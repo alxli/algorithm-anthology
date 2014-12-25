@@ -2,3 +2,22 @@
 
 Description: Given a flow network, find a flow from a
 single-source node to a single sink node that is maximized.
+
+
+Max-flow Min-cut Theorem:
+The max-flow min-cut thorem states that in a flow network,
+the maximum amount of flow passing from the source to the
+sink is equal to the minimum capacity that, when removed
+in a specific way from the network, causes the situation
+that no flow can pass from the source to the sink.
+
+Max-flow Min-cut Example:
+The figure below is a network with a max-flow of 7. We want
+to block off all flow from the source node s, to the sink
+node t by removing a subset of the graph’s edges, while
+minimizing the total capacity of the edges that are removed.
+The best way to do this is by removing the edges s-->1 and
+s-->2, which has a total capacity of 4 + 3 = 7, the same
+value as the maxflow. Another way to block off the flow from
+s to t is by removing the edges 1-->t and 2-->t. However the
+capacity removed would be 4 + 5 = 9, and this is not optimal.
