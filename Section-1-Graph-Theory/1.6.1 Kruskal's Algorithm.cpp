@@ -31,24 +31,9 @@ int main() {
         cin >> a >> b >> weight;
         E.push_back(make_pair(weight, make_pair(a, b)));
     }
-    
     sort(E.begin(), E.end());
     int totalDistance = 0;
-    
-/* If you already have a disjoint set data structure:
-    disjoint_set_forest<int> F; //see 3.1 for implementation
-    for (int i = 1; i <= nodes; i++) F.make_set(i);
-    for (int i = 0; i < E.size(); i++) {
-        a = E[i].second.first;
-        b = E[i].second.second;
-        if (!F.is_united(a, b)) {
-            MST.push_back(E[i].second);
-            totalDistance += E[i].first;
-            F.unite(a, b);
-        }
-    }
-  Otherwise, do the following:
-*/
+
     for (int i = 1; i <= nodes; i++) root[i] = i;
     for (int i = 0; i < E.size(); i++) {
         a = find_root(E[i].second.first);
@@ -87,5 +72,20 @@ int main() {
 6<->7
 1<->2
 Total distance: 13
+
+Note: If you already have a disjoint set data structure,
+then the middle section of the program can be replaced by:
+
+disjoint_set_forest<int> F;
+for (int i = 1; i <= nodes; i++) F.make_set(i);
+for (int i = 0; i < E.size(); i++) {
+    a = E[i].second.first;
+    b = E[i].second.second;
+    if (!F.is_united(a, b)) {
+        MST.push_back(E[i].second);
+        totalDistance += E[i].first;
+        F.unite(a, b);
+    }
+}
 
 */
