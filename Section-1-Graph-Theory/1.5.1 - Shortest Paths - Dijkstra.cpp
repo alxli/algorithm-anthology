@@ -1,20 +1,6 @@
 /*
 
-1.5 - Shortest Path Problems
-
-Description: Shortest path problems mainly fall into two categories:
-single-source, or all-pairs. Dijkstra’s and Bellman-Ford’s algorithms
-can be used to solve the former while the Floyd-Warshall algorithm
-can be used to solve the latter. BFS is a special case of Dijkstra’s
-algorithm where the priority queue becomes a FIFO queue on unweighted
-graphs. Dijkstra’s algorithm is a special case of A* search, where the
-heuristic is zero. The all-pairs shortest path on sparse graphs is
-best computed with Johnson’s algorithm (a combination of Bellman-Ford
-and Dijkstra’s). However, Johnson’s algorithm and A* search are both
-rare in contests, and thus are ommitted.
-
-
-1.5.1 - Dijkstra's Algorithm
+1.5.1 - Dijkstra's Algorithm (Single Source Shortest Path)
 
 Complexity: The simplest version runs in O(E+V^2) where V is the number
 of vertices and E is the number of edges. Using an adjacency list and
