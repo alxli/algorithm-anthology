@@ -1,7 +1,6 @@
 #include <algorithm> /* std::swap(), std::(stable_)partition */
 #include <iterator>  /* std::iterator_traits<T> */
 
-
 /*
 
 2.1 Quicksort
@@ -93,3 +92,65 @@ template<class RAI> void heapsort(RAI lo, RAI hi) {
     }
 }
 
+/*
+
+2.4 - Comb Sort
+
+Best: O(N)       Average: O(N^2/(2^p)) for p increments of gap
+Worst: O(N^2)     Auxiliary Space: O(1)        Stable?: No
+
+Notes: An improved bubble sort that can often be used to even
+replace O(N*log(N)) sorts because it is so simple to memorize.
+
+*/
+
+template<class RAI> void combsort(RAI lo, RAI hi) {
+    int gap = hi - lo, swapped = 1;
+    while (gap > 1 || swapped) {
+        if (gap > 1) gap = (int)((float)gap/1.3f);
+        swapped = 0;
+        for (RAI i = lo; i + gap < hi; i++)
+            if (*(i + gap) < *i) {
+                std::swap(*i, *(i + gap));
+                swapped = 1;
+            }
+    }
+}
+
+/*
+
+2.5 - Radix Sort (32-bit Signed Integers Only!)
+
+Worst: O(d*N), where d is the number of bits/digits in each of the N values.
+Since d is constant (32), we can say that radix sort runs in linear time.
+
+Auxiliary Space: O(d)
+Stable?: The LSD (least significant digit) radix sort is stable, but because
+std::stable_partition() is slower than the unstable std::partition(), the
+MSD (most significant digit) radix sort is much faster. Both are given here,
+with the MSD version implemented recursively.
+
+Notes: Radix sort usually employs a bucket sort or counting sort.
+Here, we take advantage of the partition functions found in the C++ library.
+
+*/
+
+struct radix_comp { //UnaryPredicate for std::partition
+    const int bit;  //bit position [0..31] to examine
+    radix_comp(int offset) : bit(offset) { }
+    bool operator()(int value) const {
+        return (bit==31) ? (value<0) : !(value&(1<<bit));
+    }
+};
+
+void lsd_radix_sort(int *lo, int *hi) {
+    for (int lsb = 0; lsb < 32; ++lsb)
+        std::stable_partition(lo, hi, radix_comp(lsb));
+}
+
+void msd_radix_sort(int *lo, int *hi, int msb = 31) {
+    if (lo == hi || msb < 0) return;
+    int *mid = std::partition(lo, hi, radix_comp(msb--));
+    msd_radix_sort(lo, mid, msb); //sort left partition
+    msd_radix_sort(mid, hi, msb); //sort right partition
+}
