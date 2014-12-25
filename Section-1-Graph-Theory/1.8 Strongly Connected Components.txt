@@ -1,0 +1,7 @@
+Section 1.8 - Strongly Connected Components
+
+Given a directed graph, its strongly connected components (SCC)
+are its maximal strongly connected sub-graphs. A graph is strongly
+connected if there is a path from each node to every other node.
+Condensing the strongly connected components of a graph into
+single nodes will result in a directed acyclic graph.
