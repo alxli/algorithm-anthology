@@ -1,6 +1,6 @@
 /*
 
-1.7.1 - Edmonds-Karp Algorithm
+1.7.2 - Dinic's Blocking Flow Algorithm
 
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized.
@@ -19,7 +19,7 @@ algorithm is also called Dinic’s blocking flow algorithm.
 #include <cstdio>
 #include <vector>
  
-const int MAX_N = 2005, INF = 1<<30;
+const int MAX_N = 2005, INF = 1 << 30;
 struct edge { int to, rev, f; };
  
 int nodes, source, sink;
