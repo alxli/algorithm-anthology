@@ -1,6 +1,6 @@
 /*
 
-1.5.2 - Bellman-Ford Algorithm
+1.5.2 - Bellman-Ford Algorithm (Single-Source Shortest Path)
 
 Description: Given a directed graph with positive or negative weights
 but no negative cycles, find the shortest distance to all nodes from
