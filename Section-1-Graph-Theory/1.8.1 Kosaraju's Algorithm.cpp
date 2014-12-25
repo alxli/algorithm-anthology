@@ -6,7 +6,7 @@ Description: Determines the strongly connected components
 from a given directed graph. The input is stored in an
 adjacency list.
 
-Complexity: Θ(V + E) on the number of vertices and edges.
+Complexity: O(V + E) on the number of vertices and edges.
 
 Comparison with other SCC algorithms:
 The strongly connected components of a graph can be efficiently
