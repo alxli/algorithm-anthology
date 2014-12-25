@@ -31,12 +31,13 @@ int main() {
         cin >> a >> b >> weight;
         E.push_back(make_pair(weight, make_pair(a, b)));
     }
-
+    
+    sort(E.begin(), E.end());
+    int totalDistance = 0;
+    
 /* If you already have a disjoint set data structure:
     disjoint_set_forest<int> F;
-    sort(E.begin(), E.end());
     for (int i = 1; i <= nodes; i++) F.make_set(i);
-    int totalDistance = 0;
     for (int i = 0; i < E.size(); i++) {
         a = E[i].second.first;
         b = E[i].second.second;
@@ -48,9 +49,7 @@ int main() {
     }
   Otherwise, do the following:
 */
-    sort(E.begin(), E.end());
     for (int i = 1; i <= nodes; i++) root[i] = i;
-    int totalDistance = 0;
     for (int i = 0; i < E.size(); i++) {
         a = find_root(E[i].second.first);
         b = find_root(E[i].second.second);
