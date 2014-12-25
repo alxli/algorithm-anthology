@@ -1,0 +1,13 @@
+Section 2 - Sorting and Searching
+
+The sorting functions in this section are included for novelty purposes,
+perhaps as demonstrations for ad hoc contest problems. With the exception
+of radix sort, there is generally no reason to use these sorts over C++’s
+built-in std::sort() and std::stable_sort() in an actual contest.
+
+The functions are implemented like std::sort(), taking in two
+RandomAccessIterators as the range to be sorted. To use with special
+comparators, either overload the < operator, or change every use of
+the < operator with array elements to a binary comparison function.
+E.g. to use quicksort() with a custom comp() function, change “(*i < *lo)” to
+“(comp(*i, *lo))”.
