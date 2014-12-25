@@ -1,6 +1,6 @@
 /*
 
-1.8.2 - Tarjan's Bridge-Finding Algorithm
+1.8.3 - Tarjan's Bridge-Finding Algorithm
 
 Description: Given an *undirected* graph, a bridge is an edge,
 when deleted, increases the number of connected components.
