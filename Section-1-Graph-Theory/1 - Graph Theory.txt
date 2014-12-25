@@ -1,0 +1,9 @@
+Section 1 - Graph Theory
+
+Section Notes: Some programs in this section internally operate on
+1-based vertices, and others 0-based. However, all of the example inputs
+are 1-based. You can assume that the algorithm operates on 0-based
+labelling if nodes are immediately decremented when they’re inputted
+(e.g. “cin >> a >> b;   a--; b--;”). It is your job to be cautious
+with shifting indices, as well as properly initializing arrays when
+readapting these programs for specific problems.
