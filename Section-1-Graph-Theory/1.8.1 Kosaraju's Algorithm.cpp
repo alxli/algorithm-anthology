@@ -1,6 +1,6 @@
 /*
 
-1.8.1 Kosaraju's Algorithm for Strongly Connected Components
+1.8.1 - Kosaraju's Algorithm for Strongly Connected Components
 
 Description: Determines the strongly connected components
 from a given directed graph. The input is stored in an
