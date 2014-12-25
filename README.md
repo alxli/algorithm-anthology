@@ -21,4 +21,5 @@ All the information in descriptions come from Wikipedia and other online sources
 This anthology started as a personal project to implement classic algorithms in the most concise and “vanilla” way possible while minimizing code obfuscation. I tried to determine the most appropriate trade-off between clarity, flexibility, efficiency, and code length. Short descriptions of what the programs do along with their time (and space, where necessary) complexities are typically included. For further clarification, diagrams may be given for the examples. If these are insufficient to help you understand, then you should be able to find extra information by referring to the header comments and looking online. Lastly, I do not guarantee that the programs are bug-free - it is always best to read the comments and examples, especially when you are modifying a program.
 
 Cheers and best of luck!
+
 — Alex Li
