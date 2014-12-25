@@ -38,7 +38,7 @@ int main() {
         visit[n] = true;
         cout << " " << n;
         for (int j = 0; j < adj[n].size(); j++)
-           if (!visit[adj[n][j]]) q.push(adj[n][j]);
+            if (!visit[adj[n][j]]) q.push(adj[n][j]);
     }
     return 0;
 }
