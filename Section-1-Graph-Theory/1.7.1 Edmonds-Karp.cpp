@@ -79,12 +79,13 @@ int main() {
     int nodes, edges, a, b, capacity, source, sink;
     cin >> nodes >> edges;
     for (int i = 0; i < edges; i++) {
-        cin >> a >> b >> capacity; a--; b--;
+        cin >> a >> b >> capacity;
+        a--; b--;
         adj[a].push_back(b);
         cap[a][b] = capacity;
     }
     cin >> source >> sink;
-    cout << edmonds_karp(nodes, source-1, sink-1);
+    cout << edmonds_karp(nodes, --source, --sink);
     return 0;
 } 
 
@@ -106,4 +107,3 @@ int main() {
 5
 
 */
-
