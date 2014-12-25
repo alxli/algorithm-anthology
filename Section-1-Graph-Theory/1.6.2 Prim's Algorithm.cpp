@@ -95,4 +95,22 @@ int main() {
 9<->3
 Total distance: 37
 
+
+Implementation Notes:
+
+The input graph is stored in an adjacency list. Similar to the
+implementation of Dijkstra’s algorithm in 1.5.1, weights are
+negated before they are added to the priority queue (and
+negated once again when they are retrieved). To find the
+maximum spanning tree, simply skip the two negation steps and
+the highest weighted edges will be prioritized.
+
+Prim’s algorithm greedily selects edges from a priority queue,
+and is similar to Dijkstra’s algorithm, where instead of
+processing nodes, we process individual edges. Note that the
+concept of the minimum spanning tree makes Prim’s algorithm
+work with edge weights of an arbitrary sign. In fact, a big
+positive constant added to all of the edge weights of the
+graph will not change the resulting spanning tree.
+
 */
