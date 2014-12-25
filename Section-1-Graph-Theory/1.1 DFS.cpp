@@ -13,24 +13,6 @@ Complexity: O(number of edges) for explicit graphs traversed
 without repetition. O(b^d) for implicit graphs with a branch
 factor of b, searched to depth d.
 
-=~=~=~=~= Sample Input =~=~=~=~=
-12 11 1
-1 2
-1 7
-1 8
-2 3
-2 6
-3 4
-3 5
-8 9
-8 12
-9 10
-9 11
-
-=~=~=~=~= Sample Output =~=~=~=~=
-Nodes visited:
-1 2 3 4 5 6 7 8 9 10 11 12
-
 */
 
 #include <iostream>
@@ -59,3 +41,25 @@ int main() {
     DFS(start);
     return 0;
 }
+
+/*
+
+=~=~=~=~= Sample Input =~=~=~=~=
+12 11 1
+1 2
+1 7
+1 8
+2 3
+2 6
+3 4
+3 5
+8 9
+8 12
+9 10
+9 11
+
+=~=~=~=~= Sample Output =~=~=~=~=
+Nodes visited:
+1 2 3 4 5 6 7 8 9 10 11 12
+
+*/
