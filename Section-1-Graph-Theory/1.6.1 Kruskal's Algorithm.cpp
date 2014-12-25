@@ -36,7 +36,7 @@ int main() {
     int totalDistance = 0;
     
 /* If you already have a disjoint set data structure:
-    disjoint_set_forest<int> F;
+    disjoint_set_forest<int> F; //see 3.1 for implementation
     for (int i = 1; i <= nodes; i++) F.make_set(i);
     for (int i = 0; i < E.size(); i++) {
         a = E[i].second.first;
