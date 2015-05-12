@@ -24,25 +24,25 @@ int query(int x) {
 
 template<class T, class UnaryPredicate>
 T BSQ_min(T lo, T hi, UnaryPredicate query) {
-    T mid;
+    T mid, _hi = hi;
     while (lo < hi) {
         mid = lo + (hi - lo)/2;
         if (query(mid)) hi = mid;
         else lo = mid + 1;
     }
-    if (!query(lo)) return hi;
+    if (!query(lo)) return _hi;
     return lo;
 }
 
 template<class T, class UnaryPredicate>
 T BSQ_max(T lo, T hi, UnaryPredicate query) {
-    T mid;
+    T mid, _hi = hi;
     while (lo < hi) {
         mid = lo + (hi - lo + 1)/2;
         if (query(mid)) lo = mid;
         else hi = mid - 1;
     }
-    if (!query(lo)) return hi;
+    if (!query(lo)) return _hi;
     return lo;
 } 
 
