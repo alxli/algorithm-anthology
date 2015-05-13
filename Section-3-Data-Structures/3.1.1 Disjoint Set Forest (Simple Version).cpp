@@ -63,9 +63,7 @@ int main() {
 }
 
 /*
-
 =~=~=~=~= Sample Output =~=~=~=~=
 Elements: 7, Sets: 3
 { a b f }{ c }{ d e g }
-
 */
