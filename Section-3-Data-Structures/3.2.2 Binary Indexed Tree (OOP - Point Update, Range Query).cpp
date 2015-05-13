@@ -39,7 +39,7 @@ template<class T> class binary_indexed_tree {
         delete[] bits;
     }
 
-    void update(int i, const T &newval) {
+    void update(int i, const T & newval) {
         T inc = newval - data[++i];
         data[i] = newval;
         for (; i < SIZE; i += i & -i)
