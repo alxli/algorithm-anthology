@@ -42,6 +42,9 @@ T BSQ_max(T lo, T hi, UnaryPredicate query) {
 
 /*** Tests ***/
 
+#include <iostream>
+using namespace std;
+
 int query(int x) {
     //insert your own query black-box function here:
     //a very simple example:
