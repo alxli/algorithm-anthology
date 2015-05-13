@@ -24,7 +24,7 @@ int find_root(int x) {
 }
 
 void make_set(int x) {
-    root[i] = i; rank[i] = 0; num_sets++;
+    root[x] = x; rank[x] = 0; num_sets++;
 }
 
 bool is_united(int x, int y) {
@@ -39,31 +39,3 @@ void unite(int x, int y) {
     else if (rank[X] > rank[Y]) root[Y] = X;
     else rank[root[Y] = X]++;
 }
-
-/*** Example Usage ***/
-
-#include <iostream>
-using namespace std;
-
-int main() {
-  disjoint_set_forest<char> d;
-  for (char c='a'; c<='g'; c++) d.make_set(c);
-  d.unite('a', 'b'); d.unite('b', 'f');
-  d.unite('d', 'e'); d.unite('e', 'g');
-  cout << "Elements: " << d.elements();
-  cout << ", Sets: " << d.sets() << endl;
-  vector< vector<char> > V = d.get_all_sets();
-  for (int i = 0; i < V.size(); i++) {
-    cout << "{ ";
-    for (int j = 0; j < V[i].size(); j++)
-      cout << V[i][j] << " ";
-    cout << "}";
-  }
-  return 0;
-}
-
-/*
-=~=~=~=~= Sample Output =~=~=~=~=
-Elements: 7, Sets: 3
-{ a b f }{ c }{ d e g }
-*/
