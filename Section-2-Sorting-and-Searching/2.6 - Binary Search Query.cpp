@@ -16,12 +16,6 @@ If all values in the range return false when queried, then hi is returned.
 
 */
 
-int query(int x) {
-    //insert your own query black-box function here:
-    //a very simple example:
-    return x >= 3;
-}
-
 template<class T, class UnaryPredicate>
 T BSQ_min(T lo, T hi, UnaryPredicate query) {
     T mid, _hi = hi;
@@ -44,7 +38,15 @@ T BSQ_max(T lo, T hi, UnaryPredicate query) {
     }
     if (!query(lo)) return _hi;
     return lo;
-} 
+}
+
+/*** Tests ***/
+
+int query(int x) {
+    //insert your own query black-box function here:
+    //a very simple example:
+    return x >= 3;
+}
 
 int main() {
     cout << BSQ_min(0, 7, query) << endl;
