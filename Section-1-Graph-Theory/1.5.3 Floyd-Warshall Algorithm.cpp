@@ -27,16 +27,16 @@ void print_path(int i, int j) {
 
 int main() {
     cin >> nodes >> edges;
-    for (int i = 0; i < edges; i++) {
-        cin >> a >> b >> weight;
-        dist[a][b] = weight;
-    }
-    cin >> start >> dest;
     for (int i = 1; i <= nodes; i++)
         for (int j = 1; j <= nodes; j++) {
             dist[i][j] = (i == j) ? 0 : INF;
             next[i][j] = -1;
         }
+    for (int i = 0; i < edges; i++) {
+        cin >> a >> b >> weight;
+        dist[a][b] = weight;
+    }
+    cin >> start >> dest;
     for (int k = 1; k <= nodes; k++)
      for (int i = 1; i <= nodes; i++)
       for (int j = 1; j <= nodes; j++)
