@@ -1,6 +1,6 @@
 /*
 
-3.2.1 - Binary Indexed Tree (Simple - Point Update, Range Query) 
+3.2.1 - Binary Indexed Tree (Simple - Point Update, Range Query)
 
 Description: A binary indexed tree (a.k.a. Fenwick Tree or BIT)
 is a data structure that allows for the sum of an arbitrary
@@ -13,7 +13,7 @@ Time Complexity: query() and update() are O(log(N)). All other
 functions are O(1).
 
 Space Complexity: O(N) storage and O(N) auxiliary on the number
-of elements in the array. 
+of elements in the array.
 
 */
 
