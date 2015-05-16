@@ -5,8 +5,9 @@
 Description: A binary indexed tree (a.k.a. Fenwick Tree or BIT)
 is a data structure that allows for the sum of an arbitrary
 range of values in an array to be dynamically queried in
-logarithmic time. The operations has indices accessible in the
-range [1...SIZE];
+logarithmic time. Note that unlike the OOP versions of BIT's
+provided in this anthology, the operations work for 1-based
+indices only (i.e. between 1 and SIZE, inclusive).
 
 Time Complexity: query() and update() are O(log(N)). All other
 functions are O(1).
