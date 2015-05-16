@@ -11,6 +11,9 @@ will require a segment tree with lazy propagation.
 
 Time Complexity: query(), update(), at(), and inc_range() are O(log(N))
 
+Space Complexity: O(N) storage and O(N) auxiliary on the number
+of elements in the array.
+
 */
 
 template<class T> class binary_indexed_tree {
