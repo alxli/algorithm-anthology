@@ -17,9 +17,6 @@ of elements in the array.
 
 */
 
-#include <iostream>
-using namespace std;
-
 const int SIZE = 1000;
 int a[SIZE+1], bit[SIZE+1];
 
@@ -33,17 +30,20 @@ int query(int x, int y) { //sum(a[x..y])
     return query_pre(y) - query_pre(x - 1);
 }
 
-int update_add(int x, int v) { //a[x] += v
+int update_inc(int x, int v) { //a[x] += v
     for (; x < SIZE; x += x & -x) bit[x] += v;
 }
 
-int update_set(int x, int v) { //a[x] = v
+int update(int x, int v) { //a[x] = v
     int inc = v - a[x];
     a[x] = v;
-    update_add(x, inc);
+    update_inc(x, inc);
 }
 
 /*** Example Usage: ***/
+
+#include <iostream>
+using namespace std;
 
 int main() {
     for (int i = 1; i <= 5; i++) update(i, i);
