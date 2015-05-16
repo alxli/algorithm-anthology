@@ -31,7 +31,7 @@ int query(int x, int y) { //sum(a[x..y])
 }
 
 int update_inc(int x, int v) { //a[x] += v
-    for (; x < SIZE; x += x & -x) bit[x] += v;
+    for (; x <= SIZE; x += x & -x) bit[x] += v;
 }
 
 int update(int x, int v) { //a[x] = v
