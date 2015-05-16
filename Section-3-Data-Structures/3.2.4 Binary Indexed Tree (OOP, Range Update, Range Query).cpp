@@ -1,7 +1,6 @@
 /*
 
-3.2.3 - Binary Indexed Tree (Range Update with Range Query,
-                             without Co-ordinate Compression)
+3.2.4 - Binary Indexed Tree (OOP - Range Update with Range Query)
 
 Description: Using two arrays, a BIT can be made to support
 range updates and range queries simultaneously. However,
