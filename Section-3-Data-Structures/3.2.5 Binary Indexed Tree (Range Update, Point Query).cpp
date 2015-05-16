@@ -1,8 +1,10 @@
 /*
+
 3.2.5 - Binary Indexed Tree (Range Update with Point Query)
 
 Description: Range updating can only increment values in a range,
-not set them to the same value.
+not set them to the same value. This version is a very concise
+implementation of a BIT if all that's required is point queries.
 
 Time Complexity: query() and update() are O(log(N)).
 
