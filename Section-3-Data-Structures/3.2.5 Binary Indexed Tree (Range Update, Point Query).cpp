@@ -14,18 +14,18 @@ const int SIZE = 1000;
 int bit[SIZE+1];
 
 void internal_update(int i, int inc) {
-  for (i++; i <= SIZE; i += i & -i) bit[i] += inc;
+    for (i++; i <= SIZE; i += i & -i) bit[i] += inc;
 }
 
 void update(int L, int H, int inc) {
-  internal_update(L, inc);
-  internal_update(H+1, -inc);
+    internal_update(L, inc);
+    internal_update(H+1, -inc);
 } /* add inc to each value in range [L,H] */
 
 int query(int i) {
-  int sum = 0;
-  for (i++; i > 0; i -= i & -i) sum += bit[i];
-  return sum;
+    int sum = 0;
+    for (i++; i > 0; i -= i & -i) sum += bit[i];
+    return sum;
 } /* returns value at index i */
 
 /*** Example Usage: ***/
