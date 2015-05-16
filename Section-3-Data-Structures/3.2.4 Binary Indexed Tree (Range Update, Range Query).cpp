@@ -5,9 +5,9 @@
 
 Description: Using two arrays, a BIT can be made to support
 range updates and range queries simultaneously. However,
-the range updates can only be used to increment all values in
-a range, not them to the same value. The latter will require
-a segment tree with lazy propagation.
+the range updates can only be used to add an increment to all
+values in a range, not set them to the same value. The latter
+will require a segment tree with lazy propagation.
 
 Time Complexity: query(), update(), at(), and inc_range() are O(log(N))
 
