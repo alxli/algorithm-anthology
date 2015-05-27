@@ -8,53 +8,6 @@ total weight is minimized. The input graph is stored in an edge list.
 
 Complexity: O(E*log(V)), where E and V are the number of edges and vertices.
 
-*/
-
-#include <algorithm> /* std::sort() */
-#include <iostream>
-#include <vector>
-using namespace std;
-
-const int MAX_N = 101;
-int nodes, edges, a, b, weight, root[MAX_N];
-vector< pair<int, pair<int, int> > > E;
-vector< pair<int, int> > MST;
-
-int find_root(int x) {
-    if (root[x] != x) root[x] = find_root(root[x]);
-    return root[x];
-}
-
-int main() {
-    cin >> nodes >> edges;
-    for (int i = 0; i < edges; i++) {
-        cin >> a >> b >> weight;
-        E.push_back(make_pair(weight, make_pair(a, b)));
-    }
-    sort(E.begin(), E.end());
-    int totalDistance = 0;
-
-    for (int i = 1; i <= nodes; i++) root[i] = i;
-    for (int i = 0; i < E.size(); i++) {
-        a = find_root(E[i].second.first);
-        b = find_root(E[i].second.second);
-        if (a != b) {
-            MST.push_back(E[i].second);
-            totalDistance += E[i].first;
-            root[a] = root[b];
-        }
-    }
-    
-    for (int i = 0; i < MST.size(); i++) {
-        cout << MST[i].first << "<->";
-        cout << MST[i].second << endl;
-    }
-    cout << "Total distance: " << totalDistance << endl;
-    return 0;
-} 
-
-/*
-
 =~=~=~=~= Sample Input =~=~=~=~=
 7 7
 1 2 4
@@ -79,13 +32,49 @@ then the middle section of the program can be replaced by:
 disjoint_set_forest<int> F;
 for (int i = 1; i <= nodes; i++) F.make_set(i);
 for (int i = 0; i < E.size(); i++) {
-    a = E[i].second.first;
-    b = E[i].second.second;
-    if (!F.is_united(a, b)) {
-        MST.push_back(E[i].second);
-        totalDistance += E[i].first;
-        F.unite(a, b);
-    }
+  a = E[i].second.first;
+  b = E[i].second.second;
+  if (!F.is_united(a, b)) {
+    ...
+    F.unite(a, b);
+  }
 }
 
 */
+
+#include <algorithm> /* std::sort() */
+#include <iostream>
+#include <vector>
+using namespace std;
+
+const int MAXN = 100;
+int nodes, edges, a, b, weight, root[MAXN+1];
+vector< pair<int, pair<int, int> > > E;
+
+int find_root(int x) {
+  if (root[x] != x) root[x] = find_root(root[x]);
+  return root[x];
+}
+
+int main() {
+  cin >> nodes >> edges;
+  for (int i = 0; i < edges; i++) {
+    cin >> a >> b >> weight;
+    E.push_back(make_pair(weight, make_pair(a, b)));
+  }
+  sort(E.begin(), E.end());
+  int totalDistance = 0;
+  for (int i = 1; i <= nodes; i++) root[i] = i;
+  for (int i = 0; i < E.size(); i++) {
+    a = find_root(E[i].second.first);
+    b = find_root(E[i].second.second);
+    if (a != b) {
+      cout << E[i].second.first << "<->";
+      cout << E[i].second.second << "\n";
+      totalDistance += E[i].first;
+      root[a] = root[b];
+    }
+  }
+  cout << "Total distance: " << totalDistance << endl;
+  return 0;
+} 
