@@ -62,7 +62,6 @@ int main() {
   for (int i = 0; i < nodes; i++) {
     dist[i] = INF;
     pred[i] = -1;
-    visit[i] = false;
   }
   dist[start] = 0;
   priority_queue< pair<int, int> > pq;
