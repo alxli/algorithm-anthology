@@ -13,46 +13,6 @@ stored in an adjacency list.
 
 Complexity: O(V) on the number of vertices.
 
-*/
-
-#include <iostream>
-#include <vector>
-using namespace std;
-
-const int MAX_N = 101;
-int nodes, edges, a, b;
-bool done[MAX_N] = {0}, visit[MAX_N] = {0}; 
-vector<int> adj[MAX_N], sorted;
-
-void DFS(int node) {
-    if (visit[node]) {
-        cout << "Error: Graph is not a DAG!\n";
-        return;
-    }
-    if (done[node]) return;
-    visit[node] = 1;
-    for (int j = 0; j < adj[node].size(); j++)
-        DFS(adj[node][j]);
-    visit[node] = 0;
-    done[node] = 1;
-    sorted.push_back(node);
-}
-
-int main() {
-    cin >> nodes >> edges;
-    for (int i = 0; i < edges; i++) {
-        cin >> a >> b;
-        adj[a].push_back(b);
-    }
-    for (int i = 1; i <= nodes; i++) 
-        if (!done[i]) DFS(i);
-    for (int i = sorted.size() - 1; i >= 0; i--)
-        cout << " " << sorted[i];
-    return 0;
-}
-
-/*
-
 =~=~=~=~= Sample Input =~=~=~=~=
 8 9
 1 4
@@ -70,3 +30,39 @@ The topological order:
 3 2 1 5 4 8 7 6
 
 */
+
+#include <iostream>
+#include <vector>
+using namespace std;
+
+const int MAX_N = 101;
+int nodes, edges, a, b;
+bool done[MAX_N] = {0}, visit[MAX_N] = {0}; 
+vector<int> adj[MAX_N], sorted;
+
+void DFS(int node) {
+  if (visit[node]) {
+    cout << "Error: Graph is not a DAG!\n";
+    return;
+  }
+  if (done[node]) return;
+  visit[node] = 1;
+  for (int j = 0; j < adj[node].size(); j++)
+    DFS(adj[node][j]);
+  visit[node] = 0;
+  done[node] = 1;
+  sorted.push_back(node);
+}
+
+int main() {
+  cin >> nodes >> edges;
+  for (int i = 0; i < edges; i++) {
+    cin >> a >> b;
+    adj[a].push_back(b);
+  }
+  for (int i = 1; i <= nodes; i++) 
+    if (!done[i]) DFS(i);
+  for (int i = sorted.size() - 1; i >= 0; i--)
+    cout << " " << sorted[i];
+  return 0;
+}
