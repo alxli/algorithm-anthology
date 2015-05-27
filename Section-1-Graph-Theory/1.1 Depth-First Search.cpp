@@ -25,21 +25,21 @@ bool visit[MAX_N] = {0};
 vector<int> adj[MAX_N];
 
 void DFS(int n) {
-    visit[n] = true;
-    cout << " " << n;
-    for (int j = 0; j < adj[n].size(); j++)
-        if (!visit[adj[n][j]]) DFS(adj[n][j]);
+  visit[n] = true;
+  cout << " " << n;
+  for (int j = 0; j < adj[n].size(); j++)
+    if (!visit[adj[n][j]]) DFS(adj[n][j]);
 }
 
 int main() {
-    cin >> nodes >> edges >> start;
-    for (int i = 0; i < edges; i++) {
-        cin >> a >> b;
-        adj[a].push_back(b);
-    }
-    cout << "Nodes visited:\n";
-    DFS(start);
-    return 0;
+  cin >> nodes >> edges >> start;
+  for (int i = 0; i < edges; i++) {
+    cin >> a >> b;
+    adj[a].push_back(b);
+  }
+  cout << "Nodes visited:\n";
+  DFS(start);
+  return 0;
 }
 
 /*
