@@ -13,7 +13,7 @@ priority queue, since the container is a max-heap by default. This
 method is suggested in contests because it is easier than defining
 special comparators. An alternative would be declaring the queue
 with template parameters (obviously it is ugly):
- priority_queue< pair<int,int>, vector< pair<int,int> >, greater< pair<int,int> > > pq;
+  priority_queue< pair<int,int>, vector< pair<int,int> >, greater< pair<int,int> > > pq;
 If the path is to be computed for only a single pair of nodes, one
 may break out of the loop as soon as the destination is reached,
 by inserting the line "if (a == dest) break;"  after the line  "pq.pop();"
