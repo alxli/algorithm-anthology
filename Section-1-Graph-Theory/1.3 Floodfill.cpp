@@ -14,16 +14,31 @@ adjacency list.
 
 Complexity: O(V) on the number of vertices.
 
+=~=~=~=~= Sample Input =~=~=~=~=
+8 8
+1 2
+1 6
+2 3
+2 4
+4 3
+5 1
+5 4
+7 8
+
+=~=~=~=~= Sample Output =~=~=~=~=
+Visiting 1, 2, 3, 4, 6
+Visited 5 nodes, starting from 1.
+
 */
 
 #include <iostream>
 #include <vector>
 using namespace std;
 
-const int MAX_N = 101;
+const int MAX_N = 100;
 int nodes, edges, a, b, source;
-bool visit[MAX_N] = {0};
-vector<int> adj[MAX_N];
+bool visit[MAX_N+1] = {0};
+vector<int> adj[MAX_N+1];
 
 int DFS(int node) {
   if (visit[node]) return 0;
@@ -46,22 +61,3 @@ int main() {
   cout << " nodes, starting from " << source;
   return 0;
 }
-
-/*
-
-=~=~=~=~= Sample Input =~=~=~=~=
-8 8
-1 2
-1 6
-2 3
-2 4
-4 3
-5 1
-5 4
-7 8
-
-=~=~=~=~= Sample Output =~=~=~=~=
-Visiting 1, 2, 3, 4, 6
-Visited 5 nodes, starting from 1.
-
-*/
