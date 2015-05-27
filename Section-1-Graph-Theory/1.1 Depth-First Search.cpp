@@ -37,10 +37,10 @@ Nodes visited:
 #include <vector>
 using namespace std;
 
-const int MAX_N = 100;
+const int MAXN = 100;
 int nodes, edges, start, a, b;
-bool visit[MAX_N+1] = {0};
-vector<int> adj[MAX_N+1];
+bool visit[MAXN+1] = {0};
+vector<int> adj[MAXN+1];
 
 void DFS(int n) {
   visit[n] = true;
