@@ -46,11 +46,11 @@ Take the path 1->2->3->4.
 #include <vector>
 using namespace std;
 
-const int MAX_N = 100, INF = 1 << 28;
+const int MAXN = 100, INF = 1 << 28;
 int nodes, edges, a, b, weight, start, dest;
-int dist[MAX_N+1], pred[MAX_N+1];
-bool visit[MAX_N+1] = {0};
-vector< pair<int, int> > adj[MAX_N+1];
+int dist[MAXN+1], pred[MAXN+1];
+bool visit[MAXN+1] = {0};
+vector< pair<int, int> > adj[MAXN+1];
 
 int main() {
   cin >> nodes >> edges;
@@ -84,7 +84,7 @@ int main() {
   cout << " to " << dest << " is " << dist[dest] << ".\n";
 
   /* Optional: Use pred[] to backtrack and print the path */
-  int i = 0, j = dest, path[MAX_N];
+  int i = 0, j = dest, path[MAXN];
   while (pred[j] != -1) j = path[++i] = pred[j];
   cout << "Take the path: ";
   while (i > 0) cout << path[i--] << "->";
