@@ -13,6 +13,9 @@ Time Complexity: Assuming merge() is O(1), build is O(N)
 Space Complexity: O(N) on the size of the array. A segment
                   tree needs 2^(log2(N)-1) = 4N nodes.
 
+Note: This implementation is 0-based, meaning that all
+indices from 0 to N - 1, inclusive, are accessible.
+
 */
 
 const int MAXN = 1000005;
@@ -24,7 +27,7 @@ int merge(int a, int b) {
   return (a < b) ? a : b;
 }
 
-void build(int n, int lo, int hi) {
+void build(int n, int lo, int hi) { //update a[lo..hi]
   if (lo == hi) {
     t[n] = a[lo];
     return;
@@ -34,16 +37,16 @@ void build(int n, int lo, int hi) {
   t[n] = merge(t[2*n + 1], t[2*n + 2]);
 }
 
-int A, B;
+int A, B; //must be set before calling below functions
 
-int query(int n, int lo, int hi) {
+int query(int n, int lo, int hi) { //merge(a[i] for i = A..B)
   if (hi < A || lo > B) return INF;
   if (lo >= A && hi <= B) return t[n];
   return merge(query(2*n + 1, lo, (lo + hi)/2),
            query(2*n + 2, (lo + hi)/2 + 1, hi));
 }
 
-void update(int n, int lo, int hi) {
+void update(int n, int lo, int hi) { //a[A] = B
   if (hi < A || lo > A) return;
   if (lo == hi) {
     t[n] = B;
