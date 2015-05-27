@@ -24,9 +24,9 @@ Take the path 1->2->3.
 #include <iostream>
 using namespace std;
 
-const int MAX_N=100, MAX_E = MAX_N*MAX_N, INF=1<<28;
+const int MAXN=100, MAXE = MAXN*MAXN, INF=1<<28;
 int nodes, edges, a, b, weight, start, dest;
-int E[MAX_E][3], dist[MAX_N+1], pred[MAX_N+1];
+int E[MAXE][3], dist[MAXN+1], pred[MAXN+1];
 
 int main() {
   cin >> nodes >> edges;
@@ -54,7 +54,7 @@ int main() {
       cout << "Negative-weight cycle detected!\n";
 
   /* Use pred[] to backtrack and print the path */
-  int i = 0, j = dest, path[MAX_N + 1];
+  int i = 0, j = dest, path[MAXN + 1];
   while (pred[j] != -1) j = path[++i] = pred[j];
   cout << "Take the path: ";
   while (i > 0) cout << path[i--] << "->";
