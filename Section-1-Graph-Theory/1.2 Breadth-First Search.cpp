@@ -26,21 +26,21 @@ bool visit[MAX_N] = {0};
 vector<int> adj[MAX_N];
 
 int main() {
-    cin >> nodes >> edges >> start;
-    for (int i = 0; i < edges; i++) {
-        cin >> a >> b;
-        adj[a].push_back(b);
-    }
-    cout << "Nodes visited:\n";
-    queue<int> q;
-    for (q.push(start); !q.empty(); q.pop()) {
-        int n = q.front();
-        visit[n] = true;
-        cout << " " << n;
-        for (int j = 0; j < adj[n].size(); j++)
-            if (!visit[adj[n][j]]) q.push(adj[n][j]);
-    }
-    return 0;
+  cin >> nodes >> edges >> start;
+  for (int i = 0; i < edges; i++) {
+    cin >> a >> b;
+    adj[a].push_back(b);
+  }
+  cout << "Nodes visited:\n";
+  queue<int> q;
+  for (q.push(start); !q.empty(); q.pop()) {
+    int n = q.front();
+    visit[n] = true;
+    cout << " " << n;
+    for (int j = 0; j < adj[n].size(); j++)
+      if (!visit[adj[n][j]]) q.push(adj[n][j]);
+  }
+  return 0;
 }
 
 /*
