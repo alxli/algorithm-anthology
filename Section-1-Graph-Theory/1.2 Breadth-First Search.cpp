@@ -13,38 +13,6 @@ Complexity: O(number of edges) for explicit graphs traversed
 without repetition. O(b^d) for implicit graphs with a branch
 factor of b, searched to depth d.
 
-*/
-
-#include <iostream>
-#include <queue>
-#include <vector>
-using namespace std;
-
-const int MAX_N = 101;
-int nodes, edges, start, a, b;
-bool visit[MAX_N] = {0};
-vector<int> adj[MAX_N];
-
-int main() {
-  cin >> nodes >> edges >> start;
-  for (int i = 0; i < edges; i++) {
-    cin >> a >> b;
-    adj[a].push_back(b);
-  }
-  cout << "Nodes visited:\n";
-  queue<int> q;
-  for (q.push(start); !q.empty(); q.pop()) {
-    int n = q.front();
-    visit[n] = true;
-    cout << " " << n;
-    for (int j = 0; j < adj[n].size(); j++)
-      if (!visit[adj[n][j]]) q.push(adj[n][j]);
-  }
-  return 0;
-}
-
-/*
-
 Note: The line "for (q.push(start); !q.empty(); q.pop())"
 is simply a fancy mnemonic for looping with a FIFO queue.
 This will not work as intended with a priority queue,
@@ -69,3 +37,31 @@ Nodes visited:
 1 2 3 4 5 6 7 8 9 10 11 12
 
 */
+
+#include <iostream>
+#include <queue>
+#include <vector>
+using namespace std;
+
+const int MAX_N = 100;
+int nodes, edges, start, a, b;
+bool visit[MAX_N+1] = {0};
+vector<int> adj[MAX_N+1];
+
+int main() {
+  cin >> nodes >> edges >> start;
+  for (int i = 0; i < edges; i++) {
+    cin >> a >> b;
+    adj[a].push_back(b);
+  }
+  cout << "Nodes visited:\n";
+  queue<int> q;
+  for (q.push(start); !q.empty(); q.pop()) {
+    int n = q.front();
+    visit[n] = true;
+    cout << " " << n;
+    for (int j = 0; j < adj[n].size(); j++)
+      if (!visit[adj[n][j]]) q.push(adj[n][j]);
+  }
+  return 0;
+}
