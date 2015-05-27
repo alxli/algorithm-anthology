@@ -8,7 +8,7 @@ determine the minimum (or maximum) value in any given
 range in an array that is constantly being updated.
 
 Time Complexity: Assuming merge() is O(1), build is O(N)
-                 at(), query() and update() are O(log(N)).
+                 while query() and update() are O(log(N)).
 
 Space Complexity: O(N) on the size of the array. A segment
                   tree needs 2^(log2(N)-1) = 4N nodes.
