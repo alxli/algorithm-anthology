@@ -43,7 +43,7 @@ int query(int n, int lo, int hi) { //merge(a[i] for i = A..B)
   if (hi < A || lo > B) return INF;
   if (lo >= A && hi <= B) return t[n];
   return merge(query(2*n + 1, lo, (lo + hi)/2),
-           query(2*n + 2, (lo + hi)/2 + 1, hi));
+               query(2*n + 2, (lo + hi)/2 + 1, hi));
 }
 
 void update(int n, int lo, int hi) { //a[A] = B
