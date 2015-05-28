@@ -1,6 +1,6 @@
 /*
 
-3.3.2 - 1D Segment Tree (Lazy Propagation)
+3.3.3 - 1D Segment Tree with Lazy Propagation
 
 Description: A segment tree is a data structure used for
 solving the dynamic range query problem, which asks to
