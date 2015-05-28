@@ -50,7 +50,7 @@ on real-valued capacities.
 #include <vector>
 using namespace std;
 
-const int MAX_N = 1000, INF = 1 << 28;
+const int MAXN = 1000, INF = 1 << 28;
 int cap[MAXN][MAXN];
 vector<int> adj[MAXN];
 
