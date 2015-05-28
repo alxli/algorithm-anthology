@@ -44,9 +44,9 @@ using namespace std;
 
 const int MAXN = 100;
 int nodes, edges, a, b, counter, ncomp;
-int num[MAXN+1], low[MAXN+1];
-bool visit[MAXN+1] = {0};
-vector<int> adj[MAXN+1], stack;
+int num[MAXN], low[MAXN];
+bool visit[MAXN] = {0};
+vector<int> adj[MAXN], stack;
 
 void DFS(int a) {
   int b;
