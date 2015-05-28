@@ -28,69 +28,6 @@ capacities; there exists certain real-valued inputs for which it
 will never terminate. The Edmonds-Karp algorithm here also works
 on real-valued capacities.
 
-*/
-
-#include <iostream>
-#include <queue>
-#include <vector>
-using namespace std;
-
-const int MAX_N = 1000, INF = 1<<28;
-int cap[MAX_N][MAX_N];
-vector<int> adj[MAX_N];
-
-int edmonds_karp(int nodes, int source, int sink) {
-    int max_flow = 0, a, b, best[nodes], pred[nodes];
-    bool visit[nodes];
-    for (int i = 0; i < nodes; i++) best[i] = 0;
-    while (true) {
-        for (int i = 0; i < nodes; i++) visit[i] = false;
-        visit[source] = true;
-        best[source] = INF;
-        pred[sink] = -1;
-        queue<int> q;
-        for (q.push(source); !q.empty(); q.pop()) {
-            a = q.front();
-            if (a == sink) break;
-            for (int j = 0; j < adj[a].size(); j++) {
-                b = adj[a][j];
-                if (!visit[b] && cap[a][b] > 0) {
-                    visit[b] = true;
-                    pred[b] = a;
-                    if (best[a] < cap[a][b])
-                        best[b] = best[a];
-                    else
-                        best[b] = cap[a][b];
-                    q.push(b);
-                }
-            }
-        }
-        if (pred[sink] == -1) break;
-        for (int i = sink; i != source; i = pred[i]) {
-            cap[pred[i]][i] -= best[sink];
-            cap[i][pred[i]] += best[sink];
-        }
-        max_flow += best[sink];
-    }
-    return max_flow;
-}
-
-int main() {
-    int nodes, edges, a, b, capacity, source, sink;
-    cin >> nodes >> edges;
-    for (int i = 0; i < edges; i++) {
-        cin >> a >> b >> capacity;
-        a--; b--;
-        adj[a].push_back(b);
-        cap[a][b] = capacity;
-    }
-    cin >> source >> sink;
-    cout << edmonds_karp(nodes, --source, --sink);
-    return 0;
-} 
-
-/*
-
 =~=~=~=~= Sample Input =~=~=~=~=
 6 8
 1 2 3
@@ -107,3 +44,62 @@ int main() {
 5
 
 */
+
+#include <iostream>
+#include <queue>
+#include <vector>
+using namespace std;
+
+const int MAX_N = 1000, INF = 1 << 28;
+int cap[MAXN][MAXN];
+vector<int> adj[MAXN];
+
+int edmonds_karp(int nodes, int source, int sink) {
+  int max_flow = 0, a, b, best[nodes], pred[nodes];
+  bool visit[nodes];
+  for (int i = 0; i < nodes; i++) best[i] = 0;
+  while (true) {
+    for (int i = 0; i < nodes; i++) visit[i] = false;
+    visit[source] = true;
+    best[source] = INF;
+    pred[sink] = -1;
+    queue<int> q;
+    for (q.push(source); !q.empty(); q.pop()) {
+      a = q.front();
+      if (a == sink) break;
+      for (int j = 0; j < adj[a].size(); j++) {
+        b = adj[a][j];
+        if (!visit[b] && cap[a][b] > 0) {
+          visit[b] = true;
+          pred[b] = a;
+          if (best[a] < cap[a][b])
+            best[b] = best[a];
+          else
+            best[b] = cap[a][b];
+          q.push(b);
+        }
+      }
+    }
+    if (pred[sink] == -1) break;
+    for (int i = sink; i != source; i = pred[i]) {
+      cap[pred[i]][i] -= best[sink];
+      cap[i][pred[i]] += best[sink];
+    }
+    max_flow += best[sink];
+  }
+  return max_flow;
+}
+
+int main() {
+  int nodes, edges, a, b, capacity, source, sink;
+  cin >> nodes >> edges;
+  for (int i = 0; i < edges; i++) {
+    cin >> a >> b >> capacity;
+    a--; b--;
+    adj[a].push_back(b);
+    cap[a][b] = capacity;
+  }
+  cin >> source >> sink;
+  cout << edmonds_karp(nodes, --source, --sink);
+  return 0;
+}
