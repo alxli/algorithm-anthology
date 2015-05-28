@@ -16,8 +16,8 @@ Space Complexity: O(N) total.
 
 */
 
-const int MAXN = 1001;
-int num_sets = 0, root[MAXN], rank[MAXN];
+const int MAXV = 1000; //biggest value allowed
+int num_sets = 0, root[MAXV+1], rank[MAXV+1];
 
 int find_root(int x) {
   if (root[x] != x) root[x] = find_root(root[x]);
