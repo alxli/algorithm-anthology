@@ -23,7 +23,7 @@ indices from 0 to N - 1, inclusive, are accessible.
 #include <limits> /* std::numeric_limits<T>::min() */
 
 template<class T> class segment_tree {
-  int SIZE, x, y;
+  int len, x, y;
   T *data, val;
     
   //define the following yourself. merge(x, nullv) must return x for all valid x
@@ -49,23 +49,22 @@ template<class T> class segment_tree {
   }
 
  public:
-  segment_tree(int N): SIZE(N) { data = new T[4*N]; }
+  segment_tree(int N): len(N) { data = new T[4*N]; }
   ~segment_tree() { delete[] data; }
-  int size() { return SIZE; }
+  int size() { return len; }
+  T at(int idx) { return query(idx, idx); }
   
   void update(int idx, const T &v) {
     x = idx;
     val = v;
-    internal_update(0, 0, SIZE - 1);
+    internal_update(0, 0, len - 1);
   }
   
   T query(int lo, int hi) {
     x = lo;
     y = hi;
-    return internal_query(0, 0, SIZE - 1);
+    return internal_query(0, 0, len - 1);
   }
-  
-  T at(int idx) { return query(idx, idx); }
 };
 
 /*** Example Usage ***/
