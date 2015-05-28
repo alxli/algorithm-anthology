@@ -82,7 +82,7 @@ int main() {
     num[i] = low[i] = -1;
     visit[i] = false;
   }
-  counter = 0;
+  counter = ncomp = 0;
   for (int i = 0; i < nodes; i++)
     if (num[i] == -1) DFS(i);
   return 0;
