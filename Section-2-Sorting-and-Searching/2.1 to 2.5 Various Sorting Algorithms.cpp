@@ -8,11 +8,10 @@
 Best: O(N*log(N))    Average: O(N*log(N))    Worst: O(N^2)
   Auxiliary Space: O(log(N))               Stable?: No
 
-Notes: The pivot value chosen here is always half way
-between lo and hi. Choosing random pivot values reduces
-the chances of encountering the worst case performance
-of O(N^2). Quicksort is faster in practice than other
-O(N*log(N)) algorithms.
+Notes: The pivot value chosen here is always half way between lo
+and hi. Choosing random pivot values reduces the chances of
+encountering the worst case performance of O(N^2). Quicksort is
+faster in practice than other O(N*log(N)) algorithms.
 
 */
 
@@ -32,7 +31,7 @@ template<class RAI> void quicksort(RAI lo, RAI hi) {
 2.2 - Merge Sort
 
 Best: O(N*log(N))    Average: O(N*log(N))    Worst: O(N*log(N))
-    Auxiliary Space: O(N)                  Stable?: Yes
+    Auxiliary Space: O(N)                Stable?: Yes
 
 Notes: Merge Sort has a better worse case complexity than
 quicksort and is stable (i.e. it maintains the relative order
@@ -65,7 +64,7 @@ template<class RAI> void mergesort(RAI lo, RAI hi) {
 2.3 - Heap Sort
 
 Best: O(N*log(N))     Average: O(N*log(N))     Worst: O(N*log(N))
-    Auxiliary Space: O(1)                   Stable?: No
+    Auxiliary Space: O(1)                 Stable?: No
 
 Notes: Heap Sort has a better worst case complexity than quicksort,
 but also a better space complexity than merge sort. On average,
@@ -97,7 +96,7 @@ template<class RAI> void heapsort(RAI lo, RAI hi) {
 2.4 - Comb Sort
 
 Best: O(N)       Average: O(N^2/(2^p)) for p increments of gap
-Worst: O(N^2)     Auxiliary Space: O(1)        Stable?: No
+Worst: O(N^2)     Auxiliary Space: O(1)      Stable?: No
 
 Notes: An improved bubble sort that can often be used to even
 replace O(N*log(N)) sorts because it is so simple to memorize.
@@ -136,10 +135,10 @@ Here, we take advantage of the partition functions found in the C++ library.
 */
 
 struct radix_comp { //UnaryPredicate for std::partition
-  const int bit; //bit position [0..31] to examine
-  radix_comp(int offset) : bit(offset) { }
+  const int p; //bit position [0..31] to examine
+  radix_comp(int offset) : p(offset) { }
   bool operator()(int value) const {
-    return (bit==31) ? (value<0) : !(value&(1<<bit));
+    return (p == 31) ? (value < 0) : !(value & (1 << p));
   }
 };
 
