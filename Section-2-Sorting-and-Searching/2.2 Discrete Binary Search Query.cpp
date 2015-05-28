@@ -1,6 +1,6 @@
 /*
 
-2.6 - Discrete Binary Search Query
+2.2 - Discrete Binary Search Query
 
 Not only can binary search be used on arrays (std::binary_search),
 it can also be used on monotonic functions whose domain is the set
