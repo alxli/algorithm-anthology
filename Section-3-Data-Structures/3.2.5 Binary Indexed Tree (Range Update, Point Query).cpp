@@ -1,6 +1,6 @@
 /*
 
-3.2.5 - Binary Indexed Tree (Range Update with Point Query)
+3.2.5 - Binary Indexed Tree (Range Update, Point Query)
 
 Description: Range updating can only increment values in a range,
 not set them to the same value. This version is a very concise
@@ -16,18 +16,18 @@ const int SIZE = 1000;
 int bit[SIZE+1];
 
 void internal_update(int i, int inc) {
-    for (i++; i <= SIZE; i += i & -i) bit[i] += inc;
+  for (i++; i <= SIZE; i += i & -i) bit[i] += inc;
 }
 
 void update(int L, int H, int inc) {
-    internal_update(L, inc);
-    internal_update(H+1, -inc);
+  internal_update(L, inc);
+  internal_update(H + 1, -inc);
 } /* add inc to each value in range [L,H] */
 
 int query(int i) {
-    int sum = 0;
-    for (i++; i > 0; i -= i & -i) sum += bit[i];
-    return sum;
+  int sum = 0;
+  for (i++; i > 0; i -= i & -i) sum += bit[i];
+  return sum;
 } /* returns value at index i */
 
 /*** Example Usage: ***/
@@ -36,14 +36,11 @@ int query(int i) {
 using namespace std;
 
 int main() {
-    for (int i = 1; i <= 5; i++) update(i, i, i);
-    cout << "BIT values: ";
-    for (int i = 1; i <= 5; i++)
-      cout << query(i) << " ";
-    return 0;
+  update(1, 2, 5);
+  update(2, 3, 5);
+  update(3, 5, 10);
+  cout << "BIT values: "; //5 10 15 10 10
+  for (int i = 1; i <= 5; i++)
+    cout << query(i) << " ";
+  return 0;
 } 
-
-/*
-=~=~=~=~= Sample Output =~=~=~=~=
-BIT values: 1 2 3 4 5
-*/
