@@ -68,8 +68,8 @@ template<class T> class disjoint_set_forest {
       tmp[find_root(it->second)].push_back(it->first);
     std::vector< std::vector<T> > ret;
     for (typename std::map<int, std::vector<T> >::
-      iterator it = tmp.begin(); it != tmp.end(); it++)
-        ret.push_back(it->second);
+         iterator it = tmp.begin(); it != tmp.end(); it++)
+      ret.push_back(it->second);
     return ret;
   }
 };
