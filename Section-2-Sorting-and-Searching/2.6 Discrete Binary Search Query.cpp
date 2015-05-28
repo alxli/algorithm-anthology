@@ -61,8 +61,8 @@ template<class T, class UnaryPredicate>
 T fBSQ_min(T lo, T hi, UnaryPredicate query) {
   T mid;
   for (int reps = 0; reps < 100; reps++) {
-  	mid = (lo + hi)/2.0;
-  	//simply swap hi and lo for fBSQ_max()
+    mid = (lo + hi)/2.0;
+    //simply swap hi and lo for fBSQ_max()
     (query(mid) ? hi : lo) = mid;
   }
   return lo;
