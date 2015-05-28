@@ -41,8 +41,8 @@ int query(int R, int C) { //sum(data[1..R][1..C])
 }
 
 int query(int r1, int c1, int r2, int c2) {
-  return query(r2, c2) + query(r1-1, c1-1) -
-         query(r1-1, c2) - query(r2, c1-1);
+  return query(r2, c2) + query(r1 - 1, c1 - 1) -
+         query(r1 - 1, c2) - query(r2, c1 - 1);
 }
 
 /*** Example Usage: ***/
