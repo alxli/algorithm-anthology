@@ -33,8 +33,8 @@ template<class T> class segment_tree {
   static inline const T merge(const T & a, const T & b) { return a > b ? a : b; }
   
  public:
-  segment_tree(int len, T * array = 0) {
-    this->len = len;
+  segment_tree(int N, T * array = 0) {
+    len = N;
     tree = new T[4*len];
     lazy = new T[4*len];
     for (int i = 0; i < (len << 2); i++) lazy[i] = nullv();
