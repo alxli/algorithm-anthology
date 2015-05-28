@@ -48,8 +48,8 @@ using namespace std;
 
 const int MAXN = 100;
 int nodes, edges, a, b;
-bool visit[MAXN+1] = {0};
-vector<int> adj[MAXN+1], rev[MAXN+1], order;
+bool visit[MAXN] = {0};
+vector<int> adj[MAXN], rev[MAXN], order;
 vector< vector<int> > SCC;
 
 void DFS(vector<int> graph[], vector<int> &res, int i) {
@@ -83,7 +83,7 @@ int main() {
     cout << "Component " << i + 1 << ":";
     for (int j = 0; j < SCC[i].size(); j++)
       cout << " " << (SCC[i][j] + 1);
-    cout << endl;
+    cout << "\n";
   }
   return 0;
 }
