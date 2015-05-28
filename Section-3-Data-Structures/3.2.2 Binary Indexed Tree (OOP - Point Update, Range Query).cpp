@@ -23,7 +23,7 @@ template<class T> class binary_indexed_tree {
   int SIZE;
   T *data, *bits;
   
-  T _query(int hi) {
+  T internal_query(int hi) {
     T sum = 0;
     for (; hi > 0; hi -= hi & -hi)
       sum += bits[hi];
@@ -53,7 +53,7 @@ template<class T> class binary_indexed_tree {
   int size()  { return SIZE - 1; }
   T at(int i) { return data[i + 1]; }
   T query(int lo = 0, int hi = 0) {
-    return _query(hi + 1) - _query(lo);
+    return internal_query(hi + 1) - internal_query(lo);
   }
 };
 
