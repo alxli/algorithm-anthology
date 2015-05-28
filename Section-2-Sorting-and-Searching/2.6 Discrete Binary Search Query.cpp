@@ -20,6 +20,8 @@ only if for all x in the range, query(x) implies query(y) for all y < x.
 In other words, the return value of query(x) should be false for
 x > k (k is constant) and true for x <= k. BSQ_max() will find k.
 
+Complexity: O(log N) where N is the search space (hi - lo)
+
 fBSQ_min() works like BSQ_min(), but on floating point query functions.
 Since the set of reals numbers is dense, it is clear that we cannot
 find the exact target. Instead, fBSQ_min() will return a value that is
