@@ -8,7 +8,9 @@ determine the minimum (or maximum) value in any given
 range in an array that is constantly being updated.
 
 Time Complexity: Assuming merge() is O(1), build is O(N)
-                 while query() and update() are O(log(N)).
+while query() and update() are O(log(N)). If merge() is
+not constant time, then all running times are multiplied
+by whatever complexity the merge function runs in.
 
 Space Complexity: O(N) on the size of the array. A segment
                   tree needs 2^(log2(N)-1) = 4N nodes.
@@ -21,8 +23,8 @@ indices from 0 to N - 1, inclusive, are accessible.
 const int MAXN = 100000;
 int N, M, a[MAXN], t[4*MAXN];
 
-//merge(x, INF) must return x for all x
-const int INF = 1 << 30;
+//merge(x, nullv) must return x for all x
+const int nullv = 1 << 30;
 int merge(int a, int b) {
   return (a < b) ? a : b;
 }
@@ -40,7 +42,7 @@ void build(int n, int lo, int hi) { //update a[lo..hi]
 int A, B; //must be set before calling below functions
 
 int query(int n, int lo, int hi) { //merge(a[i] for i = A..B)
-  if (hi < A || lo > B) return INF;
+  if (hi < A || lo > B) return nullv;
   if (lo >= A && hi <= B) return t[n];
   return merge(query(2*n + 1, lo, (lo + hi)/2),
                query(2*n + 2, (lo + hi)/2 + 1, hi));
