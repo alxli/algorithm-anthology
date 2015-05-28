@@ -3,7 +3,7 @@
 
 /*
 
-2.2.1 Quicksort
+2.1.1 Quicksort
 
 Best: O(N*log(N))    Average: O(N*log(N))    Worst: O(N^2)
   Auxiliary Space: O(log(N))               Stable?: No
@@ -28,7 +28,7 @@ template<class RAI> void quicksort(RAI lo, RAI hi) {
 
 /*
 
-2.2.2 - Merge Sort
+2.1.2 - Merge Sort
 
 Best: O(N*log(N))    Average: O(N*log(N))    Worst: O(N*log(N))
     Auxiliary Space: O(N)                Stable?: Yes
@@ -61,7 +61,7 @@ template<class RAI> void mergesort(RAI lo, RAI hi) {
 
 /*
 
-2.2.3 - Heap Sort
+2.1.3 - Heap Sort
 
 Best: O(N*log(N))     Average: O(N*log(N))     Worst: O(N*log(N))
     Auxiliary Space: O(1)                 Stable?: No
@@ -93,7 +93,7 @@ template<class RAI> void heapsort(RAI lo, RAI hi) {
 
 /*
 
-2.2.4 - Comb Sort
+2.1.4 - Comb Sort
 
 Best: O(N)       Average: O(N^2/(2^p)) for p increments of gap
 Worst: O(N^2)     Auxiliary Space: O(1)      Stable?: No
@@ -118,7 +118,7 @@ template<class RAI> void combsort(RAI lo, RAI hi) {
 
 /*
 
-2.2.5 - Radix Sort (32-bit Signed Integers Only!)
+2.1.5 - Radix Sort (32-bit Signed Integers Only!)
 
 Worst: O(d*N), where d is the number of bits/digits in each of the N values.
 Since d is constant (32), one can say that radix sort runs in linear time.
