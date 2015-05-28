@@ -24,7 +24,7 @@ indices from 0 to N - 1, inclusive, are accessible.
 
 template<class T> class segment_tree {
   int len, x, y;
-  T *data, val;
+  T *tree, val;
     
   //define the following yourself. merge(x, nullv) must return x for all valid x
   static inline const T nullv() { return std::numeric_limits<T>::min(); }
@@ -33,24 +33,24 @@ template<class T> class segment_tree {
   void internal_update(int node, int lo, int hi) {
     if (x < lo || x > hi) return;
     if (lo == hi) {
-      data[node] = val;
+      tree[node] = val;
       return;
     }
     internal_update(node*2 + 1, lo, (lo + hi)/2);
     internal_update(node*2 + 2, (lo + hi)/2 + 1, hi);
-    data[node] = merge(data[node*2 + 1], data[node*2 + 2]);
+    tree[node] = merge(tree[node*2 + 1], tree[node*2 + 2]);
   }
 
   T internal_query(int node, int lo, int hi) {
     if (hi < x || lo > y) return nullv();
-    if (lo >= x && hi <= y) return data[node];
+    if (lo >= x && hi <= y) return tree[node];
     return merge(internal_query(node*2 + 1, lo, (lo + hi)/2),
                  internal_query(node*2 + 2, (lo + hi)/2 + 1, hi)); 
   }
 
  public:
-  segment_tree(int N): len(N) { data = new T[4*N]; }
-  ~segment_tree() { delete[] data; }
+  segment_tree(int N): len(N) { tree = new T[4*N]; }
+  ~segment_tree() { delete[] tree; }
   int size() { return len; }
   T at(int idx) { return query(idx, idx); }
   
