@@ -65,9 +65,9 @@ using namespace std;
 int main() {
   int a[] = {10, 1, 2, 3, 4};
   binary_indexed_tree<int> BIT(5);
-  for (int i=0; i<5; i++) BIT.update(i,a[i]);
+  for (int i = 0; i < 5; i++) BIT.update(i, a[i]);
   cout << "BIT values: ";
-  for (int i=0; i<BIT.size(); i++)
+  for (int i = 0; i < BIT.size(); i++)
     cout << BIT.at(i) << " ";
   cout << "\nSum of range [1, 3] is ";
   cout << BIT.query(1, 3) << ".\n";
