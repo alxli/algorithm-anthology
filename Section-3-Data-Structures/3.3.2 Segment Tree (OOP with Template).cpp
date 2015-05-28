@@ -7,10 +7,10 @@ solving the dynamic range query problem, which asks to
 determine the minimum (or maximum) value in any given
 range in an array that is constantly being updated.
 
-Time Complexity: Assuming merge() is O(1), build is O(N)
-while query(), update(), at() are O(log(N)). If merge() is
-not constant time, then all running times are multiplied
-by whatever complexity the merge function runs in.
+Time Complexity: Assuming merge() is O(1), query(), update(),
+at() are O(log(N)). If merge() is not constant time, then all
+running times are multiplied by whatever complexity the merge
+function runs in.
 
 Space Complexity: O(N) on the size of the array. A segment
 tree for an array of size N needs 2^(log2(N)-1) = 4N nodes.
