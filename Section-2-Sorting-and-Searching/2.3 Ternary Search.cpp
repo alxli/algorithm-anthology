@@ -17,6 +17,9 @@ be able to find its minimum point. Similarly the graph of f(x)
 must look like a "hill" with a single peak for a ternary search
 to able able to find its maximum point.
 
+The answer for both functions will be really close to the peak
+or trough by no further than +/-epsilon (0.00000001 by default).
+
 */
 
 template<class UnimodalFunction>
