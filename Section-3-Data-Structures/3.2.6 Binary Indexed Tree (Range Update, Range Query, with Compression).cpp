@@ -18,7 +18,7 @@ Space Complexity: Equivalent to space complexity of std::map
 
 #include <map>
 
-const int SIZE = 1<<30;
+const int SIZE = 1 << 30;
 std::map<int, int> dataMul, dataAdd;
  
 void internal_update(int at, int mul, int add) {
@@ -35,18 +35,18 @@ void update(int L, int H, int inc) {
 
 int query(int x) {
   int mul = 0, add = 0, start = x;
-  for (int i = x; i >= 0; i = (i & (i+1)) - 1) {
+  for (int i = x; i >= 0; i = (i & (i + 1)) - 1) {
     if (dataMul.find(i) != dataMul.end())
       mul += dataMul[i];
     if (dataAdd.find(i) != dataAdd.end())
       add += dataAdd[i];
   }
   return mul*start + add;
-} /* returns sum of range [0,x] */
+} /* returns sum of range [0, x] */
 
 int query(int L, int H) {
   return query(H) - query(L-1);
-} /* returns sum of range [L,H] */
+} /* returns sum of range [L, H] */
 
 void update(int x, int v) {
   update(x, x, v - query(x, x));
