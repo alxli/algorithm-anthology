@@ -18,7 +18,7 @@ indices from 0 to N - 1, inclusive, are accessible.
 
 */
 
-const int MAXN = 1000005;
+const int MAXN = 100000;
 int N, M, a[MAXN], t[4*MAXN];
 
 //merge(x, INF) must return x for all x
