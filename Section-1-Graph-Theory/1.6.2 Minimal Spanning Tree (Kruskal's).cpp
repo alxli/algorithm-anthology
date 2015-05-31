@@ -1,6 +1,6 @@
 /*
 
-1.6.1 - Kruskal's Algorithm (Minimum Spanning Tree)
+1.6.2 - Minimum Spanning Tree (Kruskal's Algorithm)
 
 Description: Given an undirected graph, its minimum spanning tree (MST)
 is a tree connecting all nodes with a subset of its edges such that their
@@ -10,33 +10,33 @@ Complexity: O(E*log(V)), where E and V are the number of edges and vertices.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 7 7
-1 2 4
-2 3 6
-3 1 3
-4 5 1
-5 6 2
-6 7 3
-7 5 4
+0 1 4
+1 2 6
+2 0 3
+3 4 1
+4 5 2
+5 6 3
+6 4 4
 
 =~=~=~=~= Sample Output =~=~=~=~=
+3<->4
 4<->5
+2<->0
 5<->6
-3<->1
-6<->7
-1<->2
+0<->1
 Total distance: 13
 
 Note: If you already have a disjoint set data structure,
 then the middle section of the program can be replaced by:
 
-disjoint_set_forest<int> F;
-for (int i = 1; i <= nodes; i++) F.make_set(i);
+disjoint_set_forest<int> DSF;
+for (int i = 0; i < nodes; i++) DSF.make_set(i);
 for (int i = 0; i < E.size(); i++) {
   a = E[i].second.first;
   b = E[i].second.second;
-  if (!F.is_united(a, b)) {
+  if (!DSF.is_united(a, b)) {
     ...
-    F.unite(a, b);
+    DSF.unite(a, b);
   }
 }
 
@@ -48,8 +48,8 @@ for (int i = 0; i < E.size(); i++) {
 using namespace std;
 
 const int MAXN = 100;
-int nodes, edges, a, b, weight, root[MAXN+1];
-vector< pair<int, pair<int, int> > > E;
+int nodes, edges, a, b, weight, root[MAXN];
+vector<pair<int, pair<int, int> > > E;
 
 int find_root(int x) {
   if (root[x] != x) root[x] = find_root(root[x]);
@@ -64,7 +64,7 @@ int main() {
   }
   sort(E.begin(), E.end());
   int totalDistance = 0;
-  for (int i = 1; i <= nodes; i++) root[i] = i;
+  for (int i = 0; i < nodes; i++) root[i] = i;
   for (int i = 0; i < E.size(); i++) {
     a = find_root(E[i].second.first);
     b = find_root(E[i].second.second);
@@ -75,6 +75,6 @@ int main() {
       root[a] = root[b];
     }
   }
-  cout << "Total distance: " << totalDistance << endl;
+  cout << "Total distance: " << totalDistance << "\n";
   return 0;
 } 
