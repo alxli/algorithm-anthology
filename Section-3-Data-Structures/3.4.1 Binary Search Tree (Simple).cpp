@@ -29,42 +29,41 @@ template<class key_t, class val_t> class binary_search_tree {
 
   int num_nodes;
  
-  void internal_insert(node_t *& node, const key_t & k, const val_t & v) {
-    if (node == 0) {
-      node = new node_t();
-      node->key = k;
-      node->val = v;
+  void internal_insert(node_t *& n, const key_t & k, const val_t & v) {
+    if (n == 0) {
+      n = new node_t();
+      n->key = k;
+      n->val = v;
       num_nodes++;
-    } else if (k < node->key) {
-      internal_insert(node->L, k, v);
-    } else
-      internal_insert(node->R, k, v);
+    } else {
+      internal_insert(k < n->key ? n->L : n->R, k, v);
+    }
   }
   
   /* returns whether the key was successfully removed */
-  bool internal_remove(node_t *& ptr, const key_t & key) {
-    if (ptr == 0) return false;
-    if (key < ptr->key) return internal_remove(ptr->L, key);
-    if (ptr->key < key) return internal_remove(ptr->R, key);
-    if (ptr->L == 0) {
-      node_t *temp = ptr->R;
-      delete ptr;
-      ptr = temp;
-    } else if (ptr->R == 0) {
-      node_t *temp = ptr->L;
-      delete ptr;
-      ptr = temp;
+  bool internal_remove(node_t *& n, const key_t & key) {
+    if (n == 0) return false;
+    if (key < n->key) return internal_remove(n->L, key);
+    if (n->key < key) return internal_remove(n->R, key);
+    if (n->L == 0) {
+      node_t *temp = n->R;
+      delete n;
+      n = temp;
+    } else if (n->R == 0) {
+      node_t *temp = n->L;
+      delete n;
+      n = temp;
     } else {
-      node_t *temp = ptr->R, *parent = 0;
+      node_t *temp = n->R, *parent = 0;
       while (temp->L != 0) {
         parent = temp;
         temp = temp->L;
       }
-      ptr->key = temp->key;
-      ptr->val = temp->val;
+      n->key = temp->key;
+      n->val = temp->val;
       if (parent != 0)
         return internal_remove(parent->L, parent->L->key);
-      return internal_remove(ptr->R, ptr->R->key);
+      return internal_remove(n->R, n->R->key);
     }
     num_nodes--;
     return true;
@@ -78,13 +77,13 @@ template<class key_t, class val_t> class binary_search_tree {
   }
  
   template<class Func>
-  void internal_walk(node_t * p, void(*f)(Func), int order) {
-    if (p == 0) return;
-    if (order < 0) (*f)(p->val);
-    if (p->L) internal_walk(p->L, f, order);
-    if (order == 0) (*f)(p->val);
-    if (p->R) internal_walk(p->R, f, order); 
-    if (order > 0) (*f)(p->val);
+  void internal_walk(node_t * n, void(*f)(Func), int order) {
+    if (n == 0) return;
+    if (order < 0) (*f)(n->val);
+    if (n->L) internal_walk(n->L, f, order);
+    if (order == 0) (*f)(n->val);
+    if (n->R) internal_walk(n->R, f, order); 
+    if (order > 0) (*f)(n->val);
   }
 
  public:
