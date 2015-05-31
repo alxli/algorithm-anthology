@@ -96,6 +96,6 @@ int main() {
     cap[a][b] = capacity;
   }
   cin >> source >> sink;
-  cout << edmonds_karp(nodes, source, sink);
+  cout << edmonds_karp(nodes, source, sink) << "\n";
   return 0;
 }
