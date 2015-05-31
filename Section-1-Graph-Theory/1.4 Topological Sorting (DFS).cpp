@@ -1,6 +1,6 @@
 /*
 
-1.4 - Topological Sorting
+1.4 - Topological Sorting (DFS)
 
 Description: Given a directed acyclic graph (DAG), order the nodes
 such that for every edge from a to b, a precedes b in the ordering.
@@ -15,20 +15,18 @@ Complexity: O(V) on the number of vertices.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 8 9
-1 4
-1 5
+0 3
+0 4
+1 3
 2 4
+2 7
 3 5
-3 8
+3 6
+3 7
 4 6
-4 7
-4 8
-5 7
 
 =~=~=~=~= Sample Output =~=~=~=~=
-The topological order:
-3 2 1 5 4 8 7 6
-
+The topological order: 2 1 0 4 3 7 6 5
 */
 
 #include <iostream>
@@ -37,20 +35,20 @@ using namespace std;
 
 const int MAXN = 100;
 int nodes, edges, a, b;
-bool done[MAXN+1] = {0}, visit[MAXN+1] = {0}; 
-vector<int> adj[MAXN+1], sorted;
+vector<bool> vis(MAXN), done(MAXN);
+vector<int> adj[MAXN], sorted;
 
 void DFS(int node) {
-  if (visit[node]) {
+  if (vis[node]) {
     cout << "Error: Graph is not a DAG!\n";
     return;
   }
   if (done[node]) return;
-  visit[node] = 1;
+  vis[node] = true;
   for (int j = 0; j < adj[node].size(); j++)
     DFS(adj[node][j]);
-  visit[node] = 0;
-  done[node] = 1;
+  vis[node] = false;
+  done[node] = true;
   sorted.push_back(node);
 }
 
@@ -60,8 +58,9 @@ int main() {
     cin >> a >> b;
     adj[a].push_back(b);
   }
-  for (int i = 1; i <= nodes; i++) 
+  for (int i = 0; i < nodes; i++) 
     if (!done[i]) DFS(i);
+  cout << "The topological order:";
   for (int i = sorted.size() - 1; i >= 0; i--)
     cout << " " << sorted[i];
   return 0;
