@@ -1,6 +1,6 @@
 /*
 
-1.7.1 - Maximum Flow (Edmonds-Karp Algorithm)
+1.5.1 - Maximum Flow (Edmonds-Karp Algorithm)
 
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized.
@@ -12,15 +12,12 @@ of nodes, the source node, and the sink node. Nodes are zero-based.
 That is, values in adj[][] and flow[][] must describe a graph with
 nodes labeled in the range [0..nodes-1].
 
-Complexity: O(V*E^2), where V is the number of vertices
-and E is the number of edges. This improves the original
-Ford-Fulkerson algorithm, which has a complexity of O(E*|F|),
-where F is the max-flow of the graph.
-
-Despites its worst case complexity of O(V*E^2), this algorithm
-is also bounded by O(E*|F|), so it is guaranteed to be at least as
-fast as the Ford-Fulkerson algorithm. For an even faster algorithm,
-see Dinic’s algorithm (section 1.7.2), which runs in O(V^2*E).
+Complexity: O(min(V*E^2, E*|F|)), where V is the number of vertices,
+E is the number of edges, and F is the max flow. This improves the
+original Ford-Fulkerson algorithm, which runs in O(E*|F|). As the 
+Edmonds-Karp algorithm is also bounded by O(E*|F|), it is guaranteed
+to be at least as fast as Ford-Fulkerson. For an even faster algorithm,
+see Dinic’s algorithm in the next section, which runs in O(V^2*E).
 
 Comparison with Ford-Fulkerson Algorithm:
 The Ford-Fulkerson algorithm is only optimal on graphs with integer
