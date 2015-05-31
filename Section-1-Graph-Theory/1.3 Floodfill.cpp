@@ -16,18 +16,17 @@ Complexity: O(V) on the number of vertices.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 8 8
+0 1
+0 5
 1 2
-1 6
-2 3
-2 4
+1 3
+3 2
+4 0
 4 3
-5 1
-5 4
-7 8
+6 7
 
 =~=~=~=~= Sample Output =~=~=~=~=
-Visiting 1, 2, 3, 4, 6
-Visited 5 nodes, starting from 1.
+Visited 5 nodes starting from 0
 
 */
 
@@ -37,13 +36,12 @@ using namespace std;
 
 const int MAXN = 100;
 int nodes, edges, a, b, source;
-bool visit[MAXN+1] = {0};
-vector<int> adj[MAXN+1];
+vector<bool> vis(MAXN);
+vector<int> adj[MAXN];
 
 int DFS(int node) {
-  if (visit[node]) return 0;
-  visit[node] = 1;
-  cout << ", " << node; 
+  if (vis[node]) return 0;
+  vis[node] = true;
   int area = 1;
   for (int j = 0; j < adj[node].size(); j++)
     area += DFS(adj[node][j]);
@@ -58,6 +56,6 @@ int main() {
   }
   cin >> source;
   cout << "Visited " << DFS(source);
-  cout << " nodes, starting from " << source;
+  cout << " nodes starting from " << source;
   return 0;
 }
