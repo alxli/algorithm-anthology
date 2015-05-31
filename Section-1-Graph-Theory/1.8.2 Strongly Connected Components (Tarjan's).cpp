@@ -1,6 +1,6 @@
 /*
 
-1.8.2 - Tarjan's Algorithm for Strongly Connected Components
+1.8.2 - Strongly Connected Components (Tarjan's Algorithm)
 
 Description: Determines the strongly connected components
 from a given directed graph. The input is stored in an
@@ -16,25 +16,25 @@ Complexity: O(V + E) on the number of vertices and edges.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 8 14
+0 1
 1 2
+1 4
+1 5
 2 3
-2 5
 2 6
-3 4
+3 2
 3 7
-4 3
-4 8
-5 1
+4 0
+4 5
 5 6
-6 7
+6 5
+7 3
 7 6
-8 4
-8 7
 
 =~=~=~=~= Sample Output =~=~=~=~=
-Component 1: 6 7
-Component 2: 8 4 3
-Component 3: 5 2 1
+Component 1: 5 6
+Component 2: 7 3 2
+Component 3: 4 1 0
 
 */
 
@@ -45,7 +45,7 @@ using namespace std;
 const int MAXN = 100;
 int nodes, edges, a, b, counter, ncomp;
 int num[MAXN], low[MAXN];
-bool visit[MAXN] = {0};
+vector<bool> vis(MAXN);
 vector<int> adj[MAXN], stack;
 
 void DFS(int a) {
@@ -54,7 +54,7 @@ void DFS(int a) {
   stack.push_back(a);
   for (int j = 0; j < adj[a].size(); j++) {
     b = adj[a][j];
-    if (visit[b]) continue;
+    if (vis[b]) continue;
     if (num[b] == -1) {
       DFS(b);
       low[a] = min(low[a], low[b]);
@@ -65,9 +65,9 @@ void DFS(int a) {
   if (num[a] != low[a]) return;
   cout << "Component " << ++ncomp << ":";
   do {
-    visit[b = stack.back()] = true;
+    vis[b = stack.back()] = true;
     stack.pop_back();
-    cout << " " << (b + 1);
+    cout << " " << b;
   } while (a != b);
   cout << "\n";
 }
@@ -76,11 +76,10 @@ int main() {
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
     cin >> a >> b;
-    adj[--a].push_back(--b);
+    adj[a].push_back(b);
   }
   for (int i = 0; i < nodes; i++) {
     num[i] = low[i] = -1;
-    visit[i] = false;
   }
   counter = ncomp = 0;
   for (int i = 0; i < nodes; i++)
