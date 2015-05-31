@@ -30,29 +30,29 @@ Matched 3 pairs. Matchings are:
 #include <vector>
 using namespace std;
 
-const int MAXN1 = 100;
-int n1, n2, edges, a, b;
-vector<int> adj[MAXN1];
+const int MAXN = 100;
+int n1, n2, edges, a, b, match[MAXN];
+vector<bool> vis(MAXN);
+vector<int> adj[MAXN];
 
-bool find_path(int u1, int res[], vector<bool> & vis) {
-  vis[u1] = true;
-  for (int j = 0, u2, v; j < adj[u1].size(); j++) {
-    v = adj[u1][j];
-    u2 = res[v];
-    if (u2 == -1 || !vis[u2] && find_path(u2, res, vis)) {
-      res[v] = u1;
+bool find_path(int u) {
+  vis[u] = true;
+  for (int j = 0; j < adj[u].size(); j++) {
+    int v = match[adj[u][j]];
+    if (v == -1 || !vis[v] && find_path(v)) {
+      match[adj[u][j]] = u;
       return true;
     }
   }
   return false;
 }
 
-int match_bipartite(int res[]) {
-  for (int i = 0; i < n2; i++) res[i] = -1;
+int match_bipartite() {
+  for (int i = 0; i < n2; i++) match[i] = -1;
   int matches = 0;
   for (int i = 0; i < n1; i++) {
-    vector<bool> vis(n1);
-    if (find_path(i, res, vis)) matches++;
+    for (int j = 0; j < n1; j++) vis[j] = 0;
+    if (find_path(i)) matches++;
   }
   return matches;
 }
@@ -63,12 +63,11 @@ int main() {
     cin >> a >> b;
     adj[a].push_back(b);
   }
-  int res[n2];
-  cout << "Matched " << match_bipartite(res);
+  cout << "Matched " << match_bipartite();
   cout << " pairs. Matchings are:\n";
   for (int i = 0; i < n2; i++) {
-  	if (res[i] == -1) continue;
-    cout << res[i] << " " << i << "\n";
+    if (match[i] == -1) continue;
+    cout << match[i] << " " << i << "\n";
   }
   return 0;
 }
