@@ -245,14 +245,6 @@ template<class key_t, class val_t> class avl_tree {
     node * n = find_node(k);
     return n == 0 ? 0 : &(n->val);
   }
-
-  avl_tree* subtree(const key_t & k) {
-    node * target = find_node(k);
-    if (target == 0) return 0;
-    avl_tree *subtree = new avl_tree();
-    subtree->root = target;
-    return subtree;
-  }
 };
 
 /*** Stress Test - Runs in <1 second ***/
@@ -261,7 +253,6 @@ template<class key_t, class val_t> class avl_tree {
 
 int main() {
   avl_tree<int, int> T;
-
   //insert keys in an order that would break a normal BST
   for (int i = 0; i < 1000000; i++) {
     T.insert(i, i + i);
@@ -269,6 +260,5 @@ int main() {
   for (int i = 0; i < 1000000; i++) {
     assert(*T.find(i) == i + i);
   }
-
   return 0;
 }
