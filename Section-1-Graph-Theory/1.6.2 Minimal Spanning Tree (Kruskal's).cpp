@@ -5,6 +5,8 @@
 Description: Given an undirected graph, its minimum spanning tree (MST)
 is a tree connecting all nodes with a subset of its edges such that their
 total weight is minimized. The input graph is stored in an edge list.
+If the graph is not connected, Kruskal's algorithm will produce the
+minimum spanning forest (refer to the sample).
 
 Complexity: O(E*log(V)), where E and V are the number of edges and vertices.
 
@@ -29,14 +31,14 @@ Total distance: 13
 Note: If you already have a disjoint set data structure,
 then the middle section of the program can be replaced by:
 
-disjoint_set_forest<int> DSF;
-for (int i = 0; i < nodes; i++) DSF.make_set(i);
+disjoint_set_forest<int> dsf;
+for (int i = 0; i < nodes; i++) dsf.make_set(i);
 for (int i = 0; i < E.size(); i++) {
   a = E[i].second.first;
   b = E[i].second.second;
-  if (!DSF.is_united(a, b)) {
+  if (!dsf.is_united(a, b)) {
     ...
-    DSF.unite(a, b);
+    dsf.unite(a, b);
   }
 }
 
@@ -63,7 +65,7 @@ int main() {
     E.push_back(make_pair(weight, make_pair(a, b)));
   }
   sort(E.begin(), E.end());
-  int totalDistance = 0;
+  int total_dist = 0;
   for (int i = 0; i < nodes; i++) root[i] = i;
   for (int i = 0; i < E.size(); i++) {
     a = find_root(E[i].second.first);
@@ -71,10 +73,10 @@ int main() {
     if (a != b) {
       cout << E[i].second.first << "<->";
       cout << E[i].second.second << "\n";
-      totalDistance += E[i].first;
+      total_dist += E[i].first;
       root[a] = root[b];
     }
   }
-  cout << "Total distance: " << totalDistance << "\n";
+  cout << "Total distance: " << total_dist << "\n";
   return 0;
 } 
