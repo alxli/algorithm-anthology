@@ -10,23 +10,23 @@ Complexity: O(V^3) on the number of vertices.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 3 3
-1 2 1
-2 3 2
-1 3 5
-1 3 
+0 1 1
+1 2 2
+0 2 5
+0 2
 
 =~=~=~=~= Sample Output =~=~=~=~=
-The shortest path from 1 to 3 is 3.
-Take the path 1->2->3. 
+The shortest distance from 0 to 2 is 3.
+Take the path: 0->1->2.
 
 */
 
 #include <iostream>
 using namespace std;
 
-const int MAXN = 100, INF = 1<<28;
+const int MAXN = 100, INF = 0x3F3F3F3F;
 int nodes, edges, a, b, weight, start, dest;
-int dist[MAXN+1][MAXN+1], next[MAXN+1][MAXN+1];
+int dist[MAXN][MAXN], next[MAXN][MAXN];
 
 void print_path(int i, int j) {
   if (next[i][j] != -1) {
@@ -38,8 +38,8 @@ void print_path(int i, int j) {
 
 int main() {
   cin >> nodes >> edges;
-  for (int i = 1; i <= nodes; i++)
-    for (int j = 1; j <= nodes; j++) {
+  for (int i = 0; i < nodes; i++)
+    for (int j = 0; j < nodes; j++) {
       dist[i][j] = (i == j) ? 0 : INF;
       next[i][j] = -1;
     }
@@ -48,18 +48,18 @@ int main() {
     dist[a][b] = weight;
   }
   cin >> start >> dest;
-  for (int k = 1; k <= nodes; k++)
-   for (int i = 1; i <= nodes; i++)
-    for (int j = 1; j <= nodes; j++)
+  for (int k = 0; k < nodes; k++)
+   for (int i = 0; i < nodes; i++)
+    for (int j = 0; j < nodes; j++)
       if (dist[i][j] > dist[i][k] + dist[k][j]) {
           dist[i][j] = dist[i][k] + dist[k][j];
           next[i][j] = k;
       }
-  cout << "The shortest path from " << start;
+  cout << "The shortest distance from " << start;
   cout << " to " << dest << " is ";
   cout << dist[start][dest] << ".\n";
 
-  /* Use next[][] to recursively print the path */
+  //Use next[][] to recursively print the path
   cout << "Take the path " << start;
   print_path(start, dest);
   cout << dest << ".\n";
