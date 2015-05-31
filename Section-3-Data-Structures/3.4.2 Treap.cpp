@@ -144,6 +144,8 @@ template<class key_t, class val_t> class treap {
 
 /*** Stress Test - Runs in ~3 seconds ***/
 
+#include <cassert>
+
 int main() {
   treap<int, int> T;
   //insert keys in an order that would break a normal BST
