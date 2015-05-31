@@ -38,7 +38,7 @@ int nodes, edges, a, b;
 vector<bool> vis(MAXN), done(MAXN);
 vector<int> adj[MAXN], sorted;
 
-void DFS(int node) {
+void dfs(int node) {
   if (vis[node]) {
     cout << "Error: Graph is not a DAG!\n";
     return;
@@ -46,7 +46,7 @@ void DFS(int node) {
   if (done[node]) return;
   vis[node] = true;
   for (int j = 0; j < adj[node].size(); j++)
-    DFS(adj[node][j]);
+    dfs(adj[node][j]);
   vis[node] = false;
   done[node] = true;
   sorted.push_back(node);
@@ -59,7 +59,7 @@ int main() {
     adj[a].push_back(b);
   }
   for (int i = 0; i < nodes; i++) 
-    if (!done[i]) DFS(i);
+    if (!done[i]) dfs(i);
   cout << "The topological order:";
   for (int i = sorted.size() - 1; i >= 0; i--)
     cout << " " << sorted[i];
