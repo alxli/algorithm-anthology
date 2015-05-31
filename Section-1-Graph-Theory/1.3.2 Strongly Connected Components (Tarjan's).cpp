@@ -1,6 +1,6 @@
 /*
 
-1.6.2 - Strongly Connected Components (Tarjan's Algorithm)
+1.3.2 - Strongly Connected Components (Tarjan's Algorithm)
 
 Description: Determines the strongly connected components (SCC)
 from a given directed graph. Given a directed graph, its SCCs
