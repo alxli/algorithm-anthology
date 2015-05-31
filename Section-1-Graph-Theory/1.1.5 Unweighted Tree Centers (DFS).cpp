@@ -1,6 +1,6 @@
 /*
 
-1.1.5 - Unweighted Tree Centers,  Centroid, and Diameter
+1.1.5 - Unweighted Tree Centers,Centroid, and Diameter
 
 The following applies to unweighted, undirected trees only.
 
