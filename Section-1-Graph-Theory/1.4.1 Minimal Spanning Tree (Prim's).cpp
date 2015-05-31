@@ -1,6 +1,6 @@
 /*
 
-1.6.1 - Minimum Spanning Tree (Prim's Algorithm)
+1.4.1 - Minimum Spanning Tree (Prim's Algorithm)
 
 Description: Given an undirected graph, its minimum spanning tree (MST)
 is a tree connecting all nodes with a subset of its edges such that their
@@ -18,10 +18,10 @@ forest, you will have to modify the code to run Prim's once per connected
 component of the graph. Or, use Kruskal's algorithm in the next section.
 
 Implementation Notes: Similar to the implementation of Dijkstra’s algorithm
-in 1.5.1, weights are negated before they are added to the priority queue
-(and negated once again when they are retrieved). To find the maximum
-spanning tree, simply skip the two negation steps and the highest weighted
-edges will be prioritized.
+in the previous section, weights are negated before they are added to the
+priority queue (and negated once again when they are retrieved). To find
+the maximum spanning tree, simply skip the two negation steps and the
+highest weighted edges will be prioritized.
 
 Complexity: This version uses an adjacency list and priority queue
 (internally a binary heap) and has a complexity of O((E + V)*log(V)) =
