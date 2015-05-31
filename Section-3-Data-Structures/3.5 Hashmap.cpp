@@ -86,7 +86,7 @@ template<class key_t, class val_t, class Hash> class hashmap {
   }
 };
 
-/*** Example Usage: ***/
+/*** Custom Hashing Algorithm Definitions ***/
 
 #include <iostream>
 using namespace std;
@@ -125,6 +125,8 @@ struct class_hash {
     return hash + (hash << 15);
   }
 };
+
+/*** Example Usage ***/
 
 int main() {
   hashmap<string, int, class_hash> M;
