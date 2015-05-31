@@ -86,36 +86,35 @@ template<class key_t, class val_t, class Hash> class hashmap {
   }
 };
 
-/*** Custom Hashing Algorithm Definitions ***/
+/*** Examples of Hashing Algorithm Definitions ***/
 
-#include <iostream>
-using namespace std;
+#include <string>
 
 struct class_hash {
   unsigned int operator() (int key) {
-    /* Knuth’s multiplicative method (one-to-one) */
+    return class_hash()((unsigned int)key);
+  }
+
+  unsigned int operator() (long long key) {
+    return class_hash()((unsigned long long)key);
+  }
+
+  //Knuth’s multiplicative method (one-to-one)
+  unsigned int operator() (unsigned int key) {
     return key * 2654435761u;
   }
   
-  unsigned int operator() (unsigned int key) {
-    /* Robert Jenkins' 32-bit mix (one-to-one) */
-    key = ~key + (key << 15);
-    key = key ^ (key >> 12);
-    key = key + (key << 2);
-    key = (key ^ (key >> 4)) * 2057;
-    return key ^ (key >> 16);
-  }
-  
+  //Jenkins' 64-bit hash
   unsigned int operator() (unsigned long long key) {
-    key = (~key) + (key << 18);
-    key = (key ^ (key >> 31)) * 21;
-    key = key ^ (key >> 11);
-    key = key + (key << 6);
-    return key ^ (key >> 22);
+    key += ~(key << 32); key ^= (key >> 22);
+    key += ~(key << 13); key ^= (key >> 8);
+    key += (key << 3);   key ^= (key >> 15);
+    key += ~(key << 27); key ^= (key >> 31);
+    return key;
   }
-  
-  unsigned int operator() (const std::string &key) {
-    /* Jenkins' one-at-a-time hash */
+
+  //Jenkins' one-at-a-time hash
+  unsigned int operator() (const std::string & key) {
     unsigned int hash = 0;
     for (unsigned int i = 0; i < key.size(); i++) {
       hash += ((hash += key[i]) << 10);
@@ -128,7 +127,14 @@ struct class_hash {
 
 /*** Example Usage ***/
 
+#include <iostream>
+using namespace std;
+
 int main() {
+  hashmap<int, int, class_hash> m;
+  m[-12345678] = 1;
+  cout << m[0] << m[-12345678] << endl; //prints 01
+
   hashmap<string, int, class_hash> M;
   M["foo"] = 1;
   M.insert("bar", 2);
