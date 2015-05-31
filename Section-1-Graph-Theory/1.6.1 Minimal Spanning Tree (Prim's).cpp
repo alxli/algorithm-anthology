@@ -80,8 +80,8 @@ int main() {
   for (int j = 0; j < adj[start].size(); j++)
     pq.push(make_pair(-adj[start][j].second,
               make_pair(start, adj[start][j].first)));
-  int MSTnodes = 1, totalDistance = 0;
-  while (MSTnodes < nodes) {
+  int mst_nodes = 1, total_dist = 0;
+  while (mst_nodes < nodes) {
     if (pq.empty()) {
       cout << "Error: Graph is not connected!\n";
       return 0;
@@ -92,9 +92,9 @@ int main() {
     pq.pop();
     if (vis[a] && !vis[b]) {
       vis[b] = true;
-      MSTnodes++;
+      mst_nodes++;
       pred[b] = a;
-      totalDistance += weight;
+      total_dist += weight;
       for (int j = 0; j < adj[b].size(); j++)
           pq.push(make_pair(-adj[b][j].second,
                     make_pair(b, adj[b][j].first)));
@@ -102,6 +102,6 @@ int main() {
   }
   for (int i = 0; i < nodes; i++)
     if (i != start) cout << i << "<->" << pred[i] << "\n";
-  cout << "Total distance: " << totalDistance << "\n";
+  cout << "Total distance: " << total_dist << "\n";
   return 0;
 } 
