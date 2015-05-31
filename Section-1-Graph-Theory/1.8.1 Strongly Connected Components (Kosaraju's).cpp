@@ -1,10 +1,14 @@
 /*
 
-1.8.1 - Kosaraju's Algorithm for Strongly Connected Components
+1.8.1 - Strongly Connected Components (Kosaraju's Algorithm)
 
-Description: Determines the strongly connected components
-from a given directed graph. The input is stored in an
-adjacency list.
+Description: Determines the strongly connected components (SCC)
+from a given directed graph. Given a directed graph, its SCCs
+are its maximal strongly connected sub-graphs. A graph is strongly
+connected if there is a path from each node to every other node.
+Condensing the strongly connected components of a graph into
+single nodes will result in a directed acyclic graph. The input is
+stored in an adjacency list.
 
 Complexity: O(V + E) on the number of vertices and edges.
 
@@ -35,9 +39,9 @@ practice. However, Kosaraju’s algorithm is conceptually simpler.
 8 7
 
 =~=~=~=~= Sample Output =~=~=~=~=
-Component 1: 2 5 1
-Component 2: 8 4 3
-Component 3: 6 7
+Component 1: 1 4 0
+Component 2: 7 3 2
+Component 3: 5 6
 
 */
 
@@ -48,14 +52,14 @@ using namespace std;
 
 const int MAXN = 100;
 int nodes, edges, a, b;
-bool visit[MAXN] = {0};
+vector<bool> vis(MAXN);
 vector<int> adj[MAXN], rev[MAXN], order;
-vector< vector<int> > SCC;
+vector<vector<int> > SCC;
 
 void DFS(vector<int> graph[], vector<int> &res, int i) {
-  visit[i] = true;
+  vis[i] = true;
   for (int j = 0; j < graph[i].size(); j++)
-    if (!visit[graph[i][j]])
+    if (!vis[graph[i][j]])
       DFS(graph, res, graph[i][j]);
   res.push_back(i);
 }
@@ -64,17 +68,17 @@ int main() {
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
     cin >> a >> b;
-    adj[--a].push_back(--b);
+    adj[a].push_back(b);
   }
   for (int i = 0; i < nodes; i++)
-    if (!visit[i]) DFS(adj, order, i);
+    if (!vis[i]) DFS(adj, order, i);
   for (int i = 0; i < nodes; i++)
     for (int j = 0; j < adj[i].size(); j++)
       rev[adj[i][j]].push_back(i);
-  for (int i = 0; i < nodes; i++) visit[i] = false;
+  for (int i = 0; i < nodes; i++) vis[i] = false;
   reverse(order.begin(), order.end());
   for (int i = 0; i < order.size(); i++) {
-    if (visit[order[i]]) continue;
+    if (vis[order[i]]) continue;
     vector<int> component;
     DFS(rev, component, order[i]);
     SCC.push_back(component);
@@ -82,7 +86,7 @@ int main() {
   for (int i = 0; i < SCC.size(); i++) {
     cout << "Component " << i + 1 << ":";
     for (int j = 0; j < SCC[i].size(); j++)
-      cout << " " << (SCC[i][j] + 1);
+      cout << " " << SCC[i][j];
     cout << "\n";
   }
   return 0;
