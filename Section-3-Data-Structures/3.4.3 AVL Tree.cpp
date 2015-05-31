@@ -22,13 +22,13 @@ Space Complexity: O(N) on the number of nodes.
 */
 
 template<class key_t, class val_t> class avl_tree {
-  struct node {
+  struct node_t {
     key_t key;
     val_t val;
-    node *parent, *L, *R;
+    node_t *parent, *L, *R;
     int height;
 
-    node(const key_t & k, const val_t & v): key(k), val(v),
+    node_t(const key_t & k, const val_t & v): key(k), val(v),
       height(0), parent(0), L(0), R(0) {}
 
     int updateHeight() {
@@ -41,19 +41,19 @@ template<class key_t, class val_t> class avl_tree {
     }
 
     int getBalance() {
-      node *n = this;
+      node_t * n = this;
       if (n->L != 0 && n->R != 0) return n->L->height - n->R->height;
       if (n->L != 0) return n->L->height + 1;
       if (n->R != 0) return -(n->R->height + 1);
       return 0;
     }
 
-    node* setL(node * n) {
+    node_t* setL(node_t * n) {
       if (n != 0) n->parent = this;
       L = n; updateHeight(); return L;
     }
 
-    node* setR(node * n) {
+    node_t* setR(node_t * n) {
       if (n != 0) n->parent = this;
       R = n; updateHeight(); return R;
     }
@@ -61,31 +61,31 @@ template<class key_t, class val_t> class avl_tree {
 
   int num_nodes;
 
-  void setRoot(node * n) {
+  void setRoot(node_t * n) {
     if ((root = n) != 0) root->parent = 0;
   }
 
-  void rotateL(node * n) {
-    node *p = n->parent;
+  void rotateL(node_t * n) {
+    node_t * p = n->parent;
     enum { L, R } side;
     if (p != 0) side = (p->L == n) ? L : R;
-    node *tmp = n->R; n->setR(tmp->L); tmp->setL(n);
+    node_t * tmp = n->R; n->setR(tmp->L); tmp->setL(n);
     if (p == 0) setRoot(tmp);
     else if (side == L) p->setL(tmp);
     else if (side == R) p->setR(tmp);
   }
 
-  void rotateR(node * n) {
-    node *p = n->parent;
+  void rotateR(node_t * n) {
+    node_t * p = n->parent;
     enum { L, R } side;
     if (p != 0) side = (p->L == n) ? L : R;
-    node *tmp = n->L; n->setL(tmp->R); tmp->setR(n);
+    node_t * tmp = n->L; n->setL(tmp->R); tmp->setR(n);
     if (p == 0) setRoot(tmp);
     else if (side == L) p->setL(tmp);
     else if (side == R) p->setR(tmp); 
   }
 
-  void balance(node * n) {
+  void balance(node_t * n) {
     int bal = n->getBalance();
     if (bal > 1) {
       if (n->L->getBalance() < 0) rotateL(n->L);
@@ -96,8 +96,8 @@ template<class key_t, class val_t> class avl_tree {
     }
   }
 
-  node* find_node(const key_t & key) {
-    for (node* n = root; n != 0; ) {
+  node_t* find_node(const key_t & key) {
+    for (node_t * n = root; n != 0; ) {
       if (key < n->key) n = n->L;
       else if (n->key < key) n = n->R;
       else return n;
@@ -115,7 +115,7 @@ template<class key_t, class val_t> class avl_tree {
     if (order > 0) (*f)(n->val);
   }
 
-  void clean_up(node * n) {
+  void clean_up(node_t * n) {
     if (n == 0) return;
     clean_up(n->L);
     clean_up(n->R);
@@ -125,7 +125,7 @@ template<class key_t, class val_t> class avl_tree {
  public:
   avl_tree(): num_nodes(0) { root = 0; }
   avl_tree(const key_t & k, const val_t & v): num_nodes(1) {
-    root = new node(k, v);
+    root = new node_t(k, v);
   }
 
   ~avl_tree() { clean_up(root); }
@@ -134,20 +134,20 @@ template<class key_t, class val_t> class avl_tree {
 
   bool insert(const key_t & k, const val_t & v) {
     if (root == 0) {
-      root = new node(k, v);
+      root = new node_t(k, v);
       num_nodes++;
       return true;
     }
-    node *tmp = root, *added;
+    node_t *tmp = root, *added;
     while (true) {
       if (k < tmp->key) {
         if (tmp->L == 0) {
-          added = tmp->setL(new node(k, v));
+          added = tmp->setL(new node_t(k, v));
           break;
         } else tmp = tmp->L;
       } else if (tmp->key < k) {
         if (tmp->R == 0) {
-          added = tmp->setR(new node(k, v));
+          added = tmp->setR(new node_t(k, v));
           break;
         } else tmp = tmp->R;
       } else return false;
@@ -162,7 +162,7 @@ template<class key_t, class val_t> class avl_tree {
 
   bool remove(const key_t & k) {
     if (root == 0) return false;
-    node *new_n, *new_p, *tmp, *n = find_node(k), *p;
+    node_t *new_n, *new_p, *tmp, *n = find_node(k), *p;
     if (n == 0) return false; 
     int bal = n->getBalance();
     enum {L, R} side;
@@ -241,7 +241,7 @@ template<class key_t, class val_t> class avl_tree {
   }
 
   val_t* find(const key_t & k) {
-    node * n = find_node(k);
+    node_t * n = find_node(k);
     return n == 0 ? 0 : &(n->val);
   }
 };
