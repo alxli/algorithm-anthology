@@ -39,8 +39,7 @@ template<class key_t, class val_t> class binary_search_tree {
       internal_insert(k < n->key ? n->L : n->R, k, v);
     }
   }
-  
-  /* returns whether the key was successfully removed */
+
   bool internal_remove(node_t *& n, const key_t & key) {
     if (n == 0) return false;
     if (key < n->key) return internal_remove(n->L, key);
@@ -91,15 +90,16 @@ template<class key_t, class val_t> class binary_search_tree {
   ~binary_search_tree() { clean_up(root); }
   int size() const { return num_nodes; }
   bool empty() const { return root == 0; }
-  
+
   void insert(const key_t & key, const val_t & val) {
     internal_insert(root, key, val);
   }
-  
+
+  //returns whether the key was successfully removed
   bool remove(const key_t & key) {
     return internal_remove(root, key);
   }
-  
+
   //traverses nodes in either preorder (-1), inorder (0), or postorder (1)
   //for each node, the passed unary function will be called on its value
   //note: inorder is equivalent to visiting the nodes sorted by their keys.
@@ -112,7 +112,7 @@ template<class key_t, class val_t> class binary_search_tree {
       if (n->key == key) return &(n->val);
       n = (key < n->key ? n->L : n->R);
     }
-    return 0; /* key not found */
+    return 0; //key not found
   }
 };
 
