@@ -16,7 +16,7 @@ with template parameters (obviously it is ugly):
   priority_queue< pair<int,int>, vector< pair<int,int> >, greater< pair<int,int> > > pq;
 If the path is to be computed for only a single pair of nodes, one
 may break out of the loop as soon as the destination is reached,
-by inserting the line "if (a == dest) break;"  after the line  "pq.pop();"
+by inserting the line "if (a == dest) break;" after the line "pq.pop();"
 
 Shortest Path Faster Algorithm: The code for Dijkstra’s algorithm
 here can be easily modified to become the Shortest Path Faster
@@ -28,16 +28,16 @@ the SPFA very slow.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 4 5
+0 1 2
+0 3 8
 1 2 2
-1 4 8
-2 3 2
-2 4 4
-3 4 1
-1 4
+1 3 4
+2 3 1
+0 3
 
 =~=~=~=~= Sample Output =~=~=~=~=
-The shortest distance from 1 to 4 is 5.
-Take the path 1->2->3->4.
+The shortest distance from 0 to 3 is 5.
+Take the path: 0->1->2->3.
 
 */
 
@@ -46,11 +46,11 @@ Take the path 1->2->3->4.
 #include <vector>
 using namespace std;
 
-const int MAXN = 100, INF = 1 << 28;
+const int MAXN = 100, INF = 0x3F3F3F3F;
 int nodes, edges, a, b, weight, start, dest;
-int dist[MAXN+1], pred[MAXN+1];
-bool visit[MAXN+1] = {0};
-vector< pair<int, int> > adj[MAXN+1];
+int dist[MAXN], pred[MAXN];
+vector<bool> vis(MAXN);
+vector<pair<int, int> > adj[MAXN+1];
 
 int main() {
   cin >> nodes >> edges;
@@ -64,15 +64,15 @@ int main() {
     pred[i] = -1;
   }
   dist[start] = 0;
-  priority_queue< pair<int, int> > pq;
+  priority_queue<pair<int, int> > pq;
   pq.push(make_pair(0, start));
   while (!pq.empty()) {
     a = pq.top().second;
     pq.pop();
-    visit[a] = true;
+    vis[a] = true;
     for (int j = 0; j < adj[a].size(); j++) {
       b = adj[a][j].first;
-      if (visit[b]) continue;
+      if (vis[b]) continue;
       if (dist[b] > dist[a] + adj[a][j].second) {
         dist[b] = dist[a] + adj[a][j].second;
         pred[b] = a;
@@ -83,7 +83,7 @@ int main() {
   cout << "The shortest distance from " << start;
   cout << " to " << dest << " is " << dist[dest] << ".\n";
 
-  /* Optional: Use pred[] to backtrack and print the path */
+  //Optional: Use pred[] to backtrack and print the path
   int i = 0, j = dest, path[MAXN];
   while (pred[j] != -1) j = path[++i] = pred[j];
   cout << "Take the path: ";
