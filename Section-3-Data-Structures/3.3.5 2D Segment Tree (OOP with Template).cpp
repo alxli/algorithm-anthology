@@ -78,7 +78,7 @@ template<class T> class segment_tree_2D {
     if (lo + 1 == hi) update2(&node->l2, y, val);
     else {
       int mid = (lo + hi)/2;
-      layer1_node* & nnode = x < mid ? node->L : node->R;
+      layer1_node*& nnode = x < mid ? node->L : node->R;
       (x < mid ? hi : lo) = mid;
       if (nnode == 0) nnode = new layer1_node();
       update1(nnode, lo, hi, x, y, val);
