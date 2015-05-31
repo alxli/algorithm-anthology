@@ -54,13 +54,13 @@ const int MAXN = 100;
 int nodes, edges, a, b;
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN], rev[MAXN], order;
-vector<vector<int> > SCC;
+vector<vector<int> > scc;
 
-void DFS(vector<int> graph[], vector<int> &res, int i) {
+void dfs(vector<int> graph[], vector<int> &res, int i) {
   vis[i] = true;
   for (int j = 0; j < graph[i].size(); j++)
     if (!vis[graph[i][j]])
-      DFS(graph, res, graph[i][j]);
+      dfs(graph, res, graph[i][j]);
   res.push_back(i);
 }
 
@@ -71,7 +71,7 @@ int main() {
     adj[a].push_back(b);
   }
   for (int i = 0; i < nodes; i++)
-    if (!vis[i]) DFS(adj, order, i);
+    if (!vis[i]) dfs(adj, order, i);
   for (int i = 0; i < nodes; i++)
     for (int j = 0; j < adj[i].size(); j++)
       rev[adj[i][j]].push_back(i);
@@ -80,13 +80,13 @@ int main() {
   for (int i = 0; i < order.size(); i++) {
     if (vis[order[i]]) continue;
     vector<int> component;
-    DFS(rev, component, order[i]);
-    SCC.push_back(component);
+    dfs(rev, component, order[i]);
+    scc.push_back(component);
   }
-  for (int i = 0; i < SCC.size(); i++) {
+  for (int i = 0; i < scc.size(); i++) {
     cout << "Component " << i + 1 << ":";
-    for (int j = 0; j < SCC[i].size(); j++)
-      cout << " " << SCC[i][j];
+    for (int j = 0; j < scc[i].size(); j++)
+      cout << " " << scc[i][j];
     cout << "\n";
   }
   return 0;
