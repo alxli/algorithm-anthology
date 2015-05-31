@@ -1,6 +1,6 @@
 /*
 
-3.4.1 - Binary Search Tree (Simple)
+3.4.1 - Binary Search Tree
 
 Description: Description: A binary search tree (BST) is a node-based
 binary tree data structure where the left sub-tree of every node has
