@@ -12,20 +12,19 @@ and at() operations.
 
 Space Complexity: Left as an exercise for the reader.
 
-Note: This implementation is 0-based, meaning that all
-indices from 0 to N - 1, inclusive, are accessible.
+Note: This implementation is 0-based. Valid indices for
+all operations are [0..xmax][0..ymax]
 
 */
 
 #include <limits> /* std::numeric_limits<T>::min() */
 
 template<class T> class segment_tree_2D {
- 
-  //valid indices for operations are [0..xmax][0..ymax]
+
   //these can be set to large values without affecting your memory usage!
   static inline const int xmax() { return 1000000000; }
   static inline const int ymax() { return 1000000000; }
-  
+
   //define the following yourself. merge(x, nullv) must return x for all valid x
   static inline const T nullv() { return std::numeric_limits<T>::min(); }
   static inline const T merge(const T & a, const T & b) { return a > b ? a : b; }
