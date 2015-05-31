@@ -1,6 +1,6 @@
 /*
 
-1.3.3 - Floyd-Warshall Algorithm (All-Pairs Shortest Path)
+1.2.4 - Floyd-Warshall Algorithm (All-Pairs Shortest Path)
 
 Description: Given a directed graph with positive or negative weights
 but no negative cycles, find the shortest distance between all pairs
