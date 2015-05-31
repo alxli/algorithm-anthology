@@ -31,7 +31,7 @@ template<class key_t, class val_t> class treap {
   static inline int rand_int32(int l, int h) {
     return l + ((rand()&0x7fff) | ((rand()&0x7fff) << 15)) % (h - l + 1);
   }
-  
+
   struct node_t {
     key_t key;
     val_t val;
