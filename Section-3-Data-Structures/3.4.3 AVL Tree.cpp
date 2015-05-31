@@ -141,12 +141,12 @@ template<class key_t, class val_t> class avl_tree {
     node *tmp = root, *added;
     while (true) {
       if (k < tmp->key) {
-        if ((tmp->L) == 0) {
+        if (tmp->L == 0) {
           added = tmp->setL(new node(k, v));
           break;
         } else tmp = tmp->L;
       } else if (tmp->key < k) {
-        if ((tmp->R) == 0) {
+        if (tmp->R == 0) {
           added = tmp->setR(new node(k, v));
           break;
         } else tmp = tmp->R;
