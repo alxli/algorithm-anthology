@@ -1,6 +1,6 @@
 /*
 
-1.6.2 - Prim's Algorithm (Minimum Spanning Tree)
+1.6.1 - Minimum Spanning Tree (Prim's Algorithm)
 
 Complexity: This version uses an adjacency list and priority queue
 (internally a binary heap) and has a complexity of O((E + V)*log(V)) =
@@ -11,30 +11,30 @@ sophisticated Fibonacci heap, the complexity becomes O(E + V*log(V)).
 
 =~=~=~=~= Sample Input =~=~=~=~=
 9 14
-1 2 4
-1 8 8
-2 3 9
-2 8 11
-3 4 7
-3 9 2
-3 6 4
-4 5 9
-4 6 14
-5 6 10
-6 7 2
-7 8 1
-7 9 6
-8 9 7
+0 1 4
+0 7 8
+1 2 9
+1 7 11
+2 3 7
+2 8 2
+2 7 4
+3 4 9
+3 5 14
+4 5 10
+5 6 2
+6 7 1
+6 8 6
+7 8 7
 
 =~=~=~=~= Sample Output =~=~=~=~=
-2<->1
-3<->6
+1<->0
+2<->7
+3<->2
 4<->3
-5<->4
+5<->6
 6<->7
-7<->8
-8<->1
-9<->3
+7<->0
+8<->2
 Total distance: 37
 
 Implementation Notes:
@@ -62,10 +62,10 @@ graph will not change the resulting spanning tree.
 using namespace std;
 
 const int MAXN = 100;
-int nodes, edges, a, b, weight, pred[MAXN+1];
-bool visit[MAXN+1] = {0};
-vector< pair<int, int> > adj[MAXN+1];
- 
+int nodes, edges, a, b, weight, pred[MAXN];
+vector<bool> vis(MAXN);
+vector<pair<int, int> > adj[MAXN];
+
 int main() {
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
@@ -73,10 +73,10 @@ int main() {
     adj[a].push_back(make_pair(b, weight));
     adj[b].push_back(make_pair(a, weight));
   }
-  for (int i = 1; i <= nodes; i++) pred[i] = -1;
-  int start = 1; /* arbitrarily pick 1 as a starting node */
-  visit[start] = true;
-  priority_queue< pair<int, pair<int, int> > > pq;
+  for (int i = 0; i < nodes; i++) pred[i] = -1;
+  int start = 0; //arbitrarily pick 0 as a starting node
+  vis[start] = true;
+  priority_queue<pair<int, pair<int, int> > > pq;
   for (int j = 0; j < adj[start].size(); j++)
     pq.push(make_pair(-adj[start][j].second,
               make_pair(start, adj[start][j].first)));
@@ -90,8 +90,8 @@ int main() {
     a = pq.top().second.first;
     b = pq.top().second.second;
     pq.pop();
-    if (visit[a] && !visit[b]) {
-      visit[b] = true;
+    if (vis[a] && !vis[b]) {
+      vis[b] = true;
       MSTnodes++;
       pred[b] = a;
       totalDistance += weight;
@@ -100,8 +100,8 @@ int main() {
                     make_pair(b, adj[b][j].first)));
     }
   }
-  for (int i = 2; i <= nodes; i++)
-    cout << i << "<->" << pred[i] << "\n";
+  for (int i = 0; i < nodes; i++)
+    if (i != start) cout << i << "<->" << pred[i] << "\n";
   cout << "Total distance: " << totalDistance << "\n";
   return 0;
 } 
