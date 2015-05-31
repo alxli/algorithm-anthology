@@ -105,14 +105,14 @@ template<class key_t, class val_t> class avl_tree {
     return 0;
   }
 
-  template <class Func>
-  void internal_walk(node *p, void (*f)(Func), char order) {
-    if (p == 0) return;
-    if (order == -1) (*f)(p->val);
-    internal_walk(p->L, f, order);
-    if (order == 0) (*f)(p->val);
-    internal_walk(p->R, f, order);
-    if (order == 1) (*f)(p->val);
+  template<class UnaryFunction>
+  void internal_walk(node_t * n, UnaryFunction f, int order) {
+    if (n == 0) return;
+    if (order < 0) (*f)(n->val);
+    if (n->L) internal_walk(n->L, f, order);
+    if (order == 0) (*f)(n->val);
+    if (n->R) internal_walk(n->R, f, order); 
+    if (order > 0) (*f)(n->val);
   }
 
   void clean_up(node * n) {
@@ -127,7 +127,7 @@ template<class key_t, class val_t> class avl_tree {
   avl_tree(const key_t & k, const val_t & v): num_nodes(1) {
     root = new node(k, v);
   }
-  
+
   ~avl_tree() { clean_up(root); }
   int height() { return root->height; }
   int size() { return num_nodes; }
@@ -236,8 +236,7 @@ template<class key_t, class val_t> class avl_tree {
   //traverses nodes in either preorder (-1), inorder (0), or postorder (1)
   //for each node, the passed unary function will be called on its value
   //note: inorder is equivalent to visiting the nodes sorted by their keys.
-  template <class Func>
-  void walk(void (*f)(Func), char order = 0) {
+  template <class UnaryFunction> void walk(UnaryFunction f, char order = 0) {
     internal_walk(root, f, order);
   }
 
