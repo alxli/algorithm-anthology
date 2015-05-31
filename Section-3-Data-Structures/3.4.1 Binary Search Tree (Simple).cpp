@@ -16,9 +16,7 @@ average, but O(N) at worst if the tree becomes degenerate. Speed
 can be improved by randomizing insertion order. walk() is O(N).
 All other functions are O(1).
 
-=~=~=~=~= Sample Output =~=~=~=~=
-BIT values: 10 1 2 3 4
-Sum of range [1, 3] is 6.
+Space Complexity: O(N) on the number of nodes.
 
 */
 
