@@ -92,6 +92,6 @@ int main() {
       T.update(r, c, arr[r][c]);
   cout << "The maximum value in the rectangle with ";
   cout << "upper left (0,2) and lower right (3,4) is ";
-  cout << T.query(0, 2, 3, 4) << ".\n";
+  cout << T.query(0, 2, 3, 4) << ".\n"; //8
   return 0;
 }
