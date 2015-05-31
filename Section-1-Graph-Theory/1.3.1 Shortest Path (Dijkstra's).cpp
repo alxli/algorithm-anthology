@@ -1,6 +1,6 @@
 /*
 
-1.5.1 - Dijkstra's Algorithm (Single Source Shortest Path)
+1.3.1 - Dijkstra's Algorithm (Single Source Shortest Path)
 
 Complexity: The simplest version runs in O(E+V^2) where V is the number
 of vertices and E is the number of edges. Using an adjacency list and
