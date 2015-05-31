@@ -45,7 +45,7 @@ void dfs(int n) {
   vis[n] = true;
   cout << " " << n;
   for (int j = 0; j < adj[n].size(); j++)
-    if (!vis[adj[n][j]]) DFS(adj[n][j]);
+    if (!vis[adj[n][j]]) dfs(adj[n][j]);
 }
 
 int main() {
@@ -55,6 +55,6 @@ int main() {
     adj[a].push_back(b);
   }
   cout << "Nodes visited:";
-  DFS(start);
+  dfs(start);
   return 0;
 }
