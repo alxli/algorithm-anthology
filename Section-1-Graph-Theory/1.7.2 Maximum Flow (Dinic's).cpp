@@ -1,6 +1,6 @@
 /*
 
-1.7.2 - Dinic's Blocking Flow Algorithm
+1.7.2 - Maximum Flow (Dinic's Blocking Flow Algorithm)
 
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized.
@@ -16,29 +16,30 @@ algorithm is also called Dinic’s blocking flow algorithm.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 6 8
-1 2 3
+0 1 3
+0 2 3
+1 2 2
 1 3 3
-2 3 2
-2 4 3
+2 4 2
+3 4 1
 3 5 2
-4 5 1
-4 6 2
-5 6 3
-1 6
+4 5 3
+0 5
 
 =~=~=~=~= Sample Output =~=~=~=~=
 5
 
 */
 
-#include <cstdio>
+#include <iostream>
 #include <vector>
+using namespace std;
 
-const int MAXN = 2000, INF = 1 << 30;
 struct edge { int to, rev, f; };
 
+const int MAXN = 100, INF = 0x3F3F3F3F;
 int nodes, source, sink;
-std::vector<edge> adj[MAXN];
+vector<edge> adj[MAXN];
 
 void add_edge(int s, int t, int cap) {
   adj[s].push_back((edge){t, (int)adj[t].size(), cap});
@@ -73,7 +74,7 @@ int dinic_dfs(int u, int f) {
     if (!e.f) continue;
     int v = e.to, df;
     if (dist[v] == dist[u] + 1 &&
-        (df = dinic_dfs(v, std::min(f, e.f))) > 0) {
+        (df = dinic_dfs(v, min(f, e.f))) > 0) {
       e.f -= df;
       adj[v][e.rev].f += df;
       return df;
@@ -92,18 +93,14 @@ int dinic() {
   return max_flow;
 }
 
-#include <iostream>
-using namespace std;
-
 int main() {
   int edges, a, b, capacity;
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
     cin >> a >> b >> capacity;
-    add_edge(--a, --b, capacity);
+    add_edge(a, b, capacity);
   }
   cin >> source >> sink;
-  --source; --sink;
-  cout << dinic() << endl;
+  cout << dinic() << "\n";
   return 0;
 }
