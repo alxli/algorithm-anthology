@@ -12,6 +12,11 @@ tree makes Prim’s algorithm work with edge weights of an arbitrary sign.
 In fact, a big positive constant added to all of the edge weights of the
 graph will not change the resulting spanning tree.
 
+Warning: The implementation below only works on connected graphs. In order
+to make Prim's work on unconnected graphs to produce a minimum spanning
+forest, you will have to modify the code to run Prim's once per connected
+component of the graph. Or, use Kruskal's algorithm in the next section.
+
 Implementation Notes: Similar to the implementation of Dijkstra’s algorithm
 in 1.5.1, weights are negated before they are added to the priority queue
 (and negated once again when they are retrieved). To find the maximum
