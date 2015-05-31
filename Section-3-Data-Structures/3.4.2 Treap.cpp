@@ -149,10 +149,10 @@ template<class key_t, class val_t> class treap {
 int main() {
   treap<int, int> T;
   //insert keys in an order that would break a normal BST
-  for (int i = 1000000; i >= 0; i--) {
+  for (int i = 0; i < 1000000; i++) {
     T.insert(i, i + i);
   }
-  for (int i = 1000000; i >= 0; i--) {
+  for (int i = 0; i < 1000000; i++) {
     assert(*T.find(i) == i + i);
   }
   return 0;
