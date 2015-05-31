@@ -105,7 +105,7 @@ template<class key_t, class val_t> class avl_tree {
     return 0;
   }
 
- template <class Func>
+  template <class Func>
   void internal_walk(node *p, void (*f)(Func), char order) {
     if (p == 0) return;
     if (order == -1) (*f)(p->val);
@@ -131,24 +131,6 @@ template<class key_t, class val_t> class avl_tree {
   ~avl_tree() { clean_up(root); }
   int height() { return root->height; }
   int size() { return num_nodes; }
-
-  avl_tree* subtree(const key_t & k) {
-    node * target = find_node(k);
-    if (target == 0) return 0;
-    avl_tree *subtree = new avl_tree();
-    subtree->root = target;
-    return subtree;
-  }
-
-  val_t* find(const key_t & k) {
-    node * n = find_node(k);
-    return n == 0 ? 0 : &(n->val);
-  }
-
-  template <class Func>
-  void walk(void (*f)(Func), char order = 0) {
-    internal_walk(root, f, order);
-  }
 
   bool insert(const key_t & k, const val_t & v) {
     if (root == 0) {
@@ -181,7 +163,7 @@ template<class key_t, class val_t> class avl_tree {
   bool remove(const key_t & k) {
     if (root == 0) return false;
     node *new_n, *new_p, *tmp, *n = find_node(k), *p;
-    if (n == 0) return 0; 
+    if (n == 0) return false; 
     int bal = n->getBalance();
     enum {L, R} side;
     if ((p = n->parent) != 0) side = (p->L == n) ? L : R;
@@ -242,14 +224,34 @@ template<class key_t, class val_t> class avl_tree {
         }
       }
       if (p != 0) {
-        if (side == L) p->setL(new_n);
-        else p->setR(new_n);
+        side == L ? p->setL(new_n) : p->setR(new_n);
       } else setRoot(new_n);
       delete n;
       balance(tmp);
     }
     num_nodes--;
     return true;
+  }
+
+  //traverses nodes in either preorder (-1), inorder (0), or postorder (1)
+  //for each node, the passed unary function will be called on its value
+  //note: inorder is equivalent to visiting the nodes sorted by their keys.
+  template <class Func>
+  void walk(void (*f)(Func), char order = 0) {
+    internal_walk(root, f, order);
+  }
+
+  val_t* find(const key_t & k) {
+    node * n = find_node(k);
+    return n == 0 ? 0 : &(n->val);
+  }
+
+  avl_tree* subtree(const key_t & k) {
+    node * target = find_node(k);
+    if (target == 0) return 0;
+    avl_tree *subtree = new avl_tree();
+    subtree->root = target;
+    return subtree;
   }
 };
 
