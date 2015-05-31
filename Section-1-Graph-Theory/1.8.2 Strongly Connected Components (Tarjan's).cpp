@@ -61,7 +61,7 @@ int num[MAXN], low[MAXN];
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN], stack;
 
-void DFS(int a) {
+void dfs(int a) {
   int b;
   low[a] = num[a] = ++counter;
   stack.push_back(a);
@@ -69,7 +69,7 @@ void DFS(int a) {
     b = adj[a][j];
     if (vis[b]) continue;
     if (num[b] == -1) {
-      DFS(b);
+      dfs(b);
       low[a] = min(low[a], low[b]);
     } else {
       low[a] = min(low[a], num[b]);
@@ -96,6 +96,6 @@ int main() {
   }
   counter = ncomp = 0;
   for (int i = 0; i < nodes; i++)
-    if (num[i] == -1) DFS(i);
+    if (num[i] == -1) dfs(i);
   return 0;
 } 
