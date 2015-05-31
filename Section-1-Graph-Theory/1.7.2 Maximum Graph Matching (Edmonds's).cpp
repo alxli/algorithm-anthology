@@ -2,8 +2,8 @@
 
 1.7.1 - Maximum Matching for General Graphs (Edmonds's Algorithm)
 
-Description: Given a general directed graph, determine a subset of
-the edges such that no vertex is repeated in the subset.
+Description: Given a general directed graph, determine a maximal
+subset of the edges such that no vertex is repeated in the subset.
 
 Complexity: O(V^3) on the number of vertices.
 
