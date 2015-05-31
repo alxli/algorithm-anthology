@@ -3,10 +3,15 @@
 3.3.4 - Quadtree (OOP version with templates)
 
 Description: A quadtree can be used to dynamically query values
-of rectangules in a 2D array. In a quadtree, every node has exactly
+of rectangles in a 2D array. In a quadtree, every node has exactly
 4 children. The following uses a statically allocated array to
 store the nodes. This is less efficient than a 2D segment tree.
 
+Time Complexity: For update(), query() and at(): O(log(N*M)) on
+average and O(sqrt(N*M)) in the worst case. Where N is the number
+of rows and M is the number of columns in the 2D array.
+
+Space Complexity: O(N*M log(N*M))
 
 Note: This implementation is 0-based, meaning that all
 indices from 0 to N - 1, inclusive, are accessible.
