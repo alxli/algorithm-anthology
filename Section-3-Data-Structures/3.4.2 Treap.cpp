@@ -37,7 +37,7 @@ template<class key_t, class val_t> class treap {
     val_t val;
     int priority;
     node_t *L, *R;
-    
+
     node_t(const key_t & k, const val_t & v): key(k), val(v), L(0), R(0) {
       priority = rand_int32(0, 1 << 30);
     }
