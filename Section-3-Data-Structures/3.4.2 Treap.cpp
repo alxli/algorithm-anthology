@@ -60,9 +60,8 @@ template<class key_t, class val_t> class treap {
   }
 
   void internal_insert(node_t *& n, const key_t & k, const val_t & v) {
-    node_t * p_node = new node_t(k, v);
     if (n == 0) {
-      n = p_node;
+      n = new node_t(k, v);
       num_nodes++;
       return;
     }
@@ -141,7 +140,7 @@ template<class key_t, class val_t> class treap {
   }
 };
 
-/*** Stress Test - Runs in <3 seconds ***/
+/*** Stress Test - Runs in <1 second ***/
 
 #include <cassert>
 
