@@ -1,6 +1,6 @@
 /*
 
-1.7.1 - Edmonds-Karp Algorithm
+1.7.1 - Maximum Flow (Edmonds-Karp Algorithm)
 
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized.
@@ -30,15 +30,15 @@ on real-valued capacities.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 6 8
-1 2 3
+0 1 3
+0 2 3
+1 2 2
 1 3 3
-2 3 2
-2 4 3
+2 4 2
+3 4 1
 3 5 2
-4 5 1
-4 6 2
-5 6 3
-1 6
+4 5 3
+0 5
 
 =~=~=~=~= Sample Output =~=~=~=~=
 5
@@ -50,17 +50,17 @@ on real-valued capacities.
 #include <vector>
 using namespace std;
 
-const int MAXN = 1000, INF = 1 << 28;
+const int MAXN = 100, INF = 0x3F3F3F3F;
 int cap[MAXN][MAXN];
 vector<int> adj[MAXN];
 
 int edmonds_karp(int nodes, int source, int sink) {
   int max_flow = 0, a, b, best[nodes], pred[nodes];
-  bool visit[nodes];
+  vector<bool> vis(nodes);
   for (int i = 0; i < nodes; i++) best[i] = 0;
   while (true) {
-    for (int i = 0; i < nodes; i++) visit[i] = false;
-    visit[source] = true;
+    for (int i = 0; i < nodes; i++) vis[i] = false;
+    vis[source] = true;
     best[source] = INF;
     pred[sink] = -1;
     queue<int> q;
@@ -69,13 +69,10 @@ int edmonds_karp(int nodes, int source, int sink) {
       if (a == sink) break;
       for (int j = 0; j < adj[a].size(); j++) {
         b = adj[a][j];
-        if (!visit[b] && cap[a][b] > 0) {
-          visit[b] = true;
+        if (!vis[b] && cap[a][b] > 0) {
+          vis[b] = true;
           pred[b] = a;
-          if (best[a] < cap[a][b])
-            best[b] = best[a];
-          else
-            best[b] = cap[a][b];
+          best[b] = min(best[a], cap[a][b]);
           q.push(b);
         }
       }
@@ -95,11 +92,10 @@ int main() {
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
     cin >> a >> b >> capacity;
-    a--; b--;
     adj[a].push_back(b);
     cap[a][b] = capacity;
   }
   cin >> source >> sink;
-  cout << edmonds_karp(nodes, --source, --sink);
+  cout << edmonds_karp(nodes, source, sink);
   return 0;
 }
