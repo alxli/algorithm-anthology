@@ -7,6 +7,22 @@ the edges such that no vertex is repeated in the subset.
 
 Complexity: O(V^3) on the number of vertices.
 
+=~=~=~=~= Sample Input =~=~=~=~=
+4 8
+0 1
+1 0
+1 2
+2 1
+2 3
+3 2
+3 0
+0 3
+
+=~=~=~=~= Sample Output =~=~=~=~=
+Matched 2 pair(s). Matchings are:
+0 1
+2 3
+
 */
 
 #include <algorithm> /* fill() */
@@ -15,7 +31,8 @@ Complexity: O(V^3) on the number of vertices.
 using namespace std;
 
 const int MAXN = 100;
-int nodes, p[MAXN], q[MAXN], base[MAXN], match[MAXN];
+int nodes, edges, a, b;
+int p[MAXN], q[MAXN], base[MAXN], match[MAXN];
 vector<int> adj[MAXN];
 
 int lca(int a, int b) {
@@ -101,15 +118,16 @@ int max_matching() {
 }
 
 int main() {
-  nodes = 4;
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(2);
-  adj[2].push_back(1);
-  adj[2].push_back(3);
-  adj[3].push_back(2);
-  adj[0].push_back(3);
-  adj[3].push_back(0);
-  cout << max_matching() << endl; //2
+  cin >> nodes >> edges;
+  for (int i = 0; i < edges; i++) {
+    cin >> a >> b;
+    adj[a].push_back(b);
+  }
+  cout << "Matched " << max_matching();
+  cout << " pair(s). Matchings are:\n";
+  for (int i = 0; i < nodes; i++) {
+    if (match[i] != -1 && i < match[i])
+      cout << i << " " << match[i] << "\n";
+  }
   return 0;
 }
