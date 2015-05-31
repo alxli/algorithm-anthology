@@ -59,16 +59,6 @@ template<class key_t, class val_t> class treap {
     k2 = k1;
   }
 
-  template<class Func>
-  void internal_walk(node_t * n, void (*f)(Func), int order) {
-    if (n == 0) return;
-    if (order < 0) (*f)(n->val);
-    if (n->L) internal_walk(n->L, f, order);
-    if (order == 0) (*f)(n->val);
-    if (n->R) internal_walk(n->R, f, order); 
-    if (order > 0) (*f)(n->val);
-  }
-
   void internal_insert(node_t *& n, const key_t & k, const val_t & v) {
     node_t * p_node = new node_t(k, v);
     if (n == 0) {
@@ -111,6 +101,16 @@ template<class key_t, class val_t> class treap {
     delete n;
   }
 
+  template<class UnaryFunction>
+  void internal_walk(node_t * n, UnaryFunction f, int order) {
+    if (n == 0) return;
+    if (order < 0) (*f)(n->val);
+    if (n->L) internal_walk(n->L, f, order);
+    if (order == 0) (*f)(n->val);
+    if (n->R) internal_walk(n->R, f, order); 
+    if (order > 0) (*f)(n->val);
+  }
+
  public:
   treap(): root(0), num_nodes(0) { srand(time(0)); }
   ~treap() { clean_up(root); }
@@ -128,21 +128,20 @@ template<class key_t, class val_t> class treap {
   //traverses nodes in either preorder (-1), inorder (0), or postorder (1)
   //for each node, the passed unary function will be called on its value
   //note: inorder is equivalent to visiting the nodes sorted by their keys.
-  template<class Func> void walk(void (*f)(Func), int order = 0) {
+  template<class UnaryFunction> void walk(UnaryFunction f, int order = 0) {
     internal_walk(root, f, order);
   }
-  
+
   val_t* find(const key_t & key) {
     for (node_t *n = root; n != 0; ) {
       if (n->key == key) return &(n->val);
-      if (key < n->key) n = n->L;
-      else n = n->R;
+      n = (key < n->key ? n->L : n->R);
     }
     return 0; //key not found
   }
 };
 
-/*** Stress Test - Runs in ~3 seconds ***/
+/*** Stress Test - Runs in <3 seconds ***/
 
 #include <cassert>
 
