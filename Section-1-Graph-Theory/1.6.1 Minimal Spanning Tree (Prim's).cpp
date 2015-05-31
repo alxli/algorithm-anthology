@@ -2,6 +2,22 @@
 
 1.6.1 - Minimum Spanning Tree (Prim's Algorithm)
 
+Description: Given an undirected graph, its minimum spanning tree (MST)
+is a tree connecting all nodes with a subset of its edges such that their
+total weight is minimized. The input graph is stored in an adjacency list.
+Prim’s algorithm greedily selects edges from a priority queue, and is
+similar to Dijkstra’s algorithm, where instead of processing nodes, we
+process individual edges. Note that the concept of the minimum spanning
+tree makes Prim’s algorithm work with edge weights of an arbitrary sign.
+In fact, a big positive constant added to all of the edge weights of the
+graph will not change the resulting spanning tree.
+
+Implementation Notes: Similar to the implementation of Dijkstra’s algorithm
+in 1.5.1, weights are negated before they are added to the priority queue
+(and negated once again when they are retrieved). To find the maximum
+spanning tree, simply skip the two negation steps and the highest weighted
+edges will be prioritized.
+
 Complexity: This version uses an adjacency list and priority queue
 (internally a binary heap) and has a complexity of O((E + V)*log(V)) =
 O(E*log(V)). The priority queue and adjacency list improves the
@@ -36,23 +52,6 @@ sophisticated Fibonacci heap, the complexity becomes O(E + V*log(V)).
 7<->0
 8<->2
 Total distance: 37
-
-Implementation Notes:
-
-The input graph is stored in an adjacency list. Similar to the
-implementation of Dijkstra’s algorithm in 1.5.1, weights are
-negated before they are added to the priority queue (and
-negated once again when they are retrieved). To find the
-maximum spanning tree, simply skip the two negation steps and
-the highest weighted edges will be prioritized.
-
-Prim’s algorithm greedily selects edges from a priority queue,
-and is similar to Dijkstra’s algorithm, where instead of
-processing nodes, we process individual edges. Note that the
-concept of the minimum spanning tree makes Prim’s algorithm
-work with edge weights of an arbitrary sign. In fact, a big
-positive constant added to all of the edge weights of the
-graph will not change the resulting spanning tree.
 
 */
 
