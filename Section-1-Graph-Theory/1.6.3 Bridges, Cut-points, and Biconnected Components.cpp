@@ -1,6 +1,6 @@
 /*
 
-1.9 - Bridges, Cut-points, and Biconnected Components (Tarjan's)
+1.6.3 - Bridges, Cut-points, and Biconnected Components (Tarjan's)
 
 Description: The following terms apply to *undirected* graphs.
 
