@@ -23,20 +23,20 @@ practice. However, Kosaraju’s algorithm is conceptually simpler.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 8 14
+0 1
 1 2
+1 4
+1 5
 2 3
-2 5
 2 6
-3 4
+3 2
 3 7
-4 3
-4 8
-5 1
+4 0
+4 5
 5 6
-6 7
+6 5
+7 3
 7 6
-8 4
-8 7
 
 =~=~=~=~= Sample Output =~=~=~=~=
 Component 1: 1 4 0
