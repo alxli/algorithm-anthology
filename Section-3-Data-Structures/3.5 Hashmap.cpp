@@ -131,10 +131,6 @@ struct class_hash {
 using namespace std;
 
 int main() {
-  hashmap<int, int, class_hash> m;
-  m[-12345678] = 1;
-  cout << m[0] << m[-12345678] << endl; //prints 01
-
   hashmap<string, int, class_hash> M;
   M["foo"] = 1;
   M.insert("bar", 2);
@@ -144,4 +140,4 @@ int main() {
   cout << M.size() << endl;             //prints 3
   cout << M["foo"] << M["bar"] << endl; //prints 02
   return 0;
-} 
+}
