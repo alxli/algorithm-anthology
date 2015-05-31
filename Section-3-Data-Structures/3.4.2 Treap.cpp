@@ -140,7 +140,7 @@ template<class key_t, class val_t> class treap {
     }
     return 0; //key not found
   }
-}; 
+};
 
 /*** Stress Test - Runs in ~3 seconds ***/
 
