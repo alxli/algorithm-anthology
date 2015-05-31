@@ -55,6 +55,6 @@ int main() {
     adj[a].push_back(b);
   }
   cout << "Nodes visited:";
-  dfs(start);
+  dfs(start); cout << "\n";
   return 0;
 }
