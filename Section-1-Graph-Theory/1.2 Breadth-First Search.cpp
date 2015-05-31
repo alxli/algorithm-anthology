@@ -44,8 +44,20 @@ using namespace std;
 
 const int MAXN = 100;
 int nodes, edges, start, a, b;
-vector<bool> vis(MAXN);
 vector<int> adj[MAXN];
+
+void bfs(int start) {
+  vector<bool> vis(MAXN);
+  queue<int> q;
+  for (q.push(start); !q.empty(); q.pop()) {
+    int n = q.front();
+    vis[n] = true;
+    cout << " " << n;
+    for (int j = 0; j < adj[n].size(); j++)
+      if (!vis[adj[n][j]])
+        q.push(adj[n][j]);
+  }
+}
 
 int main() {
   cin >> nodes >> edges >> start;
@@ -54,13 +66,6 @@ int main() {
     adj[a].push_back(b);
   }
   cout << "Nodes visited:";
-  queue<int> q;
-  for (q.push(start); !q.empty(); q.pop()) {
-    int n = q.front();
-    vis[n] = true;
-    cout << " " << n;
-    for (int j = 0; j < adj[n].size(); j++)
-      if (!vis[adj[n][j]]) q.push(adj[n][j]);
-  }
+  bfs(start); cout << "\n";
   return 0;
 }
