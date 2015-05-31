@@ -2,9 +2,13 @@
 
 1.8.2 - Strongly Connected Components (Tarjan's Algorithm)
 
-Description: Determines the strongly connected components
-from a given directed graph. The input is stored in an
-adjacency list.
+Description: Determines the strongly connected components (SCC)
+from a given directed graph. Given a directed graph, its SCCs
+are its maximal strongly connected sub-graphs. A graph is strongly
+connected if there is a path from each node to every other node.
+Condensing the strongly connected components of a graph into
+single nodes will result in a directed acyclic graph. The input is
+stored in an adjacency list.
 
 In this implementation, a vector is used to emulate a stack
 for the sake of simplicity. One useful property of Tarjan’s
@@ -13,6 +17,15 @@ ordering of nodes within each component, the resulting DAG
 is produced in reverse topological order.
 
 Complexity: O(V + E) on the number of vertices and edges.
+
+Comparison with other SCC algorithms:
+The strongly connected components of a graph can be efficiently
+computed using Kosaraju’s algorithm, Tarjan’s algorithm, or the
+path-based strong component algorithm. Tarjan’s algorithm can
+be seen as an improved version of Kosaraju’s because it performs
+a single DFS rather than two. Though they both have the same
+complexity, Tarjan’s algorithm is much more efficient in
+practice. However, Kosaraju’s algorithm is conceptually simpler.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 8 14
