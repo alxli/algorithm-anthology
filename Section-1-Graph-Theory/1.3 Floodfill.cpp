@@ -39,12 +39,12 @@ int nodes, edges, a, b, source;
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN];
 
-int DFS(int node) {
+int dfs(int node) {
   if (vis[node]) return 0;
   vis[node] = true;
   int area = 1;
   for (int j = 0; j < adj[node].size(); j++)
-    area += DFS(adj[node][j]);
+    area += dfs(adj[node][j]);
   return area;
 }
 
@@ -55,7 +55,7 @@ int main() {
     adj[a].push_back(b);
   }
   cin >> source;
-  cout << "Visited " << DFS(source);
+  cout << "Visited " << dfs(source);
   cout << " nodes starting from " << source;
   return 0;
 }
