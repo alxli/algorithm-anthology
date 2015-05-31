@@ -45,7 +45,8 @@ void dfs(int n) {
   vis[n] = true;
   cout << " " << n;
   for (int j = 0; j < adj[n].size(); j++)
-    if (!vis[adj[n][j]]) dfs(adj[n][j]);
+    if (!vis[adj[n][j]])
+      dfs(adj[n][j]);
 }
 
 int main() {
