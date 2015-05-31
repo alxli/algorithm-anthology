@@ -1,6 +1,6 @@
 /*
 
-1.6.2 - Minimum Spanning Tree (Kruskal's Algorithm)
+1.4.2 - Minimum Spanning Tree (Kruskal's Algorithm)
 
 Description: Given an undirected graph, its minimum spanning tree (MST)
 is a tree connecting all nodes with a subset of its edges such that their
