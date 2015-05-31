@@ -42,18 +42,18 @@ template<class T> class segment_tree_2D {
     layer1_node() : L(0), R(0), l2(0, ymax()) {}
   } *root;
 
-  void update2(layer2_node * node, int Q, const T & K) {
+  void update2(layer2_node * node, int Q, const T & v) {
     int lo = node->lo, hi = node->hi, mid = (lo + hi)/2;
     if (lo + 1 == hi) {
-      node->value = K;
+      node->value = v;
       return;
     }
     layer2_node*& tgt = Q < mid ? node->L : node->R;
     if (tgt == 0) {
       tgt = new layer2_node(Q, Q + 1);
-      tgt->value = K;
+      tgt->value = v;
     } else if (tgt->lo <= Q && Q < tgt->hi) {
-      update2(tgt, Q, K);
+      update2(tgt, Q, v);
     } else {
       do {
         (Q < mid ? hi : lo) = mid;
@@ -62,7 +62,7 @@ template<class T> class segment_tree_2D {
       layer2_node *nnode = new layer2_node(lo, hi);
       (tgt->lo < mid ? nnode->L : nnode->R) = tgt;
       tgt = nnode;
-      update2(nnode, Q, K);
+      update2(nnode, Q, v);
     }
     node->value = merge(node->L ? node->L->value : nullv(),
                         node->R ? node->R->value : nullv());
@@ -74,18 +74,18 @@ template<class T> class segment_tree_2D {
     return merge(query2(nd->L, A, B), query2(nd->R, A, B));
   } 
 
-  void update1(layer1_node * node, int lo, int hi, int x, int y, T val) {
-    if (lo + 1 == hi) update2(&node->l2, y, val);
+  void update1(layer1_node * node, int lo, int hi, int x, int y, const T & v) {
+    if (lo + 1 == hi) update2(&node->l2, y, v);
     else {
       int mid = (lo + hi)/2;
       layer1_node*& nnode = x < mid ? node->L : node->R;
       (x < mid ? hi : lo) = mid;
       if (nnode == 0) nnode = new layer1_node();
-      update1(nnode, lo, hi, x, y, val);
-      val = merge(
-        node->L ? query2(&node->L->l2, y, y + 1) : nullv(),
-        node->R ? query2(&node->R->l2, y, y + 1) : nullv());
-      update2(&node->l2, y, val);
+      update1(nnode, lo, hi, x, y, v);
+      update2(&node->l2, y, merge(
+      	node->L ? query2(&node->L->l2, y, y + 1) : nullv(),
+        node->R ? query2(&node->R->l2, y, y + 1) : nullv())
+      );
     }
   }
 
@@ -115,8 +115,8 @@ template<class T> class segment_tree_2D {
   ~segment_tree_2D() { clean_up1(root); }
   T at(int x, int y) { return query(x, y, x, y); }
 
-  void update(int x, int y, const T & val) {
-    update1(root, 0, xmax(), x, y, val);
+  void update(int x, int y, const T & v) {
+    update1(root, 0, xmax(), x, y, v);
   }
   
   T query(int x1, int y1, int x2, int y2) {
