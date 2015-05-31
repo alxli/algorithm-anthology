@@ -25,7 +25,6 @@ Matched 2 pair(s). Matchings are:
 
 */
 
-#include <algorithm> /* fill() */
 #include <iostream>
 #include <vector>
 using namespace std;
