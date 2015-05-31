@@ -64,7 +64,7 @@ int main() {
     adj[a].push_back(b);
   }
   cout << "Matched " << match_bipartite();
-  cout << " pairs. Matchings are:\n";
+  cout << " pair(s). Matchings are:\n";
   for (int i = 0; i < n2; i++) {
     if (match[i] == -1) continue;
     cout << match[i] << " " << i << "\n";
