@@ -28,7 +28,7 @@ template<class key_t, class val_t> class avl_tree {
     node *parent, *L, *R;
     int height;
 
-    node(const key_t &k, const val_t &v): key(k), val(v),
+    node(const key_t & k, const val_t & v): key(k), val(v),
       height(0), parent(0), L(0), R(0) {}
 
     int updateHeight() {
