@@ -20,7 +20,10 @@ optimizations used here.
 3 4
 
 =~=~=~=~= Sample Output =~=~=~=~=
-3
+Colored using 3 color(s). The colorings are:
+Color 1: 0 3
+Color 2: 1 2
+Color 3: 4
 
 */
 
@@ -84,7 +87,7 @@ int main() {
     adj[a][b] = adj[b][a] = true;
   }
   cout << "Colored using " << color_graph();
-  cout << " color(s).\nColorings are:\n";
+  cout << " color(s). The colorings are:\n";
   for (int i = 0; i < min_colors; i++) {
   	cout << "Color " << i + 1 << ":";
     for (int j = 0; j < nodes; j++)
