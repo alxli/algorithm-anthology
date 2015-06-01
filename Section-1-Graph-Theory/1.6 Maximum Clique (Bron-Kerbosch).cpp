@@ -29,10 +29,9 @@ Complexity: O(3^(V/3)) where V is the number of vertices.
 using namespace std;
 
 const int MAXN = 35;
-
 typedef bitset<MAXN> bits;
-bool adj[MAXN][MAXN];
 int nodes, edges, a, b;
+bool adj[MAXN][MAXN];
 
 int max_clique(bits & curr, bits & pool, bits & excl, int depth) {
   if (pool.none() && excl.none()) return curr.count();
