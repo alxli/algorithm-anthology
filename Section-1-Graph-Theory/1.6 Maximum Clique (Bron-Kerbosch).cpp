@@ -31,7 +31,7 @@ using namespace std;
 const int MAXN = 35;
 
 typedef bitset<MAXN> bits;
-bool graph[MAXN][MAXN];
+bool adj[MAXN][MAXN];
 int nodes, edges, a, b;
 
 int max_clique(bits & curr, bits & pool, bits & excl, int depth) {
@@ -40,13 +40,13 @@ int max_clique(bits & curr, bits & pool, bits & excl, int depth) {
   for (int v = 0; v < nodes; v++)
     if (pool[v] || excl[v]) u = v;
   for (int v = 0; v < nodes; v++) {
-    if (!pool[v] || graph[u][v]) continue;
+    if (!pool[v] || adj[u][v]) continue;
     bits ncurr, npool, nexcl;
     for (int i = 0; i < nodes; i++) ncurr[i] = curr[i];
     ncurr[v] = true;
     for (int j = 0; j < nodes; j++) {
-      npool[j] = pool[j] && graph[v][j];
-      nexcl[j] = excl[j] && graph[v][j];
+      npool[j] = pool[j] && adj[v][j];
+      nexcl[j] = excl[j] && adj[v][j];
     }
     ans = max(ans, max_clique(ncurr, npool, nexcl, depth + 1));
     pool[v] = false;
@@ -59,7 +59,7 @@ int main() {
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
     cin >> a >> b;
-    graph[a][b] = graph[b][a] = true;
+    adj[a][b] = adj[b][a] = true;
   }
   bits curr, excl, pool;
   for (int v = 0; v < nodes; v++) pool[v] = true;
