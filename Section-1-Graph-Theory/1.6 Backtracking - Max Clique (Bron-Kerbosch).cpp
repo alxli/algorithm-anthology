@@ -1,6 +1,6 @@
 /*
 
-1.6 - Maximum Clique (Bron-Kerbosch Algorithm)
+1.6.1 - Backtracking: Maximum Clique (Bron-Kerbosch Algorithm)
 
 Description: Given an undirected graph, determine a subset
 of the graph's vertices such that every pair of vertices
