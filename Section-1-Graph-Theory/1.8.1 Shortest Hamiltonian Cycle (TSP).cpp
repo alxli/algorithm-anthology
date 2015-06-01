@@ -2,7 +2,7 @@
 
 1.8.1 - Shortest Hamiltonian Cycle (TSP)
 
-Description: Given a weighted, undirected graph, the shortest
+Description: Given a weighted, directed graph, the shortest
 hamiltonian cycle is a cycle of minimum distance that visits
 each vertex exactly once and returns to the original vertex.
 This is also known as the traveling salesman problem (TSP).
@@ -69,6 +69,7 @@ int main() {
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
     cin >> a >> b >> weight;
+    //only set adj[a][b] if you want directed edges
     adj[a][b] = adj[b][a] = weight;
   }
   int len = shortest_hamiltonian_cycle();
