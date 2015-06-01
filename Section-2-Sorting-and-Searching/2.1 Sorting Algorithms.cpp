@@ -1,9 +1,27 @@
+/*
+
+2.1 - Sorting Algorithms
+
+The sorting functions in this section are included for novelty purposes,
+perhaps as demonstrations for ad hoc contest problems. With the exception
+of radix sort, there is generally no reason to use these sorts over C++’s
+built-in std::sort() and std::stable_sort() in an actual contest.
+
+The functions are implemented like std::sort(), taking in two
+RandomAccessIterators as the range to be sorted. To use with special
+comparators, either overload the < operator, or change every use of
+the < operator with array elements to a binary comparison function.
+E.g. to use quicksort() with a custom comparator,change “(*i < *lo)” to
+“(comp(*i, *lo))” wherever applicable
+
+*/
+
 #include <algorithm> /* std::swap(), std::(stable_)partition */
 #include <iterator>  /* std::iterator_traits<T> */
 
 /*
 
-2.1.1 Quicksort
+2.1.1 - Quicksort
 
 Best: O(N*log(N))    Average: O(N*log(N))    Worst: O(N^2)
   Auxiliary Space: O(log(N))               Stable?: No
