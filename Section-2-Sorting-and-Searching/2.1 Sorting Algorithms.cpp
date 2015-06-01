@@ -195,7 +195,7 @@ int main () {
   
   int a3[] = {32, 71, 12, 45, 26, 80, 53, 33};
   v = vector<int>(a3, a3 + 8);
-  heapsort(v.rbegin(), v.rend()); //reverse works too
+  heapsort(v.rbegin(), v.rend()); //rvs iterators OK
   print_range(v.begin(), v.end());
   
   double a4[] = {1.1, -5.0, 6.23, 4.123, 155.2};
@@ -203,7 +203,7 @@ int main () {
   combsort(v2.begin(), v2.end());
   print_range(v2.begin(), v2.end());
   
-  //radix sort only work on 32-bit signed ints
+  //radix sort only works on 32-bit signed ints
   int a5[] = {1, 886, 6, -50, 7, -11, 123, 4};
   msd_radix_sort(a5, a5 + 8);
   print_range(a5, a5 + 8);
