@@ -80,7 +80,7 @@ int color_graph() {
 int main() {
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b; --a; --b;
+    cin >> a >> b;
     adj[a][b] = adj[b][a] = true;
   }
   cout << "Colored using " << color_graph();
@@ -88,7 +88,7 @@ int main() {
   for (int i = 0; i < min_colors; i++) {
   	cout << "Color " << i + 1 << ":";
     for (int j = 0; j < nodes; j++)
-      if (best_cols[j] == i) cout << " " << j + 1;
+      if (best_cols[j] == i) cout << " " << j;
     cout << "\n";
   }
   return 0;
