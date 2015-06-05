@@ -1,6 +1,6 @@
 /*
 
-3.3.3 - 1D Segment Tree with Lazy Propagation
+3.3.3 - 1D Segment Tree with Range Updates
 
 Description: A segment tree is a data structure used for
 solving the dynamic range query problem, which asks to
@@ -18,7 +18,7 @@ Space Complexity: O(N) on the size of the array. A segment
 tree for an array of size N needs 2^(log2(N)-1) = 4N nodes.
 
 Note: This implementation is 0-based, meaning that all
-indices from 0 to N - 1, inclusive, are accessible.
+indices from 0 to size() - 1, inclusive, are accessible.
 
 */
 
