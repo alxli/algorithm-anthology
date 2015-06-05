@@ -1,6 +1,6 @@
 /*
 
-3.1.2 - Disjoint Set Forest (OOP Version with Compression)
+3.1.2 - Disjoint Set Forest
 
 Description: This data structure dynamically keeps track
 of items partitioned into non-overlapping sets (a disjoint
