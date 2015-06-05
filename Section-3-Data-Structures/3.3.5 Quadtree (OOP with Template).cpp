@@ -1,6 +1,6 @@
 /*
 
-3.3.4 - Quadtree (OOP version with templates)
+3.3.5 - Quadtree (OOP version with templates)
 
 Description: A quadtree can be used to dynamically query values
 of rectangles in a 2D array. In a quadtree, every node has exactly
