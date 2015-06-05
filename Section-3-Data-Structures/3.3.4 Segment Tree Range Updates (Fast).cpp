@@ -52,18 +52,18 @@ template<class T> class segment_tree {
   T *value, *delta;
   int length, *len;
 
-  T join_value_with_delta(const T & val, const T & delta) {
+  static T join_value_with_delta(const T & val, const T & delta) {
     return delta == nullv() ? val : modify_op(val, delta);
+  }
+
+  static T join_deltas(const T & delta1, const T & delta2) {
+    if (delta1 == nullv()) return delta2;
+    if (delta2 == nullv()) return delta1;
+    return modify_op(delta1, delta2);
   }
 
   T join_value_with_delta(int i) {
     return join_value_with_delta(value[i], delta_on_segment(delta[i], len[i]));
-  }
-
-  T join_deltas(const T & delta1, const T & delta2) {
-    if (delta1 == nullv()) return delta2;
-    if (delta2 == nullv()) return delta1;
-    return modify_op(delta1, delta2);
   }
 
   void push_delta(int i) {
