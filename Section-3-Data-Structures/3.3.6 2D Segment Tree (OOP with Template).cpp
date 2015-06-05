@@ -1,6 +1,6 @@
 /*
 
-3.3.5 - 2D Segment Tree (OOP version with templates)
+3.3.6 - 2D Segment Tree (OOP version with templates)
 
 Description: The statically allocated quadtree in 3.3.3 is
 inefficient on large indicies. The following implementation
