@@ -1,6 +1,6 @@
 /*
 
-3.2.3 - 2D BIT (Point Update, Range Query)
+3.2.3 - 2D Binary Indexed Tree
 
 Description: A 2D BIT is abstractly a 2D array which also
 supports efficient queries for the sum of values in the
