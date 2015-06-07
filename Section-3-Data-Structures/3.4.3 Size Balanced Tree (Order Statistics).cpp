@@ -119,13 +119,14 @@ template<class key_t, class val_t> class size_balanced_tree {
     n->update();
   }
 
-  static int rank(node_t * n, const key_t & k) {
-    if (n == 0)
-      throw std::runtime_error("Cannot rank key not in tree.");
-    int r = size(n->c[0]);
-    if (k < n->key) return rank(n->c[0], k);
-    if (n->key < k) return rank(n->c[1], k) + r + 1;
-    return r;
+  template<class UnaryFunction>
+  static void walk(node_t * n, UnaryFunction f, int order) {
+    if (n == 0) return;
+    if (order < 0) f(n->val);
+    if (n->c[0]) walk(n->c[0], f, order);
+    if (order == 0) f(n->val);
+    if (n->c[1]) walk(n->c[1], f, order);
+    if (order > 0) f(n->val);
   }
 
   static std::pair<key_t, val_t> select(node_t *& n, int k) {
@@ -135,14 +136,13 @@ template<class key_t, class val_t> class size_balanced_tree {
     return std::make_pair(n->key, n->val);
   }
 
-  template<class UnaryFunction>
-  static void walk(node_t * n, UnaryFunction f, int order) {
-    if (n == 0) return;
-    if (order < 0) f(n->val);
-    if (n->c[0]) walk(n->c[0], f, order);
-    if (order == 0) f(n->val);
-    if (n->c[1]) walk(n->c[1], f, order);
-    if (order > 0) f(n->val);
+  static int rank(node_t * n, const key_t & k) {
+    if (n == 0)
+      throw std::runtime_error("Cannot rank key not in tree.");
+    int r = size(n->c[0]);
+    if (k < n->key) return rank(n->c[0], k);
+    if (n->key < k) return rank(n->c[1], k) + r + 1;
+    return r;
   }
 
   static void clean_up(node_t * n) {
