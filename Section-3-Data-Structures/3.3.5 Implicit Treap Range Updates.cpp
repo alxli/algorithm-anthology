@@ -198,7 +198,7 @@ template<class T> class implicit_treap {
   //for (i = a; i <= b; i++)
   //  list[i] = join_value_with_delta(list[i], delta)
   void modify(int a, int b, const T & delta) {
-    if (a < 0 || b < 0 || a >= size() || b >= size())
+    if (a < 0 || b < 0 || a >= size() || b >= size() || a > b)
       return;
     node_t *l1, *r1;
     split(root, l1, r1, b + 1);
@@ -212,7 +212,7 @@ template<class T> class implicit_treap {
 
   //return join_values(list[a..b])
   T query(int a, int b) {
-    if (a < 0 || b < 0 || a >= size() || b >= size())
+    if (a < 0 || b < 0 || a >= size() || b >= size() || a > b)
       return null_value();
     node_t *l1, *r1;
     split(root, l1, r1, b + 1);
