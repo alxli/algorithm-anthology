@@ -2,7 +2,7 @@ Alex's Anthology of Algorithms: Common Code for Contests in Concise C++ (A³C⁵
 ==================
 
 *Note*: You may find an **outdated** PDF version here: http://alexli.ca/A3C5.pdf.
-This version will contain mistakes that are fixed in the current GitHub branch.
+This version contains many mistakes that are fixed in the current GitHub branch.
 
 ## Introduction
 
