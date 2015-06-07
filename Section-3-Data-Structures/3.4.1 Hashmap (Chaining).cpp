@@ -1,6 +1,6 @@
 /*
 
-3.5 - Hashmap (Chaining)
+3.4.1 - Hashmap (Chaining)
 
 Description: A hashmap is an alternative to binary search trees. Hashmaps
 use more memory than BSTs, but are usually more efficient. In C++11, the
