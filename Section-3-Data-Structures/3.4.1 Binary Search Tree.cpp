@@ -25,18 +25,24 @@ template<class key_t, class val_t> class binary_search_tree {
     key_t key;
     val_t val;
     node_t *L, *R;
+    
+    node_t(const key_t & k, const val_t & v) {
+      key = k;
+      val = v;
+      L = R = 0;
+    }
   } *root;
 
   int num_nodes;
  
-  static void insert(node_t *& n, const key_t & k, const val_t & v) {
+  static bool insert(node_t *& n, const key_t & k, const val_t & v) {
     if (n == 0) {
-      n = new node_t();
-      n->key = k;
-      n->val = v;
-    } else {
-      insert(k < n->key ? n->L : n->R, k, v);
+      n = new node_t(k, v);
+      return true;
     }
+    if (k < n->key) return insert(n->L, k, v);
+    if (n->key < k) return insert(n->R, k, v);
+    return false; //already exists
   }
 
   static bool erase(node_t *& n, const key_t & key) {
@@ -89,12 +95,14 @@ template<class key_t, class val_t> class binary_search_tree {
   int size() const { return num_nodes; }
   bool empty() const { return root == 0; }
 
-  void insert(const key_t & key, const val_t & val) {
-    insert(root, key, val);
-    num_nodes++;
+  bool insert(const key_t & key, const val_t & val) {
+    if (insert(root, key, val)) {
+      num_nodes++;
+      return true;
+    }
+    return false;
   }
 
-  //returns whether the key was successfully removed
   bool erase(const key_t & key) {
     if (erase(root, key)) {
       num_nodes--;
