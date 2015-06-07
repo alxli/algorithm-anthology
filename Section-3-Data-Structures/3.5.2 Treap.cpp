@@ -4,17 +4,22 @@
 
 Description: A binary search tree (BST) is a node-based binary tree data
 structure where the left sub-tree of every node has keys less than the
-node's key and the right sub-tree of every node has keys greater (greater
-or equal in this implementation) than the node's key. A BST may be come
-degenerate like a linked list resulting in an O(N) running time per
-operation. A self-balancing binary search tree such as a randomized treap
-prevents the occurence of this known worst case.
+node's key and the right sub-tree of every node has keys greater than the
+node's key. A BST may be come degenerate like a linked list resulting in
+an O(N) running time per operation. A self-balancing binary search tree
+such as a randomized treap prevents the occurence of this known worst case.
 
 Treaps use randomly generated priorities to reduce the height of the
 tree. We assume that the rand() function in <cstdlib> is 16-bits, and
 call it twice to generate a 32-bit number. For the treap to be
 effective, the range of the randomly generated numbers should be
 between 0 and around the number of elements in the treap.
+
+Note: The following implementation is used similar to an std::map. In order
+to make it behave like an std::set, modify the code to remove the value
+associated with each node. In order to make it behave like an std::multiset
+or std::multimap, make appropriate changes with key comparisons (e.g.
+change (k < n->key) to (k <= n->key) in search conditions).
 
 Time Complexity: insert(), erase(), and find() are O(log(N)) on average
 and O(N) in the worst case. Despite the technically O(N) worst case,
