@@ -19,9 +19,8 @@ indices from 0 to N - 1, inclusive, are accessible.
 
 #include <cmath>
 #include <limits>
-#include <cstdio>
 
-template<class T> struct sqrt_decomp {
+template<class T> class sqrt_decomp {
 
   //define the following yourself. merge(x, nullv) must return x for all valid x
   static inline const T nullv() { return std::numeric_limits<T>::max(); }
@@ -30,6 +29,7 @@ template<class T> struct sqrt_decomp {
   int len, blocklen, blocks;
   T *array, *block;
 
+ public:
   sqrt_decomp(int N, T * a = 0) {
     len = N;
     blocklen = (int)sqrt(N);
@@ -51,6 +51,9 @@ template<class T> struct sqrt_decomp {
     delete[] array;
     delete[] block;
   }
+
+  int size() { return len; }
+  int at(int idx) { return array[idx]; }
 
   void update(int idx, const T & val) {
     array[idx] = val;
@@ -82,6 +85,8 @@ template<class T> struct sqrt_decomp {
     return ret;
   }
 };
+
+/*** Example Usage (wcipeg.com/problem/segtree) ***/
 
 #include <cstdio>
 
