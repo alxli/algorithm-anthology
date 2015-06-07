@@ -108,11 +108,11 @@ template<class key_t, class val_t> class avl_tree {
   template<class UnaryFunction>
   void internal_walk(node_t * n, UnaryFunction f, int order) {
     if (n == 0) return;
-    if (order < 0) (*f)(n->val);
+    if (order < 0) f(n->val);
     if (n->L) internal_walk(n->L, f, order);
-    if (order == 0) (*f)(n->val);
+    if (order == 0) f(n->val);
     if (n->R) internal_walk(n->R, f, order); 
-    if (order > 0) (*f)(n->val);
+    if (order > 0) f(n->val);
   }
 
   void clean_up(node_t * n) {
