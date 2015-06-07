@@ -27,12 +27,11 @@ Space Complexity: O(N) on the number of nodes.
 
 template<class key_t, class val_t> class treap {
 
-  //returns a random integer between l and h, inclusive
-  static inline int rand_int32(int l, int h) {
-    return l + ((rand()&0x7fff) | ((rand()&0x7fff) << 15)) % (h - l + 1);
-  }
-
   struct node_t {
+    static inline int rand_int32(int l, int h) { //random number in [l, h]
+      return l + ((rand()&0x7fff) | ((rand()&0x7fff) << 15)) % (h - l + 1);
+    }
+
     key_t key;
     val_t val;
     int priority;
@@ -46,14 +45,14 @@ template<class key_t, class val_t> class treap {
   int num_nodes;
 
   void rotateL(node_t *& k2) {
-    node_t *k1 = k2->R; 
+    node_t *k1 = k2->R;
     k2->R = k1->L;
     k1->L = k2;
     k2 = k1;
   }
 
   void rotateR(node_t *& k2) {
-    node_t *k1 = k2->L; 
+    node_t *k1 = k2->L;
     k2->L = k1->R;
     k1->R = k2;
     k2 = k1;
@@ -99,7 +98,7 @@ template<class key_t, class val_t> class treap {
     if (order < 0) (*f)(n->val);
     if (n->L) internal_walk(n->L, f, order);
     if (order == 0) (*f)(n->val);
-    if (n->R) internal_walk(n->R, f, order); 
+    if (n->R) internal_walk(n->R, f, order);
     if (order > 0) (*f)(n->val);
   }
 
