@@ -8,7 +8,7 @@ subsequences, each skipping over fewer elements. Searching starts
 in the sparsest subsequence until two consecutive elements have
 been found, one smaller and one larger than the element searched for.
 Skip lists are generally slower than binary search trees, but can
-be easier to implement.
+be easier to implement. The following version uses randomized levels.
 
 Time Complexity: insert(), erase(), count() and find() are O(log(N))
 on average, but O(N) in the worst case. walk() is O(N).
