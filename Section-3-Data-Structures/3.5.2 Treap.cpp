@@ -1,6 +1,6 @@
 /*
 
-3.4.2 - Treap
+3.5.2 - Treap
 
 Description: A binary search tree (BST) is a node-based binary tree data
 structure where the left sub-tree of every node has keys less than the
