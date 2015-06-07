@@ -2,29 +2,29 @@
 
 3.4.3 - Size Balanced Tree with Order Statistics
 
-Description: A binary search tree (BST) is a node-based binary tree
-data structure where the left sub-tree of every node has keys less than
-the node's key and the right sub-tree of every node has keys greater
-(greater or equal in this implementation) than the node’s key. A BST
-may be come degenerate like a linked list resulting in an O(N) running
-time per operation.
-
-An ordered statistics tree is a BST that supports additional operations:
-- Select(i) — find the i-th smallest element stored in the tree
-- Rank(x) – find the rank of element x in the tree,
-            i.e. its index in the sorted list of elements of the tree
+Description: A binary search tree (BST) is a node-based binary tree data
+structure where the left sub-tree of every node has keys less than the
+node's key and the right sub-tree of every node has keys greater (greater
+or equal in this implementation) than the node's key. A BST may be come
+degenerate like a linked list resulting in an O(N) running time per
+operation. A self-balancing binary search tree such as a randomized treap
+or a size balanced tree prevents the occurence of this known worst case.
 
 The size balanced tree is a data structure first published in 2007 by
 Chinese student Chen Qifeng. The tree is rebalanced by examining the sizes
 of each node's subtrees. It is popular amongst Chinese OI competitors due
 to its speed, simplicity to implement, and ability to double up as an
 ordered statistics tree if necessary.
-For more information, see: http://wcipeg.com/wiki/Size_Balanced_Tree
-Ordered statistic trees: http://en.wikipedia.org/wiki/Order_statistic_tree
+For more info, see: http://wcipeg.com/wiki/Size_Balanced_Tree
+
+An ordered statistics tree is a BST that supports additional operations:
+- Select(i): find the i-th smallest element stored in the tree
+- Rank(x):   find the rank of element x in the tree,
+             i.e. its index in the sorted list of elements of the tree
+For more info, see: http://en.wikipedia.org/wiki/Order_statistic_tree
 
 Time Complexity: insert(), erase(), find(), select() and rank() are
-O(log N) on the number of elements in the tree. size() and empty() are
-O(1). walk() is O(N).
+O(log N) on the number of elements in the tree. walk() is O(N).
 
 Space Complexity: O(N) on the number of nodes in the tree.
 
@@ -119,14 +119,12 @@ template<class key_t, class val_t> class size_balanced_tree {
     n->update();
   }
 
-  template<class UnaryFunction>
-  static void walk(node_t * n, UnaryFunction f, int order) {
+  template<class BinaryFunction>
+  static void walk(node_t * n, BinaryFunction f) {
     if (n == 0) return;
-    if (order < 0) f(n->val);
-    if (n->c[0]) walk(n->c[0], f, order);
-    if (order == 0) f(n->val);
-    if (n->c[1]) walk(n->c[1], f, order);
-    if (order > 0) f(n->val);
+    walk(n->c[0], f);
+    f(n->key, n->val);
+    walk(n->c[1], f);
   }
 
   static std::pair<key_t, val_t> select(node_t *& n, int k) {
@@ -166,11 +164,8 @@ template<class key_t, class val_t> class size_balanced_tree {
     erase(root, key);
   }
 
-  //traverses nodes in either preorder (-1), inorder (0), or postorder (1)
-  //for each node, the passed unary function will be called on its value
-  //note: inorder is equivalent to visiting the nodes sorted by their keys.
-  template<class UnaryFunction> void walk(UnaryFunction f, int order = 0) {
-    walk(root, f, order);
+  template<class BinaryFunction> void walk(BinaryFunction f) {
+    walk(root, f);
   }
 
   val_t* find(const key_t & key) {
@@ -198,7 +193,7 @@ template<class key_t, class val_t> class size_balanced_tree {
 #include <iostream>
 using namespace std;
 
-void printch(char c) { cout << c; }
+void printch(int k, char v) { cout << v; }
 
 int main() {
   size_balanced_tree<int, char> T;
@@ -209,7 +204,7 @@ int main() {
   T.insert(4, 'x');
   *T.find(4) = 'd';
   cout << "In-order: ";
-  T.walk(printch, 0);                   //abcde
+  T.walk(printch);                  //abcde
   T.erase(3);
   cout << "\nRank of 2: " << T.rank(2); //1
   cout << "\nRank of 5: " << T.rank(5); //3
