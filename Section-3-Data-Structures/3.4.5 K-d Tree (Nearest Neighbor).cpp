@@ -5,8 +5,10 @@
 Description: k-d tree (short for k-dimensional tree) is a space-
 partitioning data structure for organizing points in a k-
 dimensional space. The following implementation supports
-finding the nearest neighbor (in terms of Euclidean distance)
-after the tree has been build.
+querying the nearest neighboring point to (x, y) in terms of
+Euclidean distance after the tree has been build. Note that
+a point is not considered its own neighbour if it already exists
+in the tree.
 
 Time Complexity: O(N log N) for build(), where N is the number of
 points in the tree. nearest_neighbor_id() is O(log(N)) on average.
