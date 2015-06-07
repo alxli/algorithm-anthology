@@ -122,7 +122,6 @@ template<class key_t, class val_t> class treap {
     return false;
   }
 
-  //returns whether the key was successfully removed
   bool erase(const key_t & key) {
     if (erase(root, key)) {
       num_nodes--;
