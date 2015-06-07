@@ -99,14 +99,17 @@ template<class T> class segment_tree_2D {
 
   void clean_up2(layer2_node * n) {
     if (n == 0) return;
-    clean_up2(n->L); clean_up2(n->R);
+    clean_up2(n->L);
+    clean_up2(n->R);
     delete n;
   }
 
   void clean_up1(layer1_node * n) {
     if (n == 0) return;
-    clean_up1(n->L); clean_up2(n->l2.L);
-    clean_up1(n->R); clean_up2(n->l2.R);
+    clean_up2(n->l2.L);
+    clean_up2(n->l2.R);
+    clean_up1(n->L);
+    clean_up1(n->R);
     delete n;
   }
 
