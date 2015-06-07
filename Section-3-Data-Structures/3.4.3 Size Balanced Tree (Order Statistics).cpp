@@ -187,8 +187,8 @@ template<class key_t, class val_t> class size_balanced_tree {
     return select(root, k);
   }
 
-  int rank(const key_t & k) {
-    return rank(root, k);
+  int rank(const key_t & key) {
+    return rank(root, key);
   }
 };
 
