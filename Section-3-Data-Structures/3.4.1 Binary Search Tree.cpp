@@ -71,11 +71,11 @@ template<class key_t, class val_t> class binary_search_tree {
   template<class UnaryFunction>
   void internal_walk(node_t * n, UnaryFunction f, int order) {
     if (n == 0) return;
-    if (order < 0) (*f)(n->val);
+    if (order < 0) f(n->val);
     if (n->L) internal_walk(n->L, f, order);
-    if (order == 0) (*f)(n->val);
+    if (order == 0) f(n->val);
     if (n->R) internal_walk(n->R, f, order); 
-    if (order > 0) (*f)(n->val);
+    if (order > 0) f(n->val);
   }
 
   void clean_up(node_t *& n) {
@@ -132,12 +132,13 @@ int main() {
   T.insert(4, 'x');
   *T.find(4) = 'd';
   cout << "In-order: ";
-  T.walk(printch, 0); //abcde
+  T.walk(printch, 0);  //abcde
   cout << "\nRemoving node with key 3...";
   cout << (T.remove(3) ? "Success!" : "Failed");
   cout << "\nPre-order: ";
   T.walk(printch, -1); //baed
   cout << "\nPost-order: ";
-  T.walk(printch, 1); //adeb
+  T.walk(printch, 1);  //adeb
+  cout << "\n"; 
   return 0;
 }
