@@ -2,19 +2,17 @@
 
 3.4.1 - Binary Search Tree
 
-Description: Description: A binary search tree (BST) is a node-based
-binary tree data structure where the left sub-tree of every node has
-keys less than the node’s key and the right sub-tree of every node
-has keys greater (greater or equal in this implementation) than the
-node’s key. A BST may be come degenerate like a linked list resulting
-in an O(N) running time per operation. A self-balancing binary search
-tree such as a randomized Treap, or a more complicated AVL tree solves
-this problem with a worst case of O(log(N)).
+Description: A binary search tree (BST) is a node-based binary tree data
+structure where the left sub-tree of every node has keys less than the
+node's key and the right sub-tree of every node has keys greater (greater
+or equal in this implementation) than the node's key. A BST may be come
+degenerate like a linked list resulting in an O(N) running time per
+operation. A self-balancing binary search tree such as a randomized treap
+prevents the occurence of this known worst case.
 
-Time Complexity: insert(), remove() and find() are O(log(N)) on
-average, but O(N) at worst if the tree becomes degenerate. Speed
-can be improved by randomizing insertion order. walk() is O(N).
-All other functions are O(1).
+Time Complexity: insert(), erase() and find() are O(log(N)) on average,
+but O(N) at worst if the tree becomes degenerate. Speed can be improved
+by randomizing insertion order. walk() is O(N). Other functions are O(1).
 
 Space Complexity: O(N) on the number of nodes.
 
