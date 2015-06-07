@@ -1,6 +1,0 @@
-Section 3 – Data Structures
-
-Section Notes: This section contains useful data structures with
-features that are not found in the C++ Standard Library. Garbage
-collection is supported for all containers, but you may want to
-remove their destructors for more speed in contests.
