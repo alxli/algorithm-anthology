@@ -91,7 +91,7 @@ template<class key_t, class val_t> class treap {
   }
 
   template<class UnaryFunction>
-  void walk(node_t * n, UnaryFunction f, int order) {
+  static void walk(node_t * n, UnaryFunction f, int order) {
     if (n == 0) return;
     if (order < 0) f(n->val);
     if (n->L) walk(n->L, f, order);
@@ -100,7 +100,7 @@ template<class key_t, class val_t> class treap {
     if (order > 0) f(n->val);
   }
 
-  void clean_up(node_t * n) {
+  static void clean_up(node_t * n) {
     if (n == 0) return;
     clean_up(n->L);
     clean_up(n->R);
@@ -163,13 +163,9 @@ int main() {
   T.walk(printch, 0);  //abcde
   cout << "\nRemoving node with key 3...";
   cout << (T.erase(3) ? "Success!" : "Failed");
-  cout << "\nPre-order: ";
-  T.walk(printch, -1); //edba
-  cout << "\nPost-order: ";
-  T.walk(printch, 1);  //abde
   cout << "\n";
 
-  //stress test - Runs in <1 second
+  //stress test - runs in <1 second
   //insert keys in an order that would break a normal BST
   treap<int, int> T2;
   for (int i = 0; i < 1000000; i++)
