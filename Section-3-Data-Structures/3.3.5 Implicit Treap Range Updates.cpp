@@ -27,11 +27,6 @@ indices from 0 to size() - 1, inclusive, are accessible.
 
 template<class T> struct implicit_treap {
 
-  //returns a random integer between l and h, inclusive
-  static inline int rand_int32(int l, int h) {
-    return l + ((rand()&0x7fff) | ((rand()&0x7fff) << 15)) % (h - l + 1);
-  }
-
   //Modify the following 5 functions to implement your custom
   //operations on the tree. This implements the Add/Max operations.
   //Operations like Add/Sum, Set/Max can also be implemented.
@@ -51,6 +46,10 @@ template<class T> struct implicit_treap {
   static inline T null_value() { return -1000000000; }
 
   struct node_t {
+    static inline int rand_int32(int l, int h) { //random number in [l, h]
+      return l + ((rand()&0x7fff) | ((rand()&0x7fff) << 15)) % (h - l + 1);
+    }
+
     T value, subtree_value, delta;
     int count, priority;
     node_t *L, *R;
