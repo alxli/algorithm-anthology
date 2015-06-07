@@ -12,13 +12,14 @@ prevents the occurence of this known worst case.
 
 Time Complexity: insert(), erase() and find() are O(log(N)) on average,
 but O(N) at worst if the tree becomes degenerate. Speed can be improved
-by randomizing insertion order. walk() is O(N). Other functions are O(1).
+by randomizing insertion order if it doesn't matter. walk() is O(N).
 
 Space Complexity: O(N) on the number of nodes.
 
 */
 
 template<class key_t, class val_t> class binary_search_tree {
+
   struct node_t {
     key_t key;
     val_t val;
@@ -70,14 +71,12 @@ template<class key_t, class val_t> class binary_search_tree {
     return true;
   }
 
-  template<class UnaryFunction>
-  static void walk(node_t * n, UnaryFunction f, int order) {
+  template<class BinaryFunction>
+  static void walk(node_t * n, BinaryFunction f) {
     if (n == 0) return;
-    if (order < 0) f(n->val);
-    if (n->L) walk(n->L, f, order);
-    if (order == 0) f(n->val);
-    if (n->R) walk(n->R, f, order); 
-    if (order > 0) f(n->val);
+    walk(n->L, f);
+    f(n->key, n->val);
+    walk(n->R, f); 
   }
 
   static void clean_up(node_t * n) {
@@ -109,11 +108,8 @@ template<class key_t, class val_t> class binary_search_tree {
     return false;
   }
 
-  //traverses nodes in either preorder (-1), inorder (0), or postorder (1)
-  //for each node, the passed unary function will be called on its value
-  //note: inorder is equivalent to visiting the nodes sorted by their keys.
-  template<class UnaryFunction> void walk(UnaryFunction f, int order = 0) {
-    walk(root, f, order);
+  template<class BinaryFunction> void walk(BinaryFunction f) {
+    walk(root, f);
   }
 
   val_t* find(const key_t & key) {
@@ -130,7 +126,7 @@ template<class key_t, class val_t> class binary_search_tree {
 #include <iostream>
 using namespace std;
 
-void printch(char c) { cout << c; }
+void printch(int k, char v) { cout << v; }
 
 int main() {
   binary_search_tree<int, char> T;
@@ -141,13 +137,9 @@ int main() {
   T.insert(4, 'x');
   *T.find(4) = 'd';
   cout << "In-order: ";
-  T.walk(printch, 0);  //abcde
+  T.walk(printch);  //abcde
   cout << "\nRemoving node with key 3...";
   cout << (T.erase(3) ? "Success!" : "Failed");
-  cout << "\nPre-order: ";
-  T.walk(printch, -1); //baed
-  cout << "\nPost-order: ";
-  T.walk(printch, 1);  //adeb
   cout << "\n"; 
   return 0;
 }
