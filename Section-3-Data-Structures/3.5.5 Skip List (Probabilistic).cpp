@@ -1,6 +1,6 @@
 /*
 
-3.4.5 - Skip List (Probabilistic)
+3.5.5 - Skip List (Probabilistic)
 
 Description: A skip list is an alternative to binary search trees.
 Fast search is made possible by maintaining a linked hierarchy of
