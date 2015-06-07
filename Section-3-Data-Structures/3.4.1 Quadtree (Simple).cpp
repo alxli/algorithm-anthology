@@ -22,7 +22,7 @@ all operations are [0..XMAX][0..YMAX]
 
 const int XMAX = 100, YMAX = 100;
 int tree[4*XMAX*YMAX];
-int X, Y, XLO, XHI, YLO, YHI, V; //temp vals for speed
+int X, Y, XL, XH, YL, YH, V; //temporary value to speed up recursion
 
 //define the following yourself. merge(x, nullv) must return x for all valid x
 inline int nullv() { return INT_MIN; }
@@ -43,9 +43,9 @@ void update(int n, int xl, int xh, int yl, int yh) {
 }
 
 void query(int n, int xl, int xh, int yl, int yh) {
-  if (xl > XHI || xh < XLO || yh < YLO || yl > YHI || merge(tree[n], V) == V)
+  if (xl > XH || xh < XL || yh < YL || yl > YH || merge(tree[n], V) == V)
     return;
-  if (xl >= XLO && xh <= XHI && yl >= YLO && yh <= YHI) {
+  if (xl >= XL && xh <= XH && yl >= YL && yh <= YH) {
     V = merge(tree[n], V);
     return;
   }
@@ -61,8 +61,8 @@ void update(int x, int y, int v) {
 }
 
 int query(int xl, int yl, int xh, int yh) {
-  XLO = xl; XHI = xh;
-  YLO = yl; YHI = yh;
+  XL = xl; XH = xh;
+  YL = yl; YH = yh;
   V = nullv();
   query(0, 0, XMAX - 1, 0, YMAX - 1);
   return V;
