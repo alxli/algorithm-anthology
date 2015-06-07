@@ -25,13 +25,8 @@ int tree[4*XMAX*YMAX];
 int X, Y, XLO, XHI, YLO, YHI, V; //temp vals for speed
 
 //define the following yourself. merge(x, nullv) must return x for all valid x
-inline int nullv() {
-  return INT_MIN;
-}
-
-inline int merge(int a, int b) {
-  return a > b ? a : b;
-}
+inline int nullv() { return INT_MIN; }
+inline int merge(int a, int b) { return a > b ? a : b; }
 
 void update(int n, int xl, int xh, int yl, int yh) {
   if (X < xl || X > xh || Y < yl || Y > yh) return;
