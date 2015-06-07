@@ -25,7 +25,7 @@ indices from 0 to size() - 1, inclusive, are accessible.
 #include <cstdlib> /* srand(), rand() */
 #include <ctime>   /* time() */
 
-template<class T> struct implicit_treap {
+template<class T> class implicit_treap {
 
   //Modify the following 5 functions to implement your custom
   //operations on the tree. This implements the Add/Max operations.
@@ -63,7 +63,6 @@ template<class T> struct implicit_treap {
     }
   } *root;
 
- public:
   static int count(node_t * n) {
     return n ? n->count : 0;
   }
