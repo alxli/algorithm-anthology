@@ -21,7 +21,6 @@ Space Complexity: O(N) on the number of points.
 #include <vector>
 
 class kd_tree {
-
   typedef std::pair<int, int> point;
 
   static inline bool cmp_x(const point &a, const point &b) {
