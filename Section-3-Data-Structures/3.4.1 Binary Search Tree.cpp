@@ -68,13 +68,6 @@ template<class key_t, class val_t> class binary_search_tree {
     return true;
   }
 
-  void clean_up(node_t *& n) {
-    if (n == 0) return;
-    clean_up(n->L);
-    clean_up(n->R);
-    delete n;
-  }
- 
   template<class UnaryFunction>
   void internal_walk(node_t * n, UnaryFunction f, int order) {
     if (n == 0) return;
@@ -83,6 +76,13 @@ template<class key_t, class val_t> class binary_search_tree {
     if (order == 0) (*f)(n->val);
     if (n->R) internal_walk(n->R, f, order); 
     if (order > 0) (*f)(n->val);
+  }
+
+  void clean_up(node_t *& n) {
+    if (n == 0) return;
+    clean_up(n->L);
+    clean_up(n->R);
+    delete n;
   }
 
  public:
