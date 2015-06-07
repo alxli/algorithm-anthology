@@ -228,7 +228,7 @@ template<class T> struct implicit_treap {
 
   //traverses nodes in either preorder (-1), inorder (0), or postorder (1)
   //for each node, the passed unary function will be called on its value
-  //note: inorder is equivalent to visiting the nodes sorted by their keys.
+  //note: inorder is equivalent to visiting the nodes in increasing indices
   template<class UnaryFunction> void walk(UnaryFunction f, int order = 0) {
     internal_walk(root, f, order);
   }
