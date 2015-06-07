@@ -83,7 +83,7 @@ template<class T> struct quadtree {
   static void clean_up(node_t * n) {
     if (n == 0) return;
     for (int i = 0; i < 4; i++) clean_up(n->child[i]);
-    delete(n);
+    delete n;
   }
 
  public:
