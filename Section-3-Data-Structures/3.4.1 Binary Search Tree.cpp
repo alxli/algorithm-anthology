@@ -29,21 +29,20 @@ template<class key_t, class val_t> class binary_search_tree {
 
   int num_nodes;
  
-  void internal_insert(node_t *& n, const key_t & k, const val_t & v) {
+  static void insert(node_t *& n, const key_t & k, const val_t & v) {
     if (n == 0) {
       n = new node_t();
       n->key = k;
       n->val = v;
-      num_nodes++;
     } else {
-      internal_insert(k < n->key ? n->L : n->R, k, v);
+      insert(k < n->key ? n->L : n->R, k, v);
     }
   }
 
-  bool internal_remove(node_t *& n, const key_t & key) {
+  static bool erase(node_t *& n, const key_t & key) {
     if (n == 0) return false;
-    if (key < n->key) return internal_remove(n->L, key);
-    if (n->key < key) return internal_remove(n->R, key);
+    if (key < n->key) return erase(n->L, key);
+    if (n->key < key) return erase(n->R, key);
     if (n->L == 0) {
       node_t *temp = n->R;
       delete n;
@@ -61,24 +60,23 @@ template<class key_t, class val_t> class binary_search_tree {
       n->key = temp->key;
       n->val = temp->val;
       if (parent != 0)
-        return internal_remove(parent->L, parent->L->key);
-      return internal_remove(n->R, n->R->key);
+        return erase(parent->L, parent->L->key);
+      return erase(n->R, n->R->key);
     }
-    num_nodes--;
     return true;
   }
 
   template<class UnaryFunction>
-  void internal_walk(node_t * n, UnaryFunction f, int order) {
+  static void walk(node_t * n, UnaryFunction f, int order) {
     if (n == 0) return;
     if (order < 0) f(n->val);
-    if (n->L) internal_walk(n->L, f, order);
+    if (n->L) walk(n->L, f, order);
     if (order == 0) f(n->val);
-    if (n->R) internal_walk(n->R, f, order); 
+    if (n->R) walk(n->R, f, order); 
     if (order > 0) f(n->val);
   }
 
-  void clean_up(node_t *& n) {
+  static void clean_up(node_t * n) {
     if (n == 0) return;
     clean_up(n->L);
     clean_up(n->R);
@@ -92,19 +90,24 @@ template<class key_t, class val_t> class binary_search_tree {
   bool empty() const { return root == 0; }
 
   void insert(const key_t & key, const val_t & val) {
-    internal_insert(root, key, val);
+    insert(root, key, val);
+    num_nodes++;
   }
 
   //returns whether the key was successfully removed
-  bool remove(const key_t & key) {
-    return internal_remove(root, key);
+  bool erase(const key_t & key) {
+    if (erase(root, key)) {
+      num_nodes--;
+      return true;
+    }
+    return false;
   }
 
   //traverses nodes in either preorder (-1), inorder (0), or postorder (1)
   //for each node, the passed unary function will be called on its value
   //note: inorder is equivalent to visiting the nodes sorted by their keys.
   template<class UnaryFunction> void walk(UnaryFunction f, int order = 0) {
-    internal_walk(root, f, order);
+    walk(root, f, order);
   }
 
   val_t* find(const key_t & key) {
@@ -134,7 +137,7 @@ int main() {
   cout << "In-order: ";
   T.walk(printch, 0);  //abcde
   cout << "\nRemoving node with key 3...";
-  cout << (T.remove(3) ? "Success!" : "Failed");
+  cout << (T.erase(3) ? "Success!" : "Failed");
   cout << "\nPre-order: ";
   T.walk(printch, -1); //baed
   cout << "\nPost-order: ";
