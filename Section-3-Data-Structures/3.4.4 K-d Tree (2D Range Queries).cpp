@@ -24,11 +24,13 @@ class kd_tree {
 
   typedef std::pair<int, int> point;
 
-  struct comp_y {
-    bool operator()(const point & p1, const point & p2) {
-      return p1.second < p2.second;
-    }
-  };
+  static inline bool cmp_x(const point &a, const point &b) {
+    return a.first < b.first;
+  }
+
+  static inline bool cmp_y(const point &a, const point &b) {
+    return a.second < b.second;
+  }
 
   std::vector<int> tx, ty, cnt, minx, miny, maxx, maxy;
   int xl, yl, xh, yh; //temporary values to speed up recursion
@@ -36,11 +38,7 @@ class kd_tree {
   void build(int lo, int hi, bool div_x, point P[]) {
     if (lo >= hi) return;
     int mid = (lo + hi) >> 1;
-    if (div_x) {
-      std::nth_element(P + lo, P + mid, P + hi);
-    } else {
-      std::nth_element(P + lo, P + mid, P + hi, comp_y());
-    }
+    std::nth_element(P + lo, P + mid, P + hi, div_x ? cmp_x : cmp_y);
     tx[mid] = P[mid].first;
     ty[mid] = P[mid].second;
     cnt[mid] = hi - lo;
