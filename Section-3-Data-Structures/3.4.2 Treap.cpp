@@ -44,65 +44,63 @@ template<class key_t, class val_t> class treap {
 
   int num_nodes;
 
-  void rotateL(node_t *& k2) {
+  static void rotate_l(node_t *& k2) {
     node_t *k1 = k2->R;
     k2->R = k1->L;
     k1->L = k2;
     k2 = k1;
   }
 
-  void rotateR(node_t *& k2) {
+  static void rotate_r(node_t *& k2) {
     node_t *k1 = k2->L;
     k2->L = k1->R;
     k1->R = k2;
     k2 = k1;
   }
 
-  void internal_insert(node_t *& n, const key_t & k, const val_t & v) {
+  static void insert(node_t *& n, const key_t & k, const val_t & v) {
     if (n == 0) {
       n = new node_t(k, v);
-      num_nodes++;
       return;
     }
     if (k < n->key) {
-      internal_insert(n->L, k, v);
-      if (n->L->priority < n->priority) rotateR(n);
+      insert(n->L, k, v);
+      if (n->L->priority < n->priority) rotate_r(n);
     } else {
-      internal_insert(n->R, k, v);
-      if (n->R->priority < n->priority) rotateL(n);
+      insert(n->R, k, v);
+      if (n->R->priority < n->priority) rotate_l(n);
     }
   }
 
-  bool internal_remove(node_t *& n, const key_t & k) {
+  static bool erase(node_t *& n, const key_t & k) {
     if (n == 0) return false;
-    if (k < n->key) return internal_remove(n->L, k);
-    if (k > n->key) return internal_remove(n->R, k);
+    if (k < n->key) return erase(n->L, k);
+    if (k > n->key) return erase(n->R, k);
     if (n->L == 0 || n->R == 0) {
       node_t *temp = n;
       n = (n->L != 0) ? n->L : n->R;
       delete temp;
-      num_nodes--;
       return true;
     }
     if (n->L->priority < n->R->priority) {
-      rotateR(n);
-      return internal_remove(n->R, k);
+      rotate_r(n);
+      return erase(n->R, k);
     }
-    rotateL(n);
-    return internal_remove(n->L, k);
+    rotate_l(n);
+    return erase(n->L, k);
   }
 
   template<class UnaryFunction>
-  void internal_walk(node_t * n, UnaryFunction f, int order) {
+  void walk(node_t * n, UnaryFunction f, int order) {
     if (n == 0) return;
-    if (order < 0) (*f)(n->val);
-    if (n->L) internal_walk(n->L, f, order);
-    if (order == 0) (*f)(n->val);
-    if (n->R) internal_walk(n->R, f, order);
-    if (order > 0) (*f)(n->val);
+    if (order < 0) f(n->val);
+    if (n->L) walk(n->L, f, order);
+    if (order == 0) f(n->val);
+    if (n->R) walk(n->R, f, order);
+    if (order > 0) f(n->val);
   }
 
-  void clean_up(node_t *& n) {
+  void clean_up(node_t * n) {
     if (n == 0) return;
     clean_up(n->L);
     clean_up(n->R);
@@ -115,19 +113,25 @@ template<class key_t, class val_t> class treap {
   int size() const { return num_nodes; }
   bool empty() const { return root == 0; }
 
-  void insert(const key_t & k, const val_t & v) {
-    internal_insert(root, k, v);
+  void insert(const key_t & key, const val_t & val) {
+    insert(root, key, val);
+    num_nodes++;
   }
 
-  bool remove(const key_t & k) {
-    return internal_remove(root, k);
+  //returns whether the key was successfully removed
+  bool erase(const key_t & key) {
+    if (erase(root, key)) {
+      num_nodes--;
+      return true;
+    }
+    return false;
   }
 
   //traverses nodes in either preorder (-1), inorder (0), or postorder (1)
   //for each node, the passed unary function will be called on its value
   //note: inorder is equivalent to visiting the nodes sorted by their keys.
   template<class UnaryFunction> void walk(UnaryFunction f, int order = 0) {
-    internal_walk(root, f, order);
+    walk(root, f, order);
   }
 
   val_t* find(const key_t & key) {
@@ -139,18 +143,38 @@ template<class key_t, class val_t> class treap {
   }
 };
 
-/*** Stress Test - Runs in <1 second ***/
+/*** Example Usage ***/
 
 #include <cassert>
+#include <iostream>
+using namespace std;
+
+void printch(char c) { cout << c; }
 
 int main() {
-  treap<int, int> T;
+  treap<int, char> T;
+  T.insert(2, 'b');
+  T.insert(1, 'a');
+  T.insert(3, 'c');
+  T.insert(5, 'e');
+  T.insert(4, 'x');
+  *T.find(4) = 'd';
+  cout << "In-order: ";
+  T.walk(printch, 0);  //abcde
+  cout << "\nRemoving node with key 3...";
+  cout << (T.erase(3) ? "Success!" : "Failed");
+  cout << "\nPre-order: ";
+  T.walk(printch, -1); //edba
+  cout << "\nPost-order: ";
+  T.walk(printch, 1);  //abde
+  cout << "\n";
+
+  //stress test - Runs in <1 second
   //insert keys in an order that would break a normal BST
-  for (int i = 0; i < 1000000; i++) {
-    T.insert(i, i + i);
-  }
-  for (int i = 0; i < 1000000; i++) {
-    assert(*T.find(i) == i + i);
-  }
+  treap<int, int> T2;
+  for (int i = 0; i < 1000000; i++)
+    T2.insert(i, i*1337);
+  for (int i = 0; i < 1000000; i++)
+    assert(*T2.find(i) == i*1337);
   return 0;
 }
