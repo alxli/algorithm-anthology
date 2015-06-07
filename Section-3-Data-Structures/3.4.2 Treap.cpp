@@ -94,14 +94,12 @@ template<class key_t, class val_t> class treap {
     return erase(n->L, k);
   }
 
-  template<class UnaryFunction>
-  static void walk(node_t * n, UnaryFunction f, int order) {
+  template<class BinaryFunction>
+  static void walk(node_t * n, BinaryFunction f) {
     if (n == 0) return;
-    if (order < 0) f(n->val);
-    if (n->L) walk(n->L, f, order);
-    if (order == 0) f(n->val);
-    if (n->R) walk(n->R, f, order);
-    if (order > 0) f(n->val);
+    walk(n->L, f);
+    f(n->key, n->val);
+    walk(n->R, f); 
   }
 
   static void clean_up(node_t * n) {
@@ -133,11 +131,8 @@ template<class key_t, class val_t> class treap {
     return false;
   }
 
-  //traverses nodes in either preorder (-1), inorder (0), or postorder (1)
-  //for each node, the passed unary function will be called on its value
-  //note: inorder is equivalent to visiting the nodes sorted by their keys.
-  template<class UnaryFunction> void walk(UnaryFunction f, int order = 0) {
-    walk(root, f, order);
+  template<class BinaryFunction> void walk(BinaryFunction f) {
+    walk(root, f);
   }
 
   val_t* find(const key_t & key) {
@@ -155,7 +150,7 @@ template<class key_t, class val_t> class treap {
 #include <iostream>
 using namespace std;
 
-void printch(char c) { cout << c; }
+void printch(int k, char v) { cout << v; }
 
 int main() {
   treap<int, char> T;
@@ -166,7 +161,7 @@ int main() {
   T.insert(4, 'x');
   *T.find(4) = 'd';
   cout << "In-order: ";
-  T.walk(printch, 0);  //abcde
+  T.walk(printch);  //abcde
   cout << "\nRemoving node with key 3...";
   cout << (T.erase(3) ? "Success!" : "Failed");
   cout << "\n";
