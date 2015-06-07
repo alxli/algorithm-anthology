@@ -101,7 +101,7 @@ struct class_hash {
 
   //Knuth’s multiplicative method (one-to-one)
   unsigned int operator() (unsigned int key) {
-    return key * 2654435761u;
+    return key * 2654435761u; //or just return key
   }
   
   //Jenkins' 64-bit hash
