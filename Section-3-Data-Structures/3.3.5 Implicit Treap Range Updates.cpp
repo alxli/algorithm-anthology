@@ -152,6 +152,7 @@ template<class T> struct implicit_treap {
   template<class UnaryFunction>
   void internal_walk(node_t * n, UnaryFunction f, int order) {
     if (n == 0) return;
+    push_delta(n);
     if (order < 0) f(n->value);
     if (n->L) internal_walk(n->L, f, order);
     if (order == 0) f(n->value);
@@ -243,13 +244,16 @@ void print(int x) { cout << x << " "; }
 
 int main() {
   implicit_treap<int> T;
-  T.insert(0, 7);
-  T.insert(1, 8);
-  T.insert(2, 8);
-  T.erase(1);
-  T.modify(0, 1, 3);
-  T.walk(print); //10 11
-  cout << "\n" << T.at(1) << "\n"; //11
-  cout << T.size() << "\n"; //2
+  T.push_back(7);
+  T.push_back(8);
+  T.push_back(9);
+  T.insert(1, 5);
+  T.erase(3);
+  T.walk(print); cout << "\n";   //7 5 8
+  T.modify(0, 2, 2);
+  T.walk(print); cout << "\n";   //9 7 10
+  cout << T.at(1) << "\n";       //7
+  cout << T.query(0, 2) << "\n"; //10
+  cout << T.size() << "\n";      //3
   return 0;
 }
