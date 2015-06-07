@@ -1,6 +1,6 @@
 /*
 
-3.3.9 - 2D Segment Tree
+3.4.2 - 2D Segment Tree
 
 Description: The statically allocated quadtree in the previous
 section is inefficient for large indices. The following implementation
