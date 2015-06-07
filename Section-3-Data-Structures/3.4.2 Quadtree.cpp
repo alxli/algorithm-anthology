@@ -87,6 +87,7 @@ template<class T> struct quadtree {
   }
 
  public:
+  quadtree() { root = 0; }
   ~quadtree() { clean_up(root); }
   T at(int x, int y) { return query(x, y, x, y); }
 
