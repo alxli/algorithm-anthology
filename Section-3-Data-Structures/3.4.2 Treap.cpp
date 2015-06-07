@@ -58,18 +58,19 @@ template<class key_t, class val_t> class treap {
     k2 = k1;
   }
 
-  static void insert(node_t *& n, const key_t & k, const val_t & v) {
+  static bool insert(node_t *& n, const key_t & k, const val_t & v) {
     if (n == 0) {
       n = new node_t(k, v);
-      return;
+      return true;
     }
-    if (k < n->key) {
-      insert(n->L, k, v);
+    if (k < n->key && insert(n->L, k, v)) {
       if (n->L->priority < n->priority) rotate_r(n);
-    } else {
-      insert(n->R, k, v);
+      return true;
+    } else if (n->key < k && insert(n->R, k, v)) {
       if (n->R->priority < n->priority) rotate_l(n);
+      return true;
     }
+    return false;
   }
 
   static bool erase(node_t *& n, const key_t & k) {
@@ -113,9 +114,12 @@ template<class key_t, class val_t> class treap {
   int size() const { return num_nodes; }
   bool empty() const { return root == 0; }
 
-  void insert(const key_t & key, const val_t & val) {
-    insert(root, key, val);
-    num_nodes++;
+  bool insert(const key_t & key, const val_t & val) {
+    if (insert(root, key, val)) {
+      num_nodes++;
+      return true;
+    }
+    return false;
   }
 
   //returns whether the key was successfully removed
