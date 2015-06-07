@@ -2,10 +2,10 @@
 
 3.3.9 - 2D Segment Tree
 
-Description: The statically allocated quadtree in 3.3.3 is
-inefficient on large indicies. The following implementation
-is a highly optimized implementation with features such as
-coordinate compression and path compression.
+Description: The statically allocated quadtree in the previous
+section is inefficient for large indices. The following implementation
+is a highly optimized implementation with features such as coordinate
+compression and path compression.
 
 Time Complexity: O(log(xmax)*log(ymax)) for update(), query(),
 and at() operations.
