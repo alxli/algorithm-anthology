@@ -31,7 +31,7 @@ Take the path: 0->3->2->4->1->0
 #include <iostream>
 using namespace std;
 
-const int MAXN = 20, INF = 0x3F3F3F3F;
+const int MAXN = 20, INF = 0x3f3f3f3f;
 int nodes, edges, a, b, weight;
 int adj[MAXN][MAXN], order[MAXN];
 
