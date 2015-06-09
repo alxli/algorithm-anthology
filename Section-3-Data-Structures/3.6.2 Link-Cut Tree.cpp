@@ -1,7 +1,29 @@
+/*
+
+3.6.2 - Link/Cut Tree for Dynamic Path Queries and Connectivity
+
+Description: Given an unweighted forest of trees where each node
+has an associated value, a link/cut tree can be used to dynamically
+query and modify values on the path between pairs of nodes a tree.
+This problem can be solved using heavy-light decomposition, which
+also supports have values stored on edges rather than the nodes.
+However in a link/cut tree, nodes in different trees may be
+dynamically linked, edges between nodes in the same tree may be
+dynamically split, and connectivity between two nodes (whether they
+are in the same tree) may be checked.
+
+Time Complexity: O(log N) amortized for make_root(), link(), cut(),
+connected(), modify(), and query(), where N is the number of nodes
+in the forest.
+
+Space Complexity: O(N) on the number of nodes in the forest.
+
+*/
+
 #include <algorithm> /* std::max(), std::swap() */
 #include <climits>   /* INT_MIN */
 #include <map>
-#include <stdexcept>
+#include <stdexcept> /* std::runtime_error() */
 
 template<class T> class linkcut_forest {
   //Modify the following 5 functions to implement your custom
@@ -162,6 +184,16 @@ template<class T> class linkcut_forest {
   std::map<int, node_t*> nodes; //use array if ID compression not required
   node_t *u, *v; //temporary
 
+  void get_uv(int a, int b) {
+    static typename std::map<int, node_t*>::iterator it1, it2;
+    it1 = nodes.find(a);
+    it2 = nodes.find(b);
+    if (it1 == nodes.end() || it2 == nodes.end())
+      throw std::runtime_error("Error: nodes do not exist in forest.");
+    u = it1->second;
+    v = it2->second;
+  }
+
  public:
   ~linkcut_forest() {
     static typename std::map<int, node_t*>::iterator it;
@@ -178,16 +210,6 @@ template<class T> class linkcut_forest {
     nodes[id] = n;
   }
 
-  void get_uv(int a, int b) {
-    static typename std::map<int, node_t*>::iterator it1, it2;
-    it1 = nodes.find(a);
-    it2 = nodes.find(b);
-    if (it1 == nodes.end() || it2 == nodes.end())
-      throw std::runtime_error("Error: nodes do not exist in forest.");
-    u = it1->second;
-    v = it2->second;
-  }
-
   bool connected(int a, int b) {
     get_uv(a, b);
     if (a == b) return true;
@@ -197,9 +219,9 @@ template<class T> class linkcut_forest {
   }
 
   void link(int a, int b) {
-    get_uv(a, b);
     if (connected(a, b))
       throw std::runtime_error("Error: a and b are already connected.");
+    get_uv(a, b);
     expose(u);
     u->rev = !u->rev;
     u->parent = v;
