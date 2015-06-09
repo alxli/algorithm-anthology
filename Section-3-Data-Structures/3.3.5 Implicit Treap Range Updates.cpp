@@ -148,14 +148,12 @@ template<class T> class implicit_treap {
   }
 
   template<class UnaryFunction>
-  void internal_walk(node_t * n, UnaryFunction f, int order) {
+  void walk(node_t * n, UnaryFunction f) {
     if (n == 0) return;
     push_delta(n);
-    if (order < 0) f(n->value);
-    if (n->L) internal_walk(n->L, f, order);
-    if (order == 0) f(n->value);
-    if (n->R) internal_walk(n->R, f, order);
-    if (order > 0) f(n->value);
+    if (n->L) walk(n->L, f);
+    f(n->value);
+    if (n->R) walk(n->R, f);
   }
 
   void clean_up(node_t *& n) {
@@ -195,6 +193,10 @@ template<class T> class implicit_treap {
     return get(root, idx);
   }
 
+  template<class UnaryFunction> void walk(UnaryFunction f) {
+    walk(root, f);
+  }
+
   //for (i = a; i <= b; i++)
   //  list[i] = join_value_with_delta(list[i], delta)
   void modify(int a, int b, const T & delta) {
@@ -223,13 +225,6 @@ template<class T> class implicit_treap {
     merge(t, l2, r2);
     merge(root, t, r1);
     return res;
-  }
-
-  //traverses nodes in either preorder (-1), inorder (0), or postorder (1)
-  //for each node, the passed unary function will be called on its value
-  //note: inorder is equivalent to visiting the nodes in increasing indices
-  template<class UnaryFunction> void walk(UnaryFunction f, int order = 0) {
-    internal_walk(root, f, order);
   }
 };
 
