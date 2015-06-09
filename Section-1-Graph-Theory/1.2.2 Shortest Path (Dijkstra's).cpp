@@ -46,7 +46,7 @@ Take the path: 0->1->2->3.
 #include <vector>
 using namespace std;
 
-const int MAXN = 100, INF = 0x3F3F3F3F;
+const int MAXN = 100, INF = 0x3f3f3f3f;
 int nodes, edges, a, b, weight, start, dest;
 int dist[MAXN], pred[MAXN];
 vector<bool> vis(MAXN);
