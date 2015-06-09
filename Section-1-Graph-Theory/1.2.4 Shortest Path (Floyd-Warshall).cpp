@@ -24,7 +24,7 @@ Take the path: 0->1->2.
 #include <iostream>
 using namespace std;
 
-const int MAXN = 100, INF = 0x3F3F3F3F;
+const int MAXN = 100, INF = 0x3f3f3f3f;
 int nodes, edges, a, b, weight, start, dest;
 int dist[MAXN][MAXN], next[MAXN][MAXN];
 
