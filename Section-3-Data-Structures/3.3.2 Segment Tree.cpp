@@ -1,6 +1,6 @@
 /*
 
-3.3.2 - 1D Segment Tree (OOP version with templates)
+3.3.2 - 1D Segment Tree
 
 Description: A segment tree is a data structure used for
 solving the dynamic range query problem, which asks to
