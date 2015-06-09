@@ -34,7 +34,6 @@ Space Complexity: O(N) on the number of nodes.
 #include <ctime>   /* time() */
 
 template<class key_t, class val_t> class treap {
-
   struct node_t {
     static inline int rand_int32(int l, int h) { //random number in [l, h]
       return l + ((rand()&0x7fff) | ((rand()&0x7fff) << 15)) % (h - l + 1);
