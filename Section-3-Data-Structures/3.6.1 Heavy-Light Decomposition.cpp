@@ -28,7 +28,7 @@ template<class T> class heavy_light {
   //true if you want values on edges, false if you want values on vertices
   static const bool VALUES_ON_EDGES = true;
 
-  //Modify the following 5 functions to implement your custom
+  //Modify the following 6 functions to implement your custom
   //operations on the tree. This implements the Add/Max operations.
   //Operations like Add/Sum, Set/Max can also be implemented.
   static inline const T modify_op(const T & x, const T & y) {
