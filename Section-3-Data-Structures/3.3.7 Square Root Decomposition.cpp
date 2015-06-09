@@ -21,7 +21,6 @@ indices from 0 to N - 1, inclusive, are accessible.
 #include <limits>
 
 template<class T> class sqrt_decomp {
-
   //define the following yourself. merge(x, nullv) must return x for all valid x
   static inline const T nullv() { return std::numeric_limits<T>::max(); }
   static inline const T merge(const T &a, const T &b) { return a < b ? a : b; }
