@@ -21,11 +21,10 @@ indices from 0 to T.size() - 1, inclusive, are accessible.
 
 */
 
-#include <algorithm>
-#include <stdexcept>
+#include <algorithm> /* std::fill() */
+#include <stdexcept> /* std::runtime_error */
 
 template<class T> class segment_tree {
-
   //Modify the following 5 functions to implement your custom
   //operations on the tree. This implements the Add/Max operations.
   //Operations like Add/Sum, Set/Max can also be implemented.
@@ -79,15 +78,15 @@ template<class T> class segment_tree {
   }
 
  public:
-  segment_tree(int n) {
-    length = n;
-    value = new T[2*n];
-    delta = new T[2*n];
-    len = new int[2*n];
-    std::fill(delta, delta + 2*n, nullv());
-    std::fill(len + n, len + 2*n, 1);
-    for (int i = 0; i < n; i++) value[i + n] = initv();
-    for (int i = 2*n - 1; i > 1; i -= 2) {
+  segment_tree(int N) {
+    length = N;
+    value = new T[2*N];
+    delta = new T[2*N];
+    len = new int[2*N];
+    std::fill(delta, delta + 2*N, nullv());
+    std::fill(len + N, len + 2*N, 1);
+    for (int i = 0; i < N; i++) value[i + N] = initv();
+    for (int i = 2*N - 1; i > 1; i -= 2) {
       value[i >> 1] = query_op(value[i], value[i ^ 1]);
       len[i >> 1] = len[i] + len[i ^ 1];
     }
