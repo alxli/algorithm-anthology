@@ -1,4 +1,21 @@
-#include <cassert>
+/*
+
+3.6.1 - Heavy-Light Decomposition
+
+Description: Given an undirected, connected graph that is a tree, the
+heavy-light decomposition (HLD) on the graph is a partitioning of the
+vertices into disjoint paths to later support dynamic modification and
+querying of values on paths between pairs of vertices.
+See: http://wcipeg.com/wiki/Heavy-light_decomposition
+and: http://blog.anudeep2011.com/heavy-light-decomposition/
+
+Time Complexity: O(N) for the constructor and O(log N) in the worst
+case for both update() and query(), where N is the number of vertices.
+
+Space Complexity: O(N) on the number of vertices in the tree.
+
+*/
+
 #include <algorithm> /* std::max(), std::min() */
 #include <climits>   /* INT_MIN */
 #include <vector>
