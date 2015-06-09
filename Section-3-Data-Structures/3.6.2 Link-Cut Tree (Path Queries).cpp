@@ -73,7 +73,7 @@ template<class T> class linkcut_forest {
       L = R = parent = 0;
     }
 
-    bool is_root() {
+    bool is_root() { //is this the root of a splay tree?
       return parent == 0 || (parent->L != this && parent->R != this);
     }
 
@@ -115,22 +115,21 @@ template<class T> class linkcut_forest {
     (is_left ? p->L : p->R) = ch;
   }
 
-  /**
-   * rotates edge (n, n.parent)
-   *        g          g
-   *       /          /
-   *      p          n
-   *     / \  -->   / \
-   *    n  p.r    n.l  p
-   *   / \            / \
-   * n.l n.r        n.r p.r
+  /** rotates edge (n, n.parent)
+   *         g          g
+   *        /          /
+   *       p          n
+   *      / \  -->   / \
+   *     n  p.r    n.l  p
+   *    / \            / \
+   *  n.l n.r        n.r p.r
    */
   static void rotate(node_t * n) {
     node_t *p = n->parent, *g = p->parent;
-    bool isrootp = p->is_root(), lchildx = (n == p->L);
-    connect(lchildx ? n->R : n->L, p, lchildx);
-    connect(p, n, !lchildx);
-    connect(n, g, isrootp ? -1 : (p == g->L));
+    bool is_rootp = p->is_root(), is_left = (n == p->L);
+    connect(is_left ? n->R : n->L, p, is_left);
+    connect(p, n, !is_left);
+    connect(n, g, is_rootp ? -1 : (p == g->L));
     p->update();
   }
 
@@ -189,7 +188,7 @@ template<class T> class linkcut_forest {
     it1 = nodes.find(a);
     it2 = nodes.find(b);
     if (it1 == nodes.end() || it2 == nodes.end())
-      throw std::runtime_error("Error: nodes do not exist in forest.");
+      throw std::runtime_error("Error: a or b does not exist in forest.");
     u = it1->second;
     v = it2->second;
   }
@@ -233,8 +232,9 @@ template<class T> class linkcut_forest {
     u->rev = !u->rev;
     expose(v);
     if (v->R != u || u->L != 0)
-      throw std::runtime_error("Error: edge a <-> b does not exist.");
-    v->R->parent = v->R = 0;
+      throw std::runtime_error("Error: edge (a, b) does not exist.");
+    v->R->parent = 0;
+    v->R = 0;
   }
 
   T query(int a, int b) {
