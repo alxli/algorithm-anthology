@@ -58,7 +58,7 @@ class range_tree_2D {
     if (xl <= P[lo].first && P[hi].first <= xh) {
       if (!seg[idx].empty() && yh >= yl) {
         std::vector<point>::iterator it;
-        it = lower_bound(seg[idx].begin(), seg[idx].end(), yl, comp2);
+        it = std::lower_bound(seg[idx].begin(), seg[idx].end(), yl, comp2);
         while (it != seg[idx].end()) {
           if (it->second > yh) break;
           f(it->first); //or report P[it->first], the actual point
