@@ -6,8 +6,8 @@ Description: An interval tree is structure used to store and efficiently
 query intervals. An interval may be dynamically inserted, and range
 queries of [lo, hi] may be performed to have the tree report all intervals
 that intersect with the queried interval. Augmented trees, described in
-CLRS (2009, Section 14.3: Interval trees, pp. 348–354), is one such way
-to represent these intervals.
+CLRS (2009, Section 14.3, pp. 348–354), is one such way to represent these
+intervals. The following implementation uses a treap to maintain balance.
 See: http://en.wikipedia.org/wiki/Interval_tree#Augmented_tree
 
 Time Complexity: O(log N) for insert() and O(k) for query(), where N is
@@ -57,6 +57,8 @@ class interval_tree {
     k2->R = k1->L;
     k1->L = k2;
     k2 = k1;
+    if (k2 != 0) k2->update_maxh();
+    if (k1 != 0) k1->update_maxh();
   }
 
   static void rotate_r(node_t *& k2) {
@@ -64,6 +66,8 @@ class interval_tree {
     k2->L = k1->R;
     k1->R = k2;
     k2 = k1;
+    if (k2 != 0) k2->update_maxh();
+    if (k1 != 0) k1->update_maxh();
   }
 
   interval i; //temporary
