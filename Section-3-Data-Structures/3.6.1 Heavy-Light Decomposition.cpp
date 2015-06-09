@@ -224,6 +224,6 @@ int main() {
   cout << hld.query(0, 3) << "\n"; //40
   cout << hld.query(2, 4) << "\n"; //30
   hld.modify(3, 4, 50); //w[every edge from 3 to 4] += 50
-  cout << hld.query(1, 3) << "\n"; //80
+  cout << hld.query(1, 4) << "\n"; //80
   return 0;
 }
