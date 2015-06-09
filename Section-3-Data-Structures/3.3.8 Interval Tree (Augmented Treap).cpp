@@ -18,9 +18,9 @@ Space Complexity: O(N) on the number of intervals in the tree.
 
 */
 
-#include <cstdlib> /* srand() */
-#include <ctime>   /* time() */
-#include <utility> /* std:pair */
+#include <cstdlib>   /* srand() */
+#include <ctime>     /* time() */
+#include <utility>   /* std:pair */
 
 class interval_tree {
   typedef std::pair<int, int> interval;
@@ -43,6 +43,12 @@ class interval_tree {
       maxh = i.second;
       L = R = 0;
       priority = rand_int32(0, 1 << 30);
+    }
+
+    void update_maxh() {
+      maxh = i.second;
+      if (L != 0 && L->maxh > maxh) maxh = L->maxh;
+      if (R != 0 && R->maxh > maxh) maxh = R->maxh;
     }
   } *root;
 
@@ -71,7 +77,7 @@ class interval_tree {
       insert(n->R);
       if (n->R->priority < n->priority) rotate_l(n);
     }
-    if (n->maxh < i.second) n->maxh = i.second;
+    n->update_maxh();
   }
 
   template<class ReportFunction>
