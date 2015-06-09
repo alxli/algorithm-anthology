@@ -35,8 +35,8 @@ Space Complexity: O(N) on the number of nodes.
 
 template<class key_t, class val_t> class treap {
   struct node_t {
-    static inline int rand_int32(int l, int h) { //random number in [l, h]
-      return l + ((rand()&0x7fff) | ((rand()&0x7fff) << 15)) % (h - l + 1);
+    static inline int rand32() {
+      return (rand()&0x7fff) | ((rand()&0x7fff) << 15);
     }
 
     key_t key;
@@ -45,7 +45,7 @@ template<class key_t, class val_t> class treap {
     node_t *L, *R;
 
     node_t(const key_t & k, const val_t & v): key(k), val(v), L(0), R(0) {
-      priority = rand_int32(0, 1 << 30);
+      priority = rand32();
     }
   } *root;
 
@@ -103,7 +103,7 @@ template<class key_t, class val_t> class treap {
     if (n == 0) return;
     walk(n->L, f);
     f(n->key, n->val);
-    walk(n->R, f); 
+    walk(n->R, f);
   }
 
   static void clean_up(node_t * n) {
@@ -170,7 +170,7 @@ int main() {
   cout << (T.erase(3) ? "Success!" : "Failed");
   cout << "\n";
 
-  //stress test - runs in <1 second
+  //stress test - runs in <0.5 seconds
   //insert keys in an order that would break a normal BST
   treap<int, int> T2;
   for (int i = 0; i < 1000000; i++)
