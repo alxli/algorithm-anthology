@@ -23,7 +23,6 @@ all operations are [0..XMAX][0..YMAX]
 #include <limits>    /* std::numeric_limits<T>::min() */
 
 template<class T> struct quadtree {
-
   //these can be set to large values without affecting your memory usage!
   static inline const int xmax() { return 1000000000; }
   static inline const int ymax() { return 1000000000; }
