@@ -24,7 +24,6 @@ Space Complexity: O(N) on the number of nodes.
 */
 
 template<class key_t, class val_t> class binary_search_tree {
-
   struct node_t {
     key_t key;
     val_t val;
