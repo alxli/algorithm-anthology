@@ -30,8 +30,8 @@ class interval_tree {
   }
 
   struct node_t {
-    static inline int rand_int32(int l, int h) { //random number in [l, h]
-      return l + ((rand()&0x7fff) | ((rand()&0x7fff) << 15)) % (h - l + 1);
+    static inline int rand32() {
+      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
     }
 
     interval i;
@@ -42,7 +42,7 @@ class interval_tree {
       this->i = i;
       maxh = i.second;
       L = R = 0;
-      priority = rand_int32(0, 1 << 30);
+      priority = rand32();
     }
 
     void update() {
