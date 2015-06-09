@@ -37,7 +37,7 @@ using namespace std;
 
 struct edge { int to, rev, f; };
 
-const int MAXN = 100, INF = 0x3F3F3F3F;
+const int MAXN = 100, INF = 0x3f3f3f3f;
 int nodes, source, sink;
 vector<edge> adj[MAXN];
 
