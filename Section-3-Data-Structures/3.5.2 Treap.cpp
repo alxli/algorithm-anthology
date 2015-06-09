@@ -36,7 +36,7 @@ Space Complexity: O(N) on the number of nodes.
 template<class key_t, class val_t> class treap {
   struct node_t {
     static inline int rand32() {
-      return (rand()&0x7fff) | ((rand()&0x7fff) << 15);
+      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
     }
 
     key_t key;
