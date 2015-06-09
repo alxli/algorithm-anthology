@@ -24,9 +24,10 @@ For more info, see: http://en.wikipedia.org/wiki/Order_statistic_tree
 
 Note: The following implementation is used similar to an std::map. In order
 to make it behave like an std::set, modify the code to remove the value
-associated with each node. In order to make it behave like an std::multiset
-or std::multimap, make appropriate changes with key comparisons (e.g.
-change (k < n->key) to (k <= n->key) in search conditions).
+associated with each node. Making a size balanced tree behave like an
+std::multiset or std::multimap is a more complex issue. Refer to the
+articles above and determine the correct way to preserve the binary search
+tree property with maintain() if equivalent keys are allowed.
 
 Time Complexity: insert(), erase(), find(), select() and rank() are
 O(log N) on the number of elements in the tree. walk() is O(N).
@@ -35,8 +36,8 @@ Space Complexity: O(N) on the number of nodes in the tree.
 
 */
 
-#include <stdexcept>
-#include <utility>
+#include <stdexcept> /* std::runtime_error */
+#include <utility>   /* pair */
 
 template<class key_t, class val_t> class size_balanced_tree {
 
