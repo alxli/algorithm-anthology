@@ -1,6 +1,6 @@
 /*
 
-3.6.1 - Heavy-Light Decomposition
+3.6.1 - Heavy-Light Decomposition for Dynamic Tree Queries
 
 Description: Given an undirected, connected graph that is a tree, the
 heavy-light decomposition (HLD) on the graph is a partitioning of the
