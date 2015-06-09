@@ -6,8 +6,8 @@ Description: An interval tree is structure used to store and efficiently
 query intervals. An interval may be dynamically inserted, and range
 queries of [lo, hi] may be performed to have the tree report all intervals
 that intersect with the queried interval. Augmented trees, described in
-CLRS (2009, Section 14.3, pp. 348–354), is one such way to represent these
-intervals. The following implementation uses a treap to maintain balance.
+CLRS (2009, Section 14.3: Interval trees, pp. 348–354), is one such way
+to represent these intervals.
 See: http://en.wikipedia.org/wiki/Interval_tree#Augmented_tree
 
 Time Complexity: O(log N) for insert() and O(k) for query(), where N is
@@ -45,7 +45,7 @@ class interval_tree {
       priority = rand_int32(0, 1 << 30);
     }
 
-    void update_maxh() {
+    void update() {
       maxh = i.second;
       if (L != 0 && L->maxh > maxh) maxh = L->maxh;
       if (R != 0 && R->maxh > maxh) maxh = R->maxh;
@@ -57,8 +57,8 @@ class interval_tree {
     k2->R = k1->L;
     k1->L = k2;
     k2 = k1;
-    if (k2 != 0) k2->update_maxh();
-    if (k1 != 0) k1->update_maxh();
+    k2->update();
+    k1->update();
   }
 
   static void rotate_r(node_t *& k2) {
@@ -66,8 +66,8 @@ class interval_tree {
     k2->L = k1->R;
     k1->R = k2;
     k2 = k1;
-    if (k2 != 0) k2->update_maxh();
-    if (k1 != 0) k1->update_maxh();
+    k2->update();
+    k1->update();
   }
 
   interval i; //temporary
@@ -81,7 +81,7 @@ class interval_tree {
       insert(n->R);
       if (n->R->priority < n->priority) rotate_l(n);
     }
-    n->update_maxh();
+    n->update();
   }
 
   template<class ReportFunction>
