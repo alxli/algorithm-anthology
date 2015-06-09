@@ -22,11 +22,11 @@ indices from 0 to size() - 1, inclusive, are accessible.
 
 */
 
+#include <climits> /* INT_MIN */
 #include <cstdlib> /* srand(), rand() */
 #include <ctime>   /* time() */
 
 template<class T> class implicit_treap {
-
   //Modify the following 5 functions to implement your custom
   //operations on the tree. This implements the Add/Max operations.
   //Operations like Add/Sum, Set/Max can also be implemented.
@@ -43,7 +43,7 @@ template<class T> class implicit_treap {
   }
 
   static inline T null_delta() { return 0; }
-  static inline T null_value() { return -1000000000; }
+  static inline T null_value() { return INT_MIN; }
 
   struct node_t {
     static inline int rand_int32(int l, int h) { //random number in [l, h]
