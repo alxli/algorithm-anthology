@@ -46,8 +46,8 @@ template<class T> class implicit_treap {
   static inline T null_value() { return INT_MIN; }
 
   struct node_t {
-    static inline int rand_int32(int l, int h) { //random number in [l, h]
-      return l + ((rand()&0x7fff) | ((rand()&0x7fff) << 15)) % (h - l + 1);
+    static inline int rand32() {
+      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
     }
 
     T value, subtree_value, delta;
@@ -59,7 +59,7 @@ template<class T> class implicit_treap {
       delta = null_delta();
       count = 1;
       L = R = 0;
-      priority = rand_int32(0, 1 << 30);
+      priority = rand32();
     }
   } *root;
 
