@@ -1,21 +1,25 @@
 /*
 
-3.3.8 - 1D Interval Tree
+3.3.8 - 1D Interval Tree (Augmented Treap)
 
-Description: An interval tree is structure used to store and
-efficiently query intervals. An interval may be dynamically
-inserted, and range queries of [lo, hi] may be performed to
-have the tree report all intervals that intersect with the
-queried interval.
+Description: An interval tree is structure used to store and efficiently
+query intervals. An interval may be dynamically inserted, and range
+queries of [lo, hi] may be performed to have the tree report all intervals
+that intersect with the queried interval. Augmented trees, described in
+CLRS (2009, Section 14.3: Interval trees, pp. 348–354), is one such way
+to represent these intervals.
+See: http://en.wikipedia.org/wiki/Interval_tree#Augmented_tree
 
-Time Complexity: O(log N) for insert() and O(k) for query(),
-where N is the number of intervals in the tree and k is the
-number of intervals that will be reported by the query().
+Time Complexity: O(log N) for insert() and O(k) for query(), where N is
+the number of intervals in the tree and k is the number of intervals that
+will be reported by the query().
 
 Space Complexity: O(N) on the number of intervals in the tree.
 
 */
 
+#include <cstdlib> /* srand() */
+#include <ctime>   /* time() */
 #include <utility> /* std:pair */
 
 class interval_tree {
@@ -26,23 +30,47 @@ class interval_tree {
   }
 
   struct node_t {
+    static inline int rand_int32(int l, int h) { //random number in [l, h]
+      return l + ((rand()&0x7fff) | ((rand()&0x7fff) << 15)) % (h - l + 1);
+    }
+
     interval i;
-    int maxh;
+    int maxh, priority;
     node_t *L, *R;
 
     node_t(const interval & i) {
       this->i = i;
       maxh = i.second;
       L = R = 0;
+      priority = rand_int32(0, 1 << 30);
     }
   } *root;
+
+  static void rotate_l(node_t *& k2) {
+    node_t *k1 = k2->R;
+    k2->R = k1->L;
+    k1->L = k2;
+    k2 = k1;
+  }
+
+  static void rotate_r(node_t *& k2) {
+    node_t *k1 = k2->L;
+    k2->L = k1->R;
+    k1->R = k2;
+    k2 = k1;
+  }
 
   interval i; //temporary
 
   void insert(node_t *& n) {
     if (n == 0) { n = new node_t(i); return; }
-    int lo = (n->i).first;
-    insert(i.first < lo ? n->L : n->R);
+    if (i.first < (n->i).first) {
+      insert(n->L);
+      if (n->L->priority < n->priority) rotate_r(n);
+    } else {
+      insert(n->R);
+      if (n->R->priority < n->priority) rotate_l(n);
+    }
     if (n->maxh < i.second) n->maxh = i.second;
   }
 
@@ -62,7 +90,7 @@ class interval_tree {
   }
 
  public:
-  interval_tree() { root = 0; }
+  interval_tree(): root(0) { srand(time(0)); }
   ~interval_tree() { clean_up(root); }
 
   void insert(int lo, int hi) {
