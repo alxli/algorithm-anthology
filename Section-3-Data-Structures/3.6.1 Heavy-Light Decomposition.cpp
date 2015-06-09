@@ -5,12 +5,16 @@
 Description: Given an undirected, connected graph that is a tree, the
 heavy-light decomposition (HLD) on the graph is a partitioning of the
 vertices into disjoint paths to later support dynamic modification and
-querying of values on paths between pairs of vertices.
+querying of values on paths between pairs of vertices. The input tree
+is stored in an adjacency list.
 See: http://wcipeg.com/wiki/Heavy-light_decomposition
 and: http://blog.anudeep2011.com/heavy-light-decomposition/
 
+Note: The adjacency list tree[] that is passed to the constructor must
+not be changed afterwards in order for modify() and query() to work.
+
 Time Complexity: O(N) for the constructor and O(log N) in the worst
-case for both update() and query(), where N is the number of vertices.
+case for both modify() and query(), where N is the number of vertices.
 
 Space Complexity: O(N) on the number of vertices in the tree.
 
@@ -60,8 +64,8 @@ template<class T> class heavy_light {
 
   int counter, paths;
   std::vector<int> *adj;
-  std::vector< std::vector<T> > value, delta;
-  std::vector< std::vector<int> > len;
+  std::vector<std::vector<T> > value, delta;
+  std::vector<std::vector<int> > len;
   std::vector<int> size, parent, tin, tout;
   std::vector<int> path, pathlen, pathpos, pathroot;
 
@@ -151,9 +155,8 @@ template<class T> class heavy_light {
   heavy_light(int N, std::vector<int> tree[]): size(N), parent(N),
    tin(N), tout(N), path(N), pathlen(N), pathpos(N), pathroot(N) {
     adj = tree;
-    counter = 0;
+    counter = paths = 0;
     precompute_dfs(0, -1);
-    paths = 0;
     build_paths(0, new_path(0));
     value.resize(paths);
     delta.resize(paths);
