@@ -6,13 +6,13 @@ Description: An interval tree is structure used to store and efficiently
 query intervals. An interval may be dynamically inserted, and range
 queries of [lo, hi] may be performed to have the tree report all intervals
 that intersect with the queried interval. Augmented trees, described in
-CLRS (2009, Section 14.3: Interval trees, pp. 348–354), is one such way
-to represent these intervals.
+CLRS (2009, Section 14.3: pp. 348–354), is one way to represent these
+intervals. This implementation uses a treap to maintain balance.
 See: http://en.wikipedia.org/wiki/Interval_tree#Augmented_tree
 
-Time Complexity: O(log N) for insert() and O(k) for query(), where N is
-the number of intervals in the tree and k is the number of intervals that
-will be reported by the query().
+Time Complexity: On average O(log N) for insert() and O(k) for query(),
+where N is the number of intervals in the tree and k is the number of
+intervals that will be reported by each query().
 
 Space Complexity: O(N) on the number of intervals in the tree.
 
