@@ -11,9 +11,9 @@ from O(N) to O(log N). Furthermore, this version supports the same
 operations as a segment tree with lazy propagation, allowing range
 updates and queries to be performed in O(log N).
 
-Time Complexity: Assuming the join functions are O(1):
-insert(), push_back(), erase(), at(), modify(), and query()
-are O(log N). size() and empty() are O(1). walk() is O(N).
+Time Complexity: Assuming the join functions have constant complexity:
+insert(), push_back(), erase(), at(), modify(), and query() are all
+O(log N), while walk() is O(N).
 
 Space Complexity: O(N) on the size of the array.
 
