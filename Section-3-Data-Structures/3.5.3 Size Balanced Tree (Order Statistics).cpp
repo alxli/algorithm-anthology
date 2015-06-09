@@ -40,7 +40,6 @@ Space Complexity: O(N) on the number of nodes in the tree.
 #include <utility>   /* pair */
 
 template<class key_t, class val_t> class size_balanced_tree {
-
   struct node_t {
     key_t key;
     val_t val;
