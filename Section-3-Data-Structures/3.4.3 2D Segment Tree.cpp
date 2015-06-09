@@ -20,7 +20,6 @@ all operations are [0..xmax][0..ymax]
 #include <limits> /* std::numeric_limits<T>::min() */
 
 template<class T> class segment_tree_2D {
-
   //these can be set to large values without affecting your memory usage!
   static inline const int xmax() { return 1000000000; }
   static inline const int ymax() { return 1000000000; }
