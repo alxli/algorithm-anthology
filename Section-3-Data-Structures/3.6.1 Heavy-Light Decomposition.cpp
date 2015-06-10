@@ -1,14 +1,14 @@
 /*
 
-3.6.1 - Heavy-Light Decomposition for Dynamic Tree Queries
+3.6.1 - Heavy-Light Decomposition for Dynamic Path Queries
 
 Description: Given an undirected, connected graph that is a tree, the
 heavy-light decomposition (HLD) on the graph is a partitioning of the
 vertices into disjoint paths to later support dynamic modification and
-querying of values on paths between pairs of vertices. The input tree
-is stored in an adjacency list.
+querying of values on paths between pairs of vertices.
 See: http://wcipeg.com/wiki/Heavy-light_decomposition
 and: http://blog.anudeep2011.com/heavy-light-decomposition/
+To support dynamic adding and removal of edges, see link/cut tree.
 
 Note: The adjacency list tree[] that is passed to the constructor must
 not be changed afterwards in order for modify() and query() to work.
