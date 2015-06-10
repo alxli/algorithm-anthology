@@ -41,6 +41,7 @@ void build(int root) {
   while ((1 << len) <= nodes) len++;
   for (int i = 0; i < nodes; i++)
     dp[i].resize(len);
+  counter = 0;
   dfs(root, root);
 }
 
