@@ -60,7 +60,7 @@ int dfs(int u, int f) {
 int ford_fulkerson() {
   int max_flow = 0;
   for (;;) {
-    fill(vis, vis + MAXN, false);
+    fill(vis, vis + nodes, false);
     int df = dfs(source, INF);
     if (df == 0) break;
     max_flow += df;
