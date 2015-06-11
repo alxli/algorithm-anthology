@@ -2,29 +2,32 @@
 
 1.2.2 - Dijkstra's Algorithm (Single Source Shortest Path)
 
-Complexity: The simplest version runs in O(E+V^2) where V is the number
-of vertices and E is the number of edges. Using an adjacency list and
-priority queue (internally a binary heap), the implementation here is
-Θ((E+V) log(V)), dominated by Θ(E log(V)) if the graph is connected.
+Description: Given a directed graph with positive weights only, find
+the shortest distance to all nodes from a single starting node.
 
 Implementation Notes: The graph is stored using an adjacency list.
 This implementation negates distances before adding them to the 
 priority queue, since the container is a max-heap by default. This
 method is suggested in contests because it is easier than defining
 special comparators. An alternative would be declaring the queue
-with template parameters (obviously it is ugly):
-  priority_queue< pair<int,int>, vector< pair<int,int> >, greater< pair<int,int> > > pq;
-If the path is to be computed for only a single pair of nodes, one
-may break out of the loop as soon as the destination is reached,
+with template parameters (clearly, this way is very verbose and ugly):
+  priority_queue< pair<int, int>, vector<pair<int, int> >,
+                  greater<pair<int, int> > > pq;
+If only the path between a single pair of nodes is needed, for speed,
+we may break out of the loop as soon as the destination is reached
 by inserting the line "if (a == dest) break;" after the line "pq.pop();"
 
-Shortest Path Faster Algorithm: The code for Dijkstra’s algorithm
-here can be easily modified to become the Shortest Path Faster
+Complexity: The simplest version runs in O(E+V^2) where V is the number
+of vertices and E is the number of edges. Using an adjacency list and
+priority queue (internally a binary heap), the implementation here is
+Θ((E + V) log(V)), dominated by Θ(E log(V)) if the graph is connected.
+
+Modification to Shortest Path Faster Algorithm: The code for Dijkstra's
+algorithm here can be easily modified to become the Shortest Path Faster
 Algorithm (SPFA) by simply commenting out "visit[a] = true;" and changing
 the priority queue to a FIFO queue like BFS. SPFA is a faster version of
 the Bellman-Ford algorithm, working on negative path lengths (whereas
-Dijkstra’s cannot). However, certain graphs can be crafted to make
-the SPFA very slow.
+Dijkstra's cannot). Certain graphs can make the SPFA very slow.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 4 5
@@ -50,7 +53,7 @@ const int MAXN = 100, INF = 0x3f3f3f3f;
 int nodes, edges, a, b, weight, start, dest;
 int dist[MAXN], pred[MAXN];
 vector<bool> vis(MAXN);
-vector<pair<int, int> > adj[MAXN+1];
+vector<pair<int, int> > adj[MAXN];
 
 int main() {
   cin >> nodes >> edges;
@@ -90,4 +93,4 @@ int main() {
   while (i > 0) cout << path[i--] << "->";
   cout << dest << ".\n";
   return 0;
-} 
+}
