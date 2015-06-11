@@ -14,12 +14,12 @@ Complexity: O(V + E) on the number of vertices and edges.
 
 Comparison with other SCC algorithms:
 The strongly connected components of a graph can be efficiently
-computed using Kosaraju’s algorithm, Tarjan’s algorithm, or the
-path-based strong component algorithm. Tarjan’s algorithm can
-be seen as an improved version of Kosaraju’s because it performs
+computed using Kosaraju's algorithm, Tarjan's algorithm, or the
+path-based strong component algorithm. Tarjan's algorithm can
+be seen as an improved version of Kosaraju's because it performs
 a single DFS rather than two. Though they both have the same
-complexity, Tarjan’s algorithm is much more efficient in
-practice. However, Kosaraju’s algorithm is conceptually simpler.
+complexity, Tarjan's algorithm is much more efficient in
+practice. However, Kosaraju's algorithm is conceptually simpler.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 8 14
