@@ -17,6 +17,12 @@ graph, meaning that if any vertex were to be removed, the graph
 will remain connected. Therefore, a biconnected graph has no
 articulation vertices.
 
+Any connected graph decomposes into a tree of biconnected
+components called the "block tree" of the graph. An unconnected
+graph will thus decompose into a "block forest."
+
+See: http://en.wikipedia.org/wiki/Biconnected_component
+
 Complexity: O(V + E) on the number of vertices and edges.
 
 =~=~=~=~= Sample Input =~=~=~=~=
@@ -41,7 +47,7 @@ Component 3: 5 1 0
 Component 4: 7
 Component 5: 3
 Component 6: 6
-Adjacency List for Condensation Tree:
+Adjacency List for Block Forest:
 0 => 2
 1 => 2
 2 => 0 1
@@ -59,7 +65,7 @@ const int MAXN = 100;
 int nodes, edges, a, b, cnt;
 int low[MAXN], num[MAXN], comp[MAXN];
 vector<bool> vis(MAXN);
-vector<int> adj[MAXN], bcc_tree[MAXN];
+vector<int> adj[MAXN], bcc_forest[MAXN];
 vector<int> stack, cutpoints;
 vector<vector<int> > bcc;
 vector<pair<int, int> > bridges;
@@ -98,14 +104,14 @@ void dfs(int u, int p) {
 
 //condenses each bcc to a node and generates a tree
 //global variables adj and bcc must be set beforehand
-void condensation_tree() {
+void get_block_tree() {
   for (int i = 0; i < bcc.size(); i++)
     for (int j = 0; j < bcc[i].size(); j++)
       comp[bcc[i][j]] = i;
   for (int i = 0; i < nodes; i++)
     for (int j = 0; j < adj[i].size(); j++)
       if (comp[i] != comp[adj[i][j]])
-        bcc_tree[comp[i]].push_back(comp[adj[i][j]]);
+        bcc_forest[comp[i]].push_back(comp[adj[i][j]]);
 }
 
 int main() {
@@ -131,12 +137,12 @@ int main() {
       cout << " " << bcc[i][j];
     cout << "\n";
   }
-  condensation_tree();
-  cout << "Adjacency List for Condensation Tree:\n";
+  get_block_tree();
+  cout << "Adjacency List for Block Forest:\n";
   for (int i = 0; i < bcc.size(); i++) {
   	cout << i << " =>";
-    for (int j = 0; j < bcc_tree[i].size(); j++)
-      cout << " " << bcc_tree[i][j];
+    for (int j = 0; j < bcc_forest[i].size(); j++)
+      cout << " " << bcc_forest[i][j];
     cout << "\n";
   }
   return 0;
