@@ -3,7 +3,9 @@
 1.5.1 - Maximum Flow (Edmonds-Karp Algorithm)
 
 Description: Given a flow network, find a flow from a single
-source node to a single sink node that is maximized.
+source node to a single sink node that is maximized. Note
+that in this implementation, the adjacency list adj[] will
+be modified by the function edmonds_karp() after it's been called.
 
 Complexity: O(min(V*E^2, E*|F|)), where V is the number of vertices,
 E is the number of edges, and F is the max flow. This improves the
