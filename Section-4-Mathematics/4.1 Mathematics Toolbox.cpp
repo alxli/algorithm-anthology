@@ -60,6 +60,7 @@ const double eps = 1e-7;
 Sign Function
 
 Given a number x, sgn(x) returns -1 if x < 0, 0 if x = 0, or +1 if x > 0
+
 */
 
 template<class T> int sgn(const T & val) {
@@ -237,8 +238,8 @@ long long. In other worst, the value of X must be between 0 and 2^64 - 1.
 
 Note: vector[0] stores the most significant digit in all usages below.
 
-E.g. If X = {1, 2, 3} and A = 5 (i.e. X = 123 in base 5 = 38 in base 10),
-convert_base(X, 5, 3) returns {1, 1, 0, 2} (1102 in base 2).
+e.g. if X = {1, 2, 3} and A = 5 (i.e. X = 123 in base 5 = 38 in base 10),
+then convert_base(X, 5, 3) returns {1, 1, 0, 2} (1102 in base 2).
 
 */
 
@@ -271,9 +272,7 @@ Integer to Roman Numerals Conversion
 
 Given an integer x, this function returns the Roman numeral representation
 of x as a C++ string. More 'M's are appended to the front of the resulting
-string if x is greater than 1000.
-
-E.g. to_roman(1234) returns "CCXXXIV"
+string if x is greater than 1000. e.g. to_roman(1234) returns "CCXXXIV"
 
 */
 
