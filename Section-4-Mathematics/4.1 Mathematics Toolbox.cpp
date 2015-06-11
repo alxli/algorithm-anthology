@@ -22,19 +22,19 @@ const double phi = (1.0 + sqrt(5.0)) / 2.0; //golden ratio
 //A better way is using functions of std::numeric_limits<T> from <limits>
 //Some properties about the constants (isnan() is defined in <cmath>):
 //
-//  For all x that are are not NaN, posinf, or neginf, it's true that:
-//
-//    (posinf > x) and (neginf < x) and (posinf == -neginf)
-//    (posinf + x == posinf) and (posinf - x == posinf)
-//    (neginf + x == neginf) and (neginf - x == neginf)
-//    (posinf + posinf == posinf) and (neginf - neginf == neginf)
-//    (NaN != x) and (NaN != NaN) and (NaN != posinf) and (NaN != neginf)
-//    !(NaN < x) and !(NaN > x) and !(NaN <= x) and !(NaN >= x)
-//    isnan(0.0*posinf) and isnan(0.0*neginf) and isnan(posinf/neginf)
-//    isnan(NaN) and isnan(-NaN) and isnan(almost any operation with NaN)
-//    isnan(neginf-neginf) and isnan(posinf-posinf) and isnan(posinf+neginf)
+//For all x that are are not NaN, posinf, or neginf, it holds true that:
+//  (posinf > x) and (neginf < x) and (posinf == -neginf)
+//  (posinf + x == posinf) and (posinf - x == posinf)
+//  (neginf + x == neginf) and (neginf - x == neginf)
+//  (posinf + posinf == posinf) and (neginf - neginf == neginf)
+//  (NaN != x) and (NaN != NaN) and (NaN != posinf) and (NaN != neginf)
+//  !(NaN < x) and !(NaN > x) and !(NaN <= x) and !(NaN >= x)
+//  isnan(0.0*posinf) and isnan(0.0*neginf) and isnan(posinf/neginf)
+//  isnan(NaN) and isnan(-NaN) and isnan(almost any operation involving NaN)
+//  isnan(neginf-neginf) and isnan(posinf-posinf) and isnan(posinf+neginf)
 
 const double posinf = 1.0/0.0, neginf = -1.0/0.0, NaN = -(0.0/0.0);
+
 
 /*
 
@@ -49,6 +49,7 @@ e.g. if eps = 1e-7, then EQ(1e-8, 2e-8) is true and LT(1e-8, 2e-8) is false.
 
 const double eps = 1e-7;
 #define EQ(a, b) (fabs((a) - (b)) <= eps) /* equal to */
+#define NE(a, b) (fabs((a) - (b)) > eps)  /* not equal to */
 #define LT(a, b) ((a) < (b) - eps)        /* less than */
 #define GT(a, b) ((a) > (b) + eps)        /* greater than */
 #define LE(a, b) ((a) <= (b) + eps)       /* less than or equal to */
@@ -57,9 +58,10 @@ const double eps = 1e-7;
 
 /*
 
-Sign Function
+Sign Function:
 
-Given a number x, returns -1 (if x < 0), 0 (if x = 0), or 1 (if x > 0)
+Returns: -1 (if x < 0), 0 (if x = 0), or 1 (if x > 0)
+Warning: Does not handle the sign of +/-NaN (see signbit() in C++11)
 
 */
 
@@ -76,7 +78,7 @@ The % operator in C/C++ returns the remainder of division (which may be
 a positive or negative result) The true Euclidean definition of modulo,
 however, defines the remainder to be always nonnegative. For positive
 operators, % and mod are the same. But for negative operands, they differ.
-The result is consistent with the Euclidean division algorithm.
+The result here is consistent with the Euclidean division algorithm.
 
 e.g. -21 % 4 == -1 because -21 / 4 is -5 with a remainder of -1,
       however, -21 mod 4 is equal to 3 because -21 + 4*6 is 3.
@@ -84,7 +86,7 @@ e.g. -21 % 4 == -1 because -21 / 4 is -5 with a remainder of -1,
 */
 
 template<class T> T mod(const T & a, const T & b) {
-  if (b < (T)0) return a - (b * (T)ceil((double)a / b));
+  if (b < T(0)) return a - (b * (T)ceil((double)a / b));
   return a - (b * (T)floor((double)a / b));
 }
 
@@ -93,8 +95,9 @@ template<class T> T mod(const T & a, const T & b) {
 
 Floating Point Rounding Functions
 
-Note that floor() in <cmath> unsymmetrically rounds down, towards -infinity
-while ceil() in <cmath> unsymmetrically rounds up, towards +infinity.
+floor() in <cmath> asymmetrically rounds down, towards -infinity,
+while ceil() in <cmath> asymmetrically rounds up, towards +infinity.
+The following are common alternative ways to round.
 
 */
 
