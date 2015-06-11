@@ -3,12 +3,14 @@
 1.5.2 - Maximum Flow (Dinic's Blocking Flow Algorithm)
 
 Description: Given a flow network, find a flow from a single
-source node to a single sink node that is maximized.
+source node to a single sink node that is maximized. Node labels
+are 0-based. That is, values in adj[] must describe a graph with
+nodes labeled in the range from 0 to nodes - 1, inclusive.
 
 Complexity: O(V^2*E) on the number of vertices and edges.
 
 Comparison with Edmonds-Karp Algorithm:
-Dinic’s algorithm is similar to the Edmonds-Karp algorithm in that
+Dinic's algorithm is similar to the Edmonds-Karp algorithm in that
 it uses the shortest augmenting path. The introduction of the
 concepts of the level graph and blocking flow enable Dinic's
 algorithm to achieve its better performance. Hence, Dinic’s
