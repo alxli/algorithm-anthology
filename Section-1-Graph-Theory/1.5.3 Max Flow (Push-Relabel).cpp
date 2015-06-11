@@ -1,6 +1,6 @@
 /*
 
-1.5.3 - Maximum Flow (Push-Relabel Algorithm)
+1.5.4 - Max Flow (Push-Relabel Algorithm)
 
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized. The push-
