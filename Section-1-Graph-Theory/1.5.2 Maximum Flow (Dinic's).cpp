@@ -11,8 +11,8 @@ Comparison with Edmonds-Karp Algorithm:
 Dinic's algorithm is similar to the Edmonds-Karp algorithm in that
 it uses the shortest augmenting path. The introduction of the
 concepts of the level graph and blocking flow enable Dinic's
-algorithm to achieve its better performance. Hence, Dinic’s
-algorithm is also called Dinic’s blocking flow algorithm.
+algorithm to achieve its better performance. Hence, Dinic's
+algorithm is also called Dinic's blocking flow algorithm.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 6 8
