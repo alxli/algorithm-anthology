@@ -5,19 +5,19 @@
 Description: Given an undirected graph, its minimum spanning tree (MST)
 is a tree connecting all nodes with a subset of its edges such that their
 total weight is minimized. The input graph is stored in an adjacency list.
-Prim’s algorithm greedily selects edges from a priority queue, and is
-similar to Dijkstra’s algorithm, where instead of processing nodes, we
+Prim's algorithm greedily selects edges from a priority queue, and is
+similar to Dijkstra's algorithm, where instead of processing nodes, we
 process individual edges. Note that the concept of the minimum spanning
-tree makes Prim’s algorithm work with edge weights of an arbitrary sign.
+tree makes Prim's algorithm work with edge weights of an arbitrary sign.
 In fact, a big positive constant added to all of the edge weights of the
 graph will not change the resulting spanning tree.
 
 Warning: The implementation below only works on connected graphs. In order
 to make Prim's work on unconnected graphs to produce a minimum spanning
-forest, you will have to modify the code to run Prim's once per connected
-component of the graph. Or, use Kruskal's algorithm in the next section.
+forest, you will have to modify the code to run Prim once per connected
+component of the graph. Or, use Kruskal algorithm in the next section.
 
-Implementation Notes: Similar to the implementation of Dijkstra’s algorithm
+Implementation Notes: Similar to the implementation of Dijkstra's algorithm
 in the previous section, weights are negated before they are added to the
 priority queue (and negated once again when they are retrieved). To find
 the maximum spanning tree, simply skip the two negation steps and the
@@ -78,7 +78,7 @@ int main() {
     adj[b].push_back(make_pair(a, weight));
   }
   for (int i = 0; i < nodes; i++) pred[i] = -1;
-  int start = 0; //arbitrarily pick 0 as a starting node
+  int start = 0; //arbitrarily pick 0 as a start node
   vis[start] = true;
   priority_queue<pair<int, pair<int, int> > > pq;
   for (int j = 0; j < adj[start].size(); j++)
@@ -100,8 +100,8 @@ int main() {
       pred[b] = a;
       total_dist += weight;
       for (int j = 0; j < adj[b].size(); j++)
-          pq.push(make_pair(-adj[b][j].second,
-                    make_pair(b, adj[b][j].first)));
+        pq.push(make_pair(-adj[b][j].second,
+                  make_pair(b, adj[b][j].first)));
     }
   }
   for (int i = 0; i < nodes; i++)
