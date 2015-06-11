@@ -39,11 +39,13 @@ int main() {
   }
   dist[start] = 0;
   for (int i = 0; i < nodes; i++)
-    for (int j = 0; j < edges; j++)
-      if (dist[E[j][1]] > dist[E[j][0]] + E[j][2]) {
-          dist[E[j][1]] = dist[E[j][0]] + E[j][2];
-          pred[E[j][1]] = E[j][0];
+    for (int j = 0; j < edges; j++) {
+      a = E[j][0], b = E[j][1], weight = E[j][2];
+      if (dist[b] > dist[a] + weight) {
+          dist[b] = dist[a] + weight;
+          pred[b] = a;
       }
+    }
   cout << "The shortest distance from " << start;
   cout << " to " << dest << " is " << dist[dest] << ".\n";
 
