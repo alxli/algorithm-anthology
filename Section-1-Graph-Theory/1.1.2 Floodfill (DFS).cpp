@@ -4,13 +4,13 @@
 
 Description: Given a directed graph and a source node,
 traverse to all reachable nodes from the source and determine
-the total area traveled. Logically, the order that nodes are
-visited in a floodfill should resemble a BFS. However, if the
-objective is simply to visit all reachable nodes without
-regard for the order (as is the case with most applications
-of floodfill in contests), it is much simpler to DFS because
-an extra queue is not needed. The graph is stored in an
-adjacency list.
+the total area traveled. Conceptually, the order that nodes
+are visited in a "flooding" of the graph should resemble a
+BFS ordering. However, if the objective is simply to visit
+all reachable nodes without regard for the order (as is the
+case with most applications of floodfill in contests), it is
+much simpler to DFS because an extra queue is not needed.
+The input graph is stored in an adjacency list.
 
 Complexity: O(V) on the number of vertices.
 
