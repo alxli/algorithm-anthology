@@ -5,13 +5,6 @@
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized.
 
-The flow capacities are stored in an adjacency matrix. The edges
-themselves are stored in an adjacency list to optimize the BFS.
-The function edmonds_karp() takes in three parameters: the number
-of nodes, the source node, and the sink node. Nodes are zero-based.
-That is, values in adj[] must describe a graph with nodes labeled
-in the range from 0 to nodes - 1, inclusive.
-
 Complexity: O(min(V*E^2, E*|F|)), where V is the number of vertices,
 E is the number of edges, and F is the max flow. This improves the
 original Ford-Fulkerson algorithm, which runs in O(E*|F|). As the
