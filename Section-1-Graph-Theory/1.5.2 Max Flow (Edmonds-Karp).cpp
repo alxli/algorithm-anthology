@@ -1,6 +1,6 @@
 /*
 
-1.5.1 - Maximum Flow (Edmonds-Karp Algorithm)
+1.5.2 - Maximum Flow (Edmonds-Karp Algorithm)
 
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized. Note
