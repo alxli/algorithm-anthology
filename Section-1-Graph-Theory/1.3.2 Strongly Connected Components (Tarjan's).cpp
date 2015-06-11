@@ -20,12 +20,12 @@ Complexity: O(V + E) on the number of vertices and edges.
 
 Comparison with other SCC algorithms:
 The strongly connected components of a graph can be efficiently
-computed using Kosaraju’s algorithm, Tarjan’s algorithm, or the
-path-based strong component algorithm. Tarjan’s algorithm can
-be seen as an improved version of Kosaraju’s because it performs
+computed using Kosaraju's algorithm, Tarjan's algorithm, or the
+path-based strong component algorithm. Tarjan's algorithm can
+be seen as an improved version of Kosaraju's because it performs
 a single DFS rather than two. Though they both have the same
-complexity, Tarjan’s algorithm is much more efficient in
-practice. However, Kosaraju’s algorithm is conceptually simpler.
+complexity, Tarjan's algorithm is much more efficient in
+practice. However, Kosaraju's algorithm is conceptually simpler.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 8 14
@@ -61,27 +61,27 @@ int num[MAXN], low[MAXN];
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN], stack;
 
-void dfs(int a) {
-  int b;
-  low[a] = num[a] = ++counter;
-  stack.push_back(a);
-  for (int j = 0; j < adj[a].size(); j++) {
-    b = adj[a][j];
-    if (vis[b]) continue;
-    if (num[b] == -1) {
-      dfs(b);
-      low[a] = min(low[a], low[b]);
+void dfs(int u) {
+  int v;
+  low[u] = num[u] = ++counter;
+  stack.push_back(u);
+  for (int j = 0; j < adj[u].size(); j++) {
+    v = adj[u][j];
+    if (vis[v]) continue;
+    if (num[v] == -1) {
+      dfs(v);
+      low[u] = min(low[u], low[v]);
     } else {
-      low[a] = min(low[a], num[b]);
+      low[u] = min(low[u], num[v]);
     }
   }
-  if (num[a] != low[a]) return;
+  if (num[u] != low[u]) return;
   cout << "Component " << ++ncomp << ":";
   do {
-    vis[b = stack.back()] = true;
+    vis[v = stack.back()] = true;
     stack.pop_back();
-    cout << " " << b;
-  } while (a != b);
+    cout << " " << v;
+  } while (u != v);
   cout << "\n";
 }
 
