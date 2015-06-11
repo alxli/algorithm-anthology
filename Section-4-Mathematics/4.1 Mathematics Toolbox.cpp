@@ -59,7 +59,7 @@ const double eps = 1e-7;
 
 Sign Function
 
-Given a number x, sgn(x) returns -1 if x < 0, 0 if x = 0, or +1 if x > 0
+Given a number x, returns -1 (if x < 0), 0 (if x = 0), or 1 (if x > 0)
 
 */
 
@@ -170,18 +170,33 @@ double roundplaces(const Double & x, unsigned int N, Function f) {
 
 /*
 
-Gamma and Log-Gamma Functions (tgamma() and lgamma() in C++11)
+Error Function (erf() in C++11)
+Adapted from: http://www.johndcook.com/blog/cpp_erf/
 
-The following are extremely fast implementations for doubles.
+*/
+
+double erf(double x) {
+  double a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
+  double a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  int sign = (x < 0.0) ? -1 : 1;
+  x = fabs(x);
+  double t = 1.0/(1.0 + p*x);
+  return sign*(1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-x*x));
+}
+
+
+/*
+
+Gamma and Log-Gamma Functions (tgamma() and lgamma() in C++11)
 Adapted from: http://www.johndcook.com/blog/cpp_gamma/
 
 */
 
-double loggamma(double x);
+double lgamma(double x);
 
-double gamma(double x) {
+double tgamma(double x) {
   if (x <= 0.0) return NaN; //x must be positive
-  double gamma = 0.577215664901532860606512090; //Euler–Mascheroni constant
+  static const double gamma = 0.577215664901532860606512090;
   if (x < 1e-3) return 1.0/(x*(1.0 + gamma*x));
   if (x < 12.0) {
     double y = x;
@@ -211,12 +226,12 @@ double gamma(double x) {
     else for (int i = 0; i < n; i++) result *= y++;
     return result;
   }
-  return (x > 171.624) ? DBL_MAX*2.0 : exp(loggamma(x));
+  return (x > 171.624) ? DBL_MAX*2.0 : exp(lgamma(x));
 }
 
-double loggamma(double x) {
+double lgamma(double x) {
   if (x <= 0.0) return NaN; //x must be positive
-  if (x < 12.0) return log(fabs(gamma(x)));
+  if (x < 12.0) return log(fabs(tgamma(x)));
   static const double c[8] = {
     1.0/12.0, -1.0/360.0, 1.0/1260.0, -1.0/1680.0, 1.0/1188.0,
     -691.0/360360.0, 1.0/156.0, -3617.0/122400.0
@@ -288,6 +303,6 @@ std::string to_roman(int x) {
 using namespace std;
 
 int main() {
-  //TODO: examples and tests
+  //TODO: Examples and tests
   return 0;
 }
