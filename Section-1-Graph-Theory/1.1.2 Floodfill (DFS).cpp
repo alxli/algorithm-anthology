@@ -55,7 +55,7 @@ int main() {
     adj[a].push_back(b);
   }
   cin >> source;
-  cout << "Visited " << dfs(source);
-  cout << " nodes starting from " << source;
+  cout << "Visited " << dfs(source) << " nodes";
+  cout << " starting from " << source << "\n";
   return 0;
 }
