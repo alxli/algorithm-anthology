@@ -3,68 +3,72 @@
 2.2 - Discrete Binary Search Query
 
 Not only can binary search be used on arrays (std::binary_search),
-it can also be used on monotonic functions whose domain is the set
-of integers. In this case we aren’t restricted by practical
-quantities such as available memory, as was the case with arrays.
+it can also be used on monotonic functions. In this case we aren't
+restricted by practical quantities such as available memory, as is
+the case with storing values explicitly in a sorted array.
 
-BSQ_min() returns the smallest value x in the range [lo, hi),
-(i.e. including lo, but not including hi) for which the boolean
-function query(x) is true. It can be used if and only if for all x
-in the queried range, query(x) implies query(y) for all y > x.
-In other words, the return value of query(x) should be false for
-x < k (k is constant) and true for x >= k. BSQ_min() will find k.
+binary_search_first_true() returns the smallest integer k in the
+range [lo, hi) - (i.e. including lo, but excluding hi) for which
+the boolean function query(k) is true. It can be used if and only
+if there exists a constant k where the return value of query(x)
+is false for all x < k and true for all x >= k.
 
-BSQ_max() returns the greatest value x in the range [lo, hi) for
-which the boolean function query(x) is true. It can be used if and
-only if for all x in the range, query(x) implies query(y) for all y < x.
-In other words, the return value of query(x) should be false for
-x > k (k is constant) and true for x <= k. BSQ_max() will find k.
+binary_search_last_true() returns the greatest integer k in the
+range [lo, hi) - (i.e. including lo, but excluding hi) for which
+the boolean function query(k) is true. It can be used if and only
+if there exists a constant k where the return value of query(x)
+is true for all x <= k and false for all x > k.
 
-Complexity: O(log N) where N is the search space (hi - lo)
+Complexity: At most O(log N) calls to query(), where N is the
+search space (the distance between lo and hi).
 
-fBSQ_min() works like BSQ_min(), but on floating point query functions.
-Since the set of reals numbers is dense, it is clear that we cannot
-find the exact target. Instead, fBSQ_min() will return a value that is
-very close to the border between false and true. Note that the number
-of iterations performed depends on how precise we want the answer to be.
-Although one can loop while (hi - lo > epsilon) until the distance
-between hi and lo is really small, we can instead just follow the KISS
-principle and just let the loop run for a few hundred iterations.
-In most contest applications, 100 iterations is sufficient enough and
-will reduce our search space to 10^-30 times its original size.
+fbinary_search() works like binary_search_first_true(), but on
+floating point query functions. Since the set of reals numbers is
+dense, it is clear that we cannot find the exact target. Instead,
+fbinary_search() will return a value that is very close to the
+border between false and true. Note that the number of iterations
+performed depends on how precise we want the answer to be. Although
+one can loop while (hi - lo > epsilon) until the distance between
+lo and hi is really small, we can instead just keep it simple and
+let the loop run for a few hundred iterations. In most contest
+applications, 100 iterations is more than sufficient, reducing the
+search space to 10^-30 times its original size.
 
 */
 
-template<class T, class UnaryPredicate>
-T BSQ_min(T lo, T hi, UnaryPredicate query) {
-  T mid, hi_backup = hi;
+//000[1]11
+template<class Int, class UnaryPredicate>
+Int binary_search_first_true(Int lo, Int hi, UnaryPredicate query) {
+  Int mid, _hi = hi;
   while (lo < hi) {
     mid = lo + (hi - lo)/2;
     if (query(mid)) hi = mid;
     else lo = mid + 1;
   }
-  if (!query(lo)) return hi_backup; //all false
+  if (!query(lo)) return _hi; //all [lo, hi) is false
   return lo;
 }
 
-template<class T, class UnaryPredicate>
-T BSQ_max(T lo, T hi, UnaryPredicate query) {
-  T mid, hi_backup = hi;
+//11[1]000
+template<class Int, class UnaryPredicate>
+Int binary_search_last_true(Int lo, Int hi, UnaryPredicate query) {
+  Int mid, _hi = hi;
   while (lo < hi) {
     mid = lo + (hi - lo + 1)/2;
     if (query(mid)) lo = mid;
     else hi = mid - 1;
   }
-  if (!query(lo)) return hi_backup; //all true
+  if (!query(lo)) return _hi; //all [lo, hi) is true
   return lo;
 }
 
+//000[1]11
 template<class T, class UnaryPredicate>
-T fBSQ_min(T lo, T hi, UnaryPredicate query) {
+T fbinary_search(T lo, T hi, UnaryPredicate query) {
   T mid;
   for (int reps = 0; reps < 100; reps++) {
     mid = (lo + hi)/2.0;
-    //simply swap hi and lo for fBSQ_max()
+    //simply switch hi and lo in the line below to find last true
     (query(mid) ? hi : lo) = mid;
   }
   return lo;
@@ -75,8 +79,7 @@ T fBSQ_min(T lo, T hi, UnaryPredicate query) {
 #include <iostream>
 using namespace std;
 
-//Define your own black-box query function here.
-//Simple examples:
+//Define your own black-box query function here. Simple examples:
 bool query1(int x) { return x >= 3; }
 bool query2(int x) { return false; }
 bool query3(int x) { return x <= 5; }
@@ -84,10 +87,10 @@ bool query4(int x) { return true; }
 bool query5(double x) { return x >= 1.2345; }
 
 int main() {
-  cout << BSQ_min(0, 7, query1) << endl;         //3
-  cout << BSQ_min(0, 7, query2) << endl;         //7
-  cout << BSQ_max(0, 7, query3) << endl;         //5
-  cout << BSQ_max(0, 7, query4) << endl;         //7
-  cout << fBSQ_min(-10.0, 10.0, query5) << endl; //1.2345
+  cout << binary_search_first_true(0, 7, query1) << "\n"; //3
+  cout << binary_search_first_true(0, 7, query2) << "\n"; //7
+  cout << binary_search_last_true(0, 7, query3)  << "\n"; //5
+  cout << binary_search_last_true(0, 7, query4)  << "\n"; //7
+  cout << fbinary_search(-10.0, 10.0, query5)    << "\n"; //1.2345
   return 0;
 }
