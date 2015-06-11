@@ -6,7 +6,7 @@ The following applies to unweighted, undirected trees only.
 
 find_centers(): Returns 1 or 2 tree centers. The center
 (or Jordan center) of a graph is the set of all vertices of
-minimum eccentricity,[2] that is, the set of all vertices A
+minimum eccentricity, that is, the set of all vertices A
 where the max distance d(A,B) to other vertices B is minimal.
 
 find_centroid(): Returns a vertex where all of its subtrees
