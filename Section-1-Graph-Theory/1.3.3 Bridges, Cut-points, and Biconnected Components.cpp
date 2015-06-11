@@ -49,42 +49,41 @@ Component 6: 6
 using namespace std;
 
 const int MAXN = 100;
-int nodes, edges, a, b, counter;
+int nodes, edges, a, b, cnt;
 int low[MAXN], num[MAXN];
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN], stack, cutpoints;
 vector<vector<int> > bcc;
 vector<pair<int, int> > bridges;
 
-void dfs(int a, int p) {
-  int b;
-  vis[a] = true;
-  low[a] = num[a] = counter++;
-  stack.push_back(a);
-  int children = 0;
+void dfs(int u, int p) {
+  int v, children = 0;
   bool cutpoint = false;
-  for (int j = 0; j < adj[a].size(); j++) {
-    if ((b = adj[a][j]) == p) continue;
-    if (vis[b]) {
-      low[a] = min(low[a], num[b]);
+  vis[u] = true;
+  low[u] = num[u] = cnt++;
+  stack.push_back(u);
+  for (int j = 0; j < adj[u].size(); j++) {
+    if ((v = adj[u][j]) == p) continue;
+    if (vis[v]) {
+      low[u] = min(low[u], num[v]);
     } else {
-      dfs(b, a);
-      low[a] = min(low[a], low[b]);
-      cutpoint |= (low[b] >= num[a]);
-      if (low[b] > num[a])
-        bridges.push_back(make_pair(a, b));
+      dfs(v, u);
+      low[u] = min(low[u], low[v]);
+      cutpoint |= (low[v] >= num[u]);
+      if (low[v] > num[u])
+        bridges.push_back(make_pair(u, v));
       ++children;
     }
   }
   if (p == -1) cutpoint = (children >= 2);
-  if (cutpoint) cutpoints.push_back(a);
-  if (low[a] == num[a]) {
+  if (cutpoint) cutpoints.push_back(u);
+  if (low[u] == num[u]) {
     vector<int> component;
     do {
-      b = stack.back();
+      v = stack.back();
       stack.pop_back();
-      component.push_back(b);
-    } while (a != b);
+      component.push_back(v);
+    } while (u != v);
     bcc.push_back(component);
   }
 }
@@ -96,10 +95,9 @@ int main() {
     adj[a].push_back(b);
     adj[b].push_back(a);
   }
-  counter = 0;
+  cnt = 0;
   for (int i = 0; i < nodes; i++)
     if (!vis[i]) dfs(i, -1);
-
   cout << "Cut-points:";
   for (int i = 0; i < cutpoints.size(); i++)
     cout << " " << cutpoints[i];
