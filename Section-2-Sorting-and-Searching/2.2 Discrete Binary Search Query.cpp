@@ -63,9 +63,9 @@ Int binary_search_last_true(Int lo, Int hi, UnaryPredicate query) {
 }
 
 //000[1]11
-template<class T, class UnaryPredicate>
-T fbinary_search(T lo, T hi, UnaryPredicate query) {
-  T mid;
+template<class Double, class UnaryPredicate>
+Double fbinary_search(Double lo, Double hi, UnaryPredicate query) {
+  Double mid;
   for (int reps = 0; reps < 100; reps++) {
     mid = (lo + hi)/2.0;
     //simply switch hi and lo in the line below to find last true
