@@ -17,7 +17,7 @@ E is the number of edges, and F is the max flow. This improves the
 original Ford-Fulkerson algorithm, which runs in O(E*|F|). As the
 Edmonds-Karp algorithm is also bounded by O(E*|F|), it is guaranteed
 to be at least as fast as Ford-Fulkerson. For an even faster algorithm,
-see Dinic’s algorithm in the next section, which runs in O(V^2*E).
+see Dinic's algorithm in the next section, which runs in O(V^2*E).
 
 Comparison with Ford-Fulkerson Algorithm:
 The Ford-Fulkerson algorithm is only optimal on graphs with integer
