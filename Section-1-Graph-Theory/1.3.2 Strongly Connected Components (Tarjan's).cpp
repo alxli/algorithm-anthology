@@ -56,14 +56,14 @@ Component 3: 4 1 0
 using namespace std;
 
 const int MAXN = 100;
-int nodes, edges, a, b, counter, ncomp;
+int nodes, edges, a, b, cnt, ncomp;
 int num[MAXN], low[MAXN];
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN], stack;
 
 void dfs(int u) {
   int v;
-  low[u] = num[u] = ++counter;
+  low[u] = num[u] = ++cnt;
   stack.push_back(u);
   for (int j = 0; j < adj[u].size(); j++) {
     v = adj[u][j];
@@ -94,7 +94,7 @@ int main() {
   for (int i = 0; i < nodes; i++) {
     num[i] = low[i] = -1;
   }
-  counter = ncomp = 0;
+  cnt = ncomp = 0;
   for (int i = 0; i < nodes; i++)
     if (num[i] == -1) dfs(i);
   return 0;
