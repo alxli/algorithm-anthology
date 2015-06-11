@@ -31,35 +31,35 @@ algorithm is also called Dinic’s blocking flow algorithm.
 
 */
 
+#include <algorithm>
 #include <iostream>
 #include <vector>
 using namespace std;
 
-struct edge { int to, rev, f, cap; };
+struct edge { int to, rev, cap, f; };
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
 int nodes, source, sink;
-int dist[MAXN], queue[MAXN], work[MAXN];
+int dist[MAXN], q[MAXN], ptr[MAXN];
 vector<edge> adj[MAXN];
 
 void add_edge(int s, int t, int cap) {
-  adj[s].push_back((edge){t, adj[t].size(), 0, cap});
-  adj[t].push_back((edge){s, adj[s].size(), 0, cap});
+  adj[s].push_back((edge){t, adj[t].size(), cap, 0});
+  adj[t].push_back((edge){s, adj[s].size() - 1, 0, 0});
 }
 
 bool dinic_bfs() {
   for (int i = 0; i < nodes; i++) dist[i] = -1;
   dist[source] = 0;
   int qh = 0, qt = 0;
-  queue[qt++] = source;
+  q[qt++] = source;
   while (qh < qt) {
-    int u = queue[qh++];
+    int u = q[qh++];
     for (int j = 0; j < adj[u].size(); j++) {
       edge &e = adj[u][j];
-      int v = e.to;
-      if (dist[v] < 0 && e.f < e.cap) {
-        dist[v] = dist[u] + 1;
-        queue[qt++] = v;
+      if (dist[e.to] < 0 && e.f < e.cap) {
+        dist[e.to] = dist[u] + 1;
+        q[qt++] = e.to;
       }
     }
   }
@@ -68,14 +68,13 @@ bool dinic_bfs() {
 
 int dinic_dfs(int u, int f) {
   if (u == sink) return f;
-  for (int &i = work[u]; i < adj[u].size(); i++) {
-    edge &e = adj[u][i];
-    if (e.cap <= e.f) continue;
-    int v = e.to, df;
-    if (dist[v] == dist[u] + 1) {
-      if ((df = dinic_dfs(v, min(f, e.cap - e.f))) > 0) {
+  for (; ptr[u] < adj[u].size(); ptr[u]++) {
+    edge &e = adj[u][ptr[u]];
+    if (dist[e.to] == dist[u] + 1 && e.f < e.cap) {
+      int df = dinic_dfs(e.to, min(f, e.cap - e.f));
+      if (df > 0) {
         e.f += df;
-        adj[v][e.rev].f -= df;
+        adj[e.to][e.rev].f -= df;
         return df;
       }
     }
@@ -86,8 +85,8 @@ int dinic_dfs(int u, int f) {
 int dinic() {
   int max_flow = 0, delta;
   while (dinic_bfs()) {
-    for (int i = 0; i < nodes; i++) work[i] = 0;
-    while (delta = dinic_dfs(source, INF))
+    for (int i = 0; i < nodes; i++) ptr[i] = 0;
+    while ((delta = dinic_dfs(source, INF)) != 0)
       max_flow += delta;
   }
   return max_flow;
