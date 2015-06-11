@@ -8,7 +8,7 @@ total weight is minimized. The input graph is stored in an edge list.
 If the graph is not connected, Kruskal's algorithm will produce the
 minimum spanning forest (refer to the sample).
 
-Complexity: O(E*log(V)), where E and V are the number of edges and vertices.
+Complexity: O(E*log(V)) on the number of edges and vertices respectively.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 7 7
