@@ -41,12 +41,12 @@ int nodes, edges, start, a, b;
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN];
 
-void dfs(int n) {
-  vis[n] = true;
-  cout << " " << n;
-  for (int j = 0; j < adj[n].size(); j++)
-    if (!vis[adj[n][j]])
-      dfs(adj[n][j]);
+void dfs(int u) {
+  vis[u] = true;
+  cout << " " << u;
+  for (int j = 0; j < adj[u].size(); j++)
+    if (!vis[adj[u][j]])
+      dfs(adj[u][j]);
 }
 
 int main() {
