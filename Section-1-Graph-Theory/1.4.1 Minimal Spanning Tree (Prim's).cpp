@@ -48,14 +48,14 @@ sophisticated Fibonacci heap, the complexity becomes O(E + V*log(V)).
 7 8 7
 
 =~=~=~=~= Sample Output =~=~=~=~=
-1<->0
-2<->7
-3<->2
-4<->3
-5<->6
-6<->7
-7<->0
-8<->2
+0<->1
+0<->7
+7<->6
+6<->5
+7<->2
+2<->8
+2<->3
+3<->4
 Total distance: 37
 
 */
@@ -66,7 +66,7 @@ Total distance: 37
 using namespace std;
 
 const int MAXN = 100;
-int nodes, edges, a, b, weight, pred[MAXN];
+int nodes, edges, a, b, weight;
 vector<bool> vis(MAXN);
 vector<pair<int, int> > adj[MAXN];
 
@@ -77,7 +77,6 @@ int main() {
     adj[a].push_back(make_pair(b, weight));
     adj[b].push_back(make_pair(a, weight));
   }
-  for (int i = 0; i < nodes; i++) pred[i] = -1;
   int start = 0; //arbitrarily pick 0 as a start node
   vis[start] = true;
   priority_queue<pair<int, pair<int, int> > > pq;
@@ -97,15 +96,13 @@ int main() {
     if (vis[a] && !vis[b]) {
       vis[b] = true;
       mst_nodes++;
-      pred[b] = a;
+      if (b != start) cout << a << "<->" << b << "\n";
       total_dist += weight;
       for (int j = 0; j < adj[b].size(); j++)
         pq.push(make_pair(-adj[b][j].second,
                   make_pair(b, adj[b][j].first)));
     }
   }
-  for (int i = 0; i < nodes; i++)
-    if (i != start) cout << i << "<->" << pred[i] << "\n";
   cout << "Total distance: " << total_dist << "\n";
   return 0;
 }
