@@ -14,7 +14,7 @@ nodes labeled in the range [0..nodes-1].
 
 Complexity: O(min(V*E^2, E*|F|)), where V is the number of vertices,
 E is the number of edges, and F is the max flow. This improves the
-original Ford-Fulkerson algorithm, which runs in O(E*|F|). As the 
+original Ford-Fulkerson algorithm, which runs in O(E*|F|). As the
 Edmonds-Karp algorithm is also bounded by O(E*|F|), it is guaranteed
 to be at least as fast as Ford-Fulkerson. For an even faster algorithm,
 see Dinic’s algorithm in the next section, which runs in O(V^2*E).
@@ -42,44 +42,48 @@ on real-valued capacities.
 
 */
 
+#include <algorithm>
 #include <iostream>
-#include <queue>
 #include <vector>
 using namespace std;
 
+struct edge { int s, t, rev, cap, f; };
+
 const int MAXN = 100, INF = 0x3f3f3f3f;
-int cap[MAXN][MAXN];
-vector<int> adj[MAXN];
+vector<edge> adj[MAXN];
+
+void add_edge(int s, int t, int cap) {
+  adj[s].push_back((edge){s, t, adj[t].size(), cap, 0});
+  adj[t].push_back((edge){t, s, adj[s].size() - 1, 0, 0});
+}
 
 int edmonds_karp(int nodes, int source, int sink) {
-  int max_flow = 0, a, b, best[nodes], pred[nodes];
-  vector<bool> vis(nodes);
-  for (int i = 0; i < nodes; i++) best[i] = 0;
-  while (true) {
-    for (int i = 0; i < nodes; i++) vis[i] = false;
-    vis[source] = true;
-    best[source] = INF;
-    pred[sink] = -1;
-    queue<int> q;
-    for (q.push(source); !q.empty(); q.pop()) {
-      a = q.front();
-      if (a == sink) break;
-      for (int j = 0; j < adj[a].size(); j++) {
-        b = adj[a][j];
-        if (!vis[b] && cap[a][b] > 0) {
-          vis[b] = true;
-          pred[b] = a;
-          best[b] = min(best[a], cap[a][b]);
-          q.push(b);
+  static int q[MAXN];
+  int max_flow = 0;
+  for (;;) {
+    int qt = 0;
+    q[qt++] = source;
+    edge * pred[nodes];
+    for (int i = 0; i < nodes; i++) pred[i] = 0;
+    for (int qh = 0; qh < qt && !pred[sink]; qh++) {
+      int u = q[qh];
+      for (int j = 0; j < adj[u].size(); j++) {
+        edge * e = &adj[u][j];
+        if (!pred[e->t] && e->cap > e->f) {
+          pred[e->t] = e;
+          q[qt++] = e->t;
         }
       }
     }
-    if (pred[sink] == -1) break;
-    for (int i = sink; i != source; i = pred[i]) {
-      cap[pred[i]][i] -= best[sink];
-      cap[i][pred[i]] += best[sink];
+    if (!pred[sink]) break;
+    int df = INF;
+    for (int u = sink; u != source; u = pred[u]->s)
+      df = min(df, pred[u]->cap - pred[u]->f);
+    for (int u = sink; u != source; u = pred[u]->s) {
+      pred[u]->f += df;
+      adj[pred[u]->t][pred[u]->rev].f -= df;
     }
-    max_flow += best[sink];
+    max_flow += df;
   }
   return max_flow;
 }
@@ -89,8 +93,7 @@ int main() {
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
     cin >> a >> b >> capacity;
-    adj[a].push_back(b);
-    cap[a][b] = capacity;
+    add_edge(a, b, capacity);
   }
   cin >> source >> sink;
   cout << edmonds_karp(nodes, source, sink) << "\n";
