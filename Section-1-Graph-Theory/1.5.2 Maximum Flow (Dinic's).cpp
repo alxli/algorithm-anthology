@@ -3,7 +3,9 @@
 1.5.2 - Maximum Flow (Dinic's Blocking Flow Algorithm)
 
 Description: Given a flow network, find a flow from a single
-source node to a single sink node that is maximized.
+source node to a single sink node that is maximized. Note
+that in this implementation, the adjacency list adj[] will
+be modified by the function dinic() after it's been called.
 
 Complexity: O(V^2*E) on the number of vertices and edges.
 
