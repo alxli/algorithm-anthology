@@ -56,12 +56,12 @@ vector<bool> vis(MAXN);
 vector<int> adj[MAXN], rev[MAXN], order;
 vector<vector<int> > scc;
 
-void dfs(vector<int> graph[], vector<int> &res, int i) {
-  vis[i] = true;
-  for (int j = 0; j < graph[i].size(); j++)
-    if (!vis[graph[i][j]])
-      dfs(graph, res, graph[i][j]);
-  res.push_back(i);
+void dfs(vector<int> graph[], vector<int> & res, int u) {
+  vis[u] = true;
+  for (int j = 0; j < graph[u].size(); j++)
+    if (!vis[graph[u][j]])
+      dfs(graph, res, graph[u][j]);
+  res.push_back(u);
 }
 
 int main() {
