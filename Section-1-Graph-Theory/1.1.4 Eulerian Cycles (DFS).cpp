@@ -18,9 +18,18 @@ connected component.
 
 Complexity: O(V + E) on the number of vertices and edges.
 
+=~=~=~=~= Sample Input =~=~=~=~=
+5 6
+0 1
+1 2
+2 0
+1 3
+3 4
+4 1
+
 =~=~=~=~= Sample Output =~=~=~=~=
-Eulerian cycle (directed): 0 1 3 4 1 2 0
-Eulerian cycle (undirected): 2 1 0 3 2 0 4 1 3
+Eulerian cycle from 0 (directed): 0 1 3 4 1 2 0
+Eulerian cycle from 2 (undirected): 2 1 3 4 1 0 2
 
 */
 
@@ -70,31 +79,26 @@ vector<int> euler_cycle_undirected(vector<int> adj[], int nodes, int u) {
   return res;
 }
 
-int main() {
-  vector<int> g1[5], g2[5], cycle;
+int nodes, edges, a, b;
+vector<int> g1[5], g2[5], cycle;
 
-  g1[0].push_back(1);
-  g1[1].push_back(2);
-  g1[2].push_back(0);
-  g1[1].push_back(3);
-  g1[3].push_back(4);
-  g1[4].push_back(1);
-  cycle = euler_cycle_directed(g1, 5, 0);
-  cout << "Eulerian cycle (directed):";
+int main() {
+  cin >> nodes >> edges;
+  for (int i = 0; i < edges; i++) {
+    cin >> a >> b;
+    g1[a].push_back(b);
+    g2[a].push_back(b);
+    g2[b].push_back(a);
+  }
+
+  cycle = euler_cycle_directed(g1, nodes, 0);
+  cout << "Eulerian cycle from 0 (directed):";
   for (int i = 0; i < cycle.size(); i++)
     cout << " " << cycle[i];
   cout << "\n";
 
-  g2[0].push_back(1); g2[1].push_back(0);
-  g2[1].push_back(2); g2[2].push_back(1);
-  g2[2].push_back(3); g2[3].push_back(2);
-  g2[0].push_back(3); g2[3].push_back(0);
-  g2[0].push_back(4); g2[4].push_back(0);
-  g2[1].push_back(4); g2[4].push_back(1);
-  g2[0].push_back(2); g2[2].push_back(0);
-  g2[1].push_back(3); g2[3].push_back(1);
-  cycle = euler_cycle_undirected(g2, 5, 2);
-  cout << "Eulerian cycle (undirected):";
+  cycle = euler_cycle_undirected(g2, nodes, 2);
+  cout << "Eulerian cycle from 2 (undirected):";
   for (int i = 0; i < cycle.size(); i++)
     cout << " " << cycle[i];
   cout << "\n";
