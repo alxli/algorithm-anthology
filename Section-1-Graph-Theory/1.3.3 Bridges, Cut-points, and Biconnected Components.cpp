@@ -2,7 +2,7 @@
 
 1.3.3 - Bridges, Cut-points, and Biconnected Components (Tarjan's)
 
-Description: The following terms apply to *undirected* graphs.
+Description: The following terms apply to undirected graphs.
 
 A bridge is an edge, when deleted, increases the number of
 connected components. An edge is a bridge if and only ifit is not
@@ -34,13 +34,20 @@ Bridges:
 1 2
 5 4
 3 7
-Biconnected Components:
+Edge-Biconnected Components:
 Component 1: 2
 Component 2: 4
 Component 3: 5 1 0
 Component 4: 7
 Component 5: 3
 Component 6: 6
+Adjacency List for Condensation Tree:
+0 => 2
+1 => 2
+2 => 0 1
+3 => 4
+4 => 3
+5 =>
 
 */
 
@@ -50,9 +57,10 @@ using namespace std;
 
 const int MAXN = 100;
 int nodes, edges, a, b, cnt;
-int low[MAXN], num[MAXN];
+int low[MAXN], num[MAXN], comp[MAXN];
 vector<bool> vis(MAXN);
-vector<int> adj[MAXN], stack, cutpoints;
+vector<int> adj[MAXN], bcc_tree[MAXN];
+vector<int> stack, cutpoints;
 vector<vector<int> > bcc;
 vector<pair<int, int> > bridges;
 
@@ -88,6 +96,18 @@ void dfs(int u, int p) {
   }
 }
 
+//condenses each bcc to a node and generates a tree
+//global variables adj and bcc must be set beforehand
+void condensation_tree() {
+  for (int i = 0; i < bcc.size(); i++)
+    for (int j = 0; j < bcc[i].size(); j++)
+      comp[bcc[i][j]] = i;
+  for (int i = 0; i < nodes; i++)
+    for (int j = 0; j < adj[i].size(); j++)
+      if (comp[i] != comp[adj[i][j]])
+        bcc_tree[comp[i]].push_back(comp[adj[i][j]]);
+}
+
 int main() {
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
@@ -104,11 +124,19 @@ int main() {
   cout << "\nBridges:\n";
   for (int i = 0; i < bridges.size(); i++)
     cout << bridges[i].first << " " << bridges[i].second << "\n";
-  cout << "Biconnected Components:\n";
+  cout << "Edge-Biconnected Components:\n";
   for (int i = 0; i < bcc.size(); i++) {
     cout << "Component " << i + 1 << ":";
     for (int j = 0; j < bcc[i].size(); j++)
       cout << " " << bcc[i][j];
+    cout << "\n";
+  }
+  condensation_tree();
+  cout << "Adjacency List for Condensation Tree:\n";
+  for (int i = 0; i < bcc.size(); i++) {
+  	cout << i << " =>";
+    for (int j = 0; j < bcc_tree[i].size(); j++)
+      cout << " " << bcc_tree[i][j];
     cout << "\n";
   }
   return 0;
