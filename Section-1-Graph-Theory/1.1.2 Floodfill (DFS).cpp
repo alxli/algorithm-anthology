@@ -12,7 +12,7 @@ case with most applications of floodfill in contests), it is
 much simpler to DFS because an extra queue is not needed.
 The input graph is stored in an adjacency list.
 
-Complexity: O(V) on the number of vertices.
+Complexity: O(V + E) on the number of vertices and edges.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 8 8
@@ -39,12 +39,12 @@ int nodes, edges, a, b, source;
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN];
 
-int dfs(int node) {
-  if (vis[node]) return 0;
-  vis[node] = true;
+int dfs(int u) {
+  vis[u] = true;
   int area = 1;
-  for (int j = 0; j < adj[node].size(); j++)
-    area += dfs(adj[node][j]);
+  for (int j = 0, v; j < adj[u].size(); j++)
+    if (!vis[v = adj[u][j]])
+      area += dfs(v);
   return area;
 }
 
