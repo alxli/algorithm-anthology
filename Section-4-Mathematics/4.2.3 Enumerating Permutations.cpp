@@ -1,4 +1,4 @@
-/* 4.2.2 - Enumerating Permutations */
+/* 4.2.3 - Enumerating Permutations */
 
 #include <algorithm>
 #include <vector>
@@ -54,16 +54,25 @@ vector<int> p which is size n, all initialized to 0.
 */
 
 template<class ReportFunction>
-void gen_permutations(int n, ReportFunction f,
-                      std::vector<int> p, int d = 0) {
-  if (d == n) { f(p); return; }
+void gen_permutations(int n, ReportFunction report,
+                      std::vector<int> & p, int d) {
+  if (d == n) {
+    report(p);
+    return;
+  }
   for (int i = 0; i < n; i++) {
     if (p[i] == 0) {
       p[i] = d;
-      gen_permutations(n, f, p, d + 1);
+      gen_permutations(n, report, p, d + 1);
       p[i] = 0;
     }
   }
+}
+
+template<class ReportFunction>
+void gen_permutations(int n, ReportFunction report) {
+  std::vector<int> perms(n, 0);
+  gen_permutations(n, report, perms, 0);
 }
 
 
@@ -189,7 +198,7 @@ int main() {
   { //method 2: unordered
     int n = 3;
     cout << "Unordered permutations of 0 to " << n-1 << ":\n";
-    gen_permutations(n, printperm, vector<int>(n));
+    gen_permutations(n, printperm);
     cout << "\n";
   }
 
