@@ -60,9 +60,6 @@ than making many consecutive calls to next_permutation(),
 however, here, the permutations will not be printed in
 lexicographically increasing order.
 
-gen_permutation() shall be initially called with a
-vector<int> p which is size n, all initialized to 0.
-
 */
 
 template<class ReportFunction>
@@ -168,6 +165,40 @@ template<class T> long long rank_by_permutation(int n, T a[]) {
 }
 
 
+/*
+
+Given a permutation a[] of the integers from 0 to n - 1,
+returns a decomposition of the permutation into cycles.
+A permutation cycle is a subset of a permutation whose
+elements trade places with one another. For example, the
+permutation {0, 2, 1, 3} decomposes to {0, 3, 2} and {1}.
+Here, the notation {0, 3, 2} means that starting from the
+original ordering {0, 1, 2, 3}, the 0th value is replaced
+by the 3rd, the 3rd by the 2nd, and the 2nd by the first,
+See: http://mathworld.wolfram.com/PermutationCycle.html
+
+*/
+
+typedef std::vector<std::vector<int> > cycles;
+
+cycles decompose_into_cycles(int n, int a[]) {
+  std::vector<bool> vis(n);
+  cycles res;
+  for (int i = 0; i < n; i++) {
+    if (vis[i]) continue;
+    int j = i;
+    std::vector<int> cur;
+    do {
+      cur.push_back(j);
+      vis[j] = true;
+      j = a[j];
+    } while (j != i);
+    res.push_back(cur);
+  }
+  return res;
+}
+
+
 /*** Example Usage ***/
 
 #include <bitset>
@@ -222,6 +253,19 @@ int main() {
     do {
       cout << bitset<n>(lo).to_string() << "\n";
     } while ((lo = next_permutation(lo)) != hi);
+    cout << "\n";
+  }
+
+  { //permutation cycles
+    int n = 4, a[] = {3, 1, 0, 2};
+    cout << "Decompose 0 2 1 3 into cycles:\n";
+    cycles c = decompose_into_cycles(n, a);
+    for (int i = 0; i < c.size(); i++) {
+      cout << "Cycle " << i + 1 << ":";
+      for (int j = 0; j < c[i].size(); j++)
+        cout << " " << c[i][j];
+      cout << "\n";
+    }
   }
   return 0;
 }
