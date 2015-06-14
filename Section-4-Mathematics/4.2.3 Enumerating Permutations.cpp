@@ -122,7 +122,7 @@ examples: permutation_by_rank(4, 0) => {0, 1, 2, 3}
 
 */
 
-std::vector<int> permutation_by_rank(int n, int x) {
+std::vector<int> permutation_by_rank(int n, long long x) {
   long long fact[n];
   fact[0] = 1;
   for (int i = 1; i < n; i++)
