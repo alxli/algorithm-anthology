@@ -4,8 +4,11 @@
 
 We shall consider a permutation of n objects to be an
 ordered list of size n that contains all n elements,
-where order is important. That is, 1 2 0 and 0 2 1 are
-considered two different permutations of 0 1 2.
+where order is important. E.g. 1 1 2 0 and 0 1 2 1
+are considered two different permutations of 0 1 1 2.
+Compared to our prior definition of an arrangement, a
+permutable range of size n may contain repeated values
+of any type, not just the integers from 0 to n - 1.
 
 */
 
