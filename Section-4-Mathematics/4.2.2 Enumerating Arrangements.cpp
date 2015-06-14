@@ -74,12 +74,12 @@ examples: arrangement_by_rank(4, 3, 0) => {0, 1, 2}
 
 */
 
-std::vector<int> arrangement_by_rank(int n, int k, int x) {
+std::vector<int> arrangement_by_rank(int n, int k, long long x) {
   std::vector<int> free(n), res(k);
   for (int i = 0; i < n; i++) free[i] = i;
   for (int i = 0; i < k; i++) {
     long long cnt = n_permute_k(n - 1 - i, k - 1 - i);
-    int pos = x / cnt;
+    int pos = (int)(x / cnt);
     res[i] = free[pos];
     std::copy(free.begin() + pos + 1, free.end(),
               free.begin() + pos);
@@ -108,7 +108,7 @@ long long rank_by_arrangement(int n, int k, int a[]) {
     int cnt = 0;
     for (int j = 0; j < a[i]; j++)
       if (!used[j]) cnt++;
-    res += cnt * n_permute_k(n - i - 1, k - i - 1);
+    res += n_permute_k(n - i - 1, k - i - 1) * cnt;
     used[a[i]] = true;
   }
   return res;
