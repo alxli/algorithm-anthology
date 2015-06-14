@@ -17,7 +17,7 @@ table binomial_table(int n) {
 }
 
 //n choose k in O(min(k, n - k))
-long long binomial(long long n, long long k) {
+long long n_choose_k(long long n, long long k) {
   if (k > n - k) k = n - k;
   long long res = 1;
   for (int i = 0; i < k; i++)
@@ -57,7 +57,7 @@ int main() {
       cout << t[i][j] << " ";
     cout << "\n";
   }
-  cout << binomial(20, 7) << "\n";         //77520
+  cout << n_choose_k(20, 7) << "\n";       //77520
   cout << factorial(10, 10000000) << "\n"; //3628800
   cout << factorialp(1234, 10007) << "\n"; //4965
   return 0;
