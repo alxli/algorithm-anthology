@@ -28,7 +28,7 @@ class abstract_enumeration {
     return count(std::vector<int>(0));
   }
 
- public:
+public:
   long long to_number(const std::vector<int> & seq) {
     long long res = 0;
     for (int i = 0; i < seq.size(); i++) {
@@ -65,6 +65,7 @@ class abstract_enumeration {
   }
 };
 
+
 class arrangements: public abstract_enumeration {
  public:
   arrangements(int n, int k) : abstract_enumeration(n, k) {}
@@ -80,10 +81,12 @@ class arrangements: public abstract_enumeration {
   }
 };
 
+
 class permutations: public arrangements {
  public:
   permutations(int n) : arrangements(n, n) {}
 };
+
 
 class combinations: public abstract_enumeration {
 
@@ -105,6 +108,7 @@ class combinations: public abstract_enumeration {
     return binomial[range - 1 - last][length - sz];
   }
 };
+
 
 class partitions: public abstract_enumeration {
 
@@ -155,11 +159,11 @@ int main() {
   permutations perm(3);
   perm.enumerate(print);
 
-  cout << "Combinations(4, 3):\n";
+  cout << "Combination(4, 3):\n";
   combinations comb(4, 3);
   comb.enumerate(print);
 
-  cout << "Partitions(4):\n";
+  cout << "Partition(4):\n";
   partitions part(4);
   part.enumerate(print);
   return 0;
