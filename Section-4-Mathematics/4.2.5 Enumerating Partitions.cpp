@@ -10,7 +10,6 @@ sorted lists as "valid" partitions for functions below.
 
 */
 
-#include <algorithm>
 #include <vector>
 
 /*
@@ -175,7 +174,7 @@ int main() {
   assert(count_partitions(50) == 204226);
   assert(count_partitions(100) == 190569292);
 
-  { //method 1: ordered
+  {
     int n = 4;
     vector<int> a(n, 1);
     cout << "Partitions of " << n << ":\n";
@@ -190,7 +189,7 @@ int main() {
     cout << "\n";
   }
 
-  { //method 2: increasing partitions only
+  {
     int n = 8;
     cout << "Increasing partitions of " << n << ":\n";
     gen_increasing_partitons(n, print);
