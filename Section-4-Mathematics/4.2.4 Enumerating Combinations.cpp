@@ -144,7 +144,7 @@ examples: combination_by_rank(4, 3, 0) => {0, 1, 2}
 
 */
 
-std::vector<int> combination_by_rank(int n, int k, int x) {
+std::vector<int> combination_by_rank(int n, int k, long long x) {
   std::vector<int> res(k);
   int cnt = n;
   for (int i = 0; i < k; i++) {
