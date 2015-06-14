@@ -49,12 +49,53 @@ const double eps = 1e-7;
 Sign Function:
 
 Returns: -1 (if x < 0), 0 (if x = 0), or 1 (if x > 0)
-Warning: Does not handle the sign of +/-NaN (see signbit() in C++11)
+Doesn't handle the sign of NaN like signbit() or copsign()
 
 */
 
 template<class T> int sgn(const T & x) {
   return (T(0) < x) - (x < T(0));
+}
+
+
+/*
+
+signbit() and copysign() functions, only in C++11 and later.
+
+signbit() returns whether the sign bit of the floating point
+number is set to true. If signbit(x), then x is "negative."
+Note that signbit(0.0) == 0 but signbit(-0.0) == 1. This
+also works as expected on NaN, -NaN, posinf, and neginf.
+
+We implement this by casting the floating point value to an
+integer type so we can perform shift operations on it, then
+we extract the sign bit. Another way is using unions, but
+this is non-portable depending on endianess of the platform.
+Unfortunately, we cannot find the signbit of long doubles
+using the method below because there is no corresponding
+96-bit integer type.
+
+copysign(x, y) returns a number with the magnitude of x but
+the sign of y (either negative or positive).
+
+Assumptions:  sizeof(float) == sizeof(int) and
+              sizeof(long long) == sizeof(double)
+              CHAR_BITS == 8 (8 bits to a byte)
+
+*/
+
+inline bool signbit(float x) {
+  return (*(int*)&x) >> (sizeof(float)*8 - 1);
+}
+
+inline bool signbit(double x) {
+  return (*(long long*)&x) >> (sizeof(double)*8 - 1);
+}
+
+//returns the
+template<class Double>
+inline Double copysign(Double x, Double y) {
+  return signbit(y) ? -fabs(x) : fabs(x);
 }
 
 
@@ -161,24 +202,52 @@ double roundplaces(const Double & x, unsigned int N, Function f) {
 
 /*
 
-Error Function (erf() in C++11)
-Adapted from: http://www.johndcook.com/blog/cpp_erf/
+Error Function (erf() and erfc() in C++11)
+
+erf(x) = 2/sqrt(pi) * integral of exp(-t^2) dt from 0 to x
+erfc(x) = 1 - erf(x)
+Note that the functions are co-dependent.
+
+Adapted from: http://www.digitalmars.com/archives/cplusplus/3634.html#N3655
 
 */
 
+static const double rel_error= 1E-12; //calculate to 12 sig figures
+
 double erf(double x) {
-  static const double a1 =  0.254829592, a2 = -0.284496736, a3 = 1.421413741;
-  static const double a4 = -1.453152027, a5 =  1.061405429, p  = 0.3275911;
-  int sign = (x < 0.0) ? -1 : 1;
-  x = fabs(x);
-  double t = 1.0/(1.0 + p*x);
-  return sign*(1.0 - ((((a5*t + a4)*t + a3)*t + a2)*t + a1)*t*exp(-x*x));
+  if (signbit(x)) return -erf(-x);
+  if (fabs(x) > 2.2) return 1.0 - erfc(x);
+  double sum = x, term = x, xsqr = x*x;
+  int j = 1;
+  do {
+    term *= xsqr / j;
+    sum -= term / (2*j++ + 1);
+    term *= xsqr / j;
+    sum += term / (2*j++ + 1);
+  } while (fabs(term) / sum > rel_error);
+  return 1.128379167095512574 * sum; //1.128 ~ 2/sqrt(pi)
+}
+
+double erfc(double x) {
+  if (fabs(x) < 2.2) return 1.0 - erf(x);
+  if (signbit(x)) return 2.0 - erfc(-x);
+  double a = 1, b = x, c = x, d = x*x + 0.5, q1, q2, n = 1.0, t;
+  do {
+    t = a*n + b*x; a = b; b = t;
+    t = c*n + d*x; c = d; d = t;
+    n += 0.5;
+    q1 = q2;
+    q2 = b / d;
+  } while (fabs(q1 - q2)/q2 > rel_error);
+  return 0.564189583547756287 * exp(-x*x) * q2; //0.564 ~ 1/sqrt(pi)
 }
 
 
 /*
 
 Gamma and Log-Gamma Functions (tgamma() and lgamma() in C++11)
+Warning: unlike the actual standard C++ version, the following
+function only works on positive numbers (returns NaN otherwise)
 Adapted from: http://www.johndcook.com/blog/cpp_gamma/
 
 */
@@ -290,19 +359,20 @@ std::string to_roman(int x) {
 }
 
 
+#include <algorithm>
 #include <cassert>
-#include <cstdio>
 #include <iostream>
 using namespace std;
 
 int main() {
+
   cout << "PI: " << PI << "\n";
   cout << "E: " << E << "\n";
   cout << "sqrt(2): " << root2 << "\n";
   cout << "Golden ratio: " << phi << "\n";
 
-  //testing some properties of posinf, neginf, and NaN:
-  double x = -1234.567890; //any value will work
+  //some properties of posinf, neginf, and NaN:
+  double x = -1234.567890; //any normal value of x will work
   assert((posinf > x) && (neginf < x) && (posinf == -neginf));
   assert((posinf + x == posinf) && (posinf - x == posinf));
   assert((neginf + x == neginf) && (neginf - x == neginf));
@@ -312,12 +382,33 @@ int main() {
   assert(isnan(0.0*posinf) && isnan(0.0*neginf) && isnan(posinf/neginf));
   assert(isnan(NaN) && isnan(-NaN) && isnan(NaN*x + x - x/-NaN));
   assert(isnan(neginf-neginf) && isnan(posinf-posinf) && isnan(posinf+neginf));
+  assert(!signbit(NaN) && signbit(-NaN) && !signbit(posinf) && signbit(neginf));
 
-  //epsilon comparisons
-  assert(EQ(1e-8, 2e-8) && !LT(1e-8, 2e-8)); //above, eps is defined as 1e-7
-
+  assert(copysign(1.0, +2.0) == +1.0 && copysign(posinf, -2.0) == neginf);
+  assert(copysign(1.0, -2.0) == -1.0 && signbit(copysign(NaN, -2.0)));
   assert(sgn(-1.234) == -1 && sgn(0.0) == 0 && sgn(5678) == 1);
   assert(mod(21, 4) == 1 && mod(-21, 4) == 3);
-  
+
+  assert(EQ(floor0(1.5), 1.0) && EQ(floor0(-1.5), -1.0));
+  assert(EQ(ceil0(1.5), 2.0) && EQ(ceil0(-1.5), -2.0));
+  assert(EQ(roundhalfup(1.5), 2.0) && EQ(roundhalfup(-1.5), -1.0));
+  assert(EQ(roundhalfdown(1.5), 1.0) && EQ(roundhalfdown(-1.5), -2.0));
+  assert(EQ(roundhalfup0(1.5), 2.0) && EQ(roundhalfup0(-1.5), -2.0));
+  assert(EQ(roundhalfdown0(1.5), 1.0) && EQ(roundhalfdown0(-1.5), -1.0));
+  assert(EQ(roundhalfeven(1.5), 2.0) && EQ(roundhalfeven(-1.5), -2.0));
+  assert(NE(roundalternate(1.5), roundalternate(1.5)));
+  assert(EQ(roundplaces(-1.23456, 3, roundhalfdown0<double>), -1.235));
+
+  assert(EQ(erf(1.0), 0.8427007929) && EQ(erf(-1.0), -0.8427007929));
+  assert(EQ(tgamma(0.5), 1.7724538509) && EQ(tgamma(1.0), 1.0));
+  assert(EQ(lgamma(0.5), 0.5723649429) && EQ(lgamma(1.0), 0.0));
+
+  int base10digs[] = {1, 2, 3, 4, 5, 6}, a = 20, b = 10;
+  vector<int> basea = base_digits(123456, a);
+  vector<int> baseb = convert_base(basea, a, b);
+  assert(equal(baseb.begin(), baseb.end(), base10digs));
+
+  assert(to_roman(1234) == "CCXXXIV");
+
   return 0;
 }
