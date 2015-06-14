@@ -20,19 +20,7 @@ const double phi = (1.0 + sqrt(5.0)) / 2.0; //golden ratio
 
 //Sketchy but working defintions of +infinity, -infinity and quiet NaN
 //A better way is using functions of std::numeric_limits<T> from <limits>
-//Some properties about the constants (isnan() is defined in <cmath>):
-//
-//For all x that are are not NaN, posinf, or neginf, it holds true that:
-//  (posinf > x) and (neginf < x) and (posinf == -neginf)
-//  (posinf + x == posinf) and (posinf - x == posinf)
-//  (neginf + x == neginf) and (neginf - x == neginf)
-//  (posinf + posinf == posinf) and (neginf - neginf == neginf)
-//  (NaN != x) and (NaN != NaN) and (NaN != posinf) and (NaN != neginf)
-//  !(NaN < x) and !(NaN > x) and !(NaN <= x) and !(NaN >= x)
-//  isnan(0.0*posinf) and isnan(0.0*neginf) and isnan(posinf/neginf)
-//  isnan(NaN) and isnan(-NaN) and isnan(almost any operation involving NaN)
-//  isnan(neginf-neginf) and isnan(posinf-posinf) and isnan(posinf+neginf)
-
+//See main() for identities involving the following special values.
 const double posinf = 1.0/0.0, neginf = -1.0/0.0, NaN = -(0.0/0.0);
 
 
@@ -65,8 +53,8 @@ Warning: Does not handle the sign of +/-NaN (see signbit() in C++11)
 
 */
 
-template<class T> int sgn(const T & val) {
-  return (T(0) < val) - (val < T(0));
+template<class T> int sgn(const T & x) {
+  return (T(0) < x) - (x < T(0));
 }
 
 
@@ -80,8 +68,8 @@ however, defines the remainder to be always nonnegative. For positive
 operators, % and mod are the same. But for negative operands, they differ.
 The result here is consistent with the Euclidean division algorithm.
 
-e.g. -21 % 4 == -1 because -21 / 4 is -5 with a remainder of -1,
-      however, -21 mod 4 is equal to 3 because -21 + 4*6 is 3.
+e.g. -21 % 4 == -1 because -21 / 4 == -5 and 4 * -5 + (-1) == -21
+      however, -21 mod 4 is equal to 3 because -21 + 4 * 6 is 3.
 
 */
 
@@ -179,12 +167,12 @@ Adapted from: http://www.johndcook.com/blog/cpp_erf/
 */
 
 double erf(double x) {
-  double a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
-  double a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  static const double a1 =  0.254829592, a2 = -0.284496736, a3 = 1.421413741;
+  static const double a4 = -1.453152027, a5 =  1.061405429, p  = 0.3275911;
   int sign = (x < 0.0) ? -1 : 1;
   x = fabs(x);
   double t = 1.0/(1.0 + p*x);
-  return sign*(1.0 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*exp(-x*x));
+  return sign*(1.0 - ((((a5*t + a4)*t + a3)*t + a2)*t + a1)*t*exp(-x*x));
 }
 
 
@@ -250,37 +238,37 @@ double lgamma(double x) {
 
 Base Conversion - O(N) on the number of digits
 
-Given the digits of an integer X in base A, returns X's digits in base B.
-Precondition: the base-10 value of X must be able to fit within an unsigned
-long long. In other worst, the value of X must be between 0 and 2^64 - 1.
+Given the digits of an integer x in base a, returns x's digits in base b.
+Precondition: the base-10 value of x must be able to fit within an unsigned
+long long. In other worst, the value of x must be between 0 and 2^64 - 1.
 
 Note: vector[0] stores the most significant digit in all usages below.
 
-e.g. if X = {1, 2, 3} and A = 5 (i.e. X = 123 in base 5 = 38 in base 10),
-then convert_base(X, 5, 3) returns {1, 1, 0, 2} (1102 in base 2).
+e.g. if x = {1, 2, 3} and a = 5 (i.e. x = 123 in base 5 = 38 in base 10),
+then convert_base(x, 5, 3) returns {1, 1, 0, 2} (1102 in base 2).
 
 */
 
-std::vector<int> convert_base(const std::vector<int> & X, int A, int B) {
+std::vector<int> convert_base(const std::vector<int> & x, int a, int b) {
   unsigned long long base10 = 0;
-  for (int i = 0; i < X.size(); i++)
-    base10 += X[i] * pow(A, X.size() - i - 1);
-  int N = ceil(log(base10 + 1) / log(B));
-  std::vector<int> baseB;
+  for (int i = 0; i < x.size(); i++)
+    base10 += x[i] * pow(a, x.size() - i - 1);
+  int N = ceil(log(base10 + 1) / log(b));
+  std::vector<int> baseb;
   for (int i = 1; i <= N; i++)
-    baseB.push_back(int(base10/pow(B, N - i)) % B);
-  return baseB;
+    baseb.push_back(int(base10/pow(b, N - i)) % b);
+  return baseb;
 }
 
-//returns digits of a number in base B
-std::vector<int> base_digits(int X, int B = 10) {
-  std::vector<int> baseB;
-  while (X != 0) {
-    baseB.push_back(X % B);
-    X /= B;
+//returns digits of a number in base b
+std::vector<int> base_digits(int x, int b = 10) {
+  std::vector<int> baseb;
+  while (x != 0) {
+    baseb.push_back(x % b);
+    x /= b;
   }
-  std::reverse(baseB.begin(), baseB.end());
-  return baseB;
+  std::reverse(baseb.begin(), baseb.end());
+  return baseb;
 }
 
 
@@ -295,17 +283,41 @@ string if x is greater than 1000. e.g. to_roman(1234) returns "CCXXXIV"
 */
 
 std::string to_roman(int x) {
-  static std::string H[] = {"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};
-  static std::string T[] = {"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};
-  static std::string O[] = {"","I","II","III","IV","V","VI","VII","VIII","IX"};
-  return std::string(x/1000, 'M') + H[(x %= 1000)/100] + T[x/10%10] + O[x%10];
+  static std::string h[] = {"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};
+  static std::string t[] = {"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};
+  static std::string o[] = {"","I","II","III","IV","V","VI","VII","VIII","IX"};
+  return std::string(x/1000, 'M') + h[(x %= 1000)/100] + t[x/10%10] + o[x%10];
 }
 
 
+#include <cassert>
+#include <cstdio>
 #include <iostream>
 using namespace std;
 
 int main() {
-  //TODO: Examples and tests
+  cout << "PI: " << PI << "\n";
+  cout << "E: " << E << "\n";
+  cout << "sqrt(2): " << root2 << "\n";
+  cout << "Golden ratio: " << phi << "\n";
+
+  //testing some properties of posinf, neginf, and NaN:
+  double x = -1234.567890; //any value will work
+  assert((posinf > x) && (neginf < x) && (posinf == -neginf));
+  assert((posinf + x == posinf) && (posinf - x == posinf));
+  assert((neginf + x == neginf) && (neginf - x == neginf));
+  assert((posinf + posinf == posinf) && (neginf - posinf == neginf));
+  assert((NaN != x) && (NaN != NaN) && (NaN != posinf) && (NaN != neginf));
+  assert(!(NaN < x) && !(NaN > x) && !(NaN <= x) && !(NaN >= x));
+  assert(isnan(0.0*posinf) && isnan(0.0*neginf) && isnan(posinf/neginf));
+  assert(isnan(NaN) && isnan(-NaN) && isnan(NaN*x + x - x/-NaN));
+  assert(isnan(neginf-neginf) && isnan(posinf-posinf) && isnan(posinf+neginf));
+
+  //epsilon comparisons
+  assert(EQ(1e-8, 2e-8) && !LT(1e-8, 2e-8)); //above, eps is defined as 1e-7
+
+  assert(sgn(-1.234) == -1 && sgn(0.0) == 0 && sgn(5678) == 1);
+  assert(mod(21, 4) == 1 && mod(-21, 4) == 3);
+  
   return 0;
 }
