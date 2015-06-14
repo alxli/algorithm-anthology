@@ -1,4 +1,13 @@
-/* 4.2.3 - Enumerating Permutations */
+/*
+
+4.2.3 - Enumerating Permutations
+
+We shall consider a permutation of n objects to be an
+ordered list of size n that contains all n elements,
+where order is important. That is, 1 2 0 and 0 2 1 are
+considered two different permutations of 0 1 2.
+
+*/
 
 #include <algorithm>
 #include <vector>
