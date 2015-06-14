@@ -171,13 +171,12 @@ int main() {
     } while (next_arrangement(n, k, a));
     cout << "\n";
   }
+
   {
     int n = 4, k = 2, a[] = {0, 0};
     cout << n << "^" << k << " arrangements with repeats:\n";
-    int cnt = 0;
     do {
       print(a, a + k);
-      cnt++;
     } while (next_arrangement_with_repeats(n, k, a));
   }
   return 0;
