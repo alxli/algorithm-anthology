@@ -101,27 +101,6 @@ inline Double copysign(Double x, Double y) {
 
 /*
 
-Modulo Operation - Euclidean Definition
-
-The % operator in C/C++ returns the remainder of division (which may be
-a positive or negative result) The true Euclidean definition of modulo,
-however, defines the remainder to be always nonnegative. For positive
-operators, % and mod are the same. But for negative operands, they differ.
-The result here is consistent with the Euclidean division algorithm.
-
-e.g. -21 % 4 == -1 because -21 / 4 == -5 and 4 * -5 + (-1) == -21
-      however, -21 mod 4 is equal to 3 because -21 + 4 * 6 is 3.
-
-*/
-
-template<class T> T mod(const T & a, const T & b) {
-  if (b < T(0)) return a - (b * (T)ceil((double)a / b));
-  return a - (b * (T)floor((double)a / b));
-}
-
-
-/*
-
 Floating Point Rounding Functions
 
 floor() in <cmath> asymmetrically rounds down, towards -infinity,
@@ -387,7 +366,6 @@ int main() {
   assert(copysign(1.0, +2.0) == +1.0 && copysign(posinf, -2.0) == neginf);
   assert(copysign(1.0, -2.0) == -1.0 && signbit(copysign(NaN, -2.0)));
   assert(sgn(-1.234) == -1 && sgn(0.0) == 0 && sgn(5678) == 1);
-  assert(mod(21, 4) == 1 && mod(-21, 4) == 3);
 
   assert(EQ(floor0(1.5), 1.0) && EQ(floor0(-1.5), -1.0));
   assert(EQ(ceil0(1.5), 2.0) && EQ(ceil0(-1.5), -2.0));
