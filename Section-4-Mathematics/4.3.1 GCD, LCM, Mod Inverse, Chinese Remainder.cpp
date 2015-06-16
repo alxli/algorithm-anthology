@@ -91,7 +91,7 @@ template<class Int> Int mod_inverse2(Int a, Int m) {
   return mod(euclid(a, m).second.first, m);
 }
 
-//returns a vector where i*v[i] = 1 (mod p) in O(N) time
+//returns a vector where i*v[i] = 1 (mod p) in O(p) time
 //precondition: p is prime
 std::vector<int> generate_inverses(int p) {
   std::vector<int> res(p);
@@ -127,6 +127,8 @@ where M = p[1] * p[2] ... * p[n] and the b[i] are determined for
 The following functions solves for this value of x, with the
 first function computed using the method above while the
 second function using a special case of Garner's algorithm.
+
+http://e-maxx-eng.github.io/algebra/chinese-remainder-theorem.html
 
 */
 
@@ -199,7 +201,7 @@ int main() {
     int prime = 17;
     std::vector<int> res = generate_inverses(prime);
     for (int i = 0; i < prime; i++) {
-      if (i > 0) assert(mod(i*res[i], prime) == 1);
+      if (i > 0) assert(mod(i * res[i], prime) == 1);
       cout << res[i] << " ";
     }
     cout << "\n";
