@@ -62,7 +62,7 @@ uint64_t powmod(uint64_t a, uint64_t b, uint64_t m) {
   return x % m;
 }
 
-//5 calls to rand() is unecessary if RAND_MAX is high
+//5 calls to rand() is unnecessary if RAND_MAX is 2^31-1
 uint64_t rand64u() {
   return ((uint64_t)(rand() & 0xf) << 60) |
          ((uint64_t)(rand() & 0x7fff) << 45) |
