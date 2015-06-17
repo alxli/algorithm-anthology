@@ -62,8 +62,10 @@ uint64_t powmod(uint64_t a, uint64_t b, uint64_t m) {
   return x % m;
 }
 
-uint64_t rand64u() { //assumes rand() is 16-bit
-  return ((uint64_t)(rand() & 0x7fff) << 45) |
+//5 calls to rand() is unecessary if RAND_MAX is high
+uint64_t rand64u() {
+  return ((uint64_t)(rand() & 0xf) << 60) |
+         ((uint64_t)(rand() & 0x7fff) << 45) |
          ((uint64_t)(rand() & 0x7fff) << 30) |
          ((uint64_t)(rand() & 0x7fff) << 15) |
          ((uint64_t)(rand() & 0x7fff));
