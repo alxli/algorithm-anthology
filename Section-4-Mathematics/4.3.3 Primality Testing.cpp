@@ -62,9 +62,11 @@ uint64_t powmod(uint64_t a, uint64_t b, uint64_t m) {
   return x % m;
 }
 
-inline uint64_t rand64u() { //assumes rand() is 16-bit
-  return ((uint64_t)rand() << 48) | ((uint64_t)rand() << 32)
-          | ((uint64_t)rand() << 16) | ((uint64_t)rand());
+uint64_t rand64u() { //assumes rand() is 16-bit
+  return ((uint64_t)(rand() & 0x7fff) << 45) |
+         ((uint64_t)(rand() & 0x7fff) << 30) |
+         ((uint64_t)(rand() & 0x7fff) << 15) |
+         ((uint64_t)(rand() & 0x7fff));
 }
 
 bool is_probable_prime(long long n, int k = 20) {
