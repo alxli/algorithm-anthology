@@ -347,7 +347,7 @@ struct bigint {
 
   friend bigint nthroot(const bigint & x, const bigint & n) {
     bigint hi = 1;
-    while ((hi ^ n) < x) hi *= 2;
+    while ((hi ^ n) <= x) hi *= 2;
     bigint lo = hi / 2, mid, midn;
     while (lo < hi) {
       mid = (lo + hi) / 2;
