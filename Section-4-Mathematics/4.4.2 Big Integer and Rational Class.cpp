@@ -1,4 +1,4 @@
-/* 4.4.2 - Big Integer Class */
+/* 4.4.2 - Big Integer and Rational Class */
 
 #include <algorithm> /* std::max() */
 #include <cmath>     /* sqrt() */
@@ -452,6 +452,123 @@ bigint operator % (bigint a, bigint b) vs. int operator % (bigint a, int b)
 //template<class T> bigint & operator %= (bigint & a, const T & b) { return a %= bigint(b); }
 
 
+struct rational {
+  bigint num, den;
+
+  rational(): num(0), den(1) {}
+  rational(long long n): num(n), den(1) {}
+  rational(const bigint & n) : num(n), den(1) {}
+
+  template<class T1, class T2>
+  rational(const T1 & n, const T2 & d): num(n), den(d) {
+    if (den < 0) {
+      num = -num;
+      den = -den;
+    }
+    bigint a(num < 0 ? -num : num), b(den), tmp;
+    while (a != 0 && b != 0) {
+      tmp = a % b;
+      a = b;
+      b = tmp;
+    }
+    bigint gcd = (b == 0) ? a : b;
+    num /= gcd;
+    den /= gcd;
+  }
+
+  bool operator < (const rational & r) const {
+    return num * r.den < r.num * den;
+  }
+
+  bool operator > (const rational & r) const {
+    return r.num * den < num * r.den;
+  }
+
+  bool operator <= (const rational & r) const {
+    return !(r < *this);
+  }
+
+  bool operator >= (const rational & r) const {
+    return !(*this < r);
+  }
+
+  bool operator == (const rational & r) const {
+    return num == r.num && den == r.den;
+  }
+
+  bool operator != (const rational & r) const {
+    return num != r.num || den != r.den;
+  }
+
+  rational operator + (const rational & r) const {
+    return rational(num * r.den + r.num * den, den * r.den);
+  }
+
+  rational operator - (const rational & r) const {
+    return rational(num * r.den - r.num * den, r.den * den);
+  }
+
+  rational operator * (const rational & r) const {
+    return rational(num * r.num, r.den * den);
+  }
+
+  rational operator / (const rational & r) const {
+    return rational(num * r.den, den * r.num);
+  }
+
+  rational operator % (const rational & r) const {
+    return *this - r * rational(num * r.den / (r.num * den), 1);
+  }
+
+  rational operator ^ (const bigint & p) const {
+    return rational(num ^ p, den ^ p);
+  }
+
+  rational operator ++(int) { rational t(*this); operator++(); return t; }
+  rational operator --(int) { rational t(*this); operator--(); return t; }
+  rational & operator ++() { *this = *this + 1; return *this; }
+  rational & operator --() { *this = *this - 1; return *this; }
+  rational & operator += (const rational & r) { *this = *this + r; return *this; }
+  rational & operator -= (const rational & r) { *this = *this - r; return *this; }
+  rational & operator *= (const rational & r) { *this = *this * r; return *this; }
+  rational & operator /= (const rational & r) { *this = *this / r; return *this; }
+  rational & operator %= (const rational & r) { *this = *this % r; return *this; }
+  rational & operator ^= (const bigint & r) { *this = *this ^ r; return *this; }
+
+  rational operator - () const {
+    return rational(-num, den);
+  }
+
+  rational abs() const {
+    return rational(num.abs(), den);
+  }
+
+  long long to_llong() const {
+    return num.to_llong() / den.to_llong();
+  }
+
+  double to_double() const {
+    return num.to_double() / den.to_double();
+  }
+
+  friend rational abs(const rational & r) {
+    return rational(r.num.abs(), r.den);
+  }
+
+  friend std::istream & operator >> (std::istream & in, rational & r) {
+    std::string s;
+    in >> r.num;
+    r.den = 1;
+    return in;
+  }
+
+  friend std::ostream & operator << (std::ostream & out, const rational & r) {
+    out << r.num << "/" << r.den;
+    return out;
+  }
+};
+
+
 /*** Example Usage ***/
 
 #include <cassert>
@@ -493,5 +610,14 @@ int main() {
   start = clock();
   assert((20^bigint(12345)).size() == 16062);
   cout << "Pow took " << (float)(clock() - start)/CLOCKS_PER_SEC << "s\n";
+
+  int nn = -21, dd = 2;
+  rational n(nn, 1), d(dd);
+  cout << (nn % dd) << "\n";
+  cout << (n % d) << "\n";
+  cout << fmod(-5.3, -1.7) << "\n";
+  cout << rational(-53, 10) % rational(-17, 10) << "\n";
+  cout << rational(-53, 10).abs() << "\n";
+  cout << (rational(-53, 10) ^ 200) << "\n";
   return 0;
 }
