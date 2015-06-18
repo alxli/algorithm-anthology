@@ -311,8 +311,8 @@ struct bigint {
     return a / gcd(a, b) * b;
   }
 
-  friend bigint sqrt(const bigint & a1) {
-    bigint a = a1;
+  friend bigint sqrt(const bigint & x) {
+    bigint a = x;
     while (a.a.empty() || a.a.size() % 2 == 1) a.a.push_back(0);
     int n = a.a.size();
     int firstdig = sqrt((double)a.a[n - 1] * base + a.a[n - 2]);
@@ -345,6 +345,24 @@ struct bigint {
     return res / norm;
   }
 
+  friend bigint nthroot(const bigint & x, const bigint & n) {
+    bigint hi = 1;
+    while ((hi ^ n) < x) hi *= 2;
+    bigint lo = hi / 2, mid, midn;
+    while (lo < hi) {
+      mid = (lo + hi) / 2;
+      midn = mid ^ n;
+      if (lo < mid && midn < x) {
+        lo = mid;
+      } else if (mid < hi && x < midn) {
+        hi = mid;
+      } else {
+        return mid;
+      }
+    }
+    return mid + 1;
+  }
+
   friend std::istream & operator >> (std::istream & in, bigint & v) {
     std::string s;
     in >> s;
@@ -360,13 +378,6 @@ struct bigint {
     return out;
   }
 
-  long long to_llong() const {
-    long long res = 0;
-    for (int i = a.size() - 1; i >= 0; i--)
-      res = res * base + a[i];
-    return res * sign;
-  }
-
   std::string to_string() const {
     std::ostringstream oss;
     if (sign == -1) oss << '-';
@@ -374,6 +385,27 @@ struct bigint {
     for (int i = a.size() - 2; i >= 0; i--)
       oss << std::setw(base_digits) << std::setfill('0') << a[i];
     return oss.str();
+  }
+
+  long long to_llong() const {
+    long long res = 0;
+    for (int i = a.size() - 1; i >= 0; i--)
+      res = res * base + a[i];
+    return res * sign;
+  }
+
+  double to_double() const {
+    std::stringstream ss(to_string());
+    double res;
+    ss >> res;
+    return res;
+  }
+
+  long double to_ldouble() const {
+    std::stringstream ss(to_string());
+    long double res;
+    ss >> res;
+    return res;
   }
 };
 
@@ -444,6 +476,8 @@ int main() {
     yy = b * (res + 1);
     assert(a >= xx && a < yy);
   }
+  assert("995291497" ==
+    nthroot(bigint("981298591892498189249182998429898124"), 4));
 
   bigint x(5);
   x = -6;
