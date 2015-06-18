@@ -11,9 +11,11 @@
 #include <utility>   /* std::pair */
 #include <vector>
 
-const int base = 1000000000, base_digits = 9; //base_digits = ceil(log10(base))
-
 struct bigint {
+  //base should be a power of 10 for I/O to work
+  //base_digits should equal ceil(log10(base))
+  static const int base = 1000000000, base_digits = 9;
+
   typedef std::vector<int> vint;
   typedef std::vector<long long> vll;
 
@@ -37,7 +39,7 @@ struct bigint {
     int pos = 0;
     while (pos < s.size() && (s[pos] == '-' || s[pos] == '+')) {
       if (s[pos] == '-') sign = -sign;
-      ++pos;
+      pos++;
     }
     for (int i = s.size() - 1; i >= pos; i -= base_digits) {
       int x = 0;
@@ -186,7 +188,7 @@ struct bigint {
     while (!n.is_zero()) {
       if (n.a[0] % 2 == 1) res *= x;
       x *= x;
-      n = n / bigint(2);
+      n /= 2;
     }
     return res;
   }
@@ -218,7 +220,7 @@ struct bigint {
 
   bigint & operator /= (int v) {
     if (v < 0) sign = -sign, v = -v;
-    for (int i = a.size() - 1, rem = 0; i >= 0; --i) {
+    for (int i = a.size() - 1, rem = 0; i >= 0; i--) {
       long long cur = a[i] + rem * (long long)base;
       a[i] = (int)(cur / v);
       rem = (int)(cur % v);
@@ -236,7 +238,7 @@ struct bigint {
   int operator % (int v) const {
     if (v < 0) v = -v;
     int m = 0;
-    for (int i = a.size() - 1; i >= 0; --i)
+    for (int i = a.size() - 1; i >= 0; i--)
       m = (a[i] + m * (long long)base) % v;
     return m * sign;
   }
@@ -267,6 +269,13 @@ struct bigint {
   bool operator >= (const bigint & v) const { return !(*this < v); }
   bool operator == (const bigint & v) const { return !(*this < v) && !(v < *this); }
   bool operator != (const bigint & v) const { return *this < v || v < *this; }
+
+  int size() const {
+    if (a.empty()) return 1;
+    std::ostringstream oss;
+    oss << a.back();
+    return oss.str().length() + base_digits*(a.size() - 1);
+  }
 
   bool is_zero() const {
     return a.empty() || (a.size() == 1 && !a[0]);
@@ -435,14 +444,20 @@ int main() {
     yy = b * (res + 1);
     assert(a >= xx && a < yy);
   }
-  bigint a = bigint::rand(10000);
-  bigint b = bigint::rand(2000);
-  clock_t start = clock();
-  bigint c = a / b;
-  cout << "Elapsed: " << (float)(clock() - start)/CLOCKS_PER_SEC << "s\n";
+
   bigint x(5);
   x = -6;
   assert(x.to_llong() == -6ll);
   assert(x.to_string() == "-6");
+
+  clock_t start;
+
+  start = clock();
+  bigint c = bigint::rand(10000) / bigint::rand(2000);
+  cout << "Div took " << (float)(clock() - start)/CLOCKS_PER_SEC << "s\n";
+
+  start = clock();
+  assert((20^bigint(12345)).size() == 16062);
+  cout << "Pow took " << (float)(clock() - start)/CLOCKS_PER_SEC << "s\n";
   return 0;
 }
