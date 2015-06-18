@@ -9,14 +9,9 @@
 
 /*
 
-Trial division in O(sqrt(n) * log(prime factors))
-
-If map is unordered, or you wish to report factors
-yourself in O(1) by modifying the code, the running
-time simply becomes O(sqrt n).
+Trial division in O(sqrt(n))
 
 returns: map of prime_divisor to exponent
-
 e.g. prime_factorize(15435) => {(3,2),(5,1),(7,3)}
      because 3^2 * 5^1 * 7^3 = 15435
 
@@ -41,9 +36,9 @@ std::map<Int, int> prime_factorize(Int n) {
 
 /*
 
-Trial division in O(sqrt(n) * log(divisors))
-Returns a sorted vector of all divisors of n.
+Trial division in O(sqrt(n))
 
+Returns a sorted vector of all divisors of n.
 e.g. get_all_divisors(28) => {1, 2, 4, 7, 14, 28}
 
 */
@@ -93,6 +88,7 @@ long long fermat(long long n) {
   }
   return x != y ? x - y : x + y;
 }
+
 
 /*
 
@@ -194,7 +190,6 @@ std::map<long long, int> prime_factorize_big(long long n) {
 }
 
 
-
 /*** Example Usage ***/
 
 #include <cassert>
@@ -225,6 +220,8 @@ int main() {
   print(d.begin(), d.end());
 
   long long n = 1000003ll*100000037ll;
+  assert(fermat(n) == 1000003ll);
+
   map<long long, int> f = prime_factorize_big(n);
   printp(f.begin(), f.end());
 
