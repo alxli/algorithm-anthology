@@ -123,7 +123,7 @@ uint64_t rand64u() {
          ((uint64_t)(rand() & 0x7fff));
 }
 
-long long gcd(long long a, long long b) {
+uint64_t gcd(uint64_t a, uint64_t b) {
   return b == 0 ? a : gcd(b, a % b);
 }
 
@@ -142,7 +142,7 @@ long long brent(long long n) {
       hi = std::min(m, r - k);
       for (int j = 0; j < hi; j++) {
         y = (mulmod(y, y, n) + c) % n;
-        q = mulmod(q, abs(x - y), n);
+        q = mulmod(q, x > y ? x - y : y - x, n);
       }
       g = gcd(q, n);
     }
@@ -150,7 +150,7 @@ long long brent(long long n) {
   }
   if (g == n) do {
     ys = (mulmod(ys, ys, n) + c) % n;
-    g = gcd(abs(x - ys), n);
+    g = gcd(x > ys ? x - ys : ys - x, n);
   } while (g <= 1);
   return g;
 }
