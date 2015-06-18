@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cstdlib>
 #include <cmath>
-#include <map>
 #include <stdint.h>
 #include <vector>
 
@@ -11,25 +10,27 @@
 
 Trial division in O(sqrt(n))
 
-returns: map of prime_divisor to exponent
+returns: vector of pair<prime divisor, exponent>
+
 e.g. prime_factorize(15435) => {(3,2),(5,1),(7,3)}
      because 3^2 * 5^1 * 7^3 = 15435
 
 */
 
 template<class Int>
-std::map<Int, int> prime_factorize(Int n) {
-  std::map<Int, int> res;
-  for (Int d = 2; d > 1; ) {
-    int power = 0;
-    while (n % d == 0) {
+std::vector<std::pair<Int, int> > prime_factorize(Int n) {
+  std::vector<std::pair<Int, int> > res;
+  for (Int d = 2; d > 1; d++) {
+    int power = 0, quot = n / d, rem = n - quot * d;
+    if (d > quot || (d == quot && rem == 0)) break;
+    for (; rem == 0; rem = n - quot * d) {
       power++;
-      n /= d;
+      n = quot;
+      quot = n / d;
     }
-    if (power > 0) res[d] = power;
-    d++;
-    if (d * d > n) d = n;
+    if (power > 0) res.push_back(std::make_pair(d, power));
   }
+  if (n > 1) res.push_back(std::make_pair(n, 1));
   return res;
 }
 
@@ -160,32 +161,29 @@ long long brent(long long n) {
 Combines Brent's method with trial division to efficiently
 generate the prime factorization of large integers.
 
-returns: map of prime_divisor to exponent
+returns: vector of prime divisors that multiply to n
 
-e.g. prime_factorize(15435) => {(3,2),(5,1),(7,3)}
+e.g. prime_factorize(15435) => {3, 3, 5, 7, 7, 7}
      because 3^2 * 5^1 * 7^3 = 15435
 
 */
 
-std::map<long long, int> prime_factorize_big(long long n) {
-  std::map<long long, int> res;
-  if (n <= 0) return res;
-  if (n == 1) { res[1] = 1; return res; }
-  int power;
-  for (power = 0; n % 2 == 0; n /= 2) power++;
-  if (power > 0) res[2] = power;
-  for (power = 0; n % 3 == 0; n /= 3) power++;
-  if (power > 0) res[3] = power;
+std::vector<long long> prime_factorize_big(long long n) {
+  if (n <= 0) return std::vector<long long>(0);
+  if (n == 1) return std::vector<long long>(1, 1);
+  std::vector<long long> res;
+  for (; n % 2 == 0; n /= 2) res.push_back(2);
+  for (; n % 3 == 0; n /= 3) res.push_back(3);
   int mx = 1000000; //trial division for factors <= 1M
   for (int i = 5, w = 2; i <= mx; i += w, w = 6 - w) {
-    for (power = 0; n % i == 0; n /= i) power++;
-    if (power > 0) res[i] = power;
+    for (; n % i == 0; n /= i) res.push_back(i);
   }
   for (long long p = 0, p1; n > mx; n /= p1) { //brent
     for (p1 = n; p1 != p; p1 = brent(p)) p = p1;
-    res[p1]++;
+    res.push_back(p1);
   }
-  if (n != 1) res[n]++;
+  if (n != 1) res.push_back(n);
+  sort(res.begin(), res.end());
   return res;
 }
 
@@ -211,19 +209,17 @@ template<class It> void printp(It lo, It hi) {
 int main() {
   srand(time(0));
 
-  map<int, int> m = prime_factorize(15435);
-  printp(m.begin(), m.end());
+  vector< pair<int, int> > v1 = prime_factorize(15435);
+  printp(v1.begin(), v1.end());
 
-  vector<int> d;
-
-  d = get_all_divisors(28);
-  print(d.begin(), d.end());
+  vector<int> v2 = get_all_divisors(28);
+  print(v2.begin(), v2.end());
 
   long long n = 1000003ll*100000037ll;
   assert(fermat(n) == 1000003ll);
 
-  map<long long, int> f = prime_factorize_big(n);
-  printp(f.begin(), f.end());
+  vector<long long> v3 = prime_factorize_big(n);
+  print(v3.begin(), v3.end());
 
   return 0;
 }
