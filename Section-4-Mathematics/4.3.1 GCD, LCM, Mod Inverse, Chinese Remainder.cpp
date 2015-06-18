@@ -1,6 +1,6 @@
 /*
 
-4.3.1 GCD, LCM, Modular Inverse, Chinese Remainder Theorem
+4.3.1 - GCD, LCM, Modular Inverse, Chinese Remainder Theorem
 
 */
 
