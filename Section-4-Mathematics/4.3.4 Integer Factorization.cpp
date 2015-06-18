@@ -20,9 +20,9 @@ e.g. prime_factorize(15435) => {(3,2),(5,1),(7,3)}
 template<class Int>
 std::vector<std::pair<Int, int> > prime_factorize(Int n) {
   std::vector<std::pair<Int, int> > res;
-  for (Int d = 2; d > 1; d++) {
+  for (Int d = 2; ; d++) {
     int power = 0, quot = n / d, rem = n - quot * d;
-    if (d > quot || (d == quot && rem == 0)) break;
+    if (d > quot || (d == quot && rem > 0)) break;
     for (; rem == 0; rem = n - quot * d) {
       power++;
       n = quot;
