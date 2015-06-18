@@ -409,27 +409,15 @@ struct bigint {
   }
 };
 
-template<class T> bool operator >  (const bigint & a, const T & b) { return a >  bigint(b); }
-template<class T> bool operator <  (const bigint & a, const T & b) { return a <  bigint(b); }
-template<class T> bool operator >= (const bigint & a, const T & b) { return a >= bigint(b); }
-template<class T> bool operator <= (const bigint & a, const T & b) { return a <= bigint(b); }
-template<class T> bool operator == (const bigint & a, const T & b) { return a == bigint(b); }
-template<class T> bool operator != (const bigint & a, const T & b) { return a != bigint(b); }
-template<class T> bool operator >  (const T & a, const bigint & b) { return bigint(a) >  b; }
-template<class T> bool operator <  (const T & a, const bigint & b) { return bigint(a) <  b; }
+template<class T> bool operator > (const T & a, const bigint & b) { return bigint(a) > b; }
+template<class T> bool operator < (const T & a, const bigint & b) { return bigint(a) < b; }
 template<class T> bool operator >= (const T & a, const bigint & b) { return bigint(a) >= b; }
 template<class T> bool operator <= (const T & a, const bigint & b) { return bigint(a) <= b; }
 template<class T> bool operator == (const T & a, const bigint & b) { return bigint(a) == b; }
 template<class T> bool operator != (const T & a, const bigint & b) { return bigint(a) != b; }
-template<class T> bigint operator + (const bigint & a, const T & b) { return a + bigint(b);  }
-template<class T> bigint operator - (const bigint & a, const T & b) { return a - bigint(b);  }
-template<class T> bigint operator ^ (const bigint & a, const T & b) { return a ^ bigint(b);  }
 template<class T> bigint operator + (const T & a, const bigint & b) { return bigint(a) + b;  }
 template<class T> bigint operator - (const T & a, const bigint & b) { return bigint(a) - b;  }
 template<class T> bigint operator ^ (const T & a, const bigint & b) { return bigint(a) ^ b;  }
-template<class T> bigint & operator += (bigint & a, const T & b) { return a += bigint(b); }
-template<class T> bigint & operator -= (bigint & a, const T & b) { return a -= bigint(b); }
-template<class T> bigint & operator ^= (bigint & a, const T & b) { return a ^= bigint(b); }
 
 /*
 
@@ -440,16 +428,6 @@ bigint operator / (bigint a, bigint b) vs. bigint operator / (bigint a, int b)
 bigint operator % (bigint a, bigint b) vs. int operator % (bigint a, int b)
 
 */
-
-//template<class T> bigint operator * (const bigint & a, const T & b) { return a * bigint(b); }
-//template<class T> bigint operator / (const bigint & a, const T & b) { return a / bigint(b); }
-//template<class T> bigint operator % (const bigint & a, const T & b) { return a % bigint(b); }
-//template<class T> bigint operator * (const T & a, const bigint & b) { return bigint(a) * b; }
-//template<class T> bigint operator / (const T & a, const bigint & b) { return bigint(a) / b; }
-//template<class T> bigint operator % (const T & a, const bigint & b) { return bigint(a) % b; }
-//template<class T> bigint & operator *= (bigint & a, const T & b) { return a *= bigint(b); }
-//template<class T> bigint & operator /= (bigint & a, const T & b) { return a /= bigint(b); }
-//template<class T> bigint & operator %= (bigint & a, const T & b) { return a %= bigint(b); }
 
 
 struct rational {
