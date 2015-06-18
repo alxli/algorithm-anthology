@@ -1,6 +1,6 @@
 /*
 
-1.5.1 - Maximum Flow (Ford-Fulkerson Algorithm)
+2.5.1 - Maximum Flow (Ford-Fulkerson Algorithm)
 
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized. Note
@@ -45,7 +45,7 @@ int dfs(int u, int f) {
   if (u == sink) return f;
   vis[u] = true;
   for (int v = 0; v < nodes; v++) {
-    if (!vis[v] && cap[u][v] > 0) {    
+    if (!vis[v] && cap[u][v] > 0) {
       int df = dfs(v, min(f, cap[u][v]));
       if (df > 0) {
         cap[u][v] -= df;

@@ -1,12 +1,12 @@
 /*
 
-1.2.2 - Dijkstra's Algorithm (Single Source Shortest Path)
+2.2.2 - Dijkstra's Algorithm (Single Source Shortest Path)
 
 Description: Given a directed graph with positive weights only, find
 the shortest distance to all nodes from a single starting node.
 
 Implementation Notes: The graph is stored using an adjacency list.
-This implementation negates distances before adding them to the 
+This implementation negates distances before adding them to the
 priority queue, since the container is a max-heap by default. This
 method is suggested in contests because it is easier than defining
 special comparators. An alternative would be declaring the queue

@@ -1,6 +1,6 @@
 /*
 
-2.4 - Hill Climbing
+1.2.3 - Hill Climbing
 
 Description: Hill climbing is an optimization technique
 which finds the local extrema of a function. It is an

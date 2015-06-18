@@ -1,6 +1,6 @@
 /*
 
-1.4.1 - Minimum Spanning Tree (Prim's Algorithm)
+2.4.1 - Minimum Spanning Tree (Prim's Algorithm)
 
 Description: Given an undirected graph, its minimum spanning tree (MST)
 is a tree connecting all nodes with a subset of its edges such that their
@@ -28,7 +28,7 @@ Complexity: This version uses an adjacency list and priority queue
 O(E*log(V)). The priority queue and adjacency list improves the
 simplest O(V^2) version of the algorithm, which uses looping and
 an adjacency matrix. If the priority queue is implemented as a more
-sophisticated Fibonacci heap, the complexity becomes O(E + V*log(V)).  
+sophisticated Fibonacci heap, the complexity becomes O(E + V*log(V)).
 
 =~=~=~=~= Sample Input =~=~=~=~=
 9 14

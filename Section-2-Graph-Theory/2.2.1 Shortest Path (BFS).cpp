@@ -1,6 +1,6 @@
 /*
 
-1.2.1 - Shortest Path (Breadth First Search)
+2.2.1 - Shortest Path (Breadth First Search)
 
 Description: Given an unweighted graph, traverse all reachable
 nodes from a source node and determine the shortest path.

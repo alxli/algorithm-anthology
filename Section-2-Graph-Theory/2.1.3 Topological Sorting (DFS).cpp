@@ -1,6 +1,6 @@
 /*
 
-1.1.3 - Topological Sorting (DFS)
+2.1.3 - Topological Sorting (DFS)
 
 Description: Given a directed acyclic graph (DAG), order the nodes
 such that for every edge from a to b, a precedes b in the ordering.
@@ -58,7 +58,7 @@ int main() {
     cin >> a >> b;
     adj[a].push_back(b);
   }
-  for (int i = 0; i < nodes; i++) 
+  for (int i = 0; i < nodes; i++)
     if (!done[i]) dfs(i);
   cout << "The topological order:";
   for (int i = sorted.size() - 1; i >= 0; i--)

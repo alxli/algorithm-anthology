@@ -1,6 +1,6 @@
 /*
 
-1.2.3 - Bellman-Ford Algorithm (Single-Source Shortest Path)
+2.2.3 - Bellman-Ford Algorithm (Single-Source Shortest Path)
 
 Description: Given a directed graph with positive or negative weights
 but no negative cycles, find the shortest distance to all nodes from
@@ -50,7 +50,7 @@ int main() {
   cout << " to " << dest << " is " << dist[dest] << ".\n";
 
   //Optional: Report negative-weight cycles
-  for (int i = 0; i < edges; i++) 
+  for (int i = 0; i < edges; i++)
     if (dist[E[i][0]] + E[i][2] < dist[E[i][1]])
       cout << "Negative-weight cycle detected!\n";
 

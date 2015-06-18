@@ -1,6 +1,6 @@
 /*
 
-2.1 - Sorting Algorithms
+1.1 - Sorting Algorithms
 
 The sorting functions in this section are included for novelty purposes,
 perhaps as demonstrations for ad hoc contest problems. With the exception
@@ -11,17 +11,18 @@ The functions are implemented like std::sort(), taking in two
 RandomAccessIterators as the range to be sorted. To use with special
 comparators, either overload the < operator, or change every use of
 the < operator with array elements to a binary comparison function.
-E.g. to use quicksort() with a custom comparator,change “(*i < *lo)” to
-“(comp(*i, *lo))” wherever applicable
+E.g. to use quicksort() with a custom comparator,change "(*i < *lo)" to
+"(comp(*i, *lo))" wherever applicable
 
 */
 
 #include <algorithm> /* std::swap(), std::(stable_)partition */
 #include <iterator>  /* std::iterator_traits<T> */
 
+
 /*
 
-2.1.1 - Quicksort
+Quicksort
 
 Best: O(N*log(N))    Average: O(N*log(N))    Worst: O(N^2)
   Auxiliary Space: O(log(N))               Stable?: No
@@ -46,7 +47,7 @@ template<class RAI> void quicksort(RAI lo, RAI hi) {
 
 /*
 
-2.1.2 - Merge Sort
+Merge Sort
 
 Best: O(N*log(N))    Average: O(N*log(N))    Worst: O(N*log(N))
     Auxiliary Space: O(N)                Stable?: Yes
@@ -79,7 +80,7 @@ template<class RAI> void mergesort(RAI lo, RAI hi) {
 
 /*
 
-2.1.3 - Heap Sort
+Heap Sort
 
 Best: O(N*log(N))     Average: O(N*log(N))     Worst: O(N*log(N))
     Auxiliary Space: O(1)                 Stable?: No
@@ -111,7 +112,7 @@ template<class RAI> void heapsort(RAI lo, RAI hi) {
 
 /*
 
-2.1.4 - Comb Sort
+Comb Sort
 
 Best: O(N)       Average: O(N^2/(2^p)) for p increments of gap
 Worst: O(N^2)     Auxiliary Space: O(1)      Stable?: No
@@ -136,7 +137,7 @@ template<class RAI> void combsort(RAI lo, RAI hi) {
 
 /*
 
-2.1.5 - Radix Sort (32-bit Signed Integers Only!)
+Radix Sort (32-bit Signed Integers Only!)
 
 Worst: O(d*N), where d is the number of bits/digits in each of the N values.
 Since d is constant (32), one can say that radix sort runs in linear time.
@@ -172,6 +173,7 @@ void msd_radix_sort(int *lo, int *hi, int msb = 31) {
   msd_radix_sort(mid, hi, msb);
 }
 
+
 /*** Example Usage ***/
 
 #include <iostream>
@@ -192,17 +194,17 @@ int main () {
   vector<int> v(a2, a2 + 8);
   quicksort(v.begin(), v.end()); //STL works too
   print_range(v.begin(), v.end());
-  
+
   int a3[] = {32, 71, 12, 45, 26, 80, 53, 33};
   v = vector<int>(a3, a3 + 8);
   heapsort(v.rbegin(), v.rend()); //rvs iterators OK
   print_range(v.begin(), v.end());
-  
+
   double a4[] = {1.1, -5.0, 6.23, 4.123, 155.2};
   vector<double> v2(a4, a4 + 5); //doubles OK too!
   combsort(v2.begin(), v2.end());
   print_range(v2.begin(), v2.end());
-  
+
   //radix sort only works on 32-bit signed ints
   int a5[] = {1, 886, 6, -50, 7, -11, 123, 4};
   msd_radix_sort(a5, a5 + 8);

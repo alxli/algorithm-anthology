@@ -1,6 +1,6 @@
 /*
 
-2.3 - Ternary Search
+1.2.2 - Ternary Search
 
 Given a unimodal function f(x), find the maxima or minima.
 

@@ -1,6 +1,6 @@
 /*
 
-1.1.1 - Depth First Search
+2.1.1 - Depth First Search
 
 Description: Given an unweighted graph, traverse all reachable
 nodes from a source node. Each branch is explored as deep as

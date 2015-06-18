@@ -1,6 +1,6 @@
 /*
 
-1.5.3 - Maximum Flow (Dinic's Blocking Flow Algorithm)
+2.5.3 - Maximum Flow (Dinic's Blocking Flow Algorithm)
 
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized. Note

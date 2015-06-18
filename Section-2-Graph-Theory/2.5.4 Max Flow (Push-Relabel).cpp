@@ -1,6 +1,6 @@
 /*
 
-1.5.4 - Max Flow (Push-Relabel Algorithm)
+2.5.4 - Max Flow (Push-Relabel Algorithm)
 
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized. The push-
@@ -84,7 +84,7 @@ int push_relabel() {
   for (int i = 0; i < nodes; i++) flow += f[source][i];
   return flow;
 }
- 
+
 int main() {
   int edges, a, b, capacity;
   cin >> nodes >> edges;
