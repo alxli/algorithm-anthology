@@ -1,7 +1,6 @@
 /* 4.3.4 - Integer Factorization */
 
 #include <algorithm>
-#include <cstdlib>
 #include <cmath>
 #include <stdint.h>
 #include <vector>
