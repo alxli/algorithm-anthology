@@ -12,7 +12,6 @@ as well as matrix multiplication and exponentiation.
 #include <vector>
 
 template<class val_t> class matrix {
-
   int r, c;
   std::vector< std::vector<val_t> > mat;
 
@@ -37,29 +36,12 @@ template<class val_t> class matrix {
   std::vector<val_t> & operator[] (int r) { return mat[r]; }
   val_t at(int r, int c) const { return mat[r][c]; }
 
-  friend bool operator < (const matrix & a, const matrix & b) {
-    return a.mat < b.mat;
-  }
-
-  friend bool operator > (const matrix & a, const matrix & b) {
-    return a.mat > b.mat;
-  }
-
-  friend bool operator <= (const matrix & a, const matrix & b) {
-    return a.mat <= b.mat;
-  }
-
-  friend bool operator >= (const matrix & a, const matrix & b) {
-    return a.mat >= b.mat;
-  }
-
-  friend bool operator == (const matrix & a, const matrix & b) {
-    return a.mat == b.mat;
-  }
-
-  friend bool operator != (const matrix & a, const matrix & b) {
-    return a.mat == b.mat;
-  }
+  friend bool operator <  (const matrix & a, const matrix & b) { return a.mat < b.mat; }
+  friend bool operator >  (const matrix & a, const matrix & b) { return a.mat > b.mat; }
+  friend bool operator <= (const matrix & a, const matrix & b) { return a.mat <= b.mat; }
+  friend bool operator >= (const matrix & a, const matrix & b) { return a.mat >= b.mat; }
+  friend bool operator == (const matrix & a, const matrix & b) { return a.mat == b.mat; }
+  friend bool operator != (const matrix & a, const matrix & b) { return a.mat != b.mat; }
 
   friend matrix operator + (const matrix & a, const matrix & b) {
     if (a.r != b.r || a.c != b.c)
