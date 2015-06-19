@@ -41,7 +41,7 @@ void quicksort(RAI lo, RAI hi, Compare cmp) {
 
 template<class RAI> void quicksort(RAI lo, RAI hi) {
   typedef typename std::iterator_traits<RAI>::value_type T;
-  return quicksort(lo, hi, std::less<T>());
+  quicksort(lo, hi, std::less<T>());
 }
 
 /*
@@ -80,7 +80,7 @@ void mergesort(RAI lo, RAI hi, Compare cmp) {
 
 template<class RAI> void mergesort(RAI lo, RAI hi) {
   typedef typename std::iterator_traits<RAI>::value_type T;
-  return mergesort(lo, hi, std::less<T>());
+  mergesort(lo, hi, std::less<T>());
 }
 
 /*
@@ -118,7 +118,7 @@ void heapsort(RAI lo, RAI hi, Compare cmp) {
 
 template<class RAI> void heapsort(RAI lo, RAI hi) {
   typedef typename std::iterator_traits<RAI>::value_type T;
-  return heapsort(lo, hi, std::less<T>());
+  heapsort(lo, hi, std::less<T>());
 }
 
 /*
@@ -128,8 +128,7 @@ Comb Sort
 Best: O(N)       Average: O(N^2/(2^p)) for p increments of gap
 Worst: O(N^2)     Auxiliary Space: O(1)      Stable?: No
 
-Notes: An improved bubble sort that can often be used to even
-replace O(N*log(N)) sorts because it is so simple to memorize.
+Comb sort is an improved bubble sort that's simple to memorize.
 
 */
 
@@ -137,7 +136,7 @@ template<class RAI, class Compare>
 void combsort(RAI lo, RAI hi, Compare cmp) {
   int gap = hi - lo, swapped = 1;
   while (gap > 1 || swapped) {
-    if (gap > 1) gap = (int)((float)gap/1.3f);
+    if (gap > 1) gap = (int)((float)gap / 1.3f);
     swapped = 0;
     for (RAI i = lo; i + gap < hi; i++)
       if (cmp(*(i + gap), *i)) {
@@ -149,8 +148,9 @@ void combsort(RAI lo, RAI hi, Compare cmp) {
 
 template<class RAI> void combsort(RAI lo, RAI hi) {
   typedef typename std::iterator_traits<RAI>::value_type T;
-  return combsort(lo, hi, std::less<T>());
+  combsort(lo, hi, std::less<T>());
 }
+
 
 /*
 
