@@ -1,4 +1,29 @@
-/* 4.4.2 - Big Integer and Rational Class */
+/*
+
+4.4.2 - Big Integer and Rational Class
+
+The following bigint class is implemented by storing "chunks"
+of the big integer in a large base that is a power of 10 so
+it can be efficiently stored, operated on, and printed.
+
+It has extensive features including karatsuba multiplication,
+exponentiation by squaring, and n-th root using binary search.
+The class is thoroughly templatized, so you can use it as
+easily as you do for normal ints. For example, you may use
+operators with a bigint and a string (e.g. bigint(1234)+"-567"
+and the result will be correctly promoted to a bigint that has
+a value of 667). I/O is done using <iostream>. For example:
+  bigint a, b; cin >> a >> b; cout << a + b << "\n";
+adds two integers together and prints the result, just as you
+would expect for a normal int, except with arbitrary precision.
+The class also supports other streams such as fstream.
+
+After the bigint class, a class for rational numbers is
+implemented, using two bigints to store its numerators and
+denominators. It is useful for when exact results of division
+operations are needed.
+
+*/
 
 #include <algorithm> /* std::max() */
 #include <cmath>     /* sqrt() */
@@ -13,7 +38,7 @@
 
 struct bigint {
   //base should be a power of 10 for I/O to work
-  //base_digits should equal ceil(log10(base))
+  //base and base_digits should be consistent
   static const int base = 1000000000, base_digits = 9;
 
   typedef std::vector<int> vint;
@@ -132,7 +157,7 @@ struct bigint {
     return res;
   }
 
-  /* complexity: O(3N^log2(3)) ~ O(3N^1.585) */
+  //complexity: O(3N^log2(3)) ~ O(3N^1.585)
   static vll karatsuba_multiply(const vll & a, const vll & b) {
     int n = a.size();
     vll res(n + n);
@@ -159,12 +184,12 @@ struct bigint {
   }
 
   bigint operator * (const bigint & v) const {
-    //lower _base if really big values cause overflow
+    //if really big values cause overflow, use smaller _base
     static const int _base = 10000, _base_digits = 4;
-    vint a6 = convert_base(this->a, base_digits, _base_digits);
-    vint b6 = convert_base(v.a, base_digits, _base_digits);
-    vll a(a6.begin(), a6.end());
-    vll b(b6.begin(), b6.end());
+    vint _a = convert_base(this->a, base_digits, _base_digits);
+    vint _b = convert_base(v.a, base_digits, _base_digits);
+    vll a(_a.begin(), _a.end());
+    vll b(_b.begin(), _b.end());
     while (a.size() < b.size()) a.push_back(0);
     while (b.size() < a.size()) b.push_back(0);
     while (a.size() & (a.size() - 1)) {
