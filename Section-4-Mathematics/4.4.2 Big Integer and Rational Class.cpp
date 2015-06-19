@@ -159,8 +159,10 @@ struct bigint {
   }
 
   bigint operator * (const bigint & v) const {
-    vint a6 = convert_base(this->a, base_digits, 6);
-    vint b6 = convert_base(v.a, base_digits, 6);
+    //lower _base if really big values cause overflow
+    static const int _base = 10000, _base_digits = 4;
+    vint a6 = convert_base(this->a, base_digits, _base_digits);
+    vint b6 = convert_base(v.a, base_digits, _base_digits);
     vll a(a6.begin(), a6.end());
     vll b(b6.begin(), b6.end());
     while (a.size() < b.size()) a.push_back(0);
@@ -174,10 +176,10 @@ struct bigint {
     res.sign = sign * v.sign;
     for (int i = 0, carry = 0; i < c.size(); i++) {
       long long cur = c[i] + carry;
-      res.a.push_back((int)(cur % 1000000));
-      carry = (int)(cur / 1000000);
+      res.a.push_back((int)(cur % _base));
+      carry = (int)(cur / _base);
     }
-    res.a = convert_base(res.a, 6, base_digits);
+    res.a = convert_base(res.a, _base_digits, base_digits);
     res.trim();
     return res;
   }
