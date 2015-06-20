@@ -28,7 +28,7 @@ const double posinf = 1.0/0.0, neginf = -1.0/0.0, NaN = -(0.0/0.0);
 
 Epsilon Comparisons
 
-The range of values comparing EQ() to X is made to be [X - eps, X + eps].
+The range of values for which X compares EQ() to is [X - eps, X + eps].
 For values to compare LT() and GT() x, they must fall outside of the range.
 
 e.g. if eps = 1e-7, then EQ(1e-8, 2e-8) is true and LT(1e-8, 2e-8) is false.
@@ -48,8 +48,8 @@ const double eps = 1e-7;
 
 Sign Function:
 
-Returns: -1 (if x < 0), 0 (if x = 0), or 1 (if x > 0)
-Doesn't handle the sign of NaN like signbit() or copsign()
+Returns: -1 (if x < 0), 0 (if x == 0), or 1 (if x > 0)
+Doesn't handle the sign of NaN like signbit() or copysign()
 
 */
 
@@ -68,15 +68,15 @@ Note that signbit(0.0) == 0 but signbit(-0.0) == 1. This
 also works as expected on NaN, -NaN, posinf, and neginf.
 
 We implement this by casting the floating point value to an
-integer type so we can perform shift operations on it, then
-we extract the sign bit. Another way is using unions, but
-this is non-portable depending on endianess of the platform.
-Unfortunately, we cannot find the signbit of long doubles
-using the method below because there is no corresponding
-96-bit integer type.
+integer type with the same number of bits so we can perform
+shift operations on it, then we extract the sign bit.
+Another way is using unions, but this is non-portable
+depending on endianess of the platform. Unfortunately, we
+cannot find the signbit of long doubles using the method
+below because there is no corresponding 96-bit integer type.
 
 copysign(x, y) returns a number with the magnitude of x but
-the sign of y (either negative or positive).
+the sign of y.
 
 Assumptions:  sizeof(float) == sizeof(int) and
               sizeof(long long) == sizeof(double)
@@ -92,7 +92,6 @@ inline bool signbit(double x) {
   return (*(long long*)&x) >> (sizeof(double)*8 - 1);
 }
 
-//returns the
 template<class Double>
 inline Double copysign(Double x, Double y) {
   return signbit(y) ? -fabs(x) : fabs(x);
@@ -143,7 +142,7 @@ template<class Double> Double roundhalfup0(const Double & x) {
   return (x < 0.0) ? -res : res;
 }
 
-//round half even (banker's rounding), bias: none
+//round half to even (banker's rounding), bias: none
 template<class Double>
 Double roundhalfeven(const Double & x, const Double & eps = 1e-7) {
   if (x < 0.0) return -roundhalfeven(-x, eps);
@@ -191,7 +190,8 @@ Adapted from: http://www.digitalmars.com/archives/cplusplus/3634.html#N3655
 
 */
 
-static const double rel_error= 1E-12; //calculate to 12 sig figures
+//calculate 12 significant figs (don't ask for more than 1e-15)
+static const double rel_error= 1e-12;
 
 double erf(double x) {
   if (signbit(x)) return -erf(-x);
@@ -225,8 +225,8 @@ double erfc(double x) {
 /*
 
 Gamma and Log-Gamma Functions (tgamma() and lgamma() in C++11)
-Warning: unlike the actual standard C++ version, the following
-function only works on positive numbers (returns NaN otherwise)
+Warning: unlike the actual standard C++ versions, the following
+function only works on positive numbers (returns NaN if x <= 0).
 Adapted from: http://www.johndcook.com/blog/cpp_gamma/
 
 */
@@ -234,7 +234,7 @@ Adapted from: http://www.johndcook.com/blog/cpp_gamma/
 double lgamma(double x);
 
 double tgamma(double x) {
-  if (x <= 0.0) return NaN; //x must be positive
+  if (x <= 0.0) return NaN;
   static const double gamma = 0.577215664901532860606512090;
   if (x < 1e-3) return 1.0/(x*(1.0 + gamma*x));
   if (x < 12.0) {
@@ -269,7 +269,7 @@ double tgamma(double x) {
 }
 
 double lgamma(double x) {
-  if (x <= 0.0) return NaN; //x must be positive
+  if (x <= 0.0) return NaN;
   if (x < 12.0) return log(fabs(tgamma(x)));
   static const double c[8] = {
     1.0/12.0, -1.0/360.0, 1.0/1260.0, -1.0/1680.0, 1.0/1188.0,
@@ -288,7 +288,7 @@ Base Conversion - O(N) on the number of digits
 
 Given the digits of an integer x in base a, returns x's digits in base b.
 Precondition: the base-10 value of x must be able to fit within an unsigned
-long long. In other worst, the value of x must be between 0 and 2^64 - 1.
+long long. In other words, the value of x must be between 0 and 2^64 - 1.
 
 Note: vector[0] stores the most significant digit in all usages below.
 
@@ -330,7 +330,7 @@ string if x is greater than 1000. e.g. to_roman(1234) returns "CCXXXIV"
 
 */
 
-std::string to_roman(int x) {
+std::string to_roman(unsigned int x) {
   static std::string h[] = {"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};
   static std::string t[] = {"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};
   static std::string o[] = {"","I","II","III","IV","V","VI","VII","VIII","IX"};
