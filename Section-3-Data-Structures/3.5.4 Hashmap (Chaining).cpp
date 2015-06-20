@@ -2,11 +2,11 @@
 
 3.5.4 - Hashmap (Chaining)
 
-Description: A hashmap is an alternative to binary search trees. Hashmaps
-use more memory than BSTs, but are usually more efficient. In C++11, the
-built in hashmap is known as std::unordered_map. This implementation uses
-the chaining method to handle collisions. Three integer hash algorithms
-and one string hash algorithm are presented here.
+Description: A hashmap (std::unoredered_map in C++11) is an
+alternative to binary search trees. Hashmaps use more memory than
+BSTs, but are usually more efficient. The following implementation
+uses the chaining method to handle collisions. You can use the
+hash algorithms provided in the example, or define your own.
 
 Time Complexity: insert(), remove(), find(), are O(1) amortized.
 rehash() is O(N).
@@ -70,7 +70,7 @@ template<class key_t, class val_t, class Hash> class hashmap {
     map_size--;
   }
 
-  val_t* find(const key_t & key) {
+  val_t * find(const key_t & key) {
     unsigned int i = Hash()(key) % table_size;
     typename std::list<entry_t>::iterator it = table[i].begin();
     while (it != table[i].end() && it->key != key) ++it;
@@ -78,7 +78,7 @@ template<class key_t, class val_t, class Hash> class hashmap {
     return &(it->val);
   } 
 
-  inline val_t& operator[] (const key_t & key) {
+  val_t & operator [] (const key_t & key) {
     val_t * ret = find(key);
     if (ret != 0) return *ret;
     insert(key, val_t());
@@ -86,35 +86,35 @@ template<class key_t, class val_t, class Hash> class hashmap {
   }
 };
 
-/*** Examples of Hashing Algorithm Definitions ***/
+/*** Examples of Hash Algorithm Definitions ***/
 
 #include <string>
 
 struct class_hash {
-  unsigned int operator() (int key) {
+  unsigned int operator () (int key) {
     return class_hash()((unsigned int)key);
   }
 
-  unsigned int operator() (long long key) {
+  unsigned int operator () (long long key) {
     return class_hash()((unsigned long long)key);
   }
 
-  //Knuth’s multiplicative method (one-to-one)
-  unsigned int operator() (unsigned int key) {
+  //Knuth's multiplicative method (one-to-one)
+  unsigned int operator () (unsigned int key) {
     return key * 2654435761u; //or just return key
   }
   
-  //Jenkins' 64-bit hash
-  unsigned int operator() (unsigned long long key) {
+  //Jenkins's 64-bit hash
+  unsigned int operator () (unsigned long long key) {
     key += ~(key << 32); key ^= (key >> 22);
     key += ~(key << 13); key ^= (key >> 8);
-    key += (key << 3);   key ^= (key >> 15);
+    key +=  (key << 3);  key ^= (key >> 15);
     key += ~(key << 27); key ^= (key >> 31);
     return key;
   }
 
-  //Jenkins' one-at-a-time hash
-  unsigned int operator() (const std::string & key) {
+  //Jenkins's one-at-a-time hash
+  unsigned int operator () (const std::string & key) {
     unsigned int hash = 0;
     for (unsigned int i = 0; i < key.size(); i++) {
       hash += ((hash += key[i]) << 10);
@@ -124,6 +124,7 @@ struct class_hash {
     return hash + (hash << 15);
   }
 };
+
 
 /*** Example Usage ***/
 
