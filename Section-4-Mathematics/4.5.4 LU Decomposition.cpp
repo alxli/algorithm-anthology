@@ -1,21 +1,22 @@
 /*
 
-4.5.3 - LU Decomposition
+4.5.4 - LU Decomposition
 
-The LU (lower upper) decomposition of a matrix is a
-factorization of a matrix as the product of a lower
-triangular matrix and an upper triangular matrix.
-With the LU decomposition, we can solve many problems
-including calculate the determinant of the matrix,
-solving a systems of linear equations, and finding
-the inverse of a matrix.
+The LU (lower upper) decomposition of a matrix is a factorization
+of a matrix as the product of a lower triangular matrix and an
+upper triangular matrix. With the LU decomposition, we can solve
+many problems, including the determinant of the matrix, a systems
+of linear equations, and the inverse of a matrix.
 
-Note: in the following implementation, each call to
-det() and inverse() recomputes the lu decomposition.
-You do not have to do this, and can reuse the same
-precomputed decomposition for multiply uses.
+Note: in the following implementation, each call to det(),
+solve_system(), and inverse() recomputes the lu decomposition.
+For the same matrix, you should precompute the lu decomposition
+and reuse it for several of these operations afterwards.
 
-Complexity: O(N^3) for lu_decompose().
+Complexity: O(n^3) for lu_decompose(). det() uses the running time
+of lu_decompose(), plus an addition O(n) term. solve_system() and
+inverse() both have the running time of lu_decompose(), plus an
+additional O(n^3) term.
 
 */
 
@@ -31,22 +32,17 @@ typedef std::vector<vd> vvd;
 
 /*
 
-LU decomposition with Gauss-Jordan elimination.
-This is generalized for rectangular matrices.
-Since the resulting L and U matrices have all
-mutually exclusive 0's (except when i == j), we
-can merge into a single lu matrix to save memory.
+LU decomposition with Gauss-Jordan elimination. This is generalized
+for rectangular matrices. Since the resulting L and U matrices have
+all mutually exclusive 0's (except when i == j), we can merge them
+into a single LU matrix to save memory. Note: l[i][i] = 1 for all i.
 
-Optionally determine the permutation vector p.
-If an array p is passed, p[i] will be populated
-such that p[i] is the only column of the i-th
-row of the permutation matrix that is equal to 1.
+Optionally determine the permutation vector p. If an array p is
+passed, p[i] will be populated such that p[i] is the only column of
+the i-th row of the permutation matrix that is equal to 1.
 
-Returns: a merged lower/upper triangular matrix:
-         m[i][j] = l[u][j] for i > j
-         m[i][j] = u[i][j] for i <= j
-
-Note that l[i][i] = 1 for all i.
+Returns: a matrix m, the merged lower/upper triangular matrix:
+         m[i][j] = l[i][j] (for i > j) or u[i][j] (for i <= j)
 
 */
 
@@ -80,13 +76,6 @@ vvd lu_decompose(vvd a, int * detsign = 0, int * p = 0) {
   return a;
 }
 
-/*
-
-Extract a value for the lower and upper parts given
-indices (i, j) and a merged LU decomposition matrix.
-
-*/
-
 double getl(const vvd & lu, int i, int j) {
   if (i > j) return lu[i][j];
   return i < j ? 0.0 : 1.0;
@@ -96,14 +85,7 @@ double getu(const vvd & lu, int i, int j) {
   return i <= j ? lu[i][j] : 0.0;
 }
 
-
-/*
-
-Finds the determinant in an additional O(n) time.
-Precondition: A is square matrix.
-
-*/
-
+//Precondition: A is square matrix.
 double det(const vvd & a) {
   int n = a.size(), detsign;
   assert(!a.empty() && n == a[0].size());
@@ -117,11 +99,10 @@ double det(const vvd & a) {
 
 /*
 
-Solves a system of linear equations using lu
-decomposition and forward/backwards substitution.
+Solves system of linear equations with forward/backwards
+substitution. Precondition: A must be n*n and B must be n*m.
 
-Precondition: A must be n*n and B must be n*m.
-Returns an n*m matrix X such that A*X = B.
+Returns: an n by m matrix X such that A*X = B.
 
 */
 
@@ -158,14 +139,11 @@ vvd solve_system(const vvd & a, const vvd & b) {
 
 /*
 
-Find the inverse A^-1 of a matrix A. The inverse
-of a matrix satisfies A * A^-1 = I, where I is the
-identity matrix (for all pairs (i, j), I[i][j] = 1
-iff i == j, otherwise I[i][j] = 0). The inverse of
-a matrix exists if and only if det(a) is not 0.
-
-We're lazy, so just generate the identity matrix I
-and call solve_system().
+Find the inverse A^-1 of a matrix A. The inverse of a matrix
+satisfies A * A^-1 = I, where I is the identity matrix (for
+all pairs (i, j), I[i][j] = 1 iff i = j, else I[i][j] = 0).
+The inverse of a matrix exists if and only if det(a) is not 0.
+We're lazy, so we just generate I and call solve_system().
 
 Precondition: A is a square and det(A) != 0.
 
