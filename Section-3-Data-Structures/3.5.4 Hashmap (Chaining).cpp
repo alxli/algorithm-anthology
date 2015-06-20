@@ -2,8 +2,8 @@
 
 3.5.4 - Hashmap (Chaining)
 
-Description: A hashmap (std::unoredered_map in C++11) is an
-alternative to binary search trees. Hashmaps use more memory than
+Description: A hashmap (std::unordered_map in C++11) is an
+alternative to a binary search tree. Hashmaps use more memory than
 BSTs, but are usually more efficient. The following implementation
 uses the chaining method to handle collisions. You can use the
 hash algorithms provided in the example, or define your own.
