@@ -1,11 +1,12 @@
 /*
 
-4.5.2 - Determinant with Gauss's Method and LU Decomposition
+4.5.2 - LU Decomposition and Determinant (Gauss)
 
-The following are various ways to compute the determinantof a
-matrix. Since determinant values can get big, be on the
-lookout for overflows and floating-point inaccuracies. It is
-recommended you use bignums for maximal correctness.
+The following are ways to compute the LU decomposition
+and determinant of a matrix using Gaussian elimination.
+Since the determinant can get very large, be on the
+lookout for overflows and floating-point inaccuracies
+Bignums are recommended for maximal correctness.
 
 Complexity: O(N^3) for all functions, except for the
 adjustment for overflow in the integer det() function.
@@ -24,7 +25,48 @@ static const double eps = 1e-10;
 typedef std::vector< std::vector<int> > vvi;
 typedef std::vector< std::vector<double> > vvd;
 
-//Gauss's method
+//LU decomposition with Gauss-Jordan elimination
+//Optionally determine the permutation vector p
+vvd lu_decomp(vvd a, int * detsign = 0, int * p = 0) {
+  int n = a.size(), m = a[0].size();
+  int sign = 1;
+  if (p != 0) for (int r = 0; r < n; r++) p[r] = r;
+  for (int r = 0, c = 0; r < n && c < m; r++, c++) {
+    int pr = r;
+    for (int i = r + 1; i < n; i++)
+      if (fabs(a[i][c]) > fabs(a[pr][c]))
+        pr = i;
+    if (fabs(a[pr][c]) <= eps) {
+      r--;
+      continue;
+    }
+    if (pr != r) {
+      if (p != 0) std::swap(p[r], p[pr]);
+      sign = -sign;
+      for (int i = 0; i < m; i++)
+        std::swap(a[r][i], a[pr][i]);
+    }
+    for (int s = r + 1; s < n; s++) {
+      a[s][c] /= a[r][c];
+      for (int d = c + 1; d < m; d++)
+        a[s][d] -= a[s][c] * a[r][d];
+    }
+  }
+  if (detsign != 0) *detsign = sign;
+  return a;
+}
+
+double det_lu(const vvd & a) {
+  int n = a.size(), detsign;
+  //assert(!a.empty() && n == a[0].size());
+  vvd lu = lu_decomp(a, &detsign);
+  double det = 1;
+  for (int i = 0; i < n; i++)
+    det *= lu[i][i];
+  return detsign < 0 ? -det : det;
+}
+
+//direct calculation without lu decomposition
 double det(vvd a) {
   int n = a.size();
   //assert(!a.empty() && n == a[0].size());
@@ -50,15 +92,10 @@ double det(vvd a) {
   return res;
 }
 
-//C++98 doesn't have an abs() for long long
-template<class T> T _abs(const T & x) {
-  return x < 0 ? -x : x;
-}
-
 
 /*
 
-Determinant of Integer Matrix using Gauss's Method
+Determinant of Integer Matrix
 
 This is prone to overflow, so it is recommended you use your
 own bigint class instead of long long. At the end of this
@@ -71,6 +108,11 @@ even in the prime factorization method, overflow may happen
 if the final answer is too big for a long long.
 
 */
+
+//C++98 doesn't have an abs() for long long
+template<class T> T _abs(const T & x) {
+  return x < 0 ? -x : x;
+}
 
 long long det(const vvi & a) {
   int n = a.size();
@@ -131,48 +173,6 @@ long long det(const vvi & a) {
 #endif
 
   return sign < 0 ? -det : det;
-}
-
-
-//LU decomposition with Gauss-Jordan elimination
-//Optionally determine the permutation vector p
-vvd lu_decomp(vvd a, int * detsign = 0, int * p = 0) {
-  int n = a.size(), m = a[0].size();
-  int sign = 1;
-  if (p != 0) for (int r = 0; r < n; r++) p[r] = r;
-  for (int r = 0, c = 0; r < n && c < m; r++, c++) {
-    int pr = r;
-    for (int i = r + 1; i < n; i++)
-      if (fabs(a[i][c]) > fabs(a[pr][c]))
-        pr = i;
-    if (fabs(a[pr][c]) <= eps) {
-      r--;
-      continue;
-    }
-    if (pr != r) {
-      if (p != 0) std::swap(p[r], p[pr]);
-      sign = -sign;
-      for (int i = 0; i < m; i++)
-        std::swap(a[r][i], a[pr][i]);
-    }
-    for (int s = r + 1; s < n; s++) {
-      a[s][c] /= a[r][c];
-      for (int d = c + 1; d < m; d++)
-        a[s][d] -= a[s][c] * a[r][d];
-    }
-  }
-  if (detsign != 0) *detsign = sign;
-  return a;
-}
-
-double det_lu(const vvd & a) {
-  int n = a.size(), detsign;
-  //assert(!a.empty() && n == a[0].size());
-  vvd lu = lu_decomp(a, &detsign);
-  double det = 1;
-  for (int i = 0; i < n; i++)
-    det *= lu[i][i];
-  return detsign < 0 ? -det : det;
 }
 
 
