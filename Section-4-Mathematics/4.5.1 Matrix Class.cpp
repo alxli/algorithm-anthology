@@ -3,7 +3,12 @@
 4.5.1 - Matrix Class
 
 Basic matrix class with support for arithmetic operations
-as well as matrix multiplication and exponentiation.
+as well as matrix multiplication and exponentiation. You
+can access/modify indices using m(r, c) or m[r][c]. You
+can also treat it as a 2d vector, since the cast operator
+to a reference to its internal 2d vector is defined. This
+makes it compatible with the 2d vector functions such as
+det() and lu_decompose() in later sections.
 
 */
 
@@ -22,6 +27,13 @@ template<class val_t> class matrix {
     mat.resize(r, std::vector<val_t>(c, init));
   }
 
+  matrix(const std::vector< std::vector<val_t> > & m) {
+    r = m.size();
+    c = m[0].size();
+    mat = m;
+    mat.resize(r, std::vector<val_t>(c));
+  }
+
   template<size_t rows, size_t cols>
   matrix(val_t (&init)[rows][cols]) {
     r = rows;
@@ -32,9 +44,12 @@ template<class val_t> class matrix {
         mat[i][j] = init[i][j];
   }
 
+  operator std::vector< std::vector<val_t> > &() { return mat; }
   val_t & operator() (int r, int c) { return mat[r][c]; }
   std::vector<val_t> & operator[] (int r) { return mat[r]; }
   val_t at(int r, int c) const { return mat[r][c]; }
+  int rows() const { return r; }
+  int cols() const { return c; }
 
   friend bool operator <  (const matrix & a, const matrix & b) { return a.mat < b.mat; }
   friend bool operator >  (const matrix & a, const matrix & b) { return a.mat > b.mat; }
@@ -147,20 +162,3 @@ template<class val_t> class matrix {
     return out;
   }
 };
-
-
-/*** Example Usage ***/
-
-#include <cassert>
-#include <iostream>
-using namespace std;
-
-int main() {
-  int a[2][2] = {{1,8}, {5,9}};
-  matrix<int> m(5, 5, 10), m2(a);
-  m += 10;
-  m[0][0] += 10;
-  assert(m[0][0] == 30 && m[1][1] == 20);
-  assert(powsum(m2, 3) == m2 + m2*m2 + (m2^3));
-  return 0;
-}
