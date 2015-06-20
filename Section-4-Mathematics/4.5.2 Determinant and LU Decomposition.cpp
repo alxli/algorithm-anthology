@@ -63,7 +63,7 @@ Determinant of Integer Matrix using Gauss's Method
 This is prone to overflow, so it is recommended you use your
 own bigint class instead of long long. At the end of this
 function, the final answer is found as a product of powers.
-You have to choices: change the "#if 0" to "#if 1" and use
+You have two choices: change the "#if 0" to "#if 1" and use
 the naive method to compute this product and risk overflow,
 or keep it as "#if 0" and try to make the situation better
 through prime factorization (less efficient). Note that
