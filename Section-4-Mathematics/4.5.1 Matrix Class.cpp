@@ -13,7 +13,7 @@ det() and lu_decompose() in later sections.
 */
 
 #include <ostream>
-#include <stdexcept>
+#include <stdexcept> /* std::runtime_error() */
 #include <vector>
 
 template<class val_t> class matrix {
