@@ -30,7 +30,7 @@ The topological order: 2 1 0 4 3 7 6 5
 
 */
 
-#include <algorithm> /* std::reverse() */
+#include <algorithm> /* std::fill(), std::reverse() */
 #include <iostream>
 #include <stdexcept> /* std::runtime_error() */
 #include <vector>
@@ -53,8 +53,8 @@ void dfs(int u) {
 }
 
 void toposort(int nodes) {
-  for (int i = 0; i < nodes; i++)
-    vis[i] = done[i] = false;
+  fill(vis.begin(), vis.end(), false);
+  fill(done.begin(), done.end(), false);
   sorted.clear();
   for (int i = 0; i < nodes; i++)
     if (!done[i]) dfs(i);
