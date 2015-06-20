@@ -4,16 +4,18 @@
 
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized. Note
-that in this implementation, the adjacency matrix cap[][] will be
-modified by the function ford_fulkerson() after it's been called.
+that in this implementation, the adjacency matrix cap[][]
+will be modified by the function ford_fulkerson() after it's
+been called. Make a back-up if you require it afterwards.
 
-Complexity: O(V^2*|max_flow|), where V is the number of vertices.
+Complexity: O(V^2*|F|), where V is the number of
+vertices and |F| is the magnitude of the max flow.
 
-Comparison with Edmonds-Karp Algorithm:
-The Ford-Fulkerson algorithm is only optimal on graphs with integer
-capacities; there exists certain real-valued inputs for which it
-will never terminate. The Edmonds-Karp algorithm is an improvement
-using a breadth-first search, supporting real-valued capacities.
+Real-valued capacities:
+The Ford-Fulkerson algorithm is only optimal on graphs with
+integer capacities; there exists certain real capacity inputs
+for which it will never terminate. The Edmonds-Karp algorithm
+is an improvement using BFS, supporting real number capacities.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 6 8
@@ -32,14 +34,14 @@ using a breadth-first search, supporting real-valued capacities.
 
 */
 
-#include <algorithm>
+#include <algorithm> /* std::fill() */
 #include <iostream>
 #include <vector>
 using namespace std;
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
 int nodes, source, sink, cap[MAXN][MAXN];
-bool vis[MAXN];
+vector<bool> vis(MAXN);
 
 int dfs(int u, int f) {
   if (u == sink) return f;
@@ -60,7 +62,7 @@ int dfs(int u, int f) {
 int ford_fulkerson() {
   int max_flow = 0;
   for (;;) {
-    fill(vis, vis + nodes, false);
+    fill(vis.begin(), vis.end(), false);
     int df = dfs(source, INF);
     if (df == 0) break;
     max_flow += df;
@@ -69,11 +71,11 @@ int ford_fulkerson() {
 }
 
 int main() {
-  int edges, a, b, capacity;
+  int edges, u, v, capacity;
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b >> capacity;
-    cap[a][b] = capacity;
+    cin >> u >> v >> capacity;
+    cap[u][v] = capacity;
   }
   cin >> source >> sink;
   cout << ford_fulkerson() << "\n";

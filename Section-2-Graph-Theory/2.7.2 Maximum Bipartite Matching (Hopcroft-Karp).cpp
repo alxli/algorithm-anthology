@@ -5,9 +5,10 @@
 Description: Given two sets of vertices A = {0, 1, ..., n1}
 and B = {0, 1, ..., n2} as well as a set of edges E mapping
 nodes from set A to set B, determine the largest possible
-subset of E that do not contain common vertices.
+subset of E such that no pair of edges in the subset share
+a common vertex. Precondition: n2 >= n1.
 
-Complexity: O(E*sqrt(V)) on the number of edges and vertices.
+Complexity: O(E sqrt V) on the number of edges and vertices.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 3 4 6
@@ -26,19 +27,19 @@ Matched 3 pairs. Matchings are:
 
 */
 
+#include <algorithm> /* std::fill() */
 #include <iostream>
 #include <vector>
 using namespace std;
 
 const int MAXN = 100;
-int n1, n2, edges, a, b;
-int match[MAXN], dist[MAXN], q[MAXN];
+int match[MAXN], dist[MAXN];
 vector<bool> used(MAXN), vis(MAXN);
 vector<int> adj[MAXN];
 
-void bfs() {
+void bfs(int n1, int n2) {
   fill(dist, dist + n1, -1);
-  int qb = 0;
+  int q[n2], qb = 0;
   for (int u = 0; u < n1; ++u) {
     if (!used[u]) {
       q[qb++] = u;
@@ -70,15 +71,13 @@ bool dfs(int u) {
   return false;
 }
 
-int match_bipartite() {
-  for (int i = 0; i < n2; i++) match[i] = -1;
+int hopcroft_karp(int n1, int n2) {
+  fill(match, match + n2, -1);
+  fill(used.begin(), used.end(), false);
   int res = 0;
   for (;;) {
-    for (int i = 0; i < n1; i++) {
-      dist[i] = -1;
-      vis[i] = false;
-    }
-    bfs();
+    bfs(n1, n2);
+    fill(vis.begin(), vis.end(), false);
     int f = 0;
     for (int u = 0; u < n1; ++u)
       if (!used[u] && dfs(u)) f++;
@@ -89,12 +88,13 @@ int match_bipartite() {
 }
 
 int main() {
+  int n1, n2, edges, u, v;
   cin >> n1 >> n2 >> edges;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b;
-    adj[a].push_back(b);
+    cin >> u >> v;
+    adj[u].push_back(v);
   }
-  cout << "Matched " << match_bipartite();
+  cout << "Matched " << hopcroft_karp(n1, n2);
   cout << " pair(s). Matchings are:\n";
   for (int i = 0; i < n2; i++) {
     if (match[i] == -1) continue;

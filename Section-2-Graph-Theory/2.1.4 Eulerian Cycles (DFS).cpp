@@ -16,7 +16,7 @@ vertex has equal in degree and out degree, and all of its
 vertices with nonzero degree belong to a single strongly
 connected component.
 
-Complexity: O(V + E) on the number of vertices and edges.
+Complexity: O(V+E) on the number of vertices and edges.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 5 6
@@ -40,9 +40,8 @@ using namespace std;
 
 const int MAXN = 100;
 
-vector<int> euler_cycle_directed(vector<int> adj[], int nodes, int u) {
-  int cur_edge[MAXN] = {0};
-  vector<int> stack, res;
+vector<int> euler_cycle_directed(vector<int> adj[], int u) {
+  vector<int> stack, res, cur_edge(MAXN);
   stack.push_back(u);
   while (!stack.empty()) {
     u = stack.back();
@@ -57,10 +56,9 @@ vector<int> euler_cycle_directed(vector<int> adj[], int nodes, int u) {
   return res;
 }
 
-vector<int> euler_cycle_undirected(vector<int> adj[], int nodes, int u) {
-  int cur_edge[MAXN] = {0};
+vector<int> euler_cycle_undirected(vector<int> adj[], int u) {
   bool used[MAXN][MAXN] = {0};
-  vector<int> stack, res;
+  vector<int> stack, res, cur_edge(MAXN);
   stack.push_back(u);
   while (!stack.empty()) {
     u = stack.back();
@@ -79,25 +77,25 @@ vector<int> euler_cycle_undirected(vector<int> adj[], int nodes, int u) {
   return res;
 }
 
-int nodes, edges, a, b;
-vector<int> g1[5], g2[5], cycle;
-
 int main() {
+  int nodes, edges, u, v;
+  vector<int> g1[5], g2[5], cycle;
+
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b;
-    g1[a].push_back(b);
-    g2[a].push_back(b);
-    g2[b].push_back(a);
+    cin >> u >> v;
+    g1[u].push_back(v);
+    g2[u].push_back(v);
+    g2[v].push_back(u);
   }
 
-  cycle = euler_cycle_directed(g1, nodes, 0);
+  cycle = euler_cycle_directed(g1, 0);
   cout << "Eulerian cycle from 0 (directed):";
   for (int i = 0; i < cycle.size(); i++)
     cout << " " << cycle[i];
   cout << "\n";
 
-  cycle = euler_cycle_undirected(g2, nodes, 2);
+  cycle = euler_cycle_undirected(g2, 2);
   cout << "Eulerian cycle from 2 (undirected):";
   for (int i = 0; i < cycle.size(); i++)
     cout << " " << cycle[i];

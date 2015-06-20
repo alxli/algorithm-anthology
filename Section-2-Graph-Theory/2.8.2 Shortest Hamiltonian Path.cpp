@@ -6,8 +6,10 @@ Description: Given a weighted, directed graph, the shortest
 hamiltonian path is a path of minimum distance that visits
 each vertex exactly once. Unlike the travelling salesman
 problem, we don't have to return to the starting vertex.
+Since this is a bitmasking solution with 32-bit integers,
+the number of vertices must be less than 32.
 
-Complexity: O(2^N * N^2)
+Complexity: O(2^V * V^2) on the number of vertices.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 3 6
@@ -24,16 +26,18 @@ Take the path: 0->1->2
 
 */
 
+#include <algorithm> /* std::fill(), std::min() */
 #include <iostream>
 using namespace std;
 
 const int MAXN = 20, INF = 0x3f3f3f3f;
-int nodes, edges, a, b, weight;
+
 int adj[MAXN][MAXN], order[MAXN];
 
-int shortest_hamiltonian_path() {
+int shortest_hamiltonian_path(int nodes) {
   int dp[1 << nodes][nodes];
-  for (int i = 0; i < (1 << nodes); i++) fill(dp[i], dp[i] + nodes, INF);
+  for (int i = 0; i < (1 << nodes); i++)
+    fill(dp[i], dp[i] + nodes, INF);
   for (int i = 0; i < nodes; i++) dp[1 << i][i] = 0;
   for (int mask = 1; mask < (1 << nodes); mask += 2) {
     for (int i = 0; i < nodes; i++)
@@ -63,14 +67,15 @@ int shortest_hamiltonian_path() {
 }
 
 int main() {
+  int nodes, edges, u, v, w;
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b >> weight;
-    adj[a][b] = weight;
+    cin >> u >> v >> w;
+    adj[u][v] = w;
   }
-  int len = shortest_hamiltonian_path();
   cout << "The shortest hamiltonian path has length ";
-  cout << len << ".\n" << "Take the path: " << order[0];
+  cout << shortest_hamiltonian_path(nodes) << ".\n";
+  cout << "Take the path: " << order[0];
   for (int i = 1; i < nodes; i++) cout << "->" << order[i];
   return 0;
 }

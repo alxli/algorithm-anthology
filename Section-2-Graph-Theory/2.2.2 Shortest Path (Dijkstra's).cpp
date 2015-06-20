@@ -17,17 +17,19 @@ If only the path between a single pair of nodes is needed, for speed,
 we may break out of the loop as soon as the destination is reached
 by inserting the line "if (a == dest) break;" after the line "pq.pop();"
 
-Complexity: The simplest version runs in O(E+V^2) where V is the number
-of vertices and E is the number of edges. Using an adjacency list and
-priority queue (internally a binary heap), the implementation here is
-Θ((E + V) log(V)), dominated by Θ(E log(V)) if the graph is connected.
+Complexity: This version uses an adjacency list and priority queue
+(internally a binary heap) and has a complexity of O((E+V) log V) =
+O(E log V). The priority queue and adjacency list improves the
+simplest O(V^2) version of the algorithm, which uses looping and
+an adjacency matrix. If the priority queue is implemented as a more
+sophisticated Fibonacci heap, the complexity becomes O(E + V log V).
 
 Modification to Shortest Path Faster Algorithm: The code for Dijkstra's
 algorithm here can be easily modified to become the Shortest Path Faster
 Algorithm (SPFA) by simply commenting out "visit[a] = true;" and changing
-the priority queue to a FIFO queue like BFS. SPFA is a faster version of
-the Bellman-Ford algorithm, working on negative path lengths (whereas
-Dijkstra's cannot). Certain graphs can make the SPFA very slow.
+the priority queue to a FIFO queue like in BFS. SPFA is a faster version
+of the Bellman-Ford algorithm, working on negative path lengths (whereas
+Dijkstra's cannot). Certain graphs can be constructed to make SPFA slow.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 4 5
@@ -50,47 +52,54 @@ Take the path: 0->1->2->3.
 using namespace std;
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-int nodes, edges, a, b, weight, start, dest;
 int dist[MAXN], pred[MAXN];
-vector<bool> vis(MAXN);
 vector<pair<int, int> > adj[MAXN];
 
-int main() {
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> a >> b >> weight;
-    adj[a].push_back(make_pair(b, weight));
-  }
-  cin >> start >> dest;
+void dijkstra(int nodes, int start) {
+  vector<bool> vis(nodes, false);
   for (int i = 0; i < nodes; i++) {
     dist[i] = INF;
     pred[i] = -1;
   }
+  int u, v;
   dist[start] = 0;
   priority_queue<pair<int, int> > pq;
   pq.push(make_pair(0, start));
   while (!pq.empty()) {
-    a = pq.top().second;
+    u = pq.top().second;
     pq.pop();
-    vis[a] = true;
-    for (int j = 0; j < adj[a].size(); j++) {
-      b = adj[a][j].first;
-      if (vis[b]) continue;
-      if (dist[b] > dist[a] + adj[a][j].second) {
-        dist[b] = dist[a] + adj[a][j].second;
-        pred[b] = a;
-        pq.push(make_pair(-dist[b], b));
+    vis[u] = true;
+    for (int j = 0; j < adj[u].size(); j++) {
+      if (vis[v = adj[u][j].first]) continue;
+      if (dist[v] > dist[u] + adj[u][j].second) {
+        dist[v] = dist[u] + adj[u][j].second;
+        pred[v] = u;
+        pq.push(make_pair(-dist[v], v));
       }
     }
   }
-  cout << "The shortest distance from " << start;
-  cout << " to " << dest << " is " << dist[dest] << ".\n";
+}
 
-  //Optional: Use pred[] to backtrack and print the path
+//Use the precomputed pred[] array to print the path
+void print_path(int dest) {
   int i = 0, j = dest, path[MAXN];
   while (pred[j] != -1) j = path[++i] = pred[j];
   cout << "Take the path: ";
   while (i > 0) cout << path[i--] << "->";
   cout << dest << ".\n";
+}
+
+int main() {
+  int nodes, edges, u, v, w, start, dest;
+  cin >> nodes >> edges;
+  for (int i = 0; i < edges; i++) {
+    cin >> u >> v >> w;
+    adj[u].push_back(make_pair(v, w));
+  }
+  cin >> start >> dest;
+  dijkstra(nodes, start);
+  cout << "The shortest distance from " << start;
+  cout << " to " << dest << " is " << dist[dest] << ".\n";
+  print_path(dest);
   return 0;
 }

@@ -30,11 +30,10 @@ Matched 2 pair(s). Matchings are:
 using namespace std;
 
 const int MAXN = 100;
-int nodes, edges, a, b;
-int p[MAXN], q[MAXN], base[MAXN], match[MAXN];
+int p[MAXN], base[MAXN], match[MAXN];
 vector<int> adj[MAXN];
 
-int lca(int a, int b) {
+int lca(int nodes, int a, int b) {
   vector<bool> used(nodes);
   for (;;) {
     a = base[a];
@@ -57,14 +56,14 @@ void mark_path(vector<bool> & blossom, int v, int b, int children) {
   }
 }
 
-int find_path(int root) {
+int find_path(int nodes, int root) {
   vector<bool> used(nodes);
   for (int i = 0; i < nodes; ++i) {
     p[i] = -1;
     base[i] = i;
   }
   used[root] = true;
-  int qh = 0, qt = 0;
+  int q[nodes], qh = 0, qt = 0;
   q[qt++] = root;
   while (qh < qt) {
     int v = q[qh++];
@@ -72,7 +71,7 @@ int find_path(int root) {
       to = adj[v][j];
       if (base[v] == base[to] || match[v] == to) continue;
       if (to == root || match[to] != -1 && p[match[to]] != -1) {
-        int curbase = lca(v, to);
+        int curbase = lca(nodes, v, to);
         vector<bool> blossom(nodes);
         mark_path(blossom, v, curbase, to);
         mark_path(blossom, to, curbase, v);
@@ -96,17 +95,15 @@ int find_path(int root) {
   return -1;
 }
 
-int max_matching() {
+int edmonds(int nodes) {
   for (int i = 0; i < nodes; i++) match[i] = -1;
   for (int i = 0; i < nodes; i++) {
     if (match[i] == -1) {
-      int v = find_path(i);
-      while (v != -1) {
-        int pv = p[v];
-        int ppv = match[pv];
+      int v, pv, ppv;
+      for (v = find_path(nodes, i); v != -1; v = ppv) {
+        ppv = match[pv = p[v]];
         match[v] = pv;
         match[pv] = v;
-        v = ppv;
       }
     }
   }
@@ -117,12 +114,13 @@ int max_matching() {
 }
 
 int main() {
+  int nodes, edges, u, v;
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b;
-    adj[a].push_back(b);
+    cin >> u >> v;
+    adj[u].push_back(v);
   }
-  cout << "Matched " << max_matching();
+  cout << "Matched " << edmonds(nodes);
   cout << " pair(s). Matchings are:\n";
   for (int i = 0; i < nodes; i++) {
     if (match[i] != -1 && i < match[i])

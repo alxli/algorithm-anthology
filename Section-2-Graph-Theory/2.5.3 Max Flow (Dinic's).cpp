@@ -10,8 +10,8 @@ be modified by the function dinic() after it's been called.
 Complexity: O(V^2*E) on the number of vertices and edges.
 
 Comparison with Edmonds-Karp Algorithm:
-Dinic's algorithm is similar to the Edmonds-Karp algorithm in that
-it uses the shortest augmenting path. The introduction of the
+Dinic's is similar to the Edmonds-Karp algorithm in that it
+uses the shortest augmenting path. The introduction of the
 concepts of the level graph and blocking flow enable Dinic's
 algorithm to achieve its better performance. Hence, Dinic's
 algorithm is also called Dinic's blocking flow algorithm.
@@ -33,7 +33,7 @@ algorithm is also called Dinic's blocking flow algorithm.
 
 */
 
-#include <algorithm>
+#include <algorithm> /* std::fill(), std::min() */
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -41,8 +41,7 @@ using namespace std;
 struct edge { int to, rev, cap, f; };
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-int nodes, source, sink;
-int dist[MAXN], q[MAXN], ptr[MAXN];
+int dist[MAXN], ptr[MAXN];
 vector<edge> adj[MAXN];
 
 void add_edge(int s, int t, int cap) {
@@ -50,15 +49,15 @@ void add_edge(int s, int t, int cap) {
   adj[t].push_back((edge){s, adj[s].size() - 1, 0, 0});
 }
 
-bool dinic_bfs() {
-  for (int i = 0; i < nodes; i++) dist[i] = -1;
+bool dinic_bfs(int nodes, int source, int sink) {
+  fill(dist, dist + nodes, -1);
   dist[source] = 0;
-  int qh = 0, qt = 0;
+  int q[nodes], qh = 0, qt = 0;
   q[qt++] = source;
   while (qh < qt) {
     int u = q[qh++];
     for (int j = 0; j < adj[u].size(); j++) {
-      edge &e = adj[u][j];
+      edge & e = adj[u][j];
       if (dist[e.to] < 0 && e.f < e.cap) {
         dist[e.to] = dist[u] + 1;
         q[qt++] = e.to;
@@ -68,12 +67,12 @@ bool dinic_bfs() {
   return dist[sink] >= 0;
 }
 
-int dinic_dfs(int u, int f) {
+int dinic_dfs(int u, int f, int sink) {
   if (u == sink) return f;
   for (; ptr[u] < adj[u].size(); ptr[u]++) {
     edge &e = adj[u][ptr[u]];
     if (dist[e.to] == dist[u] + 1 && e.f < e.cap) {
-      int df = dinic_dfs(e.to, min(f, e.cap - e.f));
+      int df = dinic_dfs(e.to, min(f, e.cap - e.f), sink);
       if (df > 0) {
         e.f += df;
         adj[e.to][e.rev].f -= df;
@@ -84,24 +83,24 @@ int dinic_dfs(int u, int f) {
   return 0;
 }
 
-int dinic() {
+int dinic(int nodes, int source, int sink) {
   int max_flow = 0, delta;
-  while (dinic_bfs()) {
-    for (int i = 0; i < nodes; i++) ptr[i] = 0;
-    while ((delta = dinic_dfs(source, INF)) != 0)
+  while (dinic_bfs(nodes, source, sink)) {
+    fill(ptr, ptr + nodes, 0);
+    while ((delta = dinic_dfs(source, INF, sink)) != 0)
       max_flow += delta;
   }
   return max_flow;
 }
 
 int main() {
-  int edges, a, b, capacity;
+  int nodes, edges, u, v, capacity, source, sink;
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b >> capacity;
-    add_edge(a, b, capacity);
+    cin >> u >> v >> capacity;
+    add_edge(u, v, capacity);
   }
   cin >> source >> sink;
-  cout << dinic() << "\n";
+  cout << dinic(nodes, source, sink) << "\n";
   return 0;
 }

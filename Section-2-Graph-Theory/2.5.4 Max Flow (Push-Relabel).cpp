@@ -28,16 +28,20 @@ Complexity: O(V^3) on the number of vertices.
 
 */
 
-#include <algorithm>
+#include <algorithm> /* std::fill(), std::min() */
 #include <iostream>
 using namespace std;
 
 const int MAXN = 100, INF = 0x3F3F3F3F;
-int nodes, edges, source, sink;
 int cap[MAXN][MAXN], f[MAXN][MAXN];
-int h[MAXN], maxh[MAXN], e[MAXN];
 
-int push_relabel() {
+int push_relabel(int nodes, int source, int sink) {
+  int e[nodes], h[nodes], maxh[nodes];
+  fill(e, e + nodes, 0);
+  fill(h, h + nodes, 0);
+  fill(maxh, maxh + nodes, 0);
+  for (int i = 0; i < nodes; i++)
+    fill(f[i], f[i] + nodes, 0);
   h[source] = nodes - 1;
   for (int i = 0; i < nodes; i++) {
     f[source][i] = cap[source][i];
@@ -80,19 +84,20 @@ int push_relabel() {
       }
     }
   }
-  int flow = 0;
-  for (int i = 0; i < nodes; i++) flow += f[source][i];
-  return flow;
+  int max_flow = 0;
+  for (int i = 0; i < nodes; i++)
+    max_flow += f[source][i];
+  return max_flow;
 }
 
 int main() {
-  int edges, a, b, capacity;
+  int nodes, edges, u, v, capacity, source, sink;
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b >> capacity;
-    cap[a][b] = capacity;
+    cin >> u >> v >> capacity;
+    cap[u][v] = capacity;
   }
   cin >> source >> sink;
-  cout << push_relabel() << "\n";
+  cout << push_relabel(nodes, source, sink) << "\n";
   return 0;
 }

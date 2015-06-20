@@ -15,6 +15,9 @@ have size <= N/2, where N is the number of nodes in the tree.
 diameter(): The diameter of a tree is the greatest distance
 d(A,B) between any two of the nodes in the tree.
 
+Complexity: All three functions are O(V) on the number of
+vertices in the tree.
+
 =~=~=~=~= Sample Input =~=~=~=~=
 6
 0 1
@@ -35,17 +38,16 @@ Diameter: 3
 using namespace std;
 
 const int MAXN = 100;
-int nodes, a, b, degree[MAXN];
 vector<int> adj[MAXN];
 
-vector<int> find_centers() {
-  vector<int> leaves;
-  for (int i = 0; i < nodes; i++) {
+vector<int> find_centers(int n) {
+  vector<int> leaves, degree(n);
+  for (int i = 0; i < n; i++) {
     degree[i] = adj[i].size();
     if (degree[i] <= 1) leaves.push_back(i);
   }
   int removed = leaves.size();
-  while (removed < nodes) {
+  while (removed < n) {
     vector<int> nleaves;
     for (int i = 0; i < leaves.size(); i++) {
       int u = leaves[i];
@@ -61,18 +63,18 @@ vector<int> find_centers() {
   return leaves;
 }
 
-int find_centroid(int u = 0, int p = -1) {
+int find_centroid(int n, int u = 0, int p = -1) {
   int cnt = 1, v;
   bool good_center = true;
   for (int j = 0; j < adj[u].size(); j++) {
     if ((v = adj[u][j]) == p) continue;
-    int res = find_centroid(v, u);
+    int res = find_centroid(n, v, u);
     if (res >= 0) return res;
     int size = -res;
-    good_center &= (size <= nodes/2);
+    good_center &= (size <= n / 2);
     cnt += size;
   }
-  good_center &= (nodes - cnt <= nodes/2);
+  good_center &= (n - cnt <= n / 2);
   return good_center ? u : -cnt;
 }
 
@@ -90,17 +92,18 @@ int diameter() {
 }
 
 int main() {
+  int nodes, u, v;
   cin >> nodes;
   for (int i = 0; i < nodes - 1; i++) {
-    cin >> a >> b;
-    adj[a].push_back(b);
-    adj[b].push_back(a);
+    cin >> u >> v;
+    adj[u].push_back(v);
+    adj[v].push_back(u);
   }
-  vector<int> centers = find_centers();
+  vector<int> centers = find_centers(nodes);
   cout << "Center(s):";
   for (int i = 0; i < centers.size(); i++)
     cout << " " << centers[i];
-  cout << "\nCentroid: " << find_centroid();
+  cout << "\nCentroid: " << find_centroid(nodes);
   cout << "\nDiameter: " << diameter() << "\n";
   return 0;
 }

@@ -2,9 +2,12 @@
 
 2.2.4 - Floyd-Warshall Algorithm (All-Pairs Shortest Path)
 
-Description: Given a directed graph with positive or negative weights
-but no negative cycles, find the shortest distance between all pairs
-of nodes. The input graph is stored using an adjacency matrix.
+Description: Given a directed graph with positive or negative
+weights but no negative cycles, find the shortest distance
+between all pairs of nodes. The input graph is stored using
+an adjacency matrix. Note that the input adjacency matrix
+is converted to the distance matrix afterwards. If you still
+need the adjacencies afterwards, back it up at the beginning.
 
 Complexity: O(V^3) on the number of vertices.
 
@@ -25,36 +28,44 @@ Take the path: 0->1->2.
 using namespace std;
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-int nodes, edges, a, b, weight, start, dest;
 int dist[MAXN][MAXN], next[MAXN][MAXN];
 
-void print_path(int i, int j) {
-  if (next[i][j] != -1) {
-    print_path(i, next[i][j]);
-    cout << next[i][j];
-    print_path(next[i][j], j);
-  } else cout << "->";
-}
-
-int main() {
-  cin >> nodes >> edges;
+void initialize(int nodes) {
   for (int i = 0; i < nodes; i++)
     for (int j = 0; j < nodes; j++) {
       dist[i][j] = (i == j) ? 0 : INF;
       next[i][j] = -1;
     }
-  for (int i = 0; i < edges; i++) {
-    cin >> a >> b >> weight;
-    dist[a][b] = weight;
-  }
-  cin >> start >> dest;
+}
+
+void floyd_warshall(int nodes) {
   for (int k = 0; k < nodes; k++)
    for (int i = 0; i < nodes; i++)
     for (int j = 0; j < nodes; j++)
       if (dist[i][j] > dist[i][k] + dist[k][j]) {
-          dist[i][j] = dist[i][k] + dist[k][j];
-          next[i][j] = k;
+        dist[i][j] = dist[i][k] + dist[k][j];
+        next[i][j] = k;
       }
+}
+
+void print_path(int u, int v) {
+  if (next[u][v] != -1) {
+    print_path(u, next[u][v]);
+    cout << next[u][v];
+    print_path(next[u][v], v);
+  } else cout << "->";
+}
+
+int main() {
+  int nodes, edges, u, v, w, start, dest;
+  cin >> nodes >> edges;
+  initialize(nodes);
+  for (int i = 0; i < edges; i++) {
+    cin >> u >> v >> w;
+    dist[u][v] = w;
+  }
+  cin >> start >> dest;
+  floyd_warshall(nodes);
   cout << "The shortest distance from " << start;
   cout << " to " << dest << " is ";
   cout << dist[start][dest] << ".\n";

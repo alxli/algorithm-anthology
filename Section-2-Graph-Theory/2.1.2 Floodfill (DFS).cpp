@@ -12,10 +12,10 @@ case with most applications of floodfill in contests), it is
 much simpler to DFS because an extra queue is not needed.
 The input graph is stored in an adjacency list.
 
-Complexity: O(V + E) on the number of vertices and edges.
+Complexity: O(V+E) on the number of vertices and edges.
 
 =~=~=~=~= Sample Input =~=~=~=~=
-8 8
+8 8 0
 0 1
 0 5
 1 2
@@ -35,7 +35,6 @@ Visited 5 nodes starting from 0
 using namespace std;
 
 const int MAXN = 100;
-int nodes, edges, a, b, source;
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN];
 
@@ -49,13 +48,13 @@ int dfs(int u) {
 }
 
 int main() {
-  cin >> nodes >> edges;
+  int nodes, edges, start, u, v;
+  cin >> nodes >> edges >> start;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b;
-    adj[a].push_back(b);
+    cin >> u >> v;
+    adj[u].push_back(v);
   }
-  cin >> source;
-  cout << "Visited " << dfs(source) << " nodes";
-  cout << " starting from " << source << "\n";
+  cout << "Visited " << dfs(start) << " nodes";
+  cout << " starting from " << start << "\n";
   return 0;
 }

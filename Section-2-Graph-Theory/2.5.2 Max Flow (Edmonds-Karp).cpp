@@ -7,18 +7,18 @@ source node to a single sink node that is maximized. Note
 that in this implementation, the adjacency list adj[] will
 be modified by the function edmonds_karp() after it's been called.
 
-Complexity: O(min(V*E^2, E*|F|)), where V is the number of vertices,
-E is the number of edges, and F is the max flow. This improves the
-original Ford-Fulkerson algorithm, which runs in O(E*|F|). As the
-Edmonds-Karp algorithm is also bounded by O(E*|F|), it is guaranteed
-to be at least as fast as Ford-Fulkerson. For an even faster algorithm,
-see Dinic's algorithm in the next section, which runs in O(V^2*E).
+Complexity: O(min(V*E^2, E*|F|)), where V is the number of
+vertices, E is the number of edges, and |F| is the magnitude of
+the max flow. This improves the original Ford-Fulkerson algorithm,
+which runs in O(E*|F|). As the Edmonds-Karp algorithm is also
+bounded by O(E*|F|), it is guaranteed to be at least as fast as
+Ford-Fulkerson. For an even faster algorithm, see Dinic's
+algorithm in the next section, which runs in O(V^2*E).
 
-Comparison with Ford-Fulkerson Algorithm:
-The Ford-Fulkerson algorithm is only optimal on graphs with integer
-capacities; there exists certain real-valued inputs for which it
-will never terminate. The Edmonds-Karp algorithm here also works
-on real-valued capacities.
+Real-valued capacities:
+Although the Ford-Fulkerson algorithm is only optimal on graphs
+with integer capacities, the Edmonds-Karp algorithm also works
+correctly on real-valued capacities.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 6 8
@@ -37,7 +37,7 @@ on real-valued capacities.
 
 */
 
-#include <algorithm>
+#include <algorithm> /* std::fill(), std::min() */
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -59,7 +59,7 @@ int edmonds_karp(int nodes, int source, int sink) {
     int qt = 0;
     q[qt++] = source;
     edge * pred[nodes];
-    for (int i = 0; i < nodes; i++) pred[i] = 0;
+    fill(pred, pred + nodes, (edge*)0);
     for (int qh = 0; qh < qt && !pred[sink]; qh++) {
       int u = q[qh];
       for (int j = 0; j < adj[u].size(); j++) {
@@ -84,11 +84,11 @@ int edmonds_karp(int nodes, int source, int sink) {
 }
 
 int main() {
-  int nodes, edges, a, b, capacity, source, sink;
+  int nodes, edges, u, v, capacity, source, sink;
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b >> capacity;
-    add_edge(a, b, capacity);
+    cin >> u >> v >> capacity;
+    add_edge(u, v, capacity);
   }
   cin >> source >> sink;
   cout << edmonds_karp(nodes, source, sink) << "\n";

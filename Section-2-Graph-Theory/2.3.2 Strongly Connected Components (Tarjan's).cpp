@@ -4,11 +4,11 @@
 
 Description: Determines the strongly connected components (SCC)
 from a given directed graph. Given a directed graph, its SCCs
-are its maximal strongly connected sub-graphs. A graph is strongly
-connected if there is a path from each node to every other node.
-Condensing the strongly connected components of a graph into
-single nodes will result in a directed acyclic graph. The input is
-stored in an adjacency list.
+are its maximal strongly connected sub-graphs. A graph is
+strongly connected if there is a path from each node to every
+other node. Condensing the strongly connected components of a
+graph into single nodes will result in a directed acyclic graph.
+The input is stored in an adjacency list.
 
 In this implementation, a vector is used to emulate a stack
 for the sake of simplicity. One useful property of Tarjan’s
@@ -16,7 +16,7 @@ algorithm is that, while there is nothing special about the
 ordering of nodes within each component, the resulting DAG
 is produced in reverse topological order.
 
-Complexity: O(V + E) on the number of vertices and edges.
+Complexity: O(V+E) on the number of vertices and edges.
 
 Comparison with other SCC algorithms:
 The strongly connected components of a graph can be efficiently
@@ -51,51 +51,64 @@ Component 3: 4 1 0
 
 */
 
+#include <algorithm> /* std::fill() */
 #include <iostream>
 #include <vector>
 using namespace std;
 
-const int MAXN = 100;
-int nodes, edges, a, b, cnt, ncomp;
-int num[MAXN], low[MAXN];
+const int MAXN = 100, INF = 0x3f3f3f3f;
+int timer, lowlink[MAXN];
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN], stack;
+vector<vector<int> > scc;
 
 void dfs(int u) {
-  int v;
-  low[u] = num[u] = ++cnt;
+  lowlink[u] = timer++;
+  vis[u] = true;
   stack.push_back(u);
+  bool is_component_root = true;
+  int v;
   for (int j = 0; j < adj[u].size(); j++) {
-    v = adj[u][j];
-    if (vis[v]) continue;
-    if (num[v] == -1) {
-      dfs(v);
-      low[u] = min(low[u], low[v]);
-    } else {
-      low[u] = min(low[u], num[v]);
+    if (!vis[v = adj[u][j]]) dfs(v);
+    if (lowlink[u] > lowlink[v]) {
+      lowlink[u] = lowlink[v];
+      is_component_root = false;
     }
   }
-  if (num[u] != low[u]) return;
-  cout << "Component " << ++ncomp << ":";
+  if (!is_component_root) return;
+  vector<int> component;
   do {
     vis[v = stack.back()] = true;
     stack.pop_back();
-    cout << " " << v;
+    lowlink[v] = INF;
+    component.push_back(v);
   } while (u != v);
-  cout << "\n";
+  scc.push_back(component);
+}
+
+void tarjan(int nodes) {
+  scc.clear();
+  stack.clear();
+  fill(lowlink, lowlink + nodes, 0);
+  fill(vis.begin(), vis.end(), false);
+  timer = 0;
+  for (int i = 0; i < nodes; i++)
+    if (!vis[i]) dfs(i);
 }
 
 int main() {
+  int nodes, edges, u, v;
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b;
-    adj[a].push_back(b);
+    cin >> u >> v;
+    adj[u].push_back(v);
   }
-  for (int i = 0; i < nodes; i++) {
-    num[i] = low[i] = -1;
+  tarjan(nodes);
+  for (int i = 0; i < scc.size(); i++) {
+    cout << "Component:";
+    for (int j = 0; j < scc[i].size(); j++)
+      cout << " " << scc[i][j];
+    cout << "\n";
   }
-  cnt = ncomp = 0;
-  for (int i = 0; i < nodes; i++)
-    if (num[i] == -1) dfs(i);
   return 0;
 }

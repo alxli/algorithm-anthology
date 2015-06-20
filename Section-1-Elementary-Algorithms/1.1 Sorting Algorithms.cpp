@@ -18,7 +18,7 @@ as the range to be sorted, and optionally a comparator.
 Quicksort
 
 Best: O(N*log(N))    Average: O(N*log(N))    Worst: O(N^2)
-    Auxiliary Space: O(log(N))           Stable?: No
+     Auxiliary Space: O(log(N))          Stable?: No
 
 Notes: The pivot value chosen here is always half way between
 lo and hi. Choosing random pivot values reduces the chances of
@@ -49,7 +49,7 @@ template<class RAI> void quicksort(RAI lo, RAI hi) {
 Merge Sort
 
 Best: O(N*log(N))    Average: O(N*log(N))    Worst: O(N*log(N))
-    Auxiliary Space: O(N)                Stable?: Yes
+     Auxiliary Space: O(N)               Stable?: Yes
 
 Notes: Merge sort has a better worse case complexity than
 quicksort and is stable (i.e. it maintains the relative order
@@ -67,7 +67,7 @@ void mergesort(RAI lo, RAI hi, Compare cmp) {
   RAI mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   mergesort(lo, mid + 1, cmp);
   mergesort(mid + 1, hi, cmp);
-  T buff[hi - lo], *b = buff;
+  T buf[hi - lo], *b = buf;
   while (a <= mid && c < hi)
     *(b++) = cmp(*c, *a) ? *(c++) : *(a++);
   if (a > mid)
@@ -75,7 +75,7 @@ void mergesort(RAI lo, RAI hi, Compare cmp) {
   else
     for (RAI k = a; k <= mid; k++) *(b++) = *k;
   for (int i = hi - lo - 1; i >= 0; i--)
-    *(lo + i) = buff[i];
+    *(lo + i) = buf[i];
 }
 
 template<class RAI> void mergesort(RAI lo, RAI hi) {
@@ -88,7 +88,7 @@ template<class RAI> void mergesort(RAI lo, RAI hi) {
 Heap Sort
 
 Best: O(N*log(N))     Average: O(N*log(N))     Worst: O(N*log(N))
-    Auxiliary Space: O(1)                 Stable?: No
+     Auxiliary Space: O(1)                Stable?: No
 
 Heap sort has a better worst case complexity than quicksort,
 but also a better space complexity than merge sort. On average,
@@ -126,7 +126,7 @@ template<class RAI> void heapsort(RAI lo, RAI hi) {
 Comb Sort
 
 Best: O(N)       Average: O(N^2/(2^p)) for p increments of gap
-Worst: O(N^2)     Auxiliary Space: O(1)      Stable?: No
+   Worst: O(N^2)     Auxiliary Space: O(1)     Stable?: No
 
 Comb sort is an improved bubble sort that's simple to memorize.
 
@@ -177,7 +177,7 @@ found in the C++ library.
 struct radix_comp { //UnaryPredicate for std::partition
   const int p; //bit position [0..31] to examine
   radix_comp(int offset): p(offset) {}
-  bool operator() (int v) const {
+  bool operator () (int v) const {
     return (p == 31) ? (v < 0) : !(v & (1 << p));
   }
 };
@@ -210,48 +210,50 @@ template<class T> void print_range(T lo, T hi) {
 }
 
 int main () {
-  {
+
+  { //can be used to sort arrays like std::sort()
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     quicksort(a, a + 8);
     print_range(a, a + 8);
   }
 
-  {
+  { //STL contains works too
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     vector<int> v(a, a + 8);
-    quicksort(v.begin(), v.end()); //STL works too
+    quicksort(v.begin(), v.end());
     print_range(v.begin(), v.end());
   }
 
-  {
+  { //reverse iterators work as expected
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     vector<int> v(a, a + 8);
-    heapsort(v.rbegin(), v.rend()); //rvs iterators OK
+    heapsort(v.rbegin(), v.rend());
     print_range(v.begin(), v.end());
   }
 
-  {
+  { //doubles are fine also
     double a[] = {1.1, -5.0, 6.23, 4.123, 155.2};
-    vector<double> v(a, a + 5); //doubles OK too!
+    vector<double> v(a, a + 5);
     combsort(v.begin(), v.end());
     print_range(v.begin(), v.end());
   }
 
-  {
-    //radix sort only works on 32-bit signed ints
+  { //radix sort only works on 32-bit signed integers
     int a[] = {1, 886, 6, -50, 7, -11, 123, 4};
     msd_radix_sort(a, a + 8);
     print_range(a, a + 8);
   }
 
-  //example from: cplusplus.com/reference/algorithm/stable_sort/
+  //example from cplusplus.com/reference/algorithm/stable_sort/
   double a[] = {3.14, 1.41, 2.72, 4.67, 1.73, 1.32, 1.62, 2.58};
+
   {
     vector<double> v(a, a + 8);
     cout << "mergesort() with default comparison: ";
     mergesort(v.begin(), v.end());
     print_range(v.begin(), v.end());
   }
+
   {
     vector<double> v(a, a + 8);
     cout << "mergesort() with 'compare_as_ints' : ";

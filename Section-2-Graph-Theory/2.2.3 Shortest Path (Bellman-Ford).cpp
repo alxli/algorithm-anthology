@@ -22,43 +22,56 @@ Take the path: 0->1->2.
 */
 
 #include <iostream>
+#include <stdexcept>
+#include <vector>
 using namespace std;
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
-int nodes, edges, a, b, weight, start, dest;
-int E[MAXN*MAXN][3], dist[MAXN], pred[MAXN];
+struct edge { int u, v, w; };
 
-int main() {
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++)
-    cin >> E[i][0] >> E[i][1] >> E[i][2];
-  cin >> start >> dest;
+const int MAXN = 100, INF = 0x3f3f3f3f;
+int dist[MAXN], pred[MAXN];
+vector<edge> e;
+
+void bellman_ford(int nodes, int start) {
   for (int i = 0; i < nodes; i++) {
     dist[i] = INF;
     pred[i] = -1;
   }
   dist[start] = 0;
-  for (int i = 0; i < nodes; i++)
-    for (int j = 0; j < edges; j++) {
-      a = E[j][0], b = E[j][1], weight = E[j][2];
-      if (dist[b] > dist[a] + weight) {
-          dist[b] = dist[a] + weight;
-          pred[b] = a;
+  for (int i = 0; i < nodes; i++) {
+    for (int j = 0; j < e.size(); j++) {
+      if (dist[e[j].v] > dist[e[j].u] + e[j].w) {
+        dist[e[j].v] = dist[e[j].u] + e[j].w;
+        pred[e[j].v] = e[j].u;
       }
     }
-  cout << "The shortest distance from " << start;
-  cout << " to " << dest << " is " << dist[dest] << ".\n";
+  }
+  //optional: report negative-weight cycles
+  for (int i = 0; i < e.size(); i++)
+    if (dist[e[i].v] > dist[e[i].u] + e[i].w)
+      throw std::runtime_error("Negative-weight found");
+}
 
-  //Optional: Report negative-weight cycles
-  for (int i = 0; i < edges; i++)
-    if (dist[E[i][0]] + E[i][2] < dist[E[i][1]])
-      cout << "Negative-weight cycle detected!\n";
-
-  //Optional: Use pred[] to backtrack and print the path
+//Use the precomputed pred[] array to print the path
+void print_path(int dest) {
   int i = 0, j = dest, path[MAXN];
   while (pred[j] != -1) j = path[++i] = pred[j];
   cout << "Take the path: ";
   while (i > 0) cout << path[i--] << "->";
   cout << dest << ".\n";
+}
+
+int main() {
+  int nodes, edges, u, v, w, start, dest;
+  cin >> nodes >> edges;
+  for (int i = 0; i < edges; i++) {
+    cin >> u >> v >> w;
+    e.push_back((edge){u, v, w});
+  }
+  cin >> start >> dest;
+  bellman_ford(nodes, start);
+  cout << "The shortest distance from " << start;
+  cout << " to " << dest << " is " << dist[dest] << ".\n";
+  print_path(dest);
   return 0;
 }

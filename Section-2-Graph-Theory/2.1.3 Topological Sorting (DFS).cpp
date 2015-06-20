@@ -11,7 +11,7 @@ Note that the DFS algorithm here produces a reversed topological
 ordering, so the output must be printed backwards. The graph is
 stored in an adjacency list.
 
-Complexity: O(V) on the number of vertices.
+Complexity: O(V+E) on the number of vertices and edges.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 8 9
@@ -27,22 +27,22 @@ Complexity: O(V) on the number of vertices.
 
 =~=~=~=~= Sample Output =~=~=~=~=
 The topological order: 2 1 0 4 3 7 6 5
+
 */
 
+#include <algorithm> /* std::reverse() */
 #include <iostream>
+#include <stdexcept> /* std::runtime_error() */
 #include <vector>
 using namespace std;
 
 const int MAXN = 100;
-int nodes, edges, a, b;
 vector<bool> vis(MAXN), done(MAXN);
 vector<int> adj[MAXN], sorted;
 
 void dfs(int u) {
-  if (vis[u]) {
-    cout << "Error: Graph is not a DAG!\n";
-    return;
-  }
+  if (vis[u])
+    throw std::runtime_error("Not a DAG.");
   if (done[u]) return;
   vis[u] = true;
   for (int j = 0; j < adj[u].size(); j++)
@@ -52,16 +52,25 @@ void dfs(int u) {
   sorted.push_back(u);
 }
 
-int main() {
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> a >> b;
-    adj[a].push_back(b);
-  }
+void toposort(int nodes) {
+  for (int i = 0; i < nodes; i++)
+    vis[i] = done[i] = false;
+  sorted.clear();
   for (int i = 0; i < nodes; i++)
     if (!done[i]) dfs(i);
+  reverse(sorted.begin(), sorted.end());
+}
+
+int main() {
+  int nodes, edges, u, v;
+  cin >> nodes >> edges;
+  for (int i = 0; i < edges; i++) {
+    cin >> u >> v;
+    adj[u].push_back(v);
+  }
+  toposort(nodes);
   cout << "The topological order:";
-  for (int i = sorted.size() - 1; i >= 0; i--)
+  for (int i = 0; i < sorted.size(); i++)
     cout << " " << sorted[i];
   cout << "\n";
   return 0;

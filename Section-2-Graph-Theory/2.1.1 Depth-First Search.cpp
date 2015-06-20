@@ -9,9 +9,9 @@ much space as the length of the longest branch. When DFS'ing
 recursively, the internal call-stack could overflow, so
 sometimes it is safer to use an explicit stack data structure.
 
-Complexity: O(number of edges) for explicit graphs traversed
-without repetition. O(b^d) for implicit graphs with a branch
-factor of b, searched to depth d.
+Complexity: O(V+E) on the number of vertices and edges for
+explicit graphs traversed without repetition. O(b^d) for
+implicit graphs with a branch factor of b, searched to depth d.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 12 11 0
@@ -37,7 +37,6 @@ Nodes visited: 0 1 2 3 4 5 6 7 8 9 10 11
 using namespace std;
 
 const int MAXN = 100;
-int nodes, edges, start, a, b;
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN];
 
@@ -50,12 +49,14 @@ void dfs(int u) {
 }
 
 int main() {
+  int nodes, edges, start, u, v;
   cin >> nodes >> edges >> start;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b;
-    adj[a].push_back(b);
+    cin >> u >> v;
+    adj[u].push_back(v);
   }
   cout << "Nodes visited:";
-  dfs(start); cout << "\n";
+  dfs(start);
+  cout << "\n";
   return 0;
 }

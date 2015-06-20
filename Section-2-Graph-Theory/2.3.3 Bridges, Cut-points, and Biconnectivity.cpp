@@ -1,8 +1,8 @@
 /*
 
-2.3.3 - Bridges, Cut-points, and Biconnected Components (Tarjan's)
+2.3.3 - Bridges, Cut-points, and Biconnectivity (Tarjan's)
 
-Description: The following terms apply to undirected graphs.
+Description: The following operations apply to undirected graphs.
 
 A bridge is an edge, when deleted, increases the number of
 connected components. An edge is a bridge if and only ifit is not
@@ -23,7 +23,7 @@ graph will thus decompose into a "block forest."
 
 See: http://en.wikipedia.org/wiki/Biconnected_component
 
-Complexity: O(V + E) on the number of vertices and edges.
+Complexity: O(V+E) on the number of vertices and edges.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 8 6
@@ -57,13 +57,13 @@ Adjacency List for Block Forest:
 
 */
 
+#include <algorithm> /* std::fill(), std::min() */
 #include <iostream>
 #include <vector>
 using namespace std;
 
 const int MAXN = 100;
-int nodes, edges, a, b, cnt;
-int low[MAXN], num[MAXN], comp[MAXN];
+int timer, lowlink[MAXN], tin[MAXN], comp[MAXN];
 vector<bool> vis(MAXN);
 vector<int> adj[MAXN], bcc_forest[MAXN];
 vector<int> stack, cutpoints;
@@ -71,27 +71,28 @@ vector<vector<int> > bcc;
 vector<pair<int, int> > bridges;
 
 void dfs(int u, int p) {
+  vis[u] = true;
+  lowlink[u] = tin[u] = timer++;
+  stack.push_back(u);
   int v, children = 0;
   bool cutpoint = false;
-  vis[u] = true;
-  low[u] = num[u] = cnt++;
-  stack.push_back(u);
   for (int j = 0; j < adj[u].size(); j++) {
     if ((v = adj[u][j]) == p) continue;
     if (vis[v]) {
-      low[u] = min(low[u], num[v]);
+      //lowlink[u] = min(lowlink[u], lowlink[v]);
+      lowlink[u] = min(lowlink[u], tin[v]);
     } else {
       dfs(v, u);
-      low[u] = min(low[u], low[v]);
-      cutpoint |= (low[v] >= num[u]);
-      if (low[v] > num[u])
+      lowlink[u] = min(lowlink[u], lowlink[v]);
+      cutpoint |= (lowlink[v] >= tin[u]);
+      if (lowlink[v] > tin[u])
         bridges.push_back(make_pair(u, v));
-      ++children;
+      children++;
     }
   }
   if (p == -1) cutpoint = (children >= 2);
   if (cutpoint) cutpoints.push_back(u);
-  if (low[u] == num[u]) {
+  if (lowlink[u] == tin[u]) {
     vector<int> component;
     do {
       v = stack.back();
@@ -102,9 +103,24 @@ void dfs(int u, int p) {
   }
 }
 
+void tarjan(int nodes) {
+  bcc.clear();
+  bridges.clear();
+  cutpoints.clear();
+  stack.clear();
+  fill(lowlink, lowlink + nodes, 0);
+  fill(tin, tin + nodes, 0);
+  fill(vis.begin(), vis.end(), false);
+  timer = 0;
+  for (int i = 0; i < nodes; i++)
+    if (!vis[i]) dfs(i, -1);
+}
+
 //condenses each bcc to a node and generates a tree
 //global variables adj and bcc must be set beforehand
-void get_block_tree() {
+void get_block_tree(int nodes) {
+  fill(comp, comp + nodes, 0);
+  for (int i = 0; i < nodes; i++) bcc_forest[i].clear();
   for (int i = 0; i < bcc.size(); i++)
     for (int j = 0; j < bcc[i].size(); j++)
       comp[bcc[i][j]] = i;
@@ -115,15 +131,14 @@ void get_block_tree() {
 }
 
 int main() {
+  int nodes, edges, u, v;
   cin >> nodes >> edges;
   for (int i = 0; i < edges; i++) {
-    cin >> a >> b;
-    adj[a].push_back(b);
-    adj[b].push_back(a);
+    cin >> u >> v;
+    adj[u].push_back(v);
+    adj[v].push_back(u);
   }
-  cnt = 0;
-  for (int i = 0; i < nodes; i++)
-    if (!vis[i]) dfs(i, -1);
+  tarjan(nodes);
   cout << "Cut-points:";
   for (int i = 0; i < cutpoints.size(); i++)
     cout << " " << cutpoints[i];
@@ -132,15 +147,15 @@ int main() {
     cout << bridges[i].first << " " << bridges[i].second << "\n";
   cout << "Edge-Biconnected Components:\n";
   for (int i = 0; i < bcc.size(); i++) {
-    cout << "Component " << i + 1 << ":";
+    cout << "Component:";
     for (int j = 0; j < bcc[i].size(); j++)
       cout << " " << bcc[i][j];
     cout << "\n";
   }
-  get_block_tree();
+  get_block_tree(nodes);
   cout << "Adjacency List for Block Forest:\n";
   for (int i = 0; i < bcc.size(); i++) {
-  	cout << i << " =>";
+    cout << i << " =>";
     for (int j = 0; j < bcc_forest[i].size(); j++)
       cout << " " << bcc_forest[i][j];
     cout << "\n";

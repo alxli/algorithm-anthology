@@ -2,13 +2,13 @@
 
 1.2.2 - Ternary Search
 
-Given a unimodal function f(x), find the maxima or minima.
+Given a unimodal function f(x), find its maximum or minimum.
 
 Assume we are looking for a maximum of f(x) and that we know
 the maximum lies somewhere between A and B. For the algorithm
 to be applicable, there must be some value x such that:
-> for all a,b with A ≤ a < b ≤ x, we have f(a) < f(b), and
-> for all a,b with x ≤ a < b ≤ B, we have f(a) > f(b).
+>>> for all a,b with A <= a < b <= x, we have f(a) < f(b); and
+>>> for all a,b with x <= a < b <= B, we have f(a) > f(b).
 
 In other words, for the graph of f(x) must look like a "valley"
 with a single point at its trough (lowest point) and no flat
