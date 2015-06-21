@@ -139,7 +139,6 @@ std::string to_string(bigint * x) {
   return s;
 }
 
-
 /*** Example Usage ***/
 
 #include <cassert>
