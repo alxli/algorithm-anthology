@@ -4,13 +4,17 @@
 
 */
 
-#include <cstdlib>
-#include <utility>
+#include <utility> /* std::pair */
 #include <vector>
+
+//C++98 does not have abs() declared for long long
+template<class T> inline T _abs(const T & x) {
+  return x < 0 ? -x : x;
+}
 
 //GCD using Euclid's algorithm - O(log(a + b))
 template<class Int> Int gcd(Int a, Int b) {
-  return b == 0 ? abs(a) : gcd(b, a % b);
+  return b == 0 ? _abs(a) : gcd(b, a % b);
 }
 
 //non-recursive version
@@ -20,16 +24,16 @@ template<class Int> Int gcd2(Int a, Int b) {
     b = a % b;
     a = t;
   }
-  return abs(a);
+  return _abs(a);
 }
 
 template<class Int> Int lcm(Int a, Int b) {
-  return abs(a / gcd(a, b) * b);
+  return _abs(a / gcd(a, b) * b);
 }
 
 //returns <gcd(a, b), <x, y>> such that gcd(a, b) = ax + by
 template<class Int>
-std::pair< Int, std::pair<Int, Int> > euclid(Int a, Int b) {
+std::pair<Int, std::pair<Int, Int> > euclid(Int a, Int b) {
   Int x = 1, y = 0, x1 = 0, y1 = 1;
   //invariant: a = a*x + b*y, b = a*x1 + b*y1
   while (b != 0) {
@@ -47,16 +51,15 @@ std::pair< Int, std::pair<Int, Int> > euclid(Int a, Int b) {
 
 //recursive version
 template<class Int>
-std::pair< Int, std::pair<Int, Int> > euclid2(Int a, Int b) {
+std::pair<Int, std::pair<Int, Int> > euclid2(Int a, Int b) {
   if (b == 0) {
     return a > 0 ? std::make_pair(a, std::make_pair(1, 0)) :
                    std::make_pair(-a, std::make_pair(-1, 0));
   }
-  std::pair< Int, std::pair<Int, Int> > r = euclid2(b, a % b);
+  std::pair<Int, std::pair<Int, Int> > r = euclid2(b, a % b);
   return std::make_pair(r.first, std::make_pair(r.second.second,
                     r.second.first - a / b * r.second.second));
 }
-
 
 /*
 
@@ -100,7 +103,6 @@ std::vector<int> generate_inverses(int p) {
     res[i] = (p - (p / i) * res[p % i] % p) % p;
   return res;
 }
-
 
 /*
 
@@ -157,7 +159,6 @@ long long garner_restore(int n, int a[], int p[]) {
   }
   return res;
 }
-
 
 /*** Example Usage ***/
 
