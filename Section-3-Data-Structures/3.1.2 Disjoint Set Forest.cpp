@@ -10,16 +10,19 @@ built in storage and coordinate compression. That is, the
 magnitude of values inserted is not limited.
 
 Time Complexity: make_set(), unite() and is_united() are
-O(log(N)) on the number of elements in the disjoint set
-forest. get_all_sets() is O(N). find() is O(α(N)) amortized.
-α(N) is the extremely slow growing inverse of the Ackermann
-function. α(n) < 5 for all practical values of n.
+O(a(N) + log N) = O(log N) on the number of elements in the
+disjoint set forest. get_all_sets() is O(N). find() is is
+O(a(N)) amortized on the number of items in the set due to
+the optimizations of union by rank and path compression.
+Here, a(N) is the extremely slow growing inverse of the
+Ackermann function. For all practical values of n, a(n) is
+less than 5.
 
-Space Complexity: O(N) total.
+Space Complexity: O(N)
 
 =~=~=~=~= Sample Output =~=~=~=~=
 Elements: 7, Sets: 3
-{ a b f }{ c }{ d e g }
+[[a,b,f],[c],[d,e,g]]
 
 */
 
@@ -41,18 +44,18 @@ template<class T> class disjoint_set_forest {
   int elements() { return num_elements; }
   int sets() { return num_sets; }
 
-  bool is_united(const T &x, const T &y) {
+  bool is_united(const T & x, const T & y) {
     return find_root(ID[x]) == find_root(ID[y]);
   }
 
-  void make_set(const T &x) {
+  void make_set(const T & x) {
     if (ID.find(x) != ID.end()) return;
     root.push_back(ID[x] = num_elements++);
     rank.push_back(0);
     num_sets++;
   }
 
-  void unite(const T &x, const T &y) {
+  void unite(const T & x, const T & y) {
     int X = find_root(ID[x]), Y = find_root(ID[y]);
     if (X == Y) return;
     num_sets--;
@@ -61,12 +64,12 @@ template<class T> class disjoint_set_forest {
     else rank[root[Y] = X]++;
   }
 
-  std::vector< std::vector<T> > get_all_sets() {
-    std::map< int, std::vector<T> > tmp;
+  std::vector<std::vector<T> > get_all_sets() {
+    std::map<int, std::vector<T> > tmp;
     for (typename std::map<T, int>::iterator
          it = ID.begin(); it != ID.end(); it++)
       tmp[find_root(it->second)].push_back(it->first);
-    std::vector< std::vector<T> > ret;
+    std::vector<std::vector<T> > ret;
     for (typename std::map<int, std::vector<T> >::
          iterator it = tmp.begin(); it != tmp.end(); it++)
       ret.push_back(it->second);
@@ -88,12 +91,14 @@ int main() {
   d.unite('e', 'g');
   cout << "Elements: " << d.elements();
   cout << ", Sets: " << d.sets() << endl;
-  vector< vector<char> > V = d.get_all_sets();
-  for (int i = 0; i < V.size(); i++) {
-    cout << "{ ";
-    for (int j = 0; j < V[i].size(); j++)
-      cout << V[i][j] << " ";
-    cout << "}";
+  vector<vector<char> > s = d.get_all_sets();
+  cout << "[";
+  for (int i = 0; i < s.size(); i++) {
+    cout << (i > 0 ? ",[" : "[");
+    for (int j = 0; j < s[i].size(); j++)
+      cout << (j > 0 ? "," : "") << s[i][j];
+    cout << "]";
   }
+  cout << "]\n";
   return 0;
 }

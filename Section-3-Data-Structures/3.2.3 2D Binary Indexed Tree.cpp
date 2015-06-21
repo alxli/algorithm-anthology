@@ -4,58 +4,74 @@
 
 Description: A 2D BIT is abstractly a 2D array which also
 supports efficient queries for the sum of values in the
-rectangle with bottom-left (0,0) and top-right (x,y). The
+rectangle with top-left (1,1) and bottom-right (r,c). The
 2D BIT implemented below has indices accessible in the
 range [1...MAXR-1][1...MAXC].
 
-Time Complexity: query() and update() are both
-O(log(rows)*log(cols)). All other functions are O(1).
+Time Complexity: All functions are O(log(MAXR)*log(MAXC)).
+Space Complexity: O(MAXR*MAXC) storage and auxiliary.
 
-Space Complexity: O(rows*cols) storage and auxiliary.
+=~=~=~=~= Sample Output =~=~=~=~=
+2D BIT values:
+5 6 0
+3 0 0
+0 0 9
 
 */
 
 const int MAXR = 100, MAXC = 100;
 
-int data[MAXR+1][MAXC+1];
-int tree[MAXR+1][MAXC+1];
+int a[MAXR+1][MAXC+1], bit[MAXR+1][MAXC+1];
 
-void update_pre(int R, int C, int v) { //data[R][C] += v
-  for (int r = R; r < MAXR; r += r & -r)
-    for (int c = C; c < MAXC; c += c & -c)
-      tree[r][c] += v;
+//a[r][c] += v
+void add(int r, int c, int v) {
+  a[r][c] += v;
+  for (int i = r; i < MAXR; i += i & -i)
+    for (int j = c; j < MAXC; j += j & -j)
+      bit[i][j] += v;
 }
 
-void update(int r, int c, int v) { //data[R][C] = v
-  int inc = v - data[r][c];
-  data[r][c] = v;
-  update_pre(r, c, inc);
+ //a[r][c] = v
+void set(int r, int c, int v) {
+  int inc = v - a[r][c];
+  add(r, c, inc);
 }
 
-int query(int R, int C) { //sum(data[1..R][1..C])
+//returns sum(data[1..r][1..c], all inclusive)
+int sum(int r, int c) {
   int ret = 0;
-  for (int r = R; r > 0; r -= r & -r)
-    for (int c = C; c > 0; c -= c & -c)
-      ret += tree[r][c];
+  for (int i = r; i > 0; i -= i & -i)
+    for (int j = c; j > 0; j -= j & -j)
+      ret += bit[i][j];
   return ret;
 }
 
-int query(int r1, int c1, int r2, int c2) {
-  return query(r2, c2) + query(r1 - 1, c1 - 1) -
-         query(r1 - 1, c2) - query(r2, c1 - 1);
+//returns sum(data[r1..r2][c1..c2], all inclusive)
+int sum(int r1, int c1, int r2, int c2) {
+  return sum(r2, c2) + sum(r1 - 1, c1 - 1) -
+         sum(r1 - 1, c2) - sum(r2, c1 - 1);
 }
 
-/*** Example Usage: ***/
+/*** Example Usage ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 int main() {
-  update(1, 1, 5);
-  update(1, 2, 6);
-  update(2, 1, 7);
-  cout << query(1, 1, 1, 2) << endl; //11
-  cout << query(1, 1, 2, 1) << endl; //12
-  cout << query(1, 1, 2, 2) << endl; //18
+  set(1, 1, 5);
+  set(1, 2, 6);
+  set(2, 1, 7);
+  add(3, 3, 9);
+  add(2, 1, -4);
+  cout << "2D BIT values:\n";
+  for (int i = 1; i <= 3; i++) {
+    for (int j = 1; j <= 3; j++)
+      cout << a[i][j] << " ";
+    cout << "\n";
+  }
+  assert(sum(1, 1, 1, 2) == 11);
+  assert(sum(1, 1, 2, 1) == 8);
+  assert(sum(1, 1, 3, 3) == 23);
   return 0;
 }

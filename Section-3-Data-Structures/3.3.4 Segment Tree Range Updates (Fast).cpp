@@ -7,7 +7,7 @@ solving the dynamic range query problem, which asks to
 determine the minimum (or maximum) value in any given
 range in an array that is constantly being updated.
 Lazy propagation is a technique applied to segment trees that
-allows range updates to be carried out in O(log(N)) time.
+allows range updates to be carried out in O(log N) time.
 
 Time Complexity: Assuming merge() is O(1), query(), update(),
 at() are O(log(N)). If merge() is not constant time, then all
@@ -21,11 +21,12 @@ indices from 0 to T.size() - 1, inclusive, are accessible.
 
 */
 
-#include <algorithm> /* std::fill() */
+#include <algorithm> /* std::fill(), std::max() */
 #include <stdexcept> /* std::runtime_error */
+#include <vector>
 
 template<class T> class segment_tree {
-  //Modify the following 5 functions to implement your custom
+  //Modify the following 5 methods to implement your custom
   //operations on the tree. This implements the Add/Max operations.
   //Operations like Add/Sum, Set/Max can also be implemented.
   static inline const T modify_op(const T & x, const T & y) {
@@ -48,8 +49,9 @@ template<class T> class segment_tree {
   static inline const T nullv() { return 0; }
   static inline const T initv() { return 0; }
 
-  T *value, *delta;
-  int length, *len;
+  int length;
+  std::vector<T> value, delta;
+  std::vector<int> len;
 
   static T join_value_with_delta(const T & val, const T & delta) {
     return delta == nullv() ? val : modify_op(val, delta);
@@ -78,27 +80,15 @@ template<class T> class segment_tree {
   }
 
  public:
-  segment_tree(int N) {
-    length = N;
-    value = new T[2*N];
-    delta = new T[2*N];
-    len = new int[2*N];
-    std::fill(delta, delta + 2*N, nullv());
-    std::fill(len + N, len + 2*N, 1);
-    for (int i = 0; i < N; i++) value[i + N] = initv();
-    for (int i = 2*N - 1; i > 1; i -= 2) {
+  segment_tree(int n):
+   length(n), value(2 * n), delta(2 * n, nullv()), len(2 * n) {
+    std::fill(len.begin() + n, len.end(), 1);
+    for (int i = 0; i < n; i++) value[i + n] = initv();
+    for (int i = 2 * n - 1; i > 1; i -= 2) {
       value[i >> 1] = query_op(value[i], value[i ^ 1]);
       len[i >> 1] = len[i] + len[i ^ 1];
     }
   }
-
-  ~segment_tree() {
-    delete[] value;
-    delete[] delta;
-    delete[] len;
-  }
-
-  int size() { return length; }
 
   T query(int lo, int hi) {
     if (lo < 0 || hi >= length || lo > hi)
@@ -146,6 +136,9 @@ template<class T> class segment_tree {
       value[i >> 1] = query_op(join_value_with_delta(i),
                                join_value_with_delta(i ^ 1));
   }
+
+  inline int size() { return length; }
+  inline T at(int i) { return query(i, i); }
 };
 
 /*** Example Usage ***/
@@ -164,5 +157,9 @@ int main() {
   cout << T.query(1, 3) << "\n"; //9
   T.modify(0, 9, 5);
   cout << T.query(0, 9) << "\n"; //15
+  cout << "Array contains:"; //15 14 12 13 5 5 5 5 5 5
+  for (int i = 0; i < T.size(); i++)
+    cout << " " << T.at(i);
+  cout << "\n";
   return 0;
 }

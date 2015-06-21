@@ -6,18 +6,18 @@ Description: This data structure dynamically keeps track
 of items partitioned into non-overlapping sets (a disjoint
 set forest). It is also known as a union-find data structure.
 
-Time Complexity: Every function below is O(alpha(N))
-amortized on the number of items in the set due to the
-optimizations of union by rank and path compression. alpha(N)
-is the extremely slow growing inverse of the Ackermann
-function. For all practical values of n, alpha(n) < 5.
+Time Complexity: Every function below is O(a(N)) amortized
+on the number of items in the set due to the optimizations
+of union by rank and path compression. Here, a(N) is the
+extremely slow growing inverse of the Ackermann function.
+For all practical values of n, a(n) is less than 5.
 
 Space Complexity: O(N) total.
 
 */
 
-const int MAXV = 1000;
-int num_sets = 0, root[MAXV+1], rank[MAXV+1];
+const int MAXN = 1000;
+int num_sets = 0, root[MAXN+1], rank[MAXN+1];
 
 int find_root(int x) {
   if (root[x] != x) root[x] = find_root(root[x]);
