@@ -23,7 +23,6 @@ the implementation below uses 0-based indices.
 
 #include <algorithm> /* std::swap() */
 #include <cmath>     /* fabs() */
-#include <stdexcept> /* std::runtime_error() */
 #include <vector>
 
 const double eps = 1e-9;
@@ -31,6 +30,7 @@ typedef std::vector<double> vd;
 typedef std::vector<vd> vvd;
 
 //note: A[i][n] stores B[i]
+//if no unique solution found, returns empty vector
 vd solve_system(vvd A) {
   int m = A.size(), n = A[0].size() - 1;
   vd x(n);
@@ -61,8 +61,7 @@ vd solve_system(vvd A) {
     x[i] = v / A[i][i];
   }
   return x;
-fail:;
-  throw std::runtime_error("No unique solution");
+fail:
   return vd();
 }
 
@@ -77,12 +76,12 @@ int main() {
   for (int i = 0; i < m; i++)
     for (int j = 0; j <= n; j++)
       scanf("%lf", &a[i][j]);
-  try {
-    vd x = solve_system(a);
+  vd x = solve_system(a);
+  if (x.empty()) {
+    printf("NO UNIQUE SOLUTION\n");
+  } else {
     for (int i = 0; i < n; i++)
       printf("%.6lf\n", x[i]);
-  } catch (...) {
-    printf("NO UNIQUE SOLUTION\n");
   }
   return 0;
 }
