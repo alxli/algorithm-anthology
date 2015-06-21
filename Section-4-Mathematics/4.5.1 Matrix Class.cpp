@@ -18,7 +18,7 @@ det() and lu_decompose() in later sections.
 
 template<class val_t> class matrix {
   int r, c;
-  std::vector< std::vector<val_t> > mat;
+  std::vector<std::vector<val_t> > mat;
 
  public:
   matrix(int rows, int cols, val_t init = val_t()) {
@@ -27,7 +27,7 @@ template<class val_t> class matrix {
     mat.resize(r, std::vector<val_t>(c, init));
   }
 
-  matrix(const std::vector< std::vector<val_t> > & m) {
+  matrix(const std::vector<std::vector<val_t> > & m) {
     r = m.size();
     c = m[0].size();
     mat = m;
@@ -44,7 +44,7 @@ template<class val_t> class matrix {
         mat[i][j] = init[i][j];
   }
 
-  operator std::vector< std::vector<val_t> > &() { return mat; }
+  operator std::vector<std::vector<val_t> > &() { return mat; }
   val_t & operator() (int r, int c) { return mat[r][c]; }
   std::vector<val_t> & operator[] (int r) { return mat[r]; }
   val_t at(int r, int c) const { return mat[r][c]; }
