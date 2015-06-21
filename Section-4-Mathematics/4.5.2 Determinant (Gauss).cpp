@@ -16,15 +16,15 @@ Precondition: All input matrices must be square.
 
 */
 
-#include <algorithm>
+#include <algorithm> /* std::swap() */
 #include <cassert>
-#include <cmath>
+#include <cmath>     /* fabs() */
 #include <map>
 #include <vector>
 
 static const double eps = 1e-10;
-typedef std::vector< std::vector<int> > vvi;
-typedef std::vector< std::vector<double> > vvd;
+typedef std::vector<std::vector<int> > vvi;
+typedef std::vector<std::vector<double> > vvd;
 
 double det(vvd a) {
   int n = a.size();
@@ -51,7 +51,6 @@ double det(vvd a) {
   return res;
 }
 
-
 /*
 
 Determinant of Integer Matrix
@@ -69,7 +68,7 @@ if the final answer is too big for a long long.
 */
 
 //C++98 doesn't have an abs() for long long
-template<class T> T _abs(const T & x) {
+template<class T> inline T _abs(const T & x) {
   return x < 0 ? -x : x;
 }
 
