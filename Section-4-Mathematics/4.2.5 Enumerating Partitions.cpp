@@ -41,7 +41,6 @@ bool next_partition(std::vector<int> & p) {
   return true;
 }
 
-
 /* Returns the number of partitions of n. */
 
 long long count_partitions(int n) {
@@ -52,7 +51,6 @@ long long count_partitions(int n) {
       p[j] += p[j - i];
   return p[n];
 }
-
 
 /* Helper function for partitioning by rank */
 
@@ -72,7 +70,6 @@ long long partition_function(int a, int b) {
   }
   return p[a][b];
 }
-
 
 /*
 
@@ -101,7 +98,6 @@ std::vector<int> partition_by_rank(int n, long long x) {
   return res;
 }
 
-
 /*
 
 Given a partition of an integer n (sum of all values
@@ -126,7 +122,6 @@ long long rank_by_partition(const std::vector<int> & p) {
   }
   return res;
 }
-
 
 /*
 
@@ -153,7 +148,6 @@ void gen_increasing_partitons(int n, ReportFunction f) {
   std::vector<int> partitions(n, 0);
   gen_increasing_partitons(n, 0, 0, f, partitions);
 }
-
 
 /*** Example Usage ***/
 
