@@ -162,3 +162,19 @@ template<class val_t> class matrix {
     return out;
   }
 };
+
+/*** Example Usage ***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  int a[2][2] = {{1,8}, {5,9}};
+  matrix<int> m(5, 5, 10), m2(a);
+  m += 10;
+  m[0][0] += 10;
+  assert(m[0][0] == 30 && m[1][1] == 20);
+  assert(powsum(m2, 3) == m2 + m2*m2 + (m2^3));
+  return 0;
+}
