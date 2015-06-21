@@ -20,10 +20,9 @@ additional O(n^3) term.
 
 */
 
-#include <algorithm>
+#include <algorithm> /* std::swap() */
 #include <cassert>
-#include <cmath>
-#include <cstdio>
+#include <cmath>     /* fabs() */
 #include <vector>
 
 static const double eps = 1e-10;
@@ -96,12 +95,10 @@ double det(const vvd & a) {
   return detsign < 0 ? -det : det;
 }
 
-
 /*
 
 Solves system of linear equations with forward/backwards
 substitution. Precondition: A must be n*n and B must be n*m.
-
 Returns: an n by m matrix X such that A*X = B.
 
 */
@@ -136,7 +133,6 @@ vvd solve_system(const vvd & a, const vvd & b) {
   return x;
 }
 
-
 /*
 
 Find the inverse A^-1 of a matrix A. The inverse of a matrix
@@ -156,7 +152,6 @@ vvd inverse(const vvd & a) {
   for (int i = 0; i < n; i++) I[i][i] = 1;
   return solve_system(a, I);
 }
-
 
 /*** Example Usage ***/
 
