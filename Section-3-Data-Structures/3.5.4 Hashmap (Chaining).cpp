@@ -125,7 +125,6 @@ struct class_hash {
   }
 };
 
-
 /*** Example Usage ***/
 
 #include <iostream>
