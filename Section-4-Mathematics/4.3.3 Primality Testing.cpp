@@ -1,8 +1,8 @@
 /* 4.3.3 - Primality Testing */
 
-#include <stdint.h>
-#include <cstdlib>
-#include <ctime>
+#include <cstdlib>  /* rand(), srand() */
+#include <ctime>    /* time() */
+#include <stdint.h> /* uint64_t */
 
 /*
 
@@ -19,7 +19,6 @@ template<class Int> bool is_prime(Int n) {
     if (n % i == 0) return false;
   return true;
 }
-
 
 /*
 
@@ -84,7 +83,6 @@ bool is_probable_prime(long long n, int k = 20) {
   return true;
 }
 
-
 /*
 
 Miller-Rabin - Deterministic for all unsigned long long
@@ -126,7 +124,6 @@ bool is_prime_fast(long long n) {
   }
   return true;
 }
-
 
 /*** Example Usage ***/
 
