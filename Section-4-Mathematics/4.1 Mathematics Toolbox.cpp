@@ -328,6 +328,7 @@ std::string to_roman(unsigned int x) {
   return std::string(x/1000, 'M') + h[(x %= 1000)/100] + t[x/10%10] + o[x%10];
 }
 
+/*** Example Usage ***/
 
 #include <algorithm>
 #include <cassert>
