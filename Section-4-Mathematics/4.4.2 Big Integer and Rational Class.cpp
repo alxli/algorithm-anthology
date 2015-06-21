@@ -456,7 +456,6 @@ bigint operator % (bigint a, bigint b) vs. int operator % (bigint a, int b)
 
 */
 
-
 struct rational {
   bigint num, den;
 
@@ -572,7 +571,6 @@ struct rational {
     return out;
   }
 };
-
 
 /*** Example Usage ***/
 
