@@ -10,7 +10,7 @@ given values, not just distinct integers from 0 to n-1.
 
 */
 
-#include <algorithm>
+#include <algorithm> /* std::copy(), std::fill() */
 #include <vector>
 
 /*
@@ -48,7 +48,6 @@ bool next_arrangement(int n, int k, int a[]) {
   return false;
 }
 
-
 /*
 
 Computes n permute k using formula: nPk = n!/(n - k)!
@@ -61,7 +60,6 @@ long long n_permute_k(int n, int k) {
   for (int i = 0; i < k; i++) res *= n - i;
   return res;
 }
-
 
 /*
 
@@ -88,7 +86,6 @@ std::vector<int> arrangement_by_rank(int n, int k, long long x) {
   return res;
 }
 
-
 /*
 
 Given an array a[] of k integers each in range [0, n), returns
@@ -113,7 +110,6 @@ long long rank_by_arrangement(int n, int k, int a[]) {
   }
   return res;
 }
-
 
 /*
 
@@ -144,7 +140,6 @@ bool next_arrangement_with_repeats(int n, int k, int a[]) {
   }
   return false;
 }
-
 
 /*** Example Usage ***/
 
