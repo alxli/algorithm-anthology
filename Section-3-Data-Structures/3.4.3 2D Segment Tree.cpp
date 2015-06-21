@@ -2,13 +2,16 @@
 
 3.4.3 - 2D Segment Tree
 
-Description: The statically allocated quadtree in the previous
-section is inefficient for large indices. The following implementation
-is a highly optimized implementation with features such as coordinate
-compression and path compression.
+Description: A quadtree is a segment tree but with 4 children
+per node, making its running time proportional to the square
+root of the number of leaves. However, a 2D segment tree is a
+segment tree of segment trees, making its running time
+proportional to the log of its size. The following implementation
+is a highly optimized implementation with features such as
+coordinate compression and path compression.
 
 Time Complexity: O(log(xmax)*log(ymax)) for update(), query(),
-and at() operations.
+and at() operations. size() is O(1).
 
 Space Complexity: Left as an exercise for the reader.
 
@@ -47,7 +50,7 @@ template<class T> class segment_tree_2D {
       node->value = v;
       return;
     }
-    layer2_node*& tgt = Q < mid ? node->L : node->R;
+    layer2_node *& tgt = Q < mid ? node->L : node->R;
     if (tgt == 0) {
       tgt = new layer2_node(Q, Q + 1);
       tgt->value = v;
@@ -77,7 +80,7 @@ template<class T> class segment_tree_2D {
     if (lo + 1 == hi) update2(&node->l2, y, v);
     else {
       int mid = (lo + hi)/2;
-      layer1_node*& nnode = x < mid ? node->L : node->R;
+      layer1_node *& nnode = x < mid ? node->L : node->R;
       (x < mid ? hi : lo) = mid;
       if (nnode == 0) nnode = new layer1_node();
       update1(nnode, lo, hi, x, y, v);
