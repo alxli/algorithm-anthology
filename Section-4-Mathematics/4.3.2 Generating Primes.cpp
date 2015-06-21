@@ -1,6 +1,6 @@
 /* 4.3.2 - Generating Primes */
 
-#include <cmath>
+#include <cmath> /* ceil(), sqrt() */
 #include <vector>
 
 //Sieve of Eratosthenes in ~ O(n log log n)
