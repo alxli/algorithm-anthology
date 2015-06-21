@@ -10,7 +10,6 @@ abstract combinatorial sequences in O(n^2) time.
 #include <vector>
 
 class abstract_enumeration {
-
  protected:
   int range, length;
 
@@ -65,7 +64,6 @@ public:
   }
 };
 
-
 class arrangements: public abstract_enumeration {
  public:
   arrangements(int n, int k) : abstract_enumeration(n, k) {}
@@ -81,15 +79,12 @@ class arrangements: public abstract_enumeration {
   }
 };
 
-
 class permutations: public arrangements {
  public:
   permutations(int n) : arrangements(n, n) {}
 };
 
-
 class combinations: public abstract_enumeration {
-
   std::vector<std::vector<long long> > binomial;
 
  public:
@@ -109,9 +104,7 @@ class combinations: public abstract_enumeration {
   }
 };
 
-
 class partitions: public abstract_enumeration {
-
   std::vector<std::vector<long long> > p;
 
  public:
@@ -137,7 +130,6 @@ class partitions: public abstract_enumeration {
     return p[range - 1 - sum][last];
   }
 };
-
 
 /*** Example Usage ***/
 
