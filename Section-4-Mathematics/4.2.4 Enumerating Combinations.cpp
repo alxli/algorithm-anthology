@@ -11,8 +11,8 @@ combination for purposes of the functions below.
 
 */
 
-#include <algorithm>
-#include <iterator>
+#include <algorithm> /* iter_swap, rotate, swap, swap_ranges */
+#include <iterator>  /* std::iterator_traits */
 #include <vector>
 
 /*
@@ -87,7 +87,6 @@ bool next_combination(int n, int k, int a[]) {
   return false;
 }
 
-
 /*
 
 Finds the "mask" of the next combination of x. This is
@@ -122,7 +121,6 @@ long long next_combination_mask(long long x) {
   return r | (((x ^ r) >> 2) / s);
 }
 
-
 //n choose k in O(min(k, n - k))
 long long n_choose_k(long long n, long long k) {
   if (k > n - k) k = n - k;
@@ -131,7 +129,6 @@ long long n_choose_k(long long n, long long k) {
     res = res * (n - i) / (i + 1);
   return res;
 }
-
 
 /*
 
@@ -160,7 +157,6 @@ std::vector<int> combination_by_rank(int n, int k, long long x) {
   return res;
 }
 
-
 /*
 
 Given an array a[] of k integers each in range [0, n), returns
@@ -184,7 +180,6 @@ long long rank_by_combination(int n, int k, int a[]) {
   return res;
 }
 
-
 /*
 
 Changes a[] to the next lexicographically greater
@@ -205,7 +200,6 @@ bool next_combination_with_repeats(int n, int k, int a[]) {
   }
   return false;
 }
-
 
 /*** Example Usage ***/
 
