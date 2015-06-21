@@ -37,7 +37,6 @@ std::vector<int> phi_table(int n) {
   return res;
 }
 
-
 /*** Example Usage ***/
 
 #include <cassert>
