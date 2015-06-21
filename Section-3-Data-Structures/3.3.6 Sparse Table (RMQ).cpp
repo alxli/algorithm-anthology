@@ -21,13 +21,11 @@ Space Complexity: O(N log N).
 
 */
 
-#include <iostream>
 #include <vector>
-using namespace std;
 
 const int MAXN = 1000;
 int len, timer, tin[MAXN], tout[MAXN];
-vector<int> adj[MAXN], dp[MAXN];
+std::vector<int> adj[MAXN], dp[MAXN];
 
 void dfs(int u, int p) {
   tin[u] = timer++;
@@ -43,7 +41,7 @@ void build(int nodes, int root) {
   len = 1;
   while ((1 << len) <= nodes) len++;
   for (int i = 0; i < nodes; i++)
-    dp[i] = vector<int>(len);
+    dp[i] = std::vector<int>(len);
   timer = 0;
   dfs(root, root);
 }
@@ -56,10 +54,14 @@ int lca(int a, int b) {
   if (is_parent(a, b)) return a;
   if (is_parent(b, a)) return b;
   for (int i = len - 1; i >= 0; i--)
-    if (!is_parent(dp[a][i], b))
-      a = dp[a][i];
+    if (!is_parent(dp[a][i], b)) a = dp[a][i];
   return dp[a][0];
 }
+
+/*** Example Usage ***/
+
+#include <iostream>
+using namespace std;
 
 int main() {
   adj[0].push_back(1);
