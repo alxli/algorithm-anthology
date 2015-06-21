@@ -6,6 +6,9 @@ Description: A range tree is an ordered tree data structure to
 hold a list of points. It allows all points within a given range
 to be reported efficiently. Specifically, for a given query, a
 range tree will report *all* points that lie in the given range.
+Note that the initial array passed to construct the tree will be
+sorted, and all resulting query reports will pertain to the
+indices of points in the sorted array.
 
 Time Complexity: A range tree can build() in O(N log^(d-1)(N))
 and query() in O(log^d(n) + k), where N is the number of points
@@ -35,47 +38,45 @@ class range_tree_2D {
     return a.second < v;
   }
 
-  void build(int idx, int lo, int hi) {
+  void build(int n, int lo, int hi) {
     if (P[lo].first == P[hi].first) {
       for (int i = lo; i <= hi; i++)
-        seg[idx].push_back(point(i, P[i].second));
+        seg[n].push_back(point(i, P[i].second));
       return;
     }
-    int l = idx*2 + 1, r = idx*2 + 2;
+    int l = n * 2 + 1, r = n * 2 + 2;
     build(l, lo, (lo + hi)/2);
     build(r, (lo + hi)/2 + 1, hi);
-    seg[idx].resize(seg[l].size() + seg[r].size());
+    seg[n].resize(seg[l].size() + seg[r].size());
     std::merge(seg[l].begin(), seg[l].end(), seg[r].begin(), seg[r].end(),
-               seg[idx].begin(), comp1);
+               seg[n].begin(), comp1);
   }
 
   int xl, xh, yl, yh;
 
   template<class ReportFunction>
-  void query(int idx, int lo, int hi, ReportFunction f) {
+  void query(int n, int lo, int hi, ReportFunction f) {
     if (P[hi].first < xl || P[lo].first > xh) return;
     if (xl <= P[lo].first && P[hi].first <= xh) {
-      if (!seg[idx].empty() && yh >= yl) {
+      if (!seg[n].empty() && yh >= yl) {
         std::vector<point>::iterator it;
-        it = std::lower_bound(seg[idx].begin(), seg[idx].end(), yl, comp2);
-        while (it != seg[idx].end()) {
+        it = std::lower_bound(seg[n].begin(), seg[n].end(), yl, comp2);
+        for (; it != seg[n].end(); ++it) {
           if (it->second > yh) break;
           f(it->first); //or report P[it->first], the actual point
-          ++it;
         }
       }
     } else if (lo != hi) {
-      query(idx*2 + 1, lo, (lo + hi)/2, f);
-      query(idx*2 + 2, (lo + hi)/2 + 1, hi, f);
+      query(n * 2 + 1, lo, (lo + hi) / 2, f);
+      query(n * 2 + 2, (lo + hi) / 2 + 1, hi, f);
     }
   }
 
  public:
-  range_tree_2D(int N, point initp[]) {
-    seg.resize(4*N + 1);
-    std::sort(initp, initp + N);
-    P = std::vector<point>(initp, initp + N);
-    build(0, 0, N - 1);
+  range_tree_2D(int n, point init[]): seg(4 *n + 1) {
+    std::sort(init, init + n);
+    P = std::vector<point>(init, init + n);
+    build(0, 0, n - 1);
   }
 
   template<class ReportFunction>
