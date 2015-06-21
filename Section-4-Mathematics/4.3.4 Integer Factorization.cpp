@@ -1,18 +1,18 @@
 /* 4.3.4 - Integer Factorization */
 
-#include <algorithm>
-#include <cmath>
-#include <stdint.h>
+#include <algorithm> /* std::sort() */
+#include <cmath>     /* sqrt() */
+#include <cstdlib>   /* rand(), srand() */
+#include <stdint.h>  /* uint64_t */
 #include <vector>
 
 /*
 
 Trial division in O(sqrt(n))
 
-returns: vector of pair<prime divisor, exponent>
-
+Returns a vector of pair<prime divisor, exponent>
 e.g. prime_factorize(15435) => {(3,2),(5,1),(7,3)}
-     because 3^2 * 5^1 * 7^3 = 15435
+because 3^2 * 5^1 * 7^3 = 15435
 
 */
 
@@ -32,7 +32,6 @@ std::vector<std::pair<Int, int> > prime_factorize(Int n) {
   if (n > 1) res.push_back(std::make_pair(n, 1));
   return res;
 }
-
 
 /*
 
@@ -56,7 +55,6 @@ std::vector<Int> get_all_divisors(Int n) {
   std::sort(res.begin(), res.end());
   return res;
 }
-
 
 /*
 
@@ -88,7 +86,6 @@ long long fermat(long long n) {
   }
   return x != y ? x - y : x + y;
 }
-
 
 /*
 
@@ -154,14 +151,12 @@ long long brent(long long n) {
   return g;
 }
 
-
 /*
 
 Combines Brent's method with trial division to efficiently
 generate the prime factorization of large integers.
 
-returns: vector of prime divisors that multiply to n
-
+Returns a vector of prime divisors that multiply to n.
 e.g. prime_factorize(15435) => {3, 3, 5, 7, 7, 7}
      because 3^2 * 5^1 * 7^3 = 15435
 
@@ -185,7 +180,6 @@ std::vector<long long> prime_factorize_big(long long n) {
   sort(res.begin(), res.end());
   return res;
 }
-
 
 /*** Example Usage ***/
 
