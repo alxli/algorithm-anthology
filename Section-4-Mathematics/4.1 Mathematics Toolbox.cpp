@@ -6,10 +6,9 @@ Useful math definitions. Excludes geometry (see next chapter).
 
 */
 
-#include <algorithm>
-#include <cfloat>
-#include <cmath>
-#include <cstdlib>
+#include <algorithm> /* std::reverse() */
+#include <cfloat>    /* DBL_MAX */
+#include <cmath>     /* a lot of things */
 #include <string>
 #include <vector>
 
@@ -22,7 +21,6 @@ const double phi = (1.0 + sqrt(5.0)) / 2.0; //golden ratio
 //A better way is using functions of std::numeric_limits<T> from <limits>
 //See main() for identities involving the following special values.
 const double posinf = 1.0/0.0, neginf = -1.0/0.0, NaN = -(0.0/0.0);
-
 
 /*
 
@@ -43,7 +41,6 @@ const double eps = 1e-7;
 #define LE(a, b) ((a) <= (b) + eps)       /* less than or equal to */
 #define GE(a, b) ((a) >= (b) - eps)       /* greater than or equal to */
 
-
 /*
 
 Sign Function:
@@ -56,7 +53,6 @@ Doesn't handle the sign of NaN like signbit() or copysign()
 template<class T> int sgn(const T & x) {
   return (T(0) < x) - (x < T(0));
 }
-
 
 /*
 
@@ -96,7 +92,6 @@ template<class Double>
 inline Double copysign(Double x, Double y) {
   return signbit(y) ? -fabs(x) : fabs(x);
 }
-
 
 /*
 
@@ -177,7 +172,6 @@ double roundplaces(const Double & x, unsigned int N, Function f) {
   return f(x * pow(10, N)) / pow(10, N);
 }
 
-
 /*
 
 Error Function (erf() and erfc() in C++11)
@@ -220,7 +214,6 @@ double erfc(double x) {
   } while (fabs(q1 - q2)/q2 > rel_error);
   return 0.564189583547756287 * exp(-x*x) * q2; //0.564 ~ 1/sqrt(pi)
 }
-
 
 /*
 
@@ -281,7 +274,6 @@ double lgamma(double x) {
   return (x - 0.5)*log(x) - x + halflog2pi + sum/x;
 }
 
-
 /*
 
 Base Conversion - O(N) on the number of digits
@@ -318,7 +310,6 @@ std::vector<int> base_digits(int x, int b = 10) {
   std::reverse(baseb.begin(), baseb.end());
   return baseb;
 }
-
 
 /*
 
