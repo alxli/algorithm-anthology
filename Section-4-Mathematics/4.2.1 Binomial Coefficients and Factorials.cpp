@@ -45,7 +45,7 @@ int factorialp(int n, int p) {
   return res % p;
 }
 
-/* Example Usage */
+/*** Example Usage ***/
 
 #include <iostream>
 using namespace std;
