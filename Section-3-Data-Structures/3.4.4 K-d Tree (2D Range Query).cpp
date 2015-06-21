@@ -5,11 +5,11 @@
 Description: k-d tree (short for k-dimensional tree) is a space-
 partitioning data structure for organizing points in a k-
 dimensional space. The following implementation supports
-counting the number of points in rectangular ranges after the tree
-has been build.
+counting the number of points in rectangular ranges after the
+tree has been build.
 
-Time Complexity: O(N log N) for build(), where N is the number of
-points in the tree. count() is O(sqrt(N)).
+Time Complexity: O(N log N) for build(), where N is the number
+of points in the tree. count() is O(sqrt N).
 
 Space Complexity: O(N) on the number of points.
 
@@ -66,20 +66,16 @@ class kd_tree {
   }
 
  public:
-  kd_tree(int N, point P[]) {
-    tx.resize(N);
-    ty.resize(N);
-    cnt.resize(N);
-    minx.resize(N);
-    maxx.resize(N);
-    miny.resize(N);
-    maxy.resize(N);
-    build(0, N, true, P);
+  kd_tree(int n, point P[]): tx(n), ty(n), cnt(n),
+    minx(n), miny(n), maxx(n), maxy(n) {
+     build(0, n, true, P);
   }
 
   int count(int xl, int yl, int xh, int yh) {
-    this->xl = xl; this->yl = yl;
-    this->xh = xh; this->yh = yh;
+    this->xl = xl;
+    this->yl = yl;
+    this->xh = xh;
+    this->yh = yh;
     return count(0, tx.size());
   }
 };
