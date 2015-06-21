@@ -21,9 +21,9 @@ the implementation below uses 0-based indices.
 
 */
 
-#include <algorithm>
-#include <cmath>
-#include <stdexcept>
+#include <algorithm> /* std::swap() */
+#include <cmath>     /* fabs() */
+#include <stdexcept> /* std::runtime_error() */
 #include <vector>
 
 const double eps = 1e-9;
