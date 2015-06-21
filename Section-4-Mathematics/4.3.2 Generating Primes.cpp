@@ -61,7 +61,6 @@ std::vector<int> gen_primes(int l, int h) {
   return res;
 }
 
-
 /*** Example Usage ***/
 
 #include <cassert>
