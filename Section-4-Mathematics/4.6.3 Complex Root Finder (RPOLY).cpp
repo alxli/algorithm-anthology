@@ -1,4 +1,21 @@
-/* 4.6.3 - Poylnomial Root Solver (Heavy-Duty) */
+/*
+
+4.6.3 - Root Finder (Jenkins-Traub Algorithm)
+
+Determine the complex roots of a polynomial with real coefficients.
+This is the variant of the Jenkins-Traub algorithm for polynomials
+with real coefficient, known as RPOLY. RPOLY follows follows the
+same pattern as the CPOLY algorithm, but computes two roots at a
+time, either two real roots or a pair of conjugate complex roots.
+See: https://en.wikipedia.org/wiki/Jenkins%E2%80%93Traub_algorithm
+
+The following is a translation of TOMS493 (www.netlib.org/toms/)
+from FORTRAN to C++, with a simple wrapper at the end for the C++
+<complex> class. Although the code is not meant to be read, it is
+extremely efficient and robust, capable of achieving at least an
+accuracy of 5 decimal places for really laborious inputs.
+
+*/
 
 #include <cfloat>
 #include <cmath>
