@@ -12,7 +12,7 @@ of any type, not just the integers from 0 to n - 1.
 
 */
 
-#include <algorithm>
+#include <algorithm> /* copy, iter_swap, reverse, swap */
 #include <vector>
 
 //identical to std::next_permutation()
@@ -51,7 +51,6 @@ template<class T> bool next_permutation(int n, T a[]) {
   return false;
 }
 
-
 /*
 
 Calls the custom function f(vector) on all permutations
@@ -84,7 +83,6 @@ void gen_permutations(int n, ReportFunction report) {
   gen_permutations(n, report, perms, 0);
 }
 
-
 /*
 
 Finds the next lexicographically greater permutation of
@@ -106,7 +104,6 @@ long long next_permutation(long long x) {
   long long s = x & -x, r = x + s;
   return r | (((x ^ r) >> 2) / s);
 }
-
 
 /*
 
@@ -136,7 +133,6 @@ std::vector<int> permutation_by_rank(int n, long long x) {
   return res;
 }
 
-
 /*
 
 Given an array a[] of n integers each in range [0, n), returns
@@ -163,7 +159,6 @@ template<class T> long long rank_by_permutation(int n, T a[]) {
   }
   return res;
 }
-
 
 /*
 
@@ -197,7 +192,6 @@ cycles decompose_into_cycles(int n, int a[]) {
   }
   return res;
 }
-
 
 /*** Example Usage ***/
 
