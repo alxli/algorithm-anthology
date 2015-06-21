@@ -26,30 +26,30 @@ Space Complexity: O(N log N).
 using namespace std;
 
 const int MAXN = 1000;
-int nodes, len, counter, tin[MAXN], tout[MAXN];
+int len, timer, tin[MAXN], tout[MAXN];
 vector<int> adj[MAXN], dp[MAXN];
 
 void dfs(int u, int p) {
-  tin[u] = counter++;
+  tin[u] = timer++;
   dp[u][0] = p;
   for (int i = 1; i < len; i++)
     dp[u][i] = dp[dp[u][i - 1]][i - 1];
-  for (int j = 0, v; j < adj[u].size(); j++)
-    if ((v = adj[u][j]) != p)
-      dfs(v, u);
-  tout[u] = counter++;
+  for (int j = 0; j < adj[u].size(); j++)
+    if (adj[u][j] != p) dfs(adj[u][j], u);
+  tout[u] = timer++;
 }
 
-void build(int root) {
+void build(int nodes, int root) {
   len = 1;
   while ((1 << len) <= nodes) len++;
   for (int i = 0; i < nodes; i++)
-    dp[i].resize(len);
+    dp[i] = vector<int>(len);
+  timer = 0;
   dfs(root, root);
 }
 
-inline bool is_parent(int parent, int child) {
-  return tin[parent] <= tin[child] && tout[child] <= tout[parent];
+inline bool is_parent(int p, int c) {
+  return tin[p] <= tin[c] && tout[c] <= tout[p];
 }
 
 int lca(int a, int b) {
@@ -62,7 +62,6 @@ int lca(int a, int b) {
 }
 
 int main() {
-  nodes = 5;
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -71,7 +70,7 @@ int main() {
   adj[1].push_back(3);
   adj[0].push_back(4);
   adj[4].push_back(0);
-  build(0);
+  build(5, 0);
   cout << lca(3, 2) << "\n"; //1
   cout << lca(2, 4) << "\n"; //0
   return 0;
