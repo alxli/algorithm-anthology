@@ -16,15 +16,13 @@ Space Complexity: O(N log N).
 
 */
 
-#include <algorithm> /* std::fill() */
-#include <iostream>
+#include <algorithm> /* std::fill(), std::min(), std::max() */
 #include <vector>
-using namespace std;
 
 const int MAXN = 1000;
-int nodes, len, counter;
+int len, counter;
 int depth[MAXN], dfs_order[2*MAXN], first[MAXN], minpos[8*MAXN];
-vector<int> adj[MAXN];
+std::vector<int> adj[MAXN];
 
 void dfs(int u, int d) {
   depth[u] = d;
@@ -42,15 +40,16 @@ void build_tree(int n, int l, int h) {
     minpos[n] = dfs_order[l];
     return;
   }
-  build_tree(2*n + 1, l, (l + h)/2);
-  build_tree(2*n + 2, (l + h)/2 + 1, h);
-  minpos[n] = depth[minpos[2*n + 1]] < depth[minpos[2*n + 2]] ?
-              minpos[2*n + 1] : minpos[2*n + 2];
+  int lchild = 2 * n + 1, rchild = 2 * n + 2;
+  build_tree(lchild, l, (l + h)/2);
+  build_tree(rchild, (l + h) / 2 + 1, h);
+  minpos[n] = depth[minpos[lchild]] < depth[minpos[rchild]] ?
+              minpos[lchild] : minpos[rchild];
 }
 
-void build(int root) {
-  fill(depth, depth + nodes, -1);
-  fill(first, first + nodes, -1);
+void build(int nodes, int root) {
+  std::fill(depth, depth + nodes, -1);
+  std::fill(first, first + nodes, -1);
   len = 2*nodes - 1;
   counter = 0;
   dfs(root, 0);
@@ -64,12 +63,12 @@ int get_minpos(int a, int b, int n, int l, int h) {
   if (a == l && b == h) return minpos[n];
   int mid = (l + h) >> 1;
   if (a <= mid && b > mid) {
-    int p1 = get_minpos(a, std::min(b, mid), 2*n + 1, l, mid);
-    int p2 = get_minpos(std::max(a, mid + 1), b, 2*n + 2, mid + 1, h);
+    int p1 = get_minpos(a, std::min(b, mid), 2 * n + 1, l, mid);
+    int p2 = get_minpos(std::max(a, mid + 1), b, 2 * n + 2, mid + 1, h);
     return depth[p1] < depth[p2] ? p1 : p2;
   }
-  if (a <= mid) return get_minpos(a, std::min(b, mid), 2*n + 1, l, mid);
-  return get_minpos(std::max(a, mid + 1), b, 2*n + 2, mid + 1, h);
+  if (a <= mid) return get_minpos(a, std::min(b, mid), 2 * n + 1, l, mid);
+  return get_minpos(std::max(a, mid + 1), b, 2 * n + 2, mid + 1, h);
 }
 
 int lca(int a, int b) {
@@ -77,8 +76,12 @@ int lca(int a, int b) {
                     std::max(first[a], first[b]), 0, 0, len - 1);
 }
 
+/*** Example Usage ***/
+
+#include <iostream>
+using namespace std;
+
 int main() {
-  nodes = 5;
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -87,7 +90,7 @@ int main() {
   adj[1].push_back(3);
   adj[0].push_back(4);
   adj[4].push_back(0);
-  build(0);
+  build(5, 0);
   cout << lca(3, 2) << "\n"; //1
   cout << lca(2, 4) << "\n"; //0
   return 0;
