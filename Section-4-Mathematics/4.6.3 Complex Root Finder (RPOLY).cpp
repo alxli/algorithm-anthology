@@ -12,8 +12,8 @@ See: https://en.wikipedia.org/wiki/Jenkins%E2%80%93Traub_algorithm
 The following is a translation of TOMS493 (www.netlib.org/toms/)
 from FORTRAN to C++, with a simple wrapper at the end for the C++
 <complex> class. Although the code is not meant to be read, it is
-extremely efficient and robust, capable of achieving at least an
-accuracy of 5 decimal places for really laborious inputs.
+extremely efficient and robust, capable of achieving an accuracy
+of at least 5 decimal places for even the most strenuous inputs.
 
 */
 
