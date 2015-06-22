@@ -24,11 +24,11 @@ or trough by no further than +/-epsilon (0.00000001 by default).
 
 template<class UnimodalFunction>
 double ternary_search_min(double lo, double hi,
-                          UnimodalFunction f, double eps = 1E-8) {
+                          UnimodalFunction f, double eps = 1e-8) {
   double lthird, hthird;
   while (hi - lo > eps) {
-    lthird = lo + (hi - lo)/3;
-    hthird = hi - (hi - lo)/3;
+    lthird = lo + (hi - lo) / 3;
+    hthird = hi - (hi - lo) / 3;
     if (f(lthird) < f(hthird)) hi = hthird;
     else lo = lthird;
   }
@@ -37,11 +37,11 @@ double ternary_search_min(double lo, double hi,
 
 template<class UnimodalFunction>
 double ternary_search_max(double lo, double hi,
-                          UnimodalFunction f, double eps = 1E-8) {
+                          UnimodalFunction f, double eps = 1e-8) {
   double lthird, hthird;
   while (hi - lo > eps) {
-    lthird = lo + (hi - lo)/3;
-    hthird = hi - (hi - lo)/3;
+    lthird = lo + (hi - lo) / 3;
+    hthird = hi - (hi - lo) / 3;
     if (f(lthird) < f(hthird)) lo = lthird;
     else hi = hthird;
   }
@@ -54,10 +54,10 @@ double ternary_search_max(double lo, double hi,
 using namespace std;
 
 //parabola opening up with vertex at (-2, -24)
-double f1(double x) { return 3*x*x + 12*x - 12; }
+double f1(double x) { return 3 * x * x + 12 * x - 12; }
 
 //parabola opening down with vertex at (0.105, 88.1)
-double f2(double x) { return -5.7*x*x + 1.2*x + 88; }
+double f2(double x) { return -5.7 * x * x + 1.2 * x + 88; }
 
 int main() {
   cout << ternary_search_min(-99, 99, f1) << endl; //-2
