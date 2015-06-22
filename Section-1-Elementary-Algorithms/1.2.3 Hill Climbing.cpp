@@ -19,40 +19,38 @@ Complexity: O(log(SIZE)) where SIZE is the search space.
 #include <iostream>
 using namespace std;
 
-const double PI = acos(-1.0);
-
 template<class BinaryFunction>
 double find_minimum(BinaryFunction f) {
-  double curX = 0, curY = 0;
-  double curF = f(curX, curY);
+  static const double PI = acos(-1.0);
+  double x = 0, y = 0, res = f(x, y);
   for (double step = 1e6; step > 1e-7; ) {
-    double bestF = curF;
-    double bestX = curX;
-    double bestY = curY;
-    bool find = false;
+    double best = res, bestx = x, besty = y;
+    bool found = false;
     for (int i = 0; i < 6; i++) {
-      double a = 2.0*PI*i / 6.0;
-      double nextX = curX + step*cos(a);
-      double nextY = curY + step*sin(a);
-      double nextF = f(nextX, nextY);
-      if (bestF > nextF) {
-        bestF = nextF;
-        bestX = nextX;
-        bestY = nextY;
-        find = true;
+      double a = 2.0 * PI * i / 6.0;
+      double nextx = x + step * cos(a);
+      double nexty = y + step * sin(a);
+      double next = f(nextx, nexty);
+      if (best > next) {
+        bestx = nextx;
+        besty = nexty;
+        best = next;
+        found = true;
       }
     }
-    if (!find) {
-      step /= 2;
+    if (!found) {
+      step /= 2.0;
     } else {
-      curX = bestX;
-      curY = bestY;
-      curF = bestF;
+      x = bestx;
+      y = besty;
+      res = best;
     }
   }
-  cout << fixed << curX << " " << curY << "\n";
-  return curF;
+  cout << fixed << x << " " << y << "\n";
+  return res;
 }
+
+/*** Example Usage ***/
 
 //minimized at f(2, 3) = 0
 double f(double x, double y) {
