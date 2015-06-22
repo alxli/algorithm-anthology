@@ -20,7 +20,7 @@ typedef long double Double;
 typedef std::complex<Double> cdouble;
 typedef std::vector<cdouble> poly;
 
-const Double eps = 1e-15;
+const Double eps = 1e-12;
 
 std::pair<poly, cdouble> horner(const poly & a, const cdouble & x) {
   int n = a.size();
@@ -43,7 +43,7 @@ poly derivative(const poly & p) {
 }
 
 int comp(const cdouble & x, const cdouble & y) {
-  Double diff = abs(x) - abs(y);
+  Double diff = std::abs(x) - std::abs(y);
   return diff < -eps ? -1 : (diff > eps ? 1 : 0);
 }
 
@@ -54,8 +54,8 @@ cdouble find_one_root(const poly & p, cdouble x) {
     cdouble y0 = eval(p, x);
     if (comp(y0, 0) == 0) break;
     cdouble G = eval(p1, x) / y0;
-    cdouble H = G * G - eval(p2, x) - y0;
-    cdouble R = sqrt(cdouble(n - 1) * (H * cdouble(n) - G * G));
+    cdouble H = G * G - eval(p2, x) / y0;
+    cdouble R = std::sqrt(cdouble(n - 1) * (H * cdouble(n) - G * G));
     cdouble D1 = G + R, D2 = G - R;
     cdouble a = cdouble(n) / (comp(D1, D2) > 0 ? D1 : D2);
     x -= a;
