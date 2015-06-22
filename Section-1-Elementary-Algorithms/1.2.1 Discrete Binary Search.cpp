@@ -41,7 +41,7 @@ template<class Int, class UnaryPredicate>
 Int binary_search_first_true(Int lo, Int hi, UnaryPredicate query) {
   Int mid, _hi = hi;
   while (lo < hi) {
-    mid = lo + (hi - lo)/2;
+    mid = lo + (hi - lo) / 2;
     if (query(mid)) hi = mid;
     else lo = mid + 1;
   }
@@ -54,7 +54,7 @@ template<class Int, class UnaryPredicate>
 Int binary_search_last_true(Int lo, Int hi, UnaryPredicate query) {
   Int mid, _hi = hi;
   while (lo < hi) {
-    mid = lo + (hi - lo + 1)/2;
+    mid = lo + (hi - lo + 1) / 2;
     if (query(mid)) lo = mid;
     else hi = mid - 1;
   }
@@ -67,7 +67,7 @@ template<class Double, class UnaryPredicate>
 Double fbinary_search(Double lo, Double hi, UnaryPredicate query) {
   Double mid;
   for (int reps = 0; reps < 100; reps++) {
-    mid = (lo + hi)/2.0;
+    mid = (lo + hi) / 2.0;
     //simply switch hi and lo in the line below to find last true
     (query(mid) ? hi : lo) = mid;
   }
