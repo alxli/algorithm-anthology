@@ -431,7 +431,7 @@ void find_roots(int degree, LD co[], LD re[], LD im[]) {
 
 typedef std::complex<LD> root;
 
-template <class T> bool comp(const root & a, const root & b) {
+bool comp(const root & a, const root & b) {
   if (real(a) != real(b)) return real(a) < real(b);
   return imag(a) < imag(b);
 }
@@ -443,7 +443,7 @@ std::vector<root> find_roots(int degree, LD coefficients[]) {
   std::vector<root> res;
   for (int i = 0; i < degree; i++)
     res.push_back(root(re[i], im[i]));
-  std::sort(res.begin(), res.end(), comp<LD>);
+  std::sort(res.begin(), res.end(), comp);
   return res;
 }
 
