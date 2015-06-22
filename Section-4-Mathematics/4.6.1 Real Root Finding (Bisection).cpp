@@ -1,6 +1,6 @@
 /*
 
-4.5.1 - Real Root Finding (Bisection)
+4.6.1 - Real Root Finding (Bisection)
 
 Real roots can be found via binary searching, a.k.a the bisection
 method. If two x-coordinates evaluate to y-coordinates that have
