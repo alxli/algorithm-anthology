@@ -21,7 +21,7 @@ different speeds.
 
 Time Complexity: O(lambda + mu) where lambda is the
 length of the cycle and mu is the position of the first
-repetition starting at x1;
+repetition starting at x1.
 
 Space Complexity: O(1)
 
