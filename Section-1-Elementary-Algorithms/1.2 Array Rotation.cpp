@@ -1,6 +1,6 @@
 /*
 
-1.2 - Array Rotation
+1.4 - Array Rotation
 
 All of the functions below are equal in behavior
 to std::rotate(). Even though the function is
@@ -11,7 +11,7 @@ it could be done in other languages.
 
 #include <algorithm> /* reverse(), rotate(), swap() */
 
-template <class ForwardIterator>
+template<class ForwardIterator>
 void rotate1(ForwardIterator lo, ForwardIterator mid,
              ForwardIterator hi) {
   ForwardIterator next = mid;
@@ -24,9 +24,7 @@ void rotate1(ForwardIterator lo, ForwardIterator mid,
   }
 }
 
-template <class ForwardIterator>
-void rotate2(ForwardIterator lo, ForwardIterator mid,
-             ForwardIterator hi) {
+template<class It> void rotate2(It lo, It mid, It hi) {
   std::reverse(lo, mid);
   std::reverse(mid, hi);
   std::reverse(lo, hi);
