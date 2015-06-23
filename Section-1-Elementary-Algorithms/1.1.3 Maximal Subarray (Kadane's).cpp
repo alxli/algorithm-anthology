@@ -5,8 +5,8 @@
 Given an array of (potentially negative) integers,
 finds the maximal sum of any contiguous subarray.
 
-Time Complexity: O(N)
-Space Complexty: O(1) auxiliary space.
+Time Complexity: O(n) on the length of the array
+Space Complexty: O(1) auxiliary.
 
 */
 
