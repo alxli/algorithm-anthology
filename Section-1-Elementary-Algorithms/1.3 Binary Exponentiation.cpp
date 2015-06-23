@@ -1,6 +1,6 @@
 /*
 
-1.3 Binary Exponentiation
+1.3 - Binary Exponentiation
 
 Exponentiation by squaring is a general method
 for fast computation of large positive integer
