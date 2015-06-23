@@ -8,9 +8,8 @@ as the range to be sorted, and optionally a comparator.
 
 */
 
-
-#include <algorithm>  /* std::swap(), std::(stable_)partition */
-#include <functional> /* std::less<T>() */
+#include <algorithm>  /* std::(stable_)partition, std::swap */
+#include <functional> /* std::less<T> */
 #include <iterator>   /* std::iterator_traits<T> */
 
 /*
@@ -27,20 +26,20 @@ faster in practice than other O(N*log(N)) algorithms.
 
 */
 
-template<class RAI, class Compare>
-void quicksort(RAI lo, RAI hi, Compare cmp) {
+template<class It, class Compare>
+void quicksort(It lo, It hi, Compare cmp) {
   if (lo + 1 >= hi) return;
   std::swap(*lo, *(lo + (hi - lo) / 2));
-  RAI x = lo;
-  for (RAI i = lo + 1; i < hi; i++)
+  It x = lo;
+  for (It i = lo + 1; i < hi; i++)
     if (cmp(*i, *lo)) std::swap(*(++x), *i);
   std::swap(*lo, *x);
   quicksort(lo, x, cmp);
   quicksort(x + 1, hi, cmp);
 }
 
-template<class RAI> void quicksort(RAI lo, RAI hi) {
-  typedef typename std::iterator_traits<RAI>::value_type T;
+template<class It> void quicksort(It lo, It hi) {
+  typedef typename std::iterator_traits<It>::value_type T;
   quicksort(lo, hi, std::less<T>());
 }
 
@@ -60,26 +59,26 @@ will fall back to a run time of O(N*log^2(N)) if out of memory.
 
 */
 
-template<class RAI, class Compare>
-void mergesort(RAI lo, RAI hi, Compare cmp) {
-  typedef typename std::iterator_traits<RAI>::value_type T;
+template<class It, class Compare>
+void mergesort(It lo, It hi, Compare cmp) {
+  typedef typename std::iterator_traits<It>::value_type T;
   if (lo >= hi - 1) return;
-  RAI mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
+  It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   mergesort(lo, mid + 1, cmp);
   mergesort(mid + 1, hi, cmp);
   T buf[hi - lo], *b = buf;
   while (a <= mid && c < hi)
     *(b++) = cmp(*c, *a) ? *(c++) : *(a++);
   if (a > mid)
-    for (RAI k = c; k < hi; k++) *(b++) = *k;
+    for (It k = c; k < hi; k++) *(b++) = *k;
   else
-    for (RAI k = a; k <= mid; k++) *(b++) = *k;
+    for (It k = a; k <= mid; k++) *(b++) = *k;
   for (int i = hi - lo - 1; i >= 0; i--)
     *(lo + i) = buf[i];
 }
 
-template<class RAI> void mergesort(RAI lo, RAI hi) {
-  typedef typename std::iterator_traits<RAI>::value_type T;
+template<class It> void mergesort(It lo, It hi) {
+  typedef typename std::iterator_traits<It>::value_type T;
   mergesort(lo, hi, std::less<T>());
 }
 
@@ -96,10 +95,10 @@ this will likely run slower than a well implemented quicksort.
 
 */
 
-template<class RAI, class Compare>
-void heapsort(RAI lo, RAI hi, Compare cmp) {
-  typename std::iterator_traits<RAI>::value_type t;
-  RAI n = hi, i = (n - lo) / 2 + lo, parent, child;
+template<class It, class Compare>
+void heapsort(It lo, It hi, Compare cmp) {
+  typename std::iterator_traits<It>::value_type t;
+  It n = hi, i = lo + (n - lo) / 2, parent, child;
   for (;;) {
     if (i <= lo) {
       if (--n == lo) return;
@@ -110,14 +109,14 @@ void heapsort(RAI lo, RAI hi, Compare cmp) {
       if (child + 1 < n && cmp(*child, *(child + 1))) child++;
       if (!cmp(t, *child)) break;
       *parent = *child, parent = child;
-      child = lo + (parent - lo)*2 + 1;
+      child = lo + 2 * (parent - lo) + 1;
     }
     *(lo + (parent - lo)) = t;
   }
 }
 
-template<class RAI> void heapsort(RAI lo, RAI hi) {
-  typedef typename std::iterator_traits<RAI>::value_type T;
+template<class It> void heapsort(It lo, It hi) {
+  typedef typename std::iterator_traits<It>::value_type T;
   heapsort(lo, hi, std::less<T>());
 }
 
@@ -132,13 +131,13 @@ Comb sort is an improved bubble sort that's simple to memorize.
 
 */
 
-template<class RAI, class Compare>
-void combsort(RAI lo, RAI hi, Compare cmp) {
+template<class It, class Compare>
+void combsort(It lo, It hi, Compare cmp) {
   int gap = hi - lo, swapped = 1;
   while (gap > 1 || swapped) {
     if (gap > 1) gap = (int)((float)gap / 1.3f);
     swapped = 0;
-    for (RAI i = lo; i + gap < hi; i++)
+    for (It i = lo; i + gap < hi; i++)
       if (cmp(*(i + gap), *i)) {
         std::swap(*i, *(i + gap));
         swapped = 1;
@@ -146,11 +145,10 @@ void combsort(RAI lo, RAI hi, Compare cmp) {
   }
 }
 
-template<class RAI> void combsort(RAI lo, RAI hi) {
-  typedef typename std::iterator_traits<RAI>::value_type T;
+template<class It> void combsort(It lo, It hi) {
+  typedef typename std::iterator_traits<It>::value_type T;
   combsort(lo, hi, std::less<T>());
 }
-
 
 /*
 
