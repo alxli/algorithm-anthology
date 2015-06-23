@@ -29,6 +29,7 @@ Space Complexity: O(1)
 
 #include <utility> /* std::pair */
 
+//returns pair<mu, lambda> (as described above)
 template<class IntFunction>
 std::pair<int, int> floyd(IntFunction f, int x0) {
   int tortoise = f(x0), hare = f(f(x0));
@@ -85,7 +86,7 @@ int main () {
   int x0 = 0;
   pair<int, int> res = floyd(f, x0);
   cout << "Found cycle of length " << res.second;
-  cout << " starting at " << res.first << ".\n";
+  cout << " starting at x_" << res.first << ".\n";
   verify(x0, res.first, res.second);
   return 0;
 }
