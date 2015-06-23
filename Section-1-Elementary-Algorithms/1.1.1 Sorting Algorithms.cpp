@@ -1,6 +1,6 @@
 /*
 
-1.1 - Sorting Algorithms
+1.1.1 - Sorting Algorithms
 
 The following functions behave just like the sorting functions
 found in the C++ standard library, taking RandomAccessIterators
