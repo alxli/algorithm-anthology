@@ -1,6 +1,6 @@
 /*
 
-1.4 - Array Rotation
+1.1.2 - Array Rotation
 
 All of the functions below are equal in behavior
 to std::rotate(). Even though the function is
