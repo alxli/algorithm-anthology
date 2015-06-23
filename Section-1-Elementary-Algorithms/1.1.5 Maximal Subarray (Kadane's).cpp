@@ -1,6 +1,6 @@
 /*
 
-1.1.3 - Maximal Subarray Sum (Kadane's Algorithm)
+1.1.5 - Maximal Subarray Sum (Kadane's Algorithm)
 
 Given an array of (potentially negative) integers,
 finds the maximal sum of any contiguous subarray.
