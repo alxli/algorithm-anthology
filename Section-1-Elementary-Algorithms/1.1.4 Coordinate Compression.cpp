@@ -2,19 +2,18 @@
 
 1.1.4 - Coordinate Compression
 
-Given an array of length n, reassigns values to the array
-elements such that the magnitude of each new value is no
-more than n, while preserving the relative order of each
-element as they existed in the original array. Formally,
-if a[] is the original array and b[] is the compressed
-array, for every pair i, j (0 <= i, j < n) the result of
-comparing a[i] compared to a[j] (<, >=, ==, etc.) will be
-exactly the same as b[i] compared to b[j].
+Given an array of length n, reassigns values to the array elements
+such that the magnitude of each new value is no more than n, while
+preserving the relative order of each element as they existed in
+the original array. Formally, if a[] is the original array and b[]
+is the compressed array, for every pair i, j (0 <= i, j < n), the
+result of comparing a[i] compared to a[j] (<, >=, ==, etc.) will
+be exactly the same as the result of b[i] compared to b[j].
 
-Values in the range [lo, hi) will be changed to integers
-in the range [0, D), where D is the number of distinct
-values in the range. lo and hi must point to a numerical
-type that int can be assigned to.
+For the following implementations, values in the range [lo, hi)
+will be changed to integers in the range [0, D), where D is the
+number of distinct values in the range. lo and hi must be iterators
+pointing to a numerical type that int can be assigned to.
 
 Time Complexity: O(n log n) on the size of the array.
 Space Complexity: O(n) auxiliary on the size of the array.
@@ -25,7 +24,7 @@ Space Complexity: O(n) auxiliary on the size of the array.
 #include <iterator>  /* std::iterator_traits */
 #include <map>
 
-//version 1 - using std::unique and std::lower_bound
+//version 1 - using std::unique() and std::lower_bound()
 template<class It> void compress2(It lo, It hi) {
   typename std::iterator_traits<It>::value_type a[hi - lo];
   int n = 0;
