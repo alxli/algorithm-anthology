@@ -1,6 +1,6 @@
 /*
 
-1.2.3 - Subset Sum (Meet-in-the-Middle)
+1.2.4 - Subset Sum (Meet-in-the-Middle)
 
 Given an unsorted array of integers and a value v, determine
 the minimum sum of any subset of values in the array that is
