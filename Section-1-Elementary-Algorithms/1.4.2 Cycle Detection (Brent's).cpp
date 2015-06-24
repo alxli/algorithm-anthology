@@ -2,30 +2,29 @@
 
 1.4.2 - Cycle Detection (Brent's Algorithm)
 
-For a function f which maps a finite set S to itself
-and any initial value x0 in S, the sequence of
-iterated function values:
+For a function f which maps a finite set S to itself and any
+initial value x0 in S, the sequence of iterated values:
 
 x_0, x_1 = f(x_0), x_2 = f(x_1), ... x_i = f(x_(i-1))
 
-must eventually use the same value twice: there must
-be some i <> j such that xi = xj. Once this happens,
-the sequence must continue periodically, by repeating
-the same sequence of values from x_i to x_(j−1). Cycle
-detection asks to find i and j, given ƒ and x_0.
+must eventually use the same value twice: there must be some
+i <> j such that xi = xj. Once this happens, the sequence
+must continue periodically, by repeating the same sequence
+of values from x_i to x_(j−1). Cycle detection asks to find
+i and j, given the function f(x) and x_0.
 
-Brent's cycle-finding algorithm is based on a different
-principle than Floyd's: searching for the smallest power
-of two 2^i that is larger than both lambda and mu.
+Brent's cycle-finding algorithm is based on a different idea
+than Floyd's: searching for the smallest power of two, 2^i
+that is larger than both lambda and mu.
 
-Time Complexity: O(lambda + mu) where lambda is the
-length of the cycle and mu is the position of the first
-repetition starting at x1. Brent claims that, on average,
-his cycle finding algorithm runs around 36% more quickly
-than Floyd's and that it speeds up the Pollard rho
-algorithm by around 24% (see mathematics section).
+Time Complexity: O(lambda + mu), where lambda is the length
+of the cycle and mu is the first index of x for which the
+cycle starts to occur. Brent claims that, on average, his
+cycle finding algorithm runs around 36% more quickly than
+Floyd's and that it speeds up the Pollard rho algorithm by
+around 24% (see mathematics chapter).
 
-Space Complexity: O(1)
+Space Complexity: O(1) auxiliary.
 
 */
 

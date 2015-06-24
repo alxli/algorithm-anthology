@@ -2,13 +2,14 @@
 
 1.1.3 - Counting Inversions
 
-Counts far (or close) the array is from being sorted.
-If array is already sorted then inversion count is 0.
-If array is sorted in reverse order that inversion
+Counts how far (or close) an array is from being sorted.
+If the array is already sorted then inversion count is 0.
+If the array is sorted in reverse, then the inversion
 count is maximal. Formally, two elements a[i] and a[j]
-form an inversion if a[i] > a[j] and i < j. This
-problem can be solved using a simple modification to
-merge sort, or a bit of magic...
+form an inversion if a[i] > a[j] and i < j. Note that the
+inversion count is *not* the same as the minimum number
+of swaps required to sort the array. This problem can be
+solved using merge sort, or a bit of magic...
 
 Time Complexity: O(n log n) on the size of the array.
 Space Complexty: O(n) auxiliary.
@@ -55,7 +56,7 @@ value in a[]. You should coordinate compress the values
 of a[] into integers up to n for the best results. Note
 that after calling the function, a[] will be 0'd out.
 
-Time Complexity: O(n log n) where n is the magnitude
+Time Complexity: O(n log n), where n is the magnitude
 of the max value in the array.
 
 Space Complexity: O(n) auxiliary on the magnitude of
@@ -84,17 +85,16 @@ long long magic_inversions(int n, int a[]) {
 
 /*** Example Usage ***/
 
-#include <iostream>
-using namespace std;
+#include <cassert>
 
 int main() {
   {
     int a[] = {6, 9, 1, 14, 8, 12, 3, 2};
-    cout << mergesort_inversions(a, a + 8) << "\n";
+    assert(mergesort_inversions(a, a + 8) == 16);
   }
   {
     int a[] = {6, 9, 1, 14, 8, 12, 3, 2};
-    cout << magic_inversions(8, a) << "\n";
+    assert(magic_inversions(8, a) == 16);
   }
   return 0;
 }

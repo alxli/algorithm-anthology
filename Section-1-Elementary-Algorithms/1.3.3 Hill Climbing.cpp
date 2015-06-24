@@ -2,16 +2,15 @@
 
 1.2.3 - Hill Climbing
 
-Description: Hill climbing is an optimization technique
-which finds the local extrema of a function. It is an
-iterative algorithm that starts with an arbitrary solution,
-then attempts to find a better solution by incrementally
-changing a single element of the solution. If the change
-produces a better solution, an incremental change is made
-to the new solution, repeating until no further
-improvements can be found.
+Hill climbing is an optimization technique which finds the
+local extrema of a function. It is an iterative algorithm
+that starts with an arbitrary solution, then attempts to
+find a better solution by incrementally changing a single
+element of the solution. If the change produces a better
+solution, an incremental change is made to the new solution,
+repeating until no further improvements can be found.
 
-Complexity: O(log(SIZE)) where SIZE is the search space.
+Complexity: O(log SIZE) where SIZE is the search space.
 
 */
 

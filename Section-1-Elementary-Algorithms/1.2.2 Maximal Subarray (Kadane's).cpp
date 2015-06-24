@@ -1,11 +1,12 @@
 /*
 
-1.1.5 - Maximal Subarray Sum (Kadane's Algorithm)
+1.2.2 - Maximal Subarray Sum (Kadane's Algorithm)
 
-Given an array of (potentially negative) integers,
-finds the maximal sum of any contiguous subarray.
+Given an array of integers that may be negative, determine
+the maximum sum of any contiguous subarray. Additionally,
+do so optimally without using extra memory.
 
-Time Complexity: O(n) on the length of the array
+Time Complexity: O(n) on the size of the array
 Space Complexty: O(1) auxiliary.
 
 */

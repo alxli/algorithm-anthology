@@ -1,11 +1,11 @@
 /*
 
-1.2.1 - Discrete Binary Search
+1.3.1 - Discrete Binary Search
 
-Not only can binary search be used on arrays (std::binary_search),
-it can also be used on monotonic functions. In this case we aren't
-restricted by practical quantities such as available memory, as is
-the case with storing values explicitly in a sorted array.
+Not only can binary search be used on arrays, it can also be used
+on monotonic functions. In this case we aren't restricted by
+tangible quantities such as available memory, as is the case with
+storing values explicitly in a sorted array.
 
 binary_search_first_true() returns the smallest integer k in the
 range [lo, hi) - (i.e. including lo, but excluding hi) for which
@@ -37,8 +37,8 @@ search space to 10^-30 times its original size.
 */
 
 //000[1]11
-template<class Int, class UnaryPredicate>
-Int binary_search_first_true(Int lo, Int hi, UnaryPredicate query) {
+template<class Int, class BoolFunction>
+Int binary_search_first_true(Int lo, Int hi, BoolFunction query) {
   Int mid, _hi = hi;
   while (lo < hi) {
     mid = lo + (hi - lo) / 2;
@@ -50,8 +50,8 @@ Int binary_search_first_true(Int lo, Int hi, UnaryPredicate query) {
 }
 
 //11[1]000
-template<class Int, class UnaryPredicate>
-Int binary_search_last_true(Int lo, Int hi, UnaryPredicate query) {
+template<class Int, class BoolFunction>
+Int binary_search_last_true(Int lo, Int hi, BoolFunction query) {
   Int mid, _hi = hi;
   while (lo < hi) {
     mid = lo + (hi - lo + 1) / 2;
@@ -63,8 +63,8 @@ Int binary_search_last_true(Int lo, Int hi, UnaryPredicate query) {
 }
 
 //000[1]11
-template<class Double, class UnaryPredicate>
-Double fbinary_search(Double lo, Double hi, UnaryPredicate query) {
+template<class Double, class BoolFunction>
+Double fbinary_search(Double lo, Double hi, BoolFunction query) {
   Double mid;
   for (int reps = 0; reps < 100; reps++) {
     mid = (lo + hi) / 2.0;

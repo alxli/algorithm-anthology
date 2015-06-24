@@ -1,14 +1,13 @@
 /*
 
-1.1.4 - Majority Element (Boyer-Moore Algorithm)
+1.2.1 - Majority Element (Boyer-Moore Algorithm)
 
-The majority vote problem is to determine in any
-given sequence of choices whether there is a
-choice with more occurrences than all the others,
-and if so, to determine this choice. In other
-words, an element must occur more than floor(N/2)
-times in a length N array to be considered the
-majority.
+Given an array of size n, the majority vote problem asks
+to determine whether there exists a value with greater
+occurrences than all the others, and if so, to determine
+this value. In other words, a value must occur more than
+floor(n/2) times to be the majority. Additionally, do so
+optimally without using extra memory.
 
 Time Complexity: O(n) on the size of the array.
 Space Complexty: O(1) auxiliary space.

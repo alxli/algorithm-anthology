@@ -2,19 +2,20 @@
 
 1.1.2 - Array Rotation
 
-All of the functions below are equal in behavior
-to std::rotate(). Even though the function is
-already implemented, this is just a demo of how
-it could be done in other languages.
+All of the rotate functions below are equivalent in
+behavior to std::rotate(). Even though the function is
+already implemented in the standard library, this is just
+a demo of how it could be done in other languages.
+
+Time Complexity: O(n) on the distance between lo and hi.
+Space Complexity: O(1) auxiliary.
 
 */
 
 #include <algorithm> /* reverse(), rotate(), swap() */
 
-template<class ForwardIterator>
-void rotate1(ForwardIterator lo, ForwardIterator mid,
-             ForwardIterator hi) {
-  ForwardIterator next = mid;
+template<class It> void rotate1(It lo, It mid, It hi) {
+  It next = mid;
   while (lo != next) {
     std::swap(*lo++, *next++);
     if (next == hi)

@@ -1,20 +1,16 @@
 /*
 
-1.1.6 - Subset Sum (Meet-in-the-Middle)
+1.2.3 - Subset Sum (Meet-in-the-Middle)
 
-Given an unsorted array of integers and a value v,
-find the minimum sum of any subset of values in
-the array that is not less than v. A meet-in-the-
-middle algorithm divides the array in two equal
-parts. All possible sums are precomputed and stored
-in a table and sorted by the sum. To find the
-answer, the table is searched.
+Given an unsorted array of integers and a value v, determine
+the minimum sum of any subset of values in the array that is
+not less than v. A meet-in-the-middle algorithm divides the
+array in two equal parts. All possible sums are precomputed
+and stored in a table and sorted by the sum. Finally, to
+find the answer, the table is searched.
 
-Time Complexity: O(n * 2^(n / 2)) on the length of
-the array.
-
-Space Complexity: O(n) auxiliary on the length of
-the array.
+Time Complexity: O(n * 2^(n / 2)) on the size of the array.
+Space Complexity: O(n) auxiliary on the size of the array.
 
 */
 

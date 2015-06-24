@@ -1,6 +1,6 @@
 /*
 
-1.1.3 - Coordinate Compression
+1.1.4 - Coordinate Compression
 
 Given an array of length n, reassigns values to the array
 elements such that the magnitude of each new value is no
