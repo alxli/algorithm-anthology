@@ -1,6 +1,6 @@
 /*
 
-1.2.1 - Majority Element (Boyer-Moore Algorithm)
+1.2.3 - Majority Element (Boyer-Moore Algorithm)
 
 Given an array of size n, the majority vote problem asks
 to determine whether there exists a value with greater
