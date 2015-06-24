@@ -25,7 +25,7 @@ Space Complexity: O(n) auxiliary on the size of the array.
 #include <map>
 
 //version 1 - using std::unique() and std::lower_bound()
-template<class It> void compress2(It lo, It hi) {
+template<class It> void compress1(It lo, It hi) {
   typename std::iterator_traits<It>::value_type a[hi - lo];
   int n = 0;
   for (It it = lo; it != hi; ++it) a[n++] = *it;
@@ -36,7 +36,7 @@ template<class It> void compress2(It lo, It hi) {
 }
 
 //version 2 - using std::map
-template<class It> void compress1(It lo, It hi) {
+template<class It> void compress2(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   std::map<T, int> m;
   for (It it = lo; it != hi; ++it) m[*it] = 0;
