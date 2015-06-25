@@ -25,7 +25,7 @@ long long factorial(int n, int m = 1000000007) {
 }
 
 //n! mod p, where p is a prime number, in O(p log n)
-long long factorialp(int n, int p = 1000000007) {
+long long factorialp(long long n, long long p = 1000000007) {
   long long res = 1, h;
   while (n > 1) {
     res = (res * ((n / p) % 2 == 1 ? p - 1 : 1)) % p;
