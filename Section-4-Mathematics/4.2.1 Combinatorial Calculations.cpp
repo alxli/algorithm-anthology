@@ -12,8 +12,6 @@ Note: The following are only defined for nonnegative inputs.
 
 #include <vector>
 
-typedef std::vector<std::vector<long long> > table;
-
 //n! mod m in O(n)
 long long factorial(int n, int m = 1000000007) {
   long long res = 1;
@@ -32,6 +30,8 @@ long long factorialp(int n, int p) {
   }
   return res % p;
 }
+
+typedef std::vector<std::vector<long long> > table;
 
 //first n rows of pascal's triangle (mod m) in O(n^2)
 table binomial_table(int n, long long m = 1000000007) {
@@ -93,7 +93,6 @@ long long partitions(int n, long long m = 1000000007) {
   return p[n] % m;
 }
 
-
 const int MAXN = 500, MAXK = 500;
 int npartk[MAXN][MAXK] = {0}; //memoization
 
@@ -107,7 +106,6 @@ int partitions(int n, int k, long long m = 1000000007) {
   npartk[n][k] += partitions(n - k, k, m);
   return (npartk[n][k] %= m);
 }
-
 
 /*** Example Usage ***/
 
