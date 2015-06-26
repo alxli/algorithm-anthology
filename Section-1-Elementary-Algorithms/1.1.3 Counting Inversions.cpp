@@ -2,14 +2,14 @@
 
 1.1.3 - Counting Inversions
 
-Counts how far (or close) an array is from being sorted.
-If the array is already sorted then inversion count is 0.
-If the array is sorted in reverse, then the inversion
-count is maximal. Formally, two elements a[i] and a[j]
-form an inversion if a[i] > a[j] and i < j. Note that the
-inversion count is *not* the same as the minimum number
-of swaps required to sort the array. This problem can be
-solved using merge sort, or a bit of magic...
+Counts how far (or close) an array is from being sorted. If
+the array is already sorted then inversion count is 0. If
+the array is sorted in reverse, then the inversion count is
+maximal. Formally, two elements a[i] and a[j] form an
+inversion if a[i] > a[j] and i < j. Note that the inversion
+count is *not* the same as the minimum number of swaps
+required to sort the array. This problem can be solved using
+merge sort, or a bit of magic...
 
 Time Complexity: O(n log n) on the size of the array.
 Space Complexty: O(n) auxiliary.
@@ -47,20 +47,20 @@ long long mergesort_inversions(RAI lo, RAI hi) {
 
 /*
 
-The following magic is courtesy of misof, and works
-for any array of nonnegative integers. See link below:
+The following magic is courtesy of misof, and works for any
+array of nonnegative integers. See the link below:
 http://codeforces.com/blog/entry/17881?#comment-232099
 
-The complexity depends on the magnitude of the maximum
-value in a[]. You should coordinate compress the values
-of a[] into integers up to n for the best results. Note
-that after calling the function, a[] will be 0'd out.
+The complexity depends on the magnitude of the maximum value
+in a[]. You should coordinate compress the values of a[]
+into integers up to n for the best results. Note that after
+calling the function, a[] will be zeroed out.
 
-Time Complexity: O(n log n), where n is the magnitude
-of the max value in the array.
+Time Complexity: O(m log m), where m is the magnitude of the
+maximum value in the array.
 
-Space Complexity: O(n) auxiliary on the magnitude of
-the max value in the array.
+Space Complexity: O(m) auxiliary on the magnitude of the
+maximum value in the array.
 
 */
 
