@@ -1,6 +1,6 @@
 /*
 
-3.3.5 - Implicit Treap with Range Updates
+3.3.5 - Implicit Treap for Range Operations
 
 Description: A treap is a self-balancing binary search tree that
 uses randomization to maintain a low height. In this version,

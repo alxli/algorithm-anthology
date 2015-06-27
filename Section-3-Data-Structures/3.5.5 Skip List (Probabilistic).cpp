@@ -104,7 +104,7 @@ template<class key_t, class val_t> struct skip_list {
     }
   }
 
-  val_t* find(const key_t & k) {
+  val_t * find(const key_t & k) {
     node_t * n = head;
     for (int i = level; i >= 0; i--)
       while (n->next[i] && n->next[i]->key < k)

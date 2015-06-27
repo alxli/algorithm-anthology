@@ -1,16 +1,17 @@
 /*
 
-3.2.4 - Binary Indexed Tree (Range Update/Query)
+3.2.4 - Fenwick Tree (Range Update/Query)
 
-Description: Using two arrays, a BIT can be made to
-support range updates and range queries simultaneously.
-However, the range updates can only be used to add an
-increment to all values in a range, not set them to the
-same value. The latter problem may be solved using a
-segment tree with lazy propagation.
+Description: Using two arrays, a Fenwick tree can be made to
+support range updates and range queries simultaneously. However,
+the range updates can only be used to add an increment to all
+values in a range, not set them to the same value. The latter
+problem may be solved using a segment tree + lazy propagation.
+All methods below operate 0-based indices (i.e. indices in the
+range from 0 to size() - 1, inclusive, are valid).
 
-Time Complexity: add(), set(), at(), and sum() are all
-                 O(log N). size() is O(1).
+Time Complexity: add(), set(), at(), and sum() are all O(log N)
+on the length of the array. size() is O(1).
 
 Space Complexity: O(N) storage and auxiliary.
 
@@ -22,7 +23,7 @@ Sum of range [0, 4] is 27.
 
 #include <vector>
 
-template<class T> class binary_indexed_tree {
+template<class T> class fenwick_tree {
   int len;
   std::vector<T> b1, b2;
 
@@ -37,7 +38,7 @@ template<class T> class binary_indexed_tree {
   }
 
  public:
-  binary_indexed_tree(int n):
+  fenwick_tree(int n):
     len(n + 1), b1(n + 2), b2(n + 2) {}
 
   //a[i] += v for i = lo..hi, inclusive
@@ -69,7 +70,7 @@ using namespace std;
 
 int main() {
   int a[] = {10, 1, 2, 3, 4};
-  binary_indexed_tree<int> t(5);
+  fenwick_tree<int> t(5);
   for (int i = 0; i < 5; i++) t.set(i, a[i]);
   t.add(0, 2, 5); //15 6 7 3 4
   t.set(3, -5);   //15 6 7 -5 4

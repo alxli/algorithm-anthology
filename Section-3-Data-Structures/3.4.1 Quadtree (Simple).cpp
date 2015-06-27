@@ -14,57 +14,61 @@ of rows and M is the number of columns in the 2D array.
 Space Complexity: O(N*M)
 
 Note: This implementation is 0-based. Valid indices for
-all operations are [0..XMAX][0..YMAX]
+all operations are [0..xmax][0..ymax]
 
 */
 
 #include <climits> /* INT_MIN */
 
-const int XMAX = 100, YMAX = 100;
-int tree[4*XMAX*YMAX];
-int X, Y, XL, XH, YL, YH, V; //temporary value to speed up recursion
+const int xmax = 100, ymax = 100;
+int tree[4 * xmax * ymax];
+int X, Y, X1, X2, Y1, Y2, V; //temporary value to speed up recursion
 
 //define the following yourself. merge(x, nullv) must return x for all valid x
 inline int nullv() { return INT_MIN; }
 inline int merge(int a, int b) { return a > b ? a : b; }
 
-void update(int n, int xl, int xh, int yl, int yh) {
-  if (X < xl || X > xh || Y < yl || Y > yh) return;
-  if (xl == xh && yl == yh) {
+void update(int n, int x1, int x2, int y1, int y2) {
+  if (X < x1 || X > x2 || Y < y1 || Y > y2) return;
+  if (x1 == x2 && y1 == y2) {
     tree[n] = V;
     return;
   }
-  update(n*4 + 1, xl, (xl + xh)/2, yl, (yl + yh)/2);
-  update(n*4 + 2, xl, (xl + xh)/2, (yl + yh)/2 + 1, yh);
-  update(n*4 + 3, (xl + xh)/2 + 1, xh, yl, (yl + yh)/2);
-  update(n*4 + 4, (xl + xh)/2 + 1, xh, (yl + yh)/2 + 1, yh);
-  tree[n] = merge(merge(tree[n*4 + 1], tree[n*4 + 2]),
-                  merge(tree[n*4 + 3], tree[n*4 + 4]));
+  update(n * 4 + 1, x1, (x1 + x2) / 2, y1, (y1 + y2) / 2);
+  update(n * 4 + 2, x1, (x1 + x2) / 2, (y1 + y2) / 2 + 1, y2);
+  update(n * 4 + 3, (x1 + x2) / 2 + 1, x2, y1, (y1 + y2) / 2);
+  update(n * 4 + 4, (x1 + x2) / 2 + 1, x2, (y1 + y2) / 2 + 1, y2);
+  tree[n] = merge(merge(tree[n * 4 + 1], tree[n * 4 + 2]),
+                  merge(tree[n * 4 + 3], tree[n * 4 + 4]));
 }
 
-void query(int n, int xl, int xh, int yl, int yh) {
-  if (xl > XH || xh < XL || yh < YL || yl > YH || merge(tree[n], V) == V)
+void query(int n, int x1, int x2, int y1, int y2) {
+  if (x1 > X2 || x2 < X1 || y2 < Y1 || y1 > Y2 || merge(tree[n], V) == V)
     return;
-  if (xl >= XL && xh <= XH && yl >= YL && yh <= YH) {
+  if (x1 >= X1 && x2 <= X2 && y1 >= Y1 && y2 <= Y2) {
     V = merge(tree[n], V);
     return;
   }
-  query(n*4 + 1, xl, (xl + xh)/2, yl, (yl + yh)/2);
-  query(n*4 + 2, xl, (xl + xh)/2, (yl + yh)/2 + 1, yh);
-  query(n*4 + 3, (xl + xh)/2 + 1, xh, yl, (yl + yh)/2);
-  query(n*4 + 4, (xl + xh)/2 + 1, xh, (yl + yh)/2 + 1, yh);
+  query(n * 4 + 1, x1, (x1 + x2) / 2, y1, (y1 + y2) / 2);
+  query(n * 4 + 2, x1, (x1 + x2) / 2, (y1 + y2) / 2 + 1, y2);
+  query(n * 4 + 3, (x1 + x2) / 2 + 1, x2, y1, (y1 + y2) / 2);
+  query(n * 4 + 4, (x1 + x2) / 2 + 1, x2, (y1 + y2) / 2 + 1, y2);
 }
 
 void update(int x, int y, int v) {
-  X = x; Y = y; V = v;
-  update(0, 0, XMAX - 1, 0, YMAX - 1);
+  X = x;
+  Y = y;
+  V = v;
+  update(0, 0, xmax - 1, 0, ymax - 1);
 }
 
-int query(int xl, int yl, int xh, int yh) {
-  XL = xl; XH = xh;
-  YL = yl; YH = yh;
+int query(int x1, int y1, int x2, int y2) {
+  X1 = x1;
+  X2 = x2;
+  Y1 = y1;
+  Y2 = y2;
   V = nullv();
-  query(0, 0, XMAX - 1, 0, YMAX - 1);
+  query(0, 0, xmax - 1, 0, ymax - 1);
   return V;
 }
 

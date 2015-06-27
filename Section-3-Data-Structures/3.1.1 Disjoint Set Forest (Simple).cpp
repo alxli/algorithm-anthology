@@ -1,6 +1,6 @@
 /*
 
-3.1.1 - Disjoint Set Forest (Simple Version for ints)
+3.1.1 - Disjoint Set Forest (Simple)
 
 Description: This data structure dynamically keeps track
 of items partitioned into non-overlapping sets (a disjoint

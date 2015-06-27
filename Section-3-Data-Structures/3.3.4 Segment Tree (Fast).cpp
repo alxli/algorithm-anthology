@@ -29,15 +29,15 @@ template<class T> class segment_tree {
   //Modify the following 5 methods to implement your custom
   //operations on the tree. This implements the Add/Max operations.
   //Operations like Add/Sum, Set/Max can also be implemented.
-  static inline const T modify_op(const T & x, const T & y) {
+  static inline T modify_op(const T & x, const T & y) {
     return x + y;
   }
 
-  static inline const T query_op(const T & x, const T & y) {
+  static inline T query_op(const T & x, const T & y) {
     return std::max(x, y);
   }
 
-  static inline const T delta_on_segment(const T & delta, int seglen) {
+  static inline T delta_on_segment(const T & delta, int seglen) {
     if (delta == nullv()) return nullv();
     //Here you must write a fast equivalent of following slow code:
     //  T result = delta;
@@ -46,8 +46,8 @@ template<class T> class segment_tree {
     return delta;
   }
 
-  static inline const T nullv() { return 0; }
-  static inline const T initv() { return 0; }
+  static inline T nullv() { return 0; }
+  static inline T initv() { return 0; }
 
   int length;
   std::vector<T> value, delta;

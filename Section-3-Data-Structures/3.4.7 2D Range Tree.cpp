@@ -25,8 +25,9 @@ Thus for this 2D case, the space complexity is O(N log N).
 #include <utility>   /* std::pair */
 #include <vector>
 
-class range_tree_2D {
+class range_tree_2d {
   typedef std::pair<int, int> point;
+
   std::vector<point> P;
   std::vector<std::vector<point> > seg;
 
@@ -73,7 +74,7 @@ class range_tree_2D {
   }
 
  public:
-  range_tree_2D(int n, point init[]): seg(4 *n + 1) {
+  range_tree_2d(int n, point init[]): seg(4 *n + 1) {
     std::sort(init, init + n);
     P = std::vector<point>(init, init + n);
     build(0, 0, n - 1);
@@ -108,9 +109,9 @@ int main() {
     scanf("%d%d%d%d", x1 + i, y1 + i, x2 + i, y2 + i);
   for (int i = 0; i < M; i++)
     scanf("%d%d", &pts[i].first, &pts[i].second);
-  range_tree_2D T(M, pts);
+  range_tree_2d t(M, pts);
   for (int i = 0; i < N; i++)
-    T.query(x1[i], y1[i], x2[i], y2[i], mark);
+    t.query(x1[i], y1[i], x2[i], y2[i], mark);
   printf("%d\n", b.count());
   return 0;
 }

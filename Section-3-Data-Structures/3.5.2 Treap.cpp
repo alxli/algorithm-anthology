@@ -139,7 +139,7 @@ template<class key_t, class val_t> class treap {
     walk(root, f);
   }
 
-  val_t* find(const key_t & key) {
+  val_t * find(const key_t & key) {
     for (node_t *n = root; n != 0; ) {
       if (n->key == key) return &(n->val);
       n = (key < n->key ? n->L : n->R);

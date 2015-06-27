@@ -55,7 +55,7 @@ int N, M, a[MAXN], t[4*MAXN];
 
 const int nullv = 1 << 30;
 
-int merge(int a, int b) { return (a < b) ? a : b; }
+inline int merge(int a, int b) { return a < b ? a : b; }
 
 void build(int n, int lo, int hi) {
   if (lo == hi) {

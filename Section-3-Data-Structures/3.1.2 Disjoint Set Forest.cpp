@@ -18,7 +18,7 @@ Here, a(N) is the extremely slow growing inverse of the
 Ackermann function. For all practical values of n, a(n) is
 less than 5.
 
-Space Complexity: O(N)
+Space Complexity: O(N) storage and auxiliary.
 
 =~=~=~=~= Sample Output =~=~=~=~=
 Elements: 7, Sets: 3

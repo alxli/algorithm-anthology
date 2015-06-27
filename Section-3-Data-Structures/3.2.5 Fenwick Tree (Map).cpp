@@ -1,31 +1,29 @@
 /*
 
-3.2.6 - Binary Indexed Tree (Range Updates and Range Query
-                             with Co-ordinate Compression)
+3.2.5 - Fenwick Tree (Range Updates and Range Query
+                      with Co-ordinate Compression)
 
-Description: Using maps for storing the trees, there no
-longer needs to be a restriction on the magnitude of
-queried indices. Any value less than MAXN may be used
-in the operations. This version is in essence the "swiss-
-army knife" of binary indexed trees.
+Description: Using two std::maps to represent the Fenwick tree,
+there no longer needs to be a restriction on the magnitude of
+queried indices. All indices in range [0, MAXN] are valid.
 
 Time Complexity: All functions are O(log^2 MAXN). If the
 std::map is replaced with an std::unordered_map, then the
 running time will become O(log MAXN) amortized.
 
-Space Complexity: Equal to space complexity of std::map.
+Space Complexity: O(n) on the number of indices accessed.
 
 */
 
 #include <map>
 
-const int MAXN = 1 << 30;
-std::map<int, int> bitmul, bitadd;
+const int MAXN = 1000000000;
+std::map<int, int> tmul, tadd;
 
 void _add(int at, int mul, int add) {
-  for (int i = at; i < MAXN; i = (i | (i+1))) {
-    bitmul[i] += mul;
-    bitadd[i] += add;
+  for (int i = at; i <= MAXN; i = (i | (i+1))) {
+    tmul[i] += mul;
+    tadd[i] += add;
   }
 }
 
@@ -39,10 +37,10 @@ void add(int lo, int hi, int v) {
 int sum(int hi) {
   int mul = 0, add = 0, start = hi;
   for (int i = hi; i >= 0; i = (i & (i + 1)) - 1) {
-    if (bitmul.find(i) != bitmul.end())
-      mul += bitmul[i];
-    if (bitadd.find(i) != bitadd.end())
-      add += bitadd[i];
+    if (tmul.find(i) != tmul.end())
+      mul += tmul[i];
+    if (tadd.find(i) != tadd.end())
+      add += tadd[i];
   }
   return mul*start + add;
 }

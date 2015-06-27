@@ -1,13 +1,15 @@
 /*
 
-3.2.5 - Binary Indexed Tree (Range Update, Point Query)
+3.2.3 - Fenwick Tree (Range Update, Point Query)
 
-Description: Range updating in a binary indexed tree
-can only increment values in a range, not set them to
-the same value. This version is a very concise version
-of a BIT if only point queries are needed. The functions
-below work for 1-based indices only (i.e. between 1 and
-MAXN, inclusive).
+Description: A Fenwick tree (a.k.a. binary indexed tree) is a
+data structure that allows for the sum of an arbitrary range
+of values in an array to be dynamically queried in logarithmic
+time. Range updating in a Fenwick tree can only increment
+values in a range, not set them all to the same value. This
+version is a very concise version if only point queries are
+needed. The functions below work on 1-based indices (between
+1 and MAXN, inclusive).
 
 Time Complexity: add() and at() are O(log MAXN).
 Space Complexity: O(N).
@@ -15,7 +17,7 @@ Space Complexity: O(N).
 */
 
 const int MAXN = 1000;
-int bit[MAXN+1];
+int bit[MAXN + 1];
 
 //a[i] += v
 void add(int i, int v) {

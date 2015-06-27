@@ -28,7 +28,7 @@ template<class key_t, class val_t> class binary_search_tree {
     key_t key;
     val_t val;
     node_t *L, *R;
-    
+
     node_t(const key_t & k, const val_t & v) {
       key = k;
       val = v;
@@ -37,7 +37,7 @@ template<class key_t, class val_t> class binary_search_tree {
   } *root;
 
   int num_nodes;
- 
+
   static bool insert(node_t *& n, const key_t & k, const val_t & v) {
     if (n == 0) {
       n = new node_t(k, v);
@@ -80,7 +80,7 @@ template<class key_t, class val_t> class binary_search_tree {
     if (n == 0) return;
     walk(n->L, f);
     f(n->key, n->val);
-    walk(n->R, f); 
+    walk(n->R, f);
   }
 
   static void clean_up(node_t * n) {
@@ -116,7 +116,7 @@ template<class key_t, class val_t> class binary_search_tree {
     walk(root, f);
   }
 
-  val_t* find(const key_t & key) {
+  val_t * find(const key_t & key) {
     for (node_t *n = root; n != 0; ) {
       if (n->key == key) return &(n->val);
       n = (key < n->key ? n->L : n->R);
@@ -144,6 +144,6 @@ int main() {
   T.walk(printch);  //abcde
   cout << "\nRemoving node with key 3...";
   cout << (T.erase(3) ? "Success!" : "Failed");
-  cout << "\n"; 
+  cout << "\n";
   return 0;
 }

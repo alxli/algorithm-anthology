@@ -31,15 +31,15 @@ template<class T> class heavy_light {
   //Modify the following 6 functions to implement your custom
   //operations on the tree. This implements the Add/Max operations.
   //Operations like Add/Sum, Set/Max can also be implemented.
-  static inline const T modify_op(const T & x, const T & y) {
+  static inline T modify_op(const T & x, const T & y) {
     return x + y;
   }
 
-  static inline const T query_op(const T & x, const T & y) {
+  static inline T query_op(const T & x, const T & y) {
     return std::max(x, y);
   }
 
-  static inline const T delta_on_segment(const T & delta, int seglen) {
+  static inline T delta_on_segment(const T & delta, int seglen) {
     if (delta == null_delta()) return null_delta();
     //Here you must write a fast equivalent of following slow code:
     //  T result = delta;
@@ -48,9 +48,9 @@ template<class T> class heavy_light {
     return delta;
   }
 
-  static inline const T init_value() { return 0; }
-  static inline const T null_delta() { return 0; }
-  static inline const T null_value() { return INT_MIN; }
+  static inline T init_value() { return 0; }
+  static inline T null_delta() { return 0; }
+  static inline T null_value() { return INT_MIN; }
 
   static inline T join_value_with_delta(const T & v, const T & delta) {
     return delta == null_delta() ? v : modify_op(v, delta);

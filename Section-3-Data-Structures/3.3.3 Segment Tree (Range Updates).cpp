@@ -33,8 +33,8 @@ template<class T> class segment_tree {
   T val, *init;
 
   //define the following yourself. merge(x, nullv) must return x for all valid x
-  static inline const T nullv() { return std::numeric_limits<T>::min(); }
-  static inline const T merge(const T & a, const T & b) { return a > b ? a : b; }
+  static inline T nullv() { return std::numeric_limits<T>::min(); }
+  static inline T merge(const T & a, const T & b) { return a > b ? a : b; }
 
   void build(int n, int lo, int hi) {
     if (lo == hi) {

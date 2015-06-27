@@ -17,22 +17,22 @@ Space Complexity: O(N) on the number of points.
 
 #include <algorithm> /* nth_element(), max(), min() */
 #include <climits>   /* INT_MIN, INT_MAX */
-#include <utility>
+#include <utility>   /* std::pair */
 #include <vector>
 
 class kd_tree {
   typedef std::pair<int, int> point;
 
-  static inline bool cmp_x(const point &a, const point &b) {
+  static inline bool cmp_x(const point & a, const point & b) {
     return a.first < b.first;
   }
 
-  static inline bool cmp_y(const point &a, const point &b) {
+  static inline bool cmp_y(const point & a, const point & b) {
     return a.second < b.second;
   }
 
   std::vector<int> tx, ty, cnt, minx, miny, maxx, maxy;
-  int xl, yl, xh, yh; //temporary values to speed up recursion
+  int x1, y1, x2, y2; //temporary values to speed up recursion
 
   void build(int lo, int hi, bool div_x, point P[]) {
     if (lo >= hi) return;
@@ -58,10 +58,10 @@ class kd_tree {
     int mid = (lo + hi) >> 1;
     int ax = minx[mid], ay = miny[mid];
     int bx = maxx[mid], by = maxy[mid];
-    if (ax > xh || xl > bx || ay > yh || yl > by) return 0;
-    if (xl <= ax && bx <= xh && yl <= ay && by <= yh) return cnt[mid];
+    if (ax > x2 || x1 > bx || ay > y2 || y1 > by) return 0;
+    if (x1 <= ax && bx <= x2 && y1 <= ay && by <= y2) return cnt[mid];
     int res = count(lo, mid) + count(mid + 1, hi);
-    res += (xl <= tx[mid] && tx[mid] <= xh && yl <= ty[mid] && ty[mid] <= yh);
+    res += (x1 <= tx[mid] && tx[mid] <= x2 && y1 <= ty[mid] && ty[mid] <= y2);
     return res;
   }
 
@@ -71,18 +71,18 @@ class kd_tree {
      build(0, n, true, P);
   }
 
-  int count(int xl, int yl, int xh, int yh) {
-    this->xl = xl;
-    this->yl = yl;
-    this->xh = xh;
-    this->yh = yh;
+  int count(int x1, int y1, int x2, int y2) {
+    this->x1 = x1;
+    this->y1 = y1;
+    this->x2 = x2;
+    this->y2 = y2;
     return count(0, tx.size());
   }
 };
 
 /*** Example Usage ***/
 
-#include <iostream>
+#include <cassert>
 using namespace std;
 
 int main() {
@@ -91,8 +91,8 @@ int main() {
   P[1] = make_pair(10, 10);
   P[2] = make_pair(0, 10);
   P[3] = make_pair(10, 0);
-  kd_tree T(4, P);
-  cout << T.count(0, 0, 10, 9) << "\n";  //2
-  cout << T.count(0, 0, 10, 10) << "\n"; //4
+  kd_tree t(4, P);
+  assert(t.count(0, 0, 10, 9) == 2);
+  assert(t.count(0, 0, 10, 10) == 4);
   return 0;
 }

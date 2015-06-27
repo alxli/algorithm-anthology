@@ -22,7 +22,7 @@ Space Complexity: O(N) on the number of points.
 
 struct segment { int x1, y1, x2, y2; };
 
-class R_tree {
+class r_tree {
 
   static inline bool cmp_x(const segment & a, const segment & b) {
     return a.x1 + a.x2 < b.x1 + b.x2;
@@ -99,7 +99,7 @@ class R_tree {
   }
 
  public:
-  R_tree(int N, segment s[]) {
+  r_tree(int N, segment s[]) {
     this->s.resize(N);
     minx.assign(N, INT_MAX);
     maxx.assign(N, INT_MIN);
@@ -127,8 +127,8 @@ int main() {
   s[1] = (segment){0, 4, 4, 4};
   s[2] = (segment){4, 4, 4, 0};
   s[3] = (segment){4, 0, 0, 0};
-  R_tree T(4, s);
-  int id = T.nearest_neighbor_id(-1, 2);
+  r_tree t(4, s);
+  int id = t.nearest_neighbor_id(-1, 2);
   cout << s[id].x1 << " " << s[id].y1 << " " <<
           s[id].x2 << " " << s[id].y2 << "\n"; //0 0 0 4
   return 0;

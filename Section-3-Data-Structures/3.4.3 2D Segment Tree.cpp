@@ -22,14 +22,14 @@ all operations are [0..xmax][0..ymax]
 
 #include <limits> /* std::numeric_limits<T>::min() */
 
-template<class T> class segment_tree_2D {
+template<class T> class segment_tree_2d {
   //these can be set to large values without affecting your memory usage!
-  static inline const int xmax() { return 1000000000; }
-  static inline const int ymax() { return 1000000000; }
+  static const int xmax = 1000000000;
+  static const int ymax = 1000000000;
 
   //define the following yourself. merge(x, nullv) must return x for all valid x
-  static inline const T nullv() { return std::numeric_limits<T>::min(); }
-  static inline const T merge(const T & a, const T & b) { return a > b ? a : b; }
+  static inline T nullv() { return std::numeric_limits<T>::min(); }
+  static inline T merge(const T & a, const T & b) { return a > b ? a : b; }
 
   struct layer2_node {
     int lo, hi;
@@ -41,7 +41,7 @@ template<class T> class segment_tree_2D {
   struct layer1_node {
     layer1_node *L, *R;
     layer2_node l2;
-    layer1_node() : L(0), R(0), l2(0, ymax()) {}
+    layer1_node() : L(0), R(0), l2(0, ymax) {}
   } *root;
 
   void update2(layer2_node * node, int Q, const T & v) {
@@ -74,7 +74,7 @@ template<class T> class segment_tree_2D {
     if (nd == 0 || B <= nd->lo || nd->hi <= A) return nullv();
     if (A <= nd->lo && nd->hi <= B) return nd->value;
     return merge(query2(nd->L, A, B), query2(nd->R, A, B));
-  } 
+  }
 
   void update1(layer1_node * node, int lo, int hi, int x, int y, const T & v) {
     if (lo + 1 == hi) update2(&node->l2, y, v);
@@ -116,16 +116,19 @@ template<class T> class segment_tree_2D {
   }
 
  public:
-  segment_tree_2D() { root = new layer1_node(); }
-  ~segment_tree_2D() { clean_up1(root); }
-  T at(int x, int y) { return query(x, y, x, y); }
+  segment_tree_2d() { root = new layer1_node(); }
+  ~segment_tree_2d() { clean_up1(root); }
 
   void update(int x, int y, const T & v) {
-    update1(root, 0, xmax(), x, y, v);
+    update1(root, 0, xmax, x, y, v);
   }
-  
+
   T query(int x1, int y1, int x2, int y2) {
-    return query1(root, 0, xmax(), x1, x2 + 1, y1, y2 + 1);
+    return query1(root, 0, xmax, x1, x2 + 1, y1, y2 + 1);
+  }
+
+  T at(int x, int y) {
+    return query(x, y, x, y);
   }
 };
 
@@ -140,7 +143,7 @@ int main() {
                    {6, 7, 8, 0, 0},
                    {0, 1, 2, 3, 4},
                    {5, 9, 9, 1, 2}};
-  segment_tree_2D<int> T;
+  segment_tree_2d<int> T;
   for (int r = 0; r < 5; r++)
     for (int c = 0; c < 5; c++)
       T.update(r, c, arr[r][c]);

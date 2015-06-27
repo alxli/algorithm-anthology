@@ -49,9 +49,9 @@ Q 0 4
 #include <vector>
 
 template<class T> class sqrt_decomp {
-  //define the following yourself. merge(x, nullv) must return x for all valid x
-  static inline const T nullv() { return std::numeric_limits<T>::max(); }
-  static inline const T merge(const T &a, const T &b) { return a < b ? a : b; }
+  //define the following yourself. merge(x, nullv) must return x for all x
+  static inline T nullv() { return std::numeric_limits<T>::max(); }
+  static inline T merge(const T & a, const T & b) { return a < b ? a : b; }
 
   int len, blocklen, blocks;
   std::vector<T> array, block;
@@ -64,7 +64,7 @@ template<class T> class sqrt_decomp {
     for (int i = 0; i < n; i++)
       array[i] = a ? a[i] : nullv();
     for (int i = 0; i < blocks; i++) {
-      int h = (i + 1)*blocklen;
+      int h = (i + 1) * blocklen;
       if (h > n) h = n;
       block[i] = nullv();
       for (int j = i * blocklen; j < h; j++)
@@ -75,7 +75,7 @@ template<class T> class sqrt_decomp {
   void update(int idx, const T & val) {
     array[idx] = val;
     int b = idx / blocklen;
-    int h = (b + 1)*blocklen;
+    int h = (b + 1) * blocklen;
     if (h > len) h = len;
     block[b] = nullv();
     for (int i = b * blocklen; i < h; i++)
@@ -90,8 +90,8 @@ template<class T> class sqrt_decomp {
       for (int i = lo; i <= hi; i++)
         ret = merge(ret, array[i]);
     } else {
-      int l = lb*blocklen - 1;
-      int h = (hb + 1)*blocklen;
+      int l = lb * blocklen - 1;
+      int h = (hb + 1) * blocklen;
       for (int i = lo; i <= l; i++)
         ret = merge(ret, array[i]);
       for (int i = lb; i <= hb; i++)
