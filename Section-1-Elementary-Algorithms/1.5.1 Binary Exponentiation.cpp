@@ -13,23 +13,31 @@ Complexity: O(log n) on the exponent of the computation.
 
 */
 
-int pow(int x, int n, int m) {
-  long long y = x;
-  int res = 1;
-  for (; n > 0; n >>= 1) {
-    if (n & 1) res = res * y % m;
-    y = y * y % m;
+#include <stdint.h>
+
+uint64_t mulmod(uint64_t a, uint64_t b, uint64_t m) {
+  uint64_t x = 0, y = a % m;
+  for (; b > 0; b >>= 1) {
+    if (b & 1) x = (x + y) % m;
+    y = (y << 1) % m;
   }
-  return res;
+  return x % m;
+}
+
+uint64_t powmod(uint64_t a, uint64_t b, uint64_t m) {
+  uint64_t x = 1, y = a;
+  for (; b > 0; b >>= 1) {
+    if (b & 1) x = mulmod(x, y, m);
+    y = mulmod(y, y, m);
+  }
+  return x % m;
 }
 
 /*** Example Usage ***/
 
-#include <iostream>
-using namespace std;
+#include <cassert>
 
 int main() {
-  int x = pow(2, 10, 1000000007);
-  cout << x << endl;
+  assert(powmod(2, 10, 1000000007) == 1024);
   return 0;
 }
