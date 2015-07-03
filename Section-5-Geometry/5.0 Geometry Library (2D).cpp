@@ -13,10 +13,12 @@ Sections will be split up after this file is finalized.
 
 */
 
-#include <cmath>   /* fabs, sqrt, sin, cos, atan2 */
-#include <limits>  /* std::numeric_limits */
+#include <algorithm> /* std::swap() */
+#include <cmath>     /* fabs, sqrt, sin, cos, atan2 */
+#include <iostream>
+#include <limits>    /* std::numeric_limits */
 #include <ostream>
-#include <utility> /* std::pair */
+#include <utility>   /* std::pair */
 
 double posinf() { return std::numeric_limits<double>::max(); }
 double neginf() { return -std::numeric_limits<double>::max(); }
@@ -319,27 +321,68 @@ int intersection(const line & l1, const line & l2, point * p) {
   return 0;
 }
 
+//Line Segment Intersection (http://stackoverflow.com/a/565282)
+
+//should we consider barely touching segments an intersection?
+const bool TOUCH_IS_INTERSECT = true;
+
+//does [l, h] contain m?
+//precondition: l <= h
+bool contain(double l, double m, double h) {
+  if (TOUCH_IS_INTERSECT) return LE(l, m) && LE(m, h);
+  return LT(l, m) && LT(m, h);
+}
+
+//does [l1, h1] overlap with [l2, h2]?
+//precondition: l1 <= h1 and l2 <= h2
+bool overlap(double l1, double h1, double l2, double h2) {
+  if (TOUCH_IS_INTERSECT) return LE(l1, h2) && LE(l2, h1);
+  return LT(l1, h2) && LT(l2, h1);
+}
+
 //intersection of line segment ab with line segment cd
-//returns: −1 if segments do not intersect,
+//returns: -1 if segments do not intersect,
 //          0 if there is exactly one intersection point
 //         +1 if the intersection is another line segment
 //In the 2nd case, the intersection point is stored into p
 //In the 3rd case, the intersection segment is stored into p and q
-//http://stackoverflow.com/a/565282
-int intersection(const point & a, const point & b,
-                 const point & c, const point & d,
-                 point * p, point * q) {
-
-  //TODO
-  return 0;
+int intersection(point a, point b, point c, point d) {
+  point ac(c - a), ab(b - a), cd(d - c);
+  double c1 = ab.cross(cd), c2 = ac.cross(ab);
+  if (EQ(c1, 0) && EQ(c2, 0)) { //collinear
+    double t0 = ac.dot(ab) / ab.dot(ab);
+    double t1 = t0 + cd.dot(ab) / ab.dot(ab);
+    if (cd.dot(ab) < 0) std::swap(t0, t1);
+    if (overlap(t0, t1, 0, 1)) {
+      point res1 = std::max(std::min(a, b), std::min(c, d));
+      point res2 = std::min(std::max(a, b), std::max(c, d));
+      if (res1 == res2) {
+        std::cout << res1 << "\n";
+        return 0; //collinear, meeting at an endpoint
+      }
+      std::cout << res1 << " " << res2 << "\n";
+      return 1; //collinear, and overlapping
+    } else { //collinear, and disjoint
+      return -1;
+    }
+  }
+  if (EQ(c1, 0) && NE(c2, 0)) return -1; //parallel and disjoint
+  double t = ac.cross(cd) / c1, u = c2 / c1;
+  if (NE(c1, 0) && contain(0, t, 1) && contain(0, u, 1)) {
+    std::cout << (a + t * ab) << "\n";
+    return 0; //non-parallel with one intersection
+  }
+  return -1; //non-parallel with no intersections
 }
 
 /*** Example Usage ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 int main() {
+
   point a(0, 4);
   cout << a.normalize().abs() << "\n";                          //1
   cout << polar_point(5, 90 * DEG) << "\n";                     //(0,5)
@@ -365,5 +408,31 @@ int main() {
   point r;
   cout << intersection(line(-1, 1, 0), line(1, 1, -3), &r) << "\n"; //0
   cout << r << "\n";                                                //(1.5,1.5)
+
+  //tests for segment intersection (examples in order from link below)
+  //http://martin-thoma.com/how-to-check-if-two-line-segments-intersect/
+#define pt point
+#define test(a,b,c,d,e,f,g,h) intersection(pt(a,b),pt(c,d),pt(e,f),pt(g,h))
+  {
+    //point intersection
+    assert(0 == test(-4,0,4,0,0,-4,0,4));   //(0,0)
+    assert(0 == test(0,0,10,10,2,2,16,4));  //(2,2)
+    assert(0 == test(-2,2,-2,-2,-2,0,0,0)); //(-2,0)
+    assert(0 == test(0,4,4,4,4,0,4,8));     //(4,4)
+
+    //segment intersection
+    assert(1 == test(10,10,0,0,2,2,6,6));   //(2,2) (6,6)
+    assert(1 == test(6,8,14,-2,14,-2,6,8)); //(6,8) (14,-2)
+
+    //no intersection
+    assert(-1 == test(6,8,8,10,12,12,4,4));
+    assert(-1 == test(-4,2,-8,8,0,0,-4,6));
+    assert(-1 == test(4,4,4,6,0,2,0,0));
+    assert(-1 == test(4,4,6,4,0,2,0,0));
+    assert(-1 == test(-2,-2,4,4,10,10,6,6));
+    assert(-1 == test(0,0,2,2,4,0,1,4));
+    assert(-1 == test(2,2,2,8,4,4,6,4));
+    assert(-1 == test(4,2,4,4,0,8,10,0));
+  }
   return 0;
 }
