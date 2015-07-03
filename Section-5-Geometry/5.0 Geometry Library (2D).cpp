@@ -352,8 +352,7 @@ int intersection(point a, point b, point c, point d) {
   if (EQ(c1, 0) && EQ(c2, 0)) { //collinear
     double t0 = ac.dot(ab) / ab.dot(ab);
     double t1 = t0 + cd.dot(ab) / ab.dot(ab);
-    if (cd.dot(ab) < 0) std::swap(t0, t1);
-    if (overlap(t0, t1, 0, 1)) {
+    if (overlap(std::min(t0, t1), std::max(t0, t1), 0, 1)) {
       point res1 = std::max(std::min(a, b), std::min(c, d));
       point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
@@ -361,9 +360,9 @@ int intersection(point a, point b, point c, point d) {
         return 0; //collinear, meeting at an endpoint
       }
       std::cout << res1 << " " << res2 << "\n";
-      return 1; //collinear, and overlapping
-    } else { //collinear, and disjoint
-      return -1;
+      return 1; //collinear and overlapping
+    } else {
+      return -1; //collinear and disjoint
     }
   }
   if (EQ(c1, 0) && NE(c2, 0)) return -1; //parallel and disjoint
