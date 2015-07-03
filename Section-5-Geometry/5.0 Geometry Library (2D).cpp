@@ -365,9 +365,9 @@ int intersection(point a, point b, point c, point d) {
       return -1; //collinear and disjoint
     }
   }
-  if (EQ(c1, 0) && NE(c2, 0)) return -1; //parallel and disjoint
+  if (EQ(c1, 0)) return -1; //parallel and disjoint
   double t = ac.cross(cd) / c1, u = c2 / c1;
-  if (NE(c1, 0) && contain(0, t, 1) && contain(0, u, 1)) {
+  if (contain(0, t, 1) && contain(0, u, 1)) {
     std::cout << (a + t * ab) << "\n";
     return 0; //non-parallel with one intersection
   }
