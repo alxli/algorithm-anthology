@@ -309,7 +309,7 @@ int turn(const point & a, const point & o, const point & b) {
 }
 
 //intersection of line l1 and line l2
-//returns: −1 if lines do not intersect,
+//returns: -1 if lines do not intersect,
 //          0 if there is exactly one intersection point, or
 //         +1 if there are infinite intersection
 //in the 2nd case, the intersection point is stored into pointer p
@@ -381,7 +381,6 @@ int intersection(point a, point b, point c, point d) {
 using namespace std;
 
 int main() {
-
   point a(0, 4);
   cout << a.normalize().abs() << "\n";                          //1
   cout << polar_point(5, 90 * DEG) << "\n";                     //(0,5)
