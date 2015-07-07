@@ -482,12 +482,9 @@ double rectangle_area(const point & a, const point & b) {
 //finds the centroid from a range [lo, hi) of points in O(N)
 template<class It> point centroid(It lo, It hi) {
   point res(0, 0);
-  int points = 0;
-  while (lo != hi) {
-    res += *(lo++);
-    points++;
-  }
-  return res / (double)points;
+  int points = hi - lo;
+  while (lo != hi) res += *(lo++);
+  return res / points;
 }
 
 point ctr;
@@ -514,7 +511,6 @@ bool ccw_comp(const point & a, const point & b) {
 //monotone chain in O(n log n) to find hull points in CW order
 //notes: the range of input points will be sorted lexicographically
 //       change GE comparisons to LE to produce hull points in CCW order
-//       the last point in the returned list is the same as the first
 template<class It> std::vector<point> convex_hull(It lo, It hi) {
   int k = 0;
   std::vector<point> res(2 * (int)(hi - lo));
@@ -529,17 +525,17 @@ template<class It> std::vector<point> convex_hull(It lo, It hi) {
     while (k >= t && GE(cross(res[k - 2], res[k - 1], *it), 0)) k--;
     res[k++] = *it;
   }
-  res.resize(k); //use k - 1 if you don't want a repeated point
+  res.resize(k - 1); //resize(k) if want the first point repeated
   return res;
 }
 
 //return whether point p is in polygon specified by range [lo, hi) in O(n)
-//[lo, hi) must be iterators to the polygon in clockwise order
+//[lo, hi) must point to the polygon vertices, sorted in CW or CCW order
 template<class It> bool point_in_polygon(const point & p, It lo, It hi) {
   int cnt = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     if (EQ(i->y, p.y) && (EQ(i->x, p.x) ||
-                          EQ(j->y, p.y) && (LE(i->x, p.x) || LE(j->x, p.x))))
+                         (EQ(j->y, p.y) && (LE(i->x, p.x) || LE(j->x, p.x)))))
       return EDGE_IS_INSIDE; //on an edge
     if (GT(i->y, p.y) != GT(j->y, p.y)) {
       double det = cross(p, *i, *j);
@@ -548,6 +544,18 @@ template<class It> bool point_in_polygon(const point & p, It lo, It hi) {
     }
   }
   return cnt % 2 == 1;
+}
+
+//area of a polygon specified by range [lo, hi) - shoelace formula in O(n)
+//[lo, hi) must point to the polygon vertices, sorted in CW or CCW order
+template<class It> double polygon_area(It lo, It hi) {
+  if (lo == hi) return 0;
+  double area = 0;
+  if (*lo != *--hi)
+    area += (lo->x - hi->x) * (lo->y + hi->y);
+  for (It i = hi, j = hi - 1; i != lo; --i, --j)
+    area += (i->x - j->x) * (i->y + j->y);
+  return fabs(area / 2.0);
 }
 
 /*** Example Usage ***/
@@ -636,6 +644,21 @@ int main() {
   assert(EQ(6, triangle_area_medians(3.605551275, 2.5, 4.272001873)));
   assert(6 == triangle_area_altitudes(3, 4, 2.4));
 
-
+  pt pts[] = {pt(1,3),pt(1,2),pt(2,1),pt(0,0),pt(-1,3)};  //irregular pentagon
+  vector<pt> v(pts, pts + 5);
+  std::random_shuffle(v.begin(), v.end());
+  ctr = centroid(v.begin(), v.end()); //note: ctr is global
+  cout << ctr << "\n";                                    //(0.6,1.8)
+  sort(v.begin(), v.end(), cw_comp);
+  for (int i = 0; i < (int)v.size(); i++) assert(v[i] == pts[i]);
+  vector<pt> h = convex_hull(v.begin(), v.end());
+  cout << "hull points:";
+  for (int i = 0; i < (int)h.size(); i++) cout << " " << h[i]; //quadrilateral
+  cout << "\n";
+  assert(point_in_polygon(pt(1,2), h.begin(), h.end()));
+  assert(point_in_polygon(pt(0,3), h.begin(), h.end()));
+  assert(!point_in_polygon(pt(0,3.01), h.begin(), h.end()));
+  assert(!point_in_polygon(pt(2,2), h.begin(), h.end()));
+  cout << "hull area: " << polygon_area(h.begin(), h.end()) << "\n"; //5.5
   return 0;
 }
