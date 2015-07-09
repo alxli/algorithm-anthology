@@ -21,6 +21,7 @@ Sections will be split up after this file is finalized.
 #include <cmath>     /* fabs, sqrt, sin, cos, atan2 */
 #include <limits>    /* std::numeric_limits */
 #include <ostream>
+#include <stdexcept> /* std::runtime_error() */
 #include <utility>   /* std::pair */
 #include <vector>
 
@@ -47,7 +48,7 @@ struct point {
   point() : x(0), y(0) {}
   point(const point & p) : x(p.x), y(p.y) {}
   point(const std::pair<double, double> & p) : x(p.first), y(p.second) {}
-  point(const double & a, const double & b) : x(a), y(b) {}
+  point(double a, double b) : x(a), y(b) {}
 
   bool operator < (const point & p) const {
     return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
@@ -63,18 +64,18 @@ struct point {
   bool operator >= (const point & p) const { return !(*this < p); }
   point operator + (const point & p) const { return point(x + p.x, y + p.y); }
   point operator - (const point & p) const { return point(x - p.x, y - p.y); }
-  point operator + (const double & v) const { return point(x + v, y + v); }
-  point operator - (const double & v) const { return point(x - v, y - v); }
-  point operator * (const double & v) const { return point(x * v, y * v); }
-  point operator / (const double & v) const { return point(x / v, y / v); }
+  point operator + (double v) const { return point(x + v, y + v); }
+  point operator - (double v) const { return point(x - v, y - v); }
+  point operator * (double v) const { return point(x * v, y * v); }
+  point operator / (double v) const { return point(x / v, y / v); }
   point & operator += (const point & p) { x += p.x; y += p.y; return *this; }
   point & operator -= (const point & p) { x -= p.x; y -= p.y; return *this; }
-  point & operator += (const double & v) { x += v; y += v; return *this; }
-  point & operator -= (const double & v) { x -= v; y -= v; return *this; }
-  point & operator *= (const double & v) { x *= v; y *= v; return *this; }
-  point & operator /= (const double & v) { x /= v; y /= v; return *this; }
-  friend point operator + (const double & v, const point & p) { return p + v; }
-  friend point operator * (const double & v, const point & p) { return p * v; }
+  point & operator += (double v) { x += v; y += v; return *this; }
+  point & operator -= (double v) { x -= v; y -= v; return *this; }
+  point & operator *= (double v) { x *= v; y *= v; return *this; }
+  point & operator /= (double v) { x /= v; y /= v; return *this; }
+  friend point operator + (double v, const point & p) { return p + v; }
+  friend point operator * (double v, const point & p) { return p * v; }
 
   double norm() const { return x * x + y * y; }
   double abs() const { return sqrt(x * x + y * y); }
@@ -198,35 +199,20 @@ struct line {
   //solve for x, given y
   //for horizontal lines, either +inf, -inf, or nan is returned
   double x(double y) const {
-    if (!valid()) return NaN;
-    if (EQ(a, 0)) { //horizontal line
-      if (EQ(y, -c / b)) return NaN; //y = the line
-      if (LT(y, -c / b)) return neginf; //y is below
-      return posinf; //y is above
-    }
+    if (!valid() || EQ(a, 0)) return NaN; //invalid or horizontal
     return (-c - b * y) / a;
   }
 
   //solve for y, given x
   //for vertical lines, either +inf, -inf, or nan is returned
   double y(double x) const {
-    if (!valid()) return NaN;
-    if (EQ(b, 0)) { //vertical line
-      if (EQ(x, -c / a)) return NaN; //x is the line
-      if (LT(x, -c / a)) return posinf; //x is right
-      return neginf; //x is left
-    }
+    if (!valid() || EQ(b, 0)) return NaN; //invalid or vertical
     return (-c - a * x) / b;
   }
 
-  //return the parallel line passing through point p
-  line parallel(const point & p) const {
-    return line(a, b, -a * p.x - b * p.y);
-  }
-
-  //return the perpendicular line passing through point p
-  line perpendicular(const point & p) const {
-    return line(-b, a, b * p.x - a * p.y);
+  //returns whether p exists on the line
+  bool contains(const point & p) const {
+    return EQ(a * p.x + b * p.y + c, 0);
   }
 
   //returns whether the line is parallel to l
@@ -237,6 +223,16 @@ struct line {
   //returns whether the line is perpendicular to l
   bool perpendicular(const line & l) const {
     return EQ(-a * l.a, b * l.b);
+  }
+
+  //return the parallel line passing through point p
+  line parallel(const point & p) const {
+    return line(a, b, -a * p.x - b * p.y);
+  }
+
+  //return the perpendicular line passing through point p
+  line perpendicular(const point & p) const {
+    return line(-b, a, b * p.x - a * p.y);
   }
 
   friend std::ostream & operator << (std::ostream & out, const line & l) {
@@ -558,6 +554,151 @@ template<class It> double polygon_area(It lo, It hi) {
   return fabs(area / 2.0);
 }
 
+//2D circle class - represented by (x - h)^2 + (y - k)^2 = r^2
+//a generic circle has center point (h, k) and a radius r
+struct circle {
+
+  double h, k, r;
+
+  circle(): h(0), k(0), r(0) {}
+  circle(double R): h(0), k(0), r(fabs(R)) {}
+  circle(double H, double K, double R): h(H), k(K), r(fabs(R)) {}
+  circle(const point & o, double R): h(o.x), k(o.y), r(fabs(R)) {}
+
+  //circumcircle with the diameter equal to the distance from a to b
+  circle(const point & a, const point & b) {
+    h = (a.x + b.x) / 2.0;
+    k = (a.y + b.y) / 2.0;
+    r = (a - point(h, k)).abs();
+  }
+
+  //circumcircle of 3 points - throws exception if abc are collinear/equal
+  circle(const point & a, const point & b, const point & c) {
+    double an = (b - c).norm(), bn = (a - c).norm(), cn = (a - b).norm();
+    double wa = an * (bn + cn - an);
+    double wb = bn * (an + cn - bn);
+    double wc = cn * (an + bn - cn);
+    double w = wa + wb + wc;
+    if (EQ(w, 0))
+      throw std::runtime_error("No circle from collinear points.");
+    h = (wa * a.x + wb * b.x + wc * c.x) / w;
+    k = (wa * a.y + wb * b.y + wc * c.y) / w;
+    r = (point(h, k) - a).abs();
+  }
+
+  //circle from 2 points and a radius - many possible edge cases!
+  //in the "normal" case, there will be 2 possible circles, one
+  //centered at (h1, k1) and the other (h2, k2). Only one is used.
+  //Note that (h1, k1) equals (h2, k2) if dist(a, b) = 2*r = d
+  circle(const point & a, const point & b, double R) {
+    r = fabs(R);
+    if (LE(r, 0) && a == b) { //circle is a point
+      h = a.x; k = a.y; return;
+    }
+    double d = (b - a).abs();
+    if (EQ(d, 0))
+      throw std::runtime_error("Identical points, infinite circles.");
+    if (GT(d, r * 2))
+      throw std::runtime_error("Points too far away to make circle.");
+    double v = sqrt(r * r - d * d / 4) / d;
+    point m = (a + b) / 2;
+    h = m.x + (a.y - b.y) * v;
+    k = m.y + (b.x - a.x) * v;
+    //other answer is (h, k) = (m.x-(a.y-b.y)*v, m.y-(b.x-a.x)*v)
+  }
+
+  bool operator == (const circle & c) const {
+    return EQ(h, c.h) && EQ(k, c.k) && EQ(r, c.r);
+  }
+
+  bool operator != (const circle & c) const {
+    return !(*this == c);
+  }
+
+  bool contains(const point & p) const {
+    return LE((p - point(h, k)).abs(), r);
+  }
+
+  bool on_edge(const point & p) const {
+    return EQ((p.x - h) * (p.x - h) + (p.y - k) * (p.y - k), r * r);
+  }
+
+  point center() const {
+    return point(h, k);
+  }
+
+  friend std::ostream & operator << (std::ostream & out, const circle & c) {
+    out << std::showpos;
+    out << "(x" << -(fabs(c.h) < eps ? 0 : c.h) << ")^2+";
+    out << "(y" << -(fabs(c.k) < eps ? 0 : c.k) << ")^2";
+    out << std::noshowpos;
+    out << "=" << (fabs(c.r) < eps ? 0 : c.r * c.r);
+    return out;
+  }
+};
+
+//circle inscribed within points a, b, and c
+circle incircle(const point & a, const point & b, const point & c) {
+  double al = (b - c).abs(), bl = (a - c).abs(), cl = (a - b).abs();
+  double p = al + bl + cl;
+  if (EQ(p, 0)) return circle(a.x, a.y, 0);
+  return circle((al * a.x + bl * b.x + cl * c.x) / p,
+                (al * a.y + bl * b.y + cl * c.y) / p,
+                2 * triangle_area(a, b, c) / p);
+}
+
+//smallest enclosing circle of a set of points in O(n) average
+//returns the smallest circle that contains all the points in
+//the range [lo, hi). For better average case performance,
+//the points in the input range will be std::random_shuffled.
+template<class It> circle smallest_circle(It lo, It hi) {
+  if (lo == hi) return circle(0, 0, 0);
+  if (lo + 1 == hi) return circle(lo->x, lo->y, 0);
+  std::random_shuffle(lo, hi);
+  circle res(*lo, *(lo + 1));
+  for (It i = lo + 2; i != hi; ++i) {
+    if (res.contains(*i)) continue;
+    res = circle(*lo, *i);
+    for (It j = lo + 1; j != i; ++j) {
+      if (res.contains(*j)) continue;
+      res = circle(*i, *j);
+      for (It k = lo; k != j; ++k)
+        if (!res.contains(*k)) res = circle(*i, *j, *k);
+    }
+  }
+  return res;
+}
+
+//tangent line(s) to circle c passing through p. there are 3 cases:
+//returns: 0 ==> if there are no lines (p is strictly inside c)
+//         1 ==> if there is 1 tangent line (p is on the edge)
+//         2 ==> if there are 2 tangent lines (p is strictly outside)
+//If there is only 1 tangent, then the line will be stored in l1.
+//If there are 2, then they will be stored in l1 and l2 respectively.
+int tangents(const circle & c, const point & p, line * l1 = 0, line * l2 = 0) {
+  if (c.on_edge(p)) {
+    if (l1 != 0) *l1 = line(point(c.h, c.k), p).perpendicular(p);
+    return 1;
+  }
+  if (c.contains(p)) return 0;
+  point q = (p - c.center()) / c.r;
+  double norm = q.norm(), d = q.y * sqrt(q.norm() - 1);
+  point t1((q.x - d) / norm, c.k), t2((q.x + d) / norm, c.k);
+  if (NE(q.y, 0)) { //common case
+    t1.y += c.r * (1 - t1.x * q.x) / q.y;
+    t2.y += c.r * (1 - t2.x * q.x) / q.y;
+  } else { //point at center horizontal, y = 0
+    d = c.r * sqrt(1 - t1.x * t1.x);
+    t1.y += d;
+    t2.y -= d;
+  }
+  t1.x = t1.x * c.r + c.h;
+  t2.x = t2.x * c.r + c.h;
+  if (l1 != 0) *l1 = line(p, t1);
+  if (l2 != 0) *l2 = line(p, t2);
+  return 2;
+}
+
 /*** Example Usage ***/
 
 #include <cassert>
@@ -660,5 +801,18 @@ int main() {
   assert(!point_in_polygon(pt(0,3.01), h.begin(), h.end()));
   assert(!point_in_polygon(pt(2,2), h.begin(), h.end()));
   cout << "hull area: " << polygon_area(h.begin(), h.end()) << "\n"; //5.5
+
+  assert(circle(0.5,1.25,2.7950849719) == circle(pt(0,4),pt(3,0),pt(-2,0)));
+  //(x-1.11463)^2+(y+0.613014)^2=1.12257
+  cout << incircle(pt(3,-1), pt(-2,-3), pt(1,1)) << "\n";
+  //(x-0.357143)^2+(y-1.78571)^2=3.31633
+  cout << smallest_circle(pts, pts + 5) << "\n";
+
+  line l1, l2;
+  cout << tangents(circle(0,0,4), pt(1,1), &l1, &l2) << "\n";       //0
+  cout << tangents(circle(0,0,sqrt(2)), pt(1,1), &l1, &l2) << ": "; //1
+  cout << l1 << "\n"; //1x+1y-2=0
+  cout << tangents(circle(0,0,2), pt(2,2), &l1, &l2) << ": ";       //2
+  cout << l1 << " " << l2 << "\n"; //0x+1y-2=0 1x+0y-2=0
   return 0;
 }
