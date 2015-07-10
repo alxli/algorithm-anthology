@@ -305,9 +305,9 @@ int turn(const point & a, const point & o, const point & b) {
 }
 
 //intersection of line l1 and line l2
-//returns: -1 if lines do not intersect,
-//          0 if there is exactly one intersection point, or
-//         +1 if there are infinite intersection
+//returns: -1, if lines do not intersect,
+//          0, if there is exactly one intersection point, or
+//         +1, if there are infinite intersection
 //in the 2nd case, the intersection point is optionally stored into p
 int intersection(const line & l1, const line & l2, point * p = 0) {
   if (l1.parallel(l2)) return (l1 == l2) ? 1 : -1;
@@ -339,9 +339,9 @@ bool overlap(double l1, double h1, double l2, double h2) {
 }
 
 //intersection of line segment ab with line segment cd
-//returns: -1 if segments do not intersect,
-//          0 if there is exactly one intersection point
-//         +1 if the intersection is another line segment
+//returns: -1, if segments do not intersect,
+//          0, if there is exactly one intersection point
+//         +1, if the intersection is another line segment
 //In case 2, the intersection point is stored into p
 //In case 3, the intersection segment is stored into p and q
 int intersection(const point & a, const point & b,
@@ -670,9 +670,9 @@ template<class It> circle smallest_circle(It lo, It hi) {
 }
 
 //tangent line(s) to circle c passing through p. there are 3 cases:
-//returns: 0 ==> if there are no lines (p is strictly inside c)
-//         1 ==> if there is 1 tangent line (p is on the edge)
-//         2 ==> if there are 2 tangent lines (p is strictly outside)
+//returns: 0, if there are no lines (p is strictly inside c)
+//         1, if there is 1 tangent line (p is on the edge)
+//         2, if there are 2 tangent lines (p is strictly outside)
 //If there is only 1 tangent, then the line will be stored in l1.
 //If there are 2, then they will be stored in l1 and l2 respectively.
 int tangents(const circle & c, const point & p, line * l1 = 0, line * l2 = 0) {
@@ -697,6 +697,72 @@ int tangents(const circle & c, const point & p, line * l1 = 0, line * l2 = 0) {
   if (l1 != 0) *l1 = line(p, t1);
   if (l2 != 0) *l2 = line(p, t2);
   return 2;
+}
+
+//determines the intersection(s) between a circle c and line l
+//returns: 0, if the line does not intersect with the circle
+//         1, if the line is tangent (one intersection)
+//         2, if the line crosses through the circle
+//If there is 1 intersection point, it will be stored in p
+//If there are 2, they will be stored in p and q respectively
+int intersection(const circle & c, const line & l,
+                 point * p = 0, point * q = 0) {
+  if (!l.valid())
+    throw std::runtime_error("Invalid line for intersection.");
+  double v = c.h * l.a + c.k * l.b + l.c;
+  double aabb = l.a * l.a + l.b * l.b;
+  double disc = v * v / aabb - c.r * c.r;
+  if (disc > eps) return 0;
+  double x0 = -l.a * l.c / aabb, y0 = -l.b * v / aabb;
+  if (disc > -eps) {
+    if (p != 0) *p = point(x0 + c.h, y0 + c.k);
+    return 1;
+  }
+  double k = sqrt((disc /= -aabb) < 0 ? 0 : disc);
+  if (p != 0) *p = point(x0 + k * l.b + c.h, y0 - k * l.a + c.k);
+  if (q != 0) *q = point(x0 - k * l.b + c.h, y0 + k * l.a + c.k);
+  return 2;
+}
+
+//determines the intersection points between two circles c1 and c2
+//returns: -1, if the circles are disjoint
+//          0, if one circle is completely inside the other
+//          1, if the circles are tangent (one intersection point)
+//          2, if the circles intersect at two points
+//          3, if the circles intersect at infinite points (c1 = c2)
+//If one intersection, the intersection point is stored in p
+//If two, the intersection points are stored in p and q respectively
+int intersection(const circle & c1, const circle & c2,
+                 point * p = 0, point * q = 0) {
+  if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k))
+    return EQ(c1.r, c2.r) ? 3 : 0;
+  point d12(c2.center() - c1.center());
+  double d = d12.abs();
+  if (GT(d, c1.r + c2.r)) return -1;
+  if (LT(d, fabs(c1.r - c2.r))) return 0;
+  double a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
+  double x0 = c1.h + (d12.x * a / d);
+  double y0 = c1.k + (d12.y * a / d);
+  double s = sqrt(c1.r * c1.r - a * a);
+  double rx = -d12.y * s / d, ry = d12.x * s / d;
+  if (EQ(rx, 0) && EQ(ry, 0)) {
+    if (p != 0) *p = point(x0, y0);
+    return 1;
+  }
+  if (p != 0) *p = point(x0 + rx, y0 + ry);
+  if (q != 0) *q = point(x0 - rx, y0 - ry);
+  return 2;
+}
+
+//intersection area of circles c1 and c2
+double intersection_area(const circle & c1, const circle c2) {
+  double r = std::min(c1.r, c2.r), R = std::max(c1.r, c2.r);
+  double d = (c2.center() - c1.center()).abs();
+  if (LE(d, R - r)) return PI * r * r;
+  if (GE(d, R + r)) return 0;
+  return r * r * acos((d * d + r * r - R * R) / 2 / d / r) +
+         R * R * acos((d * d + R * R - r * r) / 2 / d / R) -
+         0.5 * sqrt((-d + r + R) * (d + r - R) * (d - r + R) * (d + r + R));
 }
 
 /*** Example Usage ***/

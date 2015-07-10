@@ -67,7 +67,6 @@ bool next_combination(It lo, It mid, It hi) {
   return true;
 }
 
-
 /*
 
 Changes a[] to the next lexicographically greater
