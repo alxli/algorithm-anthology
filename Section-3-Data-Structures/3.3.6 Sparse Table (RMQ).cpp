@@ -36,7 +36,7 @@ void build(int n, int a[]) {
   for (int k = 1; (1 << k) < n; k++) {
     for (int i = 0; i + (1 << k) <= n; i++) {
       int x = dp[i][k - 1];
-      int y = dp[i + (1 << k - 1)][k - 1];
+      int y = dp[i + (1 << (k - 1))][k - 1];
       dp[i][k] = a[x] <= a[y] ? x : y;
     }
   }

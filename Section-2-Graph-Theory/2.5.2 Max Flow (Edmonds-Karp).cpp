@@ -48,8 +48,8 @@ const int MAXN = 100, INF = 0x3f3f3f3f;
 vector<edge> adj[MAXN];
 
 void add_edge(int s, int t, int cap) {
-  adj[s].push_back((edge){s, t, adj[t].size(), cap, 0});
-  adj[t].push_back((edge){t, s, adj[s].size() - 1, 0, 0});
+  adj[s].push_back((edge){s, t, (int)adj[t].size(), cap, 0});
+  adj[t].push_back((edge){t, s, (int)adj[s].size() - 1, 0, 0});
 }
 
 int edmonds_karp(int nodes, int source, int sink) {
@@ -62,7 +62,7 @@ int edmonds_karp(int nodes, int source, int sink) {
     fill(pred, pred + nodes, (edge*)0);
     for (int qh = 0; qh < qt && !pred[sink]; qh++) {
       int u = q[qh];
-      for (int j = 0; j < adj[u].size(); j++) {
+      for (int j = 0; j < (int)adj[u].size(); j++) {
         edge * e = &adj[u][j];
         if (!pred[e->t] && e->cap > e->f) {
           pred[e->t] = e;

@@ -69,7 +69,7 @@ void dijkstra(int nodes, int start) {
     u = pq.top().second;
     pq.pop();
     vis[u] = true;
-    for (int j = 0; j < adj[u].size(); j++) {
+    for (int j = 0; j < (int)adj[u].size(); j++) {
       if (vis[v = adj[u][j].first]) continue;
       if (dist[v] > dist[u] + adj[u][j].second) {
         dist[v] = dist[u] + adj[u][j].second;

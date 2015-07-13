@@ -50,7 +50,7 @@ void bfs(int nodes, int start) {
     d = q.front().second;
     q.pop();
     vis[u] = true;
-    for (int j = 0; j < adj[u].size(); j++) {
+    for (int j = 0; j < (int)adj[u].size(); j++) {
       if (vis[v = adj[u][j]]) continue;
       dist[v] = d + 1;
       pred[v] = u;

@@ -41,7 +41,7 @@ vector<int> adj[MAXN];
 int dfs(int u) {
   vis[u] = true;
   int area = 1;
-  for (int j = 0; j < adj[u].size(); j++)
+  for (int j = 0; j < (int)adj[u].size(); j++)
     if (!vis[adj[u][j]])
       area += dfs(adj[u][j]);
   return area;

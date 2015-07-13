@@ -57,7 +57,7 @@ vector<vector<int> > scc;
 
 void dfs(vector<int> graph[], vector<int> & res, int u) {
   vis[u] = true;
-  for (int j = 0; j < graph[u].size(); j++)
+  for (int j = 0; j < (int)graph[u].size(); j++)
     if (!vis[graph[u][j]])
       dfs(graph, res, graph[u][j]);
   res.push_back(u);
@@ -71,11 +71,11 @@ void kosaraju(int nodes) {
   for (int i = 0; i < nodes; i++)
     if (!vis[i]) dfs(adj, order, i);
   for (int i = 0; i < nodes; i++)
-    for (int j = 0; j < adj[i].size(); j++)
+    for (int j = 0; j < (int)adj[i].size(); j++)
       rev[adj[i][j]].push_back(i);
   fill(vis.begin(), vis.end(), false);
   reverse(order.begin(), order.end());
-  for (int i = 0; i < order.size(); i++) {
+  for (int i = 0; i < (int)order.size(); i++) {
     if (vis[order[i]]) continue;
     vector<int> component;
     dfs(rev, component, order[i]);
@@ -91,9 +91,9 @@ int main() {
     adj[u].push_back(v);
   }
   kosaraju(nodes);
-  for (int i = 0; i < scc.size(); i++) {
+  for (int i = 0; i < (int)scc.size(); i++) {
     cout << "Component:";
-    for (int j = 0; j < scc[i].size(); j++)
+    for (int j = 0; j < (int)scc[i].size(); j++)
       cout << " " << scc[i][j];
     cout << "\n";
   }

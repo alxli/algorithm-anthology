@@ -67,10 +67,10 @@ int find_path(int nodes, int root) {
   q[qt++] = root;
   while (qh < qt) {
     int v = q[qh++];
-    for (int j = 0, to; j < adj[v].size(); j++) {
+    for (int j = 0, to; j < (int)adj[v].size(); j++) {
       to = adj[v][j];
       if (base[v] == base[to] || match[v] == to) continue;
-      if (to == root || match[to] != -1 && p[match[to]] != -1) {
+      if (to == root || (match[to] != -1 && p[match[to]] != -1)) {
         int curbase = lca(nodes, v, to);
         vector<bool> blossom(nodes);
         mark_path(blossom, v, curbase, to);

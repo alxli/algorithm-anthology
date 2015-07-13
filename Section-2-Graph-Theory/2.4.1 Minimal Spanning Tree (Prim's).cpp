@@ -66,7 +66,7 @@ int prim(int nodes) {
     if (vis[i]) continue;
     vis[i] = true;
     priority_queue<pair<int, pair<int, int> > > pq;
-    for (int j = 0; j < adj[i].size(); j++)
+    for (int j = 0; j < (int)adj[i].size(); j++)
       pq.push(make_pair(-adj[i][j].second,
                 make_pair(i, adj[i][j].first)));
     while (!pq.empty()) {
@@ -80,7 +80,7 @@ int prim(int nodes) {
           mst.push_back(make_pair(u, v));
           total_dist += w;
         }
-        for (int j = 0; j < adj[v].size(); j++)
+        for (int j = 0; j < (int)adj[v].size(); j++)
           pq.push(make_pair(-adj[v][j].second,
                     make_pair(v, adj[v][j].first)));
       }
@@ -98,7 +98,7 @@ int main() {
     adj[v].push_back(make_pair(u, w));
   }
   cout << "Total distance: " << prim(nodes) << "\n";
-  for (int i = 0; i < mst.size(); i++)
+  for (int i = 0; i < (int)mst.size(); i++)
     cout << mst[i].first << "<->" << mst[i].second << "\n";
   return 0;
 }

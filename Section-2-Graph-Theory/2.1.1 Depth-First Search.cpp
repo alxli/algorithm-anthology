@@ -43,7 +43,7 @@ vector<int> adj[MAXN];
 void dfs(int u) {
   vis[u] = true;
   cout << " " << u;
-  for (int j = 0; j < adj[u].size(); j++)
+  for (int j = 0; j < (int)adj[u].size(); j++)
     if (!vis[adj[u][j]])
       dfs(adj[u][j]);
 }

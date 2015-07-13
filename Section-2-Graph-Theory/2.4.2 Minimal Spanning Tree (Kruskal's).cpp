@@ -65,7 +65,7 @@ int kruskal(int nodes) {
   sort(E.begin(), E.end());
   int u, v, total_dist = 0;
   for (int i = 0; i < nodes; i++) root[i] = i;
-  for (int i = 0; i < E.size(); i++) {
+  for (int i = 0; i < (int)E.size(); i++) {
     u = find_root(E[i].second.first);
     v = find_root(E[i].second.second);
     if (u != v) {
@@ -85,7 +85,7 @@ int main() {
     E.push_back(make_pair(w, make_pair(u, v)));
   }
   cout << "Total distance: " << kruskal(nodes) << "\n";
-  for (int i = 0; i < mst.size(); i++)
+  for (int i = 0; i < (int)mst.size(); i++)
     cout << mst[i].first << "<->" << mst[i].second << "\n";
   return 0;
 }

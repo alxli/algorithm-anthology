@@ -20,14 +20,14 @@ const int MAXN = 1000;
 int a[MAXN + 1], bit[MAXN + 1];
 
 //a[i] += v
-int add(int i, int v) {
+void add(int i, int v) {
   a[i] += v;
   for (; i <= MAXN; i += i & -i)
     bit[i] += v;
 }
 
 //a[i] = v
-int set(int i, int v) {
+void set(int i, int v) {
   int inc = v - a[i];
   add(i, inc);
 }

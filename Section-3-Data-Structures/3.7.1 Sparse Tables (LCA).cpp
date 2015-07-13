@@ -28,7 +28,7 @@ void dfs(int u, int p) {
   dp[u][0] = p;
   for (int i = 1; i < len; i++)
     dp[u][i] = dp[dp[u][i - 1]][i - 1];
-  for (int j = 0, v; j < adj[u].size(); j++)
+  for (int j = 0, v; j < (int)adj[u].size(); j++)
     if ((v = adj[u][j]) != p)
       dfs(v, u);
   tout[u] = timer++;

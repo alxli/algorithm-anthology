@@ -45,7 +45,7 @@ void dfs(int u) {
     throw std::runtime_error("Not a DAG.");
   if (done[u]) return;
   vis[u] = true;
-  for (int j = 0; j < adj[u].size(); j++)
+  for (int j = 0; j < (int)adj[u].size(); j++)
     dfs(adj[u][j]);
   vis[u] = false;
   done[u] = true;
@@ -70,7 +70,7 @@ int main() {
   }
   toposort(nodes);
   cout << "The topological order:";
-  for (int i = 0; i < sorted.size(); i++)
+  for (int i = 0; i < (int)sorted.size(); i++)
     cout << " " << sorted[i];
   cout << "\n";
   return 0;

@@ -45,8 +45,8 @@ int dist[MAXN], ptr[MAXN];
 vector<edge> adj[MAXN];
 
 void add_edge(int s, int t, int cap) {
-  adj[s].push_back((edge){t, adj[t].size(), cap, 0});
-  adj[t].push_back((edge){s, adj[s].size() - 1, 0, 0});
+  adj[s].push_back((edge){t, (int)adj[t].size(), cap, 0});
+  adj[t].push_back((edge){s, (int)adj[s].size() - 1, 0, 0});
 }
 
 bool dinic_bfs(int nodes, int source, int sink) {
@@ -56,7 +56,7 @@ bool dinic_bfs(int nodes, int source, int sink) {
   q[qt++] = source;
   while (qh < qt) {
     int u = q[qh++];
-    for (int j = 0; j < adj[u].size(); j++) {
+    for (int j = 0; j < (int)adj[u].size(); j++) {
       edge & e = adj[u][j];
       if (dist[e.to] < 0 && e.f < e.cap) {
         dist[e.to] = dist[u] + 1;
@@ -69,7 +69,7 @@ bool dinic_bfs(int nodes, int source, int sink) {
 
 int dinic_dfs(int u, int f, int sink) {
   if (u == sink) return f;
-  for (; ptr[u] < adj[u].size(); ptr[u]++) {
+  for (; ptr[u] < (int)adj[u].size(); ptr[u]++) {
     edge &e = adj[u][ptr[u]];
     if (dist[e.to] == dist[u] + 1 && e.f < e.cap) {
       int df = dinic_dfs(e.to, min(f, e.cap - e.f), sink);

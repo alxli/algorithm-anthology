@@ -37,9 +37,9 @@ void add_line(long long m, long long b) {
 
 //precondition: x must be the maximum of all x queried so far
 long long min_y(long long x) {
-  if (ptr >= M.size()) ptr = (int)M.size() - 1;
-  while (ptr + 1 < M.size() && M[ptr + 1] * x + B[ptr + 1] <=
-                               M[ptr] * x + B[ptr]) {
+  if (ptr >= (int)M.size()) ptr = (int)M.size() - 1;
+  while (ptr + 1 < (int)M.size() && M[ptr + 1] * x + B[ptr + 1] <=
+                                    M[ptr] * x + B[ptr]) {
     ptr++;
   }
   return M[ptr] * x + B[ptr];

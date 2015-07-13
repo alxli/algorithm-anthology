@@ -49,9 +49,9 @@ vector<int> find_centers(int n) {
   int removed = leaves.size();
   while (removed < n) {
     vector<int> nleaves;
-    for (int i = 0; i < leaves.size(); i++) {
+    for (int i = 0; i < (int)leaves.size(); i++) {
       int u = leaves[i];
-      for (int j = 0; j < adj[u].size(); j++) {
+      for (int j = 0; j < (int)adj[u].size(); j++) {
         int v = adj[u][j];
         if (--degree[v] == 1)
           nleaves.push_back(v);
@@ -66,7 +66,7 @@ vector<int> find_centers(int n) {
 int find_centroid(int n, int u = 0, int p = -1) {
   int cnt = 1, v;
   bool good_center = true;
-  for (int j = 0; j < adj[u].size(); j++) {
+  for (int j = 0; j < (int)adj[u].size(); j++) {
     if ((v = adj[u][j]) == p) continue;
     int res = find_centroid(n, v, u);
     if (res >= 0) return res;
@@ -80,7 +80,7 @@ int find_centroid(int n, int u = 0, int p = -1) {
 
 pair<int, int> dfs(int u, int p, int depth) {
   pair<int, int> res = make_pair(depth, u);
-  for (int j = 0; j < adj[u].size(); j++)
+  for (int j = 0; j < (int)adj[u].size(); j++)
     if (adj[u][j] != p)
       res = max(res, dfs(adj[u][j], u, depth + 1));
   return res;
@@ -101,7 +101,7 @@ int main() {
   }
   vector<int> centers = find_centers(nodes);
   cout << "Center(s):";
-  for (int i = 0; i < centers.size(); i++)
+  for (int i = 0; i < (int)centers.size(); i++)
     cout << " " << centers[i];
   cout << "\nCentroid: " << find_centroid(nodes);
   cout << "\nDiameter: " << diameter() << "\n";

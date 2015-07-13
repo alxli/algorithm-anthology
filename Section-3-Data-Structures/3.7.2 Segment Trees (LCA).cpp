@@ -27,7 +27,7 @@ std::vector<int> adj[MAXN];
 void dfs(int u, int d) {
   depth[u] = d;
   dfs_order[counter++] = u;
-  for (int j = 0, v; j < adj[u].size(); j++) {
+  for (int j = 0, v; j < (int)adj[u].size(); j++) {
     if (depth[v = adj[u][j]] == -1) {
       dfs(v, d + 1);
       dfs_order[counter++] = u;

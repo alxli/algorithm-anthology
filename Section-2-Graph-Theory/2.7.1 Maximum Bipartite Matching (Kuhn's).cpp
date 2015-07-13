@@ -39,9 +39,9 @@ vector<int> adj[MAXN];
 
 bool dfs(int u) {
   vis[u] = true;
-  for (int j = 0; j < adj[u].size(); j++) {
+  for (int j = 0; j < (int)adj[u].size(); j++) {
     int v = match[adj[u][j]];
-    if (v == -1 || !vis[v] && dfs(v)) {
+    if (v == -1 || (!vis[v] && dfs(v))) {
       match[adj[u][j]] = u;
       return true;
     }

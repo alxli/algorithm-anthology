@@ -39,7 +39,7 @@ void bellman_ford(int nodes, int start) {
   }
   dist[start] = 0;
   for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < e.size(); j++) {
+    for (int j = 0; j < (int)e.size(); j++) {
       if (dist[e[j].v] > dist[e[j].u] + e[j].w) {
         dist[e[j].v] = dist[e[j].u] + e[j].w;
         pred[e[j].v] = e[j].u;
@@ -47,7 +47,7 @@ void bellman_ford(int nodes, int start) {
     }
   }
   //optional: report negative-weight cycles
-  for (int i = 0; i < e.size(); i++)
+  for (int i = 0; i < (int)e.size(); i++)
     if (dist[e[i].v] > dist[e[i].u] + e[i].w)
       throw std::runtime_error("Negative-weight found");
 }

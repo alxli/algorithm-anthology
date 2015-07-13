@@ -48,7 +48,7 @@ void bfs(int n1, int n2) {
   }
   for (int i = 0; i < qb; i++) {
     int u = q[i];
-    for (int j = 0; j < adj[u].size(); j++) {
+    for (int j = 0; j < (int)adj[u].size(); j++) {
       int v = match[adj[u][j]];
       if (v >= 0 && dist[v] < 0) {
         dist[v] = dist[u] + 1;
@@ -60,9 +60,9 @@ void bfs(int n1, int n2) {
 
 bool dfs(int u) {
   vis[u] = true;
-  for (int j = 0; j < adj[u].size(); j++) {
+  for (int j = 0; j < (int)adj[u].size(); j++) {
     int v = match[adj[u][j]];
-    if (v < 0 || !vis[v] && dist[v] == dist[u] + 1 && dfs(v)) {
+    if (v < 0 || (!vis[v] && dist[v] == dist[u] + 1 && dfs(v))) {
       match[adj[u][j]] = u;
       used[u] = true;
       return true;

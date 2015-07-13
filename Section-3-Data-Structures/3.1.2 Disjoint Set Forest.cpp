@@ -93,9 +93,9 @@ int main() {
   cout << ", Sets: " << d.sets() << endl;
   vector<vector<char> > s = d.get_all_sets();
   cout << "[";
-  for (int i = 0; i < s.size(); i++) {
+  for (int i = 0; i < (int)s.size(); i++) {
     cout << (i > 0 ? ",[" : "[");
-    for (int j = 0; j < s[i].size(); j++)
+    for (int j = 0; j < (int)s[i].size(); j++)
       cout << (j > 0 ? "," : "") << s[i][j];
     cout << "]";
   }

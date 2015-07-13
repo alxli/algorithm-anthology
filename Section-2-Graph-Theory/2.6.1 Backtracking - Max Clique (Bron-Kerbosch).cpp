@@ -44,7 +44,7 @@ bool adj[MAXN][MAXN];
 
 int rec(int nodes, bits & curr, bits & pool, bits & excl) {
   if (pool.none() && excl.none()) return curr.count();
-  int ans = 0, u;
+  int ans = 0, u = 0;
   for (int v = 0; v < nodes; v++)
     if (pool[v] || excl[v]) u = v;
   for (int v = 0; v < nodes; v++) {

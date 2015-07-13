@@ -46,7 +46,7 @@ vector<int> euler_cycle_directed(vector<int> adj[], int u) {
   while (!stack.empty()) {
     u = stack.back();
     stack.pop_back();
-    while (cur_edge[u] < adj[u].size()) {
+    while (cur_edge[u] < (int)adj[u].size()) {
       stack.push_back(u);
       u = adj[u][cur_edge[u]++];
     }
@@ -63,7 +63,7 @@ vector<int> euler_cycle_undirected(vector<int> adj[], int u) {
   while (!stack.empty()) {
     u = stack.back();
     stack.pop_back();
-    while (cur_edge[u] < adj[u].size()) {
+    while (cur_edge[u] < (int)adj[u].size()) {
       int v = adj[u][cur_edge[u]++];
       if (!used[min(u, v)][max(u, v)]) {
         used[min(u, v)][max(u, v)] = 1;
@@ -91,13 +91,13 @@ int main() {
 
   cycle = euler_cycle_directed(g1, 0);
   cout << "Eulerian cycle from 0 (directed):";
-  for (int i = 0; i < cycle.size(); i++)
+  for (int i = 0; i < (int)cycle.size(); i++)
     cout << " " << cycle[i];
   cout << "\n";
 
   cycle = euler_cycle_undirected(g2, 2);
   cout << "Eulerian cycle from 2 (undirected):";
-  for (int i = 0; i < cycle.size(); i++)
+  for (int i = 0; i < (int)cycle.size(); i++)
     cout << " " << cycle[i];
   cout << "\n";
   return 0;

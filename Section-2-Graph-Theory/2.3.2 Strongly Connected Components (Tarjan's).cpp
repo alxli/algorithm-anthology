@@ -68,7 +68,7 @@ void dfs(int u) {
   stack.push_back(u);
   bool is_component_root = true;
   int v;
-  for (int j = 0; j < adj[u].size(); j++) {
+  for (int j = 0; j < (int)adj[u].size(); j++) {
     if (!vis[v = adj[u][j]]) dfs(v);
     if (lowlink[u] > lowlink[v]) {
       lowlink[u] = lowlink[v];
@@ -104,9 +104,9 @@ int main() {
     adj[u].push_back(v);
   }
   tarjan(nodes);
-  for (int i = 0; i < scc.size(); i++) {
+  for (int i = 0; i < (int)scc.size(); i++) {
     cout << "Component:";
-    for (int j = 0; j < scc[i].size(); j++)
+    for (int j = 0; j < (int)scc[i].size(); j++)
       cout << " " << scc[i][j];
     cout << "\n";
   }

@@ -133,7 +133,7 @@ using namespace std;
 int main() {
   map<int, int> m;
   skip_list<int, int> s;
-  for (int i = 0; i < 1000000; i++) {
+  for (int i = 0; i < 50000; i++) {
     int op = rand() % 3;
     int val1 = rand(), val2 = rand();
     if (op == 0) {
@@ -144,7 +144,7 @@ int main() {
       m.erase(val1);
       s.erase(val1);
     } else if (op == 2) {
-      assert(m.count(val1) == s.count(val1));
+      assert(s.count(val1) == (int)m.count(val1));
       if (m.count(val1)) {
         assert(m[val1] == *s.find(val1));
       }

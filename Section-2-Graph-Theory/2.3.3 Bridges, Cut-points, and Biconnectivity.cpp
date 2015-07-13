@@ -76,7 +76,7 @@ void dfs(int u, int p) {
   stack.push_back(u);
   int v, children = 0;
   bool cutpoint = false;
-  for (int j = 0; j < adj[u].size(); j++) {
+  for (int j = 0; j < (int)adj[u].size(); j++) {
     if ((v = adj[u][j]) == p) continue;
     if (vis[v]) {
       //lowlink[u] = min(lowlink[u], lowlink[v]);
@@ -121,11 +121,11 @@ void tarjan(int nodes) {
 void get_block_tree(int nodes) {
   fill(comp, comp + nodes, 0);
   for (int i = 0; i < nodes; i++) bcc_forest[i].clear();
-  for (int i = 0; i < bcc.size(); i++)
-    for (int j = 0; j < bcc[i].size(); j++)
+  for (int i = 0; i < (int)bcc.size(); i++)
+    for (int j = 0; j < (int)bcc[i].size(); j++)
       comp[bcc[i][j]] = i;
   for (int i = 0; i < nodes; i++)
-    for (int j = 0; j < adj[i].size(); j++)
+    for (int j = 0; j < (int)adj[i].size(); j++)
       if (comp[i] != comp[adj[i][j]])
         bcc_forest[comp[i]].push_back(comp[adj[i][j]]);
 }
@@ -140,23 +140,23 @@ int main() {
   }
   tarjan(nodes);
   cout << "Cut-points:";
-  for (int i = 0; i < cutpoints.size(); i++)
+  for (int i = 0; i < (int)cutpoints.size(); i++)
     cout << " " << cutpoints[i];
   cout << "\nBridges:\n";
-  for (int i = 0; i < bridges.size(); i++)
+  for (int i = 0; i < (int)bridges.size(); i++)
     cout << bridges[i].first << " " << bridges[i].second << "\n";
   cout << "Edge-Biconnected Components:\n";
-  for (int i = 0; i < bcc.size(); i++) {
+  for (int i = 0; i < (int)bcc.size(); i++) {
     cout << "Component:";
-    for (int j = 0; j < bcc[i].size(); j++)
+    for (int j = 0; j < (int)bcc[i].size(); j++)
       cout << " " << bcc[i][j];
     cout << "\n";
   }
   get_block_tree(nodes);
   cout << "Adjacency List for Block Forest:\n";
-  for (int i = 0; i < bcc.size(); i++) {
+  for (int i = 0; i < (int)bcc.size(); i++) {
     cout << i << " =>";
-    for (int j = 0; j < bcc_forest[i].size(); j++)
+    for (int j = 0; j < (int)bcc_forest[i].size(); j++)
       cout << " " << bcc_forest[i][j];
     cout << "\n";
   }
