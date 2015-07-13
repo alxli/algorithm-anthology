@@ -44,7 +44,7 @@ std::vector<int> gen_primes_linear(int n) {
       lp[i] = i;
       res.push_back(i);
     }
-    for (int j = 0; j < res.size(); j++) {
+    for (int j = 0; j < (int)res.size(); j++) {
       if (res[j] > lp[i] || i * res[j] > n)
         break;
       lp[i * res[j]] = res[j];

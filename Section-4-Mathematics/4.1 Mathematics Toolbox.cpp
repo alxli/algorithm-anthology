@@ -70,6 +70,7 @@ Another way is using unions, but this is non-portable
 depending on endianess of the platform. Unfortunately, we
 cannot find the signbit of long doubles using the method
 below because there is no corresponding 96-bit integer type.
+Note that this will cause complaints with the compiler.
 
 copysign(x, y) returns a number with the magnitude of x but
 the sign of y.
@@ -194,9 +195,9 @@ double erf(double x) {
   int j = 1;
   do {
     term *= xsqr / j;
-    sum -= term / (2*j++ + 1);
+    sum -= term / (2 * j++ + 1);
     term *= xsqr / j;
-    sum += term / (2*j++ + 1);
+    sum += term / (2 * j++ + 1);
   } while (fabs(term) / sum > rel_error);
   return 1.128379167095512574 * sum; //1.128 ~ 2/sqrt(pi)
 }
@@ -204,14 +205,14 @@ double erf(double x) {
 double erfc(double x) {
   if (fabs(x) < 2.2) return 1.0 - erf(x);
   if (signbit(x)) return 2.0 - erfc(-x);
-  double a = 1, b = x, c = x, d = x*x + 0.5, q1, q2, n = 1.0, t;
+  double a = 1, b = x, c = x, d = x * x + 0.5, q1, q2 = 0, n = 1.0, t;
   do {
-    t = a*n + b*x; a = b; b = t;
-    t = c*n + d*x; c = d; d = t;
+    t = a * n + b * x; a = b; b = t;
+    t = c * n + d * x; c = d; d = t;
     n += 0.5;
     q1 = q2;
     q2 = b / d;
-  } while (fabs(q1 - q2)/q2 > rel_error);
+  } while (fabs(q1 - q2) / q2 > rel_error);
   return 0.564189583547756287 * exp(-x*x) * q2; //0.564 ~ 1/sqrt(pi)
 }
 
@@ -229,7 +230,7 @@ double lgamma(double x);
 double tgamma(double x) {
   if (x <= 0.0) return NaN;
   static const double gamma = 0.577215664901532860606512090;
-  if (x < 1e-3) return 1.0/(x*(1.0 + gamma*x));
+  if (x < 1e-3) return 1.0 / (x * (1.0 + gamma * x));
   if (x < 12.0) {
     double y = x;
     int n = 0;
@@ -250,15 +251,15 @@ double tgamma(double x) {
     };
     double num = 0.0, den = 1.0, z = y - 1;
     for (int i = 0; i < 8; i++) {
-      num = (num + p[i])*z;
-      den = den*z + q[i];
+      num = (num + p[i]) * z;
+      den = den * z + q[i];
     }
-    double result = num/den + 1.0;
+    double result = num / den + 1.0;
     if (arg_was_less_than_one) result /= (y - 1.0);
     else for (int i = 0; i < n; i++) result *= y++;
     return result;
   }
-  return (x > 171.624) ? DBL_MAX*2.0 : exp(lgamma(x));
+  return (x > 171.624) ? DBL_MAX * 2.0 : exp(lgamma(x));
 }
 
 double lgamma(double x) {
@@ -268,10 +269,10 @@ double lgamma(double x) {
     1.0/12.0, -1.0/360.0, 1.0/1260.0, -1.0/1680.0, 1.0/1188.0,
     -691.0/360360.0, 1.0/156.0, -3617.0/122400.0
   };
-  double z = 1.0/(x*x), sum = c[7];
-  for (int i = 6; i >= 0; i--) sum = sum*z + c[i];
+  double z = 1.0 / (x * x), sum = c[7];
+  for (int i = 6; i >= 0; i--) sum = sum * z + c[i];
   static const double halflog2pi = 0.91893853320467274178032973640562;
-  return (x - 0.5)*log(x) - x + halflog2pi + sum/x;
+  return (x - 0.5) * log(x) - x + halflog2pi + sum/x;
 }
 
 /*
@@ -291,12 +292,12 @@ then convert_base(x, 5, 3) returns {1, 1, 0, 2} (1102 in base 2).
 
 std::vector<int> convert_base(const std::vector<int> & x, int a, int b) {
   unsigned long long base10 = 0;
-  for (int i = 0; i < x.size(); i++)
+  for (int i = 0; i < (int)x.size(); i++)
     base10 += x[i] * pow(a, x.size() - i - 1);
   int N = ceil(log(base10 + 1) / log(b));
   std::vector<int> baseb;
   for (int i = 1; i <= N; i++)
-    baseb.push_back(int(base10/pow(b, N - i)) % b);
+    baseb.push_back(int(base10 / pow(b, N - i)) % b);
   return baseb;
 }
 
@@ -317,7 +318,8 @@ Integer to Roman Numerals Conversion
 
 Given an integer x, this function returns the Roman numeral representation
 of x as a C++ string. More 'M's are appended to the front of the resulting
-string if x is greater than 1000. e.g. to_roman(1234) returns "CCXXXIV"
+string if x is greater than 1000. e.g. to_roman(1234) returns "MCCXXXIV"
+and to_roman(5678) returns "MMMMMDCLXXVIII".
 
 */
 
@@ -325,7 +327,9 @@ std::string to_roman(unsigned int x) {
   static std::string h[] = {"","C","CC","CCC","CD","D","DC","DCC","DCCC","CM"};
   static std::string t[] = {"","X","XX","XXX","XL","L","LX","LXX","LXXX","XC"};
   static std::string o[] = {"","I","II","III","IV","V","VI","VII","VIII","IX"};
-  return std::string(x/1000, 'M') + h[(x %= 1000)/100] + t[x/10%10] + o[x%10];
+  std::string res(x / 1000, 'M');
+  x %= 1000;
+  return res + h[x / 100] + t[x / 10 % 10] + o[x % 10];
 }
 
 /*** Example Usage ***/
@@ -336,7 +340,6 @@ std::string to_roman(unsigned int x) {
 using namespace std;
 
 int main() {
-
   cout << "PI: " << PI << "\n";
   cout << "E: " << E << "\n";
   cout << "sqrt(2): " << root2 << "\n";
@@ -378,7 +381,7 @@ int main() {
   vector<int> baseb = convert_base(basea, a, b);
   assert(equal(baseb.begin(), baseb.end(), base10digs));
 
-  assert(to_roman(1234) == "CCXXXIV");
-
+  assert(to_roman(1234) == "MCCXXXIV");
+  assert(to_roman(5678) == "MMMMMDCLXXVIII");
   return 0;
 }

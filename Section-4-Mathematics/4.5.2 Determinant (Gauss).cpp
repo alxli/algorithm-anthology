@@ -28,7 +28,7 @@ typedef std::vector<std::vector<double> > vvd;
 
 double det(vvd a) {
   int n = a.size();
-  assert(!a.empty() && n == a[0].size());
+  assert(!a.empty() && n == (int)a[0].size());
   double res = 1;
   std::vector<bool> used(n, false);
   for (int i = 0; i < n; i++) {
@@ -74,7 +74,7 @@ template<class T> inline T _abs(const T & x) {
 
 long long det(const vvi & a) {
   int n = a.size();
-  assert(!a.empty() && n == a[0].size());
+  assert(!a.empty() && n == (int)a[0].size());
   long long b[n][n], det = 1;
   for (int i = 0; i < n; i++)
     for (int j = 0; j < n; j++) b[i][j] = a[i][j];

@@ -87,7 +87,7 @@ double getu(const vvd & lu, int i, int j) {
 //Precondition: A is square matrix.
 double det(const vvd & a) {
   int n = a.size(), detsign;
-  assert(!a.empty() && n == a[0].size());
+  assert(!a.empty() && n == (int)a[0].size());
   vvd lu = lu_decompose(a, &detsign);
   double det = 1;
   for (int i = 0; i < n; i++)
@@ -105,7 +105,7 @@ Returns: an n by m matrix X such that A*X = B.
 
 vvd solve_system(const vvd & a, const vvd & b) {
   int n = b.size(), m = b[0].size();
-  assert(!a.empty() && n == a.size() && n == a[0].size());
+  assert(!a.empty() && n == (int)a.size() && n == (int)a[0].size());
   int detsign, p[a.size()];
   vvd lu = lu_decompose(a, &detsign, p);
   //forward substitute for Y in L*Y = B
@@ -147,7 +147,7 @@ Precondition: A is a square and det(A) != 0.
 
 vvd inverse(const vvd & a) {
   int n = a.size();
-  assert(!a.empty() && n == a[0].size());
+  assert(!a.empty() && n == (int)a[0].size());
   vvd I(n, vd(n));
   for (int i = 0; i < n; i++) I[i][i] = 1;
   return solve_system(a, I);
@@ -161,9 +161,9 @@ using namespace std;
 
 void print(const vvd & m) {
   cout << "[";
-  for (int i = 0; i < m.size(); i++) {
+  for (int i = 0; i < (int)m.size(); i++) {
     cout << (i > 0 ? ",[" : "[");
-    for (int j = 0; j < m[0].size(); j++)
+    for (int j = 0; j < (int)m[0].size(); j++)
       cout << (j > 0 ? "," : "") << m[i][j];
     cout << "]";
   }
@@ -172,14 +172,14 @@ void print(const vvd & m) {
 
 void printlu(const vvd & lu) {
   printf("L:\n");
-  for (int i = 0; i < lu.size(); i++) {
-    for (int j = 0; j < lu[0].size(); j++)
+  for (int i = 0; i < (int)lu.size(); i++) {
+    for (int j = 0; j < (int)lu[0].size(); j++)
       printf("%10.5lf ", getl(lu, i, j));
     printf("\n");
   }
   printf("U:\n");
-  for (int i = 0; i < lu.size(); i++) {
-    for (int j = 0; j < lu[0].size(); j++)
+  for (int i = 0; i < (int)lu.size(); i++) {
+    for (int j = 0; j < (int)lu[0].size(); j++)
       printf("%10.5lf ", getu(lu, i, j));
     printf("\n");
   }

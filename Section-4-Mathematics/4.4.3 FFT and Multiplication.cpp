@@ -99,7 +99,7 @@ vcd fft(const vcd & v, bool inverse = false) {
     res.swap(tmp);
   }
   if (inverse) {
-    for (int i = 0; i < res.size(); i++) res[i] /= v.size();
+    for (int i = 0; i < (int)res.size(); i++) res[i] /= v.size();
     std::reverse(res.begin() + 1, res.end());
   }
   return res;
@@ -111,8 +111,8 @@ vll mul(const vll & va, const vll & vb) {
   int len = 32 - __builtin_clz(std::max(va.size(), vb.size()) - 1);
   len = 1 << (len + 1);
   vcd a(len), b(len);
-  for (int i = 0; i < va.size(); i++) a[i] = cd(va[i], 0);
-  for (int i = 0; i < vb.size(); i++) b[i] = cd(vb[i], 0);
+  for (int i = 0; i < (int)va.size(); i++) a[i] = cd(va[i], 0);
+  for (int i = 0; i < (int)vb.size(); i++) b[i] = cd(vb[i], 0);
   a = fft(a);
   b = fft(b);
   for (int i = 0; i < len; i++) {
@@ -144,7 +144,7 @@ std::string mul(const std::string & as, const std::string & bs) {
   }
   vll c = mul(a, b);
   long long carry = 0;
-  for (int i = 0; i < c.size(); i++) {
+  for (int i = 0; i < (int)c.size(); i++) {
     c[i] += carry;
     carry = c[i] / base;
     c[i] %= base;

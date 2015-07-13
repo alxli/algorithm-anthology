@@ -174,8 +174,8 @@ using namespace std;
 
 int main() {
   table t = binomial_table(10);
-  for (int i = 0; i < t.size(); i++) {
-    for (int j = 0; j < t[i].size(); j++)
+  for (int i = 0; i < (int)t.size(); i++) {
+    for (int j = 0; j < (int)t[i].size(); j++)
       cout << t[i][j] << " ";
     cout << "\n";
   }

@@ -2,13 +2,12 @@
 
 4.6.2 - Complex Root Finding (Laguerre's Method)
 
-Laguerre's method can be used to not only find complex
-roots of a polynomial, the polynomial may also have complex
-coefficients. From extensive empirical study, Laguerre's
-method is observed to be very close to being a "sure-fire"
-method, as it is almost guaranteed to always converge to
-some root of the polynomial no matter what initial guess
-is chosen.
+Laguerre's method can be used to not only find complex roots of
+a polynomial, the polynomial may also have complex coefficients.
+From extensive empirical study, Laguerre's method is observed to
+be very close to being a "sure-fire" method, as it is almost
+guaranteed to always converge to some root of the polynomial
+regardless of what initial guess is chosen.
 
 */
 
@@ -85,7 +84,7 @@ std::vector<cdouble> find_all_roots(const poly & p) {
 using namespace std;
 
 void print_roots(vector<cdouble> roots) {
-  for (int i = 0; i < roots.size(); i++) {
+  for (int i = 0; i < (int)roots.size(); i++) {
     printf("(%9.5lf, ", (double)roots[i].real());
     printf("%9.5lf)\n", (double)roots[i].imag());
   }

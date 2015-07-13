@@ -120,11 +120,11 @@ int main() {
     cout << "No solution.\n";
   } else {
     double solval = c[n];
-    for (int i = 0; i < x.size(); i++)
+    for (int i = 0; i < (int)x.size(); i++)
       solval += c[i] * x[i];
     cout << "Solution = " << solval;
     cout << " at (" << x[0];
-    for (int i = 1; i < x.size(); i++)
+    for (int i = 1; i < (int)x.size(); i++)
       cout << ", " << x[i];
     cout << ").\n";
   }

@@ -30,7 +30,7 @@ class abstract_enumeration {
 public:
   long long to_number(const std::vector<int> & seq) {
     long long res = 0;
-    for (int i = 0; i < seq.size(); i++) {
+    for (int i = 0; i < (int)seq.size(); i++) {
       std::vector<int> pre(seq.begin(), seq.end());
       pre.resize(i + 1);
       for (pre[i] = 0; pre[i] < seq[i]; ++pre[i])
@@ -41,7 +41,7 @@ public:
 
   std::vector<int> from_number(long long x) {
     std::vector<int> seq(length);
-    for (int i = 0; i < seq.size(); i++) {
+    for (int i = 0; i < (int)seq.size(); i++) {
       std::vector<int> pre(seq.begin(), seq.end());
       pre.resize(i + 1);
       for (pre[i] = 0; pre[i] < range; ++pre[i]) {
@@ -122,10 +122,10 @@ class partitions: public abstract_enumeration {
 
   long long count(const std::vector<int> & pre) {
     int size = pre.size(), sum = 0;
-    for (int i = 0; i < pre.size(); i++) sum += pre[i];
+    for (int i = 0; i < (int)pre.size(); i++) sum += pre[i];
     if (sum == range - 1) return 1;
-    if (sum > range - 1 || size > 0 && pre[size - 1] == 0 ||
-        size >= 2 && pre[size - 1] > pre[size - 2]) return 0;
+    if (sum > range - 1 || (size > 0 && pre[size - 1] == 0) ||
+        (size >= 2 && pre[size - 1] > pre[size - 2])) return 0;
     int last = size > 0 ? pre[size - 1] : range - 1;
     return p[range - 1 - sum][last];
   }
@@ -137,7 +137,7 @@ class partitions: public abstract_enumeration {
 using namespace std;
 
 void print(const std::vector<int> & v) {
-  for (int i = 0; i < v.size(); i++)
+  for (int i = 0; i < (int)v.size(); i++)
     cout << v[i] << " ";
   cout << "\n";
 }

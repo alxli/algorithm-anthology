@@ -38,7 +38,7 @@ const Double NaN = std::numeric_limits<Double>::quiet_NaN();
 
 Double eval(const poly & p, Double x) {
   Double res = 0;
-  for (int i = 0; i < p.size(); i++)
+  for (int i = 0; i < (int)p.size(); i++)
     res += p[i].first * powl(x, p[i].second);
   return res;
 }
@@ -57,14 +57,14 @@ Double find_root(const poly & p, Double x1, Double x2) {
 
 std::vector<Double> find_all_roots(const poly & p) {
   poly dif;
-  for (int i = 0; i < p.size(); i++)
+  for (int i = 0; i < (int)p.size(); i++)
     if (p[i].second > 0)
       dif.push_back(std::make_pair(p[i].first * p[i].second, p[i].second - 1));
   if (dif.empty()) return std::vector<Double>();
   std::vector<Double> res, r = find_all_roots(dif);
   r.insert(r.begin(), -inf);
   r.push_back(inf);
-  for (int i = 0; i < r.size() - 1; i++) {
+  for (int i = 0; i < (int)r.size() - 1; i++) {
     Double root = find_root(p, r[i], r[i + 1]);
     if (root != root) continue; //NaN, not found
     if (res.empty() || root != res.back())
@@ -92,7 +92,7 @@ int main() {
     cout << "NO REAL ROOTS\n";
   } else {
     cout.precision(9);
-    for (int i = 0; i < sol.size(); i++)
+    for (int i = 0; i < (int)sol.size(); i++)
       cout << fixed << sol[i] << "\n";
   }
   return 0;

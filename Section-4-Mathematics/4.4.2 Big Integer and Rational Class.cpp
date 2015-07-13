@@ -25,13 +25,14 @@ operations are needed.
 
 */
 
-#include <algorithm> /* std::max() */
+#include <algorithm> /* std::max(), std::swap() */
 #include <cmath>     /* sqrt() */
 #include <cstdlib>   /* rand() */
 #include <iomanip>   /* std::setw(), std::setfill() */
 #include <istream>
 #include <ostream>
 #include <sstream>
+#include <stdexcept> /* std::runtime_error() */
 #include <string>
 #include <utility>   /* std::pair */
 #include <vector>
@@ -62,7 +63,7 @@ struct bigint {
     sign = 1;
     a.clear();
     int pos = 0;
-    while (pos < s.size() && (s[pos] == '-' || s[pos] == '+')) {
+    while (pos < (int)s.size() && (s[pos] == '-' || s[pos] == '+')) {
       if (s[pos] == '-') sign = -sign;
       pos++;
     }
@@ -91,9 +92,9 @@ struct bigint {
     if (sign == v.sign) {
       bigint res = v;
       int carry = 0;
-      for (int i = 0; i < std::max(a.size(), v.a.size()) || carry; i++) {
-        if (i == res.a.size()) res.a.push_back(0);
-        res.a[i] += carry + (i < a.size() ? a[i] : 0);
+      for (int i = 0; i < (int)std::max(a.size(), v.a.size()) || carry; i++) {
+        if (i == (int)res.a.size()) res.a.push_back(0);
+        res.a[i] += carry + (i < (int)a.size() ? a[i] : 0);
         carry = res.a[i] >= base;
         if (carry) res.a[i] -= base;
       }
@@ -106,8 +107,8 @@ struct bigint {
     if (sign == v.sign) {
       if (abs() >= v.abs()) {
         bigint res(*this);
-        for (int i = 0, carry = 0; i < v.a.size() || carry; i++) {
-          res.a[i] -= carry + (i < v.a.size() ? v.a[i] : 0);
+        for (int i = 0, carry = 0; i < (int)v.a.size() || carry; i++) {
+          res.a[i] -= carry + (i < (int)v.a.size() ? v.a[i] : 0);
           carry = res.a[i] < 0;
           if (carry) res.a[i] += base;
         }
@@ -121,8 +122,8 @@ struct bigint {
 
   void operator *= (int v) {
     if (v < 0) sign = -sign, v = -v;
-    for (int i = 0, carry = 0; i < a.size() || carry; i++) {
-      if (i == a.size()) a.push_back(0);
+    for (int i = 0, carry = 0; i < (int)a.size() || carry; i++) {
+      if (i == (int)a.size()) a.push_back(0);
       long long cur = a[i] * (long long)v + carry;
       carry = (int)(cur / base);
       a[i] = (int)(cur % base);
@@ -140,10 +141,10 @@ struct bigint {
   static vint convert_base(const vint & a, int l1, int l2) {
     vll p(std::max(l1, l2) + 1);
     p[0] = 1;
-    for (int i = 1; i < p.size(); i++) p[i] = p[i - 1] * 10;
+    for (int i = 1; i < (int)p.size(); i++) p[i] = p[i - 1] * 10;
     vint res;
     long long cur = 0;
-    for (int i = 0, cur_digits = 0; i < a.size(); i++) {
+    for (int i = 0, cur_digits = 0; i < (int)a.size(); i++) {
       cur += a[i] * p[cur_digits];
       cur_digits += l1;
       while (cur_digits >= l2) {
@@ -175,11 +176,11 @@ struct bigint {
     for (int i = 0; i < k; i++) a2[i] += a1[i];
     for (int i = 0; i < k; i++) b2[i] += b1[i];
     vll r = karatsuba_multiply(a2, b2);
-    for (int i = 0; i < a1b1.size(); i++) r[i] -= a1b1[i];
-    for (int i = 0; i < a2b2.size(); i++) r[i] -= a2b2[i];
-    for (int i = 0; i < r.size(); i++) res[i + k] += r[i];
-    for (int i = 0; i < a1b1.size(); i++) res[i] += a1b1[i];
-    for (int i = 0; i < a2b2.size(); i++) res[i + n] += a2b2[i];
+    for (int i = 0; i < (int)a1b1.size(); i++) r[i] -= a1b1[i];
+    for (int i = 0; i < (int)a2b2.size(); i++) r[i] -= a2b2[i];
+    for (int i = 0; i < (int)r.size(); i++) res[i + k] += r[i];
+    for (int i = 0; i < (int)a1b1.size(); i++) res[i] += a1b1[i];
+    for (int i = 0; i < (int)a2b2.size(); i++) res[i + n] += a2b2[i];
     return res;
   }
 
@@ -199,7 +200,7 @@ struct bigint {
     vll c = karatsuba_multiply(a, b);
     bigint res;
     res.sign = sign * v.sign;
-    for (int i = 0, carry = 0; i < c.size(); i++) {
+    for (int i = 0, carry = 0; i < (int)c.size(); i++) {
       long long cur = c[i] + carry;
       res.a.push_back((int)(cur % _base));
       carry = (int)(cur / _base);
@@ -320,12 +321,6 @@ struct bigint {
     return res;
   }
 
-  static bigint rand(int len) {
-    std::string s(1, '1' + (::rand() % 9));
-    for (int i = 1; i < len; i++) s += '0' + (::rand() % 10);
-    return bigint(s);
-  }
-
   friend bigint abs(const bigint & a) {
     return a.abs();
   }
@@ -434,6 +429,13 @@ struct bigint {
     ss >> res;
     return res;
   }
+
+  static bigint rand(int len) {
+    if (len == 0) return bigint(0);
+    std::string s(1, '1' + (::rand() % 9));
+    for (int i = 1; i < len; i++) s += '0' + (::rand() % 10);
+    return bigint(s);
+  }
 };
 
 template<class T> bool operator > (const T & a, const bigint & b) { return bigint(a) > b; }
@@ -448,7 +450,7 @@ template<class T> bigint operator ^ (const T & a, const bigint & b) { return big
 
 /*
 
-Exclude templates for *, /, and % to force a user decision between algorithms:
+Exclude *, /, and % to force a user decision between int and bigint algorithms
 
 bigint operator * (bigint a, bigint b) vs. bigint operator * (bigint a, int b)
 bigint operator / (bigint a, bigint b) vs. bigint operator / (bigint a, int b)
@@ -465,6 +467,8 @@ struct rational {
 
   template<class T1, class T2>
   rational(const T1 & n, const T2 & d): num(n), den(d) {
+    if (den == 0)
+      throw std::runtime_error("Rational division by zero.");
     if (den < 0) {
       num = -num;
       den = -den;
@@ -570,7 +574,27 @@ struct rational {
     out << r.num << "/" << r.den;
     return out;
   }
+
+  //rational in range [0, 1] with precision no greater than prec
+  static rational rand(int prec) {
+    rational r(bigint::rand(prec), bigint::rand(prec));
+    if (r.num > r.den) std::swap(r.num, r.den);
+    return r;
+  }
 };
+
+template<class T> bool operator > (const T & a, const rational & b) { return rational(a) > b; }
+template<class T> bool operator < (const T & a, const rational & b) { return rational(a) < b; }
+template<class T> bool operator >= (const T & a, const rational & b) { return rational(a) >= b; }
+template<class T> bool operator <= (const T & a, const rational & b) { return rational(a) <= b; }
+template<class T> bool operator == (const T & a, const rational & b) { return rational(a) == b; }
+template<class T> bool operator != (const T & a, const rational & b) { return rational(a) != b; }
+template<class T> rational operator + (const T & a, const rational & b) { return rational(a) + b;  }
+template<class T> rational operator - (const T & a, const rational & b) { return rational(a) - b;  }
+template<class T> rational operator * (const T & a, const rational & b) { return rational(a) * b;  }
+template<class T> rational operator / (const T & a, const rational & b) { return rational(a) / b;  }
+template<class T> rational operator % (const T & a, const rational & b) { return rational(a) % b;  }
+template<class T> rational operator ^ (const T & a, const rational & b) { return rational(a) ^ b;  }
 
 /*** Example Usage ***/
 
@@ -581,7 +605,7 @@ struct rational {
 using namespace std;
 
 int main() {
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < 20; i++) {
     int n = rand() % 100 + 1;
     bigint a = bigint::rand(n);
     bigint res = sqrt(a);
@@ -596,6 +620,7 @@ int main() {
     yy = b * (res + 1);
     assert(a >= xx && a < yy);
   }
+
   assert("995291497" ==
     nthroot(bigint("981298591892498189249182998429898124"), 4));
 
@@ -621,6 +646,7 @@ int main() {
   cout << fmod(-5.3, -1.7) << "\n";
   cout << rational(-53, 10) % rational(-17, 10) << "\n";
   cout << rational(-53, 10).abs() << "\n";
-  cout << (rational(-53, 10) ^ 200) << "\n";
+  cout << (rational(-53, 10) ^ 20) << "\n";
+  cout << rational::rand(20) << "\n";
   return 0;
 }

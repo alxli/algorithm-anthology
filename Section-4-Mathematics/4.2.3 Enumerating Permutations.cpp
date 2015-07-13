@@ -201,7 +201,7 @@ cycles decompose_into_cycles(int n, int a[]) {
 using namespace std;
 
 void printperm(const vector<int> & perm) {
-  for (int i = 0; i < perm.size(); i++)
+  for (int i = 0; i < (int)perm.size(); i++)
     cout << perm[i] << " ";
   cout << "\n";
 }
@@ -254,9 +254,9 @@ int main() {
     int n = 4, a[] = {3, 1, 0, 2};
     cout << "Decompose 0 2 1 3 into cycles:\n";
     cycles c = decompose_into_cycles(n, a);
-    for (int i = 0; i < c.size(); i++) {
+    for (int i = 0; i < (int)c.size(); i++) {
       cout << "Cycle " << i + 1 << ":";
-      for (int j = 0; j < c[i].size(); j++)
+      for (int j = 0; j < (int)c[i].size(); j++)
         cout << " " << c[i][j];
       cout << "\n";
     }

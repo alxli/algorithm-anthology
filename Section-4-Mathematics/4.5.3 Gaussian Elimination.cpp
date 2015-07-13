@@ -36,10 +36,13 @@ vd solve_system(vvd A) {
   vd x(n);
   if (n > m) goto fail;
   for (int k = 0; k < n; k++) {
-    double mv = 0; int mi;
+    double mv = 0;
+    int mi = -1;
     for (int i = k; i < m; i++)
-      if (mv < fabs(A[i][k]))
-        mv = fabs(A[mi = i][k]);
+      if (mv < fabs(A[i][k])) {
+        mv = fabs(A[i][k]);
+        mi = i;
+      }
     if (mv < eps) goto fail;
     for (int i = 0; i <= n; i++)
       std::swap(A[mi][i], A[k][i]);

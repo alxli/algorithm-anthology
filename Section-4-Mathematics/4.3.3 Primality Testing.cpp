@@ -108,14 +108,14 @@ bool is_prime_fast(long long n) {
   int s = 0;
   for (; ~d & 1; s++) d >>= 1;
   for (int i = 0; i < 7; i++) {
-    if (witnesses[i] > n - 2) break;
+    if (witnesses[i] > (uint64_t)n - 2) break;
     uint64_t x = powmod(witnesses[i], d, n);
-    if (x == 1 || x == n - 1) continue;
+    if (x == 1 || x == (uint64_t)n - 1) continue;
     bool flag = false;
     for (int j = 0; j < s; j++) {
       x = powmod(x, 2, n);
       if (x == 1) return false;
-      if (x == n - 1) {
+      if (x == (uint64_t)n - 1) {
         flag = true;
         break;
       }

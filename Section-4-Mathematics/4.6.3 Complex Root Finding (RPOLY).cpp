@@ -469,7 +469,7 @@ int main() {
   std::vector<root> roots = find_roots(degree, coeff);
   bool printed = false;
   cout.precision(6);
-  for (int i = 0; i < roots.size(); i++) {
+  for (int i = 0; i < (int)roots.size(); i++) {
     if (fabsl(roots[i].imag()) < LDBL_EPSILON) {
       cout << fixed << roots[i].real() << "\n";
       printed = true;

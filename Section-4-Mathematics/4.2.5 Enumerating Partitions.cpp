@@ -58,7 +58,7 @@ std::vector< std::vector<long long> >
   p(1, std::vector<long long>(1, 1)); //memoization
 
 long long partition_function(int a, int b) {
-  if (a >= p.size()) {
+  if (a >= (int)p.size()) {
     int old = p.size();
     p.resize(a + 1);
     p[0].resize(a + 1);
@@ -114,8 +114,8 @@ examples: rank_by_partition({1, 1, 1, 1}) => 0
 long long rank_by_partition(const std::vector<int> & p) {
   long long res = 0;
   int sum = 0;
-  for (int i = 0; i < p.size(); i++) sum += p[i];
-  for (int i = 0; i < p.size(); i++) {
+  for (int i = 0; i < (int)p.size(); i++) sum += p[i];
+  for (int i = 0; i < (int)p.size(); i++) {
     for (int j = 0; j < p[i]; j++)
       res += partition_function(sum, j);
     sum -= p[i];
@@ -156,7 +156,7 @@ void gen_increasing_partitons(int n, ReportFunction f) {
 using namespace std;
 
 void print(const vector<int> & v) {
-  for (int i = 0; i < v.size(); i++)
+  for (int i = 0; i < (int)v.size(); i++)
     cout << v[i] << " ";
   cout << "\n";
 }
