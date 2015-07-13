@@ -7,11 +7,9 @@ dependencies. This file will try to take advantage of previously defined
 classes, unlike the split-up sections which will be more portable in
 definitions (where, for example, cross() may be implemented with the
 formula in terms of x and y, instead of using the point arithmetic and
-cross() function previously defined).
-
-All of the functions below apply to a 2D cartesian coordinate system
-where the positive x directions points to the "right" and the positive y
-direction points "up".
+cross() function previously defined). All of the functions below apply
+to a 2D Cartesian coordinate system where the positive x directions
+points to the "right" and the positive y direction points "up".
 
 Sections will be split up after this file is finalized.
 
@@ -48,14 +46,14 @@ struct point {
   point() : x(0), y(0) {}
   point(const point & p) : x(p.x), y(p.y) {}
   point(const std::pair<double, double> & p) : x(p.first), y(p.second) {}
-  point(double a, double b) : x(a), y(b) {}
+  point(const double & a, const double & b) : x(a), y(b) {}
 
   bool operator < (const point & p) const {
     return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
   }
 
   bool operator > (const point & p) const {
-    return EQ(x, p.x) ? GT(y, p.y) : GT(x, p.x);
+    return EQ(x, p.x) ? LT(p.y, y) : LT(p.x, x);
   }
 
   bool operator == (const point & p) const { return EQ(x, p.x) && EQ(y, p.y); }
@@ -64,25 +62,25 @@ struct point {
   bool operator >= (const point & p) const { return !(*this < p); }
   point operator + (const point & p) const { return point(x + p.x, y + p.y); }
   point operator - (const point & p) const { return point(x - p.x, y - p.y); }
-  point operator + (double v) const { return point(x + v, y + v); }
-  point operator - (double v) const { return point(x - v, y - v); }
-  point operator * (double v) const { return point(x * v, y * v); }
-  point operator / (double v) const { return point(x / v, y / v); }
+  point operator + (const double & v) const { return point(x + v, y + v); }
+  point operator - (const double & v) const { return point(x - v, y - v); }
+  point operator * (const double & v) const { return point(x * v, y * v); }
+  point operator / (const double & v) const { return point(x / v, y / v); }
   point & operator += (const point & p) { x += p.x; y += p.y; return *this; }
   point & operator -= (const point & p) { x -= p.x; y -= p.y; return *this; }
-  point & operator += (double v) { x += v; y += v; return *this; }
-  point & operator -= (double v) { x -= v; y -= v; return *this; }
-  point & operator *= (double v) { x *= v; y *= v; return *this; }
-  point & operator /= (double v) { x /= v; y /= v; return *this; }
-  friend point operator + (double v, const point & p) { return p + v; }
-  friend point operator * (double v, const point & p) { return p * v; }
+  point & operator += (const double & v) { x += v; y += v; return *this; }
+  point & operator -= (const double & v) { x -= v; y -= v; return *this; }
+  point & operator *= (const double & v) { x *= v; y *= v; return *this; }
+  point & operator /= (const double & v) { x /= v; y /= v; return *this; }
+  friend point operator + (const double & v, const point & p) { return p + v; }
+  friend point operator * (const double & v, const point & p) { return p * v; }
 
   double norm() const { return x * x + y * y; }
   double abs() const { return sqrt(x * x + y * y); }
   double arg() const { return atan2(y, x); }
   double dot(const point & p) const { return x * p.x + y * p.y; }
   double cross(const point & p) const { return x * p.y - y * p.x; }
-  double proj(const point & p) const { return dot(p) / abs(); }
+  double proj(const point & p) const { return dot(p) / p.abs(); } //onto p
   point rot90() const { return point(-y, x); }
 
   //proportional unit vector of (x, y) such that x^2 + y^2 = 1
@@ -91,22 +89,22 @@ struct point {
   }
 
   //rotate t radians CW about origin
-  point rotateCW(double t) const {
+  point rotateCW(const double & t) const {
     return point(x * cos(t) + y * sin(t), y * cos(t) - x * sin(t));
   }
 
   //rotate t radians CCW about origin
-  point rotateCCW(double t) const {
+  point rotateCCW(const double & t) const {
     return point(x * cos(t) - y * sin(t), x * sin(t) + y * cos(t));
   }
 
   //rotate t radians CW about point p
-  point rotateCW(const point & p, double t) const {
+  point rotateCW(const point & p, const double & t) const {
     return (*this - p).rotateCW(t) + p;
   }
 
   //rotate t radians CCW about point p
-  point rotateCCW(const point & p, double t) const {
+  point rotateCCW(const point & p, const double & t) const {
     return (*this - p).rotateCCW(t) + p;
   }
 
@@ -139,21 +137,23 @@ struct line {
   double a, b, c;
 
   void normalize() {
-    if (a < 0 || (EQ(a, 0) && b < 0)) {
-      a = -a; b = -b; c = -c;
-    }
     if (!EQ(b, 0)) {
       a /= b; c /= b; b = 1;
+    } else {
+      c /= a; a = 1; b = 0;
     }
   }
 
-  line() : a(0), b(0), c(0) {} //invalid/uninitialized line
+  line(): a(0), b(0), c(0) {} //invalid or uninitialized line
 
-  line(double A, double B, double C) : a(A), b(B), c(C) {
+  line(const double & A, const double & B, const double & C) {
+    a = A;
+    b = B;
+    c = C;
     normalize();
   }
 
-  line(double slope, const point & p) {
+  line(const double & slope, const point & p) {
     a = -slope;
     b = 1;
     c = slope * p.x - p.y;
@@ -198,14 +198,14 @@ struct line {
 
   //solve for x, given y
   //for horizontal lines, either +inf, -inf, or nan is returned
-  double x(double y) const {
+  double x(const double & y) const {
     if (!valid() || EQ(a, 0)) return NaN; //invalid or horizontal
     return (-c - b * y) / a;
   }
 
   //solve for y, given x
   //for vertical lines, either +inf, -inf, or nan is returned
-  double y(double x) const {
+  double y(const double & x) const {
     if (!valid() || EQ(b, 0)) return NaN; //invalid or vertical
     return (-c - a * x) / b;
   }
@@ -263,7 +263,7 @@ double dist(const point & p, const point & a, const point & b) {
 }
 
 //like std::polar(), but returns a point instead of an std::complex
-point polar_point(double r, double theta) {
+point polar_point(const double & r, const double & theta) {
   return point(r * cos(theta), r * sin(theta));
 }
 
@@ -271,6 +271,12 @@ point polar_point(double r, double theta) {
 double polar_angle(const point & p) {
   double t = p.arg();
   return t < 0 ? t + 2 * PI : t;
+}
+
+//smallest angle formed by points aob (angle is at point o) in radians
+double angle(const point & a, const point & o, const point & b) {
+  point u(o - a), v(o - b);
+  return acos(u.dot(v) / (u.abs() * v.abs()));
 }
 
 //angle of line segment ab relative (CCW) to the +'ve x-axis in radians
@@ -326,14 +332,15 @@ const bool TOUCH_IS_INTERSECT = true;
 
 //does [l, h] contain m?
 //precondition: l <= h
-bool contain(double l, double m, double h) {
+bool contain(const double & l, const double & m, const double & h) {
   if (TOUCH_IS_INTERSECT) return LE(l, m) && LE(m, h);
   return LT(l, m) && LT(m, h);
 }
 
 //does [l1, h1] overlap with [l2, h2]?
 //precondition: l1 <= h1 and l2 <= h2
-bool overlap(double l1, double h1, double l2, double h2) {
+bool overlap(const double & l1, const double & h1,
+             const double & l2, const double & h2) {
   if (TOUCH_IS_INTERSECT) return LE(l1, h2) && LE(l2, h1);
   return LT(l1, h2) && LT(l2, h1);
 }
@@ -425,20 +432,23 @@ double triangle_area(const point & a, const point & b, const point & c) {
 
 //triangle area from its side lengths
 //precondition: a,b,c >= 0 and forms a valid triangle
-double triangle_area_sides(double a, double b, double c) {
+double triangle_area_sides(const double & a, const double & b,
+                           const double & c) {
   double s = (a + b + c) / 2.0;
   return sqrt(s * (s - a) * (s - b) * (s - c));
 }
 
 //triangle area from its medians (a median is a line segment
 //joining a vertex to the midpoint of the opposing side)
-double triangle_area_medians(double m1, double m2, double m3) {
+double triangle_area_medians(const double & m1, const double & m2,
+                             const double & m3) {
   return 4.0 * triangle_area_sides(m1, m2, m3) / 3.0;
 }
 
 //triangle area from its altitudes (an altitude is the shortest line
 //segment between a vertex and its possibly extended opposite side)
-double triangle_area_altitudes(double h1, double h2, double h3) {
+double triangle_area_altitudes(const double & h1, const double & h2,
+                               const double & h3) {
   if (EQ(h1, 0) || EQ(h2, 0) || EQ(h3, 0)) return 0;
   double x = h1 * h1, y = h2 * h2, z = h3 * h3;
   double v = 2.0 / (x * y) + 2.0 / (x * z) + 2.0 / (y * z);
@@ -450,8 +460,8 @@ double triangle_area_altitudes(double h1, double h2, double h3) {
 //and top right at (x + w, y + h)? Note that negative widths and heights
 //are supported, representing rectangles that span left (instead of right)
 //and down (instead of up), respectively, starting from (x, y).
-bool point_in_rectangle(const point & p, double x, double y,
-                                         double w, double h) {
+bool point_in_rectangle(const point & p, const double & x, const double & y,
+                                         const double & w, const double & h) {
   if (w < 0) return point_in_rectangle(p, x + w, y, -w, h);
   if (h < 0) return point_in_rectangle(p, x, y + h, w, -h);
   if (EDGE_IS_INSIDE)
@@ -561,9 +571,10 @@ struct circle {
   double h, k, r;
 
   circle(): h(0), k(0), r(0) {}
-  circle(double R): h(0), k(0), r(fabs(R)) {}
-  circle(double H, double K, double R): h(H), k(K), r(fabs(R)) {}
-  circle(const point & o, double R): h(o.x), k(o.y), r(fabs(R)) {}
+  circle(const double & R): h(0), k(0), r(fabs(R)) {}
+  circle(const point & o, const double & R): h(o.x), k(o.y), r(fabs(R)) {}
+  circle(const double & H, const double & K, const double & R):
+    h(H), k(K), r(fabs(R)) {}
 
   //circumcircle with the diameter equal to the distance from a to b
   circle(const point & a, const point & b) {
@@ -590,7 +601,7 @@ struct circle {
   //in the "normal" case, there will be 2 possible circles, one
   //centered at (h1, k1) and the other (h2, k2). Only one is used.
   //Note that (h1, k1) equals (h2, k2) if dist(a, b) = 2*r = d
-  circle(const point & a, const point & b, double R) {
+  circle(const point & a, const point & b, const double & R) {
     r = fabs(R);
     if (LE(r, 0) && a == b) { //circle is a point
       h = a.x; k = a.y; return;
@@ -773,18 +784,20 @@ using namespace std;
 
 int main() {
 #define pt point
-  pt a(0, 4);
-  cout << a.normalize().abs() << "\n";                    //1
-  cout << polar_point(5, 90 * DEG) << "\n";               //(0,5)
-  cout << polar_angle(pt(-10, -10)) * RAD << "\n";        //225
-  cout << a.rotateCW(pt(1, 1), 90 * DEG) << "\n";         //(4,2)
-  cout << a.rotateCCW(pt(2, 2), 90 * DEG) << "\n";        //(0,0)
-  cout << a.reflect(pt(-2, 0), pt(5, 0)) << "\n";         //(0,-4)
-  cout << dist(pt(-10, 0), pt(5, 6)) << "\n";             //16.1555
-  cout << dist(pt(-2, 4), pt(0, 3), pt(3, 0)) << "\n";    //2.23607
-  cout << dist(pt(-2, 4), line(1, 1, -3)) << "\n";        //0.707107
-  cout << angle_between(pt(10, 100), pt(-5, 12)) << "\n"; //0.49446
-  cout << turn(pt(1, 1), pt(1, 3), pt(0, 3)) << "\n";     //-1
+  pt p(-10, 3);
+  cout << (p + point(-3, 9) * 6 / 2 - point(-1, 1)) << "\n"; //(-18,29)
+  cout << p.norm() << "\n";                                  //109
+  cout << p.abs() << "\n";                                   //10.4403
+  cout << p.arg() << "\n";                                   //2.85014
+  cout << p.dot(point(3, 10)) << "\n";                       //0
+  cout << p.cross(point(10, -3)) << "\n";                    //0
+  cout << p.proj(point(-10, 0)) << "\n";                     //10
+  cout << p.rot90() << "\n";                                 //(-3,-10)
+  cout << p.normalize().abs() << "\n";                       //1
+  cout << p.rotateCW(point(1, 1), PI / 2) << "\n";           //(3,12)
+  cout << p.rotateCCW(point(2, 2), PI / 2) << "\n";          //(1,-10)
+  cout << p.reflect(point(0, 0)) << "\n";                    //(10,-3)
+  cout << p.reflect(point(-2, 0), point(5, 0)) << "\n";      //(-10,-3)
 
   line l(2, -5, -8);
   line para = line(2, -5, -8).parallel(pt(-6, -2));
