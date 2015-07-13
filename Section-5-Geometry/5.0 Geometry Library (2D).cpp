@@ -122,6 +122,21 @@ struct point {
     return r;
   }
 
+  friend double norm(const point & p) { return p.norm(); }
+  friend double abs(const point & p) { return p.abs(); }
+  friend double arg(const point & p) { return p.arg(); }
+  friend double dot(const point & p, const point & q) { return p.dot(q); }
+  friend double cross(const point & p, const point & q) { return p.cross(q); }
+  friend double proj(const point & p, const point & q) { return p.proj(q); }
+  friend point rot90(const point & p) { return p.rot90(); }
+  friend point normalize(const point & p) { return p.normalize(); }
+  friend point rotateCW(const point & p, const double & t) { return p.rotateCW(t); }
+  friend point rotateCCW(const point & p, const double & t) { return p.rotateCCW(t); }
+  friend point rotateCW(const point & p, const point & q, const double & t) { return p.rotateCW(q, t); }
+  friend point rotateCCW(const point & p, const point & q, const double & t) { return p.rotateCCW(q, t); }
+  friend point reflect(const point & p, const point & q) { return p.reflect(q); }
+  friend point reflect(const point & p, const point & a, const point & b) { return p.reflect(a, b); }
+
   friend std::ostream & operator << (std::ostream & out, const point & p) {
     out << "(";
     out << (fabs(p.x) < eps ? 0 : p.x) << ",";
@@ -185,7 +200,7 @@ struct line {
   //whether the line is initialized and normalized
   bool valid() const {
     if (EQ(a, 0)) return !EQ(b, 0);
-    return EQ(b, 0) || EQ(b, 1);
+    return EQ(b, 1) || (EQ(b, 0) && EQ(a, 1));
   }
 
   bool horizontal() const { return valid() && EQ(a, 0); }
@@ -244,22 +259,22 @@ struct line {
 };
 
 //distance and squared distance from point a to point b
-double dist(const point & a, const point & b) { return (b - a).abs(); }
-double dist2(const point & a, const point & b) { return (b - a).norm(); }
+double dist(const point & a, const point & b) { return abs(b - a); }
+double dist2(const point & a, const point & b) { return norm(b - a); }
 
 //minimum distance from point p to line l
 double dist(const point & p, const line & l) {
-  return fabs(l.a * p.x + l.b * p.y + l.c) / point(l.a, l.b).abs();
+  return fabs(l.a * p.x + l.b * p.y + l.c) / abs(point(l.a, l.b));
 }
 
 //minimum distance from point p to line segment ab
 double dist(const point & p, const point & a, const point & b) {
   if (a == b) return dist(p, a);
   point ab(b - a), ap(p - a);
-  double norm = ab.norm(), dot = ab.dot(ap);
-  if (LE(dot, 0) || EQ(norm, 0)) return ap.abs();
-  if (GE(dot, norm)) return (ap - ab).abs();
-  return (ap - ab * (dot / norm)).abs();
+  double n = norm(ab), d = ab.dot(ap);
+  if (LE(d, 0) || EQ(n, 0)) return abs(ap);
+  if (GE(d, n)) return abs(ap - ab);
+  return abs(ap - ab * (d / n));
 }
 
 //like std::polar(), but returns a point instead of an std::complex
@@ -269,14 +284,14 @@ point polar_point(const double & r, const double & theta) {
 
 //angle of segment (0, 0) to p, relative (CCW) to the +'ve x-axis in radians
 double polar_angle(const point & p) {
-  double t = p.arg();
+  double t = arg(p);
   return t < 0 ? t + 2 * PI : t;
 }
 
 //smallest angle formed by points aob (angle is at point o) in radians
 double angle(const point & a, const point & o, const point & b) {
   point u(o - a), v(o - b);
-  return acos(u.dot(v) / (u.abs() * v.abs()));
+  return acos(u.dot(v) / (abs(u) * abs(v)));
 }
 
 //angle of line segment ab relative (CCW) to the +'ve x-axis in radians
@@ -505,7 +520,7 @@ bool cw_comp(const point & a, const point & b) {
     return b.y > a.y;
   }
   double det = cross(ctr, a, b);
-  if (EQ(det, 0)) return (a - ctr).norm() > (b - ctr).norm();
+  if (EQ(det, 0)) return norm(a - ctr) > norm(b - ctr);
   return det < 0;
 }
 
@@ -580,12 +595,12 @@ struct circle {
   circle(const point & a, const point & b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
-    r = (a - point(h, k)).abs();
+    r = abs(a - point(h, k));
   }
 
   //circumcircle of 3 points - throws exception if abc are collinear/equal
   circle(const point & a, const point & b, const point & c) {
-    double an = (b - c).norm(), bn = (a - c).norm(), cn = (a - b).norm();
+    double an = norm(b - c), bn = norm(a - c), cn = norm(a - b);
     double wa = an * (bn + cn - an);
     double wb = bn * (an + cn - bn);
     double wc = cn * (an + bn - cn);
@@ -594,7 +609,7 @@ struct circle {
       throw std::runtime_error("No circle from collinear points.");
     h = (wa * a.x + wb * b.x + wc * c.x) / w;
     k = (wa * a.y + wb * b.y + wc * c.y) / w;
-    r = (point(h, k) - a).abs();
+    r = abs(a - point(h, k));
   }
 
   //circle from 2 points and a radius - many possible edge cases!
@@ -604,15 +619,17 @@ struct circle {
   circle(const point & a, const point & b, const double & R) {
     r = fabs(R);
     if (LE(r, 0) && a == b) { //circle is a point
-      h = a.x; k = a.y; return;
+      h = a.x;
+      k = a.y;
+      return;
     }
-    double d = (b - a).abs();
+    double d = abs(b - a);
     if (EQ(d, 0))
       throw std::runtime_error("Identical points, infinite circles.");
-    if (GT(d, r * 2))
+    if (LT(r * 2.0, d))
       throw std::runtime_error("Points too far away to make circle.");
-    double v = sqrt(r * r - d * d / 4) / d;
-    point m = (a + b) / 2;
+    double v = sqrt(r * r - d * d / 4.0) / d;
+    point m = (a + b) / 2.0;
     h = m.x + (a.y - b.y) * v;
     k = m.y + (b.x - a.x) * v;
     //other answer is (h, k) = (m.x-(a.y-b.y)*v, m.y-(b.x-a.x)*v)
@@ -626,17 +643,9 @@ struct circle {
     return !(*this == c);
   }
 
-  bool contains(const point & p) const {
-    return LE((p - point(h, k)).abs(), r);
-  }
-
-  bool on_edge(const point & p) const {
-    return EQ((p.x - h) * (p.x - h) + (p.y - k) * (p.y - k), r * r);
-  }
-
-  point center() const {
-    return point(h, k);
-  }
+  point center() const { return point(h, k); }
+  bool contains(const point & p) const { return LE(norm(p - center()), r * r); }
+  bool on_edge(const point & p) const { return EQ(norm(p - center()), r * r); }
 
   friend std::ostream & operator << (std::ostream & out, const circle & c) {
     out << std::showpos;
@@ -650,7 +659,7 @@ struct circle {
 
 //circle inscribed within points a, b, and c
 circle incircle(const point & a, const point & b, const point & c) {
-  double al = (b - c).abs(), bl = (a - c).abs(), cl = (a - b).abs();
+  double al = abs(b - c), bl = abs(a - c), cl = abs(a - b);
   double p = al + bl + cl;
   if (EQ(p, 0)) return circle(a.x, a.y, 0);
   return circle((al * a.x + bl * b.x + cl * c.x) / p,
@@ -693,8 +702,8 @@ int tangents(const circle & c, const point & p, line * l1 = 0, line * l2 = 0) {
   }
   if (c.contains(p)) return 0;
   point q = (p - c.center()) / c.r;
-  double norm = q.norm(), d = q.y * sqrt(q.norm() - 1);
-  point t1((q.x - d) / norm, c.k), t2((q.x + d) / norm, c.k);
+  double n = norm(q), d = q.y * sqrt(norm(q) - 1);
+  point t1((q.x - d) / n, c.k), t2((q.x + d) / n, c.k);
   if (NE(q.y, 0)) { //common case
     t1.y += c.r * (1 - t1.x * q.x) / q.y;
     t2.y += c.r * (1 - t2.x * q.x) / q.y;
@@ -748,7 +757,7 @@ int intersection(const circle & c1, const circle & c2,
   if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k))
     return EQ(c1.r, c2.r) ? 3 : 0;
   point d12(c2.center() - c1.center());
-  double d = d12.abs();
+  double d = abs(d12);
   if (GT(d, c1.r + c2.r)) return -1;
   if (LT(d, fabs(c1.r - c2.r))) return 0;
   double a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
@@ -768,7 +777,7 @@ int intersection(const circle & c1, const circle & c2,
 //intersection area of circles c1 and c2
 double intersection_area(const circle & c1, const circle c2) {
   double r = std::min(c1.r, c2.r), R = std::max(c1.r, c2.r);
-  double d = (c2.center() - c1.center()).abs();
+  double d = abs(c2.center() - c1.center());
   if (LE(d, R - r)) return PI * r * r;
   if (GE(d, R + r)) return 0;
   return r * r * acos((d * d + r * r - R * R) / 2 / d / r) +
@@ -808,9 +817,8 @@ int main() {
   cout << perp << "\n";                                        //2.5x+1y+17=0
   cout << angle_between(l, perp) * RAD << "\n";                //90
 
-  pt r;
-  cout << intersection(line(-1, 1, 0), line(1, 1, -3), &r) << "\n"; //0
-  cout << r << "\n";                                                //(1.5,1.5)
+  cout << intersection(line(-1, 1, 0), line(1, 1, -3), &p) << "\n"; //0
+  cout << p << "\n";                                                //(1.5,1.5)
 
   //tests for segment intersection (examples in order from link below)
   //http://martin-thoma.com/how-to-check-if-two-line-segments-intersect/
@@ -867,7 +875,7 @@ int main() {
   pt pts[] = {pt(1,3),pt(1,2),pt(2,1),pt(0,0),pt(-1,3)};  //irregular pentagon
   vector<pt> v(pts, pts + 5);
   std::random_shuffle(v.begin(), v.end());
-  ctr = centroid(v.begin(), v.end()); //note: ctr is global
+  ctr = centroid(v.begin(), v.end()); //note: ctr is a global variable
   cout << ctr << "\n";                                    //(0.6,1.8)
   sort(v.begin(), v.end(), cw_comp);
   for (int i = 0; i < (int)v.size(); i++) assert(v[i] == pts[i]);
@@ -881,9 +889,14 @@ int main() {
   assert(!point_in_polygon(pt(2,2), h.begin(), h.end()));
   cout << "hull area: " << polygon_area(h.begin(), h.end()) << "\n"; //5.5
 
-  assert(circle(0.5,1.25,2.7950849719) == circle(pt(0,4),pt(3,0),pt(-2,0)));
-  //(x-1.11463)^2+(y+0.613014)^2=1.12257
-  cout << incircle(pt(3,-1), pt(-2,-3), pt(1,1)) << "\n";
+  circle c(-2, 5, sqrt(10));
+  cout << c << "\n"; //(x+2)^2+(y-5)^2=10
+  assert(c == circle(point(-2, 5), sqrt(10)));
+  assert(c == circle(point(1, 6), point(-5, 4)));
+  assert(c == circle(point(-3, 2), point(-3, 8), point(-1, 8)));
+  assert(c == incircle(point(-12, 5), point(3, 0), point(0, 9)));
+  assert(c.contains(point(-2, 8)) && !c.contains(point(-2, 9)));
+  assert(c.on_edge(point(-1, 2)) && !c.on_edge(point(-1.01, 2)));
   //(x-0.357143)^2+(y-1.78571)^2=3.31633
   cout << smallest_circle(pts, pts + 5) << "\n";
 

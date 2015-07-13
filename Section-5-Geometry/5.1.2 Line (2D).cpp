@@ -77,7 +77,7 @@ struct line {
   //whether the line is initialized and normalized
   bool valid() const {
     if (EQ(a, 0)) return !EQ(b, 0);
-    return EQ(b, 0) || EQ(b, 1);
+    return EQ(b, 1) || (EQ(b, 0) && EQ(a, 1));
   }
 
   bool horizontal() const { return valid() && EQ(a, 0); }

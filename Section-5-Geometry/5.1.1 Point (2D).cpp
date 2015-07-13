@@ -100,6 +100,21 @@ struct point {
     return r;
   }
 
+  friend double norm(const point & p) { return p.norm(); }
+  friend double abs(const point & p) { return p.abs(); }
+  friend double arg(const point & p) { return p.arg(); }
+  friend double dot(const point & p, const point & q) { return p.dot(q); }
+  friend double cross(const point & p, const point & q) { return p.cross(q); }
+  friend double proj(const point & p, const point & q) { return p.proj(q); }
+  friend point rot90(const point & p) { return p.rot90(); }
+  friend point normalize(const point & p) { return p.normalize(); }
+  friend point rotateCW(const point & p, const double & t) { return p.rotateCW(t); }
+  friend point rotateCCW(const point & p, const double & t) { return p.rotateCCW(t); }
+  friend point rotateCW(const point & p, const point & q, const double & t) { return p.rotateCW(q, t); }
+  friend point rotateCCW(const point & p, const point & q, const double & t) { return p.rotateCCW(q, t); }
+  friend point reflect(const point & p, const point & q) { return p.reflect(q); }
+  friend point reflect(const point & p, const point & a, const point & b) { return p.reflect(a, b); }
+
   friend std::ostream & operator << (std::ostream & out, const point & p) {
     out << "(";
     out << (fabs(p.x) < eps ? 0 : p.x) << ",";
