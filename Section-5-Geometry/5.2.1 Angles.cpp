@@ -1,11 +1,6 @@
 #include <cmath>     /* fabs(), sqrt() */
 #include <utility>   /* std::pair */
 
-const double eps = 1e-9;
-
-#define LT(a, b) ((a) < (b) - eps)        /* less than */
-#define GT(a, b) ((a) > (b) + eps)        /* greater than */
-
 typedef std::pair<double, double> point;
 #define x first
 #define y second
@@ -45,7 +40,7 @@ double angle_between(const double & a1, const double & b1,
                      const double & a2, const double & b2) {
   double t = atan2(a1 * b2 - a2 * b1, a1 * a2 + b1 * b2);
   if (t < 0) t += PI; //force angle to be positive
-  if (LT(PI / 2, t)) t = PI - t; //force angle to be <= 90 degrees
+  if (t > PI / 2) t = PI - t; //force angle to be <= 90 degrees
   return t;
 }
 
@@ -62,7 +57,7 @@ double cross(const point & o, const point & a, const point & b) {
 // +1 ==> a right turn on the plane?
 int turn(const point & a, const point & o, const point & b) {
   double c = cross(o, a, b);
-  return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
+  return c < 0 ? -1 : (c > 0 ? 1 : 0);
 }
 
 /*** Example Usage ***/
