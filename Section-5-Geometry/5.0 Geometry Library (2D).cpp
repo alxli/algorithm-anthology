@@ -300,9 +300,8 @@ double angle_between(const point & a, const point & b) {
   return t < 0 ? t + 2 * PI : t;
 }
 
-//the minimum angle between two lines in the range [0, PI/2]
+//minimum angle in radians between two lines in the range [0, PI/2]
 double angle_between(const line & l1, const line & l2) {
-  if (l1.parallel(l2)) return 0; //parallel or equivalent lines
   double t = atan2(l1.a * l2.b - l2.a * l1.b, l1.a * l2.a + l1.b * l2.b);
   if (t < 0) t += PI; //force angle to be positive
   if (GT(t, PI / 2)) t = PI - t; //force angle to be <= 90 degrees
