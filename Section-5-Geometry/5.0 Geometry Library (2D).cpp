@@ -16,7 +16,7 @@ Sections will be split up after this file is finalized.
 */
 
 #include <algorithm> /* std::sort(), std::swap() */
-#include <cmath>     /* fabs, sqrt, sin, cos, atan2 */
+#include <cmath>     /* acos, atan2, cos, fabs, sin, sqrt */
 #include <limits>    /* std::numeric_limits */
 #include <ostream>
 #include <stdexcept> /* std::runtime_error() */

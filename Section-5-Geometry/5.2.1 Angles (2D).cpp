@@ -1,4 +1,4 @@
-#include <cmath>     /* fabs(), sqrt() */
+#include <cmath>     /* acos(), fabs(), sqrt(), atan2() */
 #include <utility>   /* std::pair */
 
 typedef std::pair<double, double> point;
