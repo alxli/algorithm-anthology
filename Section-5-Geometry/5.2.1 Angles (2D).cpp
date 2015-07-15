@@ -5,10 +5,21 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-const double PI = acos(-1);
+const double PI = acos(-1.0), RAD = 180 / PI, DEG = PI / 180;
+double abs(const point & a) { return sqrt(a.x * a.x + a.y * a.y); }
 
-double abs(const point & a) {
-  return sqrt(a.x * a.x + a.y * a.y);
+//reduce angles to the range [0, 360) degrees. e.g. reduce_deg(-630) = 90
+double reduce_deg(const double & t) {
+  if (t < -360) return reduce_deg(fmod(t, 360));
+  if (t < 0) return t + 360;
+  return t >= 360 ? fmod(t, 360) : t;
+}
+
+//reduce angles to the range [0, 2*pi) radians. e.g. reduce_rad(720.5) = 0.5
+double reduce_rad(const double & t) {
+  if (t < -2 * PI) return reduce_rad(fmod(t, 2 * PI));
+  if (t < 0) return t + 2 * PI;
+  return t >= 2 * PI ? fmod(t, 2 * PI) : t;
 }
 
 //like std::polar(), but returns a point instead of an std::complex
@@ -66,19 +77,22 @@ int turn(const point & a, const point & o, const point & b) {
 using namespace std;
 
 void print(const point & p) {
-  cout << "(" << (fabs(p.x) < eps ? 0 : p.x)
-       << "," << (fabs(p.y) < eps ? 0 : p.y) << ")\n";
+  cout << "(" << (fabs(p.x) < 1e-9 ? 0 : p.x)
+       << "," << (fabs(p.y) < 1e-9 ? 0 : p.y) << ")\n";
 }
 
 int main() {
-  print(polar_point(4, PI));                                           //(-4,0)
-  cout << polar_angle(point(5, 5)) * 180/PI << "\n";                   //45
-  cout << polar_angle(point(-4, 4)) * 180/PI << "\n";                  //135
-  cout << angle(point(5,0), point(0,5), point(-5,0)) * 180/PI << "\n"; //90
-  cout << angle_between(point(0, 5), point(5, -5)) * 180/PI << "\n";   //225
+  cout << reduce_deg(-(8 * 360) + 123) << "\n";                     //123
+  cout << reduce_rad(2 * PI * 8 + 1.2345) << "\n";                  //1.2345
+  print(polar_point(4, PI));                                        //(-4,0)
+  print(polar_point(4, -PI/2));                                     //(0,-4)
+  cout << polar_angle(point(5, 5)) * 180/PI << "\n";                //45
+  cout << polar_angle(point(-4, 4)) * 180/PI << "\n";               //135
+  cout << angle(point(5,0), point(0,5), point(-5,0)) * RAD << "\n"; //90
+  cout << angle_between(point(0, 5), point(5, -5)) * RAD << "\n";   //225
   //y=x and y=-x
-  cout << angle_between(-1, 1, -1, -1) * 180/PI << "\n";               //90
-  cout << cross(point(0,0), point(0,1), point(1,0)) << "\n";           //-1
-  cout << turn(point(0,1), point(0,0), point(-5,-5)) << "\n";          //1
+  cout << angle_between(-1, 1, -1, -1) * 180/PI << "\n";            //90
+  cout << cross(point(0,0), point(0,1), point(1,0)) << "\n";        //-1
+  cout << turn(point(0,1), point(0,0), point(-5,-5)) << "\n";       //1
   return 0;
 }

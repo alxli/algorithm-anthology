@@ -36,8 +36,6 @@ const double eps = 1e-9;
 #define LE(a, b) ((a) <= (b) + eps)        /* less than or equal to */
 #define GE(a, b) ((a) >= (b) - eps)        /* greater than or equal to */
 
-const double PI = acos(-1.0), RAD = 180 / PI, DEG = PI / 180;
-
 //2D Points Class - like std::complex, but with epsilon comparisons
 struct point {
 
@@ -258,23 +256,20 @@ struct line {
   }
 };
 
-//distance and squared distance from point a to point b
-double dist(const point & a, const point & b) { return abs(b - a); }
-double dist2(const point & a, const point & b) { return norm(b - a); }
+const double PI = acos(-1.0), RAD = 180 / PI, DEG = PI / 180;
 
-//minimum distance from point p to line l
-double dist(const point & p, const line & l) {
-  return fabs(l.a * p.x + l.b * p.y + l.c) / abs(point(l.a, l.b));
+//reduce angles to the range [0, 360) degrees. e.g. reduce_deg(-630) = 90
+double reduce_deg(const double & t) {
+  if (t < -360) return reduce_deg(fmod(t, 360));
+  if (t < 0) return t + 360;
+  return t >= 360 ? fmod(t, 360) : t;
 }
 
-//minimum distance from point p to line segment ab
-double dist(const point & p, const point & a, const point & b) {
-  if (a == b) return dist(p, a);
-  point ab(b - a), ap(p - a);
-  double n = norm(ab), d = ab.dot(ap);
-  if (LE(d, 0) || EQ(n, 0)) return abs(ap);
-  if (GE(d, n)) return abs(ap - ab);
-  return abs(ap - ab * (d / n));
+//reduce angles to the range [0, 2*pi) radians. e.g. reduce_rad(720.5) = 0.5
+double reduce_rad(const double & t) {
+  if (t < -2 * PI) return reduce_rad(fmod(t, 2 * PI));
+  if (t < 0) return t + 2 * PI;
+  return t >= 2 * PI ? fmod(t, 2 * PI) : t;
 }
 
 //like std::polar(), but returns a point instead of an std::complex
@@ -322,6 +317,25 @@ double cross(const point & o, const point & a, const point & b) {
 int turn(const point & a, const point & o, const point & b) {
   double c = cross(o, a, b);
   return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
+}
+
+//distance and squared distance from point a to point b
+double dist(const point & a, const point & b) { return abs(b - a); }
+double dist2(const point & a, const point & b) { return norm(b - a); }
+
+//minimum distance from point p to line l
+double dist(const point & p, const line & l) {
+  return fabs(l.a * p.x + l.b * p.y + l.c) / abs(point(l.a, l.b));
+}
+
+//minimum distance from point p to line segment ab
+double dist(const point & p, const point & a, const point & b) {
+  if (a == b) return dist(p, a);
+  point ab(b - a), ap(p - a);
+  double n = norm(ab), d = ab.dot(ap);
+  if (LE(d, 0) || EQ(n, 0)) return abs(ap);
+  if (GE(d, n)) return abs(ap - ab);
+  return abs(ap - ab * (d / n));
 }
 
 //intersection of line l1 and line l2
@@ -815,6 +829,17 @@ int main() {
   cout << para << "\n";                                        //-0.4x+1y-0.4=0
   cout << perp << "\n";                                        //2.5x+1y+17=0
   cout << angle_between(l, perp) * RAD << "\n";                //90
+
+  cout << reduce_deg(-(8 * 360) + 123) << "\n";                     //123
+  cout << reduce_rad(2 * PI * 8 + 1.2345) << "\n";                  //1.2345
+  cout << polar_point(4, PI) << "\n";                               //(-4,0)
+  cout << polar_point(4, -PI/2) << "\n";                            //(0,-4)
+  cout << polar_angle(point(5, 5)) * 180/PI << "\n";                //45
+  cout << polar_angle(point(-4, 4)) * 180/PI << "\n";               //135
+  cout << angle(point(5,0), point(0,5), point(-5,0)) * RAD << "\n"; //90
+  cout << angle_between(point(0, 5), point(5, -5)) * RAD << "\n";   //225
+  cout << cross(point(0,0), point(0,1), point(1,0)) << "\n";        //-1
+  cout << turn(point(0,1), point(0,0), point(-5,-5)) << "\n";       //1
 
   cout << intersection(line(-1, 1, 0), line(1, 1, -3), &p) << "\n"; //0
   cout << p << "\n";                                                //(1.5,1.5)
