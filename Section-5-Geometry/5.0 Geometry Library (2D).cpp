@@ -324,12 +324,32 @@ double dist(const point & a, const point & b) { return abs(b - a); }
 double dist2(const point & a, const point & b) { return norm(b - a); }
 
 //minimum distance from point p to line l
-double dist(const point & p, const line & l) {
-  return fabs(l.a * p.x + l.b * p.y + l.c) / abs(point(l.a, l.b));
+//if a = b = 0, then -inf, nan, or +inf is returned depending on sgn(c)
+double dist_line(const point & p, const line & l) {
+  return fabs(l.a * p.x + l.b * p.y + l.c) / sqrt(l.a * l.a + l.b * l.b);
+}
+
+//minimum distance from point p to the infinite line containing a and b
+//if a = b, then the point distance from p to the single point is returned
+double dist_line(const point & p, const point & a, const point & b) {
+  if (a == b) return dist(p, a);
+  return abs(a + (p - a).dot(b - a) * (b - a) / dist2(a, b) - p);
+}
+
+//distance between two lines each denoted by the form ax + by + c = 0
+//if the lines are nonparallel, then the distance is 0, otherwise
+//it is the perpendicular distance from a point on one line to the other
+double dist_lines(const line & l1, const line & l2) {
+  if (EQ(l1.a * l2.b, l2.a * l1.b)) {
+    if (EQ(l1.c, l2.c)) return 0;
+    return fabs(l2.c * (l1.a / l2.a) - l1.c) /
+           sqrt(l1.a * l1.a + l1.b * l1.b);
+  }
+  return 0;
 }
 
 //minimum distance from point p to line segment ab
-double dist(const point & p, const point & a, const point & b) {
+double dist_seg(const point & p, const point & a, const point & b) {
   if (a == b) return dist(p, a);
   point ab(b - a), ap(p - a);
   double n = norm(ab), d = ab.dot(ap);
@@ -385,8 +405,8 @@ int intersection(const point & a, const point & b,
   point ab(b - a), ac(c - a), cd(d - c);
   double c1 = ab.cross(cd), c2 = ac.cross(ab);
   if (EQ(c1, 0) && EQ(c2, 0)) { //collinear
-    double t0 = ac.dot(ab) / ab.dot(ab);
-    double t1 = t0 + cd.dot(ab) / ab.dot(ab);
+    double t0 = ac.dot(ab) / norm(ab);
+    double t1 = t0 + cd.dot(ab) / norm(ab);
     if (overlap(std::min(t0, t1), std::max(t0, t1), 0, 1)) {
       point res1 = std::max(std::min(a, b), std::min(c, d));
       point res2 = std::min(std::max(a, b), std::max(c, d));
@@ -403,10 +423,20 @@ int intersection(const point & a, const point & b,
   if (EQ(c1, 0)) return -1; //parallel and disjoint
   double t = ac.cross(cd) / c1, u = c2 / c1;
   if (contain(0, t, 1) && contain(0, u, 1)) {
-    *p = a + t * ab;
+    if (p != 0) *p = a + t * ab;
     return 0; //non-parallel with one intersection
   }
   return -1; //non-parallel with no intersections
+}
+
+//minimum distance from any point on segment ab to any point on segment cd
+double dist_segs(const point & a, const point & b,
+                 const point & c, const point & d) {
+  //check if segments are touching or intersecting - if so, distance is 0
+  if (intersection(a, b, c, d) >= 0) return 0;
+  //find min distances across each endpoint to opposing segment
+  return std::min(std::min(dist_seg(a, c, d), dist_seg(b, c, d)),
+                  std::min(dist_seg(c, a, b), dist_seg(d, a, b)));
 }
 
 //determins the point on line L that is closest to point p
@@ -830,16 +860,28 @@ int main() {
   cout << perp << "\n";                                        //2.5x+1y+17=0
   cout << angle_between(l, perp) * RAD << "\n";                //90
 
-  cout << reduce_deg(-(8 * 360) + 123) << "\n";                     //123
-  cout << reduce_rad(2 * PI * 8 + 1.2345) << "\n";                  //1.2345
-  cout << polar_point(4, PI) << "\n";                               //(-4,0)
-  cout << polar_point(4, -PI/2) << "\n";                            //(0,-4)
-  cout << polar_angle(point(5, 5)) * 180/PI << "\n";                //45
-  cout << polar_angle(point(-4, 4)) * 180/PI << "\n";               //135
-  cout << angle(point(5,0), point(0,5), point(-5,0)) * RAD << "\n"; //90
-  cout << angle_between(point(0, 5), point(5, -5)) * RAD << "\n";   //225
-  cout << cross(point(0,0), point(0,1), point(1,0)) << "\n";        //-1
-  cout << turn(point(0,1), point(0,0), point(-5,-5)) << "\n";       //1
+  cout << reduce_deg(-(8 * 360) + 123) << "\n";            //123
+  cout << reduce_rad(2 * PI * 8 + 1.2345) << "\n";         //1.2345
+  cout << polar_point(4, PI) << "\n";                      //(-4,0)
+  cout << polar_point(4, -PI/2) << "\n";                   //(0,-4)
+  cout << polar_angle(pt(5,5)) * 180/PI << "\n";           //45
+  cout << polar_angle(pt(-4,4)) * 180/PI << "\n";          //135
+  cout << angle(pt(5,0), pt(0,5), pt(-5,0)) * RAD << "\n"; //90
+  cout << angle_between(pt(0,5), pt(5,-5)) * RAD << "\n";  //225
+  cout << cross(pt(0,0), pt(0,1), pt(1,0)) << "\n";        //-1
+  cout << turn(pt(0,1), pt(0,0), pt(-5,-5)) << "\n";       //1
+
+  cout << dist(pt(-1,-1), pt(2,3)) << "\n";                           //5
+  cout << dist2(pt(-1,-1), pt(2,3)) << "\n";                          //25
+  cout << dist_line(pt(2,1), line(-4, 3, -1)) << "\n";                //1.2
+  cout << dist_line(pt(3,3), pt(-1,-1), pt(2,3)) << "\n";             //0.8
+  cout << dist_line(pt(2,1), pt(-1,-1), pt(2,3)) << "\n";             //1.2
+  cout << dist_lines(line(-4, 3, -1), line(8, 6, 2)) << "\n";         //0
+  cout << dist_lines(line(-4, 3, -1), line(-8, 6, -10)) << "\n";      //0.8
+  cout << dist_seg(pt(3,3), pt(-1,-1), pt(2,3)) << "\n";              //1
+  cout << dist_seg(pt(2,1), pt(-1,-1), pt(2,3)) << "\n";              //1.2
+  cout << dist_segs(pt(0,2), pt(3,3), pt(-1,-1), pt(2,3)) << "\n";    //0
+  cout << dist_segs(pt(-1,0), pt(-2,2), pt(-1,-1), pt(2,3)) << "\n";  //0.6
 
   cout << intersection(line(-1, 1, 0), line(1, 1, -3), &p) << "\n"; //0
   cout << p << "\n";                                                //(1.5,1.5)
