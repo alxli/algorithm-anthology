@@ -341,9 +341,9 @@ double dist_line(const point & p, const point & a, const point & b) {
 //it is the perpendicular distance from a point on one line to the other
 double dist_lines(const line & l1, const line & l2) {
   if (EQ(l1.a * l2.b, l2.a * l1.b)) {
-    if (EQ(l1.c, l2.c)) return 0;
-    return fabs(l2.c * (l1.a / l2.a) - l1.c) /
-           sqrt(l1.a * l1.a + l1.b * l1.b);
+    double factor = EQ(l1.b, 0) ? (l1.a / l2.a) : (l1.b / l2.b);
+    if (EQ(l1.c, l2.c * factor)) return 0;
+    return fabs(l2.c * factor - l1.c) / sqrt(l1.a * l1.a + l1.b * l1.b);
   }
   return 0;
 }

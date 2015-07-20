@@ -47,8 +47,9 @@ double dist_line(const point & p, const point & a, const point & b) {
 double dist_lines(const double & a1, const double & b1, const double & c1,
                   const double & a2, const double & b2, const double & c2) {
   if (EQ(a1 * b2, a2 * b1)) {
-    if (EQ(c1, c2)) return 0;
-    return fabs(c2 * (a1 / a2) - c1) / sqrt(a1 * a1 + b1 * b1);
+    double factor = EQ(b1, 0) ? (a1 / a2) : (b1 / b2);
+    if (EQ(c1, c2 * factor)) return 0;
+    return fabs(c2 * factor - c1) / sqrt(a1 * a1 + b1 * b1);
   }
   return 0;
 }
