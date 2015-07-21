@@ -149,21 +149,17 @@ struct line {
 
   double a, b, c;
 
-  void normalize() {
-    if (!EQ(b, 0)) {
-      a /= b; c /= b; b = 1;
-    } else {
-      c /= a; a = 1; b = 0;
-    }
-  }
-
   line(): a(0), b(0), c(0) {} //invalid or uninitialized line
 
   line(const double & A, const double & B, const double & C) {
     a = A;
     b = B;
     c = C;
-    normalize();
+    if (!EQ(b, 0)) {
+      a /= b; c /= b; b = 1;
+    } else {
+      c /= a; a = 1; b = 0;
+    }
   }
 
   line(const double & slope, const point & p) {
@@ -181,10 +177,9 @@ struct line {
       c = -p.x;
       return;
     }
-    a = q.y - p.y;
-    b = p.x - q.x;
-    c = p.y * q.x - p.x * q.y;
-    normalize();
+    a = -(p.y - q.y) / (p.x - q.x);
+    b = 1;
+    c = -(a * p.x) - (b * p.y);
   }
 
   bool operator == (const line & l) const {
@@ -707,7 +702,7 @@ circle incircle(const point & a, const point & b, const point & c) {
   if (EQ(p, 0)) return circle(a.x, a.y, 0);
   return circle((al * a.x + bl * b.x + cl * c.x) / p,
                 (al * a.y + bl * b.y + cl * c.y) / p,
-                2 * triangle_area(a, b, c) / p);
+                2.0 * triangle_area(a, b, c) / p);
 }
 
 //smallest enclosing circle of a set of points in O(n) average
@@ -745,13 +740,13 @@ int tangents(const circle & c, const point & p, line * l1 = 0, line * l2 = 0) {
   }
   if (c.contains(p)) return 0;
   point q = (p - c.center()) / c.r;
-  double n = norm(q), d = q.y * sqrt(norm(q) - 1);
+  double n = norm(q), d = q.y * sqrt(norm(q) - 1.0);
   point t1((q.x - d) / n, c.k), t2((q.x + d) / n, c.k);
   if (NE(q.y, 0)) { //common case
-    t1.y += c.r * (1 - t1.x * q.x) / q.y;
-    t2.y += c.r * (1 - t2.x * q.x) / q.y;
+    t1.y += c.r * (1.0 - t1.x * q.x) / q.y;
+    t2.y += c.r * (1.0 - t2.x * q.x) / q.y;
   } else { //point at center horizontal, y = 0
-    d = c.r * sqrt(1 - t1.x * t1.x);
+    d = c.r * sqrt(1.0 - t1.x * t1.x);
     t1.y += d;
     t2.y -= d;
   }
@@ -833,58 +828,59 @@ double intersection_area(const circle & c1, const circle c2) {
 #include <cassert>
 #include <iostream>
 using namespace std;
+#define pt point
 
 int main() {
-#define pt point
   pt p(-10, 3);
-  cout << (p + point(-3, 9) * 6 / 2 - point(-1, 1)) << "\n"; //(-18,29)
-  cout << p.norm() << "\n";                                  //109
-  cout << p.abs() << "\n";                                   //10.4403
-  cout << p.arg() << "\n";                                   //2.85014
-  cout << p.dot(point(3, 10)) << "\n";                       //0
-  cout << p.cross(point(10, -3)) << "\n";                    //0
-  cout << p.proj(point(-10, 0)) << "\n";                     //10
-  cout << p.rot90() << "\n";                                 //(-3,-10)
-  cout << p.normalize().abs() << "\n";                       //1
-  cout << p.rotateCW(point(1, 1), PI / 2) << "\n";           //(3,12)
-  cout << p.rotateCCW(point(2, 2), PI / 2) << "\n";          //(1,-10)
-  cout << p.reflect(point(0, 0)) << "\n";                    //(10,-3)
-  cout << p.reflect(point(-2, 0), point(5, 0)) << "\n";      //(-10,-3)
+  assert(pt(-18, 29) == p + pt(-3, 9) * 6 / 2 - pt(-1, 1));
+  assert(EQ(109, p.norm()));
+  assert(EQ(10.44030650891, p.abs()));
+  assert(EQ(2.850135859112, p.arg()));
+  assert(EQ(0,  p.dot(pt(3, 10))));
+  assert(EQ(0,  p.cross(pt(10, -3))));
+  assert(EQ(10, p.proj(pt(-10, 0))));
+  assert(EQ(1,  p.normalize().abs()));
+  assert(pt(-3, -10) == p.rot90());
+  assert(pt(3, 12)   == p.rotateCW(pt(1, 1), PI / 2));
+  assert(pt(1, -10)  == p.rotateCCW(pt(2, 2), PI / 2));
+  assert(pt(10, -3)  == p.reflect(pt(0, 0)));
+  assert(pt(-10, -3) == p.reflect(pt(-2, 0), pt(5, 0)));
 
   line l(2, -5, -8);
   line para = line(2, -5, -8).parallel(pt(-6, -2));
   line perp = line(2, -5, -8).perpendicular(pt(-6, -2));
-  cout << (l.parallel(para) && l.perpendicular(perp)) << "\n"; //1
-  cout << l.slope() << "\n";                                   //0.4
-  cout << para << "\n";                                        //-0.4x+1y-0.4=0
-  cout << perp << "\n";                                        //2.5x+1y+17=0
-  cout << angle_between(l, perp) * RAD << "\n";                //90
+  assert(l.parallel(para) && l.perpendicular(perp));
+  assert(l.slope() == 0.4);
+  assert(para == line(-0.4, 1, -0.4)); //-0.4x+1y-0.4=0
+  assert(perp == line(2.5, 1, 17));    //2.5x+1y+17=0
 
-  cout << reduce_deg(-(8 * 360) + 123) << "\n";            //123
-  cout << reduce_rad(2 * PI * 8 + 1.2345) << "\n";         //1.2345
-  cout << polar_point(4, PI) << "\n";                      //(-4,0)
-  cout << polar_point(4, -PI/2) << "\n";                   //(0,-4)
-  cout << polar_angle(pt(5,5)) * 180/PI << "\n";           //45
-  cout << polar_angle(pt(-4,4)) * 180/PI << "\n";          //135
-  cout << angle(pt(5,0), pt(0,5), pt(-5,0)) * RAD << "\n"; //90
-  cout << angle_between(pt(0,5), pt(5,-5)) * RAD << "\n";  //225
-  cout << cross(pt(0,0), pt(0,1), pt(1,0)) << "\n";        //-1
-  cout << turn(pt(0,1), pt(0,0), pt(-5,-5)) << "\n";       //1
+  assert(EQ(angle_between(l, perp) * RAD, 90));
 
-  cout << dist(pt(-1,-1), pt(2,3)) << "\n";                           //5
-  cout << dist2(pt(-1,-1), pt(2,3)) << "\n";                          //25
-  cout << dist_line(pt(2,1), line(-4, 3, -1)) << "\n";                //1.2
-  cout << dist_line(pt(3,3), pt(-1,-1), pt(2,3)) << "\n";             //0.8
-  cout << dist_line(pt(2,1), pt(-1,-1), pt(2,3)) << "\n";             //1.2
-  cout << dist_lines(line(-4, 3, -1), line(8, 6, 2)) << "\n";         //0
-  cout << dist_lines(line(-4, 3, -1), line(-8, 6, -10)) << "\n";      //0.8
-  cout << dist_seg(pt(3,3), pt(-1,-1), pt(2,3)) << "\n";              //1
-  cout << dist_seg(pt(2,1), pt(-1,-1), pt(2,3)) << "\n";              //1.2
-  cout << dist_segs(pt(0,2), pt(3,3), pt(-1,-1), pt(2,3)) << "\n";    //0
-  cout << dist_segs(pt(-1,0), pt(-2,2), pt(-1,-1), pt(2,3)) << "\n";  //0.6
+  assert(EQ(123,    reduce_deg(-(8 * 360) + 123)));
+  assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
+  assert(polar_point(4, PI) == pt(-4, 0));
+  assert(polar_point(4, -PI/2) == pt(0, -4));
+  assert(EQ(45,  polar_angle(pt(5, 5)) * RAD));
+  assert(EQ(135, polar_angle(pt(-4, 4)) * RAD));
+  assert(EQ(90,  angle(pt(5, 0), pt(0, 5), pt(-5, 0)) * RAD));
+  assert(EQ(225, angle_between(pt(0, 5), pt(5, -5)) * RAD));
+  assert(-1 == cross(pt(0, 0), pt(0, 1), pt(1, 0)));
+  assert(+1 == turn(pt(0, 1), pt(0, 0), pt(-5, -5)));
 
-  cout << intersection(line(-1, 1, 0), line(1, 1, -3), &p) << "\n"; //0
-  cout << p << "\n";                                                //(1.5,1.5)
+  assert(EQ(5, dist(pt(-1, -1), pt(2, 3))));
+  assert(EQ(25, dist2(pt(-1, -1), pt(2, 3))));
+  assert(EQ(1.2, dist_line(pt(2, 1), line(-4, 3, -1))));
+  assert(EQ(0.8, dist_line(pt(3, 3), pt(-1, -1), pt(2, 3))));
+  assert(EQ(1.2, dist_line(pt(2, 1), pt(-1, -1), pt(2, 3))));
+  assert(EQ(0.0, dist_lines(line(-4, 3, -1), line(8, 6, 2))));
+  assert(EQ(0.8, dist_lines(line(-4, 3, -1), line(-8, 6, -10))));
+  assert(EQ(1.0, dist_seg(pt(3, 3), pt(-1, -1), pt(2, 3))));
+  assert(EQ(1.2, dist_seg(pt(2, 1), pt(-1, -1), pt(2, 3))));
+  assert(EQ(0.0, dist_segs(pt(0, 2), pt(3, 3), pt(-1, -1), pt(2, 3))));
+  assert(EQ(0.6, dist_segs(pt(-1, 0), pt(-2, 2), pt(-1, -1), pt(2, 3))));
+
+  assert(intersection(line(-1, 1, 0), line(1, 1, -3), &p) == 0);
+  assert(p == pt(1.5, 1.5));
 
   //tests for segment intersection (examples in order from link below)
   //http://martin-thoma.com/how-to-check-if-two-line-segments-intersect/
@@ -892,85 +888,87 @@ int main() {
 #define test(a,b,c,d,e,f,g,h) intersection(pt(a,b),pt(c,d),pt(e,f),pt(g,h),&p,&q)
     pt p, q;
     //intersection is a point
-    assert(0 == test(-4,0,4,0,0,-4,0,4));   cout << p << "\n"; //(0,0)
-    assert(0 == test(0,0,10,10,2,2,16,4));  cout << p << "\n"; //(2,2)
-    assert(0 == test(-2,2,-2,-2,-2,0,0,0)); cout << p << "\n"; //(-2,0)
-    assert(0 == test(0,4,4,4,4,0,4,8));     cout << p << "\n"; //(4,4)
+    assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4));   assert(p == pt(0, 0));
+    assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4));  assert(p == pt(2, 2));
+    assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0)); assert(p == pt(-2, 0));
+    assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8));     assert(p == pt(4, 4));
 
     //intersection is a segment
-    assert(1 == test(10,10,0,0,2,2,6,6));
-    cout << p << " " << q << "\n";          //(2,2) (6,6)
-    assert(1 == test(6,8,14,-2,14,-2,6,8));
-    cout << p << " " << q << "\n";          //(6,8) (14,-2)
+    assert(1 == test(10, 10, 0, 0, 2, 2, 6, 6));
+    assert(p == pt(2, 2) && q == pt(6, 6));
+    assert(1 == test(6, 8, 14, -2, 14, -2, 6, 8));
+    assert(p == pt(6, 8) && q == pt(14, -2));
 
     //no intersection
-    assert(-1 == test(6,8,8,10,12,12,4,4));
-    assert(-1 == test(-4,2,-8,8,0,0,-4,6));
-    assert(-1 == test(4,4,4,6,0,2,0,0));
-    assert(-1 == test(4,4,6,4,0,2,0,0));
-    assert(-1 == test(-2,-2,4,4,10,10,6,6));
-    assert(-1 == test(0,0,2,2,4,0,1,4));
-    assert(-1 == test(2,2,2,8,4,4,6,4));
-    assert(-1 == test(4,2,4,4,0,8,10,0));
+    assert(-1 == test(6, 8, 8, 10, 12, 12, 4, 4));
+    assert(-1 == test(-4, 2, -8, 8, 0, 0, -4, 6));
+    assert(-1 == test(4, 4, 4, 6, 0, 2, 0, 0));
+    assert(-1 == test(4, 4, 6, 4, 0, 2, 0, 0));
+    assert(-1 == test(-2, -2, 4, 4, 10, 10, 6, 6));
+    assert(-1 == test(0, 0, 2, 2, 4, 0, 1, 4));
+    assert(-1 == test(2, 2, 2, 8, 4, 4, 6, 4));
+    assert(-1 == test(4, 2, 4, 4, 0, 8, 10, 0));
   }
 
-  cout << closest_point(line(-1,-1,5), pt(0,0)) << "\n";      //(2.5,2.5)
-  cout << closest_point(line(1,0,-3), pt(0,0)) << "\n";       //(3,0)
-  cout << closest_point(line(0,1,-3), pt(0,0)) << "\n";       //(0,3)
+  assert(pt(2.5, 2.5) == closest_point(line(-1, -1, 5), pt(0, 0)));
+  assert(pt(3, 0)     == closest_point(line(1, 0, -3), pt(0, 0)));
+  assert(pt(0, 3)     == closest_point(line(0, 1, -3), pt(0, 0)));
 
-  cout << closest_point(pt(3,0), pt(3,3), pt(0,0)) << "\n";   //(3,0)
-  cout << closest_point(pt(2,-1), pt(4,-1), pt(0,0)) << "\n"; //(2,-1)
-  cout << closest_point(pt(2,-1), pt(4,-1), pt(5,0)) << "\n"; //(4,-1)
+  assert(pt(3, 0)  == closest_point(pt(3, 0), pt(3, 3), pt(0, 0)));
+  assert(pt(2, -1) == closest_point(pt(2, -1), pt(4, -1), pt(0, 0)));
+  assert(pt(4, -1) == closest_point(pt(2, -1), pt(4, -1), pt(5, 0)));
 
-  assert(point_in_triangle(pt(0,0), pt(-1,0), pt(0,-2), pt(4,0)));
-  assert(!point_in_triangle(pt(0,1), pt(-1,0), pt(0,-2), pt(4,0)));
-  assert(point_in_triangle(pt(-2.44, 0.82), pt(-1,0), pt(-3,1), pt(4,0)));
-  assert(!point_in_triangle(pt(-2.44, 0.7), pt(-1,0), pt(-3,1), pt(4,0)));
+  assert(point_in_triangle(pt(0, 0), pt(-1, 0), pt(0, -2), pt(4, 0)));
+  assert(!point_in_triangle(pt(0, 1), pt(-1, 0), pt(0, -2), pt(4, 0)));
+  assert(point_in_triangle(pt(-2.44, 0.82), pt(-1, 0), pt(-3, 1), pt(4, 0)));
+  assert(!point_in_triangle(pt(-2.44, 0.7), pt(-1, 0), pt(-3, 1), pt(4, 0)));
 
-  assert(point_in_rectangle(pt(0,-1), 0, -3, 3, 2));
-  assert(point_in_rectangle(pt(2,-2), 3, -3, -3, 2));
-  assert(!point_in_rectangle(pt(0,0), 3, -1, -3, -2));
-  assert(point_in_rectangle(pt(2,-2), pt(3,-3), pt(0,-1)));
-  assert(!point_in_rectangle(pt(-1,-2), pt(3,-3), pt(0,-1)));
+  assert(point_in_rectangle(pt(0, -1), 0, -3, 3, 2));
+  assert(point_in_rectangle(pt(2, -2), 3, -3, -3, 2));
+  assert(!point_in_rectangle(pt(0, 0), 3, -1, -3, -2));
+  assert(point_in_rectangle(pt(2, -2), pt(3, -3), pt(0, -1)));
+  assert(!point_in_rectangle(pt(-1, -2), pt(3, -3), pt(0, -1)));
 
-  assert(6 == triangle_area(pt(0,-1), pt(4,-1), pt(0,-4)));
-  assert(6 == triangle_area_sides(3, 4, 5));
+  assert(EQ(6, triangle_area(pt(0, -1), pt(4, -1), pt(0, -4))));
+  assert(EQ(6, triangle_area_sides(3, 4, 5)));
   assert(EQ(6, triangle_area_medians(3.605551275, 2.5, 4.272001873)));
-  assert(6 == triangle_area_altitudes(3, 4, 2.4));
+  assert(EQ(6, triangle_area_altitudes(3, 4, 2.4)));
 
-  pt pts[] = {pt(1,3),pt(1,2),pt(2,1),pt(0,0),pt(-1,3)};  //irregular pentagon
+  //irregular pentagon with only (1, 2) not on the convex hull
+  pt pts[] = {pt(1, 3), pt(1, 2), pt(2, 1), pt(0, 0), pt(-1, 3)};
   vector<pt> v(pts, pts + 5);
   std::random_shuffle(v.begin(), v.end());
   ctr = centroid(v.begin(), v.end()); //note: ctr is a global variable
-  cout << ctr << "\n";                                    //(0.6,1.8)
+  assert(ctr == pt(0.6, 1.8));
   sort(v.begin(), v.end(), cw_comp);
   for (int i = 0; i < (int)v.size(); i++) assert(v[i] == pts[i]);
   vector<pt> h = convex_hull(v.begin(), v.end());
   cout << "hull points:";
-  for (int i = 0; i < (int)h.size(); i++) cout << " " << h[i]; //quadrilateral
+  for (int i = 0; i < (int)h.size(); i++) cout << " " << h[i];
   cout << "\n";
-  assert(point_in_polygon(pt(1,2), h.begin(), h.end()));
-  assert(point_in_polygon(pt(0,3), h.begin(), h.end()));
-  assert(!point_in_polygon(pt(0,3.01), h.begin(), h.end()));
-  assert(!point_in_polygon(pt(2,2), h.begin(), h.end()));
-  cout << "hull area: " << polygon_area(h.begin(), h.end()) << "\n"; //5.5
+  assert(point_in_polygon(pt(1, 2), h.begin(), h.end()));
+  assert(point_in_polygon(pt(0, 3), h.begin(), h.end()));
+  assert(!point_in_polygon(pt(0, 3.01), h.begin(), h.end()));
+  assert(!point_in_polygon(pt(2, 2), h.begin(), h.end()));
+  assert(EQ(polygon_area(h.begin(), h.end()), 5.5));
 
-  circle c(-2, 5, sqrt(10));
-  cout << c << "\n"; //(x+2)^2+(y-5)^2=10
+  circle c(-2, 5, sqrt(10)); //(x+2)^2+(y-5)^2=10
   assert(c == circle(point(-2, 5), sqrt(10)));
   assert(c == circle(point(1, 6), point(-5, 4)));
   assert(c == circle(point(-3, 2), point(-3, 8), point(-1, 8)));
   assert(c == incircle(point(-12, 5), point(3, 0), point(0, 9)));
   assert(c.contains(point(-2, 8)) && !c.contains(point(-2, 9)));
   assert(c.on_edge(point(-1, 2)) && !c.on_edge(point(-1.01, 2)));
-  //(x-0.357143)^2+(y-1.78571)^2=3.31633
-  cout << smallest_circle(pts, pts + 5) << "\n";
+
+  circle c2 = smallest_circle(pts, pts + 5);
+  assert(c2 == circle(0.3571428571, 1.7857142857, 1.8210783977));
 
   line l1, l2;
-  cout << tangents(circle(0,0,4), pt(1,1), &l1, &l2) << "\n";       //0
-  cout << tangents(circle(0,0,sqrt(2)), pt(1,1), &l1, &l2) << ": "; //1
-  cout << l1 << "\n"; //1x+1y-2=0
-  cout << tangents(circle(0,0,2), pt(2,2), &l1, &l2) << ": ";       //2
-  cout << l1 << " " << l2 << "\n"; //0x+1y-2=0 1x+0y-2=0
+  assert(0 == tangents(circle(0, 0, 4), pt(1, 1), &l1, &l2));
+  assert(1 == tangents(circle(0, 0, sqrt(2)), pt(1, 1), &l1, &l2));
+  assert(l1 == line(1, 1, -2));
+  assert(2 == tangents(circle(0, 0, 2), pt(2, 2), &l1, &l2));
+  assert(l1 == line(0, 1, -2));
+  assert(l2 == line(1, 0, -2));
   return 0;
 }

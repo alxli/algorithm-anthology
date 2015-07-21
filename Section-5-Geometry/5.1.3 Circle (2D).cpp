@@ -102,14 +102,6 @@ struct circle {
   }
 };
 
-double cross(const point & o, const point & a, const point & b) {
-  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-}
-
-double triangle_area(const point & a, const point & b, const point & c) {
-  return fabs(cross(a, b, c)) / 2.0;
-}
-
 //circle inscribed within points a, b, and c
 circle incircle(const point & a, const point & b, const point & c) {
   double al = abs(point(b.x - c.x, b.y - c.y));
@@ -117,20 +109,19 @@ circle incircle(const point & a, const point & b, const point & c) {
   double cl = abs(point(a.x - b.x, a.y - b.y));
   double p = al + bl + cl;
   if (EQ(p, 0)) return circle(a.x, a.y, 0);
-  return circle((al * a.x + bl * b.x + cl * c.x) / p,
-                (al * a.y + bl * b.y + cl * c.y) / p,
-                2.0 * triangle_area(a, b, c) / p);
+  circle res;
+  res.h = (al * a.x + bl * b.x + cl * c.x) / p;
+  res.k = (al * a.y + bl * b.y + cl * c.y) / p;
+  res.r = fabs((a.x - c.x) * (b.y - c.y) - (a.y - c.y) * (b.x - c.x)) / p;
+  return res;
 }
 
 /*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
-using namespace std;
 
 int main() {
-  circle c(-2, 5, sqrt(10));
-  cout << c << "\n"; //(x+2)^2+(y-5)^2=10
+  circle c(-2, 5, sqrt(10)); //(x+2)^2+(y-5)^2=10
   assert(c == circle(point(-2, 5), sqrt(10)));
   assert(c == circle(point(1, 6), point(-5, 4)));
   assert(c == circle(point(-3, 2), point(-3, 8), point(-1, 8)));

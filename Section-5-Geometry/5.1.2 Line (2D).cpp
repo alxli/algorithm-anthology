@@ -28,21 +28,17 @@ struct line {
 
   double a, b, c;
 
-  void normalize() {
-    if (!EQ(b, 0)) {
-      a /= b; c /= b; b = 1;
-    } else {
-      c /= a; a = 1; b = 0;
-    }
-  }
-
   line(): a(0), b(0), c(0) {} //invalid or uninitialized line
 
   line(const double & A, const double & B, const double & C) {
     a = A;
     b = B;
     c = C;
-    normalize();
+    if (!EQ(b, 0)) {
+      a /= b; c /= b; b = 1;
+    } else {
+      c /= a; a = 1; b = 0;
+    }
   }
 
   line(const double & slope, const point & p) {
@@ -60,10 +56,9 @@ struct line {
       c = -p.x;
       return;
     }
-    a = q.y - p.y;
-    b = p.x - q.x;
-    c = p.y * q.x - p.x * q.y;
-    normalize();
+    a = -(p.y - q.y) / (p.x - q.x);
+    b = 1;
+    c = -(a * p.x) - (b * p.y);
   }
 
   bool operator == (const line & l) const {
@@ -137,16 +132,15 @@ struct line {
 
 /*** Example Usage ***/
 
-#include <iostream>
-using namespace std;
+#include <cassert>
 
 int main() {
   line l(2, -5, -8);
   line para = line(2, -5, -8).parallel(point(-6, -2));
   line perp = line(2, -5, -8).perpendicular(point(-6, -2));
-  cout << (l.parallel(para) && l.perpendicular(perp)) << "\n"; //1
-  cout << l.slope() << "\n";                                   //0.4
-  cout << para << "\n";                                        //-0.4x+1y-0.4=0
-  cout << perp << "\n";                                        //2.5x+1y+17=0
+  assert(l.parallel(para) && l.perpendicular(perp));
+  assert(l.slope() == 0.4);
+  assert(para == line(-0.4, 1, -0.4)); //-0.4x+1y-0.4=0
+  assert(perp == line(2.5, 1, 17));    //2.5x+1y+17=0
   return 0;
 }

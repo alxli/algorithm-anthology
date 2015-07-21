@@ -73,26 +73,22 @@ int turn(const point & a, const point & o, const point & b) {
 
 /*** Example Usage ***/
 
-#include <iostream>
-using namespace std;
-
-void print(const point & p) {
-  cout << "(" << (fabs(p.x) < 1e-9 ? 0 : p.x)
-       << "," << (fabs(p.y) < 1e-9 ? 0 : p.y) << ")\n";
-}
+#include <cassert>
+#define pt point
+#define EQ(a, b) (fabs((a) - (b)) <= 1e-9)
 
 int main() {
-  cout << reduce_deg(-(8 * 360) + 123) << "\n";                     //123
-  cout << reduce_rad(2 * PI * 8 + 1.2345) << "\n";                  //1.2345
-  print(polar_point(4, PI));                                        //(-4,0)
-  print(polar_point(4, -PI/2));                                     //(0,-4)
-  cout << polar_angle(point(5, 5)) * 180/PI << "\n";                //45
-  cout << polar_angle(point(-4, 4)) * 180/PI << "\n";               //135
-  cout << angle(point(5,0), point(0,5), point(-5,0)) * RAD << "\n"; //90
-  cout << angle_between(point(0, 5), point(5, -5)) * RAD << "\n";   //225
-  //y=x and y=-x
-  cout << angle_between(-1, 1, -1, -1) * 180/PI << "\n";            //90
-  cout << cross(point(0,0), point(0,1), point(1,0)) << "\n";        //-1
-  cout << turn(point(0,1), point(0,0), point(-5,-5)) << "\n";       //1
+  assert(EQ(123,    reduce_deg(-(8 * 360) + 123)));
+  assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
+  point p = polar_point(4, PI), q = polar_point(4, -PI / 2);
+  assert(EQ(p.x, -4) && EQ(p.y, 0));
+  assert(EQ(q.x, 0) && EQ(q.y, -4));
+  assert(EQ(45,  polar_angle(pt(5, 5)) * RAD));
+  assert(EQ(135, polar_angle(pt(-4, 4)) * RAD));
+  assert(EQ(90,  angle(pt(5, 0), pt(0, 5), pt(-5, 0)) * RAD));
+  assert(EQ(225, angle_between(pt(0, 5), pt(5, -5)) * RAD));
+  assert(EQ(90,  angle_between(-1, 1, -1, -1) * RAD)); //y=x and y=-x
+  assert(-1 == cross(pt(0, 0), pt(0, 1), pt(1, 0)));
+  assert(+1 == turn(pt(0, 1), pt(0, 0), pt(-5, -5)));
   return 0;
 }

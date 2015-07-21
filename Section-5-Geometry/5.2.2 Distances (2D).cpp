@@ -102,24 +102,20 @@ double dist_segs(const point & a, const point & b,
 
 /*** Example Usage ***/
 
-#include <iostream>
-using namespace std;
+#include <cassert>
+#define pt point
 
 int main() {
-  cout << dist(point(-1, -1), point(2, 3)) << "\n";                   //5
-  cout << dist2(point(-1, -1), point(2, 3)) << "\n";                  //25
-  cout << dist_line(point(2, 1), -4, 3, -1) << "\n";                  //1.2
-  cout << dist_line(point(3, 3), point(-1, -1), point(2, 3)) << "\n"; //0.8
-  cout << dist_line(point(2, 1), point(-1, -1), point(2, 3)) << "\n"; //1.2
-  cout << dist_lines(-4, 3, -1, 8, 6, 2) << "\n";                     //0
-  cout << dist_lines(-4, 3, -1, -8, 6, -10) << "\n";                  //0.8
-  cout << dist_lines(point(-2, -1), point(1, 3),
-                     point(2, 3), point(-1, -1)) << "\n";             //0.8
-  cout << dist_seg(point(3, 3), point(-1, -1), point(2, 3)) << "\n";  //1
-  cout << dist_seg(point(2, 1), point(-1, -1), point(2, 3)) << "\n";  //1.2
-  cout << dist_segs(point(0, 2), point(3, 3),
-                    point(-1, -1), point(2, 3)) << "\n";              //0
-  cout << dist_segs(point(-1, 0), point(-2, 2),
-                    point(-1, -1), point(2, 3)) << "\n";              //0.6
+  assert(EQ(5, dist(pt(-1, -1), pt(2, 3))));
+  assert(EQ(25, dist2(pt(-1, -1), pt(2, 3))));
+  assert(EQ(1.2, dist_line(pt(2, 1), -4, 3, -1)));
+  assert(EQ(0.8, dist_line(pt(3, 3), pt(-1, -1), pt(2, 3))));
+  assert(EQ(1.2, dist_line(pt(2, 1), pt(-1, -1), pt(2, 3))));
+  assert(EQ(0.0, dist_lines(-4, 3, -1, 8, 6, 2)));
+  assert(EQ(0.8, dist_lines(-4, 3, -1, -8, 6, -10)));
+  assert(EQ(1.0, dist_seg(pt(3, 3), pt(-1, -1), pt(2, 3))));
+  assert(EQ(1.2, dist_seg(pt(2, 1), pt(-1, -1), pt(2, 3))));
+  assert(EQ(0.0, dist_segs(pt(0, 2), pt(3, 3), pt(-1, -1), pt(2, 3))));
+  assert(EQ(0.6, dist_segs(pt(-1, 0), pt(-2, 2), pt(-1, -1), pt(2, 3))));
   return 0;
 }

@@ -125,25 +125,25 @@ struct point {
 
 /*** Example Usage ***/
 
-#include <iostream>
-using namespace std;
+#include <cassert>
+#define pt point
 
-const double PI = acos(-1);
+const double PI = acos(-1.0);
 
 int main() {
-  point p(-10, 3);
-  cout << (p + point(-3, 9) * 6 / 2 - point(-1, 1)) << "\n"; //(-18,29)
-  cout << p.norm() << "\n";                                  //109
-  cout << p.abs() << "\n";                                   //10.4403
-  cout << p.arg() << "\n";                                   //2.85014
-  cout << p.dot(point(3, 10)) << "\n";                       //0
-  cout << p.cross(point(10, -3)) << "\n";                    //0
-  cout << p.proj(point(-10, 0)) << "\n";                     //10
-  cout << p.rot90() << "\n";                                 //(-3,-10)
-  cout << p.normalize().abs() << "\n";                       //1
-  cout << p.rotateCW(point(1, 1), PI / 2) << "\n";           //(3,12)
-  cout << p.rotateCCW(point(2, 2), PI / 2) << "\n";          //(1,-10)
-  cout << p.reflect(point(0, 0)) << "\n";                    //(10,-3)
-  cout << p.reflect(point(-2, 0), point(5, 0)) << "\n";      //(-10,-3)
+  pt p(-10, 3);
+  assert(pt(-18, 29) == p + pt(-3, 9) * 6 / 2 - pt(-1, 1));
+  assert(EQ(109, p.norm()));
+  assert(EQ(10.44030650891, p.abs()));
+  assert(EQ(2.850135859112, p.arg()));
+  assert(EQ(0,  p.dot(pt(3, 10))));
+  assert(EQ(0,  p.cross(pt(10, -3))));
+  assert(EQ(10, p.proj(pt(-10, 0))));
+  assert(EQ(1,  p.normalize().abs()));
+  assert(pt(-3, -10) == p.rot90());
+  assert(pt(3, 12)   == p.rotateCW(pt(1, 1), PI / 2));
+  assert(pt(1, -10)  == p.rotateCCW(pt(2, 2), PI / 2));
+  assert(pt(10, -3)  == p.reflect(pt(0, 0)));
+  assert(pt(-10, -3) == p.reflect(pt(-2, 0), pt(5, 0)));
   return 0;
 }
