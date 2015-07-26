@@ -29,13 +29,15 @@ faster in practice than other O(N*log(N)) algorithms.
 template<class It, class Compare>
 void quicksort(It lo, It hi, Compare cmp) {
   if (lo + 1 >= hi) return;
-  std::swap(*lo, *(lo + (hi - lo) / 2));
-  It x = lo;
-  for (It i = lo + 1; i < hi; i++)
-    if (cmp(*i, *lo)) std::swap(*(++x), *i);
-  std::swap(*lo, *x);
-  quicksort(lo, x, cmp);
-  quicksort(x + 1, hi, cmp);
+  It i, j, pivot = lo + (hi - lo) / 2;
+  for (i = lo, j = hi - 1; ; ++i, ++j) {
+    while (cmp(*i, *pivot)) ++i;
+    while (cmp(*pivot, *j)) --j;
+    if (i >= j) break;
+    std::swap(*i, *j);
+  }
+  quicksort(lo, i, cmp);
+  quicksort(i, hi, cmp);
 }
 
 template<class It> void quicksort(It lo, It hi) {
