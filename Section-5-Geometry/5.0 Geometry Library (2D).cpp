@@ -434,7 +434,7 @@ double dist_segs(const point & a, const point & b,
                   std::min(dist_seg(c, a, b), dist_seg(d, a, b)));
 }
 
-//determins the point on line L that is closest to point p
+//determines the point on line l that is closest to point p
 //this always lies on the line through p perpendicular to l.
 point closest_point(const line & l, const point & p) {
   if (EQ(l.a, 0)) return point(p.x, -l.c); //horizontal line
@@ -449,7 +449,7 @@ point closest_point(const line & l, const point & p) {
 point closest_point(const point & a, const point & b, const point & p) {
   if (a == b) return a;
   point ap(p - a), ab(b - a);
-  double t = ap.dot(ab) / ab.norm();
+  double t = ap.dot(ab) / norm(ab);
   if (t <= 0) return a;
   if (t >= 1) return b;
   return point(a.x + t * ab.x, a.y + t * ab.y);
