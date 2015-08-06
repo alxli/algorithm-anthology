@@ -20,7 +20,7 @@ const double phi = (1.0 + sqrt(5.0)) / 2.0; //golden ratio
 //Sketchy but working defintions of +infinity, -infinity and quiet NaN
 //A better way is using functions of std::numeric_limits<T> from <limits>
 //See main() for identities involving the following special values.
-const double posinf = 1.0/0.0, neginf = -1.0/0.0, NaN = -(0.0/0.0);
+const double posinf = 1.0 / 0.0, neginf = -1.0 / 0.0, NaN = -(0.0 / 0.0);
 
 /*
 
@@ -82,11 +82,11 @@ Assumptions:  sizeof(float) == sizeof(int) and
 */
 
 inline bool signbit(float x) {
-  return (*(int*)&x) >> (sizeof(float)*8 - 1);
+  return (*(int*)&x) >> (sizeof(float) * 8 - 1);
 }
 
 inline bool signbit(double x) {
-  return (*(long long*)&x) >> (sizeof(double)*8 - 1);
+  return (*(long long*)&x) >> (sizeof(double) * 8 - 1);
 }
 
 template<class Double>
@@ -186,18 +186,18 @@ Adapted from: http://www.digitalmars.com/archives/cplusplus/3634.html#N3655
 */
 
 //calculate 12 significant figs (don't ask for more than 1e-15)
-static const double rel_error= 1e-12;
+static const double rel_error = 1e-12;
 
 double erf(double x) {
   if (signbit(x)) return -erf(-x);
   if (fabs(x) > 2.2) return 1.0 - erfc(x);
-  double sum = x, term = x, xsqr = x*x;
+  double sum = x, term = x, xsqr = x * x;
   int j = 1;
   do {
     term *= xsqr / j;
-    sum -= term / (2 * j++ + 1);
+    sum -= term / (2 * (j++) + 1);
     term *= xsqr / j;
-    sum += term / (2 * j++ + 1);
+    sum += term / (2 * (j++) + 1);
   } while (fabs(term) / sum > rel_error);
   return 1.128379167095512574 * sum; //1.128 ~ 2/sqrt(pi)
 }
@@ -213,7 +213,7 @@ double erfc(double x) {
     q1 = q2;
     q2 = b / d;
   } while (fabs(q1 - q2) / q2 > rel_error);
-  return 0.564189583547756287 * exp(-x*x) * q2; //0.564 ~ 1/sqrt(pi)
+  return 0.564189583547756287 * exp(-x * x) * q2; //0.564 ~ 1/sqrt(pi)
 }
 
 /*
@@ -272,7 +272,7 @@ double lgamma(double x) {
   double z = 1.0 / (x * x), sum = c[7];
   for (int i = 6; i >= 0; i--) sum = sum * z + c[i];
   static const double halflog2pi = 0.91893853320467274178032973640562;
-  return (x - 0.5) * log(x) - x + halflog2pi + sum/x;
+  return (x - 0.5) * log(x) - x + halflog2pi + sum / x;
 }
 
 /*
