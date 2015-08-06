@@ -29,12 +29,12 @@ const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 const double eps = 1e-9;
 
-#define EQ(a, b) (fabsl((a) - (b)) <= eps) /* equal to */
-#define NE(a, b) (fabsl((a) - (b)) > eps)  /* not equal to */
-#define LT(a, b) ((a) < (b) - eps)         /* less than */
-#define GT(a, b) ((a) > (b) + eps)         /* greater than */
-#define LE(a, b) ((a) <= (b) + eps)        /* less than or equal to */
-#define GE(a, b) ((a) >= (b) - eps)        /* greater than or equal to */
+#define EQ(a, b) (fabs((a) - (b)) <= eps) /* equal to */
+#define NE(a, b) (fabs((a) - (b)) > eps)  /* not equal to */
+#define LT(a, b) ((a) < (b) - eps)        /* less than */
+#define GT(a, b) ((a) > (b) + eps)        /* greater than */
+#define LE(a, b) ((a) <= (b) + eps)       /* less than or equal to */
+#define GE(a, b) ((a) >= (b) - eps)       /* greater than or equal to */
 
 //2D Points Class - like std::complex, but with epsilon comparisons
 struct point {
@@ -534,89 +534,6 @@ double rectangle_area(const point & a, const point & b) {
   return fabs((a.x - b.x) * (a.y - b.y));
 }
 
-//sorting points of a polygon clockwise around a specified center point
-//this could be the arithmetic average of all the points (centroid)
-//note: different center choices will yield different polygons
-
-//finds the centroid from a range [lo, hi) of points in O(N)
-template<class It> point centroid(It lo, It hi) {
-  point res(0, 0);
-  int points = hi - lo;
-  while (lo != hi) res += *(lo++);
-  return res / points;
-}
-
-point ctr;
-
-//just define your own ctr and call std::sort(lo, hi, cw_comp)
-bool cw_comp(const point & a, const point & b) {
-  if (GE(a.x - ctr.x, 0) && LT(b.x - ctr.x, 0)) return true;
-  if (LT(a.x - ctr.x, 0) && GE(b.x - ctr.x, 0)) return false;
-  if (EQ(a.x - ctr.x, 0) && EQ(b.x - ctr.x, 0)) {
-    if (GE(a.y - ctr.y, 0) || GE(b.y - ctr.y, 0))
-      return a.y > b.y;
-    return b.y > a.y;
-  }
-  double det = cross(ctr, a, b);
-  if (EQ(det, 0)) return norm(a - ctr) > norm(b - ctr);
-  return det < 0;
-}
-
-bool ccw_comp(const point & a, const point & b) {
-  return cw_comp(b, a);
-}
-
-//convex hull from a range [lo, hi) of points
-//monotone chain in O(n log n) to find hull points in CW order
-//notes: the range of input points will be sorted lexicographically
-//       change GE comparisons to LE to produce hull points in CCW order
-template<class It> std::vector<point> convex_hull(It lo, It hi) {
-  int k = 0;
-  std::vector<point> res(2 * (int)(hi - lo));
-  std::sort(lo, hi); //compare by x, then by y if x-values are equal
-  for (It it = lo; it != hi; ++it) {
-    while (k >= 2 && GE(cross(res[k - 2], res[k - 1], *it), 0)) k--;
-    res[k++] = *it;
-  }
-  int t = k + 1;
-  //for (i = n - 2; i >= 0; i--)
-  for (It it = hi - 2; it != lo - 1; --it) {
-    while (k >= t && GE(cross(res[k - 2], res[k - 1], *it), 0)) k--;
-    res[k++] = *it;
-  }
-  res.resize(k - 1); //resize(k) if want the first point repeated
-  return res;
-}
-
-//return whether point p is in polygon specified by range [lo, hi) in O(n)
-//[lo, hi) must point to the polygon vertices, sorted in CW or CCW order
-template<class It> bool point_in_polygon(const point & p, It lo, It hi) {
-  int cnt = 0;
-  for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    if (EQ(i->y, p.y) && (EQ(i->x, p.x) ||
-                         (EQ(j->y, p.y) && (LE(i->x, p.x) || LE(j->x, p.x)))))
-      return EDGE_IS_INSIDE; //on an edge
-    if (GT(i->y, p.y) != GT(j->y, p.y)) {
-      double det = cross(p, *i, *j);
-      if (EQ(det, 0)) return EDGE_IS_INSIDE; //on an edge
-      if (GT(det, 0) != GT(j->y, i->y)) cnt++;
-    }
-  }
-  return cnt % 2 == 1;
-}
-
-//area of a polygon specified by range [lo, hi) - shoelace formula in O(n)
-//[lo, hi) must point to the polygon vertices, sorted in CW or CCW order
-template<class It> double polygon_area(It lo, It hi) {
-  if (lo == hi) return 0;
-  double area = 0;
-  if (*lo != *--hi)
-    area += (lo->x - hi->x) * (lo->y + hi->y);
-  for (It i = hi, j = hi - 1; i != lo; --i, --j)
-    area += (i->x - j->x) * (i->y + j->y);
-  return fabs(area / 2.0);
-}
-
 //2D circle class - represented by (x - h)^2 + (y - k)^2 = r^2
 //a generic circle has center point (h, k) and a radius r
 struct circle {
@@ -703,28 +620,6 @@ circle incircle(const point & a, const point & b, const point & c) {
   return circle((al * a.x + bl * b.x + cl * c.x) / p,
                 (al * a.y + bl * b.y + cl * c.y) / p,
                 2.0 * triangle_area(a, b, c) / p);
-}
-
-//smallest enclosing circle of a set of points in O(n) average
-//returns the smallest circle that contains all the points in
-//the range [lo, hi). For better average case performance,
-//the points in the input range will be std::random_shuffled.
-template<class It> circle smallest_circle(It lo, It hi) {
-  if (lo == hi) return circle(0, 0, 0);
-  if (lo + 1 == hi) return circle(lo->x, lo->y, 0);
-  std::random_shuffle(lo, hi);
-  circle res(*lo, *(lo + 1));
-  for (It i = lo + 2; i != hi; ++i) {
-    if (res.contains(*i)) continue;
-    res = circle(*lo, *i);
-    for (It j = lo + 1; j != i; ++j) {
-      if (res.contains(*j)) continue;
-      res = circle(*i, *j);
-      for (It k = lo; k != j; ++k)
-        if (!res.contains(*k)) res = circle(*i, *j, *k);
-    }
-  }
-  return res;
 }
 
 //tangent line(s) to circle c passing through p. there are 3 cases:
@@ -833,7 +728,6 @@ using namespace std;
 #define pt point
 
 int main() {
-
   pt p, q;
 
   p = point(-10, 3);
@@ -938,24 +832,6 @@ int main() {
   assert(EQ(6, triangle_area_medians(3.605551275, 2.5, 4.272001873)));
   assert(EQ(6, triangle_area_altitudes(3, 4, 2.4)));
 
-  //irregular pentagon with only (1, 2) not on the convex hull
-  pt pts[] = {pt(1, 3), pt(1, 2), pt(2, 1), pt(0, 0), pt(-1, 3)};
-  vector<pt> v(pts, pts + 5);
-  std::random_shuffle(v.begin(), v.end());
-  ctr = centroid(v.begin(), v.end()); //note: ctr is a global variable
-  assert(ctr == pt(0.6, 1.8));
-  sort(v.begin(), v.end(), cw_comp);
-  for (int i = 0; i < (int)v.size(); i++) assert(v[i] == pts[i]);
-  vector<pt> h = convex_hull(v.begin(), v.end());
-  cout << "hull points:";
-  for (int i = 0; i < (int)h.size(); i++) cout << " " << h[i];
-  cout << "\n";
-  assert(point_in_polygon(pt(1, 2), h.begin(), h.end()));
-  assert(point_in_polygon(pt(0, 3), h.begin(), h.end()));
-  assert(!point_in_polygon(pt(0, 3.01), h.begin(), h.end()));
-  assert(!point_in_polygon(pt(2, 2), h.begin(), h.end()));
-  assert(EQ(polygon_area(h.begin(), h.end()), 5.5));
-
   circle c(-2, 5, sqrt(10)); //(x+2)^2+(y-5)^2=10
   assert(c == circle(point(-2, 5), sqrt(10)));
   assert(c == circle(point(1, 6), point(-5, 4)));
@@ -964,16 +840,13 @@ int main() {
   assert(c.contains(point(-2, 8)) && !c.contains(point(-2, 9)));
   assert(c.on_edge(point(-1, 2)) && !c.on_edge(point(-1.01, 2)));
 
-  circle c2 = smallest_circle(pts, pts + 5);
-  assert(c2 == circle(0.3571428571, 1.7857142857, 1.8210783977));
-
   line l1, l2;
   assert(0 == tangents(circle(0, 0, 4), pt(1, 1), &l1, &l2));
   assert(1 == tangents(circle(0, 0, sqrt(2)), pt(1, 1), &l1, &l2));
-  cout << l1.a << " " << l1.b << " " << l1.c << "\n"; // -x - y + 2 = 0
+  assert(l1 == line(-1, -1, 2));
   assert(2 == tangents(circle(0, 0, 2), pt(2, 2), &l1, &l2));
-  cout << l1.a << " " << l1.b << " " << l1.c << "\n"; //    -2y + 4 = 0
-  cout << l2.a << " " << l2.b << " " << l2.c << "\n"; // 2x     - 4 = 0
+  assert(l1 == line(0, -2, 4));
+  assert(l2 == line(2, 0, -4));
 
   assert(0 == intersection(circle(1, 1, 3), line(5, 3, -30), &p, &q));
   assert(1 == intersection(circle(1, 1, 3), line(0, 1, -4), &p, &q));

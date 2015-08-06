@@ -1,5 +1,5 @@
 #include <algorithm> /* std::min(), std::max() */
-#include <cmath>     /* fabs(), sqrt() */
+#include <cmath>     /* acos(), fabs(), sqrt() */
 #include <utility>   /* std::pair */
 
 typedef std::pair<double, double> point;
