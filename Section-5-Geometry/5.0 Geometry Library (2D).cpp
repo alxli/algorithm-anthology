@@ -2,20 +2,24 @@
 
 5.0 - 2D Geometry Library
 
-This is the entire chapter in one file for easy access due to cross-
-dependencies. This file will try to take advantage of previously defined
-classes, unlike the split-up sections which will be more portable in
-definitions (where, for example, cross() may be implemented with the
-formula in terms of x and y, instead of using the point arithmetic and
-cross() function previously defined). All of the functions below apply
-to a 2D Cartesian coordinate system where the positive x directions
-points to the "right" and the positive y direction points "up".
+This file contains all the *constant time* 2D geometric calculations in
+this entire section. In other words, all of the mathematical manipulations
+here will run in O(1) time, and algorithms such as closest pair and convex
+hull are omitted. They may be found in their independent sections. Here,
+we merely have convenient geometric classes and functions in one file for
+easy access due to cross-dependencies.
 
-Sections will be split up after this file is finalized.
+Functions in this file will try to take advantage of previously defined
+classes, unlike in the split-up sections, which will be more portable in
+definitions. For example, cross() may be implemented with the formula
+expressed in terms of x and y, instead of using the point arithmetic and
+cross() function previously defined here. All of the functions below apply
+to a 2D Cartesian coordinate system where the positive x direction points
+to the "right" and the positive y direction points "up".
 
 */
 
-#include <algorithm> /* std::sort(), std::swap() */
+#include <algorithm> /* std::swap() */
 #include <cmath>     /* acos, atan2, cos, fabs, sin, sqrt */
 #include <limits>    /* std::numeric_limits */
 #include <ostream>
