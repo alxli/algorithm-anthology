@@ -752,6 +752,7 @@ int tangents(const circle & c, const point & p, line * l1 = 0, line * l2 = 0) {
   }
   t1.x = t1.x * c.r + c.h;
   t2.x = t2.x * c.r + c.h;
+  //note: here, t1 and t2 are the two points of tangencies
   if (l1 != 0) *l1 = line(p, t1);
   if (l2 != 0) *l2 = line(p, t2);
   return 2;
@@ -783,8 +784,9 @@ int intersection(const circle & c, const line & l,
 }
 
 //determines the intersection points between two circles c1 and c2
-//returns: -1, if the circles are disjoint
-//          0, if one circle is completely inside the other
+//returns: -2, if circle c2 completely encloses circle c1
+//         -1, if circle c1 completely encloses circle c2
+//          0, if the circles are completely disjoint
 //          1, if the circles are tangent (one intersection point)
 //          2, if the circles intersect at two points
 //          3, if the circles intersect at infinite points (c1 = c2)
@@ -793,11 +795,11 @@ int intersection(const circle & c, const line & l,
 int intersection(const circle & c1, const circle & c2,
                  point * p = 0, point * q = 0) {
   if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k))
-    return EQ(c1.r, c2.r) ? 3 : 0;
+    return EQ(c1.r, c2.r) ? 3 : (c1.r > c2.r ? -1 : -2);
   point d12(c2.center() - c1.center());
   double d = abs(d12);
-  if (GT(d, c1.r + c2.r)) return -1;
-  if (LT(d, fabs(c1.r - c2.r))) return 0;
+  if (GT(d, c1.r + c2.r)) return 0;
+  if (LT(d, fabs(c1.r - c2.r))) return c1.r > c2.r ? -1 : -2;
   double a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
   double x0 = c1.h + (d12.x * a / d);
   double y0 = c1.k + (d12.y * a / d);
@@ -807,8 +809,8 @@ int intersection(const circle & c1, const circle & c2,
     if (p != 0) *p = point(x0, y0);
     return 1;
   }
-  if (p != 0) *p = point(x0 + rx, y0 + ry);
-  if (q != 0) *q = point(x0 - rx, y0 - ry);
+  if (p != 0) *p = point(x0 - rx, y0 - ry);
+  if (q != 0) *q = point(x0 + rx, y0 + ry);
   return 2;
 }
 
@@ -831,7 +833,10 @@ using namespace std;
 #define pt point
 
 int main() {
-  pt p(-10, 3);
+
+  pt p, q;
+
+  p = point(-10, 3);
   assert(pt(-18, 29) == p + pt(-3, 9) * 6 / 2 - pt(-1, 1));
   assert(EQ(109, p.norm()));
   assert(EQ(10.44030650891, p.abs()));
@@ -886,7 +891,6 @@ int main() {
   //http://martin-thoma.com/how-to-check-if-two-line-segments-intersect/
   {
 #define test(a,b,c,d,e,f,g,h) intersection(pt(a,b),pt(c,d),pt(e,f),pt(g,h),&p,&q)
-    pt p, q;
     //intersection is a point
     assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4));   assert(p == pt(0, 0));
     assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4));  assert(p == pt(2, 2));
@@ -966,9 +970,32 @@ int main() {
   line l1, l2;
   assert(0 == tangents(circle(0, 0, 4), pt(1, 1), &l1, &l2));
   assert(1 == tangents(circle(0, 0, sqrt(2)), pt(1, 1), &l1, &l2));
-  assert(l1 == line(1, 1, -2));
+  cout << l1.a << " " << l1.b << " " << l1.c << "\n"; // -x - y + 2 = 0
   assert(2 == tangents(circle(0, 0, 2), pt(2, 2), &l1, &l2));
-  assert(l1 == line(0, 1, -2));
-  assert(l2 == line(1, 0, -2));
+  cout << l1.a << " " << l1.b << " " << l1.c << "\n"; //    -2y + 4 = 0
+  cout << l2.a << " " << l2.b << " " << l2.c << "\n"; // 2x     - 4 = 0
+
+  assert(0 == intersection(circle(1, 1, 3), line(5, 3, -30), &p, &q));
+  assert(1 == intersection(circle(1, 1, 3), line(0, 1, -4), &p, &q));
+  assert(p == pt(1, 4));
+  assert(2 == intersection(circle(1, 1, 3), line(0, 1, -1), &p, &q));
+  assert(p == pt(4, 1));
+  assert(q == pt(-2, 1));
+
+  assert(-2 == intersection(circle(1, 1, 1), circle(0, 0, 3), &p, &q));
+  assert(-1 == intersection(circle(0, 0, 3), circle(1, 1, 1), &p, &q));
+  assert(0 == intersection(circle(5, 0, 4), circle(-5, 0, 4), &p, &q));
+  assert(1 == intersection(circle(-5, 0, 5), circle(5, 0, 5), &p, &q));
+  assert(p == pt(0, 0));
+  assert(2 == intersection(circle(-0.5, 0, 1), circle(0.5, 0, 1), &p, &q));
+  assert(p == pt(0, -sqrt(3) / 2));
+  assert(q == pt(0, sqrt(3) / 2));
+
+  //example where each circle passes through the other circle's center
+  //http://math.stackexchange.com/a/402891
+  double r = 3;
+  double a = intersection_area(circle(-r / 2, 0, r), circle(r / 2, 0, r));
+  assert(EQ(a, r * r * (2 * PI / 3 - sqrt(3) / 2)));
+
   return 0;
 }
