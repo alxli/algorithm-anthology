@@ -4,18 +4,20 @@
 
 This file contains all the *constant time* 2D geometric calculations in
 this entire section. In other words, all of the mathematical manipulations
-here will run in O(1) time, and algorithms such as closest pair and convex
-hull are omitted. They may be found in their independent sections. Here,
-we merely have convenient geometric classes and functions in one file for
-easy access due to cross-dependencies.
+here will run in O(1) time. Computationally heavy algorithms such as the
+closest pair problem and convex hull are omitted. All of these topics,
+constant time or not, may be found in their independent files. You may
+refer to each independent section for more documentation on their usage.
+This file is merely a convenient amalgamation of the geometric definitions
+to simplify cross-dependencies.
 
 Functions in this file will try to take advantage of previously defined
-classes, unlike in the split-up sections, which will be more portable in
-definitions. For example, cross() may be implemented with the formula
-expressed in terms of x and y, instead of using the point arithmetic and
-cross() function previously defined here. All of the functions below apply
-to a 2D Cartesian coordinate system where the positive x direction points
-to the "right" and the positive y direction points "up".
+classes, unlike in the split-up sections, which are more portable in
+their implementations. Elsewhere, cross() may be implemented with the
+formula expressed in terms of x and y, instead of point arithmetic and
+the more generic cross() method of the point class. All of the operations
+below apply to a 2D Cartesian coordinate system where the positive x
+direction points to the "right" and the positive y direction points "up".
 
 */
 
@@ -396,8 +398,8 @@ bool overlap(const double & l1, const double & h1,
 //returns: -1, if segments do not intersect,
 //          0, if there is exactly one intersection point
 //         +1, if the intersection is another line segment
-//In case 2, the intersection point is stored into p
-//In case 3, the intersection segment is stored into p and q
+//in case 2, the intersection point is stored into p
+//in case 3, the intersection segment is stored into p and q
 int intersection(const point & a, const point & b,
                  const point & c, const point & d,
                  point * p = 0, point * q = 0) {
@@ -630,8 +632,8 @@ circle incircle(const point & a, const point & b, const point & c) {
 //returns: 0, if there are no lines (p is strictly inside c)
 //         1, if there is 1 tangent line (p is on the edge)
 //         2, if there are 2 tangent lines (p is strictly outside)
-//If there is only 1 tangent, then the line will be stored in l1.
-//If there are 2, then they will be stored in l1 and l2 respectively.
+//if there is only 1 tangent, then the line will be stored in l1
+//if there are 2, then they will be stored in l1 and l2 respectively
 int tangents(const circle & c, const point & p, line * l1 = 0, line * l2 = 0) {
   if (c.on_edge(p)) {
     if (l1 != 0) *l1 = line(point(c.h, c.k), p).perpendicular(p);
@@ -661,8 +663,8 @@ int tangents(const circle & c, const point & p, line * l1 = 0, line * l2 = 0) {
 //returns: 0, if the line does not intersect with the circle
 //         1, if the line is tangent (one intersection)
 //         2, if the line crosses through the circle
-//If there is 1 intersection point, it will be stored in p
-//If there are 2, they will be stored in p and q respectively
+//if there is 1 intersection point, it will be stored in p
+//if there are 2, they will be stored in p and q respectively
 int intersection(const circle & c, const line & l,
                  point * p = 0, point * q = 0) {
   if (!l.valid())
@@ -689,8 +691,8 @@ int intersection(const circle & c, const line & l,
 //          1, if the circles are tangent (one intersection point)
 //          2, if the circles intersect at two points
 //          3, if the circles intersect at infinite points (c1 = c2)
-//If one intersection, the intersection point is stored in p
-//If two, the intersection points are stored in p and q respectively
+//if one intersection, the intersection point is stored in p
+//if two, the intersection points are stored in p and q respectively
 int intersection(const circle & c1, const circle & c2,
                  point * p = 0, point * q = 0) {
   if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k))
