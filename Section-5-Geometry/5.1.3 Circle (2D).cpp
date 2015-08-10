@@ -1,3 +1,15 @@
+/*
+
+5.1.3 - 2D Circle Class
+
+A 2D circle with center at (h, k) and a radius of r can be expressed by
+the relation (x - h)^2 + (y - k)^2 = r^2. In the following definition,
+the radius used to construct it is forced to be a positive number.
+
+All operations are O(1) in time and space.
+
+*/
+
 #include <cmath>     /* fabs(), sqrt() */
 #include <ostream>
 #include <stdexcept> /* std::runtime_error() */
@@ -52,7 +64,7 @@ struct circle {
   //circle from 2 points and a radius - many possible edge cases!
   //in the "normal" case, there will be 2 possible circles, one
   //centered at (h1, k1) and the other (h2, k2). Only one is used.
-  //Note that (h1, k1) equals (h2, k2) if dist(a, b) = 2*r = d
+  //note that (h1, k1) equals (h2, k2) if dist(a, b) = 2 * r = d
   circle(const point & a, const point & b, const double & R) {
     r = fabs(R);
     if (LE(r, 0) && a == b) { //circle is a point
