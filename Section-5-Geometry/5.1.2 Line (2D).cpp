@@ -2,11 +2,13 @@
 
 5.1.2 - 2D Line Class
 
-A line is expressed in the form Ax + By + C = 0. All lines can be
+A 2D line is expressed in the form Ax + By + C = 0. All lines can be
 "normalized" to a canonical form by insisting that the y-coefficient
 equal 1 if it is non-zero. Otherwise, we set the x-coefficient to 1.
 If B is non-zero, then we have the common case where the slope = -A
 after normalization.
+
+All operations are O(1) in time and space.
 
 */
 
