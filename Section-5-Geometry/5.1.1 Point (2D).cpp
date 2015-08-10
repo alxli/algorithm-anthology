@@ -4,7 +4,12 @@
 
 This class is very similar to std::complex, except it uses epsilon
 comparisons and also supports other operations such as reflection
-and rotation. All operations are O(1) in space and time.
+and rotation. In addition, this class supports many arithmetic
+operations (e.g. overloaded operators for vector addition, subtraction,
+multiplication, and division; dot/cross products, etc.) pertaining to
+2D cartesian vectors.
+
+All operations are O(1) in time and space.
 
 */
 
