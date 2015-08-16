@@ -1,3 +1,15 @@
+/*
+
+5.2.1 - Angles (2D)
+
+Angle calculations in 2 dimensions. All returned angles are in radians,
+except for reduce_deg(). If x is an angle in radians, then you may use
+x * DEG to convert x to degrees, and vice versa to radians with x * RAD.
+
+All operations are O(1) in time and space.
+
+*/
+
 #include <cmath>     /* acos(), fabs(), sqrt(), atan2() */
 #include <utility>   /* std::pair */
 
@@ -6,6 +18,7 @@ typedef std::pair<double, double> point;
 #define y second
 
 const double PI = acos(-1.0), RAD = 180 / PI, DEG = PI / 180;
+
 double abs(const point & a) { return sqrt(a.x * a.x + a.y * a.y); }
 
 //reduce angles to the range [0, 360) degrees. e.g. reduce_deg(-630) = 90
