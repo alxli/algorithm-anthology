@@ -2,9 +2,12 @@
 
 5.2.3 - Line Intersections (2D)
 
-Intersections between straight lines, as well as line segments.
-Also included are functions to determine the closest point to a line,
-which is done by finding the intersection through the perpendicular.
+Intersections between straight lines, as well as between line segments
+in 2 dimensions. Also included are functions to determine the closest
+point to a line, which is done by finding the intersection through the
+perpendicular. Note that you should modify the TOUCH_IS_INTERSECT flag
+used for line segment intersection, depending on whether you wish for
+the algorithm to consider barely touching segments to intersect.
 
 All operations are O(1) in time and space.
 
