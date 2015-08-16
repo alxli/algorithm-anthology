@@ -48,7 +48,7 @@ Double find_root(const poly & p, Double x1, Double x2) {
   if (fabsl(y1) <= eps0) return x1;
   bool neg1 = (y1 < 0), neg2 = (y2 < 0);
   if (fabsl(y2) <= eps0 || neg1 == neg2) return NaN;
-  while (x2 - x1 > epsa && x1*(1 + epsr) < x2 && x2*(1 + epsr) > x1) {
+  while (x2 - x1 > epsa && x1 * (1 + epsr) < x2 && x2 * (1 + epsr) > x1) {
     Double x = (x1 + x2) / 2;
     ((eval(p, x) < 0) == neg1 ? x1 : x2) = x;
   }
