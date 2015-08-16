@@ -1,3 +1,15 @@
+/*
+
+5.2.3 - Line Intersections (2D)
+
+Intersections between straight lines, as well as line segments.
+Also included are functions to determine the closest point to a line,
+which is done by finding the intersection through the perpendicular.
+
+All operations are O(1) in time and space.
+
+*/
+
 #include <algorithm> /* std::min(), std::max() */
 #include <cmath>     /* fabs(), sqrt() */
 #include <utility>   /* std::pair */
