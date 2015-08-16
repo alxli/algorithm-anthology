@@ -1,3 +1,14 @@
+/*
+
+5.2.4 - Circle Intersection (2D)
+
+Tangent lines to circles, circle-line intersections, and circle-circle
+intersections (intersection point(s) as well as area) in 2 dimensions.
+
+All operations are O(1) in time and space.
+
+*/
+
 #include <algorithm> /* std::min(), std::max() */
 #include <cmath>     /* acos(), fabs(), sqrt() */
 #include <utility>   /* std::pair */
@@ -25,8 +36,8 @@ struct circle {
   }
 };
 
-//note: this is a simple version that is not canonicalized. For example,
-//      comparing lines with == signs will not work as intended. For a
+//note: this is a simplified version of line that is not canonicalized.
+// e.g. comparing lines with == signs will not work as intended. For a
 //      fully featured line class, see the whole geometry library.
 struct line {
   double a, b, c;
