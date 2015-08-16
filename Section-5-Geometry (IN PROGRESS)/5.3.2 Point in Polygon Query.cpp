@@ -2,6 +2,14 @@
 
 5.3.2 - Point in Polygon Query
 
+Given a single point p and another range of points specifying a
+polygon, determine whether p lies within the polygon. Note that
+you should modify the EDGE_IS_INSIDE flag, depending on whether
+you wish for the algorithm to consider points lying on an edge of
+the polygon to be inside it.
+
+Complexity: O(n) on the number of vertices in the polygon.
+
 */
 
 #include <algorithm> /* std::sort() */
@@ -18,6 +26,7 @@ const double eps = 1e-9;
 #define GT(a, b) ((a) > (b) + eps)        /* greater than */
 #define LE(a, b) ((a) <= (b) + eps)       /* less than or equal to */
 
+//should we consider points lying on an edge to be inside the polygon?
 const bool EDGE_IS_INSIDE = true;
 
 //magnitude of the 3D cross product with Z component implicitly equal to 0
