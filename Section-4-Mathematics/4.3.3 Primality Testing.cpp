@@ -6,7 +6,7 @@
 
 /*
 
-Trial division in O(sqrt(N)) to return whether n is prime
+Trial division in O(sqrt(n)) to return whether n is prime
 Applies an optimization based on the fact that all
 primes greater than 3 take the form 6n + 1 or 6n - 1.
 
