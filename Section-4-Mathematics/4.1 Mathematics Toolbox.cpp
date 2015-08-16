@@ -168,8 +168,8 @@ template<class Double> Double roundrandom(const Double & x) {
 
 //round x to N digits after the decimal using the specified round function
 //e.g. roundplaces(-1.23456, 3, roundhalfdown0<double>) returns -1.235
-template<class Double, class Function>
-double roundplaces(const Double & x, unsigned int N, Function f) {
+template<class Double, class RoundFunction>
+double roundplaces(const Double & x, unsigned int N, RoundFunction f) {
   return f(x * pow(10, N)) / pow(10, N);
 }
 
