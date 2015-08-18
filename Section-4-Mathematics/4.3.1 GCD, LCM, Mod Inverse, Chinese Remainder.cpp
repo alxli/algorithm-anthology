@@ -35,12 +35,12 @@ template<class Int> Int lcm(Int a, Int b) {
 template<class Int>
 std::pair<Int, std::pair<Int, Int> > euclid(Int a, Int b) {
   Int x = 1, y = 0, x1 = 0, y1 = 1;
-  //invariant: a = a*x + b*y, b = a*x1 + b*y1
+  //invariant: a = a * x + b * y, b = a * x1 + b * y1
   while (b != 0) {
     Int q = a / b, _x1 = x1, _y1 = y1, _b = b;
-    x1 = x - q*x1;
-    y1 = y - q*y1;
-    b = a - q*b;
+    x1 = x - q * x1;
+    y1 = y - q * y1;
+    b = a - q * b;
     x = _x1;
     y = _y1;
     a = _b;
@@ -86,7 +86,7 @@ template<class Int> Int mod(Int a, Int m) {
 //precondition: m > 0 && gcd(a, m) = 1
 template<class Int> Int mod_inverse(Int a, Int m) {
   a = mod(a, m);
-  return a == 0 ? 0 : mod((1 - m*mod_inverse(m % a, a)) / a, m);
+  return a == 0 ? 0 : mod((1 - m * mod_inverse(m % a, a)) / a, m);
 }
 
 //precondition: m > 0 && gcd(a, m) = 1
@@ -120,7 +120,7 @@ which all values in p[] are pairwise relative prime:
 
 the solution of the set of congruences is:
 
- x = a[1]*b[1]*(M/p[1]) + ... + a[n]*b[n]*(M/p[n]) (mod M),
+ x = a[1] * b[1] * (M/p[1]) + ... + a[n] * b[n] * (M/p[n]) (mod M)
 
 where M = p[1] * p[2] ... * p[n] and the b[i] are determined for
 
@@ -186,7 +186,7 @@ int main() {
       assert(euc1.first == g1 && euc1 == euc2);
       int x = euc1.second.first;
       int y = euc1.second.second;
-      assert(g1 == a*x + b*y);
+      assert(g1 == a * x + b * y);
     }
   }
 
