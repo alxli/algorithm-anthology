@@ -1,21 +1,35 @@
-Alex's Anthology of Algorithms: Common Code for Contests in Concise C++ (A³C⁵)
+Alex's Anthology of Algorithms: Common Code for Contests in Concise C++ (A<sup>3</sup>C<sup>5</sup>)
 ==================
 
 *Note*: You may find an **outdated** PDF version here: http://alexli.ca/A3C5.pdf.
-This version contains many mistakes that are fixed in the current GitHub branch.
+The PDF version contains only a fraction of algorithms found in this GitHub repository, and a whole multitude of mistakes that are fixed here. Use at your own risk!
 
 ## Introduction
 
-First and foremost, this project does not intend to better your understanding of algorithms. To make the best use of these algorithms and data structures, you should already have some knowledge of algorithmic programming paradigms, as well as the actual algorithms in question. In each source code file, you will find brief descriptions and simple examples to merely help you better understand the usage of the implementations. Although it is often possible to learn an algorithm by studying its implementation, memorizing another person's code is generally a less efficient way to learn than researching the idea and trying to implement it by yourself. Treat this anthology as a last resort, if you will, when you just require a concise and robust working implementation during programming contests.
+This anthology started as a personal project to implement classic algorithms in the most concise and "vanilla" way possible while minimizing code redundancy and obfuscation. I tried to make the most appropriate trade-off between clarity, flexibility, efficiency, and code length. Short descriptions of what the programs do along with their time (and space, where necessary) complexities are included. If these are insufficient to help you understand, then you should be able to find extra information by referring to the code's comments and looking online. I do not guarantee that the programs are bug-free - it is always best to carefully study the usage notes and examples first, especially before you make your own modifications.
 
-If you seek to become a better contest programmer, I suggest you follow through with the USACO training pages (http://train.usaco.org), read up on informatics books and online algorithm tutorials (e.g. "Introduction to Algorithms" by Cormen et. al., "The Algorithm Design Manual" by Skiena, "The Art of Computer Programming" by Knuth, Topcoder tutorials: http://www.topcoder.com/tc?d1=tutorials&d2=alg_index&module=Static, etc.). Practice on sites such as the Sphere Online Judge (http://www.spoj.com), Codeforces (http://www.codeforces.com), the UVa Online Judge (uva.onlinejudge.org), and the PEG judge (http://www.wcipeg.com). I strongly recommend making an effort to understand any code you did not write on your own. Once you are well acquainted with the underlying algorithms, you will become better at adapting them for the problem at hand. Perhaps along the way, you will infrequently refer here for insight on implementing any newly-learned concepts.
+C++ is my language of choice because of its predominance in competitions. The International Olympiad in Informatics (and practically every other programming contest) accepts solutions to tasks in C, C++ and Pascal. C++ is a fast, flexible language with a sizable standard library and support for useful features like built-in memory management and object-oriented programming. In an attempt to focus less on reinventing the wheel and more on the essence of the algorithms themselves, these implementations will attempt to take advantage of useful features of the C++ language and library (iterators, templates, functions in \<algorithm\>, STL data structures, etc.) whenever possible.
 
-C++ is my language of choice because of its predominance in competitions. The International Olympiad in Informatics (and practically every other programming contest) accepts solutions to tasks in C, C++ and Pascal. C++ is a fast, flexible language with a sizable standard library and support for useful features like built-in memory management and object-oriented programming. In an attempt to focus less on reinventing the wheel and more on the essence of the algorithms themselves, these implementations will attempt to take advantage of useful features of the C++ language and library (e.g. templates, functions in <algorithm>, etc.) when possible. The programs are tested with version 4.7.3 of the GNU Compiler Collection (GCC) on a 32-bit system (that means, for instance, bool/char are assumed to be 8-bits, int/float are assumed to be 32-bits, double/long long are assumed to be 64-bits, and long double is assumed to be 96-bits).
+The primary purpose of this project is not to better your understanding of algorithms. To take advantage of this anthology, you must have prior understanding of the algorithms in question. In each source code file, you will find brief descriptions and simple examples to clarify how the functions and classes should be used (not so much how they work). This is why if you actually want to learn algorithms, you are better off researching the idea and trying to implement it by yourself. Treat this as a last resort, if you will, when you just need a concise and working implementation in the heat of a programming contest.
 
-All the information in descriptions come from Wikipedia and other online sources. Some programs you will find are direct implementations of pseudocode found online, while others are re-adaptated from informatics books and journals. If references for a program are not listed in its comments, you may assume that I have written them from scratch. You are free to use, modify, and distribute these programs in accordance to GPL v2, but please examine any corresponding references to each program for more details before you use it.
-
-This anthology started as a personal project to implement classic algorithms in the most concise and "vanilla" way possible while minimizing code redundancy and obfuscation. I tried to determine the most appropriate trade-off between clarity, flexibility, efficiency, and code length. Short descriptions of what the programs do along with their time (and space, where necessary) complexities are typically included. For further clarification, diagrams may be given for the examples. If these are insufficient to help you understand, then you should be able to find extra information by referring to the code's comments and looking online. Lastly, I do not guarantee that the programs are bug-free - it is always best to carefully study the usage notes and examples first, especially before you make your own modifications.
+All the information in the comments (descriptions, complexities, etc.) come from Wikipedia and other online sources. Some programs here are direct implementations of pseudocode found online, while others are adaptated and translated from informatics books and journals. If references for a program are not listed in its comments, you may assume that I have written them from scratch. You are free to use, modify, and distribute these programs in accordance to the license, but please examine any corresponding references to each program for more details on usage and authorship before you use it.
 
 Cheers and best of luck!
 
 — Alex Li
+
+## Portability
+
+All programs are tested with version 4.7.3 of the GNU Compiler Collection (GCC) compiled for a 32-bit target system.
+
+That means the following assumptions are made:
+* bool and char are 8 bits
+* int and float are 32 bits
+* double and long long are 64 bits
+* long double is 96 bits
+
+Programs are highly portable (ISO C++ 1998 compliant), __except__ in the following regards:
+* Usage of long long and related aspects \[-Wlong-long\] (such as LLONG_MIN in \<climits\>), which are compliant in C99/C++0x or later. 64-bit integers are a must for many programming contest problems, so it is necessary to include these.
+* Usage of variable sized arrays \[-Wvla\] (an easy fix using vectors, but I chose to keep it because it is simpler and because dynamic memory is generally good to avoid in contests)
+* Usage of compound-literals, e.g. vec.push_back((mystruct){a, b, c}). This is used in the anthology because it makes code much more concise by not having to define a constructor. It is also trivial to fix, so what the heck.
+* Ad-hoc cases where bitwise hacks are intentionally used, such as functions for getting the signbit with type-puned pointers. If you are looking for these features, chances are you don't care about portability anyway.
