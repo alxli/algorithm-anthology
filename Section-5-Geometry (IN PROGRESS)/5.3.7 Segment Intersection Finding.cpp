@@ -32,28 +32,19 @@ double cross(const point & o, const point & a, const point & b) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-//should we consider barely touching segments an intersection?
 const bool TOUCH_IS_INTERSECT = true;
 
-//does [l, h] contain m?
-//precondition: l <= h
 bool contain(const double & l, const double & m, const double & h) {
   if (TOUCH_IS_INTERSECT) return LE(l, m) && LE(m, h);
   return LT(l, m) && LT(m, h);
 }
 
-//does [l1, h1] overlap with [l2, h2]?
-//precondition: l1 <= h1 and l2 <= h2
 bool overlap(const double & l1, const double & h1,
              const double & l2, const double & h2) {
   if (TOUCH_IS_INTERSECT) return LE(l1, h2) && LE(l2, h1);
   return LT(l1, h2) && LT(l2, h1);
 }
 
-//intersection of line segment ab with line segment cd
-//returns: -1, if segments do not intersect,
-//          0, if there is exactly one intersection point
-//         +1, if the intersection is another line segment
 int intersection(const point & a, const point & b,
                  const point & c, const point & d) {
   point ab(b.x - a.x, b.y - a.y);
