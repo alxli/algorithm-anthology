@@ -481,8 +481,6 @@ point closest_point(const point & a, const point & b, const point & p) {
   return point(a.x + t * ab.x, a.y + t * ab.y);
 }
 
-/*** Polygons ***/
-
 //if a point lies on the edge of a polygon, do we consider it inside?
 const bool EDGE_IS_INSIDE = true;
 
