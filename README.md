@@ -14,7 +14,7 @@ The primary purpose of this project is not to better your understanding of algor
 
 All the information in the comments (descriptions, complexities, etc.) come from Wikipedia and other online sources. Some programs here are direct implementations of pseudocode found online, while others are adaptated and translated from informatics books and journals. If references for a program are not listed in its comments, you may assume that I have written them from scratch. You are free to use, modify, and distribute these programs in accordance to the license, but please examine any corresponding references to each program for more details on usage and authorship before you use it.
 
-Cheers and best of luck!
+Cheers and hope you enjoy!
 
 — Alex Li
 
