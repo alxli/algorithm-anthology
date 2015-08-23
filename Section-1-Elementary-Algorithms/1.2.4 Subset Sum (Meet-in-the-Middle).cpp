@@ -15,7 +15,7 @@ Space Complexity: O(n) auxiliary on the size of the array.
 */
 
 #include <algorithm> /* std::max(), std::sort() */
-#include <climits>   /* LL_MIN */
+#include <climits>   /* LLONG_MIN */
 
 template<class It>
 long long sum_lower_bound(It lo, It hi, long long v) {

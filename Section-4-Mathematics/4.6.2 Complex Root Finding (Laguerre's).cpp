@@ -85,8 +85,8 @@ using namespace std;
 
 void print_roots(vector<cdouble> roots) {
   for (int i = 0; i < (int)roots.size(); i++) {
-    printf("(%9.5lf, ", (double)roots[i].real());
-    printf("%9.5lf)\n", (double)roots[i].imag());
+    printf("(%9.5f, ", (double)roots[i].real());
+    printf("%9.5f)\n", (double)roots[i].imag());
   }
 }
 

@@ -70,21 +70,23 @@ fail:
 
 /*** Example Usage (wcipeg.com/problem/syssolve) ***/
 
-#include <cstdio>
+#include <iostream>
+using namespace std;
 
 int main() {
   int n, m;
-  scanf("%d%d", &n, &m);
+  cin >> n >> m;
   vvd a(m, vd(n + 1));
   for (int i = 0; i < m; i++)
     for (int j = 0; j <= n; j++)
-      scanf("%lf", &a[i][j]);
+      cin >> a[i][j];
   vd x = solve_system(a);
   if (x.empty()) {
-    printf("NO UNIQUE SOLUTION\n");
+    cout << "NO UNIQUE SOLUTION\n";
   } else {
+    cout.precision(6);
     for (int i = 0; i < n; i++)
-      printf("%.6lf\n", x[i]);
+      cout << fixed << x[i] << "\n";
   }
   return 0;
 }

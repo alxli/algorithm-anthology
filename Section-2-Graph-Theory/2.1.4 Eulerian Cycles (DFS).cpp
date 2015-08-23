@@ -57,7 +57,7 @@ vector<int> euler_cycle_directed(vector<int> adj[], int u) {
 }
 
 vector<int> euler_cycle_undirected(vector<int> adj[], int u) {
-  bool used[MAXN][MAXN] = {0};
+  vector<vector<bool> > used(MAXN, vector<bool>(MAXN, false));
   vector<int> stack, res, cur_edge(MAXN);
   stack.push_back(u);
   while (!stack.empty()) {

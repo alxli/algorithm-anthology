@@ -174,13 +174,13 @@ void printlu(const vvd & lu) {
   printf("L:\n");
   for (int i = 0; i < (int)lu.size(); i++) {
     for (int j = 0; j < (int)lu[0].size(); j++)
-      printf("%10.5lf ", getl(lu, i, j));
+      printf("%10.5f ", getl(lu, i, j));
     printf("\n");
   }
   printf("U:\n");
   for (int i = 0; i < (int)lu.size(); i++) {
     for (int j = 0; j < (int)lu[0].size(); j++)
-      printf("%10.5lf ", getu(lu, i, j));
+      printf("%10.5f ", getu(lu, i, j));
     printf("\n");
   }
 }

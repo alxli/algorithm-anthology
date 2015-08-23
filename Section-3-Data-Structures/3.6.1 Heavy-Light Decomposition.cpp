@@ -73,7 +73,7 @@ template<class T> class heavy_light {
     tin[u] = counter++;
     parent[u] = p;
     size[u] = 1;
-    for (int j = 0, v; j < adj[u].size(); j++) {
+    for (int j = 0, v; j < (int)adj[u].size(); j++) {
       if ((v = adj[u][j]) == p) continue;
       precompute_dfs(v, u);
       size[u] += size[v];
@@ -89,7 +89,7 @@ template<class T> class heavy_light {
   void build_paths(int u, int path) {
     this->path[u] = path;
     pathpos[u] = pathlen[path]++;
-    for (int j = 0, v; j < adj[u].size(); j++) {
+    for (int j = 0, v; j < (int)adj[u].size(); j++) {
       if ((v = adj[u][j]) == parent[u]) continue;
       build_paths(v, 2*size[v] >= size[u] ? path : new_path(v));
     }
