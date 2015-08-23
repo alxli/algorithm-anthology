@@ -315,6 +315,7 @@ double cross(const point & o, const point & a, const point & b) {
 // -1 ==> a left turn on the plane?
 //  0 ==> a single straight line segment? (i.e. are a,o,b collinear?) or
 // +1 ==> a right turn on the plane?
+//warning: the order of parameters is a,o,b, and NOT o,a,b as in cross()
 int turn(const point & a, const point & o, const point & b) {
   double c = cross(o, a, b);
   return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
@@ -326,13 +327,13 @@ double dist2(const point & a, const point & b) { return norm(b - a); }
 
 //minimum distance from point p to line l
 //if a = b = 0, then -inf, nan, or +inf is returned depending on sgn(c)
-double dist_line(const point & p, const line & l) {
+double line_dist(const point & p, const line & l) {
   return fabs(l.a * p.x + l.b * p.y + l.c) / sqrt(l.a * l.a + l.b * l.b);
 }
 
 //minimum distance from point p to the infinite line containing a and b
 //if a = b, then the point distance from p to the single point is returned
-double dist_line(const point & p, const point & a, const point & b) {
+double line_dist(const point & p, const point & a, const point & b) {
   if (a == b) return dist(p, a);
   return abs(a + (p - a).dot(b - a) * (b - a) / dist2(a, b) - p);
 }
@@ -340,7 +341,7 @@ double dist_line(const point & p, const point & a, const point & b) {
 //distance between two lines each denoted by the form ax + by + c = 0
 //if the lines are nonparallel, then the distance is 0, otherwise
 //it is the perpendicular distance from a point on one line to the other
-double dist_lines(const line & l1, const line & l2) {
+double line_dist(const line & l1, const line & l2) {
   if (EQ(l1.a * l2.b, l2.a * l1.b)) {
     double factor = EQ(l1.b, 0) ? (l1.a / l2.a) : (l1.b / l2.b);
     if (EQ(l1.c, l2.c * factor)) return 0;
@@ -350,7 +351,7 @@ double dist_lines(const line & l1, const line & l2) {
 }
 
 //minimum distance from point p to line segment ab
-double dist_seg(const point & p, const point & a, const point & b) {
+double seg_dist(const point & p, const point & a, const point & b) {
   if (a == b) return dist(p, a);
   point ab(b - a), ap(p - a);
   double n = norm(ab), d = ab.dot(ap);
@@ -362,15 +363,34 @@ double dist_seg(const point & p, const point & a, const point & b) {
 //intersection of line l1 and line l2
 //returns: -1, if lines do not intersect,
 //          0, if there is exactly one intersection point, or
-//         +1, if there are infinite intersection
+//         +1, if there are infinite intersections (lines are equal)
 //in the 2nd case, the intersection point is optionally stored into p
-int intersection(const line & l1, const line & l2, point * p = 0) {
+int line_intersection(const line & l1, const line & l2, point * p = 0) {
   if (l1.parallel(l2)) return (l1 == l2) ? 1 : -1;
   if (p != 0) {
     p->x = (l1.b * l1.c - l1.b * l2.c) / (l2.a * l1.b - l1.a * l2.b);
     if (!EQ(l1.b, 0)) p->y = -(l1.a * p->x + l1.c) / l1.b;
     else p->y = -(l2.a * p->x + l2.c) / l2.b;
   }
+  return 0;
+}
+
+//intersection of line through p1, p2, and line through p2, p3
+//returns: -1, if lines do not intersect,
+//          0, if there is exactly one intersection point, or
+//         +1, if there are infinite intersections
+//in the 2nd case, the intersection point is optionally stored into p
+int line_intersection(const point & p1, const point & p2,
+                      const point & p3, const point & p4, point * p = 0) {
+  double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
+  double c1 = -(p1.x * p2.y - p2.x * p1.y);
+  double a2 = p4.y - p3.y, b2 = p3.x - p4.x;
+  double c2 = -(p3.x * p4.y - p4.x * p3.y);
+  double x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
+  double det = a1 * b2 - a2 * b1;
+  if (EQ(det, 0))
+    return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
+  if (p != 0) *p = point(x / det, y / det);
   return 0;
 }
 
@@ -400,9 +420,9 @@ bool overlap(const double & l1, const double & h1,
 //         +1, if the intersection is another line segment
 //in case 2, the intersection point is stored into p
 //in case 3, the intersection segment is stored into p and q
-int intersection(const point & a, const point & b,
-                 const point & c, const point & d,
-                 point * p = 0, point * q = 0) {
+int seg_intersection(const point & a, const point & b,
+                     const point & c, const point & d,
+                     point * p = 0, point * q = 0) {
   point ab(b - a), ac(c - a), cd(d - c);
   double c1 = ab.cross(cd), c2 = ac.cross(ab);
   if (EQ(c1, 0) && EQ(c2, 0)) { //collinear
@@ -431,13 +451,13 @@ int intersection(const point & a, const point & b,
 }
 
 //minimum distance from any point on segment ab to any point on segment cd
-double dist_segs(const point & a, const point & b,
+double seg_dist(const point & a, const point & b,
                  const point & c, const point & d) {
   //check if segments are touching or intersecting - if so, distance is 0
-  if (intersection(a, b, c, d) >= 0) return 0;
+  if (seg_intersection(a, b, c, d) >= 0) return 0;
   //find min distances across each endpoint to opposing segment
-  return std::min(std::min(dist_seg(a, c, d), dist_seg(b, c, d)),
-                  std::min(dist_seg(c, a, b), dist_seg(d, a, b)));
+  return std::min(std::min(seg_dist(a, c, d), seg_dist(b, c, d)),
+                  std::min(seg_dist(c, a, b), seg_dist(d, a, b)));
 }
 
 //determines the point on line l that is closest to point p
@@ -447,7 +467,7 @@ point closest_point(const line & l, const point & p) {
   if (EQ(l.b, 0)) return point(-l.c, p.y); //vertical line
   line perp = l.perpendicular(p);
   point res;
-  intersection(l, perp, &res);
+  line_intersection(l, perp, &res);
   return res;
 }
 
@@ -774,23 +794,25 @@ int main() {
 
   assert(EQ(5, dist(pt(-1, -1), pt(2, 3))));
   assert(EQ(25, dist2(pt(-1, -1), pt(2, 3))));
-  assert(EQ(1.2, dist_line(pt(2, 1), line(-4, 3, -1))));
-  assert(EQ(0.8, dist_line(pt(3, 3), pt(-1, -1), pt(2, 3))));
-  assert(EQ(1.2, dist_line(pt(2, 1), pt(-1, -1), pt(2, 3))));
-  assert(EQ(0.0, dist_lines(line(-4, 3, -1), line(8, 6, 2))));
-  assert(EQ(0.8, dist_lines(line(-4, 3, -1), line(-8, 6, -10))));
-  assert(EQ(1.0, dist_seg(pt(3, 3), pt(-1, -1), pt(2, 3))));
-  assert(EQ(1.2, dist_seg(pt(2, 1), pt(-1, -1), pt(2, 3))));
-  assert(EQ(0.0, dist_segs(pt(0, 2), pt(3, 3), pt(-1, -1), pt(2, 3))));
-  assert(EQ(0.6, dist_segs(pt(-1, 0), pt(-2, 2), pt(-1, -1), pt(2, 3))));
+  assert(EQ(1.2, line_dist(pt(2, 1), line(-4, 3, -1))));
+  assert(EQ(0.8, line_dist(pt(3, 3), pt(-1, -1), pt(2, 3))));
+  assert(EQ(1.2, line_dist(pt(2, 1), pt(-1, -1), pt(2, 3))));
+  assert(EQ(0.0, line_dist(line(-4, 3, -1), line(8, 6, 2))));
+  assert(EQ(0.8, line_dist(line(-4, 3, -1), line(-8, 6, -10))));
+  assert(EQ(1.0, seg_dist(pt(3, 3), pt(-1, -1), pt(2, 3))));
+  assert(EQ(1.2, seg_dist(pt(2, 1), pt(-1, -1), pt(2, 3))));
+  assert(EQ(0.0, seg_dist(pt(0, 2), pt(3, 3), pt(-1, -1), pt(2, 3))));
+  assert(EQ(0.6, seg_dist(pt(-1, 0), pt(-2, 2), pt(-1, -1), pt(2, 3))));
 
-  assert(intersection(line(-1, 1, 0), line(1, 1, -3), &p) == 0);
+  assert(line_intersection(line(-1, 1, 0), line(1, 1, -3), &p) == 0);
   assert(p == pt(1.5, 1.5));
+  assert(line_intersection(pt(0, 0), pt(1, 1), pt(0, 4), pt(4, 0), &p) == 0);
+  assert(p == pt(2, 2));
 
   //tests for segment intersection (examples in order from link below)
   //http://martin-thoma.com/how-to-check-if-two-line-segments-intersect/
   {
-#define test(a,b,c,d,e,f,g,h) intersection(pt(a,b),pt(c,d),pt(e,f),pt(g,h),&p,&q)
+#define test(a,b,c,d,e,f,g,h) seg_intersection(pt(a,b),pt(c,d),pt(e,f),pt(g,h),&p,&q)
     //intersection is a point
     assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4));   assert(p == pt(0, 0));
     assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4));  assert(p == pt(2, 2));

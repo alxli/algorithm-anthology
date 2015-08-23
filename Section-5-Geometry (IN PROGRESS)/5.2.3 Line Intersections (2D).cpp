@@ -32,9 +32,9 @@ const double eps = 1e-9;
 //          0, if there is exactly one intersection point, or
 //         +1, if there are infinite intersection
 //in the 2nd case, the intersection point is optionally stored into p
-int intersection(const double & a1, const double & b1, const double & c1,
-                 const double & a2, const double & b2, const double & c2,
-                 point * p = 0) {
+int line_intersection(const double & a1, const double & b1, const double & c1,
+                      const double & a2, const double & b2, const double & c2,
+                      point * p = 0) {
   if (EQ(a1 * b2, a2 * b1))
     return (EQ(a1 * c2, a2 * c1) || EQ(b1 * c2, b2 * c1)) ? 1 : -1;
   if (p != 0) {
@@ -42,6 +42,25 @@ int intersection(const double & a1, const double & b1, const double & c1,
     if (!EQ(b1, 0)) p->y = -(a1 * p->x + c1) / b1;
     else p->y = -(a2 * p->x + c2) / b2;
   }
+  return 0;
+}
+
+//intersection of line through p1, p2, and line through p2, p3
+//returns: -1, if lines do not intersect,
+//          0, if there is exactly one intersection point, or
+//         +1, if there are infinite intersections
+//in the 2nd case, the intersection point is optionally stored into p
+int line_intersection(const point & p1, const point & p2,
+                      const point & p3, const point & p4, point * p = 0) {
+  double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
+  double c1 = -(p1.x * p2.y - p2.x * p1.y);
+  double a2 = p4.y - p3.y, b2 = p3.x - p4.x;
+  double c2 = -(p3.x * p4.y - p4.x * p3.y);
+  double x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
+  double det = a1 * b2 - a2 * b1;
+  if (EQ(det, 0))
+    return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
+  if (p != 0) *p = point(x / det, y / det);
   return 0;
 }
 
@@ -76,9 +95,9 @@ bool overlap(const double & l1, const double & h1,
 //         +1, if the intersection is another line segment
 //In case 2, the intersection point is stored into p
 //In case 3, the intersection segment is stored into p and q
-int intersection(const point & a, const point & b,
-                 const point & c, const point & d,
-                 point * p = 0, point * q = 0) {
+int seg_intersection(const point & a, const point & b,
+                     const point & c, const point & d,
+                     point * p = 0, point * q = 0) {
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
   point cd(d.x - c.x, d.y - c.y);
@@ -115,7 +134,7 @@ point closest_point(const double & a, const double & b, const double & c,
   if (EQ(a, 0)) return point(p.x, -c); //horizontal line
   if (EQ(b, 0)) return point(-c, p.y); //vertical line
   point res;
-  intersection(a, b, c, -b, a, b * p.x - a * p.y, &res);
+  line_intersection(a, b, c, -b, a, b * p.x - a * p.y, &res);
   return res;
 }
 
@@ -136,13 +155,15 @@ point closest_point(const point & a, const point & b, const point & p) {
 
 int main() {
   point p;
-  assert(intersection(-1, 1, 0, 1, 1, -3, &p) == 0);
+  assert(line_intersection(-1, 1, 0, 1, 1, -3, &p) == 0);
   assert(p == pt(1.5, 1.5));
+  assert(line_intersection(pt(0, 0), pt(1, 1), pt(0, 4), pt(4, 0), &p) == 0);
+  assert(p == pt(2, 2));
 
   //tests for segment intersection (examples in order from link below)
   //http://martin-thoma.com/how-to-check-if-two-line-segments-intersect/
   {
-#define test(a,b,c,d,e,f,g,h) intersection(pt(a,b),pt(c,d),pt(e,f),pt(g,h),&p,&q)
+#define test(a,b,c,d,e,f,g,h) seg_intersection(pt(a,b),pt(c,d),pt(e,f),pt(g,h),&p,&q)
     pt p, q;
     //intersection is a point
     assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4));   assert(p == pt(0, 0));

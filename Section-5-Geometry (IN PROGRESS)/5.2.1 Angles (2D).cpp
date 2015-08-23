@@ -79,6 +79,7 @@ double cross(const point & o, const point & a, const point & b) {
 // -1 ==> a left turn on the plane?
 //  0 ==> a single straight line segment? (i.e. are a,o,b collinear?) or
 // +1 ==> a right turn on the plane?
+//warning: the order of parameters is a,o,b, and NOT o,a,b as in cross()
 int turn(const point & a, const point & o, const point & b) {
   double c = cross(o, a, b);
   return c < 0 ? -1 : (c > 0 ? 1 : 0);
