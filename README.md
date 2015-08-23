@@ -29,7 +29,7 @@ That means the following assumptions are made:
 * long double is 96 bits
 
 Programs are highly portable (ISO C++ 1998 compliant), __except__ in the following regards:
-* Usage of long long and related aspects \[-Wlong-long\] (such as LLONG_MIN in \<climits\>), which are compliant in C99/C++0x or later. 64-bit integers are a must for many programming contest problems, so it is necessary to include these.
+* Usage of long long and related features \[-Wlong-long\] (such as LLONG_MIN in \<climits\>), which are compliant in C99/C++0x or later. 64-bit integers are a must for many programming contest problems, so it is necessary to include these.
 * Usage of variable sized arrays \[-Wvla\] (an easy fix using vectors, but I chose to keep it because it is simpler and because dynamic memory is generally good to avoid in contests)
 * Usage of compound-literals, e.g. vec.push_back((mystruct){a, b, c}). This is used in the anthology because it makes code much more concise by not having to define a constructor. It is also trivial to fix, so what the heck.
 * Ad-hoc cases where bitwise hacks are intentionally used, such as functions for getting the signbit with type-puned pointers. If you are looking for these features, chances are you don't care about portability anyway.
