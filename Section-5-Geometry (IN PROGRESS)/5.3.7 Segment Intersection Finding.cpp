@@ -10,7 +10,7 @@ Time Complexity: O(n log n) where n is the number of segments.
 
 */
 
-#include <algorithm> /* std::sort(), std::min(), std::max() */
+#include <algorithm> /* std::min(), std::max(), std::sort() */
 #include <cmath>     /* fabs() */
 #include <set>
 #include <utility>   /* std::pair */
