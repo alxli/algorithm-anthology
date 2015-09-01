@@ -4,6 +4,8 @@
 
 Given two ranges of points respectively denoting the vertices of
 two polygons, determine the intersection area of those polygons.
+Using this, we can easily calculate their union with the forumla:
+  union(A, B) = area(A) + area(B) - intersection(A, B)
 
 Time Complexity: O(n^2 log n), where n is the total number of vertices.
 
@@ -109,8 +111,8 @@ struct event {
   }
 };
 
-
-template<class It> double intersection(It lo1, It hi1, It lo2, It hi2) {
+template<class It>
+double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   It plo[2] = {lo1, lo2}, phi[] = {hi1, hi2};
   std::set<double> xs;
   for (It i1 = lo1; i1 != hi1; ++i1) xs.insert(i1->x);
@@ -158,6 +160,21 @@ template<class It> double intersection(It lo1, It hi1, It lo2, It hi2) {
   return res;
 }
 
+template<class It> double polygon_area(It lo, It hi) {
+  if (lo == hi) return 0;
+  double area = 0;
+  if (*lo != *--hi)
+    area += (lo->x - hi->x) * (lo->y + hi->y);
+  for (It i = hi, j = hi - 1; i != lo; --i, --j)
+    area += (i->x - j->x) * (i->y + j->y);
+  return fabs(area / 2.0);
+}
+
+template<class It>
+double union_area(It lo1, It hi1, It lo2, It hi2) {
+  return polygon_area(lo1, hi1) + polygon_area(lo2, hi2) -
+         intersection_area(lo1, hi1, lo2, hi2);
+}
 
 /*** Example Usage ***/
 
@@ -175,10 +192,13 @@ int main() {
   p1.push_back(point(-1, 3));
   //a big square in quadrant 2
   p2.push_back(point(0, 0));
-  p2.push_back(point(0, 5));
-  p2.push_back(point(-5, 5));
-  p2.push_back(point(-5, 0));
+  p2.push_back(point(0, 3));
+  p2.push_back(point(-3, 3));
+  p2.push_back(point(-3, 0));
 
-  assert(EQ(1.5, intersection(p1.begin(), p1.end(), p2.begin(), p2.end())));
+  assert(EQ(1.5, intersection_area(p1.begin(), p1.end(),
+                                   p2.begin(), p2.end())));
+  assert(EQ(12.5, union_area(p1.begin(), p1.end(),
+                             p2.begin(), p2.end())));
   return 0;
 }
