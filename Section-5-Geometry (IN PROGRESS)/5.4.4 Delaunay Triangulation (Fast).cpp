@@ -10,11 +10,16 @@ triangulation maximizes the minimum angle of all the angles of the
 triangles in the triangulation. In addition, for any point p in the
 convex hull (not necessarily in P), the nearest point is guaranteed
 to be a vertex of the enclosing triangle from the triangulation.
+See: https://en.wikipedia.org/wiki/Delaunay_triangulation
 
 The triangulation may not exist (e.g. for a set of collinear points)
 or it may not be unique (multiple possible triangulations may exist).
-
-See: https://en.wikipedia.org/wiki/Delaunay_triangulation
+The following program assumes that a triangulation exists, and
+produces one such valid result. The following is a C++ adaptation of
+a FORTRAN90 program, which applies a divide and conquer algorithm
+with complex linear-time merging. The original program (which contains
+many additional comment on how it works) can be found on this page:
+http://people.sc.fsu.edu/~burkardt/f_src/table_delaunay/table_delaunay.html
 
 Time Complexity: O(n log n) on the number of input points.
 
@@ -473,8 +478,9 @@ int dtris2(int point_num, double point_xy[][2],
       rtri = l / 3;
       redg = (l % 3) + 1;
     }
-    vbedg(point_xy[m - 1][0], point_xy[m - 1][1], point_num,
-          point_xy, tri_num, tri_nodes, tri_neigh, &ltri, &ledg, &rtri, &redg);
+    vbedg(point_xy[m - 1][0], point_xy[m - 1][1],
+          point_num, point_xy, tri_num, tri_nodes, tri_neigh,
+          &ltri, &ledg, &rtri, &redg);
     n = tri_num + 1;
     l = -tri_neigh[ltri - 1][ledg - 1];
     for (;;) {
@@ -505,8 +511,8 @@ int dtris2(int point_num, double point_xy[][2],
     tri_neigh[tri_num - 1][2] = -l;
     ltri = n;
     ledg = 2;
-    error = swapec(m, &top, &ltri, &ledg, point_num, point_xy, tri_num,
-                   tri_nodes, tri_neigh, stack);
+    error = swapec(m, &top, &ltri, &ledg, point_num, point_xy,
+                   tri_num, tri_nodes, tri_neigh, stack);
     assert(error == 0);
   }
   for (i = 0; i < 3; i++)
