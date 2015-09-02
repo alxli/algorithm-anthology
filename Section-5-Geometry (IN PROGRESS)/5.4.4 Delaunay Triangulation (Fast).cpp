@@ -17,8 +17,9 @@ or it may not be unique (multiple possible triangulations may exist).
 The following program assumes that a triangulation exists, and
 produces one such valid result. The following is a C++ adaptation of
 a FORTRAN90 program, which applies a divide and conquer algorithm
-with complex linear-time merging. The original program (which contains
-many additional comment on how it works) can be found on this page:
+with complex linear-time merging. The original program can be found
+via the following link. It contains more thorough documentation,
+comments, and debugging messages associated with the current asserts().
 http://people.sc.fsu.edu/~burkardt/f_src/table_delaunay/table_delaunay.html
 
 Time Complexity: O(n log n) on the number of input points.
