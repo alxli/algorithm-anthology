@@ -28,8 +28,8 @@ Time Complexity: O(n log n) on the number of input points.
 #include <algorithm> /* std::min(), std::max() */
 #include <cassert>
 #include <cmath>     /* fabs(), sqrt() */
-#include <vector>
 #include <utility>   /* std::pair */
+#include <vector>
 
 int wrap(int ival, int ilo, int ihi) {
   int jlo = std::min(ilo, ihi), jhi = std::max(ilo, ihi);
