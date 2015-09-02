@@ -45,8 +45,8 @@ bool overlap(const double & l1, const double & h1,
   return LT(l1, h2) && LT(l2, h1);
 }
 
-int intersection(const point & a, const point & b,
-                 const point & c, const point & d) {
+int seg_intersection(const point & a, const point & b,
+                     const point & c, const point & d) {
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
   point cd(d.x - c.x, d.y - c.y);
@@ -113,7 +113,7 @@ template<class SegIt> struct event {
 };
 
 bool intersect(const segment & s1, const segment & s2) {
-  return intersection(s1.p, s1.q, s2.p, s2.q) >= 0;
+  return seg_intersection(s1.p, s1.q, s2.p, s2.q) >= 0;
 }
 
 //returns whether any pair of segments in the range [lo, hi) intersect

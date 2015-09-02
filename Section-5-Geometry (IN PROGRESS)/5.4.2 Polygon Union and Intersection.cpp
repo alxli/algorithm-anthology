@@ -147,7 +147,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
         }
       }
     }
-    sort(events.begin(), events.end());
+    std::sort(events.begin(), events.end());
     double a = 0.0;
     int mask = 0;
     for (int j = 0; j < (int)events.size(); j++) {
