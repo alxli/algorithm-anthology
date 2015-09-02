@@ -10,11 +10,17 @@ triangulation maximizes the minimum angle of all the angles of the
 triangles in the triangulation. In addition, for any point p in the
 convex hull (not necessarily in P), the nearest point is guaranteed
 to be a vertex of the enclosing triangle from the triangulation.
+See: https://en.wikipedia.org/wiki/Delaunay_triangulation
 
 The triangulation may not exist (e.g. for a set of collinear points)
 or it may not be unique (multiple possible triangulations may exist).
-
-See: https://en.wikipedia.org/wiki/Delaunay_triangulation
+The triangulation may not exist (e.g. for a set of collinear points)
+or it may not be unique (multiple possible triangulations may exist).
+The following program assumes that a triangulation exists, and
+produces one such valid result using one of the simplest algorithms
+to solve this problem. It involves encasing the simplex in a circle
+and rejecting the simplex if another point in the tessellation is
+within the generalized circle.
 
 Time Complexity: O(n^4) on the number of input points.
 
@@ -40,9 +46,6 @@ typedef std::pair<double, double> point;
 double norm(const point & a) { return a.x * a.x + a.y * a.y; }
 double dot(const point & a, const point & b) { return a.x * b.x + a.y * b.y; }
 double cross(const point & a, const point & b) { return a.x * b.y - a.y * b.x; }
-double cross(const point & o, const point & a, const point & b) {
-  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-}
 
 const bool TOUCH_IS_INTERSECT = false;
 
@@ -58,7 +61,7 @@ bool overlap(const double & l1, const double & h1,
 }
 
 int seg_intersection(const point & a, const point & b,
-                 const point & c, const point & d) {
+                     const point & c, const point & d) {
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
   point cd(d.x - c.x, d.y - c.y);
@@ -101,7 +104,7 @@ std::vector<triangle> delaunay_triangulation(It lo, It hi) {
         if (GE(nz, 0)) continue;
         bool done = false;
         for (int m = 0; m < n; m++)
-          if (GT((x[m] - x[i]) * nx + (y[m] - y[i]) * ny + (z[m] - z[i]) * nz, 0)) {
+          if (x[m] - x[i]) * nx + (y[m] - y[i]) * ny + (z[m] - z[i]) * nz > 0) {
             done = true;
             break;
           }
