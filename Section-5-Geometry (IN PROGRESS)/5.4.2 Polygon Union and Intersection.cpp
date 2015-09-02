@@ -1,6 +1,6 @@
 /*
 
-5.4.2 - Polygon Intersection Area
+5.4.2 - Polygon Union and Intersection Area
 
 Given two ranges of points respectively denoting the vertices of
 two polygons, determine the intersection area of those polygons.
