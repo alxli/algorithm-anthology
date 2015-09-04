@@ -5,7 +5,7 @@
 Given two ranges of points respectively denoting the vertices of
 two polygons, determine the intersection area of those polygons.
 Using this, we can easily calculate their union with the forumla:
-  union(A, B) = area(A) + area(B) - intersection(A, B)
+  union_area(A, B) = area(A) + area(B) - intersection_area(A, B)
 
 Time Complexity: O(n^2 log n), where n is the total number of vertices.
 
