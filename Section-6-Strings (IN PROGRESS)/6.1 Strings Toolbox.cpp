@@ -158,7 +158,7 @@ Like the explode() function in PHP, the string s is tokenized based
 on delim, which is considered as a whole boundary string, not just a
 sequence of possible boundary characters like the split() function above.
 This will not skip empty tokens.
-  e.g. explode("a::b", ":") yields {"a", "b"}, not {"a", "", "b"}.
+  e.g. explode("a::b", ":") yields {"a", "", "b"}, not {"a", "b"}.
 
 Time Complexity: O(s.length() * delim.length())
 
