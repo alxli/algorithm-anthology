@@ -1,6 +1,6 @@
 /*
 
-1.1.5 - Kth Order Statistic
+1.1.5 - Kth Order Statistics
 
 The following is equivalent in behavior to the std::nth_element()
 function in the C++ standard library. They rearrange the elements
