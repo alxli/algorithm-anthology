@@ -20,7 +20,7 @@ Time Complexity: O(n) on the total number of operators and operands.
 #include <vector>
 
 // Classify the precedences of operators here.
-inline int prec(const std::string &op, bool unary) {
+inline int prec(const std::string & op, bool unary) {
   if (unary) {
     if (op == "+" || op == "-") return 3;
     return 0; // not a unary operator
@@ -44,11 +44,11 @@ inline int calc2(const std::string & op, int L, int R) {
   throw std::runtime_error("Invalid binary operator: " + op);
 }
 
-inline bool is_operand(const std::string &s) {
+inline bool is_operand(const std::string & s) {
   return s != "(" && s != ")" && !prec(s, 0) && !prec(s, 1);
 }
 
-int eval(std::vector<std::string> E) { /* E stores the tokens */
+int eval(std::vector<std::string> E) { // E stores the tokens
   E.insert(E.begin(), "(");
   E.push_back(")");
   std::stack<std::pair<std::string, bool> > ops;
@@ -84,12 +84,15 @@ int eval(std::vector<std::string> E) { /* E stores the tokens */
   return vals.top();
 }
 
-/**
- * Split a string expression to tokens, ignoring whitespace delimiters.
- * A vector of tokens is a more flexible format since you can decide to
- * parse the expression however you wish just by modifying this function.
- * e.g. "1+(51 * -100)" converts to {"1","+","(","51","*","-","100",")"}
- */
+/*
+
+Split a string expression to tokens, ignoring whitespace delimiters.
+A vector of tokens is a more flexible format since you can decide to
+parse the expression however you wish just by modifying this function.
+e.g. "1+(51 * -100)" converts to {"1","+","(","51","*","-","100",")"}
+
+*/
+
 std::vector<std::string> split_expr(const std::string &s,
                 const std::string &delim = " \n\t\v\f\r") {
   std::vector<std::string> ret;
