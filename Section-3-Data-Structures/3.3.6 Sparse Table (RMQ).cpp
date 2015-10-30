@@ -1,6 +1,6 @@
 /*
 
-3.3.4 - Range Minimum Query using a Sparse Table
+3.3.6 - Range Minimum Query using a Sparse Table
 
 Description: The static range minimum query problem can be solved
 using a sparse table data structure. The RMQ for sub arrays of
