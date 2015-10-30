@@ -1,6 +1,6 @@
 /*
 
-3.2.6 - 2D Fenwick Tree (Range Update, Range Query,
+3.2.7 - 2D Fenwick Tree (Range Update, Range Query,
                          with Coordinate Compression)
 
 Description: A 2D Fenwick tree is abstractly a 2D array which also
