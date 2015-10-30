@@ -1,6 +1,6 @@
 /*
 
-1.2.3 - Hill Climbing
+1.3.3 - Hill Climbing
 
 Hill climbing is an optimization technique which finds the
 local extrema of a function. It is an iterative algorithm
