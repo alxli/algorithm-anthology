@@ -40,9 +40,6 @@ Programs are highly portable (ISO C++ 1998 compliant), __except__ in the followi
 
 Only the last section (strings) is incomplete. It will be completed soon. Just be patient. After that, it will just be some proofreading and scanning for bugs. The specific unfinished sections are:
 
-* 1.1 Recursive Descent
-* 1.2 Shunting Yard
-* 2.1 KMP
 * 2.2 Aho Corasick Simple
 * 2.3 Aho Corasick
 * 2.4 Z Function
