@@ -17,7 +17,7 @@ Space Complexity: O(min(n, m)) auxiliary.
 #include <string>
 
 std::string longest_common_substring
- (const std::string & s1, const std::string & s2) {
+(const std::string & s1, const std::string & s2) {
   if (s1.empty() || s2.empty()) return "";
   if (s1.size() < s2.size())
     return longest_common_substring(s2, s1);
