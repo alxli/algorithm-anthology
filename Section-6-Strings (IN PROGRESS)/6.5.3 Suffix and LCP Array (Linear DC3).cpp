@@ -151,11 +151,11 @@ using namespace std;
 
 int main() {
   string s("banana");
+  vector<int> sa = suffix_array(s);
+  vector<int> lcp = lcp_array(s, sa);
   int sa_ans[] = {5, 3, 1, 0, 4, 2};
   int lcp_ans[] = {1, 3, 0, 0, 2};
-  vector<int> sa = suffix_array(s);
   assert(equal(sa.begin(), sa.end(), sa_ans));
-  vector<int> lcp = lcp_array(s, sa);
   assert(equal(lcp.begin(), lcp.end(), lcp_ans));
   return 0;
 }
