@@ -2,7 +2,7 @@
 
 6.3.1 - String Searching (Knuth-Morris-Pratt)
 
-Given a text and a pattern to be searched for within the text,
+Given an text and a pattern to be searched for within the text,
 determine the first position in which the pattern occurs in
 the text. The KMP algorithm is much faster than the naive,
 quadratic time, string searching algorithm that is found in
