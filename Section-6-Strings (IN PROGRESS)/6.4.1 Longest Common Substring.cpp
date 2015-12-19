@@ -2,7 +2,8 @@
 
 6.4.1 - Longest Common Substring
 
-A substring is a consecutive part of a longer string (e.g. "ABC" is a substring of "ABCDE" but "ABD" is not). Using dynamic programming,
+A substring is a consecutive part of a longer string (e.g. "ABC" is
+a substring of "ABCDE" but "ABD" is not). Using dynamic programming,
 determine the longest string which is a substring common to any two
 input strings.
 
