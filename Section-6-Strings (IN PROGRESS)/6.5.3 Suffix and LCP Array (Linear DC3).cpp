@@ -145,7 +145,6 @@ std::vector<int> lcp_array(const std::string & s,
 
 /*** Example Usage ***/
 
-#include <iostream>
 #include <cassert>
 using namespace std;
 
