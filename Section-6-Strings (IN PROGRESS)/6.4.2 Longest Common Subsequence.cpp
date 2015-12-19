@@ -8,6 +8,12 @@ elements (e.g. "ACE" is a subsequence of "ABCDE", but "BAE" is not).
 Using dynamic programming, determine the longest string which
 is a subsequence common to any two input strings.
 
+In addition, the shortest common supersequence between two strings is
+a closely related problem, which involves finding the shortest string
+which has both input strings as subsequences (e.g. "ABBC" and "BCB" has
+the shortest common supersequence of "ABBCB"). The answer is simply:
+  (sum of lengths of s1 and s2) - (length of LCS of s1 and s2)
+
 Time Complexity: O(n * m) where n and m are the lengths of the two
 input strings, respectively.
 
@@ -19,7 +25,7 @@ Space Complexity: O(n * m) auxiliary.
 #include <vector>
 
 std::string longest_common_subsequence
- (const std::string & s1, const std::string & s2) {
+(const std::string & s1, const std::string & s2) {
   int n = s1.size(), m = s2.size();
   std::vector< std::vector<int> > dp;
   dp.resize(n + 1, std::vector<int>(m + 1, 0));
