@@ -40,13 +40,7 @@ Programs are highly portable (ISO C++ 1998 compliant), __except__ in the followi
 
 Only the last section (strings) is incomplete. It will be completed soon. Just be patient. After that, it will just be some proofreading and scanning for bugs. The specific unfinished sections are:
 
-* 2.2 Aho Corasick Simple
-* 2.3 Aho Corasick
-* 2.4 Z Function
-* 3.1 Longest Common Substring
-* 3.2 Longest Common Subsequence
-* 3.3 Edit Distance
-* 4.1 Suffix and LCP Array
-* 4.2 Tries
-* 4.3 Radix Tries
-* 4.4 Suffix Tries
+* 6.4.1 Suffix and LCP Array
+* 6.4.2 Tries
+* 6.4.3 Radix Tries
+* 6.4.4 Suffix Tries
