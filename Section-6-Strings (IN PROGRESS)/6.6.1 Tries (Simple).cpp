@@ -5,10 +5,8 @@
 A trie, digital tree, or prefix tree, is an ordered tree data
 structure that is used to store a dynamic set or associative array
 where the keys are strings. Each leaf node represents a string that
-has been inserted into the trie, and every internal node represents
-the prefix of one or more of the inserted strings. This makes tries
-easier to implement than balanced binary search trees, and also
-potentially faster.
+has been inserted into the trie. This makes tries easier to implement
+than balanced binary search trees, and also potentially faster.
 
 Time Complexity: O(n) for insert(), contains(), and erase(), where
 n is the length of the string being inserted, searched, or erased.
