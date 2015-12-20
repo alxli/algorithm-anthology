@@ -21,8 +21,6 @@ sum of all lengths of strings that have been inserted so far.
 class trie {
   static const int ALPHABET_SIZE = 26;
 
-  //should map the input alphabet to the integers
-  //between 0 and ALPHABET_SIZE - 1, inclusive.
   static int map_alphabet(char c) {
     return (int)(c - 'a');
   }
