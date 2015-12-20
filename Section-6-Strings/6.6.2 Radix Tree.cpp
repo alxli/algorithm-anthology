@@ -1,6 +1,6 @@
 /*
 
-6.6.2 - Radix Trees
+6.6.2 - Radix Tree
 
 A radix tree, radix trie, patricia trie, or compressed trie is a
 data structure that is used to store a dynamic set or associative
@@ -125,7 +125,6 @@ class radix_trie {
 /*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 using namespace std;
 
 string preorder;

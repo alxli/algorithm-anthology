@@ -1,6 +1,6 @@
 /*
 
-6.6.1 - Tries (Simple)
+6.6.1 - Trie (Simple)
 
 A trie, digital tree, or prefix tree, is an ordered tree data
 structure that is used to store a dynamic set or associative array

@@ -1,6 +1,6 @@
 /*
 
-6.6.3 - Suffix Trees (Ukkonen's Algorithm)
+6.6.3 - Suffix Tree (Ukkonen's Algorithm)
 
 A suffix tree of a string S is a compressed trie of all the suffixes
 of S. While it can be constructed in O(n^2) time on the length of S
