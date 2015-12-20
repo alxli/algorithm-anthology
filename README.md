@@ -35,12 +35,3 @@ Programs are highly portable (ISO C++ 1998 compliant), __except__ in the followi
 * Usage of GCC's built-in functions like __builtin_popcount() and __builtin_clz(). These can be extremely convenient, and are easily implemented if they're not available. See here for a reference: https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
 * Usage of compound-literals, e.g. vec.push_back((mystruct){a, b, c}). This is used in the anthology because it makes code much more concise by not having to define a constructor. It is also trivial to fix, so what the heck.
 * Ad-hoc cases where bitwise hacks are intentionally used, such as functions for getting the signbit with type-puned pointers. If you are looking for these features, chances are you don't care about portability anyway.
-
-## To-Do
-
-Only the last section (strings) is incomplete. It will be completed soon. Just be patient. After that, it will just be some proofreading and scanning for bugs. The specific unfinished sections are:
-
-* 6.4.1 Suffix and LCP Array
-* 6.4.2 Tries
-* 6.4.3 Radix Tries
-* 6.4.4 Suffix Tries
