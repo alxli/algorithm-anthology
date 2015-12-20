@@ -21,14 +21,17 @@ Space Complexity: O(n) auxiliary.
 #include <cstdio>
 #include <string>
 
-const std::string ALPHABET("abcdefghijklmnopqrstuvwxyz0123456789\01\02");
-const int ALPHABET_SIZE = 38;
-
-static int map_alphabet(char c) {
-  return ALPHABET.find(c);
-}
-
 struct suffix_tree {
+
+  static const int ALPHABET_SIZE = 38;
+
+  static int map_alphabet(char c) {
+    static const std::string ALPHABET(
+      "abcdefghijklmnopqrstuvwxyz0123456789\01\02"
+    );
+    return ALPHABET.find(c);
+  }
+
   struct node_t {
     int begin, end, depth;
     node_t *parent, *suffix_link;
@@ -41,7 +44,6 @@ struct suffix_tree {
       this->parent = parent;
       for (int i = 0; i < ALPHABET_SIZE; i++)
         children[i] = 0;
-      printf("NODE\n");
     }
   } *root;
 
@@ -100,7 +102,7 @@ int lcs_rec(suffix_tree::node_t * n, int i1, int i2) {
   if (n->begin <= i1 && i1 < n->end) return 1;
   if (n->begin <= i2 && i2 < n->end) return 2;
   int mask = 0;
-  for (int i = 0; i < ALPHABET_SIZE; i++) {
+  for (int i = 0; i < suffix_tree::ALPHABET_SIZE; i++) {
     if (n->children[i] != 0)
       mask |= lcs_rec(n->children[i], i1, i2);
   }

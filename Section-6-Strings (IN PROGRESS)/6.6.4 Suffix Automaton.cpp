@@ -23,7 +23,11 @@ Space Complexity: O(n * ALPHABET_SIZE) auxiliary.
 
 struct suffix_automaton {
 
-  static const int ALPHABET_SIZE = 128;
+  static const int ALPHABET_SIZE = 26;
+
+  static int map_alphabet(char c) {
+    return (int)(c - 'a');
+  }
 
   struct state_t {
     int length, suffix_link;
@@ -48,7 +52,7 @@ struct suffix_automaton {
     int last = 0;
     int size = 1;
     for (int i = 0; i < n; i++) {
-      int c = s[i];
+      int c = map_alphabet(s[i]);
       int curr = size++;
       states[curr].length = i + 1;
       states[curr].firstpos = i;
@@ -88,7 +92,7 @@ struct suffix_automaton {
     std::vector<int> res;
     int node = 0;
     for (int i = 0; i < (int)s.size(); i++) {
-      int next = states[node].next[(int)s[i]];
+      int next = states[node].next[map_alphabet(s[i])];
       if (next == -1) return res;
       node = next;
     }
@@ -108,7 +112,7 @@ struct suffix_automaton {
   std::string longest_common_substring(const std::string & s) {
     int len = 0, bestlen = 0, bestpos = -1;
     for (int i = 0, cur = 0; i < (int)s.size(); i++) {
-      int c = s[i];
+      int c = map_alphabet(s[i]);
       if (states[cur].next[c] == -1) {
         while (cur != -1 && states[cur].next[c] == -1)
           cur = states[cur].suffix_link;
