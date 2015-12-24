@@ -87,7 +87,7 @@ not fail, but instead fall back to a time complexity of O(n log^2 n).
 
 template<class It, class Compare>
 void mergesort(It lo, It hi, Compare cmp) {
-  if (lo >= hi - 1) return;
+  if (hi - lo < 2) return;
   It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   mergesort(lo, mid + 1, cmp);
   mergesort(mid + 1, hi, cmp);
@@ -236,7 +236,7 @@ Explanation of base 2^8 choice: http://qr.ae/RbdDcG
 
 template<class UnsignedIt>
 void radix_sort(UnsignedIt lo, UnsignedIt hi) {
-  if (lo + 1 >= hi) return;
+  if (hi - lo < 2) return;
   const int radix_power = 8;
   const int radix_base = 1 << radix_power; //e.g. 2^8 = 256
   const int radix_mask = radix_base - 1;   //e.g. 2^8 - 1 = 0xFF
@@ -261,34 +261,37 @@ void radix_sort(UnsignedIt lo, UnsignedIt hi) {
 
 Sample Output:
 
-12 26 32 33 45 53 71 80
-12 26 32 33 45 53 71 80
-80 71 53 45 33 32 26 12
--5 1.1 4.123 6.23 155.2
-80 71 53 45 33 32 26 12
 mergesort() with default comparisons: 1.32 1.41 1.62 1.73 2.58 2.72 3.14 4.67
 mergesort() with 'compare_as_ints()': 1.41 1.73 1.32 1.62 2.72 2.58 3.14 4.67
-
+------
 Sorting five million integers...
-std::sort():  0.422s.
-quicksort():  0.530s.
-mergesort():  1.466s.
-heapsort():   1.183s.
-combsort():   1.093s.
-radix_sort(): 0.098s.
+std::sort():  0.429s
+quicksort():  0.498s
+mergesort():  1.437s
+heapsort():   1.179s
+combsort():   1.023s
+radix_sort(): 0.078s
 
-*/
+***/
 
 #include <cassert>
 #include <cstdlib>
 #include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <vector>
 using namespace std;
 
-template<class T> void print_range(T lo, T hi) {
-  while (lo != hi) cout << *(lo++) << " ";
+template<class It> void print_range(It lo, It hi) {
+  while (lo != hi)
+    cout << *(lo++) << " ";
   cout << "\n";
+}
+
+template<class It> bool is_sorted(It lo, It hi) {
+  while (++lo != hi)
+    if (*(lo - 1) > *lo) return false;
+  return true;
 }
 
 bool compare_as_ints(double i, double j) {
@@ -299,34 +302,34 @@ int main () {
   { //can be used to sort arrays like std::sort()
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     quicksort(a, a + 8);
-    print_range(a, a + 8);
+    assert(is_sorted(a, a + 8));
   }
   { //STL containers work too
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     vector<int> v(a, a + 8);
     quicksort(v.begin(), v.end());
-    print_range(v.begin(), v.end());
+    assert(is_sorted(v.begin(), v.end()));
   }
   { //reverse iterators work as expected
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     vector<int> v(a, a + 8);
     heapsort(v.rbegin(), v.rend());
-    print_range(v.begin(), v.end());
+    assert(is_sorted(v.rbegin(), v.rend()));
   }
   { //doubles are also fine
     double a[] = {1.1, -5.0, 6.23, 4.123, 155.2};
     vector<double> v(a, a + 5);
     combsort(v.begin(), v.end());
-    print_range(v.begin(), v.end());
+    assert(is_sorted(v.begin(), v.end()));
   }
-  { //only unsigned values work for radix_sort (but reverse works!)
+  { //only unsigned ints work for radix_sort (but reverse works!)
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     vector<int> v(a, a + 8);
     radix_sort(v.rbegin(), v.rend());
-    print_range(v.begin(), v.end());
+    assert(is_sorted(v.rbegin(), v.rend()));
   }
 
-  //example from cplusplus.com/reference/algorithm/stable_sort/
+  //example from http://www.cplusplus.com/reference/algorithm/stable_sort/
   double a[] = {3.14, 1.41, 2.72, 4.67, 1.73, 1.32, 1.62, 2.58};
   {
     vector<double> v(a, a + 8);
@@ -340,61 +343,31 @@ int main () {
     mergesort(v.begin(), v.end(), compare_as_ints);
     print_range(v.begin(), v.end());
   }
+  cout << "------" << endl;
 
-  vector<int> v, v2, sorted;
+  vector<int> v, v2;
   for (int i = 0; i < 5000000; i++)
     v.push_back((rand() & 0x7fff) | ((rand() & 0x7fff) << 15));
   v2 = v;
-
-  cout << endl << "Sorting five million integers..." << endl;
+  cout << "Sorting five million integers..." << endl;
   cout.precision(3);
-  {
-    clock_t start = clock();
-    sort(v.begin(), v.end());
-    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
-    cout << "std::sort():  " << fixed << t << "s." << endl;
-    sorted = v;
-    v = v2;
-  }
-  {
-    clock_t start = clock();
-    quicksort(v.begin(), v.end());
-    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
-    cout << "quicksort():  " << fixed << t << "s." << endl;
-    assert(v == sorted);
-    v = v2;
-  }
-  {
-    clock_t start = clock();
-    mergesort(v.begin(), v.end());
-    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
-    cout << "mergesort():  " << fixed << t << "s." << endl;
-    assert(v == sorted);
-    v = v2;
-  }
-  {
-    clock_t start = clock();
-    heapsort(v.begin(), v.end());
-    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
-    cout << "heapsort():   " << fixed << t << "s." << endl;
-    assert(v == sorted);
-    v = v2;
-  }
-  {
-    clock_t start = clock();
-    combsort(v.begin(), v.end());
-    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
-    cout << "combsort():   " << fixed << t << "s." << endl;
-    assert(v == sorted);
-    v = v2;
-  }
-  {
-    clock_t start = clock();
-    radix_sort(v.begin(), v.end());
-    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
-    cout << "radix_sort(): " << fixed << t << "s." << endl;
-    assert(v == sorted);
-    v = v2;
-  }
+
+#define test(sortfunc) {                                 \
+  clock_t start = clock();                               \
+  sortfunc(v.begin(), v.end());                          \
+  double t = (double)(clock() - start) / CLOCKS_PER_SEC; \
+  cout << setw(14) << left << #sortfunc "(): ";          \
+  cout << fixed << t << "s" << endl;                     \
+  assert(is_sorted(v.begin(), v.end()));                 \
+  v = v2;                                                \
+}
+
+  test(std::sort);
+  test(quicksort);
+  test(mergesort);
+  test(heapsort);
+  test(combsort);
+  test(radix_sort);
+
   return 0;
 }
