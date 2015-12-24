@@ -211,45 +211,77 @@ template<class It> void combsort(It lo, It hi) {
 
 Radix Sort
 
-Time Complexity (Worst): O(n * w) for n integers of w bits.
+Time Complexity: O(n * w) for n integers of w bits.
 Space Complexity: O(n + w) auxiliary.
+Stable?: Yes
 
 Radix sort can be used to sort integer keys with a constant number of
-bits in linear time. The keys are grouped by the individual digits
-which share the same significant position and value. The implementation
-below only works on 32-bit signed integers, employing std::partition()
-and std::stable_partition() instead of a custom bucket/counting sort.
+bits in linear time. The keys are grouped by the individual digits of
+a particular base which share the same significant position and value.
 
-The least significant digit (LSD) radix sort is a stable sort, but
-because std::stable_partition() is slower than std::partition(), the
-most significant digit (MSD) radix sort is much faster. Note that the
-LSD version also uses auxiliary memory due to std::stable_partition(),
-which will fall back to O(n log n) running time if none is available.
+The implementation below only works on ranges pointing to unsigned
+integer primitives (but can be modified to also work on signed values).
+Note that the input range need not strictly be "unsigned" types, as
+long as the values are all technically non-negative. A power of two is
+chosen to be the base of the sort since bitwise operations may be used
+to extract digits (instead of modulos and powers, which are much less
+efficient). In practice, it's been demonstrated that 2^8 is the best
+choice for sorting 32-bit integers (roughly 5 times faster than using
+std::sort and 2 to 4 times faster than any other chosen power of two).
+
+This implementation was adapted from: http://qr.ae/RbdDTa
+Explanation of base 2^8 choice: http://qr.ae/RbdDcG
 
 */
 
-struct radix_comp {
-  const int p; //bit position (0..31) to examine
-  radix_comp(int offset): p(offset) {}
-  bool operator () (int v) const {
-    return (p == 31) ? (v < 0) : !(v & (1 << p));
+template<class UnsignedIt>
+void radix_sort(UnsignedIt lo, UnsignedIt hi) {
+  if (lo + 1 >= hi) return;
+  const int radix_power = 8;
+  const int radix_base = 1 << radix_power; //e.g. 2^8 = 256
+  const int radix_mask = radix_base - 1;   //e.g. 2^8 - 1 = 0xFF
+  int num_bits = 8 * sizeof(*lo); //8 bits per byte
+  typedef typename std::iterator_traits<UnsignedIt>::value_type T;
+  T *l = new T[hi - lo];
+  for (int pos = 0; pos < num_bits; pos += radix_power) {
+    int count[radix_base] = {0};
+    for (UnsignedIt it = lo; it != hi; it++)
+      count[(*it >> pos) & radix_mask]++;
+    T *bucket[radix_base], *curr = l;
+    for (int i = 0; i < radix_base; curr += count[i++])
+      bucket[i] = curr;
+    for (UnsignedIt it = lo; it != hi; it++)
+      *bucket[(*it >> pos) & radix_mask]++ = *it;
+    std::copy(l, l + (hi - lo), lo);
   }
-};
-
-void msd_radix_sort(int * lo, int * hi, int msb = 31) {
-  if (lo == hi || msb < 0) return;
-  int *mid = std::partition(lo, hi, radix_comp(msb--));
-  msd_radix_sort(lo, mid, msb);
-  msd_radix_sort(mid, hi, msb);
+  delete[] l;
 }
 
-void lsd_radix_sort(int * lo, int * hi) {
-  for (int lsb = 0; lsb < 32; lsb++)
-    std::stable_partition(lo, hi, radix_comp(lsb));
-}
+/*** Example Usage
 
-/*** Example Usage ***/
+Sample Output:
 
+12 26 32 33 45 53 71 80
+12 26 32 33 45 53 71 80
+80 71 53 45 33 32 26 12
+-5 1.1 4.123 6.23 155.2
+80 71 53 45 33 32 26 12
+mergesort() with default comparisons: 1.32 1.41 1.62 1.73 2.58 2.72 3.14 4.67
+mergesort() with 'compare_as_ints()': 1.41 1.73 1.32 1.62 2.72 2.58 3.14 4.67
+
+Sorting five million integers...
+std::sort():  0.422s.
+quicksort():  0.530s.
+mergesort():  1.466s.
+heapsort():   1.183s.
+combsort():   1.093s.
+radix_sort(): 0.098s.
+
+*/
+
+#include <cassert>
+#include <cstdlib>
+#include <ctime>
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -287,10 +319,11 @@ int main () {
     combsort(v.begin(), v.end());
     print_range(v.begin(), v.end());
   }
-  { //radix sort only works on 32-bit signed integers
-    int a[] = {1, 886, 6, -50, 7, -11, 123, 4};
-    msd_radix_sort(a, a + 8);
-    print_range(a, a + 8);
+  { //only unsigned values work for radix_sort (but reverse works!)
+    int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
+    vector<int> v(a, a + 8);
+    radix_sort(v.rbegin(), v.rend());
+    print_range(v.begin(), v.end());
   }
 
   //example from cplusplus.com/reference/algorithm/stable_sort/
@@ -306,6 +339,62 @@ int main () {
     cout << "mergesort() with 'compare_as_ints()': ";
     mergesort(v.begin(), v.end(), compare_as_ints);
     print_range(v.begin(), v.end());
+  }
+
+  vector<int> v, v2, sorted;
+  for (int i = 0; i < 5000000; i++)
+    v.push_back((rand() & 0x7fff) | ((rand() & 0x7fff) << 15));
+  v2 = v;
+
+  cout << endl << "Sorting five million integers..." << endl;
+  cout.precision(3);
+  {
+    clock_t start = clock();
+    sort(v.begin(), v.end());
+    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
+    cout << "std::sort():  " << fixed << t << "s." << endl;
+    sorted = v;
+    v = v2;
+  }
+  {
+    clock_t start = clock();
+    quicksort(v.begin(), v.end());
+    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
+    cout << "quicksort():  " << fixed << t << "s." << endl;
+    assert(v == sorted);
+    v = v2;
+  }
+  {
+    clock_t start = clock();
+    mergesort(v.begin(), v.end());
+    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
+    cout << "mergesort():  " << fixed << t << "s." << endl;
+    assert(v == sorted);
+    v = v2;
+  }
+  {
+    clock_t start = clock();
+    heapsort(v.begin(), v.end());
+    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
+    cout << "heapsort():   " << fixed << t << "s." << endl;
+    assert(v == sorted);
+    v = v2;
+  }
+  {
+    clock_t start = clock();
+    combsort(v.begin(), v.end());
+    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
+    cout << "combsort():   " << fixed << t << "s." << endl;
+    assert(v == sorted);
+    v = v2;
+  }
+  {
+    clock_t start = clock();
+    radix_sort(v.begin(), v.end());
+    double t = (double)(clock() - start) / CLOCKS_PER_SEC;
+    cout << "radix_sort(): " << fixed << t << "s." << endl;
+    assert(v == sorted);
+    v = v2;
   }
   return 0;
 }
