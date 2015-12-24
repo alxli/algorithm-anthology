@@ -237,13 +237,13 @@ Explanation of base 2^8 choice: http://qr.ae/RbdDcG
 template<class UnsignedIt>
 void radix_sort(UnsignedIt lo, UnsignedIt hi) {
   if (hi - lo < 2) return;
-  const int radix_power = 8;
-  const int radix_base = 1 << radix_power; //e.g. 2^8 = 256
-  const int radix_mask = radix_base - 1;   //e.g. 2^8 - 1 = 0xFF
+  const int radix_bits = 8;
+  const int radix_base = 1 << radix_bits; //e.g. 2^8 = 256
+  const int radix_mask = radix_base - 1;  //e.g. 2^8 - 1 = 0xFF
   int num_bits = 8 * sizeof(*lo); //8 bits per byte
   typedef typename std::iterator_traits<UnsignedIt>::value_type T;
   T *l = new T[hi - lo];
-  for (int pos = 0; pos < num_bits; pos += radix_power) {
+  for (int pos = 0; pos < num_bits; pos += radix_bits) {
     int count[radix_base] = {0};
     for (UnsignedIt it = lo; it != hi; it++)
       count[(*it >> pos) & radix_mask]++;
