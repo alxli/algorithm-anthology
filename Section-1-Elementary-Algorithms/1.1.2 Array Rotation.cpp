@@ -95,7 +95,7 @@ int main() {
   cout << endl;
   //insertion sort
   for (vector<int>::iterator i = v.begin(); i != v.end(); ++i)
-    rotate1(std::upper_bound(v.begin(), i, *i), i, i+1);
+    rotate1(std::upper_bound(v.begin(), i, *i), i, i + 1);
   cout << "after sort:   ";
   for (int i = 0; i < (int)v.size(); i++)
     cout << v[i] << ' ';
