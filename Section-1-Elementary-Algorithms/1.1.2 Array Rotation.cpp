@@ -69,6 +69,7 @@ rotate right: 0 1 2 2 3 4 5 7 7 10
 
 ***/
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <vector>
@@ -92,8 +93,9 @@ int main() {
   for (int i = 0; i < (int)v.size(); i++)
     cout << v[i] << ' ';
   cout << endl;
+  //insertion sort
   for (vector<int>::iterator i = v.begin(); i != v.end(); ++i)
-    rotate1(upper_bound(v.begin(), i, *i), i, i+1);
+    rotate1(std::upper_bound(v.begin(), i, *i), i, i+1);
   cout << "after sort:   ";
   for (int i = 0; i < (int)v.size(); i++)
     cout << v[i] << ' ';
