@@ -2,7 +2,7 @@
 
 1.1.4 - Coordinate Compression
 
-Given an array a[] of size n, reassign numbers to each element of a[]
+Given an array a[] of size n, reassign integers to each element of a[]
 such that the magnitude of each new value is no more than n, while the
 relative order of each element as they were in the original array is
 preserved. That is, if a[] is the original array and b[] is the result
@@ -11,7 +11,7 @@ will be exactly the same as the result of b[i] < b[j]. Furthermore,
 no value of b[] will exceed the *number* of distinct values in a[].
 
 In the following implementations, values in the range [lo, hi) will be
-converted to integers in the range [0, D), where D is the number of
+converted to integers in the range [0, d), where d is the number of
 distinct values in the original range. lo and hi must be random access
 iterators pointing to a numerical type that int can be assigned to.
 
