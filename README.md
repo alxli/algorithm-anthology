@@ -15,8 +15,7 @@ This anthology started as a personal project to implement common algorithms in t
 
 * Implementations must be efficient. The code cannot simply demonstrate an idea, it should also have the correct running time and a reasonably low constant overhead. This is sometimes challenging if concision is to be preserved. However, contest problem setters will often be understanding and set time limits liberally. If an implementation from here does not pass in time, chances are you are choosing the wrong algorithm.
 
-* Implementations must be concise. During timed contests, code chunks are often moved around the file. To minimize the amount of scrolling, code design and formatting conventions should ensure as much code fits on the screen as possible (while not excessively sacrificing readability). It’s a given that each algorithm should be placed within singleton files. Nearly all contest environments
-demand submissions to be contained within a single file.
+* Implementations must be concise. During timed contests, code chunks are often moved around the file. To minimize the amount of scrolling, code design and formatting conventions should ensure as much code fits on the screen as possible (while not excessively sacrificing readability). It is a given that each algorithm should be placed within singleton files, since nearly all contest environments demand submissions to be contained within a single file.
 
 A good trade-off between clarity, genericness, portability, efficiency, and concision is what comprises the
 ultimate goal of adaptability.
@@ -42,7 +41,7 @@ Programs are highly portable (ISO C++ 1998 compliant), __except__ in the followi
 
 The primary purpose of this project is not to better your understanding of algorithms. To take advantage of this anthology, you must have prior understanding of the algorithms in question. In each source code file, you will find brief descriptions and simple examples to clarify how the functions and classes should be used (not so much how they work). This is why if you actually want to learn algorithms, you are better off researching the idea and trying to implement it independently. Directly using the code found here should be considered a last resort during the pressures of an actual contest.
 
-All information from the comments (descriptions, complexities, etc.) come from Wikipedia and other online sources. Some programs here are direct implementations of pseudocode found online, while others are adaptated and translated from informatics books and journals. If references for a program are not listed in its comments, you may assume that I have written them from scratch. You are free to use, modify, and distribute these programs in accordance to the license, but please first examine any corresponding references of each program for more details on usage and authorship. Cheers and hope you enjoy!
+All information from the comments (descriptions, complexities, etc.) come from Wikipedia and other online sources. Some programs here are direct implementations of pseudocode found online, while others are adaptated and translated from informatics books and journals. If references for a program are not listed in its comments, you may assume that I have written them from scratch. You are free to use, modify, and distribute these programs in accordance to the license, but please first examine any corresponding references of each program for more details on usage and authorship.
 
 Cheers and hope you enjoy!
 
