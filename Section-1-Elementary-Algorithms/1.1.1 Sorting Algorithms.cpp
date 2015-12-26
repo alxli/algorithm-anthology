@@ -13,8 +13,8 @@ implement common sorting algorithms concisely in C++.
 */
 
 #include <algorithm>  /* std::copy(), std::swap() */
-#include <functional> /* std::less<T> */
-#include <iterator>   /* std::iterator_traits<T> */
+#include <functional> /* std::less */
+#include <iterator>   /* std::iterator_traits */
 
 /*
 
