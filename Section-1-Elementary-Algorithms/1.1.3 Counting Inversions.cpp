@@ -24,7 +24,7 @@ value type must have the less than < operator defined appropriately.
 
 Explanation: http://www.geeksforgeeks.org/counting-inversions
 
-Time Complexity: O(n log n) on the size of the array.
+Time Complexity: O(n log n) on the distance between lo and hi.
 Space Complexty: O(n) auxiliary.
 
 */
