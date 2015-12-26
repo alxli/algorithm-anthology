@@ -86,7 +86,7 @@ int main() {
   rotate3(v3.begin(), v3.begin() + mid, v3.end());
   assert(v0 == v1 && v0 == v2 && v0 == v3);
 
-  //example from: en.cppreference.com/w/cpp/algorithm/rotate
+  //example from: http://en.cppreference.com/w/cpp/algorithm/rotate
   int a[] = {2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
   vector<int> v(a, a + 10);
   cout << "before sort:  ";

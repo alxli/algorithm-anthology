@@ -2,84 +2,97 @@
 
 1.1.3 - Counting Inversions
 
-Counts how far (or close) an array is from being sorted. If
-the array is already sorted then inversion count is 0. If
-the array is sorted in reverse, then the inversion count is
-maximal. Formally, two elements a[i] and a[j] form an
-inversion if a[i] > a[j] and i < j. Note that the inversion
-count is *not* the same as the minimum number of swaps
-required to sort the array. This problem can be solved using
-merge sort, or a bit of magic...
+The number of inversions in an array a[] is the number of ordered pairs
+(i, j) such that i < j and a[i] > a[j]. This is roughly how "close" an
+array is to being sorted, but is *not* the same as the minimum number
+of swaps required to sort the array. If the array is sorted then the
+inversion count is 0. If the array is sorted in decreasing order, then
+the inversion count is maximal. The following are two methods of
+efficiently counting the number of inversions.
+
+*/
+
+#include <iterator> /* std::iterator_traits */
+
+/*
+
+Version 1: Merge sort
+
+The input range [lo, hi) will become sorted after the function call,
+and then the number of inversions will be returned. The iterator's
+value type must have the less than < operator defined appropriately.
+
+Explanation: http://www.geeksforgeeks.org/counting-inversions
 
 Time Complexity: O(n log n) on the size of the array.
 Space Complexty: O(n) auxiliary.
 
 */
 
-#include <iterator> /* iterator_traits */
-
-//sorts [lo, hi) and returns the inversions count
-template<class RAI>
-long long mergesort_inversions(RAI lo, RAI hi) {
-  typedef typename std::iterator_traits<RAI>::value_type T;
-  if (lo >= hi - 1) return 0;
-  RAI mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
+template<class It> long long inversions(It lo, It hi) {
+  if (hi - lo < 2) return 0;
+  It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   long long res = 0;
-  res += mergesort_inversions(lo, mid + 1);
-  res += mergesort_inversions(mid + 1, hi);
-  T buf[hi - lo], *b = buf;
+  res += inversions(lo, mid + 1);
+  res += inversions(mid + 1, hi);
+  typedef typename std::iterator_traits<It>::value_type T;
+  T *buf = new T[hi - lo], *ptr = buf;
   while (a <= mid && c < hi) {
     if (*c < *a) {
-      *(b++) = *(c++);
+      *(ptr++) = *(c++);
       res += (mid - a) + 1;
     } else {
-      *(b++) = *(a++);
+      *(ptr++) = *(a++);
     }
   }
   if (a > mid)
-    for (RAI k = c; k < hi; k++) *(b++) = *k;
+    for (It k = c; k < hi; k++) *(ptr++) = *k;
   else
-    for (RAI k = a; k <= mid; k++) *(b++) = *k;
+    for (It k = a; k <= mid; k++) *(ptr++) = *k;
   for (int i = hi - lo - 1; i >= 0; i--)
     *(lo + i) = buf[i];
+  delete[] buf;
   return res;
 }
 
 /*
 
-The following magic is courtesy of misof, and works for any
-array of nonnegative integers. See the link below:
-http://codeforces.com/blog/entry/17881?#comment-232099
+Version 2: Magic
 
-The complexity depends on the magnitude of the maximum value
-in a[]. You should coordinate compress the values of a[]
-into integers up to n for the best results. Note that after
-calling the function, a[] will be zeroed out.
+The following magic is courtesy of misof, and works for any array of
+nonnegative integers.
 
-Time Complexity: O(m log m), where m is the magnitude of the
-maximum value in the array.
+Explanation: http://codeforces.com/blog/entry/17881?#comment-232099
 
-Space Complexity: O(m) auxiliary on the magnitude of the
-maximum value in the array.
+The complexity depends on the magnitude of the maximum value in a[].
+Coordinate compression should be applied on the values of a[] so that
+they are strictly integers with magnitudes up to n for best results.
+Note that after calling the function, a[] will be entirely set to 0.
+
+Time Complexity: O(m log m), where m is maximum value in the array.
+Space Complexity: O(m) auxiliary.
 
 */
 
-long long magic_inversions(int n, int a[]) {
+long long inversions(int n, int a[]) {
   int mx = 0;
   for (int i = 0; i < n; i++)
     if (a[i] > mx) mx = a[i];
-  int c[mx];
   long long res = 0;
+  int *c = new int[mx];
   while (mx > 0) {
     for (int i = 0; i < mx; i++) c[i] = 0;
     for (int i = 0; i < n; i++) {
-      if (a[i] % 2 == 0) res += c[a[i] / 2];
-      else c[a[i] / 2]++;
+      if (a[i] % 2 == 0)
+        res += c[a[i] / 2];
+      else
+        c[a[i] / 2]++;
     }
     mx = 0;
     for (int i = 0; i < n; i++)
       if ((a[i] /= 2) > mx) mx = a[i];
   }
+  delete[] c;
   return res;
 }
 
@@ -90,11 +103,11 @@ long long magic_inversions(int n, int a[]) {
 int main() {
   {
     int a[] = {6, 9, 1, 14, 8, 12, 3, 2};
-    assert(mergesort_inversions(a, a + 8) == 16);
+    assert(inversions(a, a + 8) == 16);
   }
   {
     int a[] = {6, 9, 1, 14, 8, 12, 3, 2};
-    assert(magic_inversions(8, a) == 16);
+    assert(inversions(8, a) == 16);
   }
   return 0;
 }

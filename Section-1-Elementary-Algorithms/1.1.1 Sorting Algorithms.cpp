@@ -329,7 +329,7 @@ int main () {
     assert(is_sorted(v.rbegin(), v.rend()));
   }
 
-  //example from www.cplusplus.com/reference/algorithm/stable_sort
+  //example from http://www.cplusplus.com/reference/algorithm/stable_sort
   double a[] = {3.14, 1.41, 2.72, 4.67, 1.73, 1.32, 1.62, 2.58};
   {
     vector<double> v(a, a + 8);
