@@ -2,9 +2,9 @@
 
 1.1.4 - Coordinate Compression
 
-Given an array a[] of size n, reassign integers to each element of a[]
+Given an array a[] of size n, reassign integers to each value of a[]
 such that the magnitude of each new value is no more than n, while the
-relative order of each element as they were in the original array is
+relative order of each value as they were in the original array is
 preserved. That is, if a[] is the original array and b[] is the result
 array, then for every pair (i, j), the result of comparing a[i] < a[j]
 will be exactly the same as the result of b[i] < b[j]. Furthermore,
@@ -64,7 +64,7 @@ Sample Output:
 #include <iostream>
 using namespace std;
 
-template<class It> void print(It lo, It hi) {
+template<class It> void print_range(It lo, It hi) {
   while (lo != hi)
     cout << *(lo++) << " ";
   cout << "\n";
@@ -74,17 +74,17 @@ int main() {
   {
     int a[] = {1, 30, 30, 7, 9, 8, 99, 99};
     compress1(a, a + 8);
-    print(a, a + 8);
+    print_range(a, a + 8);
   }
   {
     int a[] = {1, 30, 30, 7, 9, 8, 99, 99};
     compress2(a, a + 8);
-    print(a, a + 8);
+    print_range(a, a + 8);
   }
   { //works on doubles too
     double a[] = {0.5, -1.0, 3, -1.0, 20, 0.5};
     compress1(a, a + 6);
-    print(a, a + 6);
+    print_range(a, a + 6);
   }
   return 0;
 }
