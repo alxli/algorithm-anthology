@@ -2,59 +2,71 @@
 
 1.2.4 - Subset Sum (Meet-in-the-Middle)
 
-Given an unsorted array of integers and a value v, determine
-the minimum sum of any subset of values in the array that is
-not less than v. A meet-in-the-middle algorithm divides the
-array in two equal parts. All possible sums are precomputed
-and stored in a table and sorted by the sum. Finally, to
-find the answer, the table is searched.
+Given an unsorted sequence of (not necessarily unique) integers and a
+number v, determine the minimum possible sum of any subset of the given
+sequence that is not less than v. This is the general case of the more
+well-known subset sum problem which asks whether there exists a subset
+which sums to 0 (equivalent here to simply seeing if v = 0 yields an
+answer of 0). Both problems are NP-complete. A meet-in-the-middle
+algorithm divides the array in two equal parts. All possible sums of
+the lower and higher parts are precomputed and sorted in a table.
+Finally, the table is searched to find the answer.
 
-Time Complexity: O(n * 2^(n / 2)) on the size of the array.
-Space Complexity: O(n) auxiliary on the size of the array.
+The following implementation accepts two random access iterators as the
+sequence [lo, hi) of integers, and the number v. lo and hi must point
+to an integral type. Note that since the sums can get large, 64-bit
+integers are used to avoid overflow.
+
+Time Complexity: O(n * 2^(n/2)) on the distance between lo and hi.
+Space Complexity: O(n) auxiliary.
 
 */
 
 #include <algorithm> /* std::max(), std::sort() */
-#include <climits>   /* LLONG_MIN */
+#include <limits>    /* std::numeric_limits */
 
 template<class It>
 long long sum_lower_bound(It lo, It hi, long long v) {
   int n = hi - lo;
   int llen = 1 << (n / 2);
-  int rlen = 1 << (n - n / 2);
-  long long lsum[llen], rsum[rlen];
+  int hlen = 1 << (n - n / 2);
+  long long *lsum = new long long[llen];
+  long long *hsum = new long long[hlen];
   std::fill(lsum, lsum + llen, 0);
-  std::fill(rsum, rsum + rlen, 0);
-  for (int i = 0; i < llen; ++i)
-    for (int j = 0; j < n / 2; ++j)
-      if ((i & (1 << j)) > 0)
-        lsum[i] += *(lo + j);
-  for (int i = 0; i < rlen; ++i)
-    for (int j = 0; j < n - n / 2; ++j)
-      if ((i & (1 << j)) > 0)
-        rsum[i] += *(lo + j + n / 2);
+  std::fill(hsum, hsum + hlen, 0);
+  for (int mask = 0; mask < llen; mask++)
+    for (int i = 0; i < n / 2; i++)
+      if ((mask >> i) & 1)
+        lsum[mask] += *(lo + i);
+  for (int mask = 0; mask < hlen; mask++)
+    for (int i = 0; i < n - n / 2; i++)
+      if ((mask >> i) & 1)
+        hsum[mask] += *(lo + i + n / 2);
   std::sort(lsum, lsum + llen);
-  std::sort(rsum, rsum + llen);
-  int l = 0, r = rlen - 1;
-  long long cur = LLONG_MIN;
+  std::sort(hsum, hsum + llen);
+  int l = 0, r = hlen - 1;
+  long long curr = std::numeric_limits<long long>::min();
   while (l < llen && r >= 0) {
-    if (lsum[l] + rsum[r] <= v) {
-      cur = std::max(cur, lsum[l] + rsum[r]);
+    if (lsum[l] + hsum[r] <= v) {
+      curr = std::max(curr, lsum[l] + hsum[r]);
       l++;
     } else {
       r--;
     }
   }
-  return cur;
+  delete[] lsum;
+  delete[] hsum;
+  return curr;
 }
 
 /*** Example Usage ***/
 
-#include <iostream>
-using namespace std;
+#include <cassert>
 
 int main() {
-  long long a[] = {9, 1, 5, 0, 1, 11, 5};
-  cout << sum_lower_bound(a, a + 7, 8) << "\n"; //7
+  int a[] = {9, 1, 5, 0, 1, 11, 5};
+  assert(sum_lower_bound(a, a + 7, 8) == 7);
+  int b[] = {-7, -3, -2, 5, 8};
+  assert(sum_lower_bound(b, b + 5, 0) == 0);
   return 0;
 }
