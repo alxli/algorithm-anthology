@@ -2,20 +2,19 @@
 
 1.2.4 - Subset Sum (Meet-in-the-Middle)
 
-Given an unsorted sequence of (not necessarily unique) integers and a
-number v, determine the minimum possible sum of any subset of the given
-sequence that is not less than v. This is the general case of the more
-well-known subset sum problem which asks whether there exists a subset
-which sums to 0 (equivalent here to simply seeing if v = 0 yields an
-answer of 0). Both problems are NP-complete. A meet-in-the-middle
-algorithm divides the array in two equal parts. All possible sums of
-the lower and higher parts are precomputed and sorted in a table.
-Finally, the table is searched to find the answer.
+Given a sequence of n (not necessarily unique) integers and a number v,
+determine the minimum possible sum of any subset of the given sequence
+that is not less than v. This is a generalization of a more well-known
+version of the subset sum problem which asks whether a subset summing
+to 0 exists (equivalent here to seeing if v = 0 yields an answer of 0).
+Both problems are NP-complete. A meet-in-the-middle algorithm divides
+the array in two equal parts. All possible sums of the lower and higher
+parts are precomputed and sorted in a table. Finally, the table is
+searched to find the lower bound.
 
 The following implementation accepts two random access iterators as the
-sequence [lo, hi) of integers, and the number v. lo and hi must point
-to an integral type. Note that since the sums can get large, 64-bit
-integers are used to avoid overflow.
+sequence [lo, hi) of integers, and the number v. Note that since the
+sums can get large, 64-bit integers are necessary to avoid overflow.
 
 Time Complexity: O(n * 2^(n/2)) on the distance between lo and hi.
 Space Complexity: O(n) auxiliary.
