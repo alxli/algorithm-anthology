@@ -2,38 +2,42 @@
 
 1.2.5 - Maximal Zero Submatrix
 
-Given a rectangular matrix of 0's and 1's, determine the
-area of the largest submatrix which contains only 0's.
+Given an n by m rectangular matrix of 0's and 1's, determine the area
+of the largest rectangular submatrix which contains only 0's. This can
+be reduced the problem of finding the maximum rectangular area under a
+histogram, which can be efficiently solved using a stack. The following
+implementation accepts a 2-dimensional vector of bools and returns the
+area of the maximum zero submatrix.
 
-Time Complexity: O(n * m), where n is the number of rows
-and m is the number of columns in the matrix.
+Explanation: http://stackoverflow.com/a/13657337
 
-Space Complexity: O(m) auxiliary on the number of columns.
+Time Complexity: O(n * m) for a matrix n rows by m columns.
+Space Complexity: O(m) auxiliary.
 
 */
 
 #include <algorithm> /* std::max() */
 #include <vector>
 
-typedef std::vector<std::vector<bool> > matrix;
-
-int max_zero_submatrix(const matrix & a) {
-  int n = a.size(), m = a[0].size(), res = 0;
-  std::vector<int> d(m, -1), d1(m), d2(m), st(m);
+int max_zero_submatrix(const std::vector< std::vector<bool> > & mat) {
+  int n = mat.size(), m = mat[0].size(), res = 0;
+  std::vector<int> d(m, -1), d1(m), d2(m), stack;
   for (int r = 0; r < n; r++) {
     for (int c = 0; c < m; c++)
-      if (a[r][c]) d[c] = r;
-    int sz = 0;
+      if (mat[r][c]) d[c] = r;
+    stack.clear();
     for (int c = 0; c < m; c++) {
-      while (sz > 0 && d[st[sz - 1]] <= d[c]) sz--;
-      d1[c] = sz == 0 ? -1 : st[sz - 1];
-      st[sz++] = c;
+      while (!stack.empty() && d[stack.back()] <= d[c])
+        stack.pop_back();
+      d1[c] = stack.empty() ? -1 : stack.back();
+      stack.push_back(c);
     }
-    sz = 0;
+    stack.clear();
     for (int c = m - 1; c >= 0; c--) {
-      while (sz > 0 && d[st[sz - 1]] <= d[c]) sz--;
-      d2[c] = sz == 0 ? m : st[sz - 1];
-      st[sz++] = c;
+      while (!stack.empty() && d[stack.back()] <= d[c])
+        stack.pop_back();
+      d2[c] = stack.empty() ? m : stack.back();
+      stack.push_back(c);
     }
     for (int j = 0; j < m; j++)
       res = std::max(res, (r - d[j]) * (d2[j] - d1[j] - 1));
@@ -43,7 +47,7 @@ int max_zero_submatrix(const matrix & a) {
 
 /*** Example Usage ***/
 
-#include <iostream>
+#include <cassert>
 using namespace std;
 
 int main() {
@@ -53,9 +57,9 @@ int main() {
                   {0, 0, 0, 0, 0, 1},
                   {1, 0, 0, 1, 0, 0},
                   {1, 0, 1, 0, 0, 1}};
-  matrix v(n);
-  for (int i = 0; i < 5; i++)
-    v[i] = vector<bool>(a[i], a[i] + m);
-  cout << max_zero_submatrix(v) << "\n";
+  std::vector< std::vector<bool> > mat(n);
+  for (int i = 0; i < n; i++)
+    mat[i] = vector<bool>(a[i], a[i] + m);
+  assert(max_zero_submatrix(mat) == 6);
   return 0;
 }

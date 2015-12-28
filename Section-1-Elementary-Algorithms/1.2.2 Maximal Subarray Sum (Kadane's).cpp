@@ -86,17 +86,17 @@ Space Complexity: O(n) auxiliary.
 */
 
 template<class T>
-T max_submatrix_sum(const std::vector< std::vector<T> > & a,
+T max_submatrix_sum(const std::vector< std::vector<T> > & mat,
                     int *begin_row = 0, int *end_row = 0,
                     int *begin_col = 0, int *end_col = 0) {
-  int n = a.size(), m = a[0].size();
+  int n = mat.size(), m = mat[0].size();
   std::vector<T> sums(n);
   T sum, max_sum = std::numeric_limits<T>::min();
   for (int lcol = 0; lcol < m; lcol++) {
     std::fill(sums.begin(), sums.end(), 0);
     for (int hcol = lcol; hcol < m; hcol++) {
       for (int i = 0; i < n; i++)
-        sums[i] += a[i][hcol];
+        sums[i] += mat[i][hcol];
       int begin, end;
       sum = max_subarray_sum(sums.begin(), sums.end(), &begin, &end);
       if (sum > max_sum) {
