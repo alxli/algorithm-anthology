@@ -2,95 +2,125 @@
 
 1.3.1 - Discrete Binary Search
 
-Not only can binary search be used on arrays, it can also be used
-on monotonic functions. In this case we aren't restricted by
-tangible quantities such as available memory, as is the case with
-storing values explicitly in a sorted array.
+Not only can binary search be used to find the position of a given
+element in a sorted array, it can also be used to find the input value
+corresponding to any output value of a monotonic (either strictly
+non-increasing or strictly non-decreasing) function in O(log n) running
+time with respect to the domain. This is a special case of finding
+the exact point at which any given monotonic Boolean function changes
+from true to false (or vice versa). Unlike searching through an array,
+discrete binary search is not restricted by available memory, which is
+especially important while handling infinitely large search spaces such
+as the real numbers.
 
-binary_search_first_true() returns the smallest integer k in the
-range [lo, hi) - (i.e. including lo, but excluding hi) for which
-the boolean function query(k) is true. It can be used if and only
-if there exists a constant k where the return value of query(x)
-is false for all x < k and true for all x >= k.
+binary_search_first_true() takes two integers lo and hi as boundaries
+for the search space [lo, hi) (i.e. including lo, but excluding hi),
+and returns the least integer k (lo <= k < hi) for which the Boolean
+predicate pred(k) tests true. This function is correct if and only if
+there exists a constant k where the return value of pred(x) is false
+for all x < k and true for all x >= k.
 
-binary_search_last_true() returns the greatest integer k in the
-range [lo, hi) - (i.e. including lo, but excluding hi) for which
-the boolean function query(k) is true. It can be used if and only
-if there exists a constant k where the return value of query(x)
-is true for all x <= k and false for all x > k.
+binary_search_last_true() takes two integers lo and hi as boundaries
+for the search space [lo, hi) (i.e. including lo, but excluding hi),
+and returns the greatest integer k (lo <= k < hi) for which the Boolean
+predicate pred(k) tests true. This function is correct if and only if
+there exists a constant k where the return value of pred(x) is true
+for all x <= k and false for all x > k.
 
-Complexity: At most O(log N) calls to query(), where N is the
-search space (the distance between lo and hi).
+Time Complexity: At most O(log n) calls to pred(), where n is the
+distance between lo and hi.
 
-fbinary_search() works like binary_search_first_true(), but on
-floating point query functions. Since the set of reals numbers is
-dense, it is clear that we cannot find the exact target. Instead,
-fbinary_search() will return a value that is very close to the
-border between false and true. Note that the number of iterations
-performed depends on how precise we want the answer to be. Although
-one can loop while (hi - lo > epsilon) until the distance between
-lo and hi is really small, we can instead just keep it simple and
-let the loop run for a few hundred iterations. In most contest
-applications, 100 iterations is more than sufficient, reducing the
-search space to 10^-30 times its original size.
+Space Complexity: O(1) auxiliary.
 
 */
 
 //000[1]11
-template<class Int, class BoolFunction>
-Int binary_search_first_true(Int lo, Int hi, BoolFunction query) {
+template<class Int, class IntPredicate>
+Int binary_search_first_true(Int lo, Int hi, IntPredicate pred) {
   Int mid, _hi = hi;
   while (lo < hi) {
     mid = lo + (hi - lo) / 2;
-    if (query(mid)) hi = mid;
-    else lo = mid + 1;
+    if (pred(mid))
+      hi = mid;
+    else
+      lo = mid + 1;
   }
-  if (!query(lo)) return _hi; //all [lo, hi) is false
+  if (!pred(lo)) return _hi; //all false
   return lo;
 }
 
 //11[1]000
-template<class Int, class BoolFunction>
-Int binary_search_last_true(Int lo, Int hi, BoolFunction query) {
+template<class Int, class IntPredicate>
+Int binary_search_last_true(Int lo, Int hi, IntPredicate pred) {
   Int mid, _hi = hi;
   while (lo < hi) {
     mid = lo + (hi - lo + 1) / 2;
-    if (query(mid)) lo = mid;
-    else hi = mid - 1;
+    if (pred(mid))
+      lo = mid;
+    else
+      hi = mid - 1;
   }
-  if (!query(lo)) return _hi; //all [lo, hi) is true
+  if (!pred(lo)) return _hi; //all true
   return lo;
 }
 
+/*
+
+fbinary_search() is the equivalent of binary_search_first_true() on
+floating point predicates. Since any given range of reals numbers is
+dense, it is clear that the exact target cannot be found. Instead, the
+function will return a value that is very close to the border between
+false and true. The precision of the answer depends on the number of
+repetitions the function uses. Since each repetition bisects the search
+space, for r repetitions, the absolute error of the answer will be
+1/(2^r) times the distance between lo and hi. Although it's possible to
+control the error by looping while hi - lo is greater than an arbitrary
+epsilon, it is much simpler to let the loop run for a sizable number of
+iterations until floating point arithmetic breaks down. 100 iterations
+is typically sufficient, reducing the search space to 2^-100 ~ 10^-30
+times its original size.
+
+Note that the function can be modified to find the "last true" point
+in the range by interchanging lo and hi in the if-else statement.
+
+Time Complexity: At most O(log n) calls to pred(), where n is the
+distance between lo and hi divided by the desired absolute error.
+
+Space Complexity: O(1) auxiliary.
+
+*/
+
 //000[1]11
-template<class Double, class BoolFunction>
-Double fbinary_search(Double lo, Double hi, BoolFunction query) {
+template<class Double, class DoublePredicate>
+Double fbinary_search(Double lo, Double hi, DoublePredicate pred) {
   Double mid;
   for (int reps = 0; reps < 100; reps++) {
     mid = (lo + hi) / 2.0;
-    //simply switch hi and lo in the line below to find last true
-    (query(mid) ? hi : lo) = mid;
+    if (pred(mid))
+      hi = mid;
+    else
+      lo = mid;
   }
   return lo;
 }
 
 /*** Example Usage ***/
 
-#include <iostream>
-using namespace std;
+#include <cassert>
+#include <cmath>
 
-//Define your own black-box query function here. Simple examples:
-bool query1(int x) { return x >= 3; }
-bool query2(int x) { return false; }
-bool query3(int x) { return x <= 5; }
-bool query4(int x) { return true; }
-bool query5(double x) { return x >= 1.2345; }
+//Simple predicate examples:
+bool pred1(int x) { return x >= 3; }
+bool pred2(int x) { return false; }
+bool pred3(int x) { return x <= 5; }
+bool pred4(int x) { return true; }
+bool pred5(double x) { return x >= 1.2345; }
 
 int main() {
-  cout << binary_search_first_true(0, 7, query1) << "\n"; //3
-  cout << binary_search_first_true(0, 7, query2) << "\n"; //7
-  cout << binary_search_last_true(0, 7, query3)  << "\n"; //5
-  cout << binary_search_last_true(0, 7, query4)  << "\n"; //7
-  cout << fbinary_search(-10.0, 10.0, query5)    << "\n"; //1.2345
+  assert(binary_search_first_true(0, 7, pred1) == 3);
+  assert(binary_search_first_true(0, 7, pred2) == 7);
+  assert(binary_search_last_true(0, 7, pred3)  == 5);
+  assert(binary_search_last_true(0, 7, pred4)  == 7);
+  assert(fabs(fbinary_search(-10.0, 10.0, pred5) - 1.2345) < 1e-15);
   return 0;
 }
