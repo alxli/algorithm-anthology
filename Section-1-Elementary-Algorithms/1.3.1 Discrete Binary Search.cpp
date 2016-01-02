@@ -91,9 +91,9 @@ Space Complexity: O(1) auxiliary.
 */
 
 //000[1]11
-template<class Double, class DoublePredicate>
-Double fbinary_search(Double lo, Double hi, DoublePredicate pred) {
-  Double mid;
+template<class DoublePredicate>
+double fbinary_search(double lo, double hi, DoublePredicate pred) {
+  double mid;
   for (int reps = 0; reps < 100; reps++) {
     mid = (lo + hi) / 2.0;
     if (pred(mid))

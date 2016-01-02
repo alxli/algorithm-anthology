@@ -23,10 +23,10 @@ Space Complexity: O(1) auxiliary.
 */
 
 template<class UnimodalFunction>
-double ternary_search_min(double lo, double hi, UnimodalFunction f,
-                          double eps = 1e-9) {
+double ternary_search_min(double lo, double hi, UnimodalFunction f) {
+  static const double EPS = 1e-9;
   double lthird, hthird;
-  while (hi - lo > eps) {
+  while (hi - lo > EPS) {
     lthird = lo + (hi - lo) / 3;
     hthird = hi - (hi - lo) / 3;
     if (f(lthird) < f(hthird))
@@ -38,10 +38,10 @@ double ternary_search_min(double lo, double hi, UnimodalFunction f,
 }
 
 template<class UnimodalFunction>
-double ternary_search_max(double lo, double hi, UnimodalFunction f,
-                          double eps = 1e-9) {
+double ternary_search_max(double lo, double hi, UnimodalFunction f) {
+  static const double EPS = 1e-9;
   double lthird, hthird;
-  while (hi - lo > eps) {
+  while (hi - lo > EPS) {
     lthird = lo + (hi - lo) / 3;
     hthird = hi - (hi - lo) / 3;
     if (f(lthird) < f(hthird))
@@ -57,6 +57,10 @@ double ternary_search_max(double lo, double hi, UnimodalFunction f,
 #include <cmath>
 #include <cassert>
 
+bool eq(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
+
 //parabola opening up with vertex at (-2, -24)
 double f1(double x) {
   return 3*x*x + 12*x - 12;
@@ -70,10 +74,6 @@ double f2(double x) {
 //absolute value function shifted to the right by 30 units
 double f3(double x) {
   return fabs(x - 30);
-}
-
-bool eq(double a, double b) {
-  return fabs(a - b) < 1e-9;
 }
 
 int main() {
