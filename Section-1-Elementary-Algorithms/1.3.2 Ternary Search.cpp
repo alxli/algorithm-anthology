@@ -3,17 +3,17 @@
 1.3.2 - Ternary Search
 
 Given a unimodal function f(x), find its maximum or minimum point to a
-an arbitrarily specified absolute error. A maximum unimodal function
-f(x) with domain [lo, hi] means that there must exist a number x such
-that for all pairs a, b in [lo, x] with a < b, f(a) < f(b) and that
-for all pairs c, d in [x, hi] with c < d, f(c) > f(d). For a minimum
-unimodal function, f(a) > f(b) and f(c) < f(d) will instead hold.
+an arbitrarily specified absolute error.
 
-In other words, for ternary_search_min() to work on a function f, the
-graph of f must resemble a "valley" with a single point as its minimum
-and no flat regions on its left side nor right side. Conversely, for
-ternary_search_max() to work, the graph of f must look like a "hill"
-with a single point as its maximum.
+ternary_search_min() takes the domain [lo, hi] of a continuous function
+f(x) and returns a number x such that f is strictly decreasing on the
+interval [lo, x] and strictly increasing on the interval [x, hi]. For
+ternary search to work, this x must exist and be unique.
+
+ternary_search_max() takes the domain [lo, hi] of a continuous function
+f(x) and returns a number x such that f is strictly increasing on the
+interval [lo, x] and strictly decreasing on the interval [x, hi]. For
+ternary search to work, this x must exist and be unique.
 
 Time Complexity: At most O(log n) calls to f, where n is the distance
 between lo and hi divided by the desired absolute error (epsilon).
@@ -67,6 +67,11 @@ double f2(double x) {
   return -5.7*x*x + 1.2*x + 88;
 }
 
+//absolute value function shifted to the right by 30 units
+double f3(double x) {
+  return fabs(x - 30);
+}
+
 bool eq(double a, double b) {
   return fabs(a - b) < 1e-9;
 }
@@ -74,5 +79,6 @@ bool eq(double a, double b) {
 int main() {
   assert(eq(ternary_search_min(-1000, 1000, f1), -2));
   assert(eq(ternary_search_max(-1000, 1000, f2), 2.0/19));
+  assert(eq(ternary_search_min(-1000, 1000, f3), 30));
   return 0;
 }
