@@ -12,7 +12,8 @@ efficiently counting the number of inversions.
 
 */
 
-#include <iterator> /* std::iterator_traits */
+#include <algorithm> /* std::fill(), std::max() */
+#include <iterator>  /* std::iterator_traits */
 
 /*
 
@@ -45,10 +46,13 @@ template<class It> long long inversions(It lo, It hi) {
       *(ptr++) = *(a++);
     }
   }
-  if (a > mid)
-    for (It k = c; k < hi; k++) *(ptr++) = *k;
-  else
-    for (It k = a; k <= mid; k++) *(ptr++) = *k;
+  if (a > mid) {
+    for (It k = c; k < hi; k++)
+      *(ptr++) = *k;
+  } else {
+    for (It k = a; k <= mid; k++)
+      *(ptr++) = *k;
+  }
   for (int i = hi - lo - 1; i >= 0; i--)
     *(lo + i) = buf[i];
   delete[] buf;
@@ -77,22 +81,22 @@ Space Complexity: O(m) auxiliary.
 long long inversions(int n, int a[]) {
   int mx = 0;
   for (int i = 0; i < n; i++)
-    if (a[i] > mx) mx = a[i];
+    mx = std::max(mx, a[i]);
+  int *cnt = new int[mx];
   long long res = 0;
-  int *c = new int[mx];
   while (mx > 0) {
-    for (int i = 0; i < mx; i++) c[i] = 0;
+    std::fill(cnt, cnt + mx, 0);
     for (int i = 0; i < n; i++) {
       if (a[i] % 2 == 0)
-        res += c[a[i] / 2];
+        res += cnt[a[i] / 2];
       else
-        c[a[i] / 2]++;
+        cnt[a[i] / 2]++;
     }
     mx = 0;
     for (int i = 0; i < n; i++)
-      if ((a[i] /= 2) > mx) mx = a[i];
+      mx = std::max(mx, a[i] /= 2);
   }
-  delete[] c;
+  delete[] cnt;
   return res;
 }
 

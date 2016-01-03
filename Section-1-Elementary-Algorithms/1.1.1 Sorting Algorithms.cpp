@@ -296,7 +296,7 @@ using namespace std;
 template<class It> void print_range(It lo, It hi) {
   while (lo != hi)
     cout << *(lo++) << " ";
-  cout << "\n";
+  cout << endl;
 }
 
 template<class It> bool is_sorted(It lo, It hi) {

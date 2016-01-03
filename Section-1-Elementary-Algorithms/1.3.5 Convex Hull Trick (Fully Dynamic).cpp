@@ -56,7 +56,8 @@ struct line {
   }
 
   double intersect(const line & l) const {
-    if (parallel(l)) return INF;
+    if (parallel(l))
+      return INF;
     return (double)(l.b - b)/(m - l.m);
   }
 
@@ -80,7 +81,8 @@ bool has_next(hulliter it) {
 }
 
 bool irrelevant(hulliter it) {
-  if (!has_prev(it) || !has_next(it)) return false;
+  if (!has_prev(it) || !has_next(it))
+    return false;
   hulliter prev = it; --prev;
   hulliter next = it; ++next;
   return QUERY_MAX ?

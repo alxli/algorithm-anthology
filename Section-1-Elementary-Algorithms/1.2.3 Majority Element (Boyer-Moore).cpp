@@ -36,8 +36,10 @@ template<class It> It majority(It lo, It hi) {
     }
   }
   cnt = 0;
-  for (It it = lo; it != hi; ++it)
-    if (*it == *candidate) cnt++;
+  for (It it = lo; it != hi; ++it) {
+    if (*it == *candidate)
+      cnt++;
+  }
   if (cnt <= (hi - lo) / 2)
     return hi;
   return candidate;

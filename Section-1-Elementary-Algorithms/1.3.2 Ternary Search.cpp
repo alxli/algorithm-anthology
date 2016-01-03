@@ -78,7 +78,7 @@ double f3(double x) {
 
 int main() {
   assert(eq(ternary_search_min(-1000, 1000, f1), -2));
-  assert(eq(ternary_search_max(-1000, 1000, f2), 2.0/19));
+  assert(eq(ternary_search_max(-1000, 1000, f2), 2.0 / 19));
   assert(eq(ternary_search_min(-1000, 1000, f3), 30));
   return 0;
 }

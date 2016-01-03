@@ -23,8 +23,10 @@ int max_zero_submatrix(const std::vector< std::vector<bool> > & mat) {
   int n = mat.size(), m = mat[0].size(), res = 0;
   std::vector<int> d(m, -1), d1(m), d2(m), stack;
   for (int r = 0; r < n; r++) {
-    for (int c = 0; c < m; c++)
-      if (mat[r][c]) d[c] = r;
+    for (int c = 0; c < m; c++) {
+      if (mat[r][c])
+        d[c] = r;
+    }
     stack.clear();
     for (int c = 0; c < m; c++) {
       while (!stack.empty() && d[stack.back()] <= d[c])

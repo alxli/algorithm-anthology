@@ -33,14 +33,18 @@ long long sum_lower_bound(It lo, It hi, long long v) {
   long long *hsum = new long long[hlen];
   std::fill(lsum, lsum + llen, 0);
   std::fill(hsum, hsum + hlen, 0);
-  for (int mask = 0; mask < llen; mask++)
-    for (int i = 0; i < n / 2; i++)
+  for (int mask = 0; mask < llen; mask++) {
+    for (int i = 0; i < n / 2; i++) {
       if ((mask >> i) & 1)
         lsum[mask] += *(lo + i);
-  for (int mask = 0; mask < hlen; mask++)
-    for (int i = 0; i < n - n / 2; i++)
+    }
+  }
+  for (int mask = 0; mask < hlen; mask++) {
+    for (int i = 0; i < n - n / 2; i++) {
       if ((mask >> i) & 1)
         hsum[mask] += *(lo + i + n / 2);
+    }
+  }
   std::sort(lsum, lsum + llen);
   std::sort(hsum, hsum + llen);
   int l = 0, r = hlen - 1;

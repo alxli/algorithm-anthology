@@ -51,7 +51,8 @@ template<class It> void rotate3(It lo, It mid, It hi) {
     int curr = i, next;
     for (int j = 0; j < cycle - 1; j++) {
       next = curr + jump;
-      if (next >= n) next -= n;
+      if (next >= n)
+        next -= n;
       std::swap(*(lo + curr), *(lo + next));
       curr = next;
     }
@@ -77,7 +78,8 @@ using namespace std;
 
 int main() {
   std::vector<int> v0, v1, v2, v3;
-  for (int i = 0; i < 10000; i++) v0.push_back(i);
+  for (int i = 0; i < 10000; i++)
+    v0.push_back(i);
   v1 = v2 = v3 = v0;
   int mid = 5678;
   std::rotate(v0.begin(), v0.begin() + mid, v0.end());
@@ -93,6 +95,7 @@ int main() {
   for (int i = 0; i < (int)v.size(); i++)
     cout << v[i] << ' ';
   cout << endl;
+
   //insertion sort
   for (vector<int>::iterator i = v.begin(); i != v.end(); ++i)
     rotate1(std::upper_bound(v.begin(), i, *i), i, i + 1);
@@ -100,12 +103,14 @@ int main() {
   for (int i = 0; i < (int)v.size(); i++)
     cout << v[i] << ' ';
   cout << endl;
+
   //simple rotation to the left
   rotate2(v.begin(), v.begin() + 1, v.end());
   cout << "rotate left:  ";
   for (int i = 0; i < (int)v.size(); i++)
     cout << v[i] << ' ';
   cout << endl;
+
   //simple rotation to the right
   rotate3(v.rbegin(), v.rbegin() + 1, v.rend());
   cout << "rotate right: ";

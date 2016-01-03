@@ -24,12 +24,12 @@ Space Complexity: O(1) auxiliary.
 #include <cstdlib>   /* rand() */
 #include <iterator>  /* std::iterator_traits */
 
-int rand32(int n) {
-  return ((rand() & 0x7fff) | ((rand() & 0x7fff) << 15)) % n;
+int rand32() {
+  return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
 }
 
 template<class It> It rand_partition(It lo, It hi) {
-  std::swap(*(lo + rand32(hi - lo)), *(hi - 1));
+  std::swap(*(lo + rand32() % (hi - lo)), *(hi - 1));
   typename std::iterator_traits<It>::value_type mid = *(hi - 1);
   It i = lo - 1;
   for (It j = lo; j != hi; ++j)
@@ -63,7 +63,7 @@ using namespace std;
 template<class It> void print_range(It lo, It hi) {
   while (lo != hi)
     cout << *(lo++) << " ";
-  cout << "\n";
+  cout << endl;
 }
 
 int main () {

@@ -41,7 +41,8 @@ template<class T> std::vector<T> lis(int n, T a[]) {
   int len = 0;
   for (int i = 0; i < n; i++) {
     int pos = lower_bound(len, a, a[i]);
-    if (len < pos + 1) len = pos + 1;
+    if (len < pos + 1)
+      len = pos + 1;
     prev[i] = pos > 0 ? tail[pos - 1] : -1;
     tail[pos] = i;
   }
@@ -64,7 +65,7 @@ using namespace std;
 template<class It> void print_range(It lo, It hi) {
   while (lo != hi)
     cout << *(lo++) << " ";
-  cout << "\n";
+  cout << endl;
 }
 
 int main () {
