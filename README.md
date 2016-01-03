@@ -1,7 +1,7 @@
 Alex's Anthology of Algorithms: Common Code for Contests in Concise C++ (A<sup>3</sup>C<sup>5</sup>)
 ==================
 
-*Note*: You may find the currently available algorithms in a single PDF here: http://alexli.ca/A3C5.pdf. The version you are reading is currently undergoing review. You may also find an **outdated** PDF version here: http://alexli.ca/A3C5-old.pdf. The old version is an abridged first-attempt at the anthology, containing only a small fraction of algorithms found in this GitHub repository (and a whole multitude of bugs that are now fixed). Use at your own risk!
+*Note*: You may find the currently available algorithms in a single PDF here: http://alexli.ca/A3C5.pdf. The version you are reading is currently being reviewed, revised, and rewritten.
 
 ## Introduction
 
