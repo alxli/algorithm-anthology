@@ -2,37 +2,35 @@
 
 1.4.2 - Cycle Detection (Brent's Algorithm)
 
-For a function f which maps a finite set S to itself and any
-initial value x0 in S, the sequence of iterated values:
+For a function f which maps a finite set S to itself and any initial
+value x[0] in S, the same value must occur twice in the sequence below:
+x[0], x[1] = f(x[0]), x[2] = f(x[1]), ..., x[i] = f(x[i - 1])
+That is, there must exist numbers i, j (i < j) such that x[i] = x[j].
+Once this happens, the sequence will continue periodically by repeating
+the same sequence of values from x[i] to x[j − 1]. Cycle detection asks
+to find i and j, given the function f and initial value x[0]. This is
+also analogous to the problem of detecting a cycle in a linked list,
+which will make it degenerate.
 
-x_0, x_1 = f(x_0), x_2 = f(x_1), ... x_i = f(x_(i-1))
+While Floyd's cycle-finding algorithm finds cycles by simultaneously
+moving two pointers at different speeds, Brent's algorithm keeps the
+tortoise pointer stationary and "teleports" it to the hare pointer
+every power of two. The smallest power of two for which they meet is
+the start of the first cycle. This improves upon the constant factor
+of Floyd's algorithm by reducing the number of function calls.
 
-must eventually use the same value twice: there must be some
-i <> j such that xi = xj. Once this happens, the sequence
-must continue periodically, by repeating the same sequence
-of values from x_i to x_(j−1). Cycle detection asks to find
-i and j, given the function f(x) and x_0.
-
-Brent's cycle-finding algorithm is based on a different idea
-than Floyd's: searching for the smallest power of two, 2^i
-that is larger than both lambda and mu.
-
-Time Complexity: O(lambda + mu), where lambda is the length
-of the cycle and mu is the first index of x for which the
-cycle starts to occur. Brent claims that, on average, his
-cycle finding algorithm runs around 36% more quickly than
-Floyd's and that it speeds up the Pollard rho algorithm by
-around 24% (see mathematics chapter).
+Time Complexity: O(mu + lambda), where mu is the smallest index of the
+sequence on which a cycle starts, and lambda is the cycle's length.
 
 Space Complexity: O(1) auxiliary.
 
 */
 
+
 #include <utility> /* std::pair */
 
-//returns pair<mu, lambda> (as described above)
 template<class IntFunction>
-std::pair<int, int> brent(IntFunction f, int x0) {
+std::pair<int, int> find_cycle(IntFunction f, int x0) {
   int power = 1, length = 1;
   int tortoise = x0, hare = f(x0);
   while (tortoise != hare) {
@@ -60,9 +58,10 @@ std::pair<int, int> brent(IntFunction f, int x0) {
 /*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
 #include <set>
 using namespace std;
+
+const int x0 = 0;
 
 int f(int x) {
   return (123 * x * x + 4567890) % 1337;
@@ -87,10 +86,8 @@ void verify(int x0, int start, int length) {
 }
 
 int main () {
-  int x0 = 0;
-  pair<int, int> res = brent(f, x0);
-  cout << "Found cycle of length " << res.second;
-  cout << " starting at x_" << res.first << ".\n";
+  pair<int, int> res = find_cycle(f, x0);
+  assert(res == make_pair(4, 2));
   verify(x0, res.first, res.second);
   return 0;
 }
