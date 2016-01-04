@@ -1,75 +1,81 @@
 /*
 
-Description: Given a directed acyclic graph (DAG), order the nodes
-such that for every edge from a to b, a precedes b in the ordering.
-Usually, there is more than one possible valid ordering. The
-following program uses DFS to produce one possible ordering.
-This can also be used to detect whether the graph is a DAG.
-Note that the DFS algorithm here produces a reversed topological
-ordering, so the output must be printed backwards. The graph is
-stored in an adjacency list.
+Given a directed acyclic graph (DAG), find an ordering of the nodes
+such that for every edge from nodes u to v, u comes before v in the
+ordering. There may exist more than one possible topological ordering,
+in which case the following program will produce only one. Depth-first
+search can be used to produce all vertices in postorder, which happens
+to be the reverse of a valid topological ordering. By definition, the
+a node from a postorder traversal is always visited after all nodes
+that come earlier in the list.
 
-Complexity: O(V+E) on the number of vertices and edges.
+The toposort() function takes a directed graph stored as an adjacency
+list with nodes labeled from 0 to nodes - 1 and sets the global result
+vector to a valid topological ordering. If the graph contains a cycle,
+then an error is thrown. This is also known as Tarjan's algorithm.
 
-=~=~=~=~= Sample Input =~=~=~=~=
-8 9
-0 3
-0 4
-1 3
-2 4
-2 7
-3 5
-3 6
-3 7
-4 6
-
-=~=~=~=~= Sample Output =~=~=~=~=
-The topological order: 2 1 0 4 3 7 6 5
+Time Complexity: O(n) on the number of edges.
+Space Complexity: O(n) auxiliary on the number of edges.
 
 */
 
 #include <algorithm> /* std::fill(), std::reverse() */
-#include <iostream>
 #include <stdexcept> /* std::runtime_error() */
 #include <vector>
-using namespace std;
 
 const int MAXN = 100;
-vector<bool> vis(MAXN), done(MAXN);
-vector<int> adj[MAXN], sorted;
+
+std::vector<bool> vis(MAXN), done(MAXN);
+std::vector<int> adj[MAXN], result;
 
 void dfs(int u) {
   if (vis[u])
     throw std::runtime_error("Not a DAG.");
-  if (done[u]) return;
+  if (done[u])
+    return;
   vis[u] = true;
   for (int j = 0; j < (int)adj[u].size(); j++)
     dfs(adj[u][j]);
   vis[u] = false;
   done[u] = true;
-  sorted.push_back(u);
+  result.push_back(u);
 }
 
 void toposort(int nodes) {
   fill(vis.begin(), vis.end(), false);
   fill(done.begin(), done.end(), false);
-  sorted.clear();
-  for (int i = 0; i < nodes; i++)
-    if (!done[i]) dfs(i);
-  reverse(sorted.begin(), sorted.end());
+  result.clear();
+  for (int i = 0; i < nodes; i++) {
+    if (!done[i])
+      dfs(i);
+  }
+  std::reverse(result.begin(), result.end());
 }
 
+/*** Example Usage
+
+Sample Output:
+The topological order: 2 1 0 4 3 7 6 5
+
+***/
+
+#include <iostream>
+using namespace std;
+
 int main() {
-  int nodes, edges, u, v;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v;
-    adj[u].push_back(v);
-  }
-  toposort(nodes);
+  adj[0].push_back(3);
+  adj[0].push_back(4);
+  adj[1].push_back(3);
+  adj[2].push_back(4);
+  adj[2].push_back(7);
+  adj[3].push_back(5);
+  adj[3].push_back(6);
+  adj[3].push_back(7);
+  adj[4].push_back(6);
+  toposort(8);
   cout << "The topological order:";
-  for (int i = 0; i < (int)sorted.size(); i++)
-    cout << " " << sorted[i];
-  cout << "\n";
+  for (int i = 0; i < (int)result.size(); i++)
+    cout << " " << result[i];
+  cout << endl;
   return 0;
 }
