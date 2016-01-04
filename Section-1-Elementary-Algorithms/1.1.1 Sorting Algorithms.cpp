@@ -32,7 +32,6 @@ of the range to be sorted. To reduce the likelihood of encountering the
 worst case, the algorithm should be modified to select a random pivot,
 or use the "median of three" method.
 
-Time Complexity (Best): O(n log n)
 Time Complexity (Average): O(n log n)
 Time Complexity (Worst): O(n^2)
 Space Complexity: O(log n) auxiliary.
@@ -80,7 +79,6 @@ library, the implementation below differs in that it will simply fail
 if extra memory is not available. Meanwhile, std::stable_sort() will
 not fail, but instead fall back to a time complexity of O(n log^2 n).
 
-Time Complexity (Best): O(n log n)
 Time Complexity (Average): O(n log n)
 Time Complexity (Worst): O(n log n)
 Space Complexity: O(n) auxiliary.
@@ -132,7 +130,6 @@ complexity than merge sort.
 The standard library equivalent is calling std::make_heap(), followed
 by std::sort_heap() on the input range.
 
-Time Complexity (Best): O(n log n)
 Time Complexity (Average): O(n log n)
 Time Complexity (Worst): O(n log n)
 Space Complexity: O(1) auxiliary.
@@ -188,7 +185,6 @@ sensible (1.3 is empirically determined to be the best), then it will
 require astronomically large n to make the algorithm exceed O(n log n)
 steps. In practice, comb sort is only 2-3 times slower than merge sort.
 
-Time Complexity (Best): O(n)
 Time Complexity (Average): O(n^2 / 2^p) for p increments.
 Time Complexity (Worst): O(n^2)
 Space Complexity: O(1) auxiliary.
