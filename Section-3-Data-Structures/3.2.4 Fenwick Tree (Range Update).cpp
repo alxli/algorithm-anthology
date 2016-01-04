@@ -1,7 +1,5 @@
 /*
 
-3.2.4 - Fenwick Tree (Range Update/Query)
-
 Description: Using two arrays, a Fenwick tree can be made to
 support range updates and range queries simultaneously. However,
 the range updates can only be used to add an increment to all

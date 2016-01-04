@@ -1,7 +1,5 @@
 /*
 
-2.8.2 - Shortest Hamiltonian Path
-
 Description: Given a weighted, directed graph, the shortest
 hamiltonian path is a path of minimum distance that visits
 each vertex exactly once. Unlike the travelling salesman

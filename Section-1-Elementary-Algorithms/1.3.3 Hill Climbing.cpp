@@ -1,7 +1,5 @@
 /*
 
-1.3.3 - Hill Climbing
-
 Given a continuous function f on two real numbers, hill climbing is a
 technique that can be used to find the local maximum or minimum point
 based on some (possibly random) initial guess. Then, the algorithm

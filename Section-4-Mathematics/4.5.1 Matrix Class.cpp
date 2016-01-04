@@ -1,7 +1,5 @@
 /*
 
-4.5.1 - Matrix Class
-
 Basic matrix class with support for arithmetic operations
 as well as matrix multiplication and exponentiation. You
 can access/modify indices using m(r, c) or m[r][c]. You

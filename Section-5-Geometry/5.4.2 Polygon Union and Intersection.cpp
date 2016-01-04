@@ -1,7 +1,5 @@
 /*
 
-5.4.2 - Polygon Union and Intersection Area
-
 Given two ranges of points respectively denoting the vertices of
 two polygons, determine the intersection area of those polygons.
 Using this, we can easily calculate their union with the forumla:

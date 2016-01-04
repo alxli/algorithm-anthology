@@ -1,7 +1,5 @@
 /*
 
-3.7.2 - Segment Trees for Lowest Common Ancestor
-
 Description: Given a rooted tree, the lowest common ancestor (LCA)
 of two nodes v and w is the lowest (i.e. deepest) node that has
 both v and w as descendants, where we define each node to be a

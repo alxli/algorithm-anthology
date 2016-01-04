@@ -1,7 +1,5 @@
 /*
 
-1.2.5 - Maximal Zero Submatrix
-
 Given an n by m rectangular matrix of 0's and 1's, determine the area
 of the largest rectangular submatrix which contains only 0's. This can
 be reduced the problem of finding the maximum rectangular area under a

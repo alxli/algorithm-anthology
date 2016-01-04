@@ -1,7 +1,5 @@
 /*
 
-4.2.5 - Enumerating Partitions
-
 We shall consider a partition of an integer n to be an
 unordered multiset of positive integers that has a total
 sum equal to n. Since both 2 1 1 and 1 2 1 represent the

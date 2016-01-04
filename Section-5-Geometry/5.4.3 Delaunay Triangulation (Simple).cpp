@@ -1,7 +1,5 @@
 /*
 
-5.4.3 - Delaunay Triangulation (Simple)
-
 Given a range of points P on the Cartesian plane, the Delaunay
 Triangulation of said points is a set of non-overlapping triangles
 covering the entire convex hull of P, such that no point in P lies

@@ -1,7 +1,5 @@
 /*
 
-5.2.2 - Distances (2D)
-
 Distance calculations in 2 dimensions between points, lines, and segments.
 All operations are O(1) in time and space.
 

@@ -1,7 +1,5 @@
 /*
 
-2.8.1 - Shortest Hamiltonian Cycle (TSP)
-
 Description: Given a weighted, directed graph, the shortest
 hamiltonian cycle is a cycle of minimum distance that visits
 each vertex exactly once and returns to the original vertex.

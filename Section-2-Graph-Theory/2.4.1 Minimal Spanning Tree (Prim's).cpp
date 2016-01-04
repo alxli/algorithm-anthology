@@ -1,7 +1,5 @@
 /*
 
-2.4.1 - Minimum Spanning Tree (Prim's Algorithm)
-
 Description: Given an undirected graph, its minimum spanning
 tree (MST) is a tree connecting all nodes with a subset of its
 edges such that their total weight is minimized. Prim's algorithm

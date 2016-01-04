@@ -1,7 +1,5 @@
 /*
 
-2.3.3 - Bridges, Cut-points, and Biconnectivity (Tarjan's)
-
 Description: The following operations apply to undirected graphs.
 
 A bridge is an edge, when deleted, increases the number of

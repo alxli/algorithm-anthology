@@ -1,7 +1,5 @@
 /*
 
-4.7.1 - Integration (Simpson's Rule)
-
 Simpson's rule is a method for numerical integration, the
 numerical approximation of definite integrals. The rule is:
 

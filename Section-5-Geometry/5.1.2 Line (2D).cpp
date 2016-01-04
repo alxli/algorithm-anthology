@@ -1,7 +1,5 @@
 /*
 
-5.1.2 - 2D Line Class
-
 A 2D line is expressed in the form Ax + By + C = 0. All lines can be
 "normalized" to a canonical form by insisting that the y-coefficient
 equal 1 if it is non-zero. Otherwise, we set the x-coefficient to 1.

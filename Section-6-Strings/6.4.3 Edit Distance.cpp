@@ -1,7 +1,5 @@
 /*
 
-6.4.3 - Edit Distance
-
 Given two strings s1 and s2, the edit distance between them is the
 minimum number of operations required to transform s1 into s2,
 where each operation can be any one of the following:

@@ -1,7 +1,5 @@
 /*
 
-4.5.3 - System Solver (Gaussian Elimination)
-
 Given a system of m linear equations with n unknowns:
 
 A(1,1)*x(1) + A(1,2)*x(2) + ... + A(1,n)*x(n) = B(1)

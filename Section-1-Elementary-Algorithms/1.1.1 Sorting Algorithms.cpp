@@ -1,7 +1,5 @@
 /*
 
-1.1.1 - Sorting Algorithms
-
 The following functions are to be used like std::sort(), taking two
 RandomAccessIterators as the range to be sorted, and optionally a
 comparison function object to replace the default < operator.

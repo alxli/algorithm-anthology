@@ -1,7 +1,5 @@
 /*
 
-4.6.3 - Complex Root Finding (Jenkins-Traub Algorithm)
-
 Determine the complex roots of a polynomial with real coefficients.
 This is the variant of the Jenkins-Traub algorithm for polynomials
 with real coefficient, known as RPOLY. RPOLY follows follows the

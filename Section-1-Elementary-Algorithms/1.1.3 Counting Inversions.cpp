@@ -1,7 +1,5 @@
 /*
 
-1.1.3 - Counting Inversions
-
 The number of inversions in an array a[] is the number of ordered pairs
 (i, j) such that i < j and a[i] > a[j]. This is roughly how "close" an
 array is to being sorted, but is *not* the same as the minimum number

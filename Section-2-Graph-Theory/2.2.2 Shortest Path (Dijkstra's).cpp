@@ -1,7 +1,5 @@
 /*
 
-2.2.2 - Dijkstra's Algorithm (Single Source Shortest Path)
-
 Description: Given a directed graph with positive weights only, find
 the shortest distance to all nodes from a single starting node.
 

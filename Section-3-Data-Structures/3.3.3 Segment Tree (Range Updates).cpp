@@ -1,7 +1,5 @@
 /*
 
-3.3.3 - 1D Segment Tree with Range Updates
-
 Description: A segment tree is a data structure used for
 solving the dynamic range query problem, which asks to
 determine the minimum (or maximum) value in any given

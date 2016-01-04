@@ -1,7 +1,5 @@
 /*
 
-3.6.2 - Link/Cut Tree for Dynamic Path Queries and Connectivity
-
 Description: Given an unweighted forest of trees where each node
 has an associated value, a link/cut tree can be used to dynamically
 query and modify values on the path between pairs of nodes a tree.

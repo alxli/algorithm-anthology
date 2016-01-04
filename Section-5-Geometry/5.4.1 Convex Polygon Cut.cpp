@@ -1,7 +1,5 @@
 /*
 
-5.4.1 - Convex Polygon Cut
-
 Given a range of points specifying a polygon on the Cartesian
 plane, as well as two points specifying an infinite line, "cut"
 off the right part of the polygon with the line and return the

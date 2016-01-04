@@ -1,7 +1,5 @@
 /*
 
-6.3.2 - String Searching (Aho-Corasick)
-
 Given a text and multiple patterns to be searched for within the
 text, simultaneously determine the position of all matches.
 All of the patterns will be first required for precomputing

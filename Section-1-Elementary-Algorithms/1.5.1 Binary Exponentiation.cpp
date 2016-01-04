@@ -1,7 +1,5 @@
 /*
 
-1.5.1 - Binary Exponentiation
-
 Given three positive, signed 64-bit integers, powmod() efficiently
 computes the power of the first two integers, modulo the third integer.
 Binary exponentiation, also known as "exponentiation by squaring,"

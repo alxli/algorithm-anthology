@@ -1,7 +1,5 @@
 /*
 
-5.1.1 - 2D Point Class
-
 This class is very similar to std::complex, except it uses epsilon
 comparisons and also supports other operations such as reflection
 and rotation. In addition, this class supports many arithmetic

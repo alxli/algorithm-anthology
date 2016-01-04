@@ -1,7 +1,5 @@
 /*
 
-1.2.1 - Longest Increasing Subsequence
-
 Given an array a[] of size n, determine a longest subsequence of a[]
 such that all of its elements are in ascending order. This subsequence
 is not necessarily contiguous or unique, so only one such answer will

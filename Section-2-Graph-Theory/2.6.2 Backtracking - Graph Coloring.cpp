@@ -1,7 +1,5 @@
 /*
 
-2.6.2 - Backtracking - Graph Coloring
-
 Description: Given an undirected graph, assign colors to each
 of the vertices such that no pair of adjacent vertices have the
 same color. Furthermore, do so using the minimum # of colors.

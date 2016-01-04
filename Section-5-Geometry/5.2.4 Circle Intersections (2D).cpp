@@ -1,7 +1,5 @@
 /*
 
-5.2.4 - Circle Intersection (2D)
-
 Tangent lines to circles, circle-line intersections, and circle-circle
 intersections (intersection point(s) as well as area) in 2 dimensions.
 

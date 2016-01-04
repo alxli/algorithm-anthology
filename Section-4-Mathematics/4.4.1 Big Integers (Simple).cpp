@@ -1,7 +1,5 @@
 /*
 
-4.4.1 - Big Integers (Simple)
-
 Description: Integer arbitrary precision functions.
 To use, pass bigints to the functions by addresses.
 e.g. add(&a, &b, &c) stores the sum of a and b into c.

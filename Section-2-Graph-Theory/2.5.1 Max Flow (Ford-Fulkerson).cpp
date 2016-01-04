@@ -1,7 +1,5 @@
 /*
 
-2.5.1 - Maximum Flow (Ford-Fulkerson Algorithm)
-
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized. Note
 that in this implementation, the adjacency matrix cap[][]

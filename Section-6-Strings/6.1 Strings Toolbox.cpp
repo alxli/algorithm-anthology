@@ -1,7 +1,5 @@
 /*
 
-6.1 - Strings Toolbox
-
 Useful or trivial string operations. These functions are not particularly
 algorithmic. They are typically naive implementations using C++ features.
 They depend on many features of the C++ <string> library, which tend to

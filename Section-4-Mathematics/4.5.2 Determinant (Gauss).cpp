@@ -1,7 +1,5 @@
 /*
 
-4.5.2 - Determinant (Gauss's Method)
-
 The following are ways to compute the determinant of a
 matrix directly using Gaussian elimination. See the
 following section for a generalized solution using LU

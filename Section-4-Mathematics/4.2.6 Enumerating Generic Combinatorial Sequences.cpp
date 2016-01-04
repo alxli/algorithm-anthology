@@ -1,7 +1,5 @@
 /*
 
-4.2.6 - Enumerating Generic Combinatorial Sequences
-
 The follow provides a universal method for enumerating
 abstract combinatorial sequences in O(n^2) time.
 

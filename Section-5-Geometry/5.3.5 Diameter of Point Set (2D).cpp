@@ -1,7 +1,5 @@
 /*
 
-5.3.5 - Diameter of Point Set (2D)
-
 Determines the diametral pair of a range of points. The diamter
 of a set of points is the largest distance between any two
 points in the set. A diametral pair is a pair of points in the

@@ -1,7 +1,5 @@
 /*
 
-4.6.2 - Complex Root Finding (Laguerre's Method)
-
 Laguerre's method can be used to not only find complex roots of
 a polynomial, the polynomial may also have complex coefficients.
 From extensive empirical study, Laguerre's method is observed to

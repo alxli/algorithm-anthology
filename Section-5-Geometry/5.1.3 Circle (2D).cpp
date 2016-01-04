@@ -1,7 +1,5 @@
 /*
 
-5.1.3 - 2D Circle Class
-
 A 2D circle with center at (h, k) and a radius of r can be expressed by
 the relation (x - h)^2 + (y - k)^2 = r^2. In the following definition,
 the radius used to construct it is forced to be a positive number.

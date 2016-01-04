@@ -1,7 +1,5 @@
 /*
 
-1.1.2 - Array Rotation
-
 The following functions are equivalent to std::rotate(), taking three
 iterators lo, mid, hi, and swapping the elements in the range [lo, hi)
 in such a way that the element at mid becomes the first element of the

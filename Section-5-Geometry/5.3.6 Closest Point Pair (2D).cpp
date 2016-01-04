@@ -1,7 +1,5 @@
 /*
 
-5.3.6 - Closest Point Pair (2D)
-
 Given a range containing distinct points on the Cartesian plane,
 determine two points which have the closest possible distance.
 A divide and conquer algorithm is used. Note that the ordering

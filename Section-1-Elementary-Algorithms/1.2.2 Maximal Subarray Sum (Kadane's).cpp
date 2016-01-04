@@ -1,7 +1,5 @@
 /*
 
-1.2.2 - Maximal Subarray Sum (Kadane's Algorithm)
-
 Given a sequence of numbers (with at least one positive number), find
 the maximum possible sum of any contiguous subarray. Kadane's algorithm
 scans through the array, computing at each index the maximum (positive

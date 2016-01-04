@@ -1,7 +1,5 @@
 /*
 
-3.3.8 - 1D Interval Tree (Augmented Treap)
-
 Description: An interval tree is structure used to store and efficiently
 query intervals. An interval may be dynamically inserted, and range
 queries of [lo, hi] may be performed to have the tree report all intervals

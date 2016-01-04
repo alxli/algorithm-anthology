@@ -1,7 +1,5 @@
 /*
 
-5.2.1 - Angles (2D)
-
 Angle calculations in 2 dimensions. All returned angles are in radians,
 except for reduce_deg(). If x is an angle in radians, then you may use
 x * DEG to convert x to degrees, and vice versa to radians with x * RAD.

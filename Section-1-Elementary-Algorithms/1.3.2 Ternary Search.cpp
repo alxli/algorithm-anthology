@@ -1,7 +1,5 @@
 /*
 
-1.3.2 - Ternary Search
-
 Given a unimodal function f(x), find its maximum or minimum point to a
 an arbitrarily specified absolute error.
 

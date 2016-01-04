@@ -1,7 +1,5 @@
 /*
 
-4.1 - Mathematics Toolbox
-
 Useful math definitions. Excludes geometry (see next chapter).
 
 */

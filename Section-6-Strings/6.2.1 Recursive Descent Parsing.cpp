@@ -1,7 +1,5 @@
 /*
 
-6.2.1 Recursive Descent Parser
-
 Evaluate a mathematical expression in accordance to the order
 of operations (parentheses, exponents, multiplication, division,
 addition, subtraction). Does not handle unary operators like '-'.

@@ -1,7 +1,5 @@
 /*
 
-2.3.1 - Strongly Connected Components (Kosaraju's Algorithm)
-
 Description: Determines the strongly connected components (SCC)
 from a given directed graph. Given a directed graph, its SCCs
 are its maximal strongly connected sub-graphs. A graph is

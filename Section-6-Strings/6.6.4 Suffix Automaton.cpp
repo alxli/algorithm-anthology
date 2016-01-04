@@ -1,7 +1,5 @@
 /*
 
-6.6.4 - Suffix Automaton
-
 A suffix automaton is a data structure to efficiently represent the
 suffixes of a string. It can be considered a compressed version of
 a suffix tree. The data structure supports querying for substrings

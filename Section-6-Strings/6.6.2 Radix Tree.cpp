@@ -1,7 +1,5 @@
 /*
 
-6.6.2 - Radix Tree
-
 A radix tree, radix trie, patricia trie, or compressed trie is a
 data structure that is used to store a dynamic set or associative
 array where the keys are strings. Each leaf node represents a string

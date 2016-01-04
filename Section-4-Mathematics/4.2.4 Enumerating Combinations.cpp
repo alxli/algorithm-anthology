@@ -1,7 +1,5 @@
 /*
 
-4.2.4 - Enumerating Combinations
-
 We shall consider a combination n choose k to be an
 set of k elements chosen from a total of n elements.
 Unlike n permute k, the order here doesn't matter.

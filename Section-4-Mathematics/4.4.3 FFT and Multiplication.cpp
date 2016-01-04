@@ -1,7 +1,5 @@
 /*
 
-4.4.3 - Fast Fourier Transform and Multiplication
-
 A discrete Fourier transform (DFT) converts a list of equally
 spaced samples of a function into the list of coefficients of
 a finite combination of complex sinusoids, ordered by their

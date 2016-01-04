@@ -1,7 +1,5 @@
 /*
 
-2.1.4 - Eulerian Cycles (DFS)
-
 Description: A Eulerian trail is a trail in a graph which
 visits every edge exactly once. Similarly, an Eulerian circuit
 or Eulerian cycle is an Eulerian trail which starts and ends

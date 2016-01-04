@@ -1,7 +1,5 @@
 /*
 
-5.0 - 2D Geometry Library
-
 This file contains all the *constant time* 2D geometric calculations in
 this entire section. In other words, all of the mathematical manipulations
 here will run in O(1) time. Computationally heavy algorithms such as the

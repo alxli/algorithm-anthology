@@ -1,7 +1,5 @@
 /*
 
-3.3.7 - Square Root Decomposition
-
 Description: To solve the dynamic range query problem using
 square root decomposition, we split an array of size N into
 sqrt(N) buckets, each bucket of size sqrt(N). As a result,

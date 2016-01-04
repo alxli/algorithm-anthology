@@ -1,7 +1,5 @@
 /*
 
-1.2.4 - Subset Sum (Meet-in-the-Middle)
-
 Given a sequence of n (not necessarily unique) integers and a number v,
 determine the minimum possible sum of any subset of the given sequence
 that is not less than v. This is a generalization of a more well-known

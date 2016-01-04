@@ -1,4 +1,8 @@
-/* 4.3.4 - Integer Factorization */
+/*
+
+Integer Factorization
+
+*/
 
 #include <algorithm> /* std::sort() */
 #include <cmath>     /* sqrt() */

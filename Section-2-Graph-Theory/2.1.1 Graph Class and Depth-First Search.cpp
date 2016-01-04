@@ -1,7 +1,5 @@
 /*
 
-2.1.1 - Graph Class and Depth-First Search
-
 A graph can be represented as a set of objects (a.k.a. vertices, or
 nodes) and connections (a.k.a. edges) between pairs of objects. It can
 also be stored as an adjacency matrix or adjacency list, the latter of

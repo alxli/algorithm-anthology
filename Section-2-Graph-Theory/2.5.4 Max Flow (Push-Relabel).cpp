@@ -1,7 +1,5 @@
 /*
 
-2.5.4 - Max Flow (Push-Relabel Algorithm)
-
 Description: Given a flow network, find a flow from a single
 source node to a single sink node that is maximized. The push-
 relabel algorithm is considered one of the most efficient

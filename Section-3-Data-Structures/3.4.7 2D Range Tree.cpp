@@ -1,7 +1,5 @@
 /*
 
-3.4.7 - 2D Range Tree for Rectangular Queries
-
 Description: A range tree is an ordered tree data structure to
 hold a list of points. It allows all points within a given range
 to be reported efficiently. Specifically, for a given query, a

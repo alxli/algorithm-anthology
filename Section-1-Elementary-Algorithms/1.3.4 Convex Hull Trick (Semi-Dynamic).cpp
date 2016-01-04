@@ -1,7 +1,5 @@
 /*
 
-1.3.4 - Convex Hull Trick (Semi-Dynamic)
-
 Given a set of pairs (m, b) describing lines of the form y = mx + b,
 process a set of x-coordinate queries each asking to find the minimum
 y-value of any of the given lines when evaluated at the specified x.

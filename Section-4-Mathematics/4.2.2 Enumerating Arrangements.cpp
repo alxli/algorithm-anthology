@@ -1,7 +1,5 @@
 /*
 
-4.2.2 - Enumerating Arrangements
-
 We shall consider an arrangement to be a permutation of
 all the integers from 0 to n - 1. For our purposes, the
 difference between an arrangement and a permutation is

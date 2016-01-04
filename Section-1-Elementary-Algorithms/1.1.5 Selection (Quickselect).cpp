@@ -1,7 +1,5 @@
 /*
 
-1.1.5 - Selection (Quickselect)
-
 Quickselect (also known as Hoare's algorithm) is a selection algorithm
 which rearranges the elements in a sequence such that the element at
 the nth position is the element that would be there if the sequence

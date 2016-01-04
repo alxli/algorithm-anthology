@@ -1,7 +1,5 @@
 /*
 
-4.5.4 - LU Decomposition
-
 The LU (lower upper) decomposition of a matrix is a factorization
 of a matrix as the product of a lower triangular matrix and an
 upper triangular matrix. With the LU decomposition, we can solve

@@ -1,7 +1,5 @@
 /*
 
-5.3.3 - 2D Convex Hull
-
 Determines the convex hull from a range of points, that is, the
 smallest convex polygon (a polygon such that every line which
 crosses through it will only cross through it once) that contains

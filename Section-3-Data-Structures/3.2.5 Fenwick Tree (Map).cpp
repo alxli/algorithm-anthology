@@ -1,8 +1,5 @@
 /*
 
-3.2.5 - Fenwick Tree (Range Updates and Range Query
-                      with Co-ordinate Compression)
-
 Description: Using two std::maps to represent the Fenwick tree,
 there no longer needs to be a restriction on the magnitude of
 queried indices. All indices in range [0, MAXN] are valid.

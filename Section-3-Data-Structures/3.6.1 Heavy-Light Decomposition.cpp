@@ -1,7 +1,5 @@
 /*
 
-3.6.1 - Heavy-Light Decomposition for Dynamic Path Queries
-
 Description: Given an undirected, connected graph that is a tree, the
 heavy-light decomposition (HLD) on the graph is a partitioning of the
 vertices into disjoint paths to later support dynamic modification and

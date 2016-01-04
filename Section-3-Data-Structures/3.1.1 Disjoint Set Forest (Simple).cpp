@@ -1,7 +1,5 @@
 /*
 
-3.1.1 - Disjoint Set Forest (Simple)
-
 Description: This data structure dynamically keeps track
 of items partitioned into non-overlapping sets (a disjoint
 set forest). It is also known as a union-find data structure.

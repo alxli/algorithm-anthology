@@ -1,7 +1,5 @@
 /*
 
-3.2.1 - Fenwick Tree (Simple)
-
 Description: A Fenwick tree (a.k.a. binary indexed tree) is a
 data structure that allows for the sum of an arbitrary range
 of values in an array to be dynamically queried in logarithmic

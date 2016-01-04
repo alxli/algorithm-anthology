@@ -1,10 +1,10 @@
 /*
 
-1.4.1 - Cycle Detection (Floyd's Algorithm)
-
 For a function f which maps a finite set S to itself and any initial
 value x[0] in S, the same value must occur twice in the sequence below:
-x[0], x[1] = f(x[0]), x[2] = f(x[1]), ..., x[i] = f(x[i - 1])
+
+  x[0], x[1] = f(x[0]), x[2] = f(x[1]), ..., x[i] = f(x[i - 1])
+
 That is, there must exist numbers i, j (i < j) such that x[i] = x[j].
 Once this happens, the sequence will continue periodically by repeating
 the same sequence of values from x[i] to x[j − 1]. Cycle detection asks

@@ -1,7 +1,5 @@
 /*
 
-5.3.4 - Minimum Enclosing Circle (2D)
-
 Given a range of points on the 2D cartesian plane, determine
 the equation of the circle with smallest possible area which
 encloses all of the points. Note: in an attempt to avoid the

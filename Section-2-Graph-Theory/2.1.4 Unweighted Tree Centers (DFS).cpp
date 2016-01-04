@@ -1,7 +1,5 @@
 /*
 
-2.1.5 - Unweighted Tree Centers, Centroid, and Diameter
-
 The following applies to unweighted, undirected trees only.
 
 find_centers(): Returns 1 or 2 tree centers. The center

@@ -1,7 +1,5 @@
 /*
 
-4.2.3 - Enumerating Permutations
-
 We shall consider a permutation of n objects to be an
 ordered list of size n that contains all n elements,
 where order is important. E.g. 1 1 2 0 and 0 1 2 1

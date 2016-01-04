@@ -1,7 +1,5 @@
 /*
 
-2.1.3 - Topological Sorting (DFS)
-
 Description: Given a directed acyclic graph (DAG), order the nodes
 such that for every edge from a to b, a precedes b in the ordering.
 Usually, there is more than one possible valid ordering. The

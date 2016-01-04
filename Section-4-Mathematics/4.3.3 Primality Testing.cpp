@@ -1,4 +1,8 @@
-/* 4.3.3 - Primality Testing */
+/*
+
+Primality Testing
+
+*/
 
 #include <cstdlib>  /* rand(), srand() */
 #include <ctime>    /* time() */

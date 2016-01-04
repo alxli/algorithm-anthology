@@ -1,7 +1,5 @@
 /*
 
-3.5.4 - Hashmap (Chaining)
-
 Description: A hashmap (std::unordered_map in C++11) is an
 alternative to a binary search tree. Hashmaps use more memory than
 BSTs, but are usually more efficient. The following implementation
@@ -76,7 +74,7 @@ template<class key_t, class val_t, class Hash> class hashmap {
     while (it != table[i].end() && it->key != key) ++it;
     if (it == table[i].end()) return 0;
     return &(it->val);
-  } 
+  }
 
   val_t & operator [] (const key_t & key) {
     val_t * ret = find(key);
@@ -103,7 +101,7 @@ struct class_hash {
   unsigned int operator () (unsigned int key) {
     return key * 2654435761u; //or just return key
   }
-  
+
   //Jenkins's 64-bit hash
   unsigned int operator () (unsigned long long key) {
     key += ~(key << 32); key ^= (key >> 22);

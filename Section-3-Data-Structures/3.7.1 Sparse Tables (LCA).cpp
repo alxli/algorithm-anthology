@@ -1,7 +1,5 @@
 /*
 
-3.7.1 - Sparse Tables for Lowest Common Ancestor
-
 Description: Given an undirected graph that is a tree, the
 lowest common ancestor (LCA) of two nodes v and w is the
 lowest (i.e. deepest) node that has both v and w as descendants,

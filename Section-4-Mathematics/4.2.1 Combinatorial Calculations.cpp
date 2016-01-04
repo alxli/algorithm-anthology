@@ -1,7 +1,5 @@
 /*
 
-4.2.1 - Combinatorial Calculations
-
 The meanings of the following functions can respectively be
 found with quick searches online. All of them computes the
 answer modulo m, since contest problems typically ask us for

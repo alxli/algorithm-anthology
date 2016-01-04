@@ -1,7 +1,5 @@
 /*
 
-1.3.1 - Discrete Binary Search
-
 Not only can binary search be used to find the position of a given
 element in a sorted array, it can also be used to find the input value
 corresponding to any output value of a monotonic (either strictly

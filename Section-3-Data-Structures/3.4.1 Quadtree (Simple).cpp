@@ -1,7 +1,5 @@
 /*
 
-3.4.1 - Quadtree (Simple)
-
 Description: A quadtree can be used to dynamically query values
 of rectangles in a 2D array. In a quadtree, every node has exactly
 4 children. The following uses a statically allocated array to

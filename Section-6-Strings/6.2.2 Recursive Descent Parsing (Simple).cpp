@@ -1,7 +1,5 @@
 /*
 
-6.2.2 Recursive Descent Parser (Simple)
-
 Evaluate a mathematica expression in accordance to the order
 of operations (parentheses, exponents, multiplication, division,
 addition, subtraction). This handles unary operators like '-'.

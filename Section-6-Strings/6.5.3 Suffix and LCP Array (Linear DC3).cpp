@@ -1,7 +1,5 @@
 /*
 
-6.5.2 - Suffix and LCP Array (Linear Construction, DC3)
-
 A suffix array SA of a string S[1, n] is a sorted array of indices of
 all the suffixes of S ("abc" has suffixes "abc", "bc", and "c").
 SA[i] contains the starting position of the i-th smallest suffix in S,

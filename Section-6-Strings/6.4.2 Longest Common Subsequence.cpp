@@ -1,7 +1,5 @@
 /*
 
-6.4.2 - Longest Common Subsequence
-
 A subsequence is a sequence that can be derived from another sequence
 by deleting some elements without changing the order of the remaining
 elements (e.g. "ACE" is a subsequence of "ABCDE", but "BAE" is not).

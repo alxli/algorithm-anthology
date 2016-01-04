@@ -1,7 +1,5 @@
 /*
 
-4.3.5 - Euler's Totient Function
-
 Euler's totient function (or Euler's phi function) counts
 the positive integers less than or equal to n that are
 relatively prime to n. (These integers are sometimes

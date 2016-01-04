@@ -1,7 +1,5 @@
 /*
 
-5.3.7 - Segment Intersection Finding
-
 Given a range of segments on the Cartesian plane, identify one
 pair of segments which intersect each other. This is done using
 a sweep line algorithm.

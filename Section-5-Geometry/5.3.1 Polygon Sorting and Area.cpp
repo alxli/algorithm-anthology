@@ -1,7 +1,5 @@
 /*
 
-5.3.1 - Polygon Sorting and Area
-
 centroid() - Simply returns the geometric average point of all the
 points given. This could be used to find the reference center point
 for the following function. An empty range will result in (0, 0).

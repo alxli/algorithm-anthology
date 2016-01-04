@@ -1,7 +1,5 @@
 /*
 
-3.4.3 - 2D Segment Tree
-
 Description: A quadtree is a segment tree but with 4 children
 per node, making its running time proportional to the square
 root of the number of leaves. However, a 2D segment tree is a

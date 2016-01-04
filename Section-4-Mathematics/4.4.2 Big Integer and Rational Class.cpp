@@ -1,7 +1,5 @@
 /*
 
-4.4.2 - Big Integer and Rational Class
-
 The following bigint class is implemented by storing "chunks"
 of the big integer in a large base that is a power of 10 so
 it can be efficiently stored, operated on, and printed.

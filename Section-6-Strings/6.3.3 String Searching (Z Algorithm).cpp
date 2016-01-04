@@ -1,7 +1,5 @@
 /*
 
-6.3.3 - String Searching (Z Algorithm)
-
 Given an text and a pattern to be searched for within the text,
 determine the positions of all patterns within the text. This
 is as efficient as KMP, but does so through computing the

@@ -1,7 +1,5 @@
 /*
 
-5.3.2 - Point in Polygon Query
-
 Given a single point p and another range of points specifying a
 polygon, determine whether p lies within the polygon. Note that
 you should modify the EDGE_IS_INSIDE flag, depending on whether

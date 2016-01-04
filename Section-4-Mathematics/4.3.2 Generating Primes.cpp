@@ -1,7 +1,5 @@
 /*
 
-4.3.2 - Generating Primes
-
 The following are three methods to generate primes.
 Although the latter two functions are theoretically
 linear, the former function with the sieve of

@@ -1,7 +1,5 @@
 /*
 
-2.7.2 - Maximum Bipartite Matching (Hopcroft-Karp Algorithm)
-
 Description: Given two sets of vertices A = {0, 1, ..., n1}
 and B = {0, 1, ..., n2} as well as a set of edges E mapping
 nodes from set A to set B, determine the largest possible

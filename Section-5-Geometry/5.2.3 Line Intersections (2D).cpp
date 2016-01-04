@@ -1,7 +1,5 @@
 /*
 
-5.2.3 - Line Intersections (2D)
-
 Intersections between straight lines, as well as between line segments
 in 2 dimensions. Also included are functions to determine the closest
 point to a line, which is done by finding the intersection through the

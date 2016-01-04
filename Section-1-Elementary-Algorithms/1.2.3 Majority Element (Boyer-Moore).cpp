@@ -1,7 +1,5 @@
 /*
 
-1.2.3 - Majority Element (Boyer-Moore Algorithm)
-
 Given a sequence of n elements, the majority vote problem asks to find
 an element that occurs more frequently than all others, or determine
 that no such element exists. Formally, a value must occur strictly

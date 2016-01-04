@@ -1,7 +1,5 @@
 /*
 
-1.1.4 - Coordinate Compression
-
 Given an array a[] of size n, reassign integers to each value of a[]
 such that the magnitude of each new value is no more than n, while the
 relative order of each value as they were in the original array is

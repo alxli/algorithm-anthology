@@ -1,7 +1,5 @@
 /*
 
-4.5.5 - Linear Programming using Simplex Algorithm
-
 Description: The canonical form of a linear programming
 problem is to maximize c^T*x, subject to Ax <= b, and x >= 0.
 where x is the vector of variables (to be solved), c and b

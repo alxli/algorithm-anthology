@@ -1,7 +1,5 @@
 /*
 
-3.4.5 - K-d Tree for Nearest Neighbour Queries
-
 Description: k-d tree (short for k-dimensional tree) is a space-
 partitioning data structure for organizing points in a k-
 dimensional space. The following implementation supports

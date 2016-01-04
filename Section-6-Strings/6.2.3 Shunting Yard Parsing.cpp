@@ -1,7 +1,5 @@
 /*
 
-6.2.3 - Shunting Yard Expression Parser
-
 Evaluate a mathematica expression in accordance to the order
 of operations (parentheses, exponents, multiplication, division,
 addition, subtraction). This also handles unary operators like '-'.
