@@ -16,30 +16,15 @@ connected component.
 
 Complexity: O(V+E) on the number of vertices and edges.
 
-=~=~=~=~= Sample Input =~=~=~=~=
-5 6
-0 1
-1 2
-2 0
-1 3
-3 4
-4 1
-
-=~=~=~=~= Sample Output =~=~=~=~=
-Eulerian cycle from 0 (directed): 0 1 3 4 1 2 0
-Eulerian cycle from 2 (undirected): 2 1 3 4 1 0 2
-
 */
 
-#include <algorithm> /* std::reverse() */
-#include <iostream>
+#include <algorithm> /* std::max(), std::min(), std::reverse() */
 #include <vector>
-using namespace std;
 
 const int MAXN = 100;
 
-vector<int> euler_cycle_directed(vector<int> adj[], int u) {
-  vector<int> stack, res, cur_edge(MAXN);
+std::vector<int> euler_cycle_directed(std::vector<int> adj[], int u) {
+  std::vector<int> stack, res, cur_edge(MAXN);
   stack.push_back(u);
   while (!stack.empty()) {
     u = stack.back();
@@ -50,53 +35,71 @@ vector<int> euler_cycle_directed(vector<int> adj[], int u) {
     }
     res.push_back(u);
   }
-  reverse(res.begin(), res.end());
+  std::reverse(res.begin(), res.end());
   return res;
 }
 
-vector<int> euler_cycle_undirected(vector<int> adj[], int u) {
-  vector<vector<bool> > used(MAXN, vector<bool>(MAXN, false));
-  vector<int> stack, res, cur_edge(MAXN);
+std::vector<int> euler_cycle_undirected(std::vector<int> adj[], int u) {
+  std::vector< std::vector<bool> > used(MAXN, std::vector<bool>(MAXN));
+  std::vector<int> stack, res, cur_edge(MAXN);
   stack.push_back(u);
   while (!stack.empty()) {
     u = stack.back();
     stack.pop_back();
     while (cur_edge[u] < (int)adj[u].size()) {
       int v = adj[u][cur_edge[u]++];
-      if (!used[min(u, v)][max(u, v)]) {
-        used[min(u, v)][max(u, v)] = 1;
+      int mn = std::min(u, v), mx = std::max(u, v);
+      if (!used[mn][mx]) {
+        used[mn][mx] = 1;
         stack.push_back(u);
         u = v;
       }
     }
     res.push_back(u);
   }
-  reverse(res.begin(), res.end());
+  std::reverse(res.begin(), res.end());
   return res;
 }
 
+/*** Example Usage
+
+Sample Output:
+Eulerian cycle from 0 (directed): 0 1 3 4 1 2 0
+Eulerian cycle from 2 (undirected): 2 1 3 4 1 0 2
+
+***/
+
+#include <iostream>
+using namespace std;
+
 int main() {
-  int nodes, edges, u, v;
-  vector<int> g1[5], g2[5], cycle;
-
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v;
-    g1[u].push_back(v);
-    g2[u].push_back(v);
-    g2[v].push_back(u);
+  {
+    vector<int> g[5], cycle;
+    g[0].push_back(1);
+    g[1].push_back(2);
+    g[2].push_back(0);
+    g[1].push_back(3);
+    g[3].push_back(4);
+    g[4].push_back(1);
+    cycle = euler_cycle_directed(g, 0);
+    cout << "Eulerian cycle from 0 (directed):";
+    for (int i = 0; i < (int)cycle.size(); i++)
+      cout << " " << cycle[i];
+    cout << endl;
   }
-
-  cycle = euler_cycle_directed(g1, 0);
-  cout << "Eulerian cycle from 0 (directed):";
-  for (int i = 0; i < (int)cycle.size(); i++)
-    cout << " " << cycle[i];
-  cout << "\n";
-
-  cycle = euler_cycle_undirected(g2, 2);
-  cout << "Eulerian cycle from 2 (undirected):";
-  for (int i = 0; i < (int)cycle.size(); i++)
-    cout << " " << cycle[i];
-  cout << "\n";
+  {
+    vector<int> g[5], cycle;
+    g[0].push_back(1); g[1].push_back(0);
+    g[1].push_back(2); g[2].push_back(1);
+    g[2].push_back(0); g[0].push_back(2);
+    g[1].push_back(3); g[3].push_back(1);
+    g[3].push_back(4); g[4].push_back(3);
+    g[4].push_back(1); g[1].push_back(4);
+    cycle = euler_cycle_undirected(g, 2);
+    cout << "Eulerian cycle from 2 (undirected):";
+    for (int i = 0; i < (int)cycle.size(); i++)
+      cout << " " << cycle[i];
+    cout << endl;
+  }
   return 0;
 }

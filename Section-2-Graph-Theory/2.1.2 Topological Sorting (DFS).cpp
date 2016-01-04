@@ -26,7 +26,7 @@ Space Complexity: O(n) auxiliary on the number of edges.
 const int MAXN = 100;
 
 std::vector<bool> vis(MAXN), done(MAXN);
-std::vector<int> adj[MAXN], result;
+std::vector<int> adj[MAXN], res;
 
 void dfs(int u) {
   if (vis[u])
@@ -38,18 +38,18 @@ void dfs(int u) {
     dfs(adj[u][j]);
   vis[u] = false;
   done[u] = true;
-  result.push_back(u);
+  res.push_back(u);
 }
 
 void toposort(int nodes) {
   fill(vis.begin(), vis.end(), false);
   fill(done.begin(), done.end(), false);
-  result.clear();
+  res.clear();
   for (int i = 0; i < nodes; i++) {
     if (!done[i])
       dfs(i);
   }
-  std::reverse(result.begin(), result.end());
+  std::reverse(res.begin(), res.end());
 }
 
 /*** Example Usage
@@ -74,8 +74,8 @@ int main() {
   adj[4].push_back(6);
   toposort(8);
   cout << "The topological order:";
-  for (int i = 0; i < (int)result.size(); i++)
-    cout << " " << result[i];
+  for (int i = 0; i < (int)res.size(); i++)
+    cout << " " << res[i];
   cout << endl;
   return 0;
 }
