@@ -45,11 +45,11 @@ void quicksort(It lo, It hi, Compare comp) {
   typedef typename std::iterator_traits<It>::value_type T;
   T pivot = *(lo + (hi - lo) / 2);
   It i, j;
-  for (i = lo, j = hi - 1; ; i++, j--) {
+  for (i = lo, j = hi - 1; ; ++i, --j) {
     while (comp(*i, pivot))
-      i++;
+      ++i;
     while (comp(pivot, *j))
-      j--;
+      --j;
     if (i >= j)
       break;
     std::swap(*i, *j);
