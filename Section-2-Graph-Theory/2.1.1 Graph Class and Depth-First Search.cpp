@@ -28,7 +28,7 @@ Time Complexity:
 Space Complexity:
 - O(n) to store a graph of n edges.
 - dfs(), has_cycle(), is_tree(), and is_dag() each require O(n)
-  auxiliary on the number of edges.
+  auxiliary on the number of nodes.
 - All other public member functions require O(1) auxiliary.
 
 */

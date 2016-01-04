@@ -1,24 +1,30 @@
 /*
 
-Description: A Eulerian trail is a trail in a graph which
-visits every edge exactly once. Similarly, an Eulerian circuit
-or Eulerian cycle is an Eulerian trail which starts and ends
-on the same vertex.
+A Eulerian trail is a path in a graph which contains every edge exactly
+once. An Eulerian cycle or circuit is an Eulerian trail which begins
+and ends on the same vertex. A directed graph has an Eulerian cycle if
+and only if every vertex has an in-degree equal to its out-degree, and
+all of its vertices with nonzero degree belong to a single strongly
+connected component. An undirected graph has an Eulerian cycle if and
+only if every vertex has even degree, and all of its vertices with
+nonzero degree belong to a single connected component.
 
-An undirected graph has an Eulerian cycle if and only if every
-vertex has even degree, and all of its vertices with nonzero
-degree belong to a single connected component.
+Both functions below take a graph as an adjacency list along with the
+starting node of the cycle, returning a vector containing all nodes
+reachable from the starting node in an order which forms an Eulerian
+cycle. The first node of the vector will be repeated as the last.
 
-A directed graph has an Eulerian cycle if and only if every
-vertex has equal in degree and out degree, and all of its
-vertices with nonzero degree belong to a single strongly
-connected component.
+Time Complexity: O(n) on the number of edges for both functions.
 
-Complexity: O(V+E) on the number of vertices and edges.
+Space Complexity: euler_cycle_directed() requires O(n) auxiliary on the
+number of nodes. euler_cycle_undirected() requires O(n^2) auxiliary on
+the number of nodes, or O(n) auxiliary on the number of edges if the
+used[][] matrix is replaced a hashset of pairs.
 
 */
 
 #include <algorithm> /* std::max(), std::min(), std::reverse() */
+#include <bitset>
 #include <vector>
 
 const int MAXN = 100;
@@ -40,7 +46,7 @@ std::vector<int> euler_cycle_directed(std::vector<int> adj[], int u) {
 }
 
 std::vector<int> euler_cycle_undirected(std::vector<int> adj[], int u) {
-  std::vector< std::vector<bool> > used(MAXN, std::vector<bool>(MAXN));
+  std::bitset<MAXN> used[MAXN];
   std::vector<int> stack, res, cur_edge(MAXN);
   stack.push_back(u);
   while (!stack.empty()) {
@@ -50,7 +56,7 @@ std::vector<int> euler_cycle_undirected(std::vector<int> adj[], int u) {
       int v = adj[u][cur_edge[u]++];
       int mn = std::min(u, v), mx = std::max(u, v);
       if (!used[mn][mx]) {
-        used[mn][mx] = 1;
+        used[mn][mx] = true;
         stack.push_back(u);
         u = v;
       }

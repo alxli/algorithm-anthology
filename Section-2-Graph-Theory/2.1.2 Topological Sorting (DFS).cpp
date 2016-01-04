@@ -15,7 +15,7 @@ vector to a valid topological ordering. If the graph contains a cycle,
 then an error is thrown. This is also known as Tarjan's algorithm.
 
 Time Complexity: O(n) on the number of edges.
-Space Complexity: O(n) auxiliary on the number of edges.
+Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
