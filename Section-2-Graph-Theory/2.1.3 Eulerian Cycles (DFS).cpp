@@ -14,6 +14,11 @@ starting node of the cycle, returning a vector containing all nodes
 reachable from the starting node in an order which forms an Eulerian
 cycle. The first node of the vector will be repeated as the last.
 
+Both euler_cycle_directed() and euler_cycle_undirected() require all
+elements of its adj[] vectors to be between 0 and MAXN - 1, inclusive.
+However, only euler_cycle_undirected() requires that for every node v
+which exists in adj[u], node u must exist in adj[v].
+
 Time Complexity: O(n) on the number of edges for both functions.
 
 Space Complexity: euler_cycle_directed() requires O(n) auxiliary on the
