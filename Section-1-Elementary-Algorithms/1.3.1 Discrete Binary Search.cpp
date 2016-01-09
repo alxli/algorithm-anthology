@@ -43,7 +43,8 @@ Int binary_search_first_true(Int lo, Int hi, IntPredicate pred) {
     else
       lo = mid + 1;
   }
-  if (!pred(lo)) return _hi; //all false
+  if (!pred(lo))
+    return _hi; //all false
   return lo;
 }
 
@@ -51,6 +52,7 @@ Int binary_search_first_true(Int lo, Int hi, IntPredicate pred) {
 template<class Int, class IntPredicate>
 Int binary_search_last_true(Int lo, Int hi, IntPredicate pred) {
   Int mid, _hi = hi;
+  hi--;
   while (lo < hi) {
     mid = lo + (hi - lo + 1) / 2;
     if (pred(mid))
@@ -58,7 +60,8 @@ Int binary_search_last_true(Int lo, Int hi, IntPredicate pred) {
     else
       hi = mid - 1;
   }
-  if (!pred(lo)) return _hi; //all true
+  if (!pred(lo))
+    return _hi; //all false
   return lo;
 }
 
