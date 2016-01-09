@@ -32,7 +32,8 @@ std::vector<int> find_centers(int nodes) {
   std::vector<int> leaves, degree(nodes);
   for (int i = 0; i < nodes; i++) {
     degree[i] = adj[i].size();
-    if (degree[i] <= 1) leaves.push_back(i);
+    if (degree[i] <= 1)
+      leaves.push_back(i);
   }
   int removed = leaves.size();
   while (removed < nodes) {
@@ -55,9 +56,11 @@ int find_centroid(int nodes, int u = 0, int p = -1) {
   int cnt = 1, v;
   bool good_center = true;
   for (int j = 0; j < (int)adj[u].size(); j++) {
-    if ((v = adj[u][j]) == p) continue;
+    if ((v = adj[u][j]) == p)
+      continue;
     int res = find_centroid(nodes, v, u);
-    if (res >= 0) return res;
+    if (res >= 0)
+      return res;
     int size = -res;
     good_center &= (size <= nodes / 2);
     cnt += size;
