@@ -37,7 +37,8 @@ void bfs(int start) {
     q.pop();
     vis[u] = true;
     for (int j = 0; j < (int)adj[u].size(); j++) {
-      if (vis[v = adj[u][j]]) continue;
+      if (vis[v = adj[u][j]])
+        continue;
       dist[v] = d + 1;
       pred[v] = u;
       q.push(make_pair(v, d + 1));
@@ -47,9 +48,11 @@ void bfs(int start) {
 
 void print_path(int dest) {
   int i = 0, j = dest, path[MAXN];
-  while (pred[j] != -1) j = path[++i] = pred[j];
+  while (pred[j] != -1)
+    j = path[++i] = pred[j];
   cout << "Take the path: ";
-  while (i > 0) cout << path[i--] << "->";
+  while (i > 0)
+    cout << path[i--] << "->";
   cout << dest << ".\n";
 }
 
