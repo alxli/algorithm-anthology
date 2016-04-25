@@ -9,7 +9,8 @@ Time Complexity: bfs() is O(n) on the number of edges to compute the
 shortest distance to each node. print_path() is O(n) on the number of
 nodes in the shortest path to be printed.
 
-Space Complexity: O(n) auxiliary on the number of nodes.
+Space Complexity: O(n) on the number of edges to store the input graph
+as an adjacency list and O(n) auxiliary on the number of nodes.
 
 */
 

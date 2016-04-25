@@ -1,21 +1,18 @@
 /*
 
-Description: Given a directed graph with positive or negative weights
-but no negative cycles, find the shortest distance to all nodes from
-a single starting node. The input graph is stored using an edge list.
+Given an weighted, directed graph with positive or negative weights,
+traverse to every connected node and determine the shortest distance to
+each. Optionally, detect if there exists a negative-weighted cycle (in
+which case the shortest path does not exist). Optionally, output the
+shortest path to a specific destination node using the predecessor
+array precomputed during the search.
 
-Complexity: O(V*E) on the number of vertices and edges, respectively.
+Time Complexity: bellman_ford() is O(nm) where n is the number of nodes
+and m is the number of edges. print_path() is O(n) on the number of
+nodes in the shortest path to be printed.
 
-=~=~=~=~= Sample Input =~=~=~=~=
-3 3
-0 1 1
-1 2 2
-0 2 5
-0 2
-
-=~=~=~=~= Sample Output =~=~=~=~=
-The shortest distance from 0 to 2 is 3.
-Take the path: 0->1->2.
+Space Complexity: O(n) on the number of edges to store the input graph
+as an adjacency list and O(n) auxiliary on the number of nodes.
 
 */
 
@@ -30,13 +27,13 @@ const int MAXN = 100, INF = 0x3f3f3f3f;
 int dist[MAXN], pred[MAXN];
 vector<edge> e;
 
-void bellman_ford(int nodes, int start) {
-  for (int i = 0; i < nodes; i++) {
+void bellman_ford(int start) {
+  for (int i = 0; i < MAXN; i++) {
     dist[i] = INF;
     pred[i] = -1;
   }
   dist[start] = 0;
-  for (int i = 0; i < nodes; i++) {
+  for (int i = 0; i < MAXN; i++) {
     for (int j = 0; j < (int)e.size(); j++) {
       if (dist[e[j].v] > dist[e[j].u] + e[j].w) {
         dist[e[j].v] = dist[e[j].u] + e[j].w;
@@ -50,24 +47,30 @@ void bellman_ford(int nodes, int start) {
       throw std::runtime_error("Negative-weight found");
 }
 
-//Use the precomputed pred[] array to print the path
 void print_path(int dest) {
   int i = 0, j = dest, path[MAXN];
-  while (pred[j] != -1) j = path[++i] = pred[j];
+  while (pred[j] != -1)
+    j = path[++i] = pred[j];
   cout << "Take the path: ";
-  while (i > 0) cout << path[i--] << "->";
+  while (i > 0)
+    cout << path[i--] << "->";
   cout << dest << ".\n";
 }
 
+/*** Example Usage
+
+Sample Output:
+The shortest distance from 0 to 2 is 3.
+Take the path: 0->1->2.
+
+***/
+
 int main() {
-  int nodes, edges, u, v, w, start, dest;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v >> w;
-    e.push_back((edge){u, v, w});
-  }
-  cin >> start >> dest;
-  bellman_ford(nodes, start);
+  int start = 0, dest = 2;
+  e.push_back((edge){0, 1, 1});
+  e.push_back((edge){1, 2, 2});
+  e.push_back((edge){0, 2, 5});
+  bellman_ford(start);
   cout << "The shortest distance from " << start;
   cout << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);
