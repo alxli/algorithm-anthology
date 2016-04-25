@@ -1,9 +1,9 @@
 /*
 
-Given an unweighted, directed graph, traverse to every connected node
-and determine the shortest distance to each. Optionally, output the
-shortest path to a specific destination node using the predecessor
-array precomputed during the search.
+Given a starting node in an unweighted, directed graph, traverse to
+every connected node and determine the shortest distance to each.
+Optionally, output the shortest path to a specific destination node
+using the shortest-path tree precomputed into the pred[] array.
 
 Time Complexity: bfs() is O(n) on the number of edges to compute the
 shortest distance to each node. print_path() is O(n) on the number of

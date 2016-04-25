@@ -1,9 +1,10 @@
 /*
 
-Given an weighted, directed graph with nonnegative weights only,
-traverse to every connected node and determine the shortest distance to
-each. Optionally, output the shortest path to a specific destination
-node using the predecessor array precomputed during the search.
+Given a starting node in a weighted, directed graph with nonnegative
+weights only, traverse to every connected node and determine the
+shortest distance to each. Optionally, output the shortest path to a
+specific destination node using the shortest-path tree precomputed into
+the pred[] array.
 
 This implementation negates node distances before adding them to the
 priority_queue, since the standard library container is a max-heap by

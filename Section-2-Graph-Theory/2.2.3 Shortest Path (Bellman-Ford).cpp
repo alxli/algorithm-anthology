@@ -1,11 +1,11 @@
 /*
 
-Given an weighted, directed graph with positive or negative weights,
-traverse to every connected node and determine the shortest distance to
-each. Optionally, detect if there exists a negative-weighted cycle (in
-which case the shortest path does not exist). Optionally, output the
-shortest path to a specific destination node using the predecessor
-array precomputed during the search.
+Given a starting node in a weighted, directed graph with possibly
+negative weights, traverse to every connected node and determine the
+shortest distance to each. Optionally, detect if there exists a
+negative-weighted cycle (in which case there is no shortest path).
+Optionally, output the shortest path to a specific destination node
+using the shortest-path tree precomputed into the pred[] array.
 
 Time Complexity: bellman_ford() is O(nm) where n is the number of nodes
 and m is the number of edges. print_path() is O(n) on the number of
@@ -44,7 +44,7 @@ void bellman_ford(int start) {
   //optional: report negative-weight cycles
   for (int i = 0; i < (int)e.size(); i++)
     if (dist[e[i].v] > dist[e[i].u] + e[i].w)
-      throw std::runtime_error("Negative-weight found");
+      throw std::runtime_error("Negative-weight cycle found.");
 }
 
 void print_path(int dest) {
