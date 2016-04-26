@@ -1,57 +1,30 @@
 /*
 
-Description: The following operations apply to undirected graphs.
+Given an undirected graph, compute the following operations using
+Tarjan's algorithm.
 
-A bridge is an edge, when deleted, increases the number of
-connected components. An edge is a bridge if and only ifit is not
-contained in any cycle.
+A bridge is an edge such that when deleted, increases the number of
+connected components in the graph. An edge is a bridge if and only if
+it is not contained in any cycle.
 
-A cut-point (i.e. cut-vertex or articulation point) is any vertex
-whose removal increases the number of connected components.
+A cut-point (i.e. cut-vertex or articulation point) is any vertex whose
+removal increases the number of connected components in the graph.
 
-A biconnected component of a graph is a maximally biconnected
-subgraph. A biconnected graph is a connected and "nonseparable"
-graph, meaning that if any vertex were to be removed, the graph
-will remain connected. Therefore, a biconnected graph has no
-articulation vertices.
+A biconnected component of a graph is a maximally biconnected subgraph.
+A biconnected graph is a connected and "nonseparable" graph, meaning
+that if any vertex were to be removed, the graph will remain connected.
+Therefore, a biconnected graph has no articulation vertices.
 
-Any connected graph decomposes into a tree of biconnected
-components called the "block tree" of the graph. An unconnected
-graph will thus decompose into a "block forest."
+Any connected graph decomposes into a tree of biconnected components
+called the "block tree" of the graph. An unconnected graph will thus
+decompose into a "block forest."
 
 See: http://en.wikipedia.org/wiki/Biconnected_component
 
-Complexity: O(V+E) on the number of vertices and edges.
+Time Complexity: O(n) on the number of edges.
 
-=~=~=~=~= Sample Input =~=~=~=~=
-8 6
-0 1
-0 5
-1 2
-1 5
-3 7
-4 5
-
-=~=~=~=~= Sample Output =~=~=~=~=
-Cut Points: 5 1
-Bridges:
-1 2
-5 4
-3 7
-Edge-Biconnected Components:
-Component 1: 2
-Component 2: 4
-Component 3: 5 1 0
-Component 4: 7
-Component 5: 3
-Component 6: 6
-Adjacency List for Block Forest:
-0 => 2
-1 => 2
-2 => 0 1
-3 => 4
-4 => 3
-5 =>
+Space Complexity: O(n) on the number of edges to store the input graph
+as an adjacency list and O(n) auxiliary on the number of nodes.
 
 */
 
@@ -75,7 +48,8 @@ void dfs(int u, int p) {
   int v, children = 0;
   bool cutpoint = false;
   for (int j = 0; j < (int)adj[u].size(); j++) {
-    if ((v = adj[u][j]) == p) continue;
+    if ((v = adj[u][j]) == p)
+      continue;
     if (vis[v]) {
       //lowlink[u] = min(lowlink[u], lowlink[v]);
       lowlink[u] = min(lowlink[u], tin[v]);
@@ -110,15 +84,16 @@ void tarjan(int nodes) {
   fill(tin, tin + nodes, 0);
   fill(vis.begin(), vis.end(), false);
   timer = 0;
-  for (int i = 0; i < nodes; i++)
-    if (!vis[i]) dfs(i, -1);
+  for (int i = 0; i < nodes; i++) {
+    if (!vis[i])
+      dfs(i, -1);
+  }
 }
 
-//condenses each bcc to a node and generates a tree
-//global variables adj and bcc must be set beforehand
 void get_block_tree(int nodes) {
   fill(comp, comp + nodes, 0);
-  for (int i = 0; i < nodes; i++) bcc_forest[i].clear();
+  for (int i = 0; i < nodes; i++)
+    bcc_forest[i].clear();
   for (int i = 0; i < (int)bcc.size(); i++)
     for (int j = 0; j < (int)bcc[i].size(); j++)
       comp[bcc[i][j]] = i;
@@ -128,15 +103,40 @@ void get_block_tree(int nodes) {
         bcc_forest[comp[i]].push_back(comp[adj[i][j]]);
 }
 
+/*** Example Usage
+
+Sample Output:
+Cut Points: 5 1
+Bridges:
+1 2
+5 4
+3 7
+Edge-Biconnected Components:
+Component 1: 2
+Component 2: 4
+Component 3: 5 1 0
+Component 4: 7
+Component 5: 3
+Component 6: 6
+Adjacency List for Block Forest:
+0 => 2
+1 => 2
+2 => 0 1
+3 => 4
+4 => 3
+5 =>
+
+***/
+
 int main() {
-  int nodes, edges, u, v;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v;
-    adj[u].push_back(v);
-    adj[v].push_back(u);
-  }
-  tarjan(nodes);
+  adj[0].push_back(1); adj[0].push_back(1);
+  adj[0].push_back(5); adj[5].push_back(0);
+  adj[1].push_back(2); adj[2].push_back(1);
+  adj[1].push_back(5); adj[5].push_back(1);
+  adj[3].push_back(7); adj[7].push_back(3);
+  adj[4].push_back(5); adj[5].push_back(4);
+  tarjan(8);
+  get_block_tree(8);
   cout << "Cut-points:";
   for (int i = 0; i < (int)cutpoints.size(); i++)
     cout << " " << cutpoints[i];
@@ -150,7 +150,6 @@ int main() {
       cout << " " << bcc[i][j];
     cout << "\n";
   }
-  get_block_tree(nodes);
   cout << "Adjacency List for Block Forest:\n";
   for (int i = 0; i < (int)bcc.size(); i++) {
     cout << i << " =>";
