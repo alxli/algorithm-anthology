@@ -49,9 +49,7 @@ template<class It> void compress2(It lo, It hi) {
     *it = m[*it];
 }
 
-/*** Example Usage
-
-Sample Output:
+/*** Example Usage and Output:
 
 0 4 4 1 3 2 5 5
 0 4 4 1 3 2 5 5

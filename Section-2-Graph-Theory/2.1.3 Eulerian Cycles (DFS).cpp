@@ -72,9 +72,8 @@ std::vector<int> euler_cycle_undirected(std::vector<int> adj[], int u) {
   return res;
 }
 
-/*** Example Usage
+/*** Example Usage and Output:
 
-Sample Output:
 Eulerian cycle from 0 (directed): 0 1 3 4 1 2 0
 Eulerian cycle from 2 (undirected): 2 1 3 4 1 0 2
 

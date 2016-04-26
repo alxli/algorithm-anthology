@@ -262,9 +262,7 @@ void radix_sort(UnsignedIt lo, UnsignedIt hi) {
   delete[] l;
 }
 
-/*** Example Usage
-
-Sample Output:
+/*** Example Usage and Output:
 
 mergesort() with default comparisons: 1.32 1.41 1.62 1.73 2.58 2.72 3.14 4.67
 mergesort() with 'compare_as_ints()': 1.41 1.73 1.32 1.62 2.72 2.58 3.14 4.67

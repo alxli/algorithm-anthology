@@ -50,9 +50,8 @@ template<class T> std::vector<T> lis(int n, T a[]) {
   return res;
 }
 
-/*** Example Usage
+/*** Example Usage and Output:
 
-Sample Output:
 -5 1 9 10 11 13
 
 ***/

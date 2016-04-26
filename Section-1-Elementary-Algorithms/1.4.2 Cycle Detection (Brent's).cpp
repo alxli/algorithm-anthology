@@ -26,7 +26,6 @@ Space Complexity: O(1) auxiliary.
 
 */
 
-
 #include <utility> /* std::pair */
 
 template<class IntFunction>

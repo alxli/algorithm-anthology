@@ -48,9 +48,8 @@ template<class It> void nth_element2(It lo, It n, It hi) {
   }
 }
 
-/*** Example Usage
+/*** Example Usage and Output:
 
-Sample Output:
 2 3 1 5 4 6 8 7 9
 
 ***/

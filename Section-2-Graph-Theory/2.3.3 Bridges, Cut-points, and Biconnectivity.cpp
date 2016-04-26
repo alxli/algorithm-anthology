@@ -103,9 +103,8 @@ void get_block_tree(int nodes) {
         bcc_forest[comp[i]].push_back(comp[adj[i][j]]);
 }
 
-/*** Example Usage
+/*** Example Usage and Output:
 
-Sample Output:
 Cut Points: 5 1
 Bridges:
 1 2

@@ -57,9 +57,8 @@ void print_path(int dest) {
   cout << dest << ".\n";
 }
 
-/*** Example Usage
+/*** Example Usage and Output:
 
-Sample Output:
 The shortest distance from 0 to 3 is 2.
 Take the path: 0->1->3.
 

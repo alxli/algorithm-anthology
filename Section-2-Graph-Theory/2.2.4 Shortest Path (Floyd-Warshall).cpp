@@ -55,9 +55,8 @@ void print_path(int u, int v) {
   cout << ".\n";
 }
 
-/*** Example Usage
+/*** Example Usage and Output:
 
-Sample Output:
 The shortest distance from 0 to 2 is 3.
 Take the path: 0->1->2.
 

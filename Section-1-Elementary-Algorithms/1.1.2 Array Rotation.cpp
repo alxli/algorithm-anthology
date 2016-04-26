@@ -57,9 +57,7 @@ template<class It> void rotate3(It lo, It mid, It hi) {
   }
 }
 
-/*** Example Usage
-
-Sample Output:
+/*** Example Usage and Output:
 
 before sort:  2 4 2 0 5 10 7 3 7 1
 after sort:   0 1 2 2 3 4 5 7 7 10

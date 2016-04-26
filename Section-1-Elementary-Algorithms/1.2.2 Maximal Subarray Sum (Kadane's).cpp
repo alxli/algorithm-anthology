@@ -111,9 +111,8 @@ T max_submatrix_sum(const std::vector< std::vector<T> > & mat,
   return max_sum;
 }
 
-/*** Example Usage
+/*** Example Usage and Output:
 
-Sample Output:
 1D example - the max sum subarray is
 4 -1 2 1
 2D example - the max sum submatrix is

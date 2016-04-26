@@ -52,9 +52,8 @@ void toposort(int nodes) {
   std::reverse(res.begin(), res.end());
 }
 
-/*** Example Usage
+/*** Example Usage and Output:
 
-Sample Output:
 The topological order: 2 1 0 4 3 7 6 5
 
 ***/

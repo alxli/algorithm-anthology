@@ -56,9 +56,8 @@ void kosaraju(int nodes) {
   }
 }
 
-/*** Example Usage
+/*** Example Usage and Output:
 
-Sample Output:
 Component: 1 4 0
 Component: 7 3 2
 Component: 5 6
