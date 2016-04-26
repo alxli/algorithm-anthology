@@ -1,51 +1,16 @@
 /*
 
-Description: Determines the strongly connected components (SCC)
-from a given directed graph. Given a directed graph, its SCCs
-are its maximal strongly connected sub-graphs. A graph is
-strongly connected if there is a path from each node to every
-other node. Condensing the strongly connected components of a
-graph into single nodes will result in a directed acyclic graph.
-The input is stored in an adjacency list.
+Given a directed graph, determine the strongly connected components.
+The strongly connected components (SCC) of a graph is the set of all
+strongly (maximally) connected subgraphs. A subgraph is strongly
+connected if there is a path between each pair of nodes. Condensing the
+strongly connected components of a graph into single nodes will result
+in a directed acyclic graph.
 
-In this implementation, a vector is used to emulate a stack
-for the sake of simplicity. One useful property of Tarjan’s
-algorithm is that, while there is nothing special about the
-ordering of nodes within each component, the resulting DAG
-is produced in reverse topological order.
+Time Complexity: O(n) on the number of edges.
 
-Complexity: O(V+E) on the number of vertices and edges.
-
-Comparison with other SCC algorithms:
-The strongly connected components of a graph can be efficiently
-computed using Kosaraju's algorithm, Tarjan's algorithm, or the
-path-based strong component algorithm. Tarjan's algorithm can
-be seen as an improved version of Kosaraju's because it performs
-a single DFS rather than two. Though they both have the same
-complexity, Tarjan's algorithm is much more efficient in
-practice. However, Kosaraju's algorithm is conceptually simpler.
-
-=~=~=~=~= Sample Input =~=~=~=~=
-8 14
-0 1
-1 2
-1 4
-1 5
-2 3
-2 6
-3 2
-3 7
-4 0
-4 5
-5 6
-6 5
-7 3
-7 6
-
-=~=~=~=~= Sample Output =~=~=~=~=
-Component 1: 5 6
-Component 2: 7 3 2
-Component 3: 4 1 0
+Space Complexity: O(n) on the number of edges to store the input graph
+as an adjacency list and O(n) auxiliary on the number of nodes.
 
 */
 
@@ -67,13 +32,15 @@ void dfs(int u) {
   bool is_component_root = true;
   int v;
   for (int j = 0; j < (int)adj[u].size(); j++) {
-    if (!vis[v = adj[u][j]]) dfs(v);
+    if (!vis[v = adj[u][j]])
+      dfs(v);
     if (lowlink[u] > lowlink[v]) {
       lowlink[u] = lowlink[v];
       is_component_root = false;
     }
   }
-  if (!is_component_root) return;
+  if (!is_component_root)
+    return;
   vector<int> component;
   do {
     vis[v = stack.back()] = true;
@@ -90,18 +57,37 @@ void tarjan(int nodes) {
   fill(lowlink, lowlink + nodes, 0);
   fill(vis.begin(), vis.end(), false);
   timer = 0;
-  for (int i = 0; i < nodes; i++)
-    if (!vis[i]) dfs(i);
+  for (int i = 0; i < nodes; i++) {
+    if (!vis[i])
+      dfs(i);
+  }
 }
 
+/*** Example Usage
+
+Sample Output:
+Component: 5 6
+Component: 7 3 2
+Component: 4 1 0
+
+***/
+
 int main() {
-  int nodes, edges, u, v;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v;
-    adj[u].push_back(v);
-  }
-  tarjan(nodes);
+  adj[0].push_back(1);
+  adj[1].push_back(2);
+  adj[1].push_back(4);
+  adj[1].push_back(5);
+  adj[2].push_back(3);
+  adj[2].push_back(6);
+  adj[3].push_back(2);
+  adj[3].push_back(7);
+  adj[4].push_back(0);
+  adj[4].push_back(5);
+  adj[5].push_back(6);
+  adj[6].push_back(5);
+  adj[7].push_back(3);
+  adj[7].push_back(6);
+  tarjan(8);
   for (int i = 0; i < (int)scc.size(); i++) {
     cout << "Component:";
     for (int j = 0; j < (int)scc[i].size(); j++)
