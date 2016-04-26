@@ -1,45 +1,16 @@
 /*
 
-Description: Determines the strongly connected components (SCC)
-from a given directed graph. Given a directed graph, its SCCs
-are its maximal strongly connected sub-graphs. A graph is
-strongly connected if there is a path from each node to every
-other node. Condensing the strongly connected components of a
-graph into single nodes will result in a directed acyclic graph.
-The input is stored in an adjacency list.
+Given a directed graph, determine the strongly connected components.
+The strongly connected components (SCC) of a graph is the set of all
+strongly (maximally) connected subgraphs. A subgraph is strongly
+connected if there is a path between each pair of nodes. Condensing the
+strongly connected components of a graph into single nodes will result
+in a directed acyclic graph.
 
-Complexity: O(V+E) on the number of vertices and edges.
+Time Complexity: O(n) on the number of edges.
 
-Comparison with other SCC algorithms:
-The strongly connected components of a graph can be efficiently
-computed using Kosaraju's algorithm, Tarjan's algorithm, or the
-path-based strong component algorithm. Tarjan's algorithm can
-be seen as an improved version of Kosaraju's because it performs
-a single DFS rather than two. Though they both have the same
-complexity, Tarjan's algorithm is much more efficient in
-practice. However, Kosaraju's algorithm is conceptually simpler.
-
-=~=~=~=~= Sample Input =~=~=~=~=
-8 14
-0 1
-1 2
-1 4
-1 5
-2 3
-2 6
-3 2
-3 7
-4 0
-4 5
-5 6
-6 5
-7 3
-7 6
-
-=~=~=~=~= Sample Output =~=~=~=~=
-Component: 1 4 0
-Component: 7 3 2
-Component: 5 6
+Space Complexity: O(n) on the number of edges to store the input graph
+as an adjacency list and O(n) auxiliary on the number of nodes.
 
 */
 
@@ -55,9 +26,10 @@ vector<vector<int> > scc;
 
 void dfs(vector<int> graph[], vector<int> & res, int u) {
   vis[u] = true;
-  for (int j = 0; j < (int)graph[u].size(); j++)
+  for (int j = 0; j < (int)graph[u].size(); j++) {
     if (!vis[graph[u][j]])
       dfs(graph, res, graph[u][j]);
+  }
   res.push_back(u);
 }
 
@@ -66,29 +38,49 @@ void kosaraju(int nodes) {
   order.clear();
   vector<int> rev[nodes];
   fill(vis.begin(), vis.end(), false);
-  for (int i = 0; i < nodes; i++)
-    if (!vis[i]) dfs(adj, order, i);
+  for (int i = 0; i < nodes; i++) {
+    if (!vis[i])
+      dfs(adj, order, i);
+  }
   for (int i = 0; i < nodes; i++)
     for (int j = 0; j < (int)adj[i].size(); j++)
       rev[adj[i][j]].push_back(i);
   fill(vis.begin(), vis.end(), false);
   reverse(order.begin(), order.end());
   for (int i = 0; i < (int)order.size(); i++) {
-    if (vis[order[i]]) continue;
+    if (vis[order[i]])
+      continue;
     vector<int> component;
     dfs(rev, component, order[i]);
     scc.push_back(component);
   }
 }
 
+/*** Example Usage
+
+Sample Output:
+Component: 1 4 0
+Component: 7 3 2
+Component: 5 6
+
+***/
+
 int main() {
-  int nodes, edges, u, v;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v;
-    adj[u].push_back(v);
-  }
-  kosaraju(nodes);
+  adj[0].push_back(1);
+  adj[1].push_back(2);
+  adj[1].push_back(4);
+  adj[1].push_back(5);
+  adj[2].push_back(3);
+  adj[2].push_back(6);
+  adj[3].push_back(2);
+  adj[3].push_back(7);
+  adj[4].push_back(0);
+  adj[4].push_back(5);
+  adj[5].push_back(6);
+  adj[6].push_back(5);
+  adj[7].push_back(3);
+  adj[7].push_back(6);
+  kosaraju(8);
   for (int i = 0; i < (int)scc.size(); i++) {
     cout << "Component:";
     for (int j = 0; j < (int)scc[i].size(); j++)
