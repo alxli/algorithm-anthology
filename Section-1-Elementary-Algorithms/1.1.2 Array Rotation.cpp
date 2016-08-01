@@ -22,7 +22,6 @@ Space Complexity: O(1) auxiliary
 
 #include <algorithm>  // std::reverse(), std::rotate(), std::swap()
 
-
 template<class It> void rotate1(It lo, It mid, It hi) {
   It next = mid;
   while (lo != next) {
@@ -58,7 +57,6 @@ template<class It> void rotate3(It lo, It mid, It hi) {
     }
   }
 }
-
 
 /*** Example Usage and Output:
 

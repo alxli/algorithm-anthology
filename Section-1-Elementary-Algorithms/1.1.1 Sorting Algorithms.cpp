@@ -17,7 +17,6 @@ sorting algorithms can be concisely implemented in C++.
 #include <functional>  // std::less
 #include <iterator>  // std::iterator_traits
 
-
 /*
 
 Quicksort
@@ -63,7 +62,6 @@ template<class It> void quicksort(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   quicksort(lo, hi, std::less<T>());
 }
-
 
 /*
 
@@ -114,7 +112,6 @@ template<class It> void mergesort(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   mergesort(lo, hi, std::less<T>());
 }
-
 
 /*
 
@@ -169,7 +166,6 @@ template<class It> void heapsort(It lo, It hi) {
   heapsort(lo, hi, std::less<T>());
 }
 
-
 /*
 
 Comb Sort
@@ -213,7 +209,6 @@ template<class It> void combsort(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   combsort(lo, hi, std::less<T>());
 }
-
 
 /*
 
@@ -262,7 +257,6 @@ void radix_sort(UnsignedIt lo, UnsignedIt hi) {
   }
   delete[] l;
 }
-
 
 /*** Example Usage and Output:
 
