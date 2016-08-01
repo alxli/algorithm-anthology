@@ -1,25 +1,27 @@
 /*
 
-The following functions are equivalent to std::rotate(), taking three
-iterators lo, mid, hi, and swapping the elements in the range [lo, hi)
-in such a way that the element at mid becomes the first element of the
-new range and the element at mid - 1 becomes the last element.
+These functions are equivalent to std::rotate(), taking three iterators lo, mid,
+and hi (lo <= mid <= hi) to perform a left rotation on the range [lo, hi). After
+the function call, [lo, hi) will comprise of the concatenation of the elements
+initially in [mid, hi) + [lo, mid). That is, the range [lo, hi) will be
+rearranged in such a way that the element at mid becomes the first element of
+the new range and the element at mid - 1 becomes the last element, all while
+preserving the relative ordering of elements within the two rotated subarrays.
 
-All three versions achieve the same result using no temporary arrays.
-Version 1 uses a straightforward swapping algorithm listed on many C++
-reference sites, requiring only forward iterators. Version 2 requires
-bidirectional iterators, employing the well-known technique of three
-simple reversals. Version 3 applies a "juggling" algorithm which first
-divides the range into gcd(n, k) sets (n = hi - lo and k = mid - lo)
-and then rotates the corresponding elements in each set. This version
-requires random access iterators.
+All three versions below achieve the same result using in-place algorithms.
+Version 1 uses a straightforward swapping algorithm requiring ForwardIterators.
+Version 2 requires BidirectionalIterators, employing a well-known trick with
+three simple inversions. Version 3 requires RandomAccessIterators, applying a
+juggling algorithm which first divides the range into gcd(hi - lo, mid - lo)
+sets and then rotates the corresponding elements in each set.
 
-Time Complexity: O(n) on the distance between lo and hi.
-Space Complexity: O(1) auxiliary.
+Time Complexity: O(n) on the distance between lo and hi
+Space Complexity: O(1) auxiliary
 
 */
 
-#include <algorithm> /* std::reverse(), std::rotate(), std::swap() */
+#include <algorithm>  // std::reverse(), std::rotate(), std::swap()
+
 
 template<class It> void rotate1(It lo, It mid, It hi) {
   It next = mid;
@@ -57,6 +59,7 @@ template<class It> void rotate3(It lo, It mid, It hi) {
   }
 }
 
+
 /*** Example Usage and Output:
 
 before sort:  2 4 2 0 5 10 7 3 7 1
@@ -84,7 +87,7 @@ int main() {
   rotate3(v3.begin(), v3.begin() + mid, v3.end());
   assert(v0 == v1 && v0 == v2 && v0 == v3);
 
-  //example from: http://en.cppreference.com/w/cpp/algorithm/rotate
+  // Example from: http://en.cppreference.com/w/cpp/algorithm/rotate
   int a[] = {2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
   vector<int> v(a, a + 10);
   cout << "before sort:  ";
@@ -92,7 +95,7 @@ int main() {
     cout << v[i] << ' ';
   cout << endl;
 
-  //insertion sort
+  // Insertion sort.
   for (vector<int>::iterator i = v.begin(); i != v.end(); ++i)
     rotate1(std::upper_bound(v.begin(), i, *i), i, i + 1);
   cout << "after sort:   ";
@@ -100,18 +103,19 @@ int main() {
     cout << v[i] << ' ';
   cout << endl;
 
-  //simple rotation to the left
+  // Simple rotation to the left.
   rotate2(v.begin(), v.begin() + 1, v.end());
   cout << "rotate left:  ";
   for (int i = 0; i < (int)v.size(); i++)
     cout << v[i] << ' ';
   cout << endl;
 
-  //simple rotation to the right
+  // Simple rotation to the right.
   rotate3(v.rbegin(), v.rbegin() + 1, v.rend());
   cout << "rotate right: ";
   for (int i = 0; i < (int)v.size(); i++)
     cout << v[i] << ' ';
   cout << endl;
+
   return 0;
 }
