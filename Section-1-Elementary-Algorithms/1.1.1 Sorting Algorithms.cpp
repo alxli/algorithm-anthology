@@ -22,12 +22,12 @@ sorting algorithms can be concisely implemented in C++.
 
 Quicksort
 
-Quicksort repeatedly selects a pivot and partitions the range so that all
-elements comparing less than the pivot precedes the pivot, and all elements
-comparing greater follows it. Divide and conquer is then applied to both sides
-of the pivot until the original range is sorted. Despite having a worst case of
-O(n^2), quicksort is faster in practice than merge sort and heapsort, which both
-have a worst case time complexity of O(n log n).
+Quicksort repeatedly selects a pivot and partitions the range so that elements
+comparing less than the pivot precedes the pivot, and elements comparing greater
+or equal follows it. Divide and conquer is then applied to both sides of the
+pivot until the original range is sorted. Despite having a worst case of O(n^2),
+quicksort is faster in practice than merge sort and heapsort, which both have a
+worst case time complexity of O(n log n).
 
 The pivot chosen in this implementation is always a middle element of the range
 to be sorted. To reduce the likelihood of encountering the worst case, the pivot
