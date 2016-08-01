@@ -123,10 +123,10 @@ Heapsort
 Heapsort first rearranges an array to satisfy the max-heap property. Then, it
 repeatedly pops the max element of the heap (the left, unsorted subrange),
 moving it to the beginning of the right, sorted subrange until the entire range
-is sorted. Heapsort has a better worst case time complexity than quicksort, but
-a better space complexity than merge sort.
+is sorted. Heapsort has a better worst case time complexity than quicksort and
+also a better space complexity than merge sort.
 
-The c++ standard library equivalent is calling std::make_heap(lo, hi), followed
+The C++ standard library equivalent is calling std::make_heap(lo, hi), followed
 by std::sort_heap(lo, hi).
 
 Time Complexity (Average): O(n log n)
@@ -180,12 +180,11 @@ size in the inner loop, decreasing it by a particular shrink factor in every
 iteration of the outer loop. The shrink factor of 1.3 is empirically determined
 to be the most effective.
 
-Even though the worst case time complexity is theoretically O(n^2), a good
-shrink factor will ensure that the increments (gap sizes) are co-prime, in turn
-requiring astronomically large n to make the algorithm exceed O(n log n) steps.
-On random arrays, comb sort is only 2-3 times slower than merge sort. Thus, the
-small code length to efficiency ratio makes for a worthwhile algorithm to
-remember.
+Even though the worst case time complexity is O(n^2), a good shrink factor will
+ensure that the increments (gap sizes) are co-prime, in turn requiring
+astronomically large n to make the algorithm exceed O(n log n) steps. On random
+arrays, comb sort is only 2-3 times slower than merge sort. Thus, the small code
+length to efficiency ratio makes for a worthwhile algorithm to remember.
 
 Time Complexity (Worst): O(n^2)
 Space Complexity: O(1) auxiliary
