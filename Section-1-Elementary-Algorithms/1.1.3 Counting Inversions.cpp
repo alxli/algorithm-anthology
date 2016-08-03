@@ -1,75 +1,70 @@
 /*
 
-The number of inversions in an array a[] is the number of ordered pairs
-(i, j) such that i < j and a[i] > a[j]. This is roughly how "close" an
-array is to being sorted, but is *not* the same as the minimum number
-of swaps required to sort the array. If the array is sorted then the
-inversion count is 0. If the array is sorted in decreasing order, then
-the inversion count is maximal. The following are two methods of
-efficiently counting the number of inversions.
+The number of inversions for an array a[] is defined as the number of ordered
+pairs (i, j) such that i < j and a[i] > a[j]. This is roughly how "close" an
+array is to being sorted, but is *not* the minimum number of swaps required to
+sort the array. If the array is sorted, then the inversion count is 0. If the
+array is sorted in decreasing order, then the inversion count is maximal. The
+following two functions are each techniques to efficiently count inversion.
 
 */
 
-#include <algorithm> /* std::fill(), std::max() */
-#include <iterator>  /* std::iterator_traits */
+#include <algorithm>  // std::fill(), std::max()
+#include <iterator>  // std::iterator_traits
+#include <vector>
 
 /*
 
-Version 1: Merge sort
+Version 1: Merge Sort
 
-The input range [lo, hi) will become sorted after the function call,
-and then the number of inversions will be returned. The iterator's
-value type must have the less than < operator defined appropriately.
-
-Explanation: http://www.geeksforgeeks.org/counting-inversions
+Returns the number of inversions. Note that the input range [lo, hi) will become
+sorted after the function call. The value type of the input iterators must have
+operator< defined appropriately.
 
 Time Complexity: O(n log n) on the distance between lo and hi.
-Space Complexty: O(n) auxiliary.
+Space Complexity: O(n) auxiliary.
 
 */
 
 template<class It> long long inversions(It lo, It hi) {
-  if (hi - lo < 2) return 0;
-  It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
+  if (hi - lo < 2)
+    return 0;
+  It mid = lo + (hi - lo - 1)/2, a = lo, c = mid + 1;
   long long res = 0;
   res += inversions(lo, mid + 1);
   res += inversions(mid + 1, hi);
   typedef typename std::iterator_traits<It>::value_type T;
-  T *buf = new T[hi - lo], *ptr = buf;
+  std::vector<T> merged;
   while (a <= mid && c < hi) {
     if (*c < *a) {
-      *(ptr++) = *(c++);
+      merged.push_back(*(c++));
       res += (mid - a) + 1;
     } else {
-      *(ptr++) = *(a++);
+      merged.push_back(*(a++));
     }
   }
   if (a > mid) {
     for (It k = c; k < hi; k++)
-      *(ptr++) = *k;
+      merged.push_back(*k);
   } else {
     for (It k = a; k <= mid; k++)
-      *(ptr++) = *k;
+      merged.push_back(*k);
   }
-  for (int i = hi - lo - 1; i >= 0; i--)
-    *(lo + i) = buf[i];
-  delete[] buf;
+  for (int i = 0; i < hi - lo; i++)
+    *(lo + i) = merged[i];
   return res;
 }
 
 /*
 
-Version 2: Magic
+Version 2: Power-of-Two Trick
 
-The following magic is courtesy of misof, and works for any array of
-nonnegative integers.
+Returns the number of inversions for an array a[] of n nonnegative integers.
+Note that after calling the function, every value of a[] will be set to 0.
 
-Explanation: http://codeforces.com/blog/entry/17881?#comment-232099
-
-The complexity depends on the magnitude of the maximum value in a[].
-Coordinate compression should be applied on the values of a[] so that
-they are strictly integers with magnitudes up to n for best results.
-Note that after calling the function, a[] will be entirely set to 0.
+Here, the time and space complexities depend on the magnitude of the maximum
+value in a[]. Therefore for a running time of O(n log n), coordinate compression
+may be applied to a[] so its maximum is strictly less than the length n itself.
 
 Time Complexity: O(m log m), where m is maximum value in the array.
 Space Complexity: O(m) auxiliary.
@@ -80,10 +75,10 @@ long long inversions(int n, int a[]) {
   int mx = 0;
   for (int i = 0; i < n; i++)
     mx = std::max(mx, a[i]);
-  int *cnt = new int[mx];
   long long res = 0;
+  std::vector<int> cnt(mx);
   while (mx > 0) {
-    std::fill(cnt, cnt + mx, 0);
+    std::fill(cnt.begin(), cnt.end(), 0);
     for (int i = 0; i < n; i++) {
       if (a[i] % 2 == 0)
         res += cnt[a[i] / 2];
@@ -94,7 +89,6 @@ long long inversions(int n, int a[]) {
     for (int i = 0; i < n; i++)
       mx = std::max(mx, a[i] /= 2);
   }
-  delete[] cnt;
   return res;
 }
 

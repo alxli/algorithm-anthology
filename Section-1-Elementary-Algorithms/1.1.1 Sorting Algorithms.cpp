@@ -16,6 +16,7 @@ sorting algorithms can be concisely implemented in C++.
 #include <algorithm>  // std::copy(), std::swap()
 #include <functional>  // std::less
 #include <iterator>  // std::iterator_traits
+#include <vector>
 
 /*
 
@@ -33,10 +34,10 @@ to be sorted. To reduce the likelihood of encountering the worst case, the pivot
 can be chosen in better ways (e.g. randomly, or using the "median of three"
 technique).
 
-Time Complexity (Average): O(n log n)
-Time Complexity (Worst): O(n^2)
-Space Complexity: O(log n) auxiliary
-Stable?: No
+Time Complexity (Average): O(n log n).
+Time Complexity (Worst): O(n^2).
+Space Complexity: O(log n) auxiliary.
+Stable?: No.
 
 */
 
@@ -78,10 +79,10 @@ that the implementation here requires sufficient memory to be available. When
 O(n) auxiliary memory is not available, std::stable_sort() falls back to a time
 complexity of O(n log^2 n) but the implementation here will simply fail.
 
-Time Complexity (Average): O(n log n)
-Time Complexity (Worst): O(n log n)
-Space Complexity: O(n) auxiliary
-Stable?: Yes
+Time Complexity (Average): O(n log n).
+Time Complexity (Worst): O(n log n).
+Space Complexity: O(n) auxiliary.
+Stable?: Yes.
 
 */
 
@@ -89,23 +90,22 @@ template<class It, class Compare>
 void mergesort(It lo, It hi, Compare comp) {
   if (hi - lo < 2)
     return;
-  It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
+  It mid = lo + (hi - lo - 1)/2, a = lo, c = mid + 1;
   mergesort(lo, mid + 1, comp);
   mergesort(mid + 1, hi, comp);
   typedef typename std::iterator_traits<It>::value_type T;
-  T *buf = new T[hi - lo], *b = buf;
+  std::vector<T> merged;
   while (a <= mid && c < hi)
-    *(b++) = comp(*c, *a) ? *(c++) : *(a++);
+    merged.push_back(comp(*c, *a) ? *(c++) : *(a++));
   if (a > mid) {
     for (It k = c; k < hi; k++)
-      *(b++) = *k;
+      merged.push_back(*k);
   } else {
     for (It k = a; k <= mid; k++)
-      *(b++) = *k;
+      merged.push_back(*k);
   }
-  for (int i = hi - lo - 1; i >= 0; i--)
-    *(lo + i) = buf[i];
-  delete[] buf;
+  for (int i = 0; i < hi - lo; i++)
+    *(lo + i) = merged[i];
 }
 
 template<class It> void mergesort(It lo, It hi) {
@@ -126,10 +126,10 @@ also a better space complexity than merge sort.
 The C++ standard library equivalent is calling std::make_heap(lo, hi), followed
 by std::sort_heap(lo, hi).
 
-Time Complexity (Average): O(n log n)
-Time Complexity (Worst): O(n log n)
-Space Complexity: O(1) auxiliary
-Stable?: No
+Time Complexity (Average): O(n log n).
+Time Complexity (Worst): O(n log n).
+Space Complexity: O(1) auxiliary.
+Stable?: No.
 
 */
 
@@ -182,9 +182,9 @@ astronomically large n to make the algorithm exceed O(n log n) steps. On random
 arrays, comb sort is only 2-3 times slower than merge sort. Thus, the small code
 length to efficiency ratio makes for a worthwhile algorithm to remember.
 
-Time Complexity (Worst): O(n^2)
-Space Complexity: O(1) auxiliary
-Stable?: No
+Time Complexity (Worst): O(n^2).
+Space Complexity: O(1) auxiliary.
+Stable?: No.
 
 */
 
@@ -193,9 +193,8 @@ void combsort(It lo, It hi, Compare comp) {
   int gap = hi - lo;
   bool swapped = true;
   while (gap > 1 || swapped) {
-    if (gap > 1) {
+    if (gap > 1)
       gap = (int)((double)gap / 1.3);
-    }
     swapped = false;
     for (It i = lo; i + gap < hi; i++)
       if (comp(*(i + gap), *i)) {
@@ -229,8 +228,8 @@ In practice, it's been demonstrated that 2^8 is the best choice for sorting
 This implementation was adapted from: http://qr.ae/RbdDTa
 Explanation of base 2^8 choice: http://qr.ae/RbdDcG
 
-Time Complexity: O(n*w) for n integers of w bits each
-Space Complexity: O(n + w) auxiliary
+Time Complexity: O(n*w) for n integers of w bits each.
+Space Complexity: O(n + w) auxiliary.
 
 */
 
@@ -243,19 +242,19 @@ void radix_sort(UnsignedIt lo, UnsignedIt hi) {
   const int radix_mask = radix_base - 1;  // e.g. 2^8 - 1 = 0xFF
   int num_bits = 8 * sizeof(*lo);  // 8 bits per byte
   typedef typename std::iterator_traits<UnsignedIt>::value_type T;
-  T *l = new T[hi - lo];
+  T *buf = new T[hi - lo];
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
     int count[radix_base] = {0};
     for (UnsignedIt it = lo; it != hi; it++)
       count[(*it >> pos) & radix_mask]++;
-    T *bucket[radix_base], *curr = l;
+    T *bucket[radix_base], *curr = buf;
     for (int i = 0; i < radix_base; curr += count[i++])
       bucket[i] = curr;
     for (UnsignedIt it = lo; it != hi; it++)
       *bucket[(*it >> pos) & radix_mask]++ = *it;
-    std::copy(l, l + (hi - lo), lo);
+    std::copy(buf, buf + (hi - lo), lo);
   }
-  delete[] l;
+  delete[] buf;
 }
 
 /*** Example Usage and Output:
@@ -282,9 +281,8 @@ radix_sort(): 0.076s
 using namespace std;
 
 template<class It> void print_range(It lo, It hi) {
-  while (lo != hi) {
+  while (lo != hi)
     cout << *(lo++) << " ";
-  }
   cout << endl;
 }
 

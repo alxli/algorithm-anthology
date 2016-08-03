@@ -15,8 +15,8 @@ three simple inversions. Version 3 requires RandomAccessIterators, applying a
 juggling algorithm which first divides the range into gcd(hi - lo, mid - lo)
 sets and then rotates the corresponding elements in each set.
 
-Time Complexity: O(n) on the distance between lo and hi
-Space Complexity: O(1) auxiliary
+Time Complexity: O(n) on the distance between lo and hi.
+Space Complexity: O(1) auxiliary.
 
 */
 
