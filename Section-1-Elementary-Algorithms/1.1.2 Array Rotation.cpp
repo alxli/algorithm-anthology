@@ -74,7 +74,7 @@ rotate right: 0 1 2 2 3 4 5 7 7 10
 using namespace std;
 
 int main() {
-  std::vector<int> v0, v1, v2, v3;
+  vector<int> v0, v1, v2, v3;
   for (int i = 0; i < 10000; i++)
     v0.push_back(i);
   v1 = v2 = v3 = v0;
