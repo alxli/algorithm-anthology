@@ -17,9 +17,10 @@ following two functions are each techniques to efficiently count inversion.
 
 Version 1: Merge Sort
 
-Returns the number of inversions. Note that the input range [lo, hi) will become
-sorted after the function call. The value type of the input iterators must have
-operator< defined appropriately.
+Returns the number of inversions of the range [lo, hi), where lo and hi are
+RandomAccessIterators. Note that the range [lo, hi) will become sorted after
+the function call. The value type of the input iterators must have operator<
+defined appropriately.
 
 Time Complexity: O(n log n) on the distance between lo and hi.
 Space Complexity: O(n) auxiliary.
