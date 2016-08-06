@@ -1,42 +1,42 @@
 /*
 
-Given an array a[] of size n, reassign integers to each value of a[]
-such that the magnitude of each new value is no more than n, while the
-relative order of each value as they were in the original array is
-preserved. That is, if a[] is the original array and b[] is the result
-array, then for every pair (i, j), the result of comparing a[i] < a[j]
-will be exactly the same as the result of b[i] < b[j]. Furthermore,
-no value of b[] will exceed the *number* of distinct values in a[].
+Let k be the number of distinct values in a range [lo, hi) of n total values.
+Coordinate compression takes only the integers from [0, k) and reassigns them to
+every value in [lo, hi) such that the relative ordering of the original range is
+preserved. That is, if a[] is an array containing the original values and b[] is
+an array containing the compressed values, then every pair i, j (0 <= i, j <= n)
+satisfies a[i] < a[j] if and only if b[i] < b[j].
 
-In the following implementations, values in the range [lo, hi) will be
-converted to integers in the range [0, d), where d is the number of
-distinct values in the original range. lo and hi must be random access
-iterators pointing to a numerical type that int can be assigned to.
+Both of implementations below are equivalent, taking two RandomAccessIterators
+lo and hi as the range [lo, hi) to be compressed. Version 1 performs the
+compression by sorting the array, removing duplicates, and binary searching
+for the position of each original value. Version 2 achieves the same result
+by inserting all values in a balanced binary search tree (std::map) which
+automatically removes duplicate values and supports efficient lookups of the
+compressed values.
 
 Time Complexity: O(n log n) on the distance between lo and hi.
 Space Complexity: O(n) auxiliary.
 
 */
 
-#include <algorithm> /* std::lower_bound(), std::sort(), std::unique() */
-#include <iterator>  /* std::iterator_traits */
+#include <algorithm>  // std::lower_bound(), std::sort(), std::unique()
+#include <iterator>  // std::iterator_traits
 #include <map>
+#include <vector>
 
-//version 1 - using std::sort(), std::unique() and std::lower_bound()
 template<class It> void compress1(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
-  T *a = new T[hi - lo];
-  int n = 0;
+  std::vector<T> v;
   for (It it = lo; it != hi; ++it)
-    a[n++] = *it;
-  std::sort(a, a + n);
-  int n2 = std::unique(a, a + n) - a;
-  for (It it = lo; it != hi; ++it)
-    *it = (int)(std::lower_bound(a, a + n2, *it) - a);
-  delete[] a;
+    v.push_back(*it);
+  std::sort(v.begin(), v.end());
+  v.resize(std::unique(v.begin(), v.end()) - v.begin());
+  for (It it = lo; it != hi; ++it) {
+    *it = (int)(std::lower_bound(v.begin(), v.end(), *it) - v.begin());
+  }
 }
 
-//version 2 - using std::map
 template<class It> void compress2(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   std::map<T, int> m;
@@ -77,7 +77,7 @@ int main() {
     compress2(a, a + 8);
     print_range(a, a + 8);
   }
-  { //works on doubles too
+  {  // Non-integral types work too, as long as ints can be assigned to them.
     double a[] = {0.5, -1.0, 3, -1.0, 20, 0.5};
     compress1(a, a + 6);
     print_range(a, a + 6);
