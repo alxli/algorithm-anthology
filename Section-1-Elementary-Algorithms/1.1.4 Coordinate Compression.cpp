@@ -32,9 +32,8 @@ template<class It> void compress1(It lo, It hi) {
     v.push_back(*it);
   std::sort(v.begin(), v.end());
   v.resize(std::unique(v.begin(), v.end()) - v.begin());
-  for (It it = lo; it != hi; ++it) {
+  for (It it = lo; it != hi; ++it)
     *it = (int)(std::lower_bound(v.begin(), v.end(), *it) - v.begin());
-  }
 }
 
 template<class It> void compress2(It lo, It hi) {
