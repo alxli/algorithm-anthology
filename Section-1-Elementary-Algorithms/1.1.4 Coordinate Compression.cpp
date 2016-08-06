@@ -7,7 +7,7 @@ preserved. That is, if a[] is an array containing the original values and b[] is
 an array containing the compressed values, then every pair i, j (0 <= i, j <= n)
 satisfies a[i] < a[j] if and only if b[i] < b[j].
 
-Both of implementations below are equivalent, taking two RandomAccessIterators
+Both implementations below are equivalent, taking two RandomAccessIterators
 lo and hi as the range [lo, hi) to be compressed. Version 1 performs the
 compression by sorting the array, removing duplicates, and binary searching
 for the position of each original value. Version 2 achieves the same result
