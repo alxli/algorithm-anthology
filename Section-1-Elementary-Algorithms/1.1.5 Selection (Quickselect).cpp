@@ -1,47 +1,42 @@
 /*
 
-Quickselect (also known as Hoare's algorithm) is a selection algorithm
-which rearranges the elements in a sequence such that the element at
-the nth position is the element that would be there if the sequence
-were sorted. The other elements in the sequence are partioned around
-the nth element. That is, they are left in no particular order, except
-that no element before the nth element is is greater than it, and no
-element after it is less.
+nth_element2() is equivalent to std::nth_element(), taking RandomAccessIterators
+lo, nth, and hi as the range [lo, hi) to be partially sorted. The values in
+[lo, hi) are rearranged such that the value pointed to by nth is the element
+that would be there if the range were sorted. Furthermore, the range is
+partitioned such that no value in [lo, nth) compares greater than the value
+pointed to by nth and no value in (nth, hi) compares less.
 
-The following implementation is equivalent to std::nth_element(),
-taking in two random access iterators as the range and performing the
-described operation in expected linear time.
+This implementation is not intended to compete with nth_element() in terms of
+efficiency. Instead, it is meant to demonstrate how Quickselect can be concisely
+implemented in C++. Nonetheless, both functions run in expected linear time.
 
 Time Complexity (Average): O(n) on the distance between lo and hi.
-Time Complexity (Worst): O(n^2), although this *almost never* occurs.
+Time Complexity (Worst): O(n^2), though this will almost never occur.
 Space Complexity: O(1) auxiliary.
 
 */
 
-#include <algorithm> /* std::swap() */
-#include <cstdlib>   /* rand() */
-#include <iterator>  /* std::iterator_traits */
+#include <algorithm>  // std::swap()
+#include <cstdlib>  // rand()
+#include <iterator>  // std::iterator_traits
 
 int rand32() {
   return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
 }
 
-template<class It> It rand_partition(It lo, It hi) {
-  std::swap(*(lo + rand32() % (hi - lo)), *(hi - 1));
-  typename std::iterator_traits<It>::value_type mid = *(hi - 1);
-  It i = lo - 1;
-  for (It j = lo; j != hi; ++j)
-    if (*j <= mid)
-      std::swap(*(++i), *j);
-  return i;
-}
-
-template<class It> void nth_element2(It lo, It n, It hi) {
+template<class It> void nth_element2(It lo, It nth, It hi) {
   for (;;) {
-    It k = rand_partition(lo, hi);
-    if (n < k)
+    std::swap(*(lo + rand32() % (hi - lo)), *(hi - 1));
+    typename std::iterator_traits<It>::value_type mid = *(hi - 1);
+    It k = lo - 1;
+    for (It it = lo; it != hi; ++it) {
+      if (*it <= mid)
+        std::swap(*(++k), *it);
+    }
+    if (nth < k)
       hi = k;
-    else if (n > k)
+    else if (nth > k)
       lo = k + 1;
     else
       return;
@@ -50,7 +45,8 @@ template<class It> void nth_element2(It lo, It n, It hi) {
 
 /*** Example Usage and Output:
 
-2 3 1 5 4 6 8 7 9
+The median is 5.
+3 2 3 4 5 6 6 9 7
 
 ***/
 
@@ -64,9 +60,10 @@ template<class It> void print_range(It lo, It hi) {
 }
 
 int main () {
-  int a[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-  random_shuffle(a, a + 9);
-  nth_element2(a, a + 5, a + 9);
-  print_range(a, a + 9);
+  int n = 9;
+  int a[] = {5, 6, 4, 3, 2, 6, 7, 9, 3};
+  nth_element2(a, a + n/2, a + n);
+  cout << "The median is " << a[n/2] << "." << endl;
+  print_range(a, a + n);
   return 0;
 }
