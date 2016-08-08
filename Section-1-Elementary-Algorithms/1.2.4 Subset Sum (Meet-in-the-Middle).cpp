@@ -1,50 +1,47 @@
 /*
 
-Given a sequence of n (not necessarily unique) integers and a number v,
-determine the minimum possible sum of any subset of the given sequence
-that is not less than v. This is a generalization of a more well-known
-version of the subset sum problem which asks whether a subset summing
-to 0 exists (equivalent here to seeing if v = 0 yields an answer of 0).
-Both problems are NP-complete. A meet-in-the-middle algorithm divides
-the array in two equal parts. All possible sums of the lower and higher
-parts are precomputed and sorted in a table. Finally, the table is
-searched to find the lower bound.
+Given two InputIterators lo and hi specifying a range [lo, hi) of n (not
+necessarily distinct) integers and an integer v, returns the minimum possible
+sum of any subset of the given sequence that is greater than or equal to v.
+This is a generalization of a more well-known version of the subset sum problem
+which asks whether a subset summing to 0 exists (equivalent in this case to
+checking if v = 0 yields an answer of 0). Both problems are NP-complete. This
+meet-in-the-middle algorithm divides the array in two equal parts. All possible
+sums of the lower and higher parts are precomputed into a table and sorted.
+Finally, the table is searched to find the lower bound.
 
-The following implementation accepts two random access iterators as the
-sequence [lo, hi) of integers, and the number v. Note that since the
-sums can get large, 64-bit integers are necessary to avoid overflow.
+Note that since the sums can get large, 64-bit integers are used in intermediate
+calculations to avoid overflow.
 
 Time Complexity: O(n * 2^(n/2)) on the distance between lo and hi.
 Space Complexity: O(n) auxiliary.
 
 */
 
-#include <algorithm> /* std::max(), std::sort() */
-#include <limits>    /* std::numeric_limits */
+#include <algorithm>  // std::max(), std::sort()
+#include <limits>  // std::numeric_limits
+#include <vector>
 
 template<class It>
 long long sum_lower_bound(It lo, It hi, long long v) {
   int n = hi - lo;
-  int llen = 1 << (n / 2);
-  int hlen = 1 << (n - n / 2);
-  long long *lsum = new long long[llen];
-  long long *hsum = new long long[hlen];
-  std::fill(lsum, lsum + llen, 0);
-  std::fill(hsum, hsum + hlen, 0);
+  int llen = 1 << (n/2);
+  int hlen = 1 << (n - n/2);
+  std::vector<long long> lsum(llen), hsum(hlen);
   for (int mask = 0; mask < llen; mask++) {
-    for (int i = 0; i < n / 2; i++) {
+    for (int i = 0; i < n/2; i++) {
       if ((mask >> i) & 1)
         lsum[mask] += *(lo + i);
     }
   }
   for (int mask = 0; mask < hlen; mask++) {
-    for (int i = 0; i < n - n / 2; i++) {
+    for (int i = 0; i < (n - n/2); i++) {
       if ((mask >> i) & 1)
-        hsum[mask] += *(lo + i + n / 2);
+        hsum[mask] += *(lo + i + n/2);
     }
   }
-  std::sort(lsum, lsum + llen);
-  std::sort(hsum, hsum + llen);
+  std::sort(lsum.begin(), lsum.end());
+  std::sort(hsum.begin(), hsum.end());
   int l = 0, r = hlen - 1;
   long long curr = std::numeric_limits<long long>::min();
   while (l < llen && r >= 0) {
@@ -55,8 +52,6 @@ long long sum_lower_bound(It lo, It hi, long long v) {
       r--;
     }
   }
-  delete[] lsum;
-  delete[] hsum;
   return curr;
 }
 
