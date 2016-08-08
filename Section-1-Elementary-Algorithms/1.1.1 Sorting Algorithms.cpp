@@ -176,8 +176,8 @@ size in the inner loop, decreasing it by a particular shrink factor in every
 iteration of the outer loop. The shrink factor of 1.3 is empirically determined
 to be the most effective.
 
-Even though the worst case time complexity is O(n^2), a good shrink factor will
-ensure that the increments (gap sizes) are co-prime, in turn requiring
+Even though the worst case time complexity is O(n^2), a well chosen shrink
+factor ensures that the increments (gap sizes) are co-prime, in turn requiring
 astronomically large n to make the algorithm exceed O(n log n) steps. On random
 arrays, comb sort is only 2-3 times slower than merge sort. Thus, the small code
 length to efficiency ratio makes for a worthwhile algorithm to remember.

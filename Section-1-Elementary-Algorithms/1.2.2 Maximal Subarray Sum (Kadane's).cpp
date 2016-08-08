@@ -1,12 +1,12 @@
 /*
 
-Given two RandomAccessIterators lo and hi specifying a sequence [lo, hi) of
-numbers (containing at least one positive number), determine the maximum
-possible sum of any subarray (contiguous subsequence). Kadane's algorithm scans
-through the range, computing at each index the maximum (positive sum) subarray
-ending at that position. Either this subarray is empty (in which case its sum is
-zero) or it consists of one more element than the maximum sequence ending at the
-previous position.
+Given an array of numbers (at least one of which must be positive), determine
+the maximum possible sum of any subarray (contiguous subsequence). Kadane's
+algorithm scans through the array, at each index computing the maximum (positive
+sum) subarray ending there. Either this subarray is empty (in which case its sum
+is zero) or it consists of one more element than the maximum sequence ending at
+the previous position. This can be adapted to compute the maximal submatrix sum
+in overall cubic time.
 
 */
 
@@ -17,13 +17,15 @@ previous position.
 
 /*
 
-In addition to lo and hi, two int pointers begin_idx and end_idx may be passed
-to store the computed boundaries of the computed maximal sum subarray. begin_idx
-will be inclusive while end_idx will be exclusive (i.e. (lo + begin_idx) will
-reference the first element of the max sum subarray and (lo + end_idx) will
-reference the index just past the last element of the subarray. Note that the
-following version does not allow empty subarrays to be returned, so the max
-element will simply be returned if the array consists of only negative values.
+Returns the maximal subarray sum for the range [lo, hi) where lo and hi are
+RandomAccessIterators. Optionally, two int pointers begin_idx and end_idx may be
+passed to store the boundary indices of the computed maximal sum subarray. Note
+that begin_idx is inclusive while end_idx is exclusive. In particular,
+(lo + begin_idx) references the first element of the maximal sum subarray and
+(lo + end_idx) references the index just past the last element.
+
+If the input range consists of only negative values, then a maximum value of the
+range (rather than an empty subarray) will be returned as the maximal sum.
 
 Time Complexity: O(n) on the distance between lo and hi.
 Space Complexity: O(1) auxiliary.
@@ -64,15 +66,16 @@ max_subarray_sum(It lo, It hi, int *begin_idx = 0, int *end_idx = 0) {
 
 /*
 
-In the 2-dimensional version of the problem, the largest sum of any rectangular
-submatrix must be found for a matrix n rows by m columns. Kadane's algorithm is
-applied to each interval [lcol, hcol] of columns in the matrix, for an overall
-cubic time solution. The input must be a two dimensional vector, where the outer
-vector must contain n vectors of m element each. Optionally, four int pointers
-begin_row, end_row, begin_col, and end_col may be passed. If so, then their
-dereferenced values will be set to the boundary indices of the maximal sum
-submatrix. Note that begin_row and begin_col are inclusive indices, while
-end_row and end_col are exclusive (referencing to the index just past the end).
+Returns the largest sum of any rectangular submatrix for a matrix of n rows by
+m columns. The matrix should be given as a 2-dimensional vector, where the outer
+vector must contain n vectors each of size m. Optionally, four int pointers
+begin_row, end_row, begin_col, and end_col may be passed to store the boundary
+indices of the maximal sum submatrix. Note that begin_row and begin_col are
+inclusive indices, while end_row and end_col are exclusive (referencing to the
+index just past the last element).
+
+If the input matrix consists of only negative values, then a maximum value of
+the matrix (rather than an empty submatrix) will be returned as the maximal sum.
 
 Time Complexity: O(m^2 * n) for a matrix with m columns and n rows.
 Space Complexity: O(n) auxiliary.
@@ -80,17 +83,18 @@ Space Complexity: O(n) auxiliary.
 */
 
 template<class T>
-T max_submatrix_sum(const std::vector< std::vector<T> > & mat,
+T max_submatrix_sum(const std::vector< std::vector<T> > &matrix,
                     int *begin_row = 0, int *end_row = 0,
                     int *begin_col = 0, int *end_col = 0) {
-  int n = mat.size(), m = mat[0].size();
+  int n = matrix.size(), m = matrix[0].size();
   std::vector<T> sums(n);
   T sum, max_sum = std::numeric_limits<T>::min();
   for (int lcol = 0; lcol < m; lcol++) {
     std::fill(sums.begin(), sums.end(), 0);
     for (int hcol = lcol; hcol < m; hcol++) {
-      for (int i = 0; i < n; i++)
-        sums[i] += mat[i][hcol];
+      for (int i = 0; i < n; i++) {
+        sums[i] += matrix[i][hcol];
+      }
       int begin, end;
       sum = max_subarray_sum(sums.begin(), sums.end(), &begin, &end);
       if (sum > max_sum) {
