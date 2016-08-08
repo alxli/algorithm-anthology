@@ -120,7 +120,7 @@ long long get_best(long long x) {
   hulliter it = hull.lower_bound(q);
   if (QUERY_MAX)
     --it;
-  return it->m * x + it->b;
+  return it->m*x + it->b;
 }
 
 /*** Example Usage ***/
