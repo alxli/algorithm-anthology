@@ -13,14 +13,14 @@ binary_search_first_true() takes two integers lo and hi as boundaries for the
 search space [lo, hi) (i.e. including lo, but excluding hi) and returns the
 smallest integer k in [lo, hi) for which the predicate pred(k) tests true. If
 pred(k) tests false for every k in [lo, hi), then hi is returned. This function
-must be used on a range where there exists a constant k such that the pred(x) is
+must be used on a range where there exists a constant k such that pred(x) is
 false for every x in [lo, k) and true for every x in [k, hi).
 
 binary_search_last_true() takes two integers lo and hi as boundaries for the
 search space [lo, hi) (i.e. including lo, but excluding hi) and returns the
 largest integer k in [lo, hi) for which the predicate pred(k) tests true. If
 pred(k) tests false for every k in [lo, hi), then hi is returned. This function
-must be used on a range where there exists a constant k such that the pred(x) is
+must be used on a range where there exists a constant k such that pred(x) is
 true for every x in [lo, k] and false for every x in (k, hi).
 
 Time Complexity: At most O(log n) calls will be made to pred(), where n is the
@@ -73,9 +73,9 @@ the answer depends on the number of repetitions the function performs. As each
 repetition divides the search space by half, the absolute error of the answer
 is therefore 1/(2^r) times the distance between lo and hi if r repetitions are
 performed. Although it is possible to control the error by looping while hi - lo
-is greater than an arbitrary epsilon, it is simpler and safer to let the loop
-run for a desired number of iterations until floating point arithmetic break
-down. 100 iterations is typically sufficient, reducing the search space to
+is greater than an arbitrary epsilon, it is simpler to let the loop run for a
+desired number of iterations until floating point arithmetic break down. It is
+typically sufficient to have 100 iterations, which reduces the search space to
 2^-100 ~ 10^-30 times its original size.
 
 The function can be modified to compute the "last true" point in the range by
