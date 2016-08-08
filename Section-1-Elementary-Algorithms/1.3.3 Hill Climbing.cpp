@@ -28,8 +28,7 @@ template<class BinaryFunction>
 double find_min(BinaryFunction f, double x0, double y0,
                 double *x_ans = 0, double *y_ans = 0) {
   const double PI = acos(-1.0);
-  const double STEP_MIN = 1e-9;
-  const double STEP_MAX = 1000000;
+  const double STEP_MIN = 1e-9, STEP_MAX = 1e6;
   const int NUM_DIRECTIONS = 6;
   double x = x0, y = y0, res = f(x0, y0);
   for (double step = STEP_MAX; step > STEP_MIN; ) {
