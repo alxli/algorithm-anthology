@@ -72,7 +72,7 @@ vector must contain n vectors each of size m. Optionally, four int pointers
 begin_row, end_row, begin_col, and end_col may be passed to store the boundary
 indices of the maximal sum submatrix. Note that begin_row and begin_col are
 inclusive indices, while end_row and end_col are exclusive (referencing to the
-index just past the last element).
+indices just past the last elements in their respective dimensions).
 
 If the input matrix consists of only negative values, then a maximum value of
 the matrix (rather than an empty submatrix) will be returned as the maximal sum.
