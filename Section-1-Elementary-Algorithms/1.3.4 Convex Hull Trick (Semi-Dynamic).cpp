@@ -1,33 +1,27 @@
 /*
 
-Given a set of pairs (m, b) describing lines of the form y = mx + b,
-process a set of x-coordinate queries each asking to find the minimum
-y-value of any of the given lines when evaluated at the specified x.
-The convex hull optimization technique first ignores all lines which
-never take on the maximum at any x value, then sorts the rest in order
-of descending slope. The intersection points of adjacent lines in this
-sorted list form the upper envelope of a convex hull, and line segments
-connecting these points always take on the minimum y-value. The result
-can be split up into x-intervals each mapped to the line which takes on
-the minimum in that interval. The intervals can be binary searched to
-solve each query in O(log n) time on the number of lines.
+Given a set of pairs (m, b) specifying lines of the form y = mx + b, process a
+set of x-coordinate queries each asking to find the minimum y-value when any of
+the given lines are evaluated at the specified x. For each add_line(m, b) call,
+m must be the minimum m of all lines added so far. For each get_min(x) call, x
+must be the maximum x of all queries made so far.
 
-Explanation: http://wcipeg.com/wiki/Convex_hull_trick
+The following implementation is a concise, semi-dynamic version of the convex
+hull optimization technique. It supports an an interlaced sequence of add_line()
+and get_min() calls, as long as the preconditions of descending m and ascending
+x are satisfied. As a result, it may be necessary to sort the lines/queries
+before calling the functions. In that case, the overall time complexity will be
+dominated by the sorting step.
 
-The following implementation is a concise, semi-dynamic version which
-supports an an interlaced series of add line and query operations.
-However, two key preconditions are that each call to add_line(m, b)
-must have m as the minimum slope of all lines added so far, and each
-call to get_min(x) must have x as the maximum x of all queries so far.
-As a result, pre-sorting the lines and queries may be necessary (in
-which case the running time will be that of the sorting algorithm).
+Explanation of technique: http://wcipeg.com/wiki/Convex_hull_trick
 
-Time Complexity: O(n) on the number of calls to add_line(). Since the
-number of steps taken by add_line() and get_min() are both bounded by
-the number of lines added so far, their running times are respectively
-O(1) amortized.
+Time Complexity: O(n) on the total number of calls made to add_line(), for any
+interlaced sequence of add_line() and get_min() calls. This is because the
+overall number of steps taken by add_line() and get_min() are respectively
+bounded by the number of lines added so far. As such, a single call to either
+add_line() or get_min() will have an O(1) amortized running time.
 
-Space Complexity: O(n) auxiliary on the number of calls to add_line().
+Space Complexity: O(n) auxiliary on the number of calls made to add_line().
 
 */
 
@@ -38,8 +32,8 @@ int ptr = 0;
 
 void add_line(long long m, long long b) {
   int len = M.size();
-  while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
-                    (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
+  while (len > 1 && (B[len - 2] - B[len - 1])*(m - M[len - 1]) >=
+                    (B[len - 1] - b)*(M[len - 1] - M[len - 2])) {
     len--;
   }
   M.resize(len);
@@ -49,13 +43,14 @@ void add_line(long long m, long long b) {
 }
 
 long long get_min(long long x) {
-  if (ptr >= (int)M.size())
+  if (ptr >= (int)M.size()) {
     ptr = (int)M.size() - 1;
-  while (ptr + 1 < (int)M.size() && M[ptr + 1] * x + B[ptr + 1] <=
-                                    M[ptr] * x + B[ptr]) {
+  }
+  while (ptr + 1 < (int)M.size() && M[ptr + 1]*x + B[ptr + 1] <=
+                                    M[ptr]*x + B[ptr]) {
     ptr++;
   }
-  return M[ptr] * x + B[ptr];
+  return M[ptr]*x + B[ptr];
 }
 
 /*** Example Usage ***/
