@@ -12,7 +12,7 @@ efficiency. Instead, it is meant to demonstrate how Quickselect can be concisely
 implemented in C++. Nevertheless, both functions run in expected linear time.
 
 Time Complexity (Average): O(n) on the distance between lo and hi.
-Time Complexity (Worst): O(n^2), though this almost never occurs.
+Time Complexity (Worst): O(n^2), although this almost never occurs.
 Space Complexity: O(1) auxiliary.
 
 */
