@@ -7,6 +7,7 @@ only one such answer will be found. The answer is efficiently found using binary
 search and dynamic programming. Let a[] be an array of the elements in [lo, hi)
 and suppose LIS[i] stores the length of the longest increasing subsequence for
 the first i values in a[]. Then, LIS[i] has the following optimal substructure:
+
   LIS[i] = 1 + max(LIS[j] for all j < i and a[j] < a[i])
   Otherwise if such a j does not exist, then LIS[i] = 1.
 
@@ -53,7 +54,7 @@ using namespace std;
 
 template<class It> void print_range(It lo, It hi) {
   while (lo != hi)
-    cout << *(lo++) << " ";
+    cout << *lo++ << " ";
   cout << endl;
 }
 
