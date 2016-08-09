@@ -45,10 +45,10 @@ template<class It> long long inversions(It lo, It hi) {
     }
   }
   if (a > mid) {
-    for (It k = c; k < hi; k++)
+    for (It k = c; k < hi; ++k)
       merged.push_back(*k);
   } else {
-    for (It k = a; k <= mid; k++)
+    for (It k = a; k <= mid; ++k)
       merged.push_back(*k);
   }
   for (int i = 0; i < hi - lo; i++)
