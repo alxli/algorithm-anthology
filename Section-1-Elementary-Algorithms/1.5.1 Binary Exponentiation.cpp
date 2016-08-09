@@ -1,44 +1,41 @@
 /*
 
-Given three positive, signed 64-bit integers, powmod() efficiently
-computes the power of the first two integers, modulo the third integer.
-Binary exponentiation, also known as "exponentiation by squaring,"
-decomposes the computation with the observation that the exponent is
-reduced by half whenever the base is squared. Odd-numbered exponents
-can be dealt with by subtracting one and multiplying the overall
-expression by the base of the power. This yields a logarithmic number
-of multiplications while avoiding overflow. To further prevent overflow
-in intermediate multiplications, multiplication can be done using the
-similar principle of multiplication by adding. Despite using unsigned
-64-bit integers for intermediate calculations and as parameter types,
-each argument to powmod() must not exceed 2^63 - 1, the maximum value
-of a signed 64-bit integer.
+Given three unsigned 64-bit integers x, n and m, powmod() returns x raised to
+the power of n, modulo m. In spite of the function using unsigned 64-bit
+integers for parameter types and intermediate calculations, arguments a and b
+must not exceed 2^63 - 1 (the maximum value of a signed 64-bit integer) for the
+result to be correctly computed without overflow.
 
-Time Complexity: O(log n) on the exponent of the power.
+Binary exponentiation, also known as exponentiation by squaring, decomposes the
+exponentiation into a logarithmic number of multiplications while avoiding
+overflow. To further prevent overflow in the intermediate squaring computations,
+multiplication is performed using a similar principle of repeated addition.
+
+Time Complexity: O(log n) on the exponent of the power to be evaluated.
 Space Complexity: O(1) auxiliary.
 
 */
 
 typedef unsigned long long int64;
 
-int64 mulmod(int64 a, int64 b, int64 m) {
-  int64 x = 0, y = a % m;
-  for (; b > 0; b >>= 1) {
-    if (b & 1)
-      x = (x + y) % m;
-    y = (y << 1) % m;
+int64 mulmod(int64 x, int64 n, int64 m) {
+  int64 a = 0, b = x % m;
+  for (; n > 0; n >>= 1) {
+    if (n & 1)
+      a = (a + b) % m;
+    b = (b << 1) % m;
   }
-  return x % m;
+  return a % m;
 }
 
-int64 powmod(int64 a, int64 b, int64 m) {
-  int64 x = 1, y = a;
-  for (; b > 0; b >>= 1) {
-    if (b & 1)
-      x = mulmod(x, y, m);
-    y = mulmod(y, y, m);
+int64 powmod(int64 x, int64 n, int64 m) {
+  int64 a = 1, b = x;
+  for (; n > 0; n >>= 1) {
+    if (n & 1)
+      a = mulmod(a, b, m);
+    b = mulmod(b, b, m);
   }
-  return x % m;
+  return a % m;
 }
 
 /*** Example Usage ***/
