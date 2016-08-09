@@ -55,7 +55,7 @@ using namespace std;
 
 template<class It> void print_range(It lo, It hi) {
   while (lo != hi)
-    cout << *(lo++) << " ";
+    cout << *lo++ << " ";
   cout << endl;
 }
 
