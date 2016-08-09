@@ -30,7 +30,7 @@ Space Complexity: O(1) auxiliary.
 
 */
 
-#include <utility> /* std::pair */
+#include <utility>  // std::pair
 
 template<class IntFunction>
 std::pair<int, int> find_cycle(IntFunction f, int x0) {
