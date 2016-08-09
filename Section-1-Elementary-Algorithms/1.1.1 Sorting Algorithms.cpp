@@ -96,7 +96,7 @@ void mergesort(It lo, It hi, Compare comp) {
   typedef typename std::iterator_traits<It>::value_type T;
   std::vector<T> merged;
   while (a <= mid && c < hi)
-    merged.push_back(comp(*c, *a) ? *(c++) : *(a++));
+    merged.push_back(comp(*c, *a) ? *c++ : *a++);
   if (a > mid) {
     for (It k = c; k < hi; k++)
       merged.push_back(*k);
