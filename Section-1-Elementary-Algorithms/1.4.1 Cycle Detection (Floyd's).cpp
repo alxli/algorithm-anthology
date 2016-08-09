@@ -1,33 +1,34 @@
 /*
 
-For a function f which maps a finite set S to itself and any initial
-value x[0] in S, the same value must occur twice in the sequence below:
+Given a function f mapping a set of int to itself and an initial x-coordinate in
+the set, returns a pair containing the (position, length) of a cycle in the
+sequence of numbers obtained from repeatedly composing f with itself starting
+with the initial x. Formally, since f maps a finite set S to itself, some value
+is guaranteed to eventually repeat in the sequence:
 
-  x[0], x[1] = f(x[0]), x[2] = f(x[1]), ..., x[i] = f(x[i - 1])
+  x[0], x[1]=f(x[0]), x[2]=f(x[1]), ..., x[n]=f(x[n - 1]), ...
 
-That is, there must exist numbers i, j (i < j) such that x[i] = x[j].
-Once this happens, the sequence will continue periodically by repeating
-the same sequence of values from x[i] to x[j − 1]. Cycle detection asks
-to find i and j, given the function f and initial value x[0]. This is
-also analogous to the problem of detecting a cycle in a linked list,
-which will make it degenerate.
+There must exist a pair of indices i and j (i < j) such that x[i] = x[j]. When
+this happens, the rest of the sequence will consist of the subsequence from x[i]
+to x[j − 1], inclusive, repeating indefinitely. The cycle detection problem asks
+to find such an i along with the length of the repeating subsequence. A special
+case is the problem of cycle-detection in a possibly degenerate linked list.
 
-Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare
-algorithm", is a space-efficient algorithm that moves two pointers
-through the sequence at different speeds. Each step in the algorithm
-moves the "tortoise" one step forward and the "hare" two steps forward
-in the sequence, comparing the sequence values at each step. The first
-value which is simultaneously pointed to by both pointers is the start
-of the sequence.
+Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm",
+is a space-efficient algorithm that moves two pointers through the sequence at
+different speeds. Each step in the algorithm moves the "tortoise" one step
+forward and the "hare" two steps forward in the sequence, comparing the sequence
+values at each step. The first value which is simultaneously pointed to by both
+pointers is the start of the sequence.
 
-Time Complexity: O(mu + lambda), where mu is the smallest index of the
-sequence on which a cycle starts, and lambda is the cycle's length.
+Time Complexity: O(mu + lambda), where mu is the smallest index of the sequence
+which is the beginning of a cycle, and lambda is the cycle's length.
 
 Space Complexity: O(1) auxiliary.
 
 */
 
-#include <utility> /* std::pair */
+#include <utility>  // std::pair
 
 template<class IntFunction>
 std::pair<int, int> find_cycle(IntFunction f, int x0) {
@@ -56,13 +57,10 @@ std::pair<int, int> find_cycle(IntFunction f, int x0) {
 
 #include <cassert>
 #include <set>
-#include <iostream>
 using namespace std;
 
-const int x0 = 0;
-
 int f(int x) {
-  return (123 * x * x + 4567890) % 1337;
+  return (123*x*x + 4567890) % 1337;
 }
 
 void verify(int x0, int start, int length) {
@@ -84,6 +82,7 @@ void verify(int x0, int start, int length) {
 }
 
 int main () {
+  const int x0 = 0;
   pair<int, int> res = find_cycle(f, x0);
   assert(res == make_pair(4, 2));
   verify(x0, res.first, res.second);
