@@ -10,9 +10,9 @@ is guaranteed to eventually repeat in the sequence:
 
 There must exist a pair of indices i and j (i < j) such that x[i] = x[j]. When
 this happens, the rest of the sequence will consist of the subsequence from x[i]
-to x[j − 1], inclusive, repeating indefinitely. The cycle detection problem asks
-to find such an i along with the length of the repeating subsequence. A special
-case is the problem of cycle-detection in a possibly degenerate linked list.
+to x[j − 1] repeating indefinitely. The cycle detection problem asks to find
+such an i, along with the length of the repeating subsequence. A well-known
+special case is the problem of cycle-detection in a degenerate linked list.
 
 Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm",
 is a space-efficient algorithm that moves two pointers through the sequence at
@@ -20,6 +20,8 @@ different speeds. Each step in the algorithm moves the "tortoise" one step
 forward and the "hare" two steps forward in the sequence, comparing the sequence
 values at each step. The first value which is simultaneously pointed to by both
 pointers is the start of the sequence.
+
+Explanation: https://en.wikipedia.org/wiki/Cycle_detection#Tortoise_and_hare
 
 Time Complexity: O(mu + lambda), where mu is the smallest index of the sequence
 which is the beginning of a cycle, and lambda is the cycle's length.
