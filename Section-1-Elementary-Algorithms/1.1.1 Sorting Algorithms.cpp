@@ -48,9 +48,11 @@ void quicksort(It lo, It hi, Compare comp) {
   typedef typename std::iterator_traits<It>::value_type T;
   T pivot = *(lo + (hi - lo)/2);
   It i, j;
-  for (i = lo, j = hi - 1; ; i++, j--) {
-    while (comp(*i, pivot)) i++;
-    while (comp(pivot, *j)) j--;
+  for (i = lo, j = hi - 1; ; ++i, --j) {
+    while (comp(*i, pivot))
+      ++i;
+    while (comp(pivot, *j))
+      --j;
     if (i >= j)
       break;
     std::swap(*i, *j);
@@ -98,10 +100,10 @@ void mergesort(It lo, It hi, Compare comp) {
   while (a <= mid && c < hi)
     merged.push_back(comp(*c, *a) ? *c++ : *a++);
   if (a > mid) {
-    for (It k = c; k < hi; k++)
+    for (It k = c; k < hi; ++k)
       merged.push_back(*k);
   } else {
-    for (It k = a; k <= mid; k++)
+    for (It k = a; k <= mid; ++k)
       merged.push_back(*k);
   }
   for (int i = 0; i < hi - lo; i++)
@@ -196,9 +198,9 @@ void combsort(It lo, It hi, Compare comp) {
     if (gap > 1)
       gap = (int)((double)gap / 1.3);
     swapped = false;
-    for (It i = lo; i + gap < hi; i++)
-      if (comp(*(i + gap), *i)) {
-        std::swap(*i, *(i + gap));
+    for (It it = lo; it + gap < hi; ++it)
+      if (comp(*(it + gap), *it)) {
+        std::swap(*it, *(it + gap));
         swapped = true;
       }
   }
@@ -245,12 +247,12 @@ void radix_sort(UnsignedIt lo, UnsignedIt hi) {
   T *buf = new T[hi - lo];
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
     int count[radix_base] = {0};
-    for (UnsignedIt it = lo; it != hi; it++)
+    for (UnsignedIt it = lo; it != hi; ++it)
       count[(*it >> pos) & radix_mask]++;
     T *bucket[radix_base], *curr = buf;
     for (int i = 0; i < radix_base; curr += count[i++])
       bucket[i] = curr;
-    for (UnsignedIt it = lo; it != hi; it++)
+    for (UnsignedIt it = lo; it != hi; ++it)
       *bucket[(*it >> pos) & radix_mask]++ = *it;
     std::copy(buf, buf + (hi - lo), lo);
   }
