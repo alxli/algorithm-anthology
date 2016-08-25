@@ -28,24 +28,29 @@ Space Complexity: O(n) auxiliary.
 template<class It> void compress1(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   std::vector<T> v;
-  for (It it = lo; it != hi; ++it)
+  for (It it = lo; it != hi; ++it) {
     v.push_back(*it);
+  }
   std::sort(v.begin(), v.end());
   v.resize(std::unique(v.begin(), v.end()) - v.begin());
-  for (It it = lo; it != hi; ++it)
+  for (It it = lo; it != hi; ++it) {
     *it = (int)(std::lower_bound(v.begin(), v.end(), *it) - v.begin());
+  }
 }
 
 template<class It> void compress2(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   std::map<T, int> m;
-  for (It it = lo; it != hi; ++it)
+  for (It it = lo; it != hi; ++it) {
     m[*it] = 0;
-  typename std::map<T, int>::iterator x = m.begin();
-  for (int i = 0; x != m.end(); x++)
-    x->second = i++;
-  for (It it = lo; it != hi; ++it)
+  }
+  typename std::map<T, int>::iterator mit = m.begin();
+  for (int id = 0; mit != m.end(); mit++) {
+    mit->second = id++;
+  }
+  for (It it = lo; it != hi; ++it) {
     *it = m[*it];
+  }
 }
 
 /*** Example Usage and Output:

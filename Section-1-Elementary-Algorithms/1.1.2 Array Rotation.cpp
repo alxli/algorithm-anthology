@@ -75,8 +75,9 @@ using namespace std;
 
 int main() {
   vector<int> v0, v1, v2, v3;
-  for (int i = 0; i < 10000; i++)
+  for (int i = 0; i < 10000; i++) {
     v0.push_back(i);
+  }
   v1 = v2 = v3 = v0;
   int mid = 5678;
   std::rotate(v0.begin(), v0.begin() + mid, v0.end());
@@ -89,30 +90,35 @@ int main() {
   int a[] = {2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
   vector<int> v(a, a + 10);
   cout << "before sort:  ";
-  for (int i = 0; i < (int)v.size(); i++)
+  for (int i = 0; i < (int)v.size(); i++) {
     cout << v[i] << ' ';
+  }
   cout << endl;
 
   // Insertion sort.
-  for (vector<int>::iterator i = v.begin(); i != v.end(); ++i)
+  for (vector<int>::iterator i = v.begin(); i != v.end(); ++i) {
     rotate1(std::upper_bound(v.begin(), i, *i), i, i + 1);
+  }
   cout << "after sort:   ";
-  for (int i = 0; i < (int)v.size(); i++)
+  for (int i = 0; i < (int)v.size(); i++) {
     cout << v[i] << ' ';
+  }
   cout << endl;
 
   // Simple rotation to the left.
   rotate2(v.begin(), v.begin() + 1, v.end());
   cout << "rotate left:  ";
-  for (int i = 0; i < (int)v.size(); i++)
+  for (int i = 0; i < (int)v.size(); i++) {
     cout << v[i] << ' ';
+  }
   cout << endl;
 
   // Simple rotation to the right.
   rotate3(v.rbegin(), v.rbegin() + 1, v.rend());
   cout << "rotate right: ";
-  for (int i = 0; i < (int)v.size(); i++)
+  for (int i = 0; i < (int)v.size(); i++) {
     cout << v[i] << ' ';
+  }
   cout << endl;
 
   return 0;

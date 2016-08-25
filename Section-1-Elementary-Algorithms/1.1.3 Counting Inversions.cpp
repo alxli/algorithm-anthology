@@ -74,8 +74,9 @@ Space Complexity: O(m) auxiliary.
 
 long long inversions(int n, int a[]) {
   int mx = 0;
-  for (int i = 0; i < n; i++)
+  for (int i = 0; i < n; i++) {
     mx = std::max(mx, a[i]);
+  }
   long long res = 0;
   std::vector<int> cnt(mx);
   while (mx > 0) {
