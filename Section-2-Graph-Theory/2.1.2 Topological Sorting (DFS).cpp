@@ -1,26 +1,21 @@
 /*
 
-Given a directed acyclic graph (DAG), find an ordering of the nodes
-such that for every edge from nodes u to v, u comes before v in the
-ordering. There may exist more than one possible topological ordering,
-in which case the following program will produce only one. Depth-first
-search can be used to produce all vertices in postorder, which happens
-to be the reverse of a valid topological ordering. By definition, the
-a node from a postorder traversal is always visited after all nodes
-that come earlier in the list.
+Given a directed acyclic graph (a.k.a. DAG), find one of possibly many orderings
+of the nodes such that for every edge from node u to v, u comes before v in the
+output ordering. Depth-first search can be used to traverse all vertices in
+postorder, which is a reversed topological ordering.
 
-The toposort() function takes a directed graph stored as an adjacency
-list with nodes labeled from 0 to nodes - 1 and sets the global result
-vector to a valid topological ordering. If the graph contains a cycle,
-then an error is thrown. This is also known as Tarjan's algorithm.
+toposort() takes a directed graph stored as a global adjacency list with nodes
+indexed from 0 to nodes - 1 and assigns a valid topological ordering to the
+global result vector. If the graph contains a cycle, then an error is thrown.
 
 Time Complexity: O(n) on the number of edges.
 Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
-#include <algorithm> /* std::fill(), std::reverse() */
-#include <stdexcept> /* std::runtime_error() */
+#include <algorithm>  // std::fill(), std::reverse()
+#include <stdexcept>  // std::runtime_error()
 #include <vector>
 
 const int MAXN = 100;
@@ -34,8 +29,9 @@ void dfs(int u) {
   if (done[u])
     return;
   vis[u] = true;
-  for (int j = 0; j < (int)adj[u].size(); j++)
+  for (int j = 0; j < (int)adj[u].size(); j++) {
     dfs(adj[u][j]);
+  }
   vis[u] = false;
   done[u] = true;
   res.push_back(u);
