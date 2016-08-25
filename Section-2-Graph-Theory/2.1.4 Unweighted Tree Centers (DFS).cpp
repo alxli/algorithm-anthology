@@ -1,29 +1,28 @@
 /*
 
-An unweighted tree possesses a center, centroid, and diameter. The
-following functions apply to a global, prepopulated adjacency matrix
-adj which satisfies the precondition that for every node v in adj[u],
-the node u also exists in adj[v]. All node indices must be between 0
-and the number of nodes minus 1 as given in the function arguments.
+An unweighted tree possesses a center, centroid, and diameter. The following
+functions all apply to a global, pre-populated adjacency list adj which satisfies
+the precondition that for every node v in adj[u], node u also exists in adj[v].
+Node indices in adj[] must be between 0 (inclusive) and the number of nodes
+(exclusive) as passed in the function arguments.
 
-find_centers() returns one or two tree centers. The center (or Jordan
-center) of a graph is the set of all nodes with minimum eccentricity,
-that is, the set of all nodes where the max distance to all other nodes
-is minimal.
+find_centers() returns a vector of one or two tree centers. The (Jordan) center
+of a tree is the set of all nodes with minimum eccentricity, that is, the set of
+all nodes where the maximum distance to all other nodes in the tree is minimal.
 
-find_centroid() returns a node where all of its subtrees have a size
-less than or equal to n/2, where n is the number of nodes in the tree.
+find_centroid() returns the node where all of its subtrees have a size less than
+or equal to n/2, where n is the number of nodes in the tree.
 
-diameter() returns the greatest distance between any two nodes in the
-tree, using the famous double DFS technique.
+diameter() returns the maximum distance between any two nodes in the tree, using
+a well-known double depth-first search technique.
 
-Time Complexity: O(n) on the number of nodes in the tree.
+Time Complexity: O(n) on the number of nodes in the tree for all functions.
 Space Complexity: O(n) auxiliary on the number of nodes in the tree.
 
 */
 
 #include <vector>
-#include <utility> /* std::pair */
+#include <utility>  // std::pair
 
 const int MAXN = 100;
 std::vector<int> adj[MAXN];
@@ -71,9 +70,10 @@ int find_centroid(int nodes, int u = 0, int p = -1) {
 
 std::pair<int, int> dfs(int u, int p, int depth) {
   std::pair<int, int> res = std::make_pair(depth, u);
-  for (int j = 0; j < (int)adj[u].size(); j++)
+  for (int j = 0; j < (int)adj[u].size(); j++) {
     if (adj[u][j] != p)
       res = max(res, dfs(adj[u][j], u, depth + 1));
+  }
   return res;
 }
 
