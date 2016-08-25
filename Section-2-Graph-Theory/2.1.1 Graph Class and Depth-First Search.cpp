@@ -16,14 +16,13 @@ Time Complexity:
 - O(1) amortized per call to add_edge(), or O(max(n, m)) for n calls where the
   maximum node index passed as an argument is m.
 - O(max(n, m)) per call for dfs(), has_cycle(), is_tree(), or is_dag(), where n
-  is the current number of nodes and m is the current number of edges.
+  and m are the number of nodes and edges respectively.
 - O(1) per call to all other public member functions.
 
 Space Complexity:
-- O(max(n, m)) auxiliary, where n is the current number of nodes and m is the
-  current number of edges.
+- O(max(n, m)) on the number of nodes and edges for storage of the graph.
 - O(n) auxiliary per call to dfs(), has_cycle(), is_tree(), and is_dag(), where
-  n is the current number of nodes.
+  n is the number of nodes.
 - O(1) auxiliary per call to all other public member functions.
 
 */

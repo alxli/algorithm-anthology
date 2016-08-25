@@ -16,7 +16,9 @@ all values of their input adj[] vectors to be between 0 and MAXN - 1, inclusive.
 In addition, euler_cycle_undirected() requires that for every node v which is
 found in adj[u], node u must also be found in adj[v].
 
-Time Complexity: O(n) on the number of edges for both functions.
+Time Complexity:
+- O(max(n, m)) per call to either function, where n and m are the numbers of
+  nodes and edges respectively.
 
 Space Complexity:
 - O(n) auxiliary on the number of nodes for euler_cycle_directed().

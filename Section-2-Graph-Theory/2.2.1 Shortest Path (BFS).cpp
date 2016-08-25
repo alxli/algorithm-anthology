@@ -1,16 +1,18 @@
 /*
 
-Given a starting node in an unweighted, directed graph, traverse to
-every connected node and determine the shortest distance to each.
-Optionally, output the shortest path to a specific destination node
-using the shortest-path tree precomputed into the pred[] array.
+Given a starting node in an unweighted, directed graph, traverse to every
+connected node and determine the minimum distance to each such node. Optionally,
+output the shortest path to a specific destination node using the shortest-path
+tree from the predecessor array pred[]. bfs() applies to a global, pre-populated
+adjacency list adj[] which must only consist of nodes numbered with integers
+between 0 (inclusive) and the total number of nodes (exclusive), as passed in
+the function argument.
 
-Time Complexity: bfs() is O(n) on the number of edges to compute the
-shortest distance to each node. print_path() is O(n) on the number of
-nodes in the shortest path to be printed.
+Time Complexity: O(n) per call to either function, where n is the number of
+nodes.
 
-Space Complexity: O(n) on the number of edges to store the input graph
-as an adjacency list and O(n) auxiliary on the number of nodes.
+Space Complexity: O(n) auxiliary per call to either function, where n is the
+number of nodes.
 
 */
 
@@ -20,12 +22,12 @@ as an adjacency list and O(n) auxiliary on the number of nodes.
 using namespace std;
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-int dist[MAXN], pred[MAXN];
 vector<int> adj[MAXN];
+int dist[MAXN], pred[MAXN];
 
-void bfs(int start) {
-  vector<bool> vis(MAXN, false);
-  for (int i = 0; i < MAXN; i++) {
+void bfs(int nodes, int start) {
+  vector<bool> vis(nodes, false);
+  for (int i = 0; i < nodes; i++) {
     dist[i] = INF;
     pred[i] = -1;
   }
@@ -48,12 +50,15 @@ void bfs(int start) {
 }
 
 void print_path(int dest) {
-  int i = 0, j = dest, path[MAXN];
-  while (pred[j] != -1)
-    j = path[++i] = pred[j];
+  vector<int> path;
+  for (int j = dest; pred[j] != -1; j = pred[j]) {
+    path.push_back(pred[j]);
+  }
   cout << "Take the path: ";
-  while (i > 0)
-    cout << path[i--] << "->";
+  while (!path.empty()) {
+    cout << path.back() << "->";
+    path.pop_back();
+  }
   cout << dest << ".\n";
 }
 
@@ -72,7 +77,7 @@ int main() {
   adj[1].push_back(3);
   adj[2].push_back(3);
   adj[0].push_back(3);
-  bfs(start);
+  bfs(4, start);
   cout << "The shortest distance from " << start;
   cout << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);

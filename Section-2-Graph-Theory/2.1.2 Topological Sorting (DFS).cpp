@@ -9,8 +9,8 @@ toposort() takes a directed graph stored as a global adjacency list with nodes
 indexed from 0 to nodes - 1 and assigns a valid topological ordering to the
 global result vector. If the graph contains a cycle, then an error is thrown.
 
-Time Complexity: O(n) on the number of edges in the graph.
-Space Complexity: O(n) auxiliary on the number of nodes in the graph.
+Time Complexity: O(max(n, m)) on the numbers of nodes and edges respectively.
+Space Complexity: O(max(n, m)) on the numbers of nodes and edges respectively.
 
 */
 

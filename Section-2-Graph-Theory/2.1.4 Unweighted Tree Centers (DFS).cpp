@@ -1,10 +1,10 @@
 /*
 
 An unweighted tree possesses a center, centroid, and diameter. The following
-functions all apply to a global, pre-populated adjacency list adj which satisfies
+functions apply to a global, pre-populated adjacency list adj[] which satisfies
 the precondition that for every node v in adj[u], node u also exists in adj[v].
-Node indices in adj[] must be between 0 (inclusive) and the number of nodes
-(exclusive) as passed in the function arguments.
+Nodes in adj[] must be numbered with integers between 0 (inclusive) and the
+total number of nodes (exclusive), as passed in the function arguments.
 
 find_centers() returns a vector of one or two tree centers. The (Jordan) center
 of a tree is the set of all nodes with minimum eccentricity, that is, the set of
@@ -16,8 +16,10 @@ or equal to n/2, where n is the number of nodes in the tree.
 diameter() returns the maximum distance between any two nodes in the tree, using
 a well-known double depth-first search technique.
 
-Time Complexity: O(n) on the number of nodes in the tree for all functions.
-Space Complexity: O(n) auxiliary on the number of nodes in the tree.
+Time Complexity: O(max(n, m)) per call to find_centers(), find_centroid(), and
+diameter(), where n and m are the number of nodes and edges respectively.
+
+Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
