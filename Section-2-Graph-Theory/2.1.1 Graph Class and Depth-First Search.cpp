@@ -1,132 +1,119 @@
 /*
 
-A graph can be represented as a set of objects (a.k.a. vertices, or
-nodes) and connections (a.k.a. edges) between pairs of objects. It can
-also be stored as an adjacency matrix or adjacency list, the latter of
-which is more space efficient but less time efficient for particular
-operations such as checking whether a connection exists. A fundamental
-task to perform on graphs is traversal, where all reachable vertices
-are visited and actions are performed. Given any arbitrary starting
-node, depth-first search (DFS) recursively explores each "branch" from
-the current node as deep as possible before backtracking and following
-other branches. Depth-first search has many applications, including
-detecting cycles and solving generic puzzles.
+A graph consists of a set of objects (a.k.a vertices, or nodes) and a set of
+connections (a.k.a. edges) between pairs of said objects. A graph may be stored
+as an adjacency list, which is a space efficient representation that is also
+time-efficient for traversals.
 
-The following implements a simple graph class using adjacency lists,
-along with with depth-first search and a few applications. The nodes of
-the graph are identified by integers indices numbered consecutively
-starting from 0. The total number nodes will automatically increase
-based upon the maximum argument ever passed to add_edge().
+The following class implements a simple graph using adjacency lists, along with
+depth-first search and a few applications. The constructor takes a boolean
+argument which specifies whether the instance is a directed or undirected graph.
+The nodes of the graph are identified by integers indices numbered consecutively
+starting from 0. The total number nodes will automatically increase based upon
+the maximum argument passed to add_edge() so far.
 
 Time Complexity:
-- add_edge() is O(1) amortized per call, or O(n) for n calls where each
-  node index added is at most n.
-- dfs(), has_cycle(), is_tree(), and is_dag() are each O(n) per call on
-  the number of edges added so far.
-- All other public member functions are O(1).
+- O(1) amortized per call to add_edge(), or O(max(n, m)) for n calls where the
+  maximum node index passed as an argument is m.
+- O(max(n, m)) per call for dfs(), has_cycle(), is_tree(), or is_dag(), where n
+  is the current number of nodes and m is the current number of edges.
+- O(1) per call to all other public member functions.
 
 Space Complexity:
-- O(n) to store a graph of n edges.
-- dfs(), has_cycle(), is_tree(), and is_dag() each require O(n)
-  auxiliary on the number of nodes.
-- All other public member functions require O(1) auxiliary.
+- O(max(n, m)) auxiliary, where n is the current number of nodes and m is the
+  current number of edges.
+- O(n) auxiliary per call to dfs(), has_cycle(), is_tree(), and is_dag(), where
+  n is the current number of nodes.
+- O(1) auxiliary per call to all other public member functions.
 
 */
 
-#include <algorithm> /* std::max */
-#include <cstddef>   /* size_t */
+#include <algorithm>  // std::max()
 #include <vector>
 
 class graph {
-  std::vector< std::vector<int> > adj;
+  std::vector<std::vector<int> > adj;
   bool _is_directed;
 
   template<class Action>
-  void dfs(int n, std::vector<bool> & vis, Action act);
+  void dfs(int n, std::vector<bool> &vis, Action act) const {
+    act(n);
+    vis[n] = true;
+    std::vector<int>::const_iterator it;
+    for (it = adj[n].begin(); it != adj[n].end(); ++it) {
+      if (!vis[*it])
+        dfs(*it, vis, act);
+    }
+  }
 
-  bool has_cycle(int n, int prev, std::vector<bool> & vis,
-                 std::vector<bool> & onstack);
+  bool has_cycle(int n, int prev, std::vector<bool> &vis,
+                 std::vector<bool> &onstack) const {
+    vis[n] = true;
+    onstack[n] = true;
+    std::vector<int>::const_iterator it;
+    for (it = adj[n].begin(); it != adj[n].end(); ++it) {
+      if (is_directed() && onstack[*it])
+        return true;
+      if (!is_directed() && vis[*it] && *it != prev)
+        return true;
+      if (!vis[*it] && has_cycle(*it, n, vis, onstack))
+        return true;
+    }
+    onstack[n] = false;
+    return false;
+  }
 
  public:
   graph(bool is_directed = true) {
     this->_is_directed = is_directed;
   }
 
+  int nodes() const {
+    return (int)adj.size();
+  }
+
+  std::vector<int>& operator[](int n) {
+    return adj[n];
+  }
+
+  void add_edge(int u, int v) {
+    if (u >= (int)adj.size() || v >= (int)adj.size()) {
+      adj.resize(std::max(u, v) + 1);
+    }
+    adj[u].push_back(v);
+    if (!is_directed()) {
+      adj[v].push_back(u);
+    }
+  }
+
   bool is_directed() const {
     return _is_directed;
   }
 
-  size_t nodes() const {
-    return adj.size();
+  bool has_cycle() const {
+    std::vector<bool> vis(adj.size(), false);
+    std::vector<bool> onstack(adj.size(), false);
+    for (int i = 0; i < (int)adj.size(); i++) {
+      if (!vis[i] && has_cycle(i, -1, vis, onstack))
+        return true;
+    }
+    return false;
   }
 
-  std::vector<int>& operator [] (int n) {
-    return adj[n];
+  bool is_tree() const {
+    return !is_directed() && !has_cycle();
   }
 
-  void add_edge(int u, int v);
-  template<class Action> void dfs(int start, Action act);
-  bool has_cycle();
-  bool is_tree();
-  bool is_dag();
+  bool is_dag() const {
+    return is_directed() && !has_cycle();
+  }
+
+  template<class Action>
+  void dfs(int start, Action act) const {
+    std::vector<bool> vis(adj.size(), false);
+    dfs(start, vis, act);
+  }
 };
-
-void graph::add_edge(int u, int v) {
-  if (u >= (int)adj.size() || v >= (int)adj.size())
-    adj.resize(std::max(u, v) + 1);
-  adj[u].push_back(v);
-  if (!is_directed())
-    adj[v].push_back(u);
-}
-
-template<class Action>
-void graph::dfs(int n, std::vector<bool> & vis, Action act) {
-  act(n);
-  vis[n] = true;
-  std::vector<int>::iterator it;
-  for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-    if (!vis[*it])
-      dfs(*it, vis, act);
-  }
-}
-
-template<class Action> void graph::dfs(int start, Action act) {
-  std::vector<bool> vis(nodes(), false);
-  dfs(start, vis, act);
-}
-
-bool graph::has_cycle(int n, int prev, std::vector<bool> & vis,
-                      std::vector<bool> & onstack) {
-  vis[n] = true;
-  onstack[n] = true;
-  std::vector<int>::iterator it;
-  for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-    if (is_directed() && onstack[*it])
-      return true;
-    if (!is_directed() && vis[*it] && *it != prev)
-      return true;
-    if (!vis[*it] && has_cycle(*it, n, vis, onstack))
-      return true;
-  }
-  onstack[n] = false;
-  return false;
-}
-
-bool graph::has_cycle() {
-  std::vector<bool> vis(nodes(), false), onstack(nodes(), false);
-  for (int i = 0; i < (int)adj.size(); i++)
-    if (!vis[i] && has_cycle(i, -1, vis, onstack))
-      return true;
-  return false;
-}
-
-bool graph::is_tree() {
-  return !is_directed() && !has_cycle();
-}
-
-bool graph::is_dag() {
-  return is_directed() && !has_cycle();
-}
 
 /*** Example Usage and Output:
 
@@ -160,6 +147,7 @@ int main() {
     g.dfs(0, print_node);
     cout << endl;
     assert(g[0].size() == 3);
+    assert(g.is_dag());
     assert(!g.has_cycle());
   }
   {
@@ -169,6 +157,7 @@ int main() {
     tree.add_edge(1, 3);
     tree.add_edge(1, 4);
     assert(tree.is_tree());
+    assert(!tree.is_dag());
     tree.add_edge(2, 3);
     assert(!tree.is_tree());
   }
