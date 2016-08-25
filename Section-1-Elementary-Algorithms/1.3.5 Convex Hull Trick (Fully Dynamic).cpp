@@ -1,6 +1,6 @@
 /*
 
-Given a set of pairs (m, b) specifying lines of the form y = mx + b, process a
+Given a set of pairs (m, b) specifying lines of the form y = m*x + b, process a
 set of x-coordinate queries each asking to find the minimum y-value when any of
 the given lines are evaluated at the specified x. To instead have the queries
 optimize for maximum y-value, set the QUERY_MAX flag to true.
@@ -12,9 +12,9 @@ support the ability to call add_line() and get_best() in any desired order.
 Explanation: http://wcipeg.com/wiki/Convex_hull_trick#Fully_dynamic_variant
 
 Time Complexity: O(n log n) on the total number of calls made to add_line(), for
-any interlaced sequence of add_line() and get_min() calls. Each add_line() call
-is O(log n) amortized time on the number of lines added so far. Each get_best()
-call runs in O(log n) on the number of lines added so far.
+any length n sequence of arbitrarily interlaced add_line() and get_min() calls.
+Each individual call to add_line() is O(log n) amortized and each individual
+call to get_best() is O(log n), where n is the number of lines added so far.
 
 Space Complexity: O(n) auxiliary on the number of calls made to add_line().
 
