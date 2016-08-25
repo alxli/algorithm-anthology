@@ -21,8 +21,8 @@ Space Complexity: O(n) auxiliary on the number of nodes in the tree.
 
 */
 
-#include <vector>
 #include <utility>  // std::pair
+#include <vector>
 
 const int MAXN = 100;
 std::vector<int> adj[MAXN];
