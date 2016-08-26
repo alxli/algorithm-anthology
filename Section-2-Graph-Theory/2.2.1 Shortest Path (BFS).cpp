@@ -40,7 +40,8 @@ void bfs(int nodes, int start) {
     q.pop();
     vis[u] = true;
     for (int j = 0; j < (int)adj[u].size(); j++) {
-      if (vis[v = adj[u][j]])
+      v = adj[u][j];
+      if (vis[v])
         continue;
       dist[v] = d + 1;
       pred[v] = u;
