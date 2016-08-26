@@ -1,39 +1,42 @@
 /*
 
-Given a starting node in a weighted, directed graph with possibly
-negative weights, traverse to every connected node and determine the
-shortest distance to each. Optionally, detect if there exists a
-negative-weighted cycle (in which case there is no shortest path).
-Optionally, output the shortest path to a specific destination node
-using the shortest-path tree precomputed into the pred[] array.
+Given a starting node in a weighted, directed graph with possibly negative
+weights, traverse to every connected node and determine the minimum distance to
+each. Optionally, output the shortest path to a specific destination node using
+the shortest-path tree from the predecessor array pred[]. bellman_ford() applies
+to a global, pre-populated edge list which must only consist of nodes numbered
+with integers between 0 (inclusive) and the total number of nodes (exclusive),
+as passed in the function argument.
 
-Time Complexity: bellman_ford() is O(nm) where n is the number of nodes
-and m is the number of edges. print_path() is O(n) on the number of
-nodes in the shortest path to be printed.
+This function will also detect whether the graph contains negative-weighted
+cycles, in which case there is no shortest path and an error will be thrown.
 
-Space Complexity: O(n) on the number of edges to store the input graph
-as an adjacency list and O(n) auxiliary on the number of nodes.
+Time Complexity: O(n*m) where n is the number of nodes and m is the number of
+edges.
+
+Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
-#include <iostream>
-#include <stdexcept>
-#include <vector>
-using namespace std;
 
-struct edge { int u, v, w; };
+#include <stdexcept>  // std::runtime_error()
+#include <vector>
+
+struct edge {
+  int u, v, w;  // Edge from u to v with weight w.
+};
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
+std::vector<edge> e;
 int dist[MAXN], pred[MAXN];
-vector<edge> e;
 
-void bellman_ford(int start) {
-  for (int i = 0; i < MAXN; i++) {
+void bellman_ford(int nodes, int start) {
+  for (int i = 0; i < nodes; i++) {
     dist[i] = INF;
     pred[i] = -1;
   }
   dist[start] = 0;
-  for (int i = 0; i < MAXN; i++) {
+  for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < (int)e.size(); j++) {
       if (dist[e[j].v] > dist[e[j].u] + e[j].w) {
         dist[e[j].v] = dist[e[j].u] + e[j].w;
@@ -41,20 +44,11 @@ void bellman_ford(int start) {
       }
     }
   }
-  //optional: report negative-weight cycles
-  for (int i = 0; i < (int)e.size(); i++)
+  // Optional: Report negative-weight cycles.
+  for (int i = 0; i < (int)e.size(); i++) {
     if (dist[e[i].v] > dist[e[i].u] + e[i].w)
       throw std::runtime_error("Negative-weight cycle found.");
-}
-
-void print_path(int dest) {
-  int i = 0, j = dest, path[MAXN];
-  while (pred[j] != -1)
-    j = path[++i] = pred[j];
-  cout << "Take the path: ";
-  while (i > 0)
-    cout << path[i--] << "->";
-  cout << dest << ".\n";
+  }
 }
 
 /*** Example Usage and Output:
@@ -64,12 +58,28 @@ Take the path: 0->1->2.
 
 ***/
 
+#include <iostream>
+using namespace std;
+
+void print_path(int dest) {
+  vector<int> path;
+  for (int j = dest; pred[j] != -1; j = pred[j]) {
+    path.push_back(pred[j]);
+  }
+  cout << "Take the path: ";
+  while (!path.empty()) {
+    cout << path.back() << "->";
+    path.pop_back();
+  }
+  cout << dest << ".\n";
+}
+
 int main() {
   int start = 0, dest = 2;
   e.push_back((edge){0, 1, 1});
   e.push_back((edge){1, 2, 2});
   e.push_back((edge){0, 2, 5});
-  bellman_ford(start);
+  bellman_ford(3, start);
   cout << "The shortest distance from " << start;
   cout << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);

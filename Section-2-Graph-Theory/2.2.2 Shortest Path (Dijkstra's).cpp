@@ -3,7 +3,10 @@
 Given a starting node in a weighted, directed graph with nonnegative weights
 only, traverse to every connected node and determine the minimum distance to
 each. Optionally, output the shortest path to a specific destination node using
-the shortest-path tree from the predecessor array pred[].
+the shortest-path tree from the predecessor array pred[]. dijkstra() applies to
+a global, pre-populated adjacency list adj[] which must only consist of nodes
+numbered with integers between 0 (inclusive) and the total number of nodes
+(exclusive), as passed in the function argument.
 
 Since std::priority_queue is by default a max-heap, we simulate a min-heap by
 negating node distances before pushing them and negating them again after
@@ -31,12 +34,12 @@ Space Complexity: O(n) auxiliary on the number of nodes.
 #include <vector>
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-int dist[MAXN], pred[MAXN];
 std::vector<std::pair<int, int> > adj[MAXN];
+int dist[MAXN], pred[MAXN];
 
-void dijkstra(int start) {
-  std::vector<bool> vis(MAXN, false);
-  for (int i = 0; i < MAXN; i++) {
+void dijkstra(int nodes, int start) {
+  std::vector<bool> vis(nodes, false);
+  for (int i = 0; i < nodes; i++) {
     dist[i] = INF;
     pred[i] = -1;
   }
@@ -91,7 +94,7 @@ int main() {
   adj[1].push_back(make_pair(2, 2));
   adj[1].push_back(make_pair(3, 4));
   adj[2].push_back(make_pair(3, 1));
-  dijkstra(start);
+  dijkstra(4, start);
   cout << "The shortest distance from " << start;
   cout << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);
