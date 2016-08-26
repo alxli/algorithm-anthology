@@ -1,24 +1,21 @@
 /*
 
-Given a weighted, directed graph with possibly negative weights,
-determine the shortest distance between all possible pairs of starting
-and destination nodes in the graph. Optionally, detect if there exists
-a negative-weighted cycle (in which case the shortest path does not
-exist). Optionally, output the shortest path between two nodes using
-the shortest-path tree precomputed into the next[][] array.
+Given a weighted, directed graph with possibly negative weights, determine the
+minimum distance between all pairs of start and destination nodes in the graph.
+Optionally, output the shortest path between two nodes using the shortest-path
+tree precomputed into the next[][] array. floyd_warshall() applies to a global
+adjacency matrix dist[][], which must be initialized using initialize() and
+subsequently populated with weights.
 
-Time Complexity: initialize() is O(n^2) on the number of nodes.
-floyd_warshall() is O(n^3) on the number of nodes. print_path() is O(n)
-on the number of nodes in the shortest path to be printed.
+This function will also detect whether the graph contains negative-weighted
+cycles, in which case there is no shortest path and an error will be thrown.
 
-Space Complexity: O(n^2) auxiliary on the number of nodes to store the
-graph, shortest path distances, and the shortest-path tree.
+Time Complexity: O(n^3) on the number of nodes.
+Space Complexity: O(n^2) auxiliary on the number of nodes.
 
 */
 
-#include <iostream>
-#include <stdexcept>
-using namespace std;
+#include <stdexcept>  // std::runtime_error()
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
 int dist[MAXN][MAXN], next[MAXN][MAXN];
@@ -33,18 +30,32 @@ void initialize() {
 }
 
 void floyd_warshall() {
-  for (int k = 0; k < MAXN; k++)
-    for (int i = 0; i < MAXN; i++)
-      for (int j = 0; j < MAXN; j++)
+  for (int k = 0; k < MAXN; k++) {
+    for (int i = 0; i < MAXN; i++) {
+      for (int j = 0; j < MAXN; j++) {
         if (dist[i][j] > dist[i][k] + dist[k][j]) {
           dist[i][j] = dist[i][k] + dist[k][j];
           next[i][j] = next[i][k];
         }
-  //optional: report negative-weight cycles
-  for (int i = 0; i < MAXN; i++)
+      }
+    }
+  }
+  // Optional: Report negative-weighted cycles.
+  for (int i = 0; i < MAXN; i++) {
     if (dist[i][i] < 0)
       throw std::runtime_error("Negative-weight cycle found.");
+  }
 }
+
+/*** Example Usage and Output:
+
+The shortest distance from 0 to 2 is 3.
+Take the path: 0->1->2.
+
+***/
+
+#include <iostream>
+using namespace std;
 
 void print_path(int u, int v) {
   cout << "Take the path " << u;
@@ -54,13 +65,6 @@ void print_path(int u, int v) {
   }
   cout << ".\n";
 }
-
-/*** Example Usage and Output:
-
-The shortest distance from 0 to 2 is 3.
-Take the path: 0->1->2.
-
-***/
 
 int main() {
   initialize();

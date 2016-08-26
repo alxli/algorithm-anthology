@@ -44,7 +44,7 @@ void bellman_ford(int nodes, int start) {
       }
     }
   }
-  // Optional: Report negative-weight cycles.
+  // Optional: Report negative-weighted cycles.
   for (int i = 0; i < (int)e.size(); i++) {
     if (dist[e[i].v] > dist[e[i].u] + e[i].w)
       throw std::runtime_error("Negative-weight cycle found.");
