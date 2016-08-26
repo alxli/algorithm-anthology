@@ -1,29 +1,27 @@
 /*
 
-Given a directed graph, determine the strongly connected components.
-The strongly connected components (SCC) of a graph is the set of all
-strongly (maximally) connected subgraphs. A subgraph is strongly
-connected if there is a path between each pair of nodes. Condensing the
-strongly connected components of a graph into single nodes will result
-in a directed acyclic graph.
+Given a directed graph, determine the strongly connected components. The
+strongly connected components of a graph is the set of all strongly (maximally)
+connected subgraphs. A subgraph is strongly connected if there is a path between
+each pair of nodes. Condensing the strongly connected components of a graph into
+single nodes will result in a directed acyclic graph. kosaraju() applies to a
+global, pre-populated adjacency list adj[] which must only consist of nodes
+numbered with integers between 0 (inclusive) and the total number of nodes
+(exclusive), as passed in the function argument.
 
-Time Complexity: O(n) on the number of edges.
-
-Space Complexity: O(n) on the number of edges to store the input graph
-as an adjacency list and O(n) auxiliary on the number of nodes.
+Time Complexity: O(max(n, m)) on the number of nodes and edges.
+Space Complexity: O(max(n, m)) auxiliary on the number of nodes and edges.
 
 */
 
-#include <algorithm> /* std::fill() */
-#include <iostream>
+#include <algorithm>  // std::fill()
 #include <vector>
-using namespace std;
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
+std::vector<int> adj[MAXN], stack;
 int timer, lowlink[MAXN];
-vector<bool> vis(MAXN);
-vector<int> adj[MAXN], stack;
-vector<vector<int> > scc;
+std::vector<bool> vis(MAXN);
+std::vector<std::vector<int> > scc;
 
 void dfs(int u) {
   lowlink[u] = timer++;
@@ -32,7 +30,8 @@ void dfs(int u) {
   bool is_component_root = true;
   int v;
   for (int j = 0; j < (int)adj[u].size(); j++) {
-    if (!vis[v = adj[u][j]])
+    v = adj[u][j];
+    if (!vis[v])
       dfs(v);
     if (lowlink[u] > lowlink[v]) {
       lowlink[u] = lowlink[v];
@@ -41,9 +40,10 @@ void dfs(int u) {
   }
   if (!is_component_root)
     return;
-  vector<int> component;
+  std::vector<int> component;
   do {
-    vis[v = stack.back()] = true;
+    v = stack.back();
+    vis[v] = true;
     stack.pop_back();
     lowlink[v] = INF;
     component.push_back(v);
@@ -54,8 +54,8 @@ void dfs(int u) {
 void tarjan(int nodes) {
   scc.clear();
   stack.clear();
-  fill(lowlink, lowlink + nodes, 0);
-  fill(vis.begin(), vis.end(), false);
+  std::fill(lowlink, lowlink + nodes, 0);
+  std::fill(vis.begin(), vis.end(), false);
   timer = 0;
   for (int i = 0; i < nodes; i++) {
     if (!vis[i])
@@ -70,6 +70,9 @@ Component: 7 3 2
 Component: 4 1 0
 
 ***/
+
+#include <iostream>
+using namespace std;
 
 int main() {
   adj[0].push_back(1);
