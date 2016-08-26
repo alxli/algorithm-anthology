@@ -8,32 +8,28 @@ adjacency list adj[] which must only consist of nodes numbered with integers
 between 0 (inclusive) and the total number of nodes (exclusive), as passed in
 the function argument.
 
-Time Complexity: O(n) per call to either function, where n is the number of
-nodes.
-
-Space Complexity: O(n) auxiliary per call to either function, where n is the
-number of nodes.
+Time Complexity: O(n) on the number of nodes.
+Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
-#include <iostream>
 #include <queue>
+#include <utility>
 #include <vector>
-using namespace std;
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-vector<int> adj[MAXN];
+std::vector<int> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
 void bfs(int nodes, int start) {
-  vector<bool> vis(nodes, false);
+  std::vector<bool> vis(nodes, false);
   for (int i = 0; i < nodes; i++) {
     dist[i] = INF;
     pred[i] = -1;
   }
   int u, v, d;
-  queue<pair<int, int> > q;
-  q.push(make_pair(start, 0));
+  std::queue<std::pair<int, int> > q;
+  q.push(std::make_pair(start, 0));
   while (!q.empty()) {
     u = q.front().first;
     d = q.front().second;
@@ -45,10 +41,21 @@ void bfs(int nodes, int start) {
         continue;
       dist[v] = d + 1;
       pred[v] = u;
-      q.push(make_pair(v, d + 1));
+      q.push(std::make_pair(v, d + 1));
     }
   }
 }
+
+
+/*** Example Usage and Output:
+
+The shortest distance from 0 to 3 is 2.
+Take the path: 0->1->3.
+
+***/
+
+#include <iostream>
+using namespace std;
 
 void print_path(int dest) {
   vector<int> path;
@@ -62,13 +69,6 @@ void print_path(int dest) {
   }
   cout << dest << ".\n";
 }
-
-/*** Example Usage and Output:
-
-The shortest distance from 0 to 3 is 2.
-Take the path: 0->1->3.
-
-***/
 
 int main() {
   int start = 0, dest = 3;
