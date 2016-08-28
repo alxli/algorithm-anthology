@@ -114,18 +114,18 @@ void get_block_forest(int nodes) {
 
 /*** Example Usage and Output:
 
-Cut Points: 5 1
+Cut-points: 5 1
 Bridges:
 1 2
 5 4
 3 7
 Edge-Biconnected Components:
-Component 1: 2
-Component 2: 4
-Component 3: 5 1 0
-Component 4: 7
-Component 5: 3
-Component 6: 6
+2
+4
+5 1 0
+7
+3
+6
 Adjacency List for Block Forest:
 0 => 2
 1 => 2
@@ -156,22 +156,21 @@ int main() {
   cout << "Cut-points:";
   for (int i = 0; i < (int)cutpoints.size(); i++)
     cout << " " << cutpoints[i];
-  cout << "\nBridges:\n";
+  cout << endl << "Bridges:" << endl;
   for (int i = 0; i < (int)bridges.size(); i++)
-    cout << bridges[i].first << " " << bridges[i].second << "\n";
-  cout << "Edge-Biconnected Components:\n";
+    cout << bridges[i].first << " " << bridges[i].second << endl;
+  cout << "Edge-Biconnected Components:" << endl;
   for (int i = 0; i < (int)bcc.size(); i++) {
-    cout << "Component:";
     for (int j = 0; j < (int)bcc[i].size(); j++)
-      cout << " " << bcc[i][j];
-    cout << "\n";
+      cout << bcc[i][j] << " ";
+    cout << endl;
   }
   cout << "Adjacency List for Block Forest:\n";
   for (int i = 0; i < (int)bcc.size(); i++) {
     cout << i << " =>";
     for (int j = 0; j < (int)bcc_forest[i].size(); j++)
       cout << " " << bcc_forest[i][j];
-    cout << "\n";
+    cout << endl;
   }
   return 0;
 }

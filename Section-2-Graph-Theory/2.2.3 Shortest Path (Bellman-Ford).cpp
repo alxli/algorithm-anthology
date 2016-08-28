@@ -70,7 +70,7 @@ void print_path(int dest) {
     cout << path.back() << "->";
     path.pop_back();
   }
-  cout << dest << ".\n";
+  cout << dest << "." << endl;
 }
 
 int main() {
@@ -80,7 +80,7 @@ int main() {
   e.push_back((edge){0, 2, 5});
   bellman_ford(3, start);
   cout << "The shortest distance from " << start;
-  cout << " to " << dest << " is " << dist[dest] << ".\n";
+  cout << " to " << dest << " is " << dist[dest] << "." << endl;
   print_path(dest);
   return 0;
 }

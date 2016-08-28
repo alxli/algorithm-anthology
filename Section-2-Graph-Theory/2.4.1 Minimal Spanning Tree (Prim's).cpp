@@ -1,72 +1,45 @@
 /*
 
-Description: Given an undirected graph, its minimum spanning
-tree (MST) is a tree connecting all nodes with a subset of its
-edges such that their total weight is minimized. Prim's algorithm
-greedily selects edges from a priority queue, and is similar to
-Dijkstra's algorithm, where instead of processing nodes, we
-process individual edges. If the graph is not connected, Prim's
-algorithm will produce the minimum spanning forest. The input
-graph is stored in an adjacency list.
+Given a connected, undirected, weighted graph with possibly negative weights,
+its minimum spanning tree is a subgraph which is a tree that connects all nodes
+with a subset of its edges such that their total weight is minimized. prim()
+applies to a global, pre-populated adjacency list adj[] which must only consist
+of nodes numbered with integers between 0 (inclusive) and the total number of
+nodes (exclusive), as passed in the function argument. If the input graph is not
+connected, then this implementation will find the minimum spanning forest.
 
-Note that the concept of the minimum spanning tree makes Prim's
-algorithm work with negative weights. In fact, a big positive
-constant added to all of the edge weights of the graph will not
-change the resulting spanning tree.
+Since std::priority_queue is by default a max-heap, we simulate a min-heap by
+negating node distances before pushing them and negating them again after
+popping them. To modify this implementation to find the maximum spanning tree,
+the two negation steps can be skipped to prioritize the max edges.
 
-Implementation Notes: Similar to the implementation of Dijkstra's
-algorithm in the previous section, weights are negated before they
-are added to the priority queue (and negated once again when they
-are retrieved). To find the maximum spanning tree, simply skip the
-two negation steps and the max weighted edges will be prioritized.
+Time Complexity: O(m log n) where m is the number of edges and n is the number
+of nodes.
 
-Complexity: This version uses an adjacency list and priority queue
-(internally a binary heap) and has a complexity of O((E+V) log V) =
-O(E log V). The priority queue and adjacency list improves the
-simplest O(V^2) version of the algorithm, which uses looping and
-an adjacency matrix. If the priority queue is implemented as a more
-sophisticated Fibonacci heap, the complexity becomes O(E + V log V).
-
-=~=~=~=~= Sample Input =~=~=~=~=
-7 7
-0 1 4
-1 2 6
-2 0 3
-3 4 1
-4 5 2
-5 6 3
-6 4 4
-
-=~=~=~=~= Sample Output =~=~=~=~=
-Total distance: 13
-0<->2
-0<->1
-3<->4
-4<->5
-5<->6
+Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
-#include <algorithm> /* std::fill() */
-#include <iostream>
 #include <queue>
+#include <utility>
 #include <vector>
-using namespace std;
 
 const int MAXN = 100;
-vector<pair<int, int> > adj[MAXN], mst;
+std::vector<std::pair<int, int> > adj[MAXN], mst;
 
 int prim(int nodes) {
   mst.clear();
-  vector<bool> vis(nodes);
+  std::vector<bool> vis(nodes);
   int u, v, w, total_dist = 0;
   for (int i = 0; i < nodes; i++) {
-    if (vis[i]) continue;
+    if (vis[i])
+      continue;
     vis[i] = true;
-    priority_queue<pair<int, pair<int, int> > > pq;
-    for (int j = 0; j < (int)adj[i].size(); j++)
-      pq.push(make_pair(-adj[i][j].second,
-                make_pair(i, adj[i][j].first)));
+    std::priority_queue<std::pair<int, std::pair<int, int> > > pq;
+    for (int j = 0; j < (int)adj[i].size(); j++) {
+      pq.push(std::make_pair(-adj[i][j].second,
+                             std::make_pair(i, adj[i][j].first)));
+    }
     while (!pq.empty()) {
       w = -pq.top().first;
       u = pq.top().second.first;
@@ -75,28 +48,48 @@ int prim(int nodes) {
       if (vis[u] && !vis[v]) {
         vis[v] = true;
         if (v != i) {
-          mst.push_back(make_pair(u, v));
+          mst.push_back(std::make_pair(u, v));
           total_dist += w;
         }
-        for (int j = 0; j < (int)adj[v].size(); j++)
-          pq.push(make_pair(-adj[v][j].second,
-                    make_pair(v, adj[v][j].first)));
+        for (int j = 0; j < (int)adj[v].size(); j++) {
+          pq.push(std::make_pair(-adj[v][j].second,
+                                 std::make_pair(v, adj[v][j].first)));
+        }
       }
     }
   }
   return total_dist;
 }
 
+/*** Example Usage and Output:
+
+Total distance: 13
+0 <-> 2
+0 <-> 1
+3 <-> 4
+4 <-> 5
+5 <-> 6
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void add_edge(int u, int v, int w) {
+  adj[u].push_back(make_pair(v, w));
+  adj[v].push_back(make_pair(u, w));
+}
+
 int main() {
-  int nodes, edges, u, v, w;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v >> w;
-    adj[u].push_back(make_pair(v, w));
-    adj[v].push_back(make_pair(u, w));
-  }
-  cout << "Total distance: " << prim(nodes) << "\n";
+  add_edge(0, 1, 4);
+  add_edge(1, 2, 6);
+  add_edge(2, 0, 3);
+  add_edge(3, 4, 1);
+  add_edge(4, 5, 2);
+  add_edge(5, 6, 3);
+  add_edge(6, 4, 4);
+  cout << "Total distance: " << prim(7) << endl;
   for (int i = 0; i < (int)mst.size(); i++)
-    cout << mst[i].first << "<->" << mst[i].second << "\n";
+    cout << mst[i].first << " <-> " << mst[i].second << endl;
   return 0;
 }

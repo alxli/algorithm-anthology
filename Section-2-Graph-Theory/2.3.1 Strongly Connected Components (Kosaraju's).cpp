@@ -57,9 +57,9 @@ void kosaraju(int nodes) {
 
 /*** Example Usage and Output:
 
-Component: 1 4 0
-Component: 7 3 2
-Component: 5 6
+1 4 0
+7 3 2
+5 6
 
 ***/
 
@@ -82,11 +82,11 @@ int main() {
   adj[7].push_back(3);
   adj[7].push_back(6);
   kosaraju(8);
+  cout << "Components:" << endl;
   for (int i = 0; i < (int)scc.size(); i++) {
-    cout << "Component:";
     for (int j = 0; j < (int)scc[i].size(); j++)
-      cout << " " << scc[i][j];
-    cout << "\n";
+      cout << scc[i][j] << " ";
+    cout << endl;
   }
   return 0;
 }

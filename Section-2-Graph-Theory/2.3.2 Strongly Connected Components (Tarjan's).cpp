@@ -65,9 +65,10 @@ void tarjan(int nodes) {
 
 /*** Example Usage and Output:
 
-Component: 5 6
-Component: 7 3 2
-Component: 4 1 0
+Components:
+5 6
+7 3 2
+4 1 0
 
 ***/
 
@@ -90,11 +91,11 @@ int main() {
   adj[7].push_back(3);
   adj[7].push_back(6);
   tarjan(8);
+  cout << "Components:" << endl;
   for (int i = 0; i < (int)scc.size(); i++) {
-    cout << "Component:";
     for (int j = 0; j < (int)scc[i].size(); j++)
-      cout << " " << scc[i][j];
-    cout << "\n";
+      cout << scc[i][j] << " ";
+    cout << endl;
   }
   return 0;
 }

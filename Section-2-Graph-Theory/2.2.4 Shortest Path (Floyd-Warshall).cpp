@@ -63,7 +63,7 @@ void print_path(int u, int v) {
     u = next[u][v];
     cout << "->" << u;
   }
-  cout << ".\n";
+  cout << "." << endl;
 }
 
 int main() {
@@ -75,7 +75,7 @@ int main() {
   floyd_warshall();
   cout << "The shortest distance from " << start;
   cout << " to " << dest << " is ";
-  cout << dist[start][dest] << ".\n";
+  cout << dist[start][dest] << "." << endl;
   print_path(start, dest);
   return 0;
 }

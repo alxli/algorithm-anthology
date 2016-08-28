@@ -67,7 +67,7 @@ void print_path(int dest) {
     cout << path.back() << "->";
     path.pop_back();
   }
-  cout << dest << ".\n";
+  cout << dest << "." << endl;
 }
 
 int main() {
@@ -80,7 +80,7 @@ int main() {
   adj[0].push_back(3);
   bfs(4, start);
   cout << "The shortest distance from " << start;
-  cout << " to " << dest << " is " << dist[dest] << ".\n";
+  cout << " to " << dest << " is " << dist[dest] << "." << endl;
   print_path(dest);
   return 0;
 }

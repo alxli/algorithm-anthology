@@ -1,56 +1,28 @@
 /*
 
-Description: Given an undirected graph, its minimum spanning
-tree (MST) is a tree connecting all nodes with a subset of its
-edges such that their total weight is minimized. If the graph
-is not connected, Kruskal's algorithm will produce the minimum
-spanning forest. The input graph is stored in an edge list.
+Given a connected, undirected, weighted graph with possibly negative weights,
+its minimum spanning tree is a subgraph which is a tree that connects all nodes
+with a subset of its edges such that their total weight is minimized. prim()
+applies to a global, pre-populated adjacency list adj[] which must only consist
+of nodes numbered with integers between 0 (inclusive) and the total number of
+nodes (exclusive), as passed in the function argument. If the input graph is not
+connected, then this implementation will find the minimum spanning forest.
 
-Complexity: O(E log V) on the number of edges and vertices.
+Time Complexity: O(m log n) where m is the number of edges and n is the number
+of nodes.
 
-=~=~=~=~= Sample Input =~=~=~=~=
-7 7
-0 1 4
-1 2 6
-2 0 3
-3 4 1
-4 5 2
-5 6 3
-6 4 4
-
-=~=~=~=~= Sample Output =~=~=~=~=
-Total distance: 13
-3<->4
-4<->5
-2<->0
-5<->6
-0<->1
-
-Note: If you already have a disjoint set data structure,
-then the middle section of the program can be replaced by:
-
-disjoint_set_forest<int> dsf;
-for (int i = 0; i < nodes; i++) dsf.make_set(i);
-for (int i = 0; i < E.size(); i++) {
-  a = E[i].second.first;
-  b = E[i].second.second;
-  if (!dsf.is_united(a, b)) {
-    ...
-    dsf.unite(a, b);
-  }
-}
+Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
-#include <algorithm> /* std::sort() */
-#include <iostream>
+#include <algorithm>  // std::sort()
+#include <utility>  // std::pair
 #include <vector>
-using namespace std;
 
 const int MAXN = 100;
+std::vector<std::pair<int, std::pair<int, int> > > edges;
 int root[MAXN];
-vector<pair<int, pair<int, int> > > E;
-vector<pair<int, int> > mst;
+std::vector<std::pair<int, int> > mst;
 
 int find_root(int x) {
   if (root[x] != x)
@@ -60,30 +32,50 @@ int find_root(int x) {
 
 int kruskal(int nodes) {
   mst.clear();
-  sort(E.begin(), E.end());
+  std::sort(edges.begin(), edges.end());
   int u, v, total_dist = 0;
-  for (int i = 0; i < nodes; i++) root[i] = i;
-  for (int i = 0; i < (int)E.size(); i++) {
-    u = find_root(E[i].second.first);
-    v = find_root(E[i].second.second);
+  for (int i = 0; i < nodes; i++)
+    root[i] = i;
+  for (int i = 0; i < (int)edges.size(); i++) {
+    u = find_root(edges[i].second.first);
+    v = find_root(edges[i].second.second);
     if (u != v) {
-      mst.push_back(E[i].second);
-      total_dist += E[i].first;
       root[u] = root[v];
+      mst.push_back(edges[i].second);
+      total_dist += edges[i].first;
     }
   }
   return total_dist;
 }
 
+/*** Example Usage and Output:
+
+Total distance: 13
+3 <-> 4
+4 <-> 5
+2 <-> 0
+5 <-> 6
+0 <-> 1
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void add_edge(int u, int v, int w) {
+  edges.push_back(make_pair(w, make_pair(u, v)));
+}
+
 int main() {
-  int nodes, edges, u, v, w;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v >> w;
-    E.push_back(make_pair(w, make_pair(u, v)));
-  }
-  cout << "Total distance: " << kruskal(nodes) << "\n";
+  add_edge(0, 1, 4);
+  add_edge(1, 2, 6);
+  add_edge(2, 0, 3);
+  add_edge(3, 4, 1);
+  add_edge(4, 5, 2);
+  add_edge(5, 6, 3);
+  add_edge(6, 4, 4);
+  cout << "Total distance: " << kruskal(7) << endl;
   for (int i = 0; i < (int)mst.size(); i++)
-    cout << mst[i].first << "<->" << mst[i].second << "\n";
+    cout << mst[i].first << " <-> " << mst[i].second << endl;
   return 0;
 }
