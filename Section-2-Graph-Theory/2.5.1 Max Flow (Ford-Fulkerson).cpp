@@ -11,7 +11,7 @@ as there exists certain real-valued flow inputs for which the algorithm never
 terminates. The Edmonds-Karp algorithm is an improvement using breadth-first
 search, addressing this problem.
 
-Time Complexity: O(n^2 * f), where n is the number of nodes and f is the max
+Time Complexity: O(n^2 * f) where n is the number of nodes and f is the maximum
 flow.
 
 Space Complexity: O(n) auxiliary on the number of nodes.

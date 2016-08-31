@@ -1,94 +1,83 @@
 /*
 
-Description: Given a flow network, find a flow from a single
-source node to a single sink node that is maximized. Note
-that in this implementation, the adjacency list adj[] will
-be modified by the function edmonds_karp() after it's been called.
+Given a flow network with integer capacities, find the maximum flow from a given
+source node to a given sink node. The flow of a given edge u -> v is defined as
+the minimum of its capacity and the sum of the flows of all incoming edges of u.
+edmonds_karp() applies to a global adjacency list adj[] that will be modified by
+the function call.
 
-Complexity: O(min(V*E^2, E*|F|)), where V is the number of
-vertices, E is the number of edges, and |F| is the magnitude of
-the max flow. This improves the original Ford-Fulkerson algorithm,
-which runs in O(E*|F|). As the Edmonds-Karp algorithm is also
-bounded by O(E*|F|), it is guaranteed to be at least as fast as
-Ford-Fulkerson. For an even faster algorithm, see Dinic's
-algorithm in the next section, which runs in O(V^2*E).
+The Edmonds-Karp algorithm will also support real-valued flow capacities. As
+such, this implementation will work as intended upon changing the appropriate
+variables to doubles.
 
-Real-valued capacities:
-Although the Ford-Fulkerson algorithm is only optimal on graphs
-with integer capacities, the Edmonds-Karp algorithm also works
-correctly on real-valued capacities.
+Time Complexity: O(min(n*m^2, m*f)) where n is the number of nodes, m is the
+number of edges, and f is the maximum flow.
 
-=~=~=~=~= Sample Input =~=~=~=~=
-6 8
-0 1 3
-0 2 3
-1 2 2
-1 3 3
-2 4 2
-3 4 1
-3 5 2
-4 5 3
-0 5
-
-=~=~=~=~= Sample Output =~=~=~=~=
-5
+Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
-#include <algorithm> /* std::fill(), std::min() */
-#include <iostream>
+#include <algorithm>  // std::min()
+#include <queue>
 #include <vector>
-using namespace std;
 
-struct edge { int s, t, rev, cap, f; };
+struct edge {
+  int u, v, rev, cap, f;
+};
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-vector<edge> adj[MAXN];
+std::vector<edge> adj[MAXN];
 
-void add_edge(int s, int t, int cap) {
-  adj[s].push_back((edge){s, t, (int)adj[t].size(), cap, 0});
-  adj[t].push_back((edge){t, s, (int)adj[s].size() - 1, 0, 0});
+void add_edge(int u, int v, int cap) {
+  adj[u].push_back((edge){u, v, (int)adj[v].size(), cap, 0});
+  adj[v].push_back((edge){v, u, (int)adj[u].size() - 1, 0, 0});
 }
 
 int edmonds_karp(int nodes, int source, int sink) {
-  static int q[MAXN];
   int max_flow = 0;
   for (;;) {
-    int qt = 0;
-    q[qt++] = source;
-    edge * pred[nodes];
-    fill(pred, pred + nodes, (edge*)0);
-    for (int qh = 0; qh < qt && !pred[sink]; qh++) {
-      int u = q[qh];
+    std::vector<edge*> pred(nodes, (edge*)0);
+    std::queue<int> q;
+    q.push(source);
+    while (!q.empty() && !pred[sink]) {
+      int u = q.front();
+      q.pop();
       for (int j = 0; j < (int)adj[u].size(); j++) {
-        edge * e = &adj[u][j];
-        if (!pred[e->t] && e->cap > e->f) {
-          pred[e->t] = e;
-          q[qt++] = e->t;
+        edge &e = adj[u][j];
+        if (!pred[e.v] && e.cap > e.f) {
+          pred[e.v] = &e;
+          q.push(e.v);
         }
       }
     }
-    if (!pred[sink]) break;
+    if (!pred[sink])
+      break;
     int df = INF;
-    for (int u = sink; u != source; u = pred[u]->s)
-      df = min(df, pred[u]->cap - pred[u]->f);
-    for (int u = sink; u != source; u = pred[u]->s) {
+    for (int u = sink; u != source; u = pred[u]->u) {
+      df = std::min(df, pred[u]->cap - pred[u]->f);
+    }
+    for (int u = sink; u != source; u = pred[u]->u) {
       pred[u]->f += df;
-      adj[pred[u]->t][pred[u]->rev].f -= df;
+      adj[pred[u]->v][pred[u]->rev].f -= df;
     }
     max_flow += df;
   }
   return max_flow;
 }
 
+/*** Example Usage ***/
+
+#include <cassert>
+
 int main() {
-  int nodes, edges, u, v, capacity, source, sink;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v >> capacity;
-    add_edge(u, v, capacity);
-  }
-  cin >> source >> sink;
-  cout << edmonds_karp(nodes, source, sink) << "\n";
+  add_edge(0, 1, 3);
+  add_edge(0, 2, 3);
+  add_edge(1, 2, 2);
+  add_edge(1, 3, 3);
+  add_edge(2, 4, 2);
+  add_edge(3, 4, 1);
+  add_edge(3, 5, 2);
+  add_edge(4, 5, 3);
+  assert(edmonds_karp(6, 0, 5) == 5);
   return 0;
 }
