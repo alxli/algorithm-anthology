@@ -7,13 +7,12 @@ preserved. That is, if a[] is an array containing the original values and b[] is
 an array containing the compressed values, then every pair i, j (0 <= i, j <= n)
 satisfies a[i] < a[j] if and only if b[i] < b[j].
 
-Both implementations below are equivalent, taking two RandomAccessIterators
-lo and hi as the range [lo, hi) to be compressed. Version 1 performs the
-compression by sorting the array, removing duplicates, and binary searching
-for the position of each original value. Version 2 achieves the same result
-by inserting all values in a balanced binary search tree (std::map) which
-automatically removes duplicate values and supports efficient lookups of the
-compressed values.
+Both implementations below are equivalent, taking RandomAccessIterators lo and
+hi as the range [lo, hi) to be compressed. Version 1 performs the compression by
+sorting the array, removing duplicates, and binary searching for the position of
+each original value. Version 2 achieves the same result by inserting all values
+in a balanced binary search tree (std::map) which automatically removes
+duplicate values and supports efficient lookups of the compressed values.
 
 Time Complexity: O(n log n) on the distance between lo and hi.
 Space Complexity: O(n) auxiliary.
