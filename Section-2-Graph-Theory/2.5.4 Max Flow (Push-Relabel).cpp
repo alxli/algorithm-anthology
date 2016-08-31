@@ -1,45 +1,30 @@
 /*
 
-Description: Given a flow network, find a flow from a single
-source node to a single sink node that is maximized. The push-
-relabel algorithm is considered one of the most efficient
-maximum flow algorithms. However, unlike the Ford-Fulkerson or
-Edmonds-Karp algorithms, it cannot take advantage of the fact
-if max flow itself has a small magnitude.
+Given a flow network with integer capacities, find the maximum flow from a given
+source node to a given sink node. The flow of a given edge u -> v is defined as
+the minimum of its capacity and the sum of the flows of all incoming edges of u.
+push_relabel() applies to a global adjacency matrix cap[][] and returns the
+maximum flow. Although the push relabel algorithm is considered one of the most
+efficient maximum flow algorithms, it cannot take advantage of the maximum flow
+being less than n^3 (in which case the Ford-Fulkerson or Edmonds-Karp algorithms
+may be more efficient).
 
-Complexity: O(V^3) on the number of vertices.
-
-=~=~=~=~= Sample Input =~=~=~=~=
-6 8
-0 1 3
-0 2 3
-1 2 2
-1 3 3
-2 4 2
-3 4 1
-3 5 2
-4 5 3
-0 5
-
-=~=~=~=~= Sample Output =~=~=~=~=
-5
+Time Complexity: O(n^3) on the number of nodes.
+Space Complexity: O(n^2) auxiliary on the number of nodes.
 
 */
 
-#include <algorithm> /* std::fill(), std::min() */
-#include <iostream>
-using namespace std;
+#include <algorithm>  // std::fill(), std::min()
+#include <vector>
 
 const int MAXN = 100, INF = 0x3F3F3F3F;
 int cap[MAXN][MAXN], f[MAXN][MAXN];
 
 int push_relabel(int nodes, int source, int sink) {
-  int e[nodes], h[nodes], maxh[nodes];
-  fill(e, e + nodes, 0);
-  fill(h, h + nodes, 0);
-  fill(maxh, maxh + nodes, 0);
-  for (int i = 0; i < nodes; i++)
-    fill(f[i], f[i] + nodes, 0);
+  std::vector<int> e(nodes, 0), h(nodes, 0), maxh(nodes, 0);
+  for (int i = 0; i < nodes; i++) {
+    std::fill(f[i], f[i] + nodes, 0);
+  }
   h[source] = nodes - 1;
   for (int i = 0; i < nodes; i++) {
     f[source][i] = cap[source][i];
@@ -49,53 +34,64 @@ int push_relabel(int nodes, int source, int sink) {
   int sz = 0;
   for (;;) {
     if (sz == 0) {
-      for (int i = 0; i < nodes; i++)
+      for (int i = 0; i < nodes; i++) {
         if (i != source && i != sink && e[i] > 0) {
-          if (sz != 0 && h[i] > h[maxh[0]]) sz = 0;
+          if (sz != 0 && h[i] > h[maxh[0]])
+            sz = 0;
           maxh[sz++] = i;
         }
+      }
     }
-    if (sz == 0) break;
+    if (sz == 0)
+      break;
     while (sz != 0) {
       int i = maxh[sz - 1];
       bool pushed = false;
       for (int j = 0; j < nodes && e[i] != 0; j++) {
         if (h[i] == h[j] + 1 && cap[i][j] - f[i][j] > 0) {
-          int df = min(cap[i][j] - f[i][j], e[i]);
+          int df = std::min(cap[i][j] - f[i][j], e[i]);
           f[i][j] += df;
           f[j][i] -= df;
           e[i] -= df;
           e[j] += df;
-          if (e[i] == 0) sz--;
+          if (e[i] == 0)
+            sz--;
           pushed = true;
         }
       }
-      if (!pushed) {
-        h[i] = INF;
-        for (int j = 0; j < nodes; j++)
-          if (h[i] > h[j] + 1 && cap[i][j] - f[i][j] > 0)
-            h[i] = h[j] + 1;
-        if (h[i] > h[maxh[0]]) {
-          sz = 0;
-          break;
-        }
+      if (pushed)
+        continue;
+      h[i] = INF;
+      for (int j = 0; j < nodes; j++) {
+        if (h[i] > h[j] + 1 && cap[i][j] - f[i][j] > 0)
+          h[i] = h[j] + 1;
+      }
+      if (h[i] > h[maxh[0]]) {
+        sz = 0;
+        break;
       }
     }
   }
   int max_flow = 0;
-  for (int i = 0; i < nodes; i++)
+  for (int i = 0; i < nodes; i++) {
     max_flow += f[source][i];
+  }
   return max_flow;
 }
 
+/*** Example Usage ***/
+
+#include <cassert>
+
 int main() {
-  int nodes, edges, u, v, capacity, source, sink;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v >> capacity;
-    cap[u][v] = capacity;
-  }
-  cin >> source >> sink;
-  cout << push_relabel(nodes, source, sink) << "\n";
+  cap[0][1] = 3;
+  cap[0][2] = 3;
+  cap[1][2] = 2;
+  cap[1][3] = 3;
+  cap[2][4] = 2;
+  cap[3][4] = 1;
+  cap[3][5] = 2;
+  cap[4][5] = 3;
+  assert(push_relabel(6, 0, 5) == 5);
   return 0;
 }

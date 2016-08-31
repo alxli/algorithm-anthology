@@ -1,64 +1,52 @@
 /*
 
-Description: Given a flow network, find a flow from a single
-source node to a single sink node that is maximized. Note
-that in this implementation, the adjacency list adj[] will
-be modified by the function dinic() after it's been called.
+Given a flow network with integer capacities, find the maximum flow from a given
+source node to a given sink node. The flow of a given edge u -> v is defined as
+the minimum of its capacity and the sum of the flows of all incoming edges of u.
+dinic() applies to a global adjacency list adj[] that will be modified by the
+function call.
 
-Complexity: O(V^2*E) on the number of vertices and edges.
+Dinic's algorithm will also support real-valued flow capacities. As such, this
+implementation will work as intended upon changing the appropriate variables to
+doubles.
 
-Comparison with Edmonds-Karp Algorithm:
-Dinic's is similar to the Edmonds-Karp algorithm in that it
-uses the shortest augmenting path. The introduction of the
-concepts of the level graph and blocking flow enable Dinic's
-algorithm to achieve its better performance. Hence, Dinic's
-algorithm is also called Dinic's blocking flow algorithm.
+Time Complexity: O(n^2 * m) where n is the number of nodes and m is the number
+of edges.
 
-=~=~=~=~= Sample Input =~=~=~=~=
-6 8
-0 1 3
-0 2 3
-1 2 2
-1 3 3
-2 4 2
-3 4 1
-3 5 2
-4 5 3
-0 5
-
-=~=~=~=~= Sample Output =~=~=~=~=
-5
+Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
-#include <algorithm> /* std::fill(), std::min() */
-#include <iostream>
+#include <algorithm>  // std::fill(), std::min()
+#include <queue>
 #include <vector>
-using namespace std;
 
-struct edge { int to, rev, cap, f; };
+struct edge {
+  int v, rev, cap, f;
+};
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
+std::vector<edge> adj[MAXN];
 int dist[MAXN], ptr[MAXN];
-vector<edge> adj[MAXN];
 
-void add_edge(int s, int t, int cap) {
-  adj[s].push_back((edge){t, (int)adj[t].size(), cap, 0});
-  adj[t].push_back((edge){s, (int)adj[s].size() - 1, 0, 0});
+void add_edge(int u, int v, int cap) {
+  adj[u].push_back((edge){v, (int)adj[v].size(), cap, 0});
+  adj[v].push_back((edge){u, (int)adj[u].size() - 1, 0, 0});
 }
 
 bool dinic_bfs(int nodes, int source, int sink) {
-  fill(dist, dist + nodes, -1);
+  std::fill(dist, dist + nodes, -1);
   dist[source] = 0;
-  int q[nodes], qh = 0, qt = 0;
-  q[qt++] = source;
-  while (qh < qt) {
-    int u = q[qh++];
+  std::queue<int> q;
+  q.push(source);
+  while (!q.empty()) {
+    int u = q.front();
+    q.pop();
     for (int j = 0; j < (int)adj[u].size(); j++) {
-      edge & e = adj[u][j];
-      if (dist[e.to] < 0 && e.f < e.cap) {
-        dist[e.to] = dist[u] + 1;
-        q[qt++] = e.to;
+      edge &e = adj[u][j];
+      if (dist[e.v] < 0 && e.f < e.cap) {
+        dist[e.v] = dist[u] + 1;
+        q.push(e.v);
       }
     }
   }
@@ -66,15 +54,16 @@ bool dinic_bfs(int nodes, int source, int sink) {
 }
 
 int dinic_dfs(int u, int f, int sink) {
-  if (u == sink) return f;
+  if (u == sink)
+    return f;
   for (; ptr[u] < (int)adj[u].size(); ptr[u]++) {
     edge &e = adj[u][ptr[u]];
-    if (dist[e.to] == dist[u] + 1 && e.f < e.cap) {
-      int df = dinic_dfs(e.to, min(f, e.cap - e.f), sink);
-      if (df > 0) {
-        e.f += df;
-        adj[e.to][e.rev].f -= df;
-        return df;
+    if (dist[e.v] == dist[u] + 1 && e.f < e.cap) {
+      int flow = dinic_dfs(e.v, std::min(f, e.cap - e.f), sink);
+      if (flow > 0) {
+        e.f += flow;
+        adj[e.v][e.rev].f -= flow;
+        return flow;
       }
     }
   }
@@ -82,23 +71,29 @@ int dinic_dfs(int u, int f, int sink) {
 }
 
 int dinic(int nodes, int source, int sink) {
-  int max_flow = 0, delta;
+  int flow, max_flow = 0;
   while (dinic_bfs(nodes, source, sink)) {
-    fill(ptr, ptr + nodes, 0);
-    while ((delta = dinic_dfs(source, INF, sink)) != 0)
-      max_flow += delta;
+    std::fill(ptr, ptr + nodes, 0);
+    while ((flow = dinic_dfs(source, INF, sink)) != 0) {
+      max_flow += flow;
+    }
   }
   return max_flow;
 }
 
+/*** Example Usage ***/
+
+#include <cassert>
+
 int main() {
-  int nodes, edges, u, v, capacity, source, sink;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v >> capacity;
-    add_edge(u, v, capacity);
-  }
-  cin >> source >> sink;
-  cout << dinic(nodes, source, sink) << "\n";
+  add_edge(0, 1, 3);
+  add_edge(0, 2, 3);
+  add_edge(1, 2, 2);
+  add_edge(1, 3, 3);
+  add_edge(2, 4, 2);
+  add_edge(3, 4, 1);
+  add_edge(3, 5, 2);
+  add_edge(4, 5, 3);
+  assert(dinic(6, 0, 5) == 5);
   return 0;
 }

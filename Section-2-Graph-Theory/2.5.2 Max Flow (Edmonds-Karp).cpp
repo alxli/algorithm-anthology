@@ -52,15 +52,15 @@ int edmonds_karp(int nodes, int source, int sink) {
     }
     if (!pred[sink])
       break;
-    int df = INF;
+    int flow = INF;
     for (int u = sink; u != source; u = pred[u]->u) {
-      df = std::min(df, pred[u]->cap - pred[u]->f);
+      flow = std::min(flow, pred[u]->cap - pred[u]->f);
     }
     for (int u = sink; u != source; u = pred[u]->u) {
-      pred[u]->f += df;
-      adj[pred[u]->v][pred[u]->rev].f -= df;
+      pred[u]->f += flow;
+      adj[pred[u]->v][pred[u]->rev].f -= flow;
     }
-    max_flow += df;
+    max_flow += flow;
   }
   return max_flow;
 }
