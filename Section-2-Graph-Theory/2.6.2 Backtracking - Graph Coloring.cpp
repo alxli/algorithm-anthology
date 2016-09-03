@@ -1,58 +1,45 @@
 /*
 
-Description: Given an undirected graph, assign colors to each
-of the vertices such that no pair of adjacent vertices have the
-same color. Furthermore, do so using the minimum # of colors.
+Given an undirected graph, assign a color to every node such that no pair of
+adjacent nodes have the same color, and that the total number of colors used is
+minimized. color_graph() applies to a global, pre-populated adjacency matrix
+adj[] which must satisfy the condition that adj[u][v] is true if and only if
+adj[v][u] is true, for all pairs of nodes u and v respectively between 0
+(inclusive) and the total number of nodes (exclusive) as passed in the function
+argument.
 
-Complexity: Exponential on the number of vertices. The exact
-running time is difficult to calculate due to several pruning
-optimizations used here.
-
-=~=~=~=~= Sample Input =~=~=~=~=
-5 7
-0 1
-0 4
-1 3
-1 4
-2 3
-2 4
-3 4
-
-=~=~=~=~= Sample Output =~=~=~=~=
-Colored using 3 color(s). The colorings are:
-Color 1: 0 3
-Color 2: 1 2
-Color 3: 4
+Time Complexity: Exponential on the number of nodes.
+Space Complexity: O(n) on the number of nodes.
 
 */
 
-#include <algorithm> /* std::fill(), std::max() */
-#include <iostream>
+#include <algorithm>  // std::fill(), std::max()
 #include <vector>
-using namespace std;
 
 const int MAXN = 30;
-int cols[MAXN], adj[MAXN][MAXN];
-int id[MAXN + 1], deg[MAXN + 1];
-int min_cols, best_cols[MAXN];
+int adj[MAXN][MAXN], min_colors, color[MAXN];
+int curr[MAXN], id[MAXN + 1], deg[MAXN + 1];
 
-void dfs(int from, int to, int cur, int used_cols) {
-  if (used_cols >= min_cols) return;
-  if (cur == to) {
-    for (int i = from; i < to; i++)
-      best_cols[id[i]] = cols[i];
-    min_cols = used_cols;
+void rec(int lo, int hi, int n, int used_cols) {
+  if (used_cols >= min_colors)
+    return;
+  if (n == hi) {
+    for (int i = lo; i < hi; i++)
+      color[id[i]] = curr[i];
+    min_colors = used_cols;
     return;
   }
-  vector<bool> used(used_cols + 1);
-  for (int i = 0; i < cur; i++)
-    if (adj[id[cur]][id[i]]) used[cols[i]] = true;
+  std::vector<bool> used(used_cols + 1);
+  for (int i = 0; i < n; i++) {
+    if (adj[id[n]][id[i]])
+      used[curr[i]] = true;
+  }
   for (int i = 0; i <= used_cols; i++) {
     if (!used[i]) {
-      int tmp = cols[cur];
-      cols[cur] = i;
-      dfs(from, to, cur + 1, max(used_cols, i + 1));
-      cols[cur] = tmp;
+      int tmp = curr[n];
+      curr[n] = i;
+      rec(lo, hi, n + 1, std::max(used_cols, i + 1));
+      curr[n] = tmp;
     }
   }
 }
@@ -62,41 +49,62 @@ int color_graph(int nodes) {
     id[i] = i;
     deg[i] = 0;
   }
-  int res = 1;
-  for (int from = 0, to = 1; to <= nodes; to++) {
-    int best = to;
-    for (int i = to; i < nodes; i++) {
-      if (adj[id[to - 1]][id[i]]) deg[id[i]]++;
-      if (deg[id[best]] < deg[id[i]]) best = i;
+  int res = 1, lo = 0;
+  for (int hi = 1; hi <= nodes; hi++) {
+    int best = hi;
+    for (int i = hi; i < nodes; i++) {
+      if (adj[id[hi - 1]][id[i]])
+        deg[id[i]]++;
+      if (deg[id[best]] < deg[id[i]])
+        best = i;
     }
-    int tmp = id[to];
-    id[to] = id[best];
-    id[best] = tmp;
-    if (deg[id[to]] == 0) {
-      min_cols = nodes + 1;
-      fill(cols, cols + nodes, 0);
-      dfs(from, to, from, 0);
-      from = to;
-      res = max(res, min_cols);
+    std::swap(id[hi], id[best]);
+    if (deg[id[hi]] == 0) {
+      min_colors = nodes + 1;
+      std::fill(curr, curr + nodes, 0);
+      rec(lo, hi, lo, 0);
+      lo = hi;
+      res = std::max(res, min_colors);
     }
   }
   return res;
 }
 
+/*** Example Usage and Output:
+
+Colored using 3 color(s). The colorings are:
+Color 1: 0 3
+Color 2: 1 2
+Color 3: 4
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void add_edge(int u, int v) {
+  adj[u][v] = adj[v][u] = true;
+}
+
 int main() {
-  int nodes, edges, u, v;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v;
-    adj[u][v] = adj[v][u] = true;
-  }
-  cout << "Colored using " << color_graph(nodes);
-  cout << " color(s). The colorings are:\n";
-  for (int i = 0; i < min_cols; i++) {
+  add_edge(0, 1);
+  add_edge(0, 4);
+  add_edge(1, 3);
+  add_edge(1, 4);
+  add_edge(2, 3);
+  add_edge(2, 4);
+  add_edge(3, 4);
+  int colors = color_graph(5);
+  cout << "Colored using " << colors;
+  cout << " color(s). The colorings are:" << endl;
+  for (int i = 0; i < colors; i++) {
     cout << "Color " << i + 1 << ":";
-    for (int j = 0; j < nodes; j++)
-      if (best_cols[j] == i) cout << " " << j;
-    cout << "\n";
+    for (int j = 0; j < 5; j++) {
+      if (color[j] == i)
+        cout << " " << j;
+    }
+    cout << endl;
   }
   return 0;
 }

@@ -6,7 +6,7 @@ pairs of nodes in the subset are connected by an edge. bron_kerbosh_weighted()
 additionally takes a global array w[] specifying a weight value for each node,
 returning the clique in the graph that has maximum total weight. Both functions
 apply to a global, pre-populated adjacency matrix adj[] which must satisfy the
-condition that adj[u][v] is true if and only if adj[v][u] is true, for any pair
+condition that adj[u][v] is true if and only if adj[v][u] is true, for all pairs
 of nodes u and v respectively between 0 (inclusive) and the total number of
 nodes (exclusive) as passed in the function argument.
 
