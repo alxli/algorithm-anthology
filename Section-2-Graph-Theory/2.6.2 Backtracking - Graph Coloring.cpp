@@ -96,8 +96,7 @@ int main() {
   add_edge(2, 4);
   add_edge(3, 4);
   int colors = color_graph(5);
-  cout << "Colored using " << colors;
-  cout << " color(s). The colorings are:" << endl;
+  cout << "Colored using " << colors << " color(s). The colorings are:" << endl;
   for (int i = 0; i < colors; i++) {
     cout << "Color " << i + 1 << ":";
     for (int j = 0; j < 5; j++) {
