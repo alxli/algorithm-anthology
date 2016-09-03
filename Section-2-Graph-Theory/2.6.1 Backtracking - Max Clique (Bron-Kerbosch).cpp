@@ -1,60 +1,52 @@
 /*
 
-Description: Given an undirected graph, determine a subset of
-the graph's vertices such that every pair of vertices in the
-subset are connected by an edge, and that the subset is as
-large as possible. For the weighted version, each vertex is
-assigned a weight and the objective is to find the clique in
-the graph that has maximum total weight.
+Given an undirected graph, bron_kerbosh() find a clique in the graph with the
+largest number of nodes. A clique is a subset of a graph's nodes such that all
+pairs of nodes in the subset are connected by an edge. bron_kerbosh_weighted()
+additionally takes a global array w[] specifying a weight value for each node,
+returning the clique in the graph that has maximum total weight. Both functions
+apply to a global, pre-populated adjacency matrix adj[] which must satisfy the
+condition that adj[u][v] is true if and only if adj[v][u] is true, for any pair
+of nodes u and v respectively between 0 (inclusive) and the total number of
+nodes (exclusive) as passed in the function argument.
 
-Complexity: O(3^(V/3)) where V is the number of vertices.
-
-=~=~=~=~= Sample Input =~=~=~=~=
-5 8
-0 1
-0 2
-0 3
-1 2
-1 3
-2 3
-3 4
-4 2
-10 20 30 40 50
-
-=~=~=~=~= Sample Output =~=~=~=~=
-Max unweighted clique: 4
-Max weighted clique: 120
+Time Complexity: O(3^(n/3)) on the number of nodes.
+Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
-#include <algorithm> /* std::fill(), std::max() */
+#include <algorithm>  // std::max()
 #include <bitset>
-#include <iostream>
 #include <vector>
-using namespace std;
 
 const int MAXN = 35;
-typedef bitset<MAXN> bits;
-typedef unsigned long long ull;
+typedef std::bitset<MAXN> bits;
+typedef unsigned long long uint64;
 
-int w[MAXN];
 bool adj[MAXN][MAXN];
+int w[MAXN];
 
-int rec(int nodes, bits & curr, bits & pool, bits & excl) {
-  if (pool.none() && excl.none()) return curr.count();
+int rec(int nodes, bits &curr, bits &pool, bits &excl) {
+  if (pool.none() && excl.none())
+    return curr.count();
   int ans = 0, u = 0;
-  for (int v = 0; v < nodes; v++)
-    if (pool[v] || excl[v]) u = v;
   for (int v = 0; v < nodes; v++) {
-    if (!pool[v] || adj[u][v]) continue;
+    if (pool[v] || excl[v])
+      u = v;
+  }
+  for (int v = 0; v < nodes; v++) {
+    if (!pool[v] || adj[u][v])
+      continue;
     bits ncurr, npool, nexcl;
-    for (int i = 0; i < nodes; i++) ncurr[i] = curr[i];
+    for (int i = 0; i < nodes; i++) {
+      ncurr[i] = curr[i];
+    }
     ncurr[v] = true;
     for (int j = 0; j < nodes; j++) {
       npool[j] = pool[j] && adj[v][j];
       nexcl[j] = excl[j] && adj[v][j];
     }
-    ans = max(ans, rec(nodes, ncurr, npool, nexcl));
+    ans = std::max(ans, rec(nodes, ncurr, npool, nexcl));
     pool[v] = false;
     excl[v] = true;
   }
@@ -67,24 +59,26 @@ int bron_kerbosch(int nodes) {
   return rec(nodes, curr, pool, excl);
 }
 
-//This is a fast implementation using bitmasks.
-//Precondition: the number of nodes must be less than 64.
-int bron_kerbosch_weighted(int nodes, ull g[], ull curr, ull pool, ull excl) {
+// This is a fast implementation using bitmasks.
+// Precondition: The number of nodes (i.e. g.size()) is less than 64.
+int bron_kerbosch_weighted(const std::vector<uint64> &g,
+                           uint64 curr, uint64 pool, uint64 excl) {
   if (pool == 0 && excl == 0) {
     int res = 0, u = __builtin_ctzll(curr);
-    while (u < nodes) {
+    while (u < (int)g.size()) {
       res += w[u];
       u += __builtin_ctzll(curr >> (u + 1)) + 1;
     }
     return res;
   }
-  if (pool == 0) return -1;
+  if (pool == 0)
+    return -1;
   int res = -1, pivot = __builtin_ctzll(pool | excl);
-  ull z = pool & ~g[pivot];
+  uint64 z = pool & ~g[pivot];
   int u = __builtin_ctzll(z);
-  while (u < nodes) {
-    res = max(res, bron_kerbosch_weighted(nodes, g, curr | (1LL << u),
-                                          pool & g[u], excl & g[u]));
+  while (u < (int)g.size()) {
+    res = std::max(res, bron_kerbosch_weighted(g, curr | (1LL << u),
+                                               pool & g[u], excl & g[u]));
     pool ^= 1LL << u;
     excl |= 1LL << u;
     u += __builtin_ctzll(z >> (u + 1)) + 1;
@@ -93,26 +87,39 @@ int bron_kerbosch_weighted(int nodes, ull g[], ull curr, ull pool, ull excl) {
 }
 
 int bron_kerbosch_weighted(int nodes) {
-  ull g[nodes];
+  std::vector<uint64> g(nodes, 0);
   for (int i = 0; i < nodes; i++) {
-    g[i] = 0;
-    for (int j = 0; j < nodes; j++)
-      if (adj[i][j]) g[i] |= 1LL << j;
+    for (int j = 0; j < nodes; j++) {
+      if (adj[i][j])
+        g[i] |= 1LL << j;
+    }
   }
-  return bron_kerbosch_weighted(nodes, g, 0, (1LL << nodes) - 1, 0);
+  return bron_kerbosch_weighted(g, 0, (1LL << nodes) - 1, 0);
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+void add_edge(int u, int v) {
+  adj[u][v] = adj[v][u] = true;
 }
 
 int main() {
-  int nodes, edges, u, v;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v;
-    adj[u][v] = adj[v][u] = true;
-  }
-  for (int i = 0; i < nodes; i++) cin >> w[i];
-  cout << "Max unweighted clique: ";
-  cout << bron_kerbosch(nodes) << "\n";
-  cout << "Max weighted clique: ";
-  cout << bron_kerbosch_weighted(nodes) << "\n";
+  add_edge(0, 1);
+  add_edge(0, 2);
+  add_edge(0, 3);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  add_edge(2, 3);
+  add_edge(3, 4);
+  add_edge(4, 2);
+  w[0] = 10;
+  w[1] = 20;
+  w[2] = 30;
+  w[3] = 40;
+  w[4] = 50;
+  assert(bron_kerbosch(5) == 4);
+  assert(bron_kerbosch_weighted(5) == 120);
   return 0;
 }
