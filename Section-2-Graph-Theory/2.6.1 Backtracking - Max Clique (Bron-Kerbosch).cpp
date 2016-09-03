@@ -59,10 +59,7 @@ int bron_kerbosch(int nodes) {
   return rec(nodes, curr, pool, excl);
 }
 
-// This is a fast implementation using bitmasks.
-// Precondition: The number of nodes (i.e. g.size()) is less than 64.
-int bron_kerbosch_weighted(const std::vector<uint64> &g,
-                           uint64 curr, uint64 pool, uint64 excl) {
+int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
   if (pool == 0 && excl == 0) {
     int res = 0, u = __builtin_ctzll(curr);
     while (u < (int)g.size()) {
@@ -77,8 +74,7 @@ int bron_kerbosch_weighted(const std::vector<uint64> &g,
   uint64 z = pool & ~g[pivot];
   int u = __builtin_ctzll(z);
   while (u < (int)g.size()) {
-    res = std::max(res, bron_kerbosch_weighted(g, curr | (1LL << u),
-                                               pool & g[u], excl & g[u]));
+    res = std::max(res, rec(g, curr | (1LL << u), pool & g[u], excl & g[u]));
     pool ^= 1LL << u;
     excl |= 1LL << u;
     u += __builtin_ctzll(z >> (u + 1)) + 1;
@@ -86,6 +82,8 @@ int bron_kerbosch_weighted(const std::vector<uint64> &g,
   return res;
 }
 
+// This is an efficient implementation using bitmasks.
+// Precondition: The number of nodes must be less than 64.
 int bron_kerbosch_weighted(int nodes) {
   std::vector<uint64> g(nodes, 0);
   for (int i = 0; i < nodes; i++) {
@@ -94,7 +92,7 @@ int bron_kerbosch_weighted(int nodes) {
         g[i] |= 1LL << j;
     }
   }
-  return bron_kerbosch_weighted(g, 0, (1LL << nodes) - 1, 0);
+  return rec(g, 0, (1LL << nodes) - 1, 0);
 }
 
 /*** Example Usage ***/
