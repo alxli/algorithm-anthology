@@ -5,8 +5,8 @@ n1 < n2, as well as a set of edges E mapping nodes from set A to set B,
 determine the largest possible subset of E such that no pair of edges in the
 subset share a common vertex.
 
-Time Complexity: O(m * max(n1, n2)) where m is the number of edges.
-Space Complexity: O(n) auxiliary on the number of nodes.
+Time Complexity: O(m * (n1 + n2)) where m is the number of edges.
+Space Complexity: O(n1 + n2) auxiliary.
 
 */
 
@@ -62,7 +62,7 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  cout << "Matched " << kuhn(n1, n2) << " pair(s). Matchings are:" << endl;
+  cout << "Matched " << kuhn(n1, n2) << " pair(s). Matchings:" << endl;
   for (int i = 0; i < n2; i++) {
     if (match[i] != -1) {
       cout << match[i] << " " << i << endl;
