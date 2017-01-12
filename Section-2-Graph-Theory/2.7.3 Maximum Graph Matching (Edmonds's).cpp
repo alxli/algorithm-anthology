@@ -4,7 +4,7 @@ Given a directed graph, determine a maximal subset of its edges such that no
 node is shared between different edges from the resulting subset.
 
 Time Complexity: O(n^3) on the number of nodes.
-Space Complexity: O(n) on the number of nodes.
+Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
