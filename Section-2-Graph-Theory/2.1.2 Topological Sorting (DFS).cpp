@@ -2,11 +2,11 @@
 
 Given a directed acyclic graph (a.k.a. DAG), find one of possibly many orderings
 of the nodes such that for every edge from node u to v, u comes before v in the
-output ordering. Depth-first search can be used to traverse all vertices in
-postorder, which is a reversed topological ordering.
+output ordering. Depth-first search is used to traverse all nodes in post-order,
+which yields a reversed topological ordering.
 
 toposort() takes a directed graph stored as a global adjacency list with nodes
-indexed from 0 to nodes - 1 and assigns a valid topological ordering to the
+indexed from 0 to (nodes - 1) and assigns a valid topological ordering to the
 global result vector. If the graph contains a cycle, then an error is thrown.
 
 Time Complexity: O(max(n, m)) on the numbers of nodes and edges respectively.

@@ -5,9 +5,9 @@ hamiltonian path is a path of minimum distance that visits
 each vertex exactly once. Unlike the travelling salesman
 problem, we don't have to return to the starting vertex.
 Since this is a bitmasking solution with 32-bit integers,
-the number of vertices must be less than 32.
+the number of nodes must be less than 32.
 
-Complexity: O(2^V * V^2) on the number of vertices.
+Complexity: O(2^n * n^2) on the number of nodes.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 3 6

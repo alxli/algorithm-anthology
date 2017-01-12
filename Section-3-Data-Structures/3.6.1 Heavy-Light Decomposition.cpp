@@ -2,8 +2,8 @@
 
 Description: Given an undirected, connected graph that is a tree, the
 heavy-light decomposition (HLD) on the graph is a partitioning of the
-vertices into disjoint paths to later support dynamic modification and
-querying of values on paths between pairs of vertices.
+nodes into disjoint paths to later support dynamic modification and
+querying of values on paths between pairs of nodes.
 See: http://wcipeg.com/wiki/Heavy-light_decomposition
 and: http://blog.anudeep2011.com/heavy-light-decomposition/
 To support dynamic adding and removal of edges, see link/cut tree.
@@ -12,9 +12,9 @@ Note: The adjacency list tree[] that is passed to the constructor must
 not be changed afterwards in order for modify() and query() to work.
 
 Time Complexity: O(N) for the constructor and O(log N) in the worst
-case for both modify() and query(), where N is the number of vertices.
+case for both modify() and query(), where N is the number of nodes.
 
-Space Complexity: O(N) on the number of vertices in the tree.
+Space Complexity: O(N) on the number of nodes in the tree.
 
 */
 
@@ -23,7 +23,7 @@ Space Complexity: O(N) on the number of vertices in the tree.
 #include <vector>
 
 template<class T> class heavy_light {
-  //true if you want values on edges, false if you want values on vertices
+  //true if you want values on edges, false if you want values on nodes
   static const bool VALUES_ON_EDGES = true;
 
   //Modify the following 6 functions to implement your custom

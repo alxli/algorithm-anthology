@@ -2,12 +2,12 @@
 
 Description: Given a weighted, directed graph, the shortest
 hamiltonian cycle is a cycle of minimum distance that visits
-each vertex exactly once and returns to the original vertex.
+each node exactly once and returns to the original node.
 This is also known as the traveling salesman problem (TSP).
 Since this is a bitmasking solution with 32-bit integers,
-the number of vertices must be less than 32.
+the number of nodes must be less than 32.
 
-Complexity: O(2^V * V^2) on the number of vertices.
+Complexity: O(2^n * n^2) on the number of nodes.
 
 =~=~=~=~= Sample Input =~=~=~=~=
 5 10

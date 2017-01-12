@@ -12,13 +12,13 @@ A bridge is an edge such that when deleted, the number of connected components
 in the graph is increased. An edge is a bridge if and only if it is not part of
 any cycle.
 
-A cut-point (i.e. cut-vertex, or articulation point) is any vertex whose removal
+A cut-point (i.e. cut-node, or articulation point) is any node whose removal
 increases the number of connected components in the graph.
 
 A biconnected component of a graph is a maximally biconnected subgraph. A
 biconnected graph is a connected and "nonseparable" graph, meaning that if any
-vertex were to be removed, the graph will remain connected. Therefore, a
-biconnected graph has no articulation vertices.
+node were to be removed, the graph will remain connected. Thus, a biconnected
+graph has no articulation points.
 
 Any connected graph decomposes into a tree of biconnected components called the
 "block tree" of the graph. An unconnected graph will thus decompose into a

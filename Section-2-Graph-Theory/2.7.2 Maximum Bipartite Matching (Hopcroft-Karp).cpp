@@ -3,7 +3,7 @@
 Given two sets of nodes A = {0, 1, ..., n1} and B = {0, 1, ..., n2} such that
 n1 < n2, as well as a set of edges E mapping nodes from set A to set B,
 determine the largest possible subset of E such that no pair of edges in the
-subset share a common vertex.
+subset share a common node.
 
 Time Complexity: O(m*sqrt(n1 + n2)) where m is the number of edges.
 Space Complexity: O(n1 + n2) auxiliary.

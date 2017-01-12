@@ -2,11 +2,11 @@
 
 A Eulerian trail is a path in a graph which contains every edge exactly once. An
 Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same
-vertex. A directed graph has an Eulerian cycle if and only if every vertex has
-an in-degree equal to its out-degree, and all of its vertices with nonzero
-degree belong to a single strongly connected component. An undirected graph has
-an Eulerian cycle if and only if every vertex has even degree, and all of its
-vertices with nonzero degree belong to a single connected component.
+node. A directed graph has an Eulerian cycle if and only if every node has an
+in-degree equal to its out-degree, and all of its nodes with nonzero degree
+belong to a single strongly connected component. An undirected graph has an
+Eulerian cycle if and only if every node has even degree, and all of its nodes
+with nonzero degree belong to a single connected component.
 
 Given a graph as an adjacency list along with the starting node of the cycle,
 both functions below return a vector containing all nodes reachable from the

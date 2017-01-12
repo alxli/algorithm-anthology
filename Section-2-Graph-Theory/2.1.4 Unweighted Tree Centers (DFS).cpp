@@ -80,8 +80,8 @@ std::pair<int, int> dfs(int u, int p, int depth) {
 }
 
 int diameter() {
-  int furthest_vertex = dfs(0, -1, 0).second;
-  return dfs(furthest_vertex, -1, 0).first;
+  int furthest_node = dfs(0, -1, 0).second;
+  return dfs(furthest_node, -1, 0).first;
 }
 
 /*** Example Usage ***/
