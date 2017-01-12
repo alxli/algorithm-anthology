@@ -1,92 +1,83 @@
 /*
 
-Description: Given a general directed graph, determine a maximal
-subset of the edges such that no vertex is repeated in the subset.
+Given a directed graph, determine a maximal subset of its edges such that no
+node is shared between different edges from the resulting subset.
 
-Complexity: O(V^3) on the number of vertices.
-
-=~=~=~=~= Sample Input =~=~=~=~=
-4 8
-0 1
-1 0
-1 2
-2 1
-2 3
-3 2
-3 0
-0 3
-
-=~=~=~=~= Sample Output =~=~=~=~=
-Matched 2 pair(s). Matchings are:
-0 1
-2 3
+Time Complexity: O(n^3) on the number of nodes.
+Space Complexity: O(n) on the number of nodes.
 
 */
 
-#include <iostream>
+#include <queue>
 #include <vector>
-using namespace std;
 
 const int MAXN = 100;
 int p[MAXN], base[MAXN], match[MAXN];
-vector<int> adj[MAXN];
+std::vector<int> adj[MAXN];
 
 int lca(int nodes, int a, int b) {
-  vector<bool> used(nodes);
+  std::vector<bool> used(nodes);
   for (;;) {
     a = base[a];
     used[a] = true;
-    if (match[a] == -1) break;
+    if (match[a] == -1)
+      break;
     a = p[match[a]];
   }
   for (;;) {
     b = base[b];
-    if (used[b]) return b;
+    if (used[b])
+      return b;
     b = p[match[b]];
   }
 }
 
-void mark_path(vector<bool> & blossom, int v, int b, int children) {
+void mark_path(std::vector<bool>& blossom, int v, int b, int children) {
   for (; base[v] != b; v = p[match[v]]) {
-    blossom[base[v]] = blossom[base[match[v]]] = true;
+    blossom[base[v]] = true;
+    blossom[base[match[v]]] = true;
     p[v] = children;
     children = match[v];
   }
 }
 
 int find_path(int nodes, int root) {
-  vector<bool> used(nodes);
+  std::vector<bool> used(nodes);
   for (int i = 0; i < nodes; ++i) {
     p[i] = -1;
     base[i] = i;
   }
   used[root] = true;
-  int q[nodes], qh = 0, qt = 0;
-  q[qt++] = root;
-  while (qh < qt) {
-    int v = q[qh++];
+  std::queue<int> q;
+  q.push(root);
+  while (!q.empty()) {
+    int v = q.front();
+    q.pop();
     for (int j = 0, to; j < (int)adj[v].size(); j++) {
       to = adj[v][j];
-      if (base[v] == base[to] || match[v] == to) continue;
+      if (base[v] == base[to] || match[v] == to)
+        continue;
       if (to == root || (match[to] != -1 && p[match[to]] != -1)) {
-        int curbase = lca(nodes, v, to);
-        vector<bool> blossom(nodes);
-        mark_path(blossom, v, curbase, to);
-        mark_path(blossom, to, curbase, v);
-        for (int i = 0; i < nodes; i++)
+        int currbase = lca(nodes, v, to);
+        std::vector<bool> blossom(nodes);
+        mark_path(blossom, v, currbase, to);
+        mark_path(blossom, to, currbase, v);
+        for (int i = 0; i < nodes; i++) {
           if (blossom[base[i]]) {
-            base[i] = curbase;
+            base[i] = currbase;
             if (!used[i]) {
               used[i] = true;
-              q[qt++] = i;
+              q.push(i);
             }
           }
+        }
       } else if (p[to] == -1) {
         p[to] = v;
-        if (match[to] == -1) return to;
+        if (match[to] == -1)
+          return to;
         to = match[to];
         used[to] = true;
-        q[qt++] = to;
+        q.push(to);
       }
     }
   }
@@ -94,7 +85,9 @@ int find_path(int nodes, int root) {
 }
 
 int edmonds(int nodes) {
-  for (int i = 0; i < nodes; i++) match[i] = -1;
+  for (int i = 0; i < nodes; i++) {
+    match[i] = -1;
+  }
   for (int i = 0; i < nodes; i++) {
     if (match[i] == -1) {
       int v, pv, ppv;
@@ -106,23 +99,40 @@ int edmonds(int nodes) {
     }
   }
   int matches = 0;
-  for (int i = 0; i < nodes; i++)
-    if (match[i] != -1) matches++;
-  return matches / 2;
+  for (int i = 0; i < nodes; i++) {
+    if (match[i] != -1)
+      matches++;
+  }
+  return matches/2;
 }
 
+/*** Example Usage and Output:
+
+Matched 2 pair(s). Matchings are:
+0 1
+2 3
+
+***/
+
+#include <iostream>
+using namespace std;
+
 int main() {
-  int nodes, edges, u, v;
-  cin >> nodes >> edges;
-  for (int i = 0; i < edges; i++) {
-    cin >> u >> v;
-    adj[u].push_back(v);
-  }
-  cout << "Matched " << edmonds(nodes);
-  cout << " pair(s). Matchings are:\n";
+  int nodes = 4;
+  adj[0].push_back(1);
+  adj[1].push_back(0);
+  adj[1].push_back(2);
+  adj[2].push_back(1);
+  adj[2].push_back(3);
+  adj[3].push_back(2);
+  adj[3].push_back(0);
+  adj[0].push_back(3);
+  cout << "Matched " << edmonds(nodes) << " pair(s). "
+       << "Matchings are:" << endl;
   for (int i = 0; i < nodes; i++) {
-    if (match[i] != -1 && i < match[i])
-      cout << i << " " << match[i] << "\n";
+    if (match[i] != -1 && i < match[i]) {
+      cout << i << " " << match[i] << endl;
+    }
   }
   return 0;
 }
