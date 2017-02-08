@@ -48,6 +48,7 @@ int max_zero_submatrix(const std::vector< std::vector<bool> > &matrix) {
 /*** Example Usage ***/
 
 #include <cassert>
+#include <vector>
 using namespace std;
 
 int main() {
@@ -57,9 +58,10 @@ int main() {
                   {0, 0, 0, 0, 0, 1},
                   {1, 0, 0, 1, 0, 0},
                   {1, 0, 1, 0, 0, 1}};
-  std::vector< std::vector<bool> > mat(n);
-  for (int i = 0; i < n; i++)
+  vector<vector<bool> > mat(n);
+  for (int i = 0; i < n; i++) {
     mat[i] = vector<bool>(a[i], a[i] + m);
+  }
   assert(max_zero_submatrix(mat) == 6);
   return 0;
 }
