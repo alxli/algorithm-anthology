@@ -3,7 +3,7 @@
 Maintain a set of elements partitioned into non-overlapping subsets. Each
 partition is assigned a unique representative known as the parent, or root. The
 following implements two well-known optimizations known as union-by-rank and
-path compression.
+path compression. This version is simplified to only work on integer elements.
 
 - init_dsf() resets the data structure.
 - make_set(x) creates a new partition consisting of the single element x, which
@@ -17,7 +17,7 @@ A precondition to the last three operations is that make_set() must have been
 previously called on their arguments.
 
 Time Complexity:
-- O(1) per call to init_dsf() and make_set()
+- O(1) per call to init_dsf() and make_set().
 - O(a(n)) per call to find_root(), is_united(), and unite(), where n is the
   number of elements that has been added via make_set() so far, and a(n) is the
   extremely slow growing inverse of the Ackermann function (effectively a very
