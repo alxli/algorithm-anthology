@@ -13,9 +13,9 @@ from 0 to size() - 1, inclusive).
 - sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
 
 Time Complexity:
-- O(1) per call to the constructor, size(), and at().
-- O(log n) per call to add(), set(), and both sum() functions, where n is the
-  size of the array.
+- O(n) per call to the constructor, where n is the size of the array.
+- O(1) per call to size() and at().
+- O(log n) per call to add(), set(), and both sum() functions.
 
 Space Complexity:
 - O(n) for storage of the array elements.
