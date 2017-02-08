@@ -1,9 +1,9 @@
 /*
 
-Maintain an array of integral type, allowing the sum of an arbitrary consecutive
-sub-array to be dynamically queried in logarithmic time. This implementation
-assumes that the maintained array is 0-based (i.e. has valid indices from 0 to
-size() - 1, inclusive).
+Maintain an array of numerical type, allowing for updates of individual indices
+(point update) and queries for the sum of contiguous sub-arrays (range queries).
+This implementation assumes that the array is 0-based (i.e. has valid indices
+from 0 to size() - 1, inclusive).
 
 - size() returns the size of the array.
 - at(i) returns the value at index i, where i is between 0 and size() - 1.
@@ -14,7 +14,7 @@ size() - 1, inclusive).
 
 Time Complexity:
 - O(1) per call to the constructor, size(), and at().
-- O(log n) per call to add(), set(), sum(hi), and sum(lo, hi), where n is the
+- O(log n) per call to add(), set(), and both sum() functions, where n is the
   size of the array.
 
 Space Complexity:
@@ -25,7 +25,7 @@ Space Complexity:
 
 #include <vector>
 
-template<class Int> class fenwick_tree {
+template<class T> class fenwick_tree {
   int len;
   std::vector<int> data, bits;
 
@@ -40,31 +40,31 @@ template<class Int> class fenwick_tree {
     return len;
   }
 
-  Int at(int i) const {
+  T at(int i) const {
     return data[i + 1];
   }
 
-  void add(int i, const Int &x) {
+  void add(int i, const T &x) {
     data[++i] += x;
     for (; i <= len; i += i & -i) {
       bits[i] += x;
     }
   }
 
-  void set(int i, const Int &x) {
-    Int inc = x - data[i + 1];
+  void set(int i, const T &x) {
+    T inc = x - data[i + 1];
     add(i, inc);
   }
 
-  Int sum(int hi) {
-    Int res = 0;
+  T sum(int hi) {
+    T res = 0;
     for (hi++; hi > 0; hi -= hi & -hi) {
       res += bits[hi];
     }
     return res;
   }
 
-  Int sum(int lo, int hi) {
+  T sum(int lo, int hi) {
     return sum(hi) - sum(lo - 1);
   }
 };

@@ -1,52 +1,80 @@
 /*
 
-Description: A Fenwick tree (a.k.a. binary indexed tree) is a
-data structure that allows for the sum of an arbitrary range
-of values in an array to be dynamically queried in logarithmic
-time. Range updating in a Fenwick tree can only increment
-values in a range, not set them all to the same value. This
-version is a very concise version if only point queries are
-needed. The functions below work on 1-based indices (between
-1 and MAXN, inclusive).
+Maintain an array of numerical type, allowing contiguous sub-arrays to be
+simultaneously incremented by arbitrary values (range update) and values at
+individual indices to be queried (point query). This implementation assumes that
+the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
 
-Time Complexity: add() and at() are O(log MAXN).
-Space Complexity: O(N).
+- size() returns the size of the array.
+- at(i) returns the value at index i, where i is between 0 and size() - 1.
+- add(i, x) adds x to the value at index i (i.e. a[i] += x).
+- add(lo, hi, x) adds x to all indices from lo to hi, inclusive.
+
+Time Complexity:
+- O(1) per call to the constructor and size().
+- O(log n) per call to at() and both add() functions, where n is the size of the
+  array.
+
+Space Complexity:
+- O(n) for storage of the array elements.
+- O(1) auxiliary per call to all operations.
 
 */
 
-const int MAXN = 1000;
-int bit[MAXN + 1];
+#include <vector>
 
-//a[i] += v
-void add(int i, int v) {
-  for (i++; i <= MAXN; i += i & -i) bit[i] += v;
-}
+template<class T> class fenwick_tree {
+  int len;
+  std::vector<int> bits;
 
-//a[i] += v for i = lo..hi, inclusive
-void add(int lo, int hi, int v) {
-  add(lo, v);
-  add(hi + 1, -v);
-}
+ public:
+  fenwick_tree(int n) {
+    len = n;
+    bits.resize(n + 2);
+  }
 
-//returns a[i]
-int at(int i) {
-  int sum = 0;
-  for (i++; i > 0; i -= i & -i) sum += bit[i];
-  return sum;
-}
+  int size() const {
+    return len;
+  }
 
-/*** Example Usage ***/
+  T at(int i) const {
+    int sum = 0;
+    for (i++; i > 0; i -= i & -i) {
+      sum += bits[i];
+    }
+    return sum;
+  }
+
+  void add(int i, const T &x) {
+    for (i++; i <= len + 1; i += i & -i) {
+      bits[i] += x;
+    }
+  }
+
+  void add(int lo, int hi, const T &x) {
+    add(lo, x);
+    add(hi + 1, -x);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values: 5 10 15 10 10
+
+***/
 
 #include <iostream>
 using namespace std;
 
 int main() {
-  add(1, 2, 5);
-  add(2, 3, 5);
-  add(3, 5, 10);
-  cout << "BIT values: "; //5 10 15 10 10
-  for (int i = 1; i <= 5; i++)
-    cout << at(i) << " ";
-  cout << "\n";
+  fenwick_tree<int> t(5);
+  t.add(0, 1, 5);
+  t.add(1, 2, 5);
+  t.add(2, 4, 10);
+  cout << "Values: ";
+  for (int i = 0; i < t.size(); i++) {
+    cout << t.at(i) << " ";
+  }
+  cout << endl;
   return 0;
 }
