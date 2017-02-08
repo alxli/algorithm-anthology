@@ -75,7 +75,7 @@ template<class T> class disjoint_set_forest {
     return find_root(id[x]) == find_root(id[y]);
   }
 
-  void unite(const T& x, const T& y) {
+  void unite(const T &x, const T &y) {
     int r1 = find_root(id[x]);
     int r2 = find_root(id[y]);
     if (r1 == r2)
