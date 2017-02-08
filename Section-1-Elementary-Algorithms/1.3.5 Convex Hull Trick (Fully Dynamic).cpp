@@ -58,7 +58,7 @@ class hull_optimizer {
   };
 
   std::set<line> hull;
-  bool _query_max;
+  bool query_max;
 
   typedef std::set<line>::iterator hulliter;
 
@@ -76,15 +76,15 @@ class hull_optimizer {
     hulliter prev = it, next = it;
     --prev;
     ++next;
-    return _query_max ? prev->intersect(*next) <= prev->intersect(*it)
+    return query_max ? prev->intersect(*next) <= prev->intersect(*it)
                      : next->intersect(*prev) <= next->intersect(*it);
   }
 
   hulliter update_left_border(hulliter it) {
-    if ((_query_max && !has_prev(it)) || (!_query_max && !has_next(it)))
+    if ((query_max && !has_prev(it)) || (!query_max && !has_next(it)))
       return it;
     hulliter it2 = it;
-    double val = it->intersect(_query_max ? *--it2 : *++it2);
+    double val = it->intersect(query_max ? *--it2 : *++it2);
     line l(*it);
     l.xlo = val;
     hull.erase(it++);
@@ -93,14 +93,14 @@ class hull_optimizer {
 
  public:
   hull_optimizer(bool query_max = false) {
-    this->_query_max = query_max;
+    this->query_max = query_max;
   }
 
   void add_line(long long m, long long b) {
-    line l(m, b, 0, false, _query_max);
+    line l(m, b, 0, false, query_max);
     hulliter it = hull.lower_bound(l);
     if (it != hull.end() && it->parallel(l)) {
-      if ((_query_max && it->b < b) || (!_query_max && b < it->b))
+      if ((query_max && it->b < b) || (!query_max && b < it->b))
         hull.erase(it++);
       else
         return;
@@ -122,9 +122,9 @@ class hull_optimizer {
   }
 
   long long get_best(long long x) const {
-    line q(0, 0, x, true, _query_max);
+    line q(0, 0, x, true, query_max);
     hulliter it = hull.lower_bound(q);
-    if (_query_max)
+    if (query_max)
       --it;
     return it->m*x + it->b;
   }
