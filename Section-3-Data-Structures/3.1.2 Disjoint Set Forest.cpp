@@ -30,7 +30,7 @@ Time Complexity:
 Space Complexity:
 - O(n) for storage of the disjoint set forest elements.
 - O(n) auxiliary per call to get_all_sets().
-- O(1) auxiliary per call to all operations.
+- O(1) auxiliary per call to all other operations.
 
 */
 
@@ -124,7 +124,7 @@ int main() {
   dsf.unite('a', 'b');
   dsf.unite('b', 'f');
   dsf.unite('d', 'e');
-  dsf.unite('e', 'g');
+  dsf.unite('d', 'g');
   cout << dsf.elements() << " elements in ";
   cout << dsf.sets() << " set:" << endl;
   vector< vector<char> > s = dsf.get_all_sets();

@@ -81,11 +81,11 @@ int main() {
   unite('a', 'b');
   unite('b', 'f');
   unite('d', 'e');
-  unite('e', 'g');
+  unite('d', 'g');
   assert(num_sets == 3);
   assert(is_united('a', 'b'));
   assert(!is_united('a', 'c'));
   assert(!is_united('b', 'g'));
-  assert(is_united('d', 'g'));
+  assert(is_united('e', 'g'));
   return 0;
 }
