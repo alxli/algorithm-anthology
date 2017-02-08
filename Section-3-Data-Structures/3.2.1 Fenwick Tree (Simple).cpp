@@ -25,7 +25,7 @@ Space Complexity:
 const int MAXN = 1000;
 int a[MAXN + 1], bits[MAXN + 1];
 
-void init_bit() {
+void init_tree() {
   for (int i = 0; i <= MAXN; i++) {
     a[i] = bits[i] = 0;
   }
@@ -66,6 +66,7 @@ using namespace std;
 
 int main() {
   int v[] = {10, 1, 2, 3, 4};
+  init_tree();
   for (int i = 1; i <= 5; i++) {
     set(i, v[i - 1]);
   }
