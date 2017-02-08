@@ -38,11 +38,11 @@ template<class T> class fenwick_tree {
   }
 
   T at(int i) const {
-    int sum = 0;
+    int res = 0;
     for (i++; i > 0; i -= i & -i) {
-      sum += bits[i];
+      res += bits[i];
     }
-    return sum;
+    return res;
   }
 
   void add(int i, const T &x) {

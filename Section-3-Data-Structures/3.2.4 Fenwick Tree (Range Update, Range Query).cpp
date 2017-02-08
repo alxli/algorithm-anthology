@@ -38,9 +38,9 @@ template<class T> class fenwick_tree {
     return res;
   }
 
-  void add(std::vector<T> &b, int i, const T &v) {
+  void add(std::vector<T> &b, int i, const T &x) {
     for (; i <= len + 1; i += i & -i) {
-      b[i] += v;
+      b[i] += x;
     }
   }
 
@@ -55,21 +55,21 @@ template<class T> class fenwick_tree {
     return len;
   }
 
-  void add(int lo, int hi, const T &v) {
+  void add(int lo, int hi, const T &x) {
     lo++;
     hi++;
-    add(b1, lo, v);
-    add(b1, hi + 1, -v);
-    add(b2, lo, v*(lo - 1));
-    add(b2, hi + 1, -v*hi);
+    add(b1, lo, x);
+    add(b1, hi + 1, -x);
+    add(b2, lo, x*(lo - 1));
+    add(b2, hi + 1, -x*hi);
   }
 
-  void add(int i, const T &v) {
-    return add(i, i, v);
+  void add(int i, const T &x) {
+    return add(i, i, x);
   }
 
-  void set(int i, const T & v) {
-    add(i, i, v - at(i));
+  void set(int i, const T & x) {
+    add(i, i, x - at(i));
   }
 
   T sum(int hi) {
