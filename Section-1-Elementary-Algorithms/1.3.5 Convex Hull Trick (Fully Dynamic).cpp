@@ -3,7 +3,7 @@
 Given a set of pairs (m, b) specifying lines of the form y = m*x + b, process a
 set of x-coordinate queries each asking to find the minimum y-value when any of
 the given lines are evaluated at the specified x. To instead have the queries
-optimize for maximum y-value, set the QUERY_MAX flag to true.
+optimize for maximum y-value, construct with the argument query_max=true.
 
 The following implementation is a fully dynamic variant of the convex hull
 optimization technique, using a self-balancing binary search tree (std::set) to
