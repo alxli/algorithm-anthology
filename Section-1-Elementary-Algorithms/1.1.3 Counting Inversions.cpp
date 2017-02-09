@@ -45,14 +45,17 @@ template<class It> long long inversions(It lo, It hi) {
     }
   }
   if (a > mid) {
-    for (It k = c; k < hi; ++k)
+    for (It k = c; k < hi; ++k) {
       merged.push_back(*k);
+    }
   } else {
-    for (It k = a; k <= mid; ++k)
+    for (It k = a; k <= mid; ++k) {
       merged.push_back(*k);
+    }
   }
-  for (int i = 0; i < hi - lo; i++)
+  for (int i = 0; i < hi - lo; i++) {
     *(lo + i) = merged[i];
+  }
   return res;
 }
 
@@ -82,14 +85,16 @@ long long inversions(int n, int a[]) {
   while (mx > 0) {
     std::fill(cnt.begin(), cnt.end(), 0);
     for (int i = 0; i < n; i++) {
-      if (a[i] % 2 == 0)
+      if (a[i] % 2 == 0) {
         res += cnt[a[i] / 2];
-      else
+      } else {
         cnt[a[i] / 2]++;
+      }
     }
     mx = 0;
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++) {
       mx = std::max(mx, a[i] /= 2);
+    }
   }
   return res;
 }
