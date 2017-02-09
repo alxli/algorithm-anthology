@@ -24,15 +24,17 @@ void rec(int lo, int hi, int n, int used_cols) {
   if (used_cols >= min_colors)
     return;
   if (n == hi) {
-    for (int i = lo; i < hi; i++)
+    for (int i = lo; i < hi; i++) {
       color[id[i]] = curr[i];
+    }
     min_colors = used_cols;
     return;
   }
   std::vector<bool> used(used_cols + 1);
   for (int i = 0; i < n; i++) {
-    if (adj[id[n]][id[i]])
+    if (adj[id[n]][id[i]]) {
       used[curr[i]] = true;
+    }
   }
   for (int i = 0; i <= used_cols; i++) {
     if (!used[i]) {
@@ -53,10 +55,12 @@ int color_graph(int nodes) {
   for (int hi = 1; hi <= nodes; hi++) {
     int best = hi;
     for (int i = hi; i < nodes; i++) {
-      if (adj[id[hi - 1]][id[i]])
+      if (adj[id[hi - 1]][id[i]]) {
         deg[id[i]]++;
-      if (deg[id[best]] < deg[id[i]])
+      }
+      if (deg[id[best]] < deg[id[i]]) {
         best = i;
+      }
     }
     std::swap(id[hi], id[best]);
     if (deg[id[hi]] == 0) {
@@ -100,8 +104,9 @@ int main() {
   for (int i = 0; i < colors; i++) {
     cout << "Color " << i + 1 << ":";
     for (int j = 0; j < 5; j++) {
-      if (color[j] == i)
+      if (color[j] == i) {
         cout << " " << j;
+      }
     }
     cout << endl;
   }
