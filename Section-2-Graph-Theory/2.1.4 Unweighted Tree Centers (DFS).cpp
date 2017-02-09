@@ -33,8 +33,9 @@ std::vector<int> find_centers(int nodes) {
   std::vector<int> leaves, degree(nodes);
   for (int i = 0; i < nodes; i++) {
     degree[i] = adj[i].size();
-    if (degree[i] <= 1)
+    if (degree[i] <= 1) {
       leaves.push_back(i);
+    }
   }
   int removed = leaves.size();
   while (removed < nodes) {
@@ -43,8 +44,9 @@ std::vector<int> find_centers(int nodes) {
       int u = leaves[i];
       for (int j = 0; j < (int)adj[u].size(); j++) {
         int v = adj[u][j];
-        if (--degree[v] == 1)
+        if (--degree[v] == 1) {
           nleaves.push_back(v);
+        }
       }
     }
     leaves = nleaves;
@@ -73,8 +75,9 @@ int find_centroid(int nodes, int u = 0, int p = -1) {
 std::pair<int, int> dfs(int u, int p, int depth) {
   std::pair<int, int> res = std::make_pair(depth, u);
   for (int j = 0; j < (int)adj[u].size(); j++) {
-    if (adj[u][j] != p)
+    if (adj[u][j] != p) {
       res = max(res, dfs(adj[u][j], u, depth + 1));
+    }
   }
   return res;
 }
