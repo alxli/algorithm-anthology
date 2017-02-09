@@ -27,19 +27,22 @@ longest_increasing_subsequence(It lo, It hi) {
     int l = -1, h = len;
     while (h - l > 1) {
       int mid = (l + h)/2;
-      if (*(lo + tail[mid]) < *(lo + i))
+      if (*(lo + tail[mid]) < *(lo + i)) {
         l = mid;
-      else
+      } else {
         h = mid;
+      }
     }
-    if (len < h + 1)
+    if (len < h + 1) {
       len = h + 1;
+    }
     prev[i] = h > 0 ? tail[h - 1] : -1;
     tail[h] = i;
   }
   std::vector<typename std::iterator_traits<It>::value_type> res(len);
-  for (int i = tail[len - 1]; i != -1; i = prev[i])
+  for (int i = tail[len - 1]; i != -1; i = prev[i]) {
     res[--len] = *(lo + i);
+  }
   return res;
 }
 
