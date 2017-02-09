@@ -31,8 +31,9 @@ int rec(int nodes, bits &curr, bits &pool, bits &excl) {
     return curr.count();
   int ans = 0, u = 0;
   for (int v = 0; v < nodes; v++) {
-    if (pool[v] || excl[v])
+    if (pool[v] || excl[v]) {
       u = v;
+    }
   }
   for (int v = 0; v < nodes; v++) {
     if (!pool[v] || adj[u][v])
@@ -88,8 +89,9 @@ int bron_kerbosch_weighted(int nodes) {
   std::vector<uint64> g(nodes, 0);
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
-      if (adj[i][j])
+      if (adj[i][j]) {
         g[i] |= 1LL << j;
+      }
     }
   }
   return rec(g, 0, (1LL << nodes) - 1, 0);
