@@ -30,14 +30,16 @@ long long sum_lower_bound(It lo, It hi, long long v) {
   std::vector<long long> lsum(llen), hsum(hlen);
   for (int mask = 0; mask < llen; mask++) {
     for (int i = 0; i < n/2; i++) {
-      if ((mask >> i) & 1)
+      if ((mask >> i) & 1) {
         lsum[mask] += *(lo + i);
+      }
     }
   }
   for (int mask = 0; mask < hlen; mask++) {
     for (int i = 0; i < (n - n/2); i++) {
-      if ((mask >> i) & 1)
+      if ((mask >> i) & 1) {
         hsum[mask] += *(lo + i + n/2);
+      }
     }
   }
   std::sort(lsum.begin(), lsum.end());
