@@ -42,8 +42,9 @@ void toposort(int nodes) {
   fill(done.begin(), done.end(), false);
   res.clear();
   for (int i = 0; i < nodes; i++) {
-    if (!done[i])
+    if (!done[i]) {
       dfs(i);
+    }
   }
   std::reverse(res.begin(), res.end());
 }
@@ -69,8 +70,9 @@ int main() {
   adj[4].push_back(6);
   toposort(8);
   cout << "The topological order:";
-  for (int i = 0; i < (int)res.size(); i++)
+  for (int i = 0; i < (int)res.size(); i++) {
     cout << " " << res[i];
+  }
   cout << endl;
   return 0;
 }
