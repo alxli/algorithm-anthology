@@ -58,8 +58,9 @@ void dfs(int u, int p) {
       dfs(v, u);
       lowlink[u] = std::min(lowlink[u], lowlink[v]);
       cutpoint |= (lowlink[v] >= tin[u]);
-      if (lowlink[v] > tin[u])
+      if (lowlink[v] > tin[u]) {
         bridges.push_back(std::make_pair(u, v));
+      }
       children++;
     }
   }
@@ -90,8 +91,9 @@ void tarjan(int nodes) {
   std::fill(vis.begin(), vis.end(), false);
   timer = 0;
   for (int i = 0; i < nodes; i++) {
-    if (!vis[i])
+    if (!vis[i]) {
       dfs(i, -1);
+    }
   }
 }
 
@@ -106,8 +108,9 @@ void get_block_forest(int nodes) {
   }
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < (int)adj[i].size(); j++) {
-      if (comp[i] != comp[adj[i][j]])
+      if (comp[i] != comp[adj[i][j]]) {
         bcc_forest[comp[i]].push_back(comp[adj[i][j]]);
+      }
     }
   }
 }
@@ -154,22 +157,25 @@ int main() {
   tarjan(8);
   get_block_forest(8);
   cout << "Cut-points:";
-  for (int i = 0; i < (int)cutpoints.size(); i++)
+  for (int i = 0; i < (int)cutpoints.size(); i++) {
     cout << " " << cutpoints[i];
+  }
   cout << endl << "Bridges:" << endl;
   for (int i = 0; i < (int)bridges.size(); i++)
     cout << bridges[i].first << " " << bridges[i].second << endl;
   cout << "Edge-Biconnected Components:" << endl;
   for (int i = 0; i < (int)bcc.size(); i++) {
-    for (int j = 0; j < (int)bcc[i].size(); j++)
+    for (int j = 0; j < (int)bcc[i].size(); j++) {
       cout << bcc[i][j] << " ";
+    }
     cout << endl;
   }
-  cout << "Adjacency List for Block Forest:\n";
+  cout << "Adjacency List for Block Forest:" << endl;
   for (int i = 0; i < (int)bcc.size(); i++) {
     cout << i << " =>";
-    for (int j = 0; j < (int)bcc_forest[i].size(); j++)
+    for (int j = 0; j < (int)bcc_forest[i].size(); j++) {
       cout << " " << bcc_forest[i][j];
+    }
     cout << endl;
   }
   return 0;
