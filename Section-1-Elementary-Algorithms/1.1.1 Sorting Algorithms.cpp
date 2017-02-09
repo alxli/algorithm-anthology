@@ -20,8 +20,6 @@ sorting algorithms can be concisely implemented in C++.
 
 /*
 
-Quicksort
-
 Quicksort repeatedly selects a pivot and partitions the range so that elements
 comparing less than the pivot precedes the pivot, and elements comparing greater
 or equal follows it. Divide and conquer is then applied to both sides of the
@@ -67,8 +65,6 @@ template<class It> void quicksort(It lo, It hi) {
 }
 
 /*
-
-Merge Sort
 
 Merge sort first divides a list into n sublists of one element each, then
 recursively merges the sublists into sorted order until only a single sorted
@@ -116,8 +112,6 @@ template<class It> void mergesort(It lo, It hi) {
 }
 
 /*
-
-Heapsort
 
 Heapsort first rearranges an array to satisfy the max-heap property. Then, it
 repeatedly pops the max element of the heap (the left, unsorted subrange),
@@ -169,8 +163,6 @@ template<class It> void heapsort(It lo, It hi) {
 }
 
 /*
-
-Comb Sort
 
 Comb sort is an improved bubble sort. While bubble sort increments the gap
 between swapped elements for every inner loop iteration, comb sort fixes the gap
