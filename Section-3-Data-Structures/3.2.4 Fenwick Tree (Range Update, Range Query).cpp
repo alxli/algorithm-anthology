@@ -69,7 +69,7 @@ template<class T> class fenwick_tree {
   }
 
   void set(int i, const T & x) {
-    add(i, i, x - at(i));
+    add(i, x - at(i));
   }
 
   T sum(int hi) {
