@@ -100,8 +100,9 @@ int edmonds(int nodes) {
   }
   int matches = 0;
   for (int i = 0; i < nodes; i++) {
-    if (match[i] != -1)
+    if (match[i] != -1) {
       matches++;
+    }
   }
   return matches/2;
 }
