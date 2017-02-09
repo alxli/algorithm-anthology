@@ -12,16 +12,15 @@ inclusive, are accessible.
 - set(i, x) assigns x to the value at index i (i.e. a[i] = x).
 - sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
 - sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
-- at(i) returns the value at index i, where i is between 0 and size() - 1.
+- at(i) returns the value at index i, where i is between 0 and MAXN.
 
 Time Complexity:
 - O(log^2 MAXN) per call to all member functions. If std::map is replaced with
   std::unordered_map, then the amortized running time will become O(log MAXN).
 
 Space Complexity:
-- O(n log m) for storage of the array elements, where n is the number of
-  distinct array indices that have been accessed across all of the operations so
-  far, and m is the maximum value across said indices.
+- O(n log MAXN) for storage of the array elements, where n is the number of
+  distinct indices that have been accessed across all of the operations so far.
 - O(1) auxiliary per call to all operations.
 
 */
@@ -35,7 +34,7 @@ template<class T> class fenwick_tree {
   std::map<int, T> tmul, tadd;
 
   void add_helper(int at, int mul, T add) {
-    for (int i = at; i <= MAXN; i = (i | (i + 1))) {
+    for (int i = at; i <= MAXN; i |= i + 1) {
       tmul[i] += mul;
       tadd[i] += add;
     }
