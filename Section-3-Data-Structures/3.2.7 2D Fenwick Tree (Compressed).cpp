@@ -11,7 +11,7 @@ MAXR, inclusive, and columns have valid indices from 0 to MAXC, inclusive.
 - add(r1, c1, r2, c2, x) adds x to all indices in the rectangle with upper-left
   corner (r1, c1) and lower-right corner (r2, c2).
 - set(r, c, x) assigns x to the value at index (r, c).
-- sum(r, c) returns the sum of the rectangle with upper-left corner (1, 1) and
+- sum(r, c) returns the sum of the rectangle with upper-left corner (0, 0) and
   lower-right corner (r, c).
 - sum(r1, c1, r2, c2) returns the sum of the rectangle with upper-left corner
   (r1, c1) and lower-right corner (r2, c2).
