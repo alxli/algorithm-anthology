@@ -89,7 +89,8 @@ int main() {
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
   cout << "Total distance: " << prim(7) << endl;
-  for (int i = 0; i < (int)mst.size(); i++)
+  for (int i = 0; i < (int)mst.size(); i++) {
     cout << mst[i].first << " <-> " << mst[i].second << endl;
+  }
   return 0;
 }
