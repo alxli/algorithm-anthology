@@ -1,28 +1,36 @@
 /*
 
 Maintain an array, allowing for updates of individual indices (point update) and
-queries on contiguous sub-arrays (range query) of any associative function with
-an identity value. The join_values() and identity() functions may be arbitrarily
-defined as long as associativity and the identity property are preserved. That
-is, for all x, y, and z of the array's type, the definitions must satisfy:
+queries on contiguous sub-arrays (range query). This implementation assumes that
+the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
 
+The query operation is defined by a join_values() function with an associated
+identity() value. These may be arbitrarily defined as long as associativity and
+the identity property are preserved. That is, for all x, y, and z of the array's
+type, the definitions must satisfy:
 - join_values(x, join_values(y, z)) = join_values(join_values(x, y), z).
 - join_values(x, identity()) = join_values(identity(), x) = x.
 
-The default definition below assumes a numerical array type, making queries
-return the max of the target range (identity() is defined as negative infinity).
-Another common usage is sum(), where join_values() returns a + b and identity()
-is defined as 0. This implementation assumes that the array is 0-based (i.e. has
-valid indices from 0 to size() - 1, inclusive).
+The join_value_with_delta() function defines the change made to individual array
+values during an update() operation.
+
+The default definition below assumes a numerical array type, supporting queries
+for the "max" of the target range (identity() is defined as negative infinity),
+and updates which "set" the current array index to a new value. Another possible
+query operation is "sum", where the join_values() function should be defined to
+return "a + b" and identity() should be defined to return 0. Another possible
+update operation is "increment", where join_value_with_delta(v, d) should be
+defined to return "v + d".
 
 - segment_tree(n, v) constructs an array with n indices, all initialized to v.
 - segment_tree(lo, hi) constructs an array from two RandomAccessIterators as a
   range [lo, hi), initialized to the elements of the range, in the same order.
 - size() returns the size of the array.
 - at(i) returns the value at index i, where i is between
-- update(i, v) assigns v to the value at index i (i.e. a[i] = v).
 - query(lo, hi) returns the result of join_values() applied to all indices from
   lo to hi, inclusive (i.e. join_values(a[lo], a[lo + 1], ..., a[hi])).
+- update(i, d) modifies the value at index i by joining the current value with d
+  using join_value_with_delta() (i.e. a[i] = join_value_with_delta(a[i], d)).
 
 Time Complexity:
 - O(n) per call to both constructors, where n is the size of the array.
@@ -40,13 +48,16 @@ Space Complexity:
 #include <vector>
 
 template<class T> class segment_tree {
-
   static T join_values(const T &a, const T &b) {
     return a > b ? a : b;
   }
 
   static T identity() {
     return std::numeric_limits<T>::min();
+  }
+
+  static T join_value_with_delta(const T &v, const T &d) {
+    return d;
   }
 
   int len;
@@ -72,16 +83,16 @@ template<class T> class segment_tree {
     t[i] = join_values(t[i*2 + 1], t[i*2 + 2]);
   }
 
-  void update(int i, int lo, int hi, int target, const T &val) {
+  void update(int i, int lo, int hi, int target, const T &delta) {
     if (target < lo || target > hi) {
       return;
     }
     if (lo == hi) {
-      t[i] = val;
+      t[i] = join_value_with_delta(t[i], delta);
       return;
     }
-    update(i*2 + 1, lo, (lo + hi)/2, target, val);
-    update(i*2 + 2, (lo + hi)/2 + 1, hi, target, val);
+    update(i*2 + 1, lo, (lo + hi)/2, target, delta);
+    update(i*2 + 2, (lo + hi)/2 + 1, hi, target, delta);
     t[i] = join_values(t[i*2 + 1], t[i*2 + 2]);
   }
 
@@ -117,12 +128,12 @@ template<class T> class segment_tree {
     return query(i, i);
   }
 
-  void update(int i, const T &v) {
-    update(0, 0, len - 1, i, v);
-  }
-
   T query(int lo, int hi) {
     return query(0, 0, len - 1, lo, hi);
+  }
+
+  void update(int i, const T &d) {
+    update(0, 0, len - 1, i, d);
   }
 };
 
