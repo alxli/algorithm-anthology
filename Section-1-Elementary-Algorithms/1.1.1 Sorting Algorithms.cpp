@@ -96,14 +96,17 @@ void mergesort(It lo, It hi, Compare comp) {
   while (a <= mid && c < hi)
     merged.push_back(comp(*c, *a) ? *c++ : *a++);
   if (a > mid) {
-    for (It k = c; k < hi; ++k)
+    for (It k = c; k < hi; ++k) {
       merged.push_back(*k);
+    }
   } else {
-    for (It k = a; k <= mid; ++k)
+    for (It k = a; k <= mid; ++k) {
       merged.push_back(*k);
+    }
   }
-  for (int i = 0; i < hi - lo; i++)
+  for (int i = 0; i < hi - lo; i++) {
     *(lo + i) = merged[i];
+  }
 }
 
 template<class It> void mergesort(It lo, It hi) {
@@ -145,8 +148,9 @@ void heapsort(It lo, It hi, Compare comp) {
     parent = i;
     child = lo + 2*(i - lo) + 1;
     while (child < j) {
-      if (child + 1 < j && comp(*child, *(child + 1)))
+      if (child + 1 < j && comp(*child, *(child + 1))) {
         child++;
+      }
       if (!comp(tmp, *child))
         break;
       *parent = *child;
@@ -187,14 +191,16 @@ void combsort(It lo, It hi, Compare comp) {
   int gap = hi - lo;
   bool swapped = true;
   while (gap > 1 || swapped) {
-    if (gap > 1)
+    if (gap > 1) {
       gap = (int)((double)gap / 1.3);
+    }
     swapped = false;
-    for (It it = lo; it + gap < hi; ++it)
+    for (It it = lo; it + gap < hi; ++it) {
       if (comp(*(it + gap), *it)) {
         std::swap(*it, *(it + gap));
         swapped = true;
       }
+    }
   }
 }
 
@@ -239,13 +245,16 @@ void radix_sort(UnsignedIt lo, UnsignedIt hi) {
   T *buf = new T[hi - lo];
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
     int count[radix_base] = {0};
-    for (UnsignedIt it = lo; it != hi; ++it)
+    for (UnsignedIt it = lo; it != hi; ++it) {
       count[(*it >> pos) & radix_mask]++;
+    }
     T *bucket[radix_base], *curr = buf;
-    for (int i = 0; i < radix_base; curr += count[i++])
+    for (int i = 0; i < radix_base; curr += count[i++]) {
       bucket[i] = curr;
-    for (UnsignedIt it = lo; it != hi; ++it)
+    }
+    for (UnsignedIt it = lo; it != hi; ++it) {
       *bucket[(*it >> pos) & radix_mask]++ = *it;
+    }
     std::copy(buf, buf + (hi - lo), lo);
   }
   delete[] buf;
