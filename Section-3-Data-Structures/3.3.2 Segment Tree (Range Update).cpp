@@ -58,7 +58,6 @@ Space Complexity:
 #include <vector>
 
 template<class T> class segment_tree {
-
   static T join_values(const T &a, const T &b) {
     return a > b ? a : b;
   }

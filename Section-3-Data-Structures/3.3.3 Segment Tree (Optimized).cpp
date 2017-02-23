@@ -89,8 +89,8 @@ template<class T> class segment_tree {
   }
 
   void push_delta(int i) {
-    int d = 0;
-    while ((i >> d) > 0) d++;
+    int d;
+    for (d = 0; (i >> d) > 0; d++) {}
     for (d -= 2; d >= 0; d--) {
       int x = i >> d;
       if (pending[x >> 1]) {
@@ -164,18 +164,18 @@ template<class T> class segment_tree {
     update(i, i, d);
   }
 
-  void update(int lo, int hi, const T & delta) {
+  void update(int lo, int hi, const T &d) {
     push_delta(lo += len);
     push_delta(hi += len);
     int ta = -1, tb = -1;
     for (; lo <= hi; lo = (lo + 1) >> 1, hi = (hi - 1) >> 1) {
       if ((lo & 1) != 0) {
-        lazy[lo] = pending[lo] ? join_deltas(lazy[lo], delta) : delta;
+        lazy[lo] = pending[lo] ? join_deltas(lazy[lo], d) : d;
         pending[lo] = true;
         ta = (ta == -1) ? lo : ta;
       }
       if ((hi & 1) == 0) {
-        lazy[hi] = pending[hi] ? join_deltas(lazy[hi], delta) : delta;
+        lazy[hi] = pending[hi] ? join_deltas(lazy[hi], d) : d;
         pending[hi] = true;
         tb = (tb == -1) ? hi : tb;
       }
