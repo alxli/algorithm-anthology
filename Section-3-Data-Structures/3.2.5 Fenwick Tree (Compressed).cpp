@@ -26,8 +26,6 @@ Space Complexity:
 */
 
 #include <map>
-#include <iostream>
-using namespace std;
 
 template<class T> class fenwick_tree {
   static const int MAXN = 1000000001;
