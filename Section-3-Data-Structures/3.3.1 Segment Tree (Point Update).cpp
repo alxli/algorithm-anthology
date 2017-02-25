@@ -11,17 +11,17 @@ numerical array type, supporting queries for the "max" of the target range.
 Another possible query operation is "sum", in which the join_values() function
 should defined to return "a + b".
 
-The join_value_with_delta() function defines the change made to individual array
-values during an update() operation. The default definition below assumes that
-updates "set" the chosen array index to a new value. Another possible update
-operation is "increment", in which join_value_with_delta(v, d) should be defined
-to return "v + d".
+The update operation is defined by the join_value_with_delta() function, which
+determines the change made to array values. The default definition below
+supports updates that "set" the chosen array index to a new value. Another
+possible update operation is "increment", in which join_value_with_delta(v, d)
+should be defined to return "v + d".
 
 - segment_tree(n, v) constructs an array with n indices, all initialized to v.
 - segment_tree(lo, hi) constructs an array from two RandomAccessIterators as a
   range [lo, hi), initialized to the elements of the range, in the same order.
 - size() returns the size of the array.
-- at(i) returns the value at index i, where i is between
+- at(i) returns the value at index i, where i is between 0 and size() - 1.
 - query(lo, hi) returns the result of join_values() applied to all indices from
   lo to hi, inclusive (i.e. join_values(a[lo], a[lo + 1], ..., a[hi])).
 - update(i, d) modifies the value at index i by joining the current value with d
@@ -40,7 +40,6 @@ Space Complexity:
 */
 
 #include <algorithm>  // std::max(), std::min()
-#include <stdexcept>  // std::runtime_error()
 #include <vector>
 
 template<class T> class segment_tree {
@@ -53,26 +52,26 @@ template<class T> class segment_tree {
   }
 
   int len;
-  std::vector<T> t;
+  std::vector<T> value;
 
   void build(int i, int lo, int hi, const T &val) {
     if (lo == hi) {
-      t[i] = val;
+      value[i] = val;
       return;
     }
     build(i*2 + 1, lo, (lo + hi)/2, val);
     build(i*2 + 2, (lo + hi)/2 + 1, hi, val);
-    t[i] = join_values(t[i*2 + 1], t[i*2 + 2]);
+    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
   template<class It> void build(int i, int lo, int hi, It arr) {
     if (lo == hi) {
-      t[i] = *(arr + lo);
+      value[i] = *(arr + lo);
       return;
     }
     build(i*2 + 1, lo, (lo + hi)/2, arr);
     build(i*2 + 2, (lo + hi)/2 + 1, hi, arr);
-    t[i] = join_values(t[i*2 + 1], t[i*2 + 2]);
+    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
   void update(int i, int lo, int hi, int target, const T &delta) {
@@ -80,42 +79,40 @@ template<class T> class segment_tree {
       return;
     }
     if (lo == hi) {
-      t[i] = join_value_with_delta(t[i], delta);
+      value[i] = join_value_with_delta(value[i], delta);
       return;
     }
     update(i*2 + 1, lo, (lo + hi)/2, target, delta);
     update(i*2 + 2, (lo + hi)/2 + 1, hi, target, delta);
-    t[i] = join_values(t[i*2 + 1], t[i*2 + 2]);
+    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
   T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) {
     if (lo == tgt_lo && hi == tgt_hi) {
-      return t[i];
+      return value[i];
     }
     int mid = (lo + hi)/2;
     if (tgt_lo <= mid && mid < tgt_hi) {
       return join_values(
                 query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
                 query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
-    } else if (tgt_lo <= mid) {
-      return query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
-    } else if (tgt_hi > mid) {
-      return query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
-    } else {
-      throw std::runtime_error("Incorrect query range.");
     }
+    if (tgt_lo <= mid) {
+      return query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
+    }
+    return query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
   }
 
  public:
   segment_tree(int n, const T &v = T()) {
     len = n;
-    t.resize(4*len);
+    value.resize(4*len);
     build(0, 0, len - 1, false, 0, v);
   }
 
   template<class It> segment_tree(It lo, It hi) {
     len = hi - lo;
-    t.resize(4*len);
+    value.resize(4*len);
     build(0, 0, len - 1, lo);
   }
 

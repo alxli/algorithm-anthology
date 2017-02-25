@@ -4,36 +4,31 @@ Maintain an array, allowing for updates and queries of contiguous subarrays
 using the lazy propagation technique. This implementation assumes that the array
 is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
 
-The query operation is defined by a join_values() function with an associated
-identity() value. These may be arbitrarily defined as long as associativity and
-the identity property are preserved. That is, for all x, y, and z of the array's
-type, the definitions must satisfy:
-- join_values(x, join_values(y, z)) = join_values(join_values(x, y), z).
-- join_values(x, identity()) = join_values(identity(), x) = x.
+The query operation is defined by an associative join_values() function which:
+satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
+for all values x, y, and z in the array. The default definition below assumes a
+numerical array type, supporting queries for the "max" of the target range.
+Another possible query operation is "sum", in which the join_values() function
+should defined to return "a + b".
 
 The update operation is defined by the join_value_with_delta() and join_deltas()
-functions, which must defined to satisfy the following:
+functions, which determines the change made to array values. These must satisfy:
 - join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(v, join_deltas(d, ..(m times).., d), 1) should be equal
-  to join_value_with_delta(v, d, m), which is a faster implementation.
-- if a sequence d_1, ..., d_m of deltas is used to update a particular value v,
-  then a single call to join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1)
-  should be equivalent to m sequential calls to join_value_with_delta(v, d_i, 1)
-  for i = 1..m.
-
-The default definition below assumes a numerical array type, supporting queries
-for the "max" of the target range (identity() is defined as negative infinity),
-and updates which "set" the current array index to a new value. Another possible
-query operation is "sum", where the join_values() function should be defined to
-return "a + b" and identity() should be defined to return 0. Another possible
-update operation is "increment", where join_value_with_delta(v, d, len) should
-return "v + d*len" and join_deltas(d1, d2) should return "d1 + d2".
+- join_value_with_delta(v, join_deltas(d, ..(m times).., d), 1) should equal
+  join_value_with_delta(v, d, m), which is a faster implementation thereof.
+- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
+  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
+  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
+The default definition below assumes that updates "set" the chosen array index
+to a new value. Another possible update operation is "increment", in which
+join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
+join_deltas(d1, d2) should be defined to return "d1 + d2".
 
 - segment_tree(n, v) constructs an array with n indices, all initialized to v.
 - segment_tree(lo, hi) constructs an array from two RandomAccessIterators as a
   range [lo, hi), initialized to the elements of the range, in the same order.
 - size() returns the size of the array.
-- at(i) returns the value at index i, where i is between
+- at(i) returns the value at index i, where i is between 0 and size() - 1.
 - query(lo, hi) returns the result of join_values() applied to all indices from
   lo to hi, inclusive (i.e. join_values(a[lo], a[lo + 1], ..., a[hi])).
 - update(i, d) modifies the value at index i by joining the current value with d
@@ -49,20 +44,16 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the array elements.
-- O(1) auxiliary per call to all operations.
+- O(1) auxiliary per call to size().
+- O(log n) auxiliary stack space per call to update() and query().
 
 */
 
-#include <limits>  // std::numeric_limits<T>::min()
 #include <vector>
 
 template<class T> class segment_tree {
   static T join_values(const T &a, const T &b) {
     return a > b ? a : b;
-  }
-
-  static T identity() {
-    return std::numeric_limits<T>::min();
   }
 
   static T join_value_with_delta(const T &v, const T &d, int len) {
@@ -74,17 +65,29 @@ template<class T> class segment_tree {
   }
 
   int len;
-  std::vector<T> t, lazy;
+  std::vector<T> value, delta;
   std::vector<int> seglen;
   std::vector<bool> pending;
 
+  void init() {
+    delta.resize(2*len);
+    seglen.resize(2*len, 0);
+    pending.resize(2*len, false);
+    std::fill(seglen.begin() + len/2, seglen.end(), 1);
+    for (int i = value.size() - 1; i > 1; i -= 2) {
+      value[i >> 1] = join_values(value[i], value[i ^ 1]);
+      seglen[i >> 1] = seglen[i] + seglen[i ^ 1];
+    }
+  }
+
   T join_value_with_delta(int i) {
-    return pending[i] ? join_value_with_delta(t[i], lazy[i], seglen[i]) : t[i];
+    return pending[i] ? join_value_with_delta(value[i], delta[i], seglen[i])
+                      : value[i];
   }
 
   void push_delta(int parent, int child) {
-    lazy[child] = pending[child] ? join_deltas(lazy[child], lazy[parent])
-                                 : lazy[parent];
+    delta[child] = pending[child] ? join_deltas(delta[child], delta[parent])
+                                  : delta[parent];
     pending[child] = true;
   }
 
@@ -94,7 +97,7 @@ template<class T> class segment_tree {
     for (d -= 2; d >= 0; d--) {
       int x = i >> d;
       if (pending[x >> 1]) {
-        t[x >> 1] = join_value_with_delta(x >> 1);
+        value[x >> 1] = join_value_with_delta(x >> 1);
         push_delta(x >> 1, x);
         push_delta(x >> 1, x ^ 1);
         pending[x >> 1] = false;
@@ -102,32 +105,21 @@ template<class T> class segment_tree {
     }
   }
 
-  void init() {
-    lazy.resize(2*len);
-    seglen.resize(2*len, 0);
-    pending.resize(2*len, false);
-    std::fill(seglen.begin() + len/2, seglen.end(), 1);
-    for (int i = t.size() - 1; i > 1; i -= 2) {
-      t[i >> 1] = join_values(t[i], t[i ^ 1]);
-      seglen[i >> 1] = seglen[i] + seglen[i ^ 1];
-    }
-  }
-
  public:
   segment_tree(int n, const T &v = T()) {
     len = n;
-    t.resize(2*len, identity());
+    value.resize(2*len);
     for (int i = 0; i < len; i++) {
-      t[len + i] = v;
+      value[len + i] = v;
     }
     init();
   }
 
   template<class It> segment_tree(It lo, It hi) {
     len = hi - lo;
-    t.resize(2*len, identity());
+    value.resize(2*len);
     for (int i = 0; i < len; i++) {
-      t[len + i] = *(lo + i);
+      value[len + i] = *(lo + i);
     }
     init();
   }
@@ -143,17 +135,17 @@ template<class T> class segment_tree {
   T query(int lo, int hi) {
     push_delta(lo += len);
     push_delta(hi += len);
-    T res = identity();
+    T res;
     bool found = false;
     for (; lo <= hi; lo = (lo + 1) >> 1, hi = (hi - 1) >> 1) {
       if ((lo & 1) != 0) {
-        res = found ? join_values(res, join_value_with_delta(lo)) :
-                      join_value_with_delta(lo);
+        res = found ? join_values(res, join_value_with_delta(lo))
+                    : join_value_with_delta(lo);
         found = true;
       }
       if ((hi & 1) == 0) {
-        res = found ? join_values(res, join_value_with_delta(hi)) :
-                      join_value_with_delta(hi);
+        res = found ? join_values(res, join_value_with_delta(hi))
+                    : join_value_with_delta(hi);
         found = true;
       }
     }
@@ -170,23 +162,23 @@ template<class T> class segment_tree {
     int ta = -1, tb = -1;
     for (; lo <= hi; lo = (lo + 1) >> 1, hi = (hi - 1) >> 1) {
       if ((lo & 1) != 0) {
-        lazy[lo] = pending[lo] ? join_deltas(lazy[lo], d) : d;
+        delta[lo] = pending[lo] ? join_deltas(delta[lo], d) : d;
         pending[lo] = true;
         ta = (ta == -1) ? lo : ta;
       }
       if ((hi & 1) == 0) {
-        lazy[hi] = pending[hi] ? join_deltas(lazy[hi], d) : d;
+        delta[hi] = pending[hi] ? join_deltas(delta[hi], d) : d;
         pending[hi] = true;
         tb = (tb == -1) ? hi : tb;
       }
     }
     for (int i = ta; i > 1; i >>= 1) {
-      t[i >> 1] = join_values(join_value_with_delta(i),
-                              join_value_with_delta(i ^ 1));
+      value[i >> 1] = join_values(join_value_with_delta(i),
+                                  join_value_with_delta(i ^ 1));
     }
     for (int i = tb; i > 1; i >>= 1) {
-      t[i >> 1] = join_values(join_value_with_delta(i),
-                              join_value_with_delta(i ^ 1));
+      value[i >> 1] = join_values(join_value_with_delta(i),
+                                  join_value_with_delta(i ^ 1));
     }
   }
 };
