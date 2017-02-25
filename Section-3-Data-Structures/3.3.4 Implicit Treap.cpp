@@ -267,12 +267,9 @@ template<class T> class implicit_treap {
 
 /*** Example Usage and Output:
 
-Values: 99 -2 1 8 10 11
-Max value in range [0, 3] is 99.
-Values: 90 -2 1 8 10 11
-Max value in array is 90.
-Values: 2 2 1 8 10 11
-Max value in range [0, 3] is 10.
+Values: 99 -2 1 8 10 11 (max: 99)
+Values: 90 -2 1 8 10 11 (max: 90)
+Values: 2 2 1 8 10 11 (max: 11)
 
 ***/
 
