@@ -1,8 +1,7 @@
 /*
 
-Maintain an array, allowing for updates and queries of contiguous subarrays
-using the lazy propagation technique. This implementation assumes that the array
-is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
+Maintain a fixed-size array (from 0 to size() - 1) while supporting both dynamic
+queries and updates of contiguous subarrays via the lazy propagation technique.
 
 The query operation is defined by an associative join_values() function which:
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)

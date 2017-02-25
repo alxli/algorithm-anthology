@@ -1,8 +1,7 @@
 /*
 
-Maintain an array, allowing for updates of individual indices (point update) and
-queries on contiguous sub-arrays (range query). This implementation assumes that
-the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
+Maintain a fixed-size array (from 0 to size() - 1) while supporting dynamic
+queries of contiguous sub-arrays and dynamic updates of individual indices.
 
 The query operation is defined by an associative join_values() function which:
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
