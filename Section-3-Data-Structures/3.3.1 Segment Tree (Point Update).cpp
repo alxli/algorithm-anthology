@@ -4,23 +4,18 @@ Maintain an array, allowing for updates of individual indices (point update) and
 queries on contiguous sub-arrays (range query). This implementation assumes that
 the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
 
-The query operation is defined by a join_values() function with an associated
-identity() value. These may be arbitrarily defined as long as associativity and
-the identity property are preserved. That is, for all x, y, and z of the array's
-type, the definitions must satisfy:
-- join_values(x, join_values(y, z)) = join_values(join_values(x, y), z).
-- join_values(x, identity()) = join_values(identity(), x) = x.
+The query operation is defined by an associative join_values() function which:
+satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
+for all values x, y, and z in the array. The default definition below assumes a
+numerical array type, supporting queries for the "max" of the target range.
+Another possible query operation is "sum", in which the join_values() function
+should defined to return "a + b".
 
 The join_value_with_delta() function defines the change made to individual array
-values during an update() operation.
-
-The default definition below assumes a numerical array type, supporting queries
-for the "max" of the target range (identity() is defined as negative infinity),
-and updates which "set" the current array index to a new value. Another possible
-query operation is "sum", where the join_values() function should be defined to
-return "a + b" and identity() should be defined to return 0. Another possible
-update operation is "increment", where join_value_with_delta(v, d) should be
-defined to return "v + d".
+values during an update() operation. The default definition below assumes that
+updates "set" the chosen array index to a new value. Another possible update
+operation is "increment", in which join_value_with_delta(v, d) should be defined
+to return "v + d".
 
 - segment_tree(n, v) constructs an array with n indices, all initialized to v.
 - segment_tree(lo, hi) constructs an array from two RandomAccessIterators as a
@@ -44,16 +39,13 @@ Space Complexity:
 
 */
 
-#include <limits>  // std::numeric_limits<T>::min()
+#include <algorithm>  // std::max(), std::min()
+#include <stdexcept>  // std::runtime_error()
 #include <vector>
 
 template<class T> class segment_tree {
   static T join_values(const T &a, const T &b) {
-    return a > b ? a : b;
-  }
-
-  static T identity() {
-    return std::numeric_limits<T>::min();
+    return std::max(a, b);
   }
 
   static T join_value_with_delta(const T &v, const T &d) {
@@ -97,26 +89,33 @@ template<class T> class segment_tree {
   }
 
   T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) {
-    if (hi < tgt_lo || lo > tgt_hi) {
-      return identity();
-    }
-    if (tgt_lo <= lo && hi <= tgt_hi) {
+    if (lo == tgt_lo && hi == tgt_hi) {
       return t[i];
     }
-    return join_values(query(i*2 + 1, lo, (lo + hi)/2, tgt_lo, tgt_hi),
-                       query(i*2 + 2, (lo + hi)/2 + 1, hi, tgt_lo, tgt_hi));
+    int mid = (lo + hi)/2;
+    if (tgt_lo <= mid && mid < tgt_hi) {
+      return join_values(
+                query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
+                query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
+    } else if (tgt_lo <= mid) {
+      return query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
+    } else if (tgt_hi > mid) {
+      return query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
+    } else {
+      throw std::runtime_error("Incorrect query range.");
+    }
   }
 
  public:
   segment_tree(int n, const T &v = T()) {
     len = n;
-    t.resize(4*len, identity());
+    t.resize(4*len);
     build(0, 0, len - 1, false, 0, v);
   }
 
   template<class It> segment_tree(It lo, It hi) {
     len = hi - lo;
-    t.resize(4*len, identity());
+    t.resize(4*len);
     build(0, 0, len - 1, lo);
   }
 
@@ -145,6 +144,7 @@ The maximum value in the range [0, 3] is 8.
 ***/
 
 #include <iostream>
+#include <limits>
 using namespace std;
 
 int main() {
