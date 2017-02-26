@@ -25,8 +25,9 @@ std::vector<int> table, dp[MAXN];
 
 void build_rmq_table(int n, int a[]) {
   table.resize(n + 1);
-  for (int i = 2; i <= n; i++)
+  for (int i = 2; i <= n; i++) {
     table[i] = table[i >> 1] + 1;
+  }
   for (int i = 0; i < n; i++) {
     dp[i].resize(table[n] + 1);
     dp[i][0] = i;

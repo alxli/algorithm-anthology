@@ -7,7 +7,7 @@ propagation technique.
 The query operation is defined by an associative join_values() function which:
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
 for all values x, y, and z in the array. The default definition below assumes a
-numerical array type, supporting queries for the "max" of the target range.
+numerical array type, supporting queries for the "min" of the target range.
 Another possible query operation is "sum", in which the join_values() function
 should defined to return "a + b".
 
@@ -45,7 +45,7 @@ Space Complexity:
 
 template<class T> class implicit_treap {
   static T join_values(const T &a, const T &b) {
-    return a > b ? a : b;
+    return a < b ? a : b;
   }
 
   static T join_value_with_delta(const T &v, const T &d, int len) {
@@ -267,9 +267,9 @@ template<class T> class implicit_treap {
 
 /*** Example Usage and Output:
 
-Values: 99 -2 1 8 10 11 (max: 99)
-Values: 90 -2 1 8 10 11 (max: 90)
-Values: 2 2 1 8 10 11 (max: 11)
+Values: -99 -2 1 8 10 11 (min: -99)
+Values: -90 -2 1 8 10 11 (min: -90)
+Values: 2 2 1 8 10 11 (min: 1)
 
 ***/
 
@@ -281,7 +281,7 @@ void print(implicit_treap<int> &t) {
   for (int i = 0; i < t.size(); i++) {
     cout << " " << t.at(i);
   }
-  cout << " (max: " << t.query(0, t.size() - 1) << ")" << endl;
+  cout << " (min: " << t.query(0, t.size() - 1) << ")" << endl;
 }
 
 int main() {

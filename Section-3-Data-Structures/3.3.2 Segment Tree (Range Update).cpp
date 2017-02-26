@@ -6,7 +6,7 @@ queries and updates of contiguous subarrays via the lazy propagation technique.
 The query operation is defined by an associative join_values() function which:
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
 for all values x, y, and z in the array. The default definition below assumes a
-numerical array type, supporting queries for the "max" of the target range.
+numerical array type, supporting queries for the "min" of the target range.
 Another possible query operation is "sum", in which the join_values() function
 should defined to return "a + b".
 
@@ -53,7 +53,7 @@ Space Complexity:
 
 template<class T> class segment_tree {
   static T join_values(const T &a, const T &b) {
-    return std::max(a, b);
+    return std::min(a, b);
   }
 
   static T join_value_with_delta(const T &v, const T &d, int len) {
@@ -99,12 +99,12 @@ template<class T> class segment_tree {
   }
 
   T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) {
-    if (lo == tgt_lo && hi == tgt_hi) {
-      return value[i];
-    }
     if (pending[i]) {
       update_delta(i, delta[i], lo, hi);
       pending[i] = false;
+    }
+    if (lo == tgt_lo && hi == tgt_hi) {
+      return value[i];
     }
     int mid = (lo + hi)/2;
     if (tgt_lo <= mid && mid < tgt_hi) {
@@ -176,9 +176,9 @@ template<class T> class segment_tree {
 /*** Example Usage and Output:
 
 Values: 6 -2 4 8 10
-The maximum value in the range [0, 3] is 8.
-Values: -5 -5 -5 1 -5
-The maximum value in the range [0, 3] is 1.
+The minimum value in the range [0, 3] is -2.
+Values: 5 5 5 1 5
+The minimum value in the range [0, 3] is 1.
 
 ***/
 
@@ -193,16 +193,16 @@ int main() {
   for (int i = 0; i < t.size(); i++) {
     cout << " " << t.at(i);
   }
-  cout << endl << "The maximum value in the range [0, 3] is "
+  cout << endl << "The minimum value in the range [0, 3] is "
        << t.query(0, 3) << "." << endl;
-  t.update(0, 4, -5);
+  t.update(0, 4, 5);
   t.update(3, 2);
   t.update(3, 1);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {
     cout << " " << t.at(i);
   }
-  cout << endl << "The maximum value in the range [0, 3] is "
+  cout << endl << "The minimum value in the range [0, 3] is "
        << t.query(0, 3) << "." << endl;
   return 0;
 }

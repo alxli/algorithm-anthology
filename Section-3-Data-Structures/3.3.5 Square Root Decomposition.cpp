@@ -6,7 +6,7 @@ queries of contiguous sub-arrays and dynamic updates of individual indices.
 The query operation is defined by an associative join_values() function which:
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
 for all values x, y, and z in the array. The default definition below assumes a
-numerical array type, supporting queries for the "max" of the target range.
+numerical array type, supporting queries for the "min" of the target range.
 Another possible query operation is "sum", in which the join_values() function
 should defined to return "a + b".
 
@@ -30,13 +30,13 @@ Space Complexity:
 
 */
 
-#include <algorithm>  // std::max(), std::min()
+#include <algorithm>  // std::min()
 #include <cmath>  // sqrt()
 #include <vector>
 
 template<class T> class sqrt_decomposition {
   static T join_values(const T &a, const T &b) {
-    return std::max(a, b);
+    return std::min(a, b);
   }
 
   static T join_value_with_delta(const T &v, const T &d) {
@@ -118,12 +118,11 @@ template<class T> class sqrt_decomposition {
 /*** Example Usage and Output:
 
 Values: 6 -2 4 8 10
-The maximum value in the range [0, 3] is 8.
+The minimum value in the range [0, 3] is -2.
 
 ***/
 
 #include <iostream>
-#include <limits>
 using namespace std;
 
 int main() {
@@ -134,7 +133,7 @@ int main() {
   for (int i = 0; i < sd.size(); i++) {
     cout << " " << sd.at(i);
   }
-  cout << endl << "The maximum value in the range [0, 3] is "
+  cout << endl << "The minimum value in the range [0, 3] is "
        << sd.query(0, 3) << "." << endl;
   return 0;
 }
