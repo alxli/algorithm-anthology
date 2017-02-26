@@ -1,7 +1,7 @@
 /*
 
 Given a static array with indices from 0 to n - 1, precompute a table that may
-later be used perform minimum range queries on the array in constant time. This
+later be used perform range minimum queries on the array in constant time. This
 version is simplified to only work on integer arrays.
 
 The dynamic programming state dp[i][j] holds the index of the minimum value in
