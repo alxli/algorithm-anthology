@@ -66,8 +66,8 @@ template<class T> class implicit_treap {
     int size, priority;
     node_t *left, *right;
 
-    node_t(const T & val) {
-      value = subtree_value = val;
+    node_t(const T &v) {
+      value = subtree_value = v;
       pending = false;
       size = 1;
       priority = rand32();
@@ -131,15 +131,15 @@ template<class T> class implicit_treap {
     update_value(n);
   }
 
-  static void split(node_t *n, node_t *&left, node_t *&right, int key) {
+  static void split(node_t *n, node_t *&left, node_t *&right, int i) {
     push_delta(n);
     if (n == NULL) {
       left = right = NULL;
-    } else if (key <= size(n->left)) {
-      split(n->left, left, n->left, key);
+    } else if (i <= size(n->left)) {
+      split(n->left, left, n->left, i);
       right = n;
     } else {
-      split(n->right, n->right, right, key - size(n->left) - 1);
+      split(n->right, n->right, right, i - size(n->left) - 1);
       left = n;
     }
     update_value(n);
