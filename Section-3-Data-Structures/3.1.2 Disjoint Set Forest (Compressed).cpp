@@ -63,8 +63,9 @@ template<class T> class disjoint_set_forest {
   }
 
   void make_set(const T &x) {
-    if (id.find(x) != id.end())
+    if (id.find(x) != id.end()) {
       return;
+    }
     id[x] = num_elements;
     root.push_back(num_elements++);
     rank.push_back(0);
@@ -78,8 +79,9 @@ template<class T> class disjoint_set_forest {
   void unite(const T &x, const T &y) {
     int r1 = find_root(id[x]);
     int r2 = find_root(id[y]);
-    if (r1 == r2)
+    if (r1 == r2) {
       return;
+    }
     num_sets--;
     if (rank[r1] < rank[r2]) {
       root[r1] = r2;
