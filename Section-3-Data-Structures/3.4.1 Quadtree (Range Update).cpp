@@ -1,8 +1,9 @@
 /*
 
 Maintain a two-dimensional array while supporting both dynamic queries and
-updates of rectangular sub-arrays. This implementation uses lazy initialization
-of nodes to conserve memory while supporting large indices.
+updates of rectangular sub-arrays via the lazy propagation technique. This
+implementation uses lazy initialization of nodes to conserve memory while
+supporting large indices.
 
 The query operation is defined by the join_values() and join_region() functions
 where join_values(x, join_values(y, z)) = join_values(join_values(x, y), z) for
