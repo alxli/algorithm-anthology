@@ -85,11 +85,11 @@ template<class T> class quadtree {
   T res, delta;
   bool found;
 
-  void update_delta(node_t *&n, const T &d, int area) {
+  void update_delta(node_t *&n, int area) {
     if (n == NULL) {
       n = new node_t(join_region(init, area));
     }
-    n->delta = n->pending ? join_deltas(n->delta, d) : d;
+    n->delta = n->pending ? join_deltas(n->delta, delta) : delta;
     n->pending = true;
   }
 
@@ -101,10 +101,10 @@ template<class T> class quadtree {
       if (rlen*clen > 1) {
         int rlen1 = rmid - r1 + 1, rlen2 = rlen - rlen1;
         int clen1 = cmid - c1 + 1, clen2 = clen - clen1;
-        update_delta(n->child[0], delta, rlen1*clen1);
-        update_delta(n->child[1], delta, rlen2*clen1);
-        update_delta(n->child[2], delta, rlen1*clen2);
-        update_delta(n->child[3], delta, rlen2*clen2);
+        update_delta(n->child[0], rlen1*clen1);
+        update_delta(n->child[1], rlen2*clen1);
+        update_delta(n->child[2], rlen1*clen2);
+        update_delta(n->child[3], rlen2*clen2);
       }
     }
     n->pending = false;
