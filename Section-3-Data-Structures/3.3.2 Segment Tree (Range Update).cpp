@@ -3,7 +3,7 @@
 Maintain a fixed-size array (from 0 to size() - 1) while supporting both dynamic
 queries and updates of contiguous subarrays via the lazy propagation technique.
 
-The query operation is defined by an associative join_values() function which:
+The query operation is defined by an associative join_values() function which
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
 for all values x, y, and z in the array. The default definition below assumes a
 numerical array type, supporting queries for the "min" of the target range.
@@ -13,8 +13,9 @@ should defined to return "a + b".
 The update operation is defined by the join_value_with_delta() and join_deltas()
 functions, which determines the change made to array values. These must satisfy:
 - join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(v, join_deltas(d, ..(m times).., d), 1) should equal
-  join_value_with_delta(v, d, m), which is a faster implementation thereof.
+- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should equal
+  join_values(join_value_with_delta(v, d, 1), ...(repeated m times)), which is
+  a faster implementation thereof.
 - if a sequence d_1, ..., d_m of deltas is used to update a value v, then
   join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
   to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
@@ -89,20 +90,20 @@ template<class T> class segment_tree {
   }
 
   void update_delta(int i, const T &d, int lo, int hi) {
-    value[i] = join_value_with_delta(value[i], d, hi - lo + 1);
-    if (lo != hi) {
-      int l = 2*i + 1, r = 2*i + 2;
-      delta[l] = pending[l] ? join_deltas(delta[l], d) : d;
-      delta[r] = pending[r] ? join_deltas(delta[r], d) : d;
-      pending[l] = pending[r] = true;
+    if (pending[i]) {
+      value[i] = join_value_with_delta(value[i], d, hi - lo + 1);
+      if (lo != hi) {
+        int l = 2*i + 1, r = 2*i + 2;
+        delta[l] = pending[l] ? join_deltas(delta[l], d) : d;
+        delta[r] = pending[r] ? join_deltas(delta[r], d) : d;
+        pending[l] = pending[r] = true;
+      }
     }
+    pending[i] = false;
   }
 
   T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) {
-    if (pending[i]) {
-      update_delta(i, delta[i], lo, hi);
-      pending[i] = false;
-    }
+    update_delta(i, delta[i], lo, hi);
     if (lo == tgt_lo && hi == tgt_hi) {
       return value[i];
     }
@@ -119,14 +120,12 @@ template<class T> class segment_tree {
   }
 
   void update(int i, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
-    if (pending[i]) {
-      update_delta(i, delta[i], lo, hi);
-      pending[i] = false;
-    }
+    update_delta(i, delta[i], lo, hi);
     if (hi < tgt_lo || lo > tgt_hi) {
       return;
     }
     if (tgt_lo <= lo && hi <= tgt_hi) {
+      pending[i] = true;
       update_delta(i, d, lo, hi);
       return;
     }

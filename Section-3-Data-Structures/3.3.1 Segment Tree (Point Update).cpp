@@ -3,7 +3,7 @@
 Maintain a fixed-size array (from 0 to size() - 1) while supporting dynamic
 queries of contiguous sub-arrays and dynamic updates of individual indices.
 
-The query operation is defined by an associative join_values() function which:
+The query operation is defined by an associative join_values() function which
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
 for all values x, y, and z in the array. The default definition below assumes a
 numerical array type, supporting queries for the "min" of the target range.
