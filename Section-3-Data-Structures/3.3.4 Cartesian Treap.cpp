@@ -4,30 +4,30 @@ Maintain a dynamically-sized array using a balanced binary search tree while
 supporting both dynamic queries and updates of contiguous subarrays via the lazy
 propagation technique.
 
-The query operation is defined by an associative join_values() function which:
+The query operation is defined by an associative join_values() function which
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
-for all values x, y, and z in the array. The default definition below assumes a
-numerical array type, supporting queries for the "min" of the target range.
-Another possible query operation is "sum", in which the join_values() function
-should defined to return "a + b".
+for all values x, y, and z in the array. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case the join_values()
+function should defined to return "a + b".
 
 The update operation is defined by the join_value_with_delta() and join_deltas()
 functions, which determines the change made to array values. These must satisfy:
 - join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(v, join_deltas(d, ..(m times).., d), 1) should equal
-  join_value_with_delta(v, d, m), which is a faster implementation thereof.
+- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
+  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
 - if a sequence d_1, ..., d_m of deltas is used to update a value v, then
   join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
   to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
-The default definition below assumes that updates "set" the chosen array index
-to a new value. Another possible update operation is "increment", in which
+The default code below defines updates that "set" the chosen array index to a
+new value. Another possible update operation is "increment", in which case
 join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
 join_deltas(d1, d2) should be defined to return "d1 + d2".
 
-This data structure shares every operation of the segment trees found in this
-section, with the additional operations empty(), insert(), erase(), push_back(),
-and pop_back() analogous to those of std::vector (the only difference is that
-here, insert() and erase() both take an index instead of an iterator).
+This data structure shares every operation of one-dimensional segment trees in
+this section, with the additional operations empty(), insert(), erase(),
+push_back(), and pop_back() analogous to those of std::vector (the difference
+here is that, insert() and erase() both take an index instead of an iterator).
 
 Time Complexity:
 - O(n) per call to both constructors, where n is the size of the array.

@@ -9,24 +9,34 @@ The query operation is defined by the join_values() and join_region() functions
 where join_values(x, join_values(y, z)) = join_values(join_values(x, y), z) for
 all values x, y, and z in the array. The join_region(v, area) function must be
 defined in conjunction to efficiently return the result of join_values() applied
-to a rectangular sub-array of area elements. The default definition below
-assumes a numerical array type, supporting queries for the "min" of the target
-range. Another possible query operation is "sum", for which join_values(a, b)
-should return "a + b" and join_region(v, area) should return v*area.
+to a rectangular sub-array of area elements. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case join_values(a, b)
+should return "a + b" and join_region(v, area) should return "v*area".
 
 The update operation is defined by the join_value_with_delta() and join_deltas()
 functions, which determines the change made to array values. These must satisfy:
 - join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(join_values(rlen*clen), d, m)) should equal
-  join_values(join_value_with_delta(v, d, 1), ...(repeated m times)), which is
-  a faster implementation thereof.
+- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
+  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
 - if a sequence d_1, ..., d_m of deltas is used to update a value v, then
   join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
   to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
-The default definition below supports updates that "set" the chosen array index
-to a new value. Another possible update operation is "increment", in which
+The default code below defines updates that "set" the chosen array index to a
+new value. Another possible update operation is "increment", in which case
 join_value_with_delta(v, d, area) should be defined to return "v + d*area" and
 join_deltas(d1, d2) should be defined to return "d1 + d2".
+
+- quadtree(v) constructs a two-dimensional array with rows from 0 to MAXR and
+  columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
+- at(r, c) returns the value at row r, column c.
+- query(r1, c1, r2, c2) returns the result of join_values() applied to every
+  value in the rectangular region consisting of rows from r1 to r2 and columns
+  from c1 to c2, inclusive.
+- update(r, c, d) assigns the value v at (r, c) to join_value_with_delta(v, d).
+- update(r1, c1, r2, c2) modifies the value at each index of the rectangular
+  region consisting of rows from r1 to r2 and columns from c1 to c2, inclusive,
+  by respectively joining them with d using join_value_with_delta().
 
 Time Complexity:
 - O(1) per call to the constructor.
@@ -181,17 +191,8 @@ public:
     clean_up(root);
   }
 
-  void update(int r1, int c1, int r2, int c2, const T &d) {
-    tgt_r1 = r1;
-    tgt_c1 = c1;
-    tgt_r2 = r2;
-    tgt_c2 = c2;
-    delta = d;
-    update(root, 0, 0, MAXR, MAXC);
-  }
-
-  void update(int r, int c, const T &d) {
-    update(r, c, r, c, d);
+  T at(int r, int c) {
+    return query(r, c, r, c);
   }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -204,8 +205,17 @@ public:
     return found ? res : join_region(init, (r2 - r1 + 1)*(c2 - c1 + 1));
   }
 
-  T at(int r, int c) {
-    return query(r, c, r, c);
+  void update(int r, int c, const T &d) {
+    update(r, c, r, c, d);
+  }
+
+  void update(int r1, int c1, int r2, int c2, const T &d) {
+    tgt_r1 = r1;
+    tgt_c1 = c1;
+    tgt_r2 = r2;
+    tgt_c2 = c2;
+    delta = d;
+    update(root, 0, 0, MAXR, MAXC);
   }
 };
 

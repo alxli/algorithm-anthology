@@ -1,41 +1,40 @@
 /*
 
-Maintain a fixed-size array (from 0 to size() - 1) while supporting both dynamic
-queries and updates of contiguous subarrays via the lazy propagation technique.
+Maintain a fixed-size array while supporting both dynamic queries and updates of
+contiguous subarrays via the lazy propagation technique.
 
 The query operation is defined by an associative join_values() function which
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
-for all values x, y, and z in the array. The default definition below assumes a
-numerical array type, supporting queries for the "min" of the target range.
-Another possible query operation is "sum", in which the join_values() function
-should defined to return "a + b".
+for all values x, y, and z in the array. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case the join_values()
+function should defined to return "a + b".
 
 The update operation is defined by the join_value_with_delta() and join_deltas()
 functions, which determines the change made to array values. These must satisfy:
 - join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should equal
-  join_values(join_value_with_delta(v, d, 1), ...(repeated m times)), which is
-  a faster implementation thereof.
+- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
+  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
 - if a sequence d_1, ..., d_m of deltas is used to update a value v, then
   join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
   to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
-The default definition below supports updates that "set" the chosen array index
-to a new value. Another possible update operation is "increment", in which
+The default code below defines updates that "set" the chosen array index to a
+new value. Another possible update operation is "increment", in which case
 join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
 join_deltas(d1, d2) should be defined to return "d1 + d2".
 
-- segment_tree(n, v) constructs an array with n indices, all initialized to v.
+- segment_tree(n, v) constructs an array of size n with indices from 0 to n - 1,
+  inclusive, and all values initialized to v.
 - segment_tree(lo, hi) constructs an array from two RandomAccessIterators as a
-  range [lo, hi), initialized to the elements of the range, in the same order.
+  range [lo, hi), initialized to the elements of the range in the same order.
 - size() returns the size of the array.
 - at(i) returns the value at index i, where i is between 0 and size() - 1.
 - query(lo, hi) returns the result of join_values() applied to all indices from
-  lo to hi, inclusive (i.e. join_values(a[lo], a[lo + 1], ..., a[hi])).
-- update(i, d) modifies the value at index i by joining the current value with d
-  using join_value_with_delta() (i.e. a[i] = join_value_with_delta(a[i], d, 1)).
-- update(lo, hi, d) modifies all array indices from lo to hi, inclusive, by
-  joining the values at each array index with d using join_value_with_delta()
-  (i.e. for (int i=lo; i<=hi; i++) a[i] = join_value_with_delta(a[i], d, 1);).
+  lo to hi, inclusive. If the distance between lo and hi is 1, then the single
+  specified value is returned.
+- update(i, d) assigns the value v at index i to join_value_with_delta(v, d).
+- update(lo, hi, d) modifies the value at each array index from lo to hi,
+  inclusive, by respectively joining them with d using join_value_with_delta().
 
 Time Complexity:
 - O(n) per call to both constructors, where n is the size of the array.

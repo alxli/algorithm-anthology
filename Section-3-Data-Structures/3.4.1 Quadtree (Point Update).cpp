@@ -8,16 +8,24 @@ The query operation is defined by the join_values() and join_region() functions
 where join_values(x, join_values(y, z)) = join_values(join_values(x, y), z) for
 all values x, y, and z in the array. The join_region(v, area) function must be
 defined in conjunction to efficiently return the result of join_values() applied
-to a rectangular sub-array of area elements. The default definition below
-assumes a numerical array type, supporting queries for the "min" of the target
-range. Another possible query operation is "sum", for which join_values(a, b)
-should return "a + b" and join_region(v, area) should return v*area.
+to a rectangular sub-array of area elements. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case join_values(a, b)
+should return "a + b" and join_region(v, area) should return "v*area".
 
 The update operation is defined by the join_value_with_delta() function, which
-determines the change made to array values. The default definition below
-supports updates that "set" the chosen array index to a new value. Another
-possible update operation is "increment", in which join_value_with_delta(v, d)
-should be defined to return "v + d".
+determines the change made to array values. The default code below defines
+updates that "set" the chosen array index to a new value. Another possible
+update operation is "increment", in which join_value_with_delta(v, d) should be
+defined to return "v + d".
+
+- quadtree(v) constructs a two-dimensional array with rows from 0 to MAXR and
+  columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
+- at(r, c) returns the value at row r, column c.
+- query(r1, c1, r2, c2) returns the result of join_values() applied to every
+  value in the rectangular region consisting of rows from r1 to r2, inclusive,
+  and columns from c1 to c2, inclusive.
+- update(r, c, d) assigns the value v at (r, c) to join_value_with_delta(v, d).
 
 Time Complexity:
 - O(1) per call to the constructor.
@@ -142,11 +150,8 @@ template<class T> class quadtree {
     clean_up(root);
   }
 
-  void update(int r, int c, const T &d) {
-    tgt_r = r;
-    tgt_c = c;
-    delta = d;
-    update(root, 0, 0, MAXR, MAXC);
+  T at(int r, int c) {
+    return query(r, c, r, c);
   }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -159,8 +164,11 @@ template<class T> class quadtree {
     return found ? res : join_region(init, (r2 - r1 + 1)*(c2 - c1 + 1));
   }
 
-  T at(int r, int c) {
-    return query(r, c, r, c);
+  void update(int r, int c, const T &d) {
+    tgt_r = r;
+    tgt_c = c;
+    delta = d;
+    update(root, 0, 0, MAXR, MAXC);
   }
 };
 
