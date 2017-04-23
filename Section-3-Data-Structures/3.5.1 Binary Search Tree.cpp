@@ -22,6 +22,11 @@ Time Complexity:
 - O(n) per call to insert(), erase(), find(), and walk(), where n is the number
   of nodes currently in the map.
 
+Space Complexity:
+- O(n) for storage of the map elements.
+- O(1) auxiliary per call to size(), empty(), and find().
+- O(n) auxiliary stack space per call to all other operations.
+
 */
 
 #include <cstdlib>  // NULL

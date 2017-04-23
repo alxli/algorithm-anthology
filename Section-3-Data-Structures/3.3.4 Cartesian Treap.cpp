@@ -2,7 +2,8 @@
 
 Maintain a dynamically-sized array using a balanced binary search tree while
 supporting both dynamic queries and updates of contiguous subarrays via the lazy
-propagation technique.
+propagation technique. A treap maintains a balanced binary tree structure by
+preserving the heap property on the randomly generated priority values of nodes, thereby making insertions and deletions run in O(log n) with high probability.
 
 The query operation is defined by an associative join_values() function which
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
