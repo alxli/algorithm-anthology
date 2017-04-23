@@ -3,11 +3,11 @@
 Maintain a map, that is, a collection of key-value pairs such that each possible
 key appears at most once in the collection. This implementations requires an
 ordering on the set of possible keys defined by the < operator on the key type.
-A treap is a binary search tree that is balanced by preserving a heap property
-on the randomly generated priority value assigned to every node, thereby making
-insertions and deletions run in O(log n) with high probability.
+An AVL tree is a binary search tree balanced by height, guaranteeing O(log n)
+worst-case running time in insertions and deletions by making sure that the
+heights of the left and right subtrees at every node differ by at most 1.
 
-- treap() constructs an empty map.
+- avl_tree() constructs an empty map.
 - size() returns the size of the map.
 - empty() returns the map is empty.
 - insert(k, v) adds an entry with key k and value v to the map, returning true
@@ -22,41 +22,53 @@ insertions and deletions run in O(log n) with high probability.
 
 Time Complexity:
 - O(1) per call to the constructor, size(), and empty().
-- O(log n) on average per call to insert(), erase(), and find(), where n is the
-  number of nodes currently in the map.
+- O(log n) per call to insert(), erase(), and find(), where n is the number of
+  nodes currently in the map.
 - O(n) per call to walk().
 
 Space Complexity:
 - O(n) for storage of the map elements.
 - O(1) auxiliary per call to size(), empty(), and find().
-- O(log n) auxiliary stack space on average per call to all other operations.
+- O(log n) auxiliary stack space per call to all other operations.
 
 */
 
+#include <algorithm>  // std::max()
 #include <cstdlib>  // srand(), rand()
 
-template<class K, class V> class treap {
+template<class K, class V> class avl_tree {
   struct node_t {
     K key;
     V value;
     node_t *left, *right;
-    int priority;
+    int height;
 
     node_t(const K &k, const V &v) {
       key = k;
       value = v;
       left = right = NULL;
-      priority = (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
+      height = 1;
     }
   } *root;
 
   int num_nodes;
+
+  static int height(node_t *n) {
+    return (n != NULL) ? n->height : 0;
+  }
+
+  static void update_height(node_t *n) {
+    if (n == NULL) return;
+    n->height = 1 + std::max(height(n->left), height(n->right));
+  }
 
   static void rotate_l(node_t *&n) {
     node_t *tmp = n;
     n = n->right;
     tmp->right = n->left;
     n->left = tmp;
+    update_height(tmp);
+    update_height(n);
   }
 
   static void rotate_r(node_t *&n) {
@@ -64,6 +76,31 @@ template<class K, class V> class treap {
     n = n->left;
     tmp->left = n->right;
     n->right = tmp;
+    update_height(tmp);
+    update_height(n);
+  }
+
+  static int balance_factor(node_t *n) {
+    return (n != NULL) ? (height(n->left) - height(n->right)) : 0;
+  }
+
+  static void rebalance(node_t *&n) {
+    if (n == NULL) {
+      return;
+    }
+    update_height(n);
+    int bf = balance_factor(n);
+    if (bf > 1 && balance_factor(n->left) >= 0) {
+      rotate_r(n);
+    } else if (bf > 1 && balance_factor(n->left) < 0) {
+      rotate_l(n->left);
+      rotate_r(n);
+    } else if (bf < -1 && balance_factor(n->right) <= 0) {
+      rotate_l(n);
+    } else if (bf < -1 && balance_factor(n->right) > 0) {
+      rotate_r(n->right);
+      rotate_l(n);
+    }
   }
 
   static bool insert(node_t *&n, const K &k, const V &v) {
@@ -71,16 +108,9 @@ template<class K, class V> class treap {
       n = new node_t(k, v);
       return true;
     }
-    if (k < n->key && insert(n->left, k, v)) {
-      if (n->left->priority < n->priority) {
-        rotate_r(n);
-      }
-      return true;
-    }
-    if (n->key < k && insert(n->right, k, v)) {
-      if (n->right->priority < n->priority) {
-        rotate_l(n);
-      }
+    if ((k < n->key && insert(n->left, k, v)) ||
+        (n->key < k && insert(n->right, k, v))) {
+      rebalance(n);
       return true;
     }
     return false;
@@ -90,23 +120,36 @@ template<class K, class V> class treap {
     if (n == NULL) {
       return false;
     }
-    if (k < n->key) {
-      return erase(n->left, k);
-    } else if (n->key < k) {
-      return erase(n->right, k);
-    }
-    if (n->left != NULL && n->right != NULL) {
-      if (n->left->priority < n->right->priority) {
-        rotate_r(n);
-        return erase(n->right, k);
+    if (!(k < n->key || n->key < k)) {
+      if (n->left != NULL && n->right != NULL) {
+        node_t *tmp = n->right, *parent = NULL;
+        while (tmp->left != NULL) {
+          parent = tmp;
+          tmp = tmp->left;
+        }
+        n->key = tmp->key;
+        n->value = tmp->value;
+        if (parent != NULL) {
+          if (!erase(parent->left, parent->left->key)) {
+            return false;
+          }
+        } else if (!erase(n->right, n->right->key)) {
+          return false;
+        }
+      } else {
+        node_t *tmp = (n->left != NULL) ? n->left : n->right;
+        delete n;
+        n = tmp;
       }
-      rotate_l(n);
-      return erase(n->left, k);
+      rebalance(n);
+      return true;
     }
-    node_t *tmp = (n->left != NULL) ? n->left : n->right;
-    delete n;
-    n = tmp;
-    return true;
+    if ((k < n->key && erase(n->left, k)) ||
+        (n->key < k && erase(n->right, k))) {
+      rebalance(n);
+      return true;
+    }
+    return false;
   }
 
   template<class KVFunction>
@@ -127,12 +170,12 @@ template<class K, class V> class treap {
   }
 
  public:
-  treap() {
+  avl_tree() {
     root = NULL;
     num_nodes = 0;
   }
 
-  ~treap() {
+  ~avl_tree() {
     clean_up(root);
   }
 
@@ -195,7 +238,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  treap<int, char> t;
+  avl_tree<int, char> t;
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');

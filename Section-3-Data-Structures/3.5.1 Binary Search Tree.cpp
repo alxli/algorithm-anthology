@@ -3,6 +3,9 @@
 Maintain a map, that is, a collection of key-value pairs such that each possible
 key appears at most once in the collection. This implementations requires an
 ordering on the set of possible keys defined by the < operator on the key type.
+A binary search tree implements this map by inserting and deleting keys into a
+binary tree such that every node's left child has a lesser key and every node's
+right child has a greater key.
 
 - binary_search_tree() constructs an empty map.
 - size() returns the size of the map.
