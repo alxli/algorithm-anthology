@@ -34,7 +34,6 @@ Space Complexity:
 */
 
 #include <cstdlib>  // srand(), rand()
-#include <ctime>  // time()
 
 template<class K, class V> class treap {
   struct node_t {
@@ -131,7 +130,6 @@ template<class K, class V> class treap {
   treap() {
     root = NULL;
     num_nodes = 0;
-    srand(time(NULL));
   }
 
   ~treap() {
