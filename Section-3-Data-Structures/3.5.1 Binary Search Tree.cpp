@@ -1,108 +1,131 @@
 /*
 
-Description: A binary search tree (BST) is a node-based binary tree data
-structure where the left sub-tree of every node has keys less than the
-node's key and the right sub-tree of every node has keys greater than the
-node's key. A BST may be come degenerate like a linked list resulting in
-an O(N) running time per operation. A self-balancing binary search tree
-such as a randomized treap prevents the occurence of this known worst case.
+Maintain a map, that is, a collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementations requires an
+ordering on the set of possible keys defined by the < operator on the key type.
 
-Note: The following implementation is used similar to an std::map. In order
-to make it behave like an std::set, modify the code to remove the value
-associated with each node. In order to make it behave like an std::multiset
-or std::multimap, make appropriate changes with key comparisons (e.g.
-change (k < n->key) to (k <= n->key) in search conditions).
+- binary_search_tree() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns the map is empty.
+- insert(k, v) adds an entry with key k and value v to the map, returning true
+  if an new entry was added or false if the key already exists (in which case
+  the map is unchanged and the old value associated with the key is preserved).
+- erase(k) removes the entry with key k from the map, returning true if the
+  removal was successful or false if the key to be removed was not found.
+- find(k) returns a pointer to a const value associated with key k, or NULL if
+  the key was not found.
+- walk(f) calls the function f(k, v) on each entry of the map, in ascending
+  order of keys.
 
-Time Complexity: insert(), erase() and find() are O(log(N)) on average,
-but O(N) at worst if the tree becomes degenerate. Speed can be improved
-by randomizing insertion order if it doesn't matter. walk() is O(N).
-
-Space Complexity: O(N) on the number of nodes.
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(n) per call to insert(), erase(), find(), and walk(), where n is the number
+  of nodes currently in the map.
 
 */
 
-template<class key_t, class val_t> class binary_search_tree {
-  struct node_t {
-    key_t key;
-    val_t val;
-    node_t *L, *R;
+#include <cstdlib>  // NULL
 
-    node_t(const key_t & k, const val_t & v) {
+template<class K, class V> class binary_search_tree {
+  struct node_t {
+    K key;
+    V value;
+    node_t *left, *right;
+
+    node_t(const K &k, const V &v) {
       key = k;
-      val = v;
-      L = R = 0;
+      value = v;
+      left = right = NULL;
     }
   } *root;
 
   int num_nodes;
 
-  static bool insert(node_t *& n, const key_t & k, const val_t & v) {
-    if (n == 0) {
+  static bool insert(node_t *&n, const K &k, const V &v) {
+    if (n == NULL) {
       n = new node_t(k, v);
       return true;
     }
-    if (k < n->key) return insert(n->L, k, v);
-    if (n->key < k) return insert(n->R, k, v);
-    return false; //already exists
+    if (k < n->key) {
+      return insert(n->left, k, v);
+    } else if (n->key < k) {
+      return insert(n->right, k, v);
+    }
+    return false;
   }
 
-  static bool erase(node_t *& n, const key_t & key) {
-    if (n == 0) return false;
-    if (key < n->key) return erase(n->L, key);
-    if (n->key < key) return erase(n->R, key);
-    if (n->L == 0) {
-      node_t *temp = n->R;
-      delete n;
-      n = temp;
-    } else if (n->R == 0) {
-      node_t *temp = n->L;
-      delete n;
-      n = temp;
-    } else {
-      node_t *temp = n->R, *parent = 0;
-      while (temp->L != 0) {
-        parent = temp;
-        temp = temp->L;
-      }
-      n->key = temp->key;
-      n->val = temp->val;
-      if (parent != 0)
-        return erase(parent->L, parent->L->key);
-      return erase(n->R, n->R->key);
+  static bool erase(node_t *&n, const K &k) {
+    if (n == NULL) {
+      return false;
     }
+    if (k < n->key) {
+      return erase(n->left, k);
+    } else if (n->key < k) {
+      return erase(n->right, k);
+    }
+    if (n->left != NULL && n->right != NULL) {
+      node_t *tmp = n->right, *parent = NULL;
+      while (tmp->left != NULL) {
+        parent = tmp;
+        tmp = tmp->left;
+      }
+      n->key = tmp->key;
+      n->value = tmp->value;
+      if (parent != NULL) {
+        return erase(parent->left, parent->left->key);
+      }
+      return erase(n->right, n->right->key);
+    }
+    node_t *tmp = (n->left != NULL) ? n->left : n->right;
+    delete n;
+    n = tmp;
     return true;
   }
 
-  template<class BinaryFunction>
-  static void walk(node_t * n, BinaryFunction f) {
-    if (n == 0) return;
-    walk(n->L, f);
-    f(n->key, n->val);
-    walk(n->R, f);
+  template<class KVFunction>
+  static void walk(node_t *n, KVFunction f) {
+    if (n != NULL) {
+      walk(n->left, f);
+      f(n->key, n->value);
+      walk(n->right, f);
+    }
   }
 
-  static void clean_up(node_t * n) {
-    if (n == 0) return;
-    clean_up(n->L);
-    clean_up(n->R);
-    delete n;
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
   }
 
  public:
-  binary_search_tree(): root(0), num_nodes(0) {}
-  ~binary_search_tree() { clean_up(root); }
-  int size() const { return num_nodes; }
-  bool empty() const { return root == 0; }
+  binary_search_tree() {
+    root = NULL;
+    num_nodes = 0;
+  }
 
-  bool insert(const key_t & key, const val_t & val) {
-    if (insert(root, key, val)) {
+  ~binary_search_tree() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  bool insert(const K &k, const V &v) {
+    if (insert(root, k, v)) {
       num_nodes++;
       return true;
     }
     return false;
   }
 
-  bool erase(const key_t & key) {
+  bool erase(const K &k) {
     if (erase(root, key)) {
       num_nodes--;
       return true;
@@ -110,25 +133,39 @@ template<class key_t, class val_t> class binary_search_tree {
     return false;
   }
 
-  template<class BinaryFunction> void walk(BinaryFunction f) {
-    walk(root, f);
+  const V* find(const K &k) {
+    node_t *n = root;
+    while (n != NULL) {
+      if (k < n->key) {
+        n = n->left;
+      } else if (n->key < n) {
+        n = n->right;
+      } else {
+        return &(n->value);
+      }
+    }
+    return NULL;
   }
 
-  val_t * find(const key_t & key) {
-    for (node_t *n = root; n != 0; ) {
-      if (n->key == key) return &(n->val);
-      n = (key < n->key ? n->L : n->R);
-    }
-    return 0; //key not found
+  template<class KVFunction> void walk(KVFunction f) {
+    walk(root, f);
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
 
+abcde
+bcde
+
+***/
+
+#include <cassert>
 #include <iostream>
 using namespace std;
 
-void printch(int k, char v) { cout << v; }
+void printch(int k, char v) {
+  cout << v;
+}
 
 int main() {
   binary_search_tree<int, char> T;
@@ -136,12 +173,15 @@ int main() {
   T.insert(1, 'a');
   T.insert(3, 'c');
   T.insert(5, 'e');
-  T.insert(4, 'x');
-  *T.find(4) = 'd';
-  cout << "In-order: ";
-  T.walk(printch);  //abcde
-  cout << "\nRemoving node with key 3...";
-  cout << (T.erase(3) ? "Success!" : "Failed");
-  cout << "\n";
+  assert(T.insert(4, 'd'));
+  assert(*T.find(4) == 'd');
+  assert(!T.insert(4, 'd'));
+  T.walk(printch);
+  cout << endl;
+  assert(T.erase(1));
+  assert(!T.erase(1));
+  assert(T.find(1) == NULL);
+  T.walk(printch);
+  cout << endl;
   return 0;
 }
