@@ -28,152 +28,185 @@ Space Complexity: O(N) on the number of nodes.
 
 */
 
-#include <cstdlib> /* srand(), rand() */
-#include <ctime>   /* time() */
+#include <cstdlib>  // srand(), rand()
+#include <ctime>  // time()
 
-template<class key_t, class val_t> class treap {
+template<class K, class V> class treap {
   struct node_t {
-    static inline int rand32() {
-      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
-    }
-
-    key_t key;
-    val_t val;
+    K key;
+    V value;
+    node_t *left, *right;
     int priority;
-    node_t *L, *R;
 
-    node_t(const key_t & k, const val_t & v): key(k), val(v), L(0), R(0) {
-      priority = rand32();
+    node_t(const K &k, const V &v) {
+      key = k;
+      value = v;
+      left = right = NULL;
+      priority = (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
     }
   } *root;
 
   int num_nodes;
 
-  static void rotate_l(node_t *& k2) {
-    node_t *k1 = k2->R;
-    k2->R = k1->L;
-    k1->L = k2;
+  static void rotate_l(node_t *&k2) {
+    node_t *k1 = k2->right;
+    k2->right = k1->left;
+    k1->left = k2;
     k2 = k1;
   }
 
-  static void rotate_r(node_t *& k2) {
-    node_t *k1 = k2->L;
-    k2->L = k1->R;
-    k1->R = k2;
+  static void rotate_r(node_t *&k2) {
+    node_t *k1 = k2->left;
+    k2->left = k1->right;
+    k1->right = k2;
     k2 = k1;
   }
 
-  static bool insert(node_t *& n, const key_t & k, const val_t & v) {
-    if (n == 0) {
+  static bool insert(node_t *&n, const K &k, const V &v) {
+    if (n == NULL) {
       n = new node_t(k, v);
       return true;
     }
-    if (k < n->key && insert(n->L, k, v)) {
-      if (n->L->priority < n->priority) rotate_r(n);
+    if (k < n->key && insert(n->left, k, v)) {
+      if (n->left->priority < n->priority) {
+        rotate_r(n);
+      }
       return true;
-    } else if (n->key < k && insert(n->R, k, v)) {
-      if (n->R->priority < n->priority) rotate_l(n);
+    }
+    if (n->key < k && insert(n->right, k, v)) {
+      if (n->right->priority < n->priority) {
+        rotate_l(n);
+      }
       return true;
     }
     return false;
   }
 
-  static bool erase(node_t *& n, const key_t & k) {
-    if (n == 0) return false;
-    if (k < n->key) return erase(n->L, k);
-    if (k > n->key) return erase(n->R, k);
-    if (n->L == 0 || n->R == 0) {
-      node_t *temp = n;
-      n = (n->L != 0) ? n->L : n->R;
-      delete temp;
-      return true;
+  static bool erase(node_t *&n, const K &k) {
+    if (n == NULL) {
+      return false;
     }
-    if (n->L->priority < n->R->priority) {
-      rotate_r(n);
-      return erase(n->R, k);
+    if (k < n->key) {
+      return erase(n->left, k);
+    } else if (n->key < k) {
+      return erase(n->right, k);
     }
-    rotate_l(n);
-    return erase(n->L, k);
-  }
-
-  template<class BinaryFunction>
-  static void walk(node_t * n, BinaryFunction f) {
-    if (n == 0) return;
-    walk(n->L, f);
-    f(n->key, n->val);
-    walk(n->R, f);
-  }
-
-  static void clean_up(node_t * n) {
-    if (n == 0) return;
-    clean_up(n->L);
-    clean_up(n->R);
+    if (n->left != NULL && n->right != NULL) {
+      if (n->left->priority < n->right->priority) {
+        rotate_r(n);
+        return erase(n->right, k);
+      }
+      rotate_l(n);
+      return erase(n->left, k);
+    }
+    node_t *tmp = (n->left != NULL) ? n->left : n->right;
     delete n;
+    n = tmp;
+    return true;
+  }
+
+  template<class KVFunction>
+  static void walk(node_t *n, KVFunction f) {
+    if (n != NULL) {
+      walk(n->left, f);
+      f(n->key, n->value);
+      walk(n->right, f);
+    }
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
   }
 
  public:
-  treap(): root(0), num_nodes(0) { srand(time(0)); }
-  ~treap() { clean_up(root); }
-  int size() const { return num_nodes; }
-  bool empty() const { return root == 0; }
+  treap() {
+    root = NULL;
+    num_nodes = 0;
+    srand(time(NULL));
+  }
 
-  bool insert(const key_t & key, const val_t & val) {
-    if (insert(root, key, val)) {
+  ~treap() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  bool insert(const K &k, const V &v) {
+    if (insert(root, k, v)) {
       num_nodes++;
       return true;
     }
     return false;
   }
 
-  bool erase(const key_t & key) {
-    if (erase(root, key)) {
+  bool erase(const K &k) {
+    if (erase(root, k)) {
       num_nodes--;
       return true;
     }
     return false;
   }
 
-  template<class BinaryFunction> void walk(BinaryFunction f) {
-    walk(root, f);
+  const V* find(const K &k) {
+    node_t *n = root;
+    while (n != NULL) {
+      if (k < n->key) {
+        n = n->left;
+      } else if (n->key < k) {
+        n = n->right;
+      } else {
+        return &(n->value);
+      }
+    }
+    return NULL;
   }
 
-  val_t * find(const key_t & key) {
-    for (node_t *n = root; n != 0; ) {
-      if (n->key == key) return &(n->val);
-      n = (key < n->key ? n->L : n->R);
-    }
-    return 0; //key not found
+  template<class KVFunction> void walk(KVFunction f) {
+    walk(root, f);
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+abcde
+bcde
+
+***/
 
 #include <cassert>
 #include <iostream>
 using namespace std;
 
-void printch(int k, char v) { cout << v; }
+void printch(int k, char v) {
+  cout << v;
+}
 
 int main() {
-  treap<int, char> T;
-  T.insert(2, 'b');
-  T.insert(1, 'a');
-  T.insert(3, 'c');
-  T.insert(5, 'e');
-  T.insert(4, 'x');
-  *T.find(4) = 'd';
-  cout << "In-order: ";
-  T.walk(printch);  //abcde
-  cout << "\nRemoving node with key 3...";
-  cout << (T.erase(3) ? "Success!" : "Failed");
-  cout << "\n";
-
-  //stress test - runs in <0.5 seconds
-  //insert keys in an order that would break a normal BST
-  treap<int, int> T2;
-  for (int i = 0; i < 1000000; i++)
-    T2.insert(i, i*1337);
-  for (int i = 0; i < 1000000; i++)
-    assert(*T2.find(i) == i*1337);
+  treap<int, char> t;
+  t.insert(2, 'b');
+  t.insert(1, 'a');
+  t.insert(3, 'c');
+  t.insert(5, 'e');
+  assert(t.insert(4, 'd'));
+  assert(*t.find(4) == 'd');
+  assert(!t.insert(4, 'd'));
+  t.walk(printch);
+  cout << endl;
+  assert(t.erase(1));
+  assert(!t.erase(1));
+  assert(t.find(1) == NULL);
+  t.walk(printch);
+  cout << endl;
   return 0;
 }
+

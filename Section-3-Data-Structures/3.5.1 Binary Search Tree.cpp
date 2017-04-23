@@ -126,7 +126,7 @@ template<class K, class V> class binary_search_tree {
   }
 
   bool erase(const K &k) {
-    if (erase(root, key)) {
+    if (erase(root, k)) {
       num_nodes--;
       return true;
     }
@@ -138,7 +138,7 @@ template<class K, class V> class binary_search_tree {
     while (n != NULL) {
       if (k < n->key) {
         n = n->left;
-      } else if (n->key < n) {
+      } else if (n->key < k) {
         n = n->right;
       } else {
         return &(n->value);
@@ -168,20 +168,20 @@ void printch(int k, char v) {
 }
 
 int main() {
-  binary_search_tree<int, char> T;
-  T.insert(2, 'b');
-  T.insert(1, 'a');
-  T.insert(3, 'c');
-  T.insert(5, 'e');
-  assert(T.insert(4, 'd'));
-  assert(*T.find(4) == 'd');
-  assert(!T.insert(4, 'd'));
-  T.walk(printch);
+  binary_search_tree<int, char> t;
+  t.insert(2, 'b');
+  t.insert(1, 'a');
+  t.insert(3, 'c');
+  t.insert(5, 'e');
+  assert(t.insert(4, 'd'));
+  assert(*t.find(4) == 'd');
+  assert(!t.insert(4, 'd'));
+  t.walk(printch);
   cout << endl;
-  assert(T.erase(1));
-  assert(!T.erase(1));
-  assert(T.find(1) == NULL);
-  T.walk(printch);
+  assert(t.erase(1));
+  assert(!t.erase(1));
+  assert(t.find(1) == NULL);
+  t.walk(printch);
   cout << endl;
   return 0;
 }
