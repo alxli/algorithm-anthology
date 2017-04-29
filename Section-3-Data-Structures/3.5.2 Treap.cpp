@@ -9,7 +9,7 @@ insertions and deletions run in O(log n) with high probability.
 
 - treap() constructs an empty map.
 - size() returns the size of the map.
-- empty() returns the map is empty.
+- empty() returns whether the map is empty.
 - insert(k, v) adds an entry with key k and value v to the map, returning true
   if an new entry was added or false if the key already exists (in which case
   the map is unchanged and the old value associated with the key is preserved).
@@ -23,7 +23,7 @@ insertions and deletions run in O(log n) with high probability.
 Time Complexity:
 - O(1) per call to the constructor, size(), and empty().
 - O(log n) on average per call to insert(), erase(), and find(), where n is the
-  number of nodes currently in the map.
+  number of entries currently in the map.
 - O(n) per call to walk().
 
 Space Complexity:
