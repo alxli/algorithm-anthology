@@ -19,7 +19,7 @@ Time Complexity:
 - O(1) per call to the first constructor, size(), empty(), and top().
 - O(log n) per call to push() and pop(), where n is the number of elements
   currently in the priority queue.
-- O(n) per call to the second constructor.
+- O(n) per call to the second constructor on the distance between lo and hi.
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.
