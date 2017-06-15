@@ -29,7 +29,7 @@ Time Complexity:
 Space Complexity:
 - O(n) for storage of the map elements.
 - O(1) auxiliary per call to size(), empty(), and find().
-- O(log n) auxiliary stack space per call to all other operations.
+- O(log n) auxiliary per call to all other operations.
 
 */
 
@@ -50,8 +50,6 @@ template<class K, class V> class avl_tree {
       height = 1;
     }
   } *root;
-
-  int num_nodes;
 
   static int height(node_t *n) {
     return (n != NULL) ? n->height : 0;
@@ -168,6 +166,8 @@ template<class K, class V> class avl_tree {
       delete n;
     }
   }
+
+  int num_nodes;
 
  public:
   avl_tree() {
