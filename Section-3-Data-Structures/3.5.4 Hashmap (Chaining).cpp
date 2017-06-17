@@ -1,5 +1,42 @@
 /*
 
+Maintain a map, that is, a collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementation requires the ==
+operator to be defined on the key type. A hashmap implements a map by hashing
+keys into buckets using a hash function. This implementation resolves collisions
+by chaining entries hashed to the same bucket into a linked list.
+
+- hash_map() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns whether the map is empty.
+- insert(k, v) adds an entry with key k and value v to the map, returning true
+  if an new entry was added or false if the key already exists (in which case
+  the map is unchanged and the old value associated with the key is preserved).
+- erase(k) removes the entry with key k from the map, returning true if the
+  removal was successful or false if the key to be removed was not found.
+- find(k) returns a pointer to a const value associated with key k, or NULL if
+  the key was not found.
+- operator[k] returns a reference to key k's associated value (which may be
+  modified), or if necessary, inserts and returns a new entry with the default
+  constructed value if key k was not originally found.
+- walk(f) calls the function f(k, v) on each entry of the map, in no guaranteed
+  order.
+
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(1) amortized per call to insert(), erase(), find(), and operator[].
+- O(n) per call to walk(), where n is the number of entries currently in the
+  map.
+
+Space Complexity:
+- O(n) for storage of the map elements.
+- O(n) auxiliary per call to insert().
+- O(1) auxiliary per call to all other operations.
+
+*/
+
+/*
+
 Description: A hashmap (std::unordered_map in C++11) is an
 alternative to a binary search tree. Hashmaps use more memory than
 BSTs, but are usually more efficient. The following implementation
@@ -13,109 +50,151 @@ Space Complexity: O(N) on the number of entries.
 
 */
 
+#include <cstdlib>
 #include <list>
 
-template<class key_t, class val_t, class Hash> class hashmap {
+template<class K, class V, class Hash> class hash_map {
   struct entry_t {
-    key_t key;
-    val_t val;
-    entry_t(const key_t & k, const val_t & v): key(k), val(v) {}
+    K key;
+    V value;
+    entry_t(const K &k, const V &v): key(k), value(v) {}
   };
 
-  std::list<entry_t> * table;
-  int table_size, map_size;
+  std::list<entry_t> *table;
+  int table_size, num_entries;
 
-  /**
-   * This doubles the table size, then rehashes every entry.
-   * Rehashing is expensive; it is strongly suggested for the
-   * table to be constructed with a large size to avoid rehashing.
-   */
-  void rehash() {
-    std::list<entry_t> * old = table;
+  void double_capacity_and_rehash() {
+    std::list<entry_t> *old = table;
     int old_size = table_size;
     table_size = 2*table_size;
     table = new std::list<entry_t>[table_size];
-    map_size = 0;
+    num_entries = 0;
     typename std::list<entry_t>::iterator it;
-    for (int i = 0; i < old_size; i++)
-      for (it = old[i].begin(); it != old[i].end(); ++it)
-        insert(it->key, it->val);
+    for (int i = 0; i < old_size; i++) {
+      for (it = old[i].begin(); it != old[i].end(); ++it) {
+        insert(it->key, it->value);
+      }
+    }
     delete[] old;
   }
 
  public:
-  hashmap(int size = 1024): table_size(size), map_size(0) {
+  hash_map(int size = 128): table_size(size), num_entries(0) {
     table = new std::list<entry_t>[table_size];
   }
 
-  ~hashmap() { delete[] table; }
-  int size() const { return map_size; }
-
-  void insert(const key_t & key, const val_t & val) {
-    if (find(key) != 0) return;
-    if (map_size >= table_size) rehash();
-    unsigned int i = Hash()(key) % table_size;
-    table[i].push_back(entry_t(key, val));
-    map_size++;
+  ~hash_map() {
+    delete[] table;
   }
 
-  void remove(const key_t & key) {
-    unsigned int i = Hash()(key) % table_size;
+  int size() const {
+    return num_entries;
+  }
+
+  bool empty() const {
+    return num_entries == 0;
+  }
+
+  bool insert(const K &k, const V &v) {
+    if (find(k) != NULL) {
+      return false;
+    }
+    if (num_entries >= table_size) {
+      double_capacity_and_rehash();
+    }
+    unsigned int i = Hash()(k) % table_size;
+    table[i].push_back(entry_t(k, v));
+    num_entries++;
+    return true;
+  }
+
+  bool erase(const K &k) {
+    unsigned int i = Hash()(k) % table_size;
     typename std::list<entry_t>::iterator it = table[i].begin();
-    while (it != table[i].end() && it->key != key) ++it;
-    if (it == table[i].end()) return;
+    while (it != table[i].end() && !(it->key == k)) {
+      ++it;
+    }
+    if (it == table[i].end()) {
+      return false;
+    }
     table[i].erase(it);
-    map_size--;
+    num_entries--;
+    return true;
   }
 
-  val_t * find(const key_t & key) {
-    unsigned int i = Hash()(key) % table_size;
+  V* find(const K &k) {
+    unsigned int i = Hash()(k) % table_size;
     typename std::list<entry_t>::iterator it = table[i].begin();
-    while (it != table[i].end() && it->key != key) ++it;
-    if (it == table[i].end()) return 0;
-    return &(it->val);
+    while (it != table[i].end() && !(it->key == k)) {
+      ++it;
+    }
+    if (it == table[i].end()) {
+      return NULL;
+    }
+    return &(it->value);
   }
 
-  val_t & operator [] (const key_t & key) {
-    val_t * ret = find(key);
-    if (ret != 0) return *ret;
-    insert(key, val_t());
-    return *find(key);
+  V& operator[](const K &k) {
+    V *ret = find(k);
+    if (ret != NULL) {
+      return *ret;
+    }
+    insert(k, V());
+    return *find(k);
+  }
+
+  template<class KVFunction> void walk(KVFunction f) {
+    for (int i = 0; i < table_size; i++) {
+      typename std::list<entry_t>::iterator it;
+      for (it = table[i].begin(); it != table[i].end(); ++it) {
+        f(it->key, it->value);
+      }
+    }
   }
 };
 
-/*** Examples of Hash Algorithm Definitions ***/
+/*** Example Usage and Output:
 
-#include <string>
+cab
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
 
 struct class_hash {
-  unsigned int operator () (int key) {
-    return class_hash()((unsigned int)key);
+  unsigned int operator()(int k) {
+    return class_hash()((unsigned int)k);
   }
 
-  unsigned int operator () (long long key) {
-    return class_hash()((unsigned long long)key);
+  unsigned int operator()(long long k) {
+    return class_hash()((unsigned long long)k);
   }
 
-  //Knuth's multiplicative method (one-to-one)
-  unsigned int operator () (unsigned int key) {
-    return key * 2654435761u; //or just return key
+  // Knuth's one-to-one multiplicative method.
+  unsigned int operator()(unsigned int k) {
+    return k * 2654435761u;  // Or just return k.
   }
 
-  //Jenkins's 64-bit hash
-  unsigned int operator () (unsigned long long key) {
-    key += ~(key << 32); key ^= (key >> 22);
-    key += ~(key << 13); key ^= (key >>  8);
-    key +=  (key <<  3); key ^= (key >> 15);
-    key += ~(key << 27); key ^= (key >> 31);
-    return key;
+  // Jenkins's 64-bit hash.
+  unsigned int operator()(unsigned long long k) {
+    k += ~(k << 32);
+    k ^=  (k >> 22);
+    k += ~(k << 13);
+    k ^=  (k >> 8);
+    k +=  (k << 3);
+    k ^=  (k >> 15);
+    k += ~(k << 27);
+    k ^=  (k >> 31);
+    return k;
   }
 
-  //Jenkins's one-at-a-time hash
-  unsigned int operator () (const std::string & key) {
+  // Jenkins's one-at-a-time hash.
+  unsigned int operator()(const std::string &k) {
     unsigned int hash = 0;
-    for (unsigned int i = 0; i < key.size(); i++) {
-      hash += ((hash += key[i]) << 10);
+    for (unsigned int i = 0; i < k.size(); i++) {
+      hash += ((hash + k[i]) << 10);
       hash ^= (hash >> 6);
     }
     hash ^= ((hash += (hash << 3)) >> 11);
@@ -123,19 +202,23 @@ struct class_hash {
   }
 };
 
-/*** Example Usage ***/
-
-#include <iostream>
-using namespace std;
+void printch(const string &k, char v) {
+  cout << v;
+}
 
 int main() {
-  hashmap<string, int, class_hash> M;
-  M["foo"] = 1;
-  M.insert("bar", 2);
-  cout << M["foo"] << M["bar"] << endl; //prints 12
-  cout << M["baz"] << M["qux"] << endl; //prints 00
-  M.remove("foo");
-  cout << M.size() << endl;             //prints 3
-  cout << M["foo"] << M["bar"] << endl; //prints 02
+  hash_map<string, char, class_hash> m;
+  m["foo"] = 'a';
+  m.insert("bar", 'b');
+  assert(m["foo"] == 'a');
+  assert(m["bar"] == 'b');
+  assert(m["baz"] == '\0');
+  m["baz"] = 'c';
+  m.walk(printch);
+  cout << endl;
+  assert(m.erase("foo"));
+  assert(m.size() == 2);
+  assert(m["foo"] == '\0');
+  assert(m.size() == 3);
   return 0;
 }

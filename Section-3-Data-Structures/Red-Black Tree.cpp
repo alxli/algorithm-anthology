@@ -1,7 +1,7 @@
 /*
 
 Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementations requires an
+key appears at most once in the collection. This implementation requires an
 ordering on the set of possible keys defined by the < operator on the key type.
 A red black tree is a binary search tree balanced by coloring its nodes red or
 black, then constraining node colors on any simple path from the root to a leaf.

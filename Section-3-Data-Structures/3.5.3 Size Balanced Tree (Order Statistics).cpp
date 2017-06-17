@@ -3,7 +3,7 @@
 Maintain a map, that is, a collection of key-value pairs such that each possible
 key appears at most once in the collection. In addition, support queries for
 keys given their ranks as well as queries for the ranks of given keys. This
-implementations requires an ordering on the set of possible keys defined by the
+implementation requires an ordering on the set of possible keys defined by the
 < operator on the key type. A size balanced tree augments each nodes with the
 size of its subtree, using it to maintain balance and compute order statistics.
 
