@@ -15,8 +15,8 @@ Space Complexity: O(N) on the number of points.
 
 */
 
-#include <algorithm> /* nth_element(), max(), min(), swap() */
-#include <climits>   /* INT_MIN, INT_MAX */
+#include <algorithm>
+#include <climits>
 #include <utility>
 #include <vector>
 

@@ -16,9 +16,9 @@ Space Complexity: O(N) on the number of intervals in the tree.
 
 */
 
-#include <cstdlib>   /* srand() */
-#include <ctime>     /* time() */
-#include <utility>   /* std:pair */
+#include <cstdlib>
+#include <ctime>
+#include <utility>
 
 class interval_tree {
   typedef std::pair<int, int> interval;

@@ -18,10 +18,10 @@ Space Complexity: O(N) on the number of nodes in the forest.
 
 */
 
-#include <algorithm> /* std::max(), std::swap() */
-#include <climits>   /* INT_MIN */
+#include <algorithm>
+#include <climits>
 #include <map>
-#include <stdexcept> /* std::runtime_error() */
+#include <stdexcept>
 
 template<class T> class linkcut_forest {
   //Modify the following 5 functions to implement your custom

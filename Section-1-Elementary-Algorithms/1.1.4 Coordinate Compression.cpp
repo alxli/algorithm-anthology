@@ -19,8 +19,8 @@ Space Complexity: O(n) auxiliary.
 
 */
 
-#include <algorithm>  // std::lower_bound(), std::sort(), std::unique()
-#include <iterator>  // std::iterator_traits
+#include <algorithm>
+#include <iterator>
 #include <map>
 #include <vector>
 

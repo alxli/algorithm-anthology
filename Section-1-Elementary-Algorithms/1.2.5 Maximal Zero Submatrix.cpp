@@ -12,7 +12,7 @@ Space Complexity: O(m) auxiliary.
 
 */
 
-#include <algorithm>  // std::max()
+#include <algorithm>
 #include <stack>
 #include <vector>
 

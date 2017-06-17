@@ -18,7 +18,7 @@ all operations are [0..xmax][0..ymax]
 
 */
 
-#include <limits> /* std::numeric_limits<T>::min() */
+#include <limits>
 
 template<class T> class segment_tree_2d {
   //these can be set to large values without affecting your memory usage!

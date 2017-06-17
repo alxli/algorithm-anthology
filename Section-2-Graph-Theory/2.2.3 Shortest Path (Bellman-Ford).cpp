@@ -18,7 +18,7 @@ Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
-#include <stdexcept>  // std::runtime_error()
+#include <stdexcept>
 #include <vector>
 
 struct edge {

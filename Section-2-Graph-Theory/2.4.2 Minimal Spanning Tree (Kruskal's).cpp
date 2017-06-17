@@ -15,8 +15,8 @@ Space Complexity: O(n) auxiliary on the number of nodes.
 
 */
 
-#include <algorithm>  // std::sort()
-#include <utility>  // std::pair
+#include <algorithm>
+#include <utility>
 #include <vector>
 
 const int MAXN = 100;

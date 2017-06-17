@@ -14,8 +14,8 @@ Space Complexity: O(max(n, m)) on the numbers of nodes and edges respectively.
 
 */
 
-#include <algorithm>  // std::fill(), std::reverse()
-#include <stdexcept>  // std::runtime_error()
+#include <algorithm>
+#include <stdexcept>
 #include <vector>
 
 const int MAXN = 100;

@@ -30,8 +30,8 @@ Space Complexity:
 
 */
 
-#include <algorithm>  // std::min()
-#include <cmath>  // sqrt()
+#include <algorithm>
+#include <cmath>
 #include <vector>
 
 template<class T> class sqrt_decomposition {

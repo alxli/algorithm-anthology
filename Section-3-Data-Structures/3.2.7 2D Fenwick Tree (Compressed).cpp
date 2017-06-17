@@ -31,7 +31,7 @@ Space Complexity:
 */
 
 #include <map>
-#include <utility>  // std::make_pair(), std::pair
+#include <utility>
 
 template<class T> class fenwick_tree_2d {
   static const int MAXR = 1000000001;

@@ -19,8 +19,8 @@ Thus for this 2D case, the space complexity is O(N log N).
 
 */
 
-#include <algorithm> /* lower_bound(), merge(), sort() */
-#include <utility>   /* std::pair */
+#include <algorithm>
+#include <utility>
 #include <vector>
 
 class range_tree_2d {

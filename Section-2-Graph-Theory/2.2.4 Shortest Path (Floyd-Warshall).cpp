@@ -17,7 +17,7 @@ Space Complexity: O(n^2) auxiliary on the number of nodes.
 
 */
 
-#include <stdexcept>  // std::runtime_error()
+#include <stdexcept>
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
 int dist[MAXN][MAXN], next[MAXN][MAXN];

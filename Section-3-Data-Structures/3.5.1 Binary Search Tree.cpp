@@ -32,7 +32,7 @@ Space Complexity:
 
 */
 
-#include <cstdlib>  // NULL
+#include <cstdlib>
 
 template<class K, class V> class binary_search_tree {
   struct node_t {

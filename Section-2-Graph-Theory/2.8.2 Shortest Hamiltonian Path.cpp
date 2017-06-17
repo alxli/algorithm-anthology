@@ -10,7 +10,7 @@ Space Complexity: O(2^n * n^2) on the number of nodes.
 
 */
 
-#include <algorithm>  // std::fill(), std::min()
+#include <algorithm>
 
 const int MAXN = 20, INF = 0x3f3f3f3f;
 int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];

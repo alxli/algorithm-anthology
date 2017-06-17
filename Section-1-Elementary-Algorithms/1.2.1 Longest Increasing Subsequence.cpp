@@ -16,7 +16,7 @@ Space Complexity: O(n) auxiliary.
 
 */
 
-#include <iterator>  // std::iterator_traits
+#include <iterator>
 #include <vector>
 
 template<class It> std::vector<typename std::iterator_traits<It>::value_type>

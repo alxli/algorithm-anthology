@@ -13,9 +13,9 @@ Space Complexity: O(N) on the number of points.
 
 */
 
-#include <algorithm> /* nth_element(), max(), min(), swap() */
-#include <cfloat>    /* DBL_MAX */
-#include <climits>   /* INT_MIN, INT_MAX */
+#include <algorithm>
+#include <cfloat>
+#include <climits>
 #include <vector>
 
 struct segment { int x1, y1, x2, y2; };

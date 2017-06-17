@@ -20,7 +20,7 @@ Space Complexity: O(n) auxiliary on the number of calls made to add_line().
 
 */
 
-#include <limits>  // std::numeric_limits
+#include <limits>
 #include <set>
 
 class hull_optimizer {

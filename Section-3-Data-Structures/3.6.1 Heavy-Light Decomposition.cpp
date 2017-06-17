@@ -18,8 +18,8 @@ Space Complexity: O(N) on the number of nodes in the tree.
 
 */
 
-#include <algorithm> /* std::max(), std::min() */
-#include <climits>   /* INT_MIN */
+#include <algorithm>
+#include <climits>
 #include <vector>
 
 template<class T> class heavy_light {

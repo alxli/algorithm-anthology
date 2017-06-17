@@ -16,10 +16,10 @@ but O(N log N) in the worst case.
 
 */
 
-#include <cmath>   /* log() */
-#include <cstdlib> /* rand(), srand() */
-#include <cstring> /* memset() */
-#include <ctime>   /* time() */
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 
 template<class key_t, class val_t> struct skip_list {
   static const int MAX_LEVEL = 32; //~ log2(max # of keys)

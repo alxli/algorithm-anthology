@@ -17,9 +17,9 @@ Space Complexity: O(1) auxiliary.
 
 */
 
-#include <algorithm>  // std::swap()
-#include <cstdlib>  // rand()
-#include <iterator>  // std::iterator_traits
+#include <algorithm>
+#include <cstdlib>
+#include <iterator>
 
 int rand32() {
   return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);

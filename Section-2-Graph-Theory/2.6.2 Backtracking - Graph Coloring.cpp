@@ -13,7 +13,7 @@ Space Complexity: O(n) on the number of nodes.
 
 */
 
-#include <algorithm>  // std::fill(), std::max()
+#include <algorithm>
 #include <vector>
 
 const int MAXN = 30;

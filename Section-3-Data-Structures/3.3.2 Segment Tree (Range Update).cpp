@@ -48,7 +48,7 @@ Space Complexity:
 
 */
 
-#include <algorithm>  // std::max(), std::min()
+#include <algorithm>
 #include <vector>
 
 template<class T> class segment_tree {

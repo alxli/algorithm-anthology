@@ -10,7 +10,7 @@ Space Complexity: O(n1 + n2) auxiliary.
 
 */
 
-#include <algorithm>  // std::fill()
+#include <algorithm>
 #include <queue>
 #include <vector>
 

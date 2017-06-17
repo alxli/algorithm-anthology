@@ -9,8 +9,8 @@ following two functions are each techniques to efficiently count inversion.
 
 */
 
-#include <algorithm>  // std::fill(), std::max()
-#include <iterator>  // std::iterator_traits
+#include <algorithm>
+#include <iterator>
 #include <vector>
 
 /*

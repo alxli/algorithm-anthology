@@ -13,9 +13,9 @@ Space Complexity: O(N) on the number of points.
 
 */
 
-#include <algorithm> /* nth_element(), max(), min() */
-#include <climits>   /* INT_MIN, INT_MAX */
-#include <utility>   /* std::pair */
+#include <algorithm>
+#include <climits>
+#include <utility>
 #include <vector>
 
 class kd_tree {

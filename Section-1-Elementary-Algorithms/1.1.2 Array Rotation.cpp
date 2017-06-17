@@ -20,7 +20,7 @@ Space Complexity: O(1) auxiliary.
 
 */
 
-#include <algorithm>  // std::reverse(), std::rotate(), std::swap()
+#include <algorithm>
 
 template<class It> void rotate1(It lo, It mid, It hi) {
   It next = mid;

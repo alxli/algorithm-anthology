@@ -18,8 +18,8 @@ Space Complexity: O(n) auxiliary.
 
 */
 
-#include <algorithm>  // std::max(), std::sort()
-#include <limits>  // std::numeric_limits
+#include <algorithm>
+#include <limits>
 #include <vector>
 
 template<class It>

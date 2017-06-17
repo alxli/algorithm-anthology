@@ -33,7 +33,7 @@ Space Complexity:
 
 */
 
-#include <cstdlib>  // srand(), rand()
+#include <cstdlib>
 
 template<class K, class V> class treap {
   struct node_t {

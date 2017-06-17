@@ -14,7 +14,7 @@ Space Complexity: O(N log N).
 
 */
 
-#include <algorithm> /* std::fill(), std::min(), std::max() */
+#include <algorithm>
 #include <vector>
 
 const int MAXN = 1000;

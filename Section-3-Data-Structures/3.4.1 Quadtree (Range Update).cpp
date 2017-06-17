@@ -50,8 +50,8 @@ Space Complexity:
 
 */
 
-#include <algorithm>  // std::max(), std::min()
-#include <cstdlib>  // NULL
+#include <algorithm>
+#include <cstdlib>
 
 template<class T> class quadtree {
   static const int MAXR = 1000000000;

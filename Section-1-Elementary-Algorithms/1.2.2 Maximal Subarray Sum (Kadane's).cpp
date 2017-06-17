@@ -10,9 +10,9 @@ in overall cubic time.
 
 */
 
-#include <algorithm>  // std::fill()
-#include <iterator>  // std::iterator_traits
-#include <limits>  // std::numeric_limits
+#include <algorithm>
+#include <iterator>
+#include <limits>
 #include <vector>
 
 /*

@@ -27,7 +27,7 @@ Space Complexity:
 
 */
 
-#include <algorithm>  // std::max()
+#include <algorithm>
 #include <vector>
 
 class graph {

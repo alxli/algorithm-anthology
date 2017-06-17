@@ -28,7 +28,7 @@ Space Complexity:
 
 */
 
-#include <algorithm>  // std::max(), std::min(), std::reverse()
+#include <algorithm>
 #include <bitset>
 #include <vector>
 

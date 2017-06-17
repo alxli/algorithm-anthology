@@ -43,7 +43,7 @@ Space Complexity:
 
 */
 
-#include <cstdlib>  // NULL, rand()
+#include <cstdlib>
 
 template<class T> class cartesian_treap {
   static T join_values(const T &a, const T &b) {

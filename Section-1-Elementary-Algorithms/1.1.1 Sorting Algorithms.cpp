@@ -13,9 +13,9 @@ sorting algorithms can be concisely implemented in C++.
 
 */
 
-#include <algorithm>  // std::copy(), std::swap()
-#include <functional>  // std::less
-#include <iterator>  // std::iterator_traits
+#include <algorithm>
+#include <functional>
+#include <iterator>
 #include <vector>
 
 /*
