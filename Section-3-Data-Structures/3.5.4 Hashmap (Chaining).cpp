@@ -35,21 +35,6 @@ Space Complexity:
 
 */
 
-/*
-
-Description: A hashmap (std::unordered_map in C++11) is an
-alternative to a binary search tree. Hashmaps use more memory than
-BSTs, but are usually more efficient. The following implementation
-uses the chaining method to handle collisions. You can use the
-hash algorithms provided in the example, or define your own.
-
-Time Complexity: insert(), remove(), find(), are O(1) amortized.
-rehash() is O(N).
-
-Space Complexity: O(N) on the number of entries.
-
-*/
-
 #include <cstdlib>
 #include <list>
 
