@@ -24,9 +24,9 @@ skipping over fewer elements than the previous one.
 
 Time Complexity:
 - O(1) per call to the constructor, size(), and empty().
-- O(log n) on average per call to insert(), erase(), find(), and operator[].
-- O(n) per call to walk(), where n is the number of entries currently in the
-  map.
+- O(log n) on average per call to insert(), erase(), find(), and operator[],
+  where n is the number of entries currently in the map.
+- O(n) per call to walk().
 
 Space Complexity:
 - O(n) on average for storage of the map elements.
