@@ -62,7 +62,7 @@ template<class K, class V> class skip_list {
     return std::abs(level);
   }
 
-  int node_level(const std::vector<node_t*> &v) {
+  static int node_level(const std::vector<node_t*> &v) {
     int i = 0;
     while (i < (int)v.size() && v[i] != NULL) {
       i++;
