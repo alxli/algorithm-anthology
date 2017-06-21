@@ -1,152 +1,208 @@
 /*
 
-Description: A skip list is an alternative to binary search trees.
-Fast search is made possible by maintaining a linked hierarchy of
-subsequences, each skipping over fewer elements. Searching starts
-in the sparsest subsequence until two consecutive elements have
-been found, one smaller and one larger than the element searched for.
-Skip lists are generally slower than binary search trees, but can
-be easier to implement. The following version uses randomized levels.
+Maintain a map, that is, a collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementation requires both
+the < and the == operators to be defined on the key type. A skip list maintains
+a linked hierarchy of sorted subsequences with each successive subsequence
+skipping over fewer elements than the previous one.
 
-Time Complexity: insert(), erase(), count() and find() are O(log(N))
-on average, but O(N) in the worst case. walk() is O(N).
+- skip_list() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns whether the map is empty.
+- insert(k, v) adds an entry with key k and value v to the map, returning true
+  if an new entry was added or false if the key already exists (in which case
+  the map is unchanged and the old value associated with the key is preserved).
+- erase(k) removes the entry with key k from the map, returning true if the
+  removal was successful or false if the key to be removed was not found.
+- find(k) returns a pointer to a const value associated with key k, or NULL if
+  the key was not found.
+- operator[k] returns a reference to key k's associated value (which may be
+  modified), or if necessary, inserts and returns a new entry with the default
+  constructed value if key k was not originally found.
+- walk(f) calls the function f(k, v) on each entry of the map, in ascending
+  order of keys.
 
-Space Complexity: O(N) on the number of elements inserted on average,
-but O(N log N) in the worst case.
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(log n) on average per call to insert(), erase(), find(), and operator[].
+- O(n) per call to walk(), where n is the number of entries currently in the
+  map.
+
+Space Complexity:
+- O(n) on average for storage of the map elements.
+- O(n) auxiliary per call to insert() and erase().
+- O(1) auxiliary per call to all other operations.
 
 */
 
 #include <cmath>
 #include <cstdlib>
-#include <cstring>
-#include <ctime>
+#include <vector>
 
-template<class key_t, class val_t> struct skip_list {
-  static const int MAX_LEVEL = 32; //~ log2(max # of keys)
-
-  static int random_level() { //geometric distribution
-    static const float P = 0.5;
-    int lvl = log((float)rand()/RAND_MAX)/log(1.0 - P);
-    return lvl < MAX_LEVEL ? lvl : MAX_LEVEL;
-  }
+template<class K, class V> class skip_list {
+  static const int MAX_LEVELS = 32;  // log2(max possible keys)
 
   struct node_t {
-    key_t key;
-    val_t val;
-    node_t **next;
+    K key;
+    V value;
+    std::vector<node_t*> next;
 
-    node_t(int level, const key_t & k, const val_t & v) {
-      next = new node_t * [level + 1];
-      memset(next, 0, sizeof(node_t*)*(level + 1));
-      key = k;
-      val = v;
+    node_t(const K &k, const V &v, int levels)
+      : key(k), value(v), next(levels, NULL) {}
+  } *head;
+
+  int num_nodes;
+
+  static int random_level() {
+    static const double p = 0.5;
+    int level = 1;
+    while (((double)rand() / RAND_MAX) < p && std::abs(level) < MAX_LEVELS) {
+      level++;
     }
+    return std::abs(level);
+  }
 
-    ~node_t() { delete[] next; }
-  } *head, *update[MAX_LEVEL + 1];
+  int node_level(const std::vector<node_t*> &v) {
+    int i = 0;
+    while (i < (int)v.size() && v[i] != NULL) {
+      i++;
+    }
+    return i + 1;
+  }
 
-  int level, num_nodes;
-
+ public:
   skip_list() {
-    srand(time(0));
-    head = new node_t(MAX_LEVEL, key_t(), val_t());
-    level = num_nodes = 0;
-  }
-
-  ~skip_list() { delete head; }
-  int size() { return num_nodes; }
-  bool empty() { return num_nodes == 0; }
-  int count(const key_t & k) { return find(k) != 0; }
-
-  void insert(const key_t & k, const val_t & v) {
-    node_t * n = head;
-    memset(update, 0, sizeof(node_t*)*(MAX_LEVEL + 1));
-    for (int i = level; i >= 0; i--) {
-      while (n->next[i] && n->next[i]->key < k) n = n->next[i];
-      update[i] = n;
-    }
-    n = n->next[0];
-    if (!n || n->key != k) {
-      int lvl = random_level();
-      if (lvl > level) {
-        for (int i = level + 1; i <= lvl; i++) update[i] = head;
-        level = lvl;
-      }
-      n = new node_t(lvl, k, v);
-      num_nodes++;
-      for (int i = 0; i <= lvl; i++) {
-        n->next[i] = update[i]->next[i];
-        update[i]->next[i] = n;
-      }
-    } else if (n && n->key == k && n->val != v) {
-      n->val = v;
+    num_nodes = 0;
+    head = new node_t(K(), V(), MAX_LEVELS);;
+    for (int i = 0; i < (int)head->next.size(); i++) {
+      head->next[i] = NULL;
     }
   }
 
-  void erase(const key_t & k) {
-    node_t * n = head;
-    memset(update, 0, sizeof(node_t*)*(MAX_LEVEL + 1));
-    for (int i = level;i >= 0; i--) {
-      while (n->next[i] && n->next[i]->key < k) n = n->next[i];
+  ~skip_list() {
+    delete head;
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return num_nodes == 0;
+  }
+
+  bool insert(const K &k, const V &v) {
+    std::vector<node_t*> update(head->next);
+    int curr_level = node_level(update);
+    node_t *n = head;
+    for (int i = curr_level; i-- > 0; ) {
+      while (n->next[i] != NULL && n->next[i]->key < k) {
+        n = n->next[i];
+      }
       update[i] = n;
     }
     n = n->next[0];
-    if (n->key == k) {
-      for (int i = 0; i <= level; i++) {
-        if (update[i]->next[i] != n) break;
+    if (n != NULL && n->key == k) {
+      return false;
+    }
+    int new_level = random_level();
+    if (new_level > curr_level) {
+      for (int i = curr_level; i < new_level; i++) {
+        update[i] = head;
+      }
+    }
+    n = new node_t(k, v, new_level);
+    for (int i = 0; i < new_level; i++) {
+      n->next[i] = update[i]->next[i];
+      update[i]->next[i] = n;
+    }
+    num_nodes++;
+    return true;
+  }
+
+  bool erase(const K &k) {
+    std::vector<node_t*> update(head->next);
+    node_t *n = head;
+    for (int i = node_level(update); i-- > 0; ) {
+      while (n->next[i] != NULL && n->next[i]->key < k) {
+        n = n->next[i];
+      }
+      update[i] = n;
+    }
+    n = n->next[0];
+    if (n != NULL && n->key == k) {
+      for (int i = 0; i < (int)update.size(); i++) {
+        if (update[i]->next[i] != n) {
+          break;
+        }
         update[i]->next[i] = n->next[i];
       }
       delete n;
       num_nodes--;
-      while (level > 0 && !head->next[level]) level--;
+      return true;
     }
+    return false;
   }
 
-  val_t * find(const key_t & k) {
-    node_t * n = head;
-    for (int i = level; i >= 0; i--)
-      while (n->next[i] && n->next[i]->key < k)
+  V* find(const K &k) {
+    node_t *n = head;
+    for (int i = node_level(n->next); i-- > 0; ) {
+      while (n->next[i] != NULL && n->next[i]->key < k) {
         n = n->next[i];
+      }
+    }
     n = n->next[0];
-    if (n && n->key == k) return &(n->val);
-    return 0; //not found
+    return (n != NULL && n->key == k) ? &(n->value) : NULL;
   }
 
-  template<class BinaryFunction> void walk(BinaryFunction f) {
+  V& operator[](const K &k) {
+    V *ret = find(k);
+    if (ret != NULL) {
+      return *ret;
+    }
+    insert(k, V());
+    return *find(k);
+  }
+
+  template<class KVFunction> void walk(KVFunction f) {
     node_t *n = head->next[0];
-    while (n) {
-      f(n->key, n->val);
+    while (n != NULL) {
+      f(n->key, n->value);
       n = n->next[0];
     }
   }
 };
 
-/*** Example Usage: Random Tests ***/
+/*** Example Usage and Output:
+
+abcde
+bcde
+
+***/
 
 #include <cassert>
 #include <iostream>
-#include <map>
 using namespace std;
 
+void printch(int k, char v) {
+  cout << v;
+}
+
 int main() {
-  map<int, int> m;
-  skip_list<int, int> s;
-  for (int i = 0; i < 50000; i++) {
-    int op = rand() % 3;
-    int val1 = rand(), val2 = rand();
-    if (op == 0) {
-      m[val1] = val2;
-      s.insert(val1, val2);
-    } else if (op == 1) {
-      if (!m.count(val1)) continue;
-      m.erase(val1);
-      s.erase(val1);
-    } else if (op == 2) {
-      assert(s.count(val1) == (int)m.count(val1));
-      if (m.count(val1)) {
-        assert(m[val1] == *s.find(val1));
-      }
-    }
-  }
+  skip_list<int, char> l;
+  l.insert(2, 'b');
+  l.insert(1, 'a');
+  l.insert(3, 'c');
+  l.insert(5, 'e');
+  assert(l.insert(4, 'd'));
+  assert(*l.find(4) == 'd');
+  assert(!l.insert(4, 'd'));
+  l.walk(printch);
+  cout << endl;
+  assert(l.erase(1));
+  assert(!l.erase(1));
+  assert(l.find(1) == NULL);
+  l.walk(printch);
+  cout << endl;
   return 0;
 }
