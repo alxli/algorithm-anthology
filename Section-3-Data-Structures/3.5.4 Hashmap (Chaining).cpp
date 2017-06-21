@@ -2,7 +2,7 @@
 
 Maintain a map, that is, a collection of key-value pairs such that each possible
 key appears at most once in the collection. This implementation requires the ==
-operator to be defined on the key type. A hashmap implements a map by hashing
+operator to be defined on the key type. A hash map implements a map by hashing
 keys into buckets using a hash function. This implementation resolves collisions
 by chaining entries hashed to the same bucket into a linked list.
 
