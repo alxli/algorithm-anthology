@@ -1,152 +1,268 @@
 /*
 
-Description: A quadtree is a segment tree but with 4 children
-per node, making its running time proportional to the square
-root of the number of leaves. However, a 2D segment tree is a
-segment tree of segment trees, making its running time
-proportional to the log of its size. The following implementation
-is a highly optimized implementation with features such as
-coordinate compression and path compression.
+Maintain a two-dimensional array while supporting dynamic queries of rectangular
+sub-arrays and dynamic updates of individual indices. This implementation uses
+lazy initialization of nodes to conserve memory while supporting large indices.
 
-Time Complexity: O(log(xmax)*log(ymax)) for update(), query(),
-and at() operations. size() is O(1).
+The query operation is defined by the join_values() and join_region() functions
+where join_values(x, join_values(y, z)) = join_values(join_values(x, y), z) for
+all values x, y, and z in the array. The join_region(v, area) function must be
+defined in conjunction to efficiently return the result of join_values() applied
+to a rectangular sub-array of area elements. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case join_values(a, b)
+should return "a + b" and join_region(v, area) should return "v*area".
 
-Space Complexity: Left as an exercise for the reader.
+The update operation is defined by the join_value_with_delta() function, which
+determines the change made to array values. The default code below defines
+updates that "set" the chosen array index to a new value. Another possible
+update operation is "increment", in which join_value_with_delta(v, d) should be
+defined to return "v + d".
 
-Note: This implementation is 0-based. Valid indices for
-all operations are [0..xmax][0..ymax]
+- segment_tree_2d(v) constructs a two-dimensional array with rows from 0 to
+  MAXR and columns from 0 to MAXC, inclusive. All values are implicitly
+  initialized to v.
+- at(r, c) returns the value at row r, column c.
+- query(r1, c1, r2, c2) returns the result of join_values() applied to every
+  value in the rectangular region consisting of rows from r1 to r2, inclusive,
+  and columns from c1 to c2, inclusive.
+- update(r, c, d) assigns the value v at (r, c) to join_value_with_delta(v, d).
+
+Time Complexity:
+- O(1) per call to the constructor.
+- O(log(MAXR)*log(MAXC)) per call to at(), update(), and query().
+
+Space Complexity:
+- O(n) for storage of the array elements, where n is the number of updated
+  entries in the array.
+- O(log(MAXR) + log(MAXC)) auxiliary stack space per call to update(), query(),
+  and at().
 
 */
 
-#include <limits>
+#include <algorithm>
+#include <cstdlib>
 
 template<class T> class segment_tree_2d {
-  //these can be set to large values without affecting your memory usage!
-  static const int xmax = 1000000000;
-  static const int ymax = 1000000000;
+  static const int MAXR = 1000000000;
+  static const int MAXC = 1000000000;
 
-  //define the following yourself. merge(x, nullv) must return x for all valid x
-  static inline T nullv() { return std::numeric_limits<T>::min(); }
-  static inline T merge(const T & a, const T & b) { return a > b ? a : b; }
+  static T join_values(const T &a, const T &b) {
+    return std::min(a, b);
+  }
 
-  struct layer2_node {
-    int lo, hi;
-    layer2_node *L, *R;
+  static T join_region(const T &v, int area) {
+    return v;
+  }
+
+  static T join_value_with_delta(const T &v, const T &d) {
+    return d;
+  }
+
+  struct inner_node_t {
     T value;
-    layer2_node(int l, int h) : lo(l), hi(h), L(0), R(0) {}
+    int low, high;
+    inner_node_t *left, *right;
+
+    inner_node_t(int l, int h, const T &v)
+        : value(v), low(l), high(h), left(NULL), right(NULL) {}
   };
 
-  struct layer1_node {
-    layer1_node *L, *R;
-    layer2_node l2;
-    layer1_node() : L(0), R(0), l2(0, ymax) {}
+  struct outer_node_t {
+    inner_node_t root;
+    int low, high;
+    outer_node_t *left, *right;
+
+    outer_node_t(int l, int h, const T &v)
+        : root(0, MAXC, v), low(l), high(h), left(NULL), right(NULL) {}
   } *root;
 
-  void update2(layer2_node * node, int Q, const T & v) {
-    int lo = node->lo, hi = node->hi, mid = (lo + hi)/2;
-    if (lo + 1 == hi) {
-      node->value = v;
+  T init;
+
+  void update(inner_node_t *n, int c, const T &d, bool leaf_row) {
+    int l = n->low, h = n->high, mid = l + (h - l)/2;
+    if (l == h) {
+      if (leaf_row) {
+        n->value = join_value_with_delta(n->value, d);
+      } else {
+        n->value = d;
+      }
       return;
     }
-    layer2_node *& tgt = Q < mid ? node->L : node->R;
-    if (tgt == 0) {
-      tgt = new layer2_node(Q, Q + 1);
-      tgt->value = v;
-    } else if (tgt->lo <= Q && Q < tgt->hi) {
-      update2(tgt, Q, v);
+    inner_node_t *&target = (c <= mid) ? n->left : n->right;
+    if (target == NULL) {
+      target = new inner_node_t(c, c, init);
+    }
+    if (target->low <= c && c <= target->high) {
+      update(target, c, d, leaf_row);
     } else {
       do {
-        (Q < mid ? hi : lo) = mid;
-        mid = (lo + hi)/2;
-      } while ((Q < mid) == (tgt->lo < mid));
-      layer2_node *nnode = new layer2_node(lo, hi);
-      (tgt->lo < mid ? nnode->L : nnode->R) = tgt;
-      tgt = nnode;
-      update2(nnode, Q, v);
+        if (c <= mid) {
+          h = mid;
+        } else {
+          l = mid + 1;
+        }
+        mid = l + (h - l)/2;
+      } while ((c <= mid) == (target->low <= mid));
+      inner_node_t *tmp = new inner_node_t(l, h, init);
+      if (target->low <= mid) {
+        tmp->left = target;
+      } else {
+        tmp->right = target;
+      }
+      target = tmp;
+      update(tmp, c, d, leaf_row);
     }
-    node->value = merge(node->L ? node->L->value : nullv(),
-                        node->R ? node->R->value : nullv());
+    T left_value = (n->left != NULL) ? n->left->value
+                                     : join_region(init, mid - l + 1);
+    T right_value = (n->right != NULL) ? n->right->value
+                                       : join_region(init, h - mid);
+    n->value = join_values(left_value, right_value);
   }
 
-  T query2(layer2_node * nd, int A, int B) {
-    if (nd == 0 || B <= nd->lo || nd->hi <= A) return nullv();
-    if (A <= nd->lo && nd->hi <= B) return nd->value;
-    return merge(query2(nd->L, A, B), query2(nd->R, A, B));
+  void update(outer_node_t *n, int r, int c, const T &d) {
+    int l = n->low, h = n->high, mid = l + (h - l)/2;
+    if (l == h) {
+      update(&(n->root), c, d, true);
+      return;
+    }
+    if (r <= mid) {
+      if (n->left == NULL) {
+        n->left = new outer_node_t(l, mid, init);
+      }
+      update(n->left, r, c, d);
+    } else {
+      if (n->right == NULL) {
+        n->right = new outer_node_t(mid + 1, h, init);
+      }
+      update(n->right, r, c, d);
+    }
+    T value = join_region(init, h - l + 1);
+    if (n->left != NULL || n->right != NULL) {
+      T left_value = (n->left != NULL) ? query(&(n->left->root), c, c)
+                                       : join_region(init, mid - l + 1);
+      T right_value = (n->right != NULL) ? query(&(n->right->root), c, c)
+                                         : join_region(init, h - mid);
+      value = join_values(left_value, right_value);
+    }
+    update(&(n->root), c, value, false);
   }
 
-  void update1(layer1_node * node, int lo, int hi, int x, int y, const T & v) {
-    if (lo + 1 == hi) update2(&node->l2, y, v);
-    else {
-      int mid = (lo + hi)/2;
-      layer1_node *& nnode = x < mid ? node->L : node->R;
-      (x < mid ? hi : lo) = mid;
-      if (nnode == 0) nnode = new layer1_node();
-      update1(nnode, lo, hi, x, y, v);
-      update2(&node->l2, y, merge(
-      	node->L ? query2(&node->L->l2, y, y + 1) : nullv(),
-        node->R ? query2(&node->R->l2, y, y + 1) : nullv())
-      );
+  template<class node_t>
+  inline T call_query(node_t *n, int l, int h) {
+    return (n != NULL) ? query(n, l, h) : join_region(init, h - l + 1);
+  }
+
+  T query(inner_node_t *n, int tgt_l, int tgt_h) {
+    int l = n->low, h = n->high, mid = l + (h - l)/2;
+    if (l == tgt_l && h == tgt_h) {
+      return n->value;
+    }
+    if (tgt_l <= mid && mid < tgt_h) {
+      return join_values(
+                call_query(n->left, tgt_l, std::min(tgt_h, mid)),
+                call_query(n->right, std::max(tgt_l, mid + 1), tgt_h));
+    }
+    if (tgt_l <= mid) {
+      return call_query(n->left, tgt_l, std::min(tgt_h, mid));
+    }
+    return call_query(n->right, std::max(tgt_l, mid + 1), tgt_h);
+  }
+
+  int tgt_c1, tgt_c2;
+
+  T query(outer_node_t *n, int tgt_l, int tgt_h) {
+    int l = n->low, h = n->high, mid = l + (h - l)/2;
+    if (l == tgt_l && h == tgt_h) {
+      return query(&(n->root), tgt_c1, tgt_c2);
+    }
+    if (tgt_l <= mid && mid < tgt_h) {
+      return join_values(
+                call_query(n->left, tgt_l, std::min(tgt_h, mid)),
+                call_query(n->right, std::max(tgt_l, mid + 1), tgt_h));
+    }
+    if (tgt_l <= mid) {
+      return call_query(n->left, tgt_l, std::min(tgt_h, mid));
+    }
+    return call_query(n->right, std::max(tgt_l, mid + 1), tgt_h);
+  }
+
+  static void clean_up(inner_node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
     }
   }
 
-  T query1(layer1_node * nd, int lo, int hi, int A1, int B1, int A2, int B2) {
-    if (nd == 0 || B1 <= lo || hi <= A1) return nullv();
-    if (A1 <= lo && hi <= B1) return query2(&nd->l2, A2, B2);
-    int mid = (lo + hi) / 2;
-    return merge(query1(nd->L, lo, mid, A1, B1, A2, B2),
-                 query1(nd->R, mid, hi, A1, B1, A2, B2));
-  }
-
-  void clean_up2(layer2_node * n) {
-    if (n == 0) return;
-    clean_up2(n->L);
-    clean_up2(n->R);
-    delete n;
-  }
-
-  void clean_up1(layer1_node * n) {
-    if (n == 0) return;
-    clean_up2(n->l2.L);
-    clean_up2(n->l2.R);
-    clean_up1(n->L);
-    clean_up1(n->R);
-    delete n;
+  static void clean_up(outer_node_t *n) {
+    if (n != NULL) {
+      clean_up(n->root.left);
+      clean_up(n->root.right);
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
   }
 
  public:
-  segment_tree_2d() { root = new layer1_node(); }
-  ~segment_tree_2d() { clean_up1(root); }
-
-  void update(int x, int y, const T & v) {
-    update1(root, 0, xmax, x, y, v);
+  segment_tree_2d(const T &v = T()) {
+    root = new outer_node_t(0, MAXR, v);
+    init = v;
   }
 
-  T query(int x1, int y1, int x2, int y2) {
-    return query1(root, 0, xmax, x1, x2 + 1, y1, y2 + 1);
+  ~segment_tree_2d() {
+    clean_up(root);
   }
 
-  T at(int x, int y) {
-    return query(x, y, x, y);
+  void update(int r, int c, const T &d) {
+    update(root, r, c, d);
+  }
+
+  T query(int r1, int c1, int r2, int c2) {
+    tgt_c1 = c1;
+    tgt_c2 = c2;
+    return query(root, r1, r2);
+  }
+
+  T at(int r, int c) {
+    return query(r, c, r, c);
   }
 };
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
 
+Values:
+7 6 0
+5 4 0
+0 1 9
+
+***/
+
+#include <cassert>
 #include <iostream>
 using namespace std;
 
 int main() {
-  int arr[5][5] = {{1, 2, 3, 4, 5},
-                   {5, 4, 3, 2, 1},
-                   {6, 7, 8, 0, 0},
-                   {0, 1, 2, 3, 4},
-                   {5, 9, 9, 1, 2}};
-  segment_tree_2d<int> T;
-  for (int r = 0; r < 5; r++)
-    for (int c = 0; c < 5; c++)
-      T.update(r, c, arr[r][c]);
-  cout << "The maximum value in the rectangle with ";
-  cout << "upper left (0,2) and lower right (3,4) is ";
-  cout << T.query(0, 2, 3, 4) << ".\n"; //8
+  segment_tree_2d<int> t(0);
+  t.update(0, 0, 7);
+  t.update(0, 1, 6);
+  t.update(1, 0, 5);
+  t.update(1, 1, 4);
+  t.update(2, 1, 1);
+  t.update(2, 2, 9);
+  cout << "Values:" << endl;
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      cout << t.at(i, j) << " ";
+    }
+    cout << endl;
+  }
+  assert(t.query(0, 0, 0, 1) == 6);
+  assert(t.query(0, 0, 1, 0) == 5);
+  assert(t.query(1, 1, 2, 2) == 0);
+  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
+  t.update(500000000, 500000000, -100);
+  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
   return 0;
 }
