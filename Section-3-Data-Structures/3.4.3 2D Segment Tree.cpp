@@ -152,7 +152,7 @@ template<class T> class segment_tree_2d {
   }
 
   template<class node_t>
-  inline T lazy_query(node_t *n, int area) {
+  inline T call_query(node_t *n, int area) {
     return (n != NULL) ? query(n) : join_region(init, area);
   }
 
@@ -168,13 +168,13 @@ template<class T> class segment_tree_2d {
       }
       return res;
     } else if (tgt_c2 <= mid) {
-      return lazy_query(n->left, tgt_c2 - tgt_c1 + 1);
+      return call_query(n->left, tgt_c2 - tgt_c1 + 1);
     } else if (mid < tgt_c1) {
-      return lazy_query(n->right, tgt_c2 - tgt_c1 + 1);
+      return call_query(n->right, tgt_c2 - tgt_c1 + 1);
     }
     return join_values(
-        lazy_query(n->left, std::min(tgt_c2, mid) - tgt_c1 + 1),
-        lazy_query(n->right, tgt_c2 - std::max(tgt_c1, mid + 1) + 1));
+        call_query(n->left, std::min(tgt_c2, mid) - tgt_c1 + 1),
+        call_query(n->right, tgt_c2 - std::max(tgt_c1, mid + 1) + 1));
   }
 
   T query(outer_node_t *n) {
@@ -189,13 +189,13 @@ template<class T> class segment_tree_2d {
       }
       return res;
     } else if (tgt_r2 <= mid) {
-      return lazy_query(n->left, tgt_r2 - tgt_r1 + 1);
+      return call_query(n->left, tgt_r2 - tgt_r1 + 1);
     } else if (mid < tgt_r1) {
-      return lazy_query(n->right, tgt_r2 - tgt_r1 + 1);
+      return call_query(n->right, tgt_r2 - tgt_r1 + 1);
     }
     return join_values(
-        lazy_query(n->left, width*(std::min(tgt_r2, mid) - tgt_r1 + 1)),
-        lazy_query(n->right, width*(tgt_r2 - std::max(tgt_r1, mid + 1) + 1)));
+        call_query(n->left, width*(std::min(tgt_r2, mid) - tgt_r1 + 1)),
+        call_query(n->right, width*(tgt_r2 - std::max(tgt_r1, mid + 1) + 1)));
   }
 
   static void clean_up(inner_node_t *n) {
