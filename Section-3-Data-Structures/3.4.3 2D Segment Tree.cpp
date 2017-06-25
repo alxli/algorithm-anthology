@@ -155,36 +155,45 @@ template<class T> class segment_tree_2d {
 
   T query(inner_node_t *n, int tgt_l, int tgt_h) {
     int l = n->low, h = n->high, mid = l + (h - l)/2;
-    if (l == tgt_l && h == tgt_h) {
-      return n->value;
+    if (tgt_l <= l && h <= tgt_h) {
+      T res = n->value;
+      if (tgt_l < l) {
+        res = join_values(res, join_region(init, l - tgt_l + 1));
+      }
+      if (h < tgt_h) {
+        res = join_values(res, join_region(init, tgt_h - h + 1));
+      }
+      return res;
+    } else if (tgt_h <= mid) {
+      return call_query(n->left, tgt_l, tgt_h);
+    } else if (mid < tgt_l) {
+      return call_query(n->right, tgt_l, tgt_h);
     }
-    if (tgt_l <= mid && mid < tgt_h) {
-      return join_values(
-                call_query(n->left, tgt_l, std::min(tgt_h, mid)),
-                call_query(n->right, std::max(tgt_l, mid + 1), tgt_h));
-    }
-    if (tgt_l <= mid) {
-      return call_query(n->left, tgt_l, std::min(tgt_h, mid));
-    }
-    return call_query(n->right, std::max(tgt_l, mid + 1), tgt_h);
+    return join_values(call_query(n->left, tgt_l, tgt_h),
+                       call_query(n->right, tgt_l, tgt_h));
   }
 
   int tgt_c1, tgt_c2;
 
   T query(outer_node_t *n, int tgt_l, int tgt_h) {
     int l = n->low, h = n->high, mid = l + (h - l)/2;
-    if (l == tgt_l && h == tgt_h) {
-      return query(&(n->root), tgt_c1, tgt_c2);
+    if (tgt_l <= l && h <= tgt_h) {
+      T res = query(&(n->root), tgt_c1, tgt_c2);
+      int width = tgt_c2 - tgt_c1 + 1;
+      if (tgt_l < l) {
+        res = join_values(res, join_region(init, width*(l - tgt_l + 1)));
+      }
+      if (h < tgt_h) {
+        res = join_values(res, join_region(init, width*(tgt_h - h + 1)));
+      }
+      return res;
+    } else if (tgt_h <= mid) {
+      return call_query(n->left, tgt_l, tgt_h);
+    } else if (mid < tgt_l) {
+      return call_query(n->right, tgt_l, tgt_h);
     }
-    if (tgt_l <= mid && mid < tgt_h) {
-      return join_values(
-                call_query(n->left, tgt_l, std::min(tgt_h, mid)),
-                call_query(n->right, std::max(tgt_l, mid + 1), tgt_h));
-    }
-    if (tgt_l <= mid) {
-      return call_query(n->left, tgt_l, std::min(tgt_h, mid));
-    }
-    return call_query(n->right, std::max(tgt_l, mid + 1), tgt_h);
+    return join_values(call_query(n->left, tgt_l, tgt_h),
+                       call_query(n->right, tgt_l, tgt_h));
   }
 
   static void clean_up(inner_node_t *n) {
