@@ -1,80 +1,83 @@
-/*
-
-Description: k-d tree (short for k-dimensional tree) is a space-
-partitioning data structure for organizing points in a k-
-dimensional space. The following implementation supports
-counting the number of points in rectangular ranges after the
-tree has been build.
-
-Time Complexity: O(N log N) for build(), where N is the number
-of points in the tree. count() is O(sqrt N).
-
-Space Complexity: O(N) on the number of points.
-
-*/
-
 #include <algorithm>
-#include <climits>
+#include <limits>
 #include <utility>
 #include <vector>
 
-class kd_tree {
-  typedef std::pair<int, int> point;
+template<class T> class kd_tree {
+  typedef std::pair<T, T> point;
 
-  static inline bool cmp_x(const point & a, const point & b) {
+  static inline bool comp1(const point &a, const point &b) {
     return a.first < b.first;
   }
 
-  static inline bool cmp_y(const point & a, const point & b) {
+  static inline bool comp2(const point &a, const point &b) {
     return a.second < b.second;
   }
 
-  std::vector<int> tx, ty, cnt, minx, miny, maxx, maxy;
-  int x1, y1, x2, y2; //temporary values to speed up recursion
+  std::vector<point> tree, minp, maxp;
+  std::vector<int> count;
 
-  void build(int lo, int hi, bool div_x, point P[]) {
-    if (lo >= hi) return;
-    int mid = (lo + hi) >> 1;
-    std::nth_element(P + lo, P + mid, P + hi, div_x ? cmp_x : cmp_y);
-    tx[mid] = P[mid].first;
-    ty[mid] = P[mid].second;
-    cnt[mid] = hi - lo;
-    minx[mid] = INT_MAX; miny[mid] = INT_MAX;
-    maxx[mid] = INT_MIN; maxy[mid] = INT_MIN;
-    for (int i = lo; i < hi; i++) {
-      minx[mid] = std::min(minx[mid], P[i].first);
-      maxx[mid] = std::max(maxx[mid], P[i].first);
-      miny[mid] = std::min(miny[mid], P[i].second);
-      maxy[mid] = std::max(maxy[mid], P[i].second);
+  template<class It>
+  void build(int lo, int hi, bool row, It points) {
+    if (lo >= hi) {
+      return;
     }
-    build(lo, mid, !div_x, P);
-    build(mid + 1, hi, !div_x, P);
+    int mid = (lo + hi)/2;
+    std::nth_element(points + lo, points + mid, points + hi,
+                     row ? comp1 : comp2);
+    tree[mid] = *(points + mid);
+    count[mid] = hi - lo;
+    minp[mid].first = minp[mid].second = std::numeric_limits<T>::max();
+    maxp[mid].first = maxp[mid].second = std::numeric_limits<T>::min();
+    for (int i = lo; i < hi; i++) {
+      minp[mid].first = std::min(minp[mid].first, (points + i)->first);
+      minp[mid].second = std::min(minp[mid].second, (points + i)->second);
+      maxp[mid].first = std::max(maxp[mid].first, (points + i)->first);
+      maxp[mid].second = std::max(maxp[mid].second, (points + i)->second);
+    }
+    build(lo, mid, !row, points);
+    build(mid + 1, hi, !row, points);
   }
 
-  int count(int lo, int hi) {
-    if (lo >= hi) return 0;
-    int mid = (lo + hi) >> 1;
-    int ax = minx[mid], ay = miny[mid];
-    int bx = maxx[mid], by = maxy[mid];
-    if (ax > x2 || x1 > bx || ay > y2 || y1 > by) return 0;
-    if (x1 <= ax && bx <= x2 && y1 <= ay && by <= y2) return cnt[mid];
-    int res = count(lo, mid) + count(mid + 1, hi);
-    res += (x1 <= tx[mid] && tx[mid] <= x2 && y1 <= ty[mid] && ty[mid] <= y2);
-    return res;
+  T r1, c1, r2, c2;  // Helper variables for count().
+
+  int query(int lo, int hi) {
+    if (lo >= hi) {
+      return 0;
+    }
+    int mid = (lo + hi)/2;
+    T ar = minp[mid].first, ac = minp[mid].second;
+    T br = maxp[mid].first, bc = maxp[mid].second;
+    if (r2 < ar || br < r1 || c2 < ac || bc < c1) {
+      return 0;
+    }
+    if (!(ar < r1 || r2 < br || ac < c1 || c2 < bc)) {
+      return count[mid];
+    }
+    int res = query(lo, mid) + query(mid + 1, hi);
+    if (tree[mid].first < r1 || r2 < tree[mid].first ||
+        tree[mid].second < c1 || c2 < tree[mid].second) {
+      return res;
+    }
+    return res + 1;
   }
 
  public:
-  kd_tree(int n, point P[]): tx(n), ty(n), cnt(n),
-    minx(n), miny(n), maxx(n), maxy(n) {
-     build(0, n, true, P);
+  template<class It> kd_tree(It lo, It hi) {
+    int n = std::distance(lo, hi);
+    tree.resize(n);
+    count.resize(n);
+    minp.resize(n);
+    maxp.resize(n);
+    build(0, n, true, lo);
   }
 
-  int count(int x1, int y1, int x2, int y2) {
-    this->x1 = x1;
-    this->y1 = y1;
-    this->x2 = x2;
-    this->y2 = y2;
-    return count(0, tx.size());
+  int query(const T &r1, const T &c1, const T &r2, const T &c2) {
+    this->r1 = r1;
+    this->c1 = c1;
+    this->r2 = r2;
+    this->c2 = c2;
+    return query(0, tree.size());
   }
 };
 
@@ -84,13 +87,15 @@ class kd_tree {
 using namespace std;
 
 int main() {
-  pair<int, int> P[4];
-  P[0] = make_pair(0, 0);
-  P[1] = make_pair(10, 10);
-  P[2] = make_pair(0, 10);
-  P[3] = make_pair(10, 0);
-  kd_tree t(4, P);
-  assert(t.count(0, 0, 10, 9) == 2);
-  assert(t.count(0, 0, 10, 10) == 4);
+  const int n = 10;
+  int points[n][2] = {{1, 4}, {5, 4}, {2, 2}, {3, 1}, {6, -5}, {5, -1},
+                      {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
+  vector<pair<int, int> > v;
+  for (int i = 0; i < n; i++) {
+    v.push_back(make_pair(points[i][0], points[i][1]));
+  }
+  kd_tree<int> t(v.begin(), v.end());
+  assert(t.query(-1, -1, 2, 5) == 4);
+  assert(t.query(1, 1, 4, 8) == 3);
   return 0;
 }
