@@ -41,13 +41,13 @@ template<class T> class kd_tree {
   std::vector<point> tree, minp, maxp;
   std::vector<int> l_index, h_index;
 
-  void build(int lo, int hi, bool row) {
+  void build(int lo, int hi, bool div_x) {
     if (lo >= hi) {
       return;
     }
     int mid = (lo + hi)/2;
     std::nth_element(tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
-                     row ? comp1 : comp2);
+                     div_x ? comp1 : comp2);
     l_index[mid] = lo;
     h_index[mid] = hi;
     minp[mid].first = maxp[mid].first = tree[lo].first;
@@ -58,8 +58,8 @@ template<class T> class kd_tree {
       maxp[mid].first = std::max(maxp[mid].first, tree[i].first);
       maxp[mid].second = std::max(maxp[mid].second, tree[i].second);
     }
-    build(lo, mid, !row);
-    build(mid + 1, hi, !row);
+    build(lo, mid, !div_x);
+    build(mid + 1, hi, !div_x);
   }
 
   T x1, y1, x2, y2;  // Helper variables for query().
