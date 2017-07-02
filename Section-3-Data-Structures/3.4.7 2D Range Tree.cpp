@@ -5,11 +5,11 @@ that fall inside given rectangular regions. This implementation uses std::pair
 to represent points, requiring operators < and == to be defined on the numeric
 template type.
 
-- range_tree_2d(lo, hi) constructs a set from two RandomAccessIterators to
+- range_tree(lo, hi) constructs a set from two RandomAccessIterators to
   std::pair as a range [lo, hi) of points.
-- query(r1, c1, r2, c2, f) calls the function f(i, p) on each point in the set
-  that falls into the rectangular region consisting of rows from r1 to r2,
-  inclusive, and columns from c1 to c2, inclusive. The first argument to f is
+- query(x1, y1, x2, y2, f) calls the function f(i, p) on each point in the set
+  that falls into the rectangular region consisting of rows from x1 to x2,
+  inclusive, and columns from y1 to y2, inclusive. The first argument to f is
   the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an std::pair.
 
 Time Complexity:
@@ -28,7 +28,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T> class range_tree_2d {
+template<class T> class range_tree {
   typedef std::pair<T, T> point;
   typedef std::pair<int, T> colindex;
 
@@ -59,18 +59,18 @@ template<class T> class range_tree_2d {
                columns[n].begin(), comp1);
   }
 
-  T r1, c1, r2, c2;  // Helper variables for query().
+  T x1, y1, x2, y2;  // Helper variables for query().
 
   template<class ReportFunction>
   void query(int n, int lo, int hi, ReportFunction f) {
-    if (points[hi].first < r1 || r2 < points[lo].first) {
+    if (points[hi].first < x1 || x2 < points[lo].first) {
       return;
     }
-    if (!(points[lo].first < r1 || r2 < points[hi].first)) {
-      if (!columns[n].empty() && !(c2 < c1)) {
+    if (!(points[lo].first < x1 || x2 < points[hi].first)) {
+      if (!columns[n].empty() && !(y2 < y1)) {
         typename std::vector<point>::iterator it;
-        it = std::lower_bound(columns[n].begin(), columns[n].end(), c1, comp2);
-        for (; it != columns[n].end() && it->second <= c2; ++it) {
+        it = std::lower_bound(columns[n].begin(), columns[n].end(), y1, comp2);
+        for (; it != columns[n].end() && it->second <= y2; ++it) {
           f(it->first, points[it->first]);
         }
       }
@@ -81,7 +81,7 @@ template<class T> class range_tree_2d {
   }
 
  public:
-  template<class It> range_tree_2d(It lo, It hi) {
+  template<class It> range_tree(It lo, It hi) {
     int n = std::distance(lo, hi);
     columns.resize(4*n + 1);
     points.assign(lo, hi);
@@ -90,12 +90,12 @@ template<class T> class range_tree_2d {
   }
 
   template<class ReportFunction>
-  void query(const T &r1, const T &c1, const T &r2, const T &c2,
+  void query(const T &x1, const T &y1, const T &x2, const T &y2,
              ReportFunction f) {
-    this->r1 = r1;
-    this->c1 = c1;
-    this->r2 = r2;
-    this->c2 = c2;
+    this->x1 = x1;
+    this->y1 = y1;
+    this->x2 = x2;
+    this->y2 = y2;
     query(0, 0, points.size() - 1, f);
   }
 };
@@ -122,7 +122,7 @@ int main() {
   for (int i = 0; i < n; i++) {
     v.push_back(make_pair(points[i][0], points[i][1]));
   }
-  range_tree_2d<int> t(v.begin(), v.end());
+  range_tree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);
   cout << endl;
   t.query(1, 1, 4, 8, print);

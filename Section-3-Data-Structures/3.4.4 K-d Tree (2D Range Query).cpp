@@ -7,9 +7,9 @@ template type.
 
 - kd_tree(lo, hi) constructs a set from two RandomAccessIterators to std::pair
   as a range [lo, hi) of points.
-- query(r1, c1, r2, c2, f) calls the function f(i, p) on each point in the set
-  that falls into the rectangular region consisting of rows from r1 to r2,
-  inclusive, and columns from c1 to c2, inclusive. The first argument to f is
+- query(x1, y1, x2, y2, f) calls the function f(i, p) on each point in the set
+  that falls into the rectangular region consisting of rows from x1 to x2,
+  inclusive, and columns from y1 to y2, inclusive. The first argument to f is
   the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an std::pair.
 
 Time Complexity:
@@ -62,7 +62,7 @@ template<class T> class kd_tree {
     build(mid + 1, hi, !row);
   }
 
-  T r1, c1, r2, c2;  // Helper variables for query().
+  T x1, y1, x2, y2;  // Helper variables for query().
 
   template<class ReportFunction>
   void query(int lo, int hi, ReportFunction f) {
@@ -70,12 +70,12 @@ template<class T> class kd_tree {
       return;
     }
     int mid = (lo + hi)/2;
-    T ar = minp[mid].first, ac = minp[mid].second;
-    T br = maxp[mid].first, bc = maxp[mid].second;
-    if (r2 < ar || br < r1 || c2 < ac || bc < c1) {
+    T ax = minp[mid].first, ay = minp[mid].second;
+    T bx = maxp[mid].first, by = maxp[mid].second;
+    if (x2 < ax || bx < x1 || y2 < ay || by < y1) {
       return;
     }
-    if (!(ar < r1 || r2 < br || ac < c1 || c2 < bc)) {
+    if (!(ax < x1 || x2 < bx || ay < y1 || y2 < by)) {
       for (int i = l_index[mid]; i < h_index[mid]; i++) {
         f(tree[i]);
       }
@@ -83,8 +83,8 @@ template<class T> class kd_tree {
     }
     query(lo, mid, f);
     query(mid + 1, hi, f);
-    if (tree[mid].first < r1 || r2 < tree[mid].first ||
-        tree[mid].second < c1 || c2 < tree[mid].second) {
+    if (tree[mid].first < x1 || x2 < tree[mid].first ||
+        tree[mid].second < y1 || y2 < tree[mid].second) {
       return;
     }
     f(tree[mid]);
@@ -102,12 +102,12 @@ template<class T> class kd_tree {
   }
 
   template<class ReportFunction>
-  void query(const T &r1, const T &c1, const T &r2, const T &c2,
+  void query(const T &x1, const T &y1, const T &x2, const T &y2,
              ReportFunction f) {
-    this->r1 = r1;
-    this->c1 = c1;
-    this->r2 = r2;
-    this->c2 = c2;
+    this->x1 = x1;
+    this->y1 = y1;
+    this->x2 = x2;
+    this->y2 = y2;
     query(0, tree.size(), f);
   }
 };
