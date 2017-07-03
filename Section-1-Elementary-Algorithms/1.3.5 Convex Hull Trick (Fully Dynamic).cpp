@@ -30,18 +30,11 @@ class hull_optimizer {
   struct line {
     long long m, b, val;
     double xlo;
-    bool is_query;
-    bool query_max;
+    bool is_query, query_max;
 
-    line(long long m, long long b, long long val,
-         bool is_query, bool query_max) {
-      this->m = m;
-      this->b = b;
-      this->val = val;
-      this->xlo = -std::numeric_limits<double>::max();
-      this->is_query = is_query;
-      this->query_max = query_max;
-    }
+    line(long long m, long long b, long long val, bool is_query, bool query_max)
+        : m(m), b(b), val(val), xlo(-std::numeric_limits<double>::max()),
+          is_query(is_query), query_max(query_max) {}
 
     bool parallel(const line &l) const {
       return m == l.m;
