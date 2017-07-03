@@ -22,8 +22,8 @@ Space Complexity:
 #include <vector>
 
 const int MAXN = 1000;
-int len, timer, tin[MAXN], tout[MAXN];
 std::vector<int> adj[MAXN], dp[MAXN];
+int len, timer, tin[MAXN], tout[MAXN];
 
 void dfs(int u, int p) {
   tin[u] = timer++;
