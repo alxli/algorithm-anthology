@@ -58,11 +58,13 @@ std::vector<int> find_centers(int nodes) {
 }
 
 int find_centroid(int nodes, int u = 0, int p = -1) {
-  int cnt = 1, v;
+  int cnt = 1;
   bool good_center = true;
   for (int j = 0; j < (int)adj[u].size(); j++) {
-    if ((v = adj[u][j]) == p)
+    int v = adj[u][j];
+    if (v == p) {
       continue;
+    }
     int res = find_centroid(nodes, v, u);
     if (res >= 0) {
       return res;
