@@ -50,11 +50,9 @@ template<class T> class disjoint_set_forest {
   }
 
  public:
-  disjoint_set_forest() {
-    num_elements = num_sets = 0;
-  }
+  disjoint_set_forest() : num_elements(0), num_sets(0) {}
 
-  int elements() const {
+  int size() const {
     return num_elements;
   }
 
@@ -110,11 +108,11 @@ template<class T> class disjoint_set_forest {
 
 /*** Example Usage and Output:
 
-7 elements in 3 set:
 [a, b, f], [c], [d, e, g]
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -127,8 +125,8 @@ int main() {
   dsf.unite('b', 'f');
   dsf.unite('d', 'e');
   dsf.unite('d', 'g');
-  cout << dsf.elements() << " elements in ";
-  cout << dsf.sets() << " set:" << endl;
+  assert(dsf.size() == 7);
+  assert(dsf.sets() == 3);
   vector< vector<char> > s = dsf.get_all_sets();
   for (int i = 0; i < (int)s.size(); i++) {
     cout << (i > 0 ? ", [" : "[");
