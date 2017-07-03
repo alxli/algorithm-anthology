@@ -165,9 +165,9 @@ template<class T> class link_cut_forest {
       n->push();
       if (!parent->is_root()) {
         if ((n == parent->left) == (parent == grandparent->left)) {
-          rotate(parent);  // zig-zig
+          rotate(parent);
         } else {
-          rotate(n);  // zig-zag
+          rotate(n);
         }
       }
       rotate(n);
@@ -187,9 +187,9 @@ template<class T> class link_cut_forest {
     return prev;
   }
 
-  std::map<int, node_t*> nodes;  // Use array if compression is not required.
-  node_t *u, *v;  // Helper variables.
   int num_trees;
+  std::map<int, node_t*> nodes;
+  node_t *u, *v;  // Helper variables.
 
   void get_uv(int a, int b) {
     typename std::map<int, node_t*>::iterator it1, it2;
