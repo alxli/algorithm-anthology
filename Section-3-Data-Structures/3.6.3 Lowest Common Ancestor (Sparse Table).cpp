@@ -52,19 +52,19 @@ void build(int nodes, int root = 0) {
   dfs(root, root);
 }
 
-bool is_child(int parent, int child) {
+bool is_parent(int parent, int child) {
   return tin[parent] <= tin[child] && tout[child] <= tout[parent];
 }
 
 int lca(int u, int v) {
-  if (is_child(u, v)) {
+  if (is_parent(u, v)) {
     return u;
   }
-  if (is_child(v, u)) {
+  if (is_parent(v, u)) {
     return v;
   }
   for (int i = len - 1; i >= 0; i--) {
-    if (!is_child(dp[u][i], v)) {
+    if (!is_parent(dp[u][i], v)) {
       u = dp[u][i];
     }
   }
