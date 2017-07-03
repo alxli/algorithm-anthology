@@ -58,7 +58,7 @@ template<class T> class heavy_light {
   }
 
   static T join_value_with_delta(const T &v, const T &d, int len) {
-    return v + d*len;
+    return d;
   }
 
   static T join_deltas(const T &d1, const T &d2) {
@@ -114,11 +114,16 @@ template<class T> class heavy_light {
       d++;
     }
     for (d -= 2; d >= 0; d--) {
-      int left = (i >> d), right = (left ^ 1), n = left/2;
+      int l = (i >> d), r = (l ^ 1), n = l/2;
       if (pending[path][n]) {
         value[path][n] = join_value_with_delta(path, n);
-        delta[path][left] = join_deltas(delta[path][left], delta[path][n]);
-        delta[path][right] = join_deltas(delta[path][right], delta[path][n]);
+        delta[path][l] =
+            pending[path][l] ? join_deltas(delta[path][l], delta[path][n])
+                             : delta[path][n];
+        delta[path][r] =
+            pending[path][r] ? join_deltas(delta[path][r], delta[path][n])
+                             : delta[path][n];
+        pending[path][l] = pending[path][r] = true;
         pending[path][n] = false;
       }
     }
