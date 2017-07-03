@@ -26,7 +26,7 @@ Space Complexity:
 - O(n*log(MAXR)*log(MAXC)) for storage of the array elements, where n is the
   number of distinct indices that have been accessed across all of the
   operations so far.
-- O(1) auxiliary per call to all operations.
+- O(1) auxiliary for all operations.
 
 */
 

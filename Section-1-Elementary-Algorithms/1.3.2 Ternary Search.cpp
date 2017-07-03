@@ -13,10 +13,12 @@ returns a number x such that f is strictly increasing on the interval [lo, x]
 and strictly decreasing on the interval [x, hi]. For the function to be correct
 and deterministic, such an x must exist and be unique.
 
-Time Complexity: At most O(log n) calls will be made to f, where n is the
-distance between lo and hi divided by the specified absolute error (epsilon).
+Time Complexity:
+- O(log n) calls will be made to f(), where n is the distance between lo and hi
+  divided by the specified absolute error (epsilon).
 
-Space Complexity: O(1) auxiliary.
+Space Complexity:
+- O(1) auxiliary.
 
 */
 
@@ -27,10 +29,11 @@ double ternary_search_min(double lo, double hi, UnimodalFunction f) {
   while (hi - lo > EPS) {
     lthird = lo + (hi - lo)/3;
     hthird = hi - (hi - lo)/3;
-    if (f(lthird) < f(hthird))
+    if (f(lthird) < f(hthird)) {
       hi = hthird;
-    else
+    } else {
       lo = lthird;
+    }
   }
   return lo;
 }
@@ -42,10 +45,11 @@ double ternary_search_max(double lo, double hi, UnimodalFunction f) {
   while (hi - lo > EPS) {
     lthird = lo + (hi - lo)/3;
     hthird = hi - (hi - lo)/3;
-    if (f(lthird) < f(hthird))
+    if (f(lthird) < f(hthird)) {
       lo = lthird;
-    else
+    } else {
       hi = hthird;
+    }
   }
   return hi;
 }

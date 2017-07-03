@@ -22,10 +22,14 @@ a larger running time of O(n*m) on the number of nodes and edges respectively.
 While it is as slow in the worst case as the Bellman-Ford algorithm, the SPFA
 still tends to outperform in the average case.
 
-Time Complexity: O(m log n) where m is the number of edges and n is the number
-of nodes.
+Time Complexity:
+- O(m log n) for dijkstra(), where m is the number of edges and n is the number
+  of nodes.
 
-Space Complexity: O(n) auxiliary on the number of nodes.
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+  is the number of edges.
+- O(n) auxiliary heap space for dijkstra().
 
 */
 
@@ -53,8 +57,9 @@ void dijkstra(int nodes, int start) {
     vis[u] = true;
     for (int j = 0; j < (int)adj[u].size(); j++) {
       v = adj[u][j].first;
-      if (vis[v])
+      if (vis[v]) {
         continue;
+      }
       if (dist[v] > dist[u] + adj[u][j].second) {
         dist[v] = dist[u] + adj[u][j].second;
         pred[v] = u;

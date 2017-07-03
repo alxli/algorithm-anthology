@@ -34,8 +34,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the array elements.
-- O(1) auxiliary per call to size().
-- O(log n) auxiliary stack space per call to update() and query().
+- O(log n) auxiliary stack space for update() and query().
+- O(1) auxiliary for size().
 
 */
 

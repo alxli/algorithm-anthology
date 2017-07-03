@@ -31,8 +31,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the intervals.
-- O(1) auxiliary per call to size() and empty().
-- O(log n) auxiliary stack space on average per call to all other operations.
+- O(1) auxiliary for size() and empty().
+- O(log n) auxiliary stack space on average for all other operations.
 
 */
 

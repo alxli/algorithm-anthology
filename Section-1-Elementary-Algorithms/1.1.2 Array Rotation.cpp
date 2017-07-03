@@ -15,8 +15,11 @@ three simple inversions. Version 3 requires RandomAccessIterators, applying a
 juggling algorithm which first divides the range into gcd(hi - lo, mid - lo)
 sets and then rotates the corresponding elements in each set.
 
-Time Complexity: O(n) on the distance between lo and hi.
-Space Complexity: O(1) auxiliary.
+Time Complexity:
+- O(n) per call to both functions, where n is the distance between lo and hi.
+
+Space Complexity:
+- O(1) auxiliary.
 
 */
 
@@ -25,11 +28,12 @@ Space Complexity: O(1) auxiliary.
 template<class It> void rotate1(It lo, It mid, It hi) {
   It next = mid;
   while (lo != next) {
-    std::swap(*lo++, *next++);
-    if (next == hi)
+    std::iter_swap(lo++, next++);
+    if (next == hi) {
       next = mid;
-    else if (lo == mid)
+    } else if (lo == mid) {
       mid = next;
+    }
   }
 }
 
@@ -40,7 +44,7 @@ template<class It> void rotate2(It lo, It mid, It hi) {
 }
 
 int gcd(int a, int b) {
-  return b == 0 ? a : gcd(b, a % b);
+  return (b == 0) ? a : gcd(b, a % b);
 }
 
 template<class It> void rotate3(It lo, It mid, It hi) {
@@ -50,9 +54,10 @@ template<class It> void rotate3(It lo, It mid, It hi) {
     int curr = i, next;
     for (int j = 0; j < cycle - 1; j++) {
       next = curr + jump;
-      if (next >= n)
+      if (next >= n) {
         next -= n;
-      std::swap(*(lo + curr), *(lo + next));
+      }
+      std::iter_swap(lo + curr, lo + next);
       curr = next;
     }
   }

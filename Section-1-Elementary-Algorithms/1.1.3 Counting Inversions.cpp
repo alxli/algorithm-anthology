@@ -5,7 +5,7 @@ pairs (i, j) such that i < j and a[i] > a[j]. This is roughly how "close" an
 array is to being sorted, but is *not* the minimum number of swaps required to
 sort the array. If the array is sorted, then the inversion count is 0. If the
 array is sorted in decreasing order, then the inversion count is maximal. The
-following two functions are each techniques to efficiently count inversion.
+following two functions are each techniques to efficiently count inversions.
 
 */
 
@@ -22,14 +22,20 @@ RandomAccessIterators. Note that the range [lo, hi) will become sorted after
 the function call. The value type of the input iterators must have operator<
 defined appropriately.
 
-Time Complexity: O(n log n) on the distance between lo and hi.
-Space Complexity: O(n) auxiliary.
+Time Complexity:
+- O(n log n) per call to both functinos, where n is distance between lo and hi
+  in the first version and the number of array elements in the second version.
+
+Space Complexity:
+- O(n) auxiliary heap space for both functions.
 
 */
 
-template<class It> long long inversions(It lo, It hi) {
-  if (hi - lo < 2)
+template<class It>
+long long inversions(It lo, It hi) {
+  if (hi - lo < 2) {
     return 0;
+  }
   It mid = lo + (hi - lo - 1)/2, a = lo, c = mid + 1;
   long long res = 0;
   res += inversions(lo, mid + 1);

@@ -5,8 +5,14 @@ n1 < n2, as well as a set of edges E mapping nodes from set A to set B,
 determine the largest possible subset of E such that no pair of edges in the
 subset share a common node.
 
-Time Complexity: O(m*sqrt(n1 + n2)) where m is the number of edges.
-Space Complexity: O(n1 + n2) auxiliary.
+Time Complexity:
+- O(m*sqrt(n1 + n2)) per call to hopcroft_karp(), where m is the number of
+  edges.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges
+- O(n1 + n2) auxiliary stack and heap space for hopcroft_karp().
 
 */
 
@@ -15,9 +21,9 @@ Space Complexity: O(n1 + n2) auxiliary.
 #include <vector>
 
 const int MAXN = 100;
-int match[MAXN], dist[MAXN];
-std::vector<bool> used(MAXN), vis(MAXN);
 std::vector<int> adj[MAXN];
+std::vector<bool> used(MAXN), vis(MAXN);
+int match[MAXN], dist[MAXN];
 
 void bfs(int n1, int n2) {
   std::fill(dist, dist + n1, -1);

@@ -11,10 +11,14 @@ as passed in the function argument.
 This function will also detect whether the graph contains negative-weighted
 cycles, in which case there is no shortest path and an error will be thrown.
 
-Time Complexity: O(n*m) where n is the number of nodes and m is the number of
-edges.
+Time Complexity:
+- O(n*m) per call to bellman_ford(), where n is the number of nodes and m is the
+  number of edges.
 
-Space Complexity: O(n) auxiliary on the number of nodes.
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m is
+  the number of edges.
+- O(n) auxiliary heap space for bellman_ford(), where n is the number of nodes.
 
 */
 
@@ -45,8 +49,9 @@ void bellman_ford(int nodes, int start) {
   }
   // Optional: Report negative-weighted cycles.
   for (int i = 0; i < (int)e.size(); i++) {
-    if (dist[e[i].v] > dist[e[i].u] + e[i].w)
+    if (dist[e[i].v] > dist[e[i].u] + e[i].w) {
       throw std::runtime_error("Negative-weight cycle found.");
+    }
   }
 }
 

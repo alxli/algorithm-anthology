@@ -23,10 +23,12 @@ reducing the number of calls made to f.
 
 Explanation: https://en.wikipedia.org/wiki/Cycle_detection#Brent.27s_algorithm
 
-Time Complexity: O(mu + lambda), where mu is the smallest index of the sequence
-which is the beginning of a cycle, and lambda is the cycle's length.
+Time Complexity:
+- O(m + n) per call to find_cycle(), where m is the smallest index of the
+  sequence which is the beginning of a cycle, and n is the cycle's length.
 
-Space Complexity: O(1) auxiliary.
+Space Complexity:
+- O(1) auxiliary.
 
 */
 

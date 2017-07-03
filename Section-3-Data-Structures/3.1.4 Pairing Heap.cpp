@@ -24,8 +24,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.
-- O(log n) amortized auxiliary per call to pop().
-- O(1) auxiliary per call to all other operations.
+- O(log n) amortized auxiliary stack space for pop().
+- O(1) auxiliary for all other operations.
 
 */
 
@@ -37,10 +37,7 @@ template<class T> class pairing_heap {
     T value;
     node_t *left, *next;
 
-    node_t(const T &v) {
-      value = v;
-      left = next = NULL;
-    }
+    node_t(const T &v) : value(v), left(NULL), next(NULL) {}
 
     void add_child(node_t *n) {
       if (left == NULL) {

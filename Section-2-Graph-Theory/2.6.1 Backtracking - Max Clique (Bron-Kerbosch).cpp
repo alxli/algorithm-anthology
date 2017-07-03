@@ -10,8 +10,13 @@ condition that adj[u][v] is true if and only if adj[v][u] is true, for all pairs
 of nodes u and v respectively between 0 (inclusive) and the total number of
 nodes (exclusive) as passed in the function argument.
 
-Time Complexity: O(3^(n/3)) on the number of nodes.
-Space Complexity: O(n) auxiliary on the number of nodes.
+Time Complexity:
+- O(3^(n/3)) per call to bron_kerbosch() and bron_kerbosch_weighted(), where n
+  is the number of nodes.
+
+Space Complexity:
+- O(n^2) for storage of the graph, where n is the number of nodes.
+- O(n) auxiliary stack space for bron_kerbosch() and bron_kerbosch_weighted().
 
 */
 
@@ -27,8 +32,9 @@ bool adj[MAXN][MAXN];
 int w[MAXN];
 
 int rec(int nodes, bits &curr, bits &pool, bits &excl) {
-  if (pool.none() && excl.none())
+  if (pool.none() && excl.none()) {
     return curr.count();
+  }
   int ans = 0, u = 0;
   for (int v = 0; v < nodes; v++) {
     if (pool[v] || excl[v]) {
@@ -36,8 +42,9 @@ int rec(int nodes, bits &curr, bits &pool, bits &excl) {
     }
   }
   for (int v = 0; v < nodes; v++) {
-    if (!pool[v] || adj[u][v])
+    if (!pool[v] || adj[u][v]) {
       continue;
+    }
     bits ncurr, npool, nexcl;
     for (int i = 0; i < nodes; i++) {
       ncurr[i] = curr[i];
@@ -69,8 +76,9 @@ int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
     }
     return res;
   }
-  if (pool == 0)
+  if (pool == 0) {
     return -1;
+  }
   int res = -1, pivot = __builtin_ctzll(pool | excl);
   uint64 z = pool & ~g[pivot];
   int u = __builtin_ctzll(z);

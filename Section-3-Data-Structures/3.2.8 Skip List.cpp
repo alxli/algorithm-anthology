@@ -30,8 +30,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) on average for storage of the map elements.
-- O(n) auxiliary per call to insert() and erase().
-- O(1) auxiliary per call to all other operations.
+- O(n) auxiliary heap space for insert() and erase().
+- O(1) auxiliary for all other operations.
 
 */
 
@@ -48,7 +48,7 @@ template<class K, class V> class skip_list {
     std::vector<node_t*> next;
 
     node_t(const K &k, const V &v, int levels)
-      : key(k), value(v), next(levels, NULL) {}
+        : key(k), value(v), next(levels, NULL) {}
   } *head;
 
   int num_nodes;

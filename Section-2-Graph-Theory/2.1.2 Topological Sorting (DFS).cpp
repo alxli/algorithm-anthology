@@ -9,8 +9,14 @@ toposort() takes a directed graph stored as a global adjacency list with nodes
 indexed from 0 to (nodes - 1) and assigns a valid topological ordering to the
 global result vector. If the graph contains a cycle, then an error is thrown.
 
-Time Complexity: O(max(n, m)) on the numbers of nodes and edges respectively.
-Space Complexity: O(max(n, m)) on the numbers of nodes and edges respectively.
+Time Complexity:
+- O(max(n, m)) per call to toposort(), where n is the number of nodes and m is
+  the number of edges.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+  is the number of edges.
+- O(n) auxiliary stack space for toposort().
 
 */
 
@@ -20,14 +26,16 @@ Space Complexity: O(max(n, m)) on the numbers of nodes and edges respectively.
 
 const int MAXN = 100;
 
-std::vector<bool> vis(MAXN), done(MAXN);
 std::vector<int> adj[MAXN], res;
+std::vector<bool> vis(MAXN), done(MAXN);
 
 void dfs(int u) {
-  if (vis[u])
+  if (vis[u]) {
     throw std::runtime_error("Not a DAG.");
-  if (done[u])
+  }
+  if (done[u]) {
     return;
+  }
   vis[u] = true;
   for (int j = 0; j < (int)adj[u].size(); j++) {
     dfs(adj[u][j]);

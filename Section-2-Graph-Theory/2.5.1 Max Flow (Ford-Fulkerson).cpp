@@ -11,10 +11,13 @@ as there exists certain real-valued flow inputs for which the algorithm never
 terminates. The Edmonds-Karp algorithm is an improvement using breadth-first
 search, addressing this problem.
 
-Time Complexity: O(n^2 * f) where n is the number of nodes and f is the maximum
-flow.
+Time Complexity:
+- O(n^2*f) per call to ford_fulkerson(), where n is the number of nodes and f
+  is the maximum flow.
 
-Space Complexity: O(n) auxiliary on the number of nodes.
+Space Complexity:
+- O(n^2) for storage of the flow network, where n is the number of nodes.
+- O(n) auxiliary stack space for ford_fulkerson().
 
 */
 
@@ -26,8 +29,9 @@ int nodes, source, sink, cap[MAXN][MAXN];
 std::vector<bool> vis(MAXN);
 
 int dfs(int u, int f) {
-  if (u == sink)
+  if (u == sink) {
     return f;
+  }
   vis[u] = true;
   for (int v = 0; v < nodes; v++) {
     if (!vis[v] && cap[u][v] > 0) {
@@ -47,8 +51,9 @@ int ford_fulkerson() {
   for (;;) {
     std::fill(vis.begin(), vis.end(), false);
     int flow = dfs(source, INF);
-    if (flow == 0)
+    if (flow == 0) {
       break;
+    }
     max_flow += flow;
   }
   return max_flow;

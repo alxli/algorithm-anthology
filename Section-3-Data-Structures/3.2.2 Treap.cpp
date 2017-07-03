@@ -28,8 +28,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(1) auxiliary per call to size(), empty(), and find().
-- O(log n) auxiliary stack space on average per call to all other operations.
+- O(log n) auxiliary stack space on average for insert(), erase(), and walk().
+- O(1) auxiliary for all other operations.
 
 */
 
@@ -42,10 +42,8 @@ template<class K, class V> class treap {
     node_t *left, *right;
     int priority;
 
-    node_t(const K &k, const V &v) {
-      key = k;
-      value = v;
-      left = right = NULL;
+    node_t(const K &k, const V &v)
+        : key(k), value(v), left(NULL), right(NULL) {
       priority = (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
     }
   } *root;

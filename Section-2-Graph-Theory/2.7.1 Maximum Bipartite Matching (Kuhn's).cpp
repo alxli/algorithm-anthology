@@ -5,8 +5,11 @@ n1 < n2, as well as a set of edges E mapping nodes from set A to set B,
 determine the largest possible subset of E such that no pair of edges in the
 subset share a common node.
 
-Time Complexity: O(m*(n1 + n2)) where m is the number of edges.
-Space Complexity: O(n1 + n2) auxiliary.
+Time Complexity:
+- O(m*(n1 + n2)) per call to kuhn(), where m is the number of edges.
+
+Space Complexity:
+- O(n1 + n2) auxiliary stack space for kuhn().
 
 */
 

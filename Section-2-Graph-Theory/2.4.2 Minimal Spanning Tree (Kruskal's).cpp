@@ -8,10 +8,14 @@ of nodes numbered with integers between 0 (inclusive) and the total number of
 nodes (exclusive), as passed in the function argument. If the input graph is not
 connected, then this implementation will find the minimum spanning forest.
 
-Time Complexity: O(m log n) where m is the number of edges and n is the number
-of nodes.
+Time Complexity:
+- O(m log n) per call to kruskal(), where m is the number of edges and n is the
+  number of nodes.
 
-Space Complexity: O(n) auxiliary on the number of nodes.
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges
+- O(n) auxiliary stack space for kruskal().
 
 */
 

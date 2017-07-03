@@ -11,9 +11,12 @@ This implementation is not intended to compete with nth_element() in terms of
 efficiency. Instead, it is meant to demonstrate how Quickselect can be concisely
 implemented in C++. Nevertheless, both functions run in expected linear time.
 
-Time Complexity (Average): O(n) on the distance between lo and hi.
-Time Complexity (Worst): O(n^2), although this almost never occurs.
-Space Complexity: O(1) auxiliary.
+Time Complexity:
+- O(n) on average per call to nth_element2(), where n is the distance between lo
+  and hi.
+
+Space Complexity:
+- O(1) auxiliary.
 
 */
 
@@ -31,15 +34,17 @@ template<class It> void nth_element2(It lo, It nth, It hi) {
     typename std::iterator_traits<It>::value_type mid = *(hi - 1);
     It k = lo - 1;
     for (It it = lo; it != hi; ++it) {
-      if (*it <= mid)
+      if (*it <= mid) {
         std::swap(*(++k), *it);
+      }
     }
-    if (nth < k)
+    if (nth < k) {
       hi = k;
-    else if (nth > k)
+    } else if (nth > k) {
       lo = k + 1;
-    else
+    } else {
       return;
+    }
   }
 }
 
@@ -54,8 +59,9 @@ The median is 5.
 using namespace std;
 
 template<class It> void print_range(It lo, It hi) {
-  while (lo != hi)
+  while (lo != hi) {
     cout << *lo++ << " ";
+  }
   cout << endl;
 }
 

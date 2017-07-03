@@ -13,12 +13,14 @@ and the same process repeats until a desired absolute error is reached. The
 technique's success heavily depends on the behavior of f and the initial guess.
 Therefore, the result is not guaranteed to be the global minimum.
 
-Time Complexity: At most O(d log n) call will be made to f, where d is the
-number of directions considered at each position and n is the search space that
-is approximately proportional to the maximum possible step size divided by the
-minimum possible step size.
+Time Complexity:
+- O(d log n) call will be made to f(), where d is the number of directions
+  considered at each position and n is the search space that is approximately
+  proportional to the maximum possible step size divided by the minimum possible
+  step size.
 
-Space Complexity: O(1) auxiliary.
+Space Complexity:
+- O(1) auxiliary.
 
 */
 
@@ -35,7 +37,7 @@ double find_min(BinaryFunction f, double x0, double y0,
     double best = res, best_x = x, best_y = y;
     bool found = false;
     for (int i = 0; i < NUM_DIRECTIONS; i++) {
-      double a = 2.0 * PI * i / NUM_DIRECTIONS;
+      double a = 2.0*PI*i / NUM_DIRECTIONS;
       double x2 = x + step*cos(a);
       double y2 = y + step*sin(a);
       double val = f(x2, y2);

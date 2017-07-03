@@ -5,8 +5,13 @@ which visits each node exactly once and returns to the starting node. This is
 known as the traveling salesman problem (TSP). Since this implementation uses
 bitmasks with 32-bit ints, the maximum number of nodes must be less than 32.
 
-Time Complexity: O(2^n * n^2) on the number of nodes.
-Space Complexity: O(2^n * n^2) auxiliary on the number of nodes.
+Time Complexity:
+- O(2^n * n^2) per call to shortest_hamiltonian_cycle(), where n is the number
+  of nodes.
+
+Space Complexity:
+- O(n^2) for storage of the graph, where n is the number of nodes.
+- O(2^n * n^2) auxiliary heap space for shortest_hamiltonian_cycle().
 
 */
 
@@ -14,6 +19,11 @@ Space Complexity: O(2^n * n^2) auxiliary on the number of nodes.
 
 const int MAXN = 20, INF = 0x3f3f3f3f;
 int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
+
+void add_edge(int u, int v, int w) {
+  adj[u][v] = w;
+  adj[v][u] = w;  // Remove this line if the graph is directed.
+}
 
 int shortest_hamiltonian_cycle(int nodes) {
   int max_mask = (1 << nodes) - 1;
@@ -51,11 +61,6 @@ int shortest_hamiltonian_cycle(int nodes) {
     old = bj;
   }
   return res;
-}
-
-void add_edge(int u, int v, int w) {
-  adj[u][v] = w;
-  adj[v][u] = w;  // Remove this line if the graph is directed.
 }
 
 /*** Example Usage and Output:

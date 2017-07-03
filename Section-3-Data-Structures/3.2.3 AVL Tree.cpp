@@ -28,8 +28,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(1) auxiliary per call to size(), empty(), and find().
-- O(log n) auxiliary per call to all other operations.
+- O(log n) auxiliary stack space for insert(), erase(), and walk().
+- O(1) auxiliary for all other operations.
 
 */
 
@@ -43,12 +43,8 @@ template<class K, class V> class avl_tree {
     node_t *left, *right;
     int height;
 
-    node_t(const K &k, const V &v) {
-      key = k;
-      value = v;
-      left = right = NULL;
-      height = 1;
-    }
+    node_t(const K &k, const V &v)
+        : key(k), value(v), left(NULL), right(NULL), height(1) {}
   } *root;
 
   static int height(node_t *n) {
@@ -56,8 +52,9 @@ template<class K, class V> class avl_tree {
   }
 
   static void update_height(node_t *n) {
-    if (n == NULL) return;
-    n->height = 1 + std::max(height(n->left), height(n->right));
+    if (n != NULL) {
+      n->height = 1 + std::max(height(n->left), height(n->right));
+    }
   }
 
   static void rotate_l(node_t *&n) {

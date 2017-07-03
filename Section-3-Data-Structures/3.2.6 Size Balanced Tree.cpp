@@ -32,8 +32,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(1) auxiliary per call to size(), empty(), and find().
-- O(log n) auxiliary per call to all other operations.
+- O(log n) auxiliary stack space for insert(), erase(), and walk().
+- O(1) auxiliary for all oher operations.
 
 */
 
@@ -48,11 +48,11 @@ template<class K, class V> class size_balanced_tree {
     node_t *left, *right;
     int size;
 
-    node_t(const K &k, const V &v) {
-      key = k;
-      value = v;
-      left = right = NULL;
-      size = 1;
+    node_t(const K &k, const V &v)
+        : key(k), value(v), left(NULL), right(NULL), size(1) {}
+
+    inline node_t*& child(int c) {
+      return (c == 0) ? left : right;
     }
 
     void update() {
@@ -63,10 +63,6 @@ template<class K, class V> class size_balanced_tree {
       if (right != NULL) {
         size += right->size;
       }
-    }
-
-    inline node_t*& child(int c) {
-      return (c == 0) ? left : right;
     }
   } *root;
 

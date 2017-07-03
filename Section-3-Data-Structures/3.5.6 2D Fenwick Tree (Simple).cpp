@@ -21,7 +21,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n*m) for storage of the array elements.
-- O(1) auxiliary per call to all operations.
+- O(1) auxiliary for all operations.
 
 */
 

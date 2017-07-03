@@ -27,8 +27,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(log n) auxiliary stack space per call to walk().
-- O(1) auxiliary per call to all other operations.
+- O(log n) auxiliary stack space for walk().
+- O(1) auxiliary for all other operations.
 
 */
 
@@ -43,12 +43,8 @@ template<class K, class V> class red_black_tree {
     node_t *left, *right, *parent;
     color_t color;
 
-    node_t(const K &k, const V &v, color_t c) {
-      key = k;
-      value = v;
-      left = right = parent = NULL;
-      color = c;
-    }
+    node_t(const K &k, const V &v, color_t c)
+      : key(k), value(v), left(NULL), right(NULL), parent(NULL), color(c) {}
   } *root, *LEAF_NIL;
 
   void rotate_l(node_t *n) {

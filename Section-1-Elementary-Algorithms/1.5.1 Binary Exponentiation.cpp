@@ -11,10 +11,11 @@ exponentiation into a logarithmic number of multiplications while avoiding
 overflow. To further prevent overflow in the intermediate squaring computations,
 multiplication is performed using a similar principle of repeated addition.
 
-Time Complexity: Both functions are O(log n) with respect to their second
-argument n.
+Time Complexity:
+- O(log n) per call to mulmod() and powmod(), where n is the second argument.
 
-Space Complexity: O(1) auxiliary.
+Space Complexity:
+- O(1) auxiliary.
 
 */
 

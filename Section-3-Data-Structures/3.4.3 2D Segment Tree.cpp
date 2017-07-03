@@ -35,8 +35,8 @@ Time Complexity:
 Space Complexity:
 - O(n) for storage of the array elements, where n is the number of updated
   entries in the array.
-- O(log(MAXR) + log(MAXC)) auxiliary stack space per call to update(), query(),
-  and at().
+- O(log(MAXR) + log(MAXC)) auxiliary stack space for update(), query(), and
+  at().
 
 */
 

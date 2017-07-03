@@ -11,8 +11,12 @@ the first i values in a[]. Then, LIS[i] has the following optimal substructure:
   LIS[i] = 1 + max(LIS[j] for all j < i and a[j] < a[i])
   Otherwise if such a j does not exist, then LIS[i] = 1.
 
-Time Complexity: O(n log n) on the distance between lo and hi.
-Space Complexity: O(n) auxiliary.
+Time Complexity:
+- O(n log n) per call to longest_increasing_subsequence(), where n is the
+  distance between lo and hi.
+
+Space Complexity:
+- O(n) auxiliary heap space for longest_increasing_subsequence().
 
 */
 
@@ -56,8 +60,9 @@ longest_increasing_subsequence(It lo, It hi) {
 using namespace std;
 
 template<class It> void print_range(It lo, It hi) {
-  while (lo != hi)
+  while (lo != hi) {
     cout << *lo++ << " ";
+  }
   cout << endl;
 }
 

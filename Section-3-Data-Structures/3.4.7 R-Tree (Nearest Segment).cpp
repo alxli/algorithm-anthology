@@ -16,7 +16,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the segments.
-- O(log n) auxiliary stack space per call to nearest().
+- O(log n) auxiliary stack space for nearest().
 
 */
 

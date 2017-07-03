@@ -38,8 +38,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the array elements.
-- O(1) auxiliary per call to size() and empty().
-- O(log n) auxiliary stack space per call to all other operations.
+- O(1) auxiliary for size() and empty().
+- O(log n) auxiliary stack space for all other operations.
 
 */
 

@@ -8,8 +8,13 @@ adjacency list adj[] which must only consist of nodes numbered with integers
 between 0 (inclusive) and the total number of nodes (exclusive), as passed in
 the function argument.
 
-Time Complexity: O(n) on the number of nodes.
-Space Complexity: O(n) auxiliary on the number of nodes.
+Time Complexity:
+- O(n) per call to bfs(), where n is the number of nodes.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+  is the number of edges.
+- O(n) auxiliary heap space for bfs().
 
 */
 
@@ -37,8 +42,9 @@ void bfs(int nodes, int start) {
     vis[u] = true;
     for (int j = 0; j < (int)adj[u].size(); j++) {
       v = adj[u][j];
-      if (vis[v])
+      if (vis[v]) {
         continue;
+      }
       dist[v] = d + 1;
       pred[v] = u;
       q.push(std::make_pair(v, d + 1));

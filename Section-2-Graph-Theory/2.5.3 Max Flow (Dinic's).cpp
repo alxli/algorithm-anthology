@@ -10,10 +10,14 @@ Dinic's algorithm will also support real-valued flow capacities. As such, this
 implementation will work as intended upon changing the appropriate variables to
 doubles.
 
-Time Complexity: O(n^2 * m) where n is the number of nodes and m is the number
-of edges.
+Time Complexity:
+- O(n^2*m) per call to dinic(), where n is the number of nodes and m is the
+  number of edges.
 
-Space Complexity: O(n) auxiliary on the number of nodes.
+Space Complexity:
+- O(max(n, m)) for storage of the flow network, where n is the number of nodes
+  and m is the number of edges.
+- O(n) auxiliary stack and heap space for dinic().
 
 */
 
@@ -54,8 +58,9 @@ bool dinic_bfs(int nodes, int source, int sink) {
 }
 
 int dinic_dfs(int u, int f, int sink) {
-  if (u == sink)
+  if (u == sink) {
     return f;
+  }
   for (; ptr[u] < (int)adj[u].size(); ptr[u]++) {
     edge &e = adj[u][ptr[u]];
     if (dist[e.v] == dist[u] + 1 && e.f < e.cap) {

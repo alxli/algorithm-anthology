@@ -27,8 +27,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(1) auxiliary per call to size(), empty(), and find().
-- O(n) auxiliary stack space per call to all other operations.
+- O(n) auxiliary stack space for insert(), erase(), and walk().
+- O(1) auxiliary for all other operations.
 
 */
 
@@ -40,11 +40,8 @@ template<class K, class V> class binary_search_tree {
     V value;
     node_t *left, *right;
 
-    node_t(const K &k, const V &v) {
-      key = k;
-      value = v;
-      left = right = NULL;
-    }
+    node_t(const K &k, const V &v)
+        : key(k), value(v), left(NULL), right(NULL) {}
   } *root;
 
   int num_nodes;

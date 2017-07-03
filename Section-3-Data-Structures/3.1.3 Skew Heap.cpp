@@ -18,13 +18,15 @@ balance by unconditionally swapping all nodes in the merge path when merging.
 
 Time Complexity:
 - O(1) per call to the first constructor, size(), empty(), and top().
-- O(log n) amortized auxiliary per call to push(), pop(), and absorb().
-- O(n) per call to the second constructor on the distance between lo and hi.
+- O(log n) amortized auxiliary per call to push(), pop(), and absorb(), where n
+  is the number of elements in the priority queue.
+- O(n) per call to the second constructor, where n is the distance between lo
+  and hi.
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.
-- O(log n) amortized auxiliary per call to push(), pop(), and absorb().
-- O(1) auxiliary per call to all other operations.
+- O(log n) amortized auxiliary stack space for push(), pop(), and absorb().
+- O(1) auxiliary for all other operations.
 
 */
 
@@ -37,10 +39,7 @@ template<class T> class skew_heap {
     T value;
     node_t *left, *right;
 
-    node_t(const T &v) {
-      value = v;
-      left = right = NULL;
-    }
+    node_t(const T &v) : value(v), left(NULL), right(NULL) {}
   } *root;
 
   static node_t* merge(node_t *a, node_t *b) {

@@ -15,13 +15,15 @@ dominated by the sorting step.
 
 Explanation of technique: http://wcipeg.com/wiki/Convex_hull_trick
 
-Time Complexity: O(n) on the total number of calls made to add_line(), for any
-interlaced sequence of add_line() and get_min() calls. This is because the
-overall number of steps taken by add_line() and get_min() are respectively
-bounded by the number of lines added so far. As such, a single call to either
-add_line() or get_min() will have an O(1) amortized running time.
+Time Complexity:
+- O(n) for any interlaced sequence of add_line() and get_min() calls, where n is
+  the number of lines added. This is because the overall number of steps taken
+  by add_line() and get_min() are respectively bounded by the number of lines.
+  Thus a single call to either add_line() or get_min() will have an O(1)
+  amortized running time.
 
-Space Complexity: O(n) auxiliary on the number of calls made to add_line().
+Space Complexity:
+- O(n) auxiliary heap space, where n is the number of lines added.
 
 */
 
@@ -46,8 +48,8 @@ long long get_min(long long x) {
   if (ptr >= (int)M.size()) {
     ptr = (int)M.size() - 1;
   }
-  while (ptr + 1 < (int)M.size() && M[ptr + 1]*x + B[ptr + 1] <=
-                                    M[ptr]*x + B[ptr]) {
+  while (ptr + 1 < (int)M.size() &&
+         M[ptr + 1]*x + B[ptr + 1] <= M[ptr]*x + B[ptr]) {
     ptr++;
   }
   return M[ptr]*x + B[ptr];

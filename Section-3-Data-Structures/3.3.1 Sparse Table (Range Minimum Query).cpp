@@ -14,7 +14,7 @@ Time Complexity:
 - O(1) per call to query_min().
 
 Space Complexity:
-- O(n log n) to store the sparse table, where n is the size of the array.
+- O(n log n) for storage of the sparse table, where n is the size of the array.
 
 */
 

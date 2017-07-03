@@ -9,8 +9,14 @@ global, pre-populated adjacency list adj[] which must only consist of nodes
 numbered with integers between 0 (inclusive) and the total number of nodes
 (exclusive), as passed in the function argument.
 
-Time Complexity: O(max(n, m)) on the number of nodes and edges.
-Space Complexity: O(max(n, m)) auxiliary on the number of nodes and edges.
+Time Complexity:
+- O(max(n, m)) per call to tarjan(), where n is the number of nodes and m is the
+  number of edges.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges
+- O(n) auxiliary stack space for tarjan().
 
 */
 
@@ -31,15 +37,17 @@ void dfs(int u) {
   int v;
   for (int j = 0; j < (int)adj[u].size(); j++) {
     v = adj[u][j];
-    if (!vis[v])
+    if (!vis[v]) {
       dfs(v);
+    }
     if (lowlink[u] > lowlink[v]) {
       lowlink[u] = lowlink[v];
       is_component_root = false;
     }
   }
-  if (!is_component_root)
+  if (!is_component_root) {
     return;
+  }
   std::vector<int> component;
   do {
     v = stack.back();
@@ -58,8 +66,9 @@ void tarjan(int nodes) {
   std::fill(vis.begin(), vis.end(), false);
   timer = 0;
   for (int i = 0; i < nodes; i++) {
-    if (!vis[i])
+    if (!vis[i]) {
       dfs(i);
+    }
   }
 }
 
@@ -93,8 +102,9 @@ int main() {
   tarjan(8);
   cout << "Components:" << endl;
   for (int i = 0; i < (int)scc.size(); i++) {
-    for (int j = 0; j < (int)scc[i].size(); j++)
+    for (int j = 0; j < (int)scc[i].size(); j++) {
       cout << scc[i][j] << " ";
+    }
     cout << endl;
   }
   return 0;

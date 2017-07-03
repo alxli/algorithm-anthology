@@ -25,13 +25,12 @@ by chaining entries hashed to the same bucket into a linked list.
 Time Complexity:
 - O(1) per call to the constructor, size(), and empty().
 - O(1) amortized per call to insert(), erase(), find(), and operator[].
-- O(n) per call to walk(), where n is the number of entries currently in the
-  map.
+- O(n) per call to walk(), where n is the number of entries in the map.
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(n) auxiliary per call to insert().
-- O(1) auxiliary per call to all other operations.
+- O(n) auxiliary heap space for insert().
+- O(1) auxiliary for all other operations.
 
 */
 
@@ -42,7 +41,8 @@ template<class K, class V, class Hash> class hash_map {
   struct entry_t {
     K key;
     V value;
-    entry_t(const K &k, const V &v): key(k), value(v) {}
+
+    entry_t(const K &k, const V &v) : key(k), value(v) {}
   };
 
   std::list<entry_t> *table;

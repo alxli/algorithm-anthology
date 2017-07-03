@@ -8,8 +8,12 @@ adj[v][u] is true, for all pairs of nodes u and v respectively between 0
 (inclusive) and the total number of nodes (exclusive) as passed in the function
 argument.
 
-Time Complexity: Exponential on the number of nodes.
-Space Complexity: O(n) on the number of nodes.
+Time Complexity:
+- Exponential on the number of nodes per call to color_graph().
+
+Space Complexity:
+- O(n^2) for storage of the graph, where n is the number of nodes.
+- O(n) auxiliary stack and heap space for color_graph().
 
 */
 
@@ -21,8 +25,9 @@ int adj[MAXN][MAXN], min_colors, color[MAXN];
 int curr[MAXN], id[MAXN + 1], deg[MAXN + 1];
 
 void rec(int lo, int hi, int n, int used_cols) {
-  if (used_cols >= min_colors)
+  if (used_cols >= min_colors) {
     return;
+  }
   if (n == hi) {
     for (int i = lo; i < hi; i++) {
       color[id[i]] = curr[i];

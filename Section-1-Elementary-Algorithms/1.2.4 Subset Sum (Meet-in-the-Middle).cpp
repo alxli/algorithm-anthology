@@ -13,8 +13,12 @@ Finally, the table is searched to find the lower bound.
 Note that since the sums can get large, 64-bit integers are used in intermediate
 calculations to avoid overflow.
 
-Time Complexity: O(n * 2^(n/2)) on the distance between lo and hi.
-Space Complexity: O(n) auxiliary.
+Time Complexity:
+- O(n*2^(n/2)) per call to sum_lower_bound(), where n is the distance between lo
+  and hi.
+
+Space Complexity:
+- O(n) auxiliary heap space, where n is the number of array elements.
 
 */
 

@@ -11,12 +11,15 @@ support the ability to call add_line() and get_best() in any desired order.
 
 Explanation: http://wcipeg.com/wiki/Convex_hull_trick#Fully_dynamic_variant
 
-Time Complexity: O(n log n) on the total number of calls made to add_line(), for
-any length n sequence of arbitrarily interlaced add_line() and get_min() calls.
-Each individual call to add_line() is O(log n) amortized and each individual
-call to get_best() is O(log n), where n is the number of lines added so far.
+Time Complexity:
+- O(n) for any interlaced sequence of add_line() and get_best() calls, where n
+  is the number of lines added. This is because the overall number of steps
+  taken by add_line() and get_best() are respectively bounded by the number of
+  lines. Thus a single call to either add_line() or get_best() will have an O(1)
+  amortized running time.
 
-Space Complexity: O(n) auxiliary on the number of calls made to add_line().
+Space Complexity:
+- O(n) auxiliary heap space, where n is the number of lines added.
 
 */
 
@@ -45,14 +48,16 @@ class hull_optimizer {
     }
 
     double intersect(const line &l) const {
-      if (parallel(l))
+      if (parallel(l)) {
         return std::numeric_limits<double>::max();
+      }
       return (double)(l.b - b)/(m - l.m);
     }
 
     bool operator<(const line &l) const {
-      if (l.is_query)
+      if (l.is_query) {
         return query_max ? (xlo < l.val) : (l.val < xlo);
+      }
       return m < l.m;
     }
   };
@@ -71,18 +76,20 @@ class hull_optimizer {
   }
 
   bool irrelevant(hulliter it) const {
-    if (!has_prev(it) || !has_next(it))
+    if (!has_prev(it) || !has_next(it)) {
       return false;
+    }
     hulliter prev = it, next = it;
     --prev;
     ++next;
-    return query_max ? prev->intersect(*next) <= prev->intersect(*it)
-                     : next->intersect(*prev) <= next->intersect(*it);
+    return query_max ? (prev->intersect(*next) <= prev->intersect(*it))
+                     : (next->intersect(*prev) <= next->intersect(*it));
   }
 
   hulliter update_left_border(hulliter it) {
-    if ((query_max && !has_prev(it)) || (!query_max && !has_next(it)))
+    if ((query_max && !has_prev(it)) || (!query_max && !has_next(it))) {
       return it;
+    }
     hulliter it2 = it;
     double val = it->intersect(query_max ? *--it2 : *++it2);
     line l(*it);
@@ -100,32 +107,38 @@ class hull_optimizer {
     line l(m, b, 0, false, query_max);
     hulliter it = hull.lower_bound(l);
     if (it != hull.end() && it->parallel(l)) {
-      if ((query_max && it->b < b) || (!query_max && b < it->b))
+      if ((query_max && it->b < b) || (!query_max && b < it->b)) {
         hull.erase(it++);
-      else
+      } else {
         return;
+      }
     }
     it = hull.insert(it, l);
     if (irrelevant(it)) {
       hull.erase(it);
       return;
     }
-    while (has_prev(it) && irrelevant(--it))
+    while (has_prev(it) && irrelevant(--it)) {
       hull.erase(it++);
-    while (has_next(it) && irrelevant(++it))
+    }
+    while (has_next(it) && irrelevant(++it)) {
       hull.erase(it--);
+    }
     it = update_left_border(it);
-    if (has_prev(it))
+    if (has_prev(it)) {
       update_left_border(--it);
-    if (has_next(++it))
+    }
+    if (has_next(++it)) {
       update_left_border(++it);
+    }
   }
 
   long long get_best(long long x) const {
     line q(0, 0, x, true, query_max);
     hulliter it = hull.lower_bound(q);
-    if (query_max)
+    if (query_max) {
       --it;
+    }
     return it->m*x + it->b;
   }
 };

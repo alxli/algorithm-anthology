@@ -5,8 +5,11 @@ returns a reference to the first occurrence of the majority element, or the
 iterator hi if there is no majority element. The majority element is defined as
 an element which occurs strictly greater than floor(n/2) times in the range.
 
-Time Complexity: O(n) on the size of the array.
-Space Complexty: O(1) auxiliary.
+Time Complexity:
+- O(n) per call to majority(), where n is the size of the array.
+
+Space Complexty:
+- O(1) auxiliary.
 
 */
 
@@ -29,8 +32,9 @@ template<class It> It majority(It lo, It hi) {
       cnt++;
     }
   }
-  if (cnt <= (hi - lo)/2)
+  if (cnt <= (hi - lo)/2) {
     return hi;
+  }
   return candidate;
 }
 

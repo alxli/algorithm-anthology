@@ -5,7 +5,7 @@ as a range [lo, hi) to be sorted. Elements between lo and hi (including the
 element pointed to by lo but excluding the element pointed to by hi) will be
 sorted into ascending order after the function call. Optionally, a comparison
 function object specifying a strict weak ordering may be specified to replace
-the default operator<.
+the default operator <.
 
 These functions are not meant to compete with standard library implementations
 in terms terms of speed. Instead, they are meant to demonstrate how common
@@ -21,11 +21,11 @@ sorting algorithms can be concisely implemented in C++.
 /*
 
 Quicksort repeatedly selects a pivot and partitions the range so that elements
-comparing less than the pivot precedes the pivot, and elements comparing greater
-or equal follows it. Divide and conquer is then applied to both sides of the
+comparing less than the pivot precede the pivot, and elements comparing greater
+or equal follow it. Divide and conquer is then applied to both sides of the
 pivot until the original range is sorted. Despite having a worst case of O(n^2),
-quicksort is faster in practice than merge sort and heapsort, which both have a
-worst case time complexity of O(n log n).
+quicksort is often faster in practice than merge sort and heapsort, which both
+have a worst case time complexity of O(n log n).
 
 The pivot chosen in this implementation is always a middle element of the range
 to be sorted. To reduce the likelihood of encountering the worst case, the pivot
@@ -34,32 +34,37 @@ technique).
 
 Time Complexity (Average): O(n log n).
 Time Complexity (Worst): O(n^2).
-Space Complexity: O(log n) auxiliary.
+Space Complexity: O(log n) auxiliary stack space.
 Stable?: No.
 
 */
 
 template<class It, class Compare>
 void quicksort(It lo, It hi, Compare comp) {
-  if (hi - lo < 2)
+  if (hi - lo < 2) {
     return;
+  }
   typedef typename std::iterator_traits<It>::value_type T;
   T pivot = *(lo + (hi - lo)/2);
   It i, j;
   for (i = lo, j = hi - 1; ; ++i, --j) {
-    while (comp(*i, pivot))
+    while (comp(*i, pivot)) {
       ++i;
-    while (comp(pivot, *j))
+    }
+    while (comp(pivot, *j)) {
       --j;
-    if (i >= j)
+    }
+    if (i >= j) {
       break;
+    }
     std::swap(*i, *j);
   }
   quicksort(lo, i, comp);
   quicksort(i, hi, comp);
 }
 
-template<class It> void quicksort(It lo, It hi) {
+template<class It>
+void quicksort(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   quicksort(lo, hi, std::less<T>());
 }
@@ -69,7 +74,7 @@ template<class It> void quicksort(It lo, It hi) {
 Merge sort first divides a list into n sublists of one element each, then
 recursively merges the sublists into sorted order until only a single sorted
 sublist remains. Merge sort is a stable sort, meaning that it preserves the
-relative order of elements which compare equal by operator< or the custom
+relative order of elements which compare equal by operator < or the custom
 comparator given.
 
 An analogous function in the C++ standard library is std::stable_sort(), except
@@ -79,22 +84,24 @@ complexity of O(n log^2 n) but the implementation here will simply fail.
 
 Time Complexity (Average): O(n log n).
 Time Complexity (Worst): O(n log n).
-Space Complexity: O(n) auxiliary.
+Space Complexity: O(log n) auxiliary stack space and O(n) auxiliary heap space.
 Stable?: Yes.
 
 */
 
 template<class It, class Compare>
 void mergesort(It lo, It hi, Compare comp) {
-  if (hi - lo < 2)
+  if (hi - lo < 2) {
     return;
+  }
   It mid = lo + (hi - lo - 1)/2, a = lo, c = mid + 1;
   mergesort(lo, mid + 1, comp);
   mergesort(mid + 1, hi, comp);
   typedef typename std::iterator_traits<It>::value_type T;
   std::vector<T> merged;
-  while (a <= mid && c < hi)
+  while (a <= mid && c < hi) {
     merged.push_back(comp(*c, *a) ? *c++ : *a++);
+  }
   if (a > mid) {
     for (It k = c; k < hi; ++k) {
       merged.push_back(*k);
@@ -109,7 +116,8 @@ void mergesort(It lo, It hi, Compare comp) {
   }
 }
 
-template<class It> void mergesort(It lo, It hi) {
+template<class It>
+void mergesort(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   mergesort(lo, hi, std::less<T>());
 }
@@ -138,8 +146,9 @@ void heapsort(It lo, It hi, Compare comp) {
   It i = lo + (hi - lo)/2, j = hi, parent, child;
   for (;;) {
     if (i <= lo) {
-      if (--j == lo)
+      if (--j == lo) {
         return;
+      }
       tmp = *j;
       *j = *lo;
     } else {
@@ -161,7 +170,8 @@ void heapsort(It lo, It hi, Compare comp) {
   }
 }
 
-template<class It> void heapsort(It lo, It hi) {
+template<class It>
+void heapsort(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   heapsort(lo, hi, std::less<T>());
 }
@@ -175,10 +185,10 @@ iteration of the outer loop. The shrink factor of 1.3 is empirically determined
 to be the most effective.
 
 Even though the worst case time complexity is O(n^2), a well chosen shrink
-factor ensures that the increments (gap sizes) are co-prime, in turn requiring
-astronomically large n to make the algorithm exceed O(n log n) steps. On random
-arrays, comb sort is only 2-3 times slower than merge sort. Thus, the small code
-length to efficiency ratio makes for a worthwhile algorithm to remember.
+factor ensures that the gap sizes are co-prime, in turn requiring astronomically
+large n to make the algorithm exceed O(n log n) steps. On random arrays, comb
+sort is only 2-3 times slower than merge sort. Its short code length length
+relative to its good performance makes it a worthwhile algorithm to remember.
 
 Time Complexity (Worst): O(n^2).
 Space Complexity: O(1) auxiliary.
@@ -204,14 +214,13 @@ void combsort(It lo, It hi, Compare comp) {
   }
 }
 
-template<class It> void combsort(It lo, It hi) {
+template<class It>
+void combsort(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   combsort(lo, hi, std::less<T>());
 }
 
 /*
-
-Radix Sort
 
 Radix sort is used to sort integer elements with a constant number of bits in
 linear time. This implementation only works on ranges pointing to unsigned
@@ -235,12 +244,13 @@ Space Complexity: O(n + w) auxiliary.
 
 template<class UnsignedIt>
 void radix_sort(UnsignedIt lo, UnsignedIt hi) {
-  if (hi - lo < 2)
+  if (hi - lo < 2) {
     return;
+  }
   const int radix_bits = 8;
   const int radix_base = 1 << radix_bits;  // e.g. 2^8 = 256
   const int radix_mask = radix_base - 1;  // e.g. 2^8 - 1 = 0xFF
-  int num_bits = 8 * sizeof(*lo);  // 8 bits per byte
+  int num_bits = 8*sizeof(*lo);  // 8 bits per byte
   typedef typename std::iterator_traits<UnsignedIt>::value_type T;
   T *buf = new T[hi - lo];
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
@@ -284,15 +294,17 @@ radix_sort(): 0.076s
 using namespace std;
 
 template<class It> void print_range(It lo, It hi) {
-  while (lo != hi)
+  while (lo != hi) {
     cout << *lo++ << " ";
+  }
   cout << endl;
 }
 
 template<class It> bool is_sorted(It lo, It hi) {
   while (++lo != hi) {
-    if (*(lo - 1) > *lo)
+    if (*(lo - 1) > *lo) {
       return false;
+    }
   }
   return true;
 }
@@ -349,8 +361,9 @@ int main () {
   cout << "------" << endl;
 
   vector<int> v, v2;
-  for (int i = 0; i < 5000000; i++)
+  for (int i = 0; i < 5000000; i++) {
     v.push_back((rand() & 0x7fff) | ((rand() & 0x7fff) << 15));
+  }
   v2 = v;
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
@@ -370,6 +383,5 @@ int main () {
   test(heapsort);
   test(combsort);
   test(radix_sort);
-
   return 0;
 }

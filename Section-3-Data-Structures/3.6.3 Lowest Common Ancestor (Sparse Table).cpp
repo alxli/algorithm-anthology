@@ -15,7 +15,7 @@ Time Complexity:
 Space Complexity:
 - O(n log n) to store the sparse table, where n is the number of nodes.
 - O(n) auxiliary stack space for build().
-- O(1) auxiliary stack space for lca().
+- O(1) auxiliary for lca().
 
 */
 

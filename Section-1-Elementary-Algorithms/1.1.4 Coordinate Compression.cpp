@@ -14,8 +14,12 @@ each original value. Version 2 achieves the same result by inserting all values
 in a balanced binary search tree (std::map) which automatically removes
 duplicate values and supports efficient lookups of the compressed values.
 
-Time Complexity: O(n log n) on the distance between lo and hi.
-Space Complexity: O(n) auxiliary.
+Time Complexity:
+- O(n log n) per call to both functions, where n is the distance between lo and
+  hi.
+
+Space Complexity:
+- O(n) auxiliary heap space.
 
 */
 
@@ -43,9 +47,9 @@ template<class It> void compress2(It lo, It hi) {
   for (It it = lo; it != hi; ++it) {
     m[*it] = 0;
   }
-  typename std::map<T, int>::iterator mit = m.begin();
-  for (int id = 0; mit != m.end(); mit++) {
-    mit->second = id++;
+  typename std::map<T, int>::iterator it = m.begin();
+  for (int id = 0; it != m.end(); it++) {
+    it->second = id++;
   }
   for (It it = lo; it != hi; ++it) {
     *it = m[*it];
@@ -64,8 +68,9 @@ template<class It> void compress2(It lo, It hi) {
 using namespace std;
 
 template<class It> void print_range(It lo, It hi) {
-  while (lo != hi)
+  while (lo != hi) {
     cout << *lo++ << " ";
+  }
   cout << endl;
 }
 

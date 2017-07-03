@@ -23,10 +23,12 @@ pred(k) tests false for every k in [lo, hi), then hi is returned. This function
 must be used on a range where there exists a constant k such that pred(x) is
 true for every x in [lo, k] and false for every x in (k, hi).
 
-Time Complexity: At most O(log n) calls will be made to pred(), where n is the
-distance between lo and hi.
+Time Complexity:
+- O(log n) calls will be made to pred() for both function, where n is the
+  distance between lo and hi.
 
-Space Complexity: O(1) auxiliary.
+Space Complexity:
+- O(1) auxiliary.
 
 */
 
@@ -36,30 +38,33 @@ Int binary_search_first_true(Int lo, Int hi, IntPredicate pred) {
   Int mid, _hi = hi;
   while (lo < hi) {
     mid = lo + (hi - lo)/2;
-    if (pred(mid))
+    if (pred(mid)) {
       hi = mid;
-    else
+    } else {
       lo = mid + 1;
+    }
   }
-  if (!pred(lo))
+  if (!pred(lo)) {
     return _hi;  // All false.
+  }
   return lo;
 }
 
 // 11[1]000
 template<class Int, class IntPredicate>
 Int binary_search_last_true(Int lo, Int hi, IntPredicate pred) {
-  Int mid, _hi = hi;
-  --hi;
+  Int mid, _hi = hi--;
   while (lo < hi) {
     mid = lo + (hi - lo + 1)/2;
-    if (pred(mid))
+    if (pred(mid)) {
       lo = mid;
-    else
+    } else {
       hi = mid - 1;
+    }
   }
-  if (!pred(lo))
+  if (!pred(lo)) {
     return _hi;  // All false.
+  }
   return lo;
 }
 
@@ -81,10 +86,12 @@ typically sufficient to have 100 iterations, which reduces the search space to
 The function can be modified to compute the "last true" point in the range by
 simply interchanging the assignments of lo and hi in the if-else statements.
 
-Time Complexity: At most O(log n) calls will be made to pred(), where n is the
-distance between lo and hi divided by the desired absolute error.
+Time Complexity:
+- O(log n) calls will be made to pred(), where n is the distance between lo and
+  hi divided by the desired absolute error.
 
-Space Complexity: O(1) auxiliary.
+Space Complexity:
+- O(1) auxiliary.
 
 */
 
@@ -94,10 +101,11 @@ double fbinary_search(double lo, double hi, DoublePredicate pred) {
   double mid;
   for (int reps = 0; reps < 100; reps++) {
     mid = (lo + hi)/2.0;
-    if (pred(mid))
+    if (pred(mid)) {
       hi = mid;
-    else
+    } else {
       lo = mid;
+    }
   }
   return lo;
 }

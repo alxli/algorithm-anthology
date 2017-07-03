@@ -9,8 +9,14 @@ global, pre-populated adjacency list adj[] which must only consist of nodes
 numbered with integers between 0 (inclusive) and the total number of nodes
 (exclusive), as passed in the function argument.
 
-Time Complexity: O(max(n, m)) on the number of nodes and edges.
-Space Complexity: O(max(n, m)) auxiliary on the number of nodes and edges.
+Time Complexity:
+- O(max(n, m)) per call to kosaraju(), where n is the number of nodes and m is
+  the number of edges.
+
+Space Complexity:
+- O(max(n, m)) auxiliary heap space for storage of the graph, where n the
+  number of nodes and m is the number of edges.
+- O(n) auxiliary stack space for kosaraju().
 
 */
 
@@ -25,8 +31,9 @@ std::vector<std::vector<int> > scc;
 void dfs(std::vector<int> g[], std::vector<int> &res, int u) {
   vis[u] = true;
   for (int j = 0; j < (int)g[u].size(); j++) {
-    if (!vis[g[u][j]])
+    if (!vis[g[u][j]]) {
       dfs(g, res, g[u][j]);
+    }
   }
   res.push_back(u);
 }
@@ -36,19 +43,22 @@ void kosaraju(int nodes) {
   std::vector<int> order;
   for (int i = 0; i < nodes; i++) {
     rev[i].clear();
-    if (!vis[i])
+    if (!vis[i]) {
       dfs(adj, order, i);
+    }
   }
   std::reverse(order.begin(), order.end());
   std::fill(vis.begin(), vis.end(), false);
   for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < (int)adj[i].size(); j++)
+    for (int j = 0; j < (int)adj[i].size(); j++) {
       rev[adj[i][j]].push_back(i);
+    }
   }
   scc.clear();
   for (int i = 0; i < (int)order.size(); i++) {
-    if (vis[order[i]])
+    if (vis[order[i]]) {
       continue;
+    }
     std::vector<int> component;
     dfs(rev, component, order[i]);
     scc.push_back(component);
@@ -84,8 +94,9 @@ int main() {
   kosaraju(8);
   cout << "Components:" << endl;
   for (int i = 0; i < (int)scc.size(); i++) {
-    for (int j = 0; j < (int)scc[i].size(); j++)
+    for (int j = 0; j < (int)scc[i].size(); j++) {
       cout << scc[i][j] << " ";
+    }
     cout << endl;
   }
   return 0;

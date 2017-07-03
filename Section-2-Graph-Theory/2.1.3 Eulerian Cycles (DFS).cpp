@@ -21,10 +21,12 @@ Time Complexity:
   nodes and edges respectively.
 
 Space Complexity:
-- O(n) auxiliary on the number of nodes for euler_cycle_directed().
-- O(n^2) auxiliary on the number of nodes for euler_cycle_undirected(). This can
-  be reduced to O(m) auxiliary on the number of edges if the used[][] bit matrix
-  is replaced with an std::unordered_set<std::pair<int, int>>.
+- O(n) auxiliary heap space for euler_cycle_directed(), where n is the number of
+  nodes.
+- O(n^2) auxiliary heap space for euler_cycle_undirected(), where n is the
+  number of nodes. This can be reduced to O(m) auxiliary heap space on the
+  number of edges if the used[][] bit matrix is replaced with an
+  std::unordered_set<std::pair<int, int>>.
 
 */
 

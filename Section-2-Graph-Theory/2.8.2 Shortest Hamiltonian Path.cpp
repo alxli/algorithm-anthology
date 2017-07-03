@@ -5,8 +5,13 @@ which visits each node exactly once. Unlike the travelling salesman problem, we
 do not have to return to the starting vertex. Since this implementation uses
 bitmasks with 32-bit ints, the maximum number of nodes must be less than 32.
 
-Time Complexity: O(2^n * n^2) on the number of nodes.
-Space Complexity: O(2^n * n^2) on the number of nodes.
+Time Complexity:
+- O(2^n * n^2) per call to shortest_hamiltonian_cycle(), where n is the number
+  of nodes.
+
+Space Complexity:
+- O(n^2) for storage of the graph, where n is the number of nodes.
+- O(2^n * n^2) auxiliary heap space for shortest_hamiltonian_cycle().
 
 */
 
@@ -42,14 +47,14 @@ int shortest_hamiltonian_path(int nodes) {
   for (int i = nodes - 1; i >= 0; i--) {
     int bj = -1;
     for (int j = 0; j < nodes; j++) {
-      if ((cur & 1 << j) != 0 && (bj == -1 ||
-              dp[cur][bj] + (old == -1 ? 0 : adj[bj][old]) >
-               dp[cur][j] + (old == -1 ? 0 : adj[j][old]))) {
+      if ((cur & 1 << j) != 0 &&
+          (bj == -1 || dp[cur][bj] + (old == -1 ? 0 : adj[bj][old]) >
+                       dp[cur][j] + (old == -1 ? 0 : adj[j][old]))) {
         bj = j;
       }
     }
     order[i] = bj;
-    cur ^= 1 << bj;
+    cur ^= (1 << bj);
     old = bj;
   }
   return res;

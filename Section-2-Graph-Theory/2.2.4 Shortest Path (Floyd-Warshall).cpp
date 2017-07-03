@@ -12,8 +12,13 @@ valid nodes u and v.
 This function will also detect whether the graph contains negative-weighted
 cycles, in which case there is no shortest path and an error will be thrown.
 
-Time Complexity: O(n^3) on the number of nodes.
-Space Complexity: O(n^2) auxiliary on the number of nodes.
+Time Complexity:
+- O(n^2) per call to initialize(), where n is the number of nodes.
+- O(n^3) per call to floyd_warshall().
+
+Space Complexity:
+- O(n^2) for storage of the graph, where is the number of nodes.
+- O(n^2) auxiliary heap space for initialize() and floyd_warshall().
 
 */
 
@@ -44,8 +49,9 @@ void floyd_warshall(int nodes) {
   }
   // Optional: Report negative-weighted cycles.
   for (int i = 0; i < nodes; i++) {
-    if (dist[i][i] < 0)
+    if (dist[i][i] < 0) {
       throw std::runtime_error("Negative-weight cycle found.");
+    }
   }
 }
 

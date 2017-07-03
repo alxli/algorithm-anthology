@@ -18,12 +18,12 @@ binary tree such that the parent of any node is always less than its children.
 Time Complexity:
 - O(1) per call to the first constructor, size(), empty(), and top().
 - O(log n) per call to push() and pop(), where n is the number of elements
-  currently in the priority queue.
+  in the priority queue.
 - O(n) per call to the second constructor on the distance between lo and hi.
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.
-- O(1) auxiliary per call to all operations.
+- O(1) auxiliary for all operations.
 
 */
 

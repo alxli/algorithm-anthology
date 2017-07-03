@@ -26,8 +26,15 @@ Any connected graph decomposes into a tree of biconnected components called the
 
 See: http://en.wikipedia.org/wiki/Biconnected_component
 
-Time Complexity: O(max(n, m)) on the number of nodes and edges.
-Space Complexity: O(max(n, m)) auxiliary on the number of nodes and edges.
+Time Complexity:
+- O(max(n, m)) per call to tarjan() and get_block_forest(), where n is the
+  number of nodes and m is the number of edges.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges
+- O(n) auxiliary stack space for tarjan().
+- O(1) auxiliary stack space for get_block_forest().
 
 */
 
@@ -50,8 +57,9 @@ void dfs(int u, int p) {
   bool cutpoint = false;
   for (int j = 0; j < (int)adj[u].size(); j++) {
     v = adj[u][j];
-    if (v == p)
+    if (v == p) {
       continue;
+    }
     if (vis[v]) {
       lowlink[u] = std::min(lowlink[u], tin[v]);
     } else {
@@ -103,8 +111,9 @@ void get_block_forest(int nodes) {
     bcc_forest[i].clear();
   }
   for (int i = 0; i < (int)bcc.size(); i++) {
-    for (int j = 0; j < (int)bcc[i].size(); j++)
+    for (int j = 0; j < (int)bcc[i].size(); j++) {
       comp[bcc[i][j]] = i;
+    }
   }
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < (int)adj[i].size(); j++) {

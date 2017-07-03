@@ -13,10 +13,14 @@ negating node distances before pushing them and negating them again after
 popping them. To modify this implementation to find the maximum spanning tree,
 the two negation steps can be skipped to prioritize the max edges.
 
-Time Complexity: O(m log n) where m is the number of edges and n is the number
-of nodes.
+Time Complexity:
+- O(m log n) per call to prim(), where m is the number of edges and n is the
+  number of nodes.
 
-Space Complexity: O(n) auxiliary on the number of nodes.
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges
+- O(n) auxiliary heap space for prim().
 
 */
 
@@ -32,8 +36,9 @@ int prim(int nodes) {
   std::vector<bool> vis(nodes);
   int u, v, w, total_dist = 0;
   for (int i = 0; i < nodes; i++) {
-    if (vis[i])
+    if (vis[i]) {
       continue;
+    }
     vis[i] = true;
     std::priority_queue<std::pair<int, std::pair<int, int> > > pq;
     for (int j = 0; j < (int)adj[i].size(); j++) {

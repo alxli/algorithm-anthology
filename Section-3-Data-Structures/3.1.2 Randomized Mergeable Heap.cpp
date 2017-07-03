@@ -19,13 +19,13 @@ coin-toss to recursively combine nodes of two binary trees.
 Time Complexity:
 - O(1) per call to the first constructor, size(), empty(), and top().
 - O(log n) expected worst case per call to push(), pop(), and absorb(), where n
-is the number of elements currently in the priority queue.
+  is the number of elements in the priority queue.
 - O(n) per call to the second constructor on the distance between lo and hi.
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.
-- O(log n) auxiliary per call to push(), pop(), and absorb().
-- O(1) auxiliary per call to all other operations.
+- O(log n) auxiliary stack space for push(), pop(), and absorb().
+- O(1) auxiliary for all other operations.
 
 */
 
@@ -38,10 +38,7 @@ template<class T> class randomized_heap {
     T value;
     node_t *left, *right;
 
-    node_t(const T &v) {
-      value = v;
-      left = right = NULL;
-    }
+    node_t(const T &v) : value(v), left(NULL), right(NULL) {}
   } *root;
 
   int num_nodes;

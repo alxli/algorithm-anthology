@@ -10,10 +10,14 @@ The Edmonds-Karp algorithm will also support real-valued flow capacities. As
 such, this implementation will work as intended upon changing the appropriate
 variables to doubles.
 
-Time Complexity: O(min(n*m^2, m*f)) where n is the number of nodes, m is the
-number of edges, and f is the maximum flow.
+Time Complexity:
+- O(min(n*m^2, m*f)) per call to edmonds_karp(), where n is the number of nodes,
+  m is the number of edges, and f is the maximum flow.
 
-Space Complexity: O(n) auxiliary on the number of nodes.
+Space Complexity:
+- O(max(n, m)) for storage of the flow network, where n is the number of nodes
+  and m is the number of edges.
+
 
 */
 
@@ -50,8 +54,9 @@ int edmonds_karp(int nodes, int source, int sink) {
         }
       }
     }
-    if (!pred[sink])
+    if (!pred[sink]) {
       break;
+    }
     int flow = INF;
     for (int u = sink; u != source; u = pred[u]->u) {
       flow = std::min(flow, pred[u]->cap - pred[u]->f);

@@ -16,14 +16,14 @@ Time Complexity:
 - O(1) amortized per call to add_edge(), or O(max(n, m)) for n calls where the
   maximum node index passed as an argument is m.
 - O(max(n, m)) per call for dfs(), has_cycle(), is_tree(), or is_dag(), where n
-  and m are the number of nodes and edges respectively.
+  is the number of nodes and and m is the number of edges.
 - O(1) per call to all other public member functions.
 
 Space Complexity:
-- O(max(n, m)) on the number of nodes and edges for storage of the graph.
-- O(n) auxiliary per call to dfs(), has_cycle(), is_tree(), and is_dag(), where
-  n is the number of nodes.
-- O(1) auxiliary per call to all other public member functions.
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+  is the number of edges.
+- O(n) auxiliary stack space for dfs(), has_cycle(), is_tree(), and is_dag().
+- O(1) auxiliary for all other public member functions.
 
 */
 
@@ -40,8 +40,9 @@ class graph {
     vis[n] = true;
     std::vector<int>::const_iterator it;
     for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (!vis[*it])
+      if (!vis[*it]) {
         dfs(*it, vis, act);
+      }
     }
   }
 
@@ -51,12 +52,15 @@ class graph {
     onstack[n] = true;
     std::vector<int>::const_iterator it;
     for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (is_directed() && onstack[*it])
+      if (is_directed() && onstack[*it]) {
         return true;
-      if (!is_directed() && vis[*it] && *it != prev)
+      }
+      if (!is_directed() && vis[*it] && *it != prev) {
         return true;
-      if (!vis[*it] && has_cycle(*it, n, vis, onstack))
+      }
+      if (!vis[*it] && has_cycle(*it, n, vis, onstack)) {
         return true;
+      }
     }
     onstack[n] = false;
     return false;
@@ -93,8 +97,9 @@ class graph {
     std::vector<bool> vis(adj.size(), false);
     std::vector<bool> onstack(adj.size(), false);
     for (int i = 0; i < (int)adj.size(); i++) {
-      if (!vis[i] && has_cycle(i, -1, vis, onstack))
+      if (!vis[i] && has_cycle(i, -1, vis, onstack)) {
         return true;
+      }
     }
     return false;
   }

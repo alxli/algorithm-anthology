@@ -27,8 +27,12 @@ that begin_idx is inclusive while end_idx is exclusive. In particular,
 If the input range consists of only negative values, then a maximum value of the
 range (rather than an empty subarray) will be returned as the maximal sum.
 
-Time Complexity: O(n) on the distance between lo and hi.
-Space Complexity: O(1) auxiliary.
+Time Complexity:
+- O(n) per call to max_subarray_sum(), where n is the distance between lo and
+  hi.
+
+Space Complexity:
+- O(1) auxiliary.
 
 */
 
@@ -77,13 +81,18 @@ indices just past the last elements for their respective dimensions).
 If the input matrix consists of only negative values, then a maximum value of
 the matrix (rather than an empty submatrix) will be returned as the maximal sum.
 
-Time Complexity: O(m^2 * n) for a matrix with m columns and n rows.
-Space Complexity: O(n) auxiliary.
+Time Complexity:
+- O(n*m^2) per call to max_submatrix_sum(), where n is the number of rows and m
+  is the number of columns in the matrix.
+
+Space Complexity:
+- O(n) auxiliary heap space for max_submatrix_sum(), where n is the number of
+  rows in the matrix.
 
 */
 
 template<class T>
-T max_submatrix_sum(const std::vector< std::vector<T> > &matrix,
+T max_submatrix_sum(const std::vector<std::vector<T> > &matrix,
                     int *begin_row = 0, int *end_row = 0,
                     int *begin_col = 0, int *end_col = 0) {
   int n = matrix.size(), m = matrix[0].size();
