@@ -1,6 +1,6 @@
 /*
 
-Maintain a forest of trees with values associated with either its nodes, while
+Maintain a forest of trees with values associated with its nodes, while
 supporting both dynamic queries and dynamic updates of all values on any path
 between two nodes in a given tree. In addition, support testing of whether two
 nodes are connected in the forest, as well as the merging and spliting of trees
