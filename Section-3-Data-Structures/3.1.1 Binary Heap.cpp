@@ -37,7 +37,8 @@ template<class T> class binary_heap {
  public:
   binary_heap() {}
 
-  template<class It> binary_heap(It lo, It hi) {
+  template<class It>
+  binary_heap(It lo, It hi) {
     while (lo != hi) {
       push(*(lo++));
     }

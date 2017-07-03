@@ -66,7 +66,8 @@ template<class T> class sqrt_decomposition {
     init();
   }
 
-  template<class It> sqrt_decomposition(It lo, It hi) {
+  template<class It>
+  sqrt_decomposition(It lo, It hi) {
     len = (int)(hi - lo);
     value.assign(lo, hi);
     init();

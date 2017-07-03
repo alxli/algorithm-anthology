@@ -152,7 +152,8 @@ template<class K, class V> class binary_search_tree {
     return NULL;
   }
 
-  template<class KVFunction> void walk(KVFunction f) {
+  template<class KVFunction>
+  void walk(KVFunction f) {
     walk(root, f);
   }
 };

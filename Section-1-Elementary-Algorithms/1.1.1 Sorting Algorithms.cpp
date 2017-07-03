@@ -293,14 +293,16 @@ radix_sort(): 0.076s
 #include <vector>
 using namespace std;
 
-template<class It> void print_range(It lo, It hi) {
+template<class It>
+void print_range(It lo, It hi) {
   while (lo != hi) {
     cout << *lo++ << " ";
   }
   cout << endl;
 }
 
-template<class It> bool is_sorted(It lo, It hi) {
+template<class It>
+bool is_sorted(It lo, It hi) {
   while (++lo != hi) {
     if (*(lo - 1) > *lo) {
       return false;

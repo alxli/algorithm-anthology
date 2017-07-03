@@ -65,16 +65,12 @@ template<class T> class cartesian_treap {
 
     T value, subtree_value, delta;
     bool pending;
-    int size, priority;
     node_t *left, *right;
+    int size, priority;
 
-    node_t(const T &v) {
-      value = subtree_value = v;
-      pending = false;
-      size = 1;
-      priority = rand32();
-      left = right = NULL;
-    }
+    node_t(const T &v)
+        : value(v), subtree_value(v), pending(false), left(NULL), right(NULL),
+          size(1), priority(rand32()) {}
   } *root;
 
   static int size(node_t *n) {
@@ -203,7 +199,8 @@ template<class T> class cartesian_treap {
     }
   }
 
-  template<class It> cartesian_treap(It lo, It hi) {
+  template<class It>
+  cartesian_treap(It lo, It hi) {
     root = NULL;
     for (; lo != hi; ++lo) {
       push_back(*lo);

@@ -13,7 +13,8 @@ Space Complexty:
 
 */
 
-template<class It> It majority(It lo, It hi) {
+template<class It>
+It majority(It lo, It hi) {
   int cnt = 0;
   It candidate = lo;
   for (It it = lo; it != hi; ++it) {

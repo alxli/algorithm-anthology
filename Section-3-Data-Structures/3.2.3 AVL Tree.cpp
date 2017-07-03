@@ -214,7 +214,8 @@ template<class K, class V> class avl_tree {
     return NULL;
   }
 
-  template<class KVFunction> void walk(KVFunction f) {
+  template<class KVFunction>
+  void walk(KVFunction f) {
     walk(root, f);
   }
 };

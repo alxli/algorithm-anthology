@@ -64,7 +64,8 @@ template<class T> class segment_tree {
     value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
-  template<class It> void build(int i, int lo, int hi, It arr) {
+  template<class It>
+  void build(int i, int lo, int hi, It arr) {
     if (lo == hi) {
       value[i] = *(arr + lo);
       return;
@@ -110,7 +111,8 @@ template<class T> class segment_tree {
     build(0, 0, len - 1, false, 0, v);
   }
 
-  template<class It> segment_tree(It lo, It hi) {
+  template<class It>
+  segment_tree(It lo, It hi) {
     len = hi - lo;
     value.resize(4*len);
     build(0, 0, len - 1, lo);

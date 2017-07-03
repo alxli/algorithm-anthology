@@ -236,7 +236,8 @@ template<class K, class V> class size_balanced_tree {
     return rank(root, k);
   }
 
-  template<class KVFunction> void walk(KVFunction f) {
+  template<class KVFunction>
+  void walk(KVFunction f) {
     walk(root, f);
   }
 };

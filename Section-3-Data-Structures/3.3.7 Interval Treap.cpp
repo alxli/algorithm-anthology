@@ -52,12 +52,9 @@ template<class T> class interval_treap {
     T max;
     int priority;
 
-    node_t(const interval_t &i) {
-      this->interval = i;
-      max = i.second;
-      left = right = NULL;
-      priority = rand32();
-    }
+    node_t(const interval_t &i)
+        : interval(i), left(NULL), right(NULL), max(i.second),
+          priority(rand32()) {}
 
     void update() {
       max = interval.second;
@@ -223,7 +220,8 @@ template<class T> class interval_treap {
     find_all(root, std::make_pair(l, h), f);
   }
 
-  template<class ReportFunction> void walk(ReportFunction f) {
+  template<class ReportFunction>
+  void walk(ReportFunction f) {
     walk(root, f);
   }
 };

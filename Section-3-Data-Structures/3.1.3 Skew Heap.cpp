@@ -74,7 +74,8 @@ template<class T> class skew_heap {
     num_nodes = 0;
   }
 
-  template<class It> skew_heap(It lo, It hi) {
+  template<class It>
+  skew_heap(It lo, It hi) {
     root = NULL;
     num_nodes = 0;
     while (lo != hi) {

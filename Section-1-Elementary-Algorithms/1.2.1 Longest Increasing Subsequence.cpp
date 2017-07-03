@@ -23,7 +23,8 @@ Space Complexity:
 #include <iterator>
 #include <vector>
 
-template<class It> std::vector<typename std::iterator_traits<It>::value_type>
+template<class It>
+std::vector<typename std::iterator_traits<It>::value_type>
 longest_increasing_subsequence(It lo, It hi) {
   int len = 0, n = hi - lo;
   std::vector<int> prev(n), tail(n);

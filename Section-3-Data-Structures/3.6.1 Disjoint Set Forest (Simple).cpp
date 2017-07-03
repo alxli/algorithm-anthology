@@ -56,8 +56,9 @@ bool is_united(int x, int y) {
 void unite(int x, int y) {
   int r1 = find_root(x);
   int r2 = find_root(y);
-  if (r1 == r2)
+  if (r1 == r2) {
     return;
+  }
   num_sets--;
   if (rank[r1] < rank[r2]) {
     root[r1] = r2;

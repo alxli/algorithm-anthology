@@ -92,7 +92,8 @@ template<class T> class kd_tree {
   }
 
  public:
-  template<class It> kd_tree(It lo, It hi) {
+  template<class It>
+  kd_tree(It lo, It hi) {
     int n = std::distance(lo, hi);
     tree.assign(lo, hi);
     l_index.resize(n);

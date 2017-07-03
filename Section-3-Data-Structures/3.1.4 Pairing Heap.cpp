@@ -93,7 +93,8 @@ template<class T> class pairing_heap {
     num_nodes = 0;
   }
 
-  template<class It> pairing_heap(It lo, It hi) {
+  template<class It>
+  pairing_heap(It lo, It hi) {
     root = NULL;
     num_nodes = 0;
     while (lo != hi) {

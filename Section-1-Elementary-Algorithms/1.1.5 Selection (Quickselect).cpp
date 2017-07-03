@@ -28,7 +28,8 @@ int rand32() {
   return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
 }
 
-template<class It> void nth_element2(It lo, It nth, It hi) {
+template<class It>
+void nth_element2(It lo, It nth, It hi) {
   for (;;) {
     std::swap(*(lo + rand32() % (hi - lo)), *(hi - 1));
     typename std::iterator_traits<It>::value_type mid = *(hi - 1);
@@ -58,7 +59,8 @@ The median is 5.
 #include <iostream>
 using namespace std;
 
-template<class It> void print_range(It lo, It hi) {
+template<class It>
+void print_range(It lo, It hi) {
   while (lo != hi) {
     cout << *lo++ << " ";
   }

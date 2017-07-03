@@ -25,7 +25,8 @@ Space Complexity:
 
 #include <algorithm>
 
-template<class It> void rotate1(It lo, It mid, It hi) {
+template<class It>
+void rotate1(It lo, It mid, It hi) {
   It next = mid;
   while (lo != next) {
     std::iter_swap(lo++, next++);
@@ -37,7 +38,8 @@ template<class It> void rotate1(It lo, It mid, It hi) {
   }
 }
 
-template<class It> void rotate2(It lo, It mid, It hi) {
+template<class It>
+void rotate2(It lo, It mid, It hi) {
   std::reverse(lo, mid);
   std::reverse(mid, hi);
   std::reverse(lo, hi);
@@ -47,7 +49,8 @@ int gcd(int a, int b) {
   return (b == 0) ? a : gcd(b, a % b);
 }
 
-template<class It> void rotate3(It lo, It mid, It hi) {
+template<class It>
+void rotate3(It lo, It mid, It hi) {
   int n = hi - lo, jump = mid - lo;
   int g = gcd(jump, n), cycle = n / g;
   for (int i = 0; i < g; i++) {

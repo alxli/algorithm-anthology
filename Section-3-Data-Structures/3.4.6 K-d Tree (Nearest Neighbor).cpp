@@ -95,7 +95,8 @@ template<class T> class kd_tree {
   }
 
  public:
-  template<class It> kd_tree(It lo, It hi) {
+  template<class It>
+  kd_tree(It lo, It hi) {
     int n = std::distance(lo, hi);
     if (n <= 1) {
       throw std::runtime_error("K-d tree must be have at least 2 points.");

@@ -75,7 +75,8 @@ template<class T> class randomized_heap {
     num_nodes = 0;
   }
 
-  template<class It> randomized_heap(It lo, It hi) {
+  template<class It>
+  randomized_heap(It lo, It hi) {
     root = NULL;
     num_nodes = 0;
     while (lo != hi) {

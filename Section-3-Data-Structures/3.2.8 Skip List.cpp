@@ -164,7 +164,8 @@ template<class K, class V> class skip_list {
     return *find(k);
   }
 
-  template<class KVFunction> void walk(KVFunction f) {
+  template<class KVFunction>
+  void walk(KVFunction f) {
     node_t *n = head->next[0];
     while (n != NULL) {
       f(n->key, n->value);

@@ -128,7 +128,8 @@ template<class K, class V, class Hash> class hash_map {
     return *find(k);
   }
 
-  template<class KVFunction> void walk(KVFunction f) {
+  template<class KVFunction>
+  void walk(KVFunction f) {
     for (int i = 0; i < table_size; i++) {
       typename std::list<entry_t>::iterator it;
       for (it = table[i].begin(); it != table[i].end(); ++it) {
