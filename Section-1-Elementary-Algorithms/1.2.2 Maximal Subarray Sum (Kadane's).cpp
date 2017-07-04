@@ -118,9 +118,10 @@ T max_submatrix_sum(const std::vector<std::vector<T> > &matrix,
 
 /*** Example Usage and Output:
 
-1D maximal sum subarray:
+Maximal sum subarray:
 4 -1 2 1
-2D maximal sum submatrix:
+
+Maximal sum submatrix:
 9 2
 -4 1
 -1 8
@@ -137,7 +138,7 @@ int main() {
     int lo = 0, hi = 0;
     assert(max_subarray_sum(a, a + 3) == -1);
     assert(max_subarray_sum(a, a + 9, &lo, &hi) == 6);
-    cout << "1D maximal sum subarray:" << endl;
+    cout << "Maximal sum subarray:" << endl;
     for (int i = lo; i <= hi; i++) {
       cout << a[i] << " ";
     }
@@ -155,7 +156,7 @@ int main() {
     }
     int r1 = 0, c1 = 0, r2 = 0, c2 = 0;
     assert(max_submatrix_sum(mat, &r1, &c1, &r2, &c2) == 15);
-    cout << "2D maximal sum submatrix:" << endl;
+    cout << "\nMaximal sum submatrix:" << endl;
     for (int i = r1; i <= r2; i++) {
       for (int j = c1; j <= c2; j++) {
         cout << mat[i][j] << " ";
