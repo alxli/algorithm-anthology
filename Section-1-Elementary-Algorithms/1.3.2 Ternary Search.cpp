@@ -24,7 +24,7 @@ Space Complexity:
 
 template<class UnimodalFunction>
 double ternary_search_min(double lo, double hi, UnimodalFunction f) {
-  const double EPS = 1e-12;
+  static const double EPS = 1e-12;
   double lthird, hthird;
   while (hi - lo > EPS) {
     lthird = lo + (hi - lo)/3;
@@ -40,7 +40,7 @@ double ternary_search_min(double lo, double hi, UnimodalFunction f) {
 
 template<class UnimodalFunction>
 double ternary_search_max(double lo, double hi, UnimodalFunction f) {
-  const double EPS = 1e-12;
+  static const double EPS = 1e-12;
   double lthird, hthird;
   while (hi - lo > EPS) {
     lthird = lo + (hi - lo)/3;
@@ -59,7 +59,7 @@ double ternary_search_max(double lo, double hi, UnimodalFunction f) {
 #include <cassert>
 #include <cmath>
 
-bool eq(double a, double b) {
+bool equal(double a, double b) {
   return fabs(a - b) < 1e-7;
 }
 
@@ -79,8 +79,8 @@ double f3(double x) {
 }
 
 int main() {
-  assert(eq(ternary_search_min(-1000, 1000, f1), -2));
-  assert(eq(ternary_search_max(-1000, 1000, f2), 2.0/19));
-  assert(eq(ternary_search_min(-1000, 1000, f3), 30));
+  assert(equal(ternary_search_min(-1000, 1000, f1), -2));
+  assert(equal(ternary_search_max(-1000, 1000, f2), 2.0 / 19));
+  assert(equal(ternary_search_min(-1000, 1000, f3), 30));
   return 0;
 }
