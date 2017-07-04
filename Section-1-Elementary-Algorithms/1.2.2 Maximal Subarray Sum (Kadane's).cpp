@@ -150,16 +150,16 @@ int main() {
                    {9, 2, -6, 2, -4},
                    {-4, 1, -4, 1, 0},
                    {-1, 8, 0, -2, 3}};
-    vector< vector<int> > mat(n);
+    vector<vector<int> > matrix(n);
     for (int i = 0; i < n; i++) {
-      mat[i] = vector<int>(a[i], a[i] + m);
+      matrix[i] = vector<int>(a[i], a[i] + m);
     }
     int r1 = 0, c1 = 0, r2 = 0, c2 = 0;
-    assert(max_submatrix_sum(mat, &r1, &c1, &r2, &c2) == 15);
+    assert(max_submatrix_sum(matrix, &r1, &c1, &r2, &c2) == 15);
     cout << "\nMaximal sum submatrix:" << endl;
     for (int i = r1; i <= r2; i++) {
       for (int j = c1; j <= c2; j++) {
-        cout << mat[i][j] << " ";
+        cout << matrix[i][j] << " ";
       }
       cout << endl;
     }
