@@ -1,21 +1,22 @@
 /*
 
 Let k be the number of distinct values in a range [lo, hi) of n total values.
-Coordinate compression takes only the integers from [0, k) and reassigns them to
+Coordinate compression takes only the integers from [0, n) and reassigns them to
 every value in [lo, hi) such that the relative ordering of the original range is
 preserved. That is, if a[] is an array containing the original values and b[] is
-an array containing the compressed values, then every pair i, j (0 <= i, j <= n)
+an array containing the compressed values, then every pair i, j (0 <= i, j < n)
 satisfies a[i] < a[j] if and only if b[i] < b[j].
 
 Both implementations below are equivalent, taking RandomAccessIterators lo and
-hi as the range [lo, hi) to be compressed. Version 1 performs the compression by
-sorting the array, removing duplicates, and binary searching for the position of
-each original value. Version 2 achieves the same result by inserting all values
-in a balanced binary search tree (std::map) which automatically removes
-duplicate values and supports efficient lookups of the compressed values.
+hi as the range [lo, hi) to be compressed. Operator < must be defined on the
+value type of the iterators. Version 1 performs the compression by sorting the
+array, removing duplicates, and binary searching for the position of each
+original value. Version 2 achieves the same result by inserting all values in a
+balanced binary search tree (std::map) which automatically removes duplicate
+values and supports efficient lookups of the compressed values.
 
 Time Complexity:
-- O(n log n) per call to both functions, where n is the distance between lo and
+- O(n log n) per call to either function, where n is the distance between lo and
   hi.
 
 Space Complexity:

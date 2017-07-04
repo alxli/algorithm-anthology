@@ -3,7 +3,7 @@
 These functions are equivalent to std::rotate(), taking three iterators lo, mid,
 and hi (lo <= mid <= hi) to perform a left rotation on the range [lo, hi). After
 the function call, [lo, hi) will comprise of the concatenation of the elements
-initially in [mid, hi) + [lo, mid). That is, the range [lo, hi) will be
+originally in [mid, hi) + [lo, mid). That is, the range [lo, hi) will be
 rearranged in such a way that the element at mid becomes the first element of
 the new range and the element at mid - 1 becomes the last element, all while
 preserving the relative ordering of elements within the two rotated subarrays.
@@ -99,7 +99,7 @@ int main() {
   vector<int> v(a, a + 10);
   cout << "before sort:  ";
   for (int i = 0; i < (int)v.size(); i++) {
-    cout << v[i] << ' ';
+    cout << v[i] << " ";
   }
   cout << endl;
 
@@ -109,7 +109,7 @@ int main() {
   }
   cout << "after sort:   ";
   for (int i = 0; i < (int)v.size(); i++) {
-    cout << v[i] << ' ';
+    cout << v[i] << " ";
   }
   cout << endl;
 
@@ -117,7 +117,7 @@ int main() {
   rotate2(v.begin(), v.begin() + 1, v.end());
   cout << "rotate left:  ";
   for (int i = 0; i < (int)v.size(); i++) {
-    cout << v[i] << ' ';
+    cout << v[i] << " ";
   }
   cout << endl;
 
@@ -125,7 +125,7 @@ int main() {
   rotate3(v.rbegin(), v.rbegin() + 1, v.rend());
   cout << "rotate right: ";
   for (int i = 0; i < (int)v.size(); i++) {
-    cout << v[i] << ' ';
+    cout << v[i] << " ";
   }
   cout << endl;
 

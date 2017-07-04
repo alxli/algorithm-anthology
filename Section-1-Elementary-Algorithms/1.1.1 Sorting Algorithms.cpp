@@ -80,7 +80,7 @@ comparator given.
 An analogous function in the C++ standard library is std::stable_sort(), except
 that the implementation here requires sufficient memory to be available. When
 O(n) auxiliary memory is not available, std::stable_sort() falls back to a time
-complexity of O(n log^2 n) but the implementation here will simply fail.
+complexity of O(n log^2 n) whereas the implementation here will simply fail.
 
 Time Complexity (Average): O(n log n).
 Time Complexity (Worst): O(n log n).
@@ -160,8 +160,9 @@ void heapsort(It lo, It hi, Compare comp) {
       if (child + 1 < j && comp(*child, *(child + 1))) {
         child++;
       }
-      if (!comp(tmp, *child))
+      if (!comp(tmp, *child)) {
         break;
+      }
       *parent = *child;
       parent = child;
       child = lo + 2*(parent - lo) + 1;
@@ -229,7 +230,7 @@ unsigned types, as long as their values are nonnegative integers.
 
 In this implementation, a power of two is chosen to be the base for the sort
 so that bitwise operations can be easily used to extract digits. This avoids the
-neet to use modulo and exponentiation, which are much more expensive operations.
+need to use modulo and exponentiation, which are much more expensive operations.
 In practice, it's been demonstrated that 2^8 is the best choice for sorting
 32-bit integers (approximately 5 times faster than std::sort(), and typically
 2-4 faster than radix sort using any other power of two chosen as the base).
@@ -370,11 +371,11 @@ int main () {
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
 
-#define test(sortfunc) {                                 \
+#define test(sort_function) {                            \
   clock_t start = clock();                               \
-  sortfunc(v.begin(), v.end());                          \
+  sort_function(v.begin(), v.end());                     \
   double t = (double)(clock() - start) / CLOCKS_PER_SEC; \
-  cout << setw(14) << left << #sortfunc "(): ";          \
+  cout << setw(14) << left << #sort_function "(): ";     \
   cout << fixed << t << "s" << endl;                     \
   assert(is_sorted(v.begin(), v.end()));                 \
   v = v2;                                                \

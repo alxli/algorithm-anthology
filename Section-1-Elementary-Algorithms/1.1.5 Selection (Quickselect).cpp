@@ -31,12 +31,12 @@ int rand32() {
 template<class It>
 void nth_element2(It lo, It nth, It hi) {
   for (;;) {
-    std::swap(*(lo + rand32() % (hi - lo)), *(hi - 1));
+    std::iter_swap(lo + rand32() % (hi - lo), hi - 1);
     typename std::iterator_traits<It>::value_type mid = *(hi - 1);
     It k = lo - 1;
     for (It it = lo; it != hi; ++it) {
       if (*it <= mid) {
-        std::swap(*(++k), *it);
+        std::iter_swap(++k, it);
       }
     }
     if (nth < k) {
@@ -52,7 +52,7 @@ void nth_element2(It lo, It nth, It hi) {
 /*** Example Usage and Output:
 
 The median is 5.
-3 2 3 4 5 6 6 9 7
+2 3 3 4 5 6 6 7 9
 
 ***/
 

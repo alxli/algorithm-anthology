@@ -2,14 +2,10 @@
 
 Given two RandomAccessIterators lo and hi specifying a range [lo, hi), determine
 a longest subsequence of the range such that all of its elements are in strictly
-ascending order. This subsequence is not necessarily contiguous or unique, so
-only one such answer will be found. The answer is efficiently found using binary
-search and dynamic programming. Let a[] be an array of the elements in [lo, hi)
-and suppose LIS[i] stores the length of the longest increasing subsequence for
-the first i values in a[]. Then, LIS[i] has the following optimal substructure:
-
-  LIS[i] = 1 + max(LIS[j] for all j < i and a[j] < a[i])
-  Otherwise if such a j does not exist, then LIS[i] = 1.
+ascending order. This implementation requires operator < to be defined on the
+value type of the iterator. The subsequence is not necessarily contiguous or
+unique, so only one such answer will be found. The answer is computed using
+binary search and dynamic programming.
 
 Time Complexity:
 - O(n log n) per call to longest_increasing_subsequence(), where n is the

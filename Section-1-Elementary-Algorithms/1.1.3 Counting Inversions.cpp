@@ -19,8 +19,8 @@ Version 1: Merge Sort
 
 Returns the number of inversions of the range [lo, hi), where lo and hi are
 RandomAccessIterators. Note that the range [lo, hi) will become sorted after
-the function call. The value type of the input iterators must have operator<
-defined appropriately.
+the function call. This requires operator < to be defined on the value type of
+the iterator.
 
 Time Complexity:
 - O(n log n) per call to both functinos, where n is distance between lo and hi
@@ -51,16 +51,16 @@ long long inversions(It lo, It hi) {
     }
   }
   if (a > mid) {
-    for (It k = c; k < hi; ++k) {
-      merged.push_back(*k);
+    for (It it = c; it != hi; ++it) {
+      merged.push_back(*it);
     }
   } else {
-    for (It k = a; k <= mid; ++k) {
-      merged.push_back(*k);
+    for (It it = a; it <= mid; ++it) {
+      merged.push_back(*it);
     }
   }
-  for (int i = 0; i < hi - lo; i++) {
-    *(lo + i) = merged[i];
+  for (It it = lo; it != hi; ++it) {
+    *it = merged[it - lo];
   }
   return res;
 }
@@ -87,14 +87,14 @@ long long inversions(int n, int a[]) {
     mx = std::max(mx, a[i]);
   }
   long long res = 0;
-  std::vector<int> cnt(mx);
+  std::vector<int> count(mx);
   while (mx > 0) {
-    std::fill(cnt.begin(), cnt.end(), 0);
+    std::fill(count.begin(), count.end(), 0);
     for (int i = 0; i < n; i++) {
       if (a[i] % 2 == 0) {
-        res += cnt[a[i] / 2];
+        res += count[a[i] / 2];
       } else {
-        cnt[a[i] / 2]++;
+        count[a[i] / 2]++;
       }
     }
     mx = 0;
