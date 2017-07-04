@@ -1,17 +1,12 @@
 /*
 
-Given two InputIterators lo and hi specifying a range [lo, hi) of n (not
-necessarily distinct) integers and an integer v, returns the minimum possible
-sum of any subset of the given sequence that is greater than or equal to v.
-This is a generalization of a more well-known version of the subset sum problem
-which asks whether a subset summing to 0 exists (equivalent in this case to
-checking if v = 0 yields an answer of 0). Both problems are NP-complete. This
-meet-in-the-middle algorithm divides the array in two equal parts. All possible
-sums of the lower and higher parts are precomputed into a table and sorted.
-Finally, the table is searched to find the lower bound.
-
-Note that since the sums can get large, 64-bit integers are used in intermediate
-calculations to avoid overflow.
+Given RandomAccessIterators lo and hi specifying a range [lo, hi) of integers,
+return the minimum sum of any subset of the range that is greater than or equal
+to a given integer v. This is a generalization of the NP-complete subset sum
+problem, which asks whether a subset summing to 0 exists (equivalent in this
+case to checking if v = 0 yields an answer of 0). This implementation uses a
+meet-in-the-middle algorithm to precompute and search for a lower bound. Note
+that 64-bit ints are used in intermediate calculations to avoid overflow.
 
 Time Complexity:
 - O(n*2^(n/2)) per call to sum_lower_bound(), where n is the distance between lo
@@ -48,14 +43,14 @@ long long sum_lower_bound(It lo, It hi, long long v) {
   }
   std::sort(lsum.begin(), lsum.end());
   std::sort(hsum.begin(), hsum.end());
-  int l = 0, r = hlen - 1;
+  int l = 0, h = hlen - 1;
   long long curr = std::numeric_limits<long long>::min();
-  while (l < llen && r >= 0) {
-    if (lsum[l] + hsum[r] <= v) {
-      curr = std::max(curr, lsum[l] + hsum[r]);
+  while (l < llen && h >= 0) {
+    if (lsum[l] + hsum[h] <= v) {
+      curr = std::max(curr, lsum[l] + hsum[h]);
       l++;
     } else {
-      r--;
+      h--;
     }
   }
   return curr;

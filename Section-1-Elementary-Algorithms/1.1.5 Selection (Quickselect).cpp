@@ -5,11 +5,8 @@ lo, nth, and hi as the range [lo, hi) to be partially sorted. The values in
 [lo, hi) are rearranged such that the value pointed to by nth is the element
 that would be there if the range were sorted. Furthermore, the range is
 partitioned such that no value in [lo, nth) compares greater than the value
-pointed to by nth and no value in (nth, hi) compares less.
-
-This implementation is not intended to compete with nth_element() in terms of
-efficiency. Instead, it is meant to demonstrate how Quickselect can be concisely
-implemented in C++. Nevertheless, both functions run in expected linear time.
+pointed to by nth and no value in (nth, hi) compares less. This implementation
+requires operator < to be defined on the iterator's value type.
 
 Time Complexity:
 - O(n) on average per call to nth_element2(), where n is the distance between lo
@@ -35,13 +32,13 @@ void nth_element2(It lo, It nth, It hi) {
     typename std::iterator_traits<It>::value_type mid = *(hi - 1);
     It k = lo - 1;
     for (It it = lo; it != hi; ++it) {
-      if (*it <= mid) {
+      if (!(mid < *it)) {
         std::iter_swap(++k, it);
       }
     }
     if (nth < k) {
       hi = k;
-    } else if (nth > k) {
+    } else if (k < nth) {
       lo = k + 1;
     } else {
       return;
@@ -51,11 +48,11 @@ void nth_element2(It lo, It nth, It hi) {
 
 /*** Example Usage and Output:
 
-The median is 5.
 2 3 3 4 5 6 6 7 9
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -71,7 +68,7 @@ int main () {
   int n = 9;
   int a[] = {5, 6, 4, 3, 2, 6, 7, 9, 3};
   nth_element2(a, a + n/2, a + n);
-  cout << "The median is " << a[n/2] << "." << endl;
+  assert(a[n/2] == 5);
   print_range(a, a + n);
   return 0;
 }

@@ -1,9 +1,10 @@
 /*
 
-Given an n by m rectangular matrix of 0's and 1's as a two dimensional vector of
-bool, returns the area of the largest rectangular submatrix consisting of only
-0's. This can be reduced to the problem of finding the maximum rectangular area
-under a histogram, which is efficiently solved using a stack.
+Given a rectangular matrix with n rows and m columns consisting of only 0's and
+1's as a two-dimensional vector of bool, return the area of the largest
+rectangular submatrix consisting of only 0's. This solution uses a reduction to
+the problem of finding the maximum rectangular area under a histogram, which is
+efficiently solved using a stack algorithm.
 
 Explanation: http://stackoverflow.com/a/13657337
 
@@ -57,7 +58,6 @@ int max_zero_submatrix(const std::vector<std::vector<bool> > &matrix) {
 /*** Example Usage ***/
 
 #include <cassert>
-#include <vector>
 using namespace std;
 
 int main() {
@@ -67,10 +67,10 @@ int main() {
                   {0, 0, 0, 0, 0, 1},
                   {1, 0, 0, 1, 0, 0},
                   {1, 0, 1, 0, 0, 1}};
-  vector<vector<bool> > mat(n);
+  vector<vector<bool> > matrix(n);
   for (int i = 0; i < n; i++) {
-    mat[i] = vector<bool>(a[i], a[i] + m);
+    matrix[i] = vector<bool>(a[i], a[i] + m);
   }
-  assert(max_zero_submatrix(mat) == 6);
+  assert(max_zero_submatrix(matrix) == 6);
   return 0;
 }

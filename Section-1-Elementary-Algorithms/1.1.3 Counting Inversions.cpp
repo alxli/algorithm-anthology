@@ -17,10 +17,9 @@ following two functions are each techniques to efficiently count inversions.
 
 Version 1: Merge Sort
 
-Returns the number of inversions of the range [lo, hi), where lo and hi are
-RandomAccessIterators. Note that the range [lo, hi) will become sorted after
-the function call. This requires operator < to be defined on the value type of
-the iterator.
+Returns the number of inversions given two RandomAccessIterators as a range
+[lo, hi). The range will become sorted after the function call. This requires
+operator < to be defined on the iterator's value type.
 
 Time Complexity:
 - O(n log n) per call to both functinos, where n is distance between lo and hi
@@ -70,7 +69,7 @@ long long inversions(It lo, It hi) {
 Version 2: Power-of-Two Trick
 
 Returns the number of inversions for an array a[] of n nonnegative integers.
-Note that after calling the function, every value of a[] will be set to 0.
+After calling the function, every value of a[] will be set to 0.
 
 Here, the time and space complexities depend on the magnitude of the maximum
 value in a[]. Therefore for a running time of O(n log n), coordinate compression

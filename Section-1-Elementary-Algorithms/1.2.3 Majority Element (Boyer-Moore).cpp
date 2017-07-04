@@ -1,9 +1,10 @@
 /*
 
-Given two InputIterators lo and hi specifying a range [lo, hi) of n elements,
-returns a reference to the first occurrence of the majority element, or the
+Given two ForwardIterators lo and hi specifying a range [lo, hi) of n elements,
+return an iterator to the first occurrence of the majority element, or the
 iterator hi if there is no majority element. The majority element is defined as
-an element which occurs strictly greater than floor(n/2) times in the range.
+an element which occurs strictly more than floor(n/2) times in the range. This
+implementation requires operator == to be defined on the iterator's value type.
 
 Time Complexity:
 - O(n) per call to majority(), where n is the size of the array.
@@ -15,25 +16,25 @@ Space Complexty:
 
 template<class It>
 It majority(It lo, It hi) {
-  int cnt = 0;
+  int count = 0;
   It candidate = lo;
   for (It it = lo; it != hi; ++it) {
-    if (cnt == 0) {
+    if (count == 0) {
       candidate = it;
-      cnt = 1;
+      count = 1;
     } else if (*it == *candidate) {
-      cnt++;
+      count++;
     } else {
-      cnt--;
+      count--;
     }
   }
-  cnt = 0;
+  count = 0;
   for (It it = lo; it != hi; ++it) {
     if (*it == *candidate) {
-      cnt++;
+      count++;
     }
   }
-  if (cnt <= (hi - lo)/2) {
+  if (count <= (hi - lo)/2) {
     return hi;
   }
   return candidate;
