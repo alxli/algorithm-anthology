@@ -12,7 +12,7 @@ satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
 for all values x, y, and z in the forest. The default code below assumes a
 numerical forest type, defining queries for the "min" of the target range.
 Another possible query operation is "sum", in which case the join_values()
-function should defined to return "a + b".
+function should be defined to return "a + b".
 
 The update operation is defined by the join_value_with_delta() and join_deltas()
 functions, which determines the change made to values. These must satisfy:
@@ -81,11 +81,11 @@ template<class T> class link_cut_forest {
         : value(v), subtree_value(v), left(NULL), right(NULL), parent(NULL),
           size(1), rev(false), pending(false) {}
 
-    inline bool is_root() {
+    inline bool is_root() const {
       return parent == NULL || (parent->left != this && parent->right != this);
     }
 
-    inline T get_subtree_value() {
+    inline T get_subtree_value() const {
       return pending ? join_value_with_delta(subtree_value, delta, size)
                      : subtree_value;
     }

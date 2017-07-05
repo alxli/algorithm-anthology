@@ -32,7 +32,7 @@ struct segment {
   segment(int x1, int y1, int x2, int y2) : x1(x1), y1(y1), x2(x2), y2(y2) {}
 
   bool operator==(const segment &s) const {
-    return (x1 == s.x1) && (y1 == s.y1) && (x2 == s.x2) && (y2 == s. y2);
+    return (x1 == s.x1) && (y1 == s.y1) && (x2 == s.x2) && (y2 == s.y2);
   }
 };
 

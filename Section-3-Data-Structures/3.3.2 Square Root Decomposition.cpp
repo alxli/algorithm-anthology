@@ -3,14 +3,14 @@
 Maintain a fixed-size array (from 0 to size() - 1) while supporting dynamic
 queries of contiguous sub-arrays and dynamic updates of individual indices.
 
-The query operation is defined by an associative join_values() function which:
+The query operation is defined by an associative join_values() function which
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
 for all values x, y, and z in the array. The default definition below assumes a
 numerical array type, supporting queries for the "min" of the target range.
 Another possible query operation is "sum", in which the join_values() function
-should defined to return "a + b".
+should be defined to return "a + b".
 
-The update operation is defined by the join_value_with_delta() function, which
+The update operation is defined by the join_value_with_delta() function which
 determines the change made to array values. The default definition below
 supports updates that "set" the chosen array index to a new value. Another
 possible update operation is "increment", in which join_value_with_delta(v, d)

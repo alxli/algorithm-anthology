@@ -8,7 +8,7 @@ satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
 for all values x, y, and z in the array. The default code below assumes a
 numerical array type, defining queries for the "min" of the target range.
 Another possible query operation is "sum", in which case the join_values()
-function should defined to return "a + b".
+function should be defined to return "a + b".
 
 The update operation is defined by the join_value_with_delta() and join_deltas()
 functions, which determines the change made to array values. These must satisfy:
