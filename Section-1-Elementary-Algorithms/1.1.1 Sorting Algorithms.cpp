@@ -377,7 +377,7 @@ int main () {
   double t = (double)(clock() - start) / CLOCKS_PER_SEC; \
   cout << setw(14) << left << #sort_function "(): ";     \
   cout << fixed << t << "s" << endl;                     \
-  assert(sorted(v.begin(), v.end()));                 \
+  assert(sorted(v.begin(), v.end()));                    \
   v = v2;                                                \
 }
   test(std::sort);

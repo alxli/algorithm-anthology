@@ -256,6 +256,6 @@ int main() {
   t.find_all(16, 20, print);
   cout << "\nAll intervals:";
   t.walk(print);
-  cout << "\n";
+  cout << endl;
   return 0;
 }

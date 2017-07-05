@@ -75,6 +75,6 @@ int main() {
   for (int i = 1; i <= 5; i++) {
     cout << a[i] << " ";
   }
-  cout << endl << "Sum of range [2, 4] is " << sum(2, 4) << "." << endl;
+  cout << "\nSum of range [2, 4] is " << sum(2, 4) << "." << endl;
   return 0;
 }

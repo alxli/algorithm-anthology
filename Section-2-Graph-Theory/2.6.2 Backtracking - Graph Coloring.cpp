@@ -93,7 +93,8 @@ Color 3: 4
 using namespace std;
 
 void add_edge(int u, int v) {
-  adj[u][v] = adj[v][u] = true;
+  adj[u][v] = true;
+  adj[v][u] = true;
 }
 
 int main() {

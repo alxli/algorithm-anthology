@@ -80,11 +80,12 @@ template<class T> class binary_heap {
       if (child + 1 < heap.size() && heap[child + 1] < heap[child]) {
         child++;
       }
-      if (!(heap[child] < heap[i])) {
+      if (heap[child] < heap[i]) {
+        std::swap(heap[i], heap[child]);
+        i = child;
+      } else {
         break;
       }
-      std::swap(heap[i], heap[child]);
-      i = child;
     }
   }
 

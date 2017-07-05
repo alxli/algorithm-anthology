@@ -130,13 +130,12 @@ template<class T> class quadtree {
   }
 
   static void clean_up(node_t *n) {
-    if (n == NULL) {
-      return;
+    if (n != NULL) {
+      for (int i = 0; i < 4; i++) {
+        clean_up(n->child[i]);
+      }
+      delete n;
     }
-    for (int i = 0; i < 4; i++) {
-      clean_up(n->child[i]);
-    }
-    delete n;
   }
 
  public:

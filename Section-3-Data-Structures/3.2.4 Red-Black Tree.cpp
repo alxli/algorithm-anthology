@@ -44,7 +44,7 @@ template<class K, class V> class red_black_tree {
     color_t color;
 
     node_t(const K &k, const V &v, color_t c)
-      : key(k), value(v), left(NULL), right(NULL), parent(NULL), color(c) {}
+        : key(k), value(v), left(NULL), right(NULL), parent(NULL), color(c) {}
   } *root, *LEAF_NIL;
 
   int num_nodes;

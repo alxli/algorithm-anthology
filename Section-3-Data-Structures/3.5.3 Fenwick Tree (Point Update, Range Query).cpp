@@ -86,6 +86,6 @@ int main() {
   for (int i = 0; i < t.size(); i++) {
     cout << t.at(i) << " ";
   }
-  cout << endl << "Sum of range [1, 3] is " << t.sum(1, 3) << "." << endl;
+  cout << "\nSum of range [1, 3] is " << t.sum(1, 3) << "." << endl;
   return 0;
 }

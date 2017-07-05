@@ -129,7 +129,7 @@ int main() {
   for (int i = 0; i < sd.size(); i++) {
     cout << " " << sd.at(i);
   }
-  cout << endl << "The minimum value in the range [0, 3] is "
-       << sd.query(0, 3) << "." << endl;
+  cout << "\nThe minimum value in the range [0, 3] is " << sd.query(0, 3) << "."
+       << endl;
   return 0;
 }

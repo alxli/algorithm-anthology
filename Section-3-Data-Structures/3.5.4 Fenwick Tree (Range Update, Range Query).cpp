@@ -104,6 +104,6 @@ int main() {
   for (int i = 0; i < t.size(); i++) {
     cout << t.at(i) << " ";
   }
-  cout << endl << "Sum of range [0, 4] is " << t.sum(0, 4) << "." << endl;
+  cout << "\nSum of range [0, 4] is " << t.sum(0, 4) << "." << endl;
   return 0;
 }

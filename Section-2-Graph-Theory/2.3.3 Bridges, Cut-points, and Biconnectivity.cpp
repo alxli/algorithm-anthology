@@ -170,8 +170,9 @@ int main() {
     cout << " " << cutpoints[i];
   }
   cout << endl << "Bridges:" << endl;
-  for (int i = 0; i < (int)bridges.size(); i++)
+  for (int i = 0; i < (int)bridges.size(); i++) {
     cout << bridges[i].first << " " << bridges[i].second << endl;
+  }
   cout << "Edge-Biconnected Components:" << endl;
   for (int i = 0; i < (int)bcc.size(); i++) {
     for (int j = 0; j < (int)bcc[i].size(); j++) {

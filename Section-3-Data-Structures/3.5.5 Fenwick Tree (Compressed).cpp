@@ -98,7 +98,7 @@ int main() {
   for (int i = 0; i < 5; i++) {
     cout << t.at(i) << " ";
   }
-  cout << endl << "Sum of range [0, 4] is " << t.sum(0, 4) << "." << endl;
+  cout << "\nSum of range [0, 4] is " << t.sum(0, 4) << "." << endl;
   t.add(500000001, 500000010, 3);
   t.add(500000011, 500000015, 5);
   t.set(500000000, 10);

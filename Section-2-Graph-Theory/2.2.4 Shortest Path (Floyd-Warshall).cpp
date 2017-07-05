@@ -81,9 +81,8 @@ int main() {
   dist[1][2] = 2;
   dist[0][2] = 5;
   floyd_warshall(3);
-  cout << "The shortest distance from " << start;
-  cout << " to " << dest << " is ";
-  cout << dist[start][dest] << "." << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is "
+       << dist[start][dest] << "." << endl;
   print_path(start, dest);
   return 0;
 }

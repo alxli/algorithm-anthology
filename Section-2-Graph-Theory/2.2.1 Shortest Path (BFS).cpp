@@ -83,8 +83,8 @@ int main() {
   adj[2].push_back(3);
   adj[0].push_back(3);
   bfs(4, start);
-  cout << "The shortest distance from " << start;
-  cout << " to " << dest << " is " << dist[dest] << "." << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is "
+       << dist[dest] << "." << endl;
   print_path(dest);
   return 0;
 }

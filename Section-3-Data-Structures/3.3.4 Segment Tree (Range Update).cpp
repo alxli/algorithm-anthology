@@ -187,8 +187,8 @@ int main() {
   for (int i = 0; i < t.size(); i++) {
     cout << " " << t.at(i);
   }
-  cout << endl << "The minimum value in the range [0, 3] is "
-       << t.query(0, 3) << "." << endl;
+  cout << "\nThe minimum value in the range [0, 3] is " << t.query(0, 3) << "."
+       << endl;
   t.update(0, 4, 5);
   t.update(3, 2);
   t.update(3, 1);
@@ -196,7 +196,7 @@ int main() {
   for (int i = 0; i < t.size(); i++) {
     cout << " " << t.at(i);
   }
-  cout << endl << "The minimum value in the range [0, 3] is "
-       << t.query(0, 3) << "." << endl;
+  cout << "\nThe minimum value in the range [0, 3] is " << t.query(0, 3) << "."
+       << endl;
   return 0;
 }
