@@ -33,7 +33,7 @@ Time Complexity:
 Space Complexity:
 - O(n) for storage of the map elements.
 - O(log n) auxiliary stack space for insert(), erase(), and walk().
-- O(1) auxiliary for all oher operations.
+- O(1) auxiliary for all other operations.
 
 */
 

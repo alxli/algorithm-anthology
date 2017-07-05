@@ -21,7 +21,7 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3F3F3F3F;
+const int MAXN = 100, INF = 0x3f3f3f3f;
 int cap[MAXN][MAXN], f[MAXN][MAXN];
 
 int push_relabel(int nodes, int source, int sink) {

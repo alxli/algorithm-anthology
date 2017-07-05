@@ -47,7 +47,7 @@ template<class T> class fenwick_tree_2d {
     }
   }
 
-  void add_pre(int r, int c, const T &x) {
+  void add_helper(int r, int c, const T &x) {
     add(t1, 0, 0, x);
     add(t1, 0, c, -x);
     add(t2, 0, c, x*c);
@@ -61,10 +61,10 @@ template<class T> class fenwick_tree_2d {
 
  public:
   void add(int r1, int c1, int r2, int c2, const T &x) {
-    add_pre(r2 + 1, c2 + 1, x);
-    add_pre(r1, c2 + 1, -x);
-    add_pre(r2 + 1, c1, -x);
-    add_pre(r1, c1, x);
+    add_helper(r2 + 1, c2 + 1, x);
+    add_helper(r1, c2 + 1, -x);
+    add_helper(r2 + 1, c1, -x);
+    add_helper(r1, c1, x);
   }
 
   void add(int r, int c, const T &x) {

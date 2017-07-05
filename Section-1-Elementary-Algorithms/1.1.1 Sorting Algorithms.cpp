@@ -235,9 +235,6 @@ In practice, it's been demonstrated that 2^8 is the best choice for sorting
 32-bit integers (approximately 5 times faster than std::sort(), and typically
 2-4 faster than radix sort using any other power of two chosen as the base).
 
-This implementation was adapted from: http://qr.ae/RbdDTa
-Explanation of base 2^8 choice: http://qr.ae/RbdDcG
-
 Time Complexity: O(n*w) for n integers of w bits each.
 Space Complexity: O(n + w) auxiliary.
 

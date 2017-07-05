@@ -1,9 +1,9 @@
 /*
 
 Given a weighted, directed graph, determine a path of minimum total distance
-which visits each node exactly once. Unlike the travelling salesman problem, we
+which visits each node exactly once. Unlike the traveling salesman problem, we
 do not have to return to the starting vertex. Since this implementation uses
-bitmasks with 32-bit ints, the maximum number of nodes must be less than 32.
+bitmasks with 32-bit integers, the maximum number of nodes must be less than 32.
 shortest_hamiltonian_path() applies to a global adjacency matrix adj[][] which
 must be populated before the function call.
 

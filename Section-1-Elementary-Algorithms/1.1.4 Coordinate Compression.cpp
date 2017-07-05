@@ -4,8 +4,8 @@ Given two ForwardIterators as a range [lo, hi) of n numerical elements, reassign
 each element in the range to an integer in [0, k), where k is the number of
 distinct elements in the original range, while preserving the initial relative
 ordering of elements. That is, if a[] is an array of the original values and b[]
-is the compressed values, then every pair of indices i, j (0 <= i, j < n)
-satisfies a[i] < a[j] if and only if b[i] < b[j].
+is the compressed values, then every pair of indices i, j (0 <= i, j < n) shall
+satisfy a[i] < a[j] if and only if b[i] < b[j].
 
 Both implementations below require operator < to be defined on the iterator's
 value type. Version 1 performs the compression by sorting the array, removing

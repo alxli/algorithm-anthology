@@ -6,8 +6,6 @@ rectangular submatrix consisting of only 0's. This solution uses a reduction to
 the problem of finding the maximum rectangular area under a histogram, which is
 efficiently solved using a stack algorithm.
 
-Explanation: http://stackoverflow.com/a/13657337
-
 Time Complexity:
 - O(n*m) per call to max_zero_submatrix(), where n is the number of rows and m
   is the number of columns in the matrix.

@@ -234,7 +234,7 @@ template<class T> class heavy_light {
       found = true;
     }
     if (!found) {
-      throw std::runtime_error("Unexpected error: No values found.\n");
+      throw std::runtime_error("Unexpected error: No values found.");
     }
     return res;
   }

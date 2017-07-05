@@ -69,7 +69,7 @@ int get_minpos(int a, int b, int n, int lo, int hi) {
     return minpos[n];
   }
   int mid = (lo + hi)/2;
-  if (a <= mid && b > mid) {
+  if (a <= mid && mid < b) {
     int p1 = get_minpos(a, std::min(b, mid), 2*n + 1, lo, mid);
     int p2 = get_minpos(std::max(a, mid + 1), b, 2*n + 2, mid + 1, hi);
     return depth[p1] < depth[p2] ? p1 : p2;

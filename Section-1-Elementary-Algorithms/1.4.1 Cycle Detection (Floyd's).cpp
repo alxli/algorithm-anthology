@@ -20,8 +20,6 @@ forward and the "hare" two steps forward in the sequence, comparing the sequence
 values at each step. The first value which is simultaneously pointed to by both
 pointers is the start of the sequence.
 
-Explanation: https://en.wikipedia.org/wiki/Cycle_detection#Tortoise_and_hare
-
 Time Complexity:
 - O(m + n) per call to find_cycle_floyd(), where m is the smallest index of the
   sequence which is the beginning of a cycle, and n is the cycle's length.

@@ -20,8 +20,6 @@ power of two. The smallest power of two at which they meet is the start of the
 first cycle. This improves upon the constant factor of Floyd's algorithm by
 reducing the number of calls made to f.
 
-Explanation: https://en.wikipedia.org/wiki/Cycle_detection#Brent.27s_algorithm
-
 Time Complexity:
 - O(m + n) per call to find_cycle_brent(), where m is the smallest index of the
   sequence which is the beginning of a cycle, and n is the cycle's length.

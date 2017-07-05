@@ -16,15 +16,13 @@ A cut-point (i.e. cut-node, or articulation point) is any node whose removal
 increases the number of connected components in the graph.
 
 A biconnected component of a graph is a maximally biconnected subgraph. A
-biconnected graph is a connected and "nonseparable" graph, meaning that if any
+biconnected graph is a connected and "non-separable" graph, meaning that if any
 node were to be removed, the graph will remain connected. Thus, a biconnected
 graph has no articulation points.
 
 Any connected graph decomposes into a tree of biconnected components called the
 "block tree" of the graph. An unconnected graph will thus decompose into a
 "block forest."
-
-See: http://en.wikipedia.org/wiki/Biconnected_component
 
 Time Complexity:
 - O(max(n, m)) per call to tarjan() and get_block_forest(), where n is the

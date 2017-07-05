@@ -6,7 +6,7 @@ to a given integer v. This is a generalization of the NP-complete subset sum
 problem, which asks whether a subset summing to 0 exists (equivalent in this
 case to checking if v = 0 yields an answer of 0). This implementation uses a
 meet-in-the-middle algorithm to precompute and search for a lower bound. Note
-that 64-bit ints are used in intermediate calculations to avoid overflow.
+that 64-bit integers are used in intermediate calculations to avoid overflow.
 
 Time Complexity:
 - O(n*2^(n/2)) per call to sum_lower_bound(), where n is the distance between lo

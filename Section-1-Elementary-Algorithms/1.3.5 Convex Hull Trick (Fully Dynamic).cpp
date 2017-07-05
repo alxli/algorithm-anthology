@@ -9,8 +9,6 @@ The following implementation is a fully dynamic variant of the convex hull
 optimization technique, using a self-balancing binary search tree (std::set) to
 support the ability to call add_line() and query() in any desired order.
 
-Explanation: http://wcipeg.com/wiki/Convex_hull_trick#Fully_dynamic_variant
-
 Time Complexity:
 - O(n) for any interlaced sequence of add_line() and query() calls, where n
   is the number of lines added. This is because the overall number of steps

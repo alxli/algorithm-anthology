@@ -13,8 +13,6 @@ are satisfied. As a result, it may be necessary to sort the lines and queries
 before calling the functions. In that case, the overall time complexity will be
 dominated by the sorting step.
 
-Explanation of technique: http://wcipeg.com/wiki/Convex_hull_trick
-
 Time Complexity:
 - O(n) for any interlaced sequence of add_line() and query() calls, where n is
   the number of lines added. This is because the overall number of steps taken

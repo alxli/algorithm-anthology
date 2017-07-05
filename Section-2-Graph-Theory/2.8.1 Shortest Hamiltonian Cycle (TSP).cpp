@@ -3,7 +3,7 @@
 Given a weighted graph, determine a cycle of minimum total distance which visits
 each node exactly once and returns to the starting node. This is known as the
 traveling salesman problem (TSP). Since this implementation uses bitmasks with
-32-bit ints, the maximum number of nodes must be less than 32.
+32-bit integers, the maximum number of nodes must be less than 32.
 shortest_hamiltonian_cycle() applies to a global adjacency matrix adj[][], which
 must be populated with add_edge() before the function call.
 

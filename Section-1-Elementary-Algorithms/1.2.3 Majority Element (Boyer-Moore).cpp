@@ -9,7 +9,7 @@ implementation requires operator == to be defined on the iterator's value type.
 Time Complexity:
 - O(n) per call to majority(), where n is the size of the array.
 
-Space Complexty:
+Space Complexity:
 - O(1) auxiliary.
 
 */
