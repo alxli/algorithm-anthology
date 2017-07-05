@@ -1,11 +1,10 @@
 /*
 
-Given a function f mapping a set of int to itself and an initial x-coordinate in
-the set, returns a pair containing the (position, length) of a cycle in the
+Given a function f mapping a set of integers to itself and an x-coordinate in
+the set, return a pair containing the (position, length) of a cycle in the
 sequence of numbers obtained from repeatedly composing f with itself starting
 with the initial x. Formally, since f maps a finite set S to itself, some value
 is guaranteed to eventually repeat in the sequence:
-
   x[0], x[1]=f(x[0]), x[2]=f(x[1]), ..., x[n]=f(x[n - 1]), ...
 
 There must exist a pair of indices i and j (i < j) such that x[i] = x[j]. When

@@ -1,10 +1,11 @@
 /*
 
-Given three unsigned 64-bit integers x, n and m, powmod() returns x raised to
+Given three unsigned 64-bit integers x, n, and m, powmod() returns x raised to
 the power of n (modulo m). mulmod() returns x multiplied by n (modulo m).
-Despite both function using unsigned 64-bit ints for parameters and intermediate
-calculations, arguments x and n must not exceed 2^63 - 1 (the maximum value of a
-signed 64-bit integer) for the result to be correctly computed without overflow.
+Despite the fact that both functions use unsigned 64-bit integers for arguments
+and intermediate calculations, arguments x and n must not exceed 2^63 - 1 (the
+maximum value of a signed 64-bit integer) for the result to be correctly
+computed without overflow.
 
 Binary exponentiation, also known as exponentiation by squaring, decomposes the
 exponentiation into a logarithmic number of multiplications while avoiding
