@@ -83,10 +83,9 @@ template<class T> class range_tree {
 
  public:
   template<class It>
-  range_tree(It lo, It hi) {
+  range_tree(It lo, It hi) : points(lo, hi) {
     int n = std::distance(lo, hi);
     columns.resize(4*n + 1);
-    points.assign(lo, hi);
     std::sort(points.begin(), points.end());
     build(0, 0, n - 1);
   }

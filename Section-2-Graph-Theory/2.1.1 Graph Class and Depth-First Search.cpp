@@ -6,11 +6,11 @@ as an adjacency list, which is a space efficient representation that is also
 time-efficient for traversals.
 
 The following class implements a simple graph using adjacency lists, along with
-depth-first search and a few applications. The constructor takes a boolean
+depth-first search and a few other applications. The constructor takes a Boolean
 argument which specifies whether the instance is a directed or undirected graph.
 The nodes of the graph are identified by integers indices numbered consecutively
-starting from 0. The total number nodes will automatically increase based upon
-the maximum argument passed to add_edge() so far.
+starting from 0. The total number of nodes will automatically increase based on
+the maximum node index passed to add_edge() so far.
 
 Time Complexity:
 - O(1) amortized per call to add_edge(), or O(max(n, m)) for n calls where the
@@ -32,33 +32,33 @@ Space Complexity:
 
 class graph {
   std::vector<std::vector<int> > adj;
-  bool _is_directed;
+  bool directed;
 
-  template<class Action>
-  void dfs(int n, std::vector<bool> &vis, Action act) const {
-    act(n);
-    vis[n] = true;
+  template<class ReportFunction>
+  void dfs(int n, std::vector<bool> &visit, ReportFunction f) const {
+    f(n);
+    visit[n] = true;
     std::vector<int>::const_iterator it;
     for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (!vis[*it]) {
-        dfs(*it, vis, act);
+      if (!visit[*it]) {
+        dfs(*it, visit, f);
       }
     }
   }
 
-  bool has_cycle(int n, int prev, std::vector<bool> &vis,
+  bool has_cycle(int n, int prev, std::vector<bool> &visit,
                  std::vector<bool> &onstack) const {
-    vis[n] = true;
+    visit[n] = true;
     onstack[n] = true;
     std::vector<int>::const_iterator it;
     for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (is_directed() && onstack[*it]) {
+      if (directed && onstack[*it]) {
         return true;
       }
-      if (!is_directed() && vis[*it] && *it != prev) {
+      if (!directed && visit[*it] && *it != prev) {
         return true;
       }
-      if (!vis[*it] && has_cycle(*it, n, vis, onstack)) {
+      if (!visit[*it] && has_cycle(*it, n, visit, onstack)) {
         return true;
       }
     }
@@ -67,9 +67,7 @@ class graph {
   }
 
  public:
-  graph(bool is_directed = true) {
-    this->_is_directed = is_directed;
-  }
+  graph(bool is_directed = true) : directed(is_directed) {}
 
   int nodes() const {
     return (int)adj.size();
@@ -84,20 +82,20 @@ class graph {
       adj.resize(std::max(u, v) + 1);
     }
     adj[u].push_back(v);
-    if (!is_directed()) {
+    if (!directed) {
       adj[v].push_back(u);
     }
   }
 
   bool is_directed() const {
-    return _is_directed;
+    return directed;
   }
 
   bool has_cycle() const {
-    std::vector<bool> vis(adj.size(), false);
+    std::vector<bool> visit(adj.size(), false);
     std::vector<bool> onstack(adj.size(), false);
     for (int i = 0; i < (int)adj.size(); i++) {
-      if (!vis[i] && has_cycle(i, -1, vis, onstack)) {
+      if (!visit[i] && has_cycle(i, -1, visit, onstack)) {
         return true;
       }
     }
@@ -105,17 +103,17 @@ class graph {
   }
 
   bool is_tree() const {
-    return !is_directed() && !has_cycle();
+    return !directed && !has_cycle();
   }
 
   bool is_dag() const {
-    return is_directed() && !has_cycle();
+    return directed && !has_cycle();
   }
 
-  template<class Action>
-  void dfs(int start, Action act) const {
-    std::vector<bool> vis(adj.size(), false);
-    dfs(start, vis, act);
+  template<class ReportFunction>
+  void dfs(int start, ReportFunction f) const {
+    std::vector<bool> visit(adj.size(), false);
+    dfs(start, visit, f);
   }
 };
 
@@ -129,7 +127,7 @@ DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
 #include <iostream>
 using namespace std;
 
-void print_node(int n) {
+void print(int n) {
   cout << n << " ";
 }
 
@@ -148,7 +146,7 @@ int main() {
     g.add_edge(8, 9);
     g.add_edge(8, 10);
     cout << "DFS order: ";
-    g.dfs(0, print_node);
+    g.dfs(0, print);
     cout << endl;
     assert(g[0].size() == 3);
     assert(g.is_dag());

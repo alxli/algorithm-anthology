@@ -1,9 +1,11 @@
 /*
 
 Given two sets of nodes A = {0, 1, ..., n1} and B = {0, 1, ..., n2} such that
-n1 < n2, as well as a set of edges E mapping nodes from set A to set B,
-determine the largest possible subset of E such that no pair of edges in the
-subset share a common node.
+n1 < n2, as well as a set of edges E mapping nodes from set A to set B, find the
+largest possible subset of E containing no edges that share the same node.
+hopcroft_karp() applies to a global, pre-populated adjacency list adj[] which
+must only consist of nodes numbered with integers between 0 (inclusive) and the
+total number of nodes (exclusive), as passed in the function argument.
 
 Time Complexity:
 - O(m*sqrt(n1 + n2)) per call to hopcroft_karp(), where m is the number of
@@ -22,7 +24,7 @@ Space Complexity:
 
 const int MAXN = 100;
 std::vector<int> adj[MAXN];
-std::vector<bool> used(MAXN), vis(MAXN);
+std::vector<bool> used(MAXN), visit(MAXN);
 int match[MAXN], dist[MAXN];
 
 void bfs(int n1, int n2) {
@@ -48,10 +50,10 @@ void bfs(int n1, int n2) {
 }
 
 bool dfs(int u) {
-  vis[u] = true;
+  visit[u] = true;
   for (int j = 0; j < (int)adj[u].size(); j++) {
     int v = match[adj[u][j]];
-    if (v < 0 || (!vis[v] && dist[v] == dist[u] + 1 && dfs(v))) {
+    if (v < 0 || (!visit[v] && dist[v] == dist[u] + 1 && dfs(v))) {
       match[adj[u][j]] = u;
       used[u] = true;
       return true;
@@ -66,7 +68,7 @@ int hopcroft_karp(int n1, int n2) {
   int res = 0;
   for (;;) {
     bfs(n1, n2);
-    std::fill(vis.begin(), vis.end(), false);
+    std::fill(visit.begin(), visit.end(), false);
     int f = 0;
     for (int u = 0; u < n1; u++) {
       if (!used[u] && dfs(u)) {
@@ -83,6 +85,7 @@ int hopcroft_karp(int n1, int n2) {
 
 /*** Example Usage and Output:
 
+Matched 3 pair(s):
 1 0
 0 1
 2 2
@@ -100,7 +103,7 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  cout << "Matched " << hopcroft_karp(n1, n2) << " pair(s). Matchings:" << endl;
+  cout << "Matched " << hopcroft_karp(n1, n2) << " pair(s):" << endl;
   for (int i = 0; i < n2; i++) {
     if (match[i] != -1) {
       cout << match[i] << " " << i << endl;

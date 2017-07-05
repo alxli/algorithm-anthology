@@ -209,10 +209,8 @@ template<class K, class V> class red_black_tree {
   int num_nodes;
 
  public:
-  red_black_tree() {
-    LEAF_NIL = new node_t(K(), V(), BLACK);
-    root = LEAF_NIL;
-    num_nodes = 0;
+  red_black_tree() : num_nodes(0) {
+    root = LEAF_NIL = new node_t(K(), V(), BLACK);
   }
 
   ~red_black_tree() {

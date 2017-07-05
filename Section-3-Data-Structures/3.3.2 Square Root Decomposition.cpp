@@ -60,16 +60,12 @@ template<class T> class sqrt_decomposition {
   }
 
  public:
-  sqrt_decomposition(int n, const T &v = T()) {
-    len = n;
-    value.assign(n, v);
+  sqrt_decomposition(int n, const T &v = T()) : len(n), value(n, v) {
     init();
   }
 
   template<class It>
-  sqrt_decomposition(It lo, It hi) {
-    len = (int)(hi - lo);
-    value.assign(lo, hi);
+  sqrt_decomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
     init();
   }
 

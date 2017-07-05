@@ -4,14 +4,16 @@ Given a weighted, directed graph, determine a path of minimum total distance
 which visits each node exactly once. Unlike the travelling salesman problem, we
 do not have to return to the starting vertex. Since this implementation uses
 bitmasks with 32-bit ints, the maximum number of nodes must be less than 32.
+shortest_hamiltonian_path() applies to a global adjacency matrix adj[][] which
+must be populated before the function call.
 
 Time Complexity:
-- O(2^n * n^2) per call to shortest_hamiltonian_cycle(), where n is the number
+- O(2^n * n^2) per call to shortest_hamiltonian_path(), where n is the number
   of nodes.
 
 Space Complexity:
 - O(n^2) for storage of the graph, where n is the number of nodes.
-- O(2^n * n^2) auxiliary heap space for shortest_hamiltonian_cycle().
+- O(2^n * n^2) auxiliary heap space for shortest_hamiltonian_path().
 
 */
 
@@ -43,18 +45,18 @@ int shortest_hamiltonian_path(int nodes) {
   for (int i = 1; i < nodes; i++) {
     res = std::min(res, dp[max_mask][i]);
   }
-  int cur = max_mask, old = -1;
+  int mask = max_mask, old = -1;
   for (int i = nodes - 1; i >= 0; i--) {
     int bj = -1;
     for (int j = 0; j < nodes; j++) {
-      if ((cur & 1 << j) != 0 &&
-          (bj == -1 || dp[cur][bj] + (old == -1 ? 0 : adj[bj][old]) >
-                       dp[cur][j] + (old == -1 ? 0 : adj[j][old]))) {
+      if ((mask & 1 << j) != 0 &&
+          (bj == -1 || dp[mask][bj] + (old == -1 ? 0 : adj[bj][old]) >
+                       dp[mask][j] + (old == -1 ? 0 : adj[j][old]))) {
         bj = j;
       }
     }
     order[i] = bj;
-    cur ^= (1 << bj);
+    mask ^= (1 << bj);
     old = bj;
   }
   return res;

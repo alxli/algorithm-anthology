@@ -125,12 +125,11 @@ class r_tree {
 
  public:
   template<class It>
-  r_tree(It lo, It hi) {
+  r_tree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     if (n <= 1) {
       throw std::runtime_error("R-tree must be have at least 2 segments.");
     }
-    tree.assign(lo, hi);
     minx.assign(n, std::numeric_limits<int>::max());
     maxx.assign(n, std::numeric_limits<int>::min());
     miny.assign(n, std::numeric_limits<int>::max());

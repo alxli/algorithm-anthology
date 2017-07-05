@@ -2,7 +2,7 @@
 
 Given a connected, undirected, weighted graph with possibly negative weights,
 its minimum spanning tree is a subgraph which is a tree that connects all nodes
-with a subset of its edges such that their total weight is minimized. prim()
+with a subset of its edges such that their total weight is minimized. prim_mst()
 applies to a global, pre-populated adjacency list adj[] which must only consist
 of nodes numbered with integers between 0 (inclusive) and the total number of
 nodes (exclusive), as passed in the function argument. If the input graph is not
@@ -14,13 +14,13 @@ popping them. To modify this implementation to find the maximum spanning tree,
 the two negation steps can be skipped to prioritize the max edges.
 
 Time Complexity:
-- O(m log n) per call to prim(), where m is the number of edges and n is the
+- O(m log n) per call to prim_mst(), where m is the number of edges and n is the
   number of nodes.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where n the number of nodes and m is
   the number of edges
-- O(n) auxiliary heap space for prim().
+- O(n) auxiliary heap space for prim_mst().
 
 */
 
@@ -31,15 +31,15 @@ Space Complexity:
 const int MAXN = 100;
 std::vector<std::pair<int, int> > adj[MAXN], mst;
 
-int prim(int nodes) {
+int prim_mst(int nodes) {
   mst.clear();
-  std::vector<bool> vis(nodes);
+  std::vector<bool> visit(nodes);
   int u, v, w, total_dist = 0;
   for (int i = 0; i < nodes; i++) {
-    if (vis[i]) {
+    if (visit[i]) {
       continue;
     }
-    vis[i] = true;
+    visit[i] = true;
     std::priority_queue<std::pair<int, std::pair<int, int> > > pq;
     for (int j = 0; j < (int)adj[i].size(); j++) {
       pq.push(std::make_pair(-adj[i][j].second,
@@ -50,8 +50,8 @@ int prim(int nodes) {
       u = pq.top().second.first;
       v = pq.top().second.second;
       pq.pop();
-      if (vis[u] && !vis[v]) {
-        vis[v] = true;
+      if (visit[u] && !visit[v]) {
+        visit[v] = true;
         if (v != i) {
           mst.push_back(std::make_pair(u, v));
           total_dist += w;
@@ -93,7 +93,7 @@ int main() {
   add_edge(4, 5, 2);
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
-  cout << "Total distance: " << prim(7) << endl;
+  cout << "Total distance: " << prim_mst(7) << endl;
   for (int i = 0; i < (int)mst.size(); i++) {
     cout << mst[i].first << " <-> " << mst[i].second << endl;
   }

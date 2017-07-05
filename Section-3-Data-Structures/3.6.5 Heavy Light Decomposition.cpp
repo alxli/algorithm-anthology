@@ -171,12 +171,12 @@ template<class T> class heavy_light {
       }
     }
     for (int i = tu; i > 1; i /= 2) {
-      value[path][i >> 1] = join_values(join_value_with_delta(path, i),
-                                        join_value_with_delta(path, i ^ 1));
+      value[path][i/2] = join_values(join_value_with_delta(path, i),
+                                     join_value_with_delta(path, i ^ 1));
     }
     for (int i = tv; i > 1; i /= 2) {
-      value[path][i >> 1] = join_values(join_value_with_delta(path, i),
-                                        join_value_with_delta(path, i ^ 1));
+      value[path][i/2] = join_values(join_value_with_delta(path, i),
+                                     join_value_with_delta(path, i ^ 1));
     }
   }
 
@@ -201,8 +201,8 @@ template<class T> class heavy_light {
       pending[i].assign(2*m, false);
       len[i].assign(2*m, 1);
       for (int j = 2*m - 1; j > 1; j -= 2) {
-        value[i][j >> 1] = join_values(value[i][j], value[i][j ^ 1]);
-        len[i][j >> 1] = len[i][j] + len[i][j ^ 1];
+        value[i][j/2] = join_values(value[i][j], value[i][j ^ 1]);
+        len[i][j/2] = len[i][j] + len[i][j ^ 1];
       }
     }
   }

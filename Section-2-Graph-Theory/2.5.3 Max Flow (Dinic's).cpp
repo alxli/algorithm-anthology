@@ -25,9 +25,7 @@ Space Complexity:
 #include <queue>
 #include <vector>
 
-struct edge {
-  int v, rev, cap, f;
-};
+struct edge { int v, rev, cap, f; };
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
 std::vector<edge> adj[MAXN];

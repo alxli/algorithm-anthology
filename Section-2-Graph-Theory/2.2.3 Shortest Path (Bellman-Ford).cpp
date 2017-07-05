@@ -25,9 +25,7 @@ Space Complexity:
 #include <stdexcept>
 #include <vector>
 
-struct edge {
-  int u, v, w;  // Edge from u to v with weight w.
-};
+struct edge { int u, v, w; };  // Edge from u to v with weight w.
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
 std::vector<edge> e;

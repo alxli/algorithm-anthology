@@ -9,13 +9,13 @@ nodes (exclusive), as passed in the function argument. If the input graph is not
 connected, then this implementation will find the minimum spanning forest.
 
 Time Complexity:
-- O(m log n) per call to kruskal(), where m is the number of edges and n is the
-  number of nodes.
+- O(m log n) per call to kruskal_mst(), where m is the number of edges and n is
+  the number of nodes.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where n the number of nodes and m is
   the number of edges
-- O(n) auxiliary stack space for kruskal().
+- O(n) auxiliary stack space for kruskal_mst().
 
 */
 
@@ -35,7 +35,7 @@ int find_root(int x) {
   return root[x];
 }
 
-int kruskal(int nodes) {
+int kruskal_mst(int nodes) {
   mst.clear();
   std::sort(edges.begin(), edges.end());
   int u, v, total_dist = 0;
@@ -80,7 +80,7 @@ int main() {
   add_edge(4, 5, 2);
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
-  cout << "Total distance: " << kruskal(7) << endl;
+  cout << "Total distance: " << kruskal_mst(7) << endl;
   for (int i = 0; i < (int)mst.size(); i++) {
     cout << mst[i].first << " <-> " << mst[i].second << endl;
   }

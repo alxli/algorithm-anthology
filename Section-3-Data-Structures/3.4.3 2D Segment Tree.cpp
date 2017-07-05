@@ -217,10 +217,8 @@ template<class T> class segment_tree_2d {
   }
 
  public:
-  segment_tree_2d(const T &v = T()) {
-    root = new outer_node_t(0, MAXR, v);
-    init = v;
-  }
+  segment_tree_2d(const T &v = T())
+      : root(new outer_node_t(0, MAXR, v)), init(v) {}
 
   ~segment_tree_2d() {
     clean_up(root);

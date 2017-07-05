@@ -61,24 +61,18 @@ template<class T> class randomized_heap {
   }
 
   static void clean_up(node_t *n) {
-    if (n == NULL) {
-      return;
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
     }
-    clean_up(n->left);
-    clean_up(n->right);
-    delete n;
   }
 
  public:
-  randomized_heap() {
-    root = NULL;
-    num_nodes = 0;
-  }
+  randomized_heap() : root(NULL), num_nodes(0) {}
 
   template<class It>
-  randomized_heap(It lo, It hi) {
-    root = NULL;
-    num_nodes = 0;
+  randomized_heap(It lo, It hi) : root(NULL), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));
     }

@@ -1,9 +1,12 @@
 /*
 
 Given two sets of nodes A = {0, 1, ..., n1} and B = {0, 1, ..., n2} such that
-n1 < n2, as well as a set of edges E mapping nodes from set A to set B,
-determine the largest possible subset of E such that no pair of edges in the
-subset share a common node.
+n1 < n2, as well as a set of edges E mapping nodes from set A to set B, find the
+largest possible subset of E containing no edges that share the same node.
+kuhn() applies to a global, pre-populated adjacency list adj[] which must only
+consist of nodes numbered with integers between 0 (inclusive) and the total
+number of nodes (exclusive), as passed in the function argument.
+
 
 Time Complexity:
 - O(m*(n1 + n2)) per call to kuhn(), where m is the number of edges.
@@ -18,14 +21,14 @@ Space Complexity:
 
 const int MAXN = 100;
 int match[MAXN];
-std::vector<bool> vis(MAXN);
+std::vector<bool> visit(MAXN);
 std::vector<int> adj[MAXN];
 
 bool dfs(int u) {
-  vis[u] = true;
+  visit[u] = true;
   for (int j = 0; j < (int)adj[u].size(); j++) {
     int v = match[adj[u][j]];
-    if (v == -1 || (!vis[v] && dfs(v))) {
+    if (v == -1 || (!visit[v] && dfs(v))) {
       match[adj[u][j]] = u;
       return true;
     }
@@ -34,11 +37,11 @@ bool dfs(int u) {
 }
 
 int kuhn(int n1, int n2) {
-  std::fill(vis.begin(), vis.end(), false);
+  std::fill(visit.begin(), visit.end(), false);
   std::fill(match, match + n2, -1);
   int matches = 0;
   for (int i = 0; i < n1; i++) {
-    std::fill(vis.begin(), vis.begin() + n1, false);
+    std::fill(visit.begin(), visit.begin() + n1, false);
     if (dfs(i)) {
       matches++;
     }
@@ -48,6 +51,7 @@ int kuhn(int n1, int n2) {
 
 /*** Example Usage and Output:
 
+Matched 3 pair(s):
 1 0
 0 1
 2 2
@@ -65,7 +69,7 @@ int main() {
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  cout << "Matched " << kuhn(n1, n2) << " pair(s). Matchings:" << endl;
+  cout << "Matched " << kuhn(n1, n2) << " pair(s):" << endl;
   for (int i = 0; i < n2; i++) {
     if (match[i] != -1) {
       cout << match[i] << " " << i << endl;

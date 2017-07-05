@@ -1,9 +1,11 @@
 /*
 
-Given a weighted, directed graph, determine a cycle of minimum total distance
-which visits each node exactly once and returns to the starting node. This is
-known as the traveling salesman problem (TSP). Since this implementation uses
-bitmasks with 32-bit ints, the maximum number of nodes must be less than 32.
+Given a weighted graph, determine a cycle of minimum total distance which visits
+each node exactly once and returns to the starting node. This is known as the
+traveling salesman problem (TSP). Since this implementation uses bitmasks with
+32-bit ints, the maximum number of nodes must be less than 32.
+shortest_hamiltonian_cycle() applies to a global adjacency matrix adj[][], which
+must be populated with add_edge() before the function call.
 
 Time Complexity:
 - O(2^n * n^2) per call to shortest_hamiltonian_cycle(), where n is the number
@@ -47,17 +49,17 @@ int shortest_hamiltonian_cycle(int nodes) {
   for (int i = 1; i < nodes; i++) {
     res = std::min(res, dp[max_mask][i] + adj[i][0]);
   }
-  int cur = max_mask, old = 0;
+  int mask = max_mask, old = 0;
   for (int i = nodes - 1; i >= 1; i--) {
     int bj = -1;
     for (int j = 1; j < nodes; j++) {
-      if ((cur & 1 << j) != 0 &&
-          (bj == -1 || dp[cur][bj] + adj[bj][old] > dp[cur][j] + adj[j][old])) {
+      if ((mask & 1 << j) != 0 && (bj == -1 ||
+              dp[mask][bj] + adj[bj][old] > dp[mask][j] + adj[j][old])) {
         bj = j;
       }
     }
     order[i] = bj;
-    cur ^= 1 << bj;
+    mask ^= 1 << bj;
     old = bj;
   }
   return res;

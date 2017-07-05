@@ -35,23 +35,23 @@ int push_relabel(int nodes, int source, int sink) {
     f[i][source] = -f[source][i];
     e[i] = cap[source][i];
   }
-  int sz = 0;
+  int size = 0;
   for (;;) {
-    if (sz == 0) {
+    if (size == 0) {
       for (int i = 0; i < nodes; i++) {
         if (i != source && i != sink && e[i] > 0) {
-          if (sz != 0 && h[i] > h[maxh[0]]) {
-            sz = 0;
+          if (size != 0 && h[i] > h[maxh[0]]) {
+            size = 0;
           }
-          maxh[sz++] = i;
+          maxh[size++] = i;
         }
       }
     }
-    if (sz == 0) {
+    if (size == 0) {
       break;
     }
-    while (sz != 0) {
-      int i = maxh[sz - 1];
+    while (size != 0) {
+      int i = maxh[size - 1];
       bool pushed = false;
       for (int j = 0; j < nodes && e[i] != 0; j++) {
         if (h[i] == h[j] + 1 && cap[i][j] - f[i][j] > 0) {
@@ -61,7 +61,7 @@ int push_relabel(int nodes, int source, int sink) {
           e[i] -= df;
           e[j] += df;
           if (e[i] == 0) {
-            sz--;
+            size--;
           }
           pushed = true;
         }
@@ -76,7 +76,7 @@ int push_relabel(int nodes, int source, int sink) {
         }
       }
       if (h[i] > h[maxh[0]]) {
-        sz = 0;
+        size = 0;
         break;
       }
     }

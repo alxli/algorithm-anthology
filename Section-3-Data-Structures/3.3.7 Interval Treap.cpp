@@ -177,10 +177,7 @@ template<class T> class interval_treap {
   }
 
  public:
-  interval_treap() {
-    root = NULL;
-    num_nodes = 0;
-  }
+  interval_treap() : root(NULL), num_nodes(0) {}
 
   ~interval_treap() {
     clean_up(root);

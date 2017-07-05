@@ -71,8 +71,7 @@ template<class K, class V> class skip_list {
   }
 
  public:
-  skip_list() {
-    num_nodes = 0;
+  skip_list() : num_nodes(0) {
     head = new node_t(K(), V(), MAX_LEVELS);;
     for (int i = 0; i < (int)head->next.size(); i++) {
       head->next[i] = NULL;

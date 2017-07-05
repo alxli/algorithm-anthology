@@ -70,33 +70,24 @@ template<class T> class pairing_heap {
     if (n == NULL || n->next == NULL) {
       return n;
     }
-    node_t *a = n;
-    node_t *b = n->next;
-    node_t *c = n->next->next;
-    a->next = NULL;
-    b->next = NULL;
+    node_t *a = n, *b = n->next, *c = n->next->next;
+    a->next = b->next = NULL;
     return merge(merge(a, b), merge_pairs(c));
   }
 
   static void clean_up(node_t *n) {
-    if (n == NULL) {
-      return;
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->next);
+      delete n;
     }
-    clean_up(n->left);
-    clean_up(n->next);
-    delete n;
   }
 
  public:
-  pairing_heap() {
-    root = NULL;
-    num_nodes = 0;
-  }
+  pairing_heap() : root(NULL), num_nodes(0) {}
 
   template<class It>
-  pairing_heap(It lo, It hi) {
-    root = NULL;
-    num_nodes = 0;
+  pairing_heap(It lo, It hi) : root(NULL), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));
     }

@@ -187,9 +187,7 @@ template<class K, class V> class size_balanced_tree {
   }
 
  public:
-  size_balanced_tree() {
-    root = NULL;
-  }
+  size_balanced_tree() : root(NULL) {}
 
   ~size_balanced_tree() {
     clean_up(root);

@@ -23,7 +23,7 @@ reducing the number of calls made to f.
 Explanation: https://en.wikipedia.org/wiki/Cycle_detection#Brent.27s_algorithm
 
 Time Complexity:
-- O(m + n) per call to find_cycle(), where m is the smallest index of the
+- O(m + n) per call to find_cycle_brent(), where m is the smallest index of the
   sequence which is the beginning of a cycle, and n is the cycle's length.
 
 Space Complexity:
@@ -34,7 +34,7 @@ Space Complexity:
 #include <utility>
 
 template<class IntFunction>
-std::pair<int, int> find_cycle(IntFunction f, int x0) {
+std::pair<int, int> find_cycle_brent(IntFunction f, int x0) {
   int power = 1, length = 1, tortoise = x0, hare = f(x0);
   while (tortoise != hare) {
     if (power == length) {
@@ -89,7 +89,7 @@ void verify(int x0, int start, int length) {
 
 int main () {
   int x0 = 0;
-  pair<int, int> res = find_cycle(f, x0);
+  pair<int, int> res = find_cycle_brent(f, x0);
   assert(res == make_pair(4, 2));
   verify(x0, res.first, res.second);
   return 0;

@@ -183,25 +183,22 @@ template<class T> class cartesian_treap {
   }
 
   void clean_up(node_t *&n) {
-    if (n == NULL) {
-      return;
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
     }
-    clean_up(n->left);
-    clean_up(n->right);
-    delete n;
   }
 
  public:
-  cartesian_treap(int n = 0, const T &v = T()) {
-    root = NULL;
+  cartesian_treap(int n = 0, const T &v = T()) : root(NULL) {
     for (int i = 0; i < n; i++) {
       push_back(v);
     }
   }
 
   template<class It>
-  cartesian_treap(It lo, It hi) {
-    root = NULL;
+  cartesian_treap(It lo, It hi) : root(NULL) {
     for (; lo != hi; ++lo) {
       push_back(*lo);
     }

@@ -160,7 +160,9 @@ template<class T> class link_cut_forest {
   static void splay(node_t *n) {
     while (!n->is_root()) {
       node_t *parent = n->parent, *grandparent = parent->parent;
-      if (!parent->is_root()) grandparent->push();
+      if (!parent->is_root()) {
+        grandparent->push();
+      }
       parent->push();
       n->push();
       if (!parent->is_root()) {

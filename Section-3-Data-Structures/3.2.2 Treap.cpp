@@ -125,10 +125,7 @@ template<class K, class V> class treap {
   }
 
  public:
-  treap() {
-    root = NULL;
-    num_nodes = 0;
-  }
+  treap() : root(NULL), num_nodes(0) {}
 
   ~treap() {
     clean_up(root);

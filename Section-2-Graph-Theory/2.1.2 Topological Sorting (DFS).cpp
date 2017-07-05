@@ -1,13 +1,12 @@
 /*
 
-Given a directed acyclic graph (a.k.a. DAG), find one of possibly many orderings
-of the nodes such that for every edge from node u to v, u comes before v in the
-output ordering. Depth-first search is used to traverse all nodes in post-order,
-which yields a reversed topological ordering.
+Given a directed acyclic graph, find one of possibly many orderings of the nodes
+such that for every edge from node u to v, u comes before v in the ordering.
+Depth-first search is used to traverse all nodes in post-order.
 
-toposort() takes a directed graph stored as a global adjacency list with nodes
-indexed from 0 to (nodes - 1) and assigns a valid topological ordering to the
-global result vector. If the graph contains a cycle, then an error is thrown.
+toposort(nodes) takes a directed graph stored as a global adjacency list with
+nodes indexed from 0 to (nodes - 1) and assigns a valid topological ordering to
+the global result vector. An error is thrown if the graph contains a cycle.
 
 Time Complexity:
 - O(max(n, m)) per call to toposort(), where n is the number of nodes and m is
@@ -27,26 +26,26 @@ Space Complexity:
 const int MAXN = 100;
 
 std::vector<int> adj[MAXN], res;
-std::vector<bool> vis(MAXN), done(MAXN);
+std::vector<bool> visit(MAXN), done(MAXN);
 
 void dfs(int u) {
-  if (vis[u]) {
-    throw std::runtime_error("Not a DAG.");
+  if (visit[u]) {
+    throw std::runtime_error("Not a directed acyclic graph.");
   }
   if (done[u]) {
     return;
   }
-  vis[u] = true;
+  visit[u] = true;
   for (int j = 0; j < (int)adj[u].size(); j++) {
     dfs(adj[u][j]);
   }
-  vis[u] = false;
+  visit[u] = false;
   done[u] = true;
   res.push_back(u);
 }
 
 void toposort(int nodes) {
-  fill(vis.begin(), vis.end(), false);
+  fill(visit.begin(), visit.end(), false);
   fill(done.begin(), done.end(), false);
   res.clear();
   for (int i = 0; i < nodes; i++) {

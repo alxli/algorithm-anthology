@@ -167,10 +167,7 @@ template<class K, class V> class avl_tree {
   int num_nodes;
 
  public:
-  avl_tree() {
-    root = NULL;
-    num_nodes = 0;
-  }
+  avl_tree() : root(NULL), num_nodes(0) {}
 
   ~avl_tree() {
     clean_up(root);

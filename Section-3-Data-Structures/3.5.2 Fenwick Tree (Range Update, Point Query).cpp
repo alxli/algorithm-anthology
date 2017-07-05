@@ -28,10 +28,7 @@ template<class T> class fenwick_tree {
   std::vector<int> bits;
 
  public:
-  fenwick_tree(int n) {
-    len = n;
-    bits.resize(n + 2);
-  }
+  fenwick_tree(int n) : len(n), bits(n + 2) {}
 
   int size() const {
     return len;

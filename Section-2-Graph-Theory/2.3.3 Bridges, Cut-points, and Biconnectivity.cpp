@@ -43,14 +43,14 @@ Space Complexity:
 
 const int MAXN = 100;
 int timer, lowlink[MAXN], tin[MAXN], comp[MAXN];
-std::vector<bool> vis(MAXN);
+std::vector<bool> visit(MAXN);
 std::vector<int> adj[MAXN], bcc_forest[MAXN];
 std::vector<int> stack, cutpoints;
 std::vector<std::vector<int> > bcc;
 std::vector<std::pair<int, int> > bridges;
 
 void dfs(int u, int p) {
-  vis[u] = true;
+  visit[u] = true;
   lowlink[u] = tin[u] = timer++;
   stack.push_back(u);
   int v, children = 0;
@@ -60,7 +60,7 @@ void dfs(int u, int p) {
     if (v == p) {
       continue;
     }
-    if (vis[v]) {
+    if (visit[v]) {
       lowlink[u] = std::min(lowlink[u], tin[v]);
     } else {
       dfs(v, u);
@@ -96,10 +96,10 @@ void tarjan(int nodes) {
   stack.clear();
   std::fill(lowlink, lowlink + nodes, 0);
   std::fill(tin, tin + nodes, 0);
-  std::fill(vis.begin(), vis.end(), false);
+  std::fill(visit.begin(), visit.end(), false);
   timer = 0;
   for (int i = 0; i < nodes; i++) {
-    if (!vis[i]) {
+    if (!visit[i]) {
       dfs(i, -1);
     }
   }

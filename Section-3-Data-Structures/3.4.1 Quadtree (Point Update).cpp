@@ -141,10 +141,7 @@ template<class T> class quadtree {
   }
 
  public:
-  quadtree(const T &v = T()) {
-    root = NULL;
-    init = v;
-  }
+  quadtree(const T &v = T()) : root(NULL), init(v) {}
 
   ~quadtree() {
     clean_up(root);

@@ -45,11 +45,7 @@ template<class T> class fenwick_tree {
   }
 
  public:
-  fenwick_tree(int n) {
-    len = n;
-    b1.resize(n + 2);
-    b2.resize(n + 2);
-  }
+  fenwick_tree(int n) : len(n), b1(n + 2), b2(n + 2) {}
 
   int size() const {
     return len;

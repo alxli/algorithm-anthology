@@ -23,7 +23,7 @@ pointers is the start of the sequence.
 Explanation: https://en.wikipedia.org/wiki/Cycle_detection#Tortoise_and_hare
 
 Time Complexity:
-- O(m + n) per call to find_cycle(), where m is the smallest index of the
+- O(m + n) per call to find_cycle_floyd(), where m is the smallest index of the
   sequence which is the beginning of a cycle, and n is the cycle's length.
 
 Space Complexity:
@@ -34,7 +34,7 @@ Space Complexity:
 #include <utility>
 
 template<class IntFunction>
-std::pair<int, int> find_cycle(IntFunction f, int x0) {
+std::pair<int, int> find_cycle_floyd(IntFunction f, int x0) {
   int tortoise = f(x0), hare = f(f(x0));
   while (tortoise != hare) {
     tortoise = f(tortoise);
@@ -86,7 +86,7 @@ void verify(int x0, int start, int length) {
 
 int main () {
   int x0 = 0;
-  pair<int, int> res = find_cycle(f, x0);
+  pair<int, int> res = find_cycle_floyd(f, x0);
   assert(res == make_pair(4, 2));
   verify(x0, res.first, res.second);
   return 0;

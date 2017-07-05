@@ -105,10 +105,7 @@ template<class K, class V> class binary_search_tree {
   }
 
  public:
-  binary_search_tree() {
-    root = NULL;
-    num_nodes = 0;
-  }
+  binary_search_tree() : root(NULL), num_nodes(0) {}
 
   ~binary_search_tree() {
     clean_up(root);

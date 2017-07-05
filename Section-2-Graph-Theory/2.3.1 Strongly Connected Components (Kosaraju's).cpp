@@ -1,22 +1,22 @@
 /*
 
-Given a directed graph, determine the strongly connected components. The
-strongly connected components of a graph is the set of all strongly (maximally)
-connected subgraphs. A subgraph is strongly connected if there is a path between
-each pair of nodes. Condensing the strongly connected components of a graph into
-single nodes will result in a directed acyclic graph. kosaraju() applies to a
-global, pre-populated adjacency list adj[] which must only consist of nodes
-numbered with integers between 0 (inclusive) and the total number of nodes
-(exclusive), as passed in the function argument.
+Given a directed graph, determine the strongly connected components, that is,
+the set of all strongly (maximally) connected subgraphs. A subgraph is strongly
+connected if there is a path between each pair of nodes. Condensing the strongly
+connected components of a graph into single nodes will result in a directed
+acyclic graph. kosaraju_scc() applies to a global, pre-populated adjacency list
+adj[] which must only consist of nodes numbered with integers between 0
+(inclusive) and the total number of nodes (exclusive), as passed in the function
+argument.
 
 Time Complexity:
-- O(max(n, m)) per call to kosaraju(), where n is the number of nodes and m is
-  the number of edges.
+- O(max(n, m)) per call to kosaraju_scc(), where n is the number of nodes and m
+  isthe number of edges.
 
 Space Complexity:
 - O(max(n, m)) auxiliary heap space for storage of the graph, where n the
   number of nodes and m is the number of edges.
-- O(n) auxiliary stack space for kosaraju().
+- O(n) auxiliary stack space for kosaraju_scc().
 
 */
 
@@ -25,30 +25,30 @@ Space Complexity:
 
 const int MAXN = 100;
 std::vector<int> adj[MAXN], rev[MAXN];
-std::vector<bool> vis(MAXN);
+std::vector<bool> visit(MAXN);
 std::vector<std::vector<int> > scc;
 
 void dfs(std::vector<int> g[], std::vector<int> &res, int u) {
-  vis[u] = true;
+  visit[u] = true;
   for (int j = 0; j < (int)g[u].size(); j++) {
-    if (!vis[g[u][j]]) {
+    if (!visit[g[u][j]]) {
       dfs(g, res, g[u][j]);
     }
   }
   res.push_back(u);
 }
 
-void kosaraju(int nodes) {
-  std::fill(vis.begin(), vis.end(), false);
+void kosaraju_scc(int nodes) {
+  std::fill(visit.begin(), visit.end(), false);
   std::vector<int> order;
   for (int i = 0; i < nodes; i++) {
     rev[i].clear();
-    if (!vis[i]) {
+    if (!visit[i]) {
       dfs(adj, order, i);
     }
   }
   std::reverse(order.begin(), order.end());
-  std::fill(vis.begin(), vis.end(), false);
+  std::fill(visit.begin(), visit.end(), false);
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < (int)adj[i].size(); j++) {
       rev[adj[i][j]].push_back(i);
@@ -56,7 +56,7 @@ void kosaraju(int nodes) {
   }
   scc.clear();
   for (int i = 0; i < (int)order.size(); i++) {
-    if (vis[order[i]]) {
+    if (visit[order[i]]) {
       continue;
     }
     std::vector<int> component;
@@ -91,7 +91,7 @@ int main() {
   adj[6].push_back(5);
   adj[7].push_back(3);
   adj[7].push_back(6);
-  kosaraju(8);
+  kosaraju_scc(8);
   cout << "Components:" << endl;
   for (int i = 0; i < (int)scc.size(); i++) {
     for (int j = 0; j < (int)scc[i].size(); j++) {

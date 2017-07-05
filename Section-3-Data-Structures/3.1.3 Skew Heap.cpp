@@ -58,26 +58,20 @@ template<class T> class skew_heap {
   }
 
   static void clean_up(node_t *n) {
-    if (n == NULL) {
-      return;
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
     }
-    clean_up(n->left);
-    clean_up(n->right);
-    delete n;
   }
 
   int num_nodes;
 
  public:
-  skew_heap() {
-    root = NULL;
-    num_nodes = 0;
-  }
+  skew_heap() : root(NULL), num_nodes(0) {}
 
   template<class It>
-  skew_heap(It lo, It hi) {
-    root = NULL;
-    num_nodes = 0;
+  skew_heap(It lo, It hi) : root(NULL), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));
     }

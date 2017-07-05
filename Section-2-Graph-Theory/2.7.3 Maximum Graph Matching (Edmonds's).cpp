@@ -1,7 +1,10 @@
 /*
 
 Given a directed graph, determine a maximal subset of its edges such that no
-node is shared between different edges from the resulting subset.
+node is shared between different edges in the resulting subset. edmonds()
+applies to a global, pre-populated adjacency list adj[] which must only consist
+of nodes numbered with integers between 0 (inclusive) and the total number of
+nodes (exclusive), as passed in the function argument.
 
 Time Complexity:
 - O(n^3) per call to edmonds(), where n is the number of nodes.
@@ -101,7 +104,8 @@ int edmonds(int nodes) {
     if (match[i] == -1) {
       int v, pv, ppv;
       for (v = find_path(nodes, i); v != -1; v = ppv) {
-        ppv = match[pv = p[v]];
+        pv = p[v];
+        ppv = match[pv];
         match[v] = pv;
         match[pv] = v;
       }
@@ -118,7 +122,7 @@ int edmonds(int nodes) {
 
 /*** Example Usage and Output:
 
-Matched 2 pair(s). Matchings are:
+Matched 2 pair(s):
 0 1
 2 3
 
@@ -137,8 +141,7 @@ int main() {
   adj[3].push_back(2);
   adj[3].push_back(0);
   adj[0].push_back(3);
-  cout << "Matched " << edmonds(nodes) << " pair(s). "
-       << "Matchings are:" << endl;
+  cout << "Matched " << edmonds(nodes) << " pair(s):" << endl;
   for (int i = 0; i < nodes; i++) {
     if (match[i] != -1 && i < match[i]) {
       cout << i << " " << match[i] << endl;

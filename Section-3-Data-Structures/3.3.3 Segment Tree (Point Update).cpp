@@ -105,16 +105,12 @@ template<class T> class segment_tree {
   }
 
  public:
-  segment_tree(int n, const T &v = T()) {
-    len = n;
-    value.resize(4*len);
+  segment_tree(int n, const T &v = T()) : len(n), value(4*len) {
     build(0, 0, len - 1, false, 0, v);
   }
 
   template<class It>
-  segment_tree(It lo, It hi) {
-    len = hi - lo;
-    value.resize(4*len);
+  segment_tree(It lo, It hi) : len(hi - lo), value(4*len) {
     build(0, 0, len - 1, lo);
   }
 
