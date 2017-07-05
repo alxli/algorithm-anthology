@@ -35,8 +35,7 @@ Space Complexity:
 
 template<class IntFunction>
 std::pair<int, int> find_cycle(IntFunction f, int x0) {
-  int power = 1, length = 1;
-  int tortoise = x0, hare = f(x0);
+  int power = 1, length = 1, tortoise = x0, hare = f(x0);
   while (tortoise != hare) {
     if (power == length) {
       tortoise = hare;
@@ -89,7 +88,7 @@ void verify(int x0, int start, int length) {
 }
 
 int main () {
-  const int x0 = 0;
+  int x0 = 0;
   pair<int, int> res = find_cycle(f, x0);
   assert(res == make_pair(4, 2));
   verify(x0, res.first, res.second);

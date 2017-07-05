@@ -37,12 +37,8 @@ class hull_optimizer {
         : m(m), b(b), value(v), xlo(-std::numeric_limits<double>::max()),
           is_query(is_query), query_max(query_max) {}
 
-    bool parallel(const line &l) const {
-      return m == l.m;
-    }
-
     double intersect(const line &l) const {
-      if (parallel(l)) {
+      if (m == l.m) {
         return std::numeric_limits<double>::max();
       }
       return (double)(l.b - b)/(m - l.m);
@@ -98,7 +94,7 @@ class hull_optimizer {
   void add_line(long long m, long long b) {
     line l(m, b, 0, false, query_max);
     hulliter it = hull.lower_bound(l);
-    if (it != hull.end() && it->parallel(l)) {
+    if (it != hull.end() && it->m == l.m) {
       if ((query_max && it->b < b) || (!query_max && b < it->b)) {
         hull.erase(it++);
       } else {

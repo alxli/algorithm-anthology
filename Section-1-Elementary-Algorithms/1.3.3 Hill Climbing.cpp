@@ -1,9 +1,9 @@
 /*
 
-Given a continuous function f(x, y) to double and a (possibly random) initial
-guess (x0, y0), returns a potential global minimum found through hill-climbing.
-Optionally, two double pointers xmin and ymin may be passed to store the input
-coordinates to f at which the returned minimum value is attained.
+Given a continuous function f(x, y) to double and a (possibly arbitrary) initial
+guess (x0, y0), return a potential global minimum found through hill-climbing.
+Optionally, two double pointers critical_x and critical_y may be passed to store
+the input points to f at which the returned minimum value is attained.
 
 Hill-climbing is a heuristic which starts at the guess, then considers taking
 a single step in each of a fixed number of directions. The direction with the
@@ -26,9 +26,9 @@ Space Complexity:
 
 #include <cmath>
 
-template<class BinaryFunction>
-double find_min(BinaryFunction f, double x0, double y0,
-                double *xmin = NULL, double *ymin = NULL) {
+template<class ContinuousFunction>
+double find_min(ContinuousFunction f, double x0, double y0,
+                double *critical_x = NULL, double *critical_y = NULL) {
   static const double PI = acos(-1.0);
   static const double STEP_MIN = 1e-9, STEP_MAX = 1e6;
   static const int NUM_DIRECTIONS = 6;
@@ -55,9 +55,9 @@ double find_min(BinaryFunction f, double x0, double y0,
       res = best;
     }
   }
-  if (xmin != NULL && ymin != NULL) {
-    *xmin = x;
-    *ymin = y;
+  if (critical_x != NULL && critical_y != NULL) {
+    *critical_x = x;
+    *critical_y = y;
   }
   return res;
 }
