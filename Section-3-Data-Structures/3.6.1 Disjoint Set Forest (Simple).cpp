@@ -5,19 +5,19 @@ partition is assigned a unique representative known as the parent, or root. The
 following implements two well-known optimizations known as union-by-rank and
 path compression. This version is simplified to only work on integer elements.
 
-- init_dsf() resets the data structure.
-- make_set(x) creates a new partition consisting of the single element x, which
+- initialize() resets the data structure.
+- make_set(u) creates a new partition consisting of the single element u, which
   must not have been previously added to the data structure.
-- find_root(x) returns the unique representative of the partition containing x.
-- is_united(x, y) returns whether elements x and y belong to the same partition.
-- unite(x, y) replaces the partitions containing x and y with a single new
+- find_root(u) returns the unique representative of the partition containing u.
+- is_united(u, v) returns whether elements u and v belong to the same partition.
+- unite(u, v) replaces the partitions containing u and v with a single new
   partition consisting of the union of elements in the original partitions.
 
 A precondition to the last three operations is that make_set() must have been
 previously called on their arguments.
 
 Time Complexity:
-- O(1) per call to init_dsf() and make_set().
+- O(1) per call to initialize() and make_set().
 - O(a(n)) per call to find_root(), is_united(), and unite(), where n is the
   number of elements that has been added via make_set() so far, and a(n) is the
   extremely slow growing inverse of the Ackermann function (effectively a very
@@ -32,40 +32,39 @@ Space Complexity:
 const int MAXN = 1000;
 int num_sets, root[MAXN], rank[MAXN];
 
-void init_dsf() {
+void initialize() {
   num_sets = 0;
 }
 
-void make_set(int x) {
-  root[x] = x;
-  rank[x] = 0;
+void make_set(int u) {
+  root[u] = u;
+  rank[u] = 0;
   num_sets++;
 }
 
-int find_root(int x) {
-  if (root[x] != x) {
-    root[x] = find_root(root[x]);
+int find_root(int u) {
+  if (root[u] != u) {
+    root[u] = find_root(root[u]);
   }
-  return root[x];
+  return root[u];
 }
 
-bool is_united(int x, int y) {
-  return find_root(x) == find_root(y);
+bool is_united(int u, int v) {
+  return find_root(u) == find_root(v);
 }
 
-void unite(int x, int y) {
-  int r1 = find_root(x);
-  int r2 = find_root(y);
-  if (r1 == r2) {
+void unite(int u, int v) {
+  int ru = find_root(u), rv = find_root(v);
+  if (ru == rv) {
     return;
   }
   num_sets--;
-  if (rank[r1] < rank[r2]) {
-    root[r1] = r2;
+  if (rank[ru] < rank[rv]) {
+    root[ru] = rv;
   } else {
-    root[r2] = r1;
-    if (rank[r1] == rank[r2]) {
-      rank[r1]++;
+    root[rv] = ru;
+    if (rank[ru] == rank[rv]) {
+      rank[ru]++;
     }
   }
 }
@@ -75,7 +74,7 @@ void unite(int x, int y) {
 #include <cassert>
 
 int main() {
-  init_dsf();
+  initialize();
   for (char c = 'a'; c <= 'g'; c++) {
     make_set(c);
   }

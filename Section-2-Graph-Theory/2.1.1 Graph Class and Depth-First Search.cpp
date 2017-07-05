@@ -67,7 +67,7 @@ class graph {
   }
 
  public:
-  graph(bool is_directed = true) : directed(is_directed) {}
+  graph(bool directed = true) : directed(directed) {}
 
   int nodes() const {
     return (int)adj.size();

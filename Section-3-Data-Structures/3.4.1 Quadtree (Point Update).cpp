@@ -62,8 +62,7 @@ template<class T> class quadtree {
     T value;
     node_t *child[4];
 
-    node_t(const T &v) {
-      value = v;
+    node_t(const T &v) : value(v) {
       for (int i = 0; i < 4; i++) {
         child[i] = NULL;
       }

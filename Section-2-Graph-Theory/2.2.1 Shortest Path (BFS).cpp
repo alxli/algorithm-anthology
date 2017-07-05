@@ -52,7 +52,6 @@ void bfs(int nodes, int start) {
   }
 }
 
-
 /*** Example Usage and Output:
 
 The shortest distance from 0 to 3 is 2.

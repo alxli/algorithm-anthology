@@ -6,7 +6,7 @@ in the matrix (point update) and queries for the sum of rectangular sub-matrices
 (i.e. rows have valid indices from 1 to MAXR, inclusive, and columns have valid
 indices from 1 to MAXC, inclusive).
 
-- init_tree() resets the data structure.
+- initialize() resets the data structure.
 - a[r][c] stores the value at index (r, c).
 - add(r, c, x) adds x to the value at index (r, c).
 - set(r, c, x) assigns x to the value at index (r, c).
@@ -16,7 +16,8 @@ indices from 1 to MAXC, inclusive).
   (r1, c1) and lower-right corner (r2, c2).
 
 Time Complexity:
-- O(n*m) per call to init_tree(), where n and m are the dimensions of the array.
+- O(n*m) per call to initialize(), where n is the number of rows and m is the
+  number of columns.
 - O(log(n)*log(m)) per call to all other operations.
 
 Space Complexity:
@@ -29,7 +30,7 @@ const int MAXR = 100, MAXC = 100;
 int a[MAXR + 1][MAXC + 1];
 int bits[MAXR + 1][MAXC + 1];
 
-void init_tree() {
+void initialize() {
   for (int i = 0; i <= MAXR; i++) {
     for (int j = 0; j <= MAXC; j++) {
       a[i][j] = bits[i][j] = 0;
@@ -79,7 +80,7 @@ Values:
 using namespace std;
 
 int main() {
-  init_tree();
+  initialize();
   set(1, 1, 5);
   set(1, 2, 6);
   set(2, 1, 7);

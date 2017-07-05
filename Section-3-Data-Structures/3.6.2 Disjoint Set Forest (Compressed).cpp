@@ -7,10 +7,10 @@ as union-by-rank and path compression. This version uses an std::map for storage
 and coordinate compression (thus, element types must meet the requirements of
 key types for std::map).
 
-- make_set(x) creates a new partition consisting of the single element x, which
+- make_set(u) creates a new partition consisting of the single element u, which
   must not have been previously added to the data structure.
-- is_united(x, y) returns whether elements x and y belong to the same partition.
-- unite(x, y) replaces the partitions containing x and y with a single new
+- is_united(u, v) returns whether elements u and v belong to the same partition.
+- unite(u, v) replaces the partitions containing u and v with a single new
   partition consisting of the union of elements in the original partitions.
 - get_all_sets() returns all current partitions as a vector of vectors.
 
@@ -42,11 +42,11 @@ template<class T> class disjoint_set_forest {
   std::map<T, int> id;
   std::vector<int> root, rank;
 
-  int find_root(int x) {
-    if (root[x] != x) {
-      root[x] = find_root(root[x]);
+  int find_root(int u) {
+    if (root[u] != u) {
+      root[u] = find_root(root[u]);
     }
-    return root[x];
+    return root[u];
   }
 
  public:
@@ -60,33 +60,32 @@ template<class T> class disjoint_set_forest {
     return num_sets;
   }
 
-  void make_set(const T &x) {
-    if (id.find(x) != id.end()) {
+  void make_set(const T &u) {
+    if (id.find(u) != id.end()) {
       return;
     }
-    id[x] = num_elements;
+    id[u] = num_elements;
     root.push_back(num_elements++);
     rank.push_back(0);
     num_sets++;
   }
 
-  bool is_united(const T &x, const T &y) {
-    return find_root(id[x]) == find_root(id[y]);
+  bool is_united(const T &u, const T &v) {
+    return find_root(id[u]) == find_root(id[v]);
   }
 
-  void unite(const T &x, const T &y) {
-    int r1 = find_root(id[x]);
-    int r2 = find_root(id[y]);
-    if (r1 == r2) {
+  void unite(const T &u, const T &v) {
+    int ru = find_root(id[u]), rv = find_root(id[v]);
+    if (ru == rv) {
       return;
     }
     num_sets--;
-    if (rank[r1] < rank[r2]) {
-      root[r1] = r2;
+    if (rank[ru] < rank[rv]) {
+      root[ru] = rv;
     } else {
-      root[r2] = r1;
-      if (rank[r1] == rank[r2]) {
-        rank[r1]++;
+      root[rv] = ru;
+      if (rank[ru] == rank[rv]) {
+        rank[ru]++;
       }
     }
   }

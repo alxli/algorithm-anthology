@@ -217,8 +217,7 @@ template<class T> class cartesian_treap {
   }
 
   void insert(int i, const T &v) {
-    node_t *new_node = new node_t(v);
-    insert(root, new_node, i);
+    insert(root, new node_t(v), i);
   }
 
   void erase(int i) {

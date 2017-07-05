@@ -113,7 +113,8 @@ template<class T> class interval_treap {
     }
     if (i < n->interval) {
       return erase(n->left, i);
-    } else if (i > n->interval) {
+    }
+    if (i > n->interval) {
       return erase(n->right, i);
     }
     if (n->left != NULL && n->right != NULL) {

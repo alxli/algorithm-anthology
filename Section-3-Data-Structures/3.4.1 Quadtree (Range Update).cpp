@@ -78,9 +78,7 @@ template<class T> class quadtree {
     bool pending;
     node_t *child[4];
 
-    node_t(const T &v) {
-      value = v;
-      pending = false;
+    node_t(const T &v) : value(v), pending(false) {
       for (int i = 0; i < 4; i++) {
         child[i] = NULL;
       }

@@ -103,12 +103,12 @@ void mergesort(It lo, It hi, Compare comp) {
     merged.push_back(comp(*c, *a) ? *c++ : *a++);
   }
   if (a > mid) {
-    for (It k = c; k < hi; ++k) {
-      merged.push_back(*k);
+    for (It it = c; it < hi; ++it) {
+      merged.push_back(*it);
     }
   } else {
-    for (It k = a; k <= mid; ++k) {
-      merged.push_back(*k);
+    for (It it = a; it <= mid; ++it) {
+      merged.push_back(*it);
     }
   }
   for (int i = 0; i < hi - lo; i++) {
@@ -303,9 +303,9 @@ void print_range(It lo, It hi) {
 }
 
 template<class It>
-bool is_sorted(It lo, It hi) {
+bool sorted(It lo, It hi) {
   while (++lo != hi) {
-    if (*(lo - 1) > *lo) {
+    if (*lo < *(lo - 1)) {
       return false;
     }
   }
@@ -320,31 +320,31 @@ int main () {
   {  // Can be used to sort arrays like std::sort().
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     quicksort(a, a + 8);
-    assert(is_sorted(a, a + 8));
+    assert(sorted(a, a + 8));
   }
   {  // STL containers work too.
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     vector<int> v(a, a + 8);
     quicksort(v.begin(), v.end());
-    assert(is_sorted(v.begin(), v.end()));
+    assert(sorted(v.begin(), v.end()));
   }
   {  // Reverse iterators work as expected.
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     vector<int> v(a, a + 8);
     heapsort(v.rbegin(), v.rend());
-    assert(is_sorted(v.rbegin(), v.rend()));
+    assert(sorted(v.rbegin(), v.rend()));
   }
   {  // We can sort doubles just as well.
     double a[] = {1.1, -5.0, 6.23, 4.123, 155.2};
     vector<double> v(a, a + 5);
     combsort(v.begin(), v.end());
-    assert(is_sorted(v.begin(), v.end()));
+    assert(sorted(v.begin(), v.end()));
   }
   {  // Must use radix_sort with unsigned values, but sorting in reverse works!
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     vector<int> v(a, a + 8);
     radix_sort(v.rbegin(), v.rend());
-    assert(is_sorted(v.rbegin(), v.rend()));
+    assert(sorted(v.rbegin(), v.rend()));
   }
 
   // Example from: http://www.cplusplus.com/reference/algorithm/stable_sort
@@ -377,7 +377,7 @@ int main () {
   double t = (double)(clock() - start) / CLOCKS_PER_SEC; \
   cout << setw(14) << left << #sort_function "(): ";     \
   cout << fixed << t << "s" << endl;                     \
-  assert(is_sorted(v.begin(), v.end()));                 \
+  assert(sorted(v.begin(), v.end()));                 \
   v = v2;                                                \
 }
   test(std::sort);

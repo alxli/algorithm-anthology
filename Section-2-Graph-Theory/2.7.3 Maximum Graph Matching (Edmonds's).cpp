@@ -23,31 +23,31 @@ const int MAXN = 100;
 std::vector<int> adj[MAXN];
 int p[MAXN], base[MAXN], match[MAXN];
 
-int lca(int nodes, int a, int b) {
+int lca(int nodes, int u, int v) {
   std::vector<bool> used(nodes);
   for (;;) {
-    a = base[a];
-    used[a] = true;
-    if (match[a] == -1) {
+    u = base[u];
+    used[u] = true;
+    if (match[u] == -1) {
       break;
     }
-    a = p[match[a]];
+    u = p[match[u]];
   }
   for (;;) {
-    b = base[b];
-    if (used[b]) {
-      return b;
+    v = base[v];
+    if (used[v]) {
+      return v;
     }
-    b = p[match[b]];
+    v = p[match[v]];
   }
 }
 
-void mark_path(std::vector<bool>& blossom, int v, int b, int children) {
-  for (; base[v] != b; v = p[match[v]]) {
-    blossom[base[v]] = true;
-    blossom[base[match[v]]] = true;
-    p[v] = children;
-    children = match[v];
+void mark_path(std::vector<bool>& blossom, int u, int b, int children) {
+  for (; base[u] != b; u = p[match[u]]) {
+    blossom[base[u]] = true;
+    blossom[base[match[u]]] = true;
+    p[u] = children;
+    children = match[u];
   }
 }
 
@@ -61,18 +61,18 @@ int find_path(int nodes, int root) {
   std::queue<int> q;
   q.push(root);
   while (!q.empty()) {
-    int v = q.front();
+    int u = q.front();
     q.pop();
-    for (int j = 0, to; j < (int)adj[v].size(); j++) {
-      to = adj[v][j];
-      if (base[v] == base[to] || match[v] == to) {
+    for (int j = 0, to; j < (int)adj[u].size(); j++) {
+      to = adj[u][j];
+      if (base[u] == base[to] || match[u] == to) {
         continue;
       }
       if (to == root || (match[to] != -1 && p[match[to]] != -1)) {
-        int currbase = lca(nodes, v, to);
+        int currbase = lca(nodes, u, to);
         std::vector<bool> blossom(nodes);
-        mark_path(blossom, v, currbase, to);
-        mark_path(blossom, to, currbase, v);
+        mark_path(blossom, u, currbase, to);
+        mark_path(blossom, to, currbase, u);
         for (int i = 0; i < nodes; i++) {
           if (blossom[base[i]]) {
             base[i] = currbase;
@@ -83,7 +83,7 @@ int find_path(int nodes, int root) {
           }
         }
       } else if (p[to] == -1) {
-        p[to] = v;
+        p[to] = u;
         if (match[to] == -1) {
           return to;
         }
@@ -102,12 +102,12 @@ int edmonds(int nodes) {
   }
   for (int i = 0; i < nodes; i++) {
     if (match[i] == -1) {
-      int v, pv, ppv;
-      for (v = find_path(nodes, i); v != -1; v = ppv) {
-        pv = p[v];
-        ppv = match[pv];
-        match[v] = pv;
-        match[pv] = v;
+      int u, pu, ppu;
+      for (u = find_path(nodes, i); u != -1; u = ppu) {
+        pu = p[u];
+        ppu = match[pu];
+        match[u] = pu;
+        match[pu] = u;
       }
     }
   }

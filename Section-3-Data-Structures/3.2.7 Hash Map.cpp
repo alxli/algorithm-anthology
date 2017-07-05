@@ -64,7 +64,7 @@ template<class K, class V, class Hash> class hash_map {
   }
 
  public:
-  hash_map(int size = 128): table_size(size), num_entries(0) {
+  hash_map(int size = 128) : table_size(size), num_entries(0) {
     table = new std::list<entry_t>[table_size];
   }
 

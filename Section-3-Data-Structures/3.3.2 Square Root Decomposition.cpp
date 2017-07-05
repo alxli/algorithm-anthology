@@ -79,8 +79,7 @@ template<class T> class sqrt_decomposition {
 
   T query(int lo, int hi) {
     T res;
-    int blocklo = ceil((double)lo/blocklen);
-    int blockhi = (hi + 1)/blocklen - 1;
+    int blocklo = ceil((double)lo/blocklen), blockhi = (hi + 1)/blocklen - 1;
     if (blocklo > blockhi) {
       res = value[lo];
       for (int i = lo + 1; i <= hi; i++) {

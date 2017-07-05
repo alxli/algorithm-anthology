@@ -54,7 +54,7 @@ std::vector<int> euler_cycle_directed(std::vector<int> adj[], int u) {
 
 std::vector<int> euler_cycle_undirected(std::vector<int> adj[], int u) {
   std::bitset<MAXN> used[MAXN];
-  std::vector<int> stack, res, curr_edge(MAXN);
+  std::vector<int> stack, curr_edge(MAXN), res;
   stack.push_back(u);
   while (!stack.empty()) {
     u = stack.back();

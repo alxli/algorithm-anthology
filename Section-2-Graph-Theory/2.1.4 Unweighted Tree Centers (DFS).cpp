@@ -58,7 +58,7 @@ std::vector<int> find_centers(int nodes) {
 }
 
 int find_centroid(int nodes, int u = 0, int p = -1) {
-  int cnt = 1;
+  int count = 1;
   bool good_center = true;
   for (int j = 0; j < (int)adj[u].size(); j++) {
     int v = adj[u][j];
@@ -71,10 +71,10 @@ int find_centroid(int nodes, int u = 0, int p = -1) {
     }
     int size = -res;
     good_center &= (size <= nodes / 2);
-    cnt += size;
+    count += size;
   }
-  good_center &= (nodes - cnt <= nodes / 2);
-  return good_center ? u : -cnt;
+  good_center &= (nodes - count <= nodes / 2);
+  return good_center ? u : -count;
 }
 
 std::pair<int, int> dfs(int u, int p, int depth) {

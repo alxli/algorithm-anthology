@@ -54,13 +54,13 @@ template<class T> class segment_tree {
   int len;
   std::vector<T> value;
 
-  void build(int i, int lo, int hi, const T &val) {
+  void build(int i, int lo, int hi, const T &v) {
     if (lo == hi) {
-      value[i] = val;
+      value[i] = v;
       return;
     }
-    build(i*2 + 1, lo, (lo + hi)/2, val);
-    build(i*2 + 2, (lo + hi)/2 + 1, hi, val);
+    build(i*2 + 1, lo, (lo + hi)/2, v);
+    build(i*2 + 2, (lo + hi)/2 + 1, hi, v);
     value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
@@ -75,16 +75,16 @@ template<class T> class segment_tree {
     value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
-  void update(int i, int lo, int hi, int target, const T &delta) {
+  void update(int i, int lo, int hi, int target, const T &d) {
     if (target < lo || target > hi) {
       return;
     }
     if (lo == hi) {
-      value[i] = join_value_with_delta(value[i], delta);
+      value[i] = join_value_with_delta(value[i], d);
       return;
     }
-    update(i*2 + 1, lo, (lo + hi)/2, target, delta);
-    update(i*2 + 2, (lo + hi)/2 + 1, hi, target, delta);
+    update(i*2 + 1, lo, (lo + hi)/2, target, d);
+    update(i*2 + 2, (lo + hi)/2 + 1, hi, target, d);
     value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
