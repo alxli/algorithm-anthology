@@ -42,12 +42,12 @@ int lca(int nodes, int u, int v) {
   }
 }
 
-void mark_path(std::vector<bool>& blossom, int u, int b, int children) {
+void mark_path(std::vector<bool> &blossom, int u, int b, int child) {
   for (; base[u] != b; u = p[match[u]]) {
     blossom[base[u]] = true;
     blossom[base[match[u]]] = true;
-    p[u] = children;
-    children = match[u];
+    p[u] = child;
+    child = match[u];
   }
 }
 
@@ -63,33 +63,33 @@ int find_path(int nodes, int root) {
   while (!q.empty()) {
     int u = q.front();
     q.pop();
-    for (int j = 0, to; j < (int)adj[u].size(); j++) {
-      to = adj[u][j];
-      if (base[u] == base[to] || match[u] == to) {
+    for (int j = 0; j < (int)adj[u].size(); j++) {
+      int v = adj[u][j];
+      if (base[u] == base[v] || match[u] == v) {
         continue;
       }
-      if (to == root || (match[to] != -1 && p[match[to]] != -1)) {
-        int currbase = lca(nodes, u, to);
+      if (v == root || (match[v] != -1 && p[match[v]] != -1)) {
+        int curr_base = lca(nodes, u, v);
         std::vector<bool> blossom(nodes);
-        mark_path(blossom, u, currbase, to);
-        mark_path(blossom, to, currbase, u);
+        mark_path(blossom, u, curr_base, v);
+        mark_path(blossom, v, curr_base, u);
         for (int i = 0; i < nodes; i++) {
           if (blossom[base[i]]) {
-            base[i] = currbase;
+            base[i] = curr_base;
             if (!used[i]) {
               used[i] = true;
               q.push(i);
             }
           }
         }
-      } else if (p[to] == -1) {
-        p[to] = u;
-        if (match[to] == -1) {
-          return to;
+      } else if (p[v] == -1) {
+        p[v] = u;
+        if (match[v] == -1) {
+          return v;
         }
-        to = match[to];
-        used[to] = true;
-        q.push(to);
+        v = match[v];
+        used[v] = true;
+        q.push(v);
       }
     }
   }

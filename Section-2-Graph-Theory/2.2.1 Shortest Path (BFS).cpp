@@ -32,16 +32,15 @@ void bfs(int nodes, int start) {
     dist[i] = INF;
     pred[i] = -1;
   }
-  int u, v, d;
   std::queue<std::pair<int, int> > q;
   q.push(std::make_pair(start, 0));
   while (!q.empty()) {
-    u = q.front().first;
-    d = q.front().second;
+    int u = q.front().first;
+    int d = q.front().second;
     q.pop();
     visit[u] = true;
     for (int j = 0; j < (int)adj[u].size(); j++) {
-      v = adj[u][j];
+      int v = adj[u][j];
       if (visit[v]) {
         continue;
       }

@@ -107,7 +107,7 @@ template<class K, class V, class Hash> class hash_map {
     return true;
   }
 
-  V* find(const K &k) {
+  V* find(const K &k) const {
     unsigned int i = Hash()(k) % table_size;
     typename std::list<entry_t>::iterator it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
@@ -129,7 +129,7 @@ template<class K, class V, class Hash> class hash_map {
   }
 
   template<class KVFunction>
-  void walk(KVFunction f) {
+  void walk(KVFunction f) const {
     for (int i = 0; i < table_size; i++) {
       typename std::list<entry_t>::iterator it;
       for (it = table[i].begin(); it != table[i].end(); ++it) {
@@ -183,7 +183,8 @@ struct class_hash {
       hash += ((hash + k[i]) << 10);
       hash ^= (hash >> 6);
     }
-    hash ^= ((hash += (hash << 3)) >> 11);
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
     return hash + (hash << 15);
   }
 };

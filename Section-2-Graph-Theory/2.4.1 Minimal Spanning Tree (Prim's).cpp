@@ -34,7 +34,7 @@ std::vector<std::pair<int, int> > adj[MAXN], mst;
 int prim_mst(int nodes) {
   mst.clear();
   std::vector<bool> visit(nodes);
-  int u, v, w, total_dist = 0;
+  int total_dist = 0;
   for (int i = 0; i < nodes; i++) {
     if (visit[i]) {
       continue;
@@ -46,9 +46,9 @@ int prim_mst(int nodes) {
                              std::make_pair(i, adj[i][j].first)));
     }
     while (!pq.empty()) {
-      w = -pq.top().first;
-      u = pq.top().second.first;
-      v = pq.top().second.second;
+      int w = -pq.top().first;
+      int u = pq.top().second.first;
+      int v = pq.top().second.second;
       pq.pop();
       if (visit[u] && !visit[v]) {
         visit[v] = true;

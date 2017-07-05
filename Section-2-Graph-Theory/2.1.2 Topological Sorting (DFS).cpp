@@ -24,7 +24,6 @@ Space Complexity:
 #include <vector>
 
 const int MAXN = 100;
-
 std::vector<int> adj[MAXN], res;
 std::vector<bool> visit(MAXN), done(MAXN);
 

@@ -146,7 +146,7 @@ template<class K, class V> class size_balanced_tree {
     return result;
   }
 
-  static std::pair<K, V> select(node_t *&n, int r) {
+  static std::pair<K, V> select(node_t *n, int r) {
     int rank = size(n->left);
     if (r < rank) {
       return select(n->left, r);
@@ -193,7 +193,7 @@ template<class K, class V> class size_balanced_tree {
     clean_up(root);
   }
 
-  int size() {
+  int size() const {
     return size(root);
   }
 
@@ -209,7 +209,7 @@ template<class K, class V> class size_balanced_tree {
     return erase(root, k);
   }
 
-  const V* find(const K &k) {
+  const V* find(const K &k) const {
     node_t *n = root;
     while (n != NULL) {
       if (k < n->key) {
@@ -223,19 +223,19 @@ template<class K, class V> class size_balanced_tree {
     return NULL;
   }
 
-  std::pair<K, V> select(int r) {
+  std::pair<K, V> select(int r) const {
     if (r < 0 || r >= size(root)) {
       throw std::runtime_error("Select rank must be between 0 and size() - 1.");
     }
     return select(root, r);
   }
 
-  int rank(const K &k) {
+  int rank(const K &k) const {
     return rank(root, k);
   }
 
   template<class KVFunction>
-  void walk(KVFunction f) {
+  void walk(KVFunction f) const {
     walk(root, f);
   }
 };

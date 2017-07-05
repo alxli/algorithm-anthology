@@ -88,7 +88,7 @@ template<class T> class quadtree {
   node_t *root;
   T init;
 
-  // Helper variables.
+  // Helper variables for update() and query().
   int tgt_r1, tgt_c1, tgt_r2, tgt_c2;
   T res, delta;
   bool found;

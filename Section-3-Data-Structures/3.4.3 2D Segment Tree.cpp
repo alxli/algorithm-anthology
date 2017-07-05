@@ -79,6 +79,7 @@ template<class T> class segment_tree_2d {
 
   T init;
 
+  // Helper variables for update() and query().
   int tgt_r1, tgt_c1, tgt_r2, tgt_c2, width;
 
   void update(inner_node_t *n, int c, const T &d, bool leaf_row) {

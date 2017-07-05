@@ -47,6 +47,8 @@ template<class K, class V> class red_black_tree {
       : key(k), value(v), left(NULL), right(NULL), parent(NULL), color(c) {}
   } *root, *LEAF_NIL;
 
+  int num_nodes;
+
   void rotate_l(node_t *n) {
     node_t *tmp = n->right;
     if ((n->right = tmp->left) != LEAF_NIL) {
@@ -190,7 +192,7 @@ template<class K, class V> class red_black_tree {
   }
 
   template<class KVFunction>
-  void walk(node_t *n, KVFunction f) {
+  void walk(node_t *n, KVFunction f) const {
     if (n != LEAF_NIL) {
       walk(n->left, f);
       f(n->key, n->value);
@@ -205,8 +207,6 @@ template<class K, class V> class red_black_tree {
       delete n;
     }
   }
-
-  int num_nodes;
 
  public:
   red_black_tree() : num_nodes(0) {
@@ -301,7 +301,7 @@ template<class K, class V> class red_black_tree {
     return true;
   }
 
-  const V* find(const K &k) {
+  const V* find(const K &k) const {
     node_t *n = root;
     while (n != LEAF_NIL) {
       if (k < n->key) {
@@ -316,7 +316,7 @@ template<class K, class V> class red_black_tree {
   }
 
   template<class KVFunction>
-  void walk(KVFunction f) {
+  void walk(KVFunction f) const {
     walk(root, f);
   }
 };

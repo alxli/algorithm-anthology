@@ -47,6 +47,8 @@ template<class K, class V> class avl_tree {
         : key(k), value(v), left(NULL), right(NULL), height(1) {}
   } *root;
 
+  int num_nodes;
+
   static int height(node_t *n) {
     return (n != NULL) ? n->height : 0;
   }
@@ -164,8 +166,6 @@ template<class K, class V> class avl_tree {
     }
   }
 
-  int num_nodes;
-
  public:
   avl_tree() : root(NULL), num_nodes(0) {}
 
@@ -197,7 +197,7 @@ template<class K, class V> class avl_tree {
     return false;
   }
 
-  const V* find(const K &k) {
+  const V* find(const K &k) const {
     node_t *n = root;
     while (n != NULL) {
       if (k < n->key) {
@@ -212,7 +212,7 @@ template<class K, class V> class avl_tree {
   }
 
   template<class KVFunction>
-  void walk(KVFunction f) {
+  void walk(KVFunction f) const {
     walk(root, f);
   }
 };

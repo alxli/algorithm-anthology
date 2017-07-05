@@ -63,7 +63,8 @@ template<class T> class kd_tree {
     build(mid + 1, hi, !div_x);
   }
 
-  T x1, y1, x2, y2;  // Helper variables for query().
+  // Helper variables for query().
+  T x1, y1, x2, y2;
 
   template<class ReportFunction>
   void query(int lo, int hi, ReportFunction f) {

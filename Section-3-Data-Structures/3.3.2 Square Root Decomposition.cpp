@@ -73,11 +73,11 @@ template<class T> class sqrt_decomposition {
     return len;
   }
 
-  T at(int i) {
+  T at(int i) const {
     return query(i, i);
   }
 
-  T query(int lo, int hi) {
+  T query(int lo, int hi) const {
     T res;
     int blocklo = ceil((double)lo/blocklen), blockhi = (hi + 1)/blocklen - 1;
     if (blocklo > blockhi) {

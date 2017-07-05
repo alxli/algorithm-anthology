@@ -131,6 +131,9 @@ template<class T> class link_cut_forest {
     }
   };
 
+  int num_trees;
+  std::map<int, node_t*> nodes;
+
   static void connect(node_t *child, node_t *parent, bool is_left) {
     if (child != NULL) {
       child->parent = parent;
@@ -189,9 +192,8 @@ template<class T> class link_cut_forest {
     return prev;
   }
 
-  int num_trees;
-  std::map<int, node_t*> nodes;
-  node_t *u, *v;  // Helper variables.
+  // Helper variables.
+  node_t *u, *v;
 
   void get_uv(int a, int b) {
     typename std::map<int, node_t*>::iterator it1, it2;

@@ -155,7 +155,7 @@ template<class K, class V> class treap {
     return false;
   }
 
-  const V* find(const K &k) {
+  const V* find(const K &k) const {
     node_t *n = root;
     while (n != NULL) {
       if (k < n->key) {
@@ -170,7 +170,7 @@ template<class K, class V> class treap {
   }
 
   template<class KVFunction>
-  void walk(KVFunction f) {
+  void walk(KVFunction f) const {
     walk(root, f);
   }
 };

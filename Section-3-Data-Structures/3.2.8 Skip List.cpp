@@ -142,7 +142,7 @@ template<class K, class V> class skip_list {
     return false;
   }
 
-  V* find(const K &k) {
+  V* find(const K &k) const {
     node_t *n = head;
     for (int i = node_level(n->next); i-- > 0; ) {
       while (n->next[i] != NULL && n->next[i]->key < k) {
@@ -163,7 +163,7 @@ template<class K, class V> class skip_list {
   }
 
   template<class KVFunction>
-  void walk(KVFunction f) {
+  void walk(KVFunction f) const {
     node_t *n = head->next[0];
     while (n != NULL) {
       f(n->key, n->value);

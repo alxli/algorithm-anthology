@@ -208,18 +208,18 @@ template<class T> class interval_treap {
     return false;
   }
 
-  const interval_t* find_any(const T &l, const T &h) {
+  const interval_t* find_any(const T &l, const T &h) const {
     node_t *n = find_any(root, std::make_pair(l, h));
     return (n == NULL) ? NULL : &(n->interval);
   }
 
   template<class ReportFunction>
-  void find_all(const T &l, const T &h, ReportFunction f) {
+  void find_all(const T &l, const T &h, ReportFunction f) const {
     find_all(root, std::make_pair(l, h), f);
   }
 
   template<class ReportFunction>
-  void walk(ReportFunction f) {
+  void walk(ReportFunction f) const {
     walk(root, f);
   }
 };

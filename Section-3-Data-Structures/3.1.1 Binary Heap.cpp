@@ -44,11 +44,11 @@ template<class T> class binary_heap {
     }
   }
 
-  int size() {
+  int size() const {
     return heap.size();
   }
 
-  bool empty() {
+  bool empty() const {
     return heap.empty();
   }
 
@@ -88,7 +88,7 @@ template<class T> class binary_heap {
     }
   }
 
-  T top() {
+  T top() const {
     if (heap.empty()) {
       throw std::runtime_error("Cannot get top of empty heap.");
     }

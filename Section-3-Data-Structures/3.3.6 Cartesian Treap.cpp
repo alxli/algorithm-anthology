@@ -232,7 +232,7 @@ template<class T> class cartesian_treap {
     erase(size() - 1);
   }
 
-  T at(int i) {
+  T at(int i) const {
     return select(root, i)->value;
   }
 

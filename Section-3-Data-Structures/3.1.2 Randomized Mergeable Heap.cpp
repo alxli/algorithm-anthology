@@ -82,11 +82,11 @@ template<class T> class randomized_heap {
     clean_up(root);
   }
 
-  int size() {
+  int size() const {
     return num_nodes;
   }
 
-  bool empty() {
+  bool empty() const {
     return root == NULL;
   }
 
@@ -105,7 +105,7 @@ template<class T> class randomized_heap {
     num_nodes--;
   }
 
-  T top() {
+  T top() const {
     if (empty()) {
       throw std::runtime_error("Cannot get top of empty heap.");
     }

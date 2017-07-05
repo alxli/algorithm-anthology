@@ -42,6 +42,8 @@ template<class T> class skew_heap {
     node_t(const T &v) : value(v), left(NULL), right(NULL) {}
   } *root;
 
+  int num_nodes;
+
   static node_t* merge(node_t *a, node_t *b) {
     if (a == NULL) {
       return b;
@@ -65,8 +67,6 @@ template<class T> class skew_heap {
     }
   }
 
-  int num_nodes;
-
  public:
   skew_heap() : root(NULL), num_nodes(0) {}
 
@@ -81,11 +81,11 @@ template<class T> class skew_heap {
     clean_up(root);
   }
 
-  int size() {
+  int size() const {
     return num_nodes;
   }
 
-  bool empty() {
+  bool empty() const {
     return root == NULL;
   }
 
@@ -104,7 +104,7 @@ template<class T> class skew_heap {
     num_nodes--;
   }
 
-  T top() {
+  T top() const {
     if (empty()) {
       throw std::runtime_error("Cannot get top of empty heap.");
     }

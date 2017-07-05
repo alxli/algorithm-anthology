@@ -23,9 +23,7 @@ Space Complexity:
 
 template<class It>
 long long sum_lower_bound(It lo, It hi, long long v) {
-  int n = hi - lo;
-  int llen = 1 << (n/2);
-  int hlen = 1 << (n - n/2);
+  int n = hi - lo, llen = 1 << (n/2), hlen = 1 << (n - n/2);
   std::vector<long long> lsum(llen), hsum(hlen);
   for (int mask = 0; mask < llen; mask++) {
     for (int i = 0; i < n/2; i++) {

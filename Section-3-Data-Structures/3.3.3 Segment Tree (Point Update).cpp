@@ -88,7 +88,7 @@ template<class T> class segment_tree {
     value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
-  T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) {
+  T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) const {
     if (lo == tgt_lo && hi == tgt_hi) {
       return value[i];
     }
@@ -118,11 +118,11 @@ template<class T> class segment_tree {
     return len;
   }
 
-  T at(int i) {
+  T at(int i) const {
     return query(i, i);
   }
 
-  T query(int lo, int hi) {
+  T query(int lo, int hi) const {
     return query(0, 0, len - 1, lo, hi);
   }
 

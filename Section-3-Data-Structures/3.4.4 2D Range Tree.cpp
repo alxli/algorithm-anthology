@@ -60,7 +60,8 @@ template<class T> class range_tree {
                columns[n].begin(), comp1);
   }
 
-  T x1, y1, x2, y2;  // Helper variables for query().
+  // Helper variables for query().
+  T x1, y1, x2, y2;
 
   template<class ReportFunction>
   void query(int n, int lo, int hi, ReportFunction f) {

@@ -48,16 +48,15 @@ void dijkstra(int nodes, int start) {
     dist[i] = std::numeric_limits<int>::max();
     pred[i] = -1;
   }
-  int u, v;
   dist[start] = 0;
   std::priority_queue<std::pair<int, int> > pq;
   pq.push(std::make_pair(0, start));
   while (!pq.empty()) {
-    u = pq.top().second;
+    int u = pq.top().second;
     pq.pop();
     visit[u] = true;
     for (int j = 0; j < (int)adj[u].size(); j++) {
-      v = adj[u][j].first;
+      int v = adj[u][j].first;
       if (visit[v]) {
         continue;
       }
