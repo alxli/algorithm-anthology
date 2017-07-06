@@ -61,8 +61,8 @@ template<class T> class segment_tree_2d {
 
   struct inner_node_t {
     T value;
-    int low, high;
     inner_node_t *left, *right;
+    int low, high;
 
     inner_node_t(int l, int h, const T &v)
         : value(v), low(l), high(h), left(NULL), right(NULL) {}

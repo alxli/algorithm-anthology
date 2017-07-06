@@ -64,8 +64,8 @@ template<class T> class cartesian_treap {
     }
 
     T value, subtree_value, delta;
-    bool pending;
     node_t *left, *right;
+    bool pending;
     int size, priority;
 
     node_t(const T &v)
