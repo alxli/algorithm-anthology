@@ -38,11 +38,11 @@ template<class T> class fenwick_tree_2d {
   static const int MAXC = 1000000001;
   std::map<std::pair<int, int>, T> t1, t2, t3, t4;
 
-  template<class M>
-  void add(M &t, int r, int c, const T &x) {
+  template<class Map>
+  void add(Map &tree, int r, int c, const T &x) {
     for (int i = r + 1; i <= MAXR; i += i & -i) {
       for (int j = c + 1; j <= MAXC; j += j & -j) {
-        t[std::make_pair(i, j)] += x;
+        tree[std::make_pair(i, j)] += x;
       }
     }
   }

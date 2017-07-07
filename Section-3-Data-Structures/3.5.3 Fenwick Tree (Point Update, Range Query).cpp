@@ -6,9 +6,9 @@ This implementation assumes that the array is 0-based (i.e. has valid indices
 from 0 to size() - 1, inclusive).
 
 - size() returns the size of the array.
-- at(i) returns the value at index i, where i is between 0 and size() - 1.
-- add(i, x) adds x to the value at index i (i.e. a[i] += x).
-- set(i, x) assigns x to the value at index i (i.e. a[i] = x).
+- at(i) returns the value at index i.
+- add(i, x) adds x to the value at index i.
+- set(i, x) assigns the value at index i to x.
 - sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
 - sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
 
@@ -27,35 +27,35 @@ Space Complexity:
 
 template<class T> class fenwick_tree {
   int len;
-  std::vector<int> data, bits;
+  std::vector<int> a, t;
 
  public:
-  fenwick_tree(int n) : len(n), data(n + 1), bits(n + 1) {}
+  fenwick_tree(int n) : len(n), a(n + 1), t(n + 1) {}
 
   int size() const {
     return len;
   }
 
   T at(int i) const {
-    return data[i + 1];
+    return a[i + 1];
   }
 
   void add(int i, const T &x) {
-    data[++i] += x;
+    a[++i] += x;
     for (; i <= len; i += i & -i) {
-      bits[i] += x;
+      t[i] += x;
     }
   }
 
   void set(int i, const T &x) {
-    T inc = x - data[i + 1];
+    T inc = x - a[i + 1];
     add(i, inc);
   }
 
   T sum(int hi) {
     T res = 0;
     for (hi++; hi > 0; hi -= hi & -hi) {
-      res += bits[hi];
+      res += t[hi];
     }
     return res;
   }
@@ -68,10 +68,10 @@ template<class T> class fenwick_tree {
 /*** Example Usage and Output:
 
 Values: 5 1 2 3 4
-Sum of range [1, 3] is 6.
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -86,6 +86,7 @@ int main() {
   for (int i = 0; i < t.size(); i++) {
     cout << t.at(i) << " ";
   }
-  cout << "\nSum of range [1, 3] is " << t.sum(1, 3) << "." << endl;
+  cout << endl;
+  assert(t.sum(1, 3) == 6);
   return 0;
 }

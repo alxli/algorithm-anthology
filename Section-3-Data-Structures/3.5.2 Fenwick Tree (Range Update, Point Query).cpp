@@ -6,9 +6,9 @@ individual indices to be queried (point query). This implementation assumes that
 the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
 
 - size() returns the size of the array.
-- at(i) returns the value at index i, where i is between 0 and size() - 1.
-- add(i, x) adds x to the value at index i (i.e. a[i] += x).
-- add(lo, hi, x) adds x to all indices from lo to hi, inclusive.
+- at(i) returns the value at index i.
+- add(i, x) adds x to the value at index i.
+- add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
 
 Time Complexity:
 - O(n) per call to the constructor, where n is the size of the array.
@@ -25,26 +25,26 @@ Space Complexity:
 
 template<class T> class fenwick_tree {
   int len;
-  std::vector<int> bits;
+  std::vector<int> t;
 
  public:
-  fenwick_tree(int n) : len(n), bits(n + 2) {}
+  fenwick_tree(int n) : len(n), t(n + 2) {}
 
   int size() const {
     return len;
   }
 
   T at(int i) const {
-    int res = 0;
+    T res = 0;
     for (i++; i > 0; i -= i & -i) {
-      res += bits[i];
+      res += t[i];
     }
     return res;
   }
 
   void add(int i, const T &x) {
     for (i++; i <= len + 1; i += i & -i) {
-      bits[i] += x;
+      t[i] += x;
     }
   }
 

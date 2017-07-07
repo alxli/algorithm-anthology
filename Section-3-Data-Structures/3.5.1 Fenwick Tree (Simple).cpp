@@ -6,9 +6,9 @@ This implementation assumes that the array is 1-based (i.e. has valid indices
 from 1 to MAXN - 1, inclusive).
 
 - initialize() resets the data structure.
-- a[i] stores the value at index i, where i is between 1 and MAXN - 1.
-- add(i, x) adds x to the value at index i (i.e. a[i] += x).
-- set(i, x) assigns x to the value at index i (i.e. a[i] = x).
+- a[i] stores the value at index i.
+- add(i, x) adds x to the value at index i.
+- set(i, x) assigns the value at index i to x.
 - sum(hi) returns the sum of all values at indices from 1 to hi, inclusive.
 - sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
 
@@ -23,18 +23,18 @@ Space Complexity:
 */
 
 const int MAXN = 1000;
-int a[MAXN + 1], bits[MAXN + 1];
+int a[MAXN + 1], t[MAXN + 1];
 
 void initialize() {
   for (int i = 0; i <= MAXN; i++) {
-    a[i] = bits[i] = 0;
+    a[i] = t[i] = 0;
   }
 }
 
 void add(int i, int x) {
   a[i] += x;
   for (; i <= MAXN; i += i & -i) {
-    bits[i] += x;
+    t[i] += x;
   }
 }
 
@@ -45,7 +45,7 @@ void set(int i, int x) {
 int sum(int hi) {
   int res = 0;
   for (; hi > 0; hi -= hi & -hi) {
-    res += bits[hi];
+    res += t[hi];
   }
   return res;
 }
@@ -57,10 +57,10 @@ int sum(int lo, int hi) {
 /*** Example Usage and Output:
 
 Values: 5 1 2 3 4
-Sum of range [2, 4] is 6.
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -75,6 +75,7 @@ int main() {
   for (int i = 1; i <= 5; i++) {
     cout << a[i] << " ";
   }
-  cout << "\nSum of range [2, 4] is " << sum(2, 4) << "." << endl;
+  cout << endl;
+  assert(sum(2, 4) == 6);
   return 0;
 }

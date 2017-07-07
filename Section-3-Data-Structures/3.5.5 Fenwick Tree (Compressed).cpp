@@ -7,12 +7,12 @@ std::map for coordinate compression, allowing for large indices to be accessed
 with efficient space complexity. That is, all array indices from 0 to MAXN,
 inclusive, are accessible.
 
-- add(i, x) adds x to the value at index i (i.e. a[i] += x).
-- add(lo, hi, x) adds x to all indices from lo to hi, inclusive.
-- set(i, x) assigns x to the value at index i (i.e. a[i] = x).
+- at(i) returns the value at index i.
+- add(i, x) adds x to the value at index i.
+- add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
+- set(i, x) assigns the value at index i to x.
 - sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
 - sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
-- at(i) returns the value at index i, where i is between 0 and MAXN.
 
 Time Complexity:
 - O(log^2 MAXN) per call to all member functions. If std::map is replaced with
@@ -54,7 +54,6 @@ template<class T> class fenwick_tree {
 
   T sum(int hi) {
     T mul = 0, add = 0;
-    int start = hi;
     for (int i = hi; i >= 0; i = (i & (i + 1)) - 1) {
       if (tmul.find(i) != tmul.end()) {
         mul += tmul[i];
@@ -63,7 +62,7 @@ template<class T> class fenwick_tree {
         add += tadd[i];
       }
     }
-    return mul*start + add;
+    return mul*hi + add;
   }
 
   T sum(int lo, int hi) {
@@ -78,11 +77,10 @@ template<class T> class fenwick_tree {
 /*** Example Usage and Output:
 
 Values: 15 6 7 -5 4
-Sum of range [0, 4] is 27.
-Sum of the whole array is 92.
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -92,16 +90,17 @@ int main() {
   for (int i = 0; i < 5; i++) {
     t.set(i, a[i]);
   }
-  t.add(0, 2, 5);  // 15 6 7 3 4
-  t.set(3, -5);  // 15 6 7 -5 4
+  t.add(0, 2, 5);
+  t.set(3, -5);
   cout << "Values: ";
   for (int i = 0; i < 5; i++) {
     cout << t.at(i) << " ";
   }
-  cout << "\nSum of range [0, 4] is " << t.sum(0, 4) << "." << endl;
+  cout << endl;
+  assert(t.sum(0, 4) == 27);
   t.add(500000001, 500000010, 3);
   t.add(500000011, 500000015, 5);
   t.set(500000000, 10);
-  cout << "Sum of the whole array is " << t.sum(0, 1000000000) << "." << endl;
+  assert(t.sum(0, 1000000000) == 92);
   return 0;
 }
