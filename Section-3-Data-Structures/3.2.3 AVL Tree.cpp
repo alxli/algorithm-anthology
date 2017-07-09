@@ -40,11 +40,11 @@ template<class K, class V> class avl_tree {
   struct node_t {
     K key;
     V value;
-    node_t *left, *right;
     int height;
+    node_t *left, *right;
 
     node_t(const K &k, const V &v)
-        : key(k), value(v), left(NULL), right(NULL), height(1) {}
+        : key(k), value(v), height(1), left(NULL), right(NULL) {}
   } *root;
 
   int num_nodes;

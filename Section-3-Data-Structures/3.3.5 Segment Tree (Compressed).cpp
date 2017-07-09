@@ -1,7 +1,9 @@
 /*
 
 Maintain a fixed-size array while supporting both dynamic queries and updates of
-contiguous subarrays via the lazy propagation technique.
+contiguous subarrays via the lazy propagation technique. This implementation
+uses lazy initialization of nodes to conserve memory while supporting large
+indices.
 
 The query operation is defined by an associative join_values() function which
 satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
@@ -49,11 +51,17 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <vector>
+#include <cstdlib>
 
 template<class T> class segment_tree {
+  static const int MAXN = 1000000000;
+
   static T join_values(const T &a, const T &b) {
     return std::min(a, b);
+  }
+
+  static T join_segment(const T &v, int len) {
+    return v;
   }
 
   static T join_value_with_delta(const T &v, const T &d, int len) {
@@ -64,91 +72,86 @@ template<class T> class segment_tree {
     return d2;  // For "set" updates, the more recent delta prevails.
   }
 
-  int len;
-  std::vector<T> value, delta;
-  std::vector<bool> pending;
+  struct node_t {
+    T value, delta;
+    bool pending;
+    node_t *left, *right;
 
-  void build(int i, int lo, int hi, const T &v) {
-    if (lo == hi) {
-      value[i] = v;
-      return;
+    node_t(const T &v) : value(v), pending(false), left(NULL), right(NULL) {}
+  } *root;
+
+  T init;
+
+  void update_delta(node_t *&n, const T &d, int len) {
+    if (n == NULL) {
+      n = new node_t(join_segment(init, len));
     }
-    build(i*2 + 1, lo, (lo + hi)/2, v);
-    build(i*2 + 2, (lo + hi)/2 + 1, hi, v);
-    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+    n->delta = n->pending ? join_deltas(n->delta, d) : d;
+    n->pending = true;
   }
 
-  template<class It>
-  void build(int i, int lo, int hi, It arr) {
-    if (lo == hi) {
-      value[i] = *(arr + lo);
-      return;
-    }
-    build(i*2 + 1, lo, (lo + hi)/2, arr);
-    build(i*2 + 2, (lo + hi)/2 + 1, hi, arr);
-    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
-  }
-
-  void push_delta(int i, int lo, int hi) {
-    if (pending[i]) {
-      value[i] = join_value_with_delta(value[i], delta[i], hi - lo + 1);
+  void push_delta(node_t *n, int lo, int hi) {
+    if (n->pending) {
+      n->value = join_value_with_delta(n->value, n->delta, hi - lo + 1);
       if (lo != hi) {
-        int l = 2*i + 1, r = 2*i + 2;
-        delta[l] = pending[l] ? join_deltas(delta[l], delta[i]) : delta[i];
-        delta[r] = pending[r] ? join_deltas(delta[r], delta[i]) : delta[i];
-        pending[l] = pending[r] = true;
+        int mid = lo + (hi - lo)/2;
+        update_delta(n->left, n->delta, mid - lo + 1);
+        update_delta(n->right, n->delta, hi - mid);
       }
-      pending[i] = false;
     }
+    n->pending = false;
   }
 
-  T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) {
-    push_delta(i, lo, hi);
+  T query(node_t *n, int lo, int hi, int tgt_lo, int tgt_hi) {
+    push_delta(n, lo, hi);
     if (lo == tgt_lo && hi == tgt_hi) {
-      return value[i];
+      return (n == NULL) ? join_segment(init, hi - lo + 1) : n->value;
     }
-    int mid = (lo + hi)/2;
+    int mid = lo + (hi - lo)/2;
     if (tgt_lo <= mid && mid < tgt_hi) {
       return join_values(
-                query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
-                query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
+          query(n->left, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
+          query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
     }
     if (tgt_lo <= mid) {
-      return query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
+      return query(n->left, lo, mid, tgt_lo, std::min(tgt_hi, mid));
     }
-    return query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
+    return query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
   }
 
-  void update(int i, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
-    push_delta(i, lo, hi);
+  void update(node_t *&n, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
+    if (n == NULL) {
+      n = new node_t(join_segment(init, hi - lo + 1));
+    }
+    push_delta(n, lo, hi);
     if (hi < tgt_lo || lo > tgt_hi) {
       return;
     }
     if (tgt_lo <= lo && hi <= tgt_hi) {
-      delta[i] = d;
-      pending[i] = true;
-      push_delta(i, lo, hi);
+      n->delta = d;
+      n->pending = true;
+      push_delta(n, lo, hi);
       return;
     }
-    update(2*i + 1, lo, (lo + hi)/2, tgt_lo, tgt_hi, d);
-    update(2*i + 2, (lo + hi)/2 + 1, hi, tgt_lo, tgt_hi, d);
-    value[i] = join_values(value[2*i + 1], value[2*i + 2]);
+    int mid = lo + (hi - lo)/2;
+    update(n->left, lo, mid, tgt_lo, tgt_hi, d);
+    update(n->right, mid + 1, hi, tgt_lo, tgt_hi, d);
+    n->value = join_values(n->left->value, n->right->value);
+  }
+
+  void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
   }
 
  public:
-  segment_tree(int n, const T &v = T())
-      : len(n), value(4*len), delta(4*len), pending(4*len, false) {
-    build(0, 0, len - 1, v);
-  }
+  segment_tree(const T &v = T()) : root(NULL), init(v) {}
 
-  template<class It>
-  segment_tree(It lo, It hi)
-      : len(hi - lo), value(4*len), delta(4*len), pending(4*len, false) {
-    build(0, 0, len - 1, lo);
-  }
-
-  int size() const {
-    return len;
+  ~segment_tree() {
+    clean_up(root);
   }
 
   T at(int i) {
@@ -156,15 +159,15 @@ template<class T> class segment_tree {
   }
 
   T query(int lo, int hi) {
-    return query(0, 0, len - 1, lo, hi);
+    return query(root, 0, MAXN, lo, hi);
   }
 
   void update(int i, const T &d) {
-    update(0, 0, len - 1, i, i, d);
+    return update(i, i, d);
   }
 
   void update(int lo, int hi, const T &d) {
-    update(0, 0, len - 1, lo, hi, d);
+    return update(root, 0, MAXN, lo, hi, d);
   }
 };
 
@@ -180,11 +183,14 @@ Values: 5 5 5 1 5
 using namespace std;
 
 int main() {
-  int arr[5] = {6, -2, 1, 8, 10};
-  segment_tree<int> t(arr, arr + 5);
+  segment_tree<int> t(0);
+  t.update(0, 6);
+  t.update(1, -2);
   t.update(2, 4);
+  t.update(3, 8);
+  t.update(4, 10);
   cout << "Values:";
-  for (int i = 0; i < t.size(); i++) {
+  for (int i = 0; i < 5; i++) {
     cout << " " << t.at(i);
   }
   cout << endl;
@@ -193,7 +199,7 @@ int main() {
   t.update(3, 2);
   t.update(3, 1);
   cout << "Values:";
-  for (int i = 0; i < t.size(); i++) {
+  for (int i = 0; i < 5; i++) {
     cout << " " << t.at(i);
   }
   cout << endl;

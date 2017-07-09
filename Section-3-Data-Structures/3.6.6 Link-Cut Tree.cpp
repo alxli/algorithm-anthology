@@ -73,13 +73,13 @@ template<class T> class link_cut_forest {
 
   struct node_t {
     T value, subtree_value, delta;
-    node_t *left, *right, *parent;
     int size;
     bool rev, pending;
+    node_t *left, *right, *parent;
 
     node_t(const T &v)
-        : value(v), subtree_value(v), left(NULL), right(NULL), parent(NULL),
-          size(1), rev(false), pending(false) {}
+        : value(v), subtree_value(v), size(1), rev(false), pending(false),
+          left(NULL), right(NULL), parent(NULL) {}
 
     inline bool is_root() const {
       return parent == NULL || (parent->left != this && parent->right != this);

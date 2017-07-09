@@ -114,10 +114,10 @@ template<class T> class sqrt_decomposition {
 /*** Example Usage and Output:
 
 Values: 6 -2 4 8 10
-The minimum value in the range [0, 3] is -2.
 
 ***/
 
+#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -129,7 +129,7 @@ int main() {
   for (int i = 0; i < sd.size(); i++) {
     cout << " " << sd.at(i);
   }
-  cout << "\nThe minimum value in the range [0, 3] is " << sd.query(0, 3) << "."
-       << endl;
+  cout << endl;
+  assert(sd.query(0, 3) == -2);
   return 0;
 }

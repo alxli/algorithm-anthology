@@ -75,19 +75,6 @@ template<class T> class segment_tree {
     value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
-  void update(int i, int lo, int hi, int target, const T &d) {
-    if (target < lo || target > hi) {
-      return;
-    }
-    if (lo == hi) {
-      value[i] = join_value_with_delta(value[i], d);
-      return;
-    }
-    update(i*2 + 1, lo, (lo + hi)/2, target, d);
-    update(i*2 + 2, (lo + hi)/2 + 1, hi, target, d);
-    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
-  }
-
   T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) const {
     if (lo == tgt_lo && hi == tgt_hi) {
       return value[i];
@@ -102,6 +89,19 @@ template<class T> class segment_tree {
       return query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
     }
     return query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
+  }
+
+  void update(int i, int lo, int hi, int target, const T &d) {
+    if (target < lo || target > hi) {
+      return;
+    }
+    if (lo == hi) {
+      value[i] = join_value_with_delta(value[i], d);
+      return;
+    }
+    update(i*2 + 1, lo, (lo + hi)/2, target, d);
+    update(i*2 + 2, (lo + hi)/2 + 1, hi, target, d);
+    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
  public:
@@ -138,8 +138,8 @@ The minimum value in the range [0, 3] is -2.
 
 ***/
 
+#include <cassert>
 #include <iostream>
-#include <limits>
 using namespace std;
 
 int main() {
@@ -150,7 +150,7 @@ int main() {
   for (int i = 0; i < t.size(); i++) {
     cout << " " << t.at(i);
   }
-  cout << "\nThe minimum value in the range [0, 3] is " << t.query(0, 3) << "."
-       << endl;
+  cout << endl;
+  assert(t.query(0, 3) == -2);
   return 0;
 }

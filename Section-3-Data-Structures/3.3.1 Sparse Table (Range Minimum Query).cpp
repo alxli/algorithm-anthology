@@ -55,6 +55,6 @@ int query_min(int a[], int lo, int hi) {
 int main() {
   int arr[5] = {6, -2, 1, 8, 10};
   build_rmq_table(5, arr);
-  assert(-2 == query_min(arr, 0, 4));
+  assert(query_min(arr, 0, 3) == -2);
   return 0;
 }

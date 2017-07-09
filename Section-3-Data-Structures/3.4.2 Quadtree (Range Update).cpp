@@ -83,66 +83,39 @@ template<class T> class quadtree {
         child[i] = NULL;
       }
     }
-  };
+  } *root;
 
-  node_t *root;
   T init;
 
-  // Helper variables for update() and query().
-  int tgt_r1, tgt_c1, tgt_r2, tgt_c2;
-  T res, delta;
-  bool found;
-
-  void update_delta(node_t *&n, int area) {
+  void update_delta(node_t *&n, const T &d, int area) {
     if (n == NULL) {
       n = new node_t(join_region(init, area));
     }
-    n->delta = n->pending ? join_deltas(n->delta, delta) : delta;
+    n->delta = n->pending ? join_deltas(n->delta, d) : d;
     n->pending = true;
   }
 
-  void update_delta(node_t *&n, int r1, int c1, int r2, int c2) {
+  void push_delta(node_t *n, int r1, int c1, int r2, int c2) {
     if (n->pending) {
       int rmid = (r1 + r2)/2, cmid = (c1 + c2)/2;
       int rlen = r2 - r1 + 1, clen = c2 - c1 + 1;
-      n->value = join_value_with_delta(n->value, delta, rlen*clen);
+      n->value = join_value_with_delta(n->value, n->delta, rlen*clen);
       if (rlen*clen > 1) {
         int rlen1 = rmid - r1 + 1, rlen2 = rlen - rlen1;
         int clen1 = cmid - c1 + 1, clen2 = clen - clen1;
-        update_delta(n->child[0], rlen1*clen1);
-        update_delta(n->child[1], rlen2*clen1);
-        update_delta(n->child[2], rlen1*clen2);
-        update_delta(n->child[3], rlen2*clen2);
+        update_delta(n->child[0], n->delta, rlen1*clen1);
+        update_delta(n->child[1], n->delta, rlen2*clen1);
+        update_delta(n->child[2], n->delta, rlen1*clen2);
+        update_delta(n->child[3], n->delta, rlen2*clen2);
       }
+      n->pending = false;
     }
-    n->pending = false;
   }
 
-  void update(node_t *&n, int r1, int c1, int r2, int c2) {
-    if (n == NULL) {
-      n = new node_t(join_region(init, (r2 - r1 + 1)*(c2 - r1 + 1)));
-    }
-    update_delta(n, r1, c1, r2, c2);
-    if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
-      return;
-    }
-    if (tgt_r1 <= r1 && r2 <= tgt_r2 && tgt_c1 <= c1 && c2 <= tgt_c2) {
-      n->pending = true;
-      update_delta(n, r1, c1, r2, c2);
-      return;
-    }
-    int rmid = (r1 + r2)/2, cmid = (c1 + c2)/2;
-    update(n->child[0], r1, c1, rmid, cmid);
-    update(n->child[1], rmid + 1, c1, r2, cmid);
-    update(n->child[2], r1, cmid + 1, rmid, c2);
-    update(n->child[3], rmid + 1, cmid + 1, r2, c2);
-    bool found = false;
-    for (int i = 0; i < 4; i++) {
-      n->value = found ? join_values(n->value, n->child[i]->value)
-                       : n->child[i]->value;
-      found = true;
-    }
-  }
+  // Helper variables for query() and update().
+  int tgt_r1, tgt_c1, tgt_r2, tgt_c2;
+  T res, delta;
+  bool found;
 
   void query(node_t *n, int r1, int c1, int r2, int c2) {
     if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
@@ -156,7 +129,7 @@ template<class T> class quadtree {
       found = true;
       return;
     }
-    update_delta(n, r1, c1, r2, c2);
+    push_delta(n, r1, c1, r2, c2);
     if (tgt_r1 <= r1 && r2 <= tgt_r2 && tgt_c1 <= c1 && c2 <= tgt_c2) {
       res = found ? join_values(res, n->value) : n->value;
       found = true;
@@ -167,6 +140,31 @@ template<class T> class quadtree {
     query(n->child[1], rmid + 1, c1, r2, cmid);
     query(n->child[2], r1, cmid + 1, rmid, c2);
     query(n->child[3], rmid + 1, cmid + 1, r2, c2);
+  }
+
+  void update(node_t *&n, int r1, int c1, int r2, int c2) {
+    if (n == NULL) {
+      n = new node_t(join_region(init, (r2 - r1 + 1)*(c2 - r1 + 1)));
+    }
+    if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
+      return;
+    }
+    push_delta(n, r1, c1, r2, c2);
+    if (tgt_r1 <= r1 && r2 <= tgt_r2 && tgt_c1 <= c1 && c2 <= tgt_c2) {
+      n->delta = delta;
+      n->pending = true;
+      push_delta(n, r1, c1, r2, c2);
+      return;
+    }
+    int rmid = (r1 + r2)/2, cmid = (c1 + c2)/2;
+    update(n->child[0], r1, c1, rmid, cmid);
+    update(n->child[1], rmid + 1, c1, r2, cmid);
+    update(n->child[2], r1, cmid + 1, rmid, c2);
+    update(n->child[3], rmid + 1, cmid + 1, r2, c2);
+    bool found = n->child[0]->value;
+    for (int i = 1; i < 4; i++) {
+      n->value = join_values(n->value, n->child[i]->value);
+    }
   }
 
   static void clean_up(node_t *n) {

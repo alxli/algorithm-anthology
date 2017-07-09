@@ -72,35 +72,7 @@ template<class T> class quadtree {
   node_t *root;
   T init;
 
-  // Helper variables for update().
-  int tgt_r, tgt_c;
-  T delta;
-
-  void update(node_t *&n, int r1, int c1, int r2, int c2) {
-    if (n == NULL) {
-      n = new node_t(join_region(init, (r2 - r1 + 1)*(c2 - r1 + 1)));
-    }
-    if (tgt_r < r1 || tgt_r > r2 || tgt_c < c1 || tgt_c > c2) {
-      return;
-    }
-    if (r1 == r2 && c1 == c2) {
-      n->value = join_value_with_delta(n->value, delta);
-      return;
-    }
-    int rmid = (r1 + r2)/2, cmid = (c1 + c2)/2;
-    update(n->child[0], r1, c1, rmid, cmid);
-    update(n->child[1], rmid + 1, c1, r2, cmid);
-    update(n->child[2], r1, cmid + 1, rmid, c2);
-    update(n->child[3], rmid + 1, cmid + 1, r2, c2);
-    bool found = false;
-    for (int i = 0; i < 4; i++) {
-      n->value = found ? join_values(n->value, n->child[i]->value)
-                       : n->child[i]->value;
-      found = true;
-    }
-  }
-
-  // Helper variables for query.
+  // Helper variables for query().
   int tgt_r1, tgt_c1, tgt_r2, tgt_c2;
   T res;
   bool found;
@@ -127,6 +99,34 @@ template<class T> class quadtree {
     query(n->child[1], rmid + 1, c1, r2, cmid);
     query(n->child[2], r1, cmid + 1, rmid, c2);
     query(n->child[3], rmid + 1, cmid + 1, r2, c2);
+  }
+
+  // Helper variables for update().
+  int tgt_r, tgt_c;
+  T delta;
+
+  void update(node_t *&n, int r1, int c1, int r2, int c2) {
+    if (n == NULL) {
+      n = new node_t(join_region(init, (r2 - r1 + 1)*(c2 - r1 + 1)));
+    }
+    if (tgt_r < r1 || tgt_r > r2 || tgt_c < c1 || tgt_c > c2) {
+      return;
+    }
+    if (r1 == r2 && c1 == c2) {
+      n->value = join_value_with_delta(n->value, delta);
+      return;
+    }
+    int rmid = (r1 + r2)/2, cmid = (c1 + c2)/2;
+    update(n->child[0], r1, c1, rmid, cmid);
+    update(n->child[1], rmid + 1, c1, r2, cmid);
+    update(n->child[2], r1, cmid + 1, rmid, c2);
+    update(n->child[3], rmid + 1, cmid + 1, r2, c2);
+    bool found = false;
+    for (int i = 0; i < 4; i++) {
+      n->value = found ? join_values(n->value, n->child[i]->value)
+                       : n->child[i]->value;
+      found = true;
+    }
   }
 
   static void clean_up(node_t *n) {

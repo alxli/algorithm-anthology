@@ -40,11 +40,11 @@ template<class K, class V> class red_black_tree {
   struct node_t {
     K key;
     V value;
-    node_t *left, *right, *parent;
     color_t color;
+    node_t *left, *right, *parent;
 
     node_t(const K &k, const V &v, color_t c)
-        : key(k), value(v), left(NULL), right(NULL), parent(NULL), color(c) {}
+        : key(k), value(v), color(c), left(NULL), right(NULL), parent(NULL) {}
   } *root, *LEAF_NIL;
 
   int num_nodes;

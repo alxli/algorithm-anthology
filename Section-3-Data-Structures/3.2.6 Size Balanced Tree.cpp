@@ -45,11 +45,11 @@ template<class K, class V> class size_balanced_tree {
   struct node_t {
     K key;
     V value;
-    node_t *left, *right;
     int size;
+    node_t *left, *right;
 
     node_t(const K &k, const V &v)
-        : key(k), value(v), left(NULL), right(NULL), size(1) {}
+        : key(k), value(v), size(1), left(NULL), right(NULL) {}
 
     inline node_t*& child(int c) {
       return (c == 0) ? left : right;

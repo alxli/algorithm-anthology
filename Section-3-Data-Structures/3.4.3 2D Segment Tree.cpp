@@ -61,8 +61,8 @@ template<class T> class segment_tree_2d {
 
   struct inner_node_t {
     T value;
-    inner_node_t *left, *right;
     int low, high;
+    inner_node_t *left, *right;
 
     inner_node_t(int l, int h, const T &v)
         : value(v), low(l), high(h), left(NULL), right(NULL) {}
@@ -79,8 +79,55 @@ template<class T> class segment_tree_2d {
 
   T init;
 
-  // Helper variables for update() and query().
+  // Helper variables for query() and update().
   int tgt_r1, tgt_c1, tgt_r2, tgt_c2, width;
+
+  template<class node_t>
+  inline T call_query(node_t *n, int area) {
+    return (n != NULL) ? query(n) : join_region(init, area);
+  }
+
+  T query(inner_node_t *n) {
+    int l = n->low, h = n->high, mid = l + (h - l)/2;
+    if (tgt_c1 <= l && h <= tgt_c2) {
+      T res = n->value;
+      if (tgt_c1 < l) {
+        res = join_values(res, join_region(init, l - tgt_c1 + 1));
+      }
+      if (h < tgt_c2) {
+        res = join_values(res, join_region(init, tgt_c2 - h + 1));
+      }
+      return res;
+    } else if (tgt_c2 <= mid) {
+      return call_query(n->left, tgt_c2 - tgt_c1 + 1);
+    } else if (mid < tgt_c1) {
+      return call_query(n->right, tgt_c2 - tgt_c1 + 1);
+    }
+    return join_values(
+        call_query(n->left, std::min(tgt_c2, mid) - tgt_c1 + 1),
+        call_query(n->right, tgt_c2 - std::max(tgt_c1, mid + 1) + 1));
+  }
+
+  T query(outer_node_t *n) {
+    int l = n->low, h = n->high, mid = l + (h - l)/2;
+    if (tgt_r1 <= l && h <= tgt_r2) {
+      T res = query(&(n->root));
+      if (tgt_r1 < l) {
+        res = join_values(res, join_region(init, width*(l - tgt_r1 + 1)));
+      }
+      if (h < tgt_r2) {
+        res = join_values(res, join_region(init, width*(tgt_r2 - h + 1)));
+      }
+      return res;
+    } else if (tgt_r2 <= mid) {
+      return call_query(n->left, tgt_r2 - tgt_r1 + 1);
+    } else if (mid < tgt_r1) {
+      return call_query(n->right, tgt_r2 - tgt_r1 + 1);
+    }
+    return join_values(
+        call_query(n->left, width*(std::min(tgt_r2, mid) - tgt_r1 + 1)),
+        call_query(n->right, width*(tgt_r2 - std::max(tgt_r1, mid + 1) + 1)));
+  }
 
   void update(inner_node_t *n, int c, const T &d, bool leaf_row) {
     int l = n->low, h = n->high, mid = l + (h - l)/2;
@@ -152,53 +199,6 @@ template<class T> class segment_tree_2d {
     update(&(n->root), c, value, false);
   }
 
-  template<class node_t>
-  inline T call_query(node_t *n, int area) {
-    return (n != NULL) ? query(n) : join_region(init, area);
-  }
-
-  T query(inner_node_t *n) {
-    int l = n->low, h = n->high, mid = l + (h - l)/2;
-    if (tgt_c1 <= l && h <= tgt_c2) {
-      T res = n->value;
-      if (tgt_c1 < l) {
-        res = join_values(res, join_region(init, l - tgt_c1 + 1));
-      }
-      if (h < tgt_c2) {
-        res = join_values(res, join_region(init, tgt_c2 - h + 1));
-      }
-      return res;
-    } else if (tgt_c2 <= mid) {
-      return call_query(n->left, tgt_c2 - tgt_c1 + 1);
-    } else if (mid < tgt_c1) {
-      return call_query(n->right, tgt_c2 - tgt_c1 + 1);
-    }
-    return join_values(
-        call_query(n->left, std::min(tgt_c2, mid) - tgt_c1 + 1),
-        call_query(n->right, tgt_c2 - std::max(tgt_c1, mid + 1) + 1));
-  }
-
-  T query(outer_node_t *n) {
-    int l = n->low, h = n->high, mid = l + (h - l)/2;
-    if (tgt_r1 <= l && h <= tgt_r2) {
-      T res = query(&(n->root));
-      if (tgt_r1 < l) {
-        res = join_values(res, join_region(init, width*(l - tgt_r1 + 1)));
-      }
-      if (h < tgt_r2) {
-        res = join_values(res, join_region(init, width*(tgt_r2 - h + 1)));
-      }
-      return res;
-    } else if (tgt_r2 <= mid) {
-      return call_query(n->left, tgt_r2 - tgt_r1 + 1);
-    } else if (mid < tgt_r1) {
-      return call_query(n->right, tgt_r2 - tgt_r1 + 1);
-    }
-    return join_values(
-        call_query(n->left, width*(std::min(tgt_r2, mid) - tgt_r1 + 1)),
-        call_query(n->right, width*(tgt_r2 - std::max(tgt_r1, mid + 1) + 1)));
-  }
-
   static void clean_up(inner_node_t *n) {
     if (n != NULL) {
       clean_up(n->left);
@@ -225,8 +225,8 @@ template<class T> class segment_tree_2d {
     clean_up(root);
   }
 
-  void update(int r, int c, const T &d) {
-    update(root, r, c, d);
+  T at(int r, int c) {
+    return query(r, c, r, c);
   }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -238,8 +238,8 @@ template<class T> class segment_tree_2d {
     return query(root);
   }
 
-  T at(int r, int c) {
-    return query(r, c, r, c);
+  void update(int r, int c, const T &d) {
+    update(root, r, c, d);
   }
 };
 

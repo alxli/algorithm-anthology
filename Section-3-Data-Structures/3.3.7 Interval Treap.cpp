@@ -48,13 +48,13 @@ template<class T> class interval_treap {
     }
 
     interval_t interval;
-    node_t *left, *right;
     T max;
     int priority;
+    node_t *left, *right;
 
     node_t(const interval_t &i)
-        : interval(i), left(NULL), right(NULL), max(i.second),
-          priority(rand32()) {}
+        : interval(i), max(i.second), priority(rand32()), left(NULL),
+          right(NULL) {}
 
     void update() {
       max = interval.second;
