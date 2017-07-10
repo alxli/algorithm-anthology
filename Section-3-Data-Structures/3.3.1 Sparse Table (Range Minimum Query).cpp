@@ -10,7 +10,7 @@ equal to either dp[i][j - 1] or dp[i + 2^(j - 1) - 1)][j - 1], whichever of the
 indices corresponds to the smaller value in the array.
 
 Time Complexity:
-- O(n log n) per call to build_rmq_table(), where n is the size of the array.
+- O(n log n) per call to build(), where n is the size of the array.
 - O(1) per call to query_min().
 
 Space Complexity:
@@ -23,7 +23,7 @@ Space Complexity:
 const int MAXN = 1000;
 std::vector<int> table, dp[MAXN];
 
-void build_rmq_table(int n, int a[]) {
+void build(int n, int a[]) {
   table.resize(n + 1);
   for (int i = 2; i <= n; i++) {
     table[i] = table[i >> 1] + 1;
@@ -41,7 +41,7 @@ void build_rmq_table(int n, int a[]) {
   }
 }
 
-int query_min(int a[], int lo, int hi) {
+int query(int a[], int lo, int hi) {
   int j = table[hi - lo];
   int x = dp[lo][j];
   int y = dp[hi - (1 << j) + 1][j];
@@ -54,7 +54,7 @@ int query_min(int a[], int lo, int hi) {
 
 int main() {
   int arr[5] = {6, -2, 1, 8, 10};
-  build_rmq_table(5, arr);
-  assert(query_min(arr, 0, 3) == -2);
+  build(5, arr);
+  assert(query(arr, 0, 3) == -2);
   return 0;
 }
