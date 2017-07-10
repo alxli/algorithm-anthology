@@ -52,14 +52,14 @@ template<class K, class V> class treap {
 
   int num_nodes;
 
-  static void rotate_l(node_t *&n) {
+  static void rotate_left(node_t *&n) {
     node_t *tmp = n;
     n = n->right;
     tmp->right = n->left;
     n->left = tmp;
   }
 
-  static void rotate_r(node_t *&n) {
+  static void rotate_right(node_t *&n) {
     node_t *tmp = n;
     n = n->left;
     tmp->left = n->right;
@@ -73,13 +73,13 @@ template<class K, class V> class treap {
     }
     if (k < n->key && insert(n->left, k, v)) {
       if (n->left->priority < n->priority) {
-        rotate_r(n);
+        rotate_right(n);
       }
       return true;
     }
     if (n->key < k && insert(n->right, k, v)) {
       if (n->right->priority < n->priority) {
-        rotate_l(n);
+        rotate_left(n);
       }
       return true;
     }
@@ -97,10 +97,10 @@ template<class K, class V> class treap {
     }
     if (n->left != NULL && n->right != NULL) {
       if (n->left->priority < n->right->priority) {
-        rotate_r(n);
+        rotate_right(n);
         return erase(n->right, k);
       }
-      rotate_l(n);
+      rotate_left(n);
       return erase(n->left, k);
     }
     node_t *tmp = (n->left != NULL) ? n->left : n->right;

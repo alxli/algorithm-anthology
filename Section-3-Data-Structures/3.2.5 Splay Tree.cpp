@@ -46,14 +46,14 @@ template<class K, class V> class splay_tree {
 
   int num_nodes;
 
-  static void rotate_l(node_t *&n) {
+  static void rotate_left(node_t *&n) {
     node_t *tmp = n;
     n = n->right;
     tmp->right = n->left;
     n->left = tmp;
   }
 
-  static void rotate_r(node_t *&n) {
+  static void rotate_right(node_t *&n) {
     node_t *tmp = n;
     n = n->left;
     tmp->left = n->right;
@@ -67,28 +67,28 @@ template<class K, class V> class splay_tree {
     if (k < n->key && n->left != NULL) {
       if (k < n->left->key) {
         splay(n->left->left, k);
-        rotate_r(n);
+        rotate_right(n);
       } else if (n->left->key < k) {
         splay(n->left->right, k);
         if (n->left->right != NULL) {
-          rotate_l(n->left);
+          rotate_left(n->left);
         }
       }
       if (n->left != NULL) {
-        rotate_r(n);
+        rotate_right(n);
       }
     } else if (n->key < k && n->right != NULL) {
       if (k < n->right->key) {
         splay(n->right->left, k);
         if (n->right->left != NULL) {
-          rotate_r(n->right);
+          rotate_right(n->right);
         }
       } else if (n->right->key < k) {
         splay(n->right->right, k);
-        rotate_l(n);
+        rotate_left(n);
       }
       if (n->right != NULL) {
-        rotate_l(n);
+        rotate_left(n);
       }
     }
   }

@@ -59,7 +59,7 @@ template<class K, class V> class avl_tree {
     }
   }
 
-  static void rotate_l(node_t *&n) {
+  static void rotate_left(node_t *&n) {
     node_t *tmp = n;
     n = n->right;
     tmp->right = n->left;
@@ -68,7 +68,7 @@ template<class K, class V> class avl_tree {
     update_height(n);
   }
 
-  static void rotate_r(node_t *&n) {
+  static void rotate_right(node_t *&n) {
     node_t *tmp = n;
     n = n->left;
     tmp->left = n->right;
@@ -88,15 +88,15 @@ template<class K, class V> class avl_tree {
     update_height(n);
     int bf = balance_factor(n);
     if (bf > 1 && balance_factor(n->left) >= 0) {
-      rotate_r(n);
+      rotate_right(n);
     } else if (bf > 1 && balance_factor(n->left) < 0) {
-      rotate_l(n->left);
-      rotate_r(n);
+      rotate_left(n->left);
+      rotate_right(n);
     } else if (bf < -1 && balance_factor(n->right) <= 0) {
-      rotate_l(n);
+      rotate_left(n);
     } else if (bf < -1 && balance_factor(n->right) > 0) {
-      rotate_r(n->right);
-      rotate_l(n);
+      rotate_right(n->right);
+      rotate_left(n);
     }
   }
 

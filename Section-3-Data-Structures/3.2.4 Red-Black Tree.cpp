@@ -49,7 +49,7 @@ template<class K, class V> class red_black_tree {
 
   int num_nodes;
 
-  void rotate_l(node_t *n) {
+  void rotate_left(node_t *n) {
     node_t *tmp = n->right;
     if ((n->right = tmp->left) != LEAF_NIL) {
       n->right->parent = n;
@@ -65,7 +65,7 @@ template<class K, class V> class red_black_tree {
     n->parent = tmp;
   }
 
-  void rotate_r(node_t *n) {
+  void rotate_right(node_t *n) {
     node_t *tmp = n->left;
     if ((n->left = tmp->right) != LEAF_NIL) {
       n->left->parent = n;
@@ -94,11 +94,11 @@ template<class K, class V> class red_black_tree {
           n = grandparent;
         } else {
           if (n == parent->right) {
-            rotate_l(parent);
+            rotate_left(parent);
             n = parent;
             parent = n->parent;
           }
-          rotate_r(grandparent);
+          rotate_right(grandparent);
           std::swap(parent->color, grandparent->color);
           n = parent;
         }
@@ -111,11 +111,11 @@ template<class K, class V> class red_black_tree {
           n = grandparent;
         } else {
           if (n == parent->left) {
-            rotate_r(parent);
+            rotate_right(parent);
             n = parent;
             parent = n->parent;
           }
-          rotate_l(grandparent);
+          rotate_left(grandparent);
           std::swap(parent->color, grandparent->color);
           n = parent;
         }
@@ -143,7 +143,7 @@ template<class K, class V> class red_black_tree {
         if (sibling->color == RED) {
           sibling->color = BLACK;
           parent->color = RED;
-          rotate_l(parent);
+          rotate_left(parent);
           sibling = parent->right;
         }
         if (sibling->left->color == BLACK && sibling->right->color == BLACK) {
@@ -153,13 +153,13 @@ template<class K, class V> class red_black_tree {
           if (sibling->right->color == BLACK) {
             sibling->left->color = BLACK;
             sibling->color = RED;
-            rotate_r(sibling);
+            rotate_right(sibling);
             sibling = parent->right;
           }
           sibling->color = parent->color;
           parent->color = BLACK;
           sibling->right->color = BLACK;
-          rotate_l(parent);
+          rotate_left(parent);
           n = root;
         }
       } else {
@@ -167,7 +167,7 @@ template<class K, class V> class red_black_tree {
         if (sibling->color == RED) {
           sibling->color = BLACK;
           parent->color = RED;
-          rotate_r(parent);
+          rotate_right(parent);
           sibling = parent->left;
         }
         if (sibling->left->color == BLACK && sibling->right->color == BLACK) {
@@ -177,13 +177,13 @@ template<class K, class V> class red_black_tree {
           if (sibling->left->color == BLACK) {
             sibling->right->color = BLACK;
             sibling->color = RED;
-            rotate_l(sibling);
+            rotate_left(sibling);
             sibling = parent->left;
           }
           sibling->color = parent->color;
           parent->color = BLACK;
           sibling->left->color = BLACK;
-          rotate_r(parent);
+          rotate_right(parent);
           n = root;
         }
       }
