@@ -73,8 +73,9 @@ template<class T> class segment_tree {
       value[i] = v;
       return;
     }
-    build(i*2 + 1, lo, (lo + hi)/2, v);
-    build(i*2 + 2, (lo + hi)/2 + 1, hi, v);
+    int mid = lo + (hi - lo)/2;
+    build(i*2 + 1, lo, mid, v);
+    build(i*2 + 2, mid + 1, hi, v);
     value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
@@ -84,8 +85,9 @@ template<class T> class segment_tree {
       value[i] = *(arr + lo);
       return;
     }
-    build(i*2 + 1, lo, (lo + hi)/2, arr);
-    build(i*2 + 2, (lo + hi)/2 + 1, hi, arr);
+    int mid = lo + (hi - lo)/2;
+    build(i*2 + 1, lo, mid, arr);
+    build(i*2 + 2, mid + 1, hi, arr);
     value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
   }
 
@@ -107,7 +109,7 @@ template<class T> class segment_tree {
     if (lo == tgt_lo && hi == tgt_hi) {
       return value[i];
     }
-    int mid = (lo + hi)/2;
+    int mid = lo + (hi - lo)/2;
     if (tgt_lo <= mid && mid < tgt_hi) {
       return join_values(
                 query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),

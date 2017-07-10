@@ -38,14 +38,14 @@ void dfs(int u, int d) {
   }
 }
 
-void build_tree(int n, int lo, int hi) {
+void build(int n, int lo, int hi) {
   if (lo == hi) {
     minpos[n] = dfs_order[lo];
     return;
   }
-  int lchild = 2*n + 1, rchild = 2*n + 2;
-  build_tree(lchild, lo, (lo + hi)/2);
-  build_tree(rchild, (lo + hi)/2 + 1, hi);
+  int lchild = 2*n + 1, rchild = 2*n + 2, mid = lo + (hi - lo)/2;
+  build(lchild, lo, mid);
+  build(rchild, mid + 1, hi);
   minpos[n] = depth[minpos[lchild]] < depth[minpos[rchild]] ? minpos[lchild]
                                                             : minpos[rchild];
 }
@@ -56,7 +56,7 @@ void build(int nodes, int root) {
   len = 2*nodes - 1;
   counter = 0;
   dfs(root, 0);
-  build_tree(0, 0, len - 1);
+  build(0, 0, len - 1);
   for (int i = 0; i < len; i++) {
     if (first[dfs_order[i]] == -1) {
       first[dfs_order[i]] = i;
@@ -68,7 +68,7 @@ int get_minpos(int a, int b, int n, int lo, int hi) {
   if (a == lo && b == hi) {
     return minpos[n];
   }
-  int mid = (lo + hi)/2;
+  int mid = lo + (hi - lo)/2;
   if (a <= mid && mid < b) {
     int p1 = get_minpos(a, std::min(b, mid), 2*n + 1, lo, mid);
     int p2 = get_minpos(std::max(a, mid + 1), b, 2*n + 2, mid + 1, hi);

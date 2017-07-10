@@ -51,9 +51,9 @@ template<class T> class range_tree {
       }
       return;
     }
-    int l = n*2 + 1, r = n*2 + 2;
-    build(l, lo, (lo + hi)/2);
-    build(r, (lo + hi)/2 + 1, hi);
+    int l = n*2 + 1, r = n*2 + 2, mid = lo + (hi - lo)/2;
+    build(l, lo, mid);
+    build(r, mid + 1, hi);
     columns[n].resize(columns[l].size() + columns[r].size());
     std::merge(columns[l].begin(), columns[l].end(),
                columns[r].begin(), columns[r].end(),
@@ -77,8 +77,9 @@ template<class T> class range_tree {
         }
       }
     } else if (lo != hi) {
-      query(n*2 + 1, lo, (lo + hi)/2, f);
-      query(n*2 + 2, (lo + hi)/2 + 1, hi, f);
+      int mid = lo + (hi - lo)/2;
+      query(n*2 + 1, lo, mid, f);
+      query(n*2 + 2, mid + 1, hi, f);
     }
   }
 

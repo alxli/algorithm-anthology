@@ -64,8 +64,8 @@ template<class T> class segment_tree_2d {
     int low, high;
     inner_node_t *left, *right;
 
-    inner_node_t(int l, int h, const T &v)
-        : value(v), low(l), high(h), left(NULL), right(NULL) {}
+    inner_node_t(int lo, int hi, const T &v)
+        : value(v), low(lo), high(hi), left(NULL), right(NULL) {}
   };
 
   struct outer_node_t {
@@ -73,8 +73,8 @@ template<class T> class segment_tree_2d {
     int low, high;
     outer_node_t *left, *right;
 
-    outer_node_t(int l, int h, const T &v)
-        : root(0, MAXC, v), low(l), high(h), left(NULL), right(NULL) {}
+    outer_node_t(int lo, int hi, const T &v)
+        : root(0, MAXC, v), low(lo), high(hi), left(NULL), right(NULL) {}
   } *root;
 
   T init;
@@ -88,14 +88,14 @@ template<class T> class segment_tree_2d {
   }
 
   T query(inner_node_t *n) {
-    int l = n->low, h = n->high, mid = l + (h - l)/2;
-    if (tgt_c1 <= l && h <= tgt_c2) {
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    if (tgt_c1 <= lo && hi <= tgt_c2) {
       T res = n->value;
-      if (tgt_c1 < l) {
-        res = join_values(res, join_region(init, l - tgt_c1 + 1));
+      if (tgt_c1 < lo) {
+        res = join_values(res, join_region(init, lo - tgt_c1 + 1));
       }
-      if (h < tgt_c2) {
-        res = join_values(res, join_region(init, tgt_c2 - h + 1));
+      if (hi < tgt_c2) {
+        res = join_values(res, join_region(init, tgt_c2 - hi + 1));
       }
       return res;
     } else if (tgt_c2 <= mid) {
@@ -109,14 +109,14 @@ template<class T> class segment_tree_2d {
   }
 
   T query(outer_node_t *n) {
-    int l = n->low, h = n->high, mid = l + (h - l)/2;
-    if (tgt_r1 <= l && h <= tgt_r2) {
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    if (tgt_r1 <= lo && hi <= tgt_r2) {
       T res = query(&(n->root));
-      if (tgt_r1 < l) {
-        res = join_values(res, join_region(init, width*(l - tgt_r1 + 1)));
+      if (tgt_r1 < lo) {
+        res = join_values(res, join_region(init, width*(lo - tgt_r1 + 1)));
       }
-      if (h < tgt_r2) {
-        res = join_values(res, join_region(init, width*(tgt_r2 - h + 1)));
+      if (hi < tgt_r2) {
+        res = join_values(res, join_region(init, width*(tgt_r2 - hi + 1)));
       }
       return res;
     } else if (tgt_r2 <= mid) {
@@ -130,8 +130,8 @@ template<class T> class segment_tree_2d {
   }
 
   void update(inner_node_t *n, int c, const T &d, bool leaf_row) {
-    int l = n->low, h = n->high, mid = l + (h - l)/2;
-    if (l == h) {
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    if (lo == hi) {
       if (leaf_row) {
         n->value = join_value_with_delta(n->value, d);
       } else {
@@ -148,13 +148,13 @@ template<class T> class segment_tree_2d {
     } else {
       do {
         if (c <= mid) {
-          h = mid;
+          hi = mid;
         } else {
-          l = mid + 1;
+          lo = mid + 1;
         }
-        mid = l + (h - l)/2;
+        mid = lo + (hi - lo)/2;
       } while ((c <= mid) == (target->low <= mid));
-      inner_node_t *tmp = new inner_node_t(l, h, init);
+      inner_node_t *tmp = new inner_node_t(lo, hi, init);
       if (target->low <= mid) {
         tmp->left = target;
       } else {
@@ -164,36 +164,36 @@ template<class T> class segment_tree_2d {
       update(tmp, c, d, leaf_row);
     }
     T left_value = (n->left != NULL) ? n->left->value
-                                     : join_region(init, mid - l + 1);
+                                     : join_region(init, mid - lo + 1);
     T right_value = (n->right != NULL) ? n->right->value
-                                       : join_region(init, h - mid);
+                                       : join_region(init, hi - mid);
     n->value = join_values(left_value, right_value);
   }
 
   void update(outer_node_t *n, int r, int c, const T &d) {
-    int l = n->low, h = n->high, mid = l + (h - l)/2;
-    if (l == h) {
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    if (lo == hi) {
       update(&(n->root), c, d, true);
       return;
     }
     if (r <= mid) {
       if (n->left == NULL) {
-        n->left = new outer_node_t(l, mid, init);
+        n->left = new outer_node_t(lo, mid, init);
       }
       update(n->left, r, c, d);
     } else {
       if (n->right == NULL) {
-        n->right = new outer_node_t(mid + 1, h, init);
+        n->right = new outer_node_t(mid + 1, hi, init);
       }
       update(n->right, r, c, d);
     }
-    T value = join_region(init, h - l + 1);
+    T value = join_region(init, hi - lo + 1);
     if (n->left != NULL || n->right != NULL) {
       tgt_c1 = tgt_c2 = c;
       T left_value = (n->left != NULL) ? query(&(n->left->root))
-                                       : join_region(init, mid - l + 1);
+                                       : join_region(init, mid - lo + 1);
       T right_value = (n->right != NULL) ? query(&(n->right->root))
-                                         : join_region(init, h - mid);
+                                         : join_region(init, hi - mid);
       value = join_values(left_value, right_value);
     }
     update(&(n->root), c, value, false);

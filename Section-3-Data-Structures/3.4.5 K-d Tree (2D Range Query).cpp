@@ -46,7 +46,7 @@ template<class T> class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = (lo + hi)/2;
+    int mid = lo + (hi - lo)/2;
     std::nth_element(tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
                      div_x ? comp1 : comp2);
     l_index[mid] = lo;
@@ -71,7 +71,7 @@ template<class T> class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = (lo + hi)/2;
+    int mid = lo + (hi - lo)/2;
     T ax = minp[mid].first, ay = minp[mid].second;
     T bx = maxp[mid].first, by = maxp[mid].second;
     if (x2 < ax || bx < x1 || y2 < ay || by < y1) {

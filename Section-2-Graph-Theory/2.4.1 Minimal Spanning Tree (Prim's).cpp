@@ -46,9 +46,9 @@ int prim(int nodes) {
                              std::make_pair(i, adj[i][j].first)));
     }
     while (!pq.empty()) {
-      int w = -pq.top().first;
       int u = pq.top().second.first;
       int v = pq.top().second.second;
+      int w = -pq.top().first;
       pq.pop();
       if (visit[u] && !visit[v]) {
         visit[v] = true;

@@ -97,7 +97,7 @@ template<class T> class quadtree {
 
   void push_delta(node_t *n, int r1, int c1, int r2, int c2) {
     if (n->pending) {
-      int rmid = (r1 + r2)/2, cmid = (c1 + c2)/2;
+      int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
       int rlen = r2 - r1 + 1, clen = c2 - c1 + 1;
       n->value = join_value_with_delta(n->value, n->delta, rlen*clen);
       if (rlen*clen > 1) {
@@ -135,7 +135,7 @@ template<class T> class quadtree {
       found = true;
       return;
     }
-    int rmid = (r1 + r2)/2, cmid = (c1 + c2)/2;
+    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
     query(n->child[0], r1, c1, rmid, cmid);
     query(n->child[1], rmid + 1, c1, r2, cmid);
     query(n->child[2], r1, cmid + 1, rmid, c2);
@@ -156,12 +156,12 @@ template<class T> class quadtree {
       push_delta(n, r1, c1, r2, c2);
       return;
     }
-    int rmid = (r1 + r2)/2, cmid = (c1 + c2)/2;
+    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
     update(n->child[0], r1, c1, rmid, cmid);
     update(n->child[1], rmid + 1, c1, r2, cmid);
     update(n->child[2], r1, cmid + 1, rmid, c2);
     update(n->child[3], rmid + 1, cmid + 1, r2, c2);
-    bool found = n->child[0]->value;
+    n->value = n->child[0]->value;
     for (int i = 1; i < 4; i++) {
       n->value = join_values(n->value, n->child[i]->value);
     }
@@ -214,9 +214,9 @@ public:
 /*** Example Usage and Output:
 
 Values:
-7 6 9
-0 4 9
-9 9 9
+7 6 0
+5 4 0
+0 1 9
 
 ***/
 
@@ -228,11 +228,10 @@ int main() {
   quadtree<int> t(0);
   t.update(0, 0, 7);
   t.update(0, 1, 6);
+  t.update(1, 0, 5);
   t.update(1, 1, 4);
   t.update(2, 1, 1);
-  t.update(2, 2, 4);
-  t.update(0, 2, 3, 2, 9);
-  t.update(2, 0, 2, 2, 9);
+  t.update(2, 2, 9);
   cout << "Values:" << endl;
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
@@ -241,10 +240,10 @@ int main() {
     cout << endl;
   }
   assert(t.query(0, 0, 0, 1) == 6);
-  assert(t.query(0, 0, 1, 0) == 0);
-  assert(t.query(1, 1, 2, 2) == 4);
+  assert(t.query(0, 0, 1, 0) == 5);
+  assert(t.query(1, 1, 2, 2) == 0);
   assert(t.query(0, 0, 1000000000, 1000000000) == 0);
-  t.update(0, 500000000, 0, 500000000, -100);
+  t.update(500000000, 500000000, -100);
   assert(t.query(0, 0, 1000000000, 1000000000) == -100);
   return 0;
 }

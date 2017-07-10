@@ -44,7 +44,7 @@ template<class T> class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = (lo + hi)/2;
+    int mid = lo + (hi - lo)/2;
     T minx, maxx, miny, maxy;
     minx = maxx = tree[lo].first;
     miny = maxy = tree[lo].second;
@@ -72,7 +72,7 @@ template<class T> class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = (lo + hi)/2;
+    int mid = lo + (hi - lo)/2;
     T dx = x - tree[mid].first, dy = y - tree[mid].second;
     long double d = dx*(long double)dx + dy*(long double)dy;
     if (d < min_dist && (can_equal || d != 0)) {

@@ -38,13 +38,13 @@ int find_root(int x) {
 int kruskal(int nodes) {
   mst.clear();
   std::sort(edges.begin(), edges.end());
-  int u, v, total_dist = 0;
+  int total_dist = 0;
   for (int i = 0; i < nodes; i++) {
     root[i] = i;
   }
   for (int i = 0; i < (int)edges.size(); i++) {
-    u = find_root(edges[i].second.first);
-    v = find_root(edges[i].second.second);
+    int u = find_root(edges[i].second.first);
+    int v = find_root(edges[i].second.second);
     if (u != v) {
       root[u] = root[v];
       mst.push_back(edges[i].second);

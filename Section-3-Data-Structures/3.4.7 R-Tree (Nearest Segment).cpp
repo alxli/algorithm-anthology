@@ -71,7 +71,7 @@ class r_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = (lo + hi)/2;
+    int mid = lo + (hi - lo)/2;
     std::nth_element(tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
                      div_x ? cmp_x : cmp_y);
     for (int i = lo; i < hi; i++) {
@@ -92,7 +92,7 @@ class r_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = (lo + hi)/2;
+    int mid = lo + (hi - lo)/2;
     long double d = point_to_segment_squared(x, y, tree[mid]);
     if (min_dist > d) {
       min_dist = d;
@@ -113,7 +113,7 @@ class r_tree {
     } else {
       nearest(mid + 1, hi, x, y, !div_x);
       if (lo < mid) {
-        int mid1 = (lo + mid)/2;
+        int mid1 = lo + (mid - lo)/2;
         long long dist = div_x ? seg_dist(x, minx[mid1], maxx[mid1]) :
                                  seg_dist(y, miny[mid1], maxy[mid1]);
         if (dist*dist < min_dist) {

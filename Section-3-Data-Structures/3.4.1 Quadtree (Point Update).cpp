@@ -94,7 +94,7 @@ template<class T> class quadtree {
       found = true;
       return;
     }
-    int rmid = (r1 + r2)/2, cmid = (c1 + c2)/2;
+    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
     query(n->child[0], r1, c1, rmid, cmid);
     query(n->child[1], rmid + 1, c1, r2, cmid);
     query(n->child[2], r1, cmid + 1, rmid, c2);
@@ -116,7 +116,7 @@ template<class T> class quadtree {
       n->value = join_value_with_delta(n->value, delta);
       return;
     }
-    int rmid = (r1 + r2)/2, cmid = (c1 + c2)/2;
+    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
     update(n->child[0], r1, c1, rmid, cmid);
     update(n->child[1], rmid + 1, c1, r2, cmid);
     update(n->child[2], r1, cmid + 1, rmid, c2);
