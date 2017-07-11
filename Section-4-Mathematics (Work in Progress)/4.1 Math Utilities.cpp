@@ -14,7 +14,6 @@ compilers that do not support C++11 and later.
 #include <string>
 #include <vector>
 
-// Portable definitions for common floating point constants.
 #ifndef M_PI
   const double M_PI = acos(-1.0);
 #endif
@@ -51,7 +50,6 @@ const double EPS = 1e-9;
 #define GT(x, y) ((x) > (y) + EPS)
 #define LE(x, y) ((x) <= (y) + EPS)
 #define GE(x, y) ((x) >= (y) - EPS)
-
 #define rEQ(x, y) (fabs((x) - (y)) <= EPS*fabs(x))
 
 /*
@@ -63,13 +61,11 @@ Sign Functions
 - signbit_(x) is analogous to std::signbit() in C++11 and later, returning
   whether the sign bit of the floating point number is set to true. If so, then
   x is considered "negative." Note that this works as expected on +0.0, -0.0,
-  Inf, -Inf, NaN, as well as -NaN.
+  Inf, -Inf, NaN, as well as -NaN. The first version requires that sizeof(int)
+  equals sizeof(float) while the second version requires that sizeof(long long)
+  equals sizeof(double).
 - copysign_(x, y) is analogous to std::copysign() in C++11 and later, returning
   a number with the magnitude of x but the sign of y.
-
-Platform Assumptions:
-- sizeof(int) == sizeof(float)
-- sizeof(long long) == sizeof(double)
 
 */
 
@@ -193,8 +189,6 @@ Error Function
 - erfc_(x) returns the error function complement, that is, 1 - erf_(x). This
   function is analogous to erfc(x) in C++11 and later.
 
-Note that the functions are implemented co-dependently.
-
 */
 
 #define ERF_EPS 1e-14
@@ -278,13 +272,13 @@ double tgamma_(double x) {
     static const double p[] = {
         -1.71618513886549492533811e+0, 2.47656508055759199108314e+1,
         -3.79804256470945635097577e+2, 6.29331155312818442661052e+2,
-         8.66966202790413211295064e+2,-3.14512729688483675254357e+4,
+        8.66966202790413211295064e+2, -3.14512729688483675254357e+4,
         -3.61444134186911729807069e+4, 6.64561438202405440627855e+4};
     static const double q[] = {
         -3.08402300119738975254353e+1, 3.15350626979604161529144e+2,
-        -1.01515636749021914166146e+3,-3.10777167157231109440444e+3,
-         2.25381184209801510330112e+4, 4.75584627752788110767815e+3,
-        -1.34659959864969306392456e+5,-1.15132259675553483497211e+5};
+        -1.01515636749021914166146e+3, -3.10777167157231109440444e+3,
+        2.25381184209801510330112e+4, 4.75584627752788110767815e+3,
+        -1.34659959864969306392456e+5, -1.15132259675553483497211e+5};
     double num = 0, den = 1, z = y - 1;
     for (int i = 0; i < 8; i++) {
       num = (num + p[i])*z;
