@@ -4,6 +4,12 @@ Common mathematic constants and functions, many of which are substitutes for
 features which are not available in standard C++, or may not be available on
 compilers that do not support C++11 and later.
 
+Time Complexity:
+- O(1) for all operations.
+
+Space Complexity:
+- O(1) auxiliary for all operations.
+
 */
 
 #include <algorithm>
