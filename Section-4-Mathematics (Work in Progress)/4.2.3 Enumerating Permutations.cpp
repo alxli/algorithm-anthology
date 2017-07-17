@@ -1,29 +1,68 @@
 /*
 
-We shall consider a permutation of n objects to be an
-ordered list of size n that contains all n elements,
-where order is important. E.g. 1 1 2 0 and 0 1 2 1
-are considered two different permutations of 0 1 1 2.
-Compared to our prior definition of an arrangement, a
-permutable range of size n may contain repeated values
-of any type, not just the integers from 0 to n - 1.
+A permutation is an ordered list consisting of n (not necessarily distinct)
+elements.
+
+- next_permutation_(lo, hi) is analogous to std::next_permutation(lo, hi),
+  taking two Bidirectional iterators lo and hi as a range [lo, hi) for which the
+  function tries to rearrange to the next lexicographically greater permutation.
+  The function returns true if such a permutation exists, or false if the range
+  is already in descending order (in which case the values are unchanged). This
+  implementation requires an ordering on the set of possible elements defined by
+  the < operator on the iterator's value type.
+- next_permutation(n, a) is analogous to next_permutation(), except that it
+  takes an array a[] of size n instead of a range.
+- next_permutation(x) returns the next lexicographically greater permutation of
+  the binary digits of the integer x, that is, the lowest integer greater than
+  x with the same number of 1 bits. This can be used to generate combinations of
+  a set of n items by treating each 1 bit as whether to "take" the item at the
+  corresponding position.
+- permutation_by_rank(n, r) returns the permutation of the integers in the range
+  [0, n - 1] which is lexicographically ranked r, where r is a zero-based rank
+  in the range [0, n! - 1].
+- rank_by_permutation(n, a) returns an integer representing the zero-based
+  rank of permutation a[], which must consist of the integers in [0, n - 1].
+- permutation_cycles(n, a) returns the decomposition of the permutation a[] into
+  cycles. A permutation cycle is a subset of a permutation whose elements are
+  consecutively swapped, relative to a sorted set. For example, {3, 1, 0, 2}
+  decomposes to {0, 3, 2} and {1}, meaning that starting from the sorted order
+  {0, 1, 2, 3}, the 0th value is replaced by the 3rd, the 3rd by the 2nd, and
+  the 2nd by the 0th (0 -> 3 -> 2 -> 0).
+
+Time Complexity:
+- O(n^2) per call to next_permutation_(lo, hi), where n is the distance between
+  lo and hi.
+- O(n^2) per call to next_permutation(n, a), permutation_by_rank(n, r), and
+  rank_by_permutation(n, a).
+- O(1) per call to next_permutation(x).
+- O(n) per call to permutation_cycles().
+
+Space Complexity:
+- O(1) auxiliary for next_permutation_() and next_permutation().
+- O(n) auxiliary heap space for permutation_by_rank(), rank_by_permutation(),
+  and permutation_cycles().
 
 */
 
-#include <algorithm> /* copy, iter_swap, reverse, swap */
+#include <algorithm>
 #include <vector>
 
-//identical to std::next_permutation()
-template<class It> bool _next_permutation(It lo, It hi) {
-  if (lo == hi) return false;
+template<class It>
+bool next_permutation_(It lo, It hi) {
+  if (lo == hi) {
+    return false;
+  }
   It i = lo;
-  if (++i == hi) return false;
-  i = hi; --i;
+  if (++i == hi) {
+    return false;
+  }
+  i = hi;
+  --i;
   for (;;) {
-    It j = i; --i;
-    if (*i < *j) {
+    It j = i;
+    if (*--i < *j) {
       It k = hi;
-      while (!(*i < *--k)) /* pass */;
+      while (!(*i < *--k)) {}
       std::iter_swap(i, k);
       std::reverse(j, hi);
       return true;
@@ -35,229 +74,170 @@ template<class It> bool _next_permutation(It lo, It hi) {
   }
 }
 
-//array version
-template<class T> bool next_permutation(int n, T a[]) {
-  for (int i = n - 2; i >= 0; i--)
-    if (a[i] < a[i + 1])
-      for (int j = n - 1; ; j--)
+template<class T>
+bool next_permutation(int n, T a[]) {
+  for (int i = n - 2; i >= 0; i--) {
+    if (a[i] < a[i + 1]) {
+      for (int j = n - 1; ; j--) {
         if (a[i] < a[j]) {
           std::swap(a[i++], a[j]);
-          for (j = n - 1; i < j; i++, j--)
+          for (j = n - 1; i < j; i++, j--) {
             std::swap(a[i], a[j]);
+          }
           return true;
         }
+      }
+    }
+  }
   return false;
 }
 
-/*
-
-Calls the custom function f(vector) on all permutations
-of the integers from 0 to n - 1. This is more efficient
-than making many consecutive calls to next_permutation(),
-however, here, the permutations will not be printed in
-lexicographically increasing order.
-
-*/
-
-template<class ReportFunction>
-void gen_permutations(int n, ReportFunction report,
-                      std::vector<int> & p, int d) {
-  if (d == n) {
-    report(p);
-    return;
-  }
-  for (int i = 0; i < n; i++) {
-    if (p[i] == 0) {
-      p[i] = d;
-      gen_permutations(n, report, p, d + 1);
-      p[i] = 0;
-    }
-  }
-}
-
-template<class ReportFunction>
-void gen_permutations(int n, ReportFunction report) {
-  std::vector<int> perms(n, 0);
-  gen_permutations(n, report, perms, 0);
-}
-
-/*
-
-Finds the next lexicographically greater permutation of
-the binary digits of x. In other words, next_permutation()
-simply returns the smallest integer greater than x which
-has the same number of 1 bits (i.e. same popcount) as x.
-
-examples: next_permutation(10101 base 2) =  10110
-          next_permutation(11100 base 2) = 100011
-
-This can also be used to generate combinations as follows:
-If we let k = popcount(x), then we can use this to generate
-all possible masks to tell us which k items to take out of
-n total items (represented by the first n bits of x).
-
-*/
-
 long long next_permutation(long long x) {
   long long s = x & -x, r = x + s;
-  return r | (((x ^ r) >> 2) / s);
+  return r | (((x ^ r) >> 2)/s);
 }
 
-/*
-
-Given an integer rank x in range [0, n!), returns a vector
-of integers representing the x-th lexicographically smallest
-permutation of the integers in [0, n).
-
-examples: permutation_by_rank(4, 0) => {0, 1, 2, 3}
-          permutation_by_rank(4, 5) => {0, 3, 2, 1}
-
-*/
-
 std::vector<int> permutation_by_rank(int n, long long x) {
-  long long fact[n];
-  fact[0] = 1;
-  for (int i = 1; i < n; i++)
-    fact[i] = i * fact[i - 1];
-  std::vector<int> free(n), res(n);
-  for (int i = 0; i < n; i++) free[i] = i;
+  std::vector<long long> factorial(n);
+  std::vector<int> values(n), res(n);
+  factorial[0] = 1;
+  for (int i = 1; i < n; i++) {
+    factorial[i] = i*factorial[i - 1];
+  }
   for (int i = 0; i < n; i++) {
-    int pos = x / fact[n - 1 - i];
-    res[i] = free[pos];
-    std::copy(free.begin() + pos + 1, free.end(),
-              free.begin() + pos);
-    x %= fact[n - 1 - i];
+    values[i] = i;
+  }
+  for (int i = 0; i < n; i++) {
+    int pos = x/factorial[n - 1 - i];
+    res[i] = values[pos];
+    std::copy(values.begin() + pos + 1, values.end(), values.begin() + pos);
+    x %= factorial[n - 1 - i];
   }
   return res;
 }
 
-/*
-
-Given an array a[] of n integers each in range [0, n), returns
-the (0-based) lexicographical rank (counting from least to
-greatest) of the arrangement specified by a[] in all possible
-permutations of the integers from 0 to n - 1.
-
-examples: rank_by_permutation(3, {0, 1, 2}) => 0
-          rank_by_permutation(3, {2, 1, 0}) => 5
-
-*/
-
-template<class T> long long rank_by_permutation(int n, T a[]) {
-  long long fact[n];
-  fact[0] = 1;
-  for (int i = 1; i < n; i++)
-    fact[i] = i * fact[i - 1];
+template<class T>
+long long rank_by_permutation(int n, T a[]) {
+  std::vector<long long> factorial(n);
+  factorial[0] = 1;
+  for (int i = 1; i < n; i++) {
+    factorial[i] = i*factorial[i - 1];
+  }
   long long res = 0;
   for (int i = 0; i < n; i++) {
     int v = a[i];
-    for (int j = 0; j < i; j++)
-      if (a[j] < a[i]) v--;
-    res += v * fact[n - 1 - i];
+    for (int j = 0; j < i; j++) {
+      if (a[j] < a[i]) {
+        v--;
+      }
+    }
+    res += v*factorial[n - 1 - i];
   }
   return res;
 }
-
-/*
-
-Given a permutation a[] of the integers from 0 to n - 1,
-returns a decomposition of the permutation into cycles.
-A permutation cycle is a subset of a permutation whose
-elements trade places with one another. For example, the
-permutation {0, 2, 1, 3} decomposes to {0, 3, 2} and {1}.
-Here, the notation {0, 3, 2} means that starting from the
-original ordering {0, 1, 2, 3}, the 0th value is replaced
-by the 3rd, the 3rd by the 2nd, and the 2nd by the first,
-See: http://mathworld.wolfram.com/PermutationCycle.html
-
-*/
 
 typedef std::vector<std::vector<int> > cycles;
 
-cycles decompose_into_cycles(int n, int a[]) {
-  std::vector<bool> vis(n);
+cycles permutation_cycles(int n, int a[]) {
+  std::vector<bool> visit(n);
   cycles res;
   for (int i = 0; i < n; i++) {
-    if (vis[i]) continue;
-    int j = i;
-    std::vector<int> cur;
-    do {
-      cur.push_back(j);
-      vis[j] = true;
-      j = a[j];
-    } while (j != i);
-    res.push_back(cur);
+    if (!visit[i]) {
+      int j = i;
+      std::vector<int> curr;
+      do {
+        curr.push_back(j);
+        visit[j] = true;
+        j = a[j];
+      } while (j != i);
+      res.push_back(curr);
+    }
   }
   return res;
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Ordered permutations of [0, 4):
+{0,1,2,3} {0,1,3,2} {0,2,1,3} {0,2,3,1} {0,3,1,2} {0,3,2,1} {1,0,2,3} {1,0,3,2}
+{1,2,0,3} {1,2,3,0} {1,3,0,2} {1,3,2,0} {2,0,1,3} {2,0,3,1} {2,1,0,3} {2,1,3,0}
+{2,3,0,1} {2,3,1,0} {3,0,1,2} {3,0,2,1} {3,1,0,2} {3,1,2,0} {3,2,0,1} {3,2,1,0}
+
+Unordered permutations of [0, 3):
+{1,2,0} {1,0,2} {2,1,0} {0,1,2} {2,0,1} {0,2,1} {1,2,0} {1,0,2} {2,1,0} {0,1,2}
+{2,0,1} {0,2,1} {1,2,0} {1,0,2} {2,1,0} {0,1,2} {2,0,1} {0,2,1}
+
+Permutations of 2 zeros and 3 ones:
+00111 01011 01101 01110 10011 10101 10110 11001 11010 11100
+
+Decomposition of [0, 2, 1, 3] into cycles:
+{0,3,2} {1}
+
+***/
 
 #include <bitset>
 #include <cassert>
 #include <iostream>
 using namespace std;
 
-void printperm(const vector<int> & perm) {
-  for (int i = 0; i < (int)perm.size(); i++)
-    cout << perm[i] << " ";
-  cout << "\n";
+template<class It>
+void print_range(It lo, It hi) {
+  cout << "{";
+  for (; lo != hi; ++lo) {
+    cout << *lo << (lo == hi - 1 ? "" : ",");
+  }
+  cout << "} ";
 }
 
-template<class it> void print(it lo, it hi) {
-  for (; lo != hi; ++lo) cout << *lo << " ";
-  cout << "\n";
+void print(const vector<int> &v) {
+  cout << "{";
+  for (int i = 0; i < (int)v.size(); ++i) {
+    cout << v[i] << (i == (int)v.size() - 1 ? "" : ",");
+  }
+  cout << "} ";
 }
 
 int main() {
-  { //method 1: ordered
-    int n = 4, a[] = {0, 1, 2, 3};
-    int b[n], c[n];
-    for (int i = 0; i < n; i++) b[i] = c[i] = a[i];
-    cout << "Ordered permutations of 0 to " << n-1 << ":\n";
-    int cnt = 0;
+  { // Ordered permutations.
+    const int n = 4;
+    int a[] = {0, 1, 2, 3}, b[n], c[n];
+    for (int i = 0; i < n; i++) {
+      b[i] = c[i] = a[i];
+    }
+    cout << "Ordered permutations of [0, " << n << "):" << endl;
+    int count = 0;
     do {
-      print(a, a + n);
+      print_range(a, a + n);
       assert(equal(b, b + n, a));
       assert(equal(c, c + n, a));
-      vector<int> d = permutation_by_rank(n, cnt);
+      vector<int> d = permutation_by_rank(n, count);
       assert(equal(d.begin(), d.end(), a));
-      assert(rank_by_permutation(n, a) == cnt);
-      cnt++;
+      assert(rank_by_permutation(n, a) == count);
+      count++;
       std::next_permutation(b, b + n);
-      _next_permutation(c, c + n);
+      next_permutation(c, c + n);
     } while (next_permutation(n, a));
-    cout << "\n";
+    cout << endl;
   }
-
-  { //method 2: unordered
-    int n = 3;
-    cout << "Unordered permutations of 0 to " << n-1 << ":\n";
-    gen_permutations(n, printperm);
-    cout << "\n";
-  }
-
-  { //permuting binary digits
+  { // Permutations of binary digits.
     const int n = 5;
-    cout << "Permutations of 2 zeros and 3 ones:\n";
-    long long lo = 7;  // 00111 in base 2
-    long long hi = 35; //100011 in base 2
+    cout << "\nPermutations of 2 zeros and 3 ones:" << endl;
+    int lo = bitset<5>(string("00111")).to_ulong();
+    int hi = bitset<6>(string("100011")).to_ulong();
     do {
-      cout << bitset<n>(lo).to_string() << "\n";
+      cout << bitset<n>(lo).to_string() << " ";
     } while ((lo = next_permutation(lo)) != hi);
-    cout << "\n";
+    cout << endl;
   }
-
-  { //permutation cycles
-    int n = 4, a[] = {3, 1, 0, 2};
-    cout << "Decompose 0 2 1 3 into cycles:\n";
-    cycles c = decompose_into_cycles(n, a);
+  { // Decomposition into cycles.
+    const int n = 4;
+    int a[] = {3, 1, 0, 2};
+    cout << "\nDecomposition of [0, 2, 1, 3] into cycles:" << endl;
+    cycles c = permutation_cycles(n, a);
     for (int i = 0; i < (int)c.size(); i++) {
-      cout << "Cycle " << i + 1 << ":";
-      for (int j = 0; j < (int)c[i].size(); j++)
-        cout << " " << c[i][j];
-      cout << "\n";
+      print(c[i]);
     }
+    cout << endl;
   }
   return 0;
 }
