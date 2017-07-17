@@ -185,14 +185,6 @@ void print_range(It lo, It hi) {
   cout << "} ";
 }
 
-void print(const vector<int> &v) {
-  cout << "{";
-  for (int i = 0; i < (int)v.size(); ++i) {
-    cout << v[i] << (i == (int)v.size() - 1 ? "" : ",");
-  }
-  cout << "} ";
-}
-
 int main() {
   {
     const int n = 4;
@@ -231,7 +223,7 @@ int main() {
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     cycles c = permutation_cycles(n, a);
     for (int i = 0; i < (int)c.size(); i++) {
-      print(c[i]);
+      print_range(c[i].begin(), c[i].end());
     }
     cout << endl;
   }
