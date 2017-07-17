@@ -158,19 +158,15 @@ cycles permutation_cycles(int n, int a[]) {
 
 /*** Example Usage and Output:
 
-Ordered permutations of [0, 4):
+Permutations of [0, 4):
 {0,1,2,3} {0,1,3,2} {0,2,1,3} {0,2,3,1} {0,3,1,2} {0,3,2,1} {1,0,2,3} {1,0,3,2}
 {1,2,0,3} {1,2,3,0} {1,3,0,2} {1,3,2,0} {2,0,1,3} {2,0,3,1} {2,1,0,3} {2,1,3,0}
 {2,3,0,1} {2,3,1,0} {3,0,1,2} {3,0,2,1} {3,1,0,2} {3,1,2,0} {3,2,0,1} {3,2,1,0}
 
-Unordered permutations of [0, 3):
-{1,2,0} {1,0,2} {2,1,0} {0,1,2} {2,0,1} {0,2,1} {1,2,0} {1,0,2} {2,1,0} {0,1,2}
-{2,0,1} {0,2,1} {1,2,0} {1,0,2} {2,1,0} {0,1,2} {2,0,1} {0,2,1}
-
 Permutations of 2 zeros and 3 ones:
 00111 01011 01101 01110 10011 10101 10110 11001 11010 11100
 
-Decomposition of [0, 2, 1, 3] into cycles:
+Decomposition of {3,1,0,2} into cycles:
 {0,3,2} {1}
 
 ***/
@@ -198,13 +194,13 @@ void print(const vector<int> &v) {
 }
 
 int main() {
-  { // Ordered permutations.
+  {
     const int n = 4;
     int a[] = {0, 1, 2, 3}, b[n], c[n];
     for (int i = 0; i < n; i++) {
       b[i] = c[i] = a[i];
     }
-    cout << "Ordered permutations of [0, " << n << "):" << endl;
+    cout << "Permutations of [0, " << n << "):" << endl;
     int count = 0;
     do {
       print_range(a, a + n);
@@ -232,7 +228,7 @@ int main() {
   { // Decomposition into cycles.
     const int n = 4;
     int a[] = {3, 1, 0, 2};
-    cout << "\nDecomposition of [0, 2, 1, 3] into cycles:" << endl;
+    cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     cycles c = permutation_cycles(n, a);
     for (int i = 0; i < (int)c.size(); i++) {
       print(c[i]);
