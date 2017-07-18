@@ -4,7 +4,7 @@ A permutation is an ordered list consisting of n (not necessarily distinct)
 elements.
 
 - next_permutation_(lo, hi) is analogous to std::next_permutation(lo, hi),
-  taking two Bidirectional iterators lo and hi as a range [lo, hi) for which the
+  taking two BidirectionalIterators lo and hi as a range [lo, hi) for which the
   function tries to rearrange to the next lexicographically greater permutation.
   The function returns true if such a permutation exists, or false if the range
   is already in descending order (in which case the values are unchanged). This
@@ -14,14 +14,14 @@ elements.
   takes an array a[] of size n instead of a range.
 - next_permutation(x) returns the next lexicographically greater permutation of
   the binary digits of the integer x, that is, the lowest integer greater than
-  x with the same number of 1 bits. This can be used to generate combinations of
+  x with the same number of 1-bits. This can be used to generate combinations of
   a set of n items by treating each 1 bit as whether to "take" the item at the
   corresponding position.
 - permutation_by_rank(n, r) returns the permutation of the integers in the range
-  [0, n - 1] which is lexicographically ranked r, where r is a zero-based rank
-  in the range [0, n! - 1].
+  [0, n) which is lexicographically ranked r, where r is a zero-based rank in
+  the range [0, n!).
 - rank_by_permutation(n, a) returns an integer representing the zero-based
-  rank of permutation a[], which must consist of the integers in [0, n - 1].
+  rank of permutation a[], which must be a permutation of the integers [0, n).
 - permutation_cycles(n, a) returns the decomposition of the permutation a[] into
   cycles. A permutation cycle is a subset of a permutation whose elements are
   consecutively swapped, relative to a sorted set. For example, {3, 1, 0, 2}
@@ -116,8 +116,7 @@ std::vector<int> permutation_by_rank(int n, long long x) {
   return res;
 }
 
-template<class T>
-long long rank_by_permutation(int n, T a[]) {
+long long rank_by_permutation(int n, int a[]) {
   std::vector<long long> factorial(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {
