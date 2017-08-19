@@ -122,6 +122,7 @@ void generate_increasing_partitions(int n, ReportFunction f) {
 
 Partitions of 4:
 {1,1,1,1} {2,1,1} {2,2} {3,1} {4}
+
 Increasing partitions of 8:
 {1,2,5} {1,3,4} {1,7} {2,6} {3,5} {8}
 
@@ -157,7 +158,7 @@ int main() {
   }
   {
     int n = 8;
-    cout << "Increasing partitions of " << n << ":" << endl;
+    cout << "\nIncreasing partitions of " << n << ":" << endl;
     generate_increasing_partitions(n, print_range);
     cout << endl;
   }
