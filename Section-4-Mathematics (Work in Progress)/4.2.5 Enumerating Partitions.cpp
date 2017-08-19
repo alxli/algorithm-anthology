@@ -1,190 +1,165 @@
 /*
 
-We shall consider a partition of an integer n to be an
-unordered multiset of positive integers that has a total
-sum equal to n. Since both 2 1 1 and 1 2 1 represent the
-same partition of 4, we shall consider only descending
-sorted lists as "valid" partitions for functions below.
+A partition of a natural number n is a way to write n as a sum of positive
+integers where the order of the addends does not matter.
+
+- next_partition(p) takes a reference to a vector p[] of positive integers as a
+  partition of n for which the function will re-assign to become the next
+  lexicographically greater partition. The function returns true if such a
+  partition exists, or false if p[] already consists of the lexicographically
+  greatest partition (i.e. the single integer n).
+- partition_by_rank(n, r) returns the partition of n that is lexicographically
+  ranked r if addends in each partition were sorted in non-increasing order,
+  where r is a zero-based rank in the range [0, partitions(n)).
+- rank_by_partition(p) returns an integer representing the zero-based rank of
+  the partition specified by vector p[], which must consist of positive integers
+  sorted in non-increasing order.
+- generate_increasing_partitions(n, f) calls the function f(lo, hi) on strictly
+  increasing partitions of n in lexicographically increasing order of partition,
+  where lo and hi are two RandomAccessIterators to a range [lo, hi) of integers.
+  Note that non-strictly increasing partitions like {1, 1, 1, 1} are skipped.
+
+Time Complexity:
+- O(n) per call to next_partition().
+- O(n^2) per call to partition_by_rank(n, r) and rank_by_partition(p).
+- O(p(n)) per call to generate_increasing_partitions(n, f), where p(n) is the
+  number of partitions of n.
+
+Space Complexity:
+- O(1) auxiliary for next_partition().
+- O(n^2) auxiliary heap space for partition_function(), partition_by_rank(), and
+  rank_by_partition().
+- O(n) auxiliary stack space for generate_increasing_partitions().
 
 */
 
 #include <vector>
 
-/*
-
-Given a vector representing a partition of some
-integer n (the sum of all values in the vector),
-changes p to the next lexicographically greater
-partition of n and returns whether the change was
-successful (whether a lexicographically greater
-partition existed). Note that the "initial" value
-of p must be a vector of size n, all initialized 1.
-
-e.g. next_partition({2, 1, 1}) => 1, p becomes {2, 2}
-     next_partition({2, 2})    => 1, p becomes {3, 1}
-     next_partition({4})       => 0, p is unchanged
-
-*/
-
-bool next_partition(std::vector<int> & p) {
+bool next_partition(std::vector<int> &p) {
   int n = p.size();
-  if (n <= 1) return false;
+  if (n <= 1) {
+    return false;
+  }
   int s = p[n - 1] - 1, i = n - 2;
   p.pop_back();
   for (; i > 0 && p[i] == p[i - 1]; i--) {
     s += p[i];
     p.pop_back();
   }
-  for (p[i]++; s-- > 0; ) p.push_back(1);
+  for (p[i]++; s > 0; s--) {
+    p.push_back(1);
+  }
   return true;
 }
 
-/* Returns the number of partitions of n. */
-
-long long count_partitions(int n) {
-  std::vector<long long> p(n + 1, 0);
-  p[0] = 1;
-  for (int i = 1; i <= n; i++)
-    for (int j = i; j <= n; j++)
-      p[j] += p[j - i];
-  return p[n];
-}
-
-/* Helper function for partitioning by rank */
-
-std::vector< std::vector<long long> >
-  p(1, std::vector<long long>(1, 1)); //memoization
-
 long long partition_function(int a, int b) {
+  static std::vector<std::vector<long long> > p(
+      1, std::vector<long long>(1, 1));
   if (a >= (int)p.size()) {
     int old = p.size();
     p.resize(a + 1);
     p[0].resize(a + 1);
     for (int i = 1; i <= a; i++) {
       p[i].resize(a + 1);
-      for (int j = old; j <= i; j++)
+      for (int j = old; j <= i; j++) {
         p[i][j] = p[i - 1][j - 1] + p[i - j][j];
+      }
     }
   }
   return p[a][b];
 }
 
-/*
-
-Given an integer n to partition and a 0-based rank x,
-returns a vector of integers representing the x-th
-lexicographically smallest partition of n (if values
-in each partition were sorted in decreasing order).
-
-examples: partition_by_rank(4, 0) => {1, 1, 1, 1}
-          partition_by_rank(4, 3) => {3, 1}
-
-*/
-
-std::vector<int> partition_by_rank(int n, long long x) {
+std::vector<int> partition_by_rank(int n, long long r) {
   std::vector<int> res;
-  for (int i = n; i > 0; ) {
-    int j = 1;
-    for (;; j++) {
-      long long cnt = partition_function(i, j);
-      if (x < cnt) break;
-      x -= cnt;
+  for (int i = n, j; i > 0; i -= j) {
+    for (j = 1; ; j++) {
+      long long count = partition_function(i, j);
+      if (r < count) {
+        break;
+      }
+      r -= count;
     }
     res.push_back(j);
-    i -= j;
   }
   return res;
 }
 
-/*
-
-Given a partition of an integer n (sum of all values
-in vector p), returns a 0-based rank x of the partition
-represented by p, considering partitions from least to
-greatest in lexicographical order (if each partition
-had values sorted in descending order).
-
-examples: rank_by_partition({1, 1, 1, 1}) => 0
-          rank_by_partition({3, 1})       => 3
-
-*/
-
-long long rank_by_partition(const std::vector<int> & p) {
+long long rank_by_partition(const std::vector<int> &p) {
   long long res = 0;
   int sum = 0;
-  for (int i = 0; i < (int)p.size(); i++) sum += p[i];
   for (int i = 0; i < (int)p.size(); i++) {
-    for (int j = 0; j < p[i]; j++)
+    sum += p[i];
+  }
+  for (int i = 0; i < (int)p.size(); i++) {
+    for (int j = 0; j < p[i]; j++) {
       res += partition_function(sum, j);
+    }
     sum -= p[i];
   }
   return res;
 }
 
-/*
+typedef void (*ReportFunction)(std::vector<int>::iterator,
+                               std::vector<int>::iterator);
 
-Calls the custom function f(vector) on all partitions
-which consist of strictly *increasing* integers.
-This will exclude partitions such as {1, 1, 1, 1}.
-
-*/
-
-template<class ReportFunction>
-void gen_increasing_partitons(int left, int prev, int i,
-                 ReportFunction f, std::vector<int> & p) {
+void generate_increasing_partitions(int left, int prev, int i,
+                                    std::vector<int> &p, ReportFunction f) {
   if (left == 0) {
-    //warning: slow constructor - modify accordingly
-    f(std::vector<int>(p.begin(), p.begin() + i));
+    f(p.begin(), p.begin() + i);
     return;
   }
-  for (p[i] = prev + 1; p[i] <= left; p[i]++)
-    gen_increasing_partitons(left - p[i], p[i], i + 1, f, p);
+  for (p[i] = prev + 1; p[i] <= left; p[i]++) {
+    generate_increasing_partitions(left - p[i], p[i], i + 1, p, f);
+  }
 }
 
-template<class ReportFunction>
-void gen_increasing_partitons(int n, ReportFunction f) {
-  std::vector<int> partitions(n, 0);
-  gen_increasing_partitons(n, 0, 0, f, partitions);
+void generate_increasing_partitions(int n, ReportFunction f) {
+  std::vector<int> p(n, 0);
+  generate_increasing_partitions(n, 0, 0, p, f);
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Partitions of 4:
+{1,1,1,1} {2,1,1} {2,2} {3,1} {4}
+Increasing partitions of 8:
+{1,2,5} {1,3,4} {1,7} {2,6} {3,5} {8}
+
+***/
 
 #include <cassert>
 #include <iostream>
 using namespace std;
 
-void print(const vector<int> & v) {
-  for (int i = 0; i < (int)v.size(); i++)
-    cout << v[i] << " ";
-  cout << "\n";
+template<class It>
+void print_range(It lo, It hi) {
+  cout << "{";
+  for (; lo != hi; ++lo) {
+    cout << *lo << (lo == hi - 1 ? "" : ",");
+  }
+  cout << "} ";
 }
 
 int main() {
-  assert(count_partitions(5) == 7);
-  assert(count_partitions(20) == 627);
-  assert(count_partitions(30) == 5604);
-  assert(count_partitions(50) == 204226);
-  assert(count_partitions(100) == 190569292);
-
   {
     int n = 4;
     vector<int> a(n, 1);
-    cout << "Partitions of " << n << ":\n";
-    int cnt = 0;
+    cout << "Partitions of " << n << ":" << endl;
+    int count = 0;
     do {
-      print(a);
-      vector<int> b = partition_by_rank(n, cnt);
+      print_range(a.begin(), a.end());
+      vector<int> b = partition_by_rank(n, count);
       assert(equal(a.begin(), a.end(), b.begin()));
-      assert(rank_by_partition(a) == cnt);
-      cnt++;
+      assert(rank_by_partition(a) == count);
+      count++;
     } while (next_partition(a));
-    cout << "\n";
+    cout << endl;
   }
-
   {
     int n = 8;
-    cout << "Increasing partitions of " << n << ":\n";
-    gen_increasing_partitons(n, print);
+    cout << "Increasing partitions of " << n << ":" << endl;
+    generate_increasing_partitions(n, print_range);
+    cout << endl;
   }
   return 0;
 }

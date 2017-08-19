@@ -2,7 +2,7 @@
 
 The following functions implement common operations in combinatorics. All input
 arguments must be non-negative. All return values and table entries are computed
-modulo an input argument m or p.
+as 64-bit integers modulo an input argument m or p.
 
 - factorial(n, m) returns n! mod m.
 - factorialp(n, p) returns n! mod p, where p is prime.
