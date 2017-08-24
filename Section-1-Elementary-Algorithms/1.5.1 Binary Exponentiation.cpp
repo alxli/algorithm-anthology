@@ -20,10 +20,10 @@ Space Complexity:
 
 */
 
-typedef unsigned long long int64;
+typedef unsigned long long uint64;
 
-int64 mulmod(int64 x, int64 n, int64 m) {
-  int64 a = 0, b = x % m;
+uint64 mulmod(uint64 x, uint64 n, uint64 m) {
+  uint64 a = 0, b = x % m;
   for (; n > 0; n >>= 1) {
     if (n & 1) {
       a = (a + b) % m;
@@ -33,8 +33,8 @@ int64 mulmod(int64 x, int64 n, int64 m) {
   return a % m;
 }
 
-int64 powmod(int64 x, int64 n, int64 m) {
-  int64 a = 1, b = x;
+uint64 powmod(uint64 x, uint64 n, uint64 m) {
+  uint64 a = 1, b = x;
   for (; n > 0; n >>= 1) {
     if (n & 1) {
       a = mulmod(a, b, m);

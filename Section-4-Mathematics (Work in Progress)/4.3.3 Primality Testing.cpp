@@ -1,130 +1,131 @@
 /*
 
-Primality Testing
+Determine whether a given integer is prime.
+
+- is_prime(n) returns whether the integer n is prime using an optimized trial
+  division technique based on the fact that all primes greater than 6 must take
+  the form 6n + 1 or 6n - 1.
+- is_probable_prime(n, k) returns true if the integer n is prime, or false with
+  an error probability of (1/4)^k if n is composite. In other words, the result
+  is guaranteed to be correct if n is prime, but could be wrong with probability
+  (1/4)^k if n is composite. This implementation uses the probabilistic
+  Miller-Rabin primality test as well as exponentiation by squaring to support
+  all signed 64-bit integers for n (up to and including 2^63 - 1).
+- is_prime_fast(n) returns whether the signed 64-bit integer n is prime using
+  a fully deterministic version of the Miller-Rabin primality test.
+
+Time Complexity:
+- O(sqrt(n)) per call to is_prime(n).
+- O(k log^3(n)) per call to is_probable_prime(n, k).
+- O(log^3(n)) per call to is_prime_fast(n).
+
+Space Complexity:
+- O(1) auxiliary space for all operations.
 
 */
 
-#include <cstdlib>  /* rand(), srand() */
-#include <ctime>    /* time() */
-#include <stdint.h> /* uint64_t */
+#include <cstdlib>
+#include <ctime>
 
-/*
+typedef unsigned long long uint64;
 
-Trial division in O(sqrt(n)) to return whether n is prime
-Applies an optimization based on the fact that all
-primes greater than 3 take the form 6n + 1 or 6n - 1.
-
-*/
-
-template<class Int> bool is_prime(Int n) {
-  if (n == 2 || n == 3) return true;
-  if (n < 2 || !(n % 2) || !(n % 3)) return false;
-  for (Int i = 5, w = 4; i * i <= n; i += (w = 6 - w))
-    if (n % i == 0) return false;
+template<class Int>
+bool is_prime(Int n) {
+  if (n == 2 || n == 3) {
+    return true;
+  }
+  if (n < 2 || n % 2 == 0 || n % 3 == 0) {
+    return false;
+  }
+  for (Int i = 5, w = 4; i*i <= n; i += w) {
+    if (n % i == 0) {
+      return false;
+    }
+    w = 6 - w;
+  }
   return true;
 }
 
-/*
 
-Miller-Rabin Primality Test (Probabilistic)
-
-Checks whether a number n is probably prime. If n is prime,
-the function is guaranteed to return 1. If n is composite,
-the function returns 1 with a probability of (1/4)^k,
-where k is the number of iterations. With k = 1, the
-probability of a composite being falsely predicted to be a
-prime is 25%. If k = 5, the probability for this error is
-just less than 0.1%. Thus, k = 18 to 20 is accurate enough
-for most applications. All values of n < 2^63 is supported.
-
-Complexity: O(k log^3(n)). In comparison to trial division,
-the Miller-Rabin algorithm on 32-bit ints take ~45
-operations for k = 10 iterations (~0.0001% error), while the
-former takes ~10,000.
-
-Warning: Due to the overflow of modular exponentiation,
-         this will only work on inputs less than 2^63.
-
-*/
-
-uint64_t mulmod(uint64_t a, uint64_t b, uint64_t m) {
-  uint64_t x = 0, y = a % m;
-  for (; b > 0; b >>= 1) {
-    if (b & 1) x = (x + y) % m;
-    y = (y << 1) % m;
+uint64 mulmod(uint64 x, uint64 n, uint64 m) {
+  uint64 a = 0, b = x % m;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = (a + b) % m;
+    }
+    b = (b << 1) % m;
   }
-  return x % m;
+  return a % m;
 }
 
-uint64_t powmod(uint64_t a, uint64_t b, uint64_t m) {
-  uint64_t x = 1, y = a;
-  for (; b > 0; b >>= 1) {
-    if (b & 1) x = mulmod(x, y, m);
-    y = mulmod(y, y, m);
+uint64 powmod(uint64 x, uint64 n, uint64 m) {
+  uint64 a = 1, b = x;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = mulmod(a, b, m);
+    }
+    b = mulmod(b, b, m);
   }
-  return x % m;
+  return a % m;
 }
 
-//5 calls to rand() is unnecessary if RAND_MAX is 2^31-1
-uint64_t rand64u() {
-  return ((uint64_t)(rand() & 0xf) << 60) |
-         ((uint64_t)(rand() & 0x7fff) << 45) |
-         ((uint64_t)(rand() & 0x7fff) << 30) |
-         ((uint64_t)(rand() & 0x7fff) << 15) |
-         ((uint64_t)(rand() & 0x7fff));
+uint64 rand64() {
+  return ((uint64)(rand() & 0xf) << 60) | ((uint64)(rand() & 0x7fff) << 45) |
+         ((uint64)(rand() & 0x7fff) << 30) | ((uint64)(rand() & 0x7fff) << 15) |
+         (uint64)(rand() & 0x7fff);
 }
 
 bool is_probable_prime(long long n, int k = 20) {
-  if (n < 2 || (n != 2 && !(n & 1))) return false;
-  uint64_t s = n - 1, p = n - 1, x, r;
-  while (!(s & 1)) s >>= 1;
+  if (n == 2 || n == 3) {
+    return true;
+  }
+  if (n < 2 || n % 2 == 0 || n % 3 == 0) {
+    return false;
+  }
+  uint64 s = n - 1, p = n - 1;
+  while (!(s & 1)) {
+    s >>= 1;
+  }
   for (int i = 0; i < k; i++) {
-    r = powmod(rand64u() % p + 1, s, n);
-    for (x = s; x != p && r != 1 && r != p; x <<= 1)
+    uint64 x, r = powmod(rand64() % p + 1, s, n);
+    for (x = s; x != p && r != 1 && r != p; x <<= 1) {
       r = mulmod(r, r, n);
-    if (r != p && !(x & 1)) return false;
+    }
+    if (r != p && !(x & 1)) {
+      return false;
+    }
   }
   return true;
 }
 
-/*
-
-Miller-Rabin - Deterministic for all unsigned long long
-
-Although Miller-Rabin is generally probabilistic, the seven
-bases 2, 325, 9375, 28178, 450775, 9780504, 1795265022 have
-been proven to deterministically test the primality of all
-numbers under 2^64. See: http://miller-rabin.appspot.com/
-
-Complexity: O(log^3(n)).
-Warning: Due to the overflow of modular exponentiation,
-         this will only work on inputs less than 2^63.
-
-*/
-
 bool is_prime_fast(long long n) {
-  static const uint64_t witnesses[] =
-    {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
-  if (n <= 1) return false;
-  if (n <= 3) return true;
-  if ((n & 1) == 0) return false;
-  uint64_t d = n - 1;
-  int s = 0;
-  for (; ~d & 1; s++) d >>= 1;
-  for (int i = 0; i < 7; i++) {
-    if (witnesses[i] > (uint64_t)n - 2) break;
-    uint64_t x = powmod(witnesses[i], d, n);
-    if (x == 1 || x == (uint64_t)n - 1) continue;
-    bool flag = false;
-    for (int j = 0; j < s; j++) {
-      x = powmod(x, 2, n);
-      if (x == 1) return false;
-      if (x == (uint64_t)n - 1) {
-        flag = true;
-        break;
-      }
+  static const int np = 9, p[] = {2, 3, 5, 7, 11, 13, 17, 19, 23};
+  for (int i = 0; i < np; i++) {
+    if (n % p[i] == 0) {
+      return n == p[i];
     }
-    if (!flag) return false;
+  }
+  if (n < p[np - 1]) {
+    return false;
+  }
+  uint64 t;
+  int s = 0;
+  for (t = n - 1; !(t & 1); t >>= 1) {
+    s++;
+  }
+  for (int i = 0; i < np; i++) {
+    uint64 r = powmod(p[i], t, n);
+    if (r == 1) {
+      continue;
+    }
+    bool ok = false;
+    for (int j = 0; j < s && !ok; j++) {
+      ok |= (r == (uint64)n - 1);
+      r = mulmod(r, r, n);
+    }
+    if (!ok) {
+      return false;
+    }
   }
   return true;
 }
@@ -135,27 +136,15 @@ bool is_prime_fast(long long n) {
 
 int main() {
   int len = 20;
-  unsigned long long v[] = {
-    0, 1, 2, 3, 4, 5, 11,
-    1000000ull,
-    772023803ull,
-    792904103ull,
-    813815117ull,
-    834753187ull,
-    855718739ull,
-    876717799ull,
-    897746119ull,
-    2147483647ull,
-    5705234089ull,
-    5914686649ull,
-    6114145249ull,
-    6339503641ull,
-    6548531929ull
+  long long tests[] = {
+    -1, 0, 1, 2, 3, 4, 5, 1000000ull, 772023803ull, 792904103ull, 813815117ull,
+    834753187ull, 855718739ull, 876717799ull, 897746119ull, 2147483647ull,
+    5705234089ull, 5914686649ull, 6114145249ull, 6339503641ull, 6548531929ull
   };
   for (int i = 0; i < len; i++) {
-    bool p = is_prime(v[i]);
-    assert(p == is_prime_fast(v[i]));
-    assert(p == is_probable_prime(v[i]));
+    bool p = is_prime(tests[i]);
+    assert(p == is_prime_fast(tests[i]));
+    assert(p == is_probable_prime(tests[i]));
   }
   return 0;
 }
