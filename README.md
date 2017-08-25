@@ -1,7 +1,7 @@
 Alex's Anthology of Algorithms: Common Code for Contests in Concise C++ (A<sup>3</sup>C<sup>5</sup>)
 ==================
 
-*Important Note*: This repository is undergoing a major rewrite. The PDF (and work-in-progress sections) are outdated and possibly buggy. Use at your own risk.
+*Important Note*: This repository is undergoing a major rewrite. The PDF and work-in-progress sections are outdated and buggy. Use at your own risk.
 
 ## Introduction
 
@@ -21,25 +21,28 @@ A good trade-off between these five factors is key.
 
 ## Portability
 
-All programs are tested with version 4.7.3 of the GNU Compiler Collection (GCC) compiled for a 32-bit target system.
+All programs are tested with the GNU Compiler Collection (GCC) compiled for a 32-bit target system. Compiler switches:
+
+```
+g++ -std=gnu++98 -pedantic -Wall -Wno-long-long -O2
+```
 
 This means that the following assumptions are made about data types:
-* bool and char are 8 bits
-* int and float are 32 bits
-* double and long long are 64 bits
-* long double is 96 bits
+* `bool` and `char` are 8 bits
+* `int` and `float` are 32 bits
+* `double` and `long long` are 64 bits
+* `long double` is 96 bits
 
 Programs are highly portable (ISO C++ 1998 compliant), __except__ in the following regards:
-* Usage of long long and dependent features \[-Wlong-long\], which are compliant in C99/C++0x or later. 64-bit integers are a must for many programming contest problems, so it is necessary to include them.
-* Usage of variable sized arrays \[-Wvla\] (an easy fix using vectors, but sometimes avoided to preserve simplicity).
-* Usage of GCC's built-in functions like __builtin_popcount() and __builtin_clz(). These can be extremely convenient, and are easily implemented if they're not available. See here for a reference: https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
-* Usage of compound-literals, e.g. myvector.push_back((mystruct){a, b, c}). This adds a little more concision by not requiring a constructor definition.
-* Ad-hoc cases where bitwise hacks are intentionally used, such as in functions for getting the signbit with type-puned pointers. If you are looking for these features, chances are you don't care about portability anyway.
+* Usage of long long and dependent features `[-Wlong-long]`, which are compliant in C99/C++0x or later. 64-bit integers are a must for many programming contest problems, so it is necessary to include them.
+* Usage of GCC's built-in functions like `__builtin_popcount()` and `__builtin_clz()`. These can be extremely convenient, and are easily implemented if they're not available. See here for a reference: https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
+* Usage of compound-literals, e.g. `myvector.push_back((mystruct){a, b, c})`. This adds a little more concision by not requiring a constructor definition.
+* Rare cases where bitwise hacks are intentionally used, such as in functions for getting the signbit with type-puned pointers. If you are looking for these features, chances are you don't care about portability anyway.
 
 ## Usage Notes
 
-The primary purpose of this project is not to better your understanding of algorithms. To take advantage of this anthology, you must have prior understanding of the algorithms in question. In each source code file, you will find brief descriptions and simple examples to clarify how the functions and classes should be used (not so much how they work). This is why if you actually want to learn algorithms, you are better off researching the idea and trying to implement it independently. Directly using the code found here should be considered a last resort during the pressures of an actual contest. You are free to use, modify, and distribute these programs in accordance to the license, but please first examine any corresponding references of each program for more details on usage and authorship.
+The primary purpose of this project is not to better your understanding of algorithms. To take advantage of this anthology, you must have prior understanding of the algorithms in question. In each source file, you will find brief descriptions and simple examples to clarify how the functions and classes should be used. You will not find rigorous test suites, nor extensive comments detailing how the implementations work. As such, if you truly wish to learn the algorithms, you are better off researching and implementing them independently. You are free to use, modify, and distribute these programs in accordance to the license, but please first examine any corresponding references of each program for more details on usage and authorship.
 
-Cheers.
+Cheers.<br>
 — Alex
 
