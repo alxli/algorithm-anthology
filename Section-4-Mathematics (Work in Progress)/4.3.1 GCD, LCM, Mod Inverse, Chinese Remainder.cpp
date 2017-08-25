@@ -50,17 +50,17 @@ Int gcd(Int a, Int b) {
     b = a % b;
     a = t;
   }
-  return llabs(a);
+  return abs(a);
 }
 
 template<class Int>
 Int gcd2(Int a, Int b) {
-  return (b == 0) ? llabs(a) : gcd(b, a % b);
+  return (b == 0) ? abs(a) : gcd(b, a % b);
 }
 
 template<class Int>
 Int lcm(Int a, Int b) {
-  return llabs(a / gcd(a, b) * b);
+  return abs(a / gcd(a, b) * b);
 }
 
 template<class Int>

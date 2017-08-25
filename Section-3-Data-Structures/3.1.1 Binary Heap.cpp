@@ -74,10 +74,10 @@ template<class T> class binary_heap {
     int i = 0;
     for (;;) {
       int child = 2*i + 1;
-      if (child >= heap.size()) {
+      if (child >= (int)heap.size()) {
         break;
       }
-      if (child + 1 < heap.size() && heap[child + 1] < heap[child]) {
+      if (child + 1 < (int)heap.size() && heap[child + 1] < heap[child]) {
         child++;
       }
       if (heap[child] < heap[i]) {

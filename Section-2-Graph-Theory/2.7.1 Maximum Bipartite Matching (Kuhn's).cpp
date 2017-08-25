@@ -7,7 +7,6 @@ kuhn() applies to a global, pre-populated adjacency list adj[] which must only
 consist of nodes numbered with integers between 0 (inclusive) and the total
 number of nodes (exclusive), as passed in the function argument.
 
-
 Time Complexity:
 - O(m*(n1 + n2)) per call to kuhn(), where m is the number of edges.
 

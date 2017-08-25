@@ -2,7 +2,7 @@
 
 Common mathematic constants and functions, many of which are substitutes for
 features which are not available in standard C++, or may not be available on
-compilers that do not support C++11 and later.
+compilers that do not support C++11 or later.
 
 Time Complexity:
 - O(1) for all operations.
@@ -17,6 +17,7 @@ Space Complexity:
 #include <climits>
 #include <cmath>
 #include <cstdlib>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -27,8 +28,8 @@ Space Complexity:
   const double M_E = exp(1.0);
 #endif
 const double M_PHI = (1.0 + sqrt(5.0))/2.0;
-const double M_INF = strtod("Inf", NULL);
-const double M_NAN = strtod("NaN", NULL);
+const double M_INF = std::numeric_limits<double>::infinity();
+const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
 #ifndef isnan
   #define isnan(x) ((x) != (x))
@@ -376,7 +377,7 @@ std::string to_roman(unsigned int x) {
 /*** Example Usage ***/
 
 #include <cassert>
-
+#include <iostream>
 int main() {
   assert(EQ(M_PI, 3.14159265359));
   assert(EQ(M_E, 2.718281828459));
@@ -396,7 +397,7 @@ int main() {
   assert(!signbit_(M_INF) && signbit_(-M_INF));
   assert(!signbit_(M_NAN) && signbit_(-M_NAN));
   assert(copysign(1.0, +2.0) == +1.0 && copysign(M_INF, -2.0) == -M_INF);
-  assert(copysign(1.0, -2.0) == -1.0 && signbit(copysign(M_NAN, -2.0)));
+  assert(copysign(1.0, -2.0) == -1.0 && std::signbit(copysign(M_NAN, -2.0)));
 
   assert(EQ(floor0(1.5), 1.0) && EQ(ceil0(1.5), 2.0));
   assert(EQ(floor0(-1.5), -1.0) && EQ(ceil0(-1.5), -2.0));

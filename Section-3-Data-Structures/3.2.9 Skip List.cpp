@@ -48,7 +48,7 @@ template<class K, class V> class skip_list {
     std::vector<node_t*> next;
 
     node_t(const K &k, const V &v, int levels)
-        : key(k), value(v), next(levels, NULL) {}
+        : key(k), value(v), next(levels, (node_t*)NULL) {}
   } *head;
 
   int num_nodes;
