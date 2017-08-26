@@ -5,19 +5,21 @@ Alex's Anthology of Algorithms: Common Code for Contests in Concise C++ (A<sup>3
 
 ## Introduction
 
-This project aims to implement common algorithms in the most concise and "vanilla" way possible. The primary goal is to have code that is easily adaptable for direct usage in programming contests. To that end, the style of this codebase is founded on the following core traits:
+Welcome to a collection of concise and minimal implementations of common algorithms. These implementations are written in the flavor of programming contests, but their usage is by no means limited to them. More specifically, their style is founded on the following principles:
 
-* Clarity: The code should be self-documenting, assuming you already understand the algorithm at a high level. Consistency in naming conventions is emphasized.
+* Clarity: A reader already familiar with the algorithm in general should have no problem understanding how the particular implementation works. Consistency in naming conventions is emphasized, and implementation or language-specific details should be documentation.
 
-* Genericness: The more code that must be changed during the contest, the more room there is for mistakes. It should be easy to adapt these implementations for different operations, data types, etc. (where possible). C++ templates are often used to accomplish this at the slight cost of readability.
+* Genericness: It should be easy to make adjustment to achieve a slightly different end-goal. This could be tweaking a constant parameter, or supporting a slightly different data type. In a live contest, the more code that must be changed, the more room there is for mistakes. C++ templates are often used to accomplish this at the slight cost of simplicity.
 
-* Portability: Different contest environments use different versions of C++ (though almost all of them use GCC). In order to maximize compatibility, non-standard features are typically avoided. The decision is to adhere to C++98 standards as many constest systems remain stuck on older versions of the language. After all, minimizing C++ specific features will make this anthology friendlier to users of other languages. Refer to the "Portability" section below for more information.
+* Portability: Different contest environments use different versions of C++ (though almost all of them use GCC). In order to maximize compatibility, non-standard features are typically avoided. The decision is to adhere to C++98 standards as many constest systems remain stuck on older versions of the language. Moreover, minimizing newer, C++ specific features will make this anthology friendlier to users of other languages. Refer to the "Portability" section below for more information.
 
-* Efficiency: Since the code is meant to be used in real contests, it is nice to maintain a reasonably low constant overhead. This is sometimes challenging in the face of clarity and genericness, but we can typically hope for contest setters to be liberal with time limits. If an implementation does not pass in time, chances are you are choosing the wrong algorithm with a wrong big-O time.
+* Efficiency: Since the code is meant to be run during real contests, it is nice to maintain a reasonably low constant overhead. This is sometimes challenging in the face of clarity and genericness, but we can hope for contest setters to be liberal with time limits. If an implementation does not pass in time, chances are the wrong algorithm is being chosen with too slow of a big-O running time.
 
-* Concision: Code chunks are often shifted around the file in the frenzy of timed contests. To minimize the amount of scrolling and searching, code compactness is highly valued. It is a given that implementations are given in singleton ".cpp" files, since nearly all contest systems demand submissions in single files.
+* Concision: Code chunks are often shifted around the file in the frenzy of timed contests. To minimize the amount of scrolling and searching, code compactness is valued. It is no surprise that each section is confined to a singleton source file, since nearly all contest systems demand submissions this way.
 
-A good trade-off between these five factors is key.
+The right trade-off between these factors is the holy grail.
+
+A secondary goal is to have common algorithms modelled in a way simple enough that programmers in other languages may understand as well. This is hopefully achieved for most sections, but C++ specific concepts may still used in certain areas to prioritize the above principles.
 
 ## Portability
 
@@ -39,9 +41,9 @@ Programs are highly portable (ISO C++ 1998 compliant), __except__ in the followi
 * Usage of compound-literals, e.g. `myvector.push_back((mystruct){a, b, c})`. This adds a little more concision by not requiring a constructor definition.
 * Rare cases where bitwise hacks are intentionally used, such as in functions for getting the signbit with type-puned pointers. If you are looking for these features, chances are you don't care about portability anyway.
 
-## Usage Notes
+## Usage Remarks
 
-The primary purpose of this project is not to better your understanding of algorithms. To take advantage of this anthology, you must have prior understanding of the algorithms in question. In each source file, you will find brief descriptions and simple examples to clarify how the functions and classes should be used. You will not find rigorous test suites, nor extensive comments detailing how the implementations work. As such, if you truly wish to learn the algorithms, you are better off researching and implementing them independently. You are free to use, modify, and distribute these programs in accordance to the license, but please first examine any corresponding references of each program for more details on usage and authorship.
+This project does __not__ aim to introduce and explain algorithms from the ground up. To take advantage of this anthology, you must have prior understanding of the algorithms in question. In each source file, you will find brief descriptions and simple examples to clarify how the functions and classes should be used. You will not find rigorous test suites, nor extensive comments detailing how the implementations work. To properly learn the algorithms, you are better off researching and implementing them independently. You are free to use, modify, and distribute these programs in accordance to the license, but please first examine any corresponding references of each program for more details on usage and authorship.
 
 Cheers.<br>
 — Alex
