@@ -1,6 +1,9 @@
 /*
 
-Determine whether a given integer is prime.
+Determine whether an integer n is prime. This can be done deterministically by
+testing all numbers under sqrt(n) using trial division, probabilistically using
+the Miller-Rabin test, or deterministically using the Miller-Rabin test if the
+maximum input is known (2^63 - 1 for the purposes here).
 
 - is_prime(n) returns whether the integer n is prime using an optimized trial
   division technique based on the fact that all primes greater than 6 must take
@@ -8,14 +11,13 @@ Determine whether a given integer is prime.
 - is_probable_prime(n, k) returns true if the integer n is prime, or false with
   an error probability of (1/4)^k if n is composite. In other words, the result
   is guaranteed to be correct if n is prime, but could be wrong with probability
-  (1/4)^k if n is composite. This implementation uses the probabilistic
-  Miller-Rabin primality test as well as exponentiation by squaring to support
-  all signed 64-bit integers for n (up to and including 2^63 - 1).
+  (1/4)^k if n is composite. This implementation uses uses exponentiation by
+  squaring to support all signed 64-bit integers (up to and including 2^63 - 1).
 - is_prime_fast(n) returns whether the signed 64-bit integer n is prime using
-  a fully deterministic version of the Miller-Rabin primality test.
+  a fully deterministic version of the Miller-Rabin test.
 
 Time Complexity:
-- O(sqrt(n)) per call to is_prime(n).
+- O(sqrt n) per call to is_prime(n).
 - O(k log^3(n)) per call to is_probable_prime(n, k).
 - O(log^3(n)) per call to is_prime_fast(n).
 
@@ -25,9 +27,6 @@ Space Complexity:
 */
 
 #include <cstdlib>
-#include <ctime>
-
-typedef unsigned long long uint64;
 
 template<class Int>
 bool is_prime(Int n) {
@@ -46,6 +45,7 @@ bool is_prime(Int n) {
   return true;
 }
 
+typedef unsigned long long uint64;
 
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
   uint64 a = 0, b = x % m;
@@ -69,10 +69,12 @@ uint64 powmod(uint64 x, uint64 n, uint64 m) {
   return a % m;
 }
 
-uint64 rand64() {
-  return ((uint64)(rand() & 0xf) << 60) | ((uint64)(rand() & 0x7fff) << 45) |
-         ((uint64)(rand() & 0x7fff) << 30) | ((uint64)(rand() & 0x7fff) << 15) |
-         (uint64)(rand() & 0x7fff);
+uint64 rand64u() {
+  return ((uint64)(rand() & 0xf) << 60) |
+         ((uint64)(rand() & 0x7fff) << 45) |
+         ((uint64)(rand() & 0x7fff) << 30) |
+         ((uint64)(rand() & 0x7fff) << 15) |
+         ((uint64)(rand() & 0x7fff));
 }
 
 bool is_probable_prime(long long n, int k = 20) {
@@ -87,7 +89,7 @@ bool is_probable_prime(long long n, int k = 20) {
     s >>= 1;
   }
   for (int i = 0; i < k; i++) {
-    uint64 x, r = powmod(rand64() % p + 1, s, n);
+    uint64 x, r = powmod(rand64u() % p + 1, s, n);
     for (x = s; x != p && r != 1 && r != p; x <<= 1) {
       r = mulmod(r, r, n);
     }
@@ -137,9 +139,9 @@ bool is_prime_fast(long long n) {
 int main() {
   int len = 20;
   long long tests[] = {
-    -1, 0, 1, 2, 3, 4, 5, 1000000ull, 772023803ull, 792904103ull, 813815117ull,
-    834753187ull, 855718739ull, 876717799ull, 897746119ull, 2147483647ull,
-    5705234089ull, 5914686649ull, 6114145249ull, 6339503641ull, 6548531929ull
+    -1, 0, 1, 2, 3, 4, 5, 1000000LL, 772023803LL, 792904103LL, 813815117LL,
+    834753187LL, 855718739LL, 876717799LL, 897746119LL, 2147483647LL,
+    5705234089LL, 5914686649LL, 6114145249LL, 6339503641LL, 6548531929LL
   };
   for (int i = 0; i < len; i++) {
     bool p = is_prime(tests[i]);
