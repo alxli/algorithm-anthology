@@ -6,7 +6,7 @@ Generate prime numbers using the Sieve of Eratosthenes.
 - sieve(lo, hi) returns a vector of all the primes in the range [lo, hi].
 
 Time Complexity:
-- O(n*log(log(n))) per call to sieve(n).
+- O(n log(log(n))) per call to sieve(n).
 - O(sqrt(hi)*log(log(hi - lo))) per call to sieve(lo, hi).
 
 Space Complexity:
