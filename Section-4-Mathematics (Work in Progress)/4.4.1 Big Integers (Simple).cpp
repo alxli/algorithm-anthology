@@ -1,141 +1,201 @@
 /*
 
-Description: Integer arbitrary precision functions.
-To use, pass bigints to the functions by addresses.
-e.g. add(&a, &b, &c) stores the sum of a and b into c.
+Perform simple arithmetic operations on arbitrary precision big integers whose
+digits are internally represented as an std::string in little-endian order.
 
-Complexity: comp(), to_string(), digit_shift(), add(),
-and sub() are O(N) on the number of digits. mul() and
-div() are O(N^2). zero_justify() is amortized constant.
+- bigint(n) constructs a big integer from a long long (default = 0).
+- bigint(s) constructs a big integer from a string s, which must strictly
+  consist of a sequence of numeric digits, optionally preceded by a minus sign.
+- str() returns the string representation of the big integer.
+- comp(a, b) returns 0 if big integers a are equal, -1 if a < b, or 1 if a > b.
+- add(a, b) returns the sum of big integers a and b.
+- sub(a, b) returns the difference of big integers a and b.
+- mul(a, b) returns the product of big integers a and b.
+- div(a, b) returns the quotient of big integers a and b.
+
+Time Complexity:
+- O(n) per call to the constructor, str(), comp(), add(), and sub(), where n is
+  the maximum length of the arguments' digits.
+- O(n*m) per call to mul(a, b) and div(a, b) where n is the length of a's digits
+  and m is the length of b's digits.
+
+Space Complexity:
+- O(n) for storage of the big integer, where n is the length of the digits.
+- O(n) auxiliary heap space for str(), add(), sub(), mul(), and div(), where n
+  the maximum length of the arguments' digits.
 
 */
 
+#include <algorithm>
+#include <cctype>
+#include <stdexcept>
 #include <string>
 
-struct bigint {
-  static const int maxdigits = 1000;
+class bigint {
+  using string = std::string;
 
-  char dig[maxdigits], sign;
-  int last;
+  string digits;
+  int sign;
 
-  bigint(long long x = 0): sign(x < 0 ? -1 : 1) {
-    for (int i = 0; i < maxdigits; i++) dig[i] = 0;
-    if (x == 0) { last = 0; return; }
-    if (x < 0) x = -x;
-    for (last = -1; x > 0; x /= 10) dig[++last] = x % 10;
+  void normalize() {
+    size_t pos = digits.find_last_not_of('0');
+    if (pos != string::npos) {
+      digits.erase(pos + 1);
+    }
+    if (digits.empty()) {
+      digits = "0";
+    }
+    if (digits.size() == 1 && digits[0] == '0') {
+      sign = 1;
+      return;
+    }
   }
 
-  bigint(const std::string & s): sign(s[0] == '-' ? -1 : 1) {
-    for (int i = 0; i < maxdigits; i++) dig[i] = 0;
-    last = -1;
-    for (int i = s.size() - 1; i >= 0; i--)
-      dig[++last] = (s[i] - '0');
-    if (dig[last] + '0' == '-') dig[last--] = 0;
+  static int comp(const string &a, const string &b, int asign, int bsign) {
+    if (asign != bsign) {
+      return bsign;
+    }
+    if (a.size() < b.size()) {
+      return asign;
+    }
+    if (a.size() > b.size()) {
+      return -asign;
+    }
+    for (int i = (int)a.size() - 1; i >= 0; i--) {
+      if (a[i] > b[i]) {
+        return -asign;
+      }
+      if (b[i] > a[i]) {
+        return asign;
+      }
+    }
+    return 0;
+  }
+
+  static bigint add(const string &a, const string &b, int asign, int bsign) {
+    if (asign != bsign) {
+      return (asign == 1) ? sub(a, b, asign, 1) : sub(b, a, bsign, 1);
+    }
+    bigint res;
+    res.sign = asign;
+    res.digits.resize(std::max(a.size(), b.size()) + 1, '0');
+    for (int i = 0, carry = 0; i < (int)res.digits.size(); i++) {
+      int d = carry;
+      if (i < (int)a.size()) {
+        d += a[i] - '0';
+      }
+      if (i < (int)b.size()) {
+        d += b[i] - '0';
+      }
+      res.digits[i] = '0' + (d % 10);
+      carry = d/10;
+    }
+    res.normalize();
+    return res;
+  }
+
+  static bigint sub(const string &a, const string &b, int asign, int bsign) {
+    if (asign == -1 || bsign == -1) {
+      return add(a, b, asign, -bsign);
+    }
+    bigint res;
+    if (comp(a, b, asign, bsign) == 1) {
+      res = sub(b, a, bsign, asign);
+      res.sign = -1;
+      return res;
+    }
+    res.digits.assign(a.size(), '0');
+    for (int i = 0, borrow = 0; i < (int)res.digits.size(); i++) {
+      int d = (i < (int)b.size() ? a[i] - b[i] : a[i] - '0') - borrow;
+      if (a[i] > '0') {
+        borrow = 0;
+      }
+      if (d < 0) {
+        d += 10;
+        borrow = 1;
+      }
+      res.digits[i] = '0' + (d % 10);
+    }
+    res.normalize();
+    return res;
+  }
+
+ public:
+  bigint(long long n = 0) {
+    sign = (n < 0) ? -1 : 1;
+    if (n == 0) {
+      digits = "0";
+      return;
+    }
+    for (n = (n > 0) ? n : -n; n > 0; n /= 10) {
+      digits += '0' + (n % 10);
+    }
+    normalize();
+  }
+
+  bigint(const string &s) {
+    if (s.empty() || (s[0] == '-' && s.size() == 1)) {
+      throw std::runtime_error("Invalid string format to construct bigint.");
+    }
+    digits.assign(s.rbegin(), s.rend());
+    if (s[0] == '-') {
+      sign = -1;
+      digits.erase(digits.size() - 1);
+    } else {
+      sign = 1;
+    }
+    if (digits.find_first_not_of("0123456789") != string::npos) {
+      throw std::runtime_error("Invalid string format to construct bigint.");
+    }
+    normalize();
+  }
+
+  string str() const {
+    return ((sign == -1) ? "-" : "") + string(digits.rbegin(), digits.rend());
+  }
+
+  friend int comp(const bigint &a, const bigint &b) {
+    return comp(a.digits, b.digits, a.sign, b.sign);
+  }
+
+  friend bigint add(const bigint &a, const bigint &b) {
+    return add(a.digits, b.digits, a.sign, b.sign);
+  }
+
+  friend bigint sub(const bigint &a, const bigint &b) {
+    return sub(a.digits, b.digits, a.sign, b.sign);
+  }
+
+  friend bigint mul(const bigint &a, const bigint &b) {
+    bigint res, row(a);
+    for (int i = 0; i < (int)b.digits.size(); i++) {
+      for (int j = 0; j < (b.digits[i] - '0'); j++) {
+        res = add(res.digits, row.digits, res.sign, row.sign);
+      }
+      if (row.digits.size() > 1 || row.digits[0] != '0') {
+        row.digits.insert(0, "0");
+      }
+    }
+    res.sign = a.sign*b.sign;
+    res.normalize();
+    return res;
+  }
+
+  friend bigint div(const bigint &a, const bigint &b) {
+    bigint res, row;
+    res.digits.assign(a.digits.size(), '0');
+    for (int i = (int)a.digits.size() - 1; i >= 0; i--) {
+      row.digits.insert(row.digits.begin(), a.digits[i]);
+      while (comp(row.digits, b.digits, row.sign, 1) != 1) {
+        res.digits[i]++;
+        row = sub(row.digits, b.digits, row.sign, 1);
+      }
+    }
+    res.sign = a.sign*b.sign;
+    res.normalize();
+    return res;
   }
 };
-
-void zero_justify(bigint * x) {
-  while (x->last > 0 && !x->dig[x->last]) x->last--;
-  if (x->last == 0 && x->dig[0] == 0) x->sign = 1;
-}
-
-void add(bigint * a, bigint * b, bigint * c);
-void sub(bigint * a, bigint * b, bigint * c);
-
-//returns: -1 if a < b, 0 if a == b, or 1 if a > b
-int comp(bigint * a, bigint * b) {
-  if (a->sign != b->sign) return b->sign;
-  if (b->last > a->last) return a->sign;
-  if (a->last > b->last) return -a->sign;
-  for (int i = a->last; i >= 0; i--) {
-    if (a->dig[i] > b->dig[i]) return -a->sign;
-    if (b->dig[i] > a->dig[i]) return  a->sign;
-  }
-  return 0;
-}
-
-void add(bigint * a, bigint * b, bigint * c) {
-  if (a->sign != b->sign) {
-    if (a->sign == -1)
-      a->sign = 1, sub(b, a, c), a->sign = -1;
-    else
-      b->sign = 1, sub(a, b, c), b->sign = -1;
-    return;
-  }
-  c->sign = a->sign;
-  c->last = (a->last > b->last ? a->last : b->last) + 1;
-  for (int i = 0, carry = 0; i <= c->last; i++) {
-    c->dig[i] = (carry + a->dig[i] + b->dig[i]) % 10;
-    carry = (carry + a->dig[i] + b->dig[i]) / 10;
-  }
-  zero_justify(c);
-}
-
-void sub(bigint * a, bigint * b, bigint * c) {
-  if (a->sign == -1 || b->sign == -1) {
-    b->sign *= -1, add(a, b, c), b->sign *= -1;
-    return;
-  }
-  if (comp(a, b) == 1) {
-    sub(b, a, c), c->sign = -1;
-    return;
-  }
-  c->last = (a->last > b->last) ? a->last : b->last;
-  for (int i = 0, borrow = 0, v; i <= c->last; i++) {
-    v = a->dig[i] - borrow;
-    if (i <= b->last) v -= b->dig[i];
-    if (a->dig[i] > 0) borrow = 0;
-    if (v < 0) v += 10, borrow = 1;
-    c->dig[i] = v % 10;
-  }
-  zero_justify(c);
-}
-
-void digit_shift(bigint * x, int n) {
-  if (!x->last && !x->dig[0]) return;
-  for (int i = x->last; i >= 0; i--)
-    x->dig[i + n] = x->dig[i];
-  for (int i = 0; i < n; i++) x->dig[i] = 0;
-  x->last += n;
-}
-
-void mul(bigint * a, bigint * b, bigint * c) {
-  bigint row = *a, tmp;
-  for (int i = 0; i <= b->last; i++) {
-    for (int j = 1; j <= b->dig[i]; j++) {
-      add(c, &row, &tmp);
-      *c = tmp;
-    }
-    digit_shift(&row, 1);
-  }
-  c->sign = a->sign * b->sign;
-  zero_justify(c);
-}
-
-void div(bigint * a, bigint * b, bigint * c) {
-  bigint row, tmp;
-  int asign = a->sign, bsign = b->sign;
-  a->sign = b->sign = 1;
-  c->last = a->last;
-  for (int i = a->last; i >= 0; i--) {
-    digit_shift(&row, 1);
-    row.dig[0] = a->dig[i];
-    c->dig[i] = 0;
-    for (; comp(&row, b) != 1; row = tmp) {
-      c->dig[i]++;
-      sub(&row, b, &tmp);
-    }
-  }
-  c->sign = (a->sign = asign) * (b->sign = bsign);
-  zero_justify(c);
-}
-
-std::string to_string(bigint * x) {
-  std::string s(x->sign == -1 ? "-" : "");
-  for (int i = x->last; i >= 0; i--)
-    s += (char)('0' + x->dig[i]);
-  return s;
-}
 
 /*** Example Usage ***/
 
@@ -143,13 +203,9 @@ std::string to_string(bigint * x) {
 
 int main() {
   bigint a("-9899819294989142124"), b("12398124981294214");
-  bigint sum; add(&a, &b, &sum);
-  bigint dif; sub(&a, &b, &dif);
-  bigint prd; mul(&a, &b, &prd);
-  bigint quo; div(&a, &b, &quo);
-  assert(to_string(&sum) == "-9887421170007847910");
-  assert(to_string(&dif) == "-9912217419970436338");
-  assert(to_string(&prd) == "-122739196911503356525379735104870536");
-  assert(to_string(&quo) == "-798");
+  assert(add(a, b).str() == "-9887421170007847910");
+  assert(sub(a, b).str() == "-9912217419970436338");
+  assert(mul(a, b).str() == "-122739196911503356525379735104870536");
+  assert(div(a, b).str() == "-798");
   return 0;
 }
