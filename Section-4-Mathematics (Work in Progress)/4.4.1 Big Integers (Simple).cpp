@@ -32,14 +32,12 @@ Space Complexity:
 #include <string>
 
 class bigint {
-  using string = std::string;
-
-  string digits;
+  std::string digits;
   int sign;
 
   void normalize() {
     size_t pos = digits.find_last_not_of('0');
-    if (pos != string::npos) {
+    if (pos != std::string::npos) {
       digits.erase(pos + 1);
     }
     if (digits.empty()) {
@@ -51,28 +49,24 @@ class bigint {
     }
   }
 
-  static int comp(const string &a, const string &b, int asign, int bsign) {
+  static int comp(const std::string &a, const std::string &b,
+                  int asign, int bsign) {
     if (asign != bsign) {
-      return bsign;
+      return asign < bsign ? -1 : 1;
     }
-    if (a.size() < b.size()) {
-      return asign;
-    }
-    if (a.size() > b.size()) {
-      return -asign;
+    if (a.size() != b.size()) {
+      return a.size() < b.size() ? -asign : asign;
     }
     for (int i = (int)a.size() - 1; i >= 0; i--) {
-      if (a[i] > b[i]) {
-        return -asign;
-      }
-      if (b[i] > a[i]) {
-        return asign;
+      if (a[i] != b[i]) {
+        return a[i] < b[i] ? -asign : asign;
       }
     }
     return 0;
   }
 
-  static bigint add(const string &a, const string &b, int asign, int bsign) {
+  static bigint add(const std::string &a, const std::string &b,
+                    int asign, int bsign) {
     if (asign != bsign) {
       return (asign == 1) ? sub(a, b, asign, 1) : sub(b, a, bsign, 1);
     }
@@ -94,12 +88,13 @@ class bigint {
     return res;
   }
 
-  static bigint sub(const string &a, const string &b, int asign, int bsign) {
+  static bigint sub(const std::string &a, const std::string &b,
+                    int asign, int bsign) {
     if (asign == -1 || bsign == -1) {
       return add(a, b, asign, -bsign);
     }
     bigint res;
-    if (comp(a, b, asign, bsign) == 1) {
+    if (comp(a, b, asign, bsign) < 0) {
       res = sub(b, a, bsign, asign);
       res.sign = -1;
       return res;
@@ -133,7 +128,7 @@ class bigint {
     normalize();
   }
 
-  bigint(const string &s) {
+  bigint(const std::string &s) {
     if (s.empty() || (s[0] == '-' && s.size() == 1)) {
       throw std::runtime_error("Invalid string format to construct bigint.");
     }
@@ -144,14 +139,14 @@ class bigint {
     } else {
       sign = 1;
     }
-    if (digits.find_first_not_of("0123456789") != string::npos) {
+    if (digits.find_first_not_of("0123456789") != std::string::npos) {
       throw std::runtime_error("Invalid string format to construct bigint.");
     }
     normalize();
   }
 
-  string str() const {
-    return ((sign == -1) ? "-" : "") + string(digits.rbegin(), digits.rend());
+  std::string str() const {
+    return (sign < 0 ? "-" : "") + std::string(digits.rbegin(), digits.rend());
   }
 
   friend int comp(const bigint &a, const bigint &b) {
@@ -186,7 +181,7 @@ class bigint {
     res.digits.assign(a.digits.size(), '0');
     for (int i = (int)a.digits.size() - 1; i >= 0; i--) {
       row.digits.insert(row.digits.begin(), a.digits[i]);
-      while (comp(row.digits, b.digits, row.sign, 1) != 1) {
+      while (comp(row.digits, b.digits, row.sign, 1) > 0) {
         res.digits[i]++;
         row = sub(row.digits, b.digits, row.sign, 1);
       }
@@ -207,5 +202,6 @@ int main() {
   assert(sub(a, b).str() == "-9912217419970436338");
   assert(mul(a, b).str() == "-122739196911503356525379735104870536");
   assert(div(a, b).str() == "-798");
+  assert(comp(a, b) == -1 && comp(a, a) == 0 && comp(b, a) == 1);
   return 0;
 }
