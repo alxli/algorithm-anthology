@@ -7,7 +7,8 @@ digits are internally represented as an std::string in little-endian order.
 - bigint(s) constructs a big integer from a string s, which must strictly
   consist of a sequence of numeric digits, optionally preceded by a minus sign.
 - str() returns the string representation of the big integer.
-- comp(a, b) returns 0 if big integers a are equal, -1 if a < b, or 1 if a > b.
+- comp(a, b) returns -1, 0, or 1 depending on whether the big integers a and b
+  compare less, equal, or greater, respectively.
 - add(a, b) returns the sum of big integers a and b.
 - sub(a, b) returns the difference of big integers a and b.
 - mul(a, b) returns the product of big integers a and b.
@@ -15,14 +16,14 @@ digits are internally represented as an std::string in little-endian order.
 
 Time Complexity:
 - O(n) per call to the constructor, str(), comp(), add(), and sub(), where n is
-  the maximum length of the arguments' digits.
-- O(n*m) per call to mul(a, b) and div(a, b) where n is the length of a's digits
-  and m is the length of b's digits.
+  total number of digits in the argument(s) and result for each operation.
+- O(n*m) per call to mul(a, b) and div(a, b) where n is the number of digits in
+  a and m is the number of digits in b.
 
 Space Complexity:
-- O(n) for storage of the big integer, where n is the length of the digits.
+- O(n) for storage of the big integer, where n is the number of the digits.
 - O(n) auxiliary heap space for str(), add(), sub(), mul(), and div(), where n
-  the maximum length of the arguments' digits.
+  the total number of digits in the argument(s) and result for each operation.
 
 */
 
@@ -145,7 +146,7 @@ class bigint {
     normalize();
   }
 
-  std::string str() const {
+  std::string to_string() const {
     return (sign < 0 ? "-" : "") + std::string(digits.rbegin(), digits.rend());
   }
 
@@ -198,10 +199,10 @@ class bigint {
 
 int main() {
   bigint a("-9899819294989142124"), b("12398124981294214");
-  assert(add(a, b).str() == "-9887421170007847910");
-  assert(sub(a, b).str() == "-9912217419970436338");
-  assert(mul(a, b).str() == "-122739196911503356525379735104870536");
-  assert(div(a, b).str() == "-798");
+  assert(add(a, b).to_string() == "-9887421170007847910");
+  assert(sub(a, b).to_string() == "-9912217419970436338");
+  assert(mul(a, b).to_string() == "-122739196911503356525379735104870536");
+  assert(div(a, b).to_string() == "-798");
   assert(comp(a, b) == -1 && comp(a, a) == 0 && comp(b, a) == 1);
   return 0;
 }
