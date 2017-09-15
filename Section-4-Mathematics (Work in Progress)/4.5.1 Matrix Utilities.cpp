@@ -16,7 +16,10 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 - operators +, -, *, /, +=, -=, *=, and /= defines scalar addition, subtraction,
   multiplication, and division involving a matrix a numeric scalar value v.
 - operators * and *= defines vector and matrix multiplication.
-- operators ^ and ^= defines matrix exponentiation by an integer n.
+- operators ^ and ^= defines matrix exponentiation of a square matrix a by an
+  integer power p.
+- power_sum(a, p) returns the power sum of a square matrix a up to an integer
+  power p, that is, a + a^2 + ... + a^p.
 - transpose(a) returns the transpose of an r by c matrix a, that is, a new c by
   r matrix b such that a[i][j] == b[j][i] for every i in [0, r) and j in [0, c).
 - transpose_in_place(a) assigns the square matrix a to its transpose, returning
@@ -33,7 +36,8 @@ Time Complexity:
 - O(1) for rows(a) and columns(a).
 - O(n*m) for matrix-matrix addition and subtraction of n by m matrices.
 - O(n*m*log(p)) for exponentiation of an n by m matrix to power p.
-- O(n*m*k) for multiplication of an n by m matrix by a m by k matrix.
+- O(n*m*log^2(p)) for power sum of an n by m matrix to power p.
+- O(n*m*k) for multiplication of an n by m matrix by an m by k matrix.
 - O(n*m) for transpose(), transpose_in_place(), rotate(), and rotate_in_place()
   of n by m matrices.
 
@@ -41,7 +45,7 @@ Space Complexity:
 - O(1) auxiliary space for rows(), columns(), a[i][j] access, comparison
   operators, and in-place operations.
 - O(n*m*log(p)) auxiliary stack and heap space for exponentiation of an n by m
-  matrix to power p.
+  matrix to power p, as well as the power sum of an n by m matrix up to power p.
 - O(n*m) auxiliary heap space for all non-in-place operations returning an n by
   m matrix, transpose(), and rotate().
 
@@ -232,29 +236,29 @@ matrix operator*(const T &v, const matrix &a) { return a * v; }
 template<class T>
 matrix operator/(const T &v, const matrix &a) { return a / v; }
 
-matrix operator^(const matrix &a, unsigned int n) {
+matrix operator^(const matrix &a, unsigned int p) {
   if (rows(a) != columns(a)) {
     throw std::runtime_error("Matrix must be square for exponentiation.");
   }
-  if (n == 0) {
+  if (p == 0) {
     return identity_matrix(rows(a));
   }
-  return (n % 2 == 0) ? (a*a)^(n/2) : a*(a^(n - 1));
+  return (p % 2 == 0) ? (a*a)^(p/2) : a*(a^(p - 1));
 }
 
-matrix operator^=(matrix &a, unsigned int n) {
-  return a = a ^ n;
+matrix operator^=(matrix &a, unsigned int p) {
+  return a = a ^ p;
 }
 
-matrix powsum(const matrix &a, unsigned int n) {
+matrix power_sum(const matrix &a, unsigned int p) {
   if (rows(a) != columns(a)) {
-    throw std::runtime_error("Matrix must be square for powsum.");
+    throw std::runtime_error("Matrix must be square for power_sum.");
   }
-  if (n == 0) {
+  if (p == 0) {
     return make_matrix(rows(a), rows(a));
   }
-  return (n % 2 == 0) ? powsum(a, n/2)*(identity_matrix(rows(a)) + (a^(n/2)))
-                      : (a + a*powsum(a, n - 1));
+  return (p % 2 == 0) ? power_sum(a, p/2)*(identity_matrix(rows(a)) + (a^(p/2)))
+                      : (a + a*power_sum(a, p - 1));
 }
 
 matrix transpose(const matrix &a) {
@@ -398,6 +402,6 @@ int main() {
 
   m[0][0] += 5;
   assert(m[0][0] == 25 && m[1][1] == 20);
-  assert(powsum(m, 3) == m + m*m + (m^3));
+  assert(power_sum(m, 3) == m + m*m + (m^3));
   return 0;
 }
