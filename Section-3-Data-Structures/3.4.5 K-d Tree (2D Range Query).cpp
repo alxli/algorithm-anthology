@@ -28,7 +28,8 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T> class kd_tree {
+template<class T>
+class kd_tree {
   typedef std::pair<T, T> point;
 
   static inline bool comp1(const point &a, const point &b) {

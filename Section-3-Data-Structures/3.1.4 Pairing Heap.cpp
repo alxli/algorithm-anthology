@@ -32,7 +32,8 @@ Space Complexity:
 #include <cstdlib>
 #include <stdexcept>
 
-template<class T> class pairing_heap {
+template<class T>
+class pairing_heap {
   struct node_t {
     T value;
     node_t *left, *next;

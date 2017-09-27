@@ -33,7 +33,8 @@ Space Complexity:
 #include <map>
 #include <utility>
 
-template<class T> class fenwick_tree_2d {
+template<class T>
+class fenwick_tree_2d {
   static const int MAXR = 1000000001;
   static const int MAXC = 1000000001;
   std::map<std::pair<int, int>, T> t1, t2, t3, t4;

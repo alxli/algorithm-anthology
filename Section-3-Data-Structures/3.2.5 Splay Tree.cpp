@@ -34,7 +34,8 @@ Space Complexity:
 
 #include <cstdlib>
 
-template<class K, class V> class splay_tree {
+template<class K, class V>
+class splay_tree {
   struct node_t {
     K key;
     V value;

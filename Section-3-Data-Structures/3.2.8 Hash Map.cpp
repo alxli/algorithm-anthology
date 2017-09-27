@@ -37,7 +37,8 @@ Space Complexity:
 #include <cstdlib>
 #include <list>
 
-template<class K, class V, class Hash> class hash_map {
+template<class K, class V, class Hash>
+class hash_map {
   struct entry_t {
     K key;
     V value;

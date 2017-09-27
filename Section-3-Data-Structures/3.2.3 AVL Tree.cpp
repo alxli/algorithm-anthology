@@ -36,7 +36,8 @@ Space Complexity:
 #include <algorithm>
 #include <cstdlib>
 
-template<class K, class V> class avl_tree {
+template<class K, class V>
+class avl_tree {
   struct node_t {
     K key;
     V value;

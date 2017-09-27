@@ -39,7 +39,8 @@ Space Complexity:
 #include <cstdlib>
 #include <vector>
 
-template<class K, class V> class skip_list {
+template<class K, class V>
+class skip_list {
   static const int MAX_LEVELS = 32;  // log2(max possible keys)
 
   struct node_t {

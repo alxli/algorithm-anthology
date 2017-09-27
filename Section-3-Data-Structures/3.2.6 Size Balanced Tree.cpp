@@ -41,7 +41,8 @@ Space Complexity:
 #include <stdexcept>
 #include <utility>
 
-template<class K, class V> class size_balanced_tree {
+template<class K, class V>
+class size_balanced_tree {
   struct node_t {
     K key;
     V value;

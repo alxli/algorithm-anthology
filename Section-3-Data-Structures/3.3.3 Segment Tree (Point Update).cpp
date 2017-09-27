@@ -42,7 +42,8 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-template<class T> class segment_tree {
+template<class T>
+class segment_tree {
   static T join_values(const T &a, const T &b) {
     return std::min(a, b);
   }

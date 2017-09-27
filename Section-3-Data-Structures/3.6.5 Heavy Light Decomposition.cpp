@@ -51,7 +51,8 @@ Space Complexity:
 #include <stdexcept>
 #include <vector>
 
-template<class T> class heavy_light {
+template<class T>
+class heavy_light {
   // Set this to true to store values on edges, false to store values on nodes.
   static const bool VALUES_ON_EDGES = true;
 

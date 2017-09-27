@@ -34,7 +34,8 @@ Space Complexity:
 #include <cmath>
 #include <vector>
 
-template<class T> class sqrt_decomposition {
+template<class T>
+class sqrt_decomposition {
   static T join_values(const T &a, const T &b) {
     return std::min(a, b);
   }

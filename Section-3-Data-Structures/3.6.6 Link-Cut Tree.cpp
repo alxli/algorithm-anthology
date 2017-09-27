@@ -58,7 +58,8 @@ Space Complexity:
 #include <map>
 #include <stdexcept>
 
-template<class T> class link_cut_forest {
+template<class T>
+class link_cut_forest {
   static T join_values(const T &a, const T &b) {
     return std::min(a, b);
   }

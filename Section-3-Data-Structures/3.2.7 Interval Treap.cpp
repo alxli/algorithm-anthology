@@ -43,7 +43,8 @@ Space Complexity:
 #include <cstdlib>
 #include <utility>
 
-template<class K, class V> class interval_treap {
+template<class K, class V>
+class interval_treap {
   typedef std::pair<K, K> interval_t;
 
   struct node_t {

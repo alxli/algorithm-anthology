@@ -35,7 +35,8 @@ Space Complexity:
 
 #include <cstdlib>
 
-template<class K, class V> class treap {
+template<class K, class V>
+class treap {
   struct node_t {
     static inline int rand32() {
       return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);

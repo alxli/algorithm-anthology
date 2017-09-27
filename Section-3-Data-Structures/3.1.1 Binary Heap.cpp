@@ -31,7 +31,8 @@ Space Complexity:
 #include <stdexcept>
 #include <vector>
 
-template<class T> class binary_heap {
+template<class T>
+class binary_heap {
   std::vector<T> heap;
 
  public:

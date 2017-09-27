@@ -53,7 +53,8 @@ Space Complexity:
 #include <algorithm>
 #include <cstdlib>
 
-template<class T> class segment_tree {
+template<class T>
+class segment_tree {
   static const int MAXN = 1000000000;
 
   static T join_values(const T &a, const T &b) {

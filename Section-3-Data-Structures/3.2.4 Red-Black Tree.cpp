@@ -35,7 +35,8 @@ Space Complexity:
 #include <algorithm>
 #include <cstdlib>
 
-template<class K, class V> class red_black_tree {
+template<class K, class V>
+class red_black_tree {
   enum color_t { RED, BLACK };
   struct node_t {
     K key;

@@ -45,7 +45,8 @@ Space Complexity:
 
 #include <cstdlib>
 
-template<class T> class cartesian_treap {
+template<class T>
+class cartesian_treap {
   static T join_values(const T &a, const T &b) {
     return a < b ? a : b;
   }

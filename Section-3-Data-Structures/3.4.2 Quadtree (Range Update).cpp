@@ -53,7 +53,8 @@ Space Complexity:
 #include <algorithm>
 #include <cstdlib>
 
-template<class T> class quadtree {
+template<class T>
+class quadtree {
   static const int MAXR = 1000000000;
   static const int MAXC = 1000000000;
 

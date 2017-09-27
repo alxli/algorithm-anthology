@@ -29,7 +29,8 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T> class range_tree {
+template<class T>
+class range_tree {
   typedef std::pair<T, T> point;
   typedef std::pair<int, T> colindex;
 

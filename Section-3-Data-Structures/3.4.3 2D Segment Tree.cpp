@@ -43,7 +43,8 @@ Space Complexity:
 #include <algorithm>
 #include <cstdlib>
 
-template<class T> class segment_tree_2d {
+template<class T>
+class segment_tree_2d {
   static const int MAXR = 1000000000;
   static const int MAXC = 1000000000;
 

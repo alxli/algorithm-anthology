@@ -37,7 +37,8 @@ Space Complexity:
 #include <map>
 #include <vector>
 
-template<class T> class disjoint_set_forest {
+template<class T>
+class disjoint_set_forest {
   int num_elements, num_sets;
   std::map<T, int> id;
   std::vector<int> root, rank;

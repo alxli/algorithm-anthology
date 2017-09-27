@@ -34,7 +34,8 @@ Space Complexity:
 #include <cstdlib>
 #include <stdexcept>
 
-template<class T> class skew_heap {
+template<class T>
+class skew_heap {
   struct node_t {
     T value;
     node_t *left, *right;
