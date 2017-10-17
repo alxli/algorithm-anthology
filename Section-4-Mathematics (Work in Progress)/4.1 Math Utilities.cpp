@@ -68,9 +68,9 @@ Sign Functions
 - signbit_(x) is analogous to std::signbit() in C++11 and later, returning
   whether the sign bit of the floating point number is set to true. If so, then
   x is considered "negative." Note that this works as expected on +0.0, -0.0,
-  Inf, -Inf, NaN, as well as -NaN. The first version requires that sizeof(int)
-  equals sizeof(float) while the second version requires that sizeof(long long)
-  equals sizeof(double).
+  Inf, -Inf, NaN, as well as -NaN. Warning: This assumes that the sign bit is
+  the leading (most significant) bit in the internal representation of the IEEE
+  floating point value.
 - copysign_(x, y) is analogous to std::copysign() in C++11 and later, returning
   a number with the magnitude of x but the sign of y.
 
@@ -81,12 +81,9 @@ int sgn(const T &x) {
   return (T(0) < x) - (x < T(0));
 }
 
-bool signbit_(float x) {
-  return (*(int*)&x) >> (CHAR_BIT*sizeof(float) - 1);
-}
-
-bool signbit_(double x) {
-  return (*(long long*)&x) >> (CHAR_BIT*sizeof(double) - 1);
+template<class Double>
+bool signbit_(Double x) {
+  return (((unsigned char *)&x)[sizeof(x) - 1] >> (CHAR_BIT - 1)) & 1;
 }
 
 template<class Double>

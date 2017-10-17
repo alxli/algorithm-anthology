@@ -53,6 +53,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstddef>
+#include <iomanip>
 #include <ostream>
 #include <stdexcept>
 #include <vector>
@@ -91,15 +92,14 @@ int rows(const matrix &a) { return a.size(); }
 int columns(const matrix &a) { return a.empty() ? 0 : a[0].size(); }
 
 std::ostream& operator<<(std::ostream &out, const matrix &a) {
-  out << "[";
+  static const int COL_WIDTH = 10;
   for (int i = 0; i < rows(a); i++) {
-    out << (i > 0 ? ",[" : "[");
     for (int j = 0; j < columns(a); j++) {
-      out << (j > 0 ? "," : "") << a[i][j];
+      out << std::setw(COL_WIDTH) << std::fixed << a[i][j];
     }
-    out << "]";
+    out << std::endl;
   }
-  return out << "]";
+  return out;
 }
 
 template<class T>
