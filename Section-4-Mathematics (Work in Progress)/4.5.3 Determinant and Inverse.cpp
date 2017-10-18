@@ -1,33 +1,26 @@
 /*
 
-Computes the determinant, inverse, and adjugate (adjoint) of a square matrix.
+Computes the determinant and inverse of a square matrix. The inverse of a matrix
+a is another matrix b such that a*b equals the identity matrix. The inverse of a
+exists if and only if the determinant of a is zero. In this case, a is called
+"invertible" or "non-singular".
 
 - det_naive(a) returns the determinant of an n by n matrix a, using the classic
   divide-and-conquer algorithm by Laplace expansions.
 - det(a) returns the determinant of an n by n matrix a using Gaussian
   elimination.
-- inverse(a) assigns the n by n matrix a to its inverse (if it exists),
-  returning a reference to the modified argument itself. Note that the inverse
-  exists (that is, a is "invertible" or "non-singular") if and only if its
-  determinant is non-zero, which should be checked prior to calling this
-  function. Otherwise if a is not invertible, then its assigned values after the
-  function call will be undefined (likely +/-Inf or NaN).
-- adjugate(a) assigns the n by n matrix a to its adjugate (if it exists),
-  returning a reference to the modified argument itself. Note that the inverse
-  exists (that is, a is "invertible" or "non-singular") if and only if its
-  determinant is non-zero, which should be checked prior to calling this
-  function. Otherwise if a is not invertible, then its assigned values after the
-  function call will be undefined (likely +/-Inf or NaN).
+- invert(a) assigns the n by n matrix a to its inverse (if it exists), returning
+  a reference to the modified argument itself. If a is not invertible, then its
+  assigned values after the function call will be undefined (+/-Inf or NaN).
 
 Time Complexity:
 - O(n!) per call to det_naive(), where n is the dimension of the matrix.
-- O(n^3) per call to det(), inverse(), and adjugate() where n is the dimension
-  of the matrix.
+- O(n^3) per call to det() and invert() where n is the dimension of the matrix.
 
 Space Complexity:
 - O(n) auxiliary stack space and O(n!*n) auxiliary heap space for det_naive(),
   where n is the dimension of the matrix.
-- O(n^2) auxiliary for det(), inverse(), and adjugate().
+- O(n^2) auxiliary heap space for det() and invert().
 
 */
 
@@ -100,7 +93,7 @@ double det(const SquareMatrix &a, double eps = 1e-10) {
 }
 
 template<class SquareMatrix>
-SquareMatrix& inverse(SquareMatrix &a) {
+SquareMatrix& invert(SquareMatrix &a) {
   int n = a.size();
   for (int i = 0; i < n; i++) {
     a[i].resize(2*n);
@@ -128,56 +121,30 @@ SquareMatrix& inverse(SquareMatrix &a) {
   return a;
 }
 
-template<class SquareMatrix>
-SquareMatrix& adjugate(SquareMatrix &a) {
-  int n = a.size();
-  double d = det(a);
-  inverse(a);
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
-      a[i][j] *= d;
-    }
-  }
-  return a;
-}
-
 /*** Example Usage ***/
 
 #include <cassert>
 using namespace std;
 
-template<class M>
-M mul(const M &a, const M &b) {
-  int n = a.size();
-  M res(n, vector<double>(n, 0));
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
-      for (int k = 0; k < n; k++) {
-        res[i][j] += a[i][k]*b[k][j];
-      }
-    }
-  }
-  return res;
-}
-
 int main() {
   const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
-  vector<vector<double> > m(n), inv, adj, res;
+  vector<vector<double> > m(n), inv, res(n, vector<double>(n, 0));
   for (int i = 0; i < n; i++) {
     m[i] = vector<double>(a[i], a[i] + n);
   }
   double d = det(m);
   assert(fabs(d - det_naive(m)) < 1e-10);
-  res = mul(m, inverse(inv = m));
+  invert(inv = m);
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      for (int k = 0; k < n; k++) {
+        res[i][j] += a[i][k]*inv[k][j];
+      }
+    }
+  }
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
       assert(fabs(res[i][j] - (i == j ? 1 : 0)) < 1e-10);
-    }
-  }
-  res = mul(m, adjugate(adj = m));
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
-      assert(fabs(res[i][j] - (i == j ? d : 0)) < 1e-10);
     }
   }
   return 0;
