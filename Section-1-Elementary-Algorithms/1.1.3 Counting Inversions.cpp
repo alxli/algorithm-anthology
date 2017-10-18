@@ -7,28 +7,32 @@ sort the array. If the array is sorted, then the inversion count is 0. If the
 array is sorted in decreasing order, then the inversion count is maximal. The
 following two functions are each techniques to efficiently count inversions.
 
+- inversions(lo, hi) uses merge sort to return the number of inversions given
+  two RandomAccessIterators as a range [lo, hi). The input range will be sorted
+  after the function call. This requires operator < to be defined on the
+  iterators' value type.
+- inversions(n, a[]) uses a power-of-two trick to return the number of
+  inversions for an array a[] of n nonnegative integers. After calling the
+  function, every value of a[] will be set to 0. The time and space complexity
+  of this operation are functions of the magnitude of the maximum value in a[].
+  To instead obtain a running time of O(n log n) on the number of elements,
+  coordinate compression may be applied to a[] beforehand so that its maximum is
+  strictly less than the length n itself.
+
+Time Complexity:
+- O(n log n) per call to inversion(lo, hi), where n is distance between lo and
+  hi.
+- O(m log m) per call to inversions(n, a[]) where m is maximum value in a[].
+
+Space Complexity:
+- O(n) auxiliary heap space for inversions(lo, hi).
+- O(m) auxiliary heap space for inversions(n, a[]).
+
 */
 
 #include <algorithm>
 #include <iterator>
 #include <vector>
-
-/*
-
-Version 1: Merge Sort
-
-Returns the number of inversions given two RandomAccessIterators as a range
-[lo, hi). The range will become sorted after the function call. This requires
-operator < to be defined on the iterator's value type.
-
-Time Complexity:
-- O(n log n) per call to both functinos, where n is distance between lo and hi
-  in the first version and the number of array elements in the second version.
-
-Space Complexity:
-- O(n) auxiliary heap space for both functions.
-
-*/
 
 template<class It>
 long long inversions(It lo, It hi) {
@@ -63,22 +67,6 @@ long long inversions(It lo, It hi) {
   }
   return res;
 }
-
-/*
-
-Version 2: Power-of-Two Trick
-
-Returns the number of inversions for an array a[] of n nonnegative integers.
-After calling the function, every value of a[] will be set to 0.
-
-Here, the time and space complexities depend on the magnitude of the maximum
-value in a[]. Therefore for a running time of O(n log n), coordinate compression
-may be applied to a[] so its maximum is strictly less than the length n itself.
-
-Time Complexity: O(m log m), where m is maximum value in the array.
-Space Complexity: O(m) auxiliary.
-
-*/
 
 long long inversions(int n, int a[]) {
   int mx = 0;

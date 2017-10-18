@@ -7,6 +7,35 @@ ending there. Either this subarray is empty (in which case its sum is zero) or
 it consists of one more element than the maximum sequence ending at the previous
 position. This can be adapted to compute the maximal submatrix sum as well.
 
+- max_subarray_sum(lo, hi, &res_lo, &res_hi) returns the maximal subarray sum
+  for the range [lo, hi), where lo and hi are RandomAccessIterators to numerical
+  types. This implementation requires operators + and < to be defined on the
+  iterators' value type. Optionally, two int pointers may be passed to store the
+  inclusive boundary indices [res_lo, res_hi] of the resulting subarray. By
+  convention, an input range consisting of only negative values will yield a
+  size 1 subarray consisting of the maximum value.
+- max_submatrix_sum(matrix, &r1, &c1, &r2, &c2) returns the largest sum of any
+  rectangular submatrix for a matrix of n rows by m columns. The matrix should
+  be given as a 2-dimensional vector, where the outer vector must contain n
+  vectors each of size m. This implementation requires operators + and < to be
+  defined on the iterators' value type. Optionally, four int pointers may be
+  passed to store the boundary indices of the resulting subarray, with (r1, c1)
+  specifiying the top-left index and (r2, c2) specifying the bottom-right index.
+  By convention, an input matrix consisting of only negative values will yield a
+  size 1 submatrix consisting of the maximum value.
+
+
+Time Complexity:
+- O(n) per call to max_subarray_sum(), where n is the distance between lo and
+  hi.
+- O(n*m^2) per call to max_submatrix_sum(), where n is the number of rows and m
+  is the number of columns in the matrix.
+
+Space Complexity:
+- O(1) auxiliary for max_subarray_sum().
+- O(n) auxiliary heap space for max_submatrix_sum(), where n is the number of
+  rows in the matrix.
+
 */
 
 #include <algorithm>
@@ -14,24 +43,6 @@ position. This can be adapted to compute the maximal submatrix sum as well.
 #include <iterator>
 #include <limits>
 #include <vector>
-
-/*
-
-Returns the maximal subarray sum for the range [lo, hi), where lo and hi are
-RandomAccessIterators to numerical types. This implementation requires operators
-+ and < to be defined on the iterator's value type. Optionally, two int pointers
-may be passed to store the inclusive boundary indices [res_lo, res_hi] of the
-resulting subarray. By convention, an input range consisting of only negative
-values will yield a size 1 subarray consisting of the maximum value.
-
-Time Complexity:
-- O(n) per call to max_subarray_sum(), where n is the distance between lo and
-  hi.
-
-Space Complexity:
-- O(1) auxiliary.
-
-*/
 
 template<class It>
 typename std::iterator_traits<It>::value_type
@@ -50,8 +61,7 @@ max_subarray_sum(It lo, It hi, int *res_lo = NULL, int *res_hi = NULL) {
       end = it - lo;
     }
   }
-  if (end == -1) {
-    // All values negative. By convention, just return the maximum value.
+  if (end == -1) { // All negative. By convention, return the maximum value.
     for (It it = lo; it != hi; ++it) {
       if (max_sum < *it) {
         max_sum = *it;
@@ -66,27 +76,6 @@ max_subarray_sum(It lo, It hi, int *res_lo = NULL, int *res_hi = NULL) {
   }
   return max_sum;
 }
-
-/*
-
-Returns the largest sum of any rectangular submatrix for a matrix of n rows by
-m columns. The matrix should be given as a 2-dimensional vector, where the outer
-vector must contain n vectors each of size m. This implementation requires
-operators + and < to be defined on the iterator's value type. Optionally, four
-int pointers may be passed to store the boundary indices of the resulting
-subarray, with (r1, c1) specifiying the top-left index and (r2, c2) specifying
-the bottom-right index. By convention, an input matrix consisting of only
-negative values will yield a size 1 submatrix consisting of the maximum value.
-
-Time Complexity:
-- O(n*m^2) per call to max_submatrix_sum(), where n is the number of rows and m
-  is the number of columns in the matrix.
-
-Space Complexity:
-- O(n) auxiliary heap space for max_submatrix_sum(), where n is the number of
-  rows in the matrix.
-
-*/
 
 template<class T>
 T max_submatrix_sum(const std::vector<std::vector<T> > &matrix,

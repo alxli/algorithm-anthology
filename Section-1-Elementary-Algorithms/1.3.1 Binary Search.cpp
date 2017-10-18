@@ -8,26 +8,42 @@ changes from true to false or vice versa. Unlike searching through an array,
 discrete binary search is not restricted by available memory, making it useful
 for handling infinitely large search spaces such as real number intervals.
 
-binary_search_first_true() takes two integers lo and hi as boundaries for the
-search space [lo, hi) (i.e. including lo, but excluding hi) and returns the
-smallest integer k in [lo, hi) for which the predicate pred(k) tests true. If
-pred(k) tests false for every k in [lo, hi), then hi is returned. This function
-must be used on a range in which there exists a constant k such that pred(x)
-tests false for every x in [lo, k) and true for every x in [k, hi).
-
-binary_search_last_true() takes two integers lo and hi as boundaries for the
-search space [lo, hi) (i.e. including lo, but excluding hi) and returns the
-largest integer k in [lo, hi) for which the predicate pred(k) tests true. If
-pred(k) tests false for every k in [lo, hi), then hi is returned. This function
-must be used on a range in which there exists a constant k such that pred(x)
-tests true for every x in [lo, k] and false for every x in (k, hi).
+- binary_search_first_true() takes two integers lo and hi as boundaries for the
+  search space [lo, hi) (i.e. including lo, but excluding hi) and returns the
+  smallest integer k in [lo, hi) for which the predicate pred(k) tests true. If
+  pred(k) tests false for every k in [lo, hi), then hi is returned. This
+  function must be used on a range in which there exists a constant k such that
+  pred(x) tests false for every x in [lo, k) and true for every x in [k, hi).
+- binary_search_last_true() takes two integers lo and hi as boundaries for the
+  search space [lo, hi) (i.e. including lo, but excluding hi) and returns the
+  largest integer k in [lo, hi) for which the predicate pred(k) tests true. If
+  pred(k) tests false for every k in [lo, hi), then hi is returned. This
+  function must be used on a range in which there exists a constant k such that
+  pred(x) tests true for every x in [lo, k] and false for every x in (k, hi).
+- fbinary_search() is the equivalent of binary_search_first_true() on floating
+  point predicates. Since any interval of real numbers is dense, the exact target
+  cannot be found due to floating point error. Instead, the function returns a
+  value that is very close to the border between false and true. The precision of
+  the answer depends on the number of repetitions the function performs. Since
+  each repetition bisects the search space, the absolute error of the answer is
+  1/(2^r) times the distance between lo and hi after r repetitions. Although it
+  is possible to control the error by looping while hi - lo is greater than an
+  arbitrary epsilon, it is simpler to let the loop run for a desired number of
+  iterations until floating point arithmetic break down. 100 iterations is
+  usually sufficient, since the search space will be reduced to 2^-100 (roughly
+  10^-30) times its original size. This implementation can be modified to find
+  the "last true" point in the range by simply interchanging the assignments of
+  lo and hi in the if-else statements.
 
 Time Complexity:
-- O(log n) calls will be made to pred() in either function, where n is the
-  distance between lo and hi.
+- O(log n) calls will be made to pred() in binary_search_first_true() and
+  binary_search_last_true(), where n is the distance between lo and hi.
+- O(log n) calls will be made to pred() in fbinary_search(), where n is the
+  distance between lo and hi divided by the desired absolute error (based on the
+  number of iterations).
 
 Space Complexity:
-- O(1) auxiliary.
+- O(1) auxiliary for all operations.
 
 */
 
@@ -64,33 +80,6 @@ Int binary_search_last_true(Int lo, Int hi, IntPredicate pred) {  // 11[1]000
   }
   return lo;
 }
-
-/*
-
-fbinary_search() is the equivalent of binary_search_first_true() on floating
-point predicates. Since any interval of real numbers is dense, the exact target
-cannot be found due to floating point error. Instead, the function returns a
-value that is very close to the border between false and true. The precision of
-the answer depends on the number of repetitions the function performs. Since
-each repetition bisects the search space, the absolute error of the answer is
-1/(2^r) times the distance between lo and hi after r repetitions. Although it is
-possible to control the error by looping while hi - lo is greater than an
-arbitrary epsilon, it is simpler to let the loop run for a desired number of
-iterations until floating point arithmetic break down. 100 iterations is usually
-sufficient, since the search space will be reduced to 2^-100 (roughly 10^-30)
-times its original size.
-
-This implementation can be modified to find the "last true" point in the range
-by simply interchanging the assignments of lo and hi in the if-else statements.
-
-Time Complexity:
-- O(log n) calls will be made to pred(), where n is the distance between lo and
-  hi divided by the desired absolute error (based on the number of iterations).
-
-Space Complexity:
-- O(1) auxiliary.
-
-*/
 
 template<class DoublePredicate>
 double fbinary_search(double lo, double hi, DoublePredicate pred) {  // 000[1]11
