@@ -12,7 +12,7 @@ such as solving a system of linear equations or computing the determinant.
   vector perm. The resulting merged LU matrix m will have m[i][j] = l[i][j] for
   i > j and m[i][j] = u[i][j] for i <= j. Note that the result will have l[i][i]
   equal to 1 for every i from 1 to n, but this is not stored in m. The values of
-  the actual lower and upper triangular matrices can be accessed via the
+  the actual lower and upper triangular matrices should be accessed via the
   getl(lu, i, j) and getu(lu, i, j) functions respectively.
 - solve_system(a, b) returns an r by c matrix x such that a*x = b for a given
   r by r matrix a and r by c matrix b. Note that the number of columns m can be
