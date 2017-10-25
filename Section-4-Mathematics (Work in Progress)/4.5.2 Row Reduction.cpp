@@ -11,6 +11,14 @@ solve a system of linear equations as well as compute the determinant.
   solutions. If and only if there is one solution, then the vector pointed to by
   x is populated with the solution vector of length c.
 
+Time Complexity:
+- O(r^2*c) per call to row_reduce(a) and solve_system(a), where r and c are the
+  number of rows and columns of a respectively.
+
+Space Complexity:
+- O(1) auxiliary for row_reduce(a).
+- O(r*c) auxiliary heap space for solve_system(a).
+
 */
 
 #include <cmath>
