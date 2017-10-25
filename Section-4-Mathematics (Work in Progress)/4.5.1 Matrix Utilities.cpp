@@ -92,10 +92,10 @@ int rows(const matrix &a) { return a.size(); }
 int columns(const matrix &a) { return a.empty() ? 0 : a[0].size(); }
 
 std::ostream& operator<<(std::ostream &out, const matrix &a) {
-  static const int COL_WIDTH = 10;
+  static const int W = 10, P = 5;
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
-      out << std::setw(COL_WIDTH) << std::fixed << a[i][j];
+      out << std::setw(W) << std::fixed << std::setprecision(P) << a[i][j];
     }
     out << std::endl;
   }
@@ -374,6 +374,7 @@ matrix& rotate_in_place(matrix &a, int degrees = 90) {
 /*** Example Usage ***/
 
 #include <cassert>
+#include <iostream>
 using namespace std;
 
 int main() {
@@ -381,6 +382,7 @@ int main() {
   int a90[3][2] = {{4, 1}, {5, 2}, {6, 3}};
   int a180[2][3] = {{6, 5, 4}, {3, 2, 1}};
   int a270[3][2] = {{3, 6}, {2, 5}, {1, 4}};
+  cout << make_matrix(a) << endl;
   assert(rotate(make_matrix(a), -270) == make_matrix(a90));
   assert(rotate(make_matrix(a), -180) == make_matrix(a180));
   assert(rotate(make_matrix(a), -90) == make_matrix(a270));

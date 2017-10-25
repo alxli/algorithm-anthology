@@ -1,231 +1,197 @@
 /*
 
-The LU (lower upper) decomposition of a matrix is a factorization
-of a matrix as the product of a lower triangular matrix and an
-upper triangular matrix. With the LU decomposition, we can solve
-many problems, including the determinant of the matrix, a systems
-of linear equations, and the inverse of a matrix.
+The LU (lower/upper) decomposition of a matrix a is a factorization of a as the
+product of a lower triangular matrix l and an upper triangular matrix u. This
+factorization can be used to easily solve many common problems in linear algebra
+such as solving a system of linear equations or computing the determinant.
 
-Note: in the following implementation, each call to det(),
-solve_system(), and inverse() recomputes the lu decomposition.
-For the same matrix, you should precompute the lu decomposition
-and reuse it for several of these operations afterwards.
+- lu_decompose(a, &detsign, &perm) assigns the matrix a to its LU decomposition,
+  returning a reference to the modified argument itself. Optionally, an int
+  pointer detsign may be passed to store the sign of the determinant of a.
+  Optionally, an vector<int> pointer may be passed to store the permutation
+  vector perm. The resulting merged LU matrix m will have m[i][j] = l[i][j] for
+  i > j and m[i][j] = u[i][j] for i <= j. Note that the result will have l[i][i]
+  equal to 1 for every i from 1 to n, but this is not stored in m. The values of
+  the actual lower and upper triangular matrices can be accessed via the
+  getl(lu, i, j) and getu(lu, i, j) functions respectively.
+- solve_system(a, b) returns an r by c matrix x such that a*x = b for a given
+  r by r matrix a and r by c matrix b. Note that the number of columns m can be
+  equal to 1 for b and x, making them column vectors (though they will still be
+  represented as the Matrix template type).
+- det(a) returns the determinant of an n by n matrix a.
+- inverse(a) returns the inverse of the n by n matrix a (if it exists). If a is
+  not invertible, then the values of the returned matrix will be undefined
+  (+/-Inf or NaN).
 
-Complexity: O(n^3) for lu_decompose(). det() uses the running time
-of lu_decompose(), plus an addition O(n) term. solve_system() and
-inverse() both have the running time of lu_decompose(), plus an
-additional O(n^3) term.
+Time Complexity:
+- O(r^2*c) per call to lu_decompose(a) and solve_system(a, b), where r and c are
+  the number of rows and columns respectively, in accordance to the functions'
+  descriptions above.
+- O(n^3) per call to det(a) and inverse(a), where n is the dimension of a.
+
+Space Complexity:
+- O(1) auxiliary for lu_decompose().
+- O(n^2) for det(a) and inverse(a).
+- O(r*c) auxiliary heap space for solve_system(a, b).
 
 */
 
-#include <algorithm> /* std::swap() */
-#include <cassert>
-#include <cmath>     /* fabs() */
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
 #include <vector>
 
-static const double eps = 1e-10;
-typedef std::vector<double> vd;
-typedef std::vector<vd> vvd;
-
-/*
-
-LU decomposition with Gauss-Jordan elimination. This is generalized
-for rectangular matrices. Since the resulting L and U matrices have
-all mutually exclusive 0's (except when i == j), we can merge them
-into a single LU matrix to save memory. Note: l[i][i] = 1 for all i.
-
-Optionally determine the permutation vector p. If an array p is
-passed, p[i] will be populated such that p[i] is the only column of
-the i-th row of the permutation matrix that is equal to 1.
-
-Returns: a matrix m, the merged lower/upper triangular matrix:
-         m[i][j] = l[i][j] (for i > j) or u[i][j] (for i <= j)
-
-*/
-
-vvd lu_decompose(vvd a, int * detsign = 0, int * p = 0) {
-  int n = a.size(), m = a[0].size();
-  int sign = 1;
-  if (p != 0)
-    for (int i = 0; i < n; i++) p[i] = i;
-  for (int r = 0, c = 0; r < n && c < m; r++, c++) {
-    int pr = r;
-    for (int i = r + 1; i < n; i++)
-      if (fabs(a[i][c]) > fabs(a[pr][c]))
-        pr = i;
-    if (fabs(a[pr][c]) <= eps) {
-      r--;
-      continue;
-    }
-    if (pr != r) {
-      if (p != 0) std::swap(p[r], p[pr]);
-      sign = -sign;
-      for (int i = 0; i < m; i++)
-        std::swap(a[r][i], a[pr][i]);
-    }
-    for (int s = r + 1; s < n; s++) {
-      a[s][c] /= a[r][c];
-      for (int d = c + 1; d < m; d++)
-        a[s][d] -= a[s][c] * a[r][d];
+template<class Matrix>
+Matrix& lu_decompose(Matrix &a, int *detsign = NULL,
+                     std::vector<int> *perm = NULL,
+                     const double EPS = 1e-10) {
+  int r = a.size(), c = a[0].size(), sign = 1;
+  if (perm != NULL) {
+    perm->resize(r);
+    for (int i = 0; i < r; i++) {
+      (*perm)[i] = i;
     }
   }
-  if (detsign != 0) *detsign = sign;
+  for (int i = 0, j = 0; i < r && j < c; i++, j++) {
+    int pi = i;
+    for (int k = i + 1; k < r; k++) {
+      if (fabs(a[k][j]) > fabs(a[pi][j])) {
+        pi = k;
+      }
+    }
+    if (fabs(a[pi][j]) < EPS) {
+      i--;
+      continue;
+    }
+    if (pi != i) {
+      if (perm != NULL) {
+        std::iter_swap(perm->begin() + i, perm->begin() + pi);
+      }
+      sign = -sign;
+      for (int k = 0; k < c; k++) {
+        std::swap(a[i][k], a[pi][k]);
+      }
+    }
+    for (int s = i + 1; s < r; s++) {
+      a[s][j] /= a[i][j];
+      for (int d = j + 1; d < c; d++) {
+        a[s][d] -= a[s][j]*a[i][d];
+      }
+    }
+  }
+  if (detsign != NULL) {
+    *detsign = sign;
+  }
   return a;
 }
 
-double getl(const vvd & lu, int i, int j) {
-  if (i > j) return lu[i][j];
-  return i < j ? 0.0 : 1.0;
+template<class Matrix>
+double getl(const Matrix &lu, int i, int j) {
+  return i > j ? lu[i][j] : (i < j ? 0 : 1);
 }
 
-double getu(const vvd & lu, int i, int j) {
-  return i <= j ? lu[i][j] : 0.0;
+template<class Matrix>
+double getu(const Matrix &lu, int i, int j) {
+  return i <= j ? lu[i][j] : 0;
 }
 
-//Precondition: A is square matrix.
-double det(const vvd & a) {
-  int n = a.size(), detsign;
-  assert(!a.empty() && n == (int)a[0].size());
-  vvd lu = lu_decompose(a, &detsign);
-  double det = 1;
-  for (int i = 0; i < n; i++)
-    det *= lu[i][i];
-  return detsign < 0 ? -det : det;
-}
-
-/*
-
-Solves system of linear equations with forward/backwards
-substitution. Precondition: A must be n*n and B must be n*m.
-Returns: an n by m matrix X such that A*X = B.
-
-*/
-
-vvd solve_system(const vvd & a, const vvd & b) {
-  int n = b.size(), m = b[0].size();
-  assert(!a.empty() && n == (int)a.size() && n == (int)a[0].size());
-  int detsign, p[a.size()];
-  vvd lu = lu_decompose(a, &detsign, p);
-  //forward substitute for Y in L*Y = B
-  vvd y(n, vd(m));
-  for (int j = 0; j < m; j++) {
-    y[0][j] = b[p[0]][j] / getl(lu, 0, 0);
-    for (int i = 1; i < n; i++) {
+template<class Matrix>
+Matrix solve_system(const Matrix &a, const Matrix &b) {
+  int r = b.size(), c = b[0].size();
+  std::vector<int> perm;
+  Matrix lu;
+  lu_decompose(lu = a, NULL, &perm);
+  Matrix y(r, std::vector<double>(c)), x(r, std::vector<double>(c));
+  for (int j = 0; j < c; j++) {
+    y[0][j] = b[perm[0]][j]/getl(lu, 0, 0);
+    for (int i = 1; i < r; i++) {
       double s = 0;
-      for (int k = 0; k < i; k++)
-        s += getl(lu, i, k) * y[k][j];
-      y[i][j] = (b[p[i]][j] - s) / getl(lu, i, i);
+      for (int k = 0; k < i; k++) {
+        s += getl(lu, i, k)*y[k][j];
+      }
+      y[i][j] = (b[perm[i]][j] - s)/getl(lu, i, i);
     }
   }
-  //backward substitute for X in U*X = Y
-  vvd x(n, vd(m));
-  for (int j = 0; j < m; j++) {
-    x[n - 1][j] = y[n - 1][j] / getu(lu, n-1, n-1);
-    for (int i = n - 2; i >= 0; i--) {
+  for (int j = 0; j < c; j++) {
+    x[r - 1][j] = y[r - 1][j]/getu(lu, r - 1, r - 1);
+    for (int i = r - 2; i >= 0; i--) {
       double s = 0;
-      for (int k = i + 1; k < n; k++)
-        s += getu(lu, i, k) * x[k][j];
-      x[i][j] = (y[i][j] - s) / getu(lu, i, i);
+      for (int k = i + 1; k < r; k++) {
+        s += getu(lu, i, k)*x[k][j];
+      }
+      x[i][j] = (y[i][j] - s)/getu(lu, i, i);
     }
   }
   return x;
 }
 
-/*
+template<class SquareMatrix>
+double det(const SquareMatrix &a) {
+  int n = a.size(), sign;
+  SquareMatrix lu;
+  lu_decompose(lu = a, &sign);
+  double res = 1;
+  for (int i = 0; i < n; i++) {
+    res *= lu[i][i];
+  }
+  return sign < 0 ? -res : res;
+}
 
-Find the inverse A^-1 of a matrix A. The inverse of a matrix
-satisfies A * A^-1 = I, where I is the identity matrix (for
-all pairs (i, j), I[i][j] = 1 iff i = j, else I[i][j] = 0).
-The inverse of a matrix exists if and only if det(a) is not 0.
-We're lazy, so we just generate I and call solve_system().
-
-Precondition: A is a square and det(A) != 0.
-
-*/
-
-vvd inverse(const vvd & a) {
+template<class SquareMatrix>
+SquareMatrix inverse(const SquareMatrix &a) {
   int n = a.size();
-  assert(!a.empty() && n == (int)a[0].size());
-  vvd I(n, vd(n));
-  for (int i = 0; i < n; i++) I[i][i] = 1;
+  SquareMatrix I(n, typename SquareMatrix::value_type(n, 0));
+  for (int i = 0; i < n; i++) {
+    I[i][i] = 1;
+  }
   return solve_system(a, I);
 }
 
 /*** Example Usage ***/
 
-#include <cstdio>
-#include <iostream>
+#include <cassert>
 using namespace std;
 
-void print(const vvd & m) {
-  cout << "[";
-  for (int i = 0; i < (int)m.size(); i++) {
-    cout << (i > 0 ? ",[" : "[");
-    for (int j = 0; j < (int)m[0].size(); j++)
-      cout << (j > 0 ? "," : "") << m[i][j];
-    cout << "]";
-  }
-  cout << "]\n";
-}
-
-void printlu(const vvd & lu) {
-  printf("L:\n");
-  for (int i = 0; i < (int)lu.size(); i++) {
-    for (int j = 0; j < (int)lu[0].size(); j++)
-      printf("%10.5f ", getl(lu, i, j));
-    printf("\n");
-  }
-  printf("U:\n");
-  for (int i = 0; i < (int)lu.size(); i++) {
-    for (int j = 0; j < (int)lu[0].size(); j++)
-      printf("%10.5f ", getu(lu, i, j));
-    printf("\n");
-  }
-}
-
 int main() {
-  { //determinant of 3x3
-    const int n = 3;
-    double a[n][n] = {{1,3,5},{2,4,7},{1,1,0}};
-    vvd v(n);
-    for (int i = 0; i < n; i++)
-      v[i] = vector<double>(a[i], a[i] + n);
-    printlu(lu_decompose(v));
-    cout << "determinant: " << det(v) << "\n"; //4
-  }
-
-  { //determinant of 4x4
-    const int n = 4;
-    double a[n][n] = {{11,9,24,2},{1,5,2,6},{3,17,18,1},{2,5,7,1}};
-    vvd v(n);
-    for (int i = 0; i < n; i++)
-      v[i] = vector<double>(a[i], a[i] + n);
-    printlu(lu_decompose(v));
-    cout << "determinant: " << det(v) << "\n"; //284
-  }
-
-  { //solve for [x, y] in x + 3y = 4 && 2x + 3y = 6
-    const int n = 2;
-    double a[n][n] = {{1,3},{2,3}};
-    double b[n] = {4, 6};
-    vvd va(n), vb(n);
+  { // Find the determinant.
+    const int n = 3, a[n][n] = {{1, 3, 5}, {2, 4, 7}, {1, 1, 0}};
+    vector<vector<double> > m(n);
     for (int i = 0; i < n; i++) {
-      va[i] = vector<double>(a[i], a[i] + n);
-      vb[i] = vector<double>(1, b[i]);
+      m[i] = vector<double>(a[i], a[i] + n);
     }
-    vvd x = solve_system(va, vb);
+    assert(fabs(det(m) - 4) < 1e-10);
+  }
+  { // Solve for [x, y] in x + 3y = 4 && 2x + 3y = 6
+    const int n = 2, a[n][n] = {{1, 3}, {2, 3}}, b[n] = {4, 6};
+    vector<vector<double> > ma(n), mb(n), x;
     for (int i = 0; i < n; i++) {
-      assert(fabs(a[i][0]*x[0][0] + a[i][1]*x[1][0] - b[i]) < eps);
+      ma[i] = vector<double>(a[i], a[i] + n);
+      mb[i] = vector<double>(1, b[i]);
+    }
+    x = solve_system(ma, mb);
+    for (int i = 0; i < n; i++) {
+      assert(fabs(a[i][0]*x[0][0] + a[i][1]*x[1][0] - b[i]) < 1e-10);
     }
   }
-
-  { //find inverse by solving a system
-    const int n = 2;
-    double a[n][n] = {{2,3},{1,2}};
-    vvd v(n);
-    for (int i = 0; i < n; i++)
-      v[i] = vector<double>(a[i], a[i] + n);
-    print(inverse(v)); //[[2,-3],[-1,2]]
+  { // Find the inverse by solving a system.
+    const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
+    vector<vector<double> > m(n), inv, res(n, vector<double>(n, 0));
+    for (int i = 0; i < n; i++) {
+      m[i] = vector<double>(a[i], a[i] + n);
+    }
+    inv = inverse(m);
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        for (int k = 0; k < n; k++) {
+          res[i][j] += a[i][k]*inv[k][j];
+        }
+      }
+    }
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        assert(fabs(res[i][j] - (i == j ? 1 : 0)) < 1e-10);
+      }
+    }
   }
   return 0;
 }
