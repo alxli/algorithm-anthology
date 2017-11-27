@@ -115,12 +115,12 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x,
   for (int i = 0; i < c; i++) {
     (*x)[i] = b[p1col[i]];
     for (int k = 0; k < i; k++) {
-      (*x)[i] -= getl(lu, i, k) * (*x)[k];
+      (*x)[i] -= getl(lu, i, k)*(*x)[k];
     }
   }
   for (int i = c - 1; i >= 0; i--) {
     for (int k = i + 1; k < c; k++) {
-      (*x)[i] -= getu(lu, i, k) * (*x)[k];
+      (*x)[i] -= getu(lu, i, k)*(*x)[k];
     }
     (*x)[i] /= getu(lu, i, i);
   }
