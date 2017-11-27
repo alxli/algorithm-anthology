@@ -1,14 +1,17 @@
 /*
 
 Converts a matrix to reduced row echelon form using Gaussian elimination to
-solve a system of linear equations as well as compute the determinant.
+solve a system of linear equations as well as compute the determinant. In
+practice, this method is prone to rounding error on certain matrices. For a more
+accurate algorithm for solving systems of linear equations, LU decomposition
+with row partial pivoting should be used.
 
 - row_reduce(a) assigns the matrix a to its reduced row echelon form, returning
   a reference to the modified argument itself.
-- solve_system(a, b, *x) solves the system of linear equations a*x = b given an
-  r by c matrix a of real values, and a length c vector b, returning 0 if there
-  is no solution, 1 if there is one solution, or 2 if there are infinite
-  solutions. If and only if there is one solution, then the vector pointed to by
+- solve_system(a, b, &x) solves the system of linear equations a*x = b given an
+  r by c matrix a of real values, and a length r vector b, returning 0 if there
+  is one solution, -1 if there is zero solutions, or -2 if there are infinite
+  solutions. If there is exactly one solution, then the vector pointed to by
   x is populated with the solution vector of length c.
 
 Time Complexity:
@@ -23,6 +26,7 @@ Space Complexity:
 
 #include <cmath>
 #include <cstdlib>
+#include <stdexcept>
 #include <vector>
 
 const double EPS = 1e-9;
@@ -71,7 +75,7 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
   }
   int r = a.size(), c = a[0].size();
   if (r < c) {
-    return 2;
+    return -2;
   }
   Matrix m(a);
   for (int i = 0; i < r; i++) {
@@ -86,17 +90,17 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
       }
     }
     if (lead < 0 && fabs(m[i][c]) > EPS) {
-      return 0;
+      return -1;
     }
     if (lead > i) {
-      return 2;
+      return -2;
     }
   }
   x->resize(c);
   for (int i = 0; i < c; i++) {
     (*x)[i] = m[i][c];
   }
-  return 1;
+  return 0;
 }
 
 /*** Example Usage ***/
@@ -113,7 +117,7 @@ int main() {
     m[i].assign(a[i], a[i] + unknowns);
   }
   vector<double> x;
-  assert(solve_system(m, vector<double>(b, b + equations), &x) == 1);
+  assert(solve_system(m, vector<double>(b, b + equations), &x) == 0);
   for (int i = 0; i < equations; i++) {
     double sum = 0;
     for (int j = 0; j < unknowns; j++) {

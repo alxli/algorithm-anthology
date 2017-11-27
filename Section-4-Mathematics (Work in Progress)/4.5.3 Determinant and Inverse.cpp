@@ -1,9 +1,12 @@
 /*
 
-Computes the determinant and inverse of a square matrix. The inverse of a matrix
-a is another matrix b such that a*b equals the identity matrix. The inverse of a
-exists if and only if the determinant of a is zero. In this case, a is called
-"invertible" or "non-singular".
+Computes the determinant and inverse of a square matrix using Gaussian
+elimination. The inverse of a matrix a is another matrix b such that a*b equals
+the identity matrix. The inverse of a exists if and only if the determinant of a
+is zero. In this case, a is called invertible or non-singular. In practice,
+simple Gaussian elimination is prone to rounding error on certain matrices. For
+a more accurate algorithm for solving systems of linear equations, see LU
+decomposition with row partial pivoting should be.
 
 - det_naive(a) returns the determinant of an n by n matrix a, using the classic
   divide-and-conquer algorithm by Laplace expansions.
@@ -11,7 +14,7 @@ exists if and only if the determinant of a is zero. In this case, a is called
   elimination.
 - invert(a) assigns the n by n matrix a to its inverse (if it exists), returning
   a reference to the modified argument itself. If a is not invertible, then its
-  assigned values after the function call will be undefined (+/-Inf or NaN).
+  assigned values after the function call will be undefined (+/-Inf or +/-NaN).
 
 Time Complexity:
 - O(n!) per call to det_naive(), where n is the dimension of the matrix.
@@ -38,7 +41,7 @@ double det_naive(const SquareMatrix &a) {
     return a[0][0]*a[1][1] - a[0][1]*a[1][0];
   }
   double res = 0;
-  std::vector<std::vector<double> > temp(n - 1, std::vector<double>(n - 1));
+  SquareMatrix temp(n - 1, typename SquareMatrix::value_type(n - 1));
   for (int p = 0; p < n; p++) {
     int h = 0, k = 0;
     for (int i = 1; i < n; i++) {
@@ -59,7 +62,7 @@ double det_naive(const SquareMatrix &a) {
 }
 
 template<class SquareMatrix>
-double det(const SquareMatrix &a, double eps = 1e-10) {
+double det(const SquareMatrix &a, double EPS = 1e-10) {
   SquareMatrix b(a);
   int n = a.size();
   double res = 1.0;
@@ -67,7 +70,7 @@ double det(const SquareMatrix &a, double eps = 1e-10) {
   for (int i = 0; i < n; i++) {
     int p;
     for (p = 0; p < n; p++) {
-      if (!used[p] && fabs(b[p][i]) > eps) {
+      if (!used[p] && fabs(b[p][i]) > EPS) {
         break;
       }
     }
