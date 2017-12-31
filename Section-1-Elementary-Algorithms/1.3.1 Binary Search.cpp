@@ -21,12 +21,12 @@ for handling infinitely large search spaces such as real number intervals.
   function must be used on a range in which there exists a constant k such that
   pred(x) tests true for every x in [lo, k] and false for every x in (k, hi).
 - fbinary_search() is the equivalent of binary_search_first_true() on floating
-  point predicates. Since any interval of real numbers is dense, the exact target
-  cannot be found due to floating point error. Instead, the function returns a
-  value that is very close to the border between false and true. The precision of
+  point predicates. Since any interval of real numbers is dense, the exact
+  target cannot be found due to floating point error. Instead, a value that is
+  very close to the border between false and true is returned. The precision of
   the answer depends on the number of repetitions the function performs. Since
   each repetition bisects the search space, the absolute error of the answer is
-  1/(2^r) times the distance between lo and hi after r repetitions. Although it
+  1/(2^n) times the distance between lo and hi after n repetitions. Although it
   is possible to control the error by looping while hi - lo is greater than an
   arbitrary epsilon, it is simpler to let the loop run for a desired number of
   iterations until floating point arithmetic break down. 100 iterations is
@@ -38,9 +38,8 @@ for handling infinitely large search spaces such as real number intervals.
 Time Complexity:
 - O(log n) calls will be made to pred() in binary_search_first_true() and
   binary_search_last_true(), where n is the distance between lo and hi.
-- O(log n) calls will be made to pred() in fbinary_search(), where n is the
-  distance between lo and hi divided by the desired absolute error (based on the
-  number of iterations).
+- O(n) calls will be made to pred() in fbinary_search(), where n is the number
+  of iterations performed.
 
 Space Complexity:
 - O(1) auxiliary for all operations.
