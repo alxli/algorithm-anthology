@@ -91,7 +91,7 @@ std::vector<cdouble> find_all_roots(const cpoly &p, const double EPS = 1e-15,
   std::vector<cdouble> res;
   cpoly q = p;
   while (q.size() > 2) {
-    cdouble z = cdouble(rand(), rand())/double(RAND_MAX);
+    cdouble z = cdouble(rand(), rand())/(double)RAND_MAX;
     z = find_one_root(p, find_one_root(q, z, EPS, ITERATIONS), EPS, ITERATIONS);
     q = horner_eval(q, z).second;
     res.push_back(z);
