@@ -1,17 +1,18 @@
 /*
 
-Determine the complex roots of a polynomial with real coefficients.
-This is the variant of the Jenkins-Traub algorithm for polynomials
-with real coefficient, known as RPOLY. RPOLY follows follows the
-same pattern as the CPOLY algorithm, but computes two roots at a
-time, either two real roots or a pair of conjugate complex roots.
-See: https://en.wikipedia.org/wiki/Jenkins%E2%80%93Traub_algorithm
+Finds every complex root x for a polynomial p with real coefficients such that
+p(x) = 0 using a variant of the Jenkins-Traub algorithm known as RPOLY. This
+implementation is adapted from TOMS493 (www.netlib.org/toms/) with a simple
+wrapper for the C++ <complex> class.
 
-The following is a translation of TOMS493 (www.netlib.org/toms/)
-from FORTRAN to C++, with a simple wrapper at the end for the C++
-<complex> class. Although the code is not meant to be read, it is
-extremely efficient and robust, capable of achieving an accuracy
-of at least 5 decimal places for even the most strenuous inputs.
+- find_all_roots(p) returns a vector of all complex roots for a polynomial p
+  with real coefficients.
+
+Time Complexity:
+- O(n) per call to find_all_roots(p), where n is the degree of the polynomial.
+
+Space Complexity:
+- O(n) auxiliary stack space, where n is the degree of the polynomial.
 
 */
 
