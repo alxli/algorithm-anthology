@@ -20,12 +20,13 @@ following two functions are each techniques to efficiently count inversions.
   strictly less than the length n itself.
 
 Time Complexity:
-- O(n log n) per call to inversion(lo, hi), where n is distance between lo and
-  hi.
-- O(m log m) per call to inversions(n, a[]) where m is maximum value in a[].
+- O(n log n) per call to inversion(lo, hi), where n is the distance between lo
+  and hi.
+- O(n log m) per call to inversions(n, a[]) where n is the distance between lo
+  and hi and m is maximum value in a[].
 
 Space Complexity:
-- O(n) auxiliary heap space for inversions(lo, hi).
+- O(n) auxiliary space and O(log n) stack space for inversions(lo, hi).
 - O(m) auxiliary heap space for inversions(n, a[]).
 
 */
