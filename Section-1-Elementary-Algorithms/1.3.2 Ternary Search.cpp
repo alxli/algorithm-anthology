@@ -18,13 +18,13 @@ Time Complexity:
   divided by the specified absolute error (epsilon).
 
 Space Complexity:
-- O(1) auxiliary.
+- O(1) auxiliary for both operations.
 
 */
 
 template<class UnimodalFunction>
-double ternary_search_min(double lo, double hi, UnimodalFunction f) {
-  static const double EPS = 1e-12;
+double ternary_search_min(double lo, double hi, UnimodalFunction f,
+                          const double EPS = 1e-12) {
   double lthird, hthird;
   while (hi - lo > EPS) {
     lthird = lo + (hi - lo)/3;
@@ -39,8 +39,8 @@ double ternary_search_min(double lo, double hi, UnimodalFunction f) {
 }
 
 template<class UnimodalFunction>
-double ternary_search_max(double lo, double hi, UnimodalFunction f) {
-  static const double EPS = 1e-12;
+double ternary_search_max(double lo, double hi, UnimodalFunction f,
+                          const double EPS = 1e-12) {
   double lthird, hthird;
   while (hi - lo > EPS) {
     lthird = lo + (hi - lo)/3;

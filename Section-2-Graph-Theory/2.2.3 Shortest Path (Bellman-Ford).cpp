@@ -1,12 +1,12 @@
 /*
 
 Given a starting node in a weighted, directed graph with possibly negative
-weights, traverse to every connected node and determine the minimum distance to
-each. Optionally, output the shortest path to a specific destination node using
-the shortest-path tree from the predecessor array pred[]. bellman_ford() applies
-to a global, pre-populated edge list which must only consist of nodes numbered
-with integers between 0 (inclusive) and the total number of nodes (exclusive),
-as passed in the function argument.
+weights, visit every connected node and determine the minimum distance to each
+such node. Optionally, output the shortest path to a specific destination node
+using the shortest-path tree from the predecessor array pred[]. bellman_ford()
+applies to a global, pre-populated edge list which must only consist of nodes
+numbered with integers between 0 (inclusive) and the total number of nodes
+(exclusive), as passed in the function argument.
 
 This function will also detect whether the graph contains negative-weighted
 cycles, in which case there is no shortest path and an error will be thrown.

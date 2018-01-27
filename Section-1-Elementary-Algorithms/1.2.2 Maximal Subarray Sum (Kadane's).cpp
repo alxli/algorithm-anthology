@@ -24,7 +24,6 @@ position. This can be adapted to compute the maximal submatrix sum as well.
   By convention, an input matrix consisting of only negative values will yield a
   size 1 submatrix consisting of the maximum value.
 
-
 Time Complexity:
 - O(n) per call to max_subarray_sum(), where n is the distance between lo and
   hi.
