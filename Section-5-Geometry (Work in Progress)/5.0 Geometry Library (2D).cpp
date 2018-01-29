@@ -722,7 +722,7 @@ int intersection(const circle &c, const line &l,
   double disc = v*v / aabb - c.r*c.r;
   if (disc > EPS) {
     return -1;
- }
+  }
   double x0 = -l.a*l.c / aabb, y0 = -l.b*v / aabb;
   if (disc > -EPS) {
     if (p != NULL) {
