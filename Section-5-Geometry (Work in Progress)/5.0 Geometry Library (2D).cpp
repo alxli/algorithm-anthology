@@ -33,9 +33,9 @@ struct point {
   double x, y;
 
   point() : x(0), y(0) {}
+  point(double x, double y) : x(x), y(y) {}
   point(const point &p) : x(p.x), y(p.y) {}
   point(const std::pair<double, double> &p) : x(p.first), y(p.second) {}
-  point(double a, double b) : x(a), y(b) {}
 
   bool operator<(const point &p) const {
     return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
@@ -181,18 +181,16 @@ struct line {
 
   line(const point &p, const point &q) : a(0), b(0), c(0) {
     if (EQ(p.x, q.x)) {
-      if (EQ(p.y, q.y)) {
-        return;  // Invalid line.
-      }
-      // Vertical line.
-      a = 1;
-      b = 0;
-      c = -p.x;
-      return;
+      if (NE(p.y, q.y)) {  // Vertical line.
+        a = 1;
+        b = 0;
+        c = -p.x;
+      }  // Else, invalid line.
+    } else {
+      a = -(p.y - q.y) / (p.x - q.x);
+      b = 1;
+      c = -(a*p.x) - (b*p.y);
     }
-    a = -(p.y - q.y) / (p.x - q.x);
-    b = 1;
-    c = -(a*p.x) - (b*p.y);
   }
 
   bool operator==(const line &l) const {
