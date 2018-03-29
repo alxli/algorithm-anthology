@@ -15,6 +15,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n log n) for storage of the sparse table, where n is the size of the array.
+- O(1) auxiliary for query().
 
 */
 
