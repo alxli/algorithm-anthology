@@ -1,10 +1,16 @@
 /*
 
-This source file contains all the constant time 2D geometric calculations in the
-entire section. By having cross-dependent algorithms together, implementations
-may be expressed more elegantly and concisely. All of these algorithms apply to
-a two-dimensional Cartesian coordinate system where the positive x direction
-points towards the right and the positive y direction points up on the page.
+This file is an amalgamation of everything in sections 5.1 and 5.2, implemented
+in a cross-dependent manner. All of these algorithms apply to a two-dimensional
+Cartesian coordinate system where the positive x direction points towards the
+right and the positive y direction points up on the page.
+
+Time Complexity:
+- O(1) for all operations.
+
+Space Complexity:
+- O(1) for storage of all data types.
+- O(1) auxiliary for all operations.
 
 */
 
@@ -735,7 +741,6 @@ int intersection(const circle &c, const line &l,
   }
   return 1;
 }
-
 
 // Determines the intersection between two circles c1 and c2.
 // Returns: -2 if circle c2 completely encloses circle c1,
