@@ -16,7 +16,6 @@ Space Complexity:
 
 */
 
-#include <cstdio>
 #include <cmath>
 
 template<class ContinuousFunction>
@@ -31,7 +30,6 @@ double integrate(ContinuousFunction f, double a, double b,
   double am = simpsons(f, a, m);
   double mb = simpsons(f, m, b);
   double ab = simpsons(f, a, b);
-  printf("%.15lf\n", fabs(am + mb - ab));
   if (fabs(am + mb - ab) < EPS) {
     return ab;
   }
