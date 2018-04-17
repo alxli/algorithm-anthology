@@ -5,21 +5,21 @@ Alex's Anthology of Algorithms: Common Code for Contests in Concise C++ (A<sup>3
 
 ## Introduction
 
-Welcome to a collection of concise and minimal implementations of common algorithms. These implementations are written in the flavor of programming contests, but their usage is by no means limited to them. More specifically, their style is founded on the following principles:
+Welcome to a comprehensive collection of common algorithm and data structure implementations. You will find that the code here is best-suited for programming contests, but are by no means limited to them. I developed this project with following principles in mind:
 
-* Clarity: A reader already familiar with the algorithm in general should have no problem understanding how the particular implementation works. Consistency in naming conventions is emphasized, and implementation or language-specific details should be documentation.
+* Clarity: A reader already familiar with an algorithm should have no problem understanding how its particular implementation works. Consistency in naming conventions should be emphasized, and language-specific tricks or other implementation details should be documented.
 
-* Genericness: It should be easy to make adjustment to achieve a slightly different end-goal. This could be tweaking a constant parameter, or supporting a slightly different data type. In a live contest, the more code that must be changed, the more room there is for mistakes. C++ templates are often used to accomplish this at the slight cost of simplicity.
+* Genericness: Whenever possible, it should be easy to adjust an implementation to achieve slightly different goals. This could be tweaking a constant parameter, or supporting a slightly different data type. In a live contest, the more lines of code that must be changed, the more room there is for mistakes. C++ templates are often used to accomplish this at the slight cost of simplicity.
 
-* Portability: Different contest environments use different versions of C++ (though almost all of them use GCC). In order to maximize compatibility, non-standard features are typically avoided. The decision is to adhere to C++98 standards as many constest systems remain stuck on older versions of the language. Moreover, minimizing newer, C++ specific features will make this anthology friendlier to users of other languages. Refer to the "Portability" section below for more information.
+* Portability: Different contest environments use different versions of C++ (though almost all of them use GCC). In order to maximize compatibility, non-standard features are avoided. The decision to adhere to C++98 standards is due to many contest systems being stuck on older versions of the language. Moreover, minimizing newer, C++ specific features should make this anthology friendlier to users of other languages. See to the "Portability" section below for more info.
 
 * Efficiency: Since the code is meant to be run during real contests, it is nice to maintain a reasonably low constant overhead. This is sometimes challenging in the face of clarity and genericness, but we can hope for contest setters to be liberal with time limits. If an implementation does not pass in time, chances are the wrong algorithm is being chosen with too slow of a big-O running time.
 
-* Concision: Code chunks are often shifted around the file in the frenzy of timed contests. To minimize the amount of scrolling and searching, code compactness is valued. It is no surprise that each section is confined to a singleton source file, since nearly all contest systems demand submissions this way.
+* Concision: Code chunks are often shifted around the file in the frenzy of timed contests. To minimize the amount of scrolling and searching, code compactness is valued. It is no surprise that each section is confined to a singleton source file, since nearly all contest systems demand submissions to be of this format.
 
-The right trade-off between these factors is the holy grail.
+A fair trade-off between these factors is the holy grail.
 
-A secondary goal is to have common algorithms modelled in a way simple enough that programmers in other languages may understand as well. This is hopefully achieved for most sections, but C++ specific concepts may still used in certain areas to prioritize the above principles.
+My secondary goal is to have common algorithms modelled in a way simple enough that programmers in other languages may understand as well. This is hopefully achieved for most sections, but C++ specific concepts may still used in certain areas to prioritize the above principles.
 
 ## Portability
 
