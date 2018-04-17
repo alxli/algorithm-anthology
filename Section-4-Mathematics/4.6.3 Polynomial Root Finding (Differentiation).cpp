@@ -83,6 +83,8 @@ std::vector<double> find_all_roots(const std::vector<double> &p,
   return res;
 }
 
+/*** Example Usage ***/
+
 #include <cassert>
 using namespace std;
 
