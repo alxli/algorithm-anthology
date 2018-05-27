@@ -1,106 +1,131 @@
 /*
 
-Angle calculations in 2 dimensions. All returned angles are in radians,
-except for reduce_deg(). If x is an angle in radians, then you may use
-x * DEG to convert x to degrees, and vice versa to radians with x * RAD.
+Angle calculations in two-dimensions. The constants DEG and RAD may be used as
+multipliers to convert between degrees and radians. For example, if t is a value
+in radians, then t*DEG is the equivalent angle in degrees.
 
-All operations are O(1) in time and space.
+- reduce_deg(t) takes an angle t degrees and returns an equivalent angle in the
+  range [0, 360) degrees. E.g. -630 becomes 90.
+- reduce_rad(t) takes an angle t radians and returns an equivalent angle in the
+  range [0, 360) radians. E.g. 720.5 becomes 0.5.
+- polar_point(r, t) returns a two-dimensional Cartesian point given radius r and
+  angle t radians in polar coordinates (see std::polar()).
+- polar_angle(p) returns the angle in radians of the line segment from (0, 0) to
+  point p, relative counterclockwise to the positive x-axis.
+- angle(a, o, b) returns the smallest angle in radians formed by the points a,
+  o, b with vertex at point o.
+- angle_between(a, b) returns the angle in radians of segment from point a to
+  point b, relative counterclockwise to the positive x-axis.
+- angle between(a1, b1, a2, b2) returns the smaller angle in radians between
+  two lines a1*x + b1*y + c1 = 0 and a2*x + b2*y + c2 = 0, limited to [0, PI/2].
+- cross(a, b, o) returns the magnitude (Euclidean norm) of the three-dimensional
+  cross product between points a and b where the z-component is implicitly zero
+  and the origin is implicitly shifted to point o. This operation is also equal
+  to double the signed area of the triangle from these three points.
+- turn(a, o, b) returns -1 if the path a->o->b forms a left turn on the plane, 0
+  if the path forms a straight line segment, or 1 if it forms a right turn.
+
+Time Complexity:
+- O(1) for all operations.
+
+Space Complexity:
+- O(1) auxiliary for all operations.
 
 */
 
-#include <cmath>     /* acos(), fabs(), sqrt(), atan2() */
-#include <utility>   /* std::pair */
+#include <cmath>
+#include <utility>
+
+const double EPS = 1e-9;
+
+#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+#define LT(a, b) ((a) < (b) - EPS)
+#define GT(a, b) ((a) > (b) + EPS)
 
 typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-const double PI = acos(-1.0), RAD = 180 / PI, DEG = PI / 180;
+double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
+double norm(const point &a) { return sqrt(sqnorm(a)); }
 
-double abs(const point & a) { return sqrt(a.x * a.x + a.y * a.y); }
+const double PI = acos(-1.0), DEG = PI/180, RAD = 180/PI;
 
-//reduce angles to the range [0, 360) degrees. e.g. reduce_deg(-630) = 90
-double reduce_deg(const double & t) {
-  if (t < -360) return reduce_deg(fmod(t, 360));
-  if (t < 0) return t + 360;
-  return t >= 360 ? fmod(t, 360) : t;
+double reduce_deg(double t) {
+  if (t < -360) {
+    return reduce_deg(fmod(t, 360));
+  }
+  if (t < 0) {
+    return t + 360;
+  }
+  return (t >= 360) ? fmod(t, 360) : t;
 }
 
-//reduce angles to the range [0, 2*pi) radians. e.g. reduce_rad(720.5) = 0.5
-double reduce_rad(const double & t) {
-  if (t < -2 * PI) return reduce_rad(fmod(t, 2 * PI));
-  if (t < 0) return t + 2 * PI;
-  return t >= 2 * PI ? fmod(t, 2 * PI) : t;
+double reduce_rad(double t) {
+  if (t < -2*PI) {
+    return reduce_rad(fmod(t, 2*PI));
+  }
+  if (t < 0) {
+    return t + 2*PI;
+  }
+  return (t >= 2*PI) ? fmod(t, 2*PI) : t;
 }
 
-//like std::polar(), but returns a point instead of an std::complex
-point polar_point(const double & r, const double & theta) {
-  return point(r * cos(theta), r * sin(theta));
+point polar_point(double r, double t) {
+  return point(r*cos(t), r*sin(t));
 }
 
-//angle of segment (0, 0) to p, relative (CCW) to the +'ve x-axis in radians
-double polar_angle(const point & p) {
+double polar_angle(const point &p) {
   double t = atan2(p.y, p.x);
-  return t < 0 ? t + 2 * PI : t;
+  return (t < 0) ? (t + 2*PI) : t;
 }
 
-//smallest angle formed by points aob (angle is at point o) in radians
 double angle(const point & a, const point & o, const point & b) {
   point u(o.x - a.x, o.y - a.y), v(o.x - b.x, o.y - b.y);
-  return acos((u.x * v.x + u.y * v.y) / (abs(u) * abs(v)));
+  return acos((u.x*v.x + u.y*v.y) / (norm(u)*norm(v)));
 }
 
-//angle of line segment ab relative (CCW) to the +'ve x-axis in radians
-double angle_between(const point & a, const point & b) {
-  double t = atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
-  return t < 0 ? t + 2 * PI : t;
+double angle_between(const point &a, const point &b) {
+  double t = atan2(a.x*b.y - a.y*b.x, a.x*b.x + a.y*b.y);
+  return (t < 0) ? (t + 2*PI) : t;
 }
 
-//Given the A, B values of two lines in Ax + By + C = 0 form, finds the
-//minimum angle in radians between the two lines in the range [0, PI/2]
-double angle_between(const double & a1, const double & b1,
-                     const double & a2, const double & b2) {
-  double t = atan2(a1 * b2 - a2 * b1, a1 * a2 + b1 * b2);
-  if (t < 0) t += PI; //force angle to be positive
-  if (t > PI / 2) t = PI - t; //force angle to be <= 90 degrees
-  return t;
+double angle_between(const double &a1, const double &b1,
+                     const double &a2, const double &b2) {
+  double t = atan2(a1*b2 - a2*b1, a1*a2 + b1*b2);
+  if (t < 0) {
+    t += PI;
+  }
+  return GT(t, PI / 2) ? (PI - t) : t;
 }
 
-//magnitude of the 3D cross product with Z component implicitly equal to 0
-//the answer assumes the origin (0, 0) is instead shifted to point o.
-//this is equal to 2x the signed area of the triangle from these 3 points.
-double cross(const point & o, const point & a, const point & b) {
-  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+  return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
 }
 
-//does the path a->o->b form:
-// -1 ==> a left turn on the plane?
-//  0 ==> a single straight line segment? (i.e. are a,o,b collinear?) or
-// +1 ==> a right turn on the plane?
-//warning: the order of parameters is a,o,b, and NOT o,a,b as in cross()
-int turn(const point & a, const point & o, const point & b) {
-  double c = cross(o, a, b);
-  return c < 0 ? -1 : (c > 0 ? 1 : 0);
+int turn(const point &a, const point &o, const point &b) {
+  double c = cross(a, b, o);
+  return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
 }
 
 /*** Example Usage ***/
 
 #include <cassert>
-#define pt point
-#define EQ(a, b) (fabs((a) - (b)) <= 1e-9)
+
+bool EQP(const point &a, const point &b) {
+  return EQ(a.x, b.x) && EQ(a.y, b.y);
+}
 
 int main() {
-  assert(EQ(123,    reduce_deg(-(8 * 360) + 123)));
-  assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
-  point p = polar_point(4, PI), q = polar_point(4, -PI / 2);
-  assert(EQ(p.x, -4) && EQ(p.y, 0));
-  assert(EQ(q.x, 0) && EQ(q.y, -4));
-  assert(EQ(45,  polar_angle(pt(5, 5)) * RAD));
-  assert(EQ(135, polar_angle(pt(-4, 4)) * RAD));
-  assert(EQ(90,  angle(pt(5, 0), pt(0, 5), pt(-5, 0)) * RAD));
-  assert(EQ(225, angle_between(pt(0, 5), pt(5, -5)) * RAD));
-  assert(EQ(90,  angle_between(-1, 1, -1, -1) * RAD)); //y=x and y=-x
-  assert(-1 == cross(pt(0, 0), pt(0, 1), pt(1, 0)));
-  assert(+1 == turn(pt(0, 1), pt(0, 0), pt(-5, -5)));
+  assert(EQ(123, reduce_deg(-8*360 + 123)));
+  assert(EQ(1.2345, reduce_rad(2*PI*8 + 1.2345)));
+  assert(EQP(polar_point(4, PI), point(-4, 0)));
+  assert(EQP(polar_point(4, -PI/2), point(0, -4)));
+  assert(EQ(45, polar_angle(point(5, 5))*RAD));
+  assert(EQ(135*DEG, polar_angle(point(-4, 4))));
+  assert(EQ(90*DEG, angle(point(5, 0), point(0, 5), point(-5, 0))));
+  assert(EQ(225*DEG, angle_between(point(0, 5), point(5, -5))));
+  assert(-1 == cross(point(0, 1), point(1, 0), point(0, 0)));
+  assert(1 == turn(point(0, 1), point(0, 0), point(-5, -5)));
   return 0;
 }

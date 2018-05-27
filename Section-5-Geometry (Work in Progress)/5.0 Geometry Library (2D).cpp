@@ -258,7 +258,7 @@ struct line {
   }
 };
 
-const double PI = acos(-1.0), RAD = 180/PI, DEG = PI/180;
+const double PI = acos(-1.0), DEG = PI/180, RAD = 180/PI;
 
 // Returns t degrees reduced to the range [0, 360). E.g. -630 becomes 90.
 double reduce_deg(double t) {
@@ -282,7 +282,8 @@ double reduce_rad(double t) {
   return (t >= 2*PI) ? fmod(t, 2*PI) : t;
 }
 
-// Returns a point from polar coordinates (radius, theta) like std::polar().
+// Returns a two-dimensional Cartesian point given radius r and angle t radians
+// in polar coordinates, analogous to std::polar().
 point polar_point(double r, double t) {
   return point(r*cos(t), r*sin(t));
 }
@@ -294,8 +295,8 @@ double polar_angle(const point &p) {
   return (t < 0) ? (t + 2*PI) : t;
 }
 
-// Returns the smallest angle formed by the points a, o, b (with the angle at
-// point o) in radians.
+// Returns the smallest angle in radians formed by the points a, o, b with
+// vertex at point o.
 double angle(const point &a, const point &o, const point &b) {
   point u(o - a), v(o - b);
   return acos(u.dot(v) / (norm(u)*norm(v)));
@@ -308,7 +309,7 @@ double angle_between(const point &a, const point &b) {
   return (t < 0) ? (t + 2*PI) : t;
 }
 
-// Returns the smallest angle in the range [0, PI/2] radians between two lines.
+// Returns the smaller angle in radians between two lines, limited to [0, PI/2].
 double angle_between(const line &l1, const line &l2) {
   double t = atan2(l1.a*l2.b - l2.a*l1.b, l1.a*l2.a + l1.b*l2.b);
   if (t < 0) {
@@ -318,9 +319,9 @@ double angle_between(const line &l1, const line &l2) {
 }
 
 // Returns the magnitude (Euclidean norm) of the three-dimensional cross product
-// between a and b where the z-component is implicitly zero and the origin is
-// is implicitly shifted to point o. This operation is also equal to double the
-// signed area of the triangle from these three points.
+// between points a and b where the z-component is implicitly zero and the
+// origin is implicitly shifted to point o. This operation is also equal to
+// double the signed area of the triangle from these three points.
 double cross(const point &a, const point &b, const point &o = point(0, 0)) {
   return (a - o).cross(b - o);
 }
@@ -827,7 +828,7 @@ int main() {
   assert(para == line(-0.4, 1, -0.4));  // -0.4x + y - 0.4 = 0.
   assert(perp == line(2.5, 1, 17));  // 2.5x + y + 17 = 0.
 
-  assert(EQ(angle_between(l, perp) * RAD, 90));
+  assert(EQ(angle_between(l, perp), 90*DEG));
 
   assert(EQ(123, reduce_deg(-8*360 + 123)));
   assert(EQ(1.2345, reduce_rad(2*PI*8 + 1.2345)));
@@ -838,7 +839,7 @@ int main() {
   assert(EQ(90, angle(pt(5, 0), pt(0, 5), pt(-5, 0))*RAD));
   assert(EQ(225, angle_between(pt(0, 5), pt(5, -5))*RAD));
   assert(-1 == cross(pt(0, 1), pt(1, 0), pt(0, 0)));
-  assert(+1 == turn(pt(0, 1), pt(0, 0), pt(-5, -5)));
+  assert(1 == turn(pt(0, 1), pt(0, 0), pt(-5, -5)));
 
   assert(EQ(5, dist(pt(-1, -1), pt(2, 3))));
   assert(EQ(25, sqdist(pt(-1, -1), pt(2, 3))));

@@ -21,6 +21,7 @@ Space Complexity:
 #include <utility>
 
 const double EPS = 1e-9;
+
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 #define LT(a, b) ((a) < (b) - EPS)
