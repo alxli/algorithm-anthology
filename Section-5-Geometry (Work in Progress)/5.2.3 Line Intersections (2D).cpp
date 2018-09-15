@@ -3,19 +3,19 @@
 Intersection and closest point calculations in two-dimensions for straight lines
 and line segments.
 
-- line_intersection(a1, b1, c1, a2, b2, c2, *p) determines whether the lines
+- line_intersection(a1, b1, c1, a2, b2, c2, &p) determines whether the lines
   a1*x + b1*y + c1 = 0 and a2*x + b2*x + c2 = 0 intersects, returning -1 if
   there is no intersection because the lines are parallel, 0 if there is exactly
   one intersection (in which case the intersection point is stored into pointer
   p if it's not NULL), or 1 if there are infinite intersections because the
   lines are identical.
-- line_intersection(p1, p2, p3, p4, *p) determines whether the infinite lines
+- line_intersection(p1, p2, p3, p4, &p) determines whether the infinite lines
   (not segments) through points p1, p2 and through points p3 and p4 intersect,
   returning -1 if there is no intersection because the lines are parallel, 0 if
   there is exactly one intersection (in which case the intersection point is
   stored into pointer p if it's not NULL), or 1 if there are infinite
   intersections because the lines are identical.
-- seg_intersection(a, b, c, d, *p, *q) determines whether the line segment ab
+- seg_intersection(a, b, c, d, &p, &q) determines whether the line segment ab
   intersects the line segment cd, returning -1 if the segments do not intersect,
   0 if there is exactly one intersection point (in which case it is stored into
   pointer p if it's not NULL), or 1 if the intersection is another line segment

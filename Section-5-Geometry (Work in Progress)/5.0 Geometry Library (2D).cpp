@@ -748,8 +748,8 @@ int intersection(const circle &c, const line &l,
 //           1 if the circles are tangent with one intersection (stored in p),
 //           2 if the circles intersect at two points (stored in p and q),
 //           3 if the circles are equal and intersect at infinite points.
-int intersection(const circle &c1, const circle &c2,
-                 point *p = NULL, point *q = NULL) {
+int intersection(const circle &c1, const circle &c2, point *p = NULL,
+                 point *q = NULL) {
   if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k)) {
     return EQ(c1.r, c2.r) ? 3 : (c1.r > c2.r ? -1 : -2);
   }
