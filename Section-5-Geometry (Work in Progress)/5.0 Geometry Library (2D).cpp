@@ -472,8 +472,8 @@ int seg_intersection(const point &a, const point &b,
 
 // Returns the minimum distance from any point on the line segment ab to any
 // point on the line segment cd. This is 0 if the segments touch or intersect.
-double seg_dist(const point & a, const point & b,
-                const point & c, const point & d) {
+double seg_dist(const point &a, const point &b,
+                const point &c, const point &d) {
   return (seg_intersection(a, b, c, d) >= 0) ? 0
            : std::min(std::min(seg_dist(a, c, d), seg_dist(b, c, d)),
                       std::min(seg_dist(c, a, b), seg_dist(d, a, b)));
