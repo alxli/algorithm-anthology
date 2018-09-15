@@ -375,10 +375,11 @@ double seg_dist(const point &p, const point &a, const point &b) {
   return GE(d, n) ? norm(ap - ab) : norm(ap - ab*(d / n));
 }
 
-// Determines whether lines l1 and l2 intersect. Returns -1 if the lines are
-// parallel and there is no intersection, 0 if there is exactly one intersection
-// (in which case the intersection point is stored into pointer p if it's not
-// NULL), or 1 if the lines are equal and there are infinite intersections.
+// Determines whether lines l1 and l2 intersect. Returns -1 if there is no
+// intersection because the lines are parallel, 0 if there is exactly one
+// intersection (in which case the intersection point is stored into pointer p
+// if it's not NULL), or 1 if there are infinite intersections because the lines
+// are identical.
 int line_intersection(const line &l1, const line &l2, point *p = NULL) {
   if (l1.is_parallel(l2)) {
     return (l1 == l2) ? 1 : -1;
@@ -394,13 +395,13 @@ int line_intersection(const line &l1, const line &l2, point *p = NULL) {
   return 0;
 }
 
-// Determines whether the two lines (not segments) through points p1, p2 and
-// through points p3 and p4 intersect. Returns -1 if the lines are parallel and
-// there is no intersection, 0 if there is exactly one intersection (in which
-// case the intersection point is stored into pointer p if it's not NULL), or 1
-// if the lines are equal and there are infinite intersections.
-int line_intersection(const point &p1, const point &p2,
-                      const point &p3, const point &p4, point *p = NULL) {
+// Determines whether the infinite lines (not segments) through points p1, p2
+// and through points p3, p4 intersect. Returns -1 if there is no intersection
+// because the lines are parallel, 0 if there is exactly one intersection (in
+// which case the intersection point is stored into pointer p if it's not NULL),
+// or 1 if there are infinite intersections because the lines are identical.
+int line_intersection(const point &p1, const point &p2, const point &p3,
+                      const point &p4, point *p = NULL) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x*p2.y - p2.x*p1.y);
   double a2 = p4.y - p3.y, b2 = p3.x - p4.x;
@@ -423,9 +424,8 @@ int line_intersection(const point &p1, const point &p2,
 // two endpoints are stored into pointers p and q if they are not NULL). If the
 // segments are barely touching (close within EPS), then the result will depend
 // on the setting of TOUCH_IS_INTERSECT.
-int seg_intersection(const point &a, const point &b,
-                     const point &c, const point &d,
-                     point *p = NULL, point *q = NULL) {
+int seg_intersection(const point &a, const point &b, const point &c,
+                     const point &d, point *p = NULL, point *q = NULL) {
   static const bool TOUCH_IS_INTERSECT = true;
   point ab(b - a), ac(c - a), cd(d - c);
   double c1 = ab.cross(cd), c2 = ac.cross(ab);
@@ -472,15 +472,15 @@ int seg_intersection(const point &a, const point &b,
 
 // Returns the minimum distance from any point on the line segment ab to any
 // point on the line segment cd. This is 0 if the segments touch or intersect.
-double seg_dist(const point &a, const point &b,
-                const point &c, const point &d) {
+double seg_dist(const point &a, const point &b, const point &c,
+                const point &d) {
   return (seg_intersection(a, b, c, d) >= 0) ? 0
            : std::min(std::min(seg_dist(a, c, d), seg_dist(b, c, d)),
                       std::min(seg_dist(c, a, b), seg_dist(d, a, b)));
 }
 
-// Returns the point on line l that is closest to point p. The result always
-// lies on the line through p that is perpendicular to l.
+// Returns the point on line l that is closest to point p. Note that the result
+// always lies on the line through p that is perpendicular to l.
 point closest_point(const line &l, const point &p) {
   if (EQ(l.a, 0)) {
     return point(p.x, -l.c);  // Horizontal line.
@@ -517,8 +517,8 @@ bool same_side(const point &p1, const point &p2,
 // Returns whether point p lies within the triangle abc. If the point lies on or
 // close to an edge (by roughly EPS), then the result will depend on the setting
 // of EDGE_IS_SAME_SIDE in the function above.
-bool point_in_triangle(const point &p,
-                       const point &a, const point &b, const point &c) {
+bool point_in_triangle(const point &p, const point &a, const point &b,
+                       const point &c) {
   return same_side(p, a, b, c) &&
          same_side(p, b, a, c) &&
          same_side(p, c, a, b);
@@ -539,16 +539,14 @@ double triangle_area_sides(double a, double b, double c) {
 // Returns the area of a triangle with medians of lengths m1, m2, and m3. The
 // median of a triangle is a line segment joining a vertex to the midpoint of
 // the opposing edge.
-double triangle_area_medians(double m1, double m2,
-                             double m3) {
+double triangle_area_medians(double m1, double m2, double m3) {
   return 4.0*triangle_area_sides(m1, m2, m3) / 3.0;
 }
 
 // Returns the area of a triangle with altitudes h1, h2, and h3. An altitude of
 // a triangle is the shortest line between a vertex and the infinite line that
 // is extended from its opposite edge.
-double triangle_area_altitudes(double h1, double h2,
-                               double h3) {
+double triangle_area_altitudes(double h1, double h2, double h3) {
   if (EQ(h1, 0) || EQ(h2, 0) || EQ(h3, 0)) {
     return 0;
   }
@@ -561,8 +559,8 @@ double triangle_area_altitudes(double h1, double h2,
 // (x, y), a width of w, and a height of h. Note that negative widths and
 // heights are supported. If the point lies on or close to an edge (by roughly
 // EPS), then the result will depend on the setting of EDGE_IS_INSIDE.
-bool point_in_rectangle(const point &p, double x, double y,
-                                        double w, double h) {
+bool point_in_rectangle(const point &p, double x, double y, double w,
+                        double h) {
   static const bool EDGE_IS_INSIDE = true;
   if (w < 0) {
     return point_in_rectangle(p, x + w, y, -w, h);
