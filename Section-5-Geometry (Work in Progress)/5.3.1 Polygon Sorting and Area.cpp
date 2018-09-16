@@ -123,8 +123,11 @@ int main() {
   // Irregular pentagon with only the vertex (1, 2) not on its convex hull.
   // The ordering here is already sorted in ccw order around their mean center,
   // though we will shuffle them to verify our sorting comparator.
-  point points[] = {point(1, 3), point(1, 2), point(2, 1), point(0, 0),
-                 point(-1, 3)};
+  point points[] = {point(1, 3),
+                    point(1, 2),
+                    point(2, 1),
+                    point(0, 0),
+                    point(-1, 3)};
   vector<point> v(points, points + 5);
   std::random_shuffle(v.begin(), v.end());
   point c = mean_center(v.begin(), v.end());
