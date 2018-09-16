@@ -1,6 +1,6 @@
 /*
 
-Circle tangent and intersection calculations in two-dimensions.
+Circle tangent and intersection calculations in two dimensions.
 
 - tangent(c, p, &l1, &l2) determines the line(s) tangent to circle c that passes
   through point p, returning -1 if there is no tangent line because p is
@@ -15,12 +15,12 @@ Circle tangent and intersection calculations in two-dimensions.
   stored into pointer p if it's not NULL), or 1 if there are two intersection
   points because the line crosses through the circle (in which case they will be
   stored into pointers p and q if they are not NULL).
-- intersection(c1, c2, &p, &q) determines the intersection between the circle c
-  and line l, returning -1 if there is no intersection, 0 if the line is one
-  intersection point because the line is tangent (in which case it will be
-  stored into pointer p if it's not NULL), or 1 if there are two intersection
-  points because the line crosses through the circle (in which case they will be
-  stored into pointers p and q if they are not NULL).
+- intersection(c1, c2, &p, &q) determines the intersection points between two
+  circles c1 and c2, returning -2 if circle c2 completely encloses circle c1,
+  -1 if circle c1 completely encloses circle c2, 0 if the circles are completely
+  disjoint, 1 if the circles are tangent with one intersection (stored in p),
+  2 if the circles intersect at two points (stored in p and q), 3 if the circles
+  are equal and intersect at infinite points.
 - intersection_area(c1, c2) returns the intersection area of circles c1 and c2.
 
 Time Complexity:
@@ -33,6 +33,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 #include <utility>
 
 const double EPS = 1e-9, PI = acos(-1.0);

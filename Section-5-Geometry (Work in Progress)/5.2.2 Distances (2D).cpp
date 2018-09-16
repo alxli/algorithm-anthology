@@ -1,6 +1,6 @@
 /*
 
-Distance calculations in two-dimensions for points, lines, and line segments.
+Distance calculations in two dimensions for points, lines, and line segments.
 
 - dist(a, b) and sqdist(a, b) respectively return the distance and squared
   distance between points a and b.

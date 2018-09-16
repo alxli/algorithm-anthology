@@ -1,6 +1,6 @@
 /*
 
-Intersection and closest point calculations in two-dimensions for straight lines
+Intersection and closest point calculations in two dimensions for straight lines
 and line segments.
 
 - line_intersection(a1, b1, c1, a2, b2, c2, &p) determines whether the lines

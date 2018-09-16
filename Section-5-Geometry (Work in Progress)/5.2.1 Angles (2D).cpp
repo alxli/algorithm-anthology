@@ -1,6 +1,6 @@
 /*
 
-Angle calculations in two-dimensions. The constants DEG and RAD may be used as
+Angle calculations in two dimensions. The constants DEG and RAD may be used as
 multipliers to convert between degrees and radians. For example, if t is a value
 in radians, then t*DEG is the equivalent angle in degrees.
 

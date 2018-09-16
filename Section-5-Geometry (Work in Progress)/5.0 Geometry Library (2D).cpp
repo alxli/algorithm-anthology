@@ -503,90 +503,6 @@ point closest_point(const point &a, const point &b, const point &p) {
   return (t <= 0) ? a : ((t >= 1) ? b : point(a.x + t*ab.x, a.y + t*ab.y));
 }
 
-// Returns whether points p1 and p2 lie on the same side of the line containing
-// points a and b. If one or both points lie exactly on the line, then the
-// result will depend on the setting of EDGE_IS_SAME_SIDE.
-bool same_side(const point &p1, const point &p2,
-               const point &a, const point &b) {
-  static const bool EDGE_IS_SAME_SIDE = true;
-  point ab(b - a);
-  double c1 = ab.cross(p1 - a), c2 = ab.cross(p2 - a);
-  return EDGE_IS_SAME_SIDE ? GE(c1*c2, 0) : GT(c1*c2, 0);
-}
-
-// Returns whether point p lies within the triangle abc. If the point lies on or
-// close to an edge (by roughly EPS), then the result will depend on the setting
-// of EDGE_IS_SAME_SIDE in the function above.
-bool point_in_triangle(const point &p, const point &a, const point &b,
-                       const point &c) {
-  return same_side(p, a, b, c) &&
-         same_side(p, b, a, c) &&
-         same_side(p, c, a, b);
-}
-
-// Returns the area of the triangle abc.
-double triangle_area(const point &a, const point &b, const point &c) {
-  return fabs(cross(a, b, c)) / 2.0;
-}
-
-// Returns the area of a triangle with side lengths a, b, and c. The given
-// lengths must be non-negative and form a valid triangle.
-double triangle_area_sides(double a, double b, double c) {
-  double s = (a + b + c) / 2.0;
-  return sqrt(s*(s - a)*(s - b)*(s - c));
-}
-
-// Returns the area of a triangle with medians of lengths m1, m2, and m3. The
-// median of a triangle is a line segment joining a vertex to the midpoint of
-// the opposing edge.
-double triangle_area_medians(double m1, double m2, double m3) {
-  return 4.0*triangle_area_sides(m1, m2, m3) / 3.0;
-}
-
-// Returns the area of a triangle with altitudes h1, h2, and h3. An altitude of
-// a triangle is the shortest line between a vertex and the infinite line that
-// is extended from its opposite edge.
-double triangle_area_altitudes(double h1, double h2, double h3) {
-  if (EQ(h1, 0) || EQ(h2, 0) || EQ(h3, 0)) {
-    return 0;
-  }
-  double x = h1*h1, y = h2*h2, z = h3*h3;
-  double v = 2.0/(x*y) + 2.0/(x*z) + 2.0/(y*z);
-  return 1.0/sqrt(v - 1.0/(x*x) - 1.0/(y*y) - 1.0/(z*z));
-}
-
-// Returns whether point p lies within the rectangle defined by a vertex at
-// (x, y), a width of w, and a height of h. Note that negative widths and
-// heights are supported. If the point lies on or close to an edge (by roughly
-// EPS), then the result will depend on the setting of EDGE_IS_INSIDE.
-bool point_in_rectangle(const point &p, double x, double y, double w,
-                        double h) {
-  static const bool EDGE_IS_INSIDE = true;
-  if (w < 0) {
-    return point_in_rectangle(p, x + w, y, -w, h);
-  }
-  if (h < 0) {
-    return point_in_rectangle(p, x, y + h, w, -h);
-  }
-  return EDGE_IS_INSIDE
-           ? (GE(p.x, x) && LE(p.x, x + w) && GE(p.y, y) && LE(p.y, y + h))
-           : (GT(p.x, x) && LT(p.x, x + w) && GT(p.y, y) && LT(p.y, y + h));
-}
-
-// Returns whether point p lies within the rectangle with opposing vertices a
-// and b. If the point lies on or close to an edge (by roughly EPS), then the
-// result will depend on the setting of EDGE_IS_INSIDE in the function above.
-bool point_in_rectangle(const point &p, const point &a, const point &b) {
-  double xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
-  double xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(p, xl, yl, xh - xl, yh - yl);
-}
-
-// Returns the area of a rectangle with opposing vertices a and b.
-double rectangle_area(const point &a, const point &b) {
-  return fabs((a.x - b.x)*(a.y - b.y));
-}
-
 // A two-dimensional circle class represented by (x - h)^2 + (y - k)^2 = r^2,
 // where (h, k) is the center and r is the radius.
 struct circle {
@@ -670,7 +586,7 @@ circle incircle(const point &a, const point &b, const point &c) {
   return EQ(p, 0) ? circle(a.x, a.y, 0)
                   : circle((al*a.x + bl*b.x + cl*c.x) / p,
                            (al*a.y + bl*b.y + cl*c.y) / p,
-                           2.0*triangle_area(a, b, c) / p);
+                           fabs(cross(a, b, c)) / p);
 }
 
 // Determines the line(s) tangent to circle c that passes through point p.
@@ -741,7 +657,7 @@ int intersection(const circle &c, const line &l,
   return 1;
 }
 
-// Determines the intersection between two circles c1 and c2.
+// Determines the intersection points between two circles c1 and c2.
 // Returns: -2 if circle c2 completely encloses circle c1,
 //          -1 if circle c1 completely encloses circle c2,
 //           0 if the circles are completely disjoint,
@@ -790,6 +706,134 @@ double intersection_area(const circle &c1, const circle &c2) {
   return r*r*acos((d*d + r*r - R*R) / 2 / d / r) +
          R*R*acos((d*d + R*R - r*r) / 2 / d / R) -
          0.5*sqrt((-d + r + R)*(d + r - R)*(d - r + R)*(d + r + R));
+}
+
+// Returns the area of the triangle abc.
+double triangle_area(const point &a, const point &b, const point &c) {
+  return fabs(cross(a, b, c)) / 2.0;
+}
+
+// Returns the area of a triangle with side lengths s1, s2, and s3. The given
+// lengths must be non-negative and form a valid triangle.
+double triangle_area_sides(double s1, double s2, double s3) {
+  double s = (s1 + s2 + s3) / 2.0;
+  return sqrt(s*(s - s1)*(s - s2)*(s - s3));
+}
+
+// Returns the area of a triangle with medians of lengths m1, m2, and m3. The
+// median of a triangle is a line segment joining a vertex to the midpoint of
+// the opposing edge.
+double triangle_area_medians(double m1, double m2, double m3) {
+  return 4.0*triangle_area_sides(m1, m2, m3) / 3.0;
+}
+
+// Returns the area of a triangle with altitudes h1, h2, and h3. An altitude of
+// a triangle is the shortest line between a vertex and the infinite line that
+// is extended from its opposite edge.
+double triangle_area_altitudes(double h1, double h2, double h3) {
+  if (EQ(h1, 0) || EQ(h2, 0) || EQ(h3, 0)) {
+    return 0;
+  }
+  double x = h1*h1, y = h2*h2, z = h3*h3;
+  double v = 2.0/(x*y) + 2.0/(x*z) + 2.0/(y*z);
+  return 1.0/sqrt(v - 1.0/(x*x) - 1.0/(y*y) - 1.0/(z*z));
+}
+
+// Returns whether points p1 and p2 lie on the same side of the line containing
+// points a and b. If one or both points lie exactly on the line, then the
+// result will depend on the setting of EDGE_IS_SAME_SIDE.
+bool same_side(const point &p1, const point &p2, const point &a,
+               const point &b) {
+  static const bool EDGE_IS_SAME_SIDE = true;
+  point ab(b - a);
+  double c1 = ab.cross(p1 - a), c2 = ab.cross(p2 - a);
+  return EDGE_IS_SAME_SIDE ? GE(c1*c2, 0) : GT(c1*c2, 0);
+}
+
+// Returns whether point p lies within the triangle abc. If the point lies on or
+// close to an edge (by roughly EPS), then the result will depend on the setting
+// of EDGE_IS_SAME_SIDE in the function above.
+bool point_in_triangle(const point &p, const point &a, const point &b,
+                       const point &c) {
+  return same_side(p, a, b, c) &&
+         same_side(p, b, a, c) &&
+         same_side(p, c, a, b);
+}
+
+// Returns the area of a rectangle with opposing vertices a and b.
+double rectangle_area(const point &a, const point &b) {
+  return fabs((a.x - b.x)*(a.y - b.y));
+}
+
+// Returns whether point p lies within the rectangle defined by a vertex at v
+// (x, y), a width of w, and a height of h. Note that negative widths and
+// heights are supported. If the point lies on or close to an edge (by roughly
+// EPS), then the result will depend on the setting of EDGE_IS_INSIDE.
+bool point_in_rectangle(const point &p, const point &v, double w, double h) {
+  static const bool EDGE_IS_INSIDE = true;
+  if (w < 0) {
+    return point_in_rectangle(p, point(v.x + w, v.y), -w, h);
+  }
+  if (h < 0) {
+    return point_in_rectangle(p, point(v.x, v.y + h), w, -h);
+  }
+  return EDGE_IS_INSIDE
+      ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
+      : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
+}
+
+// Returns whether point p lies within the rectangle with opposing vertices a
+// and b. If the point lies on or close to an edge (by roughly EPS), then the
+// result will depend on the setting of EDGE_IS_INSIDE in the function above.
+bool point_in_rectangle(const point &p, const point &a, const point &b) {
+  double xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
+  double xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
+  return point_in_rectangle(p, point(xl, yl), xh - xl, yh - yl);
+}
+
+// Determines the intersection region of the rectangle with opposing vertices a1
+// and b1 and the rectangle with opposing vertices a2 and b2. Returns -1 if the
+// rectangles are completely disjoint, 0 if the rectangles partially intersect,
+// 1 if the first rectangle is completely inside the second, and 2 if the second
+// rectangle is completely inside the first. If there is an intersection, the
+// opposing vertices of the intersection rectangle will be stored into pointers
+// p and q if they are not NULL. If the intersection is a single point or line
+// segment, then the result will depend on the setting of EDGE_IS_INSIDE in the
+// point_in_rectangle function above.
+int rectangle_intersection(const point &a1, const point &b1, const point &a2,
+                           const point &b2, point *p = NULL, point *q = NULL) {
+  bool a1in2 = point_in_rectangle(a1, a2, b2);
+  bool b1in2 = point_in_rectangle(b1, a2, b2);
+  if (a1in2 && b1in2) {
+    if (p != NULL && q != NULL) {
+      *p = std::min(a1, b1);
+      *q = std::max(a1, b1);
+    }
+    return 1;  // Rectangle 1 completely inside 2.
+  }
+  if (!a1in2 && !b1in2) {
+    if (point_in_rectangle(a2, a1, b1)) {
+      if (p != NULL && q != NULL) {
+        *p = std::min(a2, b2);
+        *q = std::max(a2, b2);
+      }
+      return 2;  // Rectangle 2 completely inside 1.
+    }
+    return -1;  // Completely disjoint.
+  }
+  if (p != NULL && q != NULL) {
+    if (a1in2) {
+      *p = a1;
+      *q = (a1 < b1) ? std::max(a2, b2) : std::min(a2, b2);
+    } else {
+      *p = b1;
+      *q = (b1 < a1) ? std::max(a2, b2) : std::min(a2, b2);
+    }
+    if (*p > *q) {
+      std::swap(p, q);
+    }
+  }
+  return 0;
 }
 
 /*** Example Usage ***/
@@ -891,22 +935,6 @@ int main() {
   assert(pt(2, -1) == closest_point(pt(2, -1), pt(4, -1), pt(0, 0)));
   assert(pt(4, -1) == closest_point(pt(2, -1), pt(4, -1), pt(5, 0)));
 
-  assert(point_in_triangle(pt(0, 0), pt(-1, 0), pt(0, -2), pt(4, 0)));
-  assert(!point_in_triangle(pt(0, 1), pt(-1, 0), pt(0, -2), pt(4, 0)));
-  assert(point_in_triangle(pt(-2.44, 0.82), pt(-1, 0), pt(-3, 1), pt(4, 0)));
-  assert(!point_in_triangle(pt(-2.44, 0.7), pt(-1, 0), pt(-3, 1), pt(4, 0)));
-
-  assert(point_in_rectangle(pt(0, -1), 0, -3, 3, 2));
-  assert(point_in_rectangle(pt(2, -2), 3, -3, -3, 2));
-  assert(!point_in_rectangle(pt(0, 0), 3, -1, -3, -2));
-  assert(point_in_rectangle(pt(2, -2), pt(3, -3), pt(0, -1)));
-  assert(!point_in_rectangle(pt(-1, -2), pt(3, -3), pt(0, -1)));
-
-  assert(EQ(6, triangle_area(pt(0, -1), pt(4, -1), pt(0, -4))));
-  assert(EQ(6, triangle_area_sides(3, 4, 5)));
-  assert(EQ(6, triangle_area_medians(3.605551275, 2.5, 4.272001873)));
-  assert(EQ(6, triangle_area_altitudes(3, 4, 2.4)));
-
   circle c(-2, 5, sqrt(10));
   assert(c == circle(point(-2, 5), sqrt(10)));
   assert(c == circle(point(1, 6), point(-5, 4)));
@@ -942,6 +970,35 @@ int main() {
   // Each circle passes through the other's center.
   double r = 3, a = intersection_area(circle(-r/2, 0, r), circle(r/2, 0, r));
   assert(EQ(a, r*r*(2*PI / 3 - sqrt(3) / 2)));
+
+  assert(EQ(6, triangle_area(pt(0, -1), pt(4, -1), pt(0, -4))));
+  assert(EQ(6, triangle_area_sides(3, 4, 5)));
+  assert(EQ(6, triangle_area_medians(3.605551275, 2.5, 4.272001873)));
+  assert(EQ(6, triangle_area_altitudes(3, 4, 2.4)));
+
+  assert(point_in_triangle(pt(0, 0), pt(-1, 0), pt(0, -2), pt(4, 0)));
+  assert(!point_in_triangle(pt(0, 1), pt(-1, 0), pt(0, -2), pt(4, 0)));
+  assert(point_in_triangle(pt(-2.44, 0.82), pt(-1, 0), pt(-3, 1), pt(4, 0)));
+  assert(!point_in_triangle(pt(-2.44, 0.7), pt(-1, 0), pt(-3, 1), pt(4, 0)));
+
+  assert(EQ(20, rectangle_area(pt(1, 1), pt(5, 6))));
+
+  assert(point_in_rectangle(pt(0, -1), pt(0, -3), 3, 2));
+  assert(point_in_rectangle(pt(2, -2), pt(3, -3), -3, 2));
+  assert(!point_in_rectangle(pt(0, 0), pt(3, -1), -3, -2));
+  assert(point_in_rectangle(pt(2, -2), pt(3, -3), pt(0, -1)));
+  assert(!point_in_rectangle(pt(-1, -2), pt(3, -3), pt(0, -1)));
+
+  assert(-1 == rectangle_intersection(pt(0, 0), pt(1, 1), pt(2, 2), pt(3, 3)));
+  assert(0 == rectangle_intersection(pt(1, 1), pt(7, 7), pt(5, 5), pt(0, 0),
+                                     &p, &q));
+  assert(EQP(p, pt(1, 1)) && EQP(q, pt(5, 5)));
+  assert(1 == rectangle_intersection(pt(1, 1), pt(0, 0), pt(0, 0), pt(1, 10),
+                                     &p, &q));
+  assert(EQP(p, pt(0, 0)) && EQP(q, pt(1, 1)));
+  assert(2 == rectangle_intersection(pt(0, 5), pt(5, 7), pt(1, 6), pt(2, 5),
+                                     &p, &q));
+  assert(EQP(p, pt(1, 6)) && EQP(q, pt(2, 5)));
 
   return 0;
 }
