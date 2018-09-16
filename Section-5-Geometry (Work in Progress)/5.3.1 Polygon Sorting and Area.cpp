@@ -5,9 +5,9 @@ and determine the area.
 
 - mean_center(lo, hi) returns the arithmetic mean of a range [lo, hi) of points,
   where lo and hi must be RandomAccessIterators. This point is mathematically
-  guaranteed to lie with a non-self-intersecting closed polygon constructed by
-  sorting all other points clockwise about it. Note that this is different from
-  the geometric centroid (a.k.a. barycenter) of a polygon.
+  guaranteed to lie within the non-self-intersecting closed polygon constructed
+  by sorting all other points clockwise about it. Note that this is different
+  from the geometric centroid (a.k.a. barycenter) of a polygon.
 - cw_comp(a, b, c) returns whether point a compares clockwise "before" point b
   when using c as a central reference point.
 - cw_comp_class(c) constructs a wrapper class of cw_comp() that may be passed to
