@@ -46,7 +46,7 @@ Space Complexity:
 #include <cstdlib>
 
 template<class T>
-class cartesian_treap {
+class implicit_treap {
   static T join_values(const T &a, const T &b) {
     return a < b ? a : b;
   }
@@ -192,20 +192,20 @@ class cartesian_treap {
   }
 
  public:
-  cartesian_treap(int n = 0, const T &v = T()) : root(NULL) {
+  implicit_treap(int n = 0, const T &v = T()) : root(NULL) {
     for (int i = 0; i < n; i++) {
       push_back(v);
     }
   }
 
   template<class It>
-  cartesian_treap(It lo, It hi) : root(NULL) {
+  implicit_treap(It lo, It hi) : root(NULL) {
     for (; lo != hi; ++lo) {
       push_back(*lo);
     }
   }
 
-  ~cartesian_treap() {
+  ~implicit_treap() {
     clean_up(root);
   }
 
@@ -272,7 +272,7 @@ Values: 2 2 1 8 10 11 (min: 1)
 #include <iostream>
 using namespace std;
 
-void print(cartesian_treap<int> &t) {
+void print(implicit_treap<int> &t) {
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {
     cout << " " << t.at(i);
@@ -282,7 +282,7 @@ void print(cartesian_treap<int> &t) {
 
 int main() {
   int arr[5] = {99, -2, 1, 8, 10};
-  cartesian_treap<int> t(arr, arr + 5);
+  implicit_treap<int> t(arr, arr + 5);
   t.push_back(11);
   t.push_back(12);
   t.pop_back();
