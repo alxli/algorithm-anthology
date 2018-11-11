@@ -1,7 +1,7 @@
 /*
 
-Given a list of distinct two-dimensional points, order them into a valid polygon
-and determine the area.
+Given a list of distinct points in two-dimensions, order them into a valid
+polygon and determine the area.
 
 - mean_center(lo, hi) returns the arithmetic mean of a range [lo, hi) of points,
   where lo and hi must be RandomAccessIterators. This point is mathematically

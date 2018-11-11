@@ -1,6 +1,6 @@
 /*
 
-Given a list of points in two-dimensions, determine its convex hull using the
+Given a list of points in two dimensions, determine its convex hull using the
 monotone chain algorithm. The convex hull is the smallest convex polygon (a
 polygon such that every line crossing through it will only do so once) that
 contains all of its points.

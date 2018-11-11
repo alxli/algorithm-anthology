@@ -1,6 +1,6 @@
 /*
 
-Given a point p and a polygon in two-dimensions, determine whether p lies inside
+Given a point p and a polygon in two dimensions, determine whether p lies inside
 the polygon using a ray casting algorithm.
 
 - point_in_polygon(p, lo, hi) returns whether p lies within the polygon defined
