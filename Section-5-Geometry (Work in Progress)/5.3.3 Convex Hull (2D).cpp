@@ -1,50 +1,63 @@
 /*
 
-Determines the convex hull from a range of points, that is, the
-smallest convex polygon (a polygon such that every line which
-crosses through it will only cross through it once) that contains
-all of the points. This function uses the monotone chain algorithm
-to compute the upper and lower hulls separately.
+Given a list of points in two-dimensions, determine its convex hull using the
+monotone chain algorithm. The convex hull is the smallest convex polygon (a
+polygon such that every line crossing through it will only do so once) that
+contains all of its points.
 
-Returns: a vector of the convex hull points in clockwise order.
-Complexity: O(n log n) on the number of points given
+- convex_hull(lo, hi) returns the convex hull as a vector of polygon vertices in
+  clockwise order, given a range [lo, hi) of points where lo and hi must be
+  RandomAccessIterators. The input range will be sorted lexicographically (by x,
+  then by y for equal x) after the function call. Note that to produce the hull
+  points in counter-clockwise order, replace every GE() comparison with LE(). To
+  have the first point on the hull repeated as the last in the resulting vector,
+  the final res.resize(k - 1) may be changed to res.resize(k).
 
-Notes: To yield the hull points in counterclockwise order,
-       replace every usage of GE() in the function with LE().
-       To have the first point on the hull repeated as the last,
-       replace the last line of the function to res.resize(k);
+Time Complexity:
+- O(n log n) per call to convex_hull(lo, hi), where n is the distance between lo
+  and hi.
+
+Space Complexity:
+- O(n) auxiliary for storage of the convex hull.
 
 */
 
-#include <algorithm> /* std::sort() */
-#include <cmath>     /* fabs() */
-#include <utility>   /* std::pair */
+#include <algorithm>
+#include <cmath>
+#include <utility>
 #include <vector>
+
+const double EPS = 1e-9;
+
+#define GE(a, b) ((a) >= (b) - EPS)
 
 typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-//change < 0 comparisons to > 0 to produce hull points in CCW order
-double cw(const point & o, const point & a, const point & b) {
-  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x) < 0;
+double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+  return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
 }
 
-//convex hull from a range [lo, hi) of points
-//monotone chain in O(n log n) to find hull points in CW order
-//notes: the range of input points will be sorted lexicographically
-template<class It> std::vector<point> convex_hull(It lo, It hi) {
+template<class It>
+std::vector<point> convex_hull(It lo, It hi) {
   int k = 0;
-  if (hi - lo <= 1) return std::vector<point>(lo, hi);
-  std::vector<point> res(2 * (int)(hi - lo));
-  std::sort(lo, hi); //compare by x, then by y if x-values are equal
+  if (hi - lo <= 1) {
+    return std::vector<point>(lo, hi);
+  }
+  std::vector<point> res(2*(int)(hi - lo));
+  std::sort(lo, hi);
   for (It it = lo; it != hi; ++it) {
-    while (k >= 2 && !cw(res[k - 2], res[k - 1], *it)) k--;
+    while (k >= 2 && GE(cross(res[k - 1], *it, res[k - 2]), 0)) {
+      k--;
+    }
     res[k++] = *it;
   }
   int t = k + 1;
   for (It it = hi - 2; it != lo - 1; --it) {
-    while (k >= t && !cw(res[k - 2], res[k - 1], *it)) k--;
+    while (k >= t && GE(cross(res[k - 1], *it, res[k - 2]), 0)) {
+      k--;
+    }
     res[k++] = *it;
   }
   res.resize(k - 1);
@@ -53,11 +66,11 @@ template<class It> std::vector<point> convex_hull(It lo, It hi) {
 
 /*** Example Usage ***/
 
-#include <iostream>
+#include <cassert>
 using namespace std;
 
 int main() {
-  //irregular pentagon with only (1, 2) not on the convex hull
+  // Irregular pentagon with only the vertex (1, 2) not on the hull.
   vector<point> v;
   v.push_back(point(1, 3));
   v.push_back(point(1, 2));
@@ -65,10 +78,11 @@ int main() {
   v.push_back(point(0, 0));
   v.push_back(point(-1, 3));
   std::random_shuffle(v.begin(), v.end());
-  vector<point> h = convex_hull(v.begin(), v.end());
-  cout << "hull points:";
-  for (int i = 0; i < (int)h.size(); i++)
-    cout << " (" << h[i].x << "," << h[i].y << ")";
-  cout << "\n";
+  vector<point> h;
+  h.push_back(point(-1, 3));
+  h.push_back(point(1, 3));
+  h.push_back(point(2, 1));
+  h.push_back(point(0, 0));
+  assert(convex_hull(v.begin(), v.end()) == h);
   return 0;
 }

@@ -1,6 +1,6 @@
 /*
 
-Given a list of distinct two-dimensonal points, order them into a valid polygon
+Given a list of distinct two-dimensional points, order them into a valid polygon
 and determine the area.
 
 - mean_center(lo, hi) returns the arithmetic mean of a range [lo, hi) of points,
@@ -26,6 +26,9 @@ Time Complexity:
 - O(n) per call to mean_center(lo, hi) and polygon_area(lo, hi), where n is the
   distance between lo and hi.
 - O(1) per call to cw_comp() and the related class comparators.
+
+Space Complexity:
+- O(1) auxiliary for all operations.
 
 */
 
