@@ -58,8 +58,10 @@ class parser {
   }
 
   void skip(int ch) {
-    if (token != ch)
-      throw std::runtime_error(std::string("Bad character: ") + token + std::string(", expected: ") + (char)ch);
+    if (token != ch) {
+      throw std::runtime_error(std::string("Bad character: ") + token +
+                std::string(", expected: ") + (char)ch);
+    }
     next();
   }
 
