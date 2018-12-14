@@ -8,9 +8,9 @@ coefficients, and b is a vector of boundary coefficients.
 
 - simplex_solve(a, b, c, &x) solves the linear programming problem for an m by n
   matrix a of real values, a length m vector b, a length n vector c, returning 0
-  if a solution was found or -1 if there is no solution. If a solution is found,
-  then the vector pointed to by x is populated with the solution vector of
-  length n.
+  if a solution was found or -1 if there are no solutions. If a solution is
+  found, then the vector pointed to by x is populated with the solution vector
+  of length n.
 
 Time Complexity:
 - Polynomial (average) on the number of equations and unknowns, but exponential
