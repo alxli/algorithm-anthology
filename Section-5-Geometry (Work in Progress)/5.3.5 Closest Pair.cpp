@@ -1,70 +1,90 @@
 /*
 
-Given a range containing distinct points on the Cartesian plane,
-determine two points which have the closest possible distance.
-A divide and conquer algorithm is used. Note that the ordering
-of points in the input range may be changed by the function.
+Given a list of points in two dimensions, find the closest pair among them using
+a divide and conquer algorithm.
 
-Time Complexity: O(n log^2 n) where n is the number of points.
+- closest_pair(lo, hi, &res) returns the minimum Euclidean distance between any
+  two pair of points in the range [lo, hi), where lo and hi must be
+  RandomAccessIterators. The input range will be sorted lexicographically (by x,
+  then by y for equal x) after the function call. If there is an answer, the
+  closest pair will be stored into pointer *res.
+
+Time Complexity:
+- O(n log^2 n) per call to closest_pair(lo, hi, &res), where n is the distance
+  between lo and hi.
+
+Space Complexity:
+- O(n log^2 n) auxiliary stack space per call to closest_pair(lo, hi, &res),
+  where n is the distance between lo and hi.
 
 */
 
-#include <algorithm> /* std::min, std::sort */
-#include <cfloat>    /* DBL_MAX */
-#include <cmath>     /* fabs */
-#include <utility>   /* std::pair */
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <limits>
+#include <utility>
+
+const double EPS = 1e-9;
+
+#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+#define LT(a, b) ((a) < (b) - EPS)
 
 typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqdist(const point & a, const point & b) {
-  double dx = a.x - b.x, dy = a.y - b.y;
-  return dx * dx + dy * dy;
-}
+double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
+double norm(const point &a) { return sqrt(sqnorm(a)); }
 
-bool cmp_x(const point & a, const point & b) { return a.x < b.x; }
-bool cmp_y(const point & a, const point & b) { return a.y < b.y; }
+bool cmp_x(const point &a, const point &b) { return LT(a.x, b.x); }
+bool cmp_y(const point &a, const point &b) { return LT(a.y, b.y); }
 
 template<class It>
-double rec(It lo, It hi, std::pair<point, point> & res, double mindist) {
-  if (lo == hi) return DBL_MAX;
-  It mid = lo + (hi - lo) / 2;
+double closest_pair(It lo, It hi, std::pair<point, point> *res = NULL,
+                    double mindist = std::numeric_limits<double>::max(),
+                    bool sort_x = true) {
+  if (lo == hi) {
+    return std::numeric_limits<double>::max();
+  }
+  if (sort_x) {
+    std::sort(lo, hi, cmp_x);
+  }
+  It mid = lo + (hi - lo)/2;
   double midx = mid->x;
-  double d1 = rec(lo, mid, res, mindist);
+  double d1 = closest_pair(lo, mid, res, mindist, false);
   mindist = std::min(mindist, d1);
-  double d2 = rec(mid + 1, hi, res, mindist);
+  double d2 = closest_pair(mid + 1, hi, res, mindist, false);
   mindist = std::min(mindist, d2);
   std::sort(lo, hi, cmp_y);
   int size = 0;
   It t[hi - lo];
-  for (It it = lo; it != hi; ++it)
-    if (fabs(it->x - midx) < mindist)
+  for (It it = lo; it != hi; ++it) {
+    if (fabs(it->x - midx) < mindist) {
       t[size++] = it;
+    }
+  }
   for (int i = 0; i < size; i++) {
     for (int j = i + 1; j < size; j++) {
-      point a = *t[i], b = *t[j];
-      if (b.y - a.y >= mindist) break;
-      double dist = sqdist(a, b);
+      point a(*t[i]), b(*t[j]);
+      if (b.y - a.y >= mindist) {
+        break;
+      }
+      double dist = norm(point(a.x - b.x, a.y - b.y));
       if (mindist > dist) {
         mindist = dist;
-        res = std::make_pair(a, b);
+        if (res) {
+          *res = std::make_pair(a, b);
+        }
       }
     }
   }
   return mindist;
 }
 
-template<class It> std::pair<point, point> closest_pair(It lo, It hi) {
-  std::pair<point, point> res;
-  std::sort(lo, hi, cmp_x);
-  rec(lo, hi, res, DBL_MAX);
-  return res;
-}
-
 /*** Example Usage ***/
 
-#include <iostream>
+#include <cassert>
 #include <vector>
 using namespace std;
 
@@ -76,9 +96,9 @@ int main() {
   v.push_back(point(5, 1));
   v.push_back(point(12, 10));
   v.push_back(point(3, 4));
-  pair<point, point> res = closest_pair(v.begin(), v.end());
-  cout << "closest pair: (" << res.first.x << "," << res.first.y << ") ";
-  cout << "(" << res.second.x << "," << res.second.y << ")\n";
-  cout << "dist: " << sqrt(sqdist(res.first, res.second)) << "\n"; //1.41421
+  pair<point, point> res;
+  assert(EQ(closest_pair(v.begin(), v.end(), &res), sqrt(2)));
+  assert(res.first == point(2, 3));
+  assert(res.second == point(3, 4));
   return 0;
 }
