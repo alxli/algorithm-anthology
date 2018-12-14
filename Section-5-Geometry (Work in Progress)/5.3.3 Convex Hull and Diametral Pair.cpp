@@ -41,7 +41,6 @@ typedef std::pair<double, double> point;
 #define y second
 
 double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
-
 double cross(const point &a, const point &b, const point &o = point(0, 0)) {
   return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
 }
