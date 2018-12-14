@@ -38,7 +38,7 @@ Space Complexity:
 
 double horner_eval(const std::vector<double> &p, double x) {
   double res = p.back();
-  for (int i = p.size() - 2; i >= 0; i--) {
+  for (int i = (int)p.size() - 2; i >= 0; i--) {
     res = res*x + p[i];
   }
   return res;
