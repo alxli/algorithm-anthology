@@ -25,7 +25,7 @@ error due to rounding in computed solutions.
   permutation matrix p corresponding to p1col will satisfy p*a = l*u.
 - solve_system(a, b, &x) solves the system of linear equations a*x = b given an
   r by c matrix a of real values, and a length r vector b, returning 0 if there
-  is one solution or -1 if there is zero/infinite solutions. If there is exactly
+  is one solution or -1 if there are zero/infinite solutions. If there is exactly
   one solution, then the vector pointed to by x is populated with the solution
   vector of length c.
 - det(a) returns the determinant of an n by n matrix a using LU decomposition.
