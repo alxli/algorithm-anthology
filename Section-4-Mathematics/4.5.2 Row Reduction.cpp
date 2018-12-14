@@ -10,7 +10,7 @@ with row partial pivoting should be used.
   a reference to the modified argument itself.
 - solve_system(a, b, &x) solves the system of linear equations a*x = b given an
   r by c matrix a of real values, and a length r vector b, returning 0 if there
-  is one solution, -1 if there is zero solutions, or -2 if there are infinite
+  is one solution, -1 if there are zero solutions, or -2 if there are infinite
   solutions. If there is exactly one solution, then the vector pointed to by
   x is populated with the solution vector of length c.
 
