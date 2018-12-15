@@ -1,8 +1,8 @@
 /*
 
-Given a set of points P on the Cartesian plane, the Delaunay triangulation of P
-is a set of non-overlapping triangles that covers the entire convex hull of P
-such that no point in P lies within the circumcircle of any of the resulting
+Given a set P of two dimensional points, the Delaunay triangulation of P is a
+set of non-overlapping triangles that covers the entire convex hull of P such
+that no point in P lies within the circumcircle of any of the resulting
 triangles. For any point p in the convex hull of P (but not necessarily in P),
 the nearest point is guaranteed to be a vertex of the enclosing triangle from
 the triangulation.
