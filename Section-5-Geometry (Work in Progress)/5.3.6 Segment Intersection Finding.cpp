@@ -15,8 +15,8 @@ Time Complexity:
   the distance between lo and hi.
 
 Space Complexity:
-- O(n) auxiliary heap space per call to find_intersection(lo, hi, &res1, &res2),
-  where n is the distance between lo and hi.
+- O(n) auxiliary heap space for find_intersection(lo, hi, &res1, &res2), where n
+  is the distance between lo and hi.
 
 */
 

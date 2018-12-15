@@ -14,8 +14,8 @@ Time Complexity:
   between lo and hi.
 
 Space Complexity:
-- O(n log^2 n) auxiliary stack space per call to closest_pair(lo, hi, &res),
-  where n is the distance between lo and hi.
+- O(n log^2 n) auxiliary stack space for closest_pair(lo, hi, &res), where n is
+  the distance between lo and hi.
 
 */
 
