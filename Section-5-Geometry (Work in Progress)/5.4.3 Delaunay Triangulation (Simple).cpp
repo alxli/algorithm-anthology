@@ -22,7 +22,7 @@ Time Complexity:
   between lo and hi.
 
 Space Complexity:
-- O(1) auxiliary heap space for storage of the Delaunay triangulation.
+- O(n) auxiliary heap space for storage of the Delaunay triangulation.
 
 */
 
@@ -49,7 +49,7 @@ double cross(const point &a, const point &b, const point &o = point(0, 0)) {
 
 int seg_intersection(const point &a, const point &b, const point &c,
                      const point &d, point *p = NULL, point *q = NULL) {
-  static const bool TOUCH_IS_INTERSECT = true;
+  static const bool TOUCH_IS_INTERSECT = false;  // false is important!
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
   point cd(d.x - c.x, d.y - c.y);
@@ -168,6 +168,9 @@ int main() {
   v.push_back(point(-1, 3));
   vector<triangle> t;
   t.push_back(triangle(point(1, 3), point(1, 2), point(-1, 3)));
+  t.push_back(triangle(point(1, 3), point(2, 1), point(1, 2)));
+  t.push_back(triangle(point(1, 2), point(2, 1), point(0, 0)));
+  t.push_back(triangle(point(1, 2), point(0, 0), point(-1, 3)));
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
   return 0;
 }

@@ -1,33 +1,38 @@
 /*
 
-Given a range of points P on the Cartesian plane, the Delaunay
-Triangulation of said points is a set of non-overlapping triangles
-covering the entire convex hull of P, such that no point in P lies
-within the circumcircle of any of the resulting triangles. The
-triangulation maximizes the minimum angle of all the angles of the
-triangles in the triangulation. In addition, for any point p in the
-convex hull (not necessarily in P), the nearest point is guaranteed
-to be a vertex of the enclosing triangle from the triangulation.
-See: https://en.wikipedia.org/wiki/Delaunay_triangulation
+Given a set of points P on the Cartesian plane, the Delaunay triangulation of P
+is a set of non-overlapping triangles that covers the entire convex hull of P
+such that no point in P lies within the circumcircle of any of the resulting
+triangles. For any point p in the convex hull of P (but not necessarily in P),
+the nearest point is guaranteed to be a vertex of the enclosing triangle from
+the triangulation.
 
-The triangulation may not exist (e.g. for a set of collinear points)
-or it may not be unique (multiple possible triangulations may exist).
-The following program assumes that a triangulation exists, and
-produces one such valid result. The following is a C++ adaptation of
-a FORTRAN90 program, which applies a divide and conquer algorithm
-with complex linear-time merging. The original program can be found
-via the following link. It contains more thorough documentation,
-comments, and debugging messages associated with the current asserts().
-http://people.sc.fsu.edu/~burkardt/f_src/table_delaunay/table_delaunay.html
+The triangulation may not exist (e.g. for a set of collinear points), or may not
+be unique if it does exists. The following program assumes its existence and
+produces one such valid result using TABLE_DELAUNAY, a divide and conquer
+algorithm with linear merging. Its fully documented version along with debugging
+messages for the current asserts() may be found at the following link:
+http://people.sc.fsu.edu/~jburkardt/f_src/table_delaunay/table_delaunay.html
 
-Time Complexity: O(n log n) on the number of input points.
+- delaunay_triangulation(lo, hi) returns a Delaunay triangulation for the input
+  range [lo, hi) of points, where lo and hi must be RandomAccessIterators, or an
+  empty vector if a triangulation does not exist.
+
+Time Complexity:
+- O(n log n) per call to delaunay_triangulation(lo, hi), where n is the distance
+  between lo and hi.
+
+Space Complexity:
+- O(n) auxiliary heap space for storage of the Delaunay triangulation.
 
 */
 
-#include <algorithm> /* std::min(), std::max() */
+#include <algorithm>
 #include <cassert>
-#include <cmath>     /* fabs(), sqrt() */
-#include <utility>   /* std::pair */
+#include <cmath>
+#include <cstdlib>
+#include <limits>
+#include <utility>
 #include <vector>
 
 int wrap(int ival, int ilo, int ihi) {
@@ -36,27 +41,24 @@ int wrap(int ival, int ilo, int ihi) {
   if (wide != 1)  {
     assert(wide != 0);
     int tmp = (ival - jlo) % wide;
-    if (tmp < 0) res += abs(wide);
+    if (tmp < 0) {
+      res += std::abs(wide);
+    }
     res += tmp;
   }
   return res;
 }
 
-double epsilon() {
-  double r = 1;
-  while (1 < (double)(r + 1)) r /= 2;
-  return 2 * r;
-}
-
 void permute(int n, double a[][2], int p[]) {
   for (int istart = 1; istart <= n; istart++) {
-    if (p[istart - 1] < 0) continue;
+    if (p[istart - 1] < 0) {
+      continue;
+    }
     if (p[istart - 1] == istart) {
       p[istart - 1] = -p[istart - 1];
       continue;
     }
-    double tmp0 = a[istart - 1][0];
-    double tmp1 = a[istart - 1][1];
+    double tmp0 = a[istart - 1][0], tmp1 = a[istart - 1][1];
     int iget = istart;
     for (;;) {
       int iput = iget;
@@ -72,23 +74,28 @@ void permute(int n, double a[][2], int p[]) {
       a[iput - 1][1] = a[iget - 1][1];
     }
   }
-  for (int i = 0; i < n; i++) p[i] = -p[i];
-  return;
+  for (int i = 0; i < n; i++) {
+    p[i] = -p[i];
+  }
 }
 
-int * sort_heap(int n, double a[][2]) {
+int* sort_heap(int n, double a[][2]) {
   double aval[2];
   int i, ir, j, l, idxt;
   int *idx;
-  if (n < 1) return NULL;
+  if (n < 1) {
+    return NULL;
+  }
   if (n == 1) {
     idx = new int[1];
     idx[0] = 1;
     return idx;
   }
   idx = new int[n];
-  for (int i = 0; i < n; i++) idx[i] = i + 1;
-  l = n / 2 + 1;
+  for (int i = 0; i < n; i++) {
+    idx[i] = i + 1;
+  }
+  l = n/2 + 1;
   ir = n;
   for (;;) {
     if (1 < l) {
@@ -107,7 +114,7 @@ int * sort_heap(int n, double a[][2]) {
       }
     }
     i = l;
-    j = 2 * l;
+    j = 2*l;
     while (j <= ir) {
       if (j < ir && (a[idx[j - 1] - 1][0] <  a[idx[j] - 1][0] ||
                     (a[idx[j - 1] - 1][0] == a[idx[j] - 1][0] &&
@@ -130,16 +137,14 @@ int * sort_heap(int n, double a[][2]) {
 }
 
 int lrline(double xu, double yu, double xv1, double yv1,
-           double xv2, double yv2, double dv) {
-  double tol = 1e-7;
+          double xv2, double yv2, double dv) {
+  static const double tol = 1e-7;
   double dx = xv2 - xv1, dy = yv2 - yv1;
   double dxu = xu - xv1, dyu = yu - yv1;
-  double t = dy * dxu - dx * dyu + dv * sqrt(dx * dx + dy * dy);
-  double tolabs = tol * std::max(std::max(fabs(dx), fabs(dy)),
-                         std::max(fabs(dxu), std::max(fabs(dyu), fabs(dv))));
-  if (tolabs < t) return 1;
-  if (-tolabs <= t) return 0;
-  return -1;
+  double t = dy*dxu - dx*dyu + dv*sqrt(dx*dx + dy*dy);
+  double tolabs = tol*std::max(std::max(fabs(dx), fabs(dy)),
+                      std::max(fabs(dxu), std::max(fabs(dyu), fabs(dv))));
+  return tolabs < t ? 1 : (-tolabs <= t ? 0 : -1);
 }
 
 void vbedg(double x, double y, int point_num, double point_xy[][2],
@@ -157,7 +162,7 @@ void vbedg(double x, double y, int point_num, double point_xy[][2],
     done = true;
   }
   for (;;) {
-    l = -tri_neigh[(*rtri) - 1][(*redg) - 1];
+    l = -tri_neigh[*rtri - 1][*redg - 1];
     t = l / 3;
     e = l % 3 + 1;
     a = tri_nodes[t - 1][e - 1];
@@ -170,11 +175,15 @@ void vbedg(double x, double y, int point_num, double point_xy[][2],
     ay = point_xy[a - 1][1];
     bx = point_xy[b - 1][0];
     by = point_xy[b - 1][1];
-    if (lrline(x, y, ax, ay, bx, by, 0.0) <= 0) break;
+    if (lrline(x, y, ax, ay, bx, by, 0.0) <= 0) {
+      break;
+    }
     *rtri = t;
     *redg = e;
   }
-  if (done) return;
+  if (done) {
+    return;
+  }
   t = *ltri;
   e = *ledg;
   for (;;) {
@@ -195,7 +204,9 @@ void vbedg(double x, double y, int point_num, double point_xy[][2],
     ay = point_xy[a - 1][1];
     bx = point_xy[b - 1][0];
     by = point_xy[b - 1][1];
-    if (lrline(x, y, ax, ay, bx, by, 0.0) <= 0) break;
+    if (lrline(x, y, ax, ay, bx, by, 0.0) <= 0) {
+      break;
+    }
   }
   *ltri = t;
   *ledg = e;
@@ -206,24 +217,24 @@ int diaedg(double x0, double y0, double x1, double y1,
            double x2, double y2, double x3, double y3) {
   double ca, cb, s, tol, tola, tolb;
   int value;
-  tol = 100.0 * epsilon();
+  tol = 100.0*std::numeric_limits<double>::epsilon();
   double dx10 = x1 - x0, dy10 = y1 - y0;
   double dx12 = x1 - x2, dy12 = y1 - y2;
   double dx30 = x3 - x0, dy30 = y3 - y0;
   double dx32 = x3 - x2, dy32 = y3 - y2;
-  tola = tol * std::max(std::max(fabs(dx10), fabs(dy10)),
-                        std::max(fabs(dx30), fabs(dy30)));
-  tolb = tol * std::max(std::max(fabs(dx12), fabs(dy12)),
-                        std::max(fabs(dx32), fabs(dy32)));
-  ca = dx10 * dx30 + dy10 * dy30;
-  cb = dx12 * dx32 + dy12 * dy32;
+  tola = tol*std::max(std::max(fabs(dx10), fabs(dy10)),
+                      std::max(fabs(dx30), fabs(dy30)));
+  tolb = tol*std::max(std::max(fabs(dx12), fabs(dy12)),
+                      std::max(fabs(dx32), fabs(dy32)));
+  ca = dx10*dx30 + dy10*dy30;
+  cb = dx12*dx32 + dy12*dy32;
   if (tola < ca && tolb < cb) {
     value = -1;
   } else if (ca < -tola && cb < -tolb) {
     value = 1;
   } else {
     tola = std::max(tola, tolb);
-    s = (dx10 * dy30 - dx30 * dy10) * cb + (dx32 * dy12 - dx12 * dy32) * ca;
+    s = (dx10*dy30 - dx30*dy10)*cb + (dx32*dy12 - dx12*dy32)*ca;
     if (tola < s) {
       value = -1;
     } else if (s < -tola) {
@@ -235,16 +246,17 @@ int diaedg(double x0, double y0, double x1, double y1,
   return value;
 }
 
-int swapec(int i, int *top, int *btri, int *bedg,
-           int point_num, double point_xy[][2],
-           int tri_num, int tri_nodes[][3], int tri_neigh[][3], int stack[]) {
+int swapec(int i, int *top, int *btri, int *bedg, int point_num,
+           double point_xy[][2], int tri_num, int tri_nodes[][3],
+           int tri_neigh[][3], int stack[]) {
   int a, b, c, e, ee, em1, ep1, f, fm1, fp1, l, r, s, swap, t, tt, u;
-  double x = point_xy[i - 1][0];
-  double y = point_xy[i - 1][1];
+  double x = point_xy[i - 1][0], y = point_xy[i - 1][1];
   for (;;) {
-    if (*top <= 0) break;
+    if (*top <= 0) {
+      break;
+    }
     t = stack[*top - 1];
-    *top = *top - 1;
+    *top -= 1;
     if (tri_nodes[t - 1][0] == i) {
       e = 2;
       b = tri_nodes[t - 1][2];
@@ -284,7 +296,7 @@ int swapec(int i, int *top, int *btri, int *bedg,
       tri_neigh[t - 1][e - 1] = s;
       tri_neigh[u - 1][f - 1] = r;
       if (0 < tri_neigh[u - 1][fm1 - 1]) {
-        *top = *top + 1;
+        *top += 1;
         stack[*top - 1] = u;
       }
       if (0 < s) {
@@ -295,15 +307,17 @@ int swapec(int i, int *top, int *btri, int *bedg,
         } else {
           tri_neigh[s - 1][2] = t;
         }
-        *top = *top + 1;
-        if (point_num < *top) return 8;
+        *top += 1;
+        if (point_num < *top) {
+          return 8;
+        }
         stack[*top - 1] = t;
       } else {
         if (u == *btri && fp1 == *bedg) {
           *btri = t;
           *bedg = e;
         }
-        l = - (3 * t + e - 1);
+        l = - (3*t + e - 1);
         tt = t;
         ee = em1;
         while (0 < tri_neigh[tt - 1][ee - 1]) {
@@ -331,7 +345,7 @@ int swapec(int i, int *top, int *btri, int *bedg,
           *btri = u;
           *bedg = f;
         }
-        l = -(3 * u + f - 1);
+        l = -(3*u + f - 1);
         tt = u;
         ee = fm1;
         while (0 < tri_neigh[tt - 1][ee - 1]) {
@@ -370,13 +384,14 @@ void perm_inv(int n, int p[]) {
       for (;;) {
         i2 = p[i1 - 1];
         p[i1 - 1] = i0;
-        if (i2 < 0) break;
+        if (i2 < 0) {
+          break;
+        }
         i0 = i1;
         i1 = i2;
       }
     }
   }
-  return;
 }
 
 int dtris2(int point_num, double point_xy[][2],
@@ -387,7 +402,7 @@ int dtris2(int point_num, double point_xy[][2],
   int ledg, lr, ltri, redg, rtri, t, top;
   double tol;
   int *stack = new int[point_num];
-  tol = 100.0 * epsilon();
+  tol = 100.0*std::numeric_limits<double>::epsilon();
   int *idx = sort_heap(point_num, point_xy);
   permute(point_num, point_xy, idx);
   m1 = 0;
@@ -397,7 +412,7 @@ int dtris2(int point_num, double point_xy[][2],
     k = -1;
     for (j = 0; j <= 1; j++) {
       cmax = std::max(fabs(point_xy[m][j]), fabs(point_xy[m1][j]));
-      if (tol * (cmax + 1.0) < fabs(point_xy[m][j] - point_xy[m1][j])) {
+      if (tol*(cmax + 1.0) < fabs(point_xy[m][j] - point_xy[m1][j])) {
         k = j;
         break;
       }
@@ -413,7 +428,9 @@ int dtris2(int point_num, double point_xy[][2],
     lr = lrline(point_xy[m - 1][0], point_xy[m - 1][1],
                 point_xy[m1 - 1][0], point_xy[m1 - 1][1],
                 point_xy[m2 - 1][0], point_xy[m2 - 1][1], 0.0);
-    if (lr != 0) break;
+    if (lr != 0) {
+      break;
+    }
     j++;
   }
   int tri_num = j - 2;
@@ -428,11 +445,11 @@ int dtris2(int point_num, double point_xy[][2],
       tri_nodes[i - 1][0] = m1;
       tri_nodes[i - 1][1] = m2;
       tri_nodes[i - 1][2] = m;
-      tri_neigh[i - 1][0] = -3 * i;
+      tri_neigh[i - 1][0] = -3*i;
       tri_neigh[i - 1][1] = i;
       tri_neigh[i - 1][2] = i - 1;
     }
-    tri_neigh[tri_num - 1][0] = -3 * tri_num - 1;
+    tri_neigh[tri_num - 1][0] = -3*tri_num - 1;
     tri_neigh[tri_num - 1][1] = -5;
     ledg = 2;
     ltri = tri_num;
@@ -448,11 +465,11 @@ int dtris2(int point_num, double point_xy[][2],
       tri_nodes[i - 1][1] = m1;
       tri_nodes[i - 1][2] = m;
       tri_neigh[i - 2][2] = i;
-      tri_neigh[i - 1][0] = -3 * i - 3;
+      tri_neigh[i - 1][0] = -3*i - 3;
       tri_neigh[i - 1][1] = i - 1;
     }
-    tri_neigh[tri_num - 1][2] = -3 * (tri_num);
-    tri_neigh[0][1] = -3 * (tri_num) - 2;
+    tri_neigh[tri_num - 1][2] = -3*(tri_num);
+    tri_neigh[0][1] = -3*(tri_num) - 2;
     ledg = 2;
     ltri = 1;
   }
@@ -503,10 +520,12 @@ int dtris2(int point_num, double point_xy[][2],
       top++;
       assert(point_num >= top);
       stack[top - 1] = tri_num;
-      if (t == rtri && e == redg) break;
+      if (t == rtri && e == redg) {
+        break;
+      }
     }
-    tri_neigh[ltri - 1][ledg - 1] = -3 * n - 1;
-    tri_neigh[n - 1][1] = -3 * tri_num - 2;
+    tri_neigh[ltri - 1][ledg - 1] = -3*n - 1;
+    tri_neigh[n - 1][1] = -3*tri_num - 2;
     tri_neigh[tri_num - 1][2] = -l;
     ltri = n;
     ledg = 2;
@@ -514,9 +533,11 @@ int dtris2(int point_num, double point_xy[][2],
                    tri_num, tri_nodes, tri_neigh, stack);
     assert(error == 0);
   }
-  for (i = 0; i < 3; i++)
-    for (j = 0; j < tri_num; j++)
+  for (i = 0; i < 3; i++) {
+    for (j = 0; j < tri_num; j++) {
       tri_nodes[j][i] = idx[tri_nodes[j][i] - 1];
+    }
+  }
   perm_inv(point_num, idx);
   permute(point_num, point_xy, idx);
   delete[] idx;
@@ -524,19 +545,32 @@ int dtris2(int point_num, double point_xy[][2],
   return tri_num;
 }
 
-/*** C++ Wrapper ***/
+/*** Wrapper ***/
+
+const double EPS = 1e-9;
+#define EQ(a, b) (fabs((a) - (b)) <= EPS)
 
 typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-struct triangle { point a, b, c; };
+struct triangle {
+  point a, b, c;
+
+  triangle(const point &a, const point &b, const point &c) : a(a), b(b), c(c) {}
+
+  bool operator==(const triangle &t) const {
+    return EQ(a.x, t.a.x) && EQ(a.y, t.a.y) &&
+           EQ(b.x, t.b.x) && EQ(b.y, t.b.y) &&
+           EQ(c.x, t.c.x) && EQ(c.y, t.c.y);
+  }
+};
 
 template<class It>
 std::vector<triangle> delaunay_triangulation(It lo, It hi) {
   int n = hi - lo;
   double points[n][2];
-  int tri_nodes[3 * n][3], tri_neigh[3 * n][3];
+  int tri_nodes[3*n][3], tri_neigh[3*n][3];
   int curr = 0;
   for (It it = lo; it != hi; ++curr, ++it) {
     points[curr][0] = it->x;
@@ -544,16 +578,17 @@ std::vector<triangle> delaunay_triangulation(It lo, It hi) {
   }
   int m = dtris2(n, points, tri_nodes, tri_neigh);
   std::vector<triangle> res;
-  for (int i = 0; i < m; i++)
-    res.push_back((triangle){*(lo + (tri_nodes[i][0] - 1)),
-                             *(lo + (tri_nodes[i][1] - 1)),
-                             *(lo + (tri_nodes[i][2] - 1))});
+  for (int i = 0; i < m; i++) {
+    res.push_back(triangle(lo[tri_nodes[i][0] - 1],
+                           lo[tri_nodes[i][1] - 1],
+                           lo[tri_nodes[i][2] - 1]));
+  }
   return res;
 }
 
 /*** Example Usage ***/
 
-#include <iostream>
+#include <cassert>
 using namespace std;
 
 int main() {
@@ -563,12 +598,11 @@ int main() {
   v.push_back(point(2, 1));
   v.push_back(point(0, 0));
   v.push_back(point(-1, 3));
-  vector<triangle> dt = delaunay_triangulation(v.begin(), v.end());
-  for (int i = 0; i < (int)dt.size(); i++) {
-    cout << "Triangle: ";
-    cout << "(" << dt[i].a.x << "," << dt[i].a.y << ") ";
-    cout << "(" << dt[i].b.x << "," << dt[i].b.y << ") ";
-    cout << "(" << dt[i].c.x << "," << dt[i].c.y << ")\n";
-  }
+  vector<triangle> t;
+  t.push_back(triangle(point(-1, 3), point(0, 0), point(1, 2)));
+  t.push_back(triangle(point(-1, 3), point(1, 2), point(1, 3)));
+  t.push_back(triangle(point(1, 2), point(0, 0), point(2, 1)));
+  t.push_back(triangle(point(1, 3), point(1, 2), point(2, 1)));
+  assert(delaunay_triangulation(v.begin(), v.end()) == t);
   return 0;
 }
