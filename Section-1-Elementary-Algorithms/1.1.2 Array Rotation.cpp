@@ -19,7 +19,7 @@ Time Complexity:
 - O(n) per call to both functions, where n is the distance between lo and hi.
 
 Space Complexity:
-- O(1) auxiliary.
+- O(1) auxiliary for all versions
 
 */
 
