@@ -199,7 +199,6 @@ Joining and Splitting
 
 */
 
-
 string join(const std::vector<string> &v, const string &delim = " ") {
   string res;
   for (int i = 0; i < (int)v.size(); i++) {
