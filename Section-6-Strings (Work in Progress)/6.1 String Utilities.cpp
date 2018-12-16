@@ -109,7 +109,6 @@ string to_title(const string &s) {
   return res;
 }
 
-
 /*
 
 Stripping
