@@ -2,7 +2,7 @@
 
 Common string functions, many of which are substitutes for features which are
 not available in standard C++, or may not be available on compilers that do not
-support C++11 or later. These operations are naive implementations and often
+support C++11 and later. These operations are naive implementations and often
 depend on certain std::string functions that have unspecified complexity.
 
 */
@@ -20,7 +20,7 @@ using std::string;
 Integer Conversion
 
 - to_str(i) returns the string representation of integer i, much like
-  std::to_string() in C++11.
+  std::to_string() in C++11 and later.
 - to_int(s) returns the integer representation of string s, much like atoi(),
   except handling special cases of overflow by throwing an exception.
 - itoa(value, &str, base) implements the non-standard C function which converts
