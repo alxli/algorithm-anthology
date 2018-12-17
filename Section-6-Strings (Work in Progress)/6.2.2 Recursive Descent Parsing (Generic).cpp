@@ -3,7 +3,7 @@
 Evaluate an expression using a generalized parser class for custom-defined
 operand types, prefix unary operators, binary operators, and precedences.
 Typical parentheses behavior is supported, but multiplication by juxtaposition
-is not.
+is not. Evaluation is performed using the recursive descent algorithm.
 
 An arbitrary operand type is supported, with its string representation defined
 by a user-specified is_operand() and eval_operand() functions. For maximum
@@ -228,7 +228,7 @@ class parser {
 #include <cmath>
 using namespace std;
 
-#define EQ(a, b) (fabs(a - b) < 1e-7)
+#define EQ(a, b) (fabs((a) - (b)) < 1e-7)
 
 double pos(double a) { return +a; }
 double neg(double a) { return -a; }
@@ -260,6 +260,6 @@ int main() {
   assert(EQ(p.eval("10/3+10/4+10/5+10/6+10/7+10/8+10/9+10/10+15*23456"),
             351854.28968253968));
   assert(EQ(p.eval("-(5-(5-(5-(5-(5-2)))))+(3-(3-(3-(3-(3+3)))))*"
-                    "(7-(7-(7-(7-(7-7+4*5)))))"), 117));
+                   "(7-(7-(7-(7-(7-7+4*5)))))"), 117));
   return 0;
 }
