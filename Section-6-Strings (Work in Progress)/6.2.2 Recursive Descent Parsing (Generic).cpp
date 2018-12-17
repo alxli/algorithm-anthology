@@ -1,9 +1,9 @@
 /*
 
-Evaluate an expression consisting of custom operations and order of operations.
-The following generalized parser class supports custom-defined operands, prefix
-unary operators, binary operators, and operator precedences. Typical parentheses
-behavior is supported, but multiplication by juxtaposition is not.
+Evaluate an expression using a generalized parser class for custom-defined
+operand types, prefix unary operators, binary operators, and precedences.
+Typical parentheses behavior is supported, but multiplication by juxtaposition
+is not.
 
 An arbitrary operand type is supported, with its string representation defined
 by a user-specified is_operand() and eval_operand() functions. For maximum
