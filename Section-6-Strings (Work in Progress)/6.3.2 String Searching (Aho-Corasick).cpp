@@ -1,125 +1,155 @@
 /*
 
-Given a text and multiple patterns to be searched for within the
-text, simultaneously determine the position of all matches.
-All of the patterns will be first required for precomputing
-the automata, after which any input text may be given without
-having to recompute the automata for the pattern.
+Given a set of strings (needles) and subsequent queries of texts (haystacks)
+to be searched, determine all positions in which needles occur within the given
+haystacks in linear time using the Aho-Corasick algorithm.
 
-Time Complexity: O(n) for build_automata(), where n is the sum of
-all pattern lengths, and O(1) amortized for next_state(). However,
-since it must be called m times for an input text of length m, and
-if there are z matches throughout the entire text, then the entire
-algorithm will have a running time of O(n + m + z).
+Note that this implementation uses an ordered map for storage of the graph,
+adding an additional log k factor to the time complexities of all operations,
+where k is the size of the alphabet (number of distinct characters used across
+the needles). It also uses an ordered set for storage of the precomputed output
+tables, adding an additional log m factor to the time complexities, where m is
+the number of needles. In C++11 and later, both of these containers should be
+replaced by their unordered versions for constant time access, thus eliminating
+the log factors from the time complexities.
 
-Note that in this implementation, a bitset is used to speed up
-build_automata() at the cost of making the later text search cost
-O(n * m). To truly make the algorithm O(n + m + z), bitset must be
-substituted for an unordered_set, which will not encounter any
-blank spaces during iteration of the bitset. However, for simply
-counting the number of matches, bitsets are clearly advantages.
+- aho_corasick(needles) constructs the finite-state automaton for a set of
+  needle strings that are to be searched for subsequently in haystack queries.
+- find_all_in(haystack, report_match) calls the function report_match(s, pos)
+  once on each occurrence of each needle that occurs in the haystack, where pos
+  is the starting position in the haystack at which string s (a matched needle)
+  occurs. The matches will be reported in increasing order of their ending
+  positions within the haystack.
 
-Space Complexity: O(l * c), where l is the sum of all pattern
-lengths and c is the size of the alphabet.
+Time Complexity:
+- O(m*((log m) + l*log k)) per call to the constructor, where m is the number of
+  needles, l is the maximum length for any needle, and k is the size of the
+  alphabet used by the needles. If unordered containers are used, then the time
+  complexity reduces to O(m*l), or linear on the input size.
+- O(n*(log k) + z) per call to find_all_in(haystack, report_match), where n is
+  the length of the haystack, k is the size of the alphabet used by the needles,
+  and z is the number of matches. If unordered containers are used, then the
+  time complexity reduces to O(n + z), or linear on the input size.
+
+Space Complexity:
+- O(m*l) for storage of the automaton, where where m is the number of needles
+  and l is the maximum length for any needle.
+- O(1) auxiliary space per call to find_all_in(haystack, report_match).
 
 */
 
-#include <bitset>
-#include <cstring>
+#include <map>
 #include <queue>
+#include <set>
 #include <string>
 #include <vector>
+using std::string;
 
-const int MAXP = 1000;  //maximum number of patterns
-const int MAXL = 10000; //max possible sum of all pattern lengths
-const int MAXC = 26;    //size of the alphabet (e.g. 'a'..'z')
+class aho_corasick {
+  std::vector<string> needles;
+  std::vector<int> fail;
+  std::vector<std::map<char, int> > graph;
+  std::vector<std::set<int> > out;
 
-//This function should be customized to return a mapping from
-//the input alphabet (e.g. 'a'..'z') to the integers 0..MAXC-1
-inline int map_alphabet(char c) {
-  return (int)(c - 'a');
-}
-
-std::bitset<MAXP> out[MAXL];  //std::unordered_set<int> out[MAXL]
-int fail[MAXL], g[MAXL][MAXC + 1];
-
-int build_automata(const std::vector<std::string> & patterns) {
-  memset(fail, -1, sizeof fail);
-  memset(g, -1, sizeof g);
-  for (int i = 0; i < MAXL; i++)
-    out[i].reset();  //out[i].clear();
-  int states = 1;
-  for (int i = 0; i < (int)patterns.size(); i++) {
-    const std::string & pattern = patterns[i];
-    int curr = 0;
-    for (int j = 0; j < (int)pattern.size(); j++) {
-      int c = map_alphabet(pattern[j]);
-      if (g[curr][c] == -1)
-        g[curr][c] = states++;
-      curr = g[curr][c];
+  int next_state(int curr, char c) {
+    int next = curr;
+    while (graph[next].find(c) == graph[next].end()) {
+      next = fail[next];
     }
-    out[curr][i] = out[curr][i] | 1;  //out[curr].insert(i);
+    return graph[next][c];
   }
-  for (int c = 0; c < MAXC; c++)
-    if (g[0][c] == -1) g[0][c] = 0;
-  std::queue<int> q;
-  for (int c = 0; c <= MAXC; c++) {
-    if (g[0][c] != -1 && g[0][c] != 0) {
-      fail[g[0][c]] = 0;
-      q.push(g[0][c]);
+
+ public:
+  aho_corasick(const std::vector<string> &needles) : needles(needles) {
+    int total_len = 0;
+    for (int i = 0; i < (int)needles.size(); i++) {
+      total_len += needles[i].size();
     }
-  }
-  while (!q.empty()) {
-    int s = q.front(), t;
-    q.pop();
-    for (int c = 0; c <= MAXC; c++) {
-      t = g[s][c];
-      if (t != -1) {
-        int f = fail[s];
-        while (g[f][c] == -1)
+    fail.resize(total_len, -1);
+    graph.resize(total_len);
+    out.resize(total_len);
+    int states = 1;
+    std::map<char, int>::iterator it;
+    for (int i = 0; i < (int)needles.size(); i++) {
+      int curr = 0;
+      for (int j = 0; j < (int)needles[i].size(); j++) {
+        char c = needles[i][j];
+        if ((it = graph[curr].find(c)) != graph[curr].end()) {
+          curr = it->second;
+        } else {
+          curr = graph[curr][c] = states++;
+        }
+      }
+      out[curr].insert(i);
+    }
+    std::queue<int> q;
+    for (it = graph[0].begin(); it != graph[0].end(); ++it) {
+      if (it->second != 0) {
+        fail[it->second] = 0;
+        q.push(it->second);
+      }
+    }
+    while (!q.empty()) {
+      int u = q.front();
+      q.pop();
+      for (it = graph[u].begin(); it != graph[u].end(); ++it) {
+        int v = it->second, f = fail[u];
+        while (graph[f].find(it->first) == graph[f].end()) {
           f = fail[f];
-        f = g[f][c];
-        fail[t] = f;
-        out[t] |= out[f];  //out[t].insert(out[f].begin(), out[f].end());
-        q.push(t);
+        }
+        f = graph[f].find(it->first)->second;
+        fail[v] = f;
+        out[v].insert(out[f].begin(), out[f].end());
+        q.push(v);
       }
     }
   }
-  return states;
-}
 
-int next_state(int curr, char ch) {
-  int next = curr, c = map_alphabet(ch);
-  while (g[next][c] == -1)
-    next = fail[next];
-  return g[next][c];
-}
+  template<class ReportFunction>
+  void find_all_in(const string &haystack, ReportFunction report_match) {
+    int state = 0;
+    std::set<int>::iterator it;
+    for (int i = 0; i < (int)haystack.size(); i++) {
+      state = next_state(state, haystack[i]);
+      for (it = out[state].begin(); it != out[state].end(); ++it) {
+        report_match(needles[*it], i - needles[*it].size() + 1);
+      }
+    }
+  }
+};
 
-/*** Example Usage (en.wikipedia.org/wiki/Aho–Corasick_algorithm) ***/
+/*** Example Usage and Output:
+
+Matched "a" at position 0.
+Matched "ab" at position 0.
+Matched "bc" at position 1.
+Matched "c" at position 2.
+Matched "c" at position 3.
+Matched "a" at position 4.
+Matched "ab" at position 4.
+Matched "abccab" at position 0.
+
+***/
 
 #include <iostream>
 using namespace std;
 
-int main() {
-  vector<string> patterns;
-  patterns.push_back("a");
-  patterns.push_back("ab");
-  patterns.push_back("bab");
-  patterns.push_back("bc");
-  patterns.push_back("bca");
-  patterns.push_back("c");
-  patterns.push_back("caa");
-  build_automata(patterns);
+void report_match(const string &needle, int pos) {
+  cout << "Matched \"" << needle << "\" at position " << pos << "." << endl;
+}
 
-  string text("abccab");
-  int state = 0;
-  for (int i = 0; i < (int)text.size(); i++) {
-    state = next_state(state, text[i]);
-    cout << "Matches ending at position " << i << ":" << endl;
-    if (out[state].any())
-      for (int j = 0; j < (int)out[state].size(); j++)
-        if (out[state][j])
-          cout << "'" << patterns[j] << "'" << endl;
-  }
+int main() {
+  vector<string> needles;
+  needles.push_back("a");
+  needles.push_back("ab");
+  needles.push_back("bab");
+  needles.push_back("bc");
+  needles.push_back("bca");
+  needles.push_back("c");
+  needles.push_back("caa");
+  needles.push_back("abccab");
+  aho_corasick automaton(needles);
+
+  automaton.find_all_in("abccab", report_match);
   return 0;
 }
