@@ -27,9 +27,9 @@ Time Complexity:
   alphabet used by the needles. If unordered containers are used, then the time
   complexity reduces to O(m*l), or linear on the input size.
 - O(n*(log k) + z) per call to find_all_in(haystack, report_match), where n is
-  the length of the haystack, k is the size of the alphabet used by the needles,
-  and z is the number of matches. If unordered containers are used, then the
-  time complexity reduces to O(n + z), or linear on the input size.
+  the length of haystack, k is the size of the alphabet used by the needles, and
+  z is the number of matches. If unordered containers are used, then the time
+  complexity reduces to O(n + z), or linear on the input size.
 
 Space Complexity:
 - O(m*l) for storage of the automaton, where where m is the number of needles
@@ -148,7 +148,7 @@ int main() {
   needles.push_back("c");
   needles.push_back("caa");
   needles.push_back("abccab");
-  
+
   aho_corasick(needles).find_all_in("abccab", report_match);
   return 0;
 }
