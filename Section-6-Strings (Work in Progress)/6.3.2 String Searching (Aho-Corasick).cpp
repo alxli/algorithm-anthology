@@ -148,8 +148,7 @@ int main() {
   needles.push_back("c");
   needles.push_back("caa");
   needles.push_back("abccab");
-  aho_corasick automaton(needles);
-
-  automaton.find_all_in("abccab", report_match);
+  
+  aho_corasick(needles).find_all_in("abccab", report_match);
   return 0;
 }
