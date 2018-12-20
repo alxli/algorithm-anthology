@@ -18,7 +18,7 @@ Time Complexity:
 Space Complexity:
 - O(n*m) auxiliary heap space for longest_common_subsequence(s1, s2), where n
   and m are the lengths of s1 and s2, respectively.
-- O(log min(n, m)) auxiliary stack space and O(min(n, m)) auxiliary heap space
+- O(log max(n, m)) auxiliary stack space and O(min(n, m)) auxiliary heap space
   for hirschberg_lcs(s1, s2), where n and m are the lengths of s1 and s2,
   respectively.
 
@@ -99,7 +99,7 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
 }
 
 string hirschberg_lcs(const string &s1, const string &s2) {
-  if (s2.size() < s1.size()) {
+  if (s1.size() < s2.size()) {
     return hirschberg_lcs(s2, s1);
   }
   string res;
