@@ -1,46 +1,46 @@
 /*
 
-A substring is a consecutive part of a longer string (e.g. "ABC" is
-a substring of "ABCDE" but "ABD" is not). Using dynamic programming,
-determine the longest string which is a substring common to any two
-input strings.
+Given two strings, determine their longest common substring (i.e. consecutive
+subsequence) using dynamic programming.
 
-Time Complexity: O(n * m) where n and m are the lengths of the two
-input strings, respectively.
+Time Complexity:
+- O(n*m) per call to longest_common_substring(s1, s2), where n and m are the
+  lengths of s1 and s2, respectively.
 
-Space Complexity: O(min(n, m)) auxiliary.
+Space Complexity:
+- O(min(n, m)) auxiliary heap space, where n and m are the lengths of s1 and
+  s2, respectively.
 
 */
 
 #include <string>
+#include <vector>
+using std::string;
 
-std::string longest_common_substring
-(const std::string & s1, const std::string & s2) {
-  if (s1.empty() || s2.empty()) return "";
-  if (s1.size() < s2.size())
+string longest_common_substring(const string &s1, const string &s2) {
+  if (s1.empty() || s2.empty()) {
+    return "";
+  }
+  if (s1.size() < s2.size()) {
     return longest_common_substring(s2, s1);
-  int * A = new int[s2.size()];
-  int * B = new int[s2.size()];
-  int startpos = 0, maxlen = 0;
+  }
+  std::vector<int> A(s2.size()), B(s2.size());
+  int pos = 0, len = 0;
   for (int i = 0; i < (int)s1.size(); i++) {
     for (int j = 0; j < (int)s2.size(); j++) {
       if (s1[i] == s2[j]) {
-        A[j] = (i > 0 && j > 0) ? 1 + B[j - 1] : 1;
-        if (maxlen < A[j]) {
-          maxlen = A[j];
-          startpos = i - A[j] + 1;
+        A[j] = (i > 0 && j > 0) ? B[j - 1] + 1 : 1;
+        if (len < A[j]) {
+          len = A[j];
+          pos = i - A[j] + 1;
         }
       } else {
         A[j] = 0;
       }
     }
-    int * temp = A;
-    A = B;
-    B = temp;
+    A.swap(B);
   }
-  delete[] A;
-  delete[] B;
-  return s1.substr(startpos, maxlen);
+  return s1.substr(pos, len);
 }
 
 /*** Example Usage ***/
