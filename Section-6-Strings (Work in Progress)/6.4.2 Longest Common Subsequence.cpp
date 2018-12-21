@@ -6,7 +6,10 @@ without changing the order of the remaining elements (e.g. "ACE" is a
 subsequence of "ABCDE", but "BAE" is not).
 
 - longest_common_subsequence(s1, s2) returns the longest common subsequence of
-  strings s1 and s2 using a classic dynamic programming approach.
+  strings s1 and s2 using a classic dynamic programming approach. This
+  implementation computes dp[i][j] (the length of the longest common subsequence
+  for the length i prefix of s1 and the length j prefix of s2) before following
+  the path backwards to construct the answer.
 - hirschberg_lcs(s1, s2) returns the longest common subsequence of strings s1
   and s2 using the more memory efficient Hirschberg's algorithm.
 
@@ -33,38 +36,39 @@ using std::string;
 string longest_common_subsequence(const string &s1, const string &s2) {
   int n = s1.size(), m = s2.size();
   std::vector<std::vector<int> > dp(n + 1, std::vector<int>(m + 1, 0));
-  for (int i = n - 1; i >= 0; i--) {
-    for (int j = m - 1; j >= 0; j--) {
-      if (s1[i] == s2[j]) {
-        dp[i][j] = dp[i + 1][j + 1] + 1;
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1; j <= m; j++) {
+      if (s1[i - 1] == s2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
       } else {
-        dp[i][j] = std::max(dp[i + 1][j], dp[i][j + 1]);
+        dp[i][j] = std::max(dp[i][j - 1], dp[i - 1][j]);
       }
     }
   }
   string res;
-  for (int i = 0, j = 0; i < n && j < m; ) {
-    if (s1[i] == s2[j]) {
-      res += s1[i];
-      i++;
-      j++;
-    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
-      i++;
+  for (int i = n, j = m; i > 0 && j > 0; ) {
+    if (s1[i - 1] == s2[j - 1]) {
+      res += s1[i - 1];
+      i--;
+      j--;
+    } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+      i--;
     } else {
-      j++;
+      j--;
     }
   }
+  std::reverse(res.begin(), res.end());
   return res;
 }
 
 template<class It>
 std::vector<int> lcs_len(It lo1, It hi1, It lo2, It hi2) {
-  std::vector<int> res(std::distance(lo2, hi2) + 1), tmp(res);
+  std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
   for (It it1 = lo1; it1 != hi1; ++it1) {
-    res.swap(tmp);
+    res.swap(prev);
     int i = 0;
     for (It it2 = lo2; it2 != hi2; ++it2) {
-      res[i + 1] = (*it1 == *it2) ? tmp[i] + 1 : std::max(res[i], tmp[i + 1]);
+      res[i + 1] = (*it1 == *it2) ? prev[i] + 1 : std::max(res[i], prev[i + 1]);
       i++;
     }
   }
@@ -84,13 +88,13 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
   }
   It mid1 = lo1 + (hi1 - lo1)/2;
   std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
-  std::vector<int> len = lcs_len(lo1, mid1, lo2, hi2);
-  std::vector<int> rlen = lcs_len(rlo1, rmid1, rlo2, rhi2);
+  std::vector<int> fwd = lcs_len(lo1, mid1, lo2, hi2);
+  std::vector<int> rev = lcs_len(rlo1, rmid1, rlo2, rhi2);
   It mid2 = lo2;
   int maxlen = -1;
-  for (int i = 0, j = (int)rlen.size() - 1; i < (int)len.size(); i++, j--) {
-    if (len[i] + rlen[j] > maxlen) {
-      maxlen = len[i] + rlen[j];
+  for (int i = 0, j = (int)rev.size() - 1; i < (int)fwd.size(); i++, j--) {
+    if (fwd[i] + rev[j] > maxlen) {
+      maxlen = fwd[i] + rev[j];
       mid2 = lo2 + i;
     }
   }

@@ -18,27 +18,28 @@ Space Complexity:
 using std::string;
 
 string longest_common_substring(const string &s1, const string &s2) {
-  if (s1.empty() || s2.empty()) {
+  int n = s1.size(), m = s2.size();
+  if (n == 0 || m == 0) {
     return "";
   }
-  if (s1.size() < s2.size()) {
+  if (n < m) {
     return longest_common_substring(s2, s1);
   }
-  std::vector<int> A(s2.size()), B(s2.size());
+  std::vector<int> curr(m), prev(m);
   int pos = 0, len = 0;
-  for (int i = 0; i < (int)s1.size(); i++) {
-    for (int j = 0; j < (int)s2.size(); j++) {
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
       if (s1[i] == s2[j]) {
-        A[j] = (i > 0 && j > 0) ? B[j - 1] + 1 : 1;
-        if (len < A[j]) {
-          len = A[j];
-          pos = i - A[j] + 1;
+        curr[j] = (i > 0 && j > 0) ? prev[j - 1] + 1 : 1;
+        if (len < curr[j]) {
+          len = curr[j];
+          pos = i - curr[j] + 1;
         }
       } else {
-        A[j] = 0;
+        curr[j] = 0;
       }
     }
-    A.swap(B);
+    curr.swap(prev);
   }
   return s1.substr(pos, len);
 }
