@@ -22,7 +22,7 @@ suffices "a", "aa", and "baa", with an LCP array of [1, 0].
   O(m + log n) by first computing the LCP-LR array using the LCP array.
 
 Time Complexity:
-- O(n log n) per call to the constructor, where n is the length of s.
+- O(n) per call to the constructor, where n is the length of s.
 - O(1) per call to get_sa().
 - O(n) per call to get_lcp(), where n is the length of s.
 - O(m log n) per call to find(needle), where m is the length of needle and n is
