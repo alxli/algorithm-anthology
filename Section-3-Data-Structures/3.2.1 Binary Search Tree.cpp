@@ -9,7 +9,7 @@ right child has a greater key.
 
 - binary_search_tree() constructs an empty map.
 - size() returns the size of the map.
-- empty() returns the map is empty.
+- empty() returns whether the map is empty.
 - insert(k, v) adds an entry with key k and value v to the map, returning true
   if an new entry was added or false if the key already exists (in which case
   the map is unchanged and the old value associated with the key is preserved).
@@ -32,7 +32,7 @@ Space Complexity:
 
 */
 
-#include <cstdlib>
+#include <cstddef>
 
 template<class K, class V>
 class binary_search_tree {

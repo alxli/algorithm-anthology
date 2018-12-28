@@ -38,7 +38,7 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cstdlib>
+#include <cstddef>
 #include <iterator>
 #include <limits>
 #include <vector>
@@ -60,7 +60,7 @@ max_subarray_sum(It lo, It hi, int *res_lo = NULL, int *res_hi = NULL) {
       end = it - lo;
     }
   }
-  if (end == -1) { // All negative. By convention, return the maximum value.
+  if (end == -1) {  // All negative. By convention, return the maximum value.
     for (It it = lo; it != hi; ++it) {
       if (max_sum < *it) {
         max_sum = *it;

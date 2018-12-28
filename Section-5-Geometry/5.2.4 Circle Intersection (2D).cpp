@@ -33,7 +33,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
+#include <cstddef>
 #include <utility>
 
 const double EPS = 1e-9, PI = acos(-1.0);

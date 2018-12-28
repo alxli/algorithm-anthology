@@ -40,7 +40,7 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cstdlib>
+#include <cstddef>
 
 template<class T>
 class quadtree {

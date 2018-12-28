@@ -16,7 +16,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
+#include <cstddef>
 #include <limits>
 #include <ostream>
 #include <stdexcept>
@@ -843,6 +843,7 @@ int rectangle_intersection(const point &a1, const point &b1, const point &a2,
 using namespace std;
 
 #define pt point
+#define EQP(p, q) (EQ((p).x, (q).x) && EQ((p).y, (q).y))
 
 int main() {
   pt p, q;

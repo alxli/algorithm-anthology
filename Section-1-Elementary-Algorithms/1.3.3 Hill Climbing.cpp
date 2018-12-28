@@ -24,7 +24,7 @@ Space Complexity:
 
 */
 
-#include <cstdlib>
+#include <cstddef>
 #include <cmath>
 
 template<class ContinuousFunction>

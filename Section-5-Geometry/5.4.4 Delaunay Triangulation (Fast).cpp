@@ -30,7 +30,7 @@ Space Complexity:
 #include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <cstdlib>
+#include <cstddef>
 #include <limits>
 #include <utility>
 #include <vector>

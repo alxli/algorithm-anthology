@@ -7,7 +7,6 @@ depend on certain std::string functions that have unspecified complexity.
 
 */
 
-#include <cstdlib>
 #include <cctype>
 #include <sstream>
 #include <stdexcept>

@@ -34,7 +34,7 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cstdlib>
+#include <cstddef>
 
 template<class K, class V>
 class avl_tree {

@@ -25,7 +25,7 @@ Space Complexity:
 */
 
 #include <cmath>
-#include <cstdlib>
+#include <cstddef>
 #include <stdexcept>
 #include <vector>
 

@@ -34,7 +34,7 @@ Space Complexity:
 
 */
 
-#include <cstdlib>
+#include <cstddef>
 #include <list>
 
 template<class K, class V, class Hash>
@@ -169,8 +169,8 @@ struct class_hash {
     k += ~(k << 32);
     k ^=  (k >> 22);
     k += ~(k << 13);
-    k ^=  (k >> 8);
-    k +=  (k << 3);
+    k ^=  (k >>  8);
+    k +=  (k <<  3);
     k ^=  (k >> 15);
     k += ~(k << 27);
     k ^=  (k >> 31);

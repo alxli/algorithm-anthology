@@ -47,7 +47,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
+#include <cstddef>
 #include <limits>
 #include <vector>
 

@@ -31,7 +31,7 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cstdlib>
+#include <cstddef>
 #include <stdexcept>
 
 template<class T>

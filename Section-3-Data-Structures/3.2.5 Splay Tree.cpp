@@ -32,7 +32,7 @@ Space Complexity:
 
 */
 
-#include <cstdlib>
+#include <cstddef>
 
 template<class K, class V>
 class splay_tree {

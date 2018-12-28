@@ -54,7 +54,7 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cstdlib>
+#include <cstddef>
 #include <map>
 #include <stdexcept>
 

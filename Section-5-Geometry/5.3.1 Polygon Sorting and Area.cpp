@@ -34,7 +34,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
 #include <stdexcept>
 #include <utility>
 

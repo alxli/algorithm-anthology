@@ -41,7 +41,7 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cstdlib>
+#include <cstddef>
 
 template<class T>
 class segment_tree_2d {
