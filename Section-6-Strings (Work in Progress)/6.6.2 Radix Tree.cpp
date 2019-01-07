@@ -22,11 +22,14 @@ combines chains of nodes with only a single child.
 
 Time Complexity:
 - O(n) per call to insert(s, v), erase(s), and find(s), where n is the length of
-  s. Note that there is a hidden factor of log(alphabet_size) which can be
-  considered constant, since char can only take on 2^CHAR_BIT values. The
-  implementation may be optimized by storing the children of nodes in an
-  std::unordered_map in C++11 and later, or an array if a smaller alphabet size
-  is guaranteed.
+  s. Note that there is a hidden factor of log(n) due to map lookups, which can
+  be considered constant amortized. The implementation may be optimized by
+  storing the children of nodes in an std::unordered_map in C++11 and later, or
+  an std::vector< pair<string, node_t*> >, since the only container operations
+  required are iteration over the (key, child) pairs and inserting a new pair.
+  Sticking with an (ordered) std::map, we can optimize all operations by using
+  map.lower_bound(), a binary tree search for a child with a shared prefix,
+  instead of iteration.
 - O(l) per call to walk(), where l is the total length of string keys that are
   currently in the map.
 - O(1) per call to all other operations.
