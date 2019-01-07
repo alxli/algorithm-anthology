@@ -72,9 +72,6 @@ class trie {
     if (it->second->children.empty()) {
       delete it->second;
       n->children.erase(it);
-      if (n->children.empty()) {
-        delete n;
-      }
     }
     return true;
   }
