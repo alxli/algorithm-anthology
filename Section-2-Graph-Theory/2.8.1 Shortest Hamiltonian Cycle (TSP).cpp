@@ -13,7 +13,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n^2) for storage of the graph, where n is the number of nodes.
-- O(2^n * n^2) auxiliary heap space for shortest_hamiltonian_cycle().
+- O(2^n * n) auxiliary heap space for shortest_hamiltonian_cycle().
 
 */
 
