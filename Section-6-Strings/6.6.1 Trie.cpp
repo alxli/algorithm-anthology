@@ -8,7 +8,7 @@ from the root to a node that is flagged as a terminal node.
 - size() returns the size of the map.
 - empty() returns whether the map is empty.
 - insert(s, v) adds an entry with string key s and value v to the map, returning
-  true if an new entry was added or false if the string already exists (in which
+  true if a new entry was added or false if the string already exists (in which
   case the map is unchanged and the old value associated with the string key is
   preserved).
 - erase(s) removes the entry with string key s from the map, returning true if
