@@ -525,7 +525,6 @@ class bigint {
 
   bigint operator/(const bigint &v) const { return div(v).first; }
   bigint operator%(const bigint &v) const { return div(v).second; }
-
   bigint operator++(int) { bigint t(*this); operator++(); return t; }
   bigint operator--(int) { bigint t(*this); operator--(); return t; }
   bigint& operator++() { *this = *this + bigint(1); return *this; }

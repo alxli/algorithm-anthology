@@ -1,25 +1,23 @@
 Alex's Anthology of Algorithms: Common Code for Contests in Concise C++ (A<sup>3</sup>C<sup>5</sup>)
 ==================
 
-*Important Note*: This repository is undergoing a major rewrite. The PDF and work-in-progress sections are outdated and buggy. Use at your own risk.
+*Announcement*: An updated PDF version of this repo is coming soon. Until then, please avoid any older PDF versions in circulation, as they are highly outdated and buggy.
 
 ## Introduction
 
-Welcome to a comprehensive collection of common algorithm and data structure implementations. You will find that the code here is best-suited for programming contests, but are by no means limited to them. I developed this project with following principles in mind:
+Welcome to a comprehensive collection of common algorithm and data structure implementations. The code here is suitable for direct use in programming contests, or just for your own studying. I wrote them with the following principles in mind:
 
-* Clarity: A reader already familiar with an algorithm should have no problem understanding how its particular implementation works. Consistency in naming conventions should be emphasized, and language-specific tricks or other implementation details should be documented.
+* Clarity: A reader already familiar with an algorithm should have no problem understanding how its implementation works. Consistency in naming conventions should be emphasized, and any tricks or language-specific hacks should be documented.
 
-* Genericness: Whenever possible, it should be easy to adjust an implementation to achieve slightly different goals. This could be tweaking a constant parameter, or supporting a slightly different data type. In a live contest, the more lines of code that must be changed, the more room there is for mistakes. C++ templates are often used to accomplish this at the slight cost of simplicity.
+* Genericness: It should be easy to adapt an implementation to achieve slightly different goals. This could be through tweaking the parameters or data types at play. During a live contest, more lines of code to be edited corresponds to more room for bugs. C++ templates are often used to increase tweakability at the slight cost of simplicity.
 
-* Portability: Different contest environments use different versions of C++ (though almost all of them use GCC). In order to maximize compatibility, non-standard features are avoided. The decision to adhere to C++98 standards is due to many contest systems being stuck on older versions of the language. Moreover, minimizing newer, C++ specific features should make this anthology friendlier to users of other languages. See to the "Portability" section below for more info.
+* Portability: Different contest environments use different versions of C++ (though almost all of them use GCC). In order to maximize compatibility, non-standard features are avoided. The decision to adhere to C++98 standards is due to many contest systems being stuck on an older version of the language. Moreover, minimizing newer C++ specific features will make the implementations more language-agnostic. Refer to the "Portability" section below.
 
-* Efficiency: Since the code is meant to be run during real contests, it is nice to maintain a reasonably low constant overhead. This is sometimes challenging in the face of clarity and genericness, but we can hope for contest setters to be liberal with time limits. If an implementation does not pass in time, chances are the wrong algorithm is being chosen with too slow of a big-O running time.
+* Efficiency: The code here is designed to be performant on real contests, and should maintain a low constant overhead. This is often challenging in the face of clarity and tweakability, but we can hope for contest setters to be liberal with time limits. You can reasonably assume that when a program times out, it is the fault of choosing an algorithm with the wrong complexity class entirely, rather than insufficient constant optimization.
 
-* Concision: Code chunks are often shifted around the file in the frenzy of timed contests. To minimize the amount of scrolling and searching, code compactness is valued. It is no surprise that each section is confined to a singleton source file, since nearly all contest systems demand submissions to be of this format.
+* Concision: Code chunks are often shifted around the file in the frenzy of timed contests. To minimize the amount of scrolling and searching, code compactness is valued. It is no surprise that each implementation is confined to a single source file, since nearly all contest systems require individual file submissions with no outside dependencies.
 
-A fair trade-off between these factors is the holy grail.
-
-My secondary goal is to have common algorithms modelled in a way simple enough that programmers in other languages may understand as well. This is hopefully achieved for most sections, but C++ specific concepts may still used in certain areas to prioritize the above principles.
+A good trade-off between these factors is the holy grail.
 
 ## Portability
 
@@ -39,11 +37,11 @@ Programs are highly portable (ISO C++ 1998 compliant), __except__ in the followi
 * Usage of long long and dependent features `[-Wlong-long]`, which are compliant in C99/C++0x or later. 64-bit integers are a must for many programming contest problems, so it is necessary to include them.
 * Usage of GCC's built-in functions like `__builtin_popcount()` and `__builtin_clz()`. These can be extremely convenient, and are easily implemented if they're not available. See here for a reference: https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
 * Usage of compound-literals, e.g. `myvector.push_back((mystruct){a, b, c})`. This adds a little more concision by not requiring a constructor definition.
-* Rare cases where bitwise hacks are intentionally used, such as in functions for getting the signbit with type-puned pointers. If you are looking for these features, chances are you don't care about portability anyway.
+* Certain hacks that may depend on aspects of the platform (e.g. endianness), such as getting the signbit with type-puned pointers. Be weary of this for all bitwise/micro-optimization related code.
 
 ## Usage Remarks
 
-This project does __not__ aim to introduce and explain algorithms from the ground up. To take advantage of this anthology, you must have prior understanding of the algorithms in question. In each source file, you will find brief descriptions and simple examples to clarify how the functions and classes should be used. You will not find rigorous test suites, nor extensive comments detailing how the implementations work. To properly learn the algorithms, you are better off researching and implementing them independently. You are free to use, modify, and distribute these programs in accordance to the license, but please first examine any corresponding references of each program for more details on usage and authorship.
+This project does __not__ aim to introduce and explain algorithms from the ground up. To take advantage of this anthology, you must have prior understanding of the algorithms in question. In each source file, you will at most find brief descriptions to identify the problem being solved, and small examples to demo how the code should be used. Researching an algorithm and implementing it independently is the only way to properly learn it. You are free to use, modify, and distribute these programs in accordance to the license, but please first examine any references on each section for details on usage and authorship.
 
 Cheers.<br>
 — Alex
