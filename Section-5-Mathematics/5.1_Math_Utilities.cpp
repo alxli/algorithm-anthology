@@ -328,8 +328,8 @@ Base Conversion
   digits when converted base b (again with index 0 storing the least significant
   digit). The actual value of the entire integer to be converted must be able to
   fit within an unsigned 64-bit integer for intermediate storage.
-- convert_digits(x, b) returns the digits of the unsigned integer x in base b,
-  where index 0 of the result stores the least significant digit.
+- to_base(x, b) returns the digits of the unsigned integer x in base b, where
+  index 0 of the result stores the least significant digit.
 - to_roman(x) returns the Roman numeral representation of the unsigned integer x
   as a C++ string.
 
@@ -350,7 +350,7 @@ std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
   return res;
 }
 
-std::vector<int> convert_base(unsigned int x, int b = 10) {
+std::vector<int> to_base(unsigned int x, int b = 10) {
   std::vector<int> res;
   while (x != 0) {
     res.push_back(x % b);
@@ -413,7 +413,7 @@ int main() {
   assert(EQ(lgamma_(0.5), 0.5723649429) && EQ(lgamma_(1.0), 0.0));
 
   int digits[] = {6, 5, 4, 3, 2, 1};
-  std::vector<int> base20 = convert_base(123456, 20);
+  std::vector<int> base20 = to_base(123456, 20);
   assert(convert_base(base20, 20, 10) == std::vector<int>(digits, digits + 6));
   assert(to_roman(1234) == "MCCXXXIV");
   assert(to_roman(5678) == "MMMMMDCLXXVIII");
