@@ -5,8 +5,8 @@ the polygon using a ray casting algorithm.
 
 - point_in_polygon(p, lo, hi) returns whether p lies within the polygon defined
   by the range [lo, hi) of points specifying the vertices in either clockwise
-  or counter-clockwise order, where lo and hi must be RandomAccessIterators. If
-  p lies barely on an edge (within EPS), then the result will depend on the
+  or counter-clockwise order, where lo and hi must be random-access iterators.
+  If p lies barely on an edge (within EPS), then the result will depend on the
   setting of EDGE_IS_INSIDE.
 
 Time Complexity:

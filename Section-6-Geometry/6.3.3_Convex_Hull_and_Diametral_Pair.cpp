@@ -8,15 +8,14 @@ of its points.
 
 - convex_hull(lo, hi) returns the convex hull as a vector of polygon vertices in
   clockwise order, given a range [lo, hi) of points where lo and hi must be
-  RandomAccessIterators. The input range will be sorted lexicographically (by x,
-  then by y for equal x) after the function call. Note that to produce the hull
-  points in counter-clockwise order, replace every GE() comparison with LE(). To
-  have the first point on the hull repeated as the last in the resulting vector,
-  the final res.resize(k - 1) may be changed to res.resize(k).
+  random-access iterators. The input range will be sorted lexicographically (by
+  x, then by y) after the function call. Note that to produce the hull points in
+  counter-clockwise order, replace every GE() comparison with LE(). To have the
+  first point on the hull repeated as the last in the resulting vector, the
+  final res.resize(k - 1) may be changed to res.resize(k).
 - diametral_pair(lo, hi) returns a maximum diametral pair given a range [lo, hi)
-  of points where lo and hi must be RandomAccessIterators. The input range will
-  be sorted lexicographically (by x, then by y for equal x) after the function
-  call.
+  of points where lo and hi must be random-access iterators. The input range
+  will be sorted lexicographically (by x, then by y) after the function call.
 
 Time Complexity:
 - O(n log n) per call to convex_hull(lo, hi) and diametral_pair(lo, hi), where n

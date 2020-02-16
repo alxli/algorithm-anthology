@@ -5,9 +5,9 @@ a divide and conquer algorithm.
 
 - closest_pair(lo, hi, &res) returns the minimum Euclidean distance between any
   two pair of points in the range [lo, hi), where lo and hi must be
-  RandomAccessIterators. The input range will be sorted lexicographically (by x,
-  then by y for equal x) after the function call. If there is an answer, the
-  closest pair will be stored into pointer *res.
+  random-access iterators. The input range will be sorted lexicographically (by
+  x, then by y) after the function call. If there is an answer, the closest pair
+  will be stored into pointer *res.
 
 Time Complexity:
 - O(n log^2 n) per call to closest_pair(lo, hi, &res), where n is the distance

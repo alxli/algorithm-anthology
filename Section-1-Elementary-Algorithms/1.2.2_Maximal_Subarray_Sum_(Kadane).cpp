@@ -8,10 +8,10 @@ it consists of one more element than the maximum sequence ending at the previous
 position. This can be adapted to compute the maximal submatrix sum as well.
 
 - max_subarray_sum(lo, hi, &res_lo, &res_hi) returns the maximal subarray sum
-  for the range [lo, hi), where lo and hi are RandomAccessIterators to numerical
-  types. This implementation requires operators + and < to be defined on the
-  iterators' value type. Optionally, two int pointers may be passed to store the
-  inclusive boundary indices [res_lo, res_hi] of the resulting subarray. By
+  for the range [lo, hi), where lo and hi are random-access iterators to
+  numeric types. This implementation requires operators + and < to be defined on
+  the iterators' value type. Optionally, two int pointers may be passed to store
+  the inclusive boundary indices [res_lo, res_hi] of the resulting subarray. By
   convention, an input range consisting of only negative values will yield a
   size 1 subarray consisting of the maximum value.
 - max_submatrix_sum(matrix, &r1, &c1, &r2, &c2) returns the largest sum of any

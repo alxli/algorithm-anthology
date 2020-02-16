@@ -16,7 +16,7 @@ integers where the order of the addends does not matter.
   sorted in non-increasing order.
 - generate_increasing_partitions(n, f) calls the function f(lo, hi) on strictly
   increasing partitions of n in lexicographically increasing order of partition,
-  where lo and hi are two RandomAccessIterators to a range [lo, hi) of integers.
+  where lo and hi are random-access iterators to a range [lo, hi) of integers.
   Note that non-strictly increasing partitions like {1, 1, 1, 1} are skipped.
 
 Time Complexity:

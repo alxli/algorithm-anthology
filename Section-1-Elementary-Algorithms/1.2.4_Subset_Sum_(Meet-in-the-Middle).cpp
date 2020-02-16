@@ -1,6 +1,6 @@
 /*
 
-Given RandomAccessIterators lo and hi specifying a range [lo, hi) of integers,
+Given random-access iterators lo and hi specifying a range [lo, hi) of integers,
 return the minimum sum of any subset of the range that is greater than or equal
 to a given integer v. This is a generalization of the NP-complete subset sum
 problem, which asks whether a subset summing to 0 exists (equivalent in this

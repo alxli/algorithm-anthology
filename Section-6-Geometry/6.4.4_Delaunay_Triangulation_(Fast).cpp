@@ -15,8 +15,8 @@ messages for the current asserts() may be found at the following link:
 http://people.sc.fsu.edu/~jburkardt/f_src/table_delaunay/table_delaunay.html
 
 - delaunay_triangulation(lo, hi) returns a Delaunay triangulation for the input
-  range [lo, hi) of points, where lo and hi must be RandomAccessIterators, or an
-  empty vector if a triangulation does not exist.
+  range [lo, hi) of points, where lo and hi must be random-access iterators, or
+  an empty vector if a triangulation does not exist.
 
 Time Complexity:
 - O(n log n) per call to delaunay_triangulation(lo, hi), where n is the distance

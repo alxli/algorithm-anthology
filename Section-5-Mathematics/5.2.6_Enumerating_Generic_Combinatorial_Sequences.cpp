@@ -11,7 +11,7 @@ the number of combinatorial sequences starting with the given prefix.
   [0, total_count()).
 - enumerate(f) calls the function f(lo, hi) on every specified combinatorial
   sequence in lexicographically increasing order, where lo and hi are two
-  RandomAccessIterators to a range [lo, hi) of integers.
+  random-access iterators to a range [lo, hi) of integers.
 
 Time Complexity:
 - O(n^2) calls will be made to count() per call to all operations, where n is

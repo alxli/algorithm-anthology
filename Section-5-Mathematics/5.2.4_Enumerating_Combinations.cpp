@@ -3,7 +3,7 @@
 A combination is a subset of size k chosen from a total of n (not necessarily
 distinct) elements, where order does not matter.
 
-- next_combination(lo, mid, hi) takes RandomAccessIterators lo, mid, and hi
+- next_combination(lo, mid, hi) takes random-access iterators lo, mid, and hi
   as a range [lo, hi) of n elements for which the function will rearrange such
   that the k elements in [lo, mid) becomes the next lexicographically greater
   combination. The function returns true if such a combination exists, or false

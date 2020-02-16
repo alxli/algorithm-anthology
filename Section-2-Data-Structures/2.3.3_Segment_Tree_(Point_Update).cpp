@@ -18,7 +18,7 @@ should be defined to return "v + d".
 
 - segment_tree(n, v) constructs an array of size n with indices from 0 to n - 1,
   inclusive, and all values initialized to v.
-- segment_tree(lo, hi) constructs an array from two RandomAccessIterators as a
+- segment_tree(lo, hi) constructs an array from two random-access iterators as a
   range [lo, hi), initialized to the elements of the range in the same order.
 - size() returns the size of the array.
 - at(i) returns the value at index i.

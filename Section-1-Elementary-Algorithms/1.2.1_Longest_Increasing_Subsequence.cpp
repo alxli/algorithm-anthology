@@ -1,11 +1,11 @@
 /*
 
-Given two RandomAccessIterators lo and hi specifying a range [lo, hi), determine
-a longest subsequence of the range such that all of its elements are in strictly
-ascending order. This implementation requires operator < to be defined on the
-iterator's value type. The subsequence is not necessarily contiguous or unique,
-so only one such answer will be found. The answer is computed using binary
-search and dynamic programming.
+Given two random-access iterators lo and hi specifying a range [lo, hi),
+determine a longest subsequence of the range such that all of its elements are
+in strictly ascending order. This implementation requires operator < to be
+defined on the iterator's value type. The subsequence is not necessarily
+contiguous or unique, so only one such answer will be found. The answer is
+computed using binary search and dynamic programming.
 
 Time Complexity:
 - O(n log n) per call to longest_increasing_subsequence(), where n is the

@@ -4,7 +4,7 @@ Given a list of points in two dimensions, find the circle with smallest area
 which contains all the given points using a randomized algorithm.
 
 - minimum_enclosing_circle(lo, hi) returns the minimum enclosing circle given a
-  range [lo, hi) of points, where lo and hi must be RandomAccessIterators. The
+  range [lo, hi) of points, where lo and hi must be random-access iterators. The
   input range will be shuffled after the function call, though this is only to
   avoid the worst-case running time and is not necessary for correctness.
 

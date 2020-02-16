@@ -30,7 +30,7 @@ the lexicographical ordering of conflicting operators.
   naive, matching operators lazily in the case of overlapping operators as
   mentioned above. Under these circumstances, the parse may not always succeed.
 - eval(lo, hi) returns the evaluation of a range [lo, hi) of already split-up
-  expression tokens, where lo and hi must be RandomAccessIterators.
+  expression tokens, where lo and hi must be random-access iterators.
 - eval(s) returns the evaluation of expression s, after first calling split(s)
   to obtain the tokens.
 

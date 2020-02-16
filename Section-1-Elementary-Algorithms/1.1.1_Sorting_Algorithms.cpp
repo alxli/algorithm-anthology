@@ -1,6 +1,6 @@
 /*
 
-These functions are equivalent to std::sort(), taking RandomAccessIterators
+These functions are equivalent to std::sort(), taking random-access iterators
 as a range [lo, hi) to be sorted. Elements between lo and hi (including the
 element pointed to by lo but excluding the element pointed to by hi) will be
 sorted into ascending order after the function call. Optionally, a comparison

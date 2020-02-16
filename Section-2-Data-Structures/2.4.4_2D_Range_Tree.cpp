@@ -5,7 +5,7 @@ that fall inside given rectangular regions. This implementation uses std::pair
 to represent points, requiring operators < and == to be defined on the numeric
 template type.
 
-- range_tree(lo, hi) constructs a set from two RandomAccessIterators to
+- range_tree(lo, hi) constructs a set from two random-access iterators to
   std::pair as a range [lo, hi) of points.
 - query(x1, y1, x2, y2, f) calls the function f(i, p) on each point in the set
   that falls into the rectangular region consisting of rows from x1 to x2,

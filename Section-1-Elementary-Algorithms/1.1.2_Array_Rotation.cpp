@@ -11,7 +11,7 @@ preserving the relative ordering of elements within the two rotated subarrays.
 All three versions below achieve the same result using in-place algorithms.
 Version 1 uses a straightforward swapping algorithm requiring ForwardIterators.
 Version 2 requires BidirectionalIterators, employing a well-known trick with
-three simple inversions. Version 3 requires RandomAccessIterators, applying a
+three simple inversions. Version 3 requires random-access iterators, applying a
 juggling algorithm which first divides the range into gcd(hi - lo, mid - lo)
 sets and then rotates the corresponding elements in each set.
 
