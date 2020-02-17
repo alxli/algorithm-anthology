@@ -1,0 +1,5910 @@
+\chapter{Mathematics}
+
+\section{Math Utilities}
+\setcounter{section}{1}
+\begin{lstlisting}
+/*
+
+Common mathematic constants and functions, many of which are substitutes for
+features which are not available in standard C++, or may not be available on
+compilers that do not support C++11 and later.
+
+Time Complexity:
+- O(1) for all operations.
+
+Space Complexity:
+- O(1) auxiliary for all operations.
+
+*/
+
+#include <algorithm>
+#include <cfloat>
+#include <climits>
+#include <cmath>
+#include <cstdlib>
+#include <limits>
+#include <string>
+#include <vector>
+
+#ifndef M_PI
+  const double M_PI = acos(-1.0);
+#endif
+#ifndef M_E
+  const double M_E = exp(1.0);
+#endif
+const double M_PHI = (1.0 + sqrt(5.0))/2.0;
+const double M_INF = std::numeric_limits<double>::infinity();
+const double M_NAN = std::numeric_limits<double>::quiet_NaN();
+
+#ifndef isnan
+  #define isnan(x) ((x) != (x))
+#endif
+
+/*
+
+Epsilon Comparisons
+
+EQ(), NE(), LT(), GT(), LE(), and GE() relationally compares two values x and y
+accounting for absolute error. For any x, the range of values considered equal
+barring absolute error is [x - EPS, x + EPS]. Values outside of this range are
+considered not equal (strictly less or strictly greater).
+
+rEQ() returns whether x and y are equal barring relative error. For any x, the
+range of values considered equal is [x*(1 - EPS), x*(1 + EPS)].
+
+*/
+
+const double EPS = 1e-9;
+
+#define EQ(x, y) (fabs((x) - (y)) <= EPS)
+#define NE(x, y) (fabs((x) - (y)) > EPS)
+#define LT(x, y) ((x) < (y) - EPS)
+#define GT(x, y) ((x) > (y) + EPS)
+#define LE(x, y) ((x) <= (y) + EPS)
+#define GE(x, y) ((x) >= (y) - EPS)
+#define rEQ(x, y) (fabs((x) - (y)) <= EPS*fabs(x))
+
+/*
+
+Sign Functions
+
+- sgn(x) returns -1 (if x < 0), 0 (if x == 0), or 1 (if x > 0). Unlike signbit()
+  or copysign(), this does not handle the sign of NaN.
+- signbit_(x) is analogous to std::signbit() in C++11 and later, returning
+  whether the sign bit of the floating point number is set to true. If so, then
+  x is considered "negative." Note that this works as expected on +0.0, -0.0,
+  Inf, -Inf, NaN, as well as -NaN. Warning: This assumes that the sign bit is
+  the leading (most significant) bit in the internal representation of the IEEE
+  floating point value.
+- copysign_(x, y) is analogous to std::copysign() in C++11 and later, returning
+  a number with the magnitude of x but the sign of y.
+
+*/
+
+template<class T>
+int sgn(const T &x) {
+  return (T(0) < x) - (x < T(0));
+}
+
+template<class Double>
+bool signbit_(Double x) {
+  return (((unsigned char *)&x)[sizeof(x) - 1] >> (CHAR_BIT - 1)) & 1;
+}
+
+template<class Double>
+Double copysign_(Double x, Double y) {
+  return signbit_(y) ? -fabs(x) : fabs(x);
+}
+
+/*
+
+Rounding Functions
+
+- floor0(x) returns x rounded down, symmetrically towards zero. This function is
+  analogous to trunc() in C++11 and later.
+- ceil0(x) returns x rounded up, symmetrically away from zero. This function is
+  analogous to round() in C++11 and later.
+- round_half_up(x) returns x rounded half up, towards positive infinity.
+- round_half_down(x) returns x rounded half down, towards negative infinity.
+- round_half_to0(x) returns x rounded half down, symmetrically towards zero.
+- round_half_from0(x) returns x rounded half up, symmetrically away from zero.
+- round_half_even(x) returns x rounded half to even, using banker's rounding.
+- round_half_alternate(x) returns x rounded, where ties are broken by
+  alternating rounds towards positive and negative infinity.
+- round_half_alternate0(x) returns x rounded, where ties are broken by
+  alternating symmetric rounds towards and away from zero.
+- round_half_random(x) returns x rounded, where ties are broken randomly.
+- round_n_places(x, n, f) returns x rounded to n digits after the decimal, using
+  the specified rounding function f(x).
+
+*/
+
+template<class Double>
+Double floor0(const Double &x) {
+  Double res = floor(fabs(x));
+  return (x < 0.0) ? -res : res;
+}
+
+template<class Double>
+Double ceil0(const Double &x) {
+  Double res = ceil(fabs(x));
+  return (x < 0.0) ? -res : res;
+}
+
+template<class Double>
+Double round_half_up(const Double &x) {
+  return floor(x + 0.5);
+}
+
+template<class Double>
+Double round_half_down(const Double &x) {
+  return ceil(x - 0.5);
+}
+
+template<class Double>
+Double round_half_to0(const Double &x) {
+  Double res = round_half_down(fabs(x));
+  return (x < 0.0) ? -res : res;
+}
+
+template<class Double>
+Double round_half_from0(const Double &x) {
+  Double res = round_half_up(fabs(x));
+  return (x < 0.0) ? -res : res;
+}
+
+template<class Double>
+Double round_half_even(const Double &x, const Double &eps = 1e-9) {
+  if (x < 0.0) {
+    return -round_half_even(-x, eps);
+  }
+  Double ipart;
+  modf(x, &ipart);
+  if (x - (ipart + 0.5) < eps) {
+    return (fmod(ipart, 2.0) < eps) ? ipart : ceil0(ipart + 0.5);
+  }
+  return round_half_from0(x);
+}
+
+template<class Double>
+Double round_half_alternate(const Double &x) {
+  static bool up = true;
+  return (up = !up) ? round_half_up(x) : round_half_down(x);
+}
+
+template<class Double>
+Double round_half_alternate0(const Double &x) {
+  static bool up = true;
+  return (up = !up) ? round_half_from0(x) : round_half_to0(x);
+}
+
+template<class Double>
+Double round_half_random(const Double &x) {
+  return (rand() % 2 == 0) ? round_half_from0(x) : round_half_to0(x);
+}
+
+template<class Double, class RoundingFunction>
+Double round_n_places(const Double &x, unsigned int n, RoundingFunction f) {
+  return f(x*pow(10, n)) / pow(10, n);
+}
+
+/*
+
+Error Function
+
+- erf_(x) returns the error encountered in integrating the normal distribution.
+  Its value is 2/sqrt(pi)*(integral of e^(-t^2) dt from 0 to x). This function
+  is analogous to erf(x) in C++11 and later.
+- erfc_(x) returns the error function complement, that is, 1 - erf_(x). This
+  function is analogous to erfc(x) in C++11 and later.
+
+*/
+
+#define ERF_EPS 1e-14
+
+double erfc_(double x);
+
+double erf_(double x) {
+  if (signbit_(x)) {
+    return -erf_(-x);
+  }
+  if (fabs(x) > 2.2) {
+    return 1.0 - erfc_(x);
+  }
+  double sum = x, term = x, xx = x*x;
+  int j = 1;
+  do {
+    term *= xx / j;
+    sum -= term/(2*(j++) + 1);
+    term *= xx / j;
+    sum += term/(2*(j++) + 1);
+  } while (fabs(term) > sum*ERF_EPS);
+  return 2/sqrt(M_PI) * sum;
+}
+
+double erfc_(double x) {
+  if (fabs(x) < 2.2) {
+    return 1.0 - erf_(x);
+  }
+  if (signbit_(x)) {
+    return 2.0 - erfc_(-x);
+  }
+  double a = 1, b = x, c = x, d = x*x + 0.5, q1, q2 = 0, n = 1.0, t;
+  do {
+    t = a*n + b*x;
+    a = b;
+    b = t;
+    t = c*n + d*x;
+    c = d;
+    d = t;
+    n += 0.5;
+    q1 = q2;
+    q2 = b / d;
+  } while (fabs(q1 - q2) > q2*ERF_EPS);
+  return 1/sqrt(M_PI) * exp(-x*x) * q2;
+}
+
+#undef ERF_EPS
+
+/*
+
+Gamma Functions
+
+- tgamma_(x) returns the gamma function of x. Unlike the tgamma() function in
+  C++11 and later, this version only supports positive x, returning NaN if x is
+  less than or equal to 0.
+- lgamma_(x) returns the natural logarithm of the absolute value of the gamma
+  function of x. Unlike the lgamma() function in C++11 and later, this version
+  only supports positive x, returning NaN if x is less than or equal to 0.
+
+*/
+
+double lgamma_(double x);
+
+double tgamma_(double x) {
+  if (x <= 0) {
+    return M_NAN;
+  }
+  if (x < 1e-3) {
+    return 1.0 / (x*(1.0 + 0.57721566490153286060651209*x));
+  }
+  if (x < 12) {
+    double y = x;
+    int n = 0;
+    bool arg_was_less_than_one = (y < 1);
+    if (arg_was_less_than_one) {
+      y += 1;
+    } else {
+      n = (int)floor(y) - 1;
+      y -= n;
+    }
+    static const double p[] = {
+        -1.71618513886549492533811e+0, 2.47656508055759199108314e+1,
+        -3.79804256470945635097577e+2, 6.29331155312818442661052e+2,
+        8.66966202790413211295064e+2, -3.14512729688483675254357e+4,
+        -3.61444134186911729807069e+4, 6.64561438202405440627855e+4};
+    static const double q[] = {
+        -3.08402300119738975254353e+1, 3.15350626979604161529144e+2,
+        -1.01515636749021914166146e+3, -3.10777167157231109440444e+3,
+        2.25381184209801510330112e+4, 4.75584627752788110767815e+3,
+        -1.34659959864969306392456e+5, -1.15132259675553483497211e+5};
+    double num = 0, den = 1, z = y - 1;
+    for (int i = 0; i < 8; i++) {
+      num = (num + p[i])*z;
+      den = den*z + q[i];
+    }
+    double result = num/den + 1;
+    if (arg_was_less_than_one) {
+      result /= (y - 1);
+    } else {
+      for (int i = 0; i < n; i++) {
+        result *= y++;
+      }
+    }
+    return result;
+  }
+  return (x > 171.624) ? 2*DBL_MAX : exp(lgamma(x));
+}
+
+double lgamma_(double x) {
+  if (x <= 0) {
+    return M_NAN;
+  }
+  if (x < 12) {
+    return log(fabs(tgamma_(x)));
+  }
+  static const double c[8] = {
+    1.0/12, -1.0/360, 1.0/1260, -1.0/1680, 1.0/1188, -691.0/360360, 1.0/156,
+    -3617.0/122400
+  };
+  double z = 1.0/(x*x), sum = c[7];
+  for (int i = 6; i >= 0; i--) {
+    sum = sum*z + c[i];
+  }
+  return (x - 0.5)*log(x) - x + 0.91893853320467274178032973640562 + sum/x;
+}
+
+/*
+
+Base Conversion
+
+- Given an integer in base a as a vector d of digits (where d[0] is the least
+  significant digit), convert_base(d, a, b) returns a vector of the integer's
+  digits when converted base b (again with index 0 storing the least significant
+  digit). The actual value of the entire integer to be converted must be able to
+  fit within an unsigned 64-bit integer for intermediate storage.
+- to_base(x, b) returns the digits of the unsigned integer x in base b, where
+  index 0 of the result stores the least significant digit.
+- to_roman(x) returns the Roman numeral representation of the unsigned integer x
+  as a C++ string.
+
+*/
+
+std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
+  unsigned long long x = 0, power = 1;
+  for (int i = 0; i < (int)d.size(); i++) {
+    x += d[i]*power;
+    power *= a;
+  }
+  int n = ceil(log(x + 1)/log(b));
+  std::vector<int> res;
+  for (int i = 0; i < n; i++) {
+    res.push_back(x % b);
+    x /= b;
+  }
+  return res;
+}
+
+std::vector<int> to_base(unsigned int x, int b = 10) {
+  std::vector<int> res;
+  while (x != 0) {
+    res.push_back(x % b);
+    x /= b;
+  }
+  return res;
+}
+
+std::string to_roman(unsigned int x) {
+  static const std::string h[] =
+      {"", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"};
+  static const std::string t[] =
+      {"", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"};
+  static const std::string o[] =
+      {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"};
+  std::string prefix(x / 1000, 'M');
+  x %= 1000;
+  return prefix + h[x/100] + t[x/10 % 10] + o[x % 10];
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+#include <iostream>
+
+int main() {
+  assert(EQ(M_PI, 3.14159265359));
+  assert(EQ(M_E, 2.718281828459));
+  assert(EQ(M_PHI, 1.61803398875));
+
+  double x = -12345.6789;
+  assert((-M_INF < x) && (x < M_INF));
+  assert((M_INF + x == M_INF) && (M_INF - x == M_INF));
+  assert((M_INF + M_INF == M_INF) && (-M_INF - M_INF == -M_INF));
+  assert((M_NAN != x) && (M_NAN != M_INF) && (M_NAN != M_NAN));
+  assert(!(M_NAN < x) && !(M_NAN > x) && !(M_NAN <= x) && !(M_NAN >= x));
+  assert(isnan(0.0*M_INF) && isnan(0.0*-M_INF) && isnan(M_INF/-M_INF));
+  assert(isnan(M_NAN) && isnan(-M_NAN) && isnan(M_INF - M_INF));
+
+  assert(sgn(x) == -1 && sgn(0.0) == 0 && sgn(5678) == 1);
+  assert(signbit_(x) && !signbit_(0.0) && signbit_(-0.0));
+  assert(!signbit_(M_INF) && signbit_(-M_INF));
+  assert(!signbit_(M_NAN) && signbit_(-M_NAN));
+  assert(copysign(1.0, +2.0) == +1.0 && copysign(M_INF, -2.0) == -M_INF);
+  assert(copysign(1.0, -2.0) == -1.0 && std::signbit(copysign(M_NAN, -2.0)));
+
+  assert(EQ(floor0(1.5), 1.0) && EQ(ceil0(1.5), 2.0));
+  assert(EQ(floor0(-1.5), -1.0) && EQ(ceil0(-1.5), -2.0));
+  assert(EQ(round_half_up(+1.5), +2) && EQ(round_half_down(+1.5), +1));
+  assert(EQ(round_half_up(-1.5), -1) && EQ(round_half_down(-1.5), -2));
+  assert(EQ(round_half_to0(+1.5), +1) && EQ(round_half_from0(+1.5), +2));
+  assert(EQ(round_half_to0(-1.5), -1) && EQ(round_half_from0(-1.5), -2));
+  assert(EQ(round_half_even(+1.5), +2) && EQ(round_half_even(-1.5), -2));
+  assert(NE(round_half_alternate(+1.5), round_half_alternate(+1.5)));
+  assert(NE(round_half_alternate0(-1.5), round_half_alternate0(-1.5)));
+  assert(EQ(round_n_places(-1.23456, 3, round_half_to0<double>), -1.235));
+
+  assert(EQ(erf_(1.0), 0.8427007929) && EQ(erf_(-1.0), -0.8427007929));
+  assert(EQ(tgamma_(0.5), 1.7724538509) && EQ(tgamma_(1.0), 1.0));
+  assert(EQ(lgamma_(0.5), 0.5723649429) && EQ(lgamma_(1.0), 0.0));
+
+  int digits[] = {6, 5, 4, 3, 2, 1};
+  std::vector<int> base20 = to_base(123456, 20);
+  assert(convert_base(base20, 20, 10) == std::vector<int>(digits, digits + 6));
+  assert(to_roman(1234) == "MCCXXXIV");
+  assert(to_roman(5678) == "MMMMMDCLXXVIII");
+  return 0;
+}
+\end{lstlisting}
+
+\section{Combinatorics}
+\setcounter{section}{2}
+\setcounter{subsection}{0}
+\subsection{Combinatorial Calculations}
+\begin{lstlisting}
+/*
+
+The following functions implement common operations in combinatorics. All input
+arguments must be non-negative. All return values and table entries are computed
+as 64-bit integers modulo an input argument m or p.
+
+- factorial(n, m) returns n! mod m.
+- factorialp(n, p) returns n! mod p, where p is prime.
+- binomial_table(n, m) returns rows 0 to n of Pascal's triangle as a table t
+  such that t[i][j] is equal to (i choose j) mod m.
+- permute(n, k, m) returns (n permute k) mod m.
+- choose(n, k, p) returns (n choose k) mod p, where p is prime.
+- multichoose(n, k, p) returns (n multi-choose k) mod p, where p is prime.
+- catalan(n, p) returns the nth Catalan number mod p, where p is prime.
+- partitions(n, m) returns the number of partitions of n, mod m.
+- partitions(n, k, m) returns the number of partitions of n into k parts, mod m.
+- stirling1(n, k, m) returns the (n, k) unsigned Stirling number of the 1st kind
+  mod m.
+- stirling2(n, k, m) returns the (n, k) Stirling number of the 2nd kind mod m.
+- eulerian1(n, k, m) returns the (n, k) Eulerian number of the 1st kind mod m,
+  where n > k.
+- eulerian2(n, k, m) returns the (n, k) Eulerian number of the 2nd kind mod m,
+  where n > k.
+
+Time Complexity:
+- O(n) for factorial(n, m).
+- O(p log n) for factorialp(n, p).
+- O(n^2) for binomial_table(n, m).
+- O(k) for permute(n, k, p).
+- O(min(k, n - k)) for choose(n, k, p).
+- O(k) for multichoose(n, k, p).
+- O(n) for catalan(n, p).
+- O(n^2) for partitions(n, m).
+- O(n*k) for partitions(n, k, m), stirling1(n, k, m), stirling2(n, k, m),
+  eulerian1(n, k, m), and eulerian2(n, k, m).
+
+Space Complexity:
+- O(n^2) auxiliary heap space for binomial_table(n, m).
+- O(n*k) auxiliary heap space for partitions(n, k, m), stirling1(n, k, m),
+  stirling2(n, k, m), eulerian1(n, k, m), and eulerian2(n, k, m).
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <vector>
+
+typedef long long int64;
+typedef std::vector<std::vector<int64> > table;
+
+int64 factorial(int n, int m = 1000000007) {
+  int64 res = 1;
+  for (int i = 2; i <= n; i++) {
+    res = (res*i) % m;
+  }
+  return res % m;
+}
+
+int64 factorialp(int64 n, int64 p = 1000000007) {
+  int64 res = 1;
+  while (n > 1) {
+    if (n / p % 2 == 1) {
+      res = res*(p - 1) % p;
+    }
+    int max = n % p;
+    for (int i = 2; i <= max; i++) {
+      res = (res*i) % p;
+    }
+    n /= p;
+  }
+  return res % p;
+}
+
+table binomial_table(int n, int64 m = 1000000007) {
+  table t(n + 1);
+  for (int i = 0; i <= n; i++) {
+    for (int j = 0; j <= i; j++) {
+      if (i < 2 || j == 0 || i == j) {
+        t[i].push_back(1);
+      } else {
+        t[i].push_back((t[i - 1][j - 1] + t[i - 1][j]) % m);
+      }
+    }
+  }
+  return t;
+}
+
+int64 permute(int n, int k, int64 m = 1000000007) {
+  if (n < k) {
+    return 0;
+  }
+  int64 res = 1;
+  for (int i = 0; i < k; i++) {
+    res = res*(n - i) % m;
+  }
+  return res % m;
+}
+
+int64 mulmod(int64 x, int64 n, int64 m) {
+  int64 a = 0, b = x % m;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = (a + b) % m;
+    }
+    b = (b << 1) % m;
+  }
+  return a % m;
+}
+
+int64 powmod(int64 x, int64 n, int64 m) {
+  int64 a = 1, b = x;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = mulmod(a, b, m);
+    }
+    b = mulmod(b, b, m);
+  }
+  return a % m;
+}
+
+int64 choose(int n, int k, int64 p = 1000000007) {
+  if (n < k) {
+    return 0;
+  }
+  if (k > n - k) {
+    k = n - k;
+  }
+  int64 num = 1, den = 1;
+  for (int i = 0; i < k; i++) {
+    num = num*(n - i) % p;
+  }
+  for (int i = 1; i <= k; i++) {
+    den = den*i % p;
+  }
+  return num*powmod(den, p - 2, p) % p;
+}
+
+int64 multichoose(int n, int k, int64 p = 1000000007) {
+  return choose(n + k - 1, k, p);
+}
+
+int64 catalan(int n, int64 p = 1000000007) {
+  return choose(2*n, n, p)*powmod(n + 1, p - 2, p) % p;
+}
+
+int64 partitions(int n, int64 m = 1000000007) {
+  std::vector<int64> t(n + 1, 0);
+  t[0] = 1;
+  for (int i = 1; i <= n; i++) {
+    for (int j = i; j <= n; j++) {
+      t[j] = (t[j] + t[j - i]) % m;
+    }
+  }
+  return t[n] % m;
+}
+
+int64 partitions(int n, int k, int64 m = 1000000007) {
+  table t(n + 1, std::vector<int64>(k + 1, 0));
+  t[0][1] = 1;
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1, h = k < i ? k : i; j <= h; j++) {
+      t[i][j] = (t[i - 1][j - 1] + t[i - j][j]) % m;
+    }
+  }
+  return t[n][k] % m;
+}
+
+int64 stirling1(int n, int k, int64 m = 1000000007) {
+  table t(n + 1, std::vector<int64>(k + 1, 0));
+  t[0][0] = 1;
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1; j <= k; j++) {
+      t[i][j] = (i - 1)*t[i - 1][j] % m;
+      t[i][j] = (t[i][j] + t[i - 1][j - 1]) % m;
+    }
+  }
+  return t[n][k] % m;
+}
+
+int64 stirling2(int n, int k, int64 m = 1000000007) {
+  table t(n + 1, std::vector<int64>(k + 1, 0));
+  t[0][0] = 1;
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1; j <= k; j++) {
+      t[i][j] = j*t[i - 1][j] % m;
+      t[i][j] = (t[i][j] + t[i - 1][j - 1]) % m;
+    }
+  }
+  return t[n][k] % m;
+}
+
+int64 eulerian1(int n, int k, int64 m = 1000000007) {
+  if (k > n - 1 - k) {
+    k = n - 1 - k;
+  }
+  table t(n + 1, std::vector<int64>(k + 1, 1));
+  for (int j = 1; j <= k; j++) {
+    t[0][j] = 0;
+  }
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1; j <= k; j++) {
+      t[i][j] = (i - j)*t[i - 1][j - 1] % m;
+      t[i][j] = (t[i][j] + ((j + 1)*t[i - 1][j] % m)) % m;
+    }
+  }
+  return t[n][k] % m;
+}
+
+int64 eulerian2(int n, int k, int64 m = 1000000007) {
+  table t(n + 1, std::vector<int64>(k + 1, 1));
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1; j <= k; j++) {
+      if (i == j) {
+        t[i][j] = 0;
+      } else {
+        t[i][j] = (j + 1)*t[i - 1][j] % m;
+        t[i][j] = ((2*i - 1 - j)*t[i - 1][j - 1] % m + t[i][j]) % m;
+      }
+    }
+  }
+  return t[n][k] % m;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+int main() {
+  table t = binomial_table(10);
+  for (int i = 0; i < (int)t.size(); i++) {
+    for (int j = 0; j < (int)t[i].size(); j++) {
+      assert(t[i][j] == choose(i, j));
+    }
+  }
+  assert(factorial(10) == 3628800);
+  assert(factorialp(123456) == 639390503);
+  assert(permute(10, 4) == 5040);
+  assert(choose(20, 7) == 77520);
+  assert(multichoose(20, 7) == 657800);
+  assert(catalan(10) == 16796);
+  assert(partitions(4) == 5);
+  assert(partitions(100, 5) == 38225);
+  assert(stirling1(4, 2) == 11);
+  assert(stirling2(4, 3) == 6);
+  assert(eulerian1(9, 5) == 88234);
+  assert(eulerian2(8, 3) == 195800);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Enumerating Arrangements}
+\begin{lstlisting}
+/*
+
+For the purposes of this section, we define a "size k arrangement of n" to be a
+permutation of a size k subset of the integers from 0 to n - 1, for 0 <= k <= n.
+There are n permute k possible arrangements, but n^k possible arrangements if
+repeated values are allowed.
+
+- next_arragement(n, k, a) tries to rearrange a[] to the next lexicographically
+  greater arrangement, returning true if such an arrangement exists or false if
+  the array is already in descending order (in which case a[] is unchanged). The
+  input a[] must consist of exactly k distinct integers in the range [0, n).
+- arrangement_by_rank(n, k, r) returns the size k arrangement of n which is
+  lexicographically ranked r out of all size k arrangements of n, where r is
+  a zero-based rank in the range [0, n permute k).
+- rank_by_arrangement(n, k, a) returns an integer representing the zero-based
+  rank of arrangement a[], which must consist of exactly k distinct integers in
+  the range [0, n).
+- next_arragement_with_repeats(n, k, a) tries to rearrange a[] to the next
+  lexicographically greater arrangement with repeats, returning true if such an
+  arrangement exists or false if the array is already in descending order (in
+  which case a[] is unchanged). The input a[] must consist of exactly k (not
+  necessarily distinct) integers in the range [0, n). If a[] were interpreted as
+  a k digit integer in base n, this function could be thought of as incrementing
+  the integer.
+
+Time Complexity:
+- O(n*k) for next_arrangement(), arrangement_by_rank(), and
+  rank_by_arrangement().
+- O(k) for next_arrangement_with_repeats().
+
+Space Complexity:
+- O(n) auxiliary heap space for next_arrangement(), arrangement_by_rank(), and
+  rank_by_arrangement().
+- O(1) auxiliary for next_arrangement_with_repeats().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+bool next_arrangement(int n, int k, int a[]) {
+  std::vector<bool> used(n);
+  for (int i = 0; i < k; i++) {
+    used[a[i]] = true;
+  }
+  for (int i = k - 1; i >= 0; i--) {
+    used[a[i]] = false;
+    for (int j = a[i] + 1; j < n; j++) {
+      if (!used[j]) {
+        a[i++] = j;
+        used[j] = true;
+        for (int x = 0; i < k; x++) {
+          if (!used[x]) {
+            a[i++] = x;
+          }
+        }
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+long long n_permute_k(int n, int k) {
+  long long res = 1;
+  for (int i = 0; i < k; i++) {
+    res *= n - i;
+  }
+  return res;
+}
+
+std::vector<int> arrangement_by_rank(int n, int k, long long r) {
+  std::vector<int> values(n), res(k);
+  for (int i = 0; i < n; i++) {
+    values[i] = i;
+  }
+  for (int i = 0; i < k; i++) {
+    long long count = n_permute_k(n - 1 - i, k - 1 - i);
+    int pos = r/count;
+    res[i] = values[pos];
+    std::copy(values.begin() + pos + 1, values.end(), values.begin() + pos);
+    r %= count;
+  }
+  return res;
+}
+
+long long rank_by_arrangement(int n, int k, int a[]) {
+  long long res = 0;
+  std::vector<bool> used(n);
+  for (int i = 0; i < k; i++) {
+    int count = 0;
+    for (int j = 0; j < a[i]; j++) {
+      if (!used[j]) {
+        count++;
+      }
+    }
+    res += count*n_permute_k(n - i - 1, k - i - 1);
+    used[a[i]] = true;
+  }
+  return res;
+}
+
+bool next_arrangement_with_repeats(int n, int k, int a[]) {
+  for (int i = k - 1; i >= 0; i--) {
+    if (a[i] < n - 1) {
+      a[i]++;
+      std::fill(a + i + 1, a + k, 0);
+      return true;
+    }
+  }
+  return false;
+}
+
+/*** Example Usage and Output:
+
+4 permute 3 arrangements:
+{0,1,2} {0,1,3} {0,2,1} {0,2,3} {0,3,1} {0,3,2} {1,0,2} {1,0,3} {1,2,0} {1,2,3}
+{1,3,0} {1,3,2} {2,0,1} {2,0,3} {2,1,0} {2,1,3} {2,3,0} {2,3,1} {3,0,1} {3,0,2}
+{3,1,0} {3,1,2} {3,2,0} {3,2,1}
+
+4^2 arrangements with repeats:
+{0,0} {0,1} {0,2} {0,3} {1,0} {1,1} {1,2} {1,3} {2,0} {2,1} {2,2} {2,3} {3,0}
+{3,1} {3,2} {3,3}
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+template<class It>
+void print_range(It lo, It hi) {
+  cout << "{";
+  for (; lo != hi; ++lo) {
+    cout << *lo << (lo == hi - 1 ? "" : ",");
+  }
+  cout << "} ";
+}
+
+int main() {
+  {
+    int n = 4, k = 3, a[] = {0, 1, 2};
+    cout << n << " permute " << k << " arrangements:" << endl;
+    int count = 0;
+    do {
+      print_range(a, a + k);
+      vector<int> b = arrangement_by_rank(n, k, count);
+      assert(equal(a, a + k, b.begin()));
+      assert(rank_by_arrangement(n, k, a) == count);
+      count++;
+    } while (next_arrangement(n, k, a));
+    cout << endl;
+  }
+  {
+    int n = 4, k = 2, a[] = {0, 0};
+    cout << endl << n << "^" << k << " arrangements with repeats:" << endl;
+    do {
+      print_range(a, a + k);
+    } while (next_arrangement_with_repeats(n, k, a));
+    cout << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Enumerating Permutations}
+\begin{lstlisting}
+/*
+
+A permutation is an ordered list consisting of n (not necessarily distinct)
+elements.
+
+- next_permutation_(lo, hi) is analogous to std::next_permutation(lo, hi),
+  taking two BidirectionalIterators lo and hi as a range [lo, hi) for which the
+  function tries to rearrange to the next lexicographically greater permutation.
+  The function returns true if such a permutation exists, or false if the range
+  is already in descending order (in which case the values are unchanged). This
+  implementation requires an ordering on the set of possible elements defined by
+  the < operator on the iterator's value type.
+- next_permutation(n, a) is analogous to next_permutation(), except that it
+  takes an array a[] of size n instead of a range.
+- next_permutation(x) returns the next lexicographically greater permutation of
+  the binary digits of the integer x, that is, the lowest integer greater than
+  x with the same number of 1-bits. This can be used to generate combinations of
+  a set of n items by treating each 1 bit as whether to "take" the item at the
+  corresponding position.
+- permutation_by_rank(n, r) returns the permutation of the integers in the range
+  [0, n) which is lexicographically ranked r, where r is a zero-based rank in
+  the range [0, n!).
+- rank_by_permutation(n, a) returns an integer representing the zero-based
+  rank of permutation a[], which must be a permutation of the integers [0, n).
+- permutation_cycles(n, a) returns the decomposition of the permutation a[] into
+  cycles. A permutation cycle is a subset of a permutation whose elements are
+  consecutively swapped, relative to a sorted set. For example, {3, 1, 0, 2}
+  decomposes to {0, 3, 2} and {1}, meaning that starting from the sorted order
+  {0, 1, 2, 3}, the 0th value is replaced by the 3rd, the 3rd by the 2nd, and
+  the 2nd by the 0th (0 -> 3 -> 2 -> 0).
+
+Time Complexity:
+- O(n^2) per call to next_permutation_(lo, hi), where n is the distance between
+  lo and hi.
+- O(n^2) per call to next_permutation(n, a), permutation_by_rank(n, r), and
+  rank_by_permutation(n, a).
+- O(1) per call to next_permutation(x).
+- O(n) per call to permutation_cycles().
+
+Space Complexity:
+- O(1) auxiliary for next_permutation_() and next_permutation().
+- O(n) auxiliary heap space for permutation_by_rank(), rank_by_permutation(),
+  and permutation_cycles().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+template<class It>
+bool next_permutation_(It lo, It hi) {
+  if (lo == hi) {
+    return false;
+  }
+  It i = lo;
+  if (++i == hi) {
+    return false;
+  }
+  i = hi;
+  --i;
+  for (;;) {
+    It j = i;
+    if (*--i < *j) {
+      It k = hi;
+      while (!(*i < *--k)) {}
+      std::iter_swap(i, k);
+      std::reverse(j, hi);
+      return true;
+    }
+    if (i == lo) {
+      std::reverse(lo, hi);
+      return false;
+    }
+  }
+}
+
+template<class T>
+bool next_permutation(int n, T a[]) {
+  for (int i = n - 2; i >= 0; i--) {
+    if (a[i] < a[i + 1]) {
+      for (int j = n - 1; ; j--) {
+        if (a[i] < a[j]) {
+          std::swap(a[i++], a[j]);
+          for (j = n - 1; i < j; i++, j--) {
+            std::swap(a[i], a[j]);
+          }
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+long long next_permutation(long long x) {
+  long long s = x & -x, r = x + s;
+  return r | (((x ^ r) >> 2)/s);
+}
+
+std::vector<int> permutation_by_rank(int n, long long x) {
+  std::vector<long long> factorial(n);
+  std::vector<int> values(n), res(n);
+  factorial[0] = 1;
+  for (int i = 1; i < n; i++) {
+    factorial[i] = i*factorial[i - 1];
+  }
+  for (int i = 0; i < n; i++) {
+    values[i] = i;
+  }
+  for (int i = 0; i < n; i++) {
+    int pos = x/factorial[n - 1 - i];
+    res[i] = values[pos];
+    std::copy(values.begin() + pos + 1, values.end(), values.begin() + pos);
+    x %= factorial[n - 1 - i];
+  }
+  return res;
+}
+
+long long rank_by_permutation(int n, int a[]) {
+  std::vector<long long> factorial(n);
+  factorial[0] = 1;
+  for (int i = 1; i < n; i++) {
+    factorial[i] = i*factorial[i - 1];
+  }
+  long long res = 0;
+  for (int i = 0; i < n; i++) {
+    int v = a[i];
+    for (int j = 0; j < i; j++) {
+      if (a[j] < a[i]) {
+        v--;
+      }
+    }
+    res += v*factorial[n - 1 - i];
+  }
+  return res;
+}
+
+typedef std::vector<std::vector<int> > cycles;
+
+cycles permutation_cycles(int n, int a[]) {
+  std::vector<bool> visit(n);
+  cycles res;
+  for (int i = 0; i < n; i++) {
+    if (!visit[i]) {
+      int j = i;
+      std::vector<int> curr;
+      do {
+        curr.push_back(j);
+        visit[j] = true;
+        j = a[j];
+      } while (j != i);
+      res.push_back(curr);
+    }
+  }
+  return res;
+}
+
+/*** Example Usage and Output:
+
+Permutations of [0, 4):
+{0,1,2,3} {0,1,3,2} {0,2,1,3} {0,2,3,1} {0,3,1,2} {0,3,2,1} {1,0,2,3} {1,0,3,2}
+{1,2,0,3} {1,2,3,0} {1,3,0,2} {1,3,2,0} {2,0,1,3} {2,0,3,1} {2,1,0,3} {2,1,3,0}
+{2,3,0,1} {2,3,1,0} {3,0,1,2} {3,0,2,1} {3,1,0,2} {3,1,2,0} {3,2,0,1} {3,2,1,0}
+
+Permutations of 2 zeros and 3 ones:
+00111 01011 01101 01110 10011 10101 10110 11001 11010 11100
+
+Decomposition of {3,1,0,2} into cycles:
+{0,3,2} {1}
+
+***/
+
+#include <bitset>
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+template<class It>
+void print_range(It lo, It hi) {
+  cout << "{";
+  for (; lo != hi; ++lo) {
+    cout << *lo << (lo == hi - 1 ? "" : ",");
+  }
+  cout << "} ";
+}
+
+int main() {
+  {
+    const int n = 4;
+    int a[] = {0, 1, 2, 3}, b[n], c[n];
+    for (int i = 0; i < n; i++) {
+      b[i] = c[i] = a[i];
+    }
+    cout << "Permutations of [0, " << n << "):" << endl;
+    int count = 0;
+    do {
+      print_range(a, a + n);
+      assert(equal(b, b + n, a));
+      assert(equal(c, c + n, a));
+      vector<int> d = permutation_by_rank(n, count);
+      assert(equal(d.begin(), d.end(), a));
+      assert(rank_by_permutation(n, a) == count);
+      count++;
+      std::next_permutation(b, b + n);
+      next_permutation(c, c + n);
+    } while (next_permutation(n, a));
+    cout << endl;
+  }
+  { // Permutations of binary digits.
+    const int n = 5;
+    cout << "\nPermutations of 2 zeros and 3 ones:" << endl;
+    int lo = bitset<5>(string("00111")).to_ulong();
+    int hi = bitset<6>(string("100011")).to_ulong();
+    do {
+      cout << bitset<n>(lo).to_string() << " ";
+    } while ((lo = next_permutation(lo)) != hi);
+    cout << endl;
+  }
+  { // Decomposition into cycles.
+    const int n = 4;
+    int a[] = {3, 1, 0, 2};
+    cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
+    cycles c = permutation_cycles(n, a);
+    for (int i = 0; i < (int)c.size(); i++) {
+      print_range(c[i].begin(), c[i].end());
+    }
+    cout << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Enumerating Combinations}
+\begin{lstlisting}
+/*
+
+A combination is a subset of size k chosen from a total of n (not necessarily
+distinct) elements, where order does not matter.
+
+- next_combination(lo, mid, hi) takes random-access iterators lo, mid, and hi
+  as a range [lo, hi) of n elements for which the function will rearrange such
+  that the k elements in [lo, mid) becomes the next lexicographically greater
+  combination. The function returns true if such a combination exists, or false
+  if [lo, mid) already consists of the lexicographically greatest combination
+  of the elements in [lo, hi) (in which case the values are unchanged). This
+  implementation requires an ordering on the set of possible elements defined by
+  the < operator on the iterator's value type.
+- next_combination(n, k, a) rearranges a[] to become the next lexicographically
+  greater combination of k distinct integers in the range [0, n). The array a[]
+  must consist of k distinct integers in the range [0, n).
+- next_combination_mask(x) interprets the bits of an integer x as a mask with
+  1-bits specifying the chosen items for a combination and returns the mask of
+  the next lexicographically greater combination (that is, the lowest integer
+  greater than x with the same number of 1 bits). Note that this does not
+  generate combinations in the same order as next_combination(), nor does it
+  work if the corresponding n items are not distinct (in that case, duplicate
+  combinations will be generated).
+- combination_by_rank(n, k, r) returns the combination of k distinct integers in
+  the range [0, n) that is lexicographically ranked r, where r is a zero-based
+  rank in the range [0, n choose k).
+- rank_by_combination(n, k, a) returns an integer representing the zero-based
+  rank of combination a[], which must consist of k distinct integers in [0, n).
+- next_combination_with_repeats(n, k, a) rearranges a[] to become the next
+  lexicographically greater combination of k (not necessarily distinct) integers
+  in the range [0, n). The array a[] must consist of k integers in the range
+  [0, n). Note that there is a total of n multichoose k combinations if
+  repetition is allowed, where n multichoose k = (n + k - 1) choose k.
+
+Time Complexity:
+- O(n) per call to next_combination(lo, hi), where n is the distance between
+  lo and hi.
+- O(k) per call to next_combination(n, k, a) and
+  next_combination_with_repeats(n, k, a).
+- O(1) per call to next_combination_mask(x).
+- O(n*k) per call to combination_by_rank() and rank_by_combination().
+
+Space Complexity:
+- O(k) auxiliary heap space for combination_by_rank(n, k, r).
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <algorithm>
+#include <iterator>
+#include <vector>
+
+template<class It>
+bool next_combination(It lo, It mid, It hi) {
+  if (lo == mid || mid == hi) {
+    return false;
+  }
+  It l = mid - 1, h = hi - 1;
+  int len1 = 1, len2 = 1;
+  while (l != lo && !(*l < *h)) {
+    --l;
+    ++len1;
+  }
+  if (l == lo && !(*l < *h)) {
+    std::rotate(lo, mid, hi);
+    return false;
+  }
+  for (; mid < h; ++len2) {
+    if (!(*l < *--h)) {
+      ++h;
+      break;
+    }
+  }
+  if (len1 == 1 || len2 == 1) {
+    std::iter_swap(l, h);
+  } else if (len1 == len2) {
+    std::swap_ranges(l, mid, h);
+  } else {
+    std::iter_swap(l++, h++);
+    int total = (--len1) + (--len2), gcd = total;
+    for (int i = len1; i != 0; ) {
+      std::swap(gcd %= i, i);
+    }
+    int skip = total/gcd - 1;
+    for (int i = 0; i < gcd; i++) {
+      It curr = (i < len1) ? (l + i) : (h + (i - len1));
+      int k = i;
+      typename std::iterator_traits<It>::value_type prev(*curr);
+      for (int j = 0; j < skip; j++) {
+        k = (k + len1) % total;
+        It next = (k < len1) ? (l + k) : (h + (k - len1));
+        *curr = *next;
+        curr = next;
+      }
+      *curr = prev;
+    }
+  }
+  return true;
+}
+
+bool next_combination(int n, int k, int a[]) {
+  for (int i = k - 1; i >= 0; i--) {
+    if (a[i] < n - k + i) {
+      a[i]++;
+      while (++i < k) {
+        a[i] = a[i - 1] + 1;
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+long long next_combination_mask(long long x) {
+  long long s = x & -x, r = x + s;
+  return r | (((x ^ r) >> 2)/s);
+}
+
+long long n_choose_k(long long n, long long k) {
+  if (k > n - k) {
+    k = n - k;
+  }
+  long long res = 1;
+  for (int i = 0; i < k; i++) {
+    res = res*(n - i)/(i + 1);
+  }
+  return res;
+}
+
+std::vector<int> combination_by_rank(int n, int k, long long r) {
+  std::vector<int> res(k);
+  int count = n;
+  for (int i = 0; i < k; i++) {
+    int j = 1;
+    for (;; j++) {
+      long long am = n_choose_k(count - j, k - 1 - i);
+      if (r < am) {
+        break;
+      }
+      r -= am;
+    }
+    res[i] = (i > 0) ? (res[i - 1] + j) : (j - 1);
+    count -= j;
+  }
+  return res;
+}
+
+long long rank_by_combination(int n, int k, int a[]) {
+  long long res = 0;
+  int prev = -1;
+  for (int i = 0; i < k; i++) {
+    for (int j = prev + 1; j < a[i]; j++) {
+      res += n_choose_k(n - 1 - j, k - 1 - i);
+    }
+    prev = a[i];
+  }
+  return res;
+}
+
+bool next_combination_with_repeats(int n, int k, int a[]) {
+  for (int i = k - 1; i >= 0; i--) {
+    if (a[i] < n - 1) {
+      for (++a[i]; ++i < k; ) {
+        a[i] = a[i - 1];
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
+/*** Example Usage and Output:
+
+"11234" choose 3:
+112 113 114 123 124 134 234
+
+"abcde" choose 3 with masks:
+abc abd acd bcd abe ace bce ade bde
+
+5 choose 3:
+{0,1,2} {0,1,3} {0,1,4} {0,2,3} {0,2,4} {0,3,4} {1,2,3} {1,2,4} {1,3,4} {2,3,4}
+
+3 multichoose 2:
+{0,0} {0,1} {0,2} {1,1} {1,2} {2,2}
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+template<class It>
+void print_range(It lo, It hi) {
+  cout << "{";
+  for (; lo != hi; ++lo) {
+    cout << *lo << (lo == hi - 1 ? "" : ",");
+  }
+  cout << "} ";
+}
+
+int main() {
+  {
+    int k = 3;
+    string s = "11234";
+    cout << "\"" << s << "\" choose " << k << ":" << endl;
+    do {
+      cout << s.substr(0, k) << " ";
+    } while (next_combination(s.begin(), s.begin() + k, s.end()));
+    cout << endl;
+  }
+  { // Unordered combinations using masks.
+    int n = 5, k = 3;
+    string char_set = "abcde";  // Must be distinct.
+    cout << "\n\"" << char_set << "\" choose " << k << " with masks:" << endl;
+    long long mask = 0, dest = 0;
+    for (int i = 0; i < k; i++) {
+      mask |= (1 << i);
+    }
+    for (int i = k - 1; i < n; i++) {
+      dest |= (1 << i);
+    }
+    do {
+      for (int i = 0; i < n; i++) {
+        if ((mask >> i) & 1) {
+          cout << char_set[i];
+        }
+      }
+      cout << " ";
+      mask = next_combination_mask(mask);
+    } while (mask != dest);
+    cout << endl;
+  }
+  { // Combinations of distinct integers from 0 to n - 1.
+    int n = 5, k = 3, a[] = {0, 1, 2};
+    cout << "\n" << n << " choose " << k << ":" << endl;
+    int count = 0;
+    do {
+      print_range(a, a + k);
+      vector<int> b = combination_by_rank(n, k, count);
+      assert(equal(a, a + k, b.begin()));
+      assert(rank_by_combination(n, k, a) == count);
+      count++;
+    } while (next_combination(n, k, a));
+    cout << endl;
+  }
+  { // Combinations with repeats.
+    int n = 3, k = 2, a[] = {0, 0};
+    cout << "\n" << n << " multichoose " << k << ":" << endl;
+    do {
+      print_range(a, a + k);
+    } while (next_combination_with_repeats(n, k, a));
+    cout << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Enumerating Partitions}
+\begin{lstlisting}
+/*
+
+A partition of a natural number n is a way to write n as a sum of positive
+integers where the order of the addends does not matter.
+
+- next_partition(p) takes a reference to a vector p[] of positive integers as a
+  partition of n for which the function will re-assign to become the next
+  lexicographically greater partition. The function returns true if such a
+  partition exists, or false if p[] already consists of the lexicographically
+  greatest partition (i.e. the single integer n).
+- partition_by_rank(n, r) returns the partition of n that is lexicographically
+  ranked r if addends in each partition were sorted in non-increasing order,
+  where r is a zero-based rank in the range [0, partitions(n)).
+- rank_by_partition(p) returns an integer representing the zero-based rank of
+  the partition specified by vector p[], which must consist of positive integers
+  sorted in non-increasing order.
+- generate_increasing_partitions(n, f) calls the function f(lo, hi) on strictly
+  increasing partitions of n in lexicographically increasing order of partition,
+  where lo and hi are random-access iterators to a range [lo, hi) of integers.
+  Note that non-strictly increasing partitions like {1, 1, 1, 1} are skipped.
+
+Time Complexity:
+- O(n) per call to next_partition().
+- O(n^2) per call to partition_by_rank(n, r) and rank_by_partition(p).
+- O(p(n)) per call to generate_increasing_partitions(n, f), where p(n) is the
+  number of partitions of n.
+
+Space Complexity:
+- O(1) auxiliary for next_partition().
+- O(n^2) auxiliary heap space for partition_function(), partition_by_rank(), and
+  rank_by_partition().
+- O(n) auxiliary stack space for generate_increasing_partitions().
+
+*/
+
+#include <vector>
+
+bool next_partition(std::vector<int> &p) {
+  int n = p.size();
+  if (n <= 1) {
+    return false;
+  }
+  int s = p[n - 1] - 1, i = n - 2;
+  p.pop_back();
+  for (; i > 0 && p[i] == p[i - 1]; i--) {
+    s += p[i];
+    p.pop_back();
+  }
+  for (p[i]++; s > 0; s--) {
+    p.push_back(1);
+  }
+  return true;
+}
+
+long long partition_function(int a, int b) {
+  static std::vector<std::vector<long long> > p(
+      1, std::vector<long long>(1, 1));
+  if (a >= (int)p.size()) {
+    int old = p.size();
+    p.resize(a + 1);
+    p[0].resize(a + 1);
+    for (int i = 1; i <= a; i++) {
+      p[i].resize(a + 1);
+      for (int j = old; j <= i; j++) {
+        p[i][j] = p[i - 1][j - 1] + p[i - j][j];
+      }
+    }
+  }
+  return p[a][b];
+}
+
+std::vector<int> partition_by_rank(int n, long long r) {
+  std::vector<int> res;
+  for (int i = n, j; i > 0; i -= j) {
+    for (j = 1; ; j++) {
+      long long count = partition_function(i, j);
+      if (r < count) {
+        break;
+      }
+      r -= count;
+    }
+    res.push_back(j);
+  }
+  return res;
+}
+
+long long rank_by_partition(const std::vector<int> &p) {
+  long long res = 0;
+  int sum = 0;
+  for (int i = 0; i < (int)p.size(); i++) {
+    sum += p[i];
+  }
+  for (int i = 0; i < (int)p.size(); i++) {
+    for (int j = 0; j < p[i]; j++) {
+      res += partition_function(sum, j);
+    }
+    sum -= p[i];
+  }
+  return res;
+}
+
+typedef void (*ReportFunction)(std::vector<int>::iterator,
+                               std::vector<int>::iterator);
+
+void generate_increasing_partitions(int left, int prev, int i,
+                                    std::vector<int> &p, ReportFunction f) {
+  if (left == 0) {
+    f(p.begin(), p.begin() + i);
+    return;
+  }
+  for (p[i] = prev + 1; p[i] <= left; p[i]++) {
+    generate_increasing_partitions(left - p[i], p[i], i + 1, p, f);
+  }
+}
+
+void generate_increasing_partitions(int n, ReportFunction f) {
+  std::vector<int> p(n, 0);
+  generate_increasing_partitions(n, 0, 0, p, f);
+}
+
+/*** Example Usage and Output:
+
+Partitions of 4:
+{1,1,1,1} {2,1,1} {2,2} {3,1} {4}
+
+Increasing partitions of 8:
+{1,2,5} {1,3,4} {1,7} {2,6} {3,5} {8}
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+template<class It>
+void print_range(It lo, It hi) {
+  cout << "{";
+  for (; lo != hi; ++lo) {
+    cout << *lo << (lo == hi - 1 ? "" : ",");
+  }
+  cout << "} ";
+}
+
+int main() {
+  {
+    int n = 4;
+    vector<int> a(n, 1);
+    cout << "Partitions of " << n << ":" << endl;
+    int count = 0;
+    do {
+      print_range(a.begin(), a.end());
+      vector<int> b = partition_by_rank(n, count);
+      assert(equal(a.begin(), a.end(), b.begin()));
+      assert(rank_by_partition(a) == count);
+      count++;
+    } while (next_partition(a));
+    cout << endl;
+  }
+  {
+    int n = 8;
+    cout << "\nIncreasing partitions of " << n << ":" << endl;
+    generate_increasing_partitions(n, print_range);
+    cout << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Enumerating Generic Combinatorial Sequences}
+\begin{lstlisting}
+/*
+
+Enumerate combinatorial sequence by inheriting an abstract class. Child classes
+of abstract_enumerator must implement the count() function which should return
+the number of combinatorial sequences starting with the given prefix.
+
+- to_rank(a) returns an integer representing the zero-based rank of the
+  combinatorial sequence a.
+- from_rank(r) returns a combinatorial sequence of integers that is
+  lexicographically ranked r, where r is a zero-based rank in the range
+  [0, total_count()).
+- enumerate(f) calls the function f(lo, hi) on every specified combinatorial
+  sequence in lexicographically increasing order, where lo and hi are two
+  random-access iterators to a range [lo, hi) of integers.
+
+Time Complexity:
+- O(n^2) calls will be made to count() per call to all operations, where n is
+  the length of the combinatorial sequence.
+
+Space Complexity:
+- O(n) auxiliary heap space per call to all operations.
+
+*/
+
+#include <vector>
+
+class abstract_enumerator {
+ protected:
+  int range, length;
+
+  abstract_enumerator(int r, int l) : range(r), length(l) {}
+
+  virtual long long count(const std::vector<int> &prefix) {
+    return 0;
+  }
+
+  std::vector<int> next(std::vector<int> &a) {
+    return from_rank(to_rank(a) + 1);
+  }
+
+  long long total_count() {
+    return count(std::vector<int>(0));
+  }
+
+ public:
+  long long to_rank(const std::vector<int> &a) {
+    long long res = 0;
+    for (int i = 0; i < (int)a.size(); i++) {
+      std::vector<int> prefix(a.begin(), a.end());
+      prefix.resize(i + 1);
+      for (prefix[i] = 0; prefix[i] < a[i]; prefix[i]++) {
+        res += count(prefix);
+      }
+    }
+    return res;
+  }
+
+  std::vector<int> from_rank(long long r) {
+    std::vector<int> a(length);
+    for (int i = 0; i < (int)a.size(); i++) {
+      std::vector<int> prefix(a.begin(), a.end());
+      prefix.resize(i + 1);
+      for (prefix[i] = 0; prefix[i] < range; ++prefix[i]) {
+        long long curr = count(prefix);
+        if (r < curr) {
+          break;
+        }
+        r -= curr;
+      }
+      a[i] = prefix[i];
+    }
+    return a;
+  }
+
+  void enumerate(void (*f)(std::vector<int>::iterator,
+                           std::vector<int>::iterator)) {
+    long long total = total_count();
+    for (long long i = 0; i < total; i++) {
+      std::vector<int> curr = from_rank(i);
+      f(curr.begin(), curr.end());
+    }
+  }
+};
+
+class arrangement_enumerator : public abstract_enumerator {
+ public:
+  arrangement_enumerator(int n, int k) : abstract_enumerator(n, k) {}
+
+  long long count(const std::vector<int> &prefix) {
+    int n = prefix.size();
+    for (int i = 0; i < n - 1; i++) {
+      if (prefix[i] == prefix[n - 1]) {
+        return 0;
+      }
+    }
+    long long res = 1;
+    for (int i = 0; i < length - n; i++) {
+      res *= range - n - i;
+    }
+    return res;
+  }
+};
+
+class permutation_enumerator : public arrangement_enumerator {
+ public:
+  permutation_enumerator(int n) : arrangement_enumerator(n, n) {}
+};
+
+class combination_enumerator : public abstract_enumerator {
+  std::vector<std::vector<long long> > table;
+
+ public:
+  combination_enumerator(int n, int k)
+      : abstract_enumerator(n, k), table(n + 1, std::vector<long long>(n + 1)) {
+    for (int i = 0; i <= n; i++) {
+      for (int j = 0; j <= i; j++) {
+        table[i][j] = (j == 0) ? 1 : table[i - 1][j - 1] + table[i - 1][j];
+      }
+    }
+  }
+
+  long long count(const std::vector<int> &prefix) {
+    int n = prefix.size();
+    if (n >= 2 && prefix[n - 1] <= prefix[n - 2]) {
+      return 0;
+    }
+    if (n == 0) {
+      return table[range][length - n];
+    }
+    return table[range - prefix[n - 1] - 1][length - n];
+  }
+};
+
+class partition_enumerator : public abstract_enumerator {
+  std::vector<std::vector<long long> > table;
+
+ public:
+  partition_enumerator(int n) : abstract_enumerator(n + 1, n),
+                                table(n + 1, std::vector<long long>(n + 1)) {
+    std::vector<std::vector<long long> > tmp(table);
+    tmp[0][0] = 1;
+    for (int i = 1; i <= n; i++) {
+      for (int j = 1; j <= i; j++) {
+        tmp[i][j] = tmp[i - 1][j - 1] + tmp[i - j][j];
+      }
+    }
+    for (int i = 1; i <= n; i++) {
+      for (int j = 1; j <= n; j++) {
+        table[i][j] = tmp[i][j] + table[i][j - 1];
+      }
+    }
+  }
+
+  long long count(const std::vector<int> &prefix) {
+    int n = (int)prefix.size(), sum = 0;
+    for (int i = 0; i < n; i++) {
+      sum += prefix[i];
+    }
+    if (sum == range - 1) {
+      return 1;
+    }
+    if (sum > range - 1 || (n > 0 && prefix[n - 1] == 0) ||
+        (n >= 2 && prefix[n - 1] > prefix[n - 2])) {
+      return 0;
+    }
+    if (n == 0) {
+      return table[range - sum - 1][range - 1];
+    }
+    return table[range - sum - 1][prefix[n - 1]];
+  }
+};
+
+/*** Example Usage and Output:
+
+3 permute 2 arrangements:
+{0,1} {0,2} {1,0} {1,2} {2,0} {2,1}
+
+Permutatations of [0, 3):
+{0,1,2} {0,2,1} {1,0,2} {1,2,0} {2,0,1} {2,1,0}
+
+4 choose 3 combinations:
+{0,1,2} {0,1,3} {0,2,3} {1,2,3}
+
+Partition of 4:
+{1,1,1,1} {2,1,1,0} {2,2,0,0} {3,1,0,0} {4,0,0,0}
+
+***/
+
+#include <iostream>
+using namespace std;
+
+template<class It>
+void print_range(It lo, It hi) {
+  cout << "{";
+  for (; lo != hi; ++lo) {
+    cout << *lo << (lo == hi - 1 ? "" : ",");
+  }
+  cout << "} ";
+}
+
+int main() {
+  {
+    cout << "3 permute 2 arrangement_enumerator:" << endl;
+    arrangement_enumerator arr(3, 2);
+    arr.enumerate(print_range);
+    cout << endl;
+  }
+  {
+    cout << "\nPermutatations of [0, 3):" << endl;
+    permutation_enumerator perm(3);
+    perm.enumerate(print_range);
+    cout << endl;
+  }
+  {
+    cout << "\n4 choose 3 combinations:" << endl;
+    combination_enumerator comb(4, 3);
+    comb.enumerate(print_range);
+    cout << endl;
+  }
+  {
+    cout << "\nPartition of 4:" << endl;
+    partition_enumerator part(4);
+    part.enumerate(print_range);
+    cout << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+
+\section{Number Theory}
+\setcounter{section}{3}
+\setcounter{subsection}{0}
+\subsection{GCD, LCM, Mod Inverse, Chinese Remainder}
+\begin{lstlisting}
+/*
+
+Common number theory operations relating to modular arithmetic.
+
+- gcd(a, b) and gcd2(a, b) both return the greatest common division of a and b
+  using the Euclidean algorithm.
+- lcm(a, b) returns the lowest common multiple of a and b.
+- extended_euclid(a, b) and extended_euclid2(a, b) both return a pair (x, y) of
+  integers such that gcd(a, b) = a*x + b*y.
+- mod(a, b) returns the value of a mod b under the true Euclidean definition of
+  modulo, that is, the smallest nonnegative integer m satisfying a + b*n = m for
+  some integer n. Note that this is identical to the remainder operator % in C++
+  for nonnegative operands a and b, but the result will differ when an operand
+  is negative.
+- mod_inverse(a, m) and mod_inverse2(a, m) both return an integer x such that
+  a*x = 1 (mod m), where the arguments must satisfy m > 0 and gcd(a, m) = 1.
+- generate_inverse(p) returns a vector of integers where for each index i in
+  the vector, i*v[i] = 1 (mod p), where the argument p is prime.
+- simple_restore(n, a, p) and garner_restore(n, a, p) both return the solution x
+  for the system of simultaneous congruences x = a[i] (mod p[i]) for all indices
+  i in [0, n), where p[] consist of pairwise coprime integers. The solution x is
+  guaranteed to be unique by the Chinese remainder theorem.
+
+Time Complexity:
+- O(log(a + b)) per call to gcd(a, b), gcd2(a, b), lcm(a, b),
+  extended_euclid(a, b), extended_euclid2(a, b), mod_inverse(a, b), and
+  mod_inverse2(a, b).
+- O(1) for mod(a, b).
+- O(p) for generate_inverse(p).
+- Exponential for simple_restore(n, a, p).
+- O(n^2) for garner_restore(n, a, p).
+
+Space Complexity:
+- O(log(a + b)) auxiliary stack space for gcd2(a, b), extended_euclid2(a, b),
+  and mod_inverse2(a, b).
+- O(p) auxiliary heap space for generate_inverse(p).
+- O(n) auxiliary heap space for garner_restore(n, a, p).
+- O(1) auxiliary space for all other operations.
+
+*/
+
+#include <cstdlib>
+#include <utility>
+#include <vector>
+
+template<class Int>
+Int gcd(Int a, Int b) {
+  while (b != 0) {
+    Int t = b;
+    b = a % b;
+    a = t;
+  }
+  return abs(a);
+}
+
+template<class Int>
+Int gcd2(Int a, Int b) {
+  return (b == 0) ? abs(a) : gcd(b, a % b);
+}
+
+template<class Int>
+Int lcm(Int a, Int b) {
+  return abs(a / gcd(a, b) * b);
+}
+
+template<class Int>
+std::pair<Int, Int> extended_euclid(Int a, Int b) {
+  Int x = 1, y = 0, x1 = 0, y1 = 1;
+  while (b != 0) {
+    Int q = a/b, prev_x1 = x1, prev_y1 = y1, prev_b = b;
+    x1 = x - q*x1;
+    y1 = y - q*y1;
+    b = a - q*b;
+    x = prev_x1;
+    y = prev_y1;
+    a = prev_b;
+  }
+  return (a > 0) ? std::make_pair(x, y) : std::make_pair(-x, -y);
+}
+
+template<class Int>
+std::pair<Int, Int> extended_euclid2(Int a, Int b) {
+  if (b == 0) {
+    return (a > 0) ? std::make_pair(1, 0) : std::make_pair(-1, 0);
+  }
+  std::pair<Int, Int> r = extended_euclid2(b, a % b);
+  return std::make_pair(r.second, r.first - a/b*r.second);
+}
+
+template<class Int>
+Int mod(Int a, Int m) {
+  Int r = a % m;
+  return (r >= 0) ? r : (r + m);
+}
+
+template<class Int>
+Int mod_inverse(Int a, Int m) {
+  a = mod(a, m);
+  return (a == 0) ? 0 : mod((1 - m*mod_inverse(m % a, a)) / a, m);
+}
+
+template<class Int>
+Int mod_inverse2(Int a, Int m) {
+  return mod(extended_euclid(a, m).first, m);
+}
+
+std::vector<int> generate_inverse(int p) {
+  std::vector<int> res(p);
+  res[1] = 1;
+  for (int i = 2; i < p; i++) {
+    res[i] = (p - (p / i)*res[p % i] % p) % p;
+  }
+  return res;
+}
+
+long long simple_restore(int n, int a[], int p[]) {
+  long long res = 0, m = 1;
+  for (int i = 0; i < n; i++) {
+    while (res % p[i] != a[i]) {
+      res += m;
+    }
+    m *= p[i];
+  }
+  return res;
+}
+
+long long garner_restore(int n, int a[], int p[]) {
+  std::vector<int> x(a, a + n);
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < i; j++) {
+      x[i] = mod_inverse((long long)p[j], (long long)p[i])*(x[i] - x[j]);
+    }
+    x[i] = (x[i] % p[i] + p[i]) % p[i];
+  }
+  long long res = x[0], m = 1;
+  for (int i = 1; i < n; i++) {
+    m *= p[i - 1];
+    res += x[i] * m;
+  }
+  return res;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  {
+    for (int steps = 0; steps < 10000; steps++) {
+      int a = rand() % 200 - 10, b = rand() % 200 - 10, g = gcd(a, b);
+      assert(g == gcd2(a, b));
+      if (g == 1 && b > 1) {
+        int inv = mod_inverse(a, b);
+        assert(inv == mod_inverse2(a, b) && mod(a*inv, b) == 1);
+      }
+      pair<int, int> res = extended_euclid(a, b);
+      assert(res == extended_euclid2(a, b));
+      assert(g == a*res.first + b*res.second);
+    }
+  }
+  {
+    int p = 17;
+    std::vector<int> res = generate_inverse(p);
+    for (int i = 0; i < p; i++) {
+      if (i > 0) {
+        assert(mod(i*res[i], p) == 1);
+      }
+    }
+  }
+  {
+    int n = 3, a[] = {2, 3, 1}, m[] = {3, 4, 5};
+    int x = simple_restore(n, a, m);
+    assert(x == garner_restore(n, a, m));
+    for (int i = 0; i < n; i++) {
+      assert(mod(x, m[i]) == a[i]);
+    }
+    assert(x == 11);
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Prime Generation}
+\begin{lstlisting}
+/*
+
+Generate prime numbers using the Sieve of Eratosthenes.
+
+- sieve(n) returns a vector of all the primes less than or equal to n.
+- sieve(lo, hi) returns a vector of all the primes in the range [lo, hi].
+
+Time Complexity:
+- O(n log(log(n))) per call to sieve(n).
+- O(sqrt(hi)*log(log(hi - lo))) per call to sieve(lo, hi).
+
+Space Complexity:
+- O(n) auxiliary heap space per call to sieve(n).
+- O(hi - lo + sqrt(hi)) auxiliary heap space per call to sieve(lo, hi).
+
+*/
+
+#include <cmath>
+#include <vector>
+
+std::vector<int> sieve(int n) {
+  std::vector<bool> prime(n + 1, true);
+  int sqrtn = ceil(sqrt(n));
+  for (int i = 2; i <= sqrtn; i++) {
+    if (prime[i]) {
+      for (int j = i*i; j <= n; j += i) {
+        prime[j] = false;
+      }
+    }
+  }
+  std::vector<int> res;
+  for (int i = 2; i <= n; i++) {
+    if (prime[i]) {
+      res.push_back(i);
+    }
+  }
+  return res;
+}
+
+std::vector<int> sieve(int lo, int hi) {
+  int sqrt_hi = ceil(sqrt(hi)), fourth_root_hi = ceil(sqrt(sqrt_hi));
+  std::vector<bool> prime1(sqrt_hi + 1, true), prime2(hi - lo + 1, true);
+  for (int i = 2; i <= fourth_root_hi; i++) {
+    if (prime1[i]) {
+      for (int j = i*i; j <= sqrt_hi; j += i) {
+        prime1[j] = false;
+      }
+    }
+  }
+  for (int i = 2, n = hi - lo; i <= sqrt_hi; i++) {
+    if (prime1[i]) {
+      for (int j = (lo / i)*i - lo; j <= n; j += i) {
+        if (j >= 0 && j + lo != i) {
+          prime2[j] = false;
+        }
+      }
+    }
+  }
+  std::vector<int> res;
+  for (int i = (lo > 1) ? lo : 2; i <= hi; i++) {
+    if (prime2[i - lo]) {
+      res.push_back(i);
+    }
+  }
+  return res;
+}
+
+/*** Example Usage and Output:
+
+sieve(n=10000000): 0.059s
+atkins(n=10000000): 0.08s
+sieve([1000000000, 1005000000]): 0.034s
+
+***/
+
+#include <ctime>
+#include <iostream>
+using namespace std;
+
+int main() {
+  int pmax = 10000000;
+  vector<int> p;
+  time_t start;
+  double delta;
+
+  start = clock();
+  p = sieve(pmax);
+  delta = (double)(clock() - start)/CLOCKS_PER_SEC;
+  cout << "sieve(n=" << pmax << "): " << delta << "s" << endl;
+
+  int l = 1000000000, h = 1005000000;
+  start = clock();
+  p = sieve(l, h);
+  delta = (double)(clock() - start)/CLOCKS_PER_SEC;
+  cout << "sieve([" << l << ", " << h << "]): " << delta << "s" << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{Primality Testing}
+\begin{lstlisting}
+/*
+
+Determine whether an integer n is prime. This can be done deterministically by
+testing all numbers under sqrt(n) using trial division, probabilistically using
+the Miller-Rabin test, or deterministically using the Miller-Rabin test if the
+maximum input is known (2^63 - 1 for the purposes here).
+
+- is_prime(n) returns whether the integer n is prime using an optimized trial
+  division technique based on the fact that all primes greater than 6 must take
+  the form 6n + 1 or 6n - 1.
+- is_probable_prime(n, k) returns true if the integer n is prime, or false with
+  an error probability of (1/4)^k if n is composite. In other words, the result
+  is guaranteed to be correct if n is prime, but could be wrong with probability
+  (1/4)^k if n is composite. This implementation uses uses exponentiation by
+  squaring to support all signed 64-bit integers (up to and including 2^63 - 1).
+- is_prime_fast(n) returns whether the signed 64-bit integer n is prime using
+  a fully deterministic version of the Miller-Rabin test.
+
+Time Complexity:
+- O(sqrt n) per call to is_prime(n).
+- O(k log^3(n)) per call to is_probable_prime(n, k).
+- O(log^3(n)) per call to is_prime_fast(n).
+
+Space Complexity:
+- O(1) auxiliary space for all operations.
+
+*/
+
+#include <cstdlib>
+
+template<class Int>
+bool is_prime(Int n) {
+  if (n == 2 || n == 3) {
+    return true;
+  }
+  if (n < 2 || n % 2 == 0 || n % 3 == 0) {
+    return false;
+  }
+  for (Int i = 5, w = 4; i*i <= n; i += w) {
+    if (n % i == 0) {
+      return false;
+    }
+    w = 6 - w;
+  }
+  return true;
+}
+
+typedef unsigned long long uint64;
+
+uint64 mulmod(uint64 x, uint64 n, uint64 m) {
+  uint64 a = 0, b = x % m;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = (a + b) % m;
+    }
+    b = (b << 1) % m;
+  }
+  return a % m;
+}
+
+uint64 powmod(uint64 x, uint64 n, uint64 m) {
+  uint64 a = 1, b = x;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = mulmod(a, b, m);
+    }
+    b = mulmod(b, b, m);
+  }
+  return a % m;
+}
+
+uint64 rand64u() {
+  return ((uint64)(rand() & 0xf) << 60) |
+         ((uint64)(rand() & 0x7fff) << 45) |
+         ((uint64)(rand() & 0x7fff) << 30) |
+         ((uint64)(rand() & 0x7fff) << 15) |
+         ((uint64)(rand() & 0x7fff));
+}
+
+bool is_probable_prime(long long n, int k = 20) {
+  if (n == 2 || n == 3) {
+    return true;
+  }
+  if (n < 2 || n % 2 == 0 || n % 3 == 0) {
+    return false;
+  }
+  uint64 s = n - 1, p = n - 1;
+  while (!(s & 1)) {
+    s >>= 1;
+  }
+  for (int i = 0; i < k; i++) {
+    uint64 x, r = powmod(rand64u() % p + 1, s, n);
+    for (x = s; x != p && r != 1 && r != p; x <<= 1) {
+      r = mulmod(r, r, n);
+    }
+    if (r != p && !(x & 1)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool is_prime_fast(long long n) {
+  static const int np = 9, p[] = {2, 3, 5, 7, 11, 13, 17, 19, 23};
+  for (int i = 0; i < np; i++) {
+    if (n % p[i] == 0) {
+      return n == p[i];
+    }
+  }
+  if (n < p[np - 1]) {
+    return false;
+  }
+  uint64 t;
+  int s = 0;
+  for (t = n - 1; !(t & 1); t >>= 1) {
+    s++;
+  }
+  for (int i = 0; i < np; i++) {
+    uint64 r = powmod(p[i], t, n);
+    if (r == 1) {
+      continue;
+    }
+    bool ok = false;
+    for (int j = 0; j < s && !ok; j++) {
+      ok |= (r == (uint64)n - 1);
+      r = mulmod(r, r, n);
+    }
+    if (!ok) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+int main() {
+  int len = 20;
+  long long tests[] = {
+    -1, 0, 1, 2, 3, 4, 5, 1000000LL, 772023803LL, 792904103LL, 813815117LL,
+    834753187LL, 855718739LL, 876717799LL, 897746119LL, 2147483647LL,
+    5705234089LL, 5914686649LL, 6114145249LL, 6339503641LL, 6548531929LL
+  };
+  for (int i = 0; i < len; i++) {
+    bool p = is_prime(tests[i]);
+    assert(p == is_prime_fast(tests[i]));
+    assert(p == is_probable_prime(tests[i]));
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Integer Factorization}
+\begin{lstlisting}
+/*
+
+Compute the prime factorization of an integer. In the following implementations,
+the prime factorization of n is represented as a sorted vector of prime integers
+which together multiply to n. Note that factors are duplicated in the vector in
+accordance to their multiplicity in the prime factorization of n. For 0, 1, and
+prime numbers, the prime factorization is considered to be a vector consisting
+of a single element - the input itself.
+
+- prime_factorize(n) returns the prime factorization of n using trial division.
+- get_divisors(n) returns a sorted vector of all (not merely prime) divisors of
+  n using trial division.
+- fermat(n) returns a factor of n (possibly 1 or itself) that is not necessarily
+  prime. This algorithm is efficient for integers with two factors near sqrt(n),
+  but is roughly as slow as trial division otherwise.
+- pollards_rho_brent(n) returns a factor of n that is not necessarily prime
+  using Pollard's rho algorithm with Brent's optimization. If n is prime, then n
+  itself is returned. While this algorithm is non-deterministic and may fail to
+  detect factors on certain runs of the same input, it can be placed in a loop
+  to deterministically factor large integers, as done in prime_factorize_big().
+- prime_factorize_big(n, trial_division_cutoff) returns the prime factorization
+  of a 64-bit integer n using a combination of trial division, the Miller-Rabin
+  primality test, and Pollard's rho algorithm. trial_division_cutoff specifies
+  the largest factor to test with trial division before falling back to the rho
+  algorithm. This supports 64-bit integers up to and including 2^63 - 1.
+
+Time Complexity:
+- O(sqrt n) per call to prime_factorize(n), get_divisors(n), and fermat(n).
+- Unknown, but approximately O(n^(1/4)) per call to pollards_rho_brent(n) and
+  prime_factorize_big(n).
+
+Space Complexity:
+- O(f) auxiliary heap space for all operations, where f is the number of factors
+  returned.
+
+*/
+
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <vector>
+
+template<class Int>
+std::vector<Int> prime_factorize(Int n) {
+  if (n <= 3) {
+    return std::vector<Int>(1, n);
+  }
+  std::vector<Int> res;
+  for (Int i = 2; ; i++) {
+    int p = 0, q = n/i, r = n - q*i;
+    if (i > q || (i == q && r > 0)) {
+      break;
+    }
+    while (r == 0) {
+      p++;
+      n = q;
+      q = n/i;
+      r = n - q*i;
+    }
+    for (int j = 0; j < p; j++) {
+      res.push_back(i);
+    }
+  }
+  if (n > 1) {
+    res.push_back(n);
+  }
+  return res;
+}
+
+template<class Int>
+std::vector<Int> get_divisors(Int n) {
+  if (n <= 1) {
+    return (n < 1) ? std::vector<Int>() : std::vector<Int>(1, 1);
+  }
+  std::vector<Int> res;
+  for (Int i = 1; i*i <= n; i++) {
+    if (n % i == 0) {
+      res.push_back(i);
+      if (i*i != n) {
+        res.push_back(n/i);
+      }
+    }
+  }
+  std::sort(res.begin(), res.end());
+  return res;
+}
+
+long long fermat(long long n) {
+  if (n % 2 == 0) {
+    return 2;
+  }
+  long long x = sqrt(n), y = 0, r = x*x - y*y - n;
+  while (r != 0) {
+    if (r < 0) {
+      r += x + x + 1;
+      x++;
+    } else {
+      r -= y + y + 1;
+      y++;
+    }
+  }
+  return (x == y) ? (x + y) : (x - y);
+}
+
+typedef unsigned long long uint64;
+
+uint64 mulmod(uint64 x, uint64 n, uint64 m) {
+  uint64 a = 0, b = x % m;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = (a + b) % m;
+    }
+    b = (b << 1) % m;
+  }
+  return a % m;
+}
+
+uint64 powmod(uint64 x, uint64 n, uint64 m) {
+  uint64 a = 1, b = x;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = mulmod(a, b, m);
+    }
+    b = mulmod(b, b, m);
+  }
+  return a % m;
+}
+
+uint64 rand64u() {
+  return ((uint64)(rand() & 0xf) << 60) |
+         ((uint64)(rand() & 0x7fff) << 45) |
+         ((uint64)(rand() & 0x7fff) << 30) |
+         ((uint64)(rand() & 0x7fff) << 15) |
+         ((uint64)(rand() & 0x7fff));
+}
+
+uint64 gcd(uint64 a, uint64 b) {
+  while (b != 0) {
+    uint64 t = b;
+    b = a % b;
+    a = t;
+  }
+  return a;
+}
+
+long long pollards_rho_brent(long long n) {
+  if (n % 2 == 0) {
+    return 2;
+  }
+  uint64 y = rand64u() % (n - 1) + 1;
+  uint64 c = rand64u() % (n - 1) + 1;
+  uint64 m = rand64u() % (n - 1) + 1;
+  uint64 g = 1, r = 1, q = 1, ys = 0, x = 0;
+  for (r = 1; g == 1; r <<= 1) {
+    x = y;
+    for (int i = 0; i < r; i++) {
+      y = (mulmod(y, y, n) + c) % n;
+    }
+    for (long long k = 0; k < r && g == 1; k += m) {
+      ys = y;
+      long long lim = std::min(m, r - k);
+      for (int j = 0; j < lim; j++) {
+        y = (mulmod(y, y, n) + c) % n;
+        q = mulmod(q, (x > y) ? (x - y) : (y - x), n);
+      }
+      g = gcd(q, n);
+    }
+  }
+  if (g == n) {
+    do {
+      ys = (mulmod(ys, ys, n) + c) % n;
+      g = gcd((x > ys) ? (x - ys) : (ys - x), n);
+    } while (g <= 1);
+  }
+  return g;
+}
+
+bool is_prime(long long n) {
+  static const int np = 9, p[] = {2, 3, 5, 7, 11, 13, 17, 19, 23};
+  for (int i = 0; i < np; i++) {
+    if (n % p[i] == 0) {
+      return n == p[i];
+    }
+  }
+  if (n < p[np - 1]) {
+    return false;
+  }
+  uint64 t;
+  int s = 0;
+  for (t = n - 1; !(t & 1); t >>= 1) {
+    s++;
+  }
+  for (int i = 0; i < np; i++) {
+    uint64 r = powmod(p[i], t, n);
+    if (r == 1) {
+      continue;
+    }
+    bool ok = false;
+    for (int j = 0; j < s && !ok; j++) {
+      ok |= (r == (uint64)n - 1);
+      r = mulmod(r, r, n);
+    }
+    if (!ok) {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::vector<long long> prime_factorize_big(
+    long long n, long long trial_division_cutoff = 1000000LL) {
+  if (n <= 3) {
+    return std::vector<long long>(1, n);
+  }
+  std::vector<long long> res;
+  for (; n % 2 == 0; n /= 2) {
+    res.push_back(2);
+  }
+  for (; n % 3 == 0; n /= 3) {
+    res.push_back(3);
+  }
+  for (int i = 5, w = 4; i <= trial_division_cutoff && i*i <= n; i += w) {
+    for (; n % i == 0; n /= i) {
+      res.push_back(i);
+    }
+    w = 6 - w;
+  }
+  for (long long p; n > trial_division_cutoff && !is_prime(n); n /= p) {
+    do {
+      p = pollards_rho_brent(n);
+    } while (p == n);
+    res.push_back(p);
+  }
+  if (n != 1) {
+    res.push_back(n);
+  }
+  sort(res.begin(), res.end());
+  return res;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+#include <set>
+using namespace std;
+
+void validate(long long n, const vector<long long> &factors) {
+  if (n == 1 || is_prime(n)) {
+    assert(factors == vector<long long>(1, n));
+    return;
+  }
+  long long prod = 1;
+  for (int i = 0; i < factors.size(); i++) {
+    assert(is_prime(factors[i]));
+    prod *= factors[i];
+  }
+  assert(prod == n);
+}
+
+int main() {
+  { // Small tests.
+    for (int i = 1; i <= 10000; i++) {
+      vector<long long> v1 = prime_factorize((long long)i);
+      vector<long long> v2 = prime_factorize_big(i);
+      validate(i, v1);
+      assert(v1 == v2);
+      vector<int> d = get_divisors(i);
+      set<int> s(d.begin(), d.end());
+      assert(d.size() == s.size());
+      for (int j = 1; j <= i; j++) {
+        if (i % j == 0) {
+          assert(s.count(j));
+        }
+      }
+    }
+  }
+  { // Fermat works best for numbers with two factors close to each other.
+    long long n = 1000003LL*100000037;
+    assert(fermat(n) == 1000003);
+  }
+  { // Large tests.
+    const int ntests = 7;
+    const long long tests[] = {
+      3LL*3*5*7*9949*9967*1000003,
+      2LL*1000003*1000000007,
+      999961LL*1000033,
+      357267896789127671LL,
+      2LL*2*2*2*2*2*2*3*3*3*3*5*5*7*7*11*13*17*19*23*29*31*37,
+      2LL*2*2*2*2*2*2*3*3*3*3*5*5*7*7*35336848213,
+      2LL*2*2*2*2*2*2*3*3*3*3*5*5*7*7*186917*186947,
+    };
+    for (int i = 0; i < ntests; i++) {
+      validate(tests[i], prime_factorize_big(tests[i]));
+    }
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Euler's Totient Function}
+\begin{lstlisting}
+/*
+
+Euler's totient function phi(n) returns the number of positive integers less
+than or equal to n that are relatively prime to n. That is, phi(n) is the number
+of integers k in the range [1, n] for which gcd(n, k) = 1. The computation of
+phi(1..n) can be performed simultaneously, as done so by phi_table(n) which
+returns a vector v such that v[i] stores phi(i) for i in the range [0, n].
+
+Time Complexity:
+- O(n log(log(n))) per call to phi(n) and phi_table(n).
+
+Space Complexity:
+- O(1) auxiliary space for phi(n).
+- O(n) auxiliary heap space for phi_table(n).
+
+*/
+
+#include <vector>
+
+int phi(int n) {
+  int res = n;
+  for (int i = 2; i*i <= n; i++) {
+    if (n % i == 0) {
+      while (n % i == 0) {
+        n /= i;
+      }
+      res -= res/i;
+    }
+  }
+  if (n > 1) {
+    res -= res/n;
+  }
+  return res;
+}
+
+std::vector<int> phi_table(int n) {
+  std::vector<int> res(n + 1);
+  for (int i = 0; i <= n; i++) {
+    res[i] = i;
+  }
+  for (int i = 1; i <= n; i++) {
+    for (int j = 2*i; j <= n; j += i) {
+      res[j] -= res[i];
+    }
+  }
+  return res;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(phi(1) == 1);
+  assert(phi(9) == 6);
+  assert(phi(1234567) == 1224720);
+  const int n = 1000;
+  vector<int> v = phi_table(n);
+  for (int i = 0; i <= n; i++) {
+    assert(v[i] == phi(i));
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Binary Exponentiation}
+\begin{lstlisting}
+/*
+
+Given three unsigned 64-bit integers x, n, and m, powmod() returns x raised to
+the power of n (modulo m). mulmod() returns x multiplied by n (modulo m).
+Despite the fact that both functions use unsigned 64-bit integers for arguments
+and intermediate calculations, arguments x and n must not exceed 2^63 - 1 (the
+maximum value of a signed 64-bit integer) for the result to be correctly
+computed without overflow.
+
+Binary exponentiation, also known as exponentiation by squaring, decomposes the
+exponentiation into a logarithmic number of multiplications while avoiding
+overflow. To further prevent overflow in the intermediate squaring computations,
+multiplication is performed using a similar principle of repeated addition.
+
+Time Complexity:
+- O(log n) per call to mulmod() and powmod(), where n is the second argument.
+
+Space Complexity:
+- O(1) auxiliary.
+
+*/
+
+typedef unsigned long long uint64;
+
+uint64 mulmod(uint64 x, uint64 n, uint64 m) {
+  uint64 a = 0, b = x % m;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = (a + b) % m;
+    }
+    b = (b << 1) % m;
+  }
+  return a % m;
+}
+
+uint64 powmod(uint64 x, uint64 n, uint64 m) {
+  uint64 a = 1, b = x;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = mulmod(a, b, m);
+    }
+    b = mulmod(b, b, m);
+  }
+  return a % m;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+int main() {
+  assert(powmod(2, 10, 1000000007) == 1024);
+  assert(powmod(2, 62, 1000000) == 387904);
+  assert(powmod(10001, 10001, 100000) == 10001);
+  return 0;
+}
+\end{lstlisting}
+
+\section{Arbitrary Precision Arithmetic}
+\setcounter{section}{4}
+\setcounter{subsection}{0}
+\subsection{Big Integers (Simple)}
+\begin{lstlisting}
+/*
+
+Perform simple arithmetic operations on arbitrary precision big integers whose
+digits are internally represented as an std::string in little-endian order.
+
+- bigint(n) constructs a big integer from a long long (default = 0).
+- bigint(s) constructs a big integer from a string s, which must strictly
+  consist of a sequence of numeric digits, optionally preceded by a minus sign.
+- str() returns the string representation of the big integer.
+- comp(a, b) returns -1, 0, or 1 depending on whether the big integers a and b
+  compare less, equal, or greater, respectively.
+- add(a, b) returns the sum of big integers a and b.
+- sub(a, b) returns the difference of big integers a and b.
+- mul(a, b) returns the product of big integers a and b.
+- div(a, b) returns the quotient of big integers a and b.
+
+Time Complexity:
+- O(n) per call to the constructor, str(), comp(), add(), and sub(), where n is
+  total number of digits in the argument(s) and result for each operation.
+- O(n*m) per call to mul(a, b) and div(a, b) where n is the number of digits in
+  a and m is the number of digits in b.
+
+Space Complexity:
+- O(n) for storage of the big integer, where n is the number of the digits.
+- O(n) auxiliary heap space for str(), add(), sub(), mul(), and div(), where n
+  the total number of digits in the argument(s) and result for each operation.
+
+*/
+
+#include <algorithm>
+#include <cctype>
+#include <stdexcept>
+#include <string>
+
+class bigint {
+  std::string digits;
+  int sign;
+
+  void normalize() {
+    size_t pos = digits.find_last_not_of('0');
+    if (pos != std::string::npos) {
+      digits.erase(pos + 1);
+    }
+    if (digits.empty()) {
+      digits = "0";
+    }
+    if (digits.size() == 1 && digits[0] == '0') {
+      sign = 1;
+      return;
+    }
+  }
+
+  static int comp(const std::string &a, const std::string &b,
+                  int asign, int bsign) {
+    if (asign != bsign) {
+      return asign < bsign ? -1 : 1;
+    }
+    if (a.size() != b.size()) {
+      return a.size() < b.size() ? -asign : asign;
+    }
+    for (int i = (int)a.size() - 1; i >= 0; i--) {
+      if (a[i] != b[i]) {
+        return a[i] < b[i] ? -asign : asign;
+      }
+    }
+    return 0;
+  }
+
+  static bigint add(const std::string &a, const std::string &b,
+                    int asign, int bsign) {
+    if (asign != bsign) {
+      return (asign == 1) ? sub(a, b, asign, 1) : sub(b, a, bsign, 1);
+    }
+    bigint res;
+    res.sign = asign;
+    res.digits.resize(std::max(a.size(), b.size()) + 1, '0');
+    for (int i = 0, carry = 0; i < (int)res.digits.size(); i++) {
+      int d = carry;
+      if (i < (int)a.size()) {
+        d += a[i] - '0';
+      }
+      if (i < (int)b.size()) {
+        d += b[i] - '0';
+      }
+      res.digits[i] = '0' + (d % 10);
+      carry = d/10;
+    }
+    res.normalize();
+    return res;
+  }
+
+  static bigint sub(const std::string &a, const std::string &b,
+                    int asign, int bsign) {
+    if (asign == -1 || bsign == -1) {
+      return add(a, b, asign, -bsign);
+    }
+    bigint res;
+    if (comp(a, b, asign, bsign) < 0) {
+      res = sub(b, a, bsign, asign);
+      res.sign = -1;
+      return res;
+    }
+    res.digits.assign(a.size(), '0');
+    for (int i = 0, borrow = 0; i < (int)res.digits.size(); i++) {
+      int d = (i < (int)b.size() ? a[i] - b[i] : a[i] - '0') - borrow;
+      if (a[i] > '0') {
+        borrow = 0;
+      }
+      if (d < 0) {
+        d += 10;
+        borrow = 1;
+      }
+      res.digits[i] = '0' + (d % 10);
+    }
+    res.normalize();
+    return res;
+  }
+
+ public:
+  bigint(long long n = 0) {
+    sign = (n < 0) ? -1 : 1;
+    if (n == 0) {
+      digits = "0";
+      return;
+    }
+    for (n = (n > 0) ? n : -n; n > 0; n /= 10) {
+      digits += '0' + (n % 10);
+    }
+    normalize();
+  }
+
+  bigint(const std::string &s) {
+    if (s.empty() || (s[0] == '-' && s.size() == 1)) {
+      throw std::runtime_error("Invalid string format to construct bigint.");
+    }
+    digits.assign(s.rbegin(), s.rend());
+    if (s[0] == '-') {
+      sign = -1;
+      digits.erase(digits.size() - 1);
+    } else {
+      sign = 1;
+    }
+    if (digits.find_first_not_of("0123456789") != std::string::npos) {
+      throw std::runtime_error("Invalid string format to construct bigint.");
+    }
+    normalize();
+  }
+
+  std::string to_string() const {
+    return (sign < 0 ? "-" : "") + std::string(digits.rbegin(), digits.rend());
+  }
+
+  friend int comp(const bigint &a, const bigint &b) {
+    return comp(a.digits, b.digits, a.sign, b.sign);
+  }
+
+  friend bigint add(const bigint &a, const bigint &b) {
+    return add(a.digits, b.digits, a.sign, b.sign);
+  }
+
+  friend bigint sub(const bigint &a, const bigint &b) {
+    return sub(a.digits, b.digits, a.sign, b.sign);
+  }
+
+  friend bigint mul(const bigint &a, const bigint &b) {
+    bigint res, row(a);
+    for (int i = 0; i < (int)b.digits.size(); i++) {
+      for (int j = 0; j < (b.digits[i] - '0'); j++) {
+        res = add(res.digits, row.digits, res.sign, row.sign);
+      }
+      if (row.digits.size() > 1 || row.digits[0] != '0') {
+        row.digits.insert(0, "0");
+      }
+    }
+    res.sign = a.sign*b.sign;
+    res.normalize();
+    return res;
+  }
+
+  friend bigint div(const bigint &a, const bigint &b) {
+    bigint res, row;
+    res.digits.assign(a.digits.size(), '0');
+    for (int i = (int)a.digits.size() - 1; i >= 0; i--) {
+      row.digits.insert(row.digits.begin(), a.digits[i]);
+      while (comp(row.digits, b.digits, row.sign, 1) > 0) {
+        res.digits[i]++;
+        row = sub(row.digits, b.digits, row.sign, 1);
+      }
+    }
+    res.sign = a.sign*b.sign;
+    res.normalize();
+    return res;
+  }
+};
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+int main() {
+  bigint a("-9899819294989142124"), b("12398124981294214");
+  assert(add(a, b).to_string() == "-9887421170007847910");
+  assert(sub(a, b).to_string() == "-9912217419970436338");
+  assert(mul(a, b).to_string() == "-122739196911503356525379735104870536");
+  assert(div(a, b).to_string() == "-798");
+  assert(comp(a, b) == -1 && comp(a, a) == 0 && comp(b, a) == 1);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Big Integers}
+\begin{lstlisting}
+/*
+
+Perform operations on arbitrary precision big integers internally represented as
+a vector of base-1000000000 digits in little-endian order. Typical arithmetic
+operations involving mixed numeric primitives and strings are supported using
+templates and operator overloading, as long as at least one operand is a bigint
+at any given level of evaluation.
+
+- bigint(n) constructs a big integer from a long long (default = 0).
+- bigint(s) constructs a big integer from a C string or an std::string s.
+- operator = is defined to copy from another big integer or to assign from an
+  64-bit integer primitive.
+- size() returns the number of digits in the base-10 representation.
+- operators >> and << are defined to support stream-based input and output.
+- v.to_string(), v.to_llong(), v.to_double(), and v.to_ldouble() return the big
+  integer v converted to an std::string, long long, double, and long double
+  respectively. For the latter three data types, overflow behavior is based on
+  that of inputting from std::istream.
+- v.abs() returns the absolute value of big integer v.
+- a.comp(b) returns -1, 0, or 1 depending on whether the big integers a and b
+  compare less, equal, or greater, respectively.
+- operators <, >, <=, >=, ==, !=, +, -, *, /, %, ++, --, +=, -=, *=, /=, and %=
+  are defined analogous to those on integer primitives. Addition, subtraction,
+  and comparisons are performed using the standard linear algorithms.
+  Multiplication is performed using a combination of the grade school algorithm
+  (for smaller inputs) and either the Karatsuba algorithm (if the USE_FFT_MULT
+  flag is set to false) or the Schonhage-Strassen algorithm (if USE_FFT_MULT is
+  set to true). Division and modulo are computed simultaneously using the grade
+  school method.
+- a.div(b) returns a pair consisting of the quotient and remainder.
+- v.pow(n) returns v raised to the power of n.
+- v.sqrt() returns the integral part of the square root of big integer v.
+- v.nth_root(n) returns the integral part of the n-th root of big integer v.
+- rand(n) returns a random, positive big integer with n digits.
+
+Time Complexity:
+- O(n) per call to the constructors, size(), to_string(), to_llong(),
+  to_double(), to_ldouble(), abs(), comp(), rand(), and all comparison and
+  arithmetic operators except multiplication, division, and modulo, where n is
+  total number of digits in the argument(s) and result for each operation.
+- O(n*log(n)*log(log(n))) or O(n^1.585) per call to multiplication operations,
+  depending on whether USE_FFT_MULT is set to true or false.
+- O(n*m) per call to division and modulo operations, where n and m are the
+  number of digits in the dividend and divisor, respectively.
+- O(M(m) log n) per call to pow(n), where m is the length of the big integer.
+
+Space Complexity:
+- O(n) for storage of the big integer.
+- O(n) auxiliary heap space for negation, addition, subtraction, multiplication,
+  division, abs(), sqrt(), pow(), and nth_root().
+- O(1) auxiliary space for all other operations.
+
+*/
+
+#include <algorithm>
+#include <cmath>
+#include <complex>
+#include <cstdlib>
+#include <cstring>
+#include <iomanip>
+#include <istream>
+#include <ostream>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+class bigint {
+  static const int BASE = 1000000000, BASE_DIGITS = 9;
+  static const bool USE_FFT_MULT = true;
+
+  typedef std::vector<int> vint;
+  typedef std::vector<long long> vll;
+  typedef std::vector<std::complex<double> > vcd;
+
+  vint digits;
+  int sign;
+
+  void normalize() {
+    while (!digits.empty() && digits.back() == 0) {
+      digits.pop_back();
+    }
+    if (digits.empty()) {
+      sign = 1;
+    }
+  }
+
+  void read(int n, const char *s) {
+    sign = 1;
+    digits.clear();
+    int pos = 0;
+    while (pos < n && (s[pos] == '-' || s[pos] == '+')) {
+      if (s[pos] == '-') {
+        sign = -sign;
+      }
+      pos++;
+    }
+    for (int i = n - 1; i >= pos; i -= BASE_DIGITS) {
+      int x = 0;
+      for (int j = std::max(pos, i - BASE_DIGITS + 1); j <= i; j++) {
+        x = x*10 + s[j] - '0';
+      }
+      digits.push_back(x);
+    }
+    normalize();
+  }
+
+  static int comp(const vint &a, const vint &b, int asign, int bsign) {
+    if (asign != bsign) {
+      return asign < bsign ? -1 : 1;
+    }
+    if (a.size() != b.size()) {
+      return a.size() < b.size() ? -asign : asign;
+    }
+    for (int i = (int)a.size() - 1; i >= 0; i--) {
+      if (a[i] != b[i]) {
+        return a[i] < b[i] ? -asign : asign;
+      }
+    }
+    return 0;
+  }
+
+  static bigint add(const vint &a, const vint &b, int asign, int bsign) {
+    if (asign != bsign) {
+      return (asign == 1) ? sub(a, b, asign, 1) : sub(b, a, bsign, 1);
+    }
+    bigint res;
+    res.digits = a;
+    res.sign = asign;
+    int carry = 0, size = (int)std::max(a.size(), b.size());
+    for (int i = 0; i < size || carry; i++) {
+      if (i == (int)res.digits.size()) {
+        res.digits.push_back(0);
+      }
+      res.digits[i] += carry + (i < (int)b.size() ? b[i] : 0);
+      carry = (res.digits[i] >= BASE) ? 1 : 0;
+      if (carry) {
+        res.digits[i] -= BASE;
+      }
+    }
+    return res;
+  }
+
+  static bigint sub(const vint &a, const vint &b, int asign, int bsign) {
+    if (asign == -1 || bsign == -1) {
+      return add(a, b, asign, -bsign);
+    }
+    bigint res;
+    if (comp(a, b, asign, bsign) < 0) {
+      res = sub(b, a, bsign, asign);
+      res.sign = -1;
+      return res;
+    }
+    res.digits = a;
+    res.sign = asign;
+    for (int i = 0, borrow = 0; i < (int)a.size() || borrow; i++) {
+      res.digits[i] -= borrow + (i < (int)b.size() ? b[i] : 0);
+      borrow = res.digits[i] < 0;
+      if (borrow) {
+        res.digits[i] += BASE;
+      }
+    }
+    res.normalize();
+    return res;
+  }
+
+  static vint convert_base(const vint &digits, int l1, int l2) {
+    vll p(std::max(l1, l2) + 1);
+    p[0] = 1;
+    for (int i = 1; i < (int)p.size(); i++) {
+      p[i] = p[i - 1]*10;
+    }
+    vint res;
+    long long curr = 0;
+    for (int i = 0, curr_digits = 0; i < (int)digits.size(); i++) {
+      curr += digits[i]*p[curr_digits];
+      curr_digits += l1;
+      while (curr_digits >= l2) {
+        res.push_back((int)(curr % p[l2]));
+        curr /= p[l2];
+        curr_digits -= l2;
+      }
+    }
+    res.push_back((int)curr);
+    while (!res.empty() && res.back() == 0) {
+      res.pop_back();
+    }
+    return res;
+  }
+
+  template<class It>
+  static vll karatsuba(It alo, It ahi, It blo, It bhi) {
+    int n = std::distance(alo, ahi), k = n/2;
+    vll res(n*2);
+    if (n <= 32) {
+      for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+          res[i + j] += alo[i]*blo[j];
+        }
+      }
+      return res;
+    }
+    vll a1b1 = karatsuba(alo, alo + k, blo, blo + k);
+    vll a2b2 = karatsuba(alo + k, ahi, blo + k, bhi);
+    vll a2(alo + k, ahi), b2(blo + k, bhi);
+    for (int i = 0; i < k; i++) {
+      a2[i] += alo[i];
+      b2[i] += blo[i];
+    }
+    vll r = karatsuba(a2.begin(), a2.end(), b2.begin(), b2.end());
+    for (int i = 0; i < (int)a1b1.size(); i++) {
+      r[i] -= a1b1[i];
+      res[i] += a1b1[i];
+    }
+    for (int i = 0; i < (int)a2b2.size(); i++) {
+      r[i] -= a2b2[i];
+      res[i + n] += a2b2[i];
+    }
+    for (int i = 0; i < (int)r.size(); i++) {
+      res[i + k] += r[i];
+    }
+    return res;
+  }
+
+  template<class It>
+  static vcd fft(It lo, It hi, bool invert = false) {
+    int n = std::distance(lo, hi), k = 0, high1 = -1;
+    while ((1 << k) < n) {
+      k++;
+    }
+    std::vector<int> rev(n, 0);
+    for (int i = 1; i < n; i++) {
+      if (!(i & (i - 1))) {
+        high1++;
+      }
+      rev[i] = rev[i ^ (1 << high1)];
+      rev[i] |= (1 << (k - high1 - 1));
+    }
+    vcd roots(n), res(n);
+    for (int i = 0; i < n; i++) {
+      double alpha = 2*3.14159265358979323846*i/n;
+      roots[i] = std::complex<double>(cos(alpha), sin(alpha));
+      res[i] = *(lo + rev[i]);
+    }
+    for (int len = 1; len < n; len <<= 1) {
+      vcd tmp(n);
+      int rstep = roots.size()/(len << 1);
+      for (int pdest = 0; pdest < n; pdest += len) {
+        int p = pdest;
+        for (int i = 0; i < len; i++) {
+          std::complex<double> c = roots[i*rstep]*res[p + len];
+          tmp[pdest] = res[p] + c;
+          tmp[pdest + len] = res[p] - c;
+          pdest++;
+          p++;
+        }
+      }
+      res.swap(tmp);
+    }
+    if (invert) {
+      for (int i = 0; i < (int)res.size(); i++) {
+        res[i] /= n;
+      }
+      std::reverse(res.begin() + 1, res.end());
+    }
+    return res;
+  }
+
+ public:
+  bigint() : sign(1) {}
+  bigint(int v) { *this = (long long)v; }
+  bigint(long long v) { *this = v; }
+  bigint(const char *s) { read(strlen(s), s); }
+  bigint(const std::string &s) { read(s.size(), s.c_str()); }
+
+  void operator=(const bigint &v) {
+    sign = v.sign;
+    digits = v.digits;
+  }
+
+  void operator=(long long v) {
+    sign = 1;
+    if (v < 0) {
+      sign = -1;
+      v = -v;
+    }
+    digits.clear();
+    for (; v > 0; v /= BASE) {
+      digits.push_back(v % BASE);
+    }
+  }
+
+  int size() const {
+    if (digits.empty()) {
+      return 1;
+    }
+    std::ostringstream oss;
+    oss << digits.back();
+    return oss.str().length() + BASE_DIGITS*(digits.size() - 1);
+  }
+
+  friend std::istream& operator>>(std::istream &in, bigint &v) {
+    std::string s;
+    in >> s;
+    v.read(s.size(), s.c_str());
+    return in;
+  }
+
+  friend std::ostream& operator<<(std::ostream &out, const bigint &v) {
+    if (v.sign == -1) {
+      out << '-';
+    }
+    out << (v.digits.empty() ? 0 : v.digits.back());
+    for (int i = (int)v.digits.size() - 2; i >= 0; i--) {
+      out << std::setw(BASE_DIGITS) << std::setfill('0') << v.digits[i];
+    }
+    return out;
+  }
+
+  std::string to_string() const {
+    std::ostringstream oss;
+    if (sign == -1) {
+      oss << '-';
+    }
+    oss << (digits.empty() ? 0 : digits.back());
+    for (int i = (int)digits.size() - 2; i >= 0; i--) {
+      oss << std::setw(BASE_DIGITS) << std::setfill('0') << digits[i];
+    }
+    return oss.str();
+  }
+
+  long long to_llong() const {
+    long long res = 0;
+    for (int i = (int)digits.size() - 1; i >= 0; i--) {
+      res = res*BASE + digits[i];
+    }
+    return res*sign;
+  }
+
+  double to_double() const {
+    std::stringstream ss(to_string());
+    double res;
+    ss >> res;
+    return res;
+  }
+
+  long double to_ldouble() const {
+    std::stringstream ss(to_string());
+    long double res;
+    ss >> res;
+    return res;
+  }
+
+  int comp(const bigint &v) const {
+    return comp(digits, v.digits, sign, v.sign);
+  }
+
+  bool operator<(const bigint &v) const { return comp(v) < 0; }
+  bool operator>(const bigint &v) const { return comp(v) > 0; }
+  bool operator<=(const bigint &v) const { return comp(v) <= 0; }
+  bool operator>=(const bigint &v) const { return comp(v) >= 0; }
+  bool operator==(const bigint &v) const { return comp(v) == 0; }
+  bool operator!=(const bigint &v) const { return comp(v) != 0; }
+
+  template<class T>
+  friend bool operator<(const T &a, const bigint &b) { return bigint(a) < b; }
+
+  template<class T>
+  friend bool operator>(const T &a, const bigint &b) { return bigint(a) > b; }
+
+  template<class T>
+  friend bool operator<=(const T &a, const bigint &b) { return bigint(a) <= b; }
+
+  template<class T>
+  friend bool operator>=(const T &a, const bigint &b) { return bigint(a) >= b; }
+
+  template<class T>
+  friend bool operator==(const T &a, const bigint &b) { return bigint(a) == b; }
+
+  template<class T>
+  friend bool operator!=(const T &a, const bigint &b) { return bigint(a) != b; }
+
+  bigint abs() const {
+    bigint res(*this);
+    res.sign = 1;
+    return res;
+  }
+
+  bigint operator-() const {
+    bigint res(*this);
+    res.sign = -sign;
+    return res;
+  }
+
+  bigint operator+(const bigint &v) const {
+    return add(digits, v.digits, sign, v.sign);
+  }
+
+  bigint operator-(const bigint &v) const {
+    return sub(digits, v.digits, sign, v.sign);
+  }
+
+  void operator*=(int v) {
+    if (v < 0) {
+      sign = -sign;
+      v = -v;
+    }
+    for (int i = 0, carry = 0; i < (int)digits.size() || carry; i++) {
+      if (i == (int)digits.size()) {
+        digits.push_back(0);
+      }
+      long long curr = digits[i]*(long long)v + carry;
+      carry = (int)(curr/BASE);
+      digits[i] = (int)(curr % BASE);
+    }
+    normalize();
+  }
+
+  bigint operator*(int v) const {
+    bigint res(*this);
+    res *= v;
+    return res;
+  }
+
+  bigint operator*(const bigint &v) const {
+    static const int TEMP_BASE = 10000, TEMP_BASE_DIGITS = 4;
+    vint a = convert_base(digits, BASE_DIGITS, TEMP_BASE_DIGITS);
+    vint b = convert_base(v.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
+    int n = 1 << (33 - __builtin_clz(std::max(a.size(), b.size()) - 1));
+    a.resize(n, 0);
+    b.resize(n, 0);
+    vll c;
+    if (USE_FFT_MULT) {
+      vcd at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
+      for (int i = 0; i < n; i++) {
+        at[i] *= bt[i];
+      }
+      at = fft(at.begin(), at.end(), true);
+      c.resize(n);
+      for (int i = 0; i < n; i++) {
+        c[i] = at[i].real() + 0.5;
+      }
+    } else {
+      c = karatsuba(a.begin(), a.end(), b.begin(), b.end());
+    }
+    bigint res;
+    res.sign = sign*v.sign;
+    for (int i = 0, carry = 0; i < (int)c.size(); i++) {
+      long long d = c[i] + carry;
+      res.digits.push_back(d % TEMP_BASE);
+      carry = d/TEMP_BASE;
+    }
+    res.digits = convert_base(res.digits, TEMP_BASE_DIGITS, BASE_DIGITS);
+    res.normalize();
+    return res;
+  }
+
+  bigint& operator/=(int v) {
+    if (v == 0) {
+      throw std::runtime_error("Division by zero in bigint.");
+    }
+    if (v < 0) {
+      sign = -sign;
+      v = -v;
+    }
+    for (int i = (int)digits.size() - 1, rem = 0; i >= 0; i--) {
+      long long curr = digits[i] + rem*(long long)BASE;
+      digits[i] = (int)(curr/v);
+      rem = (int)(curr % v);
+    }
+    normalize();
+    return *this;
+  }
+
+  bigint operator/(int v) const {
+    bigint res(*this);
+    res /= v;
+    return res;
+  }
+
+  int operator%(int v) const {
+    if (v == 0) {
+      throw std::runtime_error("Division by zero in bigint.");
+    }
+    if (v < 0) {
+      v = -v;
+    }
+    int m = 0;
+    for (int i = (int)digits.size() - 1; i >= 0; i--) {
+      m = (digits[i] + m*(long long)BASE) % v;
+    }
+    return m*sign;
+  }
+
+  std::pair<bigint, bigint> div(const bigint &v) const {
+    if (v == 0) {
+      throw std::runtime_error("Division by zero in bigint.");
+    }
+    if (comp(digits, v.digits, 1, 1) < 0) {
+      return std::make_pair(0, *this);
+    }
+    int norm = BASE/(v.digits.back() + 1);
+    bigint an = abs()*norm, bn = v.abs()*norm, q, r;
+    q.digits.resize(an.digits.size());
+    for (int i = (int)an.digits.size() - 1; i >= 0; i--) {
+      r *= BASE;
+      r += an.digits[i];
+      int s1 = (r.digits.size() <= bn.digits.size())
+                  ? 0 : r.digits[bn.digits.size()];
+      int s2 = (r.digits.size() <= bn.digits.size() - 1)
+                  ? 0 : r.digits[bn.digits.size() - 1];
+      int d = ((long long)s1*BASE + s2)/bn.digits.back();
+      for (r -= bn*d; r < 0; r += bn) {
+        d--;
+      }
+      q.digits[i] = d;
+    }
+    q.sign = sign*v.sign;
+    r.sign = sign;
+    q.normalize();
+    r.normalize();
+    return std::make_pair(q, r/norm);
+  }
+
+  bigint operator/(const bigint &v) const { return div(v).first; }
+  bigint operator%(const bigint &v) const { return div(v).second; }
+  bigint operator++(int) { bigint t(*this); operator++(); return t; }
+  bigint operator--(int) { bigint t(*this); operator--(); return t; }
+  bigint& operator++() { *this = *this + bigint(1); return *this; }
+  bigint& operator--() { *this = *this - bigint(1); return *this; }
+  bigint& operator+=(const bigint &v) { *this = *this + v; return *this; }
+  bigint& operator-=(const bigint &v) { *this = *this - v; return *this; }
+  bigint& operator*=(const bigint &v) { *this = *this * v; return *this; }
+  bigint& operator/=(const bigint &v) { *this = *this / v; return *this; }
+  bigint& operator%=(const bigint &v) { *this = *this % v; return *this; }
+
+  template<class T>
+  friend bigint operator+(const T &a, const bigint &b) { return bigint(a) + b; }
+
+  template<class T>
+  friend bigint operator-(const T &a, const bigint &b) { return bigint(a) - b; }
+
+  bigint pow(int n) const {
+    if (n == 0) {
+      return bigint(1);
+    }
+    if (*this == 0 || n < 0) {
+      return bigint(0);
+    }
+    bigint x(*this), res(1);
+    for (; n != 0; n >>= 1) {
+      if (n & 1) {
+        res *= x;
+      }
+      x *= x;
+    }
+    return res;
+  }
+
+  bigint sqrt() const {
+    if (sign == -1) {
+      throw std::runtime_error("Cannot take square root of a negative number.");
+    }
+    bigint v(*this);
+    while (v.digits.empty() || v.digits.size() % 2 == 1) {
+      v.digits.push_back(0);
+    }
+    int n = v.digits.size();
+    int ldig = (int)::sqrt((double)v.digits[n - 1]*BASE + v.digits[n - 2]);
+    int norm = BASE/(ldig + 1);
+    v *= norm;
+    v *= norm;
+    while (v.digits.empty() || v.digits.size() % 2 == 1) {
+      v.digits.push_back(0);
+    }
+    bigint r((long long)v.digits[n - 1]*BASE + v.digits[n - 2]);
+    int q = ldig = (int)::sqrt((double)v.digits[n - 1]*BASE + v.digits[n - 2]);
+    bigint res;
+    for (int j = n/2 - 1; j >= 0; j--) {
+      for (;; q--) {
+        bigint r1 = (r - (res*2*BASE + q)*q)*BASE*BASE +
+            (j > 0 ? (long long)v.digits[2*j - 1]*BASE + v.digits[2*j - 2] : 0);
+        if (r1 >= 0) {
+          r = r1;
+          break;
+        }
+      }
+      res = res*BASE + q;
+      if (j > 0) {
+        int sz1 = res.digits.size(), sz2 = r.digits.size();
+        int d1 = (sz1 + 2 < sz2) ? r.digits[sz1 + 2] : 0;
+        int d2 = (sz1 + 1 < sz2) ? r.digits[sz1 + 1] : 0;
+        int d3 = (sz1 < sz2) ? r.digits[sz1] : 0;
+        q = ((long long)d1*BASE*BASE + (long long)d2*BASE + d3)/(ldig*2);
+      }
+    }
+    res.normalize();
+    return res/norm;
+  }
+
+  bigint nth_root(int n) const {
+    if (sign == -1 && n % 2 == 0) {
+      throw std::runtime_error("Cannot take even root of a negative number.");
+    }
+    if (*this == 0 || n < 0) {
+      return bigint(0);
+    }
+    if (n >= size()) {
+      int p = 1;
+      while (comp(bigint(p).pow(n)) > 0) {
+        p++;
+      }
+      return comp(bigint(p).pow(n)) < 0 ? p - 1 : p;
+    }
+    bigint lo(bigint(10).pow((int)ceil((double)size()/n) - 1)), hi(lo*10), mid;
+    while (lo < hi) {
+      mid = (lo + hi)/2;
+      int cmp = comp(digits, mid.pow(n).digits, 1, 1);
+      if (lo < mid && cmp > 0) {
+        lo = mid;
+      } else if (mid < hi && cmp < 0) {
+        hi = mid;
+      } else {
+        return (sign == -1) ? -mid : mid;
+      }
+    }
+    return (sign == -1) ? -(mid + 1) : (mid + 1);
+  }
+
+  static bigint rand(int n) {
+    if (n == 0) {
+      return bigint(0);
+    }
+    std::string s(1, '1' + (::rand() % 9));
+    for (int i = 1; i < n; i++) {
+      s += '0' + (::rand() % 10);
+    }
+    return bigint(s);
+  }
+
+  friend int comp(const bigint &a, const bigint &b) { return a.comp(b); }
+  friend bigint abs(const bigint &v) { return v.abs(); }
+  friend bigint pow(const bigint &v, int n) { return v.pow(n); }
+  friend bigint sqrt(const bigint &v) { return v.sqrt(); }
+  friend bigint nth_root(const bigint &v, int n) { return v.nth_root(n); }
+};
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+int main() {
+  bigint a("-9899819294989142124"), b("12398124981294214");
+  assert(a + b == "-9887421170007847910");
+  assert(a - b == "-9912217419970436338");
+  assert(a * b == "-122739196911503356525379735104870536");
+  assert(a / b == "-798");
+  assert(bigint(20).pow(12345).size() == 16062);
+  assert(bigint("9812985918924981892491829").nth_root(4) == 1769906);
+  for (int i = -100; i <= 100; i++) {
+    if (i >= 0) {
+      assert(bigint(i).sqrt() == (int)sqrt(i));
+    }
+    for (int j = -100; j <= 100; j++) {
+      assert(bigint(i) + bigint(j) == i + j);
+      assert(bigint(i) - bigint(j) == i - j);
+      assert(bigint(i) * bigint(j) == i * j);
+      if (j != 0) {
+        assert(bigint(i) / bigint(j) == i / j);
+      }
+      if (0 < i && i <= 10 && 0 < j && j <= 10) {
+        assert(bigint(i).nth_root(j) == (long long)(pow(i, 1.0/j) + 1E-5));
+        long long p = 1;
+        for (int k = 0; k < j; k++) {
+          p *= i;
+        }
+        assert(bigint(i).pow(j) == p);
+      }
+    }
+  }
+  for (int i = 0; i < 20; i++) {
+    int n = rand() % 100 + 1;
+    bigint a(bigint::rand(n)), s(a.sqrt()), xx(s*s), yy(s + 1);
+    yy *= yy;
+    assert(xx <= a && a < yy);
+    bigint b(bigint::rand(rand() % n + 1) + 1), q(a/b);
+    xx = q*b;
+    yy = b*(q + 1);
+    assert(a >= xx && a < yy);
+  }
+  bigint x(-6);
+  assert(x.to_string() == "-6");
+  assert(x.to_llong() == -6LL);
+  assert(x.to_double() == -6.0);
+  assert(x.to_ldouble() == -6.0);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Rational Numbers}
+\begin{lstlisting}
+/*
+
+Perform operations on rational numbers internally represented as two integers, a
+numerator and a denominator. The template integer type must support streamed
+input/output, comparisons, and arithmetic operations. Overflow is not checked
+for in internal operations.
+
+- rational(n) constructs a rational with numerator n and denominator 1.
+- rational(n, d) constructs a rational with numerator n and denominator d.
+- operator >> inputs a rational using the next integer from the stream as the
+  numerator and 1 as the denominator.
+- operator << outputs a rational as a string consisting of possibly a minus sign
+  followed by the numerator, followed by a slash, followed by the denominator.
+- v.to_string(), v.to_llong(), v.to_double(), and v.to_ldouble() return the big
+  integer v converted to an std::string, long long, double, and long double
+  respectively.
+- operators <, >, <=, >=, ==, !=, +, -, *, /, %, ++, --, +=, -=, *=, /=, and %=
+  are defined analogous to those on numerical primitives.
+
+Time Complexity:
+- O(log(n + d)) per call to constructor rational(n, d).
+- O(1) per call to all other operations, assuming that corresponding operations
+  on the template integer type are O(1) as well.
+
+Space Complexity:
+- O(1) for storage of the rational.
+- O(1) auxiliary space for all operations.
+
+*/
+
+#include <istream>
+#include <ostream>
+#include <sstream>
+#include <string>
+
+template<class Int = long long>
+class rational {
+  Int num, den;
+
+ public:
+  rational(): num(0), den(1) {}
+  rational(const Int &n) : num(n), den(1) {}
+
+  template<class T1, class T2>
+  rational(const T1 &n, const T2 &d): num(n), den(d) {
+    if (den == 0) {
+      throw std::runtime_error("Division by zero in rational.");
+    }
+    if (den < 0) {
+      num = -num;
+      den = -den;
+    }
+    Int a(num < 0 ? -num : num), b(den), tmp;
+    while (a != 0 && b != 0) {
+      tmp = a % b;
+      a = b;
+      b = tmp;
+    }
+    Int gcd = (b == 0) ? a : b;
+    num /= gcd;
+    den /= gcd;
+  }
+
+  friend std::istream& operator>>(std::istream &in, rational &r) {
+    std::string s;
+    in >> r.num;
+    r.den = 1;
+    return in;
+  }
+
+  friend std::ostream& operator<<(std::ostream &out, const rational &r) {
+    out << r.num << "/" << r.den;
+    return out;
+  }
+
+  std::string to_string() const {
+    std::stringstream ss;
+    ss << num << " " << den;
+    std::string n, d;
+    ss >> n >> d;
+    return n + "/" + d;
+  }
+
+  long long to_llong() const {
+    std::stringstream ss;
+    ss << num << " " << den;
+    long long n, d;
+    ss >> n >> d;
+    return n/d;
+  }
+
+  double to_double() const {
+    std::stringstream ss;
+    ss << num << " " << den;
+    double n, d;
+    ss >> n >> d;
+    return n/d;
+  }
+
+  long double to_ldouble() const {
+    long double n, d;
+    std::stringstream ss;
+    ss << num << " " << den;
+    ss >> n >> d;
+    return n/d;
+  }
+
+  bool operator<(const rational &r) const {
+    return num*r.den < r.num*den;
+  }
+
+  bool operator>(const rational &r) const {
+    return r.num*den < num*r.den;
+  }
+
+  bool operator<=(const rational &r) const {
+    return !(r < *this);
+  }
+
+  bool operator>=(const rational &r) const {
+    return !(*this < r);
+  }
+
+  bool operator==(const rational &r) const {
+    return num == r.num && den == r.den;
+  }
+
+  bool operator!=(const rational &r) const {
+    return num != r.num || den != r.den;
+  }
+
+  template<class T>
+  friend bool operator<(const T &a, const rational &b) {
+    return rational(a) < b;
+  }
+
+  template<class T>
+  friend bool operator>(const T &a, const rational &b) {
+    return rational(a) > b;
+  }
+
+  template<class T>
+  friend bool operator<=(const T &a, const rational &b) {
+    return rational(a) <= b;
+  }
+
+  template<class T>
+  friend bool operator>=(const T &a, const rational &b) {
+    return rational(a) >= b;
+  }
+
+  template<class T>
+  friend bool operator==(const T &a, const rational &b) {
+    return rational(a) == b;
+  }
+
+  template<class T>
+  friend bool operator!=(const T &a, const rational &b) {
+    return rational(a) != b;
+  }
+
+  rational abs() const {
+    return rational(num < 0 ? -num : num, den);
+  }
+
+  friend rational abs(const rational &r) { return r.abs(); }
+
+  rational operator+(const rational &r) const {
+    return rational(num*r.den + r.num*den, den*r.den);
+  }
+
+  rational operator-(const rational &r) const {
+    return rational(num*r.den - r.num*den, r.den*den);
+  }
+
+  rational operator*(const rational &r) const {
+    return rational(num*r.num, r.den*den);
+  }
+
+  rational operator/(const rational &r) const {
+    return rational(num*r.den, den*r.num);
+  }
+
+  rational operator%(const rational &r) const {
+    return *this - r*rational(num*r.den/(r.num*den), 1);
+  }
+
+  template<class T>
+  friend rational operator+(const T &a, const rational &b) {
+    return rational(a) + b;
+  }
+
+  template<class T>
+  friend rational operator-(const T &a, const rational &b) {
+    return rational(a) - b;
+  }
+
+  template<class T>
+  friend rational operator*(const T &a, const rational &b) {
+    return rational(a) * b;
+  }
+
+  template<class T>
+  friend rational operator/(const T &a, const rational &b) {
+    return rational(a) / b;
+  }
+
+  template<class T>
+  friend rational operator%(const T &a, const rational &b) {
+    return rational(a) % b;
+  }
+
+  rational operator-() const { return rational(-num, den); }
+  rational operator++(int) { rational t(*this); operator++(); return t; }
+  rational operator--(int) { rational t(*this); operator--(); return t; }
+  rational& operator++() { *this = *this + 1; return *this; }
+  rational& operator--() { *this = *this - 1; return *this; }
+  rational& operator+=(const rational &r) { *this = *this + r; return *this; }
+  rational& operator-=(const rational &r) { *this = *this - r; return *this; }
+  rational& operator*=(const rational &r) { *this = *this * r; return *this; }
+  rational& operator/=(const rational &r) { *this = *this / r; return *this; }
+  rational& operator%=(const rational &r) { *this = *this % r; return *this; }
+};
+
+/*** Example Usage ***/
+
+#include <cassert>
+#include <cmath>
+
+int main() {
+  #define EQ(a, b) (fabs((a) - (b)) <= 1E-9)
+  typedef rational<long long> rational;
+
+  assert(rational(-21, 1) % 2 == -1);
+  rational r(rational(-53, 10) % rational(-17, 10));
+  assert(EQ(r.to_ldouble(), fmod(-5.3, -1.7)));
+  assert(r.to_string() == "-1/5");
+  return 0;
+}
+\end{lstlisting}
+
+\section{Linear Algebra}
+\setcounter{section}{5}
+\setcounter{subsection}{0}
+\subsection{Matrix Utilities}
+\begin{lstlisting}
+/*
+
+Basic matrix operations defined on a two-dimensional vector of numeric values.
+
+- make_matrix(r, c, v) constructs and returns a matrix with r rows and c columns
+  where the value at every index is initialized to v.
+- make_matrix(a) returns a matrix constructed from the two dimensional array a.
+- identity_matrix(n) returns the n by n identity matrix, that is, a matrix where
+  a[i][j] equals 1 (if i == j), or 0 otherwise, for every i and j in [0, n).
+- rows(a) returns the number of rows r in an r by c matrix a.
+- columns(a) returns the number of columns c in an r by c matrix a.
+- a[i][j] may be used to access or modify the entry at row i, column j of an r
+  by c matrix a, for every i in [0, r) and j in [0, c).
+- operators <, >, <=, >=, ==, and != defines lexicographical comparison based on
+  that of std::vector.
+- operators +, -, *, /, +=, -=, *=, and /= defines scalar addition, subtraction,
+  multiplication, and division involving a matrix a numeric scalar value v.
+- operators * and *= defines vector and matrix multiplication.
+- operators ^ and ^= defines matrix exponentiation of a square matrix a by an
+  integer power p.
+- power_sum(a, p) returns the power sum of a square matrix a up to an integer
+  power p, that is, a + a^2 + ... + a^p.
+- transpose(a) returns the transpose of an r by c matrix a, that is, a new c by
+  r matrix b such that a[i][j] == b[j][i] for every i in [0, r) and j in [0, c).
+- transpose_in_place(a) assigns the square matrix a to its transpose, returning
+  a reference to the modified argument itself.
+- rotate(a, d) returns the matrix a rotated d degrees clockwise. A negative d
+  specifies a counter-clockwise rotation, and d must be a multiple of 90.
+- rotate_in_place(a, d) assigns the square matrix a to its rotation by d degrees
+  clockwise, returning a reference to the modified argument itself. A negative d
+  specifies a counter-clockwise rotation, and d must be a multiple of 90.
+
+Time Complexity:
+- O(n*m) for construction, output, comparison, and scalar arithmetic of n by m
+  matrices.
+- O(1) for rows(a) and columns(a).
+- O(n*m) for matrix-matrix addition and subtraction of n by m matrices.
+- O(n*m*log(p)) for exponentiation of an n by m matrix to power p.
+- O(n*m*log^2(p)) for power sum of an n by m matrix to power p.
+- O(n*m*k) for multiplication of an n by m matrix by an m by k matrix.
+- O(n*m) for transpose(), transpose_in_place(), rotate(), and rotate_in_place()
+  of n by m matrices.
+
+Space Complexity:
+- O(1) auxiliary space for rows(), columns(), a[i][j] access, comparison
+  operators, and in-place operations.
+- O(n*m*log(p)) auxiliary stack and heap space for exponentiation of an n by m
+  matrix to power p, as well as the power sum of an n by m matrix up to power p.
+- O(n*m) auxiliary heap space for all non-in-place operations returning an n by
+  m matrix, transpose(), and rotate().
+
+*/
+
+#include <algorithm>
+#include <cstddef>
+#include <iomanip>
+#include <ostream>
+#include <stdexcept>
+#include <vector>
+
+typedef std::vector<std::vector<int> > matrix;
+
+matrix make_matrix(int r, int c) {
+  return matrix(r, matrix::value_type(c));
+}
+
+template<class T>
+matrix make_matrix(int r, int c, const T &v) {
+  return matrix(r, matrix::value_type(c, v));
+}
+
+template<class T, size_t r, size_t c>
+matrix make_matrix(T (&a)[r][c]) {
+  matrix res(r, matrix::value_type(c));
+  for (size_t i = 0; i < r; i++) {
+    for (size_t j = 0; j < c; j++) {
+      res[i][j] = a[i][j];
+    }
+  }
+  return res;
+}
+
+matrix identity_matrix(int n) {
+  matrix res(n, matrix::value_type(n, 0));
+  for (int i = 0; i < n; i++) {
+    res[i][i] = 1;
+  }
+  return res;
+}
+
+int rows(const matrix &a) { return a.size(); }
+int columns(const matrix &a) { return a.empty() ? 0 : a[0].size(); }
+
+std::ostream& operator<<(std::ostream &out, const matrix &a) {
+  static const int W = 10, P = 5;
+  for (int i = 0; i < rows(a); i++) {
+    for (int j = 0; j < columns(a); j++) {
+      out << std::setw(W) << std::fixed << std::setprecision(P) << a[i][j];
+    }
+    out << std::endl;
+  }
+  return out;
+}
+
+template<class T>
+matrix& operator+=(matrix &a, const T &v) {
+  for (int i = 0; i < rows(a); i++) {
+    for (int j = 0; j < columns(a); j++) {
+      a[i][j] += v;
+    }
+  }
+  return a;
+}
+
+template<class T>
+matrix& operator-=(matrix &a, const T &v) {
+  for (int i = 0; i < rows(a); i++) {
+    for (int j = 0; j < columns(a); j++) {
+      a[i][j] -= v;
+    }
+  }
+  return a;
+}
+
+template<class T>
+matrix& operator*=(matrix &a, const T &v) {
+  for (int i = 0; i < rows(a); i++) {
+    for (int j = 0; j < columns(a); j++) {
+      a[i][j] *= v;
+    }
+  }
+  return a;
+}
+
+template<class T>
+matrix& operator/=(matrix &a, const T &v) {
+  for (int i = 0; i < rows(a); i++) {
+    for (int j = 0; j < columns(a); j++) {
+      a[i][j] /= v;
+    }
+  }
+  return a;
+}
+
+matrix& operator+=(matrix &a, const matrix &b) {
+  if (rows(a) != rows(b) || columns(a) != columns(b)) {
+    throw std::runtime_error("Invalid dimensions for matrix addition.");
+  }
+  for (int i = 0; i < rows(a); i++) {
+    for (int j = 0; j < columns(a); j++) {
+      a[i][j] += b[i][j];
+    }
+  }
+  return a;
+}
+
+matrix& operator-=(matrix &a, const matrix &b) {
+  if (rows(a) != rows(b) || columns(a) != columns(b)) {
+    throw std::runtime_error("Invalid dimensions for matrix addition.");
+  }
+  for (int i = 0; i < rows(a); i++) {
+    for (int j = 0; j < columns(a); j++) {
+      a[i][j] -= b[i][j];
+    }
+  }
+  return a;
+}
+
+matrix operator+(const matrix &a, const matrix &b) {
+  matrix c(a);
+  return c += b;
+}
+
+matrix operator-(const matrix &a, const matrix &b) {
+  matrix c(a);
+  return c -= b;
+}
+
+template<class T>
+matrix& operator*=(matrix &a, const std::vector<T> &v) {
+  if (columns(a) != (int)v.size() || v.empty()) {
+    throw std::runtime_error("Invalid dimensions for matrix multiplication.");
+  }
+  for (int i = 0; i < rows(a); i++) {
+    a[i][0] *= v[0];
+    for (int j = 1; j < columns(a); j++) {
+      a[i][0] += a[i][j]*v[j];
+    }
+  }
+  for (int i = 0; i < rows(a); i++) {
+    a[i].resize(1);
+  }
+  return a;
+}
+
+matrix operator*(const matrix &a, const matrix &b) {
+  if (columns(a) != rows(b)) {
+    throw std::runtime_error("Invalid dimensions for matrix multiplication.");
+  }
+  matrix res = make_matrix(rows(a), columns(b), 0);
+  for (int i = 0; i < rows(a); i++) {
+    for (int j = 0; j < columns(b); j++) {
+      for (int k = 0; k < rows(b); k++) {
+        res[i][j] += a[i][k]*b[k][j];
+      }
+    }
+  }
+  return res;
+}
+
+matrix& operator*=(matrix &a, const matrix &b) {
+  return a = a*b;
+}
+
+template<class T>
+matrix operator+(const matrix &a, const T &v) { matrix m(a); return m += v; }
+
+template<class T>
+matrix operator-(const matrix &a, const T &v) { matrix m(a); return m -= v; }
+
+template<class T>
+matrix operator*(const matrix &a, const T &v) { matrix m(a); return m *= v; }
+
+template<class T>
+matrix operator/(const matrix &a, const T &v) { matrix m(a); return m /= v; }
+
+template<class T>
+matrix operator+(const T &v, const matrix &a) { return a + v; }
+
+template<class T>
+matrix operator-(const T &v, const matrix &a) { return a - v; }
+
+template<class T>
+matrix operator*(const T &v, const matrix &a) { return a * v; }
+
+template<class T>
+matrix operator/(const T &v, const matrix &a) { return a / v; }
+
+matrix operator^(const matrix &a, unsigned int p) {
+  if (rows(a) != columns(a)) {
+    throw std::runtime_error("Matrix must be square for exponentiation.");
+  }
+  if (p == 0) {
+    return identity_matrix(rows(a));
+  }
+  return (p % 2 == 0) ? (a*a)^(p/2) : a*(a^(p - 1));
+}
+
+matrix operator^=(matrix &a, unsigned int p) {
+  return a = a ^ p;
+}
+
+matrix power_sum(const matrix &a, unsigned int p) {
+  if (rows(a) != columns(a)) {
+    throw std::runtime_error("Matrix must be square for power_sum.");
+  }
+  if (p == 0) {
+    return make_matrix(rows(a), rows(a));
+  }
+  return (p % 2 == 0) ? power_sum(a, p/2)*(identity_matrix(rows(a)) + (a^(p/2)))
+                      : (a + a*power_sum(a, p - 1));
+}
+
+matrix transpose(const matrix &a) {
+  matrix res = make_matrix(columns(a), rows(a));
+  for (int i = 0; i < rows(res); i++) {
+    for (int j = 0; j < columns(res); j++) {
+      res[i][j] = a[j][i];
+    }
+  }
+  return res;
+}
+
+matrix& transpose_in_place(matrix &a) {
+  if (rows(a) != columns(a)) {
+    throw std::runtime_error("Matrix must be square for transpose_in_place.");
+  }
+  for (int i = 0; i < rows(a); i++) {
+    for (int j = i + 1; j < columns(a); j++) {
+      std::swap(a[i][j], a[j][i]);
+    }
+  }
+  return a;
+}
+
+matrix rotate(const matrix &a, int degrees = 90) {
+  if (degrees % 90 != 0) {
+    throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
+  }
+  if (degrees < 0) {
+    degrees = 360 - ((-degrees) % 360);
+  }
+  matrix res;
+  switch (degrees % 360) {
+    case 90: {
+      res = make_matrix(columns(a), rows(a));
+      for (int i = 0; i < columns(a); i++) {
+        for (int j = 0; j < rows(a); j++) {
+          res[i][j] = a[rows(a) - j - 1][i];
+        }
+      }
+      break;
+    }
+    case 180: {
+      res = make_matrix(rows(a), columns(a));
+      for (int i = 0; i < rows(a); i++) {
+        for (int j = 0; j < columns(a); j++) {
+          res[i][j] = a[rows(a) - i - 1][columns(a) - j - 1];
+        }
+      }
+      break;
+    }
+    case 270: {
+      res = make_matrix(columns(a), rows(a));
+      for (int i = 0; i < columns(a); i++) {
+        for (int j = 0; j < rows(a); j++) {
+          res[i][j] = a[j][columns(a) - i - 1];
+        }
+      }
+      break;
+    }
+    default: {
+      res = a;
+    }
+  }
+  return res;
+}
+
+matrix& rotate_in_place(matrix &a, int degrees = 90) {
+  if (degrees % 90 != 0) {
+    throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
+  }
+  if (degrees % 180 != 0 && rows(a) != columns(a)) {
+    throw std::runtime_error("Matrix must be square for rotate_in_place.");
+  }
+  if (degrees < 0) {
+    degrees = 360 - ((-degrees) % 360);
+  }
+  int n = rows(a);
+  switch (degrees % 360) {
+    case 90: {
+      transpose_in_place(a);
+      for (int i = 0; i < n; i++) {
+        std::reverse(a[i].begin(), a[i].end());
+      }
+      break;
+    }
+    case 180: {
+      for (int i = 0; i < columns(a); i++) {
+        for (int j = 0, k = n - 1; j < k; j++, k--) {
+          std::swap(a[i][j], a[i][k]);
+        }
+      }
+      for (int j = 0; j < n; j++) {
+        for (int i = 0, k = columns(a) - 1; i < k; i++, k--) {
+          std::swap(a[i][j], a[k][j]);
+        }
+      }
+      break;
+    }
+    case 270: {
+      transpose_in_place(a);
+      for (int j = 0; j < n; j++) {
+        for (int i = 0, k = columns(a) - 1; i < k; i++, k--) {
+          std::swap(a[i][j], a[k][j]);
+        }
+      }
+      break;
+    }
+  }
+  return a;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  int a[2][3] = {{1, 2, 3}, {4, 5, 6}};
+  int a90[3][2] = {{4, 1}, {5, 2}, {6, 3}};
+  int a180[2][3] = {{6, 5, 4}, {3, 2, 1}};
+  int a270[3][2] = {{3, 6}, {2, 5}, {1, 4}};
+  cout << make_matrix(a) << endl;
+  assert(rotate(make_matrix(a), -270) == make_matrix(a90));
+  assert(rotate(make_matrix(a), -180) == make_matrix(a180));
+  assert(rotate(make_matrix(a), -90) == make_matrix(a270));
+  assert(rotate(make_matrix(a), 0) == make_matrix(a));
+  assert(rotate(make_matrix(a), 90) == make_matrix(a90));
+  assert(rotate(make_matrix(a), 180) == make_matrix(a180));
+  assert(rotate(make_matrix(a), 270) == make_matrix(a270));
+  assert(rotate(make_matrix(a), 360) == make_matrix(a));
+
+  int b[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+  for (int d = -360; d <= 360; d += 90) {
+    matrix m = make_matrix(b);
+    assert(rotate_in_place(m, d) == rotate(make_matrix(b), d));
+  }
+
+  matrix m = make_matrix(5, 5, 10) + 10;
+  int v[] = {1, 2, 3, 4, 5}, mv[5][1] = {{300}, {300}, {300}, {300}, {300}};
+  assert(m*vector<int>(v, v + 5) == make_matrix(mv));
+
+  m[0][0] += 5;
+  assert(m[0][0] == 25 && m[1][1] == 20);
+  assert(power_sum(m, 3) == m + m*m + (m^3));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Row Reduction}
+\begin{lstlisting}
+/*
+
+Converts a matrix to reduced row echelon form using Gaussian elimination to
+solve a system of linear equations as well as compute the determinant. In
+practice, this method is prone to rounding error on certain matrices. For a more
+accurate algorithm for solving systems of linear equations, LU decomposition
+with row partial pivoting should be used.
+
+- row_reduce(a) assigns the matrix a to its reduced row echelon form, returning
+  a reference to the modified argument itself.
+- solve_system(a, b, &x) solves the system of linear equations a*x = b given an
+  r by c matrix a of real values, and a length r vector b, returning 0 if there
+  is one solution, -1 if there are zero solutions, or -2 if there are infinite
+  solutions. If there is exactly one solution, then the vector pointed to by x
+  is populated with the solution vector of length c.
+
+Time Complexity:
+- O(r^2*c) per call to row_reduce(a) and solve_system(a), where r and c are the
+  number of rows and columns of a respectively.
+
+Space Complexity:
+- O(1) auxiliary for row_reduce(a).
+- O(r*c) auxiliary heap space for solve_system(a).
+
+*/
+
+#include <cmath>
+#include <cstddef>
+#include <stdexcept>
+#include <vector>
+
+const double EPS = 1e-9;
+
+template<class Matrix>
+Matrix& row_reduce(Matrix &a) {
+  if (a.empty()) {
+    return a;
+  }
+  int r = a.size(), c = a[0].size(), lead = 0;
+  for (int row = 0; row < r && lead < c; row++) {
+    int i = row;
+    while (fabs(a[i][lead]) < EPS) {
+      if (++i == r) {
+        i = row;
+        if (++lead == c) {
+          return a;
+        }
+      }
+    }
+    std::swap(a[i], a[row]);
+    typename Matrix::value_type::value_type lv = a[row][lead];
+    for (int j = 0; j < c; j++) {
+      a[row][j] /= lv;
+    }
+    for (int i = 0; i < r; i++) {
+      if (i != row) {
+        lv = a[i][lead];
+        for (int j = 0; j < c; j++) {
+          a[i][j] -= lv*a[row][j];
+        }
+      }
+    }
+    for (int j = 0; j < lead; j++) {
+      a[row][j] = 0;
+    }
+    a[row][lead++] = 1;
+  }
+  return a;
+}
+
+template<class Matrix, class T>
+int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
+  if (x == NULL || a.empty() || a.size() != b.size()) {
+    return -1;
+  }
+  int r = a.size(), c = a[0].size();
+  if (r < c) {
+    return -2;
+  }
+  Matrix m(a);
+  for (int i = 0; i < r; i++) {
+    m[i].push_back(b[i]);
+  }
+  row_reduce(m);
+  for (int i = 0; i < r; i++) {
+    int lead = -1;
+    for (int j = 0; j < c && lead < 0; j++) {
+      if (fabs(m[i][j]) > EPS) {
+        lead = j;
+      }
+    }
+    if (lead < 0 && fabs(m[i][c]) > EPS) {
+      return -1;
+    }
+    if (lead > i) {
+      return -2;
+    }
+  }
+  x->resize(c);
+  for (int i = 0; i < c; i++) {
+    (*x)[i] = m[i][c];
+  }
+  return 0;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  const int equations = 3, unknowns = 3;
+  const int a[equations][unknowns] = {{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
+  const int b[equations] = {3, 1, -2};
+  vector<vector<double> > m(equations);
+  for (int i = 0; i < equations; i++) {
+    m[i].assign(a[i], a[i] + unknowns);
+  }
+  vector<double> x;
+  assert(solve_system(m, vector<double>(b, b + equations), &x) == 0);
+  for (int i = 0; i < equations; i++) {
+    double sum = 0;
+    for (int j = 0; j < unknowns; j++) {
+      sum += a[i][j]*x[j];
+    }
+    assert(fabs(sum - b[i]) < EPS);
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Determinant and Inverse}
+\begin{lstlisting}
+/*
+
+Computes the determinant and inverse of a square matrix using Gaussian
+elimination. The inverse of a matrix a is another matrix b such that a*b equals
+the identity matrix. The inverse of a exists if and only if the determinant of a
+is zero. In this case, a is called invertible or non-singular. In practice,
+simple Gaussian elimination is prone to rounding error on certain matrices. For
+a more accurate algorithm for solving systems of linear equations, see LU
+decomposition with row partial pivoting should be.
+
+- det_naive(a) returns the determinant of an n by n matrix a, using the classic
+  divide-and-conquer algorithm by Laplace expansions.
+- det(a) returns the determinant of an n by n matrix a using Gaussian
+  elimination.
+- invert(a) assigns the n by n matrix a to its inverse (if it exists), returning
+  a reference to the modified argument itself. If a is not invertible, then its
+  assigned values after the function call will be undefined (+/-Inf or +/-NaN).
+
+Time Complexity:
+- O(n!) per call to det_naive(), where n is the dimension of the matrix.
+- O(n^3) per call to det() and invert() where n is the dimension of the matrix.
+
+Space Complexity:
+- O(n) auxiliary stack space and O(n!*n) auxiliary heap space for det_naive(),
+  where n is the dimension of the matrix.
+- O(n^2) auxiliary heap space for det() and invert().
+
+*/
+
+#include <cmath>
+#include <map>
+#include <vector>
+
+template<class SquareMatrix>
+double det_naive(const SquareMatrix &a) {
+  int n = a.size();
+  if (n == 1) {
+    return a[0][0];
+  }
+  if (n == 2) {
+    return a[0][0]*a[1][1] - a[0][1]*a[1][0];
+  }
+  double res = 0;
+  SquareMatrix temp(n - 1, typename SquareMatrix::value_type(n - 1));
+  for (int p = 0; p < n; p++) {
+    int h = 0, k = 0;
+    for (int i = 1; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        if (j == p) {
+          continue;
+        }
+        temp[h][k++] = a[i][j];
+        if (k == n - 1) {
+          h++;
+          k = 0;
+        }
+      }
+    }
+    res += (p % 2 == 0 ? 1 : -1)*a[0][p]*det_naive(temp);
+  }
+  return res;
+}
+
+template<class SquareMatrix>
+double det(const SquareMatrix &a, double EPS = 1e-10) {
+  SquareMatrix b(a);
+  int n = a.size();
+  double res = 1.0;
+  std::vector<bool> used(n, false);
+  for (int i = 0; i < n; i++) {
+    int p;
+    for (p = 0; p < n; p++) {
+      if (!used[p] && fabs(b[p][i]) > EPS) {
+        break;
+      }
+    }
+    if (p >= n) {
+      return 0;
+    }
+    res *= b[p][i];
+    used[p] = true;
+    double z = 1.0/b[p][i];
+    for (int j = 0; j < n; j++) {
+      b[p][j] *= z;
+    }
+    for (int j = 0; j < n; j++) {
+      if (j != p) {
+        z = b[j][i];
+        for (int k = 0; k < n; k++) {
+          b[j][k] -= z*b[p][k];
+        }
+      }
+    }
+  }
+  return res;
+}
+
+template<class SquareMatrix>
+SquareMatrix& invert(SquareMatrix &a) {
+  int n = a.size();
+  for (int i = 0; i < n; i++) {
+    a[i].resize(2*n);
+    for (int j = n; j < n*2; j++) {
+      a[i][j] = (i == j - n ? 1 : 0);
+    }
+  }
+  for (int i = 0; i < n; i++) {
+    double z = a[i][i];
+    for (int j = i; j < n*2; j++) {
+      a[i][j] /= z;
+    }
+    for (int j = 0; j < n; j++) {
+      if (i != j) {
+        double z = a[j][i];
+        for (int k = 0; k < n*2; k++) {
+          a[j][k] -= z*a[i][k];
+        }
+      }
+    }
+  }
+  for (int i = 0; i < n; i++) {
+    a[i].erase(a[i].begin(), a[i].begin() + n);
+  }
+  return a;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
+  vector<vector<double> > m(n), inv, res(n, vector<double>(n, 0));
+  for (int i = 0; i < n; i++) {
+    m[i] = vector<double>(a[i], a[i] + n);
+  }
+  double d = det(m);
+  assert(fabs(d - det_naive(m)) < 1e-10);
+  invert(inv = m);
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      for (int k = 0; k < n; k++) {
+        res[i][j] += a[i][k]*inv[k][j];
+      }
+    }
+  }
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      assert(fabs(res[i][j] - (i == j ? 1 : 0)) < 1e-10);
+    }
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{LU Decomposition}
+\begin{lstlisting}
+/*
+
+The LU decomposition of a matrix a with row-partial pivoting is a factorization
+of a (after some rows are possibly permuted by a permutation matrix p) as a
+product of a lower triangular matrix l and an upper triangular matrix u. This
+factorization can be used to tackle many common problems in linear algebra such
+as solving systems of linear equations and computing determinants. An
+improvement on basic row reduction, LU decomposition by row-partial pivoting
+keeps the relative magnitude of matrix values small, thus reducing the relative
+error due to rounding in computed solutions.
+
+- lu_decompose(a, &p1col) assigns the r by c matrix a to merged LU decomposition
+  matrix lu, returning either 0 or 1 denoting the "sign" of the permutation
+  parity (0 if the number of overall row swaps performed is even, or 1 if it is
+  odd), or -1 denoting a degenerate matrix (i.e. singular for square matrices).
+  The merged matrix lu has lu[i][j] = l[i][j] for i > j and lu[i][j] = u[i][j]
+  for i <= j. Note that the algorithm always yields an atomic lower triangular
+  matrix for which the diagonal entries l[i][i] are always equal to 1, so this
+  is not explicitly stored in the resulting merged matrix. For general i and j,
+  the values of the lower and upper triangular matrices should be accessed via
+  the getl(lu, i, j) and getu(lu, i, j) functions. Optionally, a vector<int>
+  pointer p1col may be passed to return the permutation vector p1col where
+  p1col[i] stores the only column that is equal to 1 in row i of the permutation
+  matrix p (all other columns in row i of p are implicitly 0). The resulting
+  permutation matrix p corresponding to p1col will satisfy p*a = l*u.
+- solve_system(a, b, &x) solves the system of linear equations a*x = b given an
+  r by c matrix a of real values, and a length r vector b, returning 0 if there
+  is one solution or -1 if there are zero or infinite solutions. If there is
+  exactly one solution, then the vector pointed to by x is populated with the
+  solution vector of length c.
+- det(a) returns the determinant of an n by n matrix a using LU decomposition.
+- invert(a) assigns the n by n matrix a to its inverse (if it exists), returning
+  0 if the inversion was successful or -1 if a has no inverse.
+
+Time Complexity:
+- O(r^2*c) per call to lu_decompose(a) and solve_system(a, b), where r and c are
+  the number of rows and columns respectively, in accordance to the functions'
+  descriptions above.
+- O(n^3) per call to det(a) and inverse(a), where n is the dimension of a.
+
+Space Complexity:
+- O(1) auxiliary for lu_decompose().
+- O(n^2) for det(a) and inverse(a).
+- O(r*c) auxiliary heap space for solve_system(a, b).
+
+*/
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <vector>
+
+template<class Matrix>
+int lu_decompose(Matrix &a, std::vector<int> *p1col = NULL,
+                 const double EPS = 1e-10) {
+  int r = a.size(), c = a[0].size(), parity = 0;
+  if (p1col != NULL) {
+    p1col->resize(r);
+    for (int i = 0; i < r; i++) {
+      (*p1col)[i] = i;
+    }
+  }
+  for (int i = 0; i < r && i < c; i++) {
+    int pi = i;
+    for (int k = i + 1; k < r; k++) {
+      if (fabs(a[k][i]) > fabs(a[pi][i])) {
+        pi = k;
+      }
+    }
+    if (fabs(a[pi][i]) < EPS) {
+      return -1;
+    }
+    if (pi != i) {
+      if (p1col != NULL) {
+        std::iter_swap(p1col->begin() + i, p1col->begin() + pi);
+      }
+      std::iter_swap(a.begin() + i, a.begin() + pi);
+      parity = 1 - parity;
+    }
+    for (int j = i + 1; j < r; j++) {
+      a[j][i] /= a[i][i];
+      for (int k = i + 1; k < c; k++) {
+        a[j][k] -= a[j][i]*a[i][k];
+      }
+    }
+  }
+  return parity;
+}
+
+template<class Matrix>
+double getl(const Matrix &lu, int i, int j) {
+  return i > j ? lu[i][j] : (i < j ? 0 : 1);
+}
+
+template<class Matrix>
+double getu(const Matrix &lu, int i, int j) {
+  return i <= j ? lu[i][j] : 0;
+}
+
+template<class Matrix, class T>
+int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x,
+                 const double EPS = 1e-10) {
+  int r = a.size(), c = a[0].size();
+  if (x == NULL || a.empty() || a.size() != b.size() || r < c) {
+    return -1;
+  }
+  x->resize(c);
+  std::vector<int> p1col;
+  Matrix lu;
+  int status = lu_decompose(lu = a, &p1col, EPS);
+  if (status < 0) {
+    return status;
+  }
+  for (int i = 0; i < c; i++) {
+    (*x)[i] = b[p1col[i]];
+    for (int k = 0; k < i; k++) {
+      (*x)[i] -= getl(lu, i, k)*(*x)[k];
+    }
+  }
+  for (int i = c - 1; i >= 0; i--) {
+    for (int k = i + 1; k < c; k++) {
+      (*x)[i] -= getu(lu, i, k)*(*x)[k];
+    }
+    (*x)[i] /= getu(lu, i, i);
+  }
+  for (int i = 0; i < r; i++) {
+    double val = 0;
+    for (int j = 0; j < c; j++) {
+      val += a[i][j]*(*x)[j];
+    }
+    if (fabs(val - b[i])/b[i] > EPS) {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+template<class SquareMatrix>
+double det(const SquareMatrix &a) {
+  int n = a.size();
+  SquareMatrix lu;
+  int status = lu_decompose(lu = a);
+  if (status < 0) {
+    return 0;
+  }
+  double res = 1;
+  for (int i = 0; i < n; i++) {
+    res *= lu[i][i];
+  }
+  return status == 0 ? res : -res;
+}
+
+template<class SquareMatrix>
+int invert(SquareMatrix &a) {
+  int n = a.size();
+  std::vector<int> p1col;
+  int status = lu_decompose(a, &p1col);
+  if (status < 0) {
+    return status;
+  }
+  SquareMatrix ia(n, typename SquareMatrix::value_type(n, 0));
+  for (int j = 0; j < n; j++) {
+    for (int i = 0; i < n; i++) {
+      if (p1col[i] == j) {
+        ia[i][j] = 1.0;
+      } else {
+        ia[i][j] = 0.0;
+      }
+      for (int k = 0; k < i; k++) {
+        ia[i][j] -= getl(a, i, k)*ia[k][j];
+      }
+    }
+    for (int i = n - 1; i >= 0; i--) {
+      for (int k = i + 1; k < n; k++) {
+        ia[i][j] -= getu(a, i, k)*ia[k][j];
+      }
+      ia[i][j] /= getu(a, i, i);
+    }
+  }
+  a.swap(ia);
+  return 0;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  { // Solve a system.
+    const int equations = 3, unknowns = 3;
+    const int a[equations][unknowns] = {{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
+    const int b[equations] = {3, 1, -2};
+    vector<vector<double> > m(equations);
+    for (int i = 0; i < equations; i++) {
+      m[i].assign(a[i], a[i] + unknowns);
+    }
+    vector<double> x;
+    assert(solve_system(m, vector<double>(b, b + equations), &x) == 0);
+    for (int i = 0; i < equations; i++) {
+      double sum = 0;
+      for (int j = 0; j < unknowns; j++) {
+        sum += a[i][j]*x[j];
+      }
+      assert(fabs(sum - b[i]) < 1e-10);
+    }
+  }
+  { // Find the determinant.
+    const int n = 3, a[n][n] = {{1, 3, 5}, {2, 4, 7}, {1, 1, 0}};
+    vector<vector<double> > m(n);
+    for (int i = 0; i < n; i++) {
+      m[i] = vector<double>(a[i], a[i] + n);
+    }
+    assert(fabs(det(m) - 4) < 1e-10);
+  }
+  { // Find the inverse.
+    const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
+    vector<vector<double> > m(n), res(n, vector<double>(n, 0));
+    for (int i = 0; i < n; i++) {
+      m[i] = vector<double>(a[i], a[i] + n);
+    }
+    assert(invert(m) == 0);
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        for (int k = 0; k < n; k++) {
+          res[i][j] += a[i][k]*m[k][j];
+        }
+      }
+    }
+    for (int i = 0; i < n; i++) {
+      for (int j = 0; j < n; j++) {
+        assert(fabs(res[i][j] - (i == j ? 1 : 0)) < 1e-10);
+      }
+    }
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Linear Programming (Simplex)}
+\begin{lstlisting}
+/*
+
+Solves a linear programming problem using Dantzig's simplex algorithm. The
+canonical form of a linear programming problem is to maximize (or minimize) the
+dot product c*x, subject to a*x <= b and x >= 0, where x is a vector of unknowns
+to be solved, c is a vector of coefficients, a is a matrix of linear equation
+coefficients, and b is a vector of boundary coefficients.
+
+- simplex_solve(a, b, c, &x) solves the linear programming problem for an m by n
+  matrix a of real values, a length m vector b, a length n vector c, returning 0
+  if a solution was found or -1 if there are no solutions. If a solution is
+  found, then the vector pointed to by x is populated with the solution vector
+  of length n.
+
+Time Complexity:
+- Polynomial (average) on the number of equations and unknowns, but exponential
+  in the worst case.
+
+Space Complexity:
+- O(m*n) auxiliary heap space.
+
+*/
+
+#include <cmath>
+#include <limits>
+#include <vector>
+
+template<class Matrix>
+int simplex_solve(const Matrix &a, const std::vector<double> &b,
+                  const std::vector<double> &c, std::vector<double> *x,
+                  const bool MAXIMIZE = true, const double EPS = 1e-10) {
+  int m = a.size(), n = c.size();
+  Matrix t(m + 2, std::vector<double>(n + 2));
+  t[1][1] = 0;
+  for (int j = 1; j <= n; j++) {
+    t[1][j + 1] = MAXIMIZE ? c[j - 1] : -c[j - 1];
+  }
+  for (int i = 1; i <= m; i++) {
+    for (int j = 1; j <= n; j++) {
+      t[i + 1][j + 1] = -a[i - 1][j - 1];
+    }
+    t[i + 1][1] = b[i - 1];
+  }
+  for (int j = 1; j <= n; j++) {
+    t[0][j + 1] = j;
+  }
+  for (int i = n + 1; i <= m + n; i++) {
+    t[i - n + 1][0] = i;
+  }
+  double p1 = 0, p2 = 0;
+  bool done = true;
+  do {
+    double mn = std::numeric_limits<double>::max(), xmax = 0, v;
+    for (int j = 2; j <= n + 1; j++) {
+      if (t[1][j] > 0 && t[1][j] > xmax) {
+        p2 = j;
+        xmax = t[1][j];
+      }
+    }
+    for (int i = 2; i <= m + 1; i++) {
+      v = fabs(t[i][1] / t[i][p2]);
+      if (t[i][p2] < 0 && mn > v) {
+        mn = v;
+        p1 = i;
+      }
+    }
+    std::swap(t[p1][0], t[0][p2]);
+    for (int i = 1; i <= m + 1; i++) {
+      if (i != p1) {
+        for (int j = 1; j <= n + 1; j++) {
+          if (j != p2) {
+            t[i][j] -= t[p1][j]*t[i][p2] / t[p1][p2];
+          }
+        }
+      }
+    }
+    t[p1][p2] = 1.0 / t[p1][p2];
+    for (int j = 1; j <= n + 1; j++) {
+      if (j != p2) {
+        t[p1][j] *= fabs(t[p1][p2]);
+      }
+    }
+    for (int i = 1; i <= m + 1; i++) {
+      if (i != p1) {
+        t[i][p2] *= t[p1][p2];
+      }
+    }
+    for (int i = 2; i <= m + 1; i++) {
+      if (t[i][1] < 0) {
+        return -1;
+      }
+    }
+    done = true;
+    for (int j = 2; j <= n + 1; j++) {
+      if (t[1][j] > 0) {
+        done = false;
+      }
+    }
+  } while (!done);
+  x->clear();
+  for (int j = 1; j <= n; j++) {
+    for (int i = 2; i <= m + 1; i++) {
+      if (fabs(t[i][0] - j) < EPS) {
+        x->push_back(t[i][1]);
+      }
+    }
+  }
+  return 0;
+}
+
+/*** Example Usage and Output:
+
+Solution = 33.3043 at (5.30435, 4.34783).
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  // Solve [x, y] that maximizes 3x + 4y, subject to x, y >= 0 and:
+  //  -2x +    1y <=  0
+  //   1x + 0.85y <=  9
+  //   1x +    2y <= 14
+  const int equations = 3, unknowns = 2;
+  double a[equations][unknowns] = {{-2, 1}, {1, 0.85}, {1, 2}};
+  double b[equations] = {0, 9, 14};
+  double c[unknowns] = {3, 4};
+  vector<vector<double>> va(equations, vector<double>(unknowns));
+  vector<double> vb(b, b + equations), vc(c, c + unknowns), x;
+  for (int i = 0; i < equations; i++) {
+    for (int j = 0; j < unknowns; j++) {
+      va[i][j] = a[i][j];
+    }
+  }
+  assert(simplex_solve(va, vb, vc, &x) == 0);
+  double maxval = 0;
+  for (int i = 0; i < (int)x.size(); i++) {
+    maxval += c[i]*x[i];
+  }
+  cout << "Solution = " << maxval << " at (" << x[0];
+  for (int i = 1; i < (int)x.size(); i++) {
+    cout << ", " << x[i];
+  }
+  cout << ")." << endl;
+  return 0;
+}
+\end{lstlisting}
+
+\section{Root Finding and Calculus}
+\setcounter{section}{6}
+\setcounter{subsection}{0}
+\subsection{Root Finding (Bracketing)}
+\begin{lstlisting}
+/*
+
+Finds an x in an interval [a, b] for a continuous function f such that f(x) = 0.
+By the intermediate value theorem, a root must exist in [a, b] if the signs of
+f(a) and f(b) differ. The answer is found with an absolute error of roughly
+1/(2^n), where n is the number of iterations. Although it is possible to control
+the error by looping while b - a is greater than an arbitrary epsilon, it is
+simpler to let the loop run for a desired number of iterations until floating
+point arithmetic break down. 100 iterations is usually sufficient, since the
+search space will be reduced to 2^-100 (roughly 10^-30) times its original size.
+
+- bisection_root(f, a, b) returns a root in an interval [a, b] for a continuous
+  function f where sgn(f(a)) != sgn(f(b)), using the bisection method.
+- falsi_root(f, a, b) returns a root in an interval [a, b] for a continuous
+  function f where sgn(f(a)) != sgn(f(b)), using the Illinois algorithm variant
+  of the false position (a.k.a. regula falsi) method.
+
+Time Complexity:
+- O(n) calls will be made to f() in bisection_root() and falsi_illinois_root(),
+  where n is the number of iterations performed.
+
+Space Complexity:
+- O(1) auxiliary space for both operations.
+
+*/
+
+#include <stdexcept>
+
+template<class ContinuousFunction>
+double bisection_root(ContinuousFunction f, double a, double b,
+                      const int ITERATIONS = 100) {
+  if (a > b || f(a)*f(b) > 0) {
+    throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");
+  }
+  double m;
+  for (int i = 0; i < ITERATIONS; i++) {
+    m = a + (b - a)/2;
+    if (f(a)*f(m) >= 0) {
+      a = m;
+    } else {
+      b = m;
+    }
+  }
+  return m;
+}
+
+template<class ContinuousFunction>
+double falsi_illinois_root(ContinuousFunction f, double a, double b,
+                           const int ITERATIONS = 100) {
+  if (a > b || f(a)*f(b) > 0) {
+    throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");
+  }
+  double m, fm, fa = f(a), fb = f(b);
+  int side = 0;
+  for (int i = 0; i < ITERATIONS; i++) {
+    m = (fa*b - fb*a)/(fa - fb);
+    fm = f(m);
+    if (fb*fm > 0) {
+      b = m;
+      fb = fm;
+      if (side < 0) {
+        fa /= 2;
+      }
+      side = -1;
+    } else if (fa*fm > 0) {
+      a = m;
+      fa = fm;
+      if (side > 1) {
+        fb /= 2;
+      }
+      side = 1;
+    } else {
+      break;
+    }
+  }
+  return m;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+#include <cmath>
+
+double f(double x) {
+  return x*x - 4*sin(x);
+}
+
+int main() {
+  assert(fabs(f(bisection_root(f, 1, 3))) < 1e-10);
+  assert(fabs(f(falsi_illinois_root(f, 1, 3))) < 1e-10);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Root Finding (Iteration)}
+\begin{lstlisting}
+/*
+
+Finds an x for a continuous function f such that f(x) = 0 using iterative
+approximation by an initial guess that is close to the answer. Newton's method
+requires an explicit definition of the function's derivative while the secant
+method starts with two initial guesses and approximates the derivative using the
+secant slope from the previous iteration. For n iterations and a good initial
+guess, the methods below compute approximately 2^n digits of precision, with the
+secant method converging approximately 1.6 times slower than Newton's.
+
+- newton_root(f, fprime, x0) returns a root x for a fuction f with derivative
+  fprime using an initial guess x0 which should be relatively close to x.
+- secant_root(f, x0, x1) returns a root x for a function f using two initial
+  guesses x0 and x1 which should be relatively close to x.
+
+Time Complexity:
+- O(n) calls will be made to f() in newton_root() and secant_root(), where n is
+  the number of iterations performed.
+
+Space Complexity:
+- O(1) auxiliary space for both operations.
+
+*/
+
+#include <cmath>
+#include <stdexcept>
+
+template<class ContinuousFunction>
+double newton_root(ContinuousFunction f, ContinuousFunction fprime, double x0,
+                   const double EPS = 1e-15, const int ITERATIONS = 100) {
+  double x = x0, error = EPS + 1;
+  for (int i = 0; error > EPS && i < ITERATIONS; i++) {
+    double xnew = x - f(x)/fprime(x);
+    error = fabs(xnew - x);
+    x = xnew;
+  }
+  if (error > EPS) {
+    throw std::runtime_error("Newton's method failed to converge.");
+  }
+  return x;
+}
+
+template<class ContinuousFunction>
+double secant_root(ContinuousFunction f, double x0, double x1,
+                   const double EPS = 1e-15, const int ITERATIONS = 100) {
+  double xold = x0, fxold = f(x0), x = x1, error = EPS + 1;
+  for (int i = 0; error > EPS && i < ITERATIONS; i++) {
+    double fx = f(x);
+    double xnew = x - fx*((x - xold)/(fx - fxold));
+    xold = x;
+    fxold = fx;
+    error = fabs(xnew - x);
+    x = xnew;
+  }
+  if (error > EPS) {
+    throw std::runtime_error("Secant method failed to converge.");
+  }
+  return x;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+double f(double x) {
+  return x*x - 4*sin(x);
+}
+
+double fprime(double x) {
+  return 2*x - 4*cos(x);
+}
+
+int main() {
+  assert(fabs(f(newton_root(f, fprime, 3))) < 1e-10);
+  assert(fabs(f(secant_root(f, 3, 2))) < 1e-10);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Polynomial Root Finding (Differentiation)}
+\begin{lstlisting}
+/*
+
+Finds every root x for a polynomial p such that p(x) = 0 by differentiation.
+Each adjacent pair of local extrema is searched using the bisection method,
+where local extrema are recursively found by finding the root of the derivative.
+
+- horner_eval(p, x) evaluates the polynomial p of degree d (represented as a
+  vector of size d + 1 where p[i] stores the coefficient for the x^i term) at x,
+  using Horner's method.
+- find_one_root(p, a, b, EPS) returns a root in the interval [a, b] for a
+  polynomial p where sgn(f(a)) != sgn(f(b)), using the bisection method. If this
+  precondition is not satisfied, then NaN is returned. The root is found to a
+  tolerance of EPS in absolute or relative error (whichever is reached first).
+- find_all_roots(p, a, b, EPS) returns a vector of all roots in the interval
+  [a, b] for a polynomial p using the bisection method. The roots are found to a
+  tolerance of EPS in absolute or relative error (whichever is reached first).
+
+Time Complexity:
+- O(n) per call to horner_eval(), where n is the degree of the polynomial.
+- O(n log p) per call to find_one_root(), where n is the degree of the
+  polynomial and p = -log10(EPS) is the number of digits of absolute or relative
+  precision that is desired.
+- O(n^3 log p) per call to find_all_roots(), where n is the degree of the
+  polynomial and p = -log10(EPS) is the number of digits of absolute or relative
+  precision that is desired.
+
+Space Complexity:
+- O(1) auxiliary space for horner_eval() and find_one_root().
+- O(n^2) auxiliary heap and O(n) auxiliary stack space for find_all_roots(),
+  where n is the degree of the polynomial.
+
+*/
+
+#include <cmath>
+#include <limits>
+#include <utility>
+#include <vector>
+
+double horner_eval(const std::vector<double> &p, double x) {
+  double res = p.back();
+  for (int i = (int)p.size() - 2; i >= 0; i--) {
+    res = res*x + p[i];
+  }
+  return res;
+}
+
+double find_one_root(const std::vector<double> &p, double a, double b,
+                     const double EPS = 1e-15) {
+  double pa = horner_eval(p, a), pb = horner_eval(p, b);
+  bool paneg = pa < 0, pbneg = pb < 0;
+  if (paneg == pbneg) {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+  while (b - a > EPS && a*(1 + EPS) < b && a < b*(1 + EPS)) {
+    double m = a + (b - a)/2;
+    if ((horner_eval(p, m) < 0) == paneg) {
+      a = m;
+    } else {
+      b = m;
+    }
+  }
+  return a;
+}
+
+std::vector<double> find_all_roots(const std::vector<double> &p,
+                                   double a = -1e20, double b = 1e20,
+                                   const double EPS = 1e-15) {
+  std::vector<double> pprime;
+  for (int i = 1; i < (int)p.size(); i++) {
+    pprime.push_back(p[i]*i);
+  }
+  if (pprime.empty()) {
+    return std::vector<double>();
+  }
+  std::vector<double> res, r = find_all_roots(pprime, a, b, EPS);
+  r.push_back(b);
+  for (int i = 0; i < (int)r.size(); i++) {
+    double root = find_one_root(p, i == 0 ? a : r[i - 1], r[i], EPS);
+    if (!std::isnan(root) && (res.empty() || root != res.back())) {
+      res.push_back(root);
+    }
+  }
+  return res;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  { // -1 + 2x - 6x^2 + 2x^3
+    int poly[] = {-1, 2, -6, 2};
+    vector<double> p(poly, poly + 4), roots = find_all_roots(p);
+    assert(roots.size() == 1 && fabs(horner_eval(p, roots[0])) < 1e-10);
+  }
+  { // -20 + 4x + 3x^2
+    int poly[] = {-20, 4, 3};
+    vector<double> p(poly, poly + 3), roots = find_all_roots(p);
+    assert(roots.size() == 2);
+    assert(fabs(horner_eval(p, roots[0])) < 1e-10);
+    assert(fabs(horner_eval(p, roots[1])) < 1e-10);
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Polynomial Root Finding (Laguerre)}
+\begin{lstlisting}
+/*
+
+Finds every complex root x for a polynomial p with complex coefficients such
+that p(x) = 0 using Laguerre's method.
+
+- horner_eval(p, x) evaluates the complex polynomial p of degree d (represented
+  as a vector of size d + 1 where p[i] stores the complex coefficient for the
+  x^i term) at x, using Horner's method, returning a pair where the first value
+  is a vector of sub-evaluations and the second value is the final result p(x).
+- find_one_root(p, x0) returns a complex root x for a polynomial p (represented
+  as a vector of size d + 1 where p[i] stores the complex coefficient for the
+  x^i term) using an initial guess x0 which should be relatively close to x. The
+  root is found to a tolerance of EPS in absolute or relative error (whichever
+  is reached first).
+- find_all_roots(p) returns a vector of all complex roots for a complex
+  polynomial p. The roots are found to a tolerance of EPS in absolute or
+  relative error (whichever is reached first).
+
+Time Complexity:
+- O(n) per call to horner_eval(), where n is the degree of the polynomial.
+- O(n log p) per call to find_one_root(), where n is the degree of the
+  polynomial and p = -log10(EPS) is the number of digits of absolute or relative
+  precision that is desired.
+- O(n^2 log p) per call to find_all_roots(), where n is the degree of the
+  polynomial and p = -log10(EPS) is the number of digits of absolute or relative
+  precision that is desired.
+
+Space Complexity:
+- O(n) auxiliary heap space and O(1) auxiliary stack space for horner_eval() and
+  find_one_root(), where n is the degree of the polynomial.
+- O(n) auxiliary heap and O(1) auxiliary stack space per for find_one_root() and
+  find_all_roots(), where n is the degree of the polynomial.
+
+*/
+
+#include <complex>
+#include <cstdlib>
+#include <vector>
+
+typedef std::complex<double> cdouble;
+typedef std::vector<cdouble> cpoly;
+
+std::pair<cdouble, cpoly> horner_eval(const cpoly &p, const cdouble &x) {
+  int n = p.size();
+  cpoly b(std::max(1, n - 1));
+  for (int i = n - 1; i > 0; i--) {
+    b[i - 1] = p[i] + (i < n - 1 ? b[i]*x : 0);
+  }
+  return std::make_pair(p[0] + b[0]*x, b);
+}
+
+cpoly derivative(const cpoly &p) {
+  int n = p.size();
+  cpoly res(std::max(1, n - 1));
+  for (int i = 1; i < n; i++) {
+    res[i - 1] = p[i]*cdouble(i);
+  }
+  return res;
+}
+
+int comp(const cdouble &a, const cdouble &b, const double EPS = 1e-15) {
+  double diff = std::abs(a) - std::abs(b);
+  return (diff < -EPS) ? -1 : (diff > EPS ? 1 : 0);
+}
+
+cdouble find_one_root(const cpoly &p, const cdouble &x0,
+                      const double EPS = 1e-15, const int ITERATIONS = 10000) {
+  cdouble x = x0;
+  int n = p.size() - 1;
+  cpoly p1 = derivative(p), p2 = derivative(p1);
+  for (int i = 0; i < ITERATIONS; i++) {
+    cdouble y0 = horner_eval(p, x).first;
+    if (comp(y0, 0, EPS) == 0) {
+      break;
+    }
+    cdouble g = horner_eval(p1, x).first/y0;
+    cdouble h = g*g - horner_eval(p2, x).first/y0;
+    cdouble r = std::sqrt(cdouble(n - 1)*(h*cdouble(n) - g*g));
+    cdouble d1 = g + r, d2 = g - r;
+    cdouble a = cdouble(n)/(comp(d1, d2, EPS) > 0 ? d1 : d2);
+    x -= a;
+    if (comp(a, 0, EPS) == 0) {
+      break;
+    }
+  }
+  return x;
+}
+
+std::vector<cdouble> find_all_roots(const cpoly &p, const double EPS = 1e-15,
+                                    const int ITERATIONS = 10000) {
+  std::vector<cdouble> res;
+  cpoly q = p;
+  while (q.size() > 2) {
+    cdouble z = cdouble(rand(), rand())/(double)RAND_MAX;
+    z = find_one_root(p, find_one_root(q, z, EPS, ITERATIONS), EPS, ITERATIONS);
+    q = horner_eval(q, z).second;
+    res.push_back(z);
+  }
+  res.push_back(-q[0] / q[1]);
+  return res;
+}
+
+/*** Example Usage and Output:
+
+Roots of 140 - 13x - 8x^2 + x^3:
+(5.00000, 0.00000)
+(-4.00000, -0.00000)
+(7.00000, -0.00000)
+Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
+(0.00000, 1.00000)
+(0.00000, -1.00000)
+(-0.92308, 1.38462)
+(-3.00000, -2.00000)
+
+***/
+
+#include <cstdio>
+#include <iostream>
+using namespace std;
+
+void print_roots(const vector<cdouble> &x) {
+  for (int i = 0; i < (int)x.size(); i++) {
+    printf("(%.5lf, %.5lf)\n", x[i].real(), x[i].imag());
+  }
+}
+
+int main() {
+  { // 140 - 13x - 8x^2 + x^3 = (x + 4)(x - 5)(x - 7)
+    printf("Roots of 140 - 13x - 8x^2 + x^3:\n");
+    cpoly p;
+    p.push_back(140);
+    p.push_back(-13);
+    p.push_back(-8);
+    p.push_back(1);
+    print_roots(find_all_roots(p));
+  }
+  { // (-24+36i) + (-26+12i)x + (-30+40i)x^2 + (-26+12i)x^3 + (-6+4i)x^4
+    // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
+    printf("Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):\n");
+    cpoly p;
+    p.push_back(cdouble(-24, 36));
+    p.push_back(cdouble(-26, 12));
+    p.push_back(cdouble(-30, 40));
+    p.push_back(cdouble(-26, 12));
+    p.push_back(cdouble(-6, 4));
+    print_roots(find_all_roots(p));
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Polynomial Root Finding (RPOLY)}
+\begin{lstlisting}
+/*
+
+Finds every complex root x for a polynomial p with real coefficients such that
+p(x) = 0 using a variant of the Jenkins-Traub algorithm known as RPOLY. This
+implementation is adapted from TOMS493 (www.netlib.org/toms/) with a simple
+wrapper for the C++ <complex> class.
+
+- find_all_roots(p) returns a vector of all complex roots for a polynomial p
+  with real coefficients.
+
+Time Complexity:
+- O(n) per call to find_all_roots(p), where n is the degree of the polynomial.
+
+Space Complexity:
+- O(n) auxiliary stack space, where n is the degree of the polynomial.
+
+*/
+
+#include <cfloat>
+#include <cmath>
+
+typedef long double LD;
+const int MAXN = 105;
+
+void divide_quadratic(int n, LD u, LD v, LD p[], LD q[], LD *a, LD *b) {
+  q[0] = *b = p[0];
+  q[1] = *a = -((*b)*u) + p[1];
+  for (int i = 2; i < n; i++) {
+    q[i] = -((*a)*u + (*b)*v) + p[i];
+    *b = *a;
+    *a = q[i];
+  }
+}
+
+int get_flag(int n, LD a, LD b, LD *a1, LD *a3, LD *a7, LD *c, LD *d, LD *e,
+             LD *f, LD *g, LD *h, LD k[], LD u, LD v, LD qk[]) {
+  divide_quadratic(n, u, v, k, qk, c, d);
+  if (fabsl(*c) <= 100.0*LDBL_EPSILON*fabsl(k[n - 1]) &&
+      fabsl(*d) <= 100.0*LDBL_EPSILON*fabsl(k[n - 2])) {
+    return 3;
+  }
+  *h = v*b;
+  if (fabsl(*d) >= fabsl(*c)) {
+    *e = a/(*d);
+    *f = (*c)/(*d);
+    *g = u*b;
+    *a1 = (*f) * b - a;
+    *a3 = (*e) * ((*g) + a) + (*h)*(b/(*d));
+    *a7 = (*h) + ((*f) + u) * a;
+    return 2;
+  }
+  *e = a/(*c);
+  *f = (*d)/(*c);
+  *g = (*e)*u;
+  *a1 = -(a*((*d) / (*c))) + b;
+  *a3 = (*e)*a + ((*g) + (*h)/(*c))*b;
+  *a7 = (*g)*(*d) + (*h)*(*f) + a;
+  return 1;
+}
+
+void find_polynomials(int n, int flag, LD a, LD b, LD a1, LD *a3, LD *a7,
+                      LD k[], LD qk[], LD qp[]) {
+  if (flag == 3) {
+    k[1] = k[0] = 0.0;
+    for (int i = 2; i < n; i++) {
+      k[i] = qk[i - 2];
+    }
+    return;
+  }
+  if (fabsl(a1) > 10.0*LDBL_EPSILON*fabsl(flag == 1 ? b : a)) {
+    *a7 /= a1;
+    *a3 /= a1;
+    k[0] = qp[0];
+    k[1] = qp[1] - (*a7)*qp[0];
+    for (int i = 2; i < n; i++) {
+      k[i] = qp[i] - ((*a7)*qp[i - 1]) + (*a3)*qk[i - 2];
+    }
+  } else {
+    k[0] = 0.0;
+    k[1] = -(*a7)*qp[0];
+    for (int i = 2; i < n; i++) {
+      k[i] = (*a3)*qk[i - 2] - (*a7)*qp[i - 1];
+    }
+  }
+}
+
+void estimate_coeff(int flag, LD *uu, LD *vv, LD a, LD a1, LD a3, LD a7, LD b,
+                    LD c, LD d, LD f, LD g, LD h, LD u, LD v, LD k[], int n,
+                    LD p[]) {
+  LD a4, a5, b1, b2, c1, c2, c3, c4, temp;
+  *vv = *uu = 0.0;
+  if (flag == 3) {
+    return;
+  }
+  if (flag != 2) {
+    a4 = a + u*b + h*f;
+    a5 = c + (u + v*f)*d;
+  } else {
+    a4 = (a + g)*f + h;
+    a5 = (f + u)*c + v*d;
+  }
+  b1 = -k[n - 1] / p[n];
+  b2 = -(k[n - 2] + b1*p[n - 1]) / p[n];
+  c1 = v*b2*a1;
+  c2 = b1*a7;
+  c3 = b1*b1*a3;
+  c4 = c1 - c2 - c3;
+  temp = b1*a4 - c4 + a5;
+  if (temp != 0.0) {
+    *uu= u - (u*(c3 + c2) + v*(b1*a1 + b2*a7)) / temp;
+    *vv = v*(1.0 + c4/temp);
+  }
+}
+
+void solve_quadratic(LD a, LD b1, LD c, LD *sr, LD *si, LD *lr, LD *li) {
+  LD b, d, e;
+  *sr = *si = *lr = *li = 0.0;
+  if (a == 0) {
+    *sr = (b1 != 0) ? -c / b1 : *sr;
+    return;
+  }
+  if (c == 0) {
+    *lr = -b1 / a;
+    return;
+  }
+  b = b1 / 2.0;
+  if (fabsl(b) < fabsl(c)) {
+    e = (c >= 0) ? a : -a;
+    e = b*(b / fabsl(c)) - e;
+    d = sqrtl(fabsl(e))*sqrtl(fabsl(c));
+  } else {
+    e = 1.0 - (a / b)*(c / b);
+    d = sqrtl(fabsl(e))*fabsl(b);
+  }
+  if (e >= 0) {
+    d = (b >= 0) ? -d : d;
+    *lr = (d - b) / a;
+    *sr = (*lr != 0) ? (c / *lr / a) : *sr;
+  } else {
+    *lr = *sr = -b / a;
+    *si = fabsl(d / a);
+    *li = -(*si);
+  }
+}
+
+void quadratic_iterate(int N, int * NZ, LD uu, LD vv, LD *szr, LD *szi, LD *lzr,
+                       LD *lzi, LD qp[], int n, LD *a, LD *b, LD p[], LD qk[],
+                       LD *a1, LD *a3, LD *a7, LD *c, LD *d, LD *e, LD *f,
+                       LD *g, LD *h, LD k[]) {
+  int steps = 0, flag, tried_flag = 0;
+  LD ee, mp, omp = 0.0, relstp = 0.0, t, u, ui, v, vi, zm;
+  *NZ = 0;
+  u = uu;
+  v = vv;
+  do {
+    solve_quadratic(1.0, u, v, szr, szi, lzr, lzi);
+    if (fabsl(fabsl(*szr) - fabsl(*lzr)) > 0.01*fabsl(*lzr)) {
+      break;
+    }
+    divide_quadratic(n, u, v, p, qp, a, b);
+    mp = fabsl(-((*szr)*(*b)) + *a) + fabsl((*szi)*(*b));
+    zm = sqrtl(fabsl(v));
+    ee = 2.0*fabsl(qp[0]);
+    t = -(*szr)*(*b);
+    for (int i = 1; i < N; i++) {
+      ee = ee*zm + fabsl(qp[i]);
+    }
+    ee = ee*zm + fabsl(*a + t);
+    ee = ee*9.0 + 2.0*fabsl(t) - 7.0*(fabsl(*a + t) + zm*fabsl(*b));
+    ee *= LDBL_EPSILON;
+    if (mp <= 20.0*ee) {
+      *NZ = 2;
+      break;
+    }
+    if (++steps > 20) {
+      break;
+    }
+    if (steps >= 2 && relstp <= 0.01 && mp >= omp && !tried_flag) {
+      relstp = (relstp < LDBL_EPSILON) ? sqrtl(LDBL_EPSILON) : sqrtl(relstp);
+      u -= u*relstp;
+      v += v*relstp;
+      divide_quadratic(n, u, v, p, qp, a, b);
+      for (int i = 0; i < 5; i++) {
+        flag = get_flag(N, *a, *b, a1, a3, a7, c, d, e, f, g, h, k, u, v, qk);
+        find_polynomials(N, flag, *a, *b, *a1, a3, a7, k, qk, qp);
+      }
+      tried_flag = 1;
+      steps = 0;
+    }
+    omp = mp;
+    flag = get_flag(N, *a, *b, a1, a3, a7, c, d, e, f, g, h, k, u, v, qk);
+    find_polynomials(N, flag, *a, *b, *a1, a3, a7, k, qk, qp);
+    flag = get_flag(N, *a, *b, a1, a3, a7, c, d, e, f, g, h, k, u, v, qk);
+    estimate_coeff(flag, &ui, &vi, *a, *a1, *a3, *a7, *b, *c, *d, *f, *g, *h, u,
+                   v, k, N, p);
+    if (vi != 0) {
+      relstp = fabsl((-v + vi)/vi);
+      u = ui;
+      v = vi;
+    }
+  } while (vi != 0);
+}
+
+void real_iterate(int *flag, int *nz, LD *sss, int n, LD p[], int nn, LD qp[],
+                  LD *szr, LD *szi, LD k[], LD qk[]) {
+  int steps = 0;
+  LD ee, kv, mp, ms, omp = 0.0, pv, s, t = 0.0;
+  *flag = *nz = 0;
+  for (s = *sss; ; s += t) {
+    pv = p[0];
+    qp[0] = pv;
+    for (int i = 1; i < nn; i++) {
+      qp[i] = pv = pv * s + p[i];
+    }
+    mp = fabsl(pv);
+    ms = fabsl(s);
+    ee = 0.5*fabsl(qp[0]);
+    for (int i = 1; i < nn; i++) {
+      ee = ee*ms + fabsl(qp[i]);
+    }
+    if (mp <= 20.0*LDBL_EPSILON*(2.0*ee - mp)) {
+      *nz = 1;
+      *szr = s;
+      *szi = 0.0;
+      break;
+    }
+    if (++steps > 10) {
+      break;
+    }
+    if (steps >= 2 && fabsl(t) <= 0.001*fabsl(s - t) && mp > omp) {
+      *flag = 1;
+      *sss = s;
+      break;
+    }
+    omp = mp;
+    qk[0] = kv = k[0];
+    for (int i = 1; i < n; i++) {
+      qk[i] = kv = kv*s + k[i];
+    }
+    if (fabsl(kv) > fabsl(k[n - 1])*10.0*LDBL_EPSILON) {
+      t = -pv / kv;
+      k[0] = qp[0];
+      for (int i = 1; i < n; i++) {
+        k[i] = t*qk[i - 1] + qp[i];
+      }
+    } else {
+      k[0] = 0.0;
+      for (int i = 1; i < n; i++) {
+        k[i] = qk[i - 1];
+      }
+    }
+    kv = k[0];
+    for (int i = 1; i < n; i++) {
+      kv = kv*s + k[i];
+    }
+    t = (fabsl(k[n - 1])*10.0*LDBL_EPSILON < fabsl(kv)) ? (-pv / kv) : 0.0;
+  }
+}
+
+void solve_fixedshift(int l2, int *nz, LD sr, LD v, LD k[], int n, LD p[],
+                      int nn, LD qp[], LD u, LD qk[], LD svk[], LD *lzi,
+                      LD *lzr, LD *szi, LD *szr) {
+  int flag, _flag, __flag = 1, spass, stry, vpass, vtry;
+  LD a, a1, a3, a7, b, betas, betav, c, d, e, f, g, h;
+  LD oss, ots = 0.0, otv = 0.0, ovv, s, ss, ts, tss, tv, tvv, ui, vi, vv;
+  *nz = 0;
+  betav = betas = 0.25;
+  oss = sr;
+  ovv = v;
+  divide_quadratic(nn, u, v, p, qp, &a, &b);
+  flag = get_flag(n, a, b, &a1, &a3, &a7, &c, &d, &e, &f, &g, &h, k, u, v, qk);
+  for (int j = 0; j < l2; j++) {
+    _flag = 1;
+    find_polynomials(n, flag, a, b, a1, &a3, &a7, k, qk, qp);
+    flag = get_flag(n, a, b, &a1, &a3, &a7, &c, &d, &e, &f, &g, &h, k, u, v,
+                    qk);
+    estimate_coeff(flag, &ui, &vi, a, a1, a3, a7, b, c, d, f, g, h, u, v, k, n,
+                   p);
+    vv = vi;
+    ss = k[n - 1] != 0.0 ? (-p[n] / k[n - 1]) : 0.0;
+    ts = tv = 1.0;
+    if (j != 0 && flag != 3) {
+      tv = (vv != 0.0) ? fabsl((vv - ovv) / vv) : tv;
+      ts = (ss != 0.0) ? fabsl((ss - oss) / ss) : ts;
+      tvv = (tv < otv) ? tv*otv : 1.0;
+      tss = (ts < ots) ? ts*ots : 1.0;
+      vpass = (tvv < betav) ? 1 : 0;
+      spass = (tss < betas) ? 1 : 0;
+      if (spass || vpass) {
+        for (int i = 0; i < n; i++) {
+          svk[i] = k[i];
+        }
+        s = ss; stry = vtry = 0;
+        for (;;) {
+          if (!(_flag && spass && (!vpass || tss < tvv))) {
+            quadratic_iterate(n, nz, ui, vi, szr, szi, lzr, lzi, qp, nn, &a, &b,
+                              p, qk, &a1, &a3, &a7, &c, &d, &e, &f, &g, &h, k);
+            if (*nz > 0) return;
+            __flag = vtry = 1;
+            betav *= 0.25;
+            if (stry || !spass) {
+              __flag = 0;
+            } else {
+              for (int i = 0; i < n; i++) {
+                k[i] = svk[i];
+              }
+            }
+          }
+          _flag = 0;
+          if (__flag != 0) {
+            real_iterate(&__flag, nz, &s, n, p, nn, qp, szr, szi, k, qk);
+            if (*nz > 0) {
+              return;
+            }
+            stry = 1;
+            betas *= 0.25;
+            if (__flag != 0) {
+              ui = -(s + s);
+              vi = s * s;
+              continue;
+            }
+          }
+          for (int i = 0; i < n; i++) k[i] = svk[i];
+          if (!vpass || vtry) {
+            break;
+          }
+        }
+        divide_quadratic(nn, u, v, p, qp, &a, &b);
+        flag = get_flag(n, a, b, &a1, &a3, &a7, &c, &d, &e, &f, &g, &h, k, u, v,
+                        qk);
+      }
+    }
+    ovv = vv;
+    oss = ss;
+    otv = tv;
+    ots = ts;
+  }
+}
+
+void find_all_roots(int degree, LD co[], LD re[], LD im[]) {
+  int j, jj, n, nm1, nn, nz, zero;
+  LD k[MAXN], p[MAXN], pt[MAXN], qp[MAXN], temp[MAXN], qk[MAXN], svk[MAXN];
+  LD bnd, df, dx, factor, ff, moduli_max, moduli_min, sc, x, xm;
+  LD aa, bb, cc, lzi, lzr, sr, szi, szr, t, u, xx, xxx, yy;
+  n = degree;
+  xx = sqrtl(0.5);
+  yy = -xx;
+  for (j = 0; co[n] == 0; n--, j++) {
+    re[j] = im[j] = 0.0;
+  }
+  nn = n + 1;
+  for (int i = 0; i < nn; i++) p[i] = co[i];
+  while (n >= 1) {
+    if (n <= 2) {
+      if (n < 2) {
+        re[degree - 1] = -p[1] / p[0];
+        im[degree - 1] = 0.0;
+      } else {
+        solve_quadratic(p[0], p[1], p[2], &re[degree - 2], &im[degree - 2],
+                        &re[degree - 1], &im[degree - 1]);
+      }
+      break;
+    }
+    moduli_max = 0.0;
+    moduli_min = LDBL_MAX;
+    for (int i = 0; i < nn; i++) {
+      x = fabsl(p[i]);
+      if (x > moduli_max) {
+        moduli_max = x;
+      }
+      if (x != 0 && x < moduli_min) {
+        moduli_min = x;
+      }
+    }
+    sc = LDBL_MIN / LDBL_EPSILON / moduli_min;
+    if ((sc < 2 && moduli_max >= 10) || (sc > 1 && LDBL_MAX/sc >= moduli_max)) {
+      sc = (sc == 0) ? LDBL_MIN : sc;
+      factor = powl(2.0, logl(sc) / logl(2.0));
+      if (factor != 1.0) {
+        for (int i = 0; i < nn; i++) {
+          p[i] *= factor;
+        }
+      }
+    }
+    for (int i = 0; i < nn; i++) {
+      pt[i] = fabsl(p[i]);
+    }
+    pt[n] = -pt[n];
+    nm1 = n - 1;
+    x = expl((logl(-pt[n]) - logl(pt[0])) / (LD)n);
+    if (pt[nm1] != 0) {
+      xm = -pt[n] / pt[nm1];
+      if (xm < x) {
+        x = xm;
+      }
+    }
+    xm = x;
+    do {
+      x = xm;
+      xm = 0.1 * x;
+      ff = pt[0];
+      for (int i = 1; i < nn; i++) {
+        ff = ff*xm + pt[i];
+      }
+    } while (ff > 0);
+    dx = x;
+    do {
+      df = ff = pt[0];
+      for (int i = 1; i < n; i++) {
+        ff = x*ff + pt[i];
+        df = x*df + ff;
+      }
+      ff = x*ff + pt[n];
+      dx = ff / df;
+      x -= dx;
+    } while (fabsl(dx / x) > 0.005);
+    bnd = x;
+    for (int i = 1; i < n; i++) {
+      k[i] = (LD)(n - i)*p[i] / (LD)n;
+    }
+    k[0] = p[0];
+    aa = p[n];
+    bb = p[nm1];
+    zero = (k[nm1] == 0) ? 1 : 0;
+    for (jj = 0; jj < 5; jj++) {
+      cc = k[nm1];
+      if (zero) {
+        for (int i = 0; i < nm1; i++) {
+          j = nm1 - i;
+          k[j] = k[j - 1];
+        }
+        k[0] = 0;
+        zero = (k[nm1] == 0) ? 1 : 0;
+      } else {
+        t = -aa / cc;
+        for (int i = 0; i < nm1; i++) {
+          j = nm1 - i;
+          k[j] = t*k[j - 1] + p[j];
+        }
+        k[0] = p[0];
+        zero = (fabsl(k[nm1]) <= fabsl(bb)*LDBL_EPSILON*10.0) ? 1 : 0;
+      }
+    }
+    for (int i = 0; i < n; i++) {
+      temp[i] = k[i];
+    }
+    static const LD DEG = 0.01745329251994329576923690768489L;
+    for (jj = 1; jj <= 20; jj++) {
+      xxx = -sinl(94*DEG)*yy + cosl(94*DEG)*xx;
+      yy = sinl(94*DEG)*xx + cosl(94*DEG)*yy;
+      xx = xxx;
+      sr = bnd*xx;
+      u = -2.0*sr;
+      for (int i = 0; i < nn; i++) {
+        qk[i] = svk[i] = 0.0;
+      }
+      solve_fixedshift(20*jj, &nz, sr, bnd, k, n, p, nn, qp, u, qk, svk, &lzi,
+                       &lzr, &szi, &szr);
+      if (nz != 0) {
+        j = degree - n;
+        re[j] = szr;
+        im[j] = szi;
+        nn = nn - nz;
+        n = nn - 1;
+        for (int i = 0; i < nn; i++) {
+          p[i] = qp[i];
+        }
+        if (nz != 1) {
+          re[j + 1] = lzr;
+          im[j + 1] = lzi;
+        }
+        break;
+      } else {
+        for (int i = 0; i < n; i++) {
+          k[i] = temp[i];
+        }
+      }
+    }
+    if (jj > 20) {
+      break;
+    }
+  }
+}
+
+/*** Example Usage and Output:
+
+Roots of -1+2x^1-6x^2+2x^3:
+(0.150976, 0.403144)
+(0.150976, -0.403144)
+(2.69805, 0)
+Roots of -20+4x^1+3x^2:
+(2, 0)
+(-3.33333, 0)
+
+***/
+
+#include <cassert>
+#include <iostream>
+#include <complex>
+#include <vector>
+using namespace std;
+
+typedef std::complex<LD> cdouble;
+
+vector<cdouble> find_all_roots(const vector<LD> &p) {
+  int degree = p.size() - 1;
+  LD c[MAXN], re[MAXN], im[MAXN];
+  copy(p.rbegin(), p.rend(), c);
+  find_all_roots(degree, c, re, im);
+  vector<cdouble> res;
+  for (int i = 0; i < (int)p.size() - 1; i++) {
+    res.push_back(complex<LD>(re[i], im[i]));
+  }
+  return res;
+}
+
+cdouble eval(const vector<LD> &p, cdouble x) {
+  cdouble res = p.back();
+  for (int i = p.size() - 2; i >= 0; i--) {
+    res = res*x + p[i];
+  }
+  return res;
+}
+
+void print_roots(const vector<LD> &p, const vector<cdouble> &x) {
+  cout << "Roots of ";
+  for (int i = 0; i < (int)p.size(); i++) {
+    cout << showpos << (double)p[i];
+    if (i > 0) {
+      cout << noshowpos << "x^" << i;
+    }
+  }
+  cout << ":" << endl;
+  for (int i = 0; i < (int)x.size(); i++) {
+    cout << "(" << (double)x[i].real() << ", " << (double)x[i].imag() << ")\n";
+  }
+}
+
+int main() {
+  { // -1 + 2x - 6x^2 + 2x^3
+    int poly[] = {-1, 2, -6, 2};
+    vector<LD> p(poly, poly + 4);
+    print_roots(p, find_all_roots(p));
+  }
+  { // -20 + 4x + 3x^2
+    int poly[] = {-20, 4, 3};
+    vector<LD> p(poly, poly + 3);
+    print_roots(p, find_all_roots(p));
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Integration (Simpson)}
+\begin{lstlisting}
+/*
+
+Computes the definite integral from a to b for a continuous function f using
+Simpson's approximation: integral ~ [f(a) + 4*f((a + b)/2) + f(b)]*(b - a)/6.
+
+- simpsons(f, a, b) returns the definite integral for a function f from a to b,
+  to a tolerance of EPS in absolute error.
+
+Time Complexity:
+- O(p) per call to integrate(), where p = -log10(EPS) is the number of digits
+  of absolute precision that is desired.
+
+Space Complexity:
+- O(p) auxiliary stack and O(1) auxiliary heap space, where p = -log10(EPS)
+  is the number of digits of absolute precision that is desired.
+
+*/
+
+#include <cmath>
+
+template<class ContinuousFunction>
+double simpsons(ContinuousFunction f, double a, double b) {
+  return (f(a) + 4*f((a + b)/2) + f(b))*(b - a)/6;
+}
+
+template<class ContinuousFunction>
+double integrate(ContinuousFunction f, double a, double b,
+                 const double EPS = 1e-15) {
+  double m = (a + b) / 2;
+  double am = simpsons(f, a, m);
+  double mb = simpsons(f, m, b);
+  double ab = simpsons(f, a, b);
+  if (fabs(am + mb - ab) < EPS) {
+    return ab;
+  }
+  return integrate(f, a, m) + integrate(f, m, b);
+}
+
+/*** Example Usage ***/
+
+#include <cstdio>
+#include <cassert>
+using namespace std;
+
+double f(double x) {
+  return sin(x);
+}
+
+int main () {
+  double PI = acos(-1.0);
+  assert(fabs(integrate(f, 0.0, PI/2) - 1) < 1e-10);
+  return 0;
+}
+\end{lstlisting}

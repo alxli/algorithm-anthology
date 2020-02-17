@@ -1,0 +1,2722 @@
+\chapter{Graphs}
+
+\section{Depth-First Search}
+\setcounter{section}{1}
+\setcounter{subsection}{0}
+\subsection{Graph Class and Depth-First Search}
+\begin{lstlisting}
+/*
+
+A graph consists of a set of objects (a.k.a vertices, or nodes) and a set of
+connections (a.k.a. edges) between pairs of said objects. A graph may be stored
+as an adjacency list, which is a space efficient representation that is also
+time-efficient for traversals.
+
+The following class implements a simple graph using adjacency lists, along with
+depth-first search and a few other applications. The constructor takes a Boolean
+argument which specifies whether the instance is a directed or undirected graph.
+The nodes of the graph are identified by integers indices numbered consecutively
+starting from 0. The total number of nodes will automatically increase based on
+the maximum node index passed to add_edge() so far.
+
+Time Complexity:
+- O(1) amortized per call to add_edge(), or O(max(n, m)) for n calls where the
+  maximum node index passed as an argument is m.
+- O(max(n, m)) per call for dfs(), has_cycle(), is_tree(), or is_dag(), where n
+  is the number of nodes and and m is the number of edges.
+- O(1) per call to all other public member functions.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+  is the number of edges.
+- O(n) auxiliary stack space for dfs(), has_cycle(), is_tree(), and is_dag().
+- O(1) auxiliary for all other public member functions.
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+class graph {
+  std::vector<std::vector<int> > adj;
+  bool directed;
+
+  template<class ReportFunction>
+  void dfs(int n, std::vector<bool> &visit, ReportFunction f) const {
+    f(n);
+    visit[n] = true;
+    std::vector<int>::const_iterator it;
+    for (it = adj[n].begin(); it != adj[n].end(); ++it) {
+      if (!visit[*it]) {
+        dfs(*it, visit, f);
+      }
+    }
+  }
+
+  bool has_cycle(int n, int prev, std::vector<bool> &visit,
+                 std::vector<bool> &onstack) const {
+    visit[n] = true;
+    onstack[n] = true;
+    std::vector<int>::const_iterator it;
+    for (it = adj[n].begin(); it != adj[n].end(); ++it) {
+      if (directed && onstack[*it]) {
+        return true;
+      }
+      if (!directed && visit[*it] && *it != prev) {
+        return true;
+      }
+      if (!visit[*it] && has_cycle(*it, n, visit, onstack)) {
+        return true;
+      }
+    }
+    onstack[n] = false;
+    return false;
+  }
+
+ public:
+  graph(bool directed = true) : directed(directed) {}
+
+  int nodes() const {
+    return (int)adj.size();
+  }
+
+  std::vector<int>& operator[](int n) {
+    return adj[n];
+  }
+
+  void add_edge(int u, int v) {
+    int n = adj.size();
+    if (u >= n || v >= n) {
+      adj.resize(std::max(u, v) + 1);
+    }
+    adj[u].push_back(v);
+    if (!directed) {
+      adj[v].push_back(u);
+    }
+  }
+
+  bool is_directed() const {
+    return directed;
+  }
+
+  bool has_cycle() const {
+    int n = adj.size();
+    std::vector<bool> visit(n, false), onstack(n, false);
+    for (int i = 0; i < n; i++) {
+      if (!visit[i] && has_cycle(i, -1, visit, onstack)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool is_tree() const {
+    return !directed && !has_cycle();
+  }
+
+  bool is_dag() const {
+    return directed && !has_cycle();
+  }
+
+  template<class ReportFunction>
+  void dfs(int start, ReportFunction f) const {
+    std::vector<bool> visit(adj.size(), false);
+    dfs(start, visit, f);
+  }
+};
+
+/*** Example Usage and Output:
+
+DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void print(int n) {
+  cout << n << " ";
+}
+
+int main() {
+  {
+    graph g;
+    g.add_edge(0, 1);
+    g.add_edge(0, 6);
+    g.add_edge(0, 7);
+    g.add_edge(1, 2);
+    g.add_edge(1, 5);
+    g.add_edge(2, 3);
+    g.add_edge(2, 4);
+    g.add_edge(7, 8);
+    g.add_edge(7, 11);
+    g.add_edge(8, 9);
+    g.add_edge(8, 10);
+    cout << "DFS order: ";
+    g.dfs(0, print);
+    cout << endl;
+    assert(g[0].size() == 3);
+    assert(g.is_dag());
+    assert(!g.has_cycle());
+  }
+  {
+    graph tree(false);
+    tree.add_edge(0, 1);
+    tree.add_edge(0, 2);
+    tree.add_edge(1, 3);
+    tree.add_edge(1, 4);
+    assert(tree.is_tree());
+    assert(!tree.is_dag());
+    tree.add_edge(2, 3);
+    assert(!tree.is_tree());
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Topological Sorting (DFS)}
+\begin{lstlisting}
+/*
+
+Given a directed acyclic graph, find one of possibly many orderings of the nodes
+such that for every edge from node u to v, u comes before v in the ordering.
+Depth-first search is used to traverse all nodes in post-order.
+
+toposort(nodes) takes a directed graph stored as a global adjacency list with
+nodes indexed from 0 to (nodes - 1) and assigns a valid topological ordering to
+the global result vector. An error is thrown if the graph contains a cycle.
+
+Time Complexity:
+- O(max(n, m)) per call to toposort(), where n is the number of nodes and m is
+  the number of edges.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+  is the number of edges.
+- O(n) auxiliary stack space for toposort().
+
+*/
+
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
+
+const int MAXN = 100;
+std::vector<int> adj[MAXN], res;
+std::vector<bool> visit(MAXN), done(MAXN);
+
+void dfs(int u) {
+  if (visit[u]) {
+    throw std::runtime_error("Not a directed acyclic graph.");
+  }
+  if (done[u]) {
+    return;
+  }
+  visit[u] = true;
+  for (int j = 0; j < (int)adj[u].size(); j++) {
+    dfs(adj[u][j]);
+  }
+  visit[u] = false;
+  done[u] = true;
+  res.push_back(u);
+}
+
+void toposort(int nodes) {
+  fill(visit.begin(), visit.end(), false);
+  fill(done.begin(), done.end(), false);
+  res.clear();
+  for (int i = 0; i < nodes; i++) {
+    if (!done[i]) {
+      dfs(i);
+    }
+  }
+  std::reverse(res.begin(), res.end());
+}
+
+/*** Example Usage and Output:
+
+The topological order: 2 1 0 4 3 7 6 5
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  adj[0].push_back(3);
+  adj[0].push_back(4);
+  adj[1].push_back(3);
+  adj[2].push_back(4);
+  adj[2].push_back(7);
+  adj[3].push_back(5);
+  adj[3].push_back(6);
+  adj[3].push_back(7);
+  adj[4].push_back(6);
+  toposort(8);
+  cout << "The topological order:";
+  for (int i = 0; i < (int)res.size(); i++) {
+    cout << " " << res[i];
+  }
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{Eulerian Cycles (DFS)}
+\begin{lstlisting}
+/*
+
+A Eulerian trail is a path in a graph which contains every edge exactly once. An
+Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same
+node. A directed graph has an Eulerian cycle if and only if every node has an
+in-degree equal to its out-degree, and all of its nodes with nonzero degree
+belong to a single strongly connected component. An undirected graph has an
+Eulerian cycle if and only if every node has even degree, and all of its nodes
+with nonzero degree belong to a single connected component.
+
+Given a graph as an adjacency list along with the starting node of the cycle,
+both functions below return a vector containing all nodes reachable from the
+starting node in an order which forms an Eulerian cycle. The first node of the
+cycle will be repeated as the last element of the vector. All nodes of input
+adjacency lists to both functions must be be between 0 and MAXN - 1, inclusive.
+In addition, euler_cycle_undirected() requires that for every node v which is
+found in adj[u], node u must also be found in adj[v].
+
+Time Complexity:
+- O(max(n, m)) per call to either function, where n and m are the numbers of
+  nodes and edges respectively.
+
+Space Complexity:
+- O(n) auxiliary heap space for euler_cycle_directed(), where n is the number of
+  nodes.
+- O(n^2) auxiliary heap space for euler_cycle_undirected(), where n is the
+  number of nodes. This can be reduced to O(m) auxiliary heap space on the
+  number of edges if the used[][] bit matrix is replaced with an
+  std::unordered_set<std::pair<int, int>>.
+
+*/
+
+#include <algorithm>
+#include <bitset>
+#include <vector>
+
+const int MAXN = 100;
+
+std::vector<int> euler_cycle_directed(std::vector<int> adj[], int u) {
+  std::vector<int> stack, curr_edge(MAXN), res;
+  stack.push_back(u);
+  while (!stack.empty()) {
+    u = stack.back();
+    stack.pop_back();
+    while (curr_edge[u] < (int)adj[u].size()) {
+      stack.push_back(u);
+      u = adj[u][curr_edge[u]++];
+    }
+    res.push_back(u);
+  }
+  std::reverse(res.begin(), res.end());
+  return res;
+}
+
+std::vector<int> euler_cycle_undirected(std::vector<int> adj[], int u) {
+  std::bitset<MAXN> used[MAXN];
+  std::vector<int> stack, curr_edge(MAXN), res;
+  stack.push_back(u);
+  while (!stack.empty()) {
+    u = stack.back();
+    stack.pop_back();
+    while (curr_edge[u] < (int)adj[u].size()) {
+      int v = adj[u][curr_edge[u]++];
+      int mn = std::min(u, v), mx = std::max(u, v);
+      if (!used[mn][mx]) {
+        used[mn][mx] = true;
+        stack.push_back(u);
+        u = v;
+      }
+    }
+    res.push_back(u);
+  }
+  std::reverse(res.begin(), res.end());
+  return res;
+}
+
+/*** Example Usage and Output:
+
+Eulerian cycle from 0 (directed): 0 1 3 4 1 2 0
+Eulerian cycle from 2 (undirected): 2 1 3 4 1 0 2
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  {
+    vector<int> g[5], cycle;
+    g[0].push_back(1);
+    g[1].push_back(2);
+    g[2].push_back(0);
+    g[1].push_back(3);
+    g[3].push_back(4);
+    g[4].push_back(1);
+    cycle = euler_cycle_directed(g, 0);
+    cout << "Eulerian cycle from 0 (directed):";
+    for (int i = 0; i < (int)cycle.size(); i++) {
+      cout << " " << cycle[i];
+    }
+    cout << endl;
+  }
+  {
+    vector<int> g[5], cycle;
+    g[0].push_back(1);
+    g[1].push_back(0);
+    g[1].push_back(2);
+    g[2].push_back(1);
+    g[2].push_back(0);
+    g[0].push_back(2);
+    g[1].push_back(3);
+    g[3].push_back(1);
+    g[3].push_back(4);
+    g[4].push_back(3);
+    g[4].push_back(1);
+    g[1].push_back(4);
+    cycle = euler_cycle_undirected(g, 2);
+    cout << "Eulerian cycle from 2 (undirected):";
+    for (int i = 0; i < (int)cycle.size(); i++) {
+      cout << " " << cycle[i];
+    }
+    cout << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Unweighted Tree Centers (DFS)}
+\begin{lstlisting}
+/*
+
+An unweighted tree possesses a center, centroid, and diameter. The following
+functions apply to a global, pre-populated adjacency list adj[] which satisfies
+the precondition that for every node v in adj[u], node u also exists in adj[v].
+Nodes in adj[] must be numbered with integers between 0 (inclusive) and the
+total number of nodes (exclusive), as passed in the function arguments.
+
+- find_centers() returns a vector of either one or two tree Jordan centers. The
+  Jordan center of a tree is the set of all nodes with minimum eccentricity,
+  that is, the set of all nodes where the maximum distance to all other nodes in
+  the tree is minimal.
+- find_centroid() returns the node where all of its subtrees have a size less
+  than or equal to n/2, where n is the number of nodes in the tree.
+- diameter() returns the maximum distance between any two nodes in the tree,
+  using a well-known double depth-first search technique.
+
+Time Complexity:
+- O(max(n, m)) per call to find_centers(), find_centroid(), and diameter(),
+  where n is the number of nodes and m is the number of edges.
+
+Space Complexity:
+- O(n) auxiliary stack space for find_centers(), find_centroid(), and
+  diameter(), where n is the number of nodes.
+
+*/
+
+#include <utility>
+#include <vector>
+
+const int MAXN = 100;
+std::vector<int> adj[MAXN];
+
+std::vector<int> find_centers(int nodes) {
+  std::vector<int> leaves, degree(nodes);
+  for (int i = 0; i < nodes; i++) {
+    degree[i] = adj[i].size();
+    if (degree[i] <= 1) {
+      leaves.push_back(i);
+    }
+  }
+  int removed = leaves.size();
+  while (removed < nodes) {
+    std::vector<int> nleaves;
+    for (int i = 0; i < (int)leaves.size(); i++) {
+      int u = leaves[i];
+      for (int j = 0; j < (int)adj[u].size(); j++) {
+        int v = adj[u][j];
+        if (--degree[v] == 1) {
+          nleaves.push_back(v);
+        }
+      }
+    }
+    leaves = nleaves;
+    removed += leaves.size();
+  }
+  return leaves;
+}
+
+int find_centroid(int nodes, int u = 0, int p = -1) {
+  int count = 1;
+  bool good_center = true;
+  for (int j = 0; j < (int)adj[u].size(); j++) {
+    int v = adj[u][j];
+    if (v == p) {
+      continue;
+    }
+    int res = find_centroid(nodes, v, u);
+    if (res >= 0) {
+      return res;
+    }
+    int size = -res;
+    good_center &= (size <= nodes / 2);
+    count += size;
+  }
+  good_center &= (nodes - count <= nodes / 2);
+  return good_center ? u : -count;
+}
+
+std::pair<int, int> dfs(int u, int p, int depth) {
+  std::pair<int, int> res = std::make_pair(depth, u);
+  for (int j = 0; j < (int)adj[u].size(); j++) {
+    if (adj[u][j] != p) {
+      res = max(res, dfs(adj[u][j], u, depth + 1));
+    }
+  }
+  return res;
+}
+
+int diameter() {
+  int furthest_node = dfs(0, -1, 0).second;
+  return dfs(furthest_node, -1, 0).first;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  int nodes = 6;
+  adj[0].push_back(1);
+  adj[1].push_back(0);
+  adj[1].push_back(2);
+  adj[2].push_back(1);
+  adj[1].push_back(4);
+  adj[4].push_back(1);
+  adj[3].push_back(4);
+  adj[4].push_back(3);
+  adj[4].push_back(5);
+  adj[5].push_back(4);
+  vector<int> centers = find_centers(nodes);
+  assert(centers.size() == 2 && centers[0] == 1 && centers[1] == 4);
+  assert(find_centroid(nodes) == 4);
+  assert(diameter() == 3);
+  return 0;
+}
+\end{lstlisting}
+
+\section{Shortest Path}
+\setcounter{section}{2}
+\setcounter{subsection}{0}
+\subsection{Shortest Path (BFS)}
+\begin{lstlisting}
+/*
+
+Given a starting node in an unweighted, directed graph, visit every connected
+node and determine the minimum distance to each such node. Optionally, output
+the shortest path to a specific destination node using the shortest-path tree
+from the predecessor array pred[]. bfs() applies to a global, pre-populated
+adjacency list adj[] which consists of only nodes numbered with integers between
+0 (inclusive) and the total number of nodes (exclusive), as passed in the
+function argument.
+
+Time Complexity:
+- O(n) per call to bfs(), where n is the number of nodes.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+  is the number of edges.
+- O(n) auxiliary heap space for bfs().
+
+*/
+
+#include <queue>
+#include <utility>
+#include <vector>
+
+const int MAXN = 100, INF = 0x3f3f3f3f;
+std::vector<int> adj[MAXN];
+int dist[MAXN], pred[MAXN];
+
+void bfs(int nodes, int start) {
+  std::vector<bool> visit(nodes, false);
+  for (int i = 0; i < nodes; i++) {
+    dist[i] = INF;
+    pred[i] = -1;
+  }
+  std::queue<std::pair<int, int> > q;
+  q.push(std::make_pair(start, 0));
+  while (!q.empty()) {
+    int u = q.front().first;
+    int d = q.front().second;
+    q.pop();
+    visit[u] = true;
+    for (int j = 0; j < (int)adj[u].size(); j++) {
+      int v = adj[u][j];
+      if (visit[v]) {
+        continue;
+      }
+      dist[v] = d + 1;
+      pred[v] = u;
+      q.push(std::make_pair(v, d + 1));
+    }
+  }
+}
+
+/*** Example Usage and Output:
+
+The shortest distance from 0 to 3 is 2.
+Take the path: 0->1->3.
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void print_path(int dest) {
+  vector<int> path;
+  for (int j = dest; pred[j] != -1; j = pred[j]) {
+    path.push_back(pred[j]);
+  }
+  cout << "Take the path: ";
+  while (!path.empty()) {
+    cout << path.back() << "->";
+    path.pop_back();
+  }
+  cout << dest << "." << endl;
+}
+
+int main() {
+  int start = 0, dest = 3;
+  adj[0].push_back(1);
+  adj[0].push_back(3);
+  adj[1].push_back(2);
+  adj[1].push_back(3);
+  adj[2].push_back(3);
+  adj[0].push_back(3);
+  bfs(4, start);
+  cout << "The shortest distance from " << start << " to " << dest << " is "
+       << dist[dest] << "." << endl;
+  print_path(dest);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Shortest Path (Dijkstra)}
+\begin{lstlisting}
+/*
+
+Given a starting node in a weighted, directed graph with nonnegative weights
+only, visit every connected node and determine the minimum distance to each such
+node. Optionally, output the shortest path to a specific destination node using
+the shortest-path tree from the predecessor array pred[]. dijkstra() applies to
+a global, pre-populated adjacency list adj[] which must only consist of nodes
+numbered with integers between 0 (inclusive) and the total number of nodes
+(exclusive), as passed in the function argument.
+
+Since std::priority_queue is by default a max-heap, we simulate a min-heap by
+negating node distances before pushing them and negating them again after
+popping them. Alternatively, the container can be declared with the following
+template arguments (#include <functional> to access std::greater):
+  priority_queue<pair<int, int>, vector<pair<int, int> >,
+                 greater<pair<int, int> > > pq;
+
+Dijkstra's algorithm may be modified to support negative edge weights by
+allowing nodes to be re-visited (removing the visited array check in the inner
+for-loop). This is known as the Shortest Path Faster Algorithm (SPFA), which has
+a larger running time of O(n*m) on the number of nodes and edges respectively.
+While it is as slow in the worst case as the Bellman-Ford algorithm, the SPFA
+still tends to outperform in the average case.
+
+Time Complexity:
+- O(m log n) for dijkstra(), where m is the number of edges and n is the number
+  of nodes.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+  is the number of edges.
+- O(n) auxiliary heap space for dijkstra().
+
+*/
+
+#include <queue>
+#include <utility>
+#include <vector>
+
+const int MAXN = 100, INF = 0x3f3f3f3f;
+std::vector<std::pair<int, int> > adj[MAXN];
+int dist[MAXN], pred[MAXN];
+
+void dijkstra(int nodes, int start) {
+  std::vector<bool> visit(nodes, false);
+  for (int i = 0; i < nodes; i++) {
+    dist[i] = INF;
+    pred[i] = -1;
+  }
+  dist[start] = 0;
+  std::priority_queue<std::pair<int, int> > pq;
+  pq.push(std::make_pair(0, start));
+  while (!pq.empty()) {
+    int u = pq.top().second;
+    pq.pop();
+    visit[u] = true;
+    for (int j = 0; j < (int)adj[u].size(); j++) {
+      int v = adj[u][j].first;
+      if (visit[v]) {
+        continue;
+      }
+      if (dist[v] > dist[u] + adj[u][j].second) {
+        dist[v] = dist[u] + adj[u][j].second;
+        pred[v] = u;
+        pq.push(std::make_pair(-dist[v], v));
+      }
+    }
+  }
+}
+
+/*** Example Usage and Output:
+
+The shortest distance from 0 to 3 is 5.
+Take the path: 0->1->2->3.
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void print_path(int dest) {
+  vector<int> path;
+  for (int j = dest; pred[j] != -1; j = pred[j]) {
+    path.push_back(pred[j]);
+  }
+  cout << "Take the path: ";
+  while (!path.empty()) {
+    cout << path.back() << "->";
+    path.pop_back();
+  }
+  cout << dest << "." << endl;
+}
+
+int main() {
+  int start = 0, dest = 3;
+  adj[0].push_back(make_pair(1, 2));
+  adj[0].push_back(make_pair(3, 8));
+  adj[1].push_back(make_pair(2, 2));
+  adj[1].push_back(make_pair(3, 4));
+  adj[2].push_back(make_pair(3, 1));
+  dijkstra(4, start);
+  cout << "The shortest distance from " << start << " to " << dest << " is "
+       << dist[dest] << "." << endl;
+  print_path(dest);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Shortest Path (Bellman-Ford)}
+\begin{lstlisting}
+/*
+
+Given a starting node in a weighted, directed graph with possibly negative
+weights, visit every connected node and determine the minimum distance to each
+such node. Optionally, output the shortest path to a specific destination node
+using the shortest-path tree from the predecessor array pred[]. bellman_ford()
+applies to a global, pre-populated edge list which must only consist of nodes
+numbered with integers between 0 (inclusive) and the total number of nodes
+(exclusive), as passed in the function argument.
+
+This function will also detect whether the graph contains negative-weighted
+cycles, in which case there is no shortest path and an error will be thrown.
+
+Time Complexity:
+- O(n*m) per call to bellman_ford(), where n is the number of nodes and m is the
+  number of edges.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n is the number of nodes and m is
+  the number of edges.
+- O(n) auxiliary heap space for bellman_ford(), where n is the number of nodes.
+
+*/
+
+#include <stdexcept>
+#include <vector>
+
+struct edge { int u, v, w; };  // Edge from u to v with weight w.
+
+const int MAXN = 100, INF = 0x3f3f3f3f;
+std::vector<edge> e;
+int dist[MAXN], pred[MAXN];
+
+void bellman_ford(int nodes, int start) {
+  for (int i = 0; i < nodes; i++) {
+    dist[i] = INF;
+    pred[i] = -1;
+  }
+  dist[start] = 0;
+  for (int i = 0; i < nodes; i++) {
+    for (int j = 0; j < (int)e.size(); j++) {
+      if (dist[e[j].v] > dist[e[j].u] + e[j].w) {
+        dist[e[j].v] = dist[e[j].u] + e[j].w;
+        pred[e[j].v] = e[j].u;
+      }
+    }
+  }
+  // Optional: Report negative-weighted cycles.
+  for (int i = 0; i < (int)e.size(); i++) {
+    if (dist[e[i].v] > dist[e[i].u] + e[i].w) {
+      throw std::runtime_error("Negative-weight cycle found.");
+    }
+  }
+}
+
+/*** Example Usage and Output:
+
+The shortest distance from 0 to 2 is 3.
+Take the path: 0->1->2.
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void print_path(int dest) {
+  vector<int> path;
+  for (int j = dest; pred[j] != -1; j = pred[j]) {
+    path.push_back(pred[j]);
+  }
+  cout << "Take the path: ";
+  while (!path.empty()) {
+    cout << path.back() << "->";
+    path.pop_back();
+  }
+  cout << dest << "." << endl;
+}
+
+int main() {
+  int start = 0, dest = 2;
+  e.push_back((edge){0, 1, 1});
+  e.push_back((edge){1, 2, 2});
+  e.push_back((edge){0, 2, 5});
+  bellman_ford(3, start);
+  cout << "The shortest distance from " << start << " to " << dest << " is "
+       << dist[dest] << "." << endl;
+  print_path(dest);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Shortest Path (Floyd-Warshall)}
+\begin{lstlisting}
+/*
+
+Given a weighted, directed graph with possibly negative weights, determine the
+minimum distance between all pairs of start and destination nodes in the graph.
+Optionally, output the shortest path between two nodes using the shortest-path
+tree precomputed into the parent[][] array. floyd_warshall() applies to a global
+adjacency matrix dist[][], which must be initialized using initialize() and
+subsequently populated with weights. After the function call, dist[u][v] will
+have been modified to contain the shortest path from u to v, for all pairs of
+valid nodes u and v.
+
+This function will also detect whether the graph contains negative-weighted
+cycles, in which case there is no shortest path and an error will be thrown.
+
+Time Complexity:
+- O(n^2) per call to initialize(), where n is the number of nodes.
+- O(n^3) per call to floyd_warshall().
+
+Space Complexity:
+- O(n^2) for storage of the graph, where n is the number of nodes.
+- O(n^2) auxiliary heap space for initialize() and floyd_warshall().
+
+*/
+
+#include <stdexcept>
+
+const int MAXN = 100, INF = 0x3f3f3f3f;
+int dist[MAXN][MAXN], parent[MAXN][MAXN];
+
+void initialize(int nodes) {
+  for (int i = 0; i < nodes; i++) {
+    for (int j = 0; j < nodes; j++) {
+      dist[i][j] = (i == j) ? 0 : INF;
+      parent[i][j] = j;
+    }
+  }
+}
+
+void floyd_warshall(int nodes) {
+  for (int k = 0; k < nodes; k++) {
+    for (int i = 0; i < nodes; i++) {
+      for (int j = 0; j < nodes; j++) {
+        if (dist[i][j] > dist[i][k] + dist[k][j]) {
+          dist[i][j] = dist[i][k] + dist[k][j];
+          parent[i][j] = parent[i][k];
+        }
+      }
+    }
+  }
+  // Optional: Report negative-weighted cycles.
+  for (int i = 0; i < nodes; i++) {
+    if (dist[i][i] < 0) {
+      throw std::runtime_error("Negative-weight cycle found.");
+    }
+  }
+}
+
+/*** Example Usage and Output:
+
+The shortest distance from 0 to 2 is 3.
+Take the path: 0->1->2.
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void print_path(int u, int v) {
+  cout << "Take the path " << u;
+  while (u != v) {
+    u = parent[u][v];
+    cout << "->" << u;
+  }
+  cout << "." << endl;
+}
+
+int main() {
+  initialize(3);
+  int start = 0, dest = 2;
+  dist[0][1] = 1;
+  dist[1][2] = 2;
+  dist[0][2] = 5;
+  floyd_warshall(3);
+  cout << "The shortest distance from " << start << " to " << dest << " is "
+       << dist[start][dest] << "." << endl;
+  print_path(start, dest);
+  return 0;
+}
+\end{lstlisting}
+
+\section{Connectivity}
+\setcounter{section}{3}
+\setcounter{subsection}{0}
+\subsection{Strongly Connected Components (Kosaraju)}
+\begin{lstlisting}
+/*
+
+Given a directed graph, determine the strongly connected components, that is,
+the set of all strongly (maximally) connected subgraphs. A subgraph is strongly
+connected if there is a path between each pair of nodes. Condensing the strongly
+connected components of a graph into single nodes will result in a directed
+acyclic graph. kosaraju() applies to a global, pre-populated adjacency list
+adj[] which must only consist of nodes numbered with integers between 0
+(inclusive) and the total number of nodes (exclusive), as passed in the function
+argument.
+
+Time Complexity:
+- O(max(n, m)) per call to kosaraju(), where n is the number of nodes and m is
+  the number of edges.
+
+Space Complexity:
+- O(max(n, m)) auxiliary heap space for storage of the graph, where n the number
+  of nodes and m is the number of edges.
+- O(n) auxiliary stack space for kosaraju().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+const int MAXN = 100;
+std::vector<int> adj[MAXN], rev[MAXN];
+std::vector<bool> visit(MAXN);
+std::vector<std::vector<int> > scc;
+
+void dfs(std::vector<int> g[], std::vector<int> &res, int u) {
+  visit[u] = true;
+  for (int j = 0; j < (int)g[u].size(); j++) {
+    if (!visit[g[u][j]]) {
+      dfs(g, res, g[u][j]);
+    }
+  }
+  res.push_back(u);
+}
+
+void kosaraju(int nodes) {
+  std::fill(visit.begin(), visit.end(), false);
+  std::vector<int> order;
+  for (int i = 0; i < nodes; i++) {
+    rev[i].clear();
+    if (!visit[i]) {
+      dfs(adj, order, i);
+    }
+  }
+  std::reverse(order.begin(), order.end());
+  std::fill(visit.begin(), visit.end(), false);
+  for (int i = 0; i < nodes; i++) {
+    for (int j = 0; j < (int)adj[i].size(); j++) {
+      rev[adj[i][j]].push_back(i);
+    }
+  }
+  scc.clear();
+  for (int i = 0; i < (int)order.size(); i++) {
+    if (visit[order[i]]) {
+      continue;
+    }
+    std::vector<int> component;
+    dfs(rev, component, order[i]);
+    scc.push_back(component);
+  }
+}
+
+/*** Example Usage and Output:
+
+1 4 0
+7 3 2
+5 6
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  adj[0].push_back(1);
+  adj[1].push_back(2);
+  adj[1].push_back(4);
+  adj[1].push_back(5);
+  adj[2].push_back(3);
+  adj[2].push_back(6);
+  adj[3].push_back(2);
+  adj[3].push_back(7);
+  adj[4].push_back(0);
+  adj[4].push_back(5);
+  adj[5].push_back(6);
+  adj[6].push_back(5);
+  adj[7].push_back(3);
+  adj[7].push_back(6);
+  kosaraju(8);
+  cout << "Components:" << endl;
+  for (int i = 0; i < (int)scc.size(); i++) {
+    for (int j = 0; j < (int)scc[i].size(); j++) {
+      cout << scc[i][j] << " ";
+    }
+    cout << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Strongly Connected Components (Tarjan)}
+\begin{lstlisting}
+/*
+
+Given a directed graph, determine the strongly connected components. The
+strongly connected components of a graph is the set of all strongly (maximally)
+connected subgraphs. A subgraph is strongly connected if there is a path between
+each pair of nodes. Condensing the strongly connected components of a graph into
+single nodes will result in a directed acyclic graph. tarjan() applies to a
+global, pre-populated adjacency list adj[] which must only consist of nodes
+numbered with integers between 0 (inclusive) and the total number of nodes
+(exclusive), as passed in the function argument.
+
+Time Complexity:
+- O(max(n, m)) per call to tarjan(), where n is the number of nodes and m is the
+  number of edges.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges.
+- O(n) auxiliary stack space for tarjan().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+const int MAXN = 100, INF = 0x3f3f3f3f;
+std::vector<int> adj[MAXN], stack;
+int timer, lowlink[MAXN];
+std::vector<bool> visit(MAXN);
+std::vector<std::vector<int> > scc;
+
+void dfs(int u) {
+  lowlink[u] = timer++;
+  visit[u] = true;
+  stack.push_back(u);
+  bool is_component_root = true;
+  int v;
+  for (int j = 0; j < (int)adj[u].size(); j++) {
+    v = adj[u][j];
+    if (!visit[v]) {
+      dfs(v);
+    }
+    if (lowlink[u] > lowlink[v]) {
+      lowlink[u] = lowlink[v];
+      is_component_root = false;
+    }
+  }
+  if (!is_component_root) {
+    return;
+  }
+  std::vector<int> component;
+  do {
+    v = stack.back();
+    visit[v] = true;
+    stack.pop_back();
+    lowlink[v] = INF;
+    component.push_back(v);
+  } while (u != v);
+  scc.push_back(component);
+}
+
+void tarjan(int nodes) {
+  scc.clear();
+  stack.clear();
+  std::fill(lowlink, lowlink + nodes, 0);
+  std::fill(visit.begin(), visit.end(), false);
+  timer = 0;
+  for (int i = 0; i < nodes; i++) {
+    if (!visit[i]) {
+      dfs(i);
+    }
+  }
+}
+
+/*** Example Usage and Output:
+
+Components:
+5 6
+7 3 2
+4 1 0
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  adj[0].push_back(1);
+  adj[1].push_back(2);
+  adj[1].push_back(4);
+  adj[1].push_back(5);
+  adj[2].push_back(3);
+  adj[2].push_back(6);
+  adj[3].push_back(2);
+  adj[3].push_back(7);
+  adj[4].push_back(0);
+  adj[4].push_back(5);
+  adj[5].push_back(6);
+  adj[6].push_back(5);
+  adj[7].push_back(3);
+  adj[7].push_back(6);
+  tarjan(8);
+  cout << "Components:" << endl;
+  for (int i = 0; i < (int)scc.size(); i++) {
+    for (int j = 0; j < (int)scc[i].size(); j++) {
+      cout << scc[i][j] << " ";
+    }
+    cout << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Bridges, Cut-points, and Biconnectivity}
+\begin{lstlisting}
+/*
+
+Given an undirected graph, compute the following properties of the graph using
+Tarjan's algorithm. tarjan() applies to a global, pre-populated adjacency list
+adj[] which satisfies the precondition that for every node v in adj[u], node u
+also exists in adj[v]. Nodes in adj[] must be numbered with integers between 0
+(inclusive) and the total number of nodes (exclusive), as passed in the function
+arguments. get_block_forest() applies to the global vector of biconnected
+components bcc[] which must have already been precomputed by a call to tarjan().
+
+A bridge is an edge such that when deleted, the number of connected components
+in the graph is increased. An edge is a bridge if and only if it is not part of
+any cycle.
+
+A cut-point (i.e. cut-node, or articulation point) is any node whose removal
+increases the number of connected components in the graph.
+
+A biconnected component of a graph is a maximally biconnected subgraph. A
+biconnected graph is a connected and "non-separable" graph, meaning that if any
+node were to be removed, the graph will remain connected. Thus, a biconnected
+graph has no articulation points.
+
+Any connected graph decomposes into a tree of biconnected components called the
+"block tree" of the graph. An unconnected graph will thus decompose into a
+"block forest."
+
+Time Complexity:
+- O(max(n, m)) per call to tarjan() and get_block_forest(), where n is the
+  number of nodes and m is the number of edges.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges
+- O(n) auxiliary stack space for tarjan().
+- O(1) auxiliary stack space for get_block_forest().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+const int MAXN = 100;
+int timer, lowlink[MAXN], tin[MAXN], comp[MAXN];
+std::vector<bool> visit(MAXN);
+std::vector<int> adj[MAXN], bcc_forest[MAXN];
+std::vector<int> stack, cutpoints;
+std::vector<std::vector<int> > bcc;
+std::vector<std::pair<int, int> > bridges;
+
+void dfs(int u, int p) {
+  visit[u] = true;
+  lowlink[u] = tin[u] = timer++;
+  stack.push_back(u);
+  int v, children = 0;
+  bool cutpoint = false;
+  for (int j = 0; j < (int)adj[u].size(); j++) {
+    v = adj[u][j];
+    if (v == p) {
+      continue;
+    }
+    if (visit[v]) {
+      lowlink[u] = std::min(lowlink[u], tin[v]);
+    } else {
+      dfs(v, u);
+      lowlink[u] = std::min(lowlink[u], lowlink[v]);
+      cutpoint |= (lowlink[v] >= tin[u]);
+      if (lowlink[v] > tin[u]) {
+        bridges.push_back(std::make_pair(u, v));
+      }
+      children++;
+    }
+  }
+  if (p == -1) {
+    cutpoint = (children >= 2);
+  }
+  if (cutpoint) {
+    cutpoints.push_back(u);
+  }
+  if (lowlink[u] == tin[u]) {
+    std::vector<int> component;
+    do {
+      v = stack.back();
+      stack.pop_back();
+      component.push_back(v);
+    } while (u != v);
+    bcc.push_back(component);
+  }
+}
+
+void tarjan(int nodes) {
+  bcc.clear();
+  bridges.clear();
+  cutpoints.clear();
+  stack.clear();
+  std::fill(lowlink, lowlink + nodes, 0);
+  std::fill(tin, tin + nodes, 0);
+  std::fill(visit.begin(), visit.end(), false);
+  timer = 0;
+  for (int i = 0; i < nodes; i++) {
+    if (!visit[i]) {
+      dfs(i, -1);
+    }
+  }
+}
+
+void get_block_forest(int nodes) {
+  std::fill(comp, comp + nodes, 0);
+  for (int i = 0; i < nodes; i++) {
+    bcc_forest[i].clear();
+  }
+  for (int i = 0; i < (int)bcc.size(); i++) {
+    for (int j = 0; j < (int)bcc[i].size(); j++) {
+      comp[bcc[i][j]] = i;
+    }
+  }
+  for (int i = 0; i < nodes; i++) {
+    for (int j = 0; j < (int)adj[i].size(); j++) {
+      if (comp[i] != comp[adj[i][j]]) {
+        bcc_forest[comp[i]].push_back(comp[adj[i][j]]);
+      }
+    }
+  }
+}
+
+/*** Example Usage and Output:
+
+Cut-points: 5 1
+Bridges:
+1 2
+5 4
+3 7
+Edge-Biconnected Components:
+2
+4
+5 1 0
+7
+3
+6
+Adjacency List for Block Forest:
+0 => 2
+1 => 2
+2 => 0 1
+3 => 4
+4 => 3
+5 =>
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void add_edge(int u, int v) {
+  adj[u].push_back(v);
+  adj[v].push_back(u);
+}
+
+int main() {
+  add_edge(0, 1);
+  add_edge(0, 5);
+  add_edge(1, 2);
+  add_edge(1, 5);
+  add_edge(3, 7);
+  add_edge(4, 5);
+  tarjan(8);
+  get_block_forest(8);
+  cout << "Cut-points:";
+  for (int i = 0; i < (int)cutpoints.size(); i++) {
+    cout << " " << cutpoints[i];
+  }
+  cout << endl << "Bridges:" << endl;
+  for (int i = 0; i < (int)bridges.size(); i++) {
+    cout << bridges[i].first << " " << bridges[i].second << endl;
+  }
+  cout << "Edge-Biconnected Components:" << endl;
+  for (int i = 0; i < (int)bcc.size(); i++) {
+    for (int j = 0; j < (int)bcc[i].size(); j++) {
+      cout << bcc[i][j] << " ";
+    }
+    cout << endl;
+  }
+  cout << "Adjacency List for Block Forest:" << endl;
+  for (int i = 0; i < (int)bcc.size(); i++) {
+    cout << i << " =>";
+    for (int j = 0; j < (int)bcc_forest[i].size(); j++) {
+      cout << " " << bcc_forest[i][j];
+    }
+    cout << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+
+\section{Minimum Spanning Tree}
+\setcounter{section}{4}
+\setcounter{subsection}{0}
+\subsection{Minimum Spanning Tree (Prim)}
+\begin{lstlisting}
+/*
+
+Given a connected, undirected, weighted graph with possibly negative weights,
+its minimum spanning tree is a subgraph which is a tree that connects all nodes
+with a subset of its edges such that their total weight is minimized. prim()
+applies to a global, pre-populated adjacency list adj[] which must only consist
+of nodes numbered with integers between 0 (inclusive) and the total number of
+nodes (exclusive), as passed in the function argument. If the input graph is not
+connected, then this implementation will find the minimum spanning forest.
+
+Since std::priority_queue is by default a max-heap, we simulate a min-heap by
+negating node distances before pushing them and negating them again after
+popping them. To modify this implementation to find the maximum spanning tree,
+the two negation steps can be skipped to prioritize the max edges.
+
+Time Complexity:
+- O(m log n) per call to prim(), where m is the number of edges and n is the
+  number of nodes.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges.
+- O(n) auxiliary heap space for prim().
+
+*/
+
+#include <queue>
+#include <utility>
+#include <vector>
+
+const int MAXN = 100;
+std::vector<std::pair<int, int> > adj[MAXN], mst;
+
+int prim(int nodes) {
+  mst.clear();
+  std::vector<bool> visit(nodes);
+  int total_dist = 0;
+  for (int i = 0; i < nodes; i++) {
+    if (visit[i]) {
+      continue;
+    }
+    visit[i] = true;
+    std::priority_queue<std::pair<int, std::pair<int, int> > > pq;
+    for (int j = 0; j < (int)adj[i].size(); j++) {
+      pq.push(std::make_pair(-adj[i][j].second,
+                             std::make_pair(i, adj[i][j].first)));
+    }
+    while (!pq.empty()) {
+      int u = pq.top().second.first;
+      int v = pq.top().second.second;
+      int w = -pq.top().first;
+      pq.pop();
+      if (visit[u] && !visit[v]) {
+        visit[v] = true;
+        if (v != i) {
+          mst.push_back(std::make_pair(u, v));
+          total_dist += w;
+        }
+        for (int j = 0; j < (int)adj[v].size(); j++) {
+          pq.push(std::make_pair(-adj[v][j].second,
+                                 std::make_pair(v, adj[v][j].first)));
+        }
+      }
+    }
+  }
+  return total_dist;
+}
+
+/*** Example Usage and Output:
+
+Total distance: 13
+0 <-> 2
+0 <-> 1
+3 <-> 4
+4 <-> 5
+5 <-> 6
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void add_edge(int u, int v, int w) {
+  adj[u].push_back(make_pair(v, w));
+  adj[v].push_back(make_pair(u, w));
+}
+
+int main() {
+  add_edge(0, 1, 4);
+  add_edge(1, 2, 6);
+  add_edge(2, 0, 3);
+  add_edge(3, 4, 1);
+  add_edge(4, 5, 2);
+  add_edge(5, 6, 3);
+  add_edge(6, 4, 4);
+  cout << "Total distance: " << prim(7) << endl;
+  for (int i = 0; i < (int)mst.size(); i++) {
+    cout << mst[i].first << " <-> " << mst[i].second << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Minimum Spanning Tree (Kruskal)}
+\begin{lstlisting}
+/*
+
+Given a connected, undirected, weighted graph with possibly negative weights,
+its minimum spanning tree is a subgraph which is a tree that connects all nodes
+with a subset of its edges such that their total weight is minimized. kruskal()
+applies to a global, pre-populated adjacency list adj[] which must only consist
+of nodes numbered with integers between 0 (inclusive) and the total number of
+nodes (exclusive), as passed in the function argument. If the input graph is not
+connected, then this implementation will find the minimum spanning forest.
+
+Time Complexity:
+- O(m log n) per call to kruskal(), where m is the number of edges and n is the
+  number of nodes.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges
+- O(n) auxiliary stack space for kruskal().
+
+*/
+
+#include <algorithm>
+#include <utility>
+#include <vector>
+
+const int MAXN = 100;
+std::vector<std::pair<int, std::pair<int, int> > > edges;
+int root[MAXN];
+std::vector<std::pair<int, int> > mst;
+
+int find_root(int x) {
+  if (root[x] != x) {
+    root[x] = find_root(root[x]);
+  }
+  return root[x];
+}
+
+int kruskal(int nodes) {
+  mst.clear();
+  std::sort(edges.begin(), edges.end());
+  int total_dist = 0;
+  for (int i = 0; i < nodes; i++) {
+    root[i] = i;
+  }
+  for (int i = 0; i < (int)edges.size(); i++) {
+    int u = find_root(edges[i].second.first);
+    int v = find_root(edges[i].second.second);
+    if (u != v) {
+      root[u] = root[v];
+      mst.push_back(edges[i].second);
+      total_dist += edges[i].first;
+    }
+  }
+  return total_dist;
+}
+
+/*** Example Usage and Output:
+
+Total distance: 13
+3 <-> 4
+4 <-> 5
+2 <-> 0
+5 <-> 6
+0 <-> 1
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void add_edge(int u, int v, int w) {
+  edges.push_back(make_pair(w, make_pair(u, v)));
+}
+
+int main() {
+  add_edge(0, 1, 4);
+  add_edge(1, 2, 6);
+  add_edge(2, 0, 3);
+  add_edge(3, 4, 1);
+  add_edge(4, 5, 2);
+  add_edge(5, 6, 3);
+  add_edge(6, 4, 4);
+  cout << "Total distance: " << kruskal(7) << endl;
+  for (int i = 0; i < (int)mst.size(); i++) {
+    cout << mst[i].first << " <-> " << mst[i].second << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+
+\section{Maximum Flow}
+\setcounter{section}{5}
+\setcounter{subsection}{0}
+\subsection{Maximum Flow (Ford-Fulkerson)}
+\begin{lstlisting}
+/*
+
+Given a flow network with integer capacities, find the maximum flow from a given
+source node to a given sink node. The flow of a given edge u -> v is defined as
+the minimum of its capacity and the sum of the flows of all incoming edges of u.
+ford_fulkerson() applies to global variables nodes, source, sink, and cap[][]
+which is an adjacency matrix that will be modified by the function call.
+
+The Ford-Fulkerson algorithm is only optimal on graphs with integer capacities,
+as there exists certain real-valued flow inputs for which the algorithm never
+terminates. The Edmonds-Karp algorithm is an improvement using breadth-first
+search, addressing this problem.
+
+Time Complexity:
+- O(n^2*f) per call to ford_fulkerson(), where n is the number of nodes and f
+  is the maximum flow.
+
+Space Complexity:
+- O(n^2) for storage of the flow network, where n is the number of nodes.
+- O(n) auxiliary stack space for ford_fulkerson().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+const int MAXN = 100, INF = 0x3f3f3f3f;
+int nodes, source, sink, cap[MAXN][MAXN];
+std::vector<bool> visit(MAXN);
+
+int dfs(int u, int f) {
+  if (u == sink) {
+    return f;
+  }
+  visit[u] = true;
+  for (int v = 0; v < nodes; v++) {
+    if (!visit[v] && cap[u][v] > 0) {
+      int flow = dfs(v, std::min(f, cap[u][v]));
+      if (flow > 0) {
+        cap[u][v] -= flow;
+        cap[v][u] += flow;
+        return flow;
+      }
+    }
+  }
+  return 0;
+}
+
+int ford_fulkerson() {
+  int max_flow = 0;
+  for (;;) {
+    std::fill(visit.begin(), visit.end(), false);
+    int flow = dfs(source, INF);
+    if (flow == 0) {
+      break;
+    }
+    max_flow += flow;
+  }
+  return max_flow;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+int main() {
+  nodes = 6;
+  source = 0;
+  sink = 5;
+  cap[0][1] = 3;
+  cap[0][2] = 3;
+  cap[1][2] = 2;
+  cap[1][3] = 3;
+  cap[2][4] = 2;
+  cap[3][4] = 1;
+  cap[3][5] = 2;
+  cap[4][5] = 3;
+  assert(ford_fulkerson() == 5);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Maximum Flow (Edmonds-Karp)}
+\begin{lstlisting}
+/*
+
+Given a flow network with integer capacities, find the maximum flow from a given
+source node to a given sink node. The flow of a given edge u -> v is defined as
+the minimum of its capacity and the sum of the flows of all incoming edges of u.
+edmonds_karp() applies to a global adjacency list adj[] that will be modified by
+the function call.
+
+The Edmonds-Karp algorithm will also support real-valued flow capacities. As
+such, this implementation will work as intended upon changing the appropriate
+variables to doubles.
+
+Time Complexity:
+- O(min(n*m^2, m*f)) per call to edmonds_karp(), where n is the number of nodes,
+  m is the number of edges, and f is the maximum flow.
+
+Space Complexity:
+- O(max(n, m)) for storage of the flow network, where n is the number of nodes
+  and m is the number of edges.
+
+*/
+
+#include <algorithm>
+#include <queue>
+#include <vector>
+
+struct edge { int u, v, rev, cap, f; };
+
+const int MAXN = 100, INF = 0x3f3f3f3f;
+std::vector<edge> adj[MAXN];
+
+void add_edge(int u, int v, int cap) {
+  adj[u].push_back((edge){u, v, (int)adj[v].size(), cap, 0});
+  adj[v].push_back((edge){v, u, (int)adj[u].size() - 1, 0, 0});
+}
+
+int edmonds_karp(int nodes, int source, int sink) {
+  int max_flow = 0;
+  for (;;) {
+    std::vector<edge*> pred(nodes, (edge*)0);
+    std::queue<int> q;
+    q.push(source);
+    while (!q.empty() && !pred[sink]) {
+      int u = q.front();
+      q.pop();
+      for (int j = 0; j < (int)adj[u].size(); j++) {
+        edge &e = adj[u][j];
+        if (!pred[e.v] && e.cap > e.f) {
+          pred[e.v] = &e;
+          q.push(e.v);
+        }
+      }
+    }
+    if (!pred[sink]) {
+      break;
+    }
+    int flow = INF;
+    for (int u = sink; u != source; u = pred[u]->u) {
+      flow = std::min(flow, pred[u]->cap - pred[u]->f);
+    }
+    for (int u = sink; u != source; u = pred[u]->u) {
+      pred[u]->f += flow;
+      adj[pred[u]->v][pred[u]->rev].f -= flow;
+    }
+    max_flow += flow;
+  }
+  return max_flow;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+int main() {
+  add_edge(0, 1, 3);
+  add_edge(0, 2, 3);
+  add_edge(1, 2, 2);
+  add_edge(1, 3, 3);
+  add_edge(2, 4, 2);
+  add_edge(3, 4, 1);
+  add_edge(3, 5, 2);
+  add_edge(4, 5, 3);
+  assert(edmonds_karp(6, 0, 5) == 5);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Maximum Flow (Dinic)}
+\begin{lstlisting}
+/*
+
+Given a flow network with integer capacities, find the maximum flow from a given
+source node to a given sink node. The flow of a given edge u -> v is defined as
+the minimum of its capacity and the sum of the flows of all incoming edges of u.
+dinic() applies to a global adjacency list adj[] that will be modified by the
+function call.
+
+Dinic's algorithm will also support real-valued flow capacities. As such, this
+implementation will work as intended upon changing the appropriate variables to
+doubles.
+
+Time Complexity:
+- O(n^2*m) per call to dinic(), where n is the number of nodes and m is the
+  number of edges.
+
+Space Complexity:
+- O(max(n, m)) for storage of the flow network, where n is the number of nodes
+  and m is the number of edges.
+- O(n) auxiliary stack and heap space for dinic().
+
+*/
+
+#include <algorithm>
+#include <queue>
+#include <vector>
+
+struct edge { int v, rev, cap, f; };
+
+const int MAXN = 100, INF = 0x3f3f3f3f;
+std::vector<edge> adj[MAXN];
+int dist[MAXN], ptr[MAXN];
+
+void add_edge(int u, int v, int cap) {
+  adj[u].push_back((edge){v, (int)adj[v].size(), cap, 0});
+  adj[v].push_back((edge){u, (int)adj[u].size() - 1, 0, 0});
+}
+
+bool dinic_bfs(int nodes, int source, int sink) {
+  std::fill(dist, dist + nodes, -1);
+  dist[source] = 0;
+  std::queue<int> q;
+  q.push(source);
+  while (!q.empty()) {
+    int u = q.front();
+    q.pop();
+    for (int j = 0; j < (int)adj[u].size(); j++) {
+      edge &e = adj[u][j];
+      if (dist[e.v] < 0 && e.f < e.cap) {
+        dist[e.v] = dist[u] + 1;
+        q.push(e.v);
+      }
+    }
+  }
+  return dist[sink] >= 0;
+}
+
+int dinic_dfs(int u, int f, int sink) {
+  if (u == sink) {
+    return f;
+  }
+  for (; ptr[u] < (int)adj[u].size(); ptr[u]++) {
+    edge &e = adj[u][ptr[u]];
+    if (dist[e.v] == dist[u] + 1 && e.f < e.cap) {
+      int flow = dinic_dfs(e.v, std::min(f, e.cap - e.f), sink);
+      if (flow > 0) {
+        e.f += flow;
+        adj[e.v][e.rev].f -= flow;
+        return flow;
+      }
+    }
+  }
+  return 0;
+}
+
+int dinic(int nodes, int source, int sink) {
+  int flow, max_flow = 0;
+  while (dinic_bfs(nodes, source, sink)) {
+    std::fill(ptr, ptr + nodes, 0);
+    while ((flow = dinic_dfs(source, INF, sink)) != 0) {
+      max_flow += flow;
+    }
+  }
+  return max_flow;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+int main() {
+  add_edge(0, 1, 3);
+  add_edge(0, 2, 3);
+  add_edge(1, 2, 2);
+  add_edge(1, 3, 3);
+  add_edge(2, 4, 2);
+  add_edge(3, 4, 1);
+  add_edge(3, 5, 2);
+  add_edge(4, 5, 3);
+  assert(dinic(6, 0, 5) == 5);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Maximum Flow (Push-Relabel)}
+\begin{lstlisting}
+/*
+
+Given a flow network with integer capacities, find the maximum flow from a given
+source node to a given sink node. The flow of a given edge u -> v is defined as
+the minimum of its capacity and the sum of the flows of all incoming edges of u.
+push_relabel() applies to a global adjacency matrix cap[][] and returns the
+maximum flow.
+
+Although the push-relabel algorithm is considered one of the most efficient
+maximum flow algorithms, it cannot take advantage of the magnitude of the
+maximum flow being less than n^3 (in which case the Ford-Fulkerson or
+Edmonds-Karp algorithms may be more efficient).
+
+Time Complexity:
+- O(n^3) per call to push_relabel(), where n is the number of nodes.
+
+Space Complexity:
+- O(n^2) for storage of the flow network, where n is the number of nodes.
+- O(n) auxiliary heap space for push_relabel().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+const int MAXN = 100, INF = 0x3f3f3f3f;
+int cap[MAXN][MAXN], f[MAXN][MAXN];
+
+int push_relabel(int nodes, int source, int sink) {
+  std::vector<int> e(nodes, 0), h(nodes, 0), maxh(nodes, 0);
+  for (int i = 0; i < nodes; i++) {
+    std::fill(f[i], f[i] + nodes, 0);
+  }
+  h[source] = nodes - 1;
+  for (int i = 0; i < nodes; i++) {
+    f[source][i] = cap[source][i];
+    f[i][source] = -f[source][i];
+    e[i] = cap[source][i];
+  }
+  int size = 0;
+  for (;;) {
+    if (size == 0) {
+      for (int i = 0; i < nodes; i++) {
+        if (i != source && i != sink && e[i] > 0) {
+          if (size != 0 && h[i] > h[maxh[0]]) {
+            size = 0;
+          }
+          maxh[size++] = i;
+        }
+      }
+    }
+    if (size == 0) {
+      break;
+    }
+    while (size != 0) {
+      int i = maxh[size - 1];
+      bool pushed = false;
+      for (int j = 0; j < nodes && e[i] != 0; j++) {
+        if (h[i] == h[j] + 1 && cap[i][j] - f[i][j] > 0) {
+          int df = std::min(cap[i][j] - f[i][j], e[i]);
+          f[i][j] += df;
+          f[j][i] -= df;
+          e[i] -= df;
+          e[j] += df;
+          if (e[i] == 0) {
+            size--;
+          }
+          pushed = true;
+        }
+      }
+      if (pushed) {
+        continue;
+      }
+      h[i] = INF;
+      for (int j = 0; j < nodes; j++) {
+        if (h[i] > h[j] + 1 && cap[i][j] - f[i][j] > 0) {
+          h[i] = h[j] + 1;
+        }
+      }
+      if (h[i] > h[maxh[0]]) {
+        size = 0;
+        break;
+      }
+    }
+  }
+  int max_flow = 0;
+  for (int i = 0; i < nodes; i++) {
+    max_flow += f[source][i];
+  }
+  return max_flow;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+int main() {
+  cap[0][1] = 3;
+  cap[0][2] = 3;
+  cap[1][2] = 2;
+  cap[1][3] = 3;
+  cap[2][4] = 2;
+  cap[3][4] = 1;
+  cap[3][5] = 2;
+  cap[4][5] = 3;
+  assert(push_relabel(6, 0, 5) == 5);
+  return 0;
+}
+\end{lstlisting}
+
+\section{Maximum Matching}
+\setcounter{section}{6}
+\setcounter{subsection}{0}
+\subsection{Maximum Bipartite Matching (Kuhn)}
+\begin{lstlisting}
+/*
+
+Given two sets of nodes A = {0, 1, ..., n1} and B = {0, 1, ..., n2} such that
+n1 < n2, as well as a set of edges E mapping nodes from set A to set B, find the
+largest possible subset of E containing no edges that share the same node.
+kuhn() applies to a global, pre-populated adjacency list adj[] which must only
+consist of nodes numbered with integers between 0 (inclusive) and the total
+number of nodes (exclusive), as passed in the function argument.
+
+Time Complexity:
+- O(m*(n1 + n2)) per call to kuhn(), where m is the number of edges.
+
+Space Complexity:
+- O(n1 + n2) auxiliary stack space for kuhn().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+const int MAXN = 100;
+int match[MAXN];
+std::vector<bool> visit(MAXN);
+std::vector<int> adj[MAXN];
+
+bool dfs(int u) {
+  visit[u] = true;
+  for (int j = 0; j < (int)adj[u].size(); j++) {
+    int v = match[adj[u][j]];
+    if (v == -1 || (!visit[v] && dfs(v))) {
+      match[adj[u][j]] = u;
+      return true;
+    }
+  }
+  return false;
+}
+
+int kuhn(int n1, int n2) {
+  std::fill(visit.begin(), visit.end(), false);
+  std::fill(match, match + n2, -1);
+  int matches = 0;
+  for (int i = 0; i < n1; i++) {
+    std::fill(visit.begin(), visit.begin() + n1, false);
+    if (dfs(i)) {
+      matches++;
+    }
+  }
+  return matches;
+}
+
+/*** Example Usage and Output:
+
+Matched 3 pair(s):
+1 0
+0 1
+2 2
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  int n1 = 3, n2 = 4;
+  adj[0].push_back(1);
+  adj[1].push_back(0);
+  adj[1].push_back(1);
+  adj[1].push_back(2);
+  adj[2].push_back(2);
+  adj[2].push_back(3);
+  cout << "Matched " << kuhn(n1, n2) << " pair(s):" << endl;
+  for (int i = 0; i < n2; i++) {
+    if (match[i] != -1) {
+      cout << match[i] << " " << i << endl;
+    }
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Maximum Bipartite Matching (Hopcroft-Karp)}
+\begin{lstlisting}
+/*
+
+Given two sets of nodes A = {0, 1, ..., n1} and B = {0, 1, ..., n2} such that
+n1 < n2, as well as a set of edges E mapping nodes from set A to set B, find the
+largest possible subset of E containing no edges that share the same node.
+hopcroft_karp() applies to a global, pre-populated adjacency list adj[] which
+must only consist of nodes numbered with integers between 0 (inclusive) and the
+total number of nodes (exclusive), as passed in the function argument.
+
+Time Complexity:
+- O(m*sqrt(n1 + n2)) per call to hopcroft_karp(), where m is the number of
+  edges.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges.
+- O(n1 + n2) auxiliary stack and heap space for hopcroft_karp().
+
+*/
+
+#include <algorithm>
+#include <queue>
+#include <vector>
+
+const int MAXN = 100;
+std::vector<int> adj[MAXN];
+std::vector<bool> used(MAXN), visit(MAXN);
+int match[MAXN], dist[MAXN];
+
+void bfs(int n1, int n2) {
+  std::fill(dist, dist + n1, -1);
+  std::queue<int> q;
+  for (int u = 0; u < n1; u++) {
+    if (!used[u]) {
+      q.push(u);
+      dist[u] = 0;
+    }
+  }
+  while (!q.empty()) {
+    int u = q.front();
+    q.pop();
+    for (int j = 0; j < (int)adj[u].size(); j++) {
+      int v = match[adj[u][j]];
+      if (v >= 0 && dist[v] < 0) {
+        dist[v] = dist[u] + 1;
+        q.push(v);
+      }
+    }
+  }
+}
+
+bool dfs(int u) {
+  visit[u] = true;
+  for (int j = 0; j < (int)adj[u].size(); j++) {
+    int v = match[adj[u][j]];
+    if (v < 0 || (!visit[v] && dist[v] == dist[u] + 1 && dfs(v))) {
+      match[adj[u][j]] = u;
+      used[u] = true;
+      return true;
+    }
+  }
+  return false;
+}
+
+int hopcroft_karp(int n1, int n2) {
+  std::fill(match, match + n2, -1);
+  std::fill(used.begin(), used.end(), false);
+  int res = 0;
+  for (;;) {
+    bfs(n1, n2);
+    std::fill(visit.begin(), visit.end(), false);
+    int f = 0;
+    for (int u = 0; u < n1; u++) {
+      if (!used[u] && dfs(u)) {
+        f++;
+      }
+    }
+    if (f == 0) {
+      return res;
+    }
+    res += f;
+  }
+  return res;
+}
+
+/*** Example Usage and Output:
+
+Matched 3 pair(s):
+1 0
+0 1
+2 2
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  int n1 = 3, n2 = 4;
+  adj[0].push_back(1);
+  adj[1].push_back(0);
+  adj[1].push_back(1);
+  adj[1].push_back(2);
+  adj[2].push_back(2);
+  adj[2].push_back(3);
+  cout << "Matched " << hopcroft_karp(n1, n2) << " pair(s):" << endl;
+  for (int i = 0; i < n2; i++) {
+    if (match[i] != -1) {
+      cout << match[i] << " " << i << endl;
+    }
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Maximum Graph Matching (Edmonds)}
+\begin{lstlisting}
+/*
+
+Given a directed graph, determine a maximal subset of its edges such that no
+node is shared between different edges in the resulting subset. edmonds()
+applies to a global, pre-populated adjacency list adj[] which must only consist
+of nodes numbered with integers between 0 (inclusive) and the total number of
+nodes (exclusive), as passed in the function argument.
+
+Time Complexity:
+- O(n^3) per call to edmonds(), where n is the number of nodes.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+  the number of edges.
+- O(n) auxiliary heap space for edmonds(), where n is the number of nodes.
+
+*/
+
+#include <queue>
+#include <vector>
+
+const int MAXN = 100;
+std::vector<int> adj[MAXN];
+int p[MAXN], base[MAXN], match[MAXN];
+
+int lca(int nodes, int u, int v) {
+  std::vector<bool> used(nodes);
+  for (;;) {
+    u = base[u];
+    used[u] = true;
+    if (match[u] == -1) {
+      break;
+    }
+    u = p[match[u]];
+  }
+  for (;;) {
+    v = base[v];
+    if (used[v]) {
+      return v;
+    }
+    v = p[match[v]];
+  }
+}
+
+void mark_path(std::vector<bool> &blossom, int u, int b, int child) {
+  for (; base[u] != b; u = p[match[u]]) {
+    blossom[base[u]] = true;
+    blossom[base[match[u]]] = true;
+    p[u] = child;
+    child = match[u];
+  }
+}
+
+int find_path(int nodes, int root) {
+  std::vector<bool> used(nodes);
+  for (int i = 0; i < nodes; ++i) {
+    p[i] = -1;
+    base[i] = i;
+  }
+  used[root] = true;
+  std::queue<int> q;
+  q.push(root);
+  while (!q.empty()) {
+    int u = q.front();
+    q.pop();
+    for (int j = 0; j < (int)adj[u].size(); j++) {
+      int v = adj[u][j];
+      if (base[u] == base[v] || match[u] == v) {
+        continue;
+      }
+      if (v == root || (match[v] != -1 && p[match[v]] != -1)) {
+        int curr_base = lca(nodes, u, v);
+        std::vector<bool> blossom(nodes);
+        mark_path(blossom, u, curr_base, v);
+        mark_path(blossom, v, curr_base, u);
+        for (int i = 0; i < nodes; i++) {
+          if (blossom[base[i]]) {
+            base[i] = curr_base;
+            if (!used[i]) {
+              used[i] = true;
+              q.push(i);
+            }
+          }
+        }
+      } else if (p[v] == -1) {
+        p[v] = u;
+        if (match[v] == -1) {
+          return v;
+        }
+        v = match[v];
+        used[v] = true;
+        q.push(v);
+      }
+    }
+  }
+  return -1;
+}
+
+int edmonds(int nodes) {
+  for (int i = 0; i < nodes; i++) {
+    match[i] = -1;
+  }
+  for (int i = 0; i < nodes; i++) {
+    if (match[i] == -1) {
+      int u, pu, ppu;
+      for (u = find_path(nodes, i); u != -1; u = ppu) {
+        pu = p[u];
+        ppu = match[pu];
+        match[u] = pu;
+        match[pu] = u;
+      }
+    }
+  }
+  int matches = 0;
+  for (int i = 0; i < nodes; i++) {
+    if (match[i] != -1) {
+      matches++;
+    }
+  }
+  return matches/2;
+}
+
+/*** Example Usage and Output:
+
+Matched 2 pair(s):
+0 1
+2 3
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  int nodes = 4;
+  adj[0].push_back(1);
+  adj[1].push_back(0);
+  adj[1].push_back(2);
+  adj[2].push_back(1);
+  adj[2].push_back(3);
+  adj[3].push_back(2);
+  adj[3].push_back(0);
+  adj[0].push_back(3);
+  cout << "Matched " << edmonds(nodes) << " pair(s):" << endl;
+  for (int i = 0; i < nodes; i++) {
+    if (match[i] != -1 && i < match[i]) {
+      cout << i << " " << match[i] << endl;
+    }
+  }
+  return 0;
+}
+\end{lstlisting}
+
+\section{Hard Problems}
+\setcounter{section}{7}
+\setcounter{subsection}{0}
+\subsection{Maximum Clique (Bron-Kerbosch)}
+\begin{lstlisting}
+/*
+
+Given an undirected graph, max_clique() returns the size of the maximum clique,
+that is, the largest subset of nodes such that all pairs of nodes in the subset
+are connected by an edge. max_clique_weighted() additionally uses a global array
+w[] specifying a weight value for each node, returning the clique in the graph
+that has maximum total weight.
+
+Both functions apply to a global, pre-populated adjacency matrix adj[] which
+must satisfy the condition that adj[u][v] is true if and only if adj[v][u] is
+true, for all pairs of nodes u and v respectively between 0 (inclusive) and the
+total number of nodes (exclusive) as passed in the function argument. Note that
+max_clique_weighted() is an efficient implementation using bitmasks of unsigned
+64-bit integers, thus requiring the number of nodes to be less than 64.
+
+Time Complexity:
+- O(3^(n/3)) per call to max_clique() and max_clique_weighted(), where n
+  is the number of nodes.
+
+Space Complexity:
+- O(n^2) for storage of the graph, where n is the number of nodes.
+- O(n) auxiliary stack space for max_clique() and max_clique_weighted().
+
+*/
+
+#include <algorithm>
+#include <bitset>
+#include <vector>
+
+const int MAXN = 35;
+typedef std::bitset<MAXN> bits;
+typedef unsigned long long uint64;
+
+bool adj[MAXN][MAXN];
+int w[MAXN];
+
+int rec(int nodes, bits &curr, bits &pool, bits &excl) {
+  if (pool.none() && excl.none()) {
+    return curr.count();
+  }
+  int ans = 0, u = 0;
+  for (int v = 0; v < nodes; v++) {
+    if (pool[v] || excl[v]) {
+      u = v;
+    }
+  }
+  for (int v = 0; v < nodes; v++) {
+    if (!pool[v] || adj[u][v]) {
+      continue;
+    }
+    bits ncurr, npool, nexcl;
+    for (int i = 0; i < nodes; i++) {
+      ncurr[i] = curr[i];
+    }
+    ncurr[v] = true;
+    for (int j = 0; j < nodes; j++) {
+      npool[j] = pool[j] && adj[v][j];
+      nexcl[j] = excl[j] && adj[v][j];
+    }
+    ans = std::max(ans, rec(nodes, ncurr, npool, nexcl));
+    pool[v] = false;
+    excl[v] = true;
+  }
+  return ans;
+}
+
+int max_clique(int nodes) {
+  bits curr, excl, pool;
+  pool.flip();
+  return rec(nodes, curr, pool, excl);
+}
+
+int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
+  if (pool == 0 && excl == 0) {
+    int res = 0, u = __builtin_ctzll(curr);
+    while (u < (int)g.size()) {
+      res += w[u];
+      u += __builtin_ctzll(curr >> (u + 1)) + 1;
+    }
+    return res;
+  }
+  if (pool == 0) {
+    return -1;
+  }
+  int res = -1, pivot = __builtin_ctzll(pool | excl);
+  uint64 z = pool & ~g[pivot];
+  int u = __builtin_ctzll(z);
+  while (u < (int)g.size()) {
+    res = std::max(res, rec(g, curr | (1LL << u), pool & g[u], excl & g[u]));
+    pool ^= 1LL << u;
+    excl |= 1LL << u;
+    u += __builtin_ctzll(z >> (u + 1)) + 1;
+  }
+  return res;
+}
+
+int max_clique_weighted(int nodes) {
+  std::vector<uint64> g(nodes, 0);
+  for (int i = 0; i < nodes; i++) {
+    for (int j = 0; j < nodes; j++) {
+      if (adj[i][j]) {
+        g[i] |= 1LL << j;
+      }
+    }
+  }
+  return rec(g, 0, (1LL << nodes) - 1, 0);
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+void add_edge(int u, int v) {
+  adj[u][v] = true;
+  adj[v][u] = true;
+}
+
+int main() {
+  add_edge(0, 1);
+  add_edge(0, 2);
+  add_edge(0, 3);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  add_edge(2, 3);
+  add_edge(3, 4);
+  add_edge(4, 2);
+  w[0] = 10;
+  w[1] = 20;
+  w[2] = 30;
+  w[3] = 40;
+  w[4] = 50;
+  assert(max_clique(5) == 4);
+  assert(max_clique_weighted(5) == 120);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Graph Coloring}
+\begin{lstlisting}
+/*
+
+Given an undirected graph, assign a color to every node such that no pair of
+adjacent nodes have the same color, and that the total number of colors used is
+minimized. color_graph() applies to a global, pre-populated adjacency matrix
+adj[][] which must satisfy the condition that adj[u][v] is true if and only if
+adj[v][u] is true, for all pairs of nodes u and v respectively between 0
+(inclusive) and the total number of nodes (exclusive) as passed in the function
+argument.
+
+Time Complexity:
+- Exponential on the number of nodes per call to color_graph().
+
+Space Complexity:
+- O(n^2) for storage of the graph, where n is the number of nodes.
+- O(n) auxiliary stack and heap space for color_graph().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+const int MAXN = 30;
+int adj[MAXN][MAXN], min_colors, color[MAXN];
+int curr[MAXN], id[MAXN + 1], degree[MAXN + 1];
+
+void rec(int lo, int hi, int n, int used_colors) {
+  if (used_colors >= min_colors) {
+    return;
+  }
+  if (n == hi) {
+    for (int i = lo; i < hi; i++) {
+      color[id[i]] = curr[i];
+    }
+    min_colors = used_colors;
+    return;
+  }
+  std::vector<bool> used(used_colors + 1);
+  for (int i = 0; i < n; i++) {
+    if (adj[id[n]][id[i]]) {
+      used[curr[i]] = true;
+    }
+  }
+  for (int i = 0; i <= used_colors; i++) {
+    if (!used[i]) {
+      int tmp = curr[n];
+      curr[n] = i;
+      rec(lo, hi, n + 1, std::max(used_colors, i + 1));
+      curr[n] = tmp;
+    }
+  }
+}
+
+int color_graph(int nodes) {
+  for (int i = 0; i <= nodes; i++) {
+    id[i] = i;
+    degree[i] = 0;
+  }
+  int res = 1, lo = 0;
+  for (int hi = 1; hi <= nodes; hi++) {
+    int best = hi;
+    for (int i = hi; i < nodes; i++) {
+      if (adj[id[hi - 1]][id[i]]) {
+        degree[id[i]]++;
+      }
+      if (degree[id[best]] < degree[id[i]]) {
+        best = i;
+      }
+    }
+    std::swap(id[hi], id[best]);
+    if (degree[id[hi]] == 0) {
+      min_colors = nodes + 1;
+      std::fill(curr, curr + nodes, 0);
+      rec(lo, hi, lo, 0);
+      lo = hi;
+      res = std::max(res, min_colors);
+    }
+  }
+  return res;
+}
+
+/*** Example Usage and Output:
+
+Colored using 3 color(s):
+Color 1: 0 3
+Color 2: 1 2
+Color 3: 4
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void add_edge(int u, int v) {
+  adj[u][v] = true;
+  adj[v][u] = true;
+}
+
+int main() {
+  add_edge(0, 1);
+  add_edge(0, 4);
+  add_edge(1, 3);
+  add_edge(1, 4);
+  add_edge(2, 3);
+  add_edge(2, 4);
+  add_edge(3, 4);
+  int colors = color_graph(5);
+  cout << "Colored using " << colors << " color(s):" << endl;
+  for (int i = 0; i < colors; i++) {
+    cout << "Color " << i + 1 << ":";
+    for (int j = 0; j < 5; j++) {
+      if (color[j] == i) {
+        cout << " " << j;
+      }
+    }
+    cout << endl;
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Shortest Hamiltonian Cycle (TSP)}
+\begin{lstlisting}
+/*
+
+Given a weighted graph, determine a cycle of minimum total distance which visits
+each node exactly once and returns to the starting node. This is known as the
+traveling salesman problem (TSP). Since this implementation uses bitmasks with
+32-bit integers, the maximum number of nodes must be less than 32.
+shortest_hamiltonian_cycle() applies to a global adjacency matrix adj[][], which
+must be populated with add_edge() before the function call.
+
+Time Complexity:
+- O(2^n * n^2) per call to shortest_hamiltonian_cycle(), where n is the number
+  of nodes.
+
+Space Complexity:
+- O(n^2) for storage of the graph, where n is the number of nodes.
+- O(2^n * n) auxiliary heap space for shortest_hamiltonian_cycle().
+
+*/
+
+#include <algorithm>
+
+const int MAXN = 20, INF = 0x3f3f3f3f;
+int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
+
+void add_edge(int u, int v, int w) {
+  adj[u][v] = w;
+  adj[v][u] = w;  // Remove this line if the graph is directed.
+}
+
+int shortest_hamiltonian_cycle(int nodes) {
+  int max_mask = (1 << nodes) - 1;
+  for (int i = 0; i <= max_mask; i++) {
+    std::fill(dp[i], dp[i] + nodes, INF);
+  }
+  dp[1][0] = 0;
+  for (int mask = 1; mask <= max_mask; mask += 2) {
+    for (int i = 1; i < nodes; i++) {
+      if ((mask & 1 << i) != 0) {
+        for (int j = 0; j < nodes; j++) {
+          if ((mask & 1 << j) != 0) {
+            dp[mask][i] = std::min(dp[mask][i],
+                                   dp[mask ^ (1 << i)][j] + adj[j][i]);
+          }
+        }
+      }
+    }
+  }
+  int res = INF + INF;
+  for (int i = 1; i < nodes; i++) {
+    res = std::min(res, dp[max_mask][i] + adj[i][0]);
+  }
+  int mask = max_mask, old = 0;
+  for (int i = nodes - 1; i >= 1; i--) {
+    int bj = -1;
+    for (int j = 1; j < nodes; j++) {
+      if ((mask & 1 << j) != 0 && (bj == -1 ||
+              dp[mask][bj] + adj[bj][old] > dp[mask][j] + adj[j][old])) {
+        bj = j;
+      }
+    }
+    order[i] = bj;
+    mask ^= 1 << bj;
+    old = bj;
+  }
+  return res;
+}
+
+/*** Example Usage and Output:
+
+The shortest hamiltonian cycle has length 5.
+Take the path: 0->3->2->4->1->0.
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  int nodes = 5;
+  add_edge(0, 1, 1);
+  add_edge(0, 2, 10);
+  add_edge(0, 3, 1);
+  add_edge(0, 4, 10);
+  add_edge(1, 2, 10);
+  add_edge(1, 3, 10);
+  add_edge(1, 4, 1);
+  add_edge(2, 3, 1);
+  add_edge(2, 4, 1);
+  add_edge(3, 4, 10);
+  cout << "The shortest hamiltonian cycle has length "
+       << shortest_hamiltonian_cycle(nodes) << "." << endl
+       << "Take the path: ";
+  for (int i = 0; i < nodes; i++) {
+    cout << order[i] << "->";
+  }
+  cout << order[0] << "." << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{Shortest Hamiltonian Path}
+\begin{lstlisting}
+/*
+
+Given a weighted, directed graph, determine a path of minimum total distance
+which visits each node exactly once. Unlike the traveling salesman problem, we
+do not have to return to the starting vertex. Since this implementation uses
+bitmasks with 32-bit integers, the maximum number of nodes must be less than 32.
+shortest_hamiltonian_path() applies to a global adjacency matrix adj[][] which
+must be populated before the function call.
+
+Time Complexity:
+- O(2^n * n^2) per call to shortest_hamiltonian_path(), where n is the number
+  of nodes.
+
+Space Complexity:
+- O(n^2) for storage of the graph, where n is the number of nodes.
+- O(2^n * n^2) auxiliary heap space for shortest_hamiltonian_path().
+
+*/
+
+#include <algorithm>
+
+const int MAXN = 20, INF = 0x3f3f3f3f;
+int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
+
+int shortest_hamiltonian_path(int nodes) {
+  int max_mask = (1 << nodes) - 1;
+  for (int i = 0; i <= max_mask; i++) {
+    std::fill(dp[i], dp[i] + nodes, INF);
+  }
+  for (int i = 0; i < nodes; i++) {
+    dp[1 << i][i] = 0;
+  }
+  for (int mask = 1; mask <= max_mask; mask += 2) {
+    for (int i = 0; i < nodes; i++) {
+      if ((mask & 1 << i) != 0) {
+        for (int j = 0; j < nodes; j++) {
+          if ((mask & 1 << j) != 0)
+            dp[mask][i] = std::min(dp[mask][i],
+                                   dp[mask ^ (1 << i)][j] + adj[j][i]);
+        }
+      }
+    }
+  }
+  int res = INF + INF;
+  for (int i = 1; i < nodes; i++) {
+    res = std::min(res, dp[max_mask][i]);
+  }
+  int mask = max_mask, old = -1;
+  for (int i = nodes - 1; i >= 0; i--) {
+    int bj = -1;
+    for (int j = 0; j < nodes; j++) {
+      if ((mask & 1 << j) != 0 &&
+          (bj == -1 || dp[mask][bj] + (old == -1 ? 0 : adj[bj][old]) >
+                       dp[mask][j] + (old == -1 ? 0 : adj[j][old]))) {
+        bj = j;
+      }
+    }
+    order[i] = bj;
+    mask ^= (1 << bj);
+    old = bj;
+  }
+  return res;
+}
+
+/*** Example Usage and Output:
+
+The shortest hamiltonian path has length 3.
+Take the path: 0->1->2.
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  int nodes = 3;
+  adj[0][1] = 1;
+  adj[0][2] = 1;
+  adj[1][0] = 7;
+  adj[1][2] = 2;
+  adj[2][0] = 3;
+  adj[2][1] = 5;
+  cout << "The shortest hamiltonian path has length "
+       << shortest_hamiltonian_path(nodes) << "." << endl
+       << "Take the path: " << order[0];
+  for (int i = 1; i < nodes; i++) {
+    cout << "->" << order[i];
+  }
+  cout << "." << endl;
+  return 0;
+}
+\end{lstlisting}

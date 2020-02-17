@@ -1,0 +1,61 @@
+\chapter{Preface}
+
+\raggedright
+\setlength{\parskip}{0.5em}
+
+Visit \href{https://github.com/alxli/algorithm-anthology}{\texttt{github.com/alxli/algorithm-anthology}} for the most up-to-date digital version of this book.
+
+\section*{Introduction}
+
+Welcome to a comprehensive collection of common algorithm and data structure implementations. The code here is suitable for direct use in programming contests, or just for your own studying. I wrote them with the following principles in mind:
+\begin{itemize}
+	\item Clarity: A reader already familiar with an algorithm should have no problem understanding how its implementation works. Consistency in naming conventions should be emphasized, and any tricks or language-specific hacks should be documented.
+
+	\item Genericness: It should be easy to adapt an implementation to achieve slightly different goals. This could be through tweaking the parameters or data types at play. During a live contest, more lines of code to be edited corresponds to more room for bugs. C++ templates are often used to increase tweakability at the slight cost of simplicity.
+
+	\item Portability: Different contest environments use different versions of C++ (though almost all of them use GCC). In order to maximize compatibility, non-standard features are avoided. The decision to adhere to C++98 standards is due to many contest systems being stuck on an older version of the language. Moreover, minimizing newer C++ specific features will make the implementations more language-agnostic. Refer to the "Portability" section below.
+
+	\item Efficiency: The code here is designed to be performant on real contests, and should maintain a low constant overhead. This is often challenging in the face of clarity and tweakability, but we can hope for contest setters to be liberal with time limits. You can reasonably assume that when a program times out, it is the fault of choosing an algorithm with the wrong complexity class entirely, rather than insufficient constant optimization.
+
+	\item Concision: Code chunks are often shifted around the file in the frenzy of timed contests. To minimize the amount of scrolling and searching, code compactness is valued. It is no surprise that each implementation is confined to a single source file, since nearly all contest systems require individual file submissions with no outside dependencies.
+\end{itemize}
+
+A good trade-off between these factors is the holy grail.
+
+\section*{Portability}
+
+All programs are tested with the GNU Compiler Collection (GCC) compiled for a 32-bit target system. Compiler switches:
+
+\begin{verbatim}
+   g++ -std=gnu++98 -pedantic -Wall -Wno-long-long -O2
+\end{verbatim}
+
+This means that the following assumptions are made about data types:
+
+\begin{compactitem}
+	\item \texttt{bool} and \texttt{char} are 8-bit
+	\item \texttt{int} and \texttt{float} are 32-bit
+	\item \texttt{double} and \texttt{long long} are 64-bit
+	\item \texttt{long double} is 96-bit
+\end{compactitem}
+
+Programs are highly portable (ISO C++ 1998 compliant), \textbf{except} in the following regards:
+
+\begin{compactitem}
+	\item Usage of \texttt{long long} and dependent features \texttt{[-Wlong-long]}, which are compliant in C99/C++0x or later. 64-bit integers are a must for many programming contest problems, so it is necessary to include them.
+	\item Usage of variable sized arrays \texttt{[-Wvla]} (an easy fix using vectors, but I chose to keep it because it is simpler and because dynamic memory is generally good to avoid in contests)
+	\item Usage of GCC's built-in functions like \texttt{\_\_builtin\_popcount()} and \texttt{\_\_builtin\_clz()}. These can be extremely convenient, and are easily implemented if they are not available. See here for a reference: \url{https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html}
+	\item Usage of compound-literals, e.g. \texttt{vec.push\_back((mystruct)\{a, b, c\})}. This adds a little more concision by not requiring a constructor definition.
+	\item Certain hacks that may depend on aspects of the platform (e.g. endianness), such as getting the signbit with type-puned pointers. Be weary of this for all bitwise/micro-optimization related code.
+\end{compactitem}
+
+
+\section*{Usage Notes}
+
+This project does \textbf{not} aim to introduce and explain algorithms from the ground up. To take advantage of this anthology, you must have prior understanding of the algorithms in question. In each source file, you will at most find brief descriptions to identify the problem being solved, and small examples to demo how the code should be used. Researching an algorithm and implementing it independently is the only way to properly learn it. You are free to use, modify, and distribute these programs in accordance to the license, but please first examine any references on each section for details on usage and authorship.
+
+\begin{flushright}
+Cheers.\\
+--- Alex\\[0.3\baselineskip]
+\end{flushright}
+

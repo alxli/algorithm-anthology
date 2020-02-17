@@ -1,0 +1,78 @@
+\documentclass[11pt,letterpaper,twoside]{book} 
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{makeidx}
+\usepackage{paralist}
+\usepackage{sectsty}
+\usepackage{textcomp}
+\geometry{left=2cm,right=2cm,top=2.5cm,bottom=2.5cm}
+
+% Lowercase section headers
+\let\MakeUppercase\relax
+
+% No colored border on hyperlinks
+\hypersetup{
+  colorlinks=false,
+  pdfborder={0 0 0},
+}
+
+% For the horizontal rule under sections
+\sectionfont{ \sectionrule{0pt}{0pt}{-5pt}{0.8pt} }
+
+% For displaying code
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{
+  aboveskip=5mm,
+  basicstyle={\footnotesize\ttfamily},
+  belowskip=5mm,
+  breaklines=true,
+  breakatwhitespace=true,
+  frame=none,
+  columns=flexible,
+  commentstyle=\color{dkgreen},
+  keepspaces=true,
+  keywordstyle=\color{blue},
+  language=C++,
+  % literate={\ \ }{{\ \ \ \ }}1,  % Convert 2 spaces to 4 
+  numbers=left,
+  numbersep=10pt,
+  numberstyle=\scriptsize\ttfamily\color{gray},
+  rulecolor=\color{black},
+  showstringspaces=false,
+  stringstyle=\color{mauve},
+  tabsize=2
+}
+
+\begin{document} 
+ 
+\frontmatter
+\pagenumbering{gobble}
+\include{title}
+\let\cleardoublepage\clearpage
+\pagenumbering{roman}
+\include{preface} 
+
+\tableofcontents
+
+\mainmatter
+\input{chapter1}
+\input{chapter2}
+\input{chapter3}
+\input{chapter4}
+\input{chapter5}
+\input{chapter6}
+
+\backmatter  
+\include{Bibliography} 
+
+\printindex
+
+\end{document}

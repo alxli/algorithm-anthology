@@ -1,0 +1,7099 @@
+\chapter{Data Structures}
+
+\section{Heaps}
+\setcounter{section}{1}
+\setcounter{subsection}{0}
+\subsection{Binary Heap}
+\begin{lstlisting}
+/*
+
+Maintain a min-priority queue, that is, a collection of elements with support
+for querying and extraction of the minimum. This implementation requires an
+ordering on the set of possible elements defined by the < operator. A binary
+min-heap implements a priority queue by inserting and deleting nodes into a
+binary tree such that the parent of any node is always less than its children.
+
+- binary_heap() constructs an empty priority queue.
+- binary_heap(lo, hi) constructs a priority queue from two ForwardIterators,
+  consisting of elements in the range [lo, hi).
+- size() returns the size of the priority queue.
+- empty() returns whether the priority queue is empty.
+- push(v) inserts the value v into the priority queue.
+- pop() removes the minimum element from the priority queue.
+- top() returns the minimum element in the priority queue.
+
+Time Complexity:
+- O(1) per call to the first constructor, size(), empty(), and top().
+- O(log n) per call to push() and pop(), where n is the number of elements
+  in the priority queue.
+- O(n) per call to the second constructor on the distance between lo and hi.
+
+Space Complexity:
+- O(n) for storage of the priority queue elements.
+- O(1) auxiliary for all operations.
+
+*/
+
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
+
+template<class T>
+class binary_heap {
+  std::vector<T> heap;
+
+ public:
+  binary_heap() {}
+
+  template<class It>
+  binary_heap(It lo, It hi) {
+    while (lo != hi) {
+      push(*(lo++));
+    }
+  }
+
+  int size() const {
+    return heap.size();
+  }
+
+  bool empty() const {
+    return heap.empty();
+  }
+
+  void push(const T &v) {
+    heap.push_back(v);
+    int i = heap.size() - 1;
+    while (i > 0) {
+      int parent = (i - 1)/2;
+      if (!(heap[i] < heap[parent])) {
+        break;
+      }
+      std::swap(heap[i], heap[parent]);
+      i = parent;
+    }
+  }
+
+  void pop() {
+    if (heap.empty()) {
+      throw std::runtime_error("Cannot pop from empty heap.");
+    }
+    heap[0] = heap.back();
+    heap.pop_back();
+    int i = 0;
+    for (;;) {
+      int child = 2*i + 1;
+      if (child >= (int)heap.size()) {
+        break;
+      }
+      if (child + 1 < (int)heap.size() && heap[child + 1] < heap[child]) {
+        child++;
+      }
+      if (heap[child] < heap[i]) {
+        std::swap(heap[i], heap[child]);
+        i = child;
+      } else {
+        break;
+      }
+    }
+  }
+
+  T top() const {
+    if (heap.empty()) {
+      throw std::runtime_error("Cannot get top of empty heap.");
+    }
+    return heap[0];
+  }
+};
+
+/*** Example Usage and Output:
+
+-1
+0
+5
+10
+12
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  int a[] = {0, 5, -1, 12};
+  binary_heap<int> h(a, a + 4);
+  h.push(10);
+  while (!h.empty()) {
+    cout << h.top() << endl;
+    h.pop();
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Randomized Mergeable Heap}
+\begin{lstlisting}
+/*
+
+Maintain a mergeable min-priority queue, that is, a collection of elements with
+support for querying and extraction of the minimum as well as efficient merging
+with other instances. This implementation requires an ordering on the set of
+possible elements defined by the < operator. A randomized mergeable heap uses a
+coin-toss to recursively combine nodes of two binary trees.
+
+- randomized_heap() constructs an empty priority queue.
+- randomized_heap(lo, hi) constructs a priority queue from two ForwardIterators,
+  consisting of elements in the range [lo, hi).
+- size() returns the size of the priority queue.
+- empty() returns whether the priority queue is empty.
+- push(v) inserts the value v into the priority queue.
+- pop() removes the minimum element from the priority queue.
+- top() returns the minimum element in the priority queue.
+- absorb(h) inserts every value from h and sets h to the empty priority queue.
+
+Time Complexity:
+- O(1) per call to the first constructor, size(), empty(), and top().
+- O(log n) expected worst case per call to push(), pop(), and absorb(), where n
+  is the number of elements in the priority queue.
+- O(n) per call to the second constructor on the distance between lo and hi.
+
+Space Complexity:
+- O(n) for storage of the priority queue elements.
+- O(log n) auxiliary stack space for push(), pop(), and absorb().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <algorithm>
+#include <cstddef>
+#include <stdexcept>
+
+template<class T>
+class randomized_heap {
+  struct node_t {
+    T value;
+    node_t *left, *right;
+
+    node_t(const T &v) : value(v), left(NULL), right(NULL) {}
+  } *root;
+
+  int num_nodes;
+
+  static node_t* merge(node_t *a, node_t *b) {
+    if (a == NULL) {
+      return b;
+    }
+    if (b == NULL) {
+      return a;
+    }
+    if (b->value < a->value) {
+      std::swap(a, b);
+    }
+    if (rand() % 2 == 0) {
+      std::swap(a->left, a->right);
+    }
+    a->left = merge(a->left, b);
+    return a;
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  randomized_heap() : root(NULL), num_nodes(0) {}
+
+  template<class It>
+  randomized_heap(It lo, It hi) : root(NULL), num_nodes(0) {
+    while (lo != hi) {
+      push(*(lo++));
+    }
+  }
+
+  ~randomized_heap() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  void push(const T &v) {
+    root = merge(root, new node_t(v));
+    num_nodes++;
+  }
+
+  void pop() {
+    if (empty()) {
+      throw std::runtime_error("Cannot pop from empty heap.");
+    }
+    node_t *tmp = root;
+    root = merge(root->left, root->right);
+    delete tmp;
+    num_nodes--;
+  }
+
+  T top() const {
+    if (empty()) {
+      throw std::runtime_error("Cannot get top of empty heap.");
+    }
+    return root->value;
+  }
+
+  void absorb(randomized_heap &h) {
+    root = merge(root, h.root);
+    h.root = NULL;
+  }
+};
+
+/*** Example Usage and Output:
+
+-1
+0
+5
+10
+12
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  randomized_heap<int> h, h2;
+  h.push(12);
+  h.push(10);
+  h2.push(5);
+  h2.push(-1);
+  h2.push(0);
+  h.absorb(h2);
+  while (!h.empty()) {
+    cout << h.top() << endl;
+    h.pop();
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Skew Heap}
+\begin{lstlisting}
+/*
+
+Maintain a mergeable min-priority queue, that is, a collection of elements with
+support for querying and extraction of the minimum as well as efficient merging
+with other instances. This implementation requires an ordering on the set of
+possible elements defined by the < operator. A skew heap attempts to maintain
+balance by unconditionally swapping all nodes in the merge path when merging.
+
+- skew_heap() constructs an empty priority queue.
+- skew_heap(lo, hi) constructs a priority queue from two ForwardIterators,
+  consisting of elements in the range [lo, hi).
+- size() returns the size of the priority queue.
+- empty() returns whether the priority queue is empty.
+- push(v) inserts the value v into the priority queue.
+- pop() removes the minimum element from the priority queue.
+- top() returns the minimum element in the priority queue.
+- absorb(h) inserts every value from h and sets h to the empty priority queue.
+
+Time Complexity:
+- O(1) per call to the first constructor, size(), empty(), and top().
+- O(log n) amortized auxiliary per call to push(), pop(), and absorb(), where n
+  is the number of elements in the priority queue.
+- O(n) per call to the second constructor, where n is the distance between lo
+  and hi.
+
+Space Complexity:
+- O(n) for storage of the priority queue elements.
+- O(log n) amortized auxiliary stack space for push(), pop(), and absorb().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <algorithm>
+#include <cstddef>
+#include <stdexcept>
+
+template<class T>
+class skew_heap {
+  struct node_t {
+    T value;
+    node_t *left, *right;
+
+    node_t(const T &v) : value(v), left(NULL), right(NULL) {}
+  } *root;
+
+  int num_nodes;
+
+  static node_t* merge(node_t *a, node_t *b) {
+    if (a == NULL) {
+      return b;
+    }
+    if (b == NULL) {
+      return a;
+    }
+    if (b->value < a->value) {
+      std::swap(a, b);
+    }
+    std::swap(a->left, a->right);
+    a->left = merge(b, a->left);
+    return a;
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  skew_heap() : root(NULL), num_nodes(0) {}
+
+  template<class It>
+  skew_heap(It lo, It hi) : root(NULL), num_nodes(0) {
+    while (lo != hi) {
+      push(*(lo++));
+    }
+  }
+
+  ~skew_heap() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  void push(const T &v) {
+    root = merge(root, new node_t(v));
+    num_nodes++;
+  }
+
+  void pop() {
+    if (empty()) {
+      throw std::runtime_error("Cannot pop from empty heap.");
+    }
+    node_t *tmp = root;
+    root = merge(root->left, root->right);
+    delete tmp;
+    num_nodes--;
+  }
+
+  T top() const {
+    if (empty()) {
+      throw std::runtime_error("Cannot get top of empty heap.");
+    }
+    return root->value;
+  }
+
+  void absorb(skew_heap &h) {
+    root = merge(root, h.root);
+    h.root = NULL;
+  }
+};
+
+/*** Example Usage and Output:
+
+-1
+0
+5
+10
+12
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  skew_heap<int> h, h2;
+  h.push(12);
+  h.push(10);
+  h2.push(5);
+  h2.push(-1);
+  h2.push(0);
+  h.absorb(h2);
+  while (!h.empty()) {
+    cout << h.top() << endl;
+    h.pop();
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Pairing Heap}
+\begin{lstlisting}
+/*
+
+Maintain a mergeable min-priority queue, that is, a collection of elements with
+support for querying and extraction of the minimum as well as efficient merging
+with other instances. This implementation requires an ordering on the set of
+possible elements defined by the < operator. A pairing heap is a heap-ordered
+multi-way tree, using a two-pass merge to self-adjust during each deletion.
+
+- pairing_heap() constructs an empty priority queue.
+- pairing_heap(lo, hi) constructs a priority queue from two ForwardIterators,
+  consisting of elements in the range [lo, hi).
+- size() returns the size of the priority queue.
+- empty() returns whether the priority queue is empty.
+- push(v) inserts the value v into the priority queue.
+- pop() removes the minimum element from the priority queue.
+- top() returns the minimum element in the priority queue.
+- absorb(h) inserts every value from h and sets h to the empty priority queue.
+
+Time Complexity:
+- O(1) per call to the first constructor, size(), empty(), top(), push(), and
+  absorb().
+- O(log n) amortized per call to pop().
+- O(n) per call to the second constructor on the distance between lo and hi.
+
+Space Complexity:
+- O(n) for storage of the priority queue elements.
+- O(log n) amortized auxiliary stack space for pop().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <cstddef>
+#include <stdexcept>
+
+template<class T>
+class pairing_heap {
+  struct node_t {
+    T value;
+    node_t *left, *next;
+
+    node_t(const T &v) : value(v), left(NULL), next(NULL) {}
+
+    void add_child(node_t *n) {
+      if (left == NULL) {
+        left = n;
+      } else {
+        n->next = left;
+        left = n;
+      }
+    }
+  } *root;
+
+  int num_nodes;
+
+  static node_t* merge(node_t *a, node_t *b) {
+    if (a == NULL) {
+      return b;
+    }
+    if (b == NULL) {
+      return a;
+    }
+    if (a->value < b->value) {
+      a->add_child(b);
+      return a;
+    }
+    b->add_child(a);
+    return b;
+  }
+
+  static node_t* merge_pairs(node_t *n) {
+    if (n == NULL || n->next == NULL) {
+      return n;
+    }
+    node_t *a = n, *b = n->next, *c = n->next->next;
+    a->next = b->next = NULL;
+    return merge(merge(a, b), merge_pairs(c));
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->next);
+      delete n;
+    }
+  }
+
+ public:
+  pairing_heap() : root(NULL), num_nodes(0) {}
+
+  template<class It>
+  pairing_heap(It lo, It hi) : root(NULL), num_nodes(0) {
+    while (lo != hi) {
+      push(*(lo++));
+    }
+  }
+
+  ~pairing_heap() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  void push(const T &v) {
+    root = merge(root, new node_t(v));
+    num_nodes++;
+  }
+
+  void pop() {
+    if (empty()) {
+      throw std::runtime_error("Cannot pop from empty heap.");
+    }
+    node_t *tmp = root;
+    root = merge_pairs(root->left);
+    delete tmp;
+    num_nodes--;
+  }
+
+  T top() const {
+    if (empty()) {
+      throw std::runtime_error("Cannot get top of empty heap.");
+    }
+    return root->value;
+  }
+
+  void absorb(pairing_heap &h) {
+    root = merge(root, h.root);
+    h.root = NULL;
+  }
+};
+
+/*** Example Usage and Output:
+
+-1
+0
+5
+10
+12
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  pairing_heap<int> h, h2;
+  h.push(12);
+  h.push(10);
+  h2.push(5);
+  h2.push(-1);
+  h2.push(0);
+  h.absorb(h2);
+  while (!h.empty()) {
+    cout << h.top() << endl;
+    h.pop();
+  }
+  return 0;
+}
+\end{lstlisting}
+
+\section{Dictionaries}
+\setcounter{section}{2}
+\setcounter{subsection}{0}
+\subsection{Binary Search Tree}
+\begin{lstlisting}
+/*
+
+Maintain a map, that is, a collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementations requires an
+ordering on the set of possible keys defined by the < operator on the key type.
+A binary search tree implements this map by inserting and deleting keys into a
+binary tree such that every node's left child has a lesser key and every node's
+right child has a greater key.
+
+- binary_search_tree() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns whether the map is empty.
+- insert(k, v) adds an entry with key k and value v to the map, returning true
+  if an new entry was added or false if the key already exists (in which case
+  the map is unchanged and the old value associated with the key is preserved).
+- erase(k) removes the entry with key k from the map, returning true if the
+  removal was successful or false if the key to be removed was not found.
+- find(k) returns a pointer to a const value associated with key k, or NULL if
+  the key was not found.
+- walk(f) calls the function f(k, v) on each entry of the map, in ascending
+  order of keys.
+
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(n) per call to insert(), erase(), find(), and walk(), where n is the number
+  of nodes currently in the map.
+
+Space Complexity:
+- O(n) for storage of the map elements.
+- O(n) auxiliary stack space for insert(), erase(), and walk().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <cstddef>
+
+template<class K, class V>
+class binary_search_tree {
+  struct node_t {
+    K key;
+    V value;
+    node_t *left, *right;
+
+    node_t(const K &k, const V &v)
+        : key(k), value(v), left(NULL), right(NULL) {}
+  } *root;
+
+  int num_nodes;
+
+  static bool insert(node_t *&n, const K &k, const V &v) {
+    if (n == NULL) {
+      n = new node_t(k, v);
+      return true;
+    }
+    if (k < n->key) {
+      return insert(n->left, k, v);
+    } else if (n->key < k) {
+      return insert(n->right, k, v);
+    }
+    return false;
+  }
+
+  static bool erase(node_t *&n, const K &k) {
+    if (n == NULL) {
+      return false;
+    }
+    if (k < n->key) {
+      return erase(n->left, k);
+    } else if (n->key < k) {
+      return erase(n->right, k);
+    }
+    if (n->left != NULL && n->right != NULL) {
+      node_t *tmp = n->right, *parent = NULL;
+      while (tmp->left != NULL) {
+        parent = tmp;
+        tmp = tmp->left;
+      }
+      n->key = tmp->key;
+      n->value = tmp->value;
+      if (parent != NULL) {
+        return erase(parent->left, parent->left->key);
+      }
+      return erase(n->right, n->right->key);
+    }
+    node_t *tmp = (n->left != NULL) ? n->left : n->right;
+    delete n;
+    n = tmp;
+    return true;
+  }
+
+  template<class KVFunction>
+  static void walk(node_t *n, KVFunction f) {
+    if (n != NULL) {
+      walk(n->left, f);
+      f(n->key, n->value);
+      walk(n->right, f);
+    }
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  binary_search_tree() : root(NULL), num_nodes(0) {}
+
+  ~binary_search_tree() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  bool insert(const K &k, const V &v) {
+    if (insert(root, k, v)) {
+      num_nodes++;
+      return true;
+    }
+    return false;
+  }
+
+  bool erase(const K &k) {
+    if (erase(root, k)) {
+      num_nodes--;
+      return true;
+    }
+    return false;
+  }
+
+  const V* find(const K &k) const {
+    node_t *n = root;
+    while (n != NULL) {
+      if (k < n->key) {
+        n = n->left;
+      } else if (n->key < k) {
+        n = n->right;
+      } else {
+        return &(n->value);
+      }
+    }
+    return NULL;
+  }
+
+  template<class KVFunction>
+  void walk(KVFunction f) const {
+    walk(root, f);
+  }
+};
+
+/*** Example Usage and Output:
+
+abcde
+bcde
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void printch(int k, char v) {
+  cout << v;
+}
+
+int main() {
+  binary_search_tree<int, char> t;
+  t.insert(2, 'b');
+  t.insert(1, 'a');
+  t.insert(3, 'c');
+  t.insert(5, 'e');
+  assert(t.insert(4, 'd'));
+  assert(*t.find(4) == 'd');
+  assert(!t.insert(4, 'd'));
+  t.walk(printch);
+  cout << endl;
+  assert(t.erase(1));
+  assert(!t.erase(1));
+  assert(t.find(1) == NULL);
+  t.walk(printch);
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{Treap}
+\begin{lstlisting}
+/*
+
+Maintain a map, that is, a collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementations requires an
+ordering on the set of possible keys defined by the < operator on the key type.
+A treap is a binary search tree that is balanced by preserving a heap property
+on the randomly generated priority value assigned to every node, thereby making
+insertions and deletions run in O(log n) with high probability.
+
+- treap() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns whether the map is empty.
+- insert(k, v) adds an entry with key k and value v to the map, returning true
+  if an new entry was added or false if the key already exists (in which case
+  the map is unchanged and the old value associated with the key is preserved).
+- erase(k) removes the entry with key k from the map, returning true if the
+  removal was successful or false if the key to be removed was not found.
+- find(k) returns a pointer to a const value associated with key k, or NULL if
+  the key was not found.
+- walk(f) calls the function f(k, v) on each entry of the map, in ascending
+  order of keys.
+
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(log n) on average per call to insert(), erase(), and find(), where n is the
+  number of entries currently in the map.
+- O(n) per call to walk().
+
+Space Complexity:
+- O(n) for storage of the map elements.
+- O(log n) auxiliary stack space on average for insert(), erase(), and walk().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <cstdlib>
+
+template<class K, class V>
+class treap {
+  struct node_t {
+    static inline int rand32() {
+      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
+    }
+
+    K key;
+    V value;
+    int priority;
+    node_t *left, *right;
+
+    node_t(const K &k, const V &v)
+        : key(k), value(v), priority(rand32()), left(NULL), right(NULL) {}
+  } *root;
+
+  int num_nodes;
+
+  static void rotate_left(node_t *&n) {
+    node_t *tmp = n;
+    n = n->right;
+    tmp->right = n->left;
+    n->left = tmp;
+  }
+
+  static void rotate_right(node_t *&n) {
+    node_t *tmp = n;
+    n = n->left;
+    tmp->left = n->right;
+    n->right = tmp;
+  }
+
+  static bool insert(node_t *&n, const K &k, const V &v) {
+    if (n == NULL) {
+      n = new node_t(k, v);
+      return true;
+    }
+    if (k < n->key && insert(n->left, k, v)) {
+      if (n->left->priority < n->priority) {
+        rotate_right(n);
+      }
+      return true;
+    }
+    if (n->key < k && insert(n->right, k, v)) {
+      if (n->right->priority < n->priority) {
+        rotate_left(n);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  static bool erase(node_t *&n, const K &k) {
+    if (n == NULL) {
+      return false;
+    }
+    if (k < n->key) {
+      return erase(n->left, k);
+    } else if (n->key < k) {
+      return erase(n->right, k);
+    }
+    if (n->left != NULL && n->right != NULL) {
+      if (n->left->priority < n->right->priority) {
+        rotate_right(n);
+        return erase(n->right, k);
+      }
+      rotate_left(n);
+      return erase(n->left, k);
+    }
+    node_t *tmp = (n->left != NULL) ? n->left : n->right;
+    delete n;
+    n = tmp;
+    return true;
+  }
+
+  template<class KVFunction>
+  static void walk(node_t *n, KVFunction f) {
+    if (n != NULL) {
+      walk(n->left, f);
+      f(n->key, n->value);
+      walk(n->right, f);
+    }
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  treap() : root(NULL), num_nodes(0) {}
+
+  ~treap() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  bool insert(const K &k, const V &v) {
+    if (insert(root, k, v)) {
+      num_nodes++;
+      return true;
+    }
+    return false;
+  }
+
+  bool erase(const K &k) {
+    if (erase(root, k)) {
+      num_nodes--;
+      return true;
+    }
+    return false;
+  }
+
+  const V* find(const K &k) const {
+    node_t *n = root;
+    while (n != NULL) {
+      if (k < n->key) {
+        n = n->left;
+      } else if (n->key < k) {
+        n = n->right;
+      } else {
+        return &(n->value);
+      }
+    }
+    return NULL;
+  }
+
+  template<class KVFunction>
+  void walk(KVFunction f) const {
+    walk(root, f);
+  }
+};
+
+/*** Example Usage and Output:
+
+abcde
+bcde
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void printch(int k, char v) {
+  cout << v;
+}
+
+int main() {
+  treap<int, char> t;
+  t.insert(2, 'b');
+  t.insert(1, 'a');
+  t.insert(3, 'c');
+  t.insert(5, 'e');
+  assert(t.insert(4, 'd'));
+  assert(*t.find(4) == 'd');
+  assert(!t.insert(4, 'd'));
+  t.walk(printch);
+  cout << endl;
+  assert(t.erase(1));
+  assert(!t.erase(1));
+  assert(t.find(1) == NULL);
+  t.walk(printch);
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{AVL Tree}
+\begin{lstlisting}
+/*
+
+Maintain a map, that is, a collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementation requires an
+ordering on the set of possible keys defined by the < operator on the key type.
+An AVL tree is a binary search tree balanced by height, guaranteeing O(log n)
+worst-case running time in insertions and deletions by making sure that the
+heights of the left and right subtrees at every node differ by at most 1.
+
+- avl_tree() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns whether the map is empty.
+- insert(k, v) adds an entry with key k and value v to the map, returning true
+  if an new entry was added or false if the key already exists (in which case
+  the map is unchanged and the old value associated with the key is preserved).
+- erase(k) removes the entry with key k from the map, returning true if the
+  removal was successful or false if the key to be removed was not found.
+- find(k) returns a pointer to a const value associated with key k, or NULL if
+  the key was not found.
+- walk(f) calls the function f(k, v) on each entry of the map, in ascending
+  order of keys.
+
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(log n) per call to insert(), erase(), and find(), where n is the number of
+  entries currently in the map.
+- O(n) per call to walk().
+
+Space Complexity:
+- O(n) for storage of the map elements.
+- O(log n) auxiliary stack space for insert(), erase(), and walk().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <algorithm>
+#include <cstddef>
+
+template<class K, class V>
+class avl_tree {
+  struct node_t {
+    K key;
+    V value;
+    int height;
+    node_t *left, *right;
+
+    node_t(const K &k, const V &v)
+        : key(k), value(v), height(1), left(NULL), right(NULL) {}
+  } *root;
+
+  int num_nodes;
+
+  static int height(node_t *n) {
+    return (n != NULL) ? n->height : 0;
+  }
+
+  static void update_height(node_t *n) {
+    if (n != NULL) {
+      n->height = 1 + std::max(height(n->left), height(n->right));
+    }
+  }
+
+  static void rotate_left(node_t *&n) {
+    node_t *tmp = n;
+    n = n->right;
+    tmp->right = n->left;
+    n->left = tmp;
+    update_height(tmp);
+    update_height(n);
+  }
+
+  static void rotate_right(node_t *&n) {
+    node_t *tmp = n;
+    n = n->left;
+    tmp->left = n->right;
+    n->right = tmp;
+    update_height(tmp);
+    update_height(n);
+  }
+
+  static int balance_factor(node_t *n) {
+    return (n != NULL) ? (height(n->left) - height(n->right)) : 0;
+  }
+
+  static void rebalance(node_t *&n) {
+    if (n == NULL) {
+      return;
+    }
+    update_height(n);
+    int bf = balance_factor(n);
+    if (bf > 1 && balance_factor(n->left) >= 0) {
+      rotate_right(n);
+    } else if (bf > 1 && balance_factor(n->left) < 0) {
+      rotate_left(n->left);
+      rotate_right(n);
+    } else if (bf < -1 && balance_factor(n->right) <= 0) {
+      rotate_left(n);
+    } else if (bf < -1 && balance_factor(n->right) > 0) {
+      rotate_right(n->right);
+      rotate_left(n);
+    }
+  }
+
+  static bool insert(node_t *&n, const K &k, const V &v) {
+    if (n == NULL) {
+      n = new node_t(k, v);
+      return true;
+    }
+    if ((k < n->key && insert(n->left, k, v)) ||
+        (n->key < k && insert(n->right, k, v))) {
+      rebalance(n);
+      return true;
+    }
+    return false;
+  }
+
+  static bool erase(node_t *&n, const K &k) {
+    if (n == NULL) {
+      return false;
+    }
+    if (!(k < n->key || n->key < k)) {
+      if (n->left != NULL && n->right != NULL) {
+        node_t *tmp = n->right, *parent = NULL;
+        while (tmp->left != NULL) {
+          parent = tmp;
+          tmp = tmp->left;
+        }
+        n->key = tmp->key;
+        n->value = tmp->value;
+        if (parent != NULL) {
+          if (!erase(parent->left, parent->left->key)) {
+            return false;
+          }
+        } else if (!erase(n->right, n->right->key)) {
+          return false;
+        }
+      } else {
+        node_t *tmp = (n->left != NULL) ? n->left : n->right;
+        delete n;
+        n = tmp;
+      }
+      rebalance(n);
+      return true;
+    }
+    if ((k < n->key && erase(n->left, k)) ||
+        (n->key < k && erase(n->right, k))) {
+      rebalance(n);
+      return true;
+    }
+    return false;
+  }
+
+  template<class KVFunction>
+  static void walk(node_t *n, KVFunction f) {
+    if (n != NULL) {
+      walk(n->left, f);
+      f(n->key, n->value);
+      walk(n->right, f);
+    }
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  avl_tree() : root(NULL), num_nodes(0) {}
+
+  ~avl_tree() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  bool insert(const K &k, const V &v) {
+    if (insert(root, k, v)) {
+      num_nodes++;
+      return true;
+    }
+    return false;
+  }
+
+  bool erase(const K &k) {
+    if (erase(root, k)) {
+      num_nodes--;
+      return true;
+    }
+    return false;
+  }
+
+  const V* find(const K &k) const {
+    node_t *n = root;
+    while (n != NULL) {
+      if (k < n->key) {
+        n = n->left;
+      } else if (n->key < k) {
+        n = n->right;
+      } else {
+        return &(n->value);
+      }
+    }
+    return NULL;
+  }
+
+  template<class KVFunction>
+  void walk(KVFunction f) const {
+    walk(root, f);
+  }
+};
+
+/*** Example Usage and Output:
+
+abcde
+bcde
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void printch(int k, char v) {
+  cout << v;
+}
+
+int main() {
+  avl_tree<int, char> t;
+  t.insert(2, 'b');
+  t.insert(1, 'a');
+  t.insert(3, 'c');
+  t.insert(5, 'e');
+  assert(t.insert(4, 'd'));
+  assert(*t.find(4) == 'd');
+  assert(!t.insert(4, 'd'));
+  t.walk(printch);
+  cout << endl;
+  assert(t.erase(1));
+  assert(!t.erase(1));
+  assert(t.find(1) == NULL);
+  t.walk(printch);
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{Red-Black Tree}
+\begin{lstlisting}
+/*
+
+Maintain a map, that is, a collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementation requires an
+ordering on the set of possible keys defined by the < operator on the key type.
+A red black tree is a binary search tree balanced by coloring its nodes red or
+black, then constraining node colors on any simple path from the root to a leaf.
+
+- red_black_tree() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns whether the map is empty.
+- insert(k, v) adds an entry with key k and value v to the map, returning true
+  if an new entry was added or false if the key already exists (in which case
+  the map is unchanged and the old value associated with the key is preserved).
+- erase(k) removes the entry with key k from the map, returning true if the
+  removal was successful or false if the key to be removed was not found.
+- find(k) returns a pointer to a const value associated with key k, or NULL if
+  the key was not found.
+- walk(f) calls the function f(k, v) on each entry of the map, in ascending
+  order of keys.
+
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(log n) per call to insert(), erase(), and find(), where n is the number of
+  entries currently in the map.
+- O(n) per call to walk().
+
+Space Complexity:
+- O(n) for storage of the map elements.
+- O(log n) auxiliary stack space for walk().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <algorithm>
+#include <cstddef>
+
+template<class K, class V>
+class red_black_tree {
+  enum color_t { RED, BLACK };
+  struct node_t {
+    K key;
+    V value;
+    color_t color;
+    node_t *left, *right, *parent;
+
+    node_t(const K &k, const V &v, color_t c)
+        : key(k), value(v), color(c), left(NULL), right(NULL), parent(NULL) {}
+  } *root, *LEAF_NIL;
+
+  int num_nodes;
+
+  void rotate_left(node_t *n) {
+    node_t *tmp = n->right;
+    if ((n->right = tmp->left) != LEAF_NIL) {
+      n->right->parent = n;
+    }
+    if ((tmp->parent = n->parent) == LEAF_NIL) {
+      root = tmp;
+    } else if (n->parent->left == n) {
+      n->parent->left = tmp;
+    } else {
+      n->parent->right = tmp;
+    }
+    tmp->left = n;
+    n->parent = tmp;
+  }
+
+  void rotate_right(node_t *n) {
+    node_t *tmp = n->left;
+    if ((n->left = tmp->right) != LEAF_NIL) {
+      n->left->parent = n;
+    }
+    if ((tmp->parent = n->parent) == LEAF_NIL) {
+      root = tmp;
+    } else if (n->parent->right == n) {
+      n->parent->right = tmp;
+    } else {
+      n->parent->left = tmp;
+    }
+    tmp->right = n;
+    n->parent = tmp;
+  }
+
+  void insert_fix(node_t *n) {
+    while (n->parent->color == RED) {
+      node_t *parent = n->parent;
+      node_t *grandparent = n->parent->parent;
+      if (parent == grandparent->left) {
+        node_t *uncle = grandparent->right;
+        if (uncle->color == RED) {
+          grandparent->color = RED;
+          parent->color = BLACK;
+          uncle->color = BLACK;
+          n = grandparent;
+        } else {
+          if (n == parent->right) {
+            rotate_left(parent);
+            n = parent;
+            parent = n->parent;
+          }
+          rotate_right(grandparent);
+          std::swap(parent->color, grandparent->color);
+          n = parent;
+        }
+      } else if (parent == grandparent->right) {
+        node_t *uncle = grandparent->left;
+        if (uncle->color == RED) {
+          grandparent->color = RED;
+          parent->color = BLACK;
+          uncle->color = BLACK;
+          n = grandparent;
+        } else {
+          if (n == parent->left) {
+            rotate_right(parent);
+            n = parent;
+            parent = n->parent;
+          }
+          rotate_left(grandparent);
+          std::swap(parent->color, grandparent->color);
+          n = parent;
+        }
+      }
+    }
+    root->color = BLACK;
+  }
+
+  void replace(node_t *n, node_t *replacement) {
+    if (n->parent == LEAF_NIL) {
+      root = replacement;
+    } else if (n == n->parent->left) {
+      n->parent->left = replacement;
+    } else {
+      n->parent->right = replacement;
+    }
+    replacement->parent = n->parent;
+  }
+
+  void erase_fix(node_t *n) {
+    while (n != root && n->color == BLACK) {
+      node_t *parent = n->parent;
+      if (n == parent->left) {
+        node_t *sibling = parent->right;
+        if (sibling->color == RED) {
+          sibling->color = BLACK;
+          parent->color = RED;
+          rotate_left(parent);
+          sibling = parent->right;
+        }
+        if (sibling->left->color == BLACK && sibling->right->color == BLACK) {
+          sibling->color = RED;
+          n = parent;
+        } else {
+          if (sibling->right->color == BLACK) {
+            sibling->left->color = BLACK;
+            sibling->color = RED;
+            rotate_right(sibling);
+            sibling = parent->right;
+          }
+          sibling->color = parent->color;
+          parent->color = BLACK;
+          sibling->right->color = BLACK;
+          rotate_left(parent);
+          n = root;
+        }
+      } else {
+        node_t *sibling = parent->left;
+        if (sibling->color == RED) {
+          sibling->color = BLACK;
+          parent->color = RED;
+          rotate_right(parent);
+          sibling = parent->left;
+        }
+        if (sibling->left->color == BLACK && sibling->right->color == BLACK) {
+          sibling->color = RED;
+          n = parent;
+        } else {
+          if (sibling->left->color == BLACK) {
+            sibling->right->color = BLACK;
+            sibling->color = RED;
+            rotate_left(sibling);
+            sibling = parent->left;
+          }
+          sibling->color = parent->color;
+          parent->color = BLACK;
+          sibling->left->color = BLACK;
+          rotate_right(parent);
+          n = root;
+        }
+      }
+    }
+    n->color = BLACK;
+  }
+
+  template<class KVFunction>
+  void walk(node_t *n, KVFunction f) const {
+    if (n != LEAF_NIL) {
+      walk(n->left, f);
+      f(n->key, n->value);
+      walk(n->right, f);
+    }
+  }
+
+  void clean_up(node_t *n) {
+    if (n != LEAF_NIL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  red_black_tree() : num_nodes(0) {
+    root = LEAF_NIL = new node_t(K(), V(), BLACK);
+  }
+
+  ~red_black_tree() {
+    clean_up(root);
+    delete LEAF_NIL;
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return num_nodes == 0;
+  }
+
+  bool insert(const K &k, const V &v) {
+    node_t *curr = root, *prev = LEAF_NIL;
+    while (curr != LEAF_NIL) {
+      prev = curr;
+      if (k < curr->key) {
+        curr = curr->left;
+      } else if (curr->key < k) {
+        curr = curr->right;
+      } else {
+        return false;
+      }
+    }
+    node_t *n = new node_t(k, v, RED);
+    n->parent = prev;
+    if (prev == LEAF_NIL) {
+      root = n;
+    } else if (k < prev->key) {
+      prev->left = n;
+    } else {
+      prev->right = n;
+    }
+    n->left = n->right = LEAF_NIL;
+    insert_fix(n);
+    num_nodes++;
+    return true;
+  }
+
+  bool erase(const K &k) {
+    node_t *n = root;
+    while (n != LEAF_NIL) {
+      if (k < n->key) {
+        n = n->left;
+      } else if (n->key < k) {
+        n = n->right;
+      } else {
+        break;
+      }
+    }
+    if (n == LEAF_NIL) {
+      return false;
+    }
+    color_t color = n->color;
+    node_t *replacement;
+    if (n->left == LEAF_NIL) {
+      replacement = n->right;
+      replace(n, n->right);
+    } else if (n->right == LEAF_NIL) {
+      replacement = n->left;
+      replace(n, n->left);
+    } else {
+      node_t *tmp = n->right;
+      while (tmp->left != LEAF_NIL) {
+        tmp = tmp->left;
+      }
+      color = tmp->color;
+      replacement = tmp->right;
+      if (tmp->parent == n) {
+        replacement->parent = tmp;
+      } else {
+        replace(tmp, tmp->right);
+        tmp->right = n->right;
+        tmp->right->parent = tmp;
+      }
+      replace(n, tmp);
+      tmp->left = n->left;
+      tmp->left->parent = tmp;
+      tmp->color = n->color;
+    }
+    delete n;
+    if (color == BLACK) {
+      erase_fix(replacement);
+    }
+    return true;
+  }
+
+  const V* find(const K &k) const {
+    node_t *n = root;
+    while (n != LEAF_NIL) {
+      if (k < n->key) {
+        n = n->left;
+      } else if (n->key < k) {
+        n = n->right;
+      } else {
+        return &(n->value);
+      }
+    }
+    return NULL;
+  }
+
+  template<class KVFunction>
+  void walk(KVFunction f) const {
+    walk(root, f);
+  }
+};
+
+/*** Example Usage and Output:
+
+abcde
+bcde
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void printch(int k, char v) {
+  cout << v;
+}
+
+int main() {
+  red_black_tree<int, char> t;
+  t.insert(2, 'b');
+  t.insert(1, 'a');
+  t.insert(3, 'c');
+  t.insert(5, 'e');
+  assert(t.insert(4, 'd'));
+  assert(*t.find(4) == 'd');
+  assert(!t.insert(4, 'd'));
+  t.walk(printch);
+  cout << endl;
+  assert(t.erase(1));
+  assert(!t.erase(1));
+  assert(t.find(1) == NULL);
+  t.walk(printch);
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{Splay Tree}
+\begin{lstlisting}
+/*
+
+Maintain a map, that is, a collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementation requires an
+ordering on the set of possible keys defined by the < operator on the key type.
+A splay tree is a balanced binary search tree with the additional property that
+recently accessed elements are quick to access again.
+
+- splay_tree() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns whether the map is empty.
+- insert(k, v) adds an entry with key k and value v to the map, returning true
+  if an new entry was added or false if the key already exists (in which case
+  the map is unchanged and the old value associated with the key is preserved).
+- erase(k) removes the entry with key k from the map, returning true if the
+  removal was successful or false if the key to be removed was not found.
+- find(k) returns a pointer to a const value associated with key k, or NULL if
+  the key was not found.
+- walk(f) calls the function f(k, v) on each entry of the map, in ascending
+  order of keys.
+
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(log n) per call to insert(), erase(), and find(), where n is the number of
+  entries currently in the map.
+- O(n) per call to walk().
+
+Space Complexity:
+- O(n) for storage of the map elements.
+- O(log n) auxiliary stack space for insert(), erase(), and walk().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <cstddef>
+
+template<class K, class V>
+class splay_tree {
+  struct node_t {
+    K key;
+    V value;
+    node_t *left, *right;
+
+    node_t(const K &k, const V &v)
+        : key(k), value(v), left(NULL), right(NULL) {}
+  } *root;
+
+  int num_nodes;
+
+  static void rotate_left(node_t *&n) {
+    node_t *tmp = n;
+    n = n->right;
+    tmp->right = n->left;
+    n->left = tmp;
+  }
+
+  static void rotate_right(node_t *&n) {
+    node_t *tmp = n;
+    n = n->left;
+    tmp->left = n->right;
+    n->right = tmp;
+  }
+
+  static void splay(node_t *&n, const K &k) {
+    if (n == NULL) {
+      return;
+    }
+    if (k < n->key && n->left != NULL) {
+      if (k < n->left->key) {
+        splay(n->left->left, k);
+        rotate_right(n);
+      } else if (n->left->key < k) {
+        splay(n->left->right, k);
+        if (n->left->right != NULL) {
+          rotate_left(n->left);
+        }
+      }
+      if (n->left != NULL) {
+        rotate_right(n);
+      }
+    } else if (n->key < k && n->right != NULL) {
+      if (k < n->right->key) {
+        splay(n->right->left, k);
+        if (n->right->left != NULL) {
+          rotate_right(n->right);
+        }
+      } else if (n->right->key < k) {
+        splay(n->right->right, k);
+        rotate_left(n);
+      }
+      if (n->right != NULL) {
+        rotate_left(n);
+      }
+    }
+  }
+
+  static bool insert(node_t *&n, const K &k, const V &v) {
+    if (n == NULL) {
+      n = new node_t(k, v);
+      return true;
+    }
+    splay(n, k);
+    if (k < n->key) {
+      node_t *tmp = new node_t(k, v);
+      tmp->left = n->left;
+      tmp->right = n;
+      n->left = NULL;
+      n = tmp;
+    } else if (n->key < k) {
+      node_t *tmp = new node_t(k, v);
+      tmp->left = n;
+      tmp->right = n->right;
+      n->right = NULL;
+      n = tmp;
+    } else {
+      return false;
+    }
+    return true;
+  }
+
+  static bool erase(node_t *&n, const K &k) {
+    if (n == NULL) {
+      return false;
+    }
+    splay(n, k);
+    if (k < n->key || n->key < k) {
+      return false;
+    }
+    node_t *tmp = n;
+    if (n->left == NULL) {
+      n = n->right;
+    } else {
+      splay(n->left, k);
+      n = n->left;
+      n->right = tmp->right;
+    }
+    delete tmp;
+    return true;
+  }
+
+  template<class KVFunction>
+  static void walk(node_t *n, KVFunction f) {
+    if (n != NULL) {
+      walk(n->left, f);
+      f(n->key, n->value);
+      walk(n->right, f);
+    }
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  splay_tree() : root(NULL), num_nodes(0) {}
+
+  ~splay_tree() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  bool insert(const K &k, const V &v) {
+    if (insert(root, k, v)) {
+      num_nodes++;
+      return true;
+    }
+    return false;
+  }
+
+  bool erase(const K &k) {
+    if (erase(root, k)) {
+      num_nodes--;
+      return true;
+    }
+    return false;
+  }
+
+  const V* find(const K &k) {
+    splay(root, k);
+    return (k < root->key || root->key < k) ? NULL : &(root->value);
+  }
+
+  template<class KVFunction>
+  void walk(KVFunction f) const {
+    walk(root, f);
+  }
+};
+
+/*** Example Usage and Output:
+
+abcde
+bcde
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void printch(int k, char v) {
+  cout << v;
+}
+
+int main() {
+  splay_tree<int, char> t;
+  t.insert(2, 'b');
+  t.insert(1, 'a');
+  t.insert(3, 'c');
+  t.insert(5, 'e');
+  assert(t.insert(4, 'd'));
+  assert(*t.find(4) == 'd');
+  assert(!t.insert(4, 'd'));
+  t.walk(printch);
+  cout << endl;
+  assert(t.erase(1));
+  assert(!t.erase(1));
+  assert(t.find(1) == NULL);
+  t.walk(printch);
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{Size Balanced Tree}
+\begin{lstlisting}
+/*
+
+Maintain a map, that is, a collection of key-value pairs such that each possible
+key appears at most once in the collection. In addition, support queries for
+keys given their ranks as well as queries for the ranks of given keys. This
+implementation requires an ordering on the set of possible keys defined by the
+< operator on the key type. A size balanced tree augments each nodes with the
+size of its subtree, using it to maintain balance and compute order statistics.
+
+- size_balanced_tree() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns whether the map is empty.
+- insert(k, v) adds an entry with key k and value v to the map, returning true
+  if an new entry was added or false if the key already exists (in which case
+  the map is unchanged and the old value associated with the key is preserved).
+- erase(k) removes the entry with key k from the map, returning true if the
+  removal was successful or false if the key to be removed was not found.
+- find(k) returns a pointer to a const value associated with key k, or NULL if
+  the key was not found.
+- select(r) returns a key-value pair of the node with a key of zero-based rank r
+  in the map, throwing an exception if the rank is not between 0 and size() - 1.
+- rank(k) returns the zero-based rank of key k in the map, throwing an
+  exception if the key was not found in the map.
+- walk(f) calls the function f(k, v) on each entry of the map, in ascending
+  order of keys.
+
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(log n) per call to insert(), erase(), find(), select(), and rank(), where n
+  is the number of entries currently in the map.
+- O(n) per call to walk().
+
+Space Complexity:
+- O(n) for storage of the map elements.
+- O(log n) auxiliary stack space for insert(), erase(), and walk().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <cstddef>
+#include <stdexcept>
+#include <utility>
+
+template<class K, class V>
+class size_balanced_tree {
+  struct node_t {
+    K key;
+    V value;
+    int size;
+    node_t *left, *right;
+
+    node_t(const K &k, const V &v)
+        : key(k), value(v), size(1), left(NULL), right(NULL) {}
+
+    inline node_t*& child(int c) {
+      return (c == 0) ? left : right;
+    }
+
+    void update() {
+      size = 1;
+      if (left != NULL) {
+        size += left->size;
+      }
+      if (right != NULL) {
+        size += right->size;
+      }
+    }
+  } *root;
+
+  static inline int size(node_t *n) {
+    return (n == NULL) ? 0 : n->size;
+  }
+
+  static void rotate(node_t *&n, int c) {
+    node_t *tmp = n->child(c);
+    n->child(c) = tmp->child(!c);
+    tmp->child(!c) = n;
+    n->update();
+    tmp->update();
+    n = tmp;
+  }
+
+  static void maintain(node_t *&n, int c) {
+    if (n == NULL || n->child(c) == NULL) {
+      return;
+    }
+    node_t *&tmp = n->child(c);
+    if (size(tmp->child(c)) > size(n->child(!c))) {
+      rotate(n, c);
+    } else if (size(tmp->child(!c)) > size(n->child(!c))) {
+      rotate(tmp, !c);
+      rotate(n, c);
+    } else {
+      return;
+    }
+    maintain(n->left, 0);
+    maintain(n->right, 1);
+    maintain(n, 0);
+    maintain(n, 1);
+  }
+
+  static bool insert(node_t *&n, const K &k, const V &v) {
+    if (n == NULL) {
+      n = new node_t(k, v);
+      return true;
+    }
+    bool result;
+    if (k < n->key) {
+      result = insert(n->left, k, v);
+      maintain(n, 0);
+    } else if (n->key < k) {
+      result = insert(n->right, k, v);
+      maintain(n, 1);
+    } else {
+      return false;
+    }
+    n->update();
+    return result;
+  }
+
+  static bool erase(node_t *&n, const K &k) {
+    if (n == NULL) {
+      return false;
+    }
+    bool result;
+    int c = (k < n->key);
+    if (k < n->key) {
+      result = erase(n->left, k);
+    } else if (n->key < k) {
+      result = erase(n->right, k);
+    } else {
+      if (n->right == NULL || n->left == NULL) {
+        node_t *tmp = n;
+        n = (n->right == NULL) ? n->left : n->right;
+        delete tmp;
+        return true;
+      }
+      node_t *p = n->right;
+      while (p->left != NULL) {
+        p = p->left;
+      }
+      n->key = p->key;
+      result = erase(n->right, p->key);
+    }
+    maintain(n, c);
+    n->update();
+    return result;
+  }
+
+  static std::pair<K, V> select(node_t *n, int r) {
+    int rank = size(n->left);
+    if (r < rank) {
+      return select(n->left, r);
+    } else if (r > rank) {
+      return select(n->right, r - rank - 1);
+    }
+    return std::make_pair(n->key, n->value);
+  }
+
+  static int rank(node_t *n, const K &k) {
+    if (n == NULL) {
+      throw std::runtime_error("Cannot rank key that's not in tree.");
+    }
+    int r = size(n->left);
+    if (k < n->key) {
+      return rank(n->left, k);
+    } else if (n->key < k) {
+      return rank(n->right, k) + r + 1;
+    }
+    return r;
+  }
+
+  template<class KVFunction>
+  static void walk(node_t *n, KVFunction f) {
+    if (n != NULL) {
+      walk(n->left, f);
+      f(n->key, n->value);
+      walk(n->right, f);
+    }
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  size_balanced_tree() : root(NULL) {}
+
+  ~size_balanced_tree() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return size(root);
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  bool insert(const K &k, const V &v) {
+    return insert(root, k, v);
+  }
+
+  bool erase(const K &k) {
+    return erase(root, k);
+  }
+
+  const V* find(const K &k) const {
+    node_t *n = root;
+    while (n != NULL) {
+      if (k < n->key) {
+        n = n->left;
+      } else if (n->key < k) {
+        n = n->right;
+      } else {
+        return &(n->value);
+      }
+    }
+    return NULL;
+  }
+
+  std::pair<K, V> select(int r) const {
+    if (r < 0 || r >= size(root)) {
+      throw std::runtime_error("Select rank must be between 0 and size() - 1.");
+    }
+    return select(root, r);
+  }
+
+  int rank(const K &k) const {
+    return rank(root, k);
+  }
+
+  template<class KVFunction>
+  void walk(KVFunction f) const {
+    walk(root, f);
+  }
+};
+
+/*** Example Usage and Output:
+
+abcde
+bcde
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void printch(int k, char v) {
+  cout << v;
+}
+
+int main() {
+  size_balanced_tree<int, char> t;
+  t.insert(2, 'b');
+  t.insert(1, 'a');
+  t.insert(3, 'c');
+  t.insert(5, 'e');
+  assert(t.insert(4, 'd'));
+  assert(*t.find(4) == 'd');
+  assert(!t.insert(4, 'd'));
+  t.walk(printch);
+  cout << endl;
+  assert(t.erase(1));
+  assert(!t.erase(1));
+  assert(t.find(1) == NULL);
+  t.walk(printch);
+  cout << endl;
+  assert(t.rank(2) == 0);
+  assert(t.rank(3) == 1);
+  assert(t.rank(5) == 3);
+  assert(t.select(0).first == 2);
+  assert(t.select(1).first == 3);
+  assert(t.select(2).first == 4);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Interval Treap}
+\begin{lstlisting}
+/*
+
+Maintain a map from closed, one-dimensional intervals to values while supporting
+efficient reporting of any or all entries that intersect with a given query
+interval. This implementation uses std::pair to represent intervals, requiring
+operators < and == to be defined on the numeric key type. A treap is used to
+process the entries, where keys are compared lexicographically as pairs.
+
+- interval_treap() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns whether the map is empty.
+- insert(lo, hi, v) adds an entry with key [lo, hi] and value v to the map,
+  returning true if a new interval was added or false if the interval already
+  exists (in which case the map is unchanged and the old value associated with
+  the key is preserved).
+- erase(lo, hi) removes the entry with key [lo, hi] from the map, returning true
+  if the removal was successful or false if the interval was not found.
+- find_key(lo, hi) returns a pointer to a const std::pair representing the key
+  of some interval in the map which intersects with [lo, hi], or NULL if no such
+  entry was found.
+- find_value(lo, hi) returns a pointer to a const value of some entry in the map
+  with a key that intersects with [lo, hi], or NULL if no such entry was found.
+- find_all(lo, hi, f) calls the function f(lo, hi, v) on each entry in the map
+  that overlaps with [lo, hi], in lexicographically ascending order of intervals.
+- walk(f) calls the function f(lo, hi, v) on each interval in the map, in
+  lexicographically ascending order of intervals.
+
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(log n) on average per call to insert(), erase(), and find_any(), where n is
+  the number of intervals currently in the set.
+- O(log n + m) on average per call to find_all(), where m is the number of
+  intersecting intervals that are reported.
+- O(n) per call to walk().
+
+Space Complexity:
+- O(n) for storage of the map elements.
+- O(1) auxiliary for size() and empty().
+- O(log n) auxiliary stack space on average for all other operations.
+
+*/
+
+#include <cstdlib>
+#include <utility>
+
+template<class K, class V>
+class interval_treap {
+  typedef std::pair<K, K> interval_t;
+
+  struct node_t {
+    static inline int rand32() {
+      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
+    }
+
+    interval_t interval;
+    V value;
+    K max;
+    int priority;
+    node_t *left, *right;
+
+    node_t(const interval_t &i, const V &v)
+        : interval(i), value(v), max(i.second), priority(rand32()), left(NULL),
+          right(NULL) {}
+
+    void update() {
+      max = interval.second;
+      if (left != NULL && left->max > max) {
+        max = left->max;
+      }
+      if (right != NULL && right->max > max) {
+        max = right->max;
+      }
+    }
+  } *root;
+
+  int num_nodes;
+
+  static void rotate_left(node_t *&n) {
+    node_t *tmp = n;
+    n = n->right;
+    tmp->right = n->left;
+    n->left = tmp;
+    tmp->update();
+  }
+
+  static void rotate_right(node_t *&n) {
+    node_t *tmp = n;
+    n = n->left;
+    tmp->left = n->right;
+    n->right = tmp;
+    tmp->update();
+  }
+
+  static bool insert(node_t *&n, const interval_t &i, const V &v) {
+    if (n == NULL) {
+      n = new node_t(i, v);
+      return true;
+    }
+    if (i < n->interval && insert(n->left, i, v)) {
+      if (n->left->priority < n->priority) {
+        rotate_right(n);
+      }
+      n->update();
+      return true;
+    }
+    if (i > n->interval && insert(n->right, i, v)) {
+      if (n->right->priority < n->priority) {
+        rotate_left(n);
+      }
+      n->update();
+      return true;
+    }
+    return false;
+  }
+
+  static bool erase(node_t *&n, const interval_t &i) {
+    if (n == NULL) {
+      return false;
+    }
+    if (i < n->interval) {
+      return erase(n->left, i);
+    }
+    if (i > n->interval) {
+      return erase(n->right, i);
+    }
+    if (n->left != NULL && n->right != NULL) {
+      bool res;
+      if (n->left->priority < n->right->priority) {
+        rotate_right(n);
+        res = erase(n->right, i);
+      } else {
+        rotate_left(n);
+        res = erase(n->left, i);
+      }
+      n->update();
+      return res;
+    }
+    node_t *tmp = (n->left != NULL) ? n->left : n->right;
+    delete n;
+    n = tmp;
+    return true;
+  }
+
+  static node_t* find_any(node_t *n, const interval_t &i) {
+    if (n == NULL) {
+      return NULL;
+    }
+    if (n->interval.first <= i.second && i.first <= n->interval.second) {
+      return n;
+    }
+    if (n->left != NULL && i.first <= n->left->max) {
+      return find_any(n->left, i);
+    }
+    return find_any(n->right, i);
+  }
+
+  template<class KVFunction>
+  static void find_all(node_t *n, const interval_t &i, KVFunction f) {
+    if (n == NULL || n->max < i.first) {
+      return;
+    }
+    if (n->interval.first <= i.second && i.first <= n->interval.second) {
+      f(n->interval.first, n->interval.second, n->value);
+    }
+    find_all(n->left, i, f);
+    find_all(n->right, i, f);
+  }
+
+  template<class KVFunction>
+  static void walk(node_t *n, KVFunction f) {
+    if (n != NULL) {
+      walk(n->left, f);
+      f(n->interval.first, n->interval.second, n->value);
+      walk(n->right, f);
+    }
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  interval_treap() : root(NULL), num_nodes(0) {}
+
+  ~interval_treap() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  bool insert(const K &lo, const K &hi, const V &v) {
+    if (insert(root, std::make_pair(lo, hi), v)) {
+      num_nodes++;
+      return true;
+    }
+    return false;
+  }
+
+  bool erase(const K &lo, const K &hi) {
+    if (erase(root, std::make_pair(lo, hi))) {
+      num_nodes--;
+      return true;
+    }
+    return false;
+  }
+
+  const interval_t* find_key(const K &lo, const K &hi) const {
+    node_t *n = find_any(root, std::make_pair(lo, hi));
+    return (n == NULL) ? NULL : &(n->interval);
+  }
+
+  const V* find_value(const K &lo, const K &hi) const {
+    node_t *n = find_any(root, std::make_pair(lo, hi));
+    return (n == NULL) ? NULL : &(n->value);
+  }
+
+  template<class KVFunction>
+  void find_all(const K &lo, const K &hi, KVFunction f) const {
+    find_all(root, std::make_pair(lo, hi), f);
+  }
+
+  template<class KVFunction>
+  void walk(KVFunction f) const {
+    walk(root, f);
+  }
+};
+
+/*** Example Usage and Output:
+
+Intervals intersecting [16, 20]: [15, 20] [10, 30] [5, 20] [10, 40]
+All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void print(int lo, int hi, char v) {
+  cout << " [" << lo << ", " << hi << "]";
+}
+
+int main() {
+  interval_treap<int, char> t;
+  t.insert(15, 20, 'a');
+  t.insert(10, 30, 'b');
+  t.insert(17, 19, 'c');
+  t.insert(5, 20, 'd');
+  t.insert(12, 15, 'e');
+  t.insert(10, 40, 'f');
+  assert(t.size() == 6);
+  assert(!t.insert(5, 20, 'x'));
+  t.erase(17, 19);
+  assert(t.size() == 5);
+  assert(*t.find_key(3, 9) == make_pair(5, 20));
+  assert(*t.find_value(3, 9) == 'd');
+  cout << "Intervals intersecting [16, 20]:";
+  t.find_all(16, 20, print);
+  cout << "\nAll intervals:";
+  t.walk(print);
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{Hash Map}
+\begin{lstlisting}
+/*
+
+Maintain a map, that is, a collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementation requires the ==
+operator to be defined on the key type. A hash map implements a map by hashing
+keys into buckets using a hash function. This implementation resolves collisions
+by chaining entries hashed to the same bucket into a linked list.
+
+- hash_map() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns whether the map is empty.
+- insert(k, v) adds an entry with key k and value v to the map, returning true
+  if an new entry was added or false if the key already exists (in which case
+  the map is unchanged and the old value associated with the key is preserved).
+- erase(k) removes the entry with key k from the map, returning true if the
+  removal was successful or false if the key to be removed was not found.
+- find(k) returns a pointer to a const value associated with key k, or NULL if
+  the key was not found.
+- operator[k] returns a reference to key k's associated value (which may be
+  modified), or if necessary, inserts and returns a new entry with the default
+  constructed value if key k was not originally found.
+- walk(f) calls the function f(k, v) on each entry of the map, in no guaranteed
+  order.
+
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(1) amortized per call to insert(), erase(), find(), and operator[].
+- O(n) per call to walk(), where n is the number of entries in the map.
+
+Space Complexity:
+- O(n) for storage of the map elements.
+- O(n) auxiliary heap space for insert().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <cstddef>
+#include <list>
+
+template<class K, class V, class Hash>
+class hash_map {
+  struct entry_t {
+    K key;
+    V value;
+
+    entry_t(const K &k, const V &v) : key(k), value(v) {}
+  };
+
+  std::list<entry_t> *table;
+  int table_size, num_entries;
+
+  void double_capacity_and_rehash() {
+    std::list<entry_t> *old = table;
+    int old_size = table_size;
+    table_size = 2*table_size;
+    table = new std::list<entry_t>[table_size];
+    num_entries = 0;
+    typename std::list<entry_t>::iterator it;
+    for (int i = 0; i < old_size; i++) {
+      for (it = old[i].begin(); it != old[i].end(); ++it) {
+        insert(it->key, it->value);
+      }
+    }
+    delete[] old;
+  }
+
+ public:
+  hash_map(int size = 128) : table_size(size), num_entries(0) {
+    table = new std::list<entry_t>[table_size];
+  }
+
+  ~hash_map() {
+    delete[] table;
+  }
+
+  int size() const {
+    return num_entries;
+  }
+
+  bool empty() const {
+    return num_entries == 0;
+  }
+
+  bool insert(const K &k, const V &v) {
+    if (find(k) != NULL) {
+      return false;
+    }
+    if (num_entries >= table_size) {
+      double_capacity_and_rehash();
+    }
+    unsigned int i = Hash()(k) % table_size;
+    table[i].push_back(entry_t(k, v));
+    num_entries++;
+    return true;
+  }
+
+  bool erase(const K &k) {
+    unsigned int i = Hash()(k) % table_size;
+    typename std::list<entry_t>::iterator it = table[i].begin();
+    while (it != table[i].end() && !(it->key == k)) {
+      ++it;
+    }
+    if (it == table[i].end()) {
+      return false;
+    }
+    table[i].erase(it);
+    num_entries--;
+    return true;
+  }
+
+  V* find(const K &k) const {
+    unsigned int i = Hash()(k) % table_size;
+    typename std::list<entry_t>::iterator it = table[i].begin();
+    while (it != table[i].end() && !(it->key == k)) {
+      ++it;
+    }
+    if (it == table[i].end()) {
+      return NULL;
+    }
+    return &(it->value);
+  }
+
+  V& operator[](const K &k) {
+    V *ret = find(k);
+    if (ret != NULL) {
+      return *ret;
+    }
+    insert(k, V());
+    return *find(k);
+  }
+
+  template<class KVFunction>
+  void walk(KVFunction f) const {
+    for (int i = 0; i < table_size; i++) {
+      typename std::list<entry_t>::iterator it;
+      for (it = table[i].begin(); it != table[i].end(); ++it) {
+        f(it->key, it->value);
+      }
+    }
+  }
+};
+
+/*** Example Usage and Output:
+
+cab
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+struct class_hash {
+  unsigned int operator()(int k) {
+    return class_hash()((unsigned int)k);
+  }
+
+  unsigned int operator()(long long k) {
+    return class_hash()((unsigned long long)k);
+  }
+
+  // Knuth's one-to-one multiplicative method.
+  unsigned int operator()(unsigned int k) {
+    return k * 2654435761u;  // Or just return k.
+  }
+
+  // Jenkins's 64-bit hash.
+  unsigned int operator()(unsigned long long k) {
+    k += ~(k << 32);
+    k ^=  (k >> 22);
+    k += ~(k << 13);
+    k ^=  (k >>  8);
+    k +=  (k <<  3);
+    k ^=  (k >> 15);
+    k += ~(k << 27);
+    k ^=  (k >> 31);
+    return k;
+  }
+
+  // Jenkins's one-at-a-time hash.
+  unsigned int operator()(const std::string &k) {
+    unsigned int hash = 0;
+    for (unsigned int i = 0; i < k.size(); i++) {
+      hash += ((hash + k[i]) << 10);
+      hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    return hash + (hash << 15);
+  }
+};
+
+void printch(const string &k, char v) {
+  cout << v;
+}
+
+int main() {
+  hash_map<string, char, class_hash> m;
+  m["foo"] = 'a';
+  m.insert("bar", 'b');
+  assert(m["foo"] == 'a');
+  assert(m["bar"] == 'b');
+  assert(m["baz"] == '\0');
+  m["baz"] = 'c';
+  m.walk(printch);
+  cout << endl;
+  assert(m.erase("foo"));
+  assert(m.size() == 2);
+  assert(m["foo"] == '\0');
+  assert(m.size() == 3);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Skip List}
+\begin{lstlisting}
+/*
+
+Maintain a map, that is, a collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementation requires both
+the < and the == operators to be defined on the key type. A skip list maintains
+a linked hierarchy of sorted subsequences with each successive subsequence
+skipping over fewer elements than the previous one.
+
+- skip_list() constructs an empty map.
+- size() returns the size of the map.
+- empty() returns whether the map is empty.
+- insert(k, v) adds an entry with key k and value v to the map, returning true
+  if an new entry was added or false if the key already exists (in which case
+  the map is unchanged and the old value associated with the key is preserved).
+- erase(k) removes the entry with key k from the map, returning true if the
+  removal was successful or false if the key to be removed was not found.
+- find(k) returns a pointer to a const value associated with key k, or NULL if
+  the key was not found.
+- operator[k] returns a reference to key k's associated value (which may be
+  modified), or if necessary, inserts and returns a new entry with the default
+  constructed value if key k was not originally found.
+- walk(f) calls the function f(k, v) on each entry of the map, in ascending
+  order of keys.
+
+Time Complexity:
+- O(1) per call to the constructor, size(), and empty().
+- O(log n) on average per call to insert(), erase(), find(), and operator[],
+  where n is the number of entries currently in the map.
+- O(n) per call to walk().
+
+Space Complexity:
+- O(n) on average for storage of the map elements.
+- O(n) auxiliary heap space for insert() and erase().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <cmath>
+#include <cstdlib>
+#include <vector>
+
+template<class K, class V>
+class skip_list {
+  static const int MAX_LEVELS = 32;  // log2(max possible keys)
+
+  struct node_t {
+    K key;
+    V value;
+    std::vector<node_t*> next;
+
+    node_t(const K &k, const V &v, int levels)
+        : key(k), value(v), next(levels, (node_t*)NULL) {}
+  } *head;
+
+  int num_nodes;
+
+  static int random_level() {
+    static const double p = 0.5;
+    int level = 1;
+    while (((double)rand() / RAND_MAX) < p && std::abs(level) < MAX_LEVELS) {
+      level++;
+    }
+    return std::abs(level);
+  }
+
+  static int node_level(const std::vector<node_t*> &v) {
+    int i = 0;
+    while (i < (int)v.size() && v[i] != NULL) {
+      i++;
+    }
+    return i + 1;
+  }
+
+ public:
+  skip_list() : head(new node_t(K(), V(), MAX_LEVELS)), num_nodes(0) {
+    for (int i = 0; i < (int)head->next.size(); i++) {
+      head->next[i] = NULL;
+    }
+  }
+
+  ~skip_list() {
+    delete head;
+  }
+
+  int size() const {
+    return num_nodes;
+  }
+
+  bool empty() const {
+    return num_nodes == 0;
+  }
+
+  bool insert(const K &k, const V &v) {
+    std::vector<node_t*> update(head->next);
+    int curr_level = node_level(update);
+    node_t *n = head;
+    for (int i = curr_level; i-- > 0; ) {
+      while (n->next[i] != NULL && n->next[i]->key < k) {
+        n = n->next[i];
+      }
+      update[i] = n;
+    }
+    n = n->next[0];
+    if (n != NULL && n->key == k) {
+      return false;
+    }
+    int new_level = random_level();
+    if (new_level > curr_level) {
+      for (int i = curr_level; i < new_level; i++) {
+        update[i] = head;
+      }
+    }
+    n = new node_t(k, v, new_level);
+    for (int i = 0; i < new_level; i++) {
+      n->next[i] = update[i]->next[i];
+      update[i]->next[i] = n;
+    }
+    num_nodes++;
+    return true;
+  }
+
+  bool erase(const K &k) {
+    std::vector<node_t*> update(head->next);
+    node_t *n = head;
+    for (int i = node_level(update); i-- > 0; ) {
+      while (n->next[i] != NULL && n->next[i]->key < k) {
+        n = n->next[i];
+      }
+      update[i] = n;
+    }
+    n = n->next[0];
+    if (n != NULL && n->key == k) {
+      for (int i = 0; i < (int)update.size(); i++) {
+        if (update[i]->next[i] != n) {
+          break;
+        }
+        update[i]->next[i] = n->next[i];
+      }
+      delete n;
+      num_nodes--;
+      return true;
+    }
+    return false;
+  }
+
+  V* find(const K &k) const {
+    node_t *n = head;
+    for (int i = node_level(n->next); i-- > 0; ) {
+      while (n->next[i] != NULL && n->next[i]->key < k) {
+        n = n->next[i];
+      }
+    }
+    n = n->next[0];
+    return (n != NULL && n->key == k) ? &(n->value) : NULL;
+  }
+
+  V& operator[](const K &k) {
+    V *ret = find(k);
+    if (ret != NULL) {
+      return *ret;
+    }
+    insert(k, V());
+    return *find(k);
+  }
+
+  template<class KVFunction>
+  void walk(KVFunction f) const {
+    node_t *n = head->next[0];
+    while (n != NULL) {
+      f(n->key, n->value);
+      n = n->next[0];
+    }
+  }
+};
+
+/*** Example Usage and Output:
+
+abcde
+bcde
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void printch(int k, char v) {
+  cout << v;
+}
+
+int main() {
+  skip_list<int, char> l;
+  l.insert(2, 'b');
+  l.insert(1, 'a');
+  l.insert(3, 'c');
+  l.insert(5, 'e');
+  assert(l.insert(4, 'd'));
+  assert(*l.find(4) == 'd');
+  assert(!l.insert(4, 'd'));
+  l.walk(printch);
+  cout << endl;
+  assert(l.erase(1));
+  assert(!l.erase(1));
+  assert(l.find(1) == NULL);
+  l.walk(printch);
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+
+\section{Range Queries in One Dimension}
+\setcounter{section}{3}
+\setcounter{subsection}{0}
+\subsection{Sparse Table (Range Minimum Query)}
+\begin{lstlisting}
+/*
+
+Given a static array with indices from 0 to n - 1, precompute a table that may
+later be used perform range minimum queries on the array in constant time. This
+version is simplified to only work on integer arrays.
+
+The dynamic programming state dp[i][j] holds the index of the minimum value in
+the sub-array starting at i and having length 2^j. Each dp[i][j] will always be
+equal to either dp[i][j - 1] or dp[i + 2^(j - 1) - 1)][j - 1], whichever of the
+indices corresponds to the smaller value in the array.
+
+Time Complexity:
+- O(n log n) per call to build(), where n is the size of the array.
+- O(1) per call to query_min().
+
+Space Complexity:
+- O(n log n) for storage of the sparse table, where n is the size of the array.
+- O(1) auxiliary for query().
+
+*/
+
+#include <vector>
+
+const int MAXN = 1000;
+std::vector<int> table, dp[MAXN];
+
+void build(int n, int a[]) {
+  table.resize(n + 1);
+  for (int i = 2; i <= n; i++) {
+    table[i] = table[i >> 1] + 1;
+  }
+  for (int i = 0; i < n; i++) {
+    dp[i].resize(table[n] + 1);
+    dp[i][0] = i;
+  }
+  for (int j = 1; (1 << j) < n; j++) {
+    for (int i = 0; i + (1 << j) <= n; i++) {
+      int x = dp[i][j - 1];
+      int y = dp[i + (1 << (j - 1))][j - 1];
+      dp[i][j] = (a[x] < a[y]) ? x : y;
+    }
+  }
+}
+
+int query(int a[], int lo, int hi) {
+  int j = table[hi - lo];
+  int x = dp[lo][j];
+  int y = dp[hi - (1 << j) + 1][j];
+  return (a[x] < a[y]) ? a[x] : a[y];
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+int main() {
+  int arr[5] = {6, -2, 1, 8, 10};
+  build(5, arr);
+  assert(query(arr, 0, 3) == -2);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Square Root Decomposition}
+\begin{lstlisting}
+/*
+
+Maintain a fixed-size array (from 0 to size() - 1) while supporting dynamic
+queries of contiguous sub-arrays and dynamic updates of individual indices.
+
+The query operation is defined by an associative join_values() function which
+satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
+for all values x, y, and z in the array. The default definition below assumes a
+numerical array type, supporting queries for the "min" of the target range.
+Another possible query operation is "sum", in which the join_values() function
+should be defined to return "a + b".
+
+The update operation is defined by the join_value_with_delta() function which
+determines the change made to array values. The default definition below
+supports updates that "set" the chosen array index to a new value. Another
+possible update operation is "increment", in which join_value_with_delta(v, d)
+should be defined to return "v + d".
+
+The operations supported by this data structure are identical to those of the
+point update segment tree found in this section.
+
+Time Complexity:
+- O(n) per call to both constructors, where n is the size of the array.
+- O(1) per call to size().
+- O(sqrt n) per call to at(), update(), and query().
+
+Space Complexity:
+- O(n) for storage of the array elements.
+- O(1) auxiliary for all operations.
+
+*/
+
+#include <algorithm>
+#include <cmath>
+#include <vector>
+
+template<class T>
+class sqrt_decomposition {
+  static T join_values(const T &a, const T &b) {
+    return std::min(a, b);
+  }
+
+  static T join_value_with_delta(const T &v, const T &d) {
+    return d;
+  }
+
+  int len, blocklen;
+  std::vector<T> value, block;
+
+  void init() {
+    blocklen = (int)sqrt(len);
+    int nblocks = (len + blocklen - 1)/blocklen;
+    for (int i = 0; i < nblocks; i++) {
+      T blockval = value[i*blocklen];
+      int blockhi = std::min(len, (i + 1)*blocklen);
+      for (int j = i*blocklen + 1; j < blockhi; j++) {
+        blockval = join_values(blockval, value[j]);
+      }
+      block.push_back(blockval);
+    }
+  }
+
+ public:
+  sqrt_decomposition(int n, const T &v = T()) : len(n), value(n, v) {
+    init();
+  }
+
+  template<class It>
+  sqrt_decomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
+    init();
+  }
+
+  int size() const {
+    return len;
+  }
+
+  T at(int i) const {
+    return query(i, i);
+  }
+
+  T query(int lo, int hi) const {
+    T res;
+    int blocklo = ceil((double)lo/blocklen), blockhi = (hi + 1)/blocklen - 1;
+    if (blocklo > blockhi) {
+      res = value[lo];
+      for (int i = lo + 1; i <= hi; i++) {
+        res = join_values(res, value[i]);
+      }
+    } else {
+      res = block[blocklo];
+      for (int i = blocklo + 1; i <= blockhi; i++) {
+        res = join_values(res, block[i]);
+      }
+      for (int i = lo; i < blocklo*blocklen; i++) {
+        res = join_values(res, value[i]);
+      }
+      for (int i = (blockhi + 1)*blocklen; i <= hi; i++) {
+        res = join_values(res, value[i]);
+      }
+    }
+    return res;
+  }
+
+  void update(int i, const T &d) {
+    value[i] = join_value_with_delta(value[i], d);
+    int b = i/blocklen;
+    int blockhi = std::min(len, (b + 1)*blocklen);
+    block[b] = value[b*blocklen];
+    for (int i = b*blocklen + 1; i < blockhi; i++) {
+      block[b] = join_values(block[b], value[i]);
+    }
+  }
+};
+
+/*** Example Usage and Output:
+
+Values: 6 -2 4 8 10
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  int arr[5] = {6, -2, 1, 8, 10};
+  sqrt_decomposition<int> sd(arr, arr + 5);
+  sd.update(2, 4);
+  cout << "Values:";
+  for (int i = 0; i < sd.size(); i++) {
+    cout << " " << sd.at(i);
+  }
+  cout << endl;
+  assert(sd.query(0, 3) == -2);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Segment Tree (Point Update)}
+\begin{lstlisting}
+/*
+
+Maintain a fixed-size array while supporting dynamic queries of contiguous
+sub-arrays and dynamic updates of individual indices.
+
+The query operation is defined by an associative join_values() function which
+satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
+for all values x, y, and z in the array. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case the join_values()
+function should be defined to return "a + b".
+
+The update operation is defined by the join_value_with_delta() function, which
+determines the change made to array values. The default definition below
+supports updates that "set" the chosen array index to a new value. Another
+possible update operation is "increment", in which join_value_with_delta(v, d)
+should be defined to return "v + d".
+
+- segment_tree(n, v) constructs an array of size n with indices from 0 to n - 1,
+  inclusive, and all values initialized to v.
+- segment_tree(lo, hi) constructs an array from two random-access iterators as a
+  range [lo, hi), initialized to the elements of the range in the same order.
+- size() returns the size of the array.
+- at(i) returns the value at index i.
+- query(lo, hi) returns the result of join_values() applied to all indices from
+  lo to hi, inclusive. If the distance between lo and hi is 1, then the single
+  specified value is returned.
+- update(i, d) assigns the value v at index i to join_value_with_delta(v, d).
+
+Time Complexity:
+- O(n) per call to both constructors, where n is the size of the array.
+- O(1) per call to size().
+- O(log n) per call to at(), update(), and query().
+
+Space Complexity:
+- O(n) for storage of the array elements.
+- O(log n) auxiliary stack space for update() and query().
+- O(1) auxiliary for size().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+template<class T>
+class segment_tree {
+  static T join_values(const T &a, const T &b) {
+    return std::min(a, b);
+  }
+
+  static T join_value_with_delta(const T &v, const T &d) {
+    return d;
+  }
+
+  int len;
+  std::vector<T> value;
+
+  void build(int i, int lo, int hi, const T &v) {
+    if (lo == hi) {
+      value[i] = v;
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    build(i*2 + 1, lo, mid, v);
+    build(i*2 + 2, mid + 1, hi, v);
+    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+  }
+
+  template<class It>
+  void build(int i, int lo, int hi, It arr) {
+    if (lo == hi) {
+      value[i] = *(arr + lo);
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    build(i*2 + 1, lo, mid, arr);
+    build(i*2 + 2, mid + 1, hi, arr);
+    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+  }
+
+  T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) const {
+    if (lo == tgt_lo && hi == tgt_hi) {
+      return value[i];
+    }
+    int mid = lo + (hi - lo)/2;
+    if (tgt_lo <= mid && mid < tgt_hi) {
+      return join_values(
+                query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
+                query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
+    }
+    if (tgt_lo <= mid) {
+      return query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
+    }
+    return query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
+  }
+
+  void update(int i, int lo, int hi, int target, const T &d) {
+    if (target < lo || target > hi) {
+      return;
+    }
+    if (lo == hi) {
+      value[i] = join_value_with_delta(value[i], d);
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    update(i*2 + 1, lo, mid, target, d);
+    update(i*2 + 2, mid + 1, hi, target, d);
+    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+  }
+
+ public:
+  segment_tree(int n, const T &v = T()) : len(n), value(4*len) {
+    build(0, 0, len - 1, false, 0, v);
+  }
+
+  template<class It>
+  segment_tree(It lo, It hi) : len(hi - lo), value(4*len) {
+    build(0, 0, len - 1, lo);
+  }
+
+  int size() const {
+    return len;
+  }
+
+  T at(int i) const {
+    return query(i, i);
+  }
+
+  T query(int lo, int hi) const {
+    return query(0, 0, len - 1, lo, hi);
+  }
+
+  void update(int i, const T &d) {
+    update(0, 0, len - 1, i, d);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values: 6 -2 4 8 10
+The minimum value in the range [0, 3] is -2.
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  int arr[5] = {6, -2, 1, 8, 10};
+  segment_tree<int> t(arr, arr + 5);
+  t.update(2, 4);
+  cout << "Values:";
+  for (int i = 0; i < t.size(); i++) {
+    cout << " " << t.at(i);
+  }
+  cout << endl;
+  assert(t.query(0, 3) == -2);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Segment Tree (Range Update)}
+\begin{lstlisting}
+/*
+
+Maintain a fixed-size array while supporting both dynamic queries and updates of
+contiguous subarrays via the lazy propagation technique.
+
+The query operation is defined by an associative join_values() function which
+satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
+for all values x, y, and z in the array. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case the join_values()
+function should be defined to return "a + b".
+
+The update operation is defined by the join_value_with_delta() and join_deltas()
+functions, which determines the change made to array values. These must satisfy:
+- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
+- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
+  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
+- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
+  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
+  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
+The default code below defines updates that "set" the chosen array index to a
+new value. Another possible update operation is "increment", in which case
+join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
+join_deltas(d1, d2) should be defined to return "d1 + d2".
+
+- segment_tree(n, v) constructs an array of size n with indices from 0 to n - 1,
+  inclusive, and all values initialized to v.
+- segment_tree(lo, hi) constructs an array from two random-access iterators as a
+  range [lo, hi), initialized to the elements of the range in the same order.
+- size() returns the size of the array.
+- at(i) returns the value at index i, where i is between 0 and size() - 1.
+- query(lo, hi) returns the result of join_values() applied to all indices from
+  lo to hi, inclusive. If the distance between lo and hi is 1, then the single
+  specified value is returned.
+- update(i, d) assigns the value v at index i to join_value_with_delta(v, d).
+- update(lo, hi, d) modifies the value at each array index from lo to hi,
+  inclusive, by respectively joining them with d using join_value_with_delta().
+
+Time Complexity:
+- O(n) per call to both constructors, where n is the size of the array.
+- O(1) per call to size().
+- O(log n) per call to at(), update(), and query().
+
+Space Complexity:
+- O(n) for storage of the array elements.
+- O(log n) auxiliary stack space for update() and query().
+- O(1) auxiliary for size().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+template<class T>
+class segment_tree {
+  static T join_values(const T &a, const T &b) {
+    return std::min(a, b);
+  }
+
+  static T join_value_with_delta(const T &v, const T &d, int len) {
+    return d;
+  }
+
+  static T join_deltas(const T &d1, const T &d2) {
+    return d2;  // For "set" updates, the more recent delta prevails.
+  }
+
+  int len;
+  std::vector<T> value, delta;
+  std::vector<bool> pending;
+
+  void build(int i, int lo, int hi, const T &v) {
+    if (lo == hi) {
+      value[i] = v;
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    build(i*2 + 1, lo, mid, v);
+    build(i*2 + 2, mid + 1, hi, v);
+    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+  }
+
+  template<class It>
+  void build(int i, int lo, int hi, It arr) {
+    if (lo == hi) {
+      value[i] = *(arr + lo);
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    build(i*2 + 1, lo, mid, arr);
+    build(i*2 + 2, mid + 1, hi, arr);
+    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+  }
+
+  void push_delta(int i, int lo, int hi) {
+    if (pending[i]) {
+      value[i] = join_value_with_delta(value[i], delta[i], hi - lo + 1);
+      if (lo != hi) {
+        int l = 2*i + 1, r = 2*i + 2;
+        delta[l] = pending[l] ? join_deltas(delta[l], delta[i]) : delta[i];
+        delta[r] = pending[r] ? join_deltas(delta[r], delta[i]) : delta[i];
+        pending[l] = pending[r] = true;
+      }
+      pending[i] = false;
+    }
+  }
+
+  T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) {
+    push_delta(i, lo, hi);
+    if (lo == tgt_lo && hi == tgt_hi) {
+      return value[i];
+    }
+    int mid = lo + (hi - lo)/2;
+    if (tgt_lo <= mid && mid < tgt_hi) {
+      return join_values(
+                query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
+                query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
+    }
+    if (tgt_lo <= mid) {
+      return query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
+    }
+    return query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
+  }
+
+  void update(int i, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
+    push_delta(i, lo, hi);
+    if (hi < tgt_lo || lo > tgt_hi) {
+      return;
+    }
+    if (tgt_lo <= lo && hi <= tgt_hi) {
+      delta[i] = d;
+      pending[i] = true;
+      push_delta(i, lo, hi);
+      return;
+    }
+    update(2*i + 1, lo, (lo + hi)/2, tgt_lo, tgt_hi, d);
+    update(2*i + 2, (lo + hi)/2 + 1, hi, tgt_lo, tgt_hi, d);
+    value[i] = join_values(value[2*i + 1], value[2*i + 2]);
+  }
+
+ public:
+  segment_tree(int n, const T &v = T())
+      : len(n), value(4*len), delta(4*len), pending(4*len, false) {
+    build(0, 0, len - 1, v);
+  }
+
+  template<class It>
+  segment_tree(It lo, It hi)
+      : len(hi - lo), value(4*len), delta(4*len), pending(4*len, false) {
+    build(0, 0, len - 1, lo);
+  }
+
+  int size() const {
+    return len;
+  }
+
+  T at(int i) {
+    return query(i, i);
+  }
+
+  T query(int lo, int hi) {
+    return query(0, 0, len - 1, lo, hi);
+  }
+
+  void update(int i, const T &d) {
+    update(0, 0, len - 1, i, i, d);
+  }
+
+  void update(int lo, int hi, const T &d) {
+    update(0, 0, len - 1, lo, hi, d);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values: 6 -2 4 8 10
+Values: 5 5 5 1 5
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  int arr[5] = {6, -2, 1, 8, 10};
+  segment_tree<int> t(arr, arr + 5);
+  t.update(2, 4);
+  cout << "Values:";
+  for (int i = 0; i < t.size(); i++) {
+    cout << " " << t.at(i);
+  }
+  cout << endl;
+  assert(t.query(0, 3) == -2);
+  t.update(0, 4, 5);
+  t.update(3, 2);
+  t.update(3, 1);
+  cout << "Values:";
+  for (int i = 0; i < t.size(); i++) {
+    cout << " " << t.at(i);
+  }
+  cout << endl;
+  assert(t.query(0, 3) == 1);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Segment Tree (Compressed)}
+\begin{lstlisting}
+/*
+
+Maintain a fixed-size array while supporting both dynamic queries and updates of
+contiguous subarrays via the lazy propagation technique. This implementation
+uses lazy initialization of nodes to conserve memory while supporting large
+indices.
+
+The query operation is defined by an associative join_values() function which
+satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
+for all values x, y, and z in the array. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case the join_values()
+function should be defined to return "a + b".
+
+The update operation is defined by the join_value_with_delta() and join_deltas()
+functions, which determines the change made to array values. These must satisfy:
+- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
+- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
+  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
+- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
+  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
+  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
+The default code below defines updates that "set" the chosen array index to a
+new value. Another possible update operation is "increment", in which case
+join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
+join_deltas(d1, d2) should be defined to return "d1 + d2".
+
+- segment_tree(n, v) constructs an array of size n with indices from 0 to n - 1,
+  inclusive, and all values initialized to v.
+- segment_tree(lo, hi) constructs an array from two random-access iterators as a
+  range [lo, hi), initialized to the elements of the range in the same order.
+- size() returns the size of the array.
+- at(i) returns the value at index i, where i is between 0 and size() - 1.
+- query(lo, hi) returns the result of join_values() applied to all indices from
+  lo to hi, inclusive. If the distance between lo and hi is 1, then the single
+  specified value is returned.
+- update(i, d) assigns the value v at index i to join_value_with_delta(v, d).
+- update(lo, hi, d) modifies the value at each array index from lo to hi,
+  inclusive, by respectively joining them with d using join_value_with_delta().
+
+Time Complexity:
+- O(n) per call to both constructors, where n is the size of the array.
+- O(1) per call to size().
+- O(log n) per call to at(), update(), and query().
+
+Space Complexity:
+- O(n) for storage of the array elements.
+- O(log n) auxiliary stack space for update() and query().
+- O(1) auxiliary for size().
+
+*/
+
+#include <algorithm>
+#include <cstddef>
+
+template<class T>
+class segment_tree {
+  static const int MAXN = 1000000000;
+
+  static T join_values(const T &a, const T &b) {
+    return std::min(a, b);
+  }
+
+  static T join_segment(const T &v, int len) {
+    return v;
+  }
+
+  static T join_value_with_delta(const T &v, const T &d, int len) {
+    return d;
+  }
+
+  static T join_deltas(const T &d1, const T &d2) {
+    return d2;  // For "set" updates, the more recent delta prevails.
+  }
+
+  struct node_t {
+    T value, delta;
+    bool pending;
+    node_t *left, *right;
+
+    node_t(const T &v) : value(v), pending(false), left(NULL), right(NULL) {}
+  } *root;
+
+  T init;
+
+  void update_delta(node_t *&n, const T &d, int len) {
+    if (n == NULL) {
+      n = new node_t(join_segment(init, len));
+    }
+    n->delta = n->pending ? join_deltas(n->delta, d) : d;
+    n->pending = true;
+  }
+
+  void push_delta(node_t *n, int lo, int hi) {
+    if (n->pending) {
+      n->value = join_value_with_delta(n->value, n->delta, hi - lo + 1);
+      if (lo != hi) {
+        int mid = lo + (hi - lo)/2;
+        update_delta(n->left, n->delta, mid - lo + 1);
+        update_delta(n->right, n->delta, hi - mid);
+      }
+    }
+    n->pending = false;
+  }
+
+  T query(node_t *n, int lo, int hi, int tgt_lo, int tgt_hi) {
+    push_delta(n, lo, hi);
+    if (lo == tgt_lo && hi == tgt_hi) {
+      return (n == NULL) ? join_segment(init, hi - lo + 1) : n->value;
+    }
+    int mid = lo + (hi - lo)/2;
+    if (tgt_lo <= mid && mid < tgt_hi) {
+      return join_values(
+          query(n->left, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
+          query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
+    }
+    if (tgt_lo <= mid) {
+      return query(n->left, lo, mid, tgt_lo, std::min(tgt_hi, mid));
+    }
+    return query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
+  }
+
+  void update(node_t *&n, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
+    if (n == NULL) {
+      n = new node_t(join_segment(init, hi - lo + 1));
+    }
+    push_delta(n, lo, hi);
+    if (hi < tgt_lo || lo > tgt_hi) {
+      return;
+    }
+    if (tgt_lo <= lo && hi <= tgt_hi) {
+      n->delta = d;
+      n->pending = true;
+      push_delta(n, lo, hi);
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    update(n->left, lo, mid, tgt_lo, tgt_hi, d);
+    update(n->right, mid + 1, hi, tgt_lo, tgt_hi, d);
+    n->value = join_values(n->left->value, n->right->value);
+  }
+
+  void clean_up(node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  segment_tree(const T &v = T()) : root(NULL), init(v) {}
+
+  ~segment_tree() {
+    clean_up(root);
+  }
+
+  T at(int i) {
+    return query(i, i);
+  }
+
+  T query(int lo, int hi) {
+    return query(root, 0, MAXN, lo, hi);
+  }
+
+  void update(int i, const T &d) {
+    return update(i, i, d);
+  }
+
+  void update(int lo, int hi, const T &d) {
+    return update(root, 0, MAXN, lo, hi, d);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values: 6 -2 4 8 10
+Values: 5 5 5 1 5
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  segment_tree<int> t(0);
+  t.update(0, 6);
+  t.update(1, -2);
+  t.update(2, 4);
+  t.update(3, 8);
+  t.update(4, 10);
+  cout << "Values:";
+  for (int i = 0; i < 5; i++) {
+    cout << " " << t.at(i);
+  }
+  cout << endl;
+  assert(t.query(0, 3) == -2);
+  t.update(0, 4, 5);
+  t.update(3, 2);
+  t.update(3, 1);
+  cout << "Values:";
+  for (int i = 0; i < 5; i++) {
+    cout << " " << t.at(i);
+  }
+  cout << endl;
+  assert(t.query(0, 3) == 1);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Implicit Treap}
+\begin{lstlisting}
+/*
+
+Maintain a dynamically-sized array using a balanced binary search tree while
+supporting both dynamic queries and updates of contiguous subarrays via the lazy
+propagation technique. A treap maintains a balanced binary tree structure by
+preserving the heap property on the randomly generated priority values of nodes,
+thereby making insertions and deletions run in O(log n) with high probability.
+
+The query operation is defined by an associative join_values() function which
+satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
+for all values x, y, and z in the array. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case the join_values()
+function should be defined to return "a + b".
+
+The update operation is defined by the join_value_with_delta() and join_deltas()
+functions, which determines the change made to array values. These must satisfy:
+- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
+- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
+  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
+- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
+  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
+  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
+The default code below defines updates that "set" the chosen array index to a
+new value. Another possible update operation is "increment", in which case
+join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
+join_deltas(d1, d2) should be defined to return "d1 + d2".
+
+This data structure shares every operation of one-dimensional segment trees in
+this section, with the additional operations empty(), insert(), erase(),
+push_back(), and pop_back() analogous to those of std::vector (here, insert()
+and erase() both take an index instead of an iterator).
+
+Time Complexity:
+- O(n) per call to both constructors, where n is the size of the array.
+- O(1) per call to size() and empty().
+- O(log n) on average per call to all other operations.
+
+Space Complexity:
+- O(n) for storage of the array elements.
+- O(1) auxiliary for size() and empty().
+- O(log n) auxiliary stack space for all other operations.
+
+*/
+
+#include <cstdlib>
+
+template<class T>
+class implicit_treap {
+  static T join_values(const T &a, const T &b) {
+    return a < b ? a : b;
+  }
+
+  static T join_value_with_delta(const T &v, const T &d, int len) {
+    return d;
+  }
+
+  static T join_deltas(const T &d1, const T &d2) {
+    return d2;
+  }
+
+  struct node_t {
+    static inline int rand32() {
+      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
+    }
+
+    T value, subtree_value, delta;
+    bool pending;
+    int size, priority;
+    node_t *left, *right;
+
+    node_t(const T &v)
+        : value(v), subtree_value(v), pending(false), size(1),
+          priority(rand32()), left(NULL), right(NULL) {}
+  } *root;
+
+  static int size(node_t *n) {
+    return (n == NULL) ? 0 : n->size;
+  }
+
+  static void update_value(node_t *n) {
+    if (n == NULL) {
+      return;
+    }
+    n->subtree_value = n->value;
+    if (n->left != NULL) {
+      n->subtree_value = join_values(n->subtree_value, n->left->subtree_value);
+    }
+    if (n->right != NULL) {
+      n->subtree_value = join_values(n->subtree_value, n->right->subtree_value);
+    }
+    n->size = 1 + size(n->left) + size(n->right);
+  }
+
+  static void update_delta(node_t *n, const T &d) {
+    if (n != NULL) {
+      n->delta = n->pending ? join_deltas(n->delta, d) : d;
+      n->pending = true;
+    }
+  }
+
+  static void push_delta(node_t *n) {
+    if (n == NULL || !n->pending) {
+      return;
+    }
+    n->value = join_value_with_delta(n->value, n->delta, 1);
+    n->subtree_value = join_value_with_delta(n->subtree_value, n->delta,
+                                             n->size);
+    if (n->size > 1) {
+      update_delta(n->left, n->delta);
+      update_delta(n->right, n->delta);
+    }
+    n->pending = false;
+  }
+
+  static void merge(node_t *&n, node_t *left, node_t *right) {
+    push_delta(left);
+    push_delta(right);
+    if (left == NULL) {
+      n = right;
+    } else if (right == NULL) {
+      n = left;
+    } else if (left->priority < right->priority) {
+      merge(left->right, left->right, right);
+      n = left;
+    } else {
+      merge(right->left, left, right->left);
+      n = right;
+    }
+    update_value(n);
+  }
+
+  static void split(node_t *n, node_t *&left, node_t *&right, int i) {
+    push_delta(n);
+    if (n == NULL) {
+      left = right = NULL;
+    } else if (i <= size(n->left)) {
+      split(n->left, left, n->left, i);
+      right = n;
+    } else {
+      split(n->right, n->right, right, i - size(n->left) - 1);
+      left = n;
+    }
+    update_value(n);
+  }
+
+  static void insert(node_t *&n, node_t *new_node, int i) {
+    push_delta(n);
+    if (n == NULL) {
+      n = new_node;
+    } else if (new_node->priority < n->priority) {
+      split(n, new_node->left, new_node->right, i);
+      n = new_node;
+    } else if (i <= size(n->left)) {
+      insert(n->left, new_node, i);
+    } else {
+      insert(n->right, new_node, i - size(n->left) - 1);
+    }
+    update_value(n);
+  }
+
+  static void erase(node_t *&n, int i) {
+    push_delta(n);
+    if (i == size(n->left)) {
+      delete n;
+      merge(n, n->left, n->right);
+    } else if (i < size(n->left)) {
+      erase(n->left, i);
+    } else {
+      erase(n->right, i - size(n->left) - 1);
+    }
+    update_value(n);
+  }
+
+  static node_t* select(node_t *n, int i) {
+    push_delta(n);
+    if (i < size(n->left)) {
+      return select(n->left, i);
+    }
+    if (i > size(n->left)) {
+      return select(n->right, i - size(n->left) - 1);
+    }
+    return n;
+  }
+
+  void clean_up(node_t *&n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  implicit_treap(int n = 0, const T &v = T()) : root(NULL) {
+    for (int i = 0; i < n; i++) {
+      push_back(v);
+    }
+  }
+
+  template<class It>
+  implicit_treap(It lo, It hi) : root(NULL) {
+    for (; lo != hi; ++lo) {
+      push_back(*lo);
+    }
+  }
+
+  ~implicit_treap() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return size(root);
+  }
+
+  bool empty() const {
+    return root == NULL;
+  }
+
+  void insert(int i, const T &v) {
+    insert(root, new node_t(v), i);
+  }
+
+  void erase(int i) {
+    erase(root, i);
+  }
+
+  void push_back(const T &v) {
+    insert(size(), v);
+  }
+
+  void pop_back() {
+    erase(size() - 1);
+  }
+
+  T at(int i) const {
+    return select(root, i)->value;
+  }
+
+  T query(int lo, int hi) {
+    node_t *l1, *r1, *l2, *r2, *t;
+    split(root, l1, r1, hi + 1);
+    split(l1, l2, r2, lo);
+    T res = r2->subtree_value;
+    merge(t, l2, r2);
+    merge(root, t, r1);
+    return res;
+  }
+
+  void update(int i, const T &d) {
+    update(i, i, d);
+  }
+
+  void update(int lo, int hi, const T &d) {
+    node_t *l1, *r1, *l2, *r2, *t;
+    split(root, l1, r1, hi + 1);
+    split(l1, l2, r2, lo);
+    update_delta(r2, d);
+    merge(t, l2, r2);
+    merge(root, t, r1);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values: -99 -2 1 8 10 11 (min: -99)
+Values: -90 -2 1 8 10 11 (min: -90)
+Values: 2 2 1 8 10 11 (min: 1)
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void print(implicit_treap<int> &t) {
+  cout << "Values:";
+  for (int i = 0; i < t.size(); i++) {
+    cout << " " << t.at(i);
+  }
+  cout << " (min: " << t.query(0, t.size() - 1) << ")" << endl;
+}
+
+int main() {
+  int arr[5] = {99, -2, 1, 8, 10};
+  implicit_treap<int> t(arr, arr + 5);
+  t.push_back(11);
+  t.push_back(12);
+  t.pop_back();
+  print(t);
+  t.insert(0, 90);
+  t.erase(1);
+  print(t);
+  t.update(0, 1, 2);
+  print(t);
+  return 0;
+}
+\end{lstlisting}
+
+\section{Range Queries in Two Dimensions}
+\setcounter{section}{4}
+\setcounter{subsection}{0}
+\subsection{Quadtree (Point Update)}
+\begin{lstlisting}
+/*
+
+Maintain a two-dimensional array while supporting dynamic queries of rectangular
+sub-arrays and dynamic updates of individual indices. This implementation uses
+lazy initialization of nodes to conserve memory while supporting large indices.
+
+The query operation is defined by the join_values() and join_region() functions
+where join_values(x, join_values(y, z)) = join_values(join_values(x, y), z) for
+all values x, y, and z in the array. The join_region(v, area) function must be
+defined in conjunction to efficiently return the result of join_values() applied
+to a rectangular sub-array of area elements. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case join_values(a, b)
+should return "a + b" and join_region(v, area) should return "v*area".
+
+The update operation is defined by the join_value_with_delta() function, which
+determines the change made to array values. The default code below defines
+updates that "set" the chosen array index to a new value. Another possible
+update operation is "increment", in which join_value_with_delta(v, d) should be
+defined to return "v + d".
+
+- quadtree(v) constructs a two-dimensional array with rows from 0 to MAXR and
+  columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
+- at(r, c) returns the value at row r, column c.
+- query(r1, c1, r2, c2) returns the result of join_values() applied to every
+  value in the rectangular region consisting of rows from r1 to r2, inclusive,
+  and columns from c1 to c2, inclusive.
+- update(r, c, d) assigns the value v at (r, c) to join_value_with_delta(v, d).
+
+Time Complexity:
+- O(1) per call to the constructor.
+- O(max(MAXR, MAXC)) per call to at(), update(), and query().
+
+Space Complexity:
+- O(n) for storage of the array elements, where n is the number of updated
+  entries in the array.
+- O(sqrt(max(MAXR, MAXC))) auxiliary stack space for update(), query(), and
+  at().
+
+*/
+
+#include <algorithm>
+#include <cstddef>
+
+template<class T>
+class quadtree {
+  static const int MAXR = 1000000000;
+  static const int MAXC = 1000000000;
+
+  static T join_values(const T &a, const T &b) {
+    return std::min(a, b);
+  }
+
+  static T join_region(const T &v, int area) {
+    return v;
+  }
+
+  static T join_value_with_delta(const T &v, const T &d) {
+    return d;
+  }
+
+  struct node_t {
+    T value;
+    node_t *child[4];
+
+    node_t(const T &v) : value(v) {
+      for (int i = 0; i < 4; i++) {
+        child[i] = NULL;
+      }
+    }
+  };
+
+  node_t *root;
+  T init;
+
+  // Helper variables for query().
+  int tgt_r1, tgt_c1, tgt_r2, tgt_c2;
+  T res;
+  bool found;
+
+  void query(node_t *n, int r1, int c1, int r2, int c2) {
+    if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
+      return;
+    }
+    if (n == NULL) {
+      int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
+      int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
+      T v = join_region(init, rlen*clen);
+      res = found ? join_values(res, v) : v;
+      found = true;
+      return;
+    }
+    if (tgt_r1 <= r1 && r2 <= tgt_r2 && tgt_c1 <= c1 && c2 <= tgt_c2) {
+      res = found ? join_values(res, n->value) : n->value;
+      found = true;
+      return;
+    }
+    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+    query(n->child[0], r1, c1, rmid, cmid);
+    query(n->child[1], rmid + 1, c1, r2, cmid);
+    query(n->child[2], r1, cmid + 1, rmid, c2);
+    query(n->child[3], rmid + 1, cmid + 1, r2, c2);
+  }
+
+  // Helper variables for update().
+  int tgt_r, tgt_c;
+  T delta;
+
+  void update(node_t *&n, int r1, int c1, int r2, int c2) {
+    if (n == NULL) {
+      n = new node_t(join_region(init, (r2 - r1 + 1)*(c2 - r1 + 1)));
+    }
+    if (tgt_r < r1 || tgt_r > r2 || tgt_c < c1 || tgt_c > c2) {
+      return;
+    }
+    if (r1 == r2 && c1 == c2) {
+      n->value = join_value_with_delta(n->value, delta);
+      return;
+    }
+    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+    update(n->child[0], r1, c1, rmid, cmid);
+    update(n->child[1], rmid + 1, c1, r2, cmid);
+    update(n->child[2], r1, cmid + 1, rmid, c2);
+    update(n->child[3], rmid + 1, cmid + 1, r2, c2);
+    bool found = false;
+    for (int i = 0; i < 4; i++) {
+      n->value = found ? join_values(n->value, n->child[i]->value)
+                       : n->child[i]->value;
+      found = true;
+    }
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      for (int i = 0; i < 4; i++) {
+        clean_up(n->child[i]);
+      }
+      delete n;
+    }
+  }
+
+ public:
+  quadtree(const T &v = T()) : root(NULL), init(v) {}
+
+  ~quadtree() {
+    clean_up(root);
+  }
+
+  T at(int r, int c) {
+    return query(r, c, r, c);
+  }
+
+  T query(int r1, int c1, int r2, int c2) {
+    tgt_r1 = r1;
+    tgt_c1 = c1;
+    tgt_r2 = r2;
+    tgt_c2 = c2;
+    found = false;
+    query(root, 0, 0, MAXR, MAXC);
+    return found ? res : join_region(init, (r2 - r1 + 1)*(c2 - c1 + 1));
+  }
+
+  void update(int r, int c, const T &d) {
+    tgt_r = r;
+    tgt_c = c;
+    delta = d;
+    update(root, 0, 0, MAXR, MAXC);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values:
+7 6 0
+5 4 0
+0 1 9
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  quadtree<int> t(0);
+  t.update(0, 0, 7);
+  t.update(0, 1, 6);
+  t.update(1, 0, 5);
+  t.update(1, 1, 4);
+  t.update(2, 1, 1);
+  t.update(2, 2, 9);
+  cout << "Values:" << endl;
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      cout << t.at(i, j) << " ";
+    }
+    cout << endl;
+  }
+  assert(t.query(0, 0, 0, 1) == 6);
+  assert(t.query(0, 0, 1, 0) == 5);
+  assert(t.query(1, 1, 2, 2) == 0);
+  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
+  t.update(500000000, 500000000, -100);
+  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Quadtree (Range Update)}
+\begin{lstlisting}
+/*
+
+Maintain a two-dimensional array while supporting both dynamic queries and
+updates of rectangular sub-arrays via the lazy propagation technique. This
+implementation uses lazy initialization of nodes to conserve memory while
+supporting large indices.
+
+The query operation is defined by the join_values() and join_region() functions
+where join_values(x, join_values(y, z)) = join_values(join_values(x, y), z) for
+all values x, y, and z in the array. The join_region(v, area) function must be
+defined in conjunction to efficiently return the result of join_values() applied
+to a rectangular sub-array of area elements. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case join_values(a, b)
+should return "a + b" and join_region(v, area) should return "v*area".
+
+The update operation is defined by the join_value_with_delta() and join_deltas()
+functions, which determines the change made to array values. These must satisfy:
+- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
+- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
+  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
+- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
+  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
+  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
+The default code below defines updates that "set" the chosen array index to a
+new value. Another possible update operation is "increment", in which case
+join_value_with_delta(v, d, area) should be defined to return "v + d*area" and
+join_deltas(d1, d2) should be defined to return "d1 + d2".
+
+- quadtree(v) constructs a two-dimensional array with rows from 0 to MAXR and
+  columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
+- at(r, c) returns the value at row r, column c.
+- query(r1, c1, r2, c2) returns the result of join_values() applied to every
+  value in the rectangular region consisting of rows from r1 to r2 and columns
+  from c1 to c2, inclusive.
+- update(r, c, d) assigns the value v at (r, c) to join_value_with_delta(v, d).
+- update(r1, c1, r2, c2) modifies the value at each index of the rectangular
+  region consisting of rows from r1 to r2 and columns from c1 to c2, inclusive,
+  by respectively joining them with d using join_value_with_delta().
+
+Time Complexity:
+- O(1) per call to the constructor.
+- O(max(MAXR, MAXC)) per call to at(), update(), and query().
+
+Space Complexity:
+- O(n) for storage of the array elements, where n is the number of updated
+  entries in the array.
+- O(sqrt(max(MAXR, MAXC))) auxiliary stack space for update(), query(), and
+  at().
+
+*/
+
+#include <algorithm>
+#include <cstddef>
+
+template<class T>
+class quadtree {
+  static const int MAXR = 1000000000;
+  static const int MAXC = 1000000000;
+
+  static T join_values(const T &a, const T &b) {
+    return std::min(a, b);
+  }
+
+  static T join_region(const T &v, int area) {
+    return v;
+  }
+
+  static T join_value_with_delta(const T &v, const T &d, int area) {
+    return d;
+  }
+
+  static T join_deltas(const T &d1, const T &d2) {
+    return d2;  // For "set" updates, the more recent delta prevails.
+  }
+
+  struct node_t {
+    T value, delta;
+    bool pending;
+    node_t *child[4];
+
+    node_t(const T &v) : value(v), pending(false) {
+      for (int i = 0; i < 4; i++) {
+        child[i] = NULL;
+      }
+    }
+  } *root;
+
+  T init;
+
+  void update_delta(node_t *&n, const T &d, int area) {
+    if (n == NULL) {
+      n = new node_t(join_region(init, area));
+    }
+    n->delta = n->pending ? join_deltas(n->delta, d) : d;
+    n->pending = true;
+  }
+
+  void push_delta(node_t *n, int r1, int c1, int r2, int c2) {
+    if (n->pending) {
+      int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+      int rlen = r2 - r1 + 1, clen = c2 - c1 + 1;
+      n->value = join_value_with_delta(n->value, n->delta, rlen*clen);
+      if (rlen*clen > 1) {
+        int rlen1 = rmid - r1 + 1, rlen2 = rlen - rlen1;
+        int clen1 = cmid - c1 + 1, clen2 = clen - clen1;
+        update_delta(n->child[0], n->delta, rlen1*clen1);
+        update_delta(n->child[1], n->delta, rlen2*clen1);
+        update_delta(n->child[2], n->delta, rlen1*clen2);
+        update_delta(n->child[3], n->delta, rlen2*clen2);
+      }
+      n->pending = false;
+    }
+  }
+
+  // Helper variables for query() and update().
+  int tgt_r1, tgt_c1, tgt_r2, tgt_c2;
+  T res, delta;
+  bool found;
+
+  void query(node_t *n, int r1, int c1, int r2, int c2) {
+    if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
+      return;
+    }
+    if (n == NULL) {
+      int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
+      int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
+      T v = join_region(init, rlen*clen);
+      res = found ? join_values(res, v) : v;
+      found = true;
+      return;
+    }
+    push_delta(n, r1, c1, r2, c2);
+    if (tgt_r1 <= r1 && r2 <= tgt_r2 && tgt_c1 <= c1 && c2 <= tgt_c2) {
+      res = found ? join_values(res, n->value) : n->value;
+      found = true;
+      return;
+    }
+    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+    query(n->child[0], r1, c1, rmid, cmid);
+    query(n->child[1], rmid + 1, c1, r2, cmid);
+    query(n->child[2], r1, cmid + 1, rmid, c2);
+    query(n->child[3], rmid + 1, cmid + 1, r2, c2);
+  }
+
+  void update(node_t *&n, int r1, int c1, int r2, int c2) {
+    if (n == NULL) {
+      n = new node_t(join_region(init, (r2 - r1 + 1)*(c2 - r1 + 1)));
+    }
+    if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
+      return;
+    }
+    push_delta(n, r1, c1, r2, c2);
+    if (tgt_r1 <= r1 && r2 <= tgt_r2 && tgt_c1 <= c1 && c2 <= tgt_c2) {
+      n->delta = delta;
+      n->pending = true;
+      push_delta(n, r1, c1, r2, c2);
+      return;
+    }
+    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+    update(n->child[0], r1, c1, rmid, cmid);
+    update(n->child[1], rmid + 1, c1, r2, cmid);
+    update(n->child[2], r1, cmid + 1, rmid, c2);
+    update(n->child[3], rmid + 1, cmid + 1, r2, c2);
+    n->value = n->child[0]->value;
+    for (int i = 1; i < 4; i++) {
+      n->value = join_values(n->value, n->child[i]->value);
+    }
+  }
+
+  static void clean_up(node_t *n) {
+    if (n != NULL) {
+      for (int i = 0; i < 4; i++) {
+        clean_up(n->child[i]);
+      }
+      delete n;
+    }
+  }
+
+public:
+  quadtree(const T &v = T()) : root(NULL), init(v) {}
+
+  ~quadtree() {
+    clean_up(root);
+  }
+
+  T at(int r, int c) {
+    return query(r, c, r, c);
+  }
+
+  T query(int r1, int c1, int r2, int c2) {
+    tgt_r1 = r1;
+    tgt_c1 = c1;
+    tgt_r2 = r2;
+    tgt_c2 = c2;
+    found = false;
+    query(root, 0, 0, MAXR, MAXC);
+    return found ? res : join_region(init, (r2 - r1 + 1)*(c2 - c1 + 1));
+  }
+
+  void update(int r, int c, const T &d) {
+    update(r, c, r, c, d);
+  }
+
+  void update(int r1, int c1, int r2, int c2, const T &d) {
+    tgt_r1 = r1;
+    tgt_c1 = c1;
+    tgt_r2 = r2;
+    tgt_c2 = c2;
+    delta = d;
+    update(root, 0, 0, MAXR, MAXC);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values:
+7 6 0
+5 4 0
+0 1 9
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  quadtree<int> t(0);
+  t.update(0, 0, 7);
+  t.update(0, 1, 6);
+  t.update(1, 0, 5);
+  t.update(1, 1, 4);
+  t.update(2, 1, 1);
+  t.update(2, 2, 9);
+  cout << "Values:" << endl;
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      cout << t.at(i, j) << " ";
+    }
+    cout << endl;
+  }
+  assert(t.query(0, 0, 0, 1) == 6);
+  assert(t.query(0, 0, 1, 0) == 5);
+  assert(t.query(1, 1, 2, 2) == 0);
+  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
+  t.update(500000000, 500000000, -100);
+  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
+  return 0;
+}
+\end{lstlisting}
+\subsection{2D Segment Tree}
+\begin{lstlisting}
+/*
+
+Maintain a two-dimensional array while supporting dynamic queries of rectangular
+sub-arrays and dynamic updates of individual indices. This implementation uses
+lazy initialization of nodes to conserve memory while supporting large indices.
+
+The query operation is defined by the join_values() and join_region() functions
+where join_values(x, join_values(y, z)) = join_values(join_values(x, y), z) for
+all values x, y, and z in the array. The join_region(v, area) function must be
+defined in conjunction to efficiently return the result of join_values() applied
+to a rectangular sub-array of area elements. The default code below assumes a
+numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case join_values(a, b)
+should return "a + b" and join_region(v, area) should return "v*area".
+
+The update operation is defined by the join_value_with_delta() function, which
+determines the change made to array values. The default code below defines
+updates that "set" the chosen array index to a new value. Another possible
+update operation is "increment", in which join_value_with_delta(v, d) should be
+defined to return "v + d".
+
+- segment_tree_2d(v) constructs a two-dimensional array with rows from 0 to
+  MAXR and columns from 0 to MAXC, inclusive. All values are implicitly
+  initialized to v.
+- at(r, c) returns the value at row r, column c.
+- query(r1, c1, r2, c2) returns the result of join_values() applied to every
+  value in the rectangular region consisting of rows from r1 to r2, inclusive,
+  and columns from c1 to c2, inclusive.
+- update(r, c, d) assigns the value v at (r, c) to join_value_with_delta(v, d).
+
+Time Complexity:
+- O(1) per call to the constructor.
+- O(log(MAXR)*log(MAXC)) per call to at(), update(), and query().
+
+Space Complexity:
+- O(n) for storage of the array elements, where n is the number of updated
+  entries in the array.
+- O(log(MAXR) + log(MAXC)) auxiliary stack space for update(), query(), and
+  at().
+
+*/
+
+#include <algorithm>
+#include <cstddef>
+
+template<class T>
+class segment_tree_2d {
+  static const int MAXR = 1000000000;
+  static const int MAXC = 1000000000;
+
+  static T join_values(const T &a, const T &b) {
+    return std::min(a, b);
+  }
+
+  static T join_region(const T &v, int area) {
+    return v;
+  }
+
+  static T join_value_with_delta(const T &v, const T &d) {
+    return d;
+  }
+
+  struct inner_node_t {
+    T value;
+    int low, high;
+    inner_node_t *left, *right;
+
+    inner_node_t(int lo, int hi, const T &v)
+        : value(v), low(lo), high(hi), left(NULL), right(NULL) {}
+  };
+
+  struct outer_node_t {
+    inner_node_t root;
+    int low, high;
+    outer_node_t *left, *right;
+
+    outer_node_t(int lo, int hi, const T &v)
+        : root(0, MAXC, v), low(lo), high(hi), left(NULL), right(NULL) {}
+  } *root;
+
+  T init;
+
+  // Helper variables for query() and update().
+  int tgt_r1, tgt_c1, tgt_r2, tgt_c2, width;
+
+  template<class node_t>
+  inline T call_query(node_t *n, int area) {
+    return (n != NULL) ? query(n) : join_region(init, area);
+  }
+
+  T query(inner_node_t *n) {
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    if (tgt_c1 <= lo && hi <= tgt_c2) {
+      T res = n->value;
+      if (tgt_c1 < lo) {
+        res = join_values(res, join_region(init, lo - tgt_c1 + 1));
+      }
+      if (hi < tgt_c2) {
+        res = join_values(res, join_region(init, tgt_c2 - hi + 1));
+      }
+      return res;
+    } else if (tgt_c2 <= mid) {
+      return call_query(n->left, tgt_c2 - tgt_c1 + 1);
+    } else if (mid < tgt_c1) {
+      return call_query(n->right, tgt_c2 - tgt_c1 + 1);
+    }
+    return join_values(
+        call_query(n->left, std::min(tgt_c2, mid) - tgt_c1 + 1),
+        call_query(n->right, tgt_c2 - std::max(tgt_c1, mid + 1) + 1));
+  }
+
+  T query(outer_node_t *n) {
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    if (tgt_r1 <= lo && hi <= tgt_r2) {
+      T res = query(&(n->root));
+      if (tgt_r1 < lo) {
+        res = join_values(res, join_region(init, width*(lo - tgt_r1 + 1)));
+      }
+      if (hi < tgt_r2) {
+        res = join_values(res, join_region(init, width*(tgt_r2 - hi + 1)));
+      }
+      return res;
+    } else if (tgt_r2 <= mid) {
+      return call_query(n->left, tgt_r2 - tgt_r1 + 1);
+    } else if (mid < tgt_r1) {
+      return call_query(n->right, tgt_r2 - tgt_r1 + 1);
+    }
+    return join_values(
+        call_query(n->left, width*(std::min(tgt_r2, mid) - tgt_r1 + 1)),
+        call_query(n->right, width*(tgt_r2 - std::max(tgt_r1, mid + 1) + 1)));
+  }
+
+  void update(inner_node_t *n, int c, const T &d, bool leaf_row) {
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    if (lo == hi) {
+      if (leaf_row) {
+        n->value = join_value_with_delta(n->value, d);
+      } else {
+        n->value = d;
+      }
+      return;
+    }
+    inner_node_t *&target = (c <= mid) ? n->left : n->right;
+    if (target == NULL) {
+      target = new inner_node_t(c, c, init);
+    }
+    if (target->low <= c && c <= target->high) {
+      update(target, c, d, leaf_row);
+    } else {
+      do {
+        if (c <= mid) {
+          hi = mid;
+        } else {
+          lo = mid + 1;
+        }
+        mid = lo + (hi - lo)/2;
+      } while ((c <= mid) == (target->low <= mid));
+      inner_node_t *tmp = new inner_node_t(lo, hi, init);
+      if (target->low <= mid) {
+        tmp->left = target;
+      } else {
+        tmp->right = target;
+      }
+      target = tmp;
+      update(tmp, c, d, leaf_row);
+    }
+    T left_value = (n->left != NULL) ? n->left->value
+                                     : join_region(init, mid - lo + 1);
+    T right_value = (n->right != NULL) ? n->right->value
+                                       : join_region(init, hi - mid);
+    n->value = join_values(left_value, right_value);
+  }
+
+  void update(outer_node_t *n, int r, int c, const T &d) {
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    if (lo == hi) {
+      update(&(n->root), c, d, true);
+      return;
+    }
+    if (r <= mid) {
+      if (n->left == NULL) {
+        n->left = new outer_node_t(lo, mid, init);
+      }
+      update(n->left, r, c, d);
+    } else {
+      if (n->right == NULL) {
+        n->right = new outer_node_t(mid + 1, hi, init);
+      }
+      update(n->right, r, c, d);
+    }
+    T value = join_region(init, hi - lo + 1);
+    if (n->left != NULL || n->right != NULL) {
+      tgt_c1 = tgt_c2 = c;
+      T left_value = (n->left != NULL) ? query(&(n->left->root))
+                                       : join_region(init, mid - lo + 1);
+      T right_value = (n->right != NULL) ? query(&(n->right->root))
+                                         : join_region(init, hi - mid);
+      value = join_values(left_value, right_value);
+    }
+    update(&(n->root), c, value, false);
+  }
+
+  static void clean_up(inner_node_t *n) {
+    if (n != NULL) {
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+  static void clean_up(outer_node_t *n) {
+    if (n != NULL) {
+      clean_up(n->root.left);
+      clean_up(n->root.right);
+      clean_up(n->left);
+      clean_up(n->right);
+      delete n;
+    }
+  }
+
+ public:
+  segment_tree_2d(const T &v = T())
+      : root(new outer_node_t(0, MAXR, v)), init(v) {}
+
+  ~segment_tree_2d() {
+    clean_up(root);
+  }
+
+  T at(int r, int c) {
+    return query(r, c, r, c);
+  }
+
+  T query(int r1, int c1, int r2, int c2) {
+    tgt_r1 = r1;
+    tgt_c1 = c1;
+    tgt_r2 = r2;
+    tgt_c2 = c2;
+    width = c2 - c1;
+    return query(root);
+  }
+
+  void update(int r, int c, const T &d) {
+    update(root, r, c, d);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values:
+7 6 0
+5 4 0
+0 1 9
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  segment_tree_2d<int> t(0);
+  t.update(0, 0, 7);
+  t.update(0, 1, 6);
+  t.update(1, 0, 5);
+  t.update(1, 1, 4);
+  t.update(2, 1, 1);
+  t.update(2, 2, 9);
+  cout << "Values:" << endl;
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      cout << t.at(i, j) << " ";
+    }
+    cout << endl;
+  }
+  assert(t.query(0, 0, 0, 1) == 6);
+  assert(t.query(0, 0, 1, 0) == 5);
+  assert(t.query(1, 1, 2, 2) == 0);
+  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
+  t.update(500000000, 500000000, -100);
+  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
+  return 0;
+}
+\end{lstlisting}
+\subsection{2D Range Tree}
+\begin{lstlisting}
+/*
+
+Maintain a set of two-dimensional points while supporting queries for all points
+that fall inside given rectangular regions. This implementation uses std::pair
+to represent points, requiring operators < and == to be defined on the numeric
+template type.
+
+- range_tree(lo, hi) constructs a set from two random-access iterators to
+  std::pair as a range [lo, hi) of points.
+- query(x1, y1, x2, y2, f) calls the function f(i, p) on each point in the set
+  that falls into the rectangular region consisting of rows from x1 to x2,
+  inclusive, and columns from y1 to y2, inclusive. The first argument to f is
+  the zero-based index of the point in the original range given to the
+  constructor. The second argument is the point itself as an std::pair.
+
+Time Complexity:
+- O(n log n) per call to the constructor, where n is the number of points.
+- O(log^2(n) + m) per call to query(), where m is the number of points that are
+  reported by the query.
+
+Space Complexity:
+- O(n log n) for storage of the points.
+- O(log^2(n)) auxiliary stack space for query().
+
+*/
+
+#include <algorithm>
+#include <iterator>
+#include <utility>
+#include <vector>
+
+template<class T>
+class range_tree {
+  typedef std::pair<T, T> point;
+  typedef std::pair<int, T> colindex;
+
+  std::vector<point> points;
+  std::vector<std::vector<colindex> > columns;
+
+  static inline bool comp1(const colindex &a, const colindex &b) {
+    return a.second < b.second;
+  }
+
+  static inline bool comp2(const colindex &a, const T &v) {
+    return a.second < v;
+  }
+
+  void build(int n, int lo, int hi) {
+    if (points[lo].first == points[hi].first) {
+      for (int i = lo; i <= hi; i++) {
+        columns[n].push_back(point(i, points[i].second));
+      }
+      return;
+    }
+    int l = n*2 + 1, r = n*2 + 2, mid = lo + (hi - lo)/2;
+    build(l, lo, mid);
+    build(r, mid + 1, hi);
+    columns[n].resize(columns[l].size() + columns[r].size());
+    std::merge(columns[l].begin(), columns[l].end(),
+               columns[r].begin(), columns[r].end(),
+               columns[n].begin(), comp1);
+  }
+
+  // Helper variables for query().
+  T x1, y1, x2, y2;
+
+  template<class ReportFunction>
+  void query(int n, int lo, int hi, ReportFunction f) {
+    if (points[hi].first < x1 || x2 < points[lo].first) {
+      return;
+    }
+    if (!(points[lo].first < x1 || x2 < points[hi].first)) {
+      if (!columns[n].empty() && !(y2 < y1)) {
+        typename std::vector<point>::iterator it;
+        it = std::lower_bound(columns[n].begin(), columns[n].end(), y1, comp2);
+        for (; it != columns[n].end() && it->second <= y2; ++it) {
+          f(it->first, points[it->first]);
+        }
+      }
+    } else if (lo != hi) {
+      int mid = lo + (hi - lo)/2;
+      query(n*2 + 1, lo, mid, f);
+      query(n*2 + 2, mid + 1, hi, f);
+    }
+  }
+
+ public:
+  template<class It>
+  range_tree(It lo, It hi) : points(lo, hi) {
+    int n = std::distance(lo, hi);
+    columns.resize(4*n + 1);
+    std::sort(points.begin(), points.end());
+    build(0, 0, n - 1);
+  }
+
+  template<class ReportFunction>
+  void query(const T &x1, const T &y1, const T &x2, const T &y2,
+             ReportFunction f) {
+    this->x1 = x1;
+    this->y1 = y1;
+    this->x2 = x2;
+    this->y2 = y2;
+    query(0, 0, points.size() - 1, f);
+  }
+};
+
+/*** Example Usage and Output:
+
+(-1, -1) (2, -1) (2, 2) (1, 4)
+(1, 4) (2, 2) (3, 1)
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void print(int i, const pair<int, int> &p) {
+  cout << "(" << p.first << ", " << p.second << ") ";
+}
+
+int main() {
+  const int n = 10;
+  int points[n][2] = {{1, 4}, {5, 4}, {2, 2}, {3, 1}, {6, -5}, {5, -1},
+                      {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
+  vector<pair<int, int> > v;
+  for (int i = 0; i < n; i++) {
+    v.push_back(make_pair(points[i][0], points[i][1]));
+  }
+  range_tree<int> t(v.begin(), v.end());
+  t.query(-1, -1, 2, 5, print);
+  cout << endl;
+  t.query(1, 1, 4, 8, print);
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{K-d Tree (2D Range Query)}
+\begin{lstlisting}
+/*
+
+Maintain a set of two-dimensional points while supporting queries for all points
+that fall inside given rectangular regions. This implementation uses std::pair
+to represent points, requiring operators < and == to be defined on the numeric
+template type.
+
+- kd_tree(lo, hi) constructs a set from two random-access iterators to std::pair
+  as a range [lo, hi) of points.
+- query(x1, y1, x2, y2, f) calls the function f(i, p) on each point in the set
+  that falls into the rectangular region consisting of rows from x1 to x2,
+  inclusive, and columns from y1 to y2, inclusive. The first argument to f is
+  the zero-based index of the point in the original range given to the
+  constructor. The second argument is the point itself as an std::pair.
+
+Time Complexity:
+- O(n log n) per call to the constructor, where n is the number of points.
+- O(log(n) + m) on average per call to query(), where m is the number of points
+  that are reported by the query.
+
+Space Complexity:
+- O(n) for storage of the points.
+- O(log n) auxiliary stack space for query().
+
+*/
+
+#include <algorithm>
+#include <utility>
+#include <vector>
+
+template<class T>
+class kd_tree {
+  typedef std::pair<T, T> point;
+
+  static inline bool comp1(const point &a, const point &b) {
+    return a.first < b.first;
+  }
+
+  static inline bool comp2(const point &a, const point &b) {
+    return a.second < b.second;
+  }
+
+  std::vector<point> tree, minp, maxp;
+  std::vector<int> l_index, h_index;
+
+  void build(int lo, int hi, bool div_x) {
+    if (lo >= hi) {
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    std::nth_element(tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
+                     div_x ? comp1 : comp2);
+    l_index[mid] = lo;
+    h_index[mid] = hi;
+    minp[mid].first = maxp[mid].first = tree[lo].first;
+    minp[mid].second = maxp[mid].second = tree[lo].second;
+    for (int i = lo + 1; i < hi; i++) {
+      minp[mid].first = std::min(minp[mid].first, tree[i].first);
+      minp[mid].second = std::min(minp[mid].second, tree[i].second);
+      maxp[mid].first = std::max(maxp[mid].first, tree[i].first);
+      maxp[mid].second = std::max(maxp[mid].second, tree[i].second);
+    }
+    build(lo, mid, !div_x);
+    build(mid + 1, hi, !div_x);
+  }
+
+  // Helper variables for query().
+  T x1, y1, x2, y2;
+
+  template<class ReportFunction>
+  void query(int lo, int hi, ReportFunction f) {
+    if (lo >= hi) {
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    T ax = minp[mid].first, ay = minp[mid].second;
+    T bx = maxp[mid].first, by = maxp[mid].second;
+    if (x2 < ax || bx < x1 || y2 < ay || by < y1) {
+      return;
+    }
+    if (!(ax < x1 || x2 < bx || ay < y1 || y2 < by)) {
+      for (int i = l_index[mid]; i < h_index[mid]; i++) {
+        f(tree[i]);
+      }
+      return;
+    }
+    query(lo, mid, f);
+    query(mid + 1, hi, f);
+    if (tree[mid].first < x1 || x2 < tree[mid].first ||
+        tree[mid].second < y1 || y2 < tree[mid].second) {
+      return;
+    }
+    f(tree[mid]);
+  }
+
+ public:
+  template<class It>
+  kd_tree(It lo, It hi) : tree(lo, hi) {
+    int n = std::distance(lo, hi);
+    l_index.resize(n);
+    h_index.resize(n);
+    minp.resize(n);
+    maxp.resize(n);
+    build(0, n, true);
+  }
+
+  template<class ReportFunction>
+  void query(const T &x1, const T &y1, const T &x2, const T &y2,
+             ReportFunction f) {
+    this->x1 = x1;
+    this->y1 = y1;
+    this->x2 = x2;
+    this->y2 = y2;
+    query(0, tree.size(), f);
+  }
+};
+
+/*** Example Usage and Output:
+
+(2, -1) (1, 4) (2, 2) (-1, -1)
+(1, 4) (2, 2) (3, 1)
+
+***/
+
+#include <iostream>
+using namespace std;
+
+void print(const pair<int, int> &p) {
+  cout << "(" << p.first << ", " << p.second << ") ";
+}
+
+int main() {
+  const int n = 10;
+  int points[n][2] = {{1, 4}, {5, 4}, {2, 2}, {3, 1}, {6, -5}, {5, -1},
+                      {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
+  vector<pair<int, int> > v;
+  for (int i = 0; i < n; i++) {
+    v.push_back(make_pair(points[i][0], points[i][1]));
+  }
+  kd_tree<int> t(v.begin(), v.end());
+  t.query(-1, -1, 2, 5, print);
+  cout << endl;
+  t.query(1, 1, 4, 8, print);
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{K-d Tree (Nearest Neighbor)}
+\begin{lstlisting}
+/*
+
+Maintain a set of two-dimensional points while supporting queries for the
+closest point in the set to a given query point. This implementation uses
+std::pair to represent points, requiring operators <, ==, -, and long double
+casting to be defined on the numeric template type.
+
+- kd_tree(lo, hi) constructs a set from two random-access iterators to std::pair
+  as a range [lo, hi) of points.
+- nearest(x, y, can_equal) returns a point in the set that is closest to (x, y)
+  by Euclidean distance. This may be equal to (x, y) only if can_equal is true.
+
+Time Complexity:
+- O(n log n) per call to the constructor, where n is the number of points.
+- O(log n) on average per call to nearest().
+
+Space Complexity:
+- O(n) for storage of the points.
+- O(log n) auxiliary stack space for nearest().
+
+*/
+
+#include <algorithm>
+#include <limits>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+template<class T>
+class kd_tree {
+  typedef std::pair<T, T> point;
+
+  static inline bool comp1(const point &a, const point &b) {
+    return a.first < b.first;
+  }
+
+  static inline bool comp2(const point &a, const point &b) {
+    return a.second < b.second;
+  }
+
+  std::vector<point> tree;
+  std::vector<bool> div_x;
+
+  void build(int lo, int hi) {
+    if (lo >= hi) {
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    T minx, maxx, miny, maxy;
+    minx = maxx = tree[lo].first;
+    miny = maxy = tree[lo].second;
+    for (int i = lo + 1; i < hi; i++) {
+      minx = std::min(minx, tree[i].first);
+      miny = std::min(miny, tree[i].second);
+      maxx = std::max(maxx, tree[i].first);
+      maxy = std::max(maxy, tree[i].second);
+    }
+    div_x[mid] = !((maxx - minx) < (maxy - miny));
+    std::nth_element(tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
+                     div_x[mid] ? comp1 : comp2);
+    if (lo + 1 == hi) {
+      return;
+    }
+    build(lo, mid);
+    build(mid + 1, hi);
+  }
+
+  // Helper variables for nearest().
+  long double min_dist;
+  int id;
+
+  void nearest(int lo, int hi, const T &x, const T &y, bool can_equal) {
+    if (lo >= hi) {
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    T dx = x - tree[mid].first, dy = y - tree[mid].second;
+    long double d = dx*(long double)dx + dy*(long double)dy;
+    if (d < min_dist && (can_equal || d != 0)) {
+      min_dist = d;
+      id = mid;
+    }
+    if (lo + 1 == hi) {
+      return;
+    }
+    d = (long double)(div_x[mid] ? dx : dy);
+    int l1 = lo, r1 = mid, l2 = mid + 1, r2 = hi;
+    if (d > 0) {
+      std::swap(l1, l2);
+      std::swap(r1, r2);
+    }
+    nearest(l1, r1, x, y, can_equal);
+    if (d*(long double)d < min_dist) {
+      nearest(l2, r2, x, y, can_equal);
+    }
+  }
+
+ public:
+  template<class It>
+  kd_tree(It lo, It hi) : tree(lo, hi) {
+    int n = std::distance(lo, hi);
+    if (n <= 1) {
+      throw std::runtime_error("K-d tree must be have at least 2 points.");
+    }
+    div_x.resize(n);
+    build(0, n);
+  }
+
+  point nearest(const T &x, const T &y, bool can_equal = true) {
+    min_dist = std::numeric_limits<long double>::max();
+    nearest(0, tree.size(), x, y, can_equal);
+    return tree[id];
+  }
+};
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  pair<int, int> p[3];
+  p[0] = make_pair(0, 2);
+  p[1] = make_pair(0, 3);
+  p[2] = make_pair(-1, 0);
+  kd_tree<int> t(p, p + 3);
+  assert(t.nearest(0, 2, true) == make_pair(0, 2));
+  assert(t.nearest(0, 2, false) == make_pair(0, 3));
+  assert(t.nearest(0, 0) == make_pair(-1, 0));
+  assert(t.nearest(-10000, 0) == make_pair(-1, 0));
+  return 0;
+}
+\end{lstlisting}
+\subsection{R-Tree (Nearest Segment)}
+\begin{lstlisting}
+/*
+
+Maintain a set of two-dimensional line segments while supporting queries for the
+closest segment in the set to a given query point. This implementation uses
+integer points and long doubles for intermediate calculations.
+
+- r_tree(lo, hi) constructs a set from two random-access iterators as a range
+  [lo, hi) of segments.
+- nearest(x, y) returns a segment in the set that contains some point which is
+  as close or closer to (x, y) by Euclidean distance than any point on any
+  other segment in the set.
+
+Time Complexity:
+- O(n log n) per call to the constructor, where n is the number of segments.
+- O(log n) on average per call to nearest().
+
+Space Complexity:
+- O(n) for storage of the segments.
+- O(log n) auxiliary stack space for nearest().
+
+*/
+
+#include <algorithm>
+#include <limits>
+#include <stdexcept>
+#include <vector>
+
+struct segment {
+  int x1, y1, x2, y2;
+
+  segment() : x1(0), y1(0), x2(0), y2(0) {}
+  segment(int x1, int y1, int x2, int y2) : x1(x1), y1(y1), x2(x2), y2(y2) {}
+
+  bool operator==(const segment &s) const {
+    return (x1 == s.x1) && (y1 == s.y1) && (x2 == s.x2) && (y2 == s.y2);
+  }
+};
+
+class r_tree {
+  static inline bool cmp_x(const segment &a, const segment &b) {
+    return a.x1 + a.x2 < b.x1 + b.x2;
+  }
+
+  static inline bool cmp_y(const segment &a, const segment &b) {
+    return a.y1 + a.y2 < b.y1 + b.y2;
+  }
+
+  static inline int seg_dist(int v, int lo, int hi) {
+    return (v <= lo) ? (lo - v) : (v >= hi ? v - hi : 0);
+  }
+
+  static long double point_to_segment_squared(int x, int y, const segment &s) {
+    long long dx = s.x2 - s.x1, dy = s.y2 - s.y1;
+    long long px = x - s.x1, py = y - s.y1;
+    long long sqdist = dx*dx + dy*dy;
+    long long dot = dx*px + dy*py;
+    if (dot <= 0 || sqdist == 0) {
+      return px*px + py*py;
+    }
+    if (dot >= sqdist) {
+      return (px - dx)*(px - dx) + (py - dy)*(py - dy);
+    }
+    double q = (double)dot / sqdist;
+    return (px - q*dx)*(px - q*dx) + (py - q*dy)*(py - q*dy);
+  }
+
+  std::vector<segment> tree;
+  std::vector<int> minx, maxx, miny, maxy;
+
+  void build(int lo, int hi, bool div_x) {
+    if (lo >= hi) {
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    std::nth_element(tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
+                     div_x ? cmp_x : cmp_y);
+    for (int i = lo; i < hi; i++) {
+      minx[mid] = std::min(minx[mid], std::min(tree[i].x1, tree[i].x2));
+      miny[mid] = std::min(miny[mid], std::min(tree[i].y1, tree[i].y2));
+      maxx[mid] = std::max(maxx[mid], std::max(tree[i].x1, tree[i].x2));
+      maxy[mid] = std::max(maxy[mid], std::max(tree[i].y1, tree[i].y2));
+    }
+    build(lo, mid, !div_x);
+    build(mid + 1, hi, !div_x);
+  }
+
+  // Helper variables for nearest().
+  double min_dist;
+  int id;
+
+  void nearest(int lo, int hi, int x, int y, bool div_x) {
+    if (lo >= hi) {
+      return;
+    }
+    int mid = lo + (hi - lo)/2;
+    long double d = point_to_segment_squared(x, y, tree[mid]);
+    if (min_dist > d) {
+      min_dist = d;
+      id = mid;
+    }
+    long long delta = div_x ? (2*x - tree[mid].x1 - tree[mid].x2)
+                            : (2*y - tree[mid].y1 - tree[mid].y2);
+    if (delta <= 0) {
+      nearest(lo, mid, x, y, !div_x);
+      if (mid + 1 < hi) {
+        int mid1 = (mid + hi + 1)/2;
+        long long dist = div_x ? seg_dist(x, minx[mid1], maxx[mid1])
+                               : seg_dist(y, miny[mid1], maxy[mid1]);
+        if (dist*dist < min_dist) {
+          nearest(mid + 1, hi, x, y, !div_x);
+        }
+      }
+    } else {
+      nearest(mid + 1, hi, x, y, !div_x);
+      if (lo < mid) {
+        int mid1 = lo + (mid - lo)/2;
+        long long dist = div_x ? seg_dist(x, minx[mid1], maxx[mid1]) :
+                                 seg_dist(y, miny[mid1], maxy[mid1]);
+        if (dist*dist < min_dist) {
+          nearest(lo, mid, x, y, !div_x);
+        }
+      }
+    }
+  }
+
+ public:
+  template<class It>
+  r_tree(It lo, It hi) : tree(lo, hi) {
+    int n = std::distance(lo, hi);
+    if (n <= 1) {
+      throw std::runtime_error("R-tree must be have at least 2 segments.");
+    }
+    minx.assign(n, std::numeric_limits<int>::max());
+    maxx.assign(n, std::numeric_limits<int>::min());
+    miny.assign(n, std::numeric_limits<int>::max());
+    maxy.assign(n, std::numeric_limits<int>::min());
+    build(0, n, true);
+  }
+
+  segment nearest(int x, int y) {
+    min_dist = std::numeric_limits<long double>::max();
+    nearest(0, tree.size(), x, y, true);
+    return tree[id];
+  }
+};
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  segment s[4];
+  s[0] = segment(0, 0, 0, 4);
+  s[1] = segment(0, 4, 4, 4);
+  s[2] = segment(4, 4, 4, 0);
+  s[3] = segment(4, 0, 0, 0);
+  r_tree t(s, s + 4);
+  assert(t.nearest(-1, 2) == segment(0, 0, 0, 4));
+  assert(t.nearest(100, 100) == segment(4, 4, 4, 0));
+  return 0;
+}
+\end{lstlisting}
+
+\section{Fenwick Trees}
+\setcounter{section}{5}
+\setcounter{subsection}{0}
+\subsection{Fenwick Tree (Simple)}
+\begin{lstlisting}
+/*
+
+Maintain an array of numerical type, allowing for updates of individual indices
+(point update) and queries for the sum of contiguous sub-arrays (range queries).
+This implementation assumes that the array is 1-based (i.e. has valid indices
+from 1 to MAXN - 1, inclusive).
+
+- initialize() resets the data structure.
+- a[i] stores the value at index i.
+- add(i, x) adds x to the value at index i.
+- set(i, x) assigns the value at index i to x.
+- sum(hi) returns the sum of all values at indices from 1 to hi, inclusive.
+- sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+
+Time Complexity:
+- O(n) per call to initialize(), where n is the size of the array.
+- O(log n) per call to all other operations.
+
+Space Complexity:
+- O(n) for storage of the array elements.
+- O(1) auxiliary for all operations.
+
+*/
+
+const int MAXN = 1000;
+int a[MAXN + 1], t[MAXN + 1];
+
+void initialize() {
+  for (int i = 0; i <= MAXN; i++) {
+    a[i] = t[i] = 0;
+  }
+}
+
+void add(int i, int x) {
+  a[i] += x;
+  for (; i <= MAXN; i += i & -i) {
+    t[i] += x;
+  }
+}
+
+void set(int i, int x) {
+  add(i, x - a[i]);
+}
+
+int sum(int hi) {
+  int res = 0;
+  for (; hi > 0; hi -= hi & -hi) {
+    res += t[hi];
+  }
+  return res;
+}
+
+int sum(int lo, int hi) {
+  return sum(hi) - sum(lo - 1);
+}
+
+/*** Example Usage and Output:
+
+Values: 5 1 2 3 4
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  int v[] = {10, 1, 2, 3, 4};
+  initialize();
+  for (int i = 1; i <= 5; i++) {
+    set(i, v[i - 1]);
+  }
+  add(1, -5);
+  cout << "Values: ";
+  for (int i = 1; i <= 5; i++) {
+    cout << a[i] << " ";
+  }
+  cout << endl;
+  assert(sum(2, 4) == 6);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Fenwick Tree (Range Update, Point Query)}
+\begin{lstlisting}
+/*
+
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be
+simultaneously incremented by arbitrary values (range update) and values at
+individual indices to be queried (point query). This implementation assumes that
+the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
+
+- size() returns the size of the array.
+- at(i) returns the value at index i.
+- add(i, x) adds x to the value at index i.
+- add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
+
+Time Complexity:
+- O(n) per call to the constructor, where n is the size of the array.
+- O(1) per call to size().
+- O(log n) per call to at() and both add() functions.
+
+Space Complexity:
+- O(n) for storage of the array elements.
+- O(1) auxiliary for all operations.
+
+*/
+
+#include <vector>
+
+template<class T>
+class fenwick_tree {
+  int len;
+  std::vector<int> t;
+
+ public:
+  fenwick_tree(int n) : len(n), t(n + 2) {}
+
+  int size() const {
+    return len;
+  }
+
+  T at(int i) const {
+    T res = 0;
+    for (i++; i > 0; i -= i & -i) {
+      res += t[i];
+    }
+    return res;
+  }
+
+  void add(int i, const T &x) {
+    for (i++; i <= len + 1; i += i & -i) {
+      t[i] += x;
+    }
+  }
+
+  void add(int lo, int hi, const T &x) {
+    add(lo, x);
+    add(hi + 1, -x);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values: 5 10 15 10 10
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  fenwick_tree<int> t(5);
+  t.add(0, 1, 5);
+  t.add(1, 2, 5);
+  t.add(2, 4, 10);
+  cout << "Values: ";
+  for (int i = 0; i < t.size(); i++) {
+    cout << t.at(i) << " ";
+  }
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{Fenwick Tree (Point Update, Range Query)}
+\begin{lstlisting}
+/*
+
+Maintain an array of numerical type, allowing for updates of individual indices
+(point update) and queries for the sum of contiguous sub-arrays (range queries).
+This implementation assumes that the array is 0-based (i.e. has valid indices
+from 0 to size() - 1, inclusive).
+
+- size() returns the size of the array.
+- at(i) returns the value at index i.
+- add(i, x) adds x to the value at index i.
+- set(i, x) assigns the value at index i to x.
+- sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
+- sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+
+Time Complexity:
+- O(n) per call to the constructor, where n is the size of the array.
+- O(1) per call to size() and at().
+- O(log n) per call to add(), set(), and both sum() functions.
+
+Space Complexity:
+- O(n) for storage of the array elements.
+- O(1) auxiliary for all operations.
+
+*/
+
+#include <vector>
+
+template<class T>
+class fenwick_tree {
+  int len;
+  std::vector<int> a, t;
+
+ public:
+  fenwick_tree(int n) : len(n), a(n + 1), t(n + 1) {}
+
+  int size() const {
+    return len;
+  }
+
+  T at(int i) const {
+    return a[i + 1];
+  }
+
+  void add(int i, const T &x) {
+    a[++i] += x;
+    for (; i <= len; i += i & -i) {
+      t[i] += x;
+    }
+  }
+
+  void set(int i, const T &x) {
+    T inc = x - a[i + 1];
+    add(i, inc);
+  }
+
+  T sum(int hi) {
+    T res = 0;
+    for (hi++; hi > 0; hi -= hi & -hi) {
+      res += t[hi];
+    }
+    return res;
+  }
+
+  T sum(int lo, int hi) {
+    return sum(hi) - sum(lo - 1);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values: 5 1 2 3 4
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  int a[] = {10, 1, 2, 3, 4};
+  fenwick_tree<int> t(5);
+  for (int i = 0; i < 5; i++) {
+    t.set(i, a[i]);
+  }
+  t.add(0, -5);
+  cout << "Values: ";
+  for (int i = 0; i < t.size(); i++) {
+    cout << t.at(i) << " ";
+  }
+  cout << endl;
+  assert(t.sum(1, 3) == 6);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Fenwick Tree (Range Update, Range Query)}
+\begin{lstlisting}
+/*
+
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be
+simultaneously incremented by arbitrary values (range update) and queries for
+the sum of contiguous sub-arrays (range query). This implementation assumes that
+the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
+
+- size() returns the size of the array.
+- at(i) returns the value at index i.
+- add(i, x) increments the value at index i by x.
+- add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
+- set(i, x) assigns the value at index i to x.
+- sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
+- sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+
+Time Complexity:
+- O(n) per call to the constructor, where n is the size of the array.
+- O(1) per call to size().
+- O(log n) per call to all other operations.
+
+Space Complexity:
+- O(n) for storage of the array elements.
+- O(1) auxiliary for all operations.
+
+*/
+
+#include <vector>
+
+template<class T>
+class fenwick_tree {
+  int len;
+  std::vector<T> t1, t2;
+
+  T sum(const std::vector<T> &t, int i) {
+    T res = 0;
+    for (; i != 0; i -= i & -i) {
+      res += t[i];
+    }
+    return res;
+  }
+
+  void add(std::vector<T> &t, int i, const T &x) {
+    for (; i <= len + 1; i += i & -i) {
+      t[i] += x;
+    }
+  }
+
+ public:
+  fenwick_tree(int n) : len(n), t1(n + 2), t2(n + 2) {}
+
+  int size() const {
+    return len;
+  }
+
+  void add(int lo, int hi, const T &x) {
+    lo++;
+    hi++;
+    add(t1, lo, x);
+    add(t1, hi + 1, -x);
+    add(t2, lo, x*(lo - 1));
+    add(t2, hi + 1, -x*hi);
+  }
+
+  void add(int i, const T &x) {
+    return add(i, i, x);
+  }
+
+  void set(int i, const T &x) {
+    add(i, x - at(i));
+  }
+
+  T sum(int hi) {
+    hi++;
+    return hi*sum(t1, hi) - sum(t2, hi);
+  }
+
+  T sum(int lo, int hi) {
+    return sum(hi) - sum(lo - 1);
+  }
+
+  T at(int i) {
+    return sum(i, i);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values: 15 6 7 -5 4
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  int a[] = {10, 1, 2, 3, 4};
+  fenwick_tree<int> t(5);
+  for (int i = 0; i < t.size(); i++) {
+    t.set(i, a[i]);
+  }
+  t.add(0, 2, 5);
+  t.set(3, -5);
+  cout << "Values: ";
+  for (int i = 0; i < t.size(); i++) {
+    cout << t.at(i) << " ";
+  }
+  cout << endl;
+  assert(t.sum(0, 4) == 27);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Fenwick Tree (Compressed)}
+\begin{lstlisting}
+/*
+
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be
+simultaneously incremented by arbitrary values (range update) and queries for
+the sum of contiguous sub-arrays (range query). This implementation uses
+std::map for coordinate compression, allowing for large indices to be accessed
+with efficient space complexity. That is, all array indices from 0 to MAXN,
+inclusive, are accessible.
+
+- at(i) returns the value at index i.
+- add(i, x) adds x to the value at index i.
+- add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
+- set(i, x) assigns the value at index i to x.
+- sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
+- sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+
+Time Complexity:
+- O(log^2 MAXN) per call to all member functions. If std::map is replaced with
+  std::unordered_map, then the amortized running time will become O(log MAXN).
+
+Space Complexity:
+- O(n log MAXN) for storage of the array elements, where n is the number of
+  distinct indices that have been accessed across all of the operations so far.
+- O(1) auxiliary for all operations.
+
+*/
+
+#include <map>
+
+template<class T>
+class fenwick_tree {
+  static const int MAXN = 1000000001;
+  std::map<int, T> tmul, tadd;
+
+  void add_helper(int at, int mul, T add) {
+    for (int i = at; i <= MAXN; i |= i + 1) {
+      tmul[i] += mul;
+      tadd[i] += add;
+    }
+  }
+
+ public:
+  void add(int lo, int hi, const T &x) {
+    add_helper(lo, x, -x*(lo - 1));
+    add_helper(hi, -x, x*hi);
+  }
+
+  void add(int i, const T &x) {
+    return add(i, i, x);
+  }
+
+  void set(int i, const T &x) {
+    add(i, x - at(i));
+  }
+
+  T sum(int hi) {
+    T mul = 0, add = 0;
+    for (int i = hi; i >= 0; i = (i & (i + 1)) - 1) {
+      if (tmul.find(i) != tmul.end()) {
+        mul += tmul[i];
+      }
+      if (tadd.find(i) != tadd.end()) {
+        add += tadd[i];
+      }
+    }
+    return mul*hi + add;
+  }
+
+  T sum(int lo, int hi) {
+    return sum(hi) - sum(lo - 1);
+  }
+
+  T at(int i) {
+    return sum(i, i);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values: 15 6 7 -5 4
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  int a[] = {10, 1, 2, 3, 4};
+  fenwick_tree<int> t;
+  for (int i = 0; i < 5; i++) {
+    t.set(i, a[i]);
+  }
+  t.add(0, 2, 5);
+  t.set(3, -5);
+  cout << "Values: ";
+  for (int i = 0; i < 5; i++) {
+    cout << t.at(i) << " ";
+  }
+  cout << endl;
+  assert(t.sum(0, 4) == 27);
+  t.add(500000001, 500000010, 3);
+  t.add(500000011, 500000015, 5);
+  t.set(500000000, 10);
+  assert(t.sum(0, 1000000000) == 92);
+  return 0;
+}
+\end{lstlisting}
+\subsection{2D Fenwick Tree (Simple)}
+\begin{lstlisting}
+/*
+
+Maintain a 2D array of numerical type, allowing for updates of individual cells
+in the matrix (point update) and queries for the sum of rectangular sub-matrices
+(range query). This implementation assumes that array dimensions are 1-based
+(i.e. rows have valid indices from 1 to MAXR, inclusive, and columns have valid
+indices from 1 to MAXC, inclusive).
+
+- initialize() resets the data structure.
+- a[r][c] stores the value at index (r, c).
+- add(r, c, x) adds x to the value at index (r, c).
+- set(r, c, x) assigns x to the value at index (r, c).
+- sum(r, c) returns the sum of the rectangle with upper-left corner (1, 1) and
+  lower-right corner (r, c).
+- sum(r1, c1, r2, c2) returns the sum of the rectangle with upper-left corner
+  (r1, c1) and lower-right corner (r2, c2).
+
+Time Complexity:
+- O(n*m) per call to initialize(), where n is the number of rows and m is the
+  number of columns.
+- O(log(n)*log(m)) per call to all other operations.
+
+Space Complexity:
+- O(n*m) for storage of the array elements.
+- O(1) auxiliary for all operations.
+
+*/
+
+const int MAXR = 100, MAXC = 100;
+int a[MAXR + 1][MAXC + 1];
+int bits[MAXR + 1][MAXC + 1];
+
+void initialize() {
+  for (int i = 0; i <= MAXR; i++) {
+    for (int j = 0; j <= MAXC; j++) {
+      a[i][j] = bits[i][j] = 0;
+    }
+  }
+}
+
+void add(int r, int c, int x) {
+  a[r][c] += x;
+  for (int i = r; i <= MAXR; i += i & -i) {
+    for (int j = c; j <= MAXC; j += j & -j) {
+      bits[i][j] += x;
+    }
+  }
+}
+
+void set(int r, int c, int x) {
+  add(r, c, x - a[r][c]);
+}
+
+int sum(int r, int c) {
+  int res = 0;
+  for (int i = r; i > 0; i -= i & -i) {
+    for (int j = c; j > 0; j -= j & -j) {
+      res += bits[i][j];
+    }
+  }
+  return res;
+}
+
+int sum(int r1, int c1, int r2, int c2) {
+  return sum(r2, c2) + sum(r1 - 1, c1 - 1) -
+         sum(r1 - 1, c2) - sum(r2, c1 - 1);
+}
+
+/*** Example Usage and Output:
+
+Values:
+5 6 0
+3 0 0
+0 0 9
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  initialize();
+  set(1, 1, 5);
+  set(1, 2, 6);
+  set(2, 1, 7);
+  add(3, 3, 9);
+  add(2, 1, -4);
+  cout << "Values:" << endl;
+  for (int i = 1; i <= 3; i++) {
+    for (int j = 1; j <= 3; j++) {
+      cout << a[i][j] << " ";
+    }
+    cout << endl;
+  }
+  assert(sum(1, 1, 1, 2) == 11);
+  assert(sum(1, 1, 2, 1) == 8);
+  assert(sum(1, 1, 3, 3) == 23);
+  return 0;
+}
+\end{lstlisting}
+\subsection{2D Fenwick Tree (Compressed)}
+\begin{lstlisting}
+/*
+
+Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to
+be simultaneously incremented by arbitrary values (range update) and queries for
+the sum of rectangular sub-matrices (range query). This implementation uses
+std::map for coordinate compression, allowing for large indices to be accessed
+with efficient space complexity. That is, rows have valid indices from 0 to
+MAXR, inclusive, and columns have valid indices from 0 to MAXC, inclusive.
+
+- add(r, c, x) adds x to the value at index (r, c).
+- add(r1, c1, r2, c2, x) adds x to all indices in the rectangle with upper-left
+  corner (r1, c1) and lower-right corner (r2, c2).
+- set(r, c, x) assigns x to the value at index (r, c).
+- sum(r, c) returns the sum of the rectangle with upper-left corner (0, 0) and
+  lower-right corner (r, c).
+- sum(r1, c1, r2, c2) returns the sum of the rectangle with upper-left corner
+  (r1, c1) and lower-right corner (r2, c2).
+- at(r, c) returns the value at index (r, c).
+
+Time Complexity:
+- O(log^2(MAXR)*log^2(MAXC)) per call to all member functions. If std::map is
+  replaced with std::unordered_map, then the amortized running time will become
+  O(log(MAXR)*log(MAXC)).
+
+Space Complexity:
+- O(n*log(MAXR)*log(MAXC)) for storage of the array elements, where n is the
+  number of distinct indices that have been accessed across all of the
+  operations so far.
+- O(1) auxiliary for all operations.
+
+*/
+
+#include <map>
+#include <utility>
+
+template<class T>
+class fenwick_tree_2d {
+  static const int MAXR = 1000000001;
+  static const int MAXC = 1000000001;
+  std::map<std::pair<int, int>, T> t1, t2, t3, t4;
+
+  template<class Map>
+  void add(Map &tree, int r, int c, const T &x) {
+    for (int i = r + 1; i <= MAXR; i += i & -i) {
+      for (int j = c + 1; j <= MAXC; j += j & -j) {
+        tree[std::make_pair(i, j)] += x;
+      }
+    }
+  }
+
+  void add_helper(int r, int c, const T &x) {
+    add(t1, 0, 0, x);
+    add(t1, 0, c, -x);
+    add(t2, 0, c, x*c);
+    add(t1, r, 0, -x);
+    add(t3, r, 0, x*r);
+    add(t1, r, c, x);
+    add(t2, r, c, -x*c);
+    add(t3, r, c, -x*r);
+    add(t4, r, c, x*r*c);
+  }
+
+ public:
+  void add(int r1, int c1, int r2, int c2, const T &x) {
+    add_helper(r2 + 1, c2 + 1, x);
+    add_helper(r1, c2 + 1, -x);
+    add_helper(r2 + 1, c1, -x);
+    add_helper(r1, c1, x);
+  }
+
+  void add(int r, int c, const T &x) {
+    add(r, c, r, c, x);
+  }
+
+  void set(int r, int c, const T &x) {
+    add(r, c, x - at(r, c));
+  }
+
+  T sum(int r, int c) {
+    r++;
+    c++;
+    T s1 = 0, s2 = 0, s3 = 0, s4 = 0;
+    for (int i = r; i > 0; i -= i & -i) {
+      for (int j = c; j > 0; j -= j & -j) {
+        const std::pair<int, int> ij(i, j);
+        s1 += t1[ij];
+        s2 += t2[ij];
+        s3 += t3[ij];
+        s4 += t4[ij];
+      }
+    }
+    return s1*r*c + s2*r + s3*c + s4;
+  }
+
+  T sum(int r1, int c1, int r2, int c2) {
+    return sum(r2, c2) + sum(r1 - 1, c1 - 1) -
+           sum(r1 - 1, c2) - sum(r2, c1 - 1);
+  }
+
+  T at(int r, int c) {
+    return sum(r, c, r, c);
+  }
+};
+
+/*** Example Usage and Output:
+
+Values:
+5 6 0
+3 5 5
+0 5 14
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  fenwick_tree_2d<int> t;
+  t.set(0, 0, 5);
+  t.set(0, 1, 6);
+  t.set(1, 0, 7);
+  t.add(2, 2, 9);
+  t.add(1, 0, -4);
+  t.add(1, 1, 2, 2, 5);
+  cout << "Values:" << endl;
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      cout << t.at(i, j) << " ";
+    }
+    cout << endl;
+  }
+  assert(t.sum(0, 0, 0, 1) == 11);
+  assert(t.sum(0, 0, 1, 0) == 8);
+  assert(t.sum(1, 1, 2, 2) == 29);
+  t.set(500000000, 500000000, 100);
+  assert(t.sum(0, 0, 1000000000, 1000000000) == 143);
+  return 0;
+}
+\end{lstlisting}
+
+\section{Tree Data Structures}
+\setcounter{section}{6}
+\setcounter{subsection}{0}
+\subsection{Disjoint Set Forest (Simple)}
+\begin{lstlisting}
+/*
+
+Maintain a set of elements partitioned into non-overlapping subsets. Each
+partition is assigned a unique representative known as the parent, or root. The
+following implements two well-known optimizations known as union-by-rank and
+path compression. This version is simplified to only work on integer elements.
+
+- initialize() resets the data structure.
+- make_set(u) creates a new partition consisting of the single element u, which
+  must not have been previously added to the data structure.
+- find_root(u) returns the unique representative of the partition containing u.
+- is_united(u, v) returns whether elements u and v belong to the same partition.
+- unite(u, v) replaces the partitions containing u and v with a single new
+  partition consisting of the union of elements in the original partitions.
+
+A precondition to the last three operations is that make_set() must have been
+previously called on their arguments.
+
+Time Complexity:
+- O(1) per call to initialize() and make_set().
+- O(a(n)) per call to find_root(), is_united(), and unite(), where n is the
+  number of elements that has been added via make_set() so far, and a(n) is the
+  extremely slow growing inverse of the Ackermann function (effectively a very
+  small constant for all practical values of n).
+
+Space Complexity:
+- O(n) for storage of the disjoint set forest elements.
+- O(1) auxiliary for all operations.
+
+*/
+
+const int MAXN = 1000;
+int num_sets, root[MAXN], rank[MAXN];
+
+void initialize() {
+  num_sets = 0;
+}
+
+void make_set(int u) {
+  root[u] = u;
+  rank[u] = 0;
+  num_sets++;
+}
+
+int find_root(int u) {
+  if (root[u] != u) {
+    root[u] = find_root(root[u]);
+  }
+  return root[u];
+}
+
+bool is_united(int u, int v) {
+  return find_root(u) == find_root(v);
+}
+
+void unite(int u, int v) {
+  int ru = find_root(u), rv = find_root(v);
+  if (ru == rv) {
+    return;
+  }
+  num_sets--;
+  if (rank[ru] < rank[rv]) {
+    root[ru] = rv;
+  } else {
+    root[rv] = ru;
+    if (rank[ru] == rank[rv]) {
+      rank[ru]++;
+    }
+  }
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+
+int main() {
+  initialize();
+  for (char c = 'a'; c <= 'g'; c++) {
+    make_set(c);
+  }
+  unite('a', 'b');
+  unite('b', 'f');
+  unite('d', 'e');
+  unite('d', 'g');
+  assert(num_sets == 3);
+  assert(is_united('a', 'b'));
+  assert(!is_united('a', 'c'));
+  assert(!is_united('b', 'g'));
+  assert(is_united('e', 'g'));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Disjoint Set Forest (Compressed)}
+\begin{lstlisting}
+/*
+
+Maintain a set of elements partitioned into non-overlapping subsets using a
+collection of trees. Each partition is assigned a unique representative known as
+the parent, or root. The following implements two well-known optimizations known
+as union-by-rank and path compression. This version uses an std::map for storage
+and coordinate compression (thus, element types must meet the requirements of
+key types for std::map).
+
+- make_set(u) creates a new partition consisting of the single element u, which
+  must not have been previously added to the data structure.
+- is_united(u, v) returns whether elements u and v belong to the same partition.
+- unite(u, v) replaces the partitions containing u and v with a single new
+  partition consisting of the union of elements in the original partitions.
+- get_all_sets() returns all current partitions as a vector of vectors.
+
+A precondition to the last three operations is that make_set() must have been
+previously called on their arguments.
+
+Time Complexity:
+- O(1) per call to the constructor.
+- O(log n) per call to make_set(), where n is the number of elements that have
+  been added via make_set() so far.
+- O(a(n) log n) per call to is_united() and unite(), where n is the number of
+  elements that have been added via make_set() so far, and a(n) is the extremely
+  slow growing inverse of the Ackermann function (effectively a very small
+  constant for all practical values of n).
+- O(n) per call to get_all_sets().
+
+Space Complexity:
+- O(n) for storage of the disjoint set forest elements.
+- O(n) auxiliary heap space for get_all_sets().
+- O(1) auxiliary for all other operations.
+
+*/
+
+#include <map>
+#include <vector>
+
+template<class T>
+class disjoint_set_forest {
+  int num_elements, num_sets;
+  std::map<T, int> id;
+  std::vector<int> root, rank;
+
+  int find_root(int u) {
+    if (root[u] != u) {
+      root[u] = find_root(root[u]);
+    }
+    return root[u];
+  }
+
+ public:
+  disjoint_set_forest() : num_elements(0), num_sets(0) {}
+
+  int size() const {
+    return num_elements;
+  }
+
+  int sets() const {
+    return num_sets;
+  }
+
+  void make_set(const T &u) {
+    if (id.find(u) != id.end()) {
+      return;
+    }
+    id[u] = num_elements;
+    root.push_back(num_elements++);
+    rank.push_back(0);
+    num_sets++;
+  }
+
+  bool is_united(const T &u, const T &v) {
+    return find_root(id[u]) == find_root(id[v]);
+  }
+
+  void unite(const T &u, const T &v) {
+    int ru = find_root(id[u]), rv = find_root(id[v]);
+    if (ru == rv) {
+      return;
+    }
+    num_sets--;
+    if (rank[ru] < rank[rv]) {
+      root[ru] = rv;
+    } else {
+      root[rv] = ru;
+      if (rank[ru] == rank[rv]) {
+        rank[ru]++;
+      }
+    }
+  }
+
+  std::vector<std::vector<T> > get_all_sets() {
+    std::map<int, std::vector<T> > tmp;
+    for (typename std::map<T, int>::iterator it = id.begin(); it != id.end();
+         ++it) {
+      tmp[find_root(it->second)].push_back(it->first);
+    }
+    std::vector<std::vector<T> > res;
+    for (typename std::map<int, std::vector<T> >::iterator it = tmp.begin();
+         it != tmp.end(); ++it) {
+      res.push_back(it->second);
+    }
+    return res;
+  }
+};
+
+/*** Example Usage and Output:
+
+[a, b, f], [c], [d, e, g]
+
+***/
+
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  disjoint_set_forest<char> dsf;
+  for (char c = 'a'; c <= 'g'; c++) {
+    dsf.make_set(c);
+  }
+  dsf.unite('a', 'b');
+  dsf.unite('b', 'f');
+  dsf.unite('d', 'e');
+  dsf.unite('d', 'g');
+  assert(dsf.size() == 7);
+  assert(dsf.sets() == 3);
+  vector< vector<char> > s = dsf.get_all_sets();
+  for (int i = 0; i < (int)s.size(); i++) {
+    cout << (i > 0 ? ", [" : "[");
+    for (int j = 0; j < (int)s[i].size(); j++) {
+      cout << (j > 0 ? ", " : "") << s[i][j];
+    }
+    cout << "]";
+  }
+  cout << endl;
+  return 0;
+}
+\end{lstlisting}
+\subsection{Lowest Common Ancestor (Sparse Table)}
+\begin{lstlisting}
+/*
+
+Given a tree, determine the lowest common ancestor of any two nodes in the tree.
+The lowest common ancestor of two nodes u and v is the node that has the longest
+distance from the root while having both u and v as its descendant. A nodes is
+considered to be a descendant of itself. build() applies to a global,
+pre-populated adjacency list adj[] which must only consist of nodes numbered
+with integers between 0 (inclusive) and the total number of nodes (exclusive),
+as passed in the function argument.
+
+Time Complexity:
+- O(n log n) per call to build(), where n is the number of nodes.
+- O(log n) per call to lca().
+
+Space Complexity:
+- O(n log n) to store the sparse table, where n is the number of nodes.
+- O(n) auxiliary stack space for build().
+- O(1) auxiliary for lca().
+
+*/
+
+#include <vector>
+
+const int MAXN = 1000;
+std::vector<int> adj[MAXN], dp[MAXN];
+int len, timer, tin[MAXN], tout[MAXN];
+
+void dfs(int u, int p) {
+  tin[u] = timer++;
+  dp[u][0] = p;
+  for (int i = 1; i < len; i++) {
+    dp[u][i] = dp[dp[u][i - 1]][i - 1];
+  }
+  for (int j = 0; j < (int)adj[u].size(); j++) {
+    int v = adj[u][j];
+    if (v != p) {
+      dfs(v, u);
+    }
+  }
+  tout[u] = timer++;
+}
+
+void build(int nodes, int root = 0) {
+  len = 1;
+  while ((1 << len) <= nodes) {
+    len++;
+  }
+  for (int i = 0; i < nodes; i++) {
+    dp[i].resize(len);
+  }
+  timer = 0;
+  dfs(root, root);
+}
+
+bool is_ancestor(int parent, int child) {
+  return (tin[parent] <= tin[child]) && (tout[child] <= tout[parent]);
+}
+
+int lca(int u, int v) {
+  if (is_ancestor(u, v)) {
+    return u;
+  }
+  if (is_ancestor(v, u)) {
+    return v;
+  }
+  for (int i = len - 1; i >= 0; i--) {
+    if (!is_ancestor(dp[u][i], v)) {
+      u = dp[u][i];
+    }
+  }
+  return dp[u][0];
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  adj[0].push_back(1);
+  adj[1].push_back(0);
+  adj[1].push_back(2);
+  adj[2].push_back(1);
+  adj[3].push_back(1);
+  adj[1].push_back(3);
+  adj[0].push_back(4);
+  adj[4].push_back(0);
+  build(5, 0);
+  assert(lca(3, 2) == 1);
+  assert(lca(2, 4) == 0);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Lowest Common Ancestor (Segment Tree)}
+\begin{lstlisting}
+/*
+
+Given a tree, determine the lowest common ancestor of any two nodes in the tree.
+The lowest common ancestor of two nodes u and v is the node that has the longest
+distance from the root while having both u and v as its descendant. A nodes is
+considered to be a descendant of itself. build() applies to a global,
+pre-populated adjacency list adj[] which must only consist of nodes numbered
+with integers between 0 (inclusive) and the total number of nodes (exclusive),
+as passed in the function argument.
+
+Time Complexity:
+- O(n log n) per call to build(), where n is the number of nodes.
+- O(log n) per call to lca().
+
+Space Complexity:
+- O(n) for storage of the segment tree, where n is the number of nodes.
+- O(n log n) auxiliary stack space for build().
+- O(log n) auxiliary stack space for lca().
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+const int MAXN = 1000;
+std::vector<int> adj[MAXN];
+int len, counter, depth[MAXN], dfs_order[2*MAXN], first[MAXN], minpos[8*MAXN];
+
+void dfs(int u, int d) {
+  depth[u] = d;
+  dfs_order[counter++] = u;
+  for (int j = 0; j < (int)adj[u].size(); j++) {
+    int v = adj[u][j];
+    if (depth[v] == -1) {
+      dfs(v, d + 1);
+      dfs_order[counter++] = u;
+    }
+  }
+}
+
+void build(int n, int lo, int hi) {
+  if (lo == hi) {
+    minpos[n] = dfs_order[lo];
+    return;
+  }
+  int lchild = 2*n + 1, rchild = 2*n + 2, mid = lo + (hi - lo)/2;
+  build(lchild, lo, mid);
+  build(rchild, mid + 1, hi);
+  minpos[n] = depth[minpos[lchild]] < depth[minpos[rchild]] ? minpos[lchild]
+                                                            : minpos[rchild];
+}
+
+void build(int nodes, int root) {
+  std::fill(depth, depth + nodes, -1);
+  std::fill(first, first + nodes, -1);
+  len = 2*nodes - 1;
+  counter = 0;
+  dfs(root, 0);
+  build(0, 0, len - 1);
+  for (int i = 0; i < len; i++) {
+    if (first[dfs_order[i]] == -1) {
+      first[dfs_order[i]] = i;
+    }
+  }
+}
+
+int get_minpos(int a, int b, int n, int lo, int hi) {
+  if (a == lo && b == hi) {
+    return minpos[n];
+  }
+  int mid = lo + (hi - lo)/2;
+  if (a <= mid && mid < b) {
+    int p1 = get_minpos(a, std::min(b, mid), 2*n + 1, lo, mid);
+    int p2 = get_minpos(std::max(a, mid + 1), b, 2*n + 2, mid + 1, hi);
+    return depth[p1] < depth[p2] ? p1 : p2;
+  }
+  if (a <= mid) {
+    return get_minpos(a, std::min(b, mid), 2*n + 1, lo, mid);
+  }
+  return get_minpos(std::max(a, mid + 1), b, 2*n + 2, mid + 1, hi);
+}
+
+int lca(int u, int v) {
+  return get_minpos(std::min(first[u], first[v]), std::max(first[u], first[v]),
+                    0, 0, len - 1);
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  adj[0].push_back(1);
+  adj[1].push_back(0);
+  adj[1].push_back(2);
+  adj[2].push_back(1);
+  adj[3].push_back(1);
+  adj[1].push_back(3);
+  adj[0].push_back(4);
+  adj[4].push_back(0);
+  build(5, 0);
+  assert(lca(3, 2) == 1);
+  assert(lca(2, 4) == 0);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Heavy Light Decomposition}
+\begin{lstlisting}
+/*
+
+Maintain a tree with values associated with either its edges or nodes, while
+supporting both dynamic queries and dynamic updates of all values on a given
+path between two nodes in the tree. Heavy-light decomposition partitions the
+nodes of the tree into disjoint paths where all nodes have degree two, except
+the endpoints of a path which has degree one.
+
+The query operation is defined by an associative join_values() function which
+satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
+for all values x, y, and z in the tree. The default code below assumes a
+numerical tree type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case the join_values()
+function should be defined to return "a + b".
+
+The update operation is defined by the join_value_with_delta() and join_deltas()
+functions, which determines the change made to values. These must satisfy:
+- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
+- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
+  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
+- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
+  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
+  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
+The default code below defines updates that "set" a path's edges or nodes to a
+new value. Another possible update operation is "increment", in which case
+join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
+join_deltas(d1, d2) should be defined to return "d1 + d2".
+
+- heavy_light(n, adj[], v) constructs a new heavy light decomposition on a tree
+  with n nodes defined by the adjacency list adj[], with all values initialized
+  to v. The adjacency list must be a size n array of vectors consisting of only
+  the integers from 0 to n - 1, inclusive. No duplicate edges should exist, and
+  the graph must be connected.
+- query(u, v) returns the result of join_values() applied to all values on the
+  path from node u to node v.
+- update(u, v, d) modifies all values on the path from node u to node v by
+  respectively joining them with d using join_value_with_delta().
+
+Time Complexity:
+- O(n) per call to the constructor, where n is the number of nodes.
+- O(log n) per call to query() and update();
+
+Space Complexity:
+- O(n) for storage of the decomposition.
+- O(n) auxiliary stack space for the constructor.
+- O(1) auxiliary for query() and update().
+
+*/
+
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
+
+template<class T>
+class heavy_light {
+  // Set this to true to store values on edges, false to store values on nodes.
+  static const bool VALUES_ON_EDGES = true;
+
+  static T join_values(const T &a, const T &b) {
+    return std::min(a, b);
+  }
+
+  static T join_value_with_delta(const T &v, const T &d, int len) {
+    return d;
+  }
+
+  static T join_deltas(const T &d1, const T &d2) {
+    return d2;  // For "set" updates, the more recent delta prevails.
+  }
+
+  int counter, paths;
+  std::vector<std::vector<T> > value, delta;
+  std::vector<std::vector<bool> > pending;
+  std::vector<std::vector<int> > len;
+  std::vector<int> size, parent, tin, tout, path, pathlen, pathpos, pathroot;
+  std::vector<int> *adj;
+
+  void dfs(int u, int p) {
+    tin[u] = counter++;
+    parent[u] = p;
+    size[u] = 1;
+    for (int j = 0; j < (int)adj[u].size(); j++) {
+      int v = adj[u][j];
+      if (v != p) {
+        dfs(v, u);
+        size[u] += size[v];
+      }
+    }
+    tout[u] = counter++;
+  }
+
+  int new_path(int u) {
+    pathroot[paths] = u;
+    return paths++;
+  }
+
+  void build_paths(int u, int path) {
+    this->path[u] = path;
+    pathpos[u] = pathlen[path]++;
+    for (int j = 0; j < (int)adj[u].size(); j++) {
+      int v = adj[u][j];
+      if (v != parent[u]) {
+        build_paths(v, (2*size[v] >= size[u]) ? path : new_path(v));
+      }
+    }
+  }
+
+  inline T join_value_with_delta(int path, int i) {
+    return pending[path][i]
+        ? join_value_with_delta(value[path][i], delta[path][i], len[path][i])
+        : value[path][i];
+  }
+
+  void push_delta(int path, int i) {
+    int d = 0;
+    while ((i >> d) > 0) {
+      d++;
+    }
+    for (d -= 2; d >= 0; d--) {
+      int l = (i >> d), r = (l ^ 1), n = l/2;
+      if (pending[path][n]) {
+        value[path][n] = join_value_with_delta(path, n);
+        delta[path][l] =
+            pending[path][l] ? join_deltas(delta[path][l], delta[path][n])
+                             : delta[path][n];
+        delta[path][r] =
+            pending[path][r] ? join_deltas(delta[path][r], delta[path][n])
+                             : delta[path][n];
+        pending[path][l] = pending[path][r] = true;
+        pending[path][n] = false;
+      }
+    }
+  }
+
+  bool query(int path, int u, int v, T *res) {
+    push_delta(path, u += value[path].size()/2);
+    push_delta(path, v += value[path].size()/2);
+    bool found = false;
+    for (; u <= v; u = (u + 1)/2, v = (v - 1)/2) {
+      if ((u & 1) != 0) {
+        T value = join_value_with_delta(path, u);
+        *res = found ? join_values(*res, value) : value;
+        found = true;
+      }
+      if ((v & 1) == 0) {
+        T value = join_value_with_delta(path, v);
+        *res = found ? join_values(*res, value) : value;
+        found = true;
+      }
+    }
+    return found;
+  }
+
+  void update(int path, int u, int v, const T &d) {
+    push_delta(path, u += value[path].size()/2);
+    push_delta(path, v += value[path].size()/2);
+    int tu = -1, tv = -1;
+    for (; u <= v; u = (u + 1)/2, v = (v - 1)/2) {
+      if ((u & 1) != 0) {
+        delta[path][u] = pending[path][u] ? join_deltas(delta[path][u], d) : d;
+        pending[path][u] = true;
+        if (tu == -1) {
+          tu = u;
+        }
+      }
+      if ((v & 1) == 0) {
+        delta[path][v] = pending[path][v] ? join_deltas(delta[path][v], d) : d;
+        pending[path][v] = true;
+        if (tv == -1) {
+          tv = v;
+        }
+      }
+    }
+    for (int i = tu; i > 1; i /= 2) {
+      value[path][i/2] = join_values(join_value_with_delta(path, i),
+                                     join_value_with_delta(path, i ^ 1));
+    }
+    for (int i = tv; i > 1; i /= 2) {
+      value[path][i/2] = join_values(join_value_with_delta(path, i),
+                                     join_value_with_delta(path, i ^ 1));
+    }
+  }
+
+  inline bool is_ancestor(int parent, int child) {
+    return (tin[parent] <= tin[child]) && (tout[child] <= tout[parent]);
+  }
+
+ public:
+  heavy_light(int n, std::vector<int> adj[], const T &v = T())
+      : counter(0), paths(0), size(n), parent(n), tin(n), tout(n), path(n),
+        pathlen(n), pathpos(n), pathroot(n), adj(adj) {
+    dfs(0, -1);
+    build_paths(0, new_path(0));
+    value.resize(paths);
+    delta.resize(paths);
+    pending.resize(paths);
+    len.resize(paths);
+    for (int i = 0; i < paths; i++) {
+      int m = pathlen[i];
+      value[i].assign(2*m, v);
+      delta[i].resize(2*m);
+      pending[i].assign(2*m, false);
+      len[i].assign(2*m, 1);
+      for (int j = 2*m - 1; j > 1; j -= 2) {
+        value[i][j/2] = join_values(value[i][j], value[i][j ^ 1]);
+        len[i][j/2] = len[i][j] + len[i][j ^ 1];
+      }
+    }
+  }
+
+  T query(int u, int v) {
+    if (VALUES_ON_EDGES && u == v) {
+      throw std::runtime_error("No edge between u and v to be queried.");
+    }
+    bool found = false;
+    T res = T(), value;
+    int root;
+    while (!is_ancestor(root = pathroot[path[u]], v)) {
+      if (query(path[u], 0, pathpos[u], &value)) {
+        res = found ? join_values(res, value) : value;
+        found = true;
+      }
+      u = parent[root];
+    }
+    while (!is_ancestor(root = pathroot[path[v]], u)) {
+      if (query(path[v], 0, pathpos[v], &value)) {
+        res = found ? join_values(res, value) : value;
+        found = true;
+      }
+      v = parent[root];
+    }
+    if (query(path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
+              std::max(pathpos[u], pathpos[v]), &value)) {
+      res = found ? join_values(res, value) : value;
+      found = true;
+    }
+    if (!found) {
+      throw std::runtime_error("Unexpected error: No values found.");
+    }
+    return res;
+  }
+
+  void update(int u, int v, const T &d) {
+    if (VALUES_ON_EDGES && u == v) {
+      return;
+    }
+    int root;
+    while (!is_ancestor(root = pathroot[path[u]], v)) {
+      update(path[u], 0, pathpos[u], d);
+      u = parent[root];
+    }
+    while (!is_ancestor(root = pathroot[path[v]], u)) {
+      update(path[v], 0, pathpos[v], d);
+      v = parent[root];
+    }
+    update(path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
+           std::max(pathpos[u], pathpos[v]), d);
+  }
+};
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  //     w=40      w=20      w=10
+  // 0---------1---------2---------3
+  //                     |
+  //                     ----------4
+  //                         w=30
+  vector<int> adj[5];
+  adj[0].push_back(1);
+  adj[1].push_back(0);
+  adj[1].push_back(2);
+  adj[2].push_back(1);
+  adj[2].push_back(3);
+  adj[3].push_back(2);
+  adj[2].push_back(4);
+  adj[4].push_back(2);
+  heavy_light<int> hld(5, adj, 0);
+  hld.update(0, 1, 40);
+  hld.update(1, 2, 20);
+  hld.update(2, 3, 10);
+  hld.update(2, 4, 30);
+  assert(hld.query(0, 3) == 10);
+  assert(hld.query(2, 4) == 30);
+  hld.update(3, 4, 5);
+  assert(hld.query(1, 4) == 5);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Link-Cut Tree}
+\begin{lstlisting}
+/*
+
+Maintain a forest of trees with values associated with its nodes, while
+supporting both dynamic queries and dynamic updates of all values on any path
+between two nodes in a given tree. In addition, support testing of whether two
+nodes are connected in the forest, as well as the merging and spliting of trees
+by adding or removing specific edges. Link/cut forests divide each of its trees
+into vertex-disjoint paths, each represented by a splay tree.
+
+The query operation is defined by an associative join_values() function which
+satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
+for all values x, y, and z in the forest. The default code below assumes a
+numerical forest type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case the join_values()
+function should be defined to return "a + b".
+
+The update operation is defined by the join_value_with_delta() and join_deltas()
+functions, which determines the change made to values. These must satisfy:
+- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
+- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
+  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
+- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
+  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
+  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
+The default code below defines updates that "set" a path's nodes to a new value.
+Another possible update operation is "increment", in which case
+join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
+join_deltas(d1, d2) should be defined to return "d1 + d2".
+
+- link_cut_forest() constructs an empty forest with no trees.
+- size() returns the number of nodes in the forest.
+- trees() returns the number of trees in the forest.
+- make_root(i, v) creates a new tree in the forest consisting of a single node
+  labeled with the integer i and value initialized to v.
+- is_connected(a, b) returns whether nodes a and b are connected.
+- link(a, b) adds an edge between the nodes a and b, both of which must exist
+  and not be connected.
+- cut(a, b) removes the edge between the nodes a and b, both of which must
+  exist and be connected.
+- query(a, b) returns the result of join_values() applied to all values on the
+  path from the node a to node b.
+- update(a, b, d) modifies all the values on the path from node a to node b by
+  respectively joining them with d using join_value_with_delta().
+
+Time Complexity:
+- O(1) per call to the constructor, size(), and trees().
+- O(log n) amortized per call to all other operations, where n is the number of
+  nodes.
+
+Space Complexity:
+- O(n) for storage of the forest, where n is the number of nodes.
+- O(1) auxiliary for all operations.
+
+*/
+
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <stdexcept>
+
+template<class T>
+class link_cut_forest {
+  static T join_values(const T &a, const T &b) {
+    return std::min(a, b);
+  }
+
+  static T join_value_with_delta(const T &v, const T &d, int len) {
+    return d;
+  }
+
+  static T join_deltas(const T &d1, const T &d2) {
+    return d2;  // For "set" updates, the more recent delta prevails.
+  }
+
+  struct node_t {
+    T value, subtree_value, delta;
+    int size;
+    bool rev, pending;
+    node_t *left, *right, *parent;
+
+    node_t(const T &v)
+        : value(v), subtree_value(v), size(1), rev(false), pending(false),
+          left(NULL), right(NULL), parent(NULL) {}
+
+    inline bool is_root() const {
+      return parent == NULL || (parent->left != this && parent->right != this);
+    }
+
+    inline T get_subtree_value() const {
+      return pending ? join_value_with_delta(subtree_value, delta, size)
+                     : subtree_value;
+    }
+
+    void push() {
+      if (rev) {
+        rev = false;
+        std::swap(left, right);
+        if (left != NULL) {
+          left->rev = !left->rev;
+        }
+        if (right != NULL) {
+          right->rev = !right->rev;
+        }
+      }
+      if (pending) {
+        value = join_value_with_delta(value, delta, 1);
+        subtree_value = join_value_with_delta(subtree_value, delta, size);
+        if (left != NULL) {
+          left->delta = left->pending ? join_deltas(left->delta, delta) : delta;
+          left->pending = true;
+        }
+        if (right != NULL) {
+          right->delta = right->pending ? join_deltas(right->delta, delta)
+                                        : delta;
+          right->pending = true;
+        }
+        pending = false;
+      }
+    }
+
+    void update() {
+      size = 1;
+      subtree_value = value;
+      if (left != NULL) {
+        subtree_value = join_values(subtree_value, left->get_subtree_value());
+        size += left->size;
+      }
+      if (right != NULL) {
+        subtree_value = join_values(subtree_value, right->get_subtree_value());
+        size += right->size;
+      }
+    }
+  };
+
+  int num_trees;
+  std::map<int, node_t*> nodes;
+
+  static void connect(node_t *child, node_t *parent, bool is_left) {
+    if (child != NULL) {
+      child->parent = parent;
+    }
+    if (is_left) {
+      parent->left = child;
+    } else {
+      parent->right = child;
+    }
+  }
+
+  static void rotate(node_t *n) {
+    node_t *parent = n->parent, *grandparent = parent->parent;
+    bool parent_is_root = parent->is_root(), is_left = (n == parent->left);
+    connect(is_left ? n->right : n->left, parent, is_left);
+    connect(parent, n, !is_left);
+    if (parent_is_root) {
+      if (n != NULL) {
+        n->parent = grandparent;
+      }
+    } else {
+      connect(n, grandparent, parent == grandparent->left);
+    }
+    parent->update();
+  }
+
+  static void splay(node_t *n) {
+    while (!n->is_root()) {
+      node_t *parent = n->parent, *grandparent = parent->parent;
+      if (!parent->is_root()) {
+        grandparent->push();
+      }
+      parent->push();
+      n->push();
+      if (!parent->is_root()) {
+        if ((n == parent->left) == (parent == grandparent->left)) {
+          rotate(parent);
+        } else {
+          rotate(n);
+        }
+      }
+      rotate(n);
+    }
+    n->push();
+    n->update();
+  }
+
+  static node_t* expose(node_t *n) {
+    node_t *prev = NULL;
+    for (node_t *curr = n; curr != NULL; curr = curr->parent) {
+      splay(curr);
+      curr->left = prev;
+      prev = curr;
+    }
+    splay(n);
+    return prev;
+  }
+
+  // Helper variables.
+  node_t *u, *v;
+
+  void get_uv(int a, int b) {
+    typename std::map<int, node_t*>::iterator it1, it2;
+    it1 = nodes.find(a);
+    it2 = nodes.find(b);
+    if (it1 == nodes.end() || it2 == nodes.end()) {
+      throw std::runtime_error("Queried node ID does not exist in forest.");
+    }
+    u = it1->second;
+    v = it2->second;
+  }
+
+ public:
+  link_cut_forest() : num_trees(0) {}
+
+  ~link_cut_forest() {
+    typename std::map<int, node_t*>::iterator it;
+    for (it = nodes.begin(); it != nodes.end(); ++it) {
+      delete it->second;
+    }
+  }
+
+  int size() const {
+    return nodes.size();
+  }
+
+  int trees() const {
+    return num_trees;
+  }
+
+  void make_root(int i, const T &v = T()) {
+    if (nodes.find(i) != nodes.end()) {
+      throw std::runtime_error("Cannot make a root with an existing ID.");
+    }
+    node_t *n = new node_t(v);
+    expose(n);
+    n->rev = !n->rev;
+    nodes[i] = n;
+    num_trees++;
+  }
+
+  bool is_connected(int a, int b) {
+    get_uv(a, b);
+    if (a == b) {
+      return true;
+    }
+    expose(u);
+    expose(v);
+    return u->parent != NULL;
+  }
+
+  void link(int a, int b) {
+    if (is_connected(a, b)) {
+      throw std::runtime_error("Cannot link nodes that are already connected.");
+    }
+    get_uv(a, b);
+    expose(u);
+    u->rev = !u->rev;
+    u->parent = v;
+    num_trees--;
+  }
+
+  void cut(int a, int b) {
+    get_uv(a, b);
+    expose(u);
+    u->rev = !u->rev;
+    expose(v);
+    if (v->right != u || u->left != NULL) {
+      throw std::runtime_error("Cannot cut edge that does not exist.");
+    }
+    v->right->parent = NULL;
+    v->right = NULL;
+    num_trees++;
+  }
+
+  T query(int a, int b) {
+    if (!is_connected(a, b)) {
+      throw std::runtime_error("Cannot query nodes that are not connected.");
+    }
+    get_uv(a, b);
+    expose(u);
+    u->rev = !u->rev;
+    expose(v);
+    return v->get_subtree_value();
+  }
+
+  void update(int a, int b, const T &d) {
+    if (!is_connected(a, b)) {
+      throw std::runtime_error("Cannot update nodes that are not connected.");
+    }
+    get_uv(a, b);
+    expose(u);
+    u->rev = !u->rev;
+    expose(v);
+    v->delta = v->pending ? join_deltas(v->delta, d) : d;
+    v->pending = true;
+  }
+};
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  link_cut_forest<int> lcf;
+  lcf.make_root(0, 10);
+  lcf.make_root(1, 40);
+  lcf.make_root(2, 20);
+  lcf.make_root(3, 10);
+  lcf.make_root(4, 30);
+  assert(lcf.size() == 5);
+  assert(lcf.trees() == 5);
+  lcf.link(0, 1);
+  lcf.link(1, 2);
+  lcf.link(2, 3);
+  lcf.link(2, 4);
+  assert(lcf.trees() == 1);
+
+  // v=10      v=40      v=20      v=10
+  //  0---------1---------2---------3
+  //                      |
+  //                      ----------4
+  //                               v=30
+  assert(lcf.query(1, 4) == 20);
+  lcf.update(1, 1, 100);
+  lcf.update(2, 4, 100);
+
+  // v=10     v=100     v=100      v=10
+  //  0---------1---------2---------3
+  //                      |
+  //                      ----------4
+  //                              v=100
+  assert(lcf.query(4, 4) == 100);
+  assert(lcf.query(0, 4) == 10);
+  assert(lcf.query(3, 4) == 10);
+  lcf.cut(1, 2);
+
+  // v=10     v=100     v=100      v=0
+  //  0---------1         2---------3
+  //                      |
+  //                      ----------4
+  //                              v=100
+  assert(lcf.trees() == 2);
+  assert(!lcf.is_connected(1, 2));
+  assert(!lcf.is_connected(0, 4));
+  assert(lcf.is_connected(2, 3));
+  return 0;
+}
+\end{lstlisting}
