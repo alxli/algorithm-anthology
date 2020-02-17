@@ -108,18 +108,18 @@ We mentioned that the implementation itself is the focus, but what makes an impl
 	\item \textit{Clarity:} A reader already familiar with an algorithm should have no problem understanding how its implementation works. Consistency in naming conventions should be emphasized, and any tricks or language-specific hacks should be documented.
 	\item \textit{Concision:} To minimize the amount of scrolling and searching during the frenzy of time contests, it is helpful for code to be compact. Shorter code is also generally easier to understand, as long as it is not overly cryptic. Finally, each implementation should fit in a single source file as required by nearly all online judging systems.
 	\item \textit{Efficiency:} The code here is designed to be performant on real contests, and should maintain a low constant overhead. This is often challenging in the face of clarity and tweakability, but we can hope for contest setters to be liberal with time and memory limits. If the code here times out, you can reasonably rule out insufficient constant optimization and assume that you are choosing an algorithm from a suboptimal complexity class.
-	\item \textit{Genericness:} It should be easy to adapt the implementation to achieve slightly different goals. This could be through tweaking some core logic, parameters, data types, etc. If we were tweaking the code to achieve a different purpose during a live contest, we would certainly want the process to be as painless as possible. C++ templates are often used to increase tweakability at the slight cost of simplicity.
-	\item \textit{Portability:} Different contest environments use different versions of C++ (though almost all of them use GCC). In order to maximize compatibility, non-standard features are avoided. The decision to adhere to C++98 standards is due to many contest systems being stuck on an older version of the language. Moreover, minimizing newer C++ specific features will make the implementations more language-agnostic. Refer to the "Portability" section below.
+	\item \textit{Genericness:} Implementations should be easy to adapt to achieve slightly different goals. One may want to tweak some core logic, parameters, data types, etc. In timed contests, we would certainly prefer this process to be as painless as possible. C++ templates are often used to increase tweakability at a slight cost to simplicity.
+	\item \textit{Portability:} Different contest environments use different compiler builds. In order to maximize compatibility, non-standard and newer features are avoided. The decision to follow C++98 standards is due to many contest systems being stuck on an older version of the language. Moreover, minimizing newer C++ features will make the code more language-agnostic.
 \end{itemize}
 
-As these points and the title both suggest, there is a slight bias towards contests. Compiling a codebook for my personal reference during contests was indeed how this project got started. This work has become much more multipurpose now; whatever your use case is, I hope you discover something enlightening.
+As these points and the title both suggest, there is a slight bias towards contests. Compiling a codebook for my personal reference during contests was indeed how this project got started. This work has become much more multipurpose now. Whatever your use case is, I hope you discover something enlightening.
 
 \begin{flushright}
 Cheers.\\
---- Alex\\[0.3\baselineskip]
+--- Alex
 \end{flushright}
 
-\section*{Portability Note}
+\section*{Portability Notes}
 
 All programs were tested with GCC and compiled for a 32-bit target using the switches below:
 
@@ -137,7 +137,7 @@ This means the following are assumed about data types:
 \end{compactitem}
 \vspace{5pt}
 
-Programs are highly portable (ISO C++ 1998 compliant), \textbf{except} in the following regards:
+Programs are highly portable (ISO C++ 1998 compliant), except in the following regards:
 
 \begin{itemize}
 	\item Usage of \texttt{long long} and dependent features, which are compliant in C99/C++0x or later. 64-bit integers are a must for many contest problems.
