@@ -24,7 +24,7 @@ at any given level of evaluation.
   and comparisons are performed using the standard linear algorithms.
   Multiplication is performed using a combination of the grade school algorithm
   (for smaller inputs) and either the Karatsuba algorithm (if the USE_FFT_MULT
-  flag is set to false) or the Schönhage–Strassen algorithm (if USE_FFT_MULT is
+  flag is set to false) or the Schonhage-Strassen algorithm (if USE_FFT_MULT is
   set to true). Division and modulo are computed simultaneously using the grade
   school method.
 - a.div(b) returns a pair consisting of the quotient and remainder.

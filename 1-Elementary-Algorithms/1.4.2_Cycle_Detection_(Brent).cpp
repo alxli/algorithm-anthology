@@ -9,7 +9,7 @@ is guaranteed to eventually repeat in the sequence:
 
 There must exist a pair of indices i and j (i < j) such that x[i] = x[j]. When
 this happens, the rest of the sequence will consist of the subsequence from x[i]
-to x[j − 1] repeating indefinitely. The cycle detection problem asks to find
+to x[j - 1] repeating indefinitely. The cycle detection problem asks to find
 such an i, along with the length of the repeating subsequence. A well-known
 special case is the problem of cycle-detection in a degenerate linked list.
 

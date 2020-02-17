@@ -35,7 +35,7 @@ This means that the following assumptions are made about data types:
 
 Programs are highly portable (ISO C++ 1998 compliant), __except__ in the following regards:
 * Usage of long long and dependent features `[-Wlong-long]`, which are compliant in C99/C++0x or later. 64-bit integers are a must for many programming contest problems, so it is necessary to include them.
-* Usage of GCC's built-in functions like `__builtin_popcount()` and `__builtin_clz()`. These can be extremely convenient, and are easily implemented if they're not available. See here for a reference: https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
+* Usage of GCC's built-in functions like `__builtin_popcount()` and `__builtin_clz()`. These can be extremely convenient, and are easily implemented if they are not available. See here for a reference: https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
 * Usage of compound-literals, e.g. `myvector.push_back((mystruct){a, b, c})`. This adds a little more concision by not requiring a constructor definition.
 * Certain hacks that may depend on aspects of the platform (e.g. endianness), such as getting the signbit with type-puned pointers. Be weary of this for all bitwise/micro-optimization related code.
 

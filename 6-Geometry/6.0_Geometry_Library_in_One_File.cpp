@@ -1,9 +1,7 @@
 /*
 
-This file is an amalgamation of everything in sections 5.1 and 5.2, implemented
-in a cross-dependent manner. All of these algorithms apply to a two-dimensional
-Cartesian coordinate system where the positive x direction points towards the
-right and the positive y direction points up on the page.
+This combines the next few subsections in this chapter in a cross-dependent
+manner. All of these algorithms apply to a two-dimensional Cartesian plane.
 
 Time Complexity:
 - O(1) for all operations.
