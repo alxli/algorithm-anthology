@@ -40,7 +40,6 @@ SECTION_NAMES = {
     (5, 4): 'Arbitrary Precision Arithmetic',
     (5, 5): 'Linear Algebra',
     (5, 6): 'Root Finding and Calculus',
-    (6, 0): 'Geometry Library in One File',
     (6, 1): 'Geometric Classes',
     (6, 2): 'Elementary Geometric Calculations',
     (6, 3): 'Intermediate Geometric Calculations',
@@ -56,7 +55,8 @@ def gen_chapter(dirname, chapter, chapter_name):
 
     for file in os.listdir(dirname):
         match = FILE_RE.match(file)
-        if not match: continue
+        if not match:
+            continue
         assert chapter == int(match.group(1))
         section = int(match.group(2))
         subsection = int(match.group(3)) if match.group(3) else None
@@ -66,6 +66,8 @@ def gen_chapter(dirname, chapter, chapter_name):
 
     prev_section = None
     for (chapter, section, subsection, name, file) in sorted(entries):
+        if section < 1:
+            continue
         if section != prev_section:
             section_name = SECTION_NAMES.get((chapter, section), "")
             fout.write(f'\n\\section{{{section_name}}}\n')
