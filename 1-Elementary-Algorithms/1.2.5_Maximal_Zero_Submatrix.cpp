@@ -20,6 +20,9 @@ Space Complexity:
 #include <vector>
 
 int max_zero_submatrix(const std::vector<std::vector<bool> > &matrix) {
+  if (matrix.empty()) {
+    return 0;
+  }
   int n = matrix.size(), m = matrix[0].size(), res = 0;
   std::vector<int> d(m, -1), d1(m), d2(m);
   for (int r = 0; r < n; r++) {
