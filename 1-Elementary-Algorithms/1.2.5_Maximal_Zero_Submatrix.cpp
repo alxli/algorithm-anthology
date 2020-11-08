@@ -36,9 +36,7 @@ int max_zero_submatrix(const std::vector<std::vector<bool> > &matrix) {
       d1[c] = s.empty() ? -1 : s.top();
       s.push(c);
     }
-    while (!s.empty()) {
-      s.pop();
-    }
+    s.clear();
     for (int c = m - 1; c >= 0; c--) {
       while (!s.empty() && d[s.top()] <= d[c]) {
         s.pop();
