@@ -31,31 +31,32 @@ class kmp {
   std::vector<int> table;
 
  public:
-  kmp(const string &needle) : needle(needle) {
-    table.resize(needle.size());
-    int i = 0, j = table[0] = -1;
-    while (i < (int)needle.size()) {
-      while (j >= 0 && needle[i] != needle[j]) {
-        j = table[j];
+  kmp(const string &needle) : needle(needle), table(needle.size()) {
+    for (int i = 1, j = 0; i < (int)needle.size(); i++) {
+      while (j > 0 && needle[i] != needle[j]) {
+        j = table[j - 1];
       }
-      i++;
-      j++;
-      table[i] = (needle[i] == needle[j]) ? table[j] : j;
+      if (needle[i] == needle[j]) {
+        j++;
+      }
+      table[i] = j;
     }
   }
 
   size_t find_in(const string &haystack) {
-    if (needle.empty()) {
+    int m = needle.size();
+    if (m == 0) {
       return 0;
     }
-    for (int i = 0, j = 0; j < (int)haystack.size(); ) {
-      while (i >= 0 && needle[i] != haystack[j]) {
-        i = table[i];
+    for (int i = 0, j = 0; i < (int)haystack.size(); i++) {
+      while (j > 0 && needle[j] != haystack[i]) {
+        j = table[j - 1];
       }
-      i++;
-      j++;
-      if (i >= (int)needle.size()) {
-        return j - i;
+      if (needle[j] == haystack[i]) {
+        j++;
+      }
+      if (j == m) {
+        return i + 1 - m;
       }
     }
     return string::npos;
