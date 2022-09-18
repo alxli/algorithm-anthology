@@ -46,7 +46,7 @@ class fenwick_tree {
   }
 
   void add(int i, const T &x) {
-    return add(i, i, x);
+    add(i, i, x);
   }
 
   void set(int i, const T &x) {
