@@ -263,8 +263,8 @@ class implicit_treap {
 
 /*** Example Usage and Output:
 
-Values: -99 -2 1 8 10 11 (min: -99)
-Values: -90 -2 1 8 10 11 (min: -90)
+Values: 99 -2 1 8 10 11 (min: -2)
+Values: 90 -2 1 8 10 11 (min: -2)
 Values: 2 2 1 8 10 11 (min: 1)
 
 ***/
