@@ -165,6 +165,14 @@ class rational {
 
   friend rational abs(const rational &r) { return r.abs(); }
 
+  Int floor() const {
+    return num < 0 ? -((-num + den - 1) / den) : num / den;
+  }
+
+  Int ceil() const {
+    return num < 0 ? -(-num / den) : (num + den - 1) / den;
+  }
+
   rational operator+(const rational &r) const {
     return rational(num*r.den + r.num*den, den*r.den);
   }
