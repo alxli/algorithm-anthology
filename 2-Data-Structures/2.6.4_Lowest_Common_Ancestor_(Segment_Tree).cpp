@@ -3,19 +3,19 @@
 Given a tree, determine the lowest common ancestor of any two nodes in the tree.
 The lowest common ancestor of two nodes u and v is the node that has the longest
 distance from the root while having both u and v as its descendant. A nodes is
-considered to be a descendant of itself. build() applies to a global,
-pre-populated adjacency list adj[] which must only consist of nodes numbered
+considered to be a descendant of itself. `build()` applies to a global,
+pre-populated adjacency list `adj[]` which must only consist of nodes numbered
 with integers between 0 (inclusive) and the total number of nodes (exclusive),
 as passed in the function argument.
 
 Time Complexity:
-- O(n log n) per call to build(), where n is the number of nodes.
-- O(log n) per call to lca().
+- O(n log n) per call to `build()`, where $n$ is the number of nodes.
+- O(log n) per call to `lca()`.
 
 Space Complexity:
-- O(n) for storage of the segment tree, where n is the number of nodes.
-- O(n log n) auxiliary stack space for build().
-- O(log n) auxiliary stack space for lca().
+- O(n) for storage of the segment tree, where $n$ is the number of nodes.
+- O(n log n) auxiliary stack space for `build()`.
+- O(log n) auxiliary stack space for `lca()`.
 
 */
 

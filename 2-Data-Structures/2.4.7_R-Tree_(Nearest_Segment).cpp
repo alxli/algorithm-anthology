@@ -4,19 +4,19 @@ Maintain a set of two-dimensional line segments while supporting queries for the
 closest segment in the set to a given query point. This implementation uses
 integer points and long doubles for intermediate calculations.
 
-- r_tree(lo, hi) constructs a set from two random-access iterators as a range
-  [lo, hi) of segments.
-- nearest(x, y) returns a segment in the set that contains some point which is
-  as close or closer to (x, y) by Euclidean distance than any point on any
+- `r_tree(lo, hi)` constructs a set from two random-access iterators as a range
+  [`lo`, `hi`) of segments.
+- `nearest(x, y)` returns a segment in the set that contains some point which is
+  as close or closer to (`x`, `y`) by Euclidean distance than any point on any
   other segment in the set.
 
 Time Complexity:
-- O(n log n) per call to the constructor, where n is the number of segments.
-- O(log n) on average per call to nearest().
+- O(n log n) per call to the constructor, where $n$ is the number of segments.
+- O(log n) on average per call to `nearest()`.
 
 Space Complexity:
 - O(n) for storage of the segments.
-- O(log n) auxiliary stack space for nearest().
+- O(log n) auxiliary stack space for `nearest()`.
 
 */
 

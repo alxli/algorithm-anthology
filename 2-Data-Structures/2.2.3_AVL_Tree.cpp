@@ -2,33 +2,33 @@
 
 Maintain a map, that is, a collection of key-value pairs such that each possible
 key appears at most once in the collection. This implementation requires an
-ordering on the set of possible keys defined by the < operator on the key type.
+ordering on the set of possible keys defined by `operator <` on the key type.
 An AVL tree is a binary search tree balanced by height, guaranteeing O(log n)
 worst-case running time in insertions and deletions by making sure that the
 heights of the left and right subtrees at every node differ by at most 1.
 
-- avl_tree() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(k, v) adds an entry with key k and value v to the map, returning true
-  if an new entry was added or false if the key already exists (in which case
+- `avl_tree()` constructs an empty map.
+- `size()` returns the size of the map.
+- `empty()` returns whether the map is empty.
+- `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true`
+  if an new entry was added or `false` if the key already exists (in which case
   the map is unchanged and the old value associated with the key is preserved).
-- erase(k) removes the entry with key k from the map, returning true if the
-  removal was successful or false if the key to be removed was not found.
-- find(k) returns a pointer to a const value associated with key k, or NULL if
+- `erase(k)` removes the entry with key `k` from the map, returning `true` if the
+  removal was successful or `false` if the key to be removed was not found.
+- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if
   the key was not found.
-- walk(f) calls the function f(k, v) on each entry of the map, in ascending
+- `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending
   order of keys.
 
 Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(log n) per call to insert(), erase(), and find(), where n is the number of
+- O(1) per call to the constructor, `size()`, and `empty()`.
+- O(log n) per call to `insert()`, `erase()`, and `find()`, where $n$ is the number of
   entries currently in the map.
-- O(n) per call to walk().
+- O(n) per call to `walk()`.
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for insert(), erase(), and walk().
+- O(log n) auxiliary stack space for `insert()`, `erase()`, and `walk()`.
 - O(1) auxiliary for all other operations.
 
 */

@@ -3,17 +3,17 @@
 Maintain an array of numerical type, allowing for updates of individual indices
 (point update) and queries for the sum of contiguous sub-arrays (range queries).
 This implementation assumes that the array is 1-based (i.e. has valid indices
-from 1 to MAXN - 1, inclusive).
+from 1 to `MAXN - 1`, inclusive).
 
-- initialize() resets the data structure.
-- a[i] stores the value at index i.
-- add(i, x) adds x to the value at index i.
-- set(i, x) assigns the value at index i to x.
-- sum(hi) returns the sum of all values at indices from 1 to hi, inclusive.
-- sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+- `initialize()` resets the data structure.
+- `a[i]` stores the value at index `i`.
+- `add(i, x)` adds `x` to the value at index `i`.
+- `set(i, x)` assigns the value at index `i` to `x`.
+- `sum(hi)` returns the sum of all values at indices from 1 to `hi`, inclusive.
+- `sum(lo, hi)` returns the sum of all values at indices from `lo` to `hi`, inclusive.
 
 Time Complexity:
-- O(n) per call to initialize(), where n is the size of the array.
+- O(n) per call to `initialize()`, where $n$ is the size of the array.
 - O(log n) per call to all other operations.
 
 Space Complexity:

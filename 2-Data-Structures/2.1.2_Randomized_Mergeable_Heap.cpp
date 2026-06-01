@@ -3,28 +3,28 @@
 Maintain a mergeable min-priority queue, that is, a collection of elements with
 support for querying and extraction of the minimum as well as efficient merging
 with other instances. This implementation requires an ordering on the set of
-possible elements defined by the < operator. A randomized mergeable heap uses a
+possible elements defined by `operator <`. A randomized mergeable heap uses a
 coin-toss to recursively combine nodes of two binary trees.
 
-- randomized_heap() constructs an empty priority queue.
-- randomized_heap(lo, hi) constructs a priority queue from two ForwardIterators,
-  consisting of elements in the range [lo, hi).
-- size() returns the size of the priority queue.
-- empty() returns whether the priority queue is empty.
-- push(v) inserts the value v into the priority queue.
-- pop() removes the minimum element from the priority queue.
-- top() returns the minimum element in the priority queue.
-- absorb(h) inserts every value from h and sets h to the empty priority queue.
+- `randomized_heap()` constructs an empty priority queue.
+- `randomized_heap(lo, hi)` constructs a priority queue from two ForwardIterators,
+  consisting of elements in the range [`lo`, `hi`).
+- `size()` returns the size of the priority queue.
+- `empty()` returns whether the priority queue is empty.
+- `push(v)` inserts the value `v` into the priority queue.
+- `pop()` removes the minimum element from the priority queue.
+- `top()` returns the minimum element in the priority queue.
+- `absorb(h)` inserts every value from `h` and sets `h` to the empty priority queue.
 
 Time Complexity:
-- O(1) per call to the first constructor, size(), empty(), and top().
-- O(log n) expected worst case per call to push(), pop(), and absorb(), where n
+- O(1) per call to the first constructor, `size()`, `empty()`, and `top()`.
+- O(log n) expected worst case per call to `push()`, `pop()`, and `absorb()`, where $n$
   is the number of elements in the priority queue.
 - O(n) per call to the second constructor on the distance between lo and hi.
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.
-- O(log n) auxiliary stack space for push(), pop(), and absorb().
+- O(log n) auxiliary stack space for `push()`, `pop()`, and `absorb()`.
 - O(1) auxiliary for all other operations.
 
 */

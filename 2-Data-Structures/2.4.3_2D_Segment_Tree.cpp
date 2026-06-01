@@ -4,39 +4,39 @@ Maintain a two-dimensional array while supporting dynamic queries of rectangular
 sub-arrays and dynamic updates of individual indices. This implementation uses
 lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by the join_values() and join_region() functions
-where join_values(x, join_values(y, z)) = join_values(join_values(x, y), z) for
-all values x, y, and z in the array. The join_region(v, area) function must be
-defined in conjunction to efficiently return the result of join_values() applied
-to a rectangular sub-array of area elements. The default code below assumes a
+The query operation is defined by the `join_values()` and `join_region()` functions
+where `join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)` for
+all values `x`, `y`, and `z` in the array. The `join_region(v, area)` function must be
+defined in conjunction to efficiently return the result of `join_values()` applied
+to a rectangular sub-array of `area` elements. The default code below assumes a
 numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case join_values(a, b)
-should return "a + b" and join_region(v, area) should return "v*area".
+Another possible query operation is "sum", in which case `join_values(a, b)`
+should return $a + b$ and `join_region(v, area)` should return $v \cdot area$.
 
-The update operation is defined by the join_value_with_delta() function, which
+The update operation is defined by the `join_value_with_delta()` function, which
 determines the change made to array values. The default code below defines
 updates that "set" the chosen array index to a new value. Another possible
-update operation is "increment", in which join_value_with_delta(v, d) should be
-defined to return "v + d".
+update operation is "increment", in which `join_value_with_delta(v, d)` should be
+defined to return $v + d$.
 
-- segment_tree_2d(v) constructs a two-dimensional array with rows from 0 to
-  MAXR and columns from 0 to MAXC, inclusive. All values are implicitly
-  initialized to v.
-- at(r, c) returns the value at row r, column c.
-- query(r1, c1, r2, c2) returns the result of join_values() applied to every
-  value in the rectangular region consisting of rows from r1 to r2, inclusive,
-  and columns from c1 to c2, inclusive.
-- update(r, c, d) assigns the value v at (r, c) to join_value_with_delta(v, d).
+- `segment_tree_2d(v)` constructs a two-dimensional array with rows from 0 to
+  `MAXR` and columns from 0 to `MAXC`, inclusive. All values are implicitly
+  initialized to `v`.
+- `at(r, c)` returns the value at row `r`, column `c`.
+- `query(r1, c1, r2, c2)` returns the result of `join_values()` applied to every
+  value in the rectangular region consisting of rows from `r1` to `r2`, inclusive,
+  and columns from `c1` to `c2`, inclusive.
+- `update(r, c, d)` assigns the value `v` at (`r`, `c`) to `join_value_with_delta(v, d)`.
 
 Time Complexity:
 - O(1) per call to the constructor.
-- O(log(MAXR)*log(MAXC)) per call to at(), update(), and query().
+- O(log(MAXR)*log(MAXC)) per call to `at()`, `update()`, and `query()`.
 
 Space Complexity:
-- O(n) for storage of the array elements, where n is the number of updated
+- O(n) for storage of the array elements, where $n$ is the number of updated
   entries in the array.
-- O(log(MAXR) + log(MAXC)) auxiliary stack space for update(), query(), and
-  at().
+- O(log(MAXR) + log(MAXC)) auxiliary stack space for `update()`, `query()`, and
+  `at()`.
 
 */
 

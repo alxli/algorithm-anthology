@@ -1,35 +1,35 @@
 /*
 
 Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires the ==
-operator to be defined on the key type. A hash map implements a map by hashing
+key appears at most once in the collection. This implementation requires
+`operator ==` to be defined on the key type. A hash map implements a map by hashing
 keys into buckets using a hash function. This implementation resolves collisions
 by chaining entries hashed to the same bucket into a linked list.
 
-- hash_map() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(k, v) adds an entry with key k and value v to the map, returning true
-  if an new entry was added or false if the key already exists (in which case
+- `hash_map()` constructs an empty map.
+- `size()` returns the size of the map.
+- `empty()` returns whether the map is empty.
+- `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true`
+  if an new entry was added or `false` if the key already exists (in which case
   the map is unchanged and the old value associated with the key is preserved).
-- erase(k) removes the entry with key k from the map, returning true if the
-  removal was successful or false if the key to be removed was not found.
-- find(k) returns a pointer to a const value associated with key k, or NULL if
+- `erase(k)` removes the entry with key `k` from the map, returning `true` if the
+  removal was successful or `false` if the key to be removed was not found.
+- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if
   the key was not found.
-- operator[k] returns a reference to key k's associated value (which may be
+- `operator[]` returns a reference to key `k`'s associated value (which may be
   modified), or if necessary, inserts and returns a new entry with the default
-  constructed value if key k was not originally found.
-- walk(f) calls the function f(k, v) on each entry of the map, in no guaranteed
+  constructed value if key `k` was not originally found.
+- `walk(f)` calls the function `f(k, v)` on each entry of the map, in no guaranteed
   order.
 
 Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(1) amortized per call to insert(), erase(), find(), and operator[].
-- O(n) per call to walk(), where n is the number of entries in the map.
+- O(1) per call to the constructor, `size()`, and `empty()`.
+- O(1) amortized per call to `insert()`, `erase()`, `find()`, and `operator[]`.
+- O(n) per call to `walk()`, where $n$ is the number of entries in the map.
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(n) auxiliary heap space for insert().
+- O(n) auxiliary heap space for `insert()`.
 - O(1) auxiliary for all other operations.
 
 */

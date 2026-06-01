@@ -5,23 +5,23 @@ partition is assigned a unique representative known as the parent, or root. The
 following implements two well-known optimizations known as union-by-rank and
 path compression. This version is simplified to only work on integer elements.
 
-- initialize() resets the data structure.
-- make_set(u) creates a new partition consisting of the single element u, which
+- `initialize()` resets the data structure.
+- `make_set(u)` creates a new partition consisting of the single element `u`, which
   must not have been previously added to the data structure.
-- find_root(u) returns the unique representative of the partition containing u.
-- is_united(u, v) returns whether elements u and v belong to the same partition.
-- unite(u, v) replaces the partitions containing u and v with a single new
+- `find_root(u)` returns the unique representative of the partition containing `u`.
+- `is_united(u, v)` returns whether elements `u` and `v` belong to the same partition.
+- `unite(u, v)` replaces the partitions containing `u` and `v` with a single new
   partition consisting of the union of elements in the original partitions.
 
-A precondition to the last three operations is that make_set() must have been
+A precondition to the last three operations is that `make_set()` must have been
 previously called on their arguments.
 
 Time Complexity:
-- O(1) per call to initialize() and make_set().
-- O(a(n)) per call to find_root(), is_united(), and unite(), where n is the
-  number of elements that has been added via make_set() so far, and a(n) is the
+- O(1) per call to `initialize()` and `make_set()`.
+- O(alpha(n)) per call to `find_root()`, `is_united()`, and `unite()`, where $n$ is the
+  number of elements that has been added via `make_set()` so far, and $\alpha(n)$ is the
   extremely slow growing inverse of the Ackermann function (effectively a very
-  small constant for all practical values of n).
+  small constant for all practical values of $n$).
 
 Space Complexity:
 - O(n) for storage of the disjoint set forest elements.

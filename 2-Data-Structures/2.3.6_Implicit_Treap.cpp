@@ -6,39 +6,39 @@ propagation technique. A treap maintains a balanced binary tree structure by
 preserving the heap property on the randomly generated priority values of nodes,
 thereby making insertions and deletions run in O(log n) with high probability.
 
-The query operation is defined by an associative join_values() function which
-satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
-for all values x, y, and z in the array. The default code below assumes a
+The query operation is defined by an associative `join_values()` function which
+satisfies `join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)`
+for all values `x`, `y`, and `z` in the array. The default code below assumes a
 numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case the join_values()
-function should be defined to return "a + b".
+Another possible query operation is "sum", in which case the `join_values()`
+function should be defined to return $a + b$.
 
-The update operation is defined by the join_value_with_delta() and join_deltas()
+The update operation is defined by the `join_value_with_delta()` and `join_deltas()`
 functions, which determines the change made to array values. These must satisfy:
-- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
-  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
-- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
-  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
-  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
+- `join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3)`.
+- `join_value_with_delta(join_values(v, ..., v), d, m)` should be equal to
+  `join_values(join_value_with_delta(v, d, 1), ...)`, with $m$ values on each side.
+- if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then
+  `join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1)` should be equivalent
+  to $m$ sequential calls to `join_value_with_delta(v, d_i, 1)` for $i = 1, ..., m$.
 The default code below defines updates that "set" the chosen array index to a
 new value. Another possible update operation is "increment", in which case
-join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
-join_deltas(d1, d2) should be defined to return "d1 + d2".
+`join_value_with_delta(v, d, len)` should be defined to return $v + d \cdot len$ and
+`join_deltas(d1, d2)` should be defined to return $d1 + d2$.
 
 This data structure shares every operation of one-dimensional segment trees in
-this section, with the additional operations empty(), insert(), erase(),
-push_back(), and pop_back() analogous to those of std::vector (here, insert()
-and erase() both take an index instead of an iterator).
+this section, with the additional operations `empty()`, `insert()`, `erase()`,
+`push_back()`, and `pop_back()` analogous to those of `std::vector` (here, `insert()`
+and `erase()` both take an index instead of an iterator).
 
 Time Complexity:
-- O(n) per call to both constructors, where n is the size of the array.
-- O(1) per call to size() and empty().
+- O(n) per call to both constructors, where $n$ is the size of the array.
+- O(1) per call to `size()` and `empty()`.
 - O(log n) on average per call to all other operations.
 
 Space Complexity:
 - O(n) for storage of the array elements.
-- O(1) auxiliary for size() and empty().
+- O(1) auxiliary for `size()` and `empty()`.
 - O(log n) auxiliary stack space for all other operations.
 
 */

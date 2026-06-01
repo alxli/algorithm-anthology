@@ -1,36 +1,36 @@
 /*
 
 Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires both
-the < and the == operators to be defined on the key type. A skip list maintains
-a linked hierarchy of sorted subsequences with each successive subsequence
-skipping over fewer elements than the previous one.
+key appears at most once in the collection. This implementation requires operators
+`<` and `==` to be defined on the key type. A skip list maintains a linked
+hierarchy of sorted subsequences with each successive subsequence skipping over
+fewer elements than the previous one.
 
-- skip_list() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(k, v) adds an entry with key k and value v to the map, returning true
-  if an new entry was added or false if the key already exists (in which case
+- `skip_list()` constructs an empty map.
+- `size()` returns the size of the map.
+- `empty()` returns whether the map is empty.
+- `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true`
+  if an new entry was added or `false` if the key already exists (in which case
   the map is unchanged and the old value associated with the key is preserved).
-- erase(k) removes the entry with key k from the map, returning true if the
-  removal was successful or false if the key to be removed was not found.
-- find(k) returns a pointer to a const value associated with key k, or NULL if
+- `erase(k)` removes the entry with key `k` from the map, returning `true` if the
+  removal was successful or `false` if the key to be removed was not found.
+- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if
   the key was not found.
-- operator[k] returns a reference to key k's associated value (which may be
+- `operator[]` returns a reference to key `k`'s associated value (which may be
   modified), or if necessary, inserts and returns a new entry with the default
-  constructed value if key k was not originally found.
-- walk(f) calls the function f(k, v) on each entry of the map, in ascending
+  constructed value if key `k` was not originally found.
+- `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending
   order of keys.
 
 Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(log n) on average per call to insert(), erase(), find(), and operator[],
-  where n is the number of entries currently in the map.
-- O(n) per call to walk().
+- O(1) per call to the constructor, `size()`, and `empty()`.
+- O(log n) on average per call to `insert()`, `erase()`, `find()`, and `operator[]`,
+  where $n$ is the number of entries currently in the map.
+- O(n) per call to `walk()`.
 
 Space Complexity:
 - O(n) on average for storage of the map elements.
-- O(n) auxiliary heap space for insert() and erase().
+- O(n) auxiliary heap space for `insert()` and `erase()`.
 - O(1) auxiliary for all other operations.
 
 */

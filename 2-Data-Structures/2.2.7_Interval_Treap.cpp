@@ -2,40 +2,40 @@
 
 Maintain a map from closed, one-dimensional intervals to values while supporting
 efficient reporting of any or all entries that intersect with a given query
-interval. This implementation uses std::pair to represent intervals, requiring
-operators < and == to be defined on the numeric key type. A treap is used to
+interval. This implementation uses `std::pair` to represent intervals, requiring
+operators `<` and `==` to be defined on the numeric key type. A treap is used to
 process the entries, where keys are compared lexicographically as pairs.
 
-- interval_treap() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(lo, hi, v) adds an entry with key [lo, hi] and value v to the map,
-  returning true if a new interval was added or false if the interval already
+- `interval_treap()` constructs an empty map.
+- `size()` returns the size of the map.
+- `empty()` returns whether the map is empty.
+- `insert(lo, hi, v)` adds an entry with key [`lo`, `hi`] and value `v` to the map,
+  returning `true` if a new interval was added or `false` if the interval already
   exists (in which case the map is unchanged and the old value associated with
   the key is preserved).
-- erase(lo, hi) removes the entry with key [lo, hi] from the map, returning true
-  if the removal was successful or false if the interval was not found.
-- find_key(lo, hi) returns a pointer to a const std::pair representing the key
-  of some interval in the map which intersects with [lo, hi], or NULL if no such
+- `erase(lo, hi)` removes the entry with key [`lo`, `hi`] from the map, returning `true`
+  if the removal was successful or `false` if the interval was not found.
+- `find_key(lo, hi)` returns a pointer to a const `std::pair` representing the key
+  of some interval in the map which intersects with [`lo`, `hi`], or `NULL` if no such
   entry was found.
-- find_value(lo, hi) returns a pointer to a const value of some entry in the map
-  with a key that intersects with [lo, hi], or NULL if no such entry was found.
-- find_all(lo, hi, f) calls the function f(lo, hi, v) on each entry in the map
-  that overlaps with [lo, hi], in lexicographically ascending order of intervals.
-- walk(f) calls the function f(lo, hi, v) on each interval in the map, in
+- `find_value(lo, hi)` returns a pointer to a const value of some entry in the map
+  with a key that intersects with [`lo`, `hi`], or `NULL` if no such entry was found.
+- `find_all(lo, hi, f)` calls the function `f(lo, hi, v)` on each entry in the map
+  that overlaps with [`lo`, `hi`], in lexicographically ascending order of intervals.
+- `walk(f)` calls the function `f(lo, hi, v)` on each interval in the map, in
   lexicographically ascending order of intervals.
 
 Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(log n) on average per call to insert(), erase(), and find_any(), where n is
+- O(1) per call to the constructor, `size()`, and `empty()`.
+- O(log n) on average per call to `insert()`, `erase()`, and `find_any()`, where $n$ is
   the number of intervals currently in the set.
-- O(log n + m) on average per call to find_all(), where m is the number of
+- O(log n + m) on average per call to `find_all()`, where $m$ is the number of
   intersecting intervals that are reported.
-- O(n) per call to walk().
+- O(n) per call to `walk()`.
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(1) auxiliary for size() and empty().
+- O(1) auxiliary for `size()` and `empty()`.
 - O(log n) auxiliary stack space on average for all other operations.
 
 */

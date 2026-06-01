@@ -3,39 +3,39 @@
 Maintain a fixed-size array while supporting dynamic queries of contiguous
 sub-arrays and dynamic updates of individual indices.
 
-The query operation is defined by an associative join_values() function which
-satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
-for all values x, y, and z in the array. The default code below assumes a
+The query operation is defined by an associative `join_values()` function which
+satisfies `join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)`
+for all values `x`, `y`, and `z` in the array. The default code below assumes a
 numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case the join_values()
-function should be defined to return "a + b".
+Another possible query operation is "sum", in which case the `join_values()`
+function should be defined to return $a + b$.
 
-The update operation is defined by the join_value_with_delta() function, which
+The update operation is defined by the `join_value_with_delta()` function, which
 determines the change made to array values. The default definition below
 supports updates that "set" the chosen array index to a new value. Another
-possible update operation is "increment", in which join_value_with_delta(v, d)
-should be defined to return "v + d".
+possible update operation is "increment", in which `join_value_with_delta(v, d)`
+should be defined to return $v + d$.
 
-- segment_tree(n, v) constructs an array of size n with indices from 0 to n - 1,
-  inclusive, and all values initialized to v.
-- segment_tree(lo, hi) constructs an array from two random-access iterators as a
-  range [lo, hi), initialized to the elements of the range in the same order.
-- size() returns the size of the array.
-- at(i) returns the value at index i.
-- query(lo, hi) returns the result of join_values() applied to all indices from
-  lo to hi, inclusive. If the distance between lo and hi is 1, then the single
+- `segment_tree(n, v)` constructs an array of size `n` with indices from 0 to `n` - 1,
+  inclusive, and all values initialized to `v`.
+- `segment_tree(lo, hi)` constructs an array from two random-access iterators as a
+  range [`lo`, `hi`), initialized to the elements of the range in the same order.
+- `size()` returns the size of the array.
+- `at(i)` returns the value at index `i`.
+- `query(lo, hi)` returns the result of `join_values()` applied to all indices from
+  `lo` to `hi`, inclusive. If the distance between `lo` and `hi` is 1, then the single
   specified value is returned.
-- update(i, d) assigns the value v at index i to join_value_with_delta(v, d).
+- `update(i, d)` assigns the value `v` at index `i` to `join_value_with_delta(v, d)`.
 
 Time Complexity:
-- O(n) per call to both constructors, where n is the size of the array.
-- O(1) per call to size().
-- O(log n) per call to at(), update(), and query().
+- O(n) per call to both constructors, where $n$ is the size of the array.
+- O(1) per call to `size()`.
+- O(log n) per call to `at()`, `update()`, and `query()`.
 
 Space Complexity:
 - O(n) for storage of the array elements.
-- O(log n) auxiliary stack space for update() and query().
-- O(1) auxiliary for size().
+- O(log n) auxiliary stack space for `update()` and `query()`.
+- O(1) auxiliary for `size()`.
 
 */
 

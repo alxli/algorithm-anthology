@@ -3,23 +3,23 @@
 Maintain an array of numerical type, allowing for contiguous sub-arrays to be
 simultaneously incremented by arbitrary values (range update) and queries for
 the sum of contiguous sub-arrays (range query). This implementation uses
-std::map for coordinate compression, allowing for large indices to be accessed
-with efficient space complexity. That is, all array indices from 0 to MAXN,
+`std::map` for coordinate compression, allowing for large indices to be accessed
+with efficient space complexity. That is, all array indices from 0 to `MAXN`,
 inclusive, are accessible.
 
-- at(i) returns the value at index i.
-- add(i, x) adds x to the value at index i.
-- add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
-- set(i, x) assigns the value at index i to x.
-- sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
-- sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+- `at(i)` returns the value at index `i`.
+- `add(i, x)` adds `x` to the value at index `i`.
+- `add(lo, hi, x)` adds `x` to the values at all indices from `lo` to `hi`, inclusive.
+- `set(i, x)` assigns the value at index `i` to `x`.
+- `sum(hi)` returns the sum of all values at indices from 0 to `hi`, inclusive.
+- `sum(lo, hi)` returns the sum of all values at indices from `lo` to `hi`, inclusive.
 
 Time Complexity:
-- O(log^2 MAXN) per call to all member functions. If std::map is replaced with
-  std::unordered_map, then the amortized running time will become O(log MAXN).
+- O(log^2 MAXN) per call to all member functions. If `std::map` is replaced with
+  `std::unordered_map`, then the amortized running time will become O(log MAXN).
 
 Space Complexity:
-- O(n log MAXN) for storage of the array elements, where n is the number of
+- O(n log MAXN) for storage of the array elements, where $n$ is the number of
   distinct indices that have been accessed across all of the operations so far.
 - O(1) auxiliary for all operations.
 

@@ -3,19 +3,19 @@
 Maintain an array of numerical type, allowing for updates of individual indices
 (point update) and queries for the sum of contiguous sub-arrays (range queries).
 This implementation assumes that the array is 0-based (i.e. has valid indices
-from 0 to size() - 1, inclusive).
+from 0 to `size() - 1`, inclusive).
 
-- size() returns the size of the array.
-- at(i) returns the value at index i.
-- add(i, x) adds x to the value at index i.
-- set(i, x) assigns the value at index i to x.
-- sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
-- sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+- `size()` returns the size of the array.
+- `at(i)` returns the value at index `i`.
+- `add(i, x)` adds `x` to the value at index `i`.
+- `set(i, x)` assigns the value at index `i` to `x`.
+- `sum(hi)` returns the sum of all values at indices from 0 to `hi`, inclusive.
+- `sum(lo, hi)` returns the sum of all values at indices from `lo` to `hi`, inclusive.
 
 Time Complexity:
-- O(n) per call to the constructor, where n is the size of the array.
-- O(1) per call to size() and at().
-- O(log n) per call to add(), set(), and both sum() functions.
+- O(n) per call to the constructor, where $n$ is the size of the array.
+- O(1) per call to `size()` and `at()`.
+- O(log n) per call to `add()`, `set()`, and both `sum()` functions.
 
 Space Complexity:
 - O(n) for storage of the array elements.

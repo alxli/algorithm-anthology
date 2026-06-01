@@ -3,28 +3,28 @@
 Maintain a mergeable min-priority queue, that is, a collection of elements with
 support for querying and extraction of the minimum as well as efficient merging
 with other instances. This implementation requires an ordering on the set of
-possible elements defined by the < operator. A pairing heap is a heap-ordered
+possible elements defined by `operator <`. A pairing heap is a heap-ordered
 multi-way tree, using a two-pass merge to self-adjust during each deletion.
 
-- pairing_heap() constructs an empty priority queue.
-- pairing_heap(lo, hi) constructs a priority queue from two ForwardIterators,
-  consisting of elements in the range [lo, hi).
-- size() returns the size of the priority queue.
-- empty() returns whether the priority queue is empty.
-- push(v) inserts the value v into the priority queue.
-- pop() removes the minimum element from the priority queue.
-- top() returns the minimum element in the priority queue.
-- absorb(h) inserts every value from h and sets h to the empty priority queue.
+- `pairing_heap()` constructs an empty priority queue.
+- `pairing_heap(lo, hi)` constructs a priority queue from two ForwardIterators,
+  consisting of elements in the range [`lo`, `hi`).
+- `size()` returns the size of the priority queue.
+- `empty()` returns whether the priority queue is empty.
+- `push(v)` inserts the value `v` into the priority queue.
+- `pop()` removes the minimum element from the priority queue.
+- `top()` returns the minimum element in the priority queue.
+- `absorb(h)` inserts every value from `h` and sets `h` to the empty priority queue.
 
 Time Complexity:
-- O(1) per call to the first constructor, size(), empty(), top(), push(), and
-  absorb().
-- O(log n) amortized per call to pop().
+- O(1) per call to the first constructor, `size()`, `empty()`, `top()`, `push()`, and
+  `absorb()`.
+- O(log n) amortized per call to `pop()`.
 - O(n) per call to the second constructor on the distance between lo and hi.
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.
-- O(log n) amortized auxiliary stack space for pop().
+- O(log n) amortized auxiliary stack space for `pop()`.
 - O(1) auxiliary for all other operations.
 
 */
