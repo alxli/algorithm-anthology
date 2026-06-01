@@ -16,7 +16,7 @@ using std::string;
 
 /*
 
-Integer Conversion
+Integer Conversion:
 
 - to_str(i) returns the string representation of integer i, much like
   std::to_string() in C++11 and later.
@@ -69,7 +69,7 @@ char* itoa(int value, char *str, int base = 10) {
 
 /*
 
-Case Conversion
+Case Conversion:
 
 - to_upper(s) returns s with all alphabetical characters converted to uppercase.
 - to_lower(s) returns s with all alphabetical characters converted to lowercase.
@@ -110,7 +110,7 @@ string to_title(const string &s) {
 
 /*
 
-Stripping
+Stripping:
 
 - lstrip(s) strips the left side of s in-place (that is, the input is modified)
   using the given delimiters and returns a reference to the stripped string.
@@ -143,7 +143,7 @@ string& strip(string &s, const string &delim = " \n\t\v\f\r") {
 
 /*
 
-Find and Replace
+Find and Replace:
 
 - find_all(haystack, needle) returns a vector of all positions where the string
   needle appears in the string haystack.
@@ -177,7 +177,7 @@ string replace(const string &s, const string &old, const string &replacement) {
 
 /*
 
-Joining and Splitting
+Joining and Splitting:
 
 - join(v, delim) returns the strings in vector v concatenated, separated by the
   given delimiter.

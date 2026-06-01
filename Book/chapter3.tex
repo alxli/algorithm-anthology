@@ -2,37 +2,25 @@
 
 \section{String Utilities}
 \setcounter{section}{1}
-\begin{lstlisting}
-/*
+Common string functions, many of which are substitutes for features which are not available in standard C++, or may not be available on compilers that do not support C++11 and later. These operations are naive implementations and often depend on certain std::string functions that have unspecified complexity.
 
-Common string functions, many of which are substitutes for features which are
-not available in standard C++, or may not be available on compilers that do not
-support C++11 and later. These operations are naive implementations and often
-depend on certain std::string functions that have unspecified complexity.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cctype>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 using std::string;
+\end{lstlisting}
+Integer Conversion:
 
-/*
+\begin{compactitem}
+  \item to\_str(i) returns the string representation of integer i, much like std::to\_string() in C++11 and later.
+  \item to\_int(s) returns the integer representation of string s, much like atoi(), except handling special cases of overflow by throwing an exception.
+  \item itoa(value, \&str, base) implements the non-standard C function which converts value into a C string, storing it into pointer str in the given base. For more generalized base conversion, see the math utilities section.
+\end{compactitem}
 
-Integer Conversion
-
-- to_str(i) returns the string representation of integer i, much like
-  std::to_string() in C++11 and later.
-- to_int(s) returns the integer representation of string s, much like atoi(),
-  except handling special cases of overflow by throwing an exception.
-- itoa(value, &str, base) implements the non-standard C function which converts
-  value into a C string, storing it into pointer str in the given base. For more
-  generalized base conversion, see the math utilities section.
-
-*/
-
+\begin{lstlisting}[language=C++]
 template<class Int>
 string to_str(Int i) {
   std::ostringstream oss;
@@ -71,18 +59,16 @@ char* itoa(int value, char *str, int base = 10) {
   }
   return str;
 }
+\end{lstlisting}
+Case Conversion:
 
-/*
+\begin{compactitem}
+  \item to\_upper(s) returns s with all alphabetical characters converted to uppercase.
+  \item to\_lower(s) returns s with all alphabetical characters converted to lowercase.
+  \item to\_title(s) returns the title case representation of string s, where the first letter of every word (consecutive alphabetical characters) is capitalized.
+\end{compactitem}
 
-Case Conversion
-
-- to_upper(s) returns s with all alphabetical characters converted to uppercase.
-- to_lower(s) returns s with all alphabetical characters converted to lowercase.
-- to_title(s) returns the title case representation of string s, where the first
-  letter of every word (consecutive alphabetical characters) is capitalized.
-
-*/
-
+\begin{lstlisting}[language=C++]
 string to_upper(const string &s) {
   string res;
   for (int i = 0; i < (int)s.size(); i++) {
@@ -112,20 +98,16 @@ string to_title(const string &s) {
   }
   return res;
 }
+\end{lstlisting}
+Stripping:
 
-/*
+\begin{compactitem}
+  \item lstrip(s) strips the left side of s in-place (that is, the input is modified) using the given delimiters and returns a reference to the stripped string.
+  \item rstrip(s) strips the right side of s in-place using the given delimiters and returns a reference to the stripped string.
+  \item strip(s) strips both sides of s in-place and returns a reference to the stripped string.
+\end{compactitem}
 
-Stripping
-
-- lstrip(s) strips the left side of s in-place (that is, the input is modified)
-  using the given delimiters and returns a reference to the stripped string.
-- rstrip(s) strips the right side of s in-place using the given delimiters and
-  returns a reference to the stripped string.
-- strip(s) strips both sides of s in-place and returns a reference to the
-  stripped string.
-
-*/
-
+\begin{lstlisting}[language=C++]
 string& lstrip(string &s, const string &delim = " \n\t\v\f\r") {
   size_t pos = s.find_first_not_of(delim);
   if (pos != string::npos) {
@@ -145,18 +127,15 @@ string& rstrip(string &s, const string &delim = " \n\t\v\f\r") {
 string& strip(string &s, const string &delim = " \n\t\v\f\r") {
   return lstrip(rstrip(s));
 }
+\end{lstlisting}
+Find and Replace:
 
-/*
+\begin{compactitem}
+  \item find\_all(haystack, needle) returns a vector of all positions where the string needle appears in the string haystack.
+  \item replace(s, old, replacement) returns a copy of s with all occurrences of the string old replaced with the given replacement.
+\end{compactitem}
 
-Find and Replace
-
-- find_all(haystack, needle) returns a vector of all positions where the string
-  needle appears in the string haystack.
-- replace(s, old, replacement) returns a copy of s with all occurrences of the
-  string old replaced with the given replacement.
-
-*/
-
+\begin{lstlisting}[language=C++]
 std::vector<int> find_all(const string &haystack, const string &needle) {
   std::vector<int> res;
   size_t pos = haystack.find(needle, 0);
@@ -179,29 +158,17 @@ string replace(const string &s, const string &old, const string &replacement) {
   }
   return res;
 }
+\end{lstlisting}
+Joining and Splitting:
 
-/*
+\begin{compactitem}
+  \item join(v, delim) returns the strings in vector v concatenated, separated by the given delimiter.
+  \item split(s, char delim) returns a vector of tokens of s, split on a single character delimiter. Note that this version will not skip empty tokens. For example, split("a::b", ":") returns \{"a", "b"\}, not \{"a", "", "b"\}.
+  \item split(s, string delim) returns a vector of tokens of s, split on a set of many possible single character delimiters. All characters ofz delim will be removed from s, and the remaining token(s) of s will be added sequentially to a vector and returned. Unlike the first version, empty tokens are skipped. For example, split("a::b", ":") returns \{"a", "b"\}, not \{"a", "", "b"\}.
+  \item explode(s, delim) returns a vector of tokens of s, split on the entire delimiter string delim. Unlike the split() functions above, delim is treated as a contiguous boundary string, not merely a set of possible boundary characters. This will not skip empty tokens. For example, explode("a::::b", "::") yields \{"a", "", "b"\}, not \{"a", "b"\}.
+\end{compactitem}
 
-Joining and Splitting
-
-- join(v, delim) returns the strings in vector v concatenated, separated by the
-  given delimiter.
-- split(s, char delim) returns a vector of tokens of s, split on a single
-  character delimiter. Note that this version will not skip empty tokens. For
-  example, split("a::b", ":") returns {"a", "b"}, not {"a", "", "b"}.
-- split(s, string delim) returns a vector of tokens of s, split on a set of many
-  possible single character delimiters. All characters ofz delim will be removed
-  from s, and the remaining token(s) of s will be added sequentially to a vector
-  and returned. Unlike the first version, empty tokens are skipped. For example,
-  split("a::b", ":") returns {"a", "b"}, not {"a", "", "b"}.
-- explode(s, delim) returns a vector of tokens of s, split on the entire
-  delimiter string delim. Unlike the split() functions above, delim is treated
-  as a contiguous boundary string, not merely a set of possible boundary
-  characters. This will not skip empty tokens. For example,
-  explode("a::::b", "::") yields {"a", "", "b"}, not {"a", "b"}.
-
-*/
-
+\begin{lstlisting}[language=C++]
 string join(const std::vector<string> &v, const string &delim = " ") {
   string res;
   for (int i = 0; i < (int)v.size(); i++) {
@@ -251,9 +218,9 @@ std::vector<string> explode(const string &s, const string &delim) {
   res.push_back(s.substr(last));
   return res;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -287,35 +254,30 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Expression Parsing}
+\section{String Searching}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{String Searching (KMP)}
-\begin{lstlisting}
-/*
+Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine the first positions in which the needle occurs within the given haystacks in linear time using the Knuth-Morris-Pratt algorithm. In comparison, std::string::find runs in quadratic time.
 
-Given a single string (needle) and subsequent queries of texts (haystacks) to be
-searched, determine the first positions in which the needle occurs within the
-given haystacks in linear time using the Knuth-Morris-Pratt algorithm. In
-comparison, std::string::find runs in quadratic time.
+\begin{compactitem}
+  \item kmp(needle) constructs the partial match table for a string needle that is to be searched for subsequently in haystack queries.
+  \item find\_in(haystack) returns the first position that needle occurs in haystack, or std::string::npos if it cannot be found. Note that the function can be modified to return all matches by simply letting the loop run and storing the results instead of returning early.
+\end{compactitem}
 
-- kmp(needle) constructs the partial match table for a string needle that is to
-  be searched for subsequently in haystack queries.
-- find_in(haystack) returns the first position that needle occurs in haystack,
-  or std::string::npos if it cannot be found. Note that the function can be
-  modified to return all matches by simply letting the loop run and storing
-  the results instead of returning early.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(m)$ per call to the constructor, where m is the length of needle.
+  \item $O(n)$ per call to find\_in(haystack), where n is the length of haystack.
+\end{compactitem}
 
-Time Complexity:
-- O(m) per call to the constructor, where m is the length of needle.
-- O(n) per call to find_in(haystack), where n is the length of haystack.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(m)$ for storage of the partial match table, where m is the length of needle.
+  \item $O(1)$ auxiliary space per call to find\_in(haystack).
+\end{compactitem}
 
-Space Complexity:
-- O(m) for storage of the partial match table, where m is the length of needle.
-- O(1) auxiliary space per call to find_in(haystack).
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <string>
 #include <vector>
 using std::string;
@@ -325,39 +287,40 @@ class kmp {
   std::vector<int> table;
 
  public:
-  kmp(const string &needle) : needle(needle) {
-    table.resize(needle.size());
-    int i = 0, j = table[0] = -1;
-    while (i < (int)needle.size()) {
-      while (j >= 0 && needle[i] != needle[j]) {
-        j = table[j];
+  kmp(const string &needle) : needle(needle), table(needle.size()) {
+    for (int i = 1, j = 0; i < (int)needle.size(); i++) {
+      while (j > 0 && needle[i] != needle[j]) {
+        j = table[j - 1];
       }
-      i++;
-      j++;
-      table[i] = (needle[i] == needle[j]) ? table[j] : j;
+      if (needle[i] == needle[j]) {
+        j++;
+      }
+      table[i] = j;
     }
   }
 
   size_t find_in(const string &haystack) {
-    if (needle.empty()) {
+    int m = needle.size();
+    if (m == 0) {
       return 0;
     }
-    for (int i = 0, j = 0; j < (int)haystack.size(); ) {
-      while (i >= 0 && needle[i] != haystack[j]) {
-        i = table[i];
+    for (int i = 0, j = 0; i < (int)haystack.size(); i++) {
+      while (j > 0 && needle[j] != haystack[i]) {
+        j = table[j - 1];
       }
-      i++;
-      j++;
-      if (i >= (int)needle.size()) {
-        return j - i;
+      if (needle[j] == haystack[i]) {
+        j++;
+      }
+      if (j == m) {
+        return i + 1 - m;
       }
     }
     return string::npos;
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -366,39 +329,28 @@ int main() {
 }
 \end{lstlisting}
 \subsection{String Searching (Z Algorithm)}
-\begin{lstlisting}
-/*
+Given a single string (needle) and a single text (haystack) to be searched, determine the first position in which the needle occurs within the haystack in linear time using the Z algorithm. In comparison, std::string::find runs in quadratic time.
 
-Given a single string (needle) and a single text (haystack) to be searched,
-determine the first position in which the needle occurs within the haystack in
-linear time using the Z algorithm. In comparison, std::string::find runs in
-quadratic time.
+The find function below calls the Z algorithm on the concatenation of the needle and the haystack, separated by a sentinel character (in this case '\textbackslash{}0'), which should be chosen such that it does not occur within either of the input strings.
 
-The find function below calls the Z algorithm on the concatenation of the needle
-and the haystack, separated by a sentinel character (in this case '\0'), which
-should be chosen such that it does not occur within either of the input strings.
+\begin{compactitem}
+  \item z\_array(s) constructs the Z array for a string needle that can be used for string searching. The Z array on an input string s is an array z where z[i] is the length of the longest substring starting from s[i] which is also a prefix of s.
+  \item find(needle, haystack) returns the first position that needle occurs in haystack, or std::string::npos if it cannot be found. Note that the function can be modified to return all matches by simply letting the loop run and storing the results instead of returning early.
+\end{compactitem}
 
-- z_array(s) constructs the Z array for a string needle that can be used for
-  string searching. The Z array on an input string s is an array z where z[i] is
-  the length of the longest substring starting from s[i] which is also a prefix
-  of s.
-- find(needle, haystack) returns the first position that needle occurs in
-  haystack, or std::string::npos if it cannot be found. Note that the function
-  can be modified to return all matches by simply letting the loop run and
-  storing the results instead of returning early.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to z\_array(s), where n is the length of s.
+  \item $O(n + m)$ per call to find(haystack, needle), where n is the length of haystack and m is the length of needle.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to z_array(s), where n is the length of s.
-- O(n + m) per call to find(haystack, needle), where n is the length of haystack
-  and m is the length of needle.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary heap space for z\_array(s), where n is the length of s.
+  \item $O(n + m)$ auxiliary heap space for find(haystack, needle) where n is the length of haystack and m is the length of needle.
+\end{compactitem}
 
-Space Complexity:
-- O(n) auxiliary heap space for z_array(s), where n is the length of s.
-- O(n + m) auxiliary heap space for find(haystack, needle) where n is the length
-  of haystack and m is the length of needle.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -430,9 +382,9 @@ size_t find(const string &haystack, const string &needle) {
   }
   return string::npos;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -441,47 +393,28 @@ int main() {
 }
 \end{lstlisting}
 \subsection{String Searching (Aho-Corasick)}
-\begin{lstlisting}
-/*
+Given a set of strings (needles) and subsequent queries of texts (haystacks) to be searched, determine all positions in which needles occur within the given haystacks in linear time using the Aho-Corasick algorithm.
 
-Given a set of strings (needles) and subsequent queries of texts (haystacks)
-to be searched, determine all positions in which needles occur within the given
-haystacks in linear time using the Aho-Corasick algorithm.
+Note that this implementation uses an ordered map for storage of the graph, adding an additional log k factor to the time complexities of all operations, where k is the size of the alphabet (number of distinct characters used across the needles). It also uses an ordered set for storage of the precomputed output tables, adding an additional log m factor to the time complexities, where m is the number of needles. In C++11 and later, both of these containers should be replaced by their unordered versions for constant time access, thus eliminating the log factors from the time complexities.
 
-Note that this implementation uses an ordered map for storage of the graph,
-adding an additional log k factor to the time complexities of all operations,
-where k is the size of the alphabet (number of distinct characters used across
-the needles). It also uses an ordered set for storage of the precomputed output
-tables, adding an additional log m factor to the time complexities, where m is
-the number of needles. In C++11 and later, both of these containers should be
-replaced by their unordered versions for constant time access, thus eliminating
-the log factors from the time complexities.
+\begin{compactitem}
+  \item aho\_corasick(needles) constructs the finite-state automaton for a set of needle strings that are to be searched for subsequently in haystack queries.
+  \item find\_all\_in(haystack, report\_match) calls the function report\_match(s, pos) once on each occurrence of each needle that occurs in the haystack, where pos is the starting position in the haystack at which string s (a matched needle) occurs. The matches will be reported in increasing order of their ending positions within the haystack.
+\end{compactitem}
 
-- aho_corasick(needles) constructs the finite-state automaton for a set of
-  needle strings that are to be searched for subsequently in haystack queries.
-- find_all_in(haystack, report_match) calls the function report_match(s, pos)
-  once on each occurrence of each needle that occurs in the haystack, where pos
-  is the starting position in the haystack at which string s (a matched needle)
-  occurs. The matches will be reported in increasing order of their ending
-  positions within the haystack.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(m \cdot ((\log m) + l \cdot \log k))$ per call to the constructor, where m is the number of needles, l is the maximum length for any needle, and k is the size of the alphabet used by the needles. If unordered containers are used, then the time complexity reduces to $O(m \cdot l)$, or linear on the input size.
+  \item $O(n \cdot (\log k) + z)$ per call to find\_all\_in(haystack, report\_match), where n is the length of haystack, k is the size of the alphabet used by the needles, and z is the number of matches. If unordered containers are used, then the time complexity reduces to $O(n + z)$, or linear on the input size.
+\end{compactitem}
 
-Time Complexity:
-- O(m*((log m) + l*log k)) per call to the constructor, where m is the number of
-  needles, l is the maximum length for any needle, and k is the size of the
-  alphabet used by the needles. If unordered containers are used, then the time
-  complexity reduces to O(m*l), or linear on the input size.
-- O(n*(log k) + z) per call to find_all_in(haystack, report_match), where n is
-  the length of haystack, k is the size of the alphabet used by the needles, and
-  z is the number of matches. If unordered containers are used, then the time
-  complexity reduces to O(n + z), or linear on the input size.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(m \cdot l)$ for storage of the automaton, where where m is the number of needles and l is the maximum length for any needle.
+  \item $O(1)$ auxiliary space per call to find\_all\_in(haystack, report\_match).
+\end{compactitem}
 
-Space Complexity:
-- O(m*l) for storage of the automaton, where where m is the number of needles
-  and l is the maximum length for any needle.
-- O(1) auxiliary space per call to find_all_in(haystack, report_match).
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <map>
 #include <queue>
 #include <set>
@@ -561,20 +494,9 @@ class aho_corasick {
     }
   }
 };
-
-/*** Example Usage and Output:
-
-Matched "a" at position 0.
-Matched "ab" at position 0.
-Matched "bc" at position 1.
-Matched "c" at position 2.
-Matched "c" at position 3.
-Matched "a" at position 4.
-Matched "ab" at position 4.
-Matched "abccab" at position 0.
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <iostream>
 using namespace std;
 
@@ -597,28 +519,32 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Matched "a" at position 0.
+Matched "ab" at position 0.
+Matched "bc" at position 1.
+Matched "c" at position 2.
+Matched "c" at position 3.
+Matched "a" at position 4.
+Matched "ab" at position 4.
+Matched "abccab" at position 0.
+\end{exampleoutput}
 
-\section{String Searching}
+\section{Expression Parsing}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Recursive Descent Parsing (Simple)}
-\begin{lstlisting}
-/*
+Evaluate an expression in accordance to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators.
 
-Evaluate an expression in accordance to the order of operations (parentheses,
-unary plus and minus signs, multiplication/division, addition/subtraction). The
-following is a minimalistic recursive descent implementation using iterators.
+\begin{compactitem}
+  \item eval(s) returns an evaluation of the arithmetic expression s.
+\end{compactitem}
 
-- eval(s) returns an evaluation of the arithmetic expression s.
+\textbf{Time Complexity}: $O(n)$ per call to eval(s), where n is the length of s.
 
-Time Complexity:
-- O(n) per call to eval(s), where n is the length of s.
+\textbf{Space Complexity}: $O(n)$ auxiliary stack space for eval(s), where n is the length of s.
 
-Space Complexity:
-- O(n) auxiliary stack space for eval(s), where n is the length of s.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <string>
 
 template<class It>
@@ -650,12 +576,13 @@ int eval(It &it, int prec) {
 }
 
 int eval(const std::string &s) {
-  std::string::iterator it = std::string(s).begin();
+  std::string expr = s + '\0';
+  std::string::iterator it = expr.begin();
   return eval(it, 2);
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -665,63 +592,34 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Recursive Descent Parsing (Generic)}
-\begin{lstlisting}
-/*
+Evaluate an expression using a generalized parser class for custom-defined operand types, prefix unary operators, binary operators, and precedences. Typical parentheses behavior is supported, but multiplication by juxtaposition is not. Evaluation is performed using the recursive descent algorithm.
 
-Evaluate an expression using a generalized parser class for custom-defined
-operand types, prefix unary operators, binary operators, and precedences.
-Typical parentheses behavior is supported, but multiplication by juxtaposition
-is not. Evaluation is performed using the recursive descent algorithm.
+An arbitrary operand type is supported, with its string representation defined by a user-specified is\_operand() and eval\_operand() functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting "-1" as a valid operand (since the "-" sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator "-".
 
-An arbitrary operand type is supported, with its string representation defined
-by a user-specified is_operand() and eval_operand() functions. For maximum
-reliability, the string representation of operands should not use characters
-shared by any operator. For instance, the best practice instead of accepting
-"-1" as a valid operand (since the "-" sign may conflict with the identical
-binary operator), is to specify non-negative number as operands alongside the
-unary operator "-".
+Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffices of one another, else the tokenization process may be ambiguous. For example, if ++ and + are both operators, then ++ may be split into either ["+", "+"] or ["++"] depending on the lexicographical ordering of conflicting operators.
 
-Operators may be non-empty strings of any length, but should not contain any
-parentheses or shared characters with the string representations of operands.
-Ideally, operators should not be prefixes or suffices of one another, else the
-tokenization process may be ambiguous. For example, if ++ and + are both
-operators, then ++ may be split into either ["+", "+"] or ["++"] depending on
-the lexicographical ordering of conflicting operators.
+\begin{compactitem}
+  \item parser(unary\_op, binary\_op) initializes a parser with operators specified by maps unary\_op (of operator to function pointer) and binary\_op (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item split(s) returns a vector of tokens for the expression s, split on the given operators during construction. Each parenthesis, operator, and operand satisfying is\_operand() will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
+  \item eval(lo, hi) returns the evaluation of a range [lo, hi) of already split-up expression tokens, where lo and hi must be random-access iterators.
+  \item eval(s) returns the evaluation of expression s, after first calling split(s) to obtain the tokens.
+\end{compactitem}
 
-- parser(unary_op, binary_op) initializes a parser with operators specified by
-  maps unary_op (of operator to function pointer) and binary_op (of operator to
-  pair of function pointer and operator precedence). Operator precedences should
-  be numbered upwards starting at 0 (lowest precedence, evaluated last).
-- split(s) returns a vector of tokens for the expression s, split on the given
-  operators during construction. Each parenthesis, operator, and operand
-  satisfying is_operand() will be split into a separate token. The algorithm is
-  naive, matching operators lazily in the case of overlapping operators as
-  mentioned above. Under these circumstances, the parse may not always succeed.
-- eval(lo, hi) returns the evaluation of a range [lo, hi) of already split-up
-  expression tokens, where lo and hi must be random-access iterators.
-- eval(s) returns the evaluation of expression s, after first calling split(s)
-  to obtain the tokens.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(m)$ per call to the constructor, where m is the total number of operators.
+  \item $O(nmk)$ per call to split(s), where n is the length of s, m is the total number of operators defined for the parser instance, and k is the maximum length for any operator representation.
+  \item $O(n \log m)$ per call to eval(lo, hi), where n is the distance between lo and hi and m is the total number of operators defined for the parser instance. In C++11 and later, std::unordered\_map may be used in place of std::map for storing the unary\_ops and binary\_ops, which will eliminate the log m factor for a time complexity of $O(n)$ per call.
+  \item $O(nmk + n \log m)$ per call to eval(s), where n is the distance between lo and hi, and m and k are as defined previous.
+\end{compactitem}
 
-Time Complexity:
-- O(m) per call to the constructor, where m is the total number of operators.
-- O(nmk) per call to split(s), where n is the length of s, m is the total number
-  of operators defined for the parser instance, and k is the maximum length for
-  any operator representation.
-- O(n log m) per call to eval(lo, hi), where n is the distance between lo and hi
-  and m is the total number of operators defined for the parser instance. In
-  C++11 and later, std::unordered_map may be used in place of std::map for
-  storing the unary_ops and binary_ops, which will eliminate the log m factor
-  for a time complexity of O(n) per call.
-- O(nmk + n log m) per call to eval(s), where n is the distance between lo and
-  hi, and m and k are as defined previous.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(mk)$ for storage of the m operators, of maximum length k.
+  \item $O(n)$ auxiliary stack space for split(s), eval(lo, hi), and eval(s), where n is the length of the argument.
+\end{compactitem}
 
-Space Complexity:
-- O(mk) for storage of the m operators, of maximum length k.
-- O(n) auxiliary stack space for split(s), eval(lo, hi), and eval(s), where n is
-  the length of the argument.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cctype>
 #include <functional>
@@ -889,9 +787,9 @@ class parser {
     return eval(tokens.begin(), tokens.end());
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cmath>
 using namespace std;
@@ -933,63 +831,34 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Shunting Yard Parsing}
-\begin{lstlisting}
-/*
+Evaluate an expression using a generalized parser class for custom-defined operand types, prefix unary operators, binary operators, and precedences. Typical parentheses behavior is supported, but multiplication by juxtaposition is not. Evaluation is performed using the shunting yard algorithm.
 
-Evaluate an expression using a generalized parser class for custom-defined
-operand types, prefix unary operators, binary operators, and precedences.
-Typical parentheses behavior is supported, but multiplication by juxtaposition
-is not. Evaluation is performed using the shunting yard algorithm.
+An arbitrary operand type is supported, with its string representation defined by a user-specified is\_operand() and eval\_operand() functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting "-1" as a valid operand (since the "-" sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator "-".
 
-An arbitrary operand type is supported, with its string representation defined
-by a user-specified is_operand() and eval_operand() functions. For maximum
-reliability, the string representation of operands should not use characters
-shared by any operator. For instance, the best practice instead of accepting
-"-1" as a valid operand (since the "-" sign may conflict with the identical
-binary operator), is to specify non-negative number as operands alongside the
-unary operator "-".
+Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffices of one another, else the tokenization process may be ambiguous. For example, if ++ and + are both operators, then ++ may be split into either ["+", "+"] or ["++"] depending on the lexicographical ordering of conflicting operators.
 
-Operators may be non-empty strings of any length, but should not contain any
-parentheses or shared characters with the string representations of operands.
-Ideally, operators should not be prefixes or suffices of one another, else the
-tokenization process may be ambiguous. For example, if ++ and + are both
-operators, then ++ may be split into either ["+", "+"] or ["++"] depending on
-the lexicographical ordering of conflicting operators.
+\begin{compactitem}
+  \item parser(unary\_op, binary\_op) initializes a parser with operators specified by maps unary\_op (of operator to function pointer) and binary\_op (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item split(s) returns a vector of tokens for the expression s, split on the given operators during construction. Each parenthesis, operator, and operand satisfying is\_operand() will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
+  \item eval(lo, hi) returns the evaluation of a range [lo, hi) of already split-up expression tokens, where lo and hi must be random-access iterators.
+  \item eval(s) returns the evaluation of expression s, after first calling split(s) to obtain the tokens.
+\end{compactitem}
 
-- parser(unary_op, binary_op) initializes a parser with operators specified by
-  maps unary_op (of operator to function pointer) and binary_op (of operator to
-  pair of function pointer and operator precedence). Operator precedences should
-  be numbered upwards starting at 0 (lowest precedence, evaluated last).
-- split(s) returns a vector of tokens for the expression s, split on the given
-  operators during construction. Each parenthesis, operator, and operand
-  satisfying is_operand() will be split into a separate token. The algorithm is
-  naive, matching operators lazily in the case of overlapping operators as
-  mentioned above. Under these circumstances, the parse may not always succeed.
-- eval(lo, hi) returns the evaluation of a range [lo, hi) of already split-up
-  expression tokens, where lo and hi must be random-access iterators.
-- eval(s) returns the evaluation of expression s, after first calling split(s)
-  to obtain the tokens.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(m)$ per call to the constructor, where m is the total number of operators.
+  \item $O(nmk)$ per call to split(s), where n is the length of s, m is the total number of operators defined for the parser instance, and k is the maximum length for any operator representation.
+  \item $O(n \log m)$ per call to eval(lo, hi), where n is the distance between lo and hi and m is the total number of operators defined for the parser instance. In C++11 and later, std::unordered\_map may be used in place of std::map for storing the unary\_ops and binary\_ops, which will eliminate the log m factor for a time complexity of $O(n)$ per call.
+  \item $O(nmk + n \log m)$ per call to eval(s), where n is the distance between lo and hi, and m and k are as defined previous.
+\end{compactitem}
 
-Time Complexity:
-- O(m) per call to the constructor, where m is the total number of operators.
-- O(nmk) per call to split(s), where n is the length of s, m is the total number
-  of operators defined for the parser instance, and k is the maximum length for
-  any operator representation.
-- O(n log m) per call to eval(lo, hi), where n is the distance between lo and hi
-  and m is the total number of operators defined for the parser instance. In
-  C++11 and later, std::unordered_map may be used in place of std::map for
-  storing the unary_ops and binary_ops, which will eliminate the log m factor
-  for a time complexity of O(n) per call.
-- O(nmk + n log m) per call to eval(s), where n is the distance between lo and
-  hi, and m and k are as defined previous.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(mk)$ for storage of the m operators, of maximum length k.
+  \item $O(n)$ auxiliary stack space for split(s), eval(lo, hi), and eval(s), where n is the length of the argument.
+\end{compactitem}
 
-Space Complexity:
-- O(mk) for storage of the m operators, of maximum length k.
-- O(n) auxiliary stack space for split(s), eval(lo, hi), and eval(s), where n is
-  the length of the argument.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cctype>
 #include <functional>
@@ -1165,9 +1034,9 @@ class parser {
     return eval(tokens.begin(), tokens.end());
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cmath>
 using namespace std;
@@ -1213,22 +1082,13 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Longest Common Substring}
-\begin{lstlisting}
-/*
+Given two strings, determine their longest common substring (i.e. consecutive subsequence) using dynamic programming.
 
-Given two strings, determine their longest common substring (i.e. consecutive
-subsequence) using dynamic programming.
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to longest\_common\_substring(s1, s2), where n and m are the lengths of s1 and s2, respectively.
 
-Time Complexity:
-- O(n*m) per call to longest_common_substring(s1, s2), where n and m are the
-  lengths of s1 and s2, respectively.
+\textbf{Space Complexity}: $O(\min\left(n, m\right))$ auxiliary heap space, where n and m are the lengths of s1 and s2, respectively.
 
-Space Complexity:
-- O(min(n, m)) auxiliary heap space, where n and m are the lengths of s1 and
-  s2, respectively.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <string>
 #include <vector>
 using std::string;
@@ -1259,9 +1119,9 @@ string longest_common_substring(const string &s1, const string &s2) {
   }
   return s1.substr(pos, len);
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -1270,36 +1130,22 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Longest Common Subsequence}
-\begin{lstlisting}
-/*
+Given two strings, determine their longest common subsequence. A subsequence is a string that can be derived from the original string by deleting some elements without changing the order of the remaining elements (e.g. "ACE" is a subsequence of "ABCDE", but "BAE" is not).
 
-Given two strings, determine their longest common subsequence. A subsequence is
-a string that can be derived from the original string by deleting some elements
-without changing the order of the remaining elements (e.g. "ACE" is a
-subsequence of "ABCDE", but "BAE" is not).
+\begin{compactitem}
+  \item longest\_common\_subsequence(s1, s2) returns the longest common subsequence of strings s1 and s2 using a classic dynamic programming approach. This implementation computes dp[i][j] (the length of the longest common subsequence for the length i prefix of s1 and the length j prefix of s2) before following the path backwards to construct the answer.
+  \item hirschberg\_lcs(s1, s2) returns the longest common subsequence of strings s1 and s2 using the more memory efficient Hirschberg's algorithm.
+\end{compactitem}
 
-- longest_common_subsequence(s1, s2) returns the longest common subsequence of
-  strings s1 and s2 using a classic dynamic programming approach. This
-  implementation computes dp[i][j] (the length of the longest common subsequence
-  for the length i prefix of s1 and the length j prefix of s2) before following
-  the path backwards to construct the answer.
-- hirschberg_lcs(s1, s2) returns the longest common subsequence of strings s1
-  and s2 using the more memory efficient Hirschberg's algorithm.
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to longest\_common\_subsequence(s1, s2) as well as hirschberg\_lcs(s1, s2), where n and m are the lengths of s1 and s2, respectively.
 
-Time Complexity:
-- O(n*m) per call to longest_common_subsequence(s1, s2) as well as
-  hirschberg_lcs(s1, s2), where n and m are the lengths of s1 and s2,
-  respectively.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot m)$ auxiliary heap space for longest\_common\_subsequence(s1, s2), where n and m are the lengths of s1 and s2, respectively.
+  \item $O(\log \max\left(n, m\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for hirschberg\_lcs(s1, s2), where n and m are the lengths of s1 and s2, respectively.
+\end{compactitem}
 
-Space Complexity:
-- O(n*m) auxiliary heap space for longest_common_subsequence(s1, s2), where n
-  and m are the lengths of s1 and s2, respectively.
-- O(log max(n, m)) auxiliary stack space and O(min(n, m)) auxiliary heap space
-  for hirschberg_lcs(s1, s2), where n and m are the lengths of s1 and s2,
-  respectively.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <iterator>
 #include <string>
@@ -1383,9 +1229,9 @@ string hirschberg_lcs(const string &s1, const string &s2) {
   hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res);
   return res;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -1395,41 +1241,22 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Sequence Alignment}
-\begin{lstlisting}
-/*
+Given two strings, determine their minimum-cost alignment. An alignment of two strings is a transformation of both strings by inserting gap characters '\_' in some way to make the final lengths equal. The total cost of an alignment given a gap\_cost (insertion or deletion cost) and a sub\_cost (substitution, i.e. mismatch cost) is gap\_cost*(the number of gaps inserted across both strings), plus sub\_cost*(the number of indices at which the two aligned strings differ).
 
-Given two strings, determine their minimum-cost alignment. An alignment of two
-strings is a transformation of both strings by inserting gap characters '_' in
-some way to make the final lengths equal. The total cost of an alignment given
-a gap_cost (insertion or deletion cost) and a sub_cost (substitution, i.e.
-mismatch cost) is gap_cost*(the number of gaps inserted across both strings),
-plus sub_cost*(the number of indices at which the two aligned strings differ).
+\begin{compactitem}
+  \item align\_sequences(s1, s2, gap\_cost, sub\_cost) returns a pair of aligned strings for strings s1 and s2, using a classic dynamic programming approach. This implementation first computes dp[i][j] (the cost of aligning the length i prefix of s1 with the length j prefix of s2) before following the path backwards to construct the answer. For gap\_cost = sub\_cost = 1, dp[n][m] will be the Levenshtein edit distance, where n and m are the lengths of s1 and s2, respectively.
+  \item hirschberg\_align\_sequences(s1, s2, gap\_cost, sub\_cost) returns the sequence alignment of strings s1 and s2 using the more memory efficient Hirschberg's algorithm.
+\end{compactitem}
 
-- align_sequences(s1, s2, gap_cost, sub_cost) returns a pair of aligned strings
-  for strings s1 and s2, using a classic dynamic programming approach. This
-  implementation first computes dp[i][j] (the cost of aligning the length i
-  prefix of s1 with the length j prefix of s2) before following the path
-  backwards to construct the answer. For gap_cost = sub_cost = 1, dp[n][m] will
-  be the Levenshtein edit distance, where n and m are the lengths of s1 and
-  s2, respectively.
-- hirschberg_align_sequences(s1, s2, gap_cost, sub_cost) returns the sequence
-  alignment of strings s1 and s2 using the more memory efficient Hirschberg's
-  algorithm.
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to align\_sequences(s1, s2) as well as hirschberg\_align\_sequences(s1, s2), where n and m are the lengths of s1 and s2, respectively.
 
-Time Complexity:
-- O(n*m) per call to align_sequences(s1, s2) as well as
-  hirschberg_align_sequences(s1, s2), where n and m are the lengths of s1 and
-  s2, respectively.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot m)$ auxiliary heap space for align\_sequences(s1, s2), where n and m are the lengths of s1 and s2, respectively.
+  \item $O(\log \max\left(n, m\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for hirschberg\_align\_sequences(s1, s2), where n and m are the lengths of s1 and s2, respectively.
+\end{compactitem}
 
-Space Complexity:
-- O(n*m) auxiliary heap space for align_sequences(s1, s2), where n and m are the
-  lengths of s1 and s2, respectively.
-- O(log max(n, m)) auxiliary stack space and O(min(n, m)) auxiliary heap space
-  for hirschberg_align_sequences(s1, s2), where n and m are the lengths of s1
-  and s2, respectively.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -1541,9 +1368,9 @@ std::pair<string, string> hirschberg_align_sequences(
                  gap_cost, sub_cost);
   return std::make_pair(res1, res2);
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -1559,45 +1386,33 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Suffix Array and LCP (Manber-Myers)}
-\begin{lstlisting}
-/*
+Given a string s, a suffix array is the array of the smallest starting positions for the sorted suffices of s. That is, the i-th position of the suffix array stores the starting position of the i-th lexicographically smallest suffix of s. For examples, s = "cab" has the suffices "cab", "ab", and "b". When sorted, the indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming zero-based indices) is [1, 2, 0].
 
-Given a string s, a suffix array is the array of the smallest starting positions
-for the sorted suffices of s. That is, the i-th position of the suffix array
-stores the starting position of the i-th lexicographically smallest suffix of s.
-For examples, s = "cab" has the suffices "cab", "ab", and "b". When sorted, the
-indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming
-zero-based indices) is [1, 2, 0].
+For a string s of length n the longest common prefix (LCP) array of length n - 1 stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffices in s. For example, "baa" has the sorted suffices "a", "aa", and "baa", with an LCP array of [1, 0].
 
-For a string s of length n the longest common prefix (LCP) array of length n - 1
-stores the lengths of the longest common prefixes between all pairs of
-lexicographically adjacent suffices in s. For example, "baa" has the sorted
-suffices "a", "aa", and "baa", with an LCP array of [1, 0].
+\begin{compactitem}
+  \item suffix\_array(s) constructs a suffix array from the given string s using the original Manber-Myers gap partitioning algorithm with a comparison-based sort.
+  \item get\_sa() returns the constructed suffix array.
+  \item get\_lcp() returns the corresponding LCP array for the suffix array.
+  \item find(needle) returns one position that needle occurs in s (not necessarily the first), or std::string::npos if it cannot be found. For a needle of length m, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
+\end{compactitem}
 
-- suffix_array(s) constructs a suffix array from the given string s using the
-  original Manber-Myers gap partitioning algorithm with a comparison-based sort.
-- get_sa() returns the constructed suffix array.
-- get_lcp() returns the corresponding LCP array for the suffix array.
-- find(needle) returns one position that needle occurs in s (not necessarily the
-  first), or std::string::npos if it cannot be found. For a needle of length m,
-  this implementation uses an O(m log n) binary search, but can be optimized to
-  O(m + log n) by first computing the LCP-LR array using the LCP array.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log^{2} n)$ per call to the constructor, where n is the length of s.
+  \item $O(1)$ per call to get\_sa().
+  \item $O(n)$ per call to get\_lcp(), where n is the length of s.
+  \item $O(m \log n)$ per call to find(needle), where m is the length of needle and n is the length of s.
+\end{compactitem}
 
-Time Complexity:
-- O(n log^2 n) per call to the constructor, where n is the length of s.
-- O(1) per call to get_sa().
-- O(n) per call to get_lcp(), where n is the length of s.
-- O(m log n) per call to find(needle), where m is the length of needle and n is
-  the length of s.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where n is the length of s.
+  \item $O(n)$ auxiliary heap space for the constructor.
+  \item $O(1)$ auxiliary space for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) auxiliary for storage of the suffix and LCP arrays, where n is the length
-  of s.
-- O(n) auxiliary heap space for the constructor.
-- O(1) auxiliary space for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <string>
 #include <utility>
@@ -1676,9 +1491,9 @@ class suffix_array {
     return string::npos;
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -1695,46 +1510,33 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Counting Sort)}
-\begin{lstlisting}
-/*
+Given a string s, a suffix array is the array of the smallest starting positions for the sorted suffices of s. That is, the i-th position of the suffix array stores the starting position of the i-th lexicographically smallest suffix of s. For examples, s = "cab" has the suffices "cab", "ab", and "b". When sorted, the indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming zero-based indices) is [1, 2, 0].
 
-Given a string s, a suffix array is the array of the smallest starting positions
-for the sorted suffices of s. That is, the i-th position of the suffix array
-stores the starting position of the i-th lexicographically smallest suffix of s.
-For examples, s = "cab" has the suffices "cab", "ab", and "b". When sorted, the
-indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming
-zero-based indices) is [1, 2, 0].
+For a string s of length n the longest common prefix (LCP) array of length n - 1 stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffices in s. For example, "baa" has the sorted suffices "a", "aa", and "baa", with an LCP array of [1, 0].
 
-For a string s of length n the longest common prefix (LCP) array of length n - 1
-stores the lengths of the longest common prefixes between all pairs of
-lexicographically adjacent suffices in s. For example, "baa" has the sorted
-suffices "a", "aa", and "baa", with an LCP array of [1, 0].
+\begin{compactitem}
+  \item suffix\_array(s) constructs a suffix array from the given string s using the original Manber-Myers gap partitioning algorithm with a counting sort instead of a comparison-based sort to reduce the running time to $O(n \log n)$.
+  \item get\_sa() returns the constructed suffix array.
+  \item get\_lcp() returns the corresponding LCP array for the suffix array.
+  \item find(needle) returns one position that needle occurs in s (not necessarily the first), or std::string::npos if it cannot be found. For a needle of length m, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
+\end{compactitem}
 
-- suffix_array(s) constructs a suffix array from the given string s using the
-  original Manber-Myers gap partitioning algorithm with a counting sort instead
-  of a comparison-based sort to reduce the running time to O(n log n).
-- get_sa() returns the constructed suffix array.
-- get_lcp() returns the corresponding LCP array for the suffix array.
-- find(needle) returns one position that needle occurs in s (not necessarily the
-  first), or std::string::npos if it cannot be found. For a needle of length m,
-  this implementation uses an O(m log n) binary search, but can be optimized to
-  O(m + log n) by first computing the LCP-LR array using the LCP array.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to the constructor, where n is the length of s.
+  \item $O(1)$ per call to get\_sa().
+  \item $O(n)$ per call to get\_lcp(), where n is the length of s.
+  \item $O(m \log n)$ per call to find(needle), where m is the length of needle and n is the length of s.
+\end{compactitem}
 
-Time Complexity:
-- O(n log n) per call to the constructor, where n is the length of s.
-- O(1) per call to get_sa().
-- O(n) per call to get_lcp(), where n is the length of s.
-- O(m log n) per call to find(needle), where m is the length of needle and n is
-  the length of s.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where n is the length of s.
+  \item $O(n)$ auxiliary heap space for the constructor.
+  \item $O(1)$ auxiliary space for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) auxiliary for storage of the suffix and LCP arrays, where n is the length
-  of s.
-- O(n) auxiliary heap space for the constructor.
-- O(1) auxiliary space for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <string>
 #include <utility>
@@ -1821,9 +1623,9 @@ class suffix_array {
     return string::npos;
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -1840,45 +1642,33 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Linear DC3)}
-\begin{lstlisting}
-/*
+Given a string s, a suffix array is the array of the smallest starting positions for the sorted suffices of s. That is, the i-th position of the suffix array stores the starting position of the i-th lexicographically smallest suffix of s. For examples, s = "cab" has the suffices "cab", "ab", and "b". When sorted, the indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming zero-based indices) is [1, 2, 0].
 
-Given a string s, a suffix array is the array of the smallest starting positions
-for the sorted suffices of s. That is, the i-th position of the suffix array
-stores the starting position of the i-th lexicographically smallest suffix of s.
-For examples, s = "cab" has the suffices "cab", "ab", and "b". When sorted, the
-indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming
-zero-based indices) is [1, 2, 0].
+For a string s of length n the longest common prefix (LCP) array of length n - 1 stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffices in s. For example, "baa" has the sorted suffices "a", "aa", and "baa", with an LCP array of [1, 0].
 
-For a string s of length n the longest common prefix (LCP) array of length n - 1
-stores the lengths of the longest common prefixes between all pairs of
-lexicographically adjacent suffices in s. For example, "baa" has the sorted
-suffices "a", "aa", and "baa", with an LCP array of [1, 0].
+\begin{compactitem}
+  \item suffix\_array(s) constructs a suffix array from the given string s using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
+  \item get\_sa() returns the constructed suffix array.
+  \item get\_lcp() returns the corresponding LCP array for the suffix array.
+  \item find(needle) returns one position that needle occurs in s (not necessarily the first), or std::string::npos if it cannot be found. For a needle of length m, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
+\end{compactitem}
 
-- suffix_array(s) constructs a suffix array from the given string s using the
-  linear time DC3/skew algorithm by Karkkainen & Sanders (2003) with radix sort.
-- get_sa() returns the constructed suffix array.
-- get_lcp() returns the corresponding LCP array for the suffix array.
-- find(needle) returns one position that needle occurs in s (not necessarily the
-  first), or std::string::npos if it cannot be found. For a needle of length m,
-  this implementation uses an O(m log n) binary search, but can be optimized to
-  O(m + log n) by first computing the LCP-LR array using the LCP array.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructor, where n is the length of s.
+  \item $O(1)$ per call to get\_sa().
+  \item $O(n)$ per call to get\_lcp(), where n is the length of s.
+  \item $O(m \log n)$ per call to find(needle), where m is the length of needle and n is the length of s.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to the constructor, where n is the length of s.
-- O(1) per call to get_sa().
-- O(n) per call to get_lcp(), where n is the length of s.
-- O(m log n) per call to find(needle), where m is the length of needle and n is
-  the length of s.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where n is the length of s.
+  \item $O(n)$ auxiliary heap space for the constructor.
+  \item $O(1)$ auxiliary space for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) auxiliary for storage of the suffix and LCP arrays, where n is the length
-  of s.
-- O(n) auxiliary heap space for the constructor.
-- O(1) auxiliary space for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <string>
 #include <utility>
@@ -1977,7 +1767,7 @@ class suffix_array {
   suffix_array(const string &s) : s(s), sa(s.size() + 1) {
     int n = s.size();
     std::vector<int> scopy(s.begin(), s.end());
-    scopy.resize(n + 3);
+    scopy.resize(n + 4);
     suffix_array_dc3(scopy.begin(), sa.begin(), n + 1, 255);
     sa.erase(sa.begin());
   }
@@ -1988,6 +1778,9 @@ class suffix_array {
 
   std::vector<int> get_lcp() {
     int n = s.size();
+    if (n == 0) {
+      return std::vector<int>();
+    }
     std::vector<int> rank(n), lcp(n - 1);
     for (int i = 0; i < n; i++) {
       rank[sa[i]] = i;
@@ -2023,9 +1816,9 @@ class suffix_array {
     return string::npos;
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -2046,48 +1839,34 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Trie}
-\begin{lstlisting}
-/*
+Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node.
 
-Maintain a map of strings to values using an ordered tree data structure. Each
-node corresponds to a character, and each inserted string corresponds to a path
-from the root to a node that is flagged as a terminal node.
+\begin{compactitem}
+  \item trie() constructs an empty map.
+  \item size() returns the size of the map.
+  \item empty() returns whether the map is empty.
+  \item insert(s, v) adds an entry with string key s and value v to the map, returning true if a new entry was added or false if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
+  \item erase(s) removes the entry with string key s from the map, returning true if the removal was successful or false if the string to be removed was not found.
+  \item find(s) returns a pointer to a const value associated with string key s, or NULL if the key was not found.
+  \item walk(f) calls the function f(s, v) on each entry of the map, in lexicographically ascending order of the string keys.
+\end{compactitem}
 
-- trie() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(s, v) adds an entry with string key s and value v to the map, returning
-  true if a new entry was added or false if the string already exists (in which
-  case the map is unchanged and the old value associated with the string key is
-  preserved).
-- erase(s) removes the entry with string key s from the map, returning true if
-  the removal was successful or false if the string to be removed was not found.
-- find(s) returns a pointer to a const value associated with string key s, or
-  NULL if the key was not found.
-- walk(f) calls the function f(s, v) on each entry of the map, in
-  lexicographically ascending order of the string keys.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to insert(s, v), erase(s), and find(s), where n is the length of s. Note that there is a hidden factor of log(alphabet\_size) which can be considered constant, since char can only take on 2\textasciicircum{}CHAR\_BIT values. The implementation may be optimized by storing the children of nodes in an std::unordered\_map in C++11 and later, or an array if a smaller alphabet size is guaranteed.
+  \item $O(l)$ per call to walk(), where l is the total length of string keys that are currently in the map.
+  \item $O(1)$ per call to all other operations.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to insert(s, v), erase(s), and find(s), where n is the length of
-  s. Note that there is a hidden factor of log(alphabet_size) which can be
-  considered constant, since char can only take on 2^CHAR_BIT values. The
-  implementation may be optimized by storing the children of nodes in an
-  std::unordered_map in C++11 and later, or an array if a smaller alphabet size
-  is guaranteed.
-- O(l) per call to walk(), where l is the total length of string keys that are
-  currently in the map.
-- O(1) per call to all other operations.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(l)$ for storage of the trie, where l is the total length of string keys that are currently in the map.
+  \item $O(n)$ auxiliary stack space for construction, destruction, walk(), where n is the maximum length of any string that has been inserted so far.
+  \item $O(n)$ auxiliary stack space for erase(s), where n is the length of s.
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(l) for storage of the trie, where l is the total length of string keys that
-  are currently in the map.
-- O(n) auxiliary stack space for construction, destruction, walk(), where n is
-  the maximum length of any string that has been inserted so far.
-- O(n) auxiliary stack space for erase(s), where n is the length of s.
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstddef>
 #include <map>
 #include <string>
@@ -2205,21 +1984,9 @@ class trie {
     walk(root, s, f);
   }
 };
-
-/*** Example Usage and Output:
-
-("", 0)
-("a", 1)
-("i", 6)
-("in", 7)
-("inn", 8)
-("tea", 3)
-("ted", 4)
-("ten", 5)
-("to", 2)
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -2250,54 +2017,46 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+("", 0)
+("a", 1)
+("i", 6)
+("in", 7)
+("inn", 8)
+("tea", 3)
+("ted", 4)
+("ten", 5)
+("to", 2)
+\end{exampleoutput}
 \subsection{Radix Tree}
-\begin{lstlisting}
-/*
+Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child.
 
-Maintain a map of strings to values using an ordered tree data structure. Each
-node corresponds to a substring of an inserted string, and each inserted string
-corresponds to a path from the root to a node that is flagged as a terminal
-node. Contrary to a regular trie, a radix tree is more space efficient as it
-combines chains of nodes with only a single child.
+\begin{compactitem}
+  \item radix\_tree() constructs an empty map.
+  \item size() returns the size of the map.
+  \item empty() returns whether the map is empty.
+  \item insert(s, v) adds an entry with string key s and value v to the map, returning true if a new entry was added or false if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
+  \item erase(s) removes the entry with string key s from the map, returning true if the removal was successful or false if the string to be removed was not found.
+  \item find(s) returns a pointer to a const value associated with string key s, or NULL if the key was not found.
+  \item walk(f) calls the function f(s, v) on each entry of the map, in lexicographically ascending order of the string keys.
+\end{compactitem}
 
-- radix_tree() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(s, v) adds an entry with string key s and value v to the map, returning
-  true if a new entry was added or false if the string already exists (in which
-  case the map is unchanged and the old value associated with the string key is
-  preserved).
-- erase(s) removes the entry with string key s from the map, returning true if
-  the removal was successful or false if the string to be removed was not found.
-- find(s) returns a pointer to a const value associated with string key s, or
-  NULL if the key was not found.
-- walk(f) calls the function f(s, v) on each entry of the map, in
-  lexicographically ascending order of the string keys.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to insert(s, v), erase(s), and find(s), where n is the length of s. Note that there is a hidden factor of log(n) due to map lookups, which can be considered constant amortized. The implementation may be optimized by storing the children of nodes in an std::unordered\_map in C++11 and later, or an std::vector< pair<string, node\_t*> >, since the only container operations required are iteration over the (key, child) pairs and inserting a new pair. Sticking with an (ordered) std::map, we can optimize all operations by using map.lower\_bound(), a binary tree search for a child with a shared prefix, instead of iteration.
+  \item $O(l)$ per call to walk(), where l is the total length of string keys that are currently in the map.
+  \item $O(1)$ per call to all other operations.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to insert(s, v), erase(s), and find(s), where n is the length of
-  s. Note that there is a hidden factor of log(n) due to map lookups, which can
-  be considered constant amortized. The implementation may be optimized by
-  storing the children of nodes in an std::unordered_map in C++11 and later, or
-  an std::vector< pair<string, node_t*> >, since the only container operations
-  required are iteration over the (key, child) pairs and inserting a new pair.
-  Sticking with an (ordered) std::map, we can optimize all operations by using
-  map.lower_bound(), a binary tree search for a child with a shared prefix,
-  instead of iteration.
-- O(l) per call to walk(), where l is the total length of string keys that are
-  currently in the map.
-- O(1) per call to all other operations.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(l)$ for storage of the radix tree, where l is the total length of string keys that are currently in the map.
+  \item $O(n)$ auxiliary stack space for construction, destruction, walk(), where n is the maximum length of any string that has been inserted so far.
+  \item $O(n)$ auxiliary stack space for erase(s), where n is the length of s.
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(l) for storage of the radix tree, where l is the total length of string keys
-  that are currently in the map.
-- O(n) auxiliary stack space for construction, destruction, walk(), where n is
-  the maximum length of any string that has been inserted so far.
-- O(n) auxiliary stack space for erase(s), where n is the length of s.
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstddef>
 #include <map>
 #include <string>
@@ -2475,21 +2234,9 @@ class radix_tree {
     walk(root, s, f);
   }
 };
-
-/*** Example Usage and Output:
-
-("", 0)
-("a", 1)
-("i", 6)
-("in", 7)
-("inn", 8)
-("tea", 3)
-("ted", 4)
-("ten", 5)
-("to", 2)
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -2520,3 +2267,14 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+("", 0)
+("a", 1)
+("i", 6)
+("in", 7)
+("inn", 8)
+("tea", 3)
+("ted", 4)
+("ten", 5)
+("to", 2)
+\end{exampleoutput}

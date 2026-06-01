@@ -4,36 +4,32 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Binary Heap}
-\begin{lstlisting}
-/*
+Maintain a min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum. This implementation requires an ordering on the set of possible elements defined by the < operator. A binary min-heap implements a priority queue by inserting and deleting nodes into a binary tree such that the parent of any node is always less than its children.
 
-Maintain a min-priority queue, that is, a collection of elements with support
-for querying and extraction of the minimum. This implementation requires an
-ordering on the set of possible elements defined by the < operator. A binary
-min-heap implements a priority queue by inserting and deleting nodes into a
-binary tree such that the parent of any node is always less than its children.
+\begin{compactitem}
+  \item binary\_heap() constructs an empty priority queue.
+  \item binary\_heap(lo, hi) constructs a priority queue from two ForwardIterators, consisting of elements in the range [lo, hi).
+  \item size() returns the size of the priority queue.
+  \item empty() returns whether the priority queue is empty.
+  \item push(v) inserts the value v into the priority queue.
+  \item pop() removes the minimum element from the priority queue.
+  \item top() returns the minimum element in the priority queue.
+\end{compactitem}
 
-- binary_heap() constructs an empty priority queue.
-- binary_heap(lo, hi) constructs a priority queue from two ForwardIterators,
-  consisting of elements in the range [lo, hi).
-- size() returns the size of the priority queue.
-- empty() returns whether the priority queue is empty.
-- push(v) inserts the value v into the priority queue.
-- pop() removes the minimum element from the priority queue.
-- top() returns the minimum element in the priority queue.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the first constructor, size(), empty(), and top().
+  \item $O(\log n)$ per call to push() and pop(), where n is the number of elements in the priority queue.
+  \item $O(n)$ per call to the second constructor on the distance between lo and hi.
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the first constructor, size(), empty(), and top().
-- O(log n) per call to push() and pop(), where n is the number of elements
-  in the priority queue.
-- O(n) per call to the second constructor on the distance between lo and hi.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the priority queue elements.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the priority queue elements.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
@@ -104,17 +100,9 @@ class binary_heap {
     return heap[0];
   }
 };
-
-/*** Example Usage and Output:
-
--1
-0
-5
-10
-12
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <iostream>
 using namespace std;
 
@@ -129,39 +117,42 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+-1
+0
+5
+10
+12
+\end{exampleoutput}
 \subsection{Randomized Mergeable Heap}
-\begin{lstlisting}
-/*
+Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by the < operator. A randomized mergeable heap uses a coin-toss to recursively combine nodes of two binary trees.
 
-Maintain a mergeable min-priority queue, that is, a collection of elements with
-support for querying and extraction of the minimum as well as efficient merging
-with other instances. This implementation requires an ordering on the set of
-possible elements defined by the < operator. A randomized mergeable heap uses a
-coin-toss to recursively combine nodes of two binary trees.
+\begin{compactitem}
+  \item randomized\_heap() constructs an empty priority queue.
+  \item randomized\_heap(lo, hi) constructs a priority queue from two ForwardIterators, consisting of elements in the range [lo, hi).
+  \item size() returns the size of the priority queue.
+  \item empty() returns whether the priority queue is empty.
+  \item push(v) inserts the value v into the priority queue.
+  \item pop() removes the minimum element from the priority queue.
+  \item top() returns the minimum element in the priority queue.
+  \item absorb(h) inserts every value from h and sets h to the empty priority queue.
+\end{compactitem}
 
-- randomized_heap() constructs an empty priority queue.
-- randomized_heap(lo, hi) constructs a priority queue from two ForwardIterators,
-  consisting of elements in the range [lo, hi).
-- size() returns the size of the priority queue.
-- empty() returns whether the priority queue is empty.
-- push(v) inserts the value v into the priority queue.
-- pop() removes the minimum element from the priority queue.
-- top() returns the minimum element in the priority queue.
-- absorb(h) inserts every value from h and sets h to the empty priority queue.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the first constructor, size(), empty(), and top().
+  \item $O(\log n)$ expected worst case per call to push(), pop(), and absorb(), where n is the number of elements in the priority queue.
+  \item $O(n)$ per call to the second constructor on the distance between lo and hi.
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the first constructor, size(), empty(), and top().
-- O(log n) expected worst case per call to push(), pop(), and absorb(), where n
-  is the number of elements in the priority queue.
-- O(n) per call to the second constructor on the distance between lo and hi.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the priority queue elements.
+  \item $O(\log n)$ auxiliary stack space for push(), pop(), and absorb().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the priority queue elements.
-- O(log n) auxiliary stack space for push(), pop(), and absorb().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
 #include <stdexcept>
@@ -251,17 +242,9 @@ class randomized_heap {
     h.root = NULL;
   }
 };
-
-/*** Example Usage and Output:
-
--1
-0
-5
-10
-12
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <iostream>
 using namespace std;
 
@@ -280,40 +263,42 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+-1
+0
+5
+10
+12
+\end{exampleoutput}
 \subsection{Skew Heap}
-\begin{lstlisting}
-/*
+Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by the < operator. A skew heap attempts to maintain balance by unconditionally swapping all nodes in the merge path when merging.
 
-Maintain a mergeable min-priority queue, that is, a collection of elements with
-support for querying and extraction of the minimum as well as efficient merging
-with other instances. This implementation requires an ordering on the set of
-possible elements defined by the < operator. A skew heap attempts to maintain
-balance by unconditionally swapping all nodes in the merge path when merging.
+\begin{compactitem}
+  \item skew\_heap() constructs an empty priority queue.
+  \item skew\_heap(lo, hi) constructs a priority queue from two ForwardIterators, consisting of elements in the range [lo, hi).
+  \item size() returns the size of the priority queue.
+  \item empty() returns whether the priority queue is empty.
+  \item push(v) inserts the value v into the priority queue.
+  \item pop() removes the minimum element from the priority queue.
+  \item top() returns the minimum element in the priority queue.
+  \item absorb(h) inserts every value from h and sets h to the empty priority queue.
+\end{compactitem}
 
-- skew_heap() constructs an empty priority queue.
-- skew_heap(lo, hi) constructs a priority queue from two ForwardIterators,
-  consisting of elements in the range [lo, hi).
-- size() returns the size of the priority queue.
-- empty() returns whether the priority queue is empty.
-- push(v) inserts the value v into the priority queue.
-- pop() removes the minimum element from the priority queue.
-- top() returns the minimum element in the priority queue.
-- absorb(h) inserts every value from h and sets h to the empty priority queue.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the first constructor, size(), empty(), and top().
+  \item $O(\log n)$ amortized auxiliary per call to push(), pop(), and absorb(), where n is the number of elements in the priority queue.
+  \item $O(n)$ per call to the second constructor, where n is the distance between lo and hi.
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the first constructor, size(), empty(), and top().
-- O(log n) amortized auxiliary per call to push(), pop(), and absorb(), where n
-  is the number of elements in the priority queue.
-- O(n) per call to the second constructor, where n is the distance between lo
-  and hi.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the priority queue elements.
+  \item $O(\log n)$ amortized auxiliary stack space for push(), pop(), and absorb().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the priority queue elements.
-- O(log n) amortized auxiliary stack space for push(), pop(), and absorb().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
 #include <stdexcept>
@@ -401,17 +386,9 @@ class skew_heap {
     h.root = NULL;
   }
 };
-
-/*** Example Usage and Output:
-
--1
-0
-5
-10
-12
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <iostream>
 using namespace std;
 
@@ -430,39 +407,42 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+-1
+0
+5
+10
+12
+\end{exampleoutput}
 \subsection{Pairing Heap}
-\begin{lstlisting}
-/*
+Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by the < operator. A pairing heap is a heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion.
 
-Maintain a mergeable min-priority queue, that is, a collection of elements with
-support for querying and extraction of the minimum as well as efficient merging
-with other instances. This implementation requires an ordering on the set of
-possible elements defined by the < operator. A pairing heap is a heap-ordered
-multi-way tree, using a two-pass merge to self-adjust during each deletion.
+\begin{compactitem}
+  \item pairing\_heap() constructs an empty priority queue.
+  \item pairing\_heap(lo, hi) constructs a priority queue from two ForwardIterators, consisting of elements in the range [lo, hi).
+  \item size() returns the size of the priority queue.
+  \item empty() returns whether the priority queue is empty.
+  \item push(v) inserts the value v into the priority queue.
+  \item pop() removes the minimum element from the priority queue.
+  \item top() returns the minimum element in the priority queue.
+  \item absorb(h) inserts every value from h and sets h to the empty priority queue.
+\end{compactitem}
 
-- pairing_heap() constructs an empty priority queue.
-- pairing_heap(lo, hi) constructs a priority queue from two ForwardIterators,
-  consisting of elements in the range [lo, hi).
-- size() returns the size of the priority queue.
-- empty() returns whether the priority queue is empty.
-- push(v) inserts the value v into the priority queue.
-- pop() removes the minimum element from the priority queue.
-- top() returns the minimum element in the priority queue.
-- absorb(h) inserts every value from h and sets h to the empty priority queue.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the first constructor, size(), empty(), top(), push(), and absorb().
+  \item $O(\log n)$ amortized per call to pop().
+  \item $O(n)$ per call to the second constructor on the distance between lo and hi.
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the first constructor, size(), empty(), top(), push(), and
-  absorb().
-- O(log n) amortized per call to pop().
-- O(n) per call to the second constructor on the distance between lo and hi.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the priority queue elements.
+  \item $O(\log n)$ amortized auxiliary stack space for pop().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the priority queue elements.
-- O(log n) amortized auxiliary stack space for pop().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstddef>
 #include <stdexcept>
 
@@ -567,17 +547,9 @@ class pairing_heap {
     h.root = NULL;
   }
 };
-
-/*** Example Usage and Output:
-
--1
-0
-5
-10
-12
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <iostream>
 using namespace std;
 
@@ -596,46 +568,44 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+-1
+0
+5
+10
+12
+\end{exampleoutput}
 
 \section{Dictionaries}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Binary Search Tree}
-\begin{lstlisting}
-/*
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by the < operator on the key type. A binary search tree implements this map by inserting and deleting keys into a binary tree such that every node's left child has a lesser key and every node's right child has a greater key.
 
-Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementations requires an
-ordering on the set of possible keys defined by the < operator on the key type.
-A binary search tree implements this map by inserting and deleting keys into a
-binary tree such that every node's left child has a lesser key and every node's
-right child has a greater key.
+\begin{compactitem}
+  \item binary\_search\_tree() constructs an empty map.
+  \item size() returns the size of the map.
+  \item empty() returns whether the map is empty.
+  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
+  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
+  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+\end{compactitem}
 
-- binary_search_tree() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(k, v) adds an entry with key k and value v to the map, returning true
-  if an new entry was added or false if the key already exists (in which case
-  the map is unchanged and the old value associated with the key is preserved).
-- erase(k) removes the entry with key k from the map, returning true if the
-  removal was successful or false if the key to be removed was not found.
-- find(k) returns a pointer to a const value associated with key k, or NULL if
-  the key was not found.
-- walk(f) calls the function f(k, v) on each entry of the map, in ascending
-  order of keys.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, size(), and empty().
+  \item $O(n)$ per call to insert(), erase(), find(), and walk(), where n is the number of nodes currently in the map.
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(n) per call to insert(), erase(), find(), and walk(), where n is the number
-  of nodes currently in the map.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the map elements.
+  \item $O(n)$ auxiliary stack space for insert(), erase(), and walk().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the map elements.
-- O(n) auxiliary stack space for insert(), erase(), and walk().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstddef>
 
 template<class K, class V>
@@ -759,14 +729,9 @@ class binary_search_tree {
     walk(root, f);
   }
 };
-
-/*** Example Usage and Output:
-
-abcde
-bcde
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -794,43 +759,38 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+abcde
+bcde
+\end{exampleoutput}
 \subsection{Treap}
-\begin{lstlisting}
-/*
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by the < operator on the key type. A treap is a binary search tree that is balanced by preserving a heap property on the randomly generated priority value assigned to every node, thereby making insertions and deletions run in $O(\log n)$ with high probability.
 
-Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementations requires an
-ordering on the set of possible keys defined by the < operator on the key type.
-A treap is a binary search tree that is balanced by preserving a heap property
-on the randomly generated priority value assigned to every node, thereby making
-insertions and deletions run in O(log n) with high probability.
+\begin{compactitem}
+  \item treap() constructs an empty map.
+  \item size() returns the size of the map.
+  \item empty() returns whether the map is empty.
+  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
+  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
+  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+\end{compactitem}
 
-- treap() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(k, v) adds an entry with key k and value v to the map, returning true
-  if an new entry was added or false if the key already exists (in which case
-  the map is unchanged and the old value associated with the key is preserved).
-- erase(k) removes the entry with key k from the map, returning true if the
-  removal was successful or false if the key to be removed was not found.
-- find(k) returns a pointer to a const value associated with key k, or NULL if
-  the key was not found.
-- walk(f) calls the function f(k, v) on each entry of the map, in ascending
-  order of keys.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, size(), and empty().
+  \item $O(\log n)$ on average per call to insert(), erase(), and find(), where n is the number of entries currently in the map.
+  \item $O(n)$ per call to walk().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(log n) on average per call to insert(), erase(), and find(), where n is the
-  number of entries currently in the map.
-- O(n) per call to walk().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the map elements.
+  \item $O(\log n)$ auxiliary stack space on average for insert(), erase(), and walk().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the map elements.
-- O(log n) auxiliary stack space on average for insert(), erase(), and walk().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstdlib>
 
 template<class K, class V>
@@ -975,14 +935,9 @@ class treap {
     walk(root, f);
   }
 };
-
-/*** Example Usage and Output:
-
-abcde
-bcde
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -1010,43 +965,38 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+abcde
+bcde
+\end{exampleoutput}
 \subsection{AVL Tree}
-\begin{lstlisting}
-/*
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by the < operator on the key type. An AVL tree is a binary search tree balanced by height, guaranteeing $O(\log n)$ worst-case running time in insertions and deletions by making sure that the heights of the left and right subtrees at every node differ by at most 1.
 
-Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires an
-ordering on the set of possible keys defined by the < operator on the key type.
-An AVL tree is a binary search tree balanced by height, guaranteeing O(log n)
-worst-case running time in insertions and deletions by making sure that the
-heights of the left and right subtrees at every node differ by at most 1.
+\begin{compactitem}
+  \item avl\_tree() constructs an empty map.
+  \item size() returns the size of the map.
+  \item empty() returns whether the map is empty.
+  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
+  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
+  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+\end{compactitem}
 
-- avl_tree() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(k, v) adds an entry with key k and value v to the map, returning true
-  if an new entry was added or false if the key already exists (in which case
-  the map is unchanged and the old value associated with the key is preserved).
-- erase(k) removes the entry with key k from the map, returning true if the
-  removal was successful or false if the key to be removed was not found.
-- find(k) returns a pointer to a const value associated with key k, or NULL if
-  the key was not found.
-- walk(f) calls the function f(k, v) on each entry of the map, in ascending
-  order of keys.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, size(), and empty().
+  \item $O(\log n)$ per call to insert(), erase(), and find(), where n is the number of entries currently in the map.
+  \item $O(n)$ per call to walk().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(log n) per call to insert(), erase(), and find(), where n is the number of
-  entries currently in the map.
-- O(n) per call to walk().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the map elements.
+  \item $O(\log n)$ auxiliary stack space for insert(), erase(), and walk().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for insert(), erase(), and walk().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
 
@@ -1231,14 +1181,9 @@ class avl_tree {
     walk(root, f);
   }
 };
-
-/*** Example Usage and Output:
-
-abcde
-bcde
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -1266,42 +1211,38 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+abcde
+bcde
+\end{exampleoutput}
 \subsection{Red-Black Tree}
-\begin{lstlisting}
-/*
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by the < operator on the key type. A red black tree is a binary search tree balanced by coloring its nodes red or black, then constraining node colors on any simple path from the root to a leaf.
 
-Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires an
-ordering on the set of possible keys defined by the < operator on the key type.
-A red black tree is a binary search tree balanced by coloring its nodes red or
-black, then constraining node colors on any simple path from the root to a leaf.
+\begin{compactitem}
+  \item red\_black\_tree() constructs an empty map.
+  \item size() returns the size of the map.
+  \item empty() returns whether the map is empty.
+  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
+  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
+  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+\end{compactitem}
 
-- red_black_tree() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(k, v) adds an entry with key k and value v to the map, returning true
-  if an new entry was added or false if the key already exists (in which case
-  the map is unchanged and the old value associated with the key is preserved).
-- erase(k) removes the entry with key k from the map, returning true if the
-  removal was successful or false if the key to be removed was not found.
-- find(k) returns a pointer to a const value associated with key k, or NULL if
-  the key was not found.
-- walk(f) calls the function f(k, v) on each entry of the map, in ascending
-  order of keys.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, size(), and empty().
+  \item $O(\log n)$ per call to insert(), erase(), and find(), where n is the number of entries currently in the map.
+  \item $O(n)$ per call to walk().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(log n) per call to insert(), erase(), and find(), where n is the number of
-  entries currently in the map.
-- O(n) per call to walk().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the map elements.
+  \item $O(\log n)$ auxiliary stack space for walk().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for walk().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
 
@@ -1591,14 +1532,9 @@ class red_black_tree {
     walk(root, f);
   }
 };
-
-/*** Example Usage and Output:
-
-abcde
-bcde
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -1626,42 +1562,38 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+abcde
+bcde
+\end{exampleoutput}
 \subsection{Splay Tree}
-\begin{lstlisting}
-/*
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by the < operator on the key type. A splay tree is a balanced binary search tree with the additional property that recently accessed elements are quick to access again.
 
-Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires an
-ordering on the set of possible keys defined by the < operator on the key type.
-A splay tree is a balanced binary search tree with the additional property that
-recently accessed elements are quick to access again.
+\begin{compactitem}
+  \item splay\_tree() constructs an empty map.
+  \item size() returns the size of the map.
+  \item empty() returns whether the map is empty.
+  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
+  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
+  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+\end{compactitem}
 
-- splay_tree() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(k, v) adds an entry with key k and value v to the map, returning true
-  if an new entry was added or false if the key already exists (in which case
-  the map is unchanged and the old value associated with the key is preserved).
-- erase(k) removes the entry with key k from the map, returning true if the
-  removal was successful or false if the key to be removed was not found.
-- find(k) returns a pointer to a const value associated with key k, or NULL if
-  the key was not found.
-- walk(f) calls the function f(k, v) on each entry of the map, in ascending
-  order of keys.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, size(), and empty().
+  \item $O(\log n)$ per call to insert(), erase(), and find(), where n is the number of entries currently in the map.
+  \item $O(n)$ per call to walk().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(log n) per call to insert(), erase(), and find(), where n is the number of
-  entries currently in the map.
-- O(n) per call to walk().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the map elements.
+  \item $O(\log n)$ auxiliary stack space for insert(), erase(), and walk().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for insert(), erase(), and walk().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstddef>
 
 template<class K, class V>
@@ -1826,14 +1758,9 @@ class splay_tree {
     walk(root, f);
   }
 };
-
-/*** Example Usage and Output:
-
-abcde
-bcde
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -1861,47 +1788,40 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+abcde
+bcde
+\end{exampleoutput}
 \subsection{Size Balanced Tree}
-\begin{lstlisting}
-/*
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. In addition, support queries for keys given their ranks as well as queries for the ranks of given keys. This implementation requires an ordering on the set of possible keys defined by the < operator on the key type. A size balanced tree augments each nodes with the size of its subtree, using it to maintain balance and compute order statistics.
 
-Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. In addition, support queries for
-keys given their ranks as well as queries for the ranks of given keys. This
-implementation requires an ordering on the set of possible keys defined by the
-< operator on the key type. A size balanced tree augments each nodes with the
-size of its subtree, using it to maintain balance and compute order statistics.
+\begin{compactitem}
+  \item size\_balanced\_tree() constructs an empty map.
+  \item size() returns the size of the map.
+  \item empty() returns whether the map is empty.
+  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
+  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
+  \item select(r) returns a key-value pair of the node with a key of zero-based rank r in the map, throwing an exception if the rank is not between 0 and size() - 1.
+  \item rank(k) returns the zero-based rank of key k in the map, throwing an exception if the key was not found in the map.
+  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+\end{compactitem}
 
-- size_balanced_tree() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(k, v) adds an entry with key k and value v to the map, returning true
-  if an new entry was added or false if the key already exists (in which case
-  the map is unchanged and the old value associated with the key is preserved).
-- erase(k) removes the entry with key k from the map, returning true if the
-  removal was successful or false if the key to be removed was not found.
-- find(k) returns a pointer to a const value associated with key k, or NULL if
-  the key was not found.
-- select(r) returns a key-value pair of the node with a key of zero-based rank r
-  in the map, throwing an exception if the rank is not between 0 and size() - 1.
-- rank(k) returns the zero-based rank of key k in the map, throwing an
-  exception if the key was not found in the map.
-- walk(f) calls the function f(k, v) on each entry of the map, in ascending
-  order of keys.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, size(), and empty().
+  \item $O(\log n)$ per call to insert(), erase(), find(), select(), and rank(), where n is the number of entries currently in the map.
+  \item $O(n)$ per call to walk().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(log n) per call to insert(), erase(), find(), select(), and rank(), where n
-  is the number of entries currently in the map.
-- O(n) per call to walk().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the map elements.
+  \item $O(\log n)$ auxiliary stack space for insert(), erase(), and walk().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for insert(), erase(), and walk().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstddef>
 #include <stdexcept>
 #include <utility>
@@ -2105,14 +2025,9 @@ class size_balanced_tree {
     walk(root, f);
   }
 };
-
-/*** Example Usage and Output:
-
-abcde
-bcde
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -2146,50 +2061,41 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+abcde
+bcde
+\end{exampleoutput}
 \subsection{Interval Treap}
-\begin{lstlisting}
-/*
+Maintain a map from closed, one-dimensional intervals to values while supporting efficient reporting of any or all entries that intersect with a given query interval. This implementation uses std::pair to represent intervals, requiring operators < and == to be defined on the numeric key type. A treap is used to process the entries, where keys are compared lexicographically as pairs.
 
-Maintain a map from closed, one-dimensional intervals to values while supporting
-efficient reporting of any or all entries that intersect with a given query
-interval. This implementation uses std::pair to represent intervals, requiring
-operators < and == to be defined on the numeric key type. A treap is used to
-process the entries, where keys are compared lexicographically as pairs.
+\begin{compactitem}
+  \item interval\_treap() constructs an empty map.
+  \item size() returns the size of the map.
+  \item empty() returns whether the map is empty.
+  \item insert(lo, hi, v) adds an entry with key [lo, hi] and value v to the map, returning true if a new interval was added or false if the interval already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item erase(lo, hi) removes the entry with key [lo, hi] from the map, returning true if the removal was successful or false if the interval was not found.
+  \item find\_key(lo, hi) returns a pointer to a const std::pair representing the key of some interval in the map which intersects with [lo, hi], or NULL if no such entry was found.
+  \item find\_value(lo, hi) returns a pointer to a const value of some entry in the map with a key that intersects with [lo, hi], or NULL if no such entry was found.
+  \item find\_all(lo, hi, f) calls the function f(lo, hi, v) on each entry in the map that overlaps with [lo, hi], in lexicographically ascending order of intervals.
+  \item walk(f) calls the function f(lo, hi, v) on each interval in the map, in lexicographically ascending order of intervals.
+\end{compactitem}
 
-- interval_treap() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(lo, hi, v) adds an entry with key [lo, hi] and value v to the map,
-  returning true if a new interval was added or false if the interval already
-  exists (in which case the map is unchanged and the old value associated with
-  the key is preserved).
-- erase(lo, hi) removes the entry with key [lo, hi] from the map, returning true
-  if the removal was successful or false if the interval was not found.
-- find_key(lo, hi) returns a pointer to a const std::pair representing the key
-  of some interval in the map which intersects with [lo, hi], or NULL if no such
-  entry was found.
-- find_value(lo, hi) returns a pointer to a const value of some entry in the map
-  with a key that intersects with [lo, hi], or NULL if no such entry was found.
-- find_all(lo, hi, f) calls the function f(lo, hi, v) on each entry in the map
-  that overlaps with [lo, hi], in lexicographically ascending order of intervals.
-- walk(f) calls the function f(lo, hi, v) on each interval in the map, in
-  lexicographically ascending order of intervals.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, size(), and empty().
+  \item $O(\log n)$ on average per call to insert(), erase(), and find\_any(), where n is the number of intervals currently in the set.
+  \item $O(\log n + m)$ on average per call to find\_all(), where m is the number of intersecting intervals that are reported.
+  \item $O(n)$ per call to walk().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(log n) on average per call to insert(), erase(), and find_any(), where n is
-  the number of intervals currently in the set.
-- O(log n + m) on average per call to find_all(), where m is the number of
-  intersecting intervals that are reported.
-- O(n) per call to walk().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the map elements.
+  \item $O(1)$ auxiliary for size() and empty().
+  \item $O(\log n)$ auxiliary stack space on average for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the map elements.
-- O(1) auxiliary for size() and empty().
-- O(log n) auxiliary stack space on average for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstdlib>
 #include <utility>
 
@@ -2384,14 +2290,9 @@ class interval_treap {
     walk(root, f);
   }
 };
-
-/*** Example Usage and Output:
-
-Intervals intersecting [16, 20]: [15, 20] [10, 30] [5, 20] [10, 40]
-All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -2422,44 +2323,39 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Intervals intersecting [16, 20]: [15, 20] [10, 30] [5, 20] [10, 40]
+All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
+\end{exampleoutput}
 \subsection{Hash Map}
-\begin{lstlisting}
-/*
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires the == operator to be defined on the key type. A hash map implements a map by hashing keys into buckets using a hash function. This implementation resolves collisions by chaining entries hashed to the same bucket into a linked list.
 
-Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires the ==
-operator to be defined on the key type. A hash map implements a map by hashing
-keys into buckets using a hash function. This implementation resolves collisions
-by chaining entries hashed to the same bucket into a linked list.
+\begin{compactitem}
+  \item hash\_map() constructs an empty map.
+  \item size() returns the size of the map.
+  \item empty() returns whether the map is empty.
+  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
+  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
+  \item operator[k] returns a reference to key k's associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key k was not originally found.
+  \item walk(f) calls the function f(k, v) on each entry of the map, in no guaranteed order.
+\end{compactitem}
 
-- hash_map() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(k, v) adds an entry with key k and value v to the map, returning true
-  if an new entry was added or false if the key already exists (in which case
-  the map is unchanged and the old value associated with the key is preserved).
-- erase(k) removes the entry with key k from the map, returning true if the
-  removal was successful or false if the key to be removed was not found.
-- find(k) returns a pointer to a const value associated with key k, or NULL if
-  the key was not found.
-- operator[k] returns a reference to key k's associated value (which may be
-  modified), or if necessary, inserts and returns a new entry with the default
-  constructed value if key k was not originally found.
-- walk(f) calls the function f(k, v) on each entry of the map, in no guaranteed
-  order.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, size(), and empty().
+  \item $O(1)$ amortized per call to insert(), erase(), find(), and operator[].
+  \item $O(n)$ per call to walk(), where n is the number of entries in the map.
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(1) amortized per call to insert(), erase(), find(), and operator[].
-- O(n) per call to walk(), where n is the number of entries in the map.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the map elements.
+  \item $O(n)$ auxiliary heap space for insert().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the map elements.
-- O(n) auxiliary heap space for insert().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstddef>
 #include <list>
 
@@ -2565,13 +2461,9 @@ class hash_map {
     }
   }
 };
-
-/*** Example Usage and Output:
-
-cab
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -2637,45 +2529,38 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+cab
+\end{exampleoutput}
 \subsection{Skip List}
-\begin{lstlisting}
-/*
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires both the < and the == operators to be defined on the key type. A skip list maintains a linked hierarchy of sorted subsequences with each successive subsequence skipping over fewer elements than the previous one.
 
-Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires both
-the < and the == operators to be defined on the key type. A skip list maintains
-a linked hierarchy of sorted subsequences with each successive subsequence
-skipping over fewer elements than the previous one.
+\begin{compactitem}
+  \item skip\_list() constructs an empty map.
+  \item size() returns the size of the map.
+  \item empty() returns whether the map is empty.
+  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
+  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
+  \item operator[k] returns a reference to key k's associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key k was not originally found.
+  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+\end{compactitem}
 
-- skip_list() constructs an empty map.
-- size() returns the size of the map.
-- empty() returns whether the map is empty.
-- insert(k, v) adds an entry with key k and value v to the map, returning true
-  if an new entry was added or false if the key already exists (in which case
-  the map is unchanged and the old value associated with the key is preserved).
-- erase(k) removes the entry with key k from the map, returning true if the
-  removal was successful or false if the key to be removed was not found.
-- find(k) returns a pointer to a const value associated with key k, or NULL if
-  the key was not found.
-- operator[k] returns a reference to key k's associated value (which may be
-  modified), or if necessary, inserts and returns a new entry with the default
-  constructed value if key k was not originally found.
-- walk(f) calls the function f(k, v) on each entry of the map, in ascending
-  order of keys.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, size(), and empty().
+  \item $O(\log n)$ on average per call to insert(), erase(), find(), and operator[], where n is the number of entries currently in the map.
+  \item $O(n)$ per call to walk().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor, size(), and empty().
-- O(log n) on average per call to insert(), erase(), find(), and operator[],
-  where n is the number of entries currently in the map.
-- O(n) per call to walk().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ on average for storage of the map elements.
+  \item $O(n)$ auxiliary heap space for insert() and erase().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) on average for storage of the map elements.
-- O(n) auxiliary heap space for insert() and erase().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <cstdlib>
 #include <vector>
@@ -2813,14 +2698,9 @@ class skip_list {
     }
   }
 };
-
-/*** Example Usage and Output:
-
-abcde
-bcde
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -2848,33 +2728,32 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+abcde
+bcde
+\end{exampleoutput}
 
 \section{Range Queries in One Dimension}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Sparse Table (Range Minimum Query)}
-\begin{lstlisting}
-/*
+Given a static array with indices from 0 to n - 1, precompute a table that may later be used perform range minimum queries on the array in constant time. This version is simplified to only work on integer arrays.
 
-Given a static array with indices from 0 to n - 1, precompute a table that may
-later be used perform range minimum queries on the array in constant time. This
-version is simplified to only work on integer arrays.
+The dynamic programming state dp[i][j] holds the index of the minimum value in the sub-array starting at i and having length 2\textasciicircum{}j. Each dp[i][j] will always be equal to either dp[i][j - 1] or dp[i + 2\textasciicircum{}(j - 1) - 1)][j - 1], whichever of the indices corresponds to the smaller value in the array.
 
-The dynamic programming state dp[i][j] holds the index of the minimum value in
-the sub-array starting at i and having length 2^j. Each dp[i][j] will always be
-equal to either dp[i][j - 1] or dp[i + 2^(j - 1) - 1)][j - 1], whichever of the
-indices corresponds to the smaller value in the array.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to build(), where n is the size of the array.
+  \item $O(1)$ per call to query\_min().
+\end{compactitem}
 
-Time Complexity:
-- O(n log n) per call to build(), where n is the size of the array.
-- O(1) per call to query_min().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ for storage of the sparse table, where n is the size of the array.
+  \item $O(1)$ auxiliary for query().
+\end{compactitem}
 
-Space Complexity:
-- O(n log n) for storage of the sparse table, where n is the size of the array.
-- O(1) auxiliary for query().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <vector>
 
 const int MAXN = 1000;
@@ -2904,9 +2783,9 @@ int query(int a[], int lo, int hi) {
   int y = dp[hi - (1 << j) + 1][j];
   return (a[x] < a[y]) ? a[x] : a[y];
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -2917,39 +2796,28 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Square Root Decomposition}
-\begin{lstlisting}
-/*
+Maintain a fixed-size array (from 0 to size() - 1) while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
 
-Maintain a fixed-size array (from 0 to size() - 1) while supporting dynamic
-queries of contiguous sub-arrays and dynamic updates of individual indices.
+The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The default definition below assumes a numerical array type, supporting queries for the "min" of the target range. Another possible query operation is "sum", in which the join\_values() function should be defined to return "a + b".
 
-The query operation is defined by an associative join_values() function which
-satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
-for all values x, y, and z in the array. The default definition below assumes a
-numerical array type, supporting queries for the "min" of the target range.
-Another possible query operation is "sum", in which the join_values() function
-should be defined to return "a + b".
+The update operation is defined by the join\_value\_with\_delta() function which determines the change made to array values. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which join\_value\_with\_delta(v, d) should be defined to return "v + d".
 
-The update operation is defined by the join_value_with_delta() function which
-determines the change made to array values. The default definition below
-supports updates that "set" the chosen array index to a new value. Another
-possible update operation is "increment", in which join_value_with_delta(v, d)
-should be defined to return "v + d".
+The operations supported by this data structure are identical to those of the point update segment tree found in this section.
 
-The operations supported by this data structure are identical to those of the
-point update segment tree found in this section.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to both constructors, where n is the size of the array.
+  \item $O(1)$ per call to size().
+  \item $O(\sqrt{n})$ per call to at(), update(), and query().
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to both constructors, where n is the size of the array.
-- O(1) per call to size().
-- O(sqrt n) per call to at(), update(), and query().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <vector>
@@ -3031,13 +2899,9 @@ class sqrt_decomposition {
     }
   }
 };
-
-/*** Example Usage and Output:
-
-Values: 6 -2 4 8 10
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -3055,49 +2919,40 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values: 6 -2 4 8 10
+\end{exampleoutput}
 \subsection{Segment Tree (Point Update)}
-\begin{lstlisting}
-/*
+Maintain a fixed-size array while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
 
-Maintain a fixed-size array while supporting dynamic queries of contiguous
-sub-arrays and dynamic updates of individual indices.
+The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
 
-The query operation is defined by an associative join_values() function which
-satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
-for all values x, y, and z in the array. The default code below assumes a
-numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case the join_values()
-function should be defined to return "a + b".
+The update operation is defined by the join\_value\_with\_delta() function, which determines the change made to array values. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which join\_value\_with\_delta(v, d) should be defined to return "v + d".
 
-The update operation is defined by the join_value_with_delta() function, which
-determines the change made to array values. The default definition below
-supports updates that "set" the chosen array index to a new value. Another
-possible update operation is "increment", in which join_value_with_delta(v, d)
-should be defined to return "v + d".
+\begin{compactitem}
+  \item segment\_tree(n, v) constructs an array of size n with indices from 0 to n - 1, inclusive, and all values initialized to v.
+  \item segment\_tree(lo, hi) constructs an array from two random-access iterators as a range [lo, hi), initialized to the elements of the range in the same order.
+  \item size() returns the size of the array.
+  \item at(i) returns the value at index i.
+  \item query(lo, hi) returns the result of join\_values() applied to all indices from lo to hi, inclusive. If the distance between lo and hi is 1, then the single specified value is returned.
+  \item update(i, d) assigns the value v at index i to join\_value\_with\_delta(v, d).
+\end{compactitem}
 
-- segment_tree(n, v) constructs an array of size n with indices from 0 to n - 1,
-  inclusive, and all values initialized to v.
-- segment_tree(lo, hi) constructs an array from two random-access iterators as a
-  range [lo, hi), initialized to the elements of the range in the same order.
-- size() returns the size of the array.
-- at(i) returns the value at index i.
-- query(lo, hi) returns the result of join_values() applied to all indices from
-  lo to hi, inclusive. If the distance between lo and hi is 1, then the single
-  specified value is returned.
-- update(i, d) assigns the value v at index i to join_value_with_delta(v, d).
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to both constructors, where n is the size of the array.
+  \item $O(1)$ per call to size().
+  \item $O(\log n)$ per call to at(), update(), and query().
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to both constructors, where n is the size of the array.
-- O(1) per call to size().
-- O(log n) per call to at(), update(), and query().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements.
+  \item $O(\log n)$ auxiliary stack space for update() and query().
+  \item $O(1)$ auxiliary for size().
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements.
-- O(log n) auxiliary stack space for update() and query().
-- O(1) auxiliary for size().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <vector>
 
@@ -3169,12 +3024,16 @@ class segment_tree {
 
  public:
   segment_tree(int n, const T &v = T()) : len(n), value(4*len) {
-    build(0, 0, len - 1, false, 0, v);
+    if (len > 0) {
+      build(0, 0, len - 1, v);
+    }
   }
 
   template<class It>
   segment_tree(It lo, It hi) : len(hi - lo), value(4*len) {
-    build(0, 0, len - 1, lo);
+    if (len > 0) {
+      build(0, 0, len - 1, lo);
+    }
   }
 
   int size() const {
@@ -3193,14 +3052,9 @@ class segment_tree {
     update(0, 0, len - 1, i, d);
   }
 };
-
-/*** Example Usage and Output:
-
-Values: 6 -2 4 8 10
-The minimum value in the range [0, 3] is -2.
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -3218,58 +3072,48 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values: 6 -2 4 8 10
+The minimum value in the range [0, 3] is -2.
+\end{exampleoutput}
 \subsection{Segment Tree (Range Update)}
-\begin{lstlisting}
-/*
+Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique.
 
-Maintain a fixed-size array while supporting both dynamic queries and updates of
-contiguous subarrays via the lazy propagation technique.
+The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
 
-The query operation is defined by an associative join_values() function which
-satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
-for all values x, y, and z in the array. The default code below assumes a
-numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case the join_values()
-function should be defined to return "a + b".
+The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to array values. These must satisfy:
 
-The update operation is defined by the join_value_with_delta() and join_deltas()
-functions, which determines the change made to array values. These must satisfy:
-- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
-  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
-- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
-  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
-  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
-The default code below defines updates that "set" the chosen array index to a
-new value. Another possible update operation is "increment", in which case
-join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
-join_deltas(d1, d2) should be defined to return "d1 + d2".
+\begin{compactitem}
+  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
+  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
+  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, len) should be defined to return "v + d*len" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+\end{compactitem}
 
-- segment_tree(n, v) constructs an array of size n with indices from 0 to n - 1,
-  inclusive, and all values initialized to v.
-- segment_tree(lo, hi) constructs an array from two random-access iterators as a
-  range [lo, hi), initialized to the elements of the range in the same order.
-- size() returns the size of the array.
-- at(i) returns the value at index i, where i is between 0 and size() - 1.
-- query(lo, hi) returns the result of join_values() applied to all indices from
-  lo to hi, inclusive. If the distance between lo and hi is 1, then the single
-  specified value is returned.
-- update(i, d) assigns the value v at index i to join_value_with_delta(v, d).
-- update(lo, hi, d) modifies the value at each array index from lo to hi,
-  inclusive, by respectively joining them with d using join_value_with_delta().
+\begin{compactitem}
+  \item segment\_tree(n, v) constructs an array of size n with indices from 0 to n - 1, inclusive, and all values initialized to v.
+  \item segment\_tree(lo, hi) constructs an array from two random-access iterators as a range [lo, hi), initialized to the elements of the range in the same order.
+  \item size() returns the size of the array.
+  \item at(i) returns the value at index i, where i is between 0 and size() - 1.
+  \item query(lo, hi) returns the result of join\_values() applied to all indices from lo to hi, inclusive. If the distance between lo and hi is 1, then the single specified value is returned.
+  \item update(i, d) assigns the value v at index i to join\_value\_with\_delta(v, d).
+  \item update(lo, hi, d) modifies the value at each array index from lo to hi, inclusive, by respectively joining them with d using join\_value\_with\_delta().
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to both constructors, where n is the size of the array.
-- O(1) per call to size().
-- O(log n) per call to at(), update(), and query().
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to both constructors, where n is the size of the array.
+  \item $O(1)$ per call to size().
+  \item $O(\log n)$ per call to at(), update(), and query().
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements.
-- O(log n) auxiliary stack space for update() and query().
-- O(1) auxiliary for size().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements.
+  \item $O(\log n)$ auxiliary stack space for update() and query().
+  \item $O(1)$ auxiliary for size().
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <vector>
 
@@ -3363,13 +3207,17 @@ class segment_tree {
  public:
   segment_tree(int n, const T &v = T())
       : len(n), value(4*len), delta(4*len), pending(4*len, false) {
-    build(0, 0, len - 1, v);
+    if (len > 0) {
+      build(0, 0, len - 1, v);
+    }
   }
 
   template<class It>
   segment_tree(It lo, It hi)
       : len(hi - lo), value(4*len), delta(4*len), pending(4*len, false) {
-    build(0, 0, len - 1, lo);
+    if (len > 0) {
+      build(0, 0, len - 1, lo);
+    }
   }
 
   int size() const {
@@ -3392,14 +3240,9 @@ class segment_tree {
     update(0, 0, len - 1, lo, hi, d);
   }
 };
-
-/*** Example Usage and Output:
-
-Values: 6 -2 4 8 10
-Values: 5 5 5 1 5
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -3426,60 +3269,48 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values: 6 -2 4 8 10
+Values: 5 5 5 1 5
+\end{exampleoutput}
 \subsection{Segment Tree (Compressed)}
-\begin{lstlisting}
-/*
+Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-Maintain a fixed-size array while supporting both dynamic queries and updates of
-contiguous subarrays via the lazy propagation technique. This implementation
-uses lazy initialization of nodes to conserve memory while supporting large
-indices.
+The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
 
-The query operation is defined by an associative join_values() function which
-satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
-for all values x, y, and z in the array. The default code below assumes a
-numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case the join_values()
-function should be defined to return "a + b".
+The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to array values. These must satisfy:
 
-The update operation is defined by the join_value_with_delta() and join_deltas()
-functions, which determines the change made to array values. These must satisfy:
-- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
-  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
-- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
-  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
-  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
-The default code below defines updates that "set" the chosen array index to a
-new value. Another possible update operation is "increment", in which case
-join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
-join_deltas(d1, d2) should be defined to return "d1 + d2".
+\begin{compactitem}
+  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
+  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
+  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, len) should be defined to return "v + d*len" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+\end{compactitem}
 
-- segment_tree(n, v) constructs an array of size n with indices from 0 to n - 1,
-  inclusive, and all values initialized to v.
-- segment_tree(lo, hi) constructs an array from two random-access iterators as a
-  range [lo, hi), initialized to the elements of the range in the same order.
-- size() returns the size of the array.
-- at(i) returns the value at index i, where i is between 0 and size() - 1.
-- query(lo, hi) returns the result of join_values() applied to all indices from
-  lo to hi, inclusive. If the distance between lo and hi is 1, then the single
-  specified value is returned.
-- update(i, d) assigns the value v at index i to join_value_with_delta(v, d).
-- update(lo, hi, d) modifies the value at each array index from lo to hi,
-  inclusive, by respectively joining them with d using join_value_with_delta().
+\begin{compactitem}
+  \item segment\_tree(n, v) constructs an array of size n with indices from 0 to n - 1, inclusive, and all values initialized to v.
+  \item segment\_tree(lo, hi) constructs an array from two random-access iterators as a range [lo, hi), initialized to the elements of the range in the same order.
+  \item size() returns the size of the array.
+  \item at(i) returns the value at index i, where i is between 0 and size() - 1.
+  \item query(lo, hi) returns the result of join\_values() applied to all indices from lo to hi, inclusive. If the distance between lo and hi is 1, then the single specified value is returned.
+  \item update(i, d) assigns the value v at index i to join\_value\_with\_delta(v, d).
+  \item update(lo, hi, d) modifies the value at each array index from lo to hi, inclusive, by respectively joining them with d using join\_value\_with\_delta().
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to both constructors, where n is the size of the array.
-- O(1) per call to size().
-- O(log n) per call to at(), update(), and query().
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to both constructors, where n is the size of the array.
+  \item $O(1)$ per call to size().
+  \item $O(\log n)$ per call to at(), update(), and query().
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements.
-- O(log n) auxiliary stack space for update() and query().
-- O(1) auxiliary for size().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements.
+  \item $O(\log n)$ auxiliary stack space for update() and query().
+  \item $O(1)$ auxiliary for size().
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
 
@@ -3522,6 +3353,9 @@ class segment_tree {
   }
 
   void push_delta(node_t *n, int lo, int hi) {
+    if (n == NULL) {
+      return;
+    }
     if (n->pending) {
       n->value = join_value_with_delta(n->value, n->delta, hi - lo + 1);
       if (lo != hi) {
@@ -3534,9 +3368,12 @@ class segment_tree {
   }
 
   T query(node_t *n, int lo, int hi, int tgt_lo, int tgt_hi) {
+    if (n == NULL) {
+      return join_segment(init, hi - lo + 1);
+    }
     push_delta(n, lo, hi);
     if (lo == tgt_lo && hi == tgt_hi) {
-      return (n == NULL) ? join_segment(init, hi - lo + 1) : n->value;
+      return n->value;
     }
     int mid = lo + (hi - lo)/2;
     if (tgt_lo <= mid && mid < tgt_hi) {
@@ -3601,14 +3438,9 @@ class segment_tree {
     return update(root, 0, MAXN, lo, hi, d);
   }
 };
-
-/*** Example Usage and Output:
-
-Values: 6 -2 4 8 10
-Values: 5 5 5 1 5
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -3638,53 +3470,40 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values: 6 -2 4 8 10
+Values: 5 5 5 1 5
+\end{exampleoutput}
 \subsection{Implicit Treap}
-\begin{lstlisting}
-/*
+Maintain a dynamically-sized array using a balanced binary search tree while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. A treap maintains a balanced binary tree structure by preserving the heap property on the randomly generated priority values of nodes, thereby making insertions and deletions run in $O(\log n)$ with high probability.
 
-Maintain a dynamically-sized array using a balanced binary search tree while
-supporting both dynamic queries and updates of contiguous subarrays via the lazy
-propagation technique. A treap maintains a balanced binary tree structure by
-preserving the heap property on the randomly generated priority values of nodes,
-thereby making insertions and deletions run in O(log n) with high probability.
+The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
 
-The query operation is defined by an associative join_values() function which
-satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
-for all values x, y, and z in the array. The default code below assumes a
-numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case the join_values()
-function should be defined to return "a + b".
+The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to array values. These must satisfy:
 
-The update operation is defined by the join_value_with_delta() and join_deltas()
-functions, which determines the change made to array values. These must satisfy:
-- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
-  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
-- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
-  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
-  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
-The default code below defines updates that "set" the chosen array index to a
-new value. Another possible update operation is "increment", in which case
-join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
-join_deltas(d1, d2) should be defined to return "d1 + d2".
+\begin{compactitem}
+  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
+  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
+  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, len) should be defined to return "v + d*len" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+\end{compactitem}
 
-This data structure shares every operation of one-dimensional segment trees in
-this section, with the additional operations empty(), insert(), erase(),
-push_back(), and pop_back() analogous to those of std::vector (here, insert()
-and erase() both take an index instead of an iterator).
+This data structure shares every operation of one-dimensional segment trees in this section, with the additional operations empty(), insert(), erase(), push\_back(), and pop\_back() analogous to those of std::vector (here, insert() and erase() both take an index instead of an iterator).
 
-Time Complexity:
-- O(n) per call to both constructors, where n is the size of the array.
-- O(1) per call to size() and empty().
-- O(log n) on average per call to all other operations.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to both constructors, where n is the size of the array.
+  \item $O(1)$ per call to size() and empty().
+  \item $O(\log n)$ on average per call to all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements.
-- O(1) auxiliary for size() and empty().
-- O(log n) auxiliary stack space for all other operations.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements.
+  \item $O(1)$ auxiliary for size() and empty().
+  \item $O(\log n)$ auxiliary stack space for all other operations.
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstdlib>
 
 template<class T>
@@ -3736,6 +3555,8 @@ class implicit_treap {
 
   static void update_delta(node_t *n, const T &d) {
     if (n != NULL) {
+      n->value = join_value_with_delta(n->value, d, 1);
+      n->subtree_value = join_value_with_delta(n->subtree_value, d, n->size);
       n->delta = n->pending ? join_deltas(n->delta, d) : d;
       n->pending = true;
     }
@@ -3745,9 +3566,6 @@ class implicit_treap {
     if (n == NULL || !n->pending) {
       return;
     }
-    n->value = join_value_with_delta(n->value, n->delta, 1);
-    n->subtree_value = join_value_with_delta(n->subtree_value, n->delta,
-                                             n->size);
     if (n->size > 1) {
       update_delta(n->left, n->delta);
       update_delta(n->right, n->delta);
@@ -3804,8 +3622,9 @@ class implicit_treap {
   static void erase(node_t *&n, int i) {
     push_delta(n);
     if (i == size(n->left)) {
+      node_t *left = n->left, *right = n->right;
       delete n;
-      merge(n, n->left, n->right);
+      merge(n, left, right);
     } else if (i < size(n->left)) {
       erase(n->left, i);
     } else {
@@ -3902,15 +3721,9 @@ class implicit_treap {
     merge(root, t, r1);
   }
 };
-
-/*** Example Usage and Output:
-
-Values: -99 -2 1 8 10 11 (min: -99)
-Values: -90 -2 1 8 10 11 (min: -90)
-Values: 2 2 1 8 10 11 (min: 1)
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <iostream>
 using namespace std;
 
@@ -3937,53 +3750,42 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values: 99 -2 1 8 10 11 (min: -2)
+Values: 90 -2 1 8 10 11 (min: -2)
+Values: 2 2 1 8 10 11 (min: 1)
+\end{exampleoutput}
 
 \section{Range Queries in Two Dimensions}
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Quadtree (Point Update)}
-\begin{lstlisting}
-/*
+Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-Maintain a two-dimensional array while supporting dynamic queries of rectangular
-sub-arrays and dynamic updates of individual indices. This implementation uses
-lazy initialization of nodes to conserve memory while supporting large indices.
+The query operation is defined by the join\_values() and join\_region() functions where join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The join\_region(v, area) function must be defined in conjunction to efficiently return the result of join\_values() applied to a rectangular sub-array of area elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case join\_values(a, b) should return "a + b" and join\_region(v, area) should return "v*area".
 
-The query operation is defined by the join_values() and join_region() functions
-where join_values(x, join_values(y, z)) = join_values(join_values(x, y), z) for
-all values x, y, and z in the array. The join_region(v, area) function must be
-defined in conjunction to efficiently return the result of join_values() applied
-to a rectangular sub-array of area elements. The default code below assumes a
-numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case join_values(a, b)
-should return "a + b" and join_region(v, area) should return "v*area".
+The update operation is defined by the join\_value\_with\_delta() function, which determines the change made to array values. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which join\_value\_with\_delta(v, d) should be defined to return "v + d".
 
-The update operation is defined by the join_value_with_delta() function, which
-determines the change made to array values. The default code below defines
-updates that "set" the chosen array index to a new value. Another possible
-update operation is "increment", in which join_value_with_delta(v, d) should be
-defined to return "v + d".
+\begin{compactitem}
+  \item quadtree(v) constructs a two-dimensional array with rows from 0 to MAXR and columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
+  \item at(r, c) returns the value at row r, column c.
+  \item query(r1, c1, r2, c2) returns the result of join\_values() applied to every value in the rectangular region consisting of rows from r1 to r2, inclusive, and columns from c1 to c2, inclusive.
+  \item update(r, c, d) assigns the value v at (r, c) to join\_value\_with\_delta(v, d).
+\end{compactitem}
 
-- quadtree(v) constructs a two-dimensional array with rows from 0 to MAXR and
-  columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
-- at(r, c) returns the value at row r, column c.
-- query(r1, c1, r2, c2) returns the result of join_values() applied to every
-  value in the rectangular region consisting of rows from r1 to r2, inclusive,
-  and columns from c1 to c2, inclusive.
-- update(r, c, d) assigns the value v at (r, c) to join_value_with_delta(v, d).
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor.
+  \item $O(\max\left(\text{MAXR}, \text{MAXC}\right))$ per call to at(), update(), and query().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor.
-- O(max(MAXR, MAXC)) per call to at(), update(), and query().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements, where n is the number of updated entries in the array.
+  \item $O(\sqrt{\max\left(\text{MAXR}, \text{MAXC}\right)})$ auxiliary stack space for update(), query(), and at().
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements, where n is the number of updated
-  entries in the array.
-- O(sqrt(max(MAXR, MAXC))) auxiliary stack space for update(), query(), and
-  at().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
 
@@ -4112,16 +3914,9 @@ class quadtree {
     update(root, 0, 0, MAXR, MAXC);
   }
 };
-
-/*** Example Usage and Output:
-
-Values:
-7 6 0
-5 4 0
-0 1 9
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -4150,60 +3945,46 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values:
+7 6 0
+5 4 0
+0 1 9
+\end{exampleoutput}
 \subsection{Quadtree (Range Update)}
-\begin{lstlisting}
-/*
+Maintain a two-dimensional array while supporting both dynamic queries and updates of rectangular sub-arrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-Maintain a two-dimensional array while supporting both dynamic queries and
-updates of rectangular sub-arrays via the lazy propagation technique. This
-implementation uses lazy initialization of nodes to conserve memory while
-supporting large indices.
+The query operation is defined by the join\_values() and join\_region() functions where join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The join\_region(v, area) function must be defined in conjunction to efficiently return the result of join\_values() applied to a rectangular sub-array of area elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case join\_values(a, b) should return "a + b" and join\_region(v, area) should return "v*area".
 
-The query operation is defined by the join_values() and join_region() functions
-where join_values(x, join_values(y, z)) = join_values(join_values(x, y), z) for
-all values x, y, and z in the array. The join_region(v, area) function must be
-defined in conjunction to efficiently return the result of join_values() applied
-to a rectangular sub-array of area elements. The default code below assumes a
-numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case join_values(a, b)
-should return "a + b" and join_region(v, area) should return "v*area".
+The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to array values. These must satisfy:
 
-The update operation is defined by the join_value_with_delta() and join_deltas()
-functions, which determines the change made to array values. These must satisfy:
-- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
-  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
-- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
-  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
-  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
-The default code below defines updates that "set" the chosen array index to a
-new value. Another possible update operation is "increment", in which case
-join_value_with_delta(v, d, area) should be defined to return "v + d*area" and
-join_deltas(d1, d2) should be defined to return "d1 + d2".
+\begin{compactitem}
+  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
+  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
+  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, area) should be defined to return "v + d*area" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+\end{compactitem}
 
-- quadtree(v) constructs a two-dimensional array with rows from 0 to MAXR and
-  columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
-- at(r, c) returns the value at row r, column c.
-- query(r1, c1, r2, c2) returns the result of join_values() applied to every
-  value in the rectangular region consisting of rows from r1 to r2 and columns
-  from c1 to c2, inclusive.
-- update(r, c, d) assigns the value v at (r, c) to join_value_with_delta(v, d).
-- update(r1, c1, r2, c2) modifies the value at each index of the rectangular
-  region consisting of rows from r1 to r2 and columns from c1 to c2, inclusive,
-  by respectively joining them with d using join_value_with_delta().
+\begin{compactitem}
+  \item quadtree(v) constructs a two-dimensional array with rows from 0 to MAXR and columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
+  \item at(r, c) returns the value at row r, column c.
+  \item query(r1, c1, r2, c2) returns the result of join\_values() applied to every value in the rectangular region consisting of rows from r1 to r2 and columns from c1 to c2, inclusive.
+  \item update(r, c, d) assigns the value v at (r, c) to join\_value\_with\_delta(v, d).
+  \item update(r1, c1, r2, c2) modifies the value at each index of the rectangular region consisting of rows from r1 to r2 and columns from c1 to c2, inclusive, by respectively joining them with d using join\_value\_with\_delta().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor.
-- O(max(MAXR, MAXC)) per call to at(), update(), and query().
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor.
+  \item $O(\max\left(\text{MAXR}, \text{MAXC}\right))$ per call to at(), update(), and query().
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements, where n is the number of updated
-  entries in the array.
-- O(sqrt(max(MAXR, MAXC))) auxiliary stack space for update(), query(), and
-  at().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements, where n is the number of updated entries in the array.
+  \item $O(\sqrt{\max\left(\text{MAXR}, \text{MAXC}\right)})$ auxiliary stack space for update(), query(), and at().
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
 
@@ -4365,16 +4146,9 @@ public:
     update(root, 0, 0, MAXR, MAXC);
   }
 };
-
-/*** Example Usage and Output:
-
-Values:
-7 6 0
-5 4 0
-0 1 9
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -4403,50 +4177,39 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values:
+7 6 0
+5 4 0
+0 1 9
+\end{exampleoutput}
 \subsection{2D Segment Tree}
-\begin{lstlisting}
-/*
+Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-Maintain a two-dimensional array while supporting dynamic queries of rectangular
-sub-arrays and dynamic updates of individual indices. This implementation uses
-lazy initialization of nodes to conserve memory while supporting large indices.
+The query operation is defined by the join\_values() and join\_region() functions where join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The join\_region(v, area) function must be defined in conjunction to efficiently return the result of join\_values() applied to a rectangular sub-array of area elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case join\_values(a, b) should return "a + b" and join\_region(v, area) should return "v*area".
 
-The query operation is defined by the join_values() and join_region() functions
-where join_values(x, join_values(y, z)) = join_values(join_values(x, y), z) for
-all values x, y, and z in the array. The join_region(v, area) function must be
-defined in conjunction to efficiently return the result of join_values() applied
-to a rectangular sub-array of area elements. The default code below assumes a
-numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case join_values(a, b)
-should return "a + b" and join_region(v, area) should return "v*area".
+The update operation is defined by the join\_value\_with\_delta() function, which determines the change made to array values. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which join\_value\_with\_delta(v, d) should be defined to return "v + d".
 
-The update operation is defined by the join_value_with_delta() function, which
-determines the change made to array values. The default code below defines
-updates that "set" the chosen array index to a new value. Another possible
-update operation is "increment", in which join_value_with_delta(v, d) should be
-defined to return "v + d".
+\begin{compactitem}
+  \item segment\_tree\_2d(v) constructs a two-dimensional array with rows from 0 to MAXR and columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
+  \item at(r, c) returns the value at row r, column c.
+  \item query(r1, c1, r2, c2) returns the result of join\_values() applied to every value in the rectangular region consisting of rows from r1 to r2, inclusive, and columns from c1 to c2, inclusive.
+  \item update(r, c, d) assigns the value v at (r, c) to join\_value\_with\_delta(v, d).
+\end{compactitem}
 
-- segment_tree_2d(v) constructs a two-dimensional array with rows from 0 to
-  MAXR and columns from 0 to MAXC, inclusive. All values are implicitly
-  initialized to v.
-- at(r, c) returns the value at row r, column c.
-- query(r1, c1, r2, c2) returns the result of join_values() applied to every
-  value in the rectangular region consisting of rows from r1 to r2, inclusive,
-  and columns from c1 to c2, inclusive.
-- update(r, c, d) assigns the value v at (r, c) to join_value_with_delta(v, d).
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor.
+  \item $O(\log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$ per call to at(), update(), and query().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor.
-- O(log(MAXR)*log(MAXC)) per call to at(), update(), and query().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements, where n is the number of updated entries in the array.
+  \item $O(\log\left(\text{MAXR}\right) + \log\left(\text{MAXC}\right))$ auxiliary stack space for update(), query(), and at().
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements, where n is the number of updated
-  entries in the array.
-- O(log(MAXR) + log(MAXC)) auxiliary stack space for update(), query(), and
-  at().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
 
@@ -4650,16 +4413,9 @@ class segment_tree_2d {
     update(root, r, c, d);
   }
 };
-
-/*** Example Usage and Output:
-
-Values:
-7 6 0
-5 4 0
-0 1 9
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -4688,34 +4444,33 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values:
+7 6 0
+5 4 0
+0 1 9
+\end{exampleoutput}
 \subsection{2D Range Tree}
-\begin{lstlisting}
-/*
+Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses std::pair to represent points, requiring operators < and == to be defined on the numeric template type.
 
-Maintain a set of two-dimensional points while supporting queries for all points
-that fall inside given rectangular regions. This implementation uses std::pair
-to represent points, requiring operators < and == to be defined on the numeric
-template type.
+\begin{compactitem}
+  \item range\_tree(lo, hi) constructs a set from two random-access iterators to std::pair as a range [lo, hi) of points.
+  \item query(x1, y1, x2, y2, f) calls the function f(i, p) on each point in the set that falls into the rectangular region consisting of rows from x1 to x2, inclusive, and columns from y1 to y2, inclusive. The first argument to f is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an std::pair.
+\end{compactitem}
 
-- range_tree(lo, hi) constructs a set from two random-access iterators to
-  std::pair as a range [lo, hi) of points.
-- query(x1, y1, x2, y2, f) calls the function f(i, p) on each point in the set
-  that falls into the rectangular region consisting of rows from x1 to x2,
-  inclusive, and columns from y1 to y2, inclusive. The first argument to f is
-  the zero-based index of the point in the original range given to the
-  constructor. The second argument is the point itself as an std::pair.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to the constructor, where n is the number of points.
+  \item $O(\log^{2}(n) + m)$ per call to query(), where m is the number of points that are reported by the query.
+\end{compactitem}
 
-Time Complexity:
-- O(n log n) per call to the constructor, where n is the number of points.
-- O(log^2(n) + m) per call to query(), where m is the number of points that are
-  reported by the query.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ for storage of the points.
+  \item $O(\log^{2}(n))$ auxiliary stack space for query().
+\end{compactitem}
 
-Space Complexity:
-- O(n log n) for storage of the points.
-- O(log^2(n)) auxiliary stack space for query().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <iterator>
 #include <utility>
@@ -4795,14 +4550,9 @@ class range_tree {
     query(0, 0, points.size() - 1, f);
   }
 };
-
-/*** Example Usage and Output:
-
-(-1, -1) (2, -1) (2, 2) (1, 4)
-(1, 4) (2, 2) (3, 1)
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <iostream>
 using namespace std;
 
@@ -4826,34 +4576,31 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+(-1, -1) (2, -1) (2, 2) (1, 4)
+(1, 4) (2, 2) (3, 1)
+\end{exampleoutput}
 \subsection{K-d Tree (2D Range Query)}
-\begin{lstlisting}
-/*
+Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses std::pair to represent points, requiring operators < and == to be defined on the numeric template type.
 
-Maintain a set of two-dimensional points while supporting queries for all points
-that fall inside given rectangular regions. This implementation uses std::pair
-to represent points, requiring operators < and == to be defined on the numeric
-template type.
+\begin{compactitem}
+  \item kd\_tree(lo, hi) constructs a set from two random-access iterators to std::pair as a range [lo, hi) of points.
+  \item query(x1, y1, x2, y2, f) calls the function f(i, p) on each point in the set that falls into the rectangular region consisting of rows from x1 to x2, inclusive, and columns from y1 to y2, inclusive. The first argument to f is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an std::pair.
+\end{compactitem}
 
-- kd_tree(lo, hi) constructs a set from two random-access iterators to std::pair
-  as a range [lo, hi) of points.
-- query(x1, y1, x2, y2, f) calls the function f(i, p) on each point in the set
-  that falls into the rectangular region consisting of rows from x1 to x2,
-  inclusive, and columns from y1 to y2, inclusive. The first argument to f is
-  the zero-based index of the point in the original range given to the
-  constructor. The second argument is the point itself as an std::pair.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to the constructor, where n is the number of points.
+  \item $O(\log\left(n\right) + m)$ on average per call to query(), where m is the number of points that are reported by the query.
+\end{compactitem}
 
-Time Complexity:
-- O(n log n) per call to the constructor, where n is the number of points.
-- O(log(n) + m) on average per call to query(), where m is the number of points
-  that are reported by the query.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the points.
+  \item $O(\log n)$ auxiliary stack space for query().
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the points.
-- O(log n) auxiliary stack space for query().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <utility>
 #include <vector>
@@ -4944,14 +4691,9 @@ class kd_tree {
     query(0, tree.size(), f);
   }
 };
-
-/*** Example Usage and Output:
-
-(2, -1) (1, 4) (2, 2) (-1, -1)
-(1, 4) (2, 2) (3, 1)
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <iostream>
 using namespace std;
 
@@ -4975,30 +4717,31 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+(2, -1) (1, 4) (2, 2) (-1, -1)
+(1, 4) (2, 2) (3, 1)
+\end{exampleoutput}
 \subsection{K-d Tree (Nearest Neighbor)}
-\begin{lstlisting}
-/*
+Maintain a set of two-dimensional points while supporting queries for the closest point in the set to a given query point. This implementation uses std::pair to represent points, requiring operators <, ==, -, and long double casting to be defined on the numeric template type.
 
-Maintain a set of two-dimensional points while supporting queries for the
-closest point in the set to a given query point. This implementation uses
-std::pair to represent points, requiring operators <, ==, -, and long double
-casting to be defined on the numeric template type.
+\begin{compactitem}
+  \item kd\_tree(lo, hi) constructs a set from two random-access iterators to std::pair as a range [lo, hi) of points.
+  \item nearest(x, y, can\_equal) returns a point in the set that is closest to (x, y) by Euclidean distance. This may be equal to (x, y) only if can\_equal is true.
+\end{compactitem}
 
-- kd_tree(lo, hi) constructs a set from two random-access iterators to std::pair
-  as a range [lo, hi) of points.
-- nearest(x, y, can_equal) returns a point in the set that is closest to (x, y)
-  by Euclidean distance. This may be equal to (x, y) only if can_equal is true.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to the constructor, where n is the number of points.
+  \item $O(\log n)$ on average per call to nearest().
+\end{compactitem}
 
-Time Complexity:
-- O(n log n) per call to the constructor, where n is the number of points.
-- O(log n) on average per call to nearest().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the points.
+  \item $O(\log n)$ auxiliary stack space for nearest().
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the points.
-- O(log n) auxiliary stack space for nearest().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -5091,9 +4834,9 @@ class kd_tree {
     return tree[id];
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -5111,29 +4854,26 @@ int main() {
 }
 \end{lstlisting}
 \subsection{R-Tree (Nearest Segment)}
-\begin{lstlisting}
-/*
+Maintain a set of two-dimensional line segments while supporting queries for the closest segment in the set to a given query point. This implementation uses integer points and long doubles for intermediate calculations.
 
-Maintain a set of two-dimensional line segments while supporting queries for the
-closest segment in the set to a given query point. This implementation uses
-integer points and long doubles for intermediate calculations.
+\begin{compactitem}
+  \item r\_tree(lo, hi) constructs a set from two random-access iterators as a range [lo, hi) of segments.
+  \item nearest(x, y) returns a segment in the set that contains some point which is as close or closer to (x, y) by Euclidean distance than any point on any other segment in the set.
+\end{compactitem}
 
-- r_tree(lo, hi) constructs a set from two random-access iterators as a range
-  [lo, hi) of segments.
-- nearest(x, y) returns a segment in the set that contains some point which is
-  as close or closer to (x, y) by Euclidean distance than any point on any
-  other segment in the set.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to the constructor, where n is the number of segments.
+  \item $O(\log n)$ on average per call to nearest().
+\end{compactitem}
 
-Time Complexity:
-- O(n log n) per call to the constructor, where n is the number of segments.
-- O(log n) on average per call to nearest().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the segments.
+  \item $O(\log n)$ auxiliary stack space for nearest().
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the segments.
-- O(log n) auxiliary stack space for nearest().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -5257,9 +4997,9 @@ class r_tree {
     return tree[id];
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -5280,31 +5020,30 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Fenwick Tree (Simple)}
-\begin{lstlisting}
-/*
+Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 1-based (i.e. has valid indices from 1 to MAXN - 1, inclusive).
 
-Maintain an array of numerical type, allowing for updates of individual indices
-(point update) and queries for the sum of contiguous sub-arrays (range queries).
-This implementation assumes that the array is 1-based (i.e. has valid indices
-from 1 to MAXN - 1, inclusive).
+\begin{compactitem}
+  \item initialize() resets the data structure.
+  \item a[i] stores the value at index i.
+  \item add(i, x) adds x to the value at index i.
+  \item set(i, x) assigns the value at index i to x.
+  \item sum(hi) returns the sum of all values at indices from 1 to hi, inclusive.
+  \item sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+\end{compactitem}
 
-- initialize() resets the data structure.
-- a[i] stores the value at index i.
-- add(i, x) adds x to the value at index i.
-- set(i, x) assigns the value at index i to x.
-- sum(hi) returns the sum of all values at indices from 1 to hi, inclusive.
-- sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to initialize(), where n is the size of the array.
+  \item $O(\log n)$ per call to all other operations.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to initialize(), where n is the size of the array.
-- O(log n) per call to all other operations.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 const int MAXN = 1000;
 int a[MAXN + 1], t[MAXN + 1];
 
@@ -5336,13 +5075,9 @@ int sum(int hi) {
 int sum(int lo, int hi) {
   return sum(hi) - sum(lo - 1);
 }
-
-/*** Example Usage and Output:
-
-Values: 5 1 2 3 4
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -5363,31 +5098,33 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values: 5 1 2 3 4
+\end{exampleoutput}
 \subsection{Fenwick Tree (Range Update, Point Query)}
-\begin{lstlisting}
-/*
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and values at individual indices to be queried (point query). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
 
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be
-simultaneously incremented by arbitrary values (range update) and values at
-individual indices to be queried (point query). This implementation assumes that
-the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
+\begin{compactitem}
+  \item size() returns the size of the array.
+  \item at(i) returns the value at index i.
+  \item add(i, x) adds x to the value at index i.
+  \item add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
+\end{compactitem}
 
-- size() returns the size of the array.
-- at(i) returns the value at index i.
-- add(i, x) adds x to the value at index i.
-- add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructor, where n is the size of the array.
+  \item $O(1)$ per call to size().
+  \item $O(\log n)$ per call to at() and both add() functions.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to the constructor, where n is the size of the array.
-- O(1) per call to size().
-- O(log n) per call to at() and both add() functions.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <vector>
 
 template<class T>
@@ -5421,13 +5158,9 @@ class fenwick_tree {
     add(hi + 1, -x);
   }
 };
-
-/*** Example Usage and Output:
-
-Values: 5 10 15 10 10
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <iostream>
 using namespace std;
 
@@ -5444,33 +5177,35 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values: 5 10 15 10 10
+\end{exampleoutput}
 \subsection{Fenwick Tree (Point Update, Range Query)}
-\begin{lstlisting}
-/*
+Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
 
-Maintain an array of numerical type, allowing for updates of individual indices
-(point update) and queries for the sum of contiguous sub-arrays (range queries).
-This implementation assumes that the array is 0-based (i.e. has valid indices
-from 0 to size() - 1, inclusive).
+\begin{compactitem}
+  \item size() returns the size of the array.
+  \item at(i) returns the value at index i.
+  \item add(i, x) adds x to the value at index i.
+  \item set(i, x) assigns the value at index i to x.
+  \item sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
+  \item sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+\end{compactitem}
 
-- size() returns the size of the array.
-- at(i) returns the value at index i.
-- add(i, x) adds x to the value at index i.
-- set(i, x) assigns the value at index i to x.
-- sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
-- sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructor, where n is the size of the array.
+  \item $O(1)$ per call to size() and at().
+  \item $O(\log n)$ per call to add(), set(), and both sum() functions.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to the constructor, where n is the size of the array.
-- O(1) per call to size() and at().
-- O(log n) per call to add(), set(), and both sum() functions.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <vector>
 
 template<class T>
@@ -5513,13 +5248,9 @@ class fenwick_tree {
     return sum(hi) - sum(lo - 1);
   }
 };
-
-/*** Example Usage and Output:
-
-Values: 5 1 2 3 4
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -5540,34 +5271,36 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values: 5 1 2 3 4
+\end{exampleoutput}
 \subsection{Fenwick Tree (Range Update, Range Query)}
-\begin{lstlisting}
-/*
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
 
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be
-simultaneously incremented by arbitrary values (range update) and queries for
-the sum of contiguous sub-arrays (range query). This implementation assumes that
-the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
+\begin{compactitem}
+  \item size() returns the size of the array.
+  \item at(i) returns the value at index i.
+  \item add(i, x) increments the value at index i by x.
+  \item add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
+  \item set(i, x) assigns the value at index i to x.
+  \item sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
+  \item sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+\end{compactitem}
 
-- size() returns the size of the array.
-- at(i) returns the value at index i.
-- add(i, x) increments the value at index i by x.
-- add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
-- set(i, x) assigns the value at index i to x.
-- sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
-- sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructor, where n is the size of the array.
+  \item $O(1)$ per call to size().
+  \item $O(\log n)$ per call to all other operations.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to the constructor, where n is the size of the array.
-- O(1) per call to size().
-- O(log n) per call to all other operations.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the array elements.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the array elements.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <vector>
 
 template<class T>
@@ -5626,13 +5359,9 @@ class fenwick_tree {
     return sum(i, i);
   }
 };
-
-/*** Example Usage and Output:
-
-Values: 15 6 7 -5 4
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -5654,35 +5383,30 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values: 15 6 7 -5 4
+\end{exampleoutput}
 \subsection{Fenwick Tree (Compressed)}
-\begin{lstlisting}
-/*
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation uses std::map for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, all array indices from 0 to MAXN, inclusive, are accessible.
 
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be
-simultaneously incremented by arbitrary values (range update) and queries for
-the sum of contiguous sub-arrays (range query). This implementation uses
-std::map for coordinate compression, allowing for large indices to be accessed
-with efficient space complexity. That is, all array indices from 0 to MAXN,
-inclusive, are accessible.
+\begin{compactitem}
+  \item at(i) returns the value at index i.
+  \item add(i, x) adds x to the value at index i.
+  \item add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
+  \item set(i, x) assigns the value at index i to x.
+  \item sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
+  \item sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+\end{compactitem}
 
-- at(i) returns the value at index i.
-- add(i, x) adds x to the value at index i.
-- add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
-- set(i, x) assigns the value at index i to x.
-- sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
-- sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+\textbf{Time Complexity}: $O(\log^{2} MAXN)$ per call to all member functions. If std::map is replaced with std::unordered\_map, then the amortized running time will become $O(\log MAXN)$.
 
-Time Complexity:
-- O(log^2 MAXN) per call to all member functions. If std::map is replaced with
-  std::unordered_map, then the amortized running time will become O(log MAXN).
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \log MAXN)$ for storage of the array elements, where n is the number of distinct indices that have been accessed across all of the operations so far.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n log MAXN) for storage of the array elements, where n is the number of
-  distinct indices that have been accessed across all of the operations so far.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <map>
 
 template<class T>
@@ -5704,7 +5428,7 @@ class fenwick_tree {
   }
 
   void add(int i, const T &x) {
-    return add(i, i, x);
+    add(i, i, x);
   }
 
   void set(int i, const T &x) {
@@ -5732,13 +5456,9 @@ class fenwick_tree {
     return sum(i, i);
   }
 };
-
-/*** Example Usage and Output:
-
-Values: 15 6 7 -5 4
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -5764,36 +5484,34 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values: 15 6 7 -5 4
+\end{exampleoutput}
 \subsection{2D Fenwick Tree (Simple)}
-\begin{lstlisting}
-/*
+Maintain a 2D array of numerical type, allowing for updates of individual cells in the matrix (point update) and queries for the sum of rectangular sub-matrices (range query). This implementation assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to MAXR, inclusive, and columns have valid indices from 1 to MAXC, inclusive).
 
-Maintain a 2D array of numerical type, allowing for updates of individual cells
-in the matrix (point update) and queries for the sum of rectangular sub-matrices
-(range query). This implementation assumes that array dimensions are 1-based
-(i.e. rows have valid indices from 1 to MAXR, inclusive, and columns have valid
-indices from 1 to MAXC, inclusive).
+\begin{compactitem}
+  \item initialize() resets the data structure.
+  \item a[r][c] stores the value at index (r, c).
+  \item add(r, c, x) adds x to the value at index (r, c).
+  \item set(r, c, x) assigns x to the value at index (r, c).
+  \item sum(r, c) returns the sum of the rectangle with upper-left corner (1, 1) and lower-right corner (r, c).
+  \item sum(r1, c1, r2, c2) returns the sum of the rectangle with upper-left corner (r1, c1) and lower-right corner (r2, c2).
+\end{compactitem}
 
-- initialize() resets the data structure.
-- a[r][c] stores the value at index (r, c).
-- add(r, c, x) adds x to the value at index (r, c).
-- set(r, c, x) assigns x to the value at index (r, c).
-- sum(r, c) returns the sum of the rectangle with upper-left corner (1, 1) and
-  lower-right corner (r, c).
-- sum(r1, c1, r2, c2) returns the sum of the rectangle with upper-left corner
-  (r1, c1) and lower-right corner (r2, c2).
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot m)$ per call to initialize(), where n is the number of rows and m is the number of columns.
+  \item $O(\log\left(n\right) \cdot \log\left(m\right))$ per call to all other operations.
+\end{compactitem}
 
-Time Complexity:
-- O(n*m) per call to initialize(), where n is the number of rows and m is the
-  number of columns.
-- O(log(n)*log(m)) per call to all other operations.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot m)$ for storage of the array elements.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n*m) for storage of the array elements.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 const int MAXR = 100, MAXC = 100;
 int a[MAXR + 1][MAXC + 1];
 int bits[MAXR + 1][MAXC + 1];
@@ -5833,16 +5551,9 @@ int sum(int r1, int c1, int r2, int c2) {
   return sum(r2, c2) + sum(r1 - 1, c1 - 1) -
          sum(r1 - 1, c2) - sum(r2, c1 - 1);
 }
-
-/*** Example Usage and Output:
-
-Values:
-5 6 0
-3 0 0
-0 0 9
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -5867,40 +5578,33 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values:
+5 6 0
+3 0 0
+0 0 9
+\end{exampleoutput}
 \subsection{2D Fenwick Tree (Compressed)}
-\begin{lstlisting}
-/*
+Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to be simultaneously incremented by arbitrary values (range update) and queries for the sum of rectangular sub-matrices (range query). This implementation uses std::map for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, rows have valid indices from 0 to MAXR, inclusive, and columns have valid indices from 0 to MAXC, inclusive.
 
-Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to
-be simultaneously incremented by arbitrary values (range update) and queries for
-the sum of rectangular sub-matrices (range query). This implementation uses
-std::map for coordinate compression, allowing for large indices to be accessed
-with efficient space complexity. That is, rows have valid indices from 0 to
-MAXR, inclusive, and columns have valid indices from 0 to MAXC, inclusive.
+\begin{compactitem}
+  \item add(r, c, x) adds x to the value at index (r, c).
+  \item add(r1, c1, r2, c2, x) adds x to all indices in the rectangle with upper-left corner (r1, c1) and lower-right corner (r2, c2).
+  \item set(r, c, x) assigns x to the value at index (r, c).
+  \item sum(r, c) returns the sum of the rectangle with upper-left corner (0, 0) and lower-right corner (r, c).
+  \item sum(r1, c1, r2, c2) returns the sum of the rectangle with upper-left corner (r1, c1) and lower-right corner (r2, c2).
+  \item at(r, c) returns the value at index (r, c).
+\end{compactitem}
 
-- add(r, c, x) adds x to the value at index (r, c).
-- add(r1, c1, r2, c2, x) adds x to all indices in the rectangle with upper-left
-  corner (r1, c1) and lower-right corner (r2, c2).
-- set(r, c, x) assigns x to the value at index (r, c).
-- sum(r, c) returns the sum of the rectangle with upper-left corner (0, 0) and
-  lower-right corner (r, c).
-- sum(r1, c1, r2, c2) returns the sum of the rectangle with upper-left corner
-  (r1, c1) and lower-right corner (r2, c2).
-- at(r, c) returns the value at index (r, c).
+\textbf{Time Complexity}: $O(\log^{2}(\text{MAXR}) \cdot \log^{2}(\text{MAXC}))$ per call to all member functions. If std::map is replaced with std::unordered\_map, then the amortized running time will become $O(\log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$.
 
-Time Complexity:
-- O(log^2(MAXR)*log^2(MAXC)) per call to all member functions. If std::map is
-  replaced with std::unordered_map, then the amortized running time will become
-  O(log(MAXR)*log(MAXC)).
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot \log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$ for storage of the array elements, where n is the number of distinct indices that have been accessed across all of the operations so far.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n*log(MAXR)*log(MAXC)) for storage of the array elements, where n is the
-  number of distinct indices that have been accessed across all of the
-  operations so far.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <map>
 #include <utility>
 
@@ -5972,16 +5676,9 @@ class fenwick_tree_2d {
     return sum(r, c, r, c);
   }
 };
-
-/*** Example Usage and Output:
-
-Values:
-5 6 0
-3 5 5
-0 5 14
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -6009,43 +5706,42 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Values:
+5 6 0
+3 5 5
+0 5 14
+\end{exampleoutput}
 
 \section{Tree Data Structures}
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Disjoint Set Forest (Simple)}
-\begin{lstlisting}
-/*
+Maintain a set of elements partitioned into non-overlapping subsets. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version is simplified to only work on integer elements.
 
-Maintain a set of elements partitioned into non-overlapping subsets. Each
-partition is assigned a unique representative known as the parent, or root. The
-following implements two well-known optimizations known as union-by-rank and
-path compression. This version is simplified to only work on integer elements.
+\begin{compactitem}
+  \item initialize() resets the data structure.
+  \item make\_set(u) creates a new partition consisting of the single element u, which must not have been previously added to the data structure.
+  \item find\_root(u) returns the unique representative of the partition containing u.
+  \item is\_united(u, v) returns whether elements u and v belong to the same partition.
+  \item unite(u, v) replaces the partitions containing u and v with a single new partition consisting of the union of elements in the original partitions.
+\end{compactitem}
 
-- initialize() resets the data structure.
-- make_set(u) creates a new partition consisting of the single element u, which
-  must not have been previously added to the data structure.
-- find_root(u) returns the unique representative of the partition containing u.
-- is_united(u, v) returns whether elements u and v belong to the same partition.
-- unite(u, v) replaces the partitions containing u and v with a single new
-  partition consisting of the union of elements in the original partitions.
+A precondition to the last three operations is that make\_set() must have been previously called on their arguments.
 
-A precondition to the last three operations is that make_set() must have been
-previously called on their arguments.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to initialize() and make\_set().
+  \item $O(a(n))$ per call to find\_root(), is\_united(), and unite(), where n is the number of elements that has been added via make\_set() so far, and a(n) is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of n).
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to initialize() and make_set().
-- O(a(n)) per call to find_root(), is_united(), and unite(), where n is the
-  number of elements that has been added via make_set() so far, and a(n) is the
-  extremely slow growing inverse of the Ackermann function (effectively a very
-  small constant for all practical values of n).
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the disjoint set forest elements.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the disjoint set forest elements.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 const int MAXN = 1000;
 int num_sets, root[MAXN], rank[MAXN];
 
@@ -6085,9 +5781,9 @@ void unite(int u, int v) {
     }
   }
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -6108,43 +5804,33 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Disjoint Set Forest (Compressed)}
-\begin{lstlisting}
-/*
+Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version uses an std::map for storage and coordinate compression (thus, element types must meet the requirements of key types for std::map).
 
-Maintain a set of elements partitioned into non-overlapping subsets using a
-collection of trees. Each partition is assigned a unique representative known as
-the parent, or root. The following implements two well-known optimizations known
-as union-by-rank and path compression. This version uses an std::map for storage
-and coordinate compression (thus, element types must meet the requirements of
-key types for std::map).
+\begin{compactitem}
+  \item make\_set(u) creates a new partition consisting of the single element u, which must not have been previously added to the data structure.
+  \item is\_united(u, v) returns whether elements u and v belong to the same partition.
+  \item unite(u, v) replaces the partitions containing u and v with a single new partition consisting of the union of elements in the original partitions.
+  \item get\_all\_sets() returns all current partitions as a vector of vectors.
+\end{compactitem}
 
-- make_set(u) creates a new partition consisting of the single element u, which
-  must not have been previously added to the data structure.
-- is_united(u, v) returns whether elements u and v belong to the same partition.
-- unite(u, v) replaces the partitions containing u and v with a single new
-  partition consisting of the union of elements in the original partitions.
-- get_all_sets() returns all current partitions as a vector of vectors.
+A precondition to the last three operations is that make\_set() must have been previously called on their arguments.
 
-A precondition to the last three operations is that make_set() must have been
-previously called on their arguments.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor.
+  \item $O(\log n)$ per call to make\_set(), where n is the number of elements that have been added via make\_set() so far.
+  \item $O(a(n) \log n)$ per call to is\_united() and unite(), where n is the number of elements that have been added via make\_set() so far, and a(n) is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of n).
+  \item $O(n)$ per call to get\_all\_sets().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor.
-- O(log n) per call to make_set(), where n is the number of elements that have
-  been added via make_set() so far.
-- O(a(n) log n) per call to is_united() and unite(), where n is the number of
-  elements that have been added via make_set() so far, and a(n) is the extremely
-  slow growing inverse of the Ackermann function (effectively a very small
-  constant for all practical values of n).
-- O(n) per call to get_all_sets().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the disjoint set forest elements.
+  \item $O(n)$ auxiliary heap space for get\_all\_sets().
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the disjoint set forest elements.
-- O(n) auxiliary heap space for get_all_sets().
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <map>
 #include <vector>
 
@@ -6216,13 +5902,9 @@ class disjoint_set_forest {
     return res;
   }
 };
-
-/*** Example Usage and Output:
-
-[a, b, f], [c], [d, e, g]
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -6250,29 +5932,26 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+[a, b, f], [c], [d, e, g]
+\end{exampleoutput}
 \subsection{Lowest Common Ancestor (Sparse Table)}
-\begin{lstlisting}
-/*
+Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes u and v is the node that has the longest distance from the root while having both u and v as its descendant. A nodes is considered to be a descendant of itself. build() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
-Given a tree, determine the lowest common ancestor of any two nodes in the tree.
-The lowest common ancestor of two nodes u and v is the node that has the longest
-distance from the root while having both u and v as its descendant. A nodes is
-considered to be a descendant of itself. build() applies to a global,
-pre-populated adjacency list adj[] which must only consist of nodes numbered
-with integers between 0 (inclusive) and the total number of nodes (exclusive),
-as passed in the function argument.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to build(), where n is the number of nodes.
+  \item $O(\log n)$ per call to lca().
+\end{compactitem}
 
-Time Complexity:
-- O(n log n) per call to build(), where n is the number of nodes.
-- O(log n) per call to lca().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ to store the sparse table, where n is the number of nodes.
+  \item $O(n)$ auxiliary stack space for build().
+  \item $O(1)$ auxiliary for lca().
+\end{compactitem}
 
-Space Complexity:
-- O(n log n) to store the sparse table, where n is the number of nodes.
-- O(n) auxiliary stack space for build().
-- O(1) auxiliary for lca().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <vector>
 
 const int MAXN = 1000;
@@ -6324,9 +6003,9 @@ int lca(int u, int v) {
   }
   return dp[u][0];
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -6346,28 +6025,22 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lowest Common Ancestor (Segment Tree)}
-\begin{lstlisting}
-/*
+Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes u and v is the node that has the longest distance from the root while having both u and v as its descendant. A nodes is considered to be a descendant of itself. build() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
-Given a tree, determine the lowest common ancestor of any two nodes in the tree.
-The lowest common ancestor of two nodes u and v is the node that has the longest
-distance from the root while having both u and v as its descendant. A nodes is
-considered to be a descendant of itself. build() applies to a global,
-pre-populated adjacency list adj[] which must only consist of nodes numbered
-with integers between 0 (inclusive) and the total number of nodes (exclusive),
-as passed in the function argument.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to build(), where n is the number of nodes.
+  \item $O(\log n)$ per call to lca().
+\end{compactitem}
 
-Time Complexity:
-- O(n log n) per call to build(), where n is the number of nodes.
-- O(log n) per call to lca().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the segment tree, where n is the number of nodes.
+  \item $O(n \log n)$ auxiliary stack space for build().
+  \item $O(\log n)$ auxiliary stack space for lca().
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the segment tree, where n is the number of nodes.
-- O(n log n) auxiliary stack space for build().
-- O(log n) auxiliary stack space for lca().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <vector>
 
@@ -6433,9 +6106,9 @@ int lca(int u, int v) {
   return get_minpos(std::min(first[u], first[v]), std::max(first[u], first[v]),
                     0, 0, len - 1);
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -6455,56 +6128,38 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Heavy Light Decomposition}
-\begin{lstlisting}
-/*
+Maintain a tree with values associated with either its edges or nodes, while supporting both dynamic queries and dynamic updates of all values on a given path between two nodes in the tree. Heavy-light decomposition partitions the nodes of the tree into disjoint paths where all nodes have degree two, except the endpoints of a path which has degree one.
 
-Maintain a tree with values associated with either its edges or nodes, while
-supporting both dynamic queries and dynamic updates of all values on a given
-path between two nodes in the tree. Heavy-light decomposition partitions the
-nodes of the tree into disjoint paths where all nodes have degree two, except
-the endpoints of a path which has degree one.
+The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the tree. The default code below assumes a numerical tree type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
 
-The query operation is defined by an associative join_values() function which
-satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
-for all values x, y, and z in the tree. The default code below assumes a
-numerical tree type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case the join_values()
-function should be defined to return "a + b".
+The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to values. These must satisfy:
 
-The update operation is defined by the join_value_with_delta() and join_deltas()
-functions, which determines the change made to values. These must satisfy:
-- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
-  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
-- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
-  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
-  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
-The default code below defines updates that "set" a path's edges or nodes to a
-new value. Another possible update operation is "increment", in which case
-join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
-join_deltas(d1, d2) should be defined to return "d1 + d2".
+\begin{compactitem}
+  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
+  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
+  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" a path's edges or nodes to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, len) should be defined to return "v + d*len" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+\end{compactitem}
 
-- heavy_light(n, adj[], v) constructs a new heavy light decomposition on a tree
-  with n nodes defined by the adjacency list adj[], with all values initialized
-  to v. The adjacency list must be a size n array of vectors consisting of only
-  the integers from 0 to n - 1, inclusive. No duplicate edges should exist, and
-  the graph must be connected.
-- query(u, v) returns the result of join_values() applied to all values on the
-  path from node u to node v.
-- update(u, v, d) modifies all values on the path from node u to node v by
-  respectively joining them with d using join_value_with_delta().
+\begin{compactitem}
+  \item heavy\_light(n, adj[], v) constructs a new heavy light decomposition on a tree with n nodes defined by the adjacency list adj[], with all values initialized to v. The adjacency list must be a size n array of vectors consisting of only the integers from 0 to n - 1, inclusive. No duplicate edges should exist, and the graph must be connected.
+  \item query(u, v) returns the result of join\_values() applied to all values on the path from node u to node v.
+  \item update(u, v, d) modifies all values on the path from node u to node v by respectively joining them with d using join\_value\_with\_delta().
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to the constructor, where n is the number of nodes.
-- O(log n) per call to query() and update();
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructor, where n is the number of nodes.
+  \item $O(\log n)$ per call to query() and update();
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the decomposition.
-- O(n) auxiliary stack space for the constructor.
-- O(1) auxiliary for query() and update().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the decomposition.
+  \item $O(n)$ auxiliary stack space for the constructor.
+  \item $O(1)$ auxiliary for query() and update().
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
@@ -6715,9 +6370,9 @@ class heavy_light {
            std::max(pathpos[u], pathpos[v]), d);
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -6749,62 +6404,43 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Link-Cut Tree}
-\begin{lstlisting}
-/*
+Maintain a forest of trees with values associated with its nodes, while supporting both dynamic queries and dynamic updates of all values on any path between two nodes in a given tree. In addition, support testing of whether two nodes are connected in the forest, as well as the merging and spliting of trees by adding or removing specific edges. Link/cut forests divide each of its trees into vertex-disjoint paths, each represented by a splay tree.
 
-Maintain a forest of trees with values associated with its nodes, while
-supporting both dynamic queries and dynamic updates of all values on any path
-between two nodes in a given tree. In addition, support testing of whether two
-nodes are connected in the forest, as well as the merging and spliting of trees
-by adding or removing specific edges. Link/cut forests divide each of its trees
-into vertex-disjoint paths, each represented by a splay tree.
+The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the forest. The default code below assumes a numerical forest type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
 
-The query operation is defined by an associative join_values() function which
-satisfies join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)
-for all values x, y, and z in the forest. The default code below assumes a
-numerical forest type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case the join_values()
-function should be defined to return "a + b".
+The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to values. These must satisfy:
 
-The update operation is defined by the join_value_with_delta() and join_deltas()
-functions, which determines the change made to values. These must satisfy:
-- join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3).
-- join_value_with_delta(join_values(v, ...(m times)..., v), d, m)) should be
-  equal to join_values(join_value_with_delta(v, d, 1), ...(m times)).
-- if a sequence d_1, ..., d_m of deltas is used to update a value v, then
-  join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1) should be equivalent
-  to m sequential calls to join_value_with_delta(v, d_i, 1) for i = 1..m.
-The default code below defines updates that "set" a path's nodes to a new value.
-Another possible update operation is "increment", in which case
-join_value_with_delta(v, d, len) should be defined to return "v + d*len" and
-join_deltas(d1, d2) should be defined to return "d1 + d2".
+\begin{compactitem}
+  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
+  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
+  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" a path's nodes to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, len) should be defined to return "v + d*len" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+\end{compactitem}
 
-- link_cut_forest() constructs an empty forest with no trees.
-- size() returns the number of nodes in the forest.
-- trees() returns the number of trees in the forest.
-- make_root(i, v) creates a new tree in the forest consisting of a single node
-  labeled with the integer i and value initialized to v.
-- is_connected(a, b) returns whether nodes a and b are connected.
-- link(a, b) adds an edge between the nodes a and b, both of which must exist
-  and not be connected.
-- cut(a, b) removes the edge between the nodes a and b, both of which must
-  exist and be connected.
-- query(a, b) returns the result of join_values() applied to all values on the
-  path from the node a to node b.
-- update(a, b, d) modifies all the values on the path from node a to node b by
-  respectively joining them with d using join_value_with_delta().
+\begin{compactitem}
+  \item link\_cut\_forest() constructs an empty forest with no trees.
+  \item size() returns the number of nodes in the forest.
+  \item trees() returns the number of trees in the forest.
+  \item make\_root(i, v) creates a new tree in the forest consisting of a single node labeled with the integer i and value initialized to v.
+  \item is\_connected(a, b) returns whether nodes a and b are connected.
+  \item link(a, b) adds an edge between the nodes a and b, both of which must exist and not be connected.
+  \item cut(a, b) removes the edge between the nodes a and b, both of which must exist and be connected.
+  \item query(a, b) returns the result of join\_values() applied to all values on the path from the node a to node b.
+  \item update(a, b, d) modifies all the values on the path from node a to node b by respectively joining them with d using join\_value\_with\_delta().
+\end{compactitem}
 
-Time Complexity:
-- O(1) per call to the constructor, size(), and trees().
-- O(log n) amortized per call to all other operations, where n is the number of
-  nodes.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, size(), and trees().
+  \item $O(\log n)$ amortized per call to all other operations, where n is the number of nodes.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the forest, where n is the number of nodes.
-- O(1) auxiliary for all operations.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the forest, where n is the number of nodes.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
 #include <map>
@@ -7045,9 +6681,9 @@ class link_cut_forest {
     v->pending = true;
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 

@@ -4,22 +4,17 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Point}
-\begin{lstlisting}
-/*
+A two-dimensional real-valued point class supporting epsilon comparisons. Operations include element-wise arithmetic, norm, arg, dot product, cross product, projection, rotation, and reflection. See also std::complex.
 
-A two-dimensional real-valued point class supporting epsilon comparisons.
-Operations include element-wise arithmetic, norm, arg, dot product, cross
-product, projection, rotation, and reflection. See also std::complex.
+\textbf{Time Complexity}: $O(1)$ per call to the constructor and all other operations.
 
-Time Complexity:
-- O(1) per call to the constructor and all other operations.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ for storage of the point.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(1) for storage of the point.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <ostream>
 #include <utility>
@@ -153,9 +148,9 @@ struct point {
                       << (fabs(p.y) < EPS ? 0 : p.y) << ")";
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #define pt point
 
@@ -180,26 +175,17 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line}
-\begin{lstlisting}
-/*
+A straight line in two dimensions supporting epsilon comparisons. The line is represented by the form a*x + b*y + c = 0, where the coefficients are normalized so that b is always 1 except for when the line is vertical, in which case b = 0. Operations include checking if the line is horizontal or vertical, finding the slope, evaluating y at some x (and vice versa), checking if a point falls on the line, checking if another line is parallel or perpendicular, and finding the parallel or perpendicular line through a point.
 
-A straight line in two dimensions supporting epsilon comparisons. The line is
-represented by the form a*x + b*y + c = 0, where the coefficients are normalized
-so that b is always 1 except for when the line is vertical, in which case b = 0.
-Operations include checking if the line is horizontal or vertical, finding the
-slope, evaluating y at some x (and vice versa), checking if a point falls on the
-line, checking if another line is parallel or perpendicular, and finding the
-parallel or perpendicular line through a point.
+\textbf{Time Complexity}: $O(1)$ per call to the constructor and all other operations.
 
-Time Complexity:
-- O(1) per call to the constructor and all other operations.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ for storage of the line.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(1) for storage of the line.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <limits>
 #include <ostream>
@@ -311,9 +297,9 @@ struct line {
                << (fabs(l.c) < EPS ? 0 : l.c) << "=0" << std::noshowpos;
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 struct point {
@@ -333,24 +319,17 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Circle}
-\begin{lstlisting}
-/*
+A circle in two dimensions supporting epsilon comparisons. The circle centered at (h, k) is represented by the relation (x - h)\textasciicircum{}2 + (y - k)\textasciicircum{}2 = r\textasciicircum{}2, where the radius r is normalized to a non-negative number. Operations include constructing a circle from a line segment, constructing a circumcircle, checking if a point falls inside the circle or on its edge, and constructing an incircle.
 
-A circle in two dimensions supporting epsilon comparisons. The circle centered
-at (h, k) is represented by the relation (x - h)^2 + (y - k)^2 = r^2, where the
-radius r is normalized to a non-negative number. Operations include constructing
-a circle from a line segment, constructing a circumcircle, checking if a point
-falls inside the circle or on its edge, and constructing an incircle.
+\textbf{Time Complexity}: $O(1)$ per call to the constructors and all other operations.
 
-Time Complexity:
-- O(1) per call to the constructors and all other operations.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ for storage of the circle.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(1) for storage of the circle.
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <ostream>
 #include <stdexcept>
@@ -464,9 +443,9 @@ circle incircle(const point &a, const point &b, const point &c) {
                            (al*a.y + bl*b.y + cl*c.y) / l,
                            fabs(p.x*q.y - p.y*q.x) / l);
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -481,37 +460,22 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Triangle}
-\begin{lstlisting}
-/*
-
 Common triangle calculations in two dimensions.
 
-- triangle_area(a, b, c) returns the area of the triangle abc.
-- triangle_area_sides(s1, s2, s3) returns the area of a triangle with side
-  lengths s1, s2, and s3. The given lengths must be non-negative and form a
-  valid triangle.
-- trinagle_area_medians(m1, m2, m3) returns the area of a triangle with medians
-  of lengths m1, m2, and m3. The median of a triangle is a line segment joining
-  a vertex to the midpoint of the opposing edge.
-- triangle_area_altitudes(h1, h2, h3) returns the area of a triangle with
-  altitudes h1, h2, and h3. An altitude of a triangle is the shortest line
-  between a vertex and the infinite line that is extended from its opposite
-  edge.
-- same_side(p1, p2, a, b) returns whether points p1 and p2 lie on the same side
-  of the line containing points a and b. If one or both points lie exactly on
-  the line, then the result will depend on the setting of EDGE_IS_SAME_SIDE.
-- point_in_triangle(p, a, b, c) returns whether point p lies within the triangle
-  abc. If the point lies on or close to an edge (by roughly EPS), then the
-  result will depend on the setting of EDGE_IS_SAME_SIDE in the function above.
+\begin{compactitem}
+  \item triangle\_area(a, b, c) returns the area of the triangle abc.
+  \item triangle\_area\_sides(s1, s2, s3) returns the area of a triangle with side lengths s1, s2, and s3. The given lengths must be non-negative and form a valid triangle.
+  \item trinagle\_area\_medians(m1, m2, m3) returns the area of a triangle with medians of lengths m1, m2, and m3. The median of a triangle is a line segment joining a vertex to the midpoint of the opposing edge.
+  \item triangle\_area\_altitudes(h1, h2, h3) returns the area of a triangle with altitudes h1, h2, and h3. An altitude of a triangle is the shortest line between a vertex and the infinite line that is extended from its opposite edge.
+  \item same\_side(p1, p2, a, b) returns whether points p1 and p2 lie on the same side of the line containing points a and b. If one or both points lie exactly on the line, then the result will depend on the setting of EDGE\_IS\_SAME\_SIDE.
+  \item point\_in\_triangle(p, a, b, c) returns whether point p lies within the triangle abc. If the point lies on or close to an edge (by roughly EPS), then the result will depend on the setting of EDGE\_IS\_SAME\_SIDE in the function above.
+\end{compactitem}
 
-Time Complexity:
-- O(1) for all operations.
+\textbf{Time Complexity}: $O(1)$ for all operations.
 
-Space Complexity:
-- O(1) auxiliary for all operations.
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -568,9 +532,9 @@ bool point_in_triangle(const point &p, const point &a, const point &b,
          same_side(p, b, a, c) &&
          same_side(p, c, a, b);
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -591,39 +555,20 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rectangle}
-\begin{lstlisting}
-/*
-
 Common rectangle calculations in two dimensions.
 
-- rectangle_area(a, b) returns the area of a rectangle with opposing vertices a
-  and b.
-- point_in_rectangle(p, x, y, w, h) returns whether point p lies within the
-  rectangle defined by a vertex at v (x, y), a width of w, and a height of h.
-  Note that negative widths and heights are supported. If the point lies on or
-  close to an edge (by roughly EPS), then the result will depend on the setting
-  of EDGE_IS_INSIDE.
-- point_in_rectangle(p, a, b) returns whether point p lies within the rectangle
-  with opposing vertices a and b. If the point lies on or close to an edge (by
-  roughly EPS), then the result will depend on the setting of EDGE_IS_INSIDE.
-- rectangle_intersection(a1, b1, a2, b2, &p, &q) determines the intersection
-  region of the rectangle with opposing vertices a1 and b1 and the rectangle
-  with opposing vertices a2 and b2. Returns -1 if the rectangles are completely
-  disjoint, 0 if the rectangles partially intersect, 1 if the first rectangle is
-  completely inside the second, and 2 if the second rectangle is completely
-  inside the first. If there is an intersection, the opposing vertices of the
-  intersection rectangle will be stored into pointers p and q if they are not
-  NULL. If the intersection is a single point or line segment, then the result
-  will depend on the setting of EDGE_IS_INSIDE within point_in_rectangle().
+\begin{compactitem}
+  \item rectangle\_area(a, b) returns the area of a rectangle with opposing vertices a and b.
+  \item point\_in\_rectangle(p, x, y, w, h) returns whether point p lies within the rectangle defined by a vertex at v (x, y), a width of w, and a height of h. Note that negative widths and heights are supported. If the point lies on or close to an edge (by roughly EPS), then the result will depend on the setting of EDGE\_IS\_INSIDE.
+  \item point\_in\_rectangle(p, a, b) returns whether point p lies within the rectangle with opposing vertices a and b. If the point lies on or close to an edge (by roughly EPS), then the result will depend on the setting of EDGE\_IS\_INSIDE.
+  \item rectangle\_intersection(a1, b1, a2, b2, \&p, \&q) determines the intersection region of the rectangle with opposing vertices a1 and b1 and the rectangle with opposing vertices a2 and b2. Returns -1 if the rectangles are completely disjoint, 0 if the rectangles partially intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle is completely inside the first. If there is an intersection, the opposing vertices of the intersection rectangle will be stored into pointers p and q if they are not NULL. If the intersection is a single point or line segment, then the result will depend on the setting of EDGE\_IS\_INSIDE within point\_in\_rectangle().
+\end{compactitem}
 
-Time Complexity:
-- O(1) for all operations.
+\textbf{Time Complexity}: $O(1)$ for all operations.
 
-Space Complexity:
-- O(1) auxiliary for all operations.
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -699,9 +644,9 @@ int rectangle_intersection(const point &a1, const point &b1, const point &a2,
   }
   return 0;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 bool EQP(const point &a, const point &b) {
@@ -738,42 +683,25 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Angles}
-\begin{lstlisting}
-/*
+Angle calculations in two dimensions. The constants DEG and RAD may be used as multipliers to convert between degrees and radians. For example, if t is a value in radians, then t*DEG is the equivalent angle in degrees.
 
-Angle calculations in two dimensions. The constants DEG and RAD may be used as
-multipliers to convert between degrees and radians. For example, if t is a value
-in radians, then t*DEG is the equivalent angle in degrees.
+\begin{compactitem}
+  \item reduce\_deg(t) takes an angle t degrees and returns an equivalent angle in the range [0, 360) degrees. E.g. -630 becomes 90.
+  \item reduce\_rad(t) takes an angle t radians and returns an equivalent angle in the range [0, 360) radians. E.g. 720.5 becomes 0.5.
+  \item polar\_point(r, t) returns a two-dimensional Cartesian point given radius r and angle t radians in polar coordinates (see std::polar()).
+  \item polar\_angle(p) returns the angle in radians of the line segment from (0, 0) to point p, relative counterclockwise to the positive x-axis.
+  \item angle(a, o, b) returns the smallest angle in radians formed by the points a, o, b with vertex at point o.
+  \item angle\_between(a, b) returns the angle in radians of segment from point a to point b, relative counterclockwise to the positive x-axis.
+  \item angle between(a1, b1, a2, b2) returns the smaller angle in radians between two lines a1*x + b1*y + c1 = 0 and a2*x + b2*y + c2 = 0, limited to [0, PI/2].
+  \item cross(a, b, o) returns the magnitude (Euclidean norm) of the three-dimensional cross product between points a and b where the z-component is implicitly zero and the origin is implicitly shifted to point o. This operation is also equal to double the signed area of the triangle from these three points.
+  \item turn(a, o, b) returns -1 if the path a->o->b forms a left turn on the plane, 0 if the path forms a straight line segment, or 1 if it forms a right turn.
+\end{compactitem}
 
-- reduce_deg(t) takes an angle t degrees and returns an equivalent angle in the
-  range [0, 360) degrees. E.g. -630 becomes 90.
-- reduce_rad(t) takes an angle t radians and returns an equivalent angle in the
-  range [0, 360) radians. E.g. 720.5 becomes 0.5.
-- polar_point(r, t) returns a two-dimensional Cartesian point given radius r and
-  angle t radians in polar coordinates (see std::polar()).
-- polar_angle(p) returns the angle in radians of the line segment from (0, 0) to
-  point p, relative counterclockwise to the positive x-axis.
-- angle(a, o, b) returns the smallest angle in radians formed by the points a,
-  o, b with vertex at point o.
-- angle_between(a, b) returns the angle in radians of segment from point a to
-  point b, relative counterclockwise to the positive x-axis.
-- angle between(a1, b1, a2, b2) returns the smaller angle in radians between
-  two lines a1*x + b1*y + c1 = 0 and a2*x + b2*y + c2 = 0, limited to [0, PI/2].
-- cross(a, b, o) returns the magnitude (Euclidean norm) of the three-dimensional
-  cross product between points a and b where the z-component is implicitly zero
-  and the origin is implicitly shifted to point o. This operation is also equal
-  to double the signed area of the triangle from these three points.
-- turn(a, o, b) returns -1 if the path a->o->b forms a left turn on the plane, 0
-  if the path forms a straight line segment, or 1 if it forms a right turn.
+\textbf{Time Complexity}: $O(1)$ for all operations.
 
-Time Complexity:
-- O(1) for all operations.
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-Space Complexity:
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <utility>
 
@@ -848,9 +776,9 @@ int turn(const point &a, const point &o, const point &b) {
   double c = cross(a, b, o);
   return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 bool EQP(const point &a, const point &b) {
@@ -872,36 +800,22 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Distances}
-\begin{lstlisting}
-/*
-
 Distance calculations in two dimensions for points, lines, and line segments.
 
-- dist(a, b) and sqdist(a, b) respectively return the distance and squared
-  distance between points a and b.
-- line_dist(p, a, b, c) returns the distance from point p to the line
-  a*x + b*y + c = 0. If the line is invalid (i.e. a = b = 0), then -INF, INF,
-  or NaN is returned based on the sign of c.
-- line_dist(p, a, b) returns the distance from point p to the infinite line
-  containing points a and b. If the line is invalid (i.e. a = b), then the
-  distance from p to the single point is returned.
-- line_dist(a1, b1, c1, a2, b2, c2) returns the distance between two lines. If
-  the lines are non-parallel then the distance is considered to be 0. Otherwise,
-  the distance is considered to be the perpendicular distance from any point on
-  one line to the other line.
-- seg_dist(p, a, b) returns the distance from point p to the line segment ab.
-- seg_dist(a, b, c, d) returns the minimum distance from any point on the line
-  segment ab to any point on the line segment cd. This is 0 if the segments
-  touch or intersect.
+\begin{compactitem}
+  \item dist(a, b) and sqdist(a, b) respectively return the distance and squared distance between points a and b.
+  \item line\_dist(p, a, b, c) returns the distance from point p to the line a*x + b*y + c = 0. If the line is invalid (i.e. a = b = 0), then -INF, INF, or NaN is returned based on the sign of c.
+  \item line\_dist(p, a, b) returns the distance from point p to the infinite line containing points a and b. If the line is invalid (i.e. a = b), then the distance from p to the single point is returned.
+  \item line\_dist(a1, b1, c1, a2, b2, c2) returns the distance between two lines. If the lines are non-parallel then the distance is considered to be 0. Otherwise, the distance is considered to be the perpendicular distance from any point on one line to the other line.
+  \item seg\_dist(p, a, b) returns the distance from point p to the line segment ab.
+  \item seg\_dist(a, b, c, d) returns the minimum distance from any point on the line segment ab to any point on the line segment cd. This is 0 if the segments touch or intersect.
+\end{compactitem}
 
-Time Complexity:
-- O(1) for all operations.
+\textbf{Time Complexity}: $O(1)$ for all operations.
 
-Space Complexity:
-- O(1) auxiliary for all operations.
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -966,18 +880,24 @@ double seg_dist(const point &p, const point &a, const point &b) {
 
 double seg_dist(const point &a, const point &b,
                 const point &c, const point &d) {
+  if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
+    return seg_dist(a, c, d);
+  }
+  if (EQ(c.x, d.x) && EQ(c.y, d.y)) {
+    return seg_dist(c, a, b);
+  }
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
   point cd(d.x - c.x, d.y - c.y);
   double c1 = cross(ab, cd), c2 = cross(ac, ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {
-    double t0 = dot(ac, ab) / norm(ab), t1 = t0 + dot(cd, ab) / norm(ab);
+    double t0 = dot(ac, ab) / sqnorm(ab), t1 = t0 + dot(cd, ab) / sqnorm(ab);
     if (LE(std::min(t0, t1), 1) && LE(0, std::max(t0, t1))) {
       return 0;
     }
-  } else {
+  } else if (!EQ(c1, 0)) {
     double t = cross(ac, cd) / c1, u = c2 / c1;
-    if (!EQ(c1, 0) && LE(0, t) && LE(t, 1) && LE(0, u) && LE(u, 1)) {
+    if (LE(0, t) && LE(t, 1) && LE(0, u) && LE(u, 1)) {
       return 0;
     }
   }
@@ -993,9 +913,9 @@ point closest_point(const point &a, const point &b, const point &p) {
   double t = dot(ap, ab) / sqnorm(ab);
   return (t <= 0) ? a : ((t >= 1) ? b : point(a.x + t*ab.x, a.y + t*ab.y));
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -1015,44 +935,21 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line Intersection}
-\begin{lstlisting}
-/*
+Intersection and closest point calculations in two dimensions for straight lines and line segments.
 
-Intersection and closest point calculations in two dimensions for straight lines
-and line segments.
+\begin{compactitem}
+  \item line\_intersection(a1, b1, c1, a2, b2, c2, \&p) determines whether the lines a1*x + b1*y + c1 = 0 and a2*x + b2*x + c2 = 0 intersects, returning -1 if there is no intersection because the lines are parallel, 0 if there is exactly one intersection (in which case the intersection point is stored into pointer p if it's not NULL), or 1 if there are infinite intersections because the lines are identical.
+  \item line\_intersection(p1, p2, p3, p4, \&p) determines whether the infinite lines (not segments) through points p1, p2 and through points p3 and p4 intersect, returning -1 if there is no intersection because the lines are parallel, 0 if there is exactly one intersection (in which case the intersection point is stored into pointer p if it's not NULL), or 1 if there are infinite intersections because the lines are identical.
+  \item seg\_intersection(a, b, c, d, \&p, \&q) determines whether the line segment ab intersects the line segment cd, returning -1 if the segments do not intersect, 0 if there is exactly one intersection point (in which case it is stored into pointer p if it's not NULL), or 1 if the intersection is another line segment (in which case the two endpoints are stored into pointers p and q if they are not NULL). If the segments are barely touching (close within EPS), then the result will depend on the setting of TOUCH\_IS\_INTERSECT.
+  \item closest\_point(a, b, c, p) returns the point on line a*x + b*y + c = 0 that is closest to point p. Note that the result always lies on the line through p which is perpendicular to the line a*x + b*y + c = 0.
+  \item closest\_point(a, b, p) returns the point on segment ab closest to point p.
+\end{compactitem}
 
-- line_intersection(a1, b1, c1, a2, b2, c2, &p) determines whether the lines
-  a1*x + b1*y + c1 = 0 and a2*x + b2*x + c2 = 0 intersects, returning -1 if
-  there is no intersection because the lines are parallel, 0 if there is exactly
-  one intersection (in which case the intersection point is stored into pointer
-  p if it's not NULL), or 1 if there are infinite intersections because the
-  lines are identical.
-- line_intersection(p1, p2, p3, p4, &p) determines whether the infinite lines
-  (not segments) through points p1, p2 and through points p3 and p4 intersect,
-  returning -1 if there is no intersection because the lines are parallel, 0 if
-  there is exactly one intersection (in which case the intersection point is
-  stored into pointer p if it's not NULL), or 1 if there are infinite
-  intersections because the lines are identical.
-- seg_intersection(a, b, c, d, &p, &q) determines whether the line segment ab
-  intersects the line segment cd, returning -1 if the segments do not intersect,
-  0 if there is exactly one intersection point (in which case it is stored into
-  pointer p if it's not NULL), or 1 if the intersection is another line segment
-  (in which case the two endpoints are stored into pointers p and q if they are
-  not NULL). If the segments are barely touching (close within EPS), then the
-  result will depend on the setting of TOUCH_IS_INTERSECT.
-- closest_point(a, b, c, p) returns the point on line a*x + b*y + c = 0 that is
-  closest to point p. Note that the result always lies on the line through p
-  which is perpendicular to the line a*x + b*y + c = 0.
-- closest_point(a, b, p) returns the point on segment ab closest to point p.
+\textbf{Time Complexity}: $O(1)$ for all operations.
 
-Time Complexity:
-- O(1) for all operations.
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-Space Complexity:
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -1072,6 +969,13 @@ double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
 double norm(const point &a) { return sqrt(sqnorm(a)); }
 double dot(const point &a, const point &b) { return a.x*b.x + a.y*b.y; }
 double cross(const point &a, const point &b) { return a.x*b.y - a.y*b.x; }
+
+bool point_on_segment(const point &p, const point &a, const point &b) {
+  return EQ(cross(point(p.x - a.x, p.y - a.y),
+                  point(b.x - a.x, b.y - a.y)), 0)
+      && LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x))
+      && LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
+}
 
 int line_intersection(double a1, double b1, double c1, double a2, double b2,
                       double c2, point *p = NULL) {
@@ -1112,6 +1016,20 @@ int seg_intersection(const point &a, const point &b, const point &c,
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
   point cd(d.x - c.x, d.y - c.y);
+  if (EQ(sqnorm(ab), 0)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
+      if (p != NULL) *p = a;
+      return 0;
+    }
+    return -1;
+  }
+  if (EQ(sqnorm(cd), 0)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) {
+      if (p != NULL) *p = c;
+      return 0;
+    }
+    return -1;
+  }
   double c1 = cross(ab, cd), c2 = cross(ac, ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     double t0 = dot(ac, ab) / sqnorm(ab);
@@ -1156,10 +1074,10 @@ int seg_intersection(const point &a, const point &b, const point &c,
 
 point closest_point(double a, double b, double c, const point &p) {
   if (EQ(a, 0)) {
-    return point(p.x, -c);  // Horizontal line.
+    return point(p.x, -c / b);  // Horizontal line.
   }
   if (EQ(b, 0)) {
-    return point(-c, p.y);  // Vertical line.
+    return point(-c / a, p.y);  // Vertical line.
   }
   point res;
   line_intersection(a, b, c, -b, a, b*p.x - a*p.y, &res);
@@ -1169,14 +1087,14 @@ point closest_point(double a, double b, double c, const point &p) {
 point closest_point(const point &a, const point &b, const point &p) {
   if (a == b) return a;
   point ap(p.x - a.x, p.y - a.y), ab(b.x - a.x, b.y - a.y);
-  double t = dot(ap, ab) / norm(ab);
+  double t = dot(ap, ab) / sqnorm(ab);
   if (t <= 0) return a;
   if (t >= 1) return b;
   return point(a.x + t * ab.x, a.y + t * ab.y);
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #define point point
 
@@ -1234,40 +1152,20 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Circle Intersection}
-\begin{lstlisting}
-/*
-
 Circle tangent and intersection calculations in two dimensions.
 
-- tangent(c, p, &l1, &l2) determines the line(s) tangent to circle c that passes
-  through point p, returning -1 if there is no tangent line because p is
-  strictly inside c, 0 if there is exactly one tangent line because p is on the
-  boundary of c (in which case the line will be stored into pointer l1 if it's
-  not NULL), or 1 if there are two tangent lines because p is strictly outside
-  of c (in which case the lines will be stored into pointers l1 and l2 if they
-  are not NULL).
-- intersection(c, l, &p, &q) determines the intersection between the circle c
-  and line l, returning -1 if there is no intersection, 0 if the line is one
-  intersection point because the line is tangent (in which case it will be
-  stored into pointer p if it's not NULL), or 1 if there are two intersection
-  points because the line crosses through the circle (in which case they will be
-  stored into pointers p and q if they are not NULL).
-- intersection(c1, c2, &p, &q) determines the intersection points between two
-  circles c1 and c2, returning -2 if circle c2 completely encloses circle c1,
-  -1 if circle c1 completely encloses circle c2, 0 if the circles are completely
-  disjoint, 1 if the circles are tangent with one intersection (stored in p),
-  2 if the circles intersect at two points (stored in p and q), 3 if the circles
-  are equal and intersect at infinite points.
-- intersection_area(c1, c2) returns the intersection area of circles c1 and c2.
+\begin{compactitem}
+  \item tangent(c, p, \&l1, \&l2) determines the line(s) tangent to circle c that passes through point p, returning -1 if there is no tangent line because p is strictly inside c, 0 if there is exactly one tangent line because p is on the boundary of c (in which case the line will be stored into pointer l1 if it's not NULL), or 1 if there are two tangent lines because p is strictly outside of c (in which case the lines will be stored into pointers l1 and l2 if they are not NULL).
+  \item intersection(c, l, \&p, \&q) determines the intersection between the circle c and line l, returning -1 if there is no intersection, 0 if the line is one intersection point because the line is tangent (in which case it will be stored into pointer p if it's not NULL), or 1 if there are two intersection points because the line crosses through the circle (in which case they will be stored into pointers p and q if they are not NULL).
+  \item intersection(c1, c2, \&p, \&q) determines the intersection points between two circles c1 and c2, returning -2 if circle c2 completely encloses circle c1, -1 if circle c1 completely encloses circle c2, 0 if the circles are completely disjoint, 1 if the circles are tangent with one intersection (stored in p), 2 if the circles intersect at two points (stored in p and q), 3 if the circles are equal and intersect at infinite points.
+  \item intersection\_area(c1, c2) returns the intersection area of circles c1 and c2.
+\end{compactitem}
 
-Time Complexity:
-- O(1) for all operations.
+\textbf{Time Complexity}: $O(1)$ for all operations.
 
-Space Complexity:
-- O(1) auxiliary for all operations.
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -1429,9 +1327,9 @@ double intersection_area(const circle &c1, const circle &c2) {
          R*R*acos((d*d + R*R - r*r) / 2 / d / R) -
          0.5*sqrt((-d + r + R)*(d + r - R)*(d - r + R)*(d + r + R));
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 bool EQP(const point &a, const point &b) {
@@ -1479,41 +1377,25 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Polygon Sorting and Area}
-\begin{lstlisting}
-/*
+Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the area.
 
-Given a list of distinct points in two-dimensions, order them into a valid
-polygon and determine the area.
+\begin{compactitem}
+  \item mean\_center(lo, hi) returns the arithmetic mean of a range [lo, hi) of points, where lo and hi must be random-access iterators. This point is mathematically guaranteed to lie within the non-self-intersecting closed polygon constructed by sorting all other points clockwise about it. Note that this is different from the geometric centroid (a.k.a. barycenter) of a polygon.
+  \item cw\_comp(a, b, c) returns whether point a compares clockwise "before" point b when using c as a central reference point.
+  \item cw\_comp\_class(c) constructs a wrapper class of cw\_comp() that may be passed to std::sort() a range of points clockwise to produce a valid polygon.
+  \item ccw\_comp\_class(c) constructs a wrapper class of cw\_comp() that may be passed to std::sort() a range of points counter-clockwise to produce a valid polygon.
+  \item polygon\_area(lo, hi) returns the area of the polygon specified by the range [lo, hi) of points, where lo and hi must be BidirectionalIterators. The points are interpreted as a polygon based on the order given in the range. The input polygon does not have to be sorted using the methods above, but must be given in some ordering that yields a valid non-self-intersecting closed polygon. Optionally, the last point may be equal to the first point in the input without affecting the result. The area is computed using the shoelace formula.
+\end{compactitem}
 
-- mean_center(lo, hi) returns the arithmetic mean of a range [lo, hi) of points,
-  where lo and hi must be random-access iterators. This point is mathematically
-  guaranteed to lie within the non-self-intersecting closed polygon constructed
-  by sorting all other points clockwise about it. Note that this is different
-  from the geometric centroid (a.k.a. barycenter) of a polygon.
-- cw_comp(a, b, c) returns whether point a compares clockwise "before" point b
-  when using c as a central reference point.
-- cw_comp_class(c) constructs a wrapper class of cw_comp() that may be passed to
-  std::sort() a range of points clockwise to produce a valid polygon.
-- ccw_comp_class(c) constructs a wrapper class of cw_comp() that may be passed
-  to std::sort() a range of points counter-clockwise to produce a valid polygon.
-- polygon_area(lo, hi) returns the area of the polygon specified by the range
-  [lo, hi) of points, where lo and hi must be BidirectionalIterators. The points
-  are interpreted as a polygon based on the order given in the range. The input
-  polygon does not have to be sorted using the methods above, but must be given
-  in some ordering that yields a valid non-self-intersecting closed polygon.
-  Optionally, the last point may be equal to the first point in the input
-  without affecting the result. The area is computed using the shoelace formula.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to mean\_center(lo, hi) and polygon\_area(lo, hi), where n is the distance between lo and hi.
+  \item $O(1)$ per call to cw\_comp() and the related class comparators.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to mean_center(lo, hi) and polygon_area(lo, hi), where n is the
-  distance between lo and hi.
-- O(1) per call to cw_comp() and the related class comparators.
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-Space Complexity:
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -1596,9 +1478,9 @@ double polygon_area(It lo, It hi) {
   }
   return fabs(area / 2.0);
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -1625,27 +1507,17 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Point-in-Polygon (Ray Casting)}
-\begin{lstlisting}
-/*
+Given a point p and a polygon in two dimensions, determine whether p lies inside the polygon using a ray casting algorithm.
 
-Given a point p and a polygon in two dimensions, determine whether p lies inside
-the polygon using a ray casting algorithm.
+\begin{compactitem}
+  \item point\_in\_polygon(p, lo, hi) returns whether p lies within the polygon defined by the range [lo, hi) of points specifying the vertices in either clockwise or counter-clockwise order, where lo and hi must be random-access iterators. If p lies barely on an edge (within EPS), then the result will depend on the setting of EDGE\_IS\_INSIDE.
+\end{compactitem}
 
-- point_in_polygon(p, lo, hi) returns whether p lies within the polygon defined
-  by the range [lo, hi) of points specifying the vertices in either clockwise
-  or counter-clockwise order, where lo and hi must be random-access iterators.
-  If p lies barely on an edge (within EPS), then the result will depend on the
-  setting of EDGE_IS_INSIDE.
+\textbf{Time Complexity}: $O(n)$ per call to point\_in\_polygon(lo, hi), where n is the distance between lo and hi.
 
-Time Complexity:
-- O(n) per call to point_in_polygon(lo, hi), where n is the distance between lo
-  and hi.
+\textbf{Space Complexity}: $O(1)$ auxiliary.
 
-Space Complexity:
-- O(1) auxiliary.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <utility>
 
@@ -1685,9 +1557,9 @@ bool point_in_polygon(const point &p, It lo, It hi) {
   }
   return ans;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -1702,35 +1574,18 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull and Diametral Pair}
-\begin{lstlisting}
-/*
+Given a list of points in two dimensions, determine the convex hull using the monotone chain algorithm, and the diameter of the points using the method of rotating calipers. The convex hull is the smallest convex polygon (a polygon such that every line crossing through it will only do so once) that contains all of its points.
 
-Given a list of points in two dimensions, determine the convex hull using the
-monotone chain algorithm, and the diameter of the points using the method of
-rotating calipers. The convex hull is the smallest convex polygon (a polygon
-such that every line crossing through it will only do so once) that contains all
-of its points.
+\begin{compactitem}
+  \item convex\_hull(lo, hi) returns the convex hull as a vector of polygon vertices in clockwise order, given a range [lo, hi) of points where lo and hi must be random-access iterators. The input range will be sorted lexicographically (by x, then by y) after the function call. Note that to produce the hull points in counter-clockwise order, replace every GE() comparison with LE(). To have the first point on the hull repeated as the last in the resulting vector, the final res.resize(k - 1) may be changed to res.resize(k).
+  \item diametral\_pair(lo, hi) returns a maximum diametral pair given a range [lo, hi) of points where lo and hi must be random-access iterators. The input range will be sorted lexicographically (by x, then by y) after the function call.
+\end{compactitem}
 
-- convex_hull(lo, hi) returns the convex hull as a vector of polygon vertices in
-  clockwise order, given a range [lo, hi) of points where lo and hi must be
-  random-access iterators. The input range will be sorted lexicographically (by
-  x, then by y) after the function call. Note that to produce the hull points in
-  counter-clockwise order, replace every GE() comparison with LE(). To have the
-  first point on the hull repeated as the last in the resulting vector, the
-  final res.resize(k - 1) may be changed to res.resize(k).
-- diametral_pair(lo, hi) returns a maximum diametral pair given a range [lo, hi)
-  of points where lo and hi must be random-access iterators. The input range
-  will be sorted lexicographically (by x, then by y) after the function call.
+\textbf{Time Complexity}: $O(n \log n)$ per call to convex\_hull(lo, hi) and diametral\_pair(lo, hi), where n is the distance between lo and hi.
 
-Time Complexity:
-- O(n log n) per call to convex_hull(lo, hi) and diametral_pair(lo, hi), where n
-  is the distance between lo and hi.
+\textbf{Space Complexity}: $O(n)$ auxiliary for storage of the convex hull in both operations.
 
-Space Complexity:
-- O(n) auxiliary for storage of the convex hull in both operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -1809,9 +1664,9 @@ std::pair<point, point> diametral_pair(It lo, It hi) {
   }
   return res;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -1846,26 +1701,17 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minimum Enclosing Circle}
-\begin{lstlisting}
-/*
+Given a list of points in two dimensions, find the circle with smallest area which contains all the given points using a randomized algorithm.
 
-Given a list of points in two dimensions, find the circle with smallest area
-which contains all the given points using a randomized algorithm.
+\begin{compactitem}
+  \item minimum\_enclosing\_circle(lo, hi) returns the minimum enclosing circle given a range [lo, hi) of points, where lo and hi must be random-access iterators. The input range will be shuffled after the function call, though this is only to avoid the worst-case running time and is not necessary for correctness.
+\end{compactitem}
 
-- minimum_enclosing_circle(lo, hi) returns the minimum enclosing circle given a
-  range [lo, hi) of points, where lo and hi must be random-access iterators. The
-  input range will be shuffled after the function call, though this is only to
-  avoid the worst-case running time and is not necessary for correctness.
+\textbf{Time Complexity}: $O(n)$ on average per call to minimum\_enclosing\_circle(lo, hi), where n is the distance between lo and hi.
 
-Time Complexity:
-- O(n) on average per call to minimum_enclosing_circle(lo, hi), where n is the
-  distance between lo and hi.
+\textbf{Space Complexity}: $O(1)$ auxiliary.
 
-Space Complexity:
-- O(1) auxiliary.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -1947,9 +1793,9 @@ circle minimum_enclosing_circle(It lo, It hi) {
   }
   return res;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -1966,32 +1812,22 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Closest Pair}
-\begin{lstlisting}
-/*
+Given a list of points in two dimensions, find the closest pair among them using a divide and conquer algorithm.
 
-Given a list of points in two dimensions, find the closest pair among them using
-a divide and conquer algorithm.
+\begin{compactitem}
+  \item closest\_pair(lo, hi, \&res) returns the minimum Euclidean distance between any two pair of points in the range [lo, hi), where lo and hi must be random-access iterators. The input range will be sorted lexicographically (by x, then by y) after the function call. If there is an answer, the closest pair will be stored into pointer *res.
+\end{compactitem}
 
-- closest_pair(lo, hi, &res) returns the minimum Euclidean distance between any
-  two pair of points in the range [lo, hi), where lo and hi must be
-  random-access iterators. The input range will be sorted lexicographically (by
-  x, then by y) after the function call. If there is an answer, the closest pair
-  will be stored into pointer *res.
+\textbf{Time Complexity}: $O(n \log^{2} n)$ per call to closest\_pair(lo, hi, \&res), where n is the distance between lo and hi.
 
-Time Complexity:
-- O(n log^2 n) per call to closest_pair(lo, hi, &res), where n is the distance
-  between lo and hi.
+\textbf{Space Complexity}: $O(n \log^{2} n)$ auxiliary stack space for closest\_pair(lo, hi, \&res), where n is the distance between lo and hi.
 
-Space Complexity:
-- O(n log^2 n) auxiliary stack space for closest_pair(lo, hi, &res), where n is
-  the distance between lo and hi.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <utility>
+#include <vector>
 
 const double EPS = 1e-9;
 
@@ -2004,8 +1840,14 @@ typedef std::pair<double, double> point;
 
 double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
 double norm(const point &a) { return sqrt(sqnorm(a)); }
-bool cmp_x(const point &a, const point &b) { return LT(a.x, b.x); }
-bool cmp_y(const point &a, const point &b) { return LT(a.y, b.y); }
+
+bool cmp_x(const point &a, const point &b) {
+  return (a.x == b.x) ? (a.y < b.y) : (a.x < b.x);
+}
+
+bool cmp_y(const point &a, const point &b) {
+  return (a.y == b.y) ? (a.x < b.x) : (a.y < b.y);
+}
 
 template<class It>
 double closest_pair(It lo, It hi, std::pair<point, point> *res = NULL,
@@ -2024,15 +1866,14 @@ double closest_pair(It lo, It hi, std::pair<point, point> *res = NULL,
   double d2 = closest_pair(mid + 1, hi, res, mindist, false);
   mindist = std::min(mindist, d2);
   std::sort(lo, hi, cmp_y);
-  int size = 0;
-  It t[hi - lo];
+  std::vector<It> t;
   for (It it = lo; it != hi; ++it) {
     if (fabs(it->x - midx) < mindist) {
-      t[size++] = it;
+      t.push_back(it);
     }
   }
-  for (int i = 0; i < size; i++) {
-    for (int j = i + 1; j < size; j++) {
+  for (int i = 0; i < (int)t.size(); i++) {
+    for (int j = i + 1; j < (int)t.size(); j++) {
       point a(*t[i]), b(*t[j]);
       if (b.y - a.y >= mindist) {
         break;
@@ -2048,9 +1889,9 @@ double closest_pair(It lo, It hi, std::pair<point, point> *res = NULL,
   }
   return mindist;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <vector>
 using namespace std;
@@ -2071,33 +1912,23 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Segment Intersection Finding}
-\begin{lstlisting}
-/*
+Given a list of line segments in two dimensions, determine whether any pair of segments intersect using a sweep line algorithm.
 
-Given a list of line segments in two dimensions, determine whether any pair of
-segments intersect using a sweep line algorithm.
+\begin{compactitem}
+  \item find\_intersection(lo, hi, \&res1, \&res2) returns whether any pair of segments intersect given a range [lo, hi) of segments, where lo and hi are random-access iterators. If there an intersection is found, then one such pair of segments will be stored into pointers res1 and res2. If some segments are barely touching (close within EPS), then the result will depend on the setting of TOUCH\_IS\_INTERSECT.
+\end{compactitem}
 
-- find_intersection(lo, hi, &res1, &res2) returns whether any pair of segments
-  intersect given a range [lo, hi) of segments, where lo and hi are
-  random-access iterators. If there an intersection is found, then one such pair
-  of segments will be stored into pointers res1 and res2. If some segments are
-  barely touching (close within EPS), then the result will depend on the setting
-  of TOUCH_IS_INTERSECT.
+\textbf{Time Complexity}: $O(n \log n)$ per call to find\_intersection(lo, hi, \&res1, \&res2), where n is the distance between lo and hi.
 
-Time Complexity:
-- O(n log n) per call to find_intersection(lo, hi, &res1, &res2), where n is
-  the distance between lo and hi.
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for find\_intersection(lo, hi, \&res1, \&res2), where n is the distance between lo and hi.
 
-Space Complexity:
-- O(n) auxiliary heap space for find_intersection(lo, hi, &res1, &res2), where n
-  is the distance between lo and hi.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <set>
 #include <utility>
+#include <vector>
 
 const double EPS = 1e-9;
 
@@ -2116,12 +1947,32 @@ double cross(const point &a, const point &b, const point &o = point(0, 0)) {
   return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
 }
 
+bool point_on_segment(const point &p, const point &a, const point &b) {
+  return EQ(cross(p, b, a), 0)
+      && LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x))
+      && LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
+}
+
 int seg_intersection(const point &a, const point &b, const point &c,
                      const point &d, point *p = NULL, point *q = NULL) {
   static const bool TOUCH_IS_INTERSECT = true;
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
   point cd(d.x - c.x, d.y - c.y);
+  if (EQ(sqnorm(ab), 0)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
+      if (p != NULL) *p = a;
+      return 0;
+    }
+    return -1;
+  }
+  if (EQ(sqnorm(cd), 0)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) {
+      if (p != NULL) *p = c;
+      return 0;
+    }
+    return -1;
+  }
   double c1 = cross(ab, cd), c2 = cross(ac, ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     double t0 = dot(ac, ab) / sqnorm(ab);
@@ -2169,20 +2020,28 @@ struct segment {
 
   segment() {}
   segment(const point &p, const point &q) : p(min(p, q)), q(max(p, q)) {}
+};
 
-  bool operator<(const segment &rhs) const {
-    if (p.x < rhs.p.x) {
-      double c = cross(q, rhs.p, p);
-      if (c != 0) {
-        return c > 0;
-      }
-    } else if (rhs.p.x < p.x) {
-      double c = cross(rhs.q, q, rhs.p);
-      if (c != 0) {
-        return c < 0;
-      }
+double get_y(const segment &s, double x) {
+  if (EQ(s.p.x, s.q.x)) {
+    return s.p.y;
+  }
+  return s.p.y + (s.q.y - s.p.y)*(x - s.p.x)/(s.q.x - s.p.x);
+}
+
+template<class It>
+struct segment_order {
+  It lo;
+
+  segment_order(It lo) : lo(lo) {}
+
+  bool operator()(It a, It b) const {
+    if (a == b) {
+      return false;
     }
-    return p.y < rhs.p.y;
+    double x = std::max(a->p.x, b->p.x);
+    double ay = get_y(*a, x), by = get_y(*b, x);
+    return (ay == by) ? (a - lo < b - lo) : (ay < by);
   }
 };
 
@@ -2212,41 +2071,42 @@ bool intersect(const segment &s1, const segment &s2) {
 
 template<class It>
 bool find_intersection(It lo, It hi, segment *res1, segment *res2) {
-  int cnt = 0;
-  event<It> e[2*(int)(hi - lo)];
+  std::vector<event<It> > e;
   for (It it = lo; it != hi; ++it) {
     if (it->p > it->q) {
       std::swap(it->p, it->q);
     }
-    e[cnt++] = event<It>(it->p, 1, it);
-    e[cnt++] = event<It>(it->q, -1, it);
+    e.push_back(event<It>(it->p, 1, it));
+    e.push_back(event<It>(it->q, -1, it));
   }
-  std::sort(e, e + cnt);
-  std::set<segment> s;
-  std::set<segment>::iterator it, next, prev;
-  for (int i = 0; i < cnt; i++) {
+  std::sort(e.begin(), e.end());
+  typedef std::set<It, segment_order<It> > active_set;
+  active_set s((segment_order<It>(lo)));
+  std::vector<typename active_set::iterator> position(hi - lo);
+  for (int i = 0; i < (int)e.size(); i++) {
     It seg = e[i].seg;
     if (e[i].type == 1) {
-      it = s.lower_bound(*seg);
-      if (it != s.end() && intersect(*it, *seg)) {
-        *res1 = *it;
+      typename active_set::iterator it = s.insert(seg).first;
+      position[seg - lo] = it;
+      typename active_set::iterator next = it;
+      if (++next != s.end() && intersect(**next, *seg)) {
+        *res1 = **next;
         *res2 = *seg;
         return true;
       }
-      if (it != s.begin() && intersect(*--it, *seg)) {
-        *res1 = *it;
+      if (it != s.begin() && intersect(**--it, *seg)) {
+        *res1 = **it;
         *res2 = *seg;
         return true;
       }
-      s.insert(*seg);
     } else {
-      it = s.lower_bound(*seg);
-      next = prev = it;
-      prev = it;
-      if (it != s.begin() && it != --s.end()) {
-        if (intersect(*(++next), *(--prev))) {
-          *res1 = *next;
-          *res2 = *prev;
+      typename active_set::iterator it = position[seg - lo];
+      typename active_set::iterator next = it;
+      if (++next != s.end() && it != s.begin()) {
+        typename active_set::iterator prev = it;
+        if (intersect(**next, **--prev)) {
+          *res1 = **next;
+          *res2 = **prev;
           return true;
         }
       }
@@ -2255,9 +2115,9 @@ bool find_intersection(It lo, It hi, segment *res1, segment *res2) {
   }
   return false;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <vector>
 using namespace std;
 
@@ -2279,27 +2139,17 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Convex Polygon Cut}
-\begin{lstlisting}
-/*
+Given a convex polygon (a polygon such that every line crossing through it will only do so once) in two dimensions, and two points specifying an infinite line, cut off the right part of the polygon, and return the resulting left part.
 
-Given a convex polygon (a polygon such that every line crossing through it will
-only do so once) in two dimensions, and two points specifying an infinite line,
-cut off the right part of the polygon, and return the resulting left part.
+\begin{compactitem}
+  \item convex\_cut(lo, hi, p, q) returns the points of the left side of a polygon, in clockwise order, after it has been cut by the line containing points p and q. The original convex polygon is given by the range [lo, hi) of points in clockwise order, where lo and hi must be random-access iterators.
+\end{compactitem}
 
-- convex_cut(lo, hi, p, q) returns the points of the left side of a polygon, in
-  clockwise order, after it has been cut by the line containing points p and q.
-  The original convex polygon is given by the range [lo, hi) of points in
-  clockwise order, where lo and hi must be random-access iterators.
+\textbf{Time Complexity}: $O(n)$ per call to convex\_cut(lo, hi, p, q), where n is the distance between lo and hi.
 
-Time Complexity:
-- O(n) per call to convex_cut(lo, hi, p, q), where n is the distance between lo
-  and hi.
+\textbf{Space Complexity}: $O(n)$ auxiliary for storage of the resulting convex cut.
 
-Space Complexity:
-- O(n) auxiliary for storage of the resulting convex cut.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <cstddef>
 #include <utility>
@@ -2360,9 +2210,9 @@ std::vector<point> convex_cut(It lo, It hi, const point &p, const point &q) {
   }
   return res;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -2401,32 +2251,18 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polygon Intersection and Union}
-\begin{lstlisting}
-/*
+Given two polygons, determine the areas of their intersection and union using a sweep line algorithm and the inclusion-exclusion principle.
 
-Given two polygons, determine the areas of their intersection and union using a
-sweep line algorithm and the inclusion-exclusion principle.
+\begin{compactitem}
+  \item intersection\_area(lo1, hi1, lo2, hi2) returns the intersection area of two polygons respectively specified by two ranges [lo1, hi1) and [lo2, hi2) of vertices in clockwise order, where lo1, hi1, lo2, and hi2 must be random-access iterators.
+  \item union\_area(lo1, hi1, lo2, hi2) returns the union area of two polygons respectively specified by two ranges [lo1, hi1) and [lo2, hi2) of vertices in clockwise order, where lo1, hi1, lo2, and hi2 must be random-access iterators.
+\end{compactitem}
 
-- intersection_area(lo1, hi1, lo2, hi2) returns the intersection area of two
-  polygons respectively specified by two ranges [lo1, hi1) and [lo2, hi2) of
-  vertices in clockwise order, where lo1, hi1, lo2, and hi2 must be
-  random-access iterators.
-- union_area(lo1, hi1, lo2, hi2) returns the union area of two polygons
-  respectively specified by two ranges [lo1, hi1) and [lo2, hi2) of vertices in
-  clockwise order, where lo1, hi1, lo2, and hi2 must be random-access iterators.
+\textbf{Time Complexity}: $O(n^{2} \log n)$ per call to intersection\_area(lo1, hi1, lo2, hi2) and union\_area(lo1, hi1, lo2, hi2) where n is the sum of distances between lo1 and hi1 and lo2 and hi2 respectively.
 
-Time Complexity:
-- O(n^2 log n) per call to intersection_area(lo1, hi1, lo2, hi2) and
-  union_area(lo1, hi1, lo2, hi2) where n is the sum of distances between lo1 and
-  hi1 and lo2 and hi2 respectively.
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for intersection\_area(lo1, hi1, lo2, hi2) and union\_area(lo1, hi1, lo2, hi2), where n is the sum of distances between lo1 and hi1 and lo2 and hi2 respectively.
 
-Space Complexity:
-- O(n) auxiliary heap space for intersection_area(lo1, hi1, lo2, hi2) and
-  union_area(lo1, hi1, lo2, hi2), where n is the sum of distances between lo1
-  and hi1 and lo2 and hi2 respectively.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <set>
@@ -2608,9 +2444,9 @@ double union_area(It lo1, It hi1, It lo2, It hi2) {
   return polygon_area(lo1, hi1) + polygon_area(lo2, hi2) -
          intersection_area(lo1, hi1, lo2, hi2);
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -2633,35 +2469,19 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Delaunay Triangulation (Simple)}
-\begin{lstlisting}
-/*
+Given a set P of two dimensional points, the Delaunay triangulation of P is a set of non-overlapping triangles that covers the entire convex hull of P such that no point in P lies within the circumcircle of any of the resulting triangles. For any point p in the convex hull of P (but not necessarily in P), the nearest point is guaranteed to be a vertex of the enclosing triangle from the triangulation.
 
-Given a set P of two dimensional points, the Delaunay triangulation of P is a
-set of non-overlapping triangles that covers the entire convex hull of P such
-that no point in P lies within the circumcircle of any of the resulting
-triangles. For any point p in the convex hull of P (but not necessarily in P),
-the nearest point is guaranteed to be a vertex of the enclosing triangle from
-the triangulation.
+The triangulation may not exist (e.g. for a set of collinear points), or may not be unique if it does exists. The following program assumes its existence and produces one such valid result using a simple algorithm which encases each triangle in a circle and rejecting the triangle if another point in the tessellation is within the generalized circle.
 
-The triangulation may not exist (e.g. for a set of collinear points), or may not
-be unique if it does exists. The following program assumes its existence and
-produces one such valid result using a simple algorithm which encases each
-triangle in a circle and rejecting the triangle if another point in the
-tessellation is within the generalized circle.
+\begin{compactitem}
+  \item delaunay\_triangulation(lo, hi) returns a Delaunay triangulation for the input range [lo, hi) of points, where lo and hi must be random-access iterators, or an empty vector if a triangulation does not exist.
+\end{compactitem}
 
-- delaunay_triangulation(lo, hi) returns a Delaunay triangulation for the input
-  range [lo, hi) of points, where lo and hi must be random-access iterators, or
-  an empty vector if a triangulation does not exist.
+\textbf{Time Complexity}: $O(n^{4})$ per call to delaunay\_triangulation(lo, hi), where n is the distance between lo and hi.
 
-Time Complexity:
-- O(n^4) per call to delaunay_triangulation(lo, hi), where n is the distance
-  between lo and hi.
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for storage of the Delaunay triangulation.
 
-Space Complexity:
-- O(n) auxiliary heap space for storage of the Delaunay triangulation.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -2789,9 +2609,9 @@ std::vector<triangle> delaunay_triangulation(It lo, It hi) {
   }
   return res;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -2812,36 +2632,19 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Delaunay Triangulation (Fast)}
-\begin{lstlisting}
-/*
+Given a set P of two dimensional points, the Delaunay triangulation of P is a set of non-overlapping triangles that covers the entire convex hull of P such that no point in P lies within the circumcircle of any of the resulting triangles. For any point p in the convex hull of P (but not necessarily in P), the nearest point is guaranteed to be a vertex of the enclosing triangle from the triangulation.
 
-Given a set P of two dimensional points, the Delaunay triangulation of P is a
-set of non-overlapping triangles that covers the entire convex hull of P such
-that no point in P lies within the circumcircle of any of the resulting
-triangles. For any point p in the convex hull of P (but not necessarily in P),
-the nearest point is guaranteed to be a vertex of the enclosing triangle from
-the triangulation.
+The triangulation may not exist (e.g. for a set of collinear points), or may not be unique if it does exists. The following program assumes its existence and produces one such valid result using TABLE\_DELAUNAY, a divide and conquer algorithm with linear merging. Its fully documented version along with debugging messages for the current asserts() may be found at the following link: http://people.sc.fsu.edu/\textasciitilde{}jburkardt/f\_src/table\_delaunay/table\_delaunay.html
 
-The triangulation may not exist (e.g. for a set of collinear points), or may not
-be unique if it does exists. The following program assumes its existence and
-produces one such valid result using TABLE_DELAUNAY, a divide and conquer
-algorithm with linear merging. Its fully documented version along with debugging
-messages for the current asserts() may be found at the following link:
-http://people.sc.fsu.edu/~jburkardt/f_src/table_delaunay/table_delaunay.html
+\begin{compactitem}
+  \item delaunay\_triangulation(lo, hi) returns a Delaunay triangulation for the input range [lo, hi) of points, where lo and hi must be random-access iterators, or an empty vector if a triangulation does not exist.
+\end{compactitem}
 
-- delaunay_triangulation(lo, hi) returns a Delaunay triangulation for the input
-  range [lo, hi) of points, where lo and hi must be random-access iterators, or
-  an empty vector if a triangulation does not exist.
+\textbf{Time Complexity}: $O(n \log n)$ per call to delaunay\_triangulation(lo, hi), where n is the distance between lo and hi.
 
-Time Complexity:
-- O(n log n) per call to delaunay_triangulation(lo, hi), where n is the distance
-  between lo and hi.
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for storage of the Delaunay triangulation.
 
-Space Complexity:
-- O(n) auxiliary heap space for storage of the Delaunay triangulation.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -3359,9 +3162,10 @@ int dtris2(int point_num, double point_xy[][2],
   delete[] stack;
   return tri_num;
 }
+\end{lstlisting}
+\textbf{Wrapper:}\par
 
-/*** Wrapper ***/
-
+\begin{lstlisting}[language=C++]
 const double EPS = 1e-9;
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 
@@ -3400,9 +3204,9 @@ std::vector<triangle> delaunay_triangulation(It lo, It hi) {
   }
   return res;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 

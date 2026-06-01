@@ -1,6 +1,11 @@
+.DS_Store
 *.exe
 *.aux
 *.log
 *.toc
 *.out
 *.synctex.gz
+*.fls
+*.fdb_latexmk
+*.listing
+/.vscode

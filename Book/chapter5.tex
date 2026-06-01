@@ -2,21 +2,13 @@
 
 \section{Math Utilities}
 \setcounter{section}{1}
-\begin{lstlisting}
-/*
+Common mathematic constants and functions, many of which are substitutes for features which are not available in standard C++, or may not be available on compilers that do not support C++11 and later.
 
-Common mathematic constants and functions, many of which are substitutes for
-features which are not available in standard C++, or may not be available on
-compilers that do not support C++11 and later.
+\textbf{Time Complexity}: $O(1)$ for all operations.
 
-Time Complexity:
-- O(1) for all operations.
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
-Space Complexity:
-- O(1) auxiliary for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cfloat>
 #include <climits>
@@ -39,21 +31,14 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 #ifndef isnan
   #define isnan(x) ((x) != (x))
 #endif
-
-/*
-
+\end{lstlisting}
 Epsilon Comparisons
 
-EQ(), NE(), LT(), GT(), LE(), and GE() relationally compares two values x and y
-accounting for absolute error. For any x, the range of values considered equal
-barring absolute error is [x - EPS, x + EPS]. Values outside of this range are
-considered not equal (strictly less or strictly greater).
+EQ(), NE(), LT(), GT(), LE(), and GE() relationally compares two values x and y accounting for absolute error. For any x, the range of values considered equal barring absolute error is [x - EPS, x + EPS]. Values outside of this range are considered not equal (strictly less or strictly greater).
 
-rEQ() returns whether x and y are equal barring relative error. For any x, the
-range of values considered equal is [x*(1 - EPS), x*(1 + EPS)].
+rEQ() returns whether x and y are equal barring relative error. For any x, the range of values considered equal is [x*(1 - EPS), x*(1 + EPS)].
 
-*/
-
+\begin{lstlisting}[language=C++]
 const double EPS = 1e-9;
 
 #define EQ(x, y) (fabs((x) - (y)) <= EPS)
@@ -63,24 +48,16 @@ const double EPS = 1e-9;
 #define LE(x, y) ((x) <= (y) + EPS)
 #define GE(x, y) ((x) >= (y) - EPS)
 #define rEQ(x, y) (fabs((x) - (y)) <= EPS*fabs(x))
-
-/*
-
+\end{lstlisting}
 Sign Functions
 
-- sgn(x) returns -1 (if x < 0), 0 (if x == 0), or 1 (if x > 0). Unlike signbit()
-  or copysign(), this does not handle the sign of NaN.
-- signbit_(x) is analogous to std::signbit() in C++11 and later, returning
-  whether the sign bit of the floating point number is set to true. If so, then
-  x is considered "negative." Note that this works as expected on +0.0, -0.0,
-  Inf, -Inf, NaN, as well as -NaN. Warning: This assumes that the sign bit is
-  the leading (most significant) bit in the internal representation of the IEEE
-  floating point value.
-- copysign_(x, y) is analogous to std::copysign() in C++11 and later, returning
-  a number with the magnitude of x but the sign of y.
+\begin{compactitem}
+  \item sgn(x) returns -1 (if x < 0), 0 (if x == 0), or 1 (if x > 0). Unlike signbit() or copysign(), this does not handle the sign of NaN.
+  \item signbit\_(x) is analogous to std::signbit() in C++11 and later, returning whether the sign bit of the floating point number is set to true. If so, then x is considered "negative." Note that this works as expected on +0.0, -0.0, Inf, -Inf, NaN, as well as -NaN. Warning: This assumes that the sign bit is the leading (most significant) bit in the internal representation of the IEEE floating point value.
+  \item copysign\_(x, y) is analogous to std::copysign() in C++11 and later, returning a number with the magnitude of x but the sign of y.
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 template<class T>
 int sgn(const T &x) {
   return (T(0) < x) - (x < T(0));
@@ -95,30 +72,24 @@ template<class Double>
 Double copysign_(Double x, Double y) {
   return signbit_(y) ? -fabs(x) : fabs(x);
 }
-
-/*
-
+\end{lstlisting}
 Rounding Functions
 
-- floor0(x) returns x rounded down, symmetrically towards zero. This function is
-  analogous to trunc() in C++11 and later.
-- ceil0(x) returns x rounded up, symmetrically away from zero. This function is
-  analogous to round() in C++11 and later.
-- round_half_up(x) returns x rounded half up, towards positive infinity.
-- round_half_down(x) returns x rounded half down, towards negative infinity.
-- round_half_to0(x) returns x rounded half down, symmetrically towards zero.
-- round_half_from0(x) returns x rounded half up, symmetrically away from zero.
-- round_half_even(x) returns x rounded half to even, using banker's rounding.
-- round_half_alternate(x) returns x rounded, where ties are broken by
-  alternating rounds towards positive and negative infinity.
-- round_half_alternate0(x) returns x rounded, where ties are broken by
-  alternating symmetric rounds towards and away from zero.
-- round_half_random(x) returns x rounded, where ties are broken randomly.
-- round_n_places(x, n, f) returns x rounded to n digits after the decimal, using
-  the specified rounding function f(x).
+\begin{compactitem}
+  \item floor0(x) returns x rounded down, symmetrically towards zero. This function is analogous to trunc() in C++11 and later.
+  \item ceil0(x) returns x rounded up, symmetrically away from zero. This function is analogous to round() in C++11 and later.
+  \item round\_half\_up(x) returns x rounded half up, towards positive infinity.
+  \item round\_half\_down(x) returns x rounded half down, towards negative infinity.
+  \item round\_half\_to0(x) returns x rounded half down, symmetrically towards zero.
+  \item round\_half\_from0(x) returns x rounded half up, symmetrically away from zero.
+  \item round\_half\_even(x) returns x rounded half to even, using banker's rounding.
+  \item round\_half\_alternate(x) returns x rounded, where ties are broken by alternating rounds towards positive and negative infinity.
+  \item round\_half\_alternate0(x) returns x rounded, where ties are broken by alternating symmetric rounds towards and away from zero.
+  \item round\_half\_random(x) returns x rounded, where ties are broken randomly.
+  \item round\_n\_places(x, n, f) returns x rounded to n digits after the decimal, using the specified rounding function f(x).
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 template<class Double>
 Double floor0(const Double &x) {
   Double res = floor(fabs(x));
@@ -187,19 +158,15 @@ template<class Double, class RoundingFunction>
 Double round_n_places(const Double &x, unsigned int n, RoundingFunction f) {
   return f(x*pow(10, n)) / pow(10, n);
 }
-
-/*
-
+\end{lstlisting}
 Error Function
 
-- erf_(x) returns the error encountered in integrating the normal distribution.
-  Its value is 2/sqrt(pi)*(integral of e^(-t^2) dt from 0 to x). This function
-  is analogous to erf(x) in C++11 and later.
-- erfc_(x) returns the error function complement, that is, 1 - erf_(x). This
-  function is analogous to erfc(x) in C++11 and later.
+\begin{compactitem}
+  \item erf\_(x) returns the error encountered in integrating the normal distribution. Its value is 2/sqrt(pi)*(integral of e\textasciicircum{}(-t\textasciicircum{}2) dt from 0 to x). This function is analogous to erf(x) in C++11 and later.
+  \item erfc\_(x) returns the error function complement, that is, 1 - erf\_(x). This function is analogous to erfc(x) in C++11 and later.
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 #define ERF_EPS 1e-14
 
 double erfc_(double x);
@@ -245,20 +212,15 @@ double erfc_(double x) {
 }
 
 #undef ERF_EPS
-
-/*
-
+\end{lstlisting}
 Gamma Functions
 
-- tgamma_(x) returns the gamma function of x. Unlike the tgamma() function in
-  C++11 and later, this version only supports positive x, returning NaN if x is
-  less than or equal to 0.
-- lgamma_(x) returns the natural logarithm of the absolute value of the gamma
-  function of x. Unlike the lgamma() function in C++11 and later, this version
-  only supports positive x, returning NaN if x is less than or equal to 0.
+\begin{compactitem}
+  \item tgamma\_(x) returns the gamma function of x. Unlike the tgamma() function in C++11 and later, this version only supports positive x, returning NaN if x is less than or equal to 0.
+  \item lgamma\_(x) returns the natural logarithm of the absolute value of the gamma function of x. Unlike the lgamma() function in C++11 and later, this version only supports positive x, returning NaN if x is less than or equal to 0.
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 double lgamma_(double x);
 
 double tgamma_(double x) {
@@ -323,23 +285,16 @@ double lgamma_(double x) {
   }
   return (x - 0.5)*log(x) - x + 0.91893853320467274178032973640562 + sum/x;
 }
-
-/*
-
+\end{lstlisting}
 Base Conversion
 
-- Given an integer in base a as a vector d of digits (where d[0] is the least
-  significant digit), convert_base(d, a, b) returns a vector of the integer's
-  digits when converted base b (again with index 0 storing the least significant
-  digit). The actual value of the entire integer to be converted must be able to
-  fit within an unsigned 64-bit integer for intermediate storage.
-- to_base(x, b) returns the digits of the unsigned integer x in base b, where
-  index 0 of the result stores the least significant digit.
-- to_roman(x) returns the Roman numeral representation of the unsigned integer x
-  as a C++ string.
+\begin{compactitem}
+  \item Given an integer in base a as a vector d of digits (where d[0] is the least significant digit), convert\_base(d, a, b) returns a vector of the integer's digits when converted base b (again with index 0 storing the least significant digit). The actual value of the entire integer to be converted must be able to fit within an unsigned 64-bit integer for intermediate storage.
+  \item to\_base(x, b) returns the digits of the unsigned integer x in base b, where index 0 of the result stores the least significant digit.
+  \item to\_roman(x) returns the Roman numeral representation of the unsigned integer x as a C++ string.
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
   unsigned long long x = 0, power = 1;
   for (int i = 0; i < (int)d.size(); i++) {
@@ -375,9 +330,9 @@ std::string to_roman(unsigned int x) {
   x %= 1000;
   return prefix + h[x/100] + t[x/10 % 10] + o[x % 10];
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 
@@ -430,51 +385,45 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Combinatorial Calculations}
-\begin{lstlisting}
-/*
+The following functions implement common operations in combinatorics. All input arguments must be non-negative. All return values and table entries are computed as 64-bit integers modulo an input argument m or p.
 
-The following functions implement common operations in combinatorics. All input
-arguments must be non-negative. All return values and table entries are computed
-as 64-bit integers modulo an input argument m or p.
+\begin{compactitem}
+  \item factorial(n, m) returns n! mod m.
+  \item factorialp(n, p) returns n! mod p, where p is prime.
+  \item binomial\_table(n, m) returns rows 0 to n of Pascal's triangle as a table t such that t[i][j] is equal to (i choose j) mod m.
+  \item permute(n, k, m) returns (n permute k) mod m.
+  \item choose(n, k, p) returns (n choose k) mod p, where p is prime.
+  \item multichoose(n, k, p) returns (n multi-choose k) mod p, where p is prime.
+  \item catalan(n, p) returns the nth Catalan number mod p, where p is prime.
+  \item partitions(n, m) returns the number of partitions of n, mod m.
+  \item partitions(n, k, m) returns the number of partitions of n into k parts, mod m.
+  \item stirling1(n, k, m) returns the (n, k) unsigned Stirling number of the 1st kind mod m.
+  \item stirling2(n, k, m) returns the (n, k) Stirling number of the 2nd kind mod m.
+  \item eulerian1(n, k, m) returns the (n, k) Eulerian number of the 1st kind mod m, where n > k.
+  \item eulerian2(n, k, m) returns the (n, k) Eulerian number of the 2nd kind mod m, where n > k.
+\end{compactitem}
 
-- factorial(n, m) returns n! mod m.
-- factorialp(n, p) returns n! mod p, where p is prime.
-- binomial_table(n, m) returns rows 0 to n of Pascal's triangle as a table t
-  such that t[i][j] is equal to (i choose j) mod m.
-- permute(n, k, m) returns (n permute k) mod m.
-- choose(n, k, p) returns (n choose k) mod p, where p is prime.
-- multichoose(n, k, p) returns (n multi-choose k) mod p, where p is prime.
-- catalan(n, p) returns the nth Catalan number mod p, where p is prime.
-- partitions(n, m) returns the number of partitions of n, mod m.
-- partitions(n, k, m) returns the number of partitions of n into k parts, mod m.
-- stirling1(n, k, m) returns the (n, k) unsigned Stirling number of the 1st kind
-  mod m.
-- stirling2(n, k, m) returns the (n, k) Stirling number of the 2nd kind mod m.
-- eulerian1(n, k, m) returns the (n, k) Eulerian number of the 1st kind mod m,
-  where n > k.
-- eulerian2(n, k, m) returns the (n, k) Eulerian number of the 2nd kind mod m,
-  where n > k.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for factorial(n, m).
+  \item $O(p \log n)$ for factorialp(n, p).
+  \item $O(n^{2})$ for binomial\_table(n, m).
+  \item $O(k)$ for permute(n, k, p).
+  \item $O(\min\left(k, n - k\right))$ for choose(n, k, p).
+  \item $O(k)$ for multichoose(n, k, p).
+  \item $O(n)$ for catalan(n, p).
+  \item $O(n^{2})$ for partitions(n, m).
+  \item $O(n \cdot k)$ for partitions(n, k, m), stirling1(n, k, m), stirling2(n, k, m), eulerian1(n, k, m), and eulerian2(n, k, m).
+\end{compactitem}
 
-Time Complexity:
-- O(n) for factorial(n, m).
-- O(p log n) for factorialp(n, p).
-- O(n^2) for binomial_table(n, m).
-- O(k) for permute(n, k, p).
-- O(min(k, n - k)) for choose(n, k, p).
-- O(k) for multichoose(n, k, p).
-- O(n) for catalan(n, p).
-- O(n^2) for partitions(n, m).
-- O(n*k) for partitions(n, k, m), stirling1(n, k, m), stirling2(n, k, m),
-  eulerian1(n, k, m), and eulerian2(n, k, m).
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n^{2})$ auxiliary heap space for binomial\_table(n, m).
+  \item $O(n \cdot k)$ auxiliary heap space for partitions(n, k, m), stirling1(n, k, m), stirling2(n, k, m), eulerian1(n, k, m), and eulerian2(n, k, m).
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n^2) auxiliary heap space for binomial_table(n, m).
-- O(n*k) auxiliary heap space for partitions(n, k, m), stirling1(n, k, m),
-  stirling2(n, k, m), eulerian1(n, k, m), and eulerian2(n, k, m).
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <vector>
 
 typedef long long int64;
@@ -652,9 +601,9 @@ int64 eulerian2(int n, int k, int64 m = 1000000007) {
   }
   return t[n][k] % m;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -680,44 +629,28 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Enumerating Arrangements}
-\begin{lstlisting}
-/*
+For the purposes of this section, we define a "size k arrangement of n" to be a permutation of a size k subset of the integers from 0 to n - 1, for 0 <= k <= n. There are n permute k possible arrangements, but n\textasciicircum{}k possible arrangements if repeated values are allowed.
 
-For the purposes of this section, we define a "size k arrangement of n" to be a
-permutation of a size k subset of the integers from 0 to n - 1, for 0 <= k <= n.
-There are n permute k possible arrangements, but n^k possible arrangements if
-repeated values are allowed.
+\begin{compactitem}
+  \item next\_arragement(n, k, a) tries to rearrange a[] to the next lexicographically greater arrangement, returning true if such an arrangement exists or false if the array is already in descending order (in which case a[] is unchanged). The input a[] must consist of exactly k distinct integers in the range [0, n).
+  \item arrangement\_by\_rank(n, k, r) returns the size k arrangement of n which is lexicographically ranked r out of all size k arrangements of n, where r is a zero-based rank in the range [0, n permute k).
+  \item rank\_by\_arrangement(n, k, a) returns an integer representing the zero-based rank of arrangement a[], which must consist of exactly k distinct integers in the range [0, n).
+  \item next\_arragement\_with\_repeats(n, k, a) tries to rearrange a[] to the next lexicographically greater arrangement with repeats, returning true if such an arrangement exists or false if the array is already in descending order (in which case a[] is unchanged). The input a[] must consist of exactly k (not necessarily distinct) integers in the range [0, n). If a[] were interpreted as a k digit integer in base n, this function could be thought of as incrementing the integer.
+\end{compactitem}
 
-- next_arragement(n, k, a) tries to rearrange a[] to the next lexicographically
-  greater arrangement, returning true if such an arrangement exists or false if
-  the array is already in descending order (in which case a[] is unchanged). The
-  input a[] must consist of exactly k distinct integers in the range [0, n).
-- arrangement_by_rank(n, k, r) returns the size k arrangement of n which is
-  lexicographically ranked r out of all size k arrangements of n, where r is
-  a zero-based rank in the range [0, n permute k).
-- rank_by_arrangement(n, k, a) returns an integer representing the zero-based
-  rank of arrangement a[], which must consist of exactly k distinct integers in
-  the range [0, n).
-- next_arragement_with_repeats(n, k, a) tries to rearrange a[] to the next
-  lexicographically greater arrangement with repeats, returning true if such an
-  arrangement exists or false if the array is already in descending order (in
-  which case a[] is unchanged). The input a[] must consist of exactly k (not
-  necessarily distinct) integers in the range [0, n). If a[] were interpreted as
-  a k digit integer in base n, this function could be thought of as incrementing
-  the integer.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot k)$ for next\_arrangement(), arrangement\_by\_rank(), and rank\_by\_arrangement().
+  \item $O(k)$ for next\_arrangement\_with\_repeats().
+\end{compactitem}
 
-Time Complexity:
-- O(n*k) for next_arrangement(), arrangement_by_rank(), and
-  rank_by_arrangement().
-- O(k) for next_arrangement_with_repeats().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary heap space for next\_arrangement(), arrangement\_by\_rank(), and rank\_by\_arrangement().
+  \item $O(1)$ auxiliary for next\_arrangement\_with\_repeats().
+\end{compactitem}
 
-Space Complexity:
-- O(n) auxiliary heap space for next_arrangement(), arrangement_by_rank(), and
-  rank_by_arrangement().
-- O(1) auxiliary for next_arrangement_with_repeats().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <vector>
 
@@ -793,20 +726,9 @@ bool next_arrangement_with_repeats(int n, int k, int a[]) {
   }
   return false;
 }
-
-/*** Example Usage and Output:
-
-4 permute 3 arrangements:
-{0,1,2} {0,1,3} {0,2,1} {0,2,3} {0,3,1} {0,3,2} {1,0,2} {1,0,3} {1,2,0} {1,2,3}
-{1,3,0} {1,3,2} {2,0,1} {2,0,3} {2,1,0} {2,1,3} {2,3,0} {2,3,1} {3,0,1} {3,0,2}
-{3,1,0} {3,1,2} {3,2,0} {3,2,1}
-
-4^2 arrangements with repeats:
-{0,0} {0,1} {0,2} {0,3} {1,0} {1,1} {1,2} {1,3} {2,0} {2,1} {2,2} {2,3} {3,0}
-{3,1} {3,2} {3,3}
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -845,54 +767,43 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+4 permute 3 arrangements:
+{0,1,2} {0,1,3} {0,2,1} {0,2,3} {0,3,1} {0,3,2} {1,0,2} {1,0,3} {1,2,0} {1,2,3}
+{1,3,0} {1,3,2} {2,0,1} {2,0,3} {2,1,0} {2,1,3} {2,3,0} {2,3,1} {3,0,1} {3,0,2}
+{3,1,0} {3,1,2} {3,2,0} {3,2,1}
+
+4^2 arrangements with repeats:
+{0,0} {0,1} {0,2} {0,3} {1,0} {1,1} {1,2} {1,3} {2,0} {2,1} {2,2} {2,3} {3,0}
+{3,1} {3,2} {3,3}
+\end{exampleoutput}
 \subsection{Enumerating Permutations}
-\begin{lstlisting}
-/*
+A permutation is an ordered list consisting of n (not necessarily distinct) elements.
 
-A permutation is an ordered list consisting of n (not necessarily distinct)
-elements.
+\begin{compactitem}
+  \item next\_permutation\_(lo, hi) is analogous to std::next\_permutation(lo, hi), taking two BidirectionalIterators lo and hi as a range [lo, hi) for which the function tries to rearrange to the next lexicographically greater permutation. The function returns true if such a permutation exists, or false if the range is already in descending order (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by the < operator on the iterator's value type.
+  \item next\_permutation(n, a) is analogous to next\_permutation(), except that it takes an array a[] of size n instead of a range.
+  \item next\_permutation(x) returns the next lexicographically greater permutation of the binary digits of the integer x, that is, the lowest integer greater than x with the same number of 1-bits. This can be used to generate combinations of a set of n items by treating each 1 bit as whether to "take" the item at the corresponding position.
+  \item permutation\_by\_rank(n, r) returns the permutation of the integers in the range [0, n) which is lexicographically ranked r, where r is a zero-based rank in the range [0, n!).
+  \item rank\_by\_permutation(n, a) returns an integer representing the zero-based rank of permutation a[], which must be a permutation of the integers [0, n).
+  \item permutation\_cycles(n, a) returns the decomposition of the permutation a[] into cycles. A permutation cycle is a subset of a permutation whose elements are consecutively swapped, relative to a sorted set. For example, \{3, 1, 0, 2\} decomposes to \{0, 3, 2\} and \{1\}, meaning that starting from the sorted order \{0, 1, 2, 3\}, the 0th value is replaced by the 3rd, the 3rd by the 2nd, and the 2nd by the 0th (0 -> 3 -> 2 -> 0).
+\end{compactitem}
 
-- next_permutation_(lo, hi) is analogous to std::next_permutation(lo, hi),
-  taking two BidirectionalIterators lo and hi as a range [lo, hi) for which the
-  function tries to rearrange to the next lexicographically greater permutation.
-  The function returns true if such a permutation exists, or false if the range
-  is already in descending order (in which case the values are unchanged). This
-  implementation requires an ordering on the set of possible elements defined by
-  the < operator on the iterator's value type.
-- next_permutation(n, a) is analogous to next_permutation(), except that it
-  takes an array a[] of size n instead of a range.
-- next_permutation(x) returns the next lexicographically greater permutation of
-  the binary digits of the integer x, that is, the lowest integer greater than
-  x with the same number of 1-bits. This can be used to generate combinations of
-  a set of n items by treating each 1 bit as whether to "take" the item at the
-  corresponding position.
-- permutation_by_rank(n, r) returns the permutation of the integers in the range
-  [0, n) which is lexicographically ranked r, where r is a zero-based rank in
-  the range [0, n!).
-- rank_by_permutation(n, a) returns an integer representing the zero-based
-  rank of permutation a[], which must be a permutation of the integers [0, n).
-- permutation_cycles(n, a) returns the decomposition of the permutation a[] into
-  cycles. A permutation cycle is a subset of a permutation whose elements are
-  consecutively swapped, relative to a sorted set. For example, {3, 1, 0, 2}
-  decomposes to {0, 3, 2} and {1}, meaning that starting from the sorted order
-  {0, 1, 2, 3}, the 0th value is replaced by the 3rd, the 3rd by the 2nd, and
-  the 2nd by the 0th (0 -> 3 -> 2 -> 0).
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n^{2})$ per call to next\_permutation\_(lo, hi), where n is the distance between lo and hi.
+  \item $O(n^{2})$ per call to next\_permutation(n, a), permutation\_by\_rank(n, r), and rank\_by\_permutation(n, a).
+  \item $O(1)$ per call to next\_permutation(x).
+  \item $O(n)$ per call to permutation\_cycles().
+\end{compactitem}
 
-Time Complexity:
-- O(n^2) per call to next_permutation_(lo, hi), where n is the distance between
-  lo and hi.
-- O(n^2) per call to next_permutation(n, a), permutation_by_rank(n, r), and
-  rank_by_permutation(n, a).
-- O(1) per call to next_permutation(x).
-- O(n) per call to permutation_cycles().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for next\_permutation\_() and next\_permutation().
+  \item $O(n)$ auxiliary heap space for permutation\_by\_rank(), rank\_by\_permutation(), and permutation\_cycles().
+\end{compactitem}
 
-Space Complexity:
-- O(1) auxiliary for next_permutation_() and next_permutation().
-- O(n) auxiliary heap space for permutation_by_rank(), rank_by_permutation(),
-  and permutation_cycles().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <vector>
 
@@ -1003,22 +914,9 @@ cycles permutation_cycles(int n, int a[]) {
   }
   return res;
 }
-
-/*** Example Usage and Output:
-
-Permutations of [0, 4):
-{0,1,2,3} {0,1,3,2} {0,2,1,3} {0,2,3,1} {0,3,1,2} {0,3,2,1} {1,0,2,3} {1,0,3,2}
-{1,2,0,3} {1,2,3,0} {1,3,0,2} {1,3,2,0} {2,0,1,3} {2,0,3,1} {2,1,0,3} {2,1,3,0}
-{2,3,0,1} {2,3,1,0} {3,0,1,2} {3,0,2,1} {3,1,0,2} {3,1,2,0} {3,2,0,1} {3,2,1,0}
-
-Permutations of 2 zeros and 3 ones:
-00111 01011 01101 01110 10011 10101 10110 11001 11010 11100
-
-Decomposition of {3,1,0,2} into cycles:
-{0,3,2} {1}
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <bitset>
 #include <cassert>
 #include <iostream>
@@ -1078,56 +976,45 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Permutations of [0, 4):
+{0,1,2,3} {0,1,3,2} {0,2,1,3} {0,2,3,1} {0,3,1,2} {0,3,2,1} {1,0,2,3} {1,0,3,2}
+{1,2,0,3} {1,2,3,0} {1,3,0,2} {1,3,2,0} {2,0,1,3} {2,0,3,1} {2,1,0,3} {2,1,3,0}
+{2,3,0,1} {2,3,1,0} {3,0,1,2} {3,0,2,1} {3,1,0,2} {3,1,2,0} {3,2,0,1} {3,2,1,0}
+
+Permutations of 2 zeros and 3 ones:
+00111 01011 01101 01110 10011 10101 10110 11001 11010 11100
+
+Decomposition of {3,1,0,2} into cycles:
+{0,3,2} {1}
+\end{exampleoutput}
 \subsection{Enumerating Combinations}
-\begin{lstlisting}
-/*
+A combination is a subset of size k chosen from a total of n (not necessarily distinct) elements, where order does not matter.
 
-A combination is a subset of size k chosen from a total of n (not necessarily
-distinct) elements, where order does not matter.
+\begin{compactitem}
+  \item next\_combination(lo, mid, hi) takes random-access iterators lo, mid, and hi as a range [lo, hi) of n elements for which the function will rearrange such that the k elements in [lo, mid) becomes the next lexicographically greater combination. The function returns true if such a combination exists, or false if [lo, mid) already consists of the lexicographically greatest combination of the elements in [lo, hi) (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by the < operator on the iterator's value type.
+  \item next\_combination(n, k, a) rearranges a[] to become the next lexicographically greater combination of k distinct integers in the range [0, n). The array a[] must consist of k distinct integers in the range [0, n).
+  \item next\_combination\_mask(x) interprets the bits of an integer x as a mask with 1-bits specifying the chosen items for a combination and returns the mask of the next lexicographically greater combination (that is, the lowest integer greater than x with the same number of 1 bits). Note that this does not generate combinations in the same order as next\_combination(), nor does it work if the corresponding n items are not distinct (in that case, duplicate combinations will be generated).
+  \item combination\_by\_rank(n, k, r) returns the combination of k distinct integers in the range [0, n) that is lexicographically ranked r, where r is a zero-based rank in the range [0, n choose k).
+  \item rank\_by\_combination(n, k, a) returns an integer representing the zero-based rank of combination a[], which must consist of k distinct integers in [0, n).
+  \item next\_combination\_with\_repeats(n, k, a) rearranges a[] to become the next lexicographically greater combination of k (not necessarily distinct) integers in the range [0, n). The array a[] must consist of k integers in the range [0, n). Note that there is a total of n multichoose k combinations if repetition is allowed, where n multichoose k = (n + k - 1) choose k.
+\end{compactitem}
 
-- next_combination(lo, mid, hi) takes random-access iterators lo, mid, and hi
-  as a range [lo, hi) of n elements for which the function will rearrange such
-  that the k elements in [lo, mid) becomes the next lexicographically greater
-  combination. The function returns true if such a combination exists, or false
-  if [lo, mid) already consists of the lexicographically greatest combination
-  of the elements in [lo, hi) (in which case the values are unchanged). This
-  implementation requires an ordering on the set of possible elements defined by
-  the < operator on the iterator's value type.
-- next_combination(n, k, a) rearranges a[] to become the next lexicographically
-  greater combination of k distinct integers in the range [0, n). The array a[]
-  must consist of k distinct integers in the range [0, n).
-- next_combination_mask(x) interprets the bits of an integer x as a mask with
-  1-bits specifying the chosen items for a combination and returns the mask of
-  the next lexicographically greater combination (that is, the lowest integer
-  greater than x with the same number of 1 bits). Note that this does not
-  generate combinations in the same order as next_combination(), nor does it
-  work if the corresponding n items are not distinct (in that case, duplicate
-  combinations will be generated).
-- combination_by_rank(n, k, r) returns the combination of k distinct integers in
-  the range [0, n) that is lexicographically ranked r, where r is a zero-based
-  rank in the range [0, n choose k).
-- rank_by_combination(n, k, a) returns an integer representing the zero-based
-  rank of combination a[], which must consist of k distinct integers in [0, n).
-- next_combination_with_repeats(n, k, a) rearranges a[] to become the next
-  lexicographically greater combination of k (not necessarily distinct) integers
-  in the range [0, n). The array a[] must consist of k integers in the range
-  [0, n). Note that there is a total of n multichoose k combinations if
-  repetition is allowed, where n multichoose k = (n + k - 1) choose k.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to next\_combination(lo, hi), where n is the distance between lo and hi.
+  \item $O(k)$ per call to next\_combination(n, k, a) and next\_combination\_with\_repeats(n, k, a).
+  \item $O(1)$ per call to next\_combination\_mask(x).
+  \item $O(n \cdot k)$ per call to combination\_by\_rank() and rank\_by\_combination().
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to next_combination(lo, hi), where n is the distance between
-  lo and hi.
-- O(k) per call to next_combination(n, k, a) and
-  next_combination_with_repeats(n, k, a).
-- O(1) per call to next_combination_mask(x).
-- O(n*k) per call to combination_by_rank() and rank_by_combination().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(k)$ auxiliary heap space for combination\_by\_rank(n, k, r).
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(k) auxiliary heap space for combination_by_rank(n, k, r).
-- O(1) auxiliary for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <iterator>
 #include <vector>
@@ -1250,23 +1137,9 @@ bool next_combination_with_repeats(int n, int k, int a[]) {
   }
   return false;
 }
-
-/*** Example Usage and Output:
-
-"11234" choose 3:
-112 113 114 123 124 134 234
-
-"abcde" choose 3 with masks:
-abc abd acd bcd abe ace bce ade bde
-
-5 choose 3:
-{0,1,2} {0,1,3} {0,1,4} {0,2,3} {0,2,4} {0,3,4} {1,2,3} {1,2,4} {1,3,4} {2,3,4}
-
-3 multichoose 2:
-{0,0} {0,1} {0,2} {1,1} {1,2} {2,2}
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -1336,43 +1209,44 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+"11234" choose 3:
+112 113 114 123 124 134 234
+
+"abcde" choose 3 with masks:
+abc abd acd bcd abe ace bce ade bde
+
+5 choose 3:
+{0,1,2} {0,1,3} {0,1,4} {0,2,3} {0,2,4} {0,3,4} {1,2,3} {1,2,4} {1,3,4} {2,3,4}
+
+3 multichoose 2:
+{0,0} {0,1} {0,2} {1,1} {1,2} {2,2}
+\end{exampleoutput}
 \subsection{Enumerating Partitions}
-\begin{lstlisting}
-/*
+A partition of a natural number n is a way to write n as a sum of positive integers where the order of the addends does not matter.
 
-A partition of a natural number n is a way to write n as a sum of positive
-integers where the order of the addends does not matter.
+\begin{compactitem}
+  \item next\_partition(p) takes a reference to a vector p[] of positive integers as a partition of n for which the function will re-assign to become the next lexicographically greater partition. The function returns true if such a partition exists, or false if p[] already consists of the lexicographically greatest partition (i.e. the single integer n).
+  \item partition\_by\_rank(n, r) returns the partition of n that is lexicographically ranked r if addends in each partition were sorted in non-increasing order, where r is a zero-based rank in the range [0, partitions(n)).
+  \item rank\_by\_partition(p) returns an integer representing the zero-based rank of the partition specified by vector p[], which must consist of positive integers sorted in non-increasing order.
+  \item generate\_increasing\_partitions(n, f) calls the function f(lo, hi) on strictly increasing partitions of n in lexicographically increasing order of partition, where lo and hi are random-access iterators to a range [lo, hi) of integers. Note that non-strictly increasing partitions like \{1, 1, 1, 1\} are skipped.
+\end{compactitem}
 
-- next_partition(p) takes a reference to a vector p[] of positive integers as a
-  partition of n for which the function will re-assign to become the next
-  lexicographically greater partition. The function returns true if such a
-  partition exists, or false if p[] already consists of the lexicographically
-  greatest partition (i.e. the single integer n).
-- partition_by_rank(n, r) returns the partition of n that is lexicographically
-  ranked r if addends in each partition were sorted in non-increasing order,
-  where r is a zero-based rank in the range [0, partitions(n)).
-- rank_by_partition(p) returns an integer representing the zero-based rank of
-  the partition specified by vector p[], which must consist of positive integers
-  sorted in non-increasing order.
-- generate_increasing_partitions(n, f) calls the function f(lo, hi) on strictly
-  increasing partitions of n in lexicographically increasing order of partition,
-  where lo and hi are random-access iterators to a range [lo, hi) of integers.
-  Note that non-strictly increasing partitions like {1, 1, 1, 1} are skipped.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to next\_partition().
+  \item $O(n^{2})$ per call to partition\_by\_rank(n, r) and rank\_by\_partition(p).
+  \item $O(p(n))$ per call to generate\_increasing\_partitions(n, f), where p(n) is the number of partitions of n.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to next_partition().
-- O(n^2) per call to partition_by_rank(n, r) and rank_by_partition(p).
-- O(p(n)) per call to generate_increasing_partitions(n, f), where p(n) is the
-  number of partitions of n.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for next\_partition().
+  \item $O(n^{2})$ auxiliary heap space for partition\_function(), partition\_by\_rank(), and rank\_by\_partition().
+  \item $O(n)$ auxiliary stack space for generate\_increasing\_partitions().
+\end{compactitem}
 
-Space Complexity:
-- O(1) auxiliary for next_partition().
-- O(n^2) auxiliary heap space for partition_function(), partition_by_rank(), and
-  rank_by_partition().
-- O(n) auxiliary stack space for generate_increasing_partitions().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <vector>
 
 bool next_partition(std::vector<int> &p) {
@@ -1457,17 +1331,9 @@ void generate_increasing_partitions(int n, ReportFunction f) {
   std::vector<int> p(n, 0);
   generate_increasing_partitions(n, 0, 0, p, f);
 }
-
-/*** Example Usage and Output:
-
-Partitions of 4:
-{1,1,1,1} {2,1,1} {2,2} {3,1} {4}
-
-Increasing partitions of 8:
-{1,2,5} {1,3,4} {1,7} {2,6} {3,5} {8}
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -1505,32 +1371,27 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Partitions of 4:
+{1,1,1,1} {2,1,1} {2,2} {3,1} {4}
+
+Increasing partitions of 8:
+{1,2,5} {1,3,4} {1,7} {2,6} {3,5} {8}
+\end{exampleoutput}
 \subsection{Enumerating Generic Combinatorial Sequences}
-\begin{lstlisting}
-/*
+Enumerate combinatorial sequence by inheriting an abstract class. Child classes of abstract\_enumerator must implement the count() function which should return the number of combinatorial sequences starting with the given prefix.
 
-Enumerate combinatorial sequence by inheriting an abstract class. Child classes
-of abstract_enumerator must implement the count() function which should return
-the number of combinatorial sequences starting with the given prefix.
+\begin{compactitem}
+  \item to\_rank(a) returns an integer representing the zero-based rank of the combinatorial sequence a.
+  \item from\_rank(r) returns a combinatorial sequence of integers that is lexicographically ranked r, where r is a zero-based rank in the range [0, total\_count()).
+  \item enumerate(f) calls the function f(lo, hi) on every specified combinatorial sequence in lexicographically increasing order, where lo and hi are two random-access iterators to a range [lo, hi) of integers.
+\end{compactitem}
 
-- to_rank(a) returns an integer representing the zero-based rank of the
-  combinatorial sequence a.
-- from_rank(r) returns a combinatorial sequence of integers that is
-  lexicographically ranked r, where r is a zero-based rank in the range
-  [0, total_count()).
-- enumerate(f) calls the function f(lo, hi) on every specified combinatorial
-  sequence in lexicographically increasing order, where lo and hi are two
-  random-access iterators to a range [lo, hi) of integers.
+\textbf{Time Complexity}: $O(n^{2})$ calls will be made to count() per call to all operations, where n is the length of the combinatorial sequence.
 
-Time Complexity:
-- O(n^2) calls will be made to count() per call to all operations, where n is
-  the length of the combinatorial sequence.
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space per call to all operations.
 
-Space Complexity:
-- O(n) auxiliary heap space per call to all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <vector>
 
 class abstract_enumerator {
@@ -1678,23 +1539,9 @@ class partition_enumerator : public abstract_enumerator {
     return table[range - sum - 1][prefix[n - 1]];
   }
 };
-
-/*** Example Usage and Output:
-
-3 permute 2 arrangements:
-{0,1} {0,2} {1,0} {1,2} {2,0} {2,1}
-
-Permutatations of [0, 3):
-{0,1,2} {0,2,1} {1,0,2} {1,2,0} {2,0,1} {2,1,0}
-
-4 choose 3 combinations:
-{0,1,2} {0,1,3} {0,2,3} {1,2,3}
-
-Partition of 4:
-{1,1,1,1} {2,1,1,0} {2,2,0,0} {3,1,0,0} {4,0,0,0}
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <iostream>
 using namespace std;
 
@@ -1735,53 +1582,54 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+3 permute 2 arrangements:
+{0,1} {0,2} {1,0} {1,2} {2,0} {2,1}
+
+Permutatations of [0, 3):
+{0,1,2} {0,2,1} {1,0,2} {1,2,0} {2,0,1} {2,1,0}
+
+4 choose 3 combinations:
+{0,1,2} {0,1,3} {0,2,3} {1,2,3}
+
+Partition of 4:
+{1,1,1,1} {2,1,1,0} {2,2,0,0} {3,1,0,0} {4,0,0,0}
+\end{exampleoutput}
 
 \section{Number Theory}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{GCD, LCM, Mod Inverse, Chinese Remainder}
-\begin{lstlisting}
-/*
-
 Common number theory operations relating to modular arithmetic.
 
-- gcd(a, b) and gcd2(a, b) both return the greatest common division of a and b
-  using the Euclidean algorithm.
-- lcm(a, b) returns the lowest common multiple of a and b.
-- extended_euclid(a, b) and extended_euclid2(a, b) both return a pair (x, y) of
-  integers such that gcd(a, b) = a*x + b*y.
-- mod(a, b) returns the value of a mod b under the true Euclidean definition of
-  modulo, that is, the smallest nonnegative integer m satisfying a + b*n = m for
-  some integer n. Note that this is identical to the remainder operator % in C++
-  for nonnegative operands a and b, but the result will differ when an operand
-  is negative.
-- mod_inverse(a, m) and mod_inverse2(a, m) both return an integer x such that
-  a*x = 1 (mod m), where the arguments must satisfy m > 0 and gcd(a, m) = 1.
-- generate_inverse(p) returns a vector of integers where for each index i in
-  the vector, i*v[i] = 1 (mod p), where the argument p is prime.
-- simple_restore(n, a, p) and garner_restore(n, a, p) both return the solution x
-  for the system of simultaneous congruences x = a[i] (mod p[i]) for all indices
-  i in [0, n), where p[] consist of pairwise coprime integers. The solution x is
-  guaranteed to be unique by the Chinese remainder theorem.
+\begin{compactitem}
+  \item gcd(a, b) and gcd2(a, b) both return the greatest common division of a and b using the Euclidean algorithm.
+  \item lcm(a, b) returns the lowest common multiple of a and b.
+  \item extended\_euclid(a, b) and extended\_euclid2(a, b) both return a pair (x, y) of integers such that gcd(a, b) = a*x + b*y.
+  \item mod(a, b) returns the value of a mod b under the true Euclidean definition of modulo, that is, the smallest nonnegative integer m satisfying a + b*n = m for some integer n. Note that this is identical to the remainder operator \% in C++ for nonnegative operands a and b, but the result will differ when an operand is negative.
+  \item mod\_inverse(a, m) and mod\_inverse2(a, m) both return an integer x such that a*x = 1 (mod m), where the arguments must satisfy m > 0 and gcd(a, m) = 1.
+  \item generate\_inverse(p) returns a vector of integers where for each index i in the vector, i*v[i] = 1 (mod p), where the argument p is prime.
+  \item simple\_restore(n, a, p) and garner\_restore(n, a, p) both return the solution x for the system of simultaneous congruences x = a[i] (mod p[i]) for all indices i in [0, n), where p[] consist of pairwise coprime integers. The solution x is guaranteed to be unique by the Chinese remainder theorem.
+\end{compactitem}
 
-Time Complexity:
-- O(log(a + b)) per call to gcd(a, b), gcd2(a, b), lcm(a, b),
-  extended_euclid(a, b), extended_euclid2(a, b), mod_inverse(a, b), and
-  mod_inverse2(a, b).
-- O(1) for mod(a, b).
-- O(p) for generate_inverse(p).
-- Exponential for simple_restore(n, a, p).
-- O(n^2) for garner_restore(n, a, p).
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\log\left(a + b\right))$ per call to gcd(a, b), gcd2(a, b), lcm(a, b), extended\_euclid(a, b), extended\_euclid2(a, b), mod\_inverse(a, b), and mod\_inverse2(a, b).
+  \item $O(1)$ for mod(a, b).
+  \item $O(p)$ for generate\_inverse(p).
+  \item Exponential for simple\_restore(n, a, p).
+  \item $O(n^{2})$ for garner\_restore(n, a, p).
+\end{compactitem}
 
-Space Complexity:
-- O(log(a + b)) auxiliary stack space for gcd2(a, b), extended_euclid2(a, b),
-  and mod_inverse2(a, b).
-- O(p) auxiliary heap space for generate_inverse(p).
-- O(n) auxiliary heap space for garner_restore(n, a, p).
-- O(1) auxiliary space for all other operations.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(\log\left(a + b\right))$ auxiliary stack space for gcd2(a, b), extended\_euclid2(a, b), and mod\_inverse2(a, b).
+  \item $O(p)$ auxiliary heap space for generate\_inverse(p).
+  \item $O(n)$ auxiliary heap space for garner\_restore(n, a, p).
+  \item $O(1)$ auxiliary space for all other operations.
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstdlib>
 #include <utility>
 #include <vector>
@@ -1868,6 +1716,9 @@ long long simple_restore(int n, int a[], int p[]) {
 }
 
 long long garner_restore(int n, int a[], int p[]) {
+  if (n == 0) {
+    return 0;
+  }
   std::vector<int> x(a, a + n);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
@@ -1882,9 +1733,9 @@ long long garner_restore(int n, int a[], int p[]) {
   }
   return res;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -1924,24 +1775,26 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Prime Generation}
-\begin{lstlisting}
-/*
-
 Generate prime numbers using the Sieve of Eratosthenes.
 
-- sieve(n) returns a vector of all the primes less than or equal to n.
-- sieve(lo, hi) returns a vector of all the primes in the range [lo, hi].
+\begin{compactitem}
+  \item sieve(n) returns a vector of all the primes less than or equal to n.
+  \item sieve(lo, hi) returns a vector of all the primes in the range [lo, hi].
+\end{compactitem}
 
-Time Complexity:
-- O(n log(log(n))) per call to sieve(n).
-- O(sqrt(hi)*log(log(hi - lo))) per call to sieve(lo, hi).
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log\left(\log\left(n\right)\right))$ per call to sieve(n).
+  \item $O(\sqrt{hi} \cdot \log\left(\log\left(hi - lo\right)\right))$ per call to sieve(lo, hi).
+\end{compactitem}
 
-Space Complexity:
-- O(n) auxiliary heap space per call to sieve(n).
-- O(hi - lo + sqrt(hi)) auxiliary heap space per call to sieve(lo, hi).
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary heap space per call to sieve(n).
+  \item $O(hi - lo + \sqrt{hi})$ auxiliary heap space per call to sieve(lo, hi).
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <vector>
 
@@ -1991,15 +1844,9 @@ std::vector<int> sieve(int lo, int hi) {
   }
   return res;
 }
-
-/*** Example Usage and Output:
-
-sieve(n=10000000): 0.059s
-atkins(n=10000000): 0.08s
-sieve([1000000000, 1005000000]): 0.034s
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <ctime>
 #include <iostream>
 using namespace std;
@@ -2023,36 +1870,30 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+sieve(n=10000000): 0.059s
+atkins(n=10000000): 0.08s
+sieve([1000000000, 1005000000]): 0.034s
+\end{exampleoutput}
 \subsection{Primality Testing}
-\begin{lstlisting}
-/*
+Determine whether an integer n is prime. This can be done deterministically by testing all numbers under sqrt(n) using trial division, probabilistically using the Miller-Rabin test, or deterministically using the Miller-Rabin test if the maximum input is known (2\textasciicircum{}63 - 1 for the purposes here).
 
-Determine whether an integer n is prime. This can be done deterministically by
-testing all numbers under sqrt(n) using trial division, probabilistically using
-the Miller-Rabin test, or deterministically using the Miller-Rabin test if the
-maximum input is known (2^63 - 1 for the purposes here).
+\begin{compactitem}
+  \item is\_prime(n) returns whether the integer n is prime using an optimized trial division technique based on the fact that all primes greater than 6 must take the form 6n + 1 or 6n - 1.
+  \item is\_probable\_prime(n, k) returns true if the integer n is prime, or false with an error probability of (1/4)\textasciicircum{}k if n is composite. In other words, the result is guaranteed to be correct if n is prime, but could be wrong with probability (1/4)\textasciicircum{}k if n is composite. This implementation uses uses exponentiation by squaring to support all signed 64-bit integers (up to and including 2\textasciicircum{}63 - 1).
+  \item is\_prime\_fast(n) returns whether the signed 64-bit integer n is prime using a fully deterministic version of the Miller-Rabin test.
+\end{compactitem}
 
-- is_prime(n) returns whether the integer n is prime using an optimized trial
-  division technique based on the fact that all primes greater than 6 must take
-  the form 6n + 1 or 6n - 1.
-- is_probable_prime(n, k) returns true if the integer n is prime, or false with
-  an error probability of (1/4)^k if n is composite. In other words, the result
-  is guaranteed to be correct if n is prime, but could be wrong with probability
-  (1/4)^k if n is composite. This implementation uses uses exponentiation by
-  squaring to support all signed 64-bit integers (up to and including 2^63 - 1).
-- is_prime_fast(n) returns whether the signed 64-bit integer n is prime using
-  a fully deterministic version of the Miller-Rabin test.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\sqrt{n})$ per call to is\_prime(n).
+  \item $O(k \log^{3}(n))$ per call to is\_probable\_prime(n, k).
+  \item $O(\log^{3}(n))$ per call to is\_prime\_fast(n).
+\end{compactitem}
 
-Time Complexity:
-- O(sqrt n) per call to is_prime(n).
-- O(k log^3(n)) per call to is_probable_prime(n, k).
-- O(log^3(n)) per call to is_prime_fast(n).
+\textbf{Space Complexity}: $O(1)$ auxiliary space for all operations.
 
-Space Complexity:
-- O(1) auxiliary space for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cstdlib>
 
 template<class Int>
@@ -2158,9 +1999,9 @@ bool is_prime_fast(long long n) {
   }
   return true;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -2179,44 +2020,25 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Integer Factorization}
-\begin{lstlisting}
-/*
+Compute the prime factorization of an integer. In the following implementations, the prime factorization of n is represented as a sorted vector of prime integers which together multiply to n. Note that factors are duplicated in the vector in accordance to their multiplicity in the prime factorization of n. For 0, 1, and prime numbers, the prime factorization is considered to be a vector consisting of a single element - the input itself.
 
-Compute the prime factorization of an integer. In the following implementations,
-the prime factorization of n is represented as a sorted vector of prime integers
-which together multiply to n. Note that factors are duplicated in the vector in
-accordance to their multiplicity in the prime factorization of n. For 0, 1, and
-prime numbers, the prime factorization is considered to be a vector consisting
-of a single element - the input itself.
+\begin{compactitem}
+  \item prime\_factorize(n) returns the prime factorization of n using trial division.
+  \item get\_divisors(n) returns a sorted vector of all (not merely prime) divisors of n using trial division.
+  \item fermat(n) returns a factor of n (possibly 1 or itself) that is not necessarily prime. This algorithm is efficient for integers with two factors near sqrt(n), but is roughly as slow as trial division otherwise.
+  \item pollards\_rho\_brent(n) returns a factor of n that is not necessarily prime using Pollard's rho algorithm with Brent's optimization. If n is prime, then n itself is returned. While this algorithm is non-deterministic and may fail to detect factors on certain runs of the same input, it can be placed in a loop to deterministically factor large integers, as done in prime\_factorize\_big().
+  \item prime\_factorize\_big(n, trial\_division\_cutoff) returns the prime factorization of a 64-bit integer n using a combination of trial division, the Miller-Rabin primality test, and Pollard's rho algorithm. trial\_division\_cutoff specifies the largest factor to test with trial division before falling back to the rho algorithm. This supports 64-bit integers up to and including 2\textasciicircum{}63 - 1.
+\end{compactitem}
 
-- prime_factorize(n) returns the prime factorization of n using trial division.
-- get_divisors(n) returns a sorted vector of all (not merely prime) divisors of
-  n using trial division.
-- fermat(n) returns a factor of n (possibly 1 or itself) that is not necessarily
-  prime. This algorithm is efficient for integers with two factors near sqrt(n),
-  but is roughly as slow as trial division otherwise.
-- pollards_rho_brent(n) returns a factor of n that is not necessarily prime
-  using Pollard's rho algorithm with Brent's optimization. If n is prime, then n
-  itself is returned. While this algorithm is non-deterministic and may fail to
-  detect factors on certain runs of the same input, it can be placed in a loop
-  to deterministically factor large integers, as done in prime_factorize_big().
-- prime_factorize_big(n, trial_division_cutoff) returns the prime factorization
-  of a 64-bit integer n using a combination of trial division, the Miller-Rabin
-  primality test, and Pollard's rho algorithm. trial_division_cutoff specifies
-  the largest factor to test with trial division before falling back to the rho
-  algorithm. This supports 64-bit integers up to and including 2^63 - 1.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\sqrt{n})$ per call to prime\_factorize(n), get\_divisors(n), and fermat(n).
+  \item Unknown, but approximately $O(n^{1/4})$ per call to pollards\_rho\_brent(n) and prime\_factorize\_big(n).
+\end{compactitem}
 
-Time Complexity:
-- O(sqrt n) per call to prime_factorize(n), get_divisors(n), and fermat(n).
-- Unknown, but approximately O(n^(1/4)) per call to pollards_rho_brent(n) and
-  prime_factorize_big(n).
+\textbf{Space Complexity}: $O(f)$ auxiliary heap space for all operations, where f is the number of factors returned.
 
-Space Complexity:
-- O(f) auxiliary heap space for all operations, where f is the number of factors
-  returned.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -2419,9 +2241,9 @@ std::vector<long long> prime_factorize_big(
   sort(res.begin(), res.end());
   return res;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <set>
 using namespace std;
@@ -2479,24 +2301,17 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Euler's Totient Function}
-\begin{lstlisting}
-/*
+Euler's totient function phi(n) returns the number of positive integers less than or equal to n that are relatively prime to n. That is, phi(n) is the number of integers k in the range [1, n] for which gcd(n, k) = 1. The computation of phi(1..n) can be performed simultaneously, as done so by phi\_table(n) which returns a vector v such that v[i] stores phi(i) for i in the range [0, n].
 
-Euler's totient function phi(n) returns the number of positive integers less
-than or equal to n that are relatively prime to n. That is, phi(n) is the number
-of integers k in the range [1, n] for which gcd(n, k) = 1. The computation of
-phi(1..n) can be performed simultaneously, as done so by phi_table(n) which
-returns a vector v such that v[i] stores phi(i) for i in the range [0, n].
+\textbf{Time Complexity}: $O(n \log\left(\log\left(n\right)\right))$ per call to phi(n) and phi\_table(n).
 
-Time Complexity:
-- O(n log(log(n))) per call to phi(n) and phi_table(n).
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary space for phi(n).
+  \item $O(n)$ auxiliary heap space for phi\_table(n).
+\end{compactitem}
 
-Space Complexity:
-- O(1) auxiliary space for phi(n).
-- O(n) auxiliary heap space for phi_table(n).
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <vector>
 
 int phi(int n) {
@@ -2527,9 +2342,9 @@ std::vector<int> phi_table(int n) {
   }
   return res;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -2546,29 +2361,15 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Binary Exponentiation}
-\begin{lstlisting}
-/*
+Given three unsigned 64-bit integers x, n, and m, powmod() returns x raised to the power of n (modulo m). mulmod() returns x multiplied by n (modulo m). Despite the fact that both functions use unsigned 64-bit integers for arguments and intermediate calculations, arguments x and n must not exceed 2\textasciicircum{}63 - 1 (the maximum value of a signed 64-bit integer) for the result to be correctly computed without overflow.
 
-Given three unsigned 64-bit integers x, n, and m, powmod() returns x raised to
-the power of n (modulo m). mulmod() returns x multiplied by n (modulo m).
-Despite the fact that both functions use unsigned 64-bit integers for arguments
-and intermediate calculations, arguments x and n must not exceed 2^63 - 1 (the
-maximum value of a signed 64-bit integer) for the result to be correctly
-computed without overflow.
+Binary exponentiation, also known as exponentiation by squaring, decomposes the exponentiation into a logarithmic number of multiplications while avoiding overflow. To further prevent overflow in the intermediate squaring computations, multiplication is performed using a similar principle of repeated addition.
 
-Binary exponentiation, also known as exponentiation by squaring, decomposes the
-exponentiation into a logarithmic number of multiplications while avoiding
-overflow. To further prevent overflow in the intermediate squaring computations,
-multiplication is performed using a similar principle of repeated addition.
+\textbf{Time Complexity}: $O(\log n)$ per call to mulmod() and powmod(), where n is the second argument.
 
-Time Complexity:
-- O(log n) per call to mulmod() and powmod(), where n is the second argument.
+\textbf{Space Complexity}: $O(1)$ auxiliary.
 
-Space Complexity:
-- O(1) auxiliary.
-
-*/
-
+\begin{lstlisting}[language=C++]
 typedef unsigned long long uint64;
 
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
@@ -2592,9 +2393,9 @@ uint64 powmod(uint64 x, uint64 n, uint64 m) {
   }
   return a % m;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -2609,36 +2410,32 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Big Integers (Simple)}
-\begin{lstlisting}
-/*
+Perform simple arithmetic operations on arbitrary precision big integers whose digits are internally represented as an std::string in little-endian order.
 
-Perform simple arithmetic operations on arbitrary precision big integers whose
-digits are internally represented as an std::string in little-endian order.
+\begin{compactitem}
+  \item bigint(n) constructs a big integer from a long long (default = 0).
+  \item bigint(s) constructs a big integer from a string s, which must strictly consist of a sequence of numeric digits, optionally preceded by a minus sign.
+  \item str() returns the string representation of the big integer.
+  \item comp(a, b) returns -1, 0, or 1 depending on whether the big integers a and b compare less, equal, or greater, respectively.
+  \item add(a, b) returns the sum of big integers a and b.
+  \item sub(a, b) returns the difference of big integers a and b.
+  \item mul(a, b) returns the product of big integers a and b.
+  \item div(a, b) returns the quotient of big integers a and b.
+\end{compactitem}
 
-- bigint(n) constructs a big integer from a long long (default = 0).
-- bigint(s) constructs a big integer from a string s, which must strictly
-  consist of a sequence of numeric digits, optionally preceded by a minus sign.
-- str() returns the string representation of the big integer.
-- comp(a, b) returns -1, 0, or 1 depending on whether the big integers a and b
-  compare less, equal, or greater, respectively.
-- add(a, b) returns the sum of big integers a and b.
-- sub(a, b) returns the difference of big integers a and b.
-- mul(a, b) returns the product of big integers a and b.
-- div(a, b) returns the quotient of big integers a and b.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructor, str(), comp(), add(), and sub(), where n is total number of digits in the argument(s) and result for each operation.
+  \item $O(n \cdot m)$ per call to mul(a, b) and div(a, b) where n is the number of digits in a and m is the number of digits in b.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to the constructor, str(), comp(), add(), and sub(), where n is
-  total number of digits in the argument(s) and result for each operation.
-- O(n*m) per call to mul(a, b) and div(a, b) where n is the number of digits in
-  a and m is the number of digits in b.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the big integer, where n is the number of the digits.
+  \item $O(n)$ auxiliary heap space for str(), add(), sub(), mul(), and div(), where n the total number of digits in the argument(s) and result for each operation.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the big integer, where n is the number of the digits.
-- O(n) auxiliary heap space for str(), add(), sub(), mul(), and div(), where n
-  the total number of digits in the argument(s) and result for each operation.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cctype>
 #include <stdexcept>
@@ -2804,9 +2601,9 @@ class bigint {
     return res;
   }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -2820,61 +2617,41 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Big Integers}
-\begin{lstlisting}
-/*
+Perform operations on arbitrary precision big integers internally represented as a vector of base-1000000000 digits in little-endian order. Typical arithmetic operations involving mixed numeric primitives and strings are supported using templates and operator overloading, as long as at least one operand is a bigint at any given level of evaluation.
 
-Perform operations on arbitrary precision big integers internally represented as
-a vector of base-1000000000 digits in little-endian order. Typical arithmetic
-operations involving mixed numeric primitives and strings are supported using
-templates and operator overloading, as long as at least one operand is a bigint
-at any given level of evaluation.
+\begin{compactitem}
+  \item bigint(n) constructs a big integer from a long long (default = 0).
+  \item bigint(s) constructs a big integer from a C string or an std::string s.
+  \item operator = is defined to copy from another big integer or to assign from an 64-bit integer primitive.
+  \item size() returns the number of digits in the base-10 representation.
+  \item operators >> and << are defined to support stream-based input and output.
+  \item v.to\_string(), v.to\_llong(), v.to\_double(), and v.to\_ldouble() return the big integer v converted to an std::string, long long, double, and long double respectively. For the latter three data types, overflow behavior is based on that of inputting from std::istream.
+  \item v.abs() returns the absolute value of big integer v.
+  \item a.comp(b) returns -1, 0, or 1 depending on whether the big integers a and b compare less, equal, or greater, respectively.
+  \item operators <, >, <=, >=, ==, !=, +, -, *, /, \%, ++, --, +=, -=, *=, /=, and \%= are defined analogous to those on integer primitives. Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication is performed using a combination of the grade school algorithm (for smaller inputs) and either the Karatsuba algorithm (if the USE\_FFT\_MULT flag is set to false) or the Schonhage-Strassen algorithm (if USE\_FFT\_MULT is set to true). Division and modulo are computed simultaneously using the grade school method.
+  \item a.div(b) returns a pair consisting of the quotient and remainder.
+  \item v.pow(n) returns v raised to the power of n.
+  \item v.sqrt() returns the integral part of the square root of big integer v.
+  \item v.nth\_root(n) returns the integral part of the n-th root of big integer v.
+  \item rand(n) returns a random, positive big integer with n digits.
+\end{compactitem}
 
-- bigint(n) constructs a big integer from a long long (default = 0).
-- bigint(s) constructs a big integer from a C string or an std::string s.
-- operator = is defined to copy from another big integer or to assign from an
-  64-bit integer primitive.
-- size() returns the number of digits in the base-10 representation.
-- operators >> and << are defined to support stream-based input and output.
-- v.to_string(), v.to_llong(), v.to_double(), and v.to_ldouble() return the big
-  integer v converted to an std::string, long long, double, and long double
-  respectively. For the latter three data types, overflow behavior is based on
-  that of inputting from std::istream.
-- v.abs() returns the absolute value of big integer v.
-- a.comp(b) returns -1, 0, or 1 depending on whether the big integers a and b
-  compare less, equal, or greater, respectively.
-- operators <, >, <=, >=, ==, !=, +, -, *, /, %, ++, --, +=, -=, *=, /=, and %=
-  are defined analogous to those on integer primitives. Addition, subtraction,
-  and comparisons are performed using the standard linear algorithms.
-  Multiplication is performed using a combination of the grade school algorithm
-  (for smaller inputs) and either the Karatsuba algorithm (if the USE_FFT_MULT
-  flag is set to false) or the Schonhage-Strassen algorithm (if USE_FFT_MULT is
-  set to true). Division and modulo are computed simultaneously using the grade
-  school method.
-- a.div(b) returns a pair consisting of the quotient and remainder.
-- v.pow(n) returns v raised to the power of n.
-- v.sqrt() returns the integral part of the square root of big integer v.
-- v.nth_root(n) returns the integral part of the n-th root of big integer v.
-- rand(n) returns a random, positive big integer with n digits.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructors, size(), to\_string(), to\_llong(), to\_double(), to\_ldouble(), abs(), comp(), rand(), and all comparison and arithmetic operators except multiplication, division, and modulo, where n is total number of digits in the argument(s) and result for each operation.
+  \item $O(n \cdot \log\left(n\right) \cdot \log\left(\log\left(n\right)\right))$ or $O(n^{1.585})$ per call to multiplication operations, depending on whether USE\_FFT\_MULT is set to true or false.
+  \item $O(n \cdot m)$ per call to division and modulo operations, where n and m are the number of digits in the dividend and divisor, respectively.
+  \item $O(M(m) \log n)$ per call to pow(n), where m is the length of the big integer.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to the constructors, size(), to_string(), to_llong(),
-  to_double(), to_ldouble(), abs(), comp(), rand(), and all comparison and
-  arithmetic operators except multiplication, division, and modulo, where n is
-  total number of digits in the argument(s) and result for each operation.
-- O(n*log(n)*log(log(n))) or O(n^1.585) per call to multiplication operations,
-  depending on whether USE_FFT_MULT is set to true or false.
-- O(n*m) per call to division and modulo operations, where n and m are the
-  number of digits in the dividend and divisor, respectively.
-- O(M(m) log n) per call to pow(n), where m is the length of the big integer.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the big integer.
+  \item $O(n)$ auxiliary heap space for negation, addition, subtraction, multiplication, division, abs(), sqrt(), pow(), and nth\_root().
+  \item $O(1)$ auxiliary space for all other operations.
+\end{compactitem}
 
-Space Complexity:
-- O(n) for storage of the big integer.
-- O(n) auxiliary heap space for negation, addition, subtraction, multiplication,
-  division, abs(), sqrt(), pow(), and nth_root().
-- O(1) auxiliary space for all other operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <complex>
@@ -3250,7 +3027,10 @@ class bigint {
     static const int TEMP_BASE = 10000, TEMP_BASE_DIGITS = 4;
     vint a = convert_base(digits, BASE_DIGITS, TEMP_BASE_DIGITS);
     vint b = convert_base(v.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
-    int n = 1 << (33 - __builtin_clz(std::max(a.size(), b.size()) - 1));
+    int n = 1;
+    while (n < 2*(int)std::max(a.size(), b.size())) {
+      n <<= 1;
+    }
     a.resize(n, 0);
     b.resize(n, 0);
     vll c;
@@ -3468,9 +3248,9 @@ class bigint {
   friend bigint sqrt(const bigint &v) { return v.sqrt(); }
   friend bigint nth_root(const bigint &v, int n) { return v.nth_root(n); }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
@@ -3521,37 +3301,30 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rational Numbers}
-\begin{lstlisting}
-/*
+Perform operations on rational numbers internally represented as two integers, a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations.
 
-Perform operations on rational numbers internally represented as two integers, a
-numerator and a denominator. The template integer type must support streamed
-input/output, comparisons, and arithmetic operations. Overflow is not checked
-for in internal operations.
+\begin{compactitem}
+  \item rational(n) constructs a rational with numerator n and denominator 1.
+  \item rational(n, d) constructs a rational with numerator n and denominator d.
+  \item operator >> inputs a rational using the next integer from the stream as the numerator and 1 as the denominator.
+  \item operator << outputs a rational as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
+  \item v.to\_string(), v.to\_llong(), v.to\_double(), and v.to\_ldouble() return the big integer v converted to an std::string, long long, double, and long double respectively.
+  \item operators <, >, <=, >=, ==, !=, +, -, *, /, \%, ++, --, +=, -=, *=, /=, and \%= are defined analogous to those on numerical primitives.
+\end{compactitem}
 
-- rational(n) constructs a rational with numerator n and denominator 1.
-- rational(n, d) constructs a rational with numerator n and denominator d.
-- operator >> inputs a rational using the next integer from the stream as the
-  numerator and 1 as the denominator.
-- operator << outputs a rational as a string consisting of possibly a minus sign
-  followed by the numerator, followed by a slash, followed by the denominator.
-- v.to_string(), v.to_llong(), v.to_double(), and v.to_ldouble() return the big
-  integer v converted to an std::string, long long, double, and long double
-  respectively.
-- operators <, >, <=, >=, ==, !=, +, -, *, /, %, ++, --, +=, -=, *=, /=, and %=
-  are defined analogous to those on numerical primitives.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\log\left(n + d\right))$ per call to constructor rational(n, d).
+  \item $O(1)$ per call to all other operations, assuming that corresponding operations on the template integer type are $O(1)$ as well.
+\end{compactitem}
 
-Time Complexity:
-- O(log(n + d)) per call to constructor rational(n, d).
-- O(1) per call to all other operations, assuming that corresponding operations
-  on the template integer type are O(1) as well.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ for storage of the rational.
+  \item $O(1)$ auxiliary space for all operations.
+\end{compactitem}
 
-Space Complexity:
-- O(1) for storage of the rational.
-- O(1) auxiliary space for all operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <istream>
 #include <ostream>
 #include <sstream>
@@ -3689,6 +3462,14 @@ class rational {
 
   friend rational abs(const rational &r) { return r.abs(); }
 
+  Int floor() const {
+    return num < 0 ? -((-num + den - 1) / den) : num / den;
+  }
+
+  Int ceil() const {
+    return num < 0 ? -(-num / den) : (num + den - 1) / den;
+  }
+
   rational operator+(const rational &r) const {
     return rational(num*r.den + r.num*den, den*r.den);
   }
@@ -3745,9 +3526,9 @@ class rational {
   rational& operator/=(const rational &r) { *this = *this / r; return *this; }
   rational& operator%=(const rational &r) { *this = *this % r; return *this; }
 };
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cmath>
 
@@ -3767,60 +3548,45 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Matrix Utilities}
-\begin{lstlisting}
-/*
-
 Basic matrix operations defined on a two-dimensional vector of numeric values.
 
-- make_matrix(r, c, v) constructs and returns a matrix with r rows and c columns
-  where the value at every index is initialized to v.
-- make_matrix(a) returns a matrix constructed from the two dimensional array a.
-- identity_matrix(n) returns the n by n identity matrix, that is, a matrix where
-  a[i][j] equals 1 (if i == j), or 0 otherwise, for every i and j in [0, n).
-- rows(a) returns the number of rows r in an r by c matrix a.
-- columns(a) returns the number of columns c in an r by c matrix a.
-- a[i][j] may be used to access or modify the entry at row i, column j of an r
-  by c matrix a, for every i in [0, r) and j in [0, c).
-- operators <, >, <=, >=, ==, and != defines lexicographical comparison based on
-  that of std::vector.
-- operators +, -, *, /, +=, -=, *=, and /= defines scalar addition, subtraction,
-  multiplication, and division involving a matrix a numeric scalar value v.
-- operators * and *= defines vector and matrix multiplication.
-- operators ^ and ^= defines matrix exponentiation of a square matrix a by an
-  integer power p.
-- power_sum(a, p) returns the power sum of a square matrix a up to an integer
-  power p, that is, a + a^2 + ... + a^p.
-- transpose(a) returns the transpose of an r by c matrix a, that is, a new c by
-  r matrix b such that a[i][j] == b[j][i] for every i in [0, r) and j in [0, c).
-- transpose_in_place(a) assigns the square matrix a to its transpose, returning
-  a reference to the modified argument itself.
-- rotate(a, d) returns the matrix a rotated d degrees clockwise. A negative d
-  specifies a counter-clockwise rotation, and d must be a multiple of 90.
-- rotate_in_place(a, d) assigns the square matrix a to its rotation by d degrees
-  clockwise, returning a reference to the modified argument itself. A negative d
-  specifies a counter-clockwise rotation, and d must be a multiple of 90.
+\begin{compactitem}
+  \item make\_matrix(r, c, v) constructs and returns a matrix with r rows and c columns where the value at every index is initialized to v.
+  \item make\_matrix(a) returns a matrix constructed from the two dimensional array a.
+  \item identity\_matrix(n) returns the n by n identity matrix, that is, a matrix where a[i][j] equals 1 (if i == j), or 0 otherwise, for every i and j in [0, n).
+  \item rows(a) returns the number of rows r in an r by c matrix a.
+  \item columns(a) returns the number of columns c in an r by c matrix a.
+  \item a[i][j] may be used to access or modify the entry at row i, column j of an r by c matrix a, for every i in [0, r) and j in [0, c).
+  \item operators <, >, <=, >=, ==, and != defines lexicographical comparison based on that of std::vector.
+  \item operators +, -, *, /, +=, -=, *=, and /= defines scalar addition, subtraction, multiplication, and division involving a matrix a numeric scalar value v.
+  \item operators * and *= defines vector and matrix multiplication.
+  \item operators \textasciicircum{} and \textasciicircum{}= defines matrix exponentiation of a square matrix a by an integer power p.
+  \item power\_sum(a, p) returns the power sum of a square matrix a up to an integer power p, that is, a + a\textasciicircum{}2 + ... + a\textasciicircum{}p.
+  \item transpose(a) returns the transpose of an r by c matrix a, that is, a new c by r matrix b such that a[i][j] == b[j][i] for every i in [0, r) and j in [0, c).
+  \item transpose\_in\_place(a) assigns the square matrix a to its transpose, returning a reference to the modified argument itself.
+  \item rotate(a, d) returns the matrix a rotated d degrees clockwise. A negative d specifies a counter-clockwise rotation, and d must be a multiple of 90.
+  \item rotate\_in\_place(a, d) assigns the square matrix a to its rotation by d degrees clockwise, returning a reference to the modified argument itself. A negative d specifies a counter-clockwise rotation, and d must be a multiple of 90.
+\end{compactitem}
 
-Time Complexity:
-- O(n*m) for construction, output, comparison, and scalar arithmetic of n by m
-  matrices.
-- O(1) for rows(a) and columns(a).
-- O(n*m) for matrix-matrix addition and subtraction of n by m matrices.
-- O(n*m*log(p)) for exponentiation of an n by m matrix to power p.
-- O(n*m*log^2(p)) for power sum of an n by m matrix to power p.
-- O(n*m*k) for multiplication of an n by m matrix by an m by k matrix.
-- O(n*m) for transpose(), transpose_in_place(), rotate(), and rotate_in_place()
-  of n by m matrices.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot m)$ for construction, output, comparison, and scalar arithmetic of n by m matrices.
+  \item $O(1)$ for rows(a) and columns(a).
+  \item $O(n \cdot m)$ for matrix-matrix addition and subtraction of n by m matrices.
+  \item $O(n \cdot m \cdot \log\left(p\right))$ for exponentiation of an n by m matrix to power p.
+  \item $O(n \cdot m \cdot \log^{2}(p))$ for power sum of an n by m matrix to power p.
+  \item $O(n \cdot m \cdot k)$ for multiplication of an n by m matrix by an m by k matrix.
+  \item $O(n \cdot m)$ for transpose(), transpose\_in\_place(), rotate(), and rotate\_in\_place() of n by m matrices.
+\end{compactitem}
 
-Space Complexity:
-- O(1) auxiliary space for rows(), columns(), a[i][j] access, comparison
-  operators, and in-place operations.
-- O(n*m*log(p)) auxiliary stack and heap space for exponentiation of an n by m
-  matrix to power p, as well as the power sum of an n by m matrix up to power p.
-- O(n*m) auxiliary heap space for all non-in-place operations returning an n by
-  m matrix, transpose(), and rotate().
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary space for rows(), columns(), a[i][j] access, comparison operators, and in-place operations.
+  \item $O(n \cdot m \cdot \log\left(p\right))$ auxiliary stack and heap space for exponentiation of an n by m matrix to power p, as well as the power sum of an n by m matrix up to power p.
+  \item $O(n \cdot m)$ auxiliary heap space for all non-in-place operations returning an n by m matrix, transpose(), and rotate().
+\end{compactitem}
 
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
 #include <iomanip>
@@ -4140,9 +3906,9 @@ matrix& rotate_in_place(matrix &a, int degrees = 90) {
   }
   return a;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -4179,33 +3945,22 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Row Reduction}
-\begin{lstlisting}
-/*
+Converts a matrix to reduced row echelon form using Gaussian elimination to solve a system of linear equations as well as compute the determinant. In practice, this method is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, LU decomposition with row partial pivoting should be used.
 
-Converts a matrix to reduced row echelon form using Gaussian elimination to
-solve a system of linear equations as well as compute the determinant. In
-practice, this method is prone to rounding error on certain matrices. For a more
-accurate algorithm for solving systems of linear equations, LU decomposition
-with row partial pivoting should be used.
+\begin{compactitem}
+  \item row\_reduce(a) assigns the matrix a to its reduced row echelon form, returning a reference to the modified argument itself.
+  \item solve\_system(a, b, \&x) solves the system of linear equations a*x = b given an r by c matrix a of real values, and a length r vector b, returning 0 if there is one solution, -1 if there are zero solutions, or -2 if there are infinite solutions. If there is exactly one solution, then the vector pointed to by x is populated with the solution vector of length c.
+\end{compactitem}
 
-- row_reduce(a) assigns the matrix a to its reduced row echelon form, returning
-  a reference to the modified argument itself.
-- solve_system(a, b, &x) solves the system of linear equations a*x = b given an
-  r by c matrix a of real values, and a length r vector b, returning 0 if there
-  is one solution, -1 if there are zero solutions, or -2 if there are infinite
-  solutions. If there is exactly one solution, then the vector pointed to by x
-  is populated with the solution vector of length c.
+\textbf{Time Complexity}: $O(r^{2} \cdot c)$ per call to row\_reduce(a) and solve\_system(a), where r and c are the number of rows and columns of a respectively.
 
-Time Complexity:
-- O(r^2*c) per call to row_reduce(a) and solve_system(a), where r and c are the
-  number of rows and columns of a respectively.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for row\_reduce(a).
+  \item $O(r \cdot c)$ auxiliary heap space for solve\_system(a).
+\end{compactitem}
 
-Space Complexity:
-- O(1) auxiliary for row_reduce(a).
-- O(r*c) auxiliary heap space for solve_system(a).
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <cstddef>
 #include <stdexcept>
@@ -4284,9 +4039,9 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
   }
   return 0;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -4311,36 +4066,27 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Determinant and Inverse}
-\begin{lstlisting}
-/*
+Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a matrix a is another matrix b such that a*b equals the identity matrix. The inverse of a exists if and only if the determinant of a is zero. In this case, a is called invertible or non-singular. In practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, see LU decomposition with row partial pivoting should be.
 
-Computes the determinant and inverse of a square matrix using Gaussian
-elimination. The inverse of a matrix a is another matrix b such that a*b equals
-the identity matrix. The inverse of a exists if and only if the determinant of a
-is zero. In this case, a is called invertible or non-singular. In practice,
-simple Gaussian elimination is prone to rounding error on certain matrices. For
-a more accurate algorithm for solving systems of linear equations, see LU
-decomposition with row partial pivoting should be.
+\begin{compactitem}
+  \item det\_naive(a) returns the determinant of an n by n matrix a, using the classic divide-and-conquer algorithm by Laplace expansions.
+  \item det(a) returns the determinant of an n by n matrix a using Gaussian elimination.
+  \item invert(a) assigns the n by n matrix a to its inverse (if it exists), returning a reference to the modified argument itself. If a is not invertible, then its assigned values after the function call will be undefined (+/-Inf or +/-NaN).
+\end{compactitem}
 
-- det_naive(a) returns the determinant of an n by n matrix a, using the classic
-  divide-and-conquer algorithm by Laplace expansions.
-- det(a) returns the determinant of an n by n matrix a using Gaussian
-  elimination.
-- invert(a) assigns the n by n matrix a to its inverse (if it exists), returning
-  a reference to the modified argument itself. If a is not invertible, then its
-  assigned values after the function call will be undefined (+/-Inf or +/-NaN).
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n!)$ per call to det\_naive(), where n is the dimension of the matrix.
+  \item $O(n^{3})$ per call to det() and invert() where n is the dimension of the matrix.
+\end{compactitem}
 
-Time Complexity:
-- O(n!) per call to det_naive(), where n is the dimension of the matrix.
-- O(n^3) per call to det() and invert() where n is the dimension of the matrix.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary stack space and $O(n! \cdot n)$ auxiliary heap space for det\_naive(), where n is the dimension of the matrix.
+  \item $O(n^{2})$ auxiliary heap space for det() and invert().
+\end{compactitem}
 
-Space Complexity:
-- O(n) auxiliary stack space and O(n!*n) auxiliary heap space for det_naive(),
-  where n is the dimension of the matrix.
-- O(n^2) auxiliary heap space for det() and invert().
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <map>
 #include <vector>
@@ -4437,9 +4183,9 @@ SquareMatrix& invert(SquareMatrix &a) {
   }
   return a;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -4468,54 +4214,29 @@ int main() {
 }
 \end{lstlisting}
 \subsection{LU Decomposition}
-\begin{lstlisting}
-/*
+The LU decomposition of a matrix a with row-partial pivoting is a factorization of a (after some rows are possibly permuted by a permutation matrix p) as a product of a lower triangular matrix l and an upper triangular matrix u. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions.
 
-The LU decomposition of a matrix a with row-partial pivoting is a factorization
-of a (after some rows are possibly permuted by a permutation matrix p) as a
-product of a lower triangular matrix l and an upper triangular matrix u. This
-factorization can be used to tackle many common problems in linear algebra such
-as solving systems of linear equations and computing determinants. An
-improvement on basic row reduction, LU decomposition by row-partial pivoting
-keeps the relative magnitude of matrix values small, thus reducing the relative
-error due to rounding in computed solutions.
+\begin{compactitem}
+  \item lu\_decompose(a, \&p1col) assigns the r by c matrix a to merged LU decomposition matrix lu, returning either 0 or 1 denoting the "sign" of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or -1 denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix lu has lu[i][j] = l[i][j] for i > j and lu[i][j] = u[i][j] for i <= j. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries l[i][i] are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general i and j, the values of the lower and upper triangular matrices should be accessed via the getl(lu, i, j) and getu(lu, i, j) functions. Optionally, a vector<int> pointer p1col may be passed to return the permutation vector p1col where p1col[i] stores the only column that is equal to 1 in row i of the permutation matrix p (all other columns in row i of p are implicitly 0). The resulting permutation matrix p corresponding to p1col will satisfy p*a = l*u.
+  \item solve\_system(a, b, \&x) solves the system of linear equations a*x = b given an r by c matrix a of real values, and a length r vector b, returning 0 if there is one solution or -1 if there are zero or infinite solutions. If there is exactly one solution, then the vector pointed to by x is populated with the solution vector of length c.
+  \item det(a) returns the determinant of an n by n matrix a using LU decomposition.
+  \item invert(a) assigns the n by n matrix a to its inverse (if it exists), returning 0 if the inversion was successful or -1 if a has no inverse.
+\end{compactitem}
 
-- lu_decompose(a, &p1col) assigns the r by c matrix a to merged LU decomposition
-  matrix lu, returning either 0 or 1 denoting the "sign" of the permutation
-  parity (0 if the number of overall row swaps performed is even, or 1 if it is
-  odd), or -1 denoting a degenerate matrix (i.e. singular for square matrices).
-  The merged matrix lu has lu[i][j] = l[i][j] for i > j and lu[i][j] = u[i][j]
-  for i <= j. Note that the algorithm always yields an atomic lower triangular
-  matrix for which the diagonal entries l[i][i] are always equal to 1, so this
-  is not explicitly stored in the resulting merged matrix. For general i and j,
-  the values of the lower and upper triangular matrices should be accessed via
-  the getl(lu, i, j) and getu(lu, i, j) functions. Optionally, a vector<int>
-  pointer p1col may be passed to return the permutation vector p1col where
-  p1col[i] stores the only column that is equal to 1 in row i of the permutation
-  matrix p (all other columns in row i of p are implicitly 0). The resulting
-  permutation matrix p corresponding to p1col will satisfy p*a = l*u.
-- solve_system(a, b, &x) solves the system of linear equations a*x = b given an
-  r by c matrix a of real values, and a length r vector b, returning 0 if there
-  is one solution or -1 if there are zero or infinite solutions. If there is
-  exactly one solution, then the vector pointed to by x is populated with the
-  solution vector of length c.
-- det(a) returns the determinant of an n by n matrix a using LU decomposition.
-- invert(a) assigns the n by n matrix a to its inverse (if it exists), returning
-  0 if the inversion was successful or -1 if a has no inverse.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(r^{2} \cdot c)$ per call to lu\_decompose(a) and solve\_system(a, b), where r and c are the number of rows and columns respectively, in accordance to the functions' descriptions above.
+  \item $O(n^{3})$ per call to det(a) and inverse(a), where n is the dimension of a.
+\end{compactitem}
 
-Time Complexity:
-- O(r^2*c) per call to lu_decompose(a) and solve_system(a, b), where r and c are
-  the number of rows and columns respectively, in accordance to the functions'
-  descriptions above.
-- O(n^3) per call to det(a) and inverse(a), where n is the dimension of a.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for lu\_decompose().
+  \item $O(n^{2})$ for det(a) and inverse(a).
+  \item $O(r \cdot c)$ auxiliary heap space for solve\_system(a, b).
+\end{compactitem}
 
-Space Complexity:
-- O(1) auxiliary for lu_decompose().
-- O(n^2) for det(a) and inverse(a).
-- O(r*c) auxiliary heap space for solve_system(a, b).
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -4652,9 +4373,9 @@ int invert(SquareMatrix &a) {
   a.swap(ia);
   return 0;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -4709,30 +4430,17 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Linear Programming (Simplex)}
-\begin{lstlisting}
-/*
+Solves a linear programming problem using Dantzig's simplex algorithm. The canonical form of a linear programming problem is to maximize (or minimize) the dot product c*x, subject to a*x <= b and x >= 0, where x is a vector of unknowns to be solved, c is a vector of coefficients, a is a matrix of linear equation coefficients, and b is a vector of boundary coefficients.
 
-Solves a linear programming problem using Dantzig's simplex algorithm. The
-canonical form of a linear programming problem is to maximize (or minimize) the
-dot product c*x, subject to a*x <= b and x >= 0, where x is a vector of unknowns
-to be solved, c is a vector of coefficients, a is a matrix of linear equation
-coefficients, and b is a vector of boundary coefficients.
+\begin{compactitem}
+  \item simplex\_solve(a, b, c, \&x) solves the linear programming problem for an m by n matrix a of real values, a length m vector b, a length n vector c, returning 0 if a solution was found or -1 if there are no solutions. If a solution is found, then the vector pointed to by x is populated with the solution vector of length n.
+\end{compactitem}
 
-- simplex_solve(a, b, c, &x) solves the linear programming problem for an m by n
-  matrix a of real values, a length m vector b, a length n vector c, returning 0
-  if a solution was found or -1 if there are no solutions. If a solution is
-  found, then the vector pointed to by x is populated with the solution vector
-  of length n.
+\textbf{Time Complexity}: Polynomial (average) on the number of equations and unknowns, but exponential in the worst case.
 
-Time Complexity:
-- Polynomial (average) on the number of equations and unknowns, but exponential
-  in the worst case.
+\textbf{Space Complexity}: $O(m \cdot n)$ auxiliary heap space.
 
-Space Complexity:
-- O(m*n) auxiliary heap space.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <limits>
 #include <vector>
@@ -4819,13 +4527,9 @@ int simplex_solve(const Matrix &a, const std::vector<double> &b,
   }
   return 0;
 }
-
-/*** Example Usage and Output:
-
-Solution = 33.3043 at (5.30435, 4.34783).
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 using namespace std;
@@ -4859,38 +4563,26 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Solution = 33.3043 at (5.30435, 4.34783).
+\end{exampleoutput}
 
 \section{Root Finding and Calculus}
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Root Finding (Bracketing)}
-\begin{lstlisting}
-/*
+Finds an x in an interval [a, b] for a continuous function f such that f(x) = 0. By the intermediate value theorem, a root must exist in [a, b] if the signs of f(a) and f(b) differ. The answer is found with an absolute error of roughly 1/(2\textasciicircum{}n), where n is the number of iterations. Although it is possible to control the error by looping while b - a is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic break down. 100 iterations is usually sufficient, since the search space will be reduced to 2\textasciicircum{}-100 (roughly 10\textasciicircum{}-30) times its original size.
 
-Finds an x in an interval [a, b] for a continuous function f such that f(x) = 0.
-By the intermediate value theorem, a root must exist in [a, b] if the signs of
-f(a) and f(b) differ. The answer is found with an absolute error of roughly
-1/(2^n), where n is the number of iterations. Although it is possible to control
-the error by looping while b - a is greater than an arbitrary epsilon, it is
-simpler to let the loop run for a desired number of iterations until floating
-point arithmetic break down. 100 iterations is usually sufficient, since the
-search space will be reduced to 2^-100 (roughly 10^-30) times its original size.
+\begin{compactitem}
+  \item bisection\_root(f, a, b) returns a root in an interval [a, b] for a continuous function f where sgn(f(a)) != sgn(f(b)), using the bisection method.
+  \item falsi\_root(f, a, b) returns a root in an interval [a, b] for a continuous function f where sgn(f(a)) != sgn(f(b)), using the Illinois algorithm variant of the false position (a.k.a. regula falsi) method.
+\end{compactitem}
 
-- bisection_root(f, a, b) returns a root in an interval [a, b] for a continuous
-  function f where sgn(f(a)) != sgn(f(b)), using the bisection method.
-- falsi_root(f, a, b) returns a root in an interval [a, b] for a continuous
-  function f where sgn(f(a)) != sgn(f(b)), using the Illinois algorithm variant
-  of the false position (a.k.a. regula falsi) method.
+\textbf{Time Complexity}: $O(n)$ calls will be made to f() in bisection\_root() and falsi\_illinois\_root(), where n is the number of iterations performed.
 
-Time Complexity:
-- O(n) calls will be made to f() in bisection_root() and falsi_illinois_root(),
-  where n is the number of iterations performed.
+\textbf{Space Complexity}: $O(1)$ auxiliary space for both operations.
 
-Space Complexity:
-- O(1) auxiliary space for both operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <stdexcept>
 
 template<class ContinuousFunction>
@@ -4942,9 +4634,9 @@ double falsi_illinois_root(ContinuousFunction f, double a, double b,
   }
   return m;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cmath>
 
@@ -4959,31 +4651,18 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Root Finding (Iteration)}
-\begin{lstlisting}
-/*
+Finds an x for a continuous function f such that f(x) = 0 using iterative approximation by an initial guess that is close to the answer. Newton's method requires an explicit definition of the function's derivative while the secant method starts with two initial guesses and approximates the derivative using the secant slope from the previous iteration. For n iterations and a good initial guess, the methods below compute approximately 2\textasciicircum{}n digits of precision, with the secant method converging approximately 1.6 times slower than Newton's.
 
-Finds an x for a continuous function f such that f(x) = 0 using iterative
-approximation by an initial guess that is close to the answer. Newton's method
-requires an explicit definition of the function's derivative while the secant
-method starts with two initial guesses and approximates the derivative using the
-secant slope from the previous iteration. For n iterations and a good initial
-guess, the methods below compute approximately 2^n digits of precision, with the
-secant method converging approximately 1.6 times slower than Newton's.
+\begin{compactitem}
+  \item newton\_root(f, fprime, x0) returns a root x for a fuction f with derivative fprime using an initial guess x0 which should be relatively close to x.
+  \item secant\_root(f, x0, x1) returns a root x for a function f using two initial guesses x0 and x1 which should be relatively close to x.
+\end{compactitem}
 
-- newton_root(f, fprime, x0) returns a root x for a fuction f with derivative
-  fprime using an initial guess x0 which should be relatively close to x.
-- secant_root(f, x0, x1) returns a root x for a function f using two initial
-  guesses x0 and x1 which should be relatively close to x.
+\textbf{Time Complexity}: $O(n)$ calls will be made to f() in newton\_root() and secant\_root(), where n is the number of iterations performed.
 
-Time Complexity:
-- O(n) calls will be made to f() in newton_root() and secant_root(), where n is
-  the number of iterations performed.
+\textbf{Space Complexity}: $O(1)$ auxiliary space for both operations.
 
-Space Complexity:
-- O(1) auxiliary space for both operations.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <stdexcept>
 
@@ -5019,9 +4698,9 @@ double secant_root(ContinuousFunction f, double x0, double x1,
   }
   return x;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 
 double f(double x) {
@@ -5039,40 +4718,28 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polynomial Root Finding (Differentiation)}
-\begin{lstlisting}
-/*
+Finds every root x for a polynomial p such that p(x) = 0 by differentiation. Each adjacent pair of local extrema is searched using the bisection method, where local extrema are recursively found by finding the root of the derivative.
 
-Finds every root x for a polynomial p such that p(x) = 0 by differentiation.
-Each adjacent pair of local extrema is searched using the bisection method,
-where local extrema are recursively found by finding the root of the derivative.
+\begin{compactitem}
+  \item horner\_eval(p, x) evaluates the polynomial p of degree d (represented as a vector of size d + 1 where p[i] stores the coefficient for the x\textasciicircum{}i term) at x, using Horner's method.
+  \item find\_one\_root(p, a, b, EPS) returns a root in the interval [a, b] for a polynomial p where sgn(f(a)) != sgn(f(b)), using the bisection method. If this precondition is not satisfied, then NaN is returned. The root is found to a tolerance of EPS in absolute or relative error (whichever is reached first).
+  \item find\_all\_roots(p, a, b, EPS) returns a vector of all roots in the interval [a, b] for a polynomial p using the bisection method. The roots are found to a tolerance of EPS in absolute or relative error (whichever is reached first).
+\end{compactitem}
 
-- horner_eval(p, x) evaluates the polynomial p of degree d (represented as a
-  vector of size d + 1 where p[i] stores the coefficient for the x^i term) at x,
-  using Horner's method.
-- find_one_root(p, a, b, EPS) returns a root in the interval [a, b] for a
-  polynomial p where sgn(f(a)) != sgn(f(b)), using the bisection method. If this
-  precondition is not satisfied, then NaN is returned. The root is found to a
-  tolerance of EPS in absolute or relative error (whichever is reached first).
-- find_all_roots(p, a, b, EPS) returns a vector of all roots in the interval
-  [a, b] for a polynomial p using the bisection method. The roots are found to a
-  tolerance of EPS in absolute or relative error (whichever is reached first).
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to horner\_eval(), where n is the degree of the polynomial.
+  \item $O(n \log p)$ per call to find\_one\_root(), where n is the degree of the polynomial and p = -log10(EPS) is the number of digits of absolute or relative precision that is desired.
+  \item $O(n^{3} \log p)$ per call to find\_all\_roots(), where n is the degree of the polynomial and p = -log10(EPS) is the number of digits of absolute or relative precision that is desired.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to horner_eval(), where n is the degree of the polynomial.
-- O(n log p) per call to find_one_root(), where n is the degree of the
-  polynomial and p = -log10(EPS) is the number of digits of absolute or relative
-  precision that is desired.
-- O(n^3 log p) per call to find_all_roots(), where n is the degree of the
-  polynomial and p = -log10(EPS) is the number of digits of absolute or relative
-  precision that is desired.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary space for horner\_eval() and find\_one\_root().
+  \item $O(n^{2})$ auxiliary heap and $O(n)$ auxiliary stack space for find\_all\_roots(), where n is the degree of the polynomial.
+\end{compactitem}
 
-Space Complexity:
-- O(1) auxiliary space for horner_eval() and find_one_root().
-- O(n^2) auxiliary heap and O(n) auxiliary stack space for find_all_roots(),
-  where n is the degree of the polynomial.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 #include <limits>
 #include <utility>
@@ -5124,9 +4791,9 @@ std::vector<double> find_all_roots(const std::vector<double> &p,
   }
   return res;
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 using namespace std;
 
@@ -5147,42 +4814,28 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polynomial Root Finding (Laguerre)}
-\begin{lstlisting}
-/*
+Finds every complex root x for a polynomial p with complex coefficients such that p(x) = 0 using Laguerre's method.
 
-Finds every complex root x for a polynomial p with complex coefficients such
-that p(x) = 0 using Laguerre's method.
+\begin{compactitem}
+  \item horner\_eval(p, x) evaluates the complex polynomial p of degree d (represented as a vector of size d + 1 where p[i] stores the complex coefficient for the x\textasciicircum{}i term) at x, using Horner's method, returning a pair where the first value is a vector of sub-evaluations and the second value is the final result p(x).
+  \item find\_one\_root(p, x0) returns a complex root x for a polynomial p (represented as a vector of size d + 1 where p[i] stores the complex coefficient for the x\textasciicircum{}i term) using an initial guess x0 which should be relatively close to x. The root is found to a tolerance of EPS in absolute or relative error (whichever is reached first).
+  \item find\_all\_roots(p) returns a vector of all complex roots for a complex polynomial p. The roots are found to a tolerance of EPS in absolute or relative error (whichever is reached first).
+\end{compactitem}
 
-- horner_eval(p, x) evaluates the complex polynomial p of degree d (represented
-  as a vector of size d + 1 where p[i] stores the complex coefficient for the
-  x^i term) at x, using Horner's method, returning a pair where the first value
-  is a vector of sub-evaluations and the second value is the final result p(x).
-- find_one_root(p, x0) returns a complex root x for a polynomial p (represented
-  as a vector of size d + 1 where p[i] stores the complex coefficient for the
-  x^i term) using an initial guess x0 which should be relatively close to x. The
-  root is found to a tolerance of EPS in absolute or relative error (whichever
-  is reached first).
-- find_all_roots(p) returns a vector of all complex roots for a complex
-  polynomial p. The roots are found to a tolerance of EPS in absolute or
-  relative error (whichever is reached first).
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to horner\_eval(), where n is the degree of the polynomial.
+  \item $O(n \log p)$ per call to find\_one\_root(), where n is the degree of the polynomial and p = -log10(EPS) is the number of digits of absolute or relative precision that is desired.
+  \item $O(n^{2} \log p)$ per call to find\_all\_roots(), where n is the degree of the polynomial and p = -log10(EPS) is the number of digits of absolute or relative precision that is desired.
+\end{compactitem}
 
-Time Complexity:
-- O(n) per call to horner_eval(), where n is the degree of the polynomial.
-- O(n log p) per call to find_one_root(), where n is the degree of the
-  polynomial and p = -log10(EPS) is the number of digits of absolute or relative
-  precision that is desired.
-- O(n^2 log p) per call to find_all_roots(), where n is the degree of the
-  polynomial and p = -log10(EPS) is the number of digits of absolute or relative
-  precision that is desired.
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary heap space and $O(1)$ auxiliary stack space for horner\_eval() and find\_one\_root(), where n is the degree of the polynomial.
+  \item $O(n)$ auxiliary heap and $O(1)$ auxiliary stack space per for find\_one\_root() and find\_all\_roots(), where n is the degree of the polynomial.
+\end{compactitem}
 
-Space Complexity:
-- O(n) auxiliary heap space and O(1) auxiliary stack space for horner_eval() and
-  find_one_root(), where n is the degree of the polynomial.
-- O(n) auxiliary heap and O(1) auxiliary stack space per for find_one_root() and
-  find_all_roots(), where n is the degree of the polynomial.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <complex>
 #include <cstdlib>
 #include <vector>
@@ -5249,21 +4902,9 @@ std::vector<cdouble> find_all_roots(const cpoly &p, const double EPS = 1e-15,
   res.push_back(-q[0] / q[1]);
   return res;
 }
-
-/*** Example Usage and Output:
-
-Roots of 140 - 13x - 8x^2 + x^3:
-(5.00000, 0.00000)
-(-4.00000, -0.00000)
-(7.00000, -0.00000)
-Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
-(0.00000, 1.00000)
-(0.00000, -1.00000)
-(-0.92308, 1.38462)
-(-3.00000, -2.00000)
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cstdio>
 #include <iostream>
 using namespace std;
@@ -5298,26 +4939,29 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Roots of 140 - 13x - 8x^2 + x^3:
+(5.00000, 0.00000)
+(-4.00000, -0.00000)
+(7.00000, -0.00000)
+Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
+(0.00000, 1.00000)
+(0.00000, -1.00000)
+(-0.92308, 1.38462)
+(-3.00000, -2.00000)
+\end{exampleoutput}
 \subsection{Polynomial Root Finding (RPOLY)}
-\begin{lstlisting}
-/*
+Finds every complex root x for a polynomial p with real coefficients such that p(x) = 0 using a variant of the Jenkins-Traub algorithm known as RPOLY. This implementation is adapted from TOMS493 (www.netlib.org/toms/) with a simple wrapper for the C++ <complex> class.
 
-Finds every complex root x for a polynomial p with real coefficients such that
-p(x) = 0 using a variant of the Jenkins-Traub algorithm known as RPOLY. This
-implementation is adapted from TOMS493 (www.netlib.org/toms/) with a simple
-wrapper for the C++ <complex> class.
+\begin{compactitem}
+  \item find\_all\_roots(p) returns a vector of all complex roots for a polynomial p with real coefficients.
+\end{compactitem}
 
-- find_all_roots(p) returns a vector of all complex roots for a polynomial p
-  with real coefficients.
+\textbf{Time Complexity}: $O(n)$ per call to find\_all\_roots(p), where n is the degree of the polynomial.
 
-Time Complexity:
-- O(n) per call to find_all_roots(p), where n is the degree of the polynomial.
+\textbf{Space Complexity}: $O(n)$ auxiliary stack space, where n is the degree of the polynomial.
 
-Space Complexity:
-- O(n) auxiliary stack space, where n is the degree of the polynomial.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cfloat>
 #include <cmath>
 
@@ -5783,19 +5427,9 @@ void find_all_roots(int degree, LD co[], LD re[], LD im[]) {
     }
   }
 }
-
-/*** Example Usage and Output:
-
-Roots of -1+2x^1-6x^2+2x^3:
-(0.150976, 0.403144)
-(0.150976, -0.403144)
-(2.69805, 0)
-Roots of -20+4x^1+3x^2:
-(2, 0)
-(-3.33333, 0)
-
-***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
 #include <complex>
@@ -5852,26 +5486,27 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Roots of -1+2x^1-6x^2+2x^3:
+(0.150976, 0.403144)
+(0.150976, -0.403144)
+(2.69805, 0)
+Roots of -20+4x^1+3x^2:
+(2, 0)
+(-3.33333, 0)
+\end{exampleoutput}
 \subsection{Integration (Simpson)}
-\begin{lstlisting}
-/*
+Computes the definite integral from a to b for a continuous function f using Simpson's approximation: integral \textasciitilde{} [f(a) + 4*f((a + b)/2) + f(b)]*(b - a)/6.
 
-Computes the definite integral from a to b for a continuous function f using
-Simpson's approximation: integral ~ [f(a) + 4*f((a + b)/2) + f(b)]*(b - a)/6.
+\begin{compactitem}
+  \item simpsons(f, a, b) returns the definite integral for a function f from a to b, to a tolerance of EPS in absolute error.
+\end{compactitem}
 
-- simpsons(f, a, b) returns the definite integral for a function f from a to b,
-  to a tolerance of EPS in absolute error.
+\textbf{Time Complexity}: $O(p)$ per call to integrate(), where p = -log10(EPS) is the number of digits of absolute precision that is desired.
 
-Time Complexity:
-- O(p) per call to integrate(), where p = -log10(EPS) is the number of digits
-  of absolute precision that is desired.
+\textbf{Space Complexity}: $O(p)$ auxiliary stack and $O(1)$ auxiliary heap space, where p = -log10(EPS) is the number of digits of absolute precision that is desired.
 
-Space Complexity:
-- O(p) auxiliary stack and O(1) auxiliary heap space, where p = -log10(EPS)
-  is the number of digits of absolute precision that is desired.
-
-*/
-
+\begin{lstlisting}[language=C++]
 #include <cmath>
 
 template<class ContinuousFunction>
@@ -5891,9 +5526,9 @@ double integrate(ContinuousFunction f, double a, double b,
   }
   return integrate(f, a, m) + integrate(f, m, b);
 }
-
-/*** Example Usage ***/
-
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
 #include <cstdio>
 #include <cassert>
 using namespace std;

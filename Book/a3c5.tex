@@ -1,4 +1,4 @@
-\documentclass[11pt,letterpaper,twoside]{book} 
+\documentclass[10pt,letterpaper,twoside]{book}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{color}
@@ -10,7 +10,9 @@
 \usepackage{makeidx}
 \usepackage{paralist}
 \usepackage{sectsty}
+\usepackage{tcolorbox}
 \usepackage{textcomp}
+\tcbuselibrary{breakable,listings}
 \geometry{left=2cm,right=2cm,top=2.5cm,bottom=2.5cm}
 
 % Lowercase section headers
@@ -39,13 +41,41 @@
   keywordstyle=\color{blue},
   language=C++,
   % literate={\ \ }{{\ \ \ \ }}1,  % Convert 2 spaces to 4 
-  numbers=left,
-  numbersep=10pt,
-  numberstyle=\scriptsize\ttfamily\color{gray},
   rulecolor=\color{black},
   showstringspaces=false,
   stringstyle=\color{mauve},
   tabsize=2
+}
+
+\newtcblisting{exampleoutput}{
+  listing only,
+  title={Example Output},
+  listing options={
+    language={},
+    numbers=none,
+    basicstyle={\footnotesize\ttfamily},
+    aboveskip=0pt,
+    belowskip=0pt,
+    breaklines=true,
+    columns=flexible,
+    keepspaces=true,
+    showstringspaces=false
+  },
+  breakable,
+  colback=black!4,
+  colframe=black!30,
+  boxrule=0.4pt,
+  arc=2mm,
+  boxsep=1mm,
+  left=2mm,
+  right=2mm,
+  top=0mm,
+  bottom=0mm,
+  before skip=0.5em,
+  after skip=0pt,
+  fonttitle=\small\bfseries,
+  colbacktitle=black!7,
+  coltitle=black
 }
 
 \begin{document} 
@@ -63,13 +93,13 @@
 	\\[1.0\baselineskip]
 	\textbf{\Large Common Code for Contests in Concise C++}
 	\\[1.0\baselineskip]
-	{\large\textit{Draft v0.9, Feb 16, 2020}}
+	{\large\textit{Draft v0.91, Jun 1, 2026}}
 
 	\vspace*{11 cm}
 
 	{\Large Alex Li}
 	\\[0.5\baselineskip]
-	{\small \textcircled{c} 2015---. All rights reserved.}
+	{\small \textcircled{c} 2026. All rights reserved.}
 \end{titlepage}
 
 \pagebreak
