@@ -383,7 +383,7 @@ int line_intersection(const line &l1, const line &l2, point *p = NULL) {
     return (l1 == l2) ? 1 : -1;
   }
   if (p != NULL) {
-    p->x = (l1.b*l1.c - l1.b*l2.c) / (l2.a*l1.b - l1.a*l2.b);
+    p->x = (l1.b*l2.c - l2.b*l1.c) / (l1.a*l2.b - l2.a*l1.b);
     if (!EQ(l1.b, 0)) {
       p->y = -(l1.a*p->x + l1.c) / l1.b;
     } else {
@@ -426,6 +426,20 @@ int seg_intersection(const point &a, const point &b, const point &c,
                      const point &d, point *p = NULL, point *q = NULL) {
   static const bool TOUCH_IS_INTERSECT = true;
   point ab(b - a), ac(c - a), cd(d - c);
+  if (EQ(sqnorm(ab), 0)) {
+    if (TOUCH_IS_INTERSECT && seg_dist(a, c, d) < EPS) {
+      if (p != NULL) *p = a;
+      return 0;
+    }
+    return -1;
+  }
+  if (EQ(sqnorm(cd), 0)) {
+    if (TOUCH_IS_INTERSECT && seg_dist(c, a, b) < EPS) {
+      if (p != NULL) *p = c;
+      return 0;
+    }
+    return -1;
+  }
   double c1 = ab.cross(cd), c2 = ac.cross(ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     double t0 = ac.dot(ab) / sqnorm(ab);

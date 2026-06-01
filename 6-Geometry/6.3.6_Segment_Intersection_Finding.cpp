@@ -44,31 +44,32 @@ double cross(const point &a, const point &b, const point &o = point(0, 0)) {
   return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
 }
 
+bool point_on_segment(const point &p, const point &a, const point &b) {
+  return EQ(cross(p, b, a), 0)
+      && LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x))
+      && LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
+}
+
 int seg_intersection(const point &a, const point &b, const point &c,
                      const point &d, point *p = NULL, point *q = NULL) {
   static const bool TOUCH_IS_INTERSECT = true;
-  if (a == b || c == d) {
-    if (!TOUCH_IS_INTERSECT) {
-      return -1;
-    }
-    if (a == b && c == d) {
-      return (a == c) ? 0 : -1;
-    }
-    point pt = (a == b) ? a : c;
-    point s1 = (a == b) ? c : a, s2 = (a == b) ? d : b;
-    bool contains = EQ(cross(pt, s2, s1), 0)
-                 && LE(std::min(s1.x, s2.x), pt.x)
-                 && LE(pt.x, std::max(s1.x, s2.x))
-                 && LE(std::min(s1.y, s2.y), pt.y)
-                 && LE(pt.y, std::max(s1.y, s2.y));
-    if (contains && p != NULL) {
-      *p = pt;
-    }
-    return contains ? 0 : -1;
-  }
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
   point cd(d.x - c.x, d.y - c.y);
+  if (EQ(sqnorm(ab), 0)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
+      if (p != NULL) *p = a;
+      return 0;
+    }
+    return -1;
+  }
+  if (EQ(sqnorm(cd), 0)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) {
+      if (p != NULL) *p = c;
+      return 0;
+    }
+    return -1;
+  }
   double c1 = cross(ab, cd), c2 = cross(ac, ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     double t0 = dot(ac, ab) / sqnorm(ab);

@@ -55,6 +55,13 @@ double norm(const point &a) { return sqrt(sqnorm(a)); }
 double dot(const point &a, const point &b) { return a.x*b.x + a.y*b.y; }
 double cross(const point &a, const point &b) { return a.x*b.y - a.y*b.x; }
 
+bool point_on_segment(const point &p, const point &a, const point &b) {
+  return EQ(cross(point(p.x - a.x, p.y - a.y),
+                  point(b.x - a.x, b.y - a.y)), 0)
+      && LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x))
+      && LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
+}
+
 int line_intersection(double a1, double b1, double c1, double a2, double b2,
                       double c2, point *p = NULL) {
   if (EQ(a1, a2) && EQ(b1, b2)) {
@@ -94,6 +101,20 @@ int seg_intersection(const point &a, const point &b, const point &c,
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
   point cd(d.x - c.x, d.y - c.y);
+  if (EQ(sqnorm(ab), 0)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
+      if (p != NULL) *p = a;
+      return 0;
+    }
+    return -1;
+  }
+  if (EQ(sqnorm(cd), 0)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) {
+      if (p != NULL) *p = c;
+      return 0;
+    }
+    return -1;
+  }
   double c1 = cross(ab, cd), c2 = cross(ac, ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     double t0 = dot(ac, ab) / sqnorm(ab);
@@ -138,10 +159,10 @@ int seg_intersection(const point &a, const point &b, const point &c,
 
 point closest_point(double a, double b, double c, const point &p) {
   if (EQ(a, 0)) {
-    return point(p.x, -c);  // Horizontal line.
+    return point(p.x, -c / b);  // Horizontal line.
   }
   if (EQ(b, 0)) {
-    return point(-c, p.y);  // Vertical line.
+    return point(-c / a, p.y);  // Vertical line.
   }
   point res;
   line_intersection(a, b, c, -b, a, b*p.x - a*p.y, &res);
@@ -151,7 +172,7 @@ point closest_point(double a, double b, double c, const point &p) {
 point closest_point(const point &a, const point &b, const point &p) {
   if (a == b) return a;
   point ap(p.x - a.x, p.y - a.y), ab(b.x - a.x, b.y - a.y);
-  double t = dot(ap, ab) / norm(ab);
+  double t = dot(ap, ab) / sqnorm(ab);
   if (t <= 0) return a;
   if (t >= 1) return b;
   return point(a.x + t * ab.x, a.y + t * ab.y);

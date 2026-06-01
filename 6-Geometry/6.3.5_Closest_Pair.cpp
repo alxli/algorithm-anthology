@@ -23,6 +23,7 @@ Space Complexity:
 #include <cmath>
 #include <limits>
 #include <utility>
+#include <vector>
 
 const double EPS = 1e-9;
 
@@ -35,8 +36,14 @@ typedef std::pair<double, double> point;
 
 double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
 double norm(const point &a) { return sqrt(sqnorm(a)); }
-bool cmp_x(const point &a, const point &b) { return LT(a.x, b.x); }
-bool cmp_y(const point &a, const point &b) { return LT(a.y, b.y); }
+
+bool cmp_x(const point &a, const point &b) {
+  return (a.x == b.x) ? (a.y < b.y) : (a.x < b.x);
+}
+
+bool cmp_y(const point &a, const point &b) {
+  return (a.y == b.y) ? (a.x < b.x) : (a.y < b.y);
+}
 
 template<class It>
 double closest_pair(It lo, It hi, std::pair<point, point> *res = NULL,
@@ -55,15 +62,14 @@ double closest_pair(It lo, It hi, std::pair<point, point> *res = NULL,
   double d2 = closest_pair(mid + 1, hi, res, mindist, false);
   mindist = std::min(mindist, d2);
   std::sort(lo, hi, cmp_y);
-  int size = 0;
-  It t[hi - lo];
+  std::vector<It> t;
   for (It it = lo; it != hi; ++it) {
     if (fabs(it->x - midx) < mindist) {
-      t[size++] = it;
+      t.push_back(it);
     }
   }
-  for (int i = 0; i < size; i++) {
-    for (int j = i + 1; j < size; j++) {
+  for (int i = 0; i < (int)t.size(); i++) {
+    for (int j = i + 1; j < (int)t.size(); j++) {
       point a(*t[i]), b(*t[j]);
       if (b.y - a.y >= mindist) {
         break;

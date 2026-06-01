@@ -91,18 +91,24 @@ double seg_dist(const point &p, const point &a, const point &b) {
 
 double seg_dist(const point &a, const point &b,
                 const point &c, const point &d) {
+  if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
+    return seg_dist(a, c, d);
+  }
+  if (EQ(c.x, d.x) && EQ(c.y, d.y)) {
+    return seg_dist(c, a, b);
+  }
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
   point cd(d.x - c.x, d.y - c.y);
   double c1 = cross(ab, cd), c2 = cross(ac, ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {
-    double t0 = dot(ac, ab) / norm(ab), t1 = t0 + dot(cd, ab) / norm(ab);
+    double t0 = dot(ac, ab) / sqnorm(ab), t1 = t0 + dot(cd, ab) / sqnorm(ab);
     if (LE(std::min(t0, t1), 1) && LE(0, std::max(t0, t1))) {
       return 0;
     }
-  } else {
+  } else if (!EQ(c1, 0)) {
     double t = cross(ac, cd) / c1, u = c2 / c1;
-    if (!EQ(c1, 0) && LE(0, t) && LE(t, 1) && LE(0, u) && LE(u, 1)) {
+    if (LE(0, t) && LE(t, 1) && LE(0, u) && LE(u, 1)) {
       return 0;
     }
   }
