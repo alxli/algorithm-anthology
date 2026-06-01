@@ -57,12 +57,8 @@ template<class T>
 class segment_tree {
   static const int MAXN = 1000000000;
 
-  static T neutral_value() {
-    return 0;  // For indices which haven't been updated.
-  }
-    
   static T join_values(const T &a, const T &b) {
-    return std::max(a, b);
+    return std::min(a, b);
   }
 
   static T join_segment(const T &v, int len) {
@@ -112,11 +108,11 @@ class segment_tree {
 
   T query(node_t *n, int lo, int hi, int tgt_lo, int tgt_hi) {
     if (n == NULL) {
-      return neutral_value();
+      return join_segment(init, hi - lo + 1);
     }
     push_delta(n, lo, hi);
     if (lo == tgt_lo && hi == tgt_hi) {
-      return (n == NULL) ? join_segment(init, hi - lo + 1) : n->value;
+      return n->value;
     }
     int mid = lo + (hi - lo)/2;
     if (tgt_lo <= mid && mid < tgt_hi) {

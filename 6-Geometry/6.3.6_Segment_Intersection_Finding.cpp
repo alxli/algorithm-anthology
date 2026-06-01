@@ -21,9 +21,11 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <set>
 #include <utility>
+#include <vector>
 
 const double EPS = 1e-9;
 
@@ -45,6 +47,25 @@ double cross(const point &a, const point &b, const point &o = point(0, 0)) {
 int seg_intersection(const point &a, const point &b, const point &c,
                      const point &d, point *p = NULL, point *q = NULL) {
   static const bool TOUCH_IS_INTERSECT = true;
+  if (a == b || c == d) {
+    if (!TOUCH_IS_INTERSECT) {
+      return -1;
+    }
+    if (a == b && c == d) {
+      return (a == c) ? 0 : -1;
+    }
+    point pt = (a == b) ? a : c;
+    point s1 = (a == b) ? c : a, s2 = (a == b) ? d : b;
+    bool contains = EQ(cross(pt, s2, s1), 0)
+                 && LE(std::min(s1.x, s2.x), pt.x)
+                 && LE(pt.x, std::max(s1.x, s2.x))
+                 && LE(std::min(s1.y, s2.y), pt.y)
+                 && LE(pt.y, std::max(s1.y, s2.y));
+    if (contains && p != NULL) {
+      *p = pt;
+    }
+    return contains ? 0 : -1;
+  }
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
   point cd(d.x - c.x, d.y - c.y);
@@ -95,20 +116,28 @@ struct segment {
 
   segment() {}
   segment(const point &p, const point &q) : p(min(p, q)), q(max(p, q)) {}
+};
 
-  bool operator<(const segment &rhs) const {
-    if (p.x < rhs.p.x) {
-      double c = cross(q, rhs.p, p);
-      if (c != 0) {
-        return c > 0;
-      }
-    } else if (rhs.p.x < p.x) {
-      double c = cross(rhs.q, q, rhs.p);
-      if (c != 0) {
-        return c < 0;
-      }
+double get_y(const segment &s, double x) {
+  if (EQ(s.p.x, s.q.x)) {
+    return s.p.y;
+  }
+  return s.p.y + (s.q.y - s.p.y)*(x - s.p.x)/(s.q.x - s.p.x);
+}
+
+template<class It>
+struct segment_order {
+  It lo;
+
+  segment_order(It lo) : lo(lo) {}
+
+  bool operator()(It a, It b) const {
+    if (a == b) {
+      return false;
     }
-    return p.y < rhs.p.y;
+    double x = std::max(a->p.x, b->p.x);
+    double ay = get_y(*a, x), by = get_y(*b, x);
+    return (ay == by) ? (a - lo < b - lo) : (ay < by);
   }
 };
 
@@ -138,41 +167,42 @@ bool intersect(const segment &s1, const segment &s2) {
 
 template<class It>
 bool find_intersection(It lo, It hi, segment *res1, segment *res2) {
-  int cnt = 0;
-  event<It> e[2*(int)(hi - lo)];
+  std::vector<event<It> > e;
   for (It it = lo; it != hi; ++it) {
     if (it->p > it->q) {
       std::swap(it->p, it->q);
     }
-    e[cnt++] = event<It>(it->p, 1, it);
-    e[cnt++] = event<It>(it->q, -1, it);
+    e.push_back(event<It>(it->p, 1, it));
+    e.push_back(event<It>(it->q, -1, it));
   }
-  std::sort(e, e + cnt);
-  std::set<segment> s;
-  std::set<segment>::iterator it, next, prev;
-  for (int i = 0; i < cnt; i++) {
+  std::sort(e.begin(), e.end());
+  typedef std::set<It, segment_order<It> > active_set;
+  active_set s((segment_order<It>(lo)));
+  std::vector<typename active_set::iterator> position(hi - lo);
+  for (int i = 0; i < (int)e.size(); i++) {
     It seg = e[i].seg;
     if (e[i].type == 1) {
-      it = s.lower_bound(*seg);
-      if (it != s.end() && intersect(*it, *seg)) {
-        *res1 = *it;
+      typename active_set::iterator it = s.insert(seg).first;
+      position[seg - lo] = it;
+      typename active_set::iterator next = it;
+      if (++next != s.end() && intersect(**next, *seg)) {
+        *res1 = **next;
         *res2 = *seg;
         return true;
       }
-      if (it != s.begin() && intersect(*--it, *seg)) {
-        *res1 = *it;
+      if (it != s.begin() && intersect(**--it, *seg)) {
+        *res1 = **it;
         *res2 = *seg;
         return true;
       }
-      s.insert(*seg);
     } else {
-      it = s.lower_bound(*seg);
-      next = prev = it;
-      prev = it;
-      if (it != s.begin() && it != --s.end()) {
-        if (intersect(*(++next), *(--prev))) {
-          *res1 = *next;
-          *res2 = *prev;
+      typename active_set::iterator it = position[seg - lo];
+      typename active_set::iterator next = it;
+      if (++next != s.end() && it != s.begin()) {
+        typename active_set::iterator prev = it;
+        if (intersect(**next, **--prev)) {
+          *res1 = **next;
+          *res2 = **prev;
           return true;
         }
       }

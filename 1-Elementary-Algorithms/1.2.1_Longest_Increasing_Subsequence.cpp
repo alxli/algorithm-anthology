@@ -23,6 +23,9 @@ template<class It>
 std::vector<typename std::iterator_traits<It>::value_type>
 longest_increasing_subsequence(It lo, It hi) {
   int len = 0, n = hi - lo;
+  if (n == 0) {
+    return std::vector<typename std::iterator_traits<It>::value_type>();
+  }
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
     int l = -1, h = len;
