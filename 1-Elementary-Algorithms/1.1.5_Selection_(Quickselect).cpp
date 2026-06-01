@@ -1,16 +1,16 @@
 /*
 
-nth_element2() is equivalent to std::nth_element(), taking random-access
-iterators lo, nth, and hi as the range [lo, hi) to be partially sorted. The
-values in [lo, hi) are rearranged such that the value pointed to by nth is the
+`nth_element2()` is equivalent to `std::nth_element()`, taking random-access
+iterators `lo`, `nth`, and `hi` as the range [`lo`, `hi`) to be partially sorted.
+The values in [`lo`, `hi`) are rearranged such that the value pointed to by `nth` is the
 element that would be there if the range were sorted. Furthermore, the range is
-partitioned such that no value in [lo, nth) compares greater than the value
-pointed to by nth and no value in (nth, hi) compares less. This implementation
-requires operator < to be defined on the iterator's value type.
+partitioned such that no value in [`lo`, `nth`) compares greater than the value
+pointed to by `nth` and no value in (`nth`, `hi`) compares less. This implementation
+requires `operator <` to be defined on the iterator's value type.
 
 Time Complexity:
-- O(n) on average per call to nth_element2(), where n is the distance between lo
-  and hi.
+- O(n) on average per call to `nth_element2()`, where $n$ is the distance between
+  `lo` and `hi`.
 
 Space Complexity:
 - O(1) auxiliary.

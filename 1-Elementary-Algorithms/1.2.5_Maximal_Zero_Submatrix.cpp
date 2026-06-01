@@ -1,17 +1,17 @@
 /*
 
-Given a rectangular matrix with n rows and m columns consisting of only 0's and
+Given a rectangular matrix with $n$ rows and $m$ columns consisting of only 0's and
 1's as a two-dimensional vector of bool, return the area of the largest
 rectangular submatrix consisting of only 0's. This solution uses a reduction to
 the problem of finding the maximum rectangular area under a histogram, which is
 efficiently solved using a stack algorithm.
 
 Time Complexity:
-- O(n*m) per call to max_zero_submatrix(), where n is the number of rows and m
+- O(n*m) per call to `max_zero_submatrix()`, where $n$ is the number of rows and $m$
   is the number of columns in the matrix.
 
 Space Complexity:
-- O(m) auxiliary heap space, where m is the number of columns in the matrix.
+- O(m) auxiliary heap space, where $m$ is the number of columns in the matrix.
 
 */
 

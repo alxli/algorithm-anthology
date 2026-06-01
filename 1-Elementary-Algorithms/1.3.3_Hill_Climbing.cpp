@@ -1,21 +1,22 @@
 /*
 
-Given a continuous function f(x, y) to double and a (possibly arbitrary) initial
-guess (x0, y0), return a potential global minimum found through hill-climbing.
-Optionally, two double pointers critical_x and critical_y may be passed to store
-the input points to f at which the returned minimum value is attained.
+Given a continuous function `f(x, y)` to `double` and a (possibly arbitrary)
+initial guess (`x0`, `y0`), return a potential global minimum found through
+hill-climbing. Optionally, two `double` pointers `critical_x` and `critical_y`
+may be passed to store the input points to `f` at which the returned minimum
+value is attained.
 
 Hill-climbing is a heuristic which starts at the guess, then considers taking
 a single step in each of a fixed number of directions. The direction with the
 best (in this case, minimum) value is chosen, and further steps are taken in it
 until the answer no longer improves. When this happens, the step size is reduced
 and the same process repeats until a desired absolute error is reached. The
-technique's success heavily depends on the behavior of f and the initial guess.
+technique's success heavily depends on the behavior of `f` and the initial guess.
 Therefore, the result is not guaranteed to be the global minimum.
 
 Time Complexity:
-- O(d log n) call will be made to f, where d is the number of directions
-  considered at each position and n is the search space that is approximately
+- O(d log n) call will be made to `f`, where $d$ is the number of directions
+  considered at each position and $n$ is the search space that is approximately
   proportional to the maximum possible step size divided by the minimum possible
   step size.
 

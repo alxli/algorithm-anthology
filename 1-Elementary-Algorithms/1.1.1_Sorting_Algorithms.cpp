@@ -1,11 +1,11 @@
 /*
 
-These functions are equivalent to std::sort(), taking random-access iterators
-as a range [lo, hi) to be sorted. Elements between lo and hi (including the
-element pointed to by lo but excluding the element pointed to by hi) will be
+These functions are equivalent to `std::sort()`, taking random-access iterators
+as a range [`lo`, `hi`) to be sorted. Elements between `lo` and `hi` (including the
+element pointed to by `lo` but excluding the element pointed to by `hi`) will be
 sorted into ascending order after the function call. Optionally, a comparison
 function object specifying a strict weak ordering may be specified to replace
-the default operator <.
+the default `operator <`.
 
 These functions are not meant to compete with standard library implementations
 in terms terms of speed. Instead, they are meant to demonstrate how common
@@ -74,12 +74,12 @@ void quicksort(It lo, It hi) {
 Merge sort first divides a list into n sublists of one element each, then
 recursively merges the sublists into sorted order until only a single sorted
 sublist remains. Merge sort is a stable sort, meaning that it preserves the
-relative order of elements which compare equal by operator < or the custom
+relative order of elements which compare equal by `operator <` or the custom
 comparator given.
 
-An analogous function in the C++ standard library is std::stable_sort(), except
+An analogous function in the C++ standard library is `std::stable_sort()`, except
 that the implementation here requires sufficient memory to be available. When
-O(n) auxiliary memory is not available, std::stable_sort() falls back to a time
+O(n) auxiliary memory is not available, `std::stable_sort()` falls back to a time
 complexity of O(n log^2 n) whereas the implementation here will simply fail.
 
 Time Complexity (Average): O(n log n).
@@ -130,8 +130,8 @@ moving it to the beginning of the right, sorted subrange until the entire range
 is sorted. Heapsort has a better worst case time complexity than quicksort and
 also a better space complexity than merge sort.
 
-The C++ standard library equivalent is calling std::make_heap(lo, hi), followed
-by std::sort_heap(lo, hi).
+The C++ standard library equivalent is calling `std::make_heap(lo, hi)`, followed
+by `std::sort_heap(lo, hi)`.
 
 Time Complexity (Average): O(n log n).
 Time Complexity (Worst): O(n log n).
@@ -231,11 +231,11 @@ unsigned types, as long as their values are nonnegative integers.
 In this implementation, a power of two is chosen to be the base for the sort
 so that bitwise operations can be easily used to extract digits. This avoids the
 need to use modulo and exponentiation, which are much more expensive operations.
-In practice, it's been demonstrated that 2^8 is the best choice for sorting
-32-bit integers (approximately 5 times faster than std::sort(), and typically
+In practice, it's been demonstrated that $2^8$ is the best choice for sorting
+32-bit integers (approximately 5 times faster than `std::sort()`, and typically
 2-4 faster than radix sort using any other power of two chosen as the base).
 
-Time Complexity: O(n*w) for n integers of w bits each.
+Time Complexity: O(n*w) for $n$ integers of $w$ bits each.
 Space Complexity: O(n + w) auxiliary.
 
 */

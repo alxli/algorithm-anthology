@@ -1,21 +1,21 @@
 /*
 
-Given a set of pairs (m, b) specifying lines of the form y = mx + b, process a
-set of x-coordinate queries each asking to find the minimum y-value when any of
-the given lines are evaluated at the specified x. To instead have the queries
-optimize for maximum y-value, call the constructor with query_max=true.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process
+a set of x-coordinate queries each asking to find the minimum y-value when any
+of the given lines are evaluated at the specified x. To instead have the queries
+optimize for maximum y-value, call the constructor with `query_max=true`.
 
 The following implementation is a fully dynamic variant of the convex hull
-optimization technique, using a self-balancing binary search tree (std::set) to
-support the ability to call add_line() and query() in any desired order.
+optimization technique, using a self-balancing binary search tree (`std::set`) to
+support the ability to call `add_line()` and `query()` in any desired order.
 
 Time Complexity:
-- O(log n) amortized per call to add_line() and O(log n) per call to query(),
-  where n is the number of lines added.
+- O(log n) amortized per call to `add_line()` and O(log n) per call to `query()`,
+  where $n$ is the number of lines added.
 
 Space Complexity:
 - O(n) for storage of the lines.
-- O(1) auxiliary for add_line() and query().
+- O(1) auxiliary for `add_line()` and `query()`.
 
 */
 
