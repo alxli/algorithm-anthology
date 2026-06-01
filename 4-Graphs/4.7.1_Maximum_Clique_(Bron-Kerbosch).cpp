@@ -66,16 +66,19 @@ int rec(int nodes, bits &curr, bits &pool, bits &excl) {
 
 int max_clique(int nodes) {
   bits curr, excl, pool;
-  pool.flip();
+  for (int i = 0; i < nodes; i++) {
+    pool[i] = true;
+  }
   return rec(nodes, curr, pool, excl);
 }
 
 int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
   if (pool == 0 && excl == 0) {
-    int res = 0, u = __builtin_ctzll(curr);
-    while (u < (int)g.size()) {
+    int res = 0;
+    while (curr != 0) {
+      int u = __builtin_ctzll(curr);
       res += w[u];
-      u += __builtin_ctzll(curr >> (u + 1)) + 1;
+      curr &= curr - 1;
     }
     return res;
   }
@@ -84,12 +87,12 @@ int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
   }
   int res = -1, pivot = __builtin_ctzll(pool | excl);
   uint64 z = pool & ~g[pivot];
-  int u = __builtin_ctzll(z);
-  while (u < (int)g.size()) {
-    res = std::max(res, rec(g, curr | (1LL << u), pool & g[u], excl & g[u]));
-    pool ^= 1LL << u;
-    excl |= 1LL << u;
-    u += __builtin_ctzll(z >> (u + 1)) + 1;
+  while (z != 0) {
+    int u = __builtin_ctzll(z);
+    res = std::max(res, rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
+    pool ^= 1ULL << u;
+    excl |= 1ULL << u;
+    z &= z - 1;
   }
   return res;
 }
@@ -99,11 +102,11 @@ int max_clique_weighted(int nodes) {
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
       if (adj[i][j]) {
-        g[i] |= 1LL << j;
+        g[i] |= 1ULL << j;
       }
     }
   }
-  return rec(g, 0, (1LL << nodes) - 1, 0);
+  return rec(g, 0, (1ULL << nodes) - 1, 0);
 }
 
 /*** Example Usage ***/

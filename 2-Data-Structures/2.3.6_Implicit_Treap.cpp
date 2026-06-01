@@ -162,8 +162,9 @@ class implicit_treap {
   static void erase(node_t *&n, int i) {
     push_delta(n);
     if (i == size(n->left)) {
+      node_t *left = n->left, *right = n->right;
       delete n;
-      merge(n, n->left, n->right);
+      merge(n, left, right);
     } else if (i < size(n->left)) {
       erase(n->left, i);
     } else {

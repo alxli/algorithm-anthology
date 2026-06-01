@@ -45,7 +45,8 @@ int eval(It &it, int prec) {
 }
 
 int eval(const std::string &s) {
-  std::string::iterator it = std::string(s).begin();
+  std::string expr = s + '\0';
+  std::string::iterator it = expr.begin();
   return eval(it, 2);
 }
 

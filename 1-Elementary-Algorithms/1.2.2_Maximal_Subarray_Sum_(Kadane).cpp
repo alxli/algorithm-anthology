@@ -47,6 +47,9 @@ template<class It>
 typename std::iterator_traits<It>::value_type
 max_subarray_sum(It lo, It hi, int *res_lo = NULL, int *res_hi = NULL) {
   typedef typename std::iterator_traits<It>::value_type T;
+  if (lo == hi) {
+    return T();
+  }
   int curr_begin = 0, begin = 0, end = -1;
   T sum = 0, max_sum = std::numeric_limits<T>::min();
   for (It it = lo; it != hi; ++it) {
@@ -79,6 +82,9 @@ max_subarray_sum(It lo, It hi, int *res_lo = NULL, int *res_hi = NULL) {
 template<class T>
 T max_submatrix_sum(const std::vector<std::vector<T> > &matrix,
     int *r1 = NULL, int *c1 = NULL, int *r2 = NULL, int *c2 = NULL) {
+  if (matrix.empty() || matrix[0].empty()) {
+    return T();
+  }
   int n = matrix.size(), m = matrix[0].size();
   std::vector<T> sums(n);
   T sum, max_sum = std::numeric_limits<T>::min();

@@ -134,7 +134,7 @@ class suffix_array {
   suffix_array(const string &s) : s(s), sa(s.size() + 1) {
     int n = s.size();
     std::vector<int> scopy(s.begin(), s.end());
-    scopy.resize(n + 3);
+    scopy.resize(n + 4);
     suffix_array_dc3(scopy.begin(), sa.begin(), n + 1, 255);
     sa.erase(sa.begin());
   }
@@ -145,6 +145,9 @@ class suffix_array {
 
   std::vector<int> get_lcp() {
     int n = s.size();
+    if (n == 0) {
+      return std::vector<int>();
+    }
     std::vector<int> rank(n), lcp(n - 1);
     for (int i = 0; i < n; i++) {
       rank[sa[i]] = i;
