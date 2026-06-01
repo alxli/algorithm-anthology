@@ -94,6 +94,8 @@ class implicit_treap {
 
   static void update_delta(node_t *n, const T &d) {
     if (n != NULL) {
+      n->value = join_value_with_delta(n->value, d, 1);
+      n->subtree_value = join_value_with_delta(n->subtree_value, d, n->size);
       n->delta = n->pending ? join_deltas(n->delta, d) : d;
       n->pending = true;
     }
@@ -103,9 +105,6 @@ class implicit_treap {
     if (n == NULL || !n->pending) {
       return;
     }
-    n->value = join_value_with_delta(n->value, n->delta, 1);
-    n->subtree_value = join_value_with_delta(n->subtree_value, n->delta,
-                                             n->size);
     if (n->size > 1) {
       update_delta(n->left, n->delta);
       update_delta(n->right, n->delta);

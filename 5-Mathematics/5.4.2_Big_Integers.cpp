@@ -427,7 +427,10 @@ class bigint {
     static const int TEMP_BASE = 10000, TEMP_BASE_DIGITS = 4;
     vint a = convert_base(digits, BASE_DIGITS, TEMP_BASE_DIGITS);
     vint b = convert_base(v.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
-    int n = 1 << (33 - __builtin_clz(std::max(a.size(), b.size()) - 1));
+    int n = 1;
+    while (n < 2*(int)std::max(a.size(), b.size())) {
+      n <<= 1;
+    }
     a.resize(n, 0);
     b.resize(n, 0);
     vll c;

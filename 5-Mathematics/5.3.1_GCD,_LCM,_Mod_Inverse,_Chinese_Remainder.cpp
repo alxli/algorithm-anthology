@@ -125,6 +125,9 @@ long long simple_restore(int n, int a[], int p[]) {
 }
 
 long long garner_restore(int n, int a[], int p[]) {
+  if (n == 0) {
+    return 0;
+  }
   std::vector<int> x(a, a + n);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
