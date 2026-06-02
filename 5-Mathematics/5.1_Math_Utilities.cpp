@@ -331,7 +331,7 @@ Base Conversion:
 - `to_base(x, b)` returns the digits of the unsigned integer `x` in base `b`, where
   index 0 of the result stores the least significant digit.
 - `to_roman(x)` returns the Roman numeral representation of the unsigned integer `x`
-  as an std::string.
+  as an `std::string`.
 
 */
 

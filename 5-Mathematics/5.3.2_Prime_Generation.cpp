@@ -3,7 +3,7 @@
 Generate prime numbers using the Sieve of Eratosthenes.
 
 - `sieve(n)` returns a vector of all the primes less than or equal to `n`.
-- `sieve(lo, hi)` returns a vector of all the primes in the range [`lo`, `hi`].
+- `sieve(lo, hi)` returns a vector of all the primes in the range `[lo, hi]`.
 
 Time Complexity:
 - O(n log(log(n))) per call to `sieve(n)`.

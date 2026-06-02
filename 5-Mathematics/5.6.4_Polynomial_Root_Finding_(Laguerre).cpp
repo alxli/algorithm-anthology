@@ -6,7 +6,7 @@ that $p(x) = 0$ using Laguerre's method.
 - `horner_eval(p, x)` evaluates the complex polynomial `p` of degree $d$ (represented
   as a vector of size $d + 1$ where `p[i]` stores the complex coefficient for the
   $x^i$ term) at `x`, using Horner's method, returning a pair where the first value
-  is a vector of sub-evaluations and the second value is the final result `p(x)`.
+  is a vector of sub-evaluations and the second value is the final result $p(x)$.
 - `find_one_root(p, x0)` returns a complex root $x$ for a polynomial `p` (represented
   as a vector of size $d + 1$ where `p[i]` stores the complex coefficient for the
   $x^i$ term) using an initial guess `x0` which should be relatively close to $x$. The

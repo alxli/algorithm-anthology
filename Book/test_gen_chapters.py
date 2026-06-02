@@ -55,7 +55,40 @@ Space Complexity:
             r'$O(\sqrt{\max\left(\text{MAXR}, \text{MAXC}\right)})$')
         self.assertEqual(
             gen_chapters.format_complexity('m*sqrt(n1 + n2)'),
-            r'$O(m \cdot \sqrt{n1 + n2})$')
+            r'$O(m \cdot \sqrt{n_{1} + n_{2}})$')
+
+    def test_format_complexity_numeric_subscripts(self):
+        self.assertEqual(gen_chapters.format_complexity('n1 + n2'),
+                         r'$O(n_{1} + n_{2})$')
+
+    def test_format_complexity_normalizes_multiplication_spacing(self):
+        self.assertEqual(gen_chapters.format_complexity('2^n * n^2'),
+                         r'$O(2^{n} \cdot n^{2})$')
+
+    def test_format_complexity_inverse_ackermann(self):
+        self.assertEqual(gen_chapters.format_complexity('alpha(n)'),
+                         r'$O(\alpha\left(n\right))$')
+
+    def test_inline_code_and_math(self):
+        self.assertEqual(
+            gen_chapters.format_text(
+                r'Call `sort(a, a + n)` for $0 \leq i < n$ in O(n log n).'),
+            r'Call \inlinecode{sort(a, a + n)} for $0 \leq i < n$ in '
+            r'$O(n \log n)$.')
+
+    def test_prose_comparisons_and_emphasis(self):
+        self.assertEqual(
+            gen_chapters.format_text(
+                'Require `lo` <= `mid` <= `hi`, *usually* but **not always**.'),
+            r'Require \inlinecode{lo} $\leq$ \inlinecode{mid} $\leq$ '
+            r'\inlinecode{hi}, \textit{usually} but \textbf{not always}.')
+        self.assertEqual(
+            gen_chapters.format_text('Compute a*x + b*y and operators *, *=.'),
+            r'Compute a*x + b*y and operators *, *=.')
+
+    def test_unmatched_inline_delimiter_is_literal(self):
+        self.assertEqual(gen_chapters.format_text('Use `foo_bar as written.'),
+                         r'Use `foo\_bar as written.')
 
     def test_render_source_interleaves_prose_output_and_code(self):
         source = '''/*
