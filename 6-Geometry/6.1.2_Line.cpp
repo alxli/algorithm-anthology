@@ -1,12 +1,13 @@
 /*
 
 A straight line in two dimensions supporting epsilon comparisons. The line is
-represented by the form a*x + b*y + c = 0, where the coefficients are normalized
-so that b is always 1 except for when the line is vertical, in which case b = 0.
-Operations include checking if the line is horizontal or vertical, finding the
-slope, evaluating y at some x (and vice versa), checking if a point falls on the
-line, checking if another line is parallel or perpendicular, and finding the
-parallel or perpendicular line through a point.
+represented by the form $ax + by + c = 0$, where the coefficients are normalized
+so that $b$ is always 1 except for when the line is vertical, in which case $b = 0$.
+Operations include `horizontal()`, `vertical()`, `slope()`, evaluating $y$ at some
+$x$ with `y()` (and vice versa with `x()`), checking if a point falls on the line
+with `contains()`, checking if another line is parallel or perpendicular with
+`is_parallel()` or `is_perpendicular()`, and finding the `parallel()` or
+`perpendicular()` line through a point.
 
 Time Complexity:
 - O(1) per call to the constructor and all other operations.

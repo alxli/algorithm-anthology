@@ -1,28 +1,28 @@
 /*
 
-Angle calculations in two dimensions. The constants DEG and RAD may be used as
-multipliers to convert between degrees and radians. For example, if t is a value
-in radians, then t*DEG is the equivalent angle in degrees.
+Angle calculations in two dimensions. The constants `DEG` and `RAD` may be used as
+multipliers to convert between degrees and radians. For example, if $t$ is a value
+in radians, then $t \cdot \text{DEG}$ is the equivalent angle in degrees.
 
-- reduce_deg(t) takes an angle t degrees and returns an equivalent angle in the
-  range [0, 360) degrees. E.g. -630 becomes 90.
-- reduce_rad(t) takes an angle t radians and returns an equivalent angle in the
-  range [0, 360) radians. E.g. 720.5 becomes 0.5.
-- polar_point(r, t) returns a two-dimensional Cartesian point given radius r and
-  angle t radians in polar coordinates (see std::polar()).
-- polar_angle(p) returns the angle in radians of the line segment from (0, 0) to
-  point p, relative counterclockwise to the positive x-axis.
-- angle(a, o, b) returns the smallest angle in radians formed by the points a,
-  o, b with vertex at point o.
-- angle_between(a, b) returns the angle in radians of segment from point a to
-  point b, relative counterclockwise to the positive x-axis.
-- angle between(a1, b1, a2, b2) returns the smaller angle in radians between
-  two lines a1*x + b1*y + c1 = 0 and a2*x + b2*y + c2 = 0, limited to [0, PI/2].
-- cross(a, b, o) returns the magnitude (Euclidean norm) of the three-dimensional
-  cross product between points a and b where the z-component is implicitly zero
-  and the origin is implicitly shifted to point o. This operation is also equal
+- `reduce_deg(t)` takes an angle $t$ degrees and returns an equivalent angle in the
+  range $[0, 360)$ degrees. E.g. $-630$ becomes $90$.
+- `reduce_rad(t)` takes an angle $t$ radians and returns an equivalent angle in the
+  range $[0, 2\pi)$ radians. E.g. $720.5$ becomes $0.5$.
+- `polar_point(r, t)` returns a two-dimensional Cartesian point given radius $r$ and
+  angle $t$ radians in polar coordinates (see `std::polar()`).
+- `polar_angle(p)` returns the angle in radians of the line segment from $(0, 0)$ to
+  point $p$, relative counterclockwise to the positive $x$-axis.
+- `angle(a, o, b)` returns the smallest angle in radians formed by the points $a$,
+  $o$, $b$ with vertex at point $o$.
+- `angle_between(a, b)` returns the angle in radians of segment from point $a$ to
+  point $b$, relative counterclockwise to the positive $x$-axis.
+- `angle_between(a1, b1, a2, b2)` returns the smaller angle in radians between
+  two lines $a_1x + b_1y + c_1 = 0$ and $a_2x + b_2y + c_2 = 0$, limited to $[0, \pi / 2]$.
+- `cross(a, b, o)` returns the magnitude (Euclidean norm) of the three-dimensional
+  cross product between points $a$ and $b$ where the $z$-component is implicitly zero
+  and the origin is implicitly shifted to point $o$. This operation is also equal
   to double the signed area of the triangle from these three points.
-- turn(a, o, b) returns -1 if the path a->o->b forms a left turn on the plane, 0
+- `turn(a, o, b)` returns $-1$ if the path $a \to o \to b$ forms a left turn on the plane, 0
   if the path forms a straight line segment, or 1 if it forms a right turn.
 
 Time Complexity:

@@ -2,23 +2,23 @@
 
 Common triangle calculations in two dimensions.
 
-- triangle_area(a, b, c) returns the area of the triangle abc.
-- triangle_area_sides(s1, s2, s3) returns the area of a triangle with side
-  lengths s1, s2, and s3. The given lengths must be non-negative and form a
+- `triangle_area(a, b, c)` returns the area of the triangle $abc$.
+- `triangle_area_sides(s1, s2, s3)` returns the area of a triangle with side
+  lengths $s_1$, $s_2$, and $s_3$. The given lengths must be non-negative and form a
   valid triangle.
-- trinagle_area_medians(m1, m2, m3) returns the area of a triangle with medians
-  of lengths m1, m2, and m3. The median of a triangle is a line segment joining
+- `triangle_area_medians(m1, m2, m3)` returns the area of a triangle with medians
+  of lengths $m_1$, $m_2$, and $m_3$. The median of a triangle is a line segment joining
   a vertex to the midpoint of the opposing edge.
-- triangle_area_altitudes(h1, h2, h3) returns the area of a triangle with
-  altitudes h1, h2, and h3. An altitude of a triangle is the shortest line
+- `triangle_area_altitudes(h1, h2, h3)` returns the area of a triangle with
+  altitudes $h_1$, $h_2$, and $h_3$. An altitude of a triangle is the shortest line
   between a vertex and the infinite line that is extended from its opposite
   edge.
-- same_side(p1, p2, a, b) returns whether points p1 and p2 lie on the same side
-  of the line containing points a and b. If one or both points lie exactly on
-  the line, then the result will depend on the setting of EDGE_IS_SAME_SIDE.
-- point_in_triangle(p, a, b, c) returns whether point p lies within the triangle
-  abc. If the point lies on or close to an edge (by roughly EPS), then the
-  result will depend on the setting of EDGE_IS_SAME_SIDE in the function above.
+- `same_side(p1, p2, a, b)` returns whether points $p_1$ and $p_2$ lie on the same side
+  of the line containing points $a$ and $b$. If one or both points lie exactly on
+  the line, then the result will depend on the setting of `EDGE_IS_SAME_SIDE`.
+- `point_in_triangle(p, a, b, c)` returns whether point $p$ lies within the triangle
+  $abc$. If the point lies on or close to an edge (by roughly `EPS`), then the
+  result will depend on the setting of `EDGE_IS_SAME_SIDE` in the function above.
 
 Time Complexity:
 - O(1) for all operations.

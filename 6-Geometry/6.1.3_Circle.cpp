@@ -1,10 +1,11 @@
 /*
 
 A circle in two dimensions supporting epsilon comparisons. The circle centered
-at (h, k) is represented by the relation (x - h)^2 + (y - k)^2 = r^2, where the
-radius r is normalized to a non-negative number. Operations include constructing
-a circle from a line segment, constructing a circumcircle, checking if a point
-falls inside the circle or on its edge, and constructing an incircle.
+at $(h, k)$ is represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the
+radius $r$ is normalized to a non-negative number. Operations include constructing
+a circle from a line segment, constructing a circumcircle, accessing `center()`,
+checking if a point falls inside the circle with `contains()` or on its edge with
+`on_edge()`, and constructing an incircle with `incircle()`.
 
 Time Complexity:
 - O(1) per call to the constructors and all other operations.

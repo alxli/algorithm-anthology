@@ -3,23 +3,23 @@
 Given two polygons, determine the areas of their intersection and union using a
 sweep line algorithm and the inclusion-exclusion principle.
 
-- intersection_area(lo1, hi1, lo2, hi2) returns the intersection area of two
-  polygons respectively specified by two ranges [lo1, hi1) and [lo2, hi2) of
-  vertices in clockwise order, where lo1, hi1, lo2, and hi2 must be
+- `intersection_area(lo1, hi1, lo2, hi2)` returns the intersection area of two
+  polygons respectively specified by two ranges `[lo1, hi1)` and `[lo2, hi2)` of
+  vertices in clockwise order, where `lo1`, `hi1`, `lo2`, and `hi2` must be
   random-access iterators.
-- union_area(lo1, hi1, lo2, hi2) returns the union area of two polygons
-  respectively specified by two ranges [lo1, hi1) and [lo2, hi2) of vertices in
-  clockwise order, where lo1, hi1, lo2, and hi2 must be random-access iterators.
+- `union_area(lo1, hi1, lo2, hi2)` returns the union area of two polygons
+  respectively specified by two ranges `[lo1, hi1)` and `[lo2, hi2)` of vertices in
+  clockwise order, where `lo1`, `hi1`, `lo2`, and `hi2` must be random-access iterators.
 
 Time Complexity:
-- O(n^2 log n) per call to intersection_area(lo1, hi1, lo2, hi2) and
-  union_area(lo1, hi1, lo2, hi2) where n is the sum of distances between lo1 and
-  hi1 and lo2 and hi2 respectively.
+- O(n^2 log n) per call to `intersection_area(lo1, hi1, lo2, hi2)` and
+  `union_area(lo1, hi1, lo2, hi2)` where $n$ is the sum of distances between `lo1` and
+  `hi1` and `lo2` and `hi2` respectively.
 
 Space Complexity:
-- O(n) auxiliary heap space for intersection_area(lo1, hi1, lo2, hi2) and
-  union_area(lo1, hi1, lo2, hi2), where n is the sum of distances between lo1
-  and hi1 and lo2 and hi2 respectively.
+- O(n) auxiliary heap space for `intersection_area(lo1, hi1, lo2, hi2)` and
+  `union_area(lo1, hi1, lo2, hi2)`, where $n$ is the sum of distances between `lo1`
+  and `hi1` and `lo2` and `hi2` respectively.
 
 */
 

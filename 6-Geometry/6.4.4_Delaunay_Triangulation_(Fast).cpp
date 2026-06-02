@@ -1,26 +1,26 @@
 /*
 
-Given a set P of two dimensional points, the Delaunay triangulation of P is a
-set of non-overlapping triangles that covers the entire convex hull of P such
-that no point in P lies within the circumcircle of any of the resulting
-triangles. For any point p in the convex hull of P (but not necessarily in P),
+Given a set $P$ of two dimensional points, the Delaunay triangulation of $P$ is a
+set of non-overlapping triangles that covers the entire convex hull of $P$ such
+that no point in $P$ lies within the circumcircle of any of the resulting
+triangles. For any point $p$ in the convex hull of $P$ (but not necessarily in $P$),
 the nearest point is guaranteed to be a vertex of the enclosing triangle from
 the triangulation.
 
 The triangulation may not exist (e.g. for a set of collinear points), or may not
-be unique if it does exists. The following program assumes its existence and
-produces one such valid result using TABLE_DELAUNAY, a divide and conquer
+be unique if it does exist. The following program assumes its existence and
+produces one such valid result using `TABLE_DELAUNAY`, a divide and conquer
 algorithm with linear merging. Its fully documented version along with debugging
-messages for the current asserts() may be found at the following link:
+messages for the current `assert()` calls may be found at the following link:
 http://people.sc.fsu.edu/~jburkardt/f_src/table_delaunay/table_delaunay.html
 
-- delaunay_triangulation(lo, hi) returns a Delaunay triangulation for the input
-  range [lo, hi) of points, where lo and hi must be random-access iterators, or
+- `delaunay_triangulation(lo, hi)` returns a Delaunay triangulation for the input
+  range `[lo, hi)` of points, where `lo` and `hi` must be random-access iterators, or
   an empty vector if a triangulation does not exist.
 
 Time Complexity:
-- O(n log n) per call to delaunay_triangulation(lo, hi), where n is the distance
-  between lo and hi.
+- O(n log n) per call to `delaunay_triangulation(lo, hi)`, where $n$ is the distance
+  between `lo` and `hi`.
 
 Space Complexity:
 - O(n) auxiliary heap space for storage of the Delaunay triangulation.
