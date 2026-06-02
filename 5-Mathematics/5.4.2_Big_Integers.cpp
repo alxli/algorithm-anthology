@@ -1,7 +1,7 @@
 /*
 
 Perform operations on arbitrary precision big integers internally represented as
-a vector of base-1000000000 digits in little-endian order. Typical arithmetic
+a vector of base-$10^9$ digits in little-endian order. Typical arithmetic
 operations involving mixed numeric primitives and strings are supported using
 templates and operator overloading, as long as at least one operand is a `bigint`
 at any given level of evaluation.
