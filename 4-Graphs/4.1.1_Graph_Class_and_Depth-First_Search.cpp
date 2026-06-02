@@ -10,19 +10,19 @@ depth-first search and a few other applications. The constructor takes a Boolean
 argument which specifies whether the instance is a directed or undirected graph.
 The nodes of the graph are identified by integers indices numbered consecutively
 starting from 0. The total number of nodes will automatically increase based on
-the maximum node index passed to add_edge() so far.
+the maximum node index passed to `add_edge()` so far.
 
 Time Complexity:
-- O(1) amortized per call to add_edge(), or O(max(n, m)) for n calls where the
-  maximum node index passed as an argument is m.
-- O(max(n, m)) per call for dfs(), has_cycle(), is_tree(), or is_dag(), where n
-  is the number of nodes and and m is the number of edges.
+- O(1) amortized per call to `add_edge()`, or O(max(n, m)) for $n$ calls where the
+  maximum node index passed as an argument is $m$.
+- O(max(n, m)) per call for `dfs()`, `has_cycle()`, `is_tree()`, or `is_dag()`, where $n$
+  is the number of nodes and $m$ is the number of edges.
 - O(1) per call to all other public member functions.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$
   is the number of edges.
-- O(n) auxiliary stack space for dfs(), has_cycle(), is_tree(), and is_dag().
+- O(n) auxiliary stack space for `dfs()`, `has_cycle()`, `is_tree()`, and `is_dag()`.
 - O(1) auxiliary for all other public member functions.
 
 */

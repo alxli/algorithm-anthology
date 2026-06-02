@@ -1,12 +1,12 @@
 /*
 
 Given an undirected graph, compute the following properties of the graph using
-Tarjan's algorithm. tarjan() applies to a global, pre-populated adjacency list
-adj[] which satisfies the precondition that for every node v in adj[u], node u
-also exists in adj[v]. Nodes in adj[] must be numbered with integers between 0
+Tarjan's algorithm. `tarjan()` applies to a global, pre-populated adjacency list
+`adj[]` which satisfies the precondition that for every node $v$ in `adj[u]`, node $u$
+also exists in `adj[v]`. Nodes in `adj[]` must be numbered with integers between 0
 (inclusive) and the total number of nodes (exclusive), as passed in the function
-arguments. get_block_forest() applies to a global vector blocks[] which must be
-already precomputed by a call to tarjan().
+arguments. `get_block_forest()` applies to a global vector `block[]` which must be
+already precomputed by a call to `tarjan()`.
 
 A cut-point (i.e. cut-node, or articulation point) is any node whose removal
 increases the number of connected components in the graph.
@@ -21,14 +21,14 @@ block-tree), with bridges connecting each block. An unconnected graph will thus
 decompose into a "bridge-block forest."
 
 Time Complexity:
-- O(max(n, m)) per call to tarjan() and get_block_forest(), where n is the
-  number of nodes and m is the number of edges.
+- O(max(n, m)) per call to `tarjan()` and `get_block_forest()`, where $n$ is the
+  number of nodes and $m$ is the number of edges.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is
   the number of edges
-- O(n) auxiliary stack space for tarjan().
-- O(1) auxiliary stack space for get_block_forest().
+- O(n) auxiliary stack space for `tarjan()`.
+- O(1) auxiliary stack space for `get_block_forest()`.
 
 */
 

@@ -1,9 +1,9 @@
 /*
 
 Given a flow network with integer capacities, find the maximum flow from a given
-source node to a given sink node. The flow of a given edge u -> v is defined as
-the minimum of its capacity and the sum of the flows of all incoming edges of u.
-dinic() applies to a global adjacency list adj[] that will be modified by the
+source node to a given sink node. The flow along each edge may not exceed its
+capacity, and flow is conserved at every node other than the source and sink.
+`dinic()` applies to a global adjacency list `adj[]` that will be modified by the
 function call.
 
 Dinic's algorithm will also support real-valued flow capacities. As such, this
@@ -11,13 +11,13 @@ implementation will work as intended upon changing the appropriate variables to
 doubles.
 
 Time Complexity:
-- O(n^2*m) per call to dinic(), where n is the number of nodes and m is the
+- O(n^2*m) per call to `dinic()`, where $n$ is the number of nodes and $m$ is the
   number of edges.
 
 Space Complexity:
-- O(max(n, m)) for storage of the flow network, where n is the number of nodes
-  and m is the number of edges.
-- O(n) auxiliary stack and heap space for dinic().
+- O(max(n, m)) for storage of the flow network, where $n$ is the number of nodes
+  and $m$ is the number of edges.
+- O(n) auxiliary stack and heap space for `dinic()`.
 
 */
 

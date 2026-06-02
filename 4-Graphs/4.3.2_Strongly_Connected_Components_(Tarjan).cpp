@@ -4,19 +4,19 @@ Given a directed graph, determine the strongly connected components. The
 strongly connected components of a graph is the set of all strongly (maximally)
 connected subgraphs. A subgraph is strongly connected if there is a path between
 each pair of nodes. Condensing the strongly connected components of a graph into
-single nodes will result in a directed acyclic graph. tarjan() applies to a
-global, pre-populated adjacency list adj[] which must only consist of nodes
+single nodes will result in a directed acyclic graph. `tarjan()` applies to a
+global, pre-populated adjacency list `adj[]` which must only consist of nodes
 numbered with integers between 0 (inclusive) and the total number of nodes
 (exclusive), as passed in the function argument.
 
 Time Complexity:
-- O(max(n, m)) per call to tarjan(), where n is the number of nodes and m is the
+- O(max(n, m)) per call to `tarjan()`, where $n$ is the number of nodes and $m$ is the
   number of edges.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is
   the number of edges.
-- O(n) auxiliary stack space for tarjan().
+- O(n) auxiliary stack space for `tarjan()`.
 
 */
 

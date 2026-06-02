@@ -3,22 +3,22 @@
 Given a weighted, directed graph with possibly negative weights, determine the
 minimum distance between all pairs of start and destination nodes in the graph.
 Optionally, output the shortest path between two nodes using the shortest-path
-tree precomputed into the parent[][] array. floyd_warshall() applies to a global
-adjacency matrix dist[][], which must be initialized using initialize() and
-subsequently populated with weights. After the function call, dist[u][v] will
-have been modified to contain the shortest path from u to v, for all pairs of
-valid nodes u and v.
+tree precomputed into the `parent[][]` array. `floyd_warshall()` applies to a global
+adjacency matrix `dist[][]`, which must be initialized using `initialize()` and
+subsequently populated with weights. After the function call, `dist[u][v]` will
+have been modified to contain the shortest path from $u$ to $v$, for all pairs of
+valid nodes $u$ and $v$.
 
 This function will also detect whether the graph contains negative-weighted
 cycles, in which case there is no shortest path and an error will be thrown.
 
 Time Complexity:
-- O(n^2) per call to initialize(), where n is the number of nodes.
-- O(n^3) per call to floyd_warshall().
+- O(n^2) per call to `initialize()`, where $n$ is the number of nodes.
+- O(n^3) per call to `floyd_warshall()`.
 
 Space Complexity:
-- O(n^2) for storage of the graph, where n is the number of nodes.
-- O(n^2) auxiliary heap space for initialize() and floyd_warshall().
+- O(n^2) for storage of the graph, where $n$ is the number of nodes.
+- O(n^2) auxiliary heap space for `initialize()` and `floyd_warshall()`.
 
 */
 

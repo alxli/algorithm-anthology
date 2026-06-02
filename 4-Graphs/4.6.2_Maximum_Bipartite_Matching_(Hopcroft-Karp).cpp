@@ -1,20 +1,21 @@
 /*
 
-Given two sets of nodes A = {0, 1, ..., n1} and B = {0, 1, ..., n2} such that
-n1 < n2, as well as a set of edges E mapping nodes from set A to set B, find the
-largest possible subset of E containing no edges that share the same node.
-hopcroft_karp() applies to a global, pre-populated adjacency list adj[] which
+Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and
+$B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges
+$E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of
+$E$ containing no edges that share the same node.
+`hopcroft_karp()` applies to a global, pre-populated adjacency list `adj[]` which
 must only consist of nodes numbered with integers between 0 (inclusive) and the
 total number of nodes (exclusive), as passed in the function argument.
 
 Time Complexity:
-- O(m*sqrt(n1 + n2)) per call to hopcroft_karp(), where m is the number of
+- O(m*sqrt(n1 + n2)) per call to `hopcroft_karp()`, where $m$ is the number of
   edges.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is
   the number of edges.
-- O(n1 + n2) auxiliary stack and heap space for hopcroft_karp().
+- O(n1 + n2) auxiliary stack and heap space for `hopcroft_karp()`.
 
 */
 

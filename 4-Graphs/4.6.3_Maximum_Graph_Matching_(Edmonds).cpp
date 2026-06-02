@@ -1,18 +1,18 @@
 /*
 
-Given a directed graph, determine a maximal subset of its edges such that no
-node is shared between different edges in the resulting subset. edmonds()
-applies to a global, pre-populated adjacency list adj[] which must only consist
+Given a directed graph, determine a maximum subset of its edges such that no
+node is shared between different edges in the resulting subset. `edmonds()`
+applies to a global, pre-populated adjacency list `adj[]` which must only consist
 of nodes numbered with integers between 0 (inclusive) and the total number of
 nodes (exclusive), as passed in the function argument.
 
 Time Complexity:
-- O(n^3) per call to edmonds(), where n is the number of nodes.
+- O(n^3) per call to `edmonds()`, where $n$ is the number of nodes.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, where n the number of nodes and m is
+- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is
   the number of edges.
-- O(n) auxiliary heap space for edmonds(), where n is the number of nodes.
+- O(n) auxiliary heap space for `edmonds()`, where $n$ is the number of nodes.
 
 */
 

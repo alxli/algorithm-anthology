@@ -12,21 +12,21 @@ Given a graph as an adjacency list along with the starting node of the cycle,
 both functions below return a vector containing all nodes reachable from the
 starting node in an order which forms an Eulerian cycle. The first node of the
 cycle will be repeated as the last element of the vector. All nodes of input
-adjacency lists to both functions must be be between 0 and MAXN - 1, inclusive.
-In addition, euler_cycle_undirected() requires that for every node v which is
-found in adj[u], node u must also be found in adj[v].
+adjacency lists to both functions must be between 0 and `MAXN - 1`, inclusive.
+In addition, `euler_cycle_undirected()` requires that for every node $v$ which is
+found in `adj[u]`, node $u$ must also be found in `adj[v]`.
 
 Time Complexity:
-- O(max(n, m)) per call to either function, where n and m are the numbers of
+- O(max(n, m)) per call to either function, where $n$ and $m$ are the numbers of
   nodes and edges respectively.
 
 Space Complexity:
-- O(n) auxiliary heap space for euler_cycle_directed(), where n is the number of
+- O(n) auxiliary heap space for `euler_cycle_directed()`, where $n$ is the number of
   nodes.
-- O(n^2) auxiliary heap space for euler_cycle_undirected(), where n is the
+- O(n^2) auxiliary heap space for `euler_cycle_undirected()`, where $n$ is the
   number of nodes. This can be reduced to O(m) auxiliary heap space on the
-  number of edges if the used[][] bit matrix is replaced with an
-  std::unordered_set<std::pair<int, int>>.
+  number of edges if the `used[][]` bit matrix is replaced with an
+  `std::unordered_set<std::pair<int, int>>`.
 
 */
 

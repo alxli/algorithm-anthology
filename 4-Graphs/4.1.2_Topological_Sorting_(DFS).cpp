@@ -1,21 +1,21 @@
 /*
 
 Given a directed acyclic graph, find one of possibly many orderings of the nodes
-such that for every edge from node u to v, u comes before v in the ordering.
+such that for every edge from node $u$ to $v$, $u$ comes before $v$ in the ordering.
 Depth-first search is used to traverse all nodes in post-order.
 
-toposort(nodes) takes a directed graph stored as a global adjacency list with
-nodes indexed from 0 to (nodes - 1) and assigns a valid topological ordering to
+`toposort(nodes)` takes a directed graph stored as a global adjacency list with
+nodes indexed from 0 to `nodes - 1` and assigns a valid topological ordering to
 the global result vector. An error is thrown if the graph contains a cycle.
 
 Time Complexity:
-- O(max(n, m)) per call to toposort(), where n is the number of nodes and m is
+- O(max(n, m)) per call to `toposort()`, where $n$ is the number of nodes and $m$ is
   the number of edges.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$
   is the number of edges.
-- O(n) auxiliary stack space for toposort().
+- O(n) auxiliary stack space for `toposort()`.
 
 */
 

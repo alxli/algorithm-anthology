@@ -1,17 +1,18 @@
 /*
 
-Given two sets of nodes A = {0, 1, ..., n1} and B = {0, 1, ..., n2} such that
-n1 < n2, as well as a set of edges E mapping nodes from set A to set B, find the
-largest possible subset of E containing no edges that share the same node.
-kuhn() applies to a global, pre-populated adjacency list adj[] which must only
+Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and
+$B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges
+$E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of
+$E$ containing no edges that share the same node.
+`kuhn()` applies to a global, pre-populated adjacency list `adj[]` which must only
 consist of nodes numbered with integers between 0 (inclusive) and the total
 number of nodes (exclusive), as passed in the function argument.
 
 Time Complexity:
-- O(m*(n1 + n2)) per call to kuhn(), where m is the number of edges.
+- O(m*(n1 + n2)) per call to `kuhn()`, where $m$ is the number of edges.
 
 Space Complexity:
-- O(n1 + n2) auxiliary stack space for kuhn().
+- O(n1 + n2) auxiliary stack space for `kuhn()`.
 
 */
 

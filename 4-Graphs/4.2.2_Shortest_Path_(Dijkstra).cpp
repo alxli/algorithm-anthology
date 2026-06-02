@@ -3,17 +3,17 @@
 Given a starting node in a weighted, directed graph with nonnegative weights
 only, visit every connected node and determine the minimum distance to each such
 node. Optionally, output the shortest path to a specific destination node using
-the shortest-path tree from the predecessor array pred[]. dijkstra() applies to
-a global, pre-populated adjacency list adj[] which must only consist of nodes
+the shortest-path tree from the predecessor array `pred[]`. `dijkstra()` applies to
+a global, pre-populated adjacency list `adj[]` which must only consist of nodes
 numbered with integers between 0 (inclusive) and the total number of nodes
 (exclusive), as passed in the function argument.
 
-Since std::priority_queue is by default a max-heap, we simulate a min-heap by
+Since `std::priority_queue` is by default a max-heap, we simulate a min-heap by
 negating node distances before pushing them and negating them again after
 popping them. Alternatively, the container can be declared with the following
-template arguments (#include <functional> to access std::greater):
-  priority_queue<pair<int, int>, vector<pair<int, int> >,
-                 greater<pair<int, int> > > pq;
+template arguments (`#include <functional>` to access `std::greater`):
+  `priority_queue<pair<int, int>, vector<pair<int, int> >,
+                  greater<pair<int, int> > > pq;`
 
 Dijkstra's algorithm may be modified to support negative edge weights by
 allowing nodes to be re-visited (removing the visited array check in the inner
@@ -23,13 +23,13 @@ While it is as slow in the worst case as the Bellman-Ford algorithm, the SPFA
 still tends to outperform in the average case.
 
 Time Complexity:
-- O(m log n) for dijkstra(), where m is the number of edges and n is the number
+- O(m log n) for `dijkstra()`, where $m$ is the number of edges and $n$ is the number
   of nodes.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, where n is the number of nodes and m
+- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$
   is the number of edges.
-- O(n) auxiliary heap space for dijkstra().
+- O(m) auxiliary heap space for `dijkstra()`.
 
 */
 

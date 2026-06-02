@@ -1,22 +1,22 @@
 /*
 
 Given a flow network with integer capacities, find the maximum flow from a given
-source node to a given sink node. The flow of a given edge u -> v is defined as
-the minimum of its capacity and the sum of the flows of all incoming edges of u.
-push_relabel() applies to a global adjacency matrix cap[][] and returns the
+source node to a given sink node. The flow along each edge may not exceed its
+capacity, and flow is conserved at every node other than the source and sink.
+`push_relabel()` applies to a global adjacency matrix `cap[][]` and returns the
 maximum flow.
 
 Although the push-relabel algorithm is considered one of the most efficient
 maximum flow algorithms, it cannot take advantage of the magnitude of the
-maximum flow being less than n^3 (in which case the Ford-Fulkerson or
+maximum flow being less than $n^3$ (in which case the Ford-Fulkerson or
 Edmonds-Karp algorithms may be more efficient).
 
 Time Complexity:
-- O(n^3) per call to push_relabel(), where n is the number of nodes.
+- O(n^3) per call to `push_relabel()`, where $n$ is the number of nodes.
 
 Space Complexity:
-- O(n^2) for storage of the flow network, where n is the number of nodes.
-- O(n) auxiliary heap space for push_relabel().
+- O(n^2) for storage of the flow network, where $n$ is the number of nodes.
+- O(n) auxiliary heap space for `push_relabel()`.
 
 */
 
