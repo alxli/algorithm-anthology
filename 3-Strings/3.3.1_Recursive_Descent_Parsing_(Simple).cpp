@@ -4,13 +4,13 @@ Evaluate an expression in accordance to the order of operations (parentheses,
 unary plus and minus signs, multiplication/division, addition/subtraction). The
 following is a minimalistic recursive descent implementation using iterators.
 
-- eval(s) returns an evaluation of the arithmetic expression s.
+- `eval(s)` returns an evaluation of the arithmetic expression `s`.
 
 Time Complexity:
-- O(n) per call to eval(s), where n is the length of s.
+- O(n) per call to `eval(s)`, where $n$ is the length of `s`.
 
 Space Complexity:
-- O(n) auxiliary stack space for eval(s), where n is the length of s.
+- O(n) auxiliary stack space for `eval(s)`, where $n$ is the length of `s`.
 
 */
 

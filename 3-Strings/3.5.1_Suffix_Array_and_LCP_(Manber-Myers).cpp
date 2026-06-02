@@ -1,36 +1,36 @@
 /*
 
-Given a string s, a suffix array is the array of the smallest starting positions
-for the sorted suffices of s. That is, the i-th position of the suffix array
-stores the starting position of the i-th lexicographically smallest suffix of s.
-For examples, s = "cab" has the suffices "cab", "ab", and "b". When sorted, the
+Given a string `s`, a suffix array is the array of the smallest starting positions
+for the sorted suffixes of `s`. That is, the $i$-th position of the suffix array
+stores the starting position of the $i$-th lexicographically smallest suffix of `s`.
+For example, `s = "cab"` has the suffixes "cab", "ab", and "b". When sorted, the
 indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming
-zero-based indices) is [1, 2, 0].
+zero-based indices) is `[1, 2, 0]`.
 
-For a string s of length n the longest common prefix (LCP) array of length n - 1
+For a string `s` of length $n$, the longest common prefix (LCP) array of length $n - 1$
 stores the lengths of the longest common prefixes between all pairs of
-lexicographically adjacent suffices in s. For example, "baa" has the sorted
-suffices "a", "aa", and "baa", with an LCP array of [1, 0].
+lexicographically adjacent suffixes in `s`. For example, "baa" has the sorted
+suffixes "a", "aa", and "baa", with an LCP array of `[1, 0]`.
 
-- suffix_array(s) constructs a suffix array from the given string s using the
+- `suffix_array(s)` constructs a suffix array from the given string `s` using the
   original Manber-Myers gap partitioning algorithm with a comparison-based sort.
-- get_sa() returns the constructed suffix array.
-- get_lcp() returns the corresponding LCP array for the suffix array.
-- find(needle) returns one position that needle occurs in s (not necessarily the
-  first), or std::string::npos if it cannot be found. For a needle of length m,
+- `get_sa()` returns the constructed suffix array.
+- `get_lcp()` returns the corresponding LCP array for the suffix array.
+- `find(needle)` returns one position that `needle` occurs in `s` (not necessarily the
+  first), or `std::string::npos` if it cannot be found. For a `needle` of length $m$,
   this implementation uses an O(m log n) binary search, but can be optimized to
   O(m + log n) by first computing the LCP-LR array using the LCP array.
 
 Time Complexity:
-- O(n log^2 n) per call to the constructor, where n is the length of s.
-- O(1) per call to get_sa().
-- O(n) per call to get_lcp(), where n is the length of s.
-- O(m log n) per call to find(needle), where m is the length of needle and n is
-  the length of s.
+- O(n log^2 n) per call to the constructor, where $n$ is the length of `s`.
+- O(1) per call to `get_sa()`.
+- O(n) per call to `get_lcp()`, where $n$ is the length of `s`.
+- O(m log n) per call to `find(needle)`, where $m$ is the length of `needle` and $n$ is
+  the length of `s`.
 
 Space Complexity:
-- O(n) auxiliary for storage of the suffix and LCP arrays, where n is the length
-  of s.
+- O(n) auxiliary for storage of the suffix and LCP arrays, where $n$ is the length
+  of `s`.
 - O(n) auxiliary heap space for the constructor.
 - O(1) auxiliary space for all other operations.
 

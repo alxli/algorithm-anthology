@@ -4,12 +4,12 @@ Given two strings, determine their longest common substring (i.e. consecutive
 subsequence) using dynamic programming.
 
 Time Complexity:
-- O(n*m) per call to longest_common_substring(s1, s2), where n and m are the
-  lengths of s1 and s2, respectively.
+- O(n*m) per call to `longest_common_substring(s1, s2)`, where $n$ and $m$ are the
+  lengths of `s1` and `s2`, respectively.
 
 Space Complexity:
-- O(min(n, m)) auxiliary heap space, where n and m are the lengths of s1 and
-  s2, respectively.
+- O(min(n, m)) auxiliary heap space, where $n$ and $m$ are the lengths of `s1` and
+  `s2`, respectively.
 
 */
 

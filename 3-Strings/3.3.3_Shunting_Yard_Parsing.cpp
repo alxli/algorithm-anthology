@@ -6,50 +6,50 @@ Typical parentheses behavior is supported, but multiplication by juxtaposition
 is not. Evaluation is performed using the shunting yard algorithm.
 
 An arbitrary operand type is supported, with its string representation defined
-by a user-specified is_operand() and eval_operand() functions. For maximum
+by a user-specified `is_operand()` and `eval_operand()` functions. For maximum
 reliability, the string representation of operands should not use characters
 shared by any operator. For instance, the best practice instead of accepting
-"-1" as a valid operand (since the "-" sign may conflict with the identical
+`-1` as a valid operand (since the `-` sign may conflict with the identical
 binary operator), is to specify non-negative number as operands alongside the
-unary operator "-".
+unary operator `-`.
 
 Operators may be non-empty strings of any length, but should not contain any
 parentheses or shared characters with the string representations of operands.
-Ideally, operators should not be prefixes or suffices of one another, else the
-tokenization process may be ambiguous. For example, if ++ and + are both
-operators, then ++ may be split into either ["+", "+"] or ["++"] depending on
+Ideally, operators should not be prefixes or suffixes of one another, else the
+tokenization process may be ambiguous. For example, if `++` and `+` are both
+operators, then `++` may be split into either `["+", "+"]` or `["++"]` depending on
 the lexicographical ordering of conflicting operators.
 
-- parser(unary_op, binary_op) initializes a parser with operators specified by
-  maps unary_op (of operator to function pointer) and binary_op (of operator to
+- `parser(unary_op, binary_op)` initializes a parser with operators specified by
+  maps `unary_op` (of operator to function pointer) and `binary_op` (of operator to
   pair of function pointer and operator precedence). Operator precedences should
   be numbered upwards starting at 0 (lowest precedence, evaluated last).
-- split(s) returns a vector of tokens for the expression s, split on the given
+- `split(s)` returns a vector of tokens for the expression `s`, split on the given
   operators during construction. Each parenthesis, operator, and operand
-  satisfying is_operand() will be split into a separate token. The algorithm is
+  satisfying `is_operand()` will be split into a separate token. The algorithm is
   naive, matching operators lazily in the case of overlapping operators as
   mentioned above. Under these circumstances, the parse may not always succeed.
-- eval(lo, hi) returns the evaluation of a range [lo, hi) of already split-up
-  expression tokens, where lo and hi must be random-access iterators.
-- eval(s) returns the evaluation of expression s, after first calling split(s)
+- `eval(lo, hi)` returns the evaluation of a range [`lo`, `hi`) of already split-up
+  expression tokens, where `lo` and `hi` must be random-access iterators.
+- `eval(s)` returns the evaluation of expression `s`, after first calling `split(s)`
   to obtain the tokens.
 
 Time Complexity:
-- O(m) per call to the constructor, where m is the total number of operators.
-- O(nmk) per call to split(s), where n is the length of s, m is the total number
-  of operators defined for the parser instance, and k is the maximum length for
+- O(m) per call to the constructor, where $m$ is the total number of operators.
+- O(nmk) per call to `split(s)`, where $n$ is the length of `s`, $m$ is the total number
+  of operators defined for the parser instance, and $k$ is the maximum length for
   any operator representation.
-- O(n log m) per call to eval(lo, hi), where n is the distance between lo and hi
-  and m is the total number of operators defined for the parser instance. In
-  C++11 and later, std::unordered_map may be used in place of std::map for
-  storing the unary_ops and binary_ops, which will eliminate the log m factor
+- O(n log m) per call to `eval(lo, hi)`, where $n$ is the distance between `lo` and `hi`
+  and $m$ is the total number of operators defined for the parser instance. In
+  C++11 and later, `std::unordered_map` may be used in place of `std::map` for
+  storing `unary_ops` and `binary_ops`, which will eliminate the $\log m$ factor
   for a time complexity of O(n) per call.
-- O(nmk + n log m) per call to eval(s), where n is the distance between lo and
-  hi, and m and k are as defined previous.
+- O(nmk + n log m) per call to `eval(s)`, where $n$ is the distance between `lo` and
+  `hi`, and $m$ and $k$ are as defined previous.
 
 Space Complexity:
-- O(mk) for storage of the m operators, of maximum length k.
-- O(n) auxiliary stack space for split(s), eval(lo, hi), and eval(s), where n is
+- O(mk) for storage of the $m$ operators, of maximum length $k$.
+- O(n) auxiliary stack space for `split(s)`, `eval(lo, hi)`, and `eval(s)`, where $n$ is
   the length of the argument.
 
 */

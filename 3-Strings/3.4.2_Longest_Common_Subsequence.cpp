@@ -5,24 +5,24 @@ a string that can be derived from the original string by deleting some elements
 without changing the order of the remaining elements (e.g. "ACE" is a
 subsequence of "ABCDE", but "BAE" is not).
 
-- longest_common_subsequence(s1, s2) returns the longest common subsequence of
-  strings s1 and s2 using a classic dynamic programming approach. This
-  implementation computes dp[i][j] (the length of the longest common subsequence
-  for the length i prefix of s1 and the length j prefix of s2) before following
+- `longest_common_subsequence(s1, s2)` returns the longest common subsequence of
+  strings `s1` and `s2` using a classic dynamic programming approach. This
+  implementation computes $dp[i][j]$ (the length of the longest common subsequence
+  for the length $i$ prefix of `s1` and the length $j$ prefix of `s2`) before following
   the path backwards to construct the answer.
-- hirschberg_lcs(s1, s2) returns the longest common subsequence of strings s1
-  and s2 using the more memory efficient Hirschberg's algorithm.
+- `hirschberg_lcs(s1, s2)` returns the longest common subsequence of strings `s1`
+  and `s2` using the more memory efficient Hirschberg's algorithm.
 
 Time Complexity:
-- O(n*m) per call to longest_common_subsequence(s1, s2) as well as
-  hirschberg_lcs(s1, s2), where n and m are the lengths of s1 and s2,
+- O(n*m) per call to `longest_common_subsequence(s1, s2)` as well as
+  `hirschberg_lcs(s1, s2)`, where $n$ and $m$ are the lengths of `s1` and `s2`,
   respectively.
 
 Space Complexity:
-- O(n*m) auxiliary heap space for longest_common_subsequence(s1, s2), where n
-  and m are the lengths of s1 and s2, respectively.
+- O(n*m) auxiliary heap space for `longest_common_subsequence(s1, s2)`, where $n$
+  and $m$ are the lengths of `s1` and `s2`, respectively.
 - O(log max(n, m)) auxiliary stack space and O(min(n, m)) auxiliary heap space
-  for hirschberg_lcs(s1, s2), where n and m are the lengths of s1 and s2,
+  for `hirschberg_lcs(s1, s2)`, where $n$ and $m$ are the lengths of `s1` and `s2`,
   respectively.
 
 */

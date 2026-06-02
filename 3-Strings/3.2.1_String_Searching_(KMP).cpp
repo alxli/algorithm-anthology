@@ -3,22 +3,22 @@
 Given a single string (needle) and subsequent queries of texts (haystacks) to be
 searched, determine the first positions in which the needle occurs within the
 given haystacks in linear time using the Knuth-Morris-Pratt algorithm. In
-comparison, std::string::find runs in quadratic time.
+comparison, `std::string::find` runs in quadratic time.
 
-- kmp(needle) constructs the partial match table for a string needle that is to
-  be searched for subsequently in haystack queries.
-- find_in(haystack) returns the first position that needle occurs in haystack,
-  or std::string::npos if it cannot be found. Note that the function can be
+- `kmp(needle)` constructs the partial match table for a string `needle` that is to
+  be searched for subsequently in `haystack` queries.
+- `find_in(haystack)` returns the first position that `needle` occurs in `haystack`,
+  or `std::string::npos` if it cannot be found. Note that the function can be
   modified to return all matches by simply letting the loop run and storing
   the results instead of returning early.
 
 Time Complexity:
-- O(m) per call to the constructor, where m is the length of needle.
-- O(n) per call to find_in(haystack), where n is the length of haystack.
+- O(m) per call to the constructor, where $m$ is the length of `needle`.
+- O(n) per call to `find_in(haystack)`, where $n$ is the length of `haystack`.
 
 Space Complexity:
-- O(m) for storage of the partial match table, where m is the length of needle.
-- O(1) auxiliary space per call to find_in(haystack).
+- O(m) for storage of the partial match table, where $m$ is the length of `needle`.
+- O(1) auxiliary space per call to `find_in(haystack)`.
 
 */
 
