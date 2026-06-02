@@ -5,11 +5,18 @@ import gen_chapters
 
 class GeneratorTest(unittest.TestCase):
     def test_escape_latex_special_characters(self):
-        text = r'\ % $ _ & # { } ~ ^'
+        text = r'\ % $ _ & # { } ~ ^ < >'
         self.assertEqual(
             gen_chapters.escape_latex(text),
             r'\textbackslash{} \% \$ \_ \& \# \{ \} '
-            r'\textasciitilde{} \textasciicircum{}')
+            r'\textasciitilde{} \textasciicircum{} \textless{} \textgreater{}')
+
+    def test_inline_code_escapes_nested_template_brackets(self):
+        self.assertEqual(
+            gen_chapters.format_text(
+                r'Use `std::unordered_set<std::pair<int, int>>`.'),
+            r'Use \inlinecode{std::unordered\_set\textless{}std::pair'
+            r'\textless{}int, int\textgreater{}\textgreater{}}.')
 
     def test_render_comment(self):
         comment = r'''

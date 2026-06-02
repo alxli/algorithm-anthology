@@ -4,22 +4,22 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Binary Heap}
-Maintain a min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum. This implementation requires an ordering on the set of possible elements defined by the < operator. A binary min-heap implements a priority queue by inserting and deleting nodes into a binary tree such that the parent of any node is always less than its children.
+Maintain a min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A binary min-heap implements a priority queue by inserting and deleting nodes into a binary tree such that the parent of any node is always less than its children.
 
 \begin{compactitem}
-  \item binary\_heap() constructs an empty priority queue.
-  \item binary\_heap(lo, hi) constructs a priority queue from two ForwardIterators, consisting of elements in the range [lo, hi).
-  \item size() returns the size of the priority queue.
-  \item empty() returns whether the priority queue is empty.
-  \item push(v) inserts the value v into the priority queue.
-  \item pop() removes the minimum element from the priority queue.
-  \item top() returns the minimum element in the priority queue.
+  \item \inlinecode{binary\_heap()} constructs an empty priority queue.
+  \item \inlinecode{binary\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{size()} returns the size of the priority queue.
+  \item \inlinecode{empty()} returns whether the priority queue is empty.
+  \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
+  \item \inlinecode{pop()} removes the minimum element from the priority queue.
+  \item \inlinecode{top()} returns the minimum element in the priority queue.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the first constructor, size(), empty(), and top().
-  \item $O(\log n)$ per call to push() and pop(), where n is the number of elements in the priority queue.
+  \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{top()}.
+  \item $O(\log n)$ per call to \inlinecode{push()} and \inlinecode{pop()}, where $n$ is the number of elements in the priority queue.
   \item $O(n)$ per call to the second constructor on the distance between lo and hi.
 \end{compactitem}
 
@@ -125,30 +125,30 @@ int main() {
 12
 \end{exampleoutput}
 \subsection{Randomized Mergeable Heap}
-Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by the < operator. A randomized mergeable heap uses a coin-toss to recursively combine nodes of two binary trees.
+Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A randomized mergeable heap uses a coin-toss to recursively combine nodes of two binary trees.
 
 \begin{compactitem}
-  \item randomized\_heap() constructs an empty priority queue.
-  \item randomized\_heap(lo, hi) constructs a priority queue from two ForwardIterators, consisting of elements in the range [lo, hi).
-  \item size() returns the size of the priority queue.
-  \item empty() returns whether the priority queue is empty.
-  \item push(v) inserts the value v into the priority queue.
-  \item pop() removes the minimum element from the priority queue.
-  \item top() returns the minimum element in the priority queue.
-  \item absorb(h) inserts every value from h and sets h to the empty priority queue.
+  \item \inlinecode{randomized\_heap()} constructs an empty priority queue.
+  \item \inlinecode{randomized\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{size()} returns the size of the priority queue.
+  \item \inlinecode{empty()} returns whether the priority queue is empty.
+  \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
+  \item \inlinecode{pop()} removes the minimum element from the priority queue.
+  \item \inlinecode{top()} returns the minimum element in the priority queue.
+  \item \inlinecode{absorb(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the first constructor, size(), empty(), and top().
-  \item $O(\log n)$ expected worst case per call to push(), pop(), and absorb(), where n is the number of elements in the priority queue.
+  \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{top()}.
+  \item $O(\log n)$ expected worst case per call to \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{absorb()}, where $n$ is the number of elements in the priority queue.
   \item $O(n)$ per call to the second constructor on the distance between lo and hi.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the priority queue elements.
-  \item $O(\log n)$ auxiliary stack space for push(), pop(), and absorb().
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{absorb()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -271,30 +271,30 @@ int main() {
 12
 \end{exampleoutput}
 \subsection{Skew Heap}
-Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by the < operator. A skew heap attempts to maintain balance by unconditionally swapping all nodes in the merge path when merging.
+Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A skew heap attempts to maintain balance by unconditionally swapping all nodes in the merge path when merging.
 
 \begin{compactitem}
-  \item skew\_heap() constructs an empty priority queue.
-  \item skew\_heap(lo, hi) constructs a priority queue from two ForwardIterators, consisting of elements in the range [lo, hi).
-  \item size() returns the size of the priority queue.
-  \item empty() returns whether the priority queue is empty.
-  \item push(v) inserts the value v into the priority queue.
-  \item pop() removes the minimum element from the priority queue.
-  \item top() returns the minimum element in the priority queue.
-  \item absorb(h) inserts every value from h and sets h to the empty priority queue.
+  \item \inlinecode{skew\_heap()} constructs an empty priority queue.
+  \item \inlinecode{skew\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{size()} returns the size of the priority queue.
+  \item \inlinecode{empty()} returns whether the priority queue is empty.
+  \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
+  \item \inlinecode{pop()} removes the minimum element from the priority queue.
+  \item \inlinecode{top()} returns the minimum element in the priority queue.
+  \item \inlinecode{absorb(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the first constructor, size(), empty(), and top().
-  \item $O(\log n)$ amortized auxiliary per call to push(), pop(), and absorb(), where n is the number of elements in the priority queue.
-  \item $O(n)$ per call to the second constructor, where n is the distance between lo and hi.
+  \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{top()}.
+  \item $O(\log n)$ amortized auxiliary per call to \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{absorb()}, where $n$ is the number of elements in the priority queue.
+  \item $O(n)$ per call to the second constructor, where $n$ is the distance between lo and hi.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the priority queue elements.
-  \item $O(\log n)$ amortized auxiliary stack space for push(), pop(), and absorb().
+  \item $O(\log n)$ amortized auxiliary stack space for \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{absorb()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -415,30 +415,30 @@ int main() {
 12
 \end{exampleoutput}
 \subsection{Pairing Heap}
-Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by the < operator. A pairing heap is a heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion.
+Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A pairing heap is a heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion.
 
 \begin{compactitem}
-  \item pairing\_heap() constructs an empty priority queue.
-  \item pairing\_heap(lo, hi) constructs a priority queue from two ForwardIterators, consisting of elements in the range [lo, hi).
-  \item size() returns the size of the priority queue.
-  \item empty() returns whether the priority queue is empty.
-  \item push(v) inserts the value v into the priority queue.
-  \item pop() removes the minimum element from the priority queue.
-  \item top() returns the minimum element in the priority queue.
-  \item absorb(h) inserts every value from h and sets h to the empty priority queue.
+  \item \inlinecode{pairing\_heap()} constructs an empty priority queue.
+  \item \inlinecode{pairing\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{size()} returns the size of the priority queue.
+  \item \inlinecode{empty()} returns whether the priority queue is empty.
+  \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
+  \item \inlinecode{pop()} removes the minimum element from the priority queue.
+  \item \inlinecode{top()} returns the minimum element in the priority queue.
+  \item \inlinecode{absorb(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the first constructor, size(), empty(), top(), push(), and absorb().
-  \item $O(\log n)$ amortized per call to pop().
+  \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, \inlinecode{top()}, \inlinecode{push()}, and \inlinecode{absorb()}.
+  \item $O(\log n)$ amortized per call to \inlinecode{pop()}.
   \item $O(n)$ per call to the second constructor on the distance between lo and hi.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the priority queue elements.
-  \item $O(\log n)$ amortized auxiliary stack space for pop().
+  \item $O(\log n)$ amortized auxiliary stack space for \inlinecode{pop()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -580,28 +580,28 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Binary Search Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by the < operator on the key type. A binary search tree implements this map by inserting and deleting keys into a binary tree such that every node's left child has a lesser key and every node's right child has a greater key.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A binary search tree implements this map by inserting and deleting keys into a binary tree such that every node's left child has a lesser key and every node's right child has a greater key.
 
 \begin{compactitem}
-  \item binary\_search\_tree() constructs an empty map.
-  \item size() returns the size of the map.
-  \item empty() returns whether the map is empty.
-  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
-  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
-  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+  \item \inlinecode{binary\_search\_tree()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the constructor, size(), and empty().
-  \item $O(n)$ per call to insert(), erase(), find(), and walk(), where n is the number of nodes currently in the map.
+  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
+  \item $O(n)$ per call to \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{find()}, and \inlinecode{walk()}, where $n$ is the number of nodes currently in the map.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
-  \item $O(n)$ auxiliary stack space for insert(), erase(), and walk().
+  \item $O(n)$ auxiliary stack space for \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{walk()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -764,29 +764,29 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Treap}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by the < operator on the key type. A treap is a binary search tree that is balanced by preserving a heap property on the randomly generated priority value assigned to every node, thereby making insertions and deletions run in $O(\log n)$ with high probability.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A treap is a binary search tree that is balanced by preserving a heap property on the randomly generated priority value assigned to every node, thereby making insertions and deletions run in $O(\log n)$ with high probability.
 
 \begin{compactitem}
-  \item treap() constructs an empty map.
-  \item size() returns the size of the map.
-  \item empty() returns whether the map is empty.
-  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
-  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
-  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+  \item \inlinecode{treap()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the constructor, size(), and empty().
-  \item $O(\log n)$ on average per call to insert(), erase(), and find(), where n is the number of entries currently in the map.
-  \item $O(n)$ per call to walk().
+  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
+  \item $O(\log n)$ on average per call to \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{find()}, where $n$ is the number of entries currently in the map.
+  \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
-  \item $O(\log n)$ auxiliary stack space on average for insert(), erase(), and walk().
+  \item $O(\log n)$ auxiliary stack space on average for \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{walk()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -970,29 +970,29 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{AVL Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by the < operator on the key type. An AVL tree is a binary search tree balanced by height, guaranteeing $O(\log n)$ worst-case running time in insertions and deletions by making sure that the heights of the left and right subtrees at every node differ by at most 1.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. An AVL tree is a binary search tree balanced by height, guaranteeing $O(\log n)$ worst-case running time in insertions and deletions by making sure that the heights of the left and right subtrees at every node differ by at most 1.
 
 \begin{compactitem}
-  \item avl\_tree() constructs an empty map.
-  \item size() returns the size of the map.
-  \item empty() returns whether the map is empty.
-  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
-  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
-  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+  \item \inlinecode{avl\_tree()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the constructor, size(), and empty().
-  \item $O(\log n)$ per call to insert(), erase(), and find(), where n is the number of entries currently in the map.
-  \item $O(n)$ per call to walk().
+  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
+  \item $O(\log n)$ per call to \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{find()}, where $n$ is the number of entries currently in the map.
+  \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
-  \item $O(\log n)$ auxiliary stack space for insert(), erase(), and walk().
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{walk()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -1216,29 +1216,29 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Red-Black Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by the < operator on the key type. A red black tree is a binary search tree balanced by coloring its nodes red or black, then constraining node colors on any simple path from the root to a leaf.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A red black tree is a binary search tree balanced by coloring its nodes red or black, then constraining node colors on any simple path from the root to a leaf.
 
 \begin{compactitem}
-  \item red\_black\_tree() constructs an empty map.
-  \item size() returns the size of the map.
-  \item empty() returns whether the map is empty.
-  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
-  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
-  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+  \item \inlinecode{red\_black\_tree()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the constructor, size(), and empty().
-  \item $O(\log n)$ per call to insert(), erase(), and find(), where n is the number of entries currently in the map.
-  \item $O(n)$ per call to walk().
+  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
+  \item $O(\log n)$ per call to \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{find()}, where $n$ is the number of entries currently in the map.
+  \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
-  \item $O(\log n)$ auxiliary stack space for walk().
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{walk()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -1567,29 +1567,29 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Splay Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by the < operator on the key type. A splay tree is a balanced binary search tree with the additional property that recently accessed elements are quick to access again.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A splay tree is a balanced binary search tree with the additional property that recently accessed elements are quick to access again.
 
 \begin{compactitem}
-  \item splay\_tree() constructs an empty map.
-  \item size() returns the size of the map.
-  \item empty() returns whether the map is empty.
-  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
-  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
-  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+  \item \inlinecode{splay\_tree()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the constructor, size(), and empty().
-  \item $O(\log n)$ per call to insert(), erase(), and find(), where n is the number of entries currently in the map.
-  \item $O(n)$ per call to walk().
+  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
+  \item $O(\log n)$ per call to \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{find()}, where $n$ is the number of entries currently in the map.
+  \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
-  \item $O(\log n)$ auxiliary stack space for insert(), erase(), and walk().
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{walk()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -1793,31 +1793,31 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Size Balanced Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. In addition, support queries for keys given their ranks as well as queries for the ranks of given keys. This implementation requires an ordering on the set of possible keys defined by the < operator on the key type. A size balanced tree augments each nodes with the size of its subtree, using it to maintain balance and compute order statistics.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. In addition, support queries for keys given their ranks as well as queries for the ranks of given keys. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A size balanced tree augments each nodes with the size of its subtree, using it to maintain balance and compute order statistics.
 
 \begin{compactitem}
-  \item size\_balanced\_tree() constructs an empty map.
-  \item size() returns the size of the map.
-  \item empty() returns whether the map is empty.
-  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
-  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
-  \item select(r) returns a key-value pair of the node with a key of zero-based rank r in the map, throwing an exception if the rank is not between 0 and size() - 1.
-  \item rank(k) returns the zero-based rank of key k in the map, throwing an exception if the key was not found in the map.
-  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+  \item \inlinecode{size\_balanced\_tree()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{select(r)} returns a key-value pair of the node with a key of zero-based rank \inlinecode{r} in the map, throwing an exception if the rank is not between 0 and \inlinecode{size() - 1}.
+  \item \inlinecode{rank(k)} returns the zero-based rank of key \inlinecode{k} in the map, throwing an exception if the key was not found in the map.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the constructor, size(), and empty().
-  \item $O(\log n)$ per call to insert(), erase(), find(), select(), and rank(), where n is the number of entries currently in the map.
-  \item $O(n)$ per call to walk().
+  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
+  \item $O(\log n)$ per call to \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{find()}, \inlinecode{select()}, and \inlinecode{rank()}, where $n$ is the number of entries currently in the map.
+  \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
-  \item $O(\log n)$ auxiliary stack space for insert(), erase(), and walk().
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{walk()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -2066,32 +2066,32 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Interval Treap}
-Maintain a map from closed, one-dimensional intervals to values while supporting efficient reporting of any or all entries that intersect with a given query interval. This implementation uses std::pair to represent intervals, requiring operators < and == to be defined on the numeric key type. A treap is used to process the entries, where keys are compared lexicographically as pairs.
+Maintain a map from closed, one-dimensional intervals to values while supporting efficient reporting of any or all entries that intersect with a given query interval. This implementation uses \inlinecode{std::pair} to represent intervals, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric key type. A treap is used to process the entries, where keys are compared lexicographically as pairs.
 
 \begin{compactitem}
-  \item interval\_treap() constructs an empty map.
-  \item size() returns the size of the map.
-  \item empty() returns whether the map is empty.
-  \item insert(lo, hi, v) adds an entry with key [lo, hi] and value v to the map, returning true if a new interval was added or false if the interval already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item erase(lo, hi) removes the entry with key [lo, hi] from the map, returning true if the removal was successful or false if the interval was not found.
-  \item find\_key(lo, hi) returns a pointer to a const std::pair representing the key of some interval in the map which intersects with [lo, hi], or NULL if no such entry was found.
-  \item find\_value(lo, hi) returns a pointer to a const value of some entry in the map with a key that intersects with [lo, hi], or NULL if no such entry was found.
-  \item find\_all(lo, hi, f) calls the function f(lo, hi, v) on each entry in the map that overlaps with [lo, hi], in lexicographically ascending order of intervals.
-  \item walk(f) calls the function f(lo, hi, v) on each interval in the map, in lexicographically ascending order of intervals.
+  \item \inlinecode{interval\_treap()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(lo, hi, v)} adds an entry with key [\inlinecode{lo}, \inlinecode{hi}] and value \inlinecode{v} to the map, returning \inlinecode{true} if a new interval was added or \inlinecode{false} if the interval already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(lo, hi)} removes the entry with key [\inlinecode{lo}, \inlinecode{hi}] from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the interval was not found.
+  \item \inlinecode{find\_key(lo, hi)} returns a pointer to a const \inlinecode{std::pair} representing the key of some interval in the map which intersects with [\inlinecode{lo}, \inlinecode{hi}], or \inlinecode{NULL} if no such entry was found.
+  \item \inlinecode{find\_value(lo, hi)} returns a pointer to a const value of some entry in the map with a key that intersects with [\inlinecode{lo}, \inlinecode{hi}], or \inlinecode{NULL} if no such entry was found.
+  \item \inlinecode{find\_all(lo, hi, f)} calls the function \inlinecode{f(lo, hi, v)} on each entry in the map that overlaps with [\inlinecode{lo}, \inlinecode{hi}], in lexicographically ascending order of intervals.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(lo, hi, v)} on each interval in the map, in lexicographically ascending order of intervals.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the constructor, size(), and empty().
-  \item $O(\log n)$ on average per call to insert(), erase(), and find\_any(), where n is the number of intervals currently in the set.
-  \item $O(\log n + m)$ on average per call to find\_all(), where m is the number of intersecting intervals that are reported.
-  \item $O(n)$ per call to walk().
+  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
+  \item $O(\log n)$ on average per call to \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{find\_any()}, where $n$ is the number of intervals currently in the set.
+  \item $O(\log n + m)$ on average per call to \inlinecode{find\_all()}, where $m$ is the number of intersecting intervals that are reported.
+  \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
-  \item $O(1)$ auxiliary for size() and empty().
+  \item $O(1)$ auxiliary for \inlinecode{size()} and \inlinecode{empty()}.
   \item $O(\log n)$ auxiliary stack space on average for all other operations.
 \end{compactitem}
 
@@ -2328,30 +2328,30 @@ Intervals intersecting [16, 20]: [15, 20] [10, 30] [5, 20] [10, 40]
 All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
 \end{exampleoutput}
 \subsection{Hash Map}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires the == operator to be defined on the key type. A hash map implements a map by hashing keys into buckets using a hash function. This implementation resolves collisions by chaining entries hashed to the same bucket into a linked list.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires \inlinecode{operator ==} to be defined on the key type. A hash map implements a map by hashing keys into buckets using a hash function. This implementation resolves collisions by chaining entries hashed to the same bucket into a linked list.
 
 \begin{compactitem}
-  \item hash\_map() constructs an empty map.
-  \item size() returns the size of the map.
-  \item empty() returns whether the map is empty.
-  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
-  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
-  \item operator[k] returns a reference to key k's associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key k was not originally found.
-  \item walk(f) calls the function f(k, v) on each entry of the map, in no guaranteed order.
+  \item \inlinecode{hash\_map()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{operator[]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in no guaranteed order.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the constructor, size(), and empty().
-  \item $O(1)$ amortized per call to insert(), erase(), find(), and operator[].
-  \item $O(n)$ per call to walk(), where n is the number of entries in the map.
+  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
+  \item $O(1)$ amortized per call to \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{find()}, and \inlinecode{operator[]}.
+  \item $O(n)$ per call to \inlinecode{walk()}, where $n$ is the number of entries in the map.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
-  \item $O(n)$ auxiliary heap space for insert().
+  \item $O(n)$ auxiliary heap space for \inlinecode{insert()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -2533,30 +2533,30 @@ int main() {
 cab
 \end{exampleoutput}
 \subsection{Skip List}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires both the < and the == operators to be defined on the key type. A skip list maintains a linked hierarchy of sorted subsequences with each successive subsequence skipping over fewer elements than the previous one.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the key type. A skip list maintains a linked hierarchy of sorted subsequences with each successive subsequence skipping over fewer elements than the previous one.
 
 \begin{compactitem}
-  \item skip\_list() constructs an empty map.
-  \item size() returns the size of the map.
-  \item empty() returns whether the map is empty.
-  \item insert(k, v) adds an entry with key k and value v to the map, returning true if an new entry was added or false if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item erase(k) removes the entry with key k from the map, returning true if the removal was successful or false if the key to be removed was not found.
-  \item find(k) returns a pointer to a const value associated with key k, or NULL if the key was not found.
-  \item operator[k] returns a reference to key k's associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key k was not originally found.
-  \item walk(f) calls the function f(k, v) on each entry of the map, in ascending order of keys.
+  \item \inlinecode{skip\_list()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{operator[]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the constructor, size(), and empty().
-  \item $O(\log n)$ on average per call to insert(), erase(), find(), and operator[], where n is the number of entries currently in the map.
-  \item $O(n)$ per call to walk().
+  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
+  \item $O(\log n)$ on average per call to \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{find()}, and \inlinecode{operator[]}, where $n$ is the number of entries currently in the map.
+  \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ on average for storage of the map elements.
-  \item $O(n)$ auxiliary heap space for insert() and erase().
+  \item $O(n)$ auxiliary heap space for \inlinecode{insert()} and \inlinecode{erase()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -2737,20 +2737,20 @@ bcde
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Sparse Table (Range Minimum Query)}
-Given a static array with indices from 0 to n - 1, precompute a table that may later be used perform range minimum queries on the array in constant time. This version is simplified to only work on integer arrays.
+Given a static array with indices from $0$ to $n - 1$, precompute a table that may later be used to perform range minimum queries on the array in constant time. This version is simplified to only work on integer arrays.
 
-The dynamic programming state dp[i][j] holds the index of the minimum value in the sub-array starting at i and having length 2\textasciicircum{}j. Each dp[i][j] will always be equal to either dp[i][j - 1] or dp[i + 2\textasciicircum{}(j - 1) - 1)][j - 1], whichever of the indices corresponds to the smaller value in the array.
+The dynamic programming state $dp[i][j]$ holds the index of the minimum value in the sub-array starting at $i$ and having length $2^j$. Each $dp[i][j]$ will always be equal to either $dp[i][j - 1]$ or $dp[i + 2^{j - 1}][j - 1]$, whichever of the indices corresponds to the smaller value in the array.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ per call to build(), where n is the size of the array.
-  \item $O(1)$ per call to query\_min().
+  \item $O(n \log n)$ per call to \inlinecode{build()}, where $n$ is the size of the array.
+  \item $O(1)$ per call to \inlinecode{query()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ for storage of the sparse table, where n is the size of the array.
-  \item $O(1)$ auxiliary for query().
+  \item $O(n \log n)$ for storage of the sparse table, where $n$ is the size of the array.
+  \item $O(1)$ auxiliary for \inlinecode{query()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2796,19 +2796,19 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Square Root Decomposition}
-Maintain a fixed-size array (from 0 to size() - 1) while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
+Maintain a fixed-size array (from 0 to \inlinecode{size() - 1}) while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
 
-The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The default definition below assumes a numerical array type, supporting queries for the "min" of the target range. Another possible query operation is "sum", in which the join\_values() function should be defined to return "a + b".
+The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The default definition below assumes a numerical array type, supporting queries for the "min" of the target range. Another possible query operation is "sum", in which the \inlinecode{join\_values()} function should be defined to return $a + b$.
 
-The update operation is defined by the join\_value\_with\_delta() function which determines the change made to array values. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which join\_value\_with\_delta(v, d) should be defined to return "v + d".
+The update operation is defined by the \inlinecode{join\_value\_with\_delta()} function which determines the change made to array values. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which \inlinecode{join\_value\_with\_delta(v, d)} should be defined to return $v + d$.
 
 The operations supported by this data structure are identical to those of the point update segment tree found in this section.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to both constructors, where n is the size of the array.
-  \item $O(1)$ per call to size().
-  \item $O(\sqrt{n})$ per call to at(), update(), and query().
+  \item $O(n)$ per call to both constructors, where $n$ is the size of the array.
+  \item $O(1)$ per call to \inlinecode{size()}.
+  \item $O(\sqrt{n})$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
@@ -2925,31 +2925,31 @@ Values: 6 -2 4 8 10
 \subsection{Segment Tree (Point Update)}
 Maintain a fixed-size array while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
 
-The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
+The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
 
-The update operation is defined by the join\_value\_with\_delta() function, which determines the change made to array values. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which join\_value\_with\_delta(v, d) should be defined to return "v + d".
+The update operation is defined by the \inlinecode{join\_value\_with\_delta()} function, which determines the change made to array values. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which \inlinecode{join\_value\_with\_delta(v, d)} should be defined to return $v + d$.
 
 \begin{compactitem}
-  \item segment\_tree(n, v) constructs an array of size n with indices from 0 to n - 1, inclusive, and all values initialized to v.
-  \item segment\_tree(lo, hi) constructs an array from two random-access iterators as a range [lo, hi), initialized to the elements of the range in the same order.
-  \item size() returns the size of the array.
-  \item at(i) returns the value at index i.
-  \item query(lo, hi) returns the result of join\_values() applied to all indices from lo to hi, inclusive. If the distance between lo and hi is 1, then the single specified value is returned.
-  \item update(i, d) assigns the value v at index i to join\_value\_with\_delta(v, d).
+  \item \inlinecode{segment\_tree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{size()} returns the size of the array.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
+  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
+  \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{join\_value\_with\_delta(v, d)}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to both constructors, where n is the size of the array.
-  \item $O(1)$ per call to size().
-  \item $O(\log n)$ per call to at(), update(), and query().
+  \item $O(n)$ per call to both constructors, where $n$ is the size of the array.
+  \item $O(1)$ per call to \inlinecode{size()}.
+  \item $O(\log n)$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
-  \item $O(\log n)$ auxiliary stack space for update() and query().
-  \item $O(1)$ auxiliary for size().
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{update()} and \inlinecode{query()}.
+  \item $O(1)$ auxiliary for \inlinecode{size()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3079,38 +3079,38 @@ The minimum value in the range [0, 3] is -2.
 \subsection{Segment Tree (Range Update)}
 Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique.
 
-The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
+The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
 
-The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to array values. These must satisfy:
+The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to array values. These must satisfy:
 
 \begin{compactitem}
-  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
-  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
-  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, len) should be defined to return "v + d*len" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
+  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
+  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, len)} should be defined to return $v + d \cdot len$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
 \end{compactitem}
 
 \begin{compactitem}
-  \item segment\_tree(n, v) constructs an array of size n with indices from 0 to n - 1, inclusive, and all values initialized to v.
-  \item segment\_tree(lo, hi) constructs an array from two random-access iterators as a range [lo, hi), initialized to the elements of the range in the same order.
-  \item size() returns the size of the array.
-  \item at(i) returns the value at index i, where i is between 0 and size() - 1.
-  \item query(lo, hi) returns the result of join\_values() applied to all indices from lo to hi, inclusive. If the distance between lo and hi is 1, then the single specified value is returned.
-  \item update(i, d) assigns the value v at index i to join\_value\_with\_delta(v, d).
-  \item update(lo, hi, d) modifies the value at each array index from lo to hi, inclusive, by respectively joining them with d using join\_value\_with\_delta().
+  \item \inlinecode{segment\_tree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{size()} returns the size of the array.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
+  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
+  \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{join\_value\_with\_delta(v, d)}.
+  \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by respectively joining them with \inlinecode{d} using \inlinecode{join\_value\_with\_delta()}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to both constructors, where n is the size of the array.
-  \item $O(1)$ per call to size().
-  \item $O(\log n)$ per call to at(), update(), and query().
+  \item $O(n)$ per call to both constructors, where $n$ is the size of the array.
+  \item $O(1)$ per call to \inlinecode{size()}.
+  \item $O(\log n)$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
-  \item $O(\log n)$ auxiliary stack space for update() and query().
-  \item $O(1)$ auxiliary for size().
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{update()} and \inlinecode{query()}.
+  \item $O(1)$ auxiliary for \inlinecode{size()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3276,38 +3276,38 @@ Values: 5 5 5 1 5
 \subsection{Segment Tree (Compressed)}
 Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
+The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
 
-The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to array values. These must satisfy:
+The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to array values. These must satisfy:
 
 \begin{compactitem}
-  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
-  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
-  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, len) should be defined to return "v + d*len" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
+  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
+  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, len)} should be defined to return $v + d \cdot len$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
 \end{compactitem}
 
 \begin{compactitem}
-  \item segment\_tree(n, v) constructs an array of size n with indices from 0 to n - 1, inclusive, and all values initialized to v.
-  \item segment\_tree(lo, hi) constructs an array from two random-access iterators as a range [lo, hi), initialized to the elements of the range in the same order.
-  \item size() returns the size of the array.
-  \item at(i) returns the value at index i, where i is between 0 and size() - 1.
-  \item query(lo, hi) returns the result of join\_values() applied to all indices from lo to hi, inclusive. If the distance between lo and hi is 1, then the single specified value is returned.
-  \item update(i, d) assigns the value v at index i to join\_value\_with\_delta(v, d).
-  \item update(lo, hi, d) modifies the value at each array index from lo to hi, inclusive, by respectively joining them with d using join\_value\_with\_delta().
+  \item \inlinecode{segment\_tree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{size()} returns the size of the array.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
+  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
+  \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{join\_value\_with\_delta(v, d)}.
+  \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by respectively joining them with \inlinecode{d} using \inlinecode{join\_value\_with\_delta()}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to both constructors, where n is the size of the array.
-  \item $O(1)$ per call to size().
-  \item $O(\log n)$ per call to at(), update(), and query().
+  \item $O(n)$ per call to both constructors, where $n$ is the size of the array.
+  \item $O(1)$ per call to \inlinecode{size()}.
+  \item $O(\log n)$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
-  \item $O(\log n)$ auxiliary stack space for update() and query().
-  \item $O(1)$ auxiliary for size().
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{update()} and \inlinecode{query()}.
+  \item $O(1)$ auxiliary for \inlinecode{size()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3477,29 +3477,29 @@ Values: 5 5 5 1 5
 \subsection{Implicit Treap}
 Maintain a dynamically-sized array using a balanced binary search tree while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. A treap maintains a balanced binary tree structure by preserving the heap property on the randomly generated priority values of nodes, thereby making insertions and deletions run in $O(\log n)$ with high probability.
 
-The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
+The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
 
-The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to array values. These must satisfy:
+The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to array values. These must satisfy:
 
 \begin{compactitem}
-  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
-  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
-  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, len) should be defined to return "v + d*len" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
+  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
+  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, len)} should be defined to return $v + d \cdot len$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
 \end{compactitem}
 
-This data structure shares every operation of one-dimensional segment trees in this section, with the additional operations empty(), insert(), erase(), push\_back(), and pop\_back() analogous to those of std::vector (here, insert() and erase() both take an index instead of an iterator).
+This data structure shares every operation of one-dimensional segment trees in this section, with the additional operations \inlinecode{empty()}, \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{push\_back()}, and \inlinecode{pop\_back()} analogous to those of \inlinecode{std::vector} (here, \inlinecode{insert()} and \inlinecode{erase()} both take an index instead of an iterator).
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to both constructors, where n is the size of the array.
-  \item $O(1)$ per call to size() and empty().
+  \item $O(n)$ per call to both constructors, where $n$ is the size of the array.
+  \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{empty()}.
   \item $O(\log n)$ on average per call to all other operations.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
-  \item $O(1)$ auxiliary for size() and empty().
+  \item $O(1)$ auxiliary for \inlinecode{size()} and \inlinecode{empty()}.
   \item $O(\log n)$ auxiliary stack space for all other operations.
 \end{compactitem}
 
@@ -3762,27 +3762,27 @@ Values: 2 2 1 8 10 11 (min: 1)
 \subsection{Quadtree (Point Update)}
 Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by the join\_values() and join\_region() functions where join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The join\_region(v, area) function must be defined in conjunction to efficiently return the result of join\_values() applied to a rectangular sub-array of area elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case join\_values(a, b) should return "a + b" and join\_region(v, area) should return "v*area".
+The query operation is defined by the \inlinecode{join\_values()} and \inlinecode{join\_region()} functions where \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The \inlinecode{join\_region(v, area)} function must be defined in conjunction to efficiently return the result of \inlinecode{join\_values()} applied to a rectangular sub-array of \inlinecode{area} elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{join\_values(a, b)} should return $a + b$ and \inlinecode{join\_region(v, area)} should return $v \cdot area$.
 
-The update operation is defined by the join\_value\_with\_delta() function, which determines the change made to array values. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which join\_value\_with\_delta(v, d) should be defined to return "v + d".
+The update operation is defined by the \inlinecode{join\_value\_with\_delta()} function, which determines the change made to array values. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which \inlinecode{join\_value\_with\_delta(v, d)} should be defined to return $v + d$.
 
 \begin{compactitem}
-  \item quadtree(v) constructs a two-dimensional array with rows from 0 to MAXR and columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
-  \item at(r, c) returns the value at row r, column c.
-  \item query(r1, c1, r2, c2) returns the result of join\_values() applied to every value in the rectangular region consisting of rows from r1 to r2, inclusive, and columns from c1 to c2, inclusive.
-  \item update(r, c, d) assigns the value v at (r, c) to join\_value\_with\_delta(v, d).
+  \item \inlinecode{quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
+  \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{join\_values()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{join\_value\_with\_delta(v, d)}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
-  \item $O(\max\left(\text{MAXR}, \text{MAXC}\right))$ per call to at(), update(), and query().
+  \item $O(\max\left(\text{MAXR}, \text{MAXC}\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the array elements, where n is the number of updated entries in the array.
-  \item $O(\sqrt{\max\left(\text{MAXR}, \text{MAXC}\right)})$ auxiliary stack space for update(), query(), and at().
+  \item $O(n)$ for storage of the array elements, where $n$ is the number of updated entries in the array.
+  \item $O(\sqrt{\max\left(\text{MAXR}, \text{MAXC}\right)})$ auxiliary stack space for \inlinecode{update()}, \inlinecode{query()}, and \inlinecode{at()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3954,34 +3954,34 @@ Values:
 \subsection{Quadtree (Range Update)}
 Maintain a two-dimensional array while supporting both dynamic queries and updates of rectangular sub-arrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by the join\_values() and join\_region() functions where join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The join\_region(v, area) function must be defined in conjunction to efficiently return the result of join\_values() applied to a rectangular sub-array of area elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case join\_values(a, b) should return "a + b" and join\_region(v, area) should return "v*area".
+The query operation is defined by the \inlinecode{join\_values()} and \inlinecode{join\_region()} functions where \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The \inlinecode{join\_region(v, area)} function must be defined in conjunction to efficiently return the result of \inlinecode{join\_values()} applied to a rectangular sub-array of \inlinecode{area} elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{join\_values(a, b)} should return $a + b$ and \inlinecode{join\_region(v, area)} should return $v \cdot area$.
 
-The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to array values. These must satisfy:
+The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to array values. These must satisfy:
 
 \begin{compactitem}
-  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
-  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
-  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, area) should be defined to return "v + d*area" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
+  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
+  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, area)} should be defined to return $v + d \cdot area$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
 \end{compactitem}
 
 \begin{compactitem}
-  \item quadtree(v) constructs a two-dimensional array with rows from 0 to MAXR and columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
-  \item at(r, c) returns the value at row r, column c.
-  \item query(r1, c1, r2, c2) returns the result of join\_values() applied to every value in the rectangular region consisting of rows from r1 to r2 and columns from c1 to c2, inclusive.
-  \item update(r, c, d) assigns the value v at (r, c) to join\_value\_with\_delta(v, d).
-  \item update(r1, c1, r2, c2) modifies the value at each index of the rectangular region consisting of rows from r1 to r2 and columns from c1 to c2, inclusive, by respectively joining them with d using join\_value\_with\_delta().
+  \item \inlinecode{quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
+  \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{join\_values()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{join\_value\_with\_delta(v, d)}.
+  \item \inlinecode{update(r1, c1, r2, c2)} modifies the value at each index of the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive, by respectively joining them with \inlinecode{d} using \inlinecode{join\_value\_with\_delta()}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
-  \item $O(\max\left(\text{MAXR}, \text{MAXC}\right))$ per call to at(), update(), and query().
+  \item $O(\max\left(\text{MAXR}, \text{MAXC}\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the array elements, where n is the number of updated entries in the array.
-  \item $O(\sqrt{\max\left(\text{MAXR}, \text{MAXC}\right)})$ auxiliary stack space for update(), query(), and at().
+  \item $O(n)$ for storage of the array elements, where $n$ is the number of updated entries in the array.
+  \item $O(\sqrt{\max\left(\text{MAXR}, \text{MAXC}\right)})$ auxiliary stack space for \inlinecode{update()}, \inlinecode{query()}, and \inlinecode{at()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4186,27 +4186,27 @@ Values:
 \subsection{2D Segment Tree}
 Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by the join\_values() and join\_region() functions where join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the array. The join\_region(v, area) function must be defined in conjunction to efficiently return the result of join\_values() applied to a rectangular sub-array of area elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case join\_values(a, b) should return "a + b" and join\_region(v, area) should return "v*area".
+The query operation is defined by the \inlinecode{join\_values()} and \inlinecode{join\_region()} functions where \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The \inlinecode{join\_region(v, area)} function must be defined in conjunction to efficiently return the result of \inlinecode{join\_values()} applied to a rectangular sub-array of \inlinecode{area} elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{join\_values(a, b)} should return $a + b$ and \inlinecode{join\_region(v, area)} should return $v \cdot area$.
 
-The update operation is defined by the join\_value\_with\_delta() function, which determines the change made to array values. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which join\_value\_with\_delta(v, d) should be defined to return "v + d".
+The update operation is defined by the \inlinecode{join\_value\_with\_delta()} function, which determines the change made to array values. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which \inlinecode{join\_value\_with\_delta(v, d)} should be defined to return $v + d$.
 
 \begin{compactitem}
-  \item segment\_tree\_2d(v) constructs a two-dimensional array with rows from 0 to MAXR and columns from 0 to MAXC, inclusive. All values are implicitly initialized to v.
-  \item at(r, c) returns the value at row r, column c.
-  \item query(r1, c1, r2, c2) returns the result of join\_values() applied to every value in the rectangular region consisting of rows from r1 to r2, inclusive, and columns from c1 to c2, inclusive.
-  \item update(r, c, d) assigns the value v at (r, c) to join\_value\_with\_delta(v, d).
+  \item \inlinecode{segment\_tree\_2d(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
+  \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{join\_values()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{join\_value\_with\_delta(v, d)}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
-  \item $O(\log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$ per call to at(), update(), and query().
+  \item $O(\log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the array elements, where n is the number of updated entries in the array.
-  \item $O(\log\left(\text{MAXR}\right) + \log\left(\text{MAXC}\right))$ auxiliary stack space for update(), query(), and at().
+  \item $O(n)$ for storage of the array elements, where $n$ is the number of updated entries in the array.
+  \item $O(\log\left(\text{MAXR}\right) + \log\left(\text{MAXC}\right))$ auxiliary stack space for \inlinecode{update()}, \inlinecode{query()}, and \inlinecode{at()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4451,23 +4451,23 @@ Values:
 0 1 9
 \end{exampleoutput}
 \subsection{2D Range Tree}
-Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses std::pair to represent points, requiring operators < and == to be defined on the numeric template type.
+Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type.
 
 \begin{compactitem}
-  \item range\_tree(lo, hi) constructs a set from two random-access iterators to std::pair as a range [lo, hi) of points.
-  \item query(x1, y1, x2, y2, f) calls the function f(i, p) on each point in the set that falls into the rectangular region consisting of rows from x1 to x2, inclusive, and columns from y1 to y2, inclusive. The first argument to f is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an std::pair.
+  \item \inlinecode{range\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range [\inlinecode{lo}, \inlinecode{hi}) of points.
+  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ per call to the constructor, where n is the number of points.
-  \item $O(\log^{2}(n) + m)$ per call to query(), where m is the number of points that are reported by the query.
+  \item $O(n \log n)$ per call to the constructor, where $n$ is the number of points.
+  \item $O(\log^{2}(n) + m)$ per call to \inlinecode{query()}, where $m$ is the number of points that are reported by the query.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ for storage of the points.
-  \item $O(\log^{2}(n))$ auxiliary stack space for query().
+  \item $O(\log^{2}(n))$ auxiliary stack space for \inlinecode{query()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4581,23 +4581,23 @@ int main() {
 (1, 4) (2, 2) (3, 1)
 \end{exampleoutput}
 \subsection{K-d Tree (2D Range Query)}
-Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses std::pair to represent points, requiring operators < and == to be defined on the numeric template type.
+Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type.
 
 \begin{compactitem}
-  \item kd\_tree(lo, hi) constructs a set from two random-access iterators to std::pair as a range [lo, hi) of points.
-  \item query(x1, y1, x2, y2, f) calls the function f(i, p) on each point in the set that falls into the rectangular region consisting of rows from x1 to x2, inclusive, and columns from y1 to y2, inclusive. The first argument to f is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an std::pair.
+  \item \inlinecode{kd\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range [\inlinecode{lo}, \inlinecode{hi}) of points.
+  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ per call to the constructor, where n is the number of points.
-  \item $O(\log\left(n\right) + m)$ on average per call to query(), where m is the number of points that are reported by the query.
+  \item $O(n \log n)$ per call to the constructor, where $n$ is the number of points.
+  \item $O(\log\left(n\right) + m)$ on average per call to \inlinecode{query()}, where $m$ is the number of points that are reported by the query.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the points.
-  \item $O(\log n)$ auxiliary stack space for query().
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{query()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4722,23 +4722,23 @@ int main() {
 (1, 4) (2, 2) (3, 1)
 \end{exampleoutput}
 \subsection{K-d Tree (Nearest Neighbor)}
-Maintain a set of two-dimensional points while supporting queries for the closest point in the set to a given query point. This implementation uses std::pair to represent points, requiring operators <, ==, -, and long double casting to be defined on the numeric template type.
+Maintain a set of two-dimensional points while supporting queries for the closest point in the set to a given query point. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}}, \inlinecode{==}, \inlinecode{-}, and \inlinecode{long double} casting to be defined on the numeric template type.
 
 \begin{compactitem}
-  \item kd\_tree(lo, hi) constructs a set from two random-access iterators to std::pair as a range [lo, hi) of points.
-  \item nearest(x, y, can\_equal) returns a point in the set that is closest to (x, y) by Euclidean distance. This may be equal to (x, y) only if can\_equal is true.
+  \item \inlinecode{kd\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range [\inlinecode{lo}, \inlinecode{hi}) of points.
+  \item \inlinecode{nearest(x, y, can\_equal)} returns a point in the set that is closest to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance. This may be equal to (\inlinecode{x}, \inlinecode{y}) only if \inlinecode{can\_equal} is \inlinecode{true}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ per call to the constructor, where n is the number of points.
-  \item $O(\log n)$ on average per call to nearest().
+  \item $O(n \log n)$ per call to the constructor, where $n$ is the number of points.
+  \item $O(\log n)$ on average per call to \inlinecode{nearest()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the points.
-  \item $O(\log n)$ auxiliary stack space for nearest().
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{nearest()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4857,20 +4857,20 @@ int main() {
 Maintain a set of two-dimensional line segments while supporting queries for the closest segment in the set to a given query point. This implementation uses integer points and long doubles for intermediate calculations.
 
 \begin{compactitem}
-  \item r\_tree(lo, hi) constructs a set from two random-access iterators as a range [lo, hi) of segments.
-  \item nearest(x, y) returns a segment in the set that contains some point which is as close or closer to (x, y) by Euclidean distance than any point on any other segment in the set.
+  \item \inlinecode{r\_tree(lo, hi)} constructs a set from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}) of segments.
+  \item \inlinecode{nearest(x, y)} returns a segment in the set that contains some point which is as close or closer to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance than any point on any other segment in the set.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ per call to the constructor, where n is the number of segments.
-  \item $O(\log n)$ on average per call to nearest().
+  \item $O(n \log n)$ per call to the constructor, where $n$ is the number of segments.
+  \item $O(\log n)$ on average per call to \inlinecode{nearest()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the segments.
-  \item $O(\log n)$ auxiliary stack space for nearest().
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{nearest()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -5020,20 +5020,20 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Fenwick Tree (Simple)}
-Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 1-based (i.e. has valid indices from 1 to MAXN - 1, inclusive).
+Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 1-based (i.e. has valid indices from 1 to \inlinecode{MAXN - 1}, inclusive).
 
 \begin{compactitem}
-  \item initialize() resets the data structure.
-  \item a[i] stores the value at index i.
-  \item add(i, x) adds x to the value at index i.
-  \item set(i, x) assigns the value at index i to x.
-  \item sum(hi) returns the sum of all values at indices from 1 to hi, inclusive.
-  \item sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+  \item \inlinecode{initialize()} resets the data structure.
+  \item \inlinecode{a[i]} stores the value at index \inlinecode{i}.
+  \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
+  \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
+  \item \inlinecode{sum(hi)} returns the sum of all values at indices from 1 to \inlinecode{hi}, inclusive.
+  \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to initialize(), where n is the size of the array.
+  \item $O(n)$ per call to \inlinecode{initialize()}, where $n$ is the size of the array.
   \item $O(\log n)$ per call to all other operations.
 \end{compactitem}
 
@@ -5102,20 +5102,20 @@ int main() {
 Values: 5 1 2 3 4
 \end{exampleoutput}
 \subsection{Fenwick Tree (Range Update, Point Query)}
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and values at individual indices to be queried (point query). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and values at individual indices to be queried (point query). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to \inlinecode{size() - 1}, inclusive).
 
 \begin{compactitem}
-  \item size() returns the size of the array.
-  \item at(i) returns the value at index i.
-  \item add(i, x) adds x to the value at index i.
-  \item add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
+  \item \inlinecode{size()} returns the size of the array.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
+  \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
+  \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to the constructor, where n is the size of the array.
-  \item $O(1)$ per call to size().
-  \item $O(\log n)$ per call to at() and both add() functions.
+  \item $O(n)$ per call to the constructor, where $n$ is the size of the array.
+  \item $O(1)$ per call to \inlinecode{size()}.
+  \item $O(\log n)$ per call to \inlinecode{at()} and both \inlinecode{add()} functions.
 \end{compactitem}
 
 \textbf{Space Complexity}:
@@ -5181,22 +5181,22 @@ int main() {
 Values: 5 10 15 10 10
 \end{exampleoutput}
 \subsection{Fenwick Tree (Point Update, Range Query)}
-Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
+Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to \inlinecode{size() - 1}, inclusive).
 
 \begin{compactitem}
-  \item size() returns the size of the array.
-  \item at(i) returns the value at index i.
-  \item add(i, x) adds x to the value at index i.
-  \item set(i, x) assigns the value at index i to x.
-  \item sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
-  \item sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+  \item \inlinecode{size()} returns the size of the array.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
+  \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
+  \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
+  \item \inlinecode{sum(hi)} returns the sum of all values at indices from 0 to \inlinecode{hi}, inclusive.
+  \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to the constructor, where n is the size of the array.
-  \item $O(1)$ per call to size() and at().
-  \item $O(\log n)$ per call to add(), set(), and both sum() functions.
+  \item $O(n)$ per call to the constructor, where $n$ is the size of the array.
+  \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{at()}.
+  \item $O(\log n)$ per call to \inlinecode{add()}, \inlinecode{set()}, and both \inlinecode{sum()} functions.
 \end{compactitem}
 
 \textbf{Space Complexity}:
@@ -5275,22 +5275,22 @@ int main() {
 Values: 5 1 2 3 4
 \end{exampleoutput}
 \subsection{Fenwick Tree (Range Update, Range Query)}
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to size() - 1, inclusive).
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to \inlinecode{size() - 1}, inclusive).
 
 \begin{compactitem}
-  \item size() returns the size of the array.
-  \item at(i) returns the value at index i.
-  \item add(i, x) increments the value at index i by x.
-  \item add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
-  \item set(i, x) assigns the value at index i to x.
-  \item sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
-  \item sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+  \item \inlinecode{size()} returns the size of the array.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
+  \item \inlinecode{add(i, x)} increments the value at index \inlinecode{i} by \inlinecode{x}.
+  \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
+  \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
+  \item \inlinecode{sum(hi)} returns the sum of all values at indices from 0 to \inlinecode{hi}, inclusive.
+  \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to the constructor, where n is the size of the array.
-  \item $O(1)$ per call to size().
+  \item $O(n)$ per call to the constructor, where $n$ is the size of the array.
+  \item $O(1)$ per call to \inlinecode{size()}.
   \item $O(\log n)$ per call to all other operations.
 \end{compactitem}
 
@@ -5387,22 +5387,22 @@ int main() {
 Values: 15 6 7 -5 4
 \end{exampleoutput}
 \subsection{Fenwick Tree (Compressed)}
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation uses std::map for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, all array indices from 0 to MAXN, inclusive, are accessible.
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation uses \inlinecode{std::map} for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, all array indices from 0 to \inlinecode{MAXN}, inclusive, are accessible.
 
 \begin{compactitem}
-  \item at(i) returns the value at index i.
-  \item add(i, x) adds x to the value at index i.
-  \item add(lo, hi, x) adds x to the values at all indices from lo to hi, inclusive.
-  \item set(i, x) assigns the value at index i to x.
-  \item sum(hi) returns the sum of all values at indices from 0 to hi, inclusive.
-  \item sum(lo, hi) returns the sum of all values at indices from lo to hi, inclusive.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
+  \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
+  \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
+  \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
+  \item \inlinecode{sum(hi)} returns the sum of all values at indices from 0 to \inlinecode{hi}, inclusive.
+  \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log^{2} MAXN)$ per call to all member functions. If std::map is replaced with std::unordered\_map, then the amortized running time will become $O(\log MAXN)$.
+\textbf{Time Complexity}: $O(\log^{2} \text{MAXN})$ per call to all member functions. If \inlinecode{std::map} is replaced with \inlinecode{std::unordered\_map}, then the amortized running time will become $O(\log \text{MAXN})$.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \log MAXN)$ for storage of the array elements, where n is the number of distinct indices that have been accessed across all of the operations so far.
+  \item $O(n \log \text{MAXN})$ for storage of the array elements, where $n$ is the number of distinct indices that have been accessed across all of the operations so far.
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
@@ -5488,20 +5488,20 @@ int main() {
 Values: 15 6 7 -5 4
 \end{exampleoutput}
 \subsection{2D Fenwick Tree (Simple)}
-Maintain a 2D array of numerical type, allowing for updates of individual cells in the matrix (point update) and queries for the sum of rectangular sub-matrices (range query). This implementation assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to MAXR, inclusive, and columns have valid indices from 1 to MAXC, inclusive).
+Maintain a 2D array of numerical type, allowing for updates of individual cells in the matrix (point update) and queries for the sum of rectangular sub-matrices (range query). This implementation assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to \inlinecode{MAXR}, inclusive, and columns have valid indices from 1 to \inlinecode{MAXC}, inclusive).
 
 \begin{compactitem}
-  \item initialize() resets the data structure.
-  \item a[r][c] stores the value at index (r, c).
-  \item add(r, c, x) adds x to the value at index (r, c).
-  \item set(r, c, x) assigns x to the value at index (r, c).
-  \item sum(r, c) returns the sum of the rectangle with upper-left corner (1, 1) and lower-right corner (r, c).
-  \item sum(r1, c1, r2, c2) returns the sum of the rectangle with upper-left corner (r1, c1) and lower-right corner (r2, c2).
+  \item \inlinecode{initialize()} resets the data structure.
+  \item \inlinecode{a[r][c]} stores the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with upper-left corner (1, 1) and lower-right corner (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner (\inlinecode{r1}, \inlinecode{c1}) and lower-right corner (\inlinecode{r2}, \inlinecode{c2}).
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \cdot m)$ per call to initialize(), where n is the number of rows and m is the number of columns.
+  \item $O(n \cdot m)$ per call to \inlinecode{initialize()}, where $n$ is the number of rows and $m$ is the number of columns.
   \item $O(\log\left(n\right) \cdot \log\left(m\right))$ per call to all other operations.
 \end{compactitem}
 
@@ -5585,22 +5585,22 @@ Values:
 0 0 9
 \end{exampleoutput}
 \subsection{2D Fenwick Tree (Compressed)}
-Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to be simultaneously incremented by arbitrary values (range update) and queries for the sum of rectangular sub-matrices (range query). This implementation uses std::map for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, rows have valid indices from 0 to MAXR, inclusive, and columns have valid indices from 0 to MAXC, inclusive.
+Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to be simultaneously incremented by arbitrary values (range update) and queries for the sum of rectangular sub-matrices (range query). This implementation uses \inlinecode{std::map} for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, rows have valid indices from 0 to \inlinecode{MAXR}, inclusive, and columns have valid indices from 0 to \inlinecode{MAXC}, inclusive.
 
 \begin{compactitem}
-  \item add(r, c, x) adds x to the value at index (r, c).
-  \item add(r1, c1, r2, c2, x) adds x to all indices in the rectangle with upper-left corner (r1, c1) and lower-right corner (r2, c2).
-  \item set(r, c, x) assigns x to the value at index (r, c).
-  \item sum(r, c) returns the sum of the rectangle with upper-left corner (0, 0) and lower-right corner (r, c).
-  \item sum(r1, c1, r2, c2) returns the sum of the rectangle with upper-left corner (r1, c1) and lower-right corner (r2, c2).
-  \item at(r, c) returns the value at index (r, c).
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{add(r1, c1, r2, c2, x)} adds \inlinecode{x} to all indices in the rectangle with upper-left corner (\inlinecode{r1}, \inlinecode{c1}) and lower-right corner (\inlinecode{r2}, \inlinecode{c2}).
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with upper-left corner (0, 0) and lower-right corner (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner (\inlinecode{r1}, \inlinecode{c1}) and lower-right corner (\inlinecode{r2}, \inlinecode{c2}).
+  \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log^{2}(\text{MAXR}) \cdot \log^{2}(\text{MAXC}))$ per call to all member functions. If std::map is replaced with std::unordered\_map, then the amortized running time will become $O(\log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$.
+\textbf{Time Complexity}: $O(\log^{2}(\text{MAXR}) \cdot \log^{2}(\text{MAXC}))$ per call to all member functions. If \inlinecode{std::map} is replaced with \inlinecode{std::unordered\_map}, then the amortized running time will become $O(\log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \cdot \log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$ for storage of the array elements, where n is the number of distinct indices that have been accessed across all of the operations so far.
+  \item $O(n \cdot \log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$ for storage of the array elements, where $n$ is the number of distinct indices that have been accessed across all of the operations so far.
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
@@ -5720,19 +5720,19 @@ Values:
 Maintain a set of elements partitioned into non-overlapping subsets. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version is simplified to only work on integer elements.
 
 \begin{compactitem}
-  \item initialize() resets the data structure.
-  \item make\_set(u) creates a new partition consisting of the single element u, which must not have been previously added to the data structure.
-  \item find\_root(u) returns the unique representative of the partition containing u.
-  \item is\_united(u, v) returns whether elements u and v belong to the same partition.
-  \item unite(u, v) replaces the partitions containing u and v with a single new partition consisting of the union of elements in the original partitions.
+  \item \inlinecode{initialize()} resets the data structure.
+  \item \inlinecode{make\_set(u)} creates a new partition consisting of the single element \inlinecode{u}, which must not have been previously added to the data structure.
+  \item \inlinecode{find\_root(u)} returns the unique representative of the partition containing \inlinecode{u}.
+  \item \inlinecode{is\_united(u, v)} returns whether elements \inlinecode{u} and \inlinecode{v} belong to the same partition.
+  \item \inlinecode{unite(u, v)} replaces the partitions containing \inlinecode{u} and \inlinecode{v} with a single new partition consisting of the union of elements in the original partitions.
 \end{compactitem}
 
-A precondition to the last three operations is that make\_set() must have been previously called on their arguments.
+A precondition to the last three operations is that \inlinecode{make\_set()} must have been previously called on their arguments.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to initialize() and make\_set().
-  \item $O(a(n))$ per call to find\_root(), is\_united(), and unite(), where n is the number of elements that has been added via make\_set() so far, and a(n) is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of n).
+  \item $O(1)$ per call to \inlinecode{initialize()} and \inlinecode{make\_set()}.
+  \item $O(\alpha\left(n\right))$ per call to \inlinecode{find\_root()}, \inlinecode{is\_united()}, and \inlinecode{unite()}, where $n$ is the number of elements that has been added via \inlinecode{make\_set()} so far, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of $n$).
 \end{compactitem}
 
 \textbf{Space Complexity}:
@@ -5804,29 +5804,29 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Disjoint Set Forest (Compressed)}
-Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version uses an std::map for storage and coordinate compression (thus, element types must meet the requirements of key types for std::map).
+Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version uses an \inlinecode{std::map} for storage and coordinate compression (thus, element types must meet the requirements of key types for \inlinecode{std::map}).
 
 \begin{compactitem}
-  \item make\_set(u) creates a new partition consisting of the single element u, which must not have been previously added to the data structure.
-  \item is\_united(u, v) returns whether elements u and v belong to the same partition.
-  \item unite(u, v) replaces the partitions containing u and v with a single new partition consisting of the union of elements in the original partitions.
-  \item get\_all\_sets() returns all current partitions as a vector of vectors.
+  \item \inlinecode{make\_set(u)} creates a new partition consisting of the single element \inlinecode{u}, which must not have been previously added to the data structure.
+  \item \inlinecode{is\_united(u, v)} returns whether elements \inlinecode{u} and \inlinecode{v} belong to the same partition.
+  \item \inlinecode{unite(u, v)} replaces the partitions containing \inlinecode{u} and \inlinecode{v} with a single new partition consisting of the union of elements in the original partitions.
+  \item \inlinecode{get\_all\_sets()} returns all current partitions as a vector of vectors.
 \end{compactitem}
 
-A precondition to the last three operations is that make\_set() must have been previously called on their arguments.
+A precondition to the last three operations is that \inlinecode{make\_set()} must have been previously called on their arguments.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
-  \item $O(\log n)$ per call to make\_set(), where n is the number of elements that have been added via make\_set() so far.
-  \item $O(a(n) \log n)$ per call to is\_united() and unite(), where n is the number of elements that have been added via make\_set() so far, and a(n) is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of n).
-  \item $O(n)$ per call to get\_all\_sets().
+  \item $O(\log n)$ per call to \inlinecode{make\_set()}, where $n$ is the number of elements that have been added via \inlinecode{make\_set()} so far.
+  \item $O(\alpha\left(n\right) \log n)$ per call to \inlinecode{is\_united()} and \inlinecode{unite()}, where $n$ is the number of elements that have been added via \inlinecode{make\_set()} so far, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of $n$).
+  \item $O(n)$ per call to \inlinecode{get\_all\_sets()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the disjoint set forest elements.
-  \item $O(n)$ auxiliary heap space for get\_all\_sets().
+  \item $O(n)$ auxiliary heap space for \inlinecode{get\_all\_sets()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -5936,19 +5936,19 @@ int main() {
 [a, b, f], [c], [d, e, g]
 \end{exampleoutput}
 \subsection{Lowest Common Ancestor (Sparse Table)}
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes u and v is the node that has the longest distance from the root while having both u and v as its descendant. A nodes is considered to be a descendant of itself. build() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes u and v is the node that has the longest distance from the root while having both u and v as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ per call to build(), where n is the number of nodes.
-  \item $O(\log n)$ per call to lca().
+  \item $O(n \log n)$ per call to \inlinecode{build()}, where $n$ is the number of nodes.
+  \item $O(\log n)$ per call to \inlinecode{lca()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ to store the sparse table, where n is the number of nodes.
-  \item $O(n)$ auxiliary stack space for build().
-  \item $O(1)$ auxiliary for lca().
+  \item $O(n \log n)$ to store the sparse table, where $n$ is the number of nodes.
+  \item $O(n)$ auxiliary stack space for \inlinecode{build()}.
+  \item $O(1)$ auxiliary for \inlinecode{lca()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -6025,19 +6025,19 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lowest Common Ancestor (Segment Tree)}
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes u and v is the node that has the longest distance from the root while having both u and v as its descendant. A nodes is considered to be a descendant of itself. build() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes u and v is the node that has the longest distance from the root while having both u and v as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ per call to build(), where n is the number of nodes.
-  \item $O(\log n)$ per call to lca().
+  \item $O(n \log n)$ per call to \inlinecode{build()}, where $n$ is the number of nodes.
+  \item $O(\log n)$ per call to \inlinecode{lca()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the segment tree, where n is the number of nodes.
-  \item $O(n \log n)$ auxiliary stack space for build().
-  \item $O(\log n)$ auxiliary stack space for lca().
+  \item $O(n)$ for storage of the segment tree, where $n$ is the number of nodes.
+  \item $O(n \log n)$ auxiliary stack space for \inlinecode{build()}.
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{lca()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -6130,33 +6130,33 @@ int main() {
 \subsection{Heavy Light Decomposition}
 Maintain a tree with values associated with either its edges or nodes, while supporting both dynamic queries and dynamic updates of all values on a given path between two nodes in the tree. Heavy-light decomposition partitions the nodes of the tree into disjoint paths where all nodes have degree two, except the endpoints of a path which has degree one.
 
-The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the tree. The default code below assumes a numerical tree type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
+The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the tree. The default code below assumes a numerical tree type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
 
-The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to values. These must satisfy:
+The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to values. These must satisfy:
 
 \begin{compactitem}
-  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
-  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
-  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" a path's edges or nodes to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, len) should be defined to return "v + d*len" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
+  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
+  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" a path's edges or nodes to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, len)} should be defined to return $v + d \cdot len$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
 \end{compactitem}
 
 \begin{compactitem}
-  \item heavy\_light(n, adj[], v) constructs a new heavy light decomposition on a tree with n nodes defined by the adjacency list adj[], with all values initialized to v. The adjacency list must be a size n array of vectors consisting of only the integers from 0 to n - 1, inclusive. No duplicate edges should exist, and the graph must be connected.
-  \item query(u, v) returns the result of join\_values() applied to all values on the path from node u to node v.
-  \item update(u, v, d) modifies all values on the path from node u to node v by respectively joining them with d using join\_value\_with\_delta().
+  \item \inlinecode{heavy\_light(n, adj[], v)} constructs a new heavy light decomposition on a tree with \inlinecode{n} nodes defined by the adjacency list \inlinecode{adj[]}, with all values initialized to \inlinecode{v}. The adjacency list must be a size \inlinecode{n} array of vectors consisting of only the integers from 0 to \inlinecode{n - 1}, inclusive. No duplicate edges should exist, and the graph must be connected.
+  \item \inlinecode{query(u, v)} returns the result of \inlinecode{join\_values()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}.
+  \item \inlinecode{update(u, v, d)} modifies all values on the path from node \inlinecode{u} to node \inlinecode{v} by respectively joining them with \inlinecode{d} using \inlinecode{join\_value\_with\_delta()}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to the constructor, where n is the number of nodes.
-  \item $O(\log n)$ per call to query() and update();
+  \item $O(n)$ per call to the constructor, where $n$ is the number of nodes.
+  \item $O(\log n)$ per call to \inlinecode{query()} and \inlinecode{update()};
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the decomposition.
   \item $O(n)$ auxiliary stack space for the constructor.
-  \item $O(1)$ auxiliary for query() and update().
+  \item $O(1)$ auxiliary for \inlinecode{query()} and \inlinecode{update()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -6406,37 +6406,37 @@ int main() {
 \subsection{Link-Cut Tree}
 Maintain a forest of trees with values associated with its nodes, while supporting both dynamic queries and dynamic updates of all values on any path between two nodes in a given tree. In addition, support testing of whether two nodes are connected in the forest, as well as the merging and spliting of trees by adding or removing specific edges. Link/cut forests divide each of its trees into vertex-disjoint paths, each represented by a splay tree.
 
-The query operation is defined by an associative join\_values() function which satisfies join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z) for all values x, y, and z in the forest. The default code below assumes a numerical forest type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the join\_values() function should be defined to return "a + b".
+The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the forest. The default code below assumes a numerical forest type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
 
-The update operation is defined by the join\_value\_with\_delta() and join\_deltas() functions, which determines the change made to values. These must satisfy:
+The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to values. These must satisfy:
 
 \begin{compactitem}
-  \item join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3).
-  \item join\_value\_with\_delta(join\_values(v, ...(m times)..., v), d, m)) should be equal to join\_values(join\_value\_with\_delta(v, d, 1), ...(m times)).
-  \item if a sequence d\_1, ..., d\_m of deltas is used to update a value v, then join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1) should be equivalent to m sequential calls to join\_value\_with\_delta(v, d\_i, 1) for i = 1..m. The default code below defines updates that "set" a path's nodes to a new value. Another possible update operation is "increment", in which case join\_value\_with\_delta(v, d, len) should be defined to return "v + d*len" and join\_deltas(d1, d2) should be defined to return "d1 + d2".
+  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
+  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
+  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" a path's nodes to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, len)} should be defined to return $v + d \cdot len$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
 \end{compactitem}
 
 \begin{compactitem}
-  \item link\_cut\_forest() constructs an empty forest with no trees.
-  \item size() returns the number of nodes in the forest.
-  \item trees() returns the number of trees in the forest.
-  \item make\_root(i, v) creates a new tree in the forest consisting of a single node labeled with the integer i and value initialized to v.
-  \item is\_connected(a, b) returns whether nodes a and b are connected.
-  \item link(a, b) adds an edge between the nodes a and b, both of which must exist and not be connected.
-  \item cut(a, b) removes the edge between the nodes a and b, both of which must exist and be connected.
-  \item query(a, b) returns the result of join\_values() applied to all values on the path from the node a to node b.
-  \item update(a, b, d) modifies all the values on the path from node a to node b by respectively joining them with d using join\_value\_with\_delta().
+  \item \inlinecode{link\_cut\_forest()} constructs an empty forest with no trees.
+  \item \inlinecode{size()} returns the number of nodes in the forest.
+  \item \inlinecode{trees()} returns the number of trees in the forest.
+  \item \inlinecode{make\_root(i, v)} creates a new tree in the forest consisting of a single node labeled with the integer \inlinecode{i} and value initialized to \inlinecode{v}.
+  \item \inlinecode{is\_connected(a, b)} returns whether nodes \inlinecode{a} and \inlinecode{b} are connected.
+  \item \inlinecode{link(a, b)} adds an edge between the nodes \inlinecode{a} and \inlinecode{b}, both of which must exist and not be connected.
+  \item \inlinecode{cut(a, b)} removes the edge between the nodes \inlinecode{a} and \inlinecode{b}, both of which must exist and be connected.
+  \item \inlinecode{query(a, b)} returns the result of \inlinecode{join\_values()} applied to all values on the path from the node \inlinecode{a} to node \inlinecode{b}.
+  \item \inlinecode{update(a, b, d)} modifies all the values on the path from node \inlinecode{a} to node \inlinecode{b} by respectively joining them with \inlinecode{d} using \inlinecode{join\_value\_with\_delta()}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the constructor, size(), and trees().
-  \item $O(\log n)$ amortized per call to all other operations, where n is the number of nodes.
+  \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{trees()}.
+  \item $O(\log n)$ amortized per call to all other operations, where $n$ is the number of nodes.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the forest, where n is the number of nodes.
+  \item $O(n)$ for storage of the forest, where $n$ is the number of nodes.
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 

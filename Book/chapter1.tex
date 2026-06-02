@@ -4,7 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Sorting Algorithms}
-These functions are equivalent to std::sort(), taking random-access iterators as a range [lo, hi) to be sorted. Elements between lo and hi (including the element pointed to by lo but excluding the element pointed to by hi) will be sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default operator <.
+These functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}) to be sorted. Elements between \inlinecode{lo} and \inlinecode{hi} (including the element pointed to by \inlinecode{lo} but excluding the element pointed to by \inlinecode{hi}) will be sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator \textless{}}.
 
 These functions are not meant to compete with standard library implementations in terms terms of speed. Instead, they are meant to demonstrate how common sorting algorithms can be concisely implemented in C++.
 
@@ -57,9 +57,9 @@ void quicksort(It lo, It hi) {
   quicksort(lo, hi, std::less<T>());
 }
 \end{lstlisting}
-Merge sort first divides a list into n sublists of one element each, then recursively merges the sublists into sorted order until only a single sorted sublist remains. Merge sort is a stable sort, meaning that it preserves the relative order of elements which compare equal by operator < or the custom comparator given.
+Merge sort first divides a list into n sublists of one element each, then recursively merges the sublists into sorted order until only a single sorted sublist remains. Merge sort is a stable sort, meaning that it preserves the relative order of elements which compare equal by \inlinecode{operator \textless{}} or the custom comparator given.
 
-An analogous function in the C++ standard library is std::stable\_sort(), except that the implementation here requires sufficient memory to be available. When $O(n)$ auxiliary memory is not available, std::stable\_sort() falls back to a time complexity of $O(n \log^{2} n)$ whereas the implementation here will simply fail.
+An analogous function in the C++ standard library is \inlinecode{std::stable\_sort()}, except that the implementation here requires sufficient memory to be available. When $O(n)$ auxiliary memory is not available, \inlinecode{std::stable\_sort()} falls back to a time complexity of $O(n \log^{2} n)$ whereas the implementation here will simply fail.
 
 \textbf{Time Complexity (Average)}: $O(n \log n)$.
 
@@ -105,7 +105,7 @@ void mergesort(It lo, It hi) {
 \end{lstlisting}
 Heapsort first rearranges an array to satisfy the max-heap property. Then, it repeatedly pops the max element of the heap (the left, unsorted subrange), moving it to the beginning of the right, sorted subrange until the entire range is sorted. Heapsort has a better worst case time complexity than quicksort and also a better space complexity than merge sort.
 
-The C++ standard library equivalent is calling std::make\_heap(lo, hi), followed by std::sort\_heap(lo, hi).
+The C++ standard library equivalent is calling \inlinecode{std::make\_heap(lo, hi)}, followed by \inlinecode{std::sort\_heap(lo, hi)}.
 
 \textbf{Time Complexity (Average)}: $O(n \log n)$.
 
@@ -190,9 +190,9 @@ void combsort(It lo, It hi) {
 \end{lstlisting}
 Radix sort is used to sort integer elements with a constant number of bits in linear time. This implementation only works on ranges pointing to unsigned integer primitives. The elements in the input range do not strictly have to be unsigned types, as long as their values are nonnegative integers.
 
-In this implementation, a power of two is chosen to be the base for the sort so that bitwise operations can be easily used to extract digits. This avoids the need to use modulo and exponentiation, which are much more expensive operations. In practice, it's been demonstrated that 2\textasciicircum{}8 is the best choice for sorting 32-bit integers (approximately 5 times faster than std::sort(), and typically 2-4 faster than radix sort using any other power of two chosen as the base).
+In this implementation, a power of two is chosen to be the base for the sort so that bitwise operations can be easily used to extract digits. This avoids the need to use modulo and exponentiation, which are much more expensive operations. In practice, it's been demonstrated that $2^8$ is the best choice for sorting 32-bit integers (approximately 5 times faster than \inlinecode{std::sort()}, and typically 2-4 faster than radix sort using any other power of two chosen as the base).
 
-\textbf{Time Complexity}: $O(n \cdot w)$ for n integers of w bits each.
+\textbf{Time Complexity}: $O(n \cdot w)$ for $n$ integers of $w$ bits each.
 
 \textbf{Space Complexity}: $O(n + w)$ auxiliary.
 
@@ -343,11 +343,11 @@ combsort():   0.827s
 radix_sort(): 0.076s
 \end{exampleoutput}
 \subsection{Array Rotation}
-These functions are equivalent to std::rotate(), taking three iterators lo, mid, and hi (lo <= mid <= hi) to perform a left rotation on the range [lo, hi). After the function call, [lo, hi) will comprise of the concatenation of the elements originally in [mid, hi) + [lo, mid). That is, the range [lo, hi) will be rearranged in such a way that the element at mid becomes the first element of the new range and the element at mid - 1 becomes the last element, all while preserving the relative ordering of elements within the two rotated subarrays.
+These functions are equivalent to \inlinecode{std::rotate()}, taking three iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} (\inlinecode{lo} $\leq$ \inlinecode{mid} $\leq$ \inlinecode{hi}) to perform a left rotation on the range [\inlinecode{lo}, \inlinecode{hi}). After the function call, [\inlinecode{lo}, \inlinecode{hi}) will comprise of the concatenation of the elements originally in [\inlinecode{mid}, \inlinecode{hi}) + [\inlinecode{lo}, \inlinecode{mid}). That is, the range [\inlinecode{lo}, \inlinecode{hi}) will be rearranged in such a way that the element at \inlinecode{mid} becomes the first element of the new range and the element at \inlinecode{mid - 1} becomes the last element, all while preserving the relative ordering of elements within the two rotated subarrays.
 
-All three versions below achieve the same result using in-place algorithms. Version 1 uses a straightforward swapping algorithm requiring ForwardIterators. Version 2 requires BidirectionalIterators, employing a well-known trick with three simple inversions. Version 3 requires random-access iterators, applying a juggling algorithm which first divides the range into gcd(hi - lo, mid - lo) sets and then rotates the corresponding elements in each set.
+All three versions below achieve the same result using in-place algorithms. Version 1 uses a straightforward swapping algorithm requiring ForwardIterators. Version 2 requires BidirectionalIterators, employing a well-known trick with three simple inversions. Version 3 requires random-access iterators, applying a juggling algorithm which first divides the range into \inlinecode{gcd(hi - lo, mid - lo)} sets and then rotates the corresponding elements in each set.
 
-\textbf{Time Complexity}: $O(n)$ per call to both functions, where n is the distance between lo and hi.
+\textbf{Time Complexity}: $O(n)$ per call to both functions, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all versions
 
@@ -461,23 +461,23 @@ rotate left:  1 2 2 3 4 5 7 7 10 0
 rotate right: 0 1 2 2 3 4 5 7 7 10
 \end{exampleoutput}
 \subsection{Counting Inversions}
-The number of inversions for an array a[] is defined as the number of ordered pairs (i, j) such that i < j and a[i] > a[j]. This is roughly how "close" an array is to being sorted, but is *not* the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions.
+The number of inversions for an array $a[]$ the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i]$ \textgreater{} $a[j]$. This is roughly how "close" an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions.
 
 \begin{compactitem}
-  \item inversions(lo, hi) uses merge sort to return the number of inversions given two random-access iterators as a range [lo, hi). The input range will be sorted after the function call. This requires operator < to be defined on the iterators' value type.
-  \item inversions(n, a[]) uses a power-of-two trick to return the number of inversions for an array a[] of n nonnegative integers. After calling the function, every value of a[] will be set to 0. The time and space complexity of this operation are functions of the magnitude of the maximum value in a[]. To instead obtain a running time of $O(n \log n)$ on the number of elements, coordinate compression may be applied to a[] beforehand so that its maximum is strictly less than the length n itself.
+  \item \inlinecode{inversions(lo, hi)} uses merge sort to return the number of inversions given two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}). The input range will be sorted after the function call. This requires \inlinecode{operator \textless{}} to be defined on the iterators' value type.
+  \item \inlinecode{inversions(n, a[])} uses a power-of-two trick to return the number of inversions for an array \inlinecode{a[]} of $n$ nonnegative integers. After calling the function, every value of \inlinecode{a[]} will be set to 0. The time and space complexity of this operation are functions of the magnitude of the maximum value in \inlinecode{a[]}. To instead obtain a running time of $O(n \log n)$ on the number of elements, coordinate compression may be applied to \inlinecode{a[]} beforehand so that its maximum is strictly less than the length n itself.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ per call to inversion(lo, hi), where n is the distance between lo and hi.
-  \item $O(n \log m)$ per call to inversions(n, a[]) where n is the distance between lo and hi and m is maximum value in a[].
+  \item $O(n \log n)$ per call to \inlinecode{inversion(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n \log m)$ per call to \inlinecode{inversions(n, a[])} where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi} and $m$ is maximum value in \inlinecode{a[]}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary space and $O(\log n)$ stack space for inversions(lo, hi).
-  \item $O(m)$ auxiliary heap space for inversions(n, a[]).
+  \item $O(n)$ auxiliary space and $O(\log n)$ stack space for \inlinecode{inversions(lo, hi)}.
+  \item $O(m)$ auxiliary heap space for \inlinecode{inversions(n, a[])}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -560,11 +560,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Coordinate Compression}
-Given two ForwardIterators as a range [lo, hi) of n numerical elements, reassign each element in the range to an integer in [0, k), where k is the number of distinct elements in the original range, while preserving the initial relative ordering of elements. That is, if a[] is an array of the original values and b[] is the compressed values, then every pair of indices i, j (0 <= i, j < n) shall satisfy a[i] < a[j] if and only if b[i] < b[j].
+Given two ForwardIterators as a range [\inlinecode{lo}, \inlinecode{hi}) of $n$ numerical elements, reassign each element in the range to an integer in $[0, k)$, where $k$ is the number of distinct elements in the original range, while preserving the initial relative ordering of elements. That is, if $a$ is the array of original values and $b$ is the array of compressed values, then every pair of indices $i, j$ ($0 \leq i, j < n$) shall satisfy $a[i] < a[j]$ if and only if $b[i] < b[j]$.
 
-Both implementations below require operator < to be defined on the iterator's value type. Version 1 performs the compression by sorting the array, removing duplicates, and binary searching for the position of each original value. Version 2 achieves the same result by inserting all values in a balanced binary search tree (std::map) which automatically removes duplicate values and supports efficient lookups of the compressed values.
+Both implementations below require \inlinecode{operator \textless{}} to be defined on the iterator's value type. Version 1 performs the compression by sorting the array, removing duplicates, and binary searching for the position of each original value. Version 2 achieves the same result by inserting all values in a balanced binary search tree (\inlinecode{std::map}) which automatically removes duplicate values and supports efficient lookups of the compressed values.
 
-\textbf{Time Complexity}: $O(n \log n)$ per call to either function, where n is the distance between lo and hi.
+\textbf{Time Complexity}: $O(n \log n)$ per call to either function, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary heap space.
 
@@ -636,9 +636,9 @@ int main() {
 1 0 2 0 3 1
 \end{exampleoutput}
 \subsection{Selection (Quickselect)}
-nth\_element2() is equivalent to std::nth\_element(), taking random-access iterators lo, nth, and hi as the range [lo, hi) to be partially sorted. The values in [lo, hi) are rearranged such that the value pointed to by nth is the element that would be there if the range were sorted. Furthermore, the range is partitioned such that no value in [lo, nth) compares greater than the value pointed to by nth and no value in (nth, hi) compares less. This implementation requires operator < to be defined on the iterator's value type.
+\inlinecode{nth\_element2()} is equivalent to \inlinecode{std::nth\_element()}, taking random-access iterators \inlinecode{lo}, \inlinecode{nth}, and \inlinecode{hi} as the range [\inlinecode{lo}, \inlinecode{hi}) to be partially sorted. The values in [\inlinecode{lo}, \inlinecode{hi}) are rearranged such that the value pointed to by \inlinecode{nth} is the element that would be there if the range were sorted. Furthermore, the range is partitioned such that no value in [\inlinecode{lo}, \inlinecode{nth}) compares greater than the value pointed to by \inlinecode{nth} and no value in (\inlinecode{nth}, \inlinecode{hi}) compares less. This implementation requires \inlinecode{operator \textless{}} to be defined on the iterator's value type.
 
-\textbf{Time Complexity}: $O(n)$ on average per call to nth\_element2(), where n is the distance between lo and hi.
+\textbf{Time Complexity}: $O(n)$ on average per call to \inlinecode{nth\_element2()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -703,11 +703,11 @@ int main () {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Longest Increasing Subsequence}
-Given two random-access iterators lo and hi specifying a range [lo, hi), determine a longest subsequence of the range such that all of its elements are in strictly ascending order. This implementation requires operator < to be defined on the iterator's value type. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed using binary search and dynamic programming.
+Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range [\inlinecode{lo}, \inlinecode{hi}), determine a longest subsequence of the range such that all of its elements are in strictly ascending order. This implementation requires \inlinecode{operator \textless{}} to be defined on the iterator's value type. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed using binary search and dynamic programming.
 
-\textbf{Time Complexity}: $O(n \log n)$ per call to longest\_increasing\_subsequence(), where n is the distance between lo and hi.
+\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{longest\_increasing\_subsequence()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space for longest\_increasing\_subsequence().
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for \inlinecode{longest\_increasing\_subsequence()}.
 
 \begin{lstlisting}[language=C++]
 #include <iterator>
@@ -770,20 +770,20 @@ int main () {
 Given an array of numbers (at least one of which must be positive), determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans through the array, at each index computing the maximum positive sum subarray ending there. Either this subarray is empty (in which case its sum is zero) or it consists of one more element than the maximum sequence ending at the previous position. This can be adapted to compute the maximal submatrix sum as well.
 
 \begin{compactitem}
-  \item max\_subarray\_sum(lo, hi, \&res\_lo, \&res\_hi) returns the maximal subarray sum for the range [lo, hi), where lo and hi are random-access iterators to numeric types. This implementation requires operators + and < to be defined on the iterators' value type. Optionally, two int pointers may be passed to store the inclusive boundary indices [res\_lo, res\_hi] of the resulting subarray. By convention, an input range consisting of only negative values will yield a size 1 subarray consisting of the maximum value.
-  \item max\_submatrix\_sum(matrix, \&r1, \&c1, \&r2, \&c2) returns the largest sum of any rectangular submatrix for a matrix of n rows by m columns. The matrix should be given as a 2-dimensional vector, where the outer vector must contain n vectors each of size m. This implementation requires operators + and < to be defined on the iterators' value type. Optionally, four int pointers may be passed to store the boundary indices of the resulting subarray, with (r1, c1) specifiying the top-left index and (r2, c2) specifying the bottom-right index. By convention, an input matrix consisting of only negative values will yield a size 1 submatrix consisting of the maximum value.
+  \item \inlinecode{max\_subarray\_sum(lo, hi, \&res\_lo, \&res\_hi)} returns the maximal subarray sum for the range [\inlinecode{lo}, \inlinecode{hi}), where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, two \inlinecode{int} pointers may be passed to store the inclusive boundary indices [\inlinecode{res\_lo}, \inlinecode{res\_hi}] of the resulting subarray. By convention, an input range consisting of only negative values will yield a size 1 subarray consisting of the maximum value.
+  \item \inlinecode{max\_submatrix\_sum(matrix, \&r1, \&c1, \&r2, \&c2)} returns the largest sum of any rectangular submatrix for a matrix of $n$ rows by $m$ columns. The matrix should be given as a 2-dimensional vector, where the outer vector must contain $n$ vectors each of size $m$. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, four \inlinecode{int} pointers may be passed to store the boundary indices of the resulting subarray, with (\inlinecode{r1}, \inlinecode{c1}) specifiying the top-left index and (\inlinecode{r2}, \inlinecode{c2}) specifying the bottom-right index. By convention, an input matrix consisting of only negative values will yield a size 1 submatrix consisting of the maximum value.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to max\_subarray\_sum(), where n is the distance between lo and hi.
-  \item $O(n \cdot m^{2})$ per call to max\_submatrix\_sum(), where n is the number of rows and m is the number of columns in the matrix.
+  \item $O(n)$ per call to \inlinecode{max\_subarray\_sum()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n \cdot m^{2})$ per call to \inlinecode{max\_submatrix\_sum()}, where $n$ is the number of rows and $m$ is the number of columns in the matrix.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary for max\_subarray\_sum().
-  \item $O(n)$ auxiliary heap space for max\_submatrix\_sum(), where n is the number of rows in the matrix.
+  \item $O(1)$ auxiliary for \inlinecode{max\_subarray\_sum()}.
+  \item $O(n)$ auxiliary heap space for \inlinecode{max\_submatrix\_sum()}, where $n$ is the number of rows in the matrix.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -911,9 +911,9 @@ Maximal sum submatrix:
 -1 8
 \end{exampleoutput}
 \subsection{Majority Element (Boyer-Moore)}
-Given two ForwardIterators lo and hi specifying a range [lo, hi) of n elements, return an iterator to the first occurrence of the majority element, or the iterator hi if there is no majority element. The majority element is defined as an element which occurs strictly more than floor(n/2) times in the range. This implementation requires operator == to be defined on the iterator's value type.
+Given two ForwardIterators \inlinecode{lo} and \inlinecode{hi} specifying a range [\inlinecode{lo}, \inlinecode{hi}) of $n$ elements, return an iterator to the first occurrence of the majority element, or the iterator \inlinecode{hi} if there is no majority element. The majority element is defined as an element which occurs strictly more than $\lfloor n/2 \rfloor$ times in the range. This implementation requires \inlinecode{operator ==} to be defined on the iterator's value type.
 
-\textbf{Time Complexity}: $O(n)$ per call to majority(), where n is the size of the array.
+\textbf{Time Complexity}: $O(n)$ per call to \inlinecode{majority()}, where $n$ is the size of the array.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -957,11 +957,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Subset Sum (Meet-in-the-Middle)}
-Given random-access iterators lo and hi specifying a range [lo, hi) of integers, return the minimum sum of any subset of the range that is greater than or equal to a given integer v. This is a generalization of the NP-complete subset sum problem, which asks whether a subset summing to 0 exists (equivalent in this case to checking if v = 0 yields an answer of 0). This implementation uses a meet-in-the-middle algorithm to precompute and search for a lower bound. Note that 64-bit integers are used in intermediate calculations to avoid overflow.
+Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range [\inlinecode{lo}, \inlinecode{hi}) of integers, return the minimum sum of any subset of the range that is greater than or equal to a given integer \inlinecode{v}. This is a generalization of the NP-complete subset sum problem, which asks whether a subset summing to 0 exists (equivalent in this case to checking if $v = 0$ yields an answer of 0). This implementation uses a meet-in-the-middle algorithm to precompute and search for a lower bound. Note that 64-bit integers are used in intermediate calculations to avoid overflow.
 
-\textbf{Time Complexity}: $O(n \cdot 2^{n/2})$ per call to sum\_lower\_bound(), where n is the distance between lo and hi.
+\textbf{Time Complexity}: $O(n \cdot 2^{n/2})$ per call to \inlinecode{sum\_lower\_bound()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space, where n is the number of array elements.
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space, where $n$ is the number of array elements.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -1014,11 +1014,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Maximal Zero Submatrix}
-Given a rectangular matrix with n rows and m columns consisting of only 0's and 1's as a two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of only 0's. This solution uses a reduction to the problem of finding the maximum rectangular area under a histogram, which is efficiently solved using a stack algorithm.
+Given a rectangular matrix with $n$ rows and $m$ columns consisting of only 0's and 1's as a two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of only 0's. This solution uses a reduction to the problem of finding the maximum rectangular area under a histogram, which is efficiently solved using a stack algorithm.
 
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to max\_zero\_submatrix(), where n is the number of rows and m is the number of columns in the matrix.
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{max\_zero\_submatrix()}, where $n$ is the number of rows and $m$ is the number of columns in the matrix.
 
-\textbf{Space Complexity}: $O(m)$ auxiliary heap space, where m is the number of columns in the matrix.
+\textbf{Space Complexity}: $O(m)$ auxiliary heap space, where $m$ is the number of columns in the matrix.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -1090,15 +1090,15 @@ int main() {
 Binary search can be generally used to find the input value corresponding to any output value of a monotonic (strictly non-increasing or strictly non-decreasing) function in $O(\log n)$ time with respect to the domain size. This is a special case of finding the exact point at which any given monotonic Boolean function changes from true to false or vice versa. Unlike searching through an array, discrete binary search is not restricted by available memory, making it useful for handling infinitely large search spaces such as real number intervals.
 
 \begin{compactitem}
-  \item binary\_search\_first\_true() takes two integers lo and hi as boundaries for the search space [lo, hi) (i.e. including lo, but excluding hi) and returns the smallest integer k in [lo, hi) for which the predicate pred(k) tests true. If pred(k) tests false for every k in [lo, hi), then hi is returned. This function must be used on a range in which there exists a constant k such that pred(x) tests false for every x in [lo, k) and true for every x in [k, hi).
-  \item binary\_search\_last\_true() takes two integers lo and hi as boundaries for the search space [lo, hi) (i.e. including lo, but excluding hi) and returns the largest integer k in [lo, hi) for which the predicate pred(k) tests true. If pred(k) tests false for every k in [lo, hi), then hi is returned. This function must be used on a range in which there exists a constant k such that pred(x) tests true for every x in [lo, k] and false for every x in (k, hi).
-  \item fbinary\_search() is the equivalent of binary\_search\_first\_true() on floating point predicates. Since any interval of real numbers is dense, the exact target cannot be found due to floating point error. Instead, a value that is very close to the border between false and true is returned. The precision of the answer depends on the number of repetitions the function performs. Since each repetition bisects the search space, the absolute error of the answer is 1/(2\textasciicircum{}n) times the distance between lo and hi after n repetitions. Although it is possible to control the error by looping while hi - lo is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic break down. 100 iterations is usually sufficient, since the search space will be reduced to 2\textasciicircum{}-100 (roughly 10\textasciicircum{}-30) times its original size. This implementation can be modified to find the "last true" point in the range by simply interchanging the assignments of lo and hi in the if-else statements.
+  \item \inlinecode{binary\_search\_first\_true()} takes two integers \inlinecode{lo} and \inlinecode{hi} as boundaries for the search space [\inlinecode{lo}, \inlinecode{hi}) (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the smallest integer \inlinecode{k} in [\inlinecode{lo}, \inlinecode{hi}) for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for every \inlinecode{k} in [\inlinecode{lo}, \inlinecode{hi}), then \inlinecode{hi} is returned. This function must be used on a range in which there exists a constant \inlinecode{k} such that \inlinecode{pred(x)} tests false for every \inlinecode{x} in [\inlinecode{lo}, \inlinecode{k}) and true for every \inlinecode{x} in [\inlinecode{k}, \inlinecode{hi}).
+  \item \inlinecode{binary\_search\_last\_true()} takes two integers \inlinecode{lo} and \inlinecode{hi} as boundaries for the search space [\inlinecode{lo}, \inlinecode{hi}) (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the largest integer \inlinecode{k} in [\inlinecode{lo}, \inlinecode{hi}) for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for every \inlinecode{k} in [\inlinecode{lo}, \inlinecode{hi}), then \inlinecode{hi} is returned. This function must be used on a range in which there exists a constant \inlinecode{k} such that \inlinecode{pred(x)} tests true for every \inlinecode{x} in [\inlinecode{lo}, \inlinecode{k}] and false for every \inlinecode{x} in (\inlinecode{k}, \inlinecode{hi}).
+  \item \inlinecode{fbinary\_search()} is the equivalent of \inlinecode{binary\_search\_first\_true()} on floating point predicates. Since any interval of real numbers is dense, the exact target cannot be found due to floating point error. Instead, a value that is very close to the border between false and true is returned. The precision of the answer depends on the number of repetitions the function performs. Since each repetition bisects the search space, the absolute error of the answer is $1/(2^n)$ times the distance between \inlinecode{lo} and \inlinecode{hi} after n repetitions. Although it is possible to control the error by looping while \inlinecode{hi - lo} is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic break down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size. This implementation can be modified to find the "last true" point in the range by simply interchanging the assignments of \inlinecode{lo} and \inlinecode{hi} in the if-else statements.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\log n)$ calls will be made to pred() in binary\_search\_first\_true() and binary\_search\_last\_true(), where n is the distance between lo and hi.
-  \item $O(n)$ calls will be made to pred() in fbinary\_search(), where n is the number of iterations performed.
+  \item $O(\log n)$ calls will be made to \inlinecode{pred()} in \inlinecode{binary\_search\_first\_true()} and \inlinecode{binary\_search\_last\_true()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n)$ calls will be made to \inlinecode{pred()} in \inlinecode{fbinary\_search()}, where $n$ is the number of iterations performed.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
@@ -1174,13 +1174,13 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Ternary Search}
-Given a unimodal function f(x) taking a single double argument, find its global maximum or minimum point to a specified absolute error.
+Given a unimodal function \inlinecode{f(x)} taking a single \inlinecode{double} argument, find its global maximum or minimum point to a specified absolute error.
 
-ternary\_search\_min() takes the domain [lo, hi] of a continuous function f(x) and returns a number x such that f is strictly decreasing on the interval [lo, x] and strictly increasing on the interval [x, hi]. For the function to be correct and deterministic, such an x must exist and be unique.
+\inlinecode{ternary\_search\_min()} takes the domain [\inlinecode{lo}, \inlinecode{hi}] of a continuous function \inlinecode{f(x)} and returns a number \inlinecode{x} such that \inlinecode{f} is strictly decreasing on the interval [\inlinecode{lo}, \inlinecode{x}] and strictly increasing on the interval [\inlinecode{x}, \inlinecode{hi}]. For the function to be correct and deterministic, such an \inlinecode{x} must exist and be unique.
 
-ternary\_search\_max() takes the domain [lo, hi] of a continuous function f(x) and returns a number x such that f is strictly increasing on the interval [lo, x] and strictly decreasing on the interval [x, hi]. For the function to be correct and deterministic, such an x must exist and be unique.
+\inlinecode{ternary\_search\_max()} takes the domain [\inlinecode{lo}, \inlinecode{hi}] of a continuous function \inlinecode{f(x)} and returns a number \inlinecode{x} such that \inlinecode{f} is strictly increasing on the interval [\inlinecode{lo}, \inlinecode{x}] and strictly decreasing on the interval [\inlinecode{x}, \inlinecode{hi}]. For the function to be correct and deterministic, such an \inlinecode{x} must exist and be unique.
 
-\textbf{Time Complexity}: $O(\log n)$ calls will be made to f(), where n is the distance between lo and hi divided by the specified absolute error (epsilon).
+\textbf{Time Complexity}: $O(\log n)$ calls will be made to \inlinecode{f()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi} divided by the specified absolute error (epsilon).
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for both operations.
 
@@ -1249,11 +1249,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Hill Climbing}
-Given a continuous function f(x, y) to double and a (possibly arbitrary) initial guess (x0, y0), return a potential global minimum found through hill-climbing. Optionally, two double pointers critical\_x and critical\_y may be passed to store the input points to f at which the returned minimum value is attained.
+Given a continuous function \inlinecode{f(x, y)} to \inlinecode{double} and a (possibly arbitrary) initial guess (\inlinecode{x0}, \inlinecode{y0}), return a potential global minimum found through hill-climbing. Optionally, two \inlinecode{double} pointers \inlinecode{critical\_x} and \inlinecode{critical\_y} may be passed to store the input points to \inlinecode{f} at which the returned minimum value is attained.
 
-Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each of a fixed number of directions. The direction with the best (in this case, minimum) value is chosen, and further steps are taken in it until the answer no longer improves. When this happens, the step size is reduced and the same process repeats until a desired absolute error is reached. The technique's success heavily depends on the behavior of f and the initial guess. Therefore, the result is not guaranteed to be the global minimum.
+Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each of a fixed number of directions. The direction with the best (in this case, minimum) value is chosen, and further steps are taken in it until the answer no longer improves. When this happens, the step size is reduced and the same process repeats until a desired absolute error is reached. The technique's success heavily depends on the behavior of \inlinecode{f} and the initial guess. Therefore, the result is not guaranteed to be the global minimum.
 
-\textbf{Time Complexity}: $O(d \log n)$ call will be made to f, where d is the number of directions considered at each position and n is the search space that is approximately proportional to the maximum possible step size divided by the minimum possible step size.
+\textbf{Time Complexity}: $O(d \log n)$ call will be made to \inlinecode{f}, where $d$ is the number of directions considered at each position and $n$ is the search space that is approximately proportional to the maximum possible step size divided by the minimum possible step size.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -1319,16 +1319,16 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Semi-Dynamic)}
-Given a set of pairs (m, b) specifying lines of the form y = mx + b, process a set of x-coordinate queries each asking to find the minimum y-value when any of the given lines are evaluated at the specified x. For each add\_line(m, b) call, m must be the minimum m of all lines added so far. For each query(x) call, x must be the maximum x of all queries made so far.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of x-coordinate queries each asking to find the minimum y-value when any of the given lines are evaluated at the specified x. For each \inlinecode{add\_line(m, b)} call, \inlinecode{m} must be the minimum \inlinecode{m} of all lines added so far. For each \inlinecode{query(x)} call, \inlinecode{x} must be the maximum \inlinecode{x} of all queries made so far.
 
-The following implementation is a concise, semi-dynamic version of the convex hull optimization technique. It supports an an interlaced sequence of add\_line() and query() calls, as long as the preconditions of descending m and ascending x are satisfied. As a result, it may be necessary to sort the lines and queries before calling the functions. In that case, the overall time complexity will be dominated by the sorting step.
+The following implementation is a concise, semi-dynamic version of the convex hull optimization technique. It supports an an interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, as long as the preconditions of descending \inlinecode{m} and ascending \inlinecode{x} are satisfied. As a result, it may be necessary to sort the lines and queries before calling the functions. In that case, the overall time complexity will be dominated by the sorting step.
 
-\textbf{Time Complexity}: $O(n)$ for any interlaced sequence of add\_line() and query() calls, where n is the number of lines added. This is because the overall number of steps taken by add\_line() and query() are respectively bounded by the number of lines. Thus a single call to either add\_line() or query() will have an amortized $O(1)$ running time.
+\textbf{Time Complexity}: $O(n)$ for any interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, where $n$ is the number of lines added. This is because the overall number of steps taken by \inlinecode{add\_line()} and \inlinecode{query()} are respectively bounded by the number of lines. Thus a single call to either \inlinecode{add\_line()} or \inlinecode{query()} will have an amortized $O(1)$ running time.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the lines.
-  \item $O(1)$ auxiliary for add\_line() and query().
+  \item $O(1)$ auxiliary for \inlinecode{add\_line()} and \inlinecode{query()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1377,16 +1377,16 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Fully-Dynamic)}
-Given a set of pairs (m, b) specifying lines of the form y = mx + b, process a set of x-coordinate queries each asking to find the minimum y-value when any of the given lines are evaluated at the specified x. To instead have the queries optimize for maximum y-value, call the constructor with query\_max=true.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of x-coordinate queries each asking to find the minimum y-value when any of the given lines are evaluated at the specified x. To instead have the queries optimize for maximum y-value, call the constructor with \inlinecode{query\_max=true}.
 
-The following implementation is a fully dynamic variant of the convex hull optimization technique, using a self-balancing binary search tree (std::set) to support the ability to call add\_line() and query() in any desired order.
+The following implementation is a fully dynamic variant of the convex hull optimization technique, using a self-balancing binary search tree (\inlinecode{std::set}) to support the ability to call \inlinecode{add\_line()} and \inlinecode{query()} in any desired order.
 
-\textbf{Time Complexity}: $O(\log n)$ amortized per call to add\_line() and $O(\log n)$ per call to query(), where n is the number of lines added.
+\textbf{Time Complexity}: $O(\log n)$ amortized per call to \inlinecode{add\_line()} and $O(\log n)$ per call to \inlinecode{query()}, where $n$ is the number of lines added.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the lines.
-  \item $O(1)$ auxiliary for add\_line() and query().
+  \item $O(1)$ auxiliary for \inlinecode{add\_line()} and \inlinecode{query()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1483,13 +1483,13 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Cycle Detection (Floyd)}
-Given a function f mapping a set of integers to itself and an x-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing f with itself starting with the initial x. Formally, since f maps a finite set S to itself, some value is guaranteed to eventually repeat in the sequence: x[0], x[1]=f(x[0]), x[2]=f(x[1]), ..., x[n]=f(x[n - 1]), ...
+Given a function $f$ mapping a set of integers to itself and an x-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing $f$ with itself starting with the initial $x$. Formally, since $f$ maps a finite set $S$ to itself, some value is guaranteed to eventually repeat in the sequence: $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
 
-There must exist a pair of indices i and j (i < j) such that x[i] = x[j]. When this happens, the rest of the sequence will consist of the subsequence from x[i] to x[j - 1] repeating indefinitely. The cycle detection problem asks to find such an i, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
+There must exist a pair of indices $i$ and $j$ ($i < j$) such that $x_i = x_j$. When this happens, the rest of the sequence will consist of the subsequence from $x_i$ to $x_{j - 1}$ repeating indefinitely. The cycle detection problem asks to find such an $i$, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
 
 Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm", is a space-efficient algorithm that moves two pointers through the sequence at different speeds. Each step in the algorithm moves the "tortoise" one step forward and the "hare" two steps forward in the sequence, comparing the sequence values at each step. The first value which is simultaneously pointed to by both pointers is the start of the sequence.
 
-\textbf{Time Complexity}: $O(m + n)$ per call to find\_cycle\_floyd(), where m is the smallest index of the sequence which is the beginning of a cycle, and n is the cycle's length.
+\textbf{Time Complexity}: $O(m + n)$ per call to \inlinecode{find\_cycle\_floyd()}, where $m$ is the smallest index of the sequence which is the beginning of a cycle, and $n$ is the cycle's length.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -1556,13 +1556,13 @@ int main () {
 }
 \end{lstlisting}
 \subsection{Cycle Detection (Brent)}
-Given a function f mapping a set of integers to itself and an x-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing f with itself starting with the initial x. Formally, since f maps a finite set S to itself, some value is guaranteed to eventually repeat in the sequence: x[0], x[1]=f(x[0]), x[2]=f(x[1]), ..., x[n]=f(x[n - 1]), ...
+Given a function $f$ mapping a set of integers to itself and an x-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing $f$ with itself starting with the initial $x$. Formally, since $f$ maps a finite set $S$ to itself, some value is guaranteed to eventually repeat in the sequence: $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
 
-There must exist a pair of indices i and j (i < j) such that x[i] = x[j]. When this happens, the rest of the sequence will consist of the subsequence from x[i] to x[j - 1] repeating indefinitely. The cycle detection problem asks to find such an i, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
+There must exist a pair of indices $i$ and $j$ ($i < j$) such that $x_i = x_j$. When this happens, the rest of the sequence will consist of the subsequence from $x_i$ to $x_{j - 1}$ repeating indefinitely. The cycle detection problem asks to find such an $i$, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
 
-While Floyd's cycle-finding algorithm finds cycles by simultaneously moving two pointers at different speeds, Brent's algorithm keeps the tortoise pointer stationary in every iteration, only teleporting it to the hare pointer at every power of two. The smallest power of two at which they meet is the start of the first cycle. This improves upon the constant factor of Floyd's algorithm by reducing the number of calls made to f.
+While Floyd's cycle-finding algorithm finds cycles by simultaneously moving two pointers at different speeds, Brent's algorithm keeps the tortoise pointer stationary in every iteration, only teleporting it to the hare pointer at every power of two. The smallest power of two at which they meet is the start of the first cycle. This improves upon the constant factor of Floyd's algorithm by reducing the number of calls made to $f$.
 
-\textbf{Time Complexity}: $O(m + n)$ per call to find\_cycle\_brent(), where m is the smallest index of the sequence which is the beginning of a cycle, and n is the cycle's length.
+\textbf{Time Complexity}: $O(m + n)$ per call to \inlinecode{find\_cycle\_brent()}, where $m$ is the smallest index of the sequence which is the beginning of a cycle, and $n$ is the cycle's length.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 

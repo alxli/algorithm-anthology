@@ -65,15 +65,24 @@ def escape_latex(text):
         '}': r'\}',
         '~': r'\textasciitilde{}',
         '^': r'\textasciicircum{}',
+        '<': r'\textless{}',
+        '>': r'\textgreater{}',
     }
     return ''.join(replacements.get(char, char) for char in text)
 
 
 def format_math_expression(expression):
-    functions = {'exp': r'\exp', 'log': r'\log', 'max': r'\max',
+    functions = {'alpha': r'\alpha', 'exp': r'\exp', 'log': r'\log', 'max': r'\max',
                  'min': r'\min'}
-    constants = {'MAXC': r'\text{MAXC}', 'MAXR': r'\text{MAXR}'}
+    constants = {'MAXC': r'\text{MAXC}', 'MAXR': r'\text{MAXR}', 'MAXN': r'\text{MAXN}'}
     result = []
+
+    def format_word(word):
+        subscript = re.fullmatch(r'([A-Za-z])([0-9]+)', word)
+        if subscript is not None:
+            return '{}_{{{}}}'.format(*subscript.groups())
+        return constants.get(word, functions.get(word, word))
+
     i = 0
     while i < len(expression):
         match = re.match(r'[A-Za-z_][A-Za-z_0-9]*', expression[i:])
@@ -106,10 +115,10 @@ def format_math_expression(expression):
         if word == 'sqrt':
             bare_arg = re.match(r'\s+([A-Za-z_0-9.]+)', expression[i:])
             if bare_arg is not None:
-                result.append(r'\sqrt{' + bare_arg.group(1) + '}')
+                result.append(r'\sqrt{' + format_math_expression(bare_arg.group(1)) + '}')
                 i += bare_arg.end()
                 continue
-        result.append(constants.get(word, functions.get(word, word)))
+        result.append(format_word(word))
     return ''.join(result)
 
 
@@ -117,17 +126,52 @@ def format_complexity(expression):
     expression = format_math_expression(expression)
     expression = re.sub(r'\^\(([^()]*)\)', r'^{\1}', expression)
     expression = re.sub(r'\^([A-Za-z0-9.]+)', r'^{\1}', expression)
-    expression = expression.replace('*', r' \cdot ')
+    expression = re.sub(r'\s*\*\s*', r' \\cdot ', expression)
     return '$O({})$'.format(expression)
 
 
-def format_text(text):
+def format_prose(text):
+    parts = []
+    pos = 0
+    while True:
+        match = re.search(
+            r'<=|>=|(?<![A-Za-z0-9_])\*\*(?=[A-Za-z])|'
+            r'(?<![A-Za-z0-9_])\*(?=[A-Za-z])',
+            text[pos:])
+        if match is None:
+            parts.append(escape_latex(text[pos:]))
+            break
+        start = pos + match.start()
+        delimiter = match.group(0)
+        parts.append(escape_latex(text[pos:start]))
+        if delimiter == '<=':
+            parts.append(r'$\leq$')
+            pos = start + 2
+        elif delimiter == '>=':
+            parts.append(r'$\geq$')
+            pos = start + 2
+        else:
+            end_match = re.search(
+                re.escape(delimiter) + r'(?![A-Za-z0-9_])',
+                text[start + len(delimiter):])
+            if end_match is None:
+                parts.append(escape_latex(text[start:]))
+                break
+            end = start + len(delimiter) + end_match.start()
+            contents = format_prose(text[start + len(delimiter):end])
+            command = 'textbf' if delimiter == '**' else 'textit'
+            parts.append('\\{}{{{}}}'.format(command, contents))
+            pos = end + len(delimiter)
+    return ''.join(parts)
+
+
+def format_plain_text(text):
     parts = []
     pos = 0
     while True:
         match = re.search(r'\bO\(', text[pos:])
         if match is None:
-            parts.append(escape_latex(text[pos:]))
+            parts.append(format_prose(text[pos:]))
             break
         start = pos + match.start()
         depth = 0
@@ -142,11 +186,35 @@ def format_text(text):
                     break
             end += 1
         if depth != 0:
-            parts.append(escape_latex(text[pos:]))
+            parts.append(format_prose(text[pos:]))
             break
-        parts.append(escape_latex(text[pos:start]))
+        parts.append(format_prose(text[pos:start]))
         parts.append(format_complexity(text[start + 2:end - 1]))
         pos = end
+    return ''.join(parts)
+
+
+def format_text(text):
+    parts = []
+    pos = 0
+    while pos < len(text):
+        match = re.search(r'[`$]', text[pos:])
+        if match is None:
+            parts.append(format_plain_text(text[pos:]))
+            break
+        start = pos + match.start()
+        delimiter = text[start]
+        end = text.find(delimiter, start + 1)
+        if end == -1:
+            parts.append(format_plain_text(text[pos:]))
+            break
+        parts.append(format_plain_text(text[pos:start]))
+        contents = text[start + 1:end]
+        if delimiter == '`':
+            parts.append(r'\inlinecode{' + escape_latex(contents) + '}')
+        else:
+            parts.append('$' + contents + '$')
+        pos = end + 1
     return ''.join(parts)
 
 

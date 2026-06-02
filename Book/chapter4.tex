@@ -6,19 +6,19 @@
 \subsection{Graph Class and Depth-First Search}
 A graph consists of a set of objects (a.k.a vertices, or nodes) and a set of connections (a.k.a. edges) between pairs of said objects. A graph may be stored as an adjacency list, which is a space efficient representation that is also time-efficient for traversals.
 
-The following class implements a simple graph using adjacency lists, along with depth-first search and a few other applications. The constructor takes a Boolean argument which specifies whether the instance is a directed or undirected graph. The nodes of the graph are identified by integers indices numbered consecutively starting from 0. The total number of nodes will automatically increase based on the maximum node index passed to add\_edge() so far.
+The following class implements a simple graph using adjacency lists, along with depth-first search and a few other applications. The constructor takes a Boolean argument which specifies whether the instance is a directed or undirected graph. The nodes of the graph are identified by integers indices numbered consecutively starting from 0. The total number of nodes will automatically increase based on the maximum node index passed to \inlinecode{add\_edge()} so far.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ amortized per call to add\_edge(), or $O(\max\left(n, m\right))$ for n calls where the maximum node index passed as an argument is m.
-  \item $O(\max\left(n, m\right))$ per call for dfs(), has\_cycle(), is\_tree(), or is\_dag(), where n is the number of nodes and and m is the number of edges.
+  \item $O(1)$ amortized per call to \inlinecode{add\_edge()}, or $O(\max\left(n, m\right))$ for $n$ calls where the maximum node index passed as an argument is $m$.
+  \item $O(\max\left(n, m\right))$ per call for \inlinecode{dfs()}, \inlinecode{has\_cycle()}, \inlinecode{is\_tree()}, or \inlinecode{is\_dag()}, where $n$ is the number of nodes and $m$ is the number of edges.
   \item $O(1)$ per call to all other public member functions.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where n is the number of nodes and m is the number of edges.
-  \item $O(n)$ auxiliary stack space for dfs(), has\_cycle(), is\_tree(), and is\_dag().
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n)$ auxiliary stack space for \inlinecode{dfs()}, \inlinecode{has\_cycle()}, \inlinecode{is\_tree()}, and \inlinecode{is\_dag()}.
   \item $O(1)$ auxiliary for all other public member functions.
 \end{compactitem}
 
@@ -163,16 +163,16 @@ int main() {
 DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
 \end{exampleoutput}
 \subsection{Topological Sorting (DFS)}
-Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every edge from node u to v, u comes before v in the ordering. Depth-first search is used to traverse all nodes in post-order.
+Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every edge from node $u$ to $v$, $u$ comes before $v$ in the ordering. Depth-first search is used to traverse all nodes in post-order.
 
-toposort(nodes) takes a directed graph stored as a global adjacency list with nodes indexed from 0 to (nodes - 1) and assigns a valid topological ordering to the global result vector. An error is thrown if the graph contains a cycle.
+\inlinecode{toposort(nodes)} takes a directed graph stored as a global adjacency list with nodes indexed from 0 to \inlinecode{nodes - 1} and assigns a valid topological ordering to the global result vector. An error is thrown if the graph contains a cycle.
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to toposort(), where n is the number of nodes and m is the number of edges.
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{toposort()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where n is the number of nodes and m is the number of edges.
-  \item $O(n)$ auxiliary stack space for toposort().
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n)$ auxiliary stack space for \inlinecode{toposort()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -242,14 +242,14 @@ The topological order: 2 1 0 4 3 7 6 5
 \subsection{Eulerian Cycles (DFS)}
 A Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an Eulerian cycle if and only if every node has an in-degree equal to its out-degree, and all of its nodes with nonzero degree belong to a single strongly connected component. An undirected graph has an Eulerian cycle if and only if every node has even degree, and all of its nodes with nonzero degree belong to a single connected component.
 
-Given a graph as an adjacency list along with the starting node of the cycle, both functions below return a vector containing all nodes reachable from the starting node in an order which forms an Eulerian cycle. The first node of the cycle will be repeated as the last element of the vector. All nodes of input adjacency lists to both functions must be be between 0 and MAXN - 1, inclusive. In addition, euler\_cycle\_undirected() requires that for every node v which is found in adj[u], node u must also be found in adj[v].
+Given a graph as an adjacency list along with the starting node of the cycle, both functions below return a vector containing all nodes reachable from the starting node in an order which forms an Eulerian cycle. The first node of the cycle will be repeated as the last element of the vector. All nodes of input adjacency lists to both functions must be between 0 and \inlinecode{MAXN - 1}, inclusive. In addition, \inlinecode{euler\_cycle\_undirected()} requires that for every node $v$ which is found in \inlinecode{adj[u]}, node $u$ must also be found in \inlinecode{adj[v]}.
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to either function, where n and m are the numbers of nodes and edges respectively.
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to either function, where $n$ and $m$ are the numbers of nodes and edges respectively.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary heap space for euler\_cycle\_directed(), where n is the number of nodes.
-  \item $O(n^{2})$ auxiliary heap space for euler\_cycle\_undirected(), where n is the number of nodes. This can be reduced to $O(m)$ auxiliary heap space on the number of edges if the used[][] bit matrix is replaced with an std::unordered\_set<std::pair<int, int>>.
+  \item $O(n)$ auxiliary heap space for \inlinecode{euler\_cycle\_directed()}, where $n$ is the number of nodes.
+  \item $O(n^{2})$ auxiliary heap space for \inlinecode{euler\_cycle\_undirected()}, where $n$ is the number of nodes. This can be reduced to $O(m)$ auxiliary heap space on the number of edges if the \inlinecode{used[][]} bit matrix is replaced with an \inlinecode{std::unordered\_set\textless{}std::pair\textless{}int, int\textgreater{}\textgreater{}}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -347,17 +347,17 @@ Eulerian cycle from 0 (directed): 0 1 3 4 1 2 0
 Eulerian cycle from 2 (undirected): 2 1 3 4 1 0 2
 \end{exampleoutput}
 \subsection{Unweighted Tree Centers (DFS)}
-An unweighted tree possesses a center, centroid, and diameter. The following functions apply to a global, pre-populated adjacency list adj[] which satisfies the precondition that for every node v in adj[u], node u also exists in adj[v]. Nodes in adj[] must be numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function arguments.
+An unweighted tree possesses a center, centroid, and diameter. The following functions apply to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}. Nodes in \inlinecode{adj[]} must be numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function arguments.
 
 \begin{compactitem}
-  \item find\_centers() returns a vector of either one or two tree Jordan centers. The Jordan center of a tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the maximum distance to all other nodes in the tree is minimal.
-  \item find\_centroid() returns the node where all of its subtrees have a size less than or equal to n/2, where n is the number of nodes in the tree.
-  \item diameter() returns the maximum distance between any two nodes in the tree, using a well-known double depth-first search technique.
+  \item \inlinecode{find\_centers()} returns a vector of either one or two tree Jordan centers. The Jordan center of a tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the maximum distance to all other nodes in the tree is minimal.
+  \item \inlinecode{find\_centroid()} returns the node where all of its subtrees have a size less than or equal to $n / 2$, where $n$ is the number of nodes in the tree.
+  \item \inlinecode{diameter()} returns the maximum distance between any two nodes in the tree, using a well-known double depth-first search technique.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to find\_centers(), find\_centroid(), and diameter(), where n is the number of nodes and m is the number of edges.
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary stack space for find\_centers(), find\_centroid(), and diameter(), where n is the number of nodes.
+\textbf{Space Complexity}: $O(n)$ auxiliary stack space for \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes.
 
 \begin{lstlisting}[language=C++]
 #include <utility>
@@ -456,14 +456,14 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Shortest Path (BFS)}
-Given a starting node in an unweighted, directed graph, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array pred[]. bfs() applies to a global, pre-populated adjacency list adj[] which consists of only nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a starting node in an unweighted, directed graph, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred[]}. \inlinecode{bfs()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which consists of only nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
-\textbf{Time Complexity}: $O(n)$ per call to bfs(), where n is the number of nodes.
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{bfs()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where n is the number of nodes and m is the number of edges.
-  \item $O(n)$ auxiliary heap space for bfs().
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n)$ auxiliary heap space for \inlinecode{bfs()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -538,18 +538,18 @@ The shortest distance from 0 to 3 is 2.
 Take the path: 0->1->3.
 \end{exampleoutput}
 \subsection{Shortest Path (Dijkstra)}
-Given a starting node in a weighted, directed graph with nonnegative weights only, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array pred[]. dijkstra() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a starting node in a weighted, directed graph with nonnegative weights only, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred[]}. \inlinecode{dijkstra()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
-Since std::priority\_queue is by default a max-heap, we simulate a min-heap by negating node distances before pushing them and negating them again after popping them. Alternatively, the container can be declared with the following template arguments (\#include <functional> to access std::greater): priority\_queue<pair<int, int>, vector<pair<int, int> >, greater<pair<int, int> > > pq;
+Since \inlinecode{std::priority\_queue} is by default a max-heap, we simulate a min-heap by negating node distances before pushing them and negating them again after popping them. Alternatively, the container can be declared with the following template arguments (\inlinecode{\#include \textless{}functional\textgreater{}} to access \inlinecode{std::greater}): \inlinecode{priority\_queue\textless{}pair\textless{}int, int\textgreater{}, vector\textless{}pair\textless{}int, int\textgreater{} \textgreater{}, greater\textless{}pair\textless{}int, int\textgreater{} \textgreater{} \textgreater{} pq;}
 
 Dijkstra's algorithm may be modified to support negative edge weights by allowing nodes to be re-visited (removing the visited array check in the inner for-loop). This is known as the Shortest Path Faster Algorithm (SPFA), which has a larger running time of $O(n \cdot m)$ on the number of nodes and edges respectively. While it is as slow in the worst case as the Bellman-Ford algorithm, the SPFA still tends to outperform in the average case.
 
-\textbf{Time Complexity}: $O(m \log n)$ for dijkstra(), where m is the number of edges and n is the number of nodes.
+\textbf{Time Complexity}: $O(m \log n)$ for \inlinecode{dijkstra()}, where $m$ is the number of edges and $n$ is the number of nodes.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where n is the number of nodes and m is the number of edges.
-  \item $O(n)$ auxiliary heap space for dijkstra().
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(m)$ auxiliary heap space for \inlinecode{dijkstra()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -625,16 +625,16 @@ The shortest distance from 0 to 3 is 5.
 Take the path: 0->1->2->3.
 \end{exampleoutput}
 \subsection{Shortest Path (Bellman-Ford)}
-Given a starting node in a weighted, directed graph with possibly negative weights, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array pred[]. bellman\_ford() applies to a global, pre-populated edge list which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a starting node in a weighted, directed graph with possibly negative weights, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred[]}. \inlinecode{bellman\_ford()} applies to a global, pre-populated edge list which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
 This function will also detect whether the graph contains negative-weighted cycles, in which case there is no shortest path and an error will be thrown.
 
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to bellman\_ford(), where n is the number of nodes and m is the number of edges.
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{bellman\_ford()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where n is the number of nodes and m is the number of edges.
-  \item $O(n)$ auxiliary heap space for bellman\_ford(), where n is the number of nodes.
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n)$ auxiliary heap space for \inlinecode{bellman\_ford()}, where $n$ is the number of nodes.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -704,20 +704,20 @@ The shortest distance from 0 to 2 is 3.
 Take the path: 0->1->2.
 \end{exampleoutput}
 \subsection{Shortest Path (Floyd-Warshall)}
-Given a weighted, directed graph with possibly negative weights, determine the minimum distance between all pairs of start and destination nodes in the graph. Optionally, output the shortest path between two nodes using the shortest-path tree precomputed into the parent[][] array. floyd\_warshall() applies to a global adjacency matrix dist[][], which must be initialized using initialize() and subsequently populated with weights. After the function call, dist[u][v] will have been modified to contain the shortest path from u to v, for all pairs of valid nodes u and v.
+Given a weighted, directed graph with possibly negative weights, determine the minimum distance between all pairs of start and destination nodes in the graph. Optionally, output the shortest path between two nodes using the shortest-path tree precomputed into the \inlinecode{parent[][]} array. \inlinecode{floyd\_warshall()} applies to a global adjacency matrix \inlinecode{dist[][]}, which must be initialized using \inlinecode{initialize()} and subsequently populated with weights. After the function call, \inlinecode{dist[u][v]} will have been modified to contain the shortest path from $u$ to $v$, for all pairs of valid nodes $u$ and $v$.
 
 This function will also detect whether the graph contains negative-weighted cycles, in which case there is no shortest path and an error will be thrown.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ per call to initialize(), where n is the number of nodes.
-  \item $O(n^{3})$ per call to floyd\_warshall().
+  \item $O(n^{2})$ per call to \inlinecode{initialize()}, where $n$ is the number of nodes.
+  \item $O(n^{3})$ per call to \inlinecode{floyd\_warshall()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ for storage of the graph, where n is the number of nodes.
-  \item $O(n^{2})$ auxiliary heap space for initialize() and floyd\_warshall().
+  \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
+  \item $O(n^{2})$ auxiliary heap space for \inlinecode{initialize()} and \inlinecode{floyd\_warshall()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -790,14 +790,14 @@ Take the path: 0->1->2.
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Strongly Connected Components (Kosaraju)}
-Given a directed graph, determine the strongly connected components, that is, the set of all strongly (maximally) connected subgraphs. A subgraph is strongly connected if there is a path between each pair of nodes. Condensing the strongly connected components of a graph into single nodes will result in a directed acyclic graph. kosaraju() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a directed graph, determine the strongly connected components, that is, the set of all strongly (maximally) connected subgraphs. A subgraph is strongly connected if there is a path between each pair of nodes. Condensing the strongly connected components of a graph into single nodes will result in a directed acyclic graph. \inlinecode{kosaraju()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to kosaraju(), where n is the number of nodes and m is the number of edges.
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{kosaraju()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ auxiliary heap space for storage of the graph, where n the number of nodes and m is the number of edges.
-  \item $O(n)$ auxiliary stack space for kosaraju().
+  \item $O(\max\left(n, m\right))$ auxiliary heap space for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n)$ auxiliary stack space for \inlinecode{kosaraju()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -883,14 +883,14 @@ int main() {
 5 6
 \end{exampleoutput}
 \subsection{Strongly Connected Components (Tarjan)}
-Given a directed graph, determine the strongly connected components. The strongly connected components of a graph is the set of all strongly (maximally) connected subgraphs. A subgraph is strongly connected if there is a path between each pair of nodes. Condensing the strongly connected components of a graph into single nodes will result in a directed acyclic graph. tarjan() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a directed graph, determine the strongly connected components. The strongly connected components of a graph is the set of all strongly (maximally) connected subgraphs. A subgraph is strongly connected if there is a path between each pair of nodes. Condensing the strongly connected components of a graph into single nodes will result in a directed acyclic graph. \inlinecode{tarjan()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to tarjan(), where n is the number of nodes and m is the number of edges.
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{tarjan()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where n the number of nodes and m is the number of edges.
-  \item $O(n)$ auxiliary stack space for tarjan().
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n)$ auxiliary stack space for \inlinecode{tarjan()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -984,7 +984,7 @@ Components:
 4 1 0
 \end{exampleoutput}
 \subsection{Cut-points, Bridges and Bridge Forest}
-Given an undirected graph, compute the following properties of the graph using Tarjan's algorithm. tarjan() applies to a global, pre-populated adjacency list adj[] which satisfies the precondition that for every node v in adj[u], node u also exists in adj[v]. Nodes in adj[] must be numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function arguments. get\_block\_forest() applies to a global vector blocks[] which must be already precomputed by a call to tarjan().
+Given an undirected graph, compute the following properties of the graph using Tarjan's algorithm. \inlinecode{tarjan()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}. Nodes in \inlinecode{adj[]} must be numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function arguments. \inlinecode{get\_block\_forest()} applies to a global vector \inlinecode{block[]} which must be already precomputed by a call to \inlinecode{tarjan()}.
 
 A cut-point (i.e. cut-node, or articulation point) is any node whose removal increases the number of connected components in the graph.
 
@@ -992,13 +992,13 @@ A bridge is an edge such that when deleted, the number of connected components i
 
 Condensing each maximal component without a bridge into a single node, we can decompose any connected graph into a bridge-block tree (a.k.a. bridge-tree or block-tree), with bridges connecting each block. An unconnected graph will thus decompose into a "bridge-block forest."
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to tarjan() and get\_block\_forest(), where n is the number of nodes and m is the number of edges.
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{tarjan()} and \inlinecode{get\_block\_forest()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where n the number of nodes and m is the number of edges
-  \item $O(n)$ auxiliary stack space for tarjan().
-  \item $O(1)$ auxiliary stack space for get\_block\_forest().
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges
+  \item $O(n)$ auxiliary stack space for \inlinecode{tarjan()}.
+  \item $O(1)$ auxiliary stack space for \inlinecode{get\_block\_forest()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1159,16 +1159,16 @@ Adjacency List for Bridge-Block Forest:
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Minimum Spanning Tree (Prim)}
-Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. prim() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument. If the input graph is not connected, then this implementation will find the minimum spanning forest.
+Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. \inlinecode{prim()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument. If the input graph is not connected, then this implementation will find the minimum spanning forest.
 
-Since std::priority\_queue is by default a max-heap, we simulate a min-heap by negating node distances before pushing them and negating them again after popping them. To modify this implementation to find the maximum spanning tree, the two negation steps can be skipped to prioritize the max edges.
+Since \inlinecode{std::priority\_queue} is by default a max-heap, we simulate a min-heap by negating node distances before pushing them and negating them again after popping them. To modify this implementation to find the maximum spanning tree, the two negation steps can be skipped to prioritize the max edges.
 
-\textbf{Time Complexity}: $O(m \log n)$ per call to prim(), where m is the number of edges and n is the number of nodes.
+\textbf{Time Complexity}: $O(m \log n)$ per call to \inlinecode{prim()}, where $m$ is the number of edges and $n$ is the number of nodes.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where n the number of nodes and m is the number of edges.
-  \item $O(n)$ auxiliary heap space for prim().
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(m)$ auxiliary heap space for \inlinecode{prim()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1248,14 +1248,14 @@ Total distance: 13
 5 <-> 6
 \end{exampleoutput}
 \subsection{Minimum Spanning Tree (Kruskal)}
-Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. kruskal() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument. If the input graph is not connected, then this implementation will find the minimum spanning forest.
+Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. \inlinecode{kruskal()} applies to a global, pre-populated edge list \inlinecode{edges}. If the input graph is not connected, then this implementation will find the minimum spanning forest.
 
-\textbf{Time Complexity}: $O(m \log n)$ per call to kruskal(), where m is the number of edges and n is the number of nodes.
+\textbf{Time Complexity}: $O(m \log n)$ per call to \inlinecode{kruskal()}, where $m$ is the number of edges and $n$ is the number of nodes.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where n the number of nodes and m is the number of edges
-  \item $O(n)$ auxiliary stack space for kruskal().
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges
+  \item $O(n)$ auxiliary stack space for \inlinecode{kruskal()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1331,16 +1331,16 @@ Total distance: 13
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Maximum Flow (Ford-Fulkerson)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow of a given edge u -> v is defined as the minimum of its capacity and the sum of the flows of all incoming edges of u. ford\_fulkerson() applies to global variables nodes, source, sink, and cap[][] which is an adjacency matrix that will be modified by the function call.
+Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{ford\_fulkerson()} applies to global variables \inlinecode{nodes}, \inlinecode{source}, \inlinecode{sink}, and \inlinecode{cap[][]} which is an adjacency matrix that will be modified by the function call.
 
 The Ford-Fulkerson algorithm is only optimal on graphs with integer capacities, as there exists certain real-valued flow inputs for which the algorithm never terminates. The Edmonds-Karp algorithm is an improvement using breadth-first search, addressing this problem.
 
-\textbf{Time Complexity}: $O(n^{2} \cdot f)$ per call to ford\_fulkerson(), where n is the number of nodes and f is the maximum flow.
+\textbf{Time Complexity}: $O(n^{2} \cdot f)$ per call to \inlinecode{ford\_fulkerson()}, where $n$ is the number of nodes and $f$ is the maximum flow.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ for storage of the flow network, where n is the number of nodes.
-  \item $O(n)$ auxiliary stack space for ford\_fulkerson().
+  \item $O(n^{2})$ for storage of the flow network, where $n$ is the number of nodes.
+  \item $O(n)$ auxiliary stack space for \inlinecode{ford\_fulkerson()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1403,13 +1403,13 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Maximum Flow (Edmonds-Karp)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow of a given edge u -> v is defined as the minimum of its capacity and the sum of the flows of all incoming edges of u. edmonds\_karp() applies to a global adjacency list adj[] that will be modified by the function call.
+Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{edmonds\_karp()} applies to a global adjacency list \inlinecode{adj[]} that will be modified by the function call.
 
 The Edmonds-Karp algorithm will also support real-valued flow capacities. As such, this implementation will work as intended upon changing the appropriate variables to doubles.
 
-\textbf{Time Complexity}: $O(\min\left(n \cdot m^{2}, m \cdot f\right))$ per call to edmonds\_karp(), where n is the number of nodes, m is the number of edges, and f is the maximum flow.
+\textbf{Time Complexity}: $O(\min\left(n \cdot m^{2}, m \cdot f\right))$ per call to \inlinecode{edmonds\_karp()}, where $n$ is the number of nodes, $m$ is the number of edges, and $f$ is the maximum flow.
 
-\textbf{Space Complexity}: $O(\max\left(n, m\right))$ for storage of the flow network, where n is the number of nodes and m is the number of edges.
+\textbf{Space Complexity}: $O(\max\left(n, m\right))$ for storage of the flow network, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -1477,16 +1477,16 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Maximum Flow (Dinic)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow of a given edge u -> v is defined as the minimum of its capacity and the sum of the flows of all incoming edges of u. dinic() applies to a global adjacency list adj[] that will be modified by the function call.
+Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{dinic()} applies to a global adjacency list \inlinecode{adj[]} that will be modified by the function call.
 
 Dinic's algorithm will also support real-valued flow capacities. As such, this implementation will work as intended upon changing the appropriate variables to doubles.
 
-\textbf{Time Complexity}: $O(n^{2} \cdot m)$ per call to dinic(), where n is the number of nodes and m is the number of edges.
+\textbf{Time Complexity}: $O(n^{2} \cdot m)$ per call to \inlinecode{dinic()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the flow network, where n is the number of nodes and m is the number of edges.
-  \item $O(n)$ auxiliary stack and heap space for dinic().
+  \item $O(\max\left(n, m\right))$ for storage of the flow network, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n)$ auxiliary stack and heap space for \inlinecode{dinic()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1571,16 +1571,16 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Maximum Flow (Push-Relabel)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow of a given edge u -> v is defined as the minimum of its capacity and the sum of the flows of all incoming edges of u. push\_relabel() applies to a global adjacency matrix cap[][] and returns the maximum flow.
+Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{push\_relabel()} applies to a global adjacency matrix \inlinecode{cap[][]} and returns the maximum flow.
 
-Although the push-relabel algorithm is considered one of the most efficient maximum flow algorithms, it cannot take advantage of the magnitude of the maximum flow being less than n\textasciicircum{}3 (in which case the Ford-Fulkerson or Edmonds-Karp algorithms may be more efficient).
+Although the push-relabel algorithm is considered one of the most efficient maximum flow algorithms, it cannot take advantage of the magnitude of the maximum flow being less than $n^3$ (in which case the Ford-Fulkerson or Edmonds-Karp algorithms may be more efficient).
 
-\textbf{Time Complexity}: $O(n^{3})$ per call to push\_relabel(), where n is the number of nodes.
+\textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{push\_relabel()}, where $n$ is the number of nodes.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ for storage of the flow network, where n is the number of nodes.
-  \item $O(n)$ auxiliary heap space for push\_relabel().
+  \item $O(n^{2})$ for storage of the flow network, where $n$ is the number of nodes.
+  \item $O(n)$ auxiliary heap space for \inlinecode{push\_relabel()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1676,11 +1676,11 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Maximum Bipartite Matching (Kuhn)}
-Given two sets of nodes A = \{0, 1, ..., n1\} and B = \{0, 1, ..., n2\} such that n1 < n2, as well as a set of edges E mapping nodes from set A to set B, find the largest possible subset of E containing no edges that share the same node. kuhn() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{kuhn()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
-\textbf{Time Complexity}: $O(m \cdot (n1 + n2))$ per call to kuhn(), where m is the number of edges.
+\textbf{Time Complexity}: $O(m \cdot (n_{1} + n_{2}))$ per call to \inlinecode{kuhn()}, where $m$ is the number of edges.
 
-\textbf{Space Complexity}: $O(n1 + n2)$ auxiliary stack space for kuhn().
+\textbf{Space Complexity}: $O(n_{1} + n_{2})$ auxiliary stack space for \inlinecode{kuhn()}.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -1745,14 +1745,14 @@ Matched 3 pair(s):
 2 2
 \end{exampleoutput}
 \subsection{Maximum Bipartite Matching (Hopcroft-Karp)}
-Given two sets of nodes A = \{0, 1, ..., n1\} and B = \{0, 1, ..., n2\} such that n1 < n2, as well as a set of edges E mapping nodes from set A to set B, find the largest possible subset of E containing no edges that share the same node. hopcroft\_karp() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{hopcroft\_karp()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
-\textbf{Time Complexity}: $O(m \cdot \sqrt{n1 + n2})$ per call to hopcroft\_karp(), where m is the number of edges.
+\textbf{Time Complexity}: $O(m \cdot \sqrt{n_{1} + n_{2}})$ per call to \inlinecode{hopcroft\_karp()}, where $m$ is the number of edges.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where n the number of nodes and m is the number of edges.
-  \item $O(n1 + n2)$ auxiliary stack and heap space for hopcroft\_karp().
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n_{1} + n_{2})$ auxiliary stack and heap space for \inlinecode{hopcroft\_karp()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1850,14 +1850,14 @@ Matched 3 pair(s):
 2 2
 \end{exampleoutput}
 \subsection{Maximum Graph Matching (Edmonds)}
-Given a directed graph, determine a maximal subset of its edges such that no node is shared between different edges in the resulting subset. edmonds() applies to a global, pre-populated adjacency list adj[] which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a directed graph, determine a maximum subset of its edges such that no node is shared between different edges in the resulting subset. \inlinecode{edmonds()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
-\textbf{Time Complexity}: $O(n^{3})$ per call to edmonds(), where n is the number of nodes.
+\textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{edmonds()}, where $n$ is the number of nodes.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where n the number of nodes and m is the number of edges.
-  \item $O(n)$ auxiliary heap space for edmonds(), where n is the number of nodes.
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n)$ auxiliary heap space for \inlinecode{edmonds()}, where $n$ is the number of nodes.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1999,16 +1999,16 @@ Matched 2 pair(s):
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Maximum Clique (Bron-Kerbosch)}
-Given an undirected graph, max\_clique() returns the size of the maximum clique, that is, the largest subset of nodes such that all pairs of nodes in the subset are connected by an edge. max\_clique\_weighted() additionally uses a global array w[] specifying a weight value for each node, returning the clique in the graph that has maximum total weight.
+Given an undirected graph, \inlinecode{max\_clique()} returns the size of the maximum clique, that is, the largest subset of nodes such that all pairs of nodes in the subset are connected by an edge. \inlinecode{max\_clique\_weighted()} additionally uses a global array \inlinecode{w[]} specifying a weight value for each node, returning the clique in the graph that has maximum total weight.
 
-Both functions apply to a global, pre-populated adjacency matrix adj[] which must satisfy the condition that adj[u][v] is true if and only if adj[v][u] is true, for all pairs of nodes u and v respectively between 0 (inclusive) and the total number of nodes (exclusive) as passed in the function argument. Note that max\_clique\_weighted() is an efficient implementation using bitmasks of unsigned 64-bit integers, thus requiring the number of nodes to be less than 64.
+Both functions apply to a global, pre-populated adjacency matrix \inlinecode{adj[][]} which must satisfy the condition that \inlinecode{adj[u][v]} is \inlinecode{true} if and only if \inlinecode{adj[v][u]} is \inlinecode{true}, for all pairs of nodes $u$ and $v$ respectively between 0 (inclusive) and the total number of nodes (exclusive) as passed in the function argument. Note that \inlinecode{max\_clique\_weighted()} is an efficient implementation using bitmasks of unsigned 64-bit integers, thus requiring the number of nodes to be less than 64.
 
-\textbf{Time Complexity}: $O(3^{n/3})$ per call to max\_clique() and max\_clique\_weighted(), where n is the number of nodes.
+\textbf{Time Complexity}: $O(3^{n/3})$ per call to \inlinecode{max\_clique()} and \inlinecode{max\_clique\_weighted()}, where $n$ is the number of nodes.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ for storage of the graph, where n is the number of nodes.
-  \item $O(n)$ auxiliary stack space for max\_clique() and max\_clique\_weighted().
+  \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
+  \item $O(n)$ auxiliary stack space for \inlinecode{max\_clique()} and \inlinecode{max\_clique\_weighted()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2127,14 +2127,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Graph Coloring}
-Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the same color, and that the total number of colors used is minimized. color\_graph() applies to a global, pre-populated adjacency matrix adj[][] which must satisfy the condition that adj[u][v] is true if and only if adj[v][u] is true, for all pairs of nodes u and v respectively between 0 (inclusive) and the total number of nodes (exclusive) as passed in the function argument.
+Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the same color, and that the total number of colors used is minimized. \inlinecode{color\_graph()} applies to a global, pre-populated adjacency matrix \inlinecode{adj[][]} which must satisfy the condition that \inlinecode{adj[u][v]} is \inlinecode{true} if and only if \inlinecode{adj[v][u]} is \inlinecode{true}, for all pairs of nodes $u$ and $v$ respectively between 0 (inclusive) and the total number of nodes (exclusive) as passed in the function argument.
 
-\textbf{Time Complexity}: Exponential on the number of nodes per call to color\_graph().
+\textbf{Time Complexity}: Exponential on the number of nodes per call to \inlinecode{color\_graph()}.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ for storage of the graph, where n is the number of nodes.
-  \item $O(n)$ auxiliary stack and heap space for color\_graph().
+  \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
+  \item $O(n)$ auxiliary stack and heap space for \inlinecode{color\_graph()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2240,14 +2240,14 @@ Color 2: 1 2
 Color 3: 4
 \end{exampleoutput}
 \subsection{Shortest Hamiltonian Cycle (TSP)}
-Given a weighted graph, determine a cycle of minimum total distance which visits each node exactly once and returns to the starting node. This is known as the traveling salesman problem (TSP). Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. shortest\_hamiltonian\_cycle() applies to a global adjacency matrix adj[][], which must be populated with add\_edge() before the function call.
+Given a weighted graph, determine a cycle of minimum total distance which visits each node exactly once and returns to the starting node. This is known as the traveling salesman problem (TSP). Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. \inlinecode{shortest\_hamiltonian\_cycle()} applies to a global adjacency matrix \inlinecode{adj[][]}, which must be populated with \inlinecode{add\_edge()} before the function call.
 
-\textbf{Time Complexity}: $O(2^{n}  \cdot  n^{2})$ per call to shortest\_hamiltonian\_cycle(), where n is the number of nodes.
+\textbf{Time Complexity}: $O(2^{n} \cdot n^{2})$ per call to \inlinecode{shortest\_hamiltonian\_cycle()}, where $n$ is the number of nodes.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ for storage of the graph, where n is the number of nodes.
-  \item $O(2^{n}  \cdot  n)$ auxiliary heap space for shortest\_hamiltonian\_cycle().
+  \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
+  \item $O(2^{n} \cdot n)$ auxiliary heap space for \inlinecode{shortest\_hamiltonian\_cycle()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2331,14 +2331,14 @@ The shortest hamiltonian cycle has length 5.
 Take the path: 0->3->2->4->1->0.
 \end{exampleoutput}
 \subsection{Shortest Hamiltonian Path}
-Given a weighted, directed graph, determine a path of minimum total distance which visits each node exactly once. Unlike the traveling salesman problem, we do not have to return to the starting vertex. Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. shortest\_hamiltonian\_path() applies to a global adjacency matrix adj[][] which must be populated before the function call.
+Given a weighted, directed graph, determine a path of minimum total distance which visits each node exactly once. Unlike the traveling salesman problem, we do not have to return to the starting vertex. Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. \inlinecode{shortest\_hamiltonian\_path()} applies to a global adjacency matrix \inlinecode{adj[][]} which must be populated before the function call.
 
-\textbf{Time Complexity}: $O(2^{n}  \cdot  n^{2})$ per call to shortest\_hamiltonian\_path(), where n is the number of nodes.
+\textbf{Time Complexity}: $O(2^{n} \cdot n^{2})$ per call to \inlinecode{shortest\_hamiltonian\_path()}, where $n$ is the number of nodes.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ for storage of the graph, where n is the number of nodes.
-  \item $O(2^{n}  \cdot  n^{2})$ auxiliary heap space for shortest\_hamiltonian\_path().
+  \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
+  \item $O(2^{n} \cdot n^{2})$ auxiliary heap space for \inlinecode{shortest\_hamiltonian\_path()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
