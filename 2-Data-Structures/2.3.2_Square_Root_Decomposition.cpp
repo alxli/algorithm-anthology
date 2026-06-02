@@ -1,6 +1,6 @@
 /*
 
-Maintain a fixed-size array (from 0 to `size()` - 1) while supporting dynamic
+Maintain a fixed-size array (from 0 to `size() - 1`) while supporting dynamic
 queries of contiguous sub-arrays and dynamic updates of individual indices.
 
 The query operation is defined by an associative `join_values()` function which

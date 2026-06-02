@@ -18,7 +18,7 @@ size of its subtree, using it to maintain balance and compute order statistics.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if
   the key was not found.
 - `select(r)` returns a key-value pair of the node with a key of zero-based rank `r`
-  in the map, throwing an exception if the rank is not between 0 and `size()` - 1.
+  in the map, throwing an exception if the rank is not between 0 and `size() - 1`.
 - `rank(k)` returns the zero-based rank of key `k` in the map, throwing an
   exception if the key was not found in the map.
 - `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending

@@ -29,7 +29,7 @@ new value. Another possible update operation is "increment", in which case
 - `heavy_light(n, adj[], v)` constructs a new heavy light decomposition on a tree
   with `n` nodes defined by the adjacency list `adj[]`, with all values initialized
   to `v`. The adjacency list must be a size `n` array of vectors consisting of only
-  the integers from 0 to `n` - 1, inclusive. No duplicate edges should exist, and
+  the integers from 0 to `n - 1`, inclusive. No duplicate edges should exist, and
   the graph must be connected.
 - `query(u, v)` returns the result of `join_values()` applied to all values on the
   path from node `u` to node `v`.
