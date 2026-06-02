@@ -2,52 +2,52 @@
 
 Basic matrix operations defined on a two-dimensional vector of numeric values.
 
-- make_matrix(r, c, v) constructs and returns a matrix with r rows and c columns
-  where the value at every index is initialized to v.
-- make_matrix(a) returns a matrix constructed from the two dimensional array a.
-- identity_matrix(n) returns the n by n identity matrix, that is, a matrix where
-  a[i][j] equals 1 (if i == j), or 0 otherwise, for every i and j in [0, n).
-- rows(a) returns the number of rows r in an r by c matrix a.
-- columns(a) returns the number of columns c in an r by c matrix a.
-- a[i][j] may be used to access or modify the entry at row i, column j of an r
-  by c matrix a, for every i in [0, r) and j in [0, c).
-- operators <, >, <=, >=, ==, and != defines lexicographical comparison based on
-  that of std::vector.
-- operators +, -, *, /, +=, -=, *=, and /= defines scalar addition, subtraction,
-  multiplication, and division involving a matrix a numeric scalar value v.
-- operators * and *= defines vector and matrix multiplication.
-- operators ^ and ^= defines matrix exponentiation of a square matrix a by an
-  integer power p.
-- power_sum(a, p) returns the power sum of a square matrix a up to an integer
-  power p, that is, a + a^2 + ... + a^p.
-- transpose(a) returns the transpose of an r by c matrix a, that is, a new c by
-  r matrix b such that a[i][j] == b[j][i] for every i in [0, r) and j in [0, c).
-- transpose_in_place(a) assigns the square matrix a to its transpose, returning
+- `make_matrix(r, c, v)` constructs and returns a matrix with `r` rows and `c` columns
+  where the value at every index is initialized to `v`.
+- `make_matrix(a)` returns a matrix constructed from the two dimensional array `a`.
+- `identity_matrix(n)` returns the $n$ by $n$ identity matrix, that is, a matrix where
+  `a[i][j]` equals 1 (if $i = j$), or 0 otherwise, for every $i$ and $j$ in $[0, n)$.
+- `rows(a)` returns the number of rows $r$ in an $r$ by $c$ matrix `a`.
+- `columns(a)` returns the number of columns $c$ in an $r$ by $c$ matrix `a`.
+- `a[i][j]` may be used to access or modify the entry at row $i$, column $j$ of an $r$
+  by $c$ matrix `a`, for every $i$ in $[0, r)$ and $j$ in $[0, c)$.
+- Operators `<`, `>`, `<=`, `>=`, `==`, and `!=` define lexicographical comparison based on
+  that of `std::vector`.
+- Operators `+`, `-`, `*`, `/`, `+=`, `-=`, `*=`, and `/=` define scalar addition,
+  subtraction, multiplication, and division involving a matrix and a numeric scalar value.
+- Operators `*` and `*=` define vector and matrix multiplication.
+- Operators `^` and `^=` define matrix exponentiation of a square matrix $a$ by an
+  integer power $p$.
+- `power_sum(a, p)` returns the power sum of a square matrix $a$ up to an integer
+  power $p$, that is, $a + a^2 + \ldots + a^p$.
+- `transpose(a)` returns the transpose of an $r$ by $c$ matrix `a`, that is, a new $c$ by
+  $r$ matrix $b$ such that $\text{a[i][j]} = \text{b[j][i]}$ for every $i$ in $[0, r)$ and $j$ in $[0, c)$.
+- `transpose_in_place(a)` assigns the square matrix `a` to its transpose, returning
   a reference to the modified argument itself.
-- rotate(a, d) returns the matrix a rotated d degrees clockwise. A negative d
-  specifies a counter-clockwise rotation, and d must be a multiple of 90.
-- rotate_in_place(a, d) assigns the square matrix a to its rotation by d degrees
-  clockwise, returning a reference to the modified argument itself. A negative d
-  specifies a counter-clockwise rotation, and d must be a multiple of 90.
+- `rotate(a, d)` returns the matrix `a` rotated `d` degrees clockwise. A negative `d`
+  specifies a counter-clockwise rotation, and `d` must be a multiple of 90.
+- `rotate_in_place(a, d)` assigns the square matrix `a` to its rotation by `d` degrees
+  clockwise, returning a reference to the modified argument itself. A negative `d`
+  specifies a counter-clockwise rotation, and `d` must be a multiple of 90.
 
 Time Complexity:
-- O(n*m) for construction, output, comparison, and scalar arithmetic of n by m
+- O(n*m) for construction, output, comparison, and scalar arithmetic of $n$ by $m$
   matrices.
-- O(1) for rows(a) and columns(a).
-- O(n*m) for matrix-matrix addition and subtraction of n by m matrices.
-- O(n*m*log(p)) for exponentiation of an n by m matrix to power p.
-- O(n*m*log^2(p)) for power sum of an n by m matrix to power p.
-- O(n*m*k) for multiplication of an n by m matrix by an m by k matrix.
-- O(n*m) for transpose(), transpose_in_place(), rotate(), and rotate_in_place()
-  of n by m matrices.
+- O(1) for `rows(a)` and `columns(a)`.
+- O(n*m) for matrix-matrix addition and subtraction of $n$ by $m$ matrices.
+- O(n*m*log(p)) for exponentiation of an $n$ by $m$ matrix to power $p$.
+- O(n*m*log^2(p)) for power sum of an $n$ by $m$ matrix to power $p$.
+- O(n*m*k) for multiplication of an $n$ by $m$ matrix by an $m$ by $k$ matrix.
+- O(n*m) for `transpose()`, `transpose_in_place()`, `rotate()`, and `rotate_in_place()`
+  of $n$ by $m$ matrices.
 
 Space Complexity:
-- O(1) auxiliary space for rows(), columns(), a[i][j] access, comparison
+- O(1) auxiliary space for `rows()`, `columns()`, `a[i][j]` access, comparison
   operators, and in-place operations.
-- O(n*m*log(p)) auxiliary stack and heap space for exponentiation of an n by m
-  matrix to power p, as well as the power sum of an n by m matrix up to power p.
-- O(n*m) auxiliary heap space for all non-in-place operations returning an n by
-  m matrix, transpose(), and rotate().
+- O(n*m*log(p)) auxiliary stack and heap space for exponentiation of an $n$ by $m$
+  matrix to power $p$, as well as the power sum of an $n$ by $m$ matrix up to power $p$.
+- O(n*m) auxiliary heap space for all non-in-place operations returning an $n$ by
+  $m$ matrix, `transpose()`, and `rotate()`.
 
 */
 

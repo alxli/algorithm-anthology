@@ -1,17 +1,17 @@
 /*
 
-Euler's totient function phi(n) returns the number of positive integers less
-than or equal to n that are relatively prime to n. That is, phi(n) is the number
-of integers k in the range [1, n] for which gcd(n, k) = 1. The computation of
-phi(1..n) can be performed simultaneously, as done so by phi_table(n) which
-returns a vector v such that v[i] stores phi(i) for i in the range [0, n].
+Euler's totient function `phi(n)` returns the number of positive integers less
+than or equal to $n$ that are relatively prime to $n$. That is, `phi(n)` is the number
+of integers $k$ in the range $[1, n]$ for which $\gcd(n, k) = 1$. The computation of
+`phi(1..n)` can be performed simultaneously, as done so by `phi_table(n)` which
+returns a vector `v` such that `v[i]` stores `phi(i)` for $i$ in the range $[0, n]$.
 
 Time Complexity:
-- O(n log(log(n))) per call to phi(n) and phi_table(n).
+- O(n log(log(n))) per call to `phi(n)` and `phi_table(n)`.
 
 Space Complexity:
-- O(1) auxiliary space for phi(n).
-- O(n) auxiliary heap space for phi_table(n).
+- O(1) auxiliary space for `phi(n)`.
+- O(n) auxiliary heap space for `phi_table(n)`.
 
 */
 

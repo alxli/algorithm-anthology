@@ -1,23 +1,24 @@
 /*
 
-Finds an x in an interval [a, b] for a continuous function f such that f(x) = 0.
-By the intermediate value theorem, a root must exist in [a, b] if the signs of
-f(a) and f(b) differ. The answer is found with an absolute error of roughly
-1/(2^n), where n is the number of iterations. Although it is possible to control
-the error by looping while b - a is greater than an arbitrary epsilon, it is
+Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(x) = 0$.
+By the intermediate value theorem, a root must exist in $[a, b]$ if the signs of
+$f(a)$ and $f(b)$ differ. The answer is found with an absolute error of roughly
+$1 / 2^n$, where $n$ is the number of iterations. Although it is possible to control
+the error by looping while $b - a$ is greater than an arbitrary epsilon, it is
 simpler to let the loop run for a desired number of iterations until floating
 point arithmetic break down. 100 iterations is usually sufficient, since the
-search space will be reduced to 2^-100 (roughly 10^-30) times its original size.
+search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
 
-- bisection_root(f, a, b) returns a root in an interval [a, b] for a continuous
-  function f where sgn(f(a)) != sgn(f(b)), using the bisection method.
-- falsi_root(f, a, b) returns a root in an interval [a, b] for a continuous
-  function f where sgn(f(a)) != sgn(f(b)), using the Illinois algorithm variant
-  of the false position (a.k.a. regula falsi) method.
+- `bisection_root(f, a, b)` returns a root in an interval $[a, b]$ for a continuous
+  function $f$ where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using
+  the bisection method.
+- `falsi_illinois_root(f, a, b)` returns a root in an interval $[a, b]$ for a continuous
+  function $f$ where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the
+  Illinois algorithm variant of the false position (a.k.a. regula falsi) method.
 
 Time Complexity:
-- O(n) calls will be made to f() in bisection_root() and falsi_illinois_root(),
-  where n is the number of iterations performed.
+- O(n) calls will be made to `f()` in `bisection_root()` and `falsi_illinois_root()`,
+  where $n$ is the number of iterations performed.
 
 Space Complexity:
 - O(1) auxiliary space for both operations.

@@ -1,21 +1,21 @@
 /*
 
-Finds an x for a continuous function f such that f(x) = 0 using iterative
+Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative
 approximation by an initial guess that is close to the answer. Newton's method
 requires an explicit definition of the function's derivative while the secant
 method starts with two initial guesses and approximates the derivative using the
-secant slope from the previous iteration. For n iterations and a good initial
-guess, the methods below compute approximately 2^n digits of precision, with the
+secant slope from the previous iteration. For $n$ iterations and a good initial
+guess, the methods below compute approximately $2^n$ digits of precision, with the
 secant method converging approximately 1.6 times slower than Newton's.
 
-- newton_root(f, fprime, x0) returns a root x for a fuction f with derivative
-  fprime using an initial guess x0 which should be relatively close to x.
-- secant_root(f, x0, x1) returns a root x for a function f using two initial
-  guesses x0 and x1 which should be relatively close to x.
+- `newton_root(f, fprime, x0)` returns a root $x$ for a function `f` with derivative
+  `fprime` using an initial guess `x0` which should be relatively close to $x$.
+- `secant_root(f, x0, x1)` returns a root $x$ for a function `f` using two initial
+  guesses `x0` and `x1` which should be relatively close to $x$.
 
 Time Complexity:
-- O(n) calls will be made to f() in newton_root() and secant_root(), where n is
-  the number of iterations performed.
+- O(n) calls will be made to `f()` in `newton_root()` and `secant_root()`, where $n$
+  is the number of iterations performed.
 
 Space Complexity:
 - O(1) auxiliary space for both operations.

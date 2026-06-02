@@ -1,18 +1,18 @@
 /*
 
-Finds every complex root x for a polynomial p with real coefficients such that
-p(x) = 0 using a variant of the Jenkins-Traub algorithm known as RPOLY. This
+Finds every complex root $x$ for a polynomial $p$ with real coefficients such that
+$p(x) = 0$ using a variant of the Jenkins-Traub algorithm known as RPOLY. This
 implementation is adapted from TOMS493 (www.netlib.org/toms/) with a simple
-wrapper for the C++ <complex> class.
+wrapper for the C++ `<complex>` class.
 
-- find_all_roots(p) returns a vector of all complex roots for a polynomial p
+- `find_all_roots(p)` returns a vector of all complex roots for a polynomial `p`
   with real coefficients.
 
 Time Complexity:
-- O(n) per call to find_all_roots(p), where n is the degree of the polynomial.
+- O(n) per call to `find_all_roots(p)`, where $n$ is the degree of the polynomial.
 
 Space Complexity:
-- O(n) auxiliary stack space, where n is the degree of the polynomial.
+- O(n) auxiliary stack space, where $n$ is the degree of the polynomial.
 
 */
 

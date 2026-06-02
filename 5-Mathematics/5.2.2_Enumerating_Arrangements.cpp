@@ -1,37 +1,37 @@
 /*
 
-For the purposes of this section, we define a "size k arrangement of n" to be a
-permutation of a size k subset of the integers from 0 to n - 1, for 0 <= k <= n.
-There are n permute k possible arrangements, but n^k possible arrangements if
+For the purposes of this section, we define a "size $k$ arrangement of $n$" to be a
+permutation of a size $k$ subset of the integers from $0$ to $n - 1$, for $0 \leq k \leq n$.
+There are $n \mathbin{\text{permute}} k$ possible arrangements, but $n^k$ possible arrangements if
 repeated values are allowed.
 
-- next_arragement(n, k, a) tries to rearrange a[] to the next lexicographically
+- `next_arrangement(n, k, a)` tries to rearrange `a[]` to the next lexicographically
   greater arrangement, returning true if such an arrangement exists or false if
-  the array is already in descending order (in which case a[] is unchanged). The
-  input a[] must consist of exactly k distinct integers in the range [0, n).
-- arrangement_by_rank(n, k, r) returns the size k arrangement of n which is
-  lexicographically ranked r out of all size k arrangements of n, where r is
-  a zero-based rank in the range [0, n permute k).
-- rank_by_arrangement(n, k, a) returns an integer representing the zero-based
-  rank of arrangement a[], which must consist of exactly k distinct integers in
-  the range [0, n).
-- next_arragement_with_repeats(n, k, a) tries to rearrange a[] to the next
+  the array is already in descending order (in which case `a[]` is unchanged). The
+  input `a[]` must consist of exactly $k$ distinct integers in the range $[0, n)$.
+- `arrangement_by_rank(n, k, r)` returns the size $k$ arrangement of $n$ which is
+  lexicographically ranked $r$ out of all size $k$ arrangements of $n$, where $r$ is
+  a zero-based rank in the range $[0, n \mathbin{\text{permute}} k)$.
+- `rank_by_arrangement(n, k, a)` returns an integer representing the zero-based
+  rank of arrangement `a[]`, which must consist of exactly $k$ distinct integers in
+  the range $[0, n)$.
+- `next_arrangement_with_repeats(n, k, a)` tries to rearrange `a[]` to the next
   lexicographically greater arrangement with repeats, returning true if such an
   arrangement exists or false if the array is already in descending order (in
-  which case a[] is unchanged). The input a[] must consist of exactly k (not
-  necessarily distinct) integers in the range [0, n). If a[] were interpreted as
-  a k digit integer in base n, this function could be thought of as incrementing
+  which case `a[]` is unchanged). The input `a[]` must consist of exactly $k$ (not
+  necessarily distinct) integers in the range $[0, n)$. If `a[]` were interpreted as
+  a $k$ digit integer in base $n$, this function could be thought of as incrementing
   the integer.
 
 Time Complexity:
-- O(n*k) for next_arrangement(), arrangement_by_rank(), and
-  rank_by_arrangement().
-- O(k) for next_arrangement_with_repeats().
+- O(n*k) for `next_arrangement()`, `arrangement_by_rank()`, and
+  `rank_by_arrangement()`.
+- O(k) for `next_arrangement_with_repeats()`.
 
 Space Complexity:
-- O(n) auxiliary heap space for next_arrangement(), arrangement_by_rank(), and
-  rank_by_arrangement().
-- O(1) auxiliary for next_arrangement_with_repeats().
+- O(n) auxiliary heap space for `next_arrangement()`, `arrangement_by_rank()`, and
+  `rank_by_arrangement()`.
+- O(1) auxiliary for `next_arrangement_with_repeats()`.
 
 */
 

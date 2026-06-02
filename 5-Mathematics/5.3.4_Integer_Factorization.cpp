@@ -1,36 +1,36 @@
 /*
 
 Compute the prime factorization of an integer. In the following implementations,
-the prime factorization of n is represented as a sorted vector of prime integers
-which together multiply to n. Note that factors are duplicated in the vector in
-accordance to their multiplicity in the prime factorization of n. For 0, 1, and
+the prime factorization of $n$ is represented as a sorted vector of prime integers
+which together multiply to $n$. Note that factors are duplicated in the vector in
+accordance to their multiplicity in the prime factorization of $n$. For 0, 1, and
 prime numbers, the prime factorization is considered to be a vector consisting
 of a single element - the input itself.
 
-- prime_factorize(n) returns the prime factorization of n using trial division.
-- get_divisors(n) returns a sorted vector of all (not merely prime) divisors of
-  n using trial division.
-- fermat(n) returns a factor of n (possibly 1 or itself) that is not necessarily
-  prime. This algorithm is efficient for integers with two factors near sqrt(n),
+- `prime_factorize(n)` returns the prime factorization of `n` using trial division.
+- `get_divisors(n)` returns a sorted vector of all (not merely prime) divisors of
+  `n` using trial division.
+- `fermat(n)` returns a factor of `n` (possibly 1 or itself) that is not necessarily
+  prime. This algorithm is efficient for integers with two factors near $\sqrt{n}$,
   but is roughly as slow as trial division otherwise.
-- pollards_rho_brent(n) returns a factor of n that is not necessarily prime
-  using Pollard's rho algorithm with Brent's optimization. If n is prime, then n
+- `pollards_rho_brent(n)` returns a factor of `n` that is not necessarily prime
+  using Pollard's rho algorithm with Brent's optimization. If `n` is prime, then `n`
   itself is returned. While this algorithm is non-deterministic and may fail to
   detect factors on certain runs of the same input, it can be placed in a loop
-  to deterministically factor large integers, as done in prime_factorize_big().
-- prime_factorize_big(n, trial_division_cutoff) returns the prime factorization
-  of a 64-bit integer n using a combination of trial division, the Miller-Rabin
-  primality test, and Pollard's rho algorithm. trial_division_cutoff specifies
+  to deterministically factor large integers, as done in `prime_factorize_big()`.
+- `prime_factorize_big(n, trial_division_cutoff)` returns the prime factorization
+  of a 64-bit integer `n` using a combination of trial division, the Miller-Rabin
+  primality test, and Pollard's rho algorithm. `trial_division_cutoff` specifies
   the largest factor to test with trial division before falling back to the rho
-  algorithm. This supports 64-bit integers up to and including 2^63 - 1.
+  algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
 
 Time Complexity:
-- O(sqrt n) per call to prime_factorize(n), get_divisors(n), and fermat(n).
-- Unknown, but approximately O(n^(1/4)) per call to pollards_rho_brent(n) and
-  prime_factorize_big(n).
+- O(sqrt n) per call to `prime_factorize(n)`, `get_divisors(n)`, and `fermat(n)`.
+- Unknown, but approximately O(n^(1/4)) per call to `pollards_rho_brent(n)` and
+  `prime_factorize_big(n)`.
 
 Space Complexity:
-- O(f) auxiliary heap space for all operations, where f is the number of factors
+- O(f) auxiliary heap space for all operations, where $f$ is the number of factors
   returned.
 
 */

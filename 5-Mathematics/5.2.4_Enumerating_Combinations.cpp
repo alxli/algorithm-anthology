@@ -1,47 +1,47 @@
 /*
 
-A combination is a subset of size k chosen from a total of n (not necessarily
+A combination is a subset of size $k$ chosen from a total of $n$ (not necessarily
 distinct) elements, where order does not matter.
 
-- next_combination(lo, mid, hi) takes random-access iterators lo, mid, and hi
-  as a range [lo, hi) of n elements for which the function will rearrange such
-  that the k elements in [lo, mid) becomes the next lexicographically greater
+- `next_combination(lo, mid, hi)` takes random-access iterators `lo`, `mid`, and `hi`
+  as a range `[lo, hi)` of $n$ elements for which the function will rearrange such
+  that the $k$ elements in `[lo, mid)` become the next lexicographically greater
   combination. The function returns true if such a combination exists, or false
-  if [lo, mid) already consists of the lexicographically greatest combination
-  of the elements in [lo, hi) (in which case the values are unchanged). This
+  if `[lo, mid)` already consists of the lexicographically greatest combination
+  of the elements in `[lo, hi)` (in which case the values are unchanged). This
   implementation requires an ordering on the set of possible elements defined by
-  the < operator on the iterator's value type.
-- next_combination(n, k, a) rearranges a[] to become the next lexicographically
-  greater combination of k distinct integers in the range [0, n). The array a[]
-  must consist of k distinct integers in the range [0, n).
-- next_combination_mask(x) interprets the bits of an integer x as a mask with
+  `operator <` on the iterator's value type.
+- `next_combination(n, k, a)` rearranges `a[]` to become the next lexicographically
+  greater combination of $k$ distinct integers in the range $[0, n)$. The array `a[]`
+  must consist of $k$ distinct integers in the range $[0, n)$.
+- `next_combination_mask(x)` interprets the bits of an integer `x` as a mask with
   1-bits specifying the chosen items for a combination and returns the mask of
   the next lexicographically greater combination (that is, the lowest integer
-  greater than x with the same number of 1 bits). Note that this does not
-  generate combinations in the same order as next_combination(), nor does it
-  work if the corresponding n items are not distinct (in that case, duplicate
+  greater than `x` with the same number of 1 bits). Note that this does not
+  generate combinations in the same order as `next_combination()`, nor does it
+  work if the corresponding $n$ items are not distinct (in that case, duplicate
   combinations will be generated).
-- combination_by_rank(n, k, r) returns the combination of k distinct integers in
-  the range [0, n) that is lexicographically ranked r, where r is a zero-based
-  rank in the range [0, n choose k).
-- rank_by_combination(n, k, a) returns an integer representing the zero-based
-  rank of combination a[], which must consist of k distinct integers in [0, n).
-- next_combination_with_repeats(n, k, a) rearranges a[] to become the next
-  lexicographically greater combination of k (not necessarily distinct) integers
-  in the range [0, n). The array a[] must consist of k integers in the range
-  [0, n). Note that there is a total of n multichoose k combinations if
-  repetition is allowed, where n multichoose k = (n + k - 1) choose k.
+- `combination_by_rank(n, k, r)` returns the combination of $k$ distinct integers in
+  the range $[0, n)$ that is lexicographically ranked $r$, where $r$ is a zero-based
+  rank in the range $[0, \binom{n}{k})$.
+- `rank_by_combination(n, k, a)` returns an integer representing the zero-based
+  rank of combination `a[]`, which must consist of $k$ distinct integers in $[0, n)$.
+- `next_combination_with_repeats(n, k, a)` rearranges `a[]` to become the next
+  lexicographically greater combination of $k$ (not necessarily distinct) integers
+  in the range $[0, n)$. The array `a[]` must consist of $k$ integers in the range
+  $[0, n)$. Note that there is a total of $n \mathbin{\text{multichoose}} k$ combinations if
+  repetition is allowed, where $n \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
 
 Time Complexity:
-- O(n) per call to next_combination(lo, hi), where n is the distance between
-  lo and hi.
-- O(k) per call to next_combination(n, k, a) and
-  next_combination_with_repeats(n, k, a).
-- O(1) per call to next_combination_mask(x).
-- O(n*k) per call to combination_by_rank() and rank_by_combination().
+- O(n) per call to `next_combination(lo, hi)`, where $n$ is the distance between
+  `lo` and `hi`.
+- O(k) per call to `next_combination(n, k, a)` and
+  `next_combination_with_repeats(n, k, a)`.
+- O(1) per call to `next_combination_mask(x)`.
+- O(n*k) per call to `combination_by_rank()` and `rank_by_combination()`.
 
 Space Complexity:
-- O(k) auxiliary heap space for combination_by_rank(n, k, r).
+- O(k) auxiliary heap space for `combination_by_rank(n, k, r)`.
 - O(1) auxiliary for all other operations.
 
 */

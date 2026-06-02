@@ -37,15 +37,15 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
 /*
 
-Epsilon Comparisons
+Epsilon Comparisons:
 
-EQ(), NE(), LT(), GT(), LE(), and GE() relationally compares two values x and y
-accounting for absolute error. For any x, the range of values considered equal
-barring absolute error is [x - EPS, x + EPS]. Values outside of this range are
-considered not equal (strictly less or strictly greater).
+- `EQ()`, `NE()`, `LT()`, `GT()`, `LE()`, and `GE()` relationally compare two values $x$ and $y$
+  accounting for absolute error. For any $x$, the range of values considered equal
+  barring absolute error is $[x - \text{EPS}, x + \text{EPS}]$. Values outside of this range are
+  considered not equal (strictly less or strictly greater).
 
-rEQ() returns whether x and y are equal barring relative error. For any x, the
-range of values considered equal is [x*(1 - EPS), x*(1 + EPS)].
+- `rEQ()` returns whether $x$ and $y$ are equal barring relative error. For any $x$, the
+  range of values considered equal is $[x(1 - \text{EPS}), x(1 + \text{EPS})]$.
 
 */
 
@@ -61,18 +61,18 @@ const double EPS = 1e-9;
 
 /*
 
-Sign Functions
+Sign Functions:
 
-- sgn(x) returns -1 (if x < 0), 0 (if x == 0), or 1 (if x > 0). Unlike signbit()
-  or copysign(), this does not handle the sign of NaN.
-- signbit_(x) is analogous to std::signbit() in C++11 and later, returning
+- `sgn(x)` returns $-1$ (if $x < 0$), 0 (if $x = 0$), or 1 (if $x > 0$).
+  Unlike `signbit()` or `copysign()`, this does not handle the sign of `NaN`.
+- `signbit_(x)` is analogous to `std::signbit()` in C++11 and later, returning
   whether the sign bit of the floating point number is set to true. If so, then
-  x is considered "negative." Note that this works as expected on +0.0, -0.0,
-  Inf, -Inf, NaN, as well as -NaN. Warning: This assumes that the sign bit is
+  `x` is considered "negative." Note that this works as expected on `+0.0`, `-0.0`,
+  `Inf`, `-Inf`, `NaN`, as well as `-NaN`. Warning: This assumes that the sign bit is
   the leading (most significant) bit in the internal representation of the IEEE
   floating point value.
-- copysign_(x, y) is analogous to std::copysign() in C++11 and later, returning
-  a number with the magnitude of x but the sign of y.
+- `copysign_(x, y)` is analogous to `std::copysign()` in C++11 and later, returning
+  a number with the magnitude of `x` but the sign of `y`.
 
 */
 
@@ -93,24 +93,24 @@ Double copysign_(Double x, Double y) {
 
 /*
 
-Rounding Functions
+Rounding Functions:
 
-- floor0(x) returns x rounded down, symmetrically towards zero. This function is
-  analogous to trunc() in C++11 and later.
-- ceil0(x) returns x rounded up, symmetrically away from zero. This function is
-  analogous to round() in C++11 and later.
-- round_half_up(x) returns x rounded half up, towards positive infinity.
-- round_half_down(x) returns x rounded half down, towards negative infinity.
-- round_half_to0(x) returns x rounded half down, symmetrically towards zero.
-- round_half_from0(x) returns x rounded half up, symmetrically away from zero.
-- round_half_even(x) returns x rounded half to even, using banker's rounding.
-- round_half_alternate(x) returns x rounded, where ties are broken by
+- `floor0(x)` returns `x` rounded down, symmetrically towards zero. This function is
+  analogous to `trunc()` in C++11 and later.
+- `ceil0(x)` returns `x` rounded up, symmetrically away from zero. This function is
+  analogous to `round()` in C++11 and later.
+- `round_half_up(x)` returns `x` rounded half up, towards positive infinity.
+- `round_half_down(x)` returns `x` rounded half down, towards negative infinity.
+- `round_half_to0(x)` returns `x` rounded half down, symmetrically towards zero.
+- `round_half_from0(x)` returns `x` rounded half up, symmetrically away from zero.
+- `round_half_even(x)` returns `x` rounded half to even, using banker's rounding.
+- `round_half_alternate(x)` returns `x` rounded, where ties are broken by
   alternating rounds towards positive and negative infinity.
-- round_half_alternate0(x) returns x rounded, where ties are broken by
+- `round_half_alternate0(x)` returns `x` rounded, where ties are broken by
   alternating symmetric rounds towards and away from zero.
-- round_half_random(x) returns x rounded, where ties are broken randomly.
-- round_n_places(x, n, f) returns x rounded to n digits after the decimal, using
-  the specified rounding function f(x).
+- `round_half_random(x)` returns `x` rounded, where ties are broken randomly.
+- `round_n_places(x, n, f)` returns `x` rounded to `n` digits after the decimal, using
+  the specified rounding function `f(x)`.
 
 */
 
@@ -185,13 +185,13 @@ Double round_n_places(const Double &x, unsigned int n, RoundingFunction f) {
 
 /*
 
-Error Function
+Error Function:
 
-- erf_(x) returns the error encountered in integrating the normal distribution.
-  Its value is 2/sqrt(pi)*(integral of e^(-t^2) dt from 0 to x). This function
-  is analogous to erf(x) in C++11 and later.
-- erfc_(x) returns the error function complement, that is, 1 - erf_(x). This
-  function is analogous to erfc(x) in C++11 and later.
+- `erf_(x)` returns the error encountered in integrating the normal distribution.
+  Its value is $2 / \sqrt{\pi} \int_0^x e^{-t^2} \, dt$. This function
+  is analogous to `erf(x)` in C++11 and later.
+- `erfc_(x)` returns the error function complement, that is, 1 - `erf_(x)`. This
+  function is analogous to `erfc(x)` in C++11 and later.
 
 */
 
@@ -243,14 +243,14 @@ double erfc_(double x) {
 
 /*
 
-Gamma Functions
+Gamma Functions:
 
-- tgamma_(x) returns the gamma function of x. Unlike the tgamma() function in
-  C++11 and later, this version only supports positive x, returning NaN if x is
+- `tgamma_(x)` returns the gamma function of `x`. Unlike the `tgamma()` function in
+  C++11 and later, this version only supports positive `x`, returning `NaN` if `x` is
   less than or equal to 0.
-- lgamma_(x) returns the natural logarithm of the absolute value of the gamma
-  function of x. Unlike the lgamma() function in C++11 and later, this version
-  only supports positive x, returning NaN if x is less than or equal to 0.
+- `lgamma_(x)` returns the natural logarithm of the absolute value of the gamma
+  function of `x`. Unlike the `lgamma()` function in C++11 and later, this version
+  only supports positive `x`, returning `NaN` if `x` is less than or equal to 0.
 
 */
 
@@ -321,17 +321,17 @@ double lgamma_(double x) {
 
 /*
 
-Base Conversion
+Base Conversion:
 
-- Given an integer in base a as a vector d of digits (where d[0] is the least
-  significant digit), convert_base(d, a, b) returns a vector of the integer's
-  digits when converted base b (again with index 0 storing the least significant
+- Given an integer in base $a$ as a vector `d` of digits (where `d[0]` is the least
+  significant digit), `convert_base(d, a, b)` returns a vector of the integer's
+  digits when converted base `b` (again with index 0 storing the least significant
   digit). The actual value of the entire integer to be converted must be able to
   fit within an unsigned 64-bit integer for intermediate storage.
-- to_base(x, b) returns the digits of the unsigned integer x in base b, where
+- `to_base(x, b)` returns the digits of the unsigned integer `x` in base `b`, where
   index 0 of the result stores the least significant digit.
-- to_roman(x) returns the Roman numeral representation of the unsigned integer x
-  as a C++ string.
+- `to_roman(x)` returns the Roman numeral representation of the unsigned integer `x`
+  as an std::string.
 
 */
 

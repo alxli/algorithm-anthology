@@ -1,35 +1,35 @@
 /*
 
-Finds every complex root x for a polynomial p with complex coefficients such
-that p(x) = 0 using Laguerre's method.
+Finds every complex root $x$ for a polynomial $p$ with complex coefficients such
+that $p(x) = 0$ using Laguerre's method.
 
-- horner_eval(p, x) evaluates the complex polynomial p of degree d (represented
-  as a vector of size d + 1 where p[i] stores the complex coefficient for the
-  x^i term) at x, using Horner's method, returning a pair where the first value
-  is a vector of sub-evaluations and the second value is the final result p(x).
-- find_one_root(p, x0) returns a complex root x for a polynomial p (represented
-  as a vector of size d + 1 where p[i] stores the complex coefficient for the
-  x^i term) using an initial guess x0 which should be relatively close to x. The
-  root is found to a tolerance of EPS in absolute or relative error (whichever
+- `horner_eval(p, x)` evaluates the complex polynomial `p` of degree $d$ (represented
+  as a vector of size $d + 1$ where `p[i]` stores the complex coefficient for the
+  $x^i$ term) at `x`, using Horner's method, returning a pair where the first value
+  is a vector of sub-evaluations and the second value is the final result `p(x)`.
+- `find_one_root(p, x0)` returns a complex root $x$ for a polynomial `p` (represented
+  as a vector of size $d + 1$ where `p[i]` stores the complex coefficient for the
+  $x^i$ term) using an initial guess `x0` which should be relatively close to $x$. The
+  root is found to a tolerance of `EPS` in absolute or relative error (whichever
   is reached first).
-- find_all_roots(p) returns a vector of all complex roots for a complex
-  polynomial p. The roots are found to a tolerance of EPS in absolute or
+- `find_all_roots(p)` returns a vector of all complex roots for a complex
+  polynomial `p`. The roots are found to a tolerance of `EPS` in absolute or
   relative error (whichever is reached first).
 
 Time Complexity:
-- O(n) per call to horner_eval(), where n is the degree of the polynomial.
-- O(n log p) per call to find_one_root(), where n is the degree of the
-  polynomial and p = -log10(EPS) is the number of digits of absolute or relative
+- O(n) per call to `horner_eval()`, where $n$ is the degree of the polynomial.
+- O(n log p) per call to `find_one_root()`, where $n$ is the degree of the
+  polynomial and $p = -\log_{10}(\text{EPS})$ is the number of digits of absolute or relative
   precision that is desired.
-- O(n^2 log p) per call to find_all_roots(), where n is the degree of the
-  polynomial and p = -log10(EPS) is the number of digits of absolute or relative
+- O(n^2 log p) per call to `find_all_roots()`, where $n$ is the degree of the
+  polynomial and $p = -\log_{10}(\text{EPS})$ is the number of digits of absolute or relative
   precision that is desired.
 
 Space Complexity:
-- O(n) auxiliary heap space and O(1) auxiliary stack space for horner_eval() and
-  find_one_root(), where n is the degree of the polynomial.
-- O(n) auxiliary heap and O(1) auxiliary stack space per for find_one_root() and
-  find_all_roots(), where n is the degree of the polynomial.
+- O(n) auxiliary heap space and O(1) auxiliary stack space for `horner_eval()` and
+  `find_one_root()`, where $n$ is the degree of the polynomial.
+- O(n) auxiliary heap and O(1) auxiliary stack space per for `find_one_root()` and
+  `find_all_roots()`, where $n$ is the degree of the polynomial.
 
 */
 

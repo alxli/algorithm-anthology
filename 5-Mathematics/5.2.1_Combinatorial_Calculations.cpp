@@ -1,43 +1,43 @@
 /*
 
-The following functions implement common operations in combinatorics. All input
-arguments must be non-negative. All return values and table entries are computed
-as 64-bit integers modulo an input argument m or p.
+The following functions implement common operations in combinatorics. All inputs must
+be non-negative. All return values and table entries are computed as 64-bit integers
+modulo an input argument $m$ or $p$.
 
-- factorial(n, m) returns n! mod m.
-- factorialp(n, p) returns n! mod p, where p is prime.
-- binomial_table(n, m) returns rows 0 to n of Pascal's triangle as a table t
-  such that t[i][j] is equal to (i choose j) mod m.
-- permute(n, k, m) returns (n permute k) mod m.
-- choose(n, k, p) returns (n choose k) mod p, where p is prime.
-- multichoose(n, k, p) returns (n multi-choose k) mod p, where p is prime.
-- catalan(n, p) returns the nth Catalan number mod p, where p is prime.
-- partitions(n, m) returns the number of partitions of n, mod m.
-- partitions(n, k, m) returns the number of partitions of n into k parts, mod m.
-- stirling1(n, k, m) returns the (n, k) unsigned Stirling number of the 1st kind
-  mod m.
-- stirling2(n, k, m) returns the (n, k) Stirling number of the 2nd kind mod m.
-- eulerian1(n, k, m) returns the (n, k) Eulerian number of the 1st kind mod m,
-  where n > k.
-- eulerian2(n, k, m) returns the (n, k) Eulerian number of the 2nd kind mod m,
-  where n > k.
+- `factorial(n, m)` returns $n! \bmod m$.
+- `factorialp(n, p)` returns $n! \bmod p$, where $p$ is prime.
+- `binomial_table(n, m)` returns rows $0$ to $n$ of Pascal's triangle as a table $t$
+  such that $t[i][j] = \binom{i}{j} \bmod m$.
+- `permute(n, k, m)` returns $(n \mathbin{\text{permute}} k) \bmod m$.
+- `choose(n, k, p)` returns $\binom{n}{k} \bmod p$, where $p$ is prime.
+- `multichoose(n, k, p)` returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is prime.
+- `catalan(n, p)` returns the $n$th Catalan number mod $p$, where $p$ is prime.
+- `partitions(n, m)` returns the number of partitions of $n$, mod $m$.
+- `partitions(n, k, m)` returns the number of partitions of $n$ into $k$ parts, mod $m$.
+- `stirling1(n, k, m)` returns the $(n, k)$ unsigned Stirling number of the 1st kind
+  mod $m$.
+- `stirling2(n, k, m)` returns the $(n, k)$ Stirling number of the 2nd kind mod $m$.
+- `eulerian1(n, k, m)` returns the $(n, k)$ Eulerian number of the 1st kind mod $m$,
+  where $n > k$.
+- `eulerian2(n, k, m)` returns the $(n, k)$ Eulerian number of the 2nd kind mod $m$,
+  where $n > k$.
 
 Time Complexity:
-- O(n) for factorial(n, m).
-- O(p log n) for factorialp(n, p).
-- O(n^2) for binomial_table(n, m).
-- O(k) for permute(n, k, p).
-- O(min(k, n - k)) for choose(n, k, p).
-- O(k) for multichoose(n, k, p).
-- O(n) for catalan(n, p).
-- O(n^2) for partitions(n, m).
-- O(n*k) for partitions(n, k, m), stirling1(n, k, m), stirling2(n, k, m),
-  eulerian1(n, k, m), and eulerian2(n, k, m).
+- O(n) for `factorial(n, m)`.
+- O(p log n) for `factorialp(n, p)`.
+- O(n^2) for `binomial_table(n, m)`.
+- O(k) for `permute(n, k, p)`.
+- O(min(k, n - k)) for `choose(n, k, p)`.
+- O(k) for `multichoose(n, k, p)`.
+- O(n) for `catalan(n, p)`.
+- O(n^2) for `partitions(n, m)`.
+- O(n*k) for `partitions(n, k, m)`, `stirling1(n, k, m)`, `stirling2(n, k, m)`,
+  `eulerian1(n, k, m)`, and `eulerian2(n, k, m)`.
 
 Space Complexity:
-- O(n^2) auxiliary heap space for binomial_table(n, m).
-- O(n*k) auxiliary heap space for partitions(n, k, m), stirling1(n, k, m),
-  stirling2(n, k, m), eulerian1(n, k, m), and eulerian2(n, k, m).
+- O(n^2) auxiliary heap space for `binomial_table(n, m)`.
+- O(n*k) auxiliary heap space for `partitions(n, k, m)`, `stirling1(n, k, m)`,
+  `stirling2(n, k, m)`, `eulerian1(n, k, m)`, and `eulerian2(n, k, m)`.
 - O(1) auxiliary for all other operations.
 
 */
