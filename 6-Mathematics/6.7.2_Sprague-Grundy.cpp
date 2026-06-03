@@ -1,0 +1,84 @@
+/*
+
+Computes Grundy numbers for finite impartial games. The Grundy number `g[p]` of
+a position `p` is the minimum excluded nonnegative integer (MEX) of the Grundy
+numbers reachable in one move. A position is losing exactly when its Grundy
+number is 0.
+
+For a sum of independent impartial games, the combined Grundy number is the xor
+of the component Grundy numbers. This is the Sprague-Grundy theorem.
+
+- `mex(values)` returns the minimum excluded nonnegative integer.
+- `subtraction_game_grundy(max_stones, moves)` computes Grundy numbers for a
+  game where a move subtracts one value in `moves` from the pile.
+- `sum_grundy(grundies)` returns the xor of component Grundy numbers.
+
+Time Complexity:
+- O(nm) for `subtraction_game_grundy(max_stones, moves)`, where $n$ is
+  `max_stones` and $m$ is the number of allowed moves.
+
+Space Complexity:
+- O(n + m) auxiliary heap space.
+
+*/
+
+#include <vector>
+
+int mex(const std::vector<int> &values) {
+  std::vector<bool> seen(values.size() + 1, false);
+  for (int i = 0; i < (int)values.size(); i++) {
+    if (0 <= values[i] && values[i] < (int)seen.size()) {
+      seen[values[i]] = true;
+    }
+  }
+  for (int i = 0; i < (int)seen.size(); i++) {
+    if (!seen[i]) {
+      return i;
+    }
+  }
+  return seen.size();
+}
+
+std::vector<int> subtraction_game_grundy(int max_stones,
+                                         const std::vector<int> &moves) {
+  std::vector<int> grundy(max_stones + 1, 0);
+  for (int stones = 1; stones <= max_stones; stones++) {
+    std::vector<int> reachable;
+    for (int i = 0; i < (int)moves.size(); i++) {
+      if (moves[i] <= stones) {
+        reachable.push_back(grundy[stones - moves[i]]);
+      }
+    }
+    grundy[stones] = mex(reachable);
+  }
+  return grundy;
+}
+
+int sum_grundy(const std::vector<int> &grundies) {
+  int x = 0;
+  for (int i = 0; i < (int)grundies.size(); i++) {
+    x ^= grundies[i];
+  }
+  return x;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  int moves_raw[] = {1, 3, 4};
+  vector<int> moves(moves_raw, moves_raw + 3);
+  vector<int> g = subtraction_game_grundy(10, moves);
+  assert(g[0] == 0);
+  assert(g[1] == 1);
+  assert(g[2] == 0);
+  assert(g[4] == 2);
+  assert(g[7] == 0);
+
+  int heaps_raw[] = {g[5], g[7], g[10]};
+  vector<int> heaps(heaps_raw, heaps_raw + 3);
+  assert(sum_grundy(heaps) == (g[5] ^ g[7] ^ g[10]));
+  return 0;
+}

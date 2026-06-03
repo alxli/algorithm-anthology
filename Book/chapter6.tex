@@ -5389,3 +5389,310 @@ int main () {
   return 0;
 }
 \end{lstlisting}
+
+\section{Game Theory}
+\setcounter{section}{7}
+\setcounter{subsection}{0}
+\subsection{Nim}
+Solves normal-play Nim and related impartial games where each position is the disjoint sum of independent piles. In normal play, the player who makes the last move wins. A Nim position is losing exactly when the xor of all pile sizes is 0.
+
+This is the base case of the Sprague-Grundy theorem: every finite impartial game position is equivalent to a Nim pile of size equal to its Grundy number, and sums of games combine by xor.
+
+\begin{compactitem}
+  \item \inlinecode{nim\_sum(piles)} returns the xor of all pile sizes.
+  \item \inlinecode{first\_player\_wins(piles)} returns whether the player to move has a winning strategy.
+  \item \inlinecode{winning\_move(piles)} returns a move \inlinecode{(pile, new\_size)} that moves to xor 0, or \inlinecode{(-1, -1)} if the position is losing.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of piles.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <utility>
+#include <vector>
+
+int nim_sum(const std::vector<int> &piles) {
+  int x = 0;
+  for (int i = 0; i < (int)piles.size(); i++) {
+    x ^= piles[i];
+  }
+  return x;
+}
+
+bool first_player_wins(const std::vector<int> &piles) {
+  return nim_sum(piles) != 0;
+}
+
+std::pair<int, int> winning_move(const std::vector<int> &piles) {
+  int x = nim_sum(piles);
+  if (x == 0) {
+    return std::make_pair(-1, -1);
+  }
+  for (int i = 0; i < (int)piles.size(); i++) {
+    int target = piles[i] ^ x;
+    if (target < piles[i]) {
+      return std::make_pair(i, target);
+    }
+  }
+  return std::make_pair(-1, -1);
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  int raw[] = {3, 4, 5};
+  vector<int> piles(raw, raw + 3);
+  assert(nim_sum(piles) == 2);
+  assert(first_player_wins(piles));
+  pair<int, int> move = winning_move(piles);
+  piles[move.first] = move.second;
+  assert(nim_sum(piles) == 0);
+
+  int losing_raw[] = {1, 2, 3};
+  vector<int> losing(losing_raw, losing_raw + 3);
+  assert(!first_player_wins(losing));
+  assert(winning_move(losing).first == -1);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Sprague-Grundy}
+Computes Grundy numbers for finite impartial games. The Grundy number \inlinecode{g[p]} of a position \inlinecode{p} is the minimum excluded nonnegative integer (MEX) of the Grundy numbers reachable in one move. A position is losing exactly when its Grundy number is 0.
+
+For a sum of independent impartial games, the combined Grundy number is the xor of the component Grundy numbers. This is the Sprague-Grundy theorem.
+
+\begin{compactitem}
+  \item \inlinecode{mex(values)} returns the minimum excluded nonnegative integer.
+  \item \inlinecode{subtraction\_game\_grundy(max\_stones, moves)} computes Grundy numbers for a game where a move subtracts one value in \inlinecode{moves} from the pile.
+  \item \inlinecode{sum\_grundy(grundies)} returns the xor of component Grundy numbers.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(nm)$ for \inlinecode{subtraction\_game\_grundy(max\_stones, moves)}, where $n$ is \inlinecode{max\_stones} and $m$ is the number of allowed moves.
+
+\textbf{Space Complexity}: $O(n + m)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+int mex(const std::vector<int> &values) {
+  std::vector<bool> seen(values.size() + 1, false);
+  for (int i = 0; i < (int)values.size(); i++) {
+    if (0 <= values[i] && values[i] < (int)seen.size()) {
+      seen[values[i]] = true;
+    }
+  }
+  for (int i = 0; i < (int)seen.size(); i++) {
+    if (!seen[i]) {
+      return i;
+    }
+  }
+  return seen.size();
+}
+
+std::vector<int> subtraction_game_grundy(int max_stones,
+                                         const std::vector<int> &moves) {
+  std::vector<int> grundy(max_stones + 1, 0);
+  for (int stones = 1; stones <= max_stones; stones++) {
+    std::vector<int> reachable;
+    for (int i = 0; i < (int)moves.size(); i++) {
+      if (moves[i] <= stones) {
+        reachable.push_back(grundy[stones - moves[i]]);
+      }
+    }
+    grundy[stones] = mex(reachable);
+  }
+  return grundy;
+}
+
+int sum_grundy(const std::vector<int> &grundies) {
+  int x = 0;
+  for (int i = 0; i < (int)grundies.size(); i++) {
+    x ^= grundies[i];
+  }
+  return x;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  int moves_raw[] = {1, 3, 4};
+  vector<int> moves(moves_raw, moves_raw + 3);
+  vector<int> g = subtraction_game_grundy(10, moves);
+  assert(g[0] == 0);
+  assert(g[1] == 1);
+  assert(g[2] == 0);
+  assert(g[4] == 2);
+  assert(g[7] == 0);
+
+  int heaps_raw[] = {g[5], g[7], g[10]};
+  vector<int> heaps(heaps_raw, heaps_raw + 3);
+  assert(sum_grundy(heaps) == (g[5] ^ g[7] ^ g[10]));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Grundy Numbers on DAG}
+Computes Grundy numbers for impartial games whose positions form a directed acyclic graph. Each vertex is a game position, and each outgoing edge is a legal move. Terminal vertices have Grundy number 0; all other vertices take the MEX of their successors' Grundy numbers.
+
+The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles are present, the usual finite impartial-game Grundy recurrence is not directly valid without additional analysis.
+
+\begin{compactitem}
+  \item \inlinecode{grundy\_on\_dag(g)} returns the Grundy number of every vertex in graph \inlinecode{g}.
+  \item \inlinecode{g[u]} contains all positions reachable from position \inlinecode{u} in one move.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n + m + s)$, where $n$ is the number of vertices, $m$ is the number of edges, and $s$ is the total cost of MEX sets over outgoing edges.
+
+\textbf{Space Complexity}: $O(n + d)$ auxiliary heap and stack space, where $d$ is DFS depth.
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+int grundy_dfs(int u, const std::vector<std::vector<int> > &g,
+               std::vector<int> *memo) {
+  if ((*memo)[u] != -1) {
+    return (*memo)[u];
+  }
+  std::vector<bool> seen(g[u].size() + 1, false);
+  for (int i = 0; i < (int)g[u].size(); i++) {
+    int v = g[u][i];
+    int x = grundy_dfs(v, g, memo);
+    if (x < (int)seen.size()) {
+      seen[x] = true;
+    }
+  }
+  int res = 0;
+  while (res < (int)seen.size() && seen[res]) {
+    res++;
+  }
+  (*memo)[u] = res;
+  return res;
+}
+
+std::vector<int> grundy_on_dag(const std::vector<std::vector<int> > &g) {
+  std::vector<int> memo(g.size(), -1);
+  for (int u = 0; u < (int)g.size(); u++) {
+    grundy_dfs(u, g, &memo);
+  }
+  return memo;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<vector<int> > g(5);
+  g[0].push_back(1);
+  g[0].push_back(2);
+  g[1].push_back(3);
+  g[2].push_back(3);
+  g[2].push_back(4);
+  vector<int> grundy = grundy_on_dag(g);
+  assert(grundy[3] == 0);
+  assert(grundy[4] == 0);
+  assert(grundy[1] == 1);
+  assert(grundy[2] == 1);
+  assert(grundy[0] == 0);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Minimax and Alpha-Beta Pruning}
+Searches a finite two-player, zero-sum, perfect-information game tree using minimax and alpha-beta pruning. Minimax assumes both players play optimally: the maximizing player chooses the child with largest value, and the minimizing player chooses the child with smallest value.
+
+Alpha-beta pruning computes the same value as minimax, but avoids exploring branches that cannot affect the final answer. It is most effective when good moves are searched first.
+
+The example game is "take 1 or 2 stones": starting with \inlinecode{stones} stones, players alternate taking 1 or 2 stones, and the player who takes the last stone wins. The evaluation returns 1 for a win for the player to move at the root and $-1$ for a loss.
+
+\begin{compactitem}
+  \item \inlinecode{minimax(stones, maximizing)} returns the exact game-tree value.
+  \item \inlinecode{alpha\_beta(stones, maximizing, alpha, beta)} returns the same value, with pruning.
+  \item \inlinecode{best\_take(stones)} returns an optimal first move, either 1 or 2.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(b^{d})$ in the worst case, where $b$ is branching factor and $d$ is search depth. Alpha-beta can reduce this substantially with good move ordering.
+
+\textbf{Space Complexity}: $O(d)$ auxiliary recursion stack space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+
+int minimax(int stones, bool maximizing) {
+  if (stones == 0) {
+    return maximizing ? -1 : 1;
+  }
+  if (maximizing) {
+    int best = -2;
+    for (int take = 1; take <= 2 && take <= stones; take++) {
+      best = std::max(best, minimax(stones - take, false));
+    }
+    return best;
+  } else {
+    int best = 2;
+    for (int take = 1; take <= 2 && take <= stones; take++) {
+      best = std::min(best, minimax(stones - take, true));
+    }
+    return best;
+  }
+}
+
+int alpha_beta(int stones, bool maximizing, int alpha = -2, int beta = 2) {
+  if (stones == 0) {
+    return maximizing ? -1 : 1;
+  }
+  if (maximizing) {
+    int value = -2;
+    for (int take = 1; take <= 2 && take <= stones; take++) {
+      value = std::max(value, alpha_beta(stones - take, false, alpha, beta));
+      alpha = std::max(alpha, value);
+      if (alpha >= beta) {
+        break;
+      }
+    }
+    return value;
+  } else {
+    int value = 2;
+    for (int take = 1; take <= 2 && take <= stones; take++) {
+      value = std::min(value, alpha_beta(stones - take, true, alpha, beta));
+      beta = std::min(beta, value);
+      if (alpha >= beta) {
+        break;
+      }
+    }
+    return value;
+  }
+}
+
+int best_take(int stones) {
+  int best_move = 1, best_value = -2;
+  for (int take = 1; take <= 2 && take <= stones; take++) {
+    int value = alpha_beta(stones - take, false);
+    if (value > best_value) {
+      best_value = value;
+      best_move = take;
+    }
+  }
+  return best_move;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(minimax(1, true) == 1);
+  assert(minimax(3, true) == -1);
+  for (int stones = 1; stones <= 10; stones++) {
+    assert(minimax(stones, true) == alpha_beta(stones, true));
+  }
+  assert(best_take(4) == 1);  // Move to losing state with 3 stones.
+  assert(best_take(5) == 2);  // Move to losing state with 3 stones.
+  return 0;
+}
+\end{lstlisting}

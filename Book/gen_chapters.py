@@ -54,6 +54,7 @@ SECTION_NAMES = {
     (6, 4): 'Arbitrary Precision Arithmetic',
     (6, 5): 'Linear Algebra',
     (6, 6): 'Root Finding and Calculus',
+    (6, 7): 'Game Theory',
     (7, 1): 'Geometric Classes',
     (7, 2): 'Elementary Geometric Calculations',
     (7, 3): 'Intermediate Geometric Calculations',
