@@ -90,6 +90,60 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Exponential Search}
+Finds the first value where a monotone Boolean predicate becomes true when an upper bound is not known in advance. Exponential search first grows the search range by powers of two until it brackets the transition point, then finishes with ordinary binary search.
+
+This is useful for answer-search problems over unbounded or very large integer domains. The predicate must eventually become true, or the search may overflow or run forever unless an explicit limit is added.
+
+\begin{compactitem}
+  \item \inlinecode{exponential\_search\_first\_true(lo, pred)} returns the smallest integer \inlinecode{x \textgreater{}= lo} such that \inlinecode{pred(x)} is true.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\log ans)$ calls to \inlinecode{pred()}, where \inlinecode{ans} is the distance from \inlinecode{lo} to the first true value.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+template<class Int, class IntPredicate>
+Int exponential_search_first_true(Int lo, IntPredicate pred) {  // 000[1]11
+  if (pred(lo)) {
+    return lo;
+  }
+  Int step = 1;
+  while (!pred(lo + step)) {
+    step *= 2;
+  }
+  Int l = lo + step / 2, r = lo + step;
+  while (l < r) {
+    Int mid = l + (r - l) / 2;
+    if (pred(mid)) {
+      r = mid;
+    } else {
+      l = mid + 1;
+    }
+  }
+  return l;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+bool at_least_1000(int x) {
+  return x >= 1000;
+}
+
+bool square_large_enough(long long x) {
+  return x * x >= 123456789LL;
+}
+
+int main() {
+  assert(exponential_search_first_true(0, at_least_1000) == 1000);
+  assert(exponential_search_first_true(5, at_least_1000) == 1000);
+  assert(exponential_search_first_true(0LL, square_large_enough) == 11112);
+  return 0;
+}
+\end{lstlisting}
 
 \section{Unimodal and Continuous Search}
 \setcounter{section}{2}
