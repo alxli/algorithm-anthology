@@ -90,7 +90,8 @@ def escape_latex_code(text):
 def format_math_expression(expression):
     functions = {'alpha': r'\alpha', 'exp': r'\exp', 'log': r'\log', 'max': r'\max',
                  'min': r'\min'}
-    constants = {'MAXC': r'\text{MAXC}', 'MAXR': r'\text{MAXR}', 'MAXN': r'\text{MAXN}'}
+    constants = {'MAXC': r'\text{MAXC}', 'MAXR': r'\text{MAXR}',
+                 'MAXN': r'\text{MAXN}', 'MOD': r'\text{MOD}'}
     result = []
 
     def format_word(word):
