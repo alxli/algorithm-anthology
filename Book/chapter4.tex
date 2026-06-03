@@ -1045,6 +1045,121 @@ Matched "a" at position 4.
 Matched "ab" at position 4.
 Matched "abccab" at position 0.
 \end{exampleoutput}
+\subsection{Palindrome Searching (Manacher)}
+Computes all odd- and even-length palindromic radii of a string in linear time using Manacher's algorithm. These radii can be used to test whether any substring is a palindrome in $O(1)$, find the longest palindromic substring, or count all palindromic substrings.
+
+For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \inlinecode{s[i]}, including the center character. Thus the palindrome spans \inlinecode{[i - odd[i] + 1, i + odd[i])}. For even palindromes, \inlinecode{even[i]} is the radius centered between \inlinecode{s[i - 1]} and \inlinecode{s[i]}. Thus the palindrome spans \inlinecode{[i - even[i], i + even[i])}.
+
+\begin{compactitem}
+  \item \inlinecode{manacher(s)} constructs the palindromic radii arrays for string \inlinecode{s}.
+  \item \inlinecode{is\_palindrome(l, r)} returns whether substring \inlinecode{[l, r)} is a palindrome.
+  \item \inlinecode{longest\_palindrome()} returns one longest palindromic substring of \inlinecode{s}.
+  \item \inlinecode{count\_palindromes()} returns the total number of palindromic substrings of \inlinecode{s}, counted with multiplicity by position.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per constructor call, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ per call to \inlinecode{is\_palindrome(l, r)}.
+  \item $O(n)$ per call to \inlinecode{longest\_palindrome()} and \inlinecode{count\_palindromes()}.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the radii arrays.
+  \item $O(1)$ auxiliary per query.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <string>
+#include <vector>
+using std::string;
+
+class manacher {
+  string s;
+  std::vector<int> odd, even;
+
+ public:
+  explicit manacher(const string &s) : s(s), odd(s.size()), even(s.size()) {
+    int n = s.size();
+    for (int i = 0, l = 0, r = -1; i < n; i++) {
+      int k = (i > r) ? 1 : std::min(odd[l + r - i], r - i + 1);
+      while (0 <= i - k && i + k < n && s[i - k] == s[i + k]) {
+        k++;
+      }
+      odd[i] = k;
+      if (i + k - 1 > r) {
+        l = i - k + 1;
+        r = i + k - 1;
+      }
+    }
+    for (int i = 0, l = 0, r = -1; i < n; i++) {
+      int k = (i > r) ? 0 : std::min(even[l + r - i + 1], r - i + 1);
+      while (0 <= i - k - 1 && i + k < n && s[i - k - 1] == s[i + k]) {
+        k++;
+      }
+      even[i] = k;
+      if (i + k - 1 > r) {
+        l = i - k;
+        r = i + k - 1;
+      }
+    }
+  }
+
+  bool is_palindrome(int l, int r) const {
+    int len = r - l;
+    if (len <= 0) {
+      return true;
+    }
+    int mid = (l + r) / 2;
+    return (len % 2) ? odd[mid] >= len / 2 + 1 : even[mid] >= len / 2;
+  }
+
+  string longest_palindrome() const {
+    int best_l = 0, best_len = 0;
+    for (int i = 0; i < (int)s.size(); i++) {
+      int len = 2 * odd[i] - 1;
+      if (len > best_len) {
+        best_len = len;
+        best_l = i - odd[i] + 1;
+      }
+      len = 2 * even[i];
+      if (len > best_len) {
+        best_len = len;
+        best_l = i - even[i];
+      }
+    }
+    return s.substr(best_l, best_len);
+  }
+
+  long long count_palindromes() const {
+    long long res = 0;
+    for (int i = 0; i < (int)s.size(); i++) {
+      res += odd[i] + even[i];
+    }
+    return res;
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  manacher m("abacaba");
+  assert(m.is_palindrome(0, 7));
+  assert(m.is_palindrome(1, 6));
+  assert(!m.is_palindrome(0, 6));
+  assert(m.longest_palindrome() == "abacaba");
+  assert(m.count_palindromes() == 12);
+
+  manacher e("cabbad");
+  assert(e.is_palindrome(1, 5));
+  assert(e.longest_palindrome() == "abba");
+  return 0;
+}
+\end{lstlisting}
 
 \section{Expression Parsing}
 \setcounter{section}{4}
@@ -2794,3 +2909,294 @@ int main() {
 ("ten", 5)
 ("to", 2)
 \end{exampleoutput}
+\subsection{Suffix Automaton}
+Maintains a compact deterministic automaton representing all substrings of a string. A suffix automaton is useful for substring membership queries, counting distinct substrings, finding longest common substrings, and many other string dynamic programming tasks.
+
+Each state represents an equivalence class of substrings with the same set of ending positions. The value \inlinecode{st[v].len} is the maximum length represented by state \inlinecode{v}, while \inlinecode{st[v].link} points to the state representing the longest proper suffix of that class.
+
+\begin{compactitem}
+  \item \inlinecode{suffix\_automaton()} constructs an empty automaton.
+  \item \inlinecode{suffix\_automaton(s)} constructs the automaton for string \inlinecode{s}.
+  \item \inlinecode{extend(c)} appends character \inlinecode{c} to the current string.
+  \item \inlinecode{contains(t)} returns whether string \inlinecode{t} occurs as a substring.
+  \item \inlinecode{count\_distinct\_substrings()} returns the number of distinct nonempty substrings.
+  \item \inlinecode{longest\_common\_substring(t)} returns one longest substring common to the built string and string \inlinecode{t}.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log A)$ to construct the automaton for a string of length $n$, where $A$ is the alphabet size, due to ordered map transitions.
+  \item $O(m \log A)$ per call to \inlinecode{contains(t)} or \inlinecode{longest\_common\_substring(t)}, where $m$ is the length of \inlinecode{t}.
+  \item $O(n)$ per call to \inlinecode{count\_distinct\_substrings()}.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ transition storage and $O(n)$ states.
+  \item $O(1)$ auxiliary per character processed.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <map>
+#include <string>
+#include <vector>
+using std::string;
+
+class suffix_automaton {
+  struct state {
+    int len, link, first_pos;
+    std::map<char, int> next;
+
+    state() : len(0), link(-1), first_pos(-1) {}
+  };
+
+  std::vector<state> st;
+  int last;
+
+ public:
+  suffix_automaton() : st(1), last(0) {}
+
+  explicit suffix_automaton(const string &s) : st(1), last(0) {
+    for (int i = 0; i < (int)s.size(); i++) {
+      extend(s[i]);
+    }
+  }
+
+  void extend(char c) {
+    int cur = st.size();
+    st.push_back(state());
+    st[cur].len = st[last].len + 1;
+    st[cur].first_pos = st[cur].len - 1;
+
+    int p = last;
+    while (p != -1 && !st[p].next.count(c)) {
+      st[p].next[c] = cur;
+      p = st[p].link;
+    }
+    if (p == -1) {
+      st[cur].link = 0;
+    } else {
+      int q = st[p].next[c];
+      if (st[p].len + 1 == st[q].len) {
+        st[cur].link = q;
+      } else {
+        int clone = st.size();
+        st.push_back(st[q]);
+        st[clone].len = st[p].len + 1;
+        while (p != -1 && st[p].next[c] == q) {
+          st[p].next[c] = clone;
+          p = st[p].link;
+        }
+        st[q].link = st[cur].link = clone;
+      }
+    }
+    last = cur;
+  }
+
+  bool contains(const string &t) const {
+    int v = 0;
+    for (int i = 0; i < (int)t.size(); i++) {
+      std::map<char, int>::const_iterator it = st[v].next.find(t[i]);
+      if (it == st[v].next.end()) {
+        return false;
+      }
+      v = it->second;
+    }
+    return true;
+  }
+
+  long long count_distinct_substrings() const {
+    long long res = 0;
+    for (int v = 1; v < (int)st.size(); v++) {
+      res += st[v].len - st[st[v].link].len;
+    }
+    return res;
+  }
+
+  string longest_common_substring(const string &t) const {
+    int v = 0, len = 0, best = 0, best_pos = -1;
+    for (int i = 0; i < (int)t.size(); i++) {
+      while (v && !st[v].next.count(t[i])) {
+        v = st[v].link;
+        len = st[v].len;
+      }
+      std::map<char, int>::const_iterator it = st[v].next.find(t[i]);
+      if (it != st[v].next.end()) {
+        v = it->second;
+        len++;
+      } else {
+        v = 0;
+        len = 0;
+      }
+      if (len > best) {
+        best = len;
+        best_pos = i;
+      }
+    }
+    return best == 0 ? "" : t.substr(best_pos - best + 1, best);
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  suffix_automaton sa("ababa");
+  assert(sa.contains("aba"));
+  assert(sa.contains("bab"));
+  assert(!sa.contains("abba"));
+  assert(sa.count_distinct_substrings() == 9);
+  assert(sa.longest_common_substring("zzbabab") == "baba");
+
+  suffix_automaton online;
+  online.extend('a');
+  online.extend('b');
+  online.extend('c');
+  assert(online.contains("bc"));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Eertree}
+Maintains all distinct palindromic substrings of a string online using an eertree, also known as a palindromic tree. Each non-root node represents one distinct palindrome, and suffix links connect each palindrome to its longest proper palindromic suffix.
+
+The structure has two roots: one of length $-1$, which simplifies boundary cases, and one of length $0$, representing the empty palindrome. After each appended character, \inlinecode{last} points to the node for the longest palindromic suffix of the current string.
+
+\begin{compactitem}
+  \item \inlinecode{eertree()} constructs an empty palindromic tree.
+  \item \inlinecode{eertree(s)} constructs the tree for string \inlinecode{s}.
+  \item \inlinecode{add(c)} appends character \inlinecode{c} and returns \inlinecode{true} if this creates a new distinct palindrome.
+  \item \inlinecode{count\_distinct\_palindromes()} returns the number of distinct nonempty palindromic substrings.
+  \item \inlinecode{longest\_suffix\_length()} returns the length of the current longest palindromic suffix.
+  \item \inlinecode{count\_occurrences()} propagates occurrence counts through suffix links and returns \inlinecode{occ[v]} for each node \inlinecode{v}.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log A)$ to build the tree for a string of length $n$, where $A$ is the alphabet size, due to ordered map transitions.
+  \item $O(\log A)$ amortized per call to \inlinecode{add(c)}.
+  \item $O(n)$ per call to \inlinecode{count\_occurrences()}.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ transition storage and $O(n)$ nodes.
+  \item $O(1)$ auxiliary per appended character.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <map>
+#include <string>
+#include <vector>
+using std::string;
+
+class eertree {
+  struct node {
+    int len, link, occ;
+    std::map<char, int> next;
+
+    node(int len = 0) : len(len), link(0), occ(0) {}
+  };
+
+  std::vector<node> tree;
+  string s;
+  int last;
+
+  int get_suffix(int v, int pos, char c) const {
+    while (pos - 1 - tree[v].len < 0 || s[pos - 1 - tree[v].len] != c) {
+      v = tree[v].link;
+    }
+    return v;
+  }
+
+ public:
+  eertree() : tree(), s(), last(1) {
+    tree.push_back(node(-1));
+    tree.push_back(node(0));
+    tree[0].link = 0;
+    tree[1].link = 0;
+  }
+
+  explicit eertree(const string &text) : tree(), s(), last(1) {
+    tree.push_back(node(-1));
+    tree.push_back(node(0));
+    tree[0].link = 0;
+    tree[1].link = 0;
+    for (int i = 0; i < (int)text.size(); i++) {
+      add(text[i]);
+    }
+  }
+
+  bool add(char c) {
+    s += c;
+    int pos = s.size() - 1;
+    int cur = get_suffix(last, pos, c);
+    std::map<char, int>::iterator it = tree[cur].next.find(c);
+    if (it != tree[cur].next.end()) {
+      last = it->second;
+      tree[last].occ++;
+      return false;
+    }
+
+    last = tree.size();
+    tree.push_back(node(tree[cur].len + 2));
+    tree[last].occ = 1;
+    tree[cur].next[c] = last;
+
+    if (tree[last].len == 1) {
+      tree[last].link = 1;
+      return true;
+    }
+    int link_parent = get_suffix(tree[cur].link, pos, c);
+    tree[last].link = tree[link_parent].next[c];
+    return true;
+  }
+
+  int count_distinct_palindromes() const {
+    return (int)tree.size() - 2;
+  }
+
+  int longest_suffix_length() const {
+    return tree[last].len;
+  }
+
+  std::vector<int> count_occurrences() const {
+    std::vector<int> occ(tree.size());
+    for (int i = 0; i < (int)tree.size(); i++) {
+      occ[i] = tree[i].occ;
+    }
+    for (int i = (int)tree.size() - 1; i >= 2; i--) {
+      occ[tree[i].link] += occ[i];
+    }
+    return occ;
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  eertree t("abacaba");
+  assert(t.count_distinct_palindromes() == 7);
+  assert(t.longest_suffix_length() == 7);
+
+  eertree online;
+  assert(online.add('a'));
+  assert(online.add('a'));
+  assert(online.add('b'));
+  assert(online.add('a'));
+  assert(online.count_distinct_palindromes() == 4);
+  assert(online.longest_suffix_length() == 3);
+
+  eertree duplicate;
+  assert(duplicate.add('a'));
+  assert(duplicate.add('b'));
+  assert(duplicate.add('c'));
+  assert(!duplicate.add('a'));
+
+  std::vector<int> occ = t.count_occurrences();
+  assert((int)occ.size() == t.count_distinct_palindromes() + 2);
+  return 0;
+}
+\end{lstlisting}
