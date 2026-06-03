@@ -1,29 +1,25 @@
 /*
 
-The number of inversions for an array $a[]$ the number of ordered pairs $(i, j)$
-such that $i < j$ and $a[i]$ > $a[j]$. This is roughly how "close" an array is
-to being sorted, but is *not* the minimum number of swaps required to sort the
-array. If the array is sorted, then the inversion count is 0. If the array is
-sorted in decreasing order, then the inversion count is maximal. The following
+The number of inversions for an array $a[]$ the number of ordered pairs $(i, j)$ such that $i < j$
+and $a[i]$ > $a[j]$. This is roughly how "close" an array is to being sorted, but is *not* the
+minimum number of swaps required to sort the array. If the array is sorted, then the inversion count
+is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following
 two functions are each techniques to efficiently count inversions.
 
-- `inversions(lo, hi)` uses merge sort to return the number of inversions given
-  two random-access iterators as a range `[lo, hi)`. The input range will be
-  sorted after the function call. This requires `operator <` to be defined on the
-  iterators' value type.
-- `inversions(n, a[])` uses a power-of-two trick to return the number of
-  inversions for an array `a[]` of $n$ nonnegative integers. After calling the
-  function, every value of `a[]` will be set to 0. The time and space complexity
-  of this operation are functions of the magnitude of the maximum value in `a[]`.
-  To instead obtain a running time of O(n log n) on the number of elements,
-  coordinate compression may be applied to `a[]` beforehand so that its maximum is
-  strictly less than the length n itself.
+- `inversions(lo, hi)` uses merge sort to return the number of inversions given two random-access
+  iterators as a range `[lo, hi)`. The input range will be sorted after the function call. This
+  requires `operator <` to be defined on the iterators' value type.
+- `inversions(n, a[])` uses a power-of-two trick to return the number of inversions for an array
+  `a[]` of $n$ nonnegative integers. After calling the function, every value of `a[]` will be set to
+  0. The time and space complexity of this operation are functions of the magnitude of the maximum
+  value in `a[]`. To instead obtain a running time of O(n log n) on the number of elements,
+  coordinate compression may be applied to `a[]` beforehand so that its maximum is strictly less
+  than the length n itself.
 
 Time Complexity:
-- O(n log n) per call to `inversion(lo, hi)`, where $n$ is the distance between `lo`
-  and `hi`.
-- O(n log m) per call to `inversions(n, a[])` where $n$ is the distance between
-  `lo` and `hi` and $m$ is maximum value in `a[]`.
+- O(n log n) per call to `inversion(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
+- O(n log m) per call to `inversions(n, a[])` where $n$ is the distance between `lo` and `hi` and
+  $m$ is maximum value in `a[]`.
 
 Space Complexity:
 - O(n) auxiliary space and O(log n) stack space for `inversions(lo, hi)`.

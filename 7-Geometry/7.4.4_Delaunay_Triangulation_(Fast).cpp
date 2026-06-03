@@ -1,25 +1,22 @@
 /*
 
-Given a set $P$ of two dimensional points, the Delaunay triangulation of $P$ is a
-set of non-overlapping triangles that covers the entire convex hull of $P$ such
-that no point in $P$ lies within the circumcircle of any of the resulting
-triangles. For any point $p$ in the convex hull of $P$ (but not necessarily in $P$),
-the nearest point is guaranteed to be a vertex of the enclosing triangle from
-the triangulation.
+Given a set $P$ of two dimensional points, the Delaunay triangulation of $P$ is a set of
+non-overlapping triangles that covers the entire convex hull of $P$ such that no point in $P$ lies
+within the circumcircle of any of the resulting triangles. For any point $p$ in the convex hull of
+$P$ (but not necessarily in $P$), the nearest point is guaranteed to be a vertex of the enclosing
+triangle from the triangulation.
 
-The triangulation may not exist (e.g. for a set of collinear points), or may not
-be unique if it does exist. The following program produces one such valid result
-using the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data
-structure. A full description is available in the original paper:
-https://people.eecs.berkeley.edu/~jrs/meshpapers/GuibasStolfi.pdf
+The triangulation may not exist (e.g. for a set of collinear points), or may not be unique if it
+does exist. The following program produces one such valid result using the Guibas-Stolfi
+divide-and-conquer algorithm with a quad-edge data structure. A full description is available in the
+original paper: https://people.eecs.berkeley.edu/~jrs/meshpapers/GuibasStolfi.pdf
 
-- `delaunay_triangulation(lo, hi)` returns a Delaunay triangulation for the input
-  range `[lo, hi)` of points, or an empty vector if a triangulation does not exist.
-  Duplicate points are ignored.
+- `delaunay_triangulation(lo, hi)` returns a Delaunay triangulation for the input range `[lo, hi)`
+  of points, or an empty vector if a triangulation does not exist. Duplicate points are ignored.
 
 Time Complexity:
-- O(n log n) per call to `delaunay_triangulation(lo, hi)`, where $n$ is the distance
-  between `lo` and `hi`.
+- O(n log n) per call to `delaunay_triangulation(lo, hi)`, where $n$ is the distance between `lo`
+  and `hi`.
 
 Space Complexity:
 - O(n) auxiliary heap space for storage of the Delaunay triangulation.

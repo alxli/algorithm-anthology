@@ -1,20 +1,18 @@
 /*
 
-Computes Grundy numbers for impartial games whose positions form a directed
-acyclic graph. Each vertex is a game position, and each outgoing edge is a legal
-move. Terminal vertices have Grundy number 0; all other vertices take the MEX of
-their successors' Grundy numbers.
+Computes Grundy numbers for impartial games whose positions form a directed acyclic graph. Each
+vertex is a game position, and each outgoing edge is a legal move. Terminal vertices have Grundy
+number 0; all other vertices take the MEX of their successors' Grundy numbers.
 
-The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles
-are present, the usual finite impartial-game Grundy recurrence is not directly
-valid without additional analysis.
+The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles are present, the
+usual finite impartial-game Grundy recurrence is not directly valid without additional analysis.
 
 - `grundy_on_dag(g)` returns the Grundy number of every vertex in graph `g`.
 - `g[u]` contains all positions reachable from position `u` in one move.
 
 Time Complexity:
-- O(n + m + s), where $n$ is the number of vertices, $m$ is the number of edges,
-  and $s$ is the total cost of MEX sets over outgoing edges.
+- O(n + m + s), where $n$ is the number of vertices, $m$ is the number of edges, and $s$ is the
+  total cost of MEX sets over outgoing edges.
 
 Space Complexity:
 - O(n + d) auxiliary heap and stack space, where $d$ is DFS depth.

@@ -1,28 +1,26 @@
 /*
 
-Maintains a compact deterministic automaton representing all substrings of a
-string. A suffix automaton is useful for substring membership queries, counting
-distinct substrings, finding longest common substrings, and many other string
-dynamic programming tasks.
+Maintains a compact deterministic automaton representing all substrings of a string. A suffix
+automaton is useful for substring membership queries, counting distinct substrings, finding longest
+common substrings, and many other string dynamic programming tasks.
 
-Each state represents an equivalence class of substrings with the same set of
-ending positions. The value `st[v].len` is the maximum length represented by state
-`v`, while `st[v].link` points to the state representing the longest proper suffix
-of that class.
+Each state represents an equivalence class of substrings with the same set of ending positions. The
+value `st[v].len` is the maximum length represented by state `v`, while `st[v].link` points to the
+state representing the longest proper suffix of that class.
 
 - `suffix_automaton()` constructs an empty automaton.
 - `suffix_automaton(s)` constructs the automaton for string `s`.
 - `extend(c)` appends character `c` to the current string.
 - `contains(t)` returns whether string `t` occurs as a substring.
 - `count_distinct_substrings()` returns the number of distinct nonempty substrings.
-- `longest_common_substring(t)` returns one longest substring common to the built
-  string and string `t`.
+- `longest_common_substring(t)` returns one longest substring common to the built string and string
+  `t`.
 
 Time Complexity:
-- O(n log A) to construct the automaton for a string of length $n$, where $A$ is
-  the alphabet size, due to ordered map transitions.
-- O(m log A) per call to `contains(t)` or `longest_common_substring(t)`, where $m$
-  is the length of `t`.
+- O(n log A) to construct the automaton for a string of length $n$, where $A$ is the alphabet size,
+  due to ordered map transitions.
+- O(m log A) per call to `contains(t)` or `longest_common_substring(t)`, where $m$ is the length of
+  `t`.
 - O(n) per call to `count_distinct_substrings()`.
 
 Space Complexity:

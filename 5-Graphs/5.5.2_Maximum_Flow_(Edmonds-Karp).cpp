@@ -1,22 +1,20 @@
 /*
 
-Given a flow network with integer capacities, find the maximum flow from a given
-source node to a given sink node. The flow along each edge may not exceed its
-capacity, and flow is conserved at every node other than the source and sink.
-`edmonds_karp()` applies to a global adjacency list `adj[]` that will be modified by
-the function call.
+Given a flow network with integer capacities, find the maximum flow from a given source node to a
+given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at
+every node other than the source and sink. `edmonds_karp()` applies to a global adjacency list
+`adj[]` that will be modified by the function call.
 
-The Edmonds-Karp algorithm will also support real-valued flow capacities. As
-such, this implementation will work as intended upon changing the appropriate
-variables to doubles.
+The Edmonds-Karp algorithm will also support real-valued flow capacities. As such, this
+implementation will work as intended upon changing the appropriate variables to doubles.
 
 Time Complexity:
-- O(min(n*m^2, m*f)) per call to `edmonds_karp()`, where $n$ is the number of nodes,
-  $m$ is the number of edges, and $f$ is the maximum flow.
+- O(min(n*m^2, m*f)) per call to `edmonds_karp()`, where $n$ is the number of nodes, $m$ is the
+  number of edges, and $f$ is the maximum flow.
 
 Space Complexity:
-- O(max(n, m)) for storage of the flow network, where $n$ is the number of nodes
-  and $m$ is the number of edges.
+- O(max(n, m)) for storage of the flow network, where $n$ is the number of nodes and $m$ is the
+  number of edges.
 
 */
 

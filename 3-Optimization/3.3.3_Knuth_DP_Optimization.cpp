@@ -1,16 +1,15 @@
 /*
 
-Computes interval dynamic programming recurrences whose optimal split points are
-monotone. Knuth optimization applies to recurrences of the form
-`dp[l][r] = min(dp[l][k] + dp[k][r]) + cost(l, r)`, where the optimal split
-`opt[l][r]` satisfies `opt[l][r - 1] <= opt[l][r] <= opt[l + 1][r]`.
+Computes interval dynamic programming recurrences whose optimal split points are monotone. Knuth
+optimization applies to recurrences of the form `dp[l][r] = min(dp[l][k] + dp[k][r]) + cost(l, r)`,
+where the optimal split `opt[l][r]` satisfies `opt[l][r - 1] <= opt[l][r] <= opt[l + 1][r]`.
 
-Common applications include optimal binary search trees and some range merging
-problems. The caller is responsible for verifying the quadrangle inequality and
-monotonicity assumptions for the chosen `cost(l, r)`.
+Common applications include optimal binary search trees and some range merging problems. The caller
+is responsible for verifying the quadrangle inequality and monotonicity assumptions for the chosen
+`cost(l, r)`.
 
-- `knuth_interval_dp(n, cost, &opt)` computes minimum costs for all half-open
-  intervals `[l, r)` over `n` items.
+- `knuth_interval_dp(n, cost, &opt)` computes minimum costs for all half-open intervals `[l, r)`
+  over `n` items.
 - `cost(l, r)` must return the interval cost added after choosing the best split.
 - If `opt` is not `NULL`, it is filled with the chosen split points.
 

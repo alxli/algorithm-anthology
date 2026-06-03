@@ -1,29 +1,29 @@
 /*
 
-Perform simple arithmetic operations on arbitrary precision big integers whose
-digits are internally represented as an `std::string` in little-endian order.
+Perform simple arithmetic operations on arbitrary precision big integers whose digits are internally
+represented as an `std::string` in little-endian order.
 
 - `bigint(n)` constructs a big integer from a long long (default: 0).
-- `bigint(s)` constructs a big integer from a string `s`, which must strictly
-  consist of a sequence of numeric digits, optionally preceded by a minus sign.
+- `bigint(s)` constructs a big integer from a string `s`, which must strictly consist of a sequence
+  of numeric digits, optionally preceded by a minus sign.
 - `str()` returns the string representation of the big integer.
-- `comp(a, b)` returns $-1$, $0$, or $1$ depending on whether the big integers
-  `a` and `b` compare less, equal, or greater, respectively.
+- `comp(a, b)` returns $-1$, $0$, or $1$ depending on whether the big integers `a` and `b` compare
+  less, equal, or greater, respectively.
 - `add(a, b)` returns the sum of big integers `a` and `b`.
 - `sub(a, b)` returns the difference of big integers `a` and `b`.
 - `mul(a, b)` returns the product of big integers `a` and `b`.
 - `div(a, b)` returns the quotient of big integers `a` and `b`.
 
 Time Complexity:
-- O(n) per call to the constructor, `str()`, `comp()`, `add()`, and `sub()`, where $n$ is
-  total number of digits in the arguments and result for each operation.
-- O(n*m) per call to `mul(a, b)` and `div(a, b)` where $n$ is the number of digits in
-  `a` and $m$ is the number of digits in `b`.
+- O(n) per call to the constructor, `str()`, `comp()`, `add()`, and `sub()`, where $n$ is total
+  number of digits in the arguments and result for each operation.
+- O(n*m) per call to `mul(a, b)` and `div(a, b)` where $n$ is the number of digits in `a` and $m$ is
+  the number of digits in `b`.
 
 Space Complexity:
 - O(n) for storage of the big integer, where $n$ is the number of the digits.
-- O(n) auxiliary heap space for `str()`, `add()`, `sub()`, `mul()`, and `div()`, where $n$
-  is the total number of digits in the arguments and result for each operation.
+- O(n) auxiliary heap space for `str()`, `add()`, `sub()`, `mul()`, and `div()`, where $n$ is the
+  total number of digits in the arguments and result for each operation.
 
 */
 

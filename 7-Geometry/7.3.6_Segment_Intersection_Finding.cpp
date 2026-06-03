@@ -1,22 +1,21 @@
 /*
 
-Given a list of line segments in two dimensions, determine whether any pair of
-segments intersect using a sweep line algorithm.
+Given a list of line segments in two dimensions, determine whether any pair of segments intersect
+using a sweep line algorithm.
 
-- `find_intersection(lo, hi, &res1, &res2)` returns whether any pair of segments
-  intersect given a range `[lo, hi)` of segments, where `lo` and `hi` are
-  random-access iterators. If an intersection is found, then one such pair
-  of segments will be stored into pointers `res1` and `res2`. If some segments are
-  barely touching (close within `EPS`), then the result will depend on the setting
-  of `TOUCH_IS_INTERSECT`.
+- `find_intersection(lo, hi, &res1, &res2)` returns whether any pair of segments intersect given a
+  range `[lo, hi)` of segments, where `lo` and `hi` are random-access iterators. If an intersection
+  is found, then one such pair of segments will be stored into pointers `res1` and `res2`. If some
+  segments are barely touching (close within `EPS`), then the result will depend on the setting of
+  `TOUCH_IS_INTERSECT`.
 
 Time Complexity:
-- O(n log n) per call to `find_intersection(lo, hi, &res1, &res2)`, where $n$ is
-  the distance between `lo` and `hi`.
+- O(n log n) per call to `find_intersection(lo, hi, &res1, &res2)`, where $n$ is the distance
+  between `lo` and `hi`.
 
 Space Complexity:
-- O(n) auxiliary heap space for `find_intersection(lo, hi, &res1, &res2)`, where $n$
-  is the distance between `lo` and `hi`.
+- O(n) auxiliary heap space for `find_intersection(lo, hi, &res1, &res2)`, where $n$ is the distance
+  between `lo` and `hi`.
 
 */
 

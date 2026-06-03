@@ -1,39 +1,37 @@
 /*
 
-Given a set of strings (needles) and subsequent queries of texts (haystacks)
-to be searched, determine all positions in which needles occur within the given
-haystacks in linear time using the Aho-Corasick algorithm.
+Given a set of strings (needles) and subsequent queries of texts (haystacks) to be searched,
+determine all positions in which needles occur within the given haystacks in linear time using the
+Aho-Corasick algorithm.
 
-Note that this implementation uses an ordered map for storage of the graph,
-adding an additional $\log k$ factor to the time complexities of all operations,
-where $k$ is the size of the alphabet (number of distinct characters used across
-the needles). It also uses an ordered set for storage of the precomputed output
-tables, adding an additional $\log m$ factor to the time complexities, where $m$ is
-the number of needles. In C++11 and later, both of these containers should be
-replaced by their unordered versions for constant time access, thus eliminating
-the log factors from the time complexities.
+Note that this implementation uses an ordered map for storage of the graph, adding an additional
+$\log k$ factor to the time complexities of all operations, where $k$ is the size of the alphabet
+(number of distinct characters used across the needles). It also uses an ordered set for storage of
+the precomputed output tables, adding an additional $\log m$ factor to the time complexities, where
+$m$ is the number of needles. In C++11 and later, both of these containers should be replaced by
+their unordered versions for constant time access, thus eliminating the log factors from the time
+complexities.
 
-- `aho_corasick(needles)` constructs the finite-state automaton for a set of
-  needle strings that are to be searched for subsequently in haystack queries.
-- `find_all_in(haystack, report_match)` calls the function `report_match(s, pos)`
-  once on each occurrence of each needle that occurs in the `haystack`, where `pos`
-  is the starting position in the `haystack` at which string `s` (a matched needle)
-  occurs. The matches will be reported in increasing order of their ending
-  positions within the `haystack`.
+- `aho_corasick(needles)` constructs the finite-state automaton for a set of needle strings that are
+  to be searched for subsequently in haystack queries.
+- `find_all_in(haystack, report_match)` calls the function `report_match(s, pos)` once on each
+  occurrence of each needle that occurs in the `haystack`, where `pos` is the starting position in
+  the `haystack` at which string `s` (a matched needle) occurs. The matches will be reported in
+  increasing order of their ending positions within the `haystack`.
 
 Time Complexity:
-- O(m*((log m) + l*log k)) per call to the constructor, where $m$ is the number of
-  needles, $l$ is the maximum length for any needle, and $k$ is the size of the
-  alphabet used by the needles. If unordered containers are used, then the time
-  complexity reduces to O(m*l), or linear on the input size.
-- O(n*(log k) + z) per call to `find_all_in(haystack, report_match)`, where $n$ is
-  the length of `haystack`, $k$ is the size of the alphabet used by the needles, and
-  $z$ is the number of matches. If unordered containers are used, then the time
-  complexity reduces to O(n + z), or linear on the input size.
+- O(m*((log m) + l*log k)) per call to the constructor, where $m$ is the number of needles, $l$ is
+  the maximum length for any needle, and $k$ is the size of the alphabet used by the needles. If
+  unordered containers are used, then the time complexity reduces to O(m*l), or linear on the input
+  size.
+- O(n*(log k) + z) per call to `find_all_in(haystack, report_match)`, where $n$ is the length of
+  `haystack`, $k$ is the size of the alphabet used by the needles, and $z$ is the number of matches.
+  If unordered containers are used, then the time complexity reduces to O(n + z), or linear on the
+  input size.
 
 Space Complexity:
-- O(m*l) for storage of the automaton, where $m$ is the number of needles
-  and $l$ is the maximum length for any needle.
+- O(m*l) for storage of the automaton, where $m$ is the number of needles and $l$ is the maximum
+  length for any needle.
 - O(1) auxiliary space per call to `find_all_in(haystack, report_match)`.
 
 */

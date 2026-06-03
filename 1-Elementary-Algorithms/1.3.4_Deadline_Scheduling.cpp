@@ -1,12 +1,11 @@
 /*
 
-Schedules unit-time jobs with deadlines and profits to maximize total profit.
-Each job takes one time slot and must be scheduled at or before its deadline.
-The greedy algorithm processes jobs in decreasing profit order and places each
-chosen job in the latest available slot before its deadline.
+Schedules unit-time jobs with deadlines and profits to maximize total profit. Each job takes one
+time slot and must be scheduled at or before its deadline. The greedy algorithm processes jobs in
+decreasing profit order and places each chosen job in the latest available slot before its deadline.
 
-This is a compact scheduling pattern that combines sorting with a disjoint-set
-forest over available time slots.
+This is a compact scheduling pattern that combines sorting with a disjoint-set forest over available
+time slots.
 
 - `schedule_deadline_jobs(jobs)` returns the maximum total profit.
 - `job_t` stores `deadline` and `profit`. Deadlines are positive integer time slots.

@@ -1,37 +1,31 @@
 /*
 
-A permutation is an ordered list consisting of $n$ (not necessarily distinct)
-elements.
+A permutation is an ordered list consisting of $n$ (not necessarily distinct) elements.
 
-- `next_permutation_(lo, hi)` is analogous to `std::next_permutation(lo, hi)`,
-  taking two BidirectionalIterators `lo` and `hi` as a range `[lo, hi)` for which the
-  function tries to rearrange to the next lexicographically greater permutation.
-  The function returns true if such a permutation exists, or false if the range
-  is already in descending order (in which case the values are unchanged). This
-  implementation requires an ordering on the set of possible elements defined by
-  the `<` operator on the iterator's value type.
-- `next_permutation(n, a)` is analogous to `next_permutation()`, except that it
-  takes an array `a[]` of size $n$ instead of a range.
-- `next_permutation(x)` returns the next lexicographically greater permutation of
-  the binary digits of the integer `x`, that is, the lowest integer greater than
-  `x` with the same number of 1-bits. This can be used to generate combinations of
-  a set of $n$ items by treating each 1 bit as whether to "take" the item at the
-  corresponding position.
-- `permutation_by_rank(n, r)` returns the permutation of the integers in the range
-  $[0, n)$ which is lexicographically ranked $r$, where $r$ is a zero-based rank in
-  the range $[0, n!)$.
-- `rank_by_permutation(n, a)` returns an integer representing the zero-based
-  rank of permutation `a[]`, which must be a permutation of the integers $[0, n)$.
-- `permutation_cycles(n, a)` returns the decomposition of the permutation `a[]` into
-  cycles. A permutation cycle is a subset of a permutation whose elements are
-  consecutively swapped, relative to a sorted set. For example, $\{3, 1, 0, 2\}$
-  decomposes to $\{0, 3, 2\}$ and $\{1\}$, meaning that starting from the sorted order
-  $\{0, 1, 2, 3\}$, the 0th value is replaced by the 3rd, the 3rd by the 2nd, and
-  the 2nd by the 0th ($0 \to 3 \to 2 \to 0$).
+- `next_permutation_(lo, hi)` is analogous to `std::next_permutation(lo, hi)`, taking two
+  BidirectionalIterators `lo` and `hi` as a range `[lo, hi)` for which the function tries to
+  rearrange to the next lexicographically greater permutation. The function returns true if such a
+  permutation exists, or false if the range is already in descending order (in which case the values
+  are unchanged). This implementation requires an ordering on the set of possible elements defined
+  by the `<` operator on the iterator's value type.
+- `next_permutation(n, a)` is analogous to `next_permutation()`, except that it takes an array `a[]`
+  of size $n$ instead of a range.
+- `next_permutation(x)` returns the next lexicographically greater permutation of the binary digits
+  of the integer `x`, that is, the lowest integer greater than `x` with the same number of 1-bits.
+  This can be used to generate combinations of a set of $n$ items by treating each 1 bit as whether
+  to "take" the item at the corresponding position.
+- `permutation_by_rank(n, r)` returns the permutation of the integers in the range $[0, n)$ which is
+  lexicographically ranked $r$, where $r$ is a zero-based rank in the range $[0, n!)$.
+- `rank_by_permutation(n, a)` returns an integer representing the zero-based rank of permutation
+  `a[]`, which must be a permutation of the integers $[0, n)$.
+- `permutation_cycles(n, a)` returns the decomposition of the permutation `a[]` into cycles. A
+  permutation cycle is a subset of a permutation whose elements are consecutively swapped, relative
+  to a sorted set. For example, $\{3, 1, 0, 2\}$ decomposes to $\{0, 3, 2\}$ and $\{1\}$, meaning
+  that starting from the sorted order $\{0, 1, 2, 3\}$, the 0th value is replaced by the 3rd, the
+  3rd by the 2nd, and the 2nd by the 0th ($0 \to 3 \to 2 \to 0$).
 
 Time Complexity:
-- O(n^2) per call to `next_permutation_(lo, hi)`, where $n$ is the distance between
-  `lo` and `hi`.
+- O(n^2) per call to `next_permutation_(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
 - O(n^2) per call to `next_permutation(n, a)`, `permutation_by_rank(n, r)`, and
   `rank_by_permutation(n, a)`.
 - O(1) per call to `next_permutation(x)`.
@@ -39,8 +33,8 @@ Time Complexity:
 
 Space Complexity:
 - O(1) auxiliary for `next_permutation_()` and `next_permutation()`.
-- O(n) auxiliary heap space for `permutation_by_rank()`, `rank_by_permutation()`,
-  and `permutation_cycles()`.
+- O(n) auxiliary heap space for `permutation_by_rank()`, `rank_by_permutation()`, and
+  `permutation_cycles()`.
 
 */
 

@@ -1,37 +1,33 @@
 /*
 
-Computes polynomial rolling hashes for sequences, supporting O(1) contiguous
-subsequence hash queries after preprocessing. This is useful for probabilistic
-string matching, substring equality checks, repeated subarray detection, and
-binary-searching over candidate lengths.
+Computes polynomial rolling hashes for sequences, supporting O(1) contiguous subsequence hash
+queries after preprocessing. This is useful for probabilistic string matching, substring equality
+checks, repeated subarray detection, and binary-searching over candidate lengths.
 
-The implementation works modulo the Mersenne prime $2^{61} - 1$ and uses
-`__uint128_t` for multiplication. The base `HASH_BASE` should be changed or chosen
-randomly for open-hacking environments. With a fixed base, hashing remains fast and
-practical, but it is still probabilistic and should not be used as proof of
-equality when exact verification is required.
+The implementation works modulo the Mersenne prime $2^{61} - 1$ and uses `__uint128_t` for
+multiplication. The base `HASH_BASE` should be changed or chosen randomly for open-hacking
+environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic
+and should not be used as proof of equality when exact verification is required.
 
-By default, each sequence value is cast to `uint64` and mixed. For non-integer
-element types, pass a custom value hasher that maps each element to a stable
-nonzero value in `[1, HASH_MOD)`.
+By default, each sequence value is cast to `uint64` and mixed. For non-integer element types, pass a
+custom value hasher that maps each element to a stable nonzero value in `[1, HASH_MOD)`.
 
-- `rolling_hash<T>(first, last)` constructs prefix hashes for any iterator range of
-  values accepted by the value hasher.
+- `rolling_hash<T>(first, last)` constructs prefix hashes for any iterator range of values accepted
+  by the value hasher.
 - `rolling_hash<T>(v)` constructs prefix hashes for vector `v`.
 - `get(l, r)` returns the hash of the half-open subsequence `[l, r)`.
 - `hash(first, last)` returns the hash of an iterator range.
 - `hash(v)` returns the hash of vector `v`.
-- `concat(left, right, right_len)` returns the hash of the concatenation of a
-  sequence with hash `left` and a sequence with hash `right` and length `right_len`.
+- `concat(left, right, right_len)` returns the hash of the concatenation of a sequence with hash
+  `left` and a sequence with hash `right` and length `right_len`.
 
 Time Complexity:
-- O(n) per constructor call and whole-sequence hash, where $n$ is the sequence
-  length.
+- O(n) per constructor call and whole-sequence hash, where $n$ is the sequence length.
 - O(1) per call to `get(l, r)` and `concat(left, right, right_len)`.
 
 Space Complexity:
-- O(n) for storage of prefix hashes and powers, where $n$ is the maximum sequence
-  length processed so far.
+- O(n) for storage of prefix hashes and powers, where $n$ is the maximum sequence length processed
+  so far.
 - O(1) auxiliary per query.
 
 */

@@ -1,12 +1,10 @@
 /*
 
-Given an undirected graph, assign a color to every node such that no pair of
-adjacent nodes have the same color, and that the total number of colors used is
-minimized. `color_graph()` applies to a global, pre-populated adjacency matrix
-`adj[][]` which must satisfy the condition that `adj[u][v]` is `true` if and only if
-`adj[v][u]` is `true`, for all pairs of nodes $u$ and $v$ respectively between 0
-(inclusive) and the total number of nodes (exclusive) as passed in the function
-argument.
+Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the
+same color, and that the total number of colors used is minimized. `color_graph()` applies to a
+global, pre-populated adjacency matrix `adj[][]` which must satisfy the condition that `adj[u][v]`
+is `true` if and only if `adj[v][u]` is `true`, for all pairs of nodes $u$ and $v$ respectively
+between 0 (inclusive) and the total number of nodes (exclusive) as passed in the function argument.
 
 Time Complexity:
 - Exponential on the number of nodes per call to `color_graph()`.

@@ -1,13 +1,13 @@
 /*
 
-Maintains a dynamic set of lines and answers minimum value queries at points in a
-fixed integer domain. A Li Chao tree is useful for dynamic programming recurrences
-of the form `dp[i] = min(m[j] * x[i] + b[j])`, especially when line slopes and query
-points arrive in arbitrary order.
+Maintains a dynamic set of lines and answers minimum value queries at points in a fixed integer
+domain. A Li Chao tree is useful for dynamic programming recurrences of the form
+`dp[i] = min(m[j] * x[i] + b[j])`, especially when line slopes and query points arrive in arbitrary
+order.
 
-The implementation below stores the lower envelope of lines over the inclusive
-domain `[X_MIN, X_MAX]`. It supports adding arbitrary lines and querying arbitrary
-integer x-coordinates in O(log C), where $C =$ `X_MAX` $-$ `X_MIN` $+ 1$.
+The implementation below stores the lower envelope of lines over the inclusive domain
+`[X_MIN, X_MAX]`. It supports adding arbitrary lines and querying arbitrary integer x-coordinates in
+O(log C), where $C =$ `X_MAX` $-$ `X_MIN` $+ 1$.
 
 - `li_chao_tree(lo, hi)` constructs an empty tree over integer domain `[lo, hi]`.
 - `add_line(m, b)` inserts line $y = mx + b$.

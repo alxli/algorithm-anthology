@@ -1,35 +1,30 @@
 /*
 
-Finds every complex root $x$ for a polynomial $p$ such that $p(x) = 0$ using the
-Ehrlich-Aberth method. This is a simultaneous iteration: every root estimate is
-updated using both the Newton correction and a repulsion term from the other
-estimates.
+Finds every complex root $x$ for a polynomial $p$ such that $p(x) = 0$ using the Ehrlich-Aberth
+method. This is a simultaneous iteration: every root estimate is updated using both the Newton
+correction and a repulsion term from the other estimates.
 
-This routine is intended for well-scaled polynomials when all complex roots are
-wanted. If only real roots are needed, a real-root isolator such as derivative
-recursion with bisection is usually more reliable. Multiple or tightly clustered
-roots may converge slowly, and very large or very small root scales may require
-rescaling the input or using multiprecision arithmetic.
+This routine is intended for well-scaled polynomials when all complex roots are wanted. If only real
+roots are needed, a real-root isolator such as derivative recursion with bisection is usually more
+reliable. Multiple or tightly clustered roots may converge slowly, and very large or very small root
+scales may require rescaling the input or using multiprecision arithmetic.
 
-- `eval_with_derivative(p, x)` returns `p(x)` and `p'(x)` for a polynomial `p`
-  represented as a vector where `p[i]` stores the coefficient for the $x^i$ term.
-- `find_all_roots(p, EPS, ITERATIONS)` returns a vector of all complex roots for
-  a complex polynomial `p`. A `vector<LD>` overload is provided for polynomials
-  with real coefficients. The roots are found to a tolerance of `EPS` in absolute
-  or relative error (whichever is reached first), and zero roots are removed
-  exactly before the simultaneous iteration starts.
+- `eval_with_derivative(p, x)` returns `p(x)` and `p'(x)` for a polynomial `p` represented as a
+  vector where `p[i]` stores the coefficient for the $x^i$ term.
+- `find_all_roots(p, EPS, ITERATIONS)` returns a vector of all complex roots for a complex
+  polynomial `p`. A `vector<LD>` overload is provided for polynomials with real coefficients. The
+  roots are found to a tolerance of `EPS` in absolute or relative error (whichever is reached
+  first), and zero roots are removed exactly before the simultaneous iteration starts.
 
 Time Complexity:
-- O(n) per call to `eval_with_derivative(p, x)`, where $n$ is the degree of the
-  polynomial.
-- O(n^2 p) per call to `find_all_roots(p, EPS, ITERATIONS)`, where $n$ is the
-  degree of the polynomial and $p$ is the number of iterations required to reach
-  the desired precision.
+- O(n) per call to `eval_with_derivative(p, x)`, where $n$ is the degree of the polynomial.
+- O(n^2 p) per call to `find_all_roots(p, EPS, ITERATIONS)`, where $n$ is the degree of the
+  polynomial and $p$ is the number of iterations required to reach the desired precision.
 
 Space Complexity:
 - O(1) auxiliary space for `eval_with_derivative(p, x)`.
-- O(n) auxiliary heap space for `find_all_roots(p, EPS, ITERATIONS)`, where $n$
-  is the degree of the polynomial.
+- O(n) auxiliary heap space for `find_all_roots(p, EPS, ITERATIONS)`, where $n$ is the degree of the
+  polynomial.
 
 */
 

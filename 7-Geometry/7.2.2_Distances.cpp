@@ -2,22 +2,20 @@
 
 Distance calculations in two dimensions for points, lines, and line segments.
 
-- `dist(a, b)` and `sqdist(a, b)` respectively return the distance and squared
-  distance between points $a$ and $b$.
-- `line_dist(p, a, b, c)` returns the distance from point $p$ to the line
-  $ax + by + c = 0$. If the line is invalid (i.e. $a = b = 0$), then `-INF`, `INF`,
-  or `NaN` is returned based on the sign of $c$.
-- `line_dist(p, a, b)` returns the distance from point $p$ to the infinite line
-  containing points $a$ and $b$. If the line is invalid (i.e. $a = b$), then the
-  distance from $p$ to the single point is returned.
-- `line_dist(a1, b1, c1, a2, b2, c2)` returns the distance between two lines. If
-  the lines are non-parallel then the distance is considered to be 0. Otherwise,
-  the distance is considered to be the perpendicular distance from any point on
-  one line to the other line.
+- `dist(a, b)` and `sqdist(a, b)` respectively return the distance and squared distance between
+  points $a$ and $b$.
+- `line_dist(p, a, b, c)` returns the distance from point $p$ to the line $ax + by + c = 0$. If the
+  line is invalid (i.e. $a = b = 0$), then `-INF`, `INF`, or `NaN` is returned based on the sign of
+  $c$.
+- `line_dist(p, a, b)` returns the distance from point $p$ to the infinite line containing points
+  $a$ and $b$. If the line is invalid (i.e. $a = b$), then the distance from $p$ to the single point
+  is returned.
+- `line_dist(a1, b1, c1, a2, b2, c2)` returns the distance between two lines. If the lines are
+  non-parallel then the distance is considered to be 0. Otherwise, the distance is considered to be
+  the perpendicular distance from any point on one line to the other line.
 - `seg_dist(p, a, b)` returns the distance from point $p$ to the line segment $ab$.
-- `seg_dist(a, b, c, d)` returns the minimum distance from any point on the line
-  segment $ab$ to any point on the line segment $cd$. This is 0 if the segments
-  touch or intersect.
+- `seg_dist(a, b, c, d)` returns the minimum distance from any point on the line segment $ab$ to any
+  point on the line segment $cd$. This is 0 if the segments touch or intersect.
 
 Time Complexity:
 - O(1) for all operations.

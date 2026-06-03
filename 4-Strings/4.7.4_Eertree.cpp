@@ -1,29 +1,24 @@
 /*
 
-Maintains all distinct palindromic substrings of a string online using an eertree,
-also known as a palindromic tree. Each non-root node represents one distinct
-palindrome, and suffix links connect each palindrome to its longest proper
-palindromic suffix.
+Maintains all distinct palindromic substrings of a string online using an eertree, also known as a
+palindromic tree. Each non-root node represents one distinct palindrome, and suffix links connect
+each palindrome to its longest proper palindromic suffix.
 
-The structure has two roots: one of length $-1$, which simplifies boundary cases,
-and one of length $0$, representing the empty palindrome. After each appended
-character, `last` points to the node for the longest palindromic suffix of the
-current string.
+The structure has two roots: one of length $-1$, which simplifies boundary cases, and one of length
+$0$, representing the empty palindrome. After each appended character, `last` points to the node for
+the longest palindromic suffix of the current string.
 
 - `eertree()` constructs an empty palindromic tree.
 - `eertree(s)` constructs the tree for string `s`.
-- `add(c)` appends character `c` and returns `true` if this creates a new distinct
-  palindrome.
-- `count_distinct_palindromes()` returns the number of distinct nonempty
-  palindromic substrings.
-- `longest_suffix_length()` returns the length of the current longest palindromic
-  suffix.
-- `count_occurrences()` propagates occurrence counts through suffix links and
-  returns `occ[v]` for each node `v`.
+- `add(c)` appends character `c` and returns `true` if this creates a new distinct palindrome.
+- `count_distinct_palindromes()` returns the number of distinct nonempty palindromic substrings.
+- `longest_suffix_length()` returns the length of the current longest palindromic suffix.
+- `count_occurrences()` propagates occurrence counts through suffix links and returns `occ[v]` for
+  each node `v`.
 
 Time Complexity:
-- O(n log A) to build the tree for a string of length $n$, where $A$ is the alphabet
-  size, due to ordered map transitions.
+- O(n log A) to build the tree for a string of length $n$, where $A$ is the alphabet size, due to
+  ordered map transitions.
 - O(log A) amortized per call to `add(c)`.
 - O(n) per call to `count_occurrences()`.
 

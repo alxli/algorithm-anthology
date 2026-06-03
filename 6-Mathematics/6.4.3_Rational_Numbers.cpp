@@ -1,26 +1,24 @@
 /*
 
-Perform operations on rational numbers internally represented as two integers, a
-numerator and a denominator. The template integer type must support streamed
-input/output, comparisons, and arithmetic operations. Overflow is not checked
-for in internal operations.
+Perform operations on rational numbers internally represented as two integers, a numerator and a
+denominator. The template integer type must support streamed input/output, comparisons, and
+arithmetic operations. Overflow is not checked for in internal operations.
 
 - `rational(n)` constructs a rational with numerator `n` and denominator 1.
 - `rational(n, d)` constructs a rational with numerator `n` and denominator `d`.
-- `operator >>` inputs a rational using the next integer from the stream as the
-  numerator and 1 as the denominator.
-- `operator <<` outputs a rational as a string consisting of possibly a minus sign
-  followed by the numerator, followed by a slash, followed by the denominator.
-- `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the big
-  integer `v` converted to an `std::string`, `long long`, `double`, and `long double`
-  respectively.
-- Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`, `/=`, and `%=`
-  are defined analogous to those on numerical primitives.
+- `operator >>` inputs a rational using the next integer from the stream as the numerator and 1 as
+  the denominator.
+- `operator <<` outputs a rational as a string consisting of possibly a minus sign followed by the
+  numerator, followed by a slash, followed by the denominator.
+- `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the big integer `v`
+  converted to an `std::string`, `long long`, `double`, and `long double` respectively.
+- Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
+  `/=`, and `%=` are defined analogous to those on numerical primitives.
 
 Time Complexity:
 - O(log(n + d)) per call to constructor `rational(n, d)`.
-- O(1) per call to all other operations, assuming that corresponding operations
-  on the template integer type are O(1) as well.
+- O(1) per call to all other operations, assuming that corresponding operations on the template
+  integer type are O(1) as well.
 
 Space Complexity:
 - O(1) for storage of the rational.

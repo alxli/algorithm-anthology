@@ -1,26 +1,23 @@
 /*
 
-Moves nodes or ranges between singly linked lists in O(1) pointer changes once
-the neighboring nodes are known. Splicing is the main operation that makes linked
-lists useful: it moves existing nodes without copying values or invalidating
-pointers to the moved nodes.
+Moves nodes or ranges between singly linked lists in O(1) pointer changes once the neighboring nodes
+are known. Splicing is the main operation that makes linked lists useful: it moves existing nodes
+without copying values or invalidating pointers to the moved nodes.
 
-The functions below use a dummy head node for each list. This makes insertions
-and removals at the beginning of a list match all other positions. In the C++
-standard library, `std::list::splice()` provides analogous operations for doubly
-linked lists, while `std::forward_list::splice_after()` provides analogous
-operations for singly linked lists.
+The functions below use a dummy head node for each list. This makes insertions and removals at the
+beginning of a list match all other positions. In the C++ standard library, `std::list::splice()`
+provides analogous operations for doubly linked lists, while `std::forward_list::splice_after()`
+provides analogous operations for singly linked lists.
 
-- `splice_after(pos, before)` moves the node after `before` so it appears after
-  `pos`.
-- `splice_range_after(pos, before_first, last)` moves the half-open range
-  `(before_first, last)` so it appears after `pos`.
+- `splice_after(pos, before)` moves the node after `before` so it appears after `pos`.
+- `splice_range_after(pos, before_first, last)` moves the half-open range `(before_first, last)` so
+  it appears after `pos`.
 
 Time Complexity:
 - O(1) per call to `splice_after(pos, before)`.
-- O(k) per call to `splice_range_after(pos, before_first, last)`, where $k$ is the
-  number of moved nodes. The actual pointer splicing is O(1), but this compact
-  version walks to the end of the moved range.
+- O(k) per call to `splice_range_after(pos, before_first, last)`, where $k$ is the number of moved
+  nodes. The actual pointer splicing is O(1), but this compact version walks to the end of the moved
+  range.
 
 Space Complexity:
 - O(1) auxiliary.

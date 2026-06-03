@@ -1,9 +1,9 @@
 /*
 
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be
-simultaneously incremented by arbitrary values (range update) and values at
-individual indices to be queried (point query). This implementation assumes that
-the array is 0-based (i.e. has valid indices from 0 to `size() - 1`, inclusive).
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously
+incremented by arbitrary values (range update) and values at individual indices to be queried (point
+query). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to
+`size() - 1`, inclusive).
 
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.

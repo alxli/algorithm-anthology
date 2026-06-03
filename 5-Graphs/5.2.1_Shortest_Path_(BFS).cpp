@@ -1,20 +1,17 @@
 /*
 
-Given a starting node in an unweighted, directed graph, visit every connected
-node and determine the minimum distance to each such node. Optionally, output
-the shortest path to a specific destination node using the shortest-path tree
-from the predecessor array `pred[]`. `bfs()` applies to a global, pre-populated
-adjacency list `adj[]` which consists of only nodes numbered with integers between
-0 (inclusive) and the total number of nodes (exclusive), as passed in the
-function argument.
+Given a starting node in an unweighted, directed graph, visit every connected node and determine the
+minimum distance to each such node. Optionally, output the shortest path to a specific destination
+node using the shortest-path tree from the predecessor array `pred[]`. `bfs()` applies to a global,
+pre-populated adjacency list `adj[]` which consists of only nodes numbered with integers between 0
+(inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
 Time Complexity:
-- O(max(n, m)) per call to `bfs()`, where $n$ is the number of nodes and $m$ is
-  the number of edges.
+- O(max(n, m)) per call to `bfs()`, where $n$ is the number of nodes and $m$ is the number of edges.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$
-  is the number of edges.
+- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
+  edges.
 - O(n) auxiliary heap space for `bfs()`.
 
 */

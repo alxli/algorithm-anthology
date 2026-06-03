@@ -2,25 +2,22 @@
 
 Common rectangle calculations in two dimensions.
 
-- `rectangle_area(a, b)` returns the area of a rectangle with opposing vertices $a$
-  and $b$.
-- `point_in_rectangle(p, v, w, h)` returns whether point $p$ lies within the
-  rectangle defined by a vertex `v` at $(x, y)$, a width of $w$, and a height of $h$.
-  Note that negative widths and heights are supported. If the point lies on or
-  close to an edge (by roughly `EPS`), then the result will depend on the setting
-  of `EDGE_IS_INSIDE`.
-- `point_in_rectangle(p, a, b)` returns whether point $p$ lies within the rectangle
-  with opposing vertices $a$ and $b$. If the point lies on or close to an edge (by
-  roughly `EPS`), then the result will depend on the setting of `EDGE_IS_INSIDE`.
-- `rectangle_intersection(a1, b1, a2, b2, &p, &q)` determines the intersection
-  region of the rectangle with opposing vertices $a_1$ and $b_1$ and the rectangle
-  with opposing vertices $a_2$ and $b_2$. Returns $-1$ if the rectangles are completely
-  disjoint, 0 if the rectangles partially intersect, 1 if the first rectangle is
-  completely inside the second, and 2 if the second rectangle is completely
-  inside the first. If there is an intersection, the opposing vertices of the
-  intersection rectangle will be stored into pointers `p` and `q` if they are not
-  `NULL`. If the intersection is a single point or line segment, then the result
-  will depend on the setting of `EDGE_IS_INSIDE` within `point_in_rectangle()`.
+- `rectangle_area(a, b)` returns the area of a rectangle with opposing vertices $a$ and $b$.
+- `point_in_rectangle(p, v, w, h)` returns whether point $p$ lies within the rectangle defined by a
+  vertex `v` at $(x, y)$, a width of $w$, and a height of $h$. Note that negative widths and heights
+  are supported. If the point lies on or close to an edge (by roughly `EPS`), then the result will
+  depend on the setting of `EDGE_IS_INSIDE`.
+- `point_in_rectangle(p, a, b)` returns whether point $p$ lies within the rectangle with opposing
+  vertices $a$ and $b$. If the point lies on or close to an edge (by roughly `EPS`), then the result
+  will depend on the setting of `EDGE_IS_INSIDE`.
+- `rectangle_intersection(a1, b1, a2, b2, &p, &q)` determines the intersection region of the
+  rectangle with opposing vertices $a_1$ and $b_1$ and the rectangle with opposing vertices $a_2$
+  and $b_2$. Returns $-1$ if the rectangles are completely disjoint, 0 if the rectangles partially
+  intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle
+  is completely inside the first. If there is an intersection, the opposing vertices of the
+  intersection rectangle will be stored into pointers `p` and `q` if they are not `NULL`. If the
+  intersection is a single point or line segment, then the result will depend on the setting of
+  `EDGE_IS_INSIDE` within `point_in_rectangle()`.
 
 Time Complexity:
 - O(1) for all operations.

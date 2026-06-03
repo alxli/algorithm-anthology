@@ -1,12 +1,12 @@
 /*
 
-Maintains disjoint sets while supporting rollback to previous snapshots. Rollback
-DSU is useful for offline dynamic connectivity, divide-and-conquer over time, and
-backtracking search where unions must be undone.
+Maintains disjoint sets while supporting rollback to previous snapshots. Rollback DSU is useful for
+offline dynamic connectivity, divide-and-conquer over time, and backtracking search where unions
+must be undone.
 
-Path compression is intentionally not used, because it is hard to undo. Union by
-size keeps tree height logarithmic, and every successful union records enough
-information to restore the previous state.
+Path compression is intentionally not used, because it is hard to undo. Union by size keeps tree
+height logarithmic, and every successful union records enough information to restore the previous
+state.
 
 - `initialize(n)` creates singleton sets over elements `0` through `n - 1`.
 - `find_root(u)` returns the representative of the set containing `u`.
@@ -17,8 +17,7 @@ information to restore the previous state.
 
 Time Complexity:
 - O(n) per call to `initialize(n)`.
-- O(log n) worst-case per call to `find_root(u)`, `is_united(u, v)`, and
-  `unite(u, v)`.
+- O(log n) worst-case per call to `find_root(u)`, `is_united(u, v)`, and `unite(u, v)`.
 - O(1) per undone union during `rollback(s)`.
 
 Space Complexity:

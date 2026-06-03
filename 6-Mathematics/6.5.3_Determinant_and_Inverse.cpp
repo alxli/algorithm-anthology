@@ -1,28 +1,26 @@
 /*
 
-Computes the determinant and inverse of a square matrix using Gaussian
-elimination. The inverse of a matrix $a$ is another matrix $b$ such that $ab$ equals
-the identity matrix. The inverse of $a$ exists if and only if the determinant of $a$
-is nonzero. In this case, $a$ is called invertible or non-singular. In practice,
-simple Gaussian elimination is prone to rounding error on certain matrices. For
-a more accurate algorithm for solving systems of linear equations, use LU
+Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a
+matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$
+exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or
+non-singular. In practice, simple Gaussian elimination is prone to rounding error on certain
+matrices. For a more accurate algorithm for solving systems of linear equations, use LU
 decomposition with row partial pivoting.
 
 - `det_naive(a)` returns the determinant of an $n$ by $n$ matrix `a`, using the classic
   divide-and-conquer algorithm by Laplace expansions.
-- `det(a)` returns the determinant of an $n$ by $n$ matrix `a` using Gaussian
-  elimination.
-- `invert(a)` assigns the $n$ by $n$ matrix `a` to its inverse (if it exists), returning
-  a reference to the modified argument itself. If `a` is not invertible, then its
-  assigned values after the function call will be undefined (+/-Inf or +/-NaN).
+- `det(a)` returns the determinant of an $n$ by $n$ matrix `a` using Gaussian elimination.
+- `invert(a)` assigns the $n$ by $n$ matrix `a` to its inverse (if it exists), returning a reference
+  to the modified argument itself. If `a` is not invertible, then its assigned values after the
+  function call will be undefined (+/-Inf or +/-NaN).
 
 Time Complexity:
 - O(n!) per call to `det_naive()`, where $n$ is the dimension of the matrix.
 - O(n^3) per call to `det()` and `invert()` where $n$ is the dimension of the matrix.
 
 Space Complexity:
-- O(n) auxiliary stack space and O(n!*n) auxiliary heap space for `det_naive()`,
-  where $n$ is the dimension of the matrix.
+- O(n) auxiliary stack space and O(n!*n) auxiliary heap space for `det_naive()`, where $n$ is the
+  dimension of the matrix.
 - O(n^2) auxiliary heap space for `det()` and `invert()`.
 
 */

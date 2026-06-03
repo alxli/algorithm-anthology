@@ -1,19 +1,17 @@
 /*
 
-Given a flow network with integer capacities and edge costs, find a minimum-cost
-flow from a source node to a sink node. Calling `min_cost_flow(source, sink,
-target_flow)` sends up to `target_flow` units of flow and returns `(flow, cost)`.
-If the returned flow is smaller than `target_flow`, the network cannot carry the
-requested amount.
+Given a flow network with integer capacities and edge costs, find a minimum-cost flow from a source
+node to a sink node. Calling `min_cost_flow(source, sink, target_flow)` sends up to `target_flow`
+units of flow and returns `(flow, cost)`. If the returned flow is smaller than `target_flow`, the
+network cannot carry the requested amount.
 
-This implementation uses shortest augmenting paths with SPFA, so it supports
-negative edge costs as long as the residual graph has no reachable negative-cost
-cycle. For dense or adversarial inputs, a potential-based Dijkstra version is
-usually faster when reduced costs are nonnegative.
+This implementation uses shortest augmenting paths with SPFA, so it supports negative edge costs as
+long as the residual graph has no reachable negative-cost cycle. For dense or adversarial inputs, a
+potential-based Dijkstra version is usually faster when reduced costs are nonnegative.
 
 Time Complexity:
-- O(F*n*m) per call to `min_cost_flow()`, where $F$ is the amount of flow sent,
-  $n$ is the number of nodes, and $m$ is the number of edges.
+- O(F*n*m) per call to `min_cost_flow()`, where $F$ is the amount of flow sent, $n$ is the number of
+  nodes, and $m$ is the number of edges.
 
 Space Complexity:
 - O(max(n, m)) for storage of the residual network and auxiliary arrays.

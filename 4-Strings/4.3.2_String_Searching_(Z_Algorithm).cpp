@@ -1,32 +1,29 @@
 /*
 
-Given a single string (needle) and a single text (haystack) to be searched,
-determine the first position in which the needle occurs within the haystack in
-linear time using the Z algorithm. In comparison, `std::string::find` runs in
-quadratic time.
+Given a single string (needle) and a single text (haystack) to be searched, determine the first
+position in which the needle occurs within the haystack in linear time using the Z algorithm. In
+comparison, `std::string::find` runs in quadratic time.
 
-The `find()` function below calls the Z algorithm on the concatenation of `needle`
-and `haystack`, separated by a sentinel character (in this case `'\0'`), which
-should be chosen such that it does not occur within either of the input strings.
+The `find()` function below calls the Z algorithm on the concatenation of `needle` and `haystack`,
+separated by a sentinel character (in this case `'\0'`), which should be chosen such that it does
+not occur within either of the input strings.
 
-- `z_array(s)` constructs the Z array for a string `needle` that can be used for
-  string searching. The Z array on an input string `s` is an array `z` where `z[i]` is
-  the length of the longest substring starting from `s[i]` which is also a prefix
-  of `s`.
-- `find(haystack, needle)` returns the first position that `needle` occurs in
-  `haystack`, or `std::string::npos` if it cannot be found. Note that the function
-  can be modified to return all matches by simply letting the loop run and
-  storing the results instead of returning early.
+- `z_array(s)` constructs the Z array for a string `needle` that can be used for string searching.
+  The Z array on an input string `s` is an array `z` where `z[i]` is the length of the longest
+  substring starting from `s[i]` which is also a prefix of `s`.
+- `find(haystack, needle)` returns the first position that `needle` occurs in `haystack`, or
+  `std::string::npos` if it cannot be found. Note that the function can be modified to return all
+  matches by simply letting the loop run and storing the results instead of returning early.
 
 Time Complexity:
 - O(n) per call to `z_array(s)`, where $n$ is the length of `s`.
-- O(n + m) per call to `find(haystack, needle)`, where $n$ is the length of `haystack`
-  and $m$ is the length of `needle`.
+- O(n + m) per call to `find(haystack, needle)`, where $n$ is the length of `haystack` and $m$ is
+  the length of `needle`.
 
 Space Complexity:
 - O(n) auxiliary heap space for `z_array(s)`, where $n$ is the length of `s`.
-- O(n + m) auxiliary heap space for `find(haystack, needle)` where $n$ is the length
-  of `haystack` and $m$ is the length of `needle`.
+- O(n + m) auxiliary heap space for `find(haystack, needle)` where $n$ is the length of `haystack`
+  and $m$ is the length of `needle`.
 
 */
 

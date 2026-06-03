@@ -1,27 +1,26 @@
 /*
 
-An unweighted tree possesses a center, centroid, and diameter. The following
-functions apply to a global, pre-populated adjacency list `adj[]` which satisfies
-the precondition that for every node $v$ in `adj[u]`, node $u$ also exists in `adj[v]`.
-Nodes in `adj[]` must be numbered with integers between 0 (inclusive) and the
-total number of nodes (exclusive), as passed in the function arguments.
+An unweighted tree possesses a center, centroid, and diameter. The following functions apply to a
+global, pre-populated adjacency list `adj[]` which satisfies the precondition that for every node
+$v$ in `adj[u]`, node $u$ also exists in `adj[v]`. Nodes in `adj[]` must be numbered with integers
+between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function
+arguments.
 
-- `find_centers()` returns a vector of either one or two tree Jordan centers. The
-  Jordan center of a tree is the set of all nodes with minimum eccentricity,
-  that is, the set of all nodes where the maximum distance to all other nodes in
-  the tree is minimal.
-- `find_centroid()` returns the node where all of its subtrees have a size less
-  than or equal to $n / 2$, where $n$ is the number of nodes in the tree.
-- `diameter()` returns the maximum distance between any two nodes in the tree,
-  using a well-known double depth-first search technique.
+- `find_centers()` returns a vector of either one or two tree Jordan centers. The Jordan center of a
+  tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the
+  maximum distance to all other nodes in the tree is minimal.
+- `find_centroid()` returns the node where all of its subtrees have a size less than or equal to $n
+  / 2$, where $n$ is the number of nodes in the tree.
+- `diameter()` returns the maximum distance between any two nodes in the tree, using a well-known
+  double depth-first search technique.
 
 Time Complexity:
-- O(max(n, m)) per call to `find_centers()`, `find_centroid()`, and `diameter()`,
-  where $n$ is the number of nodes and $m$ is the number of edges.
+- O(max(n, m)) per call to `find_centers()`, `find_centroid()`, and `diameter()`, where $n$ is the
+  number of nodes and $m$ is the number of edges.
 
 Space Complexity:
-- O(n) auxiliary stack space for `find_centers()`, `find_centroid()`, and
-  `diameter()`, where $n$ is the number of nodes.
+- O(n) auxiliary stack space for `find_centers()`, `find_centroid()`, and `diameter()`, where $n$ is
+  the number of nodes.
 
 */
 

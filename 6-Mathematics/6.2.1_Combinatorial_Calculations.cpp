@@ -1,26 +1,23 @@
 /*
 
-The following functions implement common operations in combinatorics. All inputs must
-be non-negative. All return values and table entries are computed as 64-bit integers
-modulo an input argument $m$ or $p$.
+The following functions implement common operations in combinatorics. All inputs must be
+non-negative. All return values and table entries are computed as 64-bit integers modulo an input
+argument $m$ or $p$.
 
 - `factorial(n, m)` returns $n! \bmod m$.
 - `factorialp(n, p)` returns $n! \bmod p$, where $p$ is prime.
-- `binomial_table(n, m)` returns rows $0$ to $n$ of Pascal's triangle as a table $t$
-  such that $t[i][j] = \binom{i}{j} \bmod m$.
+- `binomial_table(n, m)` returns rows $0$ to $n$ of Pascal's triangle as a table $t$ such that
+  $t[i][j] = \binom{i}{j} \bmod m$.
 - `permute(n, k, m)` returns $(n \mathbin{\text{permute}} k) \bmod m$.
 - `choose(n, k, p)` returns $\binom{n}{k} \bmod p$, where $p$ is prime.
 - `multichoose(n, k, p)` returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is prime.
 - `catalan(n, p)` returns the $n$th Catalan number mod $p$, where $p$ is prime.
 - `partitions(n, m)` returns the number of partitions of $n$, mod $m$.
 - `partitions(n, k, m)` returns the number of partitions of $n$ into $k$ parts, mod $m$.
-- `stirling1(n, k, m)` returns the $(n, k)$ unsigned Stirling number of the 1st kind
-  mod $m$.
+- `stirling1(n, k, m)` returns the $(n, k)$ unsigned Stirling number of the 1st kind mod $m$.
 - `stirling2(n, k, m)` returns the $(n, k)$ Stirling number of the 2nd kind mod $m$.
-- `eulerian1(n, k, m)` returns the $(n, k)$ Eulerian number of the 1st kind mod $m$,
-  where $n > k$.
-- `eulerian2(n, k, m)` returns the $(n, k)$ Eulerian number of the 2nd kind mod $m$,
-  where $n > k$.
+- `eulerian1(n, k, m)` returns the $(n, k)$ Eulerian number of the 1st kind mod $m$, where $n > k$.
+- `eulerian2(n, k, m)` returns the $(n, k)$ Eulerian number of the 2nd kind mod $m$, where $n > k$.
 
 Time Complexity:
 - O(n) for `factorial(n, m)`.
@@ -36,8 +33,8 @@ Time Complexity:
 
 Space Complexity:
 - O(n^2) auxiliary heap space for `binomial_table(n, m)`.
-- O(n*k) auxiliary heap space for `partitions(n, k, m)`, `stirling1(n, k, m)`,
-  `stirling2(n, k, m)`, `eulerian1(n, k, m)`, and `eulerian2(n, k, m)`.
+- O(n*k) auxiliary heap space for `partitions(n, k, m)`, `stirling1(n, k, m)`, `stirling2(n, k, m)`,
+  `eulerian1(n, k, m)`, and `eulerian2(n, k, m)`.
 - O(1) auxiliary for all other operations.
 
 */

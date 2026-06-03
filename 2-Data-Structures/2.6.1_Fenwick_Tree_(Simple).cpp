@@ -1,9 +1,8 @@
 /*
 
-Maintain an array of numerical type, allowing for updates of individual indices
-(point update) and queries for the sum of contiguous sub-arrays (range queries).
-This implementation assumes that the array is 1-based (i.e. has valid indices
-from 1 to `MAXN - 1`, inclusive).
+Maintain an array of numerical type, allowing for updates of individual indices (point update) and
+queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the
+array is 1-based (i.e. has valid indices from 1 to `MAXN - 1`, inclusive).
 
 - `initialize()` resets the data structure.
 - `a[i]` stores the value at index `i`.

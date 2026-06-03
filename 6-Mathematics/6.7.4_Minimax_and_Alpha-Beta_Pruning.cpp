@@ -1,27 +1,23 @@
 /*
 
-Searches a finite two-player, zero-sum, perfect-information game tree using
-minimax and alpha-beta pruning. Minimax assumes both players play optimally:
-the maximizing player chooses the child with largest value, and the minimizing
-player chooses the child with smallest value.
+Searches a finite two-player, zero-sum, perfect-information game tree using minimax and alpha-beta
+pruning. Minimax assumes both players play optimally: the maximizing player chooses the child with
+largest value, and the minimizing player chooses the child with smallest value.
 
-Alpha-beta pruning computes the same value as minimax, but avoids exploring
-branches that cannot affect the final answer. It is most effective when good
-moves are searched first.
+Alpha-beta pruning computes the same value as minimax, but avoids exploring branches that cannot
+affect the final answer. It is most effective when good moves are searched first.
 
-The example game is "take 1 or 2 stones": starting with `stones` stones, players
-alternate taking 1 or 2 stones, and the player who takes the last stone wins.
-The evaluation returns 1 for a win for the player to move at the root and $-1$
-for a loss.
+The example game is "take 1 or 2 stones": starting with `stones` stones, players alternate taking 1
+or 2 stones, and the player who takes the last stone wins. The evaluation returns 1 for a win for
+the player to move at the root and $-1$ for a loss.
 
 - `minimax(stones, maximizing)` returns the exact game-tree value.
-- `alpha_beta(stones, maximizing, alpha, beta)` returns the same value, with
-  pruning.
+- `alpha_beta(stones, maximizing, alpha, beta)` returns the same value, with pruning.
 - `best_take(stones)` returns an optimal first move, either 1 or 2.
 
 Time Complexity:
-- O(b^d) in the worst case, where $b$ is branching factor and $d$ is search
-  depth. Alpha-beta can reduce this substantially with good move ordering.
+- O(b^d) in the worst case, where $b$ is branching factor and $d$ is search depth. Alpha-beta can
+  reduce this substantially with good move ordering.
 
 Space Complexity:
 - O(d) auxiliary recursion stack space.

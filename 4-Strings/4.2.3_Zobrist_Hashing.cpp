@@ -1,28 +1,27 @@
 /*
 
-Computes randomized XOR fingerprints for keys and sets of keys using Zobrist
-hashing. Each distinct key is assigned a pseudorandom 64-bit token, and a set is
-represented by the XOR of its members' tokens. This makes insertion and deletion
-the same operation: XOR the key's token once.
+Computes randomized XOR fingerprints for keys and sets of keys using Zobrist hashing. Each distinct
+key is assigned a pseudorandom 64-bit token, and a set is represented by the XOR of its members'
+tokens. This makes insertion and deletion the same operation: XOR the key's token once.
 
-This technique is useful for probabilistic equality checks on sets, distinct-prefix
-queries, board-game states, and other unordered collections. It is not
-cryptographic, and collisions are possible with probability roughly $q^2 / 2^{64}$
-over $q$ compared fingerprints. For multisets, plain XOR only records element
-parity; use a summed hash or pair it with counts if multiplicity matters.
+This technique is useful for probabilistic equality checks on sets, distinct-prefix queries,
+board-game states, and other unordered collections. It is not cryptographic, and collisions are
+possible with probability roughly $q^2 / 2^{64}$ over $q$ compared fingerprints. For multisets,
+plain XOR only records element parity; use a summed hash or pair it with counts if multiplicity
+matters.
 
 - `zobrist_hash(seed)` constructs a token generator with initial value `seed`.
 - `get(x)` returns the stable token assigned to key `x`, creating it if needed.
-- `toggle(h, x)` returns the hash obtained by inserting `x` into set hash `h` if
-  absent, or removing `x` from `h` if present.
-- `distinct_prefix_hashes(lo, hi)` returns prefix hashes where each distinct
-  key in the range `[lo, hi)` contributes only on its first occurrence.
+- `toggle(h, x)` returns the hash obtained by inserting `x` into set hash `h` if absent, or removing
+  `x` from `h` if present.
+- `distinct_prefix_hashes(lo, hi)` returns prefix hashes where each distinct key in the range
+  `[lo, hi)` contributes only on its first occurrence.
 
 Time Complexity:
-- O(log n) per call to `get(x)` and `toggle(h, x)`, where $n$ is the number of
-  distinct keys seen so far.
-- O(n log n) per call to `distinct_prefix_hashes(lo, hi)`, where $n$ is the
-  distance between `lo` and `hi`.
+- O(log n) per call to `get(x)` and `toggle(h, x)`, where $n$ is the number of distinct keys seen so
+  far.
+- O(n log n) per call to `distinct_prefix_hashes(lo, hi)`, where $n$ is the distance between `lo`
+  and `hi`.
 
 Space Complexity:
 - O(n) for stored key tokens, where $n$ is the number of distinct keys seen so far.

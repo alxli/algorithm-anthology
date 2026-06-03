@@ -1,15 +1,13 @@
 /*
 
-Selects the maximum number of non-overlapping intervals using the classic greedy
-algorithm that sorts by earliest finish time. This is also known as activity
-selection.
+Selects the maximum number of non-overlapping intervals using the classic greedy algorithm that
+sorts by earliest finish time. This is also known as activity selection.
 
-Intervals are represented as half-open ranges `[start, finish)`, so two intervals
-are compatible if the next interval's `start` is at least the previous interval's
-`finish`.
+Intervals are represented as half-open ranges `[start, finish)`, so two intervals are compatible if
+the next interval's `start` is at least the previous interval's `finish`.
 
-- `interval_scheduling(intervals)` returns one maximum-size compatible subset of
-  intervals, in the order they are selected.
+- `interval_scheduling(intervals)` returns one maximum-size compatible subset of intervals, in the
+  order they are selected.
 - `interval_t` stores `start`, `finish`, and the original `id`.
 
 Time Complexity:

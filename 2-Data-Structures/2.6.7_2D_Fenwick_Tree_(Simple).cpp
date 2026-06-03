@@ -1,23 +1,22 @@
 /*
 
-Maintain a 2D array of numerical type, allowing for updates of individual cells
-in the matrix (point update) and queries for the sum of rectangular sub-matrices
-(range query). This implementation assumes that array dimensions are 1-based
-(i.e. rows have valid indices from 1 to `MAXR`, inclusive, and columns have valid
-indices from 1 to `MAXC`, inclusive).
+Maintain a 2D array of numerical type, allowing for updates of individual cells in the matrix (point
+update) and queries for the sum of rectangular sub-matrices (range query). This implementation
+assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to `MAXR`, inclusive,
+and columns have valid indices from 1 to `MAXC`, inclusive).
 
 - `initialize()` resets the data structure.
 - `a[r][c]` stores the value at index (`r`, `c`).
 - `add(r, c, x)` adds `x` to the value at index (`r`, `c`).
 - `set(r, c, x)` assigns `x` to the value at index (`r`, `c`).
-- `sum(r, c)` returns the sum of the rectangle with upper-left corner (1, 1) and
-  lower-right corner (`r`, `c`).
-- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner
-  (`r1`, `c1`) and lower-right corner (`r2`, `c2`).
+- `sum(r, c)` returns the sum of the rectangle with upper-left corner (1, 1) and lower-right corner
+  (`r`, `c`).
+- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner (`r1`, `c1`) and
+  lower-right corner (`r2`, `c2`).
 
 Time Complexity:
-- O(n*m) per call to `initialize()`, where $n$ is the number of rows and $m$ is the
-  number of columns.
+- O(n*m) per call to `initialize()`, where $n$ is the number of rows and $m$ is the number of
+  columns.
 - O(log(n)*log(m)) per call to all other operations.
 
 Space Complexity:

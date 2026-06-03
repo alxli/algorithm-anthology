@@ -1,36 +1,34 @@
 /*
 
-Provides a small library of non-cryptographic hash functions and hash functors for
-common contest keys. These helpers are useful for fingerprinting values, combining
-keys, seeding randomized algorithms, and defining `std::unordered_map` keys for
-pairs and vectors. They are not suitable for passwords, signatures, or adversarial
-security.
+Provides a small library of non-cryptographic hash functions and hash functors for common contest
+keys. These helpers are useful for fingerprinting values, combining keys, seeding randomized
+algorithms, and defining `std::unordered_map` keys for pairs and vectors. They are not suitable for
+passwords, signatures, or adversarial security.
 
-The standalone functions below are deterministic. The `int_hasher` functor adds a
-per-run random seed before mixing, which is useful for making integer-keyed hash
-tables harder to hack in open-test contests.
+The standalone functions below are deterministic. The `int_hasher` functor adds a per-run random
+seed before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test
+contests.
 
 - `mix32(x)` mixes a 32-bit unsigned integer `x`, using the MurmurHash3 finalizer.
 - `mix64(x)` mixes a 64-bit unsigned integer `x`, using the SplitMix64 finalizer.
-- `hash32(x)` and `hash64(x)` hash any integer type that can be
-  converted to `unsigned int` or `uint64`, respectively.
-- `hash_combine32(h, x)` and `hash_combine64(h, x)` fold another already-hashed
-  value into an existing hash accumulator.
-- `hash_float(x)` and `hash_double(x)` hash floating-point bit patterns, normalizing
-  `-0.0` to `0.0`. Different NaN representations may still hash differently.
-- `hash_string_fnv1a32(s)` and `hash_string_fnv1a64(s)` compute FNV-1a hashes of
-  string `s`.
-- `hash_range32(first, last)` and `hash_range64(first, last)` hash a sequence of
-  integer-like values.
+- `hash32(x)` and `hash64(x)` hash any integer type that can be converted to `unsigned int` or
+  `uint64`, respectively.
+- `hash_combine32(h, x)` and `hash_combine64(h, x)` fold another already-hashed value into an
+  existing hash accumulator.
+- `hash_float(x)` and `hash_double(x)` hash floating-point bit patterns, normalizing `-0.0` to
+  `0.0`. Different NaN representations may still hash differently.
+- `hash_string_fnv1a32(s)` and `hash_string_fnv1a64(s)` compute FNV-1a hashes of string `s`.
+- `hash_range32(first, last)` and `hash_range64(first, last)` hash a sequence of integer-like
+  values.
 - `int_hasher<Int>`, `pair_hasher<A, B>`, and `vector_hasher<T>` are hash functors for
   `std::unordered_map` and `std::unordered_set`.
-- `generic_hasher<T>` recursively handles integer, pair, and vector keys, and falls
-  back to `std::hash<T>` for other hashable types.
+- `generic_hasher<T>` recursively handles integer, pair, and vector keys, and falls back to
+  `std::hash<T>` for other hashable types.
 
 Time Complexity:
 - O(1) per call to the integer, combiner, and floating-point hash functions.
-- O(n) per call to string and range hashing functions, where $n$ is the number of
-  elements processed.
+- O(n) per call to string and range hashing functions, where $n$ is the number of elements
+  processed.
 - O(n) per call to `vector_hasher<T>::operator()`, where $n$ is the vector size.
 
 Space Complexity:

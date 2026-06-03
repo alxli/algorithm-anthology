@@ -1,9 +1,9 @@
 /*
 
-Common string functions, many of which are substitutes for features which are
-not available in standard C++, or may not be available on compilers that do not
-support C++11 and later. These operations are naive implementations and often
-depend on certain `std::string` functions that have unspecified complexity.
+Common string functions, many of which are substitutes for features which are not available in
+standard C++, or may not be available on compilers that do not support C++11 and later. These
+operations are naive implementations and often depend on certain `std::string` functions that have
+unspecified complexity.
 
 */
 
@@ -18,13 +18,13 @@ using std::string;
 
 Integer Conversion:
 
-- `to_str(i)` returns the string representation of integer `i`, much like
-  `std::to_string()` in C++11 and later.
-- `to_int(s)` returns the integer representation of string `s`, much like `atoi()`,
-  except handling special cases of overflow by throwing an exception.
-- `itoa(value, &str, base)` implements the non-standard C function which converts
-  `value` into a C string, storing it into pointer `str` in the given `base`. For more
-  generalized base conversion, see the math utilities section.
+- `to_str(i)` returns the string representation of integer `i`, much like `std::to_string()` in
+  C++11 and later.
+- `to_int(s)` returns the integer representation of string `s`, much like `atoi()`, except handling
+  special cases of overflow by throwing an exception.
+- `itoa(value, &str, base)` implements the non-standard C function which converts `value` into a C
+  string, storing it into pointer `str` in the given `base`. For more generalized base conversion,
+  see the math utilities section.
 
 */
 
@@ -73,8 +73,8 @@ Case Conversion:
 
 - `to_upper(s)` returns `s` with all alphabetical characters converted to uppercase.
 - `to_lower(s)` returns `s` with all alphabetical characters converted to lowercase.
-- `to_title(s)` returns the title case representation of string `s`, where the first
-  letter of every word (consecutive alphabetical characters) is capitalized.
+- `to_title(s)` returns the title case representation of string `s`, where the first letter of every
+  word (consecutive alphabetical characters) is capitalized.
 
 */
 
@@ -112,12 +112,11 @@ string to_title(const string &s) {
 
 Stripping:
 
-- `lstrip(s)` strips the left side of `s` in-place (that is, the input is modified)
-  using the given delimiters and returns a reference to the stripped string.
-- `rstrip(s)` strips the right side of `s` in-place using the given delimiters and
-  returns a reference to the stripped string.
-- `strip(s)` strips both sides of `s` in-place and returns a reference to the
-  stripped string.
+- `lstrip(s)` strips the left side of `s` in-place (that is, the input is modified) using the given
+  delimiters and returns a reference to the stripped string.
+- `rstrip(s)` strips the right side of `s` in-place using the given delimiters and returns a
+  reference to the stripped string.
+- `strip(s)` strips both sides of `s` in-place and returns a reference to the stripped string.
 
 */
 
@@ -145,10 +144,10 @@ string& strip(string &s, const string &delim = " \n\t\v\f\r") {
 
 Find and Replace:
 
-- `find_all(haystack, needle)` returns a vector of all positions where the string
-  `needle` appears in the string `haystack`.
-- `replace(s, old, replacement)` returns a copy of `s` with all occurrences of the
-  string `old` replaced with the given `replacement`.
+- `find_all(haystack, needle)` returns a vector of all positions where the string `needle` appears
+  in the string `haystack`.
+- `replace(s, old, replacement)` returns a copy of `s` with all occurrences of the string `old`
+  replaced with the given `replacement`.
 
 */
 
@@ -179,20 +178,18 @@ string replace(const string &s, const string &old, const string &replacement) {
 
 Joining and Splitting:
 
-- `join(v, delim)` returns the strings in vector `v` concatenated, separated by the
-  given delimiter.
-- `split(s, char delim)` returns a vector of tokens of `s`, split on a single
-  character delimiter. Note that this version will not skip empty tokens. For
-  example, `split("a::b", ":")` returns `{"a", "b"}`, not `{"a", "", "b"}`.
-- `split(s, string delim)` returns a vector of tokens of `s`, split on a set of many
-  possible single character delimiters. All characters of `delim` will be removed
-  from `s`, and the remaining token(s) of `s` will be added sequentially to a vector
-  and returned. Unlike the first version, empty tokens are skipped. For example,
-  `split("a::b", ":")` returns `{"a", "b"}`, not `{"a", "", "b"}`.
-- `explode(s, delim)` returns a vector of tokens of `s`, split on the entire
-  delimiter string `delim`. Unlike the `split()` functions above, `delim` is treated
-  as a contiguous boundary string, not merely a set of possible boundary
-  characters. This will not skip empty tokens. For example,
+- `join(v, delim)` returns the strings in vector `v` concatenated, separated by the given delimiter.
+- `split(s, char delim)` returns a vector of tokens of `s`, split on a single character delimiter.
+  Note that this version will not skip empty tokens. For example, `split("a::b", ":")` returns
+  `{"a", "b"}`, not `{"a", "", "b"}`.
+- `split(s, string delim)` returns a vector of tokens of `s`, split on a set of many possible single
+  character delimiters. All characters of `delim` will be removed from `s`, and the remaining
+  token(s) of `s` will be added sequentially to a vector and returned. Unlike the first version,
+  empty tokens are skipped. For example, `split("a::b", ":")` returns `{"a", "b"}`, not
+  `{"a", "", "b"}`.
+- `explode(s, delim)` returns a vector of tokens of `s`, split on the entire delimiter string
+  `delim`. Unlike the `split()` functions above, `delim` is treated as a contiguous boundary string,
+  not merely a set of possible boundary characters. This will not skip empty tokens. For example,
   `explode("a::::b", "::")` yields `{"a", "", "b"}`, not `{"a", "b"}`.
 
 */

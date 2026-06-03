@@ -1,8 +1,7 @@
 /*
 
-Maintains the mean and variance of a stream of numbers in one pass using
-Welford's algorithm. This is more numerically stable than maintaining the sum of
-values and the sum of squares separately.
+Maintains the mean and variance of a stream of numbers in one pass using Welford's algorithm. This
+is more numerically stable than maintaining the sum of values and the sum of squares separately.
 
 - `online_statistics()` constructs an empty summary.
 - `add(x)` incorporates one more value `x` into the summary.

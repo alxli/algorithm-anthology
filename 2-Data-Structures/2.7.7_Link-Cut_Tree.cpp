@@ -1,51 +1,47 @@
 /*
 
-Maintain a forest of trees with values associated with its nodes, while
-supporting both dynamic queries and dynamic updates of all values on any path
-between two nodes in a given tree. In addition, support testing of whether two
-nodes are connected in the forest, as well as the merging and spliting of trees
-by adding or removing specific edges. Link/cut forests divide each of its trees
-into vertex-disjoint paths, each represented by a splay tree.
+Maintain a forest of trees with values associated with its nodes, while supporting both dynamic
+queries and dynamic updates of all values on any path between two nodes in a given tree. In
+addition, support testing of whether two nodes are connected in the forest, as well as the merging
+and spliting of trees by adding or removing specific edges. Link/cut forests divide each of its
+trees into vertex-disjoint paths, each represented by a splay tree.
 
-The query operation is defined by an associative `join_values()` function which
-satisfies `join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)`
-for all values `x`, `y`, and `z` in the forest. The default code below assumes a
-numerical forest type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case the `join_values()`
-function should be defined to return $a + b$.
+The query operation is defined by an associative `join_values()` function which satisfies
+`join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)` for all values `x`, `y`, and
+`z` in the forest. The default code below assumes a numerical forest type, defining queries for the
+"min" of the target range. Another possible query operation is "sum", in which case the
+`join_values()` function should be defined to return $a + b$.
 
-The update operation is defined by the `join_value_with_delta()` and `join_deltas()`
-functions, which determines the change made to values. These must satisfy:
+The update operation is defined by the `join_value_with_delta()` and `join_deltas()` functions,
+which determines the change made to values. These must satisfy:
 - `join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3)`.
 - `join_value_with_delta(join_values(v, ..., v), d, m)` should be equal to
   `join_values(join_value_with_delta(v, d, 1), ...)`, with $m$ values on each side.
 - if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then
-  `join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1)` should be equivalent
-  to $m$ sequential calls to `join_value_with_delta(v, d_i, 1)` for $i = 1, ..., m$.
-The default code below defines updates that "set" a path's nodes to a new value.
-Another possible update operation is "increment", in which case
-`join_value_with_delta(v, d, len)` should be defined to return $v + d \cdot len$ and
-`join_deltas(d1, d2)` should be defined to return $d1 + d2$.
+  `join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1)` should be equivalent to $m$ sequential
+  calls to `join_value_with_delta(v, d_i, 1)` for $i = 1, ..., m$.
+The default code below defines updates that "set" a path's nodes to a new value. Another possible
+update operation is "increment", in which case `join_value_with_delta(v, d, len)` should be defined
+to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined to return $d1 + d2$.
 
 - `link_cut_forest()` constructs an empty forest with no trees.
 - `size()` returns the number of nodes in the forest.
 - `trees()` returns the number of trees in the forest.
-- `make_root(i, v)` creates a new tree in the forest consisting of a single node
-  labeled with the integer `i` and value initialized to `v`.
+- `make_root(i, v)` creates a new tree in the forest consisting of a single node labeled with the
+  integer `i` and value initialized to `v`.
 - `is_connected(a, b)` returns whether nodes `a` and `b` are connected.
-- `link(a, b)` adds an edge between the nodes `a` and `b`, both of which must exist
-  and not be connected.
-- `cut(a, b)` removes the edge between the nodes `a` and `b`, both of which must
-  exist and be connected.
-- `query(a, b)` returns the result of `join_values()` applied to all values on the
-  path from the node `a` to node `b`.
-- `update(a, b, d)` modifies all the values on the path from node `a` to node `b` by
-  respectively joining them with `d` using `join_value_with_delta()`.
+- `link(a, b)` adds an edge between the nodes `a` and `b`, both of which must exist and not be
+  connected.
+- `cut(a, b)` removes the edge between the nodes `a` and `b`, both of which must exist and be
+  connected.
+- `query(a, b)` returns the result of `join_values()` applied to all values on the path from the
+  node `a` to node `b`.
+- `update(a, b, d)` modifies all the values on the path from node `a` to node `b` by respectively
+  joining them with `d` using `join_value_with_delta()`.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `trees()`.
-- O(log n) amortized per call to all other operations, where $n$ is the number of
-  nodes.
+- O(log n) amortized per call to all other operations, where $n$ is the number of nodes.
 
 Space Complexity:
 - O(n) for storage of the forest, where $n$ is the number of nodes.

@@ -1,22 +1,20 @@
 /*
 
-Converts a matrix to reduced row echelon form using Gaussian elimination to
-solve a system of linear equations as well as compute the determinant. In
-practice, this method is prone to rounding error on certain matrices. For a more
-accurate algorithm for solving systems of linear equations, LU decomposition
-with row partial pivoting should be used.
+Converts a matrix to reduced row echelon form using Gaussian elimination to solve a system of linear
+equations as well as compute the determinant. In practice, this method is prone to rounding error on
+certain matrices. For a more accurate algorithm for solving systems of linear equations, LU
+decomposition with row partial pivoting should be used.
 
-- `row_reduce(a)` assigns the matrix `a` to its reduced row echelon form, returning
-  a reference to the modified argument itself.
-- `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an
-  $r$ by $c$ matrix `a` of real values, and a length $r$ vector `b`, returning 0 if there
-  is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite
-  solutions. If there is exactly one solution, then the vector pointed to by `x`
-  is populated with the solution vector of length $c$.
+- `row_reduce(a)` assigns the matrix `a` to its reduced row echelon form, returning a reference to
+  the modified argument itself.
+- `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an $r$ by $c$ matrix
+  `a` of real values, and a length $r$ vector `b`, returning 0 if there is one solution, $-1$ if
+  there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one
+  solution, then the vector pointed to by `x` is populated with the solution vector of length $c$.
 
 Time Complexity:
-- O(r^2*c) per call to `row_reduce(a)` and `solve_system(a)`, where $r$ and $c$ are the
-  number of rows and columns of `a` respectively.
+- O(r^2*c) per call to `row_reduce(a)` and `solve_system(a)`, where $r$ and $c$ are the number of
+  rows and columns of `a` respectively.
 
 Space Complexity:
 - O(1) auxiliary for `row_reduce(a)`.

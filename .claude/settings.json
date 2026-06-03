@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk '/^\\\\/\\\\*/{in_c=1} in_c{if\\(length>mx\\) mx=length} /^\\\\*\\\\//{in_c=0} END{print \"max:\", mx}' /tmp/misra_orig.cpp /tmp/hld_orig.cpp)",
+      "Bash(cp \"6-Mathematics/6.3.1_GCD,_LCM,_Mod_Inverse,_Chinese_Remainder.cpp\" /tmp/gcd_orig.cpp)",
+      "Bash(cp \"6-Mathematics/6.4.3_Rational_Numbers.cpp\" /tmp/rat_orig.cpp)",
+      "Bash(cp \"6-Mathematics/6.5.1_Matrix_Utilities.cpp\" /tmp/mat_orig.cpp)",
+      "Bash(python3 tools/reflow_comments.py /tmp/gcd_orig.cpp /tmp/rat_orig.cpp /tmp/mat_orig.cpp)",
+      "Read(//tmp/**)",
+      "Bash(awk '/^\\\\/\\\\*/{in_c=1} in_c{if\\(length>100\\) print FILENAME \":\" NR \" \\(\" length \"\\): \" $0} /^\\\\*\\\\//{in_c=0}' /tmp/gcd_orig.cpp /tmp/rat_orig.cpp /tmp/mat_orig.cpp)",
+      "Bash(python3 tools/reflow_comments.py /tmp/floyd_orig.cpp /tmp/lct_orig.cpp /tmp/gcd_orig.cpp)",
+      "Bash(python3 tools/reflow_comments.py)",
+      "Bash(ls -t ~/.claude/projects/ | head -5)",
+      "Read(//Users/alex/.claude/projects/**)",
+      "Bash(awk '{print $2}')",
+      "Bash(python3 -)",
+      "Bash(make chapters *)",
+      "Bash(python3 gen_chapters.py)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(make pdf *)"
+    ]
+  }
+}

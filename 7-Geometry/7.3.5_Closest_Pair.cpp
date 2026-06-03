@@ -1,21 +1,20 @@
 /*
 
-Given a list of points in two dimensions, find the closest pair among them using
-a divide and conquer algorithm.
+Given a list of points in two dimensions, find the closest pair among them using a divide and
+conquer algorithm.
 
-- `closest_pair(lo, hi, &res)` returns the minimum Euclidean distance between any
-  pair of points in the range `[lo, hi)`, where `lo` and `hi` must be
-  random-access iterators. The input range will be sorted lexicographically (by
-  $x$, then by $y$) after the function call. If there is an answer, the closest pair
-  will be stored into pointer `res`.
+- `closest_pair(lo, hi, &res)` returns the minimum Euclidean distance between any pair of points in
+  the range `[lo, hi)`, where `lo` and `hi` must be random-access iterators. The input range will be
+  sorted lexicographically (by $x$, then by $y$) after the function call. If there is an answer, the
+  closest pair will be stored into pointer `res`.
 
 Time Complexity:
-- O(n log^2 n) per call to `closest_pair(lo, hi, &res)`, where $n$ is the distance
-  between `lo` and `hi`.
+- O(n log^2 n) per call to `closest_pair(lo, hi, &res)`, where $n$ is the distance between `lo` and
+  `hi`.
 
 Space Complexity:
-- O(n log^2 n) auxiliary stack space for `closest_pair(lo, hi, &res)`, where $n$ is
-  the distance between `lo` and `hi`.
+- O(n log^2 n) auxiliary stack space for `closest_pair(lo, hi, &res)`, where $n$ is the distance
+  between `lo` and `hi`.
 
 */
 

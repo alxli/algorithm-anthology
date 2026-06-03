@@ -1,15 +1,14 @@
 /*
 
-Assigns intervals to the minimum number of groups so that no two intervals in the
-same group overlap. This is the classic interval partitioning problem, also known
-as finding the minimum number of rooms needed for meetings.
+Assigns intervals to the minimum number of groups so that no two intervals in the same group
+overlap. This is the classic interval partitioning problem, also known as finding the minimum number
+of rooms needed for meetings.
 
-The greedy algorithm sorts intervals by start time and reuses the group whose
-current finish time is earliest whenever possible. Otherwise, it creates a new
-group.
+The greedy algorithm sorts intervals by start time and reuses the group whose current finish time is
+earliest whenever possible. Otherwise, it creates a new group.
 
-- `interval_partitioning(intervals)` returns `room[id]`, the assigned room for each
-  original interval id.
+- `interval_partitioning(intervals)` returns `room[id]`, the assigned room for each original
+  interval id.
 - The number of rooms used is `1 + max(room[id])`, or 0 if there are no intervals.
 
 Time Complexity:

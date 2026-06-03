@@ -1,30 +1,26 @@
 /*
 
-Intersection and closest point calculations in two dimensions for straight lines
-and line segments.
+Intersection and closest point calculations in two dimensions for straight lines and line segments.
 
-- `line_intersection(a1, b1, c1, a2, b2, c2, &p)` determines whether the lines
-  $a_1x + b_1y + c_1 = 0$ and $a_2x + b_2y + c_2 = 0$ intersect, returning $-1$ if
-  there is no intersection because the lines are parallel, 0 if there is exactly
-  one intersection (in which case the intersection point is stored into pointer
-  `p` if it's not `NULL`), or 1 if there are infinite intersections because the
-  lines are identical.
-- `line_intersection(p1, p2, p3, p4, &p)` determines whether the infinite lines
-  (not segments) through points $p_1$, $p_2$ and through points $p_3$ and $p_4$ intersect,
-  returning $-1$ if there is no intersection because the lines are parallel, 0 if
-  there is exactly one intersection (in which case the intersection point is
-  stored into pointer `p` if it's not `NULL`), or 1 if there are infinite
-  intersections because the lines are identical.
-- `seg_intersection(a, b, c, d, &p, &q)` determines whether the line segment $ab$
-  intersects the line segment $cd$, returning $-1$ if the segments do not intersect,
-  0 if there is exactly one intersection point (in which case it is stored into
-  pointer `p` if it's not `NULL`), or 1 if the intersection is another line segment
-  (in which case the two endpoints are stored into pointers `p` and `q` if they are
-  not `NULL`). If the segments are barely touching (close within `EPS`), then the
-  result will depend on the setting of `TOUCH_IS_INTERSECT`.
-- `closest_point(a, b, c, p)` returns the point on line $ax + by + c = 0$ that is
-  closest to point $p$. Note that the result always lies on the line through $p$
-  which is perpendicular to the line $ax + by + c = 0$.
+- `line_intersection(a1, b1, c1, a2, b2, c2, &p)` determines whether the lines $a_1x + b_1y + c_1 =
+  0$ and $a_2x + b_2y + c_2 = 0$ intersect, returning $-1$ if there is no intersection because the
+  lines are parallel, 0 if there is exactly one intersection (in which case the intersection point
+  is stored into pointer `p` if it's not `NULL`), or 1 if there are infinite intersections because
+  the lines are identical.
+- `line_intersection(p1, p2, p3, p4, &p)` determines whether the infinite lines (not segments)
+  through points $p_1$, $p_2$ and through points $p_3$ and $p_4$ intersect, returning $-1$ if there
+  is no intersection because the lines are parallel, 0 if there is exactly one intersection (in
+  which case the intersection point is stored into pointer `p` if it's not `NULL`), or 1 if there
+  are infinite intersections because the lines are identical.
+- `seg_intersection(a, b, c, d, &p, &q)` determines whether the line segment $ab$ intersects the
+  line segment $cd$, returning $-1$ if the segments do not intersect, 0 if there is exactly one
+  intersection point (in which case it is stored into pointer `p` if it's not `NULL`), or 1 if the
+  intersection is another line segment (in which case the two endpoints are stored into pointers `p`
+  and `q` if they are not `NULL`). If the segments are barely touching (close within `EPS`), then
+  the result will depend on the setting of `TOUCH_IS_INTERSECT`.
+- `closest_point(a, b, c, p)` returns the point on line $ax + by + c = 0$ that is closest to point
+  $p$. Note that the result always lies on the line through $p$ which is perpendicular to the line
+  $ax + by + c = 0$.
 - `closest_point(a, b, p)` returns the point on segment $ab$ closest to point $p$.
 
 Time Complexity:

@@ -1,10 +1,9 @@
 /*
 
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be
-simultaneously incremented by arbitrary values (range update) and queries for
-the sum of contiguous sub-arrays (range query). This implementation uses
-`std::map` for coordinate compression, allowing for large indices to be accessed
-with efficient space complexity. That is, all array indices from 0 to `MAXN`,
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously
+incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays
+(range query). This implementation uses `std::map` for coordinate compression, allowing for large
+indices to be accessed with efficient space complexity. That is, all array indices from 0 to `MAXN`,
 inclusive, are accessible.
 
 - `at(i)` returns the value at index `i`.
@@ -19,8 +18,8 @@ Time Complexity:
   `std::unordered_map`, then the amortized running time will become O(log MAXN).
 
 Space Complexity:
-- O(n log MAXN) for storage of the array elements, where $n$ is the number of
-  distinct indices that have been accessed across all of the operations so far.
+- O(n log MAXN) for storage of the array elements, where $n$ is the number of distinct indices that
+  have been accessed across all of the operations so far.
 - O(1) auxiliary for all operations.
 
 */

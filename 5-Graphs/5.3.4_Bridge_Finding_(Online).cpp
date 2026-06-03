@@ -1,22 +1,21 @@
 /*
 
-Maintain the number of bridges in an undirected graph while edges are inserted
-one at a time. The graph starts with isolated nodes. After each call to
-`add_edge()`, `bridges` stores the current number of bridges.
+Maintain the number of bridges in an undirected graph while edges are inserted one at a time. The
+graph starts with isolated nodes. After each call to `add_edge()`, `bridges` stores the current
+number of bridges.
 
 This data structure maintains two disjoint-set forests:
 
 - `dsu_2ecc[]` tracks the current $2$-edge-connected components.
 - `dsu_cc[]` tracks the ordinary connected components.
 
-When an inserted edge joins two different connected components, it creates a new
-bridge. When it joins two nodes already in the same connected component, it
-creates a cycle and every bridge on the path between the two endpoints stops
-being a bridge.
+When an inserted edge joins two different connected components, it creates a new bridge. When it
+joins two nodes already in the same connected component, it creates a cycle and every bridge on the
+path between the two endpoints stops being a bridge.
 
 Time Complexity:
-- O(log n) amortized per call to `add_edge()` in this implementation, where $n$
-  is the number of nodes.
+- O(log n) amortized per call to `add_edge()` in this implementation, where $n$ is the number of
+  nodes.
 
 Space Complexity:
 - O(n) for the disjoint-set arrays and auxiliary parent links.

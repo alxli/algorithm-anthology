@@ -1,30 +1,28 @@
 /*
 
-Given a list of distinct points in two-dimensions, order them into a valid
-polygon and determine the area.
+Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the
+area.
 
-- `mean_center(lo, hi)` returns the arithmetic mean of a range `[lo, hi)` of points,
-  where `lo` and `hi` must be random-access iterators. This point is mathematically
-  guaranteed to lie within the non-self-intersecting closed polygon constructed
-  by sorting all other points clockwise about it. Note that this is different
-  from the geometric centroid (a.k.a. barycenter) of a polygon.
-- `cw_comp(a, b, c)` returns whether point $a$ compares clockwise "before" point $b$
-  when using $c$ as a central reference point.
-- `cw_comp_class(c)` constructs a wrapper class of `cw_comp()` that may be passed to
-  `std::sort()` a range of points clockwise to produce a valid polygon.
-- `ccw_comp_class(c)` constructs a wrapper class of `cw_comp()` that may be passed
-  to `std::sort()` a range of points counter-clockwise to produce a valid polygon.
-- `polygon_area(lo, hi)` returns the area of the polygon specified by the range
-  `[lo, hi)` of points, where `lo` and `hi` must be BidirectionalIterators. The points
-  are interpreted as a polygon based on the order given in the range. The input
-  polygon does not have to be sorted using the methods above, but must be given
-  in some ordering that yields a valid non-self-intersecting closed polygon.
-  Optionally, the last point may be equal to the first point in the input
-  without affecting the result. The area is computed using the shoelace formula.
+- `mean_center(lo, hi)` returns the arithmetic mean of a range `[lo, hi)` of points, where `lo` and
+  `hi` must be random-access iterators. This point is mathematically guaranteed to lie within the
+  non-self-intersecting closed polygon constructed by sorting all other points clockwise about it.
+  Note that this is different from the geometric centroid (a.k.a. barycenter) of a polygon.
+- `cw_comp(a, b, c)` returns whether point $a$ compares clockwise "before" point $b$ when using $c$
+  as a central reference point.
+- `cw_comp_class(c)` constructs a wrapper class of `cw_comp()` that may be passed to `std::sort()` a
+  range of points clockwise to produce a valid polygon.
+- `ccw_comp_class(c)` constructs a wrapper class of `cw_comp()` that may be passed to `std::sort()`
+  a range of points counter-clockwise to produce a valid polygon.
+- `polygon_area(lo, hi)` returns the area of the polygon specified by the range `[lo, hi)` of
+  points, where `lo` and `hi` must be BidirectionalIterators. The points are interpreted as a
+  polygon based on the order given in the range. The input polygon does not have to be sorted using
+  the methods above, but must be given in some ordering that yields a valid non-self-intersecting
+  closed polygon. Optionally, the last point may be equal to the first point in the input without
+  affecting the result. The area is computed using the shoelace formula.
 
 Time Complexity:
-- O(n) per call to `mean_center(lo, hi)` and `polygon_area(lo, hi)`, where $n$ is the
-  distance between `lo` and `hi`.
+- O(n) per call to `mean_center(lo, hi)` and `polygon_area(lo, hi)`, where $n$ is the distance
+  between `lo` and `hi`.
 - O(1) per call to `cw_comp()` and the related class comparators.
 
 Space Complexity:

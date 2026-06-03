@@ -1,32 +1,28 @@
 /*
 
-A Eulerian trail is a path in a graph which contains every edge exactly once. An
-Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same
-node. A directed graph has an Eulerian cycle if and only if every node has an
-in-degree equal to its out-degree, and all of its nodes with nonzero degree
-belong to a single strongly connected component. An undirected graph has an
-Eulerian cycle if and only if every node has even degree, and all of its nodes
-with nonzero degree belong to a single connected component.
+A Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or
+circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an
+Eulerian cycle if and only if every node has an in-degree equal to its out-degree, and all of its
+nodes with nonzero degree belong to a single strongly connected component. An undirected graph has
+an Eulerian cycle if and only if every node has even degree, and all of its nodes with nonzero
+degree belong to a single connected component.
 
-Given a graph as an adjacency list along with the starting node of the cycle,
-both functions below return a vector containing all nodes reachable from the
-starting node in an order which forms an Eulerian cycle. The first node of the
-cycle will be repeated as the last element of the vector. All nodes of input
-adjacency lists to both functions must be between 0 and `MAXN - 1`, inclusive.
-In addition, `euler_cycle_undirected()` requires that for every node $v$ which is
-found in `adj[u]`, node $u$ must also be found in `adj[v]`.
+Given a graph as an adjacency list along with the starting node of the cycle, both functions below
+return a vector containing all nodes reachable from the starting node in an order which forms an
+Eulerian cycle. The first node of the cycle will be repeated as the last element of the vector. All
+nodes of input adjacency lists to both functions must be between 0 and `MAXN - 1`, inclusive. In
+addition, `euler_cycle_undirected()` requires that for every node $v$ which is found in `adj[u]`,
+node $u$ must also be found in `adj[v]`.
 
 Time Complexity:
-- O(max(n, m)) per call to either function, where $n$ and $m$ are the numbers of
-  nodes and edges respectively.
+- O(max(n, m)) per call to either function, where $n$ and $m$ are the numbers of nodes and edges
+  respectively.
 
 Space Complexity:
-- O(n) auxiliary heap space for `euler_cycle_directed()`, where $n$ is the number of
-  nodes.
-- O(n^2) auxiliary heap space for `euler_cycle_undirected()`, where $n$ is the
-  number of nodes. This can be reduced to O(m) auxiliary heap space on the
-  number of edges if the `used[][]` bit matrix is replaced with an
-  `std::unordered_set<std::pair<int, int>>`.
+- O(n) auxiliary heap space for `euler_cycle_directed()`, where $n$ is the number of nodes.
+- O(n^2) auxiliary heap space for `euler_cycle_undirected()`, where $n$ is the number of nodes. This
+  can be reduced to O(m) auxiliary heap space on the number of edges if the `used[][]` bit matrix is
+  replaced with an `std::unordered_set<std::pair<int, int>>`.
 
 */
 

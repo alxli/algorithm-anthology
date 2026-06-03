@@ -1,44 +1,40 @@
 /*
 
-Maintain a map of strings to values using an ordered tree data structure. Each
-node corresponds to a substring of an inserted string, and each inserted string
-corresponds to a path from the root to a node that is flagged as a terminal
-node. Contrary to a regular trie, a radix tree is more space efficient as it
-combines chains of nodes with only a single child.
+Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a
+substring of an inserted string, and each inserted string corresponds to a path from the root to a
+node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space
+efficient as it combines chains of nodes with only a single child.
 
 - `radix_tree()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
-- `insert(s, v)` adds an entry with string key `s` and value `v` to the map, returning
-  `true` if a new entry was added or `false` if the string already exists (in which
-  case the map is unchanged and the old value associated with the string key is
-  preserved).
-- `erase(s)` removes the entry with string key `s` from the map, returning `true` if
-  the removal was successful or `false` if the string to be removed was not found.
-- `find(s)` returns a pointer to a const value associated with string key `s`, or
-  `NULL` if the key was not found.
-- `walk(f)` calls the function `f(s, v)` on each entry of the map, in
-  lexicographically ascending order of the string keys.
+- `insert(s, v)` adds an entry with string key `s` and value `v` to the map, returning `true` if a
+  new entry was added or `false` if the string already exists (in which case the map is unchanged
+  and the old value associated with the string key is preserved).
+- `erase(s)` removes the entry with string key `s` from the map, returning `true` if the removal was
+  successful or `false` if the string to be removed was not found.
+- `find(s)` returns a pointer to a const value associated with string key `s`, or `NULL` if the key
+  was not found.
+- `walk(f)` calls the function `f(s, v)` on each entry of the map, in lexicographically ascending
+  order of the string keys.
 
 Time Complexity:
-- O(n) per call to `insert(s, v)`, `erase(s)`, and `find(s)`, where $n$ is the length of
-  `s`. Note that there is a hidden factor of $\log n$ due to map lookups, which can
-  be considered constant amortized. The implementation may be optimized by
-  storing the children of nodes in an `std::unordered_map` in C++11 and later, or
-  a `std::vector<pair<string, node_t*> >`, since the only container operations
-  required are iteration over the (`key`, `child`) pairs and inserting a new pair.
-  Sticking with an (ordered) `std::map`, we can optimize all operations by using
-  `map.lower_bound()`, a binary tree search for a child with a shared prefix,
-  instead of iteration.
-- O(l) per call to `walk()`, where $l$ is the total length of string keys that are
-  currently in the map.
+- O(n) per call to `insert(s, v)`, `erase(s)`, and `find(s)`, where $n$ is the length of `s`. Note
+  that there is a hidden factor of $\log n$ due to map lookups, which can be considered constant
+  amortized. The implementation may be optimized by storing the children of nodes in an
+  `std::unordered_map` in C++11 and later, or a `std::vector<pair<string, node_t*> >`, since the
+  only container operations required are iteration over the (`key`, `child`) pairs and inserting a
+  new pair. Sticking with an (ordered) `std::map`, we can optimize all operations by using
+  `map.lower_bound()`, a binary tree search for a child with a shared prefix, instead of iteration.
+- O(l) per call to `walk()`, where $l$ is the total length of string keys that are currently in the
+  map.
 - O(1) per call to all other operations.
 
 Space Complexity:
-- O(l) for storage of the radix tree, where $l$ is the total length of string keys
-  that are currently in the map.
-- O(n) auxiliary stack space for construction, destruction, `walk()`, where $n$ is
-  the maximum length of any string that has been inserted so far.
+- O(l) for storage of the radix tree, where $l$ is the total length of string keys that are
+  currently in the map.
+- O(n) auxiliary stack space for construction, destruction, `walk()`, where $n$ is the maximum
+  length of any string that has been inserted so far.
 - O(n) auxiliary stack space for `erase(s)`, where $n$ is the length of `s`.
 - O(1) auxiliary for all other operations.
 

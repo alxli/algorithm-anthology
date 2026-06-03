@@ -1,9 +1,8 @@
 /*
 
-A two-dimensional real-valued point class supporting epsilon comparisons.
-Operations include element-wise arithmetic, `norm()`, `arg()`, `dot()`, `cross()`,
-`proj()`, `normalize()`, `rotate90()`, `rotateCW()`, `rotateCCW()`, and `reflect()`.
-See also `std::complex`.
+A two-dimensional real-valued point class supporting epsilon comparisons. Operations include
+element-wise arithmetic, `norm()`, `arg()`, `dot()`, `cross()`, `proj()`, `normalize()`,
+`rotate90()`, `rotateCW()`, `rotateCCW()`, and `reflect()`. See also `std::complex`.
 
 Time Complexity:
 - O(1) per call to the constructor and all other operations.

@@ -1,15 +1,13 @@
 /*
 
-Selects a maximum-weight subset of non-overlapping intervals using dynamic
-programming and binary search. Unlike unweighted interval scheduling, the earliest
-finish-time greedy choice is not sufficient when intervals have weights.
+Selects a maximum-weight subset of non-overlapping intervals using dynamic programming and binary
+search. Unlike unweighted interval scheduling, the earliest finish-time greedy choice is not
+sufficient when intervals have weights.
 
-Intervals are represented as half-open ranges `[start, finish)`, so two intervals
-are compatible if the next interval's `start` is at least the previous interval's
-`finish`.
+Intervals are represented as half-open ranges `[start, finish)`, so two intervals are compatible if
+the next interval's `start` is at least the previous interval's `finish`.
 
-- `weighted_interval_scheduling(intervals)` returns the maximum total weight of a
-  compatible subset.
+- `weighted_interval_scheduling(intervals)` returns the maximum total weight of a compatible subset.
 - `weighted_interval_t` stores `start`, `finish`, and `weight`.
 
 Time Complexity:

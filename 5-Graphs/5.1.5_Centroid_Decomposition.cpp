@@ -1,21 +1,18 @@
 /*
 
-Given a tree, build its centroid decomposition. A centroid is a node whose
-removal splits the current subtree into connected components of size at most
-half of that subtree. Recursively choosing centroids creates a decomposition
-tree of height O(log n), which is useful for queries based on distances to marked
-nodes, nearest special node, and other "path through a centroid" problems.
+Given a tree, build its centroid decomposition. A centroid is a node whose removal splits the
+current subtree into connected components of size at most half of that subtree. Recursively choosing
+centroids creates a decomposition tree of height O(log n), which is useful for queries based on
+distances to marked nodes, nearest special node, and other "path through a centroid" problems.
 
-`build_centroid_tree()` applies to a global, pre-populated adjacency list `adj[]`
-which satisfies the precondition that for every node $v$ in `adj[u]`, node $u$
-also exists in `adj[v]`.
+`build_centroid_tree()` applies to a global, pre-populated adjacency list `adj[]` which satisfies
+the precondition that for every node $v$ in `adj[u]`, node $u$ also exists in `adj[v]`.
 
 - `centroid_parent[u]` stores the parent of node $u$ in the centroid tree.
 - The root centroid has parent `-1`.
 
 Time Complexity:
-- O(n log n) per call to `build_centroid_tree()`, where $n$ is the number of
-  nodes.
+- O(n log n) per call to `build_centroid_tree()`, where $n$ is the number of nodes.
 
 Space Complexity:
 - O(n) for `subtree_size[]`, `removed[]`, and `centroid_parent[]`.

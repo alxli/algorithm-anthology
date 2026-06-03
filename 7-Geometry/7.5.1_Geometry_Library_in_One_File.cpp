@@ -1,7 +1,7 @@
 /*
 
-This combines the next few subsections in this chapter in a cross-dependent
-manner. All of these algorithms apply to a two-dimensional Cartesian plane.
+This combines the next few subsections in this chapter in a cross-dependent manner. All of these
+algorithms apply to a two-dimensional Cartesian plane.
 
 Time Complexity:
 - O(1) for all operations.

@@ -1,27 +1,26 @@
 /*
 
-Solves two common unbounded knapsack variants, where each item may be used any
-number of times. In the maximum-value version, each item has a weight and value,
-and the goal is to maximize total value subject to a capacity limit. In the coin
-change version, each coin denomination may be used any number of times, and the
-goal is to count unordered ways to form a target sum.
+Solves two common unbounded knapsack variants, where each item may be used any number of times. In
+the maximum-value version, each item has a weight and value, and the goal is to maximize total value
+subject to a capacity limit. In the coin change version, each coin denomination may be used any
+number of times, and the goal is to count unordered ways to form a target sum.
 
-For unbounded maximum-value knapsack, weights are iterated in increasing order so
-the current item may be reused. For unordered coin change, coins are the outer
-loop so each multiset of coins is counted once, independent of ordering.
+For unbounded maximum-value knapsack, weights are iterated in increasing order so the current item
+may be reused. For unordered coin change, coins are the outer loop so each multiset of coins is
+counted once, independent of ordering.
 
-- `unbounded_knapsack(weight, value, capacity)` returns the maximum value
-  achievable with total weight at most `capacity`.
-- `count_coin_change(coins, target)` returns the number of unordered ways to make
-  sum `target` using the given coin denominations.
-- All capacities must be nonnegative integers. Weights and coin denominations
-  should be positive to avoid infinitely many uses of a zero-weight item.
+- `unbounded_knapsack(weight, value, capacity)` returns the maximum value achievable with total
+  weight at most `capacity`.
+- `count_coin_change(coins, target)` returns the number of unordered ways to make sum `target` using
+  the given coin denominations.
+- All capacities must be nonnegative integers. Weights and coin denominations should be positive to
+  avoid infinitely many uses of a zero-weight item.
 
 Time Complexity:
-- O(nW) for `unbounded_knapsack(weight, value, capacity)`, where $n$ is the number
-  of items and $W$ is `capacity`.
-- O(ct) for `count_coin_change(coins, target)`, where $c$ is the number of coin
-  denominations and $t$ is `target`.
+- O(nW) for `unbounded_knapsack(weight, value, capacity)`, where $n$ is the number of items and $W$
+  is `capacity`.
+- O(ct) for `count_coin_change(coins, target)`, where $c$ is the number of coin denominations and
+  $t$ is `target`.
 
 Space Complexity:
 - O(W) auxiliary heap space for `unbounded_knapsack(weight, value, capacity)`.

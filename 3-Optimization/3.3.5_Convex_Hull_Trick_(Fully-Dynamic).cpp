@@ -1,26 +1,24 @@
 /*
 
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process
-a set of x-coordinate queries each asking to find the minimum y-value when any
-of the given lines are evaluated at the specified x. To instead have the queries
-optimize for maximum y-value, call the constructor with `query_max = true`. This is
-useful for dynamic programming recurrences of the form
-`dp[i] = min(m[j] * x[i] + b[j])` when line slopes and query coordinates are not
-monotone.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of
+x-coordinate queries each asking to find the minimum y-value when any of the given lines are
+evaluated at the specified x. To instead have the queries optimize for maximum y-value, call the
+constructor with `query_max = true`. This is useful for dynamic programming recurrences of the form
+`dp[i] = min(m[j] * x[i] + b[j])` when line slopes and query coordinates are not monotone.
 
-The following implementation is a fully dynamic variant of the convex hull
-optimization technique, using a self-balancing binary search tree (`std::set`) to
-support the ability to call `add_line()` and `query()` in any desired order.
+The following implementation is a fully dynamic variant of the convex hull optimization technique,
+using a self-balancing binary search tree (`std::set`) to support the ability to call `add_line()`
+and `query()` in any desired order.
 
-- `hull_optimizer(query_max)` constructs an empty hull. By default, `query(x)`
-  minimizes; if `query_max` is true, `query(x)` maximizes.
+- `hull_optimizer(query_max)` constructs an empty hull. By default, `query(x)` minimizes; if
+  `query_max` is true, `query(x)` maximizes.
 - `add_line(m, b)` inserts line $y = mx + b$ in arbitrary order.
-- `query(x)` returns the best y-value among all inserted lines at coordinate `x`.
-  At least one line must have been inserted.
+- `query(x)` returns the best y-value among all inserted lines at coordinate `x`. At least one line
+  must have been inserted.
 
 Time Complexity:
-- O(log n) amortized per call to `add_line()` and O(log n) per call to `query()`,
-  where $n$ is the number of lines added.
+- O(log n) amortized per call to `add_line()` and O(log n) per call to `query()`, where $n$ is the
+  number of lines added.
 
 Space Complexity:
 - O(n) for storage of the lines.

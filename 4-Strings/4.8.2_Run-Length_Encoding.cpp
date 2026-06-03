@@ -1,16 +1,14 @@
 /*
 
-Encodes consecutive equal characters as (`character`, `count`) runs. Run-length
-encoding is a simple lossless compression technique that works well when strings
-contain long repeated blocks and poorly when repetitions are rare.
+Encodes consecutive equal characters as (`character`, `count`) runs. Run-length encoding is a simple
+lossless compression technique that works well when strings contain long repeated blocks and poorly
+when repetitions are rare.
 
-The representation below stores runs in a vector of pairs rather than formatting
-them as a string. This avoids ambiguity when the original text contains digits or
-separator characters.
+The representation below stores runs in a vector of pairs rather than formatting them as a string.
+This avoids ambiguity when the original text contains digits or separator characters.
 
 - `run_length_encode(s)` returns the sequence of runs in string `s`.
-- `run_length_decode(runs)` reconstructs the original string from a sequence of
-  runs.
+- `run_length_decode(runs)` reconstructs the original string from a sequence of runs.
 
 Time Complexity:
 - O(n) per call, where $n$ is the input or output length.

@@ -1,20 +1,19 @@
 /*
 
-Computes all odd- and even-length palindromic radii of a string in linear time
-using Manacher's algorithm. These radii can be used to test whether any substring
-is a palindrome in O(1), find the longest palindromic substring, or count all
-palindromic substrings.
+Computes all odd- and even-length palindromic radii of a string in linear time using Manacher's
+algorithm. These radii can be used to test whether any substring is a palindrome in O(1), find the
+longest palindromic substring, or count all palindromic substrings.
 
-For odd palindromes, `odd[i]` is the radius centered at character `s[i]`, including
-the center character. Thus the palindrome spans `[i - odd[i] + 1, i + odd[i])`.
-For even palindromes, `even[i]` is the radius centered between `s[i - 1]` and
-`s[i]`. Thus the palindrome spans `[i - even[i], i + even[i])`.
+For odd palindromes, `odd[i]` is the radius centered at character `s[i]`, including the center
+character. Thus the palindrome spans `[i - odd[i] + 1, i + odd[i])`. For even palindromes, `even[i]`
+is the radius centered between `s[i - 1]` and `s[i]`. Thus the palindrome spans
+`[i - even[i], i + even[i])`.
 
 - `manacher(s)` constructs the palindromic radii arrays for string `s`.
 - `is_palindrome(l, r)` returns whether substring `[l, r)` is a palindrome.
 - `longest_palindrome()` returns one longest palindromic substring of `s`.
-- `count_palindromes()` returns the total number of palindromic substrings of `s`,
-  counted with multiplicity by position.
+- `count_palindromes()` returns the total number of palindromic substrings of `s`, counted with
+  multiplicity by position.
 
 Time Complexity:
 - O(n) per constructor call, where $n$ is the length of `s`.

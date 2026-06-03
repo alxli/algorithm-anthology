@@ -1,23 +1,21 @@
 /*
 
-Solve a Boolean formula in 2-CNF, where each clause contains at most two
-literals. A clause like $(a \lor b)$ is represented by the implications
-$\lnot a \rightarrow b$ and $\lnot b \rightarrow a$. The formula is satisfiable
-if and only if no variable and its negation belong to the same strongly connected
-component of the implication graph.
+Solve a Boolean formula in 2-CNF, where each clause contains at most two literals. A clause like $(a
+\lor b)$ is represented by the implications $\lnot a \rightarrow b$ and $\lnot b \rightarrow a$. The
+formula is satisfiable if and only if no variable and its negation belong to the same strongly
+connected component of the implication graph.
 
-Variables are numbered from $0$ to $n - 1$. A literal is represented by
-`literal(variable, value)`, where `value == true` means the variable itself and
-`value == false` means its negation.
+Variables are numbered from $0$ to $n - 1$. A literal is represented by `literal(variable, value)`,
+where `value == true` means the variable itself and `value == false` means its negation.
 
 - `add_or(a, b)` adds the clause $(a \lor b)$.
 - `add_true(a)` forces literal `a` to be true.
-- `satisfiable()` returns whether all added clauses can be satisfied and stores
-  one valid assignment in `answer[]`.
+- `satisfiable()` returns whether all added clauses can be satisfied and stores one valid assignment
+  in `answer[]`.
 
 Time Complexity:
-- O(max(n, m)) per call to `satisfiable()`, where $n$ is the number of variables
-  and $m$ is the number of clauses.
+- O(max(n, m)) per call to `satisfiable()`, where $n$ is the number of variables and $m$ is the
+  number of clauses.
 
 Space Complexity:
 - O(max(n, m)) for the implication graph and DFS stacks.

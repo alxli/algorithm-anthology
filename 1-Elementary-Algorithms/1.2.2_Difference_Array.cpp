@@ -1,13 +1,11 @@
 /*
 
-Applies many range-add updates to an array in linear total time using a difference
-array. Instead of immediately adding `delta` to every element of `[l, r)`, add
-`delta` at `diff[l]` and subtract it at `diff[r]`; a final prefix sum reconstructs
-the updated values.
+Applies many range-add updates to an array in linear total time using a difference array. Instead of
+immediately adding `delta` to every element of `[l, r)`, add `delta` at `diff[l]` and subtract it at
+`diff[r]`; a final prefix sum reconstructs the updated values.
 
 - `difference_array(n)` constructs an initially zero array of size `n`.
-- `add(l, r, delta)` adds `delta` to every position in the half-open range
-  `[l, r)`.
+- `add(l, r, delta)` adds `delta` to every position in the half-open range `[l, r)`.
 - `build()` returns the final array after all range updates.
 
 Time Complexity:

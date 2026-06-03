@@ -1,23 +1,21 @@
 /*
 
-Computes one layer of a dynamic programming recurrence whose optimal transition
-indices are monotone. This optimization applies to recurrences of the form
-`dp_cur[i] = min(dp_prev[k] + cost(k, i))`, where the minimizing index for `i`
-never decreases as `i` increases.
+Computes one layer of a dynamic programming recurrence whose optimal transition indices are
+monotone. This optimization applies to recurrences of the form
+`dp_cur[i] = min(dp_prev[k] + cost(k, i))`, where the minimizing index for `i` never decreases as
+`i` increases.
 
-The function below computes `dp_cur[l..r]` by evaluating the midpoint first, then
-recursing on the left half with a restricted upper bound on the optimal `k`, and
-on the right half with a restricted lower bound. The caller is responsible for
-checking that the recurrence satisfies the required monotonicity condition.
+The function below computes `dp_cur[l..r]` by evaluating the midpoint first, then recursing on the
+left half with a restricted upper bound on the optimal `k`, and on the right half with a restricted
+lower bound. The caller is responsible for checking that the recurrence satisfies the required
+monotonicity condition.
 
-- `compute_dc_layer(dp_prev, dp_cur, l, r, opt_l, opt_r, cost)` fills
-  `dp_cur[l..r]` using candidate transition indices in `[opt_l, opt_r]`.
-- `cost(k, i)` must return the transition cost from previous state `k` to current
-  state `i`.
+- `compute_dc_layer(dp_prev, dp_cur, l, r, opt_l, opt_r, cost)` fills `dp_cur[l..r]` using candidate
+  transition indices in `[opt_l, opt_r]`.
+- `cost(k, i)` must return the transition cost from previous state `k` to current state `i`.
 
 Time Complexity:
-- O(n log n) calls to `cost(k, i)` per layer when each state has O(n) possible
-  transitions.
+- O(n log n) calls to `cost(k, i)` per layer when each state has O(n) possible transitions.
 
 Space Complexity:
 - O(log n) auxiliary stack space.

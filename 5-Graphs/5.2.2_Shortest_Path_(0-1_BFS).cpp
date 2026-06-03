@@ -1,22 +1,20 @@
 /*
 
-Given a starting node in a weighted graph whose edge weights are only 0 or 1,
-compute the shortest distance to every reachable node. `zero_one_bfs()` applies
-to a global, pre-populated adjacency list `adj[]` where each edge is stored as
-`(neighbor, weight)`.
+Given a starting node in a weighted graph whose edge weights are only 0 or 1, compute the shortest
+distance to every reachable node. `zero_one_bfs()` applies to a global, pre-populated adjacency list
+`adj[]` where each edge is stored as `(neighbor, weight)`.
 
-This is a specialized version of Dijkstra's algorithm. Because every relaxation
-changes the distance by either $0$ or $1$, a deque maintains nodes in
-nondecreasing distance order: push weight-0 relaxations to the front and
-weight-1 relaxations to the back.
+This is a specialized version of Dijkstra's algorithm. Because every relaxation changes the distance
+by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push weight-0
+relaxations to the front and weight-1 relaxations to the back.
 
 Time Complexity:
-- O(max(n, m)) per call to `zero_one_bfs()`, where $n$ is the number of nodes and
-  $m$ is the number of edges.
+- O(max(n, m)) per call to `zero_one_bfs()`, where $n$ is the number of nodes and $m$ is the number
+  of edges.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$
-  is the number of edges.
+- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
+  edges.
 - O(n) auxiliary deque space for `zero_one_bfs()`.
 
 */

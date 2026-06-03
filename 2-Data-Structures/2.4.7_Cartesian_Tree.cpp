@@ -1,18 +1,16 @@
 /*
 
-Builds the min Cartesian tree of an array in linear time. A Cartesian tree is a
-binary tree whose inorder traversal is the original array order and whose heap
-property is determined by array values. For a min Cartesian tree, each parent has
-value less than or equal to its children.
+Builds the min Cartesian tree of an array in linear time. A Cartesian tree is a binary tree whose
+inorder traversal is the original array order and whose heap property is determined by array values.
+For a min Cartesian tree, each parent has value less than or equal to its children.
 
-Cartesian trees connect arrays, stacks, range minimum queries, treaps, and largest
-rectangle style problems. Equal values are broken by position, so earlier equal
-values become ancestors of later equal values.
+Cartesian trees connect arrays, stacks, range minimum queries, treaps, and largest rectangle style
+problems. Equal values are broken by position, so earlier equal values become ancestors of later
+equal values.
 
 - `cartesian_tree(a)` constructs the tree for array `a`.
 - `root` stores the root index.
-- `parent[i]`, `left[i]`, and `right[i]` store neighboring node indices, or `-1` if
-  absent.
+- `parent[i]`, `left[i]`, and `right[i]` store neighboring node indices, or `-1` if absent.
 
 Time Complexity:
 - O(n) construction time, where $n$ is the array size.

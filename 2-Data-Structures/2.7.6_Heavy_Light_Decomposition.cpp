@@ -1,40 +1,36 @@
 /*
 
-Maintain a tree with values associated with either its edges or nodes, while
-supporting both dynamic queries and dynamic updates of all values on a given
-path between two nodes in the tree. Heavy-light decomposition partitions the
-nodes of the tree into disjoint paths where all nodes have degree two, except
-the endpoints of a path which has degree one.
+Maintain a tree with values associated with either its edges or nodes, while supporting both dynamic
+queries and dynamic updates of all values on a given path between two nodes in the tree. Heavy-light
+decomposition partitions the nodes of the tree into disjoint paths where all nodes have degree two,
+except the endpoints of a path which has degree one.
 
-The query operation is defined by an associative `join_values()` function which
-satisfies `join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)`
-for all values `x`, `y`, and `z` in the tree. The default code below assumes a
-numerical tree type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case the `join_values()`
-function should be defined to return $a + b$.
+The query operation is defined by an associative `join_values()` function which satisfies
+`join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)` for all values `x`, `y`, and
+`z` in the tree. The default code below assumes a numerical tree type, defining queries for the
+"min" of the target range. Another possible query operation is "sum", in which case the
+`join_values()` function should be defined to return $a + b$.
 
-The update operation is defined by the `join_value_with_delta()` and `join_deltas()`
-functions, which determines the change made to values. These must satisfy:
+The update operation is defined by the `join_value_with_delta()` and `join_deltas()` functions,
+which determines the change made to values. These must satisfy:
 - `join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3)`.
 - `join_value_with_delta(join_values(v, ..., v), d, m)` should be equal to
   `join_values(join_value_with_delta(v, d, 1), ...)`, with $m$ values on each side.
 - if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then
-  `join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1)` should be equivalent
-  to $m$ sequential calls to `join_value_with_delta(v, d_i, 1)` for $i = 1, ..., m$.
-The default code below defines updates that "set" a path's edges or nodes to a
-new value. Another possible update operation is "increment", in which case
-`join_value_with_delta(v, d, len)` should be defined to return $v + d \cdot len$ and
-`join_deltas(d1, d2)` should be defined to return $d1 + d2$.
+  `join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1)` should be equivalent to $m$ sequential
+  calls to `join_value_with_delta(v, d_i, 1)` for $i = 1, ..., m$.
+The default code below defines updates that "set" a path's edges or nodes to a new value. Another
+possible update operation is "increment", in which case `join_value_with_delta(v, d, len)` should be
+defined to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined to return $d1 + d2$.
 
-- `heavy_light(n, adj[], v)` constructs a new heavy light decomposition on a tree
-  with `n` nodes defined by the adjacency list `adj[]`, with all values initialized
-  to `v`. The adjacency list must be a size `n` array of vectors consisting of only
-  the integers from 0 to `n - 1`, inclusive. No duplicate edges should exist, and
-  the graph must be connected.
-- `query(u, v)` returns the result of `join_values()` applied to all values on the
-  path from node `u` to node `v`.
-- `update(u, v, d)` modifies all values on the path from node `u` to node `v` by
-  respectively joining them with `d` using `join_value_with_delta()`.
+- `heavy_light(n, adj[], v)` constructs a new heavy light decomposition on a tree with `n` nodes
+  defined by the adjacency list `adj[]`, with all values initialized to `v`. The adjacency list must
+  be a size `n` array of vectors consisting of only the integers from 0 to `n - 1`, inclusive. No
+  duplicate edges should exist, and the graph must be connected.
+- `query(u, v)` returns the result of `join_values()` applied to all values on the path from node
+  `u` to node `v`.
+- `update(u, v, d)` modifies all values on the path from node `u` to node `v` by respectively
+  joining them with `d` using `join_value_with_delta()`.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the number of nodes.

@@ -1,18 +1,17 @@
 /*
 
-Given a connected, undirected, weighted graph with possibly negative weights,
-its minimum spanning tree is a subgraph which is a tree that connects all nodes
-with a subset of its edges such that their total weight is minimized. `kruskal()`
-applies to a global, pre-populated edge list `edges`. If the input graph is not
-connected, then this implementation will find the minimum spanning forest.
+Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning
+tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that
+their total weight is minimized. `kruskal()` applies to a global, pre-populated edge list `edges`.
+If the input graph is not connected, then this implementation will find the minimum spanning forest.
 
 Time Complexity:
-- O(m log n) per call to `kruskal()`, where $m$ is the number of edges and $n$ is the
-  number of nodes.
+- O(m log n) per call to `kruskal()`, where $m$ is the number of edges and $n$ is the number of
+  nodes.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is
-  the number of edges
+- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
+  edges
 - O(n) auxiliary stack space for `kruskal()`.
 
 */

@@ -1,20 +1,18 @@
 /*
 
-Computes byte frequency tables and empirical information-theoretic quantities for
-strings. These primitives are useful when analyzing compression, building coding
-schemes such as Huffman coding, or comparing symbol distributions.
+Computes byte frequency tables and empirical information-theoretic quantities for strings. These
+primitives are useful when analyzing compression, building coding schemes such as Huffman coding, or
+comparing symbol distributions.
 
-For a string with symbol probabilities $p_i$, empirical entropy is
-$H = -\sum_i p_i \log_2 p_i$ bits per symbol. This is a lower bound on the average
-number of bits per symbol achievable by any uniquely decodable code for the same
-independent symbol model.
+For a string with symbol probabilities $p_i$, empirical entropy is $H = -\sum_i p_i \log_2 p_i$ bits
+per symbol. This is a lower bound on the average number of bits per symbol achievable by any
+uniquely decodable code for the same independent symbol model.
 
 - `byte_frequencies(s)` returns a length-256 table of byte counts in string `s`.
-- `entropy(freq)` returns empirical entropy in bits per symbol for a frequency
-  table.
+- `entropy(freq)` returns empirical entropy in bits per symbol for a frequency table.
 - `entropy(s)` returns empirical entropy in bits per symbol for string `s`.
-- `expected_code_length(freq, length)` returns the average encoded bits per symbol
-  for code lengths `length[c]`.
+- `expected_code_length(freq, length)` returns the average encoded bits per symbol for code lengths
+  `length[c]`.
 
 Time Complexity:
 - O(n + A) per call to `entropy(s)`, where $n$ is the string length and $A = 256$.

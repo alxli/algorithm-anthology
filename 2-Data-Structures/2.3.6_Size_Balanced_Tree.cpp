@@ -1,33 +1,31 @@
 /*
 
-Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. In addition, support queries for
-keys given their ranks as well as queries for the ranks of given keys. This
-implementation requires an ordering on the set of possible keys defined by
-`operator <` on the key type. A size balanced tree augments each nodes with the
-size of its subtree, using it to maintain balance and compute order statistics.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
+once in the collection. In addition, support queries for keys given their ranks as well as queries
+for the ranks of given keys. This implementation requires an ordering on the set of possible keys
+defined by `operator <` on the key type. A size balanced tree augments each nodes with the size of
+its subtree, using it to maintain balance and compute order statistics.
 
 - `size_balanced_tree()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
-- `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true`
-  if an new entry was added or `false` if the key already exists (in which case
-  the map is unchanged and the old value associated with the key is preserved).
-- `erase(k)` removes the entry with key `k` from the map, returning `true` if the
-  removal was successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if
-  the key was not found.
-- `select(r)` returns a key-value pair of the node with a key of zero-based rank `r`
-  in the map, throwing an exception if the rank is not between 0 and `size() - 1`.
-- `rank(k)` returns the zero-based rank of key `k` in the map, throwing an
-  exception if the key was not found in the map.
-- `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending
-  order of keys.
+- `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if an new
+  entry was added or `false` if the key already exists (in which case the map is unchanged and the
+  old value associated with the key is preserved).
+- `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
+  successful or `false` if the key to be removed was not found.
+- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if the key was not
+  found.
+- `select(r)` returns a key-value pair of the node with a key of zero-based rank `r` in the map,
+  throwing an exception if the rank is not between 0 and `size() - 1`.
+- `rank(k)` returns the zero-based rank of key `k` in the map, throwing an exception if the key was
+  not found in the map.
+- `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending order of keys.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
-- O(log n) per call to `insert()`, `erase()`, `find()`, `select()`, and `rank()`, where $n$
-  is the number of entries currently in the map.
+- O(log n) per call to `insert()`, `erase()`, `find()`, `select()`, and `rank()`, where $n$ is the
+  number of entries currently in the map.
 - O(n) per call to `walk()`.
 
 Space Complexity:

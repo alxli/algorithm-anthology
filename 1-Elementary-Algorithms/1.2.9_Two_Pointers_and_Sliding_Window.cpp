@@ -1,19 +1,17 @@
 /*
 
-Uses two moving indices to process subarrays in linear time. This technique is
-most useful when expanding the right endpoint of a window monotonically and
-shrinking the left endpoint monotonically preserves enough state to test a
-condition or update an answer.
+Uses two moving indices to process subarrays in linear time. This technique is most useful when
+expanding the right endpoint of a window monotonically and shrinking the left endpoint monotonically
+preserves enough state to test a condition or update an answer.
 
-The examples below cover two common patterns: finding the shortest subarray with
-sum at least a target when all values are nonnegative, and finding the longest
-subarray with at most `k` distinct values.
+The examples below cover two common patterns: finding the shortest subarray with sum at least a
+target when all values are nonnegative, and finding the longest subarray with at most `k` distinct
+values.
 
-- `min_length_at_least(a, target)` returns the minimum length of a contiguous
-  subarray with sum at least `target`, or `-1` if none exists. Values in `a` must
-  be nonnegative.
-- `longest_at_most_k_distinct(a, k)` returns the maximum length of a contiguous
-  subarray containing at most `k` distinct values.
+- `min_length_at_least(a, target)` returns the minimum length of a contiguous subarray with sum at
+  least `target`, or `-1` if none exists. Values in `a` must be nonnegative.
+- `longest_at_most_k_distinct(a, k)` returns the maximum length of a contiguous subarray containing
+  at most `k` distinct values.
 
 Time Complexity:
 - O(n) per call, where $n$ is the array size.

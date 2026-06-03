@@ -1,18 +1,18 @@
 /*
 
-Computes the definite integral from $a$ to $b$ for a continuous function $f$ using
-Simpson's approximation: $\text{integral} \sim [f(a) + 4f((a + b) / 2) + f(b)](b - a) / 6$.
+Computes the definite integral from $a$ to $b$ for a continuous function $f$ using Simpson's
+approximation: $\text{integral} \sim [f(a) + 4f((a + b) / 2) + f(b)](b - a) / 6$.
 
-- `simpsons(f, a, b)` returns the definite integral for a function $f$ from $a$ to $b$,
-  to a tolerance of `EPS` in absolute error.
+- `simpsons(f, a, b)` returns the definite integral for a function $f$ from $a$ to $b$, to a
+  tolerance of `EPS` in absolute error.
 
 Time Complexity:
-- O(p) per call to `integrate()`, where $p = -\log_{10}(\text{EPS})$ is the number of digits
-  of absolute precision that is desired.
+- O(p) per call to `integrate()`, where $p = -\log_{10}(\text{EPS})$ is the number of digits of
+  absolute precision that is desired.
 
 Space Complexity:
-- O(p) auxiliary stack and O(1) auxiliary heap space, where $p = -\log_{10}(\text{EPS})$
-  is the number of digits of absolute precision that is desired.
+- O(p) auxiliary stack and O(1) auxiliary heap space, where $p = -\log_{10}(\text{EPS})$ is the
+  number of digits of absolute precision that is desired.
 
 */
 

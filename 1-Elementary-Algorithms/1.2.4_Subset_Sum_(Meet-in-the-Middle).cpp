@@ -1,16 +1,14 @@
 /*
 
-Given random-access iterators `lo` and `hi` specifying a range `[lo, hi)` of integers,
-return the minimum sum of any subset of the range that is greater than or equal
-to a given integer `v`. This is a generalization of the NP-complete subset sum
-problem, which asks whether a subset summing to 0 exists (equivalent in this
-case to checking if $v = 0$ yields an answer of 0). This implementation uses a
-meet-in-the-middle algorithm to precompute and search for a lower bound. Note
-that 64-bit integers are used in intermediate calculations to avoid overflow.
+Given random-access iterators `lo` and `hi` specifying a range `[lo, hi)` of integers, return the
+minimum sum of any subset of the range that is greater than or equal to a given integer `v`. This is
+a generalization of the NP-complete subset sum problem, which asks whether a subset summing to 0
+exists (equivalent in this case to checking if $v = 0$ yields an answer of 0). This implementation
+uses a meet-in-the-middle algorithm to precompute and search for a lower bound. Note that 64-bit
+integers are used in intermediate calculations to avoid overflow.
 
 Time Complexity:
-- O(n*2^(n/2)) per call to `sum_lower_bound()`, where $n$ is the distance between
-  `lo` and `hi`.
+- O(n*2^(n/2)) per call to `sum_lower_bound()`, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(n) auxiliary heap space, where $n$ is the number of array elements.

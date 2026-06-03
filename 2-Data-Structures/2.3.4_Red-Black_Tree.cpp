@@ -1,28 +1,26 @@
 /*
 
-Maintain a map, that is, a collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires an
-ordering on the set of possible keys defined by `operator <` on the key type.
-A red black tree is a binary search tree balanced by coloring its nodes red or
-black, then constraining node colors on any simple path from the root to a leaf.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
+once in the collection. This implementation requires an ordering on the set of possible keys defined
+by `operator <` on the key type. A red black tree is a binary search tree balanced by coloring its
+nodes red or black, then constraining node colors on any simple path from the root to a leaf.
 
 - `red_black_tree()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
-- `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true`
-  if an new entry was added or `false` if the key already exists (in which case
-  the map is unchanged and the old value associated with the key is preserved).
-- `erase(k)` removes the entry with key `k` from the map, returning `true` if the
-  removal was successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if
-  the key was not found.
-- `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending
-  order of keys.
+- `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if an new
+  entry was added or `false` if the key already exists (in which case the map is unchanged and the
+  old value associated with the key is preserved).
+- `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
+  successful or `false` if the key to be removed was not found.
+- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if the key was not
+  found.
+- `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending order of keys.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
-- O(log n) per call to `insert()`, `erase()`, and `find()`, where $n$ is the number of
-  entries currently in the map.
+- O(log n) per call to `insert()`, `erase()`, and `find()`, where $n$ is the number of entries
+  currently in the map.
 - O(n) per call to `walk()`.
 
 Space Complexity:

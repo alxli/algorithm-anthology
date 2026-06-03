@@ -1,32 +1,29 @@
 /*
 
-Perform operations on arbitrary precision big integers internally represented as
-a vector of base-$10^9$ digits in little-endian order. Typical arithmetic
-operations involving mixed numeric primitives and strings are supported using
-templates and operator overloading, as long as at least one operand is a `bigint`
-at any given level of evaluation.
+Perform operations on arbitrary precision big integers internally represented as a vector of
+base-$10^9$ digits in little-endian order. Typical arithmetic operations involving mixed numeric
+primitives and strings are supported using templates and operator overloading, as long as at least
+one operand is a `bigint` at any given level of evaluation.
 
 - `bigint(n)` constructs a big integer from a long long (default: 0).
 - `bigint(s)` constructs a big integer from a C string or an `std::string` `s`.
-- `operator =` is defined to copy from another big integer or to assign from an
-  64-bit integer primitive.
+- `operator =` is defined to copy from another big integer or to assign from an 64-bit integer
+  primitive.
 - `size()` returns the number of digits in the base-10 representation.
 - Operators `>>` and `<<` are defined to support stream-based input and output.
-- `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the big
-  integer `v` converted to an `std::string`, `long long`, `double`, and `long double`
-  respectively. For the latter three data types, overflow behavior is based on
-  that of inputting from `std::istream`.
+- `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the big integer `v`
+  converted to an `std::string`, `long long`, `double`, and `long double` respectively. For the
+  latter three data types, overflow behavior is based on that of inputting from `std::istream`.
 - `v.abs()` returns the absolute value of big integer `v`.
-- `a.comp(b)` returns $-1$, $0$, or $1$ depending on whether the big integers `a` and `b`
-  compare less, equal, or greater, respectively.
-- Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`,
-  `-=`, `*=`, `/=`, and `%=` are defined analogous to those on integer primitives.
-  Addition, subtraction, and comparisons are performed using the standard linear
-  algorithms. Multiplication is performed using a combination of the grade school
-  algorithm (for smaller inputs) and either the Karatsuba algorithm (if the
-  `USE_FFT_MULT` flag is set to false) or the Schonhage-Strassen algorithm (if
-  `USE_FFT_MULT` is set to true). Division and modulo are computed simultaneously using
-  the grade school method.
+- `a.comp(b)` returns $-1$, $0$, or $1$ depending on whether the big integers `a` and `b` compare
+  less, equal, or greater, respectively.
+- Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
+  `/=`, and `%=` are defined analogous to those on integer primitives. Addition, subtraction, and
+  comparisons are performed using the standard linear algorithms. Multiplication is performed using
+  a combination of the grade school algorithm (for smaller inputs) and either the Karatsuba
+  algorithm (if the `USE_FFT_MULT` flag is set to false) or the Schonhage-Strassen algorithm (if
+  `USE_FFT_MULT` is set to true). Division and modulo are computed simultaneously using the grade
+  school method.
 - `a.div(b)` returns a pair consisting of the quotient and remainder.
 - `v.pow(n)` returns `v` raised to the power of $n$.
 - `v.sqrt()` returns the integral part of the square root of big integer `v`.
@@ -34,20 +31,20 @@ at any given level of evaluation.
 - `rand(n)` returns a random, positive big integer with $n$ digits.
 
 Time Complexity:
-- O(n) per call to the constructors, `size()`, `to_string()`, `to_llong()`,
-  `to_double()`, `to_ldouble()`, `abs()`, `comp()`, `rand()`, and all comparison and
-  arithmetic operators except multiplication, division, and modulo, where $n$ is
-  total number of digits in the arguments and result for each operation.
-- O(n*log(n)*log(log(n))) or O(n^1.585) per call to multiplication operations,
-  depending on whether `USE_FFT_MULT` is set to true or false.
-- O(n*m) per call to division and modulo operations, where $n$ and $m$ are the
-  number of digits in the dividend and divisor, respectively.
+- O(n) per call to the constructors, `size()`, `to_string()`, `to_llong()`, `to_double()`,
+  `to_ldouble()`, `abs()`, `comp()`, `rand()`, and all comparison and arithmetic operators except
+  multiplication, division, and modulo, where $n$ is total number of digits in the arguments and
+  result for each operation.
+- O(n*log(n)*log(log(n))) or O(n^1.585) per call to multiplication operations, depending on whether
+  `USE_FFT_MULT` is set to true or false.
+- O(n*m) per call to division and modulo operations, where $n$ and $m$ are the number of digits in
+  the dividend and divisor, respectively.
 - O(M(m) log n) per call to `pow(n)`, where $m$ is the length of the big integer.
 
 Space Complexity:
 - O(n) for storage of the big integer.
-- O(n) auxiliary heap space for negation, addition, subtraction, multiplication,
-  division, `abs()`, `sqrt()`, `pow()`, and `nth_root()`.
+- O(n) auxiliary heap space for negation, addition, subtraction, multiplication, division, `abs()`,
+  `sqrt()`, `pow()`, and `nth_root()`.
 - O(1) auxiliary space for all other operations.
 
 */

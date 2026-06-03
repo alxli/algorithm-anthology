@@ -1,13 +1,13 @@
 /*
 
-Given a static array with indices from $0$ to $n - 1$, precompute a table that may
-later be used to perform range minimum queries on the array in constant time. This
-version is simplified to only work on integer arrays.
+Given a static array with indices from $0$ to $n - 1$, precompute a table that may later be used to
+perform range minimum queries on the array in constant time. This version is simplified to only work
+on integer arrays.
 
-The dynamic programming state $dp[i][j]$ holds the index of the minimum value in
-the sub-array starting at $i$ and having length $2^j$. Each $dp[i][j]$ will always
-be equal to either $dp[i][j - 1]$ or $dp[i + 2^{j - 1}][j - 1]$, whichever of the
-indices corresponds to the smaller value in the array.
+The dynamic programming state $dp[i][j]$ holds the index of the minimum value in the sub-array
+starting at $i$ and having length $2^j$. Each $dp[i][j]$ will always be equal to either $dp[i][j -
+1]$ or $dp[i + 2^{j - 1}][j - 1]$, whichever of the indices corresponds to the smaller value in the
+array.
 
 Time Complexity:
 - O(n log n) per call to `build()`, where $n$ is the size of the array.

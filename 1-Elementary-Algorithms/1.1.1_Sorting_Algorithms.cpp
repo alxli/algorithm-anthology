@@ -1,15 +1,14 @@
 /*
 
-These functions are equivalent to `std::sort()`, taking random-access iterators
-as a range `[lo, hi)` to be sorted. Elements between `lo` and `hi` (including the
-element pointed to by `lo` but excluding the element pointed to by `hi`) will be
-sorted into ascending order after the function call. Optionally, a comparison
-function object specifying a strict weak ordering may be specified to replace
-the default `operator <`.
+These functions are equivalent to `std::sort()`, taking random-access iterators as a range
+`[lo, hi)` to be sorted. Elements between `lo` and `hi` (including the element pointed to by `lo`
+but excluding the element pointed to by `hi`) will be sorted into ascending order after the function
+call. Optionally, a comparison function object specifying a strict weak ordering may be specified to
+replace the default `operator <`.
 
-These functions are not meant to compete with standard library implementations
-in terms terms of speed. Instead, they are meant to demonstrate how common
-sorting algorithms can be concisely implemented in C++.
+These functions are not meant to compete with standard library implementations in terms terms of
+speed. Instead, they are meant to demonstrate how common sorting algorithms can be concisely
+implemented in C++.
 
 */
 
@@ -20,17 +19,15 @@ sorting algorithms can be concisely implemented in C++.
 
 /*
 
-Quicksort repeatedly selects a pivot and partitions the range so that elements
-comparing less than the pivot precede the pivot, and elements comparing greater
-or equal follow it. Divide and conquer is then applied to both sides of the
-pivot until the original range is sorted. Despite having a worst case of O(n^2),
-quicksort is often faster in practice than merge sort and heapsort, which both
+Quicksort repeatedly selects a pivot and partitions the range so that elements comparing less than
+the pivot precede the pivot, and elements comparing greater or equal follow it. Divide and conquer
+is then applied to both sides of the pivot until the original range is sorted. Despite having a
+worst case of O(n^2), quicksort is often faster in practice than merge sort and heapsort, which both
 have a worst case time complexity of O(n log n).
 
-The pivot chosen in this implementation is always a middle element of the range
-to be sorted. To reduce the likelihood of encountering the worst case, the pivot
-can be chosen in better ways (e.g. randomly, or using the "median of three"
-technique).
+The pivot chosen in this implementation is always a middle element of the range to be sorted. To
+reduce the likelihood of encountering the worst case, the pivot can be chosen in better ways (e.g.
+randomly, or using the "median of three" technique).
 
 Time Complexity (Average): O(n log n).
 Time Complexity (Worst): O(n^2).
@@ -71,16 +68,15 @@ void quicksort(It lo, It hi) {
 
 /*
 
-Merge sort first divides a list into n sublists of one element each, then
-recursively merges the sublists into sorted order until only a single sorted
-sublist remains. Merge sort is a stable sort, meaning that it preserves the
-relative order of elements which compare equal by `operator <` or the custom
-comparator given.
+Merge sort first divides a list into n sublists of one element each, then recursively merges the
+sublists into sorted order until only a single sorted sublist remains. Merge sort is a stable sort,
+meaning that it preserves the relative order of elements which compare equal by `operator <` or the
+custom comparator given.
 
-An analogous function in the C++ standard library is `std::stable_sort()`, except
-that the implementation here requires sufficient memory to be available. When
-O(n) auxiliary memory is not available, `std::stable_sort()` falls back to a time
-complexity of O(n log^2 n) whereas the implementation here will simply fail.
+An analogous function in the C++ standard library is `std::stable_sort()`, except that the
+implementation here requires sufficient memory to be available. When O(n) auxiliary memory is not
+available, `std::stable_sort()` falls back to a time complexity of O(n log^2 n) whereas the
+implementation here will simply fail.
 
 Time Complexity (Average): O(n log n).
 Time Complexity (Worst): O(n log n).
@@ -124,14 +120,13 @@ void mergesort(It lo, It hi) {
 
 /*
 
-Heapsort first rearranges an array to satisfy the max-heap property. Then, it
-repeatedly pops the max element of the heap (the left, unsorted subrange),
-moving it to the beginning of the right, sorted subrange until the entire range
-is sorted. Heapsort has a better worst case time complexity than quicksort and
-also a better space complexity than merge sort.
+Heapsort first rearranges an array to satisfy the max-heap property. Then, it repeatedly pops the
+max element of the heap (the left, unsorted subrange), moving it to the beginning of the right,
+sorted subrange until the entire range is sorted. Heapsort has a better worst case time complexity
+than quicksort and also a better space complexity than merge sort.
 
-The C++ standard library equivalent is calling `std::make_heap(lo, hi)`, followed
-by `std::sort_heap(lo, hi)`.
+The C++ standard library equivalent is calling `std::make_heap(lo, hi)`, followed by
+`std::sort_heap(lo, hi)`.
 
 Time Complexity (Average): O(n log n).
 Time Complexity (Worst): O(n log n).
@@ -179,17 +174,15 @@ void heapsort(It lo, It hi) {
 
 /*
 
-Comb sort is an improved bubble sort. While bubble sort increments the gap
-between swapped elements for every inner loop iteration, comb sort fixes the gap
-size in the inner loop, decreasing it by a particular shrink factor in every
-iteration of the outer loop. The shrink factor of 1.3 is empirically determined
-to be the most effective.
+Comb sort is an improved bubble sort. While bubble sort increments the gap between swapped elements
+for every inner loop iteration, comb sort fixes the gap size in the inner loop, decreasing it by a
+particular shrink factor in every iteration of the outer loop. The shrink factor of 1.3 is
+empirically determined to be the most effective.
 
-Even though the worst case time complexity is O(n^2), a well chosen shrink
-factor ensures that the gap sizes are co-prime, in turn requiring astronomically
-large n to make the algorithm exceed O(n log n) steps. On random arrays, comb
-sort is only 2-3 times slower than merge sort. Its short code length length
-relative to its good performance makes it a worthwhile algorithm to remember.
+Even though the worst case time complexity is O(n^2), a well chosen shrink factor ensures that the
+gap sizes are co-prime, in turn requiring astronomically large n to make the algorithm exceed O(n
+log n) steps. On random arrays, comb sort is only 2-3 times slower than merge sort. Its short code
+length length relative to its good performance makes it a worthwhile algorithm to remember.
 
 Time Complexity (Worst): O(n^2).
 Space Complexity: O(1) auxiliary.
@@ -223,17 +216,17 @@ void combsort(It lo, It hi) {
 
 /*
 
-Radix sort is used to sort integer elements with a constant number of bits in
-linear time. This implementation only works on ranges pointing to unsigned
-integer primitives. The elements in the input range do not strictly have to be
-unsigned types, as long as their values are nonnegative integers.
+Radix sort is used to sort integer elements with a constant number of bits in linear time. This
+implementation only works on ranges pointing to unsigned integer primitives. The elements in the
+input range do not strictly have to be unsigned types, as long as their values are nonnegative
+integers.
 
-In this implementation, a power of two is chosen to be the base for the sort
-so that bitwise operations can be easily used to extract digits. This avoids the
-need to use modulo and exponentiation, which are much more expensive operations.
-In practice, it's been demonstrated that $2^8$ is the best choice for sorting
-32-bit integers (approximately 5 times faster than `std::sort()`, and typically
-2-4 faster than radix sort using any other power of two chosen as the base).
+In this implementation, a power of two is chosen to be the base for the sort so that bitwise
+operations can be easily used to extract digits. This avoids the need to use modulo and
+exponentiation, which are much more expensive operations. In practice, it's been demonstrated that
+$2^8$ is the best choice for sorting 32-bit integers (approximately 5 times faster than
+`std::sort()`, and typically 2-4 faster than radix sort using any other power of two chosen as the
+base).
 
 Time Complexity: O(n*w) for $n$ integers of $w$ bits each.
 Space Complexity: O(n + w) auxiliary.

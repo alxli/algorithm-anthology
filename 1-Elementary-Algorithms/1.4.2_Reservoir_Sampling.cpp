@@ -1,14 +1,12 @@
 /*
 
-Selects uniformly random samples from a stream whose length may be unknown in
-advance. Reservoir sampling keeps only the chosen sample or samples in memory
-while processing each element once.
+Selects uniformly random samples from a stream whose length may be unknown in advance. Reservoir
+sampling keeps only the chosen sample or samples in memory while processing each element once.
 
-- `reservoir_sample_one(lo, hi)` returns one uniformly random element from
-  `[lo, hi)`. The range must be nonempty.
-- `reservoir_sample_k(lo, hi, k)` returns `k` uniformly random elements without
-  replacement from `[lo, hi)`, or the whole range if it has fewer than `k`
-  elements.
+- `reservoir_sample_one(lo, hi)` returns one uniformly random element from `[lo, hi)`. The range
+  must be nonempty.
+- `reservoir_sample_k(lo, hi, k)` returns `k` uniformly random elements without replacement from
+  `[lo, hi)`, or the whole range if it has fewer than `k` elements.
 
 Time Complexity:
 - O(n) per call, where $n$ is the number of stream elements.

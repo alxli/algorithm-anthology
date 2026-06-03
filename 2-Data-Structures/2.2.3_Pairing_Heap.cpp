@@ -1,14 +1,13 @@
 /*
 
-Maintain a mergeable min-priority queue, that is, a collection of elements with
-support for querying and extraction of the minimum as well as efficient merging
-with other instances. This implementation requires an ordering on the set of
-possible elements defined by `operator <`. A pairing heap is a heap-ordered
-multi-way tree, using a two-pass merge to self-adjust during each deletion.
+Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying
+and extraction of the minimum as well as efficient merging with other instances. This implementation
+requires an ordering on the set of possible elements defined by `operator <`. A pairing heap is a
+heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion.
 
 - `pairing_heap()` constructs an empty priority queue.
-- `pairing_heap(lo, hi)` constructs a priority queue from two ForwardIterators,
-  consisting of elements in the range `[lo, hi)`.
+- `pairing_heap(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
+  elements in the range `[lo, hi)`.
 - `size()` returns the size of the priority queue.
 - `empty()` returns whether the priority queue is empty.
 - `push(v)` inserts the value `v` into the priority queue.
@@ -17,8 +16,7 @@ multi-way tree, using a two-pass merge to self-adjust during each deletion.
 - `absorb(h)` inserts every value from `h` and sets `h` to the empty priority queue.
 
 Time Complexity:
-- O(1) per call to the first constructor, `size()`, `empty()`, `top()`, `push()`, and
-  `absorb()`.
+- O(1) per call to the first constructor, `size()`, `empty()`, `top()`, `push()`, and `absorb()`.
 - O(log n) amortized per call to `pop()`.
 - O(n) per call to the second constructor on the distance between lo and hi.
 

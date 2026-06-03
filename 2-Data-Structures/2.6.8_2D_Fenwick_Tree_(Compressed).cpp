@@ -1,31 +1,28 @@
 /*
 
-Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to
-be simultaneously incremented by arbitrary values (range update) and queries for
-the sum of rectangular sub-matrices (range query). This implementation uses
-`std::map` for coordinate compression, allowing for large indices to be accessed
-with efficient space complexity. That is, rows have valid indices from 0 to
+Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to be simultaneously
+incremented by arbitrary values (range update) and queries for the sum of rectangular sub-matrices
+(range query). This implementation uses `std::map` for coordinate compression, allowing for large
+indices to be accessed with efficient space complexity. That is, rows have valid indices from 0 to
 `MAXR`, inclusive, and columns have valid indices from 0 to `MAXC`, inclusive.
 
 - `add(r, c, x)` adds `x` to the value at index (`r`, `c`).
-- `add(r1, c1, r2, c2, x)` adds `x` to all indices in the rectangle with upper-left
-  corner (`r1`, `c1`) and lower-right corner (`r2`, `c2`).
+- `add(r1, c1, r2, c2, x)` adds `x` to all indices in the rectangle with upper-left corner (`r1`,
+  `c1`) and lower-right corner (`r2`, `c2`).
 - `set(r, c, x)` assigns `x` to the value at index (`r`, `c`).
-- `sum(r, c)` returns the sum of the rectangle with upper-left corner (0, 0) and
-  lower-right corner (`r`, `c`).
-- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner
-  (`r1`, `c1`) and lower-right corner (`r2`, `c2`).
+- `sum(r, c)` returns the sum of the rectangle with upper-left corner (0, 0) and lower-right corner
+  (`r`, `c`).
+- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner (`r1`, `c1`) and
+  lower-right corner (`r2`, `c2`).
 - `at(r, c)` returns the value at index (`r`, `c`).
 
 Time Complexity:
-- O(log^2(MAXR)*log^2(MAXC)) per call to all member functions. If `std::map` is
-  replaced with `std::unordered_map`, then the amortized running time will become
-  O(log(MAXR)*log(MAXC)).
+- O(log^2(MAXR)*log^2(MAXC)) per call to all member functions. If `std::map` is replaced with
+  `std::unordered_map`, then the amortized running time will become O(log(MAXR)*log(MAXC)).
 
 Space Complexity:
-- O(n*log(MAXR)*log(MAXC)) for storage of the array elements, where $n$ is the
-  number of distinct indices that have been accessed across all of the
-  operations so far.
+- O(n*log(MAXR)*log(MAXC)) for storage of the array elements, where $n$ is the number of distinct
+  indices that have been accessed across all of the operations so far.
 - O(1) auxiliary for all operations.
 
 */

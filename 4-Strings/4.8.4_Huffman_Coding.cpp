@@ -1,23 +1,21 @@
 /*
 
-Builds a Huffman code for a string and uses it to encode and decode that string.
-Huffman coding is a lossless prefix-code compression algorithm: more frequent
-characters receive shorter bit strings, and no code is a prefix of another code.
+Builds a Huffman code for a string and uses it to encode and decode that string. Huffman coding is a
+lossless prefix-code compression algorithm: more frequent characters receive shorter bit strings,
+and no code is a prefix of another code.
 
-The implementation below stores encoded bits as a string of `'0'` and `'1'`
-characters for clarity. For real compression, pack those bits into bytes. The tree
-is also needed to decode the bit string, so compressed data normally stores enough
-metadata to reconstruct the same tree.
+The implementation below stores encoded bits as a string of `'0'` and `'1'` characters for clarity.
+For real compression, pack those bits into bytes. The tree is also needed to decode the bit string,
+so compressed data normally stores enough metadata to reconstruct the same tree.
 
-- `huffman_tree(text)` constructs a Huffman tree from the character frequencies in
-  `text`.
+- `huffman_tree(text)` constructs a Huffman tree from the character frequencies in `text`.
 - `codes()` returns a table mapping each byte value to its bit string.
 - `encode(text)` returns the encoded bit string.
 - `decode(bits)` returns the decoded text.
 
 Time Complexity:
-- O(n + A log A) to construct the tree, where $n$ is the input length and $A$ is the
-  number of distinct characters.
+- O(n + A log A) to construct the tree, where $n$ is the input length and $A$ is the number of
+  distinct characters.
 - O(n) to encode or decode, plus the number of produced or consumed bits.
 
 Space Complexity:

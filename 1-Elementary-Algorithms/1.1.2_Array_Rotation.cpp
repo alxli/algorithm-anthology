@@ -1,20 +1,17 @@
 /*
 
-These functions are equivalent to `std::rotate()`, taking three iterators `lo`,
-`mid`, and `hi` (`lo` <= `mid` <= `hi`) to perform a left rotation on the range
-`[lo, hi)`. After the function call, `[lo, hi)` will comprise of the
-concatenation of the elements originally in `[mid, hi)` + `[lo, mid)`. That is,
-the range `[lo, hi)` will be rearranged in such a way that the element at `mid`
-becomes the first element of the new range and the element at `mid - 1` becomes
-the last element, all while
-preserving the relative ordering of elements within the two rotated subarrays.
+These functions are equivalent to `std::rotate()`, taking three iterators `lo`, `mid`, and `hi`
+(`lo` <= `mid` <= `hi`) to perform a left rotation on the range `[lo, hi)`. After the function call,
+`[lo, hi)` will comprise of the concatenation of the elements originally in `[mid, hi)` +
+`[lo, mid)`. That is, the range `[lo, hi)` will be rearranged in such a way that the element at
+`mid` becomes the first element of the new range and the element at `mid - 1` becomes the last
+element, all while preserving the relative ordering of elements within the two rotated subarrays.
 
-All three versions below achieve the same result using in-place algorithms.
-Version 1 uses a straightforward swapping algorithm requiring ForwardIterators.
-Version 2 requires BidirectionalIterators, employing a well-known trick with
-three simple inversions. Version 3 requires random-access iterators, applying a
-juggling algorithm which first divides the range into `gcd(hi - lo, mid - lo)`
-sets and then rotates the corresponding elements in each set.
+All three versions below achieve the same result using in-place algorithms. Version 1 uses a
+straightforward swapping algorithm requiring ForwardIterators. Version 2 requires
+BidirectionalIterators, employing a well-known trick with three simple inversions. Version 3
+requires random-access iterators, applying a juggling algorithm which first divides the range into
+`gcd(hi - lo, mid - lo)` sets and then rotates the corresponding elements in each set.
 
 Time Complexity:
 - O(n) per call to both functions, where $n$ is the distance between `lo` and `hi`.

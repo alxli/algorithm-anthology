@@ -1,28 +1,24 @@
 /*
 
-Wraps arithmetic modulo a compile-time constant in a small value type. This is a
-common contest helper for dynamic programming, combinatorics, polynomial
-operations, and any calculation where all answers are taken modulo a number such
-as `1000000007`.
+Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest
+helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all
+answers are taken modulo a number such as `1000000007`.
 
-The implementation is intentionally close to common contest "Mint" templates:
-normalization happens at construction, arithmetic operators are overloaded,
-mixed integer operations are supported through implicit construction, and
-combinations can be computed from lazy factorial tables.
+The implementation is intentionally close to common contest "Mint" templates: normalization happens
+at construction, arithmetic operators are overloaded, mixed integer operations are supported through
+implicit construction, and combinations can be computed from lazy factorial tables.
 
-Division uses the extended Euclidean algorithm, so the divisor only needs to be
-coprime to the modulus. For the factorial-table combination helper, the usual
-contest assumption is that `MOD` is prime and the requested factorials are
-invertible modulo `MOD`.
+Division uses the extended Euclidean algorithm, so the divisor only needs to be coprime to the
+modulus. For the factorial-table combination helper, the usual contest assumption is that `MOD` is
+prime and the requested factorials are invertible modulo `MOD`.
 
 - `modular<T>(x)` constructs the residue class of integer `x` modulo `T::value`.
 - `value()` and `operator()()` return the stored representative in `[0, MOD)`.
 - `pow(e)` returns this value raised to nonnegative exponent `e`.
 - `inv()` returns the multiplicative inverse, asserting it exists.
-- Operators `+`, `-`, `*`, `/`, comparison, increment, decrement, and stream I/O are
-  overloaded.
-- `mod_combinatorics<Mint>::choose(n, k)` returns $\binom n k$ using lazy factorial
-  and inverse-factorial tables.
+- Operators `+`, `-`, `*`, `/`, comparison, increment, decrement, and stream I/O are overloaded.
+- `mod_combinatorics<Mint>::choose(n, k)` returns $\binom n k$ using lazy factorial and
+  inverse-factorial tables.
 
 Time Complexity:
 - O(1) per addition, subtraction, multiplication, comparison, and stream output.

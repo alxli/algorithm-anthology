@@ -1,12 +1,10 @@
 /*
 
-Randomly permutes a range in-place using the Fisher-Yates shuffle. Each possible
-permutation is produced with equal probability, assuming the random number source
-is uniform.
+Randomly permutes a range in-place using the Fisher-Yates shuffle. Each possible permutation is
+produced with equal probability, assuming the random number source is uniform.
 
-The algorithm scans from right to left. At position `i`, it chooses a random
-position `j` from `[0, i]` and swaps the two elements. This fixes one uniformly
-random remaining element at a time.
+The algorithm scans from right to left. At position `i`, it chooses a random position `j` from
+`[0, i]` and swaps the two elements. This fixes one uniformly random remaining element at a time.
 
 - `fisher_yates_shuffle(lo, hi)` randomly shuffles the range `[lo, hi)`.
 

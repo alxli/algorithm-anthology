@@ -1,28 +1,26 @@
 /*
 
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process
-a set of x-coordinate queries each asking to find the minimum y-value when any
-of the given lines are evaluated at the specified x. This is useful for dynamic
-programming recurrences of the form `dp[i] = min(m[j] * x[i] + b[j])`.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of
+x-coordinate queries each asking to find the minimum y-value when any of the given lines are
+evaluated at the specified x. This is useful for dynamic programming recurrences of the form
+`dp[i] = min(m[j] * x[i] + b[j])`.
 
-The following implementation is a concise, semi-dynamic version of the convex
-hull optimization technique. It supports an interlaced sequence of `add_line()`
-and `query()` calls, as long as the preconditions of descending `m` and ascending `x`
-are satisfied. As a result, it may be necessary to sort the lines and queries
-before calling the functions. In that case, the overall time complexity will be
-dominated by the sorting step.
+The following implementation is a concise, semi-dynamic version of the convex hull optimization
+technique. It supports an interlaced sequence of `add_line()` and `query()` calls, as long as the
+preconditions of descending `m` and ascending `x` are satisfied. As a result, it may be necessary to
+sort the lines and queries before calling the functions. In that case, the overall time complexity
+will be dominated by the sorting step.
 
-- `add_line(m, b)` inserts line $y = mx + b$. The slope `m` must be less than or
-  equal to the slope of every line added so far.
-- `query(x)` returns the minimum y-value among all inserted lines at coordinate
-  `x`. Query coordinates must be nondecreasing across calls.
+- `add_line(m, b)` inserts line $y = mx + b$. The slope `m` must be less than or equal to the slope
+  of every line added so far.
+- `query(x)` returns the minimum y-value among all inserted lines at coordinate `x`. Query
+  coordinates must be nondecreasing across calls.
 
 Time Complexity:
-- O(n) for any interlaced sequence of `add_line()` and `query()` calls, where $n$ is
-  the number of lines added. This is because the overall number of steps taken
-  by `add_line()` and `query()` are respectively bounded by the number of lines.
-  Thus a single call to either `add_line()` or `query()` will have an amortized O(1)
-  running time.
+- O(n) for any interlaced sequence of `add_line()` and `query()` calls, where $n$ is the number of
+  lines added. This is because the overall number of steps taken by `add_line()` and `query()` are
+  respectively bounded by the number of lines. Thus a single call to either `add_line()` or
+  `query()` will have an amortized O(1) running time.
 
 Space Complexity:
 - O(n) for storage of the lines.

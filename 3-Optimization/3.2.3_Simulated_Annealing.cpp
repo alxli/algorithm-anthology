@@ -1,23 +1,21 @@
 /*
 
-Given a function `f(x, y)` to minimize over two real variables, return a good
-approximate minimum found by simulated annealing. This is a randomized heuristic
-for difficult search spaces where gradients, convexity, and unimodality are not
-available.
+Given a function `f(x, y)` to minimize over two real variables, return a good approximate minimum
+found by simulated annealing. This is a randomized heuristic for difficult search spaces where
+gradients, convexity, and unimodality are not available.
 
-At each temperature, the algorithm proposes a random nearby point. Better moves
-are always accepted, while worse moves are accepted with probability
-`exp((current - candidate) / temperature)`. This lets the search sometimes escape
-local minima early on, then become greedier as the temperature decreases.
+At each temperature, the algorithm proposes a random nearby point. Better moves are always accepted,
+while worse moves are accepted with probability `exp((current - candidate) / temperature)`. This
+lets the search sometimes escape local minima early on, then become greedier as the temperature
+decreases.
 
-Simulated annealing is not a proof of optimality. Its quality depends heavily on
-the objective function, the starting point, the initial temperature, the cooling
-rate, and the number of independent restarts.
+Simulated annealing is not a proof of optimality. Its quality depends heavily on the objective
+function, the starting point, the initial temperature, the cooling rate, and the number of
+independent restarts.
 
-- `anneal_min(f, x0, y0, &best_x, &best_y)` returns a small value found by the
-  randomized search starting from (`x0`, `y0`).
-- `TEMPERATURE_START` controls the initial move scale and willingness to accept
-  worse states.
+- `anneal_min(f, x0, y0, &best_x, &best_y)` returns a small value found by the randomized search
+  starting from (`x0`, `y0`).
+- `TEMPERATURE_START` controls the initial move scale and willingness to accept worse states.
 - `TEMPERATURE_END` controls when the search stops.
 - `COOLING_RATE` controls how quickly the temperature decreases.
 

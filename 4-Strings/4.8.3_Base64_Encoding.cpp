@@ -1,16 +1,14 @@
 /*
 
-Encodes binary data as printable ASCII using Base64, and decodes Base64 text back
-to bytes. Base64 is an encoding, not encryption or compression: it preserves all
-input data exactly, but usually increases size by about one third.
+Encodes binary data as printable ASCII using Base64, and decodes Base64 text back to bytes. Base64
+is an encoding, not encryption or compression: it preserves all input data exactly, but usually
+increases size by about one third.
 
-This implementation uses the standard alphabet with `+`, `/`, and `=` padding.
-Whitespace is not skipped by the decoder; clean the input first if line breaks or
-spaces may appear.
+This implementation uses the standard alphabet with `+`, `/`, and `=` padding. Whitespace is not
+skipped by the decoder; clean the input first if line breaks or spaces may appear.
 
 - `base64_encode(bytes)` returns the Base64 representation of string `bytes`.
-- `base64_decode(text)` returns the decoded byte string. It assumes `text` is valid
-  padded Base64.
+- `base64_decode(text)` returns the decoded byte string. It assumes `text` is valid padded Base64.
 
 Time Complexity:
 - O(n) per call, where $n$ is the input length.

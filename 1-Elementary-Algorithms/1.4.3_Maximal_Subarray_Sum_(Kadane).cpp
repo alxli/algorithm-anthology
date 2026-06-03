@@ -1,39 +1,35 @@
 /*
 
-Given an array of numbers, determine the maximum possible sum of any contiguous
-subarray. Kadane's algorithm scans through the array, at each index computing the
-maximum nonnegative sum subarray ending there. Either this subarray is empty (in
-which case its sum is zero), or it consists of one more element than the maximum
-sequence ending at the previous position. This can be adapted to compute the
-maximal submatrix sum as well.
+Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's
+algorithm scans through the array, at each index computing the maximum nonnegative sum subarray
+ending there. Either this subarray is empty (in which case its sum is zero), or it consists of one
+more element than the maximum sequence ending at the previous position. This can be adapted to
+compute the maximal submatrix sum as well.
 
-- `max_subarray_sum(lo, hi, &res_lo, &res_hi)` returns the maximal subarray sum
-  for the range  `[lo, hi)`, where `lo` and `hi` are random-access iterators to
-  numeric types. This implementation requires operators `+` and `<` to be defined on
-  the iterators' value type. Optionally, two `int` pointers may be passed to store
-  the inclusive boundary indices `[res_lo, res_hi]` of the resulting subarray. By
-  convention, the empty subarray is allowed, so an input range consisting of only
+- `max_subarray_sum(lo, hi, &res_lo, &res_hi)` returns the maximal subarray sum for the range
+  `[lo, hi)`, where `lo` and `hi` are random-access iterators to numeric types. This implementation
+  requires operators `+` and `<` to be defined on the iterators' value type. Optionally, two `int`
+  pointers may be passed to store the inclusive boundary indices `[res_lo, res_hi]` of the resulting
+  subarray. By convention, the empty subarray is allowed, so an input range consisting of only
   negative values returns `0` with an empty result interval.
-- `max_submatrix_sum(matrix, &r1, &c1, &r2, &c2)` returns the largest sum of any
-  rectangular submatrix for a matrix of $n$ rows by $m$ columns. The matrix should
-  be given as a 2-dimensional vector, where the outer vector must contain $n$
-  vectors each of size $m$. This implementation requires operators `+` and `<` to be
-  defined on the iterators' value type. Optionally, four `int` pointers may be
-  passed to store the boundary indices of the resulting subarray, with `(r1, c1)`
-  specifiying the top-left index and `(r2, c2)` specifying the bottom-right index.
-  By convention, the empty submatrix is allowed, so an input matrix consisting of
-  only negative values returns `0` with an empty result interval.
+- `max_submatrix_sum(matrix, &r1, &c1, &r2, &c2)` returns the largest sum of any rectangular
+  submatrix for a matrix of $n$ rows by $m$ columns. The matrix should be given as a 2-dimensional
+  vector, where the outer vector must contain $n$ vectors each of size $m$. This implementation
+  requires operators `+` and `<` to be defined on the iterators' value type. Optionally, four `int`
+  pointers may be passed to store the boundary indices of the resulting subarray, with `(r1, c1)`
+  specifiying the top-left index and `(r2, c2)` specifying the bottom-right index. By convention,
+  the empty submatrix is allowed, so an input matrix consisting of only negative values returns `0`
+  with an empty result interval.
 
 Time Complexity:
-- O(n) per call to `max_subarray_sum()`, where $n$ is the distance between `lo` and
-  `hi`.
-- O(n*m^2) per call to `max_submatrix_sum()`, where $n$ is the number of rows and $m$
-  is the number of columns in the matrix.
+- O(n) per call to `max_subarray_sum()`, where $n$ is the distance between `lo` and `hi`.
+- O(n*m^2) per call to `max_submatrix_sum()`, where $n$ is the number of rows and $m$ is the number
+  of columns in the matrix.
 
 Space Complexity:
 - O(1) auxiliary for `max_subarray_sum()`.
-- O(n) auxiliary heap space for `max_submatrix_sum()`, where $n$ is the number of
-  rows in the matrix.
+- O(n) auxiliary heap space for `max_submatrix_sum()`, where $n$ is the number of rows in the
+  matrix.
 
 */
 

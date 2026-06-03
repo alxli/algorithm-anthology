@@ -1,14 +1,13 @@
 /*
 
-Maintain a min-priority queue, that is, a collection of elements with support
-for querying and extraction of the minimum. This implementation requires an
-ordering on the set of possible elements defined by `operator <`. A binary
-min-heap implements a priority queue by inserting and deleting nodes into a
-binary tree such that the parent of any node is always less than its children.
+Maintain a min-priority queue, that is, a collection of elements with support for querying and
+extraction of the minimum. This implementation requires an ordering on the set of possible elements
+defined by `operator <`. A binary min-heap implements a priority queue by inserting and deleting
+nodes into a binary tree such that the parent of any node is always less than its children.
 
 - `binary_heap()` constructs an empty priority queue.
-- `binary_heap(lo, hi)` constructs a priority queue from two ForwardIterators,
-  consisting of elements in the range `[lo, hi)`.
+- `binary_heap(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
+  elements in the range `[lo, hi)`.
 - `size()` returns the size of the priority queue.
 - `empty()` returns whether the priority queue is empty.
 - `push(v)` inserts the value `v` into the priority queue.
@@ -17,8 +16,8 @@ binary tree such that the parent of any node is always less than its children.
 
 Time Complexity:
 - O(1) per call to the first constructor, `size()`, `empty()`, and `top()`.
-- O(log n) per call to `push()` and `pop()`, where $n$ is the number of elements
-  in the priority queue.
+- O(log n) per call to `push()` and `pop()`, where $n$ is the number of elements in the priority
+  queue.
 - O(n) per call to the second constructor on the distance between lo and hi.
 
 Space Complexity:

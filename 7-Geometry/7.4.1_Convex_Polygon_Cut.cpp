@@ -1,17 +1,16 @@
 /*
 
-Given a convex polygon (a polygon such that every line crossing through it will
-only do so once) in two dimensions, and two points specifying an infinite line,
-cut off the right part of the polygon, and return the resulting left part.
+Given a convex polygon (a polygon such that every line crossing through it will only do so once) in
+two dimensions, and two points specifying an infinite line, cut off the right part of the polygon,
+and return the resulting left part.
 
-- `convex_cut(lo, hi, p, q)` returns the points of the left side of a polygon, in
-  clockwise order, after it has been cut by the line containing points $p$ and $q$.
-  The original convex polygon is given by the range `[lo, hi)` of points in
-  clockwise order, where `lo` and `hi` must be random-access iterators.
+- `convex_cut(lo, hi, p, q)` returns the points of the left side of a polygon, in clockwise order,
+  after it has been cut by the line containing points $p$ and $q$. The original convex polygon is
+  given by the range `[lo, hi)` of points in clockwise order, where `lo` and `hi` must be
+  random-access iterators.
 
 Time Complexity:
-- O(n) per call to `convex_cut(lo, hi, p, q)`, where $n$ is the distance between `lo`
-  and `hi`.
+- O(n) per call to `convex_cut(lo, hi, p, q)`, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(n) auxiliary for storage of the resulting convex cut.

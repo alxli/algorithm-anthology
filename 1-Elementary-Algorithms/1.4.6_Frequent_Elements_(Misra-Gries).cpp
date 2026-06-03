@@ -1,20 +1,19 @@
 /*
 
-Finds candidate frequent elements in a stream using the Misra-Gries algorithm.
-With parameter `k`, the algorithm keeps at most `k - 1` counters and guarantees
-that every value occurring more than $\lfloor n/k \rfloor$ times appears among the
-returned candidates.
+Finds candidate frequent elements in a stream using the Misra-Gries algorithm. With parameter `k`,
+the algorithm keeps at most `k - 1` counters and guarantees that every value occurring more than
+$\lfloor n/k \rfloor$ times appears among the returned candidates.
 
-The candidates are not automatically verified, since the algorithm intentionally
-uses sublinear memory and does not retain the stream. If exact frequencies are
-needed, make a second pass over the input and count only the returned candidates.
+The candidates are not automatically verified, since the algorithm intentionally uses sublinear
+memory and does not retain the stream. If exact frequencies are needed, make a second pass over the
+input and count only the returned candidates.
 
-- `misra_gries(lo, hi, k)` returns a map of candidate values to their residual
-  counters. Use `k = 2` for the Boyer-Moore majority-candidate special case.
+- `misra_gries(lo, hi, k)` returns a map of candidate values to their residual counters. Use `k = 2`
+  for the Boyer-Moore majority-candidate special case.
 
 Time Complexity:
-- O(nk) worst-case for this compact map-based implementation, where $n$ is the
-  number of stream values.
+- O(nk) worst-case for this compact map-based implementation, where $n$ is the number of stream
+  values.
 
 Space Complexity:
 - O(k) auxiliary heap space.
