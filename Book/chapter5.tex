@@ -1,6 +1,6 @@
 \chapter{Graphs}
 
-\section{Depth-First Search}
+\section{DFS and Tree Algorithms}
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Graph Class and Depth-First Search}
@@ -162,7 +162,78 @@ int main() {
 \begin{exampleoutput}
 DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
 \end{exampleoutput}
-\subsection{Topological Sorting (DFS)}
+\subsection{Connected Components}
+Given an undirected graph, label every node with its connected component and collect the nodes in each component. \inlinecode{connected\_components()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}.
+
+This is the standard graph reachability primitive behind many larger routines: run one depth-first search from every unseen node, and all nodes visited by that search belong to the same component. For directed graphs, use a strongly connected components algorithm instead.
+
+\begin{compactitem}
+  \item \inlinecode{component\_id[u]} stores the index of the component containing node $u$.
+  \item \inlinecode{components[k]} stores the nodes in component $k$.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{connected\_components()}, where $n$ is the number of nodes and $m$ is the number of edges.
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n)$ auxiliary stack space for \inlinecode{dfs()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <vector>
+
+const int MAXN = 100;
+std::vector<int> adj[MAXN];
+std::vector<std::vector<int> > components;
+int component_id[MAXN];
+
+void dfs(int u, int id) {
+  component_id[u] = id;
+  components[id].push_back(u);
+  for (int i = 0; i < (int)adj[u].size(); i++) {
+    int v = adj[u][i];
+    if (component_id[v] == -1) {
+      dfs(v, id);
+    }
+  }
+}
+
+void connected_components(int nodes) {
+  components.clear();
+  std::fill(component_id, component_id + nodes, -1);
+  for (int u = 0; u < nodes; u++) {
+    if (component_id[u] == -1) {
+      components.push_back(std::vector<int>());
+      dfs(u, (int)components.size() - 1);
+    }
+  }
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+void add_edge(int u, int v) {
+  adj[u].push_back(v);
+  adj[v].push_back(u);
+}
+
+int main() {
+  add_edge(0, 1);
+  add_edge(1, 2);
+  add_edge(3, 4);
+  connected_components(6);
+  assert(components.size() == 3);
+  assert(component_id[0] == component_id[2]);
+  assert(component_id[0] != component_id[3]);
+  assert(component_id[5] == 2);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Topological Sorting}
 Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every edge from node $u$ to $v$, $u$ comes before $v$ in the ordering. Depth-first search is used to traverse all nodes in post-order.
 
 \inlinecode{toposort(nodes)} takes a directed graph stored as a global adjacency list with nodes indexed from 0 to \inlinecode{nodes - 1} and assigns a valid topological ordering to the global result vector. An error is thrown if the graph contains a cycle.
@@ -239,7 +310,311 @@ int main() {
 \begin{exampleoutput}
 The topological order: 2 1 0 4 3 7 6 5
 \end{exampleoutput}
-\subsection{Eulerian Cycles (DFS)}
+\subsection{Tree Centers and Diameter}
+An unweighted tree possesses a center, centroid, and diameter. The following functions apply to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}. Nodes in \inlinecode{adj[]} must be numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function arguments.
+
+\begin{compactitem}
+  \item \inlinecode{find\_centers()} returns a vector of either one or two tree Jordan centers. The Jordan center of a tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the maximum distance to all other nodes in the tree is minimal.
+  \item \inlinecode{find\_centroid()} returns the node where all of its subtrees have a size less than or equal to $n / 2$, where $n$ is the number of nodes in the tree.
+  \item \inlinecode{diameter()} returns the maximum distance between any two nodes in the tree, using a well-known double depth-first search technique.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes and $m$ is the number of edges.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary stack space for \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes.
+
+\begin{lstlisting}[language=C++]
+#include <utility>
+#include <vector>
+
+const int MAXN = 100;
+std::vector<int> adj[MAXN];
+
+std::vector<int> find_centers(int nodes) {
+  std::vector<int> leaves, degree(nodes);
+  for (int i = 0; i < nodes; i++) {
+    degree[i] = adj[i].size();
+    if (degree[i] <= 1) {
+      leaves.push_back(i);
+    }
+  }
+  int removed = leaves.size();
+  while (removed < nodes) {
+    std::vector<int> nleaves;
+    for (int i = 0; i < (int)leaves.size(); i++) {
+      int u = leaves[i];
+      for (int j = 0; j < (int)adj[u].size(); j++) {
+        int v = adj[u][j];
+        if (--degree[v] == 1) {
+          nleaves.push_back(v);
+        }
+      }
+    }
+    leaves = nleaves;
+    removed += leaves.size();
+  }
+  return leaves;
+}
+
+int find_centroid(int nodes, int u = 0, int p = -1) {
+  int count = 1;
+  bool good_center = true;
+  for (int j = 0; j < (int)adj[u].size(); j++) {
+    int v = adj[u][j];
+    if (v == p) {
+      continue;
+    }
+    int res = find_centroid(nodes, v, u);
+    if (res >= 0) {
+      return res;
+    }
+    int size = -res;
+    good_center &= (size <= nodes / 2);
+    count += size;
+  }
+  good_center &= (nodes - count <= nodes / 2);
+  return good_center ? u : -count;
+}
+
+std::pair<int, int> dfs(int u, int p, int depth) {
+  std::pair<int, int> res = std::make_pair(depth, u);
+  for (int j = 0; j < (int)adj[u].size(); j++) {
+    if (adj[u][j] != p) {
+      res = max(res, dfs(adj[u][j], u, depth + 1));
+    }
+  }
+  return res;
+}
+
+int diameter() {
+  int furthest_node = dfs(0, -1, 0).second;
+  return dfs(furthest_node, -1, 0).first;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  int nodes = 6;
+  adj[0].push_back(1);
+  adj[1].push_back(0);
+  adj[1].push_back(2);
+  adj[2].push_back(1);
+  adj[1].push_back(4);
+  adj[4].push_back(1);
+  adj[3].push_back(4);
+  adj[4].push_back(3);
+  adj[4].push_back(5);
+  adj[5].push_back(4);
+  vector<int> centers = find_centers(nodes);
+  assert(centers.size() == 2 && centers[0] == 1 && centers[1] == 4);
+  assert(find_centroid(nodes) == 4);
+  assert(diameter() == 3);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Centroid Decomposition}
+Given a tree, build its centroid decomposition. A centroid is a node whose removal splits the current subtree into connected components of size at most half of that subtree. Recursively choosing centroids creates a decomposition tree of height $O(\log n)$, which is useful for queries based on distances to marked nodes, nearest special node, and other "path through a centroid" problems.
+
+\inlinecode{build\_centroid\_tree()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}.
+
+\begin{compactitem}
+  \item \inlinecode{centroid\_parent[u]} stores the parent of node $u$ in the centroid tree.
+  \item The root centroid has parent \inlinecode{-1}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{build\_centroid\_tree()}, where $n$ is the number of nodes.
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for \inlinecode{subtree\_size[]}, \inlinecode{removed[]}, and \inlinecode{centroid\_parent[]}.
+  \item $O(n)$ auxiliary stack space for the recursive searches.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <vector>
+
+const int MAXN = 100;
+std::vector<int> adj[MAXN];
+int subtree_size[MAXN], centroid_parent[MAXN];
+bool removed[MAXN];
+
+int get_size(int u, int p) {
+  subtree_size[u] = 1;
+  for (int i = 0; i < (int)adj[u].size(); i++) {
+    int v = adj[u][i];
+    if (v != p && !removed[v]) {
+      subtree_size[u] += get_size(v, u);
+    }
+  }
+  return subtree_size[u];
+}
+
+int get_centroid(int u, int p, int total) {
+  for (int i = 0; i < (int)adj[u].size(); i++) {
+    int v = adj[u][i];
+    if (v != p && !removed[v] && subtree_size[v] > total / 2) {
+      return get_centroid(v, u, total);
+    }
+  }
+  return u;
+}
+
+void decompose(int entry, int parent) {
+  int total = get_size(entry, -1);
+  int centroid = get_centroid(entry, -1, total);
+  centroid_parent[centroid] = parent;
+  removed[centroid] = true;
+  for (int i = 0; i < (int)adj[centroid].size(); i++) {
+    int v = adj[centroid][i];
+    if (!removed[v]) {
+      decompose(v, centroid);
+    }
+  }
+}
+
+void build_centroid_tree(int nodes) {
+  std::fill(removed, removed + nodes, false);
+  std::fill(centroid_parent, centroid_parent + nodes, -1);
+  decompose(0, -1);
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+void add_edge(int u, int v) {
+  adj[u].push_back(v);
+  adj[v].push_back(u);
+}
+
+int main() {
+  add_edge(0, 1);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  add_edge(3, 4);
+  add_edge(3, 5);
+  add_edge(5, 6);
+  build_centroid_tree(7);
+  assert(centroid_parent[3] == -1);
+  assert(centroid_parent[1] == 3);
+  assert(centroid_parent[5] == 3);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Prufer Code}
+Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence of length $n - 2$ that uniquely represents a labeled tree on nodes $0, 1, \ldots, n - 1$. It is useful for counting labeled trees, generating test cases, and converting between trees and compact sequences.
+
+\begin{compactitem}
+  \item \inlinecode{encode\_prufer()} takes a tree adjacency list and returns its Prufer code.
+  \item \inlinecode{decode\_prufer()} takes a Prufer code and returns the corresponding tree edges.
+\end{compactitem}
+
+Both functions choose the smallest available leaf at each step. This makes the implementation deterministic and matches the usual textbook convention.
+
+\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{encode\_prufer()} or \inlinecode{decode\_prufer()}, where $n$ is the number of nodes in the tree.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary space per call to \inlinecode{encode\_prufer()} or \inlinecode{decode\_prufer()}.
+
+\begin{lstlisting}[language=C++]
+#include <set>
+#include <utility>
+#include <vector>
+
+std::vector<int> encode_prufer(const std::vector<std::vector<int> > &tree) {
+  int nodes = tree.size();
+  std::vector<int> degree(nodes), parent(nodes, -1), code;
+  std::set<int> leaves;
+  if (nodes <= 2) {
+    return code;
+  }
+  int root = 0;
+  for (int u = 0; u < nodes; u++) {
+    degree[u] = tree[u].size();
+    if (degree[u] == 1) {
+      leaves.insert(u);
+    } else {
+      root = u;
+    }
+  }
+  std::vector<int> stack(1, root);
+  parent[root] = -2;
+  while (!stack.empty()) {
+    int u = stack.back();
+    stack.pop_back();
+    for (int i = 0; i < (int)tree[u].size(); i++) {
+      int v = tree[u][i];
+      if (parent[v] == -1) {
+        parent[v] = u;
+        stack.push_back(v);
+      }
+    }
+  }
+  for (int i = 0; i < nodes - 2; i++) {
+    int leaf = *leaves.begin();
+    leaves.erase(leaves.begin());
+    int p = parent[leaf];
+    code.push_back(p);
+    if (--degree[p] == 1) {
+      leaves.insert(p);
+    }
+  }
+  return code;
+}
+
+std::vector<std::pair<int, int> > decode_prufer(const std::vector<int> &code) {
+  int nodes = code.size() + 2;
+  std::vector<int> degree(nodes, 1);
+  std::set<int> leaves;
+  std::vector<std::pair<int, int> > edges;
+  for (int i = 0; i < (int)code.size(); i++) {
+    degree[code[i]]++;
+  }
+  for (int u = 0; u < nodes; u++) {
+    if (degree[u] == 1) {
+      leaves.insert(u);
+    }
+  }
+  for (int i = 0; i < (int)code.size(); i++) {
+    int leaf = *leaves.begin();
+    leaves.erase(leaves.begin());
+    int u = code[i];
+    edges.push_back(std::make_pair(leaf, u));
+    if (--degree[u] == 1) {
+      leaves.insert(u);
+    }
+  }
+  edges.push_back(std::make_pair(*leaves.begin(), *leaves.rbegin()));
+  return edges;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<vector<int> > tree(5);
+  tree[0].push_back(3);
+  tree[1].push_back(3);
+  tree[2].push_back(3);
+  tree[3].push_back(0);
+  tree[3].push_back(1);
+  tree[3].push_back(2);
+  tree[3].push_back(4);
+  tree[4].push_back(3);
+  vector<int> code = encode_prufer(tree);
+  assert(code.size() == 3 && code[0] == 3 && code[1] == 3 && code[2] == 3);
+  vector<pair<int, int> > edges = decode_prufer(code);
+  assert(edges.size() == 4);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Eulerian Cycles}
 A Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an Eulerian cycle if and only if every node has an in-degree equal to its out-degree, and all of its nodes with nonzero degree belong to a single strongly connected component. An undirected graph has an Eulerian cycle if and only if every node has even degree, and all of its nodes with nonzero degree belong to a single connected component.
 
 Given a graph as an adjacency list along with the starting node of the cycle, both functions below return a vector containing all nodes reachable from the starting node in an order which forms an Eulerian cycle. The first node of the cycle will be repeated as the last element of the vector. All nodes of input adjacency lists to both functions must be between 0 and \inlinecode{MAXN - 1}, inclusive. In addition, \inlinecode{euler\_cycle\_undirected()} requires that for every node $v$ which is found in \inlinecode{adj[u]}, node $u$ must also be found in \inlinecode{adj[v]}.
@@ -346,113 +721,8 @@ int main() {
 Eulerian cycle from 0 (directed): 0 1 3 4 1 2 0
 Eulerian cycle from 2 (undirected): 2 1 3 4 1 0 2
 \end{exampleoutput}
-\subsection{Unweighted Tree Centers (DFS)}
-An unweighted tree possesses a center, centroid, and diameter. The following functions apply to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}. Nodes in \inlinecode{adj[]} must be numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function arguments.
 
-\begin{compactitem}
-  \item \inlinecode{find\_centers()} returns a vector of either one or two tree Jordan centers. The Jordan center of a tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the maximum distance to all other nodes in the tree is minimal.
-  \item \inlinecode{find\_centroid()} returns the node where all of its subtrees have a size less than or equal to $n / 2$, where $n$ is the number of nodes in the tree.
-  \item \inlinecode{diameter()} returns the maximum distance between any two nodes in the tree, using a well-known double depth-first search technique.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes and $m$ is the number of edges.
-
-\textbf{Space Complexity}: $O(n)$ auxiliary stack space for \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes.
-
-\begin{lstlisting}[language=C++]
-#include <utility>
-#include <vector>
-
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
-
-std::vector<int> find_centers(int nodes) {
-  std::vector<int> leaves, degree(nodes);
-  for (int i = 0; i < nodes; i++) {
-    degree[i] = adj[i].size();
-    if (degree[i] <= 1) {
-      leaves.push_back(i);
-    }
-  }
-  int removed = leaves.size();
-  while (removed < nodes) {
-    std::vector<int> nleaves;
-    for (int i = 0; i < (int)leaves.size(); i++) {
-      int u = leaves[i];
-      for (int j = 0; j < (int)adj[u].size(); j++) {
-        int v = adj[u][j];
-        if (--degree[v] == 1) {
-          nleaves.push_back(v);
-        }
-      }
-    }
-    leaves = nleaves;
-    removed += leaves.size();
-  }
-  return leaves;
-}
-
-int find_centroid(int nodes, int u = 0, int p = -1) {
-  int count = 1;
-  bool good_center = true;
-  for (int j = 0; j < (int)adj[u].size(); j++) {
-    int v = adj[u][j];
-    if (v == p) {
-      continue;
-    }
-    int res = find_centroid(nodes, v, u);
-    if (res >= 0) {
-      return res;
-    }
-    int size = -res;
-    good_center &= (size <= nodes / 2);
-    count += size;
-  }
-  good_center &= (nodes - count <= nodes / 2);
-  return good_center ? u : -count;
-}
-
-std::pair<int, int> dfs(int u, int p, int depth) {
-  std::pair<int, int> res = std::make_pair(depth, u);
-  for (int j = 0; j < (int)adj[u].size(); j++) {
-    if (adj[u][j] != p) {
-      res = max(res, dfs(adj[u][j], u, depth + 1));
-    }
-  }
-  return res;
-}
-
-int diameter() {
-  int furthest_node = dfs(0, -1, 0).second;
-  return dfs(furthest_node, -1, 0).first;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  int nodes = 6;
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(2);
-  adj[2].push_back(1);
-  adj[1].push_back(4);
-  adj[4].push_back(1);
-  adj[3].push_back(4);
-  adj[4].push_back(3);
-  adj[4].push_back(5);
-  adj[5].push_back(4);
-  vector<int> centers = find_centers(nodes);
-  assert(centers.size() == 2 && centers[0] == 1 && centers[1] == 4);
-  assert(find_centroid(nodes) == 4);
-  assert(diameter() == 3);
-  return 0;
-}
-\end{lstlisting}
-
-\section{Shortest Path}
+\section{BFS and Shortest Path}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Shortest Path (BFS)}
@@ -537,6 +807,76 @@ int main() {
 The shortest distance from 0 to 3 is 2.
 Take the path: 0->1->3.
 \end{exampleoutput}
+\subsection{Shortest Path (0-1 BFS)}
+Given a starting node in a weighted graph whose edge weights are only 0 or 1, compute the shortest distance to every reachable node. \inlinecode{zero\_one\_bfs()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} where each edge is stored as \inlinecode{(neighbor, weight)}.
+
+This is a specialized version of Dijkstra's algorithm. Because every relaxation changes the distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push weight-0 relaxations to the front and weight-1 relaxations to the back.
+
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{zero\_one\_bfs()}, where $n$ is the number of nodes and $m$ is the number of edges.
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n)$ auxiliary deque space for \inlinecode{zero\_one\_bfs()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <deque>
+#include <utility>
+#include <vector>
+
+const int MAXN = 100, INF = 0x3f3f3f3f;
+std::vector<std::pair<int, int> > adj[MAXN];
+int dist[MAXN], pred[MAXN];
+
+void zero_one_bfs(int nodes, int start) {
+  std::fill(dist, dist + nodes, INF);
+  std::fill(pred, pred + nodes, -1);
+  std::deque<int> dq;
+  dist[start] = 0;
+  dq.push_front(start);
+  while (!dq.empty()) {
+    int u = dq.front();
+    dq.pop_front();
+    for (int i = 0; i < (int)adj[u].size(); i++) {
+      int v = adj[u][i].first;
+      int w = adj[u][i].second;
+      if (dist[v] > dist[u] + w) {
+        dist[v] = dist[u] + w;
+        pred[v] = u;
+        if (w == 0) {
+          dq.push_front(v);
+        } else {
+          dq.push_back(v);
+        }
+      }
+    }
+  }
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+void add_edge(int u, int v, int w) {
+  adj[u].push_back(make_pair(v, w));
+}
+
+int main() {
+  add_edge(0, 1, 1);
+  add_edge(0, 2, 0);
+  add_edge(2, 1, 0);
+  add_edge(1, 3, 1);
+  add_edge(2, 3, 1);
+  zero_one_bfs(4, 0);
+  assert(dist[1] == 0);
+  assert(dist[3] == 1);
+  assert(pred[1] == 2);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Shortest Path (Dijkstra)}
 Given a starting node in a weighted, directed graph with nonnegative weights only, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred[]}. \inlinecode{dijkstra()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
@@ -703,6 +1043,84 @@ int main() {
 The shortest distance from 0 to 2 is 3.
 Take the path: 0->1->2.
 \end{exampleoutput}
+\subsection{Shortest Path (SPFA)}
+Given a starting node in a weighted directed graph, compute shortest paths even when some edge weights are negative. \inlinecode{spfa()} applies to a global, pre-populated adjacency list \inlinecode{adj[]}, where each edge is stored as \inlinecode{(neighbor, weight)}.
+
+The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford. It is often fast on benign inputs, but it still has Bellman-Ford's worst-case behavior and can be forced to run in $O(n \cdot m)$. Prefer Dijkstra for nonnegative weights, and use SPFA mainly when negative edges are present and the input is not adversarial.
+
+\inlinecode{spfa()} returns \inlinecode{false} if it detects a reachable negative cycle, and returns \inlinecode{true} otherwise.
+
+\textbf{Time Complexity}: $O(n \cdot m)$ in the worst case for \inlinecode{spfa()}, where $n$ is the number of nodes and $m$ is the number of edges.
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
+  \item $O(n)$ auxiliary queue space for \inlinecode{spfa()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <queue>
+#include <utility>
+#include <vector>
+
+const int MAXN = 100, INF = 0x3f3f3f3f;
+std::vector<std::pair<int, int> > adj[MAXN];
+int dist[MAXN], pred[MAXN], relax_count[MAXN];
+bool in_queue[MAXN];
+
+bool spfa(int nodes, int start) {
+  std::fill(dist, dist + nodes, INF);
+  std::fill(pred, pred + nodes, -1);
+  std::fill(relax_count, relax_count + nodes, 0);
+  std::fill(in_queue, in_queue + nodes, false);
+  std::queue<int> q;
+  dist[start] = 0;
+  q.push(start);
+  in_queue[start] = true;
+  while (!q.empty()) {
+    int u = q.front();
+    q.pop();
+    in_queue[u] = false;
+    for (int i = 0; i < (int)adj[u].size(); i++) {
+      int v = adj[u][i].first;
+      int w = adj[u][i].second;
+      if (dist[u] != INF && dist[v] > dist[u] + w) {
+        dist[v] = dist[u] + w;
+        pred[v] = u;
+        if (!in_queue[v]) {
+          q.push(v);
+          in_queue[v] = true;
+          if (++relax_count[v] >= nodes) {
+            return false;
+          }
+        }
+      }
+    }
+  }
+  return true;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+void add_edge(int u, int v, int w) {
+  adj[u].push_back(make_pair(v, w));
+}
+
+int main() {
+  add_edge(0, 1, 4);
+  add_edge(0, 2, 5);
+  add_edge(1, 2, -2);
+  add_edge(2, 3, 3);
+  assert(spfa(4, 0));
+  assert(dist[3] == 5);
+  assert(pred[2] == 1);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Shortest Path (Floyd-Warshall)}
 Given a weighted, directed graph with possibly negative weights, determine the minimum distance between all pairs of start and destination nodes in the graph. Optionally, output the shortest path between two nodes using the shortest-path tree precomputed into the \inlinecode{parent[][]} array. \inlinecode{floyd\_warshall()} applies to a global adjacency matrix \inlinecode{dist[][]}, which must be initialized using \inlinecode{initialize()} and subsequently populated with weights. After the function call, \inlinecode{dist[u][v]} will have been modified to contain the shortest path from $u$ to $v$, for all pairs of valid nodes $u$ and $v$.
 
@@ -1154,8 +1572,285 @@ Adjacency List for Bridge-Block Forest:
 4 => 3
 5 =>
 \end{exampleoutput}
+\subsection{Bridge Finding (Online)}
+Maintain the number of bridges in an undirected graph while edges are inserted one at a time. The graph starts with isolated nodes. After each call to \inlinecode{add\_edge()}, \inlinecode{bridges} stores the current number of bridges.
 
-\section{Minimum Spanning Tree}
+This data structure maintains two disjoint-set forests:
+
+\begin{compactitem}
+  \item \inlinecode{dsu\_2ecc[]} tracks the current $2$-edge-connected components.
+  \item \inlinecode{dsu\_cc[]} tracks the ordinary connected components.
+\end{compactitem}
+
+When an inserted edge joins two different connected components, it creates a new bridge. When it joins two nodes already in the same connected component, it creates a cycle and every bridge on the path between the two endpoints stops being a bridge.
+
+\textbf{Time Complexity}: $O(\log n)$ amortized per call to \inlinecode{add\_edge()} in this implementation, where $n$ is the number of nodes.
+
+\textbf{Space Complexity}: $O(n)$ for the disjoint-set arrays and auxiliary parent links.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <vector>
+
+struct online_bridges {
+  std::vector<int> dsu_2ecc, dsu_cc, dsu_cc_size, parent, last_visit;
+  int lca_iteration, bridges;
+
+  online_bridges(int nodes = 0) { init(nodes); }
+
+  void init(int nodes) {
+    dsu_2ecc.resize(nodes);
+    dsu_cc.resize(nodes);
+    dsu_cc_size.assign(nodes, 1);
+    parent.assign(nodes, -1);
+    last_visit.assign(nodes, 0);
+    lca_iteration = 0;
+    bridges = 0;
+    for (int i = 0; i < nodes; i++) {
+      dsu_2ecc[i] = dsu_cc[i] = i;
+    }
+  }
+
+  int find_2ecc(int v) {
+    if (v == -1) {
+      return -1;
+    }
+    if (dsu_2ecc[v] == v) {
+      return v;
+    }
+    return dsu_2ecc[v] = find_2ecc(dsu_2ecc[v]);
+  }
+
+  int find_cc(int v) {
+    v = find_2ecc(v);
+    if (dsu_cc[v] == v) {
+      return v;
+    }
+    return dsu_cc[v] = find_cc(dsu_cc[v]);
+  }
+
+  void make_root(int v) {
+    v = find_2ecc(v);
+    int root = v, child = -1;
+    while (v != -1) {
+      int p = find_2ecc(parent[v]);
+      parent[v] = child;
+      dsu_cc[v] = root;
+      child = v;
+      v = p;
+    }
+    dsu_cc_size[root] = dsu_cc_size[child];
+  }
+
+  void merge_path(int a, int b) {
+    lca_iteration++;
+    std::vector<int> path_a, path_b;
+    int lca = -1;
+    while (lca == -1) {
+      if (a != -1) {
+        a = find_2ecc(a);
+        path_a.push_back(a);
+        if (last_visit[a] == lca_iteration) {
+          lca = a;
+          break;
+        }
+        last_visit[a] = lca_iteration;
+        a = parent[a];
+      }
+      if (b != -1) {
+        b = find_2ecc(b);
+        path_b.push_back(b);
+        if (last_visit[b] == lca_iteration) {
+          lca = b;
+          break;
+        }
+        last_visit[b] = lca_iteration;
+        b = parent[b];
+      }
+    }
+    for (int i = 0; i < (int)path_a.size(); i++) {
+      dsu_2ecc[path_a[i]] = lca;
+      if (path_a[i] == lca) {
+        break;
+      }
+      bridges--;
+    }
+    for (int i = 0; i < (int)path_b.size(); i++) {
+      dsu_2ecc[path_b[i]] = lca;
+      if (path_b[i] == lca) {
+        break;
+      }
+      bridges--;
+    }
+  }
+
+  void add_edge(int a, int b) {
+    a = find_2ecc(a);
+    b = find_2ecc(b);
+    if (a == b) {
+      return;
+    }
+    int ca = find_cc(a), cb = find_cc(b);
+    if (ca != cb) {
+      bridges++;
+      if (dsu_cc_size[ca] > dsu_cc_size[cb]) {
+        std::swap(a, b);
+        std::swap(ca, cb);
+      }
+      make_root(a);
+      parent[a] = b;
+      dsu_cc[a] = b;
+      dsu_cc_size[cb] += dsu_cc_size[a];
+    } else {
+      merge_path(a, b);
+    }
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  online_bridges graph(4);
+  graph.add_edge(0, 1);
+  assert(graph.bridges == 1);
+  graph.add_edge(1, 2);
+  assert(graph.bridges == 2);
+  graph.add_edge(2, 0);
+  assert(graph.bridges == 0);
+  graph.add_edge(2, 3);
+  assert(graph.bridges == 1);
+  return 0;
+}
+\end{lstlisting}
+\subsection{2-SAT}
+Solve a Boolean formula in 2-CNF, where each clause contains at most two literals. A clause like $(a \lor b)$ is represented by the implications $\lnot a \rightarrow b$ and $\lnot b \rightarrow a$. The formula is satisfiable if and only if no variable and its negation belong to the same strongly connected component of the implication graph.
+
+Variables are numbered from $0$ to $n - 1$. A literal is represented by \inlinecode{literal(variable, value)}, where \inlinecode{value == true} means the variable itself and \inlinecode{value == false} means its negation.
+
+\begin{compactitem}
+  \item \inlinecode{add\_or(a, b)} adds the clause $(a \lor b)$.
+  \item \inlinecode{add\_true(a)} forces literal \inlinecode{a} to be true.
+  \item \inlinecode{satisfiable()} returns whether all added clauses can be satisfied and stores one valid assignment in \inlinecode{answer[]}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{satisfiable()}, where $n$ is the number of variables and $m$ is the number of clauses.
+
+\textbf{Space Complexity}: $O(\max\left(n, m\right))$ for the implication graph and DFS stacks.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <vector>
+
+struct two_sat {
+  int variables;
+  std::vector<std::vector<int> > graph, reverse_graph;
+  std::vector<int> order, component, answer;
+
+  two_sat(int n = 0) { init(n); }
+
+  void init(int n) {
+    variables = n;
+    graph.assign(2 * n, std::vector<int>());
+    reverse_graph.assign(2 * n, std::vector<int>());
+    answer.assign(n, false);
+  }
+
+  int literal(int variable, bool value) {
+    return 2 * variable + (value ? 0 : 1);
+  }
+
+  int neg(int x) {
+    return x ^ 1;
+  }
+
+  void add_implication(int a, int b) {
+    graph[a].push_back(b);
+    reverse_graph[b].push_back(a);
+  }
+
+  void add_or(int a, int b) {
+    add_implication(neg(a), b);
+    add_implication(neg(b), a);
+  }
+
+  void add_true(int a) {
+    add_implication(neg(a), a);
+  }
+
+  void add_false(int a) {
+    add_implication(a, neg(a));
+  }
+
+  void dfs_order(int u, std::vector<bool> &visited) {
+    visited[u] = true;
+    for (int i = 0; i < (int)graph[u].size(); i++) {
+      int v = graph[u][i];
+      if (!visited[v]) {
+        dfs_order(v, visited);
+      }
+    }
+    order.push_back(u);
+  }
+
+  void dfs_component(int u, int id) {
+    component[u] = id;
+    for (int i = 0; i < (int)reverse_graph[u].size(); i++) {
+      int v = reverse_graph[u][i];
+      if (component[v] == -1) {
+        dfs_component(v, id);
+      }
+    }
+  }
+
+  bool satisfiable() {
+    order.clear();
+    component.assign(2 * variables, -1);
+    std::vector<bool> visited(2 * variables, false);
+    for (int i = 0; i < 2 * variables; i++) {
+      if (!visited[i]) {
+        dfs_order(i, visited);
+      }
+    }
+    std::reverse(order.begin(), order.end());
+    int id = 0;
+    for (int i = 0; i < (int)order.size(); i++) {
+      if (component[order[i]] == -1) {
+        dfs_component(order[i], id++);
+      }
+    }
+    for (int i = 0; i < variables; i++) {
+      if (component[2 * i] == component[2 * i + 1]) {
+        return false;
+      }
+      answer[i] = component[2 * i] > component[2 * i + 1];
+    }
+    return true;
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  two_sat solver(3);
+  int x0 = solver.literal(0, true);
+  int not_x0 = solver.literal(0, false);
+  int x1 = solver.literal(1, true);
+  int x2 = solver.literal(2, true);
+  solver.add_or(x0, x1);
+  solver.add_or(not_x0, x2);
+  solver.add_true(x0);
+  assert(solver.satisfiable());
+  assert(solver.answer[0]);
+  return 0;
+}
+\end{lstlisting}
+
+\section{Spanning Trees}
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Minimum Spanning Tree (Prim)}
@@ -1327,7 +2022,7 @@ Total distance: 13
 0 <-> 1
 \end{exampleoutput}
 
-\section{Maximum Flow}
+\section{Flow}
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Maximum Flow (Ford-Fulkerson)}
@@ -1668,6 +2363,108 @@ int main() {
   cap[3][5] = 2;
   cap[4][5] = 3;
   assert(push_relabel(6, 0, 5) == 5);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Min-Cost Max-Flow}
+Given a flow network with integer capacities and edge costs, find a minimum-cost flow from a source node to a sink node. Calling \inlinecode{min\_cost\_flow(source, sink, target\_flow)} sends up to \inlinecode{target\_flow} units of flow and returns \inlinecode{(flow, cost)}. If the returned flow is smaller than \inlinecode{target\_flow}, the network cannot carry the requested amount.
+
+This implementation uses shortest augmenting paths with SPFA, so it supports negative edge costs as long as the residual graph has no reachable negative-cost cycle. For dense or adversarial inputs, a potential-based Dijkstra version is usually faster when reduced costs are nonnegative.
+
+\textbf{Time Complexity}: $O(F \cdot n \cdot m)$ per call to \inlinecode{min\_cost\_flow()}, where $F$ is the amount of flow sent, $n$ is the number of nodes, and $m$ is the number of edges.
+
+\textbf{Space Complexity}: $O(\max\left(n, m\right))$ for storage of the residual network and auxiliary arrays.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <queue>
+#include <utility>
+#include <vector>
+
+struct edge {
+  int v, rev, cap, cost;
+  edge(int v_, int rev_, int cap_, int cost_)
+      : v(v_), rev(rev_), cap(cap_), cost(cost_) {}
+};
+
+const int MCMF_INF = 0x3f3f3f3f;
+
+struct min_cost_max_flow {
+  std::vector<std::vector<edge> > adj;
+
+  min_cost_max_flow(int nodes = 0) { init(nodes); }
+
+  void init(int nodes) {
+    adj.assign(nodes, std::vector<edge>());
+  }
+
+  void add_edge(int u, int v, int cap, int cost) {
+    adj[u].push_back(edge(v, (int)adj[v].size(), cap, cost));
+    adj[v].push_back(edge(u, (int)adj[u].size() - 1, 0, -cost));
+  }
+
+  std::pair<int, int> min_cost_flow(int source, int sink, int target_flow) {
+    int nodes = adj.size(), flow = 0, cost = 0;
+    std::vector<int> dist(nodes), parent_node(nodes), parent_edge(nodes);
+    std::vector<bool> in_queue(nodes);
+    while (flow < target_flow) {
+      std::fill(dist.begin(), dist.end(), MCMF_INF);
+      std::fill(in_queue.begin(), in_queue.end(), false);
+      std::queue<int> q;
+      dist[source] = 0;
+      q.push(source);
+      in_queue[source] = true;
+      while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        in_queue[u] = false;
+        for (int i = 0; i < (int)adj[u].size(); i++) {
+          edge &e = adj[u][i];
+          if (e.cap > 0 && dist[e.v] > dist[u] + e.cost) {
+            dist[e.v] = dist[u] + e.cost;
+            parent_node[e.v] = u;
+            parent_edge[e.v] = i;
+            if (!in_queue[e.v]) {
+              q.push(e.v);
+              in_queue[e.v] = true;
+            }
+          }
+        }
+      }
+      if (dist[sink] == MCMF_INF) {
+        break;
+      }
+      int aug = target_flow - flow;
+      for (int v = sink; v != source; v = parent_node[v]) {
+        aug = std::min(aug, adj[parent_node[v]][parent_edge[v]].cap);
+      }
+      for (int v = sink; v != source; v = parent_node[v]) {
+        edge &e = adj[parent_node[v]][parent_edge[v]];
+        e.cap -= aug;
+        adj[v][e.rev].cap += aug;
+        cost += aug * e.cost;
+      }
+      flow += aug;
+    }
+    return std::make_pair(flow, cost);
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  min_cost_max_flow graph(4);
+  graph.add_edge(0, 1, 2, 1);
+  graph.add_edge(0, 2, 1, 5);
+  graph.add_edge(1, 2, 1, 1);
+  graph.add_edge(1, 3, 1, 3);
+  graph.add_edge(2, 3, 2, 1);
+  pair<int, int> result = graph.min_cost_flow(0, 3, 3);
+  assert(result.first == 3);
+  assert(result.second == 13);
   return 0;
 }
 \end{lstlisting}
