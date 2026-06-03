@@ -698,10 +698,217 @@ int main () {
 \begin{exampleoutput}
 2 3 3 4 5 6 6 7 9
 \end{exampleoutput}
+\subsection{Dutch National Flag}
+Partitions a range into three consecutive groups according to a pivot value: elements less than the pivot, elements equal to the pivot, and elements greater than the pivot. This is the Dutch National Flag algorithm, and is the core partitioning step used in three-way quicksort and arrays with many duplicate keys.
 
-\section{Array Queries}
+\begin{compactitem}
+  \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges the range \inlinecode{[lo, hi)} in-place and returns iterators \inlinecode{(mid\_lo, mid\_hi)}, where \inlinecode{[lo, mid\_lo)} is less than \inlinecode{pivot}, \inlinecode{[mid\_lo, mid\_hi)} is equal to \inlinecode{pivot}, and \inlinecode{[mid\_hi, hi)} is greater than \inlinecode{pivot}.
+  \item \inlinecode{sort\_012(lo, hi)} sorts a range whose values are all \inlinecode{0}, \inlinecode{1}, or \inlinecode{2}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <utility>
+
+template<class It, class T>
+std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
+  It lt = lo, i = lo, gt = hi;
+  while (i != gt) {
+    if (*i < pivot) {
+      std::iter_swap(lt++, i++);
+    } else if (pivot < *i) {
+      std::iter_swap(i, --gt);
+    } else {
+      ++i;
+    }
+  }
+  return std::make_pair(lt, gt);
+}
+
+template<class It>
+void sort_012(It lo, It hi) {
+  partition_three_way(lo, hi, 1);
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+int main() {
+  int raw[] = {2, 0, 1, 2, 1, 0, 1};
+  vector<int> a(raw, raw + 7);
+  sort_012(a.begin(), a.end());
+  for (int i = 0; i < 7; i++) {
+    assert(a[i] == (i < 2 ? 0 : i < 5 ? 1 : 2));
+  }
+
+  int b_raw[] = {4, 2, 5, 3, 3, 1};
+  vector<int> b(b_raw, b_raw + 6);
+  pair<vector<int>::iterator, vector<int>::iterator> mid =
+      partition_three_way(b.begin(), b.end(), 3);
+  for (vector<int>::iterator it = b.begin(); it != mid.first; ++it) {
+    assert(*it < 3);
+  }
+  for (vector<int>::iterator it = mid.first; it != mid.second; ++it) {
+    assert(*it == 3);
+  }
+  for (vector<int>::iterator it = mid.second; it != b.end(); ++it) {
+    assert(*it > 3);
+  }
+  return 0;
+}
+\end{lstlisting}
+
+\section{Arrays and Dynamic Programming}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
+\subsection{Prefix Sums}
+Precomputes prefix sums so range-sum queries can be answered in constant time. This is one of the most common array preprocessing tools, and also appears as a building block for subarray sums, difference arrays, and two-dimensional grids.
+
+\begin{compactitem}
+  \item \inlinecode{prefix\_sums(a)} returns array \inlinecode{pref} with \inlinecode{pref[0] = 0} and \inlinecode{pref[i + 1] = a[0] + ... + a[i]}.
+  \item \inlinecode{range\_sum(pref, l, r)} returns the sum of the half-open range \inlinecode{[l, r)}.
+  \item \inlinecode{prefix\_sums\_2d(a)} returns a two-dimensional prefix sum table for matrix \inlinecode{a}.
+  \item \inlinecode{rectangle\_sum(pref, r1, c1, r2, c2)} returns the sum of rows \inlinecode{[r1, r2)} and columns \inlinecode{[c1, c2)}.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{prefix\_sums(a)}, where $n$ is the array size.
+  \item $O(RC)$ per call to \inlinecode{prefix\_sums\_2d(a)}, where $R$ and $C$ are matrix dimensions.
+  \item $O(1)$ per range or rectangle query.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for one-dimensional prefix sums.
+  \item $O(RC)$ for two-dimensional prefix sums.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+std::vector<long long> prefix_sums(const std::vector<int> &a) {
+  std::vector<long long> pref(a.size() + 1, 0);
+  for (int i = 0; i < (int)a.size(); i++) {
+    pref[i + 1] = pref[i] + a[i];
+  }
+  return pref;
+}
+
+long long range_sum(const std::vector<long long> &pref, int l, int r) {
+  return pref[r] - pref[l];
+}
+
+std::vector<std::vector<long long> >
+prefix_sums_2d(const std::vector<std::vector<int> > &a) {
+  int rows = a.size(), cols = rows == 0 ? 0 : a[0].size();
+  std::vector<std::vector<long long> > pref(
+      rows + 1, std::vector<long long>(cols + 1, 0));
+  for (int r = 0; r < rows; r++) {
+    for (int c = 0; c < cols; c++) {
+      pref[r + 1][c + 1] = a[r][c] + pref[r][c + 1] + pref[r + 1][c] -
+                           pref[r][c];
+    }
+  }
+  return pref;
+}
+
+long long rectangle_sum(const std::vector<std::vector<long long> > &pref,
+                        int r1, int c1, int r2, int c2) {
+  return pref[r2][c2] - pref[r1][c2] - pref[r2][c1] + pref[r1][c1];
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  int raw[] = {3, -1, 4, 1, 5};
+  vector<int> a(raw, raw + 5);
+  vector<long long> pref = prefix_sums(a);
+  assert(range_sum(pref, 0, 5) == 12);
+  assert(range_sum(pref, 1, 4) == 4);
+
+  vector<vector<int> > grid(2, vector<int>(3));
+  grid[0][0] = 1;
+  grid[0][1] = 2;
+  grid[0][2] = 3;
+  grid[1][0] = 4;
+  grid[1][1] = 5;
+  grid[1][2] = 6;
+  vector<vector<long long> > ps = prefix_sums_2d(grid);
+  assert(rectangle_sum(ps, 0, 1, 2, 3) == 16);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Difference Array}
+Applies many range-add updates to an array in linear total time using a difference array. Instead of immediately adding \inlinecode{delta} to every element of \inlinecode{[l, r)}, add \inlinecode{delta} at \inlinecode{diff[l]} and subtract it at \inlinecode{diff[r]}; a final prefix sum reconstructs the updated values.
+
+\begin{compactitem}
+  \item \inlinecode{difference\_array(n)} constructs an initially zero array of size \inlinecode{n}.
+  \item \inlinecode{add(l, r, delta)} adds \inlinecode{delta} to every position in the half-open range \inlinecode{[l, r)}.
+  \item \inlinecode{build()} returns the final array after all range updates.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to \inlinecode{add(l, r, delta)}.
+  \item $O(n)$ per call to \inlinecode{build()}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n)$ for the difference array.
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+class difference_array {
+  std::vector<long long> diff;
+
+ public:
+  explicit difference_array(int n) : diff(n + 1, 0) {}
+
+  void add(int l, int r, long long delta) {
+    diff[l] += delta;
+    diff[r] -= delta;
+  }
+
+  std::vector<long long> build() const {
+    std::vector<long long> res(diff.size() - 1);
+    long long cur = 0;
+    for (int i = 0; i < (int)res.size(); i++) {
+      cur += diff[i];
+      res[i] = cur;
+    }
+    return res;
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  difference_array d(5);
+  d.add(0, 3, 2);
+  d.add(1, 5, 4);
+  d.add(2, 4, -1);
+  vector<long long> a = d.build();
+  long long expected[] = {2, 6, 5, 3, 4};
+  for (int i = 0; i < 5; i++) {
+    assert(a[i] == expected[i]);
+  }
+  return 0;
+}
+\end{lstlisting}
 \subsection{Longest Increasing Subsequence}
 Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)}, determine a longest subsequence of the range such that all of its elements are in strictly ascending order. This implementation requires \inlinecode{operator \textless{}} to be defined on the iterator's value type. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed using binary search and dynamic programming.
 
@@ -766,12 +973,540 @@ int main () {
 \begin{exampleoutput}
 -5 1 9 10 11 13
 \end{exampleoutput}
-\subsection{Maximal Subarray Sum (Kadane)}
-Given an array of numbers (at least one of which must be positive), determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans through the array, at each index computing the maximum positive sum subarray ending there. Either this subarray is empty (in which case its sum is zero) or it consists of one more element than the maximum sequence ending at the previous position. This can be adapted to compute the maximal submatrix sum as well.
+\subsection{Subset Sum (Meet-in-the-Middle)}
+Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of integers, return the minimum sum of any subset of the range that is greater than or equal to a given integer \inlinecode{v}. This is a generalization of the NP-complete subset sum problem, which asks whether a subset summing to 0 exists (equivalent in this case to checking if $v = 0$ yields an answer of 0). This implementation uses a meet-in-the-middle algorithm to precompute and search for a lower bound. Note that 64-bit integers are used in intermediate calculations to avoid overflow.
+
+\textbf{Time Complexity}: $O(n \cdot 2^{n/2})$ per call to \inlinecode{sum\_lower\_bound()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space, where $n$ is the number of array elements.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <limits>
+#include <vector>
+
+template<class It>
+long long sum_lower_bound(It lo, It hi, long long v) {
+  int n = hi - lo, llen = 1 << (n/2), hlen = 1 << (n - n/2);
+  std::vector<long long> lsum(llen), hsum(hlen);
+  for (int mask = 0; mask < llen; mask++) {
+    for (int i = 0; i < n/2; i++) {
+      if ((mask >> i) & 1) {
+        lsum[mask] += *(lo + i);
+      }
+    }
+  }
+  for (int mask = 0; mask < hlen; mask++) {
+    for (int i = 0; i < (n - n/2); i++) {
+      if ((mask >> i) & 1) {
+        hsum[mask] += *(lo + i + n/2);
+      }
+    }
+  }
+  std::sort(lsum.begin(), lsum.end());
+  std::sort(hsum.begin(), hsum.end());
+  int l = 0, h = hlen - 1;
+  long long curr = std::numeric_limits<long long>::min();
+  while (l < llen && h >= 0) {
+    if (lsum[l] + hsum[h] <= v) {
+      curr = std::max(curr, lsum[l] + hsum[h]);
+      l++;
+    } else {
+      h--;
+    }
+  }
+  return curr;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  int a[] = {9, 1, 5, 0, 1, 11, 5};
+  assert(sum_lower_bound(a, a + 7, 8) == 7);
+  int b[] = {-7, -3, -2, 5, 8};
+  assert(sum_lower_bound(b, b + 5, 0) == 0);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Knapsack (0-1)}
+Solves the 0/1 knapsack problem: given items with nonnegative integer weights and values, choose each item at most once to maximize total value without exceeding a capacity limit.
+
+The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best value that can be achieved with total weight at most \inlinecode{w} after processing some prefix of the items. Iterating weights in decreasing order is what enforces the 0/1 constraint; it prevents the same item from being reused during the current item update.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subarray\_sum(lo, hi, \&res\_lo, \&res\_hi)} returns the maximal subarray sum for the range  \inlinecode{[lo, hi)}, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, two \inlinecode{int} pointers may be passed to store the inclusive boundary indices \inlinecode{[res\_lo, res\_hi]} of the resulting subarray. By convention, an input range consisting of only negative values will yield a size 1 subarray consisting of the maximum value.
-  \item \inlinecode{max\_submatrix\_sum(matrix, \&r1, \&c1, \&r2, \&c2)} returns the largest sum of any rectangular submatrix for a matrix of $n$ rows by $m$ columns. The matrix should be given as a 2-dimensional vector, where the outer vector must contain $n$ vectors each of size $m$. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, four \inlinecode{int} pointers may be passed to store the boundary indices of the resulting subarray, with \inlinecode{(r1, c1)} specifiying the top-left index and \inlinecode{(r2, c2)} specifying the bottom-right index. By convention, an input matrix consisting of only negative values will yield a size 1 submatrix consisting of the maximum value.
+  \item \inlinecode{knapsack\_01(weight, value, capacity)} returns the maximum value achievable with total weight at most \inlinecode{capacity}.
+  \item \inlinecode{weight[i]} and \inlinecode{value[i]} are the weight and value of item \inlinecode{i}.
+  \item All weights must be nonnegative integers. Items with weight \inlinecode{0} are allowed and can each be taken once.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(nW)$, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
+
+\textbf{Space Complexity}: $O(W)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <vector>
+
+long long knapsack_01(const std::vector<int> &weight,
+                      const std::vector<long long> &value, int capacity) {
+  int n = weight.size();
+  std::vector<long long> dp(capacity + 1, 0);
+  for (int i = 0; i < n; i++) {
+    for (int w = capacity; w >= weight[i]; w--) {
+      dp[w] = std::max(dp[w], dp[w - weight[i]] + value[i]);
+    }
+  }
+  return dp[capacity];
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  int w_raw[] = {3, 4, 5, 9};
+  long long v_raw[] = {4, 5, 7, 10};
+  vector<int> weight(w_raw, w_raw + 4);
+  vector<long long> value(v_raw, v_raw + 4);
+
+  assert(knapsack_01(weight, value, 8) == 11);   // Items of weight 3 and 5.
+  assert(knapsack_01(weight, value, 10) == 12);  // Items of weight 4 and 5.
+  return 0;
+}
+\end{lstlisting}
+\subsection{Knapsack (Unbounded and Coin Change)}
+Solves two common unbounded knapsack variants, where each item may be used any number of times. In the maximum-value version, each item has a weight and value, and the goal is to maximize total value subject to a capacity limit. In the coin change version, each coin denomination may be used any number of times, and the goal is to count unordered ways to form a target sum.
+
+For unbounded maximum-value knapsack, weights are iterated in increasing order so the current item may be reused. For unordered coin change, coins are the outer loop so each multiset of coins is counted once, independent of ordering.
+
+\begin{compactitem}
+  \item \inlinecode{unbounded\_knapsack(weight, value, capacity)} returns the maximum value achievable with total weight at most \inlinecode{capacity}.
+  \item \inlinecode{count\_coin\_change(coins, target)} returns the number of unordered ways to make sum \inlinecode{target} using the given coin denominations.
+  \item All capacities must be nonnegative integers. Weights and coin denominations should be positive to avoid infinitely many uses of a zero-weight item.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(nW)$ for \inlinecode{unbounded\_knapsack(weight, value, capacity)}, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
+  \item $O(ct)$ for \inlinecode{count\_coin\_change(coins, target)}, where $c$ is the number of coin denominations and $t$ is \inlinecode{target}.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(W)$ auxiliary heap space for \inlinecode{unbounded\_knapsack(weight, value, capacity)}.
+  \item $O(t)$ auxiliary heap space for \inlinecode{count\_coin\_change(coins, target)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <vector>
+
+long long unbounded_knapsack(const std::vector<int> &weight,
+                             const std::vector<long long> &value,
+                             int capacity) {
+  int n = weight.size();
+  std::vector<long long> dp(capacity + 1, 0);
+  for (int i = 0; i < n; i++) {
+    for (int w = weight[i]; w <= capacity; w++) {
+      dp[w] = std::max(dp[w], dp[w - weight[i]] + value[i]);
+    }
+  }
+  return dp[capacity];
+}
+
+long long count_coin_change(const std::vector<int> &coins, int target) {
+  std::vector<long long> dp(target + 1, 0);
+  dp[0] = 1;
+  for (int i = 0; i < (int)coins.size(); i++) {
+    for (int sum = coins[i]; sum <= target; sum++) {
+      dp[sum] += dp[sum - coins[i]];
+    }
+  }
+  return dp[target];
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  int w_raw[] = {3, 4, 5};
+  long long v_raw[] = {4, 5, 7};
+  vector<int> weight(w_raw, w_raw + 3);
+  vector<long long> value(v_raw, v_raw + 3);
+  assert(unbounded_knapsack(weight, value, 10) == 14);  // Two weight-5 items.
+
+  int c_raw[] = {1, 2, 5};
+  vector<int> coins(c_raw, c_raw + 3);
+  assert(count_coin_change(coins, 5) == 4);  // 5, 2+2+1, 2+1+1+1, 1*5.
+  return 0;
+}
+\end{lstlisting}
+\subsection{Maximal Zero Submatrix}
+Given a rectangular matrix with $n$ rows and $m$ columns consisting of only 0's and 1's as a two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of only 0's. This solution uses a reduction to the problem of finding the maximum rectangular area under a histogram, which is efficiently solved using a stack algorithm.
+
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{max\_zero\_submatrix()}, where $n$ is the number of rows and $m$ is the number of columns in the matrix.
+
+\textbf{Space Complexity}: $O(m)$ auxiliary heap space, where $m$ is the number of columns in the matrix.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <stack>
+#include <vector>
+
+int max_zero_submatrix(const std::vector<std::vector<bool> > &matrix) {
+  if (matrix.empty()) {
+    return 0;
+  }
+  int n = matrix.size(), m = matrix[0].size(), res = 0;
+  std::vector<int> d(m, -1), d1(m), d2(m);
+  for (int r = 0; r < n; r++) {
+    for (int c = 0; c < m; c++) {
+      if (matrix[r][c]) {
+        d[c] = r;
+      }
+    }
+    std::stack<int> s;
+    for (int c = 0; c < m; c++) {
+      while (!s.empty() && d[s.top()] <= d[c]) {
+        s.pop();
+      }
+      d1[c] = s.empty() ? -1 : s.top();
+      s.push(c);
+    }
+    while (!s.empty()) {
+      s.pop();
+    }
+    for (int c = m - 1; c >= 0; c--) {
+      while (!s.empty() && d[s.top()] <= d[c]) {
+        s.pop();
+      }
+      d2[c] = s.empty() ? m : s.top();
+      s.push(c);
+    }
+    for (int j = 0; j < m; j++) {
+      res = std::max(res, (r - d[j])*(d2[j] - d1[j] - 1));
+    }
+  }
+  return res;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  const int n = 5, m = 6;
+  bool a[n][m] = {{1, 0, 1, 1, 0, 0},
+                  {1, 0, 0, 1, 0, 0},
+                  {0, 0, 0, 0, 0, 1},
+                  {1, 0, 0, 1, 0, 0},
+                  {1, 0, 1, 0, 0, 1}};
+  vector<vector<bool> > matrix(n);
+  for (int i = 0; i < n; i++) {
+    matrix[i] = vector<bool>(a[i], a[i] + m);
+  }
+  assert(max_zero_submatrix(matrix) == 6);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Minimum Excluded Value (MEX)}
+Computes the minimum excluded nonnegative integer, commonly called the MEX. The MEX of a set is the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states.
+
+\begin{compactitem}
+  \item \inlinecode{mex(lo, hi)} returns the MEX of the values in \inlinecode{[lo, hi)}.
+  \item \inlinecode{dynamic\_mex(n)} maintains counts of values in \inlinecode{[0, n]}, enough to track the MEX of a multiset of at most \inlinecode{n} relevant nonnegative values.
+  \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if \inlinecode{0 \textless{}= x \textless{}= n}.
+  \item \inlinecode{remove(x)} removes one copy of value \inlinecode{x} if present.
+  \item \inlinecode{get()} returns the current MEX.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{mex(lo, hi)}, where $n$ is the number of values.
+  \item $O(\log n)$ per call to \inlinecode{add(x)}, \inlinecode{remove(x)}, and \inlinecode{get()} for \inlinecode{dynamic\_mex}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for both approaches.
+
+\begin{lstlisting}[language=C++]
+#include <set>
+#include <vector>
+
+template<class It>
+int mex(It lo, It hi) {
+  int n = hi - lo;
+  std::vector<bool> seen(n + 1, false);
+  for (It it = lo; it != hi; ++it) {
+    if (0 <= *it && *it <= n) {
+      seen[*it] = true;
+    }
+  }
+  for (int x = 0; x <= n; x++) {
+    if (!seen[x]) {
+      return x;
+    }
+  }
+  return n + 1;
+}
+
+class dynamic_mex {
+  std::vector<int> count;
+  std::set<int> missing;
+
+ public:
+  explicit dynamic_mex(int n) : count(n + 1, 0) {
+    for (int x = 0; x <= n; x++) {
+      missing.insert(x);
+    }
+  }
+
+  void add(int x) {
+    if (0 <= x && x < (int)count.size() && count[x]++ == 0) {
+      missing.erase(x);
+    }
+  }
+
+  void remove(int x) {
+    if (0 <= x && x < (int)count.size() && count[x] > 0 && --count[x] == 0) {
+      missing.insert(x);
+    }
+  }
+
+  int get() const {
+    return *missing.begin();
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  int raw[] = {0, 1, 4, 2, 1};
+  assert(mex(raw, raw + 5) == 3);
+
+  dynamic_mex m(5);
+  m.add(0);
+  m.add(1);
+  m.add(3);
+  assert(m.get() == 2);
+  m.add(2);
+  assert(m.get() == 4);
+  m.remove(1);
+  assert(m.get() == 1);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Two Pointers and Sliding Window}
+Uses two moving indices to process subarrays in linear time. This technique is most useful when expanding the right endpoint of a window monotonically and shrinking the left endpoint monotonically preserves enough state to test a condition or update an answer.
+
+The examples below cover two common patterns: finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most \inlinecode{k} distinct values.
+
+\begin{compactitem}
+  \item \inlinecode{min\_length\_at\_least(a, target)} returns the minimum length of a contiguous subarray with sum at least \inlinecode{target}, or \inlinecode{-1} if none exists. Values in \inlinecode{a} must be nonnegative.
+  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns the maximum length of a contiguous subarray containing at most \inlinecode{k} distinct values.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the array size.
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{min\_length\_at\_least(a, target)}.
+  \item $O(k)$ auxiliary heap space for \inlinecode{longest\_at\_most\_k\_distinct(a, k)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <map>
+#include <vector>
+
+int min_length_at_least(const std::vector<int> &a, long long target) {
+  int best = (int)a.size() + 1;
+  long long sum = 0;
+  for (int l = 0, r = 0; r < (int)a.size(); r++) {
+    sum += a[r];
+    while (sum >= target) {
+      best = std::min(best, r - l + 1);
+      sum -= a[l++];
+    }
+  }
+  return best == (int)a.size() + 1 ? -1 : best;
+}
+
+int longest_at_most_k_distinct(const std::vector<int> &a, int k) {
+  std::map<int, int> count;
+  int best = 0;
+  for (int l = 0, r = 0; r < (int)a.size(); r++) {
+    count[a[r]]++;
+    while ((int)count.size() > k) {
+      if (--count[a[l]] == 0) {
+        count.erase(a[l]);
+      }
+      l++;
+    }
+    best = std::max(best, r - l + 1);
+  }
+  return best;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  int raw[] = {2, 3, 1, 2, 4, 3};
+  vector<int> a(raw, raw + 6);
+  assert(min_length_at_least(a, 7) == 2);  // [4, 3].
+
+  int b_raw[] = {1, 2, 1, 3, 4, 3, 5};
+  vector<int> b(b_raw, b_raw + 7);
+  assert(longest_at_most_k_distinct(b, 2) == 3);  // [1, 2, 1].
+  return 0;
+}
+\end{lstlisting}
+
+\section{Streaming and Randomized Algorithms}
+\setcounter{section}{3}
+\setcounter{subsection}{0}
+\subsection{Fisher-Yates Shuffle}
+Randomly permutes a range in-place using the Fisher-Yates shuffle. Each possible permutation is produced with equal probability, assuming the random number source is uniform.
+
+The algorithm scans from right to left. At position \inlinecode{i}, it chooses a random position \inlinecode{j} from \inlinecode{[0, i]} and swaps the two elements. This fixes one uniformly random remaining element at a time.
+
+\begin{compactitem}
+  \item \inlinecode{fisher\_yates\_shuffle(lo, hi)} randomly shuffles the range \inlinecode{[lo, hi)}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cstdlib>
+
+template<class It>
+void fisher_yates_shuffle(It lo, It hi) {
+  int n = hi - lo;
+  for (int i = n - 1; i > 0; i--) {
+    int j = rand() % (i + 1);
+    std::iter_swap(lo + i, lo + j);
+  }
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <vector>
+using namespace std;
+
+int main() {
+  srand(1);
+  int raw[] = {1, 2, 3, 4, 5};
+  vector<int> a(raw, raw + 5), original(raw, raw + 5);
+  fisher_yates_shuffle(a.begin(), a.end());
+  sort(a.begin(), a.end());
+  assert(a == original);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Reservoir Sampling}
+Selects uniformly random samples from a stream whose length may be unknown in advance. Reservoir sampling keeps only the chosen sample or samples in memory while processing each element once.
+
+\begin{compactitem}
+  \item \inlinecode{reservoir\_sample\_one(lo, hi)} returns one uniformly random element from \inlinecode{[lo, hi)}. The range must be nonempty.
+  \item \inlinecode{reservoir\_sample\_k(lo, hi, k)} returns \inlinecode{k} uniformly random elements without replacement from \inlinecode{[lo, hi)}, or the whole range if it has fewer than \inlinecode{k} elements.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of stream elements.
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{reservoir\_sample\_one(lo, hi)}.
+  \item $O(k)$ auxiliary heap space for \inlinecode{reservoir\_sample\_k(lo, hi, k)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdlib>
+#include <iterator>
+#include <vector>
+
+template<class It>
+typename std::iterator_traits<It>::value_type reservoir_sample_one(It lo, It hi) {
+  assert(lo != hi);
+  typename std::iterator_traits<It>::value_type sample = *lo;
+  int seen = 0;
+  for (It it = lo; it != hi; ++it) {
+    seen++;
+    if (rand() % seen == 0) {
+      sample = *it;
+    }
+  }
+  return sample;
+}
+
+template<class It>
+std::vector<typename std::iterator_traits<It>::value_type>
+reservoir_sample_k(It lo, It hi, int k) {
+  std::vector<typename std::iterator_traits<It>::value_type> res;
+  int seen = 0;
+  for (It it = lo; it != hi; ++it) {
+    seen++;
+    if ((int)res.size() < k) {
+      res.push_back(*it);
+    } else {
+      int j = rand() % seen;
+      if (j < k) {
+        res[j] = *it;
+      }
+    }
+  }
+  return res;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  srand(1);
+  int raw[] = {10, 20, 30, 40, 50};
+  vector<int> a(raw, raw + 5);
+
+  int one = reservoir_sample_one(a.begin(), a.end());
+  assert(one == 10 || one == 20 || one == 30 || one == 40 || one == 50);
+
+  vector<int> sample = reservoir_sample_k(a.begin(), a.end(), 3);
+  assert(sample.size() == 3);
+  for (int i = 0; i < (int)sample.size(); i++) {
+    bool found = false;
+    for (int j = 0; j < (int)a.size(); j++) {
+      found = found || sample[i] == a[j];
+    }
+    assert(found);
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Maximal Subarray Sum (Kadane)}
+Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans through the array, at each index computing the maximum nonnegative sum subarray ending there. Either this subarray is empty (in which case its sum is zero), or it consists of one more element than the maximum sequence ending at the previous position. This can be adapted to compute the maximal submatrix sum as well.
+
+\begin{compactitem}
+  \item \inlinecode{max\_subarray\_sum(lo, hi, \&res\_lo, \&res\_hi)} returns the maximal subarray sum for the range  \inlinecode{[lo, hi)}, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, two \inlinecode{int} pointers may be passed to store the inclusive boundary indices \inlinecode{[res\_lo, res\_hi]} of the resulting subarray. By convention, the empty subarray is allowed, so an input range consisting of only negative values returns \inlinecode{0} with an empty result interval.
+  \item \inlinecode{max\_submatrix\_sum(matrix, \&r1, \&c1, \&r2, \&c2)} returns the largest sum of any rectangular submatrix for a matrix of $n$ rows by $m$ columns. The matrix should be given as a 2-dimensional vector, where the outer vector must contain $n$ vectors each of size $m$. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, four \inlinecode{int} pointers may be passed to store the boundary indices of the resulting subarray, with \inlinecode{(r1, c1)} specifiying the top-left index and \inlinecode{(r2, c2)} specifying the bottom-right index. By convention, the empty submatrix is allowed, so an input matrix consisting of only negative values returns \inlinecode{0} with an empty result interval.
 \end{compactitem}
 
 \textbf{Time Complexity}:
@@ -790,7 +1525,6 @@ Given an array of numbers (at least one of which must be positive), determine th
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
-#include <limits>
 #include <vector>
 
 template<class It>
@@ -801,7 +1535,7 @@ max_subarray_sum(It lo, It hi, int *res_lo = NULL, int *res_hi = NULL) {
     return T();
   }
   int curr_begin = 0, begin = 0, end = -1;
-  T sum = 0, max_sum = std::numeric_limits<T>::min();
+  T sum = 0, max_sum = 0;
   for (It it = lo; it != hi; ++it) {
     sum += *it;
     if (sum < 0) {
@@ -811,15 +1545,6 @@ max_subarray_sum(It lo, It hi, int *res_lo = NULL, int *res_hi = NULL) {
       max_sum = sum;
       begin = curr_begin;
       end = it - lo;
-    }
-  }
-  if (end == -1) {  // All negative. By convention, return the maximum value.
-    for (It it = lo; it != hi; ++it) {
-      if (max_sum < *it) {
-        max_sum = *it;
-        begin = it - lo;
-        end = begin;
-      }
     }
   }
   if (res_lo != NULL && res_hi != NULL) {
@@ -837,7 +1562,7 @@ T max_submatrix_sum(const std::vector<std::vector<T> > &matrix,
   }
   int n = matrix.size(), m = matrix[0].size();
   std::vector<T> sums(n);
-  T sum, max_sum = std::numeric_limits<T>::min();
+  T sum, max_sum = 0;
   for (int clo = 0; clo < m; clo++) {
     std::fill(sums.begin(), sums.end(), 0);
     for (int chi = clo; chi < m; chi++) {
@@ -870,7 +1595,7 @@ int main() {
   {
     int a[] = {-2, -1, -3, 4, -1, 2, 1, -5, 4};
     int lo = 0, hi = 0;
-    assert(max_subarray_sum(a, a + 3) == -1);
+    assert(max_subarray_sum(a, a + 3) == 0);
     assert(max_subarray_sum(a, a + 9, &lo, &hi) == 6);
     cout << "Maximal sum subarray:" << endl;
     for (int i = lo; i <= hi; i++) {
@@ -956,110 +1681,118 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Subset Sum (Meet-in-the-Middle)}
-Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of integers, return the minimum sum of any subset of the range that is greater than or equal to a given integer \inlinecode{v}. This is a generalization of the NP-complete subset sum problem, which asks whether a subset summing to 0 exists (equivalent in this case to checking if $v = 0$ yields an answer of 0). This implementation uses a meet-in-the-middle algorithm to precompute and search for a lower bound. Note that 64-bit integers are used in intermediate calculations to avoid overflow.
+\subsection{Online Statistics (Welford)}
+Maintains the mean and variance of a stream of numbers in one pass using Welford's algorithm. This is more numerically stable than maintaining the sum of values and the sum of squares separately.
 
-\textbf{Time Complexity}: $O(n \cdot 2^{n/2})$ per call to \inlinecode{sum\_lower\_bound()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\begin{compactitem}
+  \item \inlinecode{online\_statistics()} constructs an empty summary.
+  \item \inlinecode{add(x)} incorporates one more value \inlinecode{x} into the summary.
+  \item \inlinecode{count()} returns the number of values seen so far.
+  \item \inlinecode{mean()} returns the current arithmetic mean.
+  \item \inlinecode{variance\_population()} returns population variance, dividing by $n$.
+  \item \inlinecode{variance\_sample()} returns sample variance, dividing by $n - 1$.
+\end{compactitem}
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space, where $n$ is the number of array elements.
+\textbf{Time Complexity}: $O(1)$ per call to \inlinecode{add(x)} and each query.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <limits>
-#include <vector>
+class online_statistics {
+  int n;
+  double avg, m2;
 
-template<class It>
-long long sum_lower_bound(It lo, It hi, long long v) {
-  int n = hi - lo, llen = 1 << (n/2), hlen = 1 << (n - n/2);
-  std::vector<long long> lsum(llen), hsum(hlen);
-  for (int mask = 0; mask < llen; mask++) {
-    for (int i = 0; i < n/2; i++) {
-      if ((mask >> i) & 1) {
-        lsum[mask] += *(lo + i);
-      }
-    }
+ public:
+  online_statistics() : n(0), avg(0), m2(0) {}
+
+  void add(double x) {
+    n++;
+    double delta = x - avg;
+    avg += delta / n;
+    double delta2 = x - avg;
+    m2 += delta * delta2;
   }
-  for (int mask = 0; mask < hlen; mask++) {
-    for (int i = 0; i < (n - n/2); i++) {
-      if ((mask >> i) & 1) {
-        hsum[mask] += *(lo + i + n/2);
-      }
-    }
+
+  int count() const {
+    return n;
   }
-  std::sort(lsum.begin(), lsum.end());
-  std::sort(hsum.begin(), hsum.end());
-  int l = 0, h = hlen - 1;
-  long long curr = std::numeric_limits<long long>::min();
-  while (l < llen && h >= 0) {
-    if (lsum[l] + hsum[h] <= v) {
-      curr = std::max(curr, lsum[l] + hsum[h]);
-      l++;
-    } else {
-      h--;
-    }
+
+  double mean() const {
+    return avg;
   }
-  return curr;
-}
+
+  double variance_population() const {
+    return n == 0 ? 0 : m2 / n;
+  }
+
+  double variance_sample() const {
+    return n <= 1 ? 0 : m2 / (n - 1);
+  }
+};
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <cmath>
+
+bool close(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
 
 int main() {
-  int a[] = {9, 1, 5, 0, 1, 11, 5};
-  assert(sum_lower_bound(a, a + 7, 8) == 7);
-  int b[] = {-7, -3, -2, 5, 8};
-  assert(sum_lower_bound(b, b + 5, 0) == 0);
+  online_statistics stats;
+  for (int x = 1; x <= 5; x++) {
+    stats.add(x);
+  }
+  assert(stats.count() == 5);
+  assert(close(stats.mean(), 3.0));
+  assert(close(stats.variance_population(), 2.0));
+  assert(close(stats.variance_sample(), 2.5));
   return 0;
 }
 \end{lstlisting}
-\subsection{Maximal Zero Submatrix}
-Given a rectangular matrix with $n$ rows and $m$ columns consisting of only 0's and 1's as a two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of only 0's. This solution uses a reduction to the problem of finding the maximum rectangular area under a histogram, which is efficiently solved using a stack algorithm.
+\subsection{Frequent Elements (Misra-Gries)}
+Finds candidate frequent elements in a stream using the Misra-Gries algorithm. With parameter \inlinecode{k}, the algorithm keeps at most \inlinecode{k - 1} counters and guarantees that every value occurring more than $\lfloor n/k \rfloor$ times appears among the returned candidates.
 
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{max\_zero\_submatrix()}, where $n$ is the number of rows and $m$ is the number of columns in the matrix.
+The candidates are not automatically verified, since the algorithm intentionally uses sublinear memory and does not retain the stream. If exact frequencies are needed, make a second pass over the input and count only the returned candidates.
 
-\textbf{Space Complexity}: $O(m)$ auxiliary heap space, where $m$ is the number of columns in the matrix.
+\begin{compactitem}
+  \item \inlinecode{misra\_gries(lo, hi, k)} returns a map of candidate values to their residual counters. Use \inlinecode{k = 2} for the Boyer-Moore majority-candidate special case.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(nk)$ worst-case for this compact map-based implementation, where $n$ is the number of stream values.
+
+\textbf{Space Complexity}: $O(k)$ auxiliary heap space.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <stack>
+#include <map>
 #include <vector>
 
-int max_zero_submatrix(const std::vector<std::vector<bool> > &matrix) {
-  if (matrix.empty()) {
-    return 0;
-  }
-  int n = matrix.size(), m = matrix[0].size(), res = 0;
-  std::vector<int> d(m, -1), d1(m), d2(m);
-  for (int r = 0; r < n; r++) {
-    for (int c = 0; c < m; c++) {
-      if (matrix[r][c]) {
-        d[c] = r;
+template<class T, class It>
+std::map<T, int>
+misra_gries(It lo, It hi, int k) {
+  typedef std::map<T, int> counter_map;
+  counter_map count;
+  for (It it = lo; it != hi; ++it) {
+    typename counter_map::iterator found = count.find(*it);
+    if (found != count.end()) {
+      found->second++;
+    } else if ((int)count.size() < k - 1) {
+      count[*it] = 1;
+    } else {
+      std::vector<T> erase;
+      for (typename counter_map::iterator jt = count.begin(); jt != count.end();
+           ++jt) {
+        if (--jt->second == 0) {
+          erase.push_back(jt->first);
+        }
       }
-    }
-    std::stack<int> s;
-    for (int c = 0; c < m; c++) {
-      while (!s.empty() && d[s.top()] <= d[c]) {
-        s.pop();
+      for (int i = 0; i < (int)erase.size(); i++) {
+        count.erase(erase[i]);
       }
-      d1[c] = s.empty() ? -1 : s.top();
-      s.push(c);
-    }
-    while (!s.empty()) {
-      s.pop();
-    }
-    for (int c = m - 1; c >= 0; c--) {
-      while (!s.empty() && d[s.top()] <= d[c]) {
-        s.pop();
-      }
-      d2[c] = s.empty() ? m : s.top();
-      s.push(c);
-    }
-    for (int j = 0; j < m; j++) {
-      res = std::max(res, (r - d[j])*(d2[j] - d1[j] - 1));
     }
   }
-  return res;
+  return count;
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -1068,23 +1801,17 @@ int max_zero_submatrix(const std::vector<std::vector<bool> > &matrix) {
 using namespace std;
 
 int main() {
-  const int n = 5, m = 6;
-  bool a[n][m] = {{1, 0, 1, 1, 0, 0},
-                  {1, 0, 0, 1, 0, 0},
-                  {0, 0, 0, 0, 0, 1},
-                  {1, 0, 0, 1, 0, 0},
-                  {1, 0, 1, 0, 0, 1}};
-  vector<vector<bool> > matrix(n);
-  for (int i = 0; i < n; i++) {
-    matrix[i] = vector<bool>(a[i], a[i] + m);
-  }
-  assert(max_zero_submatrix(matrix) == 6);
+  int raw[] = {1, 2, 1, 3, 1, 2, 1, 4, 2, 2, 2};
+  map<int, int> candidates = misra_gries<int>(raw, raw + 11, 3);
+  assert(candidates.count(1));
+  assert(candidates.count(2));
+  assert(!candidates.count(3));
   return 0;
 }
 \end{lstlisting}
 
 \section{Cycle Detection}
-\setcounter{section}{3}
+\setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Cycle Detection (Floyd)}
 Given a function $f$ mapping a set of integers to itself and an x-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing $f$ with itself starting with the initial $x$. Formally, since $f$ maps a finite set $S$ to itself, some value is guaranteed to eventually repeat in the sequence: $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$

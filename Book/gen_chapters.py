@@ -18,8 +18,9 @@ METADATA_RE = re.compile(
     r'Stable\?):\s*(.*)$')
 SECTION_NAMES = {
     (1, 1): 'Array Transformations',
-    (1, 2): 'Array Queries',
-    (1, 3): 'Cycle Detection',
+    (1, 2): 'Arrays and Dynamic Programming',
+    (1, 3): 'Streaming and Randomized Algorithms',
+    (1, 4): 'Cycle Detection',
     (2, 1): 'Heaps',
     (2, 2): 'Dictionaries',
     (2, 3): 'Range Queries in One Dimension',
