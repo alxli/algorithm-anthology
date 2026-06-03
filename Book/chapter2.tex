@@ -1,7 +1,296 @@
 \chapter{Data Structures}
 
-\section{Heaps}
+\section{Linked Lists}
 \setcounter{section}{1}
+\setcounter{subsection}{0}
+\subsection{Singly Linked List Operations}
+Implements common singly linked list operations using raw nodes. Linked lists are rarely the best contest choice compared with arrays, vectors, and \inlinecode{std::list}, but the pointer patterns are useful for interview-style problems and for understanding constant-time splicing.
+
+For production C++, prefer containers such as \inlinecode{std::list}, \inlinecode{std::forward\_list}, or \inlinecode{std::vector} when they fit the problem. Use the raw-node style below when the problem statement already gives nodes, or when manual pointer manipulation is the point of the exercise.
+
+\begin{compactitem}
+  \item \inlinecode{reverse\_list(head)} reverses a singly linked list and returns the new head.
+  \item \inlinecode{merge\_sorted\_lists(a, b)} merges two sorted lists using a dummy node and returns the merged head.
+  \item \inlinecode{split\_half(head, \&second)} cuts a list into two halves, returning the first half and storing the second half in \inlinecode{second}.
+  \item For linked-list cycle detection, use Floyd or Brent cycle detection from Chapter 1, Section 4.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{reverse\_list(head)} and \inlinecode{split\_half(head, \&second)}.
+  \item $O(n + m)$ per call to \inlinecode{merge\_sorted\_lists(a, b)}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
+
+\begin{lstlisting}[language=C++]
+#include <cstddef>
+
+struct list_node {
+  int value;
+  list_node *next;
+
+  explicit list_node(int value = 0) : value(value), next(NULL) {}
+};
+
+list_node* reverse_list(list_node *head) {
+  list_node *prev = NULL;
+  while (head != NULL) {
+    list_node *next = head->next;
+    head->next = prev;
+    prev = head;
+    head = next;
+  }
+  return prev;
+}
+
+list_node* merge_sorted_lists(list_node *a, list_node *b) {
+  list_node dummy;
+  list_node *tail = &dummy;
+  while (a != NULL && b != NULL) {
+    if (b->value < a->value) {
+      tail->next = b;
+      b = b->next;
+    } else {
+      tail->next = a;
+      a = a->next;
+    }
+    tail = tail->next;
+  }
+  tail->next = a != NULL ? a : b;
+  return dummy.next;
+}
+
+list_node* split_half(list_node *head, list_node **second) {
+  if (head == NULL || head->next == NULL) {
+    *second = NULL;
+    return head;
+  }
+  list_node *slow = head, *fast = head->next;
+  while (fast != NULL && fast->next != NULL) {
+    slow = slow->next;
+    fast = fast->next->next;
+  }
+  *second = slow->next;
+  slow->next = NULL;
+  return head;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+vector<int> values(list_node *head) {
+  vector<int> res;
+  for (; head != NULL; head = head->next) {
+    res.push_back(head->value);
+  }
+  return res;
+}
+
+int main() {
+  list_node a[3] = {list_node(1), list_node(3), list_node(5)};
+  list_node b[3] = {list_node(2), list_node(4), list_node(6)};
+  for (int i = 0; i + 1 < 3; i++) {
+    a[i].next = &a[i + 1];
+    b[i].next = &b[i + 1];
+  }
+  list_node *merged = merge_sorted_lists(&a[0], &b[0]);
+  vector<int> merged_values = values(merged);
+  for (int i = 0; i < 6; i++) {
+    assert(merged_values[i] == i + 1);
+  }
+
+  list_node *second = NULL;
+  list_node *first = split_half(merged, &second);
+  assert(values(first).size() == 3);
+  assert(values(second).size() == 3);
+  assert(values(reverse_list(first))[0] == 3);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Linked List Splicing}
+Moves nodes or ranges between singly linked lists in $O(1)$ pointer changes once the neighboring nodes are known. Splicing is the main operation that makes linked lists useful: it moves existing nodes without copying values or invalidating pointers to the moved nodes.
+
+The functions below use a dummy head node for each list. This makes insertions and removals at the beginning of a list match all other positions. In the C++ standard library, \inlinecode{std::list::splice()} provides analogous operations for doubly linked lists, while \inlinecode{std::forward\_list::splice\_after()} provides analogous operations for singly linked lists.
+
+\begin{compactitem}
+  \item \inlinecode{splice\_after(pos, before)} moves the node after \inlinecode{before} so it appears after \inlinecode{pos}.
+  \item \inlinecode{splice\_range\_after(pos, before\_first, last)} moves the half-open range \inlinecode{(before\_first, last)} so it appears after \inlinecode{pos}.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to \inlinecode{splice\_after(pos, before)}.
+  \item $O(k)$ per call to \inlinecode{splice\_range\_after(pos, before\_first, last)}, where $k$ is the number of moved nodes. The actual pointer splicing is $O(1)$, but this compact version walks to the end of the moved range.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <cstddef>
+
+struct list_node {
+  int value;
+  list_node *next;
+
+  explicit list_node(int value = 0) : value(value), next(NULL) {}
+};
+
+void splice_after(list_node *pos, list_node *before) {
+  list_node *node = before->next;
+  if (node == NULL || pos == before || pos == node) {
+    return;
+  }
+  before->next = node->next;
+  node->next = pos->next;
+  pos->next = node;
+}
+
+void splice_range_after(list_node *pos, list_node *before_first,
+                        list_node *last) {
+  list_node *first = before_first->next;
+  if (first == last) {
+    return;
+  }
+  list_node *tail = first;
+  while (tail->next != last) {
+    tail = tail->next;
+  }
+  before_first->next = last;
+  tail->next = pos->next;
+  pos->next = first;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+vector<int> values(list_node *dummy) {
+  vector<int> res;
+  for (list_node *p = dummy->next; p != NULL; p = p->next) {
+    res.push_back(p->value);
+  }
+  return res;
+}
+
+int main() {
+  list_node dummy(0), a(1), b(2), c(3), d(4), e(5);
+  dummy.next = &a;
+  a.next = &b;
+  b.next = &c;
+  c.next = &d;
+  d.next = &e;
+
+  splice_after(&dummy, &c);  // Move 4 to the front: 4, 1, 2, 3, 5.
+  vector<int> v = values(&dummy);
+  int expected1[] = {4, 1, 2, 3, 5};
+  for (int i = 0; i < 5; i++) {
+    assert(v[i] == expected1[i]);
+  }
+
+  splice_range_after(&d, &a, &e);  // Move 2, 3 after 4: 4, 2, 3, 1, 5.
+  v = values(&dummy);
+  int expected2[] = {4, 2, 3, 1, 5};
+  for (int i = 0; i < 5; i++) {
+    assert(v[i] == expected2[i]);
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{LRU Cache}
+Maintains a least-recently-used cache with fixed capacity. The cache supports lookups and updates by key, evicting the least recently used entry whenever an insertion would exceed capacity.
+
+This implementation combines a doubly linked list (\inlinecode{std::list}) with a map from keys to list iterators. The front of the list stores the most recently used item. The operation \inlinecode{items.splice(items.begin(), items, it)} is the standard-library way to move an existing list node to the front in $O(1)$ time.
+
+\begin{compactitem}
+  \item \inlinecode{lru\_cache(capacity)} constructs an empty cache holding at most \inlinecode{capacity} keys.
+  \item \inlinecode{get(key, \&value)} returns whether \inlinecode{key} is present. If present, it stores the value in \inlinecode{value} and marks the key as most recently used.
+  \item \inlinecode{put(key, value)} inserts or updates \inlinecode{key}, marking it as most recently used and evicting the least recently used key if needed.
+  \item \inlinecode{size()} returns the number of keys currently stored.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\log n)$ per call to \inlinecode{get(key, \&value)} and \inlinecode{put(key, value)} due to \inlinecode{std::map}. In C++11 and later, replacing \inlinecode{std::map} with \inlinecode{std::unordered\_map} gives expected $O(1)$ time.
+
+\textbf{Space Complexity}: $O(n)$, where $n$ is the cache capacity.
+
+\begin{lstlisting}[language=C++]
+#include <list>
+#include <map>
+#include <utility>
+
+template<class Key, class Value>
+class lru_cache {
+  typedef typename std::list<std::pair<Key, Value> >::iterator list_iter;
+
+  int cap;
+  std::list<std::pair<Key, Value> > items;
+  std::map<Key, list_iter> where;
+
+ public:
+  explicit lru_cache(int capacity) : cap(capacity) {}
+
+  int size() const {
+    return items.size();
+  }
+
+  bool get(const Key &key, Value *value) {
+    typename std::map<Key, list_iter>::iterator it = where.find(key);
+    if (it == where.end()) {
+      return false;
+    }
+    items.splice(items.begin(), items, it->second);
+    it->second = items.begin();
+    *value = it->second->second;
+    return true;
+  }
+
+  void put(const Key &key, const Value &value) {
+    typename std::map<Key, list_iter>::iterator it = where.find(key);
+    if (it != where.end()) {
+      it->second->second = value;
+      items.splice(items.begin(), items, it->second);
+      it->second = items.begin();
+      return;
+    }
+    if (cap == 0) {
+      return;
+    }
+    if ((int)items.size() == cap) {
+      where.erase(items.back().first);
+      items.pop_back();
+    }
+    items.push_front(std::make_pair(key, value));
+    where[key] = items.begin();
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  lru_cache<int, int> cache(2);
+  int value = 0;
+  cache.put(1, 10);
+  cache.put(2, 20);
+  assert(cache.get(1, &value) && value == 10);
+  cache.put(3, 30);  // Evicts key 2.
+  assert(!cache.get(2, &value));
+  assert(cache.get(3, &value) && value == 30);
+  cache.put(1, 11);
+  assert(cache.get(1, &value) && value == 11);
+  return 0;
+}
+\end{lstlisting}
+
+\section{Heaps and Priority Queues}
+\setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Binary Heap}
 Maintain a min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A binary min-heap implements a priority queue by inserting and deleting nodes into a binary tree such that the parent of any node is always less than its children.
@@ -110,152 +399,6 @@ int main() {
   int a[] = {0, 5, -1, 12};
   binary_heap<int> h(a, a + 4);
   h.push(10);
-  while (!h.empty()) {
-    cout << h.top() << endl;
-    h.pop();
-  }
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
--1
-0
-5
-10
-12
-\end{exampleoutput}
-\subsection{Randomized Mergeable Heap}
-Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A randomized mergeable heap uses a coin-toss to recursively combine nodes of two binary trees.
-
-\begin{compactitem}
-  \item \inlinecode{randomized\_heap()} constructs an empty priority queue.
-  \item \inlinecode{randomized\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range \inlinecode{[lo, hi)}.
-  \item \inlinecode{size()} returns the size of the priority queue.
-  \item \inlinecode{empty()} returns whether the priority queue is empty.
-  \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
-  \item \inlinecode{pop()} removes the minimum element from the priority queue.
-  \item \inlinecode{top()} returns the minimum element in the priority queue.
-  \item \inlinecode{absorb(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
-\end{compactitem}
-
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{top()}.
-  \item $O(\log n)$ expected worst case per call to \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{absorb()}, where $n$ is the number of elements in the priority queue.
-  \item $O(n)$ per call to the second constructor on the distance between lo and hi.
-\end{compactitem}
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ for storage of the priority queue elements.
-  \item $O(\log n)$ auxiliary stack space for \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{absorb()}.
-  \item $O(1)$ auxiliary for all other operations.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cstddef>
-#include <stdexcept>
-
-template<class T>
-class randomized_heap {
-  struct node_t {
-    T value;
-    node_t *left, *right;
-
-    node_t(const T &v) : value(v), left(NULL), right(NULL) {}
-  } *root;
-
-  int num_nodes;
-
-  static node_t* merge(node_t *a, node_t *b) {
-    if (a == NULL) {
-      return b;
-    }
-    if (b == NULL) {
-      return a;
-    }
-    if (b->value < a->value) {
-      std::swap(a, b);
-    }
-    if (rand() % 2 == 0) {
-      std::swap(a->left, a->right);
-    }
-    a->left = merge(a->left, b);
-    return a;
-  }
-
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
-      clean_up(n->left);
-      clean_up(n->right);
-      delete n;
-    }
-  }
-
- public:
-  randomized_heap() : root(NULL), num_nodes(0) {}
-
-  template<class It>
-  randomized_heap(It lo, It hi) : root(NULL), num_nodes(0) {
-    while (lo != hi) {
-      push(*(lo++));
-    }
-  }
-
-  ~randomized_heap() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
-
-  void push(const T &v) {
-    root = merge(root, new node_t(v));
-    num_nodes++;
-  }
-
-  void pop() {
-    if (empty()) {
-      throw std::runtime_error("Cannot pop from empty heap.");
-    }
-    node_t *tmp = root;
-    root = merge(root->left, root->right);
-    delete tmp;
-    num_nodes--;
-  }
-
-  T top() const {
-    if (empty()) {
-      throw std::runtime_error("Cannot get top of empty heap.");
-    }
-    return root->value;
-  }
-
-  void absorb(randomized_heap &h) {
-    root = merge(root, h.root);
-    h.root = NULL;
-  }
-};
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-int main() {
-  randomized_heap<int> h, h2;
-  h.push(12);
-  h.push(10);
-  h2.push(5);
-  h2.push(-1);
-  h2.push(0);
-  h.absorb(h2);
   while (!h.empty()) {
     cout << h.top() << endl;
     h.pop();
@@ -576,8 +719,8 @@ int main() {
 12
 \end{exampleoutput}
 
-\section{Dictionaries}
-\setcounter{section}{2}
+\section{Dictionaries and Ordered Sets}
+\setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Binary Search Tree}
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A binary search tree implements this map by inserting and deleting keys into a binary tree such that every node's left child has a lesser key and every node's right child has a greater key.
@@ -2734,7 +2877,7 @@ bcde
 \end{exampleoutput}
 
 \section{Range Queries in One Dimension}
-\setcounter{section}{3}
+\setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Sparse Table (Range Minimum Query)}
 Given a static array with indices from $0$ to $n - 1$, precompute a table that may later be used to perform range minimum queries on the array in constant time. This version is simplified to only work on integer arrays.
@@ -3474,6 +3617,203 @@ int main() {
 Values: 6 -2 4 8 10
 Values: 5 5 5 1 5
 \end{exampleoutput}
+\subsection{Segment Tree (Persistent)}
+Maintains immutable versions of a segment tree under point updates. Each update creates a new root by copying only the nodes on the path from the root to the updated leaf, while all unchanged subtrees are shared with previous versions.
+
+The implementation below stores sums over a fixed index range \inlinecode{[0, n - 1]}. Persistent segment trees are useful for offline order-statistics queries, rollback-like histories, and functional dynamic programming states.
+
+\begin{compactitem}
+  \item \inlinecode{persistent\_segment\_tree(a)} constructs version 0 from array \inlinecode{a}.
+  \item \inlinecode{update(version, index, value)} returns a new version where \inlinecode{a[index]} is set to \inlinecode{value}, leaving the old version unchanged.
+  \item \inlinecode{query(version, lo, hi)} returns the sum of the inclusive range \inlinecode{[lo, hi]} in the specified version.
+  \item \inlinecode{versions()} returns the number of stored roots.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for construction.
+  \item $O(\log n)$ per call to \inlinecode{update(version, index, value)} and \inlinecode{query(version, lo, hi)}.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n + q \log n)$ for $q$ updates.
+  \item $O(\log n)$ auxiliary stack space per update and query.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+class persistent_segment_tree {
+  struct node {
+    long long sum;
+    int left, right;
+
+    node(long long sum = 0, int left = -1, int right = -1)
+        : sum(sum), left(left), right(right) {}
+  };
+
+  int n;
+  std::vector<node> tree;
+  std::vector<int> root;
+
+  int build(const std::vector<int> &a, int lo, int hi) {
+    if (lo == hi) {
+      tree.push_back(node(a[lo]));
+      return (int)tree.size() - 1;
+    }
+    int mid = lo + (hi - lo) / 2;
+    int left = build(a, lo, mid);
+    int right = build(a, mid + 1, hi);
+    tree.push_back(node(tree[left].sum + tree[right].sum, left, right));
+    return (int)tree.size() - 1;
+  }
+
+  int update(int cur, int lo, int hi, int index, int value) {
+    if (lo == hi) {
+      tree.push_back(node(value));
+      return (int)tree.size() - 1;
+    }
+    int mid = lo + (hi - lo) / 2;
+    int left = tree[cur].left, right = tree[cur].right;
+    if (index <= mid) {
+      left = update(left, lo, mid, index, value);
+    } else {
+      right = update(right, mid + 1, hi, index, value);
+    }
+    tree.push_back(node(tree[left].sum + tree[right].sum, left, right));
+    return (int)tree.size() - 1;
+  }
+
+  long long query(int cur, int lo, int hi, int qlo, int qhi) const {
+    if (qlo <= lo && hi <= qhi) {
+      return tree[cur].sum;
+    }
+    int mid = lo + (hi - lo) / 2;
+    long long res = 0;
+    if (qlo <= mid) {
+      res += query(tree[cur].left, lo, mid, qlo, qhi);
+    }
+    if (mid < qhi) {
+      res += query(tree[cur].right, mid + 1, hi, qlo, qhi);
+    }
+    return res;
+  }
+
+ public:
+  explicit persistent_segment_tree(const std::vector<int> &a) : n(a.size()) {
+    if (n > 0) {
+      root.push_back(build(a, 0, n - 1));
+    }
+  }
+
+  int versions() const {
+    return root.size();
+  }
+
+  int update(int version, int index, int value) {
+    root.push_back(update(root[version], 0, n - 1, index, value));
+    return (int)root.size() - 1;
+  }
+
+  long long query(int version, int lo, int hi) const {
+    return query(root[version], 0, n - 1, lo, hi);
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  int raw[] = {1, 2, 3, 4};
+  vector<int> a(raw, raw + 4);
+  persistent_segment_tree t(a);
+  int v1 = t.update(0, 1, 10);
+  int v2 = t.update(v1, 3, -1);
+  assert(t.query(0, 0, 3) == 10);
+  assert(t.query(v1, 0, 3) == 18);
+  assert(t.query(v2, 1, 3) == 12);
+  assert(t.versions() == 3);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Cartesian Tree}
+Builds the min Cartesian tree of an array in linear time. A Cartesian tree is a binary tree whose inorder traversal is the original array order and whose heap property is determined by array values. For a min Cartesian tree, each parent has value less than or equal to its children.
+
+Cartesian trees connect arrays, stacks, range minimum queries, treaps, and largest rectangle style problems. Equal values are broken by position, so earlier equal values become ancestors of later equal values.
+
+\begin{compactitem}
+  \item \inlinecode{cartesian\_tree(a)} constructs the tree for array \inlinecode{a}.
+  \item \inlinecode{root} stores the root index.
+  \item \inlinecode{parent[i]}, \inlinecode{left[i]}, and \inlinecode{right[i]} store neighboring node indices, or \inlinecode{-1} if absent.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ construction time, where $n$ is the array size.
+
+\textbf{Space Complexity}: $O(n)$ for tree arrays and the monotone stack.
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+struct cartesian_tree {
+  int root;
+  std::vector<int> parent, left, right;
+
+  explicit cartesian_tree(const std::vector<int> &a)
+      : root(-1), parent(a.size(), -1), left(a.size(), -1), right(a.size(), -1) {
+    std::vector<int> st;
+    for (int i = 0; i < (int)a.size(); i++) {
+      int last = -1;
+      while (!st.empty() && a[i] < a[st.back()]) {
+        last = st.back();
+        st.pop_back();
+      }
+      if (!st.empty()) {
+        right[st.back()] = i;
+        parent[i] = st.back();
+      }
+      if (last != -1) {
+        left[i] = last;
+        parent[last] = i;
+      }
+      st.push_back(i);
+    }
+    root = st.empty() ? -1 : st[0];
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+void inorder(const cartesian_tree &t, int u, vector<int> *order) {
+  if (u == -1) {
+    return;
+  }
+  inorder(t, t.left[u], order);
+  order->push_back(u);
+  inorder(t, t.right[u], order);
+}
+
+int main() {
+  int raw[] = {3, 2, 6, 1, 9};
+  vector<int> a(raw, raw + 5);
+  cartesian_tree t(a);
+  assert(t.root == 3);
+  assert(t.parent[1] == 3);
+  assert(t.parent[4] == 3);
+
+  vector<int> order;
+  inorder(t, t.root, &order);
+  for (int i = 0; i < 5; i++) {
+    assert(order[i] == i);
+  }
+  return 0;
+}
+\end{lstlisting}
 \subsection{Implicit Treap}
 Maintain a dynamically-sized array using a balanced binary search tree while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. A treap maintains a balanced binary tree structure by preserving the heap property on the randomly generated priority values of nodes, thereby making insertions and deletions run in $O(\log n)$ with high probability.
 
@@ -3757,7 +4097,7 @@ Values: 2 2 1 8 10 11 (min: 1)
 \end{exampleoutput}
 
 \section{Range Queries in Two Dimensions}
-\setcounter{section}{4}
+\setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Quadtree (Point Update)}
 Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
@@ -4853,171 +5193,9 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{R-Tree (Nearest Segment)}
-Maintain a set of two-dimensional line segments while supporting queries for the closest segment in the set to a given query point. This implementation uses integer points and long doubles for intermediate calculations.
-
-\begin{compactitem}
-  \item \inlinecode{r\_tree(lo, hi)} constructs a set from two random-access iterators as a range \inlinecode{[lo, hi)} of segments.
-  \item \inlinecode{nearest(x, y)} returns a segment in the set that contains some point which is as close or closer to \inlinecode{(x, y)} by Euclidean distance than any point on any other segment in the set.
-\end{compactitem}
-
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n \log n)$ per call to the constructor, where $n$ is the number of segments.
-  \item $O(\log n)$ on average per call to \inlinecode{nearest()}.
-\end{compactitem}
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ for storage of the segments.
-  \item $O(\log n)$ auxiliary stack space for \inlinecode{nearest()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <limits>
-#include <stdexcept>
-#include <vector>
-
-struct segment {
-  int x1, y1, x2, y2;
-
-  segment() : x1(0), y1(0), x2(0), y2(0) {}
-  segment(int x1, int y1, int x2, int y2) : x1(x1), y1(y1), x2(x2), y2(y2) {}
-
-  bool operator==(const segment &s) const {
-    return (x1 == s.x1) && (y1 == s.y1) && (x2 == s.x2) && (y2 == s.y2);
-  }
-};
-
-class r_tree {
-  static inline bool cmp_x(const segment &a, const segment &b) {
-    return a.x1 + a.x2 < b.x1 + b.x2;
-  }
-
-  static inline bool cmp_y(const segment &a, const segment &b) {
-    return a.y1 + a.y2 < b.y1 + b.y2;
-  }
-
-  static inline int seg_dist(int v, int lo, int hi) {
-    return (v <= lo) ? (lo - v) : (v >= hi ? v - hi : 0);
-  }
-
-  static long double point_to_segment_squared(int x, int y, const segment &s) {
-    long long dx = s.x2 - s.x1, dy = s.y2 - s.y1;
-    long long px = x - s.x1, py = y - s.y1;
-    long long sqdist = dx*dx + dy*dy;
-    long long dot = dx*px + dy*py;
-    if (dot <= 0 || sqdist == 0) {
-      return px*px + py*py;
-    }
-    if (dot >= sqdist) {
-      return (px - dx)*(px - dx) + (py - dy)*(py - dy);
-    }
-    double q = (double)dot / sqdist;
-    return (px - q*dx)*(px - q*dx) + (py - q*dy)*(py - q*dy);
-  }
-
-  std::vector<segment> tree;
-  std::vector<int> minx, maxx, miny, maxy;
-
-  void build(int lo, int hi, bool div_x) {
-    if (lo >= hi) {
-      return;
-    }
-    int mid = lo + (hi - lo)/2;
-    std::nth_element(tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
-                     div_x ? cmp_x : cmp_y);
-    for (int i = lo; i < hi; i++) {
-      minx[mid] = std::min(minx[mid], std::min(tree[i].x1, tree[i].x2));
-      miny[mid] = std::min(miny[mid], std::min(tree[i].y1, tree[i].y2));
-      maxx[mid] = std::max(maxx[mid], std::max(tree[i].x1, tree[i].x2));
-      maxy[mid] = std::max(maxy[mid], std::max(tree[i].y1, tree[i].y2));
-    }
-    build(lo, mid, !div_x);
-    build(mid + 1, hi, !div_x);
-  }
-
-  // Helper variables for nearest().
-  double min_dist;
-  int id;
-
-  void nearest(int lo, int hi, int x, int y, bool div_x) {
-    if (lo >= hi) {
-      return;
-    }
-    int mid = lo + (hi - lo)/2;
-    long double d = point_to_segment_squared(x, y, tree[mid]);
-    if (min_dist > d) {
-      min_dist = d;
-      id = mid;
-    }
-    long long delta = div_x ? (2*x - tree[mid].x1 - tree[mid].x2)
-                            : (2*y - tree[mid].y1 - tree[mid].y2);
-    if (delta <= 0) {
-      nearest(lo, mid, x, y, !div_x);
-      if (mid + 1 < hi) {
-        int mid1 = (mid + hi + 1)/2;
-        long long dist = div_x ? seg_dist(x, minx[mid1], maxx[mid1])
-                               : seg_dist(y, miny[mid1], maxy[mid1]);
-        if (dist*dist < min_dist) {
-          nearest(mid + 1, hi, x, y, !div_x);
-        }
-      }
-    } else {
-      nearest(mid + 1, hi, x, y, !div_x);
-      if (lo < mid) {
-        int mid1 = lo + (mid - lo)/2;
-        long long dist = div_x ? seg_dist(x, minx[mid1], maxx[mid1]) :
-                                 seg_dist(y, miny[mid1], maxy[mid1]);
-        if (dist*dist < min_dist) {
-          nearest(lo, mid, x, y, !div_x);
-        }
-      }
-    }
-  }
-
- public:
-  template<class It>
-  r_tree(It lo, It hi) : tree(lo, hi) {
-    int n = std::distance(lo, hi);
-    if (n <= 1) {
-      throw std::runtime_error("R-tree must be have at least 2 segments.");
-    }
-    minx.assign(n, std::numeric_limits<int>::max());
-    maxx.assign(n, std::numeric_limits<int>::min());
-    miny.assign(n, std::numeric_limits<int>::max());
-    maxy.assign(n, std::numeric_limits<int>::min());
-    build(0, n, true);
-  }
-
-  segment nearest(int x, int y) {
-    min_dist = std::numeric_limits<long double>::max();
-    nearest(0, tree.size(), x, y, true);
-    return tree[id];
-  }
-};
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  segment s[4];
-  s[0] = segment(0, 0, 0, 4);
-  s[1] = segment(0, 4, 4, 4);
-  s[2] = segment(4, 4, 4, 0);
-  s[3] = segment(4, 0, 0, 0);
-  r_tree t(s, s + 4);
-  assert(t.nearest(-1, 2) == segment(0, 0, 0, 4));
-  assert(t.nearest(100, 100) == segment(4, 4, 4, 0));
-  return 0;
-}
-\end{lstlisting}
 
 \section{Fenwick Trees}
-\setcounter{section}{5}
+\setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Fenwick Tree (Simple)}
 Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 1-based (i.e. has valid indices from 1 to \inlinecode{MAXN - 1}, inclusive).
@@ -5487,6 +5665,81 @@ int main() {
 \begin{exampleoutput}
 Values: 15 6 7 -5 4
 \end{exampleoutput}
+\subsection{Fenwick Tree (Order Statistic)}
+Maintains frequencies over a 1-based integer domain and finds order statistics by binary lifting on a Fenwick tree. This is useful for dynamic multisets of bounded integer values, coordinate-compressed kth-element queries, and online rank queries.
+
+\begin{compactitem}
+  \item \inlinecode{initialize()} resets all frequencies.
+  \item \inlinecode{add(i, delta)} adds \inlinecode{delta} to the frequency of value/index \inlinecode{i}.
+  \item \inlinecode{sum(i)} returns the total frequency over indices \inlinecode{[1, i]}.
+  \item \inlinecode{kth(k)} returns the smallest index \inlinecode{i} such that \inlinecode{sum(i) \textgreater{}= k}. The argument \inlinecode{k} is 1-based and must satisfy \inlinecode{1 \textless{}= k \textless{}= sum(MAXN)}.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{initialize()}.
+  \item $O(\log n)$ per call to \inlinecode{add(i, delta)}, \inlinecode{sum(i)}, and \inlinecode{kth(k)}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n)$ for the Fenwick tree.
+
+\begin{lstlisting}[language=C++]
+const int MAXN = 1000;
+int tree[MAXN + 1];
+
+void initialize() {
+  for (int i = 0; i <= MAXN; i++) {
+    tree[i] = 0;
+  }
+}
+
+void add(int i, int delta) {
+  for (; i <= MAXN; i += i & -i) {
+    tree[i] += delta;
+  }
+}
+
+int sum(int i) {
+  int res = 0;
+  for (; i > 0; i -= i & -i) {
+    res += tree[i];
+  }
+  return res;
+}
+
+int kth(int k) {
+  int idx = 0;
+  int bit = 1;
+  while (bit * 2 <= MAXN) {
+    bit *= 2;
+  }
+  for (; bit > 0; bit >>= 1) {
+    int next = idx + bit;
+    if (next <= MAXN && tree[next] < k) {
+      idx = next;
+      k -= tree[next];
+    }
+  }
+  return idx + 1;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  initialize();
+  add(2, 1);
+  add(4, 3);
+  add(7, 1);
+  assert(sum(4) == 4);
+  assert(kth(1) == 2);
+  assert(kth(2) == 4);
+  assert(kth(4) == 4);
+  assert(kth(5) == 7);
+  return 0;
+}
+\end{lstlisting}
 \subsection{2D Fenwick Tree (Simple)}
 Maintain a 2D array of numerical type, allowing for updates of individual cells in the matrix (point update) and queries for the sum of rectangular sub-matrices (range query). This implementation assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to \inlinecode{MAXR}, inclusive, and columns have valid indices from 1 to \inlinecode{MAXC}, inclusive).
 
@@ -5713,8 +5966,8 @@ Values:
 0 5 14
 \end{exampleoutput}
 
-\section{Tree Data Structures}
-\setcounter{section}{6}
+\section{Disjoint Sets and Tree Structures}
+\setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Disjoint Set Forest (Simple)}
 Maintain a set of elements partitioned into non-overlapping subsets. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version is simplified to only work on integer elements.
@@ -5935,6 +6188,129 @@ int main() {
 \begin{exampleoutput}
 [a, b, f], [c], [d, e, g]
 \end{exampleoutput}
+\subsection{Disjoint Set Forest (Rollback)}
+Maintains disjoint sets while supporting rollback to previous snapshots. Rollback DSU is useful for offline dynamic connectivity, divide-and-conquer over time, and backtracking search where unions must be undone.
+
+Path compression is intentionally not used, because it is hard to undo. Union by size keeps tree height logarithmic, and every successful union records enough information to restore the previous state.
+
+\begin{compactitem}
+  \item \inlinecode{initialize(n)} creates singleton sets over elements \inlinecode{0} through \inlinecode{n - 1}.
+  \item \inlinecode{find\_root(u)} returns the representative of the set containing \inlinecode{u}.
+  \item \inlinecode{is\_united(u, v)} returns whether \inlinecode{u} and \inlinecode{v} are in the same set.
+  \item \inlinecode{unite(u, v)} merges two sets and returns whether a merge occurred.
+  \item \inlinecode{snapshot()} returns a token representing the current history size.
+  \item \inlinecode{rollback(s)} undoes all changes made after snapshot \inlinecode{s}.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{initialize(n)}.
+  \item $O(\log n)$ worst-case per call to \inlinecode{find\_root(u)}, \inlinecode{is\_united(u, v)}, and \inlinecode{unite(u, v)}.
+  \item $O(1)$ per undone union during \inlinecode{rollback(s)}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n + q)$ for $q$ successful unions stored in the rollback history.
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+class rollback_dsu {
+  struct change {
+    int child, parent, parent_size;
+
+    change(int child = -1, int parent = -1, int parent_size = 0)
+        : child(child), parent(parent), parent_size(parent_size) {}
+  };
+
+  std::vector<int> root, size;
+  std::vector<change> history;
+  int sets;
+
+ public:
+  rollback_dsu() : sets(0) {}
+
+  explicit rollback_dsu(int n) {
+    initialize(n);
+  }
+
+  void initialize(int n) {
+    root.resize(n);
+    size.assign(n, 1);
+    history.clear();
+    sets = n;
+    for (int i = 0; i < n; i++) {
+      root[i] = i;
+    }
+  }
+
+  int count_sets() const {
+    return sets;
+  }
+
+  int find_root(int u) const {
+    while (root[u] != u) {
+      u = root[u];
+    }
+    return u;
+  }
+
+  bool is_united(int u, int v) const {
+    return find_root(u) == find_root(v);
+  }
+
+  bool unite(int u, int v) {
+    u = find_root(u);
+    v = find_root(v);
+    if (u == v) {
+      return false;
+    }
+    if (size[u] > size[v]) {
+      int tmp = u;
+      u = v;
+      v = tmp;
+    }
+    history.push_back(change(u, v, size[v]));
+    root[u] = v;
+    size[v] += size[u];
+    sets--;
+    return true;
+  }
+
+  int snapshot() const {
+    return history.size();
+  }
+
+  void rollback(int snapshot) {
+    while ((int)history.size() > snapshot) {
+      change c = history.back();
+      history.pop_back();
+      root[c.child] = c.child;
+      size[c.parent] = c.parent_size;
+      sets++;
+    }
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  rollback_dsu dsu(5);
+  dsu.unite(0, 1);
+  int s = dsu.snapshot();
+  dsu.unite(1, 2);
+  dsu.unite(3, 4);
+  assert(dsu.is_united(0, 2));
+  assert(dsu.count_sets() == 2);
+  dsu.rollback(s);
+  assert(dsu.is_united(0, 1));
+  assert(!dsu.is_united(0, 2));
+  assert(!dsu.is_united(3, 4));
+  assert(dsu.count_sets() == 4);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Lowest Common Ancestor (Sparse Table)}
 Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
