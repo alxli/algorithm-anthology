@@ -19,37 +19,41 @@ METADATA_RE = re.compile(
 SECTION_NAMES = {
     (1, 1): 'Array Transformations',
     (1, 2): 'Array Queries',
-    (1, 3): 'Searching',
-    (1, 4): 'Cycle Detection',
+    (1, 3): 'Cycle Detection',
     (2, 1): 'Heaps',
     (2, 2): 'Dictionaries',
     (2, 3): 'Range Queries in One Dimension',
     (2, 4): 'Range Queries in Two Dimensions',
     (2, 5): 'Fenwick Trees',
     (2, 6): 'Tree Data Structures',
-    (3, 1): 'String Utilities',
-    (3, 2): 'String Searching',
-    (3, 3): 'Expression Parsing',
-    (3, 4): 'Dynamic Programming',
-    (3, 5): 'Suffix Array and LCP',
-    (3, 6): 'String Data Structures',
-    (4, 1): 'Depth-First Search',
-    (4, 2): 'Shortest Path',
-    (4, 3): 'Connectivity',
-    (4, 4): 'Minimum Spanning Tree',
-    (4, 5): 'Maximum Flow',
-    (4, 6): 'Maximum Matching',
-    (4, 7): 'Hard Problems',
-    (5, 1): 'Math Utilities',
-    (5, 2): 'Combinatorics',
-    (5, 3): 'Number Theory',
-    (5, 4): 'Arbitrary Precision Arithmetic',
-    (5, 5): 'Linear Algebra',
-    (5, 6): 'Root Finding and Calculus',
-    (6, 1): 'Geometric Classes',
-    (6, 2): 'Elementary Geometric Calculations',
-    (6, 3): 'Intermediate Geometric Calculations',
-    (6, 4): 'Advanced Geometric Computations',
+    (3, 1): 'Search on Answer',
+    (3, 2): 'Unimodal and Continuous Search',
+    (3, 3): 'Dynamic Programming Optimization',
+    (3, 4): 'Linear and Convex Optimization',
+    (4, 1): 'String Utilities',
+    (4, 2): 'String Searching',
+    (4, 3): 'Expression Parsing',
+    (4, 4): 'Sequence Dynamic Programming',
+    (4, 5): 'Suffix Array and LCP',
+    (4, 6): 'String Data Structures',
+    (5, 1): 'Depth-First Search',
+    (5, 2): 'Shortest Path',
+    (5, 3): 'Connectivity',
+    (5, 4): 'Minimum Spanning Tree',
+    (5, 5): 'Maximum Flow',
+    (5, 6): 'Maximum Matching',
+    (5, 7): 'Hard Problems',
+    (6, 1): 'Math Utilities',
+    (6, 2): 'Combinatorics',
+    (6, 3): 'Number Theory',
+    (6, 4): 'Arbitrary Precision Arithmetic',
+    (6, 5): 'Linear Algebra',
+    (6, 6): 'Root Finding and Calculus',
+    (7, 1): 'Geometric Classes',
+    (7, 2): 'Elementary Geometric Calculations',
+    (7, 3): 'Intermediate Geometric Calculations',
+    (7, 4): 'Advanced Geometric Computations',
+    (7, 5): 'Combined Geometry Template',
 }
 
 
@@ -69,6 +73,13 @@ def escape_latex(text):
         '>': r'\textgreater{}',
     }
     return ''.join(replacements.get(char, char) for char in text)
+
+
+def escape_latex_code(text):
+    replacements = {
+        "'": r'\textquotesingle{}',
+    }
+    return ''.join(replacements.get(char, escape_latex(char)) for char in text)
 
 
 def format_math_expression(expression):
@@ -211,7 +222,7 @@ def format_text(text):
         parts.append(format_plain_text(text[pos:start]))
         contents = text[start + 1:end]
         if delimiter == '`':
-            parts.append(r'\inlinecode{' + escape_latex(contents) + '}')
+            parts.append(r'\inlinecode{' + escape_latex_code(contents) + '}')
         else:
             parts.append('$' + contents + '$')
         pos = end + 1

@@ -18,6 +18,13 @@ class GeneratorTest(unittest.TestCase):
             r'Use \inlinecode{std::unordered\_set\textless{}std::pair'
             r'\textless{}int, int\textgreater{}\textgreater{}}.')
 
+    def test_inline_code_uses_straight_single_quotes(self):
+        self.assertEqual(
+            gen_chapters.format_text("Use `s[i] == '\\0'`, then don't panic."),
+            r'Use \inlinecode{s[i] == \textquotesingle{}\textbackslash{}0'
+            r'\textquotesingle{}}, then don'
+            r"'t panic.")
+
     def test_render_comment(self):
         comment = r'''
 Soft-wrapped text with a 50% chance and path C:\tmp.

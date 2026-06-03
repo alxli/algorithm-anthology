@@ -8,7 +8,7 @@ Maintain a min-priority queue, that is, a collection of elements with support fo
 
 \begin{compactitem}
   \item \inlinecode{binary\_heap()} constructs an empty priority queue.
-  \item \inlinecode{binary\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{binary\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range \inlinecode{[lo, hi)}.
   \item \inlinecode{size()} returns the size of the priority queue.
   \item \inlinecode{empty()} returns whether the priority queue is empty.
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
@@ -129,7 +129,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 
 \begin{compactitem}
   \item \inlinecode{randomized\_heap()} constructs an empty priority queue.
-  \item \inlinecode{randomized\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{randomized\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range \inlinecode{[lo, hi)}.
   \item \inlinecode{size()} returns the size of the priority queue.
   \item \inlinecode{empty()} returns whether the priority queue is empty.
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
@@ -275,7 +275,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 
 \begin{compactitem}
   \item \inlinecode{skew\_heap()} constructs an empty priority queue.
-  \item \inlinecode{skew\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{skew\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range \inlinecode{[lo, hi)}.
   \item \inlinecode{size()} returns the size of the priority queue.
   \item \inlinecode{empty()} returns whether the priority queue is empty.
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
@@ -419,7 +419,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 
 \begin{compactitem}
   \item \inlinecode{pairing\_heap()} constructs an empty priority queue.
-  \item \inlinecode{pairing\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{pairing\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range \inlinecode{[lo, hi)}.
   \item \inlinecode{size()} returns the size of the priority queue.
   \item \inlinecode{empty()} returns whether the priority queue is empty.
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
@@ -2072,11 +2072,11 @@ Maintain a map from closed, one-dimensional intervals to values while supporting
   \item \inlinecode{interval\_treap()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
-  \item \inlinecode{insert(lo, hi, v)} adds an entry with key [\inlinecode{lo}, \inlinecode{hi}] and value \inlinecode{v} to the map, returning \inlinecode{true} if a new interval was added or \inlinecode{false} if the interval already exists (in which case the map is unchanged and the old value associated with the key is preserved).
-  \item \inlinecode{erase(lo, hi)} removes the entry with key [\inlinecode{lo}, \inlinecode{hi}] from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the interval was not found.
-  \item \inlinecode{find\_key(lo, hi)} returns a pointer to a const \inlinecode{std::pair} representing the key of some interval in the map which intersects with [\inlinecode{lo}, \inlinecode{hi}], or \inlinecode{NULL} if no such entry was found.
-  \item \inlinecode{find\_value(lo, hi)} returns a pointer to a const value of some entry in the map with a key that intersects with [\inlinecode{lo}, \inlinecode{hi}], or \inlinecode{NULL} if no such entry was found.
-  \item \inlinecode{find\_all(lo, hi, f)} calls the function \inlinecode{f(lo, hi, v)} on each entry in the map that overlaps with [\inlinecode{lo}, \inlinecode{hi}], in lexicographically ascending order of intervals.
+  \item \inlinecode{insert(lo, hi, v)} adds an entry with key \inlinecode{[lo, hi]} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new interval was added or \inlinecode{false} if the interval already exists (in which case the map is unchanged and the old value associated with the key is preserved).
+  \item \inlinecode{erase(lo, hi)} removes the entry with key \inlinecode{[lo, hi]} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the interval was not found.
+  \item \inlinecode{find\_key(lo, hi)} returns a pointer to a const \inlinecode{std::pair} representing the key of some interval in the map which intersects with \inlinecode{[lo, hi]}, or \inlinecode{NULL} if no such entry was found.
+  \item \inlinecode{find\_value(lo, hi)} returns a pointer to a const value of some entry in the map with a key that intersects with \inlinecode{[lo, hi]}, or \inlinecode{NULL} if no such entry was found.
+  \item \inlinecode{find\_all(lo, hi, f)} calls the function \inlinecode{f(lo, hi, v)} on each entry in the map that overlaps with \inlinecode{[lo, hi]}, in lexicographically ascending order of intervals.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(lo, hi, v)} on each interval in the map, in lexicographically ascending order of intervals.
 \end{compactitem}
 
@@ -2931,7 +2931,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 
 \begin{compactitem}
   \item \inlinecode{segment\_tree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
-  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
@@ -3091,7 +3091,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 
 \begin{compactitem}
   \item \inlinecode{segment\_tree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
-  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
@@ -3288,7 +3288,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 
 \begin{compactitem}
   \item \inlinecode{segment\_tree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
-  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
+  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
@@ -4454,7 +4454,7 @@ Values:
 Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type.
 
 \begin{compactitem}
-  \item \inlinecode{range\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range [\inlinecode{lo}, \inlinecode{hi}) of points.
+  \item \inlinecode{range\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
   \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
@@ -4584,7 +4584,7 @@ int main() {
 Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type.
 
 \begin{compactitem}
-  \item \inlinecode{kd\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range [\inlinecode{lo}, \inlinecode{hi}) of points.
+  \item \inlinecode{kd\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
   \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
@@ -4725,7 +4725,7 @@ int main() {
 Maintain a set of two-dimensional points while supporting queries for the closest point in the set to a given query point. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}}, \inlinecode{==}, \inlinecode{-}, and \inlinecode{long double} casting to be defined on the numeric template type.
 
 \begin{compactitem}
-  \item \inlinecode{kd\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range [\inlinecode{lo}, \inlinecode{hi}) of points.
+  \item \inlinecode{kd\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
   \item \inlinecode{nearest(x, y, can\_equal)} returns a point in the set that is closest to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance. This may be equal to (\inlinecode{x}, \inlinecode{y}) only if \inlinecode{can\_equal} is \inlinecode{true}.
 \end{compactitem}
 
@@ -4857,8 +4857,8 @@ int main() {
 Maintain a set of two-dimensional line segments while supporting queries for the closest segment in the set to a given query point. This implementation uses integer points and long doubles for intermediate calculations.
 
 \begin{compactitem}
-  \item \inlinecode{r\_tree(lo, hi)} constructs a set from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}) of segments.
-  \item \inlinecode{nearest(x, y)} returns a segment in the set that contains some point which is as close or closer to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance than any point on any other segment in the set.
+  \item \inlinecode{r\_tree(lo, hi)} constructs a set from two random-access iterators as a range \inlinecode{[lo, hi)} of segments.
+  \item \inlinecode{nearest(x, y)} returns a segment in the set that contains some point which is as close or closer to \inlinecode{(x, y)} by Euclidean distance than any point on any other segment in the set.
 \end{compactitem}
 
 \textbf{Time Complexity}:
@@ -5936,7 +5936,7 @@ int main() {
 [a, b, f], [c], [d, e, g]
 \end{exampleoutput}
 \subsection{Lowest Common Ancestor (Sparse Table)}
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes u and v is the node that has the longest distance from the root while having both u and v as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
@@ -6025,7 +6025,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lowest Common Ancestor (Segment Tree)}
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes u and v is the node that has the longest distance from the root while having both u and v as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
 \textbf{Time Complexity}:
 \begin{compactitem}

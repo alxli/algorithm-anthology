@@ -28,7 +28,7 @@ new value. Another possible update operation is "increment", in which case
 - `segment_tree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`,
   inclusive, and all values initialized to `v`.
 - `segment_tree(lo, hi)` constructs an array from two random-access iterators as a
-  range [`lo`, `hi`), initialized to the elements of the range in the same order.
+  range `[lo, hi)`, initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`, where `i` is between 0 and `size() - 1`.
 - `query(lo, hi)` returns the result of `join_values()` applied to all indices from

@@ -1,6 +1,6 @@
 /*
 
-Given two ForwardIterators `lo` and `hi` specifying a range [`lo`, `hi`) of $n$ elements,
+Given two ForwardIterators `lo` and `hi` specifying a range `[lo, hi)` of $n$ elements,
 return an iterator to the first occurrence of the majority element, or the
 iterator `hi` if there is no majority element. The majority element is defined as
 an element which occurs strictly more than $\lfloor n/2 \rfloor$ times in the

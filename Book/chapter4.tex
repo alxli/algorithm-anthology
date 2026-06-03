@@ -1,116 +1,1987 @@
-\chapter{Graphs}
+\chapter{Strings}
 
-\section{Depth-First Search}
+\section{String Utilities}
 \setcounter{section}{1}
-\setcounter{subsection}{0}
-\subsection{Graph Class and Depth-First Search}
-A graph consists of a set of objects (a.k.a vertices, or nodes) and a set of connections (a.k.a. edges) between pairs of said objects. A graph may be stored as an adjacency list, which is a space efficient representation that is also time-efficient for traversals.
+Common string functions, many of which are substitutes for features which are not available in standard C++, or may not be available on compilers that do not support C++11 and later. These operations are naive implementations and often depend on certain \inlinecode{std::string} functions that have unspecified complexity.
 
-The following class implements a simple graph using adjacency lists, along with depth-first search and a few other applications. The constructor takes a Boolean argument which specifies whether the instance is a directed or undirected graph. The nodes of the graph are identified by integers indices numbered consecutively starting from 0. The total number of nodes will automatically increase based on the maximum node index passed to \inlinecode{add\_edge()} so far.
+\begin{lstlisting}[language=C++]
+#include <cctype>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+using std::string;
+\end{lstlisting}
+Integer Conversion:
+
+\begin{compactitem}
+  \item \inlinecode{to\_str(i)} returns the string representation of integer \inlinecode{i}, much like \inlinecode{std::to\_string()} in C++11 and later.
+  \item \inlinecode{to\_int(s)} returns the integer representation of string \inlinecode{s}, much like \inlinecode{atoi()}, except handling special cases of overflow by throwing an exception.
+  \item \inlinecode{itoa(value, \&str, base)} implements the non-standard C function which converts \inlinecode{value} into a C string, storing it into pointer \inlinecode{str} in the given \inlinecode{base}. For more generalized base conversion, see the math utilities section.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+template<class Int>
+string to_str(Int i) {
+  std::ostringstream oss;
+  oss << i;
+  return oss.str();
+}
+
+int to_int(const string &s) {
+  std::istringstream iss(s);
+  int res;
+  if (!(iss >> res)) {
+    throw std::runtime_error("to_int failed");
+  }
+  return res;
+}
+
+char* itoa(int value, char *str, int base = 10) {
+  if (base < 2 || base > 36) {
+    *str = '\0';
+    return str;
+  }
+  char *ptr = str, *ptr1 = str, tmp_c;
+  int tmp_v;
+  do {
+    tmp_v = value;
+    value /= base;
+    *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789"
+             "abcdefghijklmnopqrstuvwxyz"[35 + (tmp_v - value * base)];
+  } while (value);
+  if (tmp_v < 0) {
+    *ptr++ = '-';
+  }
+  for (*ptr-- = '\0'; ptr1 < ptr; *ptr1++ = tmp_c) {
+    tmp_c = *ptr;
+    *ptr-- = *ptr1;
+  }
+  return str;
+}
+\end{lstlisting}
+Case Conversion:
+
+\begin{compactitem}
+  \item \inlinecode{to\_upper(s)} returns \inlinecode{s} with all alphabetical characters converted to uppercase.
+  \item \inlinecode{to\_lower(s)} returns \inlinecode{s} with all alphabetical characters converted to lowercase.
+  \item \inlinecode{to\_title(s)} returns the title case representation of string \inlinecode{s}, where the first letter of every word (consecutive alphabetical characters) is capitalized.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+string to_upper(const string &s) {
+  string res;
+  for (int i = 0; i < (int)s.size(); i++) {
+    res.push_back(toupper(s[i]));
+  }
+  return res;
+}
+
+string to_lower(const string &s) {
+  string res;
+  for (int i = 0; i < (int)s.size(); i++) {
+    res.push_back(tolower(s[i]));
+  }
+  return res;
+}
+
+string to_title(const string &s) {
+  string res;
+  char prev = '\0';
+  for (int i = 0; i < (int)s.size(); i++) {
+    if (isalpha(prev)) {
+      res.push_back(tolower(s[i]));
+    } else {
+      res.push_back(toupper(s[i]));
+    }
+    prev = res.back();
+  }
+  return res;
+}
+\end{lstlisting}
+Stripping:
+
+\begin{compactitem}
+  \item \inlinecode{lstrip(s)} strips the left side of \inlinecode{s} in-place (that is, the input is modified) using the given delimiters and returns a reference to the stripped string.
+  \item \inlinecode{rstrip(s)} strips the right side of \inlinecode{s} in-place using the given delimiters and returns a reference to the stripped string.
+  \item \inlinecode{strip(s)} strips both sides of \inlinecode{s} in-place and returns a reference to the stripped string.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+string& lstrip(string &s, const string &delim = " \n\t\v\f\r") {
+  size_t pos = s.find_first_not_of(delim);
+  if (pos != string::npos) {
+    s.erase(0, pos);
+  }
+  return s;
+}
+
+string& rstrip(string &s, const string &delim = " \n\t\v\f\r") {
+  size_t pos = s.find_last_not_of(delim);
+  if (pos != string::npos) {
+    s.erase(pos);
+  }
+  return s;
+}
+
+string& strip(string &s, const string &delim = " \n\t\v\f\r") {
+  return lstrip(rstrip(s));
+}
+\end{lstlisting}
+Find and Replace:
+
+\begin{compactitem}
+  \item \inlinecode{find\_all(haystack, needle)} returns a vector of all positions where the string \inlinecode{needle} appears in the string \inlinecode{haystack}.
+  \item \inlinecode{replace(s, old, replacement)} returns a copy of \inlinecode{s} with all occurrences of the string \inlinecode{old} replaced with the given \inlinecode{replacement}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+std::vector<int> find_all(const string &haystack, const string &needle) {
+  std::vector<int> res;
+  size_t pos = haystack.find(needle, 0);
+  while (pos != string::npos) {
+      res.push_back(pos);
+      pos = haystack.find(needle, pos + 1);
+  }
+  return res;
+}
+
+string replace(const string &s, const string &old, const string &replacement) {
+  if (old.empty()) {
+    return s;
+  }
+  string res(s);
+  size_t pos = 0;
+  while ((pos = res.find(old, pos)) != string::npos) {
+    res.replace(pos, old.length(), replacement);
+    pos += replacement.length();
+  }
+  return res;
+}
+\end{lstlisting}
+Joining and Splitting:
+
+\begin{compactitem}
+  \item \inlinecode{join(v, delim)} returns the strings in vector \inlinecode{v} concatenated, separated by the given delimiter.
+  \item \inlinecode{split(s, char delim)} returns a vector of tokens of \inlinecode{s}, split on a single character delimiter. Note that this version will not skip empty tokens. For example, \inlinecode{split("a::b", ":")} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
+  \item \inlinecode{split(s, string delim)} returns a vector of tokens of \inlinecode{s}, split on a set of many possible single character delimiters. All characters of \inlinecode{delim} will be removed from \inlinecode{s}, and the remaining token(s) of \inlinecode{s} will be added sequentially to a vector and returned. Unlike the first version, empty tokens are skipped. For example, \inlinecode{split("a::b", ":")} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
+  \item \inlinecode{explode(s, delim)} returns a vector of tokens of \inlinecode{s}, split on the entire delimiter string \inlinecode{delim}. Unlike the \inlinecode{split()} functions above, \inlinecode{delim} is treated as a contiguous boundary string, not merely a set of possible boundary characters. This will not skip empty tokens. For example, \inlinecode{explode("a::::b", "::")} yields \inlinecode{\{"a", "", "b"\}}, not \inlinecode{\{"a", "b"\}}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+string join(const std::vector<string> &v, const string &delim = " ") {
+  string res;
+  for (int i = 0; i < (int)v.size(); i++) {
+    if (i > 0) {
+      res += delim;
+    }
+    res += v[i];
+  }
+  return res;
+}
+
+std::vector<string> split(const string &s, char delim) {
+  std::vector<string> res;
+  std::stringstream ss(s);
+  string curr;
+  while (std::getline(ss, curr, delim)) {
+    res.push_back(curr);
+  }
+  return res;
+}
+
+std::vector<string> split(const string &s,
+                          const string &delim = " \n\t\v\f\r") {
+  std::vector<string> res;
+  string curr;
+  for (int i = 0; i < (int)s.size(); i++) {
+    if (delim.find(s[i]) == string::npos) {
+      curr += s[i];
+    } else if (!curr.empty()) {
+      res.push_back(curr);
+      curr = "";
+    }
+  }
+  if (!curr.empty()) {
+    res.push_back(curr);
+  }
+  return res;
+}
+
+std::vector<string> explode(const string &s, const string &delim) {
+  std::vector<string> res;
+  size_t last = 0, next = 0;
+  while ((next = s.find(delim, last)) != string::npos) {
+    res.push_back(s.substr(last, (int)next - last));
+    last = next + delim.size();
+  }
+  res.push_back(s.substr(last));
+  return res;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(to_str(123) + "4" == "1234");
+  assert(to_int("1234") == 1234);
+  char buffer[50];
+  assert(string(itoa(1750, buffer, 10)) == "1750");
+  assert(string(itoa(1750, buffer, 16)) == "6d6");
+  assert(string(itoa(1750, buffer, 2)) == "11011010110");
+
+  assert(to_upper("Hello world") == "HELLO WORLD");
+  assert(to_lower("Hello World") == "hello world");
+  assert(to_title("hello world") == "Hello World");
+
+  string s("   abc \n");
+  string t = s;
+  assert(lstrip(s) == "abc \n");
+  assert(rstrip(s) == strip(t));
+
+  vector<int> pos;
+  pos.push_back(0);
+  pos.push_back(7);
+  assert(find_all("abracadabra", "ab") == pos);
+  assert(replace("abcdabba", "ab", "00") == "00cd00ba");
+
+  assert(join(split("a\nb\ncde\nf", '\n'), "|") == "a|b|cde|f");  // split v1
+  assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");  // split v2
+  assert(join(explode("a..b.cde....f", ".."), "|") == "a|b.cde||f");
+  return 0;
+}
+\end{lstlisting}
+
+\section{String Searching}
+\setcounter{section}{2}
+\setcounter{subsection}{0}
+\subsection{String Searching (KMP)}
+Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine the first positions in which the needle occurs within the given haystacks in linear time using the Knuth-Morris-Pratt algorithm. In comparison, \inlinecode{std::string::find} runs in quadratic time.
+
+\begin{compactitem}
+  \item \inlinecode{kmp(needle)} constructs the partial match table for a string \inlinecode{needle} that is to be searched for subsequently in \inlinecode{haystack} queries.
+  \item \inlinecode{find\_in(haystack)} returns the first position that \inlinecode{needle} occurs in \inlinecode{haystack}, or \inlinecode{std::string::npos} if it cannot be found. Note that the function can be modified to return all matches by simply letting the loop run and storing the results instead of returning early.
+\end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ amortized per call to \inlinecode{add\_edge()}, or $O(\max\left(n, m\right))$ for $n$ calls where the maximum node index passed as an argument is $m$.
-  \item $O(\max\left(n, m\right))$ per call for \inlinecode{dfs()}, \inlinecode{has\_cycle()}, \inlinecode{is\_tree()}, or \inlinecode{is\_dag()}, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(1)$ per call to all other public member functions.
+  \item $O(m)$ per call to the constructor, where $m$ is the length of \inlinecode{needle}.
+  \item $O(n)$ per call to \inlinecode{find\_in(haystack)}, where $n$ is the length of \inlinecode{haystack}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary stack space for \inlinecode{dfs()}, \inlinecode{has\_cycle()}, \inlinecode{is\_tree()}, and \inlinecode{is\_dag()}.
-  \item $O(1)$ auxiliary for all other public member functions.
+  \item $O(m)$ for storage of the partial match table, where $m$ is the length of \inlinecode{needle}.
+  \item $O(1)$ auxiliary space per call to \inlinecode{find\_in(haystack)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <string>
+#include <vector>
+using std::string;
+
+class kmp {
+  string needle;
+  std::vector<int> table;
+
+ public:
+  kmp(const string &needle) : needle(needle), table(needle.size()) {
+    for (int i = 1, j = 0; i < (int)needle.size(); i++) {
+      while (j > 0 && needle[i] != needle[j]) {
+        j = table[j - 1];
+      }
+      if (needle[i] == needle[j]) {
+        j++;
+      }
+      table[i] = j;
+    }
+  }
+
+  size_t find_in(const string &haystack) {
+    int m = needle.size();
+    if (m == 0) {
+      return 0;
+    }
+    for (int i = 0, j = 0; i < (int)haystack.size(); i++) {
+      while (j > 0 && needle[j] != haystack[i]) {
+        j = table[j - 1];
+      }
+      if (needle[j] == haystack[i]) {
+        j++;
+      }
+      if (j == m) {
+        return i + 1 - m;
+      }
+    }
+    return string::npos;
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(15 == kmp("ABCDABD").find_in("ABC ABCDAB ABCDABCDABDE"));
+  return 0;
+}
+\end{lstlisting}
+\subsection{String Searching (Z Algorithm)}
+Given a single string (needle) and a single text (haystack) to be searched, determine the first position in which the needle occurs within the haystack in linear time using the Z algorithm. In comparison, \inlinecode{std::string::find} runs in quadratic time.
+
+The \inlinecode{find()} function below calls the Z algorithm on the concatenation of \inlinecode{needle} and \inlinecode{haystack}, separated by a sentinel character (in this case \inlinecode{\textquotesingle{}\textbackslash{}0\textquotesingle{}}), which should be chosen such that it does not occur within either of the input strings.
+
+\begin{compactitem}
+  \item \inlinecode{z\_array(s)} constructs the Z array for a string \inlinecode{needle} that can be used for string searching. The Z array on an input string \inlinecode{s} is an array \inlinecode{z} where \inlinecode{z[i]} is the length of the longest substring starting from \inlinecode{s[i]} which is also a prefix of \inlinecode{s}.
+  \item \inlinecode{find(haystack, needle)} returns the first position that \inlinecode{needle} occurs in \inlinecode{haystack}, or \inlinecode{std::string::npos} if it cannot be found. Note that the function can be modified to return all matches by simply letting the loop run and storing the results instead of returning early.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{z\_array(s)}, where $n$ is the length of \inlinecode{s}.
+  \item $O(n + m)$ per call to \inlinecode{find(haystack, needle)}, where $n$ is the length of \inlinecode{haystack} and $m$ is the length of \inlinecode{needle}.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary heap space for \inlinecode{z\_array(s)}, where $n$ is the length of \inlinecode{s}.
+  \item $O(n + m)$ auxiliary heap space for \inlinecode{find(haystack, needle)} where $n$ is the length of \inlinecode{haystack} and $m$ is the length of \inlinecode{needle}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <string>
 #include <vector>
+using std::string;
 
-class graph {
-  std::vector<std::vector<int> > adj;
-  bool directed;
-
-  template<class ReportFunction>
-  void dfs(int n, std::vector<bool> &visit, ReportFunction f) const {
-    f(n);
-    visit[n] = true;
-    std::vector<int>::const_iterator it;
-    for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (!visit[*it]) {
-        dfs(*it, visit, f);
-      }
+std::vector<int> z_array(const string &s) {
+  std::vector<int> z(s.size());
+  for (int i = 1, l = 0, r = 0; i < (int)z.size(); i++) {
+    if (i <= r) {
+      z[i] = std::min(r - i + 1, z[i - l]);
+    }
+    while (i + z[i] < (int)z.size() && s[z[i]] == s[i + z[i]]) {
+      z[i]++;
+    }
+    if (r < i + z[i] - 1) {
+      l = i;
+      r = i + z[i] - 1;
     }
   }
+  return z;
+}
 
-  bool has_cycle(int n, int prev, std::vector<bool> &visit,
-                 std::vector<bool> &onstack) const {
-    visit[n] = true;
-    onstack[n] = true;
-    std::vector<int>::const_iterator it;
-    for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (directed && onstack[*it]) {
-        return true;
-      }
-      if (!directed && visit[*it] && *it != prev) {
-        return true;
-      }
-      if (!visit[*it] && has_cycle(*it, n, visit, onstack)) {
-        return true;
-      }
+size_t find(const string &haystack, const string &needle) {
+  std::vector<int> z = z_array(needle + '\0' + haystack);
+  for (int i = (int)needle.size() + 1; i < (int)z.size(); i++) {
+    if (z[i] == (int)needle.size()) {
+      return i - (int)needle.size() - 1;
     }
-    onstack[n] = false;
-    return false;
+  }
+  return string::npos;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(15 == find("ABC ABCDAB ABCDABCDABDE", "ABCDABD"));
+  return 0;
+}
+\end{lstlisting}
+\subsection{String Searching (Aho-Corasick)}
+Given a set of strings (needles) and subsequent queries of texts (haystacks) to be searched, determine all positions in which needles occur within the given haystacks in linear time using the Aho-Corasick algorithm.
+
+Note that this implementation uses an ordered map for storage of the graph, adding an additional $\log k$ factor to the time complexities of all operations, where $k$ is the size of the alphabet (number of distinct characters used across the needles). It also uses an ordered set for storage of the precomputed output tables, adding an additional $\log m$ factor to the time complexities, where $m$ is the number of needles. In C++11 and later, both of these containers should be replaced by their unordered versions for constant time access, thus eliminating the log factors from the time complexities.
+
+\begin{compactitem}
+  \item \inlinecode{aho\_corasick(needles)} constructs the finite-state automaton for a set of needle strings that are to be searched for subsequently in haystack queries.
+  \item \inlinecode{find\_all\_in(haystack, report\_match)} calls the function \inlinecode{report\_match(s, pos)} once on each occurrence of each needle that occurs in the \inlinecode{haystack}, where \inlinecode{pos} is the starting position in the \inlinecode{haystack} at which string \inlinecode{s} (a matched needle) occurs. The matches will be reported in increasing order of their ending positions within the \inlinecode{haystack}.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(m \cdot ((\log m) + l \cdot \log k))$ per call to the constructor, where $m$ is the number of needles, $l$ is the maximum length for any needle, and $k$ is the size of the alphabet used by the needles. If unordered containers are used, then the time complexity reduces to $O(m \cdot l)$, or linear on the input size.
+  \item $O(n \cdot (\log k) + z)$ per call to \inlinecode{find\_all\_in(haystack, report\_match)}, where $n$ is the length of \inlinecode{haystack}, $k$ is the size of the alphabet used by the needles, and $z$ is the number of matches. If unordered containers are used, then the time complexity reduces to $O(n + z)$, or linear on the input size.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(m \cdot l)$ for storage of the automaton, where $m$ is the number of needles and $l$ is the maximum length for any needle.
+  \item $O(1)$ auxiliary space per call to \inlinecode{find\_all\_in(haystack, report\_match)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <map>
+#include <queue>
+#include <set>
+#include <string>
+#include <vector>
+using std::string;
+
+class aho_corasick {
+  std::vector<string> needles;
+  std::vector<int> fail;
+  std::vector<std::map<char, int> > graph;
+  std::vector<std::set<int> > out;
+
+  int next_state(int curr, char c) {
+    int next = curr;
+    while (graph[next].find(c) == graph[next].end()) {
+      next = fail[next];
+    }
+    return graph[next][c];
   }
 
  public:
-  graph(bool directed = true) : directed(directed) {}
-
-  int nodes() const {
-    return (int)adj.size();
-  }
-
-  std::vector<int>& operator[](int n) {
-    return adj[n];
-  }
-
-  void add_edge(int u, int v) {
-    int n = adj.size();
-    if (u >= n || v >= n) {
-      adj.resize(std::max(u, v) + 1);
+  aho_corasick(const std::vector<string> &needles) : needles(needles) {
+    int total_len = 0;
+    for (int i = 0; i < (int)needles.size(); i++) {
+      total_len += needles[i].size();
     }
-    adj[u].push_back(v);
-    if (!directed) {
-      adj[v].push_back(u);
-    }
-  }
-
-  bool is_directed() const {
-    return directed;
-  }
-
-  bool has_cycle() const {
-    int n = adj.size();
-    std::vector<bool> visit(n, false), onstack(n, false);
-    for (int i = 0; i < n; i++) {
-      if (!visit[i] && has_cycle(i, -1, visit, onstack)) {
-        return true;
+    fail.resize(total_len, -1);
+    graph.resize(total_len);
+    out.resize(total_len);
+    int states = 1;
+    std::map<char, int>::iterator it;
+    for (int i = 0; i < (int)needles.size(); i++) {
+      int curr = 0;
+      for (int j = 0; j < (int)needles[i].size(); j++) {
+        char c = needles[i][j];
+        if ((it = graph[curr].find(c)) != graph[curr].end()) {
+          curr = it->second;
+        } else {
+          curr = graph[curr][c] = states++;
+        }
       }
+      out[curr].insert(i);
+    }
+    std::queue<int> q;
+    for (it = graph[0].begin(); it != graph[0].end(); ++it) {
+      if (it->second != 0) {
+        fail[it->second] = 0;
+        q.push(it->second);
+      }
+    }
+    while (!q.empty()) {
+      int u = q.front();
+      q.pop();
+      for (it = graph[u].begin(); it != graph[u].end(); ++it) {
+        int v = it->second, f = fail[u];
+        while (graph[f].find(it->first) == graph[f].end()) {
+          f = fail[f];
+        }
+        f = graph[f].find(it->first)->second;
+        fail[v] = f;
+        out[v].insert(out[f].begin(), out[f].end());
+        q.push(v);
+      }
+    }
+  }
+
+  template<class ReportFunction>
+  void find_all_in(const string &haystack, ReportFunction report_match) {
+    int state = 0;
+    std::set<int>::iterator it;
+    for (int i = 0; i < (int)haystack.size(); i++) {
+      state = next_state(state, haystack[i]);
+      for (it = out[state].begin(); it != out[state].end(); ++it) {
+        report_match(needles[*it], i - needles[*it].size() + 1);
+      }
+    }
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <iostream>
+using namespace std;
+
+void report_match(const string &needle, int pos) {
+  cout << "Matched \"" << needle << "\" at position " << pos << "." << endl;
+}
+
+int main() {
+  vector<string> needles;
+  needles.push_back("a");
+  needles.push_back("ab");
+  needles.push_back("bab");
+  needles.push_back("bc");
+  needles.push_back("bca");
+  needles.push_back("c");
+  needles.push_back("caa");
+  needles.push_back("abccab");
+
+  aho_corasick(needles).find_all_in("abccab", report_match);
+  return 0;
+}
+\end{lstlisting}
+\begin{exampleoutput}
+Matched "a" at position 0.
+Matched "ab" at position 0.
+Matched "bc" at position 1.
+Matched "c" at position 2.
+Matched "c" at position 3.
+Matched "a" at position 4.
+Matched "ab" at position 4.
+Matched "abccab" at position 0.
+\end{exampleoutput}
+
+\section{Expression Parsing}
+\setcounter{section}{3}
+\setcounter{subsection}{0}
+\subsection{Recursive Descent Parsing (Simple)}
+Evaluate an expression in accordance to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators.
+
+\begin{compactitem}
+  \item \inlinecode{eval(s)} returns an evaluation of the arithmetic expression \inlinecode{s}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call to \inlinecode{eval(s)}, where $n$ is the length of \inlinecode{s}.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary stack space for \inlinecode{eval(s)}, where $n$ is the length of \inlinecode{s}.
+
+\begin{lstlisting}[language=C++]
+#include <string>
+
+template<class It>
+int eval(It &it, int prec) {
+  if (prec == 0) {
+    int sign = 1, ret = 0;
+    for (; *it == '-'; it++) {
+      sign *= -1;
+    }
+    if (*it == '(') {
+      ret = eval(++it, 2);
+      it++;
+    } else while (*it >= '0' && *it <= '9') {
+      ret = 10*ret + (*(it++) - '0');
+    }
+    return sign*ret;
+  }
+  int num = eval(it, prec - 1);
+  while (!((prec == 2 && *it != '+' && *it != '-') ||
+           (prec == 1 && *it != '*' && *it != '/'))) {
+    switch (*(it++)) {
+      case '+': num += eval(it, prec - 1); break;
+      case '-': num -= eval(it, prec - 1); break;
+      case '*': num *= eval(it, prec - 1); break;
+      case '/': num /= eval(it, prec - 1); break;
+    }
+  }
+  return num;
+}
+
+int eval(const std::string &s) {
+  std::string expr = s + '\0';
+  std::string::iterator it = expr.begin();
+  return eval(it, 2);
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(eval("1++1") == 2);
+  assert(eval("1+2*3*4+3*(2+2)-100") == -63);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Recursive Descent Parsing (Generic)}
+Evaluate an expression using a generalized parser class for custom-defined operand types, prefix unary operators, binary operators, and precedences. Typical parentheses behavior is supported, but multiplication by juxtaposition is not. Evaluation is performed using the recursive descent algorithm.
+
+An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator \inlinecode{-}.
+
+Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
+
+\begin{compactitem}
+  \item \inlinecode{parser(unary\_op, binary\_op)} initializes a parser with operators specified by maps \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
+  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range \inlinecode{[lo, hi)} of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
+  \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
+  \item $O(nmk)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
+  \item $O(n \log m)$ per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi} and $m$ is the total number of operators defined for the parser instance. In C++11 and later, \inlinecode{std::unordered\_map} may be used in place of \inlinecode{std::map} for storing \inlinecode{unary\_ops} and \inlinecode{binary\_ops}, which will eliminate the $\log m$ factor for a time complexity of $O(n)$ per call.
+  \item $O(nmk + n \log m)$ per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(mk)$ for storage of the $m$ operators, of maximum length $k$.
+  \item $O(n)$ auxiliary stack space for \inlinecode{split(s)}, \inlinecode{eval(lo, hi)}, and \inlinecode{eval(s)}, where $n$ is the length of the argument.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cctype>
+#include <functional>
+#include <map>
+#include <set>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+using std::string;
+
+// Define the custom operand type and representation below.
+typedef double Operand;
+typedef Operand (*UnaryOp)(Operand a);
+typedef Operand (*BinaryOp)(Operand a, Operand b);
+
+bool is_operand(const string &s) {
+  int npoints = 0;
+  for (int i = 0; i < (int)s.size(); i++) {
+    if (s[i] == '.') {
+      if (++npoints > 1) {
+        return false;
+      }
+    } else if (!isdigit(s[i])) {
+      return false;
+    }
+  }
+  return !s.empty();
+}
+
+Operand eval_operand(const string &s) {
+  Operand res;
+  std::stringstream ss(s);
+  ss >> res;
+  return res;
+}
+
+class parser {
+  typedef std::map<string, UnaryOp> unary_op_map;
+  typedef std::map<string, std::pair<BinaryOp, int> > binary_op_map;
+  unary_op_map unary_ops;
+  binary_op_map binary_ops;
+  std::set<string> ops;
+  int max_precedence;
+
+  template<class StrIt>
+  Operand eval_unary(StrIt &lo, StrIt hi) {
+    if (is_operand(*lo)) {
+      return eval_operand(*(lo++));
+    }
+    unary_op_map::iterator it = unary_ops.find(*lo);
+    if (it != unary_ops.end()) {
+      return (it->second)(eval_unary(++lo, hi));
+    }
+    if (*lo != "(") {
+      throw std::runtime_error("Expected \"(\" during eval.");
+    }
+    Operand res = eval_binary(++lo, hi, 0);
+    if (*lo != ")") {
+      throw std::runtime_error("Expected \")\" during eval.");
+    }
+    ++lo;
+    return res;
+  }
+
+  template<class StrIt>
+  Operand eval_binary(StrIt &lo, StrIt hi, Operand precedence) {
+    if (precedence > max_precedence) {
+      return eval_unary(lo, hi);
+    }
+    Operand v = eval_binary(lo, hi, precedence + 1);
+    while (lo != hi) {
+      binary_op_map::iterator it;
+      it = binary_ops.find(*lo);
+      if (it == binary_ops.end() || it->second.second != precedence) {
+        return v;
+      }
+      v = (it->second.first)(v, eval_binary(++lo, hi, precedence + 1));
+    }
+    return v;
+  }
+
+  static string strip(string s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))));
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+  }
+
+ public:
+  parser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
+      : unary_ops(unary_ops), binary_ops(binary_ops) {
+    for (unary_op_map::const_iterator it = unary_ops.begin();
+         it != unary_ops.end(); ++it) {
+      ops.insert(it->first);
+    }
+    max_precedence = 0;
+    for (binary_op_map::const_iterator it = binary_ops.begin();
+         it != binary_ops.end(); ++it) {
+      ops.insert(it->first);
+      max_precedence = std::max(max_precedence, it->second.second);
+    }
+  }
+
+  std::vector<string> split(const string &s) {
+    std::vector<string> res;
+    for (int i = 0; i < (int)s.size(); i++) {
+      if (s[i] == ' ') {
+        continue;
+      }
+      int next_paren = s.size();
+      for (int j = i; j < (int)s.size(); j++) {
+        if (s[j] == '(' || s[j] == ')') {
+          next_paren = j;
+          break;
+        }
+      }
+      while (i < next_paren) {
+        int found = next_paren;
+        string found_op;
+        for (int j = i; j < next_paren && found == next_paren; j++) {
+          for (std::set<string>::iterator it = ops.begin();
+               it != ops.end(); ++it) {
+            if (s.substr(j, it->size()) == *it) {
+              found = j;
+              found_op = *it;
+              break;
+            }
+          }
+        }
+        string term = strip(s.substr(i, found - i));
+        if (!term.empty()) {
+          res.push_back(term);
+          if (!is_operand(term)) {
+            throw std::runtime_error("Failed to split term: \"" + term + "\".");
+          }
+        }
+        if (found < next_paren) {
+          res.push_back(found_op);
+          i = found + found_op.size();
+        } else {
+          i = next_paren;
+        }
+      }
+      if (next_paren < s.size()) {
+        res.push_back(string(1, s[next_paren]));
+      }
+    }
+    return res;
+  }
+
+  template<class StrIt>
+  Operand eval(StrIt lo, StrIt hi) {
+    Operand res = eval_binary(lo, hi, 0);
+    if (lo != hi) {
+      throw std::runtime_error("Eval failed at token " + *lo + ".");
+    }
+    return res;
+  }
+
+  Operand eval(const string &s) {
+    std::vector<string> tokens = split(s);
+    return eval(tokens.begin(), tokens.end());
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cmath>
+using namespace std;
+
+#define EQ(a, b) (fabs((a) - (b)) < 1e-7)
+
+double pos(double a) { return +a; }
+double neg(double a) { return -a; }
+double add(double a, double b) { return a + b; }
+double sub(double a, double b) { return a - b; }
+double mul(double a, double b) { return a * b; }
+double div(double a, double b) { return a / b; }
+
+int main() {
+  map<string, UnaryOp> unary_ops;
+  unary_ops["+"] = pos;
+  unary_ops["-"] = neg;
+
+  map<string, pair<BinaryOp, int> > binary_ops;
+  binary_ops["+"] = make_pair((BinaryOp)add, 0);
+  binary_ops["-"] = make_pair((BinaryOp)sub, 0);
+  binary_ops["*"] = make_pair((BinaryOp)mul, 1);
+  binary_ops["/"] = make_pair((BinaryOp)div, 1);
+  binary_ops["^"] = make_pair((BinaryOp)pow, 2);
+
+  parser p(unary_ops, binary_ops);
+  assert(EQ(p.eval("-+-((--(-+1)))"), -1));
+  assert(EQ(p.eval("5*(3+3)-2-2"), 26));
+  assert(EQ(p.eval("1+2*3*4+3*(+2)-100"), -69));
+  assert(EQ(p.eval("3*3*3*3*3*3-2*2*2*2*2*2*2*2"), 473));
+  assert(EQ(p.eval("3.14 + 3 * (7.7/9.8^32.9  )"), 3.14));
+  assert(EQ(p.eval("5*(3+2)/-1*-2+(-2-2-2+3)-3-(-2)+15/2/2/2+(-2)"), 45.875));
+  assert(EQ(p.eval("123456789./3/3/3*2*2*2+456/6-23/3"), 36579857.6666666667));
+  assert(EQ(p.eval("10/3+10/4+10/5+10/6+10/7+10/8+10/9+10/10+15*23456"),
+            351854.28968253968));
+  assert(EQ(p.eval("-(5-(5-(5-(5-(5-2)))))+(3-(3-(3-(3-(3+3)))))*"
+                   "(7-(7-(7-(7-(7-7+4*5)))))"), 117));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Shunting Yard Parsing}
+Evaluate an expression using a generalized parser class for custom-defined operand types, prefix unary operators, binary operators, and precedences. Typical parentheses behavior is supported, but multiplication by juxtaposition is not. Evaluation is performed using the shunting yard algorithm.
+
+An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator \inlinecode{-}.
+
+Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
+
+\begin{compactitem}
+  \item \inlinecode{parser(unary\_op, binary\_op)} initializes a parser with operators specified by maps \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
+  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range \inlinecode{[lo, hi)} of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
+  \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
+  \item $O(nmk)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
+  \item $O(n \log m)$ per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi} and $m$ is the total number of operators defined for the parser instance. In C++11 and later, \inlinecode{std::unordered\_map} may be used in place of \inlinecode{std::map} for storing \inlinecode{unary\_ops} and \inlinecode{binary\_ops}, which will eliminate the $\log m$ factor for a time complexity of $O(n)$ per call.
+  \item $O(nmk + n \log m)$ per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(mk)$ for storage of the $m$ operators, of maximum length $k$.
+  \item $O(n)$ auxiliary stack space for \inlinecode{split(s)}, \inlinecode{eval(lo, hi)}, and \inlinecode{eval(s)}, where $n$ is the length of the argument.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cctype>
+#include <functional>
+#include <map>
+#include <set>
+#include <sstream>
+#include <stack>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+using std::string;
+
+// Define the custom operand type and representation below.
+typedef double Operand;
+typedef Operand (*UnaryOp)(Operand a);
+typedef Operand (*BinaryOp)(Operand a, Operand b);
+
+bool is_operand(const string &s) {
+  int npoints = 0;
+  for (int i = 0; i < (int)s.size(); i++) {
+    if (s[i] == '.') {
+      if (++npoints > 1) {
+        return false;
+      }
+    } else if (!isdigit(s[i])) {
+      return false;
+    }
+  }
+  return !s.empty();
+}
+
+Operand eval_operand(const string &s) {
+  Operand res;
+  std::stringstream ss(s);
+  ss >> res;
+  return res;
+}
+
+class parser {
+  typedef std::map<string, UnaryOp> unary_op_map;
+  typedef std::map<string, std::pair<BinaryOp, int> > binary_op_map;
+  unary_op_map unary_ops;
+  binary_op_map binary_ops;
+  std::set<string> ops;
+
+  static string strip(string s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))));
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    return s;
+  }
+
+ public:
+  parser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
+      : unary_ops(unary_ops), binary_ops(binary_ops) {
+    for (unary_op_map::const_iterator it = unary_ops.begin();
+         it != unary_ops.end(); ++it) {
+      ops.insert(it->first);
+    }
+    for (binary_op_map::const_iterator it = binary_ops.begin();
+         it != binary_ops.end(); ++it) {
+      ops.insert(it->first);
+    }
+  }
+
+  std::vector<string> split(const string &s) {
+    std::vector<string> res;
+    for (int i = 0; i < (int)s.size(); i++) {
+      if (s[i] == ' ') {
+        continue;
+      }
+      int next_paren = s.size();
+      for (int j = i; j < (int)s.size(); j++) {
+        if (s[j] == '(' || s[j] == ')') {
+          next_paren = j;
+          break;
+        }
+      }
+      while (i < next_paren) {
+        int found = next_paren;
+        string found_op;
+        for (int j = i; j < next_paren && found == next_paren; j++) {
+          for (std::set<string>::iterator it = ops.begin();
+               it != ops.end(); ++it) {
+            if (s.substr(j, it->size()) == *it) {
+              found = j;
+              found_op = *it;
+              break;
+            }
+          }
+        }
+        string term = strip(s.substr(i, found - i));
+        if (!term.empty()) {
+          res.push_back(term);
+          if (!is_operand(term)) {
+            throw std::runtime_error("Failed to split term: \"" + term + "\".");
+          }
+        }
+        if (found < next_paren) {
+          res.push_back(found_op);
+          i = found + found_op.size();
+        } else {
+          i = next_paren;
+        }
+      }
+      if (next_paren < s.size()) {
+        res.push_back(string(1, s[next_paren]));
+      }
+    }
+    return res;
+  }
+
+  template<class StrIt>
+  Operand eval(StrIt lo, StrIt hi) {
+    std::stack<Operand> vals;
+    std::stack<std::pair<string, bool> > ops;
+    ops.push(std::make_pair("(", false));
+    StrIt prev = hi;
+    do {
+      string curr = (lo == hi) ? ")" : *lo;
+      if (is_operand(curr)) {
+        vals.push(eval_operand(curr));
+      } else if (curr == "(") {
+        ops.push(std::make_pair(curr, false));
+      } else if (unary_ops.find(curr) != unary_ops.end() && (prev == hi ||
+                 *prev == "(" || binary_ops.find(*prev) != binary_ops.end())) {
+        ops.push(std::make_pair(curr, true));
+      } else {
+        for (;;) {
+          string op = ops.top().first;
+          bool is_unary = ops.top().second;
+          binary_op_map::iterator it1 = binary_ops.find(op);
+          binary_op_map::iterator it2 = binary_ops.find(curr);
+          if (!is_unary &&
+              (it1 == binary_ops.end() ? -1 : it1->second.second) <
+              (it2 == binary_ops.end() ? -1 : it2->second.second)) {
+            break;
+          }
+          ops.pop();
+          if (op == "(") {
+            break;
+          }
+          Operand b = vals.top();
+          vals.pop();
+          if (is_unary) {
+            unary_op_map::iterator it = unary_ops.find(op);
+            if (it == unary_ops.end()) {
+              throw std::runtime_error("Failed to eval unary op: " + op);
+            }
+            vals.push((it->second)(b));
+          } else {
+            Operand a = vals.top();
+            vals.pop();
+            if (it1 == binary_ops.end()) {
+              throw std::runtime_error("Failed to eval binary op: " + op);
+            }
+            vals.push((it1->second.first)(a, b));
+          }
+        }
+        if (curr != ")") {
+          ops.push(std::make_pair(*lo, false));
+        }
+      }
+      prev = lo;
+    } while (lo++ != hi);
+    return vals.top();
+  }
+
+  Operand eval(const string &s) {
+    std::vector<string> tokens = split(s);
+    return eval(tokens.begin(), tokens.end());
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cmath>
+using namespace std;
+
+#define EQ(a, b) (fabs((a) - (b)) < 1e-7)
+
+double pos(double a) { return +a; }
+double neg(double a) { return -a; }
+double add(double a, double b) { return a + b; }
+double sub(double a, double b) { return a - b; }
+double mul(double a, double b) { return a * b; }
+double div(double a, double b) { return a / b; }
+
+int main() {
+  map<string, UnaryOp> unary_ops;
+  unary_ops["+"] = pos;
+  unary_ops["-"] = neg;
+
+  map<string, pair<BinaryOp, int> > binary_ops;
+  binary_ops["+"] = make_pair((BinaryOp)add, 0);
+  binary_ops["-"] = make_pair((BinaryOp)sub, 0);
+  binary_ops["*"] = make_pair((BinaryOp)mul, 1);
+  binary_ops["/"] = make_pair((BinaryOp)div, 1);
+  binary_ops["^"] = make_pair((BinaryOp)pow, 2);
+
+  parser p(unary_ops, binary_ops);
+  assert(EQ(p.eval("-+-((--(-+1)))"), -1));
+  assert(EQ(p.eval("5*(3+3)-2-2"), 26));
+  assert(EQ(p.eval("1+2*3*4+3*(+2)-100"), -69));
+  assert(EQ(p.eval("3*3*3*3*3*3-2*2*2*2*2*2*2*2"), 473));
+  assert(EQ(p.eval("3.14 + 3 * (7.7/9.8^32.9  )"), 3.14));
+  assert(EQ(p.eval("5*(3+2)/-1*-2+(-2-2-2+3)-3-(-2)+15/2/2/2+(-2)"), 45.875));
+  assert(EQ(p.eval("123456789./3/3/3*2*2*2+456/6-23/3"), 36579857.6666666667));
+  assert(EQ(p.eval("10/3+10/4+10/5+10/6+10/7+10/8+10/9+10/10+15*23456"),
+            351854.28968253968));
+  assert(EQ(p.eval("-(5-(5-(5-(5-(5-2)))))+(3-(3-(3-(3-(3+3)))))*"
+                   "(7-(7-(7-(7-(7-7+4*5)))))"), 117));
+  return 0;
+}
+\end{lstlisting}
+
+\section{Sequence Dynamic Programming}
+\setcounter{section}{4}
+\setcounter{subsection}{0}
+\subsection{Longest Common Substring}
+Given two strings, determine their longest common substring (i.e. consecutive subsequence) using dynamic programming.
+
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{longest\_common\_substring(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+
+\textbf{Space Complexity}: $O(\min\left(n, m\right))$ auxiliary heap space, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+
+\begin{lstlisting}[language=C++]
+#include <string>
+#include <vector>
+using std::string;
+
+string longest_common_substring(const string &s1, const string &s2) {
+  int n = s1.size(), m = s2.size();
+  if (n == 0 || m == 0) {
+    return "";
+  }
+  if (n < m) {
+    return longest_common_substring(s2, s1);
+  }
+  std::vector<int> curr(m), prev(m);
+  int pos = 0, len = 0;
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      if (s1[i] == s2[j]) {
+        curr[j] = (i > 0 && j > 0) ? prev[j - 1] + 1 : 1;
+        if (len < curr[j]) {
+          len = curr[j];
+          pos = i - curr[j] + 1;
+        }
+      } else {
+        curr[j] = 0;
+      }
+    }
+    curr.swap(prev);
+  }
+  return s1.substr(pos, len);
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(longest_common_substring("bbbabca", "aababcd") == "babc");
+  return 0;
+}
+\end{lstlisting}
+\subsection{Longest Common Subsequence}
+Given two strings, determine their longest common subsequence. A subsequence is a string that can be derived from the original string by deleting some elements without changing the order of the remaining elements (e.g. "ACE" is a subsequence of "ABCDE", but "BAE" is not).
+
+\begin{compactitem}
+  \item \inlinecode{longest\_common\_subsequence(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using a classic dynamic programming approach. This implementation computes $dp[i][j]$ (the length of the longest common subsequence for the length $i$ prefix of \inlinecode{s1} and the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer.
+  \item \inlinecode{hirschberg\_lcs(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{longest\_common\_subsequence(s1, s2)} as well as \inlinecode{hirschberg\_lcs(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{longest\_common\_subsequence(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+  \item $O(\log \max\left(n, m\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_lcs(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <iterator>
+#include <string>
+#include <vector>
+using std::string;
+
+string longest_common_subsequence(const string &s1, const string &s2) {
+  int n = s1.size(), m = s2.size();
+  std::vector<std::vector<int> > dp(n + 1, std::vector<int>(m + 1, 0));
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1; j <= m; j++) {
+      if (s1[i - 1] == s2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = std::max(dp[i][j - 1], dp[i - 1][j]);
+      }
+    }
+  }
+  string res;
+  for (int i = n, j = m; i > 0 && j > 0; ) {
+    if (s1[i - 1] == s2[j - 1]) {
+      res += s1[i - 1];
+      i--;
+      j--;
+    } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+  std::reverse(res.begin(), res.end());
+  return res;
+}
+
+template<class It>
+std::vector<int> lcs_len(It lo1, It hi1, It lo2, It hi2) {
+  std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
+  for (It it1 = lo1; it1 != hi1; ++it1) {
+    res.swap(prev);
+    int i = 0;
+    for (It it2 = lo2; it2 != hi2; ++it2) {
+      res[i + 1] = (*it1 == *it2) ? prev[i] + 1 : std::max(res[i], prev[i + 1]);
+      i++;
+    }
+  }
+  return res;
+}
+
+template<class It>
+void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
+  if (lo1 == hi1) {
+    return;
+  }
+  if (lo1 + 1 == hi1) {
+    if (std::find(lo2, hi2, *lo1) != hi2) {
+      *res += *lo1;
+    }
+    return;
+  }
+  It mid1 = lo1 + (hi1 - lo1)/2;
+  std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
+  std::vector<int> fwd = lcs_len(lo1, mid1, lo2, hi2);
+  std::vector<int> rev = lcs_len(rlo1, rmid1, rlo2, rhi2);
+  It mid2 = lo2;
+  int maxlen = -1;
+  for (int i = 0, j = (int)rev.size() - 1; i < (int)fwd.size(); i++, j--) {
+    if (fwd[i] + rev[j] > maxlen) {
+      maxlen = fwd[i] + rev[j];
+      mid2 = lo2 + i;
+    }
+  }
+  hirschberg_rec(lo1, mid1, lo2, mid2, res);
+  hirschberg_rec(mid1, hi1, mid2, hi2, res);
+}
+
+string hirschberg_lcs(const string &s1, const string &s2) {
+  if (s1.size() < s2.size()) {
+    return hirschberg_lcs(s2, s1);
+  }
+  string res;
+  hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res);
+  return res;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(longest_common_subsequence("xmjyauz", "mzjawxu") == "mjau");
+  assert(hirschberg_lcs("xmjyauz", "mzjawxu") == "mjau");
+  return 0;
+}
+\end{lstlisting}
+\subsection{Sequence Alignment}
+Given two strings, determine their minimum-cost alignment. An alignment of two strings is a transformation of both strings by inserting gap characters \inlinecode{\_} in some way to make the final lengths equal. The total cost of an alignment given a \inlinecode{gap\_cost} (insertion or deletion cost) and a \inlinecode{sub\_cost} (substitution, i.e. mismatch cost) is \inlinecode{gap\_cost} times the number of inserted gaps, plus \inlinecode{sub\_cost} times the number of indices at which the two aligned strings differ.
+
+\begin{compactitem}
+  \item \inlinecode{align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns a pair of aligned strings for strings \inlinecode{s1} and \inlinecode{s2}, using a classic dynamic programming approach. This implementation first computes $dp[i][j]$ (the cost of aligning the length $i$ prefix of \inlinecode{s1} with the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer. For \inlinecode{gap\_cost = sub\_cost = 1}, $dp[n][m]$ will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+  \item \inlinecode{hirschberg\_align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns the sequence alignment of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{align\_sequences(s1, s2)} as well as \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of s1 and s2, respectively.
+  \item $O(\log \max\left(n, m\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <string>
+#include <vector>
+#include <utility>
+using std::string;
+
+std::pair<string, string> align_sequences(
+    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1) {
+  int n = s1.size(), m = s2.size();
+  std::vector<std::vector<int> > dp(n + 1, std::vector<int>(m + 1, 0));
+  for (int i = 0; i <= n; i++) {
+    dp[i][0] = i*gap_cost;
+  }
+  for (int j = 0; j <= m; j++) {
+    dp[0][j] = j*gap_cost;
+  }
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1; j <= m; j++) {
+      dp[i][j] = (s1[i - 1] == s2[j - 1]) ? dp[i - 1][j - 1] : std::min(
+          dp[i - 1][j - 1] + sub_cost,
+          std::min(dp[i - 1][j], dp[i][j - 1]) + gap_cost);
+    }
+  }
+  string res1, res2;
+  int i = n, j = m;
+  while (i > 0 && j > 0) {
+    if (s1[i - 1] == s2[j - 1] || dp[i][j] == dp[i - 1][j - 1] + sub_cost) {
+      res1 += s1[--i];
+      res2 += s2[--j];
+    } else if (dp[i][j] == dp[i - 1][j] + gap_cost) {
+      res1 += s1[--i];
+      res2 += '_';
+    } else if (dp[i][j] == dp[i][j - 1] + gap_cost) {
+      res1 += '_';
+      res2 += s2[--j];
+    }
+  }
+  while (i > 0 || j > 0) {
+    res1 += (i > 0) ? s1[--i] : '_';
+    res2 += (j > 0) ? s2[--j] : '_';
+  }
+  std::reverse(res1.begin(), res1.end());
+  std::reverse(res2.begin(), res2.end());
+  return std::make_pair(res1, res2);
+}
+
+template<class It>
+std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2,
+                          int gap_cost, int sub_cost) {
+  std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
+  for (It it1 = lo1; it1 != hi1; ++it1) {
+    res.swap(prev);
+    int i = 0;
+    for (It it2 = lo2; it2 != hi2; ++it2) {
+      res[i + 1] = (*it1 == *it2) ? prev[i] : std::min(prev[i] + sub_cost,
+                                                       res[i] + gap_cost);
+      i++;
+    }
+  }
+  return res;
+}
+
+template<class It>
+void hirschberg_rec(It lo1, It hi1, It lo2, It hi2,
+                    string *res1, string *res2, int gap_cost, int sub_cost) {
+  if (lo1 == hi1) {
+    for (It it2 = lo2; it2 != hi2; ++it2) {
+      *res1 += '_';
+      *res2 += *it2;
+    }
+    return;
+  }
+  if (lo1 + 1 == hi1) {
+    It pos = std::find(lo2, hi2, *lo1);
+    bool insert = (pos == hi2) && (gap_cost*(hi2 - lo2 + 1) < sub_cost);
+    if (lo2 == hi2 || insert) {
+      *res1 += *lo1;
+      *res2 += '_';
+    }
+    for (It it2 = lo2; it2 != hi2; ++it2) {
+      *res1 += (pos == it2 || (!insert && it2 == lo2)) ? *lo1 : '_';
+      *res2 += *it2;
+    }
+    return;
+  }
+  It mid1 = lo1 + (hi1 - lo1)/2;
+  std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
+  std::vector<int> fwd = row_cost(lo1, mid1, lo2, hi2, gap_cost, sub_cost);
+  std::vector<int> rev = row_cost(rlo1, rmid1, rlo2, rhi2, gap_cost, sub_cost);
+  It mid2 = lo2;
+  int mincost = -1;
+  for (int i = 0, j = (int)rev.size() - 1; i < (int)fwd.size(); i++, j--) {
+    if (mincost < 0 || fwd[i] + rev[j] < mincost) {
+      mincost = fwd[i] + rev[j];
+      mid2 = lo2 + i;
+    }
+  }
+  hirschberg_rec(lo1, mid1, lo2, mid2, res1, res2, gap_cost, sub_cost);
+  hirschberg_rec(mid1, hi1, mid2, hi2, res1, res2, gap_cost, sub_cost);
+}
+
+std::pair<string, string> hirschberg_align_sequences(
+    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1) {
+  if (s1.size() < s2.size()) {
+    return hirschberg_align_sequences(s2, s1, gap_cost, sub_cost);
+  }
+  string res1, res2;
+  hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res1, &res2,
+                 gap_cost, sub_cost);
+  return std::make_pair(res1, res2);
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(align_sequences("AGGGCT", "AGGCA", 2, 3) ==
+             make_pair(string("AGGGCT"), string("A_GGCA")));
+  assert(hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) ==
+             make_pair(string("AGGGCT"), string("A_GGCA")));
+  return 0;
+}
+\end{lstlisting}
+
+\section{Suffix Array and LCP}
+\setcounter{section}{5}
+\setcounter{subsection}{0}
+\subsection{Suffix Array and LCP (Manber-Myers)}
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes "cab", "ab", and "b". When sorted, the indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of \inlinecode{[1, 0]}.
+
+\begin{compactitem}
+  \item \inlinecode{suffix\_array(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a comparison-based sort.
+  \item \inlinecode{get\_sa()} returns the constructed suffix array.
+  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
+  \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log^{2} n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ per call to \inlinecode{get\_sa()}.
+  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
+  \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
+  \item $O(n)$ auxiliary heap space for the constructor.
+  \item $O(1)$ auxiliary space for all other operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
+using std::string;
+
+class suffix_array {
+  struct comp {
+    const std::vector<std::pair<int, int> > &rank;
+
+    comp(const std::vector<std::pair<int, int> > &rank) : rank(rank) {}
+
+    bool operator()(int i, int j) {
+      return rank[i] < rank[j];
+    }
+  };
+
+  string s;
+  std::vector<int> sa, rank;
+
+ public:
+  suffix_array(const string &s) : s(s), sa(s.size()), rank(s.size()) {
+    int n = s.size();
+    for (int i = 0; i < n; i++) {
+      sa[i] = i;
+      rank[i] = (int)s[i];
+    }
+    std::vector<std::pair<int, int> > rank2(n);
+    for (int gap = 1; gap < n; gap *= 2) {
+      for (int i = 0; i < n; i++) {
+        rank2[i] = std::make_pair(rank[i], i + gap < n ? rank[i + gap] + 1 : 0);
+      }
+      std::sort(sa.begin(), sa.end(), comp(rank2));
+      for (int i = 0; i < n; i++) {
+        rank[sa[i]] = (i > 0 && rank2[sa[i - 1]] == rank2[sa[i]])
+                      ? rank[sa[i - 1]] : i;
+      }
+    }
+  }
+
+  std::vector<int> get_sa() {
+    return sa;
+  }
+
+  std::vector<int> get_lcp() {
+    int n = s.size();
+    std::vector<int> lcp(n - 1);
+    for (int i = 0, k = 0; i < n; i++) {
+      if (rank[i] < n - 1) {
+        int j = sa[rank[i] + 1];
+        while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
+          k++;
+        }
+        lcp[rank[i]] = k;
+        if (k > 0) {
+          k--;
+        }
+      }
+    }
+    return lcp;
+  }
+
+  size_t find(const string &needle) {
+    int lo = 0, hi = (int)s.size() - 1;
+    while (lo <= hi) {
+      int mid = lo + (hi - lo)/2;
+      int cmp = s.compare(sa[mid], needle.size(), needle);
+      if (cmp < 0) {
+        lo = mid + 1;
+      } else if (cmp > 0) {
+        hi = mid - 1;
+      } else {
+        return sa[mid];
+      }
+    }
+    return string::npos;
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  suffix_array sa("banana");
+  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
+  int sarr_expected[] = {5, 3, 1, 0, 4, 2};
+  int lcp_expected[] = {1, 3, 0, 0, 2};
+  assert(equal(sarr.begin(), sarr.end(), sarr_expected));
+  assert(equal(lcp.begin(), lcp.end(), lcp_expected));
+  assert(sa.find("ana") == 1);
+  assert(sa.find("x") == string::npos);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Suffix Array and LCP (Counting Sort)}
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes "cab", "ab", and "b". When sorted, the indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of \inlinecode{[1, 0]}.
+
+\begin{compactitem}
+  \item \inlinecode{suffix\_array(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a counting sort instead of a comparison-based sort to reduce the running time to $O(n \log n)$.
+  \item \inlinecode{get\_sa()} returns the constructed suffix array.
+  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
+  \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ per call to \inlinecode{get\_sa()}.
+  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
+  \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
+  \item $O(n)$ auxiliary heap space for the constructor.
+  \item $O(1)$ auxiliary space for all other operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
+using std::string;
+
+class suffix_array {
+  struct comp {
+    const string &s;
+
+    comp(const string &s) : s(s) {}
+
+    bool operator()(int i, int j) {
+      return s[i] < s[j];
+    }
+  };
+
+  string s;
+  std::vector<int> sa, rank;
+
+ public:
+  suffix_array(const string &s) : s(s), sa(s.size()), rank(s.size()) {
+    int n = s.size();
+    for (int i = 0; i < n; i++) {
+      sa[i] = n - 1 - i;
+      rank[i] = (int)s[i];
+    }
+    std::stable_sort(sa.begin(), sa.end(), comp(s));
+    for (int gap = 1; gap < n; gap *= 2) {
+      std::vector<int> prev_rank(rank), prev_sa(sa), cnt(n);
+      for (int i = 0; i < n; i++) {
+        cnt[i] = i;
+      }
+      for (int i = 0; i < n; i++) {
+        rank[sa[i]] = (i > 0 && prev_rank[sa[i - 1]] == prev_rank[sa[i]] &&
+                       sa[i - 1] + gap < n &&
+                       prev_rank[sa[i - 1] + gap/2] == prev_rank[sa[i] + gap/2])
+                           ? rank[sa[i - 1]] : i;
+      }
+      for (int i = 0; i < n; i++) {
+        int s1 = prev_sa[i] - gap;
+        if (s1 >= 0) {
+          sa[cnt[rank[s1]]++] = s1;
+        }
+      }
+    }
+  }
+
+  std::vector<int> get_sa() {
+    return sa;
+  }
+
+  std::vector<int> get_lcp() {
+    int n = s.size();
+    std::vector<int> lcp(n - 1);
+    for (int i = 0, k = 0; i < n; i++) {
+      if (rank[i] < n - 1) {
+        int j = sa[rank[i] + 1];
+        while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
+          k++;
+        }
+        lcp[rank[i]] = k;
+        if (k > 0) {
+          k--;
+        }
+      }
+    }
+    return lcp;
+  }
+
+  size_t find(const string &needle) {
+    int lo = 0, hi = (int)s.size() - 1;
+    while (lo <= hi) {
+      int mid = lo + (hi - lo)/2;
+      int cmp = s.compare(sa[mid], needle.size(), needle);
+      if (cmp < 0) {
+        lo = mid + 1;
+      } else if (cmp > 0) {
+        hi = mid - 1;
+      } else {
+        return sa[mid];
+      }
+    }
+    return string::npos;
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  suffix_array sa("banana");
+  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
+  int sarr_expected[] = {5, 3, 1, 0, 4, 2};
+  int lcp_expected[] = {1, 3, 0, 0, 2};
+  assert(equal(sarr.begin(), sarr.end(), sarr_expected));
+  assert(equal(lcp.begin(), lcp.end(), lcp_expected));
+  assert(sa.find("ana") == 1);
+  assert(sa.find("x") == string::npos);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Suffix Array and LCP (Linear DC3)}
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes "cab", "ab", and "b". When sorted, the indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of \inlinecode{[1, 0]}.
+
+\begin{compactitem}
+  \item \inlinecode{suffix\_array(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
+  \item \inlinecode{get\_sa()} returns the constructed suffix array.
+  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
+  \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ per call to \inlinecode{get\_sa()}.
+  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
+  \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
+  \item $O(n)$ auxiliary heap space for the constructor.
+  \item $O(1)$ auxiliary space for all other operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
+using std::string;
+
+class suffix_array {
+  static bool leq(int a1, int a2, int b1, int b2) {
+    return (a1 < b1) || (a1 == b1 && a2 <= b2);
+  }
+
+  static bool leq(int a1, int a2, int a3, int b1, int b2, int b3) {
+    return (a1 < b1) || (a1 == b1 && leq(a2, a3, b2, b3));
+  }
+
+  template<class It>
+  static void radix_pass(It a, It b, It r, int n, int K) {
+    std::vector<int> cnt(K + 1);
+    for (int i = 0; i < n; i++) {
+      cnt[r[a[i]]]++;
+    }
+    for (int i = 1; i <= K; i++) {
+      cnt[i] += cnt[i - 1];
+    }
+    for (int i = n - 1; i >= 0; i--) {
+      b[--cnt[r[a[i]]]] = a[i];
+    }
+  }
+
+  template<class It>
+  static void suffix_array_dc3(It s, It sa, int n, int K) {
+    int n0 = (n + 2)/3, n1 = (n + 1)/3, n2 = n/3, n02 = n0 + n2;
+    std::vector<int> s12(n02 + 3), sa12(n02 + 3), s0(n0), sa0(n0);
+    s12[n02] = s12[n02 + 1] = s12[n02 + 2] = 0;
+    sa12[n02] = sa12[n02 + 1] = sa12[n02 + 2] = 0;
+    for (int i = 0, j = 0; i < n + n0 - n1; i++) {
+      if (i % 3 != 0) {
+        s12[j++] = i;
+      }
+    }
+    radix_pass(s12.begin(), sa12.begin(), s + 2, n02, K);
+    radix_pass(sa12.begin(), s12.begin(), s + 1, n02, K);
+    radix_pass(s12.begin(), sa12.begin(), s, n02, K);
+    int name = 0, c0 = -1, c1 = -1, c2 = -1;
+    for (int i = 0; i < n02; i++) {
+      if (s[sa12[i]] != c0 || s[sa12[i] + 1] != c1 || s[sa12[i] + 2] != c2) {
+        name++;
+        c0 = s[sa12[i]];
+        c1 = s[sa12[i] + 1];
+        c2 = s[sa12[i] + 2];
+      }
+      (sa12[i] % 3 == 1 ? s12[sa12[i]/3] : s12[sa12[i]/3 + n0]) = name;
+    }
+    if (name < n02) {
+      suffix_array_dc3(s12.begin(), sa12.begin(), n02, name);
+      for (int i = 0; i < n02; i++) {
+        s12[sa12[i]] = i + 1;
+      }
+    } else {
+      for (int i = 0; i < n02; i++) {
+        sa12[s12[i] - 1] = i;
+      }
+    }
+    for (int i = 0, j = 0; i < n02; i++) {
+      if (sa12[i] < n0) {
+        s0[j++] = 3*sa12[i];
+      }
+    }
+    radix_pass(s0.begin(), sa0.begin(), s, n0, K);
+    for (int p = 0, t = n0 - n1, k = 0; k < n; k++) {
+      int i = (sa12[t] < n0) ? 3*sa12[t] + 1 : 3*(sa12[t] - n0) + 2, j = sa0[p];
+      if (sa12[t] < n0 ? leq(s[i], s12[sa12[t] + n0],s[j], s12[j/3])
+                       : leq(s[i], s[i + 1], s12[sa12[t] - n0 + 1], s[j],
+                             s[j + 1], s12[j / 3 + n0])) {
+        sa[k] = i;
+        if (++t == n02) {
+          for (k++; p < n0; p++, k++) {
+            sa[k] = sa0[p];
+          }
+        }
+      } else {
+        sa[k] = j;
+        if (++p == n0) {
+          for (k++; t < n02; t++, k++) {
+            sa[k] = (sa12[t] < n0) ? 3*sa12[t] + 1 : 3*(sa12[t] - n0) + 2;
+          }
+        }
+      }
+    }
+  }
+
+  string s;
+  std::vector<int> sa;
+
+ public:
+  suffix_array(const string &s) : s(s), sa(s.size() + 1) {
+    int n = s.size();
+    std::vector<int> scopy(s.begin(), s.end());
+    scopy.resize(n + 4);
+    suffix_array_dc3(scopy.begin(), sa.begin(), n + 1, 255);
+    sa.erase(sa.begin());
+  }
+
+  std::vector<int> get_sa() {
+    return sa;
+  }
+
+  std::vector<int> get_lcp() {
+    int n = s.size();
+    if (n == 0) {
+      return std::vector<int>();
+    }
+    std::vector<int> rank(n), lcp(n - 1);
+    for (int i = 0; i < n; i++) {
+      rank[sa[i]] = i;
+    }
+    for (int i = 0, k = 0; i < n; i++) {
+      if (rank[i] < n - 1) {
+        int j = sa[rank[i] + 1];
+        while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
+          k++;
+        }
+        lcp[rank[i]] = k;
+        if (k > 0) {
+          k--;
+        }
+      }
+    }
+    return lcp;
+  }
+
+  size_t find(const string &needle) {
+    int lo = 0, hi = (int)s.size() - 1;
+    while (lo <= hi) {
+      int mid = lo + (hi - lo)/2;
+      int cmp = s.compare(sa[mid], needle.size(), needle);
+      if (cmp < 0) {
+        lo = mid + 1;
+      } else if (cmp > 0) {
+        hi = mid - 1;
+      } else {
+        return sa[mid];
+      }
+    }
+    return string::npos;
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  suffix_array sa("banana");
+  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
+  int sarr_expected[] = {5, 3, 1, 0, 4, 2};
+  int lcp_expected[] = {1, 3, 0, 0, 2};
+  assert(equal(sarr.begin(), sarr.end(), sarr_expected));
+  assert(equal(lcp.begin(), lcp.end(), lcp_expected));
+  assert(sa.find("ana") == 1);
+  assert(sa.find("x") == string::npos);
+  return 0;
+}
+\end{lstlisting}
+
+\section{String Data Structures}
+\setcounter{section}{6}
+\setcounter{subsection}{0}
+\subsection{Trie}
+Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node.
+
+\begin{compactitem}
+  \item \inlinecode{trie()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(s, v)} adds an entry with string key \inlinecode{s} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
+  \item \inlinecode{erase(s)} removes the entry with string key \inlinecode{s} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the string to be removed was not found.
+  \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}. Note that there is a hidden factor of $\log(\text{alphabet\_size})$ which can be considered constant, since \inlinecode{char} can only take on \inlinecode{2\textasciicircum{}CHAR\_BIT} values. The implementation may be optimized by storing the children of nodes in an \inlinecode{std::unordered\_map} in C++11 and later, or an array if a smaller alphabet size is guaranteed.
+  \item $O(l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map.
+  \item $O(1)$ per call to all other operations.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(l)$ for storage of the trie, where $l$ is the total length of string keys that are currently in the map.
+  \item $O(n)$ auxiliary stack space for construction, destruction, \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
+  \item $O(n)$ auxiliary stack space for \inlinecode{erase(s)}, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cstddef>
+#include <map>
+#include <string>
+#include <utility>
+using std::string;
+
+template<class V>
+class trie {
+  struct node_t {
+    V value;
+    bool is_terminal;
+    std::map<char, node_t*> children;
+
+    node_t() : is_terminal(false) {}
+  } *root;
+
+  typedef typename std::map<char, node_t*>::iterator cit;
+
+  static bool erase(node_t *n, const string &s, int i) {
+    if (i == (int)s.size()) {
+      if (!n->is_terminal) {
+        return false;
+      }
+      n->is_terminal = false;
+      return true;
+    }
+    cit it = n->children.find(s[i]);
+    if (it == n->children.end() || !erase(it->second, s, i + 1)) {
+      return false;
+    }
+    if (it->second->children.empty()) {
+      delete it->second;
+      n->children.erase(it);
+    }
+    return true;
+  }
+
+  template<class KVFunction>
+  static void walk(node_t *n, string &s, KVFunction f) {
+    if (n->is_terminal) {
+      f(s, n->value);
+    }
+    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
+      s += it->first;
+      walk(it->second, s, f);
+      s.pop_back();
+    }
+  }
+
+  static void clean_up(node_t *n) {
+    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
+      clean_up(it->second);
+    }
+    delete n;
+  }
+
+  int num_terminals;
+
+ public:
+  trie() : root(new node_t()), num_terminals(0) {}
+
+  ~trie() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_terminals;
+  }
+
+  bool empty() const {
+    return num_terminals == 0;
+  }
+
+  bool insert(const string &s, const V &v) {
+    node_t *n = root;
+    for (int i = 0; i < (int)s.size(); i++) {
+      cit it = n->children.find(s[i]);
+      if (it == n->children.end()) {
+        n->children[s[i]] = new node_t();
+      }
+      n = n->children[s[i]];
+    }
+    if (n->is_terminal) {
+      return false;
+    }
+    num_terminals++;
+    n->is_terminal = true;
+    n->value = v;
+    return true;
+  }
+
+  bool erase(const string &s) {
+    if (erase(root, s, 0)) {
+      num_terminals--;
+      return true;
     }
     return false;
   }
 
-  bool is_tree() const {
-    return !directed && !has_cycle();
+  const V* find(const string &s) const {
+    node_t *n = root;
+    for (int i = 0; i < (int)s.size(); i++) {
+      cit it = n->children.find(s[i]);
+      if (it == n->children.end()) {
+        return NULL;
+      }
+      n = it->second;
+    }
+    return n->is_terminal ? &(n->value) : NULL;
   }
 
-  bool is_dag() const {
-    return directed && !has_cycle();
-  }
-
-  template<class ReportFunction>
-  void dfs(int start, ReportFunction f) const {
-    std::vector<bool> visit(adj.size(), false);
-    dfs(start, visit, f);
+  template<class KVFunction>
+  void walk(KVFunction f) const {
+    string s = "";
+    walk(root, s, f);
   }
 };
 \end{lstlisting}
@@ -120,2085 +1991,249 @@ class graph {
 #include <iostream>
 using namespace std;
 
-void print(int n) {
-  cout << n << " ";
+void print_entry(const string &k, int v) {
+  cout << "(\"" << k << "\", " << v << ")" << endl;
 }
 
 int main() {
-  {
-    graph g;
-    g.add_edge(0, 1);
-    g.add_edge(0, 6);
-    g.add_edge(0, 7);
-    g.add_edge(1, 2);
-    g.add_edge(1, 5);
-    g.add_edge(2, 3);
-    g.add_edge(2, 4);
-    g.add_edge(7, 8);
-    g.add_edge(7, 11);
-    g.add_edge(8, 9);
-    g.add_edge(8, 10);
-    cout << "DFS order: ";
-    g.dfs(0, print);
-    cout << endl;
-    assert(g[0].size() == 3);
-    assert(g.is_dag());
-    assert(!g.has_cycle());
+  string s[9] = {"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
+  trie<int> t;
+  assert(t.empty());
+  for (int i = 0; i < 9; i++) {
+    assert(t.insert(s[i], i));
   }
-  {
-    graph tree(false);
-    tree.add_edge(0, 1);
-    tree.add_edge(0, 2);
-    tree.add_edge(1, 3);
-    tree.add_edge(1, 4);
-    assert(tree.is_tree());
-    assert(!tree.is_dag());
-    tree.add_edge(2, 3);
-    assert(!tree.is_tree());
-  }
+  t.walk(print_entry);
+  assert(!t.empty());
+  assert(t.size() == 9);
+  assert(!t.insert(s[0], 2));
+  assert(t.size() == 9);
+  assert(*t.find("") == 0);
+  assert(*t.find("ten") == 5);
+  assert(t.erase("tea"));
+  assert(t.size() == 8);
+  assert(t.find("tea") == NULL);
+  assert(t.erase(""));
+  assert(t.find("") == NULL);
   return 0;
 }
 \end{lstlisting}
 \begin{exampleoutput}
-DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
+("", 0)
+("a", 1)
+("i", 6)
+("in", 7)
+("inn", 8)
+("tea", 3)
+("ted", 4)
+("ten", 5)
+("to", 2)
 \end{exampleoutput}
-\subsection{Topological Sorting (DFS)}
-Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every edge from node $u$ to $v$, $u$ comes before $v$ in the ordering. Depth-first search is used to traverse all nodes in post-order.
-
-\inlinecode{toposort(nodes)} takes a directed graph stored as a global adjacency list with nodes indexed from 0 to \inlinecode{nodes - 1} and assigns a valid topological ordering to the global result vector. An error is thrown if the graph contains a cycle.
-
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{toposort()}, where $n$ is the number of nodes and $m$ is the number of edges.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary stack space for \inlinecode{toposort()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <stdexcept>
-#include <vector>
-
-const int MAXN = 100;
-std::vector<int> adj[MAXN], res;
-std::vector<bool> visit(MAXN), done(MAXN);
-
-void dfs(int u) {
-  if (visit[u]) {
-    throw std::runtime_error("Not a directed acyclic graph.");
-  }
-  if (done[u]) {
-    return;
-  }
-  visit[u] = true;
-  for (int j = 0; j < (int)adj[u].size(); j++) {
-    dfs(adj[u][j]);
-  }
-  visit[u] = false;
-  done[u] = true;
-  res.push_back(u);
-}
-
-void toposort(int nodes) {
-  fill(visit.begin(), visit.end(), false);
-  fill(done.begin(), done.end(), false);
-  res.clear();
-  for (int i = 0; i < nodes; i++) {
-    if (!done[i]) {
-      dfs(i);
-    }
-  }
-  std::reverse(res.begin(), res.end());
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-int main() {
-  adj[0].push_back(3);
-  adj[0].push_back(4);
-  adj[1].push_back(3);
-  adj[2].push_back(4);
-  adj[2].push_back(7);
-  adj[3].push_back(5);
-  adj[3].push_back(6);
-  adj[3].push_back(7);
-  adj[4].push_back(6);
-  toposort(8);
-  cout << "The topological order:";
-  for (int i = 0; i < (int)res.size(); i++) {
-    cout << " " << res[i];
-  }
-  cout << endl;
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-The topological order: 2 1 0 4 3 7 6 5
-\end{exampleoutput}
-\subsection{Eulerian Cycles (DFS)}
-A Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an Eulerian cycle if and only if every node has an in-degree equal to its out-degree, and all of its nodes with nonzero degree belong to a single strongly connected component. An undirected graph has an Eulerian cycle if and only if every node has even degree, and all of its nodes with nonzero degree belong to a single connected component.
-
-Given a graph as an adjacency list along with the starting node of the cycle, both functions below return a vector containing all nodes reachable from the starting node in an order which forms an Eulerian cycle. The first node of the cycle will be repeated as the last element of the vector. All nodes of input adjacency lists to both functions must be between 0 and \inlinecode{MAXN - 1}, inclusive. In addition, \inlinecode{euler\_cycle\_undirected()} requires that for every node $v$ which is found in \inlinecode{adj[u]}, node $u$ must also be found in \inlinecode{adj[v]}.
-
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to either function, where $n$ and $m$ are the numbers of nodes and edges respectively.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ auxiliary heap space for \inlinecode{euler\_cycle\_directed()}, where $n$ is the number of nodes.
-  \item $O(n^{2})$ auxiliary heap space for \inlinecode{euler\_cycle\_undirected()}, where $n$ is the number of nodes. This can be reduced to $O(m)$ auxiliary heap space on the number of edges if the \inlinecode{used[][]} bit matrix is replaced with an \inlinecode{std::unordered\_set\textless{}std::pair\textless{}int, int\textgreater{}\textgreater{}}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <bitset>
-#include <vector>
-
-const int MAXN = 100;
-
-std::vector<int> euler_cycle_directed(std::vector<int> adj[], int u) {
-  std::vector<int> stack, curr_edge(MAXN), res;
-  stack.push_back(u);
-  while (!stack.empty()) {
-    u = stack.back();
-    stack.pop_back();
-    while (curr_edge[u] < (int)adj[u].size()) {
-      stack.push_back(u);
-      u = adj[u][curr_edge[u]++];
-    }
-    res.push_back(u);
-  }
-  std::reverse(res.begin(), res.end());
-  return res;
-}
-
-std::vector<int> euler_cycle_undirected(std::vector<int> adj[], int u) {
-  std::bitset<MAXN> used[MAXN];
-  std::vector<int> stack, curr_edge(MAXN), res;
-  stack.push_back(u);
-  while (!stack.empty()) {
-    u = stack.back();
-    stack.pop_back();
-    while (curr_edge[u] < (int)adj[u].size()) {
-      int v = adj[u][curr_edge[u]++];
-      int mn = std::min(u, v), mx = std::max(u, v);
-      if (!used[mn][mx]) {
-        used[mn][mx] = true;
-        stack.push_back(u);
-        u = v;
-      }
-    }
-    res.push_back(u);
-  }
-  std::reverse(res.begin(), res.end());
-  return res;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-int main() {
-  {
-    vector<int> g[5], cycle;
-    g[0].push_back(1);
-    g[1].push_back(2);
-    g[2].push_back(0);
-    g[1].push_back(3);
-    g[3].push_back(4);
-    g[4].push_back(1);
-    cycle = euler_cycle_directed(g, 0);
-    cout << "Eulerian cycle from 0 (directed):";
-    for (int i = 0; i < (int)cycle.size(); i++) {
-      cout << " " << cycle[i];
-    }
-    cout << endl;
-  }
-  {
-    vector<int> g[5], cycle;
-    g[0].push_back(1);
-    g[1].push_back(0);
-    g[1].push_back(2);
-    g[2].push_back(1);
-    g[2].push_back(0);
-    g[0].push_back(2);
-    g[1].push_back(3);
-    g[3].push_back(1);
-    g[3].push_back(4);
-    g[4].push_back(3);
-    g[4].push_back(1);
-    g[1].push_back(4);
-    cycle = euler_cycle_undirected(g, 2);
-    cout << "Eulerian cycle from 2 (undirected):";
-    for (int i = 0; i < (int)cycle.size(); i++) {
-      cout << " " << cycle[i];
-    }
-    cout << endl;
-  }
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-Eulerian cycle from 0 (directed): 0 1 3 4 1 2 0
-Eulerian cycle from 2 (undirected): 2 1 3 4 1 0 2
-\end{exampleoutput}
-\subsection{Unweighted Tree Centers (DFS)}
-An unweighted tree possesses a center, centroid, and diameter. The following functions apply to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}. Nodes in \inlinecode{adj[]} must be numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function arguments.
+\subsection{Radix Tree}
+Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child.
 
 \begin{compactitem}
-  \item \inlinecode{find\_centers()} returns a vector of either one or two tree Jordan centers. The Jordan center of a tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the maximum distance to all other nodes in the tree is minimal.
-  \item \inlinecode{find\_centroid()} returns the node where all of its subtrees have a size less than or equal to $n / 2$, where $n$ is the number of nodes in the tree.
-  \item \inlinecode{diameter()} returns the maximum distance between any two nodes in the tree, using a well-known double depth-first search technique.
+  \item \inlinecode{radix\_tree()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(s, v)} adds an entry with string key \inlinecode{s} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
+  \item \inlinecode{erase(s)} removes the entry with string key \inlinecode{s} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the string to be removed was not found.
+  \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
 \end{compactitem}
-
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes and $m$ is the number of edges.
-
-\textbf{Space Complexity}: $O(n)$ auxiliary stack space for \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes.
-
-\begin{lstlisting}[language=C++]
-#include <utility>
-#include <vector>
-
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
-
-std::vector<int> find_centers(int nodes) {
-  std::vector<int> leaves, degree(nodes);
-  for (int i = 0; i < nodes; i++) {
-    degree[i] = adj[i].size();
-    if (degree[i] <= 1) {
-      leaves.push_back(i);
-    }
-  }
-  int removed = leaves.size();
-  while (removed < nodes) {
-    std::vector<int> nleaves;
-    for (int i = 0; i < (int)leaves.size(); i++) {
-      int u = leaves[i];
-      for (int j = 0; j < (int)adj[u].size(); j++) {
-        int v = adj[u][j];
-        if (--degree[v] == 1) {
-          nleaves.push_back(v);
-        }
-      }
-    }
-    leaves = nleaves;
-    removed += leaves.size();
-  }
-  return leaves;
-}
-
-int find_centroid(int nodes, int u = 0, int p = -1) {
-  int count = 1;
-  bool good_center = true;
-  for (int j = 0; j < (int)adj[u].size(); j++) {
-    int v = adj[u][j];
-    if (v == p) {
-      continue;
-    }
-    int res = find_centroid(nodes, v, u);
-    if (res >= 0) {
-      return res;
-    }
-    int size = -res;
-    good_center &= (size <= nodes / 2);
-    count += size;
-  }
-  good_center &= (nodes - count <= nodes / 2);
-  return good_center ? u : -count;
-}
-
-std::pair<int, int> dfs(int u, int p, int depth) {
-  std::pair<int, int> res = std::make_pair(depth, u);
-  for (int j = 0; j < (int)adj[u].size(); j++) {
-    if (adj[u][j] != p) {
-      res = max(res, dfs(adj[u][j], u, depth + 1));
-    }
-  }
-  return res;
-}
-
-int diameter() {
-  int furthest_node = dfs(0, -1, 0).second;
-  return dfs(furthest_node, -1, 0).first;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  int nodes = 6;
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(2);
-  adj[2].push_back(1);
-  adj[1].push_back(4);
-  adj[4].push_back(1);
-  adj[3].push_back(4);
-  adj[4].push_back(3);
-  adj[4].push_back(5);
-  adj[5].push_back(4);
-  vector<int> centers = find_centers(nodes);
-  assert(centers.size() == 2 && centers[0] == 1 && centers[1] == 4);
-  assert(find_centroid(nodes) == 4);
-  assert(diameter() == 3);
-  return 0;
-}
-\end{lstlisting}
-
-\section{Shortest Path}
-\setcounter{section}{2}
-\setcounter{subsection}{0}
-\subsection{Shortest Path (BFS)}
-Given a starting node in an unweighted, directed graph, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred[]}. \inlinecode{bfs()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which consists of only nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
-
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{bfs()}, where $n$ is the number of nodes and $m$ is the number of edges.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary heap space for \inlinecode{bfs()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <queue>
-#include <utility>
-#include <vector>
-
-const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<int> adj[MAXN];
-int dist[MAXN], pred[MAXN];
-
-void bfs(int nodes, int start) {
-  std::vector<bool> visit(nodes, false);
-  for (int i = 0; i < nodes; i++) {
-    dist[i] = INF;
-    pred[i] = -1;
-  }
-  std::queue<std::pair<int, int> > q;
-  q.push(std::make_pair(start, 0));
-  while (!q.empty()) {
-    int u = q.front().first;
-    int d = q.front().second;
-    q.pop();
-    visit[u] = true;
-    for (int j = 0; j < (int)adj[u].size(); j++) {
-      int v = adj[u][j];
-      if (visit[v]) {
-        continue;
-      }
-      dist[v] = d + 1;
-      pred[v] = u;
-      q.push(std::make_pair(v, d + 1));
-    }
-  }
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-void print_path(int dest) {
-  vector<int> path;
-  for (int j = dest; pred[j] != -1; j = pred[j]) {
-    path.push_back(pred[j]);
-  }
-  cout << "Take the path: ";
-  while (!path.empty()) {
-    cout << path.back() << "->";
-    path.pop_back();
-  }
-  cout << dest << "." << endl;
-}
-
-int main() {
-  int start = 0, dest = 3;
-  adj[0].push_back(1);
-  adj[0].push_back(3);
-  adj[1].push_back(2);
-  adj[1].push_back(3);
-  adj[2].push_back(3);
-  adj[0].push_back(3);
-  bfs(4, start);
-  cout << "The shortest distance from " << start << " to " << dest << " is "
-       << dist[dest] << "." << endl;
-  print_path(dest);
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-The shortest distance from 0 to 3 is 2.
-Take the path: 0->1->3.
-\end{exampleoutput}
-\subsection{Shortest Path (Dijkstra)}
-Given a starting node in a weighted, directed graph with nonnegative weights only, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred[]}. \inlinecode{dijkstra()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
-
-Since \inlinecode{std::priority\_queue} is by default a max-heap, we simulate a min-heap by negating node distances before pushing them and negating them again after popping them. Alternatively, the container can be declared with the following template arguments (\inlinecode{\#include \textless{}functional\textgreater{}} to access \inlinecode{std::greater}): \inlinecode{priority\_queue\textless{}pair\textless{}int, int\textgreater{}, vector\textless{}pair\textless{}int, int\textgreater{} \textgreater{}, greater\textless{}pair\textless{}int, int\textgreater{} \textgreater{} \textgreater{} pq;}
-
-Dijkstra's algorithm may be modified to support negative edge weights by allowing nodes to be re-visited (removing the visited array check in the inner for-loop). This is known as the Shortest Path Faster Algorithm (SPFA), which has a larger running time of $O(n \cdot m)$ on the number of nodes and edges respectively. While it is as slow in the worst case as the Bellman-Ford algorithm, the SPFA still tends to outperform in the average case.
-
-\textbf{Time Complexity}: $O(m \log n)$ for \inlinecode{dijkstra()}, where $m$ is the number of edges and $n$ is the number of nodes.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(m)$ auxiliary heap space for \inlinecode{dijkstra()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <queue>
-#include <utility>
-#include <vector>
-
-const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<std::pair<int, int> > adj[MAXN];
-int dist[MAXN], pred[MAXN];
-
-void dijkstra(int nodes, int start) {
-  std::vector<bool> visit(nodes, false);
-  for (int i = 0; i < nodes; i++) {
-    dist[i] = INF;
-    pred[i] = -1;
-  }
-  dist[start] = 0;
-  std::priority_queue<std::pair<int, int> > pq;
-  pq.push(std::make_pair(0, start));
-  while (!pq.empty()) {
-    int u = pq.top().second;
-    pq.pop();
-    visit[u] = true;
-    for (int j = 0; j < (int)adj[u].size(); j++) {
-      int v = adj[u][j].first;
-      if (visit[v]) {
-        continue;
-      }
-      if (dist[v] > dist[u] + adj[u][j].second) {
-        dist[v] = dist[u] + adj[u][j].second;
-        pred[v] = u;
-        pq.push(std::make_pair(-dist[v], v));
-      }
-    }
-  }
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-void print_path(int dest) {
-  vector<int> path;
-  for (int j = dest; pred[j] != -1; j = pred[j]) {
-    path.push_back(pred[j]);
-  }
-  cout << "Take the path: ";
-  while (!path.empty()) {
-    cout << path.back() << "->";
-    path.pop_back();
-  }
-  cout << dest << "." << endl;
-}
-
-int main() {
-  int start = 0, dest = 3;
-  adj[0].push_back(make_pair(1, 2));
-  adj[0].push_back(make_pair(3, 8));
-  adj[1].push_back(make_pair(2, 2));
-  adj[1].push_back(make_pair(3, 4));
-  adj[2].push_back(make_pair(3, 1));
-  dijkstra(4, start);
-  cout << "The shortest distance from " << start << " to " << dest << " is "
-       << dist[dest] << "." << endl;
-  print_path(dest);
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-The shortest distance from 0 to 3 is 5.
-Take the path: 0->1->2->3.
-\end{exampleoutput}
-\subsection{Shortest Path (Bellman-Ford)}
-Given a starting node in a weighted, directed graph with possibly negative weights, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred[]}. \inlinecode{bellman\_ford()} applies to a global, pre-populated edge list which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
-
-This function will also detect whether the graph contains negative-weighted cycles, in which case there is no shortest path and an error will be thrown.
-
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{bellman\_ford()}, where $n$ is the number of nodes and $m$ is the number of edges.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary heap space for \inlinecode{bellman\_ford()}, where $n$ is the number of nodes.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <stdexcept>
-#include <vector>
-
-struct edge { int u, v, w; };  // Edge from u to v with weight w.
-
-const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<edge> e;
-int dist[MAXN], pred[MAXN];
-
-void bellman_ford(int nodes, int start) {
-  for (int i = 0; i < nodes; i++) {
-    dist[i] = INF;
-    pred[i] = -1;
-  }
-  dist[start] = 0;
-  for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < (int)e.size(); j++) {
-      if (dist[e[j].v] > dist[e[j].u] + e[j].w) {
-        dist[e[j].v] = dist[e[j].u] + e[j].w;
-        pred[e[j].v] = e[j].u;
-      }
-    }
-  }
-  // Optional: Report negative-weighted cycles.
-  for (int i = 0; i < (int)e.size(); i++) {
-    if (dist[e[i].v] > dist[e[i].u] + e[i].w) {
-      throw std::runtime_error("Negative-weight cycle found.");
-    }
-  }
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-void print_path(int dest) {
-  vector<int> path;
-  for (int j = dest; pred[j] != -1; j = pred[j]) {
-    path.push_back(pred[j]);
-  }
-  cout << "Take the path: ";
-  while (!path.empty()) {
-    cout << path.back() << "->";
-    path.pop_back();
-  }
-  cout << dest << "." << endl;
-}
-
-int main() {
-  int start = 0, dest = 2;
-  e.push_back((edge){0, 1, 1});
-  e.push_back((edge){1, 2, 2});
-  e.push_back((edge){0, 2, 5});
-  bellman_ford(3, start);
-  cout << "The shortest distance from " << start << " to " << dest << " is "
-       << dist[dest] << "." << endl;
-  print_path(dest);
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-The shortest distance from 0 to 2 is 3.
-Take the path: 0->1->2.
-\end{exampleoutput}
-\subsection{Shortest Path (Floyd-Warshall)}
-Given a weighted, directed graph with possibly negative weights, determine the minimum distance between all pairs of start and destination nodes in the graph. Optionally, output the shortest path between two nodes using the shortest-path tree precomputed into the \inlinecode{parent[][]} array. \inlinecode{floyd\_warshall()} applies to a global adjacency matrix \inlinecode{dist[][]}, which must be initialized using \inlinecode{initialize()} and subsequently populated with weights. After the function call, \inlinecode{dist[u][v]} will have been modified to contain the shortest path from $u$ to $v$, for all pairs of valid nodes $u$ and $v$.
-
-This function will also detect whether the graph contains negative-weighted cycles, in which case there is no shortest path and an error will be thrown.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ per call to \inlinecode{initialize()}, where $n$ is the number of nodes.
-  \item $O(n^{3})$ per call to \inlinecode{floyd\_warshall()}.
+  \item $O(n)$ per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}. Note that there is a hidden factor of $\log n$ due to map lookups, which can be considered constant amortized. The implementation may be optimized by storing the children of nodes in an \inlinecode{std::unordered\_map} in C++11 and later, or a \inlinecode{std::vector\textless{}pair\textless{}string, node\_t*\textgreater{} \textgreater{}}, since the only container operations required are iteration over the (\inlinecode{key}, \inlinecode{child}) pairs and inserting a new pair. Sticking with an (ordered) \inlinecode{std::map}, we can optimize all operations by using \inlinecode{map.lower\_bound()}, a binary tree search for a child with a shared prefix, instead of iteration.
+  \item $O(l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map.
+  \item $O(1)$ per call to all other operations.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
-  \item $O(n^{2})$ auxiliary heap space for \inlinecode{initialize()} and \inlinecode{floyd\_warshall()}.
+  \item $O(l)$ for storage of the radix tree, where $l$ is the total length of string keys that are currently in the map.
+  \item $O(n)$ auxiliary stack space for construction, destruction, \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
+  \item $O(n)$ auxiliary stack space for \inlinecode{erase(s)}, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <stdexcept>
-
-const int MAXN = 100, INF = 0x3f3f3f3f;
-int dist[MAXN][MAXN], parent[MAXN][MAXN];
-
-void initialize(int nodes) {
-  for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < nodes; j++) {
-      dist[i][j] = (i == j) ? 0 : INF;
-      parent[i][j] = j;
-    }
-  }
-}
-
-void floyd_warshall(int nodes) {
-  for (int k = 0; k < nodes; k++) {
-    for (int i = 0; i < nodes; i++) {
-      for (int j = 0; j < nodes; j++) {
-        if (dist[i][j] > dist[i][k] + dist[k][j]) {
-          dist[i][j] = dist[i][k] + dist[k][j];
-          parent[i][j] = parent[i][k];
-        }
-      }
-    }
-  }
-  // Optional: Report negative-weighted cycles.
-  for (int i = 0; i < nodes; i++) {
-    if (dist[i][i] < 0) {
-      throw std::runtime_error("Negative-weight cycle found.");
-    }
-  }
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-void print_path(int u, int v) {
-  cout << "Take the path " << u;
-  while (u != v) {
-    u = parent[u][v];
-    cout << "->" << u;
-  }
-  cout << "." << endl;
-}
-
-int main() {
-  initialize(3);
-  int start = 0, dest = 2;
-  dist[0][1] = 1;
-  dist[1][2] = 2;
-  dist[0][2] = 5;
-  floyd_warshall(3);
-  cout << "The shortest distance from " << start << " to " << dest << " is "
-       << dist[start][dest] << "." << endl;
-  print_path(start, dest);
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-The shortest distance from 0 to 2 is 3.
-Take the path: 0->1->2.
-\end{exampleoutput}
-
-\section{Connectivity}
-\setcounter{section}{3}
-\setcounter{subsection}{0}
-\subsection{Strongly Connected Components (Kosaraju)}
-Given a directed graph, determine the strongly connected components, that is, the set of all strongly (maximally) connected subgraphs. A subgraph is strongly connected if there is a path between each pair of nodes. Condensing the strongly connected components of a graph into single nodes will result in a directed acyclic graph. \inlinecode{kosaraju()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
-
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{kosaraju()}, where $n$ is the number of nodes and $m$ is the number of edges.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ auxiliary heap space for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary stack space for \inlinecode{kosaraju()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <vector>
-
-const int MAXN = 100;
-std::vector<int> adj[MAXN], rev[MAXN];
-std::vector<bool> visit(MAXN);
-std::vector<std::vector<int> > scc;
-
-void dfs(std::vector<int> g[], std::vector<int> &res, int u) {
-  visit[u] = true;
-  for (int j = 0; j < (int)g[u].size(); j++) {
-    if (!visit[g[u][j]]) {
-      dfs(g, res, g[u][j]);
-    }
-  }
-  res.push_back(u);
-}
-
-void kosaraju(int nodes) {
-  std::fill(visit.begin(), visit.end(), false);
-  std::vector<int> order;
-  for (int i = 0; i < nodes; i++) {
-    rev[i].clear();
-    if (!visit[i]) {
-      dfs(adj, order, i);
-    }
-  }
-  std::reverse(order.begin(), order.end());
-  std::fill(visit.begin(), visit.end(), false);
-  for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < (int)adj[i].size(); j++) {
-      rev[adj[i][j]].push_back(i);
-    }
-  }
-  scc.clear();
-  for (int i = 0; i < (int)order.size(); i++) {
-    if (visit[order[i]]) {
-      continue;
-    }
-    std::vector<int> component;
-    dfs(rev, component, order[i]);
-    scc.push_back(component);
-  }
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-int main() {
-  adj[0].push_back(1);
-  adj[1].push_back(2);
-  adj[1].push_back(4);
-  adj[1].push_back(5);
-  adj[2].push_back(3);
-  adj[2].push_back(6);
-  adj[3].push_back(2);
-  adj[3].push_back(7);
-  adj[4].push_back(0);
-  adj[4].push_back(5);
-  adj[5].push_back(6);
-  adj[6].push_back(5);
-  adj[7].push_back(3);
-  adj[7].push_back(6);
-  kosaraju(8);
-  cout << "Components:" << endl;
-  for (int i = 0; i < (int)scc.size(); i++) {
-    for (int j = 0; j < (int)scc[i].size(); j++) {
-      cout << scc[i][j] << " ";
-    }
-    cout << endl;
-  }
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-1 4 0
-7 3 2
-5 6
-\end{exampleoutput}
-\subsection{Strongly Connected Components (Tarjan)}
-Given a directed graph, determine the strongly connected components. The strongly connected components of a graph is the set of all strongly (maximally) connected subgraphs. A subgraph is strongly connected if there is a path between each pair of nodes. Condensing the strongly connected components of a graph into single nodes will result in a directed acyclic graph. \inlinecode{tarjan()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
-
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{tarjan()}, where $n$ is the number of nodes and $m$ is the number of edges.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary stack space for \inlinecode{tarjan()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <vector>
-
-const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<int> adj[MAXN], stack;
-int timer, lowlink[MAXN];
-std::vector<bool> visit(MAXN);
-std::vector<std::vector<int> > scc;
-
-void dfs(int u) {
-  lowlink[u] = timer++;
-  visit[u] = true;
-  stack.push_back(u);
-  bool is_component_root = true;
-  int v;
-  for (int j = 0; j < (int)adj[u].size(); j++) {
-    v = adj[u][j];
-    if (!visit[v]) {
-      dfs(v);
-    }
-    if (lowlink[u] > lowlink[v]) {
-      lowlink[u] = lowlink[v];
-      is_component_root = false;
-    }
-  }
-  if (!is_component_root) {
-    return;
-  }
-  std::vector<int> component;
-  do {
-    v = stack.back();
-    visit[v] = true;
-    stack.pop_back();
-    lowlink[v] = INF;
-    component.push_back(v);
-  } while (u != v);
-  scc.push_back(component);
-}
-
-void tarjan(int nodes) {
-  scc.clear();
-  stack.clear();
-  std::fill(lowlink, lowlink + nodes, 0);
-  std::fill(visit.begin(), visit.end(), false);
-  timer = 0;
-  for (int i = 0; i < nodes; i++) {
-    if (!visit[i]) {
-      dfs(i);
-    }
-  }
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-int main() {
-  adj[0].push_back(1);
-  adj[1].push_back(2);
-  adj[1].push_back(4);
-  adj[1].push_back(5);
-  adj[2].push_back(3);
-  adj[2].push_back(6);
-  adj[3].push_back(2);
-  adj[3].push_back(7);
-  adj[4].push_back(0);
-  adj[4].push_back(5);
-  adj[5].push_back(6);
-  adj[6].push_back(5);
-  adj[7].push_back(3);
-  adj[7].push_back(6);
-  tarjan(8);
-  cout << "Components:" << endl;
-  for (int i = 0; i < (int)scc.size(); i++) {
-    for (int j = 0; j < (int)scc[i].size(); j++) {
-      cout << scc[i][j] << " ";
-    }
-    cout << endl;
-  }
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-Components:
-5 6
-7 3 2
-4 1 0
-\end{exampleoutput}
-\subsection{Cut-points, Bridges and Bridge Forest}
-Given an undirected graph, compute the following properties of the graph using Tarjan's algorithm. \inlinecode{tarjan()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}. Nodes in \inlinecode{adj[]} must be numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function arguments. \inlinecode{get\_block\_forest()} applies to a global vector \inlinecode{block[]} which must be already precomputed by a call to \inlinecode{tarjan()}.
-
-A cut-point (i.e. cut-node, or articulation point) is any node whose removal increases the number of connected components in the graph.
-
-A bridge is an edge such that when deleted, the number of connected components in the graph is increased. An edge is a bridge if and only if it is not part of any cycle.
-
-Condensing each maximal component without a bridge into a single node, we can decompose any connected graph into a bridge-block tree (a.k.a. bridge-tree or block-tree), with bridges connecting each block. An unconnected graph will thus decompose into a "bridge-block forest."
-
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{tarjan()} and \inlinecode{get\_block\_forest()}, where $n$ is the number of nodes and $m$ is the number of edges.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges
-  \item $O(n)$ auxiliary stack space for \inlinecode{tarjan()}.
-  \item $O(1)$ auxiliary stack space for \inlinecode{get\_block\_forest()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <vector>
-
-const int MAXN = 100;
-int timer, lowlink[MAXN], tin[MAXN], comp[MAXN];
-std::vector<bool> visit(MAXN);
-std::vector<int> adj[MAXN], block_forest[MAXN];
-std::vector<int> stack, cutpoints;
-std::vector<std::vector<int> > block;
-std::vector<std::pair<int, int> > bridges;
-
-void dfs(int u, int p) {
-  visit[u] = true;
-  lowlink[u] = tin[u] = timer++;
-  stack.push_back(u);
-  int v, children = 0;
-  bool cutpoint = false;
-  for (int j = 0; j < (int)adj[u].size(); j++) {
-    v = adj[u][j];
-    if (v == p) {
-      continue;
-    }
-    if (visit[v]) {
-      lowlink[u] = std::min(lowlink[u], tin[v]);
-    } else {
-      dfs(v, u);
-      lowlink[u] = std::min(lowlink[u], lowlink[v]);
-      cutpoint |= (lowlink[v] >= tin[u]);
-      if (lowlink[v] > tin[u]) {
-        bridges.push_back(std::make_pair(u, v));
-      }
-      children++;
-    }
-  }
-  if (p == -1) {
-    cutpoint = (children >= 2);
-  }
-  if (cutpoint) {
-    cutpoints.push_back(u);
-  }
-  if (lowlink[u] == tin[u]) {
-    std::vector<int> component;
-    do {
-      v = stack.back();
-      stack.pop_back();
-      component.push_back(v);
-    } while (u != v);
-    block.push_back(component);
-  }
-}
-
-void tarjan(int nodes) {
-  block.clear();
-  bridges.clear();
-  cutpoints.clear();
-  stack.clear();
-  std::fill(lowlink, lowlink + nodes, 0);
-  std::fill(tin, tin + nodes, 0);
-  std::fill(visit.begin(), visit.end(), false);
-  timer = 0;
-  for (int i = 0; i < nodes; i++) {
-    if (!visit[i]) {
-      dfs(i, -1);
-    }
-  }
-}
-
-void get_block_forest(int nodes) {
-  std::fill(comp, comp + nodes, 0);
-  for (int i = 0; i < nodes; i++) {
-    block_forest[i].clear();
-  }
-  for (int i = 0; i < (int)block.size(); i++) {
-    for (int j = 0; j < (int)block[i].size(); j++) {
-      comp[block[i][j]] = i;
-    }
-  }
-  for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < (int)adj[i].size(); j++) {
-      if (comp[i] != comp[adj[i][j]]) {
-        block_forest[comp[i]].push_back(comp[adj[i][j]]);
-      }
-    }
-  }
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-void add_edge(int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
-int main() {
-  add_edge(0, 1);
-  add_edge(0, 5);
-  add_edge(1, 2);
-  add_edge(1, 5);
-  add_edge(3, 7);
-  add_edge(4, 5);
-  tarjan(8);
-  get_block_forest(8);
-  cout << "Cut-points:";
-  for (int i = 0; i < (int)cutpoints.size(); i++) {
-    cout << " " << cutpoints[i];
-  }
-  cout << endl << "Bridges:" << endl;
-  for (int i = 0; i < (int)bridges.size(); i++) {
-    cout << bridges[i].first << " " << bridges[i].second << endl;
-  }
-  cout << "Blocks, or Edge-Biconnected Components:" << endl;
-  for (int i = 0; i < (int)block.size(); i++) {
-    for (int j = 0; j < (int)block[i].size(); j++) {
-      cout << block[i][j] << " ";
-    }
-    cout << endl;
-  }
-  cout << "Adjacency List for Bridge-Block Forest:" << endl;
-  for (int i = 0; i < (int)block.size(); i++) {
-    cout << i << " =>";
-    for (int j = 0; j < (int)block_forest[i].size(); j++) {
-      cout << " " << block_forest[i][j];
-    }
-    cout << endl;
-  }
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-Cut-points: 5 1
-Bridges:
-1 2
-5 4
-3 7
-Blocks, a.k.a. Edge-Biconnected Components:
-2
-4
-5 1 0
-7
-3
-6
-Adjacency List for Bridge-Block Forest:
-0 => 2
-1 => 2
-2 => 0 1
-3 => 4
-4 => 3
-5 =>
-\end{exampleoutput}
-
-\section{Minimum Spanning Tree}
-\setcounter{section}{4}
-\setcounter{subsection}{0}
-\subsection{Minimum Spanning Tree (Prim)}
-Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. \inlinecode{prim()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument. If the input graph is not connected, then this implementation will find the minimum spanning forest.
-
-Since \inlinecode{std::priority\_queue} is by default a max-heap, we simulate a min-heap by negating node distances before pushing them and negating them again after popping them. To modify this implementation to find the maximum spanning tree, the two negation steps can be skipped to prioritize the max edges.
-
-\textbf{Time Complexity}: $O(m \log n)$ per call to \inlinecode{prim()}, where $m$ is the number of edges and $n$ is the number of nodes.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(m)$ auxiliary heap space for \inlinecode{prim()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <queue>
+#include <cstddef>
+#include <map>
+#include <string>
 #include <utility>
-#include <vector>
+using std::string;
 
-const int MAXN = 100;
-std::vector<std::pair<int, int> > adj[MAXN], mst;
+template<class V>
+class radix_tree {
+  struct node_t {
+    V value;
+    bool is_terminal;
+    std::map<string, node_t*> children;
 
-int prim(int nodes) {
-  mst.clear();
-  std::vector<bool> visit(nodes);
-  int total_dist = 0;
-  for (int i = 0; i < nodes; i++) {
-    if (visit[i]) {
-      continue;
-    }
-    visit[i] = true;
-    std::priority_queue<std::pair<int, std::pair<int, int> > > pq;
-    for (int j = 0; j < (int)adj[i].size(); j++) {
-      pq.push(std::make_pair(-adj[i][j].second,
-                             std::make_pair(i, adj[i][j].first)));
-    }
-    while (!pq.empty()) {
-      int u = pq.top().second.first;
-      int v = pq.top().second.second;
-      int w = -pq.top().first;
-      pq.pop();
-      if (visit[u] && !visit[v]) {
-        visit[v] = true;
-        if (v != i) {
-          mst.push_back(std::make_pair(u, v));
-          total_dist += w;
-        }
-        for (int j = 0; j < (int)adj[v].size(); j++) {
-          pq.push(std::make_pair(-adj[v][j].second,
-                                 std::make_pair(v, adj[v][j].first)));
-        }
-      }
-    }
-  }
-  return total_dist;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
+    node_t(const V &value = V(), bool is_terminal = false)
+        : value(value), is_terminal(is_terminal) {}
+  } *root;
 
-void add_edge(int u, int v, int w) {
-  adj[u].push_back(make_pair(v, w));
-  adj[v].push_back(make_pair(u, w));
-}
+  typedef typename std::map<string, node_t*>::iterator cit;
 
-int main() {
-  add_edge(0, 1, 4);
-  add_edge(1, 2, 6);
-  add_edge(2, 0, 3);
-  add_edge(3, 4, 1);
-  add_edge(4, 5, 2);
-  add_edge(5, 6, 3);
-  add_edge(6, 4, 4);
-  cout << "Total distance: " << prim(7) << endl;
-  for (int i = 0; i < (int)mst.size(); i++) {
-    cout << mst[i].first << " <-> " << mst[i].second << endl;
-  }
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-Total distance: 13
-0 <-> 2
-0 <-> 1
-3 <-> 4
-4 <-> 5
-5 <-> 6
-\end{exampleoutput}
-\subsection{Minimum Spanning Tree (Kruskal)}
-Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. \inlinecode{kruskal()} applies to a global, pre-populated edge list \inlinecode{edges}. If the input graph is not connected, then this implementation will find the minimum spanning forest.
-
-\textbf{Time Complexity}: $O(m \log n)$ per call to \inlinecode{kruskal()}, where $m$ is the number of edges and $n$ is the number of nodes.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges
-  \item $O(n)$ auxiliary stack space for \inlinecode{kruskal()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <utility>
-#include <vector>
-
-const int MAXN = 100;
-std::vector<std::pair<int, std::pair<int, int> > > edges;
-int root[MAXN];
-std::vector<std::pair<int, int> > mst;
-
-int find_root(int x) {
-  if (root[x] != x) {
-    root[x] = find_root(root[x]);
-  }
-  return root[x];
-}
-
-int kruskal(int nodes) {
-  mst.clear();
-  std::sort(edges.begin(), edges.end());
-  int total_dist = 0;
-  for (int i = 0; i < nodes; i++) {
-    root[i] = i;
-  }
-  for (int i = 0; i < (int)edges.size(); i++) {
-    int u = find_root(edges[i].second.first);
-    int v = find_root(edges[i].second.second);
-    if (u != v) {
-      root[u] = root[v];
-      mst.push_back(edges[i].second);
-      total_dist += edges[i].first;
-    }
-  }
-  return total_dist;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-void add_edge(int u, int v, int w) {
-  edges.push_back(make_pair(w, make_pair(u, v)));
-}
-
-int main() {
-  add_edge(0, 1, 4);
-  add_edge(1, 2, 6);
-  add_edge(2, 0, 3);
-  add_edge(3, 4, 1);
-  add_edge(4, 5, 2);
-  add_edge(5, 6, 3);
-  add_edge(6, 4, 4);
-  cout << "Total distance: " << kruskal(7) << endl;
-  for (int i = 0; i < (int)mst.size(); i++) {
-    cout << mst[i].first << " <-> " << mst[i].second << endl;
-  }
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-Total distance: 13
-3 <-> 4
-4 <-> 5
-2 <-> 0
-5 <-> 6
-0 <-> 1
-\end{exampleoutput}
-
-\section{Maximum Flow}
-\setcounter{section}{5}
-\setcounter{subsection}{0}
-\subsection{Maximum Flow (Ford-Fulkerson)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{ford\_fulkerson()} applies to global variables \inlinecode{nodes}, \inlinecode{source}, \inlinecode{sink}, and \inlinecode{cap[][]} which is an adjacency matrix that will be modified by the function call.
-
-The Ford-Fulkerson algorithm is only optimal on graphs with integer capacities, as there exists certain real-valued flow inputs for which the algorithm never terminates. The Edmonds-Karp algorithm is an improvement using breadth-first search, addressing this problem.
-
-\textbf{Time Complexity}: $O(n^{2} \cdot f)$ per call to \inlinecode{ford\_fulkerson()}, where $n$ is the number of nodes and $f$ is the maximum flow.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n^{2})$ for storage of the flow network, where $n$ is the number of nodes.
-  \item $O(n)$ auxiliary stack space for \inlinecode{ford\_fulkerson()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <vector>
-
-const int MAXN = 100, INF = 0x3f3f3f3f;
-int nodes, source, sink, cap[MAXN][MAXN];
-std::vector<bool> visit(MAXN);
-
-int dfs(int u, int f) {
-  if (u == sink) {
-    return f;
-  }
-  visit[u] = true;
-  for (int v = 0; v < nodes; v++) {
-    if (!visit[v] && cap[u][v] > 0) {
-      int flow = dfs(v, std::min(f, cap[u][v]));
-      if (flow > 0) {
-        cap[u][v] -= flow;
-        cap[v][u] += flow;
-        return flow;
-      }
-    }
-  }
-  return 0;
-}
-
-int ford_fulkerson() {
-  int max_flow = 0;
-  for (;;) {
-    std::fill(visit.begin(), visit.end(), false);
-    int flow = dfs(source, INF);
-    if (flow == 0) {
-      break;
-    }
-    max_flow += flow;
-  }
-  return max_flow;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  nodes = 6;
-  source = 0;
-  sink = 5;
-  cap[0][1] = 3;
-  cap[0][2] = 3;
-  cap[1][2] = 2;
-  cap[1][3] = 3;
-  cap[2][4] = 2;
-  cap[3][4] = 1;
-  cap[3][5] = 2;
-  cap[4][5] = 3;
-  assert(ford_fulkerson() == 5);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Maximum Flow (Edmonds-Karp)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{edmonds\_karp()} applies to a global adjacency list \inlinecode{adj[]} that will be modified by the function call.
-
-The Edmonds-Karp algorithm will also support real-valued flow capacities. As such, this implementation will work as intended upon changing the appropriate variables to doubles.
-
-\textbf{Time Complexity}: $O(\min\left(n \cdot m^{2}, m \cdot f\right))$ per call to \inlinecode{edmonds\_karp()}, where $n$ is the number of nodes, $m$ is the number of edges, and $f$ is the maximum flow.
-
-\textbf{Space Complexity}: $O(\max\left(n, m\right))$ for storage of the flow network, where $n$ is the number of nodes and $m$ is the number of edges.
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <queue>
-#include <vector>
-
-struct edge { int u, v, rev, cap, f; };
-
-const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<edge> adj[MAXN];
-
-void add_edge(int u, int v, int cap) {
-  adj[u].push_back((edge){u, v, (int)adj[v].size(), cap, 0});
-  adj[v].push_back((edge){v, u, (int)adj[u].size() - 1, 0, 0});
-}
-
-int edmonds_karp(int nodes, int source, int sink) {
-  int max_flow = 0;
-  for (;;) {
-    std::vector<edge*> pred(nodes, (edge*)0);
-    std::queue<int> q;
-    q.push(source);
-    while (!q.empty() && !pred[sink]) {
-      int u = q.front();
-      q.pop();
-      for (int j = 0; j < (int)adj[u].size(); j++) {
-        edge &e = adj[u][j];
-        if (!pred[e.v] && e.cap > e.f) {
-          pred[e.v] = &e;
-          q.push(e.v);
-        }
-      }
-    }
-    if (!pred[sink]) {
-      break;
-    }
-    int flow = INF;
-    for (int u = sink; u != source; u = pred[u]->u) {
-      flow = std::min(flow, pred[u]->cap - pred[u]->f);
-    }
-    for (int u = sink; u != source; u = pred[u]->u) {
-      pred[u]->f += flow;
-      adj[pred[u]->v][pred[u]->rev].f -= flow;
-    }
-    max_flow += flow;
-  }
-  return max_flow;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  add_edge(0, 1, 3);
-  add_edge(0, 2, 3);
-  add_edge(1, 2, 2);
-  add_edge(1, 3, 3);
-  add_edge(2, 4, 2);
-  add_edge(3, 4, 1);
-  add_edge(3, 5, 2);
-  add_edge(4, 5, 3);
-  assert(edmonds_karp(6, 0, 5) == 5);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Maximum Flow (Dinic)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{dinic()} applies to a global adjacency list \inlinecode{adj[]} that will be modified by the function call.
-
-Dinic's algorithm will also support real-valued flow capacities. As such, this implementation will work as intended upon changing the appropriate variables to doubles.
-
-\textbf{Time Complexity}: $O(n^{2} \cdot m)$ per call to \inlinecode{dinic()}, where $n$ is the number of nodes and $m$ is the number of edges.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the flow network, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary stack and heap space for \inlinecode{dinic()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <queue>
-#include <vector>
-
-struct edge { int v, rev, cap, f; };
-
-const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<edge> adj[MAXN];
-int dist[MAXN], ptr[MAXN];
-
-void add_edge(int u, int v, int cap) {
-  adj[u].push_back((edge){v, (int)adj[v].size(), cap, 0});
-  adj[v].push_back((edge){u, (int)adj[u].size() - 1, 0, 0});
-}
-
-bool dinic_bfs(int nodes, int source, int sink) {
-  std::fill(dist, dist + nodes, -1);
-  dist[source] = 0;
-  std::queue<int> q;
-  q.push(source);
-  while (!q.empty()) {
-    int u = q.front();
-    q.pop();
-    for (int j = 0; j < (int)adj[u].size(); j++) {
-      edge &e = adj[u][j];
-      if (dist[e.v] < 0 && e.f < e.cap) {
-        dist[e.v] = dist[u] + 1;
-        q.push(e.v);
-      }
-    }
-  }
-  return dist[sink] >= 0;
-}
-
-int dinic_dfs(int u, int f, int sink) {
-  if (u == sink) {
-    return f;
-  }
-  for (; ptr[u] < (int)adj[u].size(); ptr[u]++) {
-    edge &e = adj[u][ptr[u]];
-    if (dist[e.v] == dist[u] + 1 && e.f < e.cap) {
-      int flow = dinic_dfs(e.v, std::min(f, e.cap - e.f), sink);
-      if (flow > 0) {
-        e.f += flow;
-        adj[e.v][e.rev].f -= flow;
-        return flow;
-      }
-    }
-  }
-  return 0;
-}
-
-int dinic(int nodes, int source, int sink) {
-  int flow, max_flow = 0;
-  while (dinic_bfs(nodes, source, sink)) {
-    std::fill(ptr, ptr + nodes, 0);
-    while ((flow = dinic_dfs(source, INF, sink)) != 0) {
-      max_flow += flow;
-    }
-  }
-  return max_flow;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  add_edge(0, 1, 3);
-  add_edge(0, 2, 3);
-  add_edge(1, 2, 2);
-  add_edge(1, 3, 3);
-  add_edge(2, 4, 2);
-  add_edge(3, 4, 1);
-  add_edge(3, 5, 2);
-  add_edge(4, 5, 3);
-  assert(dinic(6, 0, 5) == 5);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Maximum Flow (Push-Relabel)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{push\_relabel()} applies to a global adjacency matrix \inlinecode{cap[][]} and returns the maximum flow.
-
-Although the push-relabel algorithm is considered one of the most efficient maximum flow algorithms, it cannot take advantage of the magnitude of the maximum flow being less than $n^3$ (in which case the Ford-Fulkerson or Edmonds-Karp algorithms may be more efficient).
-
-\textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{push\_relabel()}, where $n$ is the number of nodes.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n^{2})$ for storage of the flow network, where $n$ is the number of nodes.
-  \item $O(n)$ auxiliary heap space for \inlinecode{push\_relabel()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <vector>
-
-const int MAXN = 100, INF = 0x3f3f3f3f;
-int cap[MAXN][MAXN], f[MAXN][MAXN];
-
-int push_relabel(int nodes, int source, int sink) {
-  std::vector<int> e(nodes, 0), h(nodes, 0), maxh(nodes, 0);
-  for (int i = 0; i < nodes; i++) {
-    std::fill(f[i], f[i] + nodes, 0);
-  }
-  h[source] = nodes - 1;
-  for (int i = 0; i < nodes; i++) {
-    f[source][i] = cap[source][i];
-    f[i][source] = -f[source][i];
-    e[i] = cap[source][i];
-  }
-  int size = 0;
-  for (;;) {
-    if (size == 0) {
-      for (int i = 0; i < nodes; i++) {
-        if (i != source && i != sink && e[i] > 0) {
-          if (size != 0 && h[i] > h[maxh[0]]) {
-            size = 0;
-          }
-          maxh[size++] = i;
-        }
-      }
-    }
-    if (size == 0) {
-      break;
-    }
-    while (size != 0) {
-      int i = maxh[size - 1];
-      bool pushed = false;
-      for (int j = 0; j < nodes && e[i] != 0; j++) {
-        if (h[i] == h[j] + 1 && cap[i][j] - f[i][j] > 0) {
-          int df = std::min(cap[i][j] - f[i][j], e[i]);
-          f[i][j] += df;
-          f[j][i] -= df;
-          e[i] -= df;
-          e[j] += df;
-          if (e[i] == 0) {
-            size--;
-          }
-          pushed = true;
-        }
-      }
-      if (pushed) {
-        continue;
-      }
-      h[i] = INF;
-      for (int j = 0; j < nodes; j++) {
-        if (h[i] > h[j] + 1 && cap[i][j] - f[i][j] > 0) {
-          h[i] = h[j] + 1;
-        }
-      }
-      if (h[i] > h[maxh[0]]) {
-        size = 0;
+  static int lcp_len(const string &s1, const string &s2, int s2start) {
+    int i = 0;
+    for (int j = s2start; i < (int)s1.size() && j < (int)s2.size(); i++, j++) {
+      if (s1[i] != s2[j]) {
         break;
       }
     }
+    return i;
   }
-  int max_flow = 0;
-  for (int i = 0; i < nodes; i++) {
-    max_flow += f[source][i];
-  }
-  return max_flow;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
 
-int main() {
-  cap[0][1] = 3;
-  cap[0][2] = 3;
-  cap[1][2] = 2;
-  cap[1][3] = 3;
-  cap[2][4] = 2;
-  cap[3][4] = 1;
-  cap[3][5] = 2;
-  cap[4][5] = 3;
-  assert(push_relabel(6, 0, 5) == 5);
-  return 0;
-}
-\end{lstlisting}
-
-\section{Maximum Matching}
-\setcounter{section}{6}
-\setcounter{subsection}{0}
-\subsection{Maximum Bipartite Matching (Kuhn)}
-Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{kuhn()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
-
-\textbf{Time Complexity}: $O(m \cdot (n_{1} + n_{2}))$ per call to \inlinecode{kuhn()}, where $m$ is the number of edges.
-
-\textbf{Space Complexity}: $O(n_{1} + n_{2})$ auxiliary stack space for \inlinecode{kuhn()}.
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <vector>
-
-const int MAXN = 100;
-int match[MAXN];
-std::vector<bool> visit(MAXN);
-std::vector<int> adj[MAXN];
-
-bool dfs(int u) {
-  visit[u] = true;
-  for (int j = 0; j < (int)adj[u].size(); j++) {
-    int v = match[adj[u][j]];
-    if (v == -1 || (!visit[v] && dfs(v))) {
-      match[adj[u][j]] = u;
+  static bool insert(node_t *n, const string &s, int i, const V &v) {
+    if (i == (int)s.size()) {
+      if (n->is_terminal) {
+        return false;
+      }
+      n->is_terminal = true;
       return true;
     }
-  }
-  return false;
-}
-
-int kuhn(int n1, int n2) {
-  std::fill(visit.begin(), visit.end(), false);
-  std::fill(match, match + n2, -1);
-  int matches = 0;
-  for (int i = 0; i < n1; i++) {
-    std::fill(visit.begin(), visit.begin() + n1, false);
-    if (dfs(i)) {
-      matches++;
-    }
-  }
-  return matches;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-int main() {
-  int n1 = 3, n2 = 4;
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(1);
-  adj[1].push_back(2);
-  adj[2].push_back(2);
-  adj[2].push_back(3);
-  cout << "Matched " << kuhn(n1, n2) << " pair(s):" << endl;
-  for (int i = 0; i < n2; i++) {
-    if (match[i] != -1) {
-      cout << match[i] << " " << i << endl;
-    }
-  }
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-Matched 3 pair(s):
-1 0
-0 1
-2 2
-\end{exampleoutput}
-\subsection{Maximum Bipartite Matching (Hopcroft-Karp)}
-Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{hopcroft\_karp()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
-
-\textbf{Time Complexity}: $O(m \cdot \sqrt{n_{1} + n_{2}})$ per call to \inlinecode{hopcroft\_karp()}, where $m$ is the number of edges.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n_{1} + n_{2})$ auxiliary stack and heap space for \inlinecode{hopcroft\_karp()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <queue>
-#include <vector>
-
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
-std::vector<bool> used(MAXN), visit(MAXN);
-int match[MAXN], dist[MAXN];
-
-void bfs(int n1, int n2) {
-  std::fill(dist, dist + n1, -1);
-  std::queue<int> q;
-  for (int u = 0; u < n1; u++) {
-    if (!used[u]) {
-      q.push(u);
-      dist[u] = 0;
-    }
-  }
-  while (!q.empty()) {
-    int u = q.front();
-    q.pop();
-    for (int j = 0; j < (int)adj[u].size(); j++) {
-      int v = match[adj[u][j]];
-      if (v >= 0 && dist[v] < 0) {
-        dist[v] = dist[u] + 1;
-        q.push(v);
-      }
-    }
-  }
-}
-
-bool dfs(int u) {
-  visit[u] = true;
-  for (int j = 0; j < (int)adj[u].size(); j++) {
-    int v = match[adj[u][j]];
-    if (v < 0 || (!visit[v] && dist[v] == dist[u] + 1 && dfs(v))) {
-      match[adj[u][j]] = u;
-      used[u] = true;
-      return true;
-    }
-  }
-  return false;
-}
-
-int hopcroft_karp(int n1, int n2) {
-  std::fill(match, match + n2, -1);
-  std::fill(used.begin(), used.end(), false);
-  int res = 0;
-  for (;;) {
-    bfs(n1, n2);
-    std::fill(visit.begin(), visit.end(), false);
-    int f = 0;
-    for (int u = 0; u < n1; u++) {
-      if (!used[u] && dfs(u)) {
-        f++;
-      }
-    }
-    if (f == 0) {
-      return res;
-    }
-    res += f;
-  }
-  return res;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-int main() {
-  int n1 = 3, n2 = 4;
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(1);
-  adj[1].push_back(2);
-  adj[2].push_back(2);
-  adj[2].push_back(3);
-  cout << "Matched " << hopcroft_karp(n1, n2) << " pair(s):" << endl;
-  for (int i = 0; i < n2; i++) {
-    if (match[i] != -1) {
-      cout << match[i] << " " << i << endl;
-    }
-  }
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-Matched 3 pair(s):
-1 0
-0 1
-2 2
-\end{exampleoutput}
-\subsection{Maximum Graph Matching (Edmonds)}
-Given a directed graph, determine a maximum subset of its edges such that no node is shared between different edges in the resulting subset. \inlinecode{edmonds()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
-
-\textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{edmonds()}, where $n$ is the number of nodes.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n)$ auxiliary heap space for \inlinecode{edmonds()}, where $n$ is the number of nodes.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <queue>
-#include <vector>
-
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
-int p[MAXN], base[MAXN], match[MAXN];
-
-int lca(int nodes, int u, int v) {
-  std::vector<bool> used(nodes);
-  for (;;) {
-    u = base[u];
-    used[u] = true;
-    if (match[u] == -1) {
-      break;
-    }
-    u = p[match[u]];
-  }
-  for (;;) {
-    v = base[v];
-    if (used[v]) {
-      return v;
-    }
-    v = p[match[v]];
-  }
-}
-
-void mark_path(std::vector<bool> &blossom, int u, int b, int child) {
-  for (; base[u] != b; u = p[match[u]]) {
-    blossom[base[u]] = true;
-    blossom[base[match[u]]] = true;
-    p[u] = child;
-    child = match[u];
-  }
-}
-
-int find_path(int nodes, int root) {
-  std::vector<bool> used(nodes);
-  for (int i = 0; i < nodes; ++i) {
-    p[i] = -1;
-    base[i] = i;
-  }
-  used[root] = true;
-  std::queue<int> q;
-  q.push(root);
-  while (!q.empty()) {
-    int u = q.front();
-    q.pop();
-    for (int j = 0; j < (int)adj[u].size(); j++) {
-      int v = adj[u][j];
-      if (base[u] == base[v] || match[u] == v) {
+    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
+      int len = lcp_len(it->first, s, i);
+      if (len == 0) {
         continue;
       }
-      if (v == root || (match[v] != -1 && p[match[v]] != -1)) {
-        int curr_base = lca(nodes, u, v);
-        std::vector<bool> blossom(nodes);
-        mark_path(blossom, u, curr_base, v);
-        mark_path(blossom, v, curr_base, u);
-        for (int i = 0; i < nodes; i++) {
-          if (blossom[base[i]]) {
-            base[i] = curr_base;
-            if (!used[i]) {
-              used[i] = true;
-              q.push(i);
-            }
-          }
+      if (len == (int)it->first.size()) {
+        return insert(it->second, s, i + len, v);
+      }
+      string left = it->first.substr(0, len);
+      string right = it->first.substr(len);
+      node_t *tmp = new node_t();
+      tmp->children[right] = it->second;
+      n->children.erase(it);
+      n->children[left] = tmp;
+      if (len == (int)s.size() - i) {
+        tmp->value = v;
+        tmp->is_terminal = true;
+        return true;
+      }
+      return insert(tmp, s, i + len, v);
+    }
+    n->children[s.substr(i)] = new node_t(v, true);
+    return true;
+  }
+
+  static bool erase(node_t *n, const string &s, int i) {
+    if (i == (int)s.size()) {
+      if (!n->is_terminal) {
+        return false;
+      }
+      n->is_terminal = false;
+      return true;
+    }
+    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
+      int len = lcp_len(it->first, s, i);
+      if (len == 0) {
+        continue;
+      }
+      node_t *child = it->second;
+      if (!erase(child, s, i + len)) {
+        return false;
+      }
+      if (child->children.empty()) {
+        delete child;
+        n->children.erase(it);
+      } else if (child->children.size() == 1) {
+        node_t *grandchild = child->children.begin()->second;
+        if (!child->is_terminal) {
+          string merged_key(it->first + child->children.begin()->first);
+          child->value = grandchild->value;
+          child->is_terminal = grandchild->is_terminal;
+          child->children = grandchild->children;
+          delete grandchild;
+          n->children.erase(it);
+          n->children[merged_key] = child;
         }
-      } else if (p[v] == -1) {
-        p[v] = u;
-        if (match[v] == -1) {
-          return v;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  template<class KVFunction>
+  static void walk(node_t *n, string &s, KVFunction f) {
+    if (n->is_terminal) {
+      f(s, n->value);
+    }
+    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
+      s += it->first;
+      walk(it->second, s, f);
+      s.pop_back();
+    }
+  }
+
+  static void clean_up(node_t *n) {
+    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
+      clean_up(it->second);
+    }
+    delete n;
+  }
+
+  int num_terminals;
+
+ public:
+  radix_tree() : root(new node_t()), num_terminals(0) {}
+
+  ~radix_tree() {
+    clean_up(root);
+  }
+
+  int size() const {
+    return num_terminals;
+  }
+
+  bool empty() const {
+    return num_terminals == 0;
+  }
+
+  bool insert(const string &s, const V &v) {
+    if (insert(root, s, 0, v)) {
+      num_terminals++;
+      return true;
+    }
+    return false;
+  }
+
+  bool erase(const string &s) {
+    if (erase(root, s, 0)) {
+      num_terminals--;
+      return true;
+    }
+    return false;
+  }
+
+  const V* find(const string &s) const {
+    node_t *n = root;
+    int i = 0;
+    while (i < (int)s.size()) {
+      bool found = false;;
+      for (cit it = n->children.begin(); it != n->children.end(); ++it) {
+        if (it->first[0] == s[i]) {
+          i += lcp_len(it->first, s, i);
+          n = it->second;
+          found = true;
+          break;
         }
-        v = match[v];
-        used[v] = true;
-        q.push(v);
+      }
+      if (!found) {
+        return NULL;
       }
     }
+    return n->is_terminal ? &(n->value) : NULL;
   }
-  return -1;
-}
 
-int edmonds(int nodes) {
-  for (int i = 0; i < nodes; i++) {
-    match[i] = -1;
+  template<class KVFunction>
+  void walk(KVFunction f) const {
+    string s = "";
+    walk(root, s, f);
   }
-  for (int i = 0; i < nodes; i++) {
-    if (match[i] == -1) {
-      int u, pu, ppu;
-      for (u = find_path(nodes, i); u != -1; u = ppu) {
-        pu = p[u];
-        ppu = match[pu];
-        match[u] = pu;
-        match[pu] = u;
-      }
-    }
-  }
-  int matches = 0;
-  for (int i = 0; i < nodes; i++) {
-    if (match[i] != -1) {
-      matches++;
-    }
-  }
-  return matches/2;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-int main() {
-  int nodes = 4;
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(2);
-  adj[2].push_back(1);
-  adj[2].push_back(3);
-  adj[3].push_back(2);
-  adj[3].push_back(0);
-  adj[0].push_back(3);
-  cout << "Matched " << edmonds(nodes) << " pair(s):" << endl;
-  for (int i = 0; i < nodes; i++) {
-    if (match[i] != -1 && i < match[i]) {
-      cout << i << " " << match[i] << endl;
-    }
-  }
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-Matched 2 pair(s):
-0 1
-2 3
-\end{exampleoutput}
-
-\section{Hard Problems}
-\setcounter{section}{7}
-\setcounter{subsection}{0}
-\subsection{Maximum Clique (Bron-Kerbosch)}
-Given an undirected graph, \inlinecode{max\_clique()} returns the size of the maximum clique, that is, the largest subset of nodes such that all pairs of nodes in the subset are connected by an edge. \inlinecode{max\_clique\_weighted()} additionally uses a global array \inlinecode{w[]} specifying a weight value for each node, returning the clique in the graph that has maximum total weight.
-
-Both functions apply to a global, pre-populated adjacency matrix \inlinecode{adj[][]} which must satisfy the condition that \inlinecode{adj[u][v]} is \inlinecode{true} if and only if \inlinecode{adj[v][u]} is \inlinecode{true}, for all pairs of nodes $u$ and $v$ respectively between 0 (inclusive) and the total number of nodes (exclusive) as passed in the function argument. Note that \inlinecode{max\_clique\_weighted()} is an efficient implementation using bitmasks of unsigned 64-bit integers, thus requiring the number of nodes to be less than 64.
-
-\textbf{Time Complexity}: $O(3^{n/3})$ per call to \inlinecode{max\_clique()} and \inlinecode{max\_clique\_weighted()}, where $n$ is the number of nodes.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
-  \item $O(n)$ auxiliary stack space for \inlinecode{max\_clique()} and \inlinecode{max\_clique\_weighted()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <bitset>
-#include <vector>
-
-const int MAXN = 35;
-typedef std::bitset<MAXN> bits;
-typedef unsigned long long uint64;
-
-bool adj[MAXN][MAXN];
-int w[MAXN];
-
-int rec(int nodes, bits &curr, bits &pool, bits &excl) {
-  if (pool.none() && excl.none()) {
-    return curr.count();
-  }
-  int ans = 0, u = 0;
-  for (int v = 0; v < nodes; v++) {
-    if (pool[v] || excl[v]) {
-      u = v;
-    }
-  }
-  for (int v = 0; v < nodes; v++) {
-    if (!pool[v] || adj[u][v]) {
-      continue;
-    }
-    bits ncurr, npool, nexcl;
-    for (int i = 0; i < nodes; i++) {
-      ncurr[i] = curr[i];
-    }
-    ncurr[v] = true;
-    for (int j = 0; j < nodes; j++) {
-      npool[j] = pool[j] && adj[v][j];
-      nexcl[j] = excl[j] && adj[v][j];
-    }
-    ans = std::max(ans, rec(nodes, ncurr, npool, nexcl));
-    pool[v] = false;
-    excl[v] = true;
-  }
-  return ans;
-}
-
-int max_clique(int nodes) {
-  bits curr, excl, pool;
-  for (int i = 0; i < nodes; i++) {
-    pool[i] = true;
-  }
-  return rec(nodes, curr, pool, excl);
-}
-
-int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
-  if (pool == 0 && excl == 0) {
-    int res = 0;
-    while (curr != 0) {
-      int u = __builtin_ctzll(curr);
-      res += w[u];
-      curr &= curr - 1;
-    }
-    return res;
-  }
-  if (pool == 0) {
-    return -1;
-  }
-  int res = -1, pivot = __builtin_ctzll(pool | excl);
-  uint64 z = pool & ~g[pivot];
-  while (z != 0) {
-    int u = __builtin_ctzll(z);
-    res = std::max(res, rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
-    pool ^= 1ULL << u;
-    excl |= 1ULL << u;
-    z &= z - 1;
-  }
-  return res;
-}
-
-int max_clique_weighted(int nodes) {
-  std::vector<uint64> g(nodes, 0);
-  for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < nodes; j++) {
-      if (adj[i][j]) {
-        g[i] |= 1ULL << j;
-      }
-    }
-  }
-  return rec(g, 0, (1ULL << nodes) - 1, 0);
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-void add_edge(int u, int v) {
-  adj[u][v] = true;
-  adj[v][u] = true;
-}
-
-int main() {
-  add_edge(0, 1);
-  add_edge(0, 2);
-  add_edge(0, 3);
-  add_edge(1, 2);
-  add_edge(1, 3);
-  add_edge(2, 3);
-  add_edge(3, 4);
-  add_edge(4, 2);
-  w[0] = 10;
-  w[1] = 20;
-  w[2] = 30;
-  w[3] = 40;
-  w[4] = 50;
-  assert(max_clique(5) == 4);
-  assert(max_clique_weighted(5) == 120);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Graph Coloring}
-Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the same color, and that the total number of colors used is minimized. \inlinecode{color\_graph()} applies to a global, pre-populated adjacency matrix \inlinecode{adj[][]} which must satisfy the condition that \inlinecode{adj[u][v]} is \inlinecode{true} if and only if \inlinecode{adj[v][u]} is \inlinecode{true}, for all pairs of nodes $u$ and $v$ respectively between 0 (inclusive) and the total number of nodes (exclusive) as passed in the function argument.
-
-\textbf{Time Complexity}: Exponential on the number of nodes per call to \inlinecode{color\_graph()}.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
-  \item $O(n)$ auxiliary stack and heap space for \inlinecode{color\_graph()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <vector>
-
-const int MAXN = 30;
-int adj[MAXN][MAXN], min_colors, color[MAXN];
-int curr[MAXN], id[MAXN + 1], degree[MAXN + 1];
-
-void rec(int lo, int hi, int n, int used_colors) {
-  if (used_colors >= min_colors) {
-    return;
-  }
-  if (n == hi) {
-    for (int i = lo; i < hi; i++) {
-      color[id[i]] = curr[i];
-    }
-    min_colors = used_colors;
-    return;
-  }
-  std::vector<bool> used(used_colors + 1);
-  for (int i = 0; i < n; i++) {
-    if (adj[id[n]][id[i]]) {
-      used[curr[i]] = true;
-    }
-  }
-  for (int i = 0; i <= used_colors; i++) {
-    if (!used[i]) {
-      int tmp = curr[n];
-      curr[n] = i;
-      rec(lo, hi, n + 1, std::max(used_colors, i + 1));
-      curr[n] = tmp;
-    }
-  }
-}
-
-int color_graph(int nodes) {
-  for (int i = 0; i <= nodes; i++) {
-    id[i] = i;
-    degree[i] = 0;
-  }
-  int res = 1, lo = 0;
-  for (int hi = 1; hi <= nodes; hi++) {
-    int best = hi;
-    for (int i = hi; i < nodes; i++) {
-      if (adj[id[hi - 1]][id[i]]) {
-        degree[id[i]]++;
-      }
-      if (degree[id[best]] < degree[id[i]]) {
-        best = i;
-      }
-    }
-    std::swap(id[hi], id[best]);
-    if (degree[id[hi]] == 0) {
-      min_colors = nodes + 1;
-      std::fill(curr, curr + nodes, 0);
-      rec(lo, hi, lo, 0);
-      lo = hi;
-      res = std::max(res, min_colors);
-    }
-  }
-  return res;
-}
+};
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
@@ -2206,211 +2241,40 @@ int color_graph(int nodes) {
 #include <iostream>
 using namespace std;
 
-void add_edge(int u, int v) {
-  adj[u][v] = true;
-  adj[v][u] = true;
+void print_entry(const string &k, int v) {
+  cout << "(\"" << k << "\", " << v << ")" << endl;
 }
 
 int main() {
-  add_edge(0, 1);
-  add_edge(0, 4);
-  add_edge(1, 3);
-  add_edge(1, 4);
-  add_edge(2, 3);
-  add_edge(2, 4);
-  add_edge(3, 4);
-  int colors = color_graph(5);
-  cout << "Colored using " << colors << " color(s):" << endl;
-  for (int i = 0; i < colors; i++) {
-    cout << "Color " << i + 1 << ":";
-    for (int j = 0; j < 5; j++) {
-      if (color[j] == i) {
-        cout << " " << j;
-      }
-    }
-    cout << endl;
+  string s[9] = {"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
+  radix_tree<int> t;
+  assert(t.empty());
+  for (int i = 0; i < 9; i++) {
+    assert(t.insert(s[i], i));
   }
+  t.walk(print_entry);
+  assert(!t.empty());
+  assert(t.size() == 9);
+  assert(!t.insert(s[0], 2));
+  assert(t.size() == 9);
+  assert(t.find("") && *t.find("") == 0);
+  assert(*t.find("ten") == 5);
+  assert(t.erase("tea"));
+  assert(t.size() == 8);
+  assert(t.find("tea") == NULL);
+  assert(t.erase(""));
+  assert(t.find("") == NULL);
   return 0;
 }
 \end{lstlisting}
 \begin{exampleoutput}
-Colored using 3 color(s):
-Color 1: 0 3
-Color 2: 1 2
-Color 3: 4
-\end{exampleoutput}
-\subsection{Shortest Hamiltonian Cycle (TSP)}
-Given a weighted graph, determine a cycle of minimum total distance which visits each node exactly once and returns to the starting node. This is known as the traveling salesman problem (TSP). Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. \inlinecode{shortest\_hamiltonian\_cycle()} applies to a global adjacency matrix \inlinecode{adj[][]}, which must be populated with \inlinecode{add\_edge()} before the function call.
-
-\textbf{Time Complexity}: $O(2^{n} \cdot n^{2})$ per call to \inlinecode{shortest\_hamiltonian\_cycle()}, where $n$ is the number of nodes.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
-  \item $O(2^{n} \cdot n)$ auxiliary heap space for \inlinecode{shortest\_hamiltonian\_cycle()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-
-const int MAXN = 20, INF = 0x3f3f3f3f;
-int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
-
-void add_edge(int u, int v, int w) {
-  adj[u][v] = w;
-  adj[v][u] = w;  // Remove this line if the graph is directed.
-}
-
-int shortest_hamiltonian_cycle(int nodes) {
-  int max_mask = (1 << nodes) - 1;
-  for (int i = 0; i <= max_mask; i++) {
-    std::fill(dp[i], dp[i] + nodes, INF);
-  }
-  dp[1][0] = 0;
-  for (int mask = 1; mask <= max_mask; mask += 2) {
-    for (int i = 1; i < nodes; i++) {
-      if ((mask & 1 << i) != 0) {
-        for (int j = 0; j < nodes; j++) {
-          if ((mask & 1 << j) != 0) {
-            dp[mask][i] = std::min(dp[mask][i],
-                                   dp[mask ^ (1 << i)][j] + adj[j][i]);
-          }
-        }
-      }
-    }
-  }
-  int res = INF + INF;
-  for (int i = 1; i < nodes; i++) {
-    res = std::min(res, dp[max_mask][i] + adj[i][0]);
-  }
-  int mask = max_mask, old = 0;
-  for (int i = nodes - 1; i >= 1; i--) {
-    int bj = -1;
-    for (int j = 1; j < nodes; j++) {
-      if ((mask & 1 << j) != 0 && (bj == -1 ||
-              dp[mask][bj] + adj[bj][old] > dp[mask][j] + adj[j][old])) {
-        bj = j;
-      }
-    }
-    order[i] = bj;
-    mask ^= 1 << bj;
-    old = bj;
-  }
-  return res;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-int main() {
-  int nodes = 5;
-  add_edge(0, 1, 1);
-  add_edge(0, 2, 10);
-  add_edge(0, 3, 1);
-  add_edge(0, 4, 10);
-  add_edge(1, 2, 10);
-  add_edge(1, 3, 10);
-  add_edge(1, 4, 1);
-  add_edge(2, 3, 1);
-  add_edge(2, 4, 1);
-  add_edge(3, 4, 10);
-  cout << "The shortest hamiltonian cycle has length "
-       << shortest_hamiltonian_cycle(nodes) << "." << endl
-       << "Take the path: ";
-  for (int i = 0; i < nodes; i++) {
-    cout << order[i] << "->";
-  }
-  cout << order[0] << "." << endl;
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-The shortest hamiltonian cycle has length 5.
-Take the path: 0->3->2->4->1->0.
-\end{exampleoutput}
-\subsection{Shortest Hamiltonian Path}
-Given a weighted, directed graph, determine a path of minimum total distance which visits each node exactly once. Unlike the traveling salesman problem, we do not have to return to the starting vertex. Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. \inlinecode{shortest\_hamiltonian\_path()} applies to a global adjacency matrix \inlinecode{adj[][]} which must be populated before the function call.
-
-\textbf{Time Complexity}: $O(2^{n} \cdot n^{2})$ per call to \inlinecode{shortest\_hamiltonian\_path()}, where $n$ is the number of nodes.
-
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n^{2})$ for storage of the graph, where $n$ is the number of nodes.
-  \item $O(2^{n} \cdot n^{2})$ auxiliary heap space for \inlinecode{shortest\_hamiltonian\_path()}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-
-const int MAXN = 20, INF = 0x3f3f3f3f;
-int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
-
-int shortest_hamiltonian_path(int nodes) {
-  int max_mask = (1 << nodes) - 1;
-  for (int i = 0; i <= max_mask; i++) {
-    std::fill(dp[i], dp[i] + nodes, INF);
-  }
-  for (int i = 0; i < nodes; i++) {
-    dp[1 << i][i] = 0;
-  }
-  for (int mask = 1; mask <= max_mask; mask += 2) {
-    for (int i = 0; i < nodes; i++) {
-      if ((mask & 1 << i) != 0) {
-        for (int j = 0; j < nodes; j++) {
-          if ((mask & 1 << j) != 0)
-            dp[mask][i] = std::min(dp[mask][i],
-                                   dp[mask ^ (1 << i)][j] + adj[j][i]);
-        }
-      }
-    }
-  }
-  int res = INF + INF;
-  for (int i = 1; i < nodes; i++) {
-    res = std::min(res, dp[max_mask][i]);
-  }
-  int mask = max_mask, old = -1;
-  for (int i = nodes - 1; i >= 0; i--) {
-    int bj = -1;
-    for (int j = 0; j < nodes; j++) {
-      if ((mask & 1 << j) != 0 &&
-          (bj == -1 || dp[mask][bj] + (old == -1 ? 0 : adj[bj][old]) >
-                       dp[mask][j] + (old == -1 ? 0 : adj[j][old]))) {
-        bj = j;
-      }
-    }
-    order[i] = bj;
-    mask ^= (1 << bj);
-    old = bj;
-  }
-  return res;
-}
-\end{lstlisting}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <iostream>
-using namespace std;
-
-int main() {
-  int nodes = 3;
-  adj[0][1] = 1;
-  adj[0][2] = 1;
-  adj[1][0] = 7;
-  adj[1][2] = 2;
-  adj[2][0] = 3;
-  adj[2][1] = 5;
-  cout << "The shortest hamiltonian path has length "
-       << shortest_hamiltonian_path(nodes) << "." << endl
-       << "Take the path: " << order[0];
-  for (int i = 1; i < nodes; i++) {
-    cout << "->" << order[i];
-  }
-  cout << "." << endl;
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-The shortest hamiltonian path has length 3.
-Take the path: 0->1->2.
+("", 0)
+("a", 1)
+("i", 6)
+("in", 7)
+("inn", 8)
+("tea", 3)
+("ted", 4)
+("ten", 5)
+("to", 2)
 \end{exampleoutput}

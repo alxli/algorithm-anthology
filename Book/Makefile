@@ -4,7 +4,10 @@ chapters:
 	python3 gen_chapters.py
 
 pdf: chapters
-	latexmk -pdf -interaction=nonstopmode -halt-on-error a3c5.tex
+	pdflatex -jobname=A3C5 -interaction=nonstopmode -halt-on-error A3C5.tex
+	pdflatex -jobname=A3C5 -interaction=nonstopmode -halt-on-error A3C5.tex
+	pdflatex -jobname=A3C5 -interaction=nonstopmode -halt-on-error A3C5.tex
 
 clean:
-	latexmk -C a3c5.tex
+	rm -f A3C5.aux A3C5.fdb_latexmk A3C5.fls A3C5.idx A3C5.ilg A3C5.ind
+	rm -f A3C5.listing A3C5.log A3C5.out A3C5.synctex.gz A3C5.toc

@@ -6,7 +6,7 @@ to represent points, requiring operators `<` and `==` to be defined on the numer
 template type.
 
 - `kd_tree(lo, hi)` constructs a set from two random-access iterators to `std::pair`
-  as a range [`lo`, `hi`) of points.
+  as a range `[lo, hi)` of points.
 - `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point in the set
   that falls into the rectangular region consisting of rows from `x1` to `x2`,
   inclusive, and columns from `y1` to `y2`, inclusive. The first argument to `f` is

@@ -6,7 +6,7 @@ closest point in the set to a given query point. This implementation uses
 casting to be defined on the numeric template type.
 
 - `kd_tree(lo, hi)` constructs a set from two random-access iterators to `std::pair`
-  as a range [`lo`, `hi`) of points.
+  as a range `[lo, hi)` of points.
 - `nearest(x, y, can_equal)` returns a point in the set that is closest to (`x`, `y`)
   by Euclidean distance. This may be equal to (`x`, `y`) only if `can_equal` is `true`.
 

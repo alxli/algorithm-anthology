@@ -8,7 +8,7 @@ sorted in decreasing order, then the inversion count is maximal. The following
 two functions are each techniques to efficiently count inversions.
 
 - `inversions(lo, hi)` uses merge sort to return the number of inversions given
-  two random-access iterators as a range [`lo`, `hi`). The input range will be
+  two random-access iterators as a range `[lo, hi)`. The input range will be
   sorted after the function call. This requires `operator <` to be defined on the
   iterators' value type.
 - `inversions(n, a[])` uses a power-of-two trick to return the number of

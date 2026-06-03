@@ -8,7 +8,7 @@ multi-way tree, using a two-pass merge to self-adjust during each deletion.
 
 - `pairing_heap()` constructs an empty priority queue.
 - `pairing_heap(lo, hi)` constructs a priority queue from two ForwardIterators,
-  consisting of elements in the range [`lo`, `hi`).
+  consisting of elements in the range `[lo, hi)`.
 - `size()` returns the size of the priority queue.
 - `empty()` returns whether the priority queue is empty.
 - `push(v)` inserts the value `v` into the priority queue.

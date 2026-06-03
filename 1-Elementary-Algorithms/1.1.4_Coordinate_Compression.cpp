@@ -1,6 +1,6 @@
 /*
 
-Given two ForwardIterators as a range [`lo`, `hi`) of $n$ numerical elements, reassign
+Given two ForwardIterators as a range `[lo, hi)` of $n$ numerical elements, reassign
 each element in the range to an integer in $[0, k)$, where $k$ is the number of
 distinct elements in the original range, while preserving the initial relative
 ordering of elements. That is, if $a$ is the array of original values and $b$

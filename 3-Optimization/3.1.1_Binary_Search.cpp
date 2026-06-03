@@ -9,19 +9,19 @@ discrete binary search is not restricted by available memory, making it useful
 for handling infinitely large search spaces such as real number intervals.
 
 - `binary_search_first_true()` takes two integers `lo` and `hi` as boundaries for
-  the search space [`lo`, `hi`) (i.e. including `lo`, but excluding `hi`) and
-  returns the smallest integer `k` in [`lo`, `hi`) for which the predicate
-  `pred(k)` tests true. If `pred(k)` tests false for every `k` in [`lo`, `hi`), then
+  the search space `[lo, hi)` (i.e. including `lo`, but excluding `hi`) and
+  returns the smallest integer `k` in `[lo, hi)` for which the predicate
+  `pred(k)` tests true. If `pred(k)` tests false for every `k` in `[lo, hi)`, then
   `hi` is returned. This function must be used on a range in which there exists
-  a constant `k` such that `pred(x)` tests false for every `x` in [`lo`, `k`) and
-  true for every `x` in [`k`, `hi`).
+  a constant `k` such that `pred(x)` tests false for every `x` in `[lo, k)` and
+  true for every `x` in `[k, hi)`.
 - `binary_search_last_true()` takes two integers `lo` and `hi` as boundaries for
-  the search space [`lo`, `hi`) (i.e. including `lo`, but excluding `hi`) and
-  returns the largest integer `k` in [`lo`, `hi`) for which the predicate `pred(k)`
-  tests true. If `pred(k)` tests false for every `k` in [`lo`, `hi`), then `hi` is
+  the search space `[lo, hi)` (i.e. including `lo`, but excluding `hi`) and
+  returns the largest integer `k` in `[lo, hi)` for which the predicate `pred(k)`
+  tests true. If `pred(k)` tests false for every `k` in `[lo, hi)`, then `hi` is
   returned. This function must be used on a range in which there exists a
-  constant `k` such that `pred(x)` tests true for every `x` in [`lo`, `k`] and
-  false for every `x` in (`k`, `hi`).
+  constant `k` such that `pred(x)` tests true for every `x` in `[lo, k]` and
+  false for every `x` in `(k, hi)`.
 - `fbinary_search()` is the equivalent of `binary_search_first_true()` on floating
   point predicates. Since any interval of real numbers is dense, the exact
   target cannot be found due to floating point error. Instead, a value that is
