@@ -24,8 +24,7 @@ Space Complexity:
 #include <vector>
 
 template<class T, class It>
-std::map<T, int>
-misra_gries(It lo, It hi, int k) {
+std::map<T, int> misra_gries(It lo, It hi, int k) {
   typedef std::map<T, int> counter_map;
   counter_map count;
   for (It it = lo; it != hi; ++it) {
@@ -36,8 +35,7 @@ misra_gries(It lo, It hi, int k) {
       count[*it] = 1;
     } else {
       std::vector<T> erase;
-      for (typename counter_map::iterator jt = count.begin(); jt != count.end();
-           ++jt) {
+      for (typename counter_map::iterator jt = count.begin(); jt != count.end(); ++jt) {
         if (--jt->second == 0) {
           erase.push_back(jt->first);
         }

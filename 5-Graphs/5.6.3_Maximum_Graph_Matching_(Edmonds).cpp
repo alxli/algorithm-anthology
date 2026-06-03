@@ -116,7 +116,7 @@ int edmonds(int nodes) {
       matches++;
     }
   }
-  return matches/2;
+  return matches / 2;
 }
 
 /*** Example Usage and Output:

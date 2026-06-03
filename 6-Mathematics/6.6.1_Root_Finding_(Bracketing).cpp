@@ -26,15 +26,14 @@ Space Complexity:
 #include <stdexcept>
 
 template<class ContinuousFunction>
-double bisection_root(ContinuousFunction f, double a, double b,
-                      const int ITERATIONS = 100) {
-  if (a > b || f(a)*f(b) > 0) {
+double bisection_root(ContinuousFunction f, double a, double b, const int ITERATIONS = 100) {
+  if (a > b || f(a) * f(b) > 0) {
     throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");
   }
   double m;
   for (int i = 0; i < ITERATIONS; i++) {
-    m = a + (b - a)/2;
-    if (f(a)*f(m) >= 0) {
+    m = a + (b - a) / 2;
+    if (f(a) * f(m) >= 0) {
       a = m;
     } else {
       b = m;
@@ -44,24 +43,23 @@ double bisection_root(ContinuousFunction f, double a, double b,
 }
 
 template<class ContinuousFunction>
-double falsi_illinois_root(ContinuousFunction f, double a, double b,
-                           const int ITERATIONS = 100) {
-  if (a > b || f(a)*f(b) > 0) {
+double falsi_illinois_root(ContinuousFunction f, double a, double b, const int ITERATIONS = 100) {
+  if (a > b || f(a) * f(b) > 0) {
     throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");
   }
   double m, fm, fa = f(a), fb = f(b);
   int side = 0;
   for (int i = 0; i < ITERATIONS; i++) {
-    m = (fa*b - fb*a)/(fa - fb);
+    m = (fa * b - fb * a) / (fa - fb);
     fm = f(m);
-    if (fb*fm > 0) {
+    if (fb * fm > 0) {
       b = m;
       fb = fm;
       if (side < 0) {
         fa /= 2;
       }
       side = -1;
-    } else if (fa*fm > 0) {
+    } else if (fa * fm > 0) {
       a = m;
       fa = fm;
       if (side > 1) {
@@ -81,7 +79,7 @@ double falsi_illinois_root(ContinuousFunction f, double a, double b,
 #include <cmath>
 
 double f(double x) {
-  return x*x - 4*sin(x);
+  return x * x - 4 * sin(x);
 }
 
 int main() {

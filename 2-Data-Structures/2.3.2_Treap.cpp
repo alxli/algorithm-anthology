@@ -36,9 +36,7 @@ Space Complexity:
 template<class K, class V>
 class treap {
   struct node_t {
-    static inline int rand32() {
-      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
-    }
+    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     K key;
     V value;
@@ -128,17 +126,9 @@ class treap {
  public:
   treap() : root(NULL), num_nodes(0) {}
 
-  ~treap() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~treap() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -156,7 +146,7 @@ class treap {
     return false;
   }
 
-  const V* find(const K &k) const {
+  const V *find(const K &k) const {
     node_t *n = root;
     while (n != NULL) {
       if (k < n->key) {

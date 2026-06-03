@@ -52,13 +52,8 @@ class disjoint_set_forest {
  public:
   disjoint_set_forest() : num_elements(0), num_sets(0) {}
 
-  int size() const {
-    return num_elements;
-  }
-
-  int sets() const {
-    return num_sets;
-  }
+  int size() const { return num_elements; }
+  int sets() const { return num_sets; }
 
   void make_set(const T &u) {
     if (id.find(u) != id.end()) {
@@ -70,9 +65,7 @@ class disjoint_set_forest {
     num_sets++;
   }
 
-  bool is_united(const T &u, const T &v) {
-    return find_root(id[u]) == find_root(id[v]);
-  }
+  bool is_united(const T &u, const T &v) { return find_root(id[u]) == find_root(id[v]); }
 
   void unite(const T &u, const T &v) {
     int ru = find_root(id[u]), rv = find_root(id[v]);
@@ -90,15 +83,13 @@ class disjoint_set_forest {
     }
   }
 
-  std::vector<std::vector<T> > get_all_sets() {
-    std::map<int, std::vector<T> > tmp;
-    for (typename std::map<T, int>::iterator it = id.begin(); it != id.end();
-         ++it) {
+  std::vector<std::vector<T>> get_all_sets() {
+    std::map<int, std::vector<T>> tmp;
+    for (typename std::map<T, int>::iterator it = id.begin(); it != id.end(); ++it) {
       tmp[find_root(it->second)].push_back(it->first);
     }
-    std::vector<std::vector<T> > res;
-    for (typename std::map<int, std::vector<T> >::iterator it = tmp.begin();
-         it != tmp.end(); ++it) {
+    std::vector<std::vector<T>> res;
+    for (typename std::map<int, std::vector<T>>::iterator it = tmp.begin(); it != tmp.end(); ++it) {
       res.push_back(it->second);
     }
     return res;
@@ -126,7 +117,7 @@ int main() {
   dsf.unite('d', 'g');
   assert(dsf.size() == 7);
   assert(dsf.sets() == 3);
-  vector< vector<char> > s = dsf.get_all_sets();
+  vector<vector<char>> s = dsf.get_all_sets();
   for (int i = 0; i < (int)s.size(); i++) {
     cout << (i > 0 ? ", [" : "[");
     for (int j = 0; j < (int)s[i].size(); j++) {

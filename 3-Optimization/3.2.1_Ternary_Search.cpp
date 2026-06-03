@@ -23,12 +23,11 @@ Space Complexity:
 */
 
 template<class UnimodalFunction>
-double ternary_search_min(double lo, double hi, UnimodalFunction f,
-                          const double EPS = 1e-12) {
+double ternary_search_min(double lo, double hi, UnimodalFunction f, const double EPS = 1e-12) {
   double lthird, hthird;
   while (hi - lo > EPS) {
-    lthird = lo + (hi - lo)/3;
-    hthird = hi - (hi - lo)/3;
+    lthird = lo + (hi - lo) / 3;
+    hthird = hi - (hi - lo) / 3;
     if (f(lthird) < f(hthird)) {
       hi = hthird;
     } else {
@@ -39,12 +38,11 @@ double ternary_search_min(double lo, double hi, UnimodalFunction f,
 }
 
 template<class UnimodalFunction>
-double ternary_search_max(double lo, double hi, UnimodalFunction f,
-                          const double EPS = 1e-12) {
+double ternary_search_max(double lo, double hi, UnimodalFunction f, const double EPS = 1e-12) {
   double lthird, hthird;
   while (hi - lo > EPS) {
-    lthird = lo + (hi - lo)/3;
-    hthird = hi - (hi - lo)/3;
+    lthird = lo + (hi - lo) / 3;
+    hthird = hi - (hi - lo) / 3;
     if (f(lthird) < f(hthird)) {
       lo = lthird;
     } else {
@@ -65,12 +63,12 @@ bool equal(double a, double b) {
 
 // Parabola opening up with vertex at (-2, -24).
 double f1(double x) {
-  return 3*x*x + 12*x - 12;
+  return 3 * x * x + 12 * x - 12;
 }
 
 // Parabola opening down with vertex at (2/19, 8366/95) ~ (0.105, 88.063).
 double f2(double x) {
-  return -5.7*x*x + 1.2*x + 88;
+  return -5.7 * x * x + 1.2 * x + 88;
 }
 
 // Absolute value function shifted to the right by 30 units.
@@ -80,7 +78,7 @@ double f3(double x) {
 
 int main() {
   assert(equal(ternary_search_min(-1000, 1000, f1), -2));
-  assert(equal(ternary_search_max(-1000, 1000, f2), 2.0/19));
+  assert(equal(ternary_search_max(-1000, 1000, f2), 2.0 / 19));
   assert(equal(ternary_search_min(-1000, 1000, f3), 30));
   return 0;
 }

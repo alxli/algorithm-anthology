@@ -29,13 +29,8 @@ template<class T>
 class kd_tree {
   typedef std::pair<T, T> point;
 
-  static inline bool comp1(const point &a, const point &b) {
-    return a.first < b.first;
-  }
-
-  static inline bool comp2(const point &a, const point &b) {
-    return a.second < b.second;
-  }
+  static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
+  static inline bool comp2(const point &a, const point &b) { return a.second < b.second; }
 
   std::vector<point> tree;
   std::vector<bool> div_x;
@@ -44,7 +39,7 @@ class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     T minx, maxx, miny, maxy;
     minx = maxx = tree[lo].first;
     miny = maxy = tree[lo].second;
@@ -55,8 +50,9 @@ class kd_tree {
       maxy = std::max(maxy, tree[i].second);
     }
     div_x[mid] = !((maxx - minx) < (maxy - miny));
-    std::nth_element(tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
-                     div_x[mid] ? comp1 : comp2);
+    std::nth_element(
+        tree.begin() + lo, tree.begin() + mid, tree.begin() + hi, div_x[mid] ? comp1 : comp2
+    );
     if (lo + 1 == hi) {
       return;
     }
@@ -72,9 +68,9 @@ class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     T dx = x - tree[mid].first, dy = y - tree[mid].second;
-    long double d = dx*(long double)dx + dy*(long double)dy;
+    long double d = dx * (long double)dx + dy * (long double)dy;
     if (d < min_dist && (can_equal || d != 0)) {
       min_dist = d;
       id = mid;
@@ -89,7 +85,7 @@ class kd_tree {
       std::swap(r1, r2);
     }
     nearest(l1, r1, x, y, can_equal);
-    if (d*(long double)d < min_dist) {
+    if (d * (long double)d < min_dist) {
       nearest(l2, r2, x, y, can_equal);
     }
   }

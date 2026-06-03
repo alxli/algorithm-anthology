@@ -27,7 +27,7 @@ The following class implements a simple graph using adjacency lists, along with 
 #include <vector>
 
 class graph {
-  std::vector<std::vector<int> > adj;
+  std::vector<std::vector<int>> adj;
   bool directed;
 
   template<class ReportFunction>
@@ -42,8 +42,7 @@ class graph {
     }
   }
 
-  bool has_cycle(int n, int prev, std::vector<bool> &visit,
-                 std::vector<bool> &onstack) const {
+  bool has_cycle(int n, int prev, std::vector<bool> &visit, std::vector<bool> &onstack) const {
     visit[n] = true;
     onstack[n] = true;
     std::vector<int>::const_iterator it;
@@ -65,13 +64,8 @@ class graph {
  public:
   graph(bool directed = true) : directed(directed) {}
 
-  int nodes() const {
-    return (int)adj.size();
-  }
-
-  std::vector<int>& operator[](int n) {
-    return adj[n];
-  }
+  int nodes() const { return (int)adj.size(); }
+  std::vector<int> &operator[](int n) { return adj[n]; }
 
   void add_edge(int u, int v) {
     int n = adj.size();
@@ -84,9 +78,7 @@ class graph {
     }
   }
 
-  bool is_directed() const {
-    return directed;
-  }
+  bool is_directed() const { return directed; }
 
   bool has_cycle() const {
     int n = adj.size();
@@ -99,13 +91,8 @@ class graph {
     return false;
   }
 
-  bool is_tree() const {
-    return !directed && !has_cycle();
-  }
-
-  bool is_dag() const {
-    return directed && !has_cycle();
-  }
+  bool is_tree() const { return !directed && !has_cycle(); }
+  bool is_dag() const { return directed && !has_cycle(); }
 
   template<class ReportFunction>
   void dfs(int start, ReportFunction f) const {
@@ -186,7 +173,7 @@ This is the standard graph reachability primitive behind many larger routines: r
 
 const int MAXN = 100;
 std::vector<int> adj[MAXN];
-std::vector<std::vector<int> > components;
+std::vector<std::vector<int>> components;
 int component_id[MAXN];
 
 void dfs(int u, int id) {
@@ -525,7 +512,7 @@ Both functions choose the smallest available leaf at each step. This makes the i
 #include <utility>
 #include <vector>
 
-std::vector<int> encode_prufer(const std::vector<std::vector<int> > &tree) {
+std::vector<int> encode_prufer(const std::vector<std::vector<int>> &tree) {
   int nodes = tree.size();
   std::vector<int> degree(nodes), parent(nodes, -1), code;
   std::set<int> leaves;
@@ -566,11 +553,11 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int> > &tree) {
   return code;
 }
 
-std::vector<std::pair<int, int> > decode_prufer(const std::vector<int> &code) {
+std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
   int nodes = code.size() + 2;
   std::vector<int> degree(nodes, 1);
   std::set<int> leaves;
-  std::vector<std::pair<int, int> > edges;
+  std::vector<std::pair<int, int>> edges;
   for (int i = 0; i < (int)code.size(); i++) {
     degree[code[i]]++;
   }
@@ -598,7 +585,7 @@ std::vector<std::pair<int, int> > decode_prufer(const std::vector<int> &code) {
 using namespace std;
 
 int main() {
-  vector<vector<int> > tree(5);
+  vector<vector<int>> tree(5);
   tree[0].push_back(3);
   tree[1].push_back(3);
   tree[2].push_back(3);
@@ -609,7 +596,7 @@ int main() {
   tree[4].push_back(3);
   vector<int> code = encode_prufer(tree);
   assert(code.size() == 3 && code[0] == 3 && code[1] == 3 && code[2] == 3);
-  vector<pair<int, int> > edges = decode_prufer(code);
+  vector<pair<int, int>> edges = decode_prufer(code);
   assert(edges.size() == 4);
   return 0;
 }
@@ -751,7 +738,7 @@ void bfs(int nodes, int start) {
     dist[i] = INF;
     pred[i] = -1;
   }
-  std::queue<std::pair<int, int> > q;
+  std::queue<std::pair<int, int>> q;
   q.push(std::make_pair(start, 0));
   while (!q.empty()) {
     int u = q.front().first;
@@ -797,8 +784,8 @@ int main() {
   adj[2].push_back(3);
   adj[0].push_back(3);
   bfs(4, start);
-  cout << "The shortest distance from " << start << " to " << dest << " is "
-       << dist[dest] << "." << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }
@@ -827,7 +814,7 @@ This is a specialized version of Dijkstra's algorithm. Because every relaxation 
 #include <vector>
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<std::pair<int, int> > adj[MAXN];
+std::vector<std::pair<int, int>> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
 void zero_one_bfs(int nodes, int start) {
@@ -898,7 +885,7 @@ Dijkstra's algorithm may be modified to support negative edge weights by allowin
 #include <vector>
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<std::pair<int, int> > adj[MAXN];
+std::vector<std::pair<int, int>> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
 void dijkstra(int nodes, int start) {
@@ -908,7 +895,7 @@ void dijkstra(int nodes, int start) {
     pred[i] = -1;
   }
   dist[start] = 0;
-  std::priority_queue<std::pair<int, int> > pq;
+  std::priority_queue<std::pair<int, int>> pq;
   pq.push(std::make_pair(0, start));
   while (!pq.empty()) {
     int u = pq.top().second;
@@ -954,8 +941,8 @@ int main() {
   adj[1].push_back(make_pair(3, 4));
   adj[2].push_back(make_pair(3, 1));
   dijkstra(4, start);
-  cout << "The shortest distance from " << start << " to " << dest << " is "
-       << dist[dest] << "." << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }
@@ -981,7 +968,9 @@ This function will also detect whether the graph contains negative-weighted cycl
 #include <stdexcept>
 #include <vector>
 
-struct edge { int u, v, w; };  // Edge from u to v with weight w.
+struct edge {
+  int u, v, w;
+};  // Edge from u to v with weight w.
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
 std::vector<edge> e;
@@ -1033,8 +1022,8 @@ int main() {
   e.push_back((edge){1, 2, 2});
   e.push_back((edge){0, 2, 5});
   bellman_ford(3, start);
-  cout << "The shortest distance from " << start << " to " << dest << " is "
-       << dist[dest] << "." << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }
@@ -1065,7 +1054,7 @@ The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford
 #include <vector>
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<std::pair<int, int> > adj[MAXN];
+std::vector<std::pair<int, int>> adj[MAXN];
 int dist[MAXN], pred[MAXN], relax_count[MAXN];
 bool in_queue[MAXN];
 
@@ -1193,8 +1182,8 @@ int main() {
   dist[1][2] = 2;
   dist[0][2] = 5;
   floyd_warshall(3);
-  cout << "The shortest distance from " << start << " to " << dest << " is "
-       << dist[start][dest] << "." << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[start][dest]
+       << "." << endl;
   print_path(start, dest);
   return 0;
 }
@@ -1225,7 +1214,7 @@ Given a directed graph, determine the strongly connected components, that is, th
 const int MAXN = 100;
 std::vector<int> adj[MAXN], rev[MAXN];
 std::vector<bool> visit(MAXN);
-std::vector<std::vector<int> > scc;
+std::vector<std::vector<int>> scc;
 
 void dfs(std::vector<int> g[], std::vector<int> &res, int u) {
   visit[u] = true;
@@ -1316,15 +1305,15 @@ Given a directed graph, determine the strongly connected components. The strongl
 #include <vector>
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<int> adj[MAXN], stack;
+std::vector<int> adj[MAXN], currstack;
 int timer, lowlink[MAXN];
 std::vector<bool> visit(MAXN);
-std::vector<std::vector<int> > scc;
+std::vector<std::vector<int>> scc;
 
 void dfs(int u) {
   lowlink[u] = timer++;
   visit[u] = true;
-  stack.push_back(u);
+  currstack.push_back(u);
   bool is_component_root = true;
   int v;
   for (int j = 0; j < (int)adj[u].size(); j++) {
@@ -1342,9 +1331,9 @@ void dfs(int u) {
   }
   std::vector<int> component;
   do {
-    v = stack.back();
+    v = currstack.back();
     visit[v] = true;
-    stack.pop_back();
+    currstack.pop_back();
     lowlink[v] = INF;
     component.push_back(v);
   } while (u != v);
@@ -1353,7 +1342,7 @@ void dfs(int u) {
 
 void tarjan(int nodes) {
   scc.clear();
-  stack.clear();
+  currstack.clear();
   std::fill(lowlink, lowlink + nodes, 0);
   std::fill(visit.begin(), visit.end(), false);
   timer = 0;
@@ -1427,14 +1416,14 @@ const int MAXN = 100;
 int timer, lowlink[MAXN], tin[MAXN], comp[MAXN];
 std::vector<bool> visit(MAXN);
 std::vector<int> adj[MAXN], block_forest[MAXN];
-std::vector<int> stack, cutpoints;
-std::vector<std::vector<int> > block;
-std::vector<std::pair<int, int> > bridges;
+std::vector<int> currstack, cutpoints;
+std::vector<std::vector<int>> block;
+std::vector<std::pair<int, int>> bridges;
 
 void dfs(int u, int p) {
   visit[u] = true;
   lowlink[u] = tin[u] = timer++;
-  stack.push_back(u);
+  currstack.push_back(u);
   int v, children = 0;
   bool cutpoint = false;
   for (int j = 0; j < (int)adj[u].size(); j++) {
@@ -1463,8 +1452,8 @@ void dfs(int u, int p) {
   if (lowlink[u] == tin[u]) {
     std::vector<int> component;
     do {
-      v = stack.back();
-      stack.pop_back();
+      v = currstack.back();
+      currstack.pop_back();
       component.push_back(v);
     } while (u != v);
     block.push_back(component);
@@ -1475,7 +1464,7 @@ void tarjan(int nodes) {
   block.clear();
   bridges.clear();
   cutpoints.clear();
-  stack.clear();
+  currstack.clear();
   std::fill(lowlink, lowlink + nodes, 0);
   std::fill(tin, tin + nodes, 0);
   std::fill(visit.begin(), visit.end(), false);
@@ -1745,7 +1734,7 @@ Variables are numbered from $0$ to $n - 1$. A literal is represented by \inlinec
 
 struct two_sat {
   int variables;
-  std::vector<std::vector<int> > graph, reverse_graph;
+  std::vector<std::vector<int>> graph, reverse_graph;
   std::vector<int> order, component, answer;
 
   two_sat(int n = 0) { init(n); }
@@ -1757,13 +1746,8 @@ struct two_sat {
     answer.assign(n, false);
   }
 
-  int literal(int variable, bool value) {
-    return 2 * variable + (value ? 0 : 1);
-  }
-
-  int neg(int x) {
-    return x ^ 1;
-  }
+  int literal(int variable, bool value) { return 2 * variable + (value ? 0 : 1); }
+  int neg(int x) { return x ^ 1; }
 
   void add_implication(int a, int b) {
     graph[a].push_back(b);
@@ -1775,13 +1759,8 @@ struct two_sat {
     add_implication(neg(b), a);
   }
 
-  void add_true(int a) {
-    add_implication(neg(a), a);
-  }
-
-  void add_false(int a) {
-    add_implication(a, neg(a));
-  }
+  void add_true(int a) { add_implication(neg(a), a); }
+  void add_false(int a) { add_implication(a, neg(a)); }
 
   void dfs_order(int u, std::vector<bool> &visited) {
     visited[u] = true;
@@ -1872,7 +1851,7 @@ Since \inlinecode{std::priority\_queue} is by default a max-heap, we simulate a 
 #include <vector>
 
 const int MAXN = 100;
-std::vector<std::pair<int, int> > adj[MAXN], mst;
+std::vector<std::pair<int, int>> adj[MAXN], mst;
 
 int prim(int nodes) {
   mst.clear();
@@ -1883,10 +1862,9 @@ int prim(int nodes) {
       continue;
     }
     visit[i] = true;
-    std::priority_queue<std::pair<int, std::pair<int, int> > > pq;
+    std::priority_queue<std::pair<int, std::pair<int, int>>> pq;
     for (int j = 0; j < (int)adj[i].size(); j++) {
-      pq.push(std::make_pair(-adj[i][j].second,
-                             std::make_pair(i, adj[i][j].first)));
+      pq.push(std::make_pair(-adj[i][j].second, std::make_pair(i, adj[i][j].first)));
     }
     while (!pq.empty()) {
       int u = pq.top().second.first;
@@ -1900,8 +1878,7 @@ int prim(int nodes) {
           total_dist += w;
         }
         for (int j = 0; j < (int)adj[v].size(); j++) {
-          pq.push(std::make_pair(-adj[v][j].second,
-                                 std::make_pair(v, adj[v][j].first)));
+          pq.push(std::make_pair(-adj[v][j].second, std::make_pair(v, adj[v][j].first)));
         }
       }
     }
@@ -1959,9 +1936,9 @@ Given a connected, undirected, weighted graph with possibly negative weights, it
 #include <vector>
 
 const int MAXN = 100;
-std::vector<std::pair<int, std::pair<int, int> > > edges;
+std::vector<std::pair<int, std::pair<int, int>>> edges;
 int root[MAXN];
-std::vector<std::pair<int, int> > mst;
+std::vector<std::pair<int, int>> mst;
 
 int find_root(int x) {
   if (root[x] != x) {
@@ -2111,7 +2088,9 @@ The Edmonds-Karp algorithm will also support real-valued flow capacities. As suc
 #include <queue>
 #include <vector>
 
-struct edge { int u, v, rev, cap, f; };
+struct edge {
+  int u, v, rev, cap, f;
+};
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
 std::vector<edge> adj[MAXN];
@@ -2124,7 +2103,7 @@ void add_edge(int u, int v, int cap) {
 int edmonds_karp(int nodes, int source, int sink) {
   int max_flow = 0;
   for (;;) {
-    std::vector<edge*> pred(nodes, (edge*)0);
+    std::vector<edge *> pred(nodes, (edge *)0);
     std::queue<int> q;
     q.push(source);
     while (!q.empty() && !pred[sink]) {
@@ -2189,7 +2168,9 @@ Dinic's algorithm will also support real-valued flow capacities. As such, this i
 #include <queue>
 #include <vector>
 
-struct edge { int v, rev, cap, f; };
+struct edge {
+  int v, rev, cap, f;
+};
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
 std::vector<edge> adj[MAXN];
@@ -2383,20 +2364,17 @@ This implementation uses shortest augmenting paths with SPFA, so it supports neg
 
 struct edge {
   int v, rev, cap, cost;
-  edge(int v_, int rev_, int cap_, int cost_)
-      : v(v_), rev(rev_), cap(cap_), cost(cost_) {}
+  edge(int v_, int rev_, int cap_, int cost_) : v(v_), rev(rev_), cap(cap_), cost(cost_) {}
 };
 
 const int MCMF_INF = 0x3f3f3f3f;
 
 struct min_cost_max_flow {
-  std::vector<std::vector<edge> > adj;
+  std::vector<std::vector<edge>> adj;
 
   min_cost_max_flow(int nodes = 0) { init(nodes); }
 
-  void init(int nodes) {
-    adj.assign(nodes, std::vector<edge>());
-  }
+  void init(int nodes) { adj.assign(nodes, std::vector<edge>()); }
 
   void add_edge(int u, int v, int cap, int cost) {
     adj[u].push_back(edge(v, (int)adj[v].size(), cap, cost));
@@ -2759,7 +2737,7 @@ int edmonds(int nodes) {
       matches++;
     }
   }
-  return matches/2;
+  return matches / 2;
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -3069,8 +3047,7 @@ int shortest_hamiltonian_cycle(int nodes) {
       if ((mask & 1 << i) != 0) {
         for (int j = 0; j < nodes; j++) {
           if ((mask & 1 << j) != 0) {
-            dp[mask][i] = std::min(dp[mask][i],
-                                   dp[mask ^ (1 << i)][j] + adj[j][i]);
+            dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
           }
         }
       }
@@ -3084,8 +3061,8 @@ int shortest_hamiltonian_cycle(int nodes) {
   for (int i = nodes - 1; i >= 1; i--) {
     int bj = -1;
     for (int j = 1; j < nodes; j++) {
-      if ((mask & 1 << j) != 0 && (bj == -1 ||
-              dp[mask][bj] + adj[bj][old] > dp[mask][j] + adj[j][old])) {
+      if ((mask & 1 << j) != 0 &&
+          (bj == -1 || dp[mask][bj] + adj[bj][old] > dp[mask][j] + adj[j][old])) {
         bj = j;
       }
     }
@@ -3113,8 +3090,8 @@ int main() {
   add_edge(2, 3, 1);
   add_edge(2, 4, 1);
   add_edge(3, 4, 10);
-  cout << "The shortest hamiltonian cycle has length "
-       << shortest_hamiltonian_cycle(nodes) << "." << endl
+  cout << "The shortest hamiltonian cycle has length " << shortest_hamiltonian_cycle(nodes) << "."
+       << endl
        << "Take the path: ";
   for (int i = 0; i < nodes; i++) {
     cout << order[i] << "->";
@@ -3157,8 +3134,7 @@ int shortest_hamiltonian_path(int nodes) {
       if ((mask & 1 << i) != 0) {
         for (int j = 0; j < nodes; j++) {
           if ((mask & 1 << j) != 0)
-            dp[mask][i] = std::min(dp[mask][i],
-                                   dp[mask ^ (1 << i)][j] + adj[j][i]);
+            dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
         }
       }
     }
@@ -3171,9 +3147,8 @@ int shortest_hamiltonian_path(int nodes) {
   for (int i = nodes - 1; i >= 0; i--) {
     int bj = -1;
     for (int j = 0; j < nodes; j++) {
-      if ((mask & 1 << j) != 0 &&
-          (bj == -1 || dp[mask][bj] + (old == -1 ? 0 : adj[bj][old]) >
-                       dp[mask][j] + (old == -1 ? 0 : adj[j][old]))) {
+      if ((mask & 1 << j) != 0 && (bj == -1 || dp[mask][bj] + (old == -1 ? 0 : adj[bj][old]) >
+                                                   dp[mask][j] + (old == -1 ? 0 : adj[j][old]))) {
         bj = j;
       }
     }
@@ -3197,8 +3172,8 @@ int main() {
   adj[1][2] = 2;
   adj[2][0] = 3;
   adj[2][1] = 5;
-  cout << "The shortest hamiltonian path has length "
-       << shortest_hamiltonian_path(nodes) << "." << endl
+  cout << "The shortest hamiltonian path has length " << shortest_hamiltonian_path(nodes) << "."
+       << endl
        << "Take the path: " << order[0];
   for (int i = 1; i < nodes; i++) {
     cout << "->" << order[i];

@@ -43,12 +43,8 @@ using std::string;
 class suffix_array {
   struct comp {
     const string &s;
-
     comp(const string &s) : s(s) {}
-
-    bool operator()(int i, int j) {
-      return s[i] < s[j];
-    }
+    bool operator()(int i, int j) { return s[i] < s[j]; }
   };
 
   string s;
@@ -68,10 +64,10 @@ class suffix_array {
         cnt[i] = i;
       }
       for (int i = 0; i < n; i++) {
-        rank[sa[i]] = (i > 0 && prev_rank[sa[i - 1]] == prev_rank[sa[i]] &&
-                       sa[i - 1] + gap < n &&
-                       prev_rank[sa[i - 1] + gap/2] == prev_rank[sa[i] + gap/2])
-                           ? rank[sa[i - 1]] : i;
+        rank[sa[i]] = (i > 0 && prev_rank[sa[i - 1]] == prev_rank[sa[i]] && sa[i - 1] + gap < n &&
+                       prev_rank[sa[i - 1] + gap / 2] == prev_rank[sa[i] + gap / 2])
+                          ? rank[sa[i - 1]]
+                          : i;
       }
       for (int i = 0; i < n; i++) {
         int s1 = prev_sa[i] - gap;
@@ -82,9 +78,7 @@ class suffix_array {
     }
   }
 
-  std::vector<int> get_sa() {
-    return sa;
-  }
+  std::vector<int> get_sa() { return sa; }
 
   std::vector<int> get_lcp() {
     int n = s.size();
@@ -107,7 +101,7 @@ class suffix_array {
   size_t find(const string &needle) {
     int lo = 0, hi = (int)s.size() - 1;
     while (lo <= hi) {
-      int mid = lo + (hi - lo)/2;
+      int mid = lo + (hi - lo) / 2;
       int cmp = s.compare(sa[mid], needle.size(), needle);
       if (cmp < 0) {
         lo = mid + 1;

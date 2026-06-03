@@ -43,8 +43,7 @@ void splice_after(list_node *pos, list_node *before) {
   pos->next = node;
 }
 
-void splice_range_after(list_node *pos, list_node *before_first,
-                        list_node *last) {
+void splice_range_after(list_node *pos, list_node *before_first, list_node *last) {
   list_node *first = before_first->next;
   if (first == last) {
     return;

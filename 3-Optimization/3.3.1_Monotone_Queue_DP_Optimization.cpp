@@ -36,9 +36,7 @@ class monotone_queue {
   Compare better;
 
  public:
-  bool empty() const {
-    return q.empty();
-  }
+  bool empty() const { return q.empty(); }
 
   void push(int index, const T &value) {
     while (!q.empty() && !better(q.back().second, value)) {
@@ -53,9 +51,7 @@ class monotone_queue {
     }
   }
 
-  entry top() const {
-    return q.front();
-  }
+  entry top() const { return q.front(); }
 };
 
 /*** Example Usage ***/
@@ -68,7 +64,7 @@ int main() {
   int raw[] = {4, 2, 7, 1, 3, 6};
   vector<int> a(raw, raw + 6);
 
-  monotone_queue<int, less<int> > minq;
+  monotone_queue<int, less<int>> minq;
   vector<int> window_min;
   for (int i = 0; i < (int)a.size(); i++) {
     minq.push(i, a[i]);
@@ -84,7 +80,7 @@ int main() {
 
   // dp[i] = a[i] + min(dp[j]) over max(0, i - 2) <= j < i.
   vector<int> dp(a.size());
-  monotone_queue<int, less<int> > best;
+  monotone_queue<int, less<int>> best;
   dp[0] = a[0];
   best.push(0, dp[0]);
   for (int i = 1; i < (int)a.size(); i++) {

@@ -24,7 +24,7 @@ Space Complexity:
 const int MAXN = 100;
 std::vector<int> adj[MAXN], rev[MAXN];
 std::vector<bool> visit(MAXN);
-std::vector<std::vector<int> > scc;
+std::vector<std::vector<int>> scc;
 
 void dfs(std::vector<int> g[], std::vector<int> &res, int u) {
   visit[u] = true;

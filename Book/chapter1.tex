@@ -33,9 +33,9 @@ void quicksort(It lo, It hi, Compare comp) {
     return;
   }
   typedef typename std::iterator_traits<It>::value_type T;
-  T pivot = *(lo + (hi - lo)/2);
+  T pivot = *(lo + (hi - lo) / 2);
   It i, j;
-  for (i = lo, j = hi - 1; ; ++i, --j) {
+  for (i = lo, j = hi - 1;; ++i, --j) {
     while (comp(*i, pivot)) {
       ++i;
     }
@@ -75,7 +75,7 @@ void mergesort(It lo, It hi, Compare comp) {
   if (hi - lo < 2) {
     return;
   }
-  It mid = lo + (hi - lo - 1)/2, a = lo, c = mid + 1;
+  It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   mergesort(lo, mid + 1, comp);
   mergesort(mid + 1, hi, comp);
   typedef typename std::iterator_traits<It>::value_type T;
@@ -119,7 +119,7 @@ The C++ standard library equivalent is calling \inlinecode{std::make\_heap(lo, h
 template<class It, class Compare>
 void heapsort(It lo, It hi, Compare comp) {
   typename std::iterator_traits<It>::value_type tmp;
-  It i = lo + (hi - lo)/2, j = hi, parent, child;
+  It i = lo + (hi - lo) / 2, j = hi, parent, child;
   for (;;) {
     if (i <= lo) {
       if (--j == lo) {
@@ -131,7 +131,7 @@ void heapsort(It lo, It hi, Compare comp) {
       tmp = *(--i);
     }
     parent = i;
-    child = lo + 2*(i - lo) + 1;
+    child = lo + 2 * (i - lo) + 1;
     while (child < j) {
       if (child + 1 < j && comp(*child, *(child + 1))) {
         child++;
@@ -141,7 +141,7 @@ void heapsort(It lo, It hi, Compare comp) {
       }
       *parent = *child;
       parent = child;
-      child = lo + 2*(parent - lo) + 1;
+      child = lo + 2 * (parent - lo) + 1;
     }
     *(lo + (parent - lo)) = tmp;
   }
@@ -204,8 +204,8 @@ void radix_sort(UnsignedIt lo, UnsignedIt hi) {
   }
   const int radix_bits = 8;
   const int radix_base = 1 << radix_bits;  // e.g. 2^8 = 256
-  const int radix_mask = radix_base - 1;  // e.g. 2^8 - 1 = 0xFF
-  int num_bits = 8*sizeof(*lo);  // 8 bits per byte
+  const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
+  int num_bits = 8 * sizeof(*lo);          // 8 bits per byte
   typedef typename std::iterator_traits<UnsignedIt>::value_type T;
   T *buf = new T[hi - lo];
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
@@ -257,7 +257,7 @@ bool compare_as_ints(double i, double j) {
   return (int)i < (int)j;
 }
 
-int main () {
+int main() {
   {  // Can be used to sort arrays like std::sort().
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     quicksort(a, a + 8);
@@ -312,15 +312,16 @@ int main () {
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
 
-#define test(sort_function) {                            \
-  clock_t start = clock();                               \
-  sort_function(v.begin(), v.end());                     \
-  double t = (double)(clock() - start) / CLOCKS_PER_SEC; \
-  cout << setw(14) << left << #sort_function "(): ";     \
-  cout << fixed << t << "s" << endl;                     \
-  assert(sorted(v.begin(), v.end()));                    \
-  v = v2;                                                \
-}
+#define test(sort_function)                                \
+  {                                                        \
+    clock_t start = clock();                               \
+    sort_function(v.begin(), v.end());                     \
+    double t = (double)(clock() - start) / CLOCKS_PER_SEC; \
+    cout << setw(14) << left << #sort_function "(): ";     \
+    cout << fixed << t << "s" << endl;                     \
+    assert(sorted(v.begin(), v.end()));                    \
+    v = v2;                                                \
+  }
   test(std::sort);
   test(quicksort);
   test(mergesort);
@@ -490,7 +491,7 @@ long long inversions(It lo, It hi) {
   if (hi - lo < 2) {
     return 0;
   }
-  It mid = lo + (hi - lo - 1)/2, a = lo, c = mid + 1;
+  It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   long long res = 0;
   res += inversions(lo, mid + 1);
   res += inversions(mid + 1, hi);
@@ -574,7 +575,8 @@ Both implementations below require \inlinecode{operator \textless{}} to be defin
 #include <map>
 #include <vector>
 
-template<class It> void compress1(It lo, It hi) {
+template<class It>
+void compress1(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   std::vector<T> v(lo, hi);
   std::sort(v.begin(), v.end());
@@ -584,7 +586,8 @@ template<class It> void compress1(It lo, It hi) {
   }
 }
 
-template<class It> void compress2(It lo, It hi) {
+template<class It>
+void compress2(It lo, It hi) {
   typedef typename std::iterator_traits<It>::value_type T;
   std::map<T, int> m;
   for (It it = lo; it != hi; ++it) {
@@ -604,7 +607,8 @@ template<class It> void compress2(It lo, It hi) {
 #include <iostream>
 using namespace std;
 
-template<class It> void print_range(It lo, It hi) {
+template<class It>
+void print_range(It lo, It hi) {
   while (lo != hi) {
     cout << *lo++ << " ";
   }
@@ -686,11 +690,11 @@ void print_range(It lo, It hi) {
   cout << endl;
 }
 
-int main () {
+int main() {
   int n = 9;
   int a[] = {5, 6, 4, 3, 2, 6, 7, 9, 3};
-  nth_element2(a, a + n/2, a + n);
-  assert(a[n/2] == 5);
+  nth_element2(a, a + n / 2, a + n);
+  assert(a[n / 2] == 5);
   print_range(a, a + n);
   return 0;
 }
@@ -806,22 +810,20 @@ long long range_sum(const std::vector<long long> &pref, int l, int r) {
   return pref[r] - pref[l];
 }
 
-std::vector<std::vector<long long> >
-prefix_sums_2d(const std::vector<std::vector<int> > &a) {
+std::vector<std::vector<long long>> prefix_sums_2d(const std::vector<std::vector<int>> &a) {
   int rows = a.size(), cols = rows == 0 ? 0 : a[0].size();
-  std::vector<std::vector<long long> > pref(
-      rows + 1, std::vector<long long>(cols + 1, 0));
+  std::vector<std::vector<long long>> pref(rows + 1, std::vector<long long>(cols + 1, 0));
   for (int r = 0; r < rows; r++) {
     for (int c = 0; c < cols; c++) {
-      pref[r + 1][c + 1] = a[r][c] + pref[r][c + 1] + pref[r + 1][c] -
-                           pref[r][c];
+      pref[r + 1][c + 1] = a[r][c] + pref[r][c + 1] + pref[r + 1][c] - pref[r][c];
     }
   }
   return pref;
 }
 
-long long rectangle_sum(const std::vector<std::vector<long long> > &pref,
-                        int r1, int c1, int r2, int c2) {
+long long rectangle_sum(
+    const std::vector<std::vector<long long>> &pref, int r1, int c1, int r2, int c2
+) {
   return pref[r2][c2] - pref[r1][c2] - pref[r2][c1] + pref[r1][c1];
 }
 \end{lstlisting}
@@ -837,14 +839,14 @@ int main() {
   assert(range_sum(pref, 0, 5) == 12);
   assert(range_sum(pref, 1, 4) == 4);
 
-  vector<vector<int> > grid(2, vector<int>(3));
+  vector<vector<int>> grid(2, vector<int>(3));
   grid[0][0] = 1;
   grid[0][1] = 2;
   grid[0][2] = 3;
   grid[1][0] = 4;
   grid[1][1] = 5;
   grid[1][2] = 6;
-  vector<vector<long long> > ps = prefix_sums_2d(grid);
+  vector<vector<long long>> ps = prefix_sums_2d(grid);
   assert(rectangle_sum(ps, 0, 1, 2, 3) == 16);
   return 0;
 }
@@ -921,8 +923,9 @@ Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying
 #include <vector>
 
 template<class It>
-std::vector<typename std::iterator_traits<It>::value_type>
-longest_increasing_subsequence(It lo, It hi) {
+std::vector<typename std::iterator_traits<It>::value_type> longest_increasing_subsequence(
+    It lo, It hi
+) {
   int len = 0, n = hi - lo;
   if (n == 0) {
     return std::vector<typename std::iterator_traits<It>::value_type>();
@@ -931,7 +934,7 @@ longest_increasing_subsequence(It lo, It hi) {
   for (int i = 0; i < n; i++) {
     int l = -1, h = len;
     while (h - l > 1) {
-      int mid = (l + h)/2;
+      int mid = (l + h) / 2;
       if (*(lo + tail[mid]) < *(lo + i)) {
         l = mid;
       } else {
@@ -956,14 +959,15 @@ longest_increasing_subsequence(It lo, It hi) {
 #include <iostream>
 using namespace std;
 
-template<class It> void print_range(It lo, It hi) {
+template<class It>
+void print_range(It lo, It hi) {
   while (lo != hi) {
     cout << *lo++ << " ";
   }
   cout << endl;
 }
 
-int main () {
+int main() {
   int a[] = {-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
   vector<int> res = longest_increasing_subsequence(a, a + 10);
   print_range(res.begin(), res.end());
@@ -987,19 +991,19 @@ Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a r
 
 template<class It>
 long long sum_lower_bound(It lo, It hi, long long v) {
-  int n = hi - lo, llen = 1 << (n/2), hlen = 1 << (n - n/2);
+  int n = hi - lo, llen = 1 << (n / 2), hlen = 1 << (n - n / 2);
   std::vector<long long> lsum(llen), hsum(hlen);
   for (int mask = 0; mask < llen; mask++) {
-    for (int i = 0; i < n/2; i++) {
+    for (int i = 0; i < n / 2; i++) {
       if ((mask >> i) & 1) {
         lsum[mask] += *(lo + i);
       }
     }
   }
   for (int mask = 0; mask < hlen; mask++) {
-    for (int i = 0; i < (n - n/2); i++) {
+    for (int i = 0; i < (n - n / 2); i++) {
       if ((mask >> i) & 1) {
-        hsum[mask] += *(lo + i + n/2);
+        hsum[mask] += *(lo + i + n / 2);
       }
     }
   }
@@ -1050,8 +1054,9 @@ The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best
 #include <cassert>
 #include <vector>
 
-long long knapsack_01(const std::vector<int> &weight,
-                      const std::vector<long long> &value, int capacity) {
+long long knapsack_01(
+    const std::vector<int> &weight, const std::vector<long long> &value, int capacity
+) {
   int n = weight.size();
   std::vector<long long> dp(capacity + 1, 0);
   for (int i = 0; i < n; i++) {
@@ -1105,9 +1110,9 @@ For unbounded maximum-value knapsack, weights are iterated in increasing order s
 #include <algorithm>
 #include <vector>
 
-long long unbounded_knapsack(const std::vector<int> &weight,
-                             const std::vector<long long> &value,
-                             int capacity) {
+long long unbounded_knapsack(
+    const std::vector<int> &weight, const std::vector<long long> &value, int capacity
+) {
   int n = weight.size();
   std::vector<long long> dp(capacity + 1, 0);
   for (int i = 0; i < n; i++) {
@@ -1159,7 +1164,7 @@ Given a rectangular matrix with $n$ rows and $m$ columns consisting of only 0's 
 #include <stack>
 #include <vector>
 
-int max_zero_submatrix(const std::vector<std::vector<bool> > &matrix) {
+int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
   if (matrix.empty()) {
     return 0;
   }
@@ -1190,7 +1195,7 @@ int max_zero_submatrix(const std::vector<std::vector<bool> > &matrix) {
       s.push(c);
     }
     for (int j = 0; j < m; j++) {
-      res = std::max(res, (r - d[j])*(d2[j] - d1[j] - 1));
+      res = std::max(res, (r - d[j]) * (d2[j] - d1[j] - 1));
     }
   }
   return res;
@@ -1203,12 +1208,14 @@ using namespace std;
 
 int main() {
   const int n = 5, m = 6;
-  bool a[n][m] = {{1, 0, 1, 1, 0, 0},
-                  {1, 0, 0, 1, 0, 0},
-                  {0, 0, 0, 0, 0, 1},
-                  {1, 0, 0, 1, 0, 0},
-                  {1, 0, 1, 0, 0, 1}};
-  vector<vector<bool> > matrix(n);
+  bool a[n][m] = {
+      {1, 0, 1, 1, 0, 0},
+      {1, 0, 0, 1, 0, 0},
+      {0, 0, 0, 0, 0, 1},
+      {1, 0, 0, 1, 0, 0},
+      {1, 0, 1, 0, 0, 1}
+  };
+  vector<vector<bool>> matrix(n);
   for (int i = 0; i < n; i++) {
     matrix[i] = vector<bool>(a[i], a[i] + m);
   }
@@ -1279,9 +1286,7 @@ class dynamic_mex {
     }
   }
 
-  int get() const {
-    return *missing.begin();
-  }
+  int get() const { return *missing.begin(); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -1398,8 +1403,7 @@ Intervals are represented as half-open ranges \inlinecode{[start, finish)}, so t
 struct interval_t {
   int start, finish, id;
 
-  interval_t(int start = 0, int finish = 0, int id = 0)
-      : start(start), finish(finish), id(id) {}
+  interval_t(int start = 0, int finish = 0, int id = 0) : start(start), finish(finish), id(id) {}
 };
 
 bool earlier_finish(const interval_t &a, const interval_t &b) {
@@ -1467,8 +1471,7 @@ struct weighted_interval_t {
       : start(start), finish(finish), weight(weight) {}
 };
 
-bool weighted_earlier_finish(const weighted_interval_t &a,
-                             const weighted_interval_t &b) {
+bool weighted_earlier_finish(const weighted_interval_t &a, const weighted_interval_t &b) {
   return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
 }
 
@@ -1481,9 +1484,7 @@ long long weighted_interval_scheduling(std::vector<weighted_interval_t> interval
   }
   std::vector<long long> dp(n + 1, 0);
   for (int i = 1; i <= n; i++) {
-    int j = std::upper_bound(finish.begin(), finish.end(),
-                             intervals[i - 1].start) -
-            finish.begin();
+    int j = std::upper_bound(finish.begin(), finish.end(), intervals[i - 1].start) - finish.begin();
     dp[i] = std::max(dp[i - 1], dp[j] + intervals[i - 1].weight);
   }
   return dp[n];
@@ -1539,8 +1540,9 @@ bool earlier_start(const partition_interval_t &a, const partition_interval_t &b)
 std::vector<int> interval_partitioning(std::vector<partition_interval_t> intervals) {
   std::sort(intervals.begin(), intervals.end(), earlier_start);
   std::vector<int> room(intervals.size());
-  std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int> >,
-                      std::greater<std::pair<int, int> > > pq;
+  std::priority_queue<
+      std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>>
+      pq;
   int rooms = 0;
   for (int i = 0; i < (int)intervals.size(); i++) {
     int id = intervals[i].id;
@@ -1596,8 +1598,7 @@ struct job_t {
   int deadline;
   long long profit;
 
-  job_t(int deadline = 0, long long profit = 0)
-      : deadline(deadline), profit(profit) {}
+  job_t(int deadline = 0, long long profit = 0) : deadline(deadline), profit(profit) {}
 };
 
 bool higher_profit(const job_t &a, const job_t &b) {
@@ -1621,9 +1622,7 @@ class slot_dsu {
     return root[u];
   }
 
-  void occupy(int u) {
-    root[u] = find_root(u - 1);
-  }
+  void occupy(int u) { root[u] = find_root(u - 1); }
 };
 
 long long schedule_deadline_jobs(std::vector<job_t> jobs) {
@@ -1680,13 +1679,11 @@ Selects a maximum-size subset of jobs that can all be completed by their deadlin
 struct timed_job_t {
   int duration, deadline;
 
-  timed_job_t(int duration = 0, int deadline = 0)
-      : duration(duration), deadline(deadline) {}
+  timed_job_t(int duration = 0, int deadline = 0) : duration(duration), deadline(deadline) {}
 };
 
 bool earlier_deadline(const timed_job_t &a, const timed_job_t &b) {
-  return a.deadline != b.deadline ? a.deadline < b.deadline
-                                  : a.duration < b.duration;
+  return a.deadline != b.deadline ? a.deadline < b.deadline : a.duration < b.duration;
 }
 
 int maximize_on_time_jobs(std::vector<timed_job_t> jobs) {
@@ -1804,8 +1801,7 @@ typename std::iterator_traits<It>::value_type reservoir_sample_one(It lo, It hi)
 }
 
 template<class It>
-std::vector<typename std::iterator_traits<It>::value_type>
-reservoir_sample_k(It lo, It hi, int k) {
+std::vector<typename std::iterator_traits<It>::value_type> reservoir_sample_k(It lo, It hi, int k) {
   std::vector<typename std::iterator_traits<It>::value_type> res;
   int seen = 0;
   for (It it = lo; it != hi; ++it) {
@@ -1874,8 +1870,9 @@ Given an array of numbers, determine the maximum possible sum of any contiguous 
 #include <vector>
 
 template<class It>
-typename std::iterator_traits<It>::value_type
-max_subarray_sum(It lo, It hi, int *res_lo = NULL, int *res_hi = NULL) {
+typename std::iterator_traits<It>::value_type max_subarray_sum(
+    It lo, It hi, int *res_lo = NULL, int *res_hi = NULL
+) {
   typedef typename std::iterator_traits<It>::value_type T;
   if (lo == hi) {
     return T();
@@ -1901,8 +1898,10 @@ max_subarray_sum(It lo, It hi, int *res_lo = NULL, int *res_hi = NULL) {
 }
 
 template<class T>
-T max_submatrix_sum(const std::vector<std::vector<T> > &matrix,
-    int *r1 = NULL, int *c1 = NULL, int *r2 = NULL, int *c2 = NULL) {
+T max_submatrix_sum(
+    const std::vector<std::vector<T>> &matrix, int *r1 = NULL, int *c1 = NULL, int *r2 = NULL,
+    int *c2 = NULL
+) {
   if (matrix.empty() || matrix[0].empty()) {
     return T();
   }
@@ -1955,7 +1954,7 @@ int main() {
                    {9, 2, -6, 2, -4},
                    {-4, 1, -4, 1, 0},
                    {-1, 8, 0, -2, 3}};
-    vector<vector<int> > matrix(n);
+    vector<vector<int>> matrix(n);
     for (int i = 0; i < n; i++) {
       matrix[i] = vector<int>(a[i], a[i] + m);
     }
@@ -2009,7 +2008,7 @@ It majority(It lo, It hi) {
       count++;
     }
   }
-  if (count <= (hi - lo)/2) {
+  if (count <= (hi - lo) / 2) {
     return hi;
   }
   return candidate;
@@ -2059,21 +2058,10 @@ class online_statistics {
     m2 += delta * delta2;
   }
 
-  int count() const {
-    return n;
-  }
-
-  double mean() const {
-    return avg;
-  }
-
-  double variance_population() const {
-    return n == 0 ? 0 : m2 / n;
-  }
-
-  double variance_sample() const {
-    return n <= 1 ? 0 : m2 / (n - 1);
-  }
+  int count() const { return n; }
+  double mean() const { return avg; }
+  double variance_population() const { return n == 0 ? 0 : m2 / n; }
+  double variance_sample() const { return n <= 1 ? 0 : m2 / (n - 1); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -2115,8 +2103,7 @@ The candidates are not automatically verified, since the algorithm intentionally
 #include <vector>
 
 template<class T, class It>
-std::map<T, int>
-misra_gries(It lo, It hi, int k) {
+std::map<T, int> misra_gries(It lo, It hi, int k) {
   typedef std::map<T, int> counter_map;
   counter_map count;
   for (It it = lo; it != hi; ++it) {
@@ -2127,8 +2114,7 @@ misra_gries(It lo, It hi, int k) {
       count[*it] = 1;
     } else {
       std::vector<T> erase;
-      for (typename counter_map::iterator jt = count.begin(); jt != count.end();
-           ++jt) {
+      for (typename counter_map::iterator jt = count.begin(); jt != count.end(); ++jt) {
         if (--jt->second == 0) {
           erase.push_back(jt->first);
         }
@@ -2203,7 +2189,7 @@ std::pair<int, int> find_cycle_floyd(IntFunction f, int x0) {
 using namespace std;
 
 int f(int x) {
-  return (123*x*x + 4567890) % 1337;
+  return (123 * x * x + 4567890) % 1337;
 }
 
 void verify(int x0, int start, int length) {
@@ -2224,7 +2210,7 @@ void verify(int x0, int start, int length) {
   assert(startx == x);
 }
 
-int main () {
+int main() {
   int x0 = 0;
   pair<int, int> res = find_cycle_floyd(f, x0);
   assert(res == make_pair(4, 2));
@@ -2279,7 +2265,7 @@ std::pair<int, int> find_cycle_brent(IntFunction f, int x0) {
 using namespace std;
 
 int f(int x) {
-  return (123*x*x + 4567890) % 1337;
+  return (123 * x * x + 4567890) % 1337;
 }
 
 void verify(int x0, int start, int length) {
@@ -2300,7 +2286,7 @@ void verify(int x0, int start, int length) {
   assert(startx == x);
 }
 
-int main () {
+int main() {
   int x0 = 0;
   pair<int, int> res = find_cycle_brent(f, x0);
   assert(res == make_pair(4, 2));

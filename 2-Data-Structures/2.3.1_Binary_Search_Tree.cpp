@@ -39,8 +39,7 @@ class binary_search_tree {
     V value;
     node_t *left, *right;
 
-    node_t(const K &k, const V &v)
-        : key(k), value(v), left(NULL), right(NULL) {}
+    node_t(const K &k, const V &v) : key(k), value(v), left(NULL), right(NULL) {}
   } *root;
 
   int num_nodes;
@@ -106,17 +105,9 @@ class binary_search_tree {
  public:
   binary_search_tree() : root(NULL), num_nodes(0) {}
 
-  ~binary_search_tree() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~binary_search_tree() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -134,7 +125,7 @@ class binary_search_tree {
     return false;
   }
 
-  const V* find(const K &k) const {
+  const V *find(const K &k) const {
     node_t *n = root;
     while (n != NULL) {
       if (k < n->key) {

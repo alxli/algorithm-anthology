@@ -27,7 +27,7 @@ Space Complexity:
 #include <vector>
 
 const int MAXN = 100;
-std::vector<std::pair<int, int> > adj[MAXN], mst;
+std::vector<std::pair<int, int>> adj[MAXN], mst;
 
 int prim(int nodes) {
   mst.clear();
@@ -38,10 +38,9 @@ int prim(int nodes) {
       continue;
     }
     visit[i] = true;
-    std::priority_queue<std::pair<int, std::pair<int, int> > > pq;
+    std::priority_queue<std::pair<int, std::pair<int, int>>> pq;
     for (int j = 0; j < (int)adj[i].size(); j++) {
-      pq.push(std::make_pair(-adj[i][j].second,
-                             std::make_pair(i, adj[i][j].first)));
+      pq.push(std::make_pair(-adj[i][j].second, std::make_pair(i, adj[i][j].first)));
     }
     while (!pq.empty()) {
       int u = pq.top().second.first;
@@ -55,8 +54,7 @@ int prim(int nodes) {
           total_dist += w;
         }
         for (int j = 0; j < (int)adj[v].size(); j++) {
-          pq.push(std::make_pair(-adj[v][j].second,
-                                 std::make_pair(v, adj[v][j].first)));
+          pq.push(std::make_pair(-adj[v][j].second, std::make_pair(v, adj[v][j].first)));
         }
       }
     }

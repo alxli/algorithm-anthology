@@ -36,7 +36,7 @@ double det_naive(const SquareMatrix &a) {
     return a[0][0];
   }
   if (n == 2) {
-    return a[0][0]*a[1][1] - a[0][1]*a[1][0];
+    return a[0][0] * a[1][1] - a[0][1] * a[1][0];
   }
   double res = 0;
   SquareMatrix temp(n - 1, typename SquareMatrix::value_type(n - 1));
@@ -54,7 +54,7 @@ double det_naive(const SquareMatrix &a) {
         }
       }
     }
-    res += (p % 2 == 0 ? 1 : -1)*a[0][p]*det_naive(temp);
+    res += (p % 2 == 0 ? 1 : -1) * a[0][p] * det_naive(temp);
   }
   return res;
 }
@@ -77,7 +77,7 @@ double det(const SquareMatrix &a, double EPS = 1e-10) {
     }
     res *= b[p][i];
     used[p] = true;
-    double z = 1.0/b[p][i];
+    double z = 1.0 / b[p][i];
     for (int j = 0; j < n; j++) {
       b[p][j] *= z;
     }
@@ -85,7 +85,7 @@ double det(const SquareMatrix &a, double EPS = 1e-10) {
       if (j != p) {
         z = b[j][i];
         for (int k = 0; k < n; k++) {
-          b[j][k] -= z*b[p][k];
+          b[j][k] -= z * b[p][k];
         }
       }
     }
@@ -94,24 +94,24 @@ double det(const SquareMatrix &a, double EPS = 1e-10) {
 }
 
 template<class SquareMatrix>
-SquareMatrix& invert(SquareMatrix &a) {
+SquareMatrix &invert(SquareMatrix &a) {
   int n = a.size();
   for (int i = 0; i < n; i++) {
-    a[i].resize(2*n);
-    for (int j = n; j < n*2; j++) {
+    a[i].resize(2 * n);
+    for (int j = n; j < n * 2; j++) {
       a[i][j] = (i == j - n ? 1 : 0);
     }
   }
   for (int i = 0; i < n; i++) {
     double z = a[i][i];
-    for (int j = i; j < n*2; j++) {
+    for (int j = i; j < n * 2; j++) {
       a[i][j] /= z;
     }
     for (int j = 0; j < n; j++) {
       if (i != j) {
         double z = a[j][i];
-        for (int k = 0; k < n*2; k++) {
-          a[j][k] -= z*a[i][k];
+        for (int k = 0; k < n * 2; k++) {
+          a[j][k] -= z * a[i][k];
         }
       }
     }
@@ -129,7 +129,7 @@ using namespace std;
 
 int main() {
   const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
-  vector<vector<double> > m(n), inv, res(n, vector<double>(n, 0));
+  vector<vector<double>> m(n), inv, res(n, vector<double>(n, 0));
   for (int i = 0; i < n; i++) {
     m[i] = vector<double>(a[i], a[i] + n);
   }
@@ -139,7 +139,7 @@ int main() {
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
       for (int k = 0; k < n; k++) {
-        res[i][j] += a[i][k]*inv[k][j];
+        res[i][j] += a[i][k] * inv[k][j];
       }
     }
   }

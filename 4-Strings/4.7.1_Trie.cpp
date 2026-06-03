@@ -48,12 +48,12 @@ class trie {
   struct node_t {
     V value;
     bool is_terminal;
-    std::map<char, node_t*> children;
+    std::map<char, node_t *> children;
 
     node_t() : is_terminal(false) {}
   } *root;
 
-  typedef typename std::map<char, node_t*>::iterator cit;
+  typedef typename std::map<char, node_t *>::iterator cit;
 
   static bool erase(node_t *n, const string &s, int i) {
     if (i == (int)s.size()) {
@@ -98,17 +98,9 @@ class trie {
  public:
   trie() : root(new node_t()), num_terminals(0) {}
 
-  ~trie() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_terminals;
-  }
-
-  bool empty() const {
-    return num_terminals == 0;
-  }
+  ~trie() { clean_up(root); }
+  int size() const { return num_terminals; }
+  bool empty() const { return num_terminals == 0; }
 
   bool insert(const string &s, const V &v) {
     node_t *n = root;
@@ -136,7 +128,7 @@ class trie {
     return false;
   }
 
-  const V* find(const string &s) const {
+  const V *find(const string &s) const {
     node_t *n = root;
     for (int i = 0; i < (int)s.size(); i++) {
       cit it = n->children.find(s[i]);

@@ -32,7 +32,7 @@ struct list_node {
   explicit list_node(int value = 0) : value(value), next(NULL) {}
 };
 
-list_node* reverse_list(list_node *head) {
+list_node *reverse_list(list_node *head) {
   list_node *prev = NULL;
   while (head != NULL) {
     list_node *next = head->next;
@@ -43,7 +43,7 @@ list_node* reverse_list(list_node *head) {
   return prev;
 }
 
-list_node* merge_sorted_lists(list_node *a, list_node *b) {
+list_node *merge_sorted_lists(list_node *a, list_node *b) {
   list_node dummy;
   list_node *tail = &dummy;
   while (a != NULL && b != NULL) {
@@ -60,7 +60,7 @@ list_node* merge_sorted_lists(list_node *a, list_node *b) {
   return dummy.next;
 }
 
-list_node* split_half(list_node *head, list_node **second) {
+list_node *split_half(list_node *head, list_node **second) {
   if (head == NULL || head->next == NULL) {
     *second = NULL;
     return head;

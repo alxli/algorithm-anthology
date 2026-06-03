@@ -33,28 +33,25 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
+// clang-format off
+double sqnorm(const point &a) { return a.x * a.x + a.y * a.y; }
 double norm(const point &a) { return sqrt(sqnorm(a)); }
-
-bool cmp_x(const point &a, const point &b) {
-  return (a.x == b.x) ? (a.y < b.y) : (a.x < b.x);
-}
-
-bool cmp_y(const point &a, const point &b) {
-  return (a.y == b.y) ? (a.x < b.x) : (a.y < b.y);
-}
+bool cmp_x(const point &a, const point &b) { return (a.x == b.x) ? (a.y < b.y) : (a.x < b.x); }
+bool cmp_y(const point &a, const point &b) { return (a.y == b.y) ? (a.x < b.x) : (a.y < b.y); }
+// clang-format on
 
 template<class It>
-double closest_pair(It lo, It hi, std::pair<point, point> *res = NULL,
-                    double mindist = std::numeric_limits<double>::max(),
-                    bool sort_x = true) {
+double closest_pair(
+    It lo, It hi, std::pair<point, point> *res = NULL,
+    double mindist = std::numeric_limits<double>::max(), bool sort_x = true
+) {
   if (lo == hi) {
     return std::numeric_limits<double>::max();
   }
   if (sort_x) {
     std::sort(lo, hi, cmp_x);
   }
-  It mid = lo + (hi - lo)/2;
+  It mid = lo + (hi - lo) / 2;
   double midx = mid->x;
   double d1 = closest_pair(lo, mid, res, mindist, false);
   mindist = std::min(mindist, d1);

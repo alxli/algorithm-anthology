@@ -48,13 +48,13 @@ class fenwick_tree_2d {
   void add_helper(int r, int c, const T &x) {
     add(t1, 0, 0, x);
     add(t1, 0, c, -x);
-    add(t2, 0, c, x*c);
+    add(t2, 0, c, x * c);
     add(t1, r, 0, -x);
-    add(t3, r, 0, x*r);
+    add(t3, r, 0, x * r);
     add(t1, r, c, x);
-    add(t2, r, c, -x*c);
-    add(t3, r, c, -x*r);
-    add(t4, r, c, x*r*c);
+    add(t2, r, c, -x * c);
+    add(t3, r, c, -x * r);
+    add(t4, r, c, x * r * c);
   }
 
  public:
@@ -65,13 +65,8 @@ class fenwick_tree_2d {
     add_helper(r1, c1, x);
   }
 
-  void add(int r, int c, const T &x) {
-    add(r, c, r, c, x);
-  }
-
-  void set(int r, int c, const T &x) {
-    add(r, c, x - at(r, c));
-  }
+  void add(int r, int c, const T &x) { add(r, c, r, c, x); }
+  void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
 
   T sum(int r, int c) {
     r++;
@@ -86,17 +81,14 @@ class fenwick_tree_2d {
         s4 += t4[ij];
       }
     }
-    return s1*r*c + s2*r + s3*c + s4;
+    return s1 * r * c + s2 * r + s3 * c + s4;
   }
 
   T sum(int r1, int c1, int r2, int c2) {
-    return sum(r2, c2) + sum(r1 - 1, c1 - 1) -
-           sum(r1 - 1, c2) - sum(r2, c1 - 1);
+    return sum(r2, c2) + sum(r1 - 1, c1 - 1) - sum(r1 - 1, c2) - sum(r2, c1 - 1);
   }
 
-  T at(int r, int c) {
-    return sum(r, c, r, c);
-  }
+  T at(int r, int c) { return sum(r, c, r, c); }
 };
 
 /*** Example Usage and Output:

@@ -21,9 +21,9 @@ Space Complexity:
 #include <vector>
 
 const int MAXN = 100;
-std::vector<std::pair<int, std::pair<int, int> > > edges;
+std::vector<std::pair<int, std::pair<int, int>>> edges;
 int root[MAXN];
-std::vector<std::pair<int, int> > mst;
+std::vector<std::pair<int, int>> mst;
 
 int find_root(int x) {
   if (root[x] != x) {

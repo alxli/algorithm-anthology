@@ -28,18 +28,9 @@ class abstract_enumerator {
   int range, length;
 
   abstract_enumerator(int r, int l) : range(r), length(l) {}
-
-  virtual long long count(const std::vector<int> &prefix) {
-    return 0;
-  }
-
-  std::vector<int> next(std::vector<int> &a) {
-    return from_rank(to_rank(a) + 1);
-  }
-
-  long long total_count() {
-    return count(std::vector<int>(0));
-  }
+  virtual long long count(const std::vector<int> &prefix) { return 0; }
+  std::vector<int> next(std::vector<int> &a) { return from_rank(to_rank(a) + 1); }
+  long long total_count() { return count(std::vector<int>(0)); }
 
  public:
   long long to_rank(const std::vector<int> &a) {
@@ -71,8 +62,7 @@ class abstract_enumerator {
     return a;
   }
 
-  void enumerate(void (*f)(std::vector<int>::iterator,
-                           std::vector<int>::iterator)) {
+  void enumerate(void (*f)(std::vector<int>::iterator, std::vector<int>::iterator)) {
     long long total = total_count();
     for (long long i = 0; i < total; i++) {
       std::vector<int> curr = from_rank(i);
@@ -106,7 +96,7 @@ class permutation_enumerator : public arrangement_enumerator {
 };
 
 class combination_enumerator : public abstract_enumerator {
-  std::vector<std::vector<long long> > table;
+  std::vector<std::vector<long long>> table;
 
  public:
   combination_enumerator(int n, int k)
@@ -131,12 +121,12 @@ class combination_enumerator : public abstract_enumerator {
 };
 
 class partition_enumerator : public abstract_enumerator {
-  std::vector<std::vector<long long> > table;
+  std::vector<std::vector<long long>> table;
 
  public:
-  partition_enumerator(int n) : abstract_enumerator(n + 1, n),
-                                table(n + 1, std::vector<long long>(n + 1)) {
-    std::vector<std::vector<long long> > tmp(table);
+  partition_enumerator(int n)
+      : abstract_enumerator(n + 1, n), table(n + 1, std::vector<long long>(n + 1)) {
+    std::vector<std::vector<long long>> tmp(table);
     tmp[0][0] = 1;
     for (int i = 1; i <= n; i++) {
       for (int j = 1; j <= i; j++) {

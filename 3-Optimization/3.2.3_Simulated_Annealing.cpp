@@ -41,8 +41,7 @@ double random_unit() {
 }
 
 template<class Function>
-double anneal_min(Function f, double x0, double y0, double *best_x = NULL,
-                  double *best_y = NULL) {
+double anneal_min(Function f, double x0, double y0, double *best_x = NULL, double *best_y = NULL) {
   double ans_x = x0, ans_y = y0, ans = f(x0, y0);
   for (int restart = 0; restart < NUM_RESTARTS; restart++) {
     double x = x0, y = y0, cur = f(x, y);
@@ -85,7 +84,7 @@ bool close(double a, double b) {
 
 // Smooth bowl with global minimum at f(2, -3) = 0.
 double f(double x, double y) {
-  return (x - 2)*(x - 2) + (y + 3)*(y + 3);
+  return (x - 2) * (x - 2) + (y + 3) * (y + 3);
 }
 
 int main() {

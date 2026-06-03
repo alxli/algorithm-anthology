@@ -24,7 +24,9 @@ Space Complexity:
 #include <stdexcept>
 #include <vector>
 
-struct edge { int u, v, w; };  // Edge from u to v with weight w.
+struct edge {
+  int u, v, w;
+};  // Edge from u to v with weight w.
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
 std::vector<edge> e;
@@ -81,8 +83,8 @@ int main() {
   e.push_back((edge){1, 2, 2});
   e.push_back((edge){0, 2, 5});
   bellman_ford(3, start);
-  cout << "The shortest distance from " << start << " to " << dest << " is "
-       << dist[dest] << "." << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }

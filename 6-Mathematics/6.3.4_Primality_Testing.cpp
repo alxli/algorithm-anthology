@@ -35,7 +35,7 @@ bool is_prime(Int n) {
   if (n < 2 || n % 2 == 0 || n % 3 == 0) {
     return false;
   }
-  for (Int i = 5, w = 4; i*i <= n; i += w) {
+  for (Int i = 5, w = 4; i * i <= n; i += w) {
     if (n % i == 0) {
       return false;
     }
@@ -69,10 +69,8 @@ uint64 powmod(uint64 x, uint64 n, uint64 m) {
 }
 
 uint64 rand64u() {
-  return ((uint64)(rand() & 0xf) << 60) |
-         ((uint64)(rand() & 0x7fff) << 45) |
-         ((uint64)(rand() & 0x7fff) << 30) |
-         ((uint64)(rand() & 0x7fff) << 15) |
+  return ((uint64)(rand() & 0xf) << 60) | ((uint64)(rand() & 0x7fff) << 45) |
+         ((uint64)(rand() & 0x7fff) << 30) | ((uint64)(rand() & 0x7fff) << 15) |
          ((uint64)(rand() & 0x7fff));
 }
 
@@ -138,9 +136,27 @@ bool is_prime_fast(long long n) {
 int main() {
   int len = 20;
   long long tests[] = {
-    -1, 0, 1, 2, 3, 4, 5, 1000000LL, 772023803LL, 792904103LL, 813815117LL,
-    834753187LL, 855718739LL, 876717799LL, 897746119LL, 2147483647LL,
-    5705234089LL, 5914686649LL, 6114145249LL, 6339503641LL, 6548531929LL
+      -1,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      1000000LL,
+      772023803LL,
+      792904103LL,
+      813815117LL,
+      834753187LL,
+      855718739LL,
+      876717799LL,
+      897746119LL,
+      2147483647LL,
+      5705234089LL,
+      5914686649LL,
+      6114145249LL,
+      6339503641LL,
+      6548531929LL
   };
   for (int i = 0; i < len; i++) {
     bool p = is_prime(tests[i]);

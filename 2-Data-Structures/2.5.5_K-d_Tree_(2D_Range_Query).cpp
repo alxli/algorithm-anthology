@@ -30,13 +30,8 @@ template<class T>
 class kd_tree {
   typedef std::pair<T, T> point;
 
-  static inline bool comp1(const point &a, const point &b) {
-    return a.first < b.first;
-  }
-
-  static inline bool comp2(const point &a, const point &b) {
-    return a.second < b.second;
-  }
+  static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
+  static inline bool comp2(const point &a, const point &b) { return a.second < b.second; }
 
   std::vector<point> tree, minp, maxp;
   std::vector<int> l_index, h_index;
@@ -45,9 +40,10 @@ class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = lo + (hi - lo)/2;
-    std::nth_element(tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
-                     div_x ? comp1 : comp2);
+    int mid = lo + (hi - lo) / 2;
+    std::nth_element(
+        tree.begin() + lo, tree.begin() + mid, tree.begin() + hi, div_x ? comp1 : comp2
+    );
     l_index[mid] = lo;
     h_index[mid] = hi;
     minp[mid].first = maxp[mid].first = tree[lo].first;
@@ -70,7 +66,7 @@ class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     T ax = minp[mid].first, ay = minp[mid].second;
     T bx = maxp[mid].first, by = maxp[mid].second;
     if (x2 < ax || bx < x1 || y2 < ay || by < y1) {
@@ -84,8 +80,8 @@ class kd_tree {
     }
     query(lo, mid, f);
     query(mid + 1, hi, f);
-    if (tree[mid].first < x1 || x2 < tree[mid].first ||
-        tree[mid].second < y1 || y2 < tree[mid].second) {
+    if (tree[mid].first < x1 || x2 < tree[mid].first || tree[mid].second < y1 ||
+        y2 < tree[mid].second) {
       return;
     }
     f(tree[mid]);
@@ -103,8 +99,7 @@ class kd_tree {
   }
 
   template<class ReportFunction>
-  void query(const T &x1, const T &y1, const T &x2, const T &y2,
-             ReportFunction f) {
+  void query(const T &x1, const T &y1, const T &x2, const T &y2, ReportFunction f) {
     this->x1 = x1;
     this->y1 = y1;
     this->x2 = x2;
@@ -129,9 +124,9 @@ void print(const pair<int, int> &p) {
 
 int main() {
   const int n = 10;
-  int points[n][2] = {{1, 4}, {5, 4}, {2, 2}, {3, 1}, {6, -5}, {5, -1},
-                      {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
-  vector<pair<int, int> > v;
+  int points[n][2] = {{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
+                      {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
+  vector<pair<int, int>> v;
   for (int i = 0; i < n; i++) {
     v.push_back(make_pair(points[i][0], points[i][1]));
   }

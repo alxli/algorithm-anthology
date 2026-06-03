@@ -30,25 +30,28 @@ Space Complexity:
 
 #include <algorithm>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 using std::string;
 
 std::pair<string, string> align_sequences(
-    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1) {
+    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
+) {
   int n = s1.size(), m = s2.size();
-  std::vector<std::vector<int> > dp(n + 1, std::vector<int>(m + 1, 0));
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
   for (int i = 0; i <= n; i++) {
-    dp[i][0] = i*gap_cost;
+    dp[i][0] = i * gap_cost;
   }
   for (int j = 0; j <= m; j++) {
-    dp[0][j] = j*gap_cost;
+    dp[0][j] = j * gap_cost;
   }
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= m; j++) {
-      dp[i][j] = (s1[i - 1] == s2[j - 1]) ? dp[i - 1][j - 1] : std::min(
-          dp[i - 1][j - 1] + sub_cost,
-          std::min(dp[i - 1][j], dp[i][j - 1]) + gap_cost);
+      dp[i][j] = (s1[i - 1] == s2[j - 1]) ? dp[i - 1][j - 1]
+                                          : std::min(
+                                                dp[i - 1][j - 1] + sub_cost,
+                                                std::min(dp[i - 1][j], dp[i][j - 1]) + gap_cost
+                                            );
     }
   }
   string res1, res2;
@@ -75,15 +78,13 @@ std::pair<string, string> align_sequences(
 }
 
 template<class It>
-std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2,
-                          int gap_cost, int sub_cost) {
+std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2, int gap_cost, int sub_cost) {
   std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
   for (It it1 = lo1; it1 != hi1; ++it1) {
     res.swap(prev);
     int i = 0;
     for (It it2 = lo2; it2 != hi2; ++it2) {
-      res[i + 1] = (*it1 == *it2) ? prev[i] : std::min(prev[i] + sub_cost,
-                                                       res[i] + gap_cost);
+      res[i + 1] = (*it1 == *it2) ? prev[i] : std::min(prev[i] + sub_cost, res[i] + gap_cost);
       i++;
     }
   }
@@ -91,8 +92,9 @@ std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2,
 }
 
 template<class It>
-void hirschberg_rec(It lo1, It hi1, It lo2, It hi2,
-                    string *res1, string *res2, int gap_cost, int sub_cost) {
+void hirschberg_rec(
+    It lo1, It hi1, It lo2, It hi2, string *res1, string *res2, int gap_cost, int sub_cost
+) {
   if (lo1 == hi1) {
     for (It it2 = lo2; it2 != hi2; ++it2) {
       *res1 += '_';
@@ -102,7 +104,7 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2,
   }
   if (lo1 + 1 == hi1) {
     It pos = std::find(lo2, hi2, *lo1);
-    bool insert = (pos == hi2) && (gap_cost*(hi2 - lo2 + 1) < sub_cost);
+    bool insert = (pos == hi2) && (gap_cost * (hi2 - lo2 + 1) < sub_cost);
     if (lo2 == hi2 || insert) {
       *res1 += *lo1;
       *res2 += '_';
@@ -113,7 +115,7 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2,
     }
     return;
   }
-  It mid1 = lo1 + (hi1 - lo1)/2;
+  It mid1 = lo1 + (hi1 - lo1) / 2;
   std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
   std::vector<int> fwd = row_cost(lo1, mid1, lo2, hi2, gap_cost, sub_cost);
   std::vector<int> rev = row_cost(rlo1, rmid1, rlo2, rhi2, gap_cost, sub_cost);
@@ -130,13 +132,13 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2,
 }
 
 std::pair<string, string> hirschberg_align_sequences(
-    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1) {
+    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
+) {
   if (s1.size() < s2.size()) {
     return hirschberg_align_sequences(s2, s1, gap_cost, sub_cost);
   }
   string res1, res2;
-  hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res1, &res2,
-                 gap_cost, sub_cost);
+  hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res1, &res2, gap_cost, sub_cost);
   return std::make_pair(res1, res2);
 }
 
@@ -145,9 +147,10 @@ std::pair<string, string> hirschberg_align_sequences(
 #include <cassert>
 
 int main() {
-  assert(align_sequences("AGGGCT", "AGGCA", 2, 3) ==
-             make_pair(string("AGGGCT"), string("A_GGCA")));
-  assert(hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) ==
-             make_pair(string("AGGGCT"), string("A_GGCA")));
+  assert(align_sequences("AGGGCT", "AGGCA", 2, 3) == make_pair(string("AGGGCT"), string("A_GGCA")));
+  assert(
+      hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) ==
+      make_pair(string("AGGGCT"), string("A_GGCA"))
+  );
   return 0;
 }

@@ -35,7 +35,7 @@ Space Complexity:
 #include <vector>
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<std::pair<int, int> > adj[MAXN];
+std::vector<std::pair<int, int>> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
 void dijkstra(int nodes, int start) {
@@ -45,7 +45,7 @@ void dijkstra(int nodes, int start) {
     pred[i] = -1;
   }
   dist[start] = 0;
-  std::priority_queue<std::pair<int, int> > pq;
+  std::priority_queue<std::pair<int, int>> pq;
   pq.push(std::make_pair(0, start));
   while (!pq.empty()) {
     int u = pq.top().second;
@@ -96,8 +96,8 @@ int main() {
   adj[1].push_back(make_pair(3, 4));
   adj[2].push_back(make_pair(3, 1));
   dijkstra(4, start);
-  cout << "The shortest distance from " << start << " to " << dest << " is "
-       << dist[dest] << "." << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }

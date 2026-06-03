@@ -45,7 +45,7 @@ typedef std::pair<double, double> point;
 #define y second
 
 double rectangle_area(const point &a, const point &b) {
-  return fabs((a.x - b.x)*(a.y - b.y));
+  return fabs((a.x - b.x) * (a.y - b.y));
 }
 
 bool point_in_rectangle(const point &p, const point &v, double w, double h) {
@@ -56,9 +56,8 @@ bool point_in_rectangle(const point &p, const point &v, double w, double h) {
   if (h < 0) {
     return point_in_rectangle(p, point(v.x, v.y + h), w, -h);
   }
-  return EDGE_IS_INSIDE
-      ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
-      : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
+  return EDGE_IS_INSIDE ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
+                        : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
 }
 
 bool point_in_rectangle(const point &p, const point &a, const point &b) {
@@ -67,8 +66,10 @@ bool point_in_rectangle(const point &p, const point &a, const point &b) {
   return point_in_rectangle(p, point(xl, yl), xh - xl, yh - yl);
 }
 
-int rectangle_intersection(const point &a1, const point &b1, const point &a2,
-                           const point &b2, point *p = NULL, point *q = NULL) {
+int rectangle_intersection(
+    const point &a1, const point &b1, const point &a2, const point &b2, point *p = NULL,
+    point *q = NULL
+) {
   bool a1in2 = point_in_rectangle(a1, a2, b2);
   bool b1in2 = point_in_rectangle(b1, a2, b2);
   if (a1in2 && b1in2) {
@@ -121,16 +122,12 @@ int main() {
   assert(!point_in_rectangle(point(-1, -2), point(3, -3), point(0, -1)));
 
   point p, q;
-  assert(-1 == rectangle_intersection(point(0, 0), point(1, 1),
-                                      point(2, 2), point(3, 3)));
-  assert(0 == rectangle_intersection(point(1, 1), point(7, 7),
-                                     point(5, 5), point(0, 0), &p, &q));
+  assert(-1 == rectangle_intersection(point(0, 0), point(1, 1), point(2, 2), point(3, 3)));
+  assert(0 == rectangle_intersection(point(1, 1), point(7, 7), point(5, 5), point(0, 0), &p, &q));
   assert(EQP(p, point(1, 1)) && EQP(q, point(5, 5)));
-  assert(1 == rectangle_intersection(point(1, 1), point(0, 0),
-                                     point(0, 0), point(1, 10), &p, &q));
+  assert(1 == rectangle_intersection(point(1, 1), point(0, 0), point(0, 0), point(1, 10), &p, &q));
   assert(EQP(p, point(0, 0)) && EQP(q, point(1, 1)));
-  assert(2 == rectangle_intersection(point(0, 5), point(5, 7),
-                                     point(1, 6), point(2, 5), &p, &q));
+  assert(2 == rectangle_intersection(point(0, 5), point(5, 7), point(1, 6), point(2, 5), &p, &q));
   assert(EQP(p, point(1, 6)) && EQP(q, point(2, 5)));
 
   return 0;

@@ -37,9 +37,12 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
+double sqnorm(const point &a) {
+  return a.x * a.x + a.y * a.y;
+}
+
 double cross(const point &a, const point &b, const point &o = point(0, 0)) {
-  return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 template<class It>
@@ -48,7 +51,7 @@ std::vector<point> convex_hull(It lo, It hi) {
   if (hi - lo <= 1) {
     return std::vector<point>(lo, hi);
   }
-  std::vector<point> res(2*(int)(hi - lo));
+  std::vector<point> res(2 * (int)(hi - lo));
   std::sort(lo, hi);
   for (It it = lo; it != hi; ++it) {
     while (k >= 2 && GE(cross(res[k - 1], *it, res[k - 2]), 0)) {
@@ -78,8 +81,7 @@ std::pair<point, point> diametral_pair(It lo, It hi) {
     return std::make_pair(h[0], h[1]);
   }
   int k = 1;
-  while (fabs(cross(h[0], h[(k + 1) % m], h[m - 1])) >
-         fabs(cross(h[0], h[k], h[m - 1]))) {
+  while (fabs(cross(h[0], h[(k + 1) % m], h[m - 1])) > fabs(cross(h[0], h[k], h[m - 1]))) {
     k++;
   }
   double maxdist = 0, d;
@@ -91,7 +93,7 @@ std::pair<point, point> diametral_pair(It lo, It hi) {
       res = std::make_pair(h[i], h[j]);
     }
     while (j < m && fabs(cross(h[(i + 1) % m], h[(j + 1) % m], h[i])) >
-                    fabs(cross(h[(i + 1) % m], h[j], h[i]))) {
+                        fabs(cross(h[(i + 1) % m], h[j], h[i]))) {
       d = sqnorm(point(h[i].x - h[(j + 1) % m].x, h[i].y - h[(j + 1) % m].y));
       if (d > maxdist) {
         maxdist = d;
@@ -109,7 +111,7 @@ std::pair<point, point> diametral_pair(It lo, It hi) {
 using namespace std;
 
 int main() {
-  { // Irregular pentagon with only the vertex (1, 2) not on the hull.
+  {  // Irregular pentagon with only the vertex (1, 2) not on the hull.
     vector<point> v;
     v.push_back(point(1, 3));
     v.push_back(point(1, 2));

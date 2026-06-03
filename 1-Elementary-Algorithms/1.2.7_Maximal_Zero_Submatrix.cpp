@@ -18,7 +18,7 @@ Space Complexity:
 #include <stack>
 #include <vector>
 
-int max_zero_submatrix(const std::vector<std::vector<bool> > &matrix) {
+int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
   if (matrix.empty()) {
     return 0;
   }
@@ -49,7 +49,7 @@ int max_zero_submatrix(const std::vector<std::vector<bool> > &matrix) {
       s.push(c);
     }
     for (int j = 0; j < m; j++) {
-      res = std::max(res, (r - d[j])*(d2[j] - d1[j] - 1));
+      res = std::max(res, (r - d[j]) * (d2[j] - d1[j] - 1));
     }
   }
   return res;
@@ -62,12 +62,14 @@ using namespace std;
 
 int main() {
   const int n = 5, m = 6;
-  bool a[n][m] = {{1, 0, 1, 1, 0, 0},
-                  {1, 0, 0, 1, 0, 0},
-                  {0, 0, 0, 0, 0, 1},
-                  {1, 0, 0, 1, 0, 0},
-                  {1, 0, 1, 0, 0, 1}};
-  vector<vector<bool> > matrix(n);
+  bool a[n][m] = {
+      {1, 0, 1, 1, 0, 0},
+      {1, 0, 0, 1, 0, 0},
+      {0, 0, 0, 0, 0, 1},
+      {1, 0, 0, 1, 0, 0},
+      {1, 0, 1, 0, 0, 1}
+  };
+  vector<vector<bool>> matrix(n);
   for (int i = 0; i < n; i++) {
     matrix[i] = vector<bool>(a[i], a[i] + m);
   }

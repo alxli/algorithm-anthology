@@ -45,8 +45,13 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
-double cross(const point &a, const point &b) { return a.x*b.y - a.y*b.x; }
+double sqnorm(const point &a) {
+  return a.x * a.x + a.y * a.y;
+}
+
+double cross(const point &a, const point &b) {
+  return a.x * b.y - a.y * b.x;
+}
 
 template<class It>
 point mean_center(It lo, It hi) {
@@ -85,17 +90,13 @@ bool cw_comp(const point &a, const point &b, const point &c) {
 struct cw_comp_class {
   point c;
   cw_comp_class(const point &c) : c(c) {}
-  bool operator()(const point &a, const point &b) const {
-    return cw_comp(a, b, c);
-  }
+  bool operator()(const point &a, const point &b) const { return cw_comp(a, b, c); }
 };
 
 struct ccw_comp_class {
   point c;
   ccw_comp_class(const point &c) : c(c) {}
-  bool operator()(const point &a, const point &b) const {
-    return cw_comp(b, a, c);
-  }
+  bool operator()(const point &a, const point &b) const { return cw_comp(b, a, c); }
 };
 
 template<class It>
@@ -105,10 +106,10 @@ double polygon_area(It lo, It hi) {
   }
   double area = 0;
   if (*lo != *--hi) {
-    area += (lo->x - hi->x)*(lo->y + hi->y);
+    area += (lo->x - hi->x) * (lo->y + hi->y);
   }
   for (It i = hi, j = --hi; i != lo; --i, --j) {
-    area += (i->x - j->x)*(i->y + j->y);
+    area += (i->x - j->x) * (i->y + j->y);
   }
   return fabs(area / 2.0);
 }
@@ -123,11 +124,7 @@ int main() {
   // Irregular pentagon with only the vertex (1, 2) not on its convex hull.
   // The ordering here is already sorted in ccw order around their mean center,
   // though we will shuffle them to verify our sorting comparator.
-  point points[] = {point(1, 3),
-                    point(1, 2),
-                    point(2, 1),
-                    point(0, 0),
-                    point(-1, 3)};
+  point points[] = {point(1, 3), point(1, 2), point(2, 1), point(0, 0), point(-1, 3)};
   vector<point> v(points, points + 5);
   std::random_shuffle(v.begin(), v.end());
   point c = mean_center(v.begin(), v.end());

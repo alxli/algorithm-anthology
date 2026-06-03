@@ -65,10 +65,10 @@ template<class Int>
 std::pair<Int, Int> extended_euclid(Int a, Int b) {
   Int x = 1, y = 0, x1 = 0, y1 = 1;
   while (b != 0) {
-    Int q = a/b, prev_x1 = x1, prev_y1 = y1, prev_b = b;
-    x1 = x - q*x1;
-    y1 = y - q*y1;
-    b = a - q*b;
+    Int q = a / b, prev_x1 = x1, prev_y1 = y1, prev_b = b;
+    x1 = x - q * x1;
+    y1 = y - q * y1;
+    b = a - q * b;
     x = prev_x1;
     y = prev_y1;
     a = prev_b;
@@ -82,7 +82,7 @@ std::pair<Int, Int> extended_euclid2(Int a, Int b) {
     return (a > 0) ? std::make_pair(1, 0) : std::make_pair(-1, 0);
   }
   std::pair<Int, Int> r = extended_euclid2(b, a % b);
-  return std::make_pair(r.second, r.first - a/b*r.second);
+  return std::make_pair(r.second, r.first - a / b * r.second);
 }
 
 template<class Int>
@@ -94,7 +94,7 @@ Int mod(Int a, Int m) {
 template<class Int>
 Int mod_inverse(Int a, Int m) {
   a = mod(a, m);
-  return (a == 0) ? 0 : mod((1 - m*mod_inverse(m % a, a)) / a, m);
+  return (a == 0) ? 0 : mod((1 - m * mod_inverse(m % a, a)) / a, m);
 }
 
 template<class Int>
@@ -106,7 +106,7 @@ std::vector<int> generate_inverse(int p) {
   std::vector<int> res(p);
   res[1] = 1;
   for (int i = 2; i < p; i++) {
-    res[i] = (p - (p / i)*res[p % i] % p) % p;
+    res[i] = (p - (p / i) * res[p % i] % p) % p;
   }
   return res;
 }
@@ -129,7 +129,7 @@ long long garner_restore(int n, int a[], int p[]) {
   std::vector<int> x(a, a + n);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
-      x[i] = mod_inverse((long long)p[j], (long long)p[i])*(x[i] - x[j]);
+      x[i] = mod_inverse((long long)p[j], (long long)p[i]) * (x[i] - x[j]);
     }
     x[i] = (x[i] % p[i] + p[i]) % p[i];
   }
@@ -153,11 +153,11 @@ int main() {
       assert(g == gcd2(a, b));
       if (g == 1 && b > 1) {
         int inv = mod_inverse(a, b);
-        assert(inv == mod_inverse2(a, b) && mod(a*inv, b) == 1);
+        assert(inv == mod_inverse2(a, b) && mod(a * inv, b) == 1);
       }
       pair<int, int> res = extended_euclid(a, b);
       assert(res == extended_euclid2(a, b));
-      assert(g == a*res.first + b*res.second);
+      assert(g == a * res.first + b * res.second);
     }
   }
   {
@@ -165,7 +165,7 @@ int main() {
     std::vector<int> res = generate_inverse(p);
     for (int i = 0; i < p; i++) {
       if (i > 0) {
-        assert(mod(i*res[i], p) == 1);
+        assert(mod(i * res[i], p) == 1);
       }
     }
   }

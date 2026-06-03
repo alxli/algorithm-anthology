@@ -22,8 +22,7 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-const char BASE64_ALPHABET[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const char BASE64_ALPHABET[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 string base64_encode(const string &bytes) {
   string res;

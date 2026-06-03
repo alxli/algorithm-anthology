@@ -42,13 +42,8 @@ Space Complexity:
 
 template<class T>
 class segment_tree {
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_value_with_delta(const T &v, const T &d) {
-    return d;
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_value_with_delta(const T &v, const T &d) { return d; }
 
   int len;
   std::vector<T> value;
@@ -58,10 +53,10 @@ class segment_tree {
       value[i] = v;
       return;
     }
-    int mid = lo + (hi - lo)/2;
-    build(i*2 + 1, lo, mid, v);
-    build(i*2 + 2, mid + 1, hi, v);
-    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+    int mid = lo + (hi - lo) / 2;
+    build(i * 2 + 1, lo, mid, v);
+    build(i * 2 + 2, mid + 1, hi, v);
+    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   template<class It>
@@ -70,26 +65,27 @@ class segment_tree {
       value[i] = *(arr + lo);
       return;
     }
-    int mid = lo + (hi - lo)/2;
-    build(i*2 + 1, lo, mid, arr);
-    build(i*2 + 2, mid + 1, hi, arr);
-    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+    int mid = lo + (hi - lo) / 2;
+    build(i * 2 + 1, lo, mid, arr);
+    build(i * 2 + 2, mid + 1, hi, arr);
+    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) const {
     if (lo == tgt_lo && hi == tgt_hi) {
       return value[i];
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     if (tgt_lo <= mid && mid < tgt_hi) {
       return join_values(
-                query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
-                query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
+          query(i * 2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
+          query(i * 2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi)
+      );
     }
     if (tgt_lo <= mid) {
-      return query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
+      return query(i * 2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
     }
-    return query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
+    return query(i * 2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
   }
 
   void update(int i, int lo, int hi, int target, const T &d) {
@@ -100,41 +96,30 @@ class segment_tree {
       value[i] = join_value_with_delta(value[i], d);
       return;
     }
-    int mid = lo + (hi - lo)/2;
-    update(i*2 + 1, lo, mid, target, d);
-    update(i*2 + 2, mid + 1, hi, target, d);
-    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+    int mid = lo + (hi - lo) / 2;
+    update(i * 2 + 1, lo, mid, target, d);
+    update(i * 2 + 2, mid + 1, hi, target, d);
+    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
  public:
-  segment_tree(int n, const T &v = T()) : len(n), value(4*len) {
+  segment_tree(int n, const T &v = T()) : len(n), value(4 * len) {
     if (len > 0) {
       build(0, 0, len - 1, v);
     }
   }
 
   template<class It>
-  segment_tree(It lo, It hi) : len(hi - lo), value(4*len) {
+  segment_tree(It lo, It hi) : len(hi - lo), value(4 * len) {
     if (len > 0) {
       build(0, 0, len - 1, lo);
     }
   }
 
-  int size() const {
-    return len;
-  }
-
-  T at(int i) const {
-    return query(i, i);
-  }
-
-  T query(int lo, int hi) const {
-    return query(0, 0, len - 1, lo, hi);
-  }
-
-  void update(int i, const T &d) {
-    update(0, 0, len - 1, i, d);
-  }
+  int size() const { return len; }
+  T at(int i) const { return query(i, i); }
+  T query(int lo, int hi) const { return query(0, 0, len - 1, lo, hi); }
+  void update(int i, const T &d) { update(0, 0, len - 1, i, d); }
 };
 
 /*** Example Usage and Output:

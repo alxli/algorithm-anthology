@@ -40,9 +40,7 @@ Space Complexity:
 using std::string;
 
 class suffix_array {
-  static bool leq(int a1, int a2, int b1, int b2) {
-    return (a1 < b1) || (a1 == b1 && a2 <= b2);
-  }
+  static bool leq(int a1, int a2, int b1, int b2) { return (a1 < b1) || (a1 == b1 && a2 <= b2); }
 
   static bool leq(int a1, int a2, int a3, int b1, int b2, int b3) {
     return (a1 < b1) || (a1 == b1 && leq(a2, a3, b2, b3));
@@ -64,7 +62,7 @@ class suffix_array {
 
   template<class It>
   static void suffix_array_dc3(It s, It sa, int n, int K) {
-    int n0 = (n + 2)/3, n1 = (n + 1)/3, n2 = n/3, n02 = n0 + n2;
+    int n0 = (n + 2) / 3, n1 = (n + 1) / 3, n2 = n / 3, n02 = n0 + n2;
     std::vector<int> s12(n02 + 3), sa12(n02 + 3), s0(n0), sa0(n0);
     s12[n02] = s12[n02 + 1] = s12[n02 + 2] = 0;
     sa12[n02] = sa12[n02 + 1] = sa12[n02 + 2] = 0;
@@ -84,7 +82,7 @@ class suffix_array {
         c1 = s[sa12[i] + 1];
         c2 = s[sa12[i] + 2];
       }
-      (sa12[i] % 3 == 1 ? s12[sa12[i]/3] : s12[sa12[i]/3 + n0]) = name;
+      (sa12[i] % 3 == 1 ? s12[sa12[i] / 3] : s12[sa12[i] / 3 + n0]) = name;
     }
     if (name < n02) {
       suffix_array_dc3(s12.begin(), sa12.begin(), n02, name);
@@ -98,15 +96,15 @@ class suffix_array {
     }
     for (int i = 0, j = 0; i < n02; i++) {
       if (sa12[i] < n0) {
-        s0[j++] = 3*sa12[i];
+        s0[j++] = 3 * sa12[i];
       }
     }
     radix_pass(s0.begin(), sa0.begin(), s, n0, K);
     for (int p = 0, t = n0 - n1, k = 0; k < n; k++) {
-      int i = (sa12[t] < n0) ? 3*sa12[t] + 1 : 3*(sa12[t] - n0) + 2, j = sa0[p];
-      if (sa12[t] < n0 ? leq(s[i], s12[sa12[t] + n0],s[j], s12[j/3])
-                       : leq(s[i], s[i + 1], s12[sa12[t] - n0 + 1], s[j],
-                             s[j + 1], s12[j / 3 + n0])) {
+      int i = (sa12[t] < n0) ? 3 * sa12[t] + 1 : 3 * (sa12[t] - n0) + 2, j = sa0[p];
+      if (sa12[t] < n0
+              ? leq(s[i], s12[sa12[t] + n0], s[j], s12[j / 3])
+              : leq(s[i], s[i + 1], s12[sa12[t] - n0 + 1], s[j], s[j + 1], s12[j / 3 + n0])) {
         sa[k] = i;
         if (++t == n02) {
           for (k++; p < n0; p++, k++) {
@@ -117,7 +115,7 @@ class suffix_array {
         sa[k] = j;
         if (++p == n0) {
           for (k++; t < n02; t++, k++) {
-            sa[k] = (sa12[t] < n0) ? 3*sa12[t] + 1 : 3*(sa12[t] - n0) + 2;
+            sa[k] = (sa12[t] < n0) ? 3 * sa12[t] + 1 : 3 * (sa12[t] - n0) + 2;
           }
         }
       }
@@ -136,9 +134,7 @@ class suffix_array {
     sa.erase(sa.begin());
   }
 
-  std::vector<int> get_sa() {
-    return sa;
-  }
+  std::vector<int> get_sa() { return sa; }
 
   std::vector<int> get_lcp() {
     int n = s.size();
@@ -167,7 +163,7 @@ class suffix_array {
   size_t find(const string &needle) {
     int lo = 0, hi = (int)s.size() - 1;
     while (lo <= hi) {
-      int mid = lo + (hi - lo)/2;
+      int mid = lo + (hi - lo) / 2;
       int cmp = s.compare(sa[mid], needle.size(), needle);
       if (cmp < 0) {
         lo = mid + 1;

@@ -34,22 +34,20 @@ long long range_sum(const std::vector<long long> &pref, int l, int r) {
   return pref[r] - pref[l];
 }
 
-std::vector<std::vector<long long> >
-prefix_sums_2d(const std::vector<std::vector<int> > &a) {
+std::vector<std::vector<long long>> prefix_sums_2d(const std::vector<std::vector<int>> &a) {
   int rows = a.size(), cols = rows == 0 ? 0 : a[0].size();
-  std::vector<std::vector<long long> > pref(
-      rows + 1, std::vector<long long>(cols + 1, 0));
+  std::vector<std::vector<long long>> pref(rows + 1, std::vector<long long>(cols + 1, 0));
   for (int r = 0; r < rows; r++) {
     for (int c = 0; c < cols; c++) {
-      pref[r + 1][c + 1] = a[r][c] + pref[r][c + 1] + pref[r + 1][c] -
-                           pref[r][c];
+      pref[r + 1][c + 1] = a[r][c] + pref[r][c + 1] + pref[r + 1][c] - pref[r][c];
     }
   }
   return pref;
 }
 
-long long rectangle_sum(const std::vector<std::vector<long long> > &pref,
-                        int r1, int c1, int r2, int c2) {
+long long rectangle_sum(
+    const std::vector<std::vector<long long>> &pref, int r1, int c1, int r2, int c2
+) {
   return pref[r2][c2] - pref[r1][c2] - pref[r2][c1] + pref[r1][c1];
 }
 
@@ -65,14 +63,14 @@ int main() {
   assert(range_sum(pref, 0, 5) == 12);
   assert(range_sum(pref, 1, 4) == 4);
 
-  vector<vector<int> > grid(2, vector<int>(3));
+  vector<vector<int>> grid(2, vector<int>(3));
   grid[0][0] = 1;
   grid[0][1] = 2;
   grid[0][2] = 3;
   grid[1][0] = 4;
   grid[1][1] = 5;
   grid[1][2] = 6;
-  vector<vector<long long> > ps = prefix_sums_2d(grid);
+  vector<vector<long long>> ps = prefix_sums_2d(grid);
   assert(rectangle_sum(ps, 0, 1, 2, 3) == 16);
   return 0;
 }

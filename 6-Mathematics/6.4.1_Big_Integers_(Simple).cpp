@@ -50,8 +50,7 @@ class bigint {
     }
   }
 
-  static int comp(const std::string &a, const std::string &b,
-                  int asign, int bsign) {
+  static int comp(const std::string &a, const std::string &b, int asign, int bsign) {
     if (asign != bsign) {
       return asign < bsign ? -1 : 1;
     }
@@ -66,8 +65,7 @@ class bigint {
     return 0;
   }
 
-  static bigint add(const std::string &a, const std::string &b,
-                    int asign, int bsign) {
+  static bigint add(const std::string &a, const std::string &b, int asign, int bsign) {
     if (asign != bsign) {
       return (asign == 1) ? sub(a, b, asign, 1) : sub(b, a, bsign, 1);
     }
@@ -83,14 +81,13 @@ class bigint {
         d += b[i] - '0';
       }
       res.digits[i] = '0' + (d % 10);
-      carry = d/10;
+      carry = d / 10;
     }
     res.normalize();
     return res;
   }
 
-  static bigint sub(const std::string &a, const std::string &b,
-                    int asign, int bsign) {
+  static bigint sub(const std::string &a, const std::string &b, int asign, int bsign) {
     if (asign == -1 || bsign == -1) {
       return add(a, b, asign, -bsign);
     }
@@ -172,7 +169,7 @@ class bigint {
         row.digits.insert(0, "0");
       }
     }
-    res.sign = a.sign*b.sign;
+    res.sign = a.sign * b.sign;
     res.normalize();
     return res;
   }
@@ -187,7 +184,7 @@ class bigint {
         row = sub(row.digits, b.digits, row.sign, 1);
       }
     }
-    res.sign = a.sign*b.sign;
+    res.sign = a.sign * b.sign;
     res.normalize();
     return res;
   }

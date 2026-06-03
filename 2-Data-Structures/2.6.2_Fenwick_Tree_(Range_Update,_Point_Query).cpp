@@ -31,9 +31,7 @@ class fenwick_tree {
  public:
   fenwick_tree(int n) : len(n), t(n + 2) {}
 
-  int size() const {
-    return len;
-  }
+  int size() const { return len; }
 
   T at(int i) const {
     T res = 0;

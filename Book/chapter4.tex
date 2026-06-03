@@ -37,7 +37,7 @@ int to_int(const string &s) {
   return res;
 }
 
-char* itoa(int value, char *str, int base = 10) {
+char *itoa(int value, char *str, int base = 10) {
   if (base < 2 || base > 36) {
     *str = '\0';
     return str;
@@ -47,8 +47,9 @@ char* itoa(int value, char *str, int base = 10) {
   do {
     tmp_v = value;
     value /= base;
-    *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789"
-             "abcdefghijklmnopqrstuvwxyz"[35 + (tmp_v - value * base)];
+    *ptr++ =
+        "zyxwvutsrqponmlkjihgfedcba9876543210123456789"
+        "abcdefghijklmnopqrstuvwxyz"[35 + (tmp_v - value * base)];
   } while (value);
   if (tmp_v < 0) {
     *ptr++ = '-';
@@ -108,7 +109,7 @@ Stripping:
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-string& lstrip(string &s, const string &delim = " \n\t\v\f\r") {
+string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
   size_t pos = s.find_first_not_of(delim);
   if (pos != string::npos) {
     s.erase(0, pos);
@@ -116,7 +117,7 @@ string& lstrip(string &s, const string &delim = " \n\t\v\f\r") {
   return s;
 }
 
-string& rstrip(string &s, const string &delim = " \n\t\v\f\r") {
+string &rstrip(string &s, const string &delim = " \n\t\v\f\r") {
   size_t pos = s.find_last_not_of(delim);
   if (pos != string::npos) {
     s.erase(pos);
@@ -124,7 +125,7 @@ string& rstrip(string &s, const string &delim = " \n\t\v\f\r") {
   return s;
 }
 
-string& strip(string &s, const string &delim = " \n\t\v\f\r") {
+string &strip(string &s, const string &delim = " \n\t\v\f\r") {
   return lstrip(rstrip(s));
 }
 \end{lstlisting}
@@ -140,8 +141,8 @@ std::vector<int> find_all(const string &haystack, const string &needle) {
   std::vector<int> res;
   size_t pos = haystack.find(needle, 0);
   while (pos != string::npos) {
-      res.push_back(pos);
-      pos = haystack.find(needle, pos + 1);
+    res.push_back(pos);
+    pos = haystack.find(needle, pos + 1);
   }
   return res;
 }
@@ -190,8 +191,7 @@ std::vector<string> split(const string &s, char delim) {
   return res;
 }
 
-std::vector<string> split(const string &s,
-                          const string &delim = " \n\t\v\f\r") {
+std::vector<string> split(const string &s, const string &delim = " \n\t\v\f\r") {
   std::vector<string> res;
   string curr;
   for (int i = 0; i < (int)s.size(); i++) {
@@ -248,7 +248,7 @@ int main() {
   assert(replace("abcdabba", "ab", "00") == "00cd00ba");
 
   assert(join(split("a\nb\ncde\nf", '\n'), "|") == "a|b|cde|f");  // split v1
-  assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");  // split v2
+  assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");   // split v2
   assert(join(explode("a..b.cde....f", ".."), "|") == "a|b.cde||f");
   return 0;
 }
@@ -386,8 +386,7 @@ uint64 hash_range64(It first, It last) {
 template<class Int>
 struct int_hasher {
   std::size_t operator()(Int x) const {
-    static const uint64 RANDOM =
-        std::chrono::steady_clock::now().time_since_epoch().count();
+    static const uint64 RANDOM = std::chrono::steady_clock::now().time_since_epoch().count();
     return (std::size_t)mix64((uint64)x + RANDOM);
   }
 };
@@ -397,16 +396,12 @@ struct generic_hasher;
 
 template<class T, bool IsInteger>
 struct scalar_hasher {
-  std::size_t operator()(const T &x) const {
-    return std::hash<T>()(x);
-  }
+  std::size_t operator()(const T &x) const { return std::hash<T>()(x); }
 };
 
 template<class T>
 struct scalar_hasher<T, true> {
-  std::size_t operator()(T x) const {
-    return int_hasher<T>()(x);
-  }
+  std::size_t operator()(T x) const { return int_hasher<T>()(x); }
 };
 
 template<class A, class B>
@@ -434,10 +429,10 @@ template<class T>
 struct generic_hasher : scalar_hasher<T, std::is_integral<T>::value> {};
 
 template<class A, class B>
-struct generic_hasher<std::pair<A, B> > : pair_hasher<A, B> {};
+struct generic_hasher<std::pair<A, B>> : pair_hasher<A, B> {};
 
 template<class T>
-struct generic_hasher<std::vector<T> > : vector_hasher<T> {};
+struct generic_hasher<std::vector<T>> : vector_hasher<T> {};
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
@@ -461,21 +456,21 @@ int main() {
   assert(hash_range32(v.begin(), v.end()) == hash_range32(v.begin(), v.end()));
   assert(hash_range64(v.begin(), v.end()) == hash_range64(v.begin(), v.end()));
 
-  unordered_map<long long, int, int_hasher<long long> > count;
+  unordered_map<long long, int, int_hasher<long long>> count;
   count[1000000000000LL] = 7;
   assert(count[1000000000000LL] == 7);
 
   typedef pair<int, int> point;
-  unordered_map<point, int, pair_hasher<int, int> > dist;
+  unordered_map<point, int, pair_hasher<int, int>> dist;
   dist[point(3, 4)] = 5;
   assert(dist[point(3, 4)] == 5);
 
-  unordered_map<vector<int>, int, vector_hasher<int> > seen;
+  unordered_map<vector<int>, int, vector_hasher<int>> seen;
   seen[v] = 1;
   assert(seen[v] == 1);
 
   typedef pair<vector<int>, int> state;
-  unordered_map<state, int, generic_hasher<state> > dp;
+  unordered_map<state, int, generic_hasher<state>> dp;
   dp[state(v, 4)] = 9;
   assert(dp[state(v, 4)] == 9);
   return 0;
@@ -548,12 +543,10 @@ uint64 hash_mix(uint64 x) {
 
 template<class T>
 struct rolling_value_hasher {
-  uint64 operator()(const T &x) const {
-    return hash_mix((uint64)x) % (HASH_MOD - 1) + 1;
-  }
+  uint64 operator()(const T &x) const { return hash_mix((uint64)x) % (HASH_MOD - 1) + 1; }
 };
 
-template<class T, class ValueHasher = rolling_value_hasher<T> >
+template<class T, class ValueHasher = rolling_value_hasher<T>>
 class rolling_hash {
   static std::vector<uint64> pow_base;
   std::vector<uint64> pref;
@@ -570,15 +563,13 @@ class rolling_hash {
     pref.clear();
     pref.push_back(0);
     for (It it = first; it != last; ++it) {
-      pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE),
-                              value_hasher(*it)));
+      pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE), value_hasher(*it)));
     }
     ensure_powers(pref.size() - 1);
   }
 
  public:
-  explicit rolling_hash(const ValueHasher &hasher = ValueHasher())
-      : value_hasher(hasher) {
+  explicit rolling_hash(const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
     ensure_powers(0);
     pref.push_back(0);
   }
@@ -589,29 +580,22 @@ class rolling_hash {
     build(first, last);
   }
 
-  explicit rolling_hash(const std::vector<T> &v,
-                        const ValueHasher &hasher = ValueHasher())
+  explicit rolling_hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher())
       : value_hasher(hasher) {
     build(v.begin(), v.end());
   }
 
-  int size() const {
-    return (int)pref.size() - 1;
-  }
+  int size() const { return (int)pref.size() - 1; }
 
-  uint64 get(int l, int r) const {
-    return hash_sub(pref[r], hash_mul(pref[l], pow_base[r - l]));
-  }
+  uint64 get(int l, int r) const { return hash_sub(pref[r], hash_mul(pref[l], pow_base[r - l])); }
 
   template<class It>
-  static uint64 hash(It first, It last,
-                     const ValueHasher &hasher = ValueHasher()) {
+  static uint64 hash(It first, It last, const ValueHasher &hasher = ValueHasher()) {
     rolling_hash<T, ValueHasher> h(first, last, hasher);
     return h.get(0, h.size());
   }
 
-  static uint64 hash(const std::vector<T> &v,
-                     const ValueHasher &hasher = ValueHasher()) {
+  static uint64 hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher()) {
     rolling_hash<T, ValueHasher> h(v, hasher);
     return h.get(0, h.size());
   }
@@ -634,8 +618,7 @@ typedef pair<int, int> point;
 
 struct point_hasher {
   uint64 operator()(const point &p) const {
-    return hash_mix((uint64)p.first * 1000003ULL + (uint64)p.second) %
-               (HASH_MOD - 1) + 1;
+    return hash_mix((uint64)p.first * 1000003ULL + (uint64)p.second) % (HASH_MOD - 1) + 1;
   }
 };
 
@@ -646,10 +629,10 @@ int main() {
   assert(hs.get(0, 4) != hs.get(3, 7));   // "abra" != "acad"
 
   string a = "abc", b = "def";
-  uint64 ab =
-      rolling_hash<char>::concat(rolling_hash<char>::hash(a.begin(), a.end()),
-                                 rolling_hash<char>::hash(b.begin(), b.end()),
-                                 b.size());
+  uint64 ab = rolling_hash<char>::concat(
+      rolling_hash<char>::hash(a.begin(), a.end()), rolling_hash<char>::hash(b.begin(), b.end()),
+      b.size()
+  );
   string c = a + b;
   assert(ab == rolling_hash<char>::hash(c.begin(), c.end()));
 
@@ -727,9 +710,7 @@ class zobrist_hash {
     return state;
   }
 
-  uint64 toggle(uint64 h, const T &x) {
-    return h ^ get(x);
-  }
+  uint64 toggle(uint64 h, const T &x) { return h ^ get(x); }
 
   template<class It>
   std::vector<uint64> distinct_prefix_hashes(It lo, It hi) {
@@ -941,8 +922,8 @@ using std::string;
 class aho_corasick {
   std::vector<string> needles;
   std::vector<int> fail;
-  std::vector<std::map<char, int> > graph;
-  std::vector<std::set<int> > out;
+  std::vector<std::map<char, int>> graph;
+  std::vector<std::set<int>> out;
 
   int next_state(int curr, char c) {
     int next = curr;
@@ -1188,19 +1169,27 @@ int eval(It &it, int prec) {
     if (*it == '(') {
       ret = eval(++it, 2);
       it++;
-    } else while (*it >= '0' && *it <= '9') {
-      ret = 10*ret + (*(it++) - '0');
-    }
-    return sign*ret;
+    } else
+      while (*it >= '0' && *it <= '9') {
+        ret = 10 * ret + (*(it++) - '0');
+      }
+    return sign * ret;
   }
   int num = eval(it, prec - 1);
-  while (!((prec == 2 && *it != '+' && *it != '-') ||
-           (prec == 1 && *it != '*' && *it != '/'))) {
+  while (!((prec == 2 && *it != '+' && *it != '-') || (prec == 1 && *it != '*' && *it != '/'))) {
     switch (*(it++)) {
-      case '+': num += eval(it, prec - 1); break;
-      case '-': num -= eval(it, prec - 1); break;
-      case '*': num *= eval(it, prec - 1); break;
-      case '/': num /= eval(it, prec - 1); break;
+      case '+':
+        num += eval(it, prec - 1);
+        break;
+      case '-':
+        num -= eval(it, prec - 1);
+        break;
+      case '*':
+        num *= eval(it, prec - 1);
+        break;
+      case '/':
+        num /= eval(it, prec - 1);
+        break;
     }
   }
   return num;
@@ -1291,7 +1280,7 @@ Operand eval_operand(const string &s) {
 
 class parser {
   typedef std::map<string, UnaryOp> unary_op_map;
-  typedef std::map<string, std::pair<BinaryOp, int> > binary_op_map;
+  typedef std::map<string, std::pair<BinaryOp, int>> binary_op_map;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
   std::set<string> ops;
@@ -1335,23 +1324,24 @@ class parser {
   }
 
   static string strip(string s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))));
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    s.erase(
+        s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace)))
+    );
+    s.erase(
+        std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(),
+        s.end()
+    );
     return s;
   }
 
  public:
   parser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
-    for (unary_op_map::const_iterator it = unary_ops.begin();
-         it != unary_ops.end(); ++it) {
+    for (unary_op_map::const_iterator it = unary_ops.begin(); it != unary_ops.end(); ++it) {
       ops.insert(it->first);
     }
     max_precedence = 0;
-    for (binary_op_map::const_iterator it = binary_ops.begin();
-         it != binary_ops.end(); ++it) {
+    for (binary_op_map::const_iterator it = binary_ops.begin(); it != binary_ops.end(); ++it) {
       ops.insert(it->first);
       max_precedence = std::max(max_precedence, it->second.second);
     }
@@ -1374,8 +1364,7 @@ class parser {
         int found = next_paren;
         string found_op;
         for (int j = i; j < next_paren && found == next_paren; j++) {
-          for (std::set<string>::iterator it = ops.begin();
-               it != ops.end(); ++it) {
+          for (std::set<string>::iterator it = ops.begin(); it != ops.end(); ++it) {
             if (s.substr(j, it->size()) == *it) {
               found = j;
               found_op = *it;
@@ -1427,19 +1416,31 @@ using namespace std;
 
 #define EQ(a, b) (fabs((a) - (b)) < 1e-7)
 
-double pos(double a) { return +a; }
-double neg(double a) { return -a; }
-double add(double a, double b) { return a + b; }
-double sub(double a, double b) { return a - b; }
-double mul(double a, double b) { return a * b; }
-double div(double a, double b) { return a / b; }
+double pos(double a) {
+  return +a;
+}
+double neg(double a) {
+  return -a;
+}
+double add(double a, double b) {
+  return a + b;
+}
+double sub(double a, double b) {
+  return a - b;
+}
+double mul(double a, double b) {
+  return a * b;
+}
+double div(double a, double b) {
+  return a / b;
+}
 
 int main() {
   map<string, UnaryOp> unary_ops;
   unary_ops["+"] = pos;
   unary_ops["-"] = neg;
 
-  map<string, pair<BinaryOp, int> > binary_ops;
+  map<string, pair<BinaryOp, int>> binary_ops;
   binary_ops["+"] = make_pair((BinaryOp)add, 0);
   binary_ops["-"] = make_pair((BinaryOp)sub, 0);
   binary_ops["*"] = make_pair((BinaryOp)mul, 1);
@@ -1454,10 +1455,14 @@ int main() {
   assert(EQ(p.eval("3.14 + 3 * (7.7/9.8^32.9  )"), 3.14));
   assert(EQ(p.eval("5*(3+2)/-1*-2+(-2-2-2+3)-3-(-2)+15/2/2/2+(-2)"), 45.875));
   assert(EQ(p.eval("123456789./3/3/3*2*2*2+456/6-23/3"), 36579857.6666666667));
-  assert(EQ(p.eval("10/3+10/4+10/5+10/6+10/7+10/8+10/9+10/10+15*23456"),
-            351854.28968253968));
-  assert(EQ(p.eval("-(5-(5-(5-(5-(5-2)))))+(3-(3-(3-(3-(3+3)))))*"
-                   "(7-(7-(7-(7-(7-7+4*5)))))"), 117));
+  assert(EQ(p.eval("10/3+10/4+10/5+10/6+10/7+10/8+10/9+10/10+15*23456"), 351854.28968253968));
+  assert(
+      EQ(p.eval(
+             "-(5-(5-(5-(5-(5-2)))))+(3-(3-(3-(3-(3+3)))))*"
+             "(7-(7-(7-(7-(7-7+4*5)))))"
+         ),
+         117)
+  );
   return 0;
 }
 \end{lstlisting}
@@ -1531,28 +1536,29 @@ Operand eval_operand(const string &s) {
 
 class parser {
   typedef std::map<string, UnaryOp> unary_op_map;
-  typedef std::map<string, std::pair<BinaryOp, int> > binary_op_map;
+  typedef std::map<string, std::pair<BinaryOp, int>> binary_op_map;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
   std::set<string> ops;
 
   static string strip(string s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))));
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    s.erase(
+        s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace)))
+    );
+    s.erase(
+        std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(),
+        s.end()
+    );
     return s;
   }
 
  public:
   parser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
-    for (unary_op_map::const_iterator it = unary_ops.begin();
-         it != unary_ops.end(); ++it) {
+    for (unary_op_map::const_iterator it = unary_ops.begin(); it != unary_ops.end(); ++it) {
       ops.insert(it->first);
     }
-    for (binary_op_map::const_iterator it = binary_ops.begin();
-         it != binary_ops.end(); ++it) {
+    for (binary_op_map::const_iterator it = binary_ops.begin(); it != binary_ops.end(); ++it) {
       ops.insert(it->first);
     }
   }
@@ -1574,8 +1580,7 @@ class parser {
         int found = next_paren;
         string found_op;
         for (int j = i; j < next_paren && found == next_paren; j++) {
-          for (std::set<string>::iterator it = ops.begin();
-               it != ops.end(); ++it) {
+          for (std::set<string>::iterator it = ops.begin(); it != ops.end(); ++it) {
             if (s.substr(j, it->size()) == *it) {
               found = j;
               found_op = *it;
@@ -1607,7 +1612,7 @@ class parser {
   template<class StrIt>
   Operand eval(StrIt lo, StrIt hi) {
     std::stack<Operand> vals;
-    std::stack<std::pair<string, bool> > ops;
+    std::stack<std::pair<string, bool>> ops;
     ops.push(std::make_pair("(", false));
     StrIt prev = hi;
     do {
@@ -1616,8 +1621,10 @@ class parser {
         vals.push(eval_operand(curr));
       } else if (curr == "(") {
         ops.push(std::make_pair(curr, false));
-      } else if (unary_ops.find(curr) != unary_ops.end() && (prev == hi ||
-                 *prev == "(" || binary_ops.find(*prev) != binary_ops.end())) {
+      } else if (
+          unary_ops.find(curr) != unary_ops.end() &&
+          (prev == hi || *prev == "(" || binary_ops.find(*prev) != binary_ops.end())
+      ) {
         ops.push(std::make_pair(curr, true));
       } else {
         for (;;) {
@@ -1625,9 +1632,8 @@ class parser {
           bool is_unary = ops.top().second;
           binary_op_map::iterator it1 = binary_ops.find(op);
           binary_op_map::iterator it2 = binary_ops.find(curr);
-          if (!is_unary &&
-              (it1 == binary_ops.end() ? -1 : it1->second.second) <
-              (it2 == binary_ops.end() ? -1 : it2->second.second)) {
+          if (!is_unary && (it1 == binary_ops.end() ? -1 : it1->second.second) <
+                               (it2 == binary_ops.end() ? -1 : it2->second.second)) {
             break;
           }
           ops.pop();
@@ -1686,7 +1692,7 @@ int main() {
   unary_ops["+"] = pos;
   unary_ops["-"] = neg;
 
-  map<string, pair<BinaryOp, int> > binary_ops;
+  map<string, pair<BinaryOp, int>> binary_ops;
   binary_ops["+"] = make_pair((BinaryOp)add, 0);
   binary_ops["-"] = make_pair((BinaryOp)sub, 0);
   binary_ops["*"] = make_pair((BinaryOp)mul, 1);
@@ -1701,10 +1707,14 @@ int main() {
   assert(EQ(p.eval("3.14 + 3 * (7.7/9.8^32.9  )"), 3.14));
   assert(EQ(p.eval("5*(3+2)/-1*-2+(-2-2-2+3)-3-(-2)+15/2/2/2+(-2)"), 45.875));
   assert(EQ(p.eval("123456789./3/3/3*2*2*2+456/6-23/3"), 36579857.6666666667));
-  assert(EQ(p.eval("10/3+10/4+10/5+10/6+10/7+10/8+10/9+10/10+15*23456"),
-            351854.28968253968));
-  assert(EQ(p.eval("-(5-(5-(5-(5-(5-2)))))+(3-(3-(3-(3-(3+3)))))*"
-                   "(7-(7-(7-(7-(7-7+4*5)))))"), 117));
+  assert(EQ(p.eval("10/3+10/4+10/5+10/6+10/7+10/8+10/9+10/10+15*23456"), 351854.28968253968));
+  assert(
+      EQ(p.eval(
+             "-(5-(5-(5-(5-(5-2)))))+(3-(3-(3-(3-(3+3)))))*"
+             "(7-(7-(7-(7-(7-7+4*5)))))"
+         ),
+         117)
+  );
   return 0;
 }
 \end{lstlisting}
@@ -1785,7 +1795,7 @@ using std::string;
 
 string longest_common_subsequence(const string &s1, const string &s2) {
   int n = s1.size(), m = s2.size();
-  std::vector<std::vector<int> > dp(n + 1, std::vector<int>(m + 1, 0));
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= m; j++) {
       if (s1[i - 1] == s2[j - 1]) {
@@ -1796,7 +1806,7 @@ string longest_common_subsequence(const string &s1, const string &s2) {
     }
   }
   string res;
-  for (int i = n, j = m; i > 0 && j > 0; ) {
+  for (int i = n, j = m; i > 0 && j > 0;) {
     if (s1[i - 1] == s2[j - 1]) {
       res += s1[i - 1];
       i--;
@@ -1836,7 +1846,7 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
     }
     return;
   }
-  It mid1 = lo1 + (hi1 - lo1)/2;
+  It mid1 = lo1 + (hi1 - lo1) / 2;
   std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
   std::vector<int> fwd = lcs_len(lo1, mid1, lo2, hi2);
   std::vector<int> rev = lcs_len(rlo1, rmid1, rlo2, rhi2);
@@ -1890,25 +1900,28 @@ Given two strings, determine their minimum-cost alignment. An alignment of two s
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 using std::string;
 
 std::pair<string, string> align_sequences(
-    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1) {
+    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
+) {
   int n = s1.size(), m = s2.size();
-  std::vector<std::vector<int> > dp(n + 1, std::vector<int>(m + 1, 0));
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
   for (int i = 0; i <= n; i++) {
-    dp[i][0] = i*gap_cost;
+    dp[i][0] = i * gap_cost;
   }
   for (int j = 0; j <= m; j++) {
-    dp[0][j] = j*gap_cost;
+    dp[0][j] = j * gap_cost;
   }
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= m; j++) {
-      dp[i][j] = (s1[i - 1] == s2[j - 1]) ? dp[i - 1][j - 1] : std::min(
-          dp[i - 1][j - 1] + sub_cost,
-          std::min(dp[i - 1][j], dp[i][j - 1]) + gap_cost);
+      dp[i][j] = (s1[i - 1] == s2[j - 1]) ? dp[i - 1][j - 1]
+                                          : std::min(
+                                                dp[i - 1][j - 1] + sub_cost,
+                                                std::min(dp[i - 1][j], dp[i][j - 1]) + gap_cost
+                                            );
     }
   }
   string res1, res2;
@@ -1935,15 +1948,13 @@ std::pair<string, string> align_sequences(
 }
 
 template<class It>
-std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2,
-                          int gap_cost, int sub_cost) {
+std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2, int gap_cost, int sub_cost) {
   std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
   for (It it1 = lo1; it1 != hi1; ++it1) {
     res.swap(prev);
     int i = 0;
     for (It it2 = lo2; it2 != hi2; ++it2) {
-      res[i + 1] = (*it1 == *it2) ? prev[i] : std::min(prev[i] + sub_cost,
-                                                       res[i] + gap_cost);
+      res[i + 1] = (*it1 == *it2) ? prev[i] : std::min(prev[i] + sub_cost, res[i] + gap_cost);
       i++;
     }
   }
@@ -1951,8 +1962,9 @@ std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2,
 }
 
 template<class It>
-void hirschberg_rec(It lo1, It hi1, It lo2, It hi2,
-                    string *res1, string *res2, int gap_cost, int sub_cost) {
+void hirschberg_rec(
+    It lo1, It hi1, It lo2, It hi2, string *res1, string *res2, int gap_cost, int sub_cost
+) {
   if (lo1 == hi1) {
     for (It it2 = lo2; it2 != hi2; ++it2) {
       *res1 += '_';
@@ -1962,7 +1974,7 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2,
   }
   if (lo1 + 1 == hi1) {
     It pos = std::find(lo2, hi2, *lo1);
-    bool insert = (pos == hi2) && (gap_cost*(hi2 - lo2 + 1) < sub_cost);
+    bool insert = (pos == hi2) && (gap_cost * (hi2 - lo2 + 1) < sub_cost);
     if (lo2 == hi2 || insert) {
       *res1 += *lo1;
       *res2 += '_';
@@ -1973,7 +1985,7 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2,
     }
     return;
   }
-  It mid1 = lo1 + (hi1 - lo1)/2;
+  It mid1 = lo1 + (hi1 - lo1) / 2;
   std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
   std::vector<int> fwd = row_cost(lo1, mid1, lo2, hi2, gap_cost, sub_cost);
   std::vector<int> rev = row_cost(rlo1, rmid1, rlo2, rhi2, gap_cost, sub_cost);
@@ -1990,13 +2002,13 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2,
 }
 
 std::pair<string, string> hirschberg_align_sequences(
-    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1) {
+    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
+) {
   if (s1.size() < s2.size()) {
     return hirschberg_align_sequences(s2, s1, gap_cost, sub_cost);
   }
   string res1, res2;
-  hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res1, &res2,
-                 gap_cost, sub_cost);
+  hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res1, &res2, gap_cost, sub_cost);
   return std::make_pair(res1, res2);
 }
 \end{lstlisting}
@@ -2005,10 +2017,11 @@ std::pair<string, string> hirschberg_align_sequences(
 #include <cassert>
 
 int main() {
-  assert(align_sequences("AGGGCT", "AGGCA", 2, 3) ==
-             make_pair(string("AGGGCT"), string("A_GGCA")));
-  assert(hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) ==
-             make_pair(string("AGGGCT"), string("A_GGCA")));
+  assert(align_sequences("AGGGCT", "AGGCA", 2, 3) == make_pair(string("AGGGCT"), string("A_GGCA")));
+  assert(
+      hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) ==
+      make_pair(string("AGGGCT"), string("A_GGCA"))
+  );
   return 0;
 }
 \end{lstlisting}
@@ -2052,13 +2065,9 @@ using std::string;
 
 class suffix_array {
   struct comp {
-    const std::vector<std::pair<int, int> > &rank;
-
-    comp(const std::vector<std::pair<int, int> > &rank) : rank(rank) {}
-
-    bool operator()(int i, int j) {
-      return rank[i] < rank[j];
-    }
+    const std::vector<std::pair<int, int>> &rank;
+    comp(const std::vector<std::pair<int, int>> &rank) : rank(rank) {}
+    bool operator()(int i, int j) { return rank[i] < rank[j]; }
   };
 
   string s;
@@ -2071,22 +2080,19 @@ class suffix_array {
       sa[i] = i;
       rank[i] = (int)s[i];
     }
-    std::vector<std::pair<int, int> > rank2(n);
+    std::vector<std::pair<int, int>> rank2(n);
     for (int gap = 1; gap < n; gap *= 2) {
       for (int i = 0; i < n; i++) {
         rank2[i] = std::make_pair(rank[i], i + gap < n ? rank[i + gap] + 1 : 0);
       }
       std::sort(sa.begin(), sa.end(), comp(rank2));
       for (int i = 0; i < n; i++) {
-        rank[sa[i]] = (i > 0 && rank2[sa[i - 1]] == rank2[sa[i]])
-                      ? rank[sa[i - 1]] : i;
+        rank[sa[i]] = (i > 0 && rank2[sa[i - 1]] == rank2[sa[i]]) ? rank[sa[i - 1]] : i;
       }
     }
   }
 
-  std::vector<int> get_sa() {
-    return sa;
-  }
+  std::vector<int> get_sa() { return sa; }
 
   std::vector<int> get_lcp() {
     int n = s.size();
@@ -2109,7 +2115,7 @@ class suffix_array {
   size_t find(const string &needle) {
     int lo = 0, hi = (int)s.size() - 1;
     while (lo <= hi) {
-      int mid = lo + (hi - lo)/2;
+      int mid = lo + (hi - lo) / 2;
       int cmp = s.compare(sa[mid], needle.size(), needle);
       if (cmp < 0) {
         lo = mid + 1;
@@ -2177,12 +2183,8 @@ using std::string;
 class suffix_array {
   struct comp {
     const string &s;
-
     comp(const string &s) : s(s) {}
-
-    bool operator()(int i, int j) {
-      return s[i] < s[j];
-    }
+    bool operator()(int i, int j) { return s[i] < s[j]; }
   };
 
   string s;
@@ -2202,10 +2204,10 @@ class suffix_array {
         cnt[i] = i;
       }
       for (int i = 0; i < n; i++) {
-        rank[sa[i]] = (i > 0 && prev_rank[sa[i - 1]] == prev_rank[sa[i]] &&
-                       sa[i - 1] + gap < n &&
-                       prev_rank[sa[i - 1] + gap/2] == prev_rank[sa[i] + gap/2])
-                           ? rank[sa[i - 1]] : i;
+        rank[sa[i]] = (i > 0 && prev_rank[sa[i - 1]] == prev_rank[sa[i]] && sa[i - 1] + gap < n &&
+                       prev_rank[sa[i - 1] + gap / 2] == prev_rank[sa[i] + gap / 2])
+                          ? rank[sa[i - 1]]
+                          : i;
       }
       for (int i = 0; i < n; i++) {
         int s1 = prev_sa[i] - gap;
@@ -2216,9 +2218,7 @@ class suffix_array {
     }
   }
 
-  std::vector<int> get_sa() {
-    return sa;
-  }
+  std::vector<int> get_sa() { return sa; }
 
   std::vector<int> get_lcp() {
     int n = s.size();
@@ -2241,7 +2241,7 @@ class suffix_array {
   size_t find(const string &needle) {
     int lo = 0, hi = (int)s.size() - 1;
     while (lo <= hi) {
-      int mid = lo + (hi - lo)/2;
+      int mid = lo + (hi - lo) / 2;
       int cmp = s.compare(sa[mid], needle.size(), needle);
       if (cmp < 0) {
         lo = mid + 1;
@@ -2307,9 +2307,7 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
 using std::string;
 
 class suffix_array {
-  static bool leq(int a1, int a2, int b1, int b2) {
-    return (a1 < b1) || (a1 == b1 && a2 <= b2);
-  }
+  static bool leq(int a1, int a2, int b1, int b2) { return (a1 < b1) || (a1 == b1 && a2 <= b2); }
 
   static bool leq(int a1, int a2, int a3, int b1, int b2, int b3) {
     return (a1 < b1) || (a1 == b1 && leq(a2, a3, b2, b3));
@@ -2331,7 +2329,7 @@ class suffix_array {
 
   template<class It>
   static void suffix_array_dc3(It s, It sa, int n, int K) {
-    int n0 = (n + 2)/3, n1 = (n + 1)/3, n2 = n/3, n02 = n0 + n2;
+    int n0 = (n + 2) / 3, n1 = (n + 1) / 3, n2 = n / 3, n02 = n0 + n2;
     std::vector<int> s12(n02 + 3), sa12(n02 + 3), s0(n0), sa0(n0);
     s12[n02] = s12[n02 + 1] = s12[n02 + 2] = 0;
     sa12[n02] = sa12[n02 + 1] = sa12[n02 + 2] = 0;
@@ -2351,7 +2349,7 @@ class suffix_array {
         c1 = s[sa12[i] + 1];
         c2 = s[sa12[i] + 2];
       }
-      (sa12[i] % 3 == 1 ? s12[sa12[i]/3] : s12[sa12[i]/3 + n0]) = name;
+      (sa12[i] % 3 == 1 ? s12[sa12[i] / 3] : s12[sa12[i] / 3 + n0]) = name;
     }
     if (name < n02) {
       suffix_array_dc3(s12.begin(), sa12.begin(), n02, name);
@@ -2365,15 +2363,15 @@ class suffix_array {
     }
     for (int i = 0, j = 0; i < n02; i++) {
       if (sa12[i] < n0) {
-        s0[j++] = 3*sa12[i];
+        s0[j++] = 3 * sa12[i];
       }
     }
     radix_pass(s0.begin(), sa0.begin(), s, n0, K);
     for (int p = 0, t = n0 - n1, k = 0; k < n; k++) {
-      int i = (sa12[t] < n0) ? 3*sa12[t] + 1 : 3*(sa12[t] - n0) + 2, j = sa0[p];
-      if (sa12[t] < n0 ? leq(s[i], s12[sa12[t] + n0],s[j], s12[j/3])
-                       : leq(s[i], s[i + 1], s12[sa12[t] - n0 + 1], s[j],
-                             s[j + 1], s12[j / 3 + n0])) {
+      int i = (sa12[t] < n0) ? 3 * sa12[t] + 1 : 3 * (sa12[t] - n0) + 2, j = sa0[p];
+      if (sa12[t] < n0
+              ? leq(s[i], s12[sa12[t] + n0], s[j], s12[j / 3])
+              : leq(s[i], s[i + 1], s12[sa12[t] - n0 + 1], s[j], s[j + 1], s12[j / 3 + n0])) {
         sa[k] = i;
         if (++t == n02) {
           for (k++; p < n0; p++, k++) {
@@ -2384,7 +2382,7 @@ class suffix_array {
         sa[k] = j;
         if (++p == n0) {
           for (k++; t < n02; t++, k++) {
-            sa[k] = (sa12[t] < n0) ? 3*sa12[t] + 1 : 3*(sa12[t] - n0) + 2;
+            sa[k] = (sa12[t] < n0) ? 3 * sa12[t] + 1 : 3 * (sa12[t] - n0) + 2;
           }
         }
       }
@@ -2403,9 +2401,7 @@ class suffix_array {
     sa.erase(sa.begin());
   }
 
-  std::vector<int> get_sa() {
-    return sa;
-  }
+  std::vector<int> get_sa() { return sa; }
 
   std::vector<int> get_lcp() {
     int n = s.size();
@@ -2434,7 +2430,7 @@ class suffix_array {
   size_t find(const string &needle) {
     int lo = 0, hi = (int)s.size() - 1;
     while (lo <= hi) {
-      int mid = lo + (hi - lo)/2;
+      int mid = lo + (hi - lo) / 2;
       int cmp = s.compare(sa[mid], needle.size(), needle);
       if (cmp < 0) {
         lo = mid + 1;
@@ -2509,12 +2505,12 @@ class trie {
   struct node_t {
     V value;
     bool is_terminal;
-    std::map<char, node_t*> children;
+    std::map<char, node_t *> children;
 
     node_t() : is_terminal(false) {}
   } *root;
 
-  typedef typename std::map<char, node_t*>::iterator cit;
+  typedef typename std::map<char, node_t *>::iterator cit;
 
   static bool erase(node_t *n, const string &s, int i) {
     if (i == (int)s.size()) {
@@ -2559,17 +2555,9 @@ class trie {
  public:
   trie() : root(new node_t()), num_terminals(0) {}
 
-  ~trie() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_terminals;
-  }
-
-  bool empty() const {
-    return num_terminals == 0;
-  }
+  ~trie() { clean_up(root); }
+  int size() const { return num_terminals; }
+  bool empty() const { return num_terminals == 0; }
 
   bool insert(const string &s, const V &v) {
     node_t *n = root;
@@ -2597,7 +2585,7 @@ class trie {
     return false;
   }
 
-  const V* find(const string &s) const {
+  const V *find(const string &s) const {
     node_t *n = root;
     for (int i = 0; i < (int)s.size(); i++) {
       cit it = n->children.find(s[i]);
@@ -2699,13 +2687,13 @@ class radix_tree {
   struct node_t {
     V value;
     bool is_terminal;
-    std::map<string, node_t*> children;
+    std::map<string, node_t *> children;
 
     node_t(const V &value = V(), bool is_terminal = false)
         : value(value), is_terminal(is_terminal) {}
   } *root;
 
-  typedef typename std::map<string, node_t*>::iterator cit;
+  typedef typename std::map<string, node_t *>::iterator cit;
 
   static int lcp_len(const string &s1, const string &s2, int s2start) {
     int i = 0;
@@ -2811,17 +2799,9 @@ class radix_tree {
  public:
   radix_tree() : root(new node_t()), num_terminals(0) {}
 
-  ~radix_tree() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_terminals;
-  }
-
-  bool empty() const {
-    return num_terminals == 0;
-  }
+  ~radix_tree() { clean_up(root); }
+  int size() const { return num_terminals; }
+  bool empty() const { return num_terminals == 0; }
 
   bool insert(const string &s, const V &v) {
     if (insert(root, s, 0, v)) {
@@ -2839,11 +2819,12 @@ class radix_tree {
     return false;
   }
 
-  const V* find(const string &s) const {
+  const V *find(const string &s) const {
     node_t *n = root;
     int i = 0;
     while (i < (int)s.size()) {
-      bool found = false;;
+      bool found = false;
+      ;
       for (cit it = n->children.begin(); it != n->children.end(); ++it) {
         if (it->first[0] == s[i]) {
           i += lcp_len(it->first, s, i);
@@ -3152,13 +3133,8 @@ class eertree {
     return true;
   }
 
-  int count_distinct_palindromes() const {
-    return (int)tree.size() - 2;
-  }
-
-  int longest_suffix_length() const {
-    return tree[last].len;
-  }
+  int count_distinct_palindromes() const { return (int)tree.size() - 2; }
+  int longest_suffix_length() const { return tree[last].len; }
 
   std::vector<int> count_occurrences() const {
     std::vector<int> occ(tree.size());
@@ -3265,8 +3241,7 @@ double entropy(const string &s) {
   return entropy(byte_frequencies(s));
 }
 
-double expected_code_length(const std::vector<int> &freq,
-                            const std::vector<int> &length) {
+double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
   int total = 0;
   for (int i = 0; i < (int)freq.size(); i++) {
     total += freq[i];
@@ -3329,8 +3304,8 @@ The representation below stores runs in a vector of pairs rather than formatting
 #include <vector>
 using std::string;
 
-std::vector<std::pair<char, int> > run_length_encode(const string &s) {
-  std::vector<std::pair<char, int> > res;
+std::vector<std::pair<char, int>> run_length_encode(const string &s) {
+  std::vector<std::pair<char, int>> res;
   for (int i = 0; i < (int)s.size(); i++) {
     if (res.empty() || res.back().first != s[i]) {
       res.push_back(std::make_pair(s[i], 1));
@@ -3341,7 +3316,7 @@ std::vector<std::pair<char, int> > run_length_encode(const string &s) {
   return res;
 }
 
-string run_length_decode(const std::vector<std::pair<char, int> > &runs) {
+string run_length_decode(const std::vector<std::pair<char, int>> &runs) {
   string res;
   for (int i = 0; i < (int)runs.size(); i++) {
     res.append(runs[i].second, runs[i].first);
@@ -3356,7 +3331,7 @@ using namespace std;
 
 int main() {
   string s = "aaabccccdd";
-  vector<pair<char, int> > runs = run_length_encode(s);
+  vector<pair<char, int>> runs = run_length_encode(s);
   assert(runs.size() == 4);
   assert(runs[0] == make_pair('a', 3));
   assert(runs[2] == make_pair('c', 4));
@@ -3383,8 +3358,7 @@ This implementation uses the standard alphabet with \inlinecode{+}, \inlinecode{
 #include <vector>
 using std::string;
 
-const char BASE64_ALPHABET[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const char BASE64_ALPHABET[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 string base64_encode(const string &bytes) {
   string res;
@@ -3484,12 +3458,8 @@ class huffman_tree {
 
   struct by_frequency {
     const std::vector<node> *nodes;
-
     explicit by_frequency(const std::vector<node> *nodes = NULL) : nodes(nodes) {}
-
-    bool operator()(int a, int b) const {
-      return (*nodes)[a].freq > (*nodes)[b].freq;
-    }
+    bool operator()(int a, int b) const { return (*nodes)[a].freq > (*nodes)[b].freq; }
   };
 
   std::vector<node> nodes;
@@ -3534,9 +3504,7 @@ class huffman_tree {
     build_codes(root, "");
   }
 
-  std::vector<string> codes() const {
-    return code;
-  }
+  std::vector<string> codes() const { return code; }
 
   string encode(const string &text) const {
     string bits;

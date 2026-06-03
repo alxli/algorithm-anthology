@@ -23,9 +23,10 @@ Space Complexity:
 #include <vector>
 
 template<class Matrix>
-int simplex_solve(const Matrix &a, const std::vector<double> &b,
-                  const std::vector<double> &c, std::vector<double> *x,
-                  const bool MAXIMIZE = true, const double EPS = 1e-10) {
+int simplex_solve(
+    const Matrix &a, const std::vector<double> &b, const std::vector<double> &c,
+    std::vector<double> *x, const bool MAXIMIZE = true, const double EPS = 1e-10
+) {
   int m = a.size(), n = c.size();
   Matrix t(m + 2, std::vector<double>(n + 2));
   t[1][1] = 0;
@@ -66,7 +67,7 @@ int simplex_solve(const Matrix &a, const std::vector<double> &b,
       if (i != p1) {
         for (int j = 1; j <= n + 1; j++) {
           if (j != p2) {
-            t[i][j] -= t[p1][j]*t[i][p2] / t[p1][p2];
+            t[i][j] -= t[p1][j] * t[i][p2] / t[p1][p2];
           }
         }
       }
@@ -124,7 +125,7 @@ int main() {
   double a[equations][unknowns] = {{-2, 1}, {1, 0.85}, {1, 2}};
   double b[equations] = {0, 9, 14};
   double c[unknowns] = {3, 4};
-  vector<vector<double> > va(equations, vector<double>(unknowns));
+  vector<vector<double>> va(equations, vector<double>(unknowns));
   vector<double> vb(b, b + equations), vc(c, c + unknowns), x;
   for (int i = 0; i < equations; i++) {
     for (int j = 0; j < unknowns; j++) {
@@ -134,7 +135,7 @@ int main() {
   assert(simplex_solve(va, vb, vc, &x) == 0);
   double maxval = 0;
   for (int i = 0; i < (int)x.size(); i++) {
-    maxval += c[i]*x[i];
+    maxval += c[i] * x[i];
   }
   cout << "Solution = " << maxval << " at (" << x[0];
   for (int i = 1; i < (int)x.size(); i++) {

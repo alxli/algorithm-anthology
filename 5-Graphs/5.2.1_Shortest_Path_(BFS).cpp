@@ -30,7 +30,7 @@ void bfs(int nodes, int start) {
     dist[i] = INF;
     pred[i] = -1;
   }
-  std::queue<std::pair<int, int> > q;
+  std::queue<std::pair<int, int>> q;
   q.push(std::make_pair(start, 0));
   while (!q.empty()) {
     int u = q.front().first;
@@ -81,8 +81,8 @@ int main() {
   adj[2].push_back(3);
   adj[0].push_back(3);
   bfs(4, start);
-  cout << "The shortest distance from " << start << " to " << dest << " is "
-       << dist[dest] << "." << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
+       << endl;
   print_path(dest);
   return 0;
 }

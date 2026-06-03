@@ -19,6 +19,7 @@ Space Complexity:
 
 #include <cmath>
 #include <cstddef>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -33,7 +34,7 @@ typedef std::pair<double, double> point;
 #define y second
 
 double cross(const point &a, const point &b, const point &o = point(0, 0)) {
-  return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 int turn(const point &a, const point &o, const point &b) {
@@ -41,14 +42,15 @@ int turn(const point &a, const point &o, const point &b) {
   return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
 }
 
-int line_intersection(const point &p1, const point &p2,
-                      const point &p3, const point &p4, point *p = NULL) {
+int line_intersection(
+    const point &p1, const point &p2, const point &p3, const point &p4, point *p = NULL
+) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
-  double c1 = -(p1.x*p2.y - p2.x*p1.y);
+  double c1 = -(p1.x * p2.y - p2.x * p1.y);
   double a2 = p4.y - p3.y, b2 = p3.x - p4.x;
-  double c2 = -(p3.x*p4.y - p4.x*p3.y);
-  double x = -(c1*b2 - c2*b1), y = -(a1*c2 - a2*c1);
-  double det = a1*b2 - a2*b1;
+  double c2 = -(p3.x * p4.y - p4.x * p3.y);
+  double x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
+  double det = a1 * b2 - a2 * b1;
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
@@ -69,7 +71,7 @@ std::vector<point> convex_cut(It lo, It hi, const point &p, const point &q) {
     if (d1 >= 0) {
       res.push_back(*j);
     }
-    if (d1*d2 < 0) {
+    if (d1 * d2 < 0) {
       point r;
       line_intersection(p, q, *j, *i, &r);
       res.push_back(r);
@@ -98,7 +100,7 @@ int main() {
     c.push_back(point(0, 0));
     assert(convex_cut(v.begin(), v.end(), point(0, 0), point(0, 1)) == c);
   }
-  { // On a non-convex input, the result may be multiple disjoint polygons!
+  {  // On a non-convex input, the result may be multiple disjoint polygons!
     vector<point> v;
     v.push_back(point(0, 0));
     v.push_back(point(2, 2));

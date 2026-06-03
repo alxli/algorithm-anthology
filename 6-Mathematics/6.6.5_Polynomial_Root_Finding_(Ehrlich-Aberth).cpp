@@ -38,10 +38,10 @@ typedef std::complex<LD> cdouble;
 typedef std::vector<cdouble> cpoly;
 
 const LD PI = acosl(-1.0L);
-const LD ZERO_EPS = 1e-30L;    // Treat coefficients and denominators this small as zero.
-const LD ROOT_EPS = 1e-18L;    // Stop once root updates are this small relative to the root.
-const LD CLEAN_EPS = 1e-12L;   // Round tiny real or imaginary output parts down to zero.
-const LD CHECK_EPS = 1e-12L;   // Residual tolerance used by the example assertions.
+const LD ZERO_EPS = 1e-30L;   // Treat coefficients and denominators this small as zero.
+const LD ROOT_EPS = 1e-18L;   // Stop once root updates are this small relative to the root.
+const LD CLEAN_EPS = 1e-12L;  // Round tiny real or imaginary output parts down to zero.
+const LD CHECK_EPS = 1e-12L;  // Residual tolerance used by the example assertions.
 
 bool is_zero(const cdouble &z, const LD EPS = ZERO_EPS) {
   return std::abs(z) <= EPS;
@@ -51,12 +51,11 @@ bool is_finite(const cdouble &z) {
   return std::isfinite((double)z.real()) && std::isfinite((double)z.imag());
 }
 
-std::pair<cdouble, cdouble> eval_with_derivative(const cpoly &p,
-                                                 const cdouble &x) {
+std::pair<cdouble, cdouble> eval_with_derivative(const cpoly &p, const cdouble &x) {
   cdouble value = p.back(), derivative = 0;
   for (int i = (int)p.size() - 2; i >= 0; i--) {
-    derivative = derivative*x + value;
-    value = value*x + p[i];
+    derivative = derivative * x + value;
+    value = value * x + p[i];
   }
   return std::make_pair(value, derivative);
 }
@@ -67,10 +66,10 @@ LD root_bound(const cpoly &p) {
   for (int i = 0; i + 1 < (int)p.size(); i++) {
     LD ratio = std::abs(p[i] / p.back());
     if (ratio > 0) {
-      res = std::max(res, powl(ratio, 1.0L/(n - i)));
+      res = std::max(res, powl(ratio, 1.0L / (n - i)));
     }
   }
-  return 2*std::max((LD)1, res);
+  return 2 * std::max((LD)1, res);
 }
 
 bool root_less(const cdouble &a, const cdouble &b) {
@@ -86,8 +85,7 @@ cdouble clean_root(const cdouble &z) {
   return cdouble(real, imag);
 }
 
-cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS,
-                     const int ITERATIONS = 2000) {
+cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 2000) {
   while (!p.empty() && is_zero(p.back())) {
     p.pop_back();
   }
@@ -112,11 +110,11 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS,
     return roots;
   }
   cpoly z(n);
-  LD radius = root_bound(p), offset = PI / (2*n);
-  LD max_radius = 2*radius;
+  LD radius = root_bound(p), offset = PI / (2 * n);
+  LD max_radius = 2 * radius;
   for (int i = 0; i < n; i++) {
-    LD angle = offset + 2*PI*i/n;
-    z[i] = radius*cdouble(cosl(angle), sinl(angle));
+    LD angle = offset + 2 * PI * i / n;
+    z[i] = radius * cdouble(cosl(angle), sinl(angle));
   }
   for (int it = 0; it < ITERATIONS; it++) {
     bool done = true;
@@ -130,14 +128,14 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS,
       for (int j = 0; j < n; j++) {
         if (i != j) {
           cdouble diff = z[i] - z[j];
-          if (std::abs(diff) <= EPS*EPS) {
-            LD angle = 2*PI*(i + 1)/(n + 1);
-            diff = EPS*(1 + std::abs(z[i]))*cdouble(cosl(angle), sinl(angle));
+          if (std::abs(diff) <= EPS * EPS) {
+            LD angle = 2 * PI * (i + 1) / (n + 1);
+            diff = EPS * (1 + std::abs(z[i])) * cdouble(cosl(angle), sinl(angle));
           }
           repulsion += cdouble(1) / diff;
         }
       }
-      cdouble denom = ev.second - ev.first*repulsion;
+      cdouble denom = ev.second - ev.first * repulsion;
       if (is_zero(denom)) {
         continue;
       }
@@ -148,9 +146,9 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS,
       if (!is_finite(step)) {
         continue;
       }
-      LD limit = 2*max_radius;
+      LD limit = 2 * max_radius;
       if (std::abs(step) > limit) {
-        step *= limit/std::abs(step);
+        step *= limit / std::abs(step);
       }
       next[i] = z[i] - step;
       if (!is_finite(next[i])) {
@@ -158,9 +156,9 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS,
         continue;
       }
       if (std::abs(next[i]) > max_radius) {
-        next[i] *= max_radius/std::abs(next[i]);
+        next[i] *= max_radius / std::abs(next[i]);
       }
-      if (std::abs(step) > EPS*(1 + std::abs(next[i]))) {
+      if (std::abs(step) > EPS * (1 + std::abs(next[i]))) {
         done = false;
       }
     }
@@ -176,9 +174,9 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS,
   return roots;
 }
 
-std::vector<cdouble> find_all_roots(const std::vector<LD> &p,
-                                    const LD EPS = ROOT_EPS,
-                                    const int ITERATIONS = 2000) {
+std::vector<cdouble> find_all_roots(
+    const std::vector<LD> &p, const LD EPS = ROOT_EPS, const int ITERATIONS = 2000
+) {
   cpoly q(p.begin(), p.end());
   return find_all_roots(q, EPS, ITERATIONS);
 }
@@ -212,7 +210,7 @@ void print_roots(const vector<cdouble> &x) {
 }
 
 int main() {
-  { // -1 + 2x - 6x^2 + 2x^3
+  {  // -1 + 2x - 6x^2 + 2x^3
     printf("Roots of -1 + 2x - 6x^2 + 2x^3:\n");
     LD poly[] = {-1, 2, -6, 2};
     vector<LD> p(poly, poly + 4);
@@ -223,7 +221,7 @@ int main() {
     }
     print_roots(roots);
   }
-  { // (-24+36i) + (-26+12i)x + (-30+40i)x^2 + (-26+12i)x^3 + (-6+4i)x^4
+  {  // (-24+36i) + (-26+12i)x + (-30+40i)x^2 + (-26+12i)x^3 + (-6+4i)x^4
     // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
     printf("Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):\n");
     cpoly p;

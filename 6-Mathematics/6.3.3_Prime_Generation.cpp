@@ -23,7 +23,7 @@ std::vector<int> sieve(int n) {
   int sqrtn = ceil(sqrt(n));
   for (int i = 2; i <= sqrtn; i++) {
     if (prime[i]) {
-      for (int j = i*i; j <= n; j += i) {
+      for (int j = i * i; j <= n; j += i) {
         prime[j] = false;
       }
     }
@@ -42,14 +42,14 @@ std::vector<int> sieve(int lo, int hi) {
   std::vector<bool> prime1(sqrt_hi + 1, true), prime2(hi - lo + 1, true);
   for (int i = 2; i <= fourth_root_hi; i++) {
     if (prime1[i]) {
-      for (int j = i*i; j <= sqrt_hi; j += i) {
+      for (int j = i * i; j <= sqrt_hi; j += i) {
         prime1[j] = false;
       }
     }
   }
   for (int i = 2, n = hi - lo; i <= sqrt_hi; i++) {
     if (prime1[i]) {
-      for (int j = (lo / i)*i - lo; j <= n; j += i) {
+      for (int j = (lo / i) * i - lo; j <= n; j += i) {
         if (j >= 0 && j + lo != i) {
           prime2[j] = false;
         }
@@ -85,13 +85,13 @@ int main() {
 
   start = clock();
   p = sieve(pmax);
-  delta = (double)(clock() - start)/CLOCKS_PER_SEC;
+  delta = (double)(clock() - start) / CLOCKS_PER_SEC;
   cout << "sieve(n=" << pmax << "): " << delta << "s" << endl;
 
   int l = 1000000000, h = 1005000000;
   start = clock();
   p = sieve(l, h);
-  delta = (double)(clock() - start)/CLOCKS_PER_SEC;
+  delta = (double)(clock() - start) / CLOCKS_PER_SEC;
   cout << "sieve([" << l << ", " << h << "]): " << delta << "s" << endl;
   return 0;
 }

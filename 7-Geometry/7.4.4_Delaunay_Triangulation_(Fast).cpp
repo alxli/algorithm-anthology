@@ -39,21 +39,20 @@ typedef std::pair<double, double> point;
 #define y second
 
 double cross(const point &a, const point &b, const point &o = point(0, 0)) {
-  return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-long double incircle(const point &a, const point &b, const point &c,
-                     const point &d) {
+long double incircle(const point &a, const point &b, const point &c, const point &d) {
   long double adx = a.x - d.x, ady = a.y - d.y;
   long double bdx = b.x - d.x, bdy = b.y - d.y;
   long double cdx = c.x - d.x, cdy = c.y - d.y;
-  long double abdet = adx*bdy - bdx*ady;
-  long double bcdet = bdx*cdy - cdx*bdy;
-  long double cadet = cdx*ady - adx*cdy;
-  long double alift = adx*adx + ady*ady;
-  long double blift = bdx*bdx + bdy*bdy;
-  long double clift = cdx*cdx + cdy*cdy;
-  return alift*bcdet + blift*cadet + clift*abdet;
+  long double abdet = adx * bdy - bdx * ady;
+  long double bcdet = bdx * cdy - cdx * bdy;
+  long double cadet = cdx * ady - adx * cdy;
+  long double alift = adx * adx + ady * ady;
+  long double blift = bdx * bdx + bdy * bdy;
+  long double clift = cdx * cdx + cdy * cdy;
+  return alift * bcdet + blift * cadet + clift * abdet;
 }
 
 struct edge {
@@ -68,7 +67,7 @@ struct edge {
 };
 
 struct quad_edge_pool {
-  std::vector<edge*> edges;
+  std::vector<edge *> edges;
 
   ~quad_edge_pool() {
     for (int i = 0; i < (int)edges.size(); i++) {
@@ -130,8 +129,9 @@ bool in_circle(const point &a, const point &b, const point &c, const point &d) {
   return incircle(a, b, c, d) > EPS;
 }
 
-std::pair<edge*, edge*> build_triangulation(std::vector<point> &p, int lo, int hi,
-                                            quad_edge_pool &pool) {
+std::pair<edge *, edge *> build_triangulation(
+    std::vector<point> &p, int lo, int hi, quad_edge_pool &pool
+) {
   if (hi - lo == 1) {
     edge *a = pool.make_edge(p[lo], p[hi]);
     return std::make_pair(a, a->rev());
@@ -140,19 +140,19 @@ std::pair<edge*, edge*> build_triangulation(std::vector<point> &p, int lo, int h
     edge *a = pool.make_edge(p[lo], p[lo + 1]);
     edge *b = pool.make_edge(p[lo + 1], p[hi]);
     pool.splice(a->rev(), b);
-    int side = GT(cross(p[lo], p[lo + 1], p[hi]), 0) ? 1
-             : (LT(cross(p[lo], p[lo + 1], p[hi]), 0) ? -1 : 0);
+    int side = GT(cross(p[lo], p[lo + 1], p[hi]), 0)
+                   ? 1
+                   : (LT(cross(p[lo], p[lo + 1], p[hi]), 0) ? -1 : 0);
     if (side == 0) {
       return std::make_pair(a, b->rev());
     }
     edge *c = pool.connect(b, a);
-    return side == 1 ? std::make_pair(a, b->rev())
-                     : std::make_pair(c->rev(), c);
+    return side == 1 ? std::make_pair(a, b->rev()) : std::make_pair(c->rev(), c);
   }
   int mid = (lo + hi) / 2;
   edge *ldo, *ldi, *rdi, *rdo;
-  std::pair<edge*, edge*> left = build_triangulation(p, lo, mid, pool);
-  std::pair<edge*, edge*> right = build_triangulation(p, mid + 1, hi, pool);
+  std::pair<edge *, edge *> left = build_triangulation(p, lo, mid, pool);
+  std::pair<edge *, edge *> right = build_triangulation(p, mid + 1, hi, pool);
   ldo = left.first;
   ldi = left.second;
   rdi = right.first;
@@ -176,8 +176,7 @@ std::pair<edge*, edge*> build_triangulation(std::vector<point> &p, int lo, int h
   for (;;) {
     edge *lcand = base->rev()->onext;
     if (right_of(lcand->dest(), base)) {
-      while (in_circle(base->dest(), base->origin, lcand->dest(),
-                       lcand->onext->dest())) {
+      while (in_circle(base->dest(), base->origin, lcand->dest(), lcand->onext->dest())) {
         edge *next = lcand->onext;
         pool.delete_edge(lcand);
         lcand = next;
@@ -185,8 +184,7 @@ std::pair<edge*, edge*> build_triangulation(std::vector<point> &p, int lo, int h
     }
     edge *rcand = base->oprev();
     if (right_of(rcand->dest(), base)) {
-      while (in_circle(base->dest(), base->origin, rcand->dest(),
-                       rcand->oprev()->dest())) {
+      while (in_circle(base->dest(), base->origin, rcand->dest(), rcand->oprev()->dest())) {
         edge *prev = rcand->oprev();
         pool.delete_edge(rcand);
         rcand = prev;
@@ -197,8 +195,8 @@ std::pair<edge*, edge*> build_triangulation(std::vector<point> &p, int lo, int h
     if (!lvalid && !rvalid) {
       break;
     }
-    if (!lvalid || (rvalid && in_circle(lcand->dest(), lcand->origin,
-                                        rcand->origin, rcand->dest()))) {
+    if (!lvalid ||
+        (rvalid && in_circle(lcand->dest(), lcand->origin, rcand->origin, rcand->dest()))) {
       base = pool.connect(rcand, base->rev());
     } else {
       base = pool.connect(base->rev(), lcand->rev());
@@ -222,9 +220,7 @@ struct triangle {
     }
   }
 
-  bool operator==(const triangle &t) const {
-    return a == t.a && b == t.b && c == t.c;
-  }
+  bool operator==(const triangle &t) const { return a == t.a && b == t.b && c == t.c; }
 
   bool operator<(const triangle &t) const {
     return a != t.a ? a < t.a : (b != t.b ? b < t.b : c < t.c);

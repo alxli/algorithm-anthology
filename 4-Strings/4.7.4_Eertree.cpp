@@ -95,13 +95,8 @@ class eertree {
     return true;
   }
 
-  int count_distinct_palindromes() const {
-    return (int)tree.size() - 2;
-  }
-
-  int longest_suffix_length() const {
-    return tree[last].len;
-  }
+  int count_distinct_palindromes() const { return (int)tree.size() - 2; }
+  int longest_suffix_length() const { return tree[last].len; }
 
   std::vector<int> count_occurrences() const {
     std::vector<int> occ(tree.size());

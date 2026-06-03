@@ -30,18 +30,16 @@ Space Complexity:
 
 template<class Key, class Value>
 class lru_cache {
-  typedef typename std::list<std::pair<Key, Value> >::iterator list_iter;
+  typedef typename std::list<std::pair<Key, Value>>::iterator list_iter;
 
   int cap;
-  std::list<std::pair<Key, Value> > items;
+  std::list<std::pair<Key, Value>> items;
   std::map<Key, list_iter> where;
 
  public:
   explicit lru_cache(int capacity) : cap(capacity) {}
 
-  int size() const {
-    return items.size();
-  }
+  int size() const { return items.size(); }
 
   bool get(const Key &key, Value *value) {
     typename std::map<Key, list_iter>::iterator it = where.find(key);

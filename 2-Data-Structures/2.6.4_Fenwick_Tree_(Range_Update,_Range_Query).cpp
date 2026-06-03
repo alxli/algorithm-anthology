@@ -48,39 +48,27 @@ class fenwick_tree {
  public:
   fenwick_tree(int n) : len(n), t1(n + 2), t2(n + 2) {}
 
-  int size() const {
-    return len;
-  }
+  int size() const { return len; }
 
   void add(int lo, int hi, const T &x) {
     lo++;
     hi++;
     add(t1, lo, x);
     add(t1, hi + 1, -x);
-    add(t2, lo, x*(lo - 1));
-    add(t2, hi + 1, -x*hi);
+    add(t2, lo, x * (lo - 1));
+    add(t2, hi + 1, -x * hi);
   }
 
-  void add(int i, const T &x) {
-    return add(i, i, x);
-  }
-
-  void set(int i, const T &x) {
-    add(i, x - at(i));
-  }
+  void add(int i, const T &x) { return add(i, i, x); }
+  void set(int i, const T &x) { add(i, x - at(i)); }
 
   T sum(int hi) {
     hi++;
-    return hi*sum(t1, hi) - sum(t2, hi);
+    return hi * sum(t1, hi) - sum(t2, hi);
   }
 
-  T sum(int lo, int hi) {
-    return sum(hi) - sum(lo - 1);
-  }
-
-  T at(int i) {
-    return sum(i, i);
-  }
+  T sum(int lo, int hi) { return sum(hi) - sum(lo - 1); }
+  T at(int i) { return sum(i, i); }
 };
 
 /*** Example Usage and Output:

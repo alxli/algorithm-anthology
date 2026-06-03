@@ -30,8 +30,12 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
-double norm(const point &a) { return sqrt(sqnorm(a)); }
+double sqnorm(const point &a) {
+  return a.x * a.x + a.y * a.y;
+}
+double norm(const point &a) {
+  return sqrt(sqnorm(a));
+}
 
 struct circle {
   double h, k, r;
@@ -43,8 +47,8 @@ struct circle {
 
   // Circle with the line segment ab as a diameter.
   circle(const point &a, const point &b) {
-    h = (a.x + b.x)/2.0;
-    k = (a.y + b.y)/2.0;
+    h = (a.x + b.x) / 2.0;
+    k = (a.y + b.y) / 2.0;
     r = norm(point(a.x - h, a.y - k));
   }
 
@@ -53,15 +57,15 @@ struct circle {
     double an = sqnorm(point(b.x - c.x, b.y - c.y));
     double bn = sqnorm(point(a.x - c.x, a.y - c.y));
     double cn = sqnorm(point(a.x - b.x, a.y - b.y));
-    double wa = an*(bn + cn - an);
-    double wb = bn*(an + cn - bn);
-    double wc = cn*(an + bn - cn);
+    double wa = an * (bn + cn - an);
+    double wb = bn * (an + cn - bn);
+    double wc = cn * (an + bn - cn);
     double w = wa + wb + wc;
     if (EQ(w, 0)) {
       throw std::runtime_error("No circumcircle from collinear points.");
     }
-    h = (wa*a.x + wb*b.x + wc*c.x)/w;
-    k = (wa*a.y + wb*b.y + wc*c.y)/w;
+    h = (wa * a.x + wb * b.x + wc * c.x) / w;
+    k = (wa * a.y + wb * b.y + wc * c.y) / w;
     r = norm(point(a.x - h, a.y - k));
   }
 
@@ -81,38 +85,26 @@ struct circle {
     if (EQ(d, 0)) {
       throw std::runtime_error("Identical points, infinite circles.");
     }
-    if (LT(r*2.0, d)) {
+    if (LT(r * 2.0, d)) {
       throw std::runtime_error("Points too far away to make circle.");
     }
-    double v = sqrt(r*r - d*d/4.0) / d;
-    point m((a.x + b.x)/2.0, (a.y + b.y)/2.0);
-    h = m.x + v*(a.y - b.y);
-    k = m.y + v*(b.x - a.x);
+    double v = sqrt(r * r - d * d / 4.0) / d;
+    point m((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
+    h = m.x + v * (a.y - b.y);
+    k = m.y + v * (b.x - a.x);
     // The other answer is (h, k) = (m.x - v*(a.y - b.y), m.y - v*(b.x - a.x)).
   }
 
-  bool operator==(const circle &c) const {
-    return EQ(h, c.h) && EQ(k, c.k) && EQ(r, c.r);
-  }
-
-  bool operator!=(const circle &c) const {
-    return !(*this == c);
-  }
-
+  bool operator==(const circle &c) const { return EQ(h, c.h) && EQ(k, c.k) && EQ(r, c.r); }
+  bool operator!=(const circle &c) const { return !(*this == c); }
   point center() const { return point(h, k); }
+  bool contains(const point &p) const { return LE(sqnorm(point(p.x - h, p.y - k)), r * r); }
+  bool on_edge(const point &p) const { return EQ(sqnorm(point(p.x - h, p.y - k)), r * r); }
 
-  bool contains(const point &p) const {
-    return LE(sqnorm(point(p.x - h, p.y - k)), r*r);
-  }
-
-  bool on_edge(const point &p) const {
-    return EQ(sqnorm(point(p.x - h, p.y - k)), r*r);
-  }
-
-  friend std::ostream& operator<<(std::ostream &out, const circle &c) {
+  friend std::ostream &operator<<(std::ostream &out, const circle &c) {
     return out << std::showpos << "(x" << -(fabs(c.h) < EPS ? 0 : c.h) << ")^2+"
-                               << "(y" << -(fabs(c.k) < EPS ? 0 : c.k) << ")^2"
-               << std::noshowpos << "=" << (fabs(c.r) < EPS ? 0 : c.r*c.r);
+               << "(y" << -(fabs(c.k) < EPS ? 0 : c.k) << ")^2" << std::noshowpos << "="
+               << (fabs(c.r) < EPS ? 0 : c.r * c.r);
   }
 };
 
@@ -124,9 +116,10 @@ circle incircle(const point &a, const point &b, const point &c) {
   double l = al + bl + cl;
   point p(a.x - c.x, a.y - c.y), q(b.x - c.x, b.y - c.y);
   return EQ(l, 0) ? circle(a.x, a.y, 0)
-                  : circle((al*a.x + bl*b.x + cl*c.x) / l,
-                           (al*a.y + bl*b.y + cl*c.y) / l,
-                           fabs(p.x*q.y - p.y*q.x) / l);
+                  : circle(
+                        (al * a.x + bl * b.x + cl * c.x) / l, (al * a.y + bl * b.y + cl * c.y) / l,
+                        fabs(p.x * q.y - p.y * q.x) / l
+                    );
 }
 
 /*** Example Usage ***/

@@ -42,12 +42,12 @@ Space Complexity:
 #include <vector>
 
 typedef long long int64;
-typedef std::vector<std::vector<int64> > table;
+typedef std::vector<std::vector<int64>> table;
 
 int64 factorial(int n, int m = 1000000007) {
   int64 res = 1;
   for (int i = 2; i <= n; i++) {
-    res = (res*i) % m;
+    res = (res * i) % m;
   }
   return res % m;
 }
@@ -56,11 +56,11 @@ int64 factorialp(int64 n, int64 p = 1000000007) {
   int64 res = 1;
   while (n > 1) {
     if (n / p % 2 == 1) {
-      res = res*(p - 1) % p;
+      res = res * (p - 1) % p;
     }
     int max = n % p;
     for (int i = 2; i <= max; i++) {
-      res = (res*i) % p;
+      res = (res * i) % p;
     }
     n /= p;
   }
@@ -87,7 +87,7 @@ int64 permute(int n, int k, int64 m = 1000000007) {
   }
   int64 res = 1;
   for (int i = 0; i < k; i++) {
-    res = res*(n - i) % m;
+    res = res * (n - i) % m;
   }
   return res % m;
 }
@@ -123,12 +123,12 @@ int64 choose(int n, int k, int64 p = 1000000007) {
   }
   int64 num = 1, den = 1;
   for (int i = 0; i < k; i++) {
-    num = num*(n - i) % p;
+    num = num * (n - i) % p;
   }
   for (int i = 1; i <= k; i++) {
-    den = den*i % p;
+    den = den * i % p;
   }
-  return num*powmod(den, p - 2, p) % p;
+  return num * powmod(den, p - 2, p) % p;
 }
 
 int64 multichoose(int n, int k, int64 p = 1000000007) {
@@ -136,7 +136,7 @@ int64 multichoose(int n, int k, int64 p = 1000000007) {
 }
 
 int64 catalan(int n, int64 p = 1000000007) {
-  return choose(2*n, n, p)*powmod(n + 1, p - 2, p) % p;
+  return choose(2 * n, n, p) * powmod(n + 1, p - 2, p) % p;
 }
 
 int64 partitions(int n, int64 m = 1000000007) {
@@ -166,7 +166,7 @@ int64 stirling1(int n, int k, int64 m = 1000000007) {
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
-      t[i][j] = (i - 1)*t[i - 1][j] % m;
+      t[i][j] = (i - 1) * t[i - 1][j] % m;
       t[i][j] = (t[i][j] + t[i - 1][j - 1]) % m;
     }
   }
@@ -178,7 +178,7 @@ int64 stirling2(int n, int k, int64 m = 1000000007) {
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
-      t[i][j] = j*t[i - 1][j] % m;
+      t[i][j] = j * t[i - 1][j] % m;
       t[i][j] = (t[i][j] + t[i - 1][j - 1]) % m;
     }
   }
@@ -195,8 +195,8 @@ int64 eulerian1(int n, int k, int64 m = 1000000007) {
   }
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
-      t[i][j] = (i - j)*t[i - 1][j - 1] % m;
-      t[i][j] = (t[i][j] + ((j + 1)*t[i - 1][j] % m)) % m;
+      t[i][j] = (i - j) * t[i - 1][j - 1] % m;
+      t[i][j] = (t[i][j] + ((j + 1) * t[i - 1][j] % m)) % m;
     }
   }
   return t[n][k] % m;
@@ -209,8 +209,8 @@ int64 eulerian2(int n, int k, int64 m = 1000000007) {
       if (i == j) {
         t[i][j] = 0;
       } else {
-        t[i][j] = (j + 1)*t[i - 1][j] % m;
-        t[i][j] = ((2*i - 1 - j)*t[i - 1][j - 1] % m + t[i][j]) % m;
+        t[i][j] = (j + 1) * t[i - 1][j] % m;
+        t[i][j] = ((2 * i - 1 - j) * t[i - 1][j - 1] % m + t[i][j]) % m;
       }
     }
   }

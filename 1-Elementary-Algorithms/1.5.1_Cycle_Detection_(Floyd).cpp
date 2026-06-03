@@ -59,7 +59,7 @@ std::pair<int, int> find_cycle_floyd(IntFunction f, int x0) {
 using namespace std;
 
 int f(int x) {
-  return (123*x*x + 4567890) % 1337;
+  return (123 * x * x + 4567890) % 1337;
 }
 
 void verify(int x0, int start, int length) {
@@ -80,7 +80,7 @@ void verify(int x0, int start, int length) {
   assert(startx == x);
 }
 
-int main () {
+int main() {
   int x0 = 0;
   pair<int, int> res = find_cycle_floyd(f, x0);
   assert(res == make_pair(4, 2));

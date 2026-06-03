@@ -46,8 +46,8 @@ using std::string;
 class aho_corasick {
   std::vector<string> needles;
   std::vector<int> fail;
-  std::vector<std::map<char, int> > graph;
-  std::vector<std::set<int> > out;
+  std::vector<std::map<char, int>> graph;
+  std::vector<std::set<int>> out;
 
   int next_state(int curr, char c) {
     int next = curr;

@@ -39,9 +39,7 @@ class hull_optimizer {
     line(long long m, long long b, long long xhi = 0, bool is_query = false)
         : m(m), b(b), xhi(xhi), is_query(is_query) {}
 
-    bool operator<(const line &l) const {
-      return l.is_query ? xhi < l.xhi : m < l.m;
-    }
+    bool operator<(const line &l) const { return l.is_query ? xhi < l.xhi : m < l.m; }
   };
 
   std::multiset<line> hull;
@@ -49,9 +47,7 @@ class hull_optimizer {
 
   typedef std::multiset<line>::iterator hulliter;
 
-  static long long div_floor(long long a, long long b) {
-    return a/b - ((a ^ b) < 0 && a % b);
-  }
+  static long long div_floor(long long a, long long b) { return a / b - ((a ^ b) < 0 && a % b); }
 
   bool update_border(hulliter x, hulliter y) {
     if (y == hull.end()) {
@@ -92,7 +88,7 @@ class hull_optimizer {
     assert(!hull.empty());
     line q(0, 0, x, true);
     hulliter it = hull.lower_bound(q);
-    long long res = it->m*x + it->b;
+    long long res = it->m * x + it->b;
     return query_max ? res : -res;
   }
 };

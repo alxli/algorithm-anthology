@@ -21,17 +21,17 @@ Space Complexity:
 #include <vector>
 
 #ifndef M_PI
-  const double M_PI = acos(-1.0);
+const double M_PI = acos(-1.0);
 #endif
 #ifndef M_E
-  const double M_E = exp(1.0);
+const double M_E = exp(1.0);
 #endif
-const double M_PHI = (1.0 + sqrt(5.0))/2.0;
+const double M_PHI = (1.0 + sqrt(5.0)) / 2.0;
 const double M_INF = std::numeric_limits<double>::infinity();
 const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
 #ifndef isnan
-  #define isnan(x) ((x) != (x))
+#define isnan(x) ((x) != (x))
 #endif
 
 /*
@@ -56,7 +56,7 @@ const double EPS = 1e-9;
 #define GT(x, y) ((x) > (y) + EPS)
 #define LE(x, y) ((x) <= (y) + EPS)
 #define GE(x, y) ((x) >= (y) - EPS)
-#define rEQ(x, y) (fabs((x) - (y)) <= EPS*fabs(x))
+#define rEQ(x, y) (fabs((x) - (y)) <= EPS * fabs(x))
 
 /*
 
@@ -178,7 +178,7 @@ Double round_half_random(const Double &x) {
 
 template<class Double, class RoundingFunction>
 Double round_n_places(const Double &x, unsigned int n, RoundingFunction f) {
-  return f(x*pow(10, n)) / pow(10, n);
+  return f(x * pow(10, n)) / pow(10, n);
 }
 
 /*
@@ -203,15 +203,15 @@ double erf_(double x) {
   if (fabs(x) > 2.2) {
     return 1.0 - erfc_(x);
   }
-  double sum = x, term = x, xx = x*x;
+  double sum = x, term = x, xx = x * x;
   int j = 1;
   do {
     term *= xx / j;
-    sum -= term/(2*(j++) + 1);
+    sum -= term / (2 * (j++) + 1);
     term *= xx / j;
-    sum += term/(2*(j++) + 1);
-  } while (fabs(term) > sum*ERF_EPS);
-  return 2/sqrt(M_PI) * sum;
+    sum += term / (2 * (j++) + 1);
+  } while (fabs(term) > sum * ERF_EPS);
+  return 2 / sqrt(M_PI) * sum;
 }
 
 double erfc_(double x) {
@@ -221,19 +221,19 @@ double erfc_(double x) {
   if (signbit_(x)) {
     return 2.0 - erfc_(-x);
   }
-  double a = 1, b = x, c = x, d = x*x + 0.5, q1, q2 = 0, n = 1.0, t;
+  double a = 1, b = x, c = x, d = x * x + 0.5, q1, q2 = 0, n = 1.0, t;
   do {
-    t = a*n + b*x;
+    t = a * n + b * x;
     a = b;
     b = t;
-    t = c*n + d*x;
+    t = c * n + d * x;
     c = d;
     d = t;
     n += 0.5;
     q1 = q2;
     q2 = b / d;
-  } while (fabs(q1 - q2) > q2*ERF_EPS);
-  return 1/sqrt(M_PI) * exp(-x*x) * q2;
+  } while (fabs(q1 - q2) > q2 * ERF_EPS);
+  return 1 / sqrt(M_PI) * exp(-x * x) * q2;
 }
 
 #undef ERF_EPS
@@ -257,7 +257,7 @@ double tgamma_(double x) {
     return M_NAN;
   }
   if (x < 1e-3) {
-    return 1.0 / (x*(1.0 + 0.57721566490153286060651209*x));
+    return 1.0 / (x * (1.0 + 0.57721566490153286060651209 * x));
   }
   if (x < 12) {
     double y = x;
@@ -269,22 +269,20 @@ double tgamma_(double x) {
       n = (int)floor(y) - 1;
       y -= n;
     }
-    static const double p[] = {
-        -1.71618513886549492533811e+0, 2.47656508055759199108314e+1,
-        -3.79804256470945635097577e+2, 6.29331155312818442661052e+2,
-        8.66966202790413211295064e+2, -3.14512729688483675254357e+4,
-        -3.61444134186911729807069e+4, 6.64561438202405440627855e+4};
-    static const double q[] = {
-        -3.08402300119738975254353e+1, 3.15350626979604161529144e+2,
-        -1.01515636749021914166146e+3, -3.10777167157231109440444e+3,
-        2.25381184209801510330112e+4, 4.75584627752788110767815e+3,
-        -1.34659959864969306392456e+5, -1.15132259675553483497211e+5};
+    static const double p[] = {-1.71618513886549492533811e+0, 2.47656508055759199108314e+1,
+                               -3.79804256470945635097577e+2, 6.29331155312818442661052e+2,
+                               8.66966202790413211295064e+2,  -3.14512729688483675254357e+4,
+                               -3.61444134186911729807069e+4, 6.64561438202405440627855e+4};
+    static const double q[] = {-3.08402300119738975254353e+1, 3.15350626979604161529144e+2,
+                               -1.01515636749021914166146e+3, -3.10777167157231109440444e+3,
+                               2.25381184209801510330112e+4,  4.75584627752788110767815e+3,
+                               -1.34659959864969306392456e+5, -1.15132259675553483497211e+5};
     double num = 0, den = 1, z = y - 1;
     for (int i = 0; i < 8; i++) {
-      num = (num + p[i])*z;
-      den = den*z + q[i];
+      num = (num + p[i]) * z;
+      den = den * z + q[i];
     }
-    double result = num/den + 1;
+    double result = num / den + 1;
     if (arg_was_less_than_one) {
       result /= (y - 1);
     } else {
@@ -294,7 +292,7 @@ double tgamma_(double x) {
     }
     return result;
   }
-  return (x > 171.624) ? 2*DBL_MAX : exp(lgamma(x));
+  return (x > 171.624) ? 2 * DBL_MAX : exp(lgamma(x));
 }
 
 double lgamma_(double x) {
@@ -304,15 +302,13 @@ double lgamma_(double x) {
   if (x < 12) {
     return log(fabs(tgamma_(x)));
   }
-  static const double c[8] = {
-    1.0/12, -1.0/360, 1.0/1260, -1.0/1680, 1.0/1188, -691.0/360360, 1.0/156,
-    -3617.0/122400
-  };
-  double z = 1.0/(x*x), sum = c[7];
+  static const double c[8] = {1.0 / 12,   -1.0 / 360,      1.0 / 1260, -1.0 / 1680,
+                              1.0 / 1188, -691.0 / 360360, 1.0 / 156,  -3617.0 / 122400};
+  double z = 1.0 / (x * x), sum = c[7];
   for (int i = 6; i >= 0; i--) {
-    sum = sum*z + c[i];
+    sum = sum * z + c[i];
   }
-  return (x - 0.5)*log(x) - x + 0.91893853320467274178032973640562 + sum/x;
+  return (x - 0.5) * log(x) - x + 0.91893853320467274178032973640562 + sum / x;
 }
 
 /*
@@ -333,10 +329,10 @@ Base Conversion:
 std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
   unsigned long long x = 0, power = 1;
   for (int i = 0; i < (int)d.size(); i++) {
-    x += d[i]*power;
+    x += d[i] * power;
     power *= a;
   }
-  int n = ceil(log(x + 1)/log(b));
+  int n = ceil(log(x + 1) / log(b));
   std::vector<int> res;
   for (int i = 0; i < n; i++) {
     res.push_back(x % b);
@@ -355,15 +351,12 @@ std::vector<int> to_base(unsigned int x, int b = 10) {
 }
 
 std::string to_roman(unsigned int x) {
-  static const std::string h[] =
-      {"", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"};
-  static const std::string t[] =
-      {"", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"};
-  static const std::string o[] =
-      {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"};
+  static const std::string h[] = {"", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"};
+  static const std::string t[] = {"", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"};
+  static const std::string o[] = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"};
   std::string prefix(x / 1000, 'M');
   x %= 1000;
-  return prefix + h[x/100] + t[x/10 % 10] + o[x % 10];
+  return prefix + h[x / 100] + t[x / 10 % 10] + o[x % 10];
 }
 
 /*** Example Usage ***/
@@ -382,7 +375,7 @@ int main() {
   assert((M_INF + M_INF == M_INF) && (-M_INF - M_INF == -M_INF));
   assert((M_NAN != x) && (M_NAN != M_INF) && (M_NAN != M_NAN));
   assert(!(M_NAN < x) && !(M_NAN > x) && !(M_NAN <= x) && !(M_NAN >= x));
-  assert(isnan(0.0*M_INF) && isnan(0.0*-M_INF) && isnan(M_INF/-M_INF));
+  assert(isnan(0.0 * M_INF) && isnan(0.0 * -M_INF) && isnan(M_INF / -M_INF));
   assert(isnan(M_NAN) && isnan(-M_NAN) && isnan(M_INF - M_INF));
 
   assert(sgn(x) == -1 && sgn(0.0) == 0 && sgn(5678) == 1);

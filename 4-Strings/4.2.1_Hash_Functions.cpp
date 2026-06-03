@@ -138,8 +138,7 @@ uint64 hash_range64(It first, It last) {
 template<class Int>
 struct int_hasher {
   std::size_t operator()(Int x) const {
-    static const uint64 RANDOM =
-        std::chrono::steady_clock::now().time_since_epoch().count();
+    static const uint64 RANDOM = std::chrono::steady_clock::now().time_since_epoch().count();
     return (std::size_t)mix64((uint64)x + RANDOM);
   }
 };
@@ -149,16 +148,12 @@ struct generic_hasher;
 
 template<class T, bool IsInteger>
 struct scalar_hasher {
-  std::size_t operator()(const T &x) const {
-    return std::hash<T>()(x);
-  }
+  std::size_t operator()(const T &x) const { return std::hash<T>()(x); }
 };
 
 template<class T>
 struct scalar_hasher<T, true> {
-  std::size_t operator()(T x) const {
-    return int_hasher<T>()(x);
-  }
+  std::size_t operator()(T x) const { return int_hasher<T>()(x); }
 };
 
 template<class A, class B>
@@ -186,10 +181,10 @@ template<class T>
 struct generic_hasher : scalar_hasher<T, std::is_integral<T>::value> {};
 
 template<class A, class B>
-struct generic_hasher<std::pair<A, B> > : pair_hasher<A, B> {};
+struct generic_hasher<std::pair<A, B>> : pair_hasher<A, B> {};
 
 template<class T>
-struct generic_hasher<std::vector<T> > : vector_hasher<T> {};
+struct generic_hasher<std::vector<T>> : vector_hasher<T> {};
 
 /*** Example Usage ***/
 
@@ -213,21 +208,21 @@ int main() {
   assert(hash_range32(v.begin(), v.end()) == hash_range32(v.begin(), v.end()));
   assert(hash_range64(v.begin(), v.end()) == hash_range64(v.begin(), v.end()));
 
-  unordered_map<long long, int, int_hasher<long long> > count;
+  unordered_map<long long, int, int_hasher<long long>> count;
   count[1000000000000LL] = 7;
   assert(count[1000000000000LL] == 7);
 
   typedef pair<int, int> point;
-  unordered_map<point, int, pair_hasher<int, int> > dist;
+  unordered_map<point, int, pair_hasher<int, int>> dist;
   dist[point(3, 4)] = 5;
   assert(dist[point(3, 4)] == 5);
 
-  unordered_map<vector<int>, int, vector_hasher<int> > seen;
+  unordered_map<vector<int>, int, vector_hasher<int>> seen;
   seen[v] = 1;
   assert(seen[v] == 1);
 
   typedef pair<vector<int>, int> state;
-  unordered_map<state, int, generic_hasher<state> > dp;
+  unordered_map<state, int, generic_hasher<state>> dp;
   dp[state(v, 4)] = 9;
   assert(dp[state(v, 4)] == 9);
   return 0;

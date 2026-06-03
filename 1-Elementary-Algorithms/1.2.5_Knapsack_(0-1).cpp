@@ -26,8 +26,9 @@ Space Complexity:
 #include <cassert>
 #include <vector>
 
-long long knapsack_01(const std::vector<int> &weight,
-                      const std::vector<long long> &value, int capacity) {
+long long knapsack_01(
+    const std::vector<int> &weight, const std::vector<long long> &value, int capacity
+) {
   int n = weight.size();
   std::vector<long long> dp(capacity + 1, 0);
   for (int i = 0; i < n; i++) {

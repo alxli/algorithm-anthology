@@ -38,14 +38,21 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
-double dot(const point &a, const point &b) { return a.x*b.x + a.y*b.y; }
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
-  return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
+double sqnorm(const point &a) {
+  return a.x * a.x + a.y * a.y;
 }
 
-int seg_intersection(const point &a, const point &b, const point &c,
-                     const point &d, point *p = NULL, point *q = NULL) {
+double dot(const point &a, const point &b) {
+  return a.x * b.x + a.y * b.y;
+}
+
+double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+}
+
+int seg_intersection(
+    const point &a, const point &b, const point &c, const point &d, point *p = NULL, point *q = NULL
+) {
   static const bool TOUCH_IS_INTERSECT = true;
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
@@ -55,8 +62,7 @@ int seg_intersection(const point &a, const point &b, const point &c,
     double t0 = dot(ac, ab) / sqnorm(ab);
     double t1 = t0 + dot(cd, ab) / sqnorm(ab);
     double mint = std::min(t0, t1), maxt = std::max(t0, t1);
-    bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt))
-                                      : (LT(mint, 1) && LT(0, maxt));
+    bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
     if (overlap) {
       point res1 = std::max(std::min(a, b), std::min(c, d));
       point res2 = std::min(std::max(a, b), std::max(c, d));
@@ -78,28 +84,27 @@ int seg_intersection(const point &a, const point &b, const point &c,
   if (EQ(c1, 0)) {
     return -1;  // Parallel and disjoint.
   }
-  double t = cross(ac, cd)/c1, u = c2/c1;
-  bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1))
-                                         : (LT(0, t) && LT(t, 1));
-  bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1))
-                                         : (LT(0, u) && LT(u, 1));
+  double t = cross(ac, cd) / c1, u = c2 / c1;
+  bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1)) : (LT(0, t) && LT(t, 1));
+  bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
     if (p != NULL) {
-      *p = point(a.x + t*ab.x, a.y + t*ab.y);
+      *p = point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
   }
   return -1;  // Non-parallel with no intersections.
 }
 
-int line_intersection(const point &p1, const point &p2,
-                      const point &p3, const point &p4, point *p = NULL) {
+int line_intersection(
+    const point &p1, const point &p2, const point &p3, const point &p4, point *p = NULL
+) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
-  double c1 = -(p1.x*p2.y - p2.x*p1.y);
+  double c1 = -(p1.x * p2.y - p2.x * p1.y);
   double a2 = p4.y - p3.y, b2 = p3.x - p4.x;
-  double c2 = -(p3.x*p4.y - p4.x*p3.y);
-  double x = -(c1*b2 - c2*b1), y = -(a1*c2 - a2*c1);
-  double det = a1*b2 - a2*b1;
+  double c2 = -(p3.x * p4.y - p4.x * p3.y);
+  double x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
+  double det = a1 * b2 - a2 * b1;
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
@@ -147,14 +152,14 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   std::vector<double> xsa(xs.begin(), xs.end());
   double res = 0;
   for (int k = 0; k < (int)xsa.size() - 1; k++) {
-    double x = (xsa[k] + xsa[k + 1])/2;
+    double x = (xsa[k] + xsa[k + 1]) / 2;
     point sweep0(x, 0), sweep1(x, 1);
     std::vector<event> events;
     for (int poly = 0; poly < 2; poly++) {
       It lo = plo[poly], hi = phi[poly];
       double area = 0;
       for (It i = lo, j = hi - 1; i != hi; j = i++) {
-        area += (j->x - i->x)*(j->y + i->y);
+        area += (j->x - i->x) * (j->y + i->y);
       }
       for (It j = lo, i = hi - 1; j != hi; i = j++) {
         point p;
@@ -162,9 +167,9 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
           double y = p.y, x0 = i->x, x1 = j->x;
           int sgn_area = (area < 0 ? -1 : (area > 0 ? 1 : 0));
           if (x0 < x && x1 > x) {
-            events.push_back(event(y, sgn_area*(1 << poly)));
+            events.push_back(event(y, sgn_area * (1 << poly)));
           } else if (x0 > x && x1 < x) {
-            events.push_back(event(y, -sgn_area*(1 << poly)));
+            events.push_back(event(y, -sgn_area * (1 << poly)));
           }
         }
       }
@@ -178,7 +183,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
       }
       mask += events[j].mask_delta;
     }
-    res += a*(xsa[k + 1] - xsa[k]);
+    res += a * (xsa[k + 1] - xsa[k]);
   }
   return res;
 }
@@ -190,18 +195,17 @@ double polygon_area(It lo, It hi) {
   }
   double area = 0;
   if (*lo != *--hi) {
-    area += (lo->x - hi->x)*(lo->y + hi->y);
+    area += (lo->x - hi->x) * (lo->y + hi->y);
   }
   for (It i = hi, j = --hi; i != lo; --i, --j) {
-    area += (i->x - j->x)*(i->y + j->y);
+    area += (i->x - j->x) * (i->y + j->y);
   }
   return fabs(area / 2.0);
 }
 
 template<class It>
 double union_area(It lo1, It hi1, It lo2, It hi2) {
-  return polygon_area(lo1, hi1) + polygon_area(lo2, hi2) -
-         intersection_area(lo1, hi1, lo2, hi2);
+  return polygon_area(lo1, hi1) + polygon_area(lo2, hi2) - intersection_area(lo1, hi1, lo2, hi2);
 }
 
 /*** Example Usage ***/

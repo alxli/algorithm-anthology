@@ -33,7 +33,7 @@ struct list_node {
   explicit list_node(int value = 0) : value(value), next(NULL) {}
 };
 
-list_node* reverse_list(list_node *head) {
+list_node *reverse_list(list_node *head) {
   list_node *prev = NULL;
   while (head != NULL) {
     list_node *next = head->next;
@@ -44,7 +44,7 @@ list_node* reverse_list(list_node *head) {
   return prev;
 }
 
-list_node* merge_sorted_lists(list_node *a, list_node *b) {
+list_node *merge_sorted_lists(list_node *a, list_node *b) {
   list_node dummy;
   list_node *tail = &dummy;
   while (a != NULL && b != NULL) {
@@ -61,7 +61,7 @@ list_node* merge_sorted_lists(list_node *a, list_node *b) {
   return dummy.next;
 }
 
-list_node* split_half(list_node *head, list_node **second) {
+list_node *split_half(list_node *head, list_node **second) {
   if (head == NULL || head->next == NULL) {
     *second = NULL;
     return head;
@@ -149,8 +149,7 @@ void splice_after(list_node *pos, list_node *before) {
   pos->next = node;
 }
 
-void splice_range_after(list_node *pos, list_node *before_first,
-                        list_node *last) {
+void splice_range_after(list_node *pos, list_node *before_first, list_node *last) {
   list_node *first = before_first->next;
   if (first == last) {
     return;
@@ -225,18 +224,16 @@ This implementation combines a doubly linked list (\inlinecode{std::list}) with 
 
 template<class Key, class Value>
 class lru_cache {
-  typedef typename std::list<std::pair<Key, Value> >::iterator list_iter;
+  typedef typename std::list<std::pair<Key, Value>>::iterator list_iter;
 
   int cap;
-  std::list<std::pair<Key, Value> > items;
+  std::list<std::pair<Key, Value>> items;
   std::map<Key, list_iter> where;
 
  public:
   explicit lru_cache(int capacity) : cap(capacity) {}
 
-  int size() const {
-    return items.size();
-  }
+  int size() const { return items.size(); }
 
   bool get(const Key &key, Value *value) {
     typename std::map<Key, list_iter>::iterator it = where.find(key);
@@ -337,19 +334,14 @@ class binary_heap {
     }
   }
 
-  int size() const {
-    return heap.size();
-  }
-
-  bool empty() const {
-    return heap.empty();
-  }
+  int size() const { return heap.size(); }
+  bool empty() const { return heap.empty(); }
 
   void push(const T &v) {
     heap.push_back(v);
     int i = heap.size() - 1;
     while (i > 0) {
-      int parent = (i - 1)/2;
+      int parent = (i - 1) / 2;
       if (!(heap[i] < heap[parent])) {
         break;
       }
@@ -366,7 +358,7 @@ class binary_heap {
     heap.pop_back();
     int i = 0;
     for (;;) {
-      int child = 2*i + 1;
+      int child = 2 * i + 1;
       if (child >= (int)heap.size()) {
         break;
       }
@@ -457,7 +449,7 @@ class skew_heap {
 
   int num_nodes;
 
-  static node_t* merge(node_t *a, node_t *b) {
+  static node_t *merge(node_t *a, node_t *b) {
     if (a == NULL) {
       return b;
     }
@@ -490,17 +482,9 @@ class skew_heap {
     }
   }
 
-  ~skew_heap() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~skew_heap() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   void push(const T &v) {
     root = merge(root, new node_t(v));
@@ -609,7 +593,7 @@ class pairing_heap {
 
   int num_nodes;
 
-  static node_t* merge(node_t *a, node_t *b) {
+  static node_t *merge(node_t *a, node_t *b) {
     if (a == NULL) {
       return b;
     }
@@ -624,7 +608,7 @@ class pairing_heap {
     return b;
   }
 
-  static node_t* merge_pairs(node_t *n) {
+  static node_t *merge_pairs(node_t *n) {
     if (n == NULL || n->next == NULL) {
       return n;
     }
@@ -651,17 +635,9 @@ class pairing_heap {
     }
   }
 
-  ~pairing_heap() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~pairing_heap() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   void push(const T &v) {
     root = merge(root, new node_t(v));
@@ -758,8 +734,7 @@ class binary_search_tree {
     V value;
     node_t *left, *right;
 
-    node_t(const K &k, const V &v)
-        : key(k), value(v), left(NULL), right(NULL) {}
+    node_t(const K &k, const V &v) : key(k), value(v), left(NULL), right(NULL) {}
   } *root;
 
   int num_nodes;
@@ -825,17 +800,9 @@ class binary_search_tree {
  public:
   binary_search_tree() : root(NULL), num_nodes(0) {}
 
-  ~binary_search_tree() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~binary_search_tree() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -853,7 +820,7 @@ class binary_search_tree {
     return false;
   }
 
-  const V* find(const K &k) const {
+  const V *find(const K &k) const {
     node_t *n = root;
     while (n != NULL) {
       if (k < n->key) {
@@ -939,9 +906,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 template<class K, class V>
 class treap {
   struct node_t {
-    static inline int rand32() {
-      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
-    }
+    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     K key;
     V value;
@@ -1031,17 +996,9 @@ class treap {
  public:
   treap() : root(NULL), num_nodes(0) {}
 
-  ~treap() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~treap() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -1059,7 +1016,7 @@ class treap {
     return false;
   }
 
-  const V* find(const K &k) const {
+  const V *find(const K &k) const {
     node_t *n = root;
     while (n != NULL) {
       if (k < n->key) {
@@ -1151,15 +1108,12 @@ class avl_tree {
     int height;
     node_t *left, *right;
 
-    node_t(const K &k, const V &v)
-        : key(k), value(v), height(1), left(NULL), right(NULL) {}
+    node_t(const K &k, const V &v) : key(k), value(v), height(1), left(NULL), right(NULL) {}
   } *root;
 
   int num_nodes;
 
-  static int height(node_t *n) {
-    return (n != NULL) ? n->height : 0;
-  }
+  static int height(node_t *n) { return (n != NULL) ? n->height : 0; }
 
   static void update_height(node_t *n) {
     if (n != NULL) {
@@ -1213,8 +1167,7 @@ class avl_tree {
       n = new node_t(k, v);
       return true;
     }
-    if ((k < n->key && insert(n->left, k, v)) ||
-        (n->key < k && insert(n->right, k, v))) {
+    if ((k < n->key && insert(n->left, k, v)) || (n->key < k && insert(n->right, k, v))) {
       rebalance(n);
       return true;
     }
@@ -1249,8 +1202,7 @@ class avl_tree {
       rebalance(n);
       return true;
     }
-    if ((k < n->key && erase(n->left, k)) ||
-        (n->key < k && erase(n->right, k))) {
+    if ((k < n->key && erase(n->left, k)) || (n->key < k && erase(n->right, k))) {
       rebalance(n);
       return true;
     }
@@ -1277,17 +1229,9 @@ class avl_tree {
  public:
   avl_tree() : root(NULL), num_nodes(0) {}
 
-  ~avl_tree() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~avl_tree() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -1305,7 +1249,7 @@ class avl_tree {
     return false;
   }
 
-  const V* find(const K &k) const {
+  const V *find(const K &k) const {
     node_t *n = root;
     while (n != NULL) {
       if (k < n->key) {
@@ -1564,22 +1508,15 @@ class red_black_tree {
   }
 
  public:
-  red_black_tree() : num_nodes(0) {
-    root = LEAF_NIL = new node_t(K(), V(), BLACK);
-  }
+  red_black_tree() : num_nodes(0) { root = LEAF_NIL = new node_t(K(), V(), BLACK); }
 
   ~red_black_tree() {
     clean_up(root);
     delete LEAF_NIL;
   }
 
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return num_nodes == 0;
-  }
+  int size() const { return num_nodes; }
+  bool empty() const { return num_nodes == 0; }
 
   bool insert(const K &k, const V &v) {
     node_t *curr = root, *prev = LEAF_NIL;
@@ -1656,7 +1593,7 @@ class red_black_tree {
     return true;
   }
 
-  const V* find(const K &k) const {
+  const V *find(const K &k) const {
     node_t *n = root;
     while (n != LEAF_NIL) {
       if (k < n->key) {
@@ -1746,8 +1683,7 @@ class splay_tree {
     V value;
     node_t *left, *right;
 
-    node_t(const K &k, const V &v)
-        : key(k), value(v), left(NULL), right(NULL) {}
+    node_t(const K &k, const V &v) : key(k), value(v), left(NULL), right(NULL) {}
   } *root;
 
   int num_nodes;
@@ -1863,17 +1799,9 @@ class splay_tree {
  public:
   splay_tree() : root(NULL), num_nodes(0) {}
 
-  ~splay_tree() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~splay_tree() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -1891,7 +1819,7 @@ class splay_tree {
     return false;
   }
 
-  const V* find(const K &k) {
+  const V *find(const K &k) {
     splay(root, k);
     return (k < root->key || root->key < k) ? NULL : &(root->value);
   }
@@ -1977,12 +1905,9 @@ class size_balanced_tree {
     int size;
     node_t *left, *right;
 
-    node_t(const K &k, const V &v)
-        : key(k), value(v), size(1), left(NULL), right(NULL) {}
+    node_t(const K &k, const V &v) : key(k), value(v), size(1), left(NULL), right(NULL) {}
 
-    inline node_t*& child(int c) {
-      return (c == 0) ? left : right;
-    }
+    inline node_t *&child(int c) { return (c == 0) ? left : right; }
 
     void update() {
       size = 1;
@@ -1995,9 +1920,7 @@ class size_balanced_tree {
     }
   } *root;
 
-  static inline int size(node_t *n) {
-    return (n == NULL) ? 0 : n->size;
-  }
+  static inline int size(node_t *n) { return (n == NULL) ? 0 : n->size; }
 
   static void rotate(node_t *&n, int c) {
     node_t *tmp = n->child(c);
@@ -2118,27 +2041,14 @@ class size_balanced_tree {
  public:
   size_balanced_tree() : root(NULL) {}
 
-  ~size_balanced_tree() {
-    clean_up(root);
-  }
+  ~size_balanced_tree() { clean_up(root); }
+  int size() const { return size(root); }
+  bool empty() const { return root == NULL; }
+  bool insert(const K &k, const V &v) { return insert(root, k, v); }
+  bool erase(const K &k) { return erase(root, k); }
+  int rank(const K &k) const { return rank(root, k); }
 
-  int size() const {
-    return size(root);
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
-
-  bool insert(const K &k, const V &v) {
-    return insert(root, k, v);
-  }
-
-  bool erase(const K &k) {
-    return erase(root, k);
-  }
-
-  const V* find(const K &k) const {
+  const V *find(const K &k) const {
     node_t *n = root;
     while (n != NULL) {
       if (k < n->key) {
@@ -2157,10 +2067,6 @@ class size_balanced_tree {
       throw std::runtime_error("Select rank must be between 0 and size() - 1.");
     }
     return select(root, r);
-  }
-
-  int rank(const K &k) const {
-    return rank(root, k);
   }
 
   template<class KVFunction>
@@ -2247,9 +2153,7 @@ class interval_treap {
   typedef std::pair<K, K> interval_t;
 
   struct node_t {
-    static inline int rand32() {
-      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
-    }
+    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     interval_t interval;
     V value;
@@ -2258,8 +2162,7 @@ class interval_treap {
     node_t *left, *right;
 
     node_t(const interval_t &i, const V &v)
-        : interval(i), value(v), max(i.second), priority(rand32()), left(NULL),
-          right(NULL) {}
+        : interval(i), value(v), max(i.second), priority(rand32()), left(NULL), right(NULL) {}
 
     void update() {
       max = interval.second;
@@ -2340,7 +2243,7 @@ class interval_treap {
     return true;
   }
 
-  static node_t* find_any(node_t *n, const interval_t &i) {
+  static node_t *find_any(node_t *n, const interval_t &i) {
     if (n == NULL) {
       return NULL;
     }
@@ -2385,17 +2288,9 @@ class interval_treap {
  public:
   interval_treap() : root(NULL), num_nodes(0) {}
 
-  ~interval_treap() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~interval_treap() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   bool insert(const K &lo, const K &hi, const V &v) {
     if (insert(root, std::make_pair(lo, hi), v)) {
@@ -2413,12 +2308,12 @@ class interval_treap {
     return false;
   }
 
-  const interval_t* find_key(const K &lo, const K &hi) const {
+  const interval_t *find_key(const K &lo, const K &hi) const {
     node_t *n = find_any(root, std::make_pair(lo, hi));
     return (n == NULL) ? NULL : &(n->interval);
   }
 
-  const V* find_value(const K &lo, const K &hi) const {
+  const V *find_value(const K &lo, const K &hi) const {
     node_t *n = find_any(root, std::make_pair(lo, hi));
     return (n == NULL) ? NULL : &(n->value);
   }
@@ -2517,7 +2412,7 @@ class hash_map {
   void double_capacity_and_rehash() {
     std::list<entry_t> *old = table;
     int old_size = table_size;
-    table_size = 2*table_size;
+    table_size = 2 * table_size;
     table = new std::list<entry_t>[table_size];
     num_entries = 0;
     typename std::list<entry_t>::iterator it;
@@ -2534,17 +2429,9 @@ class hash_map {
     table = new std::list<entry_t>[table_size];
   }
 
-  ~hash_map() {
-    delete[] table;
-  }
-
-  int size() const {
-    return num_entries;
-  }
-
-  bool empty() const {
-    return num_entries == 0;
-  }
+  ~hash_map() { delete[] table; }
+  int size() const { return num_entries; }
+  bool empty() const { return num_entries == 0; }
 
   bool insert(const K &k, const V &v) {
     if (find(k) != NULL) {
@@ -2573,7 +2460,7 @@ class hash_map {
     return true;
   }
 
-  V* find(const K &k) const {
+  V *find(const K &k) const {
     unsigned int i = Hash()(k) % table_size;
     typename std::list<entry_t>::iterator it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
@@ -2585,7 +2472,7 @@ class hash_map {
     return &(it->value);
   }
 
-  V& operator[](const K &k) {
+  V &operator[](const K &k) {
     V *ret = find(k);
     if (ret != NULL) {
       return *ret;
@@ -2612,13 +2499,9 @@ class hash_map {
 using namespace std;
 
 struct class_hash {
-  unsigned int operator()(int k) {
-    return class_hash()((unsigned int)k);
-  }
+  unsigned int operator()(int k) { return class_hash()((unsigned int)k); }
 
-  unsigned int operator()(long long k) {
-    return class_hash()((unsigned long long)k);
-  }
+  unsigned int operator()(long long k) { return class_hash()((unsigned long long)k); }
 
   // Knuth's one-to-one multiplicative method.
   unsigned int operator()(unsigned int k) {
@@ -2628,13 +2511,13 @@ struct class_hash {
   // Jenkins's 64-bit hash.
   unsigned int operator()(unsigned long long k) {
     k += ~(k << 32);
-    k ^=  (k >> 22);
+    k ^= (k >> 22);
     k += ~(k << 13);
-    k ^=  (k >>  8);
-    k +=  (k <<  3);
-    k ^=  (k >> 15);
+    k ^= (k >> 8);
+    k += (k << 3);
+    k ^= (k >> 15);
     k += ~(k << 27);
-    k ^=  (k >> 31);
+    k ^= (k >> 31);
     return k;
   }
 
@@ -2715,10 +2598,9 @@ class skip_list {
   struct node_t {
     K key;
     V value;
-    std::vector<node_t*> next;
+    std::vector<node_t *> next;
 
-    node_t(const K &k, const V &v, int levels)
-        : key(k), value(v), next(levels, (node_t*)NULL) {}
+    node_t(const K &k, const V &v, int levels) : key(k), value(v), next(levels, (node_t *)NULL) {}
   } *head;
 
   int num_nodes;
@@ -2732,7 +2614,7 @@ class skip_list {
     return std::abs(level);
   }
 
-  static int node_level(const std::vector<node_t*> &v) {
+  static int node_level(const std::vector<node_t *> &v) {
     int i = 0;
     while (i < (int)v.size() && v[i] != NULL) {
       i++;
@@ -2747,23 +2629,15 @@ class skip_list {
     }
   }
 
-  ~skip_list() {
-    delete head;
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return num_nodes == 0;
-  }
+  ~skip_list() { delete head; }
+  int size() const { return num_nodes; }
+  bool empty() const { return num_nodes == 0; }
 
   bool insert(const K &k, const V &v) {
-    std::vector<node_t*> update(head->next);
+    std::vector<node_t *> update(head->next);
     int curr_level = node_level(update);
     node_t *n = head;
-    for (int i = curr_level; i-- > 0; ) {
+    for (int i = curr_level; i-- > 0;) {
       while (n->next[i] != NULL && n->next[i]->key < k) {
         n = n->next[i];
       }
@@ -2789,9 +2663,9 @@ class skip_list {
   }
 
   bool erase(const K &k) {
-    std::vector<node_t*> update(head->next);
+    std::vector<node_t *> update(head->next);
     node_t *n = head;
-    for (int i = node_level(update); i-- > 0; ) {
+    for (int i = node_level(update); i-- > 0;) {
       while (n->next[i] != NULL && n->next[i]->key < k) {
         n = n->next[i];
       }
@@ -2812,9 +2686,9 @@ class skip_list {
     return false;
   }
 
-  V* find(const K &k) const {
+  V *find(const K &k) const {
     node_t *n = head;
-    for (int i = node_level(n->next); i-- > 0; ) {
+    for (int i = node_level(n->next); i-- > 0;) {
       while (n->next[i] != NULL && n->next[i]->key < k) {
         n = n->next[i];
       }
@@ -2823,7 +2697,7 @@ class skip_list {
     return (n != NULL && n->key == k) ? &(n->value) : NULL;
   }
 
-  V& operator[](const K &k) {
+  V &operator[](const K &k) {
     V *ret = find(k);
     if (ret != NULL) {
       return *ret;
@@ -2967,24 +2841,20 @@ The operations supported by this data structure are identical to those of the po
 
 template<class T>
 class sqrt_decomposition {
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
 
-  static T join_value_with_delta(const T &v, const T &d) {
-    return d;
-  }
+  static T join_value_with_delta(const T &v, const T &d) { return d; }
 
   int len, blocklen;
   std::vector<T> value, block;
 
   void init() {
     blocklen = (int)sqrt(len);
-    int nblocks = (len + blocklen - 1)/blocklen;
+    int nblocks = (len + blocklen - 1) / blocklen;
     for (int i = 0; i < nblocks; i++) {
-      T blockval = value[i*blocklen];
-      int blockhi = std::min(len, (i + 1)*blocklen);
-      for (int j = i*blocklen + 1; j < blockhi; j++) {
+      T blockval = value[i * blocklen];
+      int blockhi = std::min(len, (i + 1) * blocklen);
+      for (int j = i * blocklen + 1; j < blockhi; j++) {
         blockval = join_values(blockval, value[j]);
       }
       block.push_back(blockval);
@@ -2992,26 +2862,19 @@ class sqrt_decomposition {
   }
 
  public:
-  sqrt_decomposition(int n, const T &v = T()) : len(n), value(n, v) {
-    init();
-  }
+  sqrt_decomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
 
   template<class It>
   sqrt_decomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
     init();
   }
 
-  int size() const {
-    return len;
-  }
-
-  T at(int i) const {
-    return query(i, i);
-  }
+  int size() const { return len; }
+  T at(int i) const { return query(i, i); }
 
   T query(int lo, int hi) const {
     T res;
-    int blocklo = ceil((double)lo/blocklen), blockhi = (hi + 1)/blocklen - 1;
+    int blocklo = ceil((double)lo / blocklen), blockhi = (hi + 1) / blocklen - 1;
     if (blocklo > blockhi) {
       res = value[lo];
       for (int i = lo + 1; i <= hi; i++) {
@@ -3022,10 +2885,10 @@ class sqrt_decomposition {
       for (int i = blocklo + 1; i <= blockhi; i++) {
         res = join_values(res, block[i]);
       }
-      for (int i = lo; i < blocklo*blocklen; i++) {
+      for (int i = lo; i < blocklo * blocklen; i++) {
         res = join_values(res, value[i]);
       }
-      for (int i = (blockhi + 1)*blocklen; i <= hi; i++) {
+      for (int i = (blockhi + 1) * blocklen; i <= hi; i++) {
         res = join_values(res, value[i]);
       }
     }
@@ -3034,10 +2897,10 @@ class sqrt_decomposition {
 
   void update(int i, const T &d) {
     value[i] = join_value_with_delta(value[i], d);
-    int b = i/blocklen;
-    int blockhi = std::min(len, (b + 1)*blocklen);
-    block[b] = value[b*blocklen];
-    for (int i = b*blocklen + 1; i < blockhi; i++) {
+    int b = i / blocklen;
+    int blockhi = std::min(len, (b + 1) * blocklen);
+    block[b] = value[b * blocklen];
+    for (int i = b * blocklen + 1; i < blockhi; i++) {
       block[b] = join_values(block[b], value[i]);
     }
   }
@@ -3101,13 +2964,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 
 template<class T>
 class segment_tree {
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_value_with_delta(const T &v, const T &d) {
-    return d;
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_value_with_delta(const T &v, const T &d) { return d; }
 
   int len;
   std::vector<T> value;
@@ -3117,10 +2975,10 @@ class segment_tree {
       value[i] = v;
       return;
     }
-    int mid = lo + (hi - lo)/2;
-    build(i*2 + 1, lo, mid, v);
-    build(i*2 + 2, mid + 1, hi, v);
-    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+    int mid = lo + (hi - lo) / 2;
+    build(i * 2 + 1, lo, mid, v);
+    build(i * 2 + 2, mid + 1, hi, v);
+    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   template<class It>
@@ -3129,26 +2987,27 @@ class segment_tree {
       value[i] = *(arr + lo);
       return;
     }
-    int mid = lo + (hi - lo)/2;
-    build(i*2 + 1, lo, mid, arr);
-    build(i*2 + 2, mid + 1, hi, arr);
-    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+    int mid = lo + (hi - lo) / 2;
+    build(i * 2 + 1, lo, mid, arr);
+    build(i * 2 + 2, mid + 1, hi, arr);
+    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) const {
     if (lo == tgt_lo && hi == tgt_hi) {
       return value[i];
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     if (tgt_lo <= mid && mid < tgt_hi) {
       return join_values(
-                query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
-                query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
+          query(i * 2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
+          query(i * 2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi)
+      );
     }
     if (tgt_lo <= mid) {
-      return query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
+      return query(i * 2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
     }
-    return query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
+    return query(i * 2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
   }
 
   void update(int i, int lo, int hi, int target, const T &d) {
@@ -3159,41 +3018,30 @@ class segment_tree {
       value[i] = join_value_with_delta(value[i], d);
       return;
     }
-    int mid = lo + (hi - lo)/2;
-    update(i*2 + 1, lo, mid, target, d);
-    update(i*2 + 2, mid + 1, hi, target, d);
-    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+    int mid = lo + (hi - lo) / 2;
+    update(i * 2 + 1, lo, mid, target, d);
+    update(i * 2 + 2, mid + 1, hi, target, d);
+    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
  public:
-  segment_tree(int n, const T &v = T()) : len(n), value(4*len) {
+  segment_tree(int n, const T &v = T()) : len(n), value(4 * len) {
     if (len > 0) {
       build(0, 0, len - 1, v);
     }
   }
 
   template<class It>
-  segment_tree(It lo, It hi) : len(hi - lo), value(4*len) {
+  segment_tree(It lo, It hi) : len(hi - lo), value(4 * len) {
     if (len > 0) {
       build(0, 0, len - 1, lo);
     }
   }
 
-  int size() const {
-    return len;
-  }
-
-  T at(int i) const {
-    return query(i, i);
-  }
-
-  T query(int lo, int hi) const {
-    return query(0, 0, len - 1, lo, hi);
-  }
-
-  void update(int i, const T &d) {
-    update(0, 0, len - 1, i, d);
-  }
+  int size() const { return len; }
+  T at(int i) const { return query(i, i); }
+  T query(int lo, int hi) const { return query(0, 0, len - 1, lo, hi); }
+  void update(int i, const T &d) { update(0, 0, len - 1, i, d); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -3262,13 +3110,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 
 template<class T>
 class segment_tree {
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_value_with_delta(const T &v, const T &d, int len) {
-    return d;
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
 
   static T join_deltas(const T &d1, const T &d2) {
     return d2;  // For "set" updates, the more recent delta prevails.
@@ -3283,10 +3126,10 @@ class segment_tree {
       value[i] = v;
       return;
     }
-    int mid = lo + (hi - lo)/2;
-    build(i*2 + 1, lo, mid, v);
-    build(i*2 + 2, mid + 1, hi, v);
-    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+    int mid = lo + (hi - lo) / 2;
+    build(i * 2 + 1, lo, mid, v);
+    build(i * 2 + 2, mid + 1, hi, v);
+    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   template<class It>
@@ -3295,17 +3138,17 @@ class segment_tree {
       value[i] = *(arr + lo);
       return;
     }
-    int mid = lo + (hi - lo)/2;
-    build(i*2 + 1, lo, mid, arr);
-    build(i*2 + 2, mid + 1, hi, arr);
-    value[i] = join_values(value[i*2 + 1], value[i*2 + 2]);
+    int mid = lo + (hi - lo) / 2;
+    build(i * 2 + 1, lo, mid, arr);
+    build(i * 2 + 2, mid + 1, hi, arr);
+    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   void push_delta(int i, int lo, int hi) {
     if (pending[i]) {
       value[i] = join_value_with_delta(value[i], delta[i], hi - lo + 1);
       if (lo != hi) {
-        int l = 2*i + 1, r = 2*i + 2;
+        int l = 2 * i + 1, r = 2 * i + 2;
         delta[l] = pending[l] ? join_deltas(delta[l], delta[i]) : delta[i];
         delta[r] = pending[r] ? join_deltas(delta[r], delta[i]) : delta[i];
         pending[l] = pending[r] = true;
@@ -3319,16 +3162,17 @@ class segment_tree {
     if (lo == tgt_lo && hi == tgt_hi) {
       return value[i];
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     if (tgt_lo <= mid && mid < tgt_hi) {
       return join_values(
-                query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
-                query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
+          query(i * 2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
+          query(i * 2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi)
+      );
     }
     if (tgt_lo <= mid) {
-      return query(i*2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
+      return query(i * 2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid));
     }
-    return query(i*2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
+    return query(i * 2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
   }
 
   void update(int i, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
@@ -3342,14 +3186,14 @@ class segment_tree {
       push_delta(i, lo, hi);
       return;
     }
-    update(2*i + 1, lo, (lo + hi)/2, tgt_lo, tgt_hi, d);
-    update(2*i + 2, (lo + hi)/2 + 1, hi, tgt_lo, tgt_hi, d);
-    value[i] = join_values(value[2*i + 1], value[2*i + 2]);
+    update(2 * i + 1, lo, (lo + hi) / 2, tgt_lo, tgt_hi, d);
+    update(2 * i + 2, (lo + hi) / 2 + 1, hi, tgt_lo, tgt_hi, d);
+    value[i] = join_values(value[2 * i + 1], value[2 * i + 2]);
   }
 
  public:
   segment_tree(int n, const T &v = T())
-      : len(n), value(4*len), delta(4*len), pending(4*len, false) {
+      : len(n), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
       build(0, 0, len - 1, v);
     }
@@ -3357,31 +3201,17 @@ class segment_tree {
 
   template<class It>
   segment_tree(It lo, It hi)
-      : len(hi - lo), value(4*len), delta(4*len), pending(4*len, false) {
+      : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
       build(0, 0, len - 1, lo);
     }
   }
 
-  int size() const {
-    return len;
-  }
-
-  T at(int i) {
-    return query(i, i);
-  }
-
-  T query(int lo, int hi) {
-    return query(0, 0, len - 1, lo, hi);
-  }
-
-  void update(int i, const T &d) {
-    update(0, 0, len - 1, i, i, d);
-  }
-
-  void update(int lo, int hi, const T &d) {
-    update(0, 0, len - 1, lo, hi, d);
-  }
+  int size() const { return len; }
+  T at(int i) { return query(i, i); }
+  T query(int lo, int hi) { return query(0, 0, len - 1, lo, hi); }
+  void update(int i, const T &d) { update(0, 0, len - 1, i, i, d); }
+  void update(int lo, int hi, const T &d) { update(0, 0, len - 1, lo, hi, d); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -3461,17 +3291,9 @@ template<class T>
 class segment_tree {
   static const int MAXN = 1000000000;
 
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_segment(const T &v, int len) {
-    return v;
-  }
-
-  static T join_value_with_delta(const T &v, const T &d, int len) {
-    return d;
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_segment(const T &v, int len) { return v; }
+  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
 
   static T join_deltas(const T &d1, const T &d2) {
     return d2;  // For "set" updates, the more recent delta prevails.
@@ -3502,7 +3324,7 @@ class segment_tree {
     if (n->pending) {
       n->value = join_value_with_delta(n->value, n->delta, hi - lo + 1);
       if (lo != hi) {
-        int mid = lo + (hi - lo)/2;
+        int mid = lo + (hi - lo) / 2;
         update_delta(n->left, n->delta, mid - lo + 1);
         update_delta(n->right, n->delta, hi - mid);
       }
@@ -3518,11 +3340,12 @@ class segment_tree {
     if (lo == tgt_lo && hi == tgt_hi) {
       return n->value;
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     if (tgt_lo <= mid && mid < tgt_hi) {
       return join_values(
           query(n->left, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
-          query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
+          query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi)
+      );
     }
     if (tgt_lo <= mid) {
       return query(n->left, lo, mid, tgt_lo, std::min(tgt_hi, mid));
@@ -3544,7 +3367,7 @@ class segment_tree {
       push_delta(n, lo, hi);
       return;
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     update(n->left, lo, mid, tgt_lo, tgt_hi, d);
     update(n->right, mid + 1, hi, tgt_lo, tgt_hi, d);
     n->value = join_values(n->left->value, n->right->value);
@@ -3561,25 +3384,11 @@ class segment_tree {
  public:
   segment_tree(const T &v = T()) : root(NULL), init(v) {}
 
-  ~segment_tree() {
-    clean_up(root);
-  }
-
-  T at(int i) {
-    return query(i, i);
-  }
-
-  T query(int lo, int hi) {
-    return query(root, 0, MAXN, lo, hi);
-  }
-
-  void update(int i, const T &d) {
-    return update(i, i, d);
-  }
-
-  void update(int lo, int hi, const T &d) {
-    return update(root, 0, MAXN, lo, hi, d);
-  }
+  ~segment_tree() { clean_up(root); }
+  T at(int i) { return query(i, i); }
+  T query(int lo, int hi) { return query(root, 0, MAXN, lo, hi); }
+  void update(int i, const T &d) { return update(i, i, d); }
+  void update(int lo, int hi, const T &d) { return update(root, 0, MAXN, lo, hi, d); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -3649,8 +3458,7 @@ class persistent_segment_tree {
     long long sum;
     int left, right;
 
-    node(long long sum = 0, int left = -1, int right = -1)
-        : sum(sum), left(left), right(right) {}
+    node(long long sum = 0, int left = -1, int right = -1) : sum(sum), left(left), right(right) {}
   };
 
   int n;
@@ -3707,9 +3515,7 @@ class persistent_segment_tree {
     }
   }
 
-  int versions() const {
-    return root.size();
-  }
+  int versions() const { return root.size(); }
 
   int update(int version, int index, int value) {
     root.push_back(update(root[version], 0, n - 1, index, value));
@@ -3848,22 +3654,12 @@ This data structure shares every operation of one-dimensional segment trees in t
 
 template<class T>
 class implicit_treap {
-  static T join_values(const T &a, const T &b) {
-    return a < b ? a : b;
-  }
-
-  static T join_value_with_delta(const T &v, const T &d, int len) {
-    return d;
-  }
-
-  static T join_deltas(const T &d1, const T &d2) {
-    return d2;
-  }
+  static T join_values(const T &a, const T &b) { return a < b ? a : b; }
+  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
+  static T join_deltas(const T &d1, const T &d2) { return d2; }
 
   struct node_t {
-    static inline int rand32() {
-      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
-    }
+    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     T value, subtree_value, delta;
     bool pending;
@@ -3871,13 +3667,16 @@ class implicit_treap {
     node_t *left, *right;
 
     node_t(const T &v)
-        : value(v), subtree_value(v), pending(false), size(1),
-          priority(rand32()), left(NULL), right(NULL) {}
+        : value(v),
+          subtree_value(v),
+          pending(false),
+          size(1),
+          priority(rand32()),
+          left(NULL),
+          right(NULL) {}
   } *root;
 
-  static int size(node_t *n) {
-    return (n == NULL) ? 0 : n->size;
-  }
+  static int size(node_t *n) { return (n == NULL) ? 0 : n->size; }
 
   static void update_value(node_t *n) {
     if (n == NULL) {
@@ -3973,7 +3772,7 @@ class implicit_treap {
     update_value(n);
   }
 
-  static node_t* select(node_t *n, int i) {
+  static node_t *select(node_t *n, int i) {
     push_delta(n);
     if (i < size(n->left)) {
       return select(n->left, i);
@@ -4006,37 +3805,14 @@ class implicit_treap {
     }
   }
 
-  ~implicit_treap() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return size(root);
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
-
-  void insert(int i, const T &v) {
-    insert(root, new node_t(v), i);
-  }
-
-  void erase(int i) {
-    erase(root, i);
-  }
-
-  void push_back(const T &v) {
-    insert(size(), v);
-  }
-
-  void pop_back() {
-    erase(size() - 1);
-  }
-
-  T at(int i) const {
-    return select(root, i)->value;
-  }
+  ~implicit_treap() { clean_up(root); }
+  int size() const { return size(root); }
+  bool empty() const { return root == NULL; }
+  void insert(int i, const T &v) { insert(root, new node_t(v), i); }
+  void erase(int i) { erase(root, i); }
+  void push_back(const T &v) { insert(size(), v); }
+  void pop_back() { erase(size() - 1); }
+  T at(int i) const { return select(root, i)->value; }
 
   T query(int lo, int hi) {
     node_t *l1, *r1, *l2, *r2, *t;
@@ -4048,10 +3824,6 @@ class implicit_treap {
     return res;
   }
 
-  void update(int i, const T &d) {
-    update(i, i, d);
-  }
-
   void update(int lo, int hi, const T &d) {
     node_t *l1, *r1, *l2, *r2, *t;
     split(root, l1, r1, hi + 1);
@@ -4060,6 +3832,8 @@ class implicit_treap {
     merge(t, l2, r2);
     merge(root, t, r1);
   }
+
+  void update(int i, const T &d) { update(i, i, d); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -4134,17 +3908,9 @@ class quadtree {
   static const int MAXR = 1000000000;
   static const int MAXC = 1000000000;
 
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_region(const T &v, int area) {
-    return v;
-  }
-
-  static T join_value_with_delta(const T &v, const T &d) {
-    return d;
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_region(const T &v, int area) { return v; }
+  static T join_value_with_delta(const T &v, const T &d) { return d; }
 
   struct node_t {
     T value;
@@ -4172,7 +3938,7 @@ class quadtree {
     if (n == NULL) {
       int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
       int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
-      T v = join_region(init, rlen*clen);
+      T v = join_region(init, rlen * clen);
       res = found ? join_values(res, v) : v;
       found = true;
       return;
@@ -4182,7 +3948,7 @@ class quadtree {
       found = true;
       return;
     }
-    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+    int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
     query(n->child[0], r1, c1, rmid, cmid);
     query(n->child[1], rmid + 1, c1, r2, cmid);
     query(n->child[2], r1, cmid + 1, rmid, c2);
@@ -4195,7 +3961,7 @@ class quadtree {
 
   void update(node_t *&n, int r1, int c1, int r2, int c2) {
     if (n == NULL) {
-      n = new node_t(join_region(init, (r2 - r1 + 1)*(c2 - r1 + 1)));
+      n = new node_t(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
     }
     if (tgt_r < r1 || tgt_r > r2 || tgt_c < c1 || tgt_c > c2) {
       return;
@@ -4204,15 +3970,14 @@ class quadtree {
       n->value = join_value_with_delta(n->value, delta);
       return;
     }
-    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+    int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
     update(n->child[0], r1, c1, rmid, cmid);
     update(n->child[1], rmid + 1, c1, r2, cmid);
     update(n->child[2], r1, cmid + 1, rmid, c2);
     update(n->child[3], rmid + 1, cmid + 1, r2, c2);
     bool found = false;
     for (int i = 0; i < 4; i++) {
-      n->value = found ? join_values(n->value, n->child[i]->value)
-                       : n->child[i]->value;
+      n->value = found ? join_values(n->value, n->child[i]->value) : n->child[i]->value;
       found = true;
     }
   }
@@ -4229,13 +3994,8 @@ class quadtree {
  public:
   quadtree(const T &v = T()) : root(NULL), init(v) {}
 
-  ~quadtree() {
-    clean_up(root);
-  }
-
-  T at(int r, int c) {
-    return query(r, c, r, c);
-  }
+  ~quadtree() { clean_up(root); }
+  T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
     tgt_r1 = r1;
@@ -4244,7 +4004,7 @@ class quadtree {
     tgt_c2 = c2;
     found = false;
     query(root, 0, 0, MAXR, MAXC);
-    return found ? res : join_region(init, (r2 - r1 + 1)*(c2 - c1 + 1));
+    return found ? res : join_region(init, (r2 - r1 + 1) * (c2 - c1 + 1));
   }
 
   void update(int r, int c, const T &d) {
@@ -4333,17 +4093,9 @@ class quadtree {
   static const int MAXR = 1000000000;
   static const int MAXC = 1000000000;
 
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_region(const T &v, int area) {
-    return v;
-  }
-
-  static T join_value_with_delta(const T &v, const T &d, int area) {
-    return d;
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_region(const T &v, int area) { return v; }
+  static T join_value_with_delta(const T &v, const T &d, int area) { return d; }
 
   static T join_deltas(const T &d1, const T &d2) {
     return d2;  // For "set" updates, the more recent delta prevails.
@@ -4373,16 +4125,16 @@ class quadtree {
 
   void push_delta(node_t *n, int r1, int c1, int r2, int c2) {
     if (n->pending) {
-      int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+      int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
       int rlen = r2 - r1 + 1, clen = c2 - c1 + 1;
-      n->value = join_value_with_delta(n->value, n->delta, rlen*clen);
-      if (rlen*clen > 1) {
+      n->value = join_value_with_delta(n->value, n->delta, rlen * clen);
+      if (rlen * clen > 1) {
         int rlen1 = rmid - r1 + 1, rlen2 = rlen - rlen1;
         int clen1 = cmid - c1 + 1, clen2 = clen - clen1;
-        update_delta(n->child[0], n->delta, rlen1*clen1);
-        update_delta(n->child[1], n->delta, rlen2*clen1);
-        update_delta(n->child[2], n->delta, rlen1*clen2);
-        update_delta(n->child[3], n->delta, rlen2*clen2);
+        update_delta(n->child[0], n->delta, rlen1 * clen1);
+        update_delta(n->child[1], n->delta, rlen2 * clen1);
+        update_delta(n->child[2], n->delta, rlen1 * clen2);
+        update_delta(n->child[3], n->delta, rlen2 * clen2);
       }
       n->pending = false;
     }
@@ -4400,7 +4152,7 @@ class quadtree {
     if (n == NULL) {
       int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
       int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
-      T v = join_region(init, rlen*clen);
+      T v = join_region(init, rlen * clen);
       res = found ? join_values(res, v) : v;
       found = true;
       return;
@@ -4411,7 +4163,7 @@ class quadtree {
       found = true;
       return;
     }
-    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+    int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
     query(n->child[0], r1, c1, rmid, cmid);
     query(n->child[1], rmid + 1, c1, r2, cmid);
     query(n->child[2], r1, cmid + 1, rmid, c2);
@@ -4420,7 +4172,7 @@ class quadtree {
 
   void update(node_t *&n, int r1, int c1, int r2, int c2) {
     if (n == NULL) {
-      n = new node_t(join_region(init, (r2 - r1 + 1)*(c2 - r1 + 1)));
+      n = new node_t(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
     }
     if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
       return;
@@ -4432,7 +4184,7 @@ class quadtree {
       push_delta(n, r1, c1, r2, c2);
       return;
     }
-    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+    int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
     update(n->child[0], r1, c1, rmid, cmid);
     update(n->child[1], rmid + 1, c1, r2, cmid);
     update(n->child[2], r1, cmid + 1, rmid, c2);
@@ -4452,16 +4204,11 @@ class quadtree {
     }
   }
 
-public:
+ public:
   quadtree(const T &v = T()) : root(NULL), init(v) {}
 
-  ~quadtree() {
-    clean_up(root);
-  }
-
-  T at(int r, int c) {
-    return query(r, c, r, c);
-  }
+  ~quadtree() { clean_up(root); }
+  T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
     tgt_r1 = r1;
@@ -4470,12 +4217,10 @@ public:
     tgt_c2 = c2;
     found = false;
     query(root, 0, 0, MAXR, MAXC);
-    return found ? res : join_region(init, (r2 - r1 + 1)*(c2 - c1 + 1));
+    return found ? res : join_region(init, (r2 - r1 + 1) * (c2 - c1 + 1));
   }
 
-  void update(int r, int c, const T &d) {
-    update(r, c, r, c, d);
-  }
+  void update(int r, int c, const T &d) { update(r, c, r, c, d); }
 
   void update(int r1, int c1, int r2, int c2, const T &d) {
     tgt_r1 = r1;
@@ -4558,17 +4303,9 @@ class segment_tree_2d {
   static const int MAXR = 1000000000;
   static const int MAXC = 1000000000;
 
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_region(const T &v, int area) {
-    return v;
-  }
-
-  static T join_value_with_delta(const T &v, const T &d) {
-    return d;
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_region(const T &v, int area) { return v; }
+  static T join_value_with_delta(const T &v, const T &d) { return d; }
 
   struct inner_node_t {
     T value;
@@ -4599,7 +4336,7 @@ class segment_tree_2d {
   }
 
   T query(inner_node_t *n) {
-    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
     if (tgt_c1 <= lo && hi <= tgt_c2) {
       T res = n->value;
       if (tgt_c1 < lo) {
@@ -4616,18 +4353,19 @@ class segment_tree_2d {
     }
     return join_values(
         call_query(n->left, std::min(tgt_c2, mid) - tgt_c1 + 1),
-        call_query(n->right, tgt_c2 - std::max(tgt_c1, mid + 1) + 1));
+        call_query(n->right, tgt_c2 - std::max(tgt_c1, mid + 1) + 1)
+    );
   }
 
   T query(outer_node_t *n) {
-    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
     if (tgt_r1 <= lo && hi <= tgt_r2) {
       T res = query(&(n->root));
       if (tgt_r1 < lo) {
-        res = join_values(res, join_region(init, width*(lo - tgt_r1 + 1)));
+        res = join_values(res, join_region(init, width * (lo - tgt_r1 + 1)));
       }
       if (hi < tgt_r2) {
-        res = join_values(res, join_region(init, width*(tgt_r2 - hi + 1)));
+        res = join_values(res, join_region(init, width * (tgt_r2 - hi + 1)));
       }
       return res;
     } else if (tgt_r2 <= mid) {
@@ -4636,12 +4374,13 @@ class segment_tree_2d {
       return call_query(n->right, tgt_r2 - tgt_r1 + 1);
     }
     return join_values(
-        call_query(n->left, width*(std::min(tgt_r2, mid) - tgt_r1 + 1)),
-        call_query(n->right, width*(tgt_r2 - std::max(tgt_r1, mid + 1) + 1)));
+        call_query(n->left, width * (std::min(tgt_r2, mid) - tgt_r1 + 1)),
+        call_query(n->right, width * (tgt_r2 - std::max(tgt_r1, mid + 1) + 1))
+    );
   }
 
   void update(inner_node_t *n, int c, const T &d, bool leaf_row) {
-    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
     if (lo == hi) {
       if (leaf_row) {
         n->value = join_value_with_delta(n->value, d);
@@ -4663,7 +4402,7 @@ class segment_tree_2d {
         } else {
           lo = mid + 1;
         }
-        mid = lo + (hi - lo)/2;
+        mid = lo + (hi - lo) / 2;
       } while ((c <= mid) == (target->low <= mid));
       inner_node_t *tmp = new inner_node_t(lo, hi, init);
       if (target->low <= mid) {
@@ -4674,15 +4413,13 @@ class segment_tree_2d {
       target = tmp;
       update(tmp, c, d, leaf_row);
     }
-    T left_value = (n->left != NULL) ? n->left->value
-                                     : join_region(init, mid - lo + 1);
-    T right_value = (n->right != NULL) ? n->right->value
-                                       : join_region(init, hi - mid);
+    T left_value = (n->left != NULL) ? n->left->value : join_region(init, mid - lo + 1);
+    T right_value = (n->right != NULL) ? n->right->value : join_region(init, hi - mid);
     n->value = join_values(left_value, right_value);
   }
 
   void update(outer_node_t *n, int r, int c, const T &d) {
-    int lo = n->low, hi = n->high, mid = lo + (hi - lo)/2;
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
     if (lo == hi) {
       update(&(n->root), c, d, true);
       return;
@@ -4701,10 +4438,8 @@ class segment_tree_2d {
     T value = join_region(init, hi - lo + 1);
     if (n->left != NULL || n->right != NULL) {
       tgt_c1 = tgt_c2 = c;
-      T left_value = (n->left != NULL) ? query(&(n->left->root))
-                                       : join_region(init, mid - lo + 1);
-      T right_value = (n->right != NULL) ? query(&(n->right->root))
-                                         : join_region(init, hi - mid);
+      T left_value = (n->left != NULL) ? query(&(n->left->root)) : join_region(init, mid - lo + 1);
+      T right_value = (n->right != NULL) ? query(&(n->right->root)) : join_region(init, hi - mid);
       value = join_values(left_value, right_value);
     }
     update(&(n->root), c, value, false);
@@ -4729,16 +4464,11 @@ class segment_tree_2d {
   }
 
  public:
-  segment_tree_2d(const T &v = T())
-      : root(new outer_node_t(0, MAXR, v)), init(v) {}
+  segment_tree_2d(const T &v = T()) : root(new outer_node_t(0, MAXR, v)), init(v) {}
 
-  ~segment_tree_2d() {
-    clean_up(root);
-  }
+  ~segment_tree_2d() { clean_up(root); }
 
-  T at(int r, int c) {
-    return query(r, c, r, c);
-  }
+  T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
     tgt_r1 = r1;
@@ -4749,9 +4479,7 @@ class segment_tree_2d {
     return query(root);
   }
 
-  void update(int r, int c, const T &d) {
-    update(root, r, c, d);
-  }
+  void update(int r, int c, const T &d) { update(root, r, c, d); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -4822,15 +4550,10 @@ class range_tree {
   typedef std::pair<int, T> colindex;
 
   std::vector<point> points;
-  std::vector<std::vector<colindex> > columns;
+  std::vector<std::vector<colindex>> columns;
 
-  static inline bool comp1(const colindex &a, const colindex &b) {
-    return a.second < b.second;
-  }
-
-  static inline bool comp2(const colindex &a, const T &v) {
-    return a.second < v;
-  }
+  static inline bool comp1(const colindex &a, const colindex &b) { return a.second < b.second; }
+  static inline bool comp2(const colindex &a, const T &v) { return a.second < v; }
 
   void build(int n, int lo, int hi) {
     if (points[lo].first == points[hi].first) {
@@ -4839,13 +4562,14 @@ class range_tree {
       }
       return;
     }
-    int l = n*2 + 1, r = n*2 + 2, mid = lo + (hi - lo)/2;
+    int l = n * 2 + 1, r = n * 2 + 2, mid = lo + (hi - lo) / 2;
     build(l, lo, mid);
     build(r, mid + 1, hi);
     columns[n].resize(columns[l].size() + columns[r].size());
-    std::merge(columns[l].begin(), columns[l].end(),
-               columns[r].begin(), columns[r].end(),
-               columns[n].begin(), comp1);
+    std::merge(
+        columns[l].begin(), columns[l].end(), columns[r].begin(), columns[r].end(),
+        columns[n].begin(), comp1
+    );
   }
 
   // Helper variables for query().
@@ -4865,9 +4589,9 @@ class range_tree {
         }
       }
     } else if (lo != hi) {
-      int mid = lo + (hi - lo)/2;
-      query(n*2 + 1, lo, mid, f);
-      query(n*2 + 2, mid + 1, hi, f);
+      int mid = lo + (hi - lo) / 2;
+      query(n * 2 + 1, lo, mid, f);
+      query(n * 2 + 2, mid + 1, hi, f);
     }
   }
 
@@ -4875,14 +4599,13 @@ class range_tree {
   template<class It>
   range_tree(It lo, It hi) : points(lo, hi) {
     int n = std::distance(lo, hi);
-    columns.resize(4*n + 1);
+    columns.resize(4 * n + 1);
     std::sort(points.begin(), points.end());
     build(0, 0, n - 1);
   }
 
   template<class ReportFunction>
-  void query(const T &x1, const T &y1, const T &x2, const T &y2,
-             ReportFunction f) {
+  void query(const T &x1, const T &y1, const T &x2, const T &y2, ReportFunction f) {
     this->x1 = x1;
     this->y1 = y1;
     this->x2 = x2;
@@ -4902,9 +4625,9 @@ void print(int i, const pair<int, int> &p) {
 
 int main() {
   const int n = 10;
-  int points[n][2] = {{1, 4}, {5, 4}, {2, 2}, {3, 1}, {6, -5}, {5, -1},
-                      {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
-  vector<pair<int, int> > v;
+  int points[n][2] = {{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
+                      {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
+  vector<pair<int, int>> v;
   for (int i = 0; i < n; i++) {
     v.push_back(make_pair(points[i][0], points[i][1]));
   }
@@ -4949,13 +4672,8 @@ template<class T>
 class kd_tree {
   typedef std::pair<T, T> point;
 
-  static inline bool comp1(const point &a, const point &b) {
-    return a.first < b.first;
-  }
-
-  static inline bool comp2(const point &a, const point &b) {
-    return a.second < b.second;
-  }
+  static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
+  static inline bool comp2(const point &a, const point &b) { return a.second < b.second; }
 
   std::vector<point> tree, minp, maxp;
   std::vector<int> l_index, h_index;
@@ -4964,9 +4682,10 @@ class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = lo + (hi - lo)/2;
-    std::nth_element(tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
-                     div_x ? comp1 : comp2);
+    int mid = lo + (hi - lo) / 2;
+    std::nth_element(
+        tree.begin() + lo, tree.begin() + mid, tree.begin() + hi, div_x ? comp1 : comp2
+    );
     l_index[mid] = lo;
     h_index[mid] = hi;
     minp[mid].first = maxp[mid].first = tree[lo].first;
@@ -4989,7 +4708,7 @@ class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     T ax = minp[mid].first, ay = minp[mid].second;
     T bx = maxp[mid].first, by = maxp[mid].second;
     if (x2 < ax || bx < x1 || y2 < ay || by < y1) {
@@ -5003,8 +4722,8 @@ class kd_tree {
     }
     query(lo, mid, f);
     query(mid + 1, hi, f);
-    if (tree[mid].first < x1 || x2 < tree[mid].first ||
-        tree[mid].second < y1 || y2 < tree[mid].second) {
+    if (tree[mid].first < x1 || x2 < tree[mid].first || tree[mid].second < y1 ||
+        y2 < tree[mid].second) {
       return;
     }
     f(tree[mid]);
@@ -5022,8 +4741,7 @@ class kd_tree {
   }
 
   template<class ReportFunction>
-  void query(const T &x1, const T &y1, const T &x2, const T &y2,
-             ReportFunction f) {
+  void query(const T &x1, const T &y1, const T &x2, const T &y2, ReportFunction f) {
     this->x1 = x1;
     this->y1 = y1;
     this->x2 = x2;
@@ -5043,9 +4761,9 @@ void print(const pair<int, int> &p) {
 
 int main() {
   const int n = 10;
-  int points[n][2] = {{1, 4}, {5, 4}, {2, 2}, {3, 1}, {6, -5}, {5, -1},
-                      {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
-  vector<pair<int, int> > v;
+  int points[n][2] = {{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
+                      {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
+  vector<pair<int, int>> v;
   for (int i = 0; i < n; i++) {
     v.push_back(make_pair(points[i][0], points[i][1]));
   }
@@ -5092,13 +4810,8 @@ template<class T>
 class kd_tree {
   typedef std::pair<T, T> point;
 
-  static inline bool comp1(const point &a, const point &b) {
-    return a.first < b.first;
-  }
-
-  static inline bool comp2(const point &a, const point &b) {
-    return a.second < b.second;
-  }
+  static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
+  static inline bool comp2(const point &a, const point &b) { return a.second < b.second; }
 
   std::vector<point> tree;
   std::vector<bool> div_x;
@@ -5107,7 +4820,7 @@ class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     T minx, maxx, miny, maxy;
     minx = maxx = tree[lo].first;
     miny = maxy = tree[lo].second;
@@ -5118,8 +4831,9 @@ class kd_tree {
       maxy = std::max(maxy, tree[i].second);
     }
     div_x[mid] = !((maxx - minx) < (maxy - miny));
-    std::nth_element(tree.begin() + lo, tree.begin() + mid, tree.begin() + hi,
-                     div_x[mid] ? comp1 : comp2);
+    std::nth_element(
+        tree.begin() + lo, tree.begin() + mid, tree.begin() + hi, div_x[mid] ? comp1 : comp2
+    );
     if (lo + 1 == hi) {
       return;
     }
@@ -5135,9 +4849,9 @@ class kd_tree {
     if (lo >= hi) {
       return;
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     T dx = x - tree[mid].first, dy = y - tree[mid].second;
-    long double d = dx*(long double)dx + dy*(long double)dy;
+    long double d = dx * (long double)dx + dy * (long double)dy;
     if (d < min_dist && (can_equal || d != 0)) {
       min_dist = d;
       id = mid;
@@ -5152,7 +4866,7 @@ class kd_tree {
       std::swap(r1, r2);
     }
     nearest(l1, r1, x, y, can_equal);
-    if (d*(long double)d < min_dist) {
+    if (d * (long double)d < min_dist) {
       nearest(l2, r2, x, y, can_equal);
     }
   }
@@ -5313,9 +5027,7 @@ class fenwick_tree {
  public:
   fenwick_tree(int n) : len(n), t(n + 2) {}
 
-  int size() const {
-    return len;
-  }
+  int size() const { return len; }
 
   T at(int i) const {
     T res = 0;
@@ -5394,13 +5106,8 @@ class fenwick_tree {
  public:
   fenwick_tree(int n) : len(n), a(n + 1), t(n + 1) {}
 
-  int size() const {
-    return len;
-  }
-
-  T at(int i) const {
-    return a[i + 1];
-  }
+  int size() const { return len; }
+  T at(int i) const { return a[i + 1]; }
 
   void add(int i, const T &x) {
     a[++i] += x;
@@ -5422,9 +5129,7 @@ class fenwick_tree {
     return res;
   }
 
-  T sum(int lo, int hi) {
-    return sum(hi) - sum(lo - 1);
-  }
+  T sum(int lo, int hi) { return sum(hi) - sum(lo - 1); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -5503,39 +5208,27 @@ class fenwick_tree {
  public:
   fenwick_tree(int n) : len(n), t1(n + 2), t2(n + 2) {}
 
-  int size() const {
-    return len;
-  }
+  int size() const { return len; }
 
   void add(int lo, int hi, const T &x) {
     lo++;
     hi++;
     add(t1, lo, x);
     add(t1, hi + 1, -x);
-    add(t2, lo, x*(lo - 1));
-    add(t2, hi + 1, -x*hi);
+    add(t2, lo, x * (lo - 1));
+    add(t2, hi + 1, -x * hi);
   }
 
-  void add(int i, const T &x) {
-    return add(i, i, x);
-  }
-
-  void set(int i, const T &x) {
-    add(i, x - at(i));
-  }
+  void add(int i, const T &x) { return add(i, i, x); }
+  void set(int i, const T &x) { add(i, x - at(i)); }
 
   T sum(int hi) {
     hi++;
-    return hi*sum(t1, hi) - sum(t2, hi);
+    return hi * sum(t1, hi) - sum(t2, hi);
   }
 
-  T sum(int lo, int hi) {
-    return sum(hi) - sum(lo - 1);
-  }
-
-  T at(int i) {
-    return sum(i, i);
-  }
+  T sum(int lo, int hi) { return sum(hi) - sum(lo - 1); }
+  T at(int i) { return sum(i, i); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -5601,17 +5294,12 @@ class fenwick_tree {
 
  public:
   void add(int lo, int hi, const T &x) {
-    add_helper(lo, x, -x*(lo - 1));
-    add_helper(hi, -x, x*hi);
+    add_helper(lo, x, -x * (lo - 1));
+    add_helper(hi, -x, x * hi);
   }
 
-  void add(int i, const T &x) {
-    add(i, i, x);
-  }
-
-  void set(int i, const T &x) {
-    add(i, x - at(i));
-  }
+  void add(int i, const T &x) { add(i, i, x); }
+  void set(int i, const T &x) { add(i, x - at(i)); }
 
   T sum(int hi) {
     T mul = 0, add = 0;
@@ -5623,16 +5311,11 @@ class fenwick_tree {
         add += tadd[i];
       }
     }
-    return mul*hi + add;
+    return mul * hi + add;
   }
 
-  T sum(int lo, int hi) {
-    return sum(hi) - sum(lo - 1);
-  }
-
-  T at(int i) {
-    return sum(i, i);
-  }
+  T sum(int lo, int hi) { return sum(hi) - sum(lo - 1); }
+  T at(int i) { return sum(i, i); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -5801,8 +5484,7 @@ int sum(int r, int c) {
 }
 
 int sum(int r1, int c1, int r2, int c2) {
-  return sum(r2, c2) + sum(r1 - 1, c1 - 1) -
-         sum(r1 - 1, c2) - sum(r2, c1 - 1);
+  return sum(r2, c2) + sum(r1 - 1, c1 - 1) - sum(r1 - 1, c2) - sum(r2, c1 - 1);
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -5879,13 +5561,13 @@ class fenwick_tree_2d {
   void add_helper(int r, int c, const T &x) {
     add(t1, 0, 0, x);
     add(t1, 0, c, -x);
-    add(t2, 0, c, x*c);
+    add(t2, 0, c, x * c);
     add(t1, r, 0, -x);
-    add(t3, r, 0, x*r);
+    add(t3, r, 0, x * r);
     add(t1, r, c, x);
-    add(t2, r, c, -x*c);
-    add(t3, r, c, -x*r);
-    add(t4, r, c, x*r*c);
+    add(t2, r, c, -x * c);
+    add(t3, r, c, -x * r);
+    add(t4, r, c, x * r * c);
   }
 
  public:
@@ -5896,13 +5578,8 @@ class fenwick_tree_2d {
     add_helper(r1, c1, x);
   }
 
-  void add(int r, int c, const T &x) {
-    add(r, c, r, c, x);
-  }
-
-  void set(int r, int c, const T &x) {
-    add(r, c, x - at(r, c));
-  }
+  void add(int r, int c, const T &x) { add(r, c, r, c, x); }
+  void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
 
   T sum(int r, int c) {
     r++;
@@ -5917,17 +5594,14 @@ class fenwick_tree_2d {
         s4 += t4[ij];
       }
     }
-    return s1*r*c + s2*r + s3*c + s4;
+    return s1 * r * c + s2 * r + s3 * c + s4;
   }
 
   T sum(int r1, int c1, int r2, int c2) {
-    return sum(r2, c2) + sum(r1 - 1, c1 - 1) -
-           sum(r1 - 1, c2) - sum(r2, c1 - 1);
+    return sum(r2, c2) + sum(r1 - 1, c1 - 1) - sum(r1 - 1, c2) - sum(r2, c1 - 1);
   }
 
-  T at(int r, int c) {
-    return sum(r, c, r, c);
-  }
+  T at(int r, int c) { return sum(r, c, r, c); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -6103,13 +5777,8 @@ class disjoint_set_forest {
  public:
   disjoint_set_forest() : num_elements(0), num_sets(0) {}
 
-  int size() const {
-    return num_elements;
-  }
-
-  int sets() const {
-    return num_sets;
-  }
+  int size() const { return num_elements; }
+  int sets() const { return num_sets; }
 
   void make_set(const T &u) {
     if (id.find(u) != id.end()) {
@@ -6121,9 +5790,7 @@ class disjoint_set_forest {
     num_sets++;
   }
 
-  bool is_united(const T &u, const T &v) {
-    return find_root(id[u]) == find_root(id[v]);
-  }
+  bool is_united(const T &u, const T &v) { return find_root(id[u]) == find_root(id[v]); }
 
   void unite(const T &u, const T &v) {
     int ru = find_root(id[u]), rv = find_root(id[v]);
@@ -6141,15 +5808,13 @@ class disjoint_set_forest {
     }
   }
 
-  std::vector<std::vector<T> > get_all_sets() {
-    std::map<int, std::vector<T> > tmp;
-    for (typename std::map<T, int>::iterator it = id.begin(); it != id.end();
-         ++it) {
+  std::vector<std::vector<T>> get_all_sets() {
+    std::map<int, std::vector<T>> tmp;
+    for (typename std::map<T, int>::iterator it = id.begin(); it != id.end(); ++it) {
       tmp[find_root(it->second)].push_back(it->first);
     }
-    std::vector<std::vector<T> > res;
-    for (typename std::map<int, std::vector<T> >::iterator it = tmp.begin();
-         it != tmp.end(); ++it) {
+    std::vector<std::vector<T>> res;
+    for (typename std::map<int, std::vector<T>>::iterator it = tmp.begin(); it != tmp.end(); ++it) {
       res.push_back(it->second);
     }
     return res;
@@ -6173,7 +5838,7 @@ int main() {
   dsf.unite('d', 'g');
   assert(dsf.size() == 7);
   assert(dsf.sets() == 3);
-  vector< vector<char> > s = dsf.get_all_sets();
+  vector<vector<char>> s = dsf.get_all_sets();
   for (int i = 0; i < (int)s.size(); i++) {
     cout << (i > 0 ? ", [" : "[");
     for (int j = 0; j < (int)s[i].size(); j++) {
@@ -6229,9 +5894,7 @@ class rollback_dsu {
  public:
   rollback_dsu() : sets(0) {}
 
-  explicit rollback_dsu(int n) {
-    initialize(n);
-  }
+  explicit rollback_dsu(int n) { initialize(n); }
 
   void initialize(int n) {
     root.resize(n);
@@ -6243,9 +5906,7 @@ class rollback_dsu {
     }
   }
 
-  int count_sets() const {
-    return sets;
-  }
+  int count_sets() const { return sets; }
 
   int find_root(int u) const {
     while (root[u] != u) {
@@ -6254,9 +5915,7 @@ class rollback_dsu {
     return u;
   }
 
-  bool is_united(int u, int v) const {
-    return find_root(u) == find_root(v);
-  }
+  bool is_united(int u, int v) const { return find_root(u) == find_root(v); }
 
   bool unite(int u, int v) {
     u = find_root(u);
@@ -6276,9 +5935,7 @@ class rollback_dsu {
     return true;
   }
 
-  int snapshot() const {
-    return history.size();
-  }
+  int snapshot() const { return history.size(); }
 
   void rollback(int snapshot) {
     while ((int)history.size() > snapshot) {
@@ -6422,7 +6079,7 @@ Given a tree, determine the lowest common ancestor of any two nodes in the tree.
 
 const int MAXN = 1000;
 std::vector<int> adj[MAXN];
-int len, counter, depth[MAXN], dfs_order[2*MAXN], first[MAXN], minpos[8*MAXN];
+int len, counter, depth[MAXN], dfs_order[2 * MAXN], first[MAXN], minpos[8 * MAXN];
 
 void dfs(int u, int d) {
   depth[u] = d;
@@ -6441,17 +6098,16 @@ void build(int n, int lo, int hi) {
     minpos[n] = dfs_order[lo];
     return;
   }
-  int lchild = 2*n + 1, rchild = 2*n + 2, mid = lo + (hi - lo)/2;
+  int lchild = 2 * n + 1, rchild = 2 * n + 2, mid = lo + (hi - lo) / 2;
   build(lchild, lo, mid);
   build(rchild, mid + 1, hi);
-  minpos[n] = depth[minpos[lchild]] < depth[minpos[rchild]] ? minpos[lchild]
-                                                            : minpos[rchild];
+  minpos[n] = depth[minpos[lchild]] < depth[minpos[rchild]] ? minpos[lchild] : minpos[rchild];
 }
 
 void build(int nodes, int root) {
   std::fill(depth, depth + nodes, -1);
   std::fill(first, first + nodes, -1);
-  len = 2*nodes - 1;
+  len = 2 * nodes - 1;
   counter = 0;
   dfs(root, 0);
   build(0, 0, len - 1);
@@ -6466,21 +6122,20 @@ int get_minpos(int a, int b, int n, int lo, int hi) {
   if (a == lo && b == hi) {
     return minpos[n];
   }
-  int mid = lo + (hi - lo)/2;
+  int mid = lo + (hi - lo) / 2;
   if (a <= mid && mid < b) {
-    int p1 = get_minpos(a, std::min(b, mid), 2*n + 1, lo, mid);
-    int p2 = get_minpos(std::max(a, mid + 1), b, 2*n + 2, mid + 1, hi);
+    int p1 = get_minpos(a, std::min(b, mid), 2 * n + 1, lo, mid);
+    int p2 = get_minpos(std::max(a, mid + 1), b, 2 * n + 2, mid + 1, hi);
     return depth[p1] < depth[p2] ? p1 : p2;
   }
   if (a <= mid) {
-    return get_minpos(a, std::min(b, mid), 2*n + 1, lo, mid);
+    return get_minpos(a, std::min(b, mid), 2 * n + 1, lo, mid);
   }
-  return get_minpos(std::max(a, mid + 1), b, 2*n + 2, mid + 1, hi);
+  return get_minpos(std::max(a, mid + 1), b, 2 * n + 2, mid + 1, hi);
 }
 
 int lca(int u, int v) {
-  return get_minpos(std::min(first[u], first[v]), std::max(first[u], first[v]),
-                    0, 0, len - 1);
+  return get_minpos(std::min(first[u], first[v]), std::max(first[u], first[v]), 0, 0, len - 1);
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -6545,22 +6200,17 @@ class heavy_light {
   // Set this to true to store values on edges, false to store values on nodes.
   static const bool VALUES_ON_EDGES = true;
 
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_value_with_delta(const T &v, const T &d, int len) {
-    return d;
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
 
   static T join_deltas(const T &d1, const T &d2) {
     return d2;  // For "set" updates, the more recent delta prevails.
   }
 
   int counter, paths;
-  std::vector<std::vector<T> > value, delta;
-  std::vector<std::vector<bool> > pending;
-  std::vector<std::vector<int> > len;
+  std::vector<std::vector<T>> value, delta;
+  std::vector<std::vector<bool>> pending;
+  std::vector<std::vector<int>> len;
   std::vector<int> size, parent, tin, tout, path, pathlen, pathpos, pathroot;
   std::vector<int> *adj;
 
@@ -6589,15 +6239,14 @@ class heavy_light {
     for (int j = 0; j < (int)adj[u].size(); j++) {
       int v = adj[u][j];
       if (v != parent[u]) {
-        build_paths(v, (2*size[v] >= size[u]) ? path : new_path(v));
+        build_paths(v, (2 * size[v] >= size[u]) ? path : new_path(v));
       }
     }
   }
 
   inline T join_value_with_delta(int path, int i) {
-    return pending[path][i]
-        ? join_value_with_delta(value[path][i], delta[path][i], len[path][i])
-        : value[path][i];
+    return pending[path][i] ? join_value_with_delta(value[path][i], delta[path][i], len[path][i])
+                            : value[path][i];
   }
 
   void push_delta(int path, int i) {
@@ -6606,15 +6255,13 @@ class heavy_light {
       d++;
     }
     for (d -= 2; d >= 0; d--) {
-      int l = (i >> d), r = (l ^ 1), n = l/2;
+      int l = (i >> d), r = (l ^ 1), n = l / 2;
       if (pending[path][n]) {
         value[path][n] = join_value_with_delta(path, n);
         delta[path][l] =
-            pending[path][l] ? join_deltas(delta[path][l], delta[path][n])
-                             : delta[path][n];
+            pending[path][l] ? join_deltas(delta[path][l], delta[path][n]) : delta[path][n];
         delta[path][r] =
-            pending[path][r] ? join_deltas(delta[path][r], delta[path][n])
-                             : delta[path][n];
+            pending[path][r] ? join_deltas(delta[path][r], delta[path][n]) : delta[path][n];
         pending[path][l] = pending[path][r] = true;
         pending[path][n] = false;
       }
@@ -6622,10 +6269,10 @@ class heavy_light {
   }
 
   bool query(int path, int u, int v, T *res) {
-    push_delta(path, u += value[path].size()/2);
-    push_delta(path, v += value[path].size()/2);
+    push_delta(path, u += value[path].size() / 2);
+    push_delta(path, v += value[path].size() / 2);
     bool found = false;
-    for (; u <= v; u = (u + 1)/2, v = (v - 1)/2) {
+    for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
         T value = join_value_with_delta(path, u);
         *res = found ? join_values(*res, value) : value;
@@ -6641,10 +6288,10 @@ class heavy_light {
   }
 
   void update(int path, int u, int v, const T &d) {
-    push_delta(path, u += value[path].size()/2);
-    push_delta(path, v += value[path].size()/2);
+    push_delta(path, u += value[path].size() / 2);
+    push_delta(path, v += value[path].size() / 2);
     int tu = -1, tv = -1;
-    for (; u <= v; u = (u + 1)/2, v = (v - 1)/2) {
+    for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
         delta[path][u] = pending[path][u] ? join_deltas(delta[path][u], d) : d;
         pending[path][u] = true;
@@ -6661,12 +6308,12 @@ class heavy_light {
       }
     }
     for (int i = tu; i > 1; i /= 2) {
-      value[path][i/2] = join_values(join_value_with_delta(path, i),
-                                     join_value_with_delta(path, i ^ 1));
+      value[path][i / 2] =
+          join_values(join_value_with_delta(path, i), join_value_with_delta(path, i ^ 1));
     }
     for (int i = tv; i > 1; i /= 2) {
-      value[path][i/2] = join_values(join_value_with_delta(path, i),
-                                     join_value_with_delta(path, i ^ 1));
+      value[path][i / 2] =
+          join_values(join_value_with_delta(path, i), join_value_with_delta(path, i ^ 1));
     }
   }
 
@@ -6676,8 +6323,17 @@ class heavy_light {
 
  public:
   heavy_light(int n, std::vector<int> adj[], const T &v = T())
-      : counter(0), paths(0), size(n), parent(n), tin(n), tout(n), path(n),
-        pathlen(n), pathpos(n), pathroot(n), adj(adj) {
+      : counter(0),
+        paths(0),
+        size(n),
+        parent(n),
+        tin(n),
+        tout(n),
+        path(n),
+        pathlen(n),
+        pathpos(n),
+        pathroot(n),
+        adj(adj) {
     dfs(0, -1);
     build_paths(0, new_path(0));
     value.resize(paths);
@@ -6686,13 +6342,13 @@ class heavy_light {
     len.resize(paths);
     for (int i = 0; i < paths; i++) {
       int m = pathlen[i];
-      value[i].assign(2*m, v);
-      delta[i].resize(2*m);
-      pending[i].assign(2*m, false);
-      len[i].assign(2*m, 1);
-      for (int j = 2*m - 1; j > 1; j -= 2) {
-        value[i][j/2] = join_values(value[i][j], value[i][j ^ 1]);
-        len[i][j/2] = len[i][j] + len[i][j ^ 1];
+      value[i].assign(2 * m, v);
+      delta[i].resize(2 * m);
+      pending[i].assign(2 * m, false);
+      len[i].assign(2 * m, 1);
+      for (int j = 2 * m - 1; j > 1; j -= 2) {
+        value[i][j / 2] = join_values(value[i][j], value[i][j ^ 1]);
+        len[i][j / 2] = len[i][j] + len[i][j ^ 1];
       }
     }
   }
@@ -6718,8 +6374,10 @@ class heavy_light {
       }
       v = parent[root];
     }
-    if (query(path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
-              std::max(pathpos[u], pathpos[v]), &value)) {
+    if (query(
+            path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
+            std::max(pathpos[u], pathpos[v]), &value
+        )) {
       res = found ? join_values(res, value) : value;
       found = true;
     }
@@ -6742,8 +6400,10 @@ class heavy_light {
       update(path[v], 0, pathpos[v], d);
       v = parent[root];
     }
-    update(path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
-           std::max(pathpos[u], pathpos[v]), d);
+    update(
+        path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
+        std::max(pathpos[u], pathpos[v]), d
+    );
   }
 };
 \end{lstlisting}
@@ -6824,14 +6484,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 
 template<class T>
 class link_cut_forest {
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_value_with_delta(const T &v, const T &d, int len) {
-    return d;
-  }
-
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
   static T join_deltas(const T &d1, const T &d2) {
     return d2;  // For "set" updates, the more recent delta prevails.
   }
@@ -6843,16 +6497,21 @@ class link_cut_forest {
     node_t *left, *right, *parent;
 
     node_t(const T &v)
-        : value(v), subtree_value(v), size(1), rev(false), pending(false),
-          left(NULL), right(NULL), parent(NULL) {}
+        : value(v),
+          subtree_value(v),
+          size(1),
+          rev(false),
+          pending(false),
+          left(NULL),
+          right(NULL),
+          parent(NULL) {}
 
     inline bool is_root() const {
       return parent == NULL || (parent->left != this && parent->right != this);
     }
 
     inline T get_subtree_value() const {
-      return pending ? join_value_with_delta(subtree_value, delta, size)
-                     : subtree_value;
+      return pending ? join_value_with_delta(subtree_value, delta, size) : subtree_value;
     }
 
     void push() {
@@ -6874,8 +6533,7 @@ class link_cut_forest {
           left->pending = true;
         }
         if (right != NULL) {
-          right->delta = right->pending ? join_deltas(right->delta, delta)
-                                        : delta;
+          right->delta = right->pending ? join_deltas(right->delta, delta) : delta;
           right->pending = true;
         }
         pending = false;
@@ -6897,7 +6555,7 @@ class link_cut_forest {
   };
 
   int num_trees;
-  std::map<int, node_t*> nodes;
+  std::map<int, node_t *> nodes;
 
   static void connect(node_t *child, node_t *parent, bool is_left) {
     if (child != NULL) {
@@ -6946,7 +6604,7 @@ class link_cut_forest {
     n->update();
   }
 
-  static node_t* expose(node_t *n) {
+  static node_t *expose(node_t *n) {
     node_t *prev = NULL;
     for (node_t *curr = n; curr != NULL; curr = curr->parent) {
       splay(curr);
@@ -6961,7 +6619,7 @@ class link_cut_forest {
   node_t *u, *v;
 
   void get_uv(int a, int b) {
-    typename std::map<int, node_t*>::iterator it1, it2;
+    typename std::map<int, node_t *>::iterator it1, it2;
     it1 = nodes.find(a);
     it2 = nodes.find(b);
     if (it1 == nodes.end() || it2 == nodes.end()) {
@@ -6975,19 +6633,14 @@ class link_cut_forest {
   link_cut_forest() : num_trees(0) {}
 
   ~link_cut_forest() {
-    typename std::map<int, node_t*>::iterator it;
+    typename std::map<int, node_t *>::iterator it;
     for (it = nodes.begin(); it != nodes.end(); ++it) {
       delete it->second;
     }
   }
 
-  int size() const {
-    return nodes.size();
-  }
-
-  int trees() const {
-    return num_trees;
-  }
+  int size() const { return nodes.size(); }
+  int trees() const { return num_trees; }
 
   void make_root(int i, const T &v = T()) {
     if (nodes.find(i) != nodes.end()) {

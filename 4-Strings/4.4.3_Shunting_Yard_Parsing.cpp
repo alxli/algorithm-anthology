@@ -89,28 +89,29 @@ Operand eval_operand(const string &s) {
 
 class parser {
   typedef std::map<string, UnaryOp> unary_op_map;
-  typedef std::map<string, std::pair<BinaryOp, int> > binary_op_map;
+  typedef std::map<string, std::pair<BinaryOp, int>> binary_op_map;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
   std::set<string> ops;
 
   static string strip(string s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))));
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-            std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
+    s.erase(
+        s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace)))
+    );
+    s.erase(
+        std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(),
+        s.end()
+    );
     return s;
   }
 
  public:
   parser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
-    for (unary_op_map::const_iterator it = unary_ops.begin();
-         it != unary_ops.end(); ++it) {
+    for (unary_op_map::const_iterator it = unary_ops.begin(); it != unary_ops.end(); ++it) {
       ops.insert(it->first);
     }
-    for (binary_op_map::const_iterator it = binary_ops.begin();
-         it != binary_ops.end(); ++it) {
+    for (binary_op_map::const_iterator it = binary_ops.begin(); it != binary_ops.end(); ++it) {
       ops.insert(it->first);
     }
   }
@@ -132,8 +133,7 @@ class parser {
         int found = next_paren;
         string found_op;
         for (int j = i; j < next_paren && found == next_paren; j++) {
-          for (std::set<string>::iterator it = ops.begin();
-               it != ops.end(); ++it) {
+          for (std::set<string>::iterator it = ops.begin(); it != ops.end(); ++it) {
             if (s.substr(j, it->size()) == *it) {
               found = j;
               found_op = *it;
@@ -165,7 +165,7 @@ class parser {
   template<class StrIt>
   Operand eval(StrIt lo, StrIt hi) {
     std::stack<Operand> vals;
-    std::stack<std::pair<string, bool> > ops;
+    std::stack<std::pair<string, bool>> ops;
     ops.push(std::make_pair("(", false));
     StrIt prev = hi;
     do {
@@ -174,8 +174,10 @@ class parser {
         vals.push(eval_operand(curr));
       } else if (curr == "(") {
         ops.push(std::make_pair(curr, false));
-      } else if (unary_ops.find(curr) != unary_ops.end() && (prev == hi ||
-                 *prev == "(" || binary_ops.find(*prev) != binary_ops.end())) {
+      } else if (
+          unary_ops.find(curr) != unary_ops.end() &&
+          (prev == hi || *prev == "(" || binary_ops.find(*prev) != binary_ops.end())
+      ) {
         ops.push(std::make_pair(curr, true));
       } else {
         for (;;) {
@@ -183,9 +185,8 @@ class parser {
           bool is_unary = ops.top().second;
           binary_op_map::iterator it1 = binary_ops.find(op);
           binary_op_map::iterator it2 = binary_ops.find(curr);
-          if (!is_unary &&
-              (it1 == binary_ops.end() ? -1 : it1->second.second) <
-              (it2 == binary_ops.end() ? -1 : it2->second.second)) {
+          if (!is_unary && (it1 == binary_ops.end() ? -1 : it1->second.second) <
+                               (it2 == binary_ops.end() ? -1 : it2->second.second)) {
             break;
           }
           ops.pop();
@@ -232,19 +233,21 @@ using namespace std;
 
 #define EQ(a, b) (fabs((a) - (b)) < 1e-7)
 
+// clang-format off
 double pos(double a) { return +a; }
 double neg(double a) { return -a; }
 double add(double a, double b) { return a + b; }
 double sub(double a, double b) { return a - b; }
 double mul(double a, double b) { return a * b; }
 double div(double a, double b) { return a / b; }
+// clang-format on
 
 int main() {
   map<string, UnaryOp> unary_ops;
   unary_ops["+"] = pos;
   unary_ops["-"] = neg;
 
-  map<string, pair<BinaryOp, int> > binary_ops;
+  map<string, pair<BinaryOp, int>> binary_ops;
   binary_ops["+"] = make_pair((BinaryOp)add, 0);
   binary_ops["-"] = make_pair((BinaryOp)sub, 0);
   binary_ops["*"] = make_pair((BinaryOp)mul, 1);
@@ -259,9 +262,13 @@ int main() {
   assert(EQ(p.eval("3.14 + 3 * (7.7/9.8^32.9  )"), 3.14));
   assert(EQ(p.eval("5*(3+2)/-1*-2+(-2-2-2+3)-3-(-2)+15/2/2/2+(-2)"), 45.875));
   assert(EQ(p.eval("123456789./3/3/3*2*2*2+456/6-23/3"), 36579857.6666666667));
-  assert(EQ(p.eval("10/3+10/4+10/5+10/6+10/7+10/8+10/9+10/10+15*23456"),
-            351854.28968253968));
-  assert(EQ(p.eval("-(5-(5-(5-(5-(5-2)))))+(3-(3-(3-(3-(3+3)))))*"
-                   "(7-(7-(7-(7-(7-7+4*5)))))"), 117));
+  assert(EQ(p.eval("10/3+10/4+10/5+10/6+10/7+10/8+10/9+10/10+15*23456"), 351854.28968253968));
+  assert(
+      EQ(p.eval(
+             "-(5-(5-(5-(5-(5-2)))))+(3-(3-(3-(3-(3+3)))))*"
+             "(7-(7-(7-(7-(7-7+4*5)))))"
+         ),
+         117)
+  );
   return 0;
 }

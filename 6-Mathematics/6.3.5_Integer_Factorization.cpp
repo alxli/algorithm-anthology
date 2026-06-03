@@ -44,16 +44,16 @@ std::vector<Int> prime_factorize(Int n) {
     return std::vector<Int>(1, n);
   }
   std::vector<Int> res;
-  for (Int i = 2; ; i++) {
-    int p = 0, q = n/i, r = n - q*i;
+  for (Int i = 2;; i++) {
+    int p = 0, q = n / i, r = n - q * i;
     if (i > q || (i == q && r > 0)) {
       break;
     }
     while (r == 0) {
       p++;
       n = q;
-      q = n/i;
-      r = n - q*i;
+      q = n / i;
+      r = n - q * i;
     }
     for (int j = 0; j < p; j++) {
       res.push_back(i);
@@ -71,11 +71,11 @@ std::vector<Int> get_divisors(Int n) {
     return (n < 1) ? std::vector<Int>() : std::vector<Int>(1, 1);
   }
   std::vector<Int> res;
-  for (Int i = 1; i*i <= n; i++) {
+  for (Int i = 1; i * i <= n; i++) {
     if (n % i == 0) {
       res.push_back(i);
-      if (i*i != n) {
-        res.push_back(n/i);
+      if (i * i != n) {
+        res.push_back(n / i);
       }
     }
   }
@@ -87,7 +87,7 @@ long long fermat(long long n) {
   if (n % 2 == 0) {
     return 2;
   }
-  long long x = sqrt(n), y = 0, r = x*x - y*y - n;
+  long long x = sqrt(n), y = 0, r = x * x - y * y - n;
   while (r != 0) {
     if (r < 0) {
       r += x + x + 1;
@@ -125,10 +125,8 @@ uint64 powmod(uint64 x, uint64 n, uint64 m) {
 }
 
 uint64 rand64u() {
-  return ((uint64)(rand() & 0xf) << 60) |
-         ((uint64)(rand() & 0x7fff) << 45) |
-         ((uint64)(rand() & 0x7fff) << 30) |
-         ((uint64)(rand() & 0x7fff) << 15) |
+  return ((uint64)(rand() & 0xf) << 60) | ((uint64)(rand() & 0x7fff) << 45) |
+         ((uint64)(rand() & 0x7fff) << 30) | ((uint64)(rand() & 0x7fff) << 15) |
          ((uint64)(rand() & 0x7fff));
 }
 
@@ -206,7 +204,8 @@ bool is_prime(long long n) {
 }
 
 std::vector<long long> prime_factorize_big(
-    long long n, long long trial_division_cutoff = 1000000LL) {
+    long long n, long long trial_division_cutoff = 1000000LL
+) {
   if (n <= 3) {
     return std::vector<long long>(1, n);
   }
@@ -217,7 +216,7 @@ std::vector<long long> prime_factorize_big(
   for (; n % 3 == 0; n /= 3) {
     res.push_back(3);
   }
-  for (int i = 5, w = 4; i <= trial_division_cutoff && i*i <= n; i += w) {
+  for (int i = 5, w = 4; i <= trial_division_cutoff && i * i <= n; i += w) {
     for (; n % i == 0; n /= i) {
       res.push_back(i);
     }
@@ -256,7 +255,7 @@ void validate(long long n, const vector<long long> &factors) {
 }
 
 int main() {
-  { // Small tests.
+  {  // Small tests.
     for (int i = 1; i <= 10000; i++) {
       vector<long long> v1 = prime_factorize((long long)i);
       vector<long long> v2 = prime_factorize_big(i);
@@ -272,20 +271,21 @@ int main() {
       }
     }
   }
-  { // Fermat works best for numbers with two factors close to each other.
-    long long n = 1000003LL*100000037;
+  {  // Fermat works best for numbers with two factors close to each other.
+    long long n = 1000003LL * 100000037;
     assert(fermat(n) == 1000003);
   }
-  { // Large tests.
+  {  // Large tests.
     const int ntests = 7;
     const long long tests[] = {
-      3LL*3*5*7*9949*9967*1000003,
-      2LL*1000003*1000000007,
-      999961LL*1000033,
-      357267896789127671LL,
-      2LL*2*2*2*2*2*2*3*3*3*3*5*5*7*7*11*13*17*19*23*29*31*37,
-      2LL*2*2*2*2*2*2*3*3*3*3*5*5*7*7*35336848213,
-      2LL*2*2*2*2*2*2*3*3*3*3*5*5*7*7*186917*186947,
+        3LL * 3 * 5 * 7 * 9949 * 9967 * 1000003,
+        2LL * 1000003 * 1000000007,
+        999961LL * 1000033,
+        357267896789127671LL,
+        2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 11 * 13 * 17 * 19 * 23 * 29 *
+            31 * 37,
+        2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 35336848213,
+        2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 186917 * 186947,
     };
     for (int i = 0; i < ntests; i++) {
       validate(tests[i], prime_factorize_big(tests[i]));

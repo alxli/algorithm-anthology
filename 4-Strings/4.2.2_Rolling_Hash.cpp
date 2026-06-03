@@ -70,12 +70,10 @@ uint64 hash_mix(uint64 x) {
 
 template<class T>
 struct rolling_value_hasher {
-  uint64 operator()(const T &x) const {
-    return hash_mix((uint64)x) % (HASH_MOD - 1) + 1;
-  }
+  uint64 operator()(const T &x) const { return hash_mix((uint64)x) % (HASH_MOD - 1) + 1; }
 };
 
-template<class T, class ValueHasher = rolling_value_hasher<T> >
+template<class T, class ValueHasher = rolling_value_hasher<T>>
 class rolling_hash {
   static std::vector<uint64> pow_base;
   std::vector<uint64> pref;
@@ -92,15 +90,13 @@ class rolling_hash {
     pref.clear();
     pref.push_back(0);
     for (It it = first; it != last; ++it) {
-      pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE),
-                              value_hasher(*it)));
+      pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE), value_hasher(*it)));
     }
     ensure_powers(pref.size() - 1);
   }
 
  public:
-  explicit rolling_hash(const ValueHasher &hasher = ValueHasher())
-      : value_hasher(hasher) {
+  explicit rolling_hash(const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
     ensure_powers(0);
     pref.push_back(0);
   }
@@ -111,29 +107,22 @@ class rolling_hash {
     build(first, last);
   }
 
-  explicit rolling_hash(const std::vector<T> &v,
-                        const ValueHasher &hasher = ValueHasher())
+  explicit rolling_hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher())
       : value_hasher(hasher) {
     build(v.begin(), v.end());
   }
 
-  int size() const {
-    return (int)pref.size() - 1;
-  }
+  int size() const { return (int)pref.size() - 1; }
 
-  uint64 get(int l, int r) const {
-    return hash_sub(pref[r], hash_mul(pref[l], pow_base[r - l]));
-  }
+  uint64 get(int l, int r) const { return hash_sub(pref[r], hash_mul(pref[l], pow_base[r - l])); }
 
   template<class It>
-  static uint64 hash(It first, It last,
-                     const ValueHasher &hasher = ValueHasher()) {
+  static uint64 hash(It first, It last, const ValueHasher &hasher = ValueHasher()) {
     rolling_hash<T, ValueHasher> h(first, last, hasher);
     return h.get(0, h.size());
   }
 
-  static uint64 hash(const std::vector<T> &v,
-                     const ValueHasher &hasher = ValueHasher()) {
+  static uint64 hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher()) {
     rolling_hash<T, ValueHasher> h(v, hasher);
     return h.get(0, h.size());
   }
@@ -156,8 +145,7 @@ typedef pair<int, int> point;
 
 struct point_hasher {
   uint64 operator()(const point &p) const {
-    return hash_mix((uint64)p.first * 1000003ULL + (uint64)p.second) %
-               (HASH_MOD - 1) + 1;
+    return hash_mix((uint64)p.first * 1000003ULL + (uint64)p.second) % (HASH_MOD - 1) + 1;
   }
 };
 
@@ -168,10 +156,10 @@ int main() {
   assert(hs.get(0, 4) != hs.get(3, 7));   // "abra" != "acad"
 
   string a = "abc", b = "def";
-  uint64 ab =
-      rolling_hash<char>::concat(rolling_hash<char>::hash(a.begin(), a.end()),
-                                 rolling_hash<char>::hash(b.begin(), b.end()),
-                                 b.size());
+  uint64 ab = rolling_hash<char>::concat(
+      rolling_hash<char>::hash(a.begin(), a.end()), rolling_hash<char>::hash(b.begin(), b.end()),
+      b.size()
+  );
   string c = a + b;
   assert(ab == rolling_hash<char>::hash(c.begin(), c.end()));
 

@@ -44,10 +44,9 @@ class skip_list {
   struct node_t {
     K key;
     V value;
-    std::vector<node_t*> next;
+    std::vector<node_t *> next;
 
-    node_t(const K &k, const V &v, int levels)
-        : key(k), value(v), next(levels, (node_t*)NULL) {}
+    node_t(const K &k, const V &v, int levels) : key(k), value(v), next(levels, (node_t *)NULL) {}
   } *head;
 
   int num_nodes;
@@ -61,7 +60,7 @@ class skip_list {
     return std::abs(level);
   }
 
-  static int node_level(const std::vector<node_t*> &v) {
+  static int node_level(const std::vector<node_t *> &v) {
     int i = 0;
     while (i < (int)v.size() && v[i] != NULL) {
       i++;
@@ -76,23 +75,15 @@ class skip_list {
     }
   }
 
-  ~skip_list() {
-    delete head;
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return num_nodes == 0;
-  }
+  ~skip_list() { delete head; }
+  int size() const { return num_nodes; }
+  bool empty() const { return num_nodes == 0; }
 
   bool insert(const K &k, const V &v) {
-    std::vector<node_t*> update(head->next);
+    std::vector<node_t *> update(head->next);
     int curr_level = node_level(update);
     node_t *n = head;
-    for (int i = curr_level; i-- > 0; ) {
+    for (int i = curr_level; i-- > 0;) {
       while (n->next[i] != NULL && n->next[i]->key < k) {
         n = n->next[i];
       }
@@ -118,9 +109,9 @@ class skip_list {
   }
 
   bool erase(const K &k) {
-    std::vector<node_t*> update(head->next);
+    std::vector<node_t *> update(head->next);
     node_t *n = head;
-    for (int i = node_level(update); i-- > 0; ) {
+    for (int i = node_level(update); i-- > 0;) {
       while (n->next[i] != NULL && n->next[i]->key < k) {
         n = n->next[i];
       }
@@ -141,9 +132,9 @@ class skip_list {
     return false;
   }
 
-  V* find(const K &k) const {
+  V *find(const K &k) const {
     node_t *n = head;
-    for (int i = node_level(n->next); i-- > 0; ) {
+    for (int i = node_level(n->next); i-- > 0;) {
       while (n->next[i] != NULL && n->next[i]->key < k) {
         n = n->next[i];
       }
@@ -152,7 +143,7 @@ class skip_list {
     return (n != NULL && n->key == k) ? &(n->value) : NULL;
   }
 
-  V& operator[](const K &k) {
+  V &operator[](const K &k) {
     V *ret = find(k);
     if (ret != NULL) {
       return *ret;

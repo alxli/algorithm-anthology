@@ -25,8 +25,7 @@ struct job_t {
   int deadline;
   long long profit;
 
-  job_t(int deadline = 0, long long profit = 0)
-      : deadline(deadline), profit(profit) {}
+  job_t(int deadline = 0, long long profit = 0) : deadline(deadline), profit(profit) {}
 };
 
 bool higher_profit(const job_t &a, const job_t &b) {
@@ -50,9 +49,7 @@ class slot_dsu {
     return root[u];
   }
 
-  void occupy(int u) {
-    root[u] = find_root(u - 1);
-  }
+  void occupy(int u) { root[u] = find_root(u - 1); }
 };
 
 long long schedule_deadline_jobs(std::vector<job_t> jobs) {

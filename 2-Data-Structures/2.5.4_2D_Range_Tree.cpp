@@ -33,15 +33,10 @@ class range_tree {
   typedef std::pair<int, T> colindex;
 
   std::vector<point> points;
-  std::vector<std::vector<colindex> > columns;
+  std::vector<std::vector<colindex>> columns;
 
-  static inline bool comp1(const colindex &a, const colindex &b) {
-    return a.second < b.second;
-  }
-
-  static inline bool comp2(const colindex &a, const T &v) {
-    return a.second < v;
-  }
+  static inline bool comp1(const colindex &a, const colindex &b) { return a.second < b.second; }
+  static inline bool comp2(const colindex &a, const T &v) { return a.second < v; }
 
   void build(int n, int lo, int hi) {
     if (points[lo].first == points[hi].first) {
@@ -50,13 +45,14 @@ class range_tree {
       }
       return;
     }
-    int l = n*2 + 1, r = n*2 + 2, mid = lo + (hi - lo)/2;
+    int l = n * 2 + 1, r = n * 2 + 2, mid = lo + (hi - lo) / 2;
     build(l, lo, mid);
     build(r, mid + 1, hi);
     columns[n].resize(columns[l].size() + columns[r].size());
-    std::merge(columns[l].begin(), columns[l].end(),
-               columns[r].begin(), columns[r].end(),
-               columns[n].begin(), comp1);
+    std::merge(
+        columns[l].begin(), columns[l].end(), columns[r].begin(), columns[r].end(),
+        columns[n].begin(), comp1
+    );
   }
 
   // Helper variables for query().
@@ -76,9 +72,9 @@ class range_tree {
         }
       }
     } else if (lo != hi) {
-      int mid = lo + (hi - lo)/2;
-      query(n*2 + 1, lo, mid, f);
-      query(n*2 + 2, mid + 1, hi, f);
+      int mid = lo + (hi - lo) / 2;
+      query(n * 2 + 1, lo, mid, f);
+      query(n * 2 + 2, mid + 1, hi, f);
     }
   }
 
@@ -86,14 +82,13 @@ class range_tree {
   template<class It>
   range_tree(It lo, It hi) : points(lo, hi) {
     int n = std::distance(lo, hi);
-    columns.resize(4*n + 1);
+    columns.resize(4 * n + 1);
     std::sort(points.begin(), points.end());
     build(0, 0, n - 1);
   }
 
   template<class ReportFunction>
-  void query(const T &x1, const T &y1, const T &x2, const T &y2,
-             ReportFunction f) {
+  void query(const T &x1, const T &y1, const T &x2, const T &y2, ReportFunction f) {
     this->x1 = x1;
     this->y1 = y1;
     this->x2 = x2;
@@ -118,9 +113,9 @@ void print(int i, const pair<int, int> &p) {
 
 int main() {
   const int n = 10;
-  int points[n][2] = {{1, 4}, {5, 4}, {2, 2}, {3, 1}, {6, -5}, {5, -1},
-                      {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
-  vector<pair<int, int> > v;
+  int points[n][2] = {{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
+                      {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
+  vector<pair<int, int>> v;
   for (int i = 0; i < n; i++) {
     v.push_back(make_pair(points[i][0], points[i][1]));
   }

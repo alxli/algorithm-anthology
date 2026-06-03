@@ -6,4 +6,5 @@ SpaceAfterTemplateKeyword: false
 PointerAlignment: Right
 ReflowComments: false
 Standard: c++17
-AllowShortFunctionsOnASingleLine: None
+AllowShortFunctionsOnASingleLine: InlineOnly
+AlignAfterOpenBracket: BlockIndent

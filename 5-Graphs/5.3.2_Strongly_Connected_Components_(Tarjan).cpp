@@ -23,15 +23,15 @@ Space Complexity:
 #include <vector>
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<int> adj[MAXN], stack;
+std::vector<int> adj[MAXN], currstack;
 int timer, lowlink[MAXN];
 std::vector<bool> visit(MAXN);
-std::vector<std::vector<int> > scc;
+std::vector<std::vector<int>> scc;
 
 void dfs(int u) {
   lowlink[u] = timer++;
   visit[u] = true;
-  stack.push_back(u);
+  currstack.push_back(u);
   bool is_component_root = true;
   int v;
   for (int j = 0; j < (int)adj[u].size(); j++) {
@@ -49,9 +49,9 @@ void dfs(int u) {
   }
   std::vector<int> component;
   do {
-    v = stack.back();
+    v = currstack.back();
     visit[v] = true;
-    stack.pop_back();
+    currstack.pop_back();
     lowlink[v] = INF;
     component.push_back(v);
   } while (u != v);
@@ -60,7 +60,7 @@ void dfs(int u) {
 
 void tarjan(int nodes) {
   scc.clear();
-  stack.clear();
+  currstack.clear();
   std::fill(lowlink, lowlink + nodes, 0);
   std::fill(visit.begin(), visit.end(), false);
   timer = 0;

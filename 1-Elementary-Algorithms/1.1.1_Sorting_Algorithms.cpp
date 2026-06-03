@@ -42,9 +42,9 @@ void quicksort(It lo, It hi, Compare comp) {
     return;
   }
   typedef typename std::iterator_traits<It>::value_type T;
-  T pivot = *(lo + (hi - lo)/2);
+  T pivot = *(lo + (hi - lo) / 2);
   It i, j;
-  for (i = lo, j = hi - 1; ; ++i, --j) {
+  for (i = lo, j = hi - 1;; ++i, --j) {
     while (comp(*i, pivot)) {
       ++i;
     }
@@ -90,7 +90,7 @@ void mergesort(It lo, It hi, Compare comp) {
   if (hi - lo < 2) {
     return;
   }
-  It mid = lo + (hi - lo - 1)/2, a = lo, c = mid + 1;
+  It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   mergesort(lo, mid + 1, comp);
   mergesort(mid + 1, hi, comp);
   typedef typename std::iterator_traits<It>::value_type T;
@@ -138,7 +138,7 @@ Stable?: No.
 template<class It, class Compare>
 void heapsort(It lo, It hi, Compare comp) {
   typename std::iterator_traits<It>::value_type tmp;
-  It i = lo + (hi - lo)/2, j = hi, parent, child;
+  It i = lo + (hi - lo) / 2, j = hi, parent, child;
   for (;;) {
     if (i <= lo) {
       if (--j == lo) {
@@ -150,7 +150,7 @@ void heapsort(It lo, It hi, Compare comp) {
       tmp = *(--i);
     }
     parent = i;
-    child = lo + 2*(i - lo) + 1;
+    child = lo + 2 * (i - lo) + 1;
     while (child < j) {
       if (child + 1 < j && comp(*child, *(child + 1))) {
         child++;
@@ -160,7 +160,7 @@ void heapsort(It lo, It hi, Compare comp) {
       }
       *parent = *child;
       parent = child;
-      child = lo + 2*(parent - lo) + 1;
+      child = lo + 2 * (parent - lo) + 1;
     }
     *(lo + (parent - lo)) = tmp;
   }
@@ -240,8 +240,8 @@ void radix_sort(UnsignedIt lo, UnsignedIt hi) {
   }
   const int radix_bits = 8;
   const int radix_base = 1 << radix_bits;  // e.g. 2^8 = 256
-  const int radix_mask = radix_base - 1;  // e.g. 2^8 - 1 = 0xFF
-  int num_bits = 8*sizeof(*lo);  // 8 bits per byte
+  const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
+  int num_bits = 8 * sizeof(*lo);          // 8 bits per byte
   typedef typename std::iterator_traits<UnsignedIt>::value_type T;
   T *buf = new T[hi - lo];
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
@@ -306,7 +306,7 @@ bool compare_as_ints(double i, double j) {
   return (int)i < (int)j;
 }
 
-int main () {
+int main() {
   {  // Can be used to sort arrays like std::sort().
     int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
     quicksort(a, a + 8);
@@ -361,15 +361,16 @@ int main () {
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
 
-#define test(sort_function) {                            \
-  clock_t start = clock();                               \
-  sort_function(v.begin(), v.end());                     \
-  double t = (double)(clock() - start) / CLOCKS_PER_SEC; \
-  cout << setw(14) << left << #sort_function "(): ";     \
-  cout << fixed << t << "s" << endl;                     \
-  assert(sorted(v.begin(), v.end()));                    \
-  v = v2;                                                \
-}
+#define test(sort_function)                                \
+  {                                                        \
+    clock_t start = clock();                               \
+    sort_function(v.begin(), v.end());                     \
+    double t = (double)(clock() - start) / CLOCKS_PER_SEC; \
+    cout << setw(14) << left << #sort_function "(): ";     \
+    cout << fixed << t << "s" << endl;                     \
+    assert(sorted(v.begin(), v.end()));                    \
+    v = v2;                                                \
+  }
   test(std::sort);
   test(quicksort);
   test(mergesort);

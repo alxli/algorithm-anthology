@@ -36,14 +36,14 @@ const int MAXN = 100;
 int timer, lowlink[MAXN], tin[MAXN], comp[MAXN];
 std::vector<bool> visit(MAXN);
 std::vector<int> adj[MAXN], block_forest[MAXN];
-std::vector<int> stack, cutpoints;
-std::vector<std::vector<int> > block;
-std::vector<std::pair<int, int> > bridges;
+std::vector<int> currstack, cutpoints;
+std::vector<std::vector<int>> block;
+std::vector<std::pair<int, int>> bridges;
 
 void dfs(int u, int p) {
   visit[u] = true;
   lowlink[u] = tin[u] = timer++;
-  stack.push_back(u);
+  currstack.push_back(u);
   int v, children = 0;
   bool cutpoint = false;
   for (int j = 0; j < (int)adj[u].size(); j++) {
@@ -72,8 +72,8 @@ void dfs(int u, int p) {
   if (lowlink[u] == tin[u]) {
     std::vector<int> component;
     do {
-      v = stack.back();
-      stack.pop_back();
+      v = currstack.back();
+      currstack.pop_back();
       component.push_back(v);
     } while (u != v);
     block.push_back(component);
@@ -84,7 +84,7 @@ void tarjan(int nodes) {
   block.clear();
   bridges.clear();
   cutpoints.clear();
-  stack.clear();
+  currstack.clear();
   std::fill(lowlink, lowlink + nodes, 0);
   std::fill(tin, tin + nodes, 0);
   std::fill(visit.begin(), visit.end(), false);

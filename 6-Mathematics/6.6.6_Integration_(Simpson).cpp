@@ -20,12 +20,11 @@ Space Complexity:
 
 template<class ContinuousFunction>
 double simpsons(ContinuousFunction f, double a, double b) {
-  return (f(a) + 4*f((a + b)/2) + f(b))*(b - a)/6;
+  return (f(a) + 4 * f((a + b) / 2) + f(b)) * (b - a) / 6;
 }
 
 template<class ContinuousFunction>
-double integrate(ContinuousFunction f, double a, double b,
-                 const double EPS = 1e-15) {
+double integrate(ContinuousFunction f, double a, double b, const double EPS = 1e-15) {
   double m = (a + b) / 2;
   double am = simpsons(f, a, m);
   double mb = simpsons(f, m, b);
@@ -38,16 +37,16 @@ double integrate(ContinuousFunction f, double a, double b,
 
 /*** Example Usage ***/
 
-#include <cstdio>
 #include <cassert>
+#include <cstdio>
 using namespace std;
 
 double f(double x) {
   return sin(x);
 }
 
-int main () {
+int main() {
   double PI = acos(-1.0);
-  assert(fabs(integrate(f, 0.0, PI/2) - 1) < 1e-10);
+  assert(fabs(integrate(f, 0.0, PI / 2) - 1) < 1e-10);
   return 0;
 }

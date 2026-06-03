@@ -30,7 +30,7 @@ Space Complexity:
 const double EPS = 1e-9;
 
 template<class Matrix>
-Matrix& row_reduce(Matrix &a) {
+Matrix &row_reduce(Matrix &a) {
   if (a.empty()) {
     return a;
   }
@@ -54,7 +54,7 @@ Matrix& row_reduce(Matrix &a) {
       if (i != row) {
         lv = a[i][lead];
         for (int j = 0; j < c; j++) {
-          a[i][j] -= lv*a[row][j];
+          a[i][j] -= lv * a[row][j];
         }
       }
     }
@@ -110,7 +110,7 @@ int main() {
   const int equations = 3, unknowns = 3;
   const int a[equations][unknowns] = {{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
   const int b[equations] = {3, 1, -2};
-  vector<vector<double> > m(equations);
+  vector<vector<double>> m(equations);
   for (int i = 0; i < equations; i++) {
     m[i].assign(a[i], a[i] + unknowns);
   }
@@ -119,7 +119,7 @@ int main() {
   for (int i = 0; i < equations; i++) {
     double sum = 0;
     for (int j = 0; j < unknowns; j++) {
-      sum += a[i][j]*x[j];
+      sum += a[i][j] * x[j];
     }
     assert(fabs(sum - b[i]) < EPS);
   }

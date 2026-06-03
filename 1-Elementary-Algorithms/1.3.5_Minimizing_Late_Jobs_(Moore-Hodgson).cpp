@@ -24,13 +24,11 @@ Space Complexity:
 struct timed_job_t {
   int duration, deadline;
 
-  timed_job_t(int duration = 0, int deadline = 0)
-      : duration(duration), deadline(deadline) {}
+  timed_job_t(int duration = 0, int deadline = 0) : duration(duration), deadline(deadline) {}
 };
 
 bool earlier_deadline(const timed_job_t &a, const timed_job_t &b) {
-  return a.deadline != b.deadline ? a.deadline < b.deadline
-                                  : a.duration < b.duration;
+  return a.deadline != b.deadline ? a.deadline < b.deadline : a.duration < b.duration;
 }
 
 int maximize_on_time_jobs(std::vector<timed_job_t> jobs) {

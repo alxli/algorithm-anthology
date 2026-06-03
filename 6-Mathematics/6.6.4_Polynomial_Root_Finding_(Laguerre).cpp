@@ -40,16 +40,16 @@ std::pair<cdouble, cpoly> horner_eval(const cpoly &p, const cdouble &x) {
   int n = p.size();
   cpoly b(std::max(1, n - 1));
   for (int i = n - 1; i > 0; i--) {
-    b[i - 1] = p[i] + (i < n - 1 ? b[i]*x : 0);
+    b[i - 1] = p[i] + (i < n - 1 ? b[i] * x : 0);
   }
-  return std::make_pair(p[0] + b[0]*x, b);
+  return std::make_pair(p[0] + b[0] * x, b);
 }
 
 cpoly derivative(const cpoly &p) {
   int n = p.size();
   cpoly res(std::max(1, n - 1));
   for (int i = 1; i < n; i++) {
-    res[i - 1] = p[i]*cdouble(i);
+    res[i - 1] = p[i] * cdouble(i);
   }
   return res;
 }
@@ -59,8 +59,9 @@ int comp(const cdouble &a, const cdouble &b, const double EPS = 1e-15) {
   return (diff < -EPS) ? -1 : (diff > EPS ? 1 : 0);
 }
 
-cdouble find_one_root(const cpoly &p, const cdouble &x0,
-                      const double EPS = 1e-15, const int ITERATIONS = 10000) {
+cdouble find_one_root(
+    const cpoly &p, const cdouble &x0, const double EPS = 1e-15, const int ITERATIONS = 10000
+) {
   cdouble x = x0;
   int n = p.size() - 1;
   cpoly p1 = derivative(p), p2 = derivative(p1);
@@ -69,11 +70,11 @@ cdouble find_one_root(const cpoly &p, const cdouble &x0,
     if (comp(y0, 0, EPS) == 0) {
       break;
     }
-    cdouble g = horner_eval(p1, x).first/y0;
-    cdouble h = g*g - horner_eval(p2, x).first/y0;
-    cdouble r = std::sqrt(cdouble(n - 1)*(h*cdouble(n) - g*g));
+    cdouble g = horner_eval(p1, x).first / y0;
+    cdouble h = g * g - horner_eval(p2, x).first / y0;
+    cdouble r = std::sqrt(cdouble(n - 1) * (h * cdouble(n) - g * g));
     cdouble d1 = g + r, d2 = g - r;
-    cdouble a = cdouble(n)/(comp(d1, d2, EPS) > 0 ? d1 : d2);
+    cdouble a = cdouble(n) / (comp(d1, d2, EPS) > 0 ? d1 : d2);
     x -= a;
     if (comp(a, 0, EPS) == 0) {
       break;
@@ -82,12 +83,13 @@ cdouble find_one_root(const cpoly &p, const cdouble &x0,
   return x;
 }
 
-std::vector<cdouble> find_all_roots(const cpoly &p, const double EPS = 1e-15,
-                                    const int ITERATIONS = 10000) {
+std::vector<cdouble> find_all_roots(
+    const cpoly &p, const double EPS = 1e-15, const int ITERATIONS = 10000
+) {
   std::vector<cdouble> res;
   cpoly q = p;
   while (q.size() > 2) {
-    cdouble z = cdouble(rand(), rand())/(double)RAND_MAX;
+    cdouble z = cdouble(rand(), rand()) / (double)RAND_MAX;
     z = find_one_root(p, find_one_root(q, z, EPS, ITERATIONS), EPS, ITERATIONS);
     q = horner_eval(q, z).second;
     res.push_back(z);
@@ -121,7 +123,7 @@ void print_roots(const vector<cdouble> &x) {
 }
 
 int main() {
-  { // 140 - 13x - 8x^2 + x^3 = (x + 4)(x - 5)(x - 7)
+  {  // 140 - 13x - 8x^2 + x^3 = (x + 4)(x - 5)(x - 7)
     printf("Roots of 140 - 13x - 8x^2 + x^3:\n");
     cpoly p;
     p.push_back(140);
@@ -130,7 +132,7 @@ int main() {
     p.push_back(1);
     print_roots(find_all_roots(p));
   }
-  { // (-24+36i) + (-26+12i)x + (-30+40i)x^2 + (-26+12i)x^3 + (-6+4i)x^4
+  {  // (-24+36i) + (-26+12i)x + (-30+40i)x^2 + (-26+12i)x^3 + (-6+4i)x^4
     // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
     printf("Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):\n");
     cpoly p;

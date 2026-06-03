@@ -43,17 +43,9 @@ class quadtree {
   static const int MAXR = 1000000000;
   static const int MAXC = 1000000000;
 
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_region(const T &v, int area) {
-    return v;
-  }
-
-  static T join_value_with_delta(const T &v, const T &d) {
-    return d;
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_region(const T &v, int area) { return v; }
+  static T join_value_with_delta(const T &v, const T &d) { return d; }
 
   struct node_t {
     T value;
@@ -81,7 +73,7 @@ class quadtree {
     if (n == NULL) {
       int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
       int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
-      T v = join_region(init, rlen*clen);
+      T v = join_region(init, rlen * clen);
       res = found ? join_values(res, v) : v;
       found = true;
       return;
@@ -91,7 +83,7 @@ class quadtree {
       found = true;
       return;
     }
-    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+    int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
     query(n->child[0], r1, c1, rmid, cmid);
     query(n->child[1], rmid + 1, c1, r2, cmid);
     query(n->child[2], r1, cmid + 1, rmid, c2);
@@ -104,7 +96,7 @@ class quadtree {
 
   void update(node_t *&n, int r1, int c1, int r2, int c2) {
     if (n == NULL) {
-      n = new node_t(join_region(init, (r2 - r1 + 1)*(c2 - r1 + 1)));
+      n = new node_t(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
     }
     if (tgt_r < r1 || tgt_r > r2 || tgt_c < c1 || tgt_c > c2) {
       return;
@@ -113,15 +105,14 @@ class quadtree {
       n->value = join_value_with_delta(n->value, delta);
       return;
     }
-    int rmid = r1 + (r2 - r1)/2, cmid = c1 + (c2 - c1)/2;
+    int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
     update(n->child[0], r1, c1, rmid, cmid);
     update(n->child[1], rmid + 1, c1, r2, cmid);
     update(n->child[2], r1, cmid + 1, rmid, c2);
     update(n->child[3], rmid + 1, cmid + 1, r2, c2);
     bool found = false;
     for (int i = 0; i < 4; i++) {
-      n->value = found ? join_values(n->value, n->child[i]->value)
-                       : n->child[i]->value;
+      n->value = found ? join_values(n->value, n->child[i]->value) : n->child[i]->value;
       found = true;
     }
   }
@@ -138,13 +129,8 @@ class quadtree {
  public:
   quadtree(const T &v = T()) : root(NULL), init(v) {}
 
-  ~quadtree() {
-    clean_up(root);
-  }
-
-  T at(int r, int c) {
-    return query(r, c, r, c);
-  }
+  ~quadtree() { clean_up(root); }
+  T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
     tgt_r1 = r1;
@@ -153,7 +139,7 @@ class quadtree {
     tgt_c2 = c2;
     found = false;
     query(root, 0, 0, MAXR, MAXC);
-    return found ? res : join_region(init, (r2 - r1 + 1)*(c2 - c1 + 1));
+    return found ? res : join_region(init, (r2 - r1 + 1) * (c2 - c1 + 1));
   }
 
   void update(int r, int c, const T &d) {

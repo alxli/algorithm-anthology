@@ -41,13 +41,9 @@ using std::string;
 
 class suffix_array {
   struct comp {
-    const std::vector<std::pair<int, int> > &rank;
-
-    comp(const std::vector<std::pair<int, int> > &rank) : rank(rank) {}
-
-    bool operator()(int i, int j) {
-      return rank[i] < rank[j];
-    }
+    const std::vector<std::pair<int, int>> &rank;
+    comp(const std::vector<std::pair<int, int>> &rank) : rank(rank) {}
+    bool operator()(int i, int j) { return rank[i] < rank[j]; }
   };
 
   string s;
@@ -60,22 +56,19 @@ class suffix_array {
       sa[i] = i;
       rank[i] = (int)s[i];
     }
-    std::vector<std::pair<int, int> > rank2(n);
+    std::vector<std::pair<int, int>> rank2(n);
     for (int gap = 1; gap < n; gap *= 2) {
       for (int i = 0; i < n; i++) {
         rank2[i] = std::make_pair(rank[i], i + gap < n ? rank[i + gap] + 1 : 0);
       }
       std::sort(sa.begin(), sa.end(), comp(rank2));
       for (int i = 0; i < n; i++) {
-        rank[sa[i]] = (i > 0 && rank2[sa[i - 1]] == rank2[sa[i]])
-                      ? rank[sa[i - 1]] : i;
+        rank[sa[i]] = (i > 0 && rank2[sa[i - 1]] == rank2[sa[i]]) ? rank[sa[i - 1]] : i;
       }
     }
   }
 
-  std::vector<int> get_sa() {
-    return sa;
-  }
+  std::vector<int> get_sa() { return sa; }
 
   std::vector<int> get_lcp() {
     int n = s.size();
@@ -98,7 +91,7 @@ class suffix_array {
   size_t find(const string &needle) {
     int lo = 0, hi = (int)s.size() - 1;
     while (lo <= hi) {
-      int mid = lo + (hi - lo)/2;
+      int mid = lo + (hi - lo) / 2;
       int cmp = s.compare(sa[mid], needle.size(), needle);
       if (cmp < 0) {
         lo = mid + 1;

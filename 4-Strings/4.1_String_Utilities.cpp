@@ -44,7 +44,7 @@ int to_int(const string &s) {
   return res;
 }
 
-char* itoa(int value, char *str, int base = 10) {
+char *itoa(int value, char *str, int base = 10) {
   if (base < 2 || base > 36) {
     *str = '\0';
     return str;
@@ -54,8 +54,9 @@ char* itoa(int value, char *str, int base = 10) {
   do {
     tmp_v = value;
     value /= base;
-    *ptr++ = "zyxwvutsrqponmlkjihgfedcba9876543210123456789"
-             "abcdefghijklmnopqrstuvwxyz"[35 + (tmp_v - value * base)];
+    *ptr++ =
+        "zyxwvutsrqponmlkjihgfedcba9876543210123456789"
+        "abcdefghijklmnopqrstuvwxyz"[35 + (tmp_v - value * base)];
   } while (value);
   if (tmp_v < 0) {
     *ptr++ = '-';
@@ -120,7 +121,7 @@ Stripping:
 
 */
 
-string& lstrip(string &s, const string &delim = " \n\t\v\f\r") {
+string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
   size_t pos = s.find_first_not_of(delim);
   if (pos != string::npos) {
     s.erase(0, pos);
@@ -128,7 +129,7 @@ string& lstrip(string &s, const string &delim = " \n\t\v\f\r") {
   return s;
 }
 
-string& rstrip(string &s, const string &delim = " \n\t\v\f\r") {
+string &rstrip(string &s, const string &delim = " \n\t\v\f\r") {
   size_t pos = s.find_last_not_of(delim);
   if (pos != string::npos) {
     s.erase(pos);
@@ -136,7 +137,7 @@ string& rstrip(string &s, const string &delim = " \n\t\v\f\r") {
   return s;
 }
 
-string& strip(string &s, const string &delim = " \n\t\v\f\r") {
+string &strip(string &s, const string &delim = " \n\t\v\f\r") {
   return lstrip(rstrip(s));
 }
 
@@ -155,8 +156,8 @@ std::vector<int> find_all(const string &haystack, const string &needle) {
   std::vector<int> res;
   size_t pos = haystack.find(needle, 0);
   while (pos != string::npos) {
-      res.push_back(pos);
-      pos = haystack.find(needle, pos + 1);
+    res.push_back(pos);
+    pos = haystack.find(needle, pos + 1);
   }
   return res;
 }
@@ -215,8 +216,7 @@ std::vector<string> split(const string &s, char delim) {
   return res;
 }
 
-std::vector<string> split(const string &s,
-                          const string &delim = " \n\t\v\f\r") {
+std::vector<string> split(const string &s, const string &delim = " \n\t\v\f\r") {
   std::vector<string> res;
   string curr;
   for (int i = 0; i < (int)s.size(); i++) {
@@ -273,7 +273,7 @@ int main() {
   assert(replace("abcdabba", "ab", "00") == "00cd00ba");
 
   assert(join(split("a\nb\ncde\nf", '\n'), "|") == "a|b|cde|f");  // split v1
-  assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");  // split v2
+  assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");   // split v2
   assert(join(explode("a..b.cde....f", ".."), "|") == "a|b.cde||f");
   return 0;
 }

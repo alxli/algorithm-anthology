@@ -74,10 +74,10 @@ bool next_combination(It lo, It mid, It hi) {
   } else {
     std::iter_swap(l++, h++);
     int total = (--len1) + (--len2), gcd = total;
-    for (int i = len1; i != 0; ) {
+    for (int i = len1; i != 0;) {
       std::swap(gcd %= i, i);
     }
-    int skip = total/gcd - 1;
+    int skip = total / gcd - 1;
     for (int i = 0; i < gcd; i++) {
       It curr = (i < len1) ? (l + i) : (h + (i - len1));
       int k = i;
@@ -109,7 +109,7 @@ bool next_combination(int n, int k, int a[]) {
 
 long long next_combination_mask(long long x) {
   long long s = x & -x, r = x + s;
-  return r | (((x ^ r) >> 2)/s);
+  return r | (((x ^ r) >> 2) / s);
 }
 
 long long n_choose_k(long long n, long long k) {
@@ -118,7 +118,7 @@ long long n_choose_k(long long n, long long k) {
   }
   long long res = 1;
   for (int i = 0; i < k; i++) {
-    res = res*(n - i)/(i + 1);
+    res = res * (n - i) / (i + 1);
   }
   return res;
 }
@@ -156,7 +156,7 @@ long long rank_by_combination(int n, int k, int a[]) {
 bool next_combination_with_repeats(int n, int k, int a[]) {
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - 1) {
-      for (++a[i]; ++i < k; ) {
+      for (++a[i]; ++i < k;) {
         a[i] = a[i - 1];
       }
       return true;
@@ -204,7 +204,7 @@ int main() {
     } while (next_combination(s.begin(), s.begin() + k, s.end()));
     cout << endl;
   }
-  { // Unordered combinations using masks.
+  {  // Unordered combinations using masks.
     int n = 5, k = 3;
     string char_set = "abcde";  // Must be distinct.
     cout << "\n\"" << char_set << "\" choose " << k << " with masks:" << endl;
@@ -226,7 +226,7 @@ int main() {
     } while (mask != dest);
     cout << endl;
   }
-  { // Combinations of distinct integers from 0 to n - 1.
+  {  // Combinations of distinct integers from 0 to n - 1.
     int n = 5, k = 3, a[] = {0, 1, 2};
     cout << "\n" << n << " choose " << k << ":" << endl;
     int count = 0;
@@ -239,7 +239,7 @@ int main() {
     } while (next_combination(n, k, a));
     cout << endl;
   }
-  { // Combinations with repeats.
+  {  // Combinations with repeats.
     int n = 3, k = 2, a[] = {0, 0};
     cout << "\n" << n << " multichoose " << k << ":" << endl;
     do {

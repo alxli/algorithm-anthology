@@ -29,7 +29,7 @@ Space Complexity:
 #include <vector>
 
 class graph {
-  std::vector<std::vector<int> > adj;
+  std::vector<std::vector<int>> adj;
   bool directed;
 
   template<class ReportFunction>
@@ -44,8 +44,7 @@ class graph {
     }
   }
 
-  bool has_cycle(int n, int prev, std::vector<bool> &visit,
-                 std::vector<bool> &onstack) const {
+  bool has_cycle(int n, int prev, std::vector<bool> &visit, std::vector<bool> &onstack) const {
     visit[n] = true;
     onstack[n] = true;
     std::vector<int>::const_iterator it;
@@ -67,13 +66,8 @@ class graph {
  public:
   graph(bool directed = true) : directed(directed) {}
 
-  int nodes() const {
-    return (int)adj.size();
-  }
-
-  std::vector<int>& operator[](int n) {
-    return adj[n];
-  }
+  int nodes() const { return (int)adj.size(); }
+  std::vector<int> &operator[](int n) { return adj[n]; }
 
   void add_edge(int u, int v) {
     int n = adj.size();
@@ -86,9 +80,7 @@ class graph {
     }
   }
 
-  bool is_directed() const {
-    return directed;
-  }
+  bool is_directed() const { return directed; }
 
   bool has_cycle() const {
     int n = adj.size();
@@ -101,13 +93,8 @@ class graph {
     return false;
   }
 
-  bool is_tree() const {
-    return !directed && !has_cycle();
-  }
-
-  bool is_dag() const {
-    return directed && !has_cycle();
-  }
+  bool is_tree() const { return !directed && !has_cycle(); }
+  bool is_dag() const { return directed && !has_cycle(); }
 
   template<class ReportFunction>
   void dfs(int start, ReportFunction f) const {

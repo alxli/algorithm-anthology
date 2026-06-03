@@ -46,8 +46,13 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
-double norm(const point &a) { return sqrt(sqnorm(a)); }
+double sqnorm(const point &a) {
+  return a.x * a.x + a.y * a.y;
+}
+
+double norm(const point &a) {
+  return sqrt(sqnorm(a));
+}
 
 struct circle {
   double h, k, r;
@@ -86,36 +91,36 @@ struct line {
     } else {
       a = -(p.y - q.y) / (p.x - q.x);
       b = 1;
-      c = -(a*p.x) - (b*p.y);
+      c = -(a * p.x) - (b * p.y);
     }
   }
 };
 
 int tangent(const circle &c, const point &p, line *l1 = NULL, line *l2 = NULL) {
   point vop(p.x - c.h, p.y - c.k);
-  if (EQ(sqnorm(vop), c.r*c.r)) {  // Point on an edge.
-    if (l1 != 0) {  // Get perpendicular line through p.
+  if (EQ(sqnorm(vop), c.r * c.r)) {  // Point on an edge.
+    if (l1 != 0) {                   // Get perpendicular line through p.
       *l1 = line(point(c.h, c.k), p);
-      *l1 = line(-l1->b, l1->a, l1->b*p.x - l1->a*p.y);
+      *l1 = line(-l1->b, l1->a, l1->b * p.x - l1->a * p.y);
     }
     return 0;
   }
-  if (LE(sqnorm(vop), c.r*c.r)) {
+  if (LE(sqnorm(vop), c.r * c.r)) {
     return -1;  // Point inside circle, no intersection.
   }
   point q(vop.x / c.r, vop.y / c.r);
-  double n = sqnorm(q), d = q.y*sqrt(sqnorm(q) - 1.0);
+  double n = sqnorm(q), d = q.y * sqrt(sqnorm(q) - 1.0);
   point t1((q.x - d) / n, c.k), t2((q.x + d) / n, c.k);
   if (NE(q.y, 0)) {  // Common case.
-    t1.y += c.r*(1.0 - t1.x*q.x) / q.y;
-    t2.y += c.r*(1.0 - t2.x*q.x) / q.y;
+    t1.y += c.r * (1.0 - t1.x * q.x) / q.y;
+    t2.y += c.r * (1.0 - t2.x * q.x) / q.y;
   } else {  // Point at center horizontal, y = 0.
-    d = c.r*sqrt(1.0 - t1.x*t1.x);
+    d = c.r * sqrt(1.0 - t1.x * t1.x);
     t1.y += d;
     t2.y -= d;
   }
-  t1.x = t1.x*c.r + c.h;
-  t2.x = t2.x*c.r + c.h;
+  t1.x = t1.x * c.r + c.h;
+  t2.x = t2.x * c.r + c.h;
   //note: here, t1 and t2 are the two points of tangencies
   if (l1 != NULL && l2 != NULL) {
     *l1 = line(p, t1);
@@ -124,15 +129,14 @@ int tangent(const circle &c, const point &p, line *l1 = NULL, line *l2 = NULL) {
   return 1;
 }
 
-int intersection(const circle &c, const line &l, point *p = NULL,
-                 point *q = NULL) {
-  double v = c.h*l.a + c.k*l.b + l.c;
-  double aabb = l.a*l.a + l.b*l.b;
-  double disc = v*v / aabb - c.r*c.r;
+int intersection(const circle &c, const line &l, point *p = NULL, point *q = NULL) {
+  double v = c.h * l.a + c.k * l.b + l.c;
+  double aabb = l.a * l.a + l.b * l.b;
+  double disc = v * v / aabb - c.r * c.r;
   if (disc > EPS) {
     return -1;
   }
-  double x0 = -l.a*l.c / aabb, y0 = -l.b*v / aabb;
+  double x0 = -l.a * l.c / aabb, y0 = -l.b * v / aabb;
   if (disc > -EPS) {
     if (p != NULL) {
       *p = point(x0 + c.h, y0 + c.k);
@@ -141,14 +145,13 @@ int intersection(const circle &c, const line &l, point *p = NULL,
   }
   double k = sqrt(std::max(0.0, disc / -aabb));
   if (p != NULL && q != NULL) {
-    *p = point(x0 + k*l.b + c.h, y0 - k*l.a + c.k);
-    *q = point(x0 - k*l.b + c.h, y0 + k*l.a + c.k);
+    *p = point(x0 + k * l.b + c.h, y0 - k * l.a + c.k);
+    *q = point(x0 - k * l.b + c.h, y0 + k * l.a + c.k);
   }
   return 1;
 }
 
-int intersection(const circle &c1, const circle &c2, point *p = NULL,
-                 point *q = NULL) {
+int intersection(const circle &c1, const circle &c2, point *p = NULL, point *q = NULL) {
   if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k)) {
     return EQ(c1.r, c2.r) ? 3 : (c1.r > c2.r ? -1 : -2);
   }
@@ -160,9 +163,9 @@ int intersection(const circle &c1, const circle &c2, point *p = NULL,
   if (LT(d, fabs(c1.r - c2.r))) {
     return c1.r > c2.r ? -1 : -2;
   }
-  double a = (c1.r*c1.r - c2.r*c2.r + d*d) / (2*d);
-  double x0 = c1.h + (d12.x*a / d), y0 = c1.k + (d12.y*a / d);
-  double s = sqrt(c1.r*c1.r - a*a), rx = -d12.y*s / d, ry = d12.x*s / d;
+  double a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
+  double x0 = c1.h + (d12.x * a / d), y0 = c1.k + (d12.y * a / d);
+  double s = sqrt(c1.r * c1.r - a * a), rx = -d12.y * s / d, ry = d12.x * s / d;
   if (EQ(rx, 0) && EQ(ry, 0)) {
     if (p != NULL) {
       *p = point(x0, y0);
@@ -180,14 +183,14 @@ double intersection_area(const circle &c1, const circle &c2) {
   double r = std::min(c1.r, c2.r), R = std::max(c1.r, c2.r);
   double d = norm(point(c2.h - c1.h, c2.k - c1.k));
   if (LE(d, R - r)) {
-    return PI*r*r;
+    return PI * r * r;
   }
   if (GE(d, R + r)) {
     return 0;
   }
-  return r*r*acos((d*d + r*r - R*R) / 2 / d / r) +
-         R*R*acos((d*d + R*R - r*r) / 2 / d / R) -
-         0.5*sqrt((-d + r + R)*(d + r - R)*(d - r + R)*(d + r + R));
+  return r * r * acos((d * d + r * r - R * R) / 2 / d / r) +
+         R * R * acos((d * d + R * R - r * r) / 2 / d / R) -
+         0.5 * sqrt((-d + r + R) * (d + r - R) * (d - r + R) * (d + r + R));
 }
 
 /*** Example Usage ***/
@@ -229,7 +232,7 @@ int main() {
   assert(EQP(q, point(0, sqrt(3) / 2)));
 
   // Each circle passes through the other's center.
-  double r = 3, a = intersection_area(circle(-r/2, 0, r), circle(r/2, 0, r));
-  assert(EQ(a, r*r*(2*PI / 3 - sqrt(3) / 2)));
+  double r = 3, a = intersection_area(circle(-r / 2, 0, r), circle(r / 2, 0, r));
+  assert(EQ(a, r * r * (2 * PI / 3 - sqrt(3) / 2)));
   return 0;
 }

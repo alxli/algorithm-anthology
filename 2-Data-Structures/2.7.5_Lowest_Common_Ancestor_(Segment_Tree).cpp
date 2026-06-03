@@ -23,7 +23,7 @@ Space Complexity:
 
 const int MAXN = 1000;
 std::vector<int> adj[MAXN];
-int len, counter, depth[MAXN], dfs_order[2*MAXN], first[MAXN], minpos[8*MAXN];
+int len, counter, depth[MAXN], dfs_order[2 * MAXN], first[MAXN], minpos[8 * MAXN];
 
 void dfs(int u, int d) {
   depth[u] = d;
@@ -42,17 +42,16 @@ void build(int n, int lo, int hi) {
     minpos[n] = dfs_order[lo];
     return;
   }
-  int lchild = 2*n + 1, rchild = 2*n + 2, mid = lo + (hi - lo)/2;
+  int lchild = 2 * n + 1, rchild = 2 * n + 2, mid = lo + (hi - lo) / 2;
   build(lchild, lo, mid);
   build(rchild, mid + 1, hi);
-  minpos[n] = depth[minpos[lchild]] < depth[minpos[rchild]] ? minpos[lchild]
-                                                            : minpos[rchild];
+  minpos[n] = depth[minpos[lchild]] < depth[minpos[rchild]] ? minpos[lchild] : minpos[rchild];
 }
 
 void build(int nodes, int root) {
   std::fill(depth, depth + nodes, -1);
   std::fill(first, first + nodes, -1);
-  len = 2*nodes - 1;
+  len = 2 * nodes - 1;
   counter = 0;
   dfs(root, 0);
   build(0, 0, len - 1);
@@ -67,21 +66,20 @@ int get_minpos(int a, int b, int n, int lo, int hi) {
   if (a == lo && b == hi) {
     return minpos[n];
   }
-  int mid = lo + (hi - lo)/2;
+  int mid = lo + (hi - lo) / 2;
   if (a <= mid && mid < b) {
-    int p1 = get_minpos(a, std::min(b, mid), 2*n + 1, lo, mid);
-    int p2 = get_minpos(std::max(a, mid + 1), b, 2*n + 2, mid + 1, hi);
+    int p1 = get_minpos(a, std::min(b, mid), 2 * n + 1, lo, mid);
+    int p2 = get_minpos(std::max(a, mid + 1), b, 2 * n + 2, mid + 1, hi);
     return depth[p1] < depth[p2] ? p1 : p2;
   }
   if (a <= mid) {
-    return get_minpos(a, std::min(b, mid), 2*n + 1, lo, mid);
+    return get_minpos(a, std::min(b, mid), 2 * n + 1, lo, mid);
   }
-  return get_minpos(std::max(a, mid + 1), b, 2*n + 2, mid + 1, hi);
+  return get_minpos(std::max(a, mid + 1), b, 2 * n + 2, mid + 1, hi);
 }
 
 int lca(int u, int v) {
-  return get_minpos(std::min(first[u], first[v]), std::max(first[u], first[v]),
-                    0, 0, len - 1);
+  return get_minpos(std::min(first[u], first[v]), std::max(first[u], first[v]), 0, 0, len - 1);
 }
 
 /*** Example Usage ***/

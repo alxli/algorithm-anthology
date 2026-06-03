@@ -38,8 +38,7 @@ typename std::iterator_traits<It>::value_type reservoir_sample_one(It lo, It hi)
 }
 
 template<class It>
-std::vector<typename std::iterator_traits<It>::value_type>
-reservoir_sample_k(It lo, It hi, int k) {
+std::vector<typename std::iterator_traits<It>::value_type> reservoir_sample_k(It lo, It hi, int k) {
   std::vector<typename std::iterator_traits<It>::value_type> res;
   int seen = 0;
   for (It it = lo; it != hi; ++it) {

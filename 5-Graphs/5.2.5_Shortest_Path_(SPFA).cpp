@@ -28,7 +28,7 @@ Space Complexity:
 #include <vector>
 
 const int MAXN = 100, INF = 0x3f3f3f3f;
-std::vector<std::pair<int, int> > adj[MAXN];
+std::vector<std::pair<int, int>> adj[MAXN];
 int dist[MAXN], pred[MAXN], relax_count[MAXN];
 bool in_queue[MAXN];
 

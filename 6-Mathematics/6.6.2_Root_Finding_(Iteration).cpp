@@ -25,11 +25,13 @@ Space Complexity:
 #include <stdexcept>
 
 template<class ContinuousFunction>
-double newton_root(ContinuousFunction f, ContinuousFunction fprime, double x0,
-                   const double EPS = 1e-15, const int ITERATIONS = 100) {
+double newton_root(
+    ContinuousFunction f, ContinuousFunction fprime, double x0, const double EPS = 1e-15,
+    const int ITERATIONS = 100
+) {
   double x = x0, error = EPS + 1;
   for (int i = 0; error > EPS && i < ITERATIONS; i++) {
-    double xnew = x - f(x)/fprime(x);
+    double xnew = x - f(x) / fprime(x);
     error = fabs(xnew - x);
     x = xnew;
   }
@@ -40,12 +42,13 @@ double newton_root(ContinuousFunction f, ContinuousFunction fprime, double x0,
 }
 
 template<class ContinuousFunction>
-double secant_root(ContinuousFunction f, double x0, double x1,
-                   const double EPS = 1e-15, const int ITERATIONS = 100) {
+double secant_root(
+    ContinuousFunction f, double x0, double x1, const double EPS = 1e-15, const int ITERATIONS = 100
+) {
   double xold = x0, fxold = f(x0), x = x1, error = EPS + 1;
   for (int i = 0; error > EPS && i < ITERATIONS; i++) {
     double fx = f(x);
-    double xnew = x - fx*((x - xold)/(fx - fxold));
+    double xnew = x - fx * ((x - xold) / (fx - fxold));
     xold = x;
     fxold = fx;
     error = fabs(xnew - x);
@@ -62,11 +65,11 @@ double secant_root(ContinuousFunction f, double x0, double x1,
 #include <cassert>
 
 double f(double x) {
-  return x*x - 4*sin(x);
+  return x * x - 4 * sin(x);
 }
 
 double fprime(double x) {
-  return 2*x - 4*cos(x);
+  return 2 * x - 4 * cos(x);
 }
 
 int main() {

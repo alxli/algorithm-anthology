@@ -56,7 +56,8 @@ bool next_permutation_(It lo, It hi) {
     It j = i;
     if (*--i < *j) {
       It k = hi;
-      while (!(*i < *--k)) {}
+      while (!(*i < *--k)) {
+      }
       std::iter_swap(i, k);
       std::reverse(j, hi);
       return true;
@@ -72,7 +73,7 @@ template<class T>
 bool next_permutation(int n, T a[]) {
   for (int i = n - 2; i >= 0; i--) {
     if (a[i] < a[i + 1]) {
-      for (int j = n - 1; ; j--) {
+      for (int j = n - 1;; j--) {
         if (a[i] < a[j]) {
           std::swap(a[i++], a[j]);
           for (j = n - 1; i < j; i++, j--) {
@@ -88,7 +89,7 @@ bool next_permutation(int n, T a[]) {
 
 long long next_permutation(long long x) {
   long long s = x & -x, r = x + s;
-  return r | (((x ^ r) >> 2)/s);
+  return r | (((x ^ r) >> 2) / s);
 }
 
 std::vector<int> permutation_by_rank(int n, long long x) {
@@ -96,13 +97,13 @@ std::vector<int> permutation_by_rank(int n, long long x) {
   std::vector<int> values(n), res(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {
-    factorial[i] = i*factorial[i - 1];
+    factorial[i] = i * factorial[i - 1];
   }
   for (int i = 0; i < n; i++) {
     values[i] = i;
   }
   for (int i = 0; i < n; i++) {
-    int pos = x/factorial[n - 1 - i];
+    int pos = x / factorial[n - 1 - i];
     res[i] = values[pos];
     std::copy(values.begin() + pos + 1, values.end(), values.begin() + pos);
     x %= factorial[n - 1 - i];
@@ -114,7 +115,7 @@ long long rank_by_permutation(int n, int a[]) {
   std::vector<long long> factorial(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {
-    factorial[i] = i*factorial[i - 1];
+    factorial[i] = i * factorial[i - 1];
   }
   long long res = 0;
   for (int i = 0; i < n; i++) {
@@ -124,12 +125,12 @@ long long rank_by_permutation(int n, int a[]) {
         v--;
       }
     }
-    res += v*factorial[n - 1 - i];
+    res += v * factorial[n - 1 - i];
   }
   return res;
 }
 
-typedef std::vector<std::vector<int> > cycles;
+typedef std::vector<std::vector<int>> cycles;
 
 cycles permutation_cycles(int n, int a[]) {
   std::vector<bool> visit(n);
@@ -200,7 +201,7 @@ int main() {
     } while (next_permutation(n, a));
     cout << endl;
   }
-  { // Permutations of binary digits.
+  {  // Permutations of binary digits.
     const int n = 5;
     cout << "\nPermutations of 2 zeros and 3 ones:" << endl;
     int lo = bitset<5>(string("00111")).to_ulong();
@@ -210,7 +211,7 @@ int main() {
     } while ((lo = next_permutation(lo)) != hi);
     cout << endl;
   }
-  { // Decomposition into cycles.
+  {  // Decomposition into cycles.
     const int n = 4;
     int a[] = {3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;

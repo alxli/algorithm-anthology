@@ -39,8 +39,9 @@ Space Complexity:
 #include <vector>
 
 template<class It>
-typename std::iterator_traits<It>::value_type
-max_subarray_sum(It lo, It hi, int *res_lo = NULL, int *res_hi = NULL) {
+typename std::iterator_traits<It>::value_type max_subarray_sum(
+    It lo, It hi, int *res_lo = NULL, int *res_hi = NULL
+) {
   typedef typename std::iterator_traits<It>::value_type T;
   if (lo == hi) {
     return T();
@@ -66,8 +67,10 @@ max_subarray_sum(It lo, It hi, int *res_lo = NULL, int *res_hi = NULL) {
 }
 
 template<class T>
-T max_submatrix_sum(const std::vector<std::vector<T> > &matrix,
-    int *r1 = NULL, int *c1 = NULL, int *r2 = NULL, int *c2 = NULL) {
+T max_submatrix_sum(
+    const std::vector<std::vector<T>> &matrix, int *r1 = NULL, int *c1 = NULL, int *r2 = NULL,
+    int *c2 = NULL
+) {
   if (matrix.empty() || matrix[0].empty()) {
     return T();
   }
@@ -126,11 +129,13 @@ int main() {
   }
   {
     const int n = 4, m = 5;
+    // clang-format off
     int a[n][m] = {{0, -2, -7, 0, 5},
                    {9, 2, -6, 2, -4},
                    {-4, 1, -4, 1, 0},
                    {-1, 8, 0, -2, 3}};
-    vector<vector<int> > matrix(n);
+    // clang-format on
+    vector<vector<int>> matrix(n);
     for (int i = 0; i < n; i++) {
       matrix[i] = vector<int>(a[i], a[i] + m);
     }

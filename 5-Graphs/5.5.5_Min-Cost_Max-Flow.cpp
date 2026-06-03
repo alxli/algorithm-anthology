@@ -25,20 +25,17 @@ Space Complexity:
 
 struct edge {
   int v, rev, cap, cost;
-  edge(int v_, int rev_, int cap_, int cost_)
-      : v(v_), rev(rev_), cap(cap_), cost(cost_) {}
+  edge(int v_, int rev_, int cap_, int cost_) : v(v_), rev(rev_), cap(cap_), cost(cost_) {}
 };
 
 const int MCMF_INF = 0x3f3f3f3f;
 
 struct min_cost_max_flow {
-  std::vector<std::vector<edge> > adj;
+  std::vector<std::vector<edge>> adj;
 
   min_cost_max_flow(int nodes = 0) { init(nodes); }
 
-  void init(int nodes) {
-    adj.assign(nodes, std::vector<edge>());
-  }
+  void init(int nodes) { adj.assign(nodes, std::vector<edge>()); }
 
   void add_edge(int u, int v, int cap, int cost) {
     adj[u].push_back(edge(v, (int)adj[v].size(), cap, cost));

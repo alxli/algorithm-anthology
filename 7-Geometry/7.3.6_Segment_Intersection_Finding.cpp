@@ -36,21 +36,24 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
+// clang-format off
+double sqnorm(const point &a) { return a.x * a.x + a.y * a.y;}
 double norm(const point &a) { return sqrt(sqnorm(a)); }
-double dot(const point &a, const point &b) { return a.x*b.x + a.y*b.y; }
+double dot(const point &a, const point &b) { return a.x * b.x + a.y * b.y; }
+// clang-format on
+
 double cross(const point &a, const point &b, const point &o = point(0, 0)) {
-  return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 bool point_on_segment(const point &p, const point &a, const point &b) {
-  return EQ(cross(p, b, a), 0)
-      && LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x))
-      && LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
+  return EQ(cross(p, b, a), 0) && LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x)) &&
+         LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
 }
 
-int seg_intersection(const point &a, const point &b, const point &c,
-                     const point &d, point *p = NULL, point *q = NULL) {
+int seg_intersection(
+    const point &a, const point &b, const point &c, const point &d, point *p = NULL, point *q = NULL
+) {
   static const bool TOUCH_IS_INTERSECT = true;
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
@@ -74,8 +77,7 @@ int seg_intersection(const point &a, const point &b, const point &c,
     double t0 = dot(ac, ab) / sqnorm(ab);
     double t1 = t0 + dot(cd, ab) / sqnorm(ab);
     double mint = std::min(t0, t1), maxt = std::max(t0, t1);
-    bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt))
-                                      : (LT(mint, 1) && LT(0, maxt));
+    bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
     if (overlap) {
       point res1 = std::max(std::min(a, b), std::min(c, d));
       point res2 = std::min(std::max(a, b), std::max(c, d));
@@ -97,14 +99,12 @@ int seg_intersection(const point &a, const point &b, const point &c,
   if (EQ(c1, 0)) {
     return -1;  // Parallel and disjoint.
   }
-  double t = cross(ac, cd)/c1, u = c2/c1;
-  bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1))
-                                         : (LT(0, t) && LT(t, 1));
-  bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1))
-                                         : (LT(0, u) && LT(u, 1));
+  double t = cross(ac, cd) / c1, u = c2 / c1;
+  bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1)) : (LT(0, t) && LT(t, 1));
+  bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
     if (p != NULL) {
-      *p = point(a.x + t*ab.x, a.y + t*ab.y);
+      *p = point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
   }
@@ -122,7 +122,7 @@ double get_y(const segment &s, double x) {
   if (EQ(s.p.x, s.q.x)) {
     return s.p.y;
   }
-  return s.p.y + (s.q.y - s.p.y)*(x - s.p.x)/(s.q.x - s.p.x);
+  return s.p.y + (s.q.y - s.p.y) * (x - s.p.x) / (s.q.x - s.p.x);
 }
 
 template<class It>
@@ -167,7 +167,7 @@ bool intersect(const segment &s1, const segment &s2) {
 
 template<class It>
 bool find_intersection(It lo, It hi, segment *res1, segment *res2) {
-  std::vector<event<It> > e;
+  std::vector<event<It>> e;
   for (It it = lo; it != hi; ++it) {
     if (it->p > it->q) {
       std::swap(it->p, it->q);
@@ -176,7 +176,7 @@ bool find_intersection(It lo, It hi, segment *res1, segment *res2) {
     e.push_back(event<It>(it->q, -1, it));
   }
   std::sort(e.begin(), e.end());
-  typedef std::set<It, segment_order<It> > active_set;
+  typedef std::set<It, segment_order<It>> active_set;
   active_set s((segment_order<It>(lo)));
   std::vector<typename active_set::iterator> position(hi - lo);
   for (int i = 0; i < (int)e.size(); i++) {

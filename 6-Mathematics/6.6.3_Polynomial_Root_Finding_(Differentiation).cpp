@@ -36,20 +36,19 @@ Space Complexity:
 double horner_eval(const std::vector<double> &p, double x) {
   double res = p.back();
   for (int i = (int)p.size() - 2; i >= 0; i--) {
-    res = res*x + p[i];
+    res = res * x + p[i];
   }
   return res;
 }
 
-double find_one_root(const std::vector<double> &p, double a, double b,
-                     const double EPS = 1e-15) {
+double find_one_root(const std::vector<double> &p, double a, double b, const double EPS = 1e-15) {
   double pa = horner_eval(p, a), pb = horner_eval(p, b);
   bool paneg = pa < 0, pbneg = pb < 0;
   if (paneg == pbneg) {
     return std::numeric_limits<double>::quiet_NaN();
   }
-  while (b - a > EPS && a*(1 + EPS) < b && a < b*(1 + EPS)) {
-    double m = a + (b - a)/2;
+  while (b - a > EPS && a * (1 + EPS) < b && a < b * (1 + EPS)) {
+    double m = a + (b - a) / 2;
     if ((horner_eval(p, m) < 0) == paneg) {
       a = m;
     } else {
@@ -59,12 +58,12 @@ double find_one_root(const std::vector<double> &p, double a, double b,
   return a;
 }
 
-std::vector<double> find_all_roots(const std::vector<double> &p,
-                                   double a = -1e20, double b = 1e20,
-                                   const double EPS = 1e-15) {
+std::vector<double> find_all_roots(
+    const std::vector<double> &p, double a = -1e20, double b = 1e20, const double EPS = 1e-15
+) {
   std::vector<double> pprime;
   for (int i = 1; i < (int)p.size(); i++) {
-    pprime.push_back(p[i]*i);
+    pprime.push_back(p[i] * i);
   }
   if (pprime.empty()) {
     return std::vector<double>();
@@ -86,12 +85,12 @@ std::vector<double> find_all_roots(const std::vector<double> &p,
 using namespace std;
 
 int main() {
-  { // -1 + 2x - 6x^2 + 2x^3
+  {  // -1 + 2x - 6x^2 + 2x^3
     int poly[] = {-1, 2, -6, 2};
     vector<double> p(poly, poly + 4), roots = find_all_roots(p);
     assert(roots.size() == 1 && fabs(horner_eval(p, roots[0])) < 1e-10);
   }
-  { // -20 + 4x + 3x^2
+  {  // -20 + 4x + 3x^2
     int poly[] = {-20, 4, 3};
     vector<double> p(poly, poly + 3), roots = find_all_roots(p);
     assert(roots.size() == 2);

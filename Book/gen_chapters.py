@@ -318,7 +318,10 @@ def render_listing(text, language='C++'):
     text = text.strip('\n')
     if not text.strip():
         return ''
-    text = '\n'.join(line.rstrip() for line in text.splitlines())
+    text = '\n'.join(
+        line.rstrip() for line in text.splitlines()
+        if not re.match(r'\s*//\s*clang-format\s+(off|on)\s*$', line)
+    )
     options = 'language={}'.format(language) if language else 'language={},numbers=none'
     return '\\begin{{lstlisting}}[{}]\n{}\n\\end{{lstlisting}}\n'.format(
         options, text)

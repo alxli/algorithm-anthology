@@ -73,7 +73,7 @@ std::vector<int> arrangement_by_rank(int n, int k, long long r) {
   }
   for (int i = 0; i < k; i++) {
     long long count = n_permute_k(n - 1 - i, k - 1 - i);
-    int pos = r/count;
+    int pos = r / count;
     res[i] = values[pos];
     std::copy(values.begin() + pos + 1, values.end(), values.begin() + pos);
     r %= count;
@@ -91,7 +91,7 @@ long long rank_by_arrangement(int n, int k, int a[]) {
         count++;
       }
     }
-    res += count*n_permute_k(n - i - 1, k - i - 1);
+    res += count * n_permute_k(n - i - 1, k - i - 1);
     used[a[i]] = true;
   }
   return res;

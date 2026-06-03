@@ -23,7 +23,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-std::vector<int> encode_prufer(const std::vector<std::vector<int> > &tree) {
+std::vector<int> encode_prufer(const std::vector<std::vector<int>> &tree) {
   int nodes = tree.size();
   std::vector<int> degree(nodes), parent(nodes, -1), code;
   std::set<int> leaves;
@@ -64,11 +64,11 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int> > &tree) {
   return code;
 }
 
-std::vector<std::pair<int, int> > decode_prufer(const std::vector<int> &code) {
+std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
   int nodes = code.size() + 2;
   std::vector<int> degree(nodes, 1);
   std::set<int> leaves;
-  std::vector<std::pair<int, int> > edges;
+  std::vector<std::pair<int, int>> edges;
   for (int i = 0; i < (int)code.size(); i++) {
     degree[code[i]]++;
   }
@@ -96,7 +96,7 @@ std::vector<std::pair<int, int> > decode_prufer(const std::vector<int> &code) {
 using namespace std;
 
 int main() {
-  vector<vector<int> > tree(5);
+  vector<vector<int>> tree(5);
   tree[0].push_back(3);
   tree[1].push_back(3);
   tree[2].push_back(3);
@@ -107,7 +107,7 @@ int main() {
   tree[4].push_back(3);
   vector<int> code = encode_prufer(tree);
   assert(code.size() == 3 && code[0] == 3 && code[1] == 3 && code[2] == 3);
-  vector<pair<int, int> > edges = decode_prufer(code);
+  vector<pair<int, int>> edges = decode_prufer(code);
   assert(edges.size() == 4);
   return 0;
 }

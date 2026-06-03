@@ -41,12 +41,8 @@ class huffman_tree {
 
   struct by_frequency {
     const std::vector<node> *nodes;
-
     explicit by_frequency(const std::vector<node> *nodes = NULL) : nodes(nodes) {}
-
-    bool operator()(int a, int b) const {
-      return (*nodes)[a].freq > (*nodes)[b].freq;
-    }
+    bool operator()(int a, int b) const { return (*nodes)[a].freq > (*nodes)[b].freq; }
   };
 
   std::vector<node> nodes;
@@ -91,9 +87,7 @@ class huffman_tree {
     build_codes(root, "");
   }
 
-  std::vector<string> codes() const {
-    return code;
-  }
+  std::vector<string> codes() const { return code; }
 
   string encode(const string &text) const {
     string bits;

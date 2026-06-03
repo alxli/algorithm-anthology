@@ -62,17 +62,12 @@ struct line {
     } else {
       a = -(p.y - q.y) / (p.x - q.x);
       b = 1;
-      c = -(a*p.x) - (b*p.y);
+      c = -(a * p.x) - (b * p.y);
     }
   }
 
-  bool operator==(const line &l) const {
-    return EQ(a, l.a) && EQ(b, l.b) && EQ(c, l.c);
-  }
-
-  bool operator!=(const line &l) const {
-    return !(*this == l);
-  }
+  bool operator==(const line &l) const { return EQ(a, l.a) && EQ(b, l.b) && EQ(c, l.c); }
+  bool operator!=(const line &l) const { return !(*this == l); }
 
   // Returns whether the line is initialized and normalized.
   bool valid() const {
@@ -92,7 +87,7 @@ struct line {
     if (!valid() || EQ(a, 0)) {
       return M_NAN;  // Invalid or horizontal line.
     }
-    return (-c - b*y) / a;
+    return (-c - b * y) / a;
   }
 
   // Solve for y at a given x. If the line is vertical, then either -INF, INF,
@@ -101,31 +96,32 @@ struct line {
     if (!valid() || EQ(b, 0)) {
       return M_NAN;  // Invalid or vertical line.
     }
-    return (-c - a*x) / b;
+    return (-c - a * x) / b;
   }
 
   template<class Point>
-  bool contains(const Point &p) const { return EQ(a*p.x + b*p.y + c, 0); }
+  bool contains(const Point &p) const {
+    return EQ(a * p.x + b * p.y + c, 0);
+  }
 
   bool is_parallel(const line &l) const { return EQ(a, l.a) && EQ(b, l.b); }
-  bool is_perpendicular(const line &l) const { return EQ(-a*l.a, b*l.b); }
+  bool is_perpendicular(const line &l) const { return EQ(-a * l.a, b * l.b); }
 
   // Return the parallel line passing through point p.
   template<class Point>
   line parallel(const Point &p) const {
-    return line(a, b, -a*p.x - b*p.y);
+    return line(a, b, -a * p.x - b * p.y);
   }
 
   // Return the perpendicular line passing through point p.
   template<class Point>
   line perpendicular(const Point &p) const {
-    return line(-b, a, b*p.x - a*p.y);
+    return line(-b, a, b * p.x - a * p.y);
   }
 
-  friend std::ostream& operator<<(std::ostream &out, const line &l) {
-    return out << (fabs(l.a) < EPS ? 0 : l.a) << "x" << std::showpos
-               << (fabs(l.b) < EPS ? 0 : l.b) << "y"
-               << (fabs(l.c) < EPS ? 0 : l.c) << "=0" << std::noshowpos;
+  friend std::ostream &operator<<(std::ostream &out, const line &l) {
+    return out << (fabs(l.a) < EPS ? 0 : l.a) << "x" << std::showpos << (fabs(l.b) < EPS ? 0 : l.b)
+               << "y" << (fabs(l.c) < EPS ? 0 : l.c) << "=0" << std::noshowpos;
   }
 };
 
@@ -145,6 +141,6 @@ int main() {
   assert(l.is_parallel(para) && l.is_perpendicular(perp));
   assert(l.slope() == 0.4);
   assert(para == line(-0.4, 1, -0.4));  // -0.4x + y - 0.4 = 0.
-  assert(perp == line(2.5, 1, 17));  // 2.5x + y + 17 = 0.
+  assert(perp == line(2.5, 1, 17));     // 2.5x + y + 17 = 0.
   return 0;
 }

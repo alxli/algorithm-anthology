@@ -33,21 +33,10 @@ class online_statistics {
     m2 += delta * delta2;
   }
 
-  int count() const {
-    return n;
-  }
-
-  double mean() const {
-    return avg;
-  }
-
-  double variance_population() const {
-    return n == 0 ? 0 : m2 / n;
-  }
-
-  double variance_sample() const {
-    return n <= 1 ? 0 : m2 / (n - 1);
-  }
+  int count() const { return n; }
+  double mean() const { return avg; }
+  double variance_population() const { return n == 0 ? 0 : m2 / n; }
+  double variance_sample() const { return n <= 1 ? 0 : m2 / (n - 1); }
 };
 
 /*** Example Usage ***/

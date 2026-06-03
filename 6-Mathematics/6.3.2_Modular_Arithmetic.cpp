@@ -65,13 +65,9 @@ class modular {
   value_type v;
 
  public:
-  modular(long long x = 0) {
-    v = normalize(x);
-  }
+  modular(long long x = 0) { v = normalize(x); }
 
-  static value_type mod() {
-    return T::value;
-  }
+  static value_type mod() { return T::value; }
 
   static value_type normalize(long long x) {
     if (-(long long)mod() <= x && x < (long long)mod()) {
@@ -85,13 +81,8 @@ class modular {
     return (value_type)x;
   }
 
-  value_type value() const {
-    return v;
-  }
-
-  value_type operator()() const {
-    return v;
-  }
+  value_type value() const { return v; }
+  value_type operator()() const { return v; }
 
   modular pow(long long e) const {
     assert(e >= 0);
@@ -111,11 +102,7 @@ class modular {
     return modular(inverse((long long)v, (long long)mod()));
   }
 
-  modular operator-() const {
-    return modular(-v);
-  }
-
-  modular& operator+=(const modular &other) {
+  modular &operator+=(const modular &other) {
     v += other.v;
     if (v >= mod()) {
       v -= mod();
@@ -123,7 +110,7 @@ class modular {
     return *this;
   }
 
-  modular& operator-=(const modular &other) {
+  modular &operator-=(const modular &other) {
     v -= other.v;
     if (v < 0) {
       v += mod();
@@ -131,22 +118,15 @@ class modular {
     return *this;
   }
 
-  modular& operator*=(const modular &other) {
+  modular &operator*=(const modular &other) {
     v = normalize((long long)v * other.v);
     return *this;
   }
 
-  modular& operator/=(const modular &other) {
-    return *this *= other.inv();
-  }
-
-  modular& operator++() {
-    return *this += 1;
-  }
-
-  modular& operator--() {
-    return *this -= 1;
-  }
+  modular operator-() const { return modular(-v); }
+  modular &operator++() { return *this += 1; }
+  modular &operator--() { return *this -= 1; }
+  modular &operator/=(const modular &other) { return *this *= other.inv(); }
 
   modular operator++(int) {
     modular res = *this;
@@ -160,39 +140,23 @@ class modular {
     return res;
   }
 
-  friend modular operator+(modular a, const modular &b) {
-    return a += b;
-  }
+  friend modular operator+(modular a, const modular &b) { return a += b; }
 
-  friend modular operator-(modular a, const modular &b) {
-    return a -= b;
-  }
+  friend modular operator-(modular a, const modular &b) { return a -= b; }
 
-  friend modular operator*(modular a, const modular &b) {
-    return a *= b;
-  }
+  friend modular operator*(modular a, const modular &b) { return a *= b; }
 
-  friend modular operator/(modular a, const modular &b) {
-    return a /= b;
-  }
+  friend modular operator/(modular a, const modular &b) { return a /= b; }
 
-  friend bool operator==(const modular &a, const modular &b) {
-    return a.v == b.v;
-  }
+  friend bool operator==(const modular &a, const modular &b) { return a.v == b.v; }
 
-  friend bool operator!=(const modular &a, const modular &b) {
-    return !(a == b);
-  }
+  friend bool operator!=(const modular &a, const modular &b) { return !(a == b); }
 
-  friend bool operator<(const modular &a, const modular &b) {
-    return a.v < b.v;
-  }
+  friend bool operator<(const modular &a, const modular &b) { return a.v < b.v; }
 
-  friend std::ostream& operator<<(std::ostream &os, const modular &x) {
-    return os << x.v;
-  }
+  friend std::ostream &operator<<(std::ostream &os, const modular &x) { return os << x.v; }
 
-  friend std::istream& operator>>(std::istream &is, modular &x) {
+  friend std::istream &operator>>(std::istream &is, modular &x) {
     long long value;
     is >> value;
     x = modular(value);
@@ -244,9 +208,7 @@ class mod_combinatorics {
     return fact[n] * inv_fact[n - k];
   }
 
-  Mint multichoose(int n, int k) {
-    return choose(n + k - 1, k);
-  }
+  Mint multichoose(int n, int k) { return choose(n + k - 1, k); }
 };
 
 struct mod_1000000007 {

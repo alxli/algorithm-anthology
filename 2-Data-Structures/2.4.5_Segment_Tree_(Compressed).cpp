@@ -54,17 +54,9 @@ template<class T>
 class segment_tree {
   static const int MAXN = 1000000000;
 
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_segment(const T &v, int len) {
-    return v;
-  }
-
-  static T join_value_with_delta(const T &v, const T &d, int len) {
-    return d;
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_segment(const T &v, int len) { return v; }
+  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
 
   static T join_deltas(const T &d1, const T &d2) {
     return d2;  // For "set" updates, the more recent delta prevails.
@@ -95,7 +87,7 @@ class segment_tree {
     if (n->pending) {
       n->value = join_value_with_delta(n->value, n->delta, hi - lo + 1);
       if (lo != hi) {
-        int mid = lo + (hi - lo)/2;
+        int mid = lo + (hi - lo) / 2;
         update_delta(n->left, n->delta, mid - lo + 1);
         update_delta(n->right, n->delta, hi - mid);
       }
@@ -111,11 +103,12 @@ class segment_tree {
     if (lo == tgt_lo && hi == tgt_hi) {
       return n->value;
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     if (tgt_lo <= mid && mid < tgt_hi) {
       return join_values(
           query(n->left, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
-          query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi));
+          query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi)
+      );
     }
     if (tgt_lo <= mid) {
       return query(n->left, lo, mid, tgt_lo, std::min(tgt_hi, mid));
@@ -137,7 +130,7 @@ class segment_tree {
       push_delta(n, lo, hi);
       return;
     }
-    int mid = lo + (hi - lo)/2;
+    int mid = lo + (hi - lo) / 2;
     update(n->left, lo, mid, tgt_lo, tgt_hi, d);
     update(n->right, mid + 1, hi, tgt_lo, tgt_hi, d);
     n->value = join_values(n->left->value, n->right->value);
@@ -154,25 +147,11 @@ class segment_tree {
  public:
   segment_tree(const T &v = T()) : root(NULL), init(v) {}
 
-  ~segment_tree() {
-    clean_up(root);
-  }
-
-  T at(int i) {
-    return query(i, i);
-  }
-
-  T query(int lo, int hi) {
-    return query(root, 0, MAXN, lo, hi);
-  }
-
-  void update(int i, const T &d) {
-    return update(i, i, d);
-  }
-
-  void update(int lo, int hi, const T &d) {
-    return update(root, 0, MAXN, lo, hi, d);
-  }
+  ~segment_tree() { clean_up(root); }
+  T at(int i) { return query(i, i); }
+  T query(int lo, int hi) { return query(root, 0, MAXN, lo, hi); }
+  void update(int i, const T &d) { return update(i, i, d); }
+  void update(int lo, int hi, const T &d) { return update(root, 0, MAXN, lo, hi, d); }
 };
 
 /*** Example Usage and Output:

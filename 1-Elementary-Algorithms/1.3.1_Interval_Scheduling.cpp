@@ -24,8 +24,7 @@ Space Complexity:
 struct interval_t {
   int start, finish, id;
 
-  interval_t(int start = 0, int finish = 0, int id = 0)
-      : start(start), finish(finish), id(id) {}
+  interval_t(int start = 0, int finish = 0, int id = 0) : start(start), finish(finish), id(id) {}
 };
 
 bool earlier_finish(const interval_t &a, const interval_t &b) {

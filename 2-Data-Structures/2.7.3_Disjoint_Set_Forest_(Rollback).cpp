@@ -42,9 +42,7 @@ class rollback_dsu {
  public:
   rollback_dsu() : sets(0) {}
 
-  explicit rollback_dsu(int n) {
-    initialize(n);
-  }
+  explicit rollback_dsu(int n) { initialize(n); }
 
   void initialize(int n) {
     root.resize(n);
@@ -56,9 +54,7 @@ class rollback_dsu {
     }
   }
 
-  int count_sets() const {
-    return sets;
-  }
+  int count_sets() const { return sets; }
 
   int find_root(int u) const {
     while (root[u] != u) {
@@ -67,9 +63,7 @@ class rollback_dsu {
     return u;
   }
 
-  bool is_united(int u, int v) const {
-    return find_root(u) == find_root(v);
-  }
+  bool is_united(int u, int v) const { return find_root(u) == find_root(v); }
 
   bool unite(int u, int v) {
     u = find_root(u);
@@ -89,9 +83,7 @@ class rollback_dsu {
     return true;
   }
 
-  int snapshot() const {
-    return history.size();
-  }
+  int snapshot() const { return history.size(); }
 
   void rollback(int snapshot) {
     while ((int)history.size() > snapshot) {

@@ -60,8 +60,7 @@ double entropy(const string &s) {
   return entropy(byte_frequencies(s));
 }
 
-double expected_code_length(const std::vector<int> &freq,
-                            const std::vector<int> &length) {
+double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
   int total = 0;
   for (int i = 0; i < (int)freq.size(); i++) {
     total += freq[i];

@@ -39,8 +39,7 @@ class splay_tree {
     V value;
     node_t *left, *right;
 
-    node_t(const K &k, const V &v)
-        : key(k), value(v), left(NULL), right(NULL) {}
+    node_t(const K &k, const V &v) : key(k), value(v), left(NULL), right(NULL) {}
   } *root;
 
   int num_nodes;
@@ -156,17 +155,9 @@ class splay_tree {
  public:
   splay_tree() : root(NULL), num_nodes(0) {}
 
-  ~splay_tree() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~splay_tree() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -184,7 +175,7 @@ class splay_tree {
     return false;
   }
 
-  const V* find(const K &k) {
+  const V *find(const K &k) {
     splay(root, k);
     return (k < root->key || root->key < k) ? NULL : &(root->value);
   }

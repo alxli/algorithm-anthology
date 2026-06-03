@@ -38,8 +38,9 @@ bool earlier_start(const partition_interval_t &a, const partition_interval_t &b)
 std::vector<int> interval_partitioning(std::vector<partition_interval_t> intervals) {
   std::sort(intervals.begin(), intervals.end(), earlier_start);
   std::vector<int> room(intervals.size());
-  std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int> >,
-                      std::greater<std::pair<int, int> > > pq;
+  std::priority_queue<
+      std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>>
+      pq;
   int rooms = 0;
   for (int i = 0; i < (int)intervals.size(); i++) {
     int id = intervals[i].id;

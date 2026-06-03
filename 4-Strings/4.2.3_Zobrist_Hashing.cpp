@@ -60,9 +60,7 @@ class zobrist_hash {
     return state;
   }
 
-  uint64 toggle(uint64 h, const T &x) {
-    return h ^ get(x);
-  }
+  uint64 toggle(uint64 h, const T &x) { return h ^ get(x); }
 
   template<class It>
   std::vector<uint64> distinct_prefix_hashes(It lo, It hi) {

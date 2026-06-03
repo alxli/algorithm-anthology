@@ -50,7 +50,7 @@ class hash_map {
   void double_capacity_and_rehash() {
     std::list<entry_t> *old = table;
     int old_size = table_size;
-    table_size = 2*table_size;
+    table_size = 2 * table_size;
     table = new std::list<entry_t>[table_size];
     num_entries = 0;
     typename std::list<entry_t>::iterator it;
@@ -67,17 +67,9 @@ class hash_map {
     table = new std::list<entry_t>[table_size];
   }
 
-  ~hash_map() {
-    delete[] table;
-  }
-
-  int size() const {
-    return num_entries;
-  }
-
-  bool empty() const {
-    return num_entries == 0;
-  }
+  ~hash_map() { delete[] table; }
+  int size() const { return num_entries; }
+  bool empty() const { return num_entries == 0; }
 
   bool insert(const K &k, const V &v) {
     if (find(k) != NULL) {
@@ -106,7 +98,7 @@ class hash_map {
     return true;
   }
 
-  V* find(const K &k) const {
+  V *find(const K &k) const {
     unsigned int i = Hash()(k) % table_size;
     typename std::list<entry_t>::iterator it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
@@ -118,7 +110,7 @@ class hash_map {
     return &(it->value);
   }
 
-  V& operator[](const K &k) {
+  V &operator[](const K &k) {
     V *ret = find(k);
     if (ret != NULL) {
       return *ret;
@@ -149,13 +141,9 @@ cab
 using namespace std;
 
 struct class_hash {
-  unsigned int operator()(int k) {
-    return class_hash()((unsigned int)k);
-  }
+  unsigned int operator()(int k) { return class_hash()((unsigned int)k); }
 
-  unsigned int operator()(long long k) {
-    return class_hash()((unsigned long long)k);
-  }
+  unsigned int operator()(long long k) { return class_hash()((unsigned long long)k); }
 
   // Knuth's one-to-one multiplicative method.
   unsigned int operator()(unsigned int k) {
@@ -165,13 +153,13 @@ struct class_hash {
   // Jenkins's 64-bit hash.
   unsigned int operator()(unsigned long long k) {
     k += ~(k << 32);
-    k ^=  (k >> 22);
+    k ^= (k >> 22);
     k += ~(k << 13);
-    k ^=  (k >>  8);
-    k +=  (k <<  3);
-    k ^=  (k >> 15);
+    k ^= (k >> 8);
+    k += (k << 3);
+    k ^= (k >> 15);
     k += ~(k << 27);
-    k ^=  (k >> 31);
+    k ^= (k >> 31);
     return k;
   }
 

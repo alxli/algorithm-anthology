@@ -36,8 +36,7 @@ int shortest_hamiltonian_cycle(int nodes) {
       if ((mask & 1 << i) != 0) {
         for (int j = 0; j < nodes; j++) {
           if ((mask & 1 << j) != 0) {
-            dp[mask][i] = std::min(dp[mask][i],
-                                   dp[mask ^ (1 << i)][j] + adj[j][i]);
+            dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
           }
         }
       }
@@ -51,8 +50,8 @@ int shortest_hamiltonian_cycle(int nodes) {
   for (int i = nodes - 1; i >= 1; i--) {
     int bj = -1;
     for (int j = 1; j < nodes; j++) {
-      if ((mask & 1 << j) != 0 && (bj == -1 ||
-              dp[mask][bj] + adj[bj][old] > dp[mask][j] + adj[j][old])) {
+      if ((mask & 1 << j) != 0 &&
+          (bj == -1 || dp[mask][bj] + adj[bj][old] > dp[mask][j] + adj[j][old])) {
         bj = j;
       }
     }
@@ -85,8 +84,8 @@ int main() {
   add_edge(2, 3, 1);
   add_edge(2, 4, 1);
   add_edge(3, 4, 10);
-  cout << "The shortest hamiltonian cycle has length "
-       << shortest_hamiltonian_cycle(nodes) << "." << endl
+  cout << "The shortest hamiltonian cycle has length " << shortest_hamiltonian_cycle(nodes) << "."
+       << endl
        << "Take the path: ";
   for (int i = 0; i < nodes; i++) {
     cout << order[i] << "->";

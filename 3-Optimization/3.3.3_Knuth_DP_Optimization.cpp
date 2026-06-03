@@ -28,12 +28,11 @@ Space Complexity:
 const long long INF = (1LL << 62);
 
 template<class CostFunction>
-std::vector<std::vector<long long> >
-knuth_interval_dp(int n, CostFunction cost, std::vector<std::vector<int> > *opt_out =
-                                       NULL) {
-  std::vector<std::vector<long long> > dp(n + 1,
-                                          std::vector<long long>(n + 1, 0));
-  std::vector<std::vector<int> > opt(n + 1, std::vector<int>(n + 1, 0));
+std::vector<std::vector<long long>> knuth_interval_dp(
+    int n, CostFunction cost, std::vector<std::vector<int>> *opt_out = NULL
+) {
+  std::vector<std::vector<long long>> dp(n + 1, std::vector<long long>(n + 1, 0));
+  std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));
   for (int i = 0; i <= n; i++) {
     opt[i][i] = i;
     if (i < n) {
@@ -81,15 +80,13 @@ struct merge_cost {
     }
   }
 
-  long long operator()(int l, int r) const {
-    return prefix[r] - prefix[l];
-  }
+  long long operator()(int l, int r) const { return prefix[r] - prefix[l]; }
 };
 
 int main() {
   int raw[] = {1, 2, 3, 4};
   vector<int> a(raw, raw + 4);
-  vector<vector<long long> > dp = knuth_interval_dp(a.size(), merge_cost(a));
+  vector<vector<long long>> dp = knuth_interval_dp(a.size(), merge_cost(a));
   assert(dp[0][4] == 19);
   return 0;
 }

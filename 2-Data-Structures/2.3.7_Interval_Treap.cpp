@@ -46,9 +46,7 @@ class interval_treap {
   typedef std::pair<K, K> interval_t;
 
   struct node_t {
-    static inline int rand32() {
-      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
-    }
+    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     interval_t interval;
     V value;
@@ -57,8 +55,7 @@ class interval_treap {
     node_t *left, *right;
 
     node_t(const interval_t &i, const V &v)
-        : interval(i), value(v), max(i.second), priority(rand32()), left(NULL),
-          right(NULL) {}
+        : interval(i), value(v), max(i.second), priority(rand32()), left(NULL), right(NULL) {}
 
     void update() {
       max = interval.second;
@@ -139,7 +136,7 @@ class interval_treap {
     return true;
   }
 
-  static node_t* find_any(node_t *n, const interval_t &i) {
+  static node_t *find_any(node_t *n, const interval_t &i) {
     if (n == NULL) {
       return NULL;
     }
@@ -184,17 +181,9 @@ class interval_treap {
  public:
   interval_treap() : root(NULL), num_nodes(0) {}
 
-  ~interval_treap() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~interval_treap() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   bool insert(const K &lo, const K &hi, const V &v) {
     if (insert(root, std::make_pair(lo, hi), v)) {
@@ -212,12 +201,12 @@ class interval_treap {
     return false;
   }
 
-  const interval_t* find_key(const K &lo, const K &hi) const {
+  const interval_t *find_key(const K &lo, const K &hi) const {
     node_t *n = find_any(root, std::make_pair(lo, hi));
     return (n == NULL) ? NULL : &(n->interval);
   }
 
-  const V* find_value(const K &lo, const K &hi) const {
+  const V *find_value(const K &lo, const K &hi) const {
     node_t *n = find_any(root, std::make_pair(lo, hi));
     return (n == NULL) ? NULL : &(n->value);
   }

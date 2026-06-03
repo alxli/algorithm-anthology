@@ -43,7 +43,7 @@ class skew_heap {
 
   int num_nodes;
 
-  static node_t* merge(node_t *a, node_t *b) {
+  static node_t *merge(node_t *a, node_t *b) {
     if (a == NULL) {
       return b;
     }
@@ -76,17 +76,9 @@ class skew_heap {
     }
   }
 
-  ~skew_heap() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~skew_heap() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   void push(const T &v) {
     root = merge(root, new node_t(v));

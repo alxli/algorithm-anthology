@@ -34,7 +34,7 @@ It majority(It lo, It hi) {
       count++;
     }
   }
-  if (count <= (hi - lo)/2) {
+  if (count <= (hi - lo) / 2) {
     return hi;
   }
   return candidate;

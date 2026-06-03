@@ -31,8 +31,13 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
-double norm(const point &a) { return sqrt(sqnorm(a)); }
+double sqnorm(const point &a) {
+  return a.x * a.x + a.y * a.y;
+}
+
+double norm(const point &a) {
+  return sqrt(sqnorm(a));
+}
 
 struct circle {
   double h, k, r;
@@ -42,8 +47,8 @@ struct circle {
 
   // Circle with the line segment ab as a diameter.
   circle(const point &a, const point &b) {
-    h = (a.x + b.x)/2.0;
-    k = (a.y + b.y)/2.0;
+    h = (a.x + b.x) / 2.0;
+    k = (a.y + b.y) / 2.0;
     r = norm(point(a.x - h, a.y - k));
   }
 
@@ -52,21 +57,19 @@ struct circle {
     double an = sqnorm(point(b.x - c.x, b.y - c.y));
     double bn = sqnorm(point(a.x - c.x, a.y - c.y));
     double cn = sqnorm(point(a.x - b.x, a.y - b.y));
-    double wa = an*(bn + cn - an);
-    double wb = bn*(an + cn - bn);
-    double wc = cn*(an + bn - cn);
+    double wa = an * (bn + cn - an);
+    double wb = bn * (an + cn - bn);
+    double wc = cn * (an + bn - cn);
     double w = wa + wb + wc;
     if (EQ(w, 0)) {
       throw std::runtime_error("No circumcircle from collinear points.");
     }
-    h = (wa*a.x + wb*b.x + wc*c.x)/w;
-    k = (wa*a.y + wb*b.y + wc*c.y)/w;
+    h = (wa * a.x + wb * b.x + wc * c.x) / w;
+    k = (wa * a.y + wb * b.y + wc * c.y) / w;
     r = norm(point(a.x - h, a.y - k));
   }
 
-  bool contains(const point &p) const {
-    return LE(sqnorm(point(p.x - h, p.y - k)), r*r);
-  }
+  bool contains(const point &p) const { return LE(sqnorm(point(p.x - h, p.y - k)), r * r); }
 };
 
 template<class It>
@@ -112,6 +115,6 @@ int main() {
   v.push_back(point(1, 0));
   v.push_back(point(1, 1));
   circle res = minimum_enclosing_circle(v.begin(), v.end());
-  assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1/sqrt(2)));
+  assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
   return 0;
 }

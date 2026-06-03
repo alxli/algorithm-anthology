@@ -22,22 +22,23 @@ Space Complexity:
 
 */
 
-#include <cstddef>
 #include <cmath>
+#include <cstddef>
 
 template<class ContinuousFunction>
-double find_min(ContinuousFunction f, double x0, double y0,
-                double *critical_x = NULL, double *critical_y = NULL,
-                const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6,
-                const int NUM_DIRECTIONS = 6) {
+double find_min(
+    ContinuousFunction f, double x0, double y0, double *critical_x = NULL,
+    double *critical_y = NULL, const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6,
+    const int NUM_DIRECTIONS = 6
+) {
   static const double PI = acos(-1.0);
   double x = x0, y = y0, res = f(x0, y0);
-  for (double step = STEP_MAX; step > STEP_MIN; ) {
+  for (double step = STEP_MAX; step > STEP_MIN;) {
     double best = res, best_x = x, best_y = y;
     bool found = false;
     for (int i = 0; i < NUM_DIRECTIONS; i++) {
-      double a = 2.0*PI*i / NUM_DIRECTIONS;
-      double x2 = x + step*cos(a), y2 = y + step*sin(a);
+      double a = 2.0 * PI * i / NUM_DIRECTIONS;
+      double x2 = x + step * cos(a), y2 = y + step * sin(a);
       double value = f(x2, y2);
       if (best > value) {
         best_x = x2;
@@ -72,7 +73,7 @@ bool eq(double a, double b) {
 
 // Paraboloid with global minimum at f(2, 3) = 0.
 double f(double x, double y) {
-  return (x - 2)*(x - 2) + (y - 3)*(y - 3);
+  return (x - 2) * (x - 2) + (y - 3) * (y - 3);
 }
 
 int main() {

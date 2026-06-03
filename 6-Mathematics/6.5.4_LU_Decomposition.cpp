@@ -47,8 +47,7 @@ Space Complexity:
 #include <vector>
 
 template<class Matrix>
-int lu_decompose(Matrix &a, std::vector<int> *p1col = NULL,
-                 const double EPS = 1e-10) {
+int lu_decompose(Matrix &a, std::vector<int> *p1col = NULL, const double EPS = 1e-10) {
   int r = a.size(), c = a[0].size(), parity = 0;
   if (p1col != NULL) {
     p1col->resize(r);
@@ -76,7 +75,7 @@ int lu_decompose(Matrix &a, std::vector<int> *p1col = NULL,
     for (int j = i + 1; j < r; j++) {
       a[j][i] /= a[i][i];
       for (int k = i + 1; k < c; k++) {
-        a[j][k] -= a[j][i]*a[i][k];
+        a[j][k] -= a[j][i] * a[i][k];
       }
     }
   }
@@ -94,8 +93,9 @@ double getu(const Matrix &lu, int i, int j) {
 }
 
 template<class Matrix, class T>
-int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x,
-                 const double EPS = 1e-10) {
+int solve_system(
+    const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double EPS = 1e-10
+) {
   int r = a.size(), c = a[0].size();
   if (x == NULL || a.empty() || a.size() != b.size() || r < c) {
     return -1;
@@ -110,21 +110,21 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x,
   for (int i = 0; i < c; i++) {
     (*x)[i] = b[p1col[i]];
     for (int k = 0; k < i; k++) {
-      (*x)[i] -= getl(lu, i, k)*(*x)[k];
+      (*x)[i] -= getl(lu, i, k) * (*x)[k];
     }
   }
   for (int i = c - 1; i >= 0; i--) {
     for (int k = i + 1; k < c; k++) {
-      (*x)[i] -= getu(lu, i, k)*(*x)[k];
+      (*x)[i] -= getu(lu, i, k) * (*x)[k];
     }
     (*x)[i] /= getu(lu, i, i);
   }
   for (int i = 0; i < r; i++) {
     double val = 0;
     for (int j = 0; j < c; j++) {
-      val += a[i][j]*(*x)[j];
+      val += a[i][j] * (*x)[j];
     }
-    if (fabs(val - b[i])/b[i] > EPS) {
+    if (fabs(val - b[i]) / b[i] > EPS) {
       return -1;
     }
   }
@@ -163,12 +163,12 @@ int invert(SquareMatrix &a) {
         ia[i][j] = 0.0;
       }
       for (int k = 0; k < i; k++) {
-        ia[i][j] -= getl(a, i, k)*ia[k][j];
+        ia[i][j] -= getl(a, i, k) * ia[k][j];
       }
     }
     for (int i = n - 1; i >= 0; i--) {
       for (int k = i + 1; k < n; k++) {
-        ia[i][j] -= getu(a, i, k)*ia[k][j];
+        ia[i][j] -= getu(a, i, k) * ia[k][j];
       }
       ia[i][j] /= getu(a, i, i);
     }
@@ -183,11 +183,11 @@ int invert(SquareMatrix &a) {
 using namespace std;
 
 int main() {
-  { // Solve a system.
+  {  // Solve a system.
     const int equations = 3, unknowns = 3;
     const int a[equations][unknowns] = {{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
     const int b[equations] = {3, 1, -2};
-    vector<vector<double> > m(equations);
+    vector<vector<double>> m(equations);
     for (int i = 0; i < equations; i++) {
       m[i].assign(a[i], a[i] + unknowns);
     }
@@ -196,22 +196,22 @@ int main() {
     for (int i = 0; i < equations; i++) {
       double sum = 0;
       for (int j = 0; j < unknowns; j++) {
-        sum += a[i][j]*x[j];
+        sum += a[i][j] * x[j];
       }
       assert(fabs(sum - b[i]) < 1e-10);
     }
   }
-  { // Find the determinant.
+  {  // Find the determinant.
     const int n = 3, a[n][n] = {{1, 3, 5}, {2, 4, 7}, {1, 1, 0}};
-    vector<vector<double> > m(n);
+    vector<vector<double>> m(n);
     for (int i = 0; i < n; i++) {
       m[i] = vector<double>(a[i], a[i] + n);
     }
     assert(fabs(det(m) - 4) < 1e-10);
   }
-  { // Find the inverse.
+  {  // Find the inverse.
     const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
-    vector<vector<double> > m(n), res(n, vector<double>(n, 0));
+    vector<vector<double>> m(n), res(n, vector<double>(n, 0));
     for (int i = 0; i < n; i++) {
       m[i] = vector<double>(a[i], a[i] + n);
     }
@@ -219,7 +219,7 @@ int main() {
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
         for (int k = 0; k < n; k++) {
-          res[i][j] += a[i][k]*m[k][j];
+          res[i][j] += a[i][k] * m[k][j];
         }
       }
     }

@@ -25,7 +25,7 @@ template<class Int, class IntPredicate>
 Int binary_search_first_true(Int lo, Int hi, IntPredicate pred) {  // 000[1]11
   Int mid, _hi = hi;
   while (lo < hi) {
-    mid = lo + (hi - lo)/2;
+    mid = lo + (hi - lo) / 2;
     if (pred(mid)) {
       hi = mid;
     } else {
@@ -42,7 +42,7 @@ template<class Int, class IntPredicate>
 Int binary_search_last_true(Int lo, Int hi, IntPredicate pred) {  // 11[1]000
   Int mid, _hi = hi--;
   while (lo < hi) {
-    mid = lo + (hi - lo + 1)/2;
+    mid = lo + (hi - lo + 1) / 2;
     if (pred(mid)) {
       lo = mid;
     } else {
@@ -59,7 +59,7 @@ template<class DoublePredicate>
 double fbinary_search(double lo, double hi, DoublePredicate pred) {  // 000[1]11
   double mid;
   for (int i = 0; i < 100; i++) {
-    mid = (lo + hi)/2.0;
+    mid = (lo + hi) / 2.0;
     if (pred(mid)) {
       hi = mid;
     } else {
@@ -75,17 +75,27 @@ double fbinary_search(double lo, double hi, DoublePredicate pred) {  // 000[1]11
 #include <cmath>
 
 // Simple predicate examples.
-bool pred1(int x) { return x >= 3; }
-bool pred2(int x) { return false; }
-bool pred3(int x) { return x <= 5; }
-bool pred4(int x) { return true; }
-bool pred5(double x) { return x >= 1.2345; }
+bool pred1(int x) {
+  return x >= 3;
+}
+bool pred2(int x) {
+  return false;
+}
+bool pred3(int x) {
+  return x <= 5;
+}
+bool pred4(int x) {
+  return true;
+}
+bool pred5(double x) {
+  return x >= 1.2345;
+}
 
 int main() {
   assert(binary_search_first_true(0, 7, pred1) == 3);
   assert(binary_search_first_true(0, 7, pred2) == 7);
-  assert(binary_search_last_true(0, 7, pred3)  == 5);
-  assert(binary_search_last_true(0, 7, pred4)  == 6);
+  assert(binary_search_last_true(0, 7, pred3) == 5);
+  assert(binary_search_last_true(0, 7, pred4) == 6);
   assert(fabs(fbinary_search(-10.0, 10.0, pred5) - 1.2345) < 1e-15);
   return 0;
 }
@@ -165,12 +175,11 @@ Given a unimodal function \inlinecode{f(x)} taking a single \inlinecode{double} 
 
 \begin{lstlisting}[language=C++]
 template<class UnimodalFunction>
-double ternary_search_min(double lo, double hi, UnimodalFunction f,
-                          const double EPS = 1e-12) {
+double ternary_search_min(double lo, double hi, UnimodalFunction f, const double EPS = 1e-12) {
   double lthird, hthird;
   while (hi - lo > EPS) {
-    lthird = lo + (hi - lo)/3;
-    hthird = hi - (hi - lo)/3;
+    lthird = lo + (hi - lo) / 3;
+    hthird = hi - (hi - lo) / 3;
     if (f(lthird) < f(hthird)) {
       hi = hthird;
     } else {
@@ -181,12 +190,11 @@ double ternary_search_min(double lo, double hi, UnimodalFunction f,
 }
 
 template<class UnimodalFunction>
-double ternary_search_max(double lo, double hi, UnimodalFunction f,
-                          const double EPS = 1e-12) {
+double ternary_search_max(double lo, double hi, UnimodalFunction f, const double EPS = 1e-12) {
   double lthird, hthird;
   while (hi - lo > EPS) {
-    lthird = lo + (hi - lo)/3;
-    hthird = hi - (hi - lo)/3;
+    lthird = lo + (hi - lo) / 3;
+    hthird = hi - (hi - lo) / 3;
     if (f(lthird) < f(hthird)) {
       lo = lthird;
     } else {
@@ -207,12 +215,12 @@ bool equal(double a, double b) {
 
 // Parabola opening up with vertex at (-2, -24).
 double f1(double x) {
-  return 3*x*x + 12*x - 12;
+  return 3 * x * x + 12 * x - 12;
 }
 
 // Parabola opening down with vertex at (2/19, 8366/95) ~ (0.105, 88.063).
 double f2(double x) {
-  return -5.7*x*x + 1.2*x + 88;
+  return -5.7 * x * x + 1.2 * x + 88;
 }
 
 // Absolute value function shifted to the right by 30 units.
@@ -222,7 +230,7 @@ double f3(double x) {
 
 int main() {
   assert(equal(ternary_search_min(-1000, 1000, f1), -2));
-  assert(equal(ternary_search_max(-1000, 1000, f2), 2.0/19));
+  assert(equal(ternary_search_max(-1000, 1000, f2), 2.0 / 19));
   assert(equal(ternary_search_min(-1000, 1000, f3), 30));
   return 0;
 }
@@ -237,22 +245,23 @@ Hill-climbing is a heuristic which starts at the guess, then considers taking a 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-#include <cstddef>
 #include <cmath>
+#include <cstddef>
 
 template<class ContinuousFunction>
-double find_min(ContinuousFunction f, double x0, double y0,
-                double *critical_x = NULL, double *critical_y = NULL,
-                const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6,
-                const int NUM_DIRECTIONS = 6) {
+double find_min(
+    ContinuousFunction f, double x0, double y0, double *critical_x = NULL,
+    double *critical_y = NULL, const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6,
+    const int NUM_DIRECTIONS = 6
+) {
   static const double PI = acos(-1.0);
   double x = x0, y = y0, res = f(x0, y0);
-  for (double step = STEP_MAX; step > STEP_MIN; ) {
+  for (double step = STEP_MAX; step > STEP_MIN;) {
     double best = res, best_x = x, best_y = y;
     bool found = false;
     for (int i = 0; i < NUM_DIRECTIONS; i++) {
-      double a = 2.0*PI*i / NUM_DIRECTIONS;
-      double x2 = x + step*cos(a), y2 = y + step*sin(a);
+      double a = 2.0 * PI * i / NUM_DIRECTIONS;
+      double x2 = x + step * cos(a), y2 = y + step * sin(a);
       double value = f(x2, y2);
       if (best > value) {
         best_x = x2;
@@ -287,7 +296,7 @@ bool eq(double a, double b) {
 
 // Paraboloid with global minimum at f(2, 3) = 0.
 double f(double x, double y) {
-  return (x - 2)*(x - 2) + (y - 3)*(y - 3);
+  return (x - 2) * (x - 2) + (y - 3) * (y - 3);
 }
 
 int main() {
@@ -329,8 +338,7 @@ double random_unit() {
 }
 
 template<class Function>
-double anneal_min(Function f, double x0, double y0, double *best_x = NULL,
-                  double *best_y = NULL) {
+double anneal_min(Function f, double x0, double y0, double *best_x = NULL, double *best_y = NULL) {
   double ans_x = x0, ans_y = y0, ans = f(x0, y0);
   for (int restart = 0; restart < NUM_RESTARTS; restart++) {
     double x = x0, y = y0, cur = f(x, y);
@@ -373,7 +381,7 @@ bool close(double a, double b) {
 
 // Smooth bowl with global minimum at f(2, -3) = 0.
 double f(double x, double y) {
-  return (x - 2)*(x - 2) + (y + 3)*(y + 3);
+  return (x - 2) * (x - 2) + (y + 3) * (y + 3);
 }
 
 int main() {
@@ -425,9 +433,7 @@ class monotone_queue {
   Compare better;
 
  public:
-  bool empty() const {
-    return q.empty();
-  }
+  bool empty() const { return q.empty(); }
 
   void push(int index, const T &value) {
     while (!q.empty() && !better(q.back().second, value)) {
@@ -442,9 +448,7 @@ class monotone_queue {
     }
   }
 
-  entry top() const {
-    return q.front();
-  }
+  entry top() const { return q.front(); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -457,7 +461,7 @@ int main() {
   int raw[] = {4, 2, 7, 1, 3, 6};
   vector<int> a(raw, raw + 6);
 
-  monotone_queue<int, less<int> > minq;
+  monotone_queue<int, less<int>> minq;
   vector<int> window_min;
   for (int i = 0; i < (int)a.size(); i++) {
     minq.push(i, a[i]);
@@ -473,7 +477,7 @@ int main() {
 
   // dp[i] = a[i] + min(dp[j]) over max(0, i - 2) <= j < i.
   vector<int> dp(a.size());
-  monotone_queue<int, less<int> > best;
+  monotone_queue<int, less<int>> best;
   dp[0] = a[0];
   best.push(0, dp[0]);
   for (int i = 1; i < (int)a.size(); i++) {
@@ -506,9 +510,10 @@ The function below computes \inlinecode{dp\_cur[l..r]} by evaluating the midpoin
 const long long INF = (1LL << 62);
 
 template<class CostFunction>
-void compute_dc_layer(const std::vector<long long> &dp_prev,
-                      std::vector<long long> &dp_cur, int l, int r, int opt_l,
-                      int opt_r, CostFunction cost) {
+void compute_dc_layer(
+    const std::vector<long long> &dp_prev, std::vector<long long> &dp_cur, int l, int r, int opt_l,
+    int opt_r, CostFunction cost
+) {
   if (l > r) {
     return;
   }
@@ -588,12 +593,11 @@ Common applications include optimal binary search trees and some range merging p
 const long long INF = (1LL << 62);
 
 template<class CostFunction>
-std::vector<std::vector<long long> >
-knuth_interval_dp(int n, CostFunction cost, std::vector<std::vector<int> > *opt_out =
-                                       NULL) {
-  std::vector<std::vector<long long> > dp(n + 1,
-                                          std::vector<long long>(n + 1, 0));
-  std::vector<std::vector<int> > opt(n + 1, std::vector<int>(n + 1, 0));
+std::vector<std::vector<long long>> knuth_interval_dp(
+    int n, CostFunction cost, std::vector<std::vector<int>> *opt_out = NULL
+) {
+  std::vector<std::vector<long long>> dp(n + 1, std::vector<long long>(n + 1, 0));
+  std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));
   for (int i = 0; i <= n; i++) {
     opt[i][i] = i;
     if (i < n) {
@@ -641,15 +645,13 @@ struct merge_cost {
     }
   }
 
-  long long operator()(int l, int r) const {
-    return prefix[r] - prefix[l];
-  }
+  long long operator()(int l, int r) const { return prefix[r] - prefix[l]; }
 };
 
 int main() {
   int raw[] = {1, 2, 3, 4};
   vector<int> a(raw, raw + 4);
-  vector<vector<long long> > dp = knuth_interval_dp(a.size(), merge_cost(a));
+  vector<vector<long long>> dp = knuth_interval_dp(a.size(), merge_cost(a));
   assert(dp[0][4] == 19);
   return 0;
 }
@@ -680,8 +682,8 @@ int ptr = 0;
 
 void add_line(long long m, long long b) {
   int len = M.size();
-  while (len > 1 && (B[len - 2] - B[len - 1])*(m - M[len - 1]) >=
-                    (B[len - 1] - b)*(M[len - 1] - M[len - 2])) {
+  while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
+                        (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
     len--;
   }
   M.resize(len);
@@ -694,11 +696,10 @@ long long query(long long x) {
   if (ptr >= (int)M.size()) {
     ptr = (int)M.size() - 1;
   }
-  while (ptr + 1 < (int)M.size() &&
-         M[ptr + 1]*x + B[ptr + 1] <= M[ptr]*x + B[ptr]) {
+  while (ptr + 1 < (int)M.size() && M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
     ptr++;
   }
-  return M[ptr]*x + B[ptr];
+  return M[ptr] * x + B[ptr];
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -750,9 +751,7 @@ class hull_optimizer {
     line(long long m, long long b, long long xhi = 0, bool is_query = false)
         : m(m), b(b), xhi(xhi), is_query(is_query) {}
 
-    bool operator<(const line &l) const {
-      return l.is_query ? xhi < l.xhi : m < l.m;
-    }
+    bool operator<(const line &l) const { return l.is_query ? xhi < l.xhi : m < l.m; }
   };
 
   std::multiset<line> hull;
@@ -760,9 +759,7 @@ class hull_optimizer {
 
   typedef std::multiset<line>::iterator hulliter;
 
-  static long long div_floor(long long a, long long b) {
-    return a/b - ((a ^ b) < 0 && a % b);
-  }
+  static long long div_floor(long long a, long long b) { return a / b - ((a ^ b) < 0 && a % b); }
 
   bool update_border(hulliter x, hulliter y) {
     if (y == hull.end()) {
@@ -803,7 +800,7 @@ class hull_optimizer {
     assert(!hull.empty());
     line q(0, 0, x, true);
     hulliter it = hull.lower_bound(q);
-    long long res = it->m*x + it->b;
+    long long res = it->m * x + it->b;
     return query_max ? res : -res;
   }
 };
@@ -856,9 +853,7 @@ struct line {
 
   line(long long m = 0, long long b = INF) : m(m), b(b) {}
 
-  long long eval(long long x) const {
-    return m * x + b;
-  }
+  long long eval(long long x) const { return m * x + b; }
 };
 
 class li_chao_tree {
@@ -920,13 +915,9 @@ class li_chao_tree {
  public:
   li_chao_tree(long long lo, long long hi) : root(NULL), lo(lo), hi(hi) {}
 
-  ~li_chao_tree() {
-    clean_up(root);
-  }
+  ~li_chao_tree() { clean_up(root); }
 
-  void add_line(long long m, long long b) {
-    add_line(root, lo, hi, line(m, b));
-  }
+  void add_line(long long m, long long b) { add_line(root, lo, hi, line(m, b)); }
 
   long long query(long long x) const {
     assert(lo <= x && x <= hi);
@@ -970,9 +961,10 @@ Solves a linear programming problem using Dantzig's simplex algorithm. The canon
 #include <vector>
 
 template<class Matrix>
-int simplex_solve(const Matrix &a, const std::vector<double> &b,
-                  const std::vector<double> &c, std::vector<double> *x,
-                  const bool MAXIMIZE = true, const double EPS = 1e-10) {
+int simplex_solve(
+    const Matrix &a, const std::vector<double> &b, const std::vector<double> &c,
+    std::vector<double> *x, const bool MAXIMIZE = true, const double EPS = 1e-10
+) {
   int m = a.size(), n = c.size();
   Matrix t(m + 2, std::vector<double>(n + 2));
   t[1][1] = 0;
@@ -1013,7 +1005,7 @@ int simplex_solve(const Matrix &a, const std::vector<double> &b,
       if (i != p1) {
         for (int j = 1; j <= n + 1; j++) {
           if (j != p2) {
-            t[i][j] -= t[p1][j]*t[i][p2] / t[p1][p2];
+            t[i][j] -= t[p1][j] * t[i][p2] / t[p1][p2];
           }
         }
       }
@@ -1067,7 +1059,7 @@ int main() {
   double a[equations][unknowns] = {{-2, 1}, {1, 0.85}, {1, 2}};
   double b[equations] = {0, 9, 14};
   double c[unknowns] = {3, 4};
-  vector<vector<double> > va(equations, vector<double>(unknowns));
+  vector<vector<double>> va(equations, vector<double>(unknowns));
   vector<double> vb(b, b + equations), vc(c, c + unknowns), x;
   for (int i = 0; i < equations; i++) {
     for (int j = 0; j < unknowns; j++) {
@@ -1077,7 +1069,7 @@ int main() {
   assert(simplex_solve(va, vb, vc, &x) == 0);
   double maxval = 0;
   for (int i = 0; i < (int)x.size(); i++) {
-    maxval += c[i]*x[i];
+    maxval += c[i] * x[i];
   }
   cout << "Solution = " << maxval << " at (" << x[0];
   for (int i = 1; i < (int)x.size(); i++) {
@@ -1110,8 +1102,7 @@ The implementation below is the classical Hungarian algorithm using potentials. 
 #include <limits>
 #include <vector>
 
-long long hungarian(const std::vector<std::vector<long long> > &cost,
-                    std::vector<int> *assignment) {
+long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector<int> *assignment) {
   int n = cost.size(), m = cost.empty() ? 0 : cost[0].size();
   assert(n <= m);
   const long long INF = std::numeric_limits<long long>::max() / 4;
@@ -1179,7 +1170,7 @@ int main() {
       {6, 4, 3, 7},
       {5, 8, 1, 8},
   };
-  vector<vector<long long> > cost(3, vector<long long>(4));
+  vector<vector<long long>> cost(3, vector<long long>(4));
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 4; j++) {
       cost[i][j] = raw[i][j];

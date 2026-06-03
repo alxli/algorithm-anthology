@@ -35,8 +35,8 @@ int ptr = 0;
 
 void add_line(long long m, long long b) {
   int len = M.size();
-  while (len > 1 && (B[len - 2] - B[len - 1])*(m - M[len - 1]) >=
-                    (B[len - 1] - b)*(M[len - 1] - M[len - 2])) {
+  while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
+                        (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
     len--;
   }
   M.resize(len);
@@ -49,11 +49,10 @@ long long query(long long x) {
   if (ptr >= (int)M.size()) {
     ptr = (int)M.size() - 1;
   }
-  while (ptr + 1 < (int)M.size() &&
-         M[ptr + 1]*x + B[ptr + 1] <= M[ptr]*x + B[ptr]) {
+  while (ptr + 1 < (int)M.size() && M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
     ptr++;
   }
-  return M[ptr]*x + B[ptr];
+  return M[ptr] * x + B[ptr];
 }
 
 /*** Example Usage ***/

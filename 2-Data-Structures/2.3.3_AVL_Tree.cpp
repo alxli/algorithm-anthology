@@ -42,15 +42,12 @@ class avl_tree {
     int height;
     node_t *left, *right;
 
-    node_t(const K &k, const V &v)
-        : key(k), value(v), height(1), left(NULL), right(NULL) {}
+    node_t(const K &k, const V &v) : key(k), value(v), height(1), left(NULL), right(NULL) {}
   } *root;
 
   int num_nodes;
 
-  static int height(node_t *n) {
-    return (n != NULL) ? n->height : 0;
-  }
+  static int height(node_t *n) { return (n != NULL) ? n->height : 0; }
 
   static void update_height(node_t *n) {
     if (n != NULL) {
@@ -104,8 +101,7 @@ class avl_tree {
       n = new node_t(k, v);
       return true;
     }
-    if ((k < n->key && insert(n->left, k, v)) ||
-        (n->key < k && insert(n->right, k, v))) {
+    if ((k < n->key && insert(n->left, k, v)) || (n->key < k && insert(n->right, k, v))) {
       rebalance(n);
       return true;
     }
@@ -140,8 +136,7 @@ class avl_tree {
       rebalance(n);
       return true;
     }
-    if ((k < n->key && erase(n->left, k)) ||
-        (n->key < k && erase(n->right, k))) {
+    if ((k < n->key && erase(n->left, k)) || (n->key < k && erase(n->right, k))) {
       rebalance(n);
       return true;
     }
@@ -168,17 +163,9 @@ class avl_tree {
  public:
   avl_tree() : root(NULL), num_nodes(0) {}
 
-  ~avl_tree() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
+  ~avl_tree() { clean_up(root); }
+  int size() const { return num_nodes; }
+  bool empty() const { return root == NULL; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -196,7 +183,7 @@ class avl_tree {
     return false;
   }
 
-  const V* find(const K &k) const {
+  const V *find(const K &k) const {
     node_t *n = root;
     while (n != NULL) {
       if (k < n->key) {

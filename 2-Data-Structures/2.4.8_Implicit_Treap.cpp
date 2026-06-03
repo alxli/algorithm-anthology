@@ -44,22 +44,12 @@ Space Complexity:
 
 template<class T>
 class implicit_treap {
-  static T join_values(const T &a, const T &b) {
-    return a < b ? a : b;
-  }
-
-  static T join_value_with_delta(const T &v, const T &d, int len) {
-    return d;
-  }
-
-  static T join_deltas(const T &d1, const T &d2) {
-    return d2;
-  }
+  static T join_values(const T &a, const T &b) { return a < b ? a : b; }
+  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
+  static T join_deltas(const T &d1, const T &d2) { return d2; }
 
   struct node_t {
-    static inline int rand32() {
-      return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
-    }
+    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     T value, subtree_value, delta;
     bool pending;
@@ -67,13 +57,16 @@ class implicit_treap {
     node_t *left, *right;
 
     node_t(const T &v)
-        : value(v), subtree_value(v), pending(false), size(1),
-          priority(rand32()), left(NULL), right(NULL) {}
+        : value(v),
+          subtree_value(v),
+          pending(false),
+          size(1),
+          priority(rand32()),
+          left(NULL),
+          right(NULL) {}
   } *root;
 
-  static int size(node_t *n) {
-    return (n == NULL) ? 0 : n->size;
-  }
+  static int size(node_t *n) { return (n == NULL) ? 0 : n->size; }
 
   static void update_value(node_t *n) {
     if (n == NULL) {
@@ -169,7 +162,7 @@ class implicit_treap {
     update_value(n);
   }
 
-  static node_t* select(node_t *n, int i) {
+  static node_t *select(node_t *n, int i) {
     push_delta(n);
     if (i < size(n->left)) {
       return select(n->left, i);
@@ -202,37 +195,14 @@ class implicit_treap {
     }
   }
 
-  ~implicit_treap() {
-    clean_up(root);
-  }
-
-  int size() const {
-    return size(root);
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
-
-  void insert(int i, const T &v) {
-    insert(root, new node_t(v), i);
-  }
-
-  void erase(int i) {
-    erase(root, i);
-  }
-
-  void push_back(const T &v) {
-    insert(size(), v);
-  }
-
-  void pop_back() {
-    erase(size() - 1);
-  }
-
-  T at(int i) const {
-    return select(root, i)->value;
-  }
+  ~implicit_treap() { clean_up(root); }
+  int size() const { return size(root); }
+  bool empty() const { return root == NULL; }
+  void insert(int i, const T &v) { insert(root, new node_t(v), i); }
+  void erase(int i) { erase(root, i); }
+  void push_back(const T &v) { insert(size(), v); }
+  void pop_back() { erase(size() - 1); }
+  T at(int i) const { return select(root, i)->value; }
 
   T query(int lo, int hi) {
     node_t *l1, *r1, *l2, *r2, *t;
@@ -244,10 +214,6 @@ class implicit_treap {
     return res;
   }
 
-  void update(int i, const T &d) {
-    update(i, i, d);
-  }
-
   void update(int lo, int hi, const T &d) {
     node_t *l1, *r1, *l2, *r2, *t;
     split(root, l1, r1, hi + 1);
@@ -256,6 +222,8 @@ class implicit_treap {
     merge(t, l2, r2);
     merge(root, t, r1);
   }
+
+  void update(int i, const T &d) { update(i, i, d); }
 };
 
 /*** Example Usage and Output:

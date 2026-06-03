@@ -208,22 +208,15 @@ class red_black_tree {
   }
 
  public:
-  red_black_tree() : num_nodes(0) {
-    root = LEAF_NIL = new node_t(K(), V(), BLACK);
-  }
+  red_black_tree() : num_nodes(0) { root = LEAF_NIL = new node_t(K(), V(), BLACK); }
 
   ~red_black_tree() {
     clean_up(root);
     delete LEAF_NIL;
   }
 
-  int size() const {
-    return num_nodes;
-  }
-
-  bool empty() const {
-    return num_nodes == 0;
-  }
+  int size() const { return num_nodes; }
+  bool empty() const { return num_nodes == 0; }
 
   bool insert(const K &k, const V &v) {
     node_t *curr = root, *prev = LEAF_NIL;
@@ -300,7 +293,7 @@ class red_black_tree {
     return true;
   }
 
-  const V* find(const K &k) const {
+  const V *find(const K &k) const {
     node_t *n = root;
     while (n != LEAF_NIL) {
       if (k < n->key) {

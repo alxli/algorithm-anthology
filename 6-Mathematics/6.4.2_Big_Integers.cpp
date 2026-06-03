@@ -69,7 +69,7 @@ class bigint {
 
   typedef std::vector<int> vint;
   typedef std::vector<long long> vll;
-  typedef std::vector<std::complex<double> > vcd;
+  typedef std::vector<std::complex<double>> vcd;
 
   vint digits;
   int sign;
@@ -96,7 +96,7 @@ class bigint {
     for (int i = n - 1; i >= pos; i -= BASE_DIGITS) {
       int x = 0;
       for (int j = std::max(pos, i - BASE_DIGITS + 1); j <= i; j++) {
-        x = x*10 + s[j] - '0';
+        x = x * 10 + s[j] - '0';
       }
       digits.push_back(x);
     }
@@ -166,12 +166,12 @@ class bigint {
     vll p(std::max(l1, l2) + 1);
     p[0] = 1;
     for (int i = 1; i < (int)p.size(); i++) {
-      p[i] = p[i - 1]*10;
+      p[i] = p[i - 1] * 10;
     }
     vint res;
     long long curr = 0;
     for (int i = 0, curr_digits = 0; i < (int)digits.size(); i++) {
-      curr += digits[i]*p[curr_digits];
+      curr += digits[i] * p[curr_digits];
       curr_digits += l1;
       while (curr_digits >= l2) {
         res.push_back((int)(curr % p[l2]));
@@ -188,12 +188,12 @@ class bigint {
 
   template<class It>
   static vll karatsuba(It alo, It ahi, It blo, It bhi) {
-    int n = std::distance(alo, ahi), k = n/2;
-    vll res(n*2);
+    int n = std::distance(alo, ahi), k = n / 2;
+    vll res(n * 2);
     if (n <= 32) {
       for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
-          res[i + j] += alo[i]*blo[j];
+          res[i + j] += alo[i] * blo[j];
         }
       }
       return res;
@@ -236,17 +236,17 @@ class bigint {
     }
     vcd roots(n), res(n);
     for (int i = 0; i < n; i++) {
-      double alpha = 2*3.14159265358979323846*i/n;
+      double alpha = 2 * 3.14159265358979323846 * i / n;
       roots[i] = std::complex<double>(cos(alpha), sin(alpha));
       res[i] = *(lo + rev[i]);
     }
     for (int len = 1; len < n; len <<= 1) {
       vcd tmp(n);
-      int rstep = roots.size()/(len << 1);
+      int rstep = roots.size() / (len << 1);
       for (int pdest = 0; pdest < n; pdest += len) {
         int p = pdest;
         for (int i = 0; i < len; i++) {
-          std::complex<double> c = roots[i*rstep]*res[p + len];
+          std::complex<double> c = roots[i * rstep] * res[p + len];
           tmp[pdest] = res[p] + c;
           tmp[pdest + len] = res[p] - c;
           pdest++;
@@ -294,17 +294,17 @@ class bigint {
     }
     std::ostringstream oss;
     oss << digits.back();
-    return oss.str().length() + BASE_DIGITS*(digits.size() - 1);
+    return oss.str().length() + BASE_DIGITS * (digits.size() - 1);
   }
 
-  friend std::istream& operator>>(std::istream &in, bigint &v) {
+  friend std::istream &operator>>(std::istream &in, bigint &v) {
     std::string s;
     in >> s;
     v.read(s.size(), s.c_str());
     return in;
   }
 
-  friend std::ostream& operator<<(std::ostream &out, const bigint &v) {
+  friend std::ostream &operator<<(std::ostream &out, const bigint &v) {
     if (v.sign == -1) {
       out << '-';
     }
@@ -330,9 +330,9 @@ class bigint {
   long long to_llong() const {
     long long res = 0;
     for (int i = (int)digits.size() - 1; i >= 0; i--) {
-      res = res*BASE + digits[i];
+      res = res * BASE + digits[i];
     }
-    return res*sign;
+    return res * sign;
   }
 
   double to_double() const {
@@ -349,10 +349,7 @@ class bigint {
     return res;
   }
 
-  int comp(const bigint &v) const {
-    return comp(digits, v.digits, sign, v.sign);
-  }
-
+  int comp(const bigint &v) const { return comp(digits, v.digits, sign, v.sign); }
   bool operator<(const bigint &v) const { return comp(v) < 0; }
   bool operator>(const bigint &v) const { return comp(v) > 0; }
   bool operator<=(const bigint &v) const { return comp(v) <= 0; }
@@ -360,43 +357,19 @@ class bigint {
   bool operator==(const bigint &v) const { return comp(v) == 0; }
   bool operator!=(const bigint &v) const { return comp(v) != 0; }
 
-  template<class T>
-  friend bool operator<(const T &a, const bigint &b) { return bigint(a) < b; }
+  // clang-format off
+  template<class T> friend bool operator<(const T &a, const bigint &b) { return bigint(a) < b; }
+  template<class T> friend bool operator>(const T &a, const bigint &b) { return bigint(a) > b; }
+  template<class T> friend bool operator<=(const T &a, const bigint &b) { return bigint(a) <= b; }
+  template<class T> friend bool operator>=(const T &a, const bigint &b) { return bigint(a) >= b; }
+  template<class T> friend bool operator==(const T &a, const bigint &b) { return bigint(a) == b; }
+  template<class T> friend bool operator!=(const T &a, const bigint &b) { return bigint(a) != b; }
 
-  template<class T>
-  friend bool operator>(const T &a, const bigint &b) { return bigint(a) > b; }
-
-  template<class T>
-  friend bool operator<=(const T &a, const bigint &b) { return bigint(a) <= b; }
-
-  template<class T>
-  friend bool operator>=(const T &a, const bigint &b) { return bigint(a) >= b; }
-
-  template<class T>
-  friend bool operator==(const T &a, const bigint &b) { return bigint(a) == b; }
-
-  template<class T>
-  friend bool operator!=(const T &a, const bigint &b) { return bigint(a) != b; }
-
-  bigint abs() const {
-    bigint res(*this);
-    res.sign = 1;
-    return res;
-  }
-
-  bigint operator-() const {
-    bigint res(*this);
-    res.sign = -sign;
-    return res;
-  }
-
-  bigint operator+(const bigint &v) const {
-    return add(digits, v.digits, sign, v.sign);
-  }
-
-  bigint operator-(const bigint &v) const {
-    return sub(digits, v.digits, sign, v.sign);
-  }
+  bigint abs() const { bigint res(*this); res.sign = 1; return res; }
+  bigint operator-() const { bigint res(*this); res.sign = -sign; return res; }
+  bigint operator+(const bigint &v) const { return add(digits, v.digits, sign, v.sign); }
+  bigint operator-(const bigint &v) const { return sub(digits, v.digits, sign, v.sign); }
+  // clang-format on
 
   void operator*=(int v) {
     if (v < 0) {
@@ -407,8 +380,8 @@ class bigint {
       if (i == (int)digits.size()) {
         digits.push_back(0);
       }
-      long long curr = digits[i]*(long long)v + carry;
-      carry = (int)(curr/BASE);
+      long long curr = digits[i] * (long long)v + carry;
+      carry = (int)(curr / BASE);
       digits[i] = (int)(curr % BASE);
     }
     normalize();
@@ -425,7 +398,7 @@ class bigint {
     vint a = convert_base(digits, BASE_DIGITS, TEMP_BASE_DIGITS);
     vint b = convert_base(v.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
     int n = 1;
-    while (n < 2*(int)std::max(a.size(), b.size())) {
+    while (n < 2 * (int)std::max(a.size(), b.size())) {
       n <<= 1;
     }
     a.resize(n, 0);
@@ -445,18 +418,18 @@ class bigint {
       c = karatsuba(a.begin(), a.end(), b.begin(), b.end());
     }
     bigint res;
-    res.sign = sign*v.sign;
+    res.sign = sign * v.sign;
     for (int i = 0, carry = 0; i < (int)c.size(); i++) {
       long long d = c[i] + carry;
       res.digits.push_back(d % TEMP_BASE);
-      carry = d/TEMP_BASE;
+      carry = d / TEMP_BASE;
     }
     res.digits = convert_base(res.digits, TEMP_BASE_DIGITS, BASE_DIGITS);
     res.normalize();
     return res;
   }
 
-  bigint& operator/=(int v) {
+  bigint &operator/=(int v) {
     if (v == 0) {
       throw std::runtime_error("Division by zero in bigint.");
     }
@@ -465,8 +438,8 @@ class bigint {
       v = -v;
     }
     for (int i = (int)digits.size() - 1, rem = 0; i >= 0; i--) {
-      long long curr = digits[i] + rem*(long long)BASE;
-      digits[i] = (int)(curr/v);
+      long long curr = digits[i] + rem * (long long)BASE;
+      digits[i] = (int)(curr / v);
       rem = (int)(curr % v);
     }
     normalize();
@@ -488,9 +461,9 @@ class bigint {
     }
     int m = 0;
     for (int i = (int)digits.size() - 1; i >= 0; i--) {
-      m = (digits[i] + m*(long long)BASE) % v;
+      m = (digits[i] + m * (long long)BASE) % v;
     }
-    return m*sign;
+    return m * sign;
   }
 
   std::pair<bigint, bigint> div(const bigint &v) const {
@@ -500,46 +473,46 @@ class bigint {
     if (comp(digits, v.digits, 1, 1) < 0) {
       return std::make_pair(0, *this);
     }
-    int norm = BASE/(v.digits.back() + 1);
-    bigint an = abs()*norm, bn = v.abs()*norm, q, r;
+    int norm = BASE / (v.digits.back() + 1);
+    bigint an = abs() * norm, bn = v.abs() * norm, q, r;
     q.digits.resize(an.digits.size());
     for (int i = (int)an.digits.size() - 1; i >= 0; i--) {
       r *= BASE;
       r += an.digits[i];
-      int s1 = (r.digits.size() <= bn.digits.size())
-                  ? 0 : r.digits[bn.digits.size()];
-      int s2 = (r.digits.size() <= bn.digits.size() - 1)
-                  ? 0 : r.digits[bn.digits.size() - 1];
-      int d = ((long long)s1*BASE + s2)/bn.digits.back();
-      for (r -= bn*d; r < 0; r += bn) {
+      int s1 = (r.digits.size() <= bn.digits.size()) ? 0 : r.digits[bn.digits.size()];
+      int s2 = (r.digits.size() <= bn.digits.size() - 1) ? 0 : r.digits[bn.digits.size() - 1];
+      int d = ((long long)s1 * BASE + s2) / bn.digits.back();
+      for (r -= bn * d; r < 0; r += bn) {
         d--;
       }
       q.digits[i] = d;
     }
-    q.sign = sign*v.sign;
+    q.sign = sign * v.sign;
     r.sign = sign;
     q.normalize();
     r.normalize();
-    return std::make_pair(q, r/norm);
+    return std::make_pair(q, r / norm);
   }
 
+  // clang-format off
   bigint operator/(const bigint &v) const { return div(v).first; }
   bigint operator%(const bigint &v) const { return div(v).second; }
   bigint operator++(int) { bigint t(*this); operator++(); return t; }
   bigint operator--(int) { bigint t(*this); operator--(); return t; }
-  bigint& operator++() { *this = *this + bigint(1); return *this; }
-  bigint& operator--() { *this = *this - bigint(1); return *this; }
-  bigint& operator+=(const bigint &v) { *this = *this + v; return *this; }
-  bigint& operator-=(const bigint &v) { *this = *this - v; return *this; }
-  bigint& operator*=(const bigint &v) { *this = *this * v; return *this; }
-  bigint& operator/=(const bigint &v) { *this = *this / v; return *this; }
-  bigint& operator%=(const bigint &v) { *this = *this % v; return *this; }
+  bigint &operator++() { *this = *this + bigint(1); return *this; }
+  bigint &operator--() { *this = *this - bigint(1); return *this; }  
+  bigint &operator+=(const bigint &v) { *this = *this + v; return *this; }
+  bigint &operator-=(const bigint &v) { *this = *this - v; return *this; }
+  bigint &operator*=(const bigint &v) { *this = *this * v; return *this; }
+  bigint &operator/=(const bigint &v) { *this = *this / v; return *this; }
+  bigint &operator%=(const bigint &v) { *this = *this % v; return *this; }
 
   template<class T>
   friend bigint operator+(const T &a, const bigint &b) { return bigint(a) + b; }
-
+  
   template<class T>
   friend bigint operator-(const T &a, const bigint &b) { return bigint(a) - b; }
+  // clang-format on
 
   bigint pow(int n) const {
     if (n == 0) {
@@ -567,36 +540,36 @@ class bigint {
       v.digits.push_back(0);
     }
     int n = v.digits.size();
-    int ldig = (int)::sqrt((double)v.digits[n - 1]*BASE + v.digits[n - 2]);
-    int norm = BASE/(ldig + 1);
+    int ldig = (int)::sqrt((double)v.digits[n - 1] * BASE + v.digits[n - 2]);
+    int norm = BASE / (ldig + 1);
     v *= norm;
     v *= norm;
     while (v.digits.empty() || v.digits.size() % 2 == 1) {
       v.digits.push_back(0);
     }
-    bigint r((long long)v.digits[n - 1]*BASE + v.digits[n - 2]);
-    int q = ldig = (int)::sqrt((double)v.digits[n - 1]*BASE + v.digits[n - 2]);
+    bigint r((long long)v.digits[n - 1] * BASE + v.digits[n - 2]);
+    int q = ldig = (int)::sqrt((double)v.digits[n - 1] * BASE + v.digits[n - 2]);
     bigint res;
-    for (int j = n/2 - 1; j >= 0; j--) {
+    for (int j = n / 2 - 1; j >= 0; j--) {
       for (;; q--) {
-        bigint r1 = (r - (res*2*BASE + q)*q)*BASE*BASE +
-            (j > 0 ? (long long)v.digits[2*j - 1]*BASE + v.digits[2*j - 2] : 0);
+        bigint r1 = (r - (res * 2 * BASE + q) * q) * BASE * BASE +
+                    (j > 0 ? (long long)v.digits[2 * j - 1] * BASE + v.digits[2 * j - 2] : 0);
         if (r1 >= 0) {
           r = r1;
           break;
         }
       }
-      res = res*BASE + q;
+      res = res * BASE + q;
       if (j > 0) {
         int sz1 = res.digits.size(), sz2 = r.digits.size();
         int d1 = (sz1 + 2 < sz2) ? r.digits[sz1 + 2] : 0;
         int d2 = (sz1 + 1 < sz2) ? r.digits[sz1 + 1] : 0;
         int d3 = (sz1 < sz2) ? r.digits[sz1] : 0;
-        q = ((long long)d1*BASE*BASE + (long long)d2*BASE + d3)/(ldig*2);
+        q = ((long long)d1 * BASE * BASE + (long long)d2 * BASE + d3) / (ldig * 2);
       }
     }
     res.normalize();
-    return res/norm;
+    return res / norm;
   }
 
   bigint nth_root(int n) const {
@@ -613,9 +586,9 @@ class bigint {
       }
       return comp(bigint(p).pow(n)) < 0 ? p - 1 : p;
     }
-    bigint lo(bigint(10).pow((int)ceil((double)size()/n) - 1)), hi(lo*10), mid;
+    bigint lo(bigint(10).pow((int)ceil((double)size() / n) - 1)), hi(lo * 10), mid;
     while (lo < hi) {
-      mid = (lo + hi)/2;
+      mid = (lo + hi) / 2;
       int cmp = comp(digits, mid.pow(n).digits, 1, 1);
       if (lo < mid && cmp > 0) {
         lo = mid;
@@ -670,7 +643,7 @@ int main() {
         assert(bigint(i) / bigint(j) == i / j);
       }
       if (0 < i && i <= 10 && 0 < j && j <= 10) {
-        assert(bigint(i).nth_root(j) == (long long)(pow(i, 1.0/j) + 1E-5));
+        assert(bigint(i).nth_root(j) == (long long)(pow(i, 1.0 / j) + 1E-5));
         long long p = 1;
         for (int k = 0; k < j; k++) {
           p *= i;
@@ -681,12 +654,12 @@ int main() {
   }
   for (int i = 0; i < 20; i++) {
     int n = rand() % 100 + 1;
-    bigint a(bigint::rand(n)), s(a.sqrt()), xx(s*s), yy(s + 1);
+    bigint a(bigint::rand(n)), s(a.sqrt()), xx(s * s), yy(s + 1);
     yy *= yy;
     assert(xx <= a && a < yy);
-    bigint b(bigint::rand(rand() % n + 1) + 1), q(a/b);
-    xx = q*b;
-    yy = b*(q + 1);
+    bigint b(bigint::rand(rand() % n + 1) + 1), q(a / b);
+    xx = q * b;
+    yy = b * (q + 1);
     assert(a >= xx && a < yy);
   }
   bigint x(-6);

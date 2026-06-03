@@ -33,9 +33,7 @@ struct line {
 
   line(long long m = 0, long long b = INF) : m(m), b(b) {}
 
-  long long eval(long long x) const {
-    return m * x + b;
-  }
+  long long eval(long long x) const { return m * x + b; }
 };
 
 class li_chao_tree {
@@ -97,13 +95,9 @@ class li_chao_tree {
  public:
   li_chao_tree(long long lo, long long hi) : root(NULL), lo(lo), hi(hi) {}
 
-  ~li_chao_tree() {
-    clean_up(root);
-  }
+  ~li_chao_tree() { clean_up(root); }
 
-  void add_line(long long m, long long b) {
-    add_line(root, lo, hi, line(m, b));
-  }
+  void add_line(long long m, long long b) { add_line(root, lo, hi, line(m, b)); }
 
   long long query(long long x) const {
     assert(lo <= x && x <= hi);

@@ -27,7 +27,7 @@ Space Complexity:
 
 struct two_sat {
   int variables;
-  std::vector<std::vector<int> > graph, reverse_graph;
+  std::vector<std::vector<int>> graph, reverse_graph;
   std::vector<int> order, component, answer;
 
   two_sat(int n = 0) { init(n); }
@@ -39,13 +39,8 @@ struct two_sat {
     answer.assign(n, false);
   }
 
-  int literal(int variable, bool value) {
-    return 2 * variable + (value ? 0 : 1);
-  }
-
-  int neg(int x) {
-    return x ^ 1;
-  }
+  int literal(int variable, bool value) { return 2 * variable + (value ? 0 : 1); }
+  int neg(int x) { return x ^ 1; }
 
   void add_implication(int a, int b) {
     graph[a].push_back(b);
@@ -57,13 +52,8 @@ struct two_sat {
     add_implication(neg(b), a);
   }
 
-  void add_true(int a) {
-    add_implication(neg(a), a);
-  }
-
-  void add_false(int a) {
-    add_implication(a, neg(a));
-  }
+  void add_true(int a) { add_implication(neg(a), a); }
+  void add_false(int a) { add_implication(a, neg(a)); }
 
   void dfs_order(int u, std::vector<bool> &visited) {
     visited[u] = true;

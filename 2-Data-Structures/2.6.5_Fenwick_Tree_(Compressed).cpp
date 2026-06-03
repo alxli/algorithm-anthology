@@ -40,17 +40,12 @@ class fenwick_tree {
 
  public:
   void add(int lo, int hi, const T &x) {
-    add_helper(lo, x, -x*(lo - 1));
-    add_helper(hi, -x, x*hi);
+    add_helper(lo, x, -x * (lo - 1));
+    add_helper(hi, -x, x * hi);
   }
 
-  void add(int i, const T &x) {
-    add(i, i, x);
-  }
-
-  void set(int i, const T &x) {
-    add(i, x - at(i));
-  }
+  void add(int i, const T &x) { add(i, i, x); }
+  void set(int i, const T &x) { add(i, x - at(i)); }
 
   T sum(int hi) {
     T mul = 0, add = 0;
@@ -62,16 +57,11 @@ class fenwick_tree {
         add += tadd[i];
       }
     }
-    return mul*hi + add;
+    return mul * hi + add;
   }
 
-  T sum(int lo, int hi) {
-    return sum(hi) - sum(lo - 1);
-  }
-
-  T at(int i) {
-    return sum(i, i);
-  }
+  T sum(int lo, int hi) { return sum(hi) - sum(lo - 1); }
+  T at(int i) { return sum(i, i); }
 };
 
 /*** Example Usage and Output:

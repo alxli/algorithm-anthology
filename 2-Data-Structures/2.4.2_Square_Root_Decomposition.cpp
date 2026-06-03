@@ -34,24 +34,20 @@ Space Complexity:
 
 template<class T>
 class sqrt_decomposition {
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
 
-  static T join_value_with_delta(const T &v, const T &d) {
-    return d;
-  }
+  static T join_value_with_delta(const T &v, const T &d) { return d; }
 
   int len, blocklen;
   std::vector<T> value, block;
 
   void init() {
     blocklen = (int)sqrt(len);
-    int nblocks = (len + blocklen - 1)/blocklen;
+    int nblocks = (len + blocklen - 1) / blocklen;
     for (int i = 0; i < nblocks; i++) {
-      T blockval = value[i*blocklen];
-      int blockhi = std::min(len, (i + 1)*blocklen);
-      for (int j = i*blocklen + 1; j < blockhi; j++) {
+      T blockval = value[i * blocklen];
+      int blockhi = std::min(len, (i + 1) * blocklen);
+      for (int j = i * blocklen + 1; j < blockhi; j++) {
         blockval = join_values(blockval, value[j]);
       }
       block.push_back(blockval);
@@ -59,26 +55,19 @@ class sqrt_decomposition {
   }
 
  public:
-  sqrt_decomposition(int n, const T &v = T()) : len(n), value(n, v) {
-    init();
-  }
+  sqrt_decomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
 
   template<class It>
   sqrt_decomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
     init();
   }
 
-  int size() const {
-    return len;
-  }
-
-  T at(int i) const {
-    return query(i, i);
-  }
+  int size() const { return len; }
+  T at(int i) const { return query(i, i); }
 
   T query(int lo, int hi) const {
     T res;
-    int blocklo = ceil((double)lo/blocklen), blockhi = (hi + 1)/blocklen - 1;
+    int blocklo = ceil((double)lo / blocklen), blockhi = (hi + 1) / blocklen - 1;
     if (blocklo > blockhi) {
       res = value[lo];
       for (int i = lo + 1; i <= hi; i++) {
@@ -89,10 +78,10 @@ class sqrt_decomposition {
       for (int i = blocklo + 1; i <= blockhi; i++) {
         res = join_values(res, block[i]);
       }
-      for (int i = lo; i < blocklo*blocklen; i++) {
+      for (int i = lo; i < blocklo * blocklen; i++) {
         res = join_values(res, value[i]);
       }
-      for (int i = (blockhi + 1)*blocklen; i <= hi; i++) {
+      for (int i = (blockhi + 1) * blocklen; i <= hi; i++) {
         res = join_values(res, value[i]);
       }
     }
@@ -101,10 +90,10 @@ class sqrt_decomposition {
 
   void update(int i, const T &d) {
     value[i] = join_value_with_delta(value[i], d);
-    int b = i/blocklen;
-    int blockhi = std::min(len, (b + 1)*blocklen);
-    block[b] = value[b*blocklen];
-    for (int i = b*blocklen + 1; i < blockhi; i++) {
+    int b = i / blocklen;
+    int blockhi = std::min(len, (b + 1) * blocklen);
+    block[b] = value[b * blocklen];
+    for (int i = b * blocklen + 1; i < blockhi; i++) {
       block[b] = join_values(block[b], value[i]);
     }
   }

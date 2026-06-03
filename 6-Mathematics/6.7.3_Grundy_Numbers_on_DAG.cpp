@@ -21,8 +21,7 @@ Space Complexity:
 
 #include <vector>
 
-int grundy_dfs(int u, const std::vector<std::vector<int> > &g,
-               std::vector<int> *memo) {
+int grundy_dfs(int u, const std::vector<std::vector<int>> &g, std::vector<int> *memo) {
   if ((*memo)[u] != -1) {
     return (*memo)[u];
   }
@@ -42,7 +41,7 @@ int grundy_dfs(int u, const std::vector<std::vector<int> > &g,
   return res;
 }
 
-std::vector<int> grundy_on_dag(const std::vector<std::vector<int> > &g) {
+std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
   std::vector<int> memo(g.size(), -1);
   for (int u = 0; u < (int)g.size(); u++) {
     grundy_dfs(u, g, &memo);
@@ -56,7 +55,7 @@ std::vector<int> grundy_on_dag(const std::vector<std::vector<int> > &g) {
 using namespace std;
 
 int main() {
-  vector<vector<int> > g(5);
+  vector<vector<int>> g(5);
   g[0].push_back(1);
   g[0].push_back(2);
   g[1].push_back(3);

@@ -32,8 +32,7 @@ class persistent_segment_tree {
     long long sum;
     int left, right;
 
-    node(long long sum = 0, int left = -1, int right = -1)
-        : sum(sum), left(left), right(right) {}
+    node(long long sum = 0, int left = -1, int right = -1) : sum(sum), left(left), right(right) {}
   };
 
   int n;
@@ -90,9 +89,7 @@ class persistent_segment_tree {
     }
   }
 
-  int versions() const {
-    return root.size();
-  }
+  int versions() const { return root.size(); }
 
   int update(int version, int index, int value) {
     root.push_back(update(root[version], 0, n - 1, index, value));

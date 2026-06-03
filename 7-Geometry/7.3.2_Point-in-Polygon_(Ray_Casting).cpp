@@ -30,7 +30,7 @@ typedef std::pair<double, double> point;
 #define y second
 
 double cross(const point &a, const point &b, const point &o = point(0, 0)) {
-  return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 template<class It>
@@ -38,9 +38,7 @@ bool point_in_polygon(const point &p, It lo, It hi) {
   static const bool EDGE_IS_INSIDE = true;
   bool ans = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    if (EQ(i->y, p.y) &&
-        (EQ(i->x, p.x) ||
-         (EQ(j->y, p.y) && (LE(i->x, p.x) || LE(j->x, p.x))))) {
+    if (EQ(i->y, p.y) && (EQ(i->x, p.x) || (EQ(j->y, p.y) && (LE(i->x, p.x) || LE(j->x, p.x))))) {
       return EDGE_IS_INSIDE;
     }
     if (GT(i->y, p.y) != GT(j->y, p.y)) {

@@ -32,13 +32,8 @@ class fenwick_tree {
  public:
   fenwick_tree(int n) : len(n), a(n + 1), t(n + 1) {}
 
-  int size() const {
-    return len;
-  }
-
-  T at(int i) const {
-    return a[i + 1];
-  }
+  int size() const { return len; }
+  T at(int i) const { return a[i + 1]; }
 
   void add(int i, const T &x) {
     a[++i] += x;
@@ -60,9 +55,7 @@ class fenwick_tree {
     return res;
   }
 
-  T sum(int lo, int hi) {
-    return sum(hi) - sum(lo - 1);
-  }
+  T sum(int lo, int hi) { return sum(hi) - sum(lo - 1); }
 };
 
 /*** Example Usage and Output:

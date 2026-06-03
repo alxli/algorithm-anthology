@@ -36,7 +36,7 @@ long long inversions(It lo, It hi) {
   if (hi - lo < 2) {
     return 0;
   }
-  It mid = lo + (hi - lo - 1)/2, a = lo, c = mid + 1;
+  It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   long long res = 0;
   res += inversions(lo, mid + 1);
   res += inversions(mid + 1, hi);

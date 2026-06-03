@@ -39,14 +39,21 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
-double dot(const point &a, const point &b) { return a.x*b.x + a.y*b.y; }
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
-  return (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
+double sqnorm(const point &a) {
+  return a.x * a.x + a.y * a.y;
 }
 
-int seg_intersection(const point &a, const point &b, const point &c,
-                     const point &d, point *p = NULL, point *q = NULL) {
+double dot(const point &a, const point &b) {
+  return a.x * b.x + a.y * b.y;
+}
+
+double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+}
+
+int seg_intersection(
+    const point &a, const point &b, const point &c, const point &d, point *p = NULL, point *q = NULL
+) {
   static const bool TOUCH_IS_INTERSECT = false;  // false is important!
   point ab(b.x - a.x, b.y - a.y);
   point ac(c.x - a.x, c.y - a.y);
@@ -56,8 +63,7 @@ int seg_intersection(const point &a, const point &b, const point &c,
     double t0 = dot(ac, ab) / sqnorm(ab);
     double t1 = t0 + dot(cd, ab) / sqnorm(ab);
     double mint = std::min(t0, t1), maxt = std::max(t0, t1);
-    bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt))
-                                      : (LT(mint, 1) && LT(0, maxt));
+    bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
     if (overlap) {
       point res1 = std::max(std::min(a, b), std::min(c, d));
       point res2 = std::min(std::max(a, b), std::max(c, d));
@@ -79,14 +85,12 @@ int seg_intersection(const point &a, const point &b, const point &c,
   if (EQ(c1, 0)) {
     return -1;  // Parallel and disjoint.
   }
-  double t = cross(ac, cd)/c1, u = c2/c1;
-  bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1))
-                                         : (LT(0, t) && LT(t, 1));
-  bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1))
-                                         : (LT(0, u) && LT(u, 1));
+  double t = cross(ac, cd) / c1, u = c2 / c1;
+  bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1)) : (LT(0, t) && LT(t, 1));
+  bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
     if (p != NULL) {
-      *p = point(a.x + t*ab.x, a.y + t*ab.y);
+      *p = point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
   }
@@ -99,9 +103,8 @@ struct triangle {
   triangle(const point &a, const point &b, const point &c) : a(a), b(b), c(c) {}
 
   bool operator==(const triangle &t) const {
-    return EQ(a.x, t.a.x) && EQ(a.y, t.a.y) &&
-           EQ(b.x, t.b.x) && EQ(b.y, t.b.y) &&
-           EQ(c.x, t.c.x) && EQ(c.y, t.c.y);
+    return EQ(a.x, t.a.x) && EQ(a.y, t.a.y) && EQ(b.x, t.b.x) && EQ(b.y, t.b.y) && EQ(c.x, t.c.x) &&
+           EQ(c.y, t.c.y);
   }
 };
 
@@ -121,15 +124,15 @@ std::vector<triangle> delaunay_triangulation(It lo, It hi) {
         if (j == k) {
           continue;
         }
-        double nx = (y[j] - y[i])*(z[k] - z[i]) - (y[k] - y[i])*(z[j] - z[i]);
-        double ny = (x[k] - x[i])*(z[j] - z[i]) - (x[j] - x[i])*(z[k] - z[i]);
-        double nz = (x[j] - x[i])*(y[k] - y[i]) - (x[k] - x[i])*(y[j] - y[i]);
+        double nx = (y[j] - y[i]) * (z[k] - z[i]) - (y[k] - y[i]) * (z[j] - z[i]);
+        double ny = (x[k] - x[i]) * (z[j] - z[i]) - (x[j] - x[i]) * (z[k] - z[i]);
+        double nz = (x[j] - x[i]) * (y[k] - y[i]) - (x[k] - x[i]) * (y[j] - y[i]);
         if (LE(0, nz)) {
           continue;
         }
         point s1[] = {lo[i], lo[j], lo[k], lo[i]};
         for (int m = 0; m < n; m++) {
-          if (nx*(x[m] - x[i]) + ny*(y[m] - y[i]) + nz*(z[m] - z[i]) > 0) {
+          if (nx * (x[m] - x[i]) + ny * (y[m] - y[i]) + nz * (z[m] - z[i]) > 0) {
             goto skip;
           }
         }
@@ -145,7 +148,7 @@ std::vector<triangle> delaunay_triangulation(It lo, It hi) {
           }
         }
         res.push_back(triangle(lo[i], lo[j], lo[k]));
-        skip:;
+      skip:;
       }
     }
   }

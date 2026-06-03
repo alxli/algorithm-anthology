@@ -24,8 +24,8 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-std::vector<std::pair<char, int> > run_length_encode(const string &s) {
-  std::vector<std::pair<char, int> > res;
+std::vector<std::pair<char, int>> run_length_encode(const string &s) {
+  std::vector<std::pair<char, int>> res;
   for (int i = 0; i < (int)s.size(); i++) {
     if (res.empty() || res.back().first != s[i]) {
       res.push_back(std::make_pair(s[i], 1));
@@ -36,7 +36,7 @@ std::vector<std::pair<char, int> > run_length_encode(const string &s) {
   return res;
 }
 
-string run_length_decode(const std::vector<std::pair<char, int> > &runs) {
+string run_length_decode(const std::vector<std::pair<char, int>> &runs) {
   string res;
   for (int i = 0; i < (int)runs.size(); i++) {
     res.append(runs[i].second, runs[i].first);
@@ -51,7 +51,7 @@ using namespace std;
 
 int main() {
   string s = "aaabccccdd";
-  vector<pair<char, int> > runs = run_length_encode(s);
+  vector<pair<char, int>> runs = run_length_encode(s);
   assert(runs.size() == 4);
   assert(runs[0] == make_pair('a', 3));
   assert(runs[2] == make_pair('c', 4));

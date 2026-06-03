@@ -24,8 +24,7 @@ Space Complexity:
 #include <limits>
 #include <vector>
 
-long long hungarian(const std::vector<std::vector<long long> > &cost,
-                    std::vector<int> *assignment) {
+long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector<int> *assignment) {
   int n = cost.size(), m = cost.empty() ? 0 : cost[0].size();
   assert(n <= m);
   const long long INF = std::numeric_limits<long long>::max() / 4;
@@ -93,7 +92,7 @@ int main() {
       {6, 4, 3, 7},
       {5, 8, 1, 8},
   };
-  vector<vector<long long> > cost(3, vector<long long>(4));
+  vector<vector<long long>> cost(3, vector<long long>(4));
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 4; j++) {
       cost[i][j] = raw[i][j];

@@ -57,7 +57,7 @@ Space Complexity:
 #include <stdexcept>
 #include <vector>
 
-typedef std::vector<std::vector<int> > matrix;
+typedef std::vector<std::vector<int>> matrix;
 
 matrix make_matrix(int r, int c) {
   return matrix(r, matrix::value_type(c));
@@ -87,10 +87,15 @@ matrix identity_matrix(int n) {
   return res;
 }
 
-int rows(const matrix &a) { return a.size(); }
-int columns(const matrix &a) { return a.empty() ? 0 : a[0].size(); }
+int rows(const matrix &a) {
+  return a.size();
+}
 
-std::ostream& operator<<(std::ostream &out, const matrix &a) {
+int columns(const matrix &a) {
+  return a.empty() ? 0 : a[0].size();
+}
+
+std::ostream &operator<<(std::ostream &out, const matrix &a) {
   static const int W = 10, P = 5;
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -102,7 +107,7 @@ std::ostream& operator<<(std::ostream &out, const matrix &a) {
 }
 
 template<class T>
-matrix& operator+=(matrix &a, const T &v) {
+matrix &operator+=(matrix &a, const T &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] += v;
@@ -112,7 +117,7 @@ matrix& operator+=(matrix &a, const T &v) {
 }
 
 template<class T>
-matrix& operator-=(matrix &a, const T &v) {
+matrix &operator-=(matrix &a, const T &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] -= v;
@@ -122,7 +127,7 @@ matrix& operator-=(matrix &a, const T &v) {
 }
 
 template<class T>
-matrix& operator*=(matrix &a, const T &v) {
+matrix &operator*=(matrix &a, const T &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] *= v;
@@ -132,7 +137,7 @@ matrix& operator*=(matrix &a, const T &v) {
 }
 
 template<class T>
-matrix& operator/=(matrix &a, const T &v) {
+matrix &operator/=(matrix &a, const T &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] /= v;
@@ -141,7 +146,7 @@ matrix& operator/=(matrix &a, const T &v) {
   return a;
 }
 
-matrix& operator+=(matrix &a, const matrix &b) {
+matrix &operator+=(matrix &a, const matrix &b) {
   if (rows(a) != rows(b) || columns(a) != columns(b)) {
     throw std::runtime_error("Invalid dimensions for matrix addition.");
   }
@@ -153,7 +158,7 @@ matrix& operator+=(matrix &a, const matrix &b) {
   return a;
 }
 
-matrix& operator-=(matrix &a, const matrix &b) {
+matrix &operator-=(matrix &a, const matrix &b) {
   if (rows(a) != rows(b) || columns(a) != columns(b)) {
     throw std::runtime_error("Invalid dimensions for matrix addition.");
   }
@@ -176,14 +181,14 @@ matrix operator-(const matrix &a, const matrix &b) {
 }
 
 template<class T>
-matrix& operator*=(matrix &a, const std::vector<T> &v) {
+matrix &operator*=(matrix &a, const std::vector<T> &v) {
   if (columns(a) != (int)v.size() || v.empty()) {
     throw std::runtime_error("Invalid dimensions for matrix multiplication.");
   }
   for (int i = 0; i < rows(a); i++) {
     a[i][0] *= v[0];
     for (int j = 1; j < columns(a); j++) {
-      a[i][0] += a[i][j]*v[j];
+      a[i][0] += a[i][j] * v[j];
     }
   }
   for (int i = 0; i < rows(a); i++) {
@@ -200,16 +205,15 @@ matrix operator*(const matrix &a, const matrix &b) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(b); j++) {
       for (int k = 0; k < rows(b); k++) {
-        res[i][j] += a[i][k]*b[k][j];
+        res[i][j] += a[i][k] * b[k][j];
       }
     }
   }
   return res;
 }
 
-matrix& operator*=(matrix &a, const matrix &b) {
-  return a = a*b;
-}
+// clang-format off
+matrix &operator*=(matrix &a, const matrix &b) { return a = a * b; }
 
 template<class T>
 matrix operator+(const matrix &a, const T &v) { matrix m(a); return m += v; }
@@ -234,6 +238,7 @@ matrix operator*(const T &v, const matrix &a) { return a * v; }
 
 template<class T>
 matrix operator/(const T &v, const matrix &a) { return a / v; }
+// clang-format on
 
 matrix operator^(const matrix &a, unsigned int p) {
   if (rows(a) != columns(a)) {
@@ -242,7 +247,7 @@ matrix operator^(const matrix &a, unsigned int p) {
   if (p == 0) {
     return identity_matrix(rows(a));
   }
-  return (p % 2 == 0) ? (a*a)^(p/2) : a*(a^(p - 1));
+  return (p % 2 == 0) ? (a * a) ^ (p / 2) : a * (a ^ (p - 1));
 }
 
 matrix operator^=(matrix &a, unsigned int p) {
@@ -256,8 +261,8 @@ matrix power_sum(const matrix &a, unsigned int p) {
   if (p == 0) {
     return make_matrix(rows(a), rows(a));
   }
-  return (p % 2 == 0) ? power_sum(a, p/2)*(identity_matrix(rows(a)) + (a^(p/2)))
-                      : (a + a*power_sum(a, p - 1));
+  return (p % 2 == 0) ? power_sum(a, p / 2) * (identity_matrix(rows(a)) + (a ^ (p / 2)))
+                      : (a + a * power_sum(a, p - 1));
 }
 
 matrix transpose(const matrix &a) {
@@ -270,7 +275,7 @@ matrix transpose(const matrix &a) {
   return res;
 }
 
-matrix& transpose_in_place(matrix &a) {
+matrix &transpose_in_place(matrix &a) {
   if (rows(a) != columns(a)) {
     throw std::runtime_error("Matrix must be square for transpose_in_place.");
   }
@@ -325,7 +330,7 @@ matrix rotate(const matrix &a, int degrees = 90) {
   return res;
 }
 
-matrix& rotate_in_place(matrix &a, int degrees = 90) {
+matrix &rotate_in_place(matrix &a, int degrees = 90) {
   if (degrees % 90 != 0) {
     throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
   }
@@ -399,10 +404,10 @@ int main() {
 
   matrix m = make_matrix(5, 5, 10) + 10;
   int v[] = {1, 2, 3, 4, 5}, mv[5][1] = {{300}, {300}, {300}, {300}, {300}};
-  assert(m*vector<int>(v, v + 5) == make_matrix(mv));
+  assert(m * vector<int>(v, v + 5) == make_matrix(mv));
 
   m[0][0] += 5;
   assert(m[0][0] == 25 && m[1][1] == 20);
-  assert(power_sum(m, 3) == m + m*m + (m^3));
+  assert(power_sum(m, 3) == m + m * m + (m ^ 3));
   return 0;
 }

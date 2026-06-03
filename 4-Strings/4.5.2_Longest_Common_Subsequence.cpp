@@ -31,7 +31,7 @@ using std::string;
 
 string longest_common_subsequence(const string &s1, const string &s2) {
   int n = s1.size(), m = s2.size();
-  std::vector<std::vector<int> > dp(n + 1, std::vector<int>(m + 1, 0));
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= m; j++) {
       if (s1[i - 1] == s2[j - 1]) {
@@ -42,7 +42,7 @@ string longest_common_subsequence(const string &s1, const string &s2) {
     }
   }
   string res;
-  for (int i = n, j = m; i > 0 && j > 0; ) {
+  for (int i = n, j = m; i > 0 && j > 0;) {
     if (s1[i - 1] == s2[j - 1]) {
       res += s1[i - 1];
       i--;
@@ -82,7 +82,7 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
     }
     return;
   }
-  It mid1 = lo1 + (hi1 - lo1)/2;
+  It mid1 = lo1 + (hi1 - lo1) / 2;
   std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
   std::vector<int> fwd = lcs_len(lo1, mid1, lo2, hi2);
   std::vector<int> rev = lcs_len(rlo1, rmid1, rlo2, rhi2);

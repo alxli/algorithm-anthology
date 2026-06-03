@@ -63,9 +63,7 @@ class dynamic_mex {
     }
   }
 
-  int get() const {
-    return *missing.begin();
-  }
+  int get() const { return *missing.begin(); }
 };
 
 /*** Example Usage ***/

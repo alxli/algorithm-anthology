@@ -26,19 +26,27 @@ int eval(It &it, int prec) {
     if (*it == '(') {
       ret = eval(++it, 2);
       it++;
-    } else while (*it >= '0' && *it <= '9') {
-      ret = 10*ret + (*(it++) - '0');
-    }
-    return sign*ret;
+    } else
+      while (*it >= '0' && *it <= '9') {
+        ret = 10 * ret + (*(it++) - '0');
+      }
+    return sign * ret;
   }
   int num = eval(it, prec - 1);
-  while (!((prec == 2 && *it != '+' && *it != '-') ||
-           (prec == 1 && *it != '*' && *it != '/'))) {
+  while (!((prec == 2 && *it != '+' && *it != '-') || (prec == 1 && *it != '*' && *it != '/'))) {
     switch (*(it++)) {
-      case '+': num += eval(it, prec - 1); break;
-      case '-': num -= eval(it, prec - 1); break;
-      case '*': num *= eval(it, prec - 1); break;
-      case '/': num /= eval(it, prec - 1); break;
+      case '+':
+        num += eval(it, prec - 1);
+        break;
+      case '-':
+        num -= eval(it, prec - 1);
+        break;
+      case '*':
+        num *= eval(it, prec - 1);
+        break;
+      case '/':
+        num /= eval(it, prec - 1);
+        break;
     }
   }
   return num;

@@ -47,12 +47,9 @@ class size_balanced_tree {
     int size;
     node_t *left, *right;
 
-    node_t(const K &k, const V &v)
-        : key(k), value(v), size(1), left(NULL), right(NULL) {}
+    node_t(const K &k, const V &v) : key(k), value(v), size(1), left(NULL), right(NULL) {}
 
-    inline node_t*& child(int c) {
-      return (c == 0) ? left : right;
-    }
+    inline node_t *&child(int c) { return (c == 0) ? left : right; }
 
     void update() {
       size = 1;
@@ -65,9 +62,7 @@ class size_balanced_tree {
     }
   } *root;
 
-  static inline int size(node_t *n) {
-    return (n == NULL) ? 0 : n->size;
-  }
+  static inline int size(node_t *n) { return (n == NULL) ? 0 : n->size; }
 
   static void rotate(node_t *&n, int c) {
     node_t *tmp = n->child(c);
@@ -188,27 +183,14 @@ class size_balanced_tree {
  public:
   size_balanced_tree() : root(NULL) {}
 
-  ~size_balanced_tree() {
-    clean_up(root);
-  }
+  ~size_balanced_tree() { clean_up(root); }
+  int size() const { return size(root); }
+  bool empty() const { return root == NULL; }
+  bool insert(const K &k, const V &v) { return insert(root, k, v); }
+  bool erase(const K &k) { return erase(root, k); }
+  int rank(const K &k) const { return rank(root, k); }
 
-  int size() const {
-    return size(root);
-  }
-
-  bool empty() const {
-    return root == NULL;
-  }
-
-  bool insert(const K &k, const V &v) {
-    return insert(root, k, v);
-  }
-
-  bool erase(const K &k) {
-    return erase(root, k);
-  }
-
-  const V* find(const K &k) const {
+  const V *find(const K &k) const {
     node_t *n = root;
     while (n != NULL) {
       if (k < n->key) {
@@ -227,10 +209,6 @@ class size_balanced_tree {
       throw std::runtime_error("Select rank must be between 0 and size() - 1.");
     }
     return select(root, r);
-  }
-
-  int rank(const K &k) const {
-    return rank(root, k);
   }
 
   template<class KVFunction>

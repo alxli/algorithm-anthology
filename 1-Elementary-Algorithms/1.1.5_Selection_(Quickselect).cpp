@@ -62,11 +62,11 @@ void print_range(It lo, It hi) {
   cout << endl;
 }
 
-int main () {
+int main() {
   int n = 9;
   int a[] = {5, 6, 4, 3, 2, 6, 7, 9, 3};
-  nth_element2(a, a + n/2, a + n);
-  assert(a[n/2] == 5);
+  nth_element2(a, a + n / 2, a + n);
+  assert(a[n / 2] == 5);
   print_range(a, a + n);
   return 0;
 }

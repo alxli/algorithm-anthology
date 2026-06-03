@@ -52,22 +52,17 @@ class heavy_light {
   // Set this to true to store values on edges, false to store values on nodes.
   static const bool VALUES_ON_EDGES = true;
 
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_value_with_delta(const T &v, const T &d, int len) {
-    return d;
-  }
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
 
   static T join_deltas(const T &d1, const T &d2) {
     return d2;  // For "set" updates, the more recent delta prevails.
   }
 
   int counter, paths;
-  std::vector<std::vector<T> > value, delta;
-  std::vector<std::vector<bool> > pending;
-  std::vector<std::vector<int> > len;
+  std::vector<std::vector<T>> value, delta;
+  std::vector<std::vector<bool>> pending;
+  std::vector<std::vector<int>> len;
   std::vector<int> size, parent, tin, tout, path, pathlen, pathpos, pathroot;
   std::vector<int> *adj;
 
@@ -96,15 +91,14 @@ class heavy_light {
     for (int j = 0; j < (int)adj[u].size(); j++) {
       int v = adj[u][j];
       if (v != parent[u]) {
-        build_paths(v, (2*size[v] >= size[u]) ? path : new_path(v));
+        build_paths(v, (2 * size[v] >= size[u]) ? path : new_path(v));
       }
     }
   }
 
   inline T join_value_with_delta(int path, int i) {
-    return pending[path][i]
-        ? join_value_with_delta(value[path][i], delta[path][i], len[path][i])
-        : value[path][i];
+    return pending[path][i] ? join_value_with_delta(value[path][i], delta[path][i], len[path][i])
+                            : value[path][i];
   }
 
   void push_delta(int path, int i) {
@@ -113,15 +107,13 @@ class heavy_light {
       d++;
     }
     for (d -= 2; d >= 0; d--) {
-      int l = (i >> d), r = (l ^ 1), n = l/2;
+      int l = (i >> d), r = (l ^ 1), n = l / 2;
       if (pending[path][n]) {
         value[path][n] = join_value_with_delta(path, n);
         delta[path][l] =
-            pending[path][l] ? join_deltas(delta[path][l], delta[path][n])
-                             : delta[path][n];
+            pending[path][l] ? join_deltas(delta[path][l], delta[path][n]) : delta[path][n];
         delta[path][r] =
-            pending[path][r] ? join_deltas(delta[path][r], delta[path][n])
-                             : delta[path][n];
+            pending[path][r] ? join_deltas(delta[path][r], delta[path][n]) : delta[path][n];
         pending[path][l] = pending[path][r] = true;
         pending[path][n] = false;
       }
@@ -129,10 +121,10 @@ class heavy_light {
   }
 
   bool query(int path, int u, int v, T *res) {
-    push_delta(path, u += value[path].size()/2);
-    push_delta(path, v += value[path].size()/2);
+    push_delta(path, u += value[path].size() / 2);
+    push_delta(path, v += value[path].size() / 2);
     bool found = false;
-    for (; u <= v; u = (u + 1)/2, v = (v - 1)/2) {
+    for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
         T value = join_value_with_delta(path, u);
         *res = found ? join_values(*res, value) : value;
@@ -148,10 +140,10 @@ class heavy_light {
   }
 
   void update(int path, int u, int v, const T &d) {
-    push_delta(path, u += value[path].size()/2);
-    push_delta(path, v += value[path].size()/2);
+    push_delta(path, u += value[path].size() / 2);
+    push_delta(path, v += value[path].size() / 2);
     int tu = -1, tv = -1;
-    for (; u <= v; u = (u + 1)/2, v = (v - 1)/2) {
+    for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
         delta[path][u] = pending[path][u] ? join_deltas(delta[path][u], d) : d;
         pending[path][u] = true;
@@ -168,12 +160,12 @@ class heavy_light {
       }
     }
     for (int i = tu; i > 1; i /= 2) {
-      value[path][i/2] = join_values(join_value_with_delta(path, i),
-                                     join_value_with_delta(path, i ^ 1));
+      value[path][i / 2] =
+          join_values(join_value_with_delta(path, i), join_value_with_delta(path, i ^ 1));
     }
     for (int i = tv; i > 1; i /= 2) {
-      value[path][i/2] = join_values(join_value_with_delta(path, i),
-                                     join_value_with_delta(path, i ^ 1));
+      value[path][i / 2] =
+          join_values(join_value_with_delta(path, i), join_value_with_delta(path, i ^ 1));
     }
   }
 
@@ -183,8 +175,17 @@ class heavy_light {
 
  public:
   heavy_light(int n, std::vector<int> adj[], const T &v = T())
-      : counter(0), paths(0), size(n), parent(n), tin(n), tout(n), path(n),
-        pathlen(n), pathpos(n), pathroot(n), adj(adj) {
+      : counter(0),
+        paths(0),
+        size(n),
+        parent(n),
+        tin(n),
+        tout(n),
+        path(n),
+        pathlen(n),
+        pathpos(n),
+        pathroot(n),
+        adj(adj) {
     dfs(0, -1);
     build_paths(0, new_path(0));
     value.resize(paths);
@@ -193,13 +194,13 @@ class heavy_light {
     len.resize(paths);
     for (int i = 0; i < paths; i++) {
       int m = pathlen[i];
-      value[i].assign(2*m, v);
-      delta[i].resize(2*m);
-      pending[i].assign(2*m, false);
-      len[i].assign(2*m, 1);
-      for (int j = 2*m - 1; j > 1; j -= 2) {
-        value[i][j/2] = join_values(value[i][j], value[i][j ^ 1]);
-        len[i][j/2] = len[i][j] + len[i][j ^ 1];
+      value[i].assign(2 * m, v);
+      delta[i].resize(2 * m);
+      pending[i].assign(2 * m, false);
+      len[i].assign(2 * m, 1);
+      for (int j = 2 * m - 1; j > 1; j -= 2) {
+        value[i][j / 2] = join_values(value[i][j], value[i][j ^ 1]);
+        len[i][j / 2] = len[i][j] + len[i][j ^ 1];
       }
     }
   }
@@ -225,8 +226,10 @@ class heavy_light {
       }
       v = parent[root];
     }
-    if (query(path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
-              std::max(pathpos[u], pathpos[v]), &value)) {
+    if (query(
+            path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
+            std::max(pathpos[u], pathpos[v]), &value
+        )) {
       res = found ? join_values(res, value) : value;
       found = true;
     }
@@ -249,8 +252,10 @@ class heavy_light {
       update(path[v], 0, pathpos[v], d);
       v = parent[root];
     }
-    update(path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
-           std::max(pathpos[u], pathpos[v]), d);
+    update(
+        path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
+        std::max(pathpos[u], pathpos[v]), d
+    );
   }
 };
 

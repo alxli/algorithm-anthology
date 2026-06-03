@@ -51,8 +51,7 @@ bool next_partition(std::vector<int> &p) {
 }
 
 long long partition_function(int a, int b) {
-  static std::vector<std::vector<long long> > p(
-      1, std::vector<long long>(1, 1));
+  static std::vector<std::vector<long long>> p(1, std::vector<long long>(1, 1));
   if (a >= (int)p.size()) {
     int old = p.size();
     p.resize(a + 1);
@@ -70,7 +69,7 @@ long long partition_function(int a, int b) {
 std::vector<int> partition_by_rank(int n, long long r) {
   std::vector<int> res;
   for (int i = n, j; i > 0; i -= j) {
-    for (j = 1; ; j++) {
+    for (j = 1;; j++) {
       long long count = partition_function(i, j);
       if (r < count) {
         break;
@@ -97,11 +96,11 @@ long long rank_by_partition(const std::vector<int> &p) {
   return res;
 }
 
-typedef void (*ReportFunction)(std::vector<int>::iterator,
-                               std::vector<int>::iterator);
+typedef void (*ReportFunction)(std::vector<int>::iterator, std::vector<int>::iterator);
 
-void generate_increasing_partitions(int left, int prev, int i,
-                                    std::vector<int> &p, ReportFunction f) {
+void generate_increasing_partitions(
+    int left, int prev, int i, std::vector<int> &p, ReportFunction f
+) {
   if (left == 0) {
     f(p.begin(), p.begin() + i);
     return;

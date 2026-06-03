@@ -39,10 +39,21 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqnorm(const point &a) { return a.x*a.x + a.y*a.y; }
-double norm(const point &a) { return sqrt(sqnorm(a)); }
-double dot(const point &a, const point &b) { return a.x*b.x + a.y*b.y; }
-double cross(const point &a, const point &b) { return a.x*b.y - a.y*b.x; }
+double sqnorm(const point &a) {
+  return a.x * a.x + a.y * a.y;
+}
+
+double norm(const point &a) {
+  return sqrt(sqnorm(a));
+}
+
+double dot(const point &a, const point &b) {
+  return a.x * b.x + a.y * b.y;
+}
+
+double cross(const point &a, const point &b) {
+  return a.x * b.y - a.y * b.x;
+}
 
 double dist(const point &a, const point &b) {
   return norm(point(b.x - a.x, b.y - a.y));
@@ -53,23 +64,21 @@ double sqdist(const point &a, const point &b) {
 }
 
 double line_dist(const point &p, double a, double b, double c) {
-  return fabs(a*p.x + b*p.y + c) / sqrt(a*a + b*b);
+  return fabs(a * p.x + b * p.y + c) / sqrt(a * a + b * b);
 }
 
 double line_dist(const point &p, const point &a, const point &b) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return dist(p, a);
   }
-  double u = ((p.x - a.x)*(b.x - a.x) + (p.y - a.y)*(b.y - a.y)) / sqdist(a, b);
-  return norm(point(a.x + u*(b.x - a.x) - p.x, a.y + u*(b.y - a.y) - p.y));
+  double u = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / sqdist(a, b);
+  return norm(point(a.x + u * (b.x - a.x) - p.x, a.y + u * (b.y - a.y) - p.y));
 }
 
-double line_dist(double a1, double b1, double c1,
-                 double a2, double b2, double c2) {
-  if (EQ(a1*b2, a2*b1)) {
+double line_dist(double a1, double b1, double c1, double a2, double b2, double c2) {
+  if (EQ(a1 * b2, a2 * b1)) {
     double factor = EQ(b1, 0) ? (a1 / a2) : (b1 / b2);
-    return EQ(c1, c2*factor) ? 0
-                             : fabs(c2*factor - c1) / sqrt(a1*a1 + b1*b1);
+    return EQ(c1, c2 * factor) ? 0 : fabs(c2 * factor - c1) / sqrt(a1 * a1 + b1 * b1);
   }
   return 0;
 }
@@ -84,11 +93,10 @@ double seg_dist(const point &p, const point &a, const point &b) {
     return norm(ap);
   }
   return GE(d, n) ? norm(point(ap.x - ab.x, ap.y - ab.y))
-                  : norm(point(ap.x - ab.x*(d / n), ap.y - ab.y*(d / n)));
+                  : norm(point(ap.x - ab.x * (d / n), ap.y - ab.y * (d / n)));
 }
 
-double seg_dist(const point &a, const point &b,
-                const point &c, const point &d) {
+double seg_dist(const point &a, const point &b, const point &c, const point &d) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return seg_dist(a, c, d);
   }
@@ -110,8 +118,9 @@ double seg_dist(const point &a, const point &b,
       return 0;
     }
   }
-  return std::min(std::min(seg_dist(a, c, d), seg_dist(b, c, d)),
-                  std::min(seg_dist(c, a, b), seg_dist(d, a, b)));
+  return std::min(
+      std::min(seg_dist(a, c, d), seg_dist(b, c, d)), std::min(seg_dist(c, a, b), seg_dist(d, a, b))
+  );
 }
 
 point closest_point(const point &a, const point &b, const point &p) {
@@ -120,7 +129,7 @@ point closest_point(const point &a, const point &b, const point &p) {
   }
   point ap(p.x - a.x, p.y - a.y), ab(b.x - a.x, b.y - a.y);
   double t = dot(ap, ab) / sqnorm(ab);
-  return (t <= 0) ? a : ((t >= 1) ? b : point(a.x + t*ab.x, a.y + t*ab.y));
+  return (t <= 0) ? a : ((t >= 1) ? b : point(a.x + t * ab.x, a.y + t * ab.y));
 }
 
 /*** Example Usage ***/
@@ -138,7 +147,6 @@ int main() {
   assert(EQ(1.0, seg_dist(point(3, 3), point(-1, -1), point(2, 3))));
   assert(EQ(1.2, seg_dist(point(2, 1), point(-1, -1), point(2, 3))));
   assert(EQ(0, seg_dist(point(0, 2), point(3, 3), point(-1, -1), point(2, 3))));
-  assert(EQ(0.6,
-            seg_dist(point(-1, 0), point(-2, 2), point(-1, -1), point(2, 3))));
+  assert(EQ(0.6, seg_dist(point(-1, 0), point(-2, 2), point(-1, -1), point(2, 3))));
   return 0;
 }

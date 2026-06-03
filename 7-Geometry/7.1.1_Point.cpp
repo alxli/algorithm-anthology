@@ -30,14 +30,9 @@ struct point {
   point(const point &p) : x(p.x), y(p.y) {}
   point(const std::pair<double, double> &p) : x(p.first), y(p.second) {}
 
-  bool operator<(const point &p) const {
-    return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
-  }
-
-  bool operator>(const point &p) const {
-    return EQ(x, p.x) ? LT(p.y, y) : LT(p.x, x);
-  }
-
+  // clang-format off
+  bool operator<(const point &p) const { return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x); }
+  bool operator>(const point &p) const { return EQ(x, p.x) ? LT(p.y, y) : LT(p.x, x); }
   bool operator==(const point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
   bool operator!=(const point &p) const { return !(*this == p); }
   bool operator<=(const point &p) const { return !(*this > p); }
@@ -48,54 +43,45 @@ struct point {
   point operator-(double v) const { return point(x - v, y - v); }
   point operator*(double v) const { return point(x * v, y * v); }
   point operator/(double v) const { return point(x / v, y / v); }
-  point& operator+=(const point &p) { x += p.x; y += p.y; return *this; }
-  point& operator-=(const point &p) { x -= p.x; y -= p.y; return *this; }
-  point& operator+=(double v) { x += v; y += v; return *this; }
-  point& operator-=(double v) { x -= v; y -= v; return *this; }
-  point& operator*=(double v) { x *= v; y *= v; return *this; }
-  point& operator/=(double v) { x /= v; y /= v; return *this; }
+  point &operator+=(const point &p) { x += p.x; y += p.y; return *this; }
+  point &operator-=(const point &p) { x -= p.x; y -= p.y; return *this; }
+  point &operator+=(double v) { x += v; y += v; return *this; }
+  point &operator-=(double v) { x -= v; y -= v; return *this; }
+  point &operator*=(double v) { x *= v; y *= v; return *this; }
+  point &operator/=(double v) { x /= v; y /= v; return *this; }
   friend point operator+(double v, const point &p) { return p + v; }
   friend point operator*(double v, const point &p) { return p * v; }
+  // clang-format on
 
-  double sqnorm() const { return x*x + y*y; }
-  double norm() const { return sqrt(x*x + y*y); }
+  double sqnorm() const { return x * x + y * y; }
+  double norm() const { return sqrt(x * x + y * y); }
   double arg() const { return atan2(y, x); }
-  double dot(const point &p) const { return x*p.x + y*p.y; }
-  double cross(const point &p) const { return x*p.y - y*p.x; }
+  double dot(const point &p) const { return x * p.x + y * p.y; }
+  double cross(const point &p) const { return x * p.y - y * p.x; }
   double proj(const point &p) const { return dot(p) / p.norm(); }
 
   // Returns a proportional unit vector (p, q) = c(x, y) where p^2 + q^2 = 1.
-  point normalize() const {
-    return (EQ(x, 0) && EQ(y, 0)) ? point(0, 0) : (point(x, y) / norm());
-  }
+  point normalize() const { return (EQ(x, 0) && EQ(y, 0)) ? point(0, 0) : (point(x, y) / norm()); }
 
   // Returns (x, y) rotated 90 degrees clockwise about the origin.
   point rotate90() const { return point(-y, x); }
 
   // Returns (x, y) rotated t radians clockwise about the origin.
-  point rotateCW(double t) const {
-    return point(x*cos(t) + y*sin(t), y*cos(t) - x*sin(t));
-  }
+  point rotateCW(double t) const { return point(x * cos(t) + y * sin(t), y * cos(t) - x * sin(t)); }
 
   // Returns (x, y) rotated t radians counter-clockwise about the origin.
   point rotateCCW(double t) const {
-    return point(x*cos(t) - y*sin(t), x*sin(t) + y*cos(t));
+    return point(x * cos(t) - y * sin(t), x * sin(t) + y * cos(t));
   }
 
   // Returns (x, y) rotated t radians clockwise about point p.
-  point rotateCW(const point &p, double t) const {
-    return (*this - p).rotateCW(t) + p;
-  }
+  point rotateCW(const point &p, double t) const { return (*this - p).rotateCW(t) + p; }
 
   // Returns (x, y) rotated t radians counter-clockwise about the point p.
-  point rotateCCW(const point &p, double t) const {
-    return (*this - p).rotateCCW(t) + p;
-  }
+  point rotateCCW(const point &p, double t) const { return (*this - p).rotateCCW(t) + p; }
 
   // Returns (x, y) reflected across point p.
-  point reflect(const point &p) const {
-    return point(2*p.x - x, 2*p.y - y);
-  }
+  point reflect(const point &p) const { return point(2 * p.x - x, 2 * p.y - y); }
 
   // Returns (x, y) reflected across the line containing points p and q.
   point reflect(const point &p, const point &q) const {
@@ -103,8 +89,8 @@ struct point {
       return reflect(p);
     }
     point r(*this - p), s = q - p;
-    r = point(r.x*s.x + r.y*s.y, r.x*s.y - r.y*s.x) / s.sqnorm();
-    r = point(r.x*s.x - r.y*s.y, r.x*s.y + r.y*s.x) + p;
+    r = point(r.x * s.x + r.y * s.y, r.x * s.y - r.y * s.x) / s.sqnorm();
+    r = point(r.x * s.x - r.y * s.y, r.x * s.y + r.y * s.x) + p;
     return r;
   }
 
@@ -116,34 +102,15 @@ struct point {
   friend double proj(const point &p, const point &q) { return p.proj(q); }
   friend point normalize(const point &p) { return p.normalize(); }
   friend point rotate90(const point &p) { return p.rotate90(); }
+  friend point rotateCW(const point &p, double t) { return p.rotateCW(t); }
+  friend point rotateCCW(const point &p, double t) { return p.rotateCCW(t); }
+  friend point rotateCW(const point &p, const point &q, double t) { return p.rotateCW(q, t); }
+  friend point rotateCCW(const point &p, const point &q, double t) { return p.rotateCCW(q, t); }
+  friend point reflect(const point &p, const point &q) { return p.reflect(q); }
+  friend point reflect(const point &p, const point &a, const point &b) { return p.reflect(a, b); }
 
-  friend point rotateCW(const point &p, double t) {
-    return p.rotateCW(t);
-  }
-
-  friend point rotateCCW(const point &p, double t) {
-    return p.rotateCCW(t);
-  }
-
-  friend point rotateCW(const point &p, const point &q, double t) {
-    return p.rotateCW(q, t);
-  }
-
-  friend point rotateCCW(const point &p, const point &q, double t) {
-    return p.rotateCCW(q, t);
-  }
-
-  friend point reflect(const point &p, const point &q) {
-    return p.reflect(q);
-  }
-
-  friend point reflect(const point &p, const point &a, const point &b) {
-    return p.reflect(a, b);
-  }
-
-  friend std::ostream& operator<<(std::ostream &out, const point &p) {
-    return out << "(" << (fabs(p.x) < EPS ? 0 : p.x) << ","
-                      << (fabs(p.y) < EPS ? 0 : p.y) << ")";
+  friend std::ostream &operator<<(std::ostream &out, const point &p) {
+    return out << "(" << (fabs(p.x) < EPS ? 0 : p.x) << "," << (fabs(p.y) < EPS ? 0 : p.y) << ")";
   }
 };
 
@@ -156,7 +123,7 @@ const double PI = acos(-1.0);
 
 int main() {
   pt p(-10, 3), q;
-  assert(pt(-18, 29) == p + pt(-3, 9)*6 / 2 - pt(-1, 1));
+  assert(pt(-18, 29) == p + pt(-3, 9) * 6 / 2 - pt(-1, 1));
   assert(EQ(109, p.sqnorm()));
   assert(EQ(10.44030650891, p.norm()));
   assert(EQ(2.850135859112, p.arg()));

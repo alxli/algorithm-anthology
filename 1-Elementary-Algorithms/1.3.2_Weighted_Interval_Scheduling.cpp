@@ -29,8 +29,7 @@ struct weighted_interval_t {
       : start(start), finish(finish), weight(weight) {}
 };
 
-bool weighted_earlier_finish(const weighted_interval_t &a,
-                             const weighted_interval_t &b) {
+bool weighted_earlier_finish(const weighted_interval_t &a, const weighted_interval_t &b) {
   return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
 }
 
@@ -43,9 +42,7 @@ long long weighted_interval_scheduling(std::vector<weighted_interval_t> interval
   }
   std::vector<long long> dp(n + 1, 0);
   for (int i = 1; i <= n; i++) {
-    int j = std::upper_bound(finish.begin(), finish.end(),
-                             intervals[i - 1].start) -
-            finish.begin();
+    int j = std::upper_bound(finish.begin(), finish.end(), intervals[i - 1].start) - finish.begin();
     dp[i] = std::max(dp[i - 1], dp[j] + intervals[i - 1].weight);
   }
   return dp[n];

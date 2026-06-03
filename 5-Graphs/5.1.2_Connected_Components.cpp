@@ -28,7 +28,7 @@ Space Complexity:
 
 const int MAXN = 100;
 std::vector<int> adj[MAXN];
-std::vector<std::vector<int> > components;
+std::vector<std::vector<int>> components;
 int component_id[MAXN];
 
 void dfs(int u, int id) {

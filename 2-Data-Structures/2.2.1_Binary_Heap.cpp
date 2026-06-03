@@ -44,19 +44,14 @@ class binary_heap {
     }
   }
 
-  int size() const {
-    return heap.size();
-  }
-
-  bool empty() const {
-    return heap.empty();
-  }
+  int size() const { return heap.size(); }
+  bool empty() const { return heap.empty(); }
 
   void push(const T &v) {
     heap.push_back(v);
     int i = heap.size() - 1;
     while (i > 0) {
-      int parent = (i - 1)/2;
+      int parent = (i - 1) / 2;
       if (!(heap[i] < heap[parent])) {
         break;
       }
@@ -73,7 +68,7 @@ class binary_heap {
     heap.pop_back();
     int i = 0;
     for (;;) {
-      int child = 2*i + 1;
+      int child = 2 * i + 1;
       if (child >= (int)heap.size()) {
         break;
       }

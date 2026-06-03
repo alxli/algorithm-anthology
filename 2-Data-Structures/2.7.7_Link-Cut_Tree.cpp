@@ -56,14 +56,8 @@ Space Complexity:
 
 template<class T>
 class link_cut_forest {
-  static T join_values(const T &a, const T &b) {
-    return std::min(a, b);
-  }
-
-  static T join_value_with_delta(const T &v, const T &d, int len) {
-    return d;
-  }
-
+  static T join_values(const T &a, const T &b) { return std::min(a, b); }
+  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
   static T join_deltas(const T &d1, const T &d2) {
     return d2;  // For "set" updates, the more recent delta prevails.
   }
@@ -75,16 +69,21 @@ class link_cut_forest {
     node_t *left, *right, *parent;
 
     node_t(const T &v)
-        : value(v), subtree_value(v), size(1), rev(false), pending(false),
-          left(NULL), right(NULL), parent(NULL) {}
+        : value(v),
+          subtree_value(v),
+          size(1),
+          rev(false),
+          pending(false),
+          left(NULL),
+          right(NULL),
+          parent(NULL) {}
 
     inline bool is_root() const {
       return parent == NULL || (parent->left != this && parent->right != this);
     }
 
     inline T get_subtree_value() const {
-      return pending ? join_value_with_delta(subtree_value, delta, size)
-                     : subtree_value;
+      return pending ? join_value_with_delta(subtree_value, delta, size) : subtree_value;
     }
 
     void push() {
@@ -106,8 +105,7 @@ class link_cut_forest {
           left->pending = true;
         }
         if (right != NULL) {
-          right->delta = right->pending ? join_deltas(right->delta, delta)
-                                        : delta;
+          right->delta = right->pending ? join_deltas(right->delta, delta) : delta;
           right->pending = true;
         }
         pending = false;
@@ -129,7 +127,7 @@ class link_cut_forest {
   };
 
   int num_trees;
-  std::map<int, node_t*> nodes;
+  std::map<int, node_t *> nodes;
 
   static void connect(node_t *child, node_t *parent, bool is_left) {
     if (child != NULL) {
@@ -178,7 +176,7 @@ class link_cut_forest {
     n->update();
   }
 
-  static node_t* expose(node_t *n) {
+  static node_t *expose(node_t *n) {
     node_t *prev = NULL;
     for (node_t *curr = n; curr != NULL; curr = curr->parent) {
       splay(curr);
@@ -193,7 +191,7 @@ class link_cut_forest {
   node_t *u, *v;
 
   void get_uv(int a, int b) {
-    typename std::map<int, node_t*>::iterator it1, it2;
+    typename std::map<int, node_t *>::iterator it1, it2;
     it1 = nodes.find(a);
     it2 = nodes.find(b);
     if (it1 == nodes.end() || it2 == nodes.end()) {
@@ -207,19 +205,14 @@ class link_cut_forest {
   link_cut_forest() : num_trees(0) {}
 
   ~link_cut_forest() {
-    typename std::map<int, node_t*>::iterator it;
+    typename std::map<int, node_t *>::iterator it;
     for (it = nodes.begin(); it != nodes.end(); ++it) {
       delete it->second;
     }
   }
 
-  int size() const {
-    return nodes.size();
-  }
-
-  int trees() const {
-    return num_trees;
-  }
+  int size() const { return nodes.size(); }
+  int trees() const { return num_trees; }
 
   void make_root(int i, const T &v = T()) {
     if (nodes.find(i) != nodes.end()) {
