@@ -254,8 +254,524 @@ int main() {
 }
 \end{lstlisting}
 
-\section{String Searching}
+\section{Hashing}
 \setcounter{section}{2}
+\setcounter{subsection}{0}
+\subsection{Hash Functions}
+Provides a small library of non-cryptographic hash functions and hash functors for common contest keys. These helpers are useful for fingerprinting values, combining keys, seeding randomized algorithms, and defining \inlinecode{std::unordered\_map} keys for pairs and vectors. They are not suitable for passwords, signatures, or adversarial security.
+
+The standalone functions below are deterministic. The \inlinecode{int\_hasher} functor adds a per-run random seed before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test contests.
+
+\begin{compactitem}
+  \item \inlinecode{mix32(x)} mixes a 32-bit unsigned integer \inlinecode{x}, using the MurmurHash3 finalizer.
+  \item \inlinecode{mix64(x)} mixes a 64-bit unsigned integer \inlinecode{x}, using the SplitMix64 finalizer.
+  \item \inlinecode{hash32(x)} and \inlinecode{hash64(x)} hash any integer type that can be converted to \inlinecode{unsigned int} or \inlinecode{uint64}, respectively.
+  \item \inlinecode{hash\_combine32(h, x)} and \inlinecode{hash\_combine64(h, x)} fold another already-hashed value into an existing hash accumulator.
+  \item \inlinecode{hash\_float(x)} and \inlinecode{hash\_double(x)} hash floating-point bit patterns, normalizing \inlinecode{-0.0} to \inlinecode{0.0}. Different NaN representations may still hash differently.
+  \item \inlinecode{hash\_string\_fnv1a32(s)} and \inlinecode{hash\_string\_fnv1a64(s)} compute FNV-1a hashes of string \inlinecode{s}.
+  \item \inlinecode{hash\_range32(first, last)} and \inlinecode{hash\_range64(first, last)} hash a sequence of integer-like values.
+  \item \inlinecode{int\_hasher\textless{}Int\textgreater{}}, \inlinecode{pair\_hasher\textless{}A, B\textgreater{}}, and \inlinecode{vector\_hasher\textless{}T\textgreater{}} are hash functors for \inlinecode{std::unordered\_map} and \inlinecode{std::unordered\_set}.
+  \item \inlinecode{generic\_hasher\textless{}T\textgreater{}} recursively handles integer, pair, and vector keys, and falls back to \inlinecode{std::hash\textless{}T\textgreater{}} for other hashable types.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the integer, combiner, and floating-point hash functions.
+  \item $O(n)$ per call to string and range hashing functions, where $n$ is the number of elements processed.
+  \item $O(n)$ per call to \inlinecode{vector\_hasher\textless{}T\textgreater{}::operator()}, where $n$ is the vector size.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <chrono>
+#include <cstddef>
+#include <cstring>
+#include <functional>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+
+typedef unsigned long long uint64;
+
+unsigned int mix32(unsigned int x) {
+  x ^= x >> 16;
+  x *= 0x85ebca6bU;
+  x ^= x >> 13;
+  x *= 0xc2b2ae35U;
+  return x ^ (x >> 16);
+}
+
+uint64 mix64(uint64 x) {
+  x += 0x9e3779b97f4a7c15ULL;
+  x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+  return x ^ (x >> 31);
+}
+
+template<class Int>
+unsigned int hash32(Int x) {
+  return mix32((unsigned int)x);
+}
+
+template<class Int>
+uint64 hash64(Int x) {
+  return mix64((uint64)x);
+}
+
+unsigned int hash_combine32(unsigned int h, unsigned int x) {
+  return mix32(h ^ (x + 0x9e3779b9U + (h << 6) + (h >> 2)));
+}
+
+uint64 hash_combine64(uint64 h, uint64 x) {
+  return mix64(h ^ (x + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2)));
+}
+
+unsigned int hash_float(float x) {
+  if (x == 0.0f) {
+    x = 0.0f;  // Normalize -0.0.
+  }
+  unsigned int bits = 0;
+  std::memcpy(&bits, &x, sizeof(bits));
+  return mix32(bits);
+}
+
+uint64 hash_double(double x) {
+  if (x == 0.0) {
+    x = 0.0;  // Normalize -0.0.
+  }
+  uint64 bits = 0;
+  std::memcpy(&bits, &x, sizeof(bits));
+  return mix64(bits);
+}
+
+unsigned int hash_string_fnv1a32(const std::string &s) {
+  unsigned int h = 2166136261U;
+  for (int i = 0; i < (int)s.size(); i++) {
+    h ^= (unsigned char)s[i];
+    h *= 16777619U;
+  }
+  return h;
+}
+
+uint64 hash_string_fnv1a64(const std::string &s) {
+  uint64 h = 14695981039346656037ULL;
+  for (int i = 0; i < (int)s.size(); i++) {
+    h ^= (unsigned char)s[i];
+    h *= 1099511628211ULL;
+  }
+  return h;
+}
+
+template<class It>
+unsigned int hash_range32(It first, It last) {
+  unsigned int h = 0;
+  for (It it = first; it != last; ++it) {
+    h = hash_combine32(h, hash32(*it));
+  }
+  return h;
+}
+
+template<class It>
+uint64 hash_range64(It first, It last) {
+  uint64 h = 0;
+  for (It it = first; it != last; ++it) {
+    h = hash_combine64(h, hash64(*it));
+  }
+  return h;
+}
+
+template<class Int>
+struct int_hasher {
+  std::size_t operator()(Int x) const {
+    static const uint64 RANDOM =
+        std::chrono::steady_clock::now().time_since_epoch().count();
+    return (std::size_t)mix64((uint64)x + RANDOM);
+  }
+};
+
+template<class T>
+struct generic_hasher;
+
+template<class T, bool IsInteger>
+struct scalar_hasher {
+  std::size_t operator()(const T &x) const {
+    return std::hash<T>()(x);
+  }
+};
+
+template<class T>
+struct scalar_hasher<T, true> {
+  std::size_t operator()(T x) const {
+    return int_hasher<T>()(x);
+  }
+};
+
+template<class A, class B>
+struct pair_hasher {
+  std::size_t operator()(const std::pair<A, B> &p) const {
+    uint64 h = 0;
+    h = hash_combine64(h, (uint64)generic_hasher<A>()(p.first));
+    h = hash_combine64(h, (uint64)generic_hasher<B>()(p.second));
+    return (std::size_t)h;
+  }
+};
+
+template<class T>
+struct vector_hasher {
+  std::size_t operator()(const std::vector<T> &v) const {
+    uint64 h = 0;
+    for (int i = 0; i < (int)v.size(); i++) {
+      h = hash_combine64(h, (uint64)generic_hasher<T>()(v[i]));
+    }
+    return (std::size_t)h;
+  }
+};
+
+template<class T>
+struct generic_hasher : scalar_hasher<T, std::is_integral<T>::value> {};
+
+template<class A, class B>
+struct generic_hasher<std::pair<A, B> > : pair_hasher<A, B> {};
+
+template<class T>
+struct generic_hasher<std::vector<T> > : vector_hasher<T> {};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(mix32(123U) == mix32(123U));
+  assert(mix32(123U) != mix32(124U));
+  assert(hash32(-1) == hash32(-1));
+  assert(hash64(123) == mix64(123ULL));
+  assert(hash_float(-0.0f) == hash_float(0.0f));
+  assert(hash_double(-0.0) == hash_double(0.0));
+  assert(hash_string_fnv1a32("abc") == hash_string_fnv1a32("abc"));
+  assert(hash_string_fnv1a64("abc") != hash_string_fnv1a64("acb"));
+
+  vector<int> v;
+  v.push_back(1);
+  v.push_back(2);
+  v.push_back(3);
+  assert(hash_range32(v.begin(), v.end()) == hash_range32(v.begin(), v.end()));
+  assert(hash_range64(v.begin(), v.end()) == hash_range64(v.begin(), v.end()));
+
+  unordered_map<long long, int, int_hasher<long long> > count;
+  count[1000000000000LL] = 7;
+  assert(count[1000000000000LL] == 7);
+
+  typedef pair<int, int> point;
+  unordered_map<point, int, pair_hasher<int, int> > dist;
+  dist[point(3, 4)] = 5;
+  assert(dist[point(3, 4)] == 5);
+
+  unordered_map<vector<int>, int, vector_hasher<int> > seen;
+  seen[v] = 1;
+  assert(seen[v] == 1);
+
+  typedef pair<vector<int>, int> state;
+  unordered_map<state, int, generic_hasher<state> > dp;
+  dp[state(v, 4)] = 9;
+  assert(dp[state(v, 4)] == 9);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Rolling Hash}
+Computes polynomial rolling hashes for sequences, supporting $O(1)$ contiguous subsequence hash queries after preprocessing. This is useful for probabilistic string matching, substring equality checks, repeated subarray detection, and binary-searching over candidate lengths.
+
+The implementation works modulo the Mersenne prime $2^{61} - 1$ and uses \inlinecode{\_\_uint128\_t} for multiplication. The base \inlinecode{HASH\_BASE} should be changed or chosen randomly for open-hacking environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic and should not be used as proof of equality when exact verification is required.
+
+By default, each sequence value is cast to \inlinecode{uint64} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in \inlinecode{[1, HASH\_MOD)}.
+
+\begin{compactitem}
+  \item \inlinecode{rolling\_hash\textless{}T\textgreater{}(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
+  \item \inlinecode{rolling\_hash\textless{}T\textgreater{}(v)} constructs prefix hashes for vector \inlinecode{v}.
+  \item \inlinecode{get(l, r)} returns the hash of the half-open subsequence \inlinecode{[l, r)}.
+  \item \inlinecode{hash(first, last)} returns the hash of an iterator range.
+  \item \inlinecode{hash(v)} returns the hash of vector \inlinecode{v}.
+  \item \inlinecode{concat(left, right, right\_len)} returns the hash of the concatenation of a sequence with hash \inlinecode{left} and a sequence with hash \inlinecode{right} and length \inlinecode{right\_len}.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per constructor call and whole-sequence hash, where $n$ is the sequence length.
+  \item $O(1)$ per call to \inlinecode{get(l, r)} and \inlinecode{concat(left, right, right\_len)}.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of prefix hashes and powers, where $n$ is the maximum sequence length processed so far.
+  \item $O(1)$ auxiliary per query.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <string>
+#include <utility>
+#include <vector>
+
+typedef unsigned long long uint64;
+
+const uint64 HASH_MOD = (1ULL << 61) - 1;
+const uint64 HASH_BASE = 911382323ULL;  // Change or randomize.
+
+uint64 hash_add(uint64 a, uint64 b) {
+  uint64 c = a + b;
+  return c >= HASH_MOD ? c - HASH_MOD : c;
+}
+
+uint64 hash_sub(uint64 a, uint64 b) {
+  return a >= b ? a - b : a + HASH_MOD - b;
+}
+
+uint64 hash_mul(uint64 a, uint64 b) {
+  __uint128_t p = (__uint128_t)a * b;
+  uint64 low = (uint64)p & HASH_MOD;
+  uint64 high = (uint64)(p >> 61);
+  uint64 res = low + high;
+  if (res >= HASH_MOD) {
+    res -= HASH_MOD;
+  }
+  return res;
+}
+
+uint64 hash_mix(uint64 x) {
+  x += 0x9e3779b97f4a7c15ULL;
+  x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+  x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+  return x ^ (x >> 31);
+}
+
+template<class T>
+struct rolling_value_hasher {
+  uint64 operator()(const T &x) const {
+    return hash_mix((uint64)x) % (HASH_MOD - 1) + 1;
+  }
+};
+
+template<class T, class ValueHasher = rolling_value_hasher<T> >
+class rolling_hash {
+  static std::vector<uint64> pow_base;
+  std::vector<uint64> pref;
+  ValueHasher value_hasher;
+
+  static void ensure_powers(int n) {
+    while ((int)pow_base.size() <= n) {
+      pow_base.push_back(hash_mul(pow_base.back(), HASH_BASE));
+    }
+  }
+
+  template<class It>
+  void build(It first, It last) {
+    pref.clear();
+    pref.push_back(0);
+    for (It it = first; it != last; ++it) {
+      pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE),
+                              value_hasher(*it)));
+    }
+    ensure_powers(pref.size() - 1);
+  }
+
+ public:
+  explicit rolling_hash(const ValueHasher &hasher = ValueHasher())
+      : value_hasher(hasher) {
+    ensure_powers(0);
+    pref.push_back(0);
+  }
+
+  template<class It>
+  rolling_hash(It first, It last, const ValueHasher &hasher = ValueHasher())
+      : value_hasher(hasher) {
+    build(first, last);
+  }
+
+  explicit rolling_hash(const std::vector<T> &v,
+                        const ValueHasher &hasher = ValueHasher())
+      : value_hasher(hasher) {
+    build(v.begin(), v.end());
+  }
+
+  int size() const {
+    return (int)pref.size() - 1;
+  }
+
+  uint64 get(int l, int r) const {
+    return hash_sub(pref[r], hash_mul(pref[l], pow_base[r - l]));
+  }
+
+  template<class It>
+  static uint64 hash(It first, It last,
+                     const ValueHasher &hasher = ValueHasher()) {
+    rolling_hash<T, ValueHasher> h(first, last, hasher);
+    return h.get(0, h.size());
+  }
+
+  static uint64 hash(const std::vector<T> &v,
+                     const ValueHasher &hasher = ValueHasher()) {
+    rolling_hash<T, ValueHasher> h(v, hasher);
+    return h.get(0, h.size());
+  }
+
+  static uint64 concat(uint64 left, uint64 right, int right_len) {
+    ensure_powers(right_len);
+    return hash_add(hash_mul(left, pow_base[right_len]), right);
+  }
+};
+
+template<class T, class ValueHasher>
+std::vector<uint64> rolling_hash<T, ValueHasher>::pow_base(1, 1);
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+typedef pair<int, int> point;
+
+struct point_hasher {
+  uint64 operator()(const point &p) const {
+    return hash_mix((uint64)p.first * 1000003ULL + (uint64)p.second) %
+               (HASH_MOD - 1) + 1;
+  }
+};
+
+int main() {
+  string s = "abracadabra";
+  rolling_hash<char> hs(s.begin(), s.end());
+  assert(hs.get(0, 4) == hs.get(7, 11));  // "abra" == "abra"
+  assert(hs.get(0, 4) != hs.get(3, 7));   // "abra" != "acad"
+
+  string a = "abc", b = "def";
+  uint64 ab =
+      rolling_hash<char>::concat(rolling_hash<char>::hash(a.begin(), a.end()),
+                                 rolling_hash<char>::hash(b.begin(), b.end()),
+                                 b.size());
+  string c = a + b;
+  assert(ab == rolling_hash<char>::hash(c.begin(), c.end()));
+
+  vector<int> v;
+  v.push_back(1);
+  v.push_back(2);
+  v.push_back(3);
+  v.push_back(1);
+  v.push_back(2);
+  rolling_hash<int> hv(v);
+  assert(hv.get(0, 2) == hv.get(3, 5));  // [1, 2] == [1, 2]
+  assert(hv.get(0, 3) == rolling_hash<int>::hash(v.begin(), v.begin() + 3));
+
+  vector<point> poly;
+  poly.push_back(point(1, 2));
+  poly.push_back(point(3, 4));
+  rolling_hash<point, point_hasher> hp(poly);
+  assert((hp.get(0, 2) == rolling_hash<point, point_hasher>::hash(poly)));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Zobrist Hashing}
+Computes randomized XOR fingerprints for keys and sets of keys using Zobrist hashing. Each distinct key is assigned a pseudorandom 64-bit token, and a set is represented by the XOR of its members' tokens. This makes insertion and deletion the same operation: XOR the key's token once.
+
+This technique is useful for probabilistic equality checks on sets, distinct-prefix queries, board-game states, and other unordered collections. It is not cryptographic, and collisions are possible with probability roughly $q^2 / 2^{64}$ over $q$ compared fingerprints. For multisets, plain XOR only records element parity; use a summed hash or pair it with counts if multiplicity matters.
+
+\begin{compactitem}
+  \item \inlinecode{zobrist\_hash(seed)} constructs a token generator with initial value \inlinecode{seed}.
+  \item \inlinecode{get(x)} returns the stable token assigned to key \inlinecode{x}, creating it if needed.
+  \item \inlinecode{toggle(h, x)} returns the hash obtained by inserting \inlinecode{x} into set hash \inlinecode{h} if absent, or removing \inlinecode{x} from \inlinecode{h} if present.
+  \item \inlinecode{distinct\_prefix\_hashes(lo, hi)} returns prefix hashes where each distinct key in the range \inlinecode{[lo, hi)} contributes only on its first occurrence.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\log n)$ per call to \inlinecode{get(x)} and \inlinecode{toggle(h, x)}, where $n$ is the number of distinct keys seen so far.
+  \item $O(n \log n)$ per call to \inlinecode{distinct\_prefix\_hashes(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\end{compactitem}
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for stored key tokens, where $n$ is the number of distinct keys seen so far.
+  \item $O(n)$ auxiliary for \inlinecode{distinct\_prefix\_hashes(lo, hi)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <map>
+#include <set>
+#include <vector>
+
+typedef unsigned long long uint64;
+
+template<class T>
+class zobrist_hash {
+  std::map<T, uint64> token;
+  uint64 state;
+
+  static uint64 splitmix64(uint64 x) {
+    x += 0x9e3779b97f4a7c15ULL;
+    x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+    x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+    return x ^ (x >> 31);
+  }
+
+ public:
+  explicit zobrist_hash(uint64 seed = 0) : state(seed) {}
+
+  uint64 get(const T &x) {
+    typename std::map<T, uint64>::iterator it = token.find(x);
+    if (it != token.end()) {
+      return it->second;
+    }
+    state = splitmix64(state);
+    token[x] = state;
+    return state;
+  }
+
+  uint64 toggle(uint64 h, const T &x) {
+    return h ^ get(x);
+  }
+
+  template<class It>
+  std::vector<uint64> distinct_prefix_hashes(It lo, It hi) {
+    std::set<T> seen;
+    std::vector<uint64> res(1, 0);
+    uint64 h = 0;
+    for (It it = lo; it != hi; ++it) {
+      if (seen.insert(*it).second) {
+        h ^= get(*it);
+      }
+      res.push_back(h);
+    }
+    return res;
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  int a[] = {1, 2, 1, 3};
+  int b[] = {2, 1, 3};
+  zobrist_hash<int> zh(123);
+  vector<uint64> pa = zh.distinct_prefix_hashes(a, a + 4);
+  vector<uint64> pb = zh.distinct_prefix_hashes(b, b + 3);
+
+  assert(pa[2] == pb[2]);  // Distinct sets {1, 2} and {2, 1}.
+  assert(pa[4] == pb[3]);  // Distinct sets {1, 2, 3} and {2, 1, 3}.
+
+  uint64 h = 0;
+  h = zh.toggle(h, 5);
+  assert(h != 0);
+  h = zh.toggle(h, 5);
+  assert(h == 0);
+  return 0;
+}
+\end{lstlisting}
+
+\section{String Searching}
+\setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{String Searching (KMP)}
 Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine the first positions in which the needle occurs within the given haystacks in linear time using the Knuth-Morris-Pratt algorithm. In comparison, \inlinecode{std::string::find} runs in quadratic time.
@@ -531,7 +1047,7 @@ Matched "abccab" at position 0.
 \end{exampleoutput}
 
 \section{Expression Parsing}
-\setcounter{section}{3}
+\setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Recursive Descent Parsing (Simple)}
 Evaluate an expression in accordance to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators.
@@ -1079,7 +1595,7 @@ int main() {
 \end{lstlisting}
 
 \section{Sequence Dynamic Programming}
-\setcounter{section}{4}
+\setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Longest Common Substring}
 Given two strings, determine their longest common substring (i.e. consecutive subsequence) using dynamic programming.
@@ -1383,7 +1899,7 @@ int main() {
 \end{lstlisting}
 
 \section{Suffix Array and LCP}
-\setcounter{section}{5}
+\setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Suffix Array and LCP (Manber-Myers)}
 Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes "cab", "ab", and "b". When sorted, the indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
@@ -1836,7 +2352,7 @@ int main() {
 \end{lstlisting}
 
 \section{String Data Structures}
-\setcounter{section}{6}
+\setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Trie}
 Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node.
