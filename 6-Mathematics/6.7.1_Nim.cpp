@@ -25,7 +25,7 @@ Space Complexity:
 
 int nim_sum(const std::vector<int> &piles) {
   int x = 0;
-  for (int i = 0; i < (int)piles.size(); i++) {
+  for (int i = 0; i < static_cast<int>(piles.size()); i++) {
     x ^= piles[i];
   }
   return x;
@@ -40,7 +40,7 @@ std::pair<int, int> winning_move(const std::vector<int> &piles) {
   if (x == 0) {
     return std::make_pair(-1, -1);
   }
-  for (int i = 0; i < (int)piles.size(); i++) {
+  for (int i = 0; i < static_cast<int>(piles.size()); i++) {
     int target = piles[i] ^ x;
     if (target < piles[i]) {
       return std::make_pair(i, target);

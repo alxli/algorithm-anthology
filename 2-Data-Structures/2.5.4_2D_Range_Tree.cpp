@@ -4,7 +4,7 @@ Maintain a set of two-dimensional points while supporting queries for all points
 given rectangular regions. This implementation uses `std::pair` to represent points, requiring
 operators `<` and `==` to be defined on the numeric template type.
 
-- `range_tree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
+- `RangeTree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
   `[lo, hi)` of points.
 - `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point in the set that falls into
   the rectangular region consisting of rows from `x1` to `x2`, inclusive, and columns from `y1` to
@@ -28,7 +28,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class range_tree {
+class RangeTree {
   typedef std::pair<T, T> point;
   typedef std::pair<int, T> colindex;
 
@@ -80,7 +80,7 @@ class range_tree {
 
  public:
   template<class It>
-  range_tree(It lo, It hi) : points(lo, hi) {
+  RangeTree(It lo, It hi) : points(lo, hi) {
     int n = std::distance(lo, hi);
     columns.resize(4 * n + 1);
     std::sort(points.begin(), points.end());
@@ -119,7 +119,7 @@ int main() {
   for (int i = 0; i < n; i++) {
     v.push_back(make_pair(points[i][0], points[i][1]));
   }
-  range_tree<int> t(v.begin(), v.end());
+  RangeTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);
   cout << endl;
   t.query(1, 1, 4, 8, print);

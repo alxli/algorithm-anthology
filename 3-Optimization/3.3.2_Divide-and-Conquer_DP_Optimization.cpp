@@ -56,11 +56,11 @@ void compute_dc_layer(
 #include <cassert>
 using namespace std;
 
-struct square_segment_cost {
+struct SquareSegmentCost {
   vector<long long> prefix;
 
-  explicit square_segment_cost(const vector<int> &a) : prefix(a.size() + 1) {
-    for (int i = 0; i < (int)a.size(); i++) {
+  explicit SquareSegmentCost(const vector<int> &a) : prefix(a.size() + 1) {
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       prefix[i + 1] = prefix[i] + a[i];
     }
   }
@@ -75,7 +75,7 @@ int main() {
   int raw[] = {1, 2, 3, 4};
   vector<int> a(raw, raw + 4);
   int n = a.size();
-  square_segment_cost cost(a);
+  SquareSegmentCost cost(a);
 
   vector<long long> dp_prev(n + 1, INF), dp_cur(n + 1, INF);
   dp_prev[0] = 0;

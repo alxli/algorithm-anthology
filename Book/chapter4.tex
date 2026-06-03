@@ -72,7 +72,7 @@ Case Conversion:
 \begin{lstlisting}[language=C++]
 string to_upper(const string &s) {
   string res;
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     res.push_back(toupper(s[i]));
   }
   return res;
@@ -80,7 +80,7 @@ string to_upper(const string &s) {
 
 string to_lower(const string &s) {
   string res;
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     res.push_back(tolower(s[i]));
   }
   return res;
@@ -89,7 +89,7 @@ string to_lower(const string &s) {
 string to_title(const string &s) {
   string res;
   char prev = '\0';
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     if (isalpha(prev)) {
       res.push_back(tolower(s[i]));
     } else {
@@ -172,7 +172,7 @@ Joining and Splitting:
 \begin{lstlisting}[language=C++]
 string join(const std::vector<string> &v, const string &delim = " ") {
   string res;
-  for (int i = 0; i < (int)v.size(); i++) {
+  for (int i = 0; i < static_cast<int>(v.size()); i++) {
     if (i > 0) {
       res += delim;
     }
@@ -194,7 +194,7 @@ std::vector<string> split(const string &s, char delim) {
 std::vector<string> split(const string &s, const string &delim = " \n\t\v\f\r") {
   std::vector<string> res;
   string curr;
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     if (delim.find(s[i]) == string::npos) {
       curr += s[i];
     } else if (!curr.empty()) {
@@ -212,7 +212,7 @@ std::vector<string> explode(const string &s, const string &delim) {
   std::vector<string> res;
   size_t last = 0, next = 0;
   while ((next = s.find(delim, last)) != string::npos) {
-    res.push_back(s.substr(last, (int)next - last));
+    res.push_back(s.substr(last, static_cast<int>(next) - last));
     last = next + delim.size();
   }
   res.push_back(s.substr(last));
@@ -260,7 +260,7 @@ int main() {
 \subsection{Hash Functions}
 Provides a small library of non-cryptographic hash functions and hash functors for common contest keys. These helpers are useful for fingerprinting values, combining keys, seeding randomized algorithms, and defining \inlinecode{std::unordered\_map} keys for pairs and vectors. They are not suitable for passwords, signatures, or adversarial security.
 
-The standalone functions below are deterministic. The \inlinecode{int\_hasher} functor adds a per-run random seed before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test contests.
+The standalone functions below are deterministic. The \inlinecode{IntHasher} functor adds a per-run random seed before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test contests.
 
 \begin{compactitem}
   \item \inlinecode{mix32(x)} mixes a 32-bit unsigned integer \inlinecode{x}, using the MurmurHash3 finalizer.
@@ -270,15 +270,15 @@ The standalone functions below are deterministic. The \inlinecode{int\_hasher} f
   \item \inlinecode{hash\_float(x)} and \inlinecode{hash\_double(x)} hash floating-point bit patterns, normalizing \inlinecode{-0.0} to \inlinecode{0.0}. Different NaN representations may still hash differently.
   \item \inlinecode{hash\_string\_fnv1a32(s)} and \inlinecode{hash\_string\_fnv1a64(s)} compute FNV-1a hashes of string \inlinecode{s}.
   \item \inlinecode{hash\_range32(first, last)} and \inlinecode{hash\_range64(first, last)} hash a sequence of integer-like values.
-  \item \inlinecode{int\_hasher\textless{}Int\textgreater{}}, \inlinecode{pair\_hasher\textless{}A, B\textgreater{}}, and \inlinecode{vector\_hasher\textless{}T\textgreater{}} are hash functors for \inlinecode{std::unordered\_map} and \inlinecode{std::unordered\_set}.
-  \item \inlinecode{generic\_hasher\textless{}T\textgreater{}} recursively handles integer, pair, and vector keys, and falls back to \inlinecode{std::hash\textless{}T\textgreater{}} for other hashable types.
+  \item \inlinecode{IntHasher\textless{}Int\textgreater{}}, \inlinecode{PairHasher\textless{}A, B\textgreater{}}, and \inlinecode{VectorHasher\textless{}T\textgreater{}} are hash functors for \inlinecode{std::unordered\_map} and \inlinecode{std::unordered\_set}.
+  \item \inlinecode{GenericHasher\textless{}T\textgreater{}} recursively handles integer, pair, and vector keys, and falls back to \inlinecode{std::hash\textless{}T\textgreater{}} for other hashable types.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the integer, combiner, and floating-point hash functions.
   \item $O(n)$ per call to string and range hashing functions, where $n$ is the number of elements processed.
-  \item $O(n)$ per call to \inlinecode{vector\_hasher\textless{}T\textgreater{}::operator()}, where $n$ is the vector size.
+  \item $O(n)$ per call to \inlinecode{VectorHasher\textless{}T\textgreater{}::operator()}, where $n$ is the vector size.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
@@ -313,7 +313,7 @@ uint64 mix64(uint64 x) {
 
 template<class Int>
 unsigned int hash32(Int x) {
-  return mix32((unsigned int)x);
+  return mix32(static_cast<unsigned int>(x));
 }
 
 template<class Int>
@@ -349,8 +349,8 @@ uint64 hash_double(double x) {
 
 unsigned int hash_string_fnv1a32(const std::string &s) {
   unsigned int h = 2166136261U;
-  for (int i = 0; i < (int)s.size(); i++) {
-    h ^= (unsigned char)s[i];
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    h ^= static_cast<unsigned char>(s[i]);
     h *= 16777619U;
   }
   return h;
@@ -358,8 +358,8 @@ unsigned int hash_string_fnv1a32(const std::string &s) {
 
 uint64 hash_string_fnv1a64(const std::string &s) {
   uint64 h = 14695981039346656037ULL;
-  for (int i = 0; i < (int)s.size(); i++) {
-    h ^= (unsigned char)s[i];
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    h ^= static_cast<unsigned char>(s[i]);
     h *= 1099511628211ULL;
   }
   return h;
@@ -384,7 +384,7 @@ uint64 hash_range64(It first, It last) {
 }
 
 template<class Int>
-struct int_hasher {
+struct IntHasher {
   std::size_t operator()(Int x) const {
     static const uint64 RANDOM = std::chrono::steady_clock::now().time_since_epoch().count();
     return (std::size_t)mix64((uint64)x + RANDOM);
@@ -392,47 +392,47 @@ struct int_hasher {
 };
 
 template<class T>
-struct generic_hasher;
+struct GenericHasher;
 
 template<class T, bool IsInteger>
-struct scalar_hasher {
+struct ScalarHasher {
   std::size_t operator()(const T &x) const { return std::hash<T>()(x); }
 };
 
 template<class T>
-struct scalar_hasher<T, true> {
-  std::size_t operator()(T x) const { return int_hasher<T>()(x); }
+struct ScalarHasher<T, true> {
+  std::size_t operator()(T x) const { return IntHasher<T>()(x); }
 };
 
 template<class A, class B>
-struct pair_hasher {
+struct PairHasher {
   std::size_t operator()(const std::pair<A, B> &p) const {
     uint64 h = 0;
-    h = hash_combine64(h, (uint64)generic_hasher<A>()(p.first));
-    h = hash_combine64(h, (uint64)generic_hasher<B>()(p.second));
+    h = hash_combine64(h, (uint64)GenericHasher<A>()(p.first));
+    h = hash_combine64(h, (uint64)GenericHasher<B>()(p.second));
     return (std::size_t)h;
   }
 };
 
 template<class T>
-struct vector_hasher {
+struct VectorHasher {
   std::size_t operator()(const std::vector<T> &v) const {
     uint64 h = 0;
-    for (int i = 0; i < (int)v.size(); i++) {
-      h = hash_combine64(h, (uint64)generic_hasher<T>()(v[i]));
+    for (int i = 0; i < static_cast<int>(v.size()); i++) {
+      h = hash_combine64(h, (uint64)GenericHasher<T>()(v[i]));
     }
     return (std::size_t)h;
   }
 };
 
 template<class T>
-struct generic_hasher : scalar_hasher<T, std::is_integral<T>::value> {};
+struct GenericHasher : ScalarHasher<T, std::is_integral<T>::value> {};
 
 template<class A, class B>
-struct generic_hasher<std::pair<A, B>> : pair_hasher<A, B> {};
+struct GenericHasher<std::pair<A, B>> : PairHasher<A, B> {};
 
 template<class T>
-struct generic_hasher<std::vector<T>> : vector_hasher<T> {};
+struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
@@ -456,21 +456,21 @@ int main() {
   assert(hash_range32(v.begin(), v.end()) == hash_range32(v.begin(), v.end()));
   assert(hash_range64(v.begin(), v.end()) == hash_range64(v.begin(), v.end()));
 
-  unordered_map<long long, int, int_hasher<long long>> count;
+  unordered_map<long long, int, IntHasher<long long>> count;
   count[1000000000000LL] = 7;
   assert(count[1000000000000LL] == 7);
 
   typedef pair<int, int> point;
-  unordered_map<point, int, pair_hasher<int, int>> dist;
+  unordered_map<point, int, PairHasher<int, int>> dist;
   dist[point(3, 4)] = 5;
   assert(dist[point(3, 4)] == 5);
 
-  unordered_map<vector<int>, int, vector_hasher<int>> seen;
+  unordered_map<vector<int>, int, VectorHasher<int>> seen;
   seen[v] = 1;
   assert(seen[v] == 1);
 
   typedef pair<vector<int>, int> state;
-  unordered_map<state, int, generic_hasher<state>> dp;
+  unordered_map<state, int, GenericHasher<state>> dp;
   dp[state(v, 4)] = 9;
   assert(dp[state(v, 4)] == 9);
   return 0;
@@ -484,8 +484,8 @@ The implementation works modulo the Mersenne prime $2^{61} - 1$ and uses \inline
 By default, each sequence value is cast to \inlinecode{uint64} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in \inlinecode{[1, HASH\_MOD)}.
 
 \begin{compactitem}
-  \item \inlinecode{rolling\_hash\textless{}T\textgreater{}(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
-  \item \inlinecode{rolling\_hash\textless{}T\textgreater{}(v)} constructs prefix hashes for vector \inlinecode{v}.
+  \item \inlinecode{RollingHash\textless{}T\textgreater{}(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
+  \item \inlinecode{RollingHash\textless{}T\textgreater{}(v)} constructs prefix hashes for vector \inlinecode{v}.
   \item \inlinecode{get(l, r)} returns the hash of the half-open subsequence \inlinecode{[l, r)}.
   \item \inlinecode{hash(first, last)} returns the hash of an iterator range.
   \item \inlinecode{hash(v)} returns the hash of vector \inlinecode{v}.
@@ -542,18 +542,18 @@ uint64 hash_mix(uint64 x) {
 }
 
 template<class T>
-struct rolling_value_hasher {
+struct RollingValueHasher {
   uint64 operator()(const T &x) const { return hash_mix((uint64)x) % (HASH_MOD - 1) + 1; }
 };
 
-template<class T, class ValueHasher = rolling_value_hasher<T>>
-class rolling_hash {
+template<class T, class ValueHasher = RollingValueHasher<T>>
+class RollingHash {
   static std::vector<uint64> pow_base;
   std::vector<uint64> pref;
   ValueHasher value_hasher;
 
   static void ensure_powers(int n) {
-    while ((int)pow_base.size() <= n) {
+    while (static_cast<int>(pow_base.size()) <= n) {
       pow_base.push_back(hash_mul(pow_base.back(), HASH_BASE));
     }
   }
@@ -569,34 +569,35 @@ class rolling_hash {
   }
 
  public:
-  explicit rolling_hash(const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
+  explicit RollingHash(const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
     ensure_powers(0);
     pref.push_back(0);
   }
 
   template<class It>
-  rolling_hash(It first, It last, const ValueHasher &hasher = ValueHasher())
-      : value_hasher(hasher) {
+  RollingHash(It first, It last, const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
     build(first, last);
   }
 
-  explicit rolling_hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher())
+  explicit RollingHash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher())
       : value_hasher(hasher) {
     build(v.begin(), v.end());
   }
 
-  int size() const { return (int)pref.size() - 1; }
+  int size() const { return static_cast<int>(pref.size()) - 1; }
 
-  uint64 get(int l, int r) const { return hash_sub(pref[r], hash_mul(pref[l], pow_base[r - l])); }
+  uint64 get(int lo, int hi) const {
+    return hash_sub(pref[hi], hash_mul(pref[lo], pow_base[hi - lo]));
+  }
 
   template<class It>
   static uint64 hash(It first, It last, const ValueHasher &hasher = ValueHasher()) {
-    rolling_hash<T, ValueHasher> h(first, last, hasher);
+    RollingHash<T, ValueHasher> h(first, last, hasher);
     return h.get(0, h.size());
   }
 
   static uint64 hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher()) {
-    rolling_hash<T, ValueHasher> h(v, hasher);
+    RollingHash<T, ValueHasher> h(v, hasher);
     return h.get(0, h.size());
   }
 
@@ -607,7 +608,7 @@ class rolling_hash {
 };
 
 template<class T, class ValueHasher>
-std::vector<uint64> rolling_hash<T, ValueHasher>::pow_base(1, 1);
+std::vector<uint64> RollingHash<T, ValueHasher>::pow_base(1, 1);
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
@@ -616,7 +617,7 @@ using namespace std;
 
 typedef pair<int, int> point;
 
-struct point_hasher {
+struct PointHasher {
   uint64 operator()(const point &p) const {
     return hash_mix((uint64)p.first * 1000003ULL + (uint64)p.second) % (HASH_MOD - 1) + 1;
   }
@@ -624,17 +625,17 @@ struct point_hasher {
 
 int main() {
   string s = "abracadabra";
-  rolling_hash<char> hs(s.begin(), s.end());
+  RollingHash<char> hs(s.begin(), s.end());
   assert(hs.get(0, 4) == hs.get(7, 11));  // "abra" == "abra"
   assert(hs.get(0, 4) != hs.get(3, 7));   // "abra" != "acad"
 
   string a = "abc", b = "def";
-  uint64 ab = rolling_hash<char>::concat(
-      rolling_hash<char>::hash(a.begin(), a.end()), rolling_hash<char>::hash(b.begin(), b.end()),
+  uint64 ab = RollingHash<char>::concat(
+      RollingHash<char>::hash(a.begin(), a.end()), RollingHash<char>::hash(b.begin(), b.end()),
       b.size()
   );
   string c = a + b;
-  assert(ab == rolling_hash<char>::hash(c.begin(), c.end()));
+  assert(ab == RollingHash<char>::hash(c.begin(), c.end()));
 
   vector<int> v;
   v.push_back(1);
@@ -642,15 +643,15 @@ int main() {
   v.push_back(3);
   v.push_back(1);
   v.push_back(2);
-  rolling_hash<int> hv(v);
+  RollingHash<int> hv(v);
   assert(hv.get(0, 2) == hv.get(3, 5));  // [1, 2] == [1, 2]
-  assert(hv.get(0, 3) == rolling_hash<int>::hash(v.begin(), v.begin() + 3));
+  assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
   vector<point> poly;
   poly.push_back(point(1, 2));
   poly.push_back(point(3, 4));
-  rolling_hash<point, point_hasher> hp(poly);
-  assert((hp.get(0, 2) == rolling_hash<point, point_hasher>::hash(poly)));
+  RollingHash<point, PointHasher> hp(poly);
+  assert((hp.get(0, 2) == RollingHash<point, PointHasher>::hash(poly)));
   return 0;
 }
 \end{lstlisting}
@@ -660,7 +661,7 @@ Computes randomized XOR fingerprints for keys and sets of keys using Zobrist has
 This technique is useful for probabilistic equality checks on sets, distinct-prefix queries, board-game states, and other unordered collections. It is not cryptographic, and collisions are possible with probability roughly $q^2 / 2^{64}$ over $q$ compared fingerprints. For multisets, plain XOR only records element parity; use a summed hash or pair it with counts if multiplicity matters.
 
 \begin{compactitem}
-  \item \inlinecode{zobrist\_hash(seed)} constructs a token generator with initial value \inlinecode{seed}.
+  \item \inlinecode{ZobristHash(seed)} constructs a token generator with initial value \inlinecode{seed}.
   \item \inlinecode{get(x)} returns the stable token assigned to key \inlinecode{x}, creating it if needed.
   \item \inlinecode{toggle(h, x)} returns the hash obtained by inserting \inlinecode{x} into set hash \inlinecode{h} if absent, or removing \inlinecode{x} from \inlinecode{h} if present.
   \item \inlinecode{distinct\_prefix\_hashes(lo, hi)} returns prefix hashes where each distinct key in the range \inlinecode{[lo, hi)} contributes only on its first occurrence.
@@ -686,7 +687,7 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
 typedef unsigned long long uint64;
 
 template<class T>
-class zobrist_hash {
+class ZobristHash {
   std::map<T, uint64> token;
   uint64 state;
 
@@ -698,7 +699,7 @@ class zobrist_hash {
   }
 
  public:
-  explicit zobrist_hash(uint64 seed = 0) : state(seed) {}
+  explicit ZobristHash(uint64 seed = 0) : state(seed) {}
 
   uint64 get(const T &x) {
     typename std::map<T, uint64>::iterator it = token.find(x);
@@ -735,7 +736,7 @@ using namespace std;
 int main() {
   int a[] = {1, 2, 1, 3};
   int b[] = {2, 1, 3};
-  zobrist_hash<int> zh(123);
+  ZobristHash<int> zh(123);
   vector<uint64> pa = zh.distinct_prefix_hashes(a, a + 4);
   vector<uint64> pb = zh.distinct_prefix_hashes(b, b + 3);
 
@@ -758,7 +759,7 @@ int main() {
 Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine the first positions in which the needle occurs within the given haystacks in linear time using the Knuth-Morris-Pratt algorithm. In comparison, \inlinecode{std::string::find} runs in quadratic time.
 
 \begin{compactitem}
-  \item \inlinecode{kmp(needle)} constructs the partial match table for a string \inlinecode{needle} that is to be searched for subsequently in \inlinecode{haystack} queries.
+  \item \inlinecode{KMP(needle)} constructs the partial match table for a string \inlinecode{needle} that is to be searched for subsequently in \inlinecode{haystack} queries.
   \item \inlinecode{find\_in(haystack)} returns the first position that \inlinecode{needle} occurs in \inlinecode{haystack}, or \inlinecode{std::string::npos} if it cannot be found. Note that the function can be modified to return all matches by simply letting the loop run and storing the results instead of returning early.
 \end{compactitem}
 
@@ -779,13 +780,13 @@ Given a single string (needle) and subsequent queries of texts (haystacks) to be
 #include <vector>
 using std::string;
 
-class kmp {
+class KMP {
   string needle;
   std::vector<int> table;
 
  public:
-  kmp(const string &needle) : needle(needle), table(needle.size()) {
-    for (int i = 1, j = 0; i < (int)needle.size(); i++) {
+  KMP(const string &needle) : needle(needle), table(needle.size()) {
+    for (int i = 1, j = 0; i < static_cast<int>(needle.size()); i++) {
       while (j > 0 && needle[i] != needle[j]) {
         j = table[j - 1];
       }
@@ -801,7 +802,7 @@ class kmp {
     if (m == 0) {
       return 0;
     }
-    for (int i = 0, j = 0; i < (int)haystack.size(); i++) {
+    for (int i = 0, j = 0; i < static_cast<int>(haystack.size()); i++) {
       while (j > 0 && needle[j] != haystack[i]) {
         j = table[j - 1];
       }
@@ -821,7 +822,7 @@ class kmp {
 #include <cassert>
 
 int main() {
-  assert(15 == kmp("ABCDABD").find_in("ABC ABCDAB ABCDABCDABDE"));
+  assert(15 == KMP("ABCDABD").find_in("ABC ABCDAB ABCDABCDABDE"));
   return 0;
 }
 \end{lstlisting}
@@ -855,11 +856,11 @@ using std::string;
 
 std::vector<int> z_array(const string &s) {
   std::vector<int> z(s.size());
-  for (int i = 1, l = 0, r = 0; i < (int)z.size(); i++) {
+  for (int i = 1, l = 0, r = 0; i < static_cast<int>(z.size()); i++) {
     if (i <= r) {
       z[i] = std::min(r - i + 1, z[i - l]);
     }
-    while (i + z[i] < (int)z.size() && s[z[i]] == s[i + z[i]]) {
+    while (i + z[i] < static_cast<int>(z.size()) && s[z[i]] == s[i + z[i]]) {
       z[i]++;
     }
     if (r < i + z[i] - 1) {
@@ -872,9 +873,9 @@ std::vector<int> z_array(const string &s) {
 
 size_t find(const string &haystack, const string &needle) {
   std::vector<int> z = z_array(needle + '\0' + haystack);
-  for (int i = (int)needle.size() + 1; i < (int)z.size(); i++) {
-    if (z[i] == (int)needle.size()) {
-      return i - (int)needle.size() - 1;
+  for (int i = static_cast<int>(needle.size()) + 1; i < static_cast<int>(z.size()); i++) {
+    if (z[i] == static_cast<int>(needle.size())) {
+      return i - static_cast<int>(needle.size()) - 1;
     }
   }
   return string::npos;
@@ -895,7 +896,7 @@ Given a set of strings (needles) and subsequent queries of texts (haystacks) to 
 Note that this implementation uses an ordered map for storage of the graph, adding an additional $\log k$ factor to the time complexities of all operations, where $k$ is the size of the alphabet (number of distinct characters used across the needles). It also uses an ordered set for storage of the precomputed output tables, adding an additional $\log m$ factor to the time complexities, where $m$ is the number of needles. In C++11 and later, both of these containers should be replaced by their unordered versions for constant time access, thus eliminating the log factors from the time complexities.
 
 \begin{compactitem}
-  \item \inlinecode{aho\_corasick(needles)} constructs the finite-state automaton for a set of needle strings that are to be searched for subsequently in haystack queries.
+  \item \inlinecode{AhoCorasick(needles)} constructs the finite-state automaton for a set of needle strings that are to be searched for subsequently in haystack queries.
   \item \inlinecode{find\_all\_in(haystack, report\_match)} calls the function \inlinecode{report\_match(s, pos)} once on each occurrence of each needle that occurs in the \inlinecode{haystack}, where \inlinecode{pos} is the starting position in the \inlinecode{haystack} at which string \inlinecode{s} (a matched needle) occurs. The matches will be reported in increasing order of their ending positions within the \inlinecode{haystack}.
 \end{compactitem}
 
@@ -919,7 +920,7 @@ Note that this implementation uses an ordered map for storage of the graph, addi
 #include <vector>
 using std::string;
 
-class aho_corasick {
+class AhoCorasick {
   std::vector<string> needles;
   std::vector<int> fail;
   std::vector<std::map<char, int>> graph;
@@ -934,9 +935,9 @@ class aho_corasick {
   }
 
  public:
-  aho_corasick(const std::vector<string> &needles) : needles(needles) {
+  AhoCorasick(const std::vector<string> &needles) : needles(needles) {
     int total_len = 0;
-    for (int i = 0; i < (int)needles.size(); i++) {
+    for (int i = 0; i < static_cast<int>(needles.size()); i++) {
       total_len += needles[i].size();
     }
     fail.resize(total_len, -1);
@@ -944,9 +945,9 @@ class aho_corasick {
     out.resize(total_len);
     int states = 1;
     std::map<char, int>::iterator it;
-    for (int i = 0; i < (int)needles.size(); i++) {
+    for (int i = 0; i < static_cast<int>(needles.size()); i++) {
       int curr = 0;
-      for (int j = 0; j < (int)needles[i].size(); j++) {
+      for (int j = 0; j < static_cast<int>(needles[i].size()); j++) {
         char c = needles[i][j];
         if ((it = graph[curr].find(c)) != graph[curr].end()) {
           curr = it->second;
@@ -983,7 +984,7 @@ class aho_corasick {
   void find_all_in(const string &haystack, ReportFunction report_match) {
     int state = 0;
     std::set<int>::iterator it;
-    for (int i = 0; i < (int)haystack.size(); i++) {
+    for (int i = 0; i < static_cast<int>(haystack.size()); i++) {
       state = next_state(state, haystack[i]);
       for (it = out[state].begin(); it != out[state].end(); ++it) {
         report_match(needles[*it], i - needles[*it].size() + 1);
@@ -1012,7 +1013,7 @@ int main() {
   needles.push_back("caa");
   needles.push_back("abccab");
 
-  aho_corasick(needles).find_all_in("abccab", report_match);
+  AhoCorasick(needles).find_all_in("abccab", report_match);
   return 0;
 }
 \end{lstlisting}
@@ -1032,8 +1033,8 @@ Computes all odd- and even-length palindromic radii of a string in linear time u
 For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \inlinecode{s[i]}, including the center character. Thus the palindrome spans \inlinecode{[i - odd[i] + 1, i + odd[i])}. For even palindromes, \inlinecode{even[i]} is the radius centered between \inlinecode{s[i - 1]} and \inlinecode{s[i]}. Thus the palindrome spans \inlinecode{[i - even[i], i + even[i])}.
 
 \begin{compactitem}
-  \item \inlinecode{manacher(s)} constructs the palindromic radii arrays for string \inlinecode{s}.
-  \item \inlinecode{is\_palindrome(l, r)} returns whether substring \inlinecode{[l, r)} is a palindrome.
+  \item \inlinecode{Manacher(s)} constructs the palindromic radii arrays for string \inlinecode{s}.
+  \item \inlinecode{is\_palindrome(lo, r)} returns whether substring \inlinecode{[l, r)} is a palindrome.
   \item \inlinecode{longest\_palindrome()} returns one longest palindromic substring of \inlinecode{s}.
   \item \inlinecode{count\_palindromes()} returns the total number of palindromic substrings of \inlinecode{s}, counted with multiplicity by position.
 \end{compactitem}
@@ -1041,7 +1042,7 @@ For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \in
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per constructor call, where $n$ is the length of \inlinecode{s}.
-  \item $O(1)$ per call to \inlinecode{is\_palindrome(l, r)}.
+  \item $O(1)$ per call to \inlinecode{is\_palindrome(lo, r)}.
   \item $O(n)$ per call to \inlinecode{longest\_palindrome()} and \inlinecode{count\_palindromes()}.
 \end{compactitem}
 
@@ -1057,12 +1058,12 @@ For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \in
 #include <vector>
 using std::string;
 
-class manacher {
+class Manacher {
   string s;
   std::vector<int> odd, even;
 
  public:
-  explicit manacher(const string &s) : s(s), odd(s.size()), even(s.size()) {
+  explicit Manacher(const string &s) : s(s), odd(s.size()), even(s.size()) {
     int n = s.size();
     for (int i = 0, l = 0, r = -1; i < n; i++) {
       int k = (i > r) ? 1 : std::min(odd[l + r - i], r - i + 1);
@@ -1088,18 +1089,18 @@ class manacher {
     }
   }
 
-  bool is_palindrome(int l, int r) const {
-    int len = r - l;
+  bool is_palindrome(int lo, int hi) const {
+    int len = hi - lo;
     if (len <= 0) {
       return true;
     }
-    int mid = (l + r) / 2;
+    int mid = (lo + hi) / 2;
     return (len % 2) ? odd[mid] >= len / 2 + 1 : even[mid] >= len / 2;
   }
 
   string longest_palindrome() const {
     int best_l = 0, best_len = 0;
-    for (int i = 0; i < (int)s.size(); i++) {
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       int len = 2 * odd[i] - 1;
       if (len > best_len) {
         best_len = len;
@@ -1116,7 +1117,7 @@ class manacher {
 
   long long count_palindromes() const {
     long long res = 0;
-    for (int i = 0; i < (int)s.size(); i++) {
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       res += odd[i] + even[i];
     }
     return res;
@@ -1128,14 +1129,14 @@ class manacher {
 #include <cassert>
 
 int main() {
-  manacher m("abacaba");
+  Manacher m("abacaba");
   assert(m.is_palindrome(0, 7));
   assert(m.is_palindrome(1, 6));
   assert(!m.is_palindrome(0, 6));
   assert(m.longest_palindrome() == "abacaba");
   assert(m.count_palindromes() == 12);
 
-  manacher e("cabbad");
+  Manacher e("cabbad");
   assert(e.is_palindrome(1, 5));
   assert(e.longest_palindrome() == "abba");
   return 0;
@@ -1162,18 +1163,18 @@ Evaluate an expression in accordance to the order of operations (parentheses, un
 template<class It>
 int eval(It &it, int prec) {
   if (prec == 0) {
-    int sign = 1, ret = 0;
+    int sign = 1, res = 0;
     for (; *it == '-'; it++) {
       sign *= -1;
     }
     if (*it == '(') {
-      ret = eval(++it, 2);
+      res = eval(++it, 2);
       it++;
     } else
       while (*it >= '0' && *it <= '9') {
-        ret = 10 * ret + (*(it++) - '0');
+        res = 10 * res + (*(it++) - '0');
       }
-    return sign * ret;
+    return sign * res;
   }
   int num = eval(it, prec - 1);
   while (!((prec == 2 && *it != '+' && *it != '-') || (prec == 1 && *it != '*' && *it != '/'))) {
@@ -1259,7 +1260,7 @@ typedef Operand (*BinaryOp)(Operand a, Operand b);
 
 bool is_operand(const string &s) {
   int npoints = 0;
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     if (s[i] == '.') {
       if (++npoints > 1) {
         return false;
@@ -1349,12 +1350,12 @@ class parser {
 
   std::vector<string> split(const string &s) {
     std::vector<string> res;
-    for (int i = 0; i < (int)s.size(); i++) {
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       if (s[i] == ' ') {
         continue;
       }
       int next_paren = s.size();
-      for (int j = i; j < (int)s.size(); j++) {
+      for (int j = i; j < static_cast<int>(s.size()); j++) {
         if (s[j] == '(' || s[j] == ')') {
           next_paren = j;
           break;
@@ -1416,24 +1417,12 @@ using namespace std;
 
 #define EQ(a, b) (fabs((a) - (b)) < 1e-7)
 
-double pos(double a) {
-  return +a;
-}
-double neg(double a) {
-  return -a;
-}
-double add(double a, double b) {
-  return a + b;
-}
-double sub(double a, double b) {
-  return a - b;
-}
-double mul(double a, double b) {
-  return a * b;
-}
-double div(double a, double b) {
-  return a / b;
-}
+double pos(double a) { return +a; }
+double neg(double a) { return -a; }
+double add(double a, double b) { return a + b; }
+double sub(double a, double b) { return a - b; }
+double mul(double a, double b) { return a * b; }
+double div(double a, double b) { return a / b; }
 
 int main() {
   map<string, UnaryOp> unary_ops;
@@ -1515,7 +1504,7 @@ typedef Operand (*BinaryOp)(Operand a, Operand b);
 
 bool is_operand(const string &s) {
   int npoints = 0;
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     if (s[i] == '.') {
       if (++npoints > 1) {
         return false;
@@ -1565,12 +1554,12 @@ class parser {
 
   std::vector<string> split(const string &s) {
     std::vector<string> res;
-    for (int i = 0; i < (int)s.size(); i++) {
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       if (s[i] == ' ') {
         continue;
       }
       int next_paren = s.size();
-      for (int j = i; j < (int)s.size(); j++) {
+      for (int j = i; j < static_cast<int>(s.size()); j++) {
         if (s[j] == '(' || s[j] == ')') {
           next_paren = j;
           break;
@@ -1852,7 +1841,8 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
   std::vector<int> rev = lcs_len(rlo1, rmid1, rlo2, rhi2);
   It mid2 = lo2;
   int maxlen = -1;
-  for (int i = 0, j = (int)rev.size() - 1; i < (int)fwd.size(); i++, j--) {
+  for (int i = 0, j = static_cast<int>(rev.size()) - 1; i < static_cast<int>(fwd.size());
+       i++, j--) {
     if (fwd[i] + rev[j] > maxlen) {
       maxlen = fwd[i] + rev[j];
       mid2 = lo2 + i;
@@ -1991,7 +1981,8 @@ void hirschberg_rec(
   std::vector<int> rev = row_cost(rlo1, rmid1, rlo2, rhi2, gap_cost, sub_cost);
   It mid2 = lo2;
   int mincost = -1;
-  for (int i = 0, j = (int)rev.size() - 1; i < (int)fwd.size(); i++, j--) {
+  for (int i = 0, j = static_cast<int>(rev.size()) - 1; i < static_cast<int>(fwd.size());
+       i++, j--) {
     if (mincost < 0 || fwd[i] + rev[j] < mincost) {
       mincost = fwd[i] + rev[j];
       mid2 = lo2 + i;
@@ -2035,7 +2026,7 @@ Given a string \inlinecode{s}, a suffix array is the array of the smallest start
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
-  \item \inlinecode{suffix\_array(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a comparison-based sort.
+  \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a comparison-based sort.
   \item \inlinecode{get\_sa()} returns the constructed suffix array.
   \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
@@ -2063,10 +2054,10 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
 #include <vector>
 using std::string;
 
-class suffix_array {
-  struct comp {
+class SuffixArray {
+  struct Comparator {
     const std::vector<std::pair<int, int>> &rank;
-    comp(const std::vector<std::pair<int, int>> &rank) : rank(rank) {}
+    Comparator(const std::vector<std::pair<int, int>> &rank) : rank(rank) {}
     bool operator()(int i, int j) { return rank[i] < rank[j]; }
   };
 
@@ -2074,18 +2065,18 @@ class suffix_array {
   std::vector<int> sa, rank;
 
  public:
-  suffix_array(const string &s) : s(s), sa(s.size()), rank(s.size()) {
+  SuffixArray(const string &s) : s(s), sa(s.size()), rank(s.size()) {
     int n = s.size();
     for (int i = 0; i < n; i++) {
       sa[i] = i;
-      rank[i] = (int)s[i];
+      rank[i] = static_cast<int>(s[i]);
     }
     std::vector<std::pair<int, int>> rank2(n);
     for (int gap = 1; gap < n; gap *= 2) {
       for (int i = 0; i < n; i++) {
         rank2[i] = std::make_pair(rank[i], i + gap < n ? rank[i + gap] + 1 : 0);
       }
-      std::sort(sa.begin(), sa.end(), comp(rank2));
+      std::sort(sa.begin(), sa.end(), Comparator(rank2));
       for (int i = 0; i < n; i++) {
         rank[sa[i]] = (i > 0 && rank2[sa[i - 1]] == rank2[sa[i]]) ? rank[sa[i - 1]] : i;
       }
@@ -2113,7 +2104,7 @@ class suffix_array {
   }
 
   size_t find(const string &needle) {
-    int lo = 0, hi = (int)s.size() - 1;
+    int lo = 0, hi = static_cast<int>(s.size()) - 1;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
       int cmp = s.compare(sa[mid], needle.size(), needle);
@@ -2135,7 +2126,7 @@ class suffix_array {
 using namespace std;
 
 int main() {
-  suffix_array sa("banana");
+  SuffixArray sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
   int sarr_expected[] = {5, 3, 1, 0, 4, 2};
   int lcp_expected[] = {1, 3, 0, 0, 2};
@@ -2152,7 +2143,7 @@ Given a string \inlinecode{s}, a suffix array is the array of the smallest start
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
-  \item \inlinecode{suffix\_array(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a counting sort instead of a comparison-based sort to reduce the running time to $O(n \log n)$.
+  \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a counting sort instead of a comparison-based sort to reduce the running time to $O(n \log n)$.
   \item \inlinecode{get\_sa()} returns the constructed suffix array.
   \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
@@ -2180,7 +2171,7 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
 #include <vector>
 using std::string;
 
-class suffix_array {
+class SuffixArray {
   struct comp {
     const string &s;
     comp(const string &s) : s(s) {}
@@ -2191,11 +2182,11 @@ class suffix_array {
   std::vector<int> sa, rank;
 
  public:
-  suffix_array(const string &s) : s(s), sa(s.size()), rank(s.size()) {
+  SuffixArray(const string &s) : s(s), sa(s.size()), rank(s.size()) {
     int n = s.size();
     for (int i = 0; i < n; i++) {
       sa[i] = n - 1 - i;
-      rank[i] = (int)s[i];
+      rank[i] = static_cast<int>(s[i]);
     }
     std::stable_sort(sa.begin(), sa.end(), comp(s));
     for (int gap = 1; gap < n; gap *= 2) {
@@ -2239,7 +2230,7 @@ class suffix_array {
   }
 
   size_t find(const string &needle) {
-    int lo = 0, hi = (int)s.size() - 1;
+    int lo = 0, hi = static_cast<int>(s.size()) - 1;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
       int cmp = s.compare(sa[mid], needle.size(), needle);
@@ -2261,7 +2252,7 @@ class suffix_array {
 using namespace std;
 
 int main() {
-  suffix_array sa("banana");
+  SuffixArray sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
   int sarr_expected[] = {5, 3, 1, 0, 4, 2};
   int lcp_expected[] = {1, 3, 0, 0, 2};
@@ -2278,7 +2269,7 @@ Given a string \inlinecode{s}, a suffix array is the array of the smallest start
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
-  \item \inlinecode{suffix\_array(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
+  \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
   \item \inlinecode{get\_sa()} returns the constructed suffix array.
   \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
@@ -2306,7 +2297,7 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
 #include <vector>
 using std::string;
 
-class suffix_array {
+class SuffixArray {
   static bool leq(int a1, int a2, int b1, int b2) { return (a1 < b1) || (a1 == b1 && a2 <= b2); }
 
   static bool leq(int a1, int a2, int a3, int b1, int b2, int b3) {
@@ -2393,7 +2384,7 @@ class suffix_array {
   std::vector<int> sa;
 
  public:
-  suffix_array(const string &s) : s(s), sa(s.size() + 1) {
+  SuffixArray(const string &s) : s(s), sa(s.size() + 1) {
     int n = s.size();
     std::vector<int> scopy(s.begin(), s.end());
     scopy.resize(n + 4);
@@ -2428,7 +2419,7 @@ class suffix_array {
   }
 
   size_t find(const string &needle) {
-    int lo = 0, hi = (int)s.size() - 1;
+    int lo = 0, hi = static_cast<int>(s.size()) - 1;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
       int cmp = s.compare(sa[mid], needle.size(), needle);
@@ -2450,7 +2441,7 @@ class suffix_array {
 using namespace std;
 
 int main() {
-  suffix_array sa("banana");
+  SuffixArray sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
   int sarr_expected[] = {5, 3, 1, 0, 4, 2};
   int lcp_expected[] = {1, 3, 0, 0, 2};
@@ -2469,12 +2460,12 @@ int main() {
 Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node.
 
 \begin{compactitem}
-  \item \inlinecode{trie()} constructs an empty map.
+  \item \inlinecode{Trie()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(s, v)} adds an entry with string key \inlinecode{s} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
   \item \inlinecode{erase(s)} removes the entry with string key \inlinecode{s} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the string to be removed was not found.
-  \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
 \end{compactitem}
 
@@ -2487,7 +2478,7 @@ Maintain a map of strings to values using an ordered tree data structure. Each n
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(l)$ for storage of the trie, where $l$ is the total length of string keys that are currently in the map.
+  \item $O(l)$ for storage of the Trie, where $l$ is the total length of string keys that are currently in the map.
   \item $O(n)$ auxiliary stack space for construction, destruction, \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
   \item $O(n)$ auxiliary stack space for \inlinecode{erase(s)}, where $n$ is the length of \inlinecode{s}.
   \item $O(1)$ auxiliary for all other operations.
@@ -2501,19 +2492,19 @@ Maintain a map of strings to values using an ordered tree data structure. Each n
 using std::string;
 
 template<class V>
-class trie {
-  struct node_t {
+class Trie {
+  struct Node {
     V value;
     bool is_terminal;
-    std::map<char, node_t *> children;
+    std::map<char, Node *> children;
 
-    node_t() : is_terminal(false) {}
+    Node() : is_terminal(false) {}
   } *root;
 
-  typedef typename std::map<char, node_t *>::iterator cit;
+  typedef typename std::map<char, Node *>::iterator cit;
 
-  static bool erase(node_t *n, const string &s, int i) {
-    if (i == (int)s.size()) {
+  static bool erase(Node *n, const string &s, int i) {
+    if (i == static_cast<int>(s.size())) {
       if (!n->is_terminal) {
         return false;
       }
@@ -2532,7 +2523,7 @@ class trie {
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, string &s, KVFunction f) {
+  static void walk(Node *n, string &s, KVFunction f) {
     if (n->is_terminal) {
       f(s, n->value);
     }
@@ -2543,7 +2534,7 @@ class trie {
     }
   }
 
-  static void clean_up(node_t *n) {
+  static void clean_up(Node *n) {
     for (cit it = n->children.begin(); it != n->children.end(); ++it) {
       clean_up(it->second);
     }
@@ -2553,18 +2544,18 @@ class trie {
   int num_terminals;
 
  public:
-  trie() : root(new node_t()), num_terminals(0) {}
+  Trie() : root(new Node()), num_terminals(0) {}
 
-  ~trie() { clean_up(root); }
+  ~Trie() { clean_up(root); }
   int size() const { return num_terminals; }
   bool empty() const { return num_terminals == 0; }
 
   bool insert(const string &s, const V &v) {
-    node_t *n = root;
-    for (int i = 0; i < (int)s.size(); i++) {
+    Node *n = root;
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       cit it = n->children.find(s[i]);
       if (it == n->children.end()) {
-        n->children[s[i]] = new node_t();
+        n->children[s[i]] = new Node();
       }
       n = n->children[s[i]];
     }
@@ -2586,15 +2577,15 @@ class trie {
   }
 
   const V *find(const string &s) const {
-    node_t *n = root;
-    for (int i = 0; i < (int)s.size(); i++) {
+    Node *n = root;
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       cit it = n->children.find(s[i]);
       if (it == n->children.end()) {
-        return NULL;
+        return nullptr;
       }
       n = it->second;
     }
-    return n->is_terminal ? &(n->value) : NULL;
+    return n->is_terminal ? &(n->value) : nullptr;
   }
 
   template<class KVFunction>
@@ -2616,7 +2607,7 @@ void print_entry(const string &k, int v) {
 
 int main() {
   string s[9] = {"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
-  trie<int> t;
+  Trie<int> t;
   assert(t.empty());
   for (int i = 0; i < 9; i++) {
     assert(t.insert(s[i], i));
@@ -2630,9 +2621,9 @@ int main() {
   assert(*t.find("ten") == 5);
   assert(t.erase("tea"));
   assert(t.size() == 8);
-  assert(t.find("tea") == NULL);
+  assert(t.find("tea") == nullptr);
   assert(t.erase(""));
-  assert(t.find("") == NULL);
+  assert(t.find("") == nullptr);
   return 0;
 }
 \end{lstlisting}
@@ -2651,18 +2642,18 @@ int main() {
 Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child.
 
 \begin{compactitem}
-  \item \inlinecode{radix\_tree()} constructs an empty map.
+  \item \inlinecode{RadixTree()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(s, v)} adds an entry with string key \inlinecode{s} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
   \item \inlinecode{erase(s)} removes the entry with string key \inlinecode{s} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the string to be removed was not found.
-  \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}. Note that there is a hidden factor of $\log n$ due to map lookups, which can be considered constant amortized. The implementation may be optimized by storing the children of nodes in an \inlinecode{std::unordered\_map} in C++11 and later, or a \inlinecode{std::vector\textless{}pair\textless{}string, node\_t*\textgreater{} \textgreater{}}, since the only container operations required are iteration over the (\inlinecode{key}, \inlinecode{child}) pairs and inserting a new pair. Sticking with an (ordered) \inlinecode{std::map}, we can optimize all operations by using \inlinecode{map.lower\_bound()}, a binary tree search for a child with a shared prefix, instead of iteration.
+  \item $O(n)$ per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}. Note that there is a hidden factor of $\log n$ due to map lookups, which can be considered constant amortized. The implementation may be optimized by storing the children of nodes in an \inlinecode{std::unordered\_map} in C++11 and later, or a \inlinecode{std::vector\textless{}pair\textless{}string, Node*\textgreater{} \textgreater{}}, since the only container operations required are iteration over the (\inlinecode{key}, \inlinecode{child}) pairs and inserting a new pair. Sticking with an (ordered) \inlinecode{std::map}, we can optimize all operations by using \inlinecode{map.lower\_bound()}, a binary tree search for a child with a shared prefix, instead of iteration.
   \item $O(l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map.
   \item $O(1)$ per call to all other operations.
 \end{compactitem}
@@ -2683,21 +2674,21 @@ Maintain a map of strings to values using an ordered tree data structure. Each n
 using std::string;
 
 template<class V>
-class radix_tree {
-  struct node_t {
+class RadixTree {
+  struct Node {
     V value;
     bool is_terminal;
-    std::map<string, node_t *> children;
+    std::map<string, Node *> children;
 
-    node_t(const V &value = V(), bool is_terminal = false)
-        : value(value), is_terminal(is_terminal) {}
+    Node(const V &value = V(), bool is_terminal = false) : value(value), is_terminal(is_terminal) {}
   } *root;
 
-  typedef typename std::map<string, node_t *>::iterator cit;
+  typedef typename std::map<string, Node *>::iterator cit;
 
   static int lcp_len(const string &s1, const string &s2, int s2start) {
     int i = 0;
-    for (int j = s2start; i < (int)s1.size() && j < (int)s2.size(); i++, j++) {
+    for (int j = s2start; i < static_cast<int>(s1.size()) && j < static_cast<int>(s2.size());
+         i++, j++) {
       if (s1[i] != s2[j]) {
         break;
       }
@@ -2705,8 +2696,8 @@ class radix_tree {
     return i;
   }
 
-  static bool insert(node_t *n, const string &s, int i, const V &v) {
-    if (i == (int)s.size()) {
+  static bool insert(Node *n, const string &s, int i, const V &v) {
+    if (i == static_cast<int>(s.size())) {
       if (n->is_terminal) {
         return false;
       }
@@ -2718,28 +2709,28 @@ class radix_tree {
       if (len == 0) {
         continue;
       }
-      if (len == (int)it->first.size()) {
+      if (len == static_cast<int>(it->first.size())) {
         return insert(it->second, s, i + len, v);
       }
       string left = it->first.substr(0, len);
       string right = it->first.substr(len);
-      node_t *tmp = new node_t();
+      Node *tmp = new Node();
       tmp->children[right] = it->second;
       n->children.erase(it);
       n->children[left] = tmp;
-      if (len == (int)s.size() - i) {
+      if (len == static_cast<int>(s.size()) - i) {
         tmp->value = v;
         tmp->is_terminal = true;
         return true;
       }
       return insert(tmp, s, i + len, v);
     }
-    n->children[s.substr(i)] = new node_t(v, true);
+    n->children[s.substr(i)] = new Node(v, true);
     return true;
   }
 
-  static bool erase(node_t *n, const string &s, int i) {
-    if (i == (int)s.size()) {
+  static bool erase(Node *n, const string &s, int i) {
+    if (i == static_cast<int>(s.size())) {
       if (!n->is_terminal) {
         return false;
       }
@@ -2751,7 +2742,7 @@ class radix_tree {
       if (len == 0) {
         continue;
       }
-      node_t *child = it->second;
+      Node *child = it->second;
       if (!erase(child, s, i + len)) {
         return false;
       }
@@ -2759,7 +2750,7 @@ class radix_tree {
         delete child;
         n->children.erase(it);
       } else if (child->children.size() == 1) {
-        node_t *grandchild = child->children.begin()->second;
+        Node *grandchild = child->children.begin()->second;
         if (!child->is_terminal) {
           string merged_key(it->first + child->children.begin()->first);
           child->value = grandchild->value;
@@ -2776,7 +2767,7 @@ class radix_tree {
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, string &s, KVFunction f) {
+  static void walk(Node *n, string &s, KVFunction f) {
     if (n->is_terminal) {
       f(s, n->value);
     }
@@ -2787,7 +2778,7 @@ class radix_tree {
     }
   }
 
-  static void clean_up(node_t *n) {
+  static void clean_up(Node *n) {
     for (cit it = n->children.begin(); it != n->children.end(); ++it) {
       clean_up(it->second);
     }
@@ -2797,9 +2788,9 @@ class radix_tree {
   int num_terminals;
 
  public:
-  radix_tree() : root(new node_t()), num_terminals(0) {}
+  RadixTree() : root(new Node()), num_terminals(0) {}
 
-  ~radix_tree() { clean_up(root); }
+  ~RadixTree() { clean_up(root); }
   int size() const { return num_terminals; }
   bool empty() const { return num_terminals == 0; }
 
@@ -2820,9 +2811,9 @@ class radix_tree {
   }
 
   const V *find(const string &s) const {
-    node_t *n = root;
+    Node *n = root;
     int i = 0;
-    while (i < (int)s.size()) {
+    while (i < static_cast<int>(s.size())) {
       bool found = false;
       ;
       for (cit it = n->children.begin(); it != n->children.end(); ++it) {
@@ -2834,10 +2825,10 @@ class radix_tree {
         }
       }
       if (!found) {
-        return NULL;
+        return nullptr;
       }
     }
-    return n->is_terminal ? &(n->value) : NULL;
+    return n->is_terminal ? &(n->value) : nullptr;
   }
 
   template<class KVFunction>
@@ -2859,7 +2850,7 @@ void print_entry(const string &k, int v) {
 
 int main() {
   string s[9] = {"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
-  radix_tree<int> t;
+  RadixTree<int> t;
   assert(t.empty());
   for (int i = 0; i < 9; i++) {
     assert(t.insert(s[i], i));
@@ -2873,9 +2864,9 @@ int main() {
   assert(*t.find("ten") == 5);
   assert(t.erase("tea"));
   assert(t.size() == 8);
-  assert(t.find("tea") == NULL);
+  assert(t.find("tea") == nullptr);
   assert(t.erase(""));
-  assert(t.find("") == NULL);
+  assert(t.find("") == nullptr);
   return 0;
 }
 \end{lstlisting}
@@ -2896,8 +2887,8 @@ Maintains a compact deterministic automaton representing all substrings of a str
 Each state represents an equivalence class of substrings with the same set of ending positions. The value \inlinecode{st[v].len} is the maximum length represented by state \inlinecode{v}, while \inlinecode{st[v].link} points to the state representing the longest proper suffix of that class.
 
 \begin{compactitem}
-  \item \inlinecode{suffix\_automaton()} constructs an empty automaton.
-  \item \inlinecode{suffix\_automaton(s)} constructs the automaton for string \inlinecode{s}.
+  \item \inlinecode{SuffixAutomaton()} constructs an empty automaton.
+  \item \inlinecode{SuffixAutomaton(s)} constructs the automaton for string \inlinecode{s}.
   \item \inlinecode{extend(c)} appends character \inlinecode{c} to the current string.
   \item \inlinecode{contains(t)} returns whether string \inlinecode{t} occurs as a substring.
   \item \inlinecode{count\_distinct\_substrings()} returns the number of distinct nonempty substrings.
@@ -2923,29 +2914,29 @@ Each state represents an equivalence class of substrings with the same set of en
 #include <vector>
 using std::string;
 
-class suffix_automaton {
-  struct state {
+class SuffixAutomaton {
+  struct State {
     int len, link, first_pos;
     std::map<char, int> next;
 
-    state() : len(0), link(-1), first_pos(-1) {}
+    State() : len(0), link(-1), first_pos(-1) {}
   };
 
-  std::vector<state> st;
+  std::vector<State> st;
   int last;
 
  public:
-  suffix_automaton() : st(1), last(0) {}
+  SuffixAutomaton() : st(1), last(0) {}
 
-  explicit suffix_automaton(const string &s) : st(1), last(0) {
-    for (int i = 0; i < (int)s.size(); i++) {
+  explicit SuffixAutomaton(const string &s) : st(1), last(0) {
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       extend(s[i]);
     }
   }
 
   void extend(char c) {
     int cur = st.size();
-    st.push_back(state());
+    st.push_back(State());
     st[cur].len = st[last].len + 1;
     st[cur].first_pos = st[cur].len - 1;
 
@@ -2976,7 +2967,7 @@ class suffix_automaton {
 
   bool contains(const string &t) const {
     int v = 0;
-    for (int i = 0; i < (int)t.size(); i++) {
+    for (int i = 0; i < static_cast<int>(t.size()); i++) {
       std::map<char, int>::const_iterator it = st[v].next.find(t[i]);
       if (it == st[v].next.end()) {
         return false;
@@ -2988,7 +2979,7 @@ class suffix_automaton {
 
   long long count_distinct_substrings() const {
     long long res = 0;
-    for (int v = 1; v < (int)st.size(); v++) {
+    for (int v = 1; v < static_cast<int>(st.size()); v++) {
       res += st[v].len - st[st[v].link].len;
     }
     return res;
@@ -2996,7 +2987,7 @@ class suffix_automaton {
 
   string longest_common_substring(const string &t) const {
     int v = 0, len = 0, best = 0, best_pos = -1;
-    for (int i = 0; i < (int)t.size(); i++) {
+    for (int i = 0; i < static_cast<int>(t.size()); i++) {
       while (v && !st[v].next.count(t[i])) {
         v = st[v].link;
         len = st[v].len;
@@ -3023,14 +3014,14 @@ class suffix_automaton {
 #include <cassert>
 
 int main() {
-  suffix_automaton sa("ababa");
+  SuffixAutomaton sa("ababa");
   assert(sa.contains("aba"));
   assert(sa.contains("bab"));
   assert(!sa.contains("abba"));
   assert(sa.count_distinct_substrings() == 9);
   assert(sa.longest_common_substring("zzbabab") == "baba");
 
-  suffix_automaton online;
+  SuffixAutomaton online;
   online.extend('a');
   online.extend('b');
   online.extend('c');
@@ -3039,13 +3030,13 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Eertree}
-Maintains all distinct palindromic substrings of a string online using an eertree, also known as a palindromic tree. Each non-root node represents one distinct palindrome, and suffix links connect each palindrome to its longest proper palindromic suffix.
+Maintains all distinct palindromic substrings of a string online using an Eertree, also known as a palindromic tree. Each non-root node represents one distinct palindrome, and suffix links connect each palindrome to its longest proper palindromic suffix.
 
 The structure has two roots: one of length $-1$, which simplifies boundary cases, and one of length $0$, representing the empty palindrome. After each appended character, \inlinecode{last} points to the node for the longest palindromic suffix of the current string.
 
 \begin{compactitem}
-  \item \inlinecode{eertree()} constructs an empty palindromic tree.
-  \item \inlinecode{eertree(s)} constructs the tree for string \inlinecode{s}.
+  \item \inlinecode{Eertree()} constructs an empty palindromic tree.
+  \item \inlinecode{Eertree(s)} constructs the tree for string \inlinecode{s}.
   \item \inlinecode{add(c)} appends character \inlinecode{c} and returns \inlinecode{true} if this creates a new distinct palindrome.
   \item \inlinecode{count\_distinct\_palindromes()} returns the number of distinct nonempty palindromic substrings.
   \item \inlinecode{longest\_suffix\_length()} returns the length of the current longest palindromic suffix.
@@ -3071,15 +3062,15 @@ The structure has two roots: one of length $-1$, which simplifies boundary cases
 #include <vector>
 using std::string;
 
-class eertree {
-  struct node {
+class Eertree {
+  struct Node {
     int len, link, occ;
     std::map<char, int> next;
 
-    node(int len = 0) : len(len), link(0), occ(0) {}
+    Node(int len = 0) : len(len), link(0), occ(0) {}
   };
 
-  std::vector<node> tree;
+  std::vector<Node> tree;
   string s;
   int last;
 
@@ -3091,19 +3082,19 @@ class eertree {
   }
 
  public:
-  eertree() : tree(), s(), last(1) {
-    tree.push_back(node(-1));
-    tree.push_back(node(0));
+  Eertree() : tree(), s(), last(1) {
+    tree.push_back(Node(-1));
+    tree.push_back(Node(0));
     tree[0].link = 0;
     tree[1].link = 0;
   }
 
-  explicit eertree(const string &text) : tree(), s(), last(1) {
-    tree.push_back(node(-1));
-    tree.push_back(node(0));
+  explicit Eertree(const string &text) : tree(), s(), last(1) {
+    tree.push_back(Node(-1));
+    tree.push_back(Node(0));
     tree[0].link = 0;
     tree[1].link = 0;
-    for (int i = 0; i < (int)text.size(); i++) {
+    for (int i = 0; i < static_cast<int>(text.size()); i++) {
       add(text[i]);
     }
   }
@@ -3120,7 +3111,7 @@ class eertree {
     }
 
     last = tree.size();
-    tree.push_back(node(tree[cur].len + 2));
+    tree.push_back(Node(tree[cur].len + 2));
     tree[last].occ = 1;
     tree[cur].next[c] = last;
 
@@ -3133,15 +3124,15 @@ class eertree {
     return true;
   }
 
-  int count_distinct_palindromes() const { return (int)tree.size() - 2; }
+  int count_distinct_palindromes() const { return static_cast<int>(tree.size()) - 2; }
   int longest_suffix_length() const { return tree[last].len; }
 
   std::vector<int> count_occurrences() const {
     std::vector<int> occ(tree.size());
-    for (int i = 0; i < (int)tree.size(); i++) {
+    for (int i = 0; i < static_cast<int>(tree.size()); i++) {
       occ[i] = tree[i].occ;
     }
-    for (int i = (int)tree.size() - 1; i >= 2; i--) {
+    for (int i = static_cast<int>(tree.size()) - 1; i >= 2; i--) {
       occ[tree[i].link] += occ[i];
     }
     return occ;
@@ -3153,11 +3144,11 @@ class eertree {
 #include <cassert>
 
 int main() {
-  eertree t("abacaba");
+  Eertree t("abacaba");
   assert(t.count_distinct_palindromes() == 7);
   assert(t.longest_suffix_length() == 7);
 
-  eertree online;
+  Eertree online;
   assert(online.add('a'));
   assert(online.add('a'));
   assert(online.add('b'));
@@ -3165,14 +3156,14 @@ int main() {
   assert(online.count_distinct_palindromes() == 4);
   assert(online.longest_suffix_length() == 3);
 
-  eertree duplicate;
+  Eertree duplicate;
   assert(duplicate.add('a'));
   assert(duplicate.add('b'));
   assert(duplicate.add('c'));
   assert(!duplicate.add('a'));
 
   std::vector<int> occ = t.count_occurrences();
-  assert((int)occ.size() == t.count_distinct_palindromes() + 2);
+  assert(static_cast<int>(occ.size()) == t.count_distinct_palindromes() + 2);
   return 0;
 }
 \end{lstlisting}
@@ -3212,26 +3203,26 @@ using std::string;
 
 std::vector<int> byte_frequencies(const string &s) {
   std::vector<int> freq(256, 0);
-  for (int i = 0; i < (int)s.size(); i++) {
-    freq[(unsigned char)s[i]]++;
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    freq[static_cast<unsigned char>(s[i])]++;
   }
   return freq;
 }
 
 double entropy(const std::vector<int> &freq) {
   int total = 0;
-  for (int i = 0; i < (int)freq.size(); i++) {
+  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     total += freq[i];
   }
   if (total == 0) {
     return 0;
   }
   double res = 0;
-  for (int i = 0; i < (int)freq.size(); i++) {
+  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     if (freq[i] == 0) {
       continue;
     }
-    double p = (double)freq[i] / total;
+    double p = static_cast<double>(freq[i]) / total;
     res -= p * (log(p) / log(2.0));
   }
   return res;
@@ -3243,15 +3234,15 @@ double entropy(const string &s) {
 
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
   int total = 0;
-  for (int i = 0; i < (int)freq.size(); i++) {
+  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     total += freq[i];
   }
   if (total == 0) {
     return 0;
   }
   double res = 0;
-  for (int i = 0; i < (int)freq.size(); i++) {
-    res += (double)freq[i] * length[i] / total;
+  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
+    res += static_cast<double>(freq[i]) * length[i] / total;
   }
   return res;
 }
@@ -3306,7 +3297,7 @@ using std::string;
 
 std::vector<std::pair<char, int>> run_length_encode(const string &s) {
   std::vector<std::pair<char, int>> res;
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     if (res.empty() || res.back().first != s[i]) {
       res.push_back(std::make_pair(s[i], 1));
     } else {
@@ -3318,7 +3309,7 @@ std::vector<std::pair<char, int>> run_length_encode(const string &s) {
 
 string run_length_decode(const std::vector<std::pair<char, int>> &runs) {
   string res;
-  for (int i = 0; i < (int)runs.size(); i++) {
+  for (int i = 0; i < static_cast<int>(runs.size()); i++) {
     res.append(runs[i].second, runs[i].first);
   }
   return res;
@@ -3363,8 +3354,8 @@ const char BASE64_ALPHABET[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuv
 string base64_encode(const string &bytes) {
   string res;
   int val = 0, bits = -6;
-  for (int i = 0; i < (int)bytes.size(); i++) {
-    val = (val << 8) + (unsigned char)bytes[i];
+  for (int i = 0; i < static_cast<int>(bytes.size()); i++) {
+    val = (val << 8) + static_cast<unsigned char>(bytes[i]);
     bits += 8;
     while (bits >= 0) {
       res.push_back(BASE64_ALPHABET[(val >> bits) & 63]);
@@ -3383,22 +3374,22 @@ string base64_encode(const string &bytes) {
 string base64_decode(const string &text) {
   std::vector<int> table(256, -1);
   for (int i = 0; i < 64; i++) {
-    table[(unsigned char)BASE64_ALPHABET[i]] = i;
+    table[static_cast<unsigned char>(BASE64_ALPHABET[i])] = i;
   }
   string res;
   int val = 0, bits = -8;
-  for (int i = 0; i < (int)text.size(); i++) {
+  for (int i = 0; i < static_cast<int>(text.size()); i++) {
     if (text[i] == '=') {
       break;
     }
-    int x = table[(unsigned char)text[i]];
+    int x = table[static_cast<unsigned char>(text[i])];
     if (x < 0) {
       break;
     }
     val = (val << 6) + x;
     bits += 6;
     if (bits >= 0) {
-      res.push_back((char)((val >> bits) & 255));
+      res.push_back(static_cast<char>(((val >> bits) & 255)));
       bits -= 8;
     }
   }
@@ -3422,7 +3413,7 @@ Builds a Huffman code for a string and uses it to encode and decode that string.
 The implementation below stores encoded bits as a string of \inlinecode{\textquotesingle{}0\textquotesingle{}} and \inlinecode{\textquotesingle{}1\textquotesingle{}} characters for clarity. For real compression, pack those bits into bytes. The tree is also needed to decode the bit string, so compressed data normally stores enough metadata to reconstruct the same tree.
 
 \begin{compactitem}
-  \item \inlinecode{huffman\_tree(text)} constructs a Huffman tree from the character frequencies in \inlinecode{text}.
+  \item \inlinecode{HuffmanTree(text)} constructs a Huffman tree from the character frequencies in \inlinecode{text}.
   \item \inlinecode{codes()} returns a table mapping each byte value to its bit string.
   \item \inlinecode{encode(text)} returns the encoded bit string.
   \item \inlinecode{decode(bits)} returns the decoded text.
@@ -3446,23 +3437,23 @@ The implementation below stores encoded bits as a string of \inlinecode{\textquo
 #include <vector>
 using std::string;
 
-class huffman_tree {
-  struct node {
+class HuffmanTree {
+  struct Node {
     int freq;
     unsigned char ch;
     int left, right;
 
-    node(int freq = 0, unsigned char ch = 0, int left = -1, int right = -1)
+    Node(int freq = 0, unsigned char ch = 0, int left = -1, int right = -1)
         : freq(freq), ch(ch), left(left), right(right) {}
   };
 
-  struct by_frequency {
-    const std::vector<node> *nodes;
-    explicit by_frequency(const std::vector<node> *nodes = NULL) : nodes(nodes) {}
+  struct ByFrequency {
+    const std::vector<Node> *nodes;
+    explicit ByFrequency(const std::vector<Node> *nodes = nullptr) : nodes(nodes) {}
     bool operator()(int a, int b) const { return (*nodes)[a].freq > (*nodes)[b].freq; }
   };
 
-  std::vector<node> nodes;
+  std::vector<Node> nodes;
   int root;
   std::vector<string> code;
 
@@ -3476,17 +3467,17 @@ class huffman_tree {
   }
 
  public:
-  explicit huffman_tree(const string &text) : root(-1), code(256) {
+  explicit HuffmanTree(const string &text) : root(-1), code(256) {
     std::vector<int> freq(256, 0);
-    for (int i = 0; i < (int)text.size(); i++) {
-      freq[(unsigned char)text[i]]++;
+    for (int i = 0; i < static_cast<int>(text.size()); i++) {
+      freq[static_cast<unsigned char>(text[i])]++;
     }
-    by_frequency cmp(&nodes);
-    std::priority_queue<int, std::vector<int>, by_frequency> pq(cmp);
+    ByFrequency cmp(&nodes);
+    std::priority_queue<int, std::vector<int>, ByFrequency> pq(cmp);
     for (int c = 0; c < 256; c++) {
       if (freq[c] > 0) {
-        nodes.push_back(node(freq[c], (unsigned char)c));
-        pq.push((int)nodes.size() - 1);
+        nodes.push_back(Node(freq[c], static_cast<unsigned char>(c)));
+        pq.push(static_cast<int>(nodes.size()) - 1);
       }
     }
     if (pq.empty()) {
@@ -3497,8 +3488,8 @@ class huffman_tree {
       pq.pop();
       int b = pq.top();
       pq.pop();
-      nodes.push_back(node(nodes[a].freq + nodes[b].freq, 0, a, b));
-      pq.push((int)nodes.size() - 1);
+      nodes.push_back(Node(nodes[a].freq + nodes[b].freq, 0, a, b));
+      pq.push(static_cast<int>(nodes.size()) - 1);
     }
     root = pq.top();
     build_codes(root, "");
@@ -3508,8 +3499,8 @@ class huffman_tree {
 
   string encode(const string &text) const {
     string bits;
-    for (int i = 0; i < (int)text.size(); i++) {
-      bits += code[(unsigned char)text[i]];
+    for (int i = 0; i < static_cast<int>(text.size()); i++) {
+      bits += code[static_cast<unsigned char>(text[i])];
     }
     return bits;
   }
@@ -3520,10 +3511,10 @@ class huffman_tree {
       return text;
     }
     int u = root;
-    for (int i = 0; i < (int)bits.size(); i++) {
+    for (int i = 0; i < static_cast<int>(bits.size()); i++) {
       u = bits[i] == '0' ? nodes[u].left : nodes[u].right;
       if (nodes[u].left == -1 && nodes[u].right == -1) {
-        text.push_back((char)nodes[u].ch);
+        text.push_back(static_cast<char>(nodes[u].ch));
         u = root;
       }
     }
@@ -3537,7 +3528,7 @@ class huffman_tree {
 
 int main() {
   string text = "banana bandana";
-  huffman_tree h(text);
+  HuffmanTree h(text);
   string bits = h.encode(text);
   assert(h.decode(bits) == text);
   assert(bits.size() < text.size() * 8);

@@ -19,18 +19,18 @@ Space Complexity:
 template<class It>
 int eval(It &it, int prec) {
   if (prec == 0) {
-    int sign = 1, ret = 0;
+    int sign = 1, res = 0;
     for (; *it == '-'; it++) {
       sign *= -1;
     }
     if (*it == '(') {
-      ret = eval(++it, 2);
+      res = eval(++it, 2);
       it++;
     } else
       while (*it >= '0' && *it <= '9') {
-        ret = 10 * ret + (*(it++) - '0');
+        res = 10 * res + (*(it++) - '0');
       }
-    return sign * ret;
+    return sign * res;
   }
   int num = eval(it, prec - 1);
   while (!((prec == 2 && *it != '+' && *it != '-') || (prec == 1 && *it != '*' && *it != '/'))) {

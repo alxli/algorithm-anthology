@@ -43,47 +43,47 @@ Space Complexity:
 #include <cstdlib>
 
 template<class T>
-class implicit_treap {
+class ImplicitTreap {
   static T join_values(const T &a, const T &b) { return a < b ? a : b; }
   static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
   static T join_deltas(const T &d1, const T &d2) { return d2; }
 
-  struct node_t {
+  struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     T value, subtree_value, delta;
     bool pending;
     int size, priority;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const T &v)
+    Node(const T &v)
         : value(v),
           subtree_value(v),
           pending(false),
           size(1),
           priority(rand32()),
-          left(NULL),
-          right(NULL) {}
+          left(nullptr),
+          right(nullptr) {}
   } *root;
 
-  static int size(node_t *n) { return (n == NULL) ? 0 : n->size; }
+  static int size(Node *n) { return (n == nullptr) ? 0 : n->size; }
 
-  static void update_value(node_t *n) {
-    if (n == NULL) {
+  static void update_value(Node *n) {
+    if (n == nullptr) {
       return;
     }
     n->subtree_value = n->value;
-    if (n->left != NULL) {
+    if (n->left != nullptr) {
       n->subtree_value = join_values(n->subtree_value, n->left->subtree_value);
     }
-    if (n->right != NULL) {
+    if (n->right != nullptr) {
       n->subtree_value = join_values(n->subtree_value, n->right->subtree_value);
     }
     n->size = 1 + size(n->left) + size(n->right);
   }
 
-  static void update_delta(node_t *n, const T &d) {
-    if (n != NULL) {
+  static void update_delta(Node *n, const T &d) {
+    if (n != nullptr) {
       n->value = join_value_with_delta(n->value, d, 1);
       n->subtree_value = join_value_with_delta(n->subtree_value, d, n->size);
       n->delta = n->pending ? join_deltas(n->delta, d) : d;
@@ -91,8 +91,8 @@ class implicit_treap {
     }
   }
 
-  static void push_delta(node_t *n) {
-    if (n == NULL || !n->pending) {
+  static void push_delta(Node *n) {
+    if (n == nullptr || !n->pending) {
       return;
     }
     if (n->size > 1) {
@@ -102,12 +102,12 @@ class implicit_treap {
     n->pending = false;
   }
 
-  static void merge(node_t *&n, node_t *left, node_t *right) {
+  static void merge(Node *&n, Node *left, Node *right) {
     push_delta(left);
     push_delta(right);
-    if (left == NULL) {
+    if (left == nullptr) {
       n = right;
-    } else if (right == NULL) {
+    } else if (right == nullptr) {
       n = left;
     } else if (left->priority < right->priority) {
       merge(left->right, left->right, right);
@@ -119,10 +119,10 @@ class implicit_treap {
     update_value(n);
   }
 
-  static void split(node_t *n, node_t *&left, node_t *&right, int i) {
+  static void split(Node *n, Node *&left, Node *&right, int i) {
     push_delta(n);
-    if (n == NULL) {
-      left = right = NULL;
+    if (n == nullptr) {
+      left = right = nullptr;
     } else if (i <= size(n->left)) {
       split(n->left, left, n->left, i);
       right = n;
@@ -133,9 +133,9 @@ class implicit_treap {
     update_value(n);
   }
 
-  static void insert(node_t *&n, node_t *new_node, int i) {
+  static void insert(Node *&n, Node *new_node, int i) {
     push_delta(n);
-    if (n == NULL) {
+    if (n == nullptr) {
       n = new_node;
     } else if (new_node->priority < n->priority) {
       split(n, new_node->left, new_node->right, i);
@@ -148,10 +148,10 @@ class implicit_treap {
     update_value(n);
   }
 
-  static void erase(node_t *&n, int i) {
+  static void erase(Node *&n, int i) {
     push_delta(n);
     if (i == size(n->left)) {
-      node_t *left = n->left, *right = n->right;
+      Node *left = n->left, *right = n->right;
       delete n;
       merge(n, left, right);
     } else if (i < size(n->left)) {
@@ -162,7 +162,7 @@ class implicit_treap {
     update_value(n);
   }
 
-  static node_t *select(node_t *n, int i) {
+  static Node *select(Node *n, int i) {
     push_delta(n);
     if (i < size(n->left)) {
       return select(n->left, i);
@@ -173,8 +173,8 @@ class implicit_treap {
     return n;
   }
 
-  void clean_up(node_t *&n) {
-    if (n != NULL) {
+  void clean_up(Node *&n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -182,30 +182,30 @@ class implicit_treap {
   }
 
  public:
-  implicit_treap(int n = 0, const T &v = T()) : root(NULL) {
+  ImplicitTreap(int n = 0, const T &v = T()) : root(nullptr) {
     for (int i = 0; i < n; i++) {
       push_back(v);
     }
   }
 
   template<class It>
-  implicit_treap(It lo, It hi) : root(NULL) {
+  ImplicitTreap(It lo, It hi) : root(nullptr) {
     for (; lo != hi; ++lo) {
       push_back(*lo);
     }
   }
 
-  ~implicit_treap() { clean_up(root); }
+  ~ImplicitTreap() { clean_up(root); }
   int size() const { return size(root); }
-  bool empty() const { return root == NULL; }
-  void insert(int i, const T &v) { insert(root, new node_t(v), i); }
+  bool empty() const { return root == nullptr; }
+  void insert(int i, const T &v) { insert(root, new Node(v), i); }
   void erase(int i) { erase(root, i); }
   void push_back(const T &v) { insert(size(), v); }
   void pop_back() { erase(size() - 1); }
   T at(int i) const { return select(root, i)->value; }
 
   T query(int lo, int hi) {
-    node_t *l1, *r1, *l2, *r2, *t;
+    Node *l1, *r1, *l2, *r2, *t;
     split(root, l1, r1, hi + 1);
     split(l1, l2, r2, lo);
     T res = r2->subtree_value;
@@ -215,7 +215,7 @@ class implicit_treap {
   }
 
   void update(int lo, int hi, const T &d) {
-    node_t *l1, *r1, *l2, *r2, *t;
+    Node *l1, *r1, *l2, *r2, *t;
     split(root, l1, r1, hi + 1);
     split(l1, l2, r2, lo);
     update_delta(r2, d);
@@ -237,7 +237,7 @@ Values: 2 2 1 8 10 11 (min: 1)
 #include <iostream>
 using namespace std;
 
-void print(implicit_treap<int> &t) {
+void print(ImplicitTreap<int> &t) {
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {
     cout << " " << t.at(i);
@@ -247,7 +247,7 @@ void print(implicit_treap<int> &t) {
 
 int main() {
   int arr[5] = {99, -2, 1, 8, 10};
-  implicit_treap<int> t(arr, arr + 5);
+  ImplicitTreap<int> t(arr, arr + 5);
   t.push_back(11);
   t.push_back(12);
   t.pop_back();

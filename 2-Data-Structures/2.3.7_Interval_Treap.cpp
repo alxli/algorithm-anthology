@@ -6,7 +6,7 @@ of any or all entries that intersect with a given query interval. This implement
 key type. A treap is used to process the entries, where keys are compared lexicographically as
 pairs.
 
-- `interval_treap()` constructs an empty map.
+- `IntervalTreap()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(lo, hi, v)` adds an entry with key `[lo, hi]` and value `v` to the map, returning `true`
@@ -15,9 +15,9 @@ pairs.
 - `erase(lo, hi)` removes the entry with key `[lo, hi]` from the map, returning `true` if the
   removal was successful or `false` if the interval was not found.
 - `find_key(lo, hi)` returns a pointer to a const `std::pair` representing the key of some interval
-  in the map which intersects with `[lo, hi]`, or `NULL` if no such entry was found.
+  in the map which intersects with `[lo, hi]`, or `nullptr` if no such entry was found.
 - `find_value(lo, hi)` returns a pointer to a const value of some entry in the map with a key that
-  intersects with `[lo, hi]`, or `NULL` if no such entry was found.
+  intersects with `[lo, hi]`, or `nullptr` if no such entry was found.
 - `find_all(lo, hi, f)` calls the function `f(lo, hi, v)` on each entry in the map that overlaps
   with `[lo, hi]`, in lexicographically ascending order of intervals.
 - `walk(f)` calls the function `f(lo, hi, v)` on each interval in the map, in lexicographically
@@ -42,27 +42,27 @@ Space Complexity:
 #include <utility>
 
 template<class K, class V>
-class interval_treap {
+class IntervalTreap {
   typedef std::pair<K, K> interval_t;
 
-  struct node_t {
+  struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     interval_t interval;
     V value;
     K max;
     int priority;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const interval_t &i, const V &v)
-        : interval(i), value(v), max(i.second), priority(rand32()), left(NULL), right(NULL) {}
+    Node(const interval_t &i, const V &v)
+        : interval(i), value(v), max(i.second), priority(rand32()), left(nullptr), right(nullptr) {}
 
     void update() {
       max = interval.second;
-      if (left != NULL && left->max > max) {
+      if (left != nullptr && left->max > max) {
         max = left->max;
       }
-      if (right != NULL && right->max > max) {
+      if (right != nullptr && right->max > max) {
         max = right->max;
       }
     }
@@ -70,25 +70,25 @@ class interval_treap {
 
   int num_nodes;
 
-  static void rotate_left(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_left(Node *&n) {
+    Node *tmp = n;
     n = n->right;
     tmp->right = n->left;
     n->left = tmp;
     tmp->update();
   }
 
-  static void rotate_right(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_right(Node *&n) {
+    Node *tmp = n;
     n = n->left;
     tmp->left = n->right;
     n->right = tmp;
     tmp->update();
   }
 
-  static bool insert(node_t *&n, const interval_t &i, const V &v) {
-    if (n == NULL) {
-      n = new node_t(i, v);
+  static bool insert(Node *&n, const interval_t &i, const V &v) {
+    if (n == nullptr) {
+      n = new Node(i, v);
       return true;
     }
     if (i < n->interval && insert(n->left, i, v)) {
@@ -108,8 +108,8 @@ class interval_treap {
     return false;
   }
 
-  static bool erase(node_t *&n, const interval_t &i) {
-    if (n == NULL) {
+  static bool erase(Node *&n, const interval_t &i) {
+    if (n == nullptr) {
       return false;
     }
     if (i < n->interval) {
@@ -118,7 +118,7 @@ class interval_treap {
     if (i > n->interval) {
       return erase(n->right, i);
     }
-    if (n->left != NULL && n->right != NULL) {
+    if (n->left != nullptr && n->right != nullptr) {
       bool res;
       if (n->left->priority < n->right->priority) {
         rotate_right(n);
@@ -130,28 +130,28 @@ class interval_treap {
       n->update();
       return res;
     }
-    node_t *tmp = (n->left != NULL) ? n->left : n->right;
+    Node *tmp = (n->left != nullptr) ? n->left : n->right;
     delete n;
     n = tmp;
     return true;
   }
 
-  static node_t *find_any(node_t *n, const interval_t &i) {
-    if (n == NULL) {
-      return NULL;
+  static Node *find_any(Node *n, const interval_t &i) {
+    if (n == nullptr) {
+      return nullptr;
     }
     if (n->interval.first <= i.second && i.first <= n->interval.second) {
       return n;
     }
-    if (n->left != NULL && i.first <= n->left->max) {
+    if (n->left != nullptr && i.first <= n->left->max) {
       return find_any(n->left, i);
     }
     return find_any(n->right, i);
   }
 
   template<class KVFunction>
-  static void find_all(node_t *n, const interval_t &i, KVFunction f) {
-    if (n == NULL || n->max < i.first) {
+  static void find_all(Node *n, const interval_t &i, KVFunction f) {
+    if (n == nullptr || n->max < i.first) {
       return;
     }
     if (n->interval.first <= i.second && i.first <= n->interval.second) {
@@ -162,16 +162,16 @@ class interval_treap {
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, KVFunction f) {
-    if (n != NULL) {
+  static void walk(Node *n, KVFunction f) {
+    if (n != nullptr) {
       walk(n->left, f);
       f(n->interval.first, n->interval.second, n->value);
       walk(n->right, f);
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -179,11 +179,11 @@ class interval_treap {
   }
 
  public:
-  interval_treap() : root(NULL), num_nodes(0) {}
+  IntervalTreap() : root(nullptr), num_nodes(0) {}
 
-  ~interval_treap() { clean_up(root); }
+  ~IntervalTreap() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   bool insert(const K &lo, const K &hi, const V &v) {
     if (insert(root, std::make_pair(lo, hi), v)) {
@@ -202,13 +202,13 @@ class interval_treap {
   }
 
   const interval_t *find_key(const K &lo, const K &hi) const {
-    node_t *n = find_any(root, std::make_pair(lo, hi));
-    return (n == NULL) ? NULL : &(n->interval);
+    Node *n = find_any(root, std::make_pair(lo, hi));
+    return (n == nullptr) ? nullptr : &(n->interval);
   }
 
   const V *find_value(const K &lo, const K &hi) const {
-    node_t *n = find_any(root, std::make_pair(lo, hi));
-    return (n == NULL) ? NULL : &(n->value);
+    Node *n = find_any(root, std::make_pair(lo, hi));
+    return (n == nullptr) ? nullptr : &(n->value);
   }
 
   template<class KVFunction>
@@ -238,7 +238,7 @@ void print(int lo, int hi, char v) {
 }
 
 int main() {
-  interval_treap<int, char> t;
+  IntervalTreap<int, char> t;
   t.insert(15, 20, 'a');
   t.insert(10, 30, 'b');
   t.insert(17, 19, 'c');

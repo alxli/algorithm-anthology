@@ -10,7 +10,7 @@ The following implementation is a fully dynamic variant of the convex hull optim
 using a self-balancing binary search tree (`std::set`) to support the ability to call `add_line()`
 and `query()` in any desired order.
 
-- `hull_optimizer(query_max)` constructs an empty hull. By default, `query(x)` minimizes; if
+- `HullOptimizer(query_max)` constructs an empty hull. By default, `query(x)` minimizes; if
   `query_max` is true, `query(x)` maximizes.
 - `add_line(m, b)` inserts line $y = mx + b$ in arbitrary order.
 - `query(x)` returns the best y-value among all inserted lines at coordinate `x`. At least one line
@@ -30,22 +30,22 @@ Space Complexity:
 #include <climits>
 #include <set>
 
-class hull_optimizer {
-  struct line {
+class HullOptimizer {
+  struct Line {
     long long m, b;
     mutable long long xhi;
     bool is_query;
 
-    line(long long m, long long b, long long xhi = 0, bool is_query = false)
+    Line(long long m, long long b, long long xhi = 0, bool is_query = false)
         : m(m), b(b), xhi(xhi), is_query(is_query) {}
 
-    bool operator<(const line &l) const { return l.is_query ? xhi < l.xhi : m < l.m; }
+    bool operator<(const Line &l) const { return l.is_query ? xhi < l.xhi : m < l.m; }
   };
 
-  std::multiset<line> hull;
+  std::multiset<Line> hull;
   bool query_max;
 
-  typedef std::multiset<line>::iterator hulliter;
+  typedef std::multiset<Line>::iterator hulliter;
 
   static long long div_floor(long long a, long long b) { return a / b - ((a ^ b) < 0 && a % b); }
 
@@ -63,14 +63,14 @@ class hull_optimizer {
   }
 
  public:
-  hull_optimizer(bool query_max = false) : query_max(query_max) {}
+  HullOptimizer(bool query_max = false) : query_max(query_max) {}
 
   void add_line(long long m, long long b) {
     if (!query_max) {
       m = -m;
       b = -b;
     }
-    hulliter z = hull.insert(line(m, b));
+    hulliter z = hull.insert(Line(m, b));
     hulliter y = z++;
     hulliter x = y;
     while (update_border(y, z)) {
@@ -86,7 +86,7 @@ class hull_optimizer {
 
   long long query(long long x) const {
     assert(!hull.empty());
-    line q(0, 0, x, true);
+    Line q(0, 0, x, true);
     hulliter it = hull.lower_bound(q);
     long long res = it->m * x + it->b;
     return query_max ? res : -res;
@@ -98,7 +98,7 @@ class hull_optimizer {
 #include <cassert>
 
 int main() {
-  hull_optimizer h;
+  HullOptimizer h;
   h.add_line(3, 0);
   h.add_line(0, 6);
   h.add_line(1, 2);

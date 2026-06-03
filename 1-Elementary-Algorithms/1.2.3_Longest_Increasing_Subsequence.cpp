@@ -28,20 +28,20 @@ std::vector<typename std::iterator_traits<It>::value_type> longest_increasing_su
   }
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
-    int l = -1, h = len;
-    while (h - l > 1) {
-      int mid = (l + h) / 2;
+    int left = -1, right = len;
+    while (right - left > 1) {
+      int mid = (left + right) / 2;
       if (*(lo + tail[mid]) < *(lo + i)) {
-        l = mid;
+        left = mid;
       } else {
-        h = mid;
+        right = mid;
       }
     }
-    if (len < h + 1) {
-      len = h + 1;
+    if (len < right + 1) {
+      len = right + 1;
     }
-    prev[i] = h > 0 ? tail[h - 1] : -1;
-    tail[h] = i;
+    prev[i] = right > 0 ? tail[right - 1] : -1;
+    tail[right] = i;
   }
   std::vector<typename std::iterator_traits<It>::value_type> res(len);
   for (int i = tail[len - 1]; i != -1; i = prev[i]) {

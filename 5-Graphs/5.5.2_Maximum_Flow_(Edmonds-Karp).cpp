@@ -19,6 +19,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <climits>
 #include <queue>
 #include <vector>
 
@@ -26,12 +27,12 @@ struct edge {
   int u, v, rev, cap, f;
 };
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = INT_MAX / 2;
 std::vector<edge> adj[MAXN];
 
 void add_edge(int u, int v, int cap) {
-  adj[u].push_back((edge){u, v, (int)adj[v].size(), cap, 0});
-  adj[v].push_back((edge){v, u, (int)adj[u].size() - 1, 0, 0});
+  adj[u].push_back((edge){u, v, static_cast<int>(adj[v].size()), cap, 0});
+  adj[v].push_back((edge){v, u, static_cast<int>(adj[u].size()) - 1, 0, 0});
 }
 
 int edmonds_karp(int nodes, int source, int sink) {
@@ -43,7 +44,7 @@ int edmonds_karp(int nodes, int source, int sink) {
     while (!q.empty() && !pred[sink]) {
       int u = q.front();
       q.pop();
-      for (int j = 0; j < (int)adj[u].size(); j++) {
+      for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
         edge &e = adj[u][j];
         if (!pred[e.v] && e.cap > e.f) {
           pred[e.v] = &e;

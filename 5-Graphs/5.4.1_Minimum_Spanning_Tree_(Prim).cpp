@@ -39,7 +39,7 @@ int prim(int nodes) {
     }
     visit[i] = true;
     std::priority_queue<std::pair<int, std::pair<int, int>>> pq;
-    for (int j = 0; j < (int)adj[i].size(); j++) {
+    for (int j = 0; j < static_cast<int>(adj[i].size()); j++) {
       pq.push(std::make_pair(-adj[i][j].second, std::make_pair(i, adj[i][j].first)));
     }
     while (!pq.empty()) {
@@ -53,7 +53,7 @@ int prim(int nodes) {
           mst.push_back(std::make_pair(u, v));
           total_dist += w;
         }
-        for (int j = 0; j < (int)adj[v].size(); j++) {
+        for (int j = 0; j < static_cast<int>(adj[v].size()); j++) {
           pq.push(std::make_pair(-adj[v][j].second, std::make_pair(v, adj[v][j].first)));
         }
       }
@@ -90,7 +90,7 @@ int main() {
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
   cout << "Total distance: " << prim(7) << endl;
-  for (int i = 0; i < (int)mst.size(); i++) {
+  for (int i = 0; i < static_cast<int>(mst.size()); i++) {
     cout << mst[i].first << " <-> " << mst[i].second << endl;
   }
   return 0;

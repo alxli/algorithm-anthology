@@ -21,9 +21,10 @@ Space Complexity:
 
 */
 
+#include <climits>
 #include <stdexcept>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = INT_MAX / 2;
 int dist[MAXN][MAXN], parent[MAXN][MAXN];
 
 void initialize(int nodes) {

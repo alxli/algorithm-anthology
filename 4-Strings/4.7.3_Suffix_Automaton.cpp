@@ -8,8 +8,8 @@ Each state represents an equivalence class of substrings with the same set of en
 value `st[v].len` is the maximum length represented by state `v`, while `st[v].link` points to the
 state representing the longest proper suffix of that class.
 
-- `suffix_automaton()` constructs an empty automaton.
-- `suffix_automaton(s)` constructs the automaton for string `s`.
+- `SuffixAutomaton()` constructs an empty automaton.
+- `SuffixAutomaton(s)` constructs the automaton for string `s`.
 - `extend(c)` appends character `c` to the current string.
 - `contains(t)` returns whether string `t` occurs as a substring.
 - `count_distinct_substrings()` returns the number of distinct nonempty substrings.
@@ -34,29 +34,29 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-class suffix_automaton {
-  struct state {
+class SuffixAutomaton {
+  struct State {
     int len, link, first_pos;
     std::map<char, int> next;
 
-    state() : len(0), link(-1), first_pos(-1) {}
+    State() : len(0), link(-1), first_pos(-1) {}
   };
 
-  std::vector<state> st;
+  std::vector<State> st;
   int last;
 
  public:
-  suffix_automaton() : st(1), last(0) {}
+  SuffixAutomaton() : st(1), last(0) {}
 
-  explicit suffix_automaton(const string &s) : st(1), last(0) {
-    for (int i = 0; i < (int)s.size(); i++) {
+  explicit SuffixAutomaton(const string &s) : st(1), last(0) {
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       extend(s[i]);
     }
   }
 
   void extend(char c) {
     int cur = st.size();
-    st.push_back(state());
+    st.push_back(State());
     st[cur].len = st[last].len + 1;
     st[cur].first_pos = st[cur].len - 1;
 
@@ -87,7 +87,7 @@ class suffix_automaton {
 
   bool contains(const string &t) const {
     int v = 0;
-    for (int i = 0; i < (int)t.size(); i++) {
+    for (int i = 0; i < static_cast<int>(t.size()); i++) {
       std::map<char, int>::const_iterator it = st[v].next.find(t[i]);
       if (it == st[v].next.end()) {
         return false;
@@ -99,7 +99,7 @@ class suffix_automaton {
 
   long long count_distinct_substrings() const {
     long long res = 0;
-    for (int v = 1; v < (int)st.size(); v++) {
+    for (int v = 1; v < static_cast<int>(st.size()); v++) {
       res += st[v].len - st[st[v].link].len;
     }
     return res;
@@ -107,7 +107,7 @@ class suffix_automaton {
 
   string longest_common_substring(const string &t) const {
     int v = 0, len = 0, best = 0, best_pos = -1;
-    for (int i = 0; i < (int)t.size(); i++) {
+    for (int i = 0; i < static_cast<int>(t.size()); i++) {
       while (v && !st[v].next.count(t[i])) {
         v = st[v].link;
         len = st[v].len;
@@ -134,14 +134,14 @@ class suffix_automaton {
 #include <cassert>
 
 int main() {
-  suffix_automaton sa("ababa");
+  SuffixAutomaton sa("ababa");
   assert(sa.contains("aba"));
   assert(sa.contains("bab"));
   assert(!sa.contains("abba"));
   assert(sa.count_distinct_substrings() == 9);
   assert(sa.longest_common_substring("zzbabab") == "baba");
 
-  suffix_automaton online;
+  SuffixAutomaton online;
   online.extend('a');
   online.extend('b');
   online.extend('c');

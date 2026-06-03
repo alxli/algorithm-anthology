@@ -5,7 +5,7 @@ once in the collection. This implementation requires `operator ==` to be defined
 hash map implements a map by hashing keys into buckets using a hash function. This implementation
 resolves collisions by chaining entries hashed to the same bucket into a linked list.
 
-- `hash_map()` constructs an empty map.
+- `HashMap()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if an new
@@ -13,7 +13,7 @@ resolves collisions by chaining entries hashed to the same bucket into a linked 
   old value associated with the key is preserved).
 - `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
   successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if the key was not
+- `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was not
   found.
 - `operator[]` returns a reference to key `k`'s associated value (which may be modified), or if
   necessary, inserts and returns a new entry with the default constructed value if key `k` was not
@@ -36,24 +36,24 @@ Space Complexity:
 #include <list>
 
 template<class K, class V, class Hash>
-class hash_map {
-  struct entry_t {
+class HashMap {
+  struct HashMapEntry {
     K key;
     V value;
 
-    entry_t(const K &k, const V &v) : key(k), value(v) {}
+    HashMapEntry(const K &k, const V &v) : key(k), value(v) {}
   };
 
-  std::list<entry_t> *table;
+  std::list<HashMapEntry> *table;
   int table_size, num_entries;
 
   void double_capacity_and_rehash() {
-    std::list<entry_t> *old = table;
+    std::list<HashMapEntry> *old = table;
     int old_size = table_size;
     table_size = 2 * table_size;
-    table = new std::list<entry_t>[table_size];
+    table = new std::list<HashMapEntry>[table_size];
     num_entries = 0;
-    typename std::list<entry_t>::iterator it;
+    typename std::list<HashMapEntry>::iterator it;
     for (int i = 0; i < old_size; i++) {
       for (it = old[i].begin(); it != old[i].end(); ++it) {
         insert(it->key, it->value);
@@ -63,30 +63,30 @@ class hash_map {
   }
 
  public:
-  hash_map(int size = 128) : table_size(size), num_entries(0) {
-    table = new std::list<entry_t>[table_size];
+  HashMap(int size = 128) : table_size(size), num_entries(0) {
+    table = new std::list<HashMapEntry>[table_size];
   }
 
-  ~hash_map() { delete[] table; }
+  ~HashMap() { delete[] table; }
   int size() const { return num_entries; }
   bool empty() const { return num_entries == 0; }
 
   bool insert(const K &k, const V &v) {
-    if (find(k) != NULL) {
+    if (find(k) != nullptr) {
       return false;
     }
     if (num_entries >= table_size) {
       double_capacity_and_rehash();
     }
     unsigned int i = Hash()(k) % table_size;
-    table[i].push_back(entry_t(k, v));
+    table[i].push_back(HashMapEntry(k, v));
     num_entries++;
     return true;
   }
 
   bool erase(const K &k) {
     unsigned int i = Hash()(k) % table_size;
-    typename std::list<entry_t>::iterator it = table[i].begin();
+    typename std::list<HashMapEntry>::iterator it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
       ++it;
     }
@@ -100,20 +100,20 @@ class hash_map {
 
   V *find(const K &k) const {
     unsigned int i = Hash()(k) % table_size;
-    typename std::list<entry_t>::iterator it = table[i].begin();
+    typename std::list<HashMapEntry>::iterator it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
       ++it;
     }
     if (it == table[i].end()) {
-      return NULL;
+      return nullptr;
     }
     return &(it->value);
   }
 
   V &operator[](const K &k) {
-    V *ret = find(k);
-    if (ret != NULL) {
-      return *ret;
+    V *ptr = find(k);
+    if (ptr != nullptr) {
+      return *ptr;
     }
     insert(k, V());
     return *find(k);
@@ -122,7 +122,7 @@ class hash_map {
   template<class KVFunction>
   void walk(KVFunction f) const {
     for (int i = 0; i < table_size; i++) {
-      typename std::list<entry_t>::iterator it;
+      typename std::list<HashMapEntry>::iterator it;
       for (it = table[i].begin(); it != table[i].end(); ++it) {
         f(it->key, it->value);
       }
@@ -140,10 +140,10 @@ cab
 #include <iostream>
 using namespace std;
 
-struct class_hash {
-  unsigned int operator()(int k) { return class_hash()((unsigned int)k); }
+struct ClassHash {
+  unsigned int operator()(int k) { return ClassHash()(static_cast<unsigned int>(k)); }
 
-  unsigned int operator()(long long k) { return class_hash()((unsigned long long)k); }
+  unsigned int operator()(long long k) { return ClassHash()(static_cast<unsigned long long>(k)); }
 
   // Knuth's one-to-one multiplicative method.
   unsigned int operator()(unsigned int k) {
@@ -181,7 +181,7 @@ void printch(const string &k, char v) {
 }
 
 int main() {
-  hash_map<string, char, class_hash> m;
+  HashMap<string, char, ClassHash> m;
   m["foo"] = 'a';
   m.insert("bar", 'b');
   assert(m["foo"] == 'a');

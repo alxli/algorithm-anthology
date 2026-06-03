@@ -31,7 +31,7 @@ std::map<T, int> misra_gries(It lo, It hi, int k) {
     typename counter_map::iterator found = count.find(*it);
     if (found != count.end()) {
       found->second++;
-    } else if ((int)count.size() < k - 1) {
+    } else if (static_cast<int>(count.size()) < k - 1) {
       count[*it] = 1;
     } else {
       std::vector<T> erase;
@@ -40,7 +40,7 @@ std::map<T, int> misra_gries(It lo, It hi, int k) {
           erase.push_back(jt->first);
         }
       }
-      for (int i = 0; i < (int)erase.size(); i++) {
+      for (int i = 0; i < static_cast<int>(erase.size()); i++) {
         count.erase(erase[i]);
       }
     }

@@ -216,7 +216,7 @@ int main() {
     int a[] = {3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     cycles c = permutation_cycles(n, a);
-    for (int i = 0; i < (int)c.size(); i++) {
+    for (int i = 0; i < static_cast<int>(c.size()); i++) {
       print_range(c[i].begin(), c[i].end());
     }
     cout << endl;

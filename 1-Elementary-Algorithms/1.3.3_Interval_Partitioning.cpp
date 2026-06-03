@@ -24,25 +24,25 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-struct partition_interval_t {
+struct PartitionInterval {
   int start, finish, id;
 
-  partition_interval_t(int start = 0, int finish = 0, int id = 0)
+  PartitionInterval(int start = 0, int finish = 0, int id = 0)
       : start(start), finish(finish), id(id) {}
 };
 
-bool earlier_start(const partition_interval_t &a, const partition_interval_t &b) {
+bool earlier_start(const PartitionInterval &a, const PartitionInterval &b) {
   return a.start != b.start ? a.start < b.start : a.finish < b.finish;
 }
 
-std::vector<int> interval_partitioning(std::vector<partition_interval_t> intervals) {
+std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals) {
   std::sort(intervals.begin(), intervals.end(), earlier_start);
   std::vector<int> room(intervals.size());
   std::priority_queue<
       std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>>
       pq;
   int rooms = 0;
-  for (int i = 0; i < (int)intervals.size(); i++) {
+  for (int i = 0; i < static_cast<int>(intervals.size()); i++) {
     int id = intervals[i].id;
     if (!pq.empty() && pq.top().first <= intervals[i].start) {
       int r = pq.top().second;
@@ -63,10 +63,10 @@ std::vector<int> interval_partitioning(std::vector<partition_interval_t> interva
 using namespace std;
 
 int main() {
-  vector<partition_interval_t> intervals;
-  intervals.push_back(partition_interval_t(0, 30, 0));
-  intervals.push_back(partition_interval_t(5, 10, 1));
-  intervals.push_back(partition_interval_t(15, 20, 2));
+  vector<PartitionInterval> intervals;
+  intervals.push_back(PartitionInterval(0, 30, 0));
+  intervals.push_back(PartitionInterval(5, 10, 1));
+  intervals.push_back(PartitionInterval(15, 20, 2));
   vector<int> room = interval_partitioning(intervals);
   assert(1 + *max_element(room.begin(), room.end()) == 2);
   assert(room[1] == room[2]);

@@ -12,12 +12,12 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
 modulus. For the factorial-table combination helper, the usual contest assumption is that `MOD` is
 prime and the requested factorials are invertible modulo `MOD`.
 
-- `modular<T>(x)` constructs the residue class of integer `x` modulo `T::value`.
+- `Modular<T>(x)` constructs the residue class of integer `x` modulo `T::value`.
 - `value()` and `operator()()` return the stored representative in `[0, MOD)`.
 - `pow(e)` returns this value raised to nonnegative exponent `e`.
 - `inv()` returns the multiplicative inverse, asserting it exists.
 - Operators `+`, `-`, `*`, `/`, comparison, increment, decrement, and stream I/O are overloaded.
-- `mod_combinatorics<Mint>::choose(n, k)` returns $\binom n k$ using lazy factorial and
+- `ModCombinatorics<Mint>::choose(n, k)` returns $\binom n k$ using lazy factorial and
   inverse-factorial tables.
 
 Time Complexity:
@@ -27,7 +27,7 @@ Time Complexity:
 - O(n) total table growth to answer combinations up to size `n`.
 
 Space Complexity:
-- O(1) auxiliary for modular arithmetic.
+- O(1) auxiliary for Modular arithmetic.
 - O(n) for factorial and inverse-factorial tables grown through `choose(n, k)`.
 
 */
@@ -57,7 +57,7 @@ T inverse(T a, T m) {
 }
 
 template<class T>
-class modular {
+class Modular {
  public:
   typedef typename T::value_type value_type;
 
@@ -65,12 +65,12 @@ class modular {
   value_type v;
 
  public:
-  modular(long long x = 0) { v = normalize(x); }
+  Modular(long long x = 0) { v = normalize(x); }
 
   static value_type mod() { return T::value; }
 
   static value_type normalize(long long x) {
-    if (-(long long)mod() <= x && x < (long long)mod()) {
+    if (-static_cast<long long>(mod()) <= x && x < static_cast<long long>(mod())) {
       value_type y = (value_type)x;
       return y < 0 ? y + mod() : y;
     }
@@ -84,9 +84,9 @@ class modular {
   value_type value() const { return v; }
   value_type operator()() const { return v; }
 
-  modular pow(long long e) const {
+  Modular pow(long long e) const {
     assert(e >= 0);
-    modular base = *this, res = 1;
+    Modular base = *this, res = 1;
     while (e > 0) {
       if (e & 1) {
         res *= base;
@@ -97,12 +97,12 @@ class modular {
     return res;
   }
 
-  modular inv() const {
+  Modular inv() const {
     assert(v != 0);
-    return modular(inverse((long long)v, (long long)mod()));
+    return Modular(inverse(static_cast<long long>(v), static_cast<long long>(mod())));
   }
 
-  modular &operator+=(const modular &other) {
+  Modular &operator+=(const Modular &other) {
     v += other.v;
     if (v >= mod()) {
       v -= mod();
@@ -110,7 +110,7 @@ class modular {
     return *this;
   }
 
-  modular &operator-=(const modular &other) {
+  Modular &operator-=(const Modular &other) {
     v -= other.v;
     if (v < 0) {
       v += mod();
@@ -118,54 +118,54 @@ class modular {
     return *this;
   }
 
-  modular &operator*=(const modular &other) {
-    v = normalize((long long)v * other.v);
+  Modular &operator*=(const Modular &other) {
+    v = normalize(static_cast<long long>(v) * other.v);
     return *this;
   }
 
-  modular operator-() const { return modular(-v); }
-  modular &operator++() { return *this += 1; }
-  modular &operator--() { return *this -= 1; }
-  modular &operator/=(const modular &other) { return *this *= other.inv(); }
+  Modular operator-() const { return Modular(-v); }
+  Modular &operator++() { return *this += 1; }
+  Modular &operator--() { return *this -= 1; }
+  Modular &operator/=(const Modular &other) { return *this *= other.inv(); }
 
-  modular operator++(int) {
-    modular res = *this;
+  Modular operator++(int) {
+    Modular res = *this;
     ++*this;
     return res;
   }
 
-  modular operator--(int) {
-    modular res = *this;
+  Modular operator--(int) {
+    Modular res = *this;
     --*this;
     return res;
   }
 
-  friend modular operator+(modular a, const modular &b) { return a += b; }
+  friend Modular operator+(Modular a, const Modular &b) { return a += b; }
 
-  friend modular operator-(modular a, const modular &b) { return a -= b; }
+  friend Modular operator-(Modular a, const Modular &b) { return a -= b; }
 
-  friend modular operator*(modular a, const modular &b) { return a *= b; }
+  friend Modular operator*(Modular a, const Modular &b) { return a *= b; }
 
-  friend modular operator/(modular a, const modular &b) { return a /= b; }
+  friend Modular operator/(Modular a, const Modular &b) { return a /= b; }
 
-  friend bool operator==(const modular &a, const modular &b) { return a.v == b.v; }
+  friend bool operator==(const Modular &a, const Modular &b) { return a.v == b.v; }
 
-  friend bool operator!=(const modular &a, const modular &b) { return !(a == b); }
+  friend bool operator!=(const Modular &a, const Modular &b) { return !(a == b); }
 
-  friend bool operator<(const modular &a, const modular &b) { return a.v < b.v; }
+  friend bool operator<(const Modular &a, const Modular &b) { return a.v < b.v; }
 
-  friend std::ostream &operator<<(std::ostream &os, const modular &x) { return os << x.v; }
+  friend std::ostream &operator<<(std::ostream &os, const Modular &x) { return os << x.v; }
 
-  friend std::istream &operator>>(std::istream &is, modular &x) {
+  friend std::istream &operator>>(std::istream &is, Modular &x) {
     long long value;
     is >> value;
-    x = modular(value);
+    x = Modular(value);
     return is;
   }
 };
 
 template<class Mint>
-class mod_combinatorics {
+class ModCombinatorics {
   std::vector<Mint> fact, inv_fact;
 
   void ensure(int n) {
@@ -185,7 +185,7 @@ class mod_combinatorics {
   }
 
  public:
-  mod_combinatorics() : fact(1, Mint(1)), inv_fact(1, Mint(1)) {}
+  ModCombinatorics() : fact(1, Mint(1)), inv_fact(1, Mint(1)) {}
 
   Mint factorial(int n) {
     ensure(n);
@@ -211,12 +211,12 @@ class mod_combinatorics {
   Mint multichoose(int n, int k) { return choose(n + k - 1, k); }
 };
 
-struct mod_1000000007 {
+struct Mod100000007 {
   typedef int value_type;
   static const int value = 1000000007;
 };
 
-typedef modular<mod_1000000007> Mint;
+typedef Modular<Mod100000007> Mint;
 
 /*** Example Usage ***/
 
@@ -243,7 +243,7 @@ int main() {
   ss >> x;
   assert(x == 1);
 
-  mod_combinatorics<Mint> comb;
+  ModCombinatorics<Mint> comb;
   assert(comb.factorial(5) == 120);
   assert(comb.choose(5, 2) == 10);
   assert(comb.permute(5, 2) == 20);

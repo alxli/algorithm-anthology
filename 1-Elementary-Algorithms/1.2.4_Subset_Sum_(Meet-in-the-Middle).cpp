@@ -39,14 +39,14 @@ long long sum_lower_bound(It lo, It hi, long long v) {
   }
   std::sort(lsum.begin(), lsum.end());
   std::sort(hsum.begin(), hsum.end());
-  int l = 0, h = hlen - 1;
+  int blo = 0, bhi = hlen - 1;
   long long curr = std::numeric_limits<long long>::min();
-  while (l < llen && h >= 0) {
-    if (lsum[l] + hsum[h] <= v) {
-      curr = std::max(curr, lsum[l] + hsum[h]);
-      l++;
+  while (blo < llen && bhi >= 0) {
+    if (lsum[blo] + hsum[bhi] <= v) {
+      curr = std::max(curr, lsum[blo] + hsum[bhi]);
+      blo++;
     } else {
-      h--;
+      bhi--;
     }
   }
   return curr;

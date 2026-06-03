@@ -5,7 +5,7 @@ keys. These helpers are useful for fingerprinting values, combining keys, seedin
 algorithms, and defining `std::unordered_map` keys for pairs and vectors. They are not suitable for
 passwords, signatures, or adversarial security.
 
-The standalone functions below are deterministic. The `int_hasher` functor adds a per-run random
+The standalone functions below are deterministic. The `IntHasher` functor adds a per-run random
 seed before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test
 contests.
 
@@ -20,16 +20,16 @@ contests.
 - `hash_string_fnv1a32(s)` and `hash_string_fnv1a64(s)` compute FNV-1a hashes of string `s`.
 - `hash_range32(first, last)` and `hash_range64(first, last)` hash a sequence of integer-like
   values.
-- `int_hasher<Int>`, `pair_hasher<A, B>`, and `vector_hasher<T>` are hash functors for
+- `IntHasher<Int>`, `PairHasher<A, B>`, and `VectorHasher<T>` are hash functors for
   `std::unordered_map` and `std::unordered_set`.
-- `generic_hasher<T>` recursively handles integer, pair, and vector keys, and falls back to
+- `GenericHasher<T>` recursively handles integer, pair, and vector keys, and falls back to
   `std::hash<T>` for other hashable types.
 
 Time Complexity:
 - O(1) per call to the integer, combiner, and floating-point hash functions.
 - O(n) per call to string and range hashing functions, where $n$ is the number of elements
   processed.
-- O(n) per call to `vector_hasher<T>::operator()`, where $n$ is the vector size.
+- O(n) per call to `VectorHasher<T>::operator()`, where $n$ is the vector size.
 
 Space Complexity:
 - O(1) auxiliary.
@@ -65,7 +65,7 @@ uint64 mix64(uint64 x) {
 
 template<class Int>
 unsigned int hash32(Int x) {
-  return mix32((unsigned int)x);
+  return mix32(static_cast<unsigned int>(x));
 }
 
 template<class Int>
@@ -101,8 +101,8 @@ uint64 hash_double(double x) {
 
 unsigned int hash_string_fnv1a32(const std::string &s) {
   unsigned int h = 2166136261U;
-  for (int i = 0; i < (int)s.size(); i++) {
-    h ^= (unsigned char)s[i];
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    h ^= static_cast<unsigned char>(s[i]);
     h *= 16777619U;
   }
   return h;
@@ -110,8 +110,8 @@ unsigned int hash_string_fnv1a32(const std::string &s) {
 
 uint64 hash_string_fnv1a64(const std::string &s) {
   uint64 h = 14695981039346656037ULL;
-  for (int i = 0; i < (int)s.size(); i++) {
-    h ^= (unsigned char)s[i];
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    h ^= static_cast<unsigned char>(s[i]);
     h *= 1099511628211ULL;
   }
   return h;
@@ -136,7 +136,7 @@ uint64 hash_range64(It first, It last) {
 }
 
 template<class Int>
-struct int_hasher {
+struct IntHasher {
   std::size_t operator()(Int x) const {
     static const uint64 RANDOM = std::chrono::steady_clock::now().time_since_epoch().count();
     return (std::size_t)mix64((uint64)x + RANDOM);
@@ -144,47 +144,47 @@ struct int_hasher {
 };
 
 template<class T>
-struct generic_hasher;
+struct GenericHasher;
 
 template<class T, bool IsInteger>
-struct scalar_hasher {
+struct ScalarHasher {
   std::size_t operator()(const T &x) const { return std::hash<T>()(x); }
 };
 
 template<class T>
-struct scalar_hasher<T, true> {
-  std::size_t operator()(T x) const { return int_hasher<T>()(x); }
+struct ScalarHasher<T, true> {
+  std::size_t operator()(T x) const { return IntHasher<T>()(x); }
 };
 
 template<class A, class B>
-struct pair_hasher {
+struct PairHasher {
   std::size_t operator()(const std::pair<A, B> &p) const {
     uint64 h = 0;
-    h = hash_combine64(h, (uint64)generic_hasher<A>()(p.first));
-    h = hash_combine64(h, (uint64)generic_hasher<B>()(p.second));
+    h = hash_combine64(h, (uint64)GenericHasher<A>()(p.first));
+    h = hash_combine64(h, (uint64)GenericHasher<B>()(p.second));
     return (std::size_t)h;
   }
 };
 
 template<class T>
-struct vector_hasher {
+struct VectorHasher {
   std::size_t operator()(const std::vector<T> &v) const {
     uint64 h = 0;
-    for (int i = 0; i < (int)v.size(); i++) {
-      h = hash_combine64(h, (uint64)generic_hasher<T>()(v[i]));
+    for (int i = 0; i < static_cast<int>(v.size()); i++) {
+      h = hash_combine64(h, (uint64)GenericHasher<T>()(v[i]));
     }
     return (std::size_t)h;
   }
 };
 
 template<class T>
-struct generic_hasher : scalar_hasher<T, std::is_integral<T>::value> {};
+struct GenericHasher : ScalarHasher<T, std::is_integral<T>::value> {};
 
 template<class A, class B>
-struct generic_hasher<std::pair<A, B>> : pair_hasher<A, B> {};
+struct GenericHasher<std::pair<A, B>> : PairHasher<A, B> {};
 
 template<class T>
-struct generic_hasher<std::vector<T>> : vector_hasher<T> {};
+struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 
 /*** Example Usage ***/
 
@@ -208,21 +208,21 @@ int main() {
   assert(hash_range32(v.begin(), v.end()) == hash_range32(v.begin(), v.end()));
   assert(hash_range64(v.begin(), v.end()) == hash_range64(v.begin(), v.end()));
 
-  unordered_map<long long, int, int_hasher<long long>> count;
+  unordered_map<long long, int, IntHasher<long long>> count;
   count[1000000000000LL] = 7;
   assert(count[1000000000000LL] == 7);
 
   typedef pair<int, int> point;
-  unordered_map<point, int, pair_hasher<int, int>> dist;
+  unordered_map<point, int, PairHasher<int, int>> dist;
   dist[point(3, 4)] = 5;
   assert(dist[point(3, 4)] == 5);
 
-  unordered_map<vector<int>, int, vector_hasher<int>> seen;
+  unordered_map<vector<int>, int, VectorHasher<int>> seen;
   seen[v] = 1;
   assert(seen[v] == 1);
 
   typedef pair<vector<int>, int> state;
-  unordered_map<state, int, generic_hasher<state>> dp;
+  unordered_map<state, int, GenericHasher<state>> dp;
   dp[state(v, 4)] = 9;
   assert(dp[state(v, 4)] == 9);
   return 0;

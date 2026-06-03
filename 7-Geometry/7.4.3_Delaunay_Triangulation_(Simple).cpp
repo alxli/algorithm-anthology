@@ -52,7 +52,8 @@ double cross(const point &a, const point &b, const point &o = point(0, 0)) {
 }
 
 int seg_intersection(
-    const point &a, const point &b, const point &c, const point &d, point *p = NULL, point *q = NULL
+    const point &a, const point &b, const point &c, const point &d, point *p = nullptr,
+    point *q = nullptr
 ) {
   static const bool TOUCH_IS_INTERSECT = false;  // false is important!
   point ab(b.x - a.x, b.y - a.y);
@@ -68,12 +69,12 @@ int seg_intersection(
       point res1 = std::max(std::min(a, b), std::min(c, d));
       point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
-        if (p != NULL) {
+        if (p != nullptr) {
           *p = res1;
         }
         return 0;  // Collinear and meeting at an endpoint.
       }
-      if (p != NULL && q != NULL) {
+      if (p != nullptr && q != nullptr) {
         *p = res1;
         *q = res2;
       }
@@ -89,7 +90,7 @@ int seg_intersection(
   bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1)) : (LT(0, t) && LT(t, 1));
   bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
-    if (p != NULL) {
+    if (p != nullptr) {
       *p = point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
@@ -97,19 +98,19 @@ int seg_intersection(
   return -1;  // Non-parallel with no intersections.
 }
 
-struct triangle {
+struct Triangle {
   point a, b, c;
 
-  triangle(const point &a, const point &b, const point &c) : a(a), b(b), c(c) {}
+  Triangle(const point &a, const point &b, const point &c) : a(a), b(b), c(c) {}
 
-  bool operator==(const triangle &t) const {
+  bool operator==(const Triangle &t) const {
     return EQ(a.x, t.a.x) && EQ(a.y, t.a.y) && EQ(b.x, t.b.x) && EQ(b.y, t.b.y) && EQ(c.x, t.c.x) &&
            EQ(c.y, t.c.y);
   }
 };
 
 template<class It>
-std::vector<triangle> delaunay_triangulation(It lo, It hi) {
+std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
   int n = hi - lo;
   std::vector<double> x, y, z;
   for (It it = lo; it != hi; ++it) {
@@ -117,7 +118,7 @@ std::vector<triangle> delaunay_triangulation(It lo, It hi) {
     y.push_back(it->y);
     z.push_back(sqnorm(*it));
   }
-  std::vector<triangle> res;
+  std::vector<Triangle> res;
   for (int i = 0; i < n - 2; i++) {
     for (int j = i + 1; j < n; j++) {
       for (int k = i + 1; k < n; k++) {
@@ -137,7 +138,7 @@ std::vector<triangle> delaunay_triangulation(It lo, It hi) {
           }
         }
         // Handle four points on a circle.
-        for (int t = 0; t < (int)res.size(); t++) {
+        for (int t = 0; t < static_cast<int>(res.size()); t++) {
           point s2[] = {res[t].a, res[t].b, res[t].c, res[t].a};
           for (int u = 0; u < 3; u++) {
             for (int v = 0; v < 3; v++) {
@@ -147,7 +148,7 @@ std::vector<triangle> delaunay_triangulation(It lo, It hi) {
             }
           }
         }
-        res.push_back(triangle(lo[i], lo[j], lo[k]));
+        res.push_back(Triangle(lo[i], lo[j], lo[k]));
       skip:;
       }
     }
@@ -167,11 +168,11 @@ int main() {
   v.push_back(point(2, 1));
   v.push_back(point(0, 0));
   v.push_back(point(-1, 3));
-  vector<triangle> t;
-  t.push_back(triangle(point(1, 3), point(1, 2), point(-1, 3)));
-  t.push_back(triangle(point(1, 3), point(2, 1), point(1, 2)));
-  t.push_back(triangle(point(1, 2), point(2, 1), point(0, 0)));
-  t.push_back(triangle(point(1, 2), point(0, 0), point(-1, 3)));
+  vector<Triangle> t;
+  t.push_back(Triangle(point(1, 3), point(1, 2), point(-1, 3)));
+  t.push_back(Triangle(point(1, 3), point(2, 1), point(1, 2)));
+  t.push_back(Triangle(point(1, 2), point(2, 1), point(0, 0)));
+  t.push_back(Triangle(point(1, 2), point(0, 0), point(-1, 3)));
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
   return 0;
 }

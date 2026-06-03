@@ -7,7 +7,7 @@ states, such as `dp[i] = a[i] + min(dp[j])` over `i - w <= j < i`.
 The queue stores candidate (`index`, `value`) pairs in monotone order. Expired indices are removed
 from the front, and dominated values are removed from the back before inserting a new candidate.
 
-- `monotone_queue<Compare>()` constructs an empty queue. Use `std::less<T>` for minimum queries and
+- `MonotoneQueue<Compare>()` constructs an empty queue. Use `std::less<T>` for minimum queries and
   `std::greater<T>` for maximum queries.
 - `push(index, value)` inserts candidate `value` at position `index`, removing dominated candidates.
 - `expire(first_valid)` removes candidates with index less than `first_valid`.
@@ -29,7 +29,7 @@ Space Complexity:
 #include <utility>
 
 template<class T, class Compare>
-class monotone_queue {
+class MonotoneQueue {
   typedef std::pair<int, T> entry;
 
   std::deque<entry> q;
@@ -64,9 +64,9 @@ int main() {
   int raw[] = {4, 2, 7, 1, 3, 6};
   vector<int> a(raw, raw + 6);
 
-  monotone_queue<int, less<int>> minq;
+  MonotoneQueue<int, less<int>> minq;
   vector<int> window_min;
-  for (int i = 0; i < (int)a.size(); i++) {
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
     minq.push(i, a[i]);
     minq.expire(i - 2);
     if (i >= 2) {
@@ -80,10 +80,10 @@ int main() {
 
   // dp[i] = a[i] + min(dp[j]) over max(0, i - 2) <= j < i.
   vector<int> dp(a.size());
-  monotone_queue<int, less<int>> best;
+  MonotoneQueue<int, less<int>> best;
   dp[0] = a[0];
   best.push(0, dp[0]);
-  for (int i = 1; i < (int)a.size(); i++) {
+  for (int i = 1; i < static_cast<int>(a.size()); i++) {
     best.expire(i - 2);
     dp[i] = a[i] + best.top().second;
     best.push(i, dp[i]);

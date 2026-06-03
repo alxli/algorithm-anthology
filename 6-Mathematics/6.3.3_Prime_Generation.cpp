@@ -85,13 +85,13 @@ int main() {
 
   start = clock();
   p = sieve(pmax);
-  delta = (double)(clock() - start) / CLOCKS_PER_SEC;
+  delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve(n=" << pmax << "): " << delta << "s" << endl;
 
   int l = 1000000000, h = 1005000000;
   start = clock();
   p = sieve(l, h);
-  delta = (double)(clock() - start) / CLOCKS_PER_SEC;
+  delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve([" << l << ", " << h << "]): " << delta << "s" << endl;
   return 0;
 }

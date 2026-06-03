@@ -12,7 +12,7 @@ decomposition with row partial pivoting.
 - `det(a)` returns the determinant of an $n$ by $n$ matrix `a` using Gaussian elimination.
 - `invert(a)` assigns the $n$ by $n$ matrix `a` to its inverse (if it exists), returning a reference
   to the modified argument itself. If `a` is not invertible, then its assigned values after the
-  function call will be undefined (+/-Inf or +/-NaN).
+  function call will be undefined (`+/-Inf` or `+/-NaN`).
 
 Time Complexity:
 - O(n!) per call to `det_naive()`, where $n$ is the dimension of the matrix.

@@ -27,12 +27,12 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
-struct line {
+struct Line {
   double a, b, c;
 
-  line() : a(0), b(0), c(0) {}  // Invalid or uninitialized line.
+  Line() : a(0), b(0), c(0) {}  // Invalid or uninitialized line.
 
-  line(double a, double b, double c) {
+  Line(double a, double b, double c) {
     if (!EQ(b, 0)) {
       this->a = a / b;
       this->c = c / b;
@@ -45,14 +45,14 @@ struct line {
   }
 
   template<class Point>
-  line(double slope, const Point &p) {
+  Line(double slope, const Point &p) {
     a = -slope;
     b = 1;
     c = slope * p.x - p.y;
   }
 
   template<class Point>
-  line(const Point &p, const Point &q) : a(0), b(0), c(0) {
+  Line(const Point &p, const Point &q) : a(0), b(0), c(0) {
     if (EQ(p.x, q.x)) {
       if (NE(p.y, q.y)) {  // Vertical line.
         a = 1;
@@ -66,8 +66,8 @@ struct line {
     }
   }
 
-  bool operator==(const line &l) const { return EQ(a, l.a) && EQ(b, l.b) && EQ(c, l.c); }
-  bool operator!=(const line &l) const { return !(*this == l); }
+  bool operator==(const Line &l) const { return EQ(a, l.a) && EQ(b, l.b) && EQ(c, l.c); }
+  bool operator!=(const Line &l) const { return !(*this == l); }
 
   // Returns whether the line is initialized and normalized.
   bool valid() const {
@@ -81,8 +81,8 @@ struct line {
   bool vertical() const { return valid() && EQ(b, 0); }
   double slope() const { return (!valid() || EQ(b, 0)) ? M_NAN : -a; }
 
-  // Solve for x at a given y. If the line is horizontal, then either -INF, INF,
-  // or NAN is returned based on whether y is below, above, or on the line.
+  // Solve for x at a given y. If the line is horizontal, then either -INF, INF, or NaN is returned
+  // based on whether y is below, above, or on the line.
   double x(double y) const {
     if (!valid() || EQ(a, 0)) {
       return M_NAN;  // Invalid or horizontal line.
@@ -90,8 +90,8 @@ struct line {
     return (-c - b * y) / a;
   }
 
-  // Solve for y at a given x. If the line is vertical, then either -INF, INF,
-  // or NAN is returned based on whether x is left of, right of, or on the line.
+  // Solve for y at a given x. If the line is vertical, then either -INF, INF, or NaN is returned
+  // based on whether x is left of, right of, or on the line.
   double y(double x) const {
     if (!valid() || EQ(b, 0)) {
       return M_NAN;  // Invalid or vertical line.
@@ -104,22 +104,22 @@ struct line {
     return EQ(a * p.x + b * p.y + c, 0);
   }
 
-  bool is_parallel(const line &l) const { return EQ(a, l.a) && EQ(b, l.b); }
-  bool is_perpendicular(const line &l) const { return EQ(-a * l.a, b * l.b); }
+  bool is_parallel(const Line &l) const { return EQ(a, l.a) && EQ(b, l.b); }
+  bool is_perpendicular(const Line &l) const { return EQ(-a * l.a, b * l.b); }
 
   // Return the parallel line passing through point p.
   template<class Point>
-  line parallel(const Point &p) const {
-    return line(a, b, -a * p.x - b * p.y);
+  Line parallel(const Point &p) const {
+    return Line(a, b, -a * p.x - b * p.y);
   }
 
   // Return the perpendicular line passing through point p.
   template<class Point>
-  line perpendicular(const Point &p) const {
-    return line(-b, a, b * p.x - a * p.y);
+  Line perpendicular(const Point &p) const {
+    return Line(-b, a, b * p.x - a * p.y);
   }
 
-  friend std::ostream &operator<<(std::ostream &out, const line &l) {
+  friend std::ostream &operator<<(std::ostream &out, const Line &l) {
     return out << (fabs(l.a) < EPS ? 0 : l.a) << "x" << std::showpos << (fabs(l.b) < EPS ? 0 : l.b)
                << "y" << (fabs(l.c) < EPS ? 0 : l.c) << "=0" << std::noshowpos;
   }
@@ -129,18 +129,18 @@ struct line {
 
 #include <cassert>
 
-struct point {
+struct Point {
   double x, y;
-  point(double x, double y) : x(x), y(y) {}
+  Point(double x, double y) : x(x), y(y) {}
 };
 
 int main() {
-  line l(2, -5, -8);
-  line para = line(2, -5, -8).parallel(point(-6, -2));
-  line perp = line(2, -5, -8).perpendicular(point(-6, -2));
+  Line l(2, -5, -8);
+  Line para = Line(2, -5, -8).parallel(Point(-6, -2));
+  Line perp = Line(2, -5, -8).perpendicular(Point(-6, -2));
   assert(l.is_parallel(para) && l.is_perpendicular(perp));
   assert(l.slope() == 0.4);
-  assert(para == line(-0.4, 1, -0.4));  // -0.4x + y - 0.4 = 0.
-  assert(perp == line(2.5, 1, 17));     // 2.5x + y + 17 = 0.
+  assert(para == Line(-0.4, 1, -0.4));  // -0.4x + y - 0.4 = 0.
+  assert(perp == Line(2.5, 1, 17));     // 2.5x + y + 17 = 0.
   return 0;
 }

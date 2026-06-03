@@ -5,7 +5,7 @@ most common array preprocessing tools, and also appears as a building block for 
 difference arrays, and two-dimensional grids.
 
 - `prefix_sums(a)` returns array `pref` with `pref[0] = 0` and `pref[i + 1] = a[0] + ... + a[i]`.
-- `range_sum(pref, l, r)` returns the sum of the half-open range `[l, r)`.
+- `range_sum(pref, lo, hi)` returns the sum of the half-open range `[l, r)`.
 - `prefix_sums_2d(a)` returns a two-dimensional prefix sum table for matrix `a`.
 - `rectangle_sum(pref, r1, c1, r2, c2)` returns the sum of rows `[r1, r2)` and columns `[c1, c2)`.
 
@@ -24,14 +24,14 @@ Space Complexity:
 
 std::vector<long long> prefix_sums(const std::vector<int> &a) {
   std::vector<long long> pref(a.size() + 1, 0);
-  for (int i = 0; i < (int)a.size(); i++) {
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
     pref[i + 1] = pref[i] + a[i];
   }
   return pref;
 }
 
-long long range_sum(const std::vector<long long> &pref, int l, int r) {
-  return pref[r] - pref[l];
+long long range_sum(const std::vector<long long> &pref, int lo, int hi) {
+  return pref[hi] - pref[lo];
 }
 
 std::vector<std::vector<long long>> prefix_sums_2d(const std::vector<std::vector<int>> &a) {

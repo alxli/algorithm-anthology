@@ -62,7 +62,7 @@ int find_path(int nodes, int root) {
   while (!q.empty()) {
     int u = q.front();
     q.pop();
-    for (int j = 0; j < (int)adj[u].size(); j++) {
+    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
       int v = adj[u][j];
       if (base[u] == base[v] || match[u] == v) {
         continue;

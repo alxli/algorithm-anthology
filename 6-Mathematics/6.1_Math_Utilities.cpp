@@ -266,7 +266,7 @@ double tgamma_(double x) {
     if (arg_was_less_than_one) {
       y += 1;
     } else {
-      n = (int)floor(y) - 1;
+      n = static_cast<int>(floor(y)) - 1;
       y -= n;
     }
     static const double p[] = {-1.71618513886549492533811e+0, 2.47656508055759199108314e+1,
@@ -328,7 +328,7 @@ Base Conversion:
 
 std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
   unsigned long long x = 0, power = 1;
-  for (int i = 0; i < (int)d.size(); i++) {
+  for (int i = 0; i < static_cast<int>(d.size()); i++) {
     x += d[i] * power;
     power *= a;
   }
@@ -360,6 +360,8 @@ std::string to_roman(unsigned int x) {
 }
 
 /*** Example Usage ***/
+
+using namespace std;
 
 #include <cassert>
 #include <iostream>

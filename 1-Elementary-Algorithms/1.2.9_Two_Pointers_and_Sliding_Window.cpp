@@ -27,24 +27,24 @@ Space Complexity:
 #include <vector>
 
 int min_length_at_least(const std::vector<int> &a, long long target) {
-  int best = (int)a.size() + 1;
+  int best = static_cast<int>(a.size()) + 1;
   long long sum = 0;
-  for (int l = 0, r = 0; r < (int)a.size(); r++) {
+  for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
     sum += a[r];
     while (sum >= target) {
       best = std::min(best, r - l + 1);
       sum -= a[l++];
     }
   }
-  return best == (int)a.size() + 1 ? -1 : best;
+  return best == static_cast<int>(a.size()) + 1 ? -1 : best;
 }
 
 int longest_at_most_k_distinct(const std::vector<int> &a, int k) {
   std::map<int, int> count;
   int best = 0;
-  for (int l = 0, r = 0; r < (int)a.size(); r++) {
+  for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
     count[a[r]]++;
-    while ((int)count.size() > k) {
+    while (static_cast<int>(count.size()) > k) {
       if (--count[a[l]] == 0) {
         count.erase(a[l]);
       }

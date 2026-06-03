@@ -22,9 +22,9 @@ The default code below defines updates that "set" the chosen array index to a ne
 possible update operation is "increment", in which case `join_value_with_delta(v, d, len)` should be
 defined to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined to return $d1 + d2$.
 
-- `segment_tree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
+- `SegTree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
   and all values initialized to `v`.
-- `segment_tree(lo, hi)` constructs an array from two random-access iterators as a range `[lo, hi)`,
+- `SegTree(lo, hi)` constructs an array from two random-access iterators as a range `[lo, hi)`,
   initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`, where `i` is between 0 and `size() - 1`.
@@ -51,7 +51,7 @@ Space Complexity:
 #include <cstddef>
 
 template<class T>
-class segment_tree {
+class SegTree {
   static const int MAXN = 1000000000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
@@ -62,26 +62,26 @@ class segment_tree {
     return d2;  // For "set" updates, the more recent delta prevails.
   }
 
-  struct node_t {
+  struct Node {
     T value, delta;
     bool pending;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const T &v) : value(v), pending(false), left(NULL), right(NULL) {}
+    Node(const T &v) : value(v), pending(false), left(nullptr), right(nullptr) {}
   } *root;
 
   T init;
 
-  void update_delta(node_t *&n, const T &d, int len) {
-    if (n == NULL) {
-      n = new node_t(join_segment(init, len));
+  void update_delta(Node *&n, const T &d, int len) {
+    if (n == nullptr) {
+      n = new Node(join_segment(init, len));
     }
     n->delta = n->pending ? join_deltas(n->delta, d) : d;
     n->pending = true;
   }
 
-  void push_delta(node_t *n, int lo, int hi) {
-    if (n == NULL) {
+  void push_delta(Node *n, int lo, int hi) {
+    if (n == nullptr) {
       return;
     }
     if (n->pending) {
@@ -95,8 +95,8 @@ class segment_tree {
     n->pending = false;
   }
 
-  T query(node_t *n, int lo, int hi, int tgt_lo, int tgt_hi) {
-    if (n == NULL) {
+  T query(Node *n, int lo, int hi, int tgt_lo, int tgt_hi) {
+    if (n == nullptr) {
       return join_segment(init, hi - lo + 1);
     }
     push_delta(n, lo, hi);
@@ -116,9 +116,9 @@ class segment_tree {
     return query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
   }
 
-  void update(node_t *&n, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
-    if (n == NULL) {
-      n = new node_t(join_segment(init, hi - lo + 1));
+  void update(Node *&n, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
+    if (n == nullptr) {
+      n = new Node(join_segment(init, hi - lo + 1));
     }
     push_delta(n, lo, hi);
     if (hi < tgt_lo || lo > tgt_hi) {
@@ -136,8 +136,8 @@ class segment_tree {
     n->value = join_values(n->left->value, n->right->value);
   }
 
-  void clean_up(node_t *n) {
-    if (n != NULL) {
+  void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -145,9 +145,9 @@ class segment_tree {
   }
 
  public:
-  segment_tree(const T &v = T()) : root(NULL), init(v) {}
+  SegTree(const T &v = T()) : root(nullptr), init(v) {}
 
-  ~segment_tree() { clean_up(root); }
+  ~SegTree() { clean_up(root); }
   T at(int i) { return query(i, i); }
   T query(int lo, int hi) { return query(root, 0, MAXN, lo, hi); }
   void update(int i, const T &d) { return update(i, i, d); }
@@ -166,7 +166,7 @@ Values: 5 5 5 1 5
 using namespace std;
 
 int main() {
-  segment_tree<int> t(0);
+  SegTree<int> t(0);
   t.update(0, 6);
   t.update(1, -2);
   t.update(2, 4);

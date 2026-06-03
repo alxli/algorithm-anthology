@@ -46,10 +46,11 @@ void add_line(long long m, long long b) {
 }
 
 long long query(long long x) {
-  if (ptr >= (int)M.size()) {
-    ptr = (int)M.size() - 1;
+  if (ptr >= static_cast<int>(M.size())) {
+    ptr = static_cast<int>(M.size()) - 1;
   }
-  while (ptr + 1 < (int)M.size() && M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
+  while (ptr + 1 < static_cast<int>(M.size()) &&
+         M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
     ptr++;
   }
   return M[ptr] * x + B[ptr];

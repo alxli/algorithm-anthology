@@ -3,8 +3,8 @@
 Perform simple arithmetic operations on arbitrary precision big integers whose digits are internally
 represented as an `std::string` in little-endian order.
 
-- `bigint(n)` constructs a big integer from a long long (default: 0).
-- `bigint(s)` constructs a big integer from a string `s`, which must strictly consist of a sequence
+- `BigInt(n)` constructs a big integer from a long long (default: 0).
+- `BigInt(s)` constructs a big integer from a string `s`, which must strictly consist of a sequence
   of numeric digits, optionally preceded by a minus sign.
 - `str()` returns the string representation of the big integer.
 - `comp(a, b)` returns $-1$, $0$, or $1$ depending on whether the big integers `a` and `b` compare
@@ -32,7 +32,7 @@ Space Complexity:
 #include <stdexcept>
 #include <string>
 
-class bigint {
+class BigInt {
   std::string digits;
   int sign;
 
@@ -57,7 +57,7 @@ class bigint {
     if (a.size() != b.size()) {
       return a.size() < b.size() ? -asign : asign;
     }
-    for (int i = (int)a.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(a.size()) - 1; i >= 0; i--) {
       if (a[i] != b[i]) {
         return a[i] < b[i] ? -asign : asign;
       }
@@ -65,19 +65,19 @@ class bigint {
     return 0;
   }
 
-  static bigint add(const std::string &a, const std::string &b, int asign, int bsign) {
+  static BigInt add(const std::string &a, const std::string &b, int asign, int bsign) {
     if (asign != bsign) {
       return (asign == 1) ? sub(a, b, asign, 1) : sub(b, a, bsign, 1);
     }
-    bigint res;
+    BigInt res;
     res.sign = asign;
     res.digits.resize(std::max(a.size(), b.size()) + 1, '0');
-    for (int i = 0, carry = 0; i < (int)res.digits.size(); i++) {
+    for (int i = 0, carry = 0; i < static_cast<int>(res.digits.size()); i++) {
       int d = carry;
-      if (i < (int)a.size()) {
+      if (i < static_cast<int>(a.size())) {
         d += a[i] - '0';
       }
-      if (i < (int)b.size()) {
+      if (i < static_cast<int>(b.size())) {
         d += b[i] - '0';
       }
       res.digits[i] = '0' + (d % 10);
@@ -87,19 +87,19 @@ class bigint {
     return res;
   }
 
-  static bigint sub(const std::string &a, const std::string &b, int asign, int bsign) {
+  static BigInt sub(const std::string &a, const std::string &b, int asign, int bsign) {
     if (asign == -1 || bsign == -1) {
       return add(a, b, asign, -bsign);
     }
-    bigint res;
+    BigInt res;
     if (comp(a, b, asign, bsign) < 0) {
       res = sub(b, a, bsign, asign);
       res.sign = -1;
       return res;
     }
     res.digits.assign(a.size(), '0');
-    for (int i = 0, borrow = 0; i < (int)res.digits.size(); i++) {
-      int d = (i < (int)b.size() ? a[i] - b[i] : a[i] - '0') - borrow;
+    for (int i = 0, borrow = 0; i < static_cast<int>(res.digits.size()); i++) {
+      int d = (i < static_cast<int>(b.size()) ? a[i] - b[i] : a[i] - '0') - borrow;
       if (a[i] > '0') {
         borrow = 0;
       }
@@ -114,7 +114,7 @@ class bigint {
   }
 
  public:
-  bigint(long long n = 0) {
+  BigInt(long long n = 0) {
     sign = (n < 0) ? -1 : 1;
     if (n == 0) {
       digits = "0";
@@ -126,9 +126,9 @@ class bigint {
     normalize();
   }
 
-  bigint(const std::string &s) {
+  BigInt(const std::string &s) {
     if (s.empty() || (s[0] == '-' && s.size() == 1)) {
-      throw std::runtime_error("Invalid string format to construct bigint.");
+      throw std::runtime_error("Invalid string format to construct BigInt.");
     }
     digits.assign(s.rbegin(), s.rend());
     if (s[0] == '-') {
@@ -138,7 +138,7 @@ class bigint {
       sign = 1;
     }
     if (digits.find_first_not_of("0123456789") != std::string::npos) {
-      throw std::runtime_error("Invalid string format to construct bigint.");
+      throw std::runtime_error("Invalid string format to construct BigInt.");
     }
     normalize();
   }
@@ -147,21 +147,21 @@ class bigint {
     return (sign < 0 ? "-" : "") + std::string(digits.rbegin(), digits.rend());
   }
 
-  friend int comp(const bigint &a, const bigint &b) {
+  friend int comp(const BigInt &a, const BigInt &b) {
     return comp(a.digits, b.digits, a.sign, b.sign);
   }
 
-  friend bigint add(const bigint &a, const bigint &b) {
+  friend BigInt add(const BigInt &a, const BigInt &b) {
     return add(a.digits, b.digits, a.sign, b.sign);
   }
 
-  friend bigint sub(const bigint &a, const bigint &b) {
+  friend BigInt sub(const BigInt &a, const BigInt &b) {
     return sub(a.digits, b.digits, a.sign, b.sign);
   }
 
-  friend bigint mul(const bigint &a, const bigint &b) {
-    bigint res, row(a);
-    for (int i = 0; i < (int)b.digits.size(); i++) {
+  friend BigInt mul(const BigInt &a, const BigInt &b) {
+    BigInt res, row(a);
+    for (int i = 0; i < static_cast<int>(b.digits.size()); i++) {
       for (int j = 0; j < (b.digits[i] - '0'); j++) {
         res = add(res.digits, row.digits, res.sign, row.sign);
       }
@@ -174,10 +174,10 @@ class bigint {
     return res;
   }
 
-  friend bigint div(const bigint &a, const bigint &b) {
-    bigint res, row;
+  friend BigInt div(const BigInt &a, const BigInt &b) {
+    BigInt res, row;
     res.digits.assign(a.digits.size(), '0');
-    for (int i = (int)a.digits.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(a.digits.size()) - 1; i >= 0; i--) {
       row.digits.insert(row.digits.begin(), a.digits[i]);
       while (comp(row.digits, b.digits, row.sign, 1) > 0) {
         res.digits[i]++;
@@ -195,7 +195,7 @@ class bigint {
 #include <cassert>
 
 int main() {
-  bigint a("-9899819294989142124"), b("12398124981294214");
+  BigInt a("-9899819294989142124"), b("12398124981294214");
   assert(add(a, b).to_string() == "-9887421170007847910");
   assert(sub(a, b).to_string() == "-9912217419970436338");
   assert(mul(a, b).to_string() == "-122739196911503356525379735104870536");

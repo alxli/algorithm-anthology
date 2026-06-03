@@ -25,12 +25,12 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-struct two_sat {
+struct TwoSAT {
   int variables;
   std::vector<std::vector<int>> graph, reverse_graph;
   std::vector<int> order, component, answer;
 
-  two_sat(int n = 0) { init(n); }
+  TwoSAT(int n = 0) { init(n); }
 
   void init(int n) {
     variables = n;
@@ -57,7 +57,7 @@ struct two_sat {
 
   void dfs_order(int u, std::vector<bool> &visited) {
     visited[u] = true;
-    for (int i = 0; i < (int)graph[u].size(); i++) {
+    for (int i = 0; i < static_cast<int>(graph[u].size()); i++) {
       int v = graph[u][i];
       if (!visited[v]) {
         dfs_order(v, visited);
@@ -68,7 +68,7 @@ struct two_sat {
 
   void dfs_component(int u, int id) {
     component[u] = id;
-    for (int i = 0; i < (int)reverse_graph[u].size(); i++) {
+    for (int i = 0; i < static_cast<int>(reverse_graph[u].size()); i++) {
       int v = reverse_graph[u][i];
       if (component[v] == -1) {
         dfs_component(v, id);
@@ -87,7 +87,7 @@ struct two_sat {
     }
     std::reverse(order.begin(), order.end());
     int id = 0;
-    for (int i = 0; i < (int)order.size(); i++) {
+    for (int i = 0; i < static_cast<int>(order.size()); i++) {
       if (component[order[i]] == -1) {
         dfs_component(order[i], id++);
       }
@@ -108,7 +108,7 @@ struct two_sat {
 using namespace std;
 
 int main() {
-  two_sat solver(3);
+  TwoSAT solver(3);
   int x0 = solver.literal(0, true);
   int not_x0 = solver.literal(0, false);
   int x1 = solver.literal(1, true);

@@ -8,7 +8,7 @@ Cartesian trees connect arrays, stacks, range minimum queries, treaps, and large
 problems. Equal values are broken by position, so earlier equal values become ancestors of later
 equal values.
 
-- `cartesian_tree(a)` constructs the tree for array `a`.
+- `CartesianTree(a)` constructs the tree for array `a`.
 - `root` stores the root index.
 - `parent[i]`, `left[i]`, and `right[i]` store neighboring node indices, or `-1` if absent.
 
@@ -22,14 +22,14 @@ Space Complexity:
 
 #include <vector>
 
-struct cartesian_tree {
+struct CartesianTree {
   int root;
   std::vector<int> parent, left, right;
 
-  explicit cartesian_tree(const std::vector<int> &a)
+  explicit CartesianTree(const std::vector<int> &a)
       : root(-1), parent(a.size(), -1), left(a.size(), -1), right(a.size(), -1) {
     std::vector<int> st;
-    for (int i = 0; i < (int)a.size(); i++) {
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       int last = -1;
       while (!st.empty() && a[i] < a[st.back()]) {
         last = st.back();
@@ -54,7 +54,7 @@ struct cartesian_tree {
 #include <cassert>
 using namespace std;
 
-void inorder(const cartesian_tree &t, int u, vector<int> *order) {
+void inorder(const CartesianTree &t, int u, vector<int> *order) {
   if (u == -1) {
     return;
   }
@@ -66,7 +66,7 @@ void inorder(const cartesian_tree &t, int u, vector<int> *order) {
 int main() {
   int raw[] = {3, 2, 6, 1, 9};
   vector<int> a(raw, raw + 5);
-  cartesian_tree t(a);
+  CartesianTree t(a);
   assert(t.root == 3);
   assert(t.parent[1] == 3);
   assert(t.parent[4] == 3);

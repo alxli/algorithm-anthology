@@ -12,9 +12,9 @@ and should not be used as proof of equality when exact verification is required.
 By default, each sequence value is cast to `uint64` and mixed. For non-integer element types, pass a
 custom value hasher that maps each element to a stable nonzero value in `[1, HASH_MOD)`.
 
-- `rolling_hash<T>(first, last)` constructs prefix hashes for any iterator range of values accepted
+- `RollingHash<T>(first, last)` constructs prefix hashes for any iterator range of values accepted
   by the value hasher.
-- `rolling_hash<T>(v)` constructs prefix hashes for vector `v`.
+- `RollingHash<T>(v)` constructs prefix hashes for vector `v`.
 - `get(l, r)` returns the hash of the half-open subsequence `[l, r)`.
 - `hash(first, last)` returns the hash of an iterator range.
 - `hash(v)` returns the hash of vector `v`.
@@ -69,18 +69,18 @@ uint64 hash_mix(uint64 x) {
 }
 
 template<class T>
-struct rolling_value_hasher {
+struct RollingValueHasher {
   uint64 operator()(const T &x) const { return hash_mix((uint64)x) % (HASH_MOD - 1) + 1; }
 };
 
-template<class T, class ValueHasher = rolling_value_hasher<T>>
-class rolling_hash {
+template<class T, class ValueHasher = RollingValueHasher<T>>
+class RollingHash {
   static std::vector<uint64> pow_base;
   std::vector<uint64> pref;
   ValueHasher value_hasher;
 
   static void ensure_powers(int n) {
-    while ((int)pow_base.size() <= n) {
+    while (static_cast<int>(pow_base.size()) <= n) {
       pow_base.push_back(hash_mul(pow_base.back(), HASH_BASE));
     }
   }
@@ -96,34 +96,35 @@ class rolling_hash {
   }
 
  public:
-  explicit rolling_hash(const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
+  explicit RollingHash(const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
     ensure_powers(0);
     pref.push_back(0);
   }
 
   template<class It>
-  rolling_hash(It first, It last, const ValueHasher &hasher = ValueHasher())
-      : value_hasher(hasher) {
+  RollingHash(It first, It last, const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
     build(first, last);
   }
 
-  explicit rolling_hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher())
+  explicit RollingHash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher())
       : value_hasher(hasher) {
     build(v.begin(), v.end());
   }
 
-  int size() const { return (int)pref.size() - 1; }
+  int size() const { return static_cast<int>(pref.size()) - 1; }
 
-  uint64 get(int l, int r) const { return hash_sub(pref[r], hash_mul(pref[l], pow_base[r - l])); }
+  uint64 get(int lo, int hi) const {
+    return hash_sub(pref[hi], hash_mul(pref[lo], pow_base[hi - lo]));
+  }
 
   template<class It>
   static uint64 hash(It first, It last, const ValueHasher &hasher = ValueHasher()) {
-    rolling_hash<T, ValueHasher> h(first, last, hasher);
+    RollingHash<T, ValueHasher> h(first, last, hasher);
     return h.get(0, h.size());
   }
 
   static uint64 hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher()) {
-    rolling_hash<T, ValueHasher> h(v, hasher);
+    RollingHash<T, ValueHasher> h(v, hasher);
     return h.get(0, h.size());
   }
 
@@ -134,7 +135,7 @@ class rolling_hash {
 };
 
 template<class T, class ValueHasher>
-std::vector<uint64> rolling_hash<T, ValueHasher>::pow_base(1, 1);
+std::vector<uint64> RollingHash<T, ValueHasher>::pow_base(1, 1);
 
 /*** Example Usage ***/
 
@@ -143,7 +144,7 @@ using namespace std;
 
 typedef pair<int, int> point;
 
-struct point_hasher {
+struct PointHasher {
   uint64 operator()(const point &p) const {
     return hash_mix((uint64)p.first * 1000003ULL + (uint64)p.second) % (HASH_MOD - 1) + 1;
   }
@@ -151,17 +152,17 @@ struct point_hasher {
 
 int main() {
   string s = "abracadabra";
-  rolling_hash<char> hs(s.begin(), s.end());
+  RollingHash<char> hs(s.begin(), s.end());
   assert(hs.get(0, 4) == hs.get(7, 11));  // "abra" == "abra"
   assert(hs.get(0, 4) != hs.get(3, 7));   // "abra" != "acad"
 
   string a = "abc", b = "def";
-  uint64 ab = rolling_hash<char>::concat(
-      rolling_hash<char>::hash(a.begin(), a.end()), rolling_hash<char>::hash(b.begin(), b.end()),
+  uint64 ab = RollingHash<char>::concat(
+      RollingHash<char>::hash(a.begin(), a.end()), RollingHash<char>::hash(b.begin(), b.end()),
       b.size()
   );
   string c = a + b;
-  assert(ab == rolling_hash<char>::hash(c.begin(), c.end()));
+  assert(ab == RollingHash<char>::hash(c.begin(), c.end()));
 
   vector<int> v;
   v.push_back(1);
@@ -169,14 +170,14 @@ int main() {
   v.push_back(3);
   v.push_back(1);
   v.push_back(2);
-  rolling_hash<int> hv(v);
+  RollingHash<int> hv(v);
   assert(hv.get(0, 2) == hv.get(3, 5));  // [1, 2] == [1, 2]
-  assert(hv.get(0, 3) == rolling_hash<int>::hash(v.begin(), v.begin() + 3));
+  assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
   vector<point> poly;
   poly.push_back(point(1, 2));
   poly.push_back(point(3, 4));
-  rolling_hash<point, point_hasher> hp(poly);
-  assert((hp.get(0, 2) == rolling_hash<point, point_hasher>::hash(poly)));
+  RollingHash<point, PointHasher> hp(poly);
+  assert((hp.get(0, 2) == RollingHash<point, PointHasher>::hash(poly)));
   return 0;
 }

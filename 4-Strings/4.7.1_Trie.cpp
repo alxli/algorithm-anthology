@@ -4,7 +4,7 @@ Maintain a map of strings to values using an ordered tree data structure. Each n
 character, and each inserted string corresponds to a path from the root to a node that is flagged as
 a terminal node.
 
-- `trie()` constructs an empty map.
+- `Trie()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(s, v)` adds an entry with string key `s` and value `v` to the map, returning `true` if a
@@ -12,7 +12,7 @@ a terminal node.
   and the old value associated with the string key is preserved).
 - `erase(s)` removes the entry with string key `s` from the map, returning `true` if the removal was
   successful or `false` if the string to be removed was not found.
-- `find(s)` returns a pointer to a const value associated with string key `s`, or `NULL` if the key
+- `find(s)` returns a pointer to a const value associated with string key `s`, or `nullptr` if the key
   was not found.
 - `walk(f)` calls the function `f(s, v)` on each entry of the map, in lexicographically ascending
   order of the string keys.
@@ -28,7 +28,7 @@ Time Complexity:
 - O(1) per call to all other operations.
 
 Space Complexity:
-- O(l) for storage of the trie, where $l$ is the total length of string keys that are currently in
+- O(l) for storage of the Trie, where $l$ is the total length of string keys that are currently in
   the map.
 - O(n) auxiliary stack space for construction, destruction, `walk()`, where $n$ is the maximum
   length of any string that has been inserted so far.
@@ -44,19 +44,19 @@ Space Complexity:
 using std::string;
 
 template<class V>
-class trie {
-  struct node_t {
+class Trie {
+  struct Node {
     V value;
     bool is_terminal;
-    std::map<char, node_t *> children;
+    std::map<char, Node *> children;
 
-    node_t() : is_terminal(false) {}
+    Node() : is_terminal(false) {}
   } *root;
 
-  typedef typename std::map<char, node_t *>::iterator cit;
+  typedef typename std::map<char, Node *>::iterator cit;
 
-  static bool erase(node_t *n, const string &s, int i) {
-    if (i == (int)s.size()) {
+  static bool erase(Node *n, const string &s, int i) {
+    if (i == static_cast<int>(s.size())) {
       if (!n->is_terminal) {
         return false;
       }
@@ -75,7 +75,7 @@ class trie {
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, string &s, KVFunction f) {
+  static void walk(Node *n, string &s, KVFunction f) {
     if (n->is_terminal) {
       f(s, n->value);
     }
@@ -86,7 +86,7 @@ class trie {
     }
   }
 
-  static void clean_up(node_t *n) {
+  static void clean_up(Node *n) {
     for (cit it = n->children.begin(); it != n->children.end(); ++it) {
       clean_up(it->second);
     }
@@ -96,18 +96,18 @@ class trie {
   int num_terminals;
 
  public:
-  trie() : root(new node_t()), num_terminals(0) {}
+  Trie() : root(new Node()), num_terminals(0) {}
 
-  ~trie() { clean_up(root); }
+  ~Trie() { clean_up(root); }
   int size() const { return num_terminals; }
   bool empty() const { return num_terminals == 0; }
 
   bool insert(const string &s, const V &v) {
-    node_t *n = root;
-    for (int i = 0; i < (int)s.size(); i++) {
+    Node *n = root;
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       cit it = n->children.find(s[i]);
       if (it == n->children.end()) {
-        n->children[s[i]] = new node_t();
+        n->children[s[i]] = new Node();
       }
       n = n->children[s[i]];
     }
@@ -129,15 +129,15 @@ class trie {
   }
 
   const V *find(const string &s) const {
-    node_t *n = root;
-    for (int i = 0; i < (int)s.size(); i++) {
+    Node *n = root;
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       cit it = n->children.find(s[i]);
       if (it == n->children.end()) {
-        return NULL;
+        return nullptr;
       }
       n = it->second;
     }
-    return n->is_terminal ? &(n->value) : NULL;
+    return n->is_terminal ? &(n->value) : nullptr;
   }
 
   template<class KVFunction>
@@ -171,7 +171,7 @@ void print_entry(const string &k, int v) {
 
 int main() {
   string s[9] = {"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
-  trie<int> t;
+  Trie<int> t;
   assert(t.empty());
   for (int i = 0; i < 9; i++) {
     assert(t.insert(s[i], i));
@@ -185,8 +185,8 @@ int main() {
   assert(*t.find("ten") == 5);
   assert(t.erase("tea"));
   assert(t.size() == 8);
-  assert(t.find("tea") == NULL);
+  assert(t.find("tea") == nullptr);
   assert(t.erase(""));
-  assert(t.find("") == NULL);
+  assert(t.find("") == nullptr);
   return 0;
 }

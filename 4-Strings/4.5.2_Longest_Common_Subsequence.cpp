@@ -88,7 +88,8 @@ void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
   std::vector<int> rev = lcs_len(rlo1, rmid1, rlo2, rhi2);
   It mid2 = lo2;
   int maxlen = -1;
-  for (int i = 0, j = (int)rev.size() - 1; i < (int)fwd.size(); i++, j--) {
+  for (int i = 0, j = static_cast<int>(rev.size()) - 1; i < static_cast<int>(fwd.size());
+       i++, j--) {
     if (fwd[i] + rev[j] > maxlen) {
       maxlen = fwd[i] + rev[j];
       mid2 = lo2 + i;

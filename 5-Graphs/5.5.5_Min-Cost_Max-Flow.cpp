@@ -19,27 +19,28 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <climits>
 #include <queue>
 #include <utility>
 #include <vector>
 
-struct edge {
+struct Edge {
   int v, rev, cap, cost;
-  edge(int v_, int rev_, int cap_, int cost_) : v(v_), rev(rev_), cap(cap_), cost(cost_) {}
+  Edge(int v_, int rev_, int cap_, int cost_) : v(v_), rev(rev_), cap(cap_), cost(cost_) {}
 };
 
-const int MCMF_INF = 0x3f3f3f3f;
+const int MCMF_INF = INT_MAX / 2;
 
-struct min_cost_max_flow {
-  std::vector<std::vector<edge>> adj;
+struct MinCostMaxFlow {
+  std::vector<std::vector<Edge>> adj;
 
-  min_cost_max_flow(int nodes = 0) { init(nodes); }
+  MinCostMaxFlow(int nodes = 0) { init(nodes); }
 
-  void init(int nodes) { adj.assign(nodes, std::vector<edge>()); }
+  void init(int nodes) { adj.assign(nodes, std::vector<Edge>()); }
 
   void add_edge(int u, int v, int cap, int cost) {
-    adj[u].push_back(edge(v, (int)adj[v].size(), cap, cost));
-    adj[v].push_back(edge(u, (int)adj[u].size() - 1, 0, -cost));
+    adj[u].push_back(Edge(v, static_cast<int>(adj[v].size()), cap, cost));
+    adj[v].push_back(Edge(u, static_cast<int>(adj[u].size()) - 1, 0, -cost));
   }
 
   std::pair<int, int> min_cost_flow(int source, int sink, int target_flow) {
@@ -57,8 +58,8 @@ struct min_cost_max_flow {
         int u = q.front();
         q.pop();
         in_queue[u] = false;
-        for (int i = 0; i < (int)adj[u].size(); i++) {
-          edge &e = adj[u][i];
+        for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
+          Edge &e = adj[u][i];
           if (e.cap > 0 && dist[e.v] > dist[u] + e.cost) {
             dist[e.v] = dist[u] + e.cost;
             parent_node[e.v] = u;
@@ -78,7 +79,7 @@ struct min_cost_max_flow {
         aug = std::min(aug, adj[parent_node[v]][parent_edge[v]].cap);
       }
       for (int v = sink; v != source; v = parent_node[v]) {
-        edge &e = adj[parent_node[v]][parent_edge[v]];
+        Edge &e = adj[parent_node[v]][parent_edge[v]];
         e.cap -= aug;
         adj[v][e.rev].cap += aug;
         cost += aug * e.cost;
@@ -95,7 +96,7 @@ struct min_cost_max_flow {
 using namespace std;
 
 int main() {
-  min_cost_max_flow graph(4);
+  MinCostMaxFlow graph(4);
   graph.add_edge(0, 1, 2, 1);
   graph.add_edge(0, 2, 1, 5);
   graph.add_edge(1, 2, 1, 1);

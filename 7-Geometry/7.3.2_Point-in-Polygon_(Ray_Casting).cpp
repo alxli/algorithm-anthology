@@ -36,7 +36,7 @@ double cross(const point &a, const point &b, const point &o = point(0, 0)) {
 template<class It>
 bool point_in_polygon(const point &p, It lo, It hi) {
   static const bool EDGE_IS_INSIDE = true;
-  bool ans = 0;
+  bool res = false;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     if (EQ(i->y, p.y) && (EQ(i->x, p.x) || (EQ(j->y, p.y) && (LE(i->x, p.x) || LE(j->x, p.x))))) {
       return EDGE_IS_INSIDE;
@@ -47,11 +47,11 @@ bool point_in_polygon(const point &p, It lo, It hi) {
         return EDGE_IS_INSIDE;
       }
       if (GT(det, 0) != GT(j->y, i->y)) {
-        ans = !ans;
+        res = !res;
       }
     }
   }
-  return ans;
+  return res;
 }
 
 /*** Example Usage ***/

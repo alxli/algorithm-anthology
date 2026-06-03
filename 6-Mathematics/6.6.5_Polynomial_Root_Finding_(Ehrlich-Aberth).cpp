@@ -48,12 +48,13 @@ bool is_zero(const cdouble &z, const LD EPS = ZERO_EPS) {
 }
 
 bool is_finite(const cdouble &z) {
-  return std::isfinite((double)z.real()) && std::isfinite((double)z.imag());
+  return std::isfinite(static_cast<double>(z.real())) &&
+         std::isfinite(static_cast<double>(z.imag()));
 }
 
 std::pair<cdouble, cdouble> eval_with_derivative(const cpoly &p, const cdouble &x) {
   cdouble value = p.back(), derivative = 0;
-  for (int i = (int)p.size() - 2; i >= 0; i--) {
+  for (int i = static_cast<int>(p.size()) - 2; i >= 0; i--) {
     derivative = derivative * x + value;
     value = value * x + p[i];
   }
@@ -63,7 +64,7 @@ std::pair<cdouble, cdouble> eval_with_derivative(const cpoly &p, const cdouble &
 LD root_bound(const cpoly &p) {
   LD res = 0;
   int n = p.size() - 1;
-  for (int i = 0; i + 1 < (int)p.size(); i++) {
+  for (int i = 0; i + 1 < static_cast<int>(p.size()); i++) {
     LD ratio = std::abs(p[i] / p.back());
     if (ratio > 0) {
       res = std::max(res, powl(ratio, 1.0L / (n - i)));
@@ -98,10 +99,10 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
     return roots;
   }
   LD scale = 0;
-  for (int i = 0; i < (int)p.size(); i++) {
+  for (int i = 0; i < static_cast<int>(p.size()); i++) {
     scale = std::max(scale, std::abs(p[i]));
   }
-  for (int i = 0; i < (int)p.size(); i++) {
+  for (int i = 0; i < static_cast<int>(p.size()); i++) {
     p[i] /= scale;
   }
   int n = p.size() - 1;
@@ -204,7 +205,7 @@ cdouble eval(const cpoly &p, const cdouble &x) {
 }
 
 void print_roots(const vector<cdouble> &x) {
-  for (int i = 0; i < (int)x.size(); i++) {
+  for (int i = 0; i < static_cast<int>(x.size()); i++) {
     printf("(%.5Lf, %.5Lf)\n", x[i].real(), x[i].imag());
   }
 }
@@ -216,7 +217,7 @@ int main() {
     vector<LD> p(poly, poly + 4);
     vector<cdouble> roots = find_all_roots(p);
     assert(roots.size() == 3);
-    for (int i = 0; i < (int)roots.size(); i++) {
+    for (int i = 0; i < static_cast<int>(roots.size()); i++) {
       assert(abs(eval(cpoly(p.begin(), p.end()), roots[i])) < CHECK_EPS);
     }
     print_roots(roots);
@@ -232,7 +233,7 @@ int main() {
     p.push_back(cdouble(-6, 4));
     vector<cdouble> roots = find_all_roots(p);
     assert(roots.size() == 4);
-    for (int i = 0; i < (int)roots.size(); i++) {
+    for (int i = 0; i < static_cast<int>(roots.size()); i++) {
       assert(abs(eval(p, roots[i])) < CHECK_EPS);
     }
     print_roots(roots);

@@ -1,7 +1,7 @@
 /*
 
 Enumerate combinatorial sequences by inheriting an abstract class. Child classes of
-`abstract_enumerator` must implement the `count()` function which should return the number of
+`AbstractEnumerator` must implement the `count()` function which should return the number of
 combinatorial sequences starting with the given prefix.
 
 - `to_rank(a)` returns an integer representing the zero-based rank of the combinatorial sequence
@@ -23,11 +23,11 @@ Space Complexity:
 
 #include <vector>
 
-class abstract_enumerator {
+class AbstractEnumerator {
  protected:
   int range, length;
 
-  abstract_enumerator(int r, int l) : range(r), length(l) {}
+  AbstractEnumerator(int r, int l) : range(r), length(l) {}
   virtual long long count(const std::vector<int> &prefix) { return 0; }
   std::vector<int> next(std::vector<int> &a) { return from_rank(to_rank(a) + 1); }
   long long total_count() { return count(std::vector<int>(0)); }
@@ -35,7 +35,7 @@ class abstract_enumerator {
  public:
   long long to_rank(const std::vector<int> &a) {
     long long res = 0;
-    for (int i = 0; i < (int)a.size(); i++) {
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       std::vector<int> prefix(a.begin(), a.end());
       prefix.resize(i + 1);
       for (prefix[i] = 0; prefix[i] < a[i]; prefix[i]++) {
@@ -47,7 +47,7 @@ class abstract_enumerator {
 
   std::vector<int> from_rank(long long r) {
     std::vector<int> a(length);
-    for (int i = 0; i < (int)a.size(); i++) {
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       std::vector<int> prefix(a.begin(), a.end());
       prefix.resize(i + 1);
       for (prefix[i] = 0; prefix[i] < range; ++prefix[i]) {
@@ -71,9 +71,9 @@ class abstract_enumerator {
   }
 };
 
-class arrangement_enumerator : public abstract_enumerator {
+class ArrangementEnumerator : public AbstractEnumerator {
  public:
-  arrangement_enumerator(int n, int k) : abstract_enumerator(n, k) {}
+  ArrangementEnumerator(int n, int k) : AbstractEnumerator(n, k) {}
 
   long long count(const std::vector<int> &prefix) {
     int n = prefix.size();
@@ -90,17 +90,17 @@ class arrangement_enumerator : public abstract_enumerator {
   }
 };
 
-class permutation_enumerator : public arrangement_enumerator {
+class PermutationEnumerator : public ArrangementEnumerator {
  public:
-  permutation_enumerator(int n) : arrangement_enumerator(n, n) {}
+  PermutationEnumerator(int n) : ArrangementEnumerator(n, n) {}
 };
 
-class combination_enumerator : public abstract_enumerator {
+class CombinationEnumerator : public AbstractEnumerator {
   std::vector<std::vector<long long>> table;
 
  public:
-  combination_enumerator(int n, int k)
-      : abstract_enumerator(n, k), table(n + 1, std::vector<long long>(n + 1)) {
+  CombinationEnumerator(int n, int k)
+      : AbstractEnumerator(n, k), table(n + 1, std::vector<long long>(n + 1)) {
     for (int i = 0; i <= n; i++) {
       for (int j = 0; j <= i; j++) {
         table[i][j] = (j == 0) ? 1 : table[i - 1][j - 1] + table[i - 1][j];
@@ -120,12 +120,12 @@ class combination_enumerator : public abstract_enumerator {
   }
 };
 
-class partition_enumerator : public abstract_enumerator {
+class PartitionEnumerator : public AbstractEnumerator {
   std::vector<std::vector<long long>> table;
 
  public:
-  partition_enumerator(int n)
-      : abstract_enumerator(n + 1, n), table(n + 1, std::vector<long long>(n + 1)) {
+  PartitionEnumerator(int n)
+      : AbstractEnumerator(n + 1, n), table(n + 1, std::vector<long long>(n + 1)) {
     std::vector<std::vector<long long>> tmp(table);
     tmp[0][0] = 1;
     for (int i = 1; i <= n; i++) {
@@ -141,7 +141,7 @@ class partition_enumerator : public abstract_enumerator {
   }
 
   long long count(const std::vector<int> &prefix) {
-    int n = (int)prefix.size(), sum = 0;
+    int n = static_cast<int>(prefix.size()), sum = 0;
     for (int i = 0; i < n; i++) {
       sum += prefix[i];
     }
@@ -189,26 +189,26 @@ void print_range(It lo, It hi) {
 
 int main() {
   {
-    cout << "3 permute 2 arrangement_enumerator:" << endl;
-    arrangement_enumerator arr(3, 2);
+    cout << "3 permute 2 ArrangementEnumerator:" << endl;
+    ArrangementEnumerator arr(3, 2);
     arr.enumerate(print_range);
     cout << endl;
   }
   {
     cout << "\nPermutatations of [0, 3):" << endl;
-    permutation_enumerator perm(3);
+    PermutationEnumerator perm(3);
     perm.enumerate(print_range);
     cout << endl;
   }
   {
     cout << "\n4 choose 3 combinations:" << endl;
-    combination_enumerator comb(4, 3);
+    CombinationEnumerator comb(4, 3);
     comb.enumerate(print_range);
     cout << endl;
   }
   {
     cout << "\nPartition of 4:" << endl;
-    partition_enumerator part(4);
+    PartitionEnumerator part(4);
     part.enumerate(print_range);
     cout << endl;
   }

@@ -1,6 +1,6 @@
 /*
 
-Maintains all distinct palindromic substrings of a string online using an eertree, also known as a
+Maintains all distinct palindromic substrings of a string online using an Eertree, also known as a
 palindromic tree. Each non-root node represents one distinct palindrome, and suffix links connect
 each palindrome to its longest proper palindromic suffix.
 
@@ -8,8 +8,8 @@ The structure has two roots: one of length $-1$, which simplifies boundary cases
 $0$, representing the empty palindrome. After each appended character, `last` points to the node for
 the longest palindromic suffix of the current string.
 
-- `eertree()` constructs an empty palindromic tree.
-- `eertree(s)` constructs the tree for string `s`.
+- `Eertree()` constructs an empty palindromic tree.
+- `Eertree(s)` constructs the tree for string `s`.
 - `add(c)` appends character `c` and returns `true` if this creates a new distinct palindrome.
 - `count_distinct_palindromes()` returns the number of distinct nonempty palindromic substrings.
 - `longest_suffix_length()` returns the length of the current longest palindromic suffix.
@@ -33,15 +33,15 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-class eertree {
-  struct node {
+class Eertree {
+  struct Node {
     int len, link, occ;
     std::map<char, int> next;
 
-    node(int len = 0) : len(len), link(0), occ(0) {}
+    Node(int len = 0) : len(len), link(0), occ(0) {}
   };
 
-  std::vector<node> tree;
+  std::vector<Node> tree;
   string s;
   int last;
 
@@ -53,19 +53,19 @@ class eertree {
   }
 
  public:
-  eertree() : tree(), s(), last(1) {
-    tree.push_back(node(-1));
-    tree.push_back(node(0));
+  Eertree() : tree(), s(), last(1) {
+    tree.push_back(Node(-1));
+    tree.push_back(Node(0));
     tree[0].link = 0;
     tree[1].link = 0;
   }
 
-  explicit eertree(const string &text) : tree(), s(), last(1) {
-    tree.push_back(node(-1));
-    tree.push_back(node(0));
+  explicit Eertree(const string &text) : tree(), s(), last(1) {
+    tree.push_back(Node(-1));
+    tree.push_back(Node(0));
     tree[0].link = 0;
     tree[1].link = 0;
-    for (int i = 0; i < (int)text.size(); i++) {
+    for (int i = 0; i < static_cast<int>(text.size()); i++) {
       add(text[i]);
     }
   }
@@ -82,7 +82,7 @@ class eertree {
     }
 
     last = tree.size();
-    tree.push_back(node(tree[cur].len + 2));
+    tree.push_back(Node(tree[cur].len + 2));
     tree[last].occ = 1;
     tree[cur].next[c] = last;
 
@@ -95,15 +95,15 @@ class eertree {
     return true;
   }
 
-  int count_distinct_palindromes() const { return (int)tree.size() - 2; }
+  int count_distinct_palindromes() const { return static_cast<int>(tree.size()) - 2; }
   int longest_suffix_length() const { return tree[last].len; }
 
   std::vector<int> count_occurrences() const {
     std::vector<int> occ(tree.size());
-    for (int i = 0; i < (int)tree.size(); i++) {
+    for (int i = 0; i < static_cast<int>(tree.size()); i++) {
       occ[i] = tree[i].occ;
     }
-    for (int i = (int)tree.size() - 1; i >= 2; i--) {
+    for (int i = static_cast<int>(tree.size()) - 1; i >= 2; i--) {
       occ[tree[i].link] += occ[i];
     }
     return occ;
@@ -115,11 +115,11 @@ class eertree {
 #include <cassert>
 
 int main() {
-  eertree t("abacaba");
+  Eertree t("abacaba");
   assert(t.count_distinct_palindromes() == 7);
   assert(t.longest_suffix_length() == 7);
 
-  eertree online;
+  Eertree online;
   assert(online.add('a'));
   assert(online.add('a'));
   assert(online.add('b'));
@@ -127,13 +127,13 @@ int main() {
   assert(online.count_distinct_palindromes() == 4);
   assert(online.longest_suffix_length() == 3);
 
-  eertree duplicate;
+  Eertree duplicate;
   assert(duplicate.add('a'));
   assert(duplicate.add('b'));
   assert(duplicate.add('c'));
   assert(!duplicate.add('a'));
 
   std::vector<int> occ = t.count_occurrences();
-  assert((int)occ.size() == t.count_distinct_palindromes() + 2);
+  assert(static_cast<int>(occ.size()) == t.count_distinct_palindromes() + 2);
   return 0;
 }

@@ -15,7 +15,7 @@ Common rectangle calculations in two dimensions.
   and $b_2$. Returns $-1$ if the rectangles are completely disjoint, 0 if the rectangles partially
   intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle
   is completely inside the first. If there is an intersection, the opposing vertices of the
-  intersection rectangle will be stored into pointers `p` and `q` if they are not `NULL`. If the
+  intersection rectangle will be stored into pointers `p` and `q` if they are not `nullptr`. If the
   intersection is a single point or line segment, then the result will depend on the setting of
   `EDGE_IS_INSIDE` within `point_in_rectangle()`.
 
@@ -67,13 +67,13 @@ bool point_in_rectangle(const point &p, const point &a, const point &b) {
 }
 
 int rectangle_intersection(
-    const point &a1, const point &b1, const point &a2, const point &b2, point *p = NULL,
-    point *q = NULL
+    const point &a1, const point &b1, const point &a2, const point &b2, point *p = nullptr,
+    point *q = nullptr
 ) {
   bool a1in2 = point_in_rectangle(a1, a2, b2);
   bool b1in2 = point_in_rectangle(b1, a2, b2);
   if (a1in2 && b1in2) {
-    if (p != NULL && q != NULL) {
+    if (p != nullptr && q != nullptr) {
       *p = std::min(a1, b1);
       *q = std::max(a1, b1);
     }
@@ -81,7 +81,7 @@ int rectangle_intersection(
   }
   if (!a1in2 && !b1in2) {
     if (point_in_rectangle(a2, a1, b1)) {
-      if (p != NULL && q != NULL) {
+      if (p != nullptr && q != nullptr) {
         *p = std::min(a2, b2);
         *q = std::max(a2, b2);
       }
@@ -89,7 +89,7 @@ int rectangle_intersection(
     }
     return -1;  // Completely disjoint.
   }
-  if (p != NULL && q != NULL) {
+  if (p != nullptr && q != nullptr) {
     if (a1in2) {
       *p = a1;
       *q = (a1 < b1) ? std::max(a2, b2) : std::min(a2, b2);

@@ -75,21 +75,12 @@ double fbinary_search(double lo, double hi, DoublePredicate pred) {  // 000[1]11
 #include <cmath>
 
 // Simple predicate examples.
-bool pred1(int x) {
-  return x >= 3;
-}
-bool pred2(int x) {
-  return false;
-}
-bool pred3(int x) {
-  return x <= 5;
-}
-bool pred4(int x) {
-  return true;
-}
-bool pred5(double x) {
-  return x >= 1.2345;
-}
+
+bool pred1(int x) { return x >= 3; }
+bool pred2(int x) { return false; }
+bool pred3(int x) { return x <= 5; }
+bool pred4(int x) { return true; }
+bool pred5(double x) { return x >= 1.2345; }
 
 int main() {
   assert(binary_search_first_true(0, 7, pred1) == 3);
@@ -334,12 +325,14 @@ const double COOLING_RATE = 0.997;
 const int NUM_RESTARTS = 8;
 
 double random_unit() {
-  return (double)rand() / RAND_MAX;
+  return static_cast<double>(rand()) / RAND_MAX;
 }
 
 template<class Function>
-double anneal_min(Function f, double x0, double y0, double *best_x = NULL, double *best_y = NULL) {
-  double ans_x = x0, ans_y = y0, ans = f(x0, y0);
+double anneal_min(
+    Function f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr
+) {
+  double sol_x = x0, sol_y = y0, best = f(x0, y0);
   for (int restart = 0; restart < NUM_RESTARTS; restart++) {
     double x = x0, y = y0, cur = f(x, y);
     double temperature = TEMPERATURE_START;
@@ -352,23 +345,23 @@ double anneal_min(Function f, double x0, double y0, double *best_x = NULL, doubl
         x = nx;
         y = ny;
         cur = next;
-        if (cur < ans) {
-          ans = cur;
-          ans_x = x;
-          ans_y = y;
+        if (cur < best) {
+          best = cur;
+          sol_x = x;
+          sol_y = y;
         }
       }
       temperature *= COOLING_RATE;
     }
   }
 
-  if (best_x != NULL) {
-    *best_x = ans_x;
+  if (best_x != nullptr) {
+    *best_x = sol_x;
   }
-  if (best_y != NULL) {
-    *best_y = ans_y;
+  if (best_y != nullptr) {
+    *best_y = sol_y;
   }
-  return ans;
+  return best;
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -404,7 +397,7 @@ Maintains the minimum or maximum value in a sliding window using a monotone queu
 The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate.
 
 \begin{compactitem}
-  \item \inlinecode{monotone\_queue\textless{}Compare\textgreater{}()} constructs an empty queue. Use \inlinecode{std::less\textless{}T\textgreater{}} for minimum queries and \inlinecode{std::greater\textless{}T\textgreater{}} for maximum queries.
+  \item \inlinecode{MonotoneQueue\textless{}Compare\textgreater{}()} constructs an empty queue. Use \inlinecode{std::less\textless{}T\textgreater{}} for minimum queries and \inlinecode{std::greater\textless{}T\textgreater{}} for maximum queries.
   \item \inlinecode{push(index, value)} inserts candidate \inlinecode{value} at position \inlinecode{index}, removing dominated candidates.
   \item \inlinecode{expire(first\_valid)} removes candidates with index less than \inlinecode{first\_valid}.
   \item \inlinecode{top()} returns the best active (\inlinecode{index}, \inlinecode{value}) pair.
@@ -426,7 +419,7 @@ The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in mon
 #include <utility>
 
 template<class T, class Compare>
-class monotone_queue {
+class MonotoneQueue {
   typedef std::pair<int, T> entry;
 
   std::deque<entry> q;
@@ -461,9 +454,9 @@ int main() {
   int raw[] = {4, 2, 7, 1, 3, 6};
   vector<int> a(raw, raw + 6);
 
-  monotone_queue<int, less<int>> minq;
+  MonotoneQueue<int, less<int>> minq;
   vector<int> window_min;
-  for (int i = 0; i < (int)a.size(); i++) {
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
     minq.push(i, a[i]);
     minq.expire(i - 2);
     if (i >= 2) {
@@ -477,10 +470,10 @@ int main() {
 
   // dp[i] = a[i] + min(dp[j]) over max(0, i - 2) <= j < i.
   vector<int> dp(a.size());
-  monotone_queue<int, less<int>> best;
+  MonotoneQueue<int, less<int>> best;
   dp[0] = a[0];
   best.push(0, dp[0]);
-  for (int i = 1; i < (int)a.size(); i++) {
+  for (int i = 1; i < static_cast<int>(a.size()); i++) {
     best.expire(i - 2);
     dp[i] = a[i] + best.top().second;
     best.push(i, dp[i]);
@@ -538,11 +531,11 @@ void compute_dc_layer(
 #include <cassert>
 using namespace std;
 
-struct square_segment_cost {
+struct SquareSegmentCost {
   vector<long long> prefix;
 
-  explicit square_segment_cost(const vector<int> &a) : prefix(a.size() + 1) {
-    for (int i = 0; i < (int)a.size(); i++) {
+  explicit SquareSegmentCost(const vector<int> &a) : prefix(a.size() + 1) {
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       prefix[i + 1] = prefix[i] + a[i];
     }
   }
@@ -557,7 +550,7 @@ int main() {
   int raw[] = {1, 2, 3, 4};
   vector<int> a(raw, raw + 4);
   int n = a.size();
-  square_segment_cost cost(a);
+  SquareSegmentCost cost(a);
 
   vector<long long> dp_prev(n + 1, INF), dp_cur(n + 1, INF);
   dp_prev[0] = 0;
@@ -578,7 +571,7 @@ Common applications include optimal binary search trees and some range merging p
 \begin{compactitem}
   \item \inlinecode{knuth\_interval\_dp(n, cost, \&opt)} computes minimum costs for all half-open intervals \inlinecode{[l, r)} over \inlinecode{n} items.
   \item \inlinecode{cost(l, r)} must return the interval cost added after choosing the best split.
-  \item If \inlinecode{opt} is not \inlinecode{NULL}, it is filled with the chosen split points.
+  \item If \inlinecode{opt} is not \inlinecode{nullptr}, it is filled with the chosen split points.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{2})$ calls to \inlinecode{cost(l, r)} and $O(n^{2})$ candidate split checks.
@@ -594,7 +587,7 @@ const long long INF = (1LL << 62);
 
 template<class CostFunction>
 std::vector<std::vector<long long>> knuth_interval_dp(
-    int n, CostFunction cost, std::vector<std::vector<int>> *opt_out = NULL
+    int n, CostFunction cost, std::vector<std::vector<int>> *opt_out = nullptr
 ) {
   std::vector<std::vector<long long>> dp(n + 1, std::vector<long long>(n + 1, 0));
   std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));
@@ -625,7 +618,7 @@ std::vector<std::vector<long long>> knuth_interval_dp(
       }
     }
   }
-  if (opt_out != NULL) {
+  if (opt_out != nullptr) {
     *opt_out = opt;
   }
   return dp;
@@ -636,11 +629,11 @@ std::vector<std::vector<long long>> knuth_interval_dp(
 #include <cassert>
 using namespace std;
 
-struct merge_cost {
+struct MergeCost {
   vector<long long> prefix;
 
-  explicit merge_cost(const vector<int> &a) : prefix(a.size() + 1) {
-    for (int i = 0; i < (int)a.size(); i++) {
+  explicit MergeCost(const vector<int> &a) : prefix(a.size() + 1) {
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       prefix[i + 1] = prefix[i] + a[i];
     }
   }
@@ -651,7 +644,7 @@ struct merge_cost {
 int main() {
   int raw[] = {1, 2, 3, 4};
   vector<int> a(raw, raw + 4);
-  vector<vector<long long>> dp = knuth_interval_dp(a.size(), merge_cost(a));
+  vector<vector<long long>> dp = knuth_interval_dp(a.size(), MergeCost(a));
   assert(dp[0][4] == 19);
   return 0;
 }
@@ -693,10 +686,11 @@ void add_line(long long m, long long b) {
 }
 
 long long query(long long x) {
-  if (ptr >= (int)M.size()) {
-    ptr = (int)M.size() - 1;
+  if (ptr >= static_cast<int>(M.size())) {
+    ptr = static_cast<int>(M.size()) - 1;
   }
-  while (ptr + 1 < (int)M.size() && M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
+  while (ptr + 1 < static_cast<int>(M.size()) &&
+         M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
     ptr++;
   }
   return M[ptr] * x + B[ptr];
@@ -724,7 +718,7 @@ Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process
 The following implementation is a fully dynamic variant of the convex hull optimization technique, using a self-balancing binary search tree (\inlinecode{std::set}) to support the ability to call \inlinecode{add\_line()} and \inlinecode{query()} in any desired order.
 
 \begin{compactitem}
-  \item \inlinecode{hull\_optimizer(query\_max)} constructs an empty hull. By default, \inlinecode{query(x)} minimizes; if \inlinecode{query\_max} is true, \inlinecode{query(x)} maximizes.
+  \item \inlinecode{HullOptimizer(query\_max)} constructs an empty hull. By default, \inlinecode{query(x)} minimizes; if \inlinecode{query\_max} is true, \inlinecode{query(x)} maximizes.
   \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$ in arbitrary order.
   \item \inlinecode{query(x)} returns the best y-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted.
 \end{compactitem}
@@ -742,22 +736,22 @@ The following implementation is a fully dynamic variant of the convex hull optim
 #include <climits>
 #include <set>
 
-class hull_optimizer {
-  struct line {
+class HullOptimizer {
+  struct Line {
     long long m, b;
     mutable long long xhi;
     bool is_query;
 
-    line(long long m, long long b, long long xhi = 0, bool is_query = false)
+    Line(long long m, long long b, long long xhi = 0, bool is_query = false)
         : m(m), b(b), xhi(xhi), is_query(is_query) {}
 
-    bool operator<(const line &l) const { return l.is_query ? xhi < l.xhi : m < l.m; }
+    bool operator<(const Line &l) const { return l.is_query ? xhi < l.xhi : m < l.m; }
   };
 
-  std::multiset<line> hull;
+  std::multiset<Line> hull;
   bool query_max;
 
-  typedef std::multiset<line>::iterator hulliter;
+  typedef std::multiset<Line>::iterator hulliter;
 
   static long long div_floor(long long a, long long b) { return a / b - ((a ^ b) < 0 && a % b); }
 
@@ -775,14 +769,14 @@ class hull_optimizer {
   }
 
  public:
-  hull_optimizer(bool query_max = false) : query_max(query_max) {}
+  HullOptimizer(bool query_max = false) : query_max(query_max) {}
 
   void add_line(long long m, long long b) {
     if (!query_max) {
       m = -m;
       b = -b;
     }
-    hulliter z = hull.insert(line(m, b));
+    hulliter z = hull.insert(Line(m, b));
     hulliter y = z++;
     hulliter x = y;
     while (update_border(y, z)) {
@@ -798,7 +792,7 @@ class hull_optimizer {
 
   long long query(long long x) const {
     assert(!hull.empty());
-    line q(0, 0, x, true);
+    Line q(0, 0, x, true);
     hulliter it = hull.lower_bound(q);
     long long res = it->m * x + it->b;
     return query_max ? res : -res;
@@ -810,7 +804,7 @@ class hull_optimizer {
 #include <cassert>
 
 int main() {
-  hull_optimizer h;
+  HullOptimizer h;
   h.add_line(3, 0);
   h.add_line(0, 6);
   h.add_line(1, 2);
@@ -828,7 +822,7 @@ Maintains a dynamic set of lines and answers minimum value queries at points in 
 The implementation below stores the lower envelope of lines over the inclusive domain \inlinecode{[X\_MIN, X\_MAX]}. It supports adding arbitrary lines and querying arbitrary integer x-coordinates in $O(\log C)$, where $C =$ \inlinecode{X\_MAX} $-$ \inlinecode{X\_MIN} $+ 1$.
 
 \begin{compactitem}
-  \item \inlinecode{li\_chao\_tree(lo, hi)} constructs an empty tree over integer domain \inlinecode{[lo, hi]}.
+  \item \inlinecode{LiChaoTree(lo, hi)} constructs an empty tree over integer domain \inlinecode{[lo, hi]}.
   \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$.
   \item \inlinecode{query(x)} returns the minimum y-value among all inserted lines at coordinate \inlinecode{x}.
 \end{compactitem}
@@ -848,27 +842,26 @@ The implementation below stores the lower envelope of lines over the inclusive d
 
 const long long INF = std::numeric_limits<long long>::max() / 4;
 
-struct line {
+struct Line {
   long long m, b;
 
-  line(long long m = 0, long long b = INF) : m(m), b(b) {}
-
+  Line(long long m = 0, long long b = INF) : m(m), b(b) {}
   long long eval(long long x) const { return m * x + b; }
 };
 
-class li_chao_tree {
+class LiChaoTree {
   struct node {
-    line f;
+    Line f;
     node *left, *right;
 
-    node(const line &f) : f(f), left(NULL), right(NULL) {}
+    node(const Line &f) : f(f), left(nullptr), right(nullptr) {}
   };
 
   node *root;
   long long lo, hi;
 
   static void clean_up(node *n) {
-    if (n == NULL) {
+    if (n == nullptr) {
       return;
     }
     clean_up(n->left);
@@ -876,8 +869,8 @@ class li_chao_tree {
     delete n;
   }
 
-  static void add_line(node *&n, long long l, long long r, line f) {
-    if (n == NULL) {
+  static void add_line(node *&n, long long l, long long r, Line f) {
+    if (n == nullptr) {
       n = new node(f);
       return;
     }
@@ -898,7 +891,7 @@ class li_chao_tree {
   }
 
   static long long query(node *n, long long l, long long r, long long x) {
-    if (n == NULL) {
+    if (n == nullptr) {
       return INF;
     }
     long long res = n->f.eval(x);
@@ -913,11 +906,11 @@ class li_chao_tree {
   }
 
  public:
-  li_chao_tree(long long lo, long long hi) : root(NULL), lo(lo), hi(hi) {}
+  LiChaoTree(long long lo, long long hi) : root(nullptr), lo(lo), hi(hi) {}
 
-  ~li_chao_tree() { clean_up(root); }
+  ~LiChaoTree() { clean_up(root); }
 
-  void add_line(long long m, long long b) { add_line(root, lo, hi, line(m, b)); }
+  void add_line(long long m, long long b) { add_line(root, lo, hi, Line(m, b)); }
 
   long long query(long long x) const {
     assert(lo <= x && x <= hi);
@@ -930,7 +923,7 @@ class li_chao_tree {
 #include <cassert>
 
 int main() {
-  li_chao_tree cht(-10, 10);
+  LiChaoTree cht(-10, 10);
   cht.add_line(3, 0);
   cht.add_line(1, 2);
   cht.add_line(-1, 10);
@@ -1082,7 +1075,7 @@ int main() {
 \begin{exampleoutput}
 Solution = 33.3043 at (5.30435, 4.34783).
 \end{exampleoutput}
-\subsection{Hungarian Algorithm}
+\subsection{Assignment (Hungarian Algorithm)}
 Solves the minimum-cost assignment problem for a rectangular cost matrix. Given $n$ workers and $m$ jobs with $n \leq m$, choose a distinct job for each worker so that the total assignment cost is minimized.
 
 The implementation below is the classical Hungarian algorithm using potentials. It is 1-indexed internally, but the input matrix \inlinecode{cost} is 0-indexed. The returned assignment vector has length $n$, where \inlinecode{assignment[i]} is the chosen job for worker \inlinecode{i}, using 0-indexed job numbers.

@@ -20,9 +20,10 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <climits>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = INT_MAX / 2;
 std::vector<int> adj[MAXN], currstack;
 int timer, lowlink[MAXN];
 std::vector<bool> visit(MAXN);
@@ -34,7 +35,7 @@ void dfs(int u) {
   currstack.push_back(u);
   bool is_component_root = true;
   int v;
-  for (int j = 0; j < (int)adj[u].size(); j++) {
+  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
     v = adj[u][j];
     if (!visit[v]) {
       dfs(v);
@@ -100,8 +101,8 @@ int main() {
   adj[7].push_back(6);
   tarjan(8);
   cout << "Components:" << endl;
-  for (int i = 0; i < (int)scc.size(); i++) {
-    for (int j = 0; j < (int)scc[i].size(); j++) {
+  for (int i = 0; i < static_cast<int>(scc.size()); i++) {
+    for (int j = 0; j < static_cast<int>(scc[i].size()); j++) {
       cout << scc[i][j] << " ";
     }
     cout << endl;

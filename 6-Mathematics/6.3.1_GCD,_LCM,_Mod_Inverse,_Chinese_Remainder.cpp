@@ -129,7 +129,8 @@ long long garner_restore(int n, int a[], int p[]) {
   std::vector<int> x(a, a + n);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
-      x[i] = mod_inverse((long long)p[j], (long long)p[i]) * (x[i] - x[j]);
+      x[i] =
+          mod_inverse(static_cast<long long>(p[j]), static_cast<long long>(p[i])) * (x[i] - x[j]);
     }
     x[i] = (x[i] % p[i] + p[i]) % p[i];
   }

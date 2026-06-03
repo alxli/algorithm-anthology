@@ -27,7 +27,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class fenwick_tree {
+class FenwickTree {
   int len;
   std::vector<T> t1, t2;
 
@@ -46,7 +46,7 @@ class fenwick_tree {
   }
 
  public:
-  fenwick_tree(int n) : len(n), t1(n + 2), t2(n + 2) {}
+  FenwickTree(int n) : len(n), t1(n + 2), t2(n + 2) {}
 
   int size() const { return len; }
 
@@ -83,7 +83,7 @@ using namespace std;
 
 int main() {
   int a[] = {10, 1, 2, 3, 4};
-  fenwick_tree<int> t(5);
+  FenwickTree<int> t(5);
   for (int i = 0; i < t.size(); i++) {
     t.set(i, a[i]);
   }

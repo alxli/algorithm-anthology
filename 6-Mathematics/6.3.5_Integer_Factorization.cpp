@@ -257,7 +257,7 @@ void validate(long long n, const vector<long long> &factors) {
 int main() {
   {  // Small tests.
     for (int i = 1; i <= 10000; i++) {
-      vector<long long> v1 = prime_factorize((long long)i);
+      vector<long long> v1 = prime_factorize(static_cast<long long>(i));
       vector<long long> v2 = prime_factorize_big(i);
       validate(i, v1);
       assert(v1 == v2);

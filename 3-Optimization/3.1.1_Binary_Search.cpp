@@ -96,21 +96,14 @@ double fbinary_search(double lo, double hi, DoublePredicate pred) {  // 000[1]11
 #include <cmath>
 
 // Simple predicate examples.
-bool pred1(int x) {
-  return x >= 3;
-}
-bool pred2(int x) {
-  return false;
-}
-bool pred3(int x) {
-  return x <= 5;
-}
-bool pred4(int x) {
-  return true;
-}
-bool pred5(double x) {
-  return x >= 1.2345;
-}
+
+// clang-format off
+bool pred1(int x) { return x >= 3; }
+bool pred2(int x) { return false; }
+bool pred3(int x) { return x <= 5; }
+bool pred4(int x) { return true; }
+bool pred5(double x) { return x >= 1.2345; }
+// clang-format on
 
 int main() {
   assert(binary_search_first_true(0, 7, pred1) == 3);

@@ -30,7 +30,7 @@ bool removed[MAXN];
 
 int get_size(int u, int p) {
   subtree_size[u] = 1;
-  for (int i = 0; i < (int)adj[u].size(); i++) {
+  for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
     int v = adj[u][i];
     if (v != p && !removed[v]) {
       subtree_size[u] += get_size(v, u);
@@ -40,7 +40,7 @@ int get_size(int u, int p) {
 }
 
 int get_centroid(int u, int p, int total) {
-  for (int i = 0; i < (int)adj[u].size(); i++) {
+  for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
     int v = adj[u][i];
     if (v != p && !removed[v] && subtree_size[v] > total / 2) {
       return get_centroid(v, u, total);
@@ -54,7 +54,7 @@ void decompose(int entry, int parent) {
   int centroid = get_centroid(entry, -1, total);
   centroid_parent[centroid] = parent;
   removed[centroid] = true;
-  for (int i = 0; i < (int)adj[centroid].size(); i++) {
+  for (int i = 0; i < static_cast<int>(adj[centroid].size()); i++) {
     int v = adj[centroid][i];
     if (!removed[v]) {
       decompose(v, centroid);

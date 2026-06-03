@@ -8,7 +8,7 @@ The implementation below stores encoded bits as a string of `'0'` and `'1'` char
 For real compression, pack those bits into bytes. The tree is also needed to decode the bit string,
 so compressed data normally stores enough metadata to reconstruct the same tree.
 
-- `huffman_tree(text)` constructs a Huffman tree from the character frequencies in `text`.
+- `HuffmanTree(text)` constructs a Huffman tree from the character frequencies in `text`.
 - `codes()` returns a table mapping each byte value to its bit string.
 - `encode(text)` returns the encoded bit string.
 - `decode(bits)` returns the decoded text.
@@ -29,23 +29,23 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-class huffman_tree {
-  struct node {
+class HuffmanTree {
+  struct Node {
     int freq;
     unsigned char ch;
     int left, right;
 
-    node(int freq = 0, unsigned char ch = 0, int left = -1, int right = -1)
+    Node(int freq = 0, unsigned char ch = 0, int left = -1, int right = -1)
         : freq(freq), ch(ch), left(left), right(right) {}
   };
 
-  struct by_frequency {
-    const std::vector<node> *nodes;
-    explicit by_frequency(const std::vector<node> *nodes = NULL) : nodes(nodes) {}
+  struct ByFrequency {
+    const std::vector<Node> *nodes;
+    explicit ByFrequency(const std::vector<Node> *nodes = nullptr) : nodes(nodes) {}
     bool operator()(int a, int b) const { return (*nodes)[a].freq > (*nodes)[b].freq; }
   };
 
-  std::vector<node> nodes;
+  std::vector<Node> nodes;
   int root;
   std::vector<string> code;
 
@@ -59,17 +59,17 @@ class huffman_tree {
   }
 
  public:
-  explicit huffman_tree(const string &text) : root(-1), code(256) {
+  explicit HuffmanTree(const string &text) : root(-1), code(256) {
     std::vector<int> freq(256, 0);
-    for (int i = 0; i < (int)text.size(); i++) {
-      freq[(unsigned char)text[i]]++;
+    for (int i = 0; i < static_cast<int>(text.size()); i++) {
+      freq[static_cast<unsigned char>(text[i])]++;
     }
-    by_frequency cmp(&nodes);
-    std::priority_queue<int, std::vector<int>, by_frequency> pq(cmp);
+    ByFrequency cmp(&nodes);
+    std::priority_queue<int, std::vector<int>, ByFrequency> pq(cmp);
     for (int c = 0; c < 256; c++) {
       if (freq[c] > 0) {
-        nodes.push_back(node(freq[c], (unsigned char)c));
-        pq.push((int)nodes.size() - 1);
+        nodes.push_back(Node(freq[c], static_cast<unsigned char>(c)));
+        pq.push(static_cast<int>(nodes.size()) - 1);
       }
     }
     if (pq.empty()) {
@@ -80,8 +80,8 @@ class huffman_tree {
       pq.pop();
       int b = pq.top();
       pq.pop();
-      nodes.push_back(node(nodes[a].freq + nodes[b].freq, 0, a, b));
-      pq.push((int)nodes.size() - 1);
+      nodes.push_back(Node(nodes[a].freq + nodes[b].freq, 0, a, b));
+      pq.push(static_cast<int>(nodes.size()) - 1);
     }
     root = pq.top();
     build_codes(root, "");
@@ -91,8 +91,8 @@ class huffman_tree {
 
   string encode(const string &text) const {
     string bits;
-    for (int i = 0; i < (int)text.size(); i++) {
-      bits += code[(unsigned char)text[i]];
+    for (int i = 0; i < static_cast<int>(text.size()); i++) {
+      bits += code[static_cast<unsigned char>(text[i])];
     }
     return bits;
   }
@@ -103,10 +103,10 @@ class huffman_tree {
       return text;
     }
     int u = root;
-    for (int i = 0; i < (int)bits.size(); i++) {
+    for (int i = 0; i < static_cast<int>(bits.size()); i++) {
       u = bits[i] == '0' ? nodes[u].left : nodes[u].right;
       if (nodes[u].left == -1 && nodes[u].right == -1) {
-        text.push_back((char)nodes[u].ch);
+        text.push_back(static_cast<char>(nodes[u].ch));
         u = root;
       }
     }
@@ -120,7 +120,7 @@ class huffman_tree {
 
 int main() {
   string text = "banana bandana";
-  huffman_tree h(text);
+  HuffmanTree h(text);
   string bits = h.encode(text);
   assert(h.decode(bits) == text);
   assert(bits.size() < text.size() * 8);

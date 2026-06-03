@@ -196,7 +196,7 @@ void combsort(It lo, It hi, Compare comp) {
   bool swapped = true;
   while (gap > 1 || swapped) {
     if (gap > 1) {
-      gap = (int)((double)gap / 1.3);
+      gap = static_cast<int>((static_cast<double>(gap) / 1.3));
     }
     swapped = false;
     for (It it = lo; it + gap < hi; ++it) {
@@ -233,8 +233,8 @@ Space Complexity: O(n + w) auxiliary.
 
 */
 
-template<class UnsignedIt>
-void radix_sort(UnsignedIt lo, UnsignedIt hi) {
+template<class It>
+void radix_sort(It lo, It hi) {
   if (hi - lo < 2) {
     return;
   }
@@ -242,18 +242,18 @@ void radix_sort(UnsignedIt lo, UnsignedIt hi) {
   const int radix_base = 1 << radix_bits;  // e.g. 2^8 = 256
   const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
   int num_bits = 8 * sizeof(*lo);          // 8 bits per byte
-  typedef typename std::iterator_traits<UnsignedIt>::value_type T;
+  typedef typename std::iterator_traits<It>::value_type T;
   T *buf = new T[hi - lo];
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
     int count[radix_base] = {0};
-    for (UnsignedIt it = lo; it != hi; ++it) {
+    for (It it = lo; it != hi; ++it) {
       count[(*it >> pos) & radix_mask]++;
     }
     T *bucket[radix_base], *curr = buf;
     for (int i = 0; i < radix_base; curr += count[i++]) {
       bucket[i] = curr;
     }
-    for (UnsignedIt it = lo; it != hi; ++it) {
+    for (It it = lo; it != hi; ++it) {
       *bucket[(*it >> pos) & radix_mask]++ = *it;
     }
     std::copy(buf, buf + (hi - lo), lo);
@@ -303,7 +303,7 @@ bool sorted(It lo, It hi) {
 }
 
 bool compare_as_ints(double i, double j) {
-  return (int)i < (int)j;
+  return static_cast<int>(i) < static_cast<int>(j);
 }
 
 int main() {
@@ -361,15 +361,15 @@ int main() {
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
 
-#define test(sort_function)                                \
-  {                                                        \
-    clock_t start = clock();                               \
-    sort_function(v.begin(), v.end());                     \
-    double t = (double)(clock() - start) / CLOCKS_PER_SEC; \
-    cout << setw(14) << left << #sort_function "(): ";     \
-    cout << fixed << t << "s" << endl;                     \
-    assert(sorted(v.begin(), v.end()));                    \
-    v = v2;                                                \
+#define test(sort_function)                                             \
+  {                                                                     \
+    clock_t start = clock();                                            \
+    sort_function(v.begin(), v.end());                                  \
+    double t = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC; \
+    cout << setw(14) << left << #sort_function "(): ";                  \
+    cout << fixed << t << "s" << endl;                                  \
+    assert(sorted(v.begin(), v.end()));                                 \
+    v = v2;                                                             \
   }
   test(std::sort);
   test(quicksort);

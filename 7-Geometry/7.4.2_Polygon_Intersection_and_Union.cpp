@@ -51,7 +51,8 @@ double cross(const point &a, const point &b, const point &o = point(0, 0)) {
 }
 
 int seg_intersection(
-    const point &a, const point &b, const point &c, const point &d, point *p = NULL, point *q = NULL
+    const point &a, const point &b, const point &c, const point &d, point *p = nullptr,
+    point *q = nullptr
 ) {
   static const bool TOUCH_IS_INTERSECT = true;
   point ab(b.x - a.x, b.y - a.y);
@@ -67,12 +68,12 @@ int seg_intersection(
       point res1 = std::max(std::min(a, b), std::min(c, d));
       point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
-        if (p != NULL) {
+        if (p != nullptr) {
           *p = res1;
         }
         return 0;  // Collinear and meeting at an endpoint.
       }
-      if (p != NULL && q != NULL) {
+      if (p != nullptr && q != nullptr) {
         *p = res1;
         *q = res2;
       }
@@ -88,7 +89,7 @@ int seg_intersection(
   bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1)) : (LT(0, t) && LT(t, 1));
   bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
-    if (p != NULL) {
+    if (p != nullptr) {
       *p = point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
@@ -97,7 +98,7 @@ int seg_intersection(
 }
 
 int line_intersection(
-    const point &p1, const point &p2, const point &p3, const point &p4, point *p = NULL
+    const point &p1, const point &p2, const point &p3, const point &p4, point *p = nullptr
 ) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -108,22 +109,22 @@ int line_intersection(
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
-  if (p != NULL) {
+  if (p != nullptr) {
     *p = point(x / det, y / det);
   }
   return 0;
 }
 
-struct event {
+struct Event {
   double y;
   int mask_delta;
 
-  event(double y = 0, int mask_delta = 0) {
+  Event(double y = 0, int mask_delta = 0) {
     this->y = y;
     this->mask_delta = mask_delta;
   }
 
-  bool operator<(const event &e) const {
+  bool operator<(const Event &e) const {
     if (y != e.y) {
       return y < e.y;
     }
@@ -151,10 +152,10 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   }
   std::vector<double> xsa(xs.begin(), xs.end());
   double res = 0;
-  for (int k = 0; k < (int)xsa.size() - 1; k++) {
+  for (int k = 0; k < static_cast<int>(xsa.size()) - 1; k++) {
     double x = (xsa[k] + xsa[k + 1]) / 2;
     point sweep0(x, 0), sweep1(x, 1);
-    std::vector<event> events;
+    std::vector<Event> events;
     for (int poly = 0; poly < 2; poly++) {
       It lo = plo[poly], hi = phi[poly];
       double area = 0;
@@ -167,9 +168,9 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
           double y = p.y, x0 = i->x, x1 = j->x;
           int sgn_area = (area < 0 ? -1 : (area > 0 ? 1 : 0));
           if (x0 < x && x1 > x) {
-            events.push_back(event(y, sgn_area * (1 << poly)));
+            events.push_back(Event(y, sgn_area * (1 << poly)));
           } else if (x0 > x && x1 < x) {
-            events.push_back(event(y, -sgn_area * (1 << poly)));
+            events.push_back(Event(y, -sgn_area * (1 << poly)));
           }
         }
       }
@@ -177,7 +178,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     std::sort(events.begin(), events.end());
     double a = 0;
     int mask = 0;
-    for (int j = 0; j < (int)events.size(); j++) {
+    for (int j = 0; j < static_cast<int>(events.size()); j++) {
       if (mask == 3) {
         a += events[j].y - events[j - 1].y;
       }

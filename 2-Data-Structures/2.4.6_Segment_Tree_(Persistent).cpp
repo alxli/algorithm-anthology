@@ -8,7 +8,7 @@ The implementation below stores sums over a fixed index range `[0, n - 1]`. Pers
 are useful for offline order-statistics queries, rollback-like histories, and functional dynamic
 programming states.
 
-- `persistent_segment_tree(a)` constructs version 0 from array `a`.
+- `PersistentSegTree(a)` constructs version 0 from array `a`.
 - `update(version, index, value)` returns a new version where `a[index]` is set to `value`, leaving
   the old version unchanged.
 - `query(version, lo, hi)` returns the sum of the inclusive range `[lo, hi]` in the specified
@@ -27,7 +27,7 @@ Space Complexity:
 
 #include <vector>
 
-class persistent_segment_tree {
+class PersistentSegTree {
   struct node {
     long long sum;
     int left, right;
@@ -42,19 +42,19 @@ class persistent_segment_tree {
   int build(const std::vector<int> &a, int lo, int hi) {
     if (lo == hi) {
       tree.push_back(node(a[lo]));
-      return (int)tree.size() - 1;
+      return static_cast<int>(tree.size()) - 1;
     }
     int mid = lo + (hi - lo) / 2;
     int left = build(a, lo, mid);
     int right = build(a, mid + 1, hi);
     tree.push_back(node(tree[left].sum + tree[right].sum, left, right));
-    return (int)tree.size() - 1;
+    return static_cast<int>(tree.size()) - 1;
   }
 
   int update(int cur, int lo, int hi, int index, int value) {
     if (lo == hi) {
       tree.push_back(node(value));
-      return (int)tree.size() - 1;
+      return static_cast<int>(tree.size()) - 1;
     }
     int mid = lo + (hi - lo) / 2;
     int left = tree[cur].left, right = tree[cur].right;
@@ -64,7 +64,7 @@ class persistent_segment_tree {
       right = update(right, mid + 1, hi, index, value);
     }
     tree.push_back(node(tree[left].sum + tree[right].sum, left, right));
-    return (int)tree.size() - 1;
+    return static_cast<int>(tree.size()) - 1;
   }
 
   long long query(int cur, int lo, int hi, int qlo, int qhi) const {
@@ -83,7 +83,7 @@ class persistent_segment_tree {
   }
 
  public:
-  explicit persistent_segment_tree(const std::vector<int> &a) : n(a.size()) {
+  explicit PersistentSegTree(const std::vector<int> &a) : n(a.size()) {
     if (n > 0) {
       root.push_back(build(a, 0, n - 1));
     }
@@ -93,7 +93,7 @@ class persistent_segment_tree {
 
   int update(int version, int index, int value) {
     root.push_back(update(root[version], 0, n - 1, index, value));
-    return (int)root.size() - 1;
+    return static_cast<int>(root.size()) - 1;
   }
 
   long long query(int version, int lo, int hi) const {
@@ -109,7 +109,7 @@ using namespace std;
 int main() {
   int raw[] = {1, 2, 3, 4};
   vector<int> a(raw, raw + 4);
-  persistent_segment_tree t(a);
+  PersistentSegTree t(a);
   int v1 = t.update(0, 1, 10);
   int v2 = t.update(v1, 3, -1);
   assert(t.query(0, 0, 3) == 10);

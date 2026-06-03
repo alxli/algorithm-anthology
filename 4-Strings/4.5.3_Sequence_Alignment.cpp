@@ -121,7 +121,8 @@ void hirschberg_rec(
   std::vector<int> rev = row_cost(rlo1, rmid1, rlo2, rhi2, gap_cost, sub_cost);
   It mid2 = lo2;
   int mincost = -1;
-  for (int i = 0, j = (int)rev.size() - 1; i < (int)fwd.size(); i++, j--) {
+  for (int i = 0, j = static_cast<int>(rev.size()) - 1; i < static_cast<int>(fwd.size());
+       i++, j--) {
     if (mincost < 0 || fwd[i] + rev[j] < mincost) {
       mincost = fwd[i] + rev[j];
       mid2 = lo2 + i;

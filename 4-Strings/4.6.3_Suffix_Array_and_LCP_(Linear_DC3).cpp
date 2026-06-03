@@ -10,7 +10,7 @@ For a string `s` of length $n$, the longest common prefix (LCP) array of length 
 lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in
 `s`. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of `[1, 0]`.
 
-- `suffix_array(s)` constructs a suffix array from the given string `s` using the linear time
+- `SuffixArray(s)` constructs a suffix array from the given string `s` using the linear time
   DC3/skew algorithm by Karkkainen & Sanders (2003) with radix sort.
 - `get_sa()` returns the constructed suffix array.
 - `get_lcp()` returns the corresponding LCP array for the suffix array.
@@ -39,7 +39,7 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-class suffix_array {
+class SuffixArray {
   static bool leq(int a1, int a2, int b1, int b2) { return (a1 < b1) || (a1 == b1 && a2 <= b2); }
 
   static bool leq(int a1, int a2, int a3, int b1, int b2, int b3) {
@@ -126,7 +126,7 @@ class suffix_array {
   std::vector<int> sa;
 
  public:
-  suffix_array(const string &s) : s(s), sa(s.size() + 1) {
+  SuffixArray(const string &s) : s(s), sa(s.size() + 1) {
     int n = s.size();
     std::vector<int> scopy(s.begin(), s.end());
     scopy.resize(n + 4);
@@ -161,7 +161,7 @@ class suffix_array {
   }
 
   size_t find(const string &needle) {
-    int lo = 0, hi = (int)s.size() - 1;
+    int lo = 0, hi = static_cast<int>(s.size()) - 1;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
       int cmp = s.compare(sa[mid], needle.size(), needle);
@@ -183,7 +183,7 @@ class suffix_array {
 using namespace std;
 
 int main() {
-  suffix_array sa("banana");
+  SuffixArray sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
   int sarr_expected[] = {5, 3, 1, 0, 4, 2};
   int lcp_expected[] = {1, 3, 0, 0, 2};

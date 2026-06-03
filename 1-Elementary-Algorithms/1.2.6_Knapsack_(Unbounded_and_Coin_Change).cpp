@@ -47,7 +47,7 @@ long long unbounded_knapsack(
 long long count_coin_change(const std::vector<int> &coins, int target) {
   std::vector<long long> dp(target + 1, 0);
   dp[0] = 1;
-  for (int i = 0; i < (int)coins.size(); i++) {
+  for (int i = 0; i < static_cast<int>(coins.size()); i++) {
     for (int sum = coins[i]; sum <= target; sum++) {
       dp[sum] += dp[sum - coins[i]];
     }

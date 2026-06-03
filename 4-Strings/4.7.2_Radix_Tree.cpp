@@ -5,7 +5,7 @@ substring of an inserted string, and each inserted string corresponds to a path 
 node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space
 efficient as it combines chains of nodes with only a single child.
 
-- `radix_tree()` constructs an empty map.
+- `RadixTree()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(s, v)` adds an entry with string key `s` and value `v` to the map, returning `true` if a
@@ -13,7 +13,7 @@ efficient as it combines chains of nodes with only a single child.
   and the old value associated with the string key is preserved).
 - `erase(s)` removes the entry with string key `s` from the map, returning `true` if the removal was
   successful or `false` if the string to be removed was not found.
-- `find(s)` returns a pointer to a const value associated with string key `s`, or `NULL` if the key
+- `find(s)` returns a pointer to a const value associated with string key `s`, or `nullptr` if the key
   was not found.
 - `walk(f)` calls the function `f(s, v)` on each entry of the map, in lexicographically ascending
   order of the string keys.
@@ -22,7 +22,7 @@ Time Complexity:
 - O(n) per call to `insert(s, v)`, `erase(s)`, and `find(s)`, where $n$ is the length of `s`. Note
   that there is a hidden factor of $\log n$ due to map lookups, which can be considered constant
   amortized. The implementation may be optimized by storing the children of nodes in an
-  `std::unordered_map` in C++11 and later, or a `std::vector<pair<string, node_t*> >`, since the
+  `std::unordered_map` in C++11 and later, or a `std::vector<pair<string, Node*> >`, since the
   only container operations required are iteration over the (`key`, `child`) pairs and inserting a
   new pair. Sticking with an (ordered) `std::map`, we can optimize all operations by using
   `map.lower_bound()`, a binary tree search for a child with a shared prefix, instead of iteration.
@@ -47,21 +47,21 @@ Space Complexity:
 using std::string;
 
 template<class V>
-class radix_tree {
-  struct node_t {
+class RadixTree {
+  struct Node {
     V value;
     bool is_terminal;
-    std::map<string, node_t *> children;
+    std::map<string, Node *> children;
 
-    node_t(const V &value = V(), bool is_terminal = false)
-        : value(value), is_terminal(is_terminal) {}
+    Node(const V &value = V(), bool is_terminal = false) : value(value), is_terminal(is_terminal) {}
   } *root;
 
-  typedef typename std::map<string, node_t *>::iterator cit;
+  typedef typename std::map<string, Node *>::iterator cit;
 
   static int lcp_len(const string &s1, const string &s2, int s2start) {
     int i = 0;
-    for (int j = s2start; i < (int)s1.size() && j < (int)s2.size(); i++, j++) {
+    for (int j = s2start; i < static_cast<int>(s1.size()) && j < static_cast<int>(s2.size());
+         i++, j++) {
       if (s1[i] != s2[j]) {
         break;
       }
@@ -69,8 +69,8 @@ class radix_tree {
     return i;
   }
 
-  static bool insert(node_t *n, const string &s, int i, const V &v) {
-    if (i == (int)s.size()) {
+  static bool insert(Node *n, const string &s, int i, const V &v) {
+    if (i == static_cast<int>(s.size())) {
       if (n->is_terminal) {
         return false;
       }
@@ -82,28 +82,28 @@ class radix_tree {
       if (len == 0) {
         continue;
       }
-      if (len == (int)it->first.size()) {
+      if (len == static_cast<int>(it->first.size())) {
         return insert(it->second, s, i + len, v);
       }
       string left = it->first.substr(0, len);
       string right = it->first.substr(len);
-      node_t *tmp = new node_t();
+      Node *tmp = new Node();
       tmp->children[right] = it->second;
       n->children.erase(it);
       n->children[left] = tmp;
-      if (len == (int)s.size() - i) {
+      if (len == static_cast<int>(s.size()) - i) {
         tmp->value = v;
         tmp->is_terminal = true;
         return true;
       }
       return insert(tmp, s, i + len, v);
     }
-    n->children[s.substr(i)] = new node_t(v, true);
+    n->children[s.substr(i)] = new Node(v, true);
     return true;
   }
 
-  static bool erase(node_t *n, const string &s, int i) {
-    if (i == (int)s.size()) {
+  static bool erase(Node *n, const string &s, int i) {
+    if (i == static_cast<int>(s.size())) {
       if (!n->is_terminal) {
         return false;
       }
@@ -115,7 +115,7 @@ class radix_tree {
       if (len == 0) {
         continue;
       }
-      node_t *child = it->second;
+      Node *child = it->second;
       if (!erase(child, s, i + len)) {
         return false;
       }
@@ -123,7 +123,7 @@ class radix_tree {
         delete child;
         n->children.erase(it);
       } else if (child->children.size() == 1) {
-        node_t *grandchild = child->children.begin()->second;
+        Node *grandchild = child->children.begin()->second;
         if (!child->is_terminal) {
           string merged_key(it->first + child->children.begin()->first);
           child->value = grandchild->value;
@@ -140,7 +140,7 @@ class radix_tree {
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, string &s, KVFunction f) {
+  static void walk(Node *n, string &s, KVFunction f) {
     if (n->is_terminal) {
       f(s, n->value);
     }
@@ -151,7 +151,7 @@ class radix_tree {
     }
   }
 
-  static void clean_up(node_t *n) {
+  static void clean_up(Node *n) {
     for (cit it = n->children.begin(); it != n->children.end(); ++it) {
       clean_up(it->second);
     }
@@ -161,9 +161,9 @@ class radix_tree {
   int num_terminals;
 
  public:
-  radix_tree() : root(new node_t()), num_terminals(0) {}
+  RadixTree() : root(new Node()), num_terminals(0) {}
 
-  ~radix_tree() { clean_up(root); }
+  ~RadixTree() { clean_up(root); }
   int size() const { return num_terminals; }
   bool empty() const { return num_terminals == 0; }
 
@@ -184,9 +184,9 @@ class radix_tree {
   }
 
   const V *find(const string &s) const {
-    node_t *n = root;
+    Node *n = root;
     int i = 0;
-    while (i < (int)s.size()) {
+    while (i < static_cast<int>(s.size())) {
       bool found = false;
       ;
       for (cit it = n->children.begin(); it != n->children.end(); ++it) {
@@ -198,10 +198,10 @@ class radix_tree {
         }
       }
       if (!found) {
-        return NULL;
+        return nullptr;
       }
     }
-    return n->is_terminal ? &(n->value) : NULL;
+    return n->is_terminal ? &(n->value) : nullptr;
   }
 
   template<class KVFunction>
@@ -235,7 +235,7 @@ void print_entry(const string &k, int v) {
 
 int main() {
   string s[9] = {"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
-  radix_tree<int> t;
+  RadixTree<int> t;
   assert(t.empty());
   for (int i = 0; i < 9; i++) {
     assert(t.insert(s[i], i));
@@ -249,8 +249,8 @@ int main() {
   assert(*t.find("ten") == 5);
   assert(t.erase("tea"));
   assert(t.size() == 8);
-  assert(t.find("tea") == NULL);
+  assert(t.find("tea") == nullptr);
   assert(t.erase(""));
-  assert(t.find("") == NULL);
+  assert(t.find("") == nullptr);
   return 0;
 }

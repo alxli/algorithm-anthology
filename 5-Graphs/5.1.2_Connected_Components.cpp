@@ -34,7 +34,7 @@ int component_id[MAXN];
 void dfs(int u, int id) {
   component_id[u] = id;
   components[id].push_back(u);
-  for (int i = 0; i < (int)adj[u].size(); i++) {
+  for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
     int v = adj[u][i];
     if (component_id[v] == -1) {
       dfs(v, id);
@@ -48,7 +48,7 @@ void connected_components(int nodes) {
   for (int u = 0; u < nodes; u++) {
     if (component_id[u] == -1) {
       components.push_back(std::vector<int>());
-      dfs(u, (int)components.size() - 1);
+      dfs(u, static_cast<int>(components.size()) - 1);
     }
   }
 }

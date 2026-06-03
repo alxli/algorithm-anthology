@@ -34,11 +34,11 @@ using std::string;
 
 std::vector<int> z_array(const string &s) {
   std::vector<int> z(s.size());
-  for (int i = 1, l = 0, r = 0; i < (int)z.size(); i++) {
+  for (int i = 1, l = 0, r = 0; i < static_cast<int>(z.size()); i++) {
     if (i <= r) {
       z[i] = std::min(r - i + 1, z[i - l]);
     }
-    while (i + z[i] < (int)z.size() && s[z[i]] == s[i + z[i]]) {
+    while (i + z[i] < static_cast<int>(z.size()) && s[z[i]] == s[i + z[i]]) {
       z[i]++;
     }
     if (r < i + z[i] - 1) {
@@ -51,9 +51,9 @@ std::vector<int> z_array(const string &s) {
 
 size_t find(const string &haystack, const string &needle) {
   std::vector<int> z = z_array(needle + '\0' + haystack);
-  for (int i = (int)needle.size() + 1; i < (int)z.size(); i++) {
-    if (z[i] == (int)needle.size()) {
-      return i - (int)needle.size() - 1;
+  for (int i = static_cast<int>(needle.size()) + 1; i < static_cast<int>(z.size()); i++) {
+    if (z[i] == static_cast<int>(needle.size())) {
+      return i - static_cast<int>(needle.size()) - 1;
     }
   }
   return string::npos;

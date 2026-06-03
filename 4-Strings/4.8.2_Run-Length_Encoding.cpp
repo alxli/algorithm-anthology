@@ -26,7 +26,7 @@ using std::string;
 
 std::vector<std::pair<char, int>> run_length_encode(const string &s) {
   std::vector<std::pair<char, int>> res;
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     if (res.empty() || res.back().first != s[i]) {
       res.push_back(std::make_pair(s[i], 1));
     } else {
@@ -38,7 +38,7 @@ std::vector<std::pair<char, int>> run_length_encode(const string &s) {
 
 string run_length_decode(const std::vector<std::pair<char, int>> &runs) {
   string res;
-  for (int i = 0; i < (int)runs.size(); i++) {
+  for (int i = 0; i < static_cast<int>(runs.size()); i++) {
     res.append(runs[i].second, runs[i].first);
   }
   return res;

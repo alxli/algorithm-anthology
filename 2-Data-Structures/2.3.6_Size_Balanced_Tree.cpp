@@ -6,7 +6,7 @@ for the ranks of given keys. This implementation requires an ordering on the set
 defined by `operator <` on the key type. A size balanced tree augments each nodes with the size of
 its subtree, using it to maintain balance and compute order statistics.
 
-- `size_balanced_tree()` constructs an empty map.
+- `SBTree()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if an new
@@ -14,7 +14,7 @@ its subtree, using it to maintain balance and compute order statistics.
   old value associated with the key is preserved).
 - `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
   successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if the key was not
+- `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was not
   found.
 - `select(r)` returns a key-value pair of the node with a key of zero-based rank `r` in the map,
   throwing an exception if the rank is not between 0 and `size() - 1`.
@@ -40,32 +40,32 @@ Space Complexity:
 #include <utility>
 
 template<class K, class V>
-class size_balanced_tree {
-  struct node_t {
+class SBTree {
+  struct Node {
     K key;
     V value;
     int size;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const K &k, const V &v) : key(k), value(v), size(1), left(NULL), right(NULL) {}
+    Node(const K &k, const V &v) : key(k), value(v), size(1), left(nullptr), right(nullptr) {}
 
-    inline node_t *&child(int c) { return (c == 0) ? left : right; }
+    inline Node *&child(int c) { return (c == 0) ? left : right; }
 
     void update() {
       size = 1;
-      if (left != NULL) {
+      if (left != nullptr) {
         size += left->size;
       }
-      if (right != NULL) {
+      if (right != nullptr) {
         size += right->size;
       }
     }
   } *root;
 
-  static inline int size(node_t *n) { return (n == NULL) ? 0 : n->size; }
+  static inline int size(Node *n) { return (n == nullptr) ? 0 : n->size; }
 
-  static void rotate(node_t *&n, int c) {
-    node_t *tmp = n->child(c);
+  static void rotate(Node *&n, int c) {
+    Node *tmp = n->child(c);
     n->child(c) = tmp->child(!c);
     tmp->child(!c) = n;
     n->update();
@@ -73,11 +73,11 @@ class size_balanced_tree {
     n = tmp;
   }
 
-  static void maintain(node_t *&n, int c) {
-    if (n == NULL || n->child(c) == NULL) {
+  static void maintain(Node *&n, int c) {
+    if (n == nullptr || n->child(c) == nullptr) {
       return;
     }
-    node_t *&tmp = n->child(c);
+    Node *&tmp = n->child(c);
     if (size(tmp->child(c)) > size(n->child(!c))) {
       rotate(n, c);
     } else if (size(tmp->child(!c)) > size(n->child(!c))) {
@@ -92,55 +92,55 @@ class size_balanced_tree {
     maintain(n, 1);
   }
 
-  static bool insert(node_t *&n, const K &k, const V &v) {
-    if (n == NULL) {
-      n = new node_t(k, v);
+  static bool insert(Node *&n, const K &k, const V &v) {
+    if (n == nullptr) {
+      n = new Node(k, v);
       return true;
     }
-    bool result;
+    bool found;
     if (k < n->key) {
-      result = insert(n->left, k, v);
+      found = insert(n->left, k, v);
       maintain(n, 0);
     } else if (n->key < k) {
-      result = insert(n->right, k, v);
+      found = insert(n->right, k, v);
       maintain(n, 1);
     } else {
       return false;
     }
     n->update();
-    return result;
+    return found;
   }
 
-  static bool erase(node_t *&n, const K &k) {
-    if (n == NULL) {
+  static bool erase(Node *&n, const K &k) {
+    if (n == nullptr) {
       return false;
     }
-    bool result;
+    bool found;
     int c = (k < n->key);
     if (k < n->key) {
-      result = erase(n->left, k);
+      found = erase(n->left, k);
     } else if (n->key < k) {
-      result = erase(n->right, k);
+      found = erase(n->right, k);
     } else {
-      if (n->right == NULL || n->left == NULL) {
-        node_t *tmp = n;
-        n = (n->right == NULL) ? n->left : n->right;
+      if (n->right == nullptr || n->left == nullptr) {
+        Node *tmp = n;
+        n = (n->right == nullptr) ? n->left : n->right;
         delete tmp;
         return true;
       }
-      node_t *p = n->right;
-      while (p->left != NULL) {
+      Node *p = n->right;
+      while (p->left != nullptr) {
         p = p->left;
       }
       n->key = p->key;
-      result = erase(n->right, p->key);
+      found = erase(n->right, p->key);
     }
     maintain(n, c);
     n->update();
-    return result;
+    return found;
   }
 
-  static std::pair<K, V> select(node_t *n, int r) {
+  static std::pair<K, V> select(Node *n, int r) {
     int rank = size(n->left);
     if (r < rank) {
       return select(n->left, r);
@@ -150,8 +150,8 @@ class size_balanced_tree {
     return std::make_pair(n->key, n->value);
   }
 
-  static int rank(node_t *n, const K &k) {
-    if (n == NULL) {
+  static int rank(Node *n, const K &k) {
+    if (n == nullptr) {
       throw std::runtime_error("Cannot rank key that's not in tree.");
     }
     int r = size(n->left);
@@ -164,16 +164,16 @@ class size_balanced_tree {
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, KVFunction f) {
-    if (n != NULL) {
+  static void walk(Node *n, KVFunction f) {
+    if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
       walk(n->right, f);
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -181,18 +181,18 @@ class size_balanced_tree {
   }
 
  public:
-  size_balanced_tree() : root(NULL) {}
+  SBTree() : root(nullptr) {}
 
-  ~size_balanced_tree() { clean_up(root); }
+  ~SBTree() { clean_up(root); }
   int size() const { return size(root); }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
   bool insert(const K &k, const V &v) { return insert(root, k, v); }
   bool erase(const K &k) { return erase(root, k); }
   int rank(const K &k) const { return rank(root, k); }
 
   const V *find(const K &k) const {
-    node_t *n = root;
-    while (n != NULL) {
+    Node *n = root;
+    while (n != nullptr) {
       if (k < n->key) {
         n = n->left;
       } else if (n->key < k) {
@@ -201,7 +201,7 @@ class size_balanced_tree {
         return &(n->value);
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   std::pair<K, V> select(int r) const {
@@ -233,7 +233,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  size_balanced_tree<int, char> t;
+  SBTree<int, char> t;
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
@@ -245,7 +245,7 @@ int main() {
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
-  assert(t.find(1) == NULL);
+  assert(t.find(1) == nullptr);
   t.walk(printch);
   cout << endl;
   assert(t.rank(2) == 0);

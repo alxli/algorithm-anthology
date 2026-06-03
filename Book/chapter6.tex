@@ -241,7 +241,7 @@ double tgamma_(double x) {
     if (arg_was_less_than_one) {
       y += 1;
     } else {
-      n = (int)floor(y) - 1;
+      n = static_cast<int>(floor(y)) - 1;
       y -= n;
     }
     static const double p[] = {-1.71618513886549492533811e+0, 2.47656508055759199108314e+1,
@@ -297,7 +297,7 @@ Base Conversion:
 \begin{lstlisting}[language=C++]
 std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
   unsigned long long x = 0, power = 1;
-  for (int i = 0; i < (int)d.size(); i++) {
+  for (int i = 0; i < static_cast<int>(d.size()); i++) {
     x += d[i] * power;
     power *= a;
   }
@@ -330,6 +330,8 @@ std::string to_roman(unsigned int x) {
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+using namespace std;
+
 #include <cassert>
 #include <iostream>
 
@@ -605,8 +607,8 @@ int64 eulerian2(int n, int k, int64 m = 1000000007) {
 
 int main() {
   table t = binomial_table(10);
-  for (int i = 0; i < (int)t.size(); i++) {
-    for (int j = 0; j < (int)t[i].size(); j++) {
+  for (int i = 0; i < static_cast<int>(t.size()); i++) {
+    for (int j = 0; j < static_cast<int>(t[i].size()); j++) {
       assert(t[i][j] == choose(i, j));
     }
   }
@@ -966,7 +968,7 @@ int main() {
     int a[] = {3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     cycles c = permutation_cycles(n, a);
-    for (int i = 0; i < (int)c.size(); i++) {
+    for (int i = 0; i < static_cast<int>(c.size()); i++) {
       print_range(c[i].begin(), c[i].end());
     }
     cout << endl;
@@ -1266,7 +1268,7 @@ bool next_partition(std::vector<int> &p) {
 
 long long partition_function(int a, int b) {
   static std::vector<std::vector<long long>> p(1, std::vector<long long>(1, 1));
-  if (a >= (int)p.size()) {
+  if (a >= static_cast<int>(p.size())) {
     int old = p.size();
     p.resize(a + 1);
     p[0].resize(a + 1);
@@ -1298,10 +1300,10 @@ std::vector<int> partition_by_rank(int n, long long r) {
 long long rank_by_partition(const std::vector<int> &p) {
   long long res = 0;
   int sum = 0;
-  for (int i = 0; i < (int)p.size(); i++) {
+  for (int i = 0; i < static_cast<int>(p.size()); i++) {
     sum += p[i];
   }
-  for (int i = 0; i < (int)p.size(); i++) {
+  for (int i = 0; i < static_cast<int>(p.size()); i++) {
     for (int j = 0; j < p[i]; j++) {
       res += partition_function(sum, j);
     }
@@ -1376,7 +1378,7 @@ Increasing partitions of 8:
 {1,2,5} {1,3,4} {1,7} {2,6} {3,5} {8}
 \end{exampleoutput}
 \subsection{Enumerating Generic Combinatorial Sequences}
-Enumerate combinatorial sequences by inheriting an abstract class. Child classes of \inlinecode{abstract\_enumerator} must implement the \inlinecode{count()} function which should return the number of combinatorial sequences starting with the given prefix.
+Enumerate combinatorial sequences by inheriting an abstract class. Child classes of \inlinecode{AbstractEnumerator} must implement the \inlinecode{count()} function which should return the number of combinatorial sequences starting with the given prefix.
 
 \begin{compactitem}
   \item \inlinecode{to\_rank(a)} returns an integer representing the zero-based rank of the combinatorial sequence \inlinecode{a}.
@@ -1391,11 +1393,11 @@ Enumerate combinatorial sequences by inheriting an abstract class. Child classes
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-class abstract_enumerator {
+class AbstractEnumerator {
  protected:
   int range, length;
 
-  abstract_enumerator(int r, int l) : range(r), length(l) {}
+  AbstractEnumerator(int r, int l) : range(r), length(l) {}
   virtual long long count(const std::vector<int> &prefix) { return 0; }
   std::vector<int> next(std::vector<int> &a) { return from_rank(to_rank(a) + 1); }
   long long total_count() { return count(std::vector<int>(0)); }
@@ -1403,7 +1405,7 @@ class abstract_enumerator {
  public:
   long long to_rank(const std::vector<int> &a) {
     long long res = 0;
-    for (int i = 0; i < (int)a.size(); i++) {
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       std::vector<int> prefix(a.begin(), a.end());
       prefix.resize(i + 1);
       for (prefix[i] = 0; prefix[i] < a[i]; prefix[i]++) {
@@ -1415,7 +1417,7 @@ class abstract_enumerator {
 
   std::vector<int> from_rank(long long r) {
     std::vector<int> a(length);
-    for (int i = 0; i < (int)a.size(); i++) {
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       std::vector<int> prefix(a.begin(), a.end());
       prefix.resize(i + 1);
       for (prefix[i] = 0; prefix[i] < range; ++prefix[i]) {
@@ -1439,9 +1441,9 @@ class abstract_enumerator {
   }
 };
 
-class arrangement_enumerator : public abstract_enumerator {
+class ArrangementEnumerator : public AbstractEnumerator {
  public:
-  arrangement_enumerator(int n, int k) : abstract_enumerator(n, k) {}
+  ArrangementEnumerator(int n, int k) : AbstractEnumerator(n, k) {}
 
   long long count(const std::vector<int> &prefix) {
     int n = prefix.size();
@@ -1458,17 +1460,17 @@ class arrangement_enumerator : public abstract_enumerator {
   }
 };
 
-class permutation_enumerator : public arrangement_enumerator {
+class PermutationEnumerator : public ArrangementEnumerator {
  public:
-  permutation_enumerator(int n) : arrangement_enumerator(n, n) {}
+  PermutationEnumerator(int n) : ArrangementEnumerator(n, n) {}
 };
 
-class combination_enumerator : public abstract_enumerator {
+class CombinationEnumerator : public AbstractEnumerator {
   std::vector<std::vector<long long>> table;
 
  public:
-  combination_enumerator(int n, int k)
-      : abstract_enumerator(n, k), table(n + 1, std::vector<long long>(n + 1)) {
+  CombinationEnumerator(int n, int k)
+      : AbstractEnumerator(n, k), table(n + 1, std::vector<long long>(n + 1)) {
     for (int i = 0; i <= n; i++) {
       for (int j = 0; j <= i; j++) {
         table[i][j] = (j == 0) ? 1 : table[i - 1][j - 1] + table[i - 1][j];
@@ -1488,12 +1490,12 @@ class combination_enumerator : public abstract_enumerator {
   }
 };
 
-class partition_enumerator : public abstract_enumerator {
+class PartitionEnumerator : public AbstractEnumerator {
   std::vector<std::vector<long long>> table;
 
  public:
-  partition_enumerator(int n)
-      : abstract_enumerator(n + 1, n), table(n + 1, std::vector<long long>(n + 1)) {
+  PartitionEnumerator(int n)
+      : AbstractEnumerator(n + 1, n), table(n + 1, std::vector<long long>(n + 1)) {
     std::vector<std::vector<long long>> tmp(table);
     tmp[0][0] = 1;
     for (int i = 1; i <= n; i++) {
@@ -1509,7 +1511,7 @@ class partition_enumerator : public abstract_enumerator {
   }
 
   long long count(const std::vector<int> &prefix) {
-    int n = (int)prefix.size(), sum = 0;
+    int n = static_cast<int>(prefix.size()), sum = 0;
     for (int i = 0; i < n; i++) {
       sum += prefix[i];
     }
@@ -1543,26 +1545,26 @@ void print_range(It lo, It hi) {
 
 int main() {
   {
-    cout << "3 permute 2 arrangement_enumerator:" << endl;
-    arrangement_enumerator arr(3, 2);
+    cout << "3 permute 2 ArrangementEnumerator:" << endl;
+    ArrangementEnumerator arr(3, 2);
     arr.enumerate(print_range);
     cout << endl;
   }
   {
     cout << "\nPermutatations of [0, 3):" << endl;
-    permutation_enumerator perm(3);
+    PermutationEnumerator perm(3);
     perm.enumerate(print_range);
     cout << endl;
   }
   {
     cout << "\n4 choose 3 combinations:" << endl;
-    combination_enumerator comb(4, 3);
+    CombinationEnumerator comb(4, 3);
     comb.enumerate(print_range);
     cout << endl;
   }
   {
     cout << "\nPartition of 4:" << endl;
-    partition_enumerator part(4);
+    PartitionEnumerator part(4);
     part.enumerate(print_range);
     cout << endl;
   }
@@ -1709,7 +1711,8 @@ long long garner_restore(int n, int a[], int p[]) {
   std::vector<int> x(a, a + n);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
-      x[i] = mod_inverse((long long)p[j], (long long)p[i]) * (x[i] - x[j]);
+      x[i] =
+          mod_inverse(static_cast<long long>(p[j]), static_cast<long long>(p[i])) * (x[i] - x[j]);
     }
     x[i] = (x[i] % p[i] + p[i]) % p[i];
   }
@@ -1769,12 +1772,12 @@ The implementation is intentionally close to common contest "Mint" templates: no
 Division uses the extended Euclidean algorithm, so the divisor only needs to be coprime to the modulus. For the factorial-table combination helper, the usual contest assumption is that \inlinecode{MOD} is prime and the requested factorials are invertible modulo \inlinecode{MOD}.
 
 \begin{compactitem}
-  \item \inlinecode{modular\textless{}T\textgreater{}(x)} constructs the residue class of integer \inlinecode{x} modulo \inlinecode{T::value}.
+  \item \inlinecode{Modular\textless{}T\textgreater{}(x)} constructs the residue class of integer \inlinecode{x} modulo \inlinecode{T::value}.
   \item \inlinecode{value()} and \inlinecode{operator()()} return the stored representative in \inlinecode{[0, MOD)}.
   \item \inlinecode{pow(e)} returns this value raised to nonnegative exponent \inlinecode{e}.
   \item \inlinecode{inv()} returns the multiplicative inverse, asserting it exists.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, comparison, increment, decrement, and stream I/O are overloaded.
-  \item \inlinecode{mod\_combinatorics\textless{}Mint\textgreater{}::choose(n, k)} returns $\binom n k$ using lazy factorial and inverse-factorial tables.
+  \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::choose(n, k)} returns $\binom n k$ using lazy factorial and inverse-factorial tables.
 \end{compactitem}
 
 \textbf{Time Complexity}:
@@ -1787,7 +1790,7 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary for modular arithmetic.
+  \item $O(1)$ auxiliary for Modular arithmetic.
   \item $O(n)$ for factorial and inverse-factorial tables grown through \inlinecode{choose(n, k)}.
 \end{compactitem}
 
@@ -1817,7 +1820,7 @@ T inverse(T a, T m) {
 }
 
 template<class T>
-class modular {
+class Modular {
  public:
   typedef typename T::value_type value_type;
 
@@ -1825,12 +1828,12 @@ class modular {
   value_type v;
 
  public:
-  modular(long long x = 0) { v = normalize(x); }
+  Modular(long long x = 0) { v = normalize(x); }
 
   static value_type mod() { return T::value; }
 
   static value_type normalize(long long x) {
-    if (-(long long)mod() <= x && x < (long long)mod()) {
+    if (-static_cast<long long>(mod()) <= x && x < static_cast<long long>(mod())) {
       value_type y = (value_type)x;
       return y < 0 ? y + mod() : y;
     }
@@ -1844,9 +1847,9 @@ class modular {
   value_type value() const { return v; }
   value_type operator()() const { return v; }
 
-  modular pow(long long e) const {
+  Modular pow(long long e) const {
     assert(e >= 0);
-    modular base = *this, res = 1;
+    Modular base = *this, res = 1;
     while (e > 0) {
       if (e & 1) {
         res *= base;
@@ -1857,12 +1860,12 @@ class modular {
     return res;
   }
 
-  modular inv() const {
+  Modular inv() const {
     assert(v != 0);
-    return modular(inverse((long long)v, (long long)mod()));
+    return Modular(inverse(static_cast<long long>(v), static_cast<long long>(mod())));
   }
 
-  modular &operator+=(const modular &other) {
+  Modular &operator+=(const Modular &other) {
     v += other.v;
     if (v >= mod()) {
       v -= mod();
@@ -1870,7 +1873,7 @@ class modular {
     return *this;
   }
 
-  modular &operator-=(const modular &other) {
+  Modular &operator-=(const Modular &other) {
     v -= other.v;
     if (v < 0) {
       v += mod();
@@ -1878,54 +1881,54 @@ class modular {
     return *this;
   }
 
-  modular &operator*=(const modular &other) {
-    v = normalize((long long)v * other.v);
+  Modular &operator*=(const Modular &other) {
+    v = normalize(static_cast<long long>(v) * other.v);
     return *this;
   }
 
-  modular operator-() const { return modular(-v); }
-  modular &operator++() { return *this += 1; }
-  modular &operator--() { return *this -= 1; }
-  modular &operator/=(const modular &other) { return *this *= other.inv(); }
+  Modular operator-() const { return Modular(-v); }
+  Modular &operator++() { return *this += 1; }
+  Modular &operator--() { return *this -= 1; }
+  Modular &operator/=(const Modular &other) { return *this *= other.inv(); }
 
-  modular operator++(int) {
-    modular res = *this;
+  Modular operator++(int) {
+    Modular res = *this;
     ++*this;
     return res;
   }
 
-  modular operator--(int) {
-    modular res = *this;
+  Modular operator--(int) {
+    Modular res = *this;
     --*this;
     return res;
   }
 
-  friend modular operator+(modular a, const modular &b) { return a += b; }
+  friend Modular operator+(Modular a, const Modular &b) { return a += b; }
 
-  friend modular operator-(modular a, const modular &b) { return a -= b; }
+  friend Modular operator-(Modular a, const Modular &b) { return a -= b; }
 
-  friend modular operator*(modular a, const modular &b) { return a *= b; }
+  friend Modular operator*(Modular a, const Modular &b) { return a *= b; }
 
-  friend modular operator/(modular a, const modular &b) { return a /= b; }
+  friend Modular operator/(Modular a, const Modular &b) { return a /= b; }
 
-  friend bool operator==(const modular &a, const modular &b) { return a.v == b.v; }
+  friend bool operator==(const Modular &a, const Modular &b) { return a.v == b.v; }
 
-  friend bool operator!=(const modular &a, const modular &b) { return !(a == b); }
+  friend bool operator!=(const Modular &a, const Modular &b) { return !(a == b); }
 
-  friend bool operator<(const modular &a, const modular &b) { return a.v < b.v; }
+  friend bool operator<(const Modular &a, const Modular &b) { return a.v < b.v; }
 
-  friend std::ostream &operator<<(std::ostream &os, const modular &x) { return os << x.v; }
+  friend std::ostream &operator<<(std::ostream &os, const Modular &x) { return os << x.v; }
 
-  friend std::istream &operator>>(std::istream &is, modular &x) {
+  friend std::istream &operator>>(std::istream &is, Modular &x) {
     long long value;
     is >> value;
-    x = modular(value);
+    x = Modular(value);
     return is;
   }
 };
 
 template<class Mint>
-class mod_combinatorics {
+class ModCombinatorics {
   std::vector<Mint> fact, inv_fact;
 
   void ensure(int n) {
@@ -1945,7 +1948,7 @@ class mod_combinatorics {
   }
 
  public:
-  mod_combinatorics() : fact(1, Mint(1)), inv_fact(1, Mint(1)) {}
+  ModCombinatorics() : fact(1, Mint(1)), inv_fact(1, Mint(1)) {}
 
   Mint factorial(int n) {
     ensure(n);
@@ -1971,12 +1974,12 @@ class mod_combinatorics {
   Mint multichoose(int n, int k) { return choose(n + k - 1, k); }
 };
 
-struct mod_1000000007 {
+struct Mod100000007 {
   typedef int value_type;
   static const int value = 1000000007;
 };
 
-typedef modular<mod_1000000007> Mint;
+typedef Modular<Mod100000007> Mint;
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
@@ -2003,7 +2006,7 @@ int main() {
   ss >> x;
   assert(x == 1);
 
-  mod_combinatorics<Mint> comb;
+  ModCombinatorics<Mint> comb;
   assert(comb.factorial(5) == 120);
   assert(comb.choose(5, 2) == 10);
   assert(comb.permute(5, 2) == 20);
@@ -2096,13 +2099,13 @@ int main() {
 
   start = clock();
   p = sieve(pmax);
-  delta = (double)(clock() - start) / CLOCKS_PER_SEC;
+  delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve(n=" << pmax << "): " << delta << "s" << endl;
 
   int l = 1000000000, h = 1005000000;
   start = clock();
   p = sieve(l, h);
-  delta = (double)(clock() - start) / CLOCKS_PER_SEC;
+  delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve([" << l << ", " << h << "]): " << delta << "s" << endl;
   return 0;
 }
@@ -2516,7 +2519,7 @@ void validate(long long n, const vector<long long> &factors) {
 int main() {
   {  // Small tests.
     for (int i = 1; i <= 10000; i++) {
-      vector<long long> v1 = prime_factorize((long long)i);
+      vector<long long> v1 = prime_factorize(static_cast<long long>(i));
       vector<long long> v2 = prime_factorize_big(i);
       validate(i, v1);
       assert(v1 == v2);
@@ -2666,8 +2669,8 @@ int main() {
 Perform simple arithmetic operations on arbitrary precision big integers whose digits are internally represented as an \inlinecode{std::string} in little-endian order.
 
 \begin{compactitem}
-  \item \inlinecode{bigint(n)} constructs a big integer from a long long (default: 0).
-  \item \inlinecode{bigint(s)} constructs a big integer from a string \inlinecode{s}, which must strictly consist of a sequence of numeric digits, optionally preceded by a minus sign.
+  \item \inlinecode{BigInt(n)} constructs a big integer from a long long (default: 0).
+  \item \inlinecode{BigInt(s)} constructs a big integer from a string \inlinecode{s}, which must strictly consist of a sequence of numeric digits, optionally preceded by a minus sign.
   \item \inlinecode{str()} returns the string representation of the big integer.
   \item \inlinecode{comp(a, b)} returns $-1$, $0$, or $1$ depending on whether the big integers \inlinecode{a} and \inlinecode{b} compare less, equal, or greater, respectively.
   \item \inlinecode{add(a, b)} returns the sum of big integers \inlinecode{a} and \inlinecode{b}.
@@ -2694,7 +2697,7 @@ Perform simple arithmetic operations on arbitrary precision big integers whose d
 #include <stdexcept>
 #include <string>
 
-class bigint {
+class BigInt {
   std::string digits;
   int sign;
 
@@ -2719,7 +2722,7 @@ class bigint {
     if (a.size() != b.size()) {
       return a.size() < b.size() ? -asign : asign;
     }
-    for (int i = (int)a.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(a.size()) - 1; i >= 0; i--) {
       if (a[i] != b[i]) {
         return a[i] < b[i] ? -asign : asign;
       }
@@ -2727,19 +2730,19 @@ class bigint {
     return 0;
   }
 
-  static bigint add(const std::string &a, const std::string &b, int asign, int bsign) {
+  static BigInt add(const std::string &a, const std::string &b, int asign, int bsign) {
     if (asign != bsign) {
       return (asign == 1) ? sub(a, b, asign, 1) : sub(b, a, bsign, 1);
     }
-    bigint res;
+    BigInt res;
     res.sign = asign;
     res.digits.resize(std::max(a.size(), b.size()) + 1, '0');
-    for (int i = 0, carry = 0; i < (int)res.digits.size(); i++) {
+    for (int i = 0, carry = 0; i < static_cast<int>(res.digits.size()); i++) {
       int d = carry;
-      if (i < (int)a.size()) {
+      if (i < static_cast<int>(a.size())) {
         d += a[i] - '0';
       }
-      if (i < (int)b.size()) {
+      if (i < static_cast<int>(b.size())) {
         d += b[i] - '0';
       }
       res.digits[i] = '0' + (d % 10);
@@ -2749,19 +2752,19 @@ class bigint {
     return res;
   }
 
-  static bigint sub(const std::string &a, const std::string &b, int asign, int bsign) {
+  static BigInt sub(const std::string &a, const std::string &b, int asign, int bsign) {
     if (asign == -1 || bsign == -1) {
       return add(a, b, asign, -bsign);
     }
-    bigint res;
+    BigInt res;
     if (comp(a, b, asign, bsign) < 0) {
       res = sub(b, a, bsign, asign);
       res.sign = -1;
       return res;
     }
     res.digits.assign(a.size(), '0');
-    for (int i = 0, borrow = 0; i < (int)res.digits.size(); i++) {
-      int d = (i < (int)b.size() ? a[i] - b[i] : a[i] - '0') - borrow;
+    for (int i = 0, borrow = 0; i < static_cast<int>(res.digits.size()); i++) {
+      int d = (i < static_cast<int>(b.size()) ? a[i] - b[i] : a[i] - '0') - borrow;
       if (a[i] > '0') {
         borrow = 0;
       }
@@ -2776,7 +2779,7 @@ class bigint {
   }
 
  public:
-  bigint(long long n = 0) {
+  BigInt(long long n = 0) {
     sign = (n < 0) ? -1 : 1;
     if (n == 0) {
       digits = "0";
@@ -2788,9 +2791,9 @@ class bigint {
     normalize();
   }
 
-  bigint(const std::string &s) {
+  BigInt(const std::string &s) {
     if (s.empty() || (s[0] == '-' && s.size() == 1)) {
-      throw std::runtime_error("Invalid string format to construct bigint.");
+      throw std::runtime_error("Invalid string format to construct BigInt.");
     }
     digits.assign(s.rbegin(), s.rend());
     if (s[0] == '-') {
@@ -2800,7 +2803,7 @@ class bigint {
       sign = 1;
     }
     if (digits.find_first_not_of("0123456789") != std::string::npos) {
-      throw std::runtime_error("Invalid string format to construct bigint.");
+      throw std::runtime_error("Invalid string format to construct BigInt.");
     }
     normalize();
   }
@@ -2809,21 +2812,21 @@ class bigint {
     return (sign < 0 ? "-" : "") + std::string(digits.rbegin(), digits.rend());
   }
 
-  friend int comp(const bigint &a, const bigint &b) {
+  friend int comp(const BigInt &a, const BigInt &b) {
     return comp(a.digits, b.digits, a.sign, b.sign);
   }
 
-  friend bigint add(const bigint &a, const bigint &b) {
+  friend BigInt add(const BigInt &a, const BigInt &b) {
     return add(a.digits, b.digits, a.sign, b.sign);
   }
 
-  friend bigint sub(const bigint &a, const bigint &b) {
+  friend BigInt sub(const BigInt &a, const BigInt &b) {
     return sub(a.digits, b.digits, a.sign, b.sign);
   }
 
-  friend bigint mul(const bigint &a, const bigint &b) {
-    bigint res, row(a);
-    for (int i = 0; i < (int)b.digits.size(); i++) {
+  friend BigInt mul(const BigInt &a, const BigInt &b) {
+    BigInt res, row(a);
+    for (int i = 0; i < static_cast<int>(b.digits.size()); i++) {
       for (int j = 0; j < (b.digits[i] - '0'); j++) {
         res = add(res.digits, row.digits, res.sign, row.sign);
       }
@@ -2836,10 +2839,10 @@ class bigint {
     return res;
   }
 
-  friend bigint div(const bigint &a, const bigint &b) {
-    bigint res, row;
+  friend BigInt div(const BigInt &a, const BigInt &b) {
+    BigInt res, row;
     res.digits.assign(a.digits.size(), '0');
-    for (int i = (int)a.digits.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(a.digits.size()) - 1; i >= 0; i--) {
       row.digits.insert(row.digits.begin(), a.digits[i]);
       while (comp(row.digits, b.digits, row.sign, 1) > 0) {
         res.digits[i]++;
@@ -2857,7 +2860,7 @@ class bigint {
 #include <cassert>
 
 int main() {
-  bigint a("-9899819294989142124"), b("12398124981294214");
+  BigInt a("-9899819294989142124"), b("12398124981294214");
   assert(add(a, b).to_string() == "-9887421170007847910");
   assert(sub(a, b).to_string() == "-9912217419970436338");
   assert(mul(a, b).to_string() == "-122739196911503356525379735104870536");
@@ -2867,11 +2870,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Big Integers}
-Perform operations on arbitrary precision big integers internally represented as a vector of base-$10^9$ digits in little-endian order. Typical arithmetic operations involving mixed numeric primitives and strings are supported using templates and operator overloading, as long as at least one operand is a \inlinecode{bigint} at any given level of evaluation.
+Perform operations on arbitrary precision big integers internally represented as a vector of base-$10^9$ digits in little-endian order. Typical arithmetic operations involving mixed numeric primitives and strings are supported using templates and operator overloading, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
 
 \begin{compactitem}
-  \item \inlinecode{bigint(n)} constructs a big integer from a long long (default: 0).
-  \item \inlinecode{bigint(s)} constructs a big integer from a C string or an \inlinecode{std::string} \inlinecode{s}.
+  \item \inlinecode{BigInt(n)} constructs a big integer from a long long (default: 0).
+  \item \inlinecode{BigInt(s)} constructs a big integer from a C string or an \inlinecode{std::string} \inlinecode{s}.
   \item \inlinecode{operator =} is defined to copy from another big integer or to assign from an 64-bit integer primitive.
   \item \inlinecode{size()} returns the number of digits in the base-10 representation.
   \item Operators \inlinecode{\textgreater{}\textgreater{}} and \inlinecode{\textless{}\textless{}} are defined to support stream-based input and output.
@@ -2916,7 +2919,7 @@ Perform operations on arbitrary precision big integers internally represented as
 #include <utility>
 #include <vector>
 
-class bigint {
+class BigInt {
   static const int BASE = 1000000000, BASE_DIGITS = 9;
   static const bool USE_FFT_MULT = true;
 
@@ -2963,7 +2966,7 @@ class bigint {
     if (a.size() != b.size()) {
       return a.size() < b.size() ? -asign : asign;
     }
-    for (int i = (int)a.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(a.size()) - 1; i >= 0; i--) {
       if (a[i] != b[i]) {
         return a[i] < b[i] ? -asign : asign;
       }
@@ -2971,19 +2974,19 @@ class bigint {
     return 0;
   }
 
-  static bigint add(const vint &a, const vint &b, int asign, int bsign) {
+  static BigInt add(const vint &a, const vint &b, int asign, int bsign) {
     if (asign != bsign) {
       return (asign == 1) ? sub(a, b, asign, 1) : sub(b, a, bsign, 1);
     }
-    bigint res;
+    BigInt res;
     res.digits = a;
     res.sign = asign;
-    int carry = 0, size = (int)std::max(a.size(), b.size());
+    int carry = 0, size = static_cast<int>(std::max(a.size(), b.size()));
     for (int i = 0; i < size || carry; i++) {
-      if (i == (int)res.digits.size()) {
+      if (i == static_cast<int>(res.digits.size())) {
         res.digits.push_back(0);
       }
-      res.digits[i] += carry + (i < (int)b.size() ? b[i] : 0);
+      res.digits[i] += carry + (i < static_cast<int>(b.size()) ? b[i] : 0);
       carry = (res.digits[i] >= BASE) ? 1 : 0;
       if (carry) {
         res.digits[i] -= BASE;
@@ -2992,11 +2995,11 @@ class bigint {
     return res;
   }
 
-  static bigint sub(const vint &a, const vint &b, int asign, int bsign) {
+  static BigInt sub(const vint &a, const vint &b, int asign, int bsign) {
     if (asign == -1 || bsign == -1) {
       return add(a, b, asign, -bsign);
     }
-    bigint res;
+    BigInt res;
     if (comp(a, b, asign, bsign) < 0) {
       res = sub(b, a, bsign, asign);
       res.sign = -1;
@@ -3004,8 +3007,8 @@ class bigint {
     }
     res.digits = a;
     res.sign = asign;
-    for (int i = 0, borrow = 0; i < (int)a.size() || borrow; i++) {
-      res.digits[i] -= borrow + (i < (int)b.size() ? b[i] : 0);
+    for (int i = 0, borrow = 0; i < static_cast<int>(a.size()) || borrow; i++) {
+      res.digits[i] -= borrow + (i < static_cast<int>(b.size()) ? b[i] : 0);
       borrow = res.digits[i] < 0;
       if (borrow) {
         res.digits[i] += BASE;
@@ -3018,21 +3021,21 @@ class bigint {
   static vint convert_base(const vint &digits, int l1, int l2) {
     vll p(std::max(l1, l2) + 1);
     p[0] = 1;
-    for (int i = 1; i < (int)p.size(); i++) {
+    for (int i = 1; i < static_cast<int>(p.size()); i++) {
       p[i] = p[i - 1] * 10;
     }
     vint res;
     long long curr = 0;
-    for (int i = 0, curr_digits = 0; i < (int)digits.size(); i++) {
+    for (int i = 0, curr_digits = 0; i < static_cast<int>(digits.size()); i++) {
       curr += digits[i] * p[curr_digits];
       curr_digits += l1;
       while (curr_digits >= l2) {
-        res.push_back((int)(curr % p[l2]));
+        res.push_back(static_cast<int>((curr % p[l2])));
         curr /= p[l2];
         curr_digits -= l2;
       }
     }
-    res.push_back((int)curr);
+    res.push_back(static_cast<int>(curr));
     while (!res.empty() && res.back() == 0) {
       res.pop_back();
     }
@@ -3059,15 +3062,15 @@ class bigint {
       b2[i] += blo[i];
     }
     vll r = karatsuba(a2.begin(), a2.end(), b2.begin(), b2.end());
-    for (int i = 0; i < (int)a1b1.size(); i++) {
+    for (int i = 0; i < static_cast<int>(a1b1.size()); i++) {
       r[i] -= a1b1[i];
       res[i] += a1b1[i];
     }
-    for (int i = 0; i < (int)a2b2.size(); i++) {
+    for (int i = 0; i < static_cast<int>(a2b2.size()); i++) {
       r[i] -= a2b2[i];
       res[i + n] += a2b2[i];
     }
-    for (int i = 0; i < (int)r.size(); i++) {
+    for (int i = 0; i < static_cast<int>(r.size()); i++) {
       res[i + k] += r[i];
     }
     return res;
@@ -3109,7 +3112,7 @@ class bigint {
       res.swap(tmp);
     }
     if (invert) {
-      for (int i = 0; i < (int)res.size(); i++) {
+      for (int i = 0; i < static_cast<int>(res.size()); i++) {
         res[i] /= n;
       }
       std::reverse(res.begin() + 1, res.end());
@@ -3118,13 +3121,13 @@ class bigint {
   }
 
  public:
-  bigint() : sign(1) {}
-  bigint(int v) { *this = (long long)v; }
-  bigint(long long v) { *this = v; }
-  bigint(const char *s) { read(strlen(s), s); }
-  bigint(const std::string &s) { read(s.size(), s.c_str()); }
+  BigInt() : sign(1) {}
+  BigInt(int v) { *this = static_cast<long long>(v); }
+  BigInt(long long v) { *this = v; }
+  BigInt(const char *s) { read(strlen(s), s); }
+  BigInt(const std::string &s) { read(s.size(), s.c_str()); }
 
-  void operator=(const bigint &v) {
+  void operator=(const BigInt &v) {
     sign = v.sign;
     digits = v.digits;
   }
@@ -3150,19 +3153,19 @@ class bigint {
     return oss.str().length() + BASE_DIGITS * (digits.size() - 1);
   }
 
-  friend std::istream &operator>>(std::istream &in, bigint &v) {
+  friend std::istream &operator>>(std::istream &in, BigInt &v) {
     std::string s;
     in >> s;
     v.read(s.size(), s.c_str());
     return in;
   }
 
-  friend std::ostream &operator<<(std::ostream &out, const bigint &v) {
+  friend std::ostream &operator<<(std::ostream &out, const BigInt &v) {
     if (v.sign == -1) {
       out << '-';
     }
     out << (v.digits.empty() ? 0 : v.digits.back());
-    for (int i = (int)v.digits.size() - 2; i >= 0; i--) {
+    for (int i = static_cast<int>(v.digits.size()) - 2; i >= 0; i--) {
       out << std::setw(BASE_DIGITS) << std::setfill('0') << v.digits[i];
     }
     return out;
@@ -3174,7 +3177,7 @@ class bigint {
       oss << '-';
     }
     oss << (digits.empty() ? 0 : digits.back());
-    for (int i = (int)digits.size() - 2; i >= 0; i--) {
+    for (int i = static_cast<int>(digits.size()) - 2; i >= 0; i--) {
       oss << std::setw(BASE_DIGITS) << std::setfill('0') << digits[i];
     }
     return oss.str();
@@ -3182,7 +3185,7 @@ class bigint {
 
   long long to_llong() const {
     long long res = 0;
-    for (int i = (int)digits.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(digits.size()) - 1; i >= 0; i--) {
       res = res * BASE + digits[i];
     }
     return res * sign;
@@ -3202,54 +3205,54 @@ class bigint {
     return res;
   }
 
-  int comp(const bigint &v) const { return comp(digits, v.digits, sign, v.sign); }
-  bool operator<(const bigint &v) const { return comp(v) < 0; }
-  bool operator>(const bigint &v) const { return comp(v) > 0; }
-  bool operator<=(const bigint &v) const { return comp(v) <= 0; }
-  bool operator>=(const bigint &v) const { return comp(v) >= 0; }
-  bool operator==(const bigint &v) const { return comp(v) == 0; }
-  bool operator!=(const bigint &v) const { return comp(v) != 0; }
+  int comp(const BigInt &v) const { return comp(digits, v.digits, sign, v.sign); }
+  bool operator<(const BigInt &v) const { return comp(v) < 0; }
+  bool operator>(const BigInt &v) const { return comp(v) > 0; }
+  bool operator<=(const BigInt &v) const { return comp(v) <= 0; }
+  bool operator>=(const BigInt &v) const { return comp(v) >= 0; }
+  bool operator==(const BigInt &v) const { return comp(v) == 0; }
+  bool operator!=(const BigInt &v) const { return comp(v) != 0; }
 
-  template<class T> friend bool operator<(const T &a, const bigint &b) { return bigint(a) < b; }
-  template<class T> friend bool operator>(const T &a, const bigint &b) { return bigint(a) > b; }
-  template<class T> friend bool operator<=(const T &a, const bigint &b) { return bigint(a) <= b; }
-  template<class T> friend bool operator>=(const T &a, const bigint &b) { return bigint(a) >= b; }
-  template<class T> friend bool operator==(const T &a, const bigint &b) { return bigint(a) == b; }
-  template<class T> friend bool operator!=(const T &a, const bigint &b) { return bigint(a) != b; }
+  template<class T> friend bool operator<(const T &a, const BigInt &b) { return BigInt(a) < b; }
+  template<class T> friend bool operator>(const T &a, const BigInt &b) { return BigInt(a) > b; }
+  template<class T> friend bool operator<=(const T &a, const BigInt &b) { return BigInt(a) <= b; }
+  template<class T> friend bool operator>=(const T &a, const BigInt &b) { return BigInt(a) >= b; }
+  template<class T> friend bool operator==(const T &a, const BigInt &b) { return BigInt(a) == b; }
+  template<class T> friend bool operator!=(const T &a, const BigInt &b) { return BigInt(a) != b; }
 
-  bigint abs() const { bigint res(*this); res.sign = 1; return res; }
-  bigint operator-() const { bigint res(*this); res.sign = -sign; return res; }
-  bigint operator+(const bigint &v) const { return add(digits, v.digits, sign, v.sign); }
-  bigint operator-(const bigint &v) const { return sub(digits, v.digits, sign, v.sign); }
+  BigInt abs() const { BigInt res(*this); res.sign = 1; return res; }
+  BigInt operator-() const { BigInt res(*this); res.sign = -sign; return res; }
+  BigInt operator+(const BigInt &v) const { return add(digits, v.digits, sign, v.sign); }
+  BigInt operator-(const BigInt &v) const { return sub(digits, v.digits, sign, v.sign); }
 
   void operator*=(int v) {
     if (v < 0) {
       sign = -sign;
       v = -v;
     }
-    for (int i = 0, carry = 0; i < (int)digits.size() || carry; i++) {
-      if (i == (int)digits.size()) {
+    for (int i = 0, carry = 0; i < static_cast<int>(digits.size()) || carry; i++) {
+      if (i == static_cast<int>(digits.size())) {
         digits.push_back(0);
       }
-      long long curr = digits[i] * (long long)v + carry;
-      carry = (int)(curr / BASE);
-      digits[i] = (int)(curr % BASE);
+      long long curr = digits[i] * static_cast<long long>(v) + carry;
+      carry = static_cast<int>((curr / BASE));
+      digits[i] = static_cast<int>((curr % BASE));
     }
     normalize();
   }
 
-  bigint operator*(int v) const {
-    bigint res(*this);
+  BigInt operator*(int v) const {
+    BigInt res(*this);
     res *= v;
     return res;
   }
 
-  bigint operator*(const bigint &v) const {
+  BigInt operator*(const BigInt &v) const {
     static const int TEMP_BASE = 10000, TEMP_BASE_DIGITS = 4;
     vint a = convert_base(digits, BASE_DIGITS, TEMP_BASE_DIGITS);
     vint b = convert_base(v.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
     int n = 1;
-    while (n < 2 * (int)std::max(a.size(), b.size())) {
+    while (n < 2 * static_cast<int>(std::max(a.size(), b.size()))) {
       n <<= 1;
     }
     a.resize(n, 0);
@@ -3268,9 +3271,9 @@ class bigint {
     } else {
       c = karatsuba(a.begin(), a.end(), b.begin(), b.end());
     }
-    bigint res;
+    BigInt res;
     res.sign = sign * v.sign;
-    for (int i = 0, carry = 0; i < (int)c.size(); i++) {
+    for (int i = 0, carry = 0; i < static_cast<int>(c.size()); i++) {
       long long d = c[i] + carry;
       res.digits.push_back(d % TEMP_BASE);
       carry = d / TEMP_BASE;
@@ -3280,59 +3283,59 @@ class bigint {
     return res;
   }
 
-  bigint &operator/=(int v) {
+  BigInt &operator/=(int v) {
     if (v == 0) {
-      throw std::runtime_error("Division by zero in bigint.");
+      throw std::runtime_error("Division by zero in BigInt.");
     }
     if (v < 0) {
       sign = -sign;
       v = -v;
     }
-    for (int i = (int)digits.size() - 1, rem = 0; i >= 0; i--) {
-      long long curr = digits[i] + rem * (long long)BASE;
-      digits[i] = (int)(curr / v);
-      rem = (int)(curr % v);
+    for (int i = static_cast<int>(digits.size()) - 1, rem = 0; i >= 0; i--) {
+      long long curr = digits[i] + rem * static_cast<long long>(BASE);
+      digits[i] = static_cast<int>((curr / v));
+      rem = static_cast<int>((curr % v));
     }
     normalize();
     return *this;
   }
 
-  bigint operator/(int v) const {
-    bigint res(*this);
+  BigInt operator/(int v) const {
+    BigInt res(*this);
     res /= v;
     return res;
   }
 
   int operator%(int v) const {
     if (v == 0) {
-      throw std::runtime_error("Division by zero in bigint.");
+      throw std::runtime_error("Division by zero in BigInt.");
     }
     if (v < 0) {
       v = -v;
     }
     int m = 0;
-    for (int i = (int)digits.size() - 1; i >= 0; i--) {
-      m = (digits[i] + m * (long long)BASE) % v;
+    for (int i = static_cast<int>(digits.size()) - 1; i >= 0; i--) {
+      m = (digits[i] + m * static_cast<long long>(BASE)) % v;
     }
     return m * sign;
   }
 
-  std::pair<bigint, bigint> div(const bigint &v) const {
+  std::pair<BigInt, BigInt> div(const BigInt &v) const {
     if (v == 0) {
-      throw std::runtime_error("Division by zero in bigint.");
+      throw std::runtime_error("Division by zero in BigInt.");
     }
     if (comp(digits, v.digits, 1, 1) < 0) {
       return std::make_pair(0, *this);
     }
     int norm = BASE / (v.digits.back() + 1);
-    bigint an = abs() * norm, bn = v.abs() * norm, q, r;
+    BigInt an = abs() * norm, bn = v.abs() * norm, q, r;
     q.digits.resize(an.digits.size());
-    for (int i = (int)an.digits.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(an.digits.size()) - 1; i >= 0; i--) {
       r *= BASE;
       r += an.digits[i];
       int s1 = (r.digits.size() <= bn.digits.size()) ? 0 : r.digits[bn.digits.size()];
       int s2 = (r.digits.size() <= bn.digits.size() - 1) ? 0 : r.digits[bn.digits.size() - 1];
-      int d = ((long long)s1 * BASE + s2) / bn.digits.back();
+      int d = (static_cast<long long>(s1) * BASE + s2) / bn.digits.back();
       for (r -= bn * d; r < 0; r += bn) {
         d--;
       }
@@ -3345,32 +3348,32 @@ class bigint {
     return std::make_pair(q, r / norm);
   }
 
-  bigint operator/(const bigint &v) const { return div(v).first; }
-  bigint operator%(const bigint &v) const { return div(v).second; }
-  bigint operator++(int) { bigint t(*this); operator++(); return t; }
-  bigint operator--(int) { bigint t(*this); operator--(); return t; }
-  bigint &operator++() { *this = *this + bigint(1); return *this; }
-  bigint &operator--() { *this = *this - bigint(1); return *this; }
-  bigint &operator+=(const bigint &v) { *this = *this + v; return *this; }
-  bigint &operator-=(const bigint &v) { *this = *this - v; return *this; }
-  bigint &operator*=(const bigint &v) { *this = *this * v; return *this; }
-  bigint &operator/=(const bigint &v) { *this = *this / v; return *this; }
-  bigint &operator%=(const bigint &v) { *this = *this % v; return *this; }
+  BigInt operator/(const BigInt &v) const { return div(v).first; }
+  BigInt operator%(const BigInt &v) const { return div(v).second; }
+  BigInt operator++(int){ BigInt t(*this); operator++(); return t; }
+  BigInt operator--(int){ BigInt t(*this); operator--(); return t; }
+  BigInt &operator++() { *this = *this + BigInt(1); return *this; }
+  BigInt &operator--() { *this = *this - BigInt(1); return *this; }
+  BigInt &operator+=(const BigInt &v) { *this = *this + v; return *this; }
+  BigInt &operator-=(const BigInt &v) { *this = *this - v; return *this; }
+  BigInt &operator*=(const BigInt &v) { *this = *this * v; return *this; }
+  BigInt &operator/=(const BigInt &v) { *this = *this / v; return *this; }
+  BigInt &operator%=(const BigInt &v) { *this = *this % v; return *this; }
 
   template<class T>
-  friend bigint operator+(const T &a, const bigint &b) { return bigint(a) + b; }
+  friend BigInt operator+(const T &a, const BigInt &b) { return BigInt(a) + b; }
 
   template<class T>
-  friend bigint operator-(const T &a, const bigint &b) { return bigint(a) - b; }
+  friend BigInt operator-(const T &a, const BigInt &b) { return BigInt(a) - b; }
 
-  bigint pow(int n) const {
+  BigInt pow(int n) const {
     if (n == 0) {
-      return bigint(1);
+      return BigInt(1);
     }
     if (*this == 0 || n < 0) {
-      return bigint(0);
+      return BigInt(0);
     }
-    bigint x(*this), res(1);
+    BigInt x(*this), res(1);
     for (; n != 0; n >>= 1) {
       if (n & 1) {
         res *= x;
@@ -3380,29 +3383,30 @@ class bigint {
     return res;
   }
 
-  bigint sqrt() const {
+  BigInt sqrt() const {
     if (sign == -1) {
       throw std::runtime_error("Cannot take square root of a negative number.");
     }
-    bigint v(*this);
+    BigInt v(*this);
     while (v.digits.empty() || v.digits.size() % 2 == 1) {
       v.digits.push_back(0);
     }
     int n = v.digits.size();
-    int ldig = (int)::sqrt((double)v.digits[n - 1] * BASE + v.digits[n - 2]);
+    int ldig = (int)::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
     int norm = BASE / (ldig + 1);
     v *= norm;
     v *= norm;
     while (v.digits.empty() || v.digits.size() % 2 == 1) {
       v.digits.push_back(0);
     }
-    bigint r((long long)v.digits[n - 1] * BASE + v.digits[n - 2]);
-    int q = ldig = (int)::sqrt((double)v.digits[n - 1] * BASE + v.digits[n - 2]);
-    bigint res;
+    BigInt r(static_cast<long long>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
+    int q = ldig = (int)::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
+    BigInt res;
     for (int j = n / 2 - 1; j >= 0; j--) {
       for (;; q--) {
-        bigint r1 = (r - (res * 2 * BASE + q) * q) * BASE * BASE +
-                    (j > 0 ? (long long)v.digits[2 * j - 1] * BASE + v.digits[2 * j - 2] : 0);
+        BigInt r1 =
+            (r - (res * 2 * BASE + q) * q) * BASE * BASE +
+            (j > 0 ? static_cast<long long>(v.digits[2 * j - 1]) * BASE + v.digits[2 * j - 2] : 0);
         if (r1 >= 0) {
           r = r1;
           break;
@@ -3414,28 +3418,30 @@ class bigint {
         int d1 = (sz1 + 2 < sz2) ? r.digits[sz1 + 2] : 0;
         int d2 = (sz1 + 1 < sz2) ? r.digits[sz1 + 1] : 0;
         int d3 = (sz1 < sz2) ? r.digits[sz1] : 0;
-        q = ((long long)d1 * BASE * BASE + (long long)d2 * BASE + d3) / (ldig * 2);
+        q = (static_cast<long long>(d1) * BASE * BASE + static_cast<long long>(d2) * BASE + d3) /
+            (ldig * 2);
       }
     }
     res.normalize();
     return res / norm;
   }
 
-  bigint nth_root(int n) const {
+  BigInt nth_root(int n) const {
     if (sign == -1 && n % 2 == 0) {
       throw std::runtime_error("Cannot take even root of a negative number.");
     }
     if (*this == 0 || n < 0) {
-      return bigint(0);
+      return BigInt(0);
     }
     if (n >= size()) {
       int p = 1;
-      while (comp(bigint(p).pow(n)) > 0) {
+      while (comp(BigInt(p).pow(n)) > 0) {
         p++;
       }
-      return comp(bigint(p).pow(n)) < 0 ? p - 1 : p;
+      return comp(BigInt(p).pow(n)) < 0 ? p - 1 : p;
     }
-    bigint lo(bigint(10).pow((int)ceil((double)size() / n) - 1)), hi(lo * 10), mid;
+    BigInt lo(BigInt(10).pow(static_cast<int>(ceil(static_cast<double>(size()) / n)) - 1)),
+        hi(lo * 10), mid;
     while (lo < hi) {
       mid = (lo + hi) / 2;
       int cmp = comp(digits, mid.pow(n).digits, 1, 1);
@@ -3450,22 +3456,22 @@ class bigint {
     return (sign == -1) ? -(mid + 1) : (mid + 1);
   }
 
-  static bigint rand(int n) {
+  static BigInt rand(int n) {
     if (n == 0) {
-      return bigint(0);
+      return BigInt(0);
     }
     std::string s(1, '1' + (::rand() % 9));
     for (int i = 1; i < n; i++) {
       s += '0' + (::rand() % 10);
     }
-    return bigint(s);
+    return BigInt(s);
   }
 
-  friend int comp(const bigint &a, const bigint &b) { return a.comp(b); }
-  friend bigint abs(const bigint &v) { return v.abs(); }
-  friend bigint pow(const bigint &v, int n) { return v.pow(n); }
-  friend bigint sqrt(const bigint &v) { return v.sqrt(); }
-  friend bigint nth_root(const bigint &v, int n) { return v.nth_root(n); }
+  friend int comp(const BigInt &a, const BigInt &b) { return a.comp(b); }
+  friend BigInt abs(const BigInt &v) { return v.abs(); }
+  friend BigInt pow(const BigInt &v, int n) { return v.pow(n); }
+  friend BigInt sqrt(const BigInt &v) { return v.sqrt(); }
+  friend BigInt nth_root(const BigInt &v, int n) { return v.nth_root(n); }
 };
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -3473,45 +3479,45 @@ class bigint {
 #include <cassert>
 
 int main() {
-  bigint a("-9899819294989142124"), b("12398124981294214");
+  BigInt a("-9899819294989142124"), b("12398124981294214");
   assert(a + b == "-9887421170007847910");
   assert(a - b == "-9912217419970436338");
   assert(a * b == "-122739196911503356525379735104870536");
   assert(a / b == "-798");
-  assert(bigint(20).pow(12345).size() == 16062);
-  assert(bigint("9812985918924981892491829").nth_root(4) == 1769906);
+  assert(BigInt(20).pow(12345).size() == 16062);
+  assert(BigInt("9812985918924981892491829").nth_root(4) == 1769906);
   for (int i = -100; i <= 100; i++) {
     if (i >= 0) {
-      assert(bigint(i).sqrt() == (int)sqrt(i));
+      assert(BigInt(i).sqrt() == static_cast<int>(sqrt(i)));
     }
     for (int j = -100; j <= 100; j++) {
-      assert(bigint(i) + bigint(j) == i + j);
-      assert(bigint(i) - bigint(j) == i - j);
-      assert(bigint(i) * bigint(j) == i * j);
+      assert(BigInt(i) + BigInt(j) == i + j);
+      assert(BigInt(i) - BigInt(j) == i - j);
+      assert(BigInt(i) * BigInt(j) == i * j);
       if (j != 0) {
-        assert(bigint(i) / bigint(j) == i / j);
+        assert(BigInt(i) / BigInt(j) == i / j);
       }
       if (0 < i && i <= 10 && 0 < j && j <= 10) {
-        assert(bigint(i).nth_root(j) == (long long)(pow(i, 1.0 / j) + 1E-5));
+        assert(BigInt(i).nth_root(j) == static_cast<long long>((pow(i, 1.0 / j) + 1E-5)));
         long long p = 1;
         for (int k = 0; k < j; k++) {
           p *= i;
         }
-        assert(bigint(i).pow(j) == p);
+        assert(BigInt(i).pow(j) == p);
       }
     }
   }
   for (int i = 0; i < 20; i++) {
     int n = rand() % 100 + 1;
-    bigint a(bigint::rand(n)), s(a.sqrt()), xx(s * s), yy(s + 1);
+    BigInt a(BigInt::rand(n)), s(a.sqrt()), xx(s * s), yy(s + 1);
     yy *= yy;
     assert(xx <= a && a < yy);
-    bigint b(bigint::rand(rand() % n + 1) + 1), q(a / b);
+    BigInt b(BigInt::rand(rand() % n + 1) + 1), q(a / b);
     xx = q * b;
     yy = b * (q + 1);
     assert(a >= xx && a < yy);
   }
-  bigint x(-6);
+  BigInt x(-6);
   assert(x.to_string() == "-6");
   assert(x.to_llong() == -6LL);
   assert(x.to_double() == -6.0);
@@ -3520,26 +3526,26 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rational Numbers}
-Perform operations on rational numbers internally represented as two integers, a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations.
+Perform operations on Rational numbers internally represented as two integers, a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations.
 
 \begin{compactitem}
-  \item \inlinecode{rational(n)} constructs a rational with numerator \inlinecode{n} and denominator 1.
-  \item \inlinecode{rational(n, d)} constructs a rational with numerator \inlinecode{n} and denominator \inlinecode{d}.
-  \item \inlinecode{operator \textgreater{}\textgreater{}} inputs a rational using the next integer from the stream as the numerator and 1 as the denominator.
-  \item \inlinecode{operator \textless{}\textless{}} outputs a rational as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
+  \item \inlinecode{Rational(n)} constructs a Rational with numerator \inlinecode{n} and denominator 1.
+  \item \inlinecode{Rational(n, d)} constructs a Rational with numerator \inlinecode{n} and denominator \inlinecode{d}.
+  \item \inlinecode{operator \textgreater{}\textgreater{}} inputs a Rational using the next integer from the stream as the numerator and 1 as the denominator.
+  \item \inlinecode{operator \textless{}\textless{}} outputs a Rational as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
   \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the big integer \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} respectively.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on numerical primitives.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\log\left(n + d\right))$ per call to constructor \inlinecode{rational(n, d)}.
+  \item $O(\log\left(n + d\right))$ per call to constructor \inlinecode{Rational(n, d)}.
   \item $O(1)$ per call to all other operations, assuming that corresponding operations on the template integer type are $O(1)$ as well.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ for storage of the rational.
+  \item $O(1)$ for storage of the Rational.
   \item $O(1)$ auxiliary space for all operations.
 \end{compactitem}
 
@@ -3550,17 +3556,17 @@ Perform operations on rational numbers internally represented as two integers, a
 #include <string>
 
 template<class Int = long long>
-class rational {
+class Rational {
   Int num, den;
 
  public:
-  rational() : num(0), den(1) {}
-  rational(const Int &n) : num(n), den(1) {}
+  Rational() : num(0), den(1) {}
+  Rational(const Int &n) : num(n), den(1) {}
 
   template<class T1, class T2>
-  rational(const T1 &n, const T2 &d) : num(n), den(d) {
+  Rational(const T1 &n, const T2 &d) : num(n), den(d) {
     if (den == 0) {
-      throw std::runtime_error("Division by zero in rational.");
+      throw std::runtime_error("Division by zero in Rational.");
     }
     if (den < 0) {
       num = -num;
@@ -3577,14 +3583,14 @@ class rational {
     den /= gcd;
   }
 
-  friend std::istream &operator>>(std::istream &in, rational &r) {
+  friend std::istream &operator>>(std::istream &in, Rational &r) {
     std::string s;
     in >> r.num;
     r.den = 1;
     return in;
   }
 
-  friend std::ostream &operator<<(std::ostream &out, const rational &r) {
+  friend std::ostream &operator<<(std::ostream &out, const Rational &r) {
     out << r.num << "/" << r.den;
     return out;
   }
@@ -3621,103 +3627,103 @@ class rational {
     return n / d;
   }
 
-  bool operator<(const rational &r) const { return num * r.den < r.num * den; }
-  bool operator>(const rational &r) const { return r.num * den < num * r.den; }
-  bool operator<=(const rational &r) const { return !(r < *this); }
-  bool operator>=(const rational &r) const { return !(*this < r); }
-  bool operator==(const rational &r) const { return num == r.num && den == r.den; }
-  bool operator!=(const rational &r) const { return num != r.num || den != r.den; }
+  bool operator<(const Rational &r) const { return num * r.den < r.num * den; }
+  bool operator>(const Rational &r) const { return r.num * den < num * r.den; }
+  bool operator<=(const Rational &r) const { return !(r < *this); }
+  bool operator>=(const Rational &r) const { return !(*this < r); }
+  bool operator==(const Rational &r) const { return num == r.num && den == r.den; }
+  bool operator!=(const Rational &r) const { return num != r.num || den != r.den; }
 
   template<class T>
-  friend bool operator<(const T &a, const rational &b) { return rational(a) < b; }
+  friend bool operator<(const T &a, const Rational &b) { return Rational(a) < b; }
 
   template<class T>
-  friend bool operator>(const T &a, const rational &b) { return rational(a) > b; }
+  friend bool operator>(const T &a, const Rational &b) { return Rational(a) > b; }
 
   template<class T>
-  friend bool operator<=(const T &a, const rational &b) { return rational(a) <= b; }
+  friend bool operator<=(const T &a, const Rational &b) { return Rational(a) <= b; }
 
   template<class T>
-  friend bool operator>=(const T &a, const rational &b) { return rational(a) >= b; }
+  friend bool operator>=(const T &a, const Rational &b) { return Rational(a) >= b; }
 
   template<class T>
-  friend bool operator==(const T &a, const rational &b) { return rational(a) == b; }
+  friend bool operator==(const T &a, const Rational &b) { return Rational(a) == b; }
 
   template<class T>
-  friend bool operator!=(const T &a, const rational &b) { return rational(a) != b; }
+  friend bool operator!=(const T &a, const Rational &b) { return Rational(a) != b; }
 
-  rational abs() const { return rational(num < 0 ? -num : num, den); }
-  friend rational abs(const rational &r) { return r.abs(); }
+  Rational abs() const { return Rational(num < 0 ? -num : num, den); }
+  friend Rational abs(const Rational &r) { return r.abs(); }
   Int floor() const { return num < 0 ? -((-num + den - 1) / den) : num / den; }
   Int ceil() const { return num < 0 ? -(-num / den) : (num + den - 1) / den; }
 
-  rational operator+(const rational &r) const {
-    return rational(num * r.den + r.num * den, den * r.den);
+  Rational operator+(const Rational &r) const {
+    return Rational(num * r.den + r.num * den, den * r.den);
   }
 
-  rational operator-(const rational &r) const {
-    return rational(num * r.den - r.num * den, r.den * den);
+  Rational operator-(const Rational &r) const {
+    return Rational(num * r.den - r.num * den, r.den * den);
   }
 
-  rational operator*(const rational &r) const { return rational(num * r.num, r.den * den); }
-  rational operator/(const rational &r) const { return rational(num * r.den, den * r.num); }
+  Rational operator*(const Rational &r) const { return Rational(num * r.num, r.den * den); }
+  Rational operator/(const Rational &r) const { return Rational(num * r.den, den * r.num); }
 
-  rational operator%(const rational &r) const {
-    return *this - r * rational(num * r.den / (r.num * den), 1);
+  Rational operator%(const Rational &r) const {
+    return *this - r * Rational(num * r.den / (r.num * den), 1);
   }
 
   template<class T>
-  friend rational operator+(const T &a, const rational &b) { return rational(a) + b; }
+  friend Rational operator+(const T &a, const Rational &b) { return Rational(a) + b; }
 
   template<class T>
-  friend rational operator-(const T &a, const rational &b) { return rational(a) - b; }
+  friend Rational operator-(const T &a, const Rational &b) { return Rational(a) - b; }
 
   template<class T>
-  friend rational operator*(const T &a, const rational &b) { return rational(a) * b; }
+  friend Rational operator*(const T &a, const Rational &b) { return Rational(a) * b; }
 
   template<class T>
-  friend rational operator/(const T &a, const rational &b) { return rational(a) / b; }
+  friend Rational operator/(const T &a, const Rational &b) { return Rational(a) / b; }
 
   template<class T>
-  friend rational operator%(const T &a, const rational &b) { return rational(a) % b; }
+  friend Rational operator%(const T &a, const Rational &b) { return Rational(a) % b; }
 
-  rational operator-() const { return rational(-num, den); }
+  Rational operator-() const { return Rational(-num, den); }
 
-  rational operator++(int) {
-    rational t(*this);
+  Rational operator++(int) {
+    Rational t(*this);
     operator++();
     return t;
   }
-  rational operator--(int) {
-    rational t(*this);
+  Rational operator--(int) {
+    Rational t(*this);
     operator--();
     return t;
   }
-  rational &operator++() {
+  Rational &operator++() {
     *this = *this + 1;
     return *this;
   }
-  rational &operator--() {
+  Rational &operator--() {
     *this = *this - 1;
     return *this;
   }
-  rational &operator+=(const rational &r) {
+  Rational &operator+=(const Rational &r) {
     *this = *this + r;
     return *this;
   }
-  rational &operator-=(const rational &r) {
+  Rational &operator-=(const Rational &r) {
     *this = *this - r;
     return *this;
   }
-  rational &operator*=(const rational &r) {
+  Rational &operator*=(const Rational &r) {
     *this = *this * r;
     return *this;
   }
-  rational &operator/=(const rational &r) {
+  Rational &operator/=(const Rational &r) {
     *this = *this / r;
     return *this;
   }
-  rational &operator%=(const rational &r) {
+  Rational &operator%=(const Rational &r) {
     *this = *this % r;
     return *this;
   }
@@ -3730,10 +3736,10 @@ class rational {
 
 int main() {
 #define EQ(a, b) (fabs((a) - (b)) <= 1E-9)
-  typedef rational<long long> rational;
+  typedef Rational<long long> Rational;
 
-  assert(rational(-21, 1) % 2 == -1);
-  rational r(rational(-53, 10) % rational(-17, 10));
+  assert(Rational(-21, 1) % 2 == -1);
+  Rational r(Rational(-53, 10) % Rational(-17, 10));
   assert(EQ(r.to_ldouble(), fmod(-5.3, -1.7)));
   assert(r.to_string() == "-1/5");
   return 0;
@@ -3752,13 +3758,13 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
   \item \inlinecode{identity\_matrix(n)} returns the $n$ by $n$ identity matrix, that is, a matrix where \inlinecode{a[i][j]} equals 1 (if $i = j$), or 0 otherwise, for every $i$ and $j$ in $[0, n)$.
   \item \inlinecode{rows(a)} returns the number of rows $r$ in an $r$ by $c$ matrix \inlinecode{a}.
   \item \inlinecode{columns(a)} returns the number of columns $c$ in an $r$ by $c$ matrix \inlinecode{a}.
-  \item \inlinecode{a[i][j]} may be used to access or modify the entry at row $i$, column $j$ of an $r$ by $c$ matrix \inlinecode{a}, for every $i$ in $[0, r)$ and $j$ in $[0, c)$.
+  \item \inlinecode{a[i][j]} may be used to access or modify the entry at row $i$, column $j$ of an $r$ by $c$ matrix \inlinecode{a}, for every \inlinecode{i} in \inlinecode{[0, r)} and \inlinecode{j} in \inlinecode{[0, c)}.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, and \inlinecode{!=} define lexicographical comparison based on that of \inlinecode{std::vector}.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, and \inlinecode{/=} define scalar addition, subtraction, multiplication, and division involving a matrix and a numeric scalar value.
   \item Operators \inlinecode{*} and \inlinecode{*=} define vector and matrix multiplication.
   \item Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define matrix exponentiation of a square matrix $a$ by an integer power $p$.
   \item \inlinecode{power\_sum(a, p)} returns the power sum of a square matrix $a$ up to an integer power $p$, that is, $a + a^2 + \ldots + a^p$.
-  \item \inlinecode{transpose(a)} returns the transpose of an $r$ by $c$ matrix \inlinecode{a}, that is, a new $c$ by $r$ matrix $b$ such that $\text{a[i][j]} = \text{b[j][i]}$ for every $i$ in $[0, r)$ and $j$ in $[0, c)$.
+  \item \inlinecode{transpose(a)} returns the transpose of an $r$ by $c$ matrix \inlinecode{a}, that is, a new $c$ by $r$ matrix $b$ such that \inlinecode{a[i][j]} $=$ \inlinecode{b[j][i]} for every \inlinecode{i} in \inlinecode{[0, r)} and \inlinecode{j} in \inlinecode{[0, c)}.
   \item \inlinecode{transpose\_in\_place(a)} assigns the square matrix \inlinecode{a} to its transpose, returning a reference to the modified argument itself.
   \item \inlinecode{rotate(a, d)} returns the matrix \inlinecode{a} rotated \inlinecode{d} degrees clockwise. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
   \item \inlinecode{rotate\_in\_place(a, d)} assigns the square matrix \inlinecode{a} to its rotation by \inlinecode{d} degrees clockwise, returning a reference to the modified argument itself. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
@@ -3915,7 +3921,7 @@ matrix operator-(const matrix &a, const matrix &b) {
 
 template<class T>
 matrix &operator*=(matrix &a, const std::vector<T> &v) {
-  if (columns(a) != (int)v.size() || v.empty()) {
+  if (columns(a) != static_cast<int>(v.size()) || v.empty()) {
     throw std::runtime_error("Invalid dimensions for matrix multiplication.");
   }
   for (int i = 0; i < rows(a); i++) {
@@ -4270,7 +4276,7 @@ Computes the determinant and inverse of a square matrix using Gaussian eliminati
 \begin{compactitem}
   \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using Gaussian elimination.
-  \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning a reference to the modified argument itself. If \inlinecode{a} is not invertible, then its assigned values after the function call will be undefined (+/-Inf or +/-NaN).
+  \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning a reference to the modified argument itself. If \inlinecode{a} is not invertible, then its assigned values after the function call will be undefined (\inlinecode{+/-Inf} or \inlinecode{+/-NaN}).
 \end{compactitem}
 
 \textbf{Time Complexity}:
@@ -4416,7 +4422,7 @@ int main() {
 The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions.
 
 \begin{compactitem}
-  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $r$ by $c$ matrix \inlinecode{a} to merged LU decomposition matrix $lu$, returning either 0 or 1 denoting the "sign" of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or -1 denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix $lu$ has $\text{lu[i][j]} = \text{l[i][j]}$ for $i > j$ and $\text{lu[i][j]} = \text{u[i][j]}$ for $i \leq j$. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to 1 in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly 0). The resulting permutation matrix $p$ corresponding to \inlinecode{p1col} will satisfy $pa = lu$.
+  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $r$ by $c$ matrix \inlinecode{a} to merged LU decomposition matrix $lu$, returning either 0 or 1 denoting the "sign" of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or -1 denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix $lu$ has \inlinecode{lu[i][j] = l[i][j]} for $i > j$ and \inlinecode{lu[i][j] = u[i][j]} for $i \leq j$. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to 1 in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly 0). The resulting permutation matrix $p$ corresponding to \inlinecode{p1col} will satisfy $pa = lu$.
   \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $r$ by $c$ matrix \inlinecode{a} of real values, and a length $r$ vector \inlinecode{b}, returning 0 if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the vector pointed to by \inlinecode{x} is populated with the solution vector of length $c$.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using LU decomposition.
   \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning 0 if the inversion was successful or $-1$ if \inlinecode{a} has no inverse.
@@ -4443,9 +4449,9 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 #include <vector>
 
 template<class Matrix>
-int lu_decompose(Matrix &a, std::vector<int> *p1col = NULL, const double EPS = 1e-10) {
+int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS = 1e-10) {
   int r = a.size(), c = a[0].size(), parity = 0;
-  if (p1col != NULL) {
+  if (p1col != nullptr) {
     p1col->resize(r);
     for (int i = 0; i < r; i++) {
       (*p1col)[i] = i;
@@ -4462,7 +4468,7 @@ int lu_decompose(Matrix &a, std::vector<int> *p1col = NULL, const double EPS = 1
       return -1;
     }
     if (pi != i) {
-      if (p1col != NULL) {
+      if (p1col != nullptr) {
         std::iter_swap(p1col->begin() + i, p1col->begin() + pi);
       }
       std::iter_swap(a.begin() + i, a.begin() + pi);
@@ -4493,7 +4499,7 @@ int solve_system(
     const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double EPS = 1e-10
 ) {
   int r = a.size(), c = a[0].size();
-  if (x == NULL || a.empty() || a.size() != b.size() || r < c) {
+  if (x == nullptr || a.empty() || a.size() != b.size() || r < c) {
     return -1;
   }
   x->resize(c);
@@ -4527,10 +4533,10 @@ int solve_system(
   return 0;
 }
 
-template<class SquareMatrix>
-double det(const SquareMatrix &a) {
+template<class T>
+double det(const T &a) {
   int n = a.size();
-  SquareMatrix lu;
+  T lu;
   int status = lu_decompose(lu = a);
   if (status < 0) {
     return 0;
@@ -4542,15 +4548,15 @@ double det(const SquareMatrix &a) {
   return status == 0 ? res : -res;
 }
 
-template<class SquareMatrix>
-int invert(SquareMatrix &a) {
+template<class T>
+int invert(T &a) {
   int n = a.size();
   std::vector<int> p1col;
   int status = lu_decompose(a, &p1col);
   if (status < 0) {
     return status;
   }
-  SquareMatrix ia(n, typename SquareMatrix::value_type(n, 0));
+  T ia(n, typename T::value_type(n, 0));
   for (int j = 0; j < n; j++) {
     for (int i = 0; i < n; i++) {
       if (p1col[i] == j) {
@@ -4810,7 +4816,7 @@ Finds every root $x$ for a polynomial $p$ such that $p(x) = 0$ by differentiatio
 
 double horner_eval(const std::vector<double> &p, double x) {
   double res = p.back();
-  for (int i = (int)p.size() - 2; i >= 0; i--) {
+  for (int i = static_cast<int>(p.size()) - 2; i >= 0; i--) {
     res = res * x + p[i];
   }
   return res;
@@ -4837,7 +4843,7 @@ std::vector<double> find_all_roots(
     const std::vector<double> &p, double a = -1e20, double b = 1e20, const double EPS = 1e-15
 ) {
   std::vector<double> pprime;
-  for (int i = 1; i < (int)p.size(); i++) {
+  for (int i = 1; i < static_cast<int>(p.size()); i++) {
     pprime.push_back(p[i] * i);
   }
   if (pprime.empty()) {
@@ -4845,7 +4851,7 @@ std::vector<double> find_all_roots(
   }
   std::vector<double> res, r = find_all_roots(pprime, a, b, EPS);
   r.push_back(b);
-  for (int i = 0; i < (int)r.size(); i++) {
+  for (int i = 0; i < static_cast<int>(r.size()); i++) {
     double root = find_one_root(p, i == 0 ? a : r[i - 1], r[i], EPS);
     if (!std::isnan(root) && (res.empty() || root != res.back())) {
       res.push_back(root);
@@ -4958,7 +4964,7 @@ std::vector<cdouble> find_all_roots(
   std::vector<cdouble> res;
   cpoly q = p;
   while (q.size() > 2) {
-    cdouble z = cdouble(rand(), rand()) / (double)RAND_MAX;
+    cdouble z = cdouble(rand(), rand()) / static_cast<double>(RAND_MAX);
     z = find_one_root(p, find_one_root(q, z, EPS, ITERATIONS), EPS, ITERATIONS);
     q = horner_eval(q, z).second;
     res.push_back(z);
@@ -4974,7 +4980,7 @@ std::vector<cdouble> find_all_roots(
 using namespace std;
 
 void print_roots(const vector<cdouble> &x) {
-  for (int i = 0; i < (int)x.size(); i++) {
+  for (int i = 0; i < static_cast<int>(x.size()); i++) {
     printf("(%.5lf, %.5lf)\n", x[i].real(), x[i].imag());
   }
 }
@@ -5057,12 +5063,13 @@ bool is_zero(const cdouble &z, const LD EPS = ZERO_EPS) {
 }
 
 bool is_finite(const cdouble &z) {
-  return std::isfinite((double)z.real()) && std::isfinite((double)z.imag());
+  return std::isfinite(static_cast<double>(z.real())) &&
+         std::isfinite(static_cast<double>(z.imag()));
 }
 
 std::pair<cdouble, cdouble> eval_with_derivative(const cpoly &p, const cdouble &x) {
   cdouble value = p.back(), derivative = 0;
-  for (int i = (int)p.size() - 2; i >= 0; i--) {
+  for (int i = static_cast<int>(p.size()) - 2; i >= 0; i--) {
     derivative = derivative * x + value;
     value = value * x + p[i];
   }
@@ -5072,7 +5079,7 @@ std::pair<cdouble, cdouble> eval_with_derivative(const cpoly &p, const cdouble &
 LD root_bound(const cpoly &p) {
   LD res = 0;
   int n = p.size() - 1;
-  for (int i = 0; i + 1 < (int)p.size(); i++) {
+  for (int i = 0; i + 1 < static_cast<int>(p.size()); i++) {
     LD ratio = std::abs(p[i] / p.back());
     if (ratio > 0) {
       res = std::max(res, powl(ratio, 1.0L / (n - i)));
@@ -5107,10 +5114,10 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
     return roots;
   }
   LD scale = 0;
-  for (int i = 0; i < (int)p.size(); i++) {
+  for (int i = 0; i < static_cast<int>(p.size()); i++) {
     scale = std::max(scale, std::abs(p[i]));
   }
-  for (int i = 0; i < (int)p.size(); i++) {
+  for (int i = 0; i < static_cast<int>(p.size()); i++) {
     p[i] /= scale;
   }
   int n = p.size() - 1;
@@ -5201,7 +5208,7 @@ cdouble eval(const cpoly &p, const cdouble &x) {
 }
 
 void print_roots(const vector<cdouble> &x) {
-  for (int i = 0; i < (int)x.size(); i++) {
+  for (int i = 0; i < static_cast<int>(x.size()); i++) {
     printf("(%.5Lf, %.5Lf)\n", x[i].real(), x[i].imag());
   }
 }
@@ -5213,7 +5220,7 @@ int main() {
     vector<LD> p(poly, poly + 4);
     vector<cdouble> roots = find_all_roots(p);
     assert(roots.size() == 3);
-    for (int i = 0; i < (int)roots.size(); i++) {
+    for (int i = 0; i < static_cast<int>(roots.size()); i++) {
       assert(abs(eval(cpoly(p.begin(), p.end()), roots[i])) < CHECK_EPS);
     }
     print_roots(roots);
@@ -5229,7 +5236,7 @@ int main() {
     p.push_back(cdouble(-6, 4));
     vector<cdouble> roots = find_all_roots(p);
     assert(roots.size() == 4);
-    for (int i = 0; i < (int)roots.size(); i++) {
+    for (int i = 0; i < static_cast<int>(roots.size()); i++) {
       assert(abs(eval(p, roots[i])) < CHECK_EPS);
     }
     print_roots(roots);
@@ -5320,7 +5327,7 @@ This is the base case of the Sprague-Grundy theorem: every finite impartial game
 
 int nim_sum(const std::vector<int> &piles) {
   int x = 0;
-  for (int i = 0; i < (int)piles.size(); i++) {
+  for (int i = 0; i < static_cast<int>(piles.size()); i++) {
     x ^= piles[i];
   }
   return x;
@@ -5335,7 +5342,7 @@ std::pair<int, int> winning_move(const std::vector<int> &piles) {
   if (x == 0) {
     return std::make_pair(-1, -1);
   }
-  for (int i = 0; i < (int)piles.size(); i++) {
+  for (int i = 0; i < static_cast<int>(piles.size()); i++) {
     int target = piles[i] ^ x;
     if (target < piles[i]) {
       return std::make_pair(i, target);
@@ -5385,12 +5392,12 @@ For a sum of independent impartial games, the combined Grundy number is the xor 
 
 int mex(const std::vector<int> &values) {
   std::vector<bool> seen(values.size() + 1, false);
-  for (int i = 0; i < (int)values.size(); i++) {
-    if (0 <= values[i] && values[i] < (int)seen.size()) {
+  for (int i = 0; i < static_cast<int>(values.size()); i++) {
+    if (0 <= values[i] && values[i] < static_cast<int>(seen.size())) {
       seen[values[i]] = true;
     }
   }
-  for (int i = 0; i < (int)seen.size(); i++) {
+  for (int i = 0; i < static_cast<int>(seen.size()); i++) {
     if (!seen[i]) {
       return i;
     }
@@ -5402,7 +5409,7 @@ std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> 
   std::vector<int> grundy(max_stones + 1, 0);
   for (int stones = 1; stones <= max_stones; stones++) {
     std::vector<int> reachable;
-    for (int i = 0; i < (int)moves.size(); i++) {
+    for (int i = 0; i < static_cast<int>(moves.size()); i++) {
       if (moves[i] <= stones) {
         reachable.push_back(grundy[stones - moves[i]]);
       }
@@ -5414,7 +5421,7 @@ std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> 
 
 int sum_grundy(const std::vector<int> &grundies) {
   int x = 0;
-  for (int i = 0; i < (int)grundies.size(); i++) {
+  for (int i = 0; i < static_cast<int>(grundies.size()); i++) {
     x ^= grundies[i];
   }
   return x;
@@ -5463,15 +5470,15 @@ int grundy_dfs(int u, const std::vector<std::vector<int>> &g, std::vector<int> *
     return (*memo)[u];
   }
   std::vector<bool> seen(g[u].size() + 1, false);
-  for (int i = 0; i < (int)g[u].size(); i++) {
+  for (int i = 0; i < static_cast<int>(g[u].size()); i++) {
     int v = g[u][i];
     int x = grundy_dfs(v, g, memo);
-    if (x < (int)seen.size()) {
+    if (x < static_cast<int>(seen.size())) {
       seen[x] = true;
     }
   }
   int res = 0;
-  while (res < (int)seen.size() && seen[res]) {
+  while (res < static_cast<int>(seen.size()) && seen[res]) {
     res++;
   }
   (*memo)[u] = res;
@@ -5480,7 +5487,7 @@ int grundy_dfs(int u, const std::vector<std::vector<int>> &g, std::vector<int> *
 
 std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
   std::vector<int> memo(g.size(), -1);
-  for (int u = 0; u < (int)g.size(); u++) {
+  for (int u = 0; u < static_cast<int>(g.size()); u++) {
     grundy_dfs(u, g, &memo);
   }
   return memo;

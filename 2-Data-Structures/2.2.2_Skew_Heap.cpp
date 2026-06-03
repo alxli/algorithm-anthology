@@ -5,8 +5,8 @@ and extraction of the minimum as well as efficient merging with other instances.
 requires an ordering on the set of possible elements defined by `operator <`. A skew heap attempts
 to maintain balance by unconditionally swapping all nodes in the merge path when merging.
 
-- `skew_heap()` constructs an empty priority queue.
-- `skew_heap(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of elements
+- `SkewHeap()` constructs an empty priority queue.
+- `SkewHeap(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of elements
   in the range `[lo, hi)`.
 - `size()` returns the size of the priority queue.
 - `empty()` returns whether the priority queue is empty.
@@ -33,21 +33,21 @@ Space Complexity:
 #include <stdexcept>
 
 template<class T>
-class skew_heap {
-  struct node_t {
+class SkewHeap {
+  struct Node {
     T value;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const T &v) : value(v), left(NULL), right(NULL) {}
+    Node(const T &v) : value(v), left(nullptr), right(nullptr) {}
   } *root;
 
   int num_nodes;
 
-  static node_t *merge(node_t *a, node_t *b) {
-    if (a == NULL) {
+  static Node *merge(Node *a, Node *b) {
+    if (a == nullptr) {
       return b;
     }
-    if (b == NULL) {
+    if (b == nullptr) {
       return a;
     }
     if (b->value < a->value) {
@@ -58,8 +58,8 @@ class skew_heap {
     return a;
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -67,21 +67,21 @@ class skew_heap {
   }
 
  public:
-  skew_heap() : root(NULL), num_nodes(0) {}
+  SkewHeap() : root(nullptr), num_nodes(0) {}
 
   template<class It>
-  skew_heap(It lo, It hi) : root(NULL), num_nodes(0) {
+  SkewHeap(It lo, It hi) : root(nullptr), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));
     }
   }
 
-  ~skew_heap() { clean_up(root); }
+  ~SkewHeap() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   void push(const T &v) {
-    root = merge(root, new node_t(v));
+    root = merge(root, new Node(v));
     num_nodes++;
   }
 
@@ -89,7 +89,7 @@ class skew_heap {
     if (empty()) {
       throw std::runtime_error("Cannot pop from empty heap.");
     }
-    node_t *tmp = root;
+    Node *tmp = root;
     root = merge(root->left, root->right);
     delete tmp;
     num_nodes--;
@@ -102,9 +102,9 @@ class skew_heap {
     return root->value;
   }
 
-  void absorb(skew_heap &h) {
+  void absorb(SkewHeap &h) {
     root = merge(root, h.root);
-    h.root = NULL;
+    h.root = nullptr;
   }
 };
 
@@ -122,7 +122,7 @@ class skew_heap {
 using namespace std;
 
 int main() {
-  skew_heap<int> h, h2;
+  SkewHeap<int> h, h2;
   h.push(12);
   h.push(10);
   h2.push(5);

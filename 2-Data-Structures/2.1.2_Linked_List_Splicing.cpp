@@ -26,16 +26,16 @@ Space Complexity:
 
 #include <cstddef>
 
-struct list_node {
+struct ListNode {
   int value;
-  list_node *next;
+  ListNode *next;
 
-  explicit list_node(int value = 0) : value(value), next(NULL) {}
+  explicit ListNode(int value = 0) : value(value), next(nullptr) {}
 };
 
-void splice_after(list_node *pos, list_node *before) {
-  list_node *node = before->next;
-  if (node == NULL || pos == before || pos == node) {
+void splice_after(ListNode *pos, ListNode *before) {
+  ListNode *node = before->next;
+  if (node == nullptr || pos == before || pos == node) {
     return;
   }
   before->next = node->next;
@@ -43,12 +43,12 @@ void splice_after(list_node *pos, list_node *before) {
   pos->next = node;
 }
 
-void splice_range_after(list_node *pos, list_node *before_first, list_node *last) {
-  list_node *first = before_first->next;
+void splice_range_after(ListNode *pos, ListNode *before_first, ListNode *last) {
+  ListNode *first = before_first->next;
   if (first == last) {
     return;
   }
-  list_node *tail = first;
+  ListNode *tail = first;
   while (tail->next != last) {
     tail = tail->next;
   }
@@ -63,16 +63,16 @@ void splice_range_after(list_node *pos, list_node *before_first, list_node *last
 #include <vector>
 using namespace std;
 
-vector<int> values(list_node *dummy) {
+vector<int> values(ListNode *dummy) {
   vector<int> res;
-  for (list_node *p = dummy->next; p != NULL; p = p->next) {
+  for (ListNode *p = dummy->next; p != nullptr; p = p->next) {
     res.push_back(p->value);
   }
   return res;
 }
 
 int main() {
-  list_node dummy(0), a(1), b(2), c(3), d(4), e(5);
+  ListNode dummy(0), a(1), b(2), c(3), d(4), e(5);
   dummy.next = &a;
   a.next = &b;
   b.next = &c;

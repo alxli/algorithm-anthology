@@ -33,7 +33,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class sqrt_decomposition {
+class SqrtDecomposition {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
 
   static T join_value_with_delta(const T &v, const T &d) { return d; }
@@ -42,7 +42,7 @@ class sqrt_decomposition {
   std::vector<T> value, block;
 
   void init() {
-    blocklen = (int)sqrt(len);
+    blocklen = static_cast<int>(sqrt(len));
     int nblocks = (len + blocklen - 1) / blocklen;
     for (int i = 0; i < nblocks; i++) {
       T blockval = value[i * blocklen];
@@ -55,10 +55,10 @@ class sqrt_decomposition {
   }
 
  public:
-  sqrt_decomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
+  SqrtDecomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
 
   template<class It>
-  sqrt_decomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
+  SqrtDecomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
     init();
   }
 
@@ -67,7 +67,7 @@ class sqrt_decomposition {
 
   T query(int lo, int hi) const {
     T res;
-    int blocklo = ceil((double)lo / blocklen), blockhi = (hi + 1) / blocklen - 1;
+    int blocklo = ceil(static_cast<double>(lo) / blocklen), blockhi = (hi + 1) / blocklen - 1;
     if (blocklo > blockhi) {
       res = value[lo];
       for (int i = lo + 1; i <= hi; i++) {
@@ -111,7 +111,7 @@ using namespace std;
 
 int main() {
   int arr[5] = {6, -2, 1, 8, 10};
-  sqrt_decomposition<int> sd(arr, arr + 5);
+  SqrtDecomposition<int> sd(arr, arr + 5);
   sd.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < sd.size(); i++) {

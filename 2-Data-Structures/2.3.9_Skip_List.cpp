@@ -5,7 +5,7 @@ once in the collection. This implementation requires operators `<` and `==` to b
 type. A skip list maintains a linked hierarchy of sorted subsequences with each successive
 subsequence skipping over fewer elements than the previous one.
 
-- `skip_list()` constructs an empty map.
+- `SkipList()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if an new
@@ -13,7 +13,7 @@ subsequence skipping over fewer elements than the previous one.
   old value associated with the key is preserved).
 - `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
   successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if the key was not
+- `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was not
   found.
 - `operator[]` returns a reference to key `k`'s associated value (which may be modified), or if
   necessary, inserts and returns a new entry with the default constructed value if key `k` was not
@@ -38,15 +38,15 @@ Space Complexity:
 #include <vector>
 
 template<class K, class V>
-class skip_list {
+class SkipList {
   static const int MAX_LEVELS = 32;  // log2(max possible keys)
 
-  struct node_t {
+  struct Node {
     K key;
     V value;
-    std::vector<node_t *> next;
+    std::vector<Node *> next;
 
-    node_t(const K &k, const V &v, int levels) : key(k), value(v), next(levels, (node_t *)NULL) {}
+    Node(const K &k, const V &v, int levels) : key(k), value(v), next(levels, (Node *)nullptr) {}
   } *head;
 
   int num_nodes;
@@ -54,43 +54,43 @@ class skip_list {
   static int random_level() {
     static const double p = 0.5;
     int level = 1;
-    while (((double)rand() / RAND_MAX) < p && std::abs(level) < MAX_LEVELS) {
+    while ((static_cast<double>(rand()) / RAND_MAX) < p && std::abs(level) < MAX_LEVELS) {
       level++;
     }
     return std::abs(level);
   }
 
-  static int node_level(const std::vector<node_t *> &v) {
+  static int node_level(const std::vector<Node *> &v) {
     int i = 0;
-    while (i < (int)v.size() && v[i] != NULL) {
+    while (i < static_cast<int>(v.size()) && v[i] != nullptr) {
       i++;
     }
     return i + 1;
   }
 
  public:
-  skip_list() : head(new node_t(K(), V(), MAX_LEVELS)), num_nodes(0) {
-    for (int i = 0; i < (int)head->next.size(); i++) {
-      head->next[i] = NULL;
+  SkipList() : head(new Node(K(), V(), MAX_LEVELS)), num_nodes(0) {
+    for (int i = 0; i < static_cast<int>(head->next.size()); i++) {
+      head->next[i] = nullptr;
     }
   }
 
-  ~skip_list() { delete head; }
+  ~SkipList() { delete head; }
   int size() const { return num_nodes; }
   bool empty() const { return num_nodes == 0; }
 
   bool insert(const K &k, const V &v) {
-    std::vector<node_t *> update(head->next);
+    std::vector<Node *> update(head->next);
     int curr_level = node_level(update);
-    node_t *n = head;
+    Node *n = head;
     for (int i = curr_level; i-- > 0;) {
-      while (n->next[i] != NULL && n->next[i]->key < k) {
+      while (n->next[i] != nullptr && n->next[i]->key < k) {
         n = n->next[i];
       }
       update[i] = n;
     }
     n = n->next[0];
-    if (n != NULL && n->key == k) {
+    if (n != nullptr && n->key == k) {
       return false;
     }
     int new_level = random_level();
@@ -99,7 +99,7 @@ class skip_list {
         update[i] = head;
       }
     }
-    n = new node_t(k, v, new_level);
+    n = new Node(k, v, new_level);
     for (int i = 0; i < new_level; i++) {
       n->next[i] = update[i]->next[i];
       update[i]->next[i] = n;
@@ -109,17 +109,17 @@ class skip_list {
   }
 
   bool erase(const K &k) {
-    std::vector<node_t *> update(head->next);
-    node_t *n = head;
+    std::vector<Node *> update(head->next);
+    Node *n = head;
     for (int i = node_level(update); i-- > 0;) {
-      while (n->next[i] != NULL && n->next[i]->key < k) {
+      while (n->next[i] != nullptr && n->next[i]->key < k) {
         n = n->next[i];
       }
       update[i] = n;
     }
     n = n->next[0];
-    if (n != NULL && n->key == k) {
-      for (int i = 0; i < (int)update.size(); i++) {
+    if (n != nullptr && n->key == k) {
+      for (int i = 0; i < static_cast<int>(update.size()); i++) {
         if (update[i]->next[i] != n) {
           break;
         }
@@ -133,20 +133,20 @@ class skip_list {
   }
 
   V *find(const K &k) const {
-    node_t *n = head;
+    Node *n = head;
     for (int i = node_level(n->next); i-- > 0;) {
-      while (n->next[i] != NULL && n->next[i]->key < k) {
+      while (n->next[i] != nullptr && n->next[i]->key < k) {
         n = n->next[i];
       }
     }
     n = n->next[0];
-    return (n != NULL && n->key == k) ? &(n->value) : NULL;
+    return (n != nullptr && n->key == k) ? &(n->value) : nullptr;
   }
 
   V &operator[](const K &k) {
-    V *ret = find(k);
-    if (ret != NULL) {
-      return *ret;
+    V *ptr = find(k);
+    if (ptr != nullptr) {
+      return *ptr;
     }
     insert(k, V());
     return *find(k);
@@ -154,8 +154,8 @@ class skip_list {
 
   template<class KVFunction>
   void walk(KVFunction f) const {
-    node_t *n = head->next[0];
-    while (n != NULL) {
+    Node *n = head->next[0];
+    while (n != nullptr) {
       f(n->key, n->value);
       n = n->next[0];
     }
@@ -178,7 +178,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  skip_list<int, char> l;
+  SkipList<int, char> l;
   l.insert(2, 'b');
   l.insert(1, 'a');
   l.insert(3, 'c');
@@ -190,7 +190,7 @@ int main() {
   cout << endl;
   assert(l.erase(1));
   assert(!l.erase(1));
-  assert(l.find(1) == NULL);
+  assert(l.find(1) == nullptr);
   l.walk(printch);
   cout << endl;
   return 0;

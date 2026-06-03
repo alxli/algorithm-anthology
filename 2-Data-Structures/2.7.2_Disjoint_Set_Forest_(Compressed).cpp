@@ -37,7 +37,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class disjoint_set_forest {
+class DisjointSetForest {
   int num_elements, num_sets;
   std::map<T, int> id;
   std::vector<int> root, rank;
@@ -50,7 +50,7 @@ class disjoint_set_forest {
   }
 
  public:
-  disjoint_set_forest() : num_elements(0), num_sets(0) {}
+  DisjointSetForest() : num_elements(0), num_sets(0) {}
 
   int size() const { return num_elements; }
   int sets() const { return num_sets; }
@@ -107,7 +107,7 @@ class disjoint_set_forest {
 using namespace std;
 
 int main() {
-  disjoint_set_forest<char> dsf;
+  DisjointSetForest<char> dsf;
   for (char c = 'a'; c <= 'g'; c++) {
     dsf.make_set(c);
   }
@@ -118,9 +118,9 @@ int main() {
   assert(dsf.size() == 7);
   assert(dsf.sets() == 3);
   vector<vector<char>> s = dsf.get_all_sets();
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     cout << (i > 0 ? ", [" : "[");
-    for (int j = 0; j < (int)s[i].size(); j++) {
+    for (int j = 0; j < static_cast<int>(s[i].size()); j++) {
       cout << (j > 0 ? ", " : "") << s[i][j];
     }
     cout << "]";

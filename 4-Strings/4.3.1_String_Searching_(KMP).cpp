@@ -4,7 +4,7 @@ Given a single string (needle) and subsequent queries of texts (haystacks) to be
 the first positions in which the needle occurs within the given haystacks in linear time using the
 Knuth-Morris-Pratt algorithm. In comparison, `std::string::find` runs in quadratic time.
 
-- `kmp(needle)` constructs the partial match table for a string `needle` that is to be searched for
+- `KMP(needle)` constructs the partial match table for a string `needle` that is to be searched for
   subsequently in `haystack` queries.
 - `find_in(haystack)` returns the first position that `needle` occurs in `haystack`, or
   `std::string::npos` if it cannot be found. Note that the function can be modified to return all
@@ -24,13 +24,13 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-class kmp {
+class KMP {
   string needle;
   std::vector<int> table;
 
  public:
-  kmp(const string &needle) : needle(needle), table(needle.size()) {
-    for (int i = 1, j = 0; i < (int)needle.size(); i++) {
+  KMP(const string &needle) : needle(needle), table(needle.size()) {
+    for (int i = 1, j = 0; i < static_cast<int>(needle.size()); i++) {
       while (j > 0 && needle[i] != needle[j]) {
         j = table[j - 1];
       }
@@ -46,7 +46,7 @@ class kmp {
     if (m == 0) {
       return 0;
     }
-    for (int i = 0, j = 0; i < (int)haystack.size(); i++) {
+    for (int i = 0, j = 0; i < static_cast<int>(haystack.size()); i++) {
       while (j > 0 && needle[j] != haystack[i]) {
         j = table[j - 1];
       }
@@ -66,6 +66,6 @@ class kmp {
 #include <cassert>
 
 int main() {
-  assert(15 == kmp("ABCDABD").find_in("ABC ABCDAB ABCDABCDABDE"));
+  assert(15 == KMP("ABCDABD").find_in("ABC ABCDAB ABCDABCDABDE"));
   return 0;
 }

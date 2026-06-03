@@ -14,9 +14,9 @@ change made to array values. The default definition below supports updates that 
 array index to a new value. Another possible update operation is "increment", in which
 `join_value_with_delta(v, d)` should be defined to return $v + d$.
 
-- `segment_tree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
+- `SegTree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
   and all values initialized to `v`.
-- `segment_tree(lo, hi)` constructs an array from two random-access iterators as a range `[lo, hi)`,
+- `SegTree(lo, hi)` constructs an array from two random-access iterators as a range `[lo, hi)`,
   initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
@@ -41,7 +41,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class segment_tree {
+class SegTree {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_value_with_delta(const T &v, const T &d) { return d; }
 
@@ -103,14 +103,14 @@ class segment_tree {
   }
 
  public:
-  segment_tree(int n, const T &v = T()) : len(n), value(4 * len) {
+  SegTree(int n, const T &v = T()) : len(n), value(4 * len) {
     if (len > 0) {
       build(0, 0, len - 1, v);
     }
   }
 
   template<class It>
-  segment_tree(It lo, It hi) : len(hi - lo), value(4 * len) {
+  SegTree(It lo, It hi) : len(hi - lo), value(4 * len) {
     if (len > 0) {
       build(0, 0, len - 1, lo);
     }
@@ -135,7 +135,7 @@ using namespace std;
 
 int main() {
   int arr[5] = {6, -2, 1, 8, 10};
-  segment_tree<int> t(arr, arr + 5);
+  SegTree<int> t(arr, arr + 5);
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {

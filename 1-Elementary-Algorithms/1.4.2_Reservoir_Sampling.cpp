@@ -43,7 +43,7 @@ std::vector<typename std::iterator_traits<It>::value_type> reservoir_sample_k(It
   int seen = 0;
   for (It it = lo; it != hi; ++it) {
     seen++;
-    if ((int)res.size() < k) {
+    if (static_cast<int>(res.size()) < k) {
       res.push_back(*it);
     } else {
       int j = rand() % seen;
@@ -70,9 +70,9 @@ int main() {
 
   vector<int> sample = reservoir_sample_k(a.begin(), a.end(), 3);
   assert(sample.size() == 3);
-  for (int i = 0; i < (int)sample.size(); i++) {
+  for (int i = 0; i < static_cast<int>(sample.size()); i++) {
     bool found = false;
-    for (int j = 0; j < (int)a.size(); j++) {
+    for (int j = 0; j < static_cast<int>(a.size()); j++) {
       found = found || sample[i] == a[j];
     }
     assert(found);

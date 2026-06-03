@@ -39,29 +39,14 @@ typedef std::pair<double, double> point;
 #define x first
 #define y second
 
-double sqnorm(const point &a) {
-  return a.x * a.x + a.y * a.y;
-}
-
-double norm(const point &a) {
-  return sqrt(sqnorm(a));
-}
-
-double dot(const point &a, const point &b) {
-  return a.x * b.x + a.y * b.y;
-}
-
-double cross(const point &a, const point &b) {
-  return a.x * b.y - a.y * b.x;
-}
-
-double dist(const point &a, const point &b) {
-  return norm(point(b.x - a.x, b.y - a.y));
-}
-
-double sqdist(const point &a, const point &b) {
-  return sqnorm(point(b.x - a.x, b.y - a.y));
-}
+// clang-format off
+double sqnorm(const point &a) { return a.x * a.x + a.y * a.y; }
+double norm(const point &a) { return sqrt(sqnorm(a)); }
+double dot(const point &a, const point &b) { return a.x * b.x + a.y * b.y; }
+double cross(const point &a, const point &b) { return a.x * b.y - a.y * b.x; }
+double dist(const point &a, const point &b) { return norm(point(b.x - a.x, b.y - a.y)); }
+double sqdist(const point &a, const point &b) { return sqnorm(point(b.x - a.x, b.y - a.y)); }
+// clang-format on
 
 double line_dist(const point &p, double a, double b, double c) {
   return fabs(a * p.x + b * p.y + c) / sqrt(a * a + b * b);

@@ -23,7 +23,7 @@ The default code below defines updates that "set" a path's edges or nodes to a n
 possible update operation is "increment", in which case `join_value_with_delta(v, d, len)` should be
 defined to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined to return $d1 + d2$.
 
-- `heavy_light(n, adj[], v)` constructs a new heavy light decomposition on a tree with `n` nodes
+- `HeavyLight(n, adj[], v)` constructs a new heavy light decomposition on a tree with `n` nodes
   defined by the adjacency list `adj[]`, with all values initialized to `v`. The adjacency list must
   be a size `n` array of vectors consisting of only the integers from 0 to `n - 1`, inclusive. No
   duplicate edges should exist, and the graph must be connected.
@@ -48,7 +48,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class heavy_light {
+class HeavyLight {
   // Set this to true to store values on edges, false to store values on nodes.
   static const bool VALUES_ON_EDGES = true;
 
@@ -70,7 +70,7 @@ class heavy_light {
     tin[u] = counter++;
     parent[u] = p;
     size[u] = 1;
-    for (int j = 0; j < (int)adj[u].size(); j++) {
+    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
       int v = adj[u][j];
       if (v != p) {
         dfs(v, u);
@@ -88,7 +88,7 @@ class heavy_light {
   void build_paths(int u, int path) {
     this->path[u] = path;
     pathpos[u] = pathlen[path]++;
-    for (int j = 0; j < (int)adj[u].size(); j++) {
+    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
       int v = adj[u][j];
       if (v != parent[u]) {
         build_paths(v, (2 * size[v] >= size[u]) ? path : new_path(v));
@@ -174,7 +174,7 @@ class heavy_light {
   }
 
  public:
-  heavy_light(int n, std::vector<int> adj[], const T &v = T())
+  HeavyLight(int n, std::vector<int> adj[], const T &v = T())
       : counter(0),
         paths(0),
         size(n),
@@ -227,7 +227,7 @@ class heavy_light {
       v = parent[root];
     }
     if (query(
-            path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
+            path[u], std::min(pathpos[u], pathpos[v]) + static_cast<int>(VALUES_ON_EDGES),
             std::max(pathpos[u], pathpos[v]), &value
         )) {
       res = found ? join_values(res, value) : value;
@@ -253,7 +253,7 @@ class heavy_light {
       v = parent[root];
     }
     update(
-        path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
+        path[u], std::min(pathpos[u], pathpos[v]) + static_cast<int>(VALUES_ON_EDGES),
         std::max(pathpos[u], pathpos[v]), d
     );
   }
@@ -279,7 +279,7 @@ int main() {
   adj[3].push_back(2);
   adj[2].push_back(4);
   adj[4].push_back(2);
-  heavy_light<int> hld(5, adj, 0);
+  HeavyLight<int> hld(5, adj, 0);
   hld.update(0, 1, 40);
   hld.update(1, 2, 20);
   hld.update(2, 3, 10);

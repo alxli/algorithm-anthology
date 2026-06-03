@@ -8,7 +8,7 @@ iterators. The front of the list stores the most recently used item. The operati
 `items.splice(items.begin(), items, it)` is the standard-library way to move an existing list node
 to the front in O(1) time.
 
-- `lru_cache(capacity)` constructs an empty cache holding at most `capacity` keys.
+- `LRUCache(capacity)` constructs an empty cache holding at most `capacity` keys.
 - `get(key, &value)` returns whether `key` is present. If present, it stores the value in `value`
   and marks the key as most recently used.
 - `put(key, value)` inserts or updates `key`, marking it as most recently used and evicting the
@@ -29,7 +29,7 @@ Space Complexity:
 #include <utility>
 
 template<class Key, class Value>
-class lru_cache {
+class LRUCache {
   typedef typename std::list<std::pair<Key, Value>>::iterator list_iter;
 
   int cap;
@@ -37,7 +37,7 @@ class lru_cache {
   std::map<Key, list_iter> where;
 
  public:
-  explicit lru_cache(int capacity) : cap(capacity) {}
+  explicit LRUCache(int capacity) : cap(capacity) {}
 
   int size() const { return items.size(); }
 
@@ -63,7 +63,7 @@ class lru_cache {
     if (cap == 0) {
       return;
     }
-    if ((int)items.size() == cap) {
+    if (static_cast<int>(items.size()) == cap) {
       where.erase(items.back().first);
       items.pop_back();
     }
@@ -78,7 +78,7 @@ class lru_cache {
 using namespace std;
 
 int main() {
-  lru_cache<int, int> cache(2);
+  LRUCache<int, int> cache(2);
   int value = 0;
   cache.put(1, 10);
   cache.put(2, 20);

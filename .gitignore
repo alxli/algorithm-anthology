@@ -9,3 +9,4 @@
 *.fdb_latexmk
 *.listing
 /.vscode
+/.claude

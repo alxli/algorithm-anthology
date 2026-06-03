@@ -1,15 +1,15 @@
 /*
 
 Applies many range-add updates to an array in linear total time using a difference array. Instead of
-immediately adding `delta` to every element of `[l, r)`, add `delta` at `diff[l]` and subtract it at
-`diff[r]`; a final prefix sum reconstructs the updated values.
+immediately adding `delta` to every element of `[lo, hi)`, add `delta` at `diff[lo]` and subtract it at
+`diff[hi]`; a final prefix sum reconstructs the updated values.
 
-- `difference_array(n)` constructs an initially zero array of size `n`.
-- `add(l, r, delta)` adds `delta` to every position in the half-open range `[l, r)`.
+- `DifferenceArray(n)` constructs an initially zero array of size `n`.
+- `add(lo, hi, delta)` adds `delta` to every position in the half-open range `[lo, hi)`.
 - `build()` returns the final array after all range updates.
 
 Time Complexity:
-- O(1) per call to `add(l, r, delta)`.
+- O(1) per call to `add(lo, hi, delta)`.
 - O(n) per call to `build()`.
 
 Space Complexity:
@@ -19,21 +19,21 @@ Space Complexity:
 
 #include <vector>
 
-class difference_array {
+class DifferenceArray {
   std::vector<long long> diff;
 
  public:
-  explicit difference_array(int n) : diff(n + 1, 0) {}
+  explicit DifferenceArray(int n) : diff(n + 1, 0) {}
 
-  void add(int l, int r, long long delta) {
-    diff[l] += delta;
-    diff[r] -= delta;
+  void add(int lo, int hi, long long delta) {
+    diff[lo] += delta;
+    diff[hi] -= delta;
   }
 
   std::vector<long long> build() const {
     std::vector<long long> res(diff.size() - 1);
     long long cur = 0;
-    for (int i = 0; i < (int)res.size(); i++) {
+    for (int i = 0; i < static_cast<int>(res.size()); i++) {
       cur += diff[i];
       res[i] = cur;
     }
@@ -47,7 +47,7 @@ class difference_array {
 using namespace std;
 
 int main() {
-  difference_array d(5);
+  DifferenceArray d(5);
   d.add(0, 3, 2);
   d.add(1, 5, 4);
   d.add(2, 4, -1);

@@ -35,7 +35,7 @@ Space Complexity:
 
 double horner_eval(const std::vector<double> &p, double x) {
   double res = p.back();
-  for (int i = (int)p.size() - 2; i >= 0; i--) {
+  for (int i = static_cast<int>(p.size()) - 2; i >= 0; i--) {
     res = res * x + p[i];
   }
   return res;
@@ -62,7 +62,7 @@ std::vector<double> find_all_roots(
     const std::vector<double> &p, double a = -1e20, double b = 1e20, const double EPS = 1e-15
 ) {
   std::vector<double> pprime;
-  for (int i = 1; i < (int)p.size(); i++) {
+  for (int i = 1; i < static_cast<int>(p.size()); i++) {
     pprime.push_back(p[i] * i);
   }
   if (pprime.empty()) {
@@ -70,7 +70,7 @@ std::vector<double> find_all_roots(
   }
   std::vector<double> res, r = find_all_roots(pprime, a, b, EPS);
   r.push_back(b);
-  for (int i = 0; i < (int)r.size(); i++) {
+  for (int i = 0; i < static_cast<int>(r.size()); i++) {
     double root = find_one_root(p, i == 0 ? a : r[i - 1], r[i], EPS);
     if (!std::isnan(root) && (res.empty() || root != res.back())) {
       res.push_back(root);

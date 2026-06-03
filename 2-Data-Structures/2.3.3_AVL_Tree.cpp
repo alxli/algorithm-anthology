@@ -6,7 +6,7 @@ by `operator <` on the key type. An AVL tree is a binary search tree balanced by
 guaranteeing O(log n) worst-case running time in insertions and deletions by making sure that the
 heights of the left and right subtrees at every node differ by at most 1.
 
-- `avl_tree()` constructs an empty map.
+- `AVLTree()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if an new
@@ -14,7 +14,7 @@ heights of the left and right subtrees at every node differ by at most 1.
   old value associated with the key is preserved).
 - `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
   successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if the key was not
+- `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was not
   found.
 - `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending order of keys.
 
@@ -35,28 +35,28 @@ Space Complexity:
 #include <cstddef>
 
 template<class K, class V>
-class avl_tree {
-  struct node_t {
+class AVLTree {
+  struct Node {
     K key;
     V value;
     int height;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const K &k, const V &v) : key(k), value(v), height(1), left(NULL), right(NULL) {}
+    Node(const K &k, const V &v) : key(k), value(v), height(1), left(nullptr), right(nullptr) {}
   } *root;
 
   int num_nodes;
 
-  static int height(node_t *n) { return (n != NULL) ? n->height : 0; }
+  static int height(Node *n) { return (n != nullptr) ? n->height : 0; }
 
-  static void update_height(node_t *n) {
-    if (n != NULL) {
+  static void update_height(Node *n) {
+    if (n != nullptr) {
       n->height = 1 + std::max(height(n->left), height(n->right));
     }
   }
 
-  static void rotate_left(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_left(Node *&n) {
+    Node *tmp = n;
     n = n->right;
     tmp->right = n->left;
     n->left = tmp;
@@ -64,8 +64,8 @@ class avl_tree {
     update_height(n);
   }
 
-  static void rotate_right(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_right(Node *&n) {
+    Node *tmp = n;
     n = n->left;
     tmp->left = n->right;
     n->right = tmp;
@@ -73,12 +73,12 @@ class avl_tree {
     update_height(n);
   }
 
-  static int balance_factor(node_t *n) {
-    return (n != NULL) ? (height(n->left) - height(n->right)) : 0;
+  static int balance_factor(Node *n) {
+    return (n != nullptr) ? (height(n->left) - height(n->right)) : 0;
   }
 
-  static void rebalance(node_t *&n) {
-    if (n == NULL) {
+  static void rebalance(Node *&n) {
+    if (n == nullptr) {
       return;
     }
     update_height(n);
@@ -96,9 +96,9 @@ class avl_tree {
     }
   }
 
-  static bool insert(node_t *&n, const K &k, const V &v) {
-    if (n == NULL) {
-      n = new node_t(k, v);
+  static bool insert(Node *&n, const K &k, const V &v) {
+    if (n == nullptr) {
+      n = new Node(k, v);
       return true;
     }
     if ((k < n->key && insert(n->left, k, v)) || (n->key < k && insert(n->right, k, v))) {
@@ -108,20 +108,20 @@ class avl_tree {
     return false;
   }
 
-  static bool erase(node_t *&n, const K &k) {
-    if (n == NULL) {
+  static bool erase(Node *&n, const K &k) {
+    if (n == nullptr) {
       return false;
     }
     if (!(k < n->key || n->key < k)) {
-      if (n->left != NULL && n->right != NULL) {
-        node_t *tmp = n->right, *parent = NULL;
-        while (tmp->left != NULL) {
+      if (n->left != nullptr && n->right != nullptr) {
+        Node *tmp = n->right, *parent = nullptr;
+        while (tmp->left != nullptr) {
           parent = tmp;
           tmp = tmp->left;
         }
         n->key = tmp->key;
         n->value = tmp->value;
-        if (parent != NULL) {
+        if (parent != nullptr) {
           if (!erase(parent->left, parent->left->key)) {
             return false;
           }
@@ -129,7 +129,7 @@ class avl_tree {
           return false;
         }
       } else {
-        node_t *tmp = (n->left != NULL) ? n->left : n->right;
+        Node *tmp = (n->left != nullptr) ? n->left : n->right;
         delete n;
         n = tmp;
       }
@@ -144,16 +144,16 @@ class avl_tree {
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, KVFunction f) {
-    if (n != NULL) {
+  static void walk(Node *n, KVFunction f) {
+    if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
       walk(n->right, f);
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -161,11 +161,11 @@ class avl_tree {
   }
 
  public:
-  avl_tree() : root(NULL), num_nodes(0) {}
+  AVLTree() : root(nullptr), num_nodes(0) {}
 
-  ~avl_tree() { clean_up(root); }
+  ~AVLTree() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -184,8 +184,8 @@ class avl_tree {
   }
 
   const V *find(const K &k) const {
-    node_t *n = root;
-    while (n != NULL) {
+    Node *n = root;
+    while (n != nullptr) {
       if (k < n->key) {
         n = n->left;
       } else if (n->key < k) {
@@ -194,7 +194,7 @@ class avl_tree {
         return &(n->value);
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   template<class KVFunction>
@@ -219,7 +219,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  avl_tree<int, char> t;
+  AVLTree<int, char> t;
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
@@ -231,7 +231,7 @@ int main() {
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
-  assert(t.find(1) == NULL);
+  assert(t.find(1) == nullptr);
   t.walk(printch);
   cout << endl;
   return 0;

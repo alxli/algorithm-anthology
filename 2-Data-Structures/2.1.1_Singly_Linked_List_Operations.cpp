@@ -25,17 +25,17 @@ Space Complexity:
 
 #include <cstddef>
 
-struct list_node {
+struct ListNode {
   int value;
-  list_node *next;
+  ListNode *next;
 
-  explicit list_node(int value = 0) : value(value), next(NULL) {}
+  explicit ListNode(int value = 0) : value(value), next(nullptr) {}
 };
 
-list_node *reverse_list(list_node *head) {
-  list_node *prev = NULL;
-  while (head != NULL) {
-    list_node *next = head->next;
+ListNode *reverse_list(ListNode *head) {
+  ListNode *prev = nullptr;
+  while (head != nullptr) {
+    ListNode *next = head->next;
     head->next = prev;
     prev = head;
     head = next;
@@ -43,10 +43,10 @@ list_node *reverse_list(list_node *head) {
   return prev;
 }
 
-list_node *merge_sorted_lists(list_node *a, list_node *b) {
-  list_node dummy;
-  list_node *tail = &dummy;
-  while (a != NULL && b != NULL) {
+ListNode *merge_sorted_lists(ListNode *a, ListNode *b) {
+  ListNode dummy;
+  ListNode *tail = &dummy;
+  while (a != nullptr && b != nullptr) {
     if (b->value < a->value) {
       tail->next = b;
       b = b->next;
@@ -56,22 +56,22 @@ list_node *merge_sorted_lists(list_node *a, list_node *b) {
     }
     tail = tail->next;
   }
-  tail->next = a != NULL ? a : b;
+  tail->next = a != nullptr ? a : b;
   return dummy.next;
 }
 
-list_node *split_half(list_node *head, list_node **second) {
-  if (head == NULL || head->next == NULL) {
-    *second = NULL;
+ListNode *split_half(ListNode *head, ListNode **second) {
+  if (head == nullptr || head->next == nullptr) {
+    *second = nullptr;
     return head;
   }
-  list_node *slow = head, *fast = head->next;
-  while (fast != NULL && fast->next != NULL) {
+  ListNode *slow = head, *fast = head->next;
+  while (fast != nullptr && fast->next != nullptr) {
     slow = slow->next;
     fast = fast->next->next;
   }
   *second = slow->next;
-  slow->next = NULL;
+  slow->next = nullptr;
   return head;
 }
 
@@ -81,29 +81,29 @@ list_node *split_half(list_node *head, list_node **second) {
 #include <vector>
 using namespace std;
 
-vector<int> values(list_node *head) {
+vector<int> values(ListNode *head) {
   vector<int> res;
-  for (; head != NULL; head = head->next) {
+  for (; head != nullptr; head = head->next) {
     res.push_back(head->value);
   }
   return res;
 }
 
 int main() {
-  list_node a[3] = {list_node(1), list_node(3), list_node(5)};
-  list_node b[3] = {list_node(2), list_node(4), list_node(6)};
+  ListNode a[3] = {ListNode(1), ListNode(3), ListNode(5)};
+  ListNode b[3] = {ListNode(2), ListNode(4), ListNode(6)};
   for (int i = 0; i + 1 < 3; i++) {
     a[i].next = &a[i + 1];
     b[i].next = &b[i + 1];
   }
-  list_node *merged = merge_sorted_lists(&a[0], &b[0]);
+  ListNode *merged = merge_sorted_lists(&a[0], &b[0]);
   vector<int> merged_values = values(merged);
   for (int i = 0; i < 6; i++) {
     assert(merged_values[i] == i + 1);
   }
 
-  list_node *second = NULL;
-  list_node *first = split_half(merged, &second);
+  ListNode *second = nullptr;
+  ListNode *first = split_half(merged, &second);
   assert(values(first).size() == 3);
   assert(values(second).size() == 3);
   assert(values(reverse_list(first))[0] == 3);

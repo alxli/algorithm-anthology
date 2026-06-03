@@ -10,7 +10,7 @@ For a string `s` of length $n$, the longest common prefix (LCP) array of length 
 lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in
 `s`. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of `[1, 0]`.
 
-- `suffix_array(s)` constructs a suffix array from the given string `s` using the original
+- `SuffixArray(s)` constructs a suffix array from the given string `s` using the original
   Manber-Myers gap partitioning algorithm with a counting sort instead of a comparison-based sort to
   reduce the running time to O(n log n).
 - `get_sa()` returns the constructed suffix array.
@@ -40,7 +40,7 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-class suffix_array {
+class SuffixArray {
   struct comp {
     const string &s;
     comp(const string &s) : s(s) {}
@@ -51,11 +51,11 @@ class suffix_array {
   std::vector<int> sa, rank;
 
  public:
-  suffix_array(const string &s) : s(s), sa(s.size()), rank(s.size()) {
+  SuffixArray(const string &s) : s(s), sa(s.size()), rank(s.size()) {
     int n = s.size();
     for (int i = 0; i < n; i++) {
       sa[i] = n - 1 - i;
-      rank[i] = (int)s[i];
+      rank[i] = static_cast<int>(s[i]);
     }
     std::stable_sort(sa.begin(), sa.end(), comp(s));
     for (int gap = 1; gap < n; gap *= 2) {
@@ -99,7 +99,7 @@ class suffix_array {
   }
 
   size_t find(const string &needle) {
-    int lo = 0, hi = (int)s.size() - 1;
+    int lo = 0, hi = static_cast<int>(s.size()) - 1;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
       int cmp = s.compare(sa[mid], needle.size(), needle);
@@ -121,7 +121,7 @@ class suffix_array {
 using namespace std;
 
 int main() {
-  suffix_array sa("banana");
+  SuffixArray sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
   int sarr_expected[] = {5, 3, 1, 0, 4, 2};
   int lcp_expected[] = {1, 3, 0, 0, 2};

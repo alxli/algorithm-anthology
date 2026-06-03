@@ -4,7 +4,7 @@ Maintain a set of two-dimensional points while supporting queries for the closes
 to a given query point. This implementation uses `std::pair` to represent points, requiring
 operators `<`, `==`, `-`, and `long double` casting to be defined on the numeric template type.
 
-- `kd_tree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
+- `KDTree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
   `[lo, hi)` of points.
 - `nearest(x, y, can_equal)` returns a point in the set that is closest to (`x`, `y`) by Euclidean
   distance. This may be equal to (`x`, `y`) only if `can_equal` is `true`.
@@ -26,7 +26,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class kd_tree {
+class KDTree {
   typedef std::pair<T, T> point;
 
   static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
@@ -70,7 +70,7 @@ class kd_tree {
     }
     int mid = lo + (hi - lo) / 2;
     T dx = x - tree[mid].first, dy = y - tree[mid].second;
-    long double d = dx * (long double)dx + dy * (long double)dy;
+    long double d = dx * static_cast<long double>(dx) + dy * static_cast<long double>(dy);
     if (d < min_dist && (can_equal || d != 0)) {
       min_dist = d;
       id = mid;
@@ -78,21 +78,21 @@ class kd_tree {
     if (lo + 1 == hi) {
       return;
     }
-    d = (long double)(div_x[mid] ? dx : dy);
+    d = static_cast<long double>((div_x[mid] ? dx : dy));
     int l1 = lo, r1 = mid, l2 = mid + 1, r2 = hi;
     if (d > 0) {
       std::swap(l1, l2);
       std::swap(r1, r2);
     }
     nearest(l1, r1, x, y, can_equal);
-    if (d * (long double)d < min_dist) {
+    if (d * static_cast<long double>(d) < min_dist) {
       nearest(l2, r2, x, y, can_equal);
     }
   }
 
  public:
   template<class It>
-  kd_tree(It lo, It hi) : tree(lo, hi) {
+  KDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     if (n <= 1) {
       throw std::runtime_error("K-d tree must be have at least 2 points.");
@@ -118,7 +118,7 @@ int main() {
   p[0] = make_pair(0, 2);
   p[1] = make_pair(0, 3);
   p[2] = make_pair(-1, 0);
-  kd_tree<int> t(p, p + 3);
+  KDTree<int> t(p, p + 3);
   assert(t.nearest(0, 2, true) == make_pair(0, 2));
   assert(t.nearest(0, 2, false) == make_pair(0, 3));
   assert(t.nearest(0, 0) == make_pair(-1, 0));

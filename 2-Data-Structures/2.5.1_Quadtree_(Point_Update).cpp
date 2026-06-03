@@ -17,7 +17,7 @@ change made to array values. The default code below defines updates that "set" t
 index to a new value. Another possible update operation is "increment", in which
 `join_value_with_delta(v, d)` should be defined to return $v + d$.
 
-- `quadtree(v)` constructs a two-dimensional array with rows from 0 to `MAXR` and columns from 0 to
+- `Quadtree(v)` constructs a two-dimensional array with rows from 0 to `MAXR` and columns from 0 to
   `MAXC`, inclusive. All values are implicitly initialized to `v`.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `join_values()` applied to every value in the
@@ -39,7 +39,7 @@ Space Complexity:
 #include <cstddef>
 
 template<class T>
-class quadtree {
+class Quadtree {
   static const int MAXR = 1000000000;
   static const int MAXC = 1000000000;
 
@@ -47,18 +47,18 @@ class quadtree {
   static T join_region(const T &v, int area) { return v; }
   static T join_value_with_delta(const T &v, const T &d) { return d; }
 
-  struct node_t {
+  struct Node {
     T value;
-    node_t *child[4];
+    Node *child[4];
 
-    node_t(const T &v) : value(v) {
+    Node(const T &v) : value(v) {
       for (int i = 0; i < 4; i++) {
-        child[i] = NULL;
+        child[i] = nullptr;
       }
     }
   };
 
-  node_t *root;
+  Node *root;
   T init;
 
   // Helper variables for query().
@@ -66,11 +66,11 @@ class quadtree {
   T res;
   bool found;
 
-  void query(node_t *n, int r1, int c1, int r2, int c2) {
+  void query(Node *n, int r1, int c1, int r2, int c2) {
     if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
       return;
     }
-    if (n == NULL) {
+    if (n == nullptr) {
       int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
       int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
       T v = join_region(init, rlen * clen);
@@ -94,9 +94,9 @@ class quadtree {
   int tgt_r, tgt_c;
   T delta;
 
-  void update(node_t *&n, int r1, int c1, int r2, int c2) {
-    if (n == NULL) {
-      n = new node_t(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
+  void update(Node *&n, int r1, int c1, int r2, int c2) {
+    if (n == nullptr) {
+      n = new Node(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
     }
     if (tgt_r < r1 || tgt_r > r2 || tgt_c < c1 || tgt_c > c2) {
       return;
@@ -117,8 +117,8 @@ class quadtree {
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       for (int i = 0; i < 4; i++) {
         clean_up(n->child[i]);
       }
@@ -127,9 +127,9 @@ class quadtree {
   }
 
  public:
-  quadtree(const T &v = T()) : root(NULL), init(v) {}
+  Quadtree(const T &v = T()) : root(nullptr), init(v) {}
 
-  ~quadtree() { clean_up(root); }
+  ~Quadtree() { clean_up(root); }
   T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -164,7 +164,7 @@ Values:
 using namespace std;
 
 int main() {
-  quadtree<int> t(0);
+  Quadtree<int> t(0);
   t.update(0, 0, 7);
   t.update(0, 1, 6);
   t.update(1, 0, 5);

@@ -9,9 +9,9 @@ area.
   Note that this is different from the geometric centroid (a.k.a. barycenter) of a polygon.
 - `cw_comp(a, b, c)` returns whether point $a$ compares clockwise "before" point $b$ when using $c$
   as a central reference point.
-- `cw_comp_class(c)` constructs a wrapper class of `cw_comp()` that may be passed to `std::sort()` a
+- `CWComparator(c)` constructs a wrapper class of `cw_comp()` that may be passed to `std::sort()` a
   range of points clockwise to produce a valid polygon.
-- `ccw_comp_class(c)` constructs a wrapper class of `cw_comp()` that may be passed to `std::sort()`
+- `CCWComparator(c)` constructs a wrapper class of `cw_comp()` that may be passed to `std::sort()`
   a range of points counter-clockwise to produce a valid polygon.
 - `polygon_area(lo, hi)` returns the area of the polygon specified by the range `[lo, hi)` of
   points, where `lo` and `hi` must be BidirectionalIterators. The points are interpreted as a
@@ -87,15 +87,15 @@ bool cw_comp(const point &a, const point &b, const point &c) {
   return det < 0;
 }
 
-struct cw_comp_class {
+struct CWComparator {
   point c;
-  cw_comp_class(const point &c) : c(c) {}
+  CWComparator(const point &c) : c(c) {}
   bool operator()(const point &a, const point &b) const { return cw_comp(a, b, c); }
 };
 
-struct ccw_comp_class {
+struct CCWComparator {
   point c;
-  ccw_comp_class(const point &c) : c(c) {}
+  CCWComparator(const point &c) : c(c) {}
   bool operator()(const point &a, const point &b) const { return cw_comp(b, a, c); }
 };
 
@@ -121,16 +121,16 @@ double polygon_area(It lo, It hi) {
 using namespace std;
 
 int main() {
-  // Irregular pentagon with only the vertex (1, 2) not on its convex hull.
-  // The ordering here is already sorted in ccw order around their mean center,
-  // though we will shuffle them to verify our sorting comparator.
+  // Irregular pentagon with only the vertex (1, 2) not on its convex hull. The ordering here is
+  // already sorted in ccw order around their mean center, though we will shuffle them to verify our
+  // sorting comparator.
   point points[] = {point(1, 3), point(1, 2), point(2, 1), point(0, 0), point(-1, 3)};
   vector<point> v(points, points + 5);
   std::random_shuffle(v.begin(), v.end());
   point c = mean_center(v.begin(), v.end());
   assert(EQ(c.x, 0.6) && EQ(c.y, 1.8));
-  sort(v.begin(), v.end(), cw_comp_class(c));
-  for (int i = 0; i < (int)v.size(); i++) {
+  sort(v.begin(), v.end(), CWComparator(c));
+  for (int i = 0; i < static_cast<int>(v.size()); i++) {
     assert(v[i] == points[i]);
   }
   assert(EQ(polygon_area(v.begin(), v.end()), 5));

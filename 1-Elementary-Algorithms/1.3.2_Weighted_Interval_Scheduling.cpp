@@ -8,7 +8,7 @@ Intervals are represented as half-open ranges `[start, finish)`, so two interval
 the next interval's `start` is at least the previous interval's `finish`.
 
 - `weighted_interval_scheduling(intervals)` returns the maximum total weight of a compatible subset.
-- `weighted_interval_t` stores `start`, `finish`, and `weight`.
+- `WeightedInterval` stores `start`, `finish`, and `weight`.
 
 Time Complexity:
 - O(n log n) per call due to sorting and binary searching compatible intervals.
@@ -21,19 +21,19 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-struct weighted_interval_t {
+struct WeightedInterval {
   int start, finish;
   long long weight;
 
-  weighted_interval_t(int start = 0, int finish = 0, long long weight = 0)
+  WeightedInterval(int start = 0, int finish = 0, long long weight = 0)
       : start(start), finish(finish), weight(weight) {}
 };
 
-bool weighted_earlier_finish(const weighted_interval_t &a, const weighted_interval_t &b) {
+bool weighted_earlier_finish(const WeightedInterval &a, const WeightedInterval &b) {
   return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
 }
 
-long long weighted_interval_scheduling(std::vector<weighted_interval_t> intervals) {
+long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) {
   std::sort(intervals.begin(), intervals.end(), weighted_earlier_finish);
   int n = intervals.size();
   std::vector<int> finish(n);
@@ -54,12 +54,12 @@ long long weighted_interval_scheduling(std::vector<weighted_interval_t> interval
 using namespace std;
 
 int main() {
-  vector<weighted_interval_t> intervals;
-  intervals.push_back(weighted_interval_t(1, 3, 5));
-  intervals.push_back(weighted_interval_t(2, 5, 6));
-  intervals.push_back(weighted_interval_t(4, 6, 5));
-  intervals.push_back(weighted_interval_t(6, 7, 4));
-  intervals.push_back(weighted_interval_t(5, 8, 11));
+  vector<WeightedInterval> intervals;
+  intervals.push_back(WeightedInterval(1, 3, 5));
+  intervals.push_back(WeightedInterval(2, 5, 6));
+  intervals.push_back(WeightedInterval(4, 6, 5));
+  intervals.push_back(WeightedInterval(6, 7, 4));
+  intervals.push_back(WeightedInterval(5, 8, 11));
   assert(weighted_interval_scheduling(intervals) == 17);
   return 0;
 }

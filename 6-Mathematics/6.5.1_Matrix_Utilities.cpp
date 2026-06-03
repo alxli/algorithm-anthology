@@ -10,7 +10,7 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 - `rows(a)` returns the number of rows $r$ in an $r$ by $c$ matrix `a`.
 - `columns(a)` returns the number of columns $c$ in an $r$ by $c$ matrix `a`.
 - `a[i][j]` may be used to access or modify the entry at row $i$, column $j$ of an $r$ by $c$ matrix
-  `a`, for every $i$ in $[0, r)$ and $j$ in $[0, c)$.
+  `a`, for every `i` in `[0, r)` and `j` in `[0, c)`.
 - Operators `<`, `>`, `<=`, `>=`, `==`, and `!=` define lexicographical comparison based on that of
   `std::vector`.
 - Operators `+`, `-`, `*`, `/`, `+=`, `-=`, `*=`, and `/=` define scalar addition, subtraction,
@@ -21,7 +21,7 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 - `power_sum(a, p)` returns the power sum of a square matrix $a$ up to an integer power $p$, that
   is, $a + a^2 + \ldots + a^p$.
 - `transpose(a)` returns the transpose of an $r$ by $c$ matrix `a`, that is, a new $c$ by $r$ matrix
-  $b$ such that $\text{a[i][j]} = \text{b[j][i]}$ for every $i$ in $[0, r)$ and $j$ in $[0, c)$.
+  $b$ such that `a[i][j]` $=$ `b[j][i]` for every `i` in `[0, r)` and `j` in `[0, c)`.
 - `transpose_in_place(a)` assigns the square matrix `a` to its transpose, returning a reference to
   the modified argument itself.
 - `rotate(a, d)` returns the matrix `a` rotated `d` degrees clockwise. A negative `d` specifies a
@@ -182,7 +182,7 @@ matrix operator-(const matrix &a, const matrix &b) {
 
 template<class T>
 matrix &operator*=(matrix &a, const std::vector<T> &v) {
-  if (columns(a) != (int)v.size() || v.empty()) {
+  if (columns(a) != static_cast<int>(v.size()) || v.empty()) {
     throw std::runtime_error("Invalid dimensions for matrix multiplication.");
   }
   for (int i = 0; i < rows(a); i++) {

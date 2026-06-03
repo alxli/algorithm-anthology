@@ -31,26 +31,26 @@ using std::string;
 
 std::vector<int> byte_frequencies(const string &s) {
   std::vector<int> freq(256, 0);
-  for (int i = 0; i < (int)s.size(); i++) {
-    freq[(unsigned char)s[i]]++;
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    freq[static_cast<unsigned char>(s[i])]++;
   }
   return freq;
 }
 
 double entropy(const std::vector<int> &freq) {
   int total = 0;
-  for (int i = 0; i < (int)freq.size(); i++) {
+  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     total += freq[i];
   }
   if (total == 0) {
     return 0;
   }
   double res = 0;
-  for (int i = 0; i < (int)freq.size(); i++) {
+  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     if (freq[i] == 0) {
       continue;
     }
-    double p = (double)freq[i] / total;
+    double p = static_cast<double>(freq[i]) / total;
     res -= p * (log(p) / log(2.0));
   }
   return res;
@@ -62,15 +62,15 @@ double entropy(const string &s) {
 
 double expected_code_length(const std::vector<int> &freq, const std::vector<int> &length) {
   int total = 0;
-  for (int i = 0; i < (int)freq.size(); i++) {
+  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
     total += freq[i];
   }
   if (total == 0) {
     return 0;
   }
   double res = 0;
-  for (int i = 0; i < (int)freq.size(); i++) {
-    res += (double)freq[i] * length[i] / total;
+  for (int i = 0; i < static_cast<int>(freq.size()); i++) {
+    res += static_cast<double>(freq[i]) * length[i] / total;
   }
   return res;
 }

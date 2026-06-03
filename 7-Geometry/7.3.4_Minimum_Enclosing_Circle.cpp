@@ -39,21 +39,21 @@ double norm(const point &a) {
   return sqrt(sqnorm(a));
 }
 
-struct circle {
+struct Circle {
   double h, k, r;
 
-  circle() : h(0), k(0), r(0) {}
-  circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
+  Circle() : h(0), k(0), r(0) {}
+  Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
   // Circle with the line segment ab as a diameter.
-  circle(const point &a, const point &b) {
+  Circle(const point &a, const point &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
     r = norm(point(a.x - h, a.y - k));
   }
 
   // Circumcircle of three points.
-  circle(const point &a, const point &b, const point &c) {
+  Circle(const point &a, const point &b, const point &c) {
     double an = sqnorm(point(b.x - c.x, b.y - c.y));
     double bn = sqnorm(point(a.x - c.x, a.y - c.y));
     double cn = sqnorm(point(a.x - b.x, a.y - b.y));
@@ -73,28 +73,28 @@ struct circle {
 };
 
 template<class It>
-circle minimum_enclosing_circle(It lo, It hi) {
+Circle minimum_enclosing_circle(It lo, It hi) {
   if (lo == hi) {
-    return circle(0, 0, 0);
+    return Circle(0, 0, 0);
   }
   if (lo + 1 == hi) {
-    return circle(lo->x, lo->y, 0);
+    return Circle(lo->x, lo->y, 0);
   }
   std::random_shuffle(lo, hi);
-  circle res(*lo, *(lo + 1));
+  Circle res(*lo, *(lo + 1));
   for (It i = lo + 2; i != hi; ++i) {
     if (res.contains(*i)) {
       continue;
     }
-    res = circle(*lo, *i);
+    res = Circle(*lo, *i);
     for (It j = lo + 1; j != i; ++j) {
       if (res.contains(*j)) {
         continue;
       }
-      res = circle(*i, *j);
+      res = Circle(*i, *j);
       for (It k = lo; k != j; ++k) {
         if (!res.contains(*k)) {
-          res = circle(*i, *j, *k);
+          res = Circle(*i, *j, *k);
         }
       }
     }
@@ -114,7 +114,7 @@ int main() {
   v.push_back(point(0, 1));
   v.push_back(point(1, 0));
   v.push_back(point(1, 1));
-  circle res = minimum_enclosing_circle(v.begin(), v.end());
+  Circle res = minimum_enclosing_circle(v.begin(), v.end());
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
   return 0;
 }

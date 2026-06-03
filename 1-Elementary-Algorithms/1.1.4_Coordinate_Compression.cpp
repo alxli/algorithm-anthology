@@ -32,7 +32,7 @@ void compress1(It lo, It hi) {
   std::sort(v.begin(), v.end());
   v.resize(std::unique(v.begin(), v.end()) - v.begin());
   for (It it = lo; it != hi; ++it) {
-    *it = (int)(std::lower_bound(v.begin(), v.end(), *it) - v.begin());
+    *it = static_cast<int>((std::lower_bound(v.begin(), v.end(), *it) - v.begin()));
   }
 }
 

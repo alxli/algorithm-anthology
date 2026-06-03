@@ -81,7 +81,7 @@ Case Conversion:
 
 string to_upper(const string &s) {
   string res;
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     res.push_back(toupper(s[i]));
   }
   return res;
@@ -89,7 +89,7 @@ string to_upper(const string &s) {
 
 string to_lower(const string &s) {
   string res;
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     res.push_back(tolower(s[i]));
   }
   return res;
@@ -98,7 +98,7 @@ string to_lower(const string &s) {
 string to_title(const string &s) {
   string res;
   char prev = '\0';
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     if (isalpha(prev)) {
       res.push_back(tolower(s[i]));
     } else {
@@ -197,7 +197,7 @@ Joining and Splitting:
 
 string join(const std::vector<string> &v, const string &delim = " ") {
   string res;
-  for (int i = 0; i < (int)v.size(); i++) {
+  for (int i = 0; i < static_cast<int>(v.size()); i++) {
     if (i > 0) {
       res += delim;
     }
@@ -219,7 +219,7 @@ std::vector<string> split(const string &s, char delim) {
 std::vector<string> split(const string &s, const string &delim = " \n\t\v\f\r") {
   std::vector<string> res;
   string curr;
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     if (delim.find(s[i]) == string::npos) {
       curr += s[i];
     } else if (!curr.empty()) {
@@ -237,7 +237,7 @@ std::vector<string> explode(const string &s, const string &delim) {
   std::vector<string> res;
   size_t last = 0, next = 0;
   while ((next = s.find(delim, last)) != string::npos) {
-    res.push_back(s.substr(last, (int)next - last));
+    res.push_back(s.substr(last, static_cast<int>(next) - last));
     last = next + delim.size();
   }
   res.push_back(s.substr(last));

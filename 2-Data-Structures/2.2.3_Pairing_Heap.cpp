@@ -5,8 +5,8 @@ and extraction of the minimum as well as efficient merging with other instances.
 requires an ordering on the set of possible elements defined by `operator <`. A pairing heap is a
 heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion.
 
-- `pairing_heap()` constructs an empty priority queue.
-- `pairing_heap(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
+- `PairingHeap()` constructs an empty priority queue.
+- `PairingHeap(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
   elements in the range `[lo, hi)`.
 - `size()` returns the size of the priority queue.
 - `empty()` returns whether the priority queue is empty.
@@ -31,15 +31,15 @@ Space Complexity:
 #include <stdexcept>
 
 template<class T>
-class pairing_heap {
-  struct node_t {
+class PairingHeap {
+  struct Node {
     T value;
-    node_t *left, *next;
+    Node *left, *next;
 
-    node_t(const T &v) : value(v), left(NULL), next(NULL) {}
+    Node(const T &v) : value(v), left(nullptr), next(nullptr) {}
 
-    void add_child(node_t *n) {
-      if (left == NULL) {
+    void add_child(Node *n) {
+      if (left == nullptr) {
         left = n;
       } else {
         n->next = left;
@@ -50,11 +50,11 @@ class pairing_heap {
 
   int num_nodes;
 
-  static node_t *merge(node_t *a, node_t *b) {
-    if (a == NULL) {
+  static Node *merge(Node *a, Node *b) {
+    if (a == nullptr) {
       return b;
     }
-    if (b == NULL) {
+    if (b == nullptr) {
       return a;
     }
     if (a->value < b->value) {
@@ -65,17 +65,17 @@ class pairing_heap {
     return b;
   }
 
-  static node_t *merge_pairs(node_t *n) {
-    if (n == NULL || n->next == NULL) {
+  static Node *merge_pairs(Node *n) {
+    if (n == nullptr || n->next == nullptr) {
       return n;
     }
-    node_t *a = n, *b = n->next, *c = n->next->next;
-    a->next = b->next = NULL;
+    Node *a = n, *b = n->next, *c = n->next->next;
+    a->next = b->next = nullptr;
     return merge(merge(a, b), merge_pairs(c));
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->next);
       delete n;
@@ -83,21 +83,21 @@ class pairing_heap {
   }
 
  public:
-  pairing_heap() : root(NULL), num_nodes(0) {}
+  PairingHeap() : root(nullptr), num_nodes(0) {}
 
   template<class It>
-  pairing_heap(It lo, It hi) : root(NULL), num_nodes(0) {
+  PairingHeap(It lo, It hi) : root(nullptr), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));
     }
   }
 
-  ~pairing_heap() { clean_up(root); }
+  ~PairingHeap() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   void push(const T &v) {
-    root = merge(root, new node_t(v));
+    root = merge(root, new Node(v));
     num_nodes++;
   }
 
@@ -105,7 +105,7 @@ class pairing_heap {
     if (empty()) {
       throw std::runtime_error("Cannot pop from empty heap.");
     }
-    node_t *tmp = root;
+    Node *tmp = root;
     root = merge_pairs(root->left);
     delete tmp;
     num_nodes--;
@@ -118,9 +118,9 @@ class pairing_heap {
     return root->value;
   }
 
-  void absorb(pairing_heap &h) {
+  void absorb(PairingHeap &h) {
     root = merge(root, h.root);
-    h.root = NULL;
+    h.root = nullptr;
   }
 };
 
@@ -138,7 +138,7 @@ class pairing_heap {
 using namespace std;
 
 int main() {
-  pairing_heap<int> h, h2;
+  PairingHeap<int> h, h2;
   h.push(12);
   h.push(10);
   h2.push(5);

@@ -223,8 +223,8 @@ int64 eulerian2(int n, int k, int64 m = 1000000007) {
 
 int main() {
   table t = binomial_table(10);
-  for (int i = 0; i < (int)t.size(); i++) {
-    for (int j = 0; j < (int)t[i].size(); j++) {
+  for (int i = 0; i < static_cast<int>(t.size()); i++) {
+    for (int j = 0; j < static_cast<int>(t[i].size()); j++) {
       assert(t[i][j] == choose(i, j));
     }
   }

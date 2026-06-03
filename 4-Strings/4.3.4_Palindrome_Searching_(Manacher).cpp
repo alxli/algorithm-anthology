@@ -9,15 +9,15 @@ character. Thus the palindrome spans `[i - odd[i] + 1, i + odd[i])`. For even pa
 is the radius centered between `s[i - 1]` and `s[i]`. Thus the palindrome spans
 `[i - even[i], i + even[i])`.
 
-- `manacher(s)` constructs the palindromic radii arrays for string `s`.
-- `is_palindrome(l, r)` returns whether substring `[l, r)` is a palindrome.
+- `Manacher(s)` constructs the palindromic radii arrays for string `s`.
+- `is_palindrome(lo, r)` returns whether substring `[l, r)` is a palindrome.
 - `longest_palindrome()` returns one longest palindromic substring of `s`.
 - `count_palindromes()` returns the total number of palindromic substrings of `s`, counted with
   multiplicity by position.
 
 Time Complexity:
 - O(n) per constructor call, where $n$ is the length of `s`.
-- O(1) per call to `is_palindrome(l, r)`.
+- O(1) per call to `is_palindrome(lo, r)`.
 - O(n) per call to `longest_palindrome()` and `count_palindromes()`.
 
 Space Complexity:
@@ -31,12 +31,12 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-class manacher {
+class Manacher {
   string s;
   std::vector<int> odd, even;
 
  public:
-  explicit manacher(const string &s) : s(s), odd(s.size()), even(s.size()) {
+  explicit Manacher(const string &s) : s(s), odd(s.size()), even(s.size()) {
     int n = s.size();
     for (int i = 0, l = 0, r = -1; i < n; i++) {
       int k = (i > r) ? 1 : std::min(odd[l + r - i], r - i + 1);
@@ -62,18 +62,18 @@ class manacher {
     }
   }
 
-  bool is_palindrome(int l, int r) const {
-    int len = r - l;
+  bool is_palindrome(int lo, int hi) const {
+    int len = hi - lo;
     if (len <= 0) {
       return true;
     }
-    int mid = (l + r) / 2;
+    int mid = (lo + hi) / 2;
     return (len % 2) ? odd[mid] >= len / 2 + 1 : even[mid] >= len / 2;
   }
 
   string longest_palindrome() const {
     int best_l = 0, best_len = 0;
-    for (int i = 0; i < (int)s.size(); i++) {
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       int len = 2 * odd[i] - 1;
       if (len > best_len) {
         best_len = len;
@@ -90,7 +90,7 @@ class manacher {
 
   long long count_palindromes() const {
     long long res = 0;
-    for (int i = 0; i < (int)s.size(); i++) {
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       res += odd[i] + even[i];
     }
     return res;
@@ -102,14 +102,14 @@ class manacher {
 #include <cassert>
 
 int main() {
-  manacher m("abacaba");
+  Manacher m("abacaba");
   assert(m.is_palindrome(0, 7));
   assert(m.is_palindrome(1, 6));
   assert(!m.is_palindrome(0, 6));
   assert(m.longest_palindrome() == "abacaba");
   assert(m.count_palindromes() == 12);
 
-  manacher e("cabbad");
+  Manacher e("cabbad");
   assert(e.is_palindrome(1, 5));
   assert(e.longest_palindrome() == "abba");
   return 0;

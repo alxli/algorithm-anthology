@@ -89,7 +89,7 @@ std::vector<cdouble> find_all_roots(
   std::vector<cdouble> res;
   cpoly q = p;
   while (q.size() > 2) {
-    cdouble z = cdouble(rand(), rand()) / (double)RAND_MAX;
+    cdouble z = cdouble(rand(), rand()) / static_cast<double>(RAND_MAX);
     z = find_one_root(p, find_one_root(q, z, EPS, ITERATIONS), EPS, ITERATIONS);
     q = horner_eval(q, z).second;
     res.push_back(z);
@@ -117,7 +117,7 @@ Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
 using namespace std;
 
 void print_roots(const vector<cdouble> &x) {
-  for (int i = 0; i < (int)x.size(); i++) {
+  for (int i = 0; i < static_cast<int>(x.size()); i++) {
     printf("(%.5lf, %.5lf)\n", x[i].real(), x[i].imag());
   }
 }

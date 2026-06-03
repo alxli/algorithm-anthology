@@ -3,7 +3,7 @@
 Maintains the mean and variance of a stream of numbers in one pass using Welford's algorithm. This
 is more numerically stable than maintaining the sum of values and the sum of squares separately.
 
-- `online_statistics()` constructs an empty summary.
+- `OnlineStatistics()` constructs an empty summary.
 - `add(x)` incorporates one more value `x` into the summary.
 - `count()` returns the number of values seen so far.
 - `mean()` returns the current arithmetic mean.
@@ -18,12 +18,12 @@ Space Complexity:
 
 */
 
-class online_statistics {
+class OnlineStatistics {
   int n;
   double avg, m2;
 
  public:
-  online_statistics() : n(0), avg(0), m2(0) {}
+  OnlineStatistics() : n(0), avg(0), m2(0) {}
 
   void add(double x) {
     n++;
@@ -49,7 +49,7 @@ bool close(double a, double b) {
 }
 
 int main() {
-  online_statistics stats;
+  OnlineStatistics stats;
   for (int x = 1; x <= 5; x++) {
     stats.add(x);
   }

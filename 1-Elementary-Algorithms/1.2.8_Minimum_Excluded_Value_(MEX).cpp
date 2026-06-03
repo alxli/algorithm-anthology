@@ -5,7 +5,7 @@ smallest integer $x \geq 0$ that does not appear in the set. It appears frequent
 problems, game theory with Grundy numbers, and dynamic programming states.
 
 - `mex(lo, hi)` returns the MEX of the values in `[lo, hi)`.
-- `dynamic_mex(n)` maintains counts of values in `[0, n]`, enough to track the MEX of a multiset of
+- `DynamicMex(n)` maintains counts of values in `[0, n]`, enough to track the MEX of a multiset of
   at most `n` relevant nonnegative values.
 - `add(x)` inserts one copy of value `x` if `0 <= x <= n`.
 - `remove(x)` removes one copy of value `x` if present.
@@ -13,7 +13,7 @@ problems, game theory with Grundy numbers, and dynamic programming states.
 
 Time Complexity:
 - O(n) per call to `mex(lo, hi)`, where $n$ is the number of values.
-- O(log n) per call to `add(x)`, `remove(x)`, and `get()` for `dynamic_mex`.
+- O(log n) per call to `add(x)`, `remove(x)`, and `get()` for `DynamicMex`.
 
 Space Complexity:
 - O(n) auxiliary heap space for both approaches.
@@ -40,25 +40,25 @@ int mex(It lo, It hi) {
   return n + 1;
 }
 
-class dynamic_mex {
+class DynamicMex {
   std::vector<int> count;
   std::set<int> missing;
 
  public:
-  explicit dynamic_mex(int n) : count(n + 1, 0) {
+  explicit DynamicMex(int n) : count(n + 1, 0) {
     for (int x = 0; x <= n; x++) {
       missing.insert(x);
     }
   }
 
   void add(int x) {
-    if (0 <= x && x < (int)count.size() && count[x]++ == 0) {
+    if (0 <= x && x < static_cast<int>(count.size()) && count[x]++ == 0) {
       missing.erase(x);
     }
   }
 
   void remove(int x) {
-    if (0 <= x && x < (int)count.size() && count[x] > 0 && --count[x] == 0) {
+    if (0 <= x && x < static_cast<int>(count.size()) && count[x] > 0 && --count[x] == 0) {
       missing.insert(x);
     }
   }
@@ -75,7 +75,7 @@ int main() {
   int raw[] = {0, 1, 4, 2, 1};
   assert(mex(raw, raw + 5) == 3);
 
-  dynamic_mex m(5);
+  DynamicMex m(5);
   m.add(0);
   m.add(1);
   m.add(3);

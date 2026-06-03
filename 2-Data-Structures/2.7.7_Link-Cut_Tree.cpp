@@ -24,7 +24,7 @@ The default code below defines updates that "set" a path's nodes to a new value.
 update operation is "increment", in which case `join_value_with_delta(v, d, len)` should be defined
 to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined to return $d1 + d2$.
 
-- `link_cut_forest()` constructs an empty forest with no trees.
+- `LinkCutForest()` constructs an empty forest with no trees.
 - `size()` returns the number of nodes in the forest.
 - `trees()` returns the number of trees in the forest.
 - `make_root(i, v)` creates a new tree in the forest consisting of a single node labeled with the
@@ -55,31 +55,31 @@ Space Complexity:
 #include <stdexcept>
 
 template<class T>
-class link_cut_forest {
+class LinkCutForest {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
   static T join_deltas(const T &d1, const T &d2) {
     return d2;  // For "set" updates, the more recent delta prevails.
   }
 
-  struct node_t {
+  struct Node {
     T value, subtree_value, delta;
     int size;
     bool rev, pending;
-    node_t *left, *right, *parent;
+    Node *left, *right, *parent;
 
-    node_t(const T &v)
+    Node(const T &v)
         : value(v),
           subtree_value(v),
           size(1),
           rev(false),
           pending(false),
-          left(NULL),
-          right(NULL),
-          parent(NULL) {}
+          left(nullptr),
+          right(nullptr),
+          parent(nullptr) {}
 
     inline bool is_root() const {
-      return parent == NULL || (parent->left != this && parent->right != this);
+      return parent == nullptr || (parent->left != this && parent->right != this);
     }
 
     inline T get_subtree_value() const {
@@ -90,21 +90,21 @@ class link_cut_forest {
       if (rev) {
         rev = false;
         std::swap(left, right);
-        if (left != NULL) {
+        if (left != nullptr) {
           left->rev = !left->rev;
         }
-        if (right != NULL) {
+        if (right != nullptr) {
           right->rev = !right->rev;
         }
       }
       if (pending) {
         value = join_value_with_delta(value, delta, 1);
         subtree_value = join_value_with_delta(subtree_value, delta, size);
-        if (left != NULL) {
+        if (left != nullptr) {
           left->delta = left->pending ? join_deltas(left->delta, delta) : delta;
           left->pending = true;
         }
-        if (right != NULL) {
+        if (right != nullptr) {
           right->delta = right->pending ? join_deltas(right->delta, delta) : delta;
           right->pending = true;
         }
@@ -115,11 +115,11 @@ class link_cut_forest {
     void update() {
       size = 1;
       subtree_value = value;
-      if (left != NULL) {
+      if (left != nullptr) {
         subtree_value = join_values(subtree_value, left->get_subtree_value());
         size += left->size;
       }
-      if (right != NULL) {
+      if (right != nullptr) {
         subtree_value = join_values(subtree_value, right->get_subtree_value());
         size += right->size;
       }
@@ -127,10 +127,10 @@ class link_cut_forest {
   };
 
   int num_trees;
-  std::map<int, node_t *> nodes;
+  std::map<int, Node *> nodes;
 
-  static void connect(node_t *child, node_t *parent, bool is_left) {
-    if (child != NULL) {
+  static void connect(Node *child, Node *parent, bool is_left) {
+    if (child != nullptr) {
       child->parent = parent;
     }
     if (is_left) {
@@ -140,13 +140,13 @@ class link_cut_forest {
     }
   }
 
-  static void rotate(node_t *n) {
-    node_t *parent = n->parent, *grandparent = parent->parent;
+  static void rotate(Node *n) {
+    Node *parent = n->parent, *grandparent = parent->parent;
     bool parent_is_root = parent->is_root(), is_left = (n == parent->left);
     connect(is_left ? n->right : n->left, parent, is_left);
     connect(parent, n, !is_left);
     if (parent_is_root) {
-      if (n != NULL) {
+      if (n != nullptr) {
         n->parent = grandparent;
       }
     } else {
@@ -155,9 +155,9 @@ class link_cut_forest {
     parent->update();
   }
 
-  static void splay(node_t *n) {
+  static void splay(Node *n) {
     while (!n->is_root()) {
-      node_t *parent = n->parent, *grandparent = parent->parent;
+      Node *parent = n->parent, *grandparent = parent->parent;
       if (!parent->is_root()) {
         grandparent->push();
       }
@@ -176,9 +176,9 @@ class link_cut_forest {
     n->update();
   }
 
-  static node_t *expose(node_t *n) {
-    node_t *prev = NULL;
-    for (node_t *curr = n; curr != NULL; curr = curr->parent) {
+  static Node *expose(Node *n) {
+    Node *prev = nullptr;
+    for (Node *curr = n; curr != nullptr; curr = curr->parent) {
       splay(curr);
       curr->left = prev;
       prev = curr;
@@ -188,10 +188,10 @@ class link_cut_forest {
   }
 
   // Helper variables.
-  node_t *u, *v;
+  Node *u, *v;
 
   void get_uv(int a, int b) {
-    typename std::map<int, node_t *>::iterator it1, it2;
+    typename std::map<int, Node *>::iterator it1, it2;
     it1 = nodes.find(a);
     it2 = nodes.find(b);
     if (it1 == nodes.end() || it2 == nodes.end()) {
@@ -202,10 +202,10 @@ class link_cut_forest {
   }
 
  public:
-  link_cut_forest() : num_trees(0) {}
+  LinkCutForest() : num_trees(0) {}
 
-  ~link_cut_forest() {
-    typename std::map<int, node_t *>::iterator it;
+  ~LinkCutForest() {
+    typename std::map<int, Node *>::iterator it;
     for (it = nodes.begin(); it != nodes.end(); ++it) {
       delete it->second;
     }
@@ -218,7 +218,7 @@ class link_cut_forest {
     if (nodes.find(i) != nodes.end()) {
       throw std::runtime_error("Cannot make a root with an existing ID.");
     }
-    node_t *n = new node_t(v);
+    Node *n = new Node(v);
     expose(n);
     n->rev = !n->rev;
     nodes[i] = n;
@@ -232,7 +232,7 @@ class link_cut_forest {
     }
     expose(u);
     expose(v);
-    return u->parent != NULL;
+    return u->parent != nullptr;
   }
 
   void link(int a, int b) {
@@ -251,11 +251,11 @@ class link_cut_forest {
     expose(u);
     u->rev = !u->rev;
     expose(v);
-    if (v->right != u || u->left != NULL) {
+    if (v->right != u || u->left != nullptr) {
       throw std::runtime_error("Cannot cut edge that does not exist.");
     }
-    v->right->parent = NULL;
-    v->right = NULL;
+    v->right->parent = nullptr;
+    v->right = nullptr;
     num_trees++;
   }
 
@@ -289,7 +289,7 @@ class link_cut_forest {
 using namespace std;
 
 int main() {
-  link_cut_forest<int> lcf;
+  LinkCutForest<int> lcf;
   lcf.make_root(0, 10);
   lcf.make_root(1, 40);
   lcf.make_root(2, 20);

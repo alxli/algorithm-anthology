@@ -12,7 +12,7 @@ $m$ is the number of needles. In C++11 and later, both of these containers shoul
 their unordered versions for constant time access, thus eliminating the log factors from the time
 complexities.
 
-- `aho_corasick(needles)` constructs the finite-state automaton for a set of needle strings that are
+- `AhoCorasick(needles)` constructs the finite-state automaton for a set of needle strings that are
   to be searched for subsequently in haystack queries.
 - `find_all_in(haystack, report_match)` calls the function `report_match(s, pos)` once on each
   occurrence of each needle that occurs in the `haystack`, where `pos` is the starting position in
@@ -43,7 +43,7 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-class aho_corasick {
+class AhoCorasick {
   std::vector<string> needles;
   std::vector<int> fail;
   std::vector<std::map<char, int>> graph;
@@ -58,9 +58,9 @@ class aho_corasick {
   }
 
  public:
-  aho_corasick(const std::vector<string> &needles) : needles(needles) {
+  AhoCorasick(const std::vector<string> &needles) : needles(needles) {
     int total_len = 0;
-    for (int i = 0; i < (int)needles.size(); i++) {
+    for (int i = 0; i < static_cast<int>(needles.size()); i++) {
       total_len += needles[i].size();
     }
     fail.resize(total_len, -1);
@@ -68,9 +68,9 @@ class aho_corasick {
     out.resize(total_len);
     int states = 1;
     std::map<char, int>::iterator it;
-    for (int i = 0; i < (int)needles.size(); i++) {
+    for (int i = 0; i < static_cast<int>(needles.size()); i++) {
       int curr = 0;
-      for (int j = 0; j < (int)needles[i].size(); j++) {
+      for (int j = 0; j < static_cast<int>(needles[i].size()); j++) {
         char c = needles[i][j];
         if ((it = graph[curr].find(c)) != graph[curr].end()) {
           curr = it->second;
@@ -107,7 +107,7 @@ class aho_corasick {
   void find_all_in(const string &haystack, ReportFunction report_match) {
     int state = 0;
     std::set<int>::iterator it;
-    for (int i = 0; i < (int)haystack.size(); i++) {
+    for (int i = 0; i < static_cast<int>(haystack.size()); i++) {
       state = next_state(state, haystack[i]);
       for (it = out[state].begin(); it != out[state].end(); ++it) {
         report_match(needles[*it], i - needles[*it].size() + 1);
@@ -147,6 +147,6 @@ int main() {
   needles.push_back("caa");
   needles.push_back("abccab");
 
-  aho_corasick(needles).find_all_in("abccab", report_match);
+  AhoCorasick(needles).find_all_in("abccab", report_match);
   return 0;
 }

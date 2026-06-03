@@ -27,22 +27,22 @@ Space Complexity:
 
 #include <vector>
 
-class rollback_dsu {
-  struct change {
+class RollbackDSU {
+  struct Change {
     int child, parent, parent_size;
 
-    change(int child = -1, int parent = -1, int parent_size = 0)
+    Change(int child = -1, int parent = -1, int parent_size = 0)
         : child(child), parent(parent), parent_size(parent_size) {}
   };
 
   std::vector<int> root, size;
-  std::vector<change> history;
+  std::vector<Change> history;
   int sets;
 
  public:
-  rollback_dsu() : sets(0) {}
+  RollbackDSU() : sets(0) {}
 
-  explicit rollback_dsu(int n) { initialize(n); }
+  explicit RollbackDSU(int n) { initialize(n); }
 
   void initialize(int n) {
     root.resize(n);
@@ -76,7 +76,7 @@ class rollback_dsu {
       u = v;
       v = tmp;
     }
-    history.push_back(change(u, v, size[v]));
+    history.push_back(Change(u, v, size[v]));
     root[u] = v;
     size[v] += size[u];
     sets--;
@@ -86,8 +86,8 @@ class rollback_dsu {
   int snapshot() const { return history.size(); }
 
   void rollback(int snapshot) {
-    while ((int)history.size() > snapshot) {
-      change c = history.back();
+    while (static_cast<int>(history.size()) > snapshot) {
+      Change c = history.back();
       history.pop_back();
       root[c.child] = c.child;
       size[c.parent] = c.parent_size;
@@ -101,7 +101,7 @@ class rollback_dsu {
 #include <cassert>
 
 int main() {
-  rollback_dsu dsu(5);
+  RollbackDSU dsu(5);
   dsu.unite(0, 1);
   int s = dsu.snapshot();
   dsu.unite(1, 2);

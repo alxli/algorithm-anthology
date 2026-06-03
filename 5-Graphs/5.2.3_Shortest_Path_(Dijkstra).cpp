@@ -30,11 +30,12 @@ Space Complexity:
 
 */
 
+#include <climits>
 #include <queue>
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = INT_MAX / 2;
 std::vector<std::pair<int, int>> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
@@ -51,7 +52,7 @@ void dijkstra(int nodes, int start) {
     int u = pq.top().second;
     pq.pop();
     visit[u] = true;
-    for (int j = 0; j < (int)adj[u].size(); j++) {
+    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
       int v = adj[u][j].first;
       if (visit[v]) {
         continue;

@@ -42,7 +42,7 @@ bool cmp_y(const point &a, const point &b) { return (a.y == b.y) ? (a.x < b.x) :
 
 template<class It>
 double closest_pair(
-    It lo, It hi, std::pair<point, point> *res = NULL,
+    It lo, It hi, std::pair<point, point> *res = nullptr,
     double mindist = std::numeric_limits<double>::max(), bool sort_x = true
 ) {
   if (lo == hi) {
@@ -64,8 +64,8 @@ double closest_pair(
       t.push_back(it);
     }
   }
-  for (int i = 0; i < (int)t.size(); i++) {
-    for (int j = i + 1; j < (int)t.size(); j++) {
+  for (int i = 0; i < static_cast<int>(t.size()); i++) {
+    for (int j = i + 1; j < static_cast<int>(t.size()); j++) {
       point a(*t[i]), b(*t[j]);
       if (b.y - a.y >= mindist) {
         break;

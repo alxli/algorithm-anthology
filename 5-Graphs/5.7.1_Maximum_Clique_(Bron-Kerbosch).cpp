@@ -36,7 +36,7 @@ int rec(int nodes, bits &curr, bits &pool, bits &excl) {
   if (pool.none() && excl.none()) {
     return curr.count();
   }
-  int ans = 0, u = 0;
+  int best = 0, u = 0;
   for (int v = 0; v < nodes; v++) {
     if (pool[v] || excl[v]) {
       u = v;
@@ -55,11 +55,11 @@ int rec(int nodes, bits &curr, bits &pool, bits &excl) {
       npool[j] = pool[j] && adj[v][j];
       nexcl[j] = excl[j] && adj[v][j];
     }
-    ans = std::max(ans, rec(nodes, ncurr, npool, nexcl));
+    best = std::max(best, rec(nodes, ncurr, npool, nexcl));
     pool[v] = false;
     excl[v] = true;
   }
-  return ans;
+  return best;
 }
 
 int max_clique(int nodes) {

@@ -51,7 +51,7 @@ std::vector<point> convex_hull(It lo, It hi) {
   if (hi - lo <= 1) {
     return std::vector<point>(lo, hi);
   }
-  std::vector<point> res(2 * (int)(hi - lo));
+  std::vector<point> res(2 * static_cast<int>((hi - lo)));
   std::sort(lo, hi);
   for (It it = lo; it != hi; ++it) {
     while (k >= 2 && GE(cross(res[k - 1], *it, res[k - 2]), 0)) {

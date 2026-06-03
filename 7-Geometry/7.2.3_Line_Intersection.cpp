@@ -5,18 +5,18 @@ Intersection and closest point calculations in two dimensions for straight lines
 - `line_intersection(a1, b1, c1, a2, b2, c2, &p)` determines whether the lines $a_1x + b_1y + c_1 =
   0$ and $a_2x + b_2y + c_2 = 0$ intersect, returning $-1$ if there is no intersection because the
   lines are parallel, 0 if there is exactly one intersection (in which case the intersection point
-  is stored into pointer `p` if it's not `NULL`), or 1 if there are infinite intersections because
+  is stored into pointer `p` if it's not `nullptr`), or 1 if there are infinite intersections because
   the lines are identical.
 - `line_intersection(p1, p2, p3, p4, &p)` determines whether the infinite lines (not segments)
   through points $p_1$, $p_2$ and through points $p_3$ and $p_4$ intersect, returning $-1$ if there
   is no intersection because the lines are parallel, 0 if there is exactly one intersection (in
-  which case the intersection point is stored into pointer `p` if it's not `NULL`), or 1 if there
+  which case the intersection point is stored into pointer `p` if it's not `nullptr`), or 1 if there
   are infinite intersections because the lines are identical.
 - `seg_intersection(a, b, c, d, &p, &q)` determines whether the line segment $ab$ intersects the
   line segment $cd$, returning $-1$ if the segments do not intersect, 0 if there is exactly one
-  intersection point (in which case it is stored into pointer `p` if it's not `NULL`), or 1 if the
+  intersection point (in which case it is stored into pointer `p` if it's not `nullptr`), or 1 if the
   intersection is another line segment (in which case the two endpoints are stored into pointers `p`
-  and `q` if they are not `NULL`). If the segments are barely touching (close within `EPS`), then
+  and `q` if they are not `nullptr`). If the segments are barely touching (close within `EPS`), then
   the result will depend on the setting of `TOUCH_IS_INTERSECT`.
 - `closest_point(a, b, c, p)` returns the point on line $ax + by + c = 0$ that is closest to point
   $p$. Note that the result always lies on the line through $p$ which is perpendicular to the line
@@ -60,12 +60,12 @@ bool point_on_segment(const point &p, const point &a, const point &b) {
 }
 
 int line_intersection(
-    double a1, double b1, double c1, double a2, double b2, double c2, point *p = NULL
+    double a1, double b1, double c1, double a2, double b2, double c2, point *p = nullptr
 ) {
   if (EQ(a1, a2) && EQ(b1, b2)) {
     return EQ(c1, c2) ? 1 : -1;
   }
-  if (p != NULL) {
+  if (p != nullptr) {
     p->x = (b1 * c1 - b1 * c2) / (a2 * b1 - a1 * b2);
     if (!EQ(b1, 0)) {
       p->y = -(a1 * p->x + c1) / b1;
@@ -77,7 +77,7 @@ int line_intersection(
 }
 
 int line_intersection(
-    const point &p1, const point &p2, const point &p3, const point &p4, point *p = NULL
+    const point &p1, const point &p2, const point &p3, const point &p4, point *p = nullptr
 ) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -88,14 +88,15 @@ int line_intersection(
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
-  if (p != NULL) {
+  if (p != nullptr) {
     *p = point(x / det, y / det);
   }
   return 0;
 }
 
 int seg_intersection(
-    const point &a, const point &b, const point &c, const point &d, point *p = NULL, point *q = NULL
+    const point &a, const point &b, const point &c, const point &d, point *p = nullptr,
+    point *q = nullptr
 ) {
   static const bool TOUCH_IS_INTERSECT = true;
   point ab(b.x - a.x, b.y - a.y);
@@ -103,14 +104,14 @@ int seg_intersection(
   point cd(d.x - c.x, d.y - c.y);
   if (EQ(sqnorm(ab), 0)) {
     if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
-      if (p != NULL) *p = a;
+      if (p != nullptr) *p = a;
       return 0;
     }
     return -1;
   }
   if (EQ(sqnorm(cd), 0)) {
     if (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) {
-      if (p != NULL) *p = c;
+      if (p != nullptr) *p = c;
       return 0;
     }
     return -1;
@@ -125,12 +126,12 @@ int seg_intersection(
       point res1 = std::max(std::min(a, b), std::min(c, d));
       point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
-        if (p != NULL) {
+        if (p != nullptr) {
           *p = res1;
         }
         return 0;  // Collinear and meeting at an endpoint.
       }
-      if (p != NULL && q != NULL) {
+      if (p != nullptr && q != nullptr) {
         *p = res1;
         *q = res2;
       }
@@ -146,7 +147,7 @@ int seg_intersection(
   bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1)) : (LT(0, t) && LT(t, 1));
   bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
-    if (p != NULL) {
+    if (p != nullptr) {
       *p = point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.

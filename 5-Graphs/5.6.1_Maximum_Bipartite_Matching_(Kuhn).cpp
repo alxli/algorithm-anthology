@@ -24,7 +24,7 @@ std::vector<int> adj[MAXN];
 
 bool dfs(int u) {
   visit[u] = true;
-  for (int j = 0; j < (int)adj[u].size(); j++) {
+  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
     int v = match[adj[u][j]];
     if (v == -1 || (!visit[v] && dfs(v))) {
       match[adj[u][j]] = u;

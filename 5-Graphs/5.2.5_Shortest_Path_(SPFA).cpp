@@ -45,7 +45,7 @@ bool spfa(int nodes, int start) {
     int u = q.front();
     q.pop();
     in_queue[u] = false;
-    for (int i = 0; i < (int)adj[u].size(); i++) {
+    for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
       int v = adj[u][i].first;
       int w = adj[u][i].second;
       if (dist[u] != INF && dist[v] > dist[u] + w) {

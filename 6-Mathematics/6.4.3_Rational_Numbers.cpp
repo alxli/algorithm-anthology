@@ -1,14 +1,14 @@
 /*
 
-Perform operations on rational numbers internally represented as two integers, a numerator and a
+Perform operations on Rational numbers internally represented as two integers, a numerator and a
 denominator. The template integer type must support streamed input/output, comparisons, and
 arithmetic operations. Overflow is not checked for in internal operations.
 
-- `rational(n)` constructs a rational with numerator `n` and denominator 1.
-- `rational(n, d)` constructs a rational with numerator `n` and denominator `d`.
-- `operator >>` inputs a rational using the next integer from the stream as the numerator and 1 as
+- `Rational(n)` constructs a Rational with numerator `n` and denominator 1.
+- `Rational(n, d)` constructs a Rational with numerator `n` and denominator `d`.
+- `operator >>` inputs a Rational using the next integer from the stream as the numerator and 1 as
   the denominator.
-- `operator <<` outputs a rational as a string consisting of possibly a minus sign followed by the
+- `operator <<` outputs a Rational as a string consisting of possibly a minus sign followed by the
   numerator, followed by a slash, followed by the denominator.
 - `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the big integer `v`
   converted to an `std::string`, `long long`, `double`, and `long double` respectively.
@@ -16,12 +16,12 @@ arithmetic operations. Overflow is not checked for in internal operations.
   `/=`, and `%=` are defined analogous to those on numerical primitives.
 
 Time Complexity:
-- O(log(n + d)) per call to constructor `rational(n, d)`.
+- O(log(n + d)) per call to constructor `Rational(n, d)`.
 - O(1) per call to all other operations, assuming that corresponding operations on the template
   integer type are O(1) as well.
 
 Space Complexity:
-- O(1) for storage of the rational.
+- O(1) for storage of the Rational.
 - O(1) auxiliary space for all operations.
 
 */
@@ -32,17 +32,17 @@ Space Complexity:
 #include <string>
 
 template<class Int = long long>
-class rational {
+class Rational {
   Int num, den;
 
  public:
-  rational() : num(0), den(1) {}
-  rational(const Int &n) : num(n), den(1) {}
+  Rational() : num(0), den(1) {}
+  Rational(const Int &n) : num(n), den(1) {}
 
   template<class T1, class T2>
-  rational(const T1 &n, const T2 &d) : num(n), den(d) {
+  Rational(const T1 &n, const T2 &d) : num(n), den(d) {
     if (den == 0) {
-      throw std::runtime_error("Division by zero in rational.");
+      throw std::runtime_error("Division by zero in Rational.");
     }
     if (den < 0) {
       num = -num;
@@ -59,14 +59,14 @@ class rational {
     den /= gcd;
   }
 
-  friend std::istream &operator>>(std::istream &in, rational &r) {
+  friend std::istream &operator>>(std::istream &in, Rational &r) {
     std::string s;
     in >> r.num;
     r.den = 1;
     return in;
   }
 
-  friend std::ostream &operator<<(std::ostream &out, const rational &r) {
+  friend std::ostream &operator<<(std::ostream &out, const Rational &r) {
     out << r.num << "/" << r.den;
     return out;
   }
@@ -103,107 +103,107 @@ class rational {
     return n / d;
   }
 
-  bool operator<(const rational &r) const { return num * r.den < r.num * den; }
-  bool operator>(const rational &r) const { return r.num * den < num * r.den; }
-  bool operator<=(const rational &r) const { return !(r < *this); }
-  bool operator>=(const rational &r) const { return !(*this < r); }
-  bool operator==(const rational &r) const { return num == r.num && den == r.den; }
-  bool operator!=(const rational &r) const { return num != r.num || den != r.den; }
+  bool operator<(const Rational &r) const { return num * r.den < r.num * den; }
+  bool operator>(const Rational &r) const { return r.num * den < num * r.den; }
+  bool operator<=(const Rational &r) const { return !(r < *this); }
+  bool operator>=(const Rational &r) const { return !(*this < r); }
+  bool operator==(const Rational &r) const { return num == r.num && den == r.den; }
+  bool operator!=(const Rational &r) const { return num != r.num || den != r.den; }
 
   // clang-format off
   template<class T>
-  friend bool operator<(const T &a, const rational &b) { return rational(a) < b; }
+  friend bool operator<(const T &a, const Rational &b) { return Rational(a) < b; }
 
   template<class T>
-  friend bool operator>(const T &a, const rational &b) { return rational(a) > b; }
+  friend bool operator>(const T &a, const Rational &b) { return Rational(a) > b; }
 
   template<class T>
-  friend bool operator<=(const T &a, const rational &b) { return rational(a) <= b; }
+  friend bool operator<=(const T &a, const Rational &b) { return Rational(a) <= b; }
 
   template<class T>
-  friend bool operator>=(const T &a, const rational &b) { return rational(a) >= b; }
+  friend bool operator>=(const T &a, const Rational &b) { return Rational(a) >= b; }
 
   template<class T>
-  friend bool operator==(const T &a, const rational &b) { return rational(a) == b; }
+  friend bool operator==(const T &a, const Rational &b) { return Rational(a) == b; }
 
   template<class T>
-  friend bool operator!=(const T &a, const rational &b) { return rational(a) != b; }
+  friend bool operator!=(const T &a, const Rational &b) { return Rational(a) != b; }
   // clang-format on
 
-  rational abs() const { return rational(num < 0 ? -num : num, den); }
-  friend rational abs(const rational &r) { return r.abs(); }
+  Rational abs() const { return Rational(num < 0 ? -num : num, den); }
+  friend Rational abs(const Rational &r) { return r.abs(); }
   Int floor() const { return num < 0 ? -((-num + den - 1) / den) : num / den; }
   Int ceil() const { return num < 0 ? -(-num / den) : (num + den - 1) / den; }
 
-  rational operator+(const rational &r) const {
-    return rational(num * r.den + r.num * den, den * r.den);
+  Rational operator+(const Rational &r) const {
+    return Rational(num * r.den + r.num * den, den * r.den);
   }
 
-  rational operator-(const rational &r) const {
-    return rational(num * r.den - r.num * den, r.den * den);
+  Rational operator-(const Rational &r) const {
+    return Rational(num * r.den - r.num * den, r.den * den);
   }
 
-  rational operator*(const rational &r) const { return rational(num * r.num, r.den * den); }
-  rational operator/(const rational &r) const { return rational(num * r.den, den * r.num); }
+  Rational operator*(const Rational &r) const { return Rational(num * r.num, r.den * den); }
+  Rational operator/(const Rational &r) const { return Rational(num * r.den, den * r.num); }
 
-  rational operator%(const rational &r) const {
-    return *this - r * rational(num * r.den / (r.num * den), 1);
+  Rational operator%(const Rational &r) const {
+    return *this - r * Rational(num * r.den / (r.num * den), 1);
   }
 
   // clang-format off
   template<class T>
-  friend rational operator+(const T &a, const rational &b) { return rational(a) + b; }
+  friend Rational operator+(const T &a, const Rational &b) { return Rational(a) + b; }
 
   template<class T>
-  friend rational operator-(const T &a, const rational &b) { return rational(a) - b; }
+  friend Rational operator-(const T &a, const Rational &b) { return Rational(a) - b; }
 
   template<class T>
-  friend rational operator*(const T &a, const rational &b) { return rational(a) * b; }
+  friend Rational operator*(const T &a, const Rational &b) { return Rational(a) * b; }
 
   template<class T>
-  friend rational operator/(const T &a, const rational &b) { return rational(a) / b; }
+  friend Rational operator/(const T &a, const Rational &b) { return Rational(a) / b; }
 
   template<class T>
-  friend rational operator%(const T &a, const rational &b) { return rational(a) % b; }
+  friend Rational operator%(const T &a, const Rational &b) { return Rational(a) % b; }
   // clang-format on
 
-  rational operator-() const { return rational(-num, den); }
+  Rational operator-() const { return Rational(-num, den); }
 
-  rational operator++(int) {
-    rational t(*this);
+  Rational operator++(int) {
+    Rational t(*this);
     operator++();
     return t;
   }
-  rational operator--(int) {
-    rational t(*this);
+  Rational operator--(int) {
+    Rational t(*this);
     operator--();
     return t;
   }
-  rational &operator++() {
+  Rational &operator++() {
     *this = *this + 1;
     return *this;
   }
-  rational &operator--() {
+  Rational &operator--() {
     *this = *this - 1;
     return *this;
   }
-  rational &operator+=(const rational &r) {
+  Rational &operator+=(const Rational &r) {
     *this = *this + r;
     return *this;
   }
-  rational &operator-=(const rational &r) {
+  Rational &operator-=(const Rational &r) {
     *this = *this - r;
     return *this;
   }
-  rational &operator*=(const rational &r) {
+  Rational &operator*=(const Rational &r) {
     *this = *this * r;
     return *this;
   }
-  rational &operator/=(const rational &r) {
+  Rational &operator/=(const Rational &r) {
     *this = *this / r;
     return *this;
   }
-  rational &operator%=(const rational &r) {
+  Rational &operator%=(const Rational &r) {
     *this = *this % r;
     return *this;
   }
@@ -216,10 +216,10 @@ class rational {
 
 int main() {
 #define EQ(a, b) (fabs((a) - (b)) <= 1E-9)
-  typedef rational<long long> rational;
+  typedef Rational<long long> Rational;
 
-  assert(rational(-21, 1) % 2 == -1);
-  rational r(rational(-53, 10) % rational(-17, 10));
+  assert(Rational(-21, 1) % 2 == -1);
+  Rational r(Rational(-53, 10) % Rational(-17, 10));
   assert(EQ(r.to_ldouble(), fmod(-5.3, -1.7)));
   assert(r.to_string() == "-1/5");
   return 0;

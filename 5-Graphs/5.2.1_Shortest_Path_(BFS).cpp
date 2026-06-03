@@ -37,7 +37,7 @@ void bfs(int nodes, int start) {
     int d = q.front().second;
     q.pop();
     visit[u] = true;
-    for (int j = 0; j < (int)adj[u].size(); j++) {
+    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
       int v = adj[u][j];
       if (visit[v]) {
         continue;

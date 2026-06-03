@@ -10,7 +10,7 @@ possible with probability roughly $q^2 / 2^{64}$ over $q$ compared fingerprints.
 plain XOR only records element parity; use a summed hash or pair it with counts if multiplicity
 matters.
 
-- `zobrist_hash(seed)` constructs a token generator with initial value `seed`.
+- `ZobristHash(seed)` constructs a token generator with initial value `seed`.
 - `get(x)` returns the stable token assigned to key `x`, creating it if needed.
 - `toggle(h, x)` returns the hash obtained by inserting `x` into set hash `h` if absent, or removing
   `x` from `h` if present.
@@ -36,7 +36,7 @@ Space Complexity:
 typedef unsigned long long uint64;
 
 template<class T>
-class zobrist_hash {
+class ZobristHash {
   std::map<T, uint64> token;
   uint64 state;
 
@@ -48,7 +48,7 @@ class zobrist_hash {
   }
 
  public:
-  explicit zobrist_hash(uint64 seed = 0) : state(seed) {}
+  explicit ZobristHash(uint64 seed = 0) : state(seed) {}
 
   uint64 get(const T &x) {
     typename std::map<T, uint64>::iterator it = token.find(x);
@@ -85,7 +85,7 @@ using namespace std;
 int main() {
   int a[] = {1, 2, 1, 3};
   int b[] = {2, 1, 3};
-  zobrist_hash<int> zh(123);
+  ZobristHash<int> zh(123);
   vector<uint64> pa = zh.distinct_prefix_hashes(a, a + 4);
   vector<uint64> pb = zh.distinct_prefix_hashes(b, b + 3);
 

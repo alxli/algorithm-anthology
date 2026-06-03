@@ -2,11 +2,11 @@
 
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
 once in the collection. This implementations requires an ordering on the set of possible keys
-defined by `operator <` on the key type. A treap is a binary search tree that is balanced by
+defined by `operator <` on the key type. A Treap is a binary search tree that is balanced by
 preserving a heap property on the randomly generated priority value assigned to every node, thereby
 making insertions and deletions run in O(log n) with high probability.
 
-- `treap()` constructs an empty map.
+- `Treap()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if an new
@@ -14,7 +14,7 @@ making insertions and deletions run in O(log n) with high probability.
   old value associated with the key is preserved).
 - `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
   successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if the key was not
+- `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was not
   found.
 - `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending order of keys.
 
@@ -34,38 +34,38 @@ Space Complexity:
 #include <cstdlib>
 
 template<class K, class V>
-class treap {
-  struct node_t {
+class Treap {
+  struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     K key;
     V value;
     int priority;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const K &k, const V &v)
-        : key(k), value(v), priority(rand32()), left(NULL), right(NULL) {}
+    Node(const K &k, const V &v)
+        : key(k), value(v), priority(rand32()), left(nullptr), right(nullptr) {}
   } *root;
 
   int num_nodes;
 
-  static void rotate_left(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_left(Node *&n) {
+    Node *tmp = n;
     n = n->right;
     tmp->right = n->left;
     n->left = tmp;
   }
 
-  static void rotate_right(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_right(Node *&n) {
+    Node *tmp = n;
     n = n->left;
     tmp->left = n->right;
     n->right = tmp;
   }
 
-  static bool insert(node_t *&n, const K &k, const V &v) {
-    if (n == NULL) {
-      n = new node_t(k, v);
+  static bool insert(Node *&n, const K &k, const V &v) {
+    if (n == nullptr) {
+      n = new Node(k, v);
       return true;
     }
     if (k < n->key && insert(n->left, k, v)) {
@@ -83,8 +83,8 @@ class treap {
     return false;
   }
 
-  static bool erase(node_t *&n, const K &k) {
-    if (n == NULL) {
+  static bool erase(Node *&n, const K &k) {
+    if (n == nullptr) {
       return false;
     }
     if (k < n->key) {
@@ -92,7 +92,7 @@ class treap {
     } else if (n->key < k) {
       return erase(n->right, k);
     }
-    if (n->left != NULL && n->right != NULL) {
+    if (n->left != nullptr && n->right != nullptr) {
       if (n->left->priority < n->right->priority) {
         rotate_right(n);
         return erase(n->right, k);
@@ -100,23 +100,23 @@ class treap {
       rotate_left(n);
       return erase(n->left, k);
     }
-    node_t *tmp = (n->left != NULL) ? n->left : n->right;
+    Node *tmp = (n->left != nullptr) ? n->left : n->right;
     delete n;
     n = tmp;
     return true;
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, KVFunction f) {
-    if (n != NULL) {
+  static void walk(Node *n, KVFunction f) {
+    if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
       walk(n->right, f);
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -124,11 +124,11 @@ class treap {
   }
 
  public:
-  treap() : root(NULL), num_nodes(0) {}
+  Treap() : root(nullptr), num_nodes(0) {}
 
-  ~treap() { clean_up(root); }
+  ~Treap() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -147,8 +147,8 @@ class treap {
   }
 
   const V *find(const K &k) const {
-    node_t *n = root;
-    while (n != NULL) {
+    Node *n = root;
+    while (n != nullptr) {
       if (k < n->key) {
         n = n->left;
       } else if (n->key < k) {
@@ -157,7 +157,7 @@ class treap {
         return &(n->value);
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   template<class KVFunction>
@@ -182,7 +182,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  treap<int, char> t;
+  Treap<int, char> t;
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
@@ -194,7 +194,7 @@ int main() {
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
-  assert(t.find(1) == NULL);
+  assert(t.find(1) == nullptr);
   t.walk(printch);
   cout << endl;
   return 0;

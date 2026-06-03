@@ -5,8 +5,8 @@ extraction of the minimum. This implementation requires an ordering on the set o
 defined by `operator <`. A binary min-heap implements a priority queue by inserting and deleting
 nodes into a binary tree such that the parent of any node is always less than its children.
 
-- `binary_heap()` constructs an empty priority queue.
-- `binary_heap(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
+- `BinaryHeap()` constructs an empty priority queue.
+- `BinaryHeap(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
   elements in the range `[lo, hi)`.
 - `size()` returns the size of the priority queue.
 - `empty()` returns whether the priority queue is empty.
@@ -31,14 +31,14 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class binary_heap {
+class BinaryHeap {
   std::vector<T> heap;
 
  public:
-  binary_heap() {}
+  BinaryHeap() {}
 
   template<class It>
-  binary_heap(It lo, It hi) {
+  BinaryHeap(It lo, It hi) {
     while (lo != hi) {
       push(*(lo++));
     }
@@ -69,10 +69,10 @@ class binary_heap {
     int i = 0;
     for (;;) {
       int child = 2 * i + 1;
-      if (child >= (int)heap.size()) {
+      if (child >= static_cast<int>(heap.size())) {
         break;
       }
-      if (child + 1 < (int)heap.size() && heap[child + 1] < heap[child]) {
+      if (child + 1 < static_cast<int>(heap.size()) && heap[child + 1] < heap[child]) {
         child++;
       }
       if (heap[child] < heap[i]) {
@@ -107,7 +107,7 @@ using namespace std;
 
 int main() {
   int a[] = {0, 5, -1, 12};
-  binary_heap<int> h(a, a + 4);
+  BinaryHeap<int> h(a, a + 4);
   h.push(10);
   while (!h.empty()) {
     cout << h.top() << endl;

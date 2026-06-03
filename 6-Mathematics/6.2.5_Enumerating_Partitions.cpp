@@ -52,7 +52,7 @@ bool next_partition(std::vector<int> &p) {
 
 long long partition_function(int a, int b) {
   static std::vector<std::vector<long long>> p(1, std::vector<long long>(1, 1));
-  if (a >= (int)p.size()) {
+  if (a >= static_cast<int>(p.size())) {
     int old = p.size();
     p.resize(a + 1);
     p[0].resize(a + 1);
@@ -84,10 +84,10 @@ std::vector<int> partition_by_rank(int n, long long r) {
 long long rank_by_partition(const std::vector<int> &p) {
   long long res = 0;
   int sum = 0;
-  for (int i = 0; i < (int)p.size(); i++) {
+  for (int i = 0; i < static_cast<int>(p.size()); i++) {
     sum += p[i];
   }
-  for (int i = 0; i < (int)p.size(); i++) {
+  for (int i = 0; i < static_cast<int>(p.size()); i++) {
     for (int j = 0; j < p[i]; j++) {
       res += partition_function(sum, j);
     }

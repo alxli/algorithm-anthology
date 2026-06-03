@@ -44,7 +44,7 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int>> &tree) {
   while (!stack.empty()) {
     int u = stack.back();
     stack.pop_back();
-    for (int i = 0; i < (int)tree[u].size(); i++) {
+    for (int i = 0; i < static_cast<int>(tree[u].size()); i++) {
       int v = tree[u][i];
       if (parent[v] == -1) {
         parent[v] = u;
@@ -69,7 +69,7 @@ std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
   std::vector<int> degree(nodes, 1);
   std::set<int> leaves;
   std::vector<std::pair<int, int>> edges;
-  for (int i = 0; i < (int)code.size(); i++) {
+  for (int i = 0; i < static_cast<int>(code.size()); i++) {
     degree[code[i]]++;
   }
   for (int u = 0; u < nodes; u++) {
@@ -77,7 +77,7 @@ std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
       leaves.insert(u);
     }
   }
-  for (int i = 0; i < (int)code.size(); i++) {
+  for (int i = 0; i < static_cast<int>(code.size()); i++) {
     int leaf = *leaves.begin();
     leaves.erase(leaves.begin());
     int u = code[i];

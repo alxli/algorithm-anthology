@@ -5,7 +5,7 @@ once in the collection. This implementation requires an ordering on the set of p
 by `operator <` on the key type. A red black tree is a binary search tree balanced by coloring its
 nodes red or black, then constraining node colors on any simple path from the root to a leaf.
 
-- `red_black_tree()` constructs an empty map.
+- `RedBlackTree()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if an new
@@ -13,7 +13,7 @@ nodes red or black, then constraining node colors on any simple path from the ro
   old value associated with the key is preserved).
 - `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
   successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to a const value associated with key `k`, or `NULL` if the key was not
+- `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was not
   found.
 - `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending order of keys.
 
@@ -34,22 +34,22 @@ Space Complexity:
 #include <cstddef>
 
 template<class K, class V>
-class red_black_tree {
-  enum color_t { RED, BLACK };
-  struct node_t {
+class RedBlackTree {
+  enum Color { RED, BLACK };
+  struct Node {
     K key;
     V value;
-    color_t color;
-    node_t *left, *right, *parent;
+    Color color;
+    Node *left, *right, *parent;
 
-    node_t(const K &k, const V &v, color_t c)
-        : key(k), value(v), color(c), left(NULL), right(NULL), parent(NULL) {}
+    Node(const K &k, const V &v, Color c)
+        : key(k), value(v), color(c), left(nullptr), right(nullptr), parent(nullptr) {}
   } *root, *LEAF_NIL;
 
   int num_nodes;
 
-  void rotate_left(node_t *n) {
-    node_t *tmp = n->right;
+  void rotate_left(Node *n) {
+    Node *tmp = n->right;
     if ((n->right = tmp->left) != LEAF_NIL) {
       n->right->parent = n;
     }
@@ -64,8 +64,8 @@ class red_black_tree {
     n->parent = tmp;
   }
 
-  void rotate_right(node_t *n) {
-    node_t *tmp = n->left;
+  void rotate_right(Node *n) {
+    Node *tmp = n->left;
     if ((n->left = tmp->right) != LEAF_NIL) {
       n->left->parent = n;
     }
@@ -80,12 +80,12 @@ class red_black_tree {
     n->parent = tmp;
   }
 
-  void insert_fix(node_t *n) {
+  void insert_fix(Node *n) {
     while (n->parent->color == RED) {
-      node_t *parent = n->parent;
-      node_t *grandparent = n->parent->parent;
+      Node *parent = n->parent;
+      Node *grandparent = n->parent->parent;
       if (parent == grandparent->left) {
-        node_t *uncle = grandparent->right;
+        Node *uncle = grandparent->right;
         if (uncle->color == RED) {
           grandparent->color = RED;
           parent->color = BLACK;
@@ -102,7 +102,7 @@ class red_black_tree {
           n = parent;
         }
       } else if (parent == grandparent->right) {
-        node_t *uncle = grandparent->left;
+        Node *uncle = grandparent->left;
         if (uncle->color == RED) {
           grandparent->color = RED;
           parent->color = BLACK;
@@ -123,7 +123,7 @@ class red_black_tree {
     root->color = BLACK;
   }
 
-  void replace(node_t *n, node_t *replacement) {
+  void replace(Node *n, Node *replacement) {
     if (n->parent == LEAF_NIL) {
       root = replacement;
     } else if (n == n->parent->left) {
@@ -134,11 +134,11 @@ class red_black_tree {
     replacement->parent = n->parent;
   }
 
-  void erase_fix(node_t *n) {
+  void erase_fix(Node *n) {
     while (n != root && n->color == BLACK) {
-      node_t *parent = n->parent;
+      Node *parent = n->parent;
       if (n == parent->left) {
-        node_t *sibling = parent->right;
+        Node *sibling = parent->right;
         if (sibling->color == RED) {
           sibling->color = BLACK;
           parent->color = RED;
@@ -162,7 +162,7 @@ class red_black_tree {
           n = root;
         }
       } else {
-        node_t *sibling = parent->left;
+        Node *sibling = parent->left;
         if (sibling->color == RED) {
           sibling->color = BLACK;
           parent->color = RED;
@@ -191,7 +191,7 @@ class red_black_tree {
   }
 
   template<class KVFunction>
-  void walk(node_t *n, KVFunction f) const {
+  void walk(Node *n, KVFunction f) const {
     if (n != LEAF_NIL) {
       walk(n->left, f);
       f(n->key, n->value);
@@ -199,7 +199,7 @@ class red_black_tree {
     }
   }
 
-  void clean_up(node_t *n) {
+  void clean_up(Node *n) {
     if (n != LEAF_NIL) {
       clean_up(n->left);
       clean_up(n->right);
@@ -208,9 +208,9 @@ class red_black_tree {
   }
 
  public:
-  red_black_tree() : num_nodes(0) { root = LEAF_NIL = new node_t(K(), V(), BLACK); }
+  RedBlackTree() : num_nodes(0) { root = LEAF_NIL = new Node(K(), V(), BLACK); }
 
-  ~red_black_tree() {
+  ~RedBlackTree() {
     clean_up(root);
     delete LEAF_NIL;
   }
@@ -219,7 +219,7 @@ class red_black_tree {
   bool empty() const { return num_nodes == 0; }
 
   bool insert(const K &k, const V &v) {
-    node_t *curr = root, *prev = LEAF_NIL;
+    Node *curr = root, *prev = LEAF_NIL;
     while (curr != LEAF_NIL) {
       prev = curr;
       if (k < curr->key) {
@@ -230,7 +230,7 @@ class red_black_tree {
         return false;
       }
     }
-    node_t *n = new node_t(k, v, RED);
+    Node *n = new Node(k, v, RED);
     n->parent = prev;
     if (prev == LEAF_NIL) {
       root = n;
@@ -246,7 +246,7 @@ class red_black_tree {
   }
 
   bool erase(const K &k) {
-    node_t *n = root;
+    Node *n = root;
     while (n != LEAF_NIL) {
       if (k < n->key) {
         n = n->left;
@@ -259,8 +259,8 @@ class red_black_tree {
     if (n == LEAF_NIL) {
       return false;
     }
-    color_t color = n->color;
-    node_t *replacement;
+    Color color = n->color;
+    Node *replacement;
     if (n->left == LEAF_NIL) {
       replacement = n->right;
       replace(n, n->right);
@@ -268,7 +268,7 @@ class red_black_tree {
       replacement = n->left;
       replace(n, n->left);
     } else {
-      node_t *tmp = n->right;
+      Node *tmp = n->right;
       while (tmp->left != LEAF_NIL) {
         tmp = tmp->left;
       }
@@ -294,7 +294,7 @@ class red_black_tree {
   }
 
   const V *find(const K &k) const {
-    node_t *n = root;
+    Node *n = root;
     while (n != LEAF_NIL) {
       if (k < n->key) {
         n = n->left;
@@ -304,7 +304,7 @@ class red_black_tree {
         return &(n->value);
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   template<class KVFunction>
@@ -329,7 +329,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  red_black_tree<int, char> t;
+  RedBlackTree<int, char> t;
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
@@ -341,7 +341,7 @@ int main() {
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
-  assert(t.find(1) == NULL);
+  assert(t.find(1) == nullptr);
   t.walk(printch);
   cout << endl;
   return 0;

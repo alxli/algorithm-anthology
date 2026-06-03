@@ -40,7 +40,7 @@ Space Complexity:
 
 template<class It>
 typename std::iterator_traits<It>::value_type max_subarray_sum(
-    It lo, It hi, int *res_lo = NULL, int *res_hi = NULL
+    It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr
 ) {
   typedef typename std::iterator_traits<It>::value_type T;
   if (lo == hi) {
@@ -59,7 +59,7 @@ typename std::iterator_traits<It>::value_type max_subarray_sum(
       end = it - lo;
     }
   }
-  if (res_lo != NULL && res_hi != NULL) {
+  if (res_lo != nullptr && res_hi != nullptr) {
     *res_lo = begin;
     *res_hi = end;
   }
@@ -68,8 +68,8 @@ typename std::iterator_traits<It>::value_type max_subarray_sum(
 
 template<class T>
 T max_submatrix_sum(
-    const std::vector<std::vector<T>> &matrix, int *r1 = NULL, int *c1 = NULL, int *r2 = NULL,
-    int *c2 = NULL
+    const std::vector<std::vector<T>> &matrix, int *r1 = nullptr, int *c1 = nullptr,
+    int *r2 = nullptr, int *c2 = nullptr
 ) {
   if (matrix.empty() || matrix[0].empty()) {
     return T();
@@ -87,7 +87,7 @@ T max_submatrix_sum(
       sum = max_subarray_sum(sums.begin(), sums.end(), &rlo, &rhi);
       if (max_sum < sum) {
         max_sum = sum;
-        if (r1 != NULL && c1 != NULL && r2 != NULL && c2 != NULL) {
+        if (r1 != nullptr && c1 != nullptr && r2 != nullptr && c2 != nullptr) {
           *r1 = rlo;
           *c1 = clo;
           *r2 = rhi;

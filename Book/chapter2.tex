@@ -26,17 +26,17 @@ For production C++, prefer containers such as \inlinecode{std::list}, \inlinecod
 \begin{lstlisting}[language=C++]
 #include <cstddef>
 
-struct list_node {
+struct ListNode {
   int value;
-  list_node *next;
+  ListNode *next;
 
-  explicit list_node(int value = 0) : value(value), next(NULL) {}
+  explicit ListNode(int value = 0) : value(value), next(nullptr) {}
 };
 
-list_node *reverse_list(list_node *head) {
-  list_node *prev = NULL;
-  while (head != NULL) {
-    list_node *next = head->next;
+ListNode *reverse_list(ListNode *head) {
+  ListNode *prev = nullptr;
+  while (head != nullptr) {
+    ListNode *next = head->next;
     head->next = prev;
     prev = head;
     head = next;
@@ -44,10 +44,10 @@ list_node *reverse_list(list_node *head) {
   return prev;
 }
 
-list_node *merge_sorted_lists(list_node *a, list_node *b) {
-  list_node dummy;
-  list_node *tail = &dummy;
-  while (a != NULL && b != NULL) {
+ListNode *merge_sorted_lists(ListNode *a, ListNode *b) {
+  ListNode dummy;
+  ListNode *tail = &dummy;
+  while (a != nullptr && b != nullptr) {
     if (b->value < a->value) {
       tail->next = b;
       b = b->next;
@@ -57,22 +57,22 @@ list_node *merge_sorted_lists(list_node *a, list_node *b) {
     }
     tail = tail->next;
   }
-  tail->next = a != NULL ? a : b;
+  tail->next = a != nullptr ? a : b;
   return dummy.next;
 }
 
-list_node *split_half(list_node *head, list_node **second) {
-  if (head == NULL || head->next == NULL) {
-    *second = NULL;
+ListNode *split_half(ListNode *head, ListNode **second) {
+  if (head == nullptr || head->next == nullptr) {
+    *second = nullptr;
     return head;
   }
-  list_node *slow = head, *fast = head->next;
-  while (fast != NULL && fast->next != NULL) {
+  ListNode *slow = head, *fast = head->next;
+  while (fast != nullptr && fast->next != nullptr) {
     slow = slow->next;
     fast = fast->next->next;
   }
   *second = slow->next;
-  slow->next = NULL;
+  slow->next = nullptr;
   return head;
 }
 \end{lstlisting}
@@ -82,29 +82,29 @@ list_node *split_half(list_node *head, list_node **second) {
 #include <vector>
 using namespace std;
 
-vector<int> values(list_node *head) {
+vector<int> values(ListNode *head) {
   vector<int> res;
-  for (; head != NULL; head = head->next) {
+  for (; head != nullptr; head = head->next) {
     res.push_back(head->value);
   }
   return res;
 }
 
 int main() {
-  list_node a[3] = {list_node(1), list_node(3), list_node(5)};
-  list_node b[3] = {list_node(2), list_node(4), list_node(6)};
+  ListNode a[3] = {ListNode(1), ListNode(3), ListNode(5)};
+  ListNode b[3] = {ListNode(2), ListNode(4), ListNode(6)};
   for (int i = 0; i + 1 < 3; i++) {
     a[i].next = &a[i + 1];
     b[i].next = &b[i + 1];
   }
-  list_node *merged = merge_sorted_lists(&a[0], &b[0]);
+  ListNode *merged = merge_sorted_lists(&a[0], &b[0]);
   vector<int> merged_values = values(merged);
   for (int i = 0; i < 6; i++) {
     assert(merged_values[i] == i + 1);
   }
 
-  list_node *second = NULL;
-  list_node *first = split_half(merged, &second);
+  ListNode *second = nullptr;
+  ListNode *first = split_half(merged, &second);
   assert(values(first).size() == 3);
   assert(values(second).size() == 3);
   assert(values(reverse_list(first))[0] == 3);
@@ -132,16 +132,16 @@ The functions below use a dummy head node for each list. This makes insertions a
 \begin{lstlisting}[language=C++]
 #include <cstddef>
 
-struct list_node {
+struct ListNode {
   int value;
-  list_node *next;
+  ListNode *next;
 
-  explicit list_node(int value = 0) : value(value), next(NULL) {}
+  explicit ListNode(int value = 0) : value(value), next(nullptr) {}
 };
 
-void splice_after(list_node *pos, list_node *before) {
-  list_node *node = before->next;
-  if (node == NULL || pos == before || pos == node) {
+void splice_after(ListNode *pos, ListNode *before) {
+  ListNode *node = before->next;
+  if (node == nullptr || pos == before || pos == node) {
     return;
   }
   before->next = node->next;
@@ -149,12 +149,12 @@ void splice_after(list_node *pos, list_node *before) {
   pos->next = node;
 }
 
-void splice_range_after(list_node *pos, list_node *before_first, list_node *last) {
-  list_node *first = before_first->next;
+void splice_range_after(ListNode *pos, ListNode *before_first, ListNode *last) {
+  ListNode *first = before_first->next;
   if (first == last) {
     return;
   }
-  list_node *tail = first;
+  ListNode *tail = first;
   while (tail->next != last) {
     tail = tail->next;
   }
@@ -169,16 +169,16 @@ void splice_range_after(list_node *pos, list_node *before_first, list_node *last
 #include <vector>
 using namespace std;
 
-vector<int> values(list_node *dummy) {
+vector<int> values(ListNode *dummy) {
   vector<int> res;
-  for (list_node *p = dummy->next; p != NULL; p = p->next) {
+  for (ListNode *p = dummy->next; p != nullptr; p = p->next) {
     res.push_back(p->value);
   }
   return res;
 }
 
 int main() {
-  list_node dummy(0), a(1), b(2), c(3), d(4), e(5);
+  ListNode dummy(0), a(1), b(2), c(3), d(4), e(5);
   dummy.next = &a;
   a.next = &b;
   b.next = &c;
@@ -207,7 +207,7 @@ Maintains a least-recently-used cache with fixed capacity. The cache supports lo
 This implementation combines a doubly linked list (\inlinecode{std::list}) with a map from keys to list iterators. The front of the list stores the most recently used item. The operation \inlinecode{items.splice(items.begin(), items, it)} is the standard-library way to move an existing list node to the front in $O(1)$ time.
 
 \begin{compactitem}
-  \item \inlinecode{lru\_cache(capacity)} constructs an empty cache holding at most \inlinecode{capacity} keys.
+  \item \inlinecode{LRUCache(capacity)} constructs an empty cache holding at most \inlinecode{capacity} keys.
   \item \inlinecode{get(key, \&value)} returns whether \inlinecode{key} is present. If present, it stores the value in \inlinecode{value} and marks the key as most recently used.
   \item \inlinecode{put(key, value)} inserts or updates \inlinecode{key}, marking it as most recently used and evicting the least recently used key if needed.
   \item \inlinecode{size()} returns the number of keys currently stored.
@@ -223,7 +223,7 @@ This implementation combines a doubly linked list (\inlinecode{std::list}) with 
 #include <utility>
 
 template<class Key, class Value>
-class lru_cache {
+class LRUCache {
   typedef typename std::list<std::pair<Key, Value>>::iterator list_iter;
 
   int cap;
@@ -231,7 +231,7 @@ class lru_cache {
   std::map<Key, list_iter> where;
 
  public:
-  explicit lru_cache(int capacity) : cap(capacity) {}
+  explicit LRUCache(int capacity) : cap(capacity) {}
 
   int size() const { return items.size(); }
 
@@ -257,7 +257,7 @@ class lru_cache {
     if (cap == 0) {
       return;
     }
-    if ((int)items.size() == cap) {
+    if (static_cast<int>(items.size()) == cap) {
       where.erase(items.back().first);
       items.pop_back();
     }
@@ -272,7 +272,7 @@ class lru_cache {
 using namespace std;
 
 int main() {
-  lru_cache<int, int> cache(2);
+  LRUCache<int, int> cache(2);
   int value = 0;
   cache.put(1, 10);
   cache.put(2, 20);
@@ -293,8 +293,8 @@ int main() {
 Maintain a min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A binary min-heap implements a priority queue by inserting and deleting nodes into a binary tree such that the parent of any node is always less than its children.
 
 \begin{compactitem}
-  \item \inlinecode{binary\_heap()} constructs an empty priority queue.
-  \item \inlinecode{binary\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range \inlinecode{[lo, hi)}.
+  \item \inlinecode{BinaryHeap()} constructs an empty priority queue.
+  \item \inlinecode{BinaryHeap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range \inlinecode{[lo, hi)}.
   \item \inlinecode{size()} returns the size of the priority queue.
   \item \inlinecode{empty()} returns whether the priority queue is empty.
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
@@ -321,14 +321,14 @@ Maintain a min-priority queue, that is, a collection of elements with support fo
 #include <vector>
 
 template<class T>
-class binary_heap {
+class BinaryHeap {
   std::vector<T> heap;
 
  public:
-  binary_heap() {}
+  BinaryHeap() {}
 
   template<class It>
-  binary_heap(It lo, It hi) {
+  BinaryHeap(It lo, It hi) {
     while (lo != hi) {
       push(*(lo++));
     }
@@ -359,10 +359,10 @@ class binary_heap {
     int i = 0;
     for (;;) {
       int child = 2 * i + 1;
-      if (child >= (int)heap.size()) {
+      if (child >= static_cast<int>(heap.size())) {
         break;
       }
-      if (child + 1 < (int)heap.size() && heap[child + 1] < heap[child]) {
+      if (child + 1 < static_cast<int>(heap.size()) && heap[child + 1] < heap[child]) {
         child++;
       }
       if (heap[child] < heap[i]) {
@@ -389,7 +389,7 @@ using namespace std;
 
 int main() {
   int a[] = {0, 5, -1, 12};
-  binary_heap<int> h(a, a + 4);
+  BinaryHeap<int> h(a, a + 4);
   h.push(10);
   while (!h.empty()) {
     cout << h.top() << endl;
@@ -409,8 +409,8 @@ int main() {
 Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A skew heap attempts to maintain balance by unconditionally swapping all nodes in the merge path when merging.
 
 \begin{compactitem}
-  \item \inlinecode{skew\_heap()} constructs an empty priority queue.
-  \item \inlinecode{skew\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range \inlinecode{[lo, hi)}.
+  \item \inlinecode{SkewHeap()} constructs an empty priority queue.
+  \item \inlinecode{SkewHeap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range \inlinecode{[lo, hi)}.
   \item \inlinecode{size()} returns the size of the priority queue.
   \item \inlinecode{empty()} returns whether the priority queue is empty.
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
@@ -439,21 +439,21 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 #include <stdexcept>
 
 template<class T>
-class skew_heap {
-  struct node_t {
+class SkewHeap {
+  struct Node {
     T value;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const T &v) : value(v), left(NULL), right(NULL) {}
+    Node(const T &v) : value(v), left(nullptr), right(nullptr) {}
   } *root;
 
   int num_nodes;
 
-  static node_t *merge(node_t *a, node_t *b) {
-    if (a == NULL) {
+  static Node *merge(Node *a, Node *b) {
+    if (a == nullptr) {
       return b;
     }
-    if (b == NULL) {
+    if (b == nullptr) {
       return a;
     }
     if (b->value < a->value) {
@@ -464,8 +464,8 @@ class skew_heap {
     return a;
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -473,21 +473,21 @@ class skew_heap {
   }
 
  public:
-  skew_heap() : root(NULL), num_nodes(0) {}
+  SkewHeap() : root(nullptr), num_nodes(0) {}
 
   template<class It>
-  skew_heap(It lo, It hi) : root(NULL), num_nodes(0) {
+  SkewHeap(It lo, It hi) : root(nullptr), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));
     }
   }
 
-  ~skew_heap() { clean_up(root); }
+  ~SkewHeap() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   void push(const T &v) {
-    root = merge(root, new node_t(v));
+    root = merge(root, new Node(v));
     num_nodes++;
   }
 
@@ -495,7 +495,7 @@ class skew_heap {
     if (empty()) {
       throw std::runtime_error("Cannot pop from empty heap.");
     }
-    node_t *tmp = root;
+    Node *tmp = root;
     root = merge(root->left, root->right);
     delete tmp;
     num_nodes--;
@@ -508,9 +508,9 @@ class skew_heap {
     return root->value;
   }
 
-  void absorb(skew_heap &h) {
+  void absorb(SkewHeap &h) {
     root = merge(root, h.root);
-    h.root = NULL;
+    h.root = nullptr;
   }
 };
 \end{lstlisting}
@@ -520,7 +520,7 @@ class skew_heap {
 using namespace std;
 
 int main() {
-  skew_heap<int> h, h2;
+  SkewHeap<int> h, h2;
   h.push(12);
   h.push(10);
   h2.push(5);
@@ -545,8 +545,8 @@ int main() {
 Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A pairing heap is a heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion.
 
 \begin{compactitem}
-  \item \inlinecode{pairing\_heap()} constructs an empty priority queue.
-  \item \inlinecode{pairing\_heap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range \inlinecode{[lo, hi)}.
+  \item \inlinecode{PairingHeap()} constructs an empty priority queue.
+  \item \inlinecode{PairingHeap(lo, hi)} constructs a priority queue from two ForwardIterators, consisting of elements in the range \inlinecode{[lo, hi)}.
   \item \inlinecode{size()} returns the size of the priority queue.
   \item \inlinecode{empty()} returns whether the priority queue is empty.
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
@@ -574,15 +574,15 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 #include <stdexcept>
 
 template<class T>
-class pairing_heap {
-  struct node_t {
+class PairingHeap {
+  struct Node {
     T value;
-    node_t *left, *next;
+    Node *left, *next;
 
-    node_t(const T &v) : value(v), left(NULL), next(NULL) {}
+    Node(const T &v) : value(v), left(nullptr), next(nullptr) {}
 
-    void add_child(node_t *n) {
-      if (left == NULL) {
+    void add_child(Node *n) {
+      if (left == nullptr) {
         left = n;
       } else {
         n->next = left;
@@ -593,11 +593,11 @@ class pairing_heap {
 
   int num_nodes;
 
-  static node_t *merge(node_t *a, node_t *b) {
-    if (a == NULL) {
+  static Node *merge(Node *a, Node *b) {
+    if (a == nullptr) {
       return b;
     }
-    if (b == NULL) {
+    if (b == nullptr) {
       return a;
     }
     if (a->value < b->value) {
@@ -608,17 +608,17 @@ class pairing_heap {
     return b;
   }
 
-  static node_t *merge_pairs(node_t *n) {
-    if (n == NULL || n->next == NULL) {
+  static Node *merge_pairs(Node *n) {
+    if (n == nullptr || n->next == nullptr) {
       return n;
     }
-    node_t *a = n, *b = n->next, *c = n->next->next;
-    a->next = b->next = NULL;
+    Node *a = n, *b = n->next, *c = n->next->next;
+    a->next = b->next = nullptr;
     return merge(merge(a, b), merge_pairs(c));
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->next);
       delete n;
@@ -626,21 +626,21 @@ class pairing_heap {
   }
 
  public:
-  pairing_heap() : root(NULL), num_nodes(0) {}
+  PairingHeap() : root(nullptr), num_nodes(0) {}
 
   template<class It>
-  pairing_heap(It lo, It hi) : root(NULL), num_nodes(0) {
+  PairingHeap(It lo, It hi) : root(nullptr), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));
     }
   }
 
-  ~pairing_heap() { clean_up(root); }
+  ~PairingHeap() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   void push(const T &v) {
-    root = merge(root, new node_t(v));
+    root = merge(root, new Node(v));
     num_nodes++;
   }
 
@@ -648,7 +648,7 @@ class pairing_heap {
     if (empty()) {
       throw std::runtime_error("Cannot pop from empty heap.");
     }
-    node_t *tmp = root;
+    Node *tmp = root;
     root = merge_pairs(root->left);
     delete tmp;
     num_nodes--;
@@ -661,9 +661,9 @@ class pairing_heap {
     return root->value;
   }
 
-  void absorb(pairing_heap &h) {
+  void absorb(PairingHeap &h) {
     root = merge(root, h.root);
-    h.root = NULL;
+    h.root = nullptr;
   }
 };
 \end{lstlisting}
@@ -673,7 +673,7 @@ class pairing_heap {
 using namespace std;
 
 int main() {
-  pairing_heap<int> h, h2;
+  PairingHeap<int> h, h2;
   h.push(12);
   h.push(10);
   h2.push(5);
@@ -702,12 +702,12 @@ int main() {
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A binary search tree implements this map by inserting and deleting keys into a binary tree such that every node's left child has a lesser key and every node's right child has a greater key.
 
 \begin{compactitem}
-  \item \inlinecode{binary\_search\_tree()} constructs an empty map.
+  \item \inlinecode{BST()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
-  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
@@ -728,20 +728,20 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 #include <cstddef>
 
 template<class K, class V>
-class binary_search_tree {
-  struct node_t {
+class BST {
+  struct Node {
     K key;
     V value;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const K &k, const V &v) : key(k), value(v), left(NULL), right(NULL) {}
+    Node(const K &k, const V &v) : key(k), value(v), left(nullptr), right(nullptr) {}
   } *root;
 
   int num_nodes;
 
-  static bool insert(node_t *&n, const K &k, const V &v) {
-    if (n == NULL) {
-      n = new node_t(k, v);
+  static bool insert(Node *&n, const K &k, const V &v) {
+    if (n == nullptr) {
+      n = new Node(k, v);
       return true;
     }
     if (k < n->key) {
@@ -752,8 +752,8 @@ class binary_search_tree {
     return false;
   }
 
-  static bool erase(node_t *&n, const K &k) {
-    if (n == NULL) {
+  static bool erase(Node *&n, const K &k) {
+    if (n == nullptr) {
       return false;
     }
     if (k < n->key) {
@@ -761,36 +761,36 @@ class binary_search_tree {
     } else if (n->key < k) {
       return erase(n->right, k);
     }
-    if (n->left != NULL && n->right != NULL) {
-      node_t *tmp = n->right, *parent = NULL;
-      while (tmp->left != NULL) {
+    if (n->left != nullptr && n->right != nullptr) {
+      Node *tmp = n->right, *parent = nullptr;
+      while (tmp->left != nullptr) {
         parent = tmp;
         tmp = tmp->left;
       }
       n->key = tmp->key;
       n->value = tmp->value;
-      if (parent != NULL) {
+      if (parent != nullptr) {
         return erase(parent->left, parent->left->key);
       }
       return erase(n->right, n->right->key);
     }
-    node_t *tmp = (n->left != NULL) ? n->left : n->right;
+    Node *tmp = (n->left != nullptr) ? n->left : n->right;
     delete n;
     n = tmp;
     return true;
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, KVFunction f) {
-    if (n != NULL) {
+  static void walk(Node *n, KVFunction f) {
+    if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
       walk(n->right, f);
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -798,11 +798,11 @@ class binary_search_tree {
   }
 
  public:
-  binary_search_tree() : root(NULL), num_nodes(0) {}
+  BST() : root(nullptr), num_nodes(0) {}
 
-  ~binary_search_tree() { clean_up(root); }
+  ~BST() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -821,8 +821,8 @@ class binary_search_tree {
   }
 
   const V *find(const K &k) const {
-    node_t *n = root;
-    while (n != NULL) {
+    Node *n = root;
+    while (n != nullptr) {
       if (k < n->key) {
         n = n->left;
       } else if (n->key < k) {
@@ -831,7 +831,7 @@ class binary_search_tree {
         return &(n->value);
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   template<class KVFunction>
@@ -851,7 +851,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  binary_search_tree<int, char> t;
+  BST<int, char> t;
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
@@ -863,7 +863,7 @@ int main() {
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
-  assert(t.find(1) == NULL);
+  assert(t.find(1) == nullptr);
   t.walk(printch);
   cout << endl;
   return 0;
@@ -874,15 +874,15 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Treap}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A treap is a binary search tree that is balanced by preserving a heap property on the randomly generated priority value assigned to every node, thereby making insertions and deletions run in $O(\log n)$ with high probability.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A Treap is a binary search tree that is balanced by preserving a heap property on the randomly generated priority value assigned to every node, thereby making insertions and deletions run in $O(\log n)$ with high probability.
 
 \begin{compactitem}
-  \item \inlinecode{treap()} constructs an empty map.
+  \item \inlinecode{Treap()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
-  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
@@ -904,38 +904,38 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 #include <cstdlib>
 
 template<class K, class V>
-class treap {
-  struct node_t {
+class Treap {
+  struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     K key;
     V value;
     int priority;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const K &k, const V &v)
-        : key(k), value(v), priority(rand32()), left(NULL), right(NULL) {}
+    Node(const K &k, const V &v)
+        : key(k), value(v), priority(rand32()), left(nullptr), right(nullptr) {}
   } *root;
 
   int num_nodes;
 
-  static void rotate_left(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_left(Node *&n) {
+    Node *tmp = n;
     n = n->right;
     tmp->right = n->left;
     n->left = tmp;
   }
 
-  static void rotate_right(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_right(Node *&n) {
+    Node *tmp = n;
     n = n->left;
     tmp->left = n->right;
     n->right = tmp;
   }
 
-  static bool insert(node_t *&n, const K &k, const V &v) {
-    if (n == NULL) {
-      n = new node_t(k, v);
+  static bool insert(Node *&n, const K &k, const V &v) {
+    if (n == nullptr) {
+      n = new Node(k, v);
       return true;
     }
     if (k < n->key && insert(n->left, k, v)) {
@@ -953,8 +953,8 @@ class treap {
     return false;
   }
 
-  static bool erase(node_t *&n, const K &k) {
-    if (n == NULL) {
+  static bool erase(Node *&n, const K &k) {
+    if (n == nullptr) {
       return false;
     }
     if (k < n->key) {
@@ -962,7 +962,7 @@ class treap {
     } else if (n->key < k) {
       return erase(n->right, k);
     }
-    if (n->left != NULL && n->right != NULL) {
+    if (n->left != nullptr && n->right != nullptr) {
       if (n->left->priority < n->right->priority) {
         rotate_right(n);
         return erase(n->right, k);
@@ -970,23 +970,23 @@ class treap {
       rotate_left(n);
       return erase(n->left, k);
     }
-    node_t *tmp = (n->left != NULL) ? n->left : n->right;
+    Node *tmp = (n->left != nullptr) ? n->left : n->right;
     delete n;
     n = tmp;
     return true;
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, KVFunction f) {
-    if (n != NULL) {
+  static void walk(Node *n, KVFunction f) {
+    if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
       walk(n->right, f);
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -994,11 +994,11 @@ class treap {
   }
 
  public:
-  treap() : root(NULL), num_nodes(0) {}
+  Treap() : root(nullptr), num_nodes(0) {}
 
-  ~treap() { clean_up(root); }
+  ~Treap() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -1017,8 +1017,8 @@ class treap {
   }
 
   const V *find(const K &k) const {
-    node_t *n = root;
-    while (n != NULL) {
+    Node *n = root;
+    while (n != nullptr) {
       if (k < n->key) {
         n = n->left;
       } else if (n->key < k) {
@@ -1027,7 +1027,7 @@ class treap {
         return &(n->value);
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   template<class KVFunction>
@@ -1047,7 +1047,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  treap<int, char> t;
+  Treap<int, char> t;
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
@@ -1059,7 +1059,7 @@ int main() {
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
-  assert(t.find(1) == NULL);
+  assert(t.find(1) == nullptr);
   t.walk(printch);
   cout << endl;
   return 0;
@@ -1073,12 +1073,12 @@ bcde
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. An AVL tree is a binary search tree balanced by height, guaranteeing $O(\log n)$ worst-case running time in insertions and deletions by making sure that the heights of the left and right subtrees at every node differ by at most 1.
 
 \begin{compactitem}
-  \item \inlinecode{avl\_tree()} constructs an empty map.
+  \item \inlinecode{AVLTree()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
-  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
@@ -1101,28 +1101,28 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 #include <cstddef>
 
 template<class K, class V>
-class avl_tree {
-  struct node_t {
+class AVLTree {
+  struct Node {
     K key;
     V value;
     int height;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const K &k, const V &v) : key(k), value(v), height(1), left(NULL), right(NULL) {}
+    Node(const K &k, const V &v) : key(k), value(v), height(1), left(nullptr), right(nullptr) {}
   } *root;
 
   int num_nodes;
 
-  static int height(node_t *n) { return (n != NULL) ? n->height : 0; }
+  static int height(Node *n) { return (n != nullptr) ? n->height : 0; }
 
-  static void update_height(node_t *n) {
-    if (n != NULL) {
+  static void update_height(Node *n) {
+    if (n != nullptr) {
       n->height = 1 + std::max(height(n->left), height(n->right));
     }
   }
 
-  static void rotate_left(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_left(Node *&n) {
+    Node *tmp = n;
     n = n->right;
     tmp->right = n->left;
     n->left = tmp;
@@ -1130,8 +1130,8 @@ class avl_tree {
     update_height(n);
   }
 
-  static void rotate_right(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_right(Node *&n) {
+    Node *tmp = n;
     n = n->left;
     tmp->left = n->right;
     n->right = tmp;
@@ -1139,12 +1139,12 @@ class avl_tree {
     update_height(n);
   }
 
-  static int balance_factor(node_t *n) {
-    return (n != NULL) ? (height(n->left) - height(n->right)) : 0;
+  static int balance_factor(Node *n) {
+    return (n != nullptr) ? (height(n->left) - height(n->right)) : 0;
   }
 
-  static void rebalance(node_t *&n) {
-    if (n == NULL) {
+  static void rebalance(Node *&n) {
+    if (n == nullptr) {
       return;
     }
     update_height(n);
@@ -1162,9 +1162,9 @@ class avl_tree {
     }
   }
 
-  static bool insert(node_t *&n, const K &k, const V &v) {
-    if (n == NULL) {
-      n = new node_t(k, v);
+  static bool insert(Node *&n, const K &k, const V &v) {
+    if (n == nullptr) {
+      n = new Node(k, v);
       return true;
     }
     if ((k < n->key && insert(n->left, k, v)) || (n->key < k && insert(n->right, k, v))) {
@@ -1174,20 +1174,20 @@ class avl_tree {
     return false;
   }
 
-  static bool erase(node_t *&n, const K &k) {
-    if (n == NULL) {
+  static bool erase(Node *&n, const K &k) {
+    if (n == nullptr) {
       return false;
     }
     if (!(k < n->key || n->key < k)) {
-      if (n->left != NULL && n->right != NULL) {
-        node_t *tmp = n->right, *parent = NULL;
-        while (tmp->left != NULL) {
+      if (n->left != nullptr && n->right != nullptr) {
+        Node *tmp = n->right, *parent = nullptr;
+        while (tmp->left != nullptr) {
           parent = tmp;
           tmp = tmp->left;
         }
         n->key = tmp->key;
         n->value = tmp->value;
-        if (parent != NULL) {
+        if (parent != nullptr) {
           if (!erase(parent->left, parent->left->key)) {
             return false;
           }
@@ -1195,7 +1195,7 @@ class avl_tree {
           return false;
         }
       } else {
-        node_t *tmp = (n->left != NULL) ? n->left : n->right;
+        Node *tmp = (n->left != nullptr) ? n->left : n->right;
         delete n;
         n = tmp;
       }
@@ -1210,16 +1210,16 @@ class avl_tree {
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, KVFunction f) {
-    if (n != NULL) {
+  static void walk(Node *n, KVFunction f) {
+    if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
       walk(n->right, f);
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -1227,11 +1227,11 @@ class avl_tree {
   }
 
  public:
-  avl_tree() : root(NULL), num_nodes(0) {}
+  AVLTree() : root(nullptr), num_nodes(0) {}
 
-  ~avl_tree() { clean_up(root); }
+  ~AVLTree() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -1250,8 +1250,8 @@ class avl_tree {
   }
 
   const V *find(const K &k) const {
-    node_t *n = root;
-    while (n != NULL) {
+    Node *n = root;
+    while (n != nullptr) {
       if (k < n->key) {
         n = n->left;
       } else if (n->key < k) {
@@ -1260,7 +1260,7 @@ class avl_tree {
         return &(n->value);
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   template<class KVFunction>
@@ -1280,7 +1280,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  avl_tree<int, char> t;
+  AVLTree<int, char> t;
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
@@ -1292,7 +1292,7 @@ int main() {
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
-  assert(t.find(1) == NULL);
+  assert(t.find(1) == nullptr);
   t.walk(printch);
   cout << endl;
   return 0;
@@ -1306,12 +1306,12 @@ bcde
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A red black tree is a binary search tree balanced by coloring its nodes red or black, then constraining node colors on any simple path from the root to a leaf.
 
 \begin{compactitem}
-  \item \inlinecode{red\_black\_tree()} constructs an empty map.
+  \item \inlinecode{RedBlackTree()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
-  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
@@ -1334,22 +1334,22 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 #include <cstddef>
 
 template<class K, class V>
-class red_black_tree {
-  enum color_t { RED, BLACK };
-  struct node_t {
+class RedBlackTree {
+  enum Color { RED, BLACK };
+  struct Node {
     K key;
     V value;
-    color_t color;
-    node_t *left, *right, *parent;
+    Color color;
+    Node *left, *right, *parent;
 
-    node_t(const K &k, const V &v, color_t c)
-        : key(k), value(v), color(c), left(NULL), right(NULL), parent(NULL) {}
+    Node(const K &k, const V &v, Color c)
+        : key(k), value(v), color(c), left(nullptr), right(nullptr), parent(nullptr) {}
   } *root, *LEAF_NIL;
 
   int num_nodes;
 
-  void rotate_left(node_t *n) {
-    node_t *tmp = n->right;
+  void rotate_left(Node *n) {
+    Node *tmp = n->right;
     if ((n->right = tmp->left) != LEAF_NIL) {
       n->right->parent = n;
     }
@@ -1364,8 +1364,8 @@ class red_black_tree {
     n->parent = tmp;
   }
 
-  void rotate_right(node_t *n) {
-    node_t *tmp = n->left;
+  void rotate_right(Node *n) {
+    Node *tmp = n->left;
     if ((n->left = tmp->right) != LEAF_NIL) {
       n->left->parent = n;
     }
@@ -1380,12 +1380,12 @@ class red_black_tree {
     n->parent = tmp;
   }
 
-  void insert_fix(node_t *n) {
+  void insert_fix(Node *n) {
     while (n->parent->color == RED) {
-      node_t *parent = n->parent;
-      node_t *grandparent = n->parent->parent;
+      Node *parent = n->parent;
+      Node *grandparent = n->parent->parent;
       if (parent == grandparent->left) {
-        node_t *uncle = grandparent->right;
+        Node *uncle = grandparent->right;
         if (uncle->color == RED) {
           grandparent->color = RED;
           parent->color = BLACK;
@@ -1402,7 +1402,7 @@ class red_black_tree {
           n = parent;
         }
       } else if (parent == grandparent->right) {
-        node_t *uncle = grandparent->left;
+        Node *uncle = grandparent->left;
         if (uncle->color == RED) {
           grandparent->color = RED;
           parent->color = BLACK;
@@ -1423,7 +1423,7 @@ class red_black_tree {
     root->color = BLACK;
   }
 
-  void replace(node_t *n, node_t *replacement) {
+  void replace(Node *n, Node *replacement) {
     if (n->parent == LEAF_NIL) {
       root = replacement;
     } else if (n == n->parent->left) {
@@ -1434,11 +1434,11 @@ class red_black_tree {
     replacement->parent = n->parent;
   }
 
-  void erase_fix(node_t *n) {
+  void erase_fix(Node *n) {
     while (n != root && n->color == BLACK) {
-      node_t *parent = n->parent;
+      Node *parent = n->parent;
       if (n == parent->left) {
-        node_t *sibling = parent->right;
+        Node *sibling = parent->right;
         if (sibling->color == RED) {
           sibling->color = BLACK;
           parent->color = RED;
@@ -1462,7 +1462,7 @@ class red_black_tree {
           n = root;
         }
       } else {
-        node_t *sibling = parent->left;
+        Node *sibling = parent->left;
         if (sibling->color == RED) {
           sibling->color = BLACK;
           parent->color = RED;
@@ -1491,7 +1491,7 @@ class red_black_tree {
   }
 
   template<class KVFunction>
-  void walk(node_t *n, KVFunction f) const {
+  void walk(Node *n, KVFunction f) const {
     if (n != LEAF_NIL) {
       walk(n->left, f);
       f(n->key, n->value);
@@ -1499,7 +1499,7 @@ class red_black_tree {
     }
   }
 
-  void clean_up(node_t *n) {
+  void clean_up(Node *n) {
     if (n != LEAF_NIL) {
       clean_up(n->left);
       clean_up(n->right);
@@ -1508,9 +1508,9 @@ class red_black_tree {
   }
 
  public:
-  red_black_tree() : num_nodes(0) { root = LEAF_NIL = new node_t(K(), V(), BLACK); }
+  RedBlackTree() : num_nodes(0) { root = LEAF_NIL = new Node(K(), V(), BLACK); }
 
-  ~red_black_tree() {
+  ~RedBlackTree() {
     clean_up(root);
     delete LEAF_NIL;
   }
@@ -1519,7 +1519,7 @@ class red_black_tree {
   bool empty() const { return num_nodes == 0; }
 
   bool insert(const K &k, const V &v) {
-    node_t *curr = root, *prev = LEAF_NIL;
+    Node *curr = root, *prev = LEAF_NIL;
     while (curr != LEAF_NIL) {
       prev = curr;
       if (k < curr->key) {
@@ -1530,7 +1530,7 @@ class red_black_tree {
         return false;
       }
     }
-    node_t *n = new node_t(k, v, RED);
+    Node *n = new Node(k, v, RED);
     n->parent = prev;
     if (prev == LEAF_NIL) {
       root = n;
@@ -1546,7 +1546,7 @@ class red_black_tree {
   }
 
   bool erase(const K &k) {
-    node_t *n = root;
+    Node *n = root;
     while (n != LEAF_NIL) {
       if (k < n->key) {
         n = n->left;
@@ -1559,8 +1559,8 @@ class red_black_tree {
     if (n == LEAF_NIL) {
       return false;
     }
-    color_t color = n->color;
-    node_t *replacement;
+    Color color = n->color;
+    Node *replacement;
     if (n->left == LEAF_NIL) {
       replacement = n->right;
       replace(n, n->right);
@@ -1568,7 +1568,7 @@ class red_black_tree {
       replacement = n->left;
       replace(n, n->left);
     } else {
-      node_t *tmp = n->right;
+      Node *tmp = n->right;
       while (tmp->left != LEAF_NIL) {
         tmp = tmp->left;
       }
@@ -1594,7 +1594,7 @@ class red_black_tree {
   }
 
   const V *find(const K &k) const {
-    node_t *n = root;
+    Node *n = root;
     while (n != LEAF_NIL) {
       if (k < n->key) {
         n = n->left;
@@ -1604,7 +1604,7 @@ class red_black_tree {
         return &(n->value);
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   template<class KVFunction>
@@ -1624,7 +1624,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  red_black_tree<int, char> t;
+  RedBlackTree<int, char> t;
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
@@ -1636,7 +1636,7 @@ int main() {
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
-  assert(t.find(1) == NULL);
+  assert(t.find(1) == nullptr);
   t.walk(printch);
   cout << endl;
   return 0;
@@ -1650,12 +1650,12 @@ bcde
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A splay tree is a balanced binary search tree with the additional property that recently accessed elements are quick to access again.
 
 \begin{compactitem}
-  \item \inlinecode{splay\_tree()} constructs an empty map.
+  \item \inlinecode{SplayTree()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
-  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
@@ -1677,81 +1677,81 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 #include <cstddef>
 
 template<class K, class V>
-class splay_tree {
-  struct node_t {
+class SplayTree {
+  struct Node {
     K key;
     V value;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const K &k, const V &v) : key(k), value(v), left(NULL), right(NULL) {}
+    Node(const K &k, const V &v) : key(k), value(v), left(nullptr), right(nullptr) {}
   } *root;
 
   int num_nodes;
 
-  static void rotate_left(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_left(Node *&n) {
+    Node *tmp = n;
     n = n->right;
     tmp->right = n->left;
     n->left = tmp;
   }
 
-  static void rotate_right(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_right(Node *&n) {
+    Node *tmp = n;
     n = n->left;
     tmp->left = n->right;
     n->right = tmp;
   }
 
-  static void splay(node_t *&n, const K &k) {
-    if (n == NULL) {
+  static void splay(Node *&n, const K &k) {
+    if (n == nullptr) {
       return;
     }
-    if (k < n->key && n->left != NULL) {
+    if (k < n->key && n->left != nullptr) {
       if (k < n->left->key) {
         splay(n->left->left, k);
         rotate_right(n);
       } else if (n->left->key < k) {
         splay(n->left->right, k);
-        if (n->left->right != NULL) {
+        if (n->left->right != nullptr) {
           rotate_left(n->left);
         }
       }
-      if (n->left != NULL) {
+      if (n->left != nullptr) {
         rotate_right(n);
       }
-    } else if (n->key < k && n->right != NULL) {
+    } else if (n->key < k && n->right != nullptr) {
       if (k < n->right->key) {
         splay(n->right->left, k);
-        if (n->right->left != NULL) {
+        if (n->right->left != nullptr) {
           rotate_right(n->right);
         }
       } else if (n->right->key < k) {
         splay(n->right->right, k);
         rotate_left(n);
       }
-      if (n->right != NULL) {
+      if (n->right != nullptr) {
         rotate_left(n);
       }
     }
   }
 
-  static bool insert(node_t *&n, const K &k, const V &v) {
-    if (n == NULL) {
-      n = new node_t(k, v);
+  static bool insert(Node *&n, const K &k, const V &v) {
+    if (n == nullptr) {
+      n = new Node(k, v);
       return true;
     }
     splay(n, k);
     if (k < n->key) {
-      node_t *tmp = new node_t(k, v);
+      Node *tmp = new Node(k, v);
       tmp->left = n->left;
       tmp->right = n;
-      n->left = NULL;
+      n->left = nullptr;
       n = tmp;
     } else if (n->key < k) {
-      node_t *tmp = new node_t(k, v);
+      Node *tmp = new Node(k, v);
       tmp->left = n;
       tmp->right = n->right;
-      n->right = NULL;
+      n->right = nullptr;
       n = tmp;
     } else {
       return false;
@@ -1759,16 +1759,16 @@ class splay_tree {
     return true;
   }
 
-  static bool erase(node_t *&n, const K &k) {
-    if (n == NULL) {
+  static bool erase(Node *&n, const K &k) {
+    if (n == nullptr) {
       return false;
     }
     splay(n, k);
     if (k < n->key || n->key < k) {
       return false;
     }
-    node_t *tmp = n;
-    if (n->left == NULL) {
+    Node *tmp = n;
+    if (n->left == nullptr) {
       n = n->right;
     } else {
       splay(n->left, k);
@@ -1780,16 +1780,16 @@ class splay_tree {
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, KVFunction f) {
-    if (n != NULL) {
+  static void walk(Node *n, KVFunction f) {
+    if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
       walk(n->right, f);
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -1797,11 +1797,11 @@ class splay_tree {
   }
 
  public:
-  splay_tree() : root(NULL), num_nodes(0) {}
+  SplayTree() : root(nullptr), num_nodes(0) {}
 
-  ~splay_tree() { clean_up(root); }
+  ~SplayTree() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   bool insert(const K &k, const V &v) {
     if (insert(root, k, v)) {
@@ -1821,7 +1821,7 @@ class splay_tree {
 
   const V *find(const K &k) {
     splay(root, k);
-    return (k < root->key || root->key < k) ? NULL : &(root->value);
+    return (k < root->key || root->key < k) ? nullptr : &(root->value);
   }
 
   template<class KVFunction>
@@ -1841,7 +1841,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  splay_tree<int, char> t;
+  SplayTree<int, char> t;
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
@@ -1853,7 +1853,7 @@ int main() {
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
-  assert(t.find(1) == NULL);
+  assert(t.find(1) == nullptr);
   t.walk(printch);
   cout << endl;
   return 0;
@@ -1867,12 +1867,12 @@ bcde
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. In addition, support queries for keys given their ranks as well as queries for the ranks of given keys. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A size balanced tree augments each nodes with the size of its subtree, using it to maintain balance and compute order statistics.
 
 \begin{compactitem}
-  \item \inlinecode{size\_balanced\_tree()} constructs an empty map.
+  \item \inlinecode{SBTree()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
-  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{select(r)} returns a key-value pair of the node with a key of zero-based rank \inlinecode{r} in the map, throwing an exception if the rank is not between 0 and \inlinecode{size() - 1}.
   \item \inlinecode{rank(k)} returns the zero-based rank of key \inlinecode{k} in the map, throwing an exception if the key was not found in the map.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
@@ -1898,32 +1898,32 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 #include <utility>
 
 template<class K, class V>
-class size_balanced_tree {
-  struct node_t {
+class SBTree {
+  struct Node {
     K key;
     V value;
     int size;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const K &k, const V &v) : key(k), value(v), size(1), left(NULL), right(NULL) {}
+    Node(const K &k, const V &v) : key(k), value(v), size(1), left(nullptr), right(nullptr) {}
 
-    inline node_t *&child(int c) { return (c == 0) ? left : right; }
+    inline Node *&child(int c) { return (c == 0) ? left : right; }
 
     void update() {
       size = 1;
-      if (left != NULL) {
+      if (left != nullptr) {
         size += left->size;
       }
-      if (right != NULL) {
+      if (right != nullptr) {
         size += right->size;
       }
     }
   } *root;
 
-  static inline int size(node_t *n) { return (n == NULL) ? 0 : n->size; }
+  static inline int size(Node *n) { return (n == nullptr) ? 0 : n->size; }
 
-  static void rotate(node_t *&n, int c) {
-    node_t *tmp = n->child(c);
+  static void rotate(Node *&n, int c) {
+    Node *tmp = n->child(c);
     n->child(c) = tmp->child(!c);
     tmp->child(!c) = n;
     n->update();
@@ -1931,11 +1931,11 @@ class size_balanced_tree {
     n = tmp;
   }
 
-  static void maintain(node_t *&n, int c) {
-    if (n == NULL || n->child(c) == NULL) {
+  static void maintain(Node *&n, int c) {
+    if (n == nullptr || n->child(c) == nullptr) {
       return;
     }
-    node_t *&tmp = n->child(c);
+    Node *&tmp = n->child(c);
     if (size(tmp->child(c)) > size(n->child(!c))) {
       rotate(n, c);
     } else if (size(tmp->child(!c)) > size(n->child(!c))) {
@@ -1950,55 +1950,55 @@ class size_balanced_tree {
     maintain(n, 1);
   }
 
-  static bool insert(node_t *&n, const K &k, const V &v) {
-    if (n == NULL) {
-      n = new node_t(k, v);
+  static bool insert(Node *&n, const K &k, const V &v) {
+    if (n == nullptr) {
+      n = new Node(k, v);
       return true;
     }
-    bool result;
+    bool found;
     if (k < n->key) {
-      result = insert(n->left, k, v);
+      found = insert(n->left, k, v);
       maintain(n, 0);
     } else if (n->key < k) {
-      result = insert(n->right, k, v);
+      found = insert(n->right, k, v);
       maintain(n, 1);
     } else {
       return false;
     }
     n->update();
-    return result;
+    return found;
   }
 
-  static bool erase(node_t *&n, const K &k) {
-    if (n == NULL) {
+  static bool erase(Node *&n, const K &k) {
+    if (n == nullptr) {
       return false;
     }
-    bool result;
+    bool found;
     int c = (k < n->key);
     if (k < n->key) {
-      result = erase(n->left, k);
+      found = erase(n->left, k);
     } else if (n->key < k) {
-      result = erase(n->right, k);
+      found = erase(n->right, k);
     } else {
-      if (n->right == NULL || n->left == NULL) {
-        node_t *tmp = n;
-        n = (n->right == NULL) ? n->left : n->right;
+      if (n->right == nullptr || n->left == nullptr) {
+        Node *tmp = n;
+        n = (n->right == nullptr) ? n->left : n->right;
         delete tmp;
         return true;
       }
-      node_t *p = n->right;
-      while (p->left != NULL) {
+      Node *p = n->right;
+      while (p->left != nullptr) {
         p = p->left;
       }
       n->key = p->key;
-      result = erase(n->right, p->key);
+      found = erase(n->right, p->key);
     }
     maintain(n, c);
     n->update();
-    return result;
+    return found;
   }
 
-  static std::pair<K, V> select(node_t *n, int r) {
+  static std::pair<K, V> select(Node *n, int r) {
     int rank = size(n->left);
     if (r < rank) {
       return select(n->left, r);
@@ -2008,8 +2008,8 @@ class size_balanced_tree {
     return std::make_pair(n->key, n->value);
   }
 
-  static int rank(node_t *n, const K &k) {
-    if (n == NULL) {
+  static int rank(Node *n, const K &k) {
+    if (n == nullptr) {
       throw std::runtime_error("Cannot rank key that's not in tree.");
     }
     int r = size(n->left);
@@ -2022,16 +2022,16 @@ class size_balanced_tree {
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, KVFunction f) {
-    if (n != NULL) {
+  static void walk(Node *n, KVFunction f) {
+    if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
       walk(n->right, f);
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -2039,18 +2039,18 @@ class size_balanced_tree {
   }
 
  public:
-  size_balanced_tree() : root(NULL) {}
+  SBTree() : root(nullptr) {}
 
-  ~size_balanced_tree() { clean_up(root); }
+  ~SBTree() { clean_up(root); }
   int size() const { return size(root); }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
   bool insert(const K &k, const V &v) { return insert(root, k, v); }
   bool erase(const K &k) { return erase(root, k); }
   int rank(const K &k) const { return rank(root, k); }
 
   const V *find(const K &k) const {
-    node_t *n = root;
-    while (n != NULL) {
+    Node *n = root;
+    while (n != nullptr) {
       if (k < n->key) {
         n = n->left;
       } else if (n->key < k) {
@@ -2059,7 +2059,7 @@ class size_balanced_tree {
         return &(n->value);
       }
     }
-    return NULL;
+    return nullptr;
   }
 
   std::pair<K, V> select(int r) const {
@@ -2086,7 +2086,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  size_balanced_tree<int, char> t;
+  SBTree<int, char> t;
   t.insert(2, 'b');
   t.insert(1, 'a');
   t.insert(3, 'c');
@@ -2098,7 +2098,7 @@ int main() {
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
-  assert(t.find(1) == NULL);
+  assert(t.find(1) == nullptr);
   t.walk(printch);
   cout << endl;
   assert(t.rank(2) == 0);
@@ -2118,13 +2118,13 @@ bcde
 Maintain a map from closed, one-dimensional intervals to values while supporting efficient reporting of any or all entries that intersect with a given query interval. This implementation uses \inlinecode{std::pair} to represent intervals, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric key type. A treap is used to process the entries, where keys are compared lexicographically as pairs.
 
 \begin{compactitem}
-  \item \inlinecode{interval\_treap()} constructs an empty map.
+  \item \inlinecode{IntervalTreap()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(lo, hi, v)} adds an entry with key \inlinecode{[lo, hi]} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new interval was added or \inlinecode{false} if the interval already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(lo, hi)} removes the entry with key \inlinecode{[lo, hi]} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the interval was not found.
-  \item \inlinecode{find\_key(lo, hi)} returns a pointer to a const \inlinecode{std::pair} representing the key of some interval in the map which intersects with \inlinecode{[lo, hi]}, or \inlinecode{NULL} if no such entry was found.
-  \item \inlinecode{find\_value(lo, hi)} returns a pointer to a const value of some entry in the map with a key that intersects with \inlinecode{[lo, hi]}, or \inlinecode{NULL} if no such entry was found.
+  \item \inlinecode{find\_key(lo, hi)} returns a pointer to a const \inlinecode{std::pair} representing the key of some interval in the map which intersects with \inlinecode{[lo, hi]}, or \inlinecode{nullptr} if no such entry was found.
+  \item \inlinecode{find\_value(lo, hi)} returns a pointer to a const value of some entry in the map with a key that intersects with \inlinecode{[lo, hi]}, or \inlinecode{nullptr} if no such entry was found.
   \item \inlinecode{find\_all(lo, hi, f)} calls the function \inlinecode{f(lo, hi, v)} on each entry in the map that overlaps with \inlinecode{[lo, hi]}, in lexicographically ascending order of intervals.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(lo, hi, v)} on each interval in the map, in lexicographically ascending order of intervals.
 \end{compactitem}
@@ -2149,27 +2149,27 @@ Maintain a map from closed, one-dimensional intervals to values while supporting
 #include <utility>
 
 template<class K, class V>
-class interval_treap {
+class IntervalTreap {
   typedef std::pair<K, K> interval_t;
 
-  struct node_t {
+  struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     interval_t interval;
     V value;
     K max;
     int priority;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const interval_t &i, const V &v)
-        : interval(i), value(v), max(i.second), priority(rand32()), left(NULL), right(NULL) {}
+    Node(const interval_t &i, const V &v)
+        : interval(i), value(v), max(i.second), priority(rand32()), left(nullptr), right(nullptr) {}
 
     void update() {
       max = interval.second;
-      if (left != NULL && left->max > max) {
+      if (left != nullptr && left->max > max) {
         max = left->max;
       }
-      if (right != NULL && right->max > max) {
+      if (right != nullptr && right->max > max) {
         max = right->max;
       }
     }
@@ -2177,25 +2177,25 @@ class interval_treap {
 
   int num_nodes;
 
-  static void rotate_left(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_left(Node *&n) {
+    Node *tmp = n;
     n = n->right;
     tmp->right = n->left;
     n->left = tmp;
     tmp->update();
   }
 
-  static void rotate_right(node_t *&n) {
-    node_t *tmp = n;
+  static void rotate_right(Node *&n) {
+    Node *tmp = n;
     n = n->left;
     tmp->left = n->right;
     n->right = tmp;
     tmp->update();
   }
 
-  static bool insert(node_t *&n, const interval_t &i, const V &v) {
-    if (n == NULL) {
-      n = new node_t(i, v);
+  static bool insert(Node *&n, const interval_t &i, const V &v) {
+    if (n == nullptr) {
+      n = new Node(i, v);
       return true;
     }
     if (i < n->interval && insert(n->left, i, v)) {
@@ -2215,8 +2215,8 @@ class interval_treap {
     return false;
   }
 
-  static bool erase(node_t *&n, const interval_t &i) {
-    if (n == NULL) {
+  static bool erase(Node *&n, const interval_t &i) {
+    if (n == nullptr) {
       return false;
     }
     if (i < n->interval) {
@@ -2225,7 +2225,7 @@ class interval_treap {
     if (i > n->interval) {
       return erase(n->right, i);
     }
-    if (n->left != NULL && n->right != NULL) {
+    if (n->left != nullptr && n->right != nullptr) {
       bool res;
       if (n->left->priority < n->right->priority) {
         rotate_right(n);
@@ -2237,28 +2237,28 @@ class interval_treap {
       n->update();
       return res;
     }
-    node_t *tmp = (n->left != NULL) ? n->left : n->right;
+    Node *tmp = (n->left != nullptr) ? n->left : n->right;
     delete n;
     n = tmp;
     return true;
   }
 
-  static node_t *find_any(node_t *n, const interval_t &i) {
-    if (n == NULL) {
-      return NULL;
+  static Node *find_any(Node *n, const interval_t &i) {
+    if (n == nullptr) {
+      return nullptr;
     }
     if (n->interval.first <= i.second && i.first <= n->interval.second) {
       return n;
     }
-    if (n->left != NULL && i.first <= n->left->max) {
+    if (n->left != nullptr && i.first <= n->left->max) {
       return find_any(n->left, i);
     }
     return find_any(n->right, i);
   }
 
   template<class KVFunction>
-  static void find_all(node_t *n, const interval_t &i, KVFunction f) {
-    if (n == NULL || n->max < i.first) {
+  static void find_all(Node *n, const interval_t &i, KVFunction f) {
+    if (n == nullptr || n->max < i.first) {
       return;
     }
     if (n->interval.first <= i.second && i.first <= n->interval.second) {
@@ -2269,16 +2269,16 @@ class interval_treap {
   }
 
   template<class KVFunction>
-  static void walk(node_t *n, KVFunction f) {
-    if (n != NULL) {
+  static void walk(Node *n, KVFunction f) {
+    if (n != nullptr) {
       walk(n->left, f);
       f(n->interval.first, n->interval.second, n->value);
       walk(n->right, f);
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -2286,11 +2286,11 @@ class interval_treap {
   }
 
  public:
-  interval_treap() : root(NULL), num_nodes(0) {}
+  IntervalTreap() : root(nullptr), num_nodes(0) {}
 
-  ~interval_treap() { clean_up(root); }
+  ~IntervalTreap() { clean_up(root); }
   int size() const { return num_nodes; }
-  bool empty() const { return root == NULL; }
+  bool empty() const { return root == nullptr; }
 
   bool insert(const K &lo, const K &hi, const V &v) {
     if (insert(root, std::make_pair(lo, hi), v)) {
@@ -2309,13 +2309,13 @@ class interval_treap {
   }
 
   const interval_t *find_key(const K &lo, const K &hi) const {
-    node_t *n = find_any(root, std::make_pair(lo, hi));
-    return (n == NULL) ? NULL : &(n->interval);
+    Node *n = find_any(root, std::make_pair(lo, hi));
+    return (n == nullptr) ? nullptr : &(n->interval);
   }
 
   const V *find_value(const K &lo, const K &hi) const {
-    node_t *n = find_any(root, std::make_pair(lo, hi));
-    return (n == NULL) ? NULL : &(n->value);
+    Node *n = find_any(root, std::make_pair(lo, hi));
+    return (n == nullptr) ? nullptr : &(n->value);
   }
 
   template<class KVFunction>
@@ -2340,7 +2340,7 @@ void print(int lo, int hi, char v) {
 }
 
 int main() {
-  interval_treap<int, char> t;
+  IntervalTreap<int, char> t;
   t.insert(15, 20, 'a');
   t.insert(10, 30, 'b');
   t.insert(17, 19, 'c');
@@ -2369,12 +2369,12 @@ All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires \inlinecode{operator ==} to be defined on the key type. A hash map implements a map by hashing keys into buckets using a hash function. This implementation resolves collisions by chaining entries hashed to the same bucket into a linked list.
 
 \begin{compactitem}
-  \item \inlinecode{hash\_map()} constructs an empty map.
+  \item \inlinecode{HashMap()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
-  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{operator[]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in no guaranteed order.
 \end{compactitem}
@@ -2398,24 +2398,24 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 #include <list>
 
 template<class K, class V, class Hash>
-class hash_map {
-  struct entry_t {
+class HashMap {
+  struct HashMapEntry {
     K key;
     V value;
 
-    entry_t(const K &k, const V &v) : key(k), value(v) {}
+    HashMapEntry(const K &k, const V &v) : key(k), value(v) {}
   };
 
-  std::list<entry_t> *table;
+  std::list<HashMapEntry> *table;
   int table_size, num_entries;
 
   void double_capacity_and_rehash() {
-    std::list<entry_t> *old = table;
+    std::list<HashMapEntry> *old = table;
     int old_size = table_size;
     table_size = 2 * table_size;
-    table = new std::list<entry_t>[table_size];
+    table = new std::list<HashMapEntry>[table_size];
     num_entries = 0;
-    typename std::list<entry_t>::iterator it;
+    typename std::list<HashMapEntry>::iterator it;
     for (int i = 0; i < old_size; i++) {
       for (it = old[i].begin(); it != old[i].end(); ++it) {
         insert(it->key, it->value);
@@ -2425,30 +2425,30 @@ class hash_map {
   }
 
  public:
-  hash_map(int size = 128) : table_size(size), num_entries(0) {
-    table = new std::list<entry_t>[table_size];
+  HashMap(int size = 128) : table_size(size), num_entries(0) {
+    table = new std::list<HashMapEntry>[table_size];
   }
 
-  ~hash_map() { delete[] table; }
+  ~HashMap() { delete[] table; }
   int size() const { return num_entries; }
   bool empty() const { return num_entries == 0; }
 
   bool insert(const K &k, const V &v) {
-    if (find(k) != NULL) {
+    if (find(k) != nullptr) {
       return false;
     }
     if (num_entries >= table_size) {
       double_capacity_and_rehash();
     }
     unsigned int i = Hash()(k) % table_size;
-    table[i].push_back(entry_t(k, v));
+    table[i].push_back(HashMapEntry(k, v));
     num_entries++;
     return true;
   }
 
   bool erase(const K &k) {
     unsigned int i = Hash()(k) % table_size;
-    typename std::list<entry_t>::iterator it = table[i].begin();
+    typename std::list<HashMapEntry>::iterator it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
       ++it;
     }
@@ -2462,20 +2462,20 @@ class hash_map {
 
   V *find(const K &k) const {
     unsigned int i = Hash()(k) % table_size;
-    typename std::list<entry_t>::iterator it = table[i].begin();
+    typename std::list<HashMapEntry>::iterator it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
       ++it;
     }
     if (it == table[i].end()) {
-      return NULL;
+      return nullptr;
     }
     return &(it->value);
   }
 
   V &operator[](const K &k) {
-    V *ret = find(k);
-    if (ret != NULL) {
-      return *ret;
+    V *ptr = find(k);
+    if (ptr != nullptr) {
+      return *ptr;
     }
     insert(k, V());
     return *find(k);
@@ -2484,7 +2484,7 @@ class hash_map {
   template<class KVFunction>
   void walk(KVFunction f) const {
     for (int i = 0; i < table_size; i++) {
-      typename std::list<entry_t>::iterator it;
+      typename std::list<HashMapEntry>::iterator it;
       for (it = table[i].begin(); it != table[i].end(); ++it) {
         f(it->key, it->value);
       }
@@ -2498,10 +2498,10 @@ class hash_map {
 #include <iostream>
 using namespace std;
 
-struct class_hash {
-  unsigned int operator()(int k) { return class_hash()((unsigned int)k); }
+struct ClassHash {
+  unsigned int operator()(int k) { return ClassHash()(static_cast<unsigned int>(k)); }
 
-  unsigned int operator()(long long k) { return class_hash()((unsigned long long)k); }
+  unsigned int operator()(long long k) { return ClassHash()(static_cast<unsigned long long>(k)); }
 
   // Knuth's one-to-one multiplicative method.
   unsigned int operator()(unsigned int k) {
@@ -2539,7 +2539,7 @@ void printch(const string &k, char v) {
 }
 
 int main() {
-  hash_map<string, char, class_hash> m;
+  HashMap<string, char, ClassHash> m;
   m["foo"] = 'a';
   m.insert("bar", 'b');
   assert(m["foo"] == 'a');
@@ -2562,12 +2562,12 @@ cab
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the key type. A skip list maintains a linked hierarchy of sorted subsequences with each successive subsequence skipping over fewer elements than the previous one.
 
 \begin{compactitem}
-  \item \inlinecode{skip\_list()} constructs an empty map.
+  \item \inlinecode{SkipList()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
-  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{NULL} if the key was not found.
+  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{operator[]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
@@ -2592,15 +2592,15 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 #include <vector>
 
 template<class K, class V>
-class skip_list {
+class SkipList {
   static const int MAX_LEVELS = 32;  // log2(max possible keys)
 
-  struct node_t {
+  struct Node {
     K key;
     V value;
-    std::vector<node_t *> next;
+    std::vector<Node *> next;
 
-    node_t(const K &k, const V &v, int levels) : key(k), value(v), next(levels, (node_t *)NULL) {}
+    Node(const K &k, const V &v, int levels) : key(k), value(v), next(levels, (Node *)nullptr) {}
   } *head;
 
   int num_nodes;
@@ -2608,43 +2608,43 @@ class skip_list {
   static int random_level() {
     static const double p = 0.5;
     int level = 1;
-    while (((double)rand() / RAND_MAX) < p && std::abs(level) < MAX_LEVELS) {
+    while ((static_cast<double>(rand()) / RAND_MAX) < p && std::abs(level) < MAX_LEVELS) {
       level++;
     }
     return std::abs(level);
   }
 
-  static int node_level(const std::vector<node_t *> &v) {
+  static int node_level(const std::vector<Node *> &v) {
     int i = 0;
-    while (i < (int)v.size() && v[i] != NULL) {
+    while (i < static_cast<int>(v.size()) && v[i] != nullptr) {
       i++;
     }
     return i + 1;
   }
 
  public:
-  skip_list() : head(new node_t(K(), V(), MAX_LEVELS)), num_nodes(0) {
-    for (int i = 0; i < (int)head->next.size(); i++) {
-      head->next[i] = NULL;
+  SkipList() : head(new Node(K(), V(), MAX_LEVELS)), num_nodes(0) {
+    for (int i = 0; i < static_cast<int>(head->next.size()); i++) {
+      head->next[i] = nullptr;
     }
   }
 
-  ~skip_list() { delete head; }
+  ~SkipList() { delete head; }
   int size() const { return num_nodes; }
   bool empty() const { return num_nodes == 0; }
 
   bool insert(const K &k, const V &v) {
-    std::vector<node_t *> update(head->next);
+    std::vector<Node *> update(head->next);
     int curr_level = node_level(update);
-    node_t *n = head;
+    Node *n = head;
     for (int i = curr_level; i-- > 0;) {
-      while (n->next[i] != NULL && n->next[i]->key < k) {
+      while (n->next[i] != nullptr && n->next[i]->key < k) {
         n = n->next[i];
       }
       update[i] = n;
     }
     n = n->next[0];
-    if (n != NULL && n->key == k) {
+    if (n != nullptr && n->key == k) {
       return false;
     }
     int new_level = random_level();
@@ -2653,7 +2653,7 @@ class skip_list {
         update[i] = head;
       }
     }
-    n = new node_t(k, v, new_level);
+    n = new Node(k, v, new_level);
     for (int i = 0; i < new_level; i++) {
       n->next[i] = update[i]->next[i];
       update[i]->next[i] = n;
@@ -2663,17 +2663,17 @@ class skip_list {
   }
 
   bool erase(const K &k) {
-    std::vector<node_t *> update(head->next);
-    node_t *n = head;
+    std::vector<Node *> update(head->next);
+    Node *n = head;
     for (int i = node_level(update); i-- > 0;) {
-      while (n->next[i] != NULL && n->next[i]->key < k) {
+      while (n->next[i] != nullptr && n->next[i]->key < k) {
         n = n->next[i];
       }
       update[i] = n;
     }
     n = n->next[0];
-    if (n != NULL && n->key == k) {
-      for (int i = 0; i < (int)update.size(); i++) {
+    if (n != nullptr && n->key == k) {
+      for (int i = 0; i < static_cast<int>(update.size()); i++) {
         if (update[i]->next[i] != n) {
           break;
         }
@@ -2687,20 +2687,20 @@ class skip_list {
   }
 
   V *find(const K &k) const {
-    node_t *n = head;
+    Node *n = head;
     for (int i = node_level(n->next); i-- > 0;) {
-      while (n->next[i] != NULL && n->next[i]->key < k) {
+      while (n->next[i] != nullptr && n->next[i]->key < k) {
         n = n->next[i];
       }
     }
     n = n->next[0];
-    return (n != NULL && n->key == k) ? &(n->value) : NULL;
+    return (n != nullptr && n->key == k) ? &(n->value) : nullptr;
   }
 
   V &operator[](const K &k) {
-    V *ret = find(k);
-    if (ret != NULL) {
-      return *ret;
+    V *ptr = find(k);
+    if (ptr != nullptr) {
+      return *ptr;
     }
     insert(k, V());
     return *find(k);
@@ -2708,8 +2708,8 @@ class skip_list {
 
   template<class KVFunction>
   void walk(KVFunction f) const {
-    node_t *n = head->next[0];
-    while (n != NULL) {
+    Node *n = head->next[0];
+    while (n != nullptr) {
       f(n->key, n->value);
       n = n->next[0];
     }
@@ -2727,7 +2727,7 @@ void printch(int k, char v) {
 }
 
 int main() {
-  skip_list<int, char> l;
+  SkipList<int, char> l;
   l.insert(2, 'b');
   l.insert(1, 'a');
   l.insert(3, 'c');
@@ -2739,7 +2739,7 @@ int main() {
   cout << endl;
   assert(l.erase(1));
   assert(!l.erase(1));
-  assert(l.find(1) == NULL);
+  assert(l.find(1) == nullptr);
   l.walk(printch);
   cout << endl;
   return 0;
@@ -2840,7 +2840,7 @@ The operations supported by this data structure are identical to those of the po
 #include <vector>
 
 template<class T>
-class sqrt_decomposition {
+class SqrtDecomposition {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
 
   static T join_value_with_delta(const T &v, const T &d) { return d; }
@@ -2849,7 +2849,7 @@ class sqrt_decomposition {
   std::vector<T> value, block;
 
   void init() {
-    blocklen = (int)sqrt(len);
+    blocklen = static_cast<int>(sqrt(len));
     int nblocks = (len + blocklen - 1) / blocklen;
     for (int i = 0; i < nblocks; i++) {
       T blockval = value[i * blocklen];
@@ -2862,10 +2862,10 @@ class sqrt_decomposition {
   }
 
  public:
-  sqrt_decomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
+  SqrtDecomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
 
   template<class It>
-  sqrt_decomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
+  SqrtDecomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
     init();
   }
 
@@ -2874,7 +2874,7 @@ class sqrt_decomposition {
 
   T query(int lo, int hi) const {
     T res;
-    int blocklo = ceil((double)lo / blocklen), blockhi = (hi + 1) / blocklen - 1;
+    int blocklo = ceil(static_cast<double>(lo) / blocklen), blockhi = (hi + 1) / blocklen - 1;
     if (blocklo > blockhi) {
       res = value[lo];
       for (int i = lo + 1; i <= hi; i++) {
@@ -2914,7 +2914,7 @@ using namespace std;
 
 int main() {
   int arr[5] = {6, -2, 1, 8, 10};
-  sqrt_decomposition<int> sd(arr, arr + 5);
+  SqrtDecomposition<int> sd(arr, arr + 5);
   sd.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < sd.size(); i++) {
@@ -2936,8 +2936,8 @@ The query operation is defined by an associative \inlinecode{join\_values()} fun
 The update operation is defined by the \inlinecode{join\_value\_with\_delta()} function, which determines the change made to array values. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which \inlinecode{join\_value\_with\_delta(v, d)} should be defined to return $v + d$.
 
 \begin{compactitem}
-  \item \inlinecode{segment\_tree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
-  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
+  \item \inlinecode{SegTree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{SegTree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
@@ -2963,7 +2963,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 #include <vector>
 
 template<class T>
-class segment_tree {
+class SegTree {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_value_with_delta(const T &v, const T &d) { return d; }
 
@@ -3025,14 +3025,14 @@ class segment_tree {
   }
 
  public:
-  segment_tree(int n, const T &v = T()) : len(n), value(4 * len) {
+  SegTree(int n, const T &v = T()) : len(n), value(4 * len) {
     if (len > 0) {
       build(0, 0, len - 1, v);
     }
   }
 
   template<class It>
-  segment_tree(It lo, It hi) : len(hi - lo), value(4 * len) {
+  SegTree(It lo, It hi) : len(hi - lo), value(4 * len) {
     if (len > 0) {
       build(0, 0, len - 1, lo);
     }
@@ -3052,7 +3052,7 @@ using namespace std;
 
 int main() {
   int arr[5] = {6, -2, 1, 8, 10};
-  segment_tree<int> t(arr, arr + 5);
+  SegTree<int> t(arr, arr + 5);
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {
@@ -3081,8 +3081,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 \end{compactitem}
 
 \begin{compactitem}
-  \item \inlinecode{segment\_tree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
-  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
+  \item \inlinecode{SegTree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{SegTree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
@@ -3109,7 +3109,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 #include <vector>
 
 template<class T>
-class segment_tree {
+class SegTree {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
 
@@ -3192,7 +3192,7 @@ class segment_tree {
   }
 
  public:
-  segment_tree(int n, const T &v = T())
+  SegTree(int n, const T &v = T())
       : len(n), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
       build(0, 0, len - 1, v);
@@ -3200,8 +3200,7 @@ class segment_tree {
   }
 
   template<class It>
-  segment_tree(It lo, It hi)
-      : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
+  SegTree(It lo, It hi) : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
       build(0, 0, len - 1, lo);
     }
@@ -3222,7 +3221,7 @@ using namespace std;
 
 int main() {
   int arr[5] = {6, -2, 1, 8, 10};
-  segment_tree<int> t(arr, arr + 5);
+  SegTree<int> t(arr, arr + 5);
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {
@@ -3260,8 +3259,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 \end{compactitem}
 
 \begin{compactitem}
-  \item \inlinecode{segment\_tree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
-  \item \inlinecode{segment\_tree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
+  \item \inlinecode{SegTree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{SegTree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
@@ -3288,7 +3287,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 #include <cstddef>
 
 template<class T>
-class segment_tree {
+class SegTree {
   static const int MAXN = 1000000000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
@@ -3299,26 +3298,26 @@ class segment_tree {
     return d2;  // For "set" updates, the more recent delta prevails.
   }
 
-  struct node_t {
+  struct Node {
     T value, delta;
     bool pending;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const T &v) : value(v), pending(false), left(NULL), right(NULL) {}
+    Node(const T &v) : value(v), pending(false), left(nullptr), right(nullptr) {}
   } *root;
 
   T init;
 
-  void update_delta(node_t *&n, const T &d, int len) {
-    if (n == NULL) {
-      n = new node_t(join_segment(init, len));
+  void update_delta(Node *&n, const T &d, int len) {
+    if (n == nullptr) {
+      n = new Node(join_segment(init, len));
     }
     n->delta = n->pending ? join_deltas(n->delta, d) : d;
     n->pending = true;
   }
 
-  void push_delta(node_t *n, int lo, int hi) {
-    if (n == NULL) {
+  void push_delta(Node *n, int lo, int hi) {
+    if (n == nullptr) {
       return;
     }
     if (n->pending) {
@@ -3332,8 +3331,8 @@ class segment_tree {
     n->pending = false;
   }
 
-  T query(node_t *n, int lo, int hi, int tgt_lo, int tgt_hi) {
-    if (n == NULL) {
+  T query(Node *n, int lo, int hi, int tgt_lo, int tgt_hi) {
+    if (n == nullptr) {
       return join_segment(init, hi - lo + 1);
     }
     push_delta(n, lo, hi);
@@ -3353,9 +3352,9 @@ class segment_tree {
     return query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi);
   }
 
-  void update(node_t *&n, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
-    if (n == NULL) {
-      n = new node_t(join_segment(init, hi - lo + 1));
+  void update(Node *&n, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
+    if (n == nullptr) {
+      n = new Node(join_segment(init, hi - lo + 1));
     }
     push_delta(n, lo, hi);
     if (hi < tgt_lo || lo > tgt_hi) {
@@ -3373,8 +3372,8 @@ class segment_tree {
     n->value = join_values(n->left->value, n->right->value);
   }
 
-  void clean_up(node_t *n) {
-    if (n != NULL) {
+  void clean_up(Node *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -3382,9 +3381,9 @@ class segment_tree {
   }
 
  public:
-  segment_tree(const T &v = T()) : root(NULL), init(v) {}
+  SegTree(const T &v = T()) : root(nullptr), init(v) {}
 
-  ~segment_tree() { clean_up(root); }
+  ~SegTree() { clean_up(root); }
   T at(int i) { return query(i, i); }
   T query(int lo, int hi) { return query(root, 0, MAXN, lo, hi); }
   void update(int i, const T &d) { return update(i, i, d); }
@@ -3398,7 +3397,7 @@ class segment_tree {
 using namespace std;
 
 int main() {
-  segment_tree<int> t(0);
+  SegTree<int> t(0);
   t.update(0, 6);
   t.update(1, -2);
   t.update(2, 4);
@@ -3432,7 +3431,7 @@ Maintains immutable versions of a segment tree under point updates. Each update 
 The implementation below stores sums over a fixed index range \inlinecode{[0, n - 1]}. Persistent segment trees are useful for offline order-statistics queries, rollback-like histories, and functional dynamic programming states.
 
 \begin{compactitem}
-  \item \inlinecode{persistent\_segment\_tree(a)} constructs version 0 from array \inlinecode{a}.
+  \item \inlinecode{PersistentSegTree(a)} constructs version 0 from array \inlinecode{a}.
   \item \inlinecode{update(version, index, value)} returns a new version where \inlinecode{a[index]} is set to \inlinecode{value}, leaving the old version unchanged.
   \item \inlinecode{query(version, lo, hi)} returns the sum of the inclusive range \inlinecode{[lo, hi]} in the specified version.
   \item \inlinecode{versions()} returns the number of stored roots.
@@ -3453,7 +3452,7 @@ The implementation below stores sums over a fixed index range \inlinecode{[0, n 
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-class persistent_segment_tree {
+class PersistentSegTree {
   struct node {
     long long sum;
     int left, right;
@@ -3468,19 +3467,19 @@ class persistent_segment_tree {
   int build(const std::vector<int> &a, int lo, int hi) {
     if (lo == hi) {
       tree.push_back(node(a[lo]));
-      return (int)tree.size() - 1;
+      return static_cast<int>(tree.size()) - 1;
     }
     int mid = lo + (hi - lo) / 2;
     int left = build(a, lo, mid);
     int right = build(a, mid + 1, hi);
     tree.push_back(node(tree[left].sum + tree[right].sum, left, right));
-    return (int)tree.size() - 1;
+    return static_cast<int>(tree.size()) - 1;
   }
 
   int update(int cur, int lo, int hi, int index, int value) {
     if (lo == hi) {
       tree.push_back(node(value));
-      return (int)tree.size() - 1;
+      return static_cast<int>(tree.size()) - 1;
     }
     int mid = lo + (hi - lo) / 2;
     int left = tree[cur].left, right = tree[cur].right;
@@ -3490,7 +3489,7 @@ class persistent_segment_tree {
       right = update(right, mid + 1, hi, index, value);
     }
     tree.push_back(node(tree[left].sum + tree[right].sum, left, right));
-    return (int)tree.size() - 1;
+    return static_cast<int>(tree.size()) - 1;
   }
 
   long long query(int cur, int lo, int hi, int qlo, int qhi) const {
@@ -3509,7 +3508,7 @@ class persistent_segment_tree {
   }
 
  public:
-  explicit persistent_segment_tree(const std::vector<int> &a) : n(a.size()) {
+  explicit PersistentSegTree(const std::vector<int> &a) : n(a.size()) {
     if (n > 0) {
       root.push_back(build(a, 0, n - 1));
     }
@@ -3519,7 +3518,7 @@ class persistent_segment_tree {
 
   int update(int version, int index, int value) {
     root.push_back(update(root[version], 0, n - 1, index, value));
-    return (int)root.size() - 1;
+    return static_cast<int>(root.size()) - 1;
   }
 
   long long query(int version, int lo, int hi) const {
@@ -3535,7 +3534,7 @@ using namespace std;
 int main() {
   int raw[] = {1, 2, 3, 4};
   vector<int> a(raw, raw + 4);
-  persistent_segment_tree t(a);
+  PersistentSegTree t(a);
   int v1 = t.update(0, 1, 10);
   int v2 = t.update(v1, 3, -1);
   assert(t.query(0, 0, 3) == 10);
@@ -3551,7 +3550,7 @@ Builds the min Cartesian tree of an array in linear time. A Cartesian tree is a 
 Cartesian trees connect arrays, stacks, range minimum queries, treaps, and largest rectangle style problems. Equal values are broken by position, so earlier equal values become ancestors of later equal values.
 
 \begin{compactitem}
-  \item \inlinecode{cartesian\_tree(a)} constructs the tree for array \inlinecode{a}.
+  \item \inlinecode{CartesianTree(a)} constructs the tree for array \inlinecode{a}.
   \item \inlinecode{root} stores the root index.
   \item \inlinecode{parent[i]}, \inlinecode{left[i]}, and \inlinecode{right[i]} store neighboring node indices, or \inlinecode{-1} if absent.
 \end{compactitem}
@@ -3563,14 +3562,14 @@ Cartesian trees connect arrays, stacks, range minimum queries, treaps, and large
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-struct cartesian_tree {
+struct CartesianTree {
   int root;
   std::vector<int> parent, left, right;
 
-  explicit cartesian_tree(const std::vector<int> &a)
+  explicit CartesianTree(const std::vector<int> &a)
       : root(-1), parent(a.size(), -1), left(a.size(), -1), right(a.size(), -1) {
     std::vector<int> st;
-    for (int i = 0; i < (int)a.size(); i++) {
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       int last = -1;
       while (!st.empty() && a[i] < a[st.back()]) {
         last = st.back();
@@ -3595,7 +3594,7 @@ struct cartesian_tree {
 #include <cassert>
 using namespace std;
 
-void inorder(const cartesian_tree &t, int u, vector<int> *order) {
+void inorder(const CartesianTree &t, int u, vector<int> *order) {
   if (u == -1) {
     return;
   }
@@ -3607,7 +3606,7 @@ void inorder(const cartesian_tree &t, int u, vector<int> *order) {
 int main() {
   int raw[] = {3, 2, 6, 1, 9};
   vector<int> a(raw, raw + 5);
-  cartesian_tree t(a);
+  CartesianTree t(a);
   assert(t.root == 3);
   assert(t.parent[1] == 3);
   assert(t.parent[4] == 3);
@@ -3653,47 +3652,47 @@ This data structure shares every operation of one-dimensional segment trees in t
 #include <cstdlib>
 
 template<class T>
-class implicit_treap {
+class ImplicitTreap {
   static T join_values(const T &a, const T &b) { return a < b ? a : b; }
   static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
   static T join_deltas(const T &d1, const T &d2) { return d2; }
 
-  struct node_t {
+  struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
     T value, subtree_value, delta;
     bool pending;
     int size, priority;
-    node_t *left, *right;
+    Node *left, *right;
 
-    node_t(const T &v)
+    Node(const T &v)
         : value(v),
           subtree_value(v),
           pending(false),
           size(1),
           priority(rand32()),
-          left(NULL),
-          right(NULL) {}
+          left(nullptr),
+          right(nullptr) {}
   } *root;
 
-  static int size(node_t *n) { return (n == NULL) ? 0 : n->size; }
+  static int size(Node *n) { return (n == nullptr) ? 0 : n->size; }
 
-  static void update_value(node_t *n) {
-    if (n == NULL) {
+  static void update_value(Node *n) {
+    if (n == nullptr) {
       return;
     }
     n->subtree_value = n->value;
-    if (n->left != NULL) {
+    if (n->left != nullptr) {
       n->subtree_value = join_values(n->subtree_value, n->left->subtree_value);
     }
-    if (n->right != NULL) {
+    if (n->right != nullptr) {
       n->subtree_value = join_values(n->subtree_value, n->right->subtree_value);
     }
     n->size = 1 + size(n->left) + size(n->right);
   }
 
-  static void update_delta(node_t *n, const T &d) {
-    if (n != NULL) {
+  static void update_delta(Node *n, const T &d) {
+    if (n != nullptr) {
       n->value = join_value_with_delta(n->value, d, 1);
       n->subtree_value = join_value_with_delta(n->subtree_value, d, n->size);
       n->delta = n->pending ? join_deltas(n->delta, d) : d;
@@ -3701,8 +3700,8 @@ class implicit_treap {
     }
   }
 
-  static void push_delta(node_t *n) {
-    if (n == NULL || !n->pending) {
+  static void push_delta(Node *n) {
+    if (n == nullptr || !n->pending) {
       return;
     }
     if (n->size > 1) {
@@ -3712,12 +3711,12 @@ class implicit_treap {
     n->pending = false;
   }
 
-  static void merge(node_t *&n, node_t *left, node_t *right) {
+  static void merge(Node *&n, Node *left, Node *right) {
     push_delta(left);
     push_delta(right);
-    if (left == NULL) {
+    if (left == nullptr) {
       n = right;
-    } else if (right == NULL) {
+    } else if (right == nullptr) {
       n = left;
     } else if (left->priority < right->priority) {
       merge(left->right, left->right, right);
@@ -3729,10 +3728,10 @@ class implicit_treap {
     update_value(n);
   }
 
-  static void split(node_t *n, node_t *&left, node_t *&right, int i) {
+  static void split(Node *n, Node *&left, Node *&right, int i) {
     push_delta(n);
-    if (n == NULL) {
-      left = right = NULL;
+    if (n == nullptr) {
+      left = right = nullptr;
     } else if (i <= size(n->left)) {
       split(n->left, left, n->left, i);
       right = n;
@@ -3743,9 +3742,9 @@ class implicit_treap {
     update_value(n);
   }
 
-  static void insert(node_t *&n, node_t *new_node, int i) {
+  static void insert(Node *&n, Node *new_node, int i) {
     push_delta(n);
-    if (n == NULL) {
+    if (n == nullptr) {
       n = new_node;
     } else if (new_node->priority < n->priority) {
       split(n, new_node->left, new_node->right, i);
@@ -3758,10 +3757,10 @@ class implicit_treap {
     update_value(n);
   }
 
-  static void erase(node_t *&n, int i) {
+  static void erase(Node *&n, int i) {
     push_delta(n);
     if (i == size(n->left)) {
-      node_t *left = n->left, *right = n->right;
+      Node *left = n->left, *right = n->right;
       delete n;
       merge(n, left, right);
     } else if (i < size(n->left)) {
@@ -3772,7 +3771,7 @@ class implicit_treap {
     update_value(n);
   }
 
-  static node_t *select(node_t *n, int i) {
+  static Node *select(Node *n, int i) {
     push_delta(n);
     if (i < size(n->left)) {
       return select(n->left, i);
@@ -3783,8 +3782,8 @@ class implicit_treap {
     return n;
   }
 
-  void clean_up(node_t *&n) {
-    if (n != NULL) {
+  void clean_up(Node *&n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
@@ -3792,30 +3791,30 @@ class implicit_treap {
   }
 
  public:
-  implicit_treap(int n = 0, const T &v = T()) : root(NULL) {
+  ImplicitTreap(int n = 0, const T &v = T()) : root(nullptr) {
     for (int i = 0; i < n; i++) {
       push_back(v);
     }
   }
 
   template<class It>
-  implicit_treap(It lo, It hi) : root(NULL) {
+  ImplicitTreap(It lo, It hi) : root(nullptr) {
     for (; lo != hi; ++lo) {
       push_back(*lo);
     }
   }
 
-  ~implicit_treap() { clean_up(root); }
+  ~ImplicitTreap() { clean_up(root); }
   int size() const { return size(root); }
-  bool empty() const { return root == NULL; }
-  void insert(int i, const T &v) { insert(root, new node_t(v), i); }
+  bool empty() const { return root == nullptr; }
+  void insert(int i, const T &v) { insert(root, new Node(v), i); }
   void erase(int i) { erase(root, i); }
   void push_back(const T &v) { insert(size(), v); }
   void pop_back() { erase(size() - 1); }
   T at(int i) const { return select(root, i)->value; }
 
   T query(int lo, int hi) {
-    node_t *l1, *r1, *l2, *r2, *t;
+    Node *l1, *r1, *l2, *r2, *t;
     split(root, l1, r1, hi + 1);
     split(l1, l2, r2, lo);
     T res = r2->subtree_value;
@@ -3825,7 +3824,7 @@ class implicit_treap {
   }
 
   void update(int lo, int hi, const T &d) {
-    node_t *l1, *r1, *l2, *r2, *t;
+    Node *l1, *r1, *l2, *r2, *t;
     split(root, l1, r1, hi + 1);
     split(l1, l2, r2, lo);
     update_delta(r2, d);
@@ -3841,7 +3840,7 @@ class implicit_treap {
 #include <iostream>
 using namespace std;
 
-void print(implicit_treap<int> &t) {
+void print(ImplicitTreap<int> &t) {
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {
     cout << " " << t.at(i);
@@ -3851,7 +3850,7 @@ void print(implicit_treap<int> &t) {
 
 int main() {
   int arr[5] = {99, -2, 1, 8, 10};
-  implicit_treap<int> t(arr, arr + 5);
+  ImplicitTreap<int> t(arr, arr + 5);
   t.push_back(11);
   t.push_back(12);
   t.pop_back();
@@ -3881,7 +3880,7 @@ The query operation is defined by the \inlinecode{join\_values()} and \inlinecod
 The update operation is defined by the \inlinecode{join\_value\_with\_delta()} function, which determines the change made to array values. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which \inlinecode{join\_value\_with\_delta(v, d)} should be defined to return $v + d$.
 
 \begin{compactitem}
-  \item \inlinecode{quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{join\_values()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
   \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{join\_value\_with\_delta(v, d)}.
@@ -3904,7 +3903,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 #include <cstddef>
 
 template<class T>
-class quadtree {
+class Quadtree {
   static const int MAXR = 1000000000;
   static const int MAXC = 1000000000;
 
@@ -3912,18 +3911,18 @@ class quadtree {
   static T join_region(const T &v, int area) { return v; }
   static T join_value_with_delta(const T &v, const T &d) { return d; }
 
-  struct node_t {
+  struct Node {
     T value;
-    node_t *child[4];
+    Node *child[4];
 
-    node_t(const T &v) : value(v) {
+    Node(const T &v) : value(v) {
       for (int i = 0; i < 4; i++) {
-        child[i] = NULL;
+        child[i] = nullptr;
       }
     }
   };
 
-  node_t *root;
+  Node *root;
   T init;
 
   // Helper variables for query().
@@ -3931,11 +3930,11 @@ class quadtree {
   T res;
   bool found;
 
-  void query(node_t *n, int r1, int c1, int r2, int c2) {
+  void query(Node *n, int r1, int c1, int r2, int c2) {
     if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
       return;
     }
-    if (n == NULL) {
+    if (n == nullptr) {
       int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
       int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
       T v = join_region(init, rlen * clen);
@@ -3959,9 +3958,9 @@ class quadtree {
   int tgt_r, tgt_c;
   T delta;
 
-  void update(node_t *&n, int r1, int c1, int r2, int c2) {
-    if (n == NULL) {
-      n = new node_t(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
+  void update(Node *&n, int r1, int c1, int r2, int c2) {
+    if (n == nullptr) {
+      n = new Node(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
     }
     if (tgt_r < r1 || tgt_r > r2 || tgt_c < c1 || tgt_c > c2) {
       return;
@@ -3982,8 +3981,8 @@ class quadtree {
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       for (int i = 0; i < 4; i++) {
         clean_up(n->child[i]);
       }
@@ -3992,9 +3991,9 @@ class quadtree {
   }
 
  public:
-  quadtree(const T &v = T()) : root(NULL), init(v) {}
+  Quadtree(const T &v = T()) : root(nullptr), init(v) {}
 
-  ~quadtree() { clean_up(root); }
+  ~Quadtree() { clean_up(root); }
   T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -4022,7 +4021,7 @@ class quadtree {
 using namespace std;
 
 int main() {
-  quadtree<int> t(0);
+  Quadtree<int> t(0);
   t.update(0, 0, 7);
   t.update(0, 1, 6);
   t.update(1, 0, 5);
@@ -4065,7 +4064,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 \end{compactitem}
 
 \begin{compactitem}
-  \item \inlinecode{quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{join\_values()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
   \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{join\_value\_with\_delta(v, d)}.
@@ -4089,7 +4088,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 #include <cstddef>
 
 template<class T>
-class quadtree {
+class Quadtree {
   static const int MAXR = 1000000000;
   static const int MAXC = 1000000000;
 
@@ -4101,29 +4100,29 @@ class quadtree {
     return d2;  // For "set" updates, the more recent delta prevails.
   }
 
-  struct node_t {
+  struct Node {
     T value, delta;
     bool pending;
-    node_t *child[4];
+    Node *child[4];
 
-    node_t(const T &v) : value(v), pending(false) {
+    Node(const T &v) : value(v), pending(false) {
       for (int i = 0; i < 4; i++) {
-        child[i] = NULL;
+        child[i] = nullptr;
       }
     }
   } *root;
 
   T init;
 
-  void update_delta(node_t *&n, const T &d, int area) {
-    if (n == NULL) {
-      n = new node_t(join_region(init, area));
+  void update_delta(Node *&n, const T &d, int area) {
+    if (n == nullptr) {
+      n = new Node(join_region(init, area));
     }
     n->delta = n->pending ? join_deltas(n->delta, d) : d;
     n->pending = true;
   }
 
-  void push_delta(node_t *n, int r1, int c1, int r2, int c2) {
+  void push_delta(Node *n, int r1, int c1, int r2, int c2) {
     if (n->pending) {
       int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
       int rlen = r2 - r1 + 1, clen = c2 - c1 + 1;
@@ -4145,11 +4144,11 @@ class quadtree {
   T res, delta;
   bool found;
 
-  void query(node_t *n, int r1, int c1, int r2, int c2) {
+  void query(Node *n, int r1, int c1, int r2, int c2) {
     if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
       return;
     }
-    if (n == NULL) {
+    if (n == nullptr) {
       int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
       int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
       T v = join_region(init, rlen * clen);
@@ -4170,9 +4169,9 @@ class quadtree {
     query(n->child[3], rmid + 1, cmid + 1, r2, c2);
   }
 
-  void update(node_t *&n, int r1, int c1, int r2, int c2) {
-    if (n == NULL) {
-      n = new node_t(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
+  void update(Node *&n, int r1, int c1, int r2, int c2) {
+    if (n == nullptr) {
+      n = new Node(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
     }
     if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
       return;
@@ -4195,8 +4194,8 @@ class quadtree {
     }
   }
 
-  static void clean_up(node_t *n) {
-    if (n != NULL) {
+  static void clean_up(Node *n) {
+    if (n != nullptr) {
       for (int i = 0; i < 4; i++) {
         clean_up(n->child[i]);
       }
@@ -4205,9 +4204,9 @@ class quadtree {
   }
 
  public:
-  quadtree(const T &v = T()) : root(NULL), init(v) {}
+  Quadtree(const T &v = T()) : root(nullptr), init(v) {}
 
-  ~quadtree() { clean_up(root); }
+  ~Quadtree() { clean_up(root); }
   T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -4239,7 +4238,7 @@ class quadtree {
 using namespace std;
 
 int main() {
-  quadtree<int> t(0);
+  Quadtree<int> t(0);
   t.update(0, 0, 7);
   t.update(0, 1, 6);
   t.update(1, 0, 5);
@@ -4276,7 +4275,7 @@ The query operation is defined by the \inlinecode{join\_values()} and \inlinecod
 The update operation is defined by the \inlinecode{join\_value\_with\_delta()} function, which determines the change made to array values. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which \inlinecode{join\_value\_with\_delta(v, d)} should be defined to return $v + d$.
 
 \begin{compactitem}
-  \item \inlinecode{segment\_tree\_2d(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{SegTree2D(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{join\_values()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
   \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{join\_value\_with\_delta(v, d)}.
@@ -4299,7 +4298,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 #include <cstddef>
 
 template<class T>
-class segment_tree_2d {
+class SegTree2D {
   static const int MAXR = 1000000000;
   static const int MAXC = 1000000000;
 
@@ -4307,22 +4306,22 @@ class segment_tree_2d {
   static T join_region(const T &v, int area) { return v; }
   static T join_value_with_delta(const T &v, const T &d) { return d; }
 
-  struct inner_node_t {
+  struct InnerNode {
     T value;
     int low, high;
-    inner_node_t *left, *right;
+    InnerNode *left, *right;
 
-    inner_node_t(int lo, int hi, const T &v)
-        : value(v), low(lo), high(hi), left(NULL), right(NULL) {}
+    InnerNode(int lo, int hi, const T &v)
+        : value(v), low(lo), high(hi), left(nullptr), right(nullptr) {}
   };
 
-  struct outer_node_t {
-    inner_node_t root;
+  struct OuterNode {
+    InnerNode root;
     int low, high;
-    outer_node_t *left, *right;
+    OuterNode *left, *right;
 
-    outer_node_t(int lo, int hi, const T &v)
-        : root(0, MAXC, v), low(lo), high(hi), left(NULL), right(NULL) {}
+    OuterNode(int lo, int hi, const T &v)
+        : root(0, MAXC, v), low(lo), high(hi), left(nullptr), right(nullptr) {}
   } *root;
 
   T init;
@@ -4330,12 +4329,12 @@ class segment_tree_2d {
   // Helper variables for query() and update().
   int tgt_r1, tgt_c1, tgt_r2, tgt_c2, width;
 
-  template<class node_t>
-  inline T call_query(node_t *n, int area) {
-    return (n != NULL) ? query(n) : join_region(init, area);
+  template<class Node>
+  inline T call_query(Node *n, int area) {
+    return (n != nullptr) ? query(n) : join_region(init, area);
   }
 
-  T query(inner_node_t *n) {
+  T query(InnerNode *n) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
     if (tgt_c1 <= lo && hi <= tgt_c2) {
       T res = n->value;
@@ -4357,7 +4356,7 @@ class segment_tree_2d {
     );
   }
 
-  T query(outer_node_t *n) {
+  T query(OuterNode *n) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
     if (tgt_r1 <= lo && hi <= tgt_r2) {
       T res = query(&(n->root));
@@ -4379,7 +4378,7 @@ class segment_tree_2d {
     );
   }
 
-  void update(inner_node_t *n, int c, const T &d, bool leaf_row) {
+  void update(InnerNode *n, int c, const T &d, bool leaf_row) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
     if (lo == hi) {
       if (leaf_row) {
@@ -4389,9 +4388,9 @@ class segment_tree_2d {
       }
       return;
     }
-    inner_node_t *&target = (c <= mid) ? n->left : n->right;
-    if (target == NULL) {
-      target = new inner_node_t(c, c, init);
+    InnerNode *&target = (c <= mid) ? n->left : n->right;
+    if (target == nullptr) {
+      target = new InnerNode(c, c, init);
     }
     if (target->low <= c && c <= target->high) {
       update(target, c, d, leaf_row);
@@ -4404,7 +4403,7 @@ class segment_tree_2d {
         }
         mid = lo + (hi - lo) / 2;
       } while ((c <= mid) == (target->low <= mid));
-      inner_node_t *tmp = new inner_node_t(lo, hi, init);
+      InnerNode *tmp = new InnerNode(lo, hi, init);
       if (target->low <= mid) {
         tmp->left = target;
       } else {
@@ -4413,48 +4412,50 @@ class segment_tree_2d {
       target = tmp;
       update(tmp, c, d, leaf_row);
     }
-    T left_value = (n->left != NULL) ? n->left->value : join_region(init, mid - lo + 1);
-    T right_value = (n->right != NULL) ? n->right->value : join_region(init, hi - mid);
+    T left_value = (n->left != nullptr) ? n->left->value : join_region(init, mid - lo + 1);
+    T right_value = (n->right != nullptr) ? n->right->value : join_region(init, hi - mid);
     n->value = join_values(left_value, right_value);
   }
 
-  void update(outer_node_t *n, int r, int c, const T &d) {
+  void update(OuterNode *n, int r, int c, const T &d) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
     if (lo == hi) {
       update(&(n->root), c, d, true);
       return;
     }
     if (r <= mid) {
-      if (n->left == NULL) {
-        n->left = new outer_node_t(lo, mid, init);
+      if (n->left == nullptr) {
+        n->left = new OuterNode(lo, mid, init);
       }
       update(n->left, r, c, d);
     } else {
-      if (n->right == NULL) {
-        n->right = new outer_node_t(mid + 1, hi, init);
+      if (n->right == nullptr) {
+        n->right = new OuterNode(mid + 1, hi, init);
       }
       update(n->right, r, c, d);
     }
     T value = join_region(init, hi - lo + 1);
-    if (n->left != NULL || n->right != NULL) {
+    if (n->left != nullptr || n->right != nullptr) {
       tgt_c1 = tgt_c2 = c;
-      T left_value = (n->left != NULL) ? query(&(n->left->root)) : join_region(init, mid - lo + 1);
-      T right_value = (n->right != NULL) ? query(&(n->right->root)) : join_region(init, hi - mid);
+      T left_value =
+          (n->left != nullptr) ? query(&(n->left->root)) : join_region(init, mid - lo + 1);
+      T right_value =
+          (n->right != nullptr) ? query(&(n->right->root)) : join_region(init, hi - mid);
       value = join_values(left_value, right_value);
     }
     update(&(n->root), c, value, false);
   }
 
-  static void clean_up(inner_node_t *n) {
-    if (n != NULL) {
+  static void clean_up(InnerNode *n) {
+    if (n != nullptr) {
       clean_up(n->left);
       clean_up(n->right);
       delete n;
     }
   }
 
-  static void clean_up(outer_node_t *n) {
-    if (n != NULL) {
+  static void clean_up(OuterNode *n) {
+    if (n != nullptr) {
       clean_up(n->root.left);
       clean_up(n->root.right);
       clean_up(n->left);
@@ -4464,9 +4465,9 @@ class segment_tree_2d {
   }
 
  public:
-  segment_tree_2d(const T &v = T()) : root(new outer_node_t(0, MAXR, v)), init(v) {}
+  SegTree2D(const T &v = T()) : root(new OuterNode(0, MAXR, v)), init(v) {}
 
-  ~segment_tree_2d() { clean_up(root); }
+  ~SegTree2D() { clean_up(root); }
 
   T at(int r, int c) { return query(r, c, r, c); }
 
@@ -4489,7 +4490,7 @@ class segment_tree_2d {
 using namespace std;
 
 int main() {
-  segment_tree_2d<int> t(0);
+  SegTree2D<int> t(0);
   t.update(0, 0, 7);
   t.update(0, 1, 6);
   t.update(1, 0, 5);
@@ -4522,7 +4523,7 @@ Values:
 Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type.
 
 \begin{compactitem}
-  \item \inlinecode{range\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
+  \item \inlinecode{RangeTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
   \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
@@ -4545,7 +4546,7 @@ Maintain a set of two-dimensional points while supporting queries for all points
 #include <vector>
 
 template<class T>
-class range_tree {
+class RangeTree {
   typedef std::pair<T, T> point;
   typedef std::pair<int, T> colindex;
 
@@ -4597,7 +4598,7 @@ class range_tree {
 
  public:
   template<class It>
-  range_tree(It lo, It hi) : points(lo, hi) {
+  RangeTree(It lo, It hi) : points(lo, hi) {
     int n = std::distance(lo, hi);
     columns.resize(4 * n + 1);
     std::sort(points.begin(), points.end());
@@ -4631,7 +4632,7 @@ int main() {
   for (int i = 0; i < n; i++) {
     v.push_back(make_pair(points[i][0], points[i][1]));
   }
-  range_tree<int> t(v.begin(), v.end());
+  RangeTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);
   cout << endl;
   t.query(1, 1, 4, 8, print);
@@ -4647,7 +4648,7 @@ int main() {
 Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type.
 
 \begin{compactitem}
-  \item \inlinecode{kd\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
+  \item \inlinecode{KDTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
   \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
@@ -4669,7 +4670,7 @@ Maintain a set of two-dimensional points while supporting queries for all points
 #include <vector>
 
 template<class T>
-class kd_tree {
+class KDTree {
   typedef std::pair<T, T> point;
 
   static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
@@ -4731,7 +4732,7 @@ class kd_tree {
 
  public:
   template<class It>
-  kd_tree(It lo, It hi) : tree(lo, hi) {
+  KDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     l_index.resize(n);
     h_index.resize(n);
@@ -4767,7 +4768,7 @@ int main() {
   for (int i = 0; i < n; i++) {
     v.push_back(make_pair(points[i][0], points[i][1]));
   }
-  kd_tree<int> t(v.begin(), v.end());
+  KDTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);
   cout << endl;
   t.query(1, 1, 4, 8, print);
@@ -4783,7 +4784,7 @@ int main() {
 Maintain a set of two-dimensional points while supporting queries for the closest point in the set to a given query point. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}}, \inlinecode{==}, \inlinecode{-}, and \inlinecode{long double} casting to be defined on the numeric template type.
 
 \begin{compactitem}
-  \item \inlinecode{kd\_tree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
+  \item \inlinecode{KDTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
   \item \inlinecode{nearest(x, y, can\_equal)} returns a point in the set that is closest to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance. This may be equal to (\inlinecode{x}, \inlinecode{y}) only if \inlinecode{can\_equal} is \inlinecode{true}.
 \end{compactitem}
 
@@ -4807,7 +4808,7 @@ Maintain a set of two-dimensional points while supporting queries for the closes
 #include <vector>
 
 template<class T>
-class kd_tree {
+class KDTree {
   typedef std::pair<T, T> point;
 
   static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
@@ -4851,7 +4852,7 @@ class kd_tree {
     }
     int mid = lo + (hi - lo) / 2;
     T dx = x - tree[mid].first, dy = y - tree[mid].second;
-    long double d = dx * (long double)dx + dy * (long double)dy;
+    long double d = dx * static_cast<long double>(dx) + dy * static_cast<long double>(dy);
     if (d < min_dist && (can_equal || d != 0)) {
       min_dist = d;
       id = mid;
@@ -4859,21 +4860,21 @@ class kd_tree {
     if (lo + 1 == hi) {
       return;
     }
-    d = (long double)(div_x[mid] ? dx : dy);
+    d = static_cast<long double>((div_x[mid] ? dx : dy));
     int l1 = lo, r1 = mid, l2 = mid + 1, r2 = hi;
     if (d > 0) {
       std::swap(l1, l2);
       std::swap(r1, r2);
     }
     nearest(l1, r1, x, y, can_equal);
-    if (d * (long double)d < min_dist) {
+    if (d * static_cast<long double>(d) < min_dist) {
       nearest(l2, r2, x, y, can_equal);
     }
   }
 
  public:
   template<class It>
-  kd_tree(It lo, It hi) : tree(lo, hi) {
+  KDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     if (n <= 1) {
       throw std::runtime_error("K-d tree must be have at least 2 points.");
@@ -4899,7 +4900,7 @@ int main() {
   p[0] = make_pair(0, 2);
   p[1] = make_pair(0, 3);
   p[2] = make_pair(-1, 0);
-  kd_tree<int> t(p, p + 3);
+  KDTree<int> t(p, p + 3);
   assert(t.nearest(0, 2, true) == make_pair(0, 2));
   assert(t.nearest(0, 2, false) == make_pair(0, 3));
   assert(t.nearest(0, 0) == make_pair(-1, 0));
@@ -5020,12 +5021,12 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
 #include <vector>
 
 template<class T>
-class fenwick_tree {
+class FenwickTree {
   int len;
   std::vector<int> t;
 
  public:
-  fenwick_tree(int n) : len(n), t(n + 2) {}
+  FenwickTree(int n) : len(n), t(n + 2) {}
 
   int size() const { return len; }
 
@@ -5055,7 +5056,7 @@ class fenwick_tree {
 using namespace std;
 
 int main() {
-  fenwick_tree<int> t(5);
+  FenwickTree<int> t(5);
   t.add(0, 1, 5);
   t.add(1, 2, 5);
   t.add(2, 4, 10);
@@ -5099,12 +5100,12 @@ Maintain an array of numerical type, allowing for updates of individual indices 
 #include <vector>
 
 template<class T>
-class fenwick_tree {
+class FenwickTree {
   int len;
   std::vector<int> a, t;
 
  public:
-  fenwick_tree(int n) : len(n), a(n + 1), t(n + 1) {}
+  FenwickTree(int n) : len(n), a(n + 1), t(n + 1) {}
 
   int size() const { return len; }
   T at(int i) const { return a[i + 1]; }
@@ -5140,7 +5141,7 @@ using namespace std;
 
 int main() {
   int a[] = {10, 1, 2, 3, 4};
-  fenwick_tree<int> t(5);
+  FenwickTree<int> t(5);
   for (int i = 0; i < 5; i++) {
     t.set(i, a[i]);
   }
@@ -5187,7 +5188,7 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
 #include <vector>
 
 template<class T>
-class fenwick_tree {
+class FenwickTree {
   int len;
   std::vector<T> t1, t2;
 
@@ -5206,7 +5207,7 @@ class fenwick_tree {
   }
 
  public:
-  fenwick_tree(int n) : len(n), t1(n + 2), t2(n + 2) {}
+  FenwickTree(int n) : len(n), t1(n + 2), t2(n + 2) {}
 
   int size() const { return len; }
 
@@ -5239,7 +5240,7 @@ using namespace std;
 
 int main() {
   int a[] = {10, 1, 2, 3, 4};
-  fenwick_tree<int> t(5);
+  FenwickTree<int> t(5);
   for (int i = 0; i < t.size(); i++) {
     t.set(i, a[i]);
   }
@@ -5281,7 +5282,7 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
 #include <map>
 
 template<class T>
-class fenwick_tree {
+class FenwickTree {
   static const int MAXN = 1000000001;
   std::map<int, T> tmul, tadd;
 
@@ -5326,7 +5327,7 @@ using namespace std;
 
 int main() {
   int a[] = {10, 1, 2, 3, 4};
-  fenwick_tree<int> t;
+  FenwickTree<int> t;
   for (int i = 0; i < 5; i++) {
     t.set(i, a[i]);
   }
@@ -5544,7 +5545,7 @@ Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to 
 #include <utility>
 
 template<class T>
-class fenwick_tree_2d {
+class FenwickTree2D {
   static const int MAXR = 1000000001;
   static const int MAXC = 1000000001;
   std::map<std::pair<int, int>, T> t1, t2, t3, t4;
@@ -5611,7 +5612,7 @@ class fenwick_tree_2d {
 using namespace std;
 
 int main() {
-  fenwick_tree_2d<int> t;
+  FenwickTree2D<int> t;
   t.set(0, 0, 5);
   t.set(0, 1, 6);
   t.set(1, 0, 7);
@@ -5762,7 +5763,7 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
 #include <vector>
 
 template<class T>
-class disjoint_set_forest {
+class DisjointSetForest {
   int num_elements, num_sets;
   std::map<T, int> id;
   std::vector<int> root, rank;
@@ -5775,7 +5776,7 @@ class disjoint_set_forest {
   }
 
  public:
-  disjoint_set_forest() : num_elements(0), num_sets(0) {}
+  DisjointSetForest() : num_elements(0), num_sets(0) {}
 
   int size() const { return num_elements; }
   int sets() const { return num_sets; }
@@ -5828,7 +5829,7 @@ class disjoint_set_forest {
 using namespace std;
 
 int main() {
-  disjoint_set_forest<char> dsf;
+  DisjointSetForest<char> dsf;
   for (char c = 'a'; c <= 'g'; c++) {
     dsf.make_set(c);
   }
@@ -5839,9 +5840,9 @@ int main() {
   assert(dsf.size() == 7);
   assert(dsf.sets() == 3);
   vector<vector<char>> s = dsf.get_all_sets();
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     cout << (i > 0 ? ", [" : "[");
-    for (int j = 0; j < (int)s[i].size(); j++) {
+    for (int j = 0; j < static_cast<int>(s[i].size()); j++) {
       cout << (j > 0 ? ", " : "") << s[i][j];
     }
     cout << "]";
@@ -5879,22 +5880,22 @@ Path compression is intentionally not used, because it is hard to undo. Union by
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-class rollback_dsu {
-  struct change {
+class RollbackDSU {
+  struct Change {
     int child, parent, parent_size;
 
-    change(int child = -1, int parent = -1, int parent_size = 0)
+    Change(int child = -1, int parent = -1, int parent_size = 0)
         : child(child), parent(parent), parent_size(parent_size) {}
   };
 
   std::vector<int> root, size;
-  std::vector<change> history;
+  std::vector<Change> history;
   int sets;
 
  public:
-  rollback_dsu() : sets(0) {}
+  RollbackDSU() : sets(0) {}
 
-  explicit rollback_dsu(int n) { initialize(n); }
+  explicit RollbackDSU(int n) { initialize(n); }
 
   void initialize(int n) {
     root.resize(n);
@@ -5928,7 +5929,7 @@ class rollback_dsu {
       u = v;
       v = tmp;
     }
-    history.push_back(change(u, v, size[v]));
+    history.push_back(Change(u, v, size[v]));
     root[u] = v;
     size[v] += size[u];
     sets--;
@@ -5938,8 +5939,8 @@ class rollback_dsu {
   int snapshot() const { return history.size(); }
 
   void rollback(int snapshot) {
-    while ((int)history.size() > snapshot) {
-      change c = history.back();
+    while (static_cast<int>(history.size()) > snapshot) {
+      Change c = history.back();
       history.pop_back();
       root[c.child] = c.child;
       size[c.parent] = c.parent_size;
@@ -5953,7 +5954,7 @@ class rollback_dsu {
 #include <cassert>
 
 int main() {
-  rollback_dsu dsu(5);
+  RollbackDSU dsu(5);
   dsu.unite(0, 1);
   int s = dsu.snapshot();
   dsu.unite(1, 2);
@@ -5997,7 +5998,7 @@ void dfs(int u, int p) {
   for (int i = 1; i < len; i++) {
     dp[u][i] = dp[dp[u][i - 1]][i - 1];
   }
-  for (int j = 0; j < (int)adj[u].size(); j++) {
+  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
     int v = adj[u][j];
     if (v != p) {
       dfs(v, u);
@@ -6084,7 +6085,7 @@ int len, counter, depth[MAXN], dfs_order[2 * MAXN], first[MAXN], minpos[8 * MAXN
 void dfs(int u, int d) {
   depth[u] = d;
   dfs_order[counter++] = u;
-  for (int j = 0; j < (int)adj[u].size(); j++) {
+  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
     int v = adj[u][j];
     if (depth[v] == -1) {
       dfs(v, d + 1);
@@ -6172,7 +6173,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 \end{compactitem}
 
 \begin{compactitem}
-  \item \inlinecode{heavy\_light(n, adj[], v)} constructs a new heavy light decomposition on a tree with \inlinecode{n} nodes defined by the adjacency list \inlinecode{adj[]}, with all values initialized to \inlinecode{v}. The adjacency list must be a size \inlinecode{n} array of vectors consisting of only the integers from 0 to \inlinecode{n - 1}, inclusive. No duplicate edges should exist, and the graph must be connected.
+  \item \inlinecode{HeavyLight(n, adj[], v)} constructs a new heavy light decomposition on a tree with \inlinecode{n} nodes defined by the adjacency list \inlinecode{adj[]}, with all values initialized to \inlinecode{v}. The adjacency list must be a size \inlinecode{n} array of vectors consisting of only the integers from 0 to \inlinecode{n - 1}, inclusive. No duplicate edges should exist, and the graph must be connected.
   \item \inlinecode{query(u, v)} returns the result of \inlinecode{join\_values()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}.
   \item \inlinecode{update(u, v, d)} modifies all values on the path from node \inlinecode{u} to node \inlinecode{v} by respectively joining them with \inlinecode{d} using \inlinecode{join\_value\_with\_delta()}.
 \end{compactitem}
@@ -6196,7 +6197,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 #include <vector>
 
 template<class T>
-class heavy_light {
+class HeavyLight {
   // Set this to true to store values on edges, false to store values on nodes.
   static const bool VALUES_ON_EDGES = true;
 
@@ -6218,7 +6219,7 @@ class heavy_light {
     tin[u] = counter++;
     parent[u] = p;
     size[u] = 1;
-    for (int j = 0; j < (int)adj[u].size(); j++) {
+    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
       int v = adj[u][j];
       if (v != p) {
         dfs(v, u);
@@ -6236,7 +6237,7 @@ class heavy_light {
   void build_paths(int u, int path) {
     this->path[u] = path;
     pathpos[u] = pathlen[path]++;
-    for (int j = 0; j < (int)adj[u].size(); j++) {
+    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
       int v = adj[u][j];
       if (v != parent[u]) {
         build_paths(v, (2 * size[v] >= size[u]) ? path : new_path(v));
@@ -6322,7 +6323,7 @@ class heavy_light {
   }
 
  public:
-  heavy_light(int n, std::vector<int> adj[], const T &v = T())
+  HeavyLight(int n, std::vector<int> adj[], const T &v = T())
       : counter(0),
         paths(0),
         size(n),
@@ -6375,7 +6376,7 @@ class heavy_light {
       v = parent[root];
     }
     if (query(
-            path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
+            path[u], std::min(pathpos[u], pathpos[v]) + static_cast<int>(VALUES_ON_EDGES),
             std::max(pathpos[u], pathpos[v]), &value
         )) {
       res = found ? join_values(res, value) : value;
@@ -6401,7 +6402,7 @@ class heavy_light {
       v = parent[root];
     }
     update(
-        path[u], std::min(pathpos[u], pathpos[v]) + (int)VALUES_ON_EDGES,
+        path[u], std::min(pathpos[u], pathpos[v]) + static_cast<int>(VALUES_ON_EDGES),
         std::max(pathpos[u], pathpos[v]), d
     );
   }
@@ -6427,7 +6428,7 @@ int main() {
   adj[3].push_back(2);
   adj[2].push_back(4);
   adj[4].push_back(2);
-  heavy_light<int> hld(5, adj, 0);
+  HeavyLight<int> hld(5, adj, 0);
   hld.update(0, 1, 40);
   hld.update(1, 2, 20);
   hld.update(2, 3, 10);
@@ -6453,7 +6454,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 \end{compactitem}
 
 \begin{compactitem}
-  \item \inlinecode{link\_cut\_forest()} constructs an empty forest with no trees.
+  \item \inlinecode{LinkCutForest()} constructs an empty forest with no trees.
   \item \inlinecode{size()} returns the number of nodes in the forest.
   \item \inlinecode{trees()} returns the number of trees in the forest.
   \item \inlinecode{make\_root(i, v)} creates a new tree in the forest consisting of a single node labeled with the integer \inlinecode{i} and value initialized to \inlinecode{v}.
@@ -6483,31 +6484,31 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 #include <stdexcept>
 
 template<class T>
-class link_cut_forest {
+class LinkCutForest {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
   static T join_deltas(const T &d1, const T &d2) {
     return d2;  // For "set" updates, the more recent delta prevails.
   }
 
-  struct node_t {
+  struct Node {
     T value, subtree_value, delta;
     int size;
     bool rev, pending;
-    node_t *left, *right, *parent;
+    Node *left, *right, *parent;
 
-    node_t(const T &v)
+    Node(const T &v)
         : value(v),
           subtree_value(v),
           size(1),
           rev(false),
           pending(false),
-          left(NULL),
-          right(NULL),
-          parent(NULL) {}
+          left(nullptr),
+          right(nullptr),
+          parent(nullptr) {}
 
     inline bool is_root() const {
-      return parent == NULL || (parent->left != this && parent->right != this);
+      return parent == nullptr || (parent->left != this && parent->right != this);
     }
 
     inline T get_subtree_value() const {
@@ -6518,21 +6519,21 @@ class link_cut_forest {
       if (rev) {
         rev = false;
         std::swap(left, right);
-        if (left != NULL) {
+        if (left != nullptr) {
           left->rev = !left->rev;
         }
-        if (right != NULL) {
+        if (right != nullptr) {
           right->rev = !right->rev;
         }
       }
       if (pending) {
         value = join_value_with_delta(value, delta, 1);
         subtree_value = join_value_with_delta(subtree_value, delta, size);
-        if (left != NULL) {
+        if (left != nullptr) {
           left->delta = left->pending ? join_deltas(left->delta, delta) : delta;
           left->pending = true;
         }
-        if (right != NULL) {
+        if (right != nullptr) {
           right->delta = right->pending ? join_deltas(right->delta, delta) : delta;
           right->pending = true;
         }
@@ -6543,11 +6544,11 @@ class link_cut_forest {
     void update() {
       size = 1;
       subtree_value = value;
-      if (left != NULL) {
+      if (left != nullptr) {
         subtree_value = join_values(subtree_value, left->get_subtree_value());
         size += left->size;
       }
-      if (right != NULL) {
+      if (right != nullptr) {
         subtree_value = join_values(subtree_value, right->get_subtree_value());
         size += right->size;
       }
@@ -6555,10 +6556,10 @@ class link_cut_forest {
   };
 
   int num_trees;
-  std::map<int, node_t *> nodes;
+  std::map<int, Node *> nodes;
 
-  static void connect(node_t *child, node_t *parent, bool is_left) {
-    if (child != NULL) {
+  static void connect(Node *child, Node *parent, bool is_left) {
+    if (child != nullptr) {
       child->parent = parent;
     }
     if (is_left) {
@@ -6568,13 +6569,13 @@ class link_cut_forest {
     }
   }
 
-  static void rotate(node_t *n) {
-    node_t *parent = n->parent, *grandparent = parent->parent;
+  static void rotate(Node *n) {
+    Node *parent = n->parent, *grandparent = parent->parent;
     bool parent_is_root = parent->is_root(), is_left = (n == parent->left);
     connect(is_left ? n->right : n->left, parent, is_left);
     connect(parent, n, !is_left);
     if (parent_is_root) {
-      if (n != NULL) {
+      if (n != nullptr) {
         n->parent = grandparent;
       }
     } else {
@@ -6583,9 +6584,9 @@ class link_cut_forest {
     parent->update();
   }
 
-  static void splay(node_t *n) {
+  static void splay(Node *n) {
     while (!n->is_root()) {
-      node_t *parent = n->parent, *grandparent = parent->parent;
+      Node *parent = n->parent, *grandparent = parent->parent;
       if (!parent->is_root()) {
         grandparent->push();
       }
@@ -6604,9 +6605,9 @@ class link_cut_forest {
     n->update();
   }
 
-  static node_t *expose(node_t *n) {
-    node_t *prev = NULL;
-    for (node_t *curr = n; curr != NULL; curr = curr->parent) {
+  static Node *expose(Node *n) {
+    Node *prev = nullptr;
+    for (Node *curr = n; curr != nullptr; curr = curr->parent) {
       splay(curr);
       curr->left = prev;
       prev = curr;
@@ -6616,10 +6617,10 @@ class link_cut_forest {
   }
 
   // Helper variables.
-  node_t *u, *v;
+  Node *u, *v;
 
   void get_uv(int a, int b) {
-    typename std::map<int, node_t *>::iterator it1, it2;
+    typename std::map<int, Node *>::iterator it1, it2;
     it1 = nodes.find(a);
     it2 = nodes.find(b);
     if (it1 == nodes.end() || it2 == nodes.end()) {
@@ -6630,10 +6631,10 @@ class link_cut_forest {
   }
 
  public:
-  link_cut_forest() : num_trees(0) {}
+  LinkCutForest() : num_trees(0) {}
 
-  ~link_cut_forest() {
-    typename std::map<int, node_t *>::iterator it;
+  ~LinkCutForest() {
+    typename std::map<int, Node *>::iterator it;
     for (it = nodes.begin(); it != nodes.end(); ++it) {
       delete it->second;
     }
@@ -6646,7 +6647,7 @@ class link_cut_forest {
     if (nodes.find(i) != nodes.end()) {
       throw std::runtime_error("Cannot make a root with an existing ID.");
     }
-    node_t *n = new node_t(v);
+    Node *n = new Node(v);
     expose(n);
     n->rev = !n->rev;
     nodes[i] = n;
@@ -6660,7 +6661,7 @@ class link_cut_forest {
     }
     expose(u);
     expose(v);
-    return u->parent != NULL;
+    return u->parent != nullptr;
   }
 
   void link(int a, int b) {
@@ -6679,11 +6680,11 @@ class link_cut_forest {
     expose(u);
     u->rev = !u->rev;
     expose(v);
-    if (v->right != u || u->left != NULL) {
+    if (v->right != u || u->left != nullptr) {
       throw std::runtime_error("Cannot cut edge that does not exist.");
     }
-    v->right->parent = NULL;
-    v->right = NULL;
+    v->right->parent = nullptr;
+    v->right = nullptr;
     num_trees++;
   }
 
@@ -6717,7 +6718,7 @@ class link_cut_forest {
 using namespace std;
 
 int main() {
-  link_cut_forest<int> lcf;
+  LinkCutForest<int> lcf;
   lcf.make_root(0, 10);
   lcf.make_root(1, 40);
   lcf.make_root(2, 20);

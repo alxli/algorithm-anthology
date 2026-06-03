@@ -43,7 +43,7 @@ int turn(const point &a, const point &o, const point &b) {
 }
 
 int line_intersection(
-    const point &p1, const point &p2, const point &p3, const point &p4, point *p = NULL
+    const point &p1, const point &p2, const point &p3, const point &p4, point *p = nullptr
 ) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -54,7 +54,7 @@ int line_intersection(
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
-  if (p != NULL) {
+  if (p != nullptr) {
     *p = point(x / det, y / det);
   }
   return 0;

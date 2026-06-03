@@ -1,12 +1,12 @@
 /*
 
-A graph consists of a set of objects (a.k.a vertices, or nodes) and a set of connections (a.k.a.
-edges) between pairs of said objects. A graph may be stored as an adjacency list, which is a space
+A Graph consists of a set of objects (a.k.a vertices, or nodes) and a set of connections (a.k.a.
+edges) between pairs of said objects. A Graph may be stored as an adjacency list, which is a space
 efficient representation that is also time-efficient for traversals.
 
-The following class implements a simple graph using adjacency lists, along with depth-first search
+The following class implements a simple Graph using adjacency lists, along with depth-first search
 and a few other applications. The constructor takes a Boolean argument which specifies whether the
-instance is a directed or undirected graph. The nodes of the graph are identified by integers
+instance is a directed or undirected Graph. The nodes of the Graph are identified by integers
 indices numbered consecutively starting from 0. The total number of nodes will automatically
 increase based on the maximum node index passed to `add_edge()` so far.
 
@@ -18,7 +18,7 @@ Time Complexity:
 - O(1) per call to all other public member functions.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
+- O(max(n, m)) for storage of the Graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
 - O(n) auxiliary stack space for `dfs()`, `has_cycle()`, `is_tree()`, and `is_dag()`.
 - O(1) auxiliary for all other public member functions.
@@ -28,7 +28,7 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-class graph {
+class Graph {
   std::vector<std::vector<int>> adj;
   bool directed;
 
@@ -64,9 +64,9 @@ class graph {
   }
 
  public:
-  graph(bool directed = true) : directed(directed) {}
+  Graph(bool directed = true) : directed(directed) {}
 
-  int nodes() const { return (int)adj.size(); }
+  int nodes() const { return static_cast<int>(adj.size()); }
   std::vector<int> &operator[](int n) { return adj[n]; }
 
   void add_edge(int u, int v) {
@@ -119,7 +119,7 @@ void print(int n) {
 
 int main() {
   {
-    graph g;
+    Graph g;
     g.add_edge(0, 1);
     g.add_edge(0, 6);
     g.add_edge(0, 7);
@@ -139,7 +139,7 @@ int main() {
     assert(!g.has_cycle());
   }
   {
-    graph tree(false);
+    Graph tree(false);
     tree.add_edge(0, 1);
     tree.add_edge(0, 2);
     tree.add_edge(1, 3);

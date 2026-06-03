@@ -11,7 +11,7 @@ is responsible for verifying the quadrangle inequality and monotonicity assumpti
 - `knuth_interval_dp(n, cost, &opt)` computes minimum costs for all half-open intervals `[l, r)`
   over `n` items.
 - `cost(l, r)` must return the interval cost added after choosing the best split.
-- If `opt` is not `NULL`, it is filled with the chosen split points.
+- If `opt` is not `nullptr`, it is filled with the chosen split points.
 
 Time Complexity:
 - O(n^2) calls to `cost(l, r)` and O(n^2) candidate split checks.
@@ -29,7 +29,7 @@ const long long INF = (1LL << 62);
 
 template<class CostFunction>
 std::vector<std::vector<long long>> knuth_interval_dp(
-    int n, CostFunction cost, std::vector<std::vector<int>> *opt_out = NULL
+    int n, CostFunction cost, std::vector<std::vector<int>> *opt_out = nullptr
 ) {
   std::vector<std::vector<long long>> dp(n + 1, std::vector<long long>(n + 1, 0));
   std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));
@@ -60,7 +60,7 @@ std::vector<std::vector<long long>> knuth_interval_dp(
       }
     }
   }
-  if (opt_out != NULL) {
+  if (opt_out != nullptr) {
     *opt_out = opt;
   }
   return dp;
@@ -71,11 +71,11 @@ std::vector<std::vector<long long>> knuth_interval_dp(
 #include <cassert>
 using namespace std;
 
-struct merge_cost {
+struct MergeCost {
   vector<long long> prefix;
 
-  explicit merge_cost(const vector<int> &a) : prefix(a.size() + 1) {
-    for (int i = 0; i < (int)a.size(); i++) {
+  explicit MergeCost(const vector<int> &a) : prefix(a.size() + 1) {
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       prefix[i + 1] = prefix[i] + a[i];
     }
   }
@@ -86,7 +86,7 @@ struct merge_cost {
 int main() {
   int raw[] = {1, 2, 3, 4};
   vector<int> a(raw, raw + 4);
-  vector<vector<long long>> dp = knuth_interval_dp(a.size(), merge_cost(a));
+  vector<vector<long long>> dp = knuth_interval_dp(a.size(), MergeCost(a));
   assert(dp[0][4] == 19);
   return 0;
 }

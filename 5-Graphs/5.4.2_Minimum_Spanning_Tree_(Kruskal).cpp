@@ -25,11 +25,11 @@ std::vector<std::pair<int, std::pair<int, int>>> edges;
 int root[MAXN];
 std::vector<std::pair<int, int>> mst;
 
-int find_root(int x) {
-  if (root[x] != x) {
-    root[x] = find_root(root[x]);
+int find_root(int u) {
+  if (root[u] != u) {
+    root[u] = find_root(root[u]);
   }
-  return root[x];
+  return root[u];
 }
 
 int kruskal(int nodes) {
@@ -39,7 +39,7 @@ int kruskal(int nodes) {
   for (int i = 0; i < nodes; i++) {
     root[i] = i;
   }
-  for (int i = 0; i < (int)edges.size(); i++) {
+  for (int i = 0; i < static_cast<int>(edges.size()); i++) {
     int u = find_root(edges[i].second.first);
     int v = find_root(edges[i].second.second);
     if (u != v) {
@@ -78,7 +78,7 @@ int main() {
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
   cout << "Total distance: " << kruskal(7) << endl;
-  for (int i = 0; i < (int)mst.size(); i++) {
+  for (int i = 0; i < static_cast<int>(mst.size()); i++) {
     cout << mst[i].first << " <-> " << mst[i].second << endl;
   }
   return 0;

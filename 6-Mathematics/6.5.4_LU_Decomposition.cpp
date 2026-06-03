@@ -11,8 +11,8 @@ solutions.
 - `lu_decompose(a, &p1col)` assigns the $r$ by $c$ matrix `a` to merged LU decomposition matrix
   $lu$, returning either 0 or 1 denoting the "sign" of the permutation parity (0 if the number of
   overall row swaps performed is even, or 1 if it is odd), or -1 denoting a degenerate matrix (i.e.
-  singular for square matrices). The merged matrix $lu$ has $\text{lu[i][j]} = \text{l[i][j]}$ for
-  $i > j$ and $\text{lu[i][j]} = \text{u[i][j]}$ for $i \leq j$. Note that the algorithm always
+  singular for square matrices). The merged matrix $lu$ has `lu[i][j] = l[i][j]` for
+  $i > j$ and `lu[i][j] = u[i][j]` for $i \leq j$. Note that the algorithm always
   yields an atomic lower triangular matrix for which the diagonal entries `l[i][i]` are always equal
   to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$,
   the values of the lower and upper triangular matrices should be accessed via the `getl(lu, i, j)`
@@ -47,9 +47,9 @@ Space Complexity:
 #include <vector>
 
 template<class Matrix>
-int lu_decompose(Matrix &a, std::vector<int> *p1col = NULL, const double EPS = 1e-10) {
+int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS = 1e-10) {
   int r = a.size(), c = a[0].size(), parity = 0;
-  if (p1col != NULL) {
+  if (p1col != nullptr) {
     p1col->resize(r);
     for (int i = 0; i < r; i++) {
       (*p1col)[i] = i;
@@ -66,7 +66,7 @@ int lu_decompose(Matrix &a, std::vector<int> *p1col = NULL, const double EPS = 1
       return -1;
     }
     if (pi != i) {
-      if (p1col != NULL) {
+      if (p1col != nullptr) {
         std::iter_swap(p1col->begin() + i, p1col->begin() + pi);
       }
       std::iter_swap(a.begin() + i, a.begin() + pi);
@@ -97,7 +97,7 @@ int solve_system(
     const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double EPS = 1e-10
 ) {
   int r = a.size(), c = a[0].size();
-  if (x == NULL || a.empty() || a.size() != b.size() || r < c) {
+  if (x == nullptr || a.empty() || a.size() != b.size() || r < c) {
     return -1;
   }
   x->resize(c);
@@ -131,10 +131,10 @@ int solve_system(
   return 0;
 }
 
-template<class SquareMatrix>
-double det(const SquareMatrix &a) {
+template<class T>
+double det(const T &a) {
   int n = a.size();
-  SquareMatrix lu;
+  T lu;
   int status = lu_decompose(lu = a);
   if (status < 0) {
     return 0;
@@ -146,15 +146,15 @@ double det(const SquareMatrix &a) {
   return status == 0 ? res : -res;
 }
 
-template<class SquareMatrix>
-int invert(SquareMatrix &a) {
+template<class T>
+int invert(T &a) {
   int n = a.size();
   std::vector<int> p1col;
   int status = lu_decompose(a, &p1col);
   if (status < 0) {
     return status;
   }
-  SquareMatrix ia(n, typename SquareMatrix::value_type(n, 0));
+  T ia(n, typename T::value_type(n, 0));
   for (int j = 0; j < n; j++) {
     for (int i = 0; i < n; i++) {
       if (p1col[i] == j) {

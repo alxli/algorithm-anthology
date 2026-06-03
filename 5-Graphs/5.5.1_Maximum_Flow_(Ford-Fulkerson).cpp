@@ -21,9 +21,10 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <climits>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = INT_MAX / 2;
 int nodes, source, sink, cap[MAXN][MAXN];
 std::vector<bool> visit(MAXN);
 

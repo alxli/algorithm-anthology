@@ -9,7 +9,7 @@ The implementation below stores the lower envelope of lines over the inclusive d
 `[X_MIN, X_MAX]`. It supports adding arbitrary lines and querying arbitrary integer x-coordinates in
 O(log C), where $C =$ `X_MAX` $-$ `X_MIN` $+ 1$.
 
-- `li_chao_tree(lo, hi)` constructs an empty tree over integer domain `[lo, hi]`.
+- `LiChaoTree(lo, hi)` constructs an empty tree over integer domain `[lo, hi]`.
 - `add_line(m, b)` inserts line $y = mx + b$.
 - `query(x)` returns the minimum y-value among all inserted lines at coordinate `x`.
 
@@ -28,27 +28,26 @@ Space Complexity:
 
 const long long INF = std::numeric_limits<long long>::max() / 4;
 
-struct line {
+struct Line {
   long long m, b;
 
-  line(long long m = 0, long long b = INF) : m(m), b(b) {}
-
+  Line(long long m = 0, long long b = INF) : m(m), b(b) {}
   long long eval(long long x) const { return m * x + b; }
 };
 
-class li_chao_tree {
+class LiChaoTree {
   struct node {
-    line f;
+    Line f;
     node *left, *right;
 
-    node(const line &f) : f(f), left(NULL), right(NULL) {}
+    node(const Line &f) : f(f), left(nullptr), right(nullptr) {}
   };
 
   node *root;
   long long lo, hi;
 
   static void clean_up(node *n) {
-    if (n == NULL) {
+    if (n == nullptr) {
       return;
     }
     clean_up(n->left);
@@ -56,8 +55,8 @@ class li_chao_tree {
     delete n;
   }
 
-  static void add_line(node *&n, long long l, long long r, line f) {
-    if (n == NULL) {
+  static void add_line(node *&n, long long l, long long r, Line f) {
+    if (n == nullptr) {
       n = new node(f);
       return;
     }
@@ -78,7 +77,7 @@ class li_chao_tree {
   }
 
   static long long query(node *n, long long l, long long r, long long x) {
-    if (n == NULL) {
+    if (n == nullptr) {
       return INF;
     }
     long long res = n->f.eval(x);
@@ -93,11 +92,11 @@ class li_chao_tree {
   }
 
  public:
-  li_chao_tree(long long lo, long long hi) : root(NULL), lo(lo), hi(hi) {}
+  LiChaoTree(long long lo, long long hi) : root(nullptr), lo(lo), hi(hi) {}
 
-  ~li_chao_tree() { clean_up(root); }
+  ~LiChaoTree() { clean_up(root); }
 
-  void add_line(long long m, long long b) { add_line(root, lo, hi, line(m, b)); }
+  void add_line(long long m, long long b) { add_line(root, lo, hi, Line(m, b)); }
 
   long long query(long long x) const {
     assert(lo <= x && x <= hi);
@@ -110,7 +109,7 @@ class li_chao_tree {
 #include <cassert>
 
 int main() {
-  li_chao_tree cht(-10, 10);
+  LiChaoTree cht(-10, 10);
   cht.add_line(3, 0);
   cht.add_line(1, 2);
   cht.add_line(-1, 10);

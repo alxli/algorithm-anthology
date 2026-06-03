@@ -20,11 +20,12 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <climits>
 #include <deque>
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = INT_MAX / 2;
 std::vector<std::pair<int, int>> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
@@ -37,7 +38,7 @@ void zero_one_bfs(int nodes, int start) {
   while (!dq.empty()) {
     int u = dq.front();
     dq.pop_front();
-    for (int i = 0; i < (int)adj[u].size(); i++) {
+    for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
       int v = adj[u][i].first;
       int w = adj[u][i].second;
       if (dist[v] > dist[u] + w) {

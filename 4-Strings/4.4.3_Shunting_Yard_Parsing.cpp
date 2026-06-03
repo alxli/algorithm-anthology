@@ -68,7 +68,7 @@ typedef Operand (*BinaryOp)(Operand a, Operand b);
 
 bool is_operand(const string &s) {
   int npoints = 0;
-  for (int i = 0; i < (int)s.size(); i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     if (s[i] == '.') {
       if (++npoints > 1) {
         return false;
@@ -118,12 +118,12 @@ class parser {
 
   std::vector<string> split(const string &s) {
     std::vector<string> res;
-    for (int i = 0; i < (int)s.size(); i++) {
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
       if (s[i] == ' ') {
         continue;
       }
       int next_paren = s.size();
-      for (int j = i; j < (int)s.size(); j++) {
+      for (int j = i; j < static_cast<int>(s.size()); j++) {
         if (s[j] == '(' || s[j] == ')') {
           next_paren = j;
           break;

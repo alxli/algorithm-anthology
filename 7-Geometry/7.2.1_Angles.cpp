@@ -49,6 +49,7 @@ typedef std::pair<double, double> point;
 double sqnorm(const point &a) {
   return a.x * a.x + a.y * a.y;
 }
+
 double norm(const point &a) {
   return sqrt(sqnorm(a));
 }

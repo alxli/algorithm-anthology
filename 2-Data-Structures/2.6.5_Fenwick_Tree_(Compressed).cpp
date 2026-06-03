@@ -27,7 +27,7 @@ Space Complexity:
 #include <map>
 
 template<class T>
-class fenwick_tree {
+class FenwickTree {
   static const int MAXN = 1000000001;
   std::map<int, T> tmul, tadd;
 
@@ -76,7 +76,7 @@ using namespace std;
 
 int main() {
   int a[] = {10, 1, 2, 3, 4};
-  fenwick_tree<int> t;
+  FenwickTree<int> t;
   for (int i = 0; i < 5; i++) {
     t.set(i, a[i]);
   }
