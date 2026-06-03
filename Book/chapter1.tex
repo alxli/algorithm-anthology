@@ -1374,8 +1374,354 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Streaming and Randomized Algorithms}
+\section{Greedy and Scheduling}
 \setcounter{section}{3}
+\setcounter{subsection}{0}
+\subsection{Interval Scheduling}
+Selects the maximum number of non-overlapping intervals using the classic greedy algorithm that sorts by earliest finish time. This is also known as activity selection.
+
+Intervals are represented as half-open ranges \inlinecode{[start, finish)}, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
+
+\begin{compactitem}
+  \item \inlinecode{interval\_scheduling(intervals)} returns one maximum-size compatible subset of intervals, in the order they are selected.
+  \item \inlinecode{interval\_t} stores \inlinecode{start}, \inlinecode{finish}, and the original \inlinecode{id}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, where $n$ is the number of intervals.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for sorting and the answer.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <vector>
+
+struct interval_t {
+  int start, finish, id;
+
+  interval_t(int start = 0, int finish = 0, int id = 0)
+      : start(start), finish(finish), id(id) {}
+};
+
+bool earlier_finish(const interval_t &a, const interval_t &b) {
+  return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
+}
+
+std::vector<interval_t> interval_scheduling(std::vector<interval_t> intervals) {
+  std::sort(intervals.begin(), intervals.end(), earlier_finish);
+  std::vector<interval_t> res;
+  int last_finish = 0;
+  bool first = true;
+  for (int i = 0; i < (int)intervals.size(); i++) {
+    if (first || intervals[i].start >= last_finish) {
+      res.push_back(intervals[i]);
+      last_finish = intervals[i].finish;
+      first = false;
+    }
+  }
+  return res;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<interval_t> intervals;
+  intervals.push_back(interval_t(1, 4, 0));
+  intervals.push_back(interval_t(3, 5, 1));
+  intervals.push_back(interval_t(0, 6, 2));
+  intervals.push_back(interval_t(5, 7, 3));
+  intervals.push_back(interval_t(8, 9, 4));
+  vector<interval_t> chosen = interval_scheduling(intervals);
+  assert(chosen.size() == 3);
+  assert(chosen[0].id == 0);
+  assert(chosen[1].id == 3);
+  assert(chosen[2].id == 4);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Weighted Interval Scheduling}
+Selects a maximum-weight subset of non-overlapping intervals using dynamic programming and binary search. Unlike unweighted interval scheduling, the earliest finish-time greedy choice is not sufficient when intervals have weights.
+
+Intervals are represented as half-open ranges \inlinecode{[start, finish)}, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
+
+\begin{compactitem}
+  \item \inlinecode{weighted\_interval\_scheduling(intervals)} returns the maximum total weight of a compatible subset.
+  \item \inlinecode{weighted\_interval\_t} stores \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and binary searching compatible intervals.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <vector>
+
+struct weighted_interval_t {
+  int start, finish;
+  long long weight;
+
+  weighted_interval_t(int start = 0, int finish = 0, long long weight = 0)
+      : start(start), finish(finish), weight(weight) {}
+};
+
+bool weighted_earlier_finish(const weighted_interval_t &a,
+                             const weighted_interval_t &b) {
+  return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
+}
+
+long long weighted_interval_scheduling(std::vector<weighted_interval_t> intervals) {
+  std::sort(intervals.begin(), intervals.end(), weighted_earlier_finish);
+  int n = intervals.size();
+  std::vector<int> finish(n);
+  for (int i = 0; i < n; i++) {
+    finish[i] = intervals[i].finish;
+  }
+  std::vector<long long> dp(n + 1, 0);
+  for (int i = 1; i <= n; i++) {
+    int j = std::upper_bound(finish.begin(), finish.end(),
+                             intervals[i - 1].start) -
+            finish.begin();
+    dp[i] = std::max(dp[i - 1], dp[j] + intervals[i - 1].weight);
+  }
+  return dp[n];
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<weighted_interval_t> intervals;
+  intervals.push_back(weighted_interval_t(1, 3, 5));
+  intervals.push_back(weighted_interval_t(2, 5, 6));
+  intervals.push_back(weighted_interval_t(4, 6, 5));
+  intervals.push_back(weighted_interval_t(6, 7, 4));
+  intervals.push_back(weighted_interval_t(5, 8, 11));
+  assert(weighted_interval_scheduling(intervals) == 17);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Interval Partitioning}
+Assigns intervals to the minimum number of groups so that no two intervals in the same group overlap. This is the classic interval partitioning problem, also known as finding the minimum number of rooms needed for meetings.
+
+The greedy algorithm sorts intervals by start time and reuses the group whose current finish time is earliest whenever possible. Otherwise, it creates a new group.
+
+\begin{compactitem}
+  \item \inlinecode{interval\_partitioning(intervals)} returns \inlinecode{room[id]}, the assigned room for each original interval id.
+  \item The number of rooms used is \inlinecode{1 + max(room[id])}, or 0 if there are no intervals.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and priority queue operations.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <queue>
+#include <utility>
+#include <vector>
+
+struct partition_interval_t {
+  int start, finish, id;
+
+  partition_interval_t(int start = 0, int finish = 0, int id = 0)
+      : start(start), finish(finish), id(id) {}
+};
+
+bool earlier_start(const partition_interval_t &a, const partition_interval_t &b) {
+  return a.start != b.start ? a.start < b.start : a.finish < b.finish;
+}
+
+std::vector<int> interval_partitioning(std::vector<partition_interval_t> intervals) {
+  std::sort(intervals.begin(), intervals.end(), earlier_start);
+  std::vector<int> room(intervals.size());
+  std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int> >,
+                      std::greater<std::pair<int, int> > > pq;
+  int rooms = 0;
+  for (int i = 0; i < (int)intervals.size(); i++) {
+    int id = intervals[i].id;
+    if (!pq.empty() && pq.top().first <= intervals[i].start) {
+      int r = pq.top().second;
+      pq.pop();
+      room[id] = r;
+    } else {
+      room[id] = rooms++;
+    }
+    pq.push(std::make_pair(intervals[i].finish, room[id]));
+  }
+  return room;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<partition_interval_t> intervals;
+  intervals.push_back(partition_interval_t(0, 30, 0));
+  intervals.push_back(partition_interval_t(5, 10, 1));
+  intervals.push_back(partition_interval_t(15, 20, 2));
+  vector<int> room = interval_partitioning(intervals);
+  assert(1 + *max_element(room.begin(), room.end()) == 2);
+  assert(room[1] == room[2]);
+  assert(room[0] != room[1]);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Deadline Scheduling}
+Schedules unit-time jobs with deadlines and profits to maximize total profit. Each job takes one time slot and must be scheduled at or before its deadline. The greedy algorithm processes jobs in decreasing profit order and places each chosen job in the latest available slot before its deadline.
+
+This is a compact scheduling pattern that combines sorting with a disjoint-set forest over available time slots.
+
+\begin{compactitem}
+  \item \inlinecode{schedule\_deadline\_jobs(jobs)} returns the maximum total profit.
+  \item \inlinecode{job\_t} stores \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integer time slots.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, with near-constant disjoint-set operations.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <vector>
+
+struct job_t {
+  int deadline;
+  long long profit;
+
+  job_t(int deadline = 0, long long profit = 0)
+      : deadline(deadline), profit(profit) {}
+};
+
+bool higher_profit(const job_t &a, const job_t &b) {
+  return a.profit != b.profit ? a.profit > b.profit : a.deadline < b.deadline;
+}
+
+class slot_dsu {
+  std::vector<int> root;
+
+ public:
+  explicit slot_dsu(int n) : root(n + 1) {
+    for (int i = 0; i <= n; i++) {
+      root[i] = i;
+    }
+  }
+
+  int find_root(int u) {
+    if (root[u] != u) {
+      root[u] = find_root(root[u]);
+    }
+    return root[u];
+  }
+
+  void occupy(int u) {
+    root[u] = find_root(u - 1);
+  }
+};
+
+long long schedule_deadline_jobs(std::vector<job_t> jobs) {
+  std::sort(jobs.begin(), jobs.end(), higher_profit);
+  int max_deadline = 0;
+  for (int i = 0; i < (int)jobs.size(); i++) {
+    max_deadline = std::max(max_deadline, jobs[i].deadline);
+  }
+  slot_dsu slots(max_deadline);
+  long long res = 0;
+  for (int i = 0; i < (int)jobs.size(); i++) {
+    int slot = slots.find_root(jobs[i].deadline);
+    if (slot > 0) {
+      res += jobs[i].profit;
+      slots.occupy(slot);
+    }
+  }
+  return res;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<job_t> jobs;
+  jobs.push_back(job_t(2, 100));
+  jobs.push_back(job_t(1, 19));
+  jobs.push_back(job_t(2, 27));
+  jobs.push_back(job_t(1, 25));
+  jobs.push_back(job_t(3, 15));
+  assert(schedule_deadline_jobs(jobs) == 142);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Minimizing Late Jobs (Moore-Hodgson)}
+Selects a maximum-size subset of jobs that can all be completed by their deadlines. Each job has a processing time and deadline, and all jobs are available at time 0. The Moore-Hodgson algorithm sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the schedule becomes late, it removes the longest accepted job.
+
+\begin{compactitem}
+  \item \inlinecode{maximize\_on\_time\_jobs(jobs)} returns the maximum number of jobs that can finish by their deadlines.
+  \item \inlinecode{timed\_job\_t} stores \inlinecode{duration} and \inlinecode{deadline}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and heap operations.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <queue>
+#include <vector>
+
+struct timed_job_t {
+  int duration, deadline;
+
+  timed_job_t(int duration = 0, int deadline = 0)
+      : duration(duration), deadline(deadline) {}
+};
+
+bool earlier_deadline(const timed_job_t &a, const timed_job_t &b) {
+  return a.deadline != b.deadline ? a.deadline < b.deadline
+                                  : a.duration < b.duration;
+}
+
+int maximize_on_time_jobs(std::vector<timed_job_t> jobs) {
+  std::sort(jobs.begin(), jobs.end(), earlier_deadline);
+  std::priority_queue<int> durations;
+  int time = 0;
+  for (int i = 0; i < (int)jobs.size(); i++) {
+    time += jobs[i].duration;
+    durations.push(jobs[i].duration);
+    if (time > jobs[i].deadline) {
+      time -= durations.top();
+      durations.pop();
+    }
+  }
+  return durations.size();
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<timed_job_t> jobs;
+  jobs.push_back(timed_job_t(3, 4));
+  jobs.push_back(timed_job_t(2, 3));
+  jobs.push_back(timed_job_t(1, 2));
+  jobs.push_back(timed_job_t(2, 7));
+  assert(maximize_on_time_jobs(jobs) == 3);
+  return 0;
+}
+\end{lstlisting}
+
+\section{Streaming and Randomized Algorithms}
+\setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Fisher-Yates Shuffle}
 Randomly permutes a range in-place using the Fisher-Yates shuffle. Each possible permutation is produced with equal probability, assuming the random number source is uniform.
@@ -1811,7 +2157,7 @@ int main() {
 \end{lstlisting}
 
 \section{Cycle Detection}
-\setcounter{section}{4}
+\setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Cycle Detection (Floyd)}
 Given a function $f$ mapping a set of integers to itself and an x-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing $f$ with itself starting with the initial $x$. Formally, since $f$ maps a finite set $S$ to itself, some value is guaranteed to eventually repeat in the sequence: $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
