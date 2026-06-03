@@ -40,6 +40,7 @@ SECTION_NAMES = {
     (4, 5): 'Sequence Dynamic Programming',
     (4, 6): 'Suffix Array and LCP',
     (4, 7): 'String Data Structures',
+    (4, 8): 'Encoding and Compression',
     (5, 1): 'Depth-First Search',
     (5, 2): 'Shortest Path',
     (5, 3): 'Connectivity',
