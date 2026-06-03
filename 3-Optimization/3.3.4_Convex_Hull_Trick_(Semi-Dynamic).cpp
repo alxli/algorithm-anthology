@@ -2,16 +2,20 @@
 
 Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process
 a set of x-coordinate queries each asking to find the minimum y-value when any
-of the given lines are evaluated at the specified x. For each `add_line(m, b)`
-call, `m` must be the minimum `m` of all lines added so far. For each `query(x)`
-call, `x` must be the maximum `x` of all queries made so far.
+of the given lines are evaluated at the specified x. This is useful for dynamic
+programming recurrences of the form `dp[i] = min(m[j] * x[i] + b[j])`.
 
 The following implementation is a concise, semi-dynamic version of the convex
-hull optimization technique. It supports an an interlaced sequence of `add_line()`
+hull optimization technique. It supports an interlaced sequence of `add_line()`
 and `query()` calls, as long as the preconditions of descending `m` and ascending `x`
 are satisfied. As a result, it may be necessary to sort the lines and queries
 before calling the functions. In that case, the overall time complexity will be
 dominated by the sorting step.
+
+- `add_line(m, b)` inserts line $y = mx + b$. The slope `m` must be less than or
+  equal to the slope of every line added so far.
+- `query(x)` returns the minimum y-value among all inserted lines at coordinate
+  `x`. Query coordinates must be nondecreasing across calls.
 
 Time Complexity:
 - O(n) for any interlaced sequence of `add_line()` and `query()` calls, where $n$ is

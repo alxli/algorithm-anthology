@@ -97,9 +97,13 @@ int main() {
 \subsection{Ternary Search}
 Given a unimodal function \inlinecode{f(x)} taking a single \inlinecode{double} argument, find its global maximum or minimum point to a specified absolute error.
 
-\inlinecode{ternary\_search\_min()} takes the domain \inlinecode{[lo, hi]} of a continuous function \inlinecode{f(x)} and returns a number \inlinecode{x} such that \inlinecode{f} is strictly decreasing on the interval \inlinecode{[lo, x]} and strictly increasing on the interval \inlinecode{[x, hi]}. For the function to be correct and deterministic, such an \inlinecode{x} must exist and be unique.
+\begin{compactitem}
+  \item \inlinecode{ternary\_search\_min()} takes the domain \inlinecode{[lo, hi]} of a continuous function \inlinecode{f(x)} and returns a number \inlinecode{x} such that \inlinecode{f} is strictly decreasing on the interval \inlinecode{[lo, x]} and strictly increasing on the interval \inlinecode{[x, hi]}. For the function to be correct and deterministic, such an \inlinecode{x} must exist and be unique.
+\end{compactitem}
 
-\inlinecode{ternary\_search\_max()} takes the domain \inlinecode{[lo, hi]} of a continuous function \inlinecode{f(x)} and returns a number \inlinecode{x} such that \inlinecode{f} is strictly increasing on the interval \inlinecode{[lo, x]} and strictly decreasing on the interval \inlinecode{[x, hi]}. For the function to be correct and deterministic, such an \inlinecode{x} must exist and be unique.
+\begin{compactitem}
+  \item \inlinecode{ternary\_search\_max()} takes the domain \inlinecode{[lo, hi]} of a continuous function \inlinecode{f(x)} and returns a number \inlinecode{x} such that \inlinecode{f} is strictly increasing on the interval \inlinecode{[lo, x]} and strictly decreasing on the interval \inlinecode{[x, hi]}. For the function to be correct and deterministic, such an \inlinecode{x} must exist and be unique.
+\end{compactitem}
 
 \textbf{Time Complexity}: $O(\log n)$ calls will be made to \inlinecode{f()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi} divided by the specified absolute error (epsilon).
 
@@ -239,14 +243,372 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Simulated Annealing}
+Given a function \inlinecode{f(x, y)} to minimize over two real variables, return a good approximate minimum found by simulated annealing. This is a randomized heuristic for difficult search spaces where gradients, convexity, and unimodality are not available.
+
+At each temperature, the algorithm proposes a random nearby point. Better moves are always accepted, while worse moves are accepted with probability \inlinecode{exp((current - candidate) / temperature)}. This lets the search sometimes escape local minima early on, then become greedier as the temperature decreases.
+
+Simulated annealing is not a proof of optimality. Its quality depends heavily on the objective function, the starting point, the initial temperature, the cooling rate, and the number of independent restarts.
+
+\begin{compactitem}
+  \item \inlinecode{anneal\_min(f, x0, y0, \&best\_x, \&best\_y)} returns a small value found by the randomized search starting from (\inlinecode{x0}, \inlinecode{y0}).
+  \item \inlinecode{TEMPERATURE\_START} controls the initial move scale and willingness to accept worse states.
+  \item \inlinecode{TEMPERATURE\_END} controls when the search stops.
+  \item \inlinecode{COOLING\_RATE} controls how quickly the temperature decreases.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(r \log n)$ calls to \inlinecode{f()}, where $r$ is the number of restarts and $n$ is roughly \inlinecode{TEMPERATURE\_START / TEMPERATURE\_END}.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <cmath>
+#include <cstdlib>
+
+const double TEMPERATURE_START = 10.0;
+const double TEMPERATURE_END = 1e-7;
+const double COOLING_RATE = 0.997;
+const int NUM_RESTARTS = 8;
+
+double random_unit() {
+  return (double)rand() / RAND_MAX;
+}
+
+template<class Function>
+double anneal_min(Function f, double x0, double y0, double *best_x = NULL,
+                  double *best_y = NULL) {
+  double ans_x = x0, ans_y = y0, ans = f(x0, y0);
+  for (int restart = 0; restart < NUM_RESTARTS; restart++) {
+    double x = x0, y = y0, cur = f(x, y);
+    double temperature = TEMPERATURE_START;
+    while (temperature > TEMPERATURE_END) {
+      double nx = x + (2.0 * random_unit() - 1.0) * temperature;
+      double ny = y + (2.0 * random_unit() - 1.0) * temperature;
+      double next = f(nx, ny);
+      double probability = exp((cur - next) / temperature);
+      if (next < cur || random_unit() < probability) {
+        x = nx;
+        y = ny;
+        cur = next;
+        if (cur < ans) {
+          ans = cur;
+          ans_x = x;
+          ans_y = y;
+        }
+      }
+      temperature *= COOLING_RATE;
+    }
+  }
+
+  if (best_x != NULL) {
+    *best_x = ans_x;
+  }
+  if (best_y != NULL) {
+    *best_y = ans_y;
+  }
+  return ans;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+bool close(double a, double b) {
+  return fabs(a - b) < 1e-3;
+}
+
+// Smooth bowl with global minimum at f(2, -3) = 0.
+double f(double x, double y) {
+  return (x - 2)*(x - 2) + (y + 3)*(y + 3);
+}
+
+int main() {
+  srand(1);
+  double x, y;
+  double value = anneal_min(f, 0, 0, &x, &y);
+  assert(value < 1e-4);
+  assert(close(x, 2));
+  assert(close(y, -3));
+  return 0;
+}
+\end{lstlisting}
 
 \section{Dynamic Programming Optimization}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
-\subsection{Convex Hull Trick (Semi-Dynamic)}
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of x-coordinate queries each asking to find the minimum y-value when any of the given lines are evaluated at the specified x. For each \inlinecode{add\_line(m, b)} call, \inlinecode{m} must be the minimum \inlinecode{m} of all lines added so far. For each \inlinecode{query(x)} call, \inlinecode{x} must be the maximum \inlinecode{x} of all queries made so far.
+\subsection{Monotone Queue DP Optimization}
+Maintains the minimum or maximum value in a sliding window using a monotone queue. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as \inlinecode{dp[i] = a[i] + min(dp[j])} over \inlinecode{i - w \textless{}= j \textless{} i}.
 
-The following implementation is a concise, semi-dynamic version of the convex hull optimization technique. It supports an an interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, as long as the preconditions of descending \inlinecode{m} and ascending \inlinecode{x} are satisfied. As a result, it may be necessary to sort the lines and queries before calling the functions. In that case, the overall time complexity will be dominated by the sorting step.
+The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate.
+
+\begin{compactitem}
+  \item \inlinecode{monotone\_queue\textless{}Compare\textgreater{}()} constructs an empty queue. Use \inlinecode{std::less\textless{}T\textgreater{}} for minimum queries and \inlinecode{std::greater\textless{}T\textgreater{}} for maximum queries.
+  \item \inlinecode{push(index, value)} inserts candidate \inlinecode{value} at position \inlinecode{index}, removing dominated candidates.
+  \item \inlinecode{expire(first\_valid)} removes candidates with index less than \inlinecode{first\_valid}.
+  \item \inlinecode{top()} returns the best active (\inlinecode{index}, \inlinecode{value}) pair.
+  \item \inlinecode{empty()} returns whether the queue has no active candidates.
+\end{compactitem}
+
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for any sequence of $n$ calls to \inlinecode{push(index, value)} and \inlinecode{expire(first\_valid)}.
+  \item $O(1)$ amortized per call to \inlinecode{push(index, value)} and \inlinecode{expire(first\_valid)}.
+  \item $O(1)$ worst-case per call to \inlinecode{top()} and \inlinecode{empty()}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(w)$ for a sliding window of width $w$.
+
+\begin{lstlisting}[language=C++]
+#include <deque>
+#include <functional>
+#include <utility>
+
+template<class T, class Compare>
+class monotone_queue {
+  typedef std::pair<int, T> entry;
+
+  std::deque<entry> q;
+  Compare better;
+
+ public:
+  bool empty() const {
+    return q.empty();
+  }
+
+  void push(int index, const T &value) {
+    while (!q.empty() && !better(q.back().second, value)) {
+      q.pop_back();
+    }
+    q.push_back(entry(index, value));
+  }
+
+  void expire(int first_valid) {
+    while (!q.empty() && q.front().first < first_valid) {
+      q.pop_front();
+    }
+  }
+
+  entry top() const {
+    return q.front();
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+int main() {
+  int raw[] = {4, 2, 7, 1, 3, 6};
+  vector<int> a(raw, raw + 6);
+
+  monotone_queue<int, less<int> > minq;
+  vector<int> window_min;
+  for (int i = 0; i < (int)a.size(); i++) {
+    minq.push(i, a[i]);
+    minq.expire(i - 2);
+    if (i >= 2) {
+      window_min.push_back(minq.top().second);
+    }
+  }
+  assert(window_min[0] == 2);
+  assert(window_min[1] == 1);
+  assert(window_min[2] == 1);
+  assert(window_min[3] == 1);
+
+  // dp[i] = a[i] + min(dp[j]) over max(0, i - 2) <= j < i.
+  vector<int> dp(a.size());
+  monotone_queue<int, less<int> > best;
+  dp[0] = a[0];
+  best.push(0, dp[0]);
+  for (int i = 1; i < (int)a.size(); i++) {
+    best.expire(i - 2);
+    dp[i] = a[i] + best.top().second;
+    best.push(i, dp[i]);
+  }
+  assert(dp[5] == 13);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Divide-and-Conquer DP Optimization}
+Computes one layer of a dynamic programming recurrence whose optimal transition indices are monotone. This optimization applies to recurrences of the form \inlinecode{dp\_cur[i] = min(dp\_prev[k] + cost(k, i))}, where the minimizing index for \inlinecode{i} never decreases as \inlinecode{i} increases.
+
+The function below computes \inlinecode{dp\_cur[l..r]} by evaluating the midpoint first, then recursing on the left half with a restricted upper bound on the optimal \inlinecode{k}, and on the right half with a restricted lower bound. The caller is responsible for checking that the recurrence satisfies the required monotonicity condition.
+
+\begin{compactitem}
+  \item \inlinecode{compute\_dc\_layer(dp\_prev, dp\_cur, l, r, opt\_l, opt\_r, cost)} fills \inlinecode{dp\_cur[l..r]} using candidate transition indices in \inlinecode{[opt\_l, opt\_r]}.
+  \item \inlinecode{cost(k, i)} must return the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \log n)$ calls to \inlinecode{cost(k, i)} per layer when each state has $O(n)$ possible transitions.
+
+\textbf{Space Complexity}: $O(\log n)$ auxiliary stack space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <vector>
+
+const long long INF = (1LL << 62);
+
+template<class CostFunction>
+void compute_dc_layer(const std::vector<long long> &dp_prev,
+                      std::vector<long long> &dp_cur, int l, int r, int opt_l,
+                      int opt_r, CostFunction cost) {
+  if (l > r) {
+    return;
+  }
+  int mid = (l + r) / 2;
+  long long best = INF;
+  int best_k = opt_l;
+  int upper = std::min(mid, opt_r);
+  for (int k = opt_l; k <= upper; k++) {
+    long long candidate = dp_prev[k] + cost(k, mid);
+    if (candidate < best) {
+      best = candidate;
+      best_k = k;
+    }
+  }
+  dp_cur[mid] = best;
+  compute_dc_layer(dp_prev, dp_cur, l, mid - 1, opt_l, best_k, cost);
+  compute_dc_layer(dp_prev, dp_cur, mid + 1, r, best_k, opt_r, cost);
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+struct square_segment_cost {
+  vector<long long> prefix;
+
+  explicit square_segment_cost(const vector<int> &a) : prefix(a.size() + 1) {
+    for (int i = 0; i < (int)a.size(); i++) {
+      prefix[i + 1] = prefix[i] + a[i];
+    }
+  }
+
+  long long operator()(int k, int i) const {
+    long long sum = prefix[i] - prefix[k];
+    return sum * sum;
+  }
+};
+
+int main() {
+  int raw[] = {1, 2, 3, 4};
+  vector<int> a(raw, raw + 4);
+  int n = a.size();
+  square_segment_cost cost(a);
+
+  vector<long long> dp_prev(n + 1, INF), dp_cur(n + 1, INF);
+  dp_prev[0] = 0;
+  compute_dc_layer(dp_prev, dp_cur, 1, n, 0, n - 1, cost);
+  assert(dp_cur[4] == 100);  // One group: (1 + 2 + 3 + 4)^2.
+
+  vector<long long> dp_two(n + 1, INF);
+  compute_dc_layer(dp_cur, dp_two, 1, n, 0, n - 1, cost);
+  assert(dp_two[4] == 52);  // Split as [1, 2] and [3, 4].
+  return 0;
+}
+\end{lstlisting}
+\subsection{Knuth DP Optimization}
+Computes interval dynamic programming recurrences whose optimal split points are monotone. Knuth optimization applies to recurrences of the form \inlinecode{dp[l][r] = min(dp[l][k] + dp[k][r]) + cost(l, r)}, where the optimal split \inlinecode{opt[l][r]} satisfies \inlinecode{opt[l][r - 1] \textless{}= opt[l][r] \textless{}= opt[l + 1][r]}.
+
+Common applications include optimal binary search trees and some range merging problems. The caller is responsible for verifying the quadrangle inequality and monotonicity assumptions for the chosen \inlinecode{cost(l, r)}.
+
+\begin{compactitem}
+  \item \inlinecode{knuth\_interval\_dp(n, cost, \&opt)} computes minimum costs for all half-open intervals \inlinecode{[l, r)} over \inlinecode{n} items.
+  \item \inlinecode{cost(l, r)} must return the interval cost added after choosing the best split.
+  \item If \inlinecode{opt} is not \inlinecode{NULL}, it is filled with the chosen split points.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{2})$ calls to \inlinecode{cost(l, r)} and $O(n^{2})$ candidate split checks.
+
+\textbf{Space Complexity}: $O(n^{2})$ for the \inlinecode{dp} and \inlinecode{opt} tables.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cstddef>
+#include <vector>
+
+const long long INF = (1LL << 62);
+
+template<class CostFunction>
+std::vector<std::vector<long long> >
+knuth_interval_dp(int n, CostFunction cost, std::vector<std::vector<int> > *opt_out =
+                                       NULL) {
+  std::vector<std::vector<long long> > dp(n + 1,
+                                          std::vector<long long>(n + 1, 0));
+  std::vector<std::vector<int> > opt(n + 1, std::vector<int>(n + 1, 0));
+  for (int i = 0; i <= n; i++) {
+    opt[i][i] = i;
+    if (i < n) {
+      opt[i][i + 1] = i + 1;
+    }
+  }
+  for (int len = 2; len <= n; len++) {
+    for (int l = 0; l + len <= n; l++) {
+      int r = l + len;
+      dp[l][r] = INF;
+      int start = opt[l][r - 1];
+      int finish = opt[l + 1][r];
+      if (start < l + 1) {
+        start = l + 1;
+      }
+      if (finish > r - 1) {
+        finish = r - 1;
+      }
+      for (int k = start; k <= finish; k++) {
+        long long candidate = dp[l][k] + dp[k][r] + cost(l, r);
+        if (candidate < dp[l][r]) {
+          dp[l][r] = candidate;
+          opt[l][r] = k;
+        }
+      }
+    }
+  }
+  if (opt_out != NULL) {
+    *opt_out = opt;
+  }
+  return dp;
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+struct merge_cost {
+  vector<long long> prefix;
+
+  explicit merge_cost(const vector<int> &a) : prefix(a.size() + 1) {
+    for (int i = 0; i < (int)a.size(); i++) {
+      prefix[i + 1] = prefix[i] + a[i];
+    }
+  }
+
+  long long operator()(int l, int r) const {
+    return prefix[r] - prefix[l];
+  }
+};
+
+int main() {
+  int raw[] = {1, 2, 3, 4};
+  vector<int> a(raw, raw + 4);
+  vector<vector<long long> > dp = knuth_interval_dp(a.size(), merge_cost(a));
+  assert(dp[0][4] == 19);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Convex Hull Trick (Semi-Dynamic)}
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of x-coordinate queries each asking to find the minimum y-value when any of the given lines are evaluated at the specified x. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}.
+
+The following implementation is a concise, semi-dynamic version of the convex hull optimization technique. It supports an interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, as long as the preconditions of descending \inlinecode{m} and ascending \inlinecode{x} are satisfied. As a result, it may be necessary to sort the lines and queries before calling the functions. In that case, the overall time complexity will be dominated by the sorting step.
+
+\begin{compactitem}
+  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$. The slope \inlinecode{m} must be less than or equal to the slope of every line added so far.
+  \item \inlinecode{query(x)} returns the minimum y-value among all inserted lines at coordinate \inlinecode{x}. Query coordinates must be nondecreasing across calls.
+\end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ for any interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, where $n$ is the number of lines added. This is because the overall number of steps taken by \inlinecode{add\_line()} and \inlinecode{query()} are respectively bounded by the number of lines. Thus a single call to either \inlinecode{add\_line()} or \inlinecode{query()} will have an amortized $O(1)$ running time.
 
@@ -302,9 +664,15 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Fully-Dynamic)}
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of x-coordinate queries each asking to find the minimum y-value when any of the given lines are evaluated at the specified x. To instead have the queries optimize for maximum y-value, call the constructor with \inlinecode{query\_max=true}.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of x-coordinate queries each asking to find the minimum y-value when any of the given lines are evaluated at the specified x. To instead have the queries optimize for maximum y-value, call the constructor with \inlinecode{query\_max = true}. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])} when line slopes and query coordinates are not monotone.
 
 The following implementation is a fully dynamic variant of the convex hull optimization technique, using a self-balancing binary search tree (\inlinecode{std::set}) to support the ability to call \inlinecode{add\_line()} and \inlinecode{query()} in any desired order.
+
+\begin{compactitem}
+  \item \inlinecode{hull\_optimizer(query\_max)} constructs an empty hull. By default, \inlinecode{query(x)} minimizes; if \inlinecode{query\_max} is true, \inlinecode{query(x)} maximizes.
+  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$ in arbitrary order.
+  \item \inlinecode{query(x)} returns the best y-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted.
+\end{compactitem}
 
 \textbf{Time Complexity}: $O(\log n)$ amortized per call to \inlinecode{add\_line()} and $O(\log n)$ per call to \inlinecode{query()}, where $n$ is the number of lines added.
 
@@ -400,6 +768,130 @@ int main() {
   assert(h.query(2) == 4);
   assert(h.query(1) == 3);
   assert(h.query(3) == 5);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Li Chao Tree}
+Maintains a dynamic set of lines and answers minimum value queries at points in a fixed integer domain. A Li Chao tree is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}, especially when line slopes and query points arrive in arbitrary order.
+
+The implementation below stores the lower envelope of lines over the inclusive domain \inlinecode{[X\_MIN, X\_MAX]}. It supports adding arbitrary lines and querying arbitrary integer x-coordinates in $O(\log C)$, where $C =$ \inlinecode{X\_MAX} $-$ \inlinecode{X\_MIN} $+ 1$.
+
+\begin{compactitem}
+  \item \inlinecode{li\_chao\_tree(lo, hi)} constructs an empty tree over integer domain \inlinecode{[lo, hi]}.
+  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$.
+  \item \inlinecode{query(x)} returns the minimum y-value among all inserted lines at coordinate \inlinecode{x}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\log C)$ per call to \inlinecode{add\_line(m, b)} and \inlinecode{query(x)}, where $C$ is the domain size.
+
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \log C)$ worst-case node storage for $n$ inserted lines, usually much less.
+  \item $O(\log C)$ auxiliary stack space per operation.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <limits>
+
+const long long INF = std::numeric_limits<long long>::max() / 4;
+
+struct line {
+  long long m, b;
+
+  line(long long m = 0, long long b = INF) : m(m), b(b) {}
+
+  long long eval(long long x) const {
+    return m * x + b;
+  }
+};
+
+class li_chao_tree {
+  struct node {
+    line f;
+    node *left, *right;
+
+    node(const line &f) : f(f), left(NULL), right(NULL) {}
+  };
+
+  node *root;
+  long long lo, hi;
+
+  static void clean_up(node *n) {
+    if (n == NULL) {
+      return;
+    }
+    clean_up(n->left);
+    clean_up(n->right);
+    delete n;
+  }
+
+  static void add_line(node *&n, long long l, long long r, line f) {
+    if (n == NULL) {
+      n = new node(f);
+      return;
+    }
+    long long mid = l + (r - l) / 2;
+    bool left_better = f.eval(l) < n->f.eval(l);
+    bool mid_better = f.eval(mid) < n->f.eval(mid);
+    if (mid_better) {
+      std::swap(f, n->f);
+    }
+    if (l == r) {
+      return;
+    }
+    if (left_better != mid_better) {
+      add_line(n->left, l, mid, f);
+    } else {
+      add_line(n->right, mid + 1, r, f);
+    }
+  }
+
+  static long long query(node *n, long long l, long long r, long long x) {
+    if (n == NULL) {
+      return INF;
+    }
+    long long res = n->f.eval(x);
+    if (l == r) {
+      return res;
+    }
+    long long mid = l + (r - l) / 2;
+    if (x <= mid) {
+      return std::min(res, query(n->left, l, mid, x));
+    }
+    return std::min(res, query(n->right, mid + 1, r, x));
+  }
+
+ public:
+  li_chao_tree(long long lo, long long hi) : root(NULL), lo(lo), hi(hi) {}
+
+  ~li_chao_tree() {
+    clean_up(root);
+  }
+
+  void add_line(long long m, long long b) {
+    add_line(root, lo, hi, line(m, b));
+  }
+
+  long long query(long long x) const {
+    assert(lo <= x && x <= hi);
+    return query(root, lo, hi, x);
+  }
+};
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  li_chao_tree cht(-10, 10);
+  cht.add_line(3, 0);
+  cht.add_line(1, 2);
+  cht.add_line(-1, 10);
+  assert(cht.query(0) == 0);
+  assert(cht.query(2) == 4);
+  assert(cht.query(10) == 0);
   return 0;
 }
 \end{lstlisting}
@@ -521,7 +1013,7 @@ int main() {
   double a[equations][unknowns] = {{-2, 1}, {1, 0.85}, {1, 2}};
   double b[equations] = {0, 9, 14};
   double c[unknowns] = {3, 4};
-  vector<vector<double>> va(equations, vector<double>(unknowns));
+  vector<vector<double> > va(equations, vector<double>(unknowns));
   vector<double> vb(b, b + equations), vc(c, c + unknowns), x;
   for (int i = 0; i < equations; i++) {
     for (int j = 0; j < unknowns; j++) {
@@ -544,3 +1036,106 @@ int main() {
 \begin{exampleoutput}
 Solution = 33.3043 at (5.30435, 4.34783).
 \end{exampleoutput}
+\subsection{Hungarian Algorithm}
+Solves the minimum-cost assignment problem for a rectangular cost matrix. Given $n$ workers and $m$ jobs with $n \leq m$, choose a distinct job for each worker so that the total assignment cost is minimized.
+
+The implementation below is the classical Hungarian algorithm using potentials. It is 1-indexed internally, but the input matrix \inlinecode{cost} is 0-indexed. The returned assignment vector has length $n$, where \inlinecode{assignment[i]} is the chosen job for worker \inlinecode{i}, using 0-indexed job numbers.
+
+\begin{compactitem}
+  \item \inlinecode{hungarian(cost, \&assignment)} returns the minimum total assignment cost.
+  \item \inlinecode{cost[i][j]} is the cost of assigning worker \inlinecode{i} to job \inlinecode{j}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{2} \cdot m)$, where \inlinecode{cost} has $n$ rows and $m$ columns.
+
+\textbf{Space Complexity}: $O(n + m)$ auxiliary heap space, not counting the input matrix and returned assignment.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <limits>
+#include <vector>
+
+long long hungarian(const std::vector<std::vector<long long> > &cost,
+                    std::vector<int> *assignment) {
+  int n = cost.size(), m = cost.empty() ? 0 : cost[0].size();
+  assert(n <= m);
+  const long long INF = std::numeric_limits<long long>::max() / 4;
+  std::vector<long long> u(n + 1), v(m + 1);
+  std::vector<int> p(m + 1), way(m + 1);
+
+  for (int i = 1; i <= n; i++) {
+    p[0] = i;
+    int j0 = 0;
+    std::vector<long long> minv(m + 1, INF);
+    std::vector<char> used(m + 1, false);
+    do {
+      used[j0] = true;
+      int i0 = p[j0], j1 = 0;
+      long long delta = INF;
+      for (int j = 1; j <= m; j++) {
+        if (used[j]) {
+          continue;
+        }
+        long long cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+        if (cur < minv[j]) {
+          minv[j] = cur;
+          way[j] = j0;
+        }
+        if (minv[j] < delta) {
+          delta = minv[j];
+          j1 = j;
+        }
+      }
+      for (int j = 0; j <= m; j++) {
+        if (used[j]) {
+          u[p[j]] += delta;
+          v[j] -= delta;
+        } else {
+          minv[j] -= delta;
+        }
+      }
+      j0 = j1;
+    } while (p[j0] != 0);
+
+    do {
+      int j1 = way[j0];
+      p[j0] = p[j1];
+      j0 = j1;
+    } while (j0 != 0);
+  }
+
+  assignment->assign(n, -1);
+  for (int j = 1; j <= m; j++) {
+    if (p[j] != 0) {
+      (*assignment)[p[j] - 1] = j - 1;
+    }
+  }
+  return -v[0];
+}
+\end{lstlisting}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  long long raw[3][4] = {
+      {9, 2, 7, 8},
+      {6, 4, 3, 7},
+      {5, 8, 1, 8},
+  };
+  vector<vector<long long> > cost(3, vector<long long>(4));
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 4; j++) {
+      cost[i][j] = raw[i][j];
+    }
+  }
+  vector<int> assignment;
+  assert(hungarian(cost, &assignment) == 9);
+  assert(assignment[0] == 1);
+  assert(assignment[1] == 0);
+  assert(assignment[2] == 2);
+  return 0;
+}
+\end{lstlisting}

@@ -1,9 +1,9 @@
 /*
 
 For the purposes of this section, we define a "size $k$ arrangement of $n$" to be a
-permutation of a size $k$ subset of the integers from $0$ to $n - 1$, for $0 \leq k \leq n$.
-There are $n \mathbin{\text{permute}} k$ possible arrangements, but $n^k$ possible arrangements if
-repeated values are allowed.
+permutation of a size $k$ subset of the integers from $0$ to $n - 1$, for
+$0 \leq k \leq n$. There are $n \mathbin{\text{permute}} k$ possible arrangements,
+but $n^k$ possible arrangements if repeated values are allowed.
 
 - `next_arrangement(n, k, a)` tries to rearrange `a[]` to the next lexicographically
   greater arrangement, returning true if such an arrangement exists or false if

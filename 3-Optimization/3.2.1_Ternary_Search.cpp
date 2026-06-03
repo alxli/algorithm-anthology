@@ -3,15 +3,15 @@
 Given a unimodal function `f(x)` taking a single `double` argument, find its global
 maximum or minimum point to a specified absolute error.
 
-`ternary_search_min()` takes the domain `[lo, hi]` of a continuous function
-`f(x)` and returns a number `x` such that `f` is strictly decreasing on the
-interval `[lo, x]` and strictly increasing on the interval `[x, hi]`. For the
-function to be correct and deterministic, such an `x` must exist and be unique.
+- `ternary_search_min()` takes the domain `[lo, hi]` of a continuous function
+  `f(x)` and returns a number `x` such that `f` is strictly decreasing on the
+  interval `[lo, x]` and strictly increasing on the interval `[x, hi]`. For the
+  function to be correct and deterministic, such an `x` must exist and be unique.
 
-`ternary_search_max()` takes the domain `[lo, hi]` of a continuous function
-`f(x)` and returns a number `x` such that `f` is strictly increasing on the
-interval `[lo, x]` and strictly decreasing on the interval `[x, hi]`. For the
-function to be correct and deterministic, such an `x` must exist and be unique.
+- `ternary_search_max()` takes the domain `[lo, hi]` of a continuous function
+  `f(x)` and returns a number `x` such that `f` is strictly increasing on the
+  interval `[lo, x]` and strictly decreasing on the interval `[x, hi]`. For the
+  function to be correct and deterministic, such an `x` must exist and be unique.
 
 Time Complexity:
 - O(log n) calls will be made to `f()`, where $n$ is the distance between `lo` and `hi`

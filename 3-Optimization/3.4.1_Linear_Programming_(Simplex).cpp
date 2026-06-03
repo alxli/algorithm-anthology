@@ -127,7 +127,7 @@ int main() {
   double a[equations][unknowns] = {{-2, 1}, {1, 0.85}, {1, 2}};
   double b[equations] = {0, 9, 14};
   double c[unknowns] = {3, 4};
-  vector<vector<double>> va(equations, vector<double>(unknowns));
+  vector<vector<double> > va(equations, vector<double>(unknowns));
   vector<double> vb(b, b + equations), vc(c, c + unknowns), x;
   for (int i = 0; i < equations; i++) {
     for (int j = 0; j < unknowns; j++) {
