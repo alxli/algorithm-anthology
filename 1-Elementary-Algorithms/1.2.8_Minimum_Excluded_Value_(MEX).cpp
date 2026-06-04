@@ -72,8 +72,8 @@ class DynamicMex {
 using namespace std;
 
 int main() {
-  int raw[] = {0, 1, 4, 2, 1};
-  assert(mex(raw, raw + 5) == 3);
+  vector<int> a{0, 1, 4, 2, 1};
+  assert(mex(a.begin(), a.end()) == 3);
 
   DynamicMex m(5);
   m.add(0);

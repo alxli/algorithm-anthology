@@ -64,7 +64,7 @@ Space Complexity:
 #include <vector>
 
 class BigInt {
-  static const int BASE = 1'000'000'000, BASE_DIGITS = 9;
+  static const int BASE = 1000000000, BASE_DIGITS = 9;
   static const bool USE_FFT_MULT = true;
 
   using vint = std::vector<int>;

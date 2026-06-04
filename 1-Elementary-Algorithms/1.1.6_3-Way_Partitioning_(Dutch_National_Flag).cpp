@@ -48,15 +48,13 @@ void sort_012(It lo, It hi) {
 using namespace std;
 
 int main() {
-  int raw[] = {2, 0, 1, 2, 1, 0, 1};
-  vector<int> a(raw, raw + 7);
+  vector<int> a{2, 0, 1, 2, 1, 0, 1};
   sort_012(a.begin(), a.end());
   for (int i = 0; i < 7; i++) {
     assert(a[i] == (i < 2 ? 0 : i < 5 ? 1 : 2));
   }
 
-  int b_raw[] = {4, 2, 5, 3, 3, 1};
-  vector<int> b(b_raw, b_raw + 6);
+  vector<int> b{4, 2, 5, 3, 3, 1};
   auto [mid_lo, mid_hi] = partition_three_way(b.begin(), b.end(), 3);
   for (auto it = b.begin(); it != mid_lo; ++it) {
     assert(*it < 3);

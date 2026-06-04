@@ -2474,8 +2474,6 @@ class Trie {
     Node() : is_terminal(false) {}
   } *root;
 
-  using cit = typename std::map<char, Node *>::iterator;
-
   static bool erase(Node *n, const string &s, int i) {
     if (i == static_cast<int>(s.size())) {
       if (!n->is_terminal) {
@@ -2654,8 +2652,6 @@ class RadixTree {
 
     Node(const V &value = V(), bool is_terminal = false) : value(value), is_terminal(is_terminal) {}
   } *root;
-
-  using cit = typename std::map<string, Node *>::iterator;
 
   static int lcp_len(const string &s1, const string &s2, int s2start) {
     int i = 0;
@@ -3446,7 +3442,7 @@ class HuffmanTree {
     std::priority_queue<int, std::vector<int>, ByFrequency> pq(cmp);
     for (int c = 0; c < 256; c++) {
       if (freq[c] > 0) {
-        nodes.push_back(Node(freq[c], static_cast<unsigned char>(c)));
+        nodes.emplace_back(freq[c], static_cast<unsigned char>(c));
         pq.push(static_cast<int>(nodes.size()) - 1);
       }
     }

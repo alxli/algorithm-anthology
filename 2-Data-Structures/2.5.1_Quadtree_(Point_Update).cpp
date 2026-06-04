@@ -40,8 +40,8 @@ Space Complexity:
 
 template<class T>
 class Quadtree {
-  static const int MAXR = 1'000'000'000;
-  static const int MAXC = 1'000'000'000;
+  static const int MAXR = 1000000000;
+  static const int MAXC = 1000000000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_region(const T &v, int area) { return v; }
@@ -181,8 +181,8 @@ int main() {
   assert(t.query(0, 0, 0, 1) == 6);
   assert(t.query(0, 0, 1, 0) == 5);
   assert(t.query(1, 1, 2, 2) == 0);
-  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == 0);
+  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
   t.update(500000000, 500000000, -100);
-  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == -100);
+  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
   return 0;
 }

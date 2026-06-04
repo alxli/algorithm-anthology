@@ -56,8 +56,6 @@ class RadixTree {
     Node(const V &value = V(), bool is_terminal = false) : value(value), is_terminal(is_terminal) {}
   } *root;
 
-  using cit = typename std::map<string, Node *>::iterator;
-
   static int lcp_len(const string &s1, const string &s2, int s2start) {
     int i = 0;
     for (int j = s2start; i < static_cast<int>(s1.size()) && j < static_cast<int>(s2.size());

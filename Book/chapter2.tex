@@ -224,11 +224,11 @@ This implementation combines a doubly linked list (\inlinecode{std::list}) with 
 
 template<class Key, class Value>
 class LRUCache {
-  using list_iter = typename std::list<std::pair<Key, Value>>::iterator;
+  using ListIter = typename std::list<std::pair<Key, Value>>::iterator;
 
   int cap;
   std::list<std::pair<Key, Value>> items;
-  std::map<Key, list_iter> where;
+  std::map<Key, ListIter> where;
 
  public:
   explicit LRUCache(int capacity) : cap(capacity) {}
@@ -846,10 +846,6 @@ class BST {
 #include <iostream>
 using namespace std;
 
-void printch(int k, char v) {
-  cout << v;
-}
-
 int main() {
   BST<int, char> t;
   t.insert(2, 'b');
@@ -859,6 +855,7 @@ int main() {
   assert(t.insert(4, 'd'));
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
+  auto printch = [](int k, char v) { cout << v; };
   t.walk(printch);
   cout << endl;
   assert(t.erase(1));
@@ -1042,10 +1039,6 @@ class Treap {
 #include <iostream>
 using namespace std;
 
-void printch(int k, char v) {
-  cout << v;
-}
-
 int main() {
   Treap<int, char> t;
   t.insert(2, 'b');
@@ -1055,6 +1048,7 @@ int main() {
   assert(t.insert(4, 'd'));
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
+  auto printch = [](int k, char v) { cout << v; };
   t.walk(printch);
   cout << endl;
   assert(t.erase(1));
@@ -1275,10 +1269,6 @@ class AVLTree {
 #include <iostream>
 using namespace std;
 
-void printch(int k, char v) {
-  cout << v;
-}
-
 int main() {
   AVLTree<int, char> t;
   t.insert(2, 'b');
@@ -1288,6 +1278,7 @@ int main() {
   assert(t.insert(4, 'd'));
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
+  auto printch = [](int k, char v) { cout << v; };
   t.walk(printch);
   cout << endl;
   assert(t.erase(1));
@@ -1619,10 +1610,6 @@ class RedBlackTree {
 #include <iostream>
 using namespace std;
 
-void printch(int k, char v) {
-  cout << v;
-}
-
 int main() {
   RedBlackTree<int, char> t;
   t.insert(2, 'b');
@@ -1632,6 +1619,7 @@ int main() {
   assert(t.insert(4, 'd'));
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
+  auto printch = [](int k, char v) { cout << v; };
   t.walk(printch);
   cout << endl;
   assert(t.erase(1));
@@ -1836,10 +1824,6 @@ class SplayTree {
 #include <iostream>
 using namespace std;
 
-void printch(int k, char v) {
-  cout << v;
-}
-
 int main() {
   SplayTree<int, char> t;
   t.insert(2, 'b');
@@ -1849,6 +1833,7 @@ int main() {
   assert(t.insert(4, 'd'));
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
+  auto printch = [](int k, char v) { cout << v; };
   t.walk(printch);
   cout << endl;
   assert(t.erase(1));
@@ -2081,10 +2066,6 @@ class SBTree {
 #include <iostream>
 using namespace std;
 
-void printch(int k, char v) {
-  cout << v;
-}
-
 int main() {
   SBTree<int, char> t;
   t.insert(2, 'b');
@@ -2094,6 +2075,7 @@ int main() {
   assert(t.insert(4, 'd'));
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
+  auto printch = [](int k, char v) { cout << v; };
   t.walk(printch);
   cout << endl;
   assert(t.erase(1));
@@ -2150,18 +2132,18 @@ Maintain a map from closed, one-dimensional intervals to values while supporting
 
 template<class K, class V>
 class IntervalTreap {
-  using interval_t = std::pair<K, K>;
+  using Interval = std::pair<K, K>;
 
   struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
-    interval_t interval;
+    Interval interval;
     V value;
     K max;
     int priority;
     Node *left, *right;
 
-    Node(const interval_t &i, const V &v)
+    Node(const Interval &i, const V &v)
         : interval(i), value(v), max(i.second), priority(rand32()), left(nullptr), right(nullptr) {}
 
     void update() {
@@ -2193,7 +2175,7 @@ class IntervalTreap {
     tmp->update();
   }
 
-  static bool insert(Node *&n, const interval_t &i, const V &v) {
+  static bool insert(Node *&n, const Interval &i, const V &v) {
     if (n == nullptr) {
       n = new Node(i, v);
       return true;
@@ -2215,7 +2197,7 @@ class IntervalTreap {
     return false;
   }
 
-  static bool erase(Node *&n, const interval_t &i) {
+  static bool erase(Node *&n, const Interval &i) {
     if (n == nullptr) {
       return false;
     }
@@ -2243,7 +2225,7 @@ class IntervalTreap {
     return true;
   }
 
-  static Node *find_any(Node *n, const interval_t &i) {
+  static Node *find_any(Node *n, const Interval &i) {
     if (n == nullptr) {
       return nullptr;
     }
@@ -2257,7 +2239,7 @@ class IntervalTreap {
   }
 
   template<class KVFunction>
-  static void find_all(Node *n, const interval_t &i, KVFunction f) {
+  static void find_all(Node *n, const Interval &i, KVFunction f) {
     if (n == nullptr || n->max < i.first) {
       return;
     }
@@ -2293,7 +2275,7 @@ class IntervalTreap {
   bool empty() const { return root == nullptr; }
 
   bool insert(const K &lo, const K &hi, const V &v) {
-    if (insert(root, interval_t{lo, hi}, v)) {
+    if (insert(root, Interval{lo, hi}, v)) {
       num_nodes++;
       return true;
     }
@@ -2301,26 +2283,26 @@ class IntervalTreap {
   }
 
   bool erase(const K &lo, const K &hi) {
-    if (erase(root, interval_t{lo, hi})) {
+    if (erase(root, Interval{lo, hi})) {
       num_nodes--;
       return true;
     }
     return false;
   }
 
-  const interval_t *find_key(const K &lo, const K &hi) const {
-    Node *n = find_any(root, interval_t{lo, hi});
+  const Interval *find_key(const K &lo, const K &hi) const {
+    Node *n = find_any(root, Interval{lo, hi});
     return (n == nullptr) ? nullptr : &(n->interval);
   }
 
   const V *find_value(const K &lo, const K &hi) const {
-    Node *n = find_any(root, interval_t{lo, hi});
+    Node *n = find_any(root, Interval{lo, hi});
     return (n == nullptr) ? nullptr : &(n->value);
   }
 
   template<class KVFunction>
   void find_all(const K &lo, const K &hi, KVFunction f) const {
-    find_all(root, interval_t{lo, hi}, f);
+    find_all(root, Interval{lo, hi}, f);
   }
 
   template<class KVFunction>
@@ -2334,10 +2316,6 @@ class IntervalTreap {
 #include <cassert>
 #include <iostream>
 using namespace std;
-
-void print(int lo, int hi, char v) {
-  cout << " [" << lo << ", " << hi << "]";
-}
 
 int main() {
   IntervalTreap<int, char> t;
@@ -2354,6 +2332,7 @@ int main() {
   assert(*t.find_key(3, 9) == (pair<int, int>{5, 20}));
   assert(*t.find_value(3, 9) == 'd');
   cout << "Intervals intersecting [16, 20]:";
+  auto print = [](int lo, int hi, char v) { cout << " [" << lo << ", " << hi << "]"; };
   t.find_all(16, 20, print);
   cout << "\nAll intervals:";
   t.walk(print);
@@ -2532,10 +2511,6 @@ struct ClassHash {
   }
 };
 
-void printch(const string &k, char v) {
-  cout << v;
-}
-
 int main() {
   HashMap<string, char, ClassHash> m;
   m["foo"] = 'a';
@@ -2544,7 +2519,7 @@ int main() {
   assert(m["bar"] == 'b');
   assert(m["baz"] == '\0');
   m["baz"] = 'c';
-  m.walk(printch);
+  m.walk([](const string &k, char v) { cout << v; });
   cout << endl;
   assert(m.erase("foo"));
   assert(m.size() == 2);
@@ -2720,10 +2695,6 @@ class SkipList {
 #include <iostream>
 using namespace std;
 
-void printch(int k, char v) {
-  cout << v;
-}
-
 int main() {
   SkipList<int, char> l;
   l.insert(2, 'b');
@@ -2733,6 +2704,7 @@ int main() {
   assert(l.insert(4, 'd'));
   assert(*l.find(4) == 'd');
   assert(!l.insert(4, 'd'));
+  auto printch = [](int k, char v) { cout << v; };
   l.walk(printch);
   cout << endl;
   assert(l.erase(1));
@@ -2840,7 +2812,6 @@ The operations supported by this data structure are identical to those of the po
 template<class T>
 class SqrtDecomposition {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
-
   static T join_value_with_delta(const T &v, const T &d) { return d; }
 
   int len, blocklen;
@@ -3110,10 +3081,7 @@ template<class T>
 class SegTree {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-
-  static T join_deltas(const T &d1, const T &d2) {
-    return d2;  // For "set" updates, the more recent delta prevails.
-  }
+  static T join_deltas(const T &d1, const T &d2) { return d2; }
 
   int len;
   std::vector<T> value, delta;
@@ -3286,15 +3254,12 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 
 template<class T>
 class SegTree {
-  static const int MAXN = 1'000'000'000;
+  static const int MAXN = 1000000000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_segment(const T &v, int len) { return v; }
   static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-
-  static T join_deltas(const T &d1, const T &d2) {
-    return d2;  // For "set" updates, the more recent delta prevails.
-  }
+  static T join_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
     T value, delta;
@@ -3900,8 +3865,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 
 template<class T>
 class Quadtree {
-  static const int MAXR = 1'000'000'000;
-  static const int MAXC = 1'000'000'000;
+  static const int MAXR = 1000000000;
+  static const int MAXC = 1000000000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_region(const T &v, int area) { return v; }
@@ -4034,9 +3999,9 @@ int main() {
   assert(t.query(0, 0, 0, 1) == 6);
   assert(t.query(0, 0, 1, 0) == 5);
   assert(t.query(1, 1, 2, 2) == 0);
-  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == 0);
+  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
   t.update(500000000, 500000000, -100);
-  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == -100);
+  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
   return 0;
 }
 \end{lstlisting}
@@ -4085,16 +4050,13 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 
 template<class T>
 class Quadtree {
-  static const int MAXR = 1'000'000'000;
-  static const int MAXC = 1'000'000'000;
+  static const int MAXR = 1000000000;
+  static const int MAXC = 1000000000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_region(const T &v, int area) { return v; }
   static T join_value_with_delta(const T &v, const T &d, int area) { return d; }
-
-  static T join_deltas(const T &d1, const T &d2) {
-    return d2;  // For "set" updates, the more recent delta prevails.
-  }
+  static T join_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
     T value, delta;
@@ -4251,9 +4213,9 @@ int main() {
   assert(t.query(0, 0, 0, 1) == 6);
   assert(t.query(0, 0, 1, 0) == 5);
   assert(t.query(1, 1, 2, 2) == 0);
-  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == 0);
+  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
   t.update(500000000, 500000000, -100);
-  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == -100);
+  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
   return 0;
 }
 \end{lstlisting}
@@ -4295,8 +4257,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 
 template<class T>
 class SegTree2D {
-  static const int MAXR = 1'000'000'000;
-  static const int MAXC = 1'000'000'000;
+  static const int MAXR = 1000000000;
+  static const int MAXC = 1000000000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_region(const T &v, int area) { return v; }
@@ -4464,7 +4426,6 @@ class SegTree2D {
   explicit SegTree2D(const T &v = T()) : root(new OuterNode(0, MAXR, v)), init(v) {}
 
   ~SegTree2D() { clean_up(root); }
-
   T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -4503,9 +4464,9 @@ int main() {
   assert(t.query(0, 0, 0, 1) == 6);
   assert(t.query(0, 0, 1, 0) == 5);
   assert(t.query(1, 1, 2, 2) == 0);
-  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == 0);
+  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
   t.update(500000000, 500000000, -100);
-  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == -100);
+  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
   return 0;
 }
 \end{lstlisting}
@@ -5337,7 +5298,7 @@ int main() {
   t.add(500000001, 500000010, 3);
   t.add(500000011, 500000015, 5);
   t.set(500000000, 10);
-  assert(t.sum(0, 1'000'000'000) == 92);
+  assert(t.sum(0, 1000000000) == 92);
   return 0;
 }
 \end{lstlisting}
@@ -5624,7 +5585,7 @@ int main() {
   assert(t.sum(0, 0, 1, 0) == 8);
   assert(t.sum(1, 1, 2, 2) == 29);
   t.set(500000000, 500000000, 100);
-  assert(t.sum(0, 0, 1'000'000'000, 1'000'000'000) == 143);
+  assert(t.sum(0, 0, 1000000000, 1000000000) == 143);
   return 0;
 }
 \end{lstlisting}
@@ -6198,10 +6159,7 @@ class HeavyLight {
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-
-  static T join_deltas(const T &d1, const T &d2) {
-    return d2;  // For "set" updates, the more recent delta prevails.
-  }
+  static T join_deltas(const T &d1, const T &d2) { return d2; }
 
   int counter, paths;
   std::vector<std::vector<T>> value, delta;
@@ -6480,9 +6438,7 @@ template<class T>
 class LinkCutForest {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-  static T join_deltas(const T &d1, const T &d2) {
-    return d2;  // For "set" updates, the more recent delta prevails.
-  }
+  static T join_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
     T value, subtree_value, delta;

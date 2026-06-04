@@ -64,8 +64,7 @@ using namespace std;
 
 int main() {
   srand(1);
-  int raw[] = {10, 20, 30, 40, 50};
-  vector<int> a(raw, raw + 5);
+  vector<int> a{10, 20, 30, 40, 50};
 
   int one = reservoir_sample_one(a.begin(), a.end());
   assert(one == 10 || one == 20 || one == 30 || one == 40 || one == 50);

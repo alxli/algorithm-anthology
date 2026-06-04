@@ -61,14 +61,11 @@ long long count_coin_change(const std::vector<int> &coins, int target) {
 using namespace std;
 
 int main() {
-  int w_raw[] = {3, 4, 5};
-  long long v_raw[] = {4, 5, 7};
-  vector<int> weight(w_raw, w_raw + 3);
-  vector<long long> value(v_raw, v_raw + 3);
+  vector<int> weight{3, 4, 5};
+  vector<long long> value{4, 5, 7};
   assert(unbounded_knapsack(weight, value, 10) == 14);  // Two weight-5 items.
 
-  int c_raw[] = {1, 2, 5};
-  vector<int> coins(c_raw, c_raw + 3);
+  vector<int> coins{1, 2, 5};
   assert(count_coin_change(coins, 5) == 4);  // 5, 2+2+1, 2+1+1+1, 1*5.
   return 0;
 }

@@ -53,8 +53,6 @@ class Trie {
     Node() : is_terminal(false) {}
   } *root;
 
-  using cit = typename std::map<char, Node *>::iterator;
-
   static bool erase(Node *n, const string &s, int i) {
     if (i == static_cast<int>(s.size())) {
       if (!n->is_terminal) {

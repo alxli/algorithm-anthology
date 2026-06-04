@@ -68,7 +68,7 @@ class HuffmanTree {
     std::priority_queue<int, std::vector<int>, ByFrequency> pq(cmp);
     for (int c = 0; c < 256; c++) {
       if (freq[c] > 0) {
-        nodes.push_back(Node(freq[c], static_cast<unsigned char>(c)));
+        nodes.emplace_back(freq[c], static_cast<unsigned char>(c));
         pq.push(static_cast<int>(nodes.size()) - 1);
       }
     }

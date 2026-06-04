@@ -25,8 +25,7 @@ Space Complexity:
 
 template<class T, class It>
 std::map<T, int> misra_gries(It lo, It hi, int k) {
-  using counter_map = std::map<T, int>;
-  counter_map count;
+  std::map<T, int> count;
   for (It it = lo; it != hi; ++it) {
     if (auto found = count.find(*it); found != count.end()) {
       found->second++;
@@ -53,8 +52,8 @@ std::map<T, int> misra_gries(It lo, It hi, int k) {
 using namespace std;
 
 int main() {
-  int raw[] = {1, 2, 1, 3, 1, 2, 1, 4, 2, 2, 2};
-  map<int, int> candidates = misra_gries<int>(raw, raw + 11, 3);
+  vector<int> a{1, 2, 1, 3, 1, 2, 1, 4, 2, 2, 2};
+  map<int, int> candidates = misra_gries<int>(a.begin(), a.end(), 3);
   assert(candidates.count(1));
   assert(candidates.count(2));
   assert(!candidates.count(3));

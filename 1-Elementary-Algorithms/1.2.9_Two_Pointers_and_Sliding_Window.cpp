@@ -61,12 +61,10 @@ int longest_at_most_k_distinct(const std::vector<int> &a, int k) {
 using namespace std;
 
 int main() {
-  int raw[] = {2, 3, 1, 2, 4, 3};
-  vector<int> a(raw, raw + 6);
+  vector<int> a{2, 3, 1, 2, 4, 3};
   assert(min_length_at_least(a, 7) == 2);  // [4, 3].
 
-  int b_raw[] = {1, 2, 1, 3, 4, 3, 5};
-  vector<int> b(b_raw, b_raw + 7);
+  vector<int> b{1, 2, 1, 3, 4, 3, 5};
   assert(longest_at_most_k_distinct(b, 2) == 3);  // [1, 2, 1].
   return 0;
 }

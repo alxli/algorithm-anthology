@@ -20,7 +20,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f'3f3f;
+const int MAXN = 100, INF = 0x3f3f3f3f;
 std::vector<int> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 

@@ -53,10 +53,7 @@ template<class T>
 class SegTree {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-
-  static T join_deltas(const T &d1, const T &d2) {
-    return d2;  // For "set" updates, the more recent delta prevails.
-  }
+  static T join_deltas(const T &d1, const T &d2) { return d2; }
 
   int len;
   std::vector<T> value, delta;

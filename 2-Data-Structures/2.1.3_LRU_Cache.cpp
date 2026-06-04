@@ -30,11 +30,11 @@ Space Complexity:
 
 template<class Key, class Value>
 class LRUCache {
-  using list_iter = typename std::list<std::pair<Key, Value>>::iterator;
+  using ListIter = typename std::list<std::pair<Key, Value>>::iterator;
 
   int cap;
   std::list<std::pair<Key, Value>> items;
-  std::map<Key, list_iter> where;
+  std::map<Key, ListIter> where;
 
  public:
   explicit LRUCache(int capacity) : cap(capacity) {}

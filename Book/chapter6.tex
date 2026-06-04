@@ -330,10 +330,9 @@ std::string to_roman(unsigned int x) {
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-using namespace std;
-
 #include <cassert>
 #include <iostream>
+using namespace std;
 
 int main() {
   assert(EQ(M_PI, 3.14159265359));
@@ -428,7 +427,7 @@ The following functions implement common operations in combinatorics. All inputs
 using int64 = long long;
 using table = std::vector<std::vector<int64>>;
 
-int64 factorial(int n, int m = 1'000'000'007) {
+int64 factorial(int n, int m = 1000000007) {
   int64 res = 1;
   for (int i = 2; i <= n; i++) {
     res = (res * i) % m;
@@ -436,7 +435,7 @@ int64 factorial(int n, int m = 1'000'000'007) {
   return res % m;
 }
 
-int64 factorialp(int64 n, int64 p = 1'000'000'007) {
+int64 factorialp(int64 n, int64 p = 1000000007) {
   int64 res = 1;
   while (n > 1) {
     if (n / p % 2 == 1) {
@@ -451,7 +450,7 @@ int64 factorialp(int64 n, int64 p = 1'000'000'007) {
   return res % p;
 }
 
-table binomial_table(int n, int64 m = 1'000'000'007) {
+table binomial_table(int n, int64 m = 1000000007) {
   table t(n + 1);
   for (int i = 0; i <= n; i++) {
     for (int j = 0; j <= i; j++) {
@@ -465,7 +464,7 @@ table binomial_table(int n, int64 m = 1'000'000'007) {
   return t;
 }
 
-int64 permute(int n, int k, int64 m = 1'000'000'007) {
+int64 permute(int n, int k, int64 m = 1000000007) {
   if (n < k) {
     return 0;
   }
@@ -498,7 +497,7 @@ int64 powmod(int64 x, int64 n, int64 m) {
   return a % m;
 }
 
-int64 choose(int n, int k, int64 p = 1'000'000'007) {
+int64 choose(int n, int k, int64 p = 1000000007) {
   if (n < k) {
     return 0;
   }
@@ -515,15 +514,15 @@ int64 choose(int n, int k, int64 p = 1'000'000'007) {
   return num * powmod(den, p - 2, p) % p;
 }
 
-int64 multichoose(int n, int k, int64 p = 1'000'000'007) {
+int64 multichoose(int n, int k, int64 p = 1000000007) {
   return choose(n + k - 1, k, p);
 }
 
-int64 catalan(int n, int64 p = 1'000'000'007) {
+int64 catalan(int n, int64 p = 1000000007) {
   return choose(2 * n, n, p) * powmod(n + 1, p - 2, p) % p;
 }
 
-int64 partitions(int n, int64 m = 1'000'000'007) {
+int64 partitions(int n, int64 m = 1000000007) {
   std::vector<int64> t(n + 1, 0);
   t[0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -534,7 +533,7 @@ int64 partitions(int n, int64 m = 1'000'000'007) {
   return t[n] % m;
 }
 
-int64 partitions(int n, int k, int64 m = 1'000'000'007) {
+int64 partitions(int n, int k, int64 m = 1000000007) {
   table t(n + 1, std::vector<int64>(k + 1, 0));
   t[0][1] = 1;
   for (int i = 1; i <= n; i++) {
@@ -545,7 +544,7 @@ int64 partitions(int n, int k, int64 m = 1'000'000'007) {
   return t[n][k] % m;
 }
 
-int64 stirling1(int n, int k, int64 m = 1'000'000'007) {
+int64 stirling1(int n, int k, int64 m = 1000000007) {
   table t(n + 1, std::vector<int64>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -557,7 +556,7 @@ int64 stirling1(int n, int k, int64 m = 1'000'000'007) {
   return t[n][k] % m;
 }
 
-int64 stirling2(int n, int k, int64 m = 1'000'000'007) {
+int64 stirling2(int n, int k, int64 m = 1000000007) {
   table t(n + 1, std::vector<int64>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -569,7 +568,7 @@ int64 stirling2(int n, int k, int64 m = 1'000'000'007) {
   return t[n][k] % m;
 }
 
-int64 eulerian1(int n, int k, int64 m = 1'000'000'007) {
+int64 eulerian1(int n, int k, int64 m = 1000000007) {
   if (k > n - 1 - k) {
     k = n - 1 - k;
   }
@@ -586,7 +585,7 @@ int64 eulerian1(int n, int k, int64 m = 1'000'000'007) {
   return t[n][k] % m;
 }
 
-int64 eulerian2(int n, int k, int64 m = 1'000'000'007) {
+int64 eulerian2(int n, int k, int64 m = 1000000007) {
   table t(n + 1, std::vector<int64>(k + 1, 1));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
@@ -1903,19 +1902,12 @@ class Modular {
   }
 
   friend Modular operator+(Modular a, const Modular &b) { return a += b; }
-
   friend Modular operator-(Modular a, const Modular &b) { return a -= b; }
-
   friend Modular operator*(Modular a, const Modular &b) { return a *= b; }
-
   friend Modular operator/(Modular a, const Modular &b) { return a /= b; }
-
   friend bool operator==(const Modular &a, const Modular &b) { return a.v == b.v; }
-
   friend bool operator!=(const Modular &a, const Modular &b) { return !(a == b); }
-
   friend bool operator<(const Modular &a, const Modular &b) { return a.v < b.v; }
-
   friend std::ostream &operator<<(std::ostream &os, const Modular &x) { return os << x.v; }
 
   friend std::istream &operator>>(std::istream &is, Modular &x) {
@@ -1975,7 +1967,7 @@ class ModCombinatorics {
 
 struct Mod100000007 {
   using value_type = int;
-  static const int value = 1'000'000'007;
+  static const int value = 1000000007;
 };
 
 using Mint = Modular<Mod100000007>;
@@ -2100,7 +2092,7 @@ int main() {
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve(n=" << pmax << "): " << delta << "s" << endl;
 
-  int l = 1'000'000'000, h = 1005000000;
+  int l = 1000000000, h = 1005000000;
   start = clock();
   p = sieve(l, h);
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
@@ -2539,7 +2531,7 @@ int main() {
     const int ntests = 7;
     const long long tests[] = {
         3LL * 3 * 5 * 7 * 9949 * 9967 * 1000003,
-        2LL * 1000003 * 1'000'000'007,
+        2LL * 1000003 * 1000000007,
         999961LL * 1000033,
         357267896789127671LL,
         2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 11 * 13 * 17 * 19 * 23 * 29 *
@@ -2652,9 +2644,9 @@ uint64 powmod(uint64 x, uint64 n, uint64 m) {
 #include <cassert>
 
 int main() {
-  assert(powmod(2, 10, 1'000'000'007) == 1024);
-  assert(powmod(2, 62, 1'000'000) == 387904);
-  assert(powmod(10001, 10001, 100'000) == 10001);
+  assert(powmod(2, 10, 1000000007) == 1024);
+  assert(powmod(2, 62, 1000000) == 387904);
+  assert(powmod(10001, 10001, 100000) == 10001);
   return 0;
 }
 \end{lstlisting}
@@ -2917,7 +2909,7 @@ Perform operations on arbitrary precision big integers internally represented as
 #include <vector>
 
 class BigInt {
-  static const int BASE = 1'000'000'000, BASE_DIGITS = 9;
+  static const int BASE = 1000000000, BASE_DIGITS = 9;
   static const bool USE_FFT_MULT = true;
 
   using vint = std::vector<int>;

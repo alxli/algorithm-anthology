@@ -35,7 +35,6 @@ Space Complexity:
 template<class T>
 class SqrtDecomposition {
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
-
   static T join_value_with_delta(const T &v, const T &d) { return d; }
 
   int len, blocklen;

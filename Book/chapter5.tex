@@ -717,7 +717,7 @@ Given a starting node in an unweighted, directed graph, visit every connected no
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f'3f3f;
+const int MAXN = 100, INF = 0x3f3f3f3f;
 std::vector<int> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
@@ -1040,7 +1040,7 @@ The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f'3f3f;
+const int MAXN = 100, INF = 0x3f3f3f3f;
 std::vector<std::pair<int, int>> adj[MAXN];
 int dist[MAXN], pred[MAXN], relax_count[MAXN];
 bool in_queue[MAXN];
@@ -2250,7 +2250,7 @@ Although the push-relabel algorithm is considered one of the most efficient maxi
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f'3f3f;
+const int MAXN = 100, INF = 0x3f3f3f3f;
 int cap[MAXN][MAXN], f[MAXN][MAXN];
 
 int push_relabel(int nodes, int source, int sink) {
@@ -3015,7 +3015,7 @@ Given a weighted graph, determine a cycle of minimum total distance which visits
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 
-const int MAXN = 20, INF = 0x3f3f'3f3f;
+const int MAXN = 20, INF = 0x3f3f3f3f;
 int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
 
 void add_edge(int u, int v, int w) {
@@ -3105,7 +3105,7 @@ Given a weighted, directed graph, determine a path of minimum total distance whi
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 
-const int MAXN = 20, INF = 0x3f3f'3f3f;
+const int MAXN = 20, INF = 0x3f3f3f3f;
 int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
 
 int shortest_hamiltonian_path(int nodes) {

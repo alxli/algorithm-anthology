@@ -141,19 +141,12 @@ class Modular {
   }
 
   friend Modular operator+(Modular a, const Modular &b) { return a += b; }
-
   friend Modular operator-(Modular a, const Modular &b) { return a -= b; }
-
   friend Modular operator*(Modular a, const Modular &b) { return a *= b; }
-
   friend Modular operator/(Modular a, const Modular &b) { return a /= b; }
-
   friend bool operator==(const Modular &a, const Modular &b) { return a.v == b.v; }
-
   friend bool operator!=(const Modular &a, const Modular &b) { return !(a == b); }
-
   friend bool operator<(const Modular &a, const Modular &b) { return a.v < b.v; }
-
   friend std::ostream &operator<<(std::ostream &os, const Modular &x) { return os << x.v; }
 
   friend std::istream &operator>>(std::istream &is, Modular &x) {
@@ -213,7 +206,7 @@ class ModCombinatorics {
 
 struct Mod100000007 {
   using value_type = int;
-  static const int value = 1'000'000'007;
+  static const int value = 1000000007;
 };
 
 using Mint = Modular<Mod100000007>;

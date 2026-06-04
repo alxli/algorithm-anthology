@@ -52,15 +52,12 @@ Space Complexity:
 
 template<class T>
 class SegTree {
-  static const int MAXN = 1'000'000'000;
+  static const int MAXN = 1000000000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_segment(const T &v, int len) { return v; }
   static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-
-  static T join_deltas(const T &d1, const T &d2) {
-    return d2;  // For "set" updates, the more recent delta prevails.
-  }
+  static T join_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
     T value, delta;

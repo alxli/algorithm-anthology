@@ -173,10 +173,6 @@ bcde
 #include <iostream>
 using namespace std;
 
-void printch(int k, char v) {
-  cout << v;
-}
-
 int main() {
   SkipList<int, char> l;
   l.insert(2, 'b');
@@ -186,6 +182,7 @@ int main() {
   assert(l.insert(4, 'd'));
   assert(*l.find(4) == 'd');
   assert(!l.insert(4, 'd'));
+  auto printch = [](int k, char v) { cout << v; };
   l.walk(printch);
   cout << endl;
   assert(l.erase(1));

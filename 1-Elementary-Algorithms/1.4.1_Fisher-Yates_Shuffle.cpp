@@ -37,8 +37,7 @@ using namespace std;
 
 int main() {
   srand(1);
-  int raw[] = {1, 2, 3, 4, 5};
-  vector<int> a(raw, raw + 5), original(raw, raw + 5);
+  vector<int> a{1, 2, 3, 4, 5}, original(a);
   fisher_yates_shuffle(a.begin(), a.end());
   sort(a.begin(), a.end());
   assert(a == original);

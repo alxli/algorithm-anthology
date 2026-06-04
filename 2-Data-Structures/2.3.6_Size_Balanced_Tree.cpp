@@ -228,10 +228,6 @@ bcde
 #include <iostream>
 using namespace std;
 
-void printch(int k, char v) {
-  cout << v;
-}
-
 int main() {
   SBTree<int, char> t;
   t.insert(2, 'b');
@@ -241,6 +237,7 @@ int main() {
   assert(t.insert(4, 'd'));
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
+  auto printch = [](int k, char v) { cout << v; };
   t.walk(printch);
   cout << endl;
   assert(t.erase(1));

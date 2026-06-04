@@ -43,18 +43,18 @@ Space Complexity:
 
 template<class K, class V>
 class IntervalTreap {
-  using interval_t = std::pair<K, K>;
+  using Interval = std::pair<K, K>;
 
   struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
 
-    interval_t interval;
+    Interval interval;
     V value;
     K max;
     int priority;
     Node *left, *right;
 
-    Node(const interval_t &i, const V &v)
+    Node(const Interval &i, const V &v)
         : interval(i), value(v), max(i.second), priority(rand32()), left(nullptr), right(nullptr) {}
 
     void update() {
@@ -86,7 +86,7 @@ class IntervalTreap {
     tmp->update();
   }
 
-  static bool insert(Node *&n, const interval_t &i, const V &v) {
+  static bool insert(Node *&n, const Interval &i, const V &v) {
     if (n == nullptr) {
       n = new Node(i, v);
       return true;
@@ -108,7 +108,7 @@ class IntervalTreap {
     return false;
   }
 
-  static bool erase(Node *&n, const interval_t &i) {
+  static bool erase(Node *&n, const Interval &i) {
     if (n == nullptr) {
       return false;
     }
@@ -136,7 +136,7 @@ class IntervalTreap {
     return true;
   }
 
-  static Node *find_any(Node *n, const interval_t &i) {
+  static Node *find_any(Node *n, const Interval &i) {
     if (n == nullptr) {
       return nullptr;
     }
@@ -150,7 +150,7 @@ class IntervalTreap {
   }
 
   template<class KVFunction>
-  static void find_all(Node *n, const interval_t &i, KVFunction f) {
+  static void find_all(Node *n, const Interval &i, KVFunction f) {
     if (n == nullptr || n->max < i.first) {
       return;
     }
@@ -186,7 +186,7 @@ class IntervalTreap {
   bool empty() const { return root == nullptr; }
 
   bool insert(const K &lo, const K &hi, const V &v) {
-    if (insert(root, interval_t{lo, hi}, v)) {
+    if (insert(root, Interval{lo, hi}, v)) {
       num_nodes++;
       return true;
     }
@@ -194,26 +194,26 @@ class IntervalTreap {
   }
 
   bool erase(const K &lo, const K &hi) {
-    if (erase(root, interval_t{lo, hi})) {
+    if (erase(root, Interval{lo, hi})) {
       num_nodes--;
       return true;
     }
     return false;
   }
 
-  const interval_t *find_key(const K &lo, const K &hi) const {
-    Node *n = find_any(root, interval_t{lo, hi});
+  const Interval *find_key(const K &lo, const K &hi) const {
+    Node *n = find_any(root, Interval{lo, hi});
     return (n == nullptr) ? nullptr : &(n->interval);
   }
 
   const V *find_value(const K &lo, const K &hi) const {
-    Node *n = find_any(root, interval_t{lo, hi});
+    Node *n = find_any(root, Interval{lo, hi});
     return (n == nullptr) ? nullptr : &(n->value);
   }
 
   template<class KVFunction>
   void find_all(const K &lo, const K &hi, KVFunction f) const {
-    find_all(root, interval_t{lo, hi}, f);
+    find_all(root, Interval{lo, hi}, f);
   }
 
   template<class KVFunction>
@@ -233,10 +233,6 @@ All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
 #include <iostream>
 using namespace std;
 
-void print(int lo, int hi, char v) {
-  cout << " [" << lo << ", " << hi << "]";
-}
-
 int main() {
   IntervalTreap<int, char> t;
   t.insert(15, 20, 'a');
@@ -252,6 +248,7 @@ int main() {
   assert(*t.find_key(3, 9) == (pair<int, int>{5, 20}));
   assert(*t.find_value(3, 9) == 'd');
   cout << "Intervals intersecting [16, 20]:";
+  auto print = [](int lo, int hi, char v) { cout << " [" << lo << ", " << hi << "]"; };
   t.find_all(16, 20, print);
   cout << "\nAll intervals:";
   t.walk(print);

@@ -40,8 +40,8 @@ Space Complexity:
 
 template<class T>
 class SegTree2D {
-  static const int MAXR = 1'000'000'000;
-  static const int MAXC = 1'000'000'000;
+  static const int MAXR = 1000000000;
+  static const int MAXC = 1000000000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_region(const T &v, int area) { return v; }
@@ -209,7 +209,6 @@ class SegTree2D {
   explicit SegTree2D(const T &v = T()) : root(new OuterNode(0, MAXR, v)), init(v) {}
 
   ~SegTree2D() { clean_up(root); }
-
   T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -255,8 +254,8 @@ int main() {
   assert(t.query(0, 0, 0, 1) == 6);
   assert(t.query(0, 0, 1, 0) == 5);
   assert(t.query(1, 1, 2, 2) == 0);
-  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == 0);
+  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
   t.update(500000000, 500000000, -100);
-  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == -100);
+  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
   return 0;
 }

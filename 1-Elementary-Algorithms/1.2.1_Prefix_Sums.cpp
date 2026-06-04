@@ -57,19 +57,12 @@ long long rectangle_sum(
 using namespace std;
 
 int main() {
-  int raw[] = {3, -1, 4, 1, 5};
-  vector<int> a(raw, raw + 5);
+  vector<int> a{3, -1, 4, 1, 5};
   vector<long long> pref = prefix_sums(a);
   assert(range_sum(pref, 0, 5) == 12);
   assert(range_sum(pref, 1, 4) == 4);
 
-  vector<vector<int>> grid(2, vector<int>(3));
-  grid[0][0] = 1;
-  grid[0][1] = 2;
-  grid[0][2] = 3;
-  grid[1][0] = 4;
-  grid[1][1] = 5;
-  grid[1][2] = 6;
+  vector<vector<int>> grid{{1, 2, 3}, {4, 5, 6}};
   vector<vector<long long>> ps = prefix_sums_2d(grid);
   assert(rectangle_sum(ps, 0, 1, 2, 3) == 16);
   return 0;

@@ -174,10 +174,6 @@ struct ClassHash {
   }
 };
 
-void printch(const string &k, char v) {
-  cout << v;
-}
-
 int main() {
   HashMap<string, char, ClassHash> m;
   m["foo"] = 'a';
@@ -186,7 +182,7 @@ int main() {
   assert(m["bar"] == 'b');
   assert(m["baz"] == '\0');
   m["baz"] = 'c';
-  m.walk(printch);
+  m.walk([](const string &k, char v) { cout << v; });
   cout << endl;
   assert(m.erase("foo"));
   assert(m.size() == 2);

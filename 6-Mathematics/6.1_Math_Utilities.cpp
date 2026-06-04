@@ -361,10 +361,9 @@ std::string to_roman(unsigned int x) {
 
 /*** Example Usage ***/
 
-using namespace std;
-
 #include <cassert>
 #include <iostream>
+using namespace std;
 
 int main() {
   assert(EQ(M_PI, 3.14159265359));

@@ -45,10 +45,8 @@ long long knapsack_01(
 using namespace std;
 
 int main() {
-  int w_raw[] = {3, 4, 5, 9};
-  long long v_raw[] = {4, 5, 7, 10};
-  vector<int> weight(w_raw, w_raw + 4);
-  vector<long long> value(v_raw, v_raw + 4);
+  vector<int> weight{3, 4, 5, 9};
+  vector<long long> value{4, 5, 7, 10};
 
   assert(knapsack_01(weight, value, 8) == 11);   // Items of weight 3 and 5.
   assert(knapsack_01(weight, value, 10) == 12);  // Items of weight 4 and 5.
