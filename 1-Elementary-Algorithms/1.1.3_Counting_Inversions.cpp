@@ -1,7 +1,7 @@
 /*
 
-The number of inversions for an array $a[]$ the number of ordered pairs $(i, j)$ such that $i < j$
-and $a[i]$ > $a[j]$. This is roughly how "close" an array is to being sorted, but is *not* the
+The number of inversions for a sequence `a` is the number of ordered pairs $(i, j)$ such that
+$i < j$ and $a[i] > a[j]$. This is roughly how "close" an array is to being sorted, but is *not* the
 minimum number of swaps required to sort the array. If the array is sorted, then the inversion count
 is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following
 two functions are each techniques to efficiently count inversions.
@@ -9,21 +9,16 @@ two functions are each techniques to efficiently count inversions.
 - `inversions(lo, hi)` uses merge sort to return the number of inversions given two random-access
   iterators as a range `[lo, hi)`. The input range will be sorted after the function call. This
   requires `operator <` to be defined on the iterators' value type.
-- `inversions(n, a[])` uses a power-of-two trick to return the number of inversions for an array
-  `a[]` of $n$ nonnegative integers. After calling the function, every value of `a[]` will be set to
-  0. The time and space complexity of this operation are functions of the magnitude of the maximum
-  value in `a[]`. To instead obtain a running time of O(n log n) on the number of elements,
-  coordinate compression may be applied to `a[]` beforehand so that its maximum is strictly less
-  than the length n itself.
+- `inversions(a)` uses coordinate compression and a Fenwick tree to return the number of
+  inversions in an integer vector without modifying it.
 
 Time Complexity:
 - O(n log n) per call to `inversion(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
-- O(n log m) per call to `inversions(n, a[])` where $n$ is the distance between `lo` and `hi` and
-  $m$ is maximum value in `a[]`.
+- O(n log n) per call to `inversions(a)`.
 
 Space Complexity:
 - O(n) auxiliary space and O(log n) stack space for `inversions(lo, hi)`.
-- O(m) auxiliary heap space for `inversions(n, a[])`.
+- O(n) auxiliary heap space for `inversions(a)`.
 
 */
 
@@ -65,25 +60,20 @@ long long inversions(It lo, It hi) {
   return res;
 }
 
-long long inversions(int n, int a[]) {
-  int mx = 0;
-  for (int i = 0; i < n; i++) {
-    mx = std::max(mx, a[i]);
-  }
+long long inversions(const std::vector<int> &a) {
+  int n = a.size();
+  std::vector<int> values(a.begin(), a.end());
+  std::sort(values.begin(), values.end());
+  values.erase(std::unique(values.begin(), values.end()), values.end());
+  std::vector<int> bit(values.size() + 1, 0);
   long long res = 0;
-  std::vector<int> count(mx);
-  while (mx > 0) {
-    std::fill(count.begin(), count.end(), 0);
-    for (int i = 0; i < n; i++) {
-      if (a[i] % 2 == 0) {
-        res += count[a[i] / 2];
-      } else {
-        count[a[i] / 2]++;
-      }
+  for (int i = n - 1; i >= 0; i--) {
+    int id = std::lower_bound(values.begin(), values.end(), a[i]) - values.begin() + 1;
+    for (int j = id - 1; j > 0; j -= j & -j) {
+      res += bit[j];
     }
-    mx = 0;
-    for (int i = 0; i < n; i++) {
-      mx = std::max(mx, a[i] /= 2);
+    for (int j = id; j < static_cast<int>(bit.size()); j += j & -j) {
+      bit[j]++;
     }
   }
   return res;
@@ -95,12 +85,12 @@ long long inversions(int n, int a[]) {
 
 int main() {
   {
-    int a[] = {6, 9, 1, 14, 8, 12, 3, 2};
-    assert(inversions(a, a + 8) == 16);
+    std::vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
+    assert(inversions(a.begin(), a.end()) == 16);
   }
   {
-    int a[] = {6, 9, 1, 14, 8, 12, 3, 2};
-    assert(inversions(8, a) == 16);
+    std::vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
+    assert(inversions(a) == 16);
   }
   return 0;
 }

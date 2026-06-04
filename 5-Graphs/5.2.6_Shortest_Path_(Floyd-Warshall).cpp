@@ -2,8 +2,8 @@
 
 Given a weighted, directed graph with possibly negative weights, determine the minimum distance
 between all pairs of start and destination nodes in the graph. Optionally, output the shortest path
-between two nodes using the shortest-path tree precomputed into the `parent[][]` array.
-`floyd_warshall()` applies to a global adjacency matrix `dist[][]`, which must be initialized using
+between two nodes using the shortest-path tree precomputed into the `parent` matrix.
+`floyd_warshall()` applies to a global adjacency matrix `dist`, which must be initialized using
 `initialize()` and subsequently populated with weights. After the function call, `dist[u][v]` will
 have been modified to contain the shortest path from $u$ to $v$, for all pairs of valid nodes $u$
 and $v$.
@@ -23,11 +23,14 @@ Space Complexity:
 
 #include <climits>
 #include <stdexcept>
+#include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-int dist[MAXN][MAXN], parent[MAXN][MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<int>> dist, parent;
 
 void initialize(int nodes) {
+  dist.assign(nodes, std::vector<int>(nodes));
+  parent.assign(nodes, std::vector<int>(nodes));
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
       dist[i][j] = (i == j) ? 0 : INF;
@@ -36,7 +39,8 @@ void initialize(int nodes) {
   }
 }
 
-void floyd_warshall(int nodes) {
+void floyd_warshall() {
+  int nodes = dist.size();
   for (int k = 0; k < nodes; k++) {
     for (int i = 0; i < nodes; i++) {
       for (int j = 0; j < nodes; j++) {
@@ -80,7 +84,7 @@ int main() {
   dist[0][1] = 1;
   dist[1][2] = 2;
   dist[0][2] = 5;
-  floyd_warshall(3);
+  floyd_warshall();
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[start][dest]
        << "." << endl;
   print_path(start, dest);

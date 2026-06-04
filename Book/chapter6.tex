@@ -11,7 +11,6 @@ Common mathematic constants and functions, many of which are substitutes for fea
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cfloat>
-#include <climits>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
@@ -277,8 +276,8 @@ double lgamma_(double x) {
   if (x < 12) {
     return log(fabs(tgamma_(x)));
   }
-  static const double c[8] = {1.0 / 12,   -1.0 / 360,      1.0 / 1260, -1.0 / 1680,
-                              1.0 / 1188, -691.0 / 360360, 1.0 / 156,  -3617.0 / 122400};
+  static const double c[] = {1.0 / 12,   -1.0 / 360,      1.0 / 1260, -1.0 / 1680,
+                             1.0 / 1188, -691.0 / 360360, 1.0 / 156,  -3617.0 / 122400};
   double z = 1.0 / (x * x), sum = c[7];
   for (int i = 6; i >= 0; i--) {
     sum = sum * z + c[i];
@@ -370,9 +369,9 @@ int main() {
   assert(EQ(tgamma_(0.5), 1.7724538509) && EQ(tgamma_(1.0), 1.0));
   assert(EQ(lgamma_(0.5), 0.5723649429) && EQ(lgamma_(1.0), 0.0));
 
-  int digits[] = {6, 5, 4, 3, 2, 1};
+  std::vector<int> digits{6, 5, 4, 3, 2, 1};
   std::vector<int> base20 = to_base(123456, 20);
-  assert(convert_base(base20, 20, 10) == std::vector<int>(digits, digits + 6));
+  assert(convert_base(base20, 20, 10) == digits);
   assert(to_roman(1234) == "MCCXXXIV");
   assert(to_roman(5678) == "MMMMMDCLXXVIII");
   return 0;
@@ -630,16 +629,16 @@ int main() {
 For the purposes of this section, we define a "size $k$ arrangement of $n$" to be a permutation of a size $k$ subset of the integers from $0$ to $n - 1$, for $0 \leq k \leq n$. There are $n \mathbin{\text{permute}} k$ possible arrangements, but $n^k$ possible arrangements if repeated values are allowed.
 
 \begin{compactitem}
-  \item \inlinecode{next\_arrangement(n, k, a)} tries to rearrange \inlinecode{a[]} to the next lexicographically greater arrangement, returning true if such an arrangement exists or false if the array is already in descending order (in which case \inlinecode{a[]} is unchanged). The input \inlinecode{a[]} must consist of exactly $k$ distinct integers in the range $[0, n)$.
+  \item \inlinecode{next\_arrangement(n, a)} tries to rearrange \inlinecode{a} to the next lexicographically greater arrangement, returning true if such an arrangement exists or false if the array is already in descending order (in which case \inlinecode{a} is unchanged). The input \inlinecode{a} must consist of distinct integers in the range $[0, n)$.
   \item \inlinecode{arrangement\_by\_rank(n, k, r)} returns the size $k$ arrangement of $n$ which is lexicographically ranked $r$ out of all size $k$ arrangements of $n$, where $r$ is a zero-based rank in the range $[0, n \mathbin{\text{permute}} k)$.
-  \item \inlinecode{rank\_by\_arrangement(n, k, a)} returns an integer representing the zero-based rank of arrangement \inlinecode{a[]}, which must consist of exactly $k$ distinct integers in the range $[0, n)$.
-  \item \inlinecode{next\_arrangement\_with\_repeats(n, k, a)} tries to rearrange \inlinecode{a[]} to the next lexicographically greater arrangement with repeats, returning true if such an arrangement exists or false if the array is already in descending order (in which case \inlinecode{a[]} is unchanged). The input \inlinecode{a[]} must consist of exactly $k$ (not necessarily distinct) integers in the range $[0, n)$. If \inlinecode{a[]} were interpreted as a $k$ digit integer in base $n$, this function could be thought of as incrementing the integer.
+  \item \inlinecode{rank\_by\_arrangement(n, a)} returns an integer representing the zero-based rank of arrangement \inlinecode{a}, which must consist of distinct integers in the range $[0, n)$.
+  \item \inlinecode{next\_arrangement\_with\_repeats(n, a)} tries to rearrange \inlinecode{a} to the next lexicographically greater arrangement with repeats, returning true if such an arrangement exists or false if the array is already in descending order (in which case \inlinecode{a} is unchanged). The input \inlinecode{a} must consist of integers in the range $[0, n)$. If \inlinecode{a} were interpreted as a $k$ digit integer in base $n$, this function could be thought of as incrementing the integer.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \cdot k)$ for \inlinecode{next\_arrangement()}, \inlinecode{arrangement\_by\_rank()}, and \inlinecode{rank\_by\_arrangement()}.
-  \item $O(k)$ for \inlinecode{next\_arrangement\_with\_repeats()}.
+  \item $O(n \cdot k)$ for \inlinecode{next\_arrangement(n, a)}, \inlinecode{arrangement\_by\_rank(n, k, r)}, and \inlinecode{rank\_by\_arrangement(n, a)}, where $k$ is the size of \inlinecode{a}.
+  \item $O(k)$ for \inlinecode{next\_arrangement\_with\_repeats(n, a)}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
@@ -653,7 +652,8 @@ For the purposes of this section, we define a "size $k$ arrangement of $n$" to b
 #include <numeric>
 #include <vector>
 
-bool next_arrangement(int n, int k, int a[]) {
+bool next_arrangement(int n, std::vector<int> &a) {
+  int k = a.size();
   std::vector<bool> used(n);
   for (int i = 0; i < k; i++) {
     used[a[i]] = true;
@@ -697,7 +697,8 @@ std::vector<int> arrangement_by_rank(int n, int k, long long r) {
   return res;
 }
 
-long long rank_by_arrangement(int n, int k, int a[]) {
+long long rank_by_arrangement(int n, const std::vector<int> &a) {
+  int k = a.size();
   long long res = 0;
   std::vector<bool> used(n);
   for (int i = 0; i < k; i++) {
@@ -713,11 +714,12 @@ long long rank_by_arrangement(int n, int k, int a[]) {
   return res;
 }
 
-bool next_arrangement_with_repeats(int n, int k, int a[]) {
+bool next_arrangement_with_repeats(int n, std::vector<int> &a) {
+  int k = a.size();
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - 1) {
       a[i]++;
-      std::fill(a + i + 1, a + k, 0);
+      std::fill(a.begin() + i + 1, a.end(), 0);
       return true;
     }
   }
@@ -741,24 +743,26 @@ void print_range(It lo, It hi) {
 
 int main() {
   {
-    int n = 4, k = 3, a[] = {0, 1, 2};
+    int n = 4, k = 3;
+    vector<int> a{0, 1, 2};
     cout << n << " permute " << k << " arrangements:" << endl;
     int count = 0;
     do {
-      print_range(a, a + k);
+      print_range(a.begin(), a.end());
       auto b = arrangement_by_rank(n, k, count);
-      assert(equal(a, a + k, b.begin()));
-      assert(rank_by_arrangement(n, k, a) == count);
+      assert(a == b);
+      assert(rank_by_arrangement(n, a) == count);
       count++;
-    } while (next_arrangement(n, k, a));
+    } while (next_arrangement(n, a));
     cout << endl;
   }
   {
-    int n = 4, k = 2, a[] = {0, 0};
+    int n = 4, k = 2;
+    vector<int> a{0, 0};
     cout << endl << n << "^" << k << " arrangements with repeats:" << endl;
     do {
-      print_range(a, a + k);
-    } while (next_arrangement_with_repeats(n, k, a));
+      print_range(a.begin(), a.end());
+    } while (next_arrangement_with_repeats(n, a));
     cout << endl;
   }
   return 0;
@@ -779,17 +783,17 @@ A permutation is an ordered list consisting of $n$ (not necessarily distinct) el
 
 \begin{compactitem}
   \item \inlinecode{next\_permutation\_(lo, hi)} is analogous to \inlinecode{std::next\_permutation(lo, hi)}, taking two BidirectionalIterators \inlinecode{lo} and \inlinecode{hi} as a range \inlinecode{[lo, hi)} for which the function tries to rearrange to the next lexicographically greater permutation. The function returns true if such a permutation exists, or false if the range is already in descending order (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by the \inlinecode{\textless{}} operator on the iterator's value type.
-  \item \inlinecode{next\_permutation(n, a)} is analogous to \inlinecode{next\_permutation()}, except that it takes an array \inlinecode{a[]} of size $n$ instead of a range.
+  \item \inlinecode{next\_permutation(a)} is analogous to \inlinecode{next\_permutation()}, except that it takes a vector instead of a range.
   \item \inlinecode{next\_permutation(x)} returns the next lexicographically greater permutation of the binary digits of the integer \inlinecode{x}, that is, the lowest integer greater than \inlinecode{x} with the same number of 1-bits. This can be used to generate combinations of a set of $n$ items by treating each 1 bit as whether to "take" the item at the corresponding position.
   \item \inlinecode{permutation\_by\_rank(n, r)} returns the permutation of the integers in the range $[0, n)$ which is lexicographically ranked $r$, where $r$ is a zero-based rank in the range $[0, n!)$.
-  \item \inlinecode{rank\_by\_permutation(n, a)} returns an integer representing the zero-based rank of permutation \inlinecode{a[]}, which must be a permutation of the integers $[0, n)$.
-  \item \inlinecode{permutation\_cycles(n, a)} returns the decomposition of the permutation \inlinecode{a[]} into cycles. A permutation cycle is a subset of a permutation whose elements are consecutively swapped, relative to a sorted set. For example, $\{3, 1, 0, 2\}$ decomposes to $\{0, 3, 2\}$ and $\{1\}$, meaning that starting from the sorted order $\{0, 1, 2, 3\}$, the 0th value is replaced by the 3rd, the 3rd by the 2nd, and the 2nd by the 0th ($0 \to 3 \to 2 \to 0$).
+  \item \inlinecode{rank\_by\_permutation(a)} returns an integer representing the zero-based rank of permutation \inlinecode{a}, which must be a permutation of the integers $[0, n)$.
+  \item \inlinecode{permutation\_cycles(a)} returns the decomposition of the permutation \inlinecode{a} into cycles. A permutation cycle is a subset of a permutation whose elements are consecutively swapped, relative to a sorted set. For example, $\{3, 1, 0, 2\}$ decomposes to $\{0, 3, 2\}$ and $\{1\}$, meaning that starting from the sorted order $\{0, 1, 2, 3\}$, the 0th value is replaced by the 3rd, the 3rd by the 2nd, and the 2nd by the 0th ($0 \to 3 \to 2 \to 0$).
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n^{2})$ per call to \inlinecode{next\_permutation\_(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(n^{2})$ per call to \inlinecode{next\_permutation(n, a)}, \inlinecode{permutation\_by\_rank(n, r)}, and \inlinecode{rank\_by\_permutation(n, a)}.
+  \item $O(n^{2})$ per call to \inlinecode{next\_permutation(a)}, \inlinecode{permutation\_by\_rank(n, r)}, and \inlinecode{rank\_by\_permutation(a)}.
   \item $O(1)$ per call to \inlinecode{next\_permutation(x)}.
   \item $O(n)$ per call to \inlinecode{permutation\_cycles()}.
 \end{compactitem}
@@ -834,7 +838,8 @@ bool next_permutation_(It lo, It hi) {
 }
 
 template<class T>
-bool next_permutation(int n, T a[]) {
+bool next_permutation(std::vector<T> &a) {
+  int n = a.size();
   for (int i = n - 2; i >= 0; i--) {
     if (a[i] < a[i + 1]) {
       for (int j = n - 1;; j--) {
@@ -873,7 +878,8 @@ std::vector<int> permutation_by_rank(int n, long long x) {
   return res;
 }
 
-long long rank_by_permutation(int n, int a[]) {
+long long rank_by_permutation(const std::vector<int> &a) {
+  int n = a.size();
   std::vector<long long> factorial(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {
@@ -894,7 +900,8 @@ long long rank_by_permutation(int n, int a[]) {
 
 using cycles = std::vector<std::vector<int>>;
 
-cycles permutation_cycles(int n, int a[]) {
+cycles permutation_cycles(const std::vector<int> &a) {
+  int n = a.size();
   std::vector<bool> visit(n);
   cycles res;
   for (int i = 0; i < n; i++) {
@@ -931,23 +938,20 @@ void print_range(It lo, It hi) {
 int main() {
   {
     const int n = 4;
-    int a[] = {0, 1, 2, 3}, b[n], c[n];
-    for (int i = 0; i < n; i++) {
-      b[i] = c[i] = a[i];
-    }
+    vector<int> a{0, 1, 2, 3}, b = a, c = a;
     cout << "Permutations of [0, " << n << "):" << endl;
     int count = 0;
     do {
-      print_range(a, a + n);
-      assert(equal(b, b + n, a));
-      assert(equal(c, c + n, a));
+      print_range(a.begin(), a.end());
+      assert(b == a);
+      assert(c == a);
       vector<int> d = permutation_by_rank(n, count);
-      assert(equal(d.begin(), d.end(), a));
-      assert(rank_by_permutation(n, a) == count);
+      assert(d == a);
+      assert(rank_by_permutation(a) == count);
       count++;
-      std::next_permutation(b, b + n);
-      next_permutation(c, c + n);
-    } while (next_permutation(n, a));
+      std::next_permutation(b.begin(), b.end());
+      next_permutation(c);
+    } while (next_permutation(a));
     cout << endl;
   }
   {  // Permutations of binary digits.
@@ -962,9 +966,9 @@ int main() {
   }
   {  // Decomposition into cycles.
     const int n = 4;
-    int a[] = {3, 1, 0, 2};
+    vector<int> a{3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
-    cycles c = permutation_cycles(n, a);
+    cycles c = permutation_cycles(a);
     for (const auto &cycle : c) {
       print_range(cycle.begin(), cycle.end());
     }
@@ -990,17 +994,17 @@ A combination is a subset of size $k$ chosen from a total of $n$ (not necessaril
 
 \begin{compactitem}
   \item \inlinecode{next\_combination(lo, mid, hi)} takes random-access iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} as a range \inlinecode{[lo, hi)} of $n$ elements for which the function will rearrange such that the $k$ elements in \inlinecode{[lo, mid)} become the next lexicographically greater combination. The function returns true if such a combination exists, or false if \inlinecode{[lo, mid)} already consists of the lexicographically greatest combination of the elements in \inlinecode{[lo, hi)} (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}} on the iterator's value type.
-  \item \inlinecode{next\_combination(n, k, a)} rearranges \inlinecode{a[]} to become the next lexicographically greater combination of $k$ distinct integers in the range $[0, n)$. The array \inlinecode{a[]} must consist of $k$ distinct integers in the range $[0, n)$.
+  \item \inlinecode{next\_combination(n, a)} rearranges \inlinecode{a} to become the next lexicographically greater combination of distinct integers in the range $[0, n)$. The vector \inlinecode{a} must be sorted and contain distinct integers in the range $[0, n)$.
   \item \inlinecode{next\_combination\_mask(x)} interprets the bits of an integer \inlinecode{x} as a mask with 1-bits specifying the chosen items for a combination and returns the mask of the next lexicographically greater combination (that is, the lowest integer greater than \inlinecode{x} with the same number of 1 bits). Note that this does not generate combinations in the same order as \inlinecode{next\_combination()}, nor does it work if the corresponding $n$ items are not distinct (in that case, duplicate combinations will be generated).
   \item \inlinecode{combination\_by\_rank(n, k, r)} returns the combination of $k$ distinct integers in the range $[0, n)$ that is lexicographically ranked $r$, where $r$ is a zero-based rank in the range $[0, \binom{n}{k})$.
-  \item \inlinecode{rank\_by\_combination(n, k, a)} returns an integer representing the zero-based rank of combination \inlinecode{a[]}, which must consist of $k$ distinct integers in $[0, n)$.
-  \item \inlinecode{next\_combination\_with\_repeats(n, k, a)} rearranges \inlinecode{a[]} to become the next lexicographically greater combination of $k$ (not necessarily distinct) integers in the range $[0, n)$. The array \inlinecode{a[]} must consist of $k$ integers in the range $[0, n)$. Note that there is a total of $n \mathbin{\text{multichoose}} k$ combinations if repetition is allowed, where $n \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
+  \item \inlinecode{rank\_by\_combination(n, a)} returns an integer representing the zero-based rank of combination \inlinecode{a}, which must contain sorted distinct integers in $[0, n)$.
+  \item \inlinecode{next\_combination\_with\_repeats(n, a)} rearranges \inlinecode{a} to become the next lexicographically greater combination of not necessarily distinct integers in the range $[0, n)$. The vector \inlinecode{a} must be sorted. Note that there is a total of $n \mathbin{\text{multichoose}} k$ combinations if repetition is allowed, where $n \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{next\_combination(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(k)$ per call to \inlinecode{next\_combination(n, k, a)} and \inlinecode{next\_combination\_with\_repeats(n, k, a)}.
+  \item $O(k)$ per call to \inlinecode{next\_combination(n, a)} and \inlinecode{next\_combination\_with\_repeats(n, a)}, where $k$ is the size of \inlinecode{a}.
   \item $O(1)$ per call to \inlinecode{next\_combination\_mask(x)}.
   \item $O(n \cdot k)$ per call to \inlinecode{combination\_by\_rank()} and \inlinecode{rank\_by\_combination()}.
 \end{compactitem}
@@ -1064,7 +1068,8 @@ bool next_combination(It lo, It mid, It hi) {
   return true;
 }
 
-bool next_combination(int n, int k, int a[]) {
+bool next_combination(int n, std::vector<int> &a) {
+  int k = a.size();
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - k + i) {
       a[i]++;
@@ -1111,7 +1116,8 @@ std::vector<int> combination_by_rank(int n, int k, long long r) {
   return res;
 }
 
-long long rank_by_combination(int n, int k, int a[]) {
+long long rank_by_combination(int n, const std::vector<int> &a) {
+  int k = a.size();
   long long res = 0;
   int prev = -1;
   for (int i = 0; i < k; i++) {
@@ -1123,7 +1129,8 @@ long long rank_by_combination(int n, int k, int a[]) {
   return res;
 }
 
-bool next_combination_with_repeats(int n, int k, int a[]) {
+bool next_combination_with_repeats(int n, std::vector<int> &a) {
+  int k = a.size();
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - 1) {
       for (++a[i]; ++i < k;) {
@@ -1183,24 +1190,26 @@ int main() {
     cout << endl;
   }
   {  // Combinations of distinct integers from 0 to n - 1.
-    int n = 5, k = 3, a[] = {0, 1, 2};
+    int n = 5, k = 3;
+    vector<int> a{0, 1, 2};
     cout << "\n" << n << " choose " << k << ":" << endl;
     int count = 0;
     do {
-      print_range(a, a + k);
+      print_range(a.begin(), a.end());
       vector<int> b = combination_by_rank(n, k, count);
-      assert(equal(a, a + k, b.begin()));
-      assert(rank_by_combination(n, k, a) == count);
+      assert(a == b);
+      assert(rank_by_combination(n, a) == count);
       count++;
-    } while (next_combination(n, k, a));
+    } while (next_combination(n, a));
     cout << endl;
   }
   {  // Combinations with repeats.
-    int n = 3, k = 2, a[] = {0, 0};
+    int n = 3, k = 2;
+    vector<int> a{0, 0};
     cout << "\n" << n << " multichoose " << k << ":" << endl;
     do {
-      print_range(a, a + k);
-    } while (next_combination_with_repeats(n, k, a));
+      print_range(a.begin(), a.end());
+    } while (next_combination_with_repeats(n, a));
     cout << endl;
   }
   return 0;
@@ -1223,9 +1232,9 @@ abc abd acd bcd abe ace bce ade bde
 A partition of a natural number $n$ is a way to write $n$ as a sum of positive integers where the order of the addends does not matter.
 
 \begin{compactitem}
-  \item \inlinecode{next\_partition(p)} takes a reference to a vector \inlinecode{p[]} of positive integers as a partition of $n$ for which the function will re-assign to become the next lexicographically greater partition. The function returns true if such a partition exists, or false if \inlinecode{p[]} already consists of the lexicographically greatest partition (i.e. the single integer $n$).
+  \item \inlinecode{next\_partition(p)} takes a reference to a vector \inlinecode{p} of positive integers as a partition of $n$ for which the function will re-assign to become the next lexicographically greater partition. The function returns true if such a partition exists, or false if \inlinecode{p} already consists of the lexicographically greatest partition (i.e. the single integer $n$).
   \item \inlinecode{partition\_by\_rank(n, r)} returns the partition of $n$ that is lexicographically ranked $r$ if addends in each partition were sorted in non-increasing order, where $r$ is a zero-based rank in the range $[0, \text{partitions}(n))$.
-  \item \inlinecode{rank\_by\_partition(p)} returns an integer representing the zero-based rank of the partition specified by vector \inlinecode{p[]}, which must consist of positive integers sorted in non-increasing order.
+  \item \inlinecode{rank\_by\_partition(p)} returns an integer representing the zero-based rank of the partition specified by vector \inlinecode{p}, which must consist of positive integers sorted in non-increasing order.
   \item \inlinecode{generate\_increasing\_partitions(n, f)} calls the function \inlinecode{f(lo, hi)} on strictly increasing partitions of $n$ in lexicographically increasing order of partition, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to a range \inlinecode{[lo, hi)} of integers. Note that non-strictly increasing partitions like $\{1, 1, 1, 1\}$ are skipped.
 \end{compactitem}
 
@@ -1593,7 +1602,7 @@ Common number theory operations relating to modular arithmetic.
   \item \inlinecode{mod(a, b)} returns the value of \inlinecode{a} mod \inlinecode{b} under the true Euclidean definition of modulo, that is, the smallest nonnegative integer $m$ satisfying $a + bn = m$ for some integer $n$. Note that this is identical to the remainder operator \inlinecode{\%} in C++ for nonnegative operands \inlinecode{a} and \inlinecode{b}, but the result will differ when an operand is negative.
   \item \inlinecode{mod\_inverse(a, m)} and \inlinecode{mod\_inverse2(a, m)} both return an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
   \item \inlinecode{generate\_inverse(p)} returns a vector $v$ of integers where for each index $i$ in the vector, $i \cdot \text{v[i]} \equiv 1 \pmod p$, where the argument $p$ is prime.
-  \item \inlinecode{simple\_restore(n, a, p)} and \inlinecode{garner\_restore(n, a, p)} both return the solution $x$ for the system of simultaneous congruences $x \equiv \text{a[i]} \pmod{\text{p[i]}}$ for all indices $i$ in $[0, n)$, where \inlinecode{p[]} consists of pairwise coprime integers. The solution $x$ is guaranteed to be unique by the Chinese remainder theorem.
+  \item \inlinecode{simple\_restore(a, p)} and \inlinecode{garner\_restore(a, p)} both return the solution $x$ for the system of simultaneous congruences $x \equiv \text{a[i]} \pmod{\text{p[i]}}$ for all indices $i$ in $[0, n)$, where \inlinecode{p} consists of pairwise coprime integers. The solution $x$ is guaranteed to be unique by the Chinese remainder theorem.
 \end{compactitem}
 
 \textbf{Time Complexity}:
@@ -1601,15 +1610,15 @@ Common number theory operations relating to modular arithmetic.
   \item $O(\log\left(a + b\right))$ per call to \inlinecode{gcd(a, b)}, \inlinecode{gcd2(a, b)}, \inlinecode{lcm(a, b)}, \inlinecode{extended\_euclid(a, b)}, \inlinecode{extended\_euclid2(a, b)}, \inlinecode{mod\_inverse(a, b)}, and \inlinecode{mod\_inverse2(a, b)}.
   \item $O(1)$ for \inlinecode{mod(a, b)}.
   \item $O(p)$ for \inlinecode{generate\_inverse(p)}.
-  \item Exponential for \inlinecode{simple\_restore(n, a, p)}.
-  \item $O(n^{2})$ for \inlinecode{garner\_restore(n, a, p)}.
+  \item Exponential for \inlinecode{simple\_restore(a, p)}.
+  \item $O(n^{2})$ for \inlinecode{garner\_restore(a, p)}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\log\left(a + b\right))$ auxiliary stack space for \inlinecode{gcd2(a, b)}, \inlinecode{extended\_euclid2(a, b)}, and \inlinecode{mod\_inverse2(a, b)}.
   \item $O(p)$ auxiliary heap space for \inlinecode{generate\_inverse(p)}.
-  \item $O(n)$ auxiliary heap space for \inlinecode{garner\_restore(n, a, p)}.
+  \item $O(n)$ auxiliary heap space for \inlinecode{garner\_restore(a, p)}.
   \item $O(1)$ auxiliary space for all other operations.
 \end{compactitem}
 
@@ -1688,7 +1697,8 @@ std::vector<int> generate_inverse(int p) {
   return res;
 }
 
-long long simple_restore(int n, int a[], int p[]) {
+long long simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
+  int n = a.size();
   long long res = 0, m = 1;
   for (int i = 0; i < n; i++) {
     while (res % p[i] != a[i]) {
@@ -1699,11 +1709,12 @@ long long simple_restore(int n, int a[], int p[]) {
   return res;
 }
 
-long long garner_restore(int n, int a[], int p[]) {
+long long garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
+  int n = a.size();
   if (n == 0) {
     return 0;
   }
-  std::vector<int> x(a, a + n);
+  std::vector<int> x(a);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
       x[i] =
@@ -1749,9 +1760,10 @@ int main() {
     }
   }
   {
-    int n = 3, a[] = {2, 3, 1}, m[] = {3, 4, 5};
-    int x = simple_restore(n, a, m);
-    assert(x == garner_restore(n, a, m));
+    vector<int> a{2, 3, 1}, m{3, 4, 5};
+    int n = a.size();
+    int x = simple_restore(a, m);
+    assert(x == garner_restore(a, m));
     for (int i = 0; i < n; i++) {
       assert(mod(x, m[i]) == a[i]);
     }
@@ -2229,10 +2241,10 @@ bool is_prime_fast(long long n) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <vector>
 
 int main() {
-  int len = 20;
-  long long tests[] = {
+  std::vector<long long> tests{
       -1,
       0,
       1,
@@ -2255,10 +2267,10 @@ int main() {
       6339503641LL,
       6548531929LL
   };
-  for (int i = 0; i < len; i++) {
-    bool p = is_prime(tests[i]);
-    assert(p == is_prime_fast(tests[i]));
-    assert(p == is_probable_prime(tests[i]));
+  for (long long test : tests) {
+    bool p = is_prime(test);
+    assert(p == is_prime_fast(test));
+    assert(p == is_probable_prime(test));
   }
   return 0;
 }
@@ -2526,8 +2538,7 @@ int main() {
     assert(fermat(n) == 1000003);
   }
   {  // Large tests.
-    const int ntests = 7;
-    const long long tests[] = {
+    const vector<long long> tests{
         3LL * 3 * 5 * 7 * 9949 * 9967 * 1000003,
         2LL * 1000003 * 1000000007,
         999961LL * 1000033,
@@ -3741,7 +3752,7 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 
 \begin{compactitem}
   \item \inlinecode{make\_matrix(r, c, v)} constructs and returns a matrix with \inlinecode{r} rows and \inlinecode{c} columns where the value at every index is initialized to \inlinecode{v}.
-  \item \inlinecode{make\_matrix(a)} returns a matrix constructed from the two dimensional array \inlinecode{a}.
+  \item \inlinecode{make\_matrix(a)} returns a matrix constructed from the two-dimensional vector \inlinecode{a}.
   \item \inlinecode{identity\_matrix(n)} returns the $n$ by $n$ identity matrix, that is, a matrix where \inlinecode{a[i][j]} equals 1 (if $i = j$), or 0 otherwise, for every $i$ and $j$ in $[0, n)$.
   \item \inlinecode{rows(a)} returns the number of rows $r$ in an $r$ by $c$ matrix \inlinecode{a}.
   \item \inlinecode{columns(a)} returns the number of columns $c$ in an $r$ by $c$ matrix \inlinecode{a}.
@@ -3794,11 +3805,12 @@ matrix make_matrix(int r, int c, const T &v) {
   return matrix(r, matrix::value_type(c, v));
 }
 
-template<class T, size_t r, size_t c>
-matrix make_matrix(T (&a)[r][c]) {
+template<class T>
+matrix make_matrix(const std::vector<std::vector<T>> &a) {
+  int r = a.size(), c = a.empty() ? 0 : a[0].size();
   matrix res(r, matrix::value_type(c));
-  for (size_t i = 0; i < r; i++) {
-    for (size_t j = 0; j < c; j++) {
+  for (int i = 0; i < r; i++) {
+    for (int j = 0; j < c; j++) {
       res[i][j] = a[i][j];
     }
   }
@@ -4106,29 +4118,30 @@ matrix &rotate_in_place(matrix &a, int degrees = 90) {
 using namespace std;
 
 int main() {
-  int a[2][3] = {{1, 2, 3}, {4, 5, 6}};
-  int a90[3][2] = {{4, 1}, {5, 2}, {6, 3}};
-  int a180[2][3] = {{6, 5, 4}, {3, 2, 1}};
-  int a270[3][2] = {{3, 6}, {2, 5}, {1, 4}};
-  cout << make_matrix(a) << endl;
-  assert(rotate(make_matrix(a), -270) == make_matrix(a90));
-  assert(rotate(make_matrix(a), -180) == make_matrix(a180));
-  assert(rotate(make_matrix(a), -90) == make_matrix(a270));
-  assert(rotate(make_matrix(a), 0) == make_matrix(a));
-  assert(rotate(make_matrix(a), 90) == make_matrix(a90));
-  assert(rotate(make_matrix(a), 180) == make_matrix(a180));
-  assert(rotate(make_matrix(a), 270) == make_matrix(a270));
-  assert(rotate(make_matrix(a), 360) == make_matrix(a));
+  matrix a{{1, 2, 3}, {4, 5, 6}};
+  matrix a90{{4, 1}, {5, 2}, {6, 3}};
+  matrix a180{{6, 5, 4}, {3, 2, 1}};
+  matrix a270{{3, 6}, {2, 5}, {1, 4}};
+  cout << a << endl;
+  assert(rotate(a, -270) == a90);
+  assert(rotate(a, -180) == a180);
+  assert(rotate(a, -90) == a270);
+  assert(rotate(a, 0) == a);
+  assert(rotate(a, 90) == a90);
+  assert(rotate(a, 180) == a180);
+  assert(rotate(a, 270) == a270);
+  assert(rotate(a, 360) == a);
 
-  int b[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+  matrix b{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
   for (int d = -360; d <= 360; d += 90) {
-    matrix m = make_matrix(b);
-    assert(rotate_in_place(m, d) == rotate(make_matrix(b), d));
+    matrix m = b;
+    assert(rotate_in_place(m, d) == rotate(b, d));
   }
 
   matrix m = make_matrix(5, 5, 10) + 10;
-  int v[] = {1, 2, 3, 4, 5}, mv[5][1] = {{300}, {300}, {300}, {300}, {300}};
-  assert(m * vector<int>(v, v + 5) == make_matrix(mv));
+  vector<int> v{1, 2, 3, 4, 5};
+  matrix mv{{300}, {300}, {300}, {300}, {300}};
+  assert(m * v == mv);
 
   m[0][0] += 5;
   assert(m[0][0] == 25 && m[1][1] == 20);
@@ -4238,18 +4251,13 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
 using namespace std;
 
 int main() {
-  const int equations = 3, unknowns = 3;
-  const int a[equations][unknowns] = {{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
-  const int b[equations] = {3, 1, -2};
-  vector<vector<double>> m(equations);
-  for (int i = 0; i < equations; i++) {
-    m[i].assign(a[i], a[i] + unknowns);
-  }
+  vector<vector<double>> a{{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
+  vector<double> b{3, 1, -2};
   vector<double> x;
-  assert(solve_system(m, vector<double>(b, b + equations), &x) == 0);
-  for (int i = 0; i < equations; i++) {
+  assert(solve_system(a, b, &x) == 0);
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
     double sum = 0;
-    for (int j = 0; j < unknowns; j++) {
+    for (int j = 0; j < static_cast<int>(a[i].size()); j++) {
       sum += a[i][j] * x[j];
     }
     assert(fabs(sum - b[i]) < EPS);
@@ -4280,7 +4288,6 @@ Computes the determinant and inverse of a square matrix using Gaussian eliminati
 
 \begin{lstlisting}[language=C++]
 #include <cmath>
-#include <map>
 #include <vector>
 
 template<class SquareMatrix>
@@ -4382,14 +4389,13 @@ SquareMatrix &invert(SquareMatrix &a) {
 using namespace std;
 
 int main() {
-  const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
-  vector<vector<double>> m(n), inv, res(n, vector<double>(n, 0));
-  for (int i = 0; i < n; i++) {
-    m[i].assign(a[i], a[i] + n);
-  }
-  double d = det(m);
-  assert(fabs(d - det_naive(m)) < 1e-10);
-  invert(inv = m);
+  vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
+  int n = static_cast<int>(a.size());
+  vector<vector<double>> res(n, vector<double>(n, 0));
+  double d = det(a);
+  assert(fabs(d - det_naive(a)) < 1e-10);
+  vector<vector<double>> inv = a;
+  invert(inv);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
       for (int k = 0; k < n; k++) {
@@ -4572,42 +4578,32 @@ using namespace std;
 
 int main() {
   {  // Solve a system.
-    const int equations = 3, unknowns = 3;
-    const int a[equations][unknowns] = {{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
-    const int b[equations] = {3, 1, -2};
-    vector<vector<double>> m(equations);
-    for (int i = 0; i < equations; i++) {
-      m[i].assign(a[i], a[i] + unknowns);
-    }
+    vector<vector<double>> a{{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
+    vector<double> b{3, 1, -2};
     vector<double> x;
-    assert(solve_system(m, vector<double>(b, b + equations), &x) == 0);
-    for (int i = 0; i < equations; i++) {
+    assert(solve_system(a, b, &x) == 0);
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       double sum = 0;
-      for (int j = 0; j < unknowns; j++) {
+      for (int j = 0; j < static_cast<int>(a[i].size()); j++) {
         sum += a[i][j] * x[j];
       }
       assert(fabs(sum - b[i]) < 1e-10);
     }
   }
   {  // Find the determinant.
-    const int n = 3, a[n][n] = {{1, 3, 5}, {2, 4, 7}, {1, 1, 0}};
-    vector<vector<double>> m(n);
-    for (int i = 0; i < n; i++) {
-      m[i] = vector<double>(a[i], a[i] + n);
-    }
-    assert(fabs(det(m) - 4) < 1e-10);
+    vector<vector<double>> a{{1, 3, 5}, {2, 4, 7}, {1, 1, 0}};
+    assert(fabs(det(a) - 4) < 1e-10);
   }
   {  // Find the inverse.
-    const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
-    vector<vector<double>> m(n), res(n, vector<double>(n, 0));
-    for (int i = 0; i < n; i++) {
-      m[i] = vector<double>(a[i], a[i] + n);
-    }
-    assert(invert(m) == 0);
+    vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
+    vector<vector<double>> inv = a;
+    int n = static_cast<int>(a.size());
+    vector<vector<double>> res(n, vector<double>(n, 0));
+    assert(invert(inv) == 0);
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
         for (int k = 0; k < n; k++) {
-          res[i][j] += a[i][k] * m[k][j];
+          res[i][j] += a[i][k] * inv[k][j];
         }
       }
     }

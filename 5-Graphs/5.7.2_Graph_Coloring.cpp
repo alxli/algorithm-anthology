@@ -2,9 +2,9 @@
 
 Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the
 same color, and that the total number of colors used is minimized. `color_graph()` applies to a
-global, pre-populated adjacency matrix `adj[][]` which must satisfy the condition that `adj[u][v]`
+global, pre-populated adjacency matrix `adj` which must satisfy the condition that `adj[u][v]`
 is `true` if and only if `adj[v][u]` is `true`, for all pairs of nodes $u$ and $v$ respectively
-between 0 (inclusive) and the total number of nodes (exclusive) as passed in the function argument.
+between 0 (inclusive) and `adj.size()` (exclusive).
 
 Time Complexity:
 - Exponential on the number of nodes per call to `color_graph()`.
@@ -18,9 +18,9 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 30;
-int adj[MAXN][MAXN], min_colors, color[MAXN];
-int curr[MAXN], id[MAXN + 1], degree[MAXN + 1];
+std::vector<std::vector<bool>> adj;
+int min_colors;
+std::vector<int> color, curr, id, degree;
 
 void rec(int lo, int hi, int n, int used_colors) {
   if (used_colors >= min_colors) {
@@ -49,7 +49,12 @@ void rec(int lo, int hi, int n, int used_colors) {
   }
 }
 
-int color_graph(int nodes) {
+int color_graph() {
+  int nodes = adj.size();
+  color.assign(nodes, 0);
+  curr.assign(nodes, 0);
+  id.assign(nodes + 1, 0);
+  degree.assign(nodes + 1, 0);
   for (int i = 0; i <= nodes; i++) {
     id[i] = i;
     degree[i] = 0;
@@ -68,7 +73,7 @@ int color_graph(int nodes) {
     std::swap(id[hi], id[best]);
     if (degree[id[hi]] == 0) {
       min_colors = nodes + 1;
-      std::fill(curr, curr + nodes, 0);
+      curr.assign(nodes, 0);
       rec(lo, hi, lo, 0);
       lo = hi;
       res = std::max(res, min_colors);
@@ -96,6 +101,8 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  int nodes = 5;
+  adj.assign(nodes, std::vector<bool>(nodes));
   add_edge(0, 1);
   add_edge(0, 4);
   add_edge(1, 3);
@@ -103,11 +110,11 @@ int main() {
   add_edge(2, 3);
   add_edge(2, 4);
   add_edge(3, 4);
-  int colors = color_graph(5);
+  int colors = color_graph();
   cout << "Colored using " << colors << " color(s):" << endl;
   for (int i = 0; i < colors; i++) {
     cout << "Color " << i + 1 << ":";
-    for (int j = 0; j < 5; j++) {
+    for (int j = 0; j < nodes; j++) {
       if (color[j] == i) {
         cout << " " << j;
       }

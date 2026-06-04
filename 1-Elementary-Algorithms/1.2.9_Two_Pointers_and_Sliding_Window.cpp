@@ -14,7 +14,7 @@ values.
   at most `k` distinct values.
 
 Time Complexity:
-- O(n) per call, where $n$ is the array size.
+- O(n) expected per call, where $n$ is the array size.
 
 Space Complexity:
 - O(1) auxiliary for `min_length_at_least(a, target)`.
@@ -23,7 +23,7 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 int min_length_at_least(const std::vector<int> &a, long long target) {
@@ -40,7 +40,10 @@ int min_length_at_least(const std::vector<int> &a, long long target) {
 }
 
 int longest_at_most_k_distinct(const std::vector<int> &a, int k) {
-  std::map<int, int> count;
+  if (k <= 0) {
+    return 0;
+  }
+  std::unordered_map<int, int> count;
   int best = 0;
   for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
     count[a[r]]++;

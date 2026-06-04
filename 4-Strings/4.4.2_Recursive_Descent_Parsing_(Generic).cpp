@@ -17,10 +17,10 @@ suffixes of one another, else the tokenization process may be ambiguous. For exa
 `+` are both operators, then `++` may be split into either `["+", "+"]` or `["++"]` depending on the
 lexicographical ordering of conflicting operators.
 
-- `parser(unary_op, binary_op)` initializes a parser with operators specified by maps `unary_op` (of
-  operator to function pointer) and `binary_op` (of operator to pair of function pointer and
-  operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest
-  precedence, evaluated last).
+- `parser(unary_op, binary_op)` initializes a parser with operators specified by hash tables
+  `unary_op` (of operator to function pointer) and `binary_op` (of operator to pair of function
+  pointer and operator precedence). Operator precedences should be numbered upwards starting at 0
+  (lowest precedence, evaluated last).
 - `split(s)` returns a vector of tokens for the expression `s`, split on the given operators during
   construction. Each parenthesis, operator, and operand satisfying `is_operand()` will be split into
   a separate token. The algorithm is naive, matching operators lazily in the case of overlapping
@@ -35,12 +35,9 @@ Time Complexity:
 - O(nmk) per call to `split(s)`, where $n$ is the length of `s`, $m$ is the total number of
   operators defined for the parser instance, and $k$ is the maximum length for any operator
   representation.
-- O(n log m) per call to `eval(lo, hi)`, where $n$ is the distance between `lo` and `hi` and $m$ is
-  the total number of operators defined for the parser instance. In C++11 and later,
-  `std::unordered_map` may be used in place of `std::map` for storing `unary_ops` and `binary_ops`,
-  which will eliminate the $\log m$ factor for a time complexity of O(n) per call.
-- O(nmk + n log m) per call to `eval(s)`, where $n$ is the distance between `lo` and `hi`, and $m$
-  and $k$ are as defined previous.
+- O(n) expected per call to `eval(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
+- O(nmk + n) expected per call to `eval(s)`, where $n$ is the distance between `lo` and `hi`, and
+  $m$ and $k$ are as defined previous.
 
 Space Complexity:
 - O(mk) for storage of the $m$ operators, of maximum length $k$.
@@ -51,11 +48,11 @@ Space Complexity:
 
 #include <algorithm>
 #include <cctype>
-#include <map>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 using std::string;
@@ -92,8 +89,8 @@ Operand eval_operand(const string &s) {
 }
 
 class parser {
-  using unary_op_map = std::map<string, UnaryOp>;
-  using binary_op_map = std::map<string, BinaryRule>;
+  using unary_op_map = std::unordered_map<string, UnaryOp>;
+  using binary_op_map = std::unordered_map<string, BinaryRule>;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
   std::set<string> ops;
@@ -233,11 +230,11 @@ double div(double a, double b) { return a / b; }
 // clang-format on
 
 int main() {
-  map<string, UnaryOp> unary_ops;
+  unordered_map<string, UnaryOp> unary_ops;
   unary_ops["+"] = pos;
   unary_ops["-"] = neg;
 
-  map<string, BinaryRule> binary_ops;
+  unordered_map<string, BinaryRule> binary_ops;
   binary_ops["+"] = {static_cast<BinaryOp>(add), 0};
   binary_ops["-"] = {static_cast<BinaryOp>(sub), 0};
   binary_ops["*"] = {static_cast<BinaryOp>(mul), 1};

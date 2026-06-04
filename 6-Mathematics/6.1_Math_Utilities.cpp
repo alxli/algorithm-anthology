@@ -13,7 +13,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cfloat>
-#include <climits>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
@@ -302,8 +301,8 @@ double lgamma_(double x) {
   if (x < 12) {
     return log(fabs(tgamma_(x)));
   }
-  static const double c[8] = {1.0 / 12,   -1.0 / 360,      1.0 / 1260, -1.0 / 1680,
-                              1.0 / 1188, -691.0 / 360360, 1.0 / 156,  -3617.0 / 122400};
+  static const double c[] = {1.0 / 12,   -1.0 / 360,      1.0 / 1260, -1.0 / 1680,
+                             1.0 / 1188, -691.0 / 360360, 1.0 / 156,  -3617.0 / 122400};
   double z = 1.0 / (x * x), sum = c[7];
   for (int i = 6; i >= 0; i--) {
     sum = sum * z + c[i];
@@ -401,9 +400,9 @@ int main() {
   assert(EQ(tgamma_(0.5), 1.7724538509) && EQ(tgamma_(1.0), 1.0));
   assert(EQ(lgamma_(0.5), 0.5723649429) && EQ(lgamma_(1.0), 0.0));
 
-  int digits[] = {6, 5, 4, 3, 2, 1};
+  std::vector<int> digits{6, 5, 4, 3, 2, 1};
   std::vector<int> base20 = to_base(123456, 20);
-  assert(convert_base(base20, 20, 10) == std::vector<int>(digits, digits + 6));
+  assert(convert_base(base20, 20, 10) == digits);
   assert(to_roman(1234) == "MCCXXXIV");
   assert(to_roman(5678) == "MMMMMDCLXXVIII");
   return 0;

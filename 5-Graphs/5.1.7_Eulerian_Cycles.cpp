@@ -10,9 +10,9 @@ degree belong to a single connected component.
 Given a graph as an adjacency list along with the starting node of the cycle, both functions below
 return a vector containing all nodes reachable from the starting node in an order which forms an
 Eulerian cycle. The first node of the cycle will be repeated as the last element of the vector. All
-nodes of input adjacency lists to both functions must be between 0 and `MAXN - 1`, inclusive. In
-addition, `euler_cycle_undirected()` requires that for every node $v$ which is found in `adj[u]`,
-node $u$ must also be found in `adj[v]`.
+indices stored in the input adjacency lists must be valid indices into `adj`. In addition,
+`euler_cycle_undirected()` requires that for every node $v$ which is found in `adj[u]`, node $u$
+must also be found in `adj[v]`.
 
 Time Complexity:
 - O(max(n, m)) per call to either function, where $n$ and $m$ are the numbers of nodes and edges
@@ -21,19 +21,17 @@ Time Complexity:
 Space Complexity:
 - O(n) auxiliary heap space for `euler_cycle_directed()`, where $n$ is the number of nodes.
 - O(n^2) auxiliary heap space for `euler_cycle_undirected()`, where $n$ is the number of nodes. This
-  can be reduced to O(m) auxiliary heap space on the number of edges if the `used[][]` bit matrix is
+  can be reduced to O(m) auxiliary heap space on the number of edges if the `used` bit matrix is
   replaced with an `std::unordered_set<std::pair<int, int>>`.
 
 */
 
 #include <algorithm>
-#include <bitset>
 #include <vector>
 
-const int MAXN = 100;
-
-std::vector<int> euler_cycle_directed(std::vector<int> adj[], int u) {
-  std::vector<int> stack, curr_edge(MAXN), res;
+std::vector<int> euler_cycle_directed(const std::vector<std::vector<int>> &adj, int u) {
+  int nodes = adj.size();
+  std::vector<int> stack, curr_edge(nodes), res;
   stack.push_back(u);
   while (!stack.empty()) {
     u = stack.back();
@@ -48,9 +46,10 @@ std::vector<int> euler_cycle_directed(std::vector<int> adj[], int u) {
   return res;
 }
 
-std::vector<int> euler_cycle_undirected(std::vector<int> adj[], int u) {
-  std::bitset<MAXN> used[MAXN];
-  std::vector<int> stack, curr_edge(MAXN), res;
+std::vector<int> euler_cycle_undirected(const std::vector<std::vector<int>> &adj, int u) {
+  int nodes = adj.size();
+  std::vector<std::vector<bool>> used(nodes, std::vector<bool>(nodes));
+  std::vector<int> stack, curr_edge(nodes), res;
   stack.push_back(u);
   while (!stack.empty()) {
     u = stack.back();
@@ -82,14 +81,14 @@ using namespace std;
 
 int main() {
   {
-    vector<int> g[5], cycle;
+    vector<vector<int>> g(5);
     g[0].push_back(1);
     g[1].push_back(2);
     g[2].push_back(0);
     g[1].push_back(3);
     g[3].push_back(4);
     g[4].push_back(1);
-    cycle = euler_cycle_directed(g, 0);
+    vector<int> cycle = euler_cycle_directed(g, 0);
     cout << "Eulerian cycle from 0 (directed):";
     for (int v : cycle) {
       cout << " " << v;
@@ -97,7 +96,7 @@ int main() {
     cout << endl;
   }
   {
-    vector<int> g[5], cycle;
+    vector<vector<int>> g(5);
     g[0].push_back(1);
     g[1].push_back(0);
     g[1].push_back(2);
@@ -110,7 +109,7 @@ int main() {
     g[4].push_back(3);
     g[4].push_back(1);
     g[1].push_back(4);
-    cycle = euler_cycle_undirected(g, 2);
+    vector<int> cycle = euler_cycle_undirected(g, 2);
     cout << "Eulerian cycle from 2 (undirected):";
     for (int v : cycle) {
       cout << " " << v;

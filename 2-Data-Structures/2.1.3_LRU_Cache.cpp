@@ -16,8 +16,7 @@ to the front in O(1) time.
 - `size()` returns the number of keys currently stored.
 
 Time Complexity:
-- O(log n) per call to `get(key, &value)` and `put(key, value)` due to `std::map`. In C++11 and
-  later, replacing `std::map` with `std::unordered_map` gives expected O(1) time.
+- O(1) amortized per call to `get(key, &value)` and `put(key, value)`.
 
 Space Complexity:
 - O(n), where $n$ is the cache capacity.
@@ -25,7 +24,7 @@ Space Complexity:
 */
 
 #include <list>
-#include <map>
+#include <unordered_map>
 #include <utility>
 
 template<class Key, class Value>
@@ -34,7 +33,7 @@ class LRUCache {
 
   int cap;
   std::list<std::pair<Key, Value>> items;
-  std::map<Key, ListIter> where;
+  std::unordered_map<Key, ListIter> where;
 
  public:
   explicit LRUCache(int capacity) : cap(capacity) {}

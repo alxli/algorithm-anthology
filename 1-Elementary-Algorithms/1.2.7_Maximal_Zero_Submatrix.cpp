@@ -61,18 +61,13 @@ int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
 using namespace std;
 
 int main() {
-  const int n = 5, m = 6;
-  bool a[n][m] = {
+  vector<vector<bool>> matrix{
       {1, 0, 1, 1, 0, 0},
       {1, 0, 0, 1, 0, 0},
       {0, 0, 0, 0, 0, 1},
       {1, 0, 0, 1, 0, 0},
       {1, 0, 1, 0, 0, 1}
   };
-  vector<vector<bool>> matrix(n);
-  for (int i = 0; i < n; i++) {
-    matrix[i] = vector<bool>(a[i], a[i] + m);
-  }
   assert(max_zero_submatrix(matrix) == 6);
   return 0;
 }

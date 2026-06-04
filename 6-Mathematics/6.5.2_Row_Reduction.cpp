@@ -107,18 +107,13 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
 using namespace std;
 
 int main() {
-  const int equations = 3, unknowns = 3;
-  const int a[equations][unknowns] = {{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
-  const int b[equations] = {3, 1, -2};
-  vector<vector<double>> m(equations);
-  for (int i = 0; i < equations; i++) {
-    m[i].assign(a[i], a[i] + unknowns);
-  }
+  vector<vector<double>> a{{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
+  vector<double> b{3, 1, -2};
   vector<double> x;
-  assert(solve_system(m, vector<double>(b, b + equations), &x) == 0);
-  for (int i = 0; i < equations; i++) {
+  assert(solve_system(a, b, &x) == 0);
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
     double sum = 0;
-    for (int j = 0; j < unknowns; j++) {
+    for (int j = 0; j < static_cast<int>(a[i].size()); j++) {
       sum += a[i][j] * x[j];
     }
     assert(fabs(sum - b[i]) < EPS);

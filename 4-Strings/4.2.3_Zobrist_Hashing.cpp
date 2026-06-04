@@ -18,10 +18,9 @@ matters.
   `[lo, hi)` contributes only on its first occurrence.
 
 Time Complexity:
-- O(log n) per call to `get(x)` and `toggle(h, x)`, where $n$ is the number of distinct keys seen so
-  far.
-- O(n log n) per call to `distinct_prefix_hashes(lo, hi)`, where $n$ is the distance between `lo`
-  and `hi`.
+- O(1) expected per call to `get(x)` and `toggle(h, x)`.
+- O(n) expected per call to `distinct_prefix_hashes(lo, hi)`, where $n$ is the distance between
+  `lo` and `hi`.
 
 Space Complexity:
 - O(n) for stored key tokens, where $n$ is the number of distinct keys seen so far.
@@ -29,15 +28,15 @@ Space Complexity:
 
 */
 
-#include <map>
-#include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 using uint64 = unsigned long long;
 
 template<class T>
 class ZobristHash {
-  std::map<T, uint64> token;
+  std::unordered_map<T, uint64> token;
   uint64 state;
 
   static uint64 splitmix64(uint64 x) {
@@ -63,7 +62,7 @@ class ZobristHash {
 
   template<class It>
   std::vector<uint64> distinct_prefix_hashes(It lo, It hi) {
-    std::set<T> seen;
+    std::unordered_set<T> seen;
     std::vector<uint64> res(1, 0);
     uint64 h = 0;
     for (It it = lo; it != hi; ++it) {
@@ -82,11 +81,11 @@ class ZobristHash {
 using namespace std;
 
 int main() {
-  int a[] = {1, 2, 1, 3};
-  int b[] = {2, 1, 3};
+  vector<int> a{1, 2, 1, 3};
+  vector<int> b{2, 1, 3};
   ZobristHash<int> zh(123);
-  vector<uint64> pa = zh.distinct_prefix_hashes(a, a + 4);
-  vector<uint64> pb = zh.distinct_prefix_hashes(b, b + 3);
+  vector<uint64> pa = zh.distinct_prefix_hashes(a.begin(), a.end());
+  vector<uint64> pb = zh.distinct_prefix_hashes(b.begin(), b.end());
 
   assert(pa[2] == pb[2]);  // Distinct sets {1, 2} and {2, 1}.
   assert(pa[4] == pb[3]);  // Distinct sets {1, 2, 3} and {2, 1, 3}.

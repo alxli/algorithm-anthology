@@ -15,8 +15,8 @@ linked list.
 Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm", is a space-efficient
 algorithm that moves two pointers through the sequence at different speeds. Each step in the
 algorithm moves the "tortoise" one step forward and the "hare" two steps forward in the sequence,
-comparing the sequence values at each step. The first value which is simultaneously pointed to by
-both pointers is the start of the sequence.
+comparing the sequence values at each step. Their first meeting point is somewhere in the cycle; a
+second phase then finds the cycle's starting position.
 
 Time Complexity:
 - O(m + n) per call to `find_cycle_floyd()`, where $m$ is the smallest index of the sequence which

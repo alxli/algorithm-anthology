@@ -136,7 +136,7 @@ struct Event {
 
 template<class It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
-  It plo[2] = {lo1, lo2}, phi[] = {hi1, hi2};
+  std::vector<It> plo{lo1, lo2}, phi{hi1, hi2};
   std::set<double> xs;
   for (It it = lo1; it != hi1; ++it) {
     xs.insert(it->x);

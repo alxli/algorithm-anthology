@@ -90,9 +90,9 @@ vector<int> values(ListNode *head) {
 }
 
 int main() {
-  ListNode a[3] = {ListNode(1), ListNode(3), ListNode(5)};
-  ListNode b[3] = {ListNode(2), ListNode(4), ListNode(6)};
-  for (int i = 0; i + 1 < 3; i++) {
+  vector<ListNode> a{ListNode(1), ListNode(3), ListNode(5)};
+  vector<ListNode> b{ListNode(2), ListNode(4), ListNode(6)};
+  for (int i = 0; i + 1 < static_cast<int>(a.size()); i++) {
     a[i].next = &a[i + 1];
     b[i].next = &b[i + 1];
   }

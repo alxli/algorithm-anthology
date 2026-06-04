@@ -19,7 +19,7 @@ Space Complexity:
 */
 
 #include <cmath>
-#include <limits>
+#include <cfloat>
 #include <vector>
 
 template<class Matrix>
@@ -48,7 +48,7 @@ int simplex_solve(
   double p1 = 0, p2 = 0;
   bool done = true;
   do {
-    double mn = std::numeric_limits<double>::max(), xmax = 0;
+    double mn = DBL_MAX, xmax = 0;
     for (int j = 2; j <= n + 1; j++) {
       if (t[1][j] > 0 && t[1][j] > xmax) {
         p2 = j;

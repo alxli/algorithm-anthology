@@ -17,13 +17,15 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cstdlib>
+#include <random>
 
 template<class It>
 void fisher_yates_shuffle(It lo, It hi) {
+  static std::mt19937 rng(std::random_device{}());
   int n = hi - lo;
   for (int i = n - 1; i > 0; i--) {
-    int j = rand() % (i + 1);
+    std::uniform_int_distribution<int> dist(0, i);
+    int j = dist(rng);
     std::iter_swap(lo + i, lo + j);
   }
 }
@@ -36,7 +38,6 @@ void fisher_yates_shuffle(It lo, It hi) {
 using namespace std;
 
 int main() {
-  srand(1);
   vector<int> a{1, 2, 3, 4, 5}, original(a);
   fisher_yates_shuffle(a.begin(), a.end());
   sort(a.begin(), a.end());

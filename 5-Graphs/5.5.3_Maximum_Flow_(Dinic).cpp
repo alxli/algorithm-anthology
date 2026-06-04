@@ -2,7 +2,7 @@
 
 Given a flow network with integer capacities, find the maximum flow from a given source node to a
 given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at
-every node other than the source and sink. `dinic()` applies to a global adjacency list `adj[]` that
+every node other than the source and sink. `dinic()` applies to a global adjacency list `adj` that
 will be modified by the function call.
 
 Dinic's algorithm will also support real-valued flow capacities. As such, this implementation will
@@ -27,17 +27,18 @@ struct Edge {
   int v, rev, cap, f;
 };
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<Edge> adj[MAXN];
-int dist[MAXN], ptr[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<Edge>> adj;
+std::vector<int> dist, ptr;
 
 void add_edge(int u, int v, int cap) {
   adj[u].push_back(Edge{v, static_cast<int>(adj[v].size()), cap, 0});
   adj[v].push_back(Edge{u, static_cast<int>(adj[u].size()) - 1, 0, 0});
 }
 
-bool dinic_bfs(int nodes, int source, int sink) {
-  std::fill(dist, dist + nodes, -1);
+bool dinic_bfs(int source, int sink) {
+  int nodes = adj.size();
+  dist.assign(nodes, -1);
   dist[source] = 0;
   std::queue<int> q;
   q.push(source);
@@ -72,10 +73,11 @@ int dinic_dfs(int u, int f, int sink) {
   return 0;
 }
 
-int dinic(int nodes, int source, int sink) {
+int dinic(int source, int sink) {
+  int nodes = adj.size();
   int flow, max_flow = 0;
-  while (dinic_bfs(nodes, source, sink)) {
-    std::fill(ptr, ptr + nodes, 0);
+  while (dinic_bfs(source, sink)) {
+    ptr.assign(nodes, 0);
     while ((flow = dinic_dfs(source, INF, sink)) != 0) {
       max_flow += flow;
     }
@@ -88,6 +90,8 @@ int dinic(int nodes, int source, int sink) {
 #include <cassert>
 
 int main() {
+  int nodes = 6;
+  adj.resize(nodes);
   add_edge(0, 1, 3);
   add_edge(0, 2, 3);
   add_edge(1, 2, 2);
@@ -96,6 +100,6 @@ int main() {
   add_edge(3, 4, 1);
   add_edge(3, 5, 2);
   add_edge(4, 5, 3);
-  assert(dinic(6, 0, 5) == 5);
+  assert(dinic(0, 5) == 5);
   return 0;
 }

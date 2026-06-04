@@ -21,13 +21,13 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <limits>
+#include <climits>
 #include <vector>
 
 long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector<int> *assignment) {
   int n = cost.size(), m = cost.empty() ? 0 : cost[0].size();
   assert(n <= m);
-  const long long INF = std::numeric_limits<long long>::max() / 4;
+  const long long INF = LLONG_MAX / 4;
   std::vector<long long> u(n + 1), v(m + 1);
   std::vector<int> p(m + 1), way(m + 1);
 

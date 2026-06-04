@@ -4,9 +4,8 @@ Given a directed acyclic graph, find one of possibly many orderings of the nodes
 edge from node $u$ to $v$, $u$ comes before $v$ in the ordering. Depth-first search is used to
 traverse all nodes in post-order.
 
-`toposort(nodes)` takes a directed graph stored as a global adjacency list with nodes indexed from 0
-to `nodes - 1` and assigns a valid topological ordering to the global result vector. An error is
-thrown if the graph contains a cycle.
+`toposort()` takes a directed graph stored as a global adjacency list and assigns a valid
+topological ordering to the global result vector. An error is thrown if the graph contains a cycle.
 
 Time Complexity:
 - O(max(n, m)) per call to `toposort()`, where $n$ is the number of nodes and $m$ is the number of
@@ -23,11 +22,10 @@ Space Complexity:
 #include <stdexcept>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN], res;
-std::vector<bool> visit(MAXN), done(MAXN);
+std::vector<std::vector<int>> adj;
+std::vector<bool> visit, done;
 
-void dfs(int u) {
+void dfs(int u, std::vector<int>& res) {
   if (visit[u]) {
     throw std::runtime_error("Not a directed acyclic graph.");
   }
@@ -36,23 +34,25 @@ void dfs(int u) {
   }
   visit[u] = true;
   for (int v : adj[u]) {
-    dfs(v);
+    dfs(v, res);
   }
   visit[u] = false;
   done[u] = true;
   res.push_back(u);
 }
 
-void toposort(int nodes) {
-  fill(visit.begin(), visit.end(), false);
-  fill(done.begin(), done.end(), false);
-  res.clear();
+std::vector<int> toposort() {
+  int nodes = adj.size();
+  visit.assign(nodes, false);
+  done.assign(nodes, false);
+  std::vector<int> res;
   for (int i = 0; i < nodes; i++) {
     if (!done[i]) {
-      dfs(i);
+      dfs(i, res);
     }
   }
   std::reverse(res.begin(), res.end());
+  return res;
 }
 
 /*** Example Usage and Output:
@@ -65,6 +65,8 @@ The topological order: 2 1 0 4 3 7 6 5
 using namespace std;
 
 int main() {
+  int nodes = 8;
+  adj.resize(nodes);
   adj[0].push_back(3);
   adj[0].push_back(4);
   adj[1].push_back(3);
@@ -74,7 +76,7 @@ int main() {
   adj[3].push_back(6);
   adj[3].push_back(7);
   adj[4].push_back(6);
-  toposort(8);
+  auto res = toposort();
   cout << "The topological order:";
   for (int v : res) {
     cout << " " << v;

@@ -40,10 +40,8 @@ double random_unit() {
   return static_cast<double>(rand()) / RAND_MAX;
 }
 
-template<class Function>
-double anneal_min(
-    Function f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr
-) {
+template<class Fn>
+double anneal_min(Fn f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr) {
   double sol_x = x0, sol_y = y0, best = f(x0, y0);
   for (int restart = 0; restart < NUM_RESTARTS; restart++) {
     double x = x0, y = y0, cur = f(x, y);

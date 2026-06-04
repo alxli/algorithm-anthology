@@ -108,8 +108,8 @@ Values: 6 -2 4 8 10
 using namespace std;
 
 int main() {
-  int arr[5] = {6, -2, 1, 8, 10};
-  SqrtDecomposition<int> sd(arr, arr + 5);
+  vector<int> arr{6, -2, 1, 8, 10};
+  SqrtDecomposition<int> sd(arr.begin(), arr.end());
   sd.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < sd.size(); i++) {

@@ -1,9 +1,10 @@
 /*
 
-Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a
-substring of an inserted string, and each inserted string corresponds to a path from the root to a
+Maintain a map of strings to values using a compressed tree data structure. Each node corresponds to
+a substring of an inserted string, and each inserted string corresponds to a path from the root to a
 node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space
-efficient as it combines chains of nodes with only a single child.
+efficient as it combines chains of nodes with only a single child. Children are stored in hash
+tables, and `walk()` sorts child labels as needed to preserve lexicographic traversal.
 
 - `RadixTree()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -19,15 +20,10 @@ efficient as it combines chains of nodes with only a single child.
   order of the string keys.
 
 Time Complexity:
-- O(n) per call to `insert(s, v)`, `erase(s)`, and `find(s)`, where $n$ is the length of `s`. Note
-  that there is a hidden factor of $\log n$ due to map lookups, which can be considered constant
-  amortized. The implementation may be optimized by storing the children of nodes in an
-  `std::unordered_map` in C++11 and later, or a `std::vector<pair<string, Node*> >`, since the
-  only container operations required are iteration over the (`key`, `child`) pairs and inserting a
-  new pair. Sticking with an (ordered) `std::map`, we can optimize all operations by using
-  `map.lower_bound()`, a binary tree search for a child with a shared prefix, instead of iteration.
-- O(l) per call to `walk()`, where $l$ is the total length of string keys that are currently in the
-  map.
+- O(n) expected per call to `insert(s, v)`, `erase(s)`, and `find(s)`, where $n$ is the length of
+  `s`, assuming the number of outgoing compressed edges checked at each node is small.
+- O(l log l) per call to `walk()`, where $l$ is the total length of string keys that are currently
+  in the map.
 - O(1) per call to all other operations.
 
 Space Complexity:
@@ -40,10 +36,12 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <cstddef>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 using std::string;
 
 template<class V>
@@ -51,7 +49,7 @@ class RadixTree {
   struct Node {
     V value;
     bool is_terminal;
-    std::map<string, Node *> children;
+    std::unordered_map<string, Node *> children;
 
     Node(const V &value = V(), bool is_terminal = false) : value(value), is_terminal(is_terminal) {}
   } *root;
@@ -142,7 +140,9 @@ class RadixTree {
     if (n->is_terminal) {
       f(s, n->value);
     }
-    for (auto &[key, child] : n->children) {
+    std::vector<std::pair<string, Node *>> children(n->children.begin(), n->children.end());
+    std::sort(children.begin(), children.end());
+    for (auto &[key, child] : children) {
       s += key;
       walk(child, s, f);
       s.erase(s.size() - key.size());
@@ -231,10 +231,10 @@ void print_entry(const string &k, int v) {
 }
 
 int main() {
-  string s[9] = {"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
+  vector<string> s{"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
   RadixTree<int> t;
   assert(t.empty());
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
   t.walk(print_entry);

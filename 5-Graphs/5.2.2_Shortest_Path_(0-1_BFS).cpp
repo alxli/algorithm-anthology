@@ -2,7 +2,7 @@
 
 Given a starting node in a weighted graph whose edge weights are only 0 or 1, compute the shortest
 distance to every reachable node. `zero_one_bfs()` applies to a global, pre-populated adjacency list
-`adj[]` where each edge is stored as `(neighbor, weight)`.
+`adj` where each edge is stored as `(neighbor, weight)`.
 
 This is a specialized version of Dijkstra's algorithm. Because every relaxation changes the distance
 by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push weight-0
@@ -25,13 +25,14 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<std::pair<int, int>> adj[MAXN];
-int dist[MAXN], pred[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<std::pair<int, int>>> adj;
+std::vector<int> dist, pred;
 
-void zero_one_bfs(int nodes, int start) {
-  std::fill(dist, dist + nodes, INF);
-  std::fill(pred, pred + nodes, -1);
+void zero_one_bfs(int start) {
+  int nodes = adj.size();
+  dist.assign(nodes, INF);
+  pred.assign(nodes, -1);
   std::deque<int> dq;
   dist[start] = 0;
   dq.push_front(start);
@@ -62,12 +63,14 @@ void add_edge(int u, int v, int w) {
 }
 
 int main() {
+  int nodes = 4;
+  adj.resize(nodes);
   add_edge(0, 1, 1);
   add_edge(0, 2, 0);
   add_edge(2, 1, 0);
   add_edge(1, 3, 1);
   add_edge(2, 3, 1);
-  zero_one_bfs(4, 0);
+  zero_one_bfs(0);
   assert(dist[1] == 0);
   assert(dist[3] == 1);
   assert(pred[1] == 2);

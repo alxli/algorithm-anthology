@@ -276,8 +276,7 @@ int main() {
     assert(fermat(n) == 1000003);
   }
   {  // Large tests.
-    const int ntests = 7;
-    const long long tests[] = {
+    const vector<long long> tests{
         3LL * 3 * 5 * 7 * 9949 * 9967 * 1000003,
         2LL * 1000003 * 1000000007,
         999961LL * 1000033,

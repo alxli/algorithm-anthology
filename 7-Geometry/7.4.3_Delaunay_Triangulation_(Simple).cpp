@@ -136,7 +136,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
         if (LE(0, nz)) {
           continue;
         }
-        Point s1[] = {lo[i], lo[j], lo[k], lo[i]};
+        std::vector<Point> s1{lo[i], lo[j], lo[k], lo[i]};
         for (int m = 0; m < n; m++) {
           if (nx * (x[m] - x[i]) + ny * (y[m] - y[i]) + nz * (z[m] - z[i]) > 0) {
             goto skip;
@@ -144,7 +144,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
         }
         // Handle four points on a circle.
         for (const auto &tri : res) {
-          Point s2[] = {tri.a, tri.b, tri.c, tri.a};
+          std::vector<Point> s2{tri.a, tri.b, tri.c, tri.a};
           for (int u = 0; u < 3; u++) {
             for (int v = 0; v < 3; v++) {
               if (seg_intersection(s1[u], s1[u + 1], s2[v], s2[v + 1]) == 0) {

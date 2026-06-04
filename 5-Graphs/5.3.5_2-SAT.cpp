@@ -11,7 +11,7 @@ where `value == true` means the variable itself and `value == false` means its n
 - `add_or(a, b)` adds the clause $(a \lor b)$.
 - `add_true(a)` forces literal `a` to be true.
 - `satisfiable()` returns whether all added clauses can be satisfied and stores one valid assignment
-  in `answer[]`.
+  in `answer`.
 
 Time Complexity:
 - O(max(n, m)) per call to `satisfiable()`, where $n$ is the number of variables and $m$ is the

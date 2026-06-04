@@ -15,9 +15,9 @@ Common number theory operations relating to modular arithmetic.
   \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
 - `generate_inverse(p)` returns a vector $v$ of integers where for each index $i$ in the vector, $i
   \cdot \text{v[i]} \equiv 1 \pmod p$, where the argument $p$ is prime.
-- `simple_restore(n, a, p)` and `garner_restore(n, a, p)` both return the solution $x$ for the
+- `simple_restore(a, p)` and `garner_restore(a, p)` both return the solution $x$ for the
   system of simultaneous congruences $x \equiv \text{a[i]} \pmod{\text{p[i]}}$ for all indices $i$
-  in $[0, n)$, where `p[]` consists of pairwise coprime integers. The solution $x$ is guaranteed to
+  in $[0, n)$, where `p` consists of pairwise coprime integers. The solution $x$ is guaranteed to
   be unique by the Chinese remainder theorem.
 
 Time Complexity:
@@ -25,14 +25,14 @@ Time Complexity:
   `extended_euclid2(a, b)`, `mod_inverse(a, b)`, and `mod_inverse2(a, b)`.
 - O(1) for `mod(a, b)`.
 - O(p) for `generate_inverse(p)`.
-- Exponential for `simple_restore(n, a, p)`.
-- O(n^2) for `garner_restore(n, a, p)`.
+- Exponential for `simple_restore(a, p)`.
+- O(n^2) for `garner_restore(a, p)`.
 
 Space Complexity:
 - O(log(a + b)) auxiliary stack space for `gcd2(a, b)`, `extended_euclid2(a, b)`, and
   `mod_inverse2(a, b)`.
 - O(p) auxiliary heap space for `generate_inverse(p)`.
-- O(n) auxiliary heap space for `garner_restore(n, a, p)`.
+- O(n) auxiliary heap space for `garner_restore(a, p)`.
 - O(1) auxiliary space for all other operations.
 
 */
@@ -111,7 +111,8 @@ std::vector<int> generate_inverse(int p) {
   return res;
 }
 
-long long simple_restore(int n, int a[], int p[]) {
+long long simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
+  int n = a.size();
   long long res = 0, m = 1;
   for (int i = 0; i < n; i++) {
     while (res % p[i] != a[i]) {
@@ -122,11 +123,12 @@ long long simple_restore(int n, int a[], int p[]) {
   return res;
 }
 
-long long garner_restore(int n, int a[], int p[]) {
+long long garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
+  int n = a.size();
   if (n == 0) {
     return 0;
   }
-  std::vector<int> x(a, a + n);
+  std::vector<int> x(a);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
       x[i] =
@@ -172,9 +174,10 @@ int main() {
     }
   }
   {
-    int n = 3, a[] = {2, 3, 1}, m[] = {3, 4, 5};
-    int x = simple_restore(n, a, m);
-    assert(x == garner_restore(n, a, m));
+    vector<int> a{2, 3, 1}, m{3, 4, 5};
+    int n = a.size();
+    int x = simple_restore(a, m);
+    assert(x == garner_restore(a, m));
     for (int i = 0; i < n; i++) {
       assert(mod(x, m[i]) == a[i]);
     }

@@ -303,9 +303,7 @@ const double EPS = 1e-9;
 
 struct Point {
   double x, y;
-
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-
   bool operator==(const Point &p) const { return x == p.x && y == p.y; }
   bool operator!=(const Point &p) const { return !(*this == p); }
   bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
@@ -450,9 +448,7 @@ const double EPS = 1e-9;
 
 struct Point {
   double x, y;
-
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-
   bool operator==(const Point &p) const { return x == p.x && y == p.y; }
   bool operator!=(const Point &p) const { return !(*this == p); }
   bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
@@ -1542,15 +1538,16 @@ bool point_in_polygon(const Point &p, It lo, It hi) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <vector>
 using namespace std;
 
 int main() {
   // Irregular trapezoid.
-  Point p[] = {Point(-1, 3), Point(1, 3), Point(2, 1), Point(0, 0)};
-  assert(point_in_polygon(Point(1, 2), p, p + 4));
-  assert(point_in_polygon(Point(0, 3), p, p + 4));
-  assert(!point_in_polygon(Point(0, 3.01), p, p + 4));
-  assert(!point_in_polygon(Point(2, 2), p, p + 4));
+  vector<Point> p{Point(-1, 3), Point(1, 3), Point(2, 1), Point(0, 0)};
+  assert(point_in_polygon(Point(1, 2), p.begin(), p.end()));
+  assert(point_in_polygon(Point(0, 3), p.begin(), p.end()));
+  assert(!point_in_polygon(Point(0, 3.01), p.begin(), p.end()));
+  assert(!point_in_polygon(Point(2, 2), p.begin(), p.end()));
   return 0;
 }
 \end{lstlisting}
@@ -1807,7 +1804,7 @@ Given a list of points in two dimensions, find the closest pair among them using
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
-#include <limits>
+#include <cfloat>
 #include <utility>
 #include <vector>
 
@@ -1833,10 +1830,10 @@ bool cmp_y(const Point &a, const Point &b) { return (a.y == b.y) ? (a.x < b.x) :
 template<class It>
 double closest_pair(
     It lo, It hi, std::pair<Point, Point> *res = nullptr,
-    double mindist = std::numeric_limits<double>::max(), bool sort_x = true
+    double mindist = DBL_MAX, bool sort_x = true
 ) {
   if (lo == hi) {
-    return std::numeric_limits<double>::max();
+    return DBL_MAX;
   }
   if (sort_x) {
     std::sort(lo, hi, cmp_x);
@@ -2345,7 +2342,7 @@ struct Event {
 
 template<class It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
-  It plo[2] = {lo1, lo2}, phi[] = {hi1, hi2};
+  std::vector<It> plo{lo1, lo2}, phi{hi1, hi2};
   std::set<double> xs;
   for (It it = lo1; it != hi1; ++it) {
     xs.insert(it->x);
@@ -2569,7 +2566,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
         if (LE(0, nz)) {
           continue;
         }
-        Point s1[] = {lo[i], lo[j], lo[k], lo[i]};
+        std::vector<Point> s1{lo[i], lo[j], lo[k], lo[i]};
         for (int m = 0; m < n; m++) {
           if (nx * (x[m] - x[i]) + ny * (y[m] - y[i]) + nz * (z[m] - z[i]) > 0) {
             goto skip;
@@ -2577,7 +2574,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
         }
         // Handle four points on a circle.
         for (const auto &tri : res) {
-          Point s2[] = {tri.a, tri.b, tri.c, tri.a};
+          std::vector<Point> s2{tri.a, tri.b, tri.c, tri.a};
           for (int u = 0; u < 3; u++) {
             for (int v = 0; v < 3; v++) {
               if (seg_intersection(s1[u], s1[u + 1], s2[v], s2[v + 1]) == 0) {

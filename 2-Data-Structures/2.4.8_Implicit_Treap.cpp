@@ -230,6 +230,7 @@ Values: 2 2 1 8 10 11 (min: 1)
 ***/
 
 #include <iostream>
+#include <vector>
 using namespace std;
 
 void print(ImplicitTreap<int> &t) {
@@ -241,8 +242,8 @@ void print(ImplicitTreap<int> &t) {
 }
 
 int main() {
-  int arr[5] = {99, -2, 1, 8, 10};
-  ImplicitTreap<int> t(arr, arr + 5);
+  vector<int> arr{99, -2, 1, 8, 10};
+  ImplicitTreap<int> t(arr.begin(), arr.end());
   t.push_back(11);
   t.push_back(12);
   t.pop_back();

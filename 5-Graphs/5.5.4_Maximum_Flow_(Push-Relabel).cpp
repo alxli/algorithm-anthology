@@ -3,7 +3,7 @@
 Given a flow network with integer capacities, find the maximum flow from a given source node to a
 given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at
 every node other than the source and sink. `push_relabel()` applies to a global adjacency matrix
-`cap[][]` and returns the maximum flow.
+`cap` and returns the maximum flow.
 
 Although the push-relabel algorithm is considered one of the most efficient maximum flow algorithms,
 it cannot take advantage of the magnitude of the maximum flow being less than $n^3$ (in which case
@@ -22,14 +22,14 @@ Space Complexity:
 #include <climits>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-int cap[MAXN][MAXN], f[MAXN][MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<int>> cap;
+std::vector<std::vector<int>> f;
 
-int push_relabel(int nodes, int source, int sink) {
+int push_relabel(int source, int sink) {
+  int nodes = cap.size();
+  f.assign(nodes, std::vector<int>(nodes, 0));
   std::vector<int> e(nodes, 0), h(nodes, 0), maxh(nodes, 0);
-  for (int i = 0; i < nodes; i++) {
-    std::fill(f[i], f[i] + nodes, 0);
-  }
   h[source] = nodes - 1;
   for (int i = 0; i < nodes; i++) {
     f[source][i] = cap[source][i];
@@ -94,6 +94,8 @@ int push_relabel(int nodes, int source, int sink) {
 #include <cassert>
 
 int main() {
+  int nodes = 6;
+  cap.assign(nodes, std::vector<int>(nodes));
   cap[0][1] = 3;
   cap[0][2] = 3;
   cap[1][2] = 2;
@@ -102,6 +104,6 @@ int main() {
   cap[3][4] = 1;
   cap[3][5] = 2;
   cap[4][5] = 3;
-  assert(push_relabel(6, 0, 5) == 5);
+  assert(push_relabel(0, 5) == 5);
   return 0;
 }

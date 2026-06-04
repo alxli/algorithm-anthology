@@ -157,8 +157,8 @@ Values: 5 5 5 1 5
 using namespace std;
 
 int main() {
-  int arr[5] = {6, -2, 1, 8, 10};
-  SegTree<int> t(arr, arr + 5);
+  vector<int> arr{6, -2, 1, 8, 10};
+  SegTree<int> t(arr.begin(), arr.end());
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {

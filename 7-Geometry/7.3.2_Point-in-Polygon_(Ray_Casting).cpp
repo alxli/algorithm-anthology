@@ -62,14 +62,15 @@ bool point_in_polygon(const Point &p, It lo, It hi) {
 /*** Example Usage ***/
 
 #include <cassert>
+#include <vector>
 using namespace std;
 
 int main() {
   // Irregular trapezoid.
-  Point p[] = {Point(-1, 3), Point(1, 3), Point(2, 1), Point(0, 0)};
-  assert(point_in_polygon(Point(1, 2), p, p + 4));
-  assert(point_in_polygon(Point(0, 3), p, p + 4));
-  assert(!point_in_polygon(Point(0, 3.01), p, p + 4));
-  assert(!point_in_polygon(Point(2, 2), p, p + 4));
+  vector<Point> p{Point(-1, 3), Point(1, 3), Point(2, 1), Point(0, 0)};
+  assert(point_in_polygon(Point(1, 2), p.begin(), p.end()));
+  assert(point_in_polygon(Point(0, 3), p.begin(), p.end()));
+  assert(!point_in_polygon(Point(0, 3.01), p.begin(), p.end()));
+  assert(!point_in_polygon(Point(2, 2), p.begin(), p.end()));
   return 0;
 }

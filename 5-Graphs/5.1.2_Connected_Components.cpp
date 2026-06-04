@@ -1,7 +1,7 @@
 /*
 
 Given an undirected graph, label every node with its connected component and collect the nodes in
-each component. `connected_components()` applies to a global, pre-populated adjacency list `adj[]`
+each component. `connected_components()` applies to a global, pre-populated adjacency list `adj`
 which satisfies the precondition that for every node $v$ in `adj[u]`, node $u$ also exists in
 `adj[v]`.
 
@@ -26,10 +26,9 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
+std::vector<std::vector<int>> adj;
 std::vector<std::vector<int>> components;
-int component_id[MAXN];
+std::vector<int> component_id;
 
 void dfs(int u, int id) {
   component_id[u] = id;
@@ -41,9 +40,10 @@ void dfs(int u, int id) {
   }
 }
 
-void connected_components(int nodes) {
+void connected_components() {
+  int nodes = adj.size();
   components.clear();
-  std::fill(component_id, component_id + nodes, -1);
+  component_id.assign(nodes, -1);
   for (int u = 0; u < nodes; u++) {
     if (component_id[u] == -1) {
       components.push_back({});
@@ -63,10 +63,12 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  int nodes = 6;
+  adj.resize(nodes);
   add_edge(0, 1);
   add_edge(1, 2);
   add_edge(3, 4);
-  connected_components(6);
+  connected_components();
   assert(components.size() == 3);
   assert(component_id[0] == component_id[2]);
   assert(component_id[0] != component_id[3]);

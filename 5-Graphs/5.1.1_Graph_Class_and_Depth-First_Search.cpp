@@ -111,10 +111,6 @@ DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
 #include <iostream>
 using namespace std;
 
-void print(int n) {
-  cout << n << " ";
-}
-
 int main() {
   {
     Graph g;
@@ -130,7 +126,7 @@ int main() {
     g.add_edge(8, 9);
     g.add_edge(8, 10);
     cout << "DFS order: ";
-    g.dfs(0, print);
+    g.dfs(0, [](int n) { cout << n << " "; });
     cout << endl;
     assert(g[0].size() == 3);
     assert(g.is_dag());

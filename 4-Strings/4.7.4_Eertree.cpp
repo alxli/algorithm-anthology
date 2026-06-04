@@ -17,9 +17,8 @@ the longest palindromic suffix of the current string.
   each node `v`.
 
 Time Complexity:
-- O(n log A) to build the tree for a string of length $n$, where $A$ is the alphabet size, due to
-  ordered map transitions.
-- O(log A) amortized per call to `add(c)`.
+- O(n) expected to build the tree for a string of length $n$.
+- O(1) expected amortized per call to `add(c)`.
 - O(n) per call to `count_occurrences()`.
 
 Space Complexity:
@@ -28,15 +27,15 @@ Space Complexity:
 
 */
 
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 using std::string;
 
 class Eertree {
   struct Node {
     int len, link, occ;
-    std::map<char, int> next;
+    std::unordered_map<char, int> next;
 
     Node(int len = 0) : len(len), link(0), occ(0) {}
   };
@@ -74,7 +73,7 @@ class Eertree {
     s += c;
     int pos = s.size() - 1;
     int cur = get_suffix(last, pos, c);
-    std::map<char, int>::iterator it = tree[cur].next.find(c);
+    auto it = tree[cur].next.find(c);
     if (it != tree[cur].next.end()) {
       last = it->second;
       tree[last].occ++;

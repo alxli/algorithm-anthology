@@ -3,7 +3,7 @@
 Given a starting node in a weighted, directed graph with possibly negative weights, visit every
 connected node and determine the minimum distance to each such node. Optionally, output the shortest
 path to a specific destination node using the shortest-path tree from the predecessor array
-`pred[]`. `bellman_ford()` applies to a global, pre-populated edge list which must only consist of
+`pred`. `bellman_ford()` applies to a global, pre-populated edge list which must only consist of
 nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as
 passed in the function argument.
 
@@ -27,17 +27,15 @@ Space Complexity:
 
 struct Edge {
   int u, v, w;
-};  // Edge from u to v with weight w.
+};
 
-const int MAXN = 100, INF = INT_MAX / 2;
+const int INF = INT_MAX / 2;
 std::vector<Edge> e;
-int dist[MAXN], pred[MAXN];
+std::vector<int> dist, pred;
 
 void bellman_ford(int nodes, int start) {
-  for (int i = 0; i < nodes; i++) {
-    dist[i] = INF;
-    pred[i] = -1;
-  }
+  dist.assign(nodes, INF);
+  pred.assign(nodes, -1);
   dist[start] = 0;
   for (int i = 0; i < nodes; i++) {
     for (auto &edge : e) {

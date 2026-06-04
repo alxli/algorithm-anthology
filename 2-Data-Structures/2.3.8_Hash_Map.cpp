@@ -34,6 +34,7 @@ Space Complexity:
 
 #include <cstddef>
 #include <list>
+#include <vector>
 
 template<class K, class V, class Hash>
 class HashMap {
@@ -44,29 +45,24 @@ class HashMap {
     HashMapEntry(const K &k, const V &v) : key(k), value(v) {}
   };
 
-  std::list<HashMapEntry> *table;
+  std::vector<std::list<HashMapEntry>> table;
   int table_size, num_entries;
 
   void double_capacity_and_rehash() {
-    std::list<HashMapEntry> *old = table;
-    int old_size = table_size;
+    std::vector<std::list<HashMapEntry>> old = std::move(table);
     table_size = 2 * table_size;
-    table = new std::list<HashMapEntry>[table_size];
+    table.assign(table_size, std::list<HashMapEntry>());
     num_entries = 0;
-    for (int i = 0; i < old_size; i++) {
-      for (auto &entry : old[i]) {
+    for (auto &bucket : old) {
+      for (auto &entry : bucket) {
         insert(entry.key, entry.value);
       }
     }
-    delete[] old;
   }
 
  public:
-  explicit HashMap(int size = 128) : table_size(size), num_entries(0) {
-    table = new std::list<HashMapEntry>[table_size];
-  }
+  explicit HashMap(int size = 128) : table(size), table_size(size), num_entries(0) {}
 
-  ~HashMap() { delete[] table; }
   int size() const { return num_entries; }
   bool empty() const { return num_entries == 0; }
 
@@ -97,7 +93,7 @@ class HashMap {
     return true;
   }
 
-  V *find(const K &k) const {
+  V *find(const K &k) {
     unsigned int i = Hash()(k) % table_size;
     auto it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
@@ -140,7 +136,6 @@ using namespace std;
 
 struct ClassHash {
   unsigned int operator()(int k) { return ClassHash()(static_cast<unsigned int>(k)); }
-
   unsigned int operator()(long long k) { return ClassHash()(static_cast<unsigned long long>(k)); }
 
   // Knuth's one-to-one multiplicative method.

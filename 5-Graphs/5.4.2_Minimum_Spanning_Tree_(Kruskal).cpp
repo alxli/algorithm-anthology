@@ -22,9 +22,8 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-const int MAXN = 100;
 std::vector<std::tuple<int, int, int>> edges;
-int root[MAXN];
+std::vector<int> root;
 std::vector<std::pair<int, int>> mst;
 
 int find_root(int u) {
@@ -38,7 +37,8 @@ int kruskal(int nodes) {
   mst.clear();
   std::sort(edges.begin(), edges.end());
   int total_dist = 0;
-  std::iota(root, root + nodes, 0);
+  root.resize(nodes);
+  std::iota(root.begin(), root.end(), 0);
   for (auto &[w, a, b] : edges) {
     int u = find_root(a);
     int v = find_root(b);

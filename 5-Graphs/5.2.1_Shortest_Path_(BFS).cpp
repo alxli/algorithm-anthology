@@ -2,9 +2,8 @@
 
 Given a starting node in an unweighted, directed graph, visit every connected node and determine the
 minimum distance to each such node. Optionally, output the shortest path to a specific destination
-node using the shortest-path tree from the predecessor array `pred[]`. `bfs()` applies to a global,
-pre-populated adjacency list `adj[]` which consists of only nodes numbered with integers between 0
-(inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+node using the shortest-path tree from the predecessor vector `pred`. `bfs()` applies to a global,
+pre-populated adjacency list `adj`.
 
 Time Complexity:
 - O(max(n, m)) per call to `bfs()`, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -21,13 +20,14 @@ Space Complexity:
 #include <queue>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<int> adj[MAXN];
-int dist[MAXN], pred[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<int>> adj;
+std::vector<int> dist, pred;
 
-void bfs(int nodes, int start) {
-  std::fill(dist, dist + nodes, INF);
-  std::fill(pred, pred + nodes, -1);
+void bfs(int start) {
+  int nodes = adj.size();
+  dist.assign(nodes, INF);
+  pred.assign(nodes, -1);
   std::queue<int> q;
   dist[start] = 0;
   q.push(start);
@@ -69,12 +69,13 @@ void print_path(int dest) {
 }
 
 int main() {
-  int start = 0, dest = 3;
+  int nodes = 4, start = 0, dest = 3;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(2);
   adj[1].push_back(3);
   adj[2].push_back(3);
-  bfs(4, start);
+  bfs(start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;
   print_path(dest);

@@ -17,10 +17,9 @@ state representing the longest proper suffix of that class.
   `t`.
 
 Time Complexity:
-- O(n log A) to construct the automaton for a string of length $n$, where $A$ is the alphabet size,
-  due to ordered map transitions.
-- O(m log A) per call to `contains(t)` or `longest_common_substring(t)`, where $m$ is the length of
-  `t`.
+- O(n) expected to construct the automaton for a string of length $n$.
+- O(m) expected per call to `contains(t)` or `longest_common_substring(t)`, where $m$ is the length
+  of `t`.
 - O(n) per call to `count_distinct_substrings()`.
 
 Space Complexity:
@@ -29,15 +28,15 @@ Space Complexity:
 
 */
 
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 using std::string;
 
 class SuffixAutomaton {
   struct State {
     int len, link, first_pos;
-    std::map<char, int> next;
+    std::unordered_map<char, int> next;
 
     State() : len(0), link(-1), first_pos(-1) {}
   };

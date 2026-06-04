@@ -1,26 +1,26 @@
 /*
 
 Given random-access iterators `lo` and `hi` specifying a range `[lo, hi)` of integers, return the
-minimum sum of any subset of the range that is greater than or equal to a given integer `v`. This is
-a generalization of the NP-complete subset sum problem, which asks whether a subset summing to 0
-exists (equivalent in this case to checking if $v = 0$ yields an answer of 0). This implementation
-uses a meet-in-the-middle algorithm to precompute and search for a lower bound. Note that 64-bit
-integers are used in intermediate calculations to avoid overflow.
+maximum sum of any subset of the range that is at most a given integer `v`. This is a common
+meet-in-the-middle version of subset sum: enumerate subset sums for each half, sort one side, and
+binary search for the best compatible partner. Note that 64-bit integers are used in intermediate
+calculations to avoid overflow.
 
 Time Complexity:
-- O(n*2^(n/2)) per call to `sum_lower_bound()`, where $n$ is the distance between `lo` and `hi`.
+- O(n*2^(n/2)) per call to `max_subset_sum_at_most()`, where $n$ is the distance between `lo` and
+  `hi`.
 
 Space Complexity:
-- O(n) auxiliary heap space, where $n$ is the number of array elements.
+- O(2^(n/2)) auxiliary heap space.
 
 */
 
 #include <algorithm>
-#include <limits>
+#include <climits>
 #include <vector>
 
 template<class It>
-long long sum_lower_bound(It lo, It hi, long long v) {
+long long max_subset_sum_at_most(It lo, It hi, long long v) {
   int n = hi - lo, llen = 1 << (n / 2), hlen = 1 << (n - n / 2);
   std::vector<long long> lsum(llen), hsum(hlen);
   for (int mask = 0; mask < llen; mask++) {
@@ -37,19 +37,15 @@ long long sum_lower_bound(It lo, It hi, long long v) {
       }
     }
   }
-  std::sort(lsum.begin(), lsum.end());
   std::sort(hsum.begin(), hsum.end());
-  int blo = 0, bhi = hlen - 1;
-  long long curr = std::numeric_limits<long long>::min();
-  while (blo < llen && bhi >= 0) {
-    if (lsum[blo] + hsum[bhi] <= v) {
-      curr = std::max(curr, lsum[blo] + hsum[bhi]);
-      blo++;
-    } else {
-      bhi--;
+  long long res = LLONG_MIN;
+  for (long long x : lsum) {
+    auto it = std::upper_bound(hsum.begin(), hsum.end(), v - x);
+    if (it != hsum.begin()) {
+      res = std::max(res, x + *--it);
     }
   }
-  return curr;
+  return res;
 }
 
 /*** Example Usage ***/
@@ -57,9 +53,9 @@ long long sum_lower_bound(It lo, It hi, long long v) {
 #include <cassert>
 
 int main() {
-  int a[] = {9, 1, 5, 0, 1, 11, 5};
-  assert(sum_lower_bound(a, a + 7, 8) == 7);
-  int b[] = {-7, -3, -2, 5, 8};
-  assert(sum_lower_bound(b, b + 5, 0) == 0);
+  std::vector<int> a{9, 1, 5, 0, 1, 11, 5};
+  assert(max_subset_sum_at_most(a.begin(), a.end(), 8) == 7);
+  std::vector<int> b{-7, -3, -2, 5, 8};
+  assert(max_subset_sum_at_most(b.begin(), b.end(), 0) == 0);
   return 0;
 }

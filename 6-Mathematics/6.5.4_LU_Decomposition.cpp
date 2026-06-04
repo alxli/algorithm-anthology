@@ -183,42 +183,32 @@ using namespace std;
 
 int main() {
   {  // Solve a system.
-    const int equations = 3, unknowns = 3;
-    const int a[equations][unknowns] = {{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
-    const int b[equations] = {3, 1, -2};
-    vector<vector<double>> m(equations);
-    for (int i = 0; i < equations; i++) {
-      m[i].assign(a[i], a[i] + unknowns);
-    }
+    vector<vector<double>> a{{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
+    vector<double> b{3, 1, -2};
     vector<double> x;
-    assert(solve_system(m, vector<double>(b, b + equations), &x) == 0);
-    for (int i = 0; i < equations; i++) {
+    assert(solve_system(a, b, &x) == 0);
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
       double sum = 0;
-      for (int j = 0; j < unknowns; j++) {
+      for (int j = 0; j < static_cast<int>(a[i].size()); j++) {
         sum += a[i][j] * x[j];
       }
       assert(fabs(sum - b[i]) < 1e-10);
     }
   }
   {  // Find the determinant.
-    const int n = 3, a[n][n] = {{1, 3, 5}, {2, 4, 7}, {1, 1, 0}};
-    vector<vector<double>> m(n);
-    for (int i = 0; i < n; i++) {
-      m[i] = vector<double>(a[i], a[i] + n);
-    }
-    assert(fabs(det(m) - 4) < 1e-10);
+    vector<vector<double>> a{{1, 3, 5}, {2, 4, 7}, {1, 1, 0}};
+    assert(fabs(det(a) - 4) < 1e-10);
   }
   {  // Find the inverse.
-    const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
-    vector<vector<double>> m(n), res(n, vector<double>(n, 0));
-    for (int i = 0; i < n; i++) {
-      m[i] = vector<double>(a[i], a[i] + n);
-    }
-    assert(invert(m) == 0);
+    vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
+    vector<vector<double>> inv = a;
+    int n = static_cast<int>(a.size());
+    vector<vector<double>> res(n, vector<double>(n, 0));
+    assert(invert(inv) == 0);
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
         for (int k = 0; k < n; k++) {
-          res[i][j] += a[i][k] * m[k][j];
+          res[i][j] += a[i][k] * inv[k][j];
         }
       }
     }

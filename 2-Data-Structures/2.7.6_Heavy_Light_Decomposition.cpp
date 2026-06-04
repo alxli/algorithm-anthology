@@ -22,10 +22,10 @@ The default code below defines updates that "set" a path's edges or nodes to a n
 increment updates, `apply_delta(v, d, len)` would return `v + d` for min/max queries, or
 `v + d * len` for sum queries, and `compose_deltas(old, d)` would return `old + d`.
 
-- `HeavyLight(n, adj[], v)` constructs a new heavy light decomposition on a tree with `n` nodes
-  defined by the adjacency list `adj[]`, with all values initialized to `v`. The adjacency list must
-  be a size `n` array of vectors consisting of only the integers from 0 to `n - 1`, inclusive. No
-  duplicate edges should exist, and the graph must be connected.
+- `HeavyLight(adj, v)` constructs a new heavy light decomposition on a tree defined by the adjacency
+  list `adj`, with all values initialized to `v`. The adjacency list must consist of only the
+  integers from 0 to `adj.size() - 1`, inclusive. No duplicate edges should exist, and the graph
+  must be connected.
 - `query(u, v)` returns the result of `combine()` applied to all values on the path from node `u` to
   node `v`.
 - `update(u, v, d)` modifies all values on the path from node `u` to node `v` by respectively
@@ -60,7 +60,7 @@ class HeavyLight {
   std::vector<std::vector<bool>> pending;
   std::vector<std::vector<int>> len;
   std::vector<int> size, parent, tin, tout, path, pathlen, pathpos, pathroot;
-  std::vector<int> *adj;
+  const std::vector<std::vector<int>> &adj;
 
   void dfs(int u, int p) {
     tin[u] = counter++;
@@ -166,17 +166,17 @@ class HeavyLight {
   }
 
  public:
-  HeavyLight(int n, std::vector<int> adj[], const T &v = T())
+  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T())
       : counter(0),
         paths(0),
-        size(n),
-        parent(n),
-        tin(n),
-        tout(n),
-        path(n),
-        pathlen(n),
-        pathpos(n),
-        pathroot(n),
+        size(adj.size()),
+        parent(adj.size()),
+        tin(adj.size()),
+        tout(adj.size()),
+        path(adj.size()),
+        pathlen(adj.size()),
+        pathpos(adj.size()),
+        pathroot(adj.size()),
         adj(adj) {
     dfs(0, -1);
     build_paths(0, new_path(0));
@@ -262,7 +262,7 @@ int main() {
   //                     |
   //                     ----------4
   //                         w=30
-  vector<int> adj[5];
+  vector<vector<int>> adj(5);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -271,7 +271,7 @@ int main() {
   adj[3].push_back(2);
   adj[2].push_back(4);
   adj[4].push_back(2);
-  HeavyLight<int> hld(5, adj, 0);
+  HeavyLight<int> hld(adj, 0);
   hld.update(0, 1, 40);
   hld.update(1, 2, 20);
   hld.update(2, 3, 10);

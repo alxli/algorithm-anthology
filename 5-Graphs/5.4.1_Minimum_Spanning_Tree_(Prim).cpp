@@ -2,7 +2,7 @@
 
 Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning
 tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that
-their total weight is minimized. `prim()` applies to a global, pre-populated adjacency list `adj[]`
+their total weight is minimized. `prim()` applies to a global, pre-populated adjacency list `adj`
 which must only consist of nodes numbered with integers between 0 (inclusive) and the total number
 of nodes (exclusive), as passed in the function argument. If the input graph is not connected, then
 this implementation will find the minimum spanning forest.
@@ -27,12 +27,13 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-const int MAXN = 100;
 using QueueEntry = std::tuple<int, int, int>;  // (-weight, from, to)
 
-std::vector<std::pair<int, int>> adj[MAXN], mst;
+std::vector<std::vector<std::pair<int, int>>> adj;
+std::vector<std::pair<int, int>> mst;
 
-int prim(int nodes) {
+int prim() {
+  int nodes = adj.size();
   mst.clear();
   std::vector<bool> visit(nodes);
   int total_dist = 0;
@@ -84,6 +85,8 @@ void add_edge(int u, int v, int w) {
 }
 
 int main() {
+  int nodes = 7;
+  adj.resize(nodes);
   add_edge(0, 1, 4);
   add_edge(1, 2, 6);
   add_edge(2, 0, 3);
@@ -91,7 +94,7 @@ int main() {
   add_edge(4, 5, 2);
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
-  cout << "Total distance: " << prim(7) << endl;
+  cout << "Total distance: " << prim() << endl;
   for (auto &[u, v] : mst) {
     cout << u << " <-> " << v << endl;
   }

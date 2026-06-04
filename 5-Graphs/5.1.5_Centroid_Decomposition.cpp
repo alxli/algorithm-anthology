@@ -5,7 +5,7 @@ current subtree into connected components of size at most half of that subtree. 
 centroids creates a decomposition tree of height O(log n), which is useful for queries based on
 distances to marked nodes, nearest special node, and other "path through a centroid" problems.
 
-`build_centroid_tree()` applies to a global, pre-populated adjacency list `adj[]` which satisfies
+`build_centroid_tree()` applies to a global, pre-populated adjacency list `adj` which satisfies
 the precondition that for every node $v$ in `adj[u]`, node $u$ also exists in `adj[v]`.
 
 - `centroid_parent[u]` stores the parent of node $u$ in the centroid tree.
@@ -15,7 +15,7 @@ Time Complexity:
 - O(n log n) per call to `build_centroid_tree()`, where $n$ is the number of nodes.
 
 Space Complexity:
-- O(n) for `subtree_size[]`, `removed[]`, and `centroid_parent[]`.
+- O(n) for `subtree_size`, `removed`, and `centroid_parent`.
 - O(n) auxiliary stack space for the recursive searches.
 
 */
@@ -23,10 +23,9 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
-int subtree_size[MAXN], centroid_parent[MAXN];
-bool removed[MAXN];
+std::vector<std::vector<int>> adj;
+std::vector<int> subtree_size, centroid_parent;
+std::vector<bool> removed;
 
 int get_size(int u, int p) {
   subtree_size[u] = 1;
@@ -59,9 +58,11 @@ void decompose(int entry, int parent) {
   }
 }
 
-void build_centroid_tree(int nodes) {
-  std::fill(removed, removed + nodes, false);
-  std::fill(centroid_parent, centroid_parent + nodes, -1);
+void build_centroid_tree() {
+  int nodes = adj.size();
+  subtree_size.assign(nodes, 0);
+  centroid_parent.assign(nodes, -1);
+  removed.assign(nodes, false);
   decompose(0, -1);
 }
 
@@ -76,13 +77,15 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  int nodes = 7;
+  adj.resize(nodes);
   add_edge(0, 1);
   add_edge(1, 2);
   add_edge(1, 3);
   add_edge(3, 4);
   add_edge(3, 5);
   add_edge(5, 6);
-  build_centroid_tree(7);
+  build_centroid_tree();
   assert(centroid_parent[3] == -1);
   assert(centroid_parent[1] == 3);
   assert(centroid_parent[5] == 3);

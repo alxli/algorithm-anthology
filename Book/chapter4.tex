@@ -225,10 +225,10 @@ using namespace std;
 int main() {
   assert(to_str(123) + "4" == "1234");
   assert(to_int("1234") == 1234);
-  char buffer[50];
-  assert(string(itoa(1750, buffer, 10)) == "1750");
-  assert(string(itoa(1750, buffer, 16)) == "6d6");
-  assert(string(itoa(1750, buffer, 2)) == "11011010110");
+  vector<char> buffer(50);
+  assert(string(itoa(1750, buffer.data(), 10)) == "1750");
+  assert(string(itoa(1750, buffer.data(), 16)) == "6d6");
+  assert(string(itoa(1750, buffer.data(), 2)) == "11011010110");
 
   assert(to_upper("Hello world") == "HELLO WORLD");
   assert(to_lower("Hello World") == "hello world");
@@ -665,8 +665,8 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\log n)$ per call to \inlinecode{get(x)} and \inlinecode{toggle(h, x)}, where $n$ is the number of distinct keys seen so far.
-  \item $O(n \log n)$ per call to \inlinecode{distinct\_prefix\_hashes(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(1)$ expected per call to \inlinecode{get(x)} and \inlinecode{toggle(h, x)}.
+  \item $O(n)$ expected per call to \inlinecode{distinct\_prefix\_hashes(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
@@ -676,15 +676,15 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <map>
-#include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 using uint64 = unsigned long long;
 
 template<class T>
 class ZobristHash {
-  std::map<T, uint64> token;
+  std::unordered_map<T, uint64> token;
   uint64 state;
 
   static uint64 splitmix64(uint64 x) {
@@ -710,7 +710,7 @@ class ZobristHash {
 
   template<class It>
   std::vector<uint64> distinct_prefix_hashes(It lo, It hi) {
-    std::set<T> seen;
+    std::unordered_set<T> seen;
     std::vector<uint64> res(1, 0);
     uint64 h = 0;
     for (It it = lo; it != hi; ++it) {
@@ -729,11 +729,11 @@ class ZobristHash {
 using namespace std;
 
 int main() {
-  int a[] = {1, 2, 1, 3};
-  int b[] = {2, 1, 3};
+  vector<int> a{1, 2, 1, 3};
+  vector<int> b{2, 1, 3};
   ZobristHash<int> zh(123);
-  vector<uint64> pa = zh.distinct_prefix_hashes(a, a + 4);
-  vector<uint64> pb = zh.distinct_prefix_hashes(b, b + 3);
+  vector<uint64> pa = zh.distinct_prefix_hashes(a.begin(), a.end());
+  vector<uint64> pb = zh.distinct_prefix_hashes(b.begin(), b.end());
 
   assert(pa[2] == pb[2]);  // Distinct sets {1, 2} and {2, 1}.
   assert(pa[4] == pb[3]);  // Distinct sets {1, 2, 3} and {2, 1, 3}.
@@ -889,7 +889,7 @@ int main() {
 \subsection{String Searching (Aho-Corasick)}
 Given a set of strings (needles) and subsequent queries of texts (haystacks) to be searched, determine all positions in which needles occur within the given haystacks in linear time using the Aho-Corasick algorithm.
 
-Note that this implementation uses an ordered map for storage of the graph, adding an additional $\log k$ factor to the time complexities of all operations, where $k$ is the size of the alphabet (number of distinct characters used across the needles). It also uses an ordered set for storage of the precomputed output tables, adding an additional $\log m$ factor to the time complexities, where $m$ is the number of needles. In C++11 and later, both of these containers should be replaced by their unordered versions for constant time access, thus eliminating the log factors from the time complexities.
+This implementation stores transitions in hash tables, which keeps lookups expected constant time without assuming a fixed alphabet size. The output tables are stored as ordered sets so matches ending at the same position are reported in deterministic needle order.
 
 \begin{compactitem}
   \item \inlinecode{AhoCorasick(needles)} constructs the finite-state automaton for a set of needle strings that are to be searched for subsequently in haystack queries.
@@ -898,8 +898,8 @@ Note that this implementation uses an ordered map for storage of the graph, addi
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(m \cdot ((\log m) + l \cdot \log k))$ per call to the constructor, where $m$ is the number of needles, $l$ is the maximum length for any needle, and $k$ is the size of the alphabet used by the needles. If unordered containers are used, then the time complexity reduces to $O(m \cdot l)$, or linear on the input size.
-  \item $O(n \cdot (\log k) + z)$ per call to \inlinecode{find\_all\_in(haystack, report\_match)}, where $n$ is the length of \inlinecode{haystack}, $k$ is the size of the alphabet used by the needles, and $z$ is the number of matches. If unordered containers are used, then the time complexity reduces to $O(n + z)$, or linear on the input size.
+  \item $O(m \cdot l + z \log m)$ expected per call to the constructor, where $m$ is the number of needles, $l$ is the maximum length of any needle, and $z$ is the total number of inherited output entries.
+  \item $O(n + z)$ expected per call to \inlinecode{find\_all\_in(haystack, report\_match)}, where $n$ is the length of \inlinecode{haystack} and $z$ is the number of matches.
 \end{compactitem}
 
 \textbf{Space Complexity}:
@@ -909,25 +909,25 @@ Note that this implementation uses an ordered map for storage of the graph, addi
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <map>
 #include <queue>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 using std::string;
 
 class AhoCorasick {
   std::vector<string> needles;
   std::vector<int> fail;
-  std::vector<std::map<char, int>> graph;
+  std::vector<std::unordered_map<char, int>> adj;
   std::vector<std::set<int>> out;
 
   int next_state(int curr, char c) {
     int next = curr;
-    while (graph[next].find(c) == graph[next].end()) {
+    while (adj[next].find(c) == adj[next].end()) {
       next = fail[next];
     }
-    return graph[next][c];
+    return adj[next][c];
   }
 
  public:
@@ -937,22 +937,22 @@ class AhoCorasick {
       total_len += needle.size();
     }
     fail.resize(total_len, -1);
-    graph.resize(total_len);
+    adj.resize(total_len);
     out.resize(total_len);
     int states = 1;
     for (int i = 0; i < static_cast<int>(needles.size()); i++) {
       int curr = 0;
       for (char c : needles[i]) {
-        if (auto it = graph[curr].find(c); it != graph[curr].end()) {
+        if (auto it = adj[curr].find(c); it != adj[curr].end()) {
           curr = it->second;
         } else {
-          curr = graph[curr][c] = states++;
+          curr = adj[curr][c] = states++;
         }
       }
       out[curr].insert(i);
     }
     std::queue<int> q;
-    for (auto &[c, v] : graph[0]) {
+    for (auto &[c, v] : adj[0]) {
       if (v != 0) {
         fail[v] = 0;
         q.push(v);
@@ -961,12 +961,12 @@ class AhoCorasick {
     while (!q.empty()) {
       int u = q.front();
       q.pop();
-      for (auto &[c, v] : graph[u]) {
+      for (auto &[c, v] : adj[u]) {
         int f = fail[u];
-        while (graph[f].find(c) == graph[f].end()) {
+        while (adj[f].find(c) == adj[f].end()) {
           f = fail[f];
         }
-        f = graph[f].find(c)->second;
+        f = adj[f].find(c)->second;
         fail[v] = f;
         out[v].insert(out[f].begin(), out[f].end());
         q.push(v);
@@ -1214,7 +1214,7 @@ An arbitrary operand type is supported, with its string representation defined b
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
-  \item \inlinecode{parser(unary\_op, binary\_op)} initializes a parser with operators specified by maps \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item \inlinecode{parser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
   \item \inlinecode{eval(lo, hi)} returns the evaluation of a range \inlinecode{[lo, hi)} of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
@@ -1224,8 +1224,8 @@ Operators may be non-empty strings of any length, but should not contain any par
 \begin{compactitem}
   \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
   \item $O(nmk)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
-  \item $O(n \log m)$ per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi} and $m$ is the total number of operators defined for the parser instance. In C++11 and later, \inlinecode{std::unordered\_map} may be used in place of \inlinecode{std::map} for storing \inlinecode{unary\_ops} and \inlinecode{binary\_ops}, which will eliminate the $\log m$ factor for a time complexity of $O(n)$ per call.
-  \item $O(nmk + n \log m)$ per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
+  \item $O(n)$ expected per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(nmk + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
 \end{compactitem}
 
 \textbf{Space Complexity}:
@@ -1237,11 +1237,11 @@ Operators may be non-empty strings of any length, but should not contain any par
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cctype>
-#include <map>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 using std::string;
@@ -1278,8 +1278,8 @@ Operand eval_operand(const string &s) {
 }
 
 class parser {
-  using unary_op_map = std::map<string, UnaryOp>;
-  using binary_op_map = std::map<string, BinaryRule>;
+  using unary_op_map = std::unordered_map<string, UnaryOp>;
+  using binary_op_map = std::unordered_map<string, BinaryRule>;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
   std::set<string> ops;
@@ -1417,11 +1417,11 @@ double mul(double a, double b) { return a * b; }
 double div(double a, double b) { return a / b; }
 
 int main() {
-  map<string, UnaryOp> unary_ops;
+  unordered_map<string, UnaryOp> unary_ops;
   unary_ops["+"] = pos;
   unary_ops["-"] = neg;
 
-  map<string, BinaryRule> binary_ops;
+  unordered_map<string, BinaryRule> binary_ops;
   binary_ops["+"] = {static_cast<BinaryOp>(add), 0};
   binary_ops["-"] = {static_cast<BinaryOp>(sub), 0};
   binary_ops["*"] = {static_cast<BinaryOp>(mul), 1};
@@ -1455,7 +1455,7 @@ An arbitrary operand type is supported, with its string representation defined b
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
-  \item \inlinecode{parser(unary\_op, binary\_op)} initializes a parser with operators specified by maps \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item \inlinecode{parser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
   \item \inlinecode{eval(lo, hi)} returns the evaluation of a range \inlinecode{[lo, hi)} of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
@@ -1465,8 +1465,8 @@ Operators may be non-empty strings of any length, but should not contain any par
 \begin{compactitem}
   \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
   \item $O(nmk)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
-  \item $O(n \log m)$ per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi} and $m$ is the total number of operators defined for the parser instance. In C++11 and later, \inlinecode{std::unordered\_map} may be used in place of \inlinecode{std::map} for storing \inlinecode{unary\_ops} and \inlinecode{binary\_ops}, which will eliminate the $\log m$ factor for a time complexity of $O(n)$ per call.
-  \item $O(nmk + n \log m)$ per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
+  \item $O(n)$ expected per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(nmk + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
 \end{compactitem}
 
 \textbf{Space Complexity}:
@@ -1478,12 +1478,12 @@ Operators may be non-empty strings of any length, but should not contain any par
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cctype>
-#include <map>
 #include <set>
 #include <sstream>
 #include <stack>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 using std::string;
@@ -1520,8 +1520,8 @@ Operand eval_operand(const string &s) {
 }
 
 class parser {
-  using unary_op_map = std::map<string, UnaryOp>;
-  using binary_op_map = std::map<string, BinaryRule>;
+  using unary_op_map = std::unordered_map<string, UnaryOp>;
+  using binary_op_map = std::unordered_map<string, BinaryRule>;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
   std::set<string> ops;
@@ -1668,11 +1668,11 @@ double mul(double a, double b) { return a * b; }
 double div(double a, double b) { return a / b; }
 
 int main() {
-  map<string, UnaryOp> unary_ops;
+  unordered_map<string, UnaryOp> unary_ops;
   unary_ops["+"] = pos;
   unary_ops["-"] = neg;
 
-  map<string, BinaryRule> binary_ops;
+  unordered_map<string, BinaryRule> binary_ops;
   binary_ops["+"] = {static_cast<BinaryOp>(add), 0};
   binary_ops["-"] = {static_cast<BinaryOp>(sub), 0};
   binary_ops["*"] = {static_cast<BinaryOp>(mul), 1};
@@ -2116,10 +2116,10 @@ using namespace std;
 int main() {
   SuffixArray sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
-  int sarr_expected[] = {5, 3, 1, 0, 4, 2};
-  int lcp_expected[] = {1, 3, 0, 0, 2};
-  assert(equal(sarr.begin(), sarr.end(), sarr_expected));
-  assert(equal(lcp.begin(), lcp.end(), lcp_expected));
+  vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
+  vector<int> lcp_expected{1, 3, 0, 0, 2};
+  assert(sarr == sarr_expected);
+  assert(lcp == lcp_expected);
   assert(sa.find("ana") == 1);
   assert(sa.find("x") == string::npos);
   return 0;
@@ -2235,10 +2235,10 @@ using namespace std;
 int main() {
   SuffixArray sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
-  int sarr_expected[] = {5, 3, 1, 0, 4, 2};
-  int lcp_expected[] = {1, 3, 0, 0, 2};
-  assert(equal(sarr.begin(), sarr.end(), sarr_expected));
-  assert(equal(lcp.begin(), lcp.end(), lcp_expected));
+  vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
+  vector<int> lcp_expected{1, 3, 0, 0, 2};
+  assert(sarr == sarr_expected);
+  assert(lcp == lcp_expected);
   assert(sa.find("ana") == 1);
   assert(sa.find("x") == string::npos);
   return 0;
@@ -2424,10 +2424,10 @@ using namespace std;
 int main() {
   SuffixArray sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
-  int sarr_expected[] = {5, 3, 1, 0, 4, 2};
-  int lcp_expected[] = {1, 3, 0, 0, 2};
-  assert(equal(sarr.begin(), sarr.end(), sarr_expected));
-  assert(equal(lcp.begin(), lcp.end(), lcp_expected));
+  vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
+  vector<int> lcp_expected{1, 3, 0, 0, 2};
+  assert(sarr == sarr_expected);
+  assert(lcp == lcp_expected);
   assert(sa.find("ana") == 1);
   assert(sa.find("x") == string::npos);
   return 0;
@@ -2438,7 +2438,7 @@ int main() {
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Trie}
-Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node.
+Maintain a map of strings to values using a tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Children are stored in hash tables, and \inlinecode{walk()} sorts child labels as needed to preserve lexicographic traversal.
 
 \begin{compactitem}
   \item \inlinecode{Trie()} constructs an empty map.
@@ -2452,8 +2452,8 @@ Maintain a map of strings to values using an ordered tree data structure. Each n
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}. Note that there is a hidden factor of $\log(\text{alphabet\_size})$ which can be considered constant, since \inlinecode{char} can only take on \inlinecode{2\textasciicircum{}CHAR\_BIT} values. The implementation may be optimized by storing the children of nodes in an \inlinecode{std::unordered\_map} in C++11 and later, or an array if a smaller alphabet size is guaranteed.
-  \item $O(l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map.
+  \item $O(n)$ expected per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}.
+  \item $O(l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map, treating the character alphabet as constant.
   \item $O(1)$ per call to all other operations.
 \end{compactitem}
 
@@ -2466,10 +2466,12 @@ Maintain a map of strings to values using an ordered tree data structure. Each n
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cstddef>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 using std::string;
 
 template<class V>
@@ -2477,7 +2479,7 @@ class Trie {
   struct Node {
     V value;
     bool is_terminal;
-    std::map<char, Node *> children;
+    std::unordered_map<char, Node *> children;
 
     Node() : is_terminal(false) {}
   } *root;
@@ -2506,7 +2508,9 @@ class Trie {
     if (n->is_terminal) {
       f(s, n->value);
     }
-    for (auto &[c, child] : n->children) {
+    std::vector<std::pair<char, Node *>> children(n->children.begin(), n->children.end());
+    std::sort(children.begin(), children.end());
+    for (auto &[c, child] : children) {
       s += c;
       walk(child, s, f);
       s.pop_back();
@@ -2584,10 +2588,10 @@ void print_entry(const string &k, int v) {
 }
 
 int main() {
-  string s[9] = {"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
+  vector<string> s{"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
   Trie<int> t;
   assert(t.empty());
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
   t.walk(print_entry);
@@ -2617,7 +2621,7 @@ int main() {
 ("to", 2)
 \end{exampleoutput}
 \subsection{Radix Tree}
-Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child.
+Maintain a map of strings to values using a compressed tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child. Children are stored in hash tables, and \inlinecode{walk()} sorts child labels as needed to preserve lexicographic traversal.
 
 \begin{compactitem}
   \item \inlinecode{RadixTree()} constructs an empty map.
@@ -2631,8 +2635,8 @@ Maintain a map of strings to values using an ordered tree data structure. Each n
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}. Note that there is a hidden factor of $\log n$ due to map lookups, which can be considered constant amortized. The implementation may be optimized by storing the children of nodes in an \inlinecode{std::unordered\_map} in C++11 and later, or a \inlinecode{std::vector\textless{}pair\textless{}string, Node*\textgreater{} \textgreater{}}, since the only container operations required are iteration over the (\inlinecode{key}, \inlinecode{child}) pairs and inserting a new pair. Sticking with an (ordered) \inlinecode{std::map}, we can optimize all operations by using \inlinecode{map.lower\_bound()}, a binary tree search for a child with a shared prefix, instead of iteration.
-  \item $O(l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map.
+  \item $O(n)$ expected per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}, assuming the number of outgoing compressed edges checked at each node is small.
+  \item $O(l \log l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map.
   \item $O(1)$ per call to all other operations.
 \end{compactitem}
 
@@ -2645,10 +2649,12 @@ Maintain a map of strings to values using an ordered tree data structure. Each n
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cstddef>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 using std::string;
 
 template<class V>
@@ -2656,7 +2662,7 @@ class RadixTree {
   struct Node {
     V value;
     bool is_terminal;
-    std::map<string, Node *> children;
+    std::unordered_map<string, Node *> children;
 
     Node(const V &value = V(), bool is_terminal = false) : value(value), is_terminal(is_terminal) {}
   } *root;
@@ -2747,7 +2753,9 @@ class RadixTree {
     if (n->is_terminal) {
       f(s, n->value);
     }
-    for (auto &[key, child] : n->children) {
+    std::vector<std::pair<string, Node *>> children(n->children.begin(), n->children.end());
+    std::sort(children.begin(), children.end());
+    for (auto &[key, child] : children) {
       s += key;
       walk(child, s, f);
       s.erase(s.size() - key.size());
@@ -2824,10 +2832,10 @@ void print_entry(const string &k, int v) {
 }
 
 int main() {
-  string s[9] = {"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
+  vector<string> s{"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
   RadixTree<int> t;
   assert(t.empty());
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
   t.walk(print_entry);
@@ -2872,8 +2880,8 @@ Each state represents an equivalence class of substrings with the same set of en
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log A)$ to construct the automaton for a string of length $n$, where $A$ is the alphabet size, due to ordered map transitions.
-  \item $O(m \log A)$ per call to \inlinecode{contains(t)} or \inlinecode{longest\_common\_substring(t)}, where $m$ is the length of \inlinecode{t}.
+  \item $O(n)$ expected to construct the automaton for a string of length $n$.
+  \item $O(m)$ expected per call to \inlinecode{contains(t)} or \inlinecode{longest\_common\_substring(t)}, where $m$ is the length of \inlinecode{t}.
   \item $O(n)$ per call to \inlinecode{count\_distinct\_substrings()}.
 \end{compactitem}
 
@@ -2884,15 +2892,15 @@ Each state represents an equivalence class of substrings with the same set of en
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 using std::string;
 
 class SuffixAutomaton {
   struct State {
     int len, link, first_pos;
-    std::map<char, int> next;
+    std::unordered_map<char, int> next;
 
     State() : len(0), link(-1), first_pos(-1) {}
   };
@@ -3019,8 +3027,8 @@ The structure has two roots: one of length $-1$, which simplifies boundary cases
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log A)$ to build the tree for a string of length $n$, where $A$ is the alphabet size, due to ordered map transitions.
-  \item $O(\log A)$ amortized per call to \inlinecode{add(c)}.
+  \item $O(n)$ expected to build the tree for a string of length $n$.
+  \item $O(1)$ expected amortized per call to \inlinecode{add(c)}.
   \item $O(n)$ per call to \inlinecode{count\_occurrences()}.
 \end{compactitem}
 
@@ -3031,15 +3039,15 @@ The structure has two roots: one of length $-1$, which simplifies boundary cases
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 using std::string;
 
 class Eertree {
   struct Node {
     int len, link, occ;
-    std::map<char, int> next;
+    std::unordered_map<char, int> next;
 
     Node(int len = 0) : len(len), link(0), occ(0) {}
   };
@@ -3077,7 +3085,7 @@ class Eertree {
     s += c;
     int pos = s.size() - 1;
     int cur = get_suffix(last, pos, c);
-    std::map<char, int>::iterator it = tree[cur].next.find(c);
+    auto it = tree[cur].next.find(c);
     if (it != tree[cur].next.end()) {
       last = it->second;
       tree[last].occ++;
@@ -3323,7 +3331,7 @@ This implementation uses the standard alphabet with \inlinecode{+}, \inlinecode{
 #include <vector>
 using std::string;
 
-const char BASE64_ALPHABET[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const string BASE64_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 string base64_encode(const string &bytes) {
   string res;

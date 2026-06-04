@@ -105,10 +105,6 @@ class Graph {
 #include <iostream>
 using namespace std;
 
-void print(int n) {
-  cout << n << " ";
-}
-
 int main() {
   {
     Graph g;
@@ -124,7 +120,7 @@ int main() {
     g.add_edge(8, 9);
     g.add_edge(8, 10);
     cout << "DFS order: ";
-    g.dfs(0, print);
+    g.dfs(0, [](int n) { cout << n << " "; });
     cout << endl;
     assert(g[0].size() == 3);
     assert(g.is_dag());
@@ -148,7 +144,7 @@ int main() {
 DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
 \end{exampleoutput}
 \subsection{Connected Components}
-Given an undirected graph, label every node with its connected component and collect the nodes in each component. \inlinecode{connected\_components()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}.
+Given an undirected graph, label every node with its connected component and collect the nodes in each component. \inlinecode{connected\_components()} applies to a global, pre-populated adjacency list \inlinecode{adj} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}.
 
 This is the standard graph reachability primitive behind many larger routines: run one depth-first search from every unseen node, and all nodes visited by that search belong to the same component. For directed graphs, use a strongly connected components algorithm instead.
 
@@ -169,10 +165,9 @@ This is the standard graph reachability primitive behind many larger routines: r
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
+std::vector<std::vector<int>> adj;
 std::vector<std::vector<int>> components;
-int component_id[MAXN];
+std::vector<int> component_id;
 
 void dfs(int u, int id) {
   component_id[u] = id;
@@ -184,9 +179,10 @@ void dfs(int u, int id) {
   }
 }
 
-void connected_components(int nodes) {
+void connected_components() {
+  int nodes = adj.size();
   components.clear();
-  std::fill(component_id, component_id + nodes, -1);
+  component_id.assign(nodes, -1);
   for (int u = 0; u < nodes; u++) {
     if (component_id[u] == -1) {
       components.push_back({});
@@ -206,10 +202,12 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  int nodes = 6;
+  adj.resize(nodes);
   add_edge(0, 1);
   add_edge(1, 2);
   add_edge(3, 4);
-  connected_components(6);
+  connected_components();
   assert(components.size() == 3);
   assert(component_id[0] == component_id[2]);
   assert(component_id[0] != component_id[3]);
@@ -220,7 +218,7 @@ int main() {
 \subsection{Topological Sorting}
 Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every edge from node $u$ to $v$, $u$ comes before $v$ in the ordering. Depth-first search is used to traverse all nodes in post-order.
 
-\inlinecode{toposort(nodes)} takes a directed graph stored as a global adjacency list with nodes indexed from 0 to \inlinecode{nodes - 1} and assigns a valid topological ordering to the global result vector. An error is thrown if the graph contains a cycle.
+\inlinecode{toposort()} takes a directed graph stored as a global adjacency list and assigns a valid topological ordering to the global result vector. An error is thrown if the graph contains a cycle.
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{toposort()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
@@ -235,11 +233,10 @@ Given a directed acyclic graph, find one of possibly many orderings of the nodes
 #include <stdexcept>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN], res;
-std::vector<bool> visit(MAXN), done(MAXN);
+std::vector<std::vector<int>> adj;
+std::vector<bool> visit, done;
 
-void dfs(int u) {
+void dfs(int u, std::vector<int>& res) {
   if (visit[u]) {
     throw std::runtime_error("Not a directed acyclic graph.");
   }
@@ -248,23 +245,25 @@ void dfs(int u) {
   }
   visit[u] = true;
   for (int v : adj[u]) {
-    dfs(v);
+    dfs(v, res);
   }
   visit[u] = false;
   done[u] = true;
   res.push_back(u);
 }
 
-void toposort(int nodes) {
-  fill(visit.begin(), visit.end(), false);
-  fill(done.begin(), done.end(), false);
-  res.clear();
+std::vector<int> toposort() {
+  int nodes = adj.size();
+  visit.assign(nodes, false);
+  done.assign(nodes, false);
+  std::vector<int> res;
   for (int i = 0; i < nodes; i++) {
     if (!done[i]) {
-      dfs(i);
+      dfs(i, res);
     }
   }
   std::reverse(res.begin(), res.end());
+  return res;
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -273,6 +272,8 @@ void toposort(int nodes) {
 using namespace std;
 
 int main() {
+  int nodes = 8;
+  adj.resize(nodes);
   adj[0].push_back(3);
   adj[0].push_back(4);
   adj[1].push_back(3);
@@ -282,7 +283,7 @@ int main() {
   adj[3].push_back(6);
   adj[3].push_back(7);
   adj[4].push_back(6);
-  toposort(8);
+  auto res = toposort();
   cout << "The topological order:";
   for (int v : res) {
     cout << " " << v;
@@ -295,7 +296,7 @@ int main() {
 The topological order: 2 1 0 4 3 7 6 5
 \end{exampleoutput}
 \subsection{Tree Centers and Diameter}
-An unweighted tree possesses a center, centroid, and diameter. The following functions apply to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}. Nodes in \inlinecode{adj[]} must be numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function arguments.
+An unweighted tree possesses a center, centroid, and diameter. The following functions apply to a global, pre-populated adjacency list \inlinecode{adj} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}. Nodes in \inlinecode{adj} must be numbered with integers between 0 (inclusive) and the total number of nodes (exclusive).
 
 \begin{compactitem}
   \item \inlinecode{find\_centers()} returns a vector of either one or two tree Jordan centers. The Jordan center of a tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the maximum distance to all other nodes in the tree is minimal.
@@ -312,10 +313,10 @@ An unweighted tree possesses a center, centroid, and diameter. The following fun
 #include <utility>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
+std::vector<std::vector<int>> adj;
 
-std::vector<int> find_centers(int nodes) {
+std::vector<int> find_centers() {
+  int nodes = adj.size();
   std::vector<int> leaves, degree(nodes);
   for (int i = 0; i < nodes; i++) {
     degree[i] = adj[i].size();
@@ -339,14 +340,15 @@ std::vector<int> find_centers(int nodes) {
   return leaves;
 }
 
-int find_centroid(int nodes, int u = 0, int p = -1) {
+int find_centroid(int u = 0, int p = -1) {
+  int nodes = adj.size();
   int count = 1;
   bool good_center = true;
   for (int v : adj[u]) {
     if (v == p) {
       continue;
     }
-    int res = find_centroid(nodes, v, u);
+    int res = find_centroid(v, u);
     if (res >= 0) {
       return res;
     }
@@ -380,6 +382,7 @@ using namespace std;
 
 int main() {
   int nodes = 6;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -390,9 +393,9 @@ int main() {
   adj[4].push_back(3);
   adj[4].push_back(5);
   adj[5].push_back(4);
-  vector<int> centers = find_centers(nodes);
+  vector<int> centers = find_centers();
   assert(centers.size() == 2 && centers[0] == 1 && centers[1] == 4);
-  assert(find_centroid(nodes) == 4);
+  assert(find_centroid() == 4);
   assert(diameter() == 3);
   return 0;
 }
@@ -400,7 +403,7 @@ int main() {
 \subsection{Centroid Decomposition}
 Given a tree, build its centroid decomposition. A centroid is a node whose removal splits the current subtree into connected components of size at most half of that subtree. Recursively choosing centroids creates a decomposition tree of height $O(\log n)$, which is useful for queries based on distances to marked nodes, nearest special node, and other "path through a centroid" problems.
 
-\inlinecode{build\_centroid\_tree()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}.
+\inlinecode{build\_centroid\_tree()} applies to a global, pre-populated adjacency list \inlinecode{adj} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}.
 
 \begin{compactitem}
   \item \inlinecode{centroid\_parent[u]} stores the parent of node $u$ in the centroid tree.
@@ -411,7 +414,7 @@ Given a tree, build its centroid decomposition. A centroid is a node whose remov
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for \inlinecode{subtree\_size[]}, \inlinecode{removed[]}, and \inlinecode{centroid\_parent[]}.
+  \item $O(n)$ for \inlinecode{subtree\_size}, \inlinecode{removed}, and \inlinecode{centroid\_parent}.
   \item $O(n)$ auxiliary stack space for the recursive searches.
 \end{compactitem}
 
@@ -419,10 +422,9 @@ Given a tree, build its centroid decomposition. A centroid is a node whose remov
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
-int subtree_size[MAXN], centroid_parent[MAXN];
-bool removed[MAXN];
+std::vector<std::vector<int>> adj;
+std::vector<int> subtree_size, centroid_parent;
+std::vector<bool> removed;
 
 int get_size(int u, int p) {
   subtree_size[u] = 1;
@@ -455,9 +457,11 @@ void decompose(int entry, int parent) {
   }
 }
 
-void build_centroid_tree(int nodes) {
-  std::fill(removed, removed + nodes, false);
-  std::fill(centroid_parent, centroid_parent + nodes, -1);
+void build_centroid_tree() {
+  int nodes = adj.size();
+  subtree_size.assign(nodes, 0);
+  centroid_parent.assign(nodes, -1);
+  removed.assign(nodes, false);
   decompose(0, -1);
 }
 \end{lstlisting}
@@ -472,13 +476,15 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  int nodes = 7;
+  adj.resize(nodes);
   add_edge(0, 1);
   add_edge(1, 2);
   add_edge(1, 3);
   add_edge(3, 4);
   add_edge(3, 5);
   add_edge(5, 6);
-  build_centroid_tree(7);
+  build_centroid_tree();
   assert(centroid_parent[3] == -1);
   assert(centroid_parent[1] == 3);
   assert(centroid_parent[5] == 3);
@@ -594,25 +600,23 @@ int main() {
 \subsection{Eulerian Cycles}
 A Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an Eulerian cycle if and only if every node has an in-degree equal to its out-degree, and all of its nodes with nonzero degree belong to a single strongly connected component. An undirected graph has an Eulerian cycle if and only if every node has even degree, and all of its nodes with nonzero degree belong to a single connected component.
 
-Given a graph as an adjacency list along with the starting node of the cycle, both functions below return a vector containing all nodes reachable from the starting node in an order which forms an Eulerian cycle. The first node of the cycle will be repeated as the last element of the vector. All nodes of input adjacency lists to both functions must be between 0 and \inlinecode{MAXN - 1}, inclusive. In addition, \inlinecode{euler\_cycle\_undirected()} requires that for every node $v$ which is found in \inlinecode{adj[u]}, node $u$ must also be found in \inlinecode{adj[v]}.
+Given a graph as an adjacency list along with the starting node of the cycle, both functions below return a vector containing all nodes reachable from the starting node in an order which forms an Eulerian cycle. The first node of the cycle will be repeated as the last element of the vector. All indices stored in the input adjacency lists must be valid indices into \inlinecode{adj}. In addition, \inlinecode{euler\_cycle\_undirected()} requires that for every node $v$ which is found in \inlinecode{adj[u]}, node $u$ must also be found in \inlinecode{adj[v]}.
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to either function, where $n$ and $m$ are the numbers of nodes and edges respectively.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary heap space for \inlinecode{euler\_cycle\_directed()}, where $n$ is the number of nodes.
-  \item $O(n^{2})$ auxiliary heap space for \inlinecode{euler\_cycle\_undirected()}, where $n$ is the number of nodes. This can be reduced to $O(m)$ auxiliary heap space on the number of edges if the \inlinecode{used[][]} bit matrix is replaced with an \inlinecode{std::unordered\_set\textless{}std::pair\textless{}int, int\textgreater{}\textgreater{}}.
+  \item $O(n^{2})$ auxiliary heap space for \inlinecode{euler\_cycle\_undirected()}, where $n$ is the number of nodes. This can be reduced to $O(m)$ auxiliary heap space on the number of edges if the \inlinecode{used} bit matrix is replaced with an \inlinecode{std::unordered\_set\textless{}std::pair\textless{}int, int\textgreater{}\textgreater{}}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <bitset>
 #include <vector>
 
-const int MAXN = 100;
-
-std::vector<int> euler_cycle_directed(std::vector<int> adj[], int u) {
-  std::vector<int> stack, curr_edge(MAXN), res;
+std::vector<int> euler_cycle_directed(const std::vector<std::vector<int>> &adj, int u) {
+  int nodes = adj.size();
+  std::vector<int> stack, curr_edge(nodes), res;
   stack.push_back(u);
   while (!stack.empty()) {
     u = stack.back();
@@ -627,9 +631,10 @@ std::vector<int> euler_cycle_directed(std::vector<int> adj[], int u) {
   return res;
 }
 
-std::vector<int> euler_cycle_undirected(std::vector<int> adj[], int u) {
-  std::bitset<MAXN> used[MAXN];
-  std::vector<int> stack, curr_edge(MAXN), res;
+std::vector<int> euler_cycle_undirected(const std::vector<std::vector<int>> &adj, int u) {
+  int nodes = adj.size();
+  std::vector<std::vector<bool>> used(nodes, std::vector<bool>(nodes));
+  std::vector<int> stack, curr_edge(nodes), res;
   stack.push_back(u);
   while (!stack.empty()) {
     u = stack.back();
@@ -656,14 +661,14 @@ using namespace std;
 
 int main() {
   {
-    vector<int> g[5], cycle;
+    vector<vector<int>> g(5);
     g[0].push_back(1);
     g[1].push_back(2);
     g[2].push_back(0);
     g[1].push_back(3);
     g[3].push_back(4);
     g[4].push_back(1);
-    cycle = euler_cycle_directed(g, 0);
+    vector<int> cycle = euler_cycle_directed(g, 0);
     cout << "Eulerian cycle from 0 (directed):";
     for (int v : cycle) {
       cout << " " << v;
@@ -671,7 +676,7 @@ int main() {
     cout << endl;
   }
   {
-    vector<int> g[5], cycle;
+    vector<vector<int>> g(5);
     g[0].push_back(1);
     g[1].push_back(0);
     g[1].push_back(2);
@@ -684,7 +689,7 @@ int main() {
     g[4].push_back(3);
     g[4].push_back(1);
     g[1].push_back(4);
-    cycle = euler_cycle_undirected(g, 2);
+    vector<int> cycle = euler_cycle_undirected(g, 2);
     cout << "Eulerian cycle from 2 (undirected):";
     for (int v : cycle) {
       cout << " " << v;
@@ -703,7 +708,7 @@ Eulerian cycle from 2 (undirected): 2 1 3 4 1 0 2
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Shortest Path (BFS)}
-Given a starting node in an unweighted, directed graph, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred[]}. \inlinecode{bfs()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which consists of only nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a starting node in an unweighted, directed graph, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor vector \inlinecode{pred}. \inlinecode{bfs()} applies to a global, pre-populated adjacency list \inlinecode{adj}.
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{bfs()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
@@ -719,13 +724,14 @@ Given a starting node in an unweighted, directed graph, visit every connected no
 #include <queue>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<int> adj[MAXN];
-int dist[MAXN], pred[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<int>> adj;
+std::vector<int> dist, pred;
 
-void bfs(int nodes, int start) {
-  std::fill(dist, dist + nodes, INF);
-  std::fill(pred, pred + nodes, -1);
+void bfs(int start) {
+  int nodes = adj.size();
+  dist.assign(nodes, INF);
+  pred.assign(nodes, -1);
   std::queue<int> q;
   dist[start] = 0;
   q.push(start);
@@ -762,12 +768,13 @@ void print_path(int dest) {
 }
 
 int main() {
-  int start = 0, dest = 3;
+  int nodes = 4, start = 0, dest = 3;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(2);
   adj[1].push_back(3);
   adj[2].push_back(3);
-  bfs(4, start);
+  bfs(start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;
   print_path(dest);
@@ -779,7 +786,7 @@ The shortest distance from 0 to 3 is 2.
 Take the path: 0->1->3.
 \end{exampleoutput}
 \subsection{Shortest Path (0-1 BFS)}
-Given a starting node in a weighted graph whose edge weights are only 0 or 1, compute the shortest distance to every reachable node. \inlinecode{zero\_one\_bfs()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} where each edge is stored as \inlinecode{(neighbor, weight)}.
+Given a starting node in a weighted graph whose edge weights are only 0 or 1, compute the shortest distance to every reachable node. \inlinecode{zero\_one\_bfs()} applies to a global, pre-populated adjacency list \inlinecode{adj} where each edge is stored as \inlinecode{(neighbor, weight)}.
 
 This is a specialized version of Dijkstra's algorithm. Because every relaxation changes the distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push weight-0 relaxations to the front and weight-1 relaxations to the back.
 
@@ -798,13 +805,14 @@ This is a specialized version of Dijkstra's algorithm. Because every relaxation 
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<std::pair<int, int>> adj[MAXN];
-int dist[MAXN], pred[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<std::pair<int, int>>> adj;
+std::vector<int> dist, pred;
 
-void zero_one_bfs(int nodes, int start) {
-  std::fill(dist, dist + nodes, INF);
-  std::fill(pred, pred + nodes, -1);
+void zero_one_bfs(int start) {
+  int nodes = adj.size();
+  dist.assign(nodes, INF);
+  pred.assign(nodes, -1);
   std::deque<int> dq;
   dist[start] = 0;
   dq.push_front(start);
@@ -835,12 +843,14 @@ void add_edge(int u, int v, int w) {
 }
 
 int main() {
+  int nodes = 4;
+  adj.resize(nodes);
   add_edge(0, 1, 1);
   add_edge(0, 2, 0);
   add_edge(2, 1, 0);
   add_edge(1, 3, 1);
   add_edge(2, 3, 1);
-  zero_one_bfs(4, 0);
+  zero_one_bfs(0);
   assert(dist[1] == 0);
   assert(dist[3] == 1);
   assert(pred[1] == 2);
@@ -848,7 +858,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Shortest Path (Dijkstra)}
-Given a starting node in a weighted, directed graph with nonnegative weights only, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred[]}. \inlinecode{dijkstra()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a starting node in a weighted, directed graph with nonnegative weights only, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred}. \inlinecode{dijkstra()} applies to a global, pre-populated adjacency list \inlinecode{adj}.
 
 Since \inlinecode{std::priority\_queue} is by default a max-heap, we store negated node distances so the closest candidate is popped first.
 
@@ -868,16 +878,15 @@ Dijkstra's algorithm may be modified to support negative edge weights by allowin
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<std::pair<int, int>> adj[MAXN];
-int dist[MAXN], pred[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<std::pair<int, int>>> adj;
+std::vector<int> dist, pred;
 
-void dijkstra(int nodes, int start) {
+void dijkstra(int start) {
+  int nodes = adj.size();
   std::vector<bool> visit(nodes, false);
-  for (int i = 0; i < nodes; i++) {
-    dist[i] = INF;
-    pred[i] = -1;
-  }
+  dist.assign(nodes, INF);
+  pred.assign(nodes, -1);
   dist[start] = 0;
   std::priority_queue<std::pair<int, int>> pq;
   pq.emplace(0, start);
@@ -920,13 +929,14 @@ void print_path(int dest) {
 }
 
 int main() {
-  int start = 0, dest = 3;
+  int nodes = 4, start = 0, dest = 3;
+  adj.resize(nodes);
   adj[0].push_back({1, 2});
   adj[0].push_back({3, 8});
   adj[1].push_back({2, 2});
   adj[1].push_back({3, 4});
   adj[2].push_back({3, 1});
-  dijkstra(4, start);
+  dijkstra(start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;
   print_path(dest);
@@ -938,7 +948,7 @@ The shortest distance from 0 to 3 is 5.
 Take the path: 0->1->2->3.
 \end{exampleoutput}
 \subsection{Shortest Path (Bellman-Ford)}
-Given a starting node in a weighted, directed graph with possibly negative weights, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred[]}. \inlinecode{bellman\_ford()} applies to a global, pre-populated edge list which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a starting node in a weighted, directed graph with possibly negative weights, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred}. \inlinecode{bellman\_ford()} applies to a global, pre-populated edge list which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
 This function will also detect whether the graph contains negative-weighted cycles, in which case there is no shortest path and an error will be thrown.
 
@@ -957,17 +967,15 @@ This function will also detect whether the graph contains negative-weighted cycl
 
 struct Edge {
   int u, v, w;
-};  // Edge from u to v with weight w.
+};
 
-const int MAXN = 100, INF = INT_MAX / 2;
+const int INF = INT_MAX / 2;
 std::vector<Edge> e;
-int dist[MAXN], pred[MAXN];
+std::vector<int> dist, pred;
 
 void bellman_ford(int nodes, int start) {
-  for (int i = 0; i < nodes; i++) {
-    dist[i] = INF;
-    pred[i] = -1;
-  }
+  dist.assign(nodes, INF);
+  pred.assign(nodes, -1);
   dist[start] = 0;
   for (int i = 0; i < nodes; i++) {
     for (auto &edge : e) {
@@ -1020,7 +1028,7 @@ The shortest distance from 0 to 2 is 3.
 Take the path: 0->1->2.
 \end{exampleoutput}
 \subsection{Shortest Path (SPFA)}
-Given a starting node in a weighted directed graph, compute shortest paths even when some edge weights are negative. \inlinecode{spfa()} applies to a global, pre-populated adjacency list \inlinecode{adj[]}, where each edge is stored as \inlinecode{(neighbor, weight)}.
+Given a starting node in a weighted directed graph, compute shortest paths even when some edge weights are negative. \inlinecode{spfa()} applies to a global, pre-populated adjacency list \inlinecode{adj}, where each edge is stored as \inlinecode{(neighbor, weight)}.
 
 The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford. It is often fast on benign inputs, but it still has Bellman-Ford's worst-case behavior and can be forced to run in $O(n \cdot m)$. Prefer Dijkstra for nonnegative weights, and use SPFA mainly when negative edges are present and the input is not adversarial.
 
@@ -1041,16 +1049,17 @@ The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<std::pair<int, int>> adj[MAXN];
-int dist[MAXN], pred[MAXN], relax_count[MAXN];
-bool in_queue[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<std::pair<int, int>>> adj;
+std::vector<int> dist, pred, relax_count;
+std::vector<bool> in_queue;
 
-bool spfa(int nodes, int start) {
-  std::fill(dist, dist + nodes, INF);
-  std::fill(pred, pred + nodes, -1);
-  std::fill(relax_count, relax_count + nodes, 0);
-  std::fill(in_queue, in_queue + nodes, false);
+bool spfa(int start) {
+  int nodes = adj.size();
+  dist.assign(nodes, INF);
+  pred.assign(nodes, -1);
+  relax_count.assign(nodes, 0);
+  in_queue.assign(nodes, false);
   std::queue<int> q;
   dist[start] = 0;
   q.push(start);
@@ -1086,18 +1095,20 @@ void add_edge(int u, int v, int w) {
 }
 
 int main() {
+  int nodes = 4;
+  adj.resize(nodes);
   add_edge(0, 1, 4);
   add_edge(0, 2, 5);
   add_edge(1, 2, -2);
   add_edge(2, 3, 3);
-  assert(spfa(4, 0));
+  assert(spfa(0));
   assert(dist[3] == 5);
   assert(pred[2] == 1);
   return 0;
 }
 \end{lstlisting}
 \subsection{Shortest Path (Floyd-Warshall)}
-Given a weighted, directed graph with possibly negative weights, determine the minimum distance between all pairs of start and destination nodes in the graph. Optionally, output the shortest path between two nodes using the shortest-path tree precomputed into the \inlinecode{parent[][]} array. \inlinecode{floyd\_warshall()} applies to a global adjacency matrix \inlinecode{dist[][]}, which must be initialized using \inlinecode{initialize()} and subsequently populated with weights. After the function call, \inlinecode{dist[u][v]} will have been modified to contain the shortest path from $u$ to $v$, for all pairs of valid nodes $u$ and $v$.
+Given a weighted, directed graph with possibly negative weights, determine the minimum distance between all pairs of start and destination nodes in the graph. Optionally, output the shortest path between two nodes using the shortest-path tree precomputed into the \inlinecode{parent} matrix. \inlinecode{floyd\_warshall()} applies to a global adjacency matrix \inlinecode{dist}, which must be initialized using \inlinecode{initialize()} and subsequently populated with weights. After the function call, \inlinecode{dist[u][v]} will have been modified to contain the shortest path from $u$ to $v$, for all pairs of valid nodes $u$ and $v$.
 
 This function will also detect whether the graph contains negative-weighted cycles, in which case there is no shortest path and an error will be thrown.
 
@@ -1116,11 +1127,14 @@ This function will also detect whether the graph contains negative-weighted cycl
 \begin{lstlisting}[language=C++]
 #include <climits>
 #include <stdexcept>
+#include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-int dist[MAXN][MAXN], parent[MAXN][MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<int>> dist, parent;
 
 void initialize(int nodes) {
+  dist.assign(nodes, std::vector<int>(nodes));
+  parent.assign(nodes, std::vector<int>(nodes));
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
       dist[i][j] = (i == j) ? 0 : INF;
@@ -1129,7 +1143,8 @@ void initialize(int nodes) {
   }
 }
 
-void floyd_warshall(int nodes) {
+void floyd_warshall() {
+  int nodes = dist.size();
   for (int k = 0; k < nodes; k++) {
     for (int i = 0; i < nodes; i++) {
       for (int j = 0; j < nodes; j++) {
@@ -1168,7 +1183,7 @@ int main() {
   dist[0][1] = 1;
   dist[1][2] = 2;
   dist[0][2] = 5;
-  floyd_warshall(3);
+  floyd_warshall();
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[start][dest]
        << "." << endl;
   print_path(start, dest);
@@ -1184,7 +1199,7 @@ Take the path: 0->1->2.
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Strongly Connected Components (Kosaraju)}
-Given a directed graph, determine the strongly connected components, that is, the set of all strongly (maximally) connected subgraphs. A subgraph is strongly connected if there is a path between each pair of nodes. Condensing the strongly connected components of a graph into single nodes will result in a directed acyclic graph. \inlinecode{kosaraju()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a directed graph, determine the strongly connected components, that is, the set of all strongly (maximally) connected subgraphs. A subgraph is strongly connected if there is a path between each pair of nodes. Condensing the strongly connected components of a graph into single nodes will result in a directed acyclic graph. \inlinecode{kosaraju()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{kosaraju()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
@@ -1198,12 +1213,11 @@ Given a directed graph, determine the strongly connected components, that is, th
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN], rev[MAXN];
-std::vector<bool> visit(MAXN);
+std::vector<std::vector<int>> adj, rev;
+std::vector<bool> visit;
 std::vector<std::vector<int>> scc;
 
-void dfs(std::vector<int> g[], std::vector<int> &res, int u) {
+void dfs(const std::vector<std::vector<int>> &g, std::vector<int> &res, int u) {
   visit[u] = true;
   for (int v : g[u]) {
     if (!visit[v]) {
@@ -1213,17 +1227,18 @@ void dfs(std::vector<int> g[], std::vector<int> &res, int u) {
   res.push_back(u);
 }
 
-void kosaraju(int nodes) {
-  std::fill(visit.begin(), visit.end(), false);
+void kosaraju() {
+  int nodes = adj.size();
+  visit.assign(nodes, false);
+  rev.assign(nodes, std::vector<int>());
   std::vector<int> order;
   for (int i = 0; i < nodes; i++) {
-    rev[i].clear();
     if (!visit[i]) {
       dfs(adj, order, i);
     }
   }
   std::reverse(order.begin(), order.end());
-  std::fill(visit.begin(), visit.end(), false);
+  visit.assign(nodes, false);
   for (int i = 0; i < nodes; i++) {
     for (int v : adj[i]) {
       rev[v].push_back(i);
@@ -1246,6 +1261,8 @@ void kosaraju(int nodes) {
 using namespace std;
 
 int main() {
+  int nodes = 8;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(2);
   adj[1].push_back(4);
@@ -1260,7 +1277,7 @@ int main() {
   adj[6].push_back(5);
   adj[7].push_back(3);
   adj[7].push_back(6);
-  kosaraju(8);
+  kosaraju();
   cout << "Components:" << endl;
   for (auto &comp : scc) {
     for (int v : comp) {
@@ -1277,7 +1294,7 @@ int main() {
 5 6
 \end{exampleoutput}
 \subsection{Strongly Connected Components (Tarjan)}
-Given a directed graph, determine the strongly connected components. The strongly connected components of a graph is the set of all strongly (maximally) connected subgraphs. A subgraph is strongly connected if there is a path between each pair of nodes. Condensing the strongly connected components of a graph into single nodes will result in a directed acyclic graph. \inlinecode{tarjan()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a directed graph, determine the strongly connected components. The strongly connected components of a graph is the set of all strongly (maximally) connected subgraphs. A subgraph is strongly connected if there is a path between each pair of nodes. Condensing the strongly connected components of a graph into single nodes will result in a directed acyclic graph. \inlinecode{tarjan()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{tarjan()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
@@ -1292,10 +1309,12 @@ Given a directed graph, determine the strongly connected components. The strongl
 #include <climits>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<int> adj[MAXN], currstack;
-int timer, lowlink[MAXN];
-std::vector<bool> visit(MAXN);
+const int INF = INT_MAX / 2;
+std::vector<std::vector<int>> adj;
+std::vector<int> currstack;
+int timer;
+std::vector<int> lowlink;
+std::vector<bool> visit;
 std::vector<std::vector<int>> scc;
 
 void dfs(int u) {
@@ -1327,11 +1346,12 @@ void dfs(int u) {
   scc.push_back(component);
 }
 
-void tarjan(int nodes) {
+void tarjan() {
+  int nodes = adj.size();
   scc.clear();
   currstack.clear();
-  std::fill(lowlink, lowlink + nodes, 0);
-  std::fill(visit.begin(), visit.end(), false);
+  lowlink.assign(nodes, 0);
+  visit.assign(nodes, false);
   timer = 0;
   for (int i = 0; i < nodes; i++) {
     if (!visit[i]) {
@@ -1346,6 +1366,8 @@ void tarjan(int nodes) {
 using namespace std;
 
 int main() {
+  int nodes = 8;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(2);
   adj[1].push_back(4);
@@ -1360,7 +1382,7 @@ int main() {
   adj[6].push_back(5);
   adj[7].push_back(3);
   adj[7].push_back(6);
-  tarjan(8);
+  tarjan();
   cout << "Components:" << endl;
   for (auto &comp : scc) {
     for (int v : comp) {
@@ -1378,7 +1400,7 @@ Components:
 4 1 0
 \end{exampleoutput}
 \subsection{Cut-points, Bridges and Bridge Forest}
-Given an undirected graph, compute the following properties of the graph using Tarjan's algorithm. \inlinecode{tarjan()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}. Nodes in \inlinecode{adj[]} must be numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function arguments. \inlinecode{get\_block\_forest()} applies to a global vector \inlinecode{block[]} which must be already precomputed by a call to \inlinecode{tarjan()}.
+Given an undirected graph, compute the following properties of the graph using Tarjan's algorithm. \inlinecode{tarjan()} applies to a global, pre-populated adjacency list \inlinecode{adj} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}. Nodes in \inlinecode{adj} must be numbered with integers between 0 (inclusive) and \inlinecode{adj.size()} (exclusive). \inlinecode{get\_block\_forest()} applies to a global vector \inlinecode{block} which must be already precomputed by a call to \inlinecode{tarjan()}.
 
 A cut-point (i.e. cut-node, or articulation point) is any node whose removal increases the number of connected components in the graph.
 
@@ -1400,10 +1422,10 @@ Condensing each maximal component without a bridge into a single node, we can de
 #include <utility>
 #include <vector>
 
-const int MAXN = 100;
-int timer, lowlink[MAXN], tin[MAXN], comp[MAXN];
-std::vector<bool> visit(MAXN);
-std::vector<int> adj[MAXN], block_forest[MAXN];
+int timer;
+std::vector<int> lowlink, tin, comp;
+std::vector<bool> visit;
+std::vector<std::vector<int>> adj, block_forest;
 std::vector<int> currstack, cutpoints;
 std::vector<std::vector<int>> block;
 std::vector<std::pair<int, int>> bridges;
@@ -1448,14 +1470,15 @@ void dfs(int u, int p) {
   }
 }
 
-void tarjan(int nodes) {
+void tarjan() {
+  int nodes = adj.size();
   block.clear();
   bridges.clear();
   cutpoints.clear();
   currstack.clear();
-  std::fill(lowlink, lowlink + nodes, 0);
-  std::fill(tin, tin + nodes, 0);
-  std::fill(visit.begin(), visit.end(), false);
+  lowlink.assign(nodes, 0);
+  tin.assign(nodes, 0);
+  visit.assign(nodes, false);
   timer = 0;
   for (int i = 0; i < nodes; i++) {
     if (!visit[i]) {
@@ -1464,11 +1487,10 @@ void tarjan(int nodes) {
   }
 }
 
-void get_block_forest(int nodes) {
-  std::fill(comp, comp + nodes, 0);
-  for (int i = 0; i < nodes; i++) {
-    block_forest[i].clear();
-  }
+void get_block_forest() {
+  int nodes = adj.size();
+  comp.assign(nodes, 0);
+  block_forest.assign(nodes, std::vector<int>());
   int id = 0;
   for (const auto &component : block) {
     for (int v : component) {
@@ -1496,14 +1518,16 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  int nodes = 8;
+  adj.resize(nodes);
   add_edge(0, 1);
   add_edge(0, 5);
   add_edge(1, 2);
   add_edge(1, 5);
   add_edge(3, 7);
   add_edge(4, 5);
-  tarjan(8);
-  get_block_forest(8);
+  tarjan();
+  get_block_forest();
   cout << "Cut-points:";
   for (int v : cutpoints) {
     cout << " " << v;
@@ -1557,8 +1581,8 @@ Maintain the number of bridges in an undirected graph while edges are inserted o
 This data structure maintains two disjoint-set forests:
 
 \begin{compactitem}
-  \item \inlinecode{dsu\_2ecc[]} tracks the current $2$-edge-connected components.
-  \item \inlinecode{dsu\_cc[]} tracks the ordinary connected components.
+  \item \inlinecode{dsu\_2ecc} tracks the current $2$-edge-connected components.
+  \item \inlinecode{dsu\_cc} tracks the ordinary connected components.
 \end{compactitem}
 
 When an inserted edge joins two different connected components, it creates a new bridge. When it joins two nodes already in the same connected component, it creates a cycle and every bridge on the path between the two endpoints stops being a bridge.
@@ -1711,7 +1735,7 @@ Variables are numbered from $0$ to $n - 1$. A literal is represented by \inlinec
 \begin{compactitem}
   \item \inlinecode{add\_or(a, b)} adds the clause $(a \lor b)$.
   \item \inlinecode{add\_true(a)} forces literal \inlinecode{a} to be true.
-  \item \inlinecode{satisfiable()} returns whether all added clauses can be satisfied and stores one valid assignment in \inlinecode{answer[]}.
+  \item \inlinecode{satisfiable()} returns whether all added clauses can be satisfied and stores one valid assignment in \inlinecode{answer}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{satisfiable()}, where $n$ is the number of variables and $m$ is the number of clauses.
@@ -1821,7 +1845,7 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Minimum Spanning Tree (Prim)}
-Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. \inlinecode{prim()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument. If the input graph is not connected, then this implementation will find the minimum spanning forest.
+Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. \inlinecode{prim()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument. If the input graph is not connected, then this implementation will find the minimum spanning forest.
 
 Since \inlinecode{std::priority\_queue} is by default a max-heap, we simulate a min-heap by negating node distances before pushing them and negating them again after popping them. To modify this implementation to find the maximum spanning tree, the two negation steps can be skipped to prioritize the max edges.
 
@@ -1839,12 +1863,13 @@ Since \inlinecode{std::priority\_queue} is by default a max-heap, we simulate a 
 #include <utility>
 #include <vector>
 
-const int MAXN = 100;
 using QueueEntry = std::tuple<int, int, int>;  // (-weight, from, to)
 
-std::vector<std::pair<int, int>> adj[MAXN], mst;
+std::vector<std::vector<std::pair<int, int>>> adj;
+std::vector<std::pair<int, int>> mst;
 
-int prim(int nodes) {
+int prim() {
+  int nodes = adj.size();
   mst.clear();
   std::vector<bool> visit(nodes);
   int total_dist = 0;
@@ -1887,6 +1912,8 @@ void add_edge(int u, int v, int w) {
 }
 
 int main() {
+  int nodes = 7;
+  adj.resize(nodes);
   add_edge(0, 1, 4);
   add_edge(1, 2, 6);
   add_edge(2, 0, 3);
@@ -1894,7 +1921,7 @@ int main() {
   add_edge(4, 5, 2);
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
-  cout << "Total distance: " << prim(7) << endl;
+  cout << "Total distance: " << prim() << endl;
   for (auto &[u, v] : mst) {
     cout << u << " <-> " << v << endl;
   }
@@ -1927,9 +1954,8 @@ Given a connected, undirected, weighted graph with possibly negative weights, it
 #include <utility>
 #include <vector>
 
-const int MAXN = 100;
 std::vector<std::tuple<int, int, int>> edges;
-int root[MAXN];
+std::vector<int> root;
 std::vector<std::pair<int, int>> mst;
 
 int find_root(int u) {
@@ -1943,7 +1969,8 @@ int kruskal(int nodes) {
   mst.clear();
   std::sort(edges.begin(), edges.end());
   int total_dist = 0;
-  std::iota(root, root + nodes, 0);
+  root.resize(nodes);
+  std::iota(root.begin(), root.end(), 0);
   for (auto &[w, a, b] : edges) {
     int u = find_root(a);
     int v = find_root(b);
@@ -1993,7 +2020,7 @@ Total distance: 13
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Maximum Flow (Ford-Fulkerson)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{ford\_fulkerson()} applies to global variables \inlinecode{nodes}, \inlinecode{source}, \inlinecode{sink}, and \inlinecode{cap[][]} which is an adjacency matrix that will be modified by the function call.
+Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{ford\_fulkerson()} applies to global variables \inlinecode{nodes}, \inlinecode{source}, \inlinecode{sink}, and \inlinecode{cap} which is an adjacency matrix that will be modified by the function call.
 
 The Ford-Fulkerson algorithm is only optimal on graphs with integer capacities, as there exists certain real-valued flow inputs for which the algorithm never terminates. The Edmonds-Karp algorithm is an improvement using breadth-first search, addressing this problem.
 
@@ -2010,11 +2037,13 @@ The Ford-Fulkerson algorithm is only optimal on graphs with integer capacities, 
 #include <climits>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-int nodes, source, sink, cap[MAXN][MAXN];
-std::vector<bool> visit(MAXN);
+const int INF = INT_MAX / 2;
+int source, sink;
+std::vector<std::vector<int>> cap;
+std::vector<bool> visit;
 
 int dfs(int u, int f) {
+  int nodes = cap.size();
   if (u == sink) {
     return f;
   }
@@ -2033,9 +2062,10 @@ int dfs(int u, int f) {
 }
 
 int ford_fulkerson() {
+  int nodes = cap.size();
   int max_flow = 0;
   for (;;) {
-    std::fill(visit.begin(), visit.end(), false);
+    visit.assign(nodes, false);
     int flow = dfs(source, INF);
     if (flow == 0) {
       break;
@@ -2050,9 +2080,10 @@ int ford_fulkerson() {
 #include <cassert>
 
 int main() {
-  nodes = 6;
+  int nodes = 6;
   source = 0;
   sink = 5;
+  cap.assign(nodes, std::vector<int>(nodes));
   cap[0][1] = 3;
   cap[0][2] = 3;
   cap[1][2] = 2;
@@ -2066,7 +2097,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Maximum Flow (Edmonds-Karp)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{edmonds\_karp()} applies to a global adjacency list \inlinecode{adj[]} that will be modified by the function call.
+Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{edmonds\_karp()} applies to a global adjacency list \inlinecode{adj} that will be modified by the function call.
 
 The Edmonds-Karp algorithm will also support real-valued flow capacities. As such, this implementation will work as intended upon changing the appropriate variables to doubles.
 
@@ -2084,15 +2115,16 @@ struct edge {
   int u, v, rev, cap, f;
 };
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<edge> adj[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<edge>> adj;
 
 void add_edge(int u, int v, int cap) {
   adj[u].push_back(edge{u, v, static_cast<int>(adj[v].size()), cap, 0});
   adj[v].push_back(edge{v, u, static_cast<int>(adj[u].size()) - 1, 0, 0});
 }
 
-int edmonds_karp(int nodes, int source, int sink) {
+int edmonds_karp(int source, int sink) {
+  int nodes = adj.size();
   int max_flow = 0;
   for (;;) {
     std::vector<edge *> pred(nodes, nullptr);
@@ -2129,6 +2161,8 @@ int edmonds_karp(int nodes, int source, int sink) {
 #include <cassert>
 
 int main() {
+  int nodes = 6;
+  adj.resize(nodes);
   add_edge(0, 1, 3);
   add_edge(0, 2, 3);
   add_edge(1, 2, 2);
@@ -2137,12 +2171,12 @@ int main() {
   add_edge(3, 4, 1);
   add_edge(3, 5, 2);
   add_edge(4, 5, 3);
-  assert(edmonds_karp(6, 0, 5) == 5);
+  assert(edmonds_karp(0, 5) == 5);
   return 0;
 }
 \end{lstlisting}
 \subsection{Maximum Flow (Dinic)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{dinic()} applies to a global adjacency list \inlinecode{adj[]} that will be modified by the function call.
+Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{dinic()} applies to a global adjacency list \inlinecode{adj} that will be modified by the function call.
 
 Dinic's algorithm will also support real-valued flow capacities. As such, this implementation will work as intended upon changing the appropriate variables to doubles.
 
@@ -2164,17 +2198,18 @@ struct Edge {
   int v, rev, cap, f;
 };
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<Edge> adj[MAXN];
-int dist[MAXN], ptr[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<Edge>> adj;
+std::vector<int> dist, ptr;
 
 void add_edge(int u, int v, int cap) {
   adj[u].push_back(Edge{v, static_cast<int>(adj[v].size()), cap, 0});
   adj[v].push_back(Edge{u, static_cast<int>(adj[u].size()) - 1, 0, 0});
 }
 
-bool dinic_bfs(int nodes, int source, int sink) {
-  std::fill(dist, dist + nodes, -1);
+bool dinic_bfs(int source, int sink) {
+  int nodes = adj.size();
+  dist.assign(nodes, -1);
   dist[source] = 0;
   std::queue<int> q;
   q.push(source);
@@ -2209,10 +2244,11 @@ int dinic_dfs(int u, int f, int sink) {
   return 0;
 }
 
-int dinic(int nodes, int source, int sink) {
+int dinic(int source, int sink) {
+  int nodes = adj.size();
   int flow, max_flow = 0;
-  while (dinic_bfs(nodes, source, sink)) {
-    std::fill(ptr, ptr + nodes, 0);
+  while (dinic_bfs(source, sink)) {
+    ptr.assign(nodes, 0);
     while ((flow = dinic_dfs(source, INF, sink)) != 0) {
       max_flow += flow;
     }
@@ -2225,6 +2261,8 @@ int dinic(int nodes, int source, int sink) {
 #include <cassert>
 
 int main() {
+  int nodes = 6;
+  adj.resize(nodes);
   add_edge(0, 1, 3);
   add_edge(0, 2, 3);
   add_edge(1, 2, 2);
@@ -2233,12 +2271,12 @@ int main() {
   add_edge(3, 4, 1);
   add_edge(3, 5, 2);
   add_edge(4, 5, 3);
-  assert(dinic(6, 0, 5) == 5);
+  assert(dinic(0, 5) == 5);
   return 0;
 }
 \end{lstlisting}
 \subsection{Maximum Flow (Push-Relabel)}
-Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{push\_relabel()} applies to a global adjacency matrix \inlinecode{cap[][]} and returns the maximum flow.
+Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink. \inlinecode{push\_relabel()} applies to a global adjacency matrix \inlinecode{cap} and returns the maximum flow.
 
 Although the push-relabel algorithm is considered one of the most efficient maximum flow algorithms, it cannot take advantage of the magnitude of the maximum flow being less than $n^3$ (in which case the Ford-Fulkerson or Edmonds-Karp algorithms may be more efficient).
 
@@ -2255,14 +2293,14 @@ Although the push-relabel algorithm is considered one of the most efficient maxi
 #include <climits>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-int cap[MAXN][MAXN], f[MAXN][MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<int>> cap;
+std::vector<std::vector<int>> f;
 
-int push_relabel(int nodes, int source, int sink) {
+int push_relabel(int source, int sink) {
+  int nodes = cap.size();
+  f.assign(nodes, std::vector<int>(nodes, 0));
   std::vector<int> e(nodes, 0), h(nodes, 0), maxh(nodes, 0);
-  for (int i = 0; i < nodes; i++) {
-    std::fill(f[i], f[i] + nodes, 0);
-  }
   h[source] = nodes - 1;
   for (int i = 0; i < nodes; i++) {
     f[source][i] = cap[source][i];
@@ -2327,6 +2365,8 @@ int push_relabel(int nodes, int source, int sink) {
 #include <cassert>
 
 int main() {
+  int nodes = 6;
+  cap.assign(nodes, std::vector<int>(nodes));
   cap[0][1] = 3;
   cap[0][2] = 3;
   cap[1][2] = 2;
@@ -2335,7 +2375,7 @@ int main() {
   cap[3][4] = 1;
   cap[3][5] = 2;
   cap[4][5] = 3;
-  assert(push_relabel(6, 0, 5) == 5);
+  assert(push_relabel(0, 5) == 5);
   return 0;
 }
 \end{lstlisting}
@@ -2448,7 +2488,7 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Maximum Bipartite Matching (Kuhn)}
-Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{kuhn()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{kuhn()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and $n_2$ (exclusive). The left side size is inferred from \inlinecode{adj.size()}.
 
 \textbf{Time Complexity}: $O(m \cdot (n_{1} + n_{2}))$ per call to \inlinecode{kuhn()}, where $m$ is the number of edges.
 
@@ -2458,10 +2498,9 @@ Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots,
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 100;
-int match[MAXN];
-std::vector<bool> visit(MAXN);
-std::vector<int> adj[MAXN];
+std::vector<int> match;
+std::vector<bool> visit;
+std::vector<std::vector<int>> adj;
 
 bool dfs(int u) {
   visit[u] = true;
@@ -2475,12 +2514,13 @@ bool dfs(int u) {
   return false;
 }
 
-int kuhn(int n1, int n2) {
-  std::fill(visit.begin(), visit.end(), false);
-  std::fill(match, match + n2, -1);
+int kuhn(int n2) {
+  int n1 = adj.size();
+  visit.assign(n1, false);
+  match.assign(n2, -1);
   int matches = 0;
   for (int i = 0; i < n1; i++) {
-    std::fill(visit.begin(), visit.begin() + n1, false);
+    visit.assign(n1, false);
     if (dfs(i)) {
       matches++;
     }
@@ -2495,13 +2535,14 @@ using namespace std;
 
 int main() {
   int n1 = 3, n2 = 4;
+  adj.resize(n1);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(1);
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  cout << "Matched " << kuhn(n1, n2) << " pair(s):" << endl;
+  cout << "Matched " << kuhn(n2) << " pair(s):" << endl;
   for (int i = 0; i < n2; i++) {
     if (match[i] != -1) {
       cout << match[i] << " " << i << endl;
@@ -2517,7 +2558,7 @@ Matched 3 pair(s):
 2 2
 \end{exampleoutput}
 \subsection{Maximum Bipartite Matching (Hopcroft-Karp)}
-Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{hopcroft\_karp()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{hopcroft\_karp()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and $n_2$ (exclusive). The left side size is inferred from \inlinecode{adj.size()}.
 
 \textbf{Time Complexity}: $O(m \cdot \sqrt{n_{1} + n_{2}})$ per call to \inlinecode{hopcroft\_karp()}, where $m$ is the number of edges.
 
@@ -2532,13 +2573,13 @@ Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots,
 #include <queue>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
-std::vector<bool> used(MAXN), visit(MAXN);
-int match[MAXN], dist[MAXN];
+std::vector<std::vector<int>> adj;
+std::vector<bool> used, visit;
+std::vector<int> match, dist;
 
-void bfs(int n1, int n2) {
-  std::fill(dist, dist + n1, -1);
+void bfs() {
+  int n1 = adj.size();
+  dist.assign(n1, -1);
   std::queue<int> q;
   for (int u = 0; u < n1; u++) {
     if (!used[u]) {
@@ -2572,13 +2613,14 @@ bool dfs(int u) {
   return false;
 }
 
-int hopcroft_karp(int n1, int n2) {
-  std::fill(match, match + n2, -1);
-  std::fill(used.begin(), used.end(), false);
+int hopcroft_karp(int n2) {
+  int n1 = adj.size();
+  match.assign(n2, -1);
+  used.assign(n1, false);
   int res = 0;
   for (;;) {
-    bfs(n1, n2);
-    std::fill(visit.begin(), visit.end(), false);
+    bfs();
+    visit.assign(n1, false);
     int f = 0;
     for (int u = 0; u < n1; u++) {
       if (!used[u] && dfs(u)) {
@@ -2600,13 +2642,14 @@ using namespace std;
 
 int main() {
   int n1 = 3, n2 = 4;
+  adj.resize(n1);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(1);
   adj[1].push_back(2);
   adj[2].push_back(2);
   adj[2].push_back(3);
-  cout << "Matched " << hopcroft_karp(n1, n2) << " pair(s):" << endl;
+  cout << "Matched " << hopcroft_karp(n2) << " pair(s):" << endl;
   for (int i = 0; i < n2; i++) {
     if (match[i] != -1) {
       cout << match[i] << " " << i << endl;
@@ -2622,7 +2665,7 @@ Matched 3 pair(s):
 2 2
 \end{exampleoutput}
 \subsection{Maximum Graph Matching (Edmonds)}
-Given a directed graph, determine a maximum subset of its edges such that no node is shared between different edges in the resulting subset. \inlinecode{edmonds()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a directed graph, determine a maximum subset of its edges such that no node is shared between different edges in the resulting subset. \inlinecode{edmonds()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as inferred from \inlinecode{adj.size()}.
 
 \textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{edmonds()}, where $n$ is the number of nodes.
 
@@ -2638,11 +2681,11 @@ Given a directed graph, determine a maximum subset of its edges such that no nod
 #include <queue>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
-int p[MAXN], base[MAXN], match[MAXN];
+std::vector<std::vector<int>> adj;
+std::vector<int> p, base, match;
 
-int lca(int nodes, int u, int v) {
+int lca(int u, int v) {
+  int nodes = adj.size();
   std::vector<bool> used(nodes);
   for (;;) {
     u = base[u];
@@ -2670,10 +2713,12 @@ void mark_path(std::vector<bool> &blossom, int u, int b, int child) {
   }
 }
 
-int find_path(int nodes, int root) {
+int find_path(int root) {
+  int nodes = adj.size();
   std::vector<bool> used(nodes);
-  std::fill(p, p + nodes, -1);
-  std::iota(base, base + nodes, 0);
+  p.assign(nodes, -1);
+  base.resize(nodes);
+  std::iota(base.begin(), base.end(), 0);
   used[root] = true;
   std::queue<int> q;
   q.push(root);
@@ -2685,7 +2730,7 @@ int find_path(int nodes, int root) {
         continue;
       }
       if (v == root || (match[v] != -1 && p[match[v]] != -1)) {
-        int curr_base = lca(nodes, u, v);
+        int curr_base = lca(u, v);
         std::vector<bool> blossom(nodes);
         mark_path(blossom, u, curr_base, v);
         mark_path(blossom, v, curr_base, u);
@@ -2712,14 +2757,13 @@ int find_path(int nodes, int root) {
   return -1;
 }
 
-int edmonds(int nodes) {
-  for (int i = 0; i < nodes; i++) {
-    match[i] = -1;
-  }
+int edmonds() {
+  int nodes = adj.size();
+  match.assign(nodes, -1);
   for (int i = 0; i < nodes; i++) {
     if (match[i] == -1) {
       int u, pu, ppu;
-      for (u = find_path(nodes, i); u != -1; u = ppu) {
+      for (u = find_path(i); u != -1; u = ppu) {
         pu = p[u];
         ppu = match[pu];
         match[u] = pu;
@@ -2743,6 +2787,7 @@ using namespace std;
 
 int main() {
   int nodes = 4;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -2751,7 +2796,7 @@ int main() {
   adj[3].push_back(2);
   adj[3].push_back(0);
   adj[0].push_back(3);
-  cout << "Matched " << edmonds(nodes) << " pair(s):" << endl;
+  cout << "Matched " << edmonds() << " pair(s):" << endl;
   for (int i = 0; i < nodes; i++) {
     if (match[i] != -1 && i < match[i]) {
       cout << i << " " << match[i] << endl;
@@ -2770,9 +2815,9 @@ Matched 2 pair(s):
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Maximum Clique (Bron-Kerbosch)}
-Given an undirected graph, \inlinecode{max\_clique()} returns the size of the maximum clique, that is, the largest subset of nodes such that all pairs of nodes in the subset are connected by an edge. \inlinecode{max\_clique\_weighted()} additionally uses a global array \inlinecode{w[]} specifying a weight value for each node, returning the clique in the graph that has maximum total weight.
+Given an undirected graph, \inlinecode{max\_clique()} returns the size of the maximum clique, that is, the largest subset of nodes such that all pairs of nodes in the subset are connected by an edge. \inlinecode{max\_clique\_weighted()} additionally uses a global array \inlinecode{w} specifying a weight value for each node, returning the clique in the graph that has maximum total weight.
 
-Both functions apply to a global, pre-populated adjacency matrix \inlinecode{adj[][]} which must satisfy the condition that \inlinecode{adj[u][v]} is \inlinecode{true} if and only if \inlinecode{adj[v][u]} is \inlinecode{true}, for all pairs of nodes $u$ and $v$ respectively between 0 (inclusive) and the total number of nodes (exclusive) as passed in the function argument. Note that \inlinecode{max\_clique\_weighted()} is an efficient implementation using bitmasks of unsigned 64-bit integers, thus requiring the number of nodes to be less than 64.
+Both functions apply to a global, pre-populated adjacency matrix \inlinecode{adj} which must satisfy the condition that \inlinecode{adj[u][v]} is \inlinecode{true} if and only if \inlinecode{adj[v][u]} is \inlinecode{true}, for all pairs of nodes $u$ and $v$ respectively between 0 (inclusive) and \inlinecode{adj.size()} (exclusive). These implementations use bitmasks of unsigned 64-bit integers, so the number of nodes must be less than 64.
 
 \textbf{Time Complexity}: $O(3^{n/3})$ per call to \inlinecode{max\_clique()} and \inlinecode{max\_clique\_weighted()}, where $n$ is the number of nodes.
 
@@ -2784,55 +2829,50 @@ Both functions apply to a global, pre-populated adjacency matrix \inlinecode{adj
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <bitset>
 #include <vector>
 
-const int MAXN = 35;
-using bits = std::bitset<MAXN>;
 using uint64 = unsigned long long;
 
-bool adj[MAXN][MAXN];
-int w[MAXN];
+std::vector<std::vector<bool>> adj;
+std::vector<int> w;
 
-int rec(int nodes, bits &curr, bits &pool, bits &excl) {
-  if (pool.none() && excl.none()) {
-    return curr.count();
-  }
-  int best = 0, u = 0;
-  for (int v = 0; v < nodes; v++) {
-    if (pool[v] || excl[v]) {
-      u = v;
-    }
-  }
-  for (int v = 0; v < nodes; v++) {
-    if (!pool[v] || adj[u][v]) {
-      continue;
-    }
-    bits ncurr, npool, nexcl;
-    for (int i = 0; i < nodes; i++) {
-      ncurr[i] = curr[i];
-    }
-    ncurr[v] = true;
-    for (int j = 0; j < nodes; j++) {
-      npool[j] = pool[j] && adj[v][j];
-      nexcl[j] = excl[j] && adj[v][j];
-    }
-    best = std::max(best, rec(nodes, ncurr, npool, nexcl));
-    pool[v] = false;
-    excl[v] = true;
-  }
-  return best;
-}
-
-int max_clique(int nodes) {
-  bits curr, excl, pool;
+std::vector<uint64> build_mask_graph() {
+  int nodes = adj.size();
+  std::vector<uint64> g(nodes);
   for (int i = 0; i < nodes; i++) {
-    pool[i] = true;
+    for (int j = 0; j < nodes; j++) {
+      if (adj[i][j]) {
+        g[i] |= 1ULL << j;
+      }
+    }
   }
-  return rec(nodes, curr, pool, excl);
+  return g;
 }
 
-int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
+int max_clique_rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
+  if (pool == 0 && excl == 0) {
+    return __builtin_popcountll(curr);
+  }
+  int res = 0;
+  int pivot = __builtin_ctzll(pool | excl);
+  uint64 candidates = pool & ~g[pivot];
+  while (candidates != 0) {
+    int u = __builtin_ctzll(candidates);
+    res = std::max(res, max_clique_rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
+    pool ^= 1ULL << u;
+    excl |= 1ULL << u;
+    candidates &= candidates - 1;
+  }
+  return res;
+}
+
+int max_clique() {
+  int nodes = adj.size();
+  std::vector<uint64> g = build_mask_graph();
+  return max_clique_rec(g, 0, (1ULL << nodes) - 1, 0);
+}
+
+int max_clique_weighted_rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
   if (pool == 0 && excl == 0) {
     int res = 0;
     while (curr != 0) {
@@ -2849,7 +2889,7 @@ int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
   uint64 z = pool & ~g[pivot];
   while (z != 0) {
     int u = __builtin_ctzll(z);
-    res = std::max(res, rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
+    res = std::max(res, max_clique_weighted_rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
     pool ^= 1ULL << u;
     excl |= 1ULL << u;
     z &= z - 1;
@@ -2857,16 +2897,10 @@ int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
   return res;
 }
 
-int max_clique_weighted(int nodes) {
-  std::vector<uint64> g(nodes, 0);
-  for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < nodes; j++) {
-      if (adj[i][j]) {
-        g[i] |= 1ULL << j;
-      }
-    }
-  }
-  return rec(g, 0, (1ULL << nodes) - 1, 0);
+int max_clique_weighted() {
+  int nodes = adj.size();
+  std::vector<uint64> g = build_mask_graph();
+  return max_clique_weighted_rec(g, 0, (1ULL << nodes) - 1, 0);
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -2879,6 +2913,9 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  int nodes = 5;
+  adj.assign(nodes, std::vector<bool>(nodes));
+  w.assign(nodes, 0);
   add_edge(0, 1);
   add_edge(0, 2);
   add_edge(0, 3);
@@ -2892,13 +2929,13 @@ int main() {
   w[2] = 30;
   w[3] = 40;
   w[4] = 50;
-  assert(max_clique(5) == 4);
-  assert(max_clique_weighted(5) == 120);
+  assert(max_clique() == 4);
+  assert(max_clique_weighted() == 120);
   return 0;
 }
 \end{lstlisting}
 \subsection{Graph Coloring}
-Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the same color, and that the total number of colors used is minimized. \inlinecode{color\_graph()} applies to a global, pre-populated adjacency matrix \inlinecode{adj[][]} which must satisfy the condition that \inlinecode{adj[u][v]} is \inlinecode{true} if and only if \inlinecode{adj[v][u]} is \inlinecode{true}, for all pairs of nodes $u$ and $v$ respectively between 0 (inclusive) and the total number of nodes (exclusive) as passed in the function argument.
+Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the same color, and that the total number of colors used is minimized. \inlinecode{color\_graph()} applies to a global, pre-populated adjacency matrix \inlinecode{adj} which must satisfy the condition that \inlinecode{adj[u][v]} is \inlinecode{true} if and only if \inlinecode{adj[v][u]} is \inlinecode{true}, for all pairs of nodes $u$ and $v$ respectively between 0 (inclusive) and \inlinecode{adj.size()} (exclusive).
 
 \textbf{Time Complexity}: Exponential on the number of nodes per call to \inlinecode{color\_graph()}.
 
@@ -2912,9 +2949,9 @@ Given an undirected graph, assign a color to every node such that no pair of adj
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 30;
-int adj[MAXN][MAXN], min_colors, color[MAXN];
-int curr[MAXN], id[MAXN + 1], degree[MAXN + 1];
+std::vector<std::vector<bool>> adj;
+int min_colors;
+std::vector<int> color, curr, id, degree;
 
 void rec(int lo, int hi, int n, int used_colors) {
   if (used_colors >= min_colors) {
@@ -2943,7 +2980,12 @@ void rec(int lo, int hi, int n, int used_colors) {
   }
 }
 
-int color_graph(int nodes) {
+int color_graph() {
+  int nodes = adj.size();
+  color.assign(nodes, 0);
+  curr.assign(nodes, 0);
+  id.assign(nodes + 1, 0);
+  degree.assign(nodes + 1, 0);
   for (int i = 0; i <= nodes; i++) {
     id[i] = i;
     degree[i] = 0;
@@ -2962,7 +3004,7 @@ int color_graph(int nodes) {
     std::swap(id[hi], id[best]);
     if (degree[id[hi]] == 0) {
       min_colors = nodes + 1;
-      std::fill(curr, curr + nodes, 0);
+      curr.assign(nodes, 0);
       rec(lo, hi, lo, 0);
       lo = hi;
       res = std::max(res, min_colors);
@@ -2983,6 +3025,8 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  int nodes = 5;
+  adj.assign(nodes, std::vector<bool>(nodes));
   add_edge(0, 1);
   add_edge(0, 4);
   add_edge(1, 3);
@@ -2990,11 +3034,11 @@ int main() {
   add_edge(2, 3);
   add_edge(2, 4);
   add_edge(3, 4);
-  int colors = color_graph(5);
+  int colors = color_graph();
   cout << "Colored using " << colors << " color(s):" << endl;
   for (int i = 0; i < colors; i++) {
     cout << "Color " << i + 1 << ":";
-    for (int j = 0; j < 5; j++) {
+    for (int j = 0; j < nodes; j++) {
       if (color[j] == i) {
         cout << " " << j;
       }
@@ -3011,7 +3055,7 @@ Color 2: 1 2
 Color 3: 4
 \end{exampleoutput}
 \subsection{Shortest Hamiltonian Cycle (TSP)}
-Given a weighted graph, determine a cycle of minimum total distance which visits each node exactly once and returns to the starting node. This is known as the traveling salesman problem (TSP). Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. \inlinecode{shortest\_hamiltonian\_cycle()} applies to a global adjacency matrix \inlinecode{adj[][]}, which must be populated with \inlinecode{add\_edge()} before the function call.
+Given a weighted graph, determine a cycle of minimum total distance which visits each node exactly once and returns to the starting node. This is known as the traveling salesman problem (TSP). Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. \inlinecode{shortest\_hamiltonian\_cycle()} applies to a global adjacency matrix \inlinecode{adj}, which must be populated with \inlinecode{add\_edge()} before the function call.
 
 \textbf{Time Complexity}: $O(2^{n} \cdot n^{2})$ per call to \inlinecode{shortest\_hamiltonian\_cycle()}, where $n$ is the number of nodes.
 
@@ -3024,20 +3068,22 @@ Given a weighted graph, determine a cycle of minimum total distance which visits
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <climits>
+#include <vector>
 
-const int MAXN = 20, INF = INT_MAX / 2;
-int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<int>> adj, dp;
+std::vector<int> order;
 
 void add_edge(int u, int v, int w) {
   adj[u][v] = w;
   adj[v][u] = w;  // Remove this line if the graph is directed.
 }
 
-int shortest_hamiltonian_cycle(int nodes) {
+int shortest_hamiltonian_cycle() {
+  int nodes = adj.size();
   int max_mask = (1 << nodes) - 1;
-  for (int i = 0; i <= max_mask; i++) {
-    std::fill(dp[i], dp[i] + nodes, INF);
-  }
+  dp.assign(max_mask + 1, std::vector<int>(nodes, INF));
+  order.assign(nodes, 0);
   dp[1][0] = 0;
   for (int mask = 1; mask <= max_mask; mask += 2) {
     for (int i = 1; i < nodes; i++) {
@@ -3077,6 +3123,7 @@ using namespace std;
 
 int main() {
   int nodes = 5;
+  adj.assign(nodes, std::vector<int>(nodes));
   add_edge(0, 1, 1);
   add_edge(0, 2, 10);
   add_edge(0, 3, 1);
@@ -3087,7 +3134,7 @@ int main() {
   add_edge(2, 3, 1);
   add_edge(2, 4, 1);
   add_edge(3, 4, 10);
-  cout << "The shortest hamiltonian cycle has length " << shortest_hamiltonian_cycle(nodes) << "."
+  cout << "The shortest hamiltonian cycle has length " << shortest_hamiltonian_cycle() << "."
        << endl
        << "Take the path: ";
   for (int i = 0; i < nodes; i++) {
@@ -3102,7 +3149,7 @@ The shortest hamiltonian cycle has length 5.
 Take the path: 0->3->2->4->1->0.
 \end{exampleoutput}
 \subsection{Shortest Hamiltonian Path}
-Given a weighted, directed graph, determine a path of minimum total distance which visits each node exactly once. Unlike the traveling salesman problem, we do not have to return to the starting vertex. Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. \inlinecode{shortest\_hamiltonian\_path()} applies to a global adjacency matrix \inlinecode{adj[][]} which must be populated before the function call.
+Given a weighted, directed graph, determine a path of minimum total distance which visits each node exactly once. Unlike the traveling salesman problem, we do not have to return to the starting vertex. Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. \inlinecode{shortest\_hamiltonian\_path()} applies to a global adjacency matrix \inlinecode{adj} which must be populated before the function call.
 
 \textbf{Time Complexity}: $O(2^{n} \cdot n^{2})$ per call to \inlinecode{shortest\_hamiltonian\_path()}, where $n$ is the number of nodes.
 
@@ -3115,15 +3162,17 @@ Given a weighted, directed graph, determine a path of minimum total distance whi
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <climits>
+#include <vector>
 
-const int MAXN = 20, INF = INT_MAX / 2;
-int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<int>> adj, dp;
+std::vector<int> order;
 
-int shortest_hamiltonian_path(int nodes) {
+int shortest_hamiltonian_path() {
+  int nodes = adj.size();
   int max_mask = (1 << nodes) - 1;
-  for (int i = 0; i <= max_mask; i++) {
-    std::fill(dp[i], dp[i] + nodes, INF);
-  }
+  dp.assign(max_mask + 1, std::vector<int>(nodes, INF));
+  order.assign(nodes, 0);
   for (int i = 0; i < nodes; i++) {
     dp[1 << i][i] = 0;
   }
@@ -3164,14 +3213,14 @@ using namespace std;
 
 int main() {
   int nodes = 3;
+  adj.assign(nodes, std::vector<int>(nodes));
   adj[0][1] = 1;
   adj[0][2] = 1;
   adj[1][0] = 7;
   adj[1][2] = 2;
   adj[2][0] = 3;
   adj[2][1] = 5;
-  cout << "The shortest hamiltonian path has length " << shortest_hamiltonian_path(nodes) << "."
-       << endl
+  cout << "The shortest hamiltonian path has length " << shortest_hamiltonian_path() << "." << endl
        << "Take the path: " << order[0];
   for (int i = 1; i < nodes; i++) {
     cout << "->" << order[i];

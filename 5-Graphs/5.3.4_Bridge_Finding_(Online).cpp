@@ -6,8 +6,8 @@ number of bridges.
 
 This data structure maintains two disjoint-set forests:
 
-- `dsu_2ecc[]` tracks the current $2$-edge-connected components.
-- `dsu_cc[]` tracks the ordinary connected components.
+- `dsu_2ecc` tracks the current $2$-edge-connected components.
+- `dsu_cc` tracks the ordinary connected components.
 
 When an inserted edge joins two different connected components, it creates a new bridge. When it
 joins two nodes already in the same connected component, it creates a cycle and every bridge on the

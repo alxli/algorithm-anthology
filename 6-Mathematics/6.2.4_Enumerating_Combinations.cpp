@@ -10,9 +10,9 @@ elements, where order does not matter.
   greatest combination of the elements in `[lo, hi)` (in which case the values are unchanged). This
   implementation requires an ordering on the set of possible elements defined by `operator <` on the
   iterator's value type.
-- `next_combination(n, k, a)` rearranges `a[]` to become the next lexicographically greater
-  combination of $k$ distinct integers in the range $[0, n)$. The array `a[]` must consist of $k$
-  distinct integers in the range $[0, n)$.
+- `next_combination(n, a)` rearranges `a` to become the next lexicographically greater combination
+  of distinct integers in the range $[0, n)$. The vector `a` must be sorted and contain distinct
+  integers in the range $[0, n)$.
 - `next_combination_mask(x)` interprets the bits of an integer `x` as a mask with 1-bits specifying
   the chosen items for a combination and returns the mask of the next lexicographically greater
   combination (that is, the lowest integer greater than `x` with the same number of 1 bits). Note
@@ -22,17 +22,18 @@ elements, where order does not matter.
 - `combination_by_rank(n, k, r)` returns the combination of $k$ distinct integers in the range $[0,
   n)$ that is lexicographically ranked $r$, where $r$ is a zero-based rank in the range $[0,
   \binom{n}{k})$.
-- `rank_by_combination(n, k, a)` returns an integer representing the zero-based rank of combination
-  `a[]`, which must consist of $k$ distinct integers in $[0, n)$.
-- `next_combination_with_repeats(n, k, a)` rearranges `a[]` to become the next lexicographically
-  greater combination of $k$ (not necessarily distinct) integers in the range $[0, n)$. The array
-  `a[]` must consist of $k$ integers in the range $[0, n)$. Note that there is a total of $n
+- `rank_by_combination(n, a)` returns an integer representing the zero-based rank of combination
+  `a`, which must contain sorted distinct integers in $[0, n)$.
+- `next_combination_with_repeats(n, a)` rearranges `a` to become the next lexicographically greater
+  combination of not necessarily distinct integers in the range $[0, n)$. The vector `a` must be
+  sorted. Note that there is a total of $n
   \mathbin{\text{multichoose}} k$ combinations if repetition is allowed, where $n
   \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
 
 Time Complexity:
 - O(n) per call to `next_combination(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
-- O(k) per call to `next_combination(n, k, a)` and `next_combination_with_repeats(n, k, a)`.
+- O(k) per call to `next_combination(n, a)` and `next_combination_with_repeats(n, a)`, where $k$ is
+  the size of `a`.
 - O(1) per call to `next_combination_mask(x)`.
 - O(n*k) per call to `combination_by_rank()` and `rank_by_combination()`.
 
@@ -94,7 +95,8 @@ bool next_combination(It lo, It mid, It hi) {
   return true;
 }
 
-bool next_combination(int n, int k, int a[]) {
+bool next_combination(int n, std::vector<int> &a) {
+  int k = a.size();
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - k + i) {
       a[i]++;
@@ -141,7 +143,8 @@ std::vector<int> combination_by_rank(int n, int k, long long r) {
   return res;
 }
 
-long long rank_by_combination(int n, int k, int a[]) {
+long long rank_by_combination(int n, const std::vector<int> &a) {
+  int k = a.size();
   long long res = 0;
   int prev = -1;
   for (int i = 0; i < k; i++) {
@@ -153,7 +156,8 @@ long long rank_by_combination(int n, int k, int a[]) {
   return res;
 }
 
-bool next_combination_with_repeats(int n, int k, int a[]) {
+bool next_combination_with_repeats(int n, std::vector<int> &a) {
+  int k = a.size();
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - 1) {
       for (++a[i]; ++i < k;) {
@@ -227,24 +231,26 @@ int main() {
     cout << endl;
   }
   {  // Combinations of distinct integers from 0 to n - 1.
-    int n = 5, k = 3, a[] = {0, 1, 2};
+    int n = 5, k = 3;
+    vector<int> a{0, 1, 2};
     cout << "\n" << n << " choose " << k << ":" << endl;
     int count = 0;
     do {
-      print_range(a, a + k);
+      print_range(a.begin(), a.end());
       vector<int> b = combination_by_rank(n, k, count);
-      assert(equal(a, a + k, b.begin()));
-      assert(rank_by_combination(n, k, a) == count);
+      assert(a == b);
+      assert(rank_by_combination(n, a) == count);
       count++;
-    } while (next_combination(n, k, a));
+    } while (next_combination(n, a));
     cout << endl;
   }
   {  // Combinations with repeats.
-    int n = 3, k = 2, a[] = {0, 0};
+    int n = 3, k = 2;
+    vector<int> a{0, 0};
     cout << "\n" << n << " multichoose " << k << ":" << endl;
     do {
-      print_range(a, a + k);
-    } while (next_combination_with_repeats(n, k, a));
+      print_range(a.begin(), a.end());
+    } while (next_combination_with_repeats(n, a));
     cout << endl;
   }
   return 0;

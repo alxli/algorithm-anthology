@@ -4,7 +4,7 @@ Given a directed graph, determine the strongly connected components. The strongl
 components of a graph is the set of all strongly (maximally) connected subgraphs. A subgraph is
 strongly connected if there is a path between each pair of nodes. Condensing the strongly connected
 components of a graph into single nodes will result in a directed acyclic graph. `tarjan()` applies
-to a global, pre-populated adjacency list `adj[]` which must only consist of nodes numbered with
+to a global, pre-populated adjacency list `adj` which must only consist of nodes numbered with
 integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function
 argument.
 
@@ -23,10 +23,12 @@ Space Complexity:
 #include <climits>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<int> adj[MAXN], currstack;
-int timer, lowlink[MAXN];
-std::vector<bool> visit(MAXN);
+const int INF = INT_MAX / 2;
+std::vector<std::vector<int>> adj;
+std::vector<int> currstack;
+int timer;
+std::vector<int> lowlink;
+std::vector<bool> visit;
 std::vector<std::vector<int>> scc;
 
 void dfs(int u) {
@@ -58,11 +60,12 @@ void dfs(int u) {
   scc.push_back(component);
 }
 
-void tarjan(int nodes) {
+void tarjan() {
+  int nodes = adj.size();
   scc.clear();
   currstack.clear();
-  std::fill(lowlink, lowlink + nodes, 0);
-  std::fill(visit.begin(), visit.end(), false);
+  lowlink.assign(nodes, 0);
+  visit.assign(nodes, false);
   timer = 0;
   for (int i = 0; i < nodes; i++) {
     if (!visit[i]) {
@@ -84,6 +87,8 @@ Components:
 using namespace std;
 
 int main() {
+  int nodes = 8;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(2);
   adj[1].push_back(4);
@@ -98,7 +103,7 @@ int main() {
   adj[6].push_back(5);
   adj[7].push_back(3);
   adj[7].push_back(6);
-  tarjan(8);
+  tarjan();
   cout << "Components:" << endl;
   for (auto &comp : scc) {
     for (int v : comp) {

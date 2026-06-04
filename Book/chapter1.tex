@@ -6,7 +6,7 @@
 \subsection{Sorting Algorithms}
 These functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a range \inlinecode{[lo, hi)} to be sorted. Elements between \inlinecode{lo} and \inlinecode{hi} (including the element pointed to by \inlinecode{lo} but excluding the element pointed to by \inlinecode{hi}) will be sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator \textless{}}.
 
-These functions are not meant to compete with standard library implementations in terms terms of speed. Instead, they are meant to demonstrate how common sorting algorithms can be concisely implemented in C++.
+These functions are not meant to compete with standard library implementations in terms of speed. Instead, they are meant to demonstrate how common sorting algorithms can be concisely implemented in C++.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -14,7 +14,7 @@ These functions are not meant to compete with standard library implementations i
 #include <iterator>
 #include <vector>
 \end{lstlisting}
-Quicksort repeatedly selects a pivot and partitions the range so that elements comparing less than the pivot precede the pivot, and elements comparing greater or equal follow it. Divide and conquer is then applied to both sides of the pivot until the original range is sorted. Despite having a worst case of $O(n^{2})$, quicksort is often faster in practice than merge sort and heapsort, which both have a worst case time complexity of $O(n \log n)$.
+Quicksort repeatedly selects a pivot and partitions the range so that elements comparing less than the pivot precede it, elements comparing equal stay in the middle, and elements comparing greater follow it. Divide and conquer is then applied to the two outer ranges until the original range is sorted. Despite having a worst case of $O(n^{2})$, quicksort is often faster in practice than merge sort and heapsort, which both have a worst case time complexity of $O(n \log n)$.
 
 The pivot chosen in this implementation is always a middle element of the range to be sorted. To reduce the likelihood of encountering the worst case, the pivot can be chosen in better ways (e.g. randomly, or using the "median of three" technique).
 
@@ -29,26 +29,26 @@ The pivot chosen in this implementation is always a middle element of the range 
 \begin{lstlisting}[language=C++]
 template<class It, class Compare>
 void quicksort(It lo, It hi, Compare comp) {
-  if (hi - lo < 2) {
-    return;
+  while (hi - lo >= 2) {
+    auto pivot = *(lo + (hi - lo) / 2);
+    It lt = lo, i = lo, gt = hi;
+    while (i != gt) {
+      if (comp(*i, pivot)) {
+        std::iter_swap(lt++, i++);
+      } else if (comp(pivot, *i)) {
+        std::iter_swap(i, --gt);
+      } else {
+        ++i;
+      }
+    }
+    if (lt - lo < hi - gt) {
+      quicksort(lo, lt, comp);
+      lo = gt;
+    } else {
+      quicksort(gt, hi, comp);
+      hi = lt;
+    }
   }
-  using T = typename std::iterator_traits<It>::value_type;
-  T pivot = *(lo + (hi - lo) / 2);
-  It i, j;
-  for (i = lo, j = hi - 1;; ++i, --j) {
-    while (comp(*i, pivot)) {
-      ++i;
-    }
-    while (comp(pivot, *j)) {
-      --j;
-    }
-    if (i >= j) {
-      break;
-    }
-    std::swap(*i, *j);
-  }
-  quicksort(lo, i, comp);
-  quicksort(i, hi, comp);
 }
 
 template<class It>
@@ -154,7 +154,7 @@ void heapsort(It lo, It hi) {
 \end{lstlisting}
 Comb sort is an improved bubble sort. While bubble sort increments the gap between swapped elements for every inner loop iteration, comb sort fixes the gap size in the inner loop, decreasing it by a particular shrink factor in every iteration of the outer loop. The shrink factor of 1.3 is empirically determined to be the most effective.
 
-Even though the worst case time complexity is $O(n^{2})$, a well chosen shrink factor ensures that the gap sizes are co-prime, in turn requiring astronomically large n to make the algorithm exceed $O(n \log n)$ steps. On random arrays, comb sort is only 2-3 times slower than merge sort. Its short code length length relative to its good performance makes it a worthwhile algorithm to remember.
+Even though the worst case time complexity is $O(n^{2})$, a well chosen shrink factor ensures that the gap sizes are co-prime, in turn requiring astronomically large n to make the algorithm exceed $O(n \log n)$ steps. On random arrays, comb sort is only 2-3 times slower than merge sort. Its short code length relative to its good performance makes it a worthwhile algorithm to remember.
 
 \textbf{Time Complexity (Worst)}: $O(n^{2})$.
 
@@ -189,7 +189,7 @@ void combsort(It lo, It hi) {
 \end{lstlisting}
 Radix sort is used to sort integer elements with a constant number of bits in linear time. This implementation only works on ranges pointing to unsigned integer primitives. The elements in the input range do not strictly have to be unsigned types, as long as their values are nonnegative integers.
 
-In this implementation, a power of two is chosen to be the base for the sort so that bitwise operations can be easily used to extract digits. This avoids the need to use modulo and exponentiation, which are much more expensive operations. In practice, it's been demonstrated that $2^8$ is the best choice for sorting 32-bit integers (approximately 5 times faster than \inlinecode{std::sort()}, and typically 2-4 faster than radix sort using any other power of two chosen as the base).
+In this implementation, a power of two is chosen to be the base for the sort so that bitwise operations can be easily used to extract digits. This avoids the need to use modulo and exponentiation, which are much more expensive operations. In practice, it's been demonstrated that $2^8$ is the best choice for sorting 32-bit integers (approximately 5 times faster than \inlinecode{std::sort()}, and typically 2-4 times faster than radix sort using any other power of two chosen as the base).
 
 \textbf{Time Complexity}: $O(n \cdot w)$ for $n$ integers of $w$ bits each.
 
@@ -206,22 +206,22 @@ void radix_sort(It lo, It hi) {
   const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
   int num_bits = 8 * sizeof(*lo);          // 8 bits per byte
   using T = typename std::iterator_traits<It>::value_type;
-  T *buf = new T[hi - lo];
+  std::vector<T> buf(hi - lo);
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
-    int count[radix_base] = {0};
+    std::vector<int> count(radix_base);
     for (It it = lo; it != hi; ++it) {
       count[(*it >> pos) & radix_mask]++;
     }
-    T *bucket[radix_base], *curr = buf;
+    std::vector<T *> bucket(radix_base);
+    T *curr = buf.data();
     for (int i = 0; i < radix_base; curr += count[i++]) {
       bucket[i] = curr;
     }
     for (It it = lo; it != hi; ++it) {
       *bucket[(*it >> pos) & radix_mask]++ = *it;
     }
-    std::copy(buf, buf + (hi - lo), lo);
+    std::copy(buf.begin(), buf.end(), lo);
   }
-  delete[] buf;
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -258,9 +258,9 @@ bool compare_as_ints(double i, double j) {
 
 int main() {
   {  // Can be used to sort arrays like std::sort().
-    int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
-    quicksort(a, a + 8);
-    assert(sorted(a, a + 8));
+    vector<int> a{32, 71, 12, 45, 26, 80, 53, 33};
+    quicksort(a.begin(), a.end());
+    assert(sorted(a.begin(), a.end()));
   }
   {  // STL containers work too.
     vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};
@@ -339,7 +339,7 @@ combsort():   0.827s
 radix_sort(): 0.076s
 \end{exampleoutput}
 \subsection{Array Rotation}
-These functions are equivalent to \inlinecode{std::rotate()}, taking three iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} (\inlinecode{lo} $\leq$ \inlinecode{mid} $\leq$ \inlinecode{hi}) to perform a left rotation on the range \inlinecode{[lo, hi)}. After the function call, \inlinecode{[lo, hi)} will comprise of the concatenation of the elements originally in \inlinecode{[mid, hi)} + \inlinecode{[lo, mid)}. That is, the range \inlinecode{[lo, hi)} will be rearranged in such a way that the element at \inlinecode{mid} becomes the first element of the new range and the element at \inlinecode{mid - 1} becomes the last element, all while preserving the relative ordering of elements within the two rotated subarrays.
+These functions are equivalent to \inlinecode{std::rotate()}, taking three iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} (\inlinecode{lo} $\leq$ \inlinecode{mid} $\leq$ \inlinecode{hi}) to perform a left rotation on the range \inlinecode{[lo, hi)}. After the function call, \inlinecode{[lo, hi)} will consist of the concatenation of the elements originally in \inlinecode{[mid, hi)} + \inlinecode{[lo, mid)}. That is, the range \inlinecode{[lo, hi)} will be rearranged in such a way that the element at \inlinecode{mid} becomes the first element of the new range and the element at \inlinecode{mid - 1} becomes the last element, all while preserving the relative ordering of elements within the two rotated subarrays.
 
 All three versions below achieve the same result using in-place algorithms. Version 1 uses a straightforward swapping algorithm requiring ForwardIterators. Version 2 requires BidirectionalIterators, employing a well-known trick with three simple inversions. Version 3 requires random-access iterators, applying a juggling algorithm which first divides the range into \inlinecode{gcd(hi - lo, mid - lo)} sets and then rotates the corresponding elements in each set.
 
@@ -456,23 +456,23 @@ rotate left:  1 2 2 3 4 5 7 7 10 0
 rotate right: 0 1 2 2 3 4 5 7 7 10
 \end{exampleoutput}
 \subsection{Counting Inversions}
-The number of inversions for an array $a[]$ the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i]$ \textgreater{} $a[j]$. This is roughly how "close" an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions.
+The number of inversions for a sequence \inlinecode{a} is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how "close" an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions.
 
 \begin{compactitem}
   \item \inlinecode{inversions(lo, hi)} uses merge sort to return the number of inversions given two random-access iterators as a range \inlinecode{[lo, hi)}. The input range will be sorted after the function call. This requires \inlinecode{operator \textless{}} to be defined on the iterators' value type.
-  \item \inlinecode{inversions(n, a[])} uses a power-of-two trick to return the number of inversions for an array \inlinecode{a[]} of $n$ nonnegative integers. After calling the function, every value of \inlinecode{a[]} will be set to 0. The time and space complexity of this operation are functions of the magnitude of the maximum value in \inlinecode{a[]}. To instead obtain a running time of $O(n \log n)$ on the number of elements, coordinate compression may be applied to \inlinecode{a[]} beforehand so that its maximum is strictly less than the length n itself.
+  \item \inlinecode{inversions(a)} uses coordinate compression and a Fenwick tree to return the number of inversions in an integer vector without modifying it.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to \inlinecode{inversion(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(n \log m)$ per call to \inlinecode{inversions(n, a[])} where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi} and $m$ is maximum value in \inlinecode{a[]}.
+  \item $O(n \log n)$ per call to \inlinecode{inversions(a)}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary space and $O(\log n)$ stack space for \inlinecode{inversions(lo, hi)}.
-  \item $O(m)$ auxiliary heap space for \inlinecode{inversions(n, a[])}.
+  \item $O(n)$ auxiliary heap space for \inlinecode{inversions(a)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -514,25 +514,20 @@ long long inversions(It lo, It hi) {
   return res;
 }
 
-long long inversions(int n, int a[]) {
-  int mx = 0;
-  for (int i = 0; i < n; i++) {
-    mx = std::max(mx, a[i]);
-  }
+long long inversions(const std::vector<int> &a) {
+  int n = a.size();
+  std::vector<int> values(a.begin(), a.end());
+  std::sort(values.begin(), values.end());
+  values.erase(std::unique(values.begin(), values.end()), values.end());
+  std::vector<int> bit(values.size() + 1, 0);
   long long res = 0;
-  std::vector<int> count(mx);
-  while (mx > 0) {
-    std::fill(count.begin(), count.end(), 0);
-    for (int i = 0; i < n; i++) {
-      if (a[i] % 2 == 0) {
-        res += count[a[i] / 2];
-      } else {
-        count[a[i] / 2]++;
-      }
+  for (int i = n - 1; i >= 0; i--) {
+    int id = std::lower_bound(values.begin(), values.end(), a[i]) - values.begin() + 1;
+    for (int j = id - 1; j > 0; j -= j & -j) {
+      res += bit[j];
     }
-    mx = 0;
-    for (int i = 0; i < n; i++) {
-      mx = std::max(mx, a[i] /= 2);
+    for (int j = id; j < static_cast<int>(bit.size()); j += j & -j) {
+      bit[j]++;
     }
   }
   return res;
@@ -544,12 +539,12 @@ long long inversions(int n, int a[]) {
 
 int main() {
   {
-    int a[] = {6, 9, 1, 14, 8, 12, 3, 2};
-    assert(inversions(a, a + 8) == 16);
+    std::vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
+    assert(inversions(a.begin(), a.end()) == 16);
   }
   {
-    int a[] = {6, 9, 1, 14, 8, 12, 3, 2};
-    assert(inversions(8, a) == 16);
+    std::vector<int> a{6, 9, 1, 14, 8, 12, 3, 2};
+    assert(inversions(a) == 16);
   }
   return 0;
 }
@@ -611,19 +606,19 @@ void print_range(It lo, It hi) {
 
 int main() {
   {
-    int a[] = {1, 30, 30, 7, 9, 8, 99, 99};
-    compress1(a, a + 8);
-    print_range(a, a + 8);
+    vector<int> a{1, 30, 30, 7, 9, 8, 99, 99};
+    compress1(a.begin(), a.end());
+    print_range(a.begin(), a.end());
   }
   {
-    int a[] = {1, 30, 30, 7, 9, 8, 99, 99};
-    compress2(a, a + 8);
-    print_range(a, a + 8);
+    vector<int> a{1, 30, 30, 7, 9, 8, 99, 99};
+    compress2(a.begin(), a.end());
+    print_range(a.begin(), a.end());
   }
   {  // Non-integral types work too, as long as ints can be assigned to them.
-    double a[] = {0.5, -1.0, 3, -1.0, 20, 0.5};
-    compress1(a, a + 6);
-    print_range(a, a + 6);
+    vector<double> a{0.5, -1.0, 3, -1.0, 20, 0.5};
+    compress1(a.begin(), a.end());
+    print_range(a.begin(), a.end());
   }
   return 0;
 }
@@ -636,34 +631,37 @@ int main() {
 \subsection{Selection (Quickselect)}
 \inlinecode{nth\_element2()} is equivalent to \inlinecode{std::nth\_element()}, taking random-access iterators \inlinecode{lo}, \inlinecode{nth}, and \inlinecode{hi} as the range \inlinecode{[lo, hi)} to be partially sorted. The values in \inlinecode{[lo, hi)} are rearranged such that the value pointed to by \inlinecode{nth} is the element that would be there if the range were sorted. Furthermore, the range is partitioned such that no value in \inlinecode{[lo, nth)} compares greater than the value pointed to by \inlinecode{nth} and no value in \inlinecode{(nth, hi)} compares less. This implementation requires \inlinecode{operator \textless{}} to be defined on the iterator's value type.
 
+The pivot is chosen uniformly at random, and the partition step groups equal keys together so arrays with many duplicate values remain efficient.
+
 \textbf{Time Complexity}: $O(n)$ on average per call to \inlinecode{nth\_element2()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <cstdlib>
 #include <iterator>
-
-int rand32() {
-  return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15);
-}
+#include <random>
 
 template<class It>
 void nth_element2(It lo, It nth, It hi) {
-  for (;;) {
-    std::iter_swap(lo + rand32() % (hi - lo), hi - 1);
-    auto mid = *(hi - 1);
-    It k = lo - 1;
-    for (It it = lo; it != hi; ++it) {
-      if (!(mid < *it)) {
-        std::iter_swap(++k, it);
+  static std::mt19937 rng(1);
+  while (hi - lo > 1) {
+    std::uniform_int_distribution<int> dist(0, hi - lo - 1);
+    auto pivot = *(lo + dist(rng));
+    It lt = lo, i = lo, gt = hi;
+    while (i != gt) {
+      if (*i < pivot) {
+        std::iter_swap(lt++, i++);
+      } else if (pivot < *i) {
+        std::iter_swap(i, --gt);
+      } else {
+        ++i;
       }
     }
-    if (nth < k) {
-      hi = k;
-    } else if (k < nth) {
-      lo = k + 1;
+    if (nth < lt) {
+      hi = lt;
+    } else if (nth >= gt) {
+      lo = gt;
     } else {
       return;
     }
@@ -685,16 +683,16 @@ void print_range(It lo, It hi) {
 }
 
 int main() {
-  int n = 9;
-  int a[] = {5, 6, 4, 3, 2, 6, 7, 9, 3};
-  nth_element2(a, a + n / 2, a + n);
+  vector<int> a{5, 6, 4, 3, 2, 6, 7, 9, 3};
+  int n = a.size();
+  nth_element2(a.begin(), a.begin() + n / 2, a.end());
   assert(a[n / 2] == 5);
-  print_range(a, a + n);
+  print_range(a.begin(), a.end());
   return 0;
 }
 \end{lstlisting}
 \begin{exampleoutput}
-2 3 3 4 5 6 6 7 9
+2 3 3 4 5 9 6 7 6
 \end{exampleoutput}
 \subsection{3-Way Partitioning (Dutch National Flag)}
 Partitions a range into three consecutive groups according to a pivot value: elements less than the pivot, elements equal to the pivot, and elements greater than the pivot. This is the Dutch National Flag algorithm, and is the core partitioning step used in three-way quicksort and arrays with many duplicate keys.
@@ -768,7 +766,7 @@ Precomputes prefix sums so range-sum queries can be answered in constant time. T
 
 \begin{compactitem}
   \item \inlinecode{prefix\_sums(a)} returns array \inlinecode{pref} with \inlinecode{pref[0] = 0} and \inlinecode{pref[i + 1] = a[0] + ... + a[i]}.
-  \item \inlinecode{range\_sum(pref, lo, hi)} returns the sum of the half-open range \inlinecode{[l, r)}.
+  \item \inlinecode{range\_sum(pref, lo, hi)} returns the sum of the half-open range \inlinecode{[lo, hi)}.
   \item \inlinecode{prefix\_sums\_2d(a)} returns a two-dimensional prefix sum table for matrix \inlinecode{a}.
   \item \inlinecode{rectangle\_sum(pref, r1, c1, r2, c2)} returns the sum of rows \inlinecode{[r1, r2)} and columns \inlinecode{[c1, c2)}.
 \end{compactitem}
@@ -888,8 +886,8 @@ int main() {
   d.add(1, 5, 4);
   d.add(2, 4, -1);
   vector<long long> a = d.build();
-  long long expected[] = {2, 6, 5, 3, 4};
-  for (int i = 0; i < 5; i++) {
+  vector<long long> expected{2, 6, 5, 3, 4};
+  for (int i = 0; i < static_cast<int>(expected.size()); i++) {
     assert(a[i] == expected[i]);
   }
   return 0;
@@ -961,19 +959,19 @@ int main() {
 -5 1 9 10 11 13
 \end{exampleoutput}
 \subsection{Subset Sum (Meet-in-the-Middle)}
-Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of integers, return the minimum sum of any subset of the range that is greater than or equal to a given integer \inlinecode{v}. This is a generalization of the NP-complete subset sum problem, which asks whether a subset summing to 0 exists (equivalent in this case to checking if $v = 0$ yields an answer of 0). This implementation uses a meet-in-the-middle algorithm to precompute and search for a lower bound. Note that 64-bit integers are used in intermediate calculations to avoid overflow.
+Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of integers, return the maximum sum of any subset of the range that is at most a given integer \inlinecode{v}. This is a common meet-in-the-middle version of subset sum: enumerate subset sums for each half, sort one side, and binary search for the best compatible partner. Note that 64-bit integers are used in intermediate calculations to avoid overflow.
 
-\textbf{Time Complexity}: $O(n \cdot 2^{n/2})$ per call to \inlinecode{sum\_lower\_bound()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(n \cdot 2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space, where $n$ is the number of array elements.
+\textbf{Space Complexity}: $O(2^{n/2})$ auxiliary heap space.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <limits>
+#include <climits>
 #include <vector>
 
 template<class It>
-long long sum_lower_bound(It lo, It hi, long long v) {
+long long max_subset_sum_at_most(It lo, It hi, long long v) {
   int n = hi - lo, llen = 1 << (n / 2), hlen = 1 << (n - n / 2);
   std::vector<long long> lsum(llen), hsum(hlen);
   for (int mask = 0; mask < llen; mask++) {
@@ -990,19 +988,15 @@ long long sum_lower_bound(It lo, It hi, long long v) {
       }
     }
   }
-  std::sort(lsum.begin(), lsum.end());
   std::sort(hsum.begin(), hsum.end());
-  int blo = 0, bhi = hlen - 1;
-  long long curr = std::numeric_limits<long long>::min();
-  while (blo < llen && bhi >= 0) {
-    if (lsum[blo] + hsum[bhi] <= v) {
-      curr = std::max(curr, lsum[blo] + hsum[bhi]);
-      blo++;
-    } else {
-      bhi--;
+  long long res = LLONG_MIN;
+  for (long long x : lsum) {
+    auto it = std::upper_bound(hsum.begin(), hsum.end(), v - x);
+    if (it != hsum.begin()) {
+      res = std::max(res, x + *--it);
     }
   }
-  return curr;
+  return res;
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -1010,10 +1004,10 @@ long long sum_lower_bound(It lo, It hi, long long v) {
 #include <cassert>
 
 int main() {
-  int a[] = {9, 1, 5, 0, 1, 11, 5};
-  assert(sum_lower_bound(a, a + 7, 8) == 7);
-  int b[] = {-7, -3, -2, 5, 8};
-  assert(sum_lower_bound(b, b + 5, 0) == 0);
+  std::vector<int> a{9, 1, 5, 0, 1, 11, 5};
+  assert(max_subset_sum_at_most(a.begin(), a.end(), 8) == 7);
+  std::vector<int> b{-7, -3, -2, 5, 8};
+  assert(max_subset_sum_at_most(b.begin(), b.end(), 0) == 0);
   return 0;
 }
 \end{lstlisting}
@@ -1185,18 +1179,13 @@ int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
 using namespace std;
 
 int main() {
-  const int n = 5, m = 6;
-  bool a[n][m] = {
+  vector<vector<bool>> matrix{
       {1, 0, 1, 1, 0, 0},
       {1, 0, 0, 1, 0, 0},
       {0, 0, 0, 0, 0, 1},
       {1, 0, 0, 1, 0, 0},
       {1, 0, 1, 0, 0, 1}
   };
-  vector<vector<bool>> matrix(n);
-  for (int i = 0; i < n; i++) {
-    matrix[i] = vector<bool>(a[i], a[i] + m);
-  }
   assert(max_zero_submatrix(matrix) == 6);
   return 0;
 }
@@ -1298,7 +1287,7 @@ The examples below cover two common patterns: finding the shortest subarray with
   \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns the maximum length of a contiguous subarray containing at most \inlinecode{k} distinct values.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the array size.
+\textbf{Time Complexity}: $O(n)$ expected per call, where $n$ is the array size.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
@@ -1308,7 +1297,7 @@ The examples below cover two common patterns: finding the shortest subarray with
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 int min_length_at_least(const std::vector<int> &a, long long target) {
@@ -1325,7 +1314,10 @@ int min_length_at_least(const std::vector<int> &a, long long target) {
 }
 
 int longest_at_most_k_distinct(const std::vector<int> &a, int k) {
-  std::map<int, int> count;
+  if (k <= 0) {
+    return 0;
+  }
+  std::unordered_map<int, int> count;
   int best = 0;
   for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
     count[a[r]]++;
@@ -1671,13 +1663,15 @@ The algorithm scans from right to left. At position \inlinecode{i}, it chooses a
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <cstdlib>
+#include <random>
 
 template<class It>
 void fisher_yates_shuffle(It lo, It hi) {
+  static std::mt19937 rng(std::random_device{}());
   int n = hi - lo;
   for (int i = n - 1; i > 0; i--) {
-    int j = rand() % (i + 1);
+    std::uniform_int_distribution<int> dist(0, i);
+    int j = dist(rng);
     std::iter_swap(lo + i, lo + j);
   }
 }
@@ -1690,7 +1684,6 @@ void fisher_yates_shuffle(It lo, It hi) {
 using namespace std;
 
 int main() {
-  srand(1);
   vector<int> a{1, 2, 3, 4, 5}, original(a);
   fisher_yates_shuffle(a.begin(), a.end());
   sort(a.begin(), a.end());
@@ -1717,9 +1710,14 @@ Selects uniformly random samples from a stream whose length may be unknown in ad
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <cstdlib>
 #include <iterator>
+#include <random>
 #include <vector>
+
+int rand_int(int lo, int hi) {
+  static std::mt19937 rng(std::random_device{}());
+  return std::uniform_int_distribution<int>(lo, hi)(rng);
+}
 
 template<class It>
 auto reservoir_sample_one(It lo, It hi) {
@@ -1728,7 +1726,7 @@ auto reservoir_sample_one(It lo, It hi) {
   int seen = 0;
   for (It it = lo; it != hi; ++it) {
     seen++;
-    if (rand() % seen == 0) {
+    if (rand_int(0, seen - 1) == 0) {
       sample = *it;
     }
   }
@@ -1745,7 +1743,7 @@ auto reservoir_sample_k(It lo, It hi, int k) {
     if (static_cast<int>(res.size()) < k) {
       res.push_back(*it);
     } else {
-      int j = rand() % seen;
+      int j = rand_int(0, seen - 1);
       if (j < k) {
         res[j] = *it;
       }
@@ -1760,7 +1758,6 @@ auto reservoir_sample_k(It lo, It hi, int k) {
 using namespace std;
 
 int main() {
-  srand(1);
   vector<int> a{10, 20, 30, 40, 50};
 
   int one = reservoir_sample_one(a.begin(), a.end());
@@ -1871,10 +1868,10 @@ using namespace std;
 
 int main() {
   {
-    int a[] = {-2, -1, -3, 4, -1, 2, 1, -5, 4};
+    vector<int> a{-2, -1, -3, 4, -1, 2, 1, -5, 4};
     int lo = 0, hi = 0;
-    assert(max_subarray_sum(a, a + 3) == 0);
-    assert(max_subarray_sum(a, a + 9, &lo, &hi) == 6);
+    assert(max_subarray_sum(a.begin(), a.begin() + 3) == 0);
+    assert(max_subarray_sum(a.begin(), a.end(), &lo, &hi) == 6);
     cout << "Maximal sum subarray:" << endl;
     for (int i = lo; i <= hi; i++) {
       cout << a[i] << " ";
@@ -1882,15 +1879,10 @@ int main() {
     cout << endl;
   }
   {
-    const int n = 4, m = 5;
-    int a[n][m] = {{0, -2, -7, 0, 5},
-                   {9, 2, -6, 2, -4},
-                   {-4, 1, -4, 1, 0},
-                   {-1, 8, 0, -2, 3}};
-    vector<vector<int>> matrix(n);
-    for (int i = 0; i < n; i++) {
-      matrix[i] = vector<int>(a[i], a[i] + m);
-    }
+    vector<vector<int>> matrix{{0, -2, -7, 0, 5},
+                               {9, 2, -6, 2, -4},
+                               {-4, 1, -4, 1, 0},
+                               {-1, 8, 0, -2, 3}};
     int r1 = 0, c1 = 0, r2 = 0, c2 = 0;
     assert(max_submatrix_sum(matrix, &r1, &c1, &r2, &c2) == 15);
     cout << "\nMaximal sum submatrix:" << endl;
@@ -1950,12 +1942,13 @@ It majority(It lo, It hi) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <vector>
 
 int main() {
-  int a[] = {3, 2, 3, 1, 3};
-  assert(*majority(a, a + 5) == 3);
-  int b[] = {2, 3, 3, 3, 2, 1};
-  assert(majority(b, b + 6) == b + 6);
+  std::vector<int> a{3, 2, 3, 1, 3};
+  assert(*majority(a.begin(), a.end()) == 3);
+  std::vector<int> b{2, 3, 3, 3, 2, 1};
+  assert(majority(b.begin(), b.end()) == b.end());
   return 0;
 }
 \end{lstlisting}
@@ -2024,20 +2017,20 @@ Finds candidate frequent elements in a stream using the Misra-Gries algorithm. W
 The candidates are not automatically verified, since the algorithm intentionally uses sublinear memory and does not retain the stream. If exact frequencies are needed, make a second pass over the input and count only the returned candidates.
 
 \begin{compactitem}
-  \item \inlinecode{misra\_gries(lo, hi, k)} returns a map of candidate values to their residual counters. Use \inlinecode{k = 2} for the Boyer-Moore majority-candidate special case.
+  \item \inlinecode{misra\_gries(lo, hi, k)} returns a hash table of candidate values to their residual counters. Use \inlinecode{k = 2} for the Boyer-Moore majority-candidate special case.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(nk)$ worst-case for this compact map-based implementation, where $n$ is the number of stream values.
+\textbf{Time Complexity}: $O(nk)$ expected for this compact hash-table implementation, where $n$ is the number of stream values.
 
 \textbf{Space Complexity}: $O(k)$ auxiliary heap space.
 
 \begin{lstlisting}[language=C++]
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 template<class T, class It>
-std::map<T, int> misra_gries(It lo, It hi, int k) {
-  std::map<T, int> count;
+std::unordered_map<T, int> misra_gries(It lo, It hi, int k) {
+  std::unordered_map<T, int> count;
   for (It it = lo; it != hi; ++it) {
     if (auto found = count.find(*it); found != count.end()) {
       found->second++;
@@ -2065,7 +2058,7 @@ using namespace std;
 
 int main() {
   vector<int> a{1, 2, 1, 3, 1, 2, 1, 4, 2, 2, 2};
-  map<int, int> candidates = misra_gries<int>(a.begin(), a.end(), 3);
+  unordered_map<int, int> candidates = misra_gries<int>(a.begin(), a.end(), 3);
   assert(candidates.count(1));
   assert(candidates.count(2));
   assert(!candidates.count(3));
@@ -2081,7 +2074,7 @@ Given a function $f$ mapping a set of integers to itself and an x-coordinate in 
 
 There must exist a pair of indices $i$ and $j$ ($i < j$) such that $x_i = x_j$. When this happens, the rest of the sequence will consist of the subsequence from $x_i$ to $x_{j - 1}$ repeating indefinitely. The cycle detection problem asks to find such an $i$, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
 
-Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm", is a space-efficient algorithm that moves two pointers through the sequence at different speeds. Each step in the algorithm moves the "tortoise" one step forward and the "hare" two steps forward in the sequence, comparing the sequence values at each step. The first value which is simultaneously pointed to by both pointers is the start of the sequence.
+Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm", is a space-efficient algorithm that moves two pointers through the sequence at different speeds. Each step in the algorithm moves the "tortoise" one step forward and the "hare" two steps forward in the sequence, comparing the sequence values at each step. Their first meeting point is somewhere in the cycle; a second phase then finds the cycle's starting position.
 
 \textbf{Time Complexity}: $O(m + n)$ per call to \inlinecode{find\_cycle\_floyd()}, where $m$ is the smallest index of the sequence which is the beginning of a cycle, and $n$ is the cycle's length.
 
@@ -2156,7 +2149,7 @@ Given a function $f$ mapping a set of integers to itself and an x-coordinate in 
 
 There must exist a pair of indices $i$ and $j$ ($i < j$) such that $x_i = x_j$. When this happens, the rest of the sequence will consist of the subsequence from $x_i$ to $x_{j - 1}$ repeating indefinitely. The cycle detection problem asks to find such an $i$, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
 
-While Floyd's cycle-finding algorithm finds cycles by simultaneously moving two pointers at different speeds, Brent's algorithm keeps the tortoise pointer stationary in every iteration, only teleporting it to the hare pointer at every power of two. The smallest power of two at which they meet is the start of the first cycle. This improves upon the constant factor of Floyd's algorithm by reducing the number of calls made to $f$.
+While Floyd's cycle-finding algorithm finds cycles by simultaneously moving two pointers at different speeds, Brent's algorithm keeps the tortoise pointer stationary in every iteration, only teleporting it to the hare pointer at every power of two. Once the two pointers meet, the cycle length is known, and a second phase finds the cycle's starting position. This improves upon the constant factor of Floyd's algorithm by reducing the number of calls made to $f$.
 
 \textbf{Time Complexity}: $O(m + n)$ per call to \inlinecode{find\_cycle\_brent()}, where $m$ is the smallest index of the sequence which is the beginning of a cycle, and $n$ is the cycle's length.
 

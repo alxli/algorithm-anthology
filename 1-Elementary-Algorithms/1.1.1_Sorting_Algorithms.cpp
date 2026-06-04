@@ -6,9 +6,9 @@ but excluding the element pointed to by `hi`) will be sorted into ascending orde
 call. Optionally, a comparison function object specifying a strict weak ordering may be specified to
 replace the default `operator <`.
 
-These functions are not meant to compete with standard library implementations in terms terms of
-speed. Instead, they are meant to demonstrate how common sorting algorithms can be concisely
-implemented in C++.
+These functions are not meant to compete with standard library implementations in terms of speed.
+Instead, they are meant to demonstrate how common sorting algorithms can be concisely implemented
+in C++.
 
 */
 
@@ -20,10 +20,10 @@ implemented in C++.
 /*
 
 Quicksort repeatedly selects a pivot and partitions the range so that elements comparing less than
-the pivot precede the pivot, and elements comparing greater or equal follow it. Divide and conquer
-is then applied to both sides of the pivot until the original range is sorted. Despite having a
-worst case of O(n^2), quicksort is often faster in practice than merge sort and heapsort, which both
-have a worst case time complexity of O(n log n).
+the pivot precede it, elements comparing equal stay in the middle, and elements comparing greater
+follow it. Divide and conquer is then applied to the two outer ranges until the original range is
+sorted. Despite having a worst case of O(n^2), quicksort is often faster in practice than merge sort
+and heapsort, which both have a worst case time complexity of O(n log n).
 
 The pivot chosen in this implementation is always a middle element of the range to be sorted. To
 reduce the likelihood of encountering the worst case, the pivot can be chosen in better ways (e.g.
@@ -38,26 +38,26 @@ Stable?: No.
 
 template<class It, class Compare>
 void quicksort(It lo, It hi, Compare comp) {
-  if (hi - lo < 2) {
-    return;
+  while (hi - lo >= 2) {
+    auto pivot = *(lo + (hi - lo) / 2);
+    It lt = lo, i = lo, gt = hi;
+    while (i != gt) {
+      if (comp(*i, pivot)) {
+        std::iter_swap(lt++, i++);
+      } else if (comp(pivot, *i)) {
+        std::iter_swap(i, --gt);
+      } else {
+        ++i;
+      }
+    }
+    if (lt - lo < hi - gt) {
+      quicksort(lo, lt, comp);
+      lo = gt;
+    } else {
+      quicksort(gt, hi, comp);
+      hi = lt;
+    }
   }
-  using T = typename std::iterator_traits<It>::value_type;
-  T pivot = *(lo + (hi - lo) / 2);
-  It i, j;
-  for (i = lo, j = hi - 1;; ++i, --j) {
-    while (comp(*i, pivot)) {
-      ++i;
-    }
-    while (comp(pivot, *j)) {
-      --j;
-    }
-    if (i >= j) {
-      break;
-    }
-    std::swap(*i, *j);
-  }
-  quicksort(lo, i, comp);
-  quicksort(i, hi, comp);
 }
 
 template<class It>
@@ -181,7 +181,7 @@ empirically determined to be the most effective.
 Even though the worst case time complexity is O(n^2), a well chosen shrink factor ensures that the
 gap sizes are co-prime, in turn requiring astronomically large n to make the algorithm exceed O(n
 log n) steps. On random arrays, comb sort is only 2-3 times slower than merge sort. Its short code
-length length relative to its good performance makes it a worthwhile algorithm to remember.
+length relative to its good performance makes it a worthwhile algorithm to remember.
 
 Time Complexity (Worst): O(n^2).
 Space Complexity: O(1) auxiliary.
@@ -224,8 +224,8 @@ In this implementation, a power of two is chosen to be the base for the sort so 
 operations can be easily used to extract digits. This avoids the need to use modulo and
 exponentiation, which are much more expensive operations. In practice, it's been demonstrated that
 $2^8$ is the best choice for sorting 32-bit integers (approximately 5 times faster than
-`std::sort()`, and typically 2-4 faster than radix sort using any other power of two chosen as the
-base).
+`std::sort()`, and typically 2-4 times faster than radix sort using any other power of two chosen as
+the base).
 
 Time Complexity: O(n*w) for $n$ integers of $w$ bits each.
 Space Complexity: O(n + w) auxiliary.
@@ -242,22 +242,22 @@ void radix_sort(It lo, It hi) {
   const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
   int num_bits = 8 * sizeof(*lo);          // 8 bits per byte
   using T = typename std::iterator_traits<It>::value_type;
-  T *buf = new T[hi - lo];
+  std::vector<T> buf(hi - lo);
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
-    int count[radix_base] = {0};
+    std::vector<int> count(radix_base);
     for (It it = lo; it != hi; ++it) {
       count[(*it >> pos) & radix_mask]++;
     }
-    T *bucket[radix_base], *curr = buf;
+    std::vector<T *> bucket(radix_base);
+    T *curr = buf.data();
     for (int i = 0; i < radix_base; curr += count[i++]) {
       bucket[i] = curr;
     }
     for (It it = lo; it != hi; ++it) {
       *bucket[(*it >> pos) & radix_mask]++ = *it;
     }
-    std::copy(buf, buf + (hi - lo), lo);
+    std::copy(buf.begin(), buf.end(), lo);
   }
-  delete[] buf;
 }
 
 /*** Example Usage and Output:
@@ -307,9 +307,9 @@ bool compare_as_ints(double i, double j) {
 
 int main() {
   {  // Can be used to sort arrays like std::sort().
-    int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
-    quicksort(a, a + 8);
-    assert(sorted(a, a + 8));
+    vector<int> a{32, 71, 12, 45, 26, 80, 53, 33};
+    quicksort(a.begin(), a.end());
+    assert(sorted(a.begin(), a.end()));
   }
   {  // STL containers work too.
     vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};

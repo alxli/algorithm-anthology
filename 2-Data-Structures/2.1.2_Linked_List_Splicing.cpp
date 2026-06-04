@@ -81,15 +81,15 @@ int main() {
 
   splice_after(&dummy, &c);  // Move 4 to the front: 4, 1, 2, 3, 5.
   vector<int> v = values(&dummy);
-  int expected1[] = {4, 1, 2, 3, 5};
-  for (int i = 0; i < 5; i++) {
+  vector<int> expected1{4, 1, 2, 3, 5};
+  for (int i = 0; i < static_cast<int>(expected1.size()); i++) {
     assert(v[i] == expected1[i]);
   }
 
   splice_range_after(&d, &a, &e);  // Move 2, 3 after 4: 4, 2, 3, 1, 5.
   v = values(&dummy);
-  int expected2[] = {4, 2, 3, 1, 5};
-  for (int i = 0; i < 5; i++) {
+  vector<int> expected2{4, 2, 3, 1, 5};
+  for (int i = 0; i < static_cast<int>(expected2.size()); i++) {
     assert(v[i] == expected2[i]);
   }
   return 0;

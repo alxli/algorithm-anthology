@@ -116,10 +116,10 @@ using namespace std;
 int main() {
   SuffixArray sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
-  int sarr_expected[] = {5, 3, 1, 0, 4, 2};
-  int lcp_expected[] = {1, 3, 0, 0, 2};
-  assert(equal(sarr.begin(), sarr.end(), sarr_expected));
-  assert(equal(lcp.begin(), lcp.end(), lcp_expected));
+  vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
+  vector<int> lcp_expected{1, 3, 0, 0, 2};
+  assert(sarr == sarr_expected);
+  assert(lcp == lcp_expected);
   assert(sa.find("ana") == 1);
   assert(sa.find("x") == string::npos);
   return 0;

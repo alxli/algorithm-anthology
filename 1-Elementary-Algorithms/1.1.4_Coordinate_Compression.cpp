@@ -73,19 +73,19 @@ void print_range(It lo, It hi) {
 
 int main() {
   {
-    int a[] = {1, 30, 30, 7, 9, 8, 99, 99};
-    compress1(a, a + 8);
-    print_range(a, a + 8);
+    vector<int> a{1, 30, 30, 7, 9, 8, 99, 99};
+    compress1(a.begin(), a.end());
+    print_range(a.begin(), a.end());
   }
   {
-    int a[] = {1, 30, 30, 7, 9, 8, 99, 99};
-    compress2(a, a + 8);
-    print_range(a, a + 8);
+    vector<int> a{1, 30, 30, 7, 9, 8, 99, 99};
+    compress2(a.begin(), a.end());
+    print_range(a.begin(), a.end());
   }
   {  // Non-integral types work too, as long as ints can be assigned to them.
-    double a[] = {0.5, -1.0, 3, -1.0, 20, 0.5};
-    compress1(a, a + 6);
-    print_range(a, a + 6);
+    vector<double> a{0.5, -1.0, 3, -1.0, 20, 0.5};
+    compress1(a.begin(), a.end());
+    print_range(a.begin(), a.end());
   }
   return 0;
 }

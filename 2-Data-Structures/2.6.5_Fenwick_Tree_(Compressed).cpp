@@ -72,12 +72,13 @@ Values: 15 6 7 -5 4
 
 #include <cassert>
 #include <iostream>
+#include <vector>
 using namespace std;
 
 int main() {
-  int a[] = {10, 1, 2, 3, 4};
+  vector<int> a{10, 1, 2, 3, 4};
   FenwickTree<int> t;
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
     t.set(i, a[i]);
   }
   t.add(0, 2, 5);

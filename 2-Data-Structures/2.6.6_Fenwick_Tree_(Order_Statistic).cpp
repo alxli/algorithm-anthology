@@ -4,11 +4,11 @@ Maintains frequencies over a 1-based integer domain and finds order statistics b
 a Fenwick tree. This is useful for dynamic multisets of bounded integer values,
 coordinate-compressed kth-element queries, and online rank queries.
 
-- `initialize()` resets all frequencies.
+- `initialize(n)` resets all frequencies.
 - `add(i, delta)` adds `delta` to the frequency of value/index `i`.
 - `sum(i)` returns the total frequency over indices `[1, i]`.
 - `kth(k)` returns the smallest index `i` such that `sum(i) >= k`. The argument `k` is 1-based and
-  must satisfy `1 <= k <= sum(MAXN)`.
+  must satisfy `1 <= k <= sum(n)`.
 
 Time Complexity:
 - O(n) per call to `initialize()`.
@@ -19,17 +19,17 @@ Space Complexity:
 
 */
 
-const int MAXN = 1000;
-int tree[MAXN + 1];
+#include <algorithm>
+#include <vector>
 
-void initialize() {
-  for (int i = 0; i <= MAXN; i++) {
-    tree[i] = 0;
-  }
+std::vector<int> tree;
+
+void initialize(int n) {
+  tree.assign(n + 1, 0);
 }
 
 void add(int i, int delta) {
-  for (; i <= MAXN; i += i & -i) {
+  for (; i < tree.size(); i += i & -i) {
     tree[i] += delta;
   }
 }
@@ -43,14 +43,13 @@ int sum(int i) {
 }
 
 int kth(int k) {
-  int idx = 0;
-  int bit = 1;
-  while (bit * 2 <= MAXN) {
-    bit *= 2;
+  int idx = 0, bits = 1;
+  while (bits * 2 < tree.size()) {
+    bits *= 2;
   }
-  for (; bit > 0; bit >>= 1) {
-    int next = idx + bit;
-    if (next <= MAXN && tree[next] < k) {
+  for (; bits > 0; bits >>= 1) {
+    int next = idx + bits;
+    if (next < tree.size() && tree[next] < k) {
       idx = next;
       k -= tree[next];
     }
@@ -63,7 +62,7 @@ int kth(int k) {
 #include <cassert>
 
 int main() {
-  initialize();
+  initialize(100);
   add(2, 1);
   add(4, 3);
   add(7, 1);

@@ -2,14 +2,13 @@
 
 Given an undirected graph, `max_clique()` returns the size of the maximum clique, that is, the
 largest subset of nodes such that all pairs of nodes in the subset are connected by an edge.
-`max_clique_weighted()` additionally uses a global array `w[]` specifying a weight value for each
+`max_clique_weighted()` additionally uses a global array `w` specifying a weight value for each
 node, returning the clique in the graph that has maximum total weight.
 
-Both functions apply to a global, pre-populated adjacency matrix `adj[][]` which must satisfy the
+Both functions apply to a global, pre-populated adjacency matrix `adj` which must satisfy the
 condition that `adj[u][v]` is `true` if and only if `adj[v][u]` is `true`, for all pairs of nodes
-$u$ and $v$ respectively between 0 (inclusive) and the total number of nodes (exclusive) as passed
-in the function argument. Note that `max_clique_weighted()` is an efficient implementation using
-bitmasks of unsigned 64-bit integers, thus requiring the number of nodes to be less than 64.
+$u$ and $v$ respectively between 0 (inclusive) and `adj.size()` (exclusive). These implementations
+use bitmasks of unsigned 64-bit integers, so the number of nodes must be less than 64.
 
 Time Complexity:
 - O(3^(n/3)) per call to `max_clique()` and `max_clique_weighted()`, where $n$ is the number of
@@ -22,55 +21,50 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <bitset>
 #include <vector>
 
-const int MAXN = 35;
-using bits = std::bitset<MAXN>;
 using uint64 = unsigned long long;
 
-bool adj[MAXN][MAXN];
-int w[MAXN];
+std::vector<std::vector<bool>> adj;
+std::vector<int> w;
 
-int rec(int nodes, bits &curr, bits &pool, bits &excl) {
-  if (pool.none() && excl.none()) {
-    return curr.count();
-  }
-  int best = 0, u = 0;
-  for (int v = 0; v < nodes; v++) {
-    if (pool[v] || excl[v]) {
-      u = v;
-    }
-  }
-  for (int v = 0; v < nodes; v++) {
-    if (!pool[v] || adj[u][v]) {
-      continue;
-    }
-    bits ncurr, npool, nexcl;
-    for (int i = 0; i < nodes; i++) {
-      ncurr[i] = curr[i];
-    }
-    ncurr[v] = true;
-    for (int j = 0; j < nodes; j++) {
-      npool[j] = pool[j] && adj[v][j];
-      nexcl[j] = excl[j] && adj[v][j];
-    }
-    best = std::max(best, rec(nodes, ncurr, npool, nexcl));
-    pool[v] = false;
-    excl[v] = true;
-  }
-  return best;
-}
-
-int max_clique(int nodes) {
-  bits curr, excl, pool;
+std::vector<uint64> build_mask_graph() {
+  int nodes = adj.size();
+  std::vector<uint64> g(nodes);
   for (int i = 0; i < nodes; i++) {
-    pool[i] = true;
+    for (int j = 0; j < nodes; j++) {
+      if (adj[i][j]) {
+        g[i] |= 1ULL << j;
+      }
+    }
   }
-  return rec(nodes, curr, pool, excl);
+  return g;
 }
 
-int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
+int max_clique_rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
+  if (pool == 0 && excl == 0) {
+    return __builtin_popcountll(curr);
+  }
+  int res = 0;
+  int pivot = __builtin_ctzll(pool | excl);
+  uint64 candidates = pool & ~g[pivot];
+  while (candidates != 0) {
+    int u = __builtin_ctzll(candidates);
+    res = std::max(res, max_clique_rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
+    pool ^= 1ULL << u;
+    excl |= 1ULL << u;
+    candidates &= candidates - 1;
+  }
+  return res;
+}
+
+int max_clique() {
+  int nodes = adj.size();
+  std::vector<uint64> g = build_mask_graph();
+  return max_clique_rec(g, 0, (1ULL << nodes) - 1, 0);
+}
+
+int max_clique_weighted_rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
   if (pool == 0 && excl == 0) {
     int res = 0;
     while (curr != 0) {
@@ -87,7 +81,7 @@ int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
   uint64 z = pool & ~g[pivot];
   while (z != 0) {
     int u = __builtin_ctzll(z);
-    res = std::max(res, rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
+    res = std::max(res, max_clique_weighted_rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
     pool ^= 1ULL << u;
     excl |= 1ULL << u;
     z &= z - 1;
@@ -95,16 +89,10 @@ int rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
   return res;
 }
 
-int max_clique_weighted(int nodes) {
-  std::vector<uint64> g(nodes, 0);
-  for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < nodes; j++) {
-      if (adj[i][j]) {
-        g[i] |= 1ULL << j;
-      }
-    }
-  }
-  return rec(g, 0, (1ULL << nodes) - 1, 0);
+int max_clique_weighted() {
+  int nodes = adj.size();
+  std::vector<uint64> g = build_mask_graph();
+  return max_clique_weighted_rec(g, 0, (1ULL << nodes) - 1, 0);
 }
 
 /*** Example Usage ***/
@@ -117,6 +105,9 @@ void add_edge(int u, int v) {
 }
 
 int main() {
+  int nodes = 5;
+  adj.assign(nodes, std::vector<bool>(nodes));
+  w.assign(nodes, 0);
   add_edge(0, 1);
   add_edge(0, 2);
   add_edge(0, 3);
@@ -130,7 +121,7 @@ int main() {
   w[2] = 30;
   w[3] = 40;
   w[4] = 50;
-  assert(max_clique(5) == 4);
-  assert(max_clique_weighted(5) == 120);
+  assert(max_clique() == 4);
+  assert(max_clique_weighted() == 120);
   return 0;
 }

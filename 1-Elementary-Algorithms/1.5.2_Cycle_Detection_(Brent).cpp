@@ -14,9 +14,9 @@ linked list.
 
 While Floyd's cycle-finding algorithm finds cycles by simultaneously moving two pointers at
 different speeds, Brent's algorithm keeps the tortoise pointer stationary in every iteration, only
-teleporting it to the hare pointer at every power of two. The smallest power of two at which they
-meet is the start of the first cycle. This improves upon the constant factor of Floyd's algorithm by
-reducing the number of calls made to $f$.
+teleporting it to the hare pointer at every power of two. Once the two pointers meet, the cycle
+length is known, and a second phase finds the cycle's starting position. This improves upon the
+constant factor of Floyd's algorithm by reducing the number of calls made to $f$.
 
 Time Complexity:
 - O(m + n) per call to `find_cycle_brent()`, where $m$ is the smallest index of the sequence which

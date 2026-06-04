@@ -21,11 +21,13 @@ Space Complexity:
 
 #include <vector>
 
-const int MAXN = 1000;
-std::vector<int> table, dp[MAXN];
+std::vector<int> table;
+std::vector<std::vector<int>> dp;
 
-void build(int n, int a[]) {
+void build(const std::vector<int> &a) {
+  int n = a.size();
   table.resize(n + 1);
+  dp.assign(n, std::vector<int>());
   for (int i = 2; i <= n; i++) {
     table[i] = table[i >> 1] + 1;
   }
@@ -42,7 +44,7 @@ void build(int n, int a[]) {
   }
 }
 
-int query(int a[], int lo, int hi) {
+int query(const std::vector<int> &a, int lo, int hi) {
   int j = table[hi - lo];
   int x = dp[lo][j];
   int y = dp[hi - (1 << j) + 1][j];
@@ -54,8 +56,8 @@ int query(int a[], int lo, int hi) {
 #include <cassert>
 
 int main() {
-  int arr[5] = {6, -2, 1, 8, 10};
-  build(5, arr);
-  assert(query(arr, 0, 3) == -2);
+  std::vector<int> a{6, -2, 1, 8, 10};
+  build(a);
+  assert(query(a, 0, 3) == -2);
   return 0;
 }

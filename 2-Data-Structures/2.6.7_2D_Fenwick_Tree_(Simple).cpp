@@ -5,8 +5,8 @@ update) and queries for the sum of rectangular sub-matrices (range query). This 
 assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to `R`, inclusive,
 and columns have valid indices from 1 to `C`, inclusive).
 
-- `initialize()` resets the data structure.
-- `a[r][c]` stores the value at index (`r`, `c`).
+- `initialize(R, C)` resets the data structure.
+- `vals[r][c]` stores the value at index (`r`, `c`).
 - `add(r, c, x)` adds `x` to the value at index (`r`, `c`).
 - `set(r, c, x)` assigns `x` to the value at index (`r`, `c`).
 - `sum(r, c)` returns the sum of the rectangle with upper-left corner (1, 1) and lower-right corner
@@ -15,7 +15,7 @@ and columns have valid indices from 1 to `C`, inclusive).
   lower-right corner (`r2`, `c2`).
 
 Time Complexity:
-- O(R*C) per call to `initialize()`.
+- O(R*C) per call to `initialize(R, C)`.
 - O(log(R)*log(C)) per call to all other operations.
 
 Space Complexity:
@@ -24,36 +24,34 @@ Space Complexity:
 
 */
 
-const int R = 100, C = 100;
-int a[R + 1][C + 1];
-int bits[R + 1][C + 1];
+#include <algorithm>
+#include <vector>
 
-void initialize() {
-  for (int i = 0; i <= R; i++) {
-    for (int j = 0; j <= C; j++) {
-      a[i][j] = bits[i][j] = 0;
-    }
-  }
+std::vector<std::vector<int>> vals, tree;
+
+void initialize(int R, int C) {
+  vals.assign(R + 2, std::vector<int>(C + 2, 0));
+  tree.assign(R + 2, std::vector<int>(C + 2, 0));
 }
 
 void add(int r, int c, int x) {
-  a[r][c] += x;
-  for (int i = r; i <= R; i += i & -i) {
-    for (int j = c; j <= C; j += j & -j) {
-      bits[i][j] += x;
+  vals[r][c] += x;
+  for (int i = r; i < static_cast<int>(tree.size()); i += i & -i) {
+    for (int j = c; j < static_cast<int>(tree[0].size()); j += j & -j) {
+      tree[i][j] += x;
     }
   }
 }
 
 void set(int r, int c, int x) {
-  add(r, c, x - a[r][c]);
+  add(r, c, x - vals[r][c]);
 }
 
 int sum(int r, int c) {
   int res = 0;
   for (int i = r; i > 0; i -= i & -i) {
     for (int j = c; j > 0; j -= j & -j) {
-      res += bits[i][j];
+      res += tree[i][j];
     }
   }
   return res;
@@ -77,7 +75,7 @@ Values:
 using namespace std;
 
 int main() {
-  initialize();
+  initialize(3, 3);
   set(1, 1, 5);
   set(1, 2, 6);
   set(2, 1, 7);
@@ -86,7 +84,7 @@ int main() {
   cout << "Values:" << endl;
   for (int i = 1; i <= 3; i++) {
     for (int j = 1; j <= 3; j++) {
-      cout << a[i][j] << " ";
+      cout << vals[i][j] << " ";
     }
     cout << endl;
   }

@@ -3,7 +3,7 @@
 Given a flow network with integer capacities, find the maximum flow from a given source node to a
 given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at
 every node other than the source and sink. `ford_fulkerson()` applies to global variables `nodes`,
-`source`, `sink`, and `cap[][]` which is an adjacency matrix that will be modified by the function
+`source`, `sink`, and `cap` which is an adjacency matrix that will be modified by the function
 call.
 
 The Ford-Fulkerson algorithm is only optimal on graphs with integer capacities, as there exists
@@ -24,11 +24,13 @@ Space Complexity:
 #include <climits>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-int nodes, source, sink, cap[MAXN][MAXN];
-std::vector<bool> visit(MAXN);
+const int INF = INT_MAX / 2;
+int source, sink;
+std::vector<std::vector<int>> cap;
+std::vector<bool> visit;
 
 int dfs(int u, int f) {
+  int nodes = cap.size();
   if (u == sink) {
     return f;
   }
@@ -47,9 +49,10 @@ int dfs(int u, int f) {
 }
 
 int ford_fulkerson() {
+  int nodes = cap.size();
   int max_flow = 0;
   for (;;) {
-    std::fill(visit.begin(), visit.end(), false);
+    visit.assign(nodes, false);
     int flow = dfs(source, INF);
     if (flow == 0) {
       break;
@@ -64,9 +67,10 @@ int ford_fulkerson() {
 #include <cassert>
 
 int main() {
-  nodes = 6;
+  int nodes = 6;
   source = 0;
   sink = 5;
+  cap.assign(nodes, std::vector<int>(nodes));
   cap[0][1] = 3;
   cap[0][2] = 3;
   cap[1][2] = 2;

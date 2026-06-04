@@ -8,17 +8,17 @@ A permutation is an ordered list consisting of $n$ (not necessarily distinct) el
   permutation exists, or false if the range is already in descending order (in which case the values
   are unchanged). This implementation requires an ordering on the set of possible elements defined
   by the `<` operator on the iterator's value type.
-- `next_permutation(n, a)` is analogous to `next_permutation()`, except that it takes an array `a[]`
-  of size $n$ instead of a range.
+- `next_permutation(a)` is analogous to `next_permutation()`, except that it takes a vector instead
+  of a range.
 - `next_permutation(x)` returns the next lexicographically greater permutation of the binary digits
   of the integer `x`, that is, the lowest integer greater than `x` with the same number of 1-bits.
   This can be used to generate combinations of a set of $n$ items by treating each 1 bit as whether
   to "take" the item at the corresponding position.
 - `permutation_by_rank(n, r)` returns the permutation of the integers in the range $[0, n)$ which is
   lexicographically ranked $r$, where $r$ is a zero-based rank in the range $[0, n!)$.
-- `rank_by_permutation(n, a)` returns an integer representing the zero-based rank of permutation
-  `a[]`, which must be a permutation of the integers $[0, n)$.
-- `permutation_cycles(n, a)` returns the decomposition of the permutation `a[]` into cycles. A
+- `rank_by_permutation(a)` returns an integer representing the zero-based rank of permutation `a`,
+  which must be a permutation of the integers $[0, n)$.
+- `permutation_cycles(a)` returns the decomposition of the permutation `a` into cycles. A
   permutation cycle is a subset of a permutation whose elements are consecutively swapped, relative
   to a sorted set. For example, $\{3, 1, 0, 2\}$ decomposes to $\{0, 3, 2\}$ and $\{1\}$, meaning
   that starting from the sorted order $\{0, 1, 2, 3\}$, the 0th value is replaced by the 3rd, the
@@ -26,8 +26,8 @@ A permutation is an ordered list consisting of $n$ (not necessarily distinct) el
 
 Time Complexity:
 - O(n^2) per call to `next_permutation_(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
-- O(n^2) per call to `next_permutation(n, a)`, `permutation_by_rank(n, r)`, and
-  `rank_by_permutation(n, a)`.
+- O(n^2) per call to `next_permutation(a)`, `permutation_by_rank(n, r)`, and
+  `rank_by_permutation(a)`.
 - O(1) per call to `next_permutation(x)`.
 - O(n) per call to `permutation_cycles()`.
 
@@ -71,7 +71,8 @@ bool next_permutation_(It lo, It hi) {
 }
 
 template<class T>
-bool next_permutation(int n, T a[]) {
+bool next_permutation(std::vector<T> &a) {
+  int n = a.size();
   for (int i = n - 2; i >= 0; i--) {
     if (a[i] < a[i + 1]) {
       for (int j = n - 1;; j--) {
@@ -110,7 +111,8 @@ std::vector<int> permutation_by_rank(int n, long long x) {
   return res;
 }
 
-long long rank_by_permutation(int n, int a[]) {
+long long rank_by_permutation(const std::vector<int> &a) {
+  int n = a.size();
   std::vector<long long> factorial(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {
@@ -131,7 +133,8 @@ long long rank_by_permutation(int n, int a[]) {
 
 using cycles = std::vector<std::vector<int>>;
 
-cycles permutation_cycles(int n, int a[]) {
+cycles permutation_cycles(const std::vector<int> &a) {
+  int n = a.size();
   std::vector<bool> visit(n);
   cycles res;
   for (int i = 0; i < n; i++) {
@@ -181,23 +184,20 @@ void print_range(It lo, It hi) {
 int main() {
   {
     const int n = 4;
-    int a[] = {0, 1, 2, 3}, b[n], c[n];
-    for (int i = 0; i < n; i++) {
-      b[i] = c[i] = a[i];
-    }
+    vector<int> a{0, 1, 2, 3}, b = a, c = a;
     cout << "Permutations of [0, " << n << "):" << endl;
     int count = 0;
     do {
-      print_range(a, a + n);
-      assert(equal(b, b + n, a));
-      assert(equal(c, c + n, a));
+      print_range(a.begin(), a.end());
+      assert(b == a);
+      assert(c == a);
       vector<int> d = permutation_by_rank(n, count);
-      assert(equal(d.begin(), d.end(), a));
-      assert(rank_by_permutation(n, a) == count);
+      assert(d == a);
+      assert(rank_by_permutation(a) == count);
       count++;
-      std::next_permutation(b, b + n);
-      next_permutation(c, c + n);
-    } while (next_permutation(n, a));
+      std::next_permutation(b.begin(), b.end());
+      next_permutation(c);
+    } while (next_permutation(a));
     cout << endl;
   }
   {  // Permutations of binary digits.
@@ -212,9 +212,9 @@ int main() {
   }
   {  // Decomposition into cycles.
     const int n = 4;
-    int a[] = {3, 1, 0, 2};
+    vector<int> a{3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
-    cycles c = permutation_cycles(n, a);
+    cycles c = permutation_cycles(a);
     for (const auto &cycle : c) {
       print_range(cycle.begin(), cycle.end());
     }

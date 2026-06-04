@@ -3,7 +3,7 @@
 Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common
 ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while
 having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself.
-`build()` applies to a global, pre-populated adjacency list `adj[]` which must only consist of nodes
+`build()` applies to a global, pre-populated adjacency list `adj` which must only consist of nodes
 numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in
 the function argument.
 
@@ -20,9 +20,9 @@ Space Complexity:
 
 #include <vector>
 
-const int MAXN = 1000;
-std::vector<int> adj[MAXN], dp[MAXN];
-int len, timer, tin[MAXN], tout[MAXN];
+std::vector<std::vector<int>> adj, dp;
+int len, timer;
+std::vector<int> tin, tout;
 
 void dfs(int u, int p) {
   tin[u] = timer++;
@@ -43,9 +43,9 @@ void build(int nodes, int root = 0) {
   while ((1 << len) <= nodes) {
     len++;
   }
-  for (int i = 0; i < nodes; i++) {
-    dp[i].resize(len);
-  }
+  dp.assign(nodes, std::vector<int>(len));
+  tin.assign(nodes, 0);
+  tout.assign(nodes, 0);
   timer = 0;
   dfs(root, root);
 }
@@ -75,6 +75,8 @@ int lca(int u, int v) {
 using namespace std;
 
 int main() {
+  int nodes = 5;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -83,7 +85,7 @@ int main() {
   adj[1].push_back(3);
   adj[0].push_back(4);
   adj[4].push_back(0);
-  build(5, 0);
+  build(nodes, 0);
   assert(lca(3, 2) == 1);
   assert(lca(2, 4) == 0);
   return 0;

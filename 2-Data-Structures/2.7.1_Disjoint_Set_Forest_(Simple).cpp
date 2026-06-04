@@ -29,14 +29,22 @@ Space Complexity:
 
 */
 
-const int MAXN = 1000;
-int num_sets, root[MAXN], rank[MAXN];
+#include <vector>
+
+int num_sets;
+std::vector<int> root, rank;
 
 void initialize() {
   num_sets = 0;
+  root.clear();
+  rank.clear();
 }
 
 void make_set(int u) {
+  if (u >= static_cast<int>(root.size())) {
+    root.resize(u + 1);
+    rank.resize(u + 1);
+  }
   root[u] = u;
   rank[u] = 0;
   num_sets++;

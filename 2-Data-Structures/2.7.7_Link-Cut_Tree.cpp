@@ -50,8 +50,8 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstddef>
-#include <map>
 #include <stdexcept>
+#include <unordered_map>
 
 template<class T>
 class LinkCutForest {
@@ -124,7 +124,7 @@ class LinkCutForest {
   };
 
   int num_trees;
-  std::map<int, Node *> nodes;
+  std::unordered_map<int, Node *> nodes;
 
   static void connect(Node *child, Node *parent, bool is_left) {
     if (child != nullptr) {

@@ -26,7 +26,6 @@ Space Complexity:
 */
 
 #include <cmath>
-#include <map>
 #include <vector>
 
 template<class SquareMatrix>
@@ -128,14 +127,13 @@ SquareMatrix &invert(SquareMatrix &a) {
 using namespace std;
 
 int main() {
-  const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
-  vector<vector<double>> m(n), inv, res(n, vector<double>(n, 0));
-  for (int i = 0; i < n; i++) {
-    m[i].assign(a[i], a[i] + n);
-  }
-  double d = det(m);
-  assert(fabs(d - det_naive(m)) < 1e-10);
-  invert(inv = m);
+  vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
+  int n = static_cast<int>(a.size());
+  vector<vector<double>> res(n, vector<double>(n, 0));
+  double d = det(a);
+  assert(fabs(d - det_naive(a)) < 1e-10);
+  vector<vector<double>> inv = a;
+  invert(inv);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
       for (int k = 0; k < n; k++) {

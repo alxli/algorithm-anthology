@@ -1,8 +1,9 @@
 /*
 
-Maintain a map of strings to values using an ordered tree data structure. Each node corresponds to a
+Maintain a map of strings to values using a tree data structure. Each node corresponds to a
 character, and each inserted string corresponds to a path from the root to a node that is flagged as
-a terminal node.
+a terminal node. Children are stored in hash tables, and `walk()` sorts child labels as needed to
+preserve lexicographic traversal.
 
 - `Trie()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -18,13 +19,10 @@ a terminal node.
   order of the string keys.
 
 Time Complexity:
-- O(n) per call to `insert(s, v)`, `erase(s)`, and `find(s)`, where $n$ is the length of `s`. Note
-  that there is a hidden factor of $\log(\text{alphabet\_size})$ which can be considered constant,
-  since `char` can only take on `2^CHAR_BIT` values. The implementation may be optimized by storing
-  the children of nodes in an `std::unordered_map` in C++11 and later, or an array if a smaller
-  alphabet size is guaranteed.
+- O(n) expected per call to `insert(s, v)`, `erase(s)`, and `find(s)`, where $n$ is the length of
+  `s`.
 - O(l) per call to `walk()`, where $l$ is the total length of string keys that are currently in the
-  map.
+  map, treating the character alphabet as constant.
 - O(1) per call to all other operations.
 
 Space Complexity:
@@ -37,10 +35,12 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <cstddef>
-#include <map>
 #include <string>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 using std::string;
 
 template<class V>
@@ -48,7 +48,7 @@ class Trie {
   struct Node {
     V value;
     bool is_terminal;
-    std::map<char, Node *> children;
+    std::unordered_map<char, Node *> children;
 
     Node() : is_terminal(false) {}
   } *root;
@@ -77,7 +77,9 @@ class Trie {
     if (n->is_terminal) {
       f(s, n->value);
     }
-    for (auto &[c, child] : n->children) {
+    std::vector<std::pair<char, Node *>> children(n->children.begin(), n->children.end());
+    std::sort(children.begin(), children.end());
+    for (auto &[c, child] : children) {
       s += c;
       walk(child, s, f);
       s.pop_back();
@@ -167,10 +169,10 @@ void print_entry(const string &k, int v) {
 }
 
 int main() {
-  string s[9] = {"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
+  vector<string> s{"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
   Trie<int> t;
   assert(t.empty());
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
   t.walk(print_entry);

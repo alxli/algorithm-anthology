@@ -115,10 +115,10 @@ using namespace std;
 
 int main() {
   {
-    int a[] = {-2, -1, -3, 4, -1, 2, 1, -5, 4};
+    vector<int> a{-2, -1, -3, 4, -1, 2, 1, -5, 4};
     int lo = 0, hi = 0;
-    assert(max_subarray_sum(a, a + 3) == 0);
-    assert(max_subarray_sum(a, a + 9, &lo, &hi) == 6);
+    assert(max_subarray_sum(a.begin(), a.begin() + 3) == 0);
+    assert(max_subarray_sum(a.begin(), a.end(), &lo, &hi) == 6);
     cout << "Maximal sum subarray:" << endl;
     for (int i = lo; i <= hi; i++) {
       cout << a[i] << " ";
@@ -126,17 +126,12 @@ int main() {
     cout << endl;
   }
   {
-    const int n = 4, m = 5;
     // clang-format off
-    int a[n][m] = {{0, -2, -7, 0, 5},
-                   {9, 2, -6, 2, -4},
-                   {-4, 1, -4, 1, 0},
-                   {-1, 8, 0, -2, 3}};
+    vector<vector<int>> matrix{{0, -2, -7, 0, 5},
+                               {9, 2, -6, 2, -4},
+                               {-4, 1, -4, 1, 0},
+                               {-1, 8, 0, -2, 3}};
     // clang-format on
-    vector<vector<int>> matrix(n);
-    for (int i = 0; i < n; i++) {
-      matrix[i] = vector<int>(a[i], a[i] + m);
-    }
     int r1 = 0, c1 = 0, r2 = 0, c2 = 0;
     assert(max_submatrix_sum(matrix, &r1, &c1, &r2, &c2) == 15);
     cout << "\nMaximal sum submatrix:" << endl;

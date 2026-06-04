@@ -132,10 +132,10 @@ bool is_prime_fast(long long n) {
 /*** Example Usage ***/
 
 #include <cassert>
+#include <vector>
 
 int main() {
-  int len = 20;
-  long long tests[] = {
+  std::vector<long long> tests{
       -1,
       0,
       1,
@@ -158,10 +158,10 @@ int main() {
       6339503641LL,
       6548531929LL
   };
-  for (int i = 0; i < len; i++) {
-    bool p = is_prime(tests[i]);
-    assert(p == is_prime_fast(tests[i]));
-    assert(p == is_probable_prime(tests[i]));
+  for (long long test : tests) {
+    bool p = is_prime(test);
+    assert(p == is_prime_fast(test));
+    assert(p == is_probable_prime(test));
   }
   return 0;
 }

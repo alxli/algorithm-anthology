@@ -19,9 +19,14 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <cstdlib>
 #include <iterator>
+#include <random>
 #include <vector>
+
+int rand_int(int lo, int hi) {
+  static std::mt19937 rng(std::random_device{}());
+  return std::uniform_int_distribution<int>(lo, hi)(rng);
+}
 
 template<class It>
 auto reservoir_sample_one(It lo, It hi) {
@@ -30,7 +35,7 @@ auto reservoir_sample_one(It lo, It hi) {
   int seen = 0;
   for (It it = lo; it != hi; ++it) {
     seen++;
-    if (rand() % seen == 0) {
+    if (rand_int(0, seen - 1) == 0) {
       sample = *it;
     }
   }
@@ -47,7 +52,7 @@ auto reservoir_sample_k(It lo, It hi, int k) {
     if (static_cast<int>(res.size()) < k) {
       res.push_back(*it);
     } else {
-      int j = rand() % seen;
+      int j = rand_int(0, seen - 1);
       if (j < k) {
         res[j] = *it;
       }
@@ -62,7 +67,6 @@ auto reservoir_sample_k(It lo, It hi, int k) {
 using namespace std;
 
 int main() {
-  srand(1);
   vector<int> a{10, 20, 30, 40, 50};
 
   int one = reservoir_sample_one(a.begin(), a.end());

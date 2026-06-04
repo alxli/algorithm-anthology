@@ -5,7 +5,7 @@ most common array preprocessing tools, and also appears as a building block for 
 difference arrays, and two-dimensional grids.
 
 - `prefix_sums(a)` returns array `pref` with `pref[0] = 0` and `pref[i + 1] = a[0] + ... + a[i]`.
-- `range_sum(pref, lo, hi)` returns the sum of the half-open range `[l, r)`.
+- `range_sum(pref, lo, hi)` returns the sum of the half-open range `[lo, hi)`.
 - `prefix_sums_2d(a)` returns a two-dimensional prefix sum table for matrix `a`.
 - `rectangle_sum(pref, r1, c1, r2, c2)` returns the sum of rows `[r1, r2)` and columns `[c1, c2)`.
 

@@ -3,9 +3,7 @@
 Given a starting node in a weighted, directed graph with nonnegative weights only, visit every
 connected node and determine the minimum distance to each such node. Optionally, output the shortest
 path to a specific destination node using the shortest-path tree from the predecessor array
-`pred[]`. `dijkstra()` applies to a global, pre-populated adjacency list `adj[]` which must only
-consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes
-(exclusive), as passed in the function argument.
+`pred`. `dijkstra()` applies to a global, pre-populated adjacency list `adj`.
 
 Since `std::priority_queue` is by default a max-heap, we store negated node distances so the
 closest candidate is popped first.
@@ -31,16 +29,15 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<std::pair<int, int>> adj[MAXN];
-int dist[MAXN], pred[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<std::pair<int, int>>> adj;
+std::vector<int> dist, pred;
 
-void dijkstra(int nodes, int start) {
+void dijkstra(int start) {
+  int nodes = adj.size();
   std::vector<bool> visit(nodes, false);
-  for (int i = 0; i < nodes; i++) {
-    dist[i] = INF;
-    pred[i] = -1;
-  }
+  dist.assign(nodes, INF);
+  pred.assign(nodes, -1);
   dist[start] = 0;
   std::priority_queue<std::pair<int, int>> pq;
   pq.emplace(0, start);
@@ -88,13 +85,14 @@ void print_path(int dest) {
 }
 
 int main() {
-  int start = 0, dest = 3;
+  int nodes = 4, start = 0, dest = 3;
+  adj.resize(nodes);
   adj[0].push_back({1, 2});
   adj[0].push_back({3, 8});
   adj[1].push_back({2, 2});
   adj[1].push_back({3, 4});
   adj[2].push_back({3, 1});
-  dijkstra(4, start);
+  dijkstra(start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;
   print_path(dest);

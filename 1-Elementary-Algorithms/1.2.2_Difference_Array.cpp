@@ -52,8 +52,8 @@ int main() {
   d.add(1, 5, 4);
   d.add(2, 4, -1);
   vector<long long> a = d.build();
-  long long expected[] = {2, 6, 5, 3, 4};
-  for (int i = 0; i < 5; i++) {
+  vector<long long> expected{2, 6, 5, 3, 4};
+  for (int i = 0; i < static_cast<int>(expected.size()); i++) {
     assert(a[i] == expected[i]);
   }
   return 0;

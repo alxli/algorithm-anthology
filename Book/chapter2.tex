@@ -91,9 +91,9 @@ vector<int> values(ListNode *head) {
 }
 
 int main() {
-  ListNode a[3] = {ListNode(1), ListNode(3), ListNode(5)};
-  ListNode b[3] = {ListNode(2), ListNode(4), ListNode(6)};
-  for (int i = 0; i + 1 < 3; i++) {
+  vector<ListNode> a{ListNode(1), ListNode(3), ListNode(5)};
+  vector<ListNode> b{ListNode(2), ListNode(4), ListNode(6)};
+  for (int i = 0; i + 1 < static_cast<int>(a.size()); i++) {
     a[i].next = &a[i + 1];
     b[i].next = &b[i + 1];
   }
@@ -187,15 +187,15 @@ int main() {
 
   splice_after(&dummy, &c);  // Move 4 to the front: 4, 1, 2, 3, 5.
   vector<int> v = values(&dummy);
-  int expected1[] = {4, 1, 2, 3, 5};
-  for (int i = 0; i < 5; i++) {
+  vector<int> expected1{4, 1, 2, 3, 5};
+  for (int i = 0; i < static_cast<int>(expected1.size()); i++) {
     assert(v[i] == expected1[i]);
   }
 
   splice_range_after(&d, &a, &e);  // Move 2, 3 after 4: 4, 2, 3, 1, 5.
   v = values(&dummy);
-  int expected2[] = {4, 2, 3, 1, 5};
-  for (int i = 0; i < 5; i++) {
+  vector<int> expected2{4, 2, 3, 1, 5};
+  for (int i = 0; i < static_cast<int>(expected2.size()); i++) {
     assert(v[i] == expected2[i]);
   }
   return 0;
@@ -213,13 +213,13 @@ This implementation combines a doubly linked list (\inlinecode{std::list}) with 
   \item \inlinecode{size()} returns the number of keys currently stored.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log n)$ per call to \inlinecode{get(key, \&value)} and \inlinecode{put(key, value)} due to \inlinecode{std::map}. In C++11 and later, replacing \inlinecode{std::map} with \inlinecode{std::unordered\_map} gives expected $O(1)$ time.
+\textbf{Time Complexity}: $O(1)$ amortized per call to \inlinecode{get(key, \&value)} and \inlinecode{put(key, value)}.
 
 \textbf{Space Complexity}: $O(n)$, where $n$ is the cache capacity.
 
 \begin{lstlisting}[language=C++]
 #include <list>
-#include <map>
+#include <unordered_map>
 #include <utility>
 
 template<class Key, class Value>
@@ -228,7 +228,7 @@ class LRUCache {
 
   int cap;
   std::list<std::pair<Key, Value>> items;
-  std::map<Key, ListIter> where;
+  std::unordered_map<Key, ListIter> where;
 
  public:
   explicit LRUCache(int capacity) : cap(capacity) {}
@@ -388,8 +388,8 @@ class BinaryHeap {
 using namespace std;
 
 int main() {
-  int a[] = {0, 5, -1, 12};
-  BinaryHeap<int> h(a, a + 4);
+  vector<int> a{0, 5, -1, 12};
+  BinaryHeap<int> h(a.begin(), a.end());
   h.push(10);
   while (!h.empty()) {
     cout << h.top() << endl;
@@ -2375,6 +2375,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 \begin{lstlisting}[language=C++]
 #include <cstddef>
 #include <list>
+#include <vector>
 
 template<class K, class V, class Hash>
 class HashMap {
@@ -2385,29 +2386,24 @@ class HashMap {
     HashMapEntry(const K &k, const V &v) : key(k), value(v) {}
   };
 
-  std::list<HashMapEntry> *table;
+  std::vector<std::list<HashMapEntry>> table;
   int table_size, num_entries;
 
   void double_capacity_and_rehash() {
-    std::list<HashMapEntry> *old = table;
-    int old_size = table_size;
+    std::vector<std::list<HashMapEntry>> old = std::move(table);
     table_size = 2 * table_size;
-    table = new std::list<HashMapEntry>[table_size];
+    table.assign(table_size, std::list<HashMapEntry>());
     num_entries = 0;
-    for (int i = 0; i < old_size; i++) {
-      for (auto &entry : old[i]) {
+    for (auto &bucket : old) {
+      for (auto &entry : bucket) {
         insert(entry.key, entry.value);
       }
     }
-    delete[] old;
   }
 
  public:
-  explicit HashMap(int size = 128) : table_size(size), num_entries(0) {
-    table = new std::list<HashMapEntry>[table_size];
-  }
+  explicit HashMap(int size = 128) : table(size), table_size(size), num_entries(0) {}
 
-  ~HashMap() { delete[] table; }
   int size() const { return num_entries; }
   bool empty() const { return num_entries == 0; }
 
@@ -2438,7 +2434,7 @@ class HashMap {
     return true;
   }
 
-  V *find(const K &k) const {
+  V *find(const K &k) {
     unsigned int i = Hash()(k) % table_size;
     auto it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
@@ -2477,7 +2473,6 @@ using namespace std;
 
 struct ClassHash {
   unsigned int operator()(int k) { return ClassHash()(static_cast<unsigned int>(k)); }
-
   unsigned int operator()(long long k) { return ClassHash()(static_cast<unsigned long long>(k)); }
 
   // Knuth's one-to-one multiplicative method.
@@ -2743,11 +2738,13 @@ The dynamic programming state $dp[i][j]$ holds the index of the minimum value in
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-const int MAXN = 1000;
-std::vector<int> table, dp[MAXN];
+std::vector<int> table;
+std::vector<std::vector<int>> dp;
 
-void build(int n, int a[]) {
+void build(const std::vector<int> &a) {
+  int n = a.size();
   table.resize(n + 1);
+  dp.assign(n, std::vector<int>());
   for (int i = 2; i <= n; i++) {
     table[i] = table[i >> 1] + 1;
   }
@@ -2764,7 +2761,7 @@ void build(int n, int a[]) {
   }
 }
 
-int query(int a[], int lo, int hi) {
+int query(const std::vector<int> &a, int lo, int hi) {
   int j = table[hi - lo];
   int x = dp[lo][j];
   int y = dp[hi - (1 << j) + 1][j];
@@ -2776,9 +2773,9 @@ int query(int a[], int lo, int hi) {
 #include <cassert>
 
 int main() {
-  int arr[5] = {6, -2, 1, 8, 10};
-  build(5, arr);
-  assert(query(arr, 0, 3) == -2);
+  std::vector<int> a{6, -2, 1, 8, 10};
+  build(a);
+  assert(query(a, 0, 3) == -2);
   return 0;
 }
 \end{lstlisting}
@@ -2882,8 +2879,8 @@ class SqrtDecomposition {
 using namespace std;
 
 int main() {
-  int arr[5] = {6, -2, 1, 8, 10};
-  SqrtDecomposition<int> sd(arr, arr + 5);
+  vector<int> arr{6, -2, 1, 8, 10};
+  SqrtDecomposition<int> sd(arr.begin(), arr.end());
   sd.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < sd.size(); i++) {
@@ -3020,8 +3017,8 @@ class SegTree {
 using namespace std;
 
 int main() {
-  int arr[5] = {6, -2, 1, 8, 10};
-  SegTree<int> t(arr, arr + 5);
+  vector<int> arr{6, -2, 1, 8, 10};
+  SegTree<int> t(arr.begin(), arr.end());
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {
@@ -3180,8 +3177,8 @@ class SegTree {
 using namespace std;
 
 int main() {
-  int arr[5] = {6, -2, 1, 8, 10};
-  SegTree<int> t(arr, arr + 5);
+  vector<int> arr{6, -2, 1, 8, 10};
+  SegTree<int> t(arr.begin(), arr.end());
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {
@@ -3787,6 +3784,7 @@ class ImplicitTreap {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <iostream>
+#include <vector>
 using namespace std;
 
 void print(ImplicitTreap<int> &t) {
@@ -3798,8 +3796,8 @@ void print(ImplicitTreap<int> &t) {
 }
 
 int main() {
-  int arr[5] = {99, -2, 1, 8, 10};
-  ImplicitTreap<int> t(arr, arr + 5);
+  vector<int> arr{99, -2, 1, 8, 10};
+  ImplicitTreap<int> t(arr.begin(), arr.end());
   t.push_back(11);
   t.push_back(12);
   t.pop_back();
@@ -4796,7 +4794,7 @@ Maintain a set of two-dimensional points while supporting queries for the closes
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <limits>
+#include <cfloat>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -4878,7 +4876,7 @@ class KDTree {
   }
 
   point nearest(const T &x, const T &y, bool can_equal = true) {
-    min_dist = std::numeric_limits<long double>::max();
+    min_dist = LDBL_MAX;
     nearest(0, tree.size(), x, y, can_equal);
     return tree[id];
   }
@@ -4904,11 +4902,11 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Fenwick Tree (Simple)}
-Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 1-based (i.e. has valid indices from 1 to \inlinecode{MAXN - 1}, inclusive).
+Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 1-based (i.e. has valid indices from 1 to \inlinecode{n}, inclusive).
 
 \begin{compactitem}
-  \item \inlinecode{initialize()} resets the data structure.
-  \item \inlinecode{a[i]} stores the value at index \inlinecode{i}.
+  \item \inlinecode{initialize(n)} resets the dat structure.
+  \item \inlinecode{vals[i]} stores the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
   \item \inlinecode{sum(hi)} returns the sum of all values at indices from 1 to \inlinecode{hi}, inclusive.
@@ -4917,7 +4915,7 @@ Maintain an array of numerical type, allowing for updates of individual indices 
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{initialize()}, where $n$ is the size of the array.
+  \item $O(n)$ per call to \inlinecode{initialize(n)}, where $n$ is the size of the array.
   \item $O(\log n)$ per call to all other operations.
 \end{compactitem}
 
@@ -4928,30 +4926,30 @@ Maintain an array of numerical type, allowing for updates of individual indices 
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-const int MAXN = 1000;
-int a[MAXN + 1], t[MAXN + 1];
+#include <vector>
 
-void initialize() {
-  for (int i = 0; i <= MAXN; i++) {
-    a[i] = t[i] = 0;
-  }
+std::vector<int> vals, tree;
+
+void initialize(int n) {
+  vals.assign(n + 2, 0);
+  tree.assign(n + 2, 0);
 }
 
 void add(int i, int x) {
-  a[i] += x;
-  for (; i <= MAXN; i += i & -i) {
-    t[i] += x;
+  vals[i] += x;
+  for (; i < static_cast<int>(tree.size()); i += i & -i) {
+    tree[i] += x;
   }
 }
 
 void set(int i, int x) {
-  add(i, x - a[i]);
+  add(i, x - vals[i]);
 }
 
 int sum(int hi) {
   int res = 0;
   for (; hi > 0; hi -= hi & -hi) {
-    res += t[hi];
+    res += tree[hi];
   }
   return res;
 }
@@ -4967,15 +4965,16 @@ int sum(int lo, int hi) {
 using namespace std;
 
 int main() {
-  int v[] = {10, 1, 2, 3, 4};
-  initialize();
-  for (int i = 1; i <= 5; i++) {
+  vector<int> v{10, 1, 2, 3, 4};
+  int n = 5;
+  initialize(n);
+  for (int i = 1; i < n; i++) {
     set(i, v[i - 1]);
   }
   add(1, -5);
   cout << "Values: ";
-  for (int i = 1; i <= 5; i++) {
-    cout << a[i] << " ";
+  for (int i = 1; i < n; i++) {
+    cout << vals[i] << " ";
   }
   cout << endl;
   assert(sum(2, 4) == 6);
@@ -5014,24 +5013,24 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
 template<class T>
 class FenwickTree {
   int len;
-  std::vector<int> t;
+  std::vector<int> tree;
 
  public:
-  explicit FenwickTree(int n) : len(n), t(n + 2) {}
+  explicit FenwickTree(int n) : len(n), tree(n + 2) {}
 
   int size() const { return len; }
 
   T at(int i) const {
     T res = 0;
     for (i++; i > 0; i -= i & -i) {
-      res += t[i];
+      res += tree[i];
     }
     return res;
   }
 
   void add(int i, const T &x) {
     for (i++; i <= len + 1; i += i & -i) {
-      t[i] += x;
+      tree[i] += x;
     }
   }
 
@@ -5093,30 +5092,30 @@ Maintain an array of numerical type, allowing for updates of individual indices 
 template<class T>
 class FenwickTree {
   int len;
-  std::vector<int> a, t;
+  std::vector<int> vals, tree;
 
  public:
-  explicit FenwickTree(int n) : len(n), a(n + 1), t(n + 1) {}
+  explicit FenwickTree(int n) : len(n), vals(n + 1), tree(n + 1) {}
 
   int size() const { return len; }
-  T at(int i) const { return a[i + 1]; }
+  T at(int i) const { return vals[i + 1]; }
 
   void add(int i, const T &x) {
-    a[++i] += x;
+    vals[++i] += x;
     for (; i <= len; i += i & -i) {
-      t[i] += x;
+      tree[i] += x;
     }
   }
 
   void set(int i, const T &x) {
-    T inc = x - a[i + 1];
+    T inc = x - vals[i + 1];
     add(i, inc);
   }
 
   T sum(int hi) {
     T res = 0;
     for (hi++; hi > 0; hi -= hi & -hi) {
-      res += t[hi];
+      res += tree[hi];
     }
     return res;
   }
@@ -5131,9 +5130,9 @@ class FenwickTree {
 using namespace std;
 
 int main() {
-  int a[] = {10, 1, 2, 3, 4};
+  vector<int> a{10, 1, 2, 3, 4};
   FenwickTree<int> t(5);
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
     t.set(i, a[i]);
   }
   t.add(0, -5);
@@ -5183,17 +5182,17 @@ class FenwickTree {
   int len;
   std::vector<T> t1, t2;
 
-  T sum(const std::vector<T> &t, int i) {
+  T sum(const std::vector<T> &tree, int i) {
     T res = 0;
     for (; i != 0; i -= i & -i) {
-      res += t[i];
+      res += tree[i];
     }
     return res;
   }
 
-  void add(std::vector<T> &t, int i, const T &x) {
+  void add(std::vector<T> &tree, int i, const T &x) {
     for (; i <= len + 1; i += i & -i) {
-      t[i] += x;
+      tree[i] += x;
     }
   }
 
@@ -5230,7 +5229,7 @@ class FenwickTree {
 using namespace std;
 
 int main() {
-  int a[] = {10, 1, 2, 3, 4};
+  vector<int> a{10, 1, 2, 3, 4};
   FenwickTree<int> t(5);
   for (int i = 0; i < t.size(); i++) {
     t.set(i, a[i]);
@@ -5314,12 +5313,13 @@ class FenwickTree {
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <iostream>
+#include <vector>
 using namespace std;
 
 int main() {
-  int a[] = {10, 1, 2, 3, 4};
+  vector<int> a{10, 1, 2, 3, 4};
   FenwickTree<int> t;
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
     t.set(i, a[i]);
   }
   t.add(0, 2, 5);
@@ -5344,10 +5344,10 @@ Values: 15 6 7 -5 4
 Maintains frequencies over a 1-based integer domain and finds order statistics by binary lifting on a Fenwick tree. This is useful for dynamic multisets of bounded integer values, coordinate-compressed kth-element queries, and online rank queries.
 
 \begin{compactitem}
-  \item \inlinecode{initialize()} resets all frequencies.
+  \item \inlinecode{initialize(n)} resets all frequencies.
   \item \inlinecode{add(i, delta)} adds \inlinecode{delta} to the frequency of value/index \inlinecode{i}.
   \item \inlinecode{sum(i)} returns the total frequency over indices \inlinecode{[1, i]}.
-  \item \inlinecode{kth(k)} returns the smallest index \inlinecode{i} such that \inlinecode{sum(i) \textgreater{}= k}. The argument \inlinecode{k} is 1-based and must satisfy \inlinecode{1 \textless{}= k \textless{}= sum(MAXN)}.
+  \item \inlinecode{kth(k)} returns the smallest index \inlinecode{i} such that \inlinecode{sum(i) \textgreater{}= k}. The argument \inlinecode{k} is 1-based and must satisfy \inlinecode{1 \textless{}= k \textless{}= sum(n)}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
@@ -5359,17 +5359,17 @@ Maintains frequencies over a 1-based integer domain and finds order statistics b
 \textbf{Space Complexity}: $O(n)$ for the Fenwick tree.
 
 \begin{lstlisting}[language=C++]
-const int MAXN = 1000;
-int tree[MAXN + 1];
+#include <algorithm>
+#include <vector>
 
-void initialize() {
-  for (int i = 0; i <= MAXN; i++) {
-    tree[i] = 0;
-  }
+std::vector<int> tree;
+
+void initialize(int n) {
+  tree.assign(n + 1, 0);
 }
 
 void add(int i, int delta) {
-  for (; i <= MAXN; i += i & -i) {
+  for (; i < tree.size(); i += i & -i) {
     tree[i] += delta;
   }
 }
@@ -5383,14 +5383,13 @@ int sum(int i) {
 }
 
 int kth(int k) {
-  int idx = 0;
-  int bit = 1;
-  while (bit * 2 <= MAXN) {
-    bit *= 2;
+  int idx = 0, bits = 1;
+  while (bits * 2 < tree.size()) {
+    bits *= 2;
   }
-  for (; bit > 0; bit >>= 1) {
-    int next = idx + bit;
-    if (next <= MAXN && tree[next] < k) {
+  for (; bits > 0; bits >>= 1) {
+    int next = idx + bits;
+    if (next < tree.size() && tree[next] < k) {
       idx = next;
       k -= tree[next];
     }
@@ -5403,7 +5402,7 @@ int kth(int k) {
 #include <cassert>
 
 int main() {
-  initialize();
+  initialize(100);
   add(2, 1);
   add(4, 3);
   add(7, 1);
@@ -5419,8 +5418,8 @@ int main() {
 Maintain a 2D array of numerical type, allowing for updates of individual cells in the matrix (point update) and queries for the sum of rectangular sub-matrices (range query). This implementation assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to \inlinecode{R}, inclusive, and columns have valid indices from 1 to \inlinecode{C}, inclusive).
 
 \begin{compactitem}
-  \item \inlinecode{initialize()} resets the data structure.
-  \item \inlinecode{a[r][c]} stores the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{initialize(R, C)} resets the data structure.
+  \item \inlinecode{vals[r][c]} stores the value at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
   \item \inlinecode{sum(r, c)} returns the sum of the rectangle with upper-left corner (1, 1) and lower-right corner (\inlinecode{r}, \inlinecode{c}).
@@ -5429,7 +5428,7 @@ Maintain a 2D array of numerical type, allowing for updates of individual cells 
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(R \cdot C)$ per call to \inlinecode{initialize()}.
+  \item $O(R \cdot C)$ per call to \inlinecode{initialize(R, C)}.
   \item $O(\log\left(R\right) \cdot \log\left(C\right))$ per call to all other operations.
 \end{compactitem}
 
@@ -5440,36 +5439,34 @@ Maintain a 2D array of numerical type, allowing for updates of individual cells 
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-const int R = 100, C = 100;
-int a[R + 1][C + 1];
-int bits[R + 1][C + 1];
+#include <algorithm>
+#include <vector>
 
-void initialize() {
-  for (int i = 0; i <= R; i++) {
-    for (int j = 0; j <= C; j++) {
-      a[i][j] = bits[i][j] = 0;
-    }
-  }
+std::vector<std::vector<int>> vals, tree;
+
+void initialize(int R, int C) {
+  vals.assign(R + 2, std::vector<int>(C + 2, 0));
+  tree.assign(R + 2, std::vector<int>(C + 2, 0));
 }
 
 void add(int r, int c, int x) {
-  a[r][c] += x;
-  for (int i = r; i <= R; i += i & -i) {
-    for (int j = c; j <= C; j += j & -j) {
-      bits[i][j] += x;
+  vals[r][c] += x;
+  for (int i = r; i < static_cast<int>(tree.size()); i += i & -i) {
+    for (int j = c; j < static_cast<int>(tree[0].size()); j += j & -j) {
+      tree[i][j] += x;
     }
   }
 }
 
 void set(int r, int c, int x) {
-  add(r, c, x - a[r][c]);
+  add(r, c, x - vals[r][c]);
 }
 
 int sum(int r, int c) {
   int res = 0;
   for (int i = r; i > 0; i -= i & -i) {
     for (int j = c; j > 0; j -= j & -j) {
-      res += bits[i][j];
+      res += tree[i][j];
     }
   }
   return res;
@@ -5486,7 +5483,7 @@ int sum(int r1, int c1, int r2, int c2) {
 using namespace std;
 
 int main() {
-  initialize();
+  initialize(3, 3);
   set(1, 1, 5);
   set(1, 2, 6);
   set(2, 1, 7);
@@ -5495,7 +5492,7 @@ int main() {
   cout << "Values:" << endl;
   for (int i = 1; i <= 3; i++) {
     for (int j = 1; j <= 3; j++) {
-      cout << a[i][j] << " ";
+      cout << vals[i][j] << " ";
     }
     cout << endl;
   }
@@ -5667,14 +5664,22 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-const int MAXN = 1000;
-int num_sets, root[MAXN], rank[MAXN];
+#include <vector>
+
+int num_sets;
+std::vector<int> root, rank;
 
 void initialize() {
   num_sets = 0;
+  root.clear();
+  rank.clear();
 }
 
 void make_set(int u) {
+  if (u >= static_cast<int>(root.size())) {
+    root.resize(u + 1);
+    rank.resize(u + 1);
+  }
   root[u] = u;
   rank[u] = 0;
   num_sets++;
@@ -5970,7 +5975,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lowest Common Ancestor (Sparse Table)}
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
@@ -5988,9 +5993,9 @@ Given a tree, determine the lowest common ancestor of any two nodes in the tree.
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-const int MAXN = 1000;
-std::vector<int> adj[MAXN], dp[MAXN];
-int len, timer, tin[MAXN], tout[MAXN];
+std::vector<std::vector<int>> adj, dp;
+int len, timer;
+std::vector<int> tin, tout;
 
 void dfs(int u, int p) {
   tin[u] = timer++;
@@ -6011,9 +6016,9 @@ void build(int nodes, int root = 0) {
   while ((1 << len) <= nodes) {
     len++;
   }
-  for (int i = 0; i < nodes; i++) {
-    dp[i].resize(len);
-  }
+  dp.assign(nodes, std::vector<int>(len));
+  tin.assign(nodes, 0);
+  tout.assign(nodes, 0);
   timer = 0;
   dfs(root, root);
 }
@@ -6043,6 +6048,8 @@ int lca(int u, int v) {
 using namespace std;
 
 int main() {
+  int nodes = 5;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -6051,14 +6058,14 @@ int main() {
   adj[1].push_back(3);
   adj[0].push_back(4);
   adj[4].push_back(0);
-  build(5, 0);
+  build(nodes, 0);
   assert(lca(3, 2) == 1);
   assert(lca(2, 4) == 0);
   return 0;
 }
 \end{lstlisting}
 \subsection{Lowest Common Ancestor (Segment Tree)}
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
 \textbf{Time Complexity}:
 \begin{compactitem}
@@ -6077,9 +6084,9 @@ Given a tree, determine the lowest common ancestor of any two nodes in the tree.
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 1000;
-std::vector<int> adj[MAXN];
-int len, counter, depth[MAXN], dfs_order[2 * MAXN], first[MAXN], minpos[8 * MAXN];
+std::vector<std::vector<int>> adj;
+int len, counter;
+std::vector<int> depth, dfs_order, first, minpos;
 
 void dfs(int u, int d) {
   depth[u] = d;
@@ -6104,8 +6111,10 @@ void build(int n, int lo, int hi) {
 }
 
 void build(int nodes, int root) {
-  std::fill(depth, depth + nodes, -1);
-  std::fill(first, first + nodes, -1);
+  depth.assign(nodes, -1);
+  dfs_order.assign(2 * nodes, 0);
+  first.assign(nodes, -1);
+  minpos.assign(8 * nodes, 0);
   len = 2 * nodes - 1;
   counter = 0;
   dfs(root, 0);
@@ -6143,6 +6152,8 @@ int lca(int u, int v) {
 using namespace std;
 
 int main() {
+  int nodes = 5;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -6151,7 +6162,7 @@ int main() {
   adj[1].push_back(3);
   adj[0].push_back(4);
   adj[4].push_back(0);
-  build(5, 0);
+  build(nodes, 0);
   assert(lca(3, 2) == 1);
   assert(lca(2, 4) == 0);
   return 0;
@@ -6165,7 +6176,7 @@ The query operation is defined by an associative \inlinecode{combine()} function
 The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning "apply \inlinecode{old}, then apply \inlinecode{d}". These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that "set" a path's edges or nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 
 \begin{compactitem}
-  \item \inlinecode{HeavyLight(n, adj[], v)} constructs a new heavy light decomposition on a tree with \inlinecode{n} nodes defined by the adjacency list \inlinecode{adj[]}, with all values initialized to \inlinecode{v}. The adjacency list must be a size \inlinecode{n} array of vectors consisting of only the integers from 0 to \inlinecode{n - 1}, inclusive. No duplicate edges should exist, and the graph must be connected.
+  \item \inlinecode{HeavyLight(adj, v)} constructs a new heavy light decomposition on a tree defined by the adjacency list \inlinecode{adj}, with all values initialized to \inlinecode{v}. The adjacency list must consist of only the integers from 0 to \inlinecode{adj.size() - 1}, inclusive. No duplicate edges should exist, and the graph must be connected.
   \item \inlinecode{query(u, v)} returns the result of \inlinecode{combine()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}.
   \item \inlinecode{update(u, v, d)} modifies all values on the path from node \inlinecode{u} to node \inlinecode{v} by respectively applying the delta \inlinecode{d}.
 \end{compactitem}
@@ -6202,7 +6213,7 @@ class HeavyLight {
   std::vector<std::vector<bool>> pending;
   std::vector<std::vector<int>> len;
   std::vector<int> size, parent, tin, tout, path, pathlen, pathpos, pathroot;
-  std::vector<int> *adj;
+  const std::vector<std::vector<int>> &adj;
 
   void dfs(int u, int p) {
     tin[u] = counter++;
@@ -6308,17 +6319,17 @@ class HeavyLight {
   }
 
  public:
-  HeavyLight(int n, std::vector<int> adj[], const T &v = T())
+  explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T())
       : counter(0),
         paths(0),
-        size(n),
-        parent(n),
-        tin(n),
-        tout(n),
-        path(n),
-        pathlen(n),
-        pathpos(n),
-        pathroot(n),
+        size(adj.size()),
+        parent(adj.size()),
+        tin(adj.size()),
+        tout(adj.size()),
+        path(adj.size()),
+        pathlen(adj.size()),
+        pathpos(adj.size()),
+        pathroot(adj.size()),
         adj(adj) {
     dfs(0, -1);
     build_paths(0, new_path(0));
@@ -6404,7 +6415,7 @@ int main() {
   //                     |
   //                     ----------4
   //                         w=30
-  vector<int> adj[5];
+  vector<vector<int>> adj(5);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -6413,7 +6424,7 @@ int main() {
   adj[3].push_back(2);
   adj[2].push_back(4);
   adj[4].push_back(2);
-  HeavyLight<int> hld(5, adj, 0);
+  HeavyLight<int> hld(adj, 0);
   hld.update(0, 1, 40);
   hld.update(1, 2, 20);
   hld.update(2, 3, 10);
@@ -6459,8 +6470,8 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
-#include <map>
 #include <stdexcept>
+#include <unordered_map>
 
 template<class T>
 class LinkCutForest {
@@ -6533,7 +6544,7 @@ class LinkCutForest {
   };
 
   int num_trees;
-  std::map<int, Node *> nodes;
+  std::unordered_map<int, Node *> nodes;
 
   static void connect(Node *child, Node *parent, bool is_left) {
     if (child != nullptr) {

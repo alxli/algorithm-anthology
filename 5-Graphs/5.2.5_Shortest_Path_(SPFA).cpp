@@ -1,7 +1,7 @@
 /*
 
 Given a starting node in a weighted directed graph, compute shortest paths even when some edge
-weights are negative. `spfa()` applies to a global, pre-populated adjacency list `adj[]`, where each
+weights are negative. `spfa()` applies to a global, pre-populated adjacency list `adj`, where each
 edge is stored as `(neighbor, weight)`.
 
 The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford. It is often fast
@@ -28,16 +28,17 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = INT_MAX / 2;
-std::vector<std::pair<int, int>> adj[MAXN];
-int dist[MAXN], pred[MAXN], relax_count[MAXN];
-bool in_queue[MAXN];
+const int INF = INT_MAX / 2;
+std::vector<std::vector<std::pair<int, int>>> adj;
+std::vector<int> dist, pred, relax_count;
+std::vector<bool> in_queue;
 
-bool spfa(int nodes, int start) {
-  std::fill(dist, dist + nodes, INF);
-  std::fill(pred, pred + nodes, -1);
-  std::fill(relax_count, relax_count + nodes, 0);
-  std::fill(in_queue, in_queue + nodes, false);
+bool spfa(int start) {
+  int nodes = adj.size();
+  dist.assign(nodes, INF);
+  pred.assign(nodes, -1);
+  relax_count.assign(nodes, 0);
+  in_queue.assign(nodes, false);
   std::queue<int> q;
   dist[start] = 0;
   q.push(start);
@@ -73,11 +74,13 @@ void add_edge(int u, int v, int w) {
 }
 
 int main() {
+  int nodes = 4;
+  adj.resize(nodes);
   add_edge(0, 1, 4);
   add_edge(0, 2, 5);
   add_edge(1, 2, -2);
   add_edge(2, 3, 3);
-  assert(spfa(4, 0));
+  assert(spfa(0));
   assert(dist[3] == 5);
   assert(pred[2] == 1);
   return 0;

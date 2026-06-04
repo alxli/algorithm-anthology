@@ -43,11 +43,12 @@ It majority(It lo, It hi) {
 /*** Example Usage ***/
 
 #include <cassert>
+#include <vector>
 
 int main() {
-  int a[] = {3, 2, 3, 1, 3};
-  assert(*majority(a, a + 5) == 3);
-  int b[] = {2, 3, 3, 3, 2, 1};
-  assert(majority(b, b + 6) == b + 6);
+  std::vector<int> a{3, 2, 3, 1, 3};
+  assert(*majority(a.begin(), a.end()) == 3);
+  std::vector<int> b{2, 3, 3, 3, 2, 1};
+  assert(majority(b.begin(), b.end()) == b.end());
   return 0;
 }

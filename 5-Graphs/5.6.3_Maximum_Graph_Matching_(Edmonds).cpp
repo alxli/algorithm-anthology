@@ -2,8 +2,8 @@
 
 Given a directed graph, determine a maximum subset of its edges such that no node is shared between
 different edges in the resulting subset. `edmonds()` applies to a global, pre-populated adjacency
-list `adj[]` which must only consist of nodes numbered with integers between 0 (inclusive) and the
-total number of nodes (exclusive), as passed in the function argument.
+list `adj` which must only consist of nodes numbered with integers between 0 (inclusive) and the
+total number of nodes (exclusive), as inferred from `adj.size()`.
 
 Time Complexity:
 - O(n^3) per call to `edmonds()`, where $n$ is the number of nodes.
@@ -20,11 +20,11 @@ Space Complexity:
 #include <queue>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
-int p[MAXN], base[MAXN], match[MAXN];
+std::vector<std::vector<int>> adj;
+std::vector<int> p, base, match;
 
-int lca(int nodes, int u, int v) {
+int lca(int u, int v) {
+  int nodes = adj.size();
   std::vector<bool> used(nodes);
   for (;;) {
     u = base[u];
@@ -52,10 +52,12 @@ void mark_path(std::vector<bool> &blossom, int u, int b, int child) {
   }
 }
 
-int find_path(int nodes, int root) {
+int find_path(int root) {
+  int nodes = adj.size();
   std::vector<bool> used(nodes);
-  std::fill(p, p + nodes, -1);
-  std::iota(base, base + nodes, 0);
+  p.assign(nodes, -1);
+  base.resize(nodes);
+  std::iota(base.begin(), base.end(), 0);
   used[root] = true;
   std::queue<int> q;
   q.push(root);
@@ -67,7 +69,7 @@ int find_path(int nodes, int root) {
         continue;
       }
       if (v == root || (match[v] != -1 && p[match[v]] != -1)) {
-        int curr_base = lca(nodes, u, v);
+        int curr_base = lca(u, v);
         std::vector<bool> blossom(nodes);
         mark_path(blossom, u, curr_base, v);
         mark_path(blossom, v, curr_base, u);
@@ -94,14 +96,13 @@ int find_path(int nodes, int root) {
   return -1;
 }
 
-int edmonds(int nodes) {
-  for (int i = 0; i < nodes; i++) {
-    match[i] = -1;
-  }
+int edmonds() {
+  int nodes = adj.size();
+  match.assign(nodes, -1);
   for (int i = 0; i < nodes; i++) {
     if (match[i] == -1) {
       int u, pu, ppu;
-      for (u = find_path(nodes, i); u != -1; u = ppu) {
+      for (u = find_path(i); u != -1; u = ppu) {
         pu = p[u];
         ppu = match[pu];
         match[u] = pu;
@@ -131,6 +132,7 @@ using namespace std;
 
 int main() {
   int nodes = 4;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -139,7 +141,7 @@ int main() {
   adj[3].push_back(2);
   adj[3].push_back(0);
   adj[0].push_back(3);
-  cout << "Matched " << edmonds(nodes) << " pair(s):" << endl;
+  cout << "Matched " << edmonds() << " pair(s):" << endl;
   for (int i = 0; i < nodes; i++) {
     if (match[i] != -1 && i < match[i]) {
       cout << i << " " << match[i] << endl;

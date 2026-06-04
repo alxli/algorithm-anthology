@@ -31,17 +31,17 @@ class FenwickTree {
   int len;
   std::vector<T> t1, t2;
 
-  T sum(const std::vector<T> &t, int i) {
+  T sum(const std::vector<T> &tree, int i) {
     T res = 0;
     for (; i != 0; i -= i & -i) {
-      res += t[i];
+      res += tree[i];
     }
     return res;
   }
 
-  void add(std::vector<T> &t, int i, const T &x) {
+  void add(std::vector<T> &tree, int i, const T &x) {
     for (; i <= len + 1; i += i & -i) {
-      t[i] += x;
+      tree[i] += x;
     }
   }
 
@@ -82,7 +82,7 @@ Values: 15 6 7 -5 4
 using namespace std;
 
 int main() {
-  int a[] = {10, 1, 2, 3, 4};
+  vector<int> a{10, 1, 2, 3, 4};
   FenwickTree<int> t(5);
   for (int i = 0; i < t.size(); i++) {
     t.set(i, a[i]);

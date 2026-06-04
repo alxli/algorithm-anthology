@@ -4,7 +4,7 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 
 - `make_matrix(r, c, v)` constructs and returns a matrix with `r` rows and `c` columns where the
   value at every index is initialized to `v`.
-- `make_matrix(a)` returns a matrix constructed from the two dimensional array `a`.
+- `make_matrix(a)` returns a matrix constructed from the two-dimensional vector `a`.
 - `identity_matrix(n)` returns the $n$ by $n$ identity matrix, that is, a matrix where `a[i][j]`
   equals 1 (if $i = j$), or 0 otherwise, for every $i$ and $j$ in $[0, n)$.
 - `rows(a)` returns the number of rows $r$ in an $r$ by $c$ matrix `a`.
@@ -68,11 +68,12 @@ matrix make_matrix(int r, int c, const T &v) {
   return matrix(r, matrix::value_type(c, v));
 }
 
-template<class T, size_t r, size_t c>
-matrix make_matrix(T (&a)[r][c]) {
+template<class T>
+matrix make_matrix(const std::vector<std::vector<T>> &a) {
+  int r = a.size(), c = a.empty() ? 0 : a[0].size();
   matrix res(r, matrix::value_type(c));
-  for (size_t i = 0; i < r; i++) {
-    for (size_t j = 0; j < c; j++) {
+  for (int i = 0; i < r; i++) {
+    for (int j = 0; j < c; j++) {
       res[i][j] = a[i][j];
     }
   }
@@ -382,29 +383,30 @@ matrix &rotate_in_place(matrix &a, int degrees = 90) {
 using namespace std;
 
 int main() {
-  int a[2][3] = {{1, 2, 3}, {4, 5, 6}};
-  int a90[3][2] = {{4, 1}, {5, 2}, {6, 3}};
-  int a180[2][3] = {{6, 5, 4}, {3, 2, 1}};
-  int a270[3][2] = {{3, 6}, {2, 5}, {1, 4}};
-  cout << make_matrix(a) << endl;
-  assert(rotate(make_matrix(a), -270) == make_matrix(a90));
-  assert(rotate(make_matrix(a), -180) == make_matrix(a180));
-  assert(rotate(make_matrix(a), -90) == make_matrix(a270));
-  assert(rotate(make_matrix(a), 0) == make_matrix(a));
-  assert(rotate(make_matrix(a), 90) == make_matrix(a90));
-  assert(rotate(make_matrix(a), 180) == make_matrix(a180));
-  assert(rotate(make_matrix(a), 270) == make_matrix(a270));
-  assert(rotate(make_matrix(a), 360) == make_matrix(a));
+  matrix a{{1, 2, 3}, {4, 5, 6}};
+  matrix a90{{4, 1}, {5, 2}, {6, 3}};
+  matrix a180{{6, 5, 4}, {3, 2, 1}};
+  matrix a270{{3, 6}, {2, 5}, {1, 4}};
+  cout << a << endl;
+  assert(rotate(a, -270) == a90);
+  assert(rotate(a, -180) == a180);
+  assert(rotate(a, -90) == a270);
+  assert(rotate(a, 0) == a);
+  assert(rotate(a, 90) == a90);
+  assert(rotate(a, 180) == a180);
+  assert(rotate(a, 270) == a270);
+  assert(rotate(a, 360) == a);
 
-  int b[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+  matrix b{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
   for (int d = -360; d <= 360; d += 90) {
-    matrix m = make_matrix(b);
-    assert(rotate_in_place(m, d) == rotate(make_matrix(b), d));
+    matrix m = b;
+    assert(rotate_in_place(m, d) == rotate(b, d));
   }
 
   matrix m = make_matrix(5, 5, 10) + 10;
-  int v[] = {1, 2, 3, 4, 5}, mv[5][1] = {{300}, {300}, {300}, {300}, {300}};
-  assert(m * vector<int>(v, v + 5) == make_matrix(mv));
+  vector<int> v{1, 2, 3, 4, 5};
+  matrix mv{{300}, {300}, {300}, {300}, {300}};
+  assert(m * v == mv);
 
   m[0][0] += 5;
   assert(m[0][0] == 25 && m[1][1] == 20);

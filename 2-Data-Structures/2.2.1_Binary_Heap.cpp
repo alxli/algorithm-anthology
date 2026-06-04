@@ -106,8 +106,8 @@ class BinaryHeap {
 using namespace std;
 
 int main() {
-  int a[] = {0, 5, -1, 12};
-  BinaryHeap<int> h(a, a + 4);
+  vector<int> a{0, 5, -1, 12};
+  BinaryHeap<int> h(a.begin(), a.end());
   h.push(10);
   while (!h.empty()) {
     cout << h.top() << endl;

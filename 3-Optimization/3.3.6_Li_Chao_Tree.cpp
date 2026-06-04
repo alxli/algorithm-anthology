@@ -24,9 +24,9 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <limits>
+#include <climits>
 
-const long long INF = std::numeric_limits<long long>::max() / 4;
+const long long INF = LLONG_MAX / 4;
 
 struct Line {
   long long m, b;

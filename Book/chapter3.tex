@@ -327,10 +327,8 @@ double random_unit() {
   return static_cast<double>(rand()) / RAND_MAX;
 }
 
-template<class Function>
-double anneal_min(
-    Function f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr
-) {
+template<class Fn>
+double anneal_min(Fn f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr) {
   double sol_x = x0, sol_y = y0, best = f(x0, y0);
   for (int restart = 0; restart < NUM_RESTARTS; restart++) {
     double x = x0, y = y0, cur = f(x, y);
@@ -828,9 +826,9 @@ The implementation below stores the lower envelope of lines over the inclusive d
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <limits>
+#include <climits>
 
-const long long INF = std::numeric_limits<long long>::max() / 4;
+const long long INF = LLONG_MAX / 4;
 
 struct Line {
   long long m, b;
@@ -940,7 +938,7 @@ Solves a linear programming problem using Dantzig's simplex algorithm. The canon
 
 \begin{lstlisting}[language=C++]
 #include <cmath>
-#include <limits>
+#include <cfloat>
 #include <vector>
 
 template<class Matrix>
@@ -969,7 +967,7 @@ int simplex_solve(
   double p1 = 0, p2 = 0;
   bool done = true;
   do {
-    double mn = std::numeric_limits<double>::max(), xmax = 0;
+    double mn = DBL_MAX, xmax = 0;
     for (int j = 2; j <= n + 1; j++) {
       if (t[1][j] > 0 && t[1][j] > xmax) {
         p2 = j;
@@ -1075,13 +1073,13 @@ The implementation below is the classical Hungarian algorithm using potentials. 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <limits>
+#include <climits>
 #include <vector>
 
 long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector<int> *assignment) {
   int n = cost.size(), m = cost.empty() ? 0 : cost[0].size();
   assert(n <= m);
-  const long long INF = std::numeric_limits<long long>::max() / 4;
+  const long long INF = LLONG_MAX / 4;
   std::vector<long long> u(n + 1), v(m + 1);
   std::vector<int> p(m + 1), way(m + 1);
 

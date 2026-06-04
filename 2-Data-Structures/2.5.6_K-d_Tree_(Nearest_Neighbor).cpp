@@ -20,7 +20,7 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <limits>
+#include <cfloat>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -102,7 +102,7 @@ class KDTree {
   }
 
   point nearest(const T &x, const T &y, bool can_equal = true) {
-    min_dist = std::numeric_limits<long double>::max();
+    min_dist = LDBL_MAX;
     nearest(0, tree.size(), x, y, can_equal);
     return tree[id];
   }

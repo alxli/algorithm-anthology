@@ -4,13 +4,9 @@ Given a set of strings (needles) and subsequent queries of texts (haystacks) to 
 determine all positions in which needles occur within the given haystacks in linear time using the
 Aho-Corasick algorithm.
 
-Note that this implementation uses an ordered map for storage of the graph, adding an additional
-$\log k$ factor to the time complexities of all operations, where $k$ is the size of the alphabet
-(number of distinct characters used across the needles). It also uses an ordered set for storage of
-the precomputed output tables, adding an additional $\log m$ factor to the time complexities, where
-$m$ is the number of needles. In C++11 and later, both of these containers should be replaced by
-their unordered versions for constant time access, thus eliminating the log factors from the time
-complexities.
+This implementation stores transitions in hash tables, which keeps lookups expected constant time
+without assuming a fixed alphabet size. The output tables are stored as ordered sets so matches
+ending at the same position are reported in deterministic needle order.
 
 - `AhoCorasick(needles)` constructs the finite-state automaton for a set of needle strings that are
   to be searched for subsequently in haystack queries.
@@ -20,14 +16,10 @@ complexities.
   increasing order of their ending positions within the `haystack`.
 
 Time Complexity:
-- O(m*((log m) + l*log k)) per call to the constructor, where $m$ is the number of needles, $l$ is
-  the maximum length for any needle, and $k$ is the size of the alphabet used by the needles. If
-  unordered containers are used, then the time complexity reduces to O(m*l), or linear on the input
-  size.
-- O(n*(log k) + z) per call to `find_all_in(haystack, report_match)`, where $n$ is the length of
-  `haystack`, $k$ is the size of the alphabet used by the needles, and $z$ is the number of matches.
-  If unordered containers are used, then the time complexity reduces to O(n + z), or linear on the
-  input size.
+- O(m*l + z log m) expected per call to the constructor, where $m$ is the number of needles, $l$ is
+  the maximum length of any needle, and $z$ is the total number of inherited output entries.
+- O(n + z) expected per call to `find_all_in(haystack, report_match)`, where $n$ is the length of
+  `haystack` and $z$ is the number of matches.
 
 Space Complexity:
 - O(m*l) for storage of the automaton, where $m$ is the number of needles and $l$ is the maximum
@@ -36,25 +28,25 @@ Space Complexity:
 
 */
 
-#include <map>
 #include <queue>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 using std::string;
 
 class AhoCorasick {
   std::vector<string> needles;
   std::vector<int> fail;
-  std::vector<std::map<char, int>> graph;
+  std::vector<std::unordered_map<char, int>> adj;
   std::vector<std::set<int>> out;
 
   int next_state(int curr, char c) {
     int next = curr;
-    while (graph[next].find(c) == graph[next].end()) {
+    while (adj[next].find(c) == adj[next].end()) {
       next = fail[next];
     }
-    return graph[next][c];
+    return adj[next][c];
   }
 
  public:
@@ -64,22 +56,22 @@ class AhoCorasick {
       total_len += needle.size();
     }
     fail.resize(total_len, -1);
-    graph.resize(total_len);
+    adj.resize(total_len);
     out.resize(total_len);
     int states = 1;
     for (int i = 0; i < static_cast<int>(needles.size()); i++) {
       int curr = 0;
       for (char c : needles[i]) {
-        if (auto it = graph[curr].find(c); it != graph[curr].end()) {
+        if (auto it = adj[curr].find(c); it != adj[curr].end()) {
           curr = it->second;
         } else {
-          curr = graph[curr][c] = states++;
+          curr = adj[curr][c] = states++;
         }
       }
       out[curr].insert(i);
     }
     std::queue<int> q;
-    for (auto &[c, v] : graph[0]) {
+    for (auto &[c, v] : adj[0]) {
       if (v != 0) {
         fail[v] = 0;
         q.push(v);
@@ -88,12 +80,12 @@ class AhoCorasick {
     while (!q.empty()) {
       int u = q.front();
       q.pop();
-      for (auto &[c, v] : graph[u]) {
+      for (auto &[c, v] : adj[u]) {
         int f = fail[u];
-        while (graph[f].find(c) == graph[f].end()) {
+        while (adj[f].find(c) == adj[f].end()) {
           f = fail[f];
         }
-        f = graph[f].find(c)->second;
+        f = adj[f].find(c)->second;
         fail[v] = f;
         out[v].insert(out[f].begin(), out[f].end());
         q.push(v);

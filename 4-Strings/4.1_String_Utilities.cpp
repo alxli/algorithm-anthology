@@ -250,10 +250,10 @@ using namespace std;
 int main() {
   assert(to_str(123) + "4" == "1234");
   assert(to_int("1234") == 1234);
-  char buffer[50];
-  assert(string(itoa(1750, buffer, 10)) == "1750");
-  assert(string(itoa(1750, buffer, 16)) == "6d6");
-  assert(string(itoa(1750, buffer, 2)) == "11011010110");
+  vector<char> buffer(50);
+  assert(string(itoa(1750, buffer.data(), 10)) == "1750");
+  assert(string(itoa(1750, buffer.data(), 16)) == "6d6");
+  assert(string(itoa(1750, buffer.data(), 2)) == "11011010110");
 
   assert(to_upper("Hello world") == "HELLO WORLD");
   assert(to_lower("Hello World") == "hello world");

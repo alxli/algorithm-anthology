@@ -1,10 +1,9 @@
 /*
 
 An unweighted tree possesses a center, centroid, and diameter. The following functions apply to a
-global, pre-populated adjacency list `adj[]` which satisfies the precondition that for every node
-$v$ in `adj[u]`, node $u$ also exists in `adj[v]`. Nodes in `adj[]` must be numbered with integers
-between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function
-arguments.
+global, pre-populated adjacency list `adj` which satisfies the precondition that for every node $v$
+in `adj[u]`, node $u$ also exists in `adj[v]`. Nodes in `adj` must be numbered with integers
+between 0 (inclusive) and the total number of nodes (exclusive).
 
 - `find_centers()` returns a vector of either one or two tree Jordan centers. The Jordan center of a
   tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the
@@ -28,10 +27,10 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-const int MAXN = 100;
-std::vector<int> adj[MAXN];
+std::vector<std::vector<int>> adj;
 
-std::vector<int> find_centers(int nodes) {
+std::vector<int> find_centers() {
+  int nodes = adj.size();
   std::vector<int> leaves, degree(nodes);
   for (int i = 0; i < nodes; i++) {
     degree[i] = adj[i].size();
@@ -55,14 +54,15 @@ std::vector<int> find_centers(int nodes) {
   return leaves;
 }
 
-int find_centroid(int nodes, int u = 0, int p = -1) {
+int find_centroid(int u = 0, int p = -1) {
+  int nodes = adj.size();
   int count = 1;
   bool good_center = true;
   for (int v : adj[u]) {
     if (v == p) {
       continue;
     }
-    int res = find_centroid(nodes, v, u);
+    int res = find_centroid(v, u);
     if (res >= 0) {
       return res;
     }
@@ -96,6 +96,7 @@ using namespace std;
 
 int main() {
   int nodes = 6;
+  adj.resize(nodes);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -106,9 +107,9 @@ int main() {
   adj[4].push_back(3);
   adj[4].push_back(5);
   adj[5].push_back(4);
-  vector<int> centers = find_centers(nodes);
+  vector<int> centers = find_centers();
   assert(centers.size() == 2 && centers[0] == 1 && centers[1] == 4);
-  assert(find_centroid(nodes) == 4);
+  assert(find_centroid() == 4);
   assert(diameter() == 3);
   return 0;
 }
