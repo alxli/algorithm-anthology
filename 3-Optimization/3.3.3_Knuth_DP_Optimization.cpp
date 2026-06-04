@@ -43,14 +43,8 @@ std::vector<std::vector<long long>> knuth_interval_dp(
     for (int l = 0; l + len <= n; l++) {
       int r = l + len;
       dp[l][r] = INF;
-      int start = opt[l][r - 1];
-      int finish = opt[l + 1][r];
-      if (start < l + 1) {
-        start = l + 1;
-      }
-      if (finish > r - 1) {
-        finish = r - 1;
-      }
+      int start = std::max(opt[l][r - 1], l + 1);
+      int finish = std::min(opt[l + 1][r], r - 1);
       for (int k = start; k <= finish; k++) {
         long long candidate = dp[l][k] + dp[k][r] + cost(l, r);
         if (candidate < dp[l][r]) {
@@ -84,8 +78,7 @@ struct MergeCost {
 };
 
 int main() {
-  int raw[] = {1, 2, 3, 4};
-  vector<int> a(raw, raw + 4);
+  vector<int> a = {1, 2, 3, 4};
   vector<vector<long long>> dp = knuth_interval_dp(a.size(), MergeCost(a));
   assert(dp[0][4] == 19);
   return 0;

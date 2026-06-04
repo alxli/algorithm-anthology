@@ -34,7 +34,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -119,10 +119,7 @@ struct Event {
   double y;
   int mask_delta;
 
-  Event(double y = 0, int mask_delta = 0) {
-    this->y = y;
-    this->mask_delta = mask_delta;
-  }
+  Event(double y = 0, int mask_delta = 0) : y(y), mask_delta(mask_delta) {}
 
   bool operator<(const Event &e) const {
     if (y != e.y) {
@@ -136,11 +133,11 @@ template<class It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   It plo[2] = {lo1, lo2}, phi[] = {hi1, hi2};
   std::set<double> xs;
-  for (It i1 = lo1; i1 != hi1; ++i1) {
-    xs.insert(i1->x);
+  for (It it = lo1; it != hi1; ++it) {
+    xs.insert(it->x);
   }
-  for (It i2 = lo2; i2 != hi2; ++i2) {
-    xs.insert(i2->x);
+  for (It it = lo2; it != hi2; ++it) {
+    xs.insert(it->x);
   }
   for (It i1 = lo1, j1 = hi1 - 1; i1 != hi1; j1 = i1++) {
     for (It i2 = lo2, j2 = hi2 - 1; i2 != hi2; j2 = i2++) {
@@ -152,7 +149,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   }
   std::vector<double> xsa(xs.begin(), xs.end());
   double res = 0;
-  for (int k = 0; k < static_cast<int>(xsa.size()) - 1; k++) {
+  for (size_t k = 0; k + 1 < xsa.size(); k++) {
     double x = (xsa[k] + xsa[k + 1]) / 2;
     point sweep0(x, 0), sweep1(x, 1);
     std::vector<Event> events;
@@ -168,9 +165,9 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
           double y = p.y, x0 = i->x, x1 = j->x;
           int sgn_area = (area < 0 ? -1 : (area > 0 ? 1 : 0));
           if (x0 < x && x1 > x) {
-            events.push_back(Event(y, sgn_area * (1 << poly)));
+            events.emplace_back(y, sgn_area * (1 << poly));
           } else if (x0 > x && x1 < x) {
-            events.push_back(Event(y, -sgn_area * (1 << poly)));
+            events.emplace_back(y, -sgn_area * (1 << poly));
           }
         }
       }
@@ -178,7 +175,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     std::sort(events.begin(), events.end());
     double a = 0;
     int mask = 0;
-    for (int j = 0; j < static_cast<int>(events.size()); j++) {
+    for (size_t j = 0; j < events.size(); j++) {
       if (mask == 3) {
         a += events[j].y - events[j - 1].y;
       }
@@ -217,16 +214,16 @@ using namespace std;
 int main() {
   vector<point> p, s;
   // Irregular pentagon a triangle of area 1.5 overlapping quadrant 2.
-  p.push_back(point(1, 3));
-  p.push_back(point(1, 2));
-  p.push_back(point(2, 1));
-  p.push_back(point(0, 0));
-  p.push_back(point(-1, 3));
+  p.emplace_back(1, 3);
+  p.emplace_back(1, 2);
+  p.emplace_back(2, 1);
+  p.emplace_back(0, 0);
+  p.emplace_back(-1, 3);
   // Square of area 12.5 in quadrant 2.
-  s.push_back(point(0, 0));
-  s.push_back(point(0, 3));
-  s.push_back(point(-3, 3));
-  s.push_back(point(-3, 0));
+  s.emplace_back(0, 0);
+  s.emplace_back(0, 3);
+  s.emplace_back(-3, 3);
+  s.emplace_back(-3, 0);
   assert(EQ(1.5, intersection_area(p.begin(), p.end(), s.begin(), s.end())));
   assert(EQ(12.5, union_area(p.begin(), p.end(), s.begin(), s.end())));
   return 0;

@@ -50,10 +50,11 @@ std::vector<int> z_array(const string &s) {
 }
 
 size_t find(const string &haystack, const string &needle) {
-  std::vector<int> z = z_array(needle + '\0' + haystack);
-  for (int i = static_cast<int>(needle.size()) + 1; i < static_cast<int>(z.size()); i++) {
-    if (z[i] == static_cast<int>(needle.size())) {
-      return i - static_cast<int>(needle.size()) - 1;
+  auto z = z_array(needle + '\0' + haystack);
+  int m = static_cast<int>(needle.size());
+  for (int i = m + 1; i < static_cast<int>(z.size()); i++) {
+    if (z[i] == m) {
+      return i - m - 1;
     }
   }
   return string::npos;

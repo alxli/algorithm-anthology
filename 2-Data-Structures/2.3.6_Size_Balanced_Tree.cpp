@@ -147,7 +147,7 @@ class SBTree {
     } else if (r > rank) {
       return select(n->right, r - rank - 1);
     }
-    return std::make_pair(n->key, n->value);
+    return {n->key, n->value};
   }
 
   static int rank(Node *n, const K &k) {

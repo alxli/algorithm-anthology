@@ -29,7 +29,7 @@ class KMP {
   std::vector<int> table;
 
  public:
-  KMP(const string &needle) : needle(needle), table(needle.size()) {
+  explicit KMP(const string &needle) : needle(needle), table(needle.size()) {
     for (int i = 1, j = 0; i < static_cast<int>(needle.size()); i++) {
       while (j > 0 && needle[i] != needle[j]) {
         j = table[j - 1];

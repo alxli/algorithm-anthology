@@ -41,19 +41,19 @@ class PersistentSegTree {
 
   int build(const std::vector<int> &a, int lo, int hi) {
     if (lo == hi) {
-      tree.push_back(node(a[lo]));
+      tree.emplace_back(a[lo]);
       return static_cast<int>(tree.size()) - 1;
     }
     int mid = lo + (hi - lo) / 2;
     int left = build(a, lo, mid);
     int right = build(a, mid + 1, hi);
-    tree.push_back(node(tree[left].sum + tree[right].sum, left, right));
+    tree.emplace_back(tree[left].sum + tree[right].sum, left, right);
     return static_cast<int>(tree.size()) - 1;
   }
 
   int update(int cur, int lo, int hi, int index, int value) {
     if (lo == hi) {
-      tree.push_back(node(value));
+      tree.emplace_back(value);
       return static_cast<int>(tree.size()) - 1;
     }
     int mid = lo + (hi - lo) / 2;
@@ -63,7 +63,7 @@ class PersistentSegTree {
     } else {
       right = update(right, mid + 1, hi, index, value);
     }
-    tree.push_back(node(tree[left].sum + tree[right].sum, left, right));
+    tree.emplace_back(tree[left].sum + tree[right].sum, left, right);
     return static_cast<int>(tree.size()) - 1;
   }
 
@@ -107,8 +107,7 @@ class PersistentSegTree {
 using namespace std;
 
 int main() {
-  int raw[] = {1, 2, 3, 4};
-  vector<int> a(raw, raw + 4);
+  vector<int> a{1, 2, 3, 4};
   PersistentSegTree t(a);
   int v1 = t.update(0, 1, 10);
   int v2 = t.update(v1, 3, -1);

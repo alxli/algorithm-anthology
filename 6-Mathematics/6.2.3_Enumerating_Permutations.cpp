@@ -39,6 +39,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <numeric>
 #include <vector>
 
 template<class It>
@@ -99,9 +100,7 @@ std::vector<int> permutation_by_rank(int n, long long x) {
   for (int i = 1; i < n; i++) {
     factorial[i] = i * factorial[i - 1];
   }
-  for (int i = 0; i < n; i++) {
-    values[i] = i;
-  }
+  std::iota(values.begin(), values.end(), 0);
   for (int i = 0; i < n; i++) {
     int pos = x / factorial[n - 1 - i];
     res[i] = values[pos];
@@ -130,7 +129,7 @@ long long rank_by_permutation(int n, int a[]) {
   return res;
 }
 
-typedef std::vector<std::vector<int>> cycles;
+using cycles = std::vector<std::vector<int>>;
 
 cycles permutation_cycles(int n, int a[]) {
   std::vector<bool> visit(n);
@@ -144,7 +143,7 @@ cycles permutation_cycles(int n, int a[]) {
         visit[j] = true;
         j = a[j];
       } while (j != i);
-      res.push_back(curr);
+      res.push_back(std::move(curr));
     }
   }
   return res;
@@ -216,8 +215,8 @@ int main() {
     int a[] = {3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     cycles c = permutation_cycles(n, a);
-    for (int i = 0; i < static_cast<int>(c.size()); i++) {
-      print_range(c[i].begin(), c[i].end());
+    for (const auto &cycle : c) {
+      print_range(cycle.begin(), cycle.end());
     }
     cout << endl;
   }

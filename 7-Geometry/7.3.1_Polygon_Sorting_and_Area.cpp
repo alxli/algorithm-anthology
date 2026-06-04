@@ -32,6 +32,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
+#include <random>
 #include <stdexcept>
 #include <utility>
 
@@ -41,7 +42,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -58,10 +59,11 @@ point mean_center(It lo, It hi) {
   if (lo == hi) {
     throw std::runtime_error("Cannot get center of an empty range.");
   }
-  double x_sum = 0, y_sum = 0, num_points = hi - lo;
-  for (; lo != hi; ++lo) {
-    x_sum += lo->x;
-    y_sum += lo->y;
+  double x_sum = 0, y_sum = 0;
+  double num_points = hi - lo;
+  for (It it = lo; it != hi; ++it) {
+    x_sum += it->x;
+    y_sum += it->y;
   }
   return point(x_sum / num_points, y_sum / num_points);
 }
@@ -87,17 +89,13 @@ bool cw_comp(const point &a, const point &b, const point &c) {
   return det < 0;
 }
 
-struct CWComparator {
-  point c;
-  CWComparator(const point &c) : c(c) {}
-  bool operator()(const point &a, const point &b) const { return cw_comp(a, b, c); }
-};
+auto CWComparator(const point &c) {
+  return [c](const point &a, const point &b) { return cw_comp(a, b, c); };
+}
 
-struct CCWComparator {
-  point c;
-  CCWComparator(const point &c) : c(c) {}
-  bool operator()(const point &a, const point &b) const { return cw_comp(b, a, c); }
-};
+auto CCWComparator(const point &c) {
+  return [c](const point &a, const point &b) { return cw_comp(b, a, c); };
+}
 
 template<class It>
 double polygon_area(It lo, It hi) {
@@ -124,14 +122,16 @@ int main() {
   // Irregular pentagon with only the vertex (1, 2) not on its convex hull. The ordering here is
   // already sorted in ccw order around their mean center, though we will shuffle them to verify our
   // sorting comparator.
-  point points[] = {point(1, 3), point(1, 2), point(2, 1), point(0, 0), point(-1, 3)};
-  vector<point> v(points, points + 5);
-  std::random_shuffle(v.begin(), v.end());
+  vector<point> points{point(1, 3), point(1, 2), point(2, 1), point(0, 0), point(-1, 3)};
+  vector<point> v(points);
+  std::mt19937 rng(12345);
+  std::shuffle(v.begin(), v.end(), rng);
   point c = mean_center(v.begin(), v.end());
   assert(EQ(c.x, 0.6) && EQ(c.y, 1.8));
   sort(v.begin(), v.end(), CWComparator(c));
-  for (int i = 0; i < static_cast<int>(v.size()); i++) {
-    assert(v[i] == points[i]);
+  auto expected = points.begin();
+  for (const auto &p : v) {
+    assert(p == *expected++);
   }
   assert(EQ(polygon_area(v.begin(), v.end()), 5));
   return 0;

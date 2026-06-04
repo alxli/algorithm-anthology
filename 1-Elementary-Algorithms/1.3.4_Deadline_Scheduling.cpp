@@ -19,28 +19,21 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <numeric>
 #include <vector>
 
 struct Job {
   int deadline;
   long long profit;
 
-  Job(int deadline = 0, long long profit = 0) : deadline(deadline), profit(profit) {}
+  explicit Job(int deadline = 0, long long profit = 0) : deadline(deadline), profit(profit) {}
 };
-
-bool higher_profit(const Job &a, const Job &b) {
-  return a.profit != b.profit ? a.profit > b.profit : a.deadline < b.deadline;
-}
 
 class SlotDSU {
   std::vector<int> root;
 
  public:
-  explicit SlotDSU(int n) : root(n + 1) {
-    for (int i = 0; i <= n; i++) {
-      root[i] = i;
-    }
-  }
+  explicit SlotDSU(int n) : root(n + 1) { std::iota(root.begin(), root.end(), 0); }
 
   int find_root(int u) {
     if (root[u] != u) {
@@ -53,17 +46,19 @@ class SlotDSU {
 };
 
 long long schedule_deadline_jobs(std::vector<Job> jobs) {
-  std::sort(jobs.begin(), jobs.end(), higher_profit);
+  std::sort(jobs.begin(), jobs.end(), [](const Job &a, const Job &b) {
+    return a.profit != b.profit ? a.profit > b.profit : a.deadline < b.deadline;
+  });
   int max_deadline = 0;
-  for (int i = 0; i < static_cast<int>(jobs.size()); i++) {
-    max_deadline = std::max(max_deadline, jobs[i].deadline);
+  for (const auto &j : jobs) {
+    max_deadline = std::max(max_deadline, j.deadline);
   }
   SlotDSU slots(max_deadline);
   long long res = 0;
-  for (int i = 0; i < static_cast<int>(jobs.size()); i++) {
-    int slot = slots.find_root(jobs[i].deadline);
+  for (const auto &j : jobs) {
+    int slot = slots.find_root(j.deadline);
     if (slot > 0) {
-      res += jobs[i].profit;
+      res += j.profit;
       slots.occupy(slot);
     }
   }
@@ -77,11 +72,11 @@ using namespace std;
 
 int main() {
   vector<Job> jobs;
-  jobs.push_back(Job(2, 100));
-  jobs.push_back(Job(1, 19));
-  jobs.push_back(Job(2, 27));
-  jobs.push_back(Job(1, 25));
-  jobs.push_back(Job(3, 15));
+  jobs.emplace_back(2, 100);
+  jobs.emplace_back(1, 19);
+  jobs.emplace_back(2, 27);
+  jobs.emplace_back(1, 25);
+  jobs.emplace_back(3, 15);
   assert(schedule_deadline_jobs(jobs) == 142);
   return 0;
 }

@@ -41,10 +41,10 @@ Space Complexity:
 
 #include <vector>
 
-typedef long long int64;
-typedef std::vector<std::vector<int64>> table;
+using int64 = long long;
+using table = std::vector<std::vector<int64>>;
 
-int64 factorial(int n, int m = 1000000007) {
+int64 factorial(int n, int m = 1'000'000'007) {
   int64 res = 1;
   for (int i = 2; i <= n; i++) {
     res = (res * i) % m;
@@ -52,7 +52,7 @@ int64 factorial(int n, int m = 1000000007) {
   return res % m;
 }
 
-int64 factorialp(int64 n, int64 p = 1000000007) {
+int64 factorialp(int64 n, int64 p = 1'000'000'007) {
   int64 res = 1;
   while (n > 1) {
     if (n / p % 2 == 1) {
@@ -67,7 +67,7 @@ int64 factorialp(int64 n, int64 p = 1000000007) {
   return res % p;
 }
 
-table binomial_table(int n, int64 m = 1000000007) {
+table binomial_table(int n, int64 m = 1'000'000'007) {
   table t(n + 1);
   for (int i = 0; i <= n; i++) {
     for (int j = 0; j <= i; j++) {
@@ -81,7 +81,7 @@ table binomial_table(int n, int64 m = 1000000007) {
   return t;
 }
 
-int64 permute(int n, int k, int64 m = 1000000007) {
+int64 permute(int n, int k, int64 m = 1'000'000'007) {
   if (n < k) {
     return 0;
   }
@@ -114,7 +114,7 @@ int64 powmod(int64 x, int64 n, int64 m) {
   return a % m;
 }
 
-int64 choose(int n, int k, int64 p = 1000000007) {
+int64 choose(int n, int k, int64 p = 1'000'000'007) {
   if (n < k) {
     return 0;
   }
@@ -131,15 +131,15 @@ int64 choose(int n, int k, int64 p = 1000000007) {
   return num * powmod(den, p - 2, p) % p;
 }
 
-int64 multichoose(int n, int k, int64 p = 1000000007) {
+int64 multichoose(int n, int k, int64 p = 1'000'000'007) {
   return choose(n + k - 1, k, p);
 }
 
-int64 catalan(int n, int64 p = 1000000007) {
+int64 catalan(int n, int64 p = 1'000'000'007) {
   return choose(2 * n, n, p) * powmod(n + 1, p - 2, p) % p;
 }
 
-int64 partitions(int n, int64 m = 1000000007) {
+int64 partitions(int n, int64 m = 1'000'000'007) {
   std::vector<int64> t(n + 1, 0);
   t[0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -150,7 +150,7 @@ int64 partitions(int n, int64 m = 1000000007) {
   return t[n] % m;
 }
 
-int64 partitions(int n, int k, int64 m = 1000000007) {
+int64 partitions(int n, int k, int64 m = 1'000'000'007) {
   table t(n + 1, std::vector<int64>(k + 1, 0));
   t[0][1] = 1;
   for (int i = 1; i <= n; i++) {
@@ -161,7 +161,7 @@ int64 partitions(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 stirling1(int n, int k, int64 m = 1000000007) {
+int64 stirling1(int n, int k, int64 m = 1'000'000'007) {
   table t(n + 1, std::vector<int64>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -173,7 +173,7 @@ int64 stirling1(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 stirling2(int n, int k, int64 m = 1000000007) {
+int64 stirling2(int n, int k, int64 m = 1'000'000'007) {
   table t(n + 1, std::vector<int64>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -185,7 +185,7 @@ int64 stirling2(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 eulerian1(int n, int k, int64 m = 1000000007) {
+int64 eulerian1(int n, int k, int64 m = 1'000'000'007) {
   if (k > n - 1 - k) {
     k = n - 1 - k;
   }
@@ -202,7 +202,7 @@ int64 eulerian1(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 eulerian2(int n, int k, int64 m = 1000000007) {
+int64 eulerian2(int n, int k, int64 m = 1'000'000'007) {
   table t(n + 1, std::vector<int64>(k + 1, 1));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {

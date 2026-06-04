@@ -17,7 +17,7 @@ Space Complexity:
 
 #include <algorithm>
 
-const int MAXN = 20, INF = 0x3f3f3f3f;
+const int MAXN = 20, INF = 0x3f3f'3f3f;
 int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
 
 void add_edge(int u, int v, int w) {

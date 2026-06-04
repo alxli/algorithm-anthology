@@ -133,7 +133,7 @@ class SegTree {
   }
 
  public:
-  SegTree(int n, const T &v = T())
+  explicit SegTree(int n, const T &v = T())
       : len(n), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
       build(0, 0, len - 1, v);

@@ -55,7 +55,7 @@ class SqrtDecomposition {
   }
 
  public:
-  SqrtDecomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
+  explicit SqrtDecomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
 
   template<class It>
   SqrtDecomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {

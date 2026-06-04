@@ -34,9 +34,7 @@ void dfs(int u) {
   visit[u] = true;
   currstack.push_back(u);
   bool is_component_root = true;
-  int v;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    v = adj[u][j];
+  for (int v : adj[u]) {
     if (!visit[v]) {
       dfs(v);
     }
@@ -49,6 +47,7 @@ void dfs(int u) {
     return;
   }
   std::vector<int> component;
+  int v;
   do {
     v = currstack.back();
     visit[v] = true;
@@ -101,9 +100,9 @@ int main() {
   adj[7].push_back(6);
   tarjan(8);
   cout << "Components:" << endl;
-  for (int i = 0; i < static_cast<int>(scc.size()); i++) {
-    for (int j = 0; j < static_cast<int>(scc[i].size()); j++) {
-      cout << scc[i][j] << " ";
+  for (auto &comp : scc) {
+    for (int v : comp) {
+      cout << v << " ";
     }
     cout << endl;
   }

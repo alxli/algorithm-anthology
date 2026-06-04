@@ -36,7 +36,7 @@ class PairingHeap {
     T value;
     Node *left, *next;
 
-    Node(const T &v) : value(v), left(nullptr), next(nullptr) {}
+    explicit Node(const T &v) : value(v), left(nullptr), next(nullptr) {}
 
     void add_child(Node *n) {
       if (left == nullptr) {

@@ -131,7 +131,7 @@ int main() {
   const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
   vector<vector<double>> m(n), inv, res(n, vector<double>(n, 0));
   for (int i = 0; i < n; i++) {
-    m[i] = vector<double>(a[i], a[i] + n);
+    m[i].assign(a[i], a[i] + n);
   }
   double d = det(m);
   assert(fabs(d - det_naive(m)) < 1e-10);

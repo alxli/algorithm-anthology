@@ -27,7 +27,7 @@ Space Complexity:
 
 template<class It>
 void compress1(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> v(lo, hi);
   std::sort(v.begin(), v.end());
   v.resize(std::unique(v.begin(), v.end()) - v.begin());
@@ -38,14 +38,14 @@ void compress1(It lo, It hi) {
 
 template<class It>
 void compress2(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   std::map<T, int> m;
   for (It it = lo; it != hi; ++it) {
     m[*it] = 0;
   }
-  typename std::map<T, int>::iterator it = m.begin();
-  for (int id = 0; it != m.end(); it++) {
-    it->second = id++;
+  int id = 0;
+  for (auto &[key, val] : m) {
+    val = id++;
   }
   for (It it = lo; it != hi; ++it) {
     *it = m[*it];

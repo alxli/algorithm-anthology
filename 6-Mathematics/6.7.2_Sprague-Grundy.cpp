@@ -25,9 +25,9 @@ Space Complexity:
 
 int mex(const std::vector<int> &values) {
   std::vector<bool> seen(values.size() + 1, false);
-  for (int i = 0; i < static_cast<int>(values.size()); i++) {
-    if (0 <= values[i] && values[i] < static_cast<int>(seen.size())) {
-      seen[values[i]] = true;
+  for (int v : values) {
+    if (0 <= v && v < static_cast<int>(seen.size())) {
+      seen[v] = true;
     }
   }
   for (int i = 0; i < static_cast<int>(seen.size()); i++) {
@@ -42,9 +42,9 @@ std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> 
   std::vector<int> grundy(max_stones + 1, 0);
   for (int stones = 1; stones <= max_stones; stones++) {
     std::vector<int> reachable;
-    for (int i = 0; i < static_cast<int>(moves.size()); i++) {
-      if (moves[i] <= stones) {
-        reachable.push_back(grundy[stones - moves[i]]);
+    for (int m : moves) {
+      if (m <= stones) {
+        reachable.push_back(grundy[stones - m]);
       }
     }
     grundy[stones] = mex(reachable);
@@ -54,8 +54,8 @@ std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> 
 
 int sum_grundy(const std::vector<int> &grundies) {
   int x = 0;
-  for (int i = 0; i < static_cast<int>(grundies.size()); i++) {
-    x ^= grundies[i];
+  for (int g : grundies) {
+    x ^= g;
   }
   return x;
 }
@@ -66,17 +66,15 @@ int sum_grundy(const std::vector<int> &grundies) {
 using namespace std;
 
 int main() {
-  int moves_raw[] = {1, 3, 4};
-  vector<int> moves(moves_raw, moves_raw + 3);
-  vector<int> g = subtraction_game_grundy(10, moves);
+  vector<int> moves = {1, 3, 4};
+  auto g = subtraction_game_grundy(10, moves);
   assert(g[0] == 0);
   assert(g[1] == 1);
   assert(g[2] == 0);
   assert(g[4] == 2);
   assert(g[7] == 0);
 
-  int heaps_raw[] = {g[5], g[7], g[10]};
-  vector<int> heaps(heaps_raw, heaps_raw + 3);
+  vector<int> heaps = {g[5], g[7], g[10]};
   assert(sum_grundy(heaps) == (g[5] ^ g[7] ^ g[10]));
   return 0;
 }

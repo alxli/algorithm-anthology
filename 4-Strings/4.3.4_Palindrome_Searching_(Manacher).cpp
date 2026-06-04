@@ -73,7 +73,8 @@ class Manacher {
 
   string longest_palindrome() const {
     int best_l = 0, best_len = 0;
-    for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    int n = static_cast<int>(s.size());
+    for (int i = 0; i < n; i++) {
       int len = 2 * odd[i] - 1;
       if (len > best_len) {
         best_len = len;

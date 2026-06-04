@@ -30,7 +30,7 @@ class FenwickTree {
   std::vector<int> a, t;
 
  public:
-  FenwickTree(int n) : len(n), a(n + 1), t(n + 1) {}
+  explicit FenwickTree(int n) : len(n), a(n + 1), t(n + 1) {}
 
   int size() const { return len; }
   T at(int i) const { return a[i + 1]; }

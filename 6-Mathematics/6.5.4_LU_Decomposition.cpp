@@ -44,6 +44,7 @@ Space Complexity:
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <numeric>
 #include <vector>
 
 template<class Matrix>
@@ -51,9 +52,7 @@ int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS 
   int r = a.size(), c = a[0].size(), parity = 0;
   if (p1col != nullptr) {
     p1col->resize(r);
-    for (int i = 0; i < r; i++) {
-      (*p1col)[i] = i;
-    }
+    std::iota(p1col->begin(), p1col->end(), 0);
   }
   for (int i = 0; i < r && i < c; i++) {
     int pi = i;

@@ -26,8 +26,7 @@ int grundy_dfs(int u, const std::vector<std::vector<int>> &g, std::vector<int> *
     return (*memo)[u];
   }
   std::vector<bool> seen(g[u].size() + 1, false);
-  for (int i = 0; i < static_cast<int>(g[u].size()); i++) {
-    int v = g[u][i];
+  for (int v : g[u]) {
     int x = grundy_dfs(v, g, memo);
     if (x < static_cast<int>(seen.size())) {
       seen[x] = true;
@@ -55,13 +54,8 @@ std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
 using namespace std;
 
 int main() {
-  vector<vector<int>> g(5);
-  g[0].push_back(1);
-  g[0].push_back(2);
-  g[1].push_back(3);
-  g[2].push_back(3);
-  g[2].push_back(4);
-  vector<int> grundy = grundy_on_dag(g);
+  vector<vector<int>> g{{1, 2}, {3}, {3, 4}, {}, {}};
+  auto grundy = grundy_on_dag(g);
   assert(grundy[3] == 0);
   assert(grundy[4] == 0);
   assert(grundy[1] == 1);

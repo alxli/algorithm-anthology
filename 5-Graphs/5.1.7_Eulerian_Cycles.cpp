@@ -91,8 +91,8 @@ int main() {
     g[4].push_back(1);
     cycle = euler_cycle_directed(g, 0);
     cout << "Eulerian cycle from 0 (directed):";
-    for (int i = 0; i < static_cast<int>(cycle.size()); i++) {
-      cout << " " << cycle[i];
+    for (int v : cycle) {
+      cout << " " << v;
     }
     cout << endl;
   }
@@ -112,8 +112,8 @@ int main() {
     g[1].push_back(4);
     cycle = euler_cycle_undirected(g, 2);
     cout << "Eulerian cycle from 2 (undirected):";
-    for (int i = 0; i < static_cast<int>(cycle.size()); i++) {
-      cout << " " << cycle[i];
+    for (int v : cycle) {
+      cout << " " << v;
     }
     cout << endl;
   }

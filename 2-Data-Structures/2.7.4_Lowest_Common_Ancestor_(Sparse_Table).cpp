@@ -30,8 +30,7 @@ void dfs(int u, int p) {
   for (int i = 1; i < len; i++) {
     dp[u][i] = dp[dp[u][i - 1]][i - 1];
   }
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    int v = adj[u][j];
+  for (int v : adj[u]) {
     if (v != p) {
       dfs(v, u);
     }

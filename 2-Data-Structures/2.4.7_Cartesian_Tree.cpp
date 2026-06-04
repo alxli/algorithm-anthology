@@ -29,7 +29,7 @@ struct CartesianTree {
   explicit CartesianTree(const std::vector<int> &a)
       : root(-1), parent(a.size(), -1), left(a.size(), -1), right(a.size(), -1) {
     std::vector<int> st;
-    for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    for (int i = 0, n = static_cast<int>(a.size()); i < n; i++) {
       int last = -1;
       while (!st.empty() && a[i] < a[st.back()]) {
         last = st.back();
@@ -64,8 +64,7 @@ void inorder(const CartesianTree &t, int u, vector<int> *order) {
 }
 
 int main() {
-  int raw[] = {3, 2, 6, 1, 9};
-  vector<int> a(raw, raw + 5);
+  vector<int> a{3, 2, 6, 1, 9};
   CartesianTree t(a);
   assert(t.root == 3);
   assert(t.parent[1] == 3);

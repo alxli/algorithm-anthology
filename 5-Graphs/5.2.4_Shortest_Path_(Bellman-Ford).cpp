@@ -40,16 +40,16 @@ void bellman_ford(int nodes, int start) {
   }
   dist[start] = 0;
   for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < static_cast<int>(e.size()); j++) {
-      if (dist[e[j].v] > dist[e[j].u] + e[j].w) {
-        dist[e[j].v] = dist[e[j].u] + e[j].w;
-        pred[e[j].v] = e[j].u;
+    for (auto &edge : e) {
+      if (dist[edge.v] > dist[edge.u] + edge.w) {
+        dist[edge.v] = dist[edge.u] + edge.w;
+        pred[edge.v] = edge.u;
       }
     }
   }
   // Optional: Report negative-weighted cycles.
-  for (int i = 0; i < static_cast<int>(e.size()); i++) {
-    if (dist[e[i].v] > dist[e[i].u] + e[i].w) {
+  for (auto &edge : e) {
+    if (dist[edge.v] > dist[edge.u] + edge.w) {
       throw std::runtime_error("Negative-weight cycle found.");
     }
   }
@@ -80,9 +80,9 @@ void print_path(int dest) {
 
 int main() {
   int start = 0, dest = 2;
-  e.push_back((Edge){0, 1, 1});
-  e.push_back((Edge){1, 2, 2});
-  e.push_back((Edge){0, 2, 5});
+  e.push_back(Edge{0, 1, 1});
+  e.push_back(Edge{1, 2, 2});
+  e.push_back(Edge{0, 2, 5});
   bellman_ford(3, start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;

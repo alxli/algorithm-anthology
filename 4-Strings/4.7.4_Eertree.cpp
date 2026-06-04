@@ -54,19 +54,19 @@ class Eertree {
 
  public:
   Eertree() : tree(), s(), last(1) {
-    tree.push_back(Node(-1));
-    tree.push_back(Node(0));
+    tree.emplace_back(-1);
+    tree.emplace_back(0);
     tree[0].link = 0;
     tree[1].link = 0;
   }
 
   explicit Eertree(const string &text) : tree(), s(), last(1) {
-    tree.push_back(Node(-1));
-    tree.push_back(Node(0));
+    tree.emplace_back(-1);
+    tree.emplace_back(0);
     tree[0].link = 0;
     tree[1].link = 0;
-    for (int i = 0; i < static_cast<int>(text.size()); i++) {
-      add(text[i]);
+    for (char c : text) {
+      add(c);
     }
   }
 
@@ -82,7 +82,7 @@ class Eertree {
     }
 
     last = tree.size();
-    tree.push_back(Node(tree[cur].len + 2));
+    tree.emplace_back(tree[cur].len + 2);
     tree[last].occ = 1;
     tree[cur].next[c] = last;
 

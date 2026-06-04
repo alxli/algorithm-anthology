@@ -38,7 +38,7 @@ class SkewHeap {
     T value;
     Node *left, *right;
 
-    Node(const T &v) : value(v), left(nullptr), right(nullptr) {}
+    explicit Node(const T &v) : value(v), left(nullptr), right(nullptr) {}
   } *root;
 
   int num_nodes;

@@ -29,8 +29,8 @@ Space Complexity:
 
 template<class T>
 class RangeTree {
-  typedef std::pair<T, T> point;
-  typedef std::pair<int, T> colindex;
+  using point = std::pair<T, T>;
+  using colindex = std::pair<int, T>;
 
   std::vector<point> points;
   std::vector<std::vector<colindex>> columns;
@@ -41,7 +41,7 @@ class RangeTree {
   void build(int n, int lo, int hi) {
     if (points[lo].first == points[hi].first) {
       for (int i = lo; i <= hi; i++) {
-        columns[n].push_back(point(i, points[i].second));
+        columns[n].emplace_back(i, points[i].second);
       }
       return;
     }
@@ -65,8 +65,7 @@ class RangeTree {
     }
     if (!(points[lo].first < x1 || x2 < points[hi].first)) {
       if (!columns[n].empty() && !(y2 < y1)) {
-        typename std::vector<point>::iterator it;
-        it = std::lower_bound(columns[n].begin(), columns[n].end(), y1, comp2);
+        auto it = std::lower_bound(columns[n].begin(), columns[n].end(), y1, comp2);
         for (; it != columns[n].end() && it->second <= y2; ++it) {
           f(it->first, points[it->first]);
         }
@@ -117,7 +116,7 @@ int main() {
                       {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   vector<pair<int, int>> v;
   for (int i = 0; i < n; i++) {
-    v.push_back(make_pair(points[i][0], points[i][1]));
+    v.push_back({points[i][0], points[i][1]});
   }
   RangeTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);

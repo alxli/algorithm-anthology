@@ -41,10 +41,8 @@ std::vector<int> find_centers(int nodes) {
   int removed = leaves.size();
   while (removed < nodes) {
     std::vector<int> nleaves;
-    for (int i = 0; i < static_cast<int>(leaves.size()); i++) {
-      int u = leaves[i];
-      for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-        int v = adj[u][j];
+    for (int u : leaves) {
+      for (int v : adj[u]) {
         if (--degree[v] == 1) {
           nleaves.push_back(v);
         }
@@ -59,8 +57,7 @@ std::vector<int> find_centers(int nodes) {
 int find_centroid(int nodes, int u = 0, int p = -1) {
   int count = 1;
   bool good_center = true;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    int v = adj[u][j];
+  for (int v : adj[u]) {
     if (v == p) {
       continue;
     }
@@ -77,10 +74,10 @@ int find_centroid(int nodes, int u = 0, int p = -1) {
 }
 
 std::pair<int, int> dfs(int u, int p, int depth) {
-  std::pair<int, int> res = std::make_pair(depth, u);
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    if (adj[u][j] != p) {
-      res = max(res, dfs(adj[u][j], u, depth + 1));
+  std::pair<int, int> res = {depth, u};
+  for (int v : adj[u]) {
+    if (v != p) {
+      res = max(res, dfs(v, u, depth + 1));
     }
   }
   return res;

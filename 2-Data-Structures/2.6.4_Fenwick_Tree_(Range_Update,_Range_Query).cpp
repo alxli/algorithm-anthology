@@ -46,7 +46,7 @@ class FenwickTree {
   }
 
  public:
-  FenwickTree(int n) : len(n), t1(n + 2), t2(n + 2) {}
+  explicit FenwickTree(int n) : len(n), t1(n + 2), t2(n + 2) {}
 
   int size() const { return len; }
 

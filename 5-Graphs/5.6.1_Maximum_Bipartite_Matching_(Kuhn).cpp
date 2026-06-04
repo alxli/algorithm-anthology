@@ -24,10 +24,10 @@ std::vector<int> adj[MAXN];
 
 bool dfs(int u) {
   visit[u] = true;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    int v = match[adj[u][j]];
+  for (int nb : adj[u]) {
+    int v = match[nb];
     if (v == -1 || (!visit[v] && dfs(v))) {
-      match[adj[u][j]] = u;
+      match[nb] = u;
       return true;
     }
   }

@@ -72,8 +72,7 @@ struct SquareSegmentCost {
 };
 
 int main() {
-  int raw[] = {1, 2, 3, 4};
-  vector<int> a(raw, raw + 4);
+  vector<int> a = {1, 2, 3, 4};
   int n = a.size();
   SquareSegmentCost cost(a);
 

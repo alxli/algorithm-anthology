@@ -38,7 +38,7 @@ struct Point {
   Point() : x(0), y(0) {}
   Point(double x, double y) : x(x), y(y) {}
   Point(const Point &p) : x(p.x), y(p.y) {}
-  Point(const std::pair<double, double> &p) : x(p.first), y(p.second) {}
+  explicit Point(const std::pair<double, double> &p) : x(p.first), y(p.second) {}
 
   // clang-format off
   bool operator<(const Point &p) const { return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x); }

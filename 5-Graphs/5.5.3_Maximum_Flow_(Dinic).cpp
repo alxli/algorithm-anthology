@@ -32,8 +32,8 @@ std::vector<Edge> adj[MAXN];
 int dist[MAXN], ptr[MAXN];
 
 void add_edge(int u, int v, int cap) {
-  adj[u].push_back((Edge){v, static_cast<int>(adj[v].size()), cap, 0});
-  adj[v].push_back((Edge){u, static_cast<int>(adj[u].size()) - 1, 0, 0});
+  adj[u].push_back(Edge{v, static_cast<int>(adj[v].size()), cap, 0});
+  adj[v].push_back(Edge{u, static_cast<int>(adj[u].size()) - 1, 0, 0});
 }
 
 bool dinic_bfs(int nodes, int source, int sink) {
@@ -44,8 +44,7 @@ bool dinic_bfs(int nodes, int source, int sink) {
   while (!q.empty()) {
     int u = q.front();
     q.pop();
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      Edge &e = adj[u][j];
+    for (Edge &e : adj[u]) {
       if (dist[e.v] < 0 && e.f < e.cap) {
         dist[e.v] = dist[u] + 1;
         q.push(e.v);

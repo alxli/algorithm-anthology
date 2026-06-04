@@ -49,7 +49,7 @@ std::pair<int, int> find_cycle_floyd(IntFunction f, int x0) {
     hare = f(hare);
     length++;
   }
-  return std::make_pair(start, length);
+  return {start, length};
 }
 
 /*** Example Usage ***/
@@ -82,8 +82,8 @@ void verify(int x0, int start, int length) {
 
 int main() {
   int x0 = 0;
-  pair<int, int> res = find_cycle_floyd(f, x0);
-  assert(res == make_pair(4, 2));
-  verify(x0, res.first, res.second);
+  auto [start, length] = find_cycle_floyd(f, x0);
+  assert(start == 4 && length == 2);
+  verify(x0, start, length);
   return 0;
 }

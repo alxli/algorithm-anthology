@@ -56,7 +56,7 @@ class ImplicitTreap {
     int size, priority;
     Node *left, *right;
 
-    Node(const T &v)
+    explicit Node(const T &v)
         : value(v),
           subtree_value(v),
           pending(false),
@@ -182,7 +182,7 @@ class ImplicitTreap {
   }
 
  public:
-  ImplicitTreap(int n = 0, const T &v = T()) : root(nullptr) {
+  explicit ImplicitTreap(int n = 0, const T &v = T()) : root(nullptr) {
     for (int i = 0; i < n; i++) {
       push_back(v);
     }

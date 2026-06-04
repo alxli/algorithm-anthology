@@ -27,7 +27,7 @@ template<class It>
 void nth_element2(It lo, It nth, It hi) {
   for (;;) {
     std::iter_swap(lo + rand32() % (hi - lo), hi - 1);
-    typename std::iterator_traits<It>::value_type mid = *(hi - 1);
+    auto mid = *(hi - 1);
     It k = lo - 1;
     for (It it = lo; it != hi; ++it) {
       if (!(mid < *it)) {

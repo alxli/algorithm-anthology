@@ -26,8 +26,8 @@ Space Complexity:
 #include <vector>
 
 const int MAXN = 35;
-typedef std::bitset<MAXN> bits;
-typedef unsigned long long uint64;
+using bits = std::bitset<MAXN>;
+using uint64 = unsigned long long;
 
 bool adj[MAXN][MAXN];
 int w[MAXN];

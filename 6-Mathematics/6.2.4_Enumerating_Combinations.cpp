@@ -81,7 +81,7 @@ bool next_combination(It lo, It mid, It hi) {
     for (int i = 0; i < gcd; i++) {
       It curr = (i < len1) ? (l + i) : (h + (i - len1));
       int k = i;
-      typename std::iterator_traits<It>::value_type prev(*curr);
+      auto prev = *curr;
       for (int j = 0; j < skip; j++) {
         k = (k + len1) % total;
         It next = (k < len1) ? (l + k) : (h + (k - len1));

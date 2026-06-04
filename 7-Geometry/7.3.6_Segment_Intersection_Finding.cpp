@@ -32,7 +32,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -173,19 +173,19 @@ bool find_intersection(It lo, It hi, Segment *res1, Segment *res2) {
     if (it->p > it->q) {
       std::swap(it->p, it->q);
     }
-    e.push_back(Event<It>(it->p, 1, it));
-    e.push_back(Event<It>(it->q, -1, it));
+    e.emplace_back(it->p, 1, it);
+    e.emplace_back(it->q, -1, it);
   }
   std::sort(e.begin(), e.end());
-  typedef std::set<It, SegmentComparator<It>> active_set;
+  using active_set = std::set<It, SegmentComparator<It>>;
   active_set s((SegmentComparator<It>(lo)));
   std::vector<typename active_set::iterator> position(hi - lo);
-  for (int i = 0; i < static_cast<int>(e.size()); i++) {
-    It seg = e[i].seg;
-    if (e[i].type == 1) {
-      typename active_set::iterator it = s.insert(seg).first;
+  for (const auto &ev : e) {
+    It seg = ev.seg;
+    if (ev.type == 1) {
+      auto it = s.insert(seg).first;
       position[seg - lo] = it;
-      typename active_set::iterator next = it;
+      auto next = it;
       if (++next != s.end() && intersect(**next, *seg)) {
         *res1 = **next;
         *res2 = *seg;
@@ -197,10 +197,10 @@ bool find_intersection(It lo, It hi, Segment *res1, Segment *res2) {
         return true;
       }
     } else {
-      typename active_set::iterator it = position[seg - lo];
-      typename active_set::iterator next = it;
+      auto it = position[seg - lo];
+      auto next = it;
       if (++next != s.end() && it != s.begin()) {
-        typename active_set::iterator prev = it;
+        auto prev = it;
         if (intersect(**next, **--prev)) {
           *res1 = **next;
           *res2 = **prev;
@@ -220,10 +220,10 @@ using namespace std;
 
 int main() {
   vector<Segment> v;
-  v.push_back(Segment(point(0, 0), point(2, 2)));
-  v.push_back(Segment(point(3, 0), point(0, -1)));
-  v.push_back(Segment(point(0, 2), point(2, -2)));
-  v.push_back(Segment(point(0, 3), point(9, 0)));
+  v.emplace_back(point(0, 0), point(2, 2));
+  v.emplace_back(point(3, 0), point(0, -1));
+  v.emplace_back(point(0, 2), point(2, -2));
+  v.emplace_back(point(0, 3), point(9, 0));
   Segment res1, res2;
   assert(find_intersection(v.begin(), v.end(), &res1, &res2));
   assert(res1.p == point(0, 0) && res1.q == point(2, 2));

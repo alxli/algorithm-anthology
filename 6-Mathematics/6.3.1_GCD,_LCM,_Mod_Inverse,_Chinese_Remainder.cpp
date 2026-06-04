@@ -73,16 +73,16 @@ std::pair<Int, Int> extended_euclid(Int a, Int b) {
     y = prev_y1;
     a = prev_b;
   }
-  return (a > 0) ? std::make_pair(x, y) : std::make_pair(-x, -y);
+  return (a > 0) ? std::pair<Int, Int>{x, y} : std::pair<Int, Int>{-x, -y};
 }
 
 template<class Int>
 std::pair<Int, Int> extended_euclid2(Int a, Int b) {
   if (b == 0) {
-    return (a > 0) ? std::make_pair(1, 0) : std::make_pair(-1, 0);
+    return (a > 0) ? std::pair<Int, Int>{1, 0} : std::pair<Int, Int>{-1, 0};
   }
   std::pair<Int, Int> r = extended_euclid2(b, a % b);
-  return std::make_pair(r.second, r.first - a / b * r.second);
+  return {r.second, r.first - a / b * r.second};
 }
 
 template<class Int>
@@ -156,14 +156,15 @@ int main() {
         int inv = mod_inverse(a, b);
         assert(inv == mod_inverse2(a, b) && mod(a * inv, b) == 1);
       }
-      pair<int, int> res = extended_euclid(a, b);
+      auto res = extended_euclid(a, b);
       assert(res == extended_euclid2(a, b));
-      assert(g == a * res.first + b * res.second);
+      auto [rx, ry] = res;
+      assert(g == a * rx + b * ry);
     }
   }
   {
     int p = 17;
-    std::vector<int> res = generate_inverse(p);
+    auto res = generate_inverse(p);
     for (int i = 0; i < p; i++) {
       if (i > 0) {
         assert(mod(i * res[i], p) == 1);

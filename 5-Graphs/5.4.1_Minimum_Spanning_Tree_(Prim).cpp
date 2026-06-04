@@ -39,22 +39,22 @@ int prim(int nodes) {
     }
     visit[i] = true;
     std::priority_queue<std::pair<int, std::pair<int, int>>> pq;
-    for (int j = 0; j < static_cast<int>(adj[i].size()); j++) {
-      pq.push(std::make_pair(-adj[i][j].second, std::make_pair(i, adj[i][j].first)));
+    for (auto &[nb, w] : adj[i]) {
+      pq.emplace(-w, std::pair<int, int>{i, nb});
     }
     while (!pq.empty()) {
-      int u = pq.top().second.first;
-      int v = pq.top().second.second;
-      int w = -pq.top().first;
+      auto [neg_w, endpoints] = pq.top();
+      auto [u, v] = endpoints;
+      int w = -neg_w;
       pq.pop();
       if (visit[u] && !visit[v]) {
         visit[v] = true;
         if (v != i) {
-          mst.push_back(std::make_pair(u, v));
+          mst.emplace_back(u, v);
           total_dist += w;
         }
-        for (int j = 0; j < static_cast<int>(adj[v].size()); j++) {
-          pq.push(std::make_pair(-adj[v][j].second, std::make_pair(v, adj[v][j].first)));
+        for (auto &[nb, ew] : adj[v]) {
+          pq.emplace(-ew, std::pair<int, int>{v, nb});
         }
       }
     }
@@ -77,8 +77,8 @@ Total distance: 13
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].push_back(make_pair(v, w));
-  adj[v].push_back(make_pair(u, w));
+  adj[u].push_back({v, w});
+  adj[v].push_back({u, w});
 }
 
 int main() {
@@ -90,8 +90,8 @@ int main() {
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
   cout << "Total distance: " << prim(7) << endl;
-  for (int i = 0; i < static_cast<int>(mst.size()); i++) {
-    cout << mst[i].first << " <-> " << mst[i].second << endl;
+  for (auto &[u, v] : mst) {
+    cout << u << " <-> " << v << endl;
   }
   return 0;
 }

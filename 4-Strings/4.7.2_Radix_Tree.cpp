@@ -56,7 +56,7 @@ class RadixTree {
     Node(const V &value = V(), bool is_terminal = false) : value(value), is_terminal(is_terminal) {}
   } *root;
 
-  typedef typename std::map<string, Node *>::iterator cit;
+  using cit = typename std::map<string, Node *>::iterator;
 
   static int lcp_len(const string &s1, const string &s2, int s2start) {
     int i = 0;
@@ -77,7 +77,7 @@ class RadixTree {
       n->is_terminal = true;
       return true;
     }
-    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
+    for (auto it = n->children.begin(); it != n->children.end(); ++it) {
       int len = lcp_len(it->first, s, i);
       if (len == 0) {
         continue;
@@ -110,7 +110,7 @@ class RadixTree {
       n->is_terminal = false;
       return true;
     }
-    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
+    for (auto it = n->children.begin(); it != n->children.end(); ++it) {
       int len = lcp_len(it->first, s, i);
       if (len == 0) {
         continue;
@@ -144,16 +144,16 @@ class RadixTree {
     if (n->is_terminal) {
       f(s, n->value);
     }
-    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
-      s += it->first;
-      walk(it->second, s, f);
-      s.pop_back();
+    for (auto &[key, child] : n->children) {
+      s += key;
+      walk(child, s, f);
+      s.erase(s.size() - key.size());
     }
   }
 
   static void clean_up(Node *n) {
-    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
-      clean_up(it->second);
+    for (auto &[key, child] : n->children) {
+      clean_up(child);
     }
     delete n;
   }
@@ -188,11 +188,10 @@ class RadixTree {
     int i = 0;
     while (i < static_cast<int>(s.size())) {
       bool found = false;
-      ;
-      for (cit it = n->children.begin(); it != n->children.end(); ++it) {
-        if (it->first[0] == s[i]) {
-          i += lcp_len(it->first, s, i);
-          n = it->second;
+      for (auto &[key, child] : n->children) {
+        if (key[0] == s[i]) {
+          i += lcp_len(key, s, i);
+          n = child;
           found = true;
           break;
         }
@@ -206,7 +205,7 @@ class RadixTree {
 
   template<class KVFunction>
   void walk(KVFunction f) const {
-    string s = "";
+    string s;
     walk(root, s, f);
   }
 };

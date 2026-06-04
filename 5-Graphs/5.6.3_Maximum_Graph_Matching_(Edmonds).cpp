@@ -15,6 +15,8 @@ Space Complexity:
 
 */
 
+#include <algorithm>
+#include <numeric>
 #include <queue>
 #include <vector>
 
@@ -52,18 +54,15 @@ void mark_path(std::vector<bool> &blossom, int u, int b, int child) {
 
 int find_path(int nodes, int root) {
   std::vector<bool> used(nodes);
-  for (int i = 0; i < nodes; ++i) {
-    p[i] = -1;
-    base[i] = i;
-  }
+  std::fill(p, p + nodes, -1);
+  std::iota(base, base + nodes, 0);
   used[root] = true;
   std::queue<int> q;
   q.push(root);
   while (!q.empty()) {
     int u = q.front();
     q.pop();
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      int v = adj[u][j];
+    for (int v : adj[u]) {
       if (base[u] == base[v] || match[u] == v) {
         continue;
       }

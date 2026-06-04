@@ -328,8 +328,8 @@ Base Conversion:
 
 std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
   unsigned long long x = 0, power = 1;
-  for (int i = 0; i < static_cast<int>(d.size()); i++) {
-    x += d[i] * power;
+  for (int di : d) {
+    x += di * power;
     power *= a;
   }
   int n = ceil(log(x + 1) / log(b));

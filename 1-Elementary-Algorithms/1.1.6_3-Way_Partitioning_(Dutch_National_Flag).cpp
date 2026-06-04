@@ -33,7 +33,7 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
       ++i;
     }
   }
-  return std::make_pair(lt, gt);
+  return {lt, gt};
 }
 
 template<class It>
@@ -57,15 +57,14 @@ int main() {
 
   int b_raw[] = {4, 2, 5, 3, 3, 1};
   vector<int> b(b_raw, b_raw + 6);
-  pair<vector<int>::iterator, vector<int>::iterator> mid =
-      partition_three_way(b.begin(), b.end(), 3);
-  for (vector<int>::iterator it = b.begin(); it != mid.first; ++it) {
+  auto [mid_lo, mid_hi] = partition_three_way(b.begin(), b.end(), 3);
+  for (auto it = b.begin(); it != mid_lo; ++it) {
     assert(*it < 3);
   }
-  for (vector<int>::iterator it = mid.first; it != mid.second; ++it) {
+  for (auto it = mid_lo; it != mid_hi; ++it) {
     assert(*it == 3);
   }
-  for (vector<int>::iterator it = mid.second; it != b.end(); ++it) {
+  for (auto it = mid_hi; it != b.end(); ++it) {
     assert(*it > 3);
   }
   return 0;

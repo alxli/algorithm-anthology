@@ -43,7 +43,7 @@ Space Complexity:
 
 template<class K, class V>
 class IntervalTreap {
-  typedef std::pair<K, K> interval_t;
+  using interval_t = std::pair<K, K>;
 
   struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
@@ -186,7 +186,7 @@ class IntervalTreap {
   bool empty() const { return root == nullptr; }
 
   bool insert(const K &lo, const K &hi, const V &v) {
-    if (insert(root, std::make_pair(lo, hi), v)) {
+    if (insert(root, interval_t{lo, hi}, v)) {
       num_nodes++;
       return true;
     }
@@ -194,7 +194,7 @@ class IntervalTreap {
   }
 
   bool erase(const K &lo, const K &hi) {
-    if (erase(root, std::make_pair(lo, hi))) {
+    if (erase(root, interval_t{lo, hi})) {
       num_nodes--;
       return true;
     }
@@ -202,18 +202,18 @@ class IntervalTreap {
   }
 
   const interval_t *find_key(const K &lo, const K &hi) const {
-    Node *n = find_any(root, std::make_pair(lo, hi));
+    Node *n = find_any(root, interval_t{lo, hi});
     return (n == nullptr) ? nullptr : &(n->interval);
   }
 
   const V *find_value(const K &lo, const K &hi) const {
-    Node *n = find_any(root, std::make_pair(lo, hi));
+    Node *n = find_any(root, interval_t{lo, hi});
     return (n == nullptr) ? nullptr : &(n->value);
   }
 
   template<class KVFunction>
   void find_all(const K &lo, const K &hi, KVFunction f) const {
-    find_all(root, std::make_pair(lo, hi), f);
+    find_all(root, interval_t{lo, hi}, f);
   }
 
   template<class KVFunction>
@@ -249,7 +249,7 @@ int main() {
   assert(!t.insert(5, 20, 'x'));
   t.erase(17, 19);
   assert(t.size() == 5);
-  assert(*t.find_key(3, 9) == make_pair(5, 20));
+  assert(*t.find_key(3, 9) == (pair<int, int>{5, 20}));
   assert(*t.find_value(3, 9) == 'd');
   cout << "Intervals intersecting [16, 20]:";
   t.find_all(16, 20, print);

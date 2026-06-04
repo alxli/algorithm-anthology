@@ -17,11 +17,13 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <numeric>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 const int MAXN = 100;
-std::vector<std::pair<int, std::pair<int, int>>> edges;
+std::vector<std::tuple<int, int, int>> edges;
 int root[MAXN];
 std::vector<std::pair<int, int>> mst;
 
@@ -36,16 +38,14 @@ int kruskal(int nodes) {
   mst.clear();
   std::sort(edges.begin(), edges.end());
   int total_dist = 0;
-  for (int i = 0; i < nodes; i++) {
-    root[i] = i;
-  }
-  for (int i = 0; i < static_cast<int>(edges.size()); i++) {
-    int u = find_root(edges[i].second.first);
-    int v = find_root(edges[i].second.second);
+  std::iota(root, root + nodes, 0);
+  for (auto &[w, a, b] : edges) {
+    int u = find_root(a);
+    int v = find_root(b);
     if (u != v) {
       root[u] = root[v];
-      mst.push_back(edges[i].second);
-      total_dist += edges[i].first;
+      mst.emplace_back(a, b);
+      total_dist += w;
     }
   }
   return total_dist;
@@ -66,7 +66,7 @@ Total distance: 13
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  edges.push_back(make_pair(w, make_pair(u, v)));
+  edges.emplace_back(w, u, v);
 }
 
 int main() {
@@ -78,8 +78,8 @@ int main() {
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
   cout << "Total distance: " << kruskal(7) << endl;
-  for (int i = 0; i < static_cast<int>(mst.size()); i++) {
-    cout << mst[i].first << " <-> " << mst[i].second << endl;
+  for (auto &[u, v] : mst) {
+    cout << u << " <-> " << v << endl;
   }
   return 0;
 }

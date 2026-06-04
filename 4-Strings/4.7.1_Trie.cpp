@@ -53,7 +53,7 @@ class Trie {
     Node() : is_terminal(false) {}
   } *root;
 
-  typedef typename std::map<char, Node *>::iterator cit;
+  using cit = typename std::map<char, Node *>::iterator;
 
   static bool erase(Node *n, const string &s, int i) {
     if (i == static_cast<int>(s.size())) {
@@ -63,7 +63,7 @@ class Trie {
       n->is_terminal = false;
       return true;
     }
-    cit it = n->children.find(s[i]);
+    auto it = n->children.find(s[i]);
     if (it == n->children.end() || !erase(it->second, s, i + 1)) {
       return false;
     }
@@ -79,16 +79,16 @@ class Trie {
     if (n->is_terminal) {
       f(s, n->value);
     }
-    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
-      s += it->first;
-      walk(it->second, s, f);
+    for (auto &[c, child] : n->children) {
+      s += c;
+      walk(child, s, f);
       s.pop_back();
     }
   }
 
   static void clean_up(Node *n) {
-    for (cit it = n->children.begin(); it != n->children.end(); ++it) {
-      clean_up(it->second);
+    for (auto &[c, child] : n->children) {
+      clean_up(child);
     }
     delete n;
   }
@@ -104,12 +104,11 @@ class Trie {
 
   bool insert(const string &s, const V &v) {
     Node *n = root;
-    for (int i = 0; i < static_cast<int>(s.size()); i++) {
-      cit it = n->children.find(s[i]);
-      if (it == n->children.end()) {
-        n->children[s[i]] = new Node();
+    for (char c : s) {
+      if (n->children.find(c) == n->children.end()) {
+        n->children[c] = new Node();
       }
-      n = n->children[s[i]];
+      n = n->children[c];
     }
     if (n->is_terminal) {
       return false;
@@ -130,19 +129,19 @@ class Trie {
 
   const V *find(const string &s) const {
     Node *n = root;
-    for (int i = 0; i < static_cast<int>(s.size()); i++) {
-      cit it = n->children.find(s[i]);
-      if (it == n->children.end()) {
+    for (char c : s) {
+      if (auto it = n->children.find(c); it != n->children.end()) {
+        n = it->second;
+      } else {
         return nullptr;
       }
-      n = it->second;
     }
     return n->is_terminal ? &(n->value) : nullptr;
   }
 
   template<class KVFunction>
   void walk(KVFunction f) const {
-    string s = "";
+    string s;
     walk(root, s, f);
   }
 };

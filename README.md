@@ -21,7 +21,7 @@ We mentioned that the implementation itself is the focus, but what makes an impl
 * *Concision:* To minimize the amount of scrolling and searching during the frenzy of time contests, it is helpful for code to be compact. Shorter code is also generally easier to understand, as long as it is not overly cryptic. Finally, each implementation should fit in a single source file as required by nearly all online judging systems.
 * *Efficiency:* The code here is designed to be performant on real contests, and should maintain a low constant overhead. This is often challenging in the face of clarity and tweakability, but we can hope for contest setters to be liberal with time and memory limits. If the code here times out, you can reasonably rule out insufficient constant optimization and assume that you are choosing an algorithm from a suboptimal complexity class.
 * *Genericness:* Implementations should be easy to adapt to achieve slightly different goals. One may want to tweak some core logic, parameters, data types, etc. In timed contests, we would certainly prefer this process to be as painless as possible. C++ templates are often used to increase tweakability at a slight cost to simplicity.
-* *Portability:* Different contest environments use different compiler builds. In order to maximize compatibility, non-standard and newer features are avoided. The decision to follow C++98 standards is due to many contest systems being stuck on an older version of the language. Moreover, minimizing newer C++ features will make the code more language-agnostic.
+* *Portability:* Different contest environments use different compiler builds. The code targets C++17, which is broadly available on modern contest systems, while still avoiding unnecessary dependencies and non-standard features where practical.
 
 As these points and the title both suggest, there is a slight bias towards contests. Compiling a codebook for my personal reference during contests was indeed how this project got started. This work has become much more multipurpose now. Whatever your use case is, I hope you discover something enlightening.
 
@@ -30,10 +30,10 @@ Cheers.<br>
 
 ## Portability Note
 
-All programs were tested with GCC and compiled for a 32-bit target using the switches below::
+All programs were tested with GCC using the switches below::
 
 ```
-g++ -std=gnu++98 -pedantic -Wall -Wno-long-long -O2
+g++ -std=gnu++17 -pedantic -Wall -O2
 ```
 
 This means the following are assumed about data types:
@@ -42,9 +42,7 @@ This means the following are assumed about data types:
 * `double` and `long long` are 64-bit.
 * `long double` is 96-bit.
 
-Programs are highly portable (ISO C++ 1998 compliant), except in the following regards:
-* Usage of `long long` and dependent features, which are compliant in C99/C++0x or later. 64-bit integers are a must for many contest problems.
+Programs target ISO C++17, except in the following regards:
 * Usage of variable sized arrays. While easily replaced by vectors, they are generally simpler and avoid dynamic memory (which some argue is a bad idea for contests).
 * Usage of GCC's built-in functions like `__builtin_popcount()` and `__builtin_clz()`. These can be extremely convenient, but are straightforward to implement if unavailable. See here for a reference: https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
-* Usage of compound-literals, e.g. `myvector.push_back((mystruct){a, b, c})`. This adds a little more concision by not requiring a constructor definition.
 * Hacks that may depend on the platform (e.g. endianness), such as getting the signbit with type-punned pointers. Be weary of portability for all bitwise/lower level code.

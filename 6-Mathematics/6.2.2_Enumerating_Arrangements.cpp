@@ -33,6 +33,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <numeric>
 #include <vector>
 
 bool next_arrangement(int n, int k, int a[]) {
@@ -68,9 +69,7 @@ long long n_permute_k(int n, int k) {
 
 std::vector<int> arrangement_by_rank(int n, int k, long long r) {
   std::vector<int> values(n), res(k);
-  for (int i = 0; i < n; i++) {
-    values[i] = i;
-  }
+  std::iota(values.begin(), values.end(), 0);
   for (int i = 0; i < k; i++) {
     long long count = n_permute_k(n - 1 - i, k - 1 - i);
     int pos = r / count;
@@ -141,7 +140,7 @@ int main() {
     int count = 0;
     do {
       print_range(a, a + k);
-      vector<int> b = arrangement_by_rank(n, k, count);
+      auto b = arrangement_by_rank(n, k, count);
       assert(equal(a, a + k, b.begin()));
       assert(rank_by_arrangement(n, k, a) == count);
       count++;

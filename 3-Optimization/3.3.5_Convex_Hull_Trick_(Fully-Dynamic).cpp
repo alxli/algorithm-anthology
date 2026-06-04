@@ -45,7 +45,7 @@ class HullOptimizer {
   std::multiset<Line> hull;
   bool query_max;
 
-  typedef std::multiset<Line>::iterator hulliter;
+  using hulliter = std::multiset<Line>::iterator;
 
   static long long div_floor(long long a, long long b) { return a / b - ((a ^ b) < 0 && a % b); }
 
@@ -63,16 +63,16 @@ class HullOptimizer {
   }
 
  public:
-  HullOptimizer(bool query_max = false) : query_max(query_max) {}
+  explicit HullOptimizer(bool query_max = false) : query_max(query_max) {}
 
   void add_line(long long m, long long b) {
     if (!query_max) {
       m = -m;
       b = -b;
     }
-    hulliter z = hull.insert(Line(m, b));
-    hulliter y = z++;
-    hulliter x = y;
+    auto z = hull.insert(Line(m, b));
+    auto y = z++;
+    auto x = y;
     while (update_border(y, z)) {
       z = hull.erase(z);
     }
@@ -87,7 +87,7 @@ class HullOptimizer {
   long long query(long long x) const {
     assert(!hull.empty());
     Line q(0, 0, x, true);
-    hulliter it = hull.lower_bound(q);
+    auto it = hull.lower_bound(q);
     long long res = it->m * x + it->b;
     return query_max ? res : -res;
   }

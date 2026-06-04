@@ -32,7 +32,7 @@ void quicksort(It lo, It hi, Compare comp) {
   if (hi - lo < 2) {
     return;
   }
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   T pivot = *(lo + (hi - lo) / 2);
   It i, j;
   for (i = lo, j = hi - 1;; ++i, --j) {
@@ -53,7 +53,7 @@ void quicksort(It lo, It hi, Compare comp) {
 
 template<class It>
 void quicksort(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   quicksort(lo, hi, std::less<T>());
 }
 \end{lstlisting}
@@ -78,7 +78,7 @@ void mergesort(It lo, It hi, Compare comp) {
   It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   mergesort(lo, mid + 1, comp);
   mergesort(mid + 1, hi, comp);
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> merged;
   while (a <= mid && c < hi) {
     merged.push_back(comp(*c, *a) ? *c++ : *a++);
@@ -92,14 +92,12 @@ void mergesort(It lo, It hi, Compare comp) {
       merged.push_back(*it);
     }
   }
-  for (int i = 0; i < hi - lo; i++) {
-    *(lo + i) = merged[i];
-  }
+  std::copy(merged.begin(), merged.end(), lo);
 }
 
 template<class It>
 void mergesort(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   mergesort(lo, hi, std::less<T>());
 }
 \end{lstlisting}
@@ -118,7 +116,8 @@ The C++ standard library equivalent is calling \inlinecode{std::make\_heap(lo, h
 \begin{lstlisting}[language=C++]
 template<class It, class Compare>
 void heapsort(It lo, It hi, Compare comp) {
-  typename std::iterator_traits<It>::value_type tmp;
+  using T = typename std::iterator_traits<It>::value_type;
+  T tmp;
   It i = lo + (hi - lo) / 2, j = hi, parent, child;
   for (;;) {
     if (i <= lo) {
@@ -149,7 +148,7 @@ void heapsort(It lo, It hi, Compare comp) {
 
 template<class It>
 void heapsort(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   heapsort(lo, hi, std::less<T>());
 }
 \end{lstlisting}
@@ -184,7 +183,7 @@ void combsort(It lo, It hi, Compare comp) {
 
 template<class It>
 void combsort(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   combsort(lo, hi, std::less<T>());
 }
 \end{lstlisting}
@@ -206,7 +205,7 @@ void radix_sort(It lo, It hi) {
   const int radix_base = 1 << radix_bits;  // e.g. 2^8 = 256
   const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
   int num_bits = 8 * sizeof(*lo);          // 8 bits per byte
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   T *buf = new T[hi - lo];
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
     int count[radix_base] = {0};
@@ -421,34 +420,34 @@ int main() {
   int a[] = {2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
   vector<int> v(a, a + 10);
   cout << "before sort:  ";
-  for (int i = 0; i < static_cast<int>(v.size()); i++) {
-    cout << v[i] << " ";
+  for (const auto &x : v) {
+    cout << x << " ";
   }
   cout << endl;
 
   // Insertion sort.
-  for (vector<int>::iterator i = v.begin(); i != v.end(); ++i) {
+  for (auto i = v.begin(); i != v.end(); ++i) {
     rotate1(std::upper_bound(v.begin(), i, *i), i, i + 1);
   }
   cout << "after sort:   ";
-  for (int i = 0; i < static_cast<int>(v.size()); i++) {
-    cout << v[i] << " ";
+  for (const auto &x : v) {
+    cout << x << " ";
   }
   cout << endl;
 
   // Simple rotation to the left.
   rotate2(v.begin(), v.begin() + 1, v.end());
   cout << "rotate left:  ";
-  for (int i = 0; i < static_cast<int>(v.size()); i++) {
-    cout << v[i] << " ";
+  for (const auto &x : v) {
+    cout << x << " ";
   }
   cout << endl;
 
   // Simple rotation to the right.
   rotate3(v.rbegin(), v.rbegin() + 1, v.rend());
   cout << "rotate right: ";
-  for (int i = 0; i < static_cast<int>(v.size()); i++) {
-    cout << v[i] << " ";
+  for (const auto &x : v) {
+    cout << x << " ";
   }
   cout << endl;
 
@@ -495,7 +494,7 @@ long long inversions(It lo, It hi) {
   long long res = 0;
   res += inversions(lo, mid + 1);
   res += inversions(mid + 1, hi);
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> merged;
   while (a <= mid && c < hi) {
     if (*c < *a) {
@@ -577,7 +576,7 @@ Both implementations below require \inlinecode{operator \textless{}} to be defin
 
 template<class It>
 void compress1(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> v(lo, hi);
   std::sort(v.begin(), v.end());
   v.resize(std::unique(v.begin(), v.end()) - v.begin());
@@ -588,14 +587,14 @@ void compress1(It lo, It hi) {
 
 template<class It>
 void compress2(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   std::map<T, int> m;
   for (It it = lo; it != hi; ++it) {
     m[*it] = 0;
   }
-  typename std::map<T, int>::iterator it = m.begin();
-  for (int id = 0; it != m.end(); it++) {
-    it->second = id++;
+  int id = 0;
+  for (auto &[key, val] : m) {
+    val = id++;
   }
   for (It it = lo; it != hi; ++it) {
     *it = m[*it];
@@ -659,7 +658,7 @@ template<class It>
 void nth_element2(It lo, It nth, It hi) {
   for (;;) {
     std::iter_swap(lo + rand32() % (hi - lo), hi - 1);
-    typename std::iterator_traits<It>::value_type mid = *(hi - 1);
+    auto mid = *(hi - 1);
     It k = lo - 1;
     for (It it = lo; it != hi; ++it) {
       if (!(mid < *it)) {
@@ -730,7 +729,7 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
       ++i;
     }
   }
-  return std::make_pair(lt, gt);
+  return {lt, gt};
 }
 
 template<class It>
@@ -754,15 +753,14 @@ int main() {
 
   int b_raw[] = {4, 2, 5, 3, 3, 1};
   vector<int> b(b_raw, b_raw + 6);
-  pair<vector<int>::iterator, vector<int>::iterator> mid =
-      partition_three_way(b.begin(), b.end(), 3);
-  for (vector<int>::iterator it = b.begin(); it != mid.first; ++it) {
+  auto [mid_lo, mid_hi] = partition_three_way(b.begin(), b.end(), 3);
+  for (auto it = b.begin(); it != mid_lo; ++it) {
     assert(*it < 3);
   }
-  for (vector<int>::iterator it = mid.first; it != mid.second; ++it) {
+  for (auto it = mid_lo; it != mid_hi; ++it) {
     assert(*it == 3);
   }
-  for (vector<int>::iterator it = mid.second; it != b.end(); ++it) {
+  for (auto it = mid_hi; it != b.end(); ++it) {
     assert(*it > 3);
   }
   return 0;
@@ -923,12 +921,12 @@ Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying
 #include <vector>
 
 template<class It>
-std::vector<typename std::iterator_traits<It>::value_type> longest_increasing_subsequence(
-    It lo, It hi
-) {
+auto longest_increasing_subsequence(It lo, It hi)
+    -> std::vector<typename std::iterator_traits<It>::value_type> {
+  using T = typename std::iterator_traits<It>::value_type;
   int len = 0, n = hi - lo;
   if (n == 0) {
-    return std::vector<typename std::iterator_traits<It>::value_type>();
+    return {};
   }
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
@@ -947,7 +945,7 @@ std::vector<typename std::iterator_traits<It>::value_type> longest_increasing_su
     prev[i] = right > 0 ? tail[right - 1] : -1;
     tail[right] = i;
   }
-  std::vector<typename std::iterator_traits<It>::value_type> res(len);
+  std::vector<T> res(len);
   for (int i = tail[len - 1]; i != -1; i = prev[i]) {
     res[--len] = *(lo + i);
   }
@@ -1126,9 +1124,9 @@ long long unbounded_knapsack(
 long long count_coin_change(const std::vector<int> &coins, int target) {
   std::vector<long long> dp(target + 1, 0);
   dp[0] = 1;
-  for (int i = 0; i < static_cast<int>(coins.size()); i++) {
-    for (int sum = coins[i]; sum <= target; sum++) {
-      dp[sum] += dp[sum - coins[i]];
+  for (int coin : coins) {
+    for (int sum = coin; sum <= target; sum++) {
+      dp[sum] += dp[sum - coin];
     }
   }
   return dp[target];
@@ -1403,22 +1401,21 @@ Intervals are represented as half-open ranges \inlinecode{[start, finish)}, so t
 struct Interval {
   int start, finish, id;
 
-  Interval(int start = 0, int finish = 0, int id = 0) : start(start), finish(finish), id(id) {}
+  explicit Interval(int start = 0, int finish = 0, int id = 0)
+      : start(start), finish(finish), id(id) {}
 };
 
-bool earlier_finish(const Interval &a, const Interval &b) {
-  return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
-}
-
 std::vector<Interval> interval_scheduling(std::vector<Interval> intervals) {
-  std::sort(intervals.begin(), intervals.end(), earlier_finish);
+  std::sort(intervals.begin(), intervals.end(), [](const Interval &a, const Interval &b) {
+    return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
+  });
   std::vector<Interval> res;
   int last_finish = 0;
   bool first = true;
-  for (int i = 0; i < static_cast<int>(intervals.size()); i++) {
-    if (first || intervals[i].start >= last_finish) {
-      res.push_back(intervals[i]);
-      last_finish = intervals[i].finish;
+  for (const auto &iv : intervals) {
+    if (first || iv.start >= last_finish) {
+      res.push_back(iv);
+      last_finish = iv.finish;
       first = false;
     }
   }
@@ -1432,11 +1429,11 @@ using namespace std;
 
 int main() {
   vector<Interval> intervals;
-  intervals.push_back(Interval(1, 4, 0));
-  intervals.push_back(Interval(3, 5, 1));
-  intervals.push_back(Interval(0, 6, 2));
-  intervals.push_back(Interval(5, 7, 3));
-  intervals.push_back(Interval(8, 9, 4));
+  intervals.emplace_back(1, 4, 0);
+  intervals.emplace_back(3, 5, 1);
+  intervals.emplace_back(0, 6, 2);
+  intervals.emplace_back(5, 7, 3);
+  intervals.emplace_back(8, 9, 4);
   vector<Interval> chosen = interval_scheduling(intervals);
   assert(chosen.size() == 3);
   assert(chosen[0].id == 0);
@@ -1467,20 +1464,21 @@ struct WeightedInterval {
   int start, finish;
   long long weight;
 
-  WeightedInterval(int start = 0, int finish = 0, long long weight = 0)
+  explicit WeightedInterval(int start = 0, int finish = 0, long long weight = 0)
       : start(start), finish(finish), weight(weight) {}
 };
 
-bool weighted_earlier_finish(const WeightedInterval &a, const WeightedInterval &b) {
-  return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
-}
-
 long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) {
-  std::sort(intervals.begin(), intervals.end(), weighted_earlier_finish);
+  std::sort(
+      intervals.begin(), intervals.end(), [](const WeightedInterval &a, const WeightedInterval &b) {
+        return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
+      }
+  );
   int n = intervals.size();
-  std::vector<int> finish(n);
-  for (int i = 0; i < n; i++) {
-    finish[i] = intervals[i].finish;
+  std::vector<int> finish;
+  finish.reserve(n);
+  for (const auto &iv : intervals) {
+    finish.push_back(iv.finish);
   }
   std::vector<long long> dp(n + 1, 0);
   for (int i = 1; i <= n; i++) {
@@ -1497,11 +1495,11 @@ using namespace std;
 
 int main() {
   vector<WeightedInterval> intervals;
-  intervals.push_back(WeightedInterval(1, 3, 5));
-  intervals.push_back(WeightedInterval(2, 5, 6));
-  intervals.push_back(WeightedInterval(4, 6, 5));
-  intervals.push_back(WeightedInterval(6, 7, 4));
-  intervals.push_back(WeightedInterval(5, 8, 11));
+  intervals.emplace_back(1, 3, 5);
+  intervals.emplace_back(2, 5, 6);
+  intervals.emplace_back(4, 6, 5);
+  intervals.emplace_back(6, 7, 4);
+  intervals.emplace_back(5, 8, 11);
   assert(weighted_interval_scheduling(intervals) == 17);
   return 0;
 }
@@ -1529,31 +1527,32 @@ The greedy algorithm sorts intervals by start time and reuses the group whose cu
 struct PartitionInterval {
   int start, finish, id;
 
-  PartitionInterval(int start = 0, int finish = 0, int id = 0)
+  explicit PartitionInterval(int start = 0, int finish = 0, int id = 0)
       : start(start), finish(finish), id(id) {}
 };
 
-bool earlier_start(const PartitionInterval &a, const PartitionInterval &b) {
-  return a.start != b.start ? a.start < b.start : a.finish < b.finish;
-}
-
 std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals) {
-  std::sort(intervals.begin(), intervals.end(), earlier_start);
+  std::sort(
+      intervals.begin(), intervals.end(),
+      [](const PartitionInterval &a, const PartitionInterval &b) {
+        return a.start != b.start ? a.start < b.start : a.finish < b.finish;
+      }
+  );
   std::vector<int> room(intervals.size());
   std::priority_queue<
       std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>>
       pq;
   int rooms = 0;
-  for (int i = 0; i < static_cast<int>(intervals.size()); i++) {
-    int id = intervals[i].id;
-    if (!pq.empty() && pq.top().first <= intervals[i].start) {
+  for (const auto &iv : intervals) {
+    int id = iv.id;
+    if (!pq.empty() && pq.top().first <= iv.start) {
       int r = pq.top().second;
       pq.pop();
       room[id] = r;
     } else {
       room[id] = rooms++;
     }
-    pq.push(std::make_pair(intervals[i].finish, room[id]));
+    pq.emplace(iv.finish, room[id]);
   }
   return room;
 }
@@ -1566,9 +1565,9 @@ using namespace std;
 
 int main() {
   vector<PartitionInterval> intervals;
-  intervals.push_back(PartitionInterval(0, 30, 0));
-  intervals.push_back(PartitionInterval(5, 10, 1));
-  intervals.push_back(PartitionInterval(15, 20, 2));
+  intervals.emplace_back(0, 30, 0);
+  intervals.emplace_back(5, 10, 1);
+  intervals.emplace_back(15, 20, 2);
   vector<int> room = interval_partitioning(intervals);
   assert(1 + *max_element(room.begin(), room.end()) == 2);
   assert(room[1] == room[2]);
@@ -1592,28 +1591,21 @@ This is a compact scheduling pattern that combines sorting with a disjoint-set f
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <numeric>
 #include <vector>
 
 struct Job {
   int deadline;
   long long profit;
 
-  Job(int deadline = 0, long long profit = 0) : deadline(deadline), profit(profit) {}
+  explicit Job(int deadline = 0, long long profit = 0) : deadline(deadline), profit(profit) {}
 };
-
-bool higher_profit(const Job &a, const Job &b) {
-  return a.profit != b.profit ? a.profit > b.profit : a.deadline < b.deadline;
-}
 
 class SlotDSU {
   std::vector<int> root;
 
  public:
-  explicit SlotDSU(int n) : root(n + 1) {
-    for (int i = 0; i <= n; i++) {
-      root[i] = i;
-    }
-  }
+  explicit SlotDSU(int n) : root(n + 1) { std::iota(root.begin(), root.end(), 0); }
 
   int find_root(int u) {
     if (root[u] != u) {
@@ -1626,17 +1618,19 @@ class SlotDSU {
 };
 
 long long schedule_deadline_jobs(std::vector<Job> jobs) {
-  std::sort(jobs.begin(), jobs.end(), higher_profit);
+  std::sort(jobs.begin(), jobs.end(), [](const Job &a, const Job &b) {
+    return a.profit != b.profit ? a.profit > b.profit : a.deadline < b.deadline;
+  });
   int max_deadline = 0;
-  for (int i = 0; i < static_cast<int>(jobs.size()); i++) {
-    max_deadline = std::max(max_deadline, jobs[i].deadline);
+  for (const auto &j : jobs) {
+    max_deadline = std::max(max_deadline, j.deadline);
   }
   SlotDSU slots(max_deadline);
   long long res = 0;
-  for (int i = 0; i < static_cast<int>(jobs.size()); i++) {
-    int slot = slots.find_root(jobs[i].deadline);
+  for (const auto &j : jobs) {
+    int slot = slots.find_root(j.deadline);
     if (slot > 0) {
-      res += jobs[i].profit;
+      res += j.profit;
       slots.occupy(slot);
     }
   }
@@ -1650,11 +1644,11 @@ using namespace std;
 
 int main() {
   vector<Job> jobs;
-  jobs.push_back(Job(2, 100));
-  jobs.push_back(Job(1, 19));
-  jobs.push_back(Job(2, 27));
-  jobs.push_back(Job(1, 25));
-  jobs.push_back(Job(3, 15));
+  jobs.emplace_back(2, 100);
+  jobs.emplace_back(1, 19);
+  jobs.emplace_back(2, 27);
+  jobs.emplace_back(1, 25);
+  jobs.emplace_back(3, 15);
   assert(schedule_deadline_jobs(jobs) == 142);
   return 0;
 }
@@ -1679,21 +1673,19 @@ Selects a maximum-size subset of jobs that can all be completed by their deadlin
 struct TimedJob {
   int duration, deadline;
 
-  TimedJob(int duration = 0, int deadline = 0) : duration(duration), deadline(deadline) {}
+  explicit TimedJob(int duration = 0, int deadline = 0) : duration(duration), deadline(deadline) {}
 };
 
-bool earlier_deadline(const TimedJob &a, const TimedJob &b) {
-  return a.deadline != b.deadline ? a.deadline < b.deadline : a.duration < b.duration;
-}
-
 int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
-  std::sort(jobs.begin(), jobs.end(), earlier_deadline);
+  std::sort(jobs.begin(), jobs.end(), [](const TimedJob &a, const TimedJob &b) {
+    return a.deadline != b.deadline ? a.deadline < b.deadline : a.duration < b.duration;
+  });
   std::priority_queue<int> durations;
   int time = 0;
-  for (int i = 0; i < static_cast<int>(jobs.size()); i++) {
-    time += jobs[i].duration;
-    durations.push(jobs[i].duration);
-    if (time > jobs[i].deadline) {
+  for (const auto &j : jobs) {
+    time += j.duration;
+    durations.push(j.duration);
+    if (time > j.deadline) {
       time -= durations.top();
       durations.pop();
     }
@@ -1708,10 +1700,10 @@ using namespace std;
 
 int main() {
   vector<TimedJob> jobs;
-  jobs.push_back(TimedJob(3, 4));
-  jobs.push_back(TimedJob(2, 3));
-  jobs.push_back(TimedJob(1, 2));
-  jobs.push_back(TimedJob(2, 7));
+  jobs.emplace_back(3, 4);
+  jobs.emplace_back(2, 3);
+  jobs.emplace_back(1, 2);
+  jobs.emplace_back(2, 7);
   assert(maximize_on_time_jobs(jobs) == 3);
   return 0;
 }
@@ -1789,7 +1781,7 @@ Selects uniformly random samples from a stream whose length may be unknown in ad
 template<class It>
 typename std::iterator_traits<It>::value_type reservoir_sample_one(It lo, It hi) {
   assert(lo != hi);
-  typename std::iterator_traits<It>::value_type sample = *lo;
+  auto sample = *lo;
   int seen = 0;
   for (It it = lo; it != hi; ++it) {
     seen++;
@@ -1801,8 +1793,10 @@ typename std::iterator_traits<It>::value_type reservoir_sample_one(It lo, It hi)
 }
 
 template<class It>
-std::vector<typename std::iterator_traits<It>::value_type> reservoir_sample_k(It lo, It hi, int k) {
-  std::vector<typename std::iterator_traits<It>::value_type> res;
+auto reservoir_sample_k(It lo, It hi, int k)
+    -> std::vector<typename std::iterator_traits<It>::value_type> {
+  using T = typename std::iterator_traits<It>::value_type;
+  std::vector<T> res;
   int seen = 0;
   for (It it = lo; it != hi; ++it) {
     seen++;
@@ -1833,10 +1827,10 @@ int main() {
 
   vector<int> sample = reservoir_sample_k(a.begin(), a.end(), 3);
   assert(sample.size() == 3);
-  for (int i = 0; i < static_cast<int>(sample.size()); i++) {
+  for (int s : sample) {
     bool found = false;
-    for (int j = 0; j < static_cast<int>(a.size()); j++) {
-      found = found || sample[i] == a[j];
+    for (int x : a) {
+      found = found || s == x;
     }
     assert(found);
   }
@@ -1870,10 +1864,9 @@ Given an array of numbers, determine the maximum possible sum of any contiguous 
 #include <vector>
 
 template<class It>
-typename std::iterator_traits<It>::value_type max_subarray_sum(
-    It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr
-) {
-  typedef typename std::iterator_traits<It>::value_type T;
+auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr) ->
+    typename std::iterator_traits<It>::value_type {
+  using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
     return T();
   }
@@ -2104,23 +2097,22 @@ The candidates are not automatically verified, since the algorithm intentionally
 
 template<class T, class It>
 std::map<T, int> misra_gries(It lo, It hi, int k) {
-  typedef std::map<T, int> counter_map;
+  using counter_map = std::map<T, int>;
   counter_map count;
   for (It it = lo; it != hi; ++it) {
-    typename counter_map::iterator found = count.find(*it);
-    if (found != count.end()) {
+    if (auto found = count.find(*it); found != count.end()) {
       found->second++;
     } else if (static_cast<int>(count.size()) < k - 1) {
       count[*it] = 1;
     } else {
       std::vector<T> erase;
-      for (typename counter_map::iterator jt = count.begin(); jt != count.end(); ++jt) {
-        if (--jt->second == 0) {
-          erase.push_back(jt->first);
+      for (auto &[key, val] : count) {
+        if (--val == 0) {
+          erase.push_back(key);
         }
       }
-      for (int i = 0; i < static_cast<int>(erase.size()); i++) {
-        count.erase(erase[i]);
+      for (const auto &key : erase) {
+        count.erase(key);
       }
     }
   }
@@ -2179,7 +2171,7 @@ std::pair<int, int> find_cycle_floyd(IntFunction f, int x0) {
     hare = f(hare);
     length++;
   }
-  return std::make_pair(start, length);
+  return {start, length};
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -2212,9 +2204,9 @@ void verify(int x0, int start, int length) {
 
 int main() {
   int x0 = 0;
-  pair<int, int> res = find_cycle_floyd(f, x0);
-  assert(res == make_pair(4, 2));
-  verify(x0, res.first, res.second);
+  auto [start, length] = find_cycle_floyd(f, x0);
+  assert(start == 4 && length == 2);
+  verify(x0, start, length);
   return 0;
 }
 \end{lstlisting}
@@ -2255,7 +2247,7 @@ std::pair<int, int> find_cycle_brent(IntFunction f, int x0) {
     hare = f(hare);
     start++;
   }
-  return std::make_pair(start, length);
+  return {start, length};
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -2288,9 +2280,9 @@ void verify(int x0, int start, int length) {
 
 int main() {
   int x0 = 0;
-  pair<int, int> res = find_cycle_brent(f, x0);
-  assert(res == make_pair(4, 2));
-  verify(x0, res.first, res.second);
+  auto [start, length] = find_cycle_brent(f, x0);
+  assert(start == 4 && length == 2);
+  verify(x0, start, length);
   return 0;
 }
 \end{lstlisting}

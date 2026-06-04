@@ -19,6 +19,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
+#include <random>
 #include <stdexcept>
 #include <utility>
 
@@ -27,7 +28,7 @@ const double EPS = 1e-9;
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -80,7 +81,8 @@ Circle minimum_enclosing_circle(It lo, It hi) {
   if (lo + 1 == hi) {
     return Circle(lo->x, lo->y, 0);
   }
-  std::random_shuffle(lo, hi);
+  static std::mt19937 rng(std::random_device{}());
+  std::shuffle(lo, hi, rng);
   Circle res(*lo, *(lo + 1));
   for (It i = lo + 2; i != hi; ++i) {
     if (res.contains(*i)) {
@@ -110,10 +112,10 @@ using namespace std;
 
 int main() {
   vector<point> v;
-  v.push_back(point(0, 0));
-  v.push_back(point(0, 1));
-  v.push_back(point(1, 0));
-  v.push_back(point(1, 1));
+  v.emplace_back(0, 0);
+  v.emplace_back(0, 1);
+  v.emplace_back(1, 0);
+  v.emplace_back(1, 1);
   Circle res = minimum_enclosing_circle(v.begin(), v.end());
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
   return 0;

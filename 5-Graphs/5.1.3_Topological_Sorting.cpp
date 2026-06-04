@@ -35,8 +35,8 @@ void dfs(int u) {
     return;
   }
   visit[u] = true;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    dfs(adj[u][j]);
+  for (int v : adj[u]) {
+    dfs(v);
   }
   visit[u] = false;
   done[u] = true;
@@ -76,8 +76,8 @@ int main() {
   adj[4].push_back(6);
   toposort(8);
   cout << "The topological order:";
-  for (int i = 0; i < static_cast<int>(res.size()); i++) {
-    cout << " " << res[i];
+  for (int v : res) {
+    cout << " " << v;
   }
   cout << endl;
   return 0;

@@ -35,7 +35,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -114,9 +114,9 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
   int n = hi - lo;
   std::vector<double> x, y, z;
   for (It it = lo; it != hi; ++it) {
-    x.push_back(it->x);
-    y.push_back(it->y);
-    z.push_back(sqnorm(*it));
+    x.emplace_back(it->x);
+    y.emplace_back(it->y);
+    z.emplace_back(sqnorm(*it));
   }
   std::vector<Triangle> res;
   for (int i = 0; i < n - 2; i++) {
@@ -138,8 +138,8 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
           }
         }
         // Handle four points on a circle.
-        for (int t = 0; t < static_cast<int>(res.size()); t++) {
-          point s2[] = {res[t].a, res[t].b, res[t].c, res[t].a};
+        for (const auto &tri : res) {
+          point s2[] = {tri.a, tri.b, tri.c, tri.a};
           for (int u = 0; u < 3; u++) {
             for (int v = 0; v < 3; v++) {
               if (seg_intersection(s1[u], s1[u + 1], s2[v], s2[v + 1]) == 0) {
@@ -148,7 +148,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
             }
           }
         }
-        res.push_back(Triangle(lo[i], lo[j], lo[k]));
+        res.emplace_back(lo[i], lo[j], lo[k]);
       skip:;
       }
     }
@@ -163,16 +163,16 @@ using namespace std;
 
 int main() {
   vector<point> v;
-  v.push_back(point(1, 3));
-  v.push_back(point(1, 2));
-  v.push_back(point(2, 1));
-  v.push_back(point(0, 0));
-  v.push_back(point(-1, 3));
+  v.emplace_back(1, 3);
+  v.emplace_back(1, 2);
+  v.emplace_back(2, 1);
+  v.emplace_back(0, 0);
+  v.emplace_back(-1, 3);
   vector<Triangle> t;
-  t.push_back(Triangle(point(1, 3), point(1, 2), point(-1, 3)));
-  t.push_back(Triangle(point(1, 3), point(2, 1), point(1, 2)));
-  t.push_back(Triangle(point(1, 2), point(2, 1), point(0, 0)));
-  t.push_back(Triangle(point(1, 2), point(0, 0), point(-1, 3)));
+  t.emplace_back(point(1, 3), point(1, 2), point(-1, 3));
+  t.emplace_back(point(1, 3), point(2, 1), point(1, 2));
+  t.emplace_back(point(1, 2), point(2, 1), point(0, 0));
+  t.emplace_back(point(1, 2), point(0, 0), point(-1, 3));
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
   return 0;
 }

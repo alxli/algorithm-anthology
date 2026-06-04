@@ -70,8 +70,8 @@ class SkipList {
 
  public:
   SkipList() : head(new Node(K(), V(), MAX_LEVELS)), num_nodes(0) {
-    for (int i = 0; i < static_cast<int>(head->next.size()); i++) {
-      head->next[i] = nullptr;
+    for (auto &ptr : head->next) {
+      ptr = nullptr;
     }
   }
 
@@ -119,7 +119,7 @@ class SkipList {
     }
     n = n->next[0];
     if (n != nullptr && n->key == k) {
-      for (int i = 0; i < static_cast<int>(update.size()); i++) {
+      for (int i = 0, levels = static_cast<int>(update.size()); i < levels; i++) {
         if (update[i]->next[i] != n) {
           break;
         }

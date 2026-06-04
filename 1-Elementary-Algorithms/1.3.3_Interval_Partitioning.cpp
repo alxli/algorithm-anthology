@@ -27,31 +27,32 @@ Space Complexity:
 struct PartitionInterval {
   int start, finish, id;
 
-  PartitionInterval(int start = 0, int finish = 0, int id = 0)
+  explicit PartitionInterval(int start = 0, int finish = 0, int id = 0)
       : start(start), finish(finish), id(id) {}
 };
 
-bool earlier_start(const PartitionInterval &a, const PartitionInterval &b) {
-  return a.start != b.start ? a.start < b.start : a.finish < b.finish;
-}
-
 std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals) {
-  std::sort(intervals.begin(), intervals.end(), earlier_start);
+  std::sort(
+      intervals.begin(), intervals.end(),
+      [](const PartitionInterval &a, const PartitionInterval &b) {
+        return a.start != b.start ? a.start < b.start : a.finish < b.finish;
+      }
+  );
   std::vector<int> room(intervals.size());
   std::priority_queue<
       std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>>
       pq;
   int rooms = 0;
-  for (int i = 0; i < static_cast<int>(intervals.size()); i++) {
-    int id = intervals[i].id;
-    if (!pq.empty() && pq.top().first <= intervals[i].start) {
+  for (const auto &iv : intervals) {
+    int id = iv.id;
+    if (!pq.empty() && pq.top().first <= iv.start) {
       int r = pq.top().second;
       pq.pop();
       room[id] = r;
     } else {
       room[id] = rooms++;
     }
-    pq.push(std::make_pair(intervals[i].finish, room[id]));
+    pq.emplace(iv.finish, room[id]);
   }
   return room;
 }
@@ -64,9 +65,9 @@ using namespace std;
 
 int main() {
   vector<PartitionInterval> intervals;
-  intervals.push_back(PartitionInterval(0, 30, 0));
-  intervals.push_back(PartitionInterval(5, 10, 1));
-  intervals.push_back(PartitionInterval(15, 20, 2));
+  intervals.emplace_back(0, 30, 0);
+  intervals.emplace_back(5, 10, 1);
+  intervals.emplace_back(15, 20, 2);
   vector<int> room = interval_partitioning(intervals);
   assert(1 + *max_element(room.begin(), room.end()) == 2);
   assert(room[1] == room[2]);

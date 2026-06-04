@@ -44,10 +44,9 @@ void dfs(int u, int p) {
   visit[u] = true;
   lowlink[u] = tin[u] = timer++;
   currstack.push_back(u);
-  int v, children = 0;
+  int children = 0;
   bool cutpoint = false;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    v = adj[u][j];
+  for (int v : adj[u]) {
     if (v == p) {
       continue;
     }
@@ -58,7 +57,7 @@ void dfs(int u, int p) {
       lowlink[u] = std::min(lowlink[u], lowlink[v]);
       cutpoint |= (lowlink[v] >= tin[u]);
       if (lowlink[v] > tin[u]) {
-        bridges.push_back(std::make_pair(u, v));
+        bridges.emplace_back(u, v);
       }
       children++;
     }
@@ -71,6 +70,7 @@ void dfs(int u, int p) {
   }
   if (lowlink[u] == tin[u]) {
     std::vector<int> component;
+    int v;
     do {
       v = currstack.back();
       currstack.pop_back();
@@ -101,15 +101,17 @@ void get_block_forest(int nodes) {
   for (int i = 0; i < nodes; i++) {
     block_forest[i].clear();
   }
-  for (int i = 0; i < static_cast<int>(block.size()); i++) {
-    for (int j = 0; j < static_cast<int>(block[i].size()); j++) {
-      comp[block[i][j]] = i;
+  int id = 0;
+  for (const auto &component : block) {
+    for (int v : component) {
+      comp[v] = id;
     }
+    id++;
   }
   for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < static_cast<int>(adj[i].size()); j++) {
-      if (comp[i] != comp[adj[i][j]]) {
-        block_forest[comp[i]].push_back(comp[adj[i][j]]);
+    for (int v : adj[i]) {
+      if (comp[i] != comp[v]) {
+        block_forest[comp[i]].push_back(comp[v]);
       }
     }
   }
@@ -157,25 +159,25 @@ int main() {
   tarjan(8);
   get_block_forest(8);
   cout << "Cut-points:";
-  for (int i = 0; i < static_cast<int>(cutpoints.size()); i++) {
-    cout << " " << cutpoints[i];
+  for (int v : cutpoints) {
+    cout << " " << v;
   }
   cout << endl << "Bridges:" << endl;
-  for (int i = 0; i < static_cast<int>(bridges.size()); i++) {
-    cout << bridges[i].first << " " << bridges[i].second << endl;
+  for (auto &[u, v] : bridges) {
+    cout << u << " " << v << endl;
   }
   cout << "Blocks, or Edge-Biconnected Components:" << endl;
-  for (int i = 0; i < static_cast<int>(block.size()); i++) {
-    for (int j = 0; j < static_cast<int>(block[i].size()); j++) {
-      cout << block[i][j] << " ";
+  for (auto &blk : block) {
+    for (int v : blk) {
+      cout << v << " ";
     }
     cout << endl;
   }
   cout << "Adjacency List for Bridge-Block Forest:" << endl;
-  for (int i = 0; i < static_cast<int>(block.size()); i++) {
+  for (int i = 0, n = static_cast<int>(block.size()); i < n; i++) {
     cout << i << " =>";
-    for (int j = 0; j < static_cast<int>(block_forest[i].size()); j++) {
-      cout << " " << block_forest[i][j];
+    for (int v : block_forest[i]) {
+      cout << " " << v;
     }
     cout << endl;
   }

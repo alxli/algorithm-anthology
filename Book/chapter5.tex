@@ -34,10 +34,9 @@ class Graph {
   void dfs(int n, std::vector<bool> &visit, ReportFunction f) const {
     f(n);
     visit[n] = true;
-    std::vector<int>::const_iterator it;
-    for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (!visit[*it]) {
-        dfs(*it, visit, f);
+    for (int v : adj[n]) {
+      if (!visit[v]) {
+        dfs(v, visit, f);
       }
     }
   }
@@ -45,15 +44,14 @@ class Graph {
   bool has_cycle(int n, int prev, std::vector<bool> &visit, std::vector<bool> &onstack) const {
     visit[n] = true;
     onstack[n] = true;
-    std::vector<int>::const_iterator it;
-    for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (directed && onstack[*it]) {
+    for (int v : adj[n]) {
+      if (directed && onstack[v]) {
         return true;
       }
-      if (!directed && visit[*it] && *it != prev) {
+      if (!directed && visit[v] && v != prev) {
         return true;
       }
-      if (!visit[*it] && has_cycle(*it, n, visit, onstack)) {
+      if (!visit[v] && has_cycle(v, n, visit, onstack)) {
         return true;
       }
     }
@@ -179,8 +177,7 @@ int component_id[MAXN];
 void dfs(int u, int id) {
   component_id[u] = id;
   components[id].push_back(u);
-  for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
-    int v = adj[u][i];
+  for (int v : adj[u]) {
     if (component_id[v] == -1) {
       dfs(v, id);
     }
@@ -192,7 +189,7 @@ void connected_components(int nodes) {
   std::fill(component_id, component_id + nodes, -1);
   for (int u = 0; u < nodes; u++) {
     if (component_id[u] == -1) {
-      components.push_back(std::vector<int>());
+      components.push_back({});
       dfs(u, static_cast<int>(components.size()) - 1);
     }
   }
@@ -250,8 +247,8 @@ void dfs(int u) {
     return;
   }
   visit[u] = true;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    dfs(adj[u][j]);
+  for (int v : adj[u]) {
+    dfs(v);
   }
   visit[u] = false;
   done[u] = true;
@@ -287,8 +284,8 @@ int main() {
   adj[4].push_back(6);
   toposort(8);
   cout << "The topological order:";
-  for (int i = 0; i < static_cast<int>(res.size()); i++) {
-    cout << " " << res[i];
+  for (int v : res) {
+    cout << " " << v;
   }
   cout << endl;
   return 0;
@@ -328,10 +325,8 @@ std::vector<int> find_centers(int nodes) {
   int removed = leaves.size();
   while (removed < nodes) {
     std::vector<int> nleaves;
-    for (int i = 0; i < static_cast<int>(leaves.size()); i++) {
-      int u = leaves[i];
-      for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-        int v = adj[u][j];
+    for (int u : leaves) {
+      for (int v : adj[u]) {
         if (--degree[v] == 1) {
           nleaves.push_back(v);
         }
@@ -346,8 +341,7 @@ std::vector<int> find_centers(int nodes) {
 int find_centroid(int nodes, int u = 0, int p = -1) {
   int count = 1;
   bool good_center = true;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    int v = adj[u][j];
+  for (int v : adj[u]) {
     if (v == p) {
       continue;
     }
@@ -364,10 +358,10 @@ int find_centroid(int nodes, int u = 0, int p = -1) {
 }
 
 std::pair<int, int> dfs(int u, int p, int depth) {
-  std::pair<int, int> res = std::make_pair(depth, u);
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    if (adj[u][j] != p) {
-      res = max(res, dfs(adj[u][j], u, depth + 1));
+  std::pair<int, int> res = {depth, u};
+  for (int v : adj[u]) {
+    if (v != p) {
+      res = max(res, dfs(v, u, depth + 1));
     }
   }
   return res;
@@ -431,8 +425,7 @@ bool removed[MAXN];
 
 int get_size(int u, int p) {
   subtree_size[u] = 1;
-  for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
-    int v = adj[u][i];
+  for (int v : adj[u]) {
     if (v != p && !removed[v]) {
       subtree_size[u] += get_size(v, u);
     }
@@ -441,8 +434,7 @@ int get_size(int u, int p) {
 }
 
 int get_centroid(int u, int p, int total) {
-  for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
-    int v = adj[u][i];
+  for (int v : adj[u]) {
     if (v != p && !removed[v] && subtree_size[v] > total / 2) {
       return get_centroid(v, u, total);
     }
@@ -455,8 +447,7 @@ void decompose(int entry, int parent) {
   int centroid = get_centroid(entry, -1, total);
   centroid_parent[centroid] = parent;
   removed[centroid] = true;
-  for (int i = 0; i < static_cast<int>(adj[centroid].size()); i++) {
-    int v = adj[centroid][i];
+  for (int v : adj[centroid]) {
     if (!removed[v]) {
       decompose(v, centroid);
     }
@@ -533,8 +524,7 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int>> &tree) {
   while (!stack.empty()) {
     int u = stack.back();
     stack.pop_back();
-    for (int i = 0; i < static_cast<int>(tree[u].size()); i++) {
-      int v = tree[u][i];
+    for (int v : tree[u]) {
       if (parent[v] == -1) {
         parent[v] = u;
         stack.push_back(v);
@@ -558,24 +548,23 @@ std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
   std::vector<int> degree(nodes, 1);
   std::set<int> leaves;
   std::vector<std::pair<int, int>> edges;
-  for (int i = 0; i < static_cast<int>(code.size()); i++) {
-    degree[code[i]]++;
+  for (int c : code) {
+    degree[c]++;
   }
   for (int u = 0; u < nodes; u++) {
     if (degree[u] == 1) {
       leaves.insert(u);
     }
   }
-  for (int i = 0; i < static_cast<int>(code.size()); i++) {
+  for (int u : code) {
     int leaf = *leaves.begin();
     leaves.erase(leaves.begin());
-    int u = code[i];
-    edges.push_back(std::make_pair(leaf, u));
+    edges.emplace_back(leaf, u);
     if (--degree[u] == 1) {
       leaves.insert(u);
     }
   }
-  edges.push_back(std::make_pair(*leaves.begin(), *leaves.rbegin()));
+  edges.emplace_back(*leaves.begin(), *leaves.rbegin());
   return edges;
 }
 \end{lstlisting}
@@ -675,8 +664,8 @@ int main() {
     g[4].push_back(1);
     cycle = euler_cycle_directed(g, 0);
     cout << "Eulerian cycle from 0 (directed):";
-    for (int i = 0; i < static_cast<int>(cycle.size()); i++) {
-      cout << " " << cycle[i];
+    for (int v : cycle) {
+      cout << " " << v;
     }
     cout << endl;
   }
@@ -696,8 +685,8 @@ int main() {
     g[1].push_back(4);
     cycle = euler_cycle_undirected(g, 2);
     cout << "Eulerian cycle from 2 (undirected):";
-    for (int i = 0; i < static_cast<int>(cycle.size()); i++) {
-      cout << " " << cycle[i];
+    for (int v : cycle) {
+      cout << " " << v;
     }
     cout << endl;
   }
@@ -728,7 +717,7 @@ Given a starting node in an unweighted, directed graph, visit every connected no
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = 0x3f3f'3f3f;
 std::vector<int> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
@@ -739,20 +728,18 @@ void bfs(int nodes, int start) {
     pred[i] = -1;
   }
   std::queue<std::pair<int, int>> q;
-  q.push(std::make_pair(start, 0));
+  q.emplace(start, 0);
   while (!q.empty()) {
-    int u = q.front().first;
-    int d = q.front().second;
+    auto [u, d] = q.front();
     q.pop();
     visit[u] = true;
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      int v = adj[u][j];
+    for (int v : adj[u]) {
       if (visit[v]) {
         continue;
       }
       dist[v] = d + 1;
       pred[v] = u;
-      q.push(std::make_pair(v, d + 1));
+      q.emplace(v, d + 1);
     }
   }
 }
@@ -827,9 +814,7 @@ void zero_one_bfs(int nodes, int start) {
   while (!dq.empty()) {
     int u = dq.front();
     dq.pop_front();
-    for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
-      int v = adj[u][i].first;
-      int w = adj[u][i].second;
+    for (auto &[v, w] : adj[u]) {
       if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
@@ -849,7 +834,7 @@ void zero_one_bfs(int nodes, int start) {
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].push_back(make_pair(v, w));
+  adj[u].emplace_back(v, w);
 }
 
 int main() {
@@ -898,20 +883,19 @@ void dijkstra(int nodes, int start) {
   }
   dist[start] = 0;
   std::priority_queue<std::pair<int, int>> pq;
-  pq.push(std::make_pair(0, start));
+  pq.emplace(0, start);
   while (!pq.empty()) {
     int u = pq.top().second;
     pq.pop();
     visit[u] = true;
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      int v = adj[u][j].first;
+    for (auto &[v, w] : adj[u]) {
       if (visit[v]) {
         continue;
       }
-      if (dist[v] > dist[u] + adj[u][j].second) {
-        dist[v] = dist[u] + adj[u][j].second;
+      if (dist[v] > dist[u] + w) {
+        dist[v] = dist[u] + w;
         pred[v] = u;
-        pq.push(std::make_pair(-dist[v], v));
+        pq.emplace(-dist[v], v);
       }
     }
   }
@@ -937,11 +921,11 @@ void print_path(int dest) {
 
 int main() {
   int start = 0, dest = 3;
-  adj[0].push_back(make_pair(1, 2));
-  adj[0].push_back(make_pair(3, 8));
-  adj[1].push_back(make_pair(2, 2));
-  adj[1].push_back(make_pair(3, 4));
-  adj[2].push_back(make_pair(3, 1));
+  adj[0].push_back({1, 2});
+  adj[0].push_back({3, 8});
+  adj[1].push_back({2, 2});
+  adj[1].push_back({3, 4});
+  adj[2].push_back({3, 1});
   dijkstra(4, start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;
@@ -986,16 +970,16 @@ void bellman_ford(int nodes, int start) {
   }
   dist[start] = 0;
   for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < static_cast<int>(e.size()); j++) {
-      if (dist[e[j].v] > dist[e[j].u] + e[j].w) {
-        dist[e[j].v] = dist[e[j].u] + e[j].w;
-        pred[e[j].v] = e[j].u;
+    for (auto &edge : e) {
+      if (dist[edge.v] > dist[edge.u] + edge.w) {
+        dist[edge.v] = dist[edge.u] + edge.w;
+        pred[edge.v] = edge.u;
       }
     }
   }
   // Optional: Report negative-weighted cycles.
-  for (int i = 0; i < static_cast<int>(e.size()); i++) {
-    if (dist[e[i].v] > dist[e[i].u] + e[i].w) {
+  for (auto &edge : e) {
+    if (dist[edge.v] > dist[edge.u] + edge.w) {
       throw std::runtime_error("Negative-weight cycle found.");
     }
   }
@@ -1021,9 +1005,9 @@ void print_path(int dest) {
 
 int main() {
   int start = 0, dest = 2;
-  e.push_back((Edge){0, 1, 1});
-  e.push_back((Edge){1, 2, 2});
-  e.push_back((Edge){0, 2, 5});
+  e.push_back(Edge{0, 1, 1});
+  e.push_back(Edge{1, 2, 2});
+  e.push_back(Edge{0, 2, 5});
   bellman_ford(3, start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;
@@ -1056,7 +1040,7 @@ The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = 0x3f3f'3f3f;
 std::vector<std::pair<int, int>> adj[MAXN];
 int dist[MAXN], pred[MAXN], relax_count[MAXN];
 bool in_queue[MAXN];
@@ -1074,9 +1058,7 @@ bool spfa(int nodes, int start) {
     int u = q.front();
     q.pop();
     in_queue[u] = false;
-    for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
-      int v = adj[u][i].first;
-      int w = adj[u][i].second;
+    for (auto &[v, w] : adj[u]) {
       if (dist[u] != INF && dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
@@ -1099,7 +1081,7 @@ bool spfa(int nodes, int start) {
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].push_back(make_pair(v, w));
+  adj[u].emplace_back(v, w);
 }
 
 int main() {
@@ -1222,9 +1204,9 @@ std::vector<std::vector<int>> scc;
 
 void dfs(std::vector<int> g[], std::vector<int> &res, int u) {
   visit[u] = true;
-  for (int j = 0; j < static_cast<int>(g[u].size()); j++) {
-    if (!visit[g[u][j]]) {
-      dfs(g, res, g[u][j]);
+  for (int v : g[u]) {
+    if (!visit[v]) {
+      dfs(g, res, v);
     }
   }
   res.push_back(u);
@@ -1242,17 +1224,17 @@ void kosaraju(int nodes) {
   std::reverse(order.begin(), order.end());
   std::fill(visit.begin(), visit.end(), false);
   for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < static_cast<int>(adj[i].size()); j++) {
-      rev[adj[i][j]].push_back(i);
+    for (int v : adj[i]) {
+      rev[v].push_back(i);
     }
   }
   scc.clear();
-  for (int i = 0; i < static_cast<int>(order.size()); i++) {
-    if (visit[order[i]]) {
+  for (int u : order) {
+    if (visit[u]) {
       continue;
     }
     std::vector<int> component;
-    dfs(rev, component, order[i]);
+    dfs(rev, component, u);
     scc.push_back(component);
   }
 }
@@ -1279,9 +1261,9 @@ int main() {
   adj[7].push_back(6);
   kosaraju(8);
   cout << "Components:" << endl;
-  for (int i = 0; i < static_cast<int>(scc.size()); i++) {
-    for (int j = 0; j < static_cast<int>(scc[i].size()); j++) {
-      cout << scc[i][j] << " ";
+  for (auto &comp : scc) {
+    for (int v : comp) {
+      cout << v << " ";
     }
     cout << endl;
   }
@@ -1320,9 +1302,7 @@ void dfs(int u) {
   visit[u] = true;
   currstack.push_back(u);
   bool is_component_root = true;
-  int v;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    v = adj[u][j];
+  for (int v : adj[u]) {
     if (!visit[v]) {
       dfs(v);
     }
@@ -1335,6 +1315,7 @@ void dfs(int u) {
     return;
   }
   std::vector<int> component;
+  int v;
   do {
     v = currstack.back();
     visit[v] = true;
@@ -1380,9 +1361,9 @@ int main() {
   adj[7].push_back(6);
   tarjan(8);
   cout << "Components:" << endl;
-  for (int i = 0; i < static_cast<int>(scc.size()); i++) {
-    for (int j = 0; j < static_cast<int>(scc[i].size()); j++) {
-      cout << scc[i][j] << " ";
+  for (auto &comp : scc) {
+    for (int v : comp) {
+      cout << v << " ";
     }
     cout << endl;
   }
@@ -1429,10 +1410,9 @@ void dfs(int u, int p) {
   visit[u] = true;
   lowlink[u] = tin[u] = timer++;
   currstack.push_back(u);
-  int v, children = 0;
+  int children = 0;
   bool cutpoint = false;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    v = adj[u][j];
+  for (int v : adj[u]) {
     if (v == p) {
       continue;
     }
@@ -1443,7 +1423,7 @@ void dfs(int u, int p) {
       lowlink[u] = std::min(lowlink[u], lowlink[v]);
       cutpoint |= (lowlink[v] >= tin[u]);
       if (lowlink[v] > tin[u]) {
-        bridges.push_back(std::make_pair(u, v));
+        bridges.emplace_back(u, v);
       }
       children++;
     }
@@ -1456,6 +1436,7 @@ void dfs(int u, int p) {
   }
   if (lowlink[u] == tin[u]) {
     std::vector<int> component;
+    int v;
     do {
       v = currstack.back();
       currstack.pop_back();
@@ -1486,15 +1467,17 @@ void get_block_forest(int nodes) {
   for (int i = 0; i < nodes; i++) {
     block_forest[i].clear();
   }
-  for (int i = 0; i < static_cast<int>(block.size()); i++) {
-    for (int j = 0; j < static_cast<int>(block[i].size()); j++) {
-      comp[block[i][j]] = i;
+  int id = 0;
+  for (const auto &component : block) {
+    for (int v : component) {
+      comp[v] = id;
     }
+    id++;
   }
   for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < static_cast<int>(adj[i].size()); j++) {
-      if (comp[i] != comp[adj[i][j]]) {
-        block_forest[comp[i]].push_back(comp[adj[i][j]]);
+    for (int v : adj[i]) {
+      if (comp[i] != comp[v]) {
+        block_forest[comp[i]].push_back(comp[v]);
       }
     }
   }
@@ -1520,25 +1503,25 @@ int main() {
   tarjan(8);
   get_block_forest(8);
   cout << "Cut-points:";
-  for (int i = 0; i < static_cast<int>(cutpoints.size()); i++) {
-    cout << " " << cutpoints[i];
+  for (int v : cutpoints) {
+    cout << " " << v;
   }
   cout << endl << "Bridges:" << endl;
-  for (int i = 0; i < static_cast<int>(bridges.size()); i++) {
-    cout << bridges[i].first << " " << bridges[i].second << endl;
+  for (auto &[u, v] : bridges) {
+    cout << u << " " << v << endl;
   }
   cout << "Blocks, or Edge-Biconnected Components:" << endl;
-  for (int i = 0; i < static_cast<int>(block.size()); i++) {
-    for (int j = 0; j < static_cast<int>(block[i].size()); j++) {
-      cout << block[i][j] << " ";
+  for (auto &blk : block) {
+    for (int v : blk) {
+      cout << v << " ";
     }
     cout << endl;
   }
   cout << "Adjacency List for Bridge-Block Forest:" << endl;
-  for (int i = 0; i < static_cast<int>(block.size()); i++) {
+  for (int i = 0, n = static_cast<int>(block.size()); i < n; i++) {
     cout << i << " =>";
-    for (int j = 0; j < static_cast<int>(block_forest[i].size()); j++) {
-      cout << " " << block_forest[i][j];
+    for (int v : block_forest[i]) {
+      cout << " " << v;
     }
     cout << endl;
   }
@@ -1662,16 +1645,16 @@ struct OnlineBridges {
         v = parent[v];
       }
     }
-    for (int i = 0; i < static_cast<int>(path_a.size()); i++) {
-      dsu_2ecc[path_a[i]] = lca;
-      if (path_a[i] == lca) {
+    for (int v : path_a) {
+      dsu_2ecc[v] = lca;
+      if (v == lca) {
         break;
       }
       bridges--;
     }
-    for (int i = 0; i < static_cast<int>(path_b.size()); i++) {
-      dsu_2ecc[path_b[i]] = lca;
-      if (path_b[i] == lca) {
+    for (int v : path_b) {
+      dsu_2ecc[v] = lca;
+      if (v == lca) {
         break;
       }
       bridges--;
@@ -1769,8 +1752,7 @@ struct TwoSAT {
 
   void dfs_order(int u, std::vector<bool> &visited) {
     visited[u] = true;
-    for (int i = 0; i < static_cast<int>(graph[u].size()); i++) {
-      int v = graph[u][i];
+    for (int v : graph[u]) {
       if (!visited[v]) {
         dfs_order(v, visited);
       }
@@ -1780,8 +1762,7 @@ struct TwoSAT {
 
   void dfs_component(int u, int id) {
     component[u] = id;
-    for (int i = 0; i < static_cast<int>(reverse_graph[u].size()); i++) {
-      int v = reverse_graph[u][i];
+    for (int v : reverse_graph[u]) {
       if (component[v] == -1) {
         dfs_component(v, id);
       }
@@ -1799,9 +1780,9 @@ struct TwoSAT {
     }
     std::reverse(order.begin(), order.end());
     int id = 0;
-    for (int i = 0; i < static_cast<int>(order.size()); i++) {
-      if (component[order[i]] == -1) {
-        dfs_component(order[i], id++);
+    for (int u : order) {
+      if (component[u] == -1) {
+        dfs_component(u, id++);
       }
     }
     for (int i = 0; i < variables; i++) {
@@ -1868,22 +1849,22 @@ int prim(int nodes) {
     }
     visit[i] = true;
     std::priority_queue<std::pair<int, std::pair<int, int>>> pq;
-    for (int j = 0; j < static_cast<int>(adj[i].size()); j++) {
-      pq.push(std::make_pair(-adj[i][j].second, std::make_pair(i, adj[i][j].first)));
+    for (auto &[nb, w] : adj[i]) {
+      pq.emplace(-w, std::pair<int, int>{i, nb});
     }
     while (!pq.empty()) {
-      int u = pq.top().second.first;
-      int v = pq.top().second.second;
-      int w = -pq.top().first;
+      auto [neg_w, endpoints] = pq.top();
+      auto [u, v] = endpoints;
+      int w = -neg_w;
       pq.pop();
       if (visit[u] && !visit[v]) {
         visit[v] = true;
         if (v != i) {
-          mst.push_back(std::make_pair(u, v));
+          mst.emplace_back(u, v);
           total_dist += w;
         }
-        for (int j = 0; j < static_cast<int>(adj[v].size()); j++) {
-          pq.push(std::make_pair(-adj[v][j].second, std::make_pair(v, adj[v][j].first)));
+        for (auto &[nb, ew] : adj[v]) {
+          pq.emplace(-ew, std::pair<int, int>{v, nb});
         }
       }
     }
@@ -1897,8 +1878,8 @@ int prim(int nodes) {
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].push_back(make_pair(v, w));
-  adj[v].push_back(make_pair(u, w));
+  adj[u].push_back({v, w});
+  adj[v].push_back({u, w});
 }
 
 int main() {
@@ -1910,8 +1891,8 @@ int main() {
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
   cout << "Total distance: " << prim(7) << endl;
-  for (int i = 0; i < static_cast<int>(mst.size()); i++) {
-    cout << mst[i].first << " <-> " << mst[i].second << endl;
+  for (auto &[u, v] : mst) {
+    cout << u << " <-> " << v << endl;
   }
   return 0;
 }
@@ -1937,11 +1918,13 @@ Given a connected, undirected, weighted graph with possibly negative weights, it
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <numeric>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 const int MAXN = 100;
-std::vector<std::pair<int, std::pair<int, int>>> edges;
+std::vector<std::tuple<int, int, int>> edges;
 int root[MAXN];
 std::vector<std::pair<int, int>> mst;
 
@@ -1956,16 +1939,14 @@ int kruskal(int nodes) {
   mst.clear();
   std::sort(edges.begin(), edges.end());
   int total_dist = 0;
-  for (int i = 0; i < nodes; i++) {
-    root[i] = i;
-  }
-  for (int i = 0; i < static_cast<int>(edges.size()); i++) {
-    int u = find_root(edges[i].second.first);
-    int v = find_root(edges[i].second.second);
+  std::iota(root, root + nodes, 0);
+  for (auto &[w, a, b] : edges) {
+    int u = find_root(a);
+    int v = find_root(b);
     if (u != v) {
       root[u] = root[v];
-      mst.push_back(edges[i].second);
-      total_dist += edges[i].first;
+      mst.emplace_back(a, b);
+      total_dist += w;
     }
   }
   return total_dist;
@@ -1977,7 +1958,7 @@ int kruskal(int nodes) {
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  edges.push_back(make_pair(w, make_pair(u, v)));
+  edges.emplace_back(w, u, v);
 }
 
 int main() {
@@ -1989,8 +1970,8 @@ int main() {
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
   cout << "Total distance: " << kruskal(7) << endl;
-  for (int i = 0; i < static_cast<int>(mst.size()); i++) {
-    cout << mst[i].first << " <-> " << mst[i].second << endl;
+  for (auto &[u, v] : mst) {
+    cout << u << " <-> " << v << endl;
   }
   return 0;
 }
@@ -2103,21 +2084,20 @@ const int MAXN = 100, INF = INT_MAX / 2;
 std::vector<edge> adj[MAXN];
 
 void add_edge(int u, int v, int cap) {
-  adj[u].push_back((edge){u, v, static_cast<int>(adj[v].size()), cap, 0});
-  adj[v].push_back((edge){v, u, static_cast<int>(adj[u].size()) - 1, 0, 0});
+  adj[u].push_back(edge{u, v, static_cast<int>(adj[v].size()), cap, 0});
+  adj[v].push_back(edge{v, u, static_cast<int>(adj[u].size()) - 1, 0, 0});
 }
 
 int edmonds_karp(int nodes, int source, int sink) {
   int max_flow = 0;
   for (;;) {
-    std::vector<edge *> pred(nodes, (edge *)0);
+    std::vector<edge *> pred(nodes, nullptr);
     std::queue<int> q;
     q.push(source);
     while (!q.empty() && !pred[sink]) {
       int u = q.front();
       q.pop();
-      for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-        edge &e = adj[u][j];
+      for (edge &e : adj[u]) {
         if (!pred[e.v] && e.cap > e.f) {
           pred[e.v] = &e;
           q.push(e.v);
@@ -2185,8 +2165,8 @@ std::vector<Edge> adj[MAXN];
 int dist[MAXN], ptr[MAXN];
 
 void add_edge(int u, int v, int cap) {
-  adj[u].push_back((Edge){v, static_cast<int>(adj[v].size()), cap, 0});
-  adj[v].push_back((Edge){u, static_cast<int>(adj[u].size()) - 1, 0, 0});
+  adj[u].push_back(Edge{v, static_cast<int>(adj[v].size()), cap, 0});
+  adj[v].push_back(Edge{u, static_cast<int>(adj[u].size()) - 1, 0, 0});
 }
 
 bool dinic_bfs(int nodes, int source, int sink) {
@@ -2197,8 +2177,7 @@ bool dinic_bfs(int nodes, int source, int sink) {
   while (!q.empty()) {
     int u = q.front();
     q.pop();
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      Edge &e = adj[u][j];
+    for (Edge &e : adj[u]) {
       if (dist[e.v] < 0 && e.f < e.cap) {
         dist[e.v] = dist[u] + 1;
         q.push(e.v);
@@ -2271,7 +2250,7 @@ Although the push-relabel algorithm is considered one of the most efficient maxi
 #include <algorithm>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = 0x3f3f'3f3f;
 int cap[MAXN][MAXN], f[MAXN][MAXN];
 
 int push_relabel(int nodes, int source, int sink) {
@@ -2386,8 +2365,8 @@ struct MinCostMaxFlow {
   void init(int nodes) { adj.assign(nodes, std::vector<Edge>()); }
 
   void add_edge(int u, int v, int cap, int cost) {
-    adj[u].push_back(Edge(v, static_cast<int>(adj[v].size()), cap, cost));
-    adj[v].push_back(Edge(u, static_cast<int>(adj[u].size()) - 1, 0, -cost));
+    adj[u].emplace_back(v, static_cast<int>(adj[v].size()), cap, cost);
+    adj[v].emplace_back(u, static_cast<int>(adj[u].size()) - 1, 0, -cost);
   }
 
   std::pair<int, int> min_cost_flow(int source, int sink, int target_flow) {
@@ -2405,7 +2384,7 @@ struct MinCostMaxFlow {
         int u = q.front();
         q.pop();
         in_queue[u] = false;
-        for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
+        for (int i = 0, n = static_cast<int>(adj[u].size()); i < n; i++) {
           Edge &e = adj[u][i];
           if (e.cap > 0 && dist[e.v] > dist[u] + e.cost) {
             dist[e.v] = dist[u] + e.cost;
@@ -2433,7 +2412,7 @@ struct MinCostMaxFlow {
       }
       flow += aug;
     }
-    return std::make_pair(flow, cost);
+    return {flow, cost};
   }
 };
 \end{lstlisting}
@@ -2477,10 +2456,10 @@ std::vector<int> adj[MAXN];
 
 bool dfs(int u) {
   visit[u] = true;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    int v = match[adj[u][j]];
+  for (int nb : adj[u]) {
+    int v = match[nb];
     if (v == -1 || (!visit[v] && dfs(v))) {
-      match[adj[u][j]] = u;
+      match[nb] = u;
       return true;
     }
   }
@@ -2561,8 +2540,8 @@ void bfs(int n1, int n2) {
   while (!q.empty()) {
     int u = q.front();
     q.pop();
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      int v = match[adj[u][j]];
+    for (int nb : adj[u]) {
+      int v = match[nb];
       if (v >= 0 && dist[v] < 0) {
         dist[v] = dist[u] + 1;
         q.push(v);
@@ -2573,10 +2552,10 @@ void bfs(int n1, int n2) {
 
 bool dfs(int u) {
   visit[u] = true;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    int v = match[adj[u][j]];
+  for (int nb : adj[u]) {
+    int v = match[nb];
     if (v < 0 || (!visit[v] && dist[v] == dist[u] + 1 && dfs(v))) {
-      match[adj[u][j]] = u;
+      match[nb] = u;
       used[u] = true;
       return true;
     }
@@ -2645,6 +2624,8 @@ Given a directed graph, determine a maximum subset of its edges such that no nod
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <numeric>
 #include <queue>
 #include <vector>
 
@@ -2682,18 +2663,15 @@ void mark_path(std::vector<bool> &blossom, int u, int b, int child) {
 
 int find_path(int nodes, int root) {
   std::vector<bool> used(nodes);
-  for (int i = 0; i < nodes; ++i) {
-    p[i] = -1;
-    base[i] = i;
-  }
+  std::fill(p, p + nodes, -1);
+  std::iota(base, base + nodes, 0);
   used[root] = true;
   std::queue<int> q;
   q.push(root);
   while (!q.empty()) {
     int u = q.front();
     q.pop();
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      int v = adj[u][j];
+    for (int v : adj[u]) {
       if (base[u] == base[v] || match[u] == v) {
         continue;
       }
@@ -2801,8 +2779,8 @@ Both functions apply to a global, pre-populated adjacency matrix \inlinecode{adj
 #include <vector>
 
 const int MAXN = 35;
-typedef std::bitset<MAXN> bits;
-typedef unsigned long long uint64;
+using bits = std::bitset<MAXN>;
+using uint64 = unsigned long long;
 
 bool adj[MAXN][MAXN];
 int w[MAXN];
@@ -3037,7 +3015,7 @@ Given a weighted graph, determine a cycle of minimum total distance which visits
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 
-const int MAXN = 20, INF = 0x3f3f3f3f;
+const int MAXN = 20, INF = 0x3f3f'3f3f;
 int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
 
 void add_edge(int u, int v, int w) {
@@ -3127,7 +3105,7 @@ Given a weighted, directed graph, determine a path of minimum total distance whi
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 
-const int MAXN = 20, INF = 0x3f3f3f3f;
+const int MAXN = 20, INF = 0x3f3f'3f3f;
 int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
 
 int shortest_hamiltonian_path(int nodes) {

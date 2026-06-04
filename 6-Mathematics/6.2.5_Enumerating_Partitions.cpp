@@ -84,19 +84,19 @@ std::vector<int> partition_by_rank(int n, long long r) {
 long long rank_by_partition(const std::vector<int> &p) {
   long long res = 0;
   int sum = 0;
-  for (int i = 0; i < static_cast<int>(p.size()); i++) {
-    sum += p[i];
+  for (int x : p) {
+    sum += x;
   }
-  for (int i = 0; i < static_cast<int>(p.size()); i++) {
-    for (int j = 0; j < p[i]; j++) {
+  for (int x : p) {
+    for (int j = 0; j < x; j++) {
       res += partition_function(sum, j);
     }
-    sum -= p[i];
+    sum -= x;
   }
   return res;
 }
 
-typedef void (*ReportFunction)(std::vector<int>::iterator, std::vector<int>::iterator);
+using ReportFunction = void (*)(std::vector<int>::iterator, std::vector<int>::iterator);
 
 void generate_increasing_partitions(
     int left, int prev, int i, std::vector<int> &p, ReportFunction f

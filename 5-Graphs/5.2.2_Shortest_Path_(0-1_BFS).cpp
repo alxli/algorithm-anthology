@@ -38,9 +38,7 @@ void zero_one_bfs(int nodes, int start) {
   while (!dq.empty()) {
     int u = dq.front();
     dq.pop_front();
-    for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
-      int v = adj[u][i].first;
-      int w = adj[u][i].second;
+    for (auto &[v, w] : adj[u]) {
       if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
@@ -60,7 +58,7 @@ void zero_one_bfs(int nodes, int start) {
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].push_back(make_pair(v, w));
+  adj[u].emplace_back(v, w);
 }
 
 int main() {

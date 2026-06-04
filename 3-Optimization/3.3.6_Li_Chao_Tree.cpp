@@ -40,7 +40,7 @@ class LiChaoTree {
     Line f;
     node *left, *right;
 
-    node(const Line &f) : f(f), left(nullptr), right(nullptr) {}
+    explicit node(const Line &f) : f(f), left(nullptr), right(nullptr) {}
   };
 
   node *root;

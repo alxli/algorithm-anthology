@@ -81,29 +81,29 @@ Case Conversion:
 
 string to_upper(const string &s) {
   string res;
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    res.push_back(toupper(s[i]));
+  auto upper = [](unsigned char c) { return static_cast<char>(toupper(c)); };
+  for (char c : s) {
+    res.push_back(upper(c));
   }
   return res;
 }
 
 string to_lower(const string &s) {
   string res;
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    res.push_back(tolower(s[i]));
+  auto lower = [](unsigned char c) { return static_cast<char>(tolower(c)); };
+  for (char c : s) {
+    res.push_back(lower(c));
   }
   return res;
 }
 
 string to_title(const string &s) {
   string res;
+  auto lower = [](unsigned char c) { return static_cast<char>(tolower(c)); };
+  auto upper = [](unsigned char c) { return static_cast<char>(toupper(c)); };
   char prev = '\0';
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    if (isalpha(prev)) {
-      res.push_back(tolower(s[i]));
-    } else {
-      res.push_back(toupper(s[i]));
-    }
+  for (char c : s) {
+    res.push_back(isalpha(static_cast<unsigned char>(prev)) ? lower(c) : upper(c));
     prev = res.back();
   }
   return res;
@@ -198,9 +198,7 @@ Joining and Splitting:
 string join(const std::vector<string> &v, const string &delim = " ") {
   string res;
   for (int i = 0; i < static_cast<int>(v.size()); i++) {
-    if (i > 0) {
-      res += delim;
-    }
+    if (i > 0) res += delim;
     res += v[i];
   }
   return res;
@@ -219,9 +217,9 @@ std::vector<string> split(const string &s, char delim) {
 std::vector<string> split(const string &s, const string &delim = " \n\t\v\f\r") {
   std::vector<string> res;
   string curr;
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    if (delim.find(s[i]) == string::npos) {
-      curr += s[i];
+  for (char c : s) {
+    if (delim.find(c) == string::npos) {
+      curr += c;
     } else if (!curr.empty()) {
       res.push_back(curr);
       curr = "";
@@ -237,7 +235,7 @@ std::vector<string> explode(const string &s, const string &delim) {
   std::vector<string> res;
   size_t last = 0, next = 0;
   while ((next = s.find(delim, last)) != string::npos) {
-    res.push_back(s.substr(last, static_cast<int>(next) - last));
+    res.push_back(s.substr(last, next - last));
     last = next + delim.size();
   }
   res.push_back(s.substr(last));

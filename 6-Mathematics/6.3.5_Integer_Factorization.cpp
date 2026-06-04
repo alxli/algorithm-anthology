@@ -100,7 +100,7 @@ long long fermat(long long n) {
   return (x == y) ? (x + y) : (x - y);
 }
 
-typedef unsigned long long uint64;
+using uint64 = unsigned long long;
 
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
   uint64 a = 0, b = x % m;
@@ -247,9 +247,9 @@ void validate(long long n, const vector<long long> &factors) {
     return;
   }
   long long prod = 1;
-  for (int i = 0; i < factors.size(); i++) {
-    assert(is_prime(factors[i]));
-    prod *= factors[i];
+  for (long long f : factors) {
+    assert(is_prime(f));
+    prod *= f;
   }
   assert(prod == n);
 }
@@ -257,11 +257,11 @@ void validate(long long n, const vector<long long> &factors) {
 int main() {
   {  // Small tests.
     for (int i = 1; i <= 10000; i++) {
-      vector<long long> v1 = prime_factorize(static_cast<long long>(i));
-      vector<long long> v2 = prime_factorize_big(i);
+      auto v1 = prime_factorize(static_cast<long long>(i));
+      auto v2 = prime_factorize_big(i);
       validate(i, v1);
       assert(v1 == v2);
-      vector<int> d = get_divisors(i);
+      auto d = get_divisors(i);
       set<int> s(d.begin(), d.end());
       assert(d.size() == s.size());
       for (int j = 1; j <= i; j++) {
@@ -279,7 +279,7 @@ int main() {
     const int ntests = 7;
     const long long tests[] = {
         3LL * 3 * 5 * 7 * 9949 * 9967 * 1000003,
-        2LL * 1000003 * 1000000007,
+        2LL * 1000003 * 1'000'000'007,
         999961LL * 1000033,
         357267896789127671LL,
         2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 11 * 13 * 17 * 19 * 23 * 29 *
@@ -287,8 +287,8 @@ int main() {
         2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 35336848213,
         2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 186917 * 186947,
     };
-    for (int i = 0; i < ntests; i++) {
-      validate(tests[i], prime_factorize_big(tests[i]));
+    for (const auto t : tests) {
+      validate(t, prime_factorize_big(t));
     }
   }
   return 0;

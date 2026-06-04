@@ -57,7 +57,7 @@ Space Complexity:
 #include <stdexcept>
 #include <vector>
 
-typedef std::vector<std::vector<int>> matrix;
+using matrix = std::vector<std::vector<int>>;
 
 matrix make_matrix(int r, int c) {
   return matrix(r, matrix::value_type(c));
@@ -344,8 +344,8 @@ matrix &rotate_in_place(matrix &a, int degrees = 90) {
   switch (degrees % 360) {
     case 90: {
       transpose_in_place(a);
-      for (int i = 0; i < n; i++) {
-        std::reverse(a[i].begin(), a[i].end());
+      for (auto &row : a) {
+        std::reverse(row.begin(), row.end());
       }
       break;
     }

@@ -85,12 +85,12 @@ class DisjointSetForest {
 
   std::vector<std::vector<T>> get_all_sets() {
     std::map<int, std::vector<T>> tmp;
-    for (typename std::map<T, int>::iterator it = id.begin(); it != id.end(); ++it) {
-      tmp[find_root(it->second)].push_back(it->first);
+    for (auto &[key, val] : id) {
+      tmp[find_root(val)].push_back(key);
     }
     std::vector<std::vector<T>> res;
-    for (typename std::map<int, std::vector<T>>::iterator it = tmp.begin(); it != tmp.end(); ++it) {
-      res.push_back(it->second);
+    for (auto &[key, val] : tmp) {
+      res.push_back(val);
     }
     return res;
   }
@@ -117,11 +117,15 @@ int main() {
   dsf.unite('d', 'g');
   assert(dsf.size() == 7);
   assert(dsf.sets() == 3);
-  vector<vector<char>> s = dsf.get_all_sets();
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    cout << (i > 0 ? ", [" : "[");
-    for (int j = 0; j < static_cast<int>(s[i].size()); j++) {
-      cout << (j > 0 ? ", " : "") << s[i][j];
+  auto s = dsf.get_all_sets();
+  bool first_set = true;
+  for (const auto &set : s) {
+    cout << (first_set ? "[" : ", [");
+    first_set = false;
+    bool first_value = true;
+    for (char value : set) {
+      cout << (first_value ? "" : ", ") << value;
+      first_value = false;
     }
     cout << "]";
   }

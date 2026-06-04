@@ -53,17 +53,16 @@ class HashMap {
     table_size = 2 * table_size;
     table = new std::list<HashMapEntry>[table_size];
     num_entries = 0;
-    typename std::list<HashMapEntry>::iterator it;
     for (int i = 0; i < old_size; i++) {
-      for (it = old[i].begin(); it != old[i].end(); ++it) {
-        insert(it->key, it->value);
+      for (auto &entry : old[i]) {
+        insert(entry.key, entry.value);
       }
     }
     delete[] old;
   }
 
  public:
-  HashMap(int size = 128) : table_size(size), num_entries(0) {
+  explicit HashMap(int size = 128) : table_size(size), num_entries(0) {
     table = new std::list<HashMapEntry>[table_size];
   }
 
@@ -79,14 +78,14 @@ class HashMap {
       double_capacity_and_rehash();
     }
     unsigned int i = Hash()(k) % table_size;
-    table[i].push_back(HashMapEntry(k, v));
+    table[i].emplace_back(k, v);
     num_entries++;
     return true;
   }
 
   bool erase(const K &k) {
     unsigned int i = Hash()(k) % table_size;
-    typename std::list<HashMapEntry>::iterator it = table[i].begin();
+    auto it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
       ++it;
     }
@@ -100,7 +99,7 @@ class HashMap {
 
   V *find(const K &k) const {
     unsigned int i = Hash()(k) % table_size;
-    typename std::list<HashMapEntry>::iterator it = table[i].begin();
+    auto it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
       ++it;
     }
@@ -122,9 +121,8 @@ class HashMap {
   template<class KVFunction>
   void walk(KVFunction f) const {
     for (int i = 0; i < table_size; i++) {
-      typename std::list<HashMapEntry>::iterator it;
-      for (it = table[i].begin(); it != table[i].end(); ++it) {
-        f(it->key, it->value);
+      for (const auto &entry : table[i]) {
+        f(entry.key, entry.value);
       }
     }
   }
@@ -166,8 +164,8 @@ struct ClassHash {
   // Jenkins's one-at-a-time hash.
   unsigned int operator()(const std::string &k) {
     unsigned int hash = 0;
-    for (unsigned int i = 0; i < k.size(); i++) {
-      hash += ((hash + k[i]) << 10);
+    for (char c : k) {
+      hash += ((hash + static_cast<unsigned char>(c)) << 10);
       hash ^= (hash >> 6);
     }
     hash += (hash << 3);

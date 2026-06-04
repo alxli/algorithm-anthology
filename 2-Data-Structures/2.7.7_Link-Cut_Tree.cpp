@@ -68,7 +68,7 @@ class LinkCutForest {
     bool rev, pending;
     Node *left, *right, *parent;
 
-    Node(const T &v)
+    explicit Node(const T &v)
         : value(v),
           subtree_value(v),
           size(1),
@@ -191,9 +191,8 @@ class LinkCutForest {
   Node *u, *v;
 
   void get_uv(int a, int b) {
-    typename std::map<int, Node *>::iterator it1, it2;
-    it1 = nodes.find(a);
-    it2 = nodes.find(b);
+    auto it1 = nodes.find(a);
+    auto it2 = nodes.find(b);
     if (it1 == nodes.end() || it2 == nodes.end()) {
       throw std::runtime_error("Queried node ID does not exist in forest.");
     }
@@ -205,9 +204,8 @@ class LinkCutForest {
   LinkCutForest() : num_trees(0) {}
 
   ~LinkCutForest() {
-    typename std::map<int, Node *>::iterator it;
-    for (it = nodes.begin(); it != nodes.end(); ++it) {
-      delete it->second;
+    for (auto &[key, node] : nodes) {
+      delete node;
     }
   }
 
@@ -215,7 +213,7 @@ class LinkCutForest {
   int trees() const { return num_trees; }
 
   void make_root(int i, const T &v = T()) {
-    if (nodes.find(i) != nodes.end()) {
+    if (auto it = nodes.find(i); it != nodes.end()) {
       throw std::runtime_error("Cannot make a root with an existing ID.");
     }
     Node *n = new Node(v);

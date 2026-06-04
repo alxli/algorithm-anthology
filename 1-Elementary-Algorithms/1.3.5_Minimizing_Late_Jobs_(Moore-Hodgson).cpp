@@ -24,21 +24,19 @@ Space Complexity:
 struct TimedJob {
   int duration, deadline;
 
-  TimedJob(int duration = 0, int deadline = 0) : duration(duration), deadline(deadline) {}
+  explicit TimedJob(int duration = 0, int deadline = 0) : duration(duration), deadline(deadline) {}
 };
 
-bool earlier_deadline(const TimedJob &a, const TimedJob &b) {
-  return a.deadline != b.deadline ? a.deadline < b.deadline : a.duration < b.duration;
-}
-
 int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
-  std::sort(jobs.begin(), jobs.end(), earlier_deadline);
+  std::sort(jobs.begin(), jobs.end(), [](const TimedJob &a, const TimedJob &b) {
+    return a.deadline != b.deadline ? a.deadline < b.deadline : a.duration < b.duration;
+  });
   std::priority_queue<int> durations;
   int time = 0;
-  for (int i = 0; i < static_cast<int>(jobs.size()); i++) {
-    time += jobs[i].duration;
-    durations.push(jobs[i].duration);
-    if (time > jobs[i].deadline) {
+  for (const auto &j : jobs) {
+    time += j.duration;
+    durations.push(j.duration);
+    if (time > j.deadline) {
       time -= durations.top();
       durations.pop();
     }
@@ -53,10 +51,10 @@ using namespace std;
 
 int main() {
   vector<TimedJob> jobs;
-  jobs.push_back(TimedJob(3, 4));
-  jobs.push_back(TimedJob(2, 3));
-  jobs.push_back(TimedJob(1, 2));
-  jobs.push_back(TimedJob(2, 7));
+  jobs.emplace_back(3, 4);
+  jobs.emplace_back(2, 3);
+  jobs.emplace_back(1, 2);
+  jobs.emplace_back(2, 7);
   assert(maximize_on_time_jobs(jobs) == 3);
   return 0;
 }

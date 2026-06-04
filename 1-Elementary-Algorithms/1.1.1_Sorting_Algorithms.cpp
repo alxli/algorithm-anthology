@@ -41,7 +41,7 @@ void quicksort(It lo, It hi, Compare comp) {
   if (hi - lo < 2) {
     return;
   }
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   T pivot = *(lo + (hi - lo) / 2);
   It i, j;
   for (i = lo, j = hi - 1;; ++i, --j) {
@@ -62,7 +62,7 @@ void quicksort(It lo, It hi, Compare comp) {
 
 template<class It>
 void quicksort(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   quicksort(lo, hi, std::less<T>());
 }
 
@@ -93,7 +93,7 @@ void mergesort(It lo, It hi, Compare comp) {
   It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   mergesort(lo, mid + 1, comp);
   mergesort(mid + 1, hi, comp);
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> merged;
   while (a <= mid && c < hi) {
     merged.push_back(comp(*c, *a) ? *c++ : *a++);
@@ -107,14 +107,12 @@ void mergesort(It lo, It hi, Compare comp) {
       merged.push_back(*it);
     }
   }
-  for (int i = 0; i < hi - lo; i++) {
-    *(lo + i) = merged[i];
-  }
+  std::copy(merged.begin(), merged.end(), lo);
 }
 
 template<class It>
 void mergesort(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   mergesort(lo, hi, std::less<T>());
 }
 
@@ -137,7 +135,8 @@ Stable?: No.
 
 template<class It, class Compare>
 void heapsort(It lo, It hi, Compare comp) {
-  typename std::iterator_traits<It>::value_type tmp;
+  using T = typename std::iterator_traits<It>::value_type;
+  T tmp;
   It i = lo + (hi - lo) / 2, j = hi, parent, child;
   for (;;) {
     if (i <= lo) {
@@ -168,7 +167,7 @@ void heapsort(It lo, It hi, Compare comp) {
 
 template<class It>
 void heapsort(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   heapsort(lo, hi, std::less<T>());
 }
 
@@ -210,7 +209,7 @@ void combsort(It lo, It hi, Compare comp) {
 
 template<class It>
 void combsort(It lo, It hi) {
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   combsort(lo, hi, std::less<T>());
 }
 
@@ -242,7 +241,7 @@ void radix_sort(It lo, It hi) {
   const int radix_base = 1 << radix_bits;  // e.g. 2^8 = 256
   const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
   int num_bits = 8 * sizeof(*lo);          // 8 bits per byte
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   T *buf = new T[hi - lo];
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
     int count[radix_base] = {0};

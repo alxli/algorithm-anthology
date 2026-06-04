@@ -40,7 +40,7 @@ long long inversions(It lo, It hi) {
   long long res = 0;
   res += inversions(lo, mid + 1);
   res += inversions(mid + 1, hi);
-  typedef typename std::iterator_traits<It>::value_type T;
+  using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> merged;
   while (a <= mid && c < hi) {
     if (*c < *a) {

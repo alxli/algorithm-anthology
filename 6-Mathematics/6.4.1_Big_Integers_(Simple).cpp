@@ -161,8 +161,8 @@ class BigInt {
 
   friend BigInt mul(const BigInt &a, const BigInt &b) {
     BigInt res, row(a);
-    for (int i = 0; i < static_cast<int>(b.digits.size()); i++) {
-      for (int j = 0; j < (b.digits[i] - '0'); j++) {
+    for (char dc : b.digits) {
+      for (int j = 0; j < (dc - '0'); j++) {
         res = add(res.digits, row.digits, res.sign, row.sign);
       }
       if (row.digits.size() > 1 || row.digits[0] != '0') {

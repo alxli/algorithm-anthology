@@ -46,7 +46,7 @@ Matrix &row_reduce(Matrix &a) {
       }
     }
     std::swap(a[i], a[row]);
-    typename Matrix::value_type::value_type lv = a[row][lead];
+    auto lv = a[row][lead];
     for (int j = 0; j < c; j++) {
       a[row][j] /= lv;
     }

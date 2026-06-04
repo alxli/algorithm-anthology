@@ -87,17 +87,11 @@ long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector
 using namespace std;
 
 int main() {
-  long long raw[3][4] = {
+  vector<vector<long long>> cost = {
       {9, 2, 7, 8},
       {6, 4, 3, 7},
       {5, 8, 1, 8},
   };
-  vector<vector<long long>> cost(3, vector<long long>(4));
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 4; j++) {
-      cost[i][j] = raw[i][j];
-    }
-  }
   vector<int> assignment;
   assert(hungarian(cost, &assignment) == 9);
   assert(assignment[0] == 1);

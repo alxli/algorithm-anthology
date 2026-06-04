@@ -420,7 +420,7 @@ The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in mon
 
 template<class T, class Compare>
 class MonotoneQueue {
-  typedef std::pair<int, T> entry;
+  using entry = std::pair<int, T>;
 
   std::deque<entry> q;
   Compare better;
@@ -432,7 +432,7 @@ class MonotoneQueue {
     while (!q.empty() && !better(q.back().second, value)) {
       q.pop_back();
     }
-    q.push_back(entry(index, value));
+    q.emplace_back(index, value);
   }
 
   void expire(int first_valid) {
@@ -451,8 +451,7 @@ class MonotoneQueue {
 using namespace std;
 
 int main() {
-  int raw[] = {4, 2, 7, 1, 3, 6};
-  vector<int> a(raw, raw + 6);
+  vector<int> a = {4, 2, 7, 1, 3, 6};
 
   MonotoneQueue<int, less<int>> minq;
   vector<int> window_min;
@@ -547,8 +546,7 @@ struct SquareSegmentCost {
 };
 
 int main() {
-  int raw[] = {1, 2, 3, 4};
-  vector<int> a(raw, raw + 4);
+  vector<int> a = {1, 2, 3, 4};
   int n = a.size();
   SquareSegmentCost cost(a);
 
@@ -601,14 +599,8 @@ std::vector<std::vector<long long>> knuth_interval_dp(
     for (int l = 0; l + len <= n; l++) {
       int r = l + len;
       dp[l][r] = INF;
-      int start = opt[l][r - 1];
-      int finish = opt[l + 1][r];
-      if (start < l + 1) {
-        start = l + 1;
-      }
-      if (finish > r - 1) {
-        finish = r - 1;
-      }
+      int start = std::max(opt[l][r - 1], l + 1);
+      int finish = std::min(opt[l + 1][r], r - 1);
       for (int k = start; k <= finish; k++) {
         long long candidate = dp[l][k] + dp[k][r] + cost(l, r);
         if (candidate < dp[l][r]) {
@@ -642,8 +634,7 @@ struct MergeCost {
 };
 
 int main() {
-  int raw[] = {1, 2, 3, 4};
-  vector<int> a(raw, raw + 4);
+  vector<int> a = {1, 2, 3, 4};
   vector<vector<long long>> dp = knuth_interval_dp(a.size(), MergeCost(a));
   assert(dp[0][4] == 19);
   return 0;
@@ -751,7 +742,7 @@ class HullOptimizer {
   std::multiset<Line> hull;
   bool query_max;
 
-  typedef std::multiset<Line>::iterator hulliter;
+  using hulliter = std::multiset<Line>::iterator;
 
   static long long div_floor(long long a, long long b) { return a / b - ((a ^ b) < 0 && a % b); }
 
@@ -769,16 +760,16 @@ class HullOptimizer {
   }
 
  public:
-  HullOptimizer(bool query_max = false) : query_max(query_max) {}
+  explicit HullOptimizer(bool query_max = false) : query_max(query_max) {}
 
   void add_line(long long m, long long b) {
     if (!query_max) {
       m = -m;
       b = -b;
     }
-    hulliter z = hull.insert(Line(m, b));
-    hulliter y = z++;
-    hulliter x = y;
+    auto z = hull.insert(Line(m, b));
+    auto y = z++;
+    auto x = y;
     while (update_border(y, z)) {
       z = hull.erase(z);
     }
@@ -793,7 +784,7 @@ class HullOptimizer {
   long long query(long long x) const {
     assert(!hull.empty());
     Line q(0, 0, x, true);
-    hulliter it = hull.lower_bound(q);
+    auto it = hull.lower_bound(q);
     long long res = it->m * x + it->b;
     return query_max ? res : -res;
   }
@@ -854,7 +845,7 @@ class LiChaoTree {
     Line f;
     node *left, *right;
 
-    node(const Line &f) : f(f), left(nullptr), right(nullptr) {}
+    explicit node(const Line &f) : f(f), left(nullptr), right(nullptr) {}
   };
 
   node *root;
@@ -979,7 +970,7 @@ int simplex_solve(
   double p1 = 0, p2 = 0;
   bool done = true;
   do {
-    double mn = std::numeric_limits<double>::max(), xmax = 0, v;
+    double mn = std::numeric_limits<double>::max(), xmax = 0;
     for (int j = 2; j <= n + 1; j++) {
       if (t[1][j] > 0 && t[1][j] > xmax) {
         p2 = j;
@@ -987,7 +978,7 @@ int simplex_solve(
       }
     }
     for (int i = 2; i <= m + 1; i++) {
-      v = fabs(t[i][1] / t[i][p2]);
+      double v = fabs(t[i][1] / t[i][p2]);
       if (t[i][p2] < 0 && mn > v) {
         mn = v;
         p1 = i;
@@ -1048,21 +1039,14 @@ int main() {
   //  -2x +    1y <=  0
   //   1x + 0.85y <=  9
   //   1x +    2y <= 14
-  const int equations = 3, unknowns = 2;
-  double a[equations][unknowns] = {{-2, 1}, {1, 0.85}, {1, 2}};
-  double b[equations] = {0, 9, 14};
-  double c[unknowns] = {3, 4};
-  vector<vector<double>> va(equations, vector<double>(unknowns));
-  vector<double> vb(b, b + equations), vc(c, c + unknowns), x;
-  for (int i = 0; i < equations; i++) {
-    for (int j = 0; j < unknowns; j++) {
-      va[i][j] = a[i][j];
-    }
-  }
+  vector<vector<double>> va{{-2, 1}, {1, 0.85}, {1, 2}};
+  vector<double> vb = {0, 9, 14};
+  vector<double> vc = {3, 4};
+  vector<double> x;
   assert(simplex_solve(va, vb, vc, &x) == 0);
   double maxval = 0;
   for (int i = 0; i < static_cast<int>(x.size()); i++) {
-    maxval += c[i] * x[i];
+    maxval += vc[i] * x[i];
   }
   cout << "Solution = " << maxval << " at (" << x[0];
   for (int i = 1; i < static_cast<int>(x.size()); i++) {
@@ -1158,17 +1142,11 @@ long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector
 using namespace std;
 
 int main() {
-  long long raw[3][4] = {
+  vector<vector<long long>> cost = {
       {9, 2, 7, 8},
       {6, 4, 3, 7},
       {5, 8, 1, 8},
   };
-  vector<vector<long long>> cost(3, vector<long long>(4));
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 4; j++) {
-      cost[i][j] = raw[i][j];
-    }
-  }
   vector<int> assignment;
   assert(hungarian(cost, &assignment) == 9);
   assert(assignment[0] == 1);

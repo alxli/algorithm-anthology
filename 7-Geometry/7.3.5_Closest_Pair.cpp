@@ -29,7 +29,7 @@ const double EPS = 1e-9;
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -64,8 +64,8 @@ double closest_pair(
       t.push_back(it);
     }
   }
-  for (int i = 0; i < static_cast<int>(t.size()); i++) {
-    for (int j = i + 1; j < static_cast<int>(t.size()); j++) {
+  for (size_t i = 0; i < t.size(); i++) {
+    for (size_t j = i + 1; j < t.size(); j++) {
       point a(*t[i]), b(*t[j]);
       if (b.y - a.y >= mindist) {
         break;
@@ -74,7 +74,7 @@ double closest_pair(
       if (mindist > dist) {
         mindist = dist;
         if (res) {
-          *res = std::make_pair(a, b);
+          *res = {a, b};
         }
       }
     }
@@ -90,15 +90,16 @@ using namespace std;
 
 int main() {
   vector<point> v;
-  v.push_back(point(2, 3));
-  v.push_back(point(12, 30));
-  v.push_back(point(40, 50));
-  v.push_back(point(5, 1));
-  v.push_back(point(12, 10));
-  v.push_back(point(3, 4));
-  pair<point, point> res;
+  v.emplace_back(2, 3);
+  v.emplace_back(12, 30);
+  v.emplace_back(40, 50);
+  v.emplace_back(5, 1);
+  v.emplace_back(12, 10);
+  v.emplace_back(3, 4);
+  std::pair<point, point> res;
   assert(EQ(closest_pair(v.begin(), v.end(), &res), sqrt(2)));
-  assert(res.first == point(2, 3));
-  assert(res.second == point(3, 4));
+  auto [p1, p2] = res;
+  assert(p1 == point(2, 3));
+  assert(p2 == point(3, 4));
   return 0;
 }

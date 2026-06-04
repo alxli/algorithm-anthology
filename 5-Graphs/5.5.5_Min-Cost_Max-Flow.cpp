@@ -39,8 +39,8 @@ struct MinCostMaxFlow {
   void init(int nodes) { adj.assign(nodes, std::vector<Edge>()); }
 
   void add_edge(int u, int v, int cap, int cost) {
-    adj[u].push_back(Edge(v, static_cast<int>(adj[v].size()), cap, cost));
-    adj[v].push_back(Edge(u, static_cast<int>(adj[u].size()) - 1, 0, -cost));
+    adj[u].emplace_back(v, static_cast<int>(adj[v].size()), cap, cost);
+    adj[v].emplace_back(u, static_cast<int>(adj[u].size()) - 1, 0, -cost);
   }
 
   std::pair<int, int> min_cost_flow(int source, int sink, int target_flow) {
@@ -58,7 +58,7 @@ struct MinCostMaxFlow {
         int u = q.front();
         q.pop();
         in_queue[u] = false;
-        for (int i = 0; i < static_cast<int>(adj[u].size()); i++) {
+        for (int i = 0, n = static_cast<int>(adj[u].size()); i < n; i++) {
           Edge &e = adj[u][i];
           if (e.cap > 0 && dist[e.v] > dist[u] + e.cost) {
             dist[e.v] = dist[u] + e.cost;
@@ -86,7 +86,7 @@ struct MinCostMaxFlow {
       }
       flow += aug;
     }
-    return std::make_pair(flow, cost);
+    return {flow, cost};
   }
 };
 

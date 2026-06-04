@@ -297,8 +297,8 @@ Base Conversion:
 \begin{lstlisting}[language=C++]
 std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
   unsigned long long x = 0, power = 1;
-  for (int i = 0; i < static_cast<int>(d.size()); i++) {
-    x += d[i] * power;
+  for (int di : d) {
+    x += di * power;
     power *= a;
   }
   int n = ceil(log(x + 1) / log(b));
@@ -425,10 +425,10 @@ The following functions implement common operations in combinatorics. All inputs
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-typedef long long int64;
-typedef std::vector<std::vector<int64>> table;
+using int64 = long long;
+using table = std::vector<std::vector<int64>>;
 
-int64 factorial(int n, int m = 1000000007) {
+int64 factorial(int n, int m = 1'000'000'007) {
   int64 res = 1;
   for (int i = 2; i <= n; i++) {
     res = (res * i) % m;
@@ -436,7 +436,7 @@ int64 factorial(int n, int m = 1000000007) {
   return res % m;
 }
 
-int64 factorialp(int64 n, int64 p = 1000000007) {
+int64 factorialp(int64 n, int64 p = 1'000'000'007) {
   int64 res = 1;
   while (n > 1) {
     if (n / p % 2 == 1) {
@@ -451,7 +451,7 @@ int64 factorialp(int64 n, int64 p = 1000000007) {
   return res % p;
 }
 
-table binomial_table(int n, int64 m = 1000000007) {
+table binomial_table(int n, int64 m = 1'000'000'007) {
   table t(n + 1);
   for (int i = 0; i <= n; i++) {
     for (int j = 0; j <= i; j++) {
@@ -465,7 +465,7 @@ table binomial_table(int n, int64 m = 1000000007) {
   return t;
 }
 
-int64 permute(int n, int k, int64 m = 1000000007) {
+int64 permute(int n, int k, int64 m = 1'000'000'007) {
   if (n < k) {
     return 0;
   }
@@ -498,7 +498,7 @@ int64 powmod(int64 x, int64 n, int64 m) {
   return a % m;
 }
 
-int64 choose(int n, int k, int64 p = 1000000007) {
+int64 choose(int n, int k, int64 p = 1'000'000'007) {
   if (n < k) {
     return 0;
   }
@@ -515,15 +515,15 @@ int64 choose(int n, int k, int64 p = 1000000007) {
   return num * powmod(den, p - 2, p) % p;
 }
 
-int64 multichoose(int n, int k, int64 p = 1000000007) {
+int64 multichoose(int n, int k, int64 p = 1'000'000'007) {
   return choose(n + k - 1, k, p);
 }
 
-int64 catalan(int n, int64 p = 1000000007) {
+int64 catalan(int n, int64 p = 1'000'000'007) {
   return choose(2 * n, n, p) * powmod(n + 1, p - 2, p) % p;
 }
 
-int64 partitions(int n, int64 m = 1000000007) {
+int64 partitions(int n, int64 m = 1'000'000'007) {
   std::vector<int64> t(n + 1, 0);
   t[0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -534,7 +534,7 @@ int64 partitions(int n, int64 m = 1000000007) {
   return t[n] % m;
 }
 
-int64 partitions(int n, int k, int64 m = 1000000007) {
+int64 partitions(int n, int k, int64 m = 1'000'000'007) {
   table t(n + 1, std::vector<int64>(k + 1, 0));
   t[0][1] = 1;
   for (int i = 1; i <= n; i++) {
@@ -545,7 +545,7 @@ int64 partitions(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 stirling1(int n, int k, int64 m = 1000000007) {
+int64 stirling1(int n, int k, int64 m = 1'000'000'007) {
   table t(n + 1, std::vector<int64>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -557,7 +557,7 @@ int64 stirling1(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 stirling2(int n, int k, int64 m = 1000000007) {
+int64 stirling2(int n, int k, int64 m = 1'000'000'007) {
   table t(n + 1, std::vector<int64>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
@@ -569,7 +569,7 @@ int64 stirling2(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 eulerian1(int n, int k, int64 m = 1000000007) {
+int64 eulerian1(int n, int k, int64 m = 1'000'000'007) {
   if (k > n - 1 - k) {
     k = n - 1 - k;
   }
@@ -586,7 +586,7 @@ int64 eulerian1(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 eulerian2(int n, int k, int64 m = 1000000007) {
+int64 eulerian2(int n, int k, int64 m = 1'000'000'007) {
   table t(n + 1, std::vector<int64>(k + 1, 1));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
@@ -651,6 +651,7 @@ For the purposes of this section, we define a "size $k$ arrangement of $n$" to b
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <numeric>
 #include <vector>
 
 bool next_arrangement(int n, int k, int a[]) {
@@ -686,9 +687,7 @@ long long n_permute_k(int n, int k) {
 
 std::vector<int> arrangement_by_rank(int n, int k, long long r) {
   std::vector<int> values(n), res(k);
-  for (int i = 0; i < n; i++) {
-    values[i] = i;
-  }
+  std::iota(values.begin(), values.end(), 0);
   for (int i = 0; i < k; i++) {
     long long count = n_permute_k(n - 1 - i, k - 1 - i);
     int pos = r / count;
@@ -748,7 +747,7 @@ int main() {
     int count = 0;
     do {
       print_range(a, a + k);
-      vector<int> b = arrangement_by_rank(n, k, count);
+      auto b = arrangement_by_rank(n, k, count);
       assert(equal(a, a + k, b.begin()));
       assert(rank_by_arrangement(n, k, a) == count);
       count++;
@@ -804,6 +803,7 @@ A permutation is an ordered list consisting of $n$ (not necessarily distinct) el
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <numeric>
 #include <vector>
 
 template<class It>
@@ -864,9 +864,7 @@ std::vector<int> permutation_by_rank(int n, long long x) {
   for (int i = 1; i < n; i++) {
     factorial[i] = i * factorial[i - 1];
   }
-  for (int i = 0; i < n; i++) {
-    values[i] = i;
-  }
+  std::iota(values.begin(), values.end(), 0);
   for (int i = 0; i < n; i++) {
     int pos = x / factorial[n - 1 - i];
     res[i] = values[pos];
@@ -895,7 +893,7 @@ long long rank_by_permutation(int n, int a[]) {
   return res;
 }
 
-typedef std::vector<std::vector<int>> cycles;
+using cycles = std::vector<std::vector<int>>;
 
 cycles permutation_cycles(int n, int a[]) {
   std::vector<bool> visit(n);
@@ -909,7 +907,7 @@ cycles permutation_cycles(int n, int a[]) {
         visit[j] = true;
         j = a[j];
       } while (j != i);
-      res.push_back(curr);
+      res.push_back(std::move(curr));
     }
   }
   return res;
@@ -968,8 +966,8 @@ int main() {
     int a[] = {3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     cycles c = permutation_cycles(n, a);
-    for (int i = 0; i < static_cast<int>(c.size()); i++) {
-      print_range(c[i].begin(), c[i].end());
+    for (const auto &cycle : c) {
+      print_range(cycle.begin(), cycle.end());
     }
     cout << endl;
   }
@@ -1054,7 +1052,7 @@ bool next_combination(It lo, It mid, It hi) {
     for (int i = 0; i < gcd; i++) {
       It curr = (i < len1) ? (l + i) : (h + (i - len1));
       int k = i;
-      typename std::iterator_traits<It>::value_type prev(*curr);
+      auto prev = *curr;
       for (int j = 0; j < skip; j++) {
         k = (k + len1) % total;
         It next = (k < len1) ? (l + k) : (h + (k - len1));
@@ -1300,19 +1298,19 @@ std::vector<int> partition_by_rank(int n, long long r) {
 long long rank_by_partition(const std::vector<int> &p) {
   long long res = 0;
   int sum = 0;
-  for (int i = 0; i < static_cast<int>(p.size()); i++) {
-    sum += p[i];
+  for (int x : p) {
+    sum += x;
   }
-  for (int i = 0; i < static_cast<int>(p.size()); i++) {
-    for (int j = 0; j < p[i]; j++) {
+  for (int x : p) {
+    for (int j = 0; j < x; j++) {
       res += partition_function(sum, j);
     }
-    sum -= p[i];
+    sum -= x;
   }
   return res;
 }
 
-typedef void (*ReportFunction)(std::vector<int>::iterator, std::vector<int>::iterator);
+using ReportFunction = void (*)(std::vector<int>::iterator, std::vector<int>::iterator);
 
 void generate_increasing_partitions(
     int left, int prev, int i, std::vector<int> &p, ReportFunction f
@@ -1512,8 +1510,8 @@ class PartitionEnumerator : public AbstractEnumerator {
 
   long long count(const std::vector<int> &prefix) {
     int n = static_cast<int>(prefix.size()), sum = 0;
-    for (int i = 0; i < n; i++) {
-      sum += prefix[i];
+    for (int x : prefix) {
+      sum += x;
     }
     if (sum == range - 1) {
       return 1;
@@ -1655,16 +1653,16 @@ std::pair<Int, Int> extended_euclid(Int a, Int b) {
     y = prev_y1;
     a = prev_b;
   }
-  return (a > 0) ? std::make_pair(x, y) : std::make_pair(-x, -y);
+  return (a > 0) ? std::pair<Int, Int>{x, y} : std::pair<Int, Int>{-x, -y};
 }
 
 template<class Int>
 std::pair<Int, Int> extended_euclid2(Int a, Int b) {
   if (b == 0) {
-    return (a > 0) ? std::make_pair(1, 0) : std::make_pair(-1, 0);
+    return (a > 0) ? std::pair<Int, Int>{1, 0} : std::pair<Int, Int>{-1, 0};
   }
   std::pair<Int, Int> r = extended_euclid2(b, a % b);
-  return std::make_pair(r.second, r.first - a / b * r.second);
+  return {r.second, r.first - a / b * r.second};
 }
 
 template<class Int>
@@ -1738,14 +1736,15 @@ int main() {
         int inv = mod_inverse(a, b);
         assert(inv == mod_inverse2(a, b) && mod(a * inv, b) == 1);
       }
-      pair<int, int> res = extended_euclid(a, b);
+      auto res = extended_euclid(a, b);
       assert(res == extended_euclid2(a, b));
-      assert(g == a * res.first + b * res.second);
+      auto [rx, ry] = res;
+      assert(g == a * rx + b * ry);
     }
   }
   {
     int p = 17;
-    std::vector<int> res = generate_inverse(p);
+    auto res = generate_inverse(p);
     for (int i = 0; i < p; i++) {
       if (i > 0) {
         assert(mod(i * res[i], p) == 1);
@@ -1822,7 +1821,7 @@ T inverse(T a, T m) {
 template<class T>
 class Modular {
  public:
-  typedef typename T::value_type value_type;
+  using value_type = typename T::value_type;
 
  private:
   value_type v;
@@ -1932,7 +1931,7 @@ class ModCombinatorics {
   std::vector<Mint> fact, inv_fact;
 
   void ensure(int n) {
-    int old = fact.size();
+    auto old = static_cast<int>(fact.size());
     if (old > n) {
       return;
     }
@@ -1975,11 +1974,11 @@ class ModCombinatorics {
 };
 
 struct Mod100000007 {
-  typedef int value_type;
-  static const int value = 1000000007;
+  using value_type = int;
+  static const int value = 1'000'000'007;
 };
 
-typedef Modular<Mod100000007> Mint;
+using Mint = Modular<Mod100000007>;
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
@@ -2093,16 +2092,15 @@ using namespace std;
 
 int main() {
   int pmax = 10000000;
-  vector<int> p;
   time_t start;
   double delta;
 
   start = clock();
-  p = sieve(pmax);
+  auto p = sieve(pmax);
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve(n=" << pmax << "): " << delta << "s" << endl;
 
-  int l = 1000000000, h = 1005000000;
+  int l = 1'000'000'000, h = 1005000000;
   start = clock();
   p = sieve(l, h);
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
@@ -2153,7 +2151,7 @@ bool is_prime(Int n) {
   return true;
 }
 
-typedef unsigned long long uint64;
+using uint64 = unsigned long long;
 
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
   uint64 a = 0, b = x % m;
@@ -2362,7 +2360,7 @@ long long fermat(long long n) {
   return (x == y) ? (x + y) : (x - y);
 }
 
-typedef unsigned long long uint64;
+using uint64 = unsigned long long;
 
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
   uint64 a = 0, b = x % m;
@@ -2509,9 +2507,9 @@ void validate(long long n, const vector<long long> &factors) {
     return;
   }
   long long prod = 1;
-  for (int i = 0; i < factors.size(); i++) {
-    assert(is_prime(factors[i]));
-    prod *= factors[i];
+  for (long long f : factors) {
+    assert(is_prime(f));
+    prod *= f;
   }
   assert(prod == n);
 }
@@ -2519,11 +2517,11 @@ void validate(long long n, const vector<long long> &factors) {
 int main() {
   {  // Small tests.
     for (int i = 1; i <= 10000; i++) {
-      vector<long long> v1 = prime_factorize(static_cast<long long>(i));
-      vector<long long> v2 = prime_factorize_big(i);
+      auto v1 = prime_factorize(static_cast<long long>(i));
+      auto v2 = prime_factorize_big(i);
       validate(i, v1);
       assert(v1 == v2);
-      vector<int> d = get_divisors(i);
+      auto d = get_divisors(i);
       set<int> s(d.begin(), d.end());
       assert(d.size() == s.size());
       for (int j = 1; j <= i; j++) {
@@ -2541,7 +2539,7 @@ int main() {
     const int ntests = 7;
     const long long tests[] = {
         3LL * 3 * 5 * 7 * 9949 * 9967 * 1000003,
-        2LL * 1000003 * 1000000007,
+        2LL * 1000003 * 1'000'000'007,
         999961LL * 1000033,
         357267896789127671LL,
         2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 11 * 13 * 17 * 19 * 23 * 29 *
@@ -2549,8 +2547,8 @@ int main() {
         2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 35336848213,
         2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 186917 * 186947,
     };
-    for (int i = 0; i < ntests; i++) {
-      validate(tests[i], prime_factorize_big(tests[i]));
+    for (const auto t : tests) {
+      validate(t, prime_factorize_big(t));
     }
   }
   return 0;
@@ -2568,6 +2566,7 @@ Euler's totient function \inlinecode{phi(n)} returns the number of positive inte
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <numeric>
 #include <vector>
 
 int phi(int n) {
@@ -2588,9 +2587,7 @@ int phi(int n) {
 
 std::vector<int> phi_table(int n) {
   std::vector<int> res(n + 1);
-  for (int i = 0; i <= n; i++) {
-    res[i] = i;
-  }
+  std::iota(res.begin(), res.end(), 0);
   for (int i = 1; i <= n; i++) {
     for (int j = 2 * i; j <= n; j += i) {
       res[j] -= res[i];
@@ -2626,7 +2623,7 @@ Binary exponentiation, also known as exponentiation by squaring, decomposes the 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-typedef unsigned long long uint64;
+using uint64 = unsigned long long;
 
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
   uint64 a = 0, b = x % m;
@@ -2655,9 +2652,9 @@ uint64 powmod(uint64 x, uint64 n, uint64 m) {
 #include <cassert>
 
 int main() {
-  assert(powmod(2, 10, 1000000007) == 1024);
-  assert(powmod(2, 62, 1000000) == 387904);
-  assert(powmod(10001, 10001, 100000) == 10001);
+  assert(powmod(2, 10, 1'000'000'007) == 1024);
+  assert(powmod(2, 62, 1'000'000) == 387904);
+  assert(powmod(10001, 10001, 100'000) == 10001);
   return 0;
 }
 \end{lstlisting}
@@ -2826,8 +2823,8 @@ class BigInt {
 
   friend BigInt mul(const BigInt &a, const BigInt &b) {
     BigInt res, row(a);
-    for (int i = 0; i < static_cast<int>(b.digits.size()); i++) {
-      for (int j = 0; j < (b.digits[i] - '0'); j++) {
+    for (char dc : b.digits) {
+      for (int j = 0; j < (dc - '0'); j++) {
         res = add(res.digits, row.digits, res.sign, row.sign);
       }
       if (row.digits.size() > 1 || row.digits[0] != '0') {
@@ -2920,12 +2917,12 @@ Perform operations on arbitrary precision big integers internally represented as
 #include <vector>
 
 class BigInt {
-  static const int BASE = 1000000000, BASE_DIGITS = 9;
+  static const int BASE = 1'000'000'000, BASE_DIGITS = 9;
   static const bool USE_FFT_MULT = true;
 
-  typedef std::vector<int> vint;
-  typedef std::vector<long long> vll;
-  typedef std::vector<std::complex<double>> vcd;
+  using vint = std::vector<int>;
+  using vll = std::vector<long long>;
+  using vcd = std::vector<std::complex<double>>;
 
   vint digits;
   int sign;
@@ -3054,14 +3051,14 @@ class BigInt {
       }
       return res;
     }
-    vll a1b1 = karatsuba(alo, alo + k, blo, blo + k);
-    vll a2b2 = karatsuba(alo + k, ahi, blo + k, bhi);
+    auto a1b1 = karatsuba(alo, alo + k, blo, blo + k);
+    auto a2b2 = karatsuba(alo + k, ahi, blo + k, bhi);
     vll a2(alo + k, ahi), b2(blo + k, bhi);
     for (int i = 0; i < k; i++) {
       a2[i] += alo[i];
       b2[i] += blo[i];
     }
-    vll r = karatsuba(a2.begin(), a2.end(), b2.begin(), b2.end());
+    auto r = karatsuba(a2.begin(), a2.end(), b2.begin(), b2.end());
     for (int i = 0; i < static_cast<int>(a1b1.size()); i++) {
       r[i] -= a1b1[i];
       res[i] += a1b1[i];
@@ -3259,7 +3256,7 @@ class BigInt {
     b.resize(n, 0);
     vll c;
     if (USE_FFT_MULT) {
-      vcd at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
+      auto at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
       for (int i = 0; i < n; i++) {
         at[i] *= bt[i];
       }
@@ -3325,7 +3322,7 @@ class BigInt {
       throw std::runtime_error("Division by zero in BigInt.");
     }
     if (comp(digits, v.digits, 1, 1) < 0) {
-      return std::make_pair(0, *this);
+      return {BigInt(0), *this};
     }
     int norm = BASE / (v.digits.back() + 1);
     BigInt an = abs() * norm, bn = v.abs() * norm, q, r;
@@ -3345,7 +3342,7 @@ class BigInt {
     r.sign = sign;
     q.normalize();
     r.normalize();
-    return std::make_pair(q, r / norm);
+    return {q, r / norm};
   }
 
   BigInt operator/(const BigInt &v) const { return div(v).first; }
@@ -3736,7 +3733,7 @@ class Rational {
 
 int main() {
 #define EQ(a, b) (fabs((a) - (b)) <= 1E-9)
-  typedef Rational<long long> Rational;
+  using Rational = Rational<long long>;
 
   assert(Rational(-21, 1) % 2 == -1);
   Rational r(Rational(-53, 10) % Rational(-17, 10));
@@ -3796,7 +3793,7 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 #include <stdexcept>
 #include <vector>
 
-typedef std::vector<std::vector<int>> matrix;
+using matrix = std::vector<std::vector<int>>;
 
 matrix make_matrix(int r, int c) {
   return matrix(r, matrix::value_type(c));
@@ -4081,8 +4078,8 @@ matrix &rotate_in_place(matrix &a, int degrees = 90) {
   switch (degrees % 360) {
     case 90: {
       transpose_in_place(a);
-      for (int i = 0; i < n; i++) {
-        std::reverse(a[i].begin(), a[i].end());
+      for (auto &row : a) {
+        std::reverse(row.begin(), row.end());
       }
       break;
     }
@@ -4190,7 +4187,7 @@ Matrix &row_reduce(Matrix &a) {
       }
     }
     std::swap(a[i], a[row]);
-    typename Matrix::value_type::value_type lv = a[row][lead];
+    auto lv = a[row][lead];
     for (int j = 0; j < c; j++) {
       a[row][j] /= lv;
     }
@@ -4398,7 +4395,7 @@ int main() {
   const int n = 3, a[n][n] = {{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
   vector<vector<double>> m(n), inv, res(n, vector<double>(n, 0));
   for (int i = 0; i < n; i++) {
-    m[i] = vector<double>(a[i], a[i] + n);
+    m[i].assign(a[i], a[i] + n);
   }
   double d = det(m);
   assert(fabs(d - det_naive(m)) < 1e-10);
@@ -4446,6 +4443,7 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <numeric>
 #include <vector>
 
 template<class Matrix>
@@ -4453,9 +4451,7 @@ int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS 
   int r = a.size(), c = a[0].size(), parity = 0;
   if (p1col != nullptr) {
     p1col->resize(r);
-    for (int i = 0; i < r; i++) {
-      (*p1col)[i] = i;
-    }
+    std::iota(p1col->begin(), p1col->end(), 0);
   }
   for (int i = 0; i < r && i < c; i++) {
     int pi = i;
@@ -4843,11 +4839,12 @@ std::vector<double> find_all_roots(
     const std::vector<double> &p, double a = -1e20, double b = 1e20, const double EPS = 1e-15
 ) {
   std::vector<double> pprime;
+  pprime.reserve(p.size() > 0 ? p.size() - 1 : 0);
   for (int i = 1; i < static_cast<int>(p.size()); i++) {
     pprime.push_back(p[i] * i);
   }
   if (pprime.empty()) {
-    return std::vector<double>();
+    return {};
   }
   std::vector<double> res, r = find_all_roots(pprime, a, b, EPS);
   r.push_back(b);
@@ -4908,8 +4905,8 @@ Finds every complex root $x$ for a polynomial $p$ with complex coefficients such
 #include <cstdlib>
 #include <vector>
 
-typedef std::complex<double> cdouble;
-typedef std::vector<cdouble> cpoly;
+using cdouble = std::complex<double>;
+using cpoly = std::vector<cdouble>;
 
 std::pair<cdouble, cpoly> horner_eval(const cpoly &p, const cdouble &x) {
   int n = p.size();
@@ -4917,7 +4914,7 @@ std::pair<cdouble, cpoly> horner_eval(const cpoly &p, const cdouble &x) {
   for (int i = n - 1; i > 0; i--) {
     b[i - 1] = p[i] + (i < n - 1 ? b[i] * x : 0);
   }
-  return std::make_pair(p[0] + b[0] * x, b);
+  return {p[0] + b[0] * x, b};
 }
 
 cpoly derivative(const cpoly &p) {
@@ -4980,8 +4977,8 @@ std::vector<cdouble> find_all_roots(
 using namespace std;
 
 void print_roots(const vector<cdouble> &x) {
-  for (int i = 0; i < static_cast<int>(x.size()); i++) {
-    printf("(%.5lf, %.5lf)\n", x[i].real(), x[i].imag());
+  for (const auto &z : x) {
+    printf("(%.5lf, %.5lf)\n", z.real(), z.imag());
   }
 }
 
@@ -4999,11 +4996,11 @@ int main() {
     // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
     printf("Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):\n");
     cpoly p;
-    p.push_back(cdouble(-24, 36));
-    p.push_back(cdouble(-26, 12));
-    p.push_back(cdouble(-30, 40));
-    p.push_back(cdouble(-26, 12));
-    p.push_back(cdouble(-6, 4));
+    p.emplace_back(-24, 36);
+    p.emplace_back(-26, 12);
+    p.emplace_back(-30, 40);
+    p.emplace_back(-26, 12);
+    p.emplace_back(-6, 4);
     print_roots(find_all_roots(p));
   }
   return 0;
@@ -5048,9 +5045,9 @@ This routine is intended for well-scaled polynomials when all complex roots are 
 #include <complex>
 #include <vector>
 
-typedef long double LD;
-typedef std::complex<LD> cdouble;
-typedef std::vector<cdouble> cpoly;
+using LD = long double;
+using cdouble = std::complex<LD>;
+using cpoly = std::vector<cdouble>;
 
 const LD PI = acosl(-1.0L);
 const LD ZERO_EPS = 1e-30L;   // Treat coefficients and denominators this small as zero.
@@ -5073,7 +5070,7 @@ std::pair<cdouble, cdouble> eval_with_derivative(const cpoly &p, const cdouble &
     derivative = derivative * x + value;
     value = value * x + p[i];
   }
-  return std::make_pair(value, derivative);
+  return {value, derivative};
 }
 
 LD root_bound(const cpoly &p) {
@@ -5136,8 +5133,8 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
     bool done = true;
     cpoly next = z;
     for (int i = 0; i < n; i++) {
-      std::pair<cdouble, cdouble> ev = eval_with_derivative(p, z[i]);
-      if (std::abs(ev.first) <= EPS) {
+      auto [fx, dfx] = eval_with_derivative(p, z[i]);
+      if (std::abs(fx) <= EPS) {
         continue;
       }
       cdouble repulsion = 0;
@@ -5151,13 +5148,13 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
           repulsion += cdouble(1) / diff;
         }
       }
-      cdouble denom = ev.second - ev.first * repulsion;
+      cdouble denom = dfx - fx * repulsion;
       if (is_zero(denom)) {
         continue;
       }
-      cdouble step = ev.first / denom;
-      if (!is_finite(step) && !is_zero(ev.second)) {
-        step = ev.first / ev.second;
+      cdouble step = fx / denom;
+      if (!is_finite(step) && !is_zero(dfx)) {
+        step = fx / dfx;
       }
       if (!is_finite(step)) {
         continue;
@@ -5184,7 +5181,7 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
     }
   }
   for (int i = 0; i < n; i++) {
-    roots.push_back(clean_root(z[i]));
+    roots.emplace_back(z[i]);
   }
   std::sort(roots.begin(), roots.end(), root_less);
   return roots;
@@ -5208,8 +5205,8 @@ cdouble eval(const cpoly &p, const cdouble &x) {
 }
 
 void print_roots(const vector<cdouble> &x) {
-  for (int i = 0; i < static_cast<int>(x.size()); i++) {
-    printf("(%.5Lf, %.5Lf)\n", x[i].real(), x[i].imag());
+  for (const auto &z : x) {
+    printf("(%.5Lf, %.5Lf)\n", z.real(), z.imag());
   }
 }
 
@@ -5220,8 +5217,8 @@ int main() {
     vector<LD> p(poly, poly + 4);
     vector<cdouble> roots = find_all_roots(p);
     assert(roots.size() == 3);
-    for (int i = 0; i < static_cast<int>(roots.size()); i++) {
-      assert(abs(eval(cpoly(p.begin(), p.end()), roots[i])) < CHECK_EPS);
+    for (const auto &root : roots) {
+      assert(abs(eval(cpoly(p.begin(), p.end()), root)) < CHECK_EPS);
     }
     print_roots(roots);
   }
@@ -5229,15 +5226,15 @@ int main() {
     // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
     printf("Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):\n");
     cpoly p;
-    p.push_back(cdouble(-24, 36));
-    p.push_back(cdouble(-26, 12));
-    p.push_back(cdouble(-30, 40));
-    p.push_back(cdouble(-26, 12));
-    p.push_back(cdouble(-6, 4));
+    p.emplace_back(-24, 36);
+    p.emplace_back(-26, 12);
+    p.emplace_back(-30, 40);
+    p.emplace_back(-26, 12);
+    p.emplace_back(-6, 4);
     vector<cdouble> roots = find_all_roots(p);
     assert(roots.size() == 4);
-    for (int i = 0; i < static_cast<int>(roots.size()); i++) {
-      assert(abs(eval(p, roots[i])) < CHECK_EPS);
+    for (const auto &root : roots) {
+      assert(abs(eval(p, root)) < CHECK_EPS);
     }
     print_roots(roots);
   }
@@ -5297,7 +5294,7 @@ double f(double x) {
 }
 
 int main() {
-  double PI = acos(-1.0);
+  const double PI = acos(-1.0);
   assert(fabs(integrate(f, 0.0, PI / 2) - 1) < 1e-10);
   return 0;
 }
@@ -5327,8 +5324,8 @@ This is the base case of the Sprague-Grundy theorem: every finite impartial game
 
 int nim_sum(const std::vector<int> &piles) {
   int x = 0;
-  for (int i = 0; i < static_cast<int>(piles.size()); i++) {
-    x ^= piles[i];
+  for (int p : piles) {
+    x ^= p;
   }
   return x;
 }
@@ -5340,15 +5337,14 @@ bool first_player_wins(const std::vector<int> &piles) {
 std::pair<int, int> winning_move(const std::vector<int> &piles) {
   int x = nim_sum(piles);
   if (x == 0) {
-    return std::make_pair(-1, -1);
+    return {-1, -1};
   }
   for (int i = 0; i < static_cast<int>(piles.size()); i++) {
-    int target = piles[i] ^ x;
-    if (target < piles[i]) {
-      return std::make_pair(i, target);
+    if (int target = piles[i] ^ x; target < piles[i]) {
+      return {i, target};
     }
   }
-  return std::make_pair(-1, -1);
+  return {-1, -1};
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -5357,16 +5353,14 @@ std::pair<int, int> winning_move(const std::vector<int> &piles) {
 using namespace std;
 
 int main() {
-  int raw[] = {3, 4, 5};
-  vector<int> piles(raw, raw + 3);
+  vector<int> piles = {3, 4, 5};
   assert(nim_sum(piles) == 2);
   assert(first_player_wins(piles));
-  pair<int, int> move = winning_move(piles);
-  piles[move.first] = move.second;
+  auto [pile_idx, new_size] = winning_move(piles);
+  piles[pile_idx] = new_size;
   assert(nim_sum(piles) == 0);
 
-  int losing_raw[] = {1, 2, 3};
-  vector<int> losing(losing_raw, losing_raw + 3);
+  vector<int> losing = {1, 2, 3};
   assert(!first_player_wins(losing));
   assert(winning_move(losing).first == -1);
   return 0;
@@ -5392,9 +5386,9 @@ For a sum of independent impartial games, the combined Grundy number is the xor 
 
 int mex(const std::vector<int> &values) {
   std::vector<bool> seen(values.size() + 1, false);
-  for (int i = 0; i < static_cast<int>(values.size()); i++) {
-    if (0 <= values[i] && values[i] < static_cast<int>(seen.size())) {
-      seen[values[i]] = true;
+  for (int v : values) {
+    if (0 <= v && v < static_cast<int>(seen.size())) {
+      seen[v] = true;
     }
   }
   for (int i = 0; i < static_cast<int>(seen.size()); i++) {
@@ -5409,9 +5403,9 @@ std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> 
   std::vector<int> grundy(max_stones + 1, 0);
   for (int stones = 1; stones <= max_stones; stones++) {
     std::vector<int> reachable;
-    for (int i = 0; i < static_cast<int>(moves.size()); i++) {
-      if (moves[i] <= stones) {
-        reachable.push_back(grundy[stones - moves[i]]);
+    for (int m : moves) {
+      if (m <= stones) {
+        reachable.push_back(grundy[stones - m]);
       }
     }
     grundy[stones] = mex(reachable);
@@ -5421,8 +5415,8 @@ std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> 
 
 int sum_grundy(const std::vector<int> &grundies) {
   int x = 0;
-  for (int i = 0; i < static_cast<int>(grundies.size()); i++) {
-    x ^= grundies[i];
+  for (int g : grundies) {
+    x ^= g;
   }
   return x;
 }
@@ -5433,17 +5427,15 @@ int sum_grundy(const std::vector<int> &grundies) {
 using namespace std;
 
 int main() {
-  int moves_raw[] = {1, 3, 4};
-  vector<int> moves(moves_raw, moves_raw + 3);
-  vector<int> g = subtraction_game_grundy(10, moves);
+  vector<int> moves = {1, 3, 4};
+  auto g = subtraction_game_grundy(10, moves);
   assert(g[0] == 0);
   assert(g[1] == 1);
   assert(g[2] == 0);
   assert(g[4] == 2);
   assert(g[7] == 0);
 
-  int heaps_raw[] = {g[5], g[7], g[10]};
-  vector<int> heaps(heaps_raw, heaps_raw + 3);
+  vector<int> heaps = {g[5], g[7], g[10]};
   assert(sum_grundy(heaps) == (g[5] ^ g[7] ^ g[10]));
   return 0;
 }
@@ -5470,8 +5462,7 @@ int grundy_dfs(int u, const std::vector<std::vector<int>> &g, std::vector<int> *
     return (*memo)[u];
   }
   std::vector<bool> seen(g[u].size() + 1, false);
-  for (int i = 0; i < static_cast<int>(g[u].size()); i++) {
-    int v = g[u][i];
+  for (int v : g[u]) {
     int x = grundy_dfs(v, g, memo);
     if (x < static_cast<int>(seen.size())) {
       seen[x] = true;
@@ -5499,13 +5490,8 @@ std::vector<int> grundy_on_dag(const std::vector<std::vector<int>> &g) {
 using namespace std;
 
 int main() {
-  vector<vector<int>> g(5);
-  g[0].push_back(1);
-  g[0].push_back(2);
-  g[1].push_back(3);
-  g[2].push_back(3);
-  g[2].push_back(4);
-  vector<int> grundy = grundy_on_dag(g);
+  vector<vector<int>> g{{1, 2}, {3}, {3, 4}, {}, {}};
+  auto grundy = grundy_on_dag(g);
   assert(grundy[3] == 0);
   assert(grundy[4] == 0);
   assert(grundy[1] == 1);

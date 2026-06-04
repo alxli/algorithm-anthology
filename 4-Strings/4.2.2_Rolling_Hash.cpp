@@ -36,7 +36,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-typedef unsigned long long uint64;
+using uint64 = unsigned long long;
 
 const uint64 HASH_MOD = (1ULL << 61) - 1;
 const uint64 HASH_BASE = 911382323ULL;  // Change or randomize.
@@ -89,8 +89,8 @@ class RollingHash {
   void build(It first, It last) {
     pref.clear();
     pref.push_back(0);
-    for (It it = first; it != last; ++it) {
-      pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE), value_hasher(*it)));
+    for (; first != last; ++first) {
+      pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE), value_hasher(*first)));
     }
     ensure_powers(pref.size() - 1);
   }
@@ -142,7 +142,7 @@ std::vector<uint64> RollingHash<T, ValueHasher>::pow_base(1, 1);
 #include <cassert>
 using namespace std;
 
-typedef pair<int, int> point;
+using point = pair<int, int>;
 
 struct PointHasher {
   uint64 operator()(const point &p) const {
@@ -175,8 +175,8 @@ int main() {
   assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
   vector<point> poly;
-  poly.push_back(point(1, 2));
-  poly.push_back(point(3, 4));
+  poly.emplace_back(1, 2);
+  poly.emplace_back(3, 4);
   RollingHash<point, PointHasher> hp(poly);
   assert((hp.get(0, 2) == RollingHash<point, PointHasher>::hash(poly)));
   return 0;

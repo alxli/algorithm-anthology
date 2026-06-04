@@ -26,7 +26,7 @@ Space Complexity:
 template<class It>
 typename std::iterator_traits<It>::value_type reservoir_sample_one(It lo, It hi) {
   assert(lo != hi);
-  typename std::iterator_traits<It>::value_type sample = *lo;
+  auto sample = *lo;
   int seen = 0;
   for (It it = lo; it != hi; ++it) {
     seen++;
@@ -38,8 +38,10 @@ typename std::iterator_traits<It>::value_type reservoir_sample_one(It lo, It hi)
 }
 
 template<class It>
-std::vector<typename std::iterator_traits<It>::value_type> reservoir_sample_k(It lo, It hi, int k) {
-  std::vector<typename std::iterator_traits<It>::value_type> res;
+auto reservoir_sample_k(It lo, It hi, int k)
+    -> std::vector<typename std::iterator_traits<It>::value_type> {
+  using T = typename std::iterator_traits<It>::value_type;
+  std::vector<T> res;
   int seen = 0;
   for (It it = lo; it != hi; ++it) {
     seen++;
@@ -70,10 +72,10 @@ int main() {
 
   vector<int> sample = reservoir_sample_k(a.begin(), a.end(), 3);
   assert(sample.size() == 3);
-  for (int i = 0; i < static_cast<int>(sample.size()); i++) {
+  for (int s : sample) {
     bool found = false;
-    for (int j = 0; j < static_cast<int>(a.size()); j++) {
-      found = found || sample[i] == a[j];
+    for (int x : a) {
+      found = found || s == x;
     }
     assert(found);
   }

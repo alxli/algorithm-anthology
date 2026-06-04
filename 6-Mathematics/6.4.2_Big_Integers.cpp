@@ -64,12 +64,12 @@ Space Complexity:
 #include <vector>
 
 class BigInt {
-  static const int BASE = 1000000000, BASE_DIGITS = 9;
+  static const int BASE = 1'000'000'000, BASE_DIGITS = 9;
   static const bool USE_FFT_MULT = true;
 
-  typedef std::vector<int> vint;
-  typedef std::vector<long long> vll;
-  typedef std::vector<std::complex<double>> vcd;
+  using vint = std::vector<int>;
+  using vll = std::vector<long long>;
+  using vcd = std::vector<std::complex<double>>;
 
   vint digits;
   int sign;
@@ -198,14 +198,14 @@ class BigInt {
       }
       return res;
     }
-    vll a1b1 = karatsuba(alo, alo + k, blo, blo + k);
-    vll a2b2 = karatsuba(alo + k, ahi, blo + k, bhi);
+    auto a1b1 = karatsuba(alo, alo + k, blo, blo + k);
+    auto a2b2 = karatsuba(alo + k, ahi, blo + k, bhi);
     vll a2(alo + k, ahi), b2(blo + k, bhi);
     for (int i = 0; i < k; i++) {
       a2[i] += alo[i];
       b2[i] += blo[i];
     }
-    vll r = karatsuba(a2.begin(), a2.end(), b2.begin(), b2.end());
+    auto r = karatsuba(a2.begin(), a2.end(), b2.begin(), b2.end());
     for (int i = 0; i < static_cast<int>(a1b1.size()); i++) {
       r[i] -= a1b1[i];
       res[i] += a1b1[i];
@@ -405,7 +405,7 @@ class BigInt {
     b.resize(n, 0);
     vll c;
     if (USE_FFT_MULT) {
-      vcd at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
+      auto at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
       for (int i = 0; i < n; i++) {
         at[i] *= bt[i];
       }
@@ -471,7 +471,7 @@ class BigInt {
       throw std::runtime_error("Division by zero in BigInt.");
     }
     if (comp(digits, v.digits, 1, 1) < 0) {
-      return std::make_pair(0, *this);
+      return {BigInt(0), *this};
     }
     int norm = BASE / (v.digits.back() + 1);
     BigInt an = abs() * norm, bn = v.abs() * norm, q, r;
@@ -491,7 +491,7 @@ class BigInt {
     r.sign = sign;
     q.normalize();
     r.normalize();
-    return std::make_pair(q, r / norm);
+    return {q, r / norm};
   }
 
   // clang-format off

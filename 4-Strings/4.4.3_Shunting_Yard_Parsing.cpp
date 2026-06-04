@@ -50,7 +50,6 @@ Space Complexity:
 
 #include <algorithm>
 #include <cctype>
-#include <functional>
 #include <map>
 #include <set>
 #include <sstream>
@@ -62,18 +61,18 @@ Space Complexity:
 using std::string;
 
 // Define the custom operand type and representation below.
-typedef double Operand;
-typedef Operand (*UnaryOp)(Operand a);
-typedef Operand (*BinaryOp)(Operand a, Operand b);
+using Operand = double;
+using UnaryOp = Operand (*)(Operand a);
+using BinaryOp = Operand (*)(Operand a, Operand b);
 
 bool is_operand(const string &s) {
   int npoints = 0;
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    if (s[i] == '.') {
+  for (char c : s) {
+    if (c == '.') {
       if (++npoints > 1) {
         return false;
       }
-    } else if (!isdigit(s[i])) {
+    } else if (!isdigit(static_cast<unsigned char>(c))) {
       return false;
     }
   }
@@ -88,31 +87,27 @@ Operand eval_operand(const string &s) {
 }
 
 class parser {
-  typedef std::map<string, UnaryOp> unary_op_map;
-  typedef std::map<string, std::pair<BinaryOp, int>> binary_op_map;
+  using unary_op_map = std::map<string, UnaryOp>;
+  using binary_op_map = std::map<string, std::pair<BinaryOp, int>>;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
   std::set<string> ops;
 
   static string strip(string s) {
-    s.erase(
-        s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace)))
-    );
-    s.erase(
-        std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(),
-        s.end()
-    );
+    auto not_space = [](unsigned char c) { return !std::isspace(c); };
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), not_space));
+    s.erase(std::find_if(s.rbegin(), s.rend(), not_space).base(), s.end());
     return s;
   }
 
  public:
   parser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
-    for (unary_op_map::const_iterator it = unary_ops.begin(); it != unary_ops.end(); ++it) {
-      ops.insert(it->first);
+    for (const auto &[op, fn] : unary_ops) {
+      ops.insert(op);
     }
-    for (binary_op_map::const_iterator it = binary_ops.begin(); it != binary_ops.end(); ++it) {
-      ops.insert(it->first);
+    for (const auto &[op, fn_prec] : binary_ops) {
+      ops.insert(op);
     }
   }
 
@@ -122,7 +117,7 @@ class parser {
       if (s[i] == ' ') {
         continue;
       }
-      int next_paren = s.size();
+      int next_paren = static_cast<int>(s.size());
       for (int j = i; j < static_cast<int>(s.size()); j++) {
         if (s[j] == '(' || s[j] == ')') {
           next_paren = j;
@@ -133,10 +128,10 @@ class parser {
         int found = next_paren;
         string found_op;
         for (int j = i; j < next_paren && found == next_paren; j++) {
-          for (std::set<string>::iterator it = ops.begin(); it != ops.end(); ++it) {
-            if (s.substr(j, it->size()) == *it) {
+          for (const auto &op : ops) {
+            if (s.substr(j, op.size()) == op) {
               found = j;
-              found_op = *it;
+              found_op = op;
               break;
             }
           }
@@ -150,13 +145,13 @@ class parser {
         }
         if (found < next_paren) {
           res.push_back(found_op);
-          i = found + found_op.size();
+          i = found + static_cast<int>(found_op.size());
         } else {
           i = next_paren;
         }
       }
-      if (next_paren < s.size()) {
-        res.push_back(string(1, s[next_paren]));
+      if (next_paren < static_cast<int>(s.size())) {
+        res.emplace_back(1, s[next_paren]);
       }
     }
     return res;
@@ -166,25 +161,24 @@ class parser {
   Operand eval(StrIt lo, StrIt hi) {
     std::stack<Operand> vals;
     std::stack<std::pair<string, bool>> ops;
-    ops.push(std::make_pair("(", false));
+    ops.emplace("(", false);
     StrIt prev = hi;
     do {
       string curr = (lo == hi) ? ")" : *lo;
       if (is_operand(curr)) {
         vals.push(eval_operand(curr));
       } else if (curr == "(") {
-        ops.push(std::make_pair(curr, false));
+        ops.emplace(curr, false);
       } else if (
           unary_ops.find(curr) != unary_ops.end() &&
           (prev == hi || *prev == "(" || binary_ops.find(*prev) != binary_ops.end())
       ) {
-        ops.push(std::make_pair(curr, true));
+        ops.emplace(curr, true);
       } else {
         for (;;) {
-          string op = ops.top().first;
-          bool is_unary = ops.top().second;
-          binary_op_map::iterator it1 = binary_ops.find(op);
-          binary_op_map::iterator it2 = binary_ops.find(curr);
+          auto [op, is_unary] = ops.top();
+          auto it1 = binary_ops.find(op);
+          auto it2 = binary_ops.find(curr);
           if (!is_unary && (it1 == binary_ops.end() ? -1 : it1->second.second) <
                                (it2 == binary_ops.end() ? -1 : it2->second.second)) {
             break;
@@ -196,11 +190,11 @@ class parser {
           Operand b = vals.top();
           vals.pop();
           if (is_unary) {
-            unary_op_map::iterator it = unary_ops.find(op);
-            if (it == unary_ops.end()) {
+            if (auto it = unary_ops.find(op); it != unary_ops.end()) {
+              vals.push((it->second)(b));
+            } else {
               throw std::runtime_error("Failed to eval unary op: " + op);
             }
-            vals.push((it->second)(b));
           } else {
             Operand a = vals.top();
             vals.pop();
@@ -211,7 +205,7 @@ class parser {
           }
         }
         if (curr != ")") {
-          ops.push(std::make_pair(*lo, false));
+          ops.emplace(*lo, false);
         }
       }
       prev = lo;
@@ -248,11 +242,11 @@ int main() {
   unary_ops["-"] = neg;
 
   map<string, pair<BinaryOp, int>> binary_ops;
-  binary_ops["+"] = make_pair((BinaryOp)add, 0);
-  binary_ops["-"] = make_pair((BinaryOp)sub, 0);
-  binary_ops["*"] = make_pair((BinaryOp)mul, 1);
-  binary_ops["/"] = make_pair((BinaryOp)div, 1);
-  binary_ops["^"] = make_pair((BinaryOp)pow, 2);
+  binary_ops["+"] = {static_cast<BinaryOp>(add), 0};
+  binary_ops["-"] = {static_cast<BinaryOp>(sub), 0};
+  binary_ops["*"] = {static_cast<BinaryOp>(mul), 1};
+  binary_ops["/"] = {static_cast<BinaryOp>(div), 1};
+  binary_ops["^"] = {static_cast<BinaryOp>(pow), 2};
 
   parser p(unary_ops, binary_ops);
   assert(EQ(p.eval("-+-((--(-+1)))"), -1));

@@ -33,7 +33,7 @@ Space Complexity:
 #include <set>
 #include <vector>
 
-typedef unsigned long long uint64;
+using uint64 = unsigned long long;
 
 template<class T>
 class ZobristHash {
@@ -51,8 +51,7 @@ class ZobristHash {
   explicit ZobristHash(uint64 seed = 0) : state(seed) {}
 
   uint64 get(const T &x) {
-    typename std::map<T, uint64>::iterator it = token.find(x);
-    if (it != token.end()) {
+    if (auto it = token.find(x); it != token.end()) {
       return it->second;
     }
     state = splitmix64(state);

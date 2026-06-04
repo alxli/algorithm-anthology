@@ -44,8 +44,7 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int>> &tree) {
   while (!stack.empty()) {
     int u = stack.back();
     stack.pop_back();
-    for (int i = 0; i < static_cast<int>(tree[u].size()); i++) {
-      int v = tree[u][i];
+    for (int v : tree[u]) {
       if (parent[v] == -1) {
         parent[v] = u;
         stack.push_back(v);
@@ -69,24 +68,23 @@ std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
   std::vector<int> degree(nodes, 1);
   std::set<int> leaves;
   std::vector<std::pair<int, int>> edges;
-  for (int i = 0; i < static_cast<int>(code.size()); i++) {
-    degree[code[i]]++;
+  for (int c : code) {
+    degree[c]++;
   }
   for (int u = 0; u < nodes; u++) {
     if (degree[u] == 1) {
       leaves.insert(u);
     }
   }
-  for (int i = 0; i < static_cast<int>(code.size()); i++) {
+  for (int u : code) {
     int leaf = *leaves.begin();
     leaves.erase(leaves.begin());
-    int u = code[i];
-    edges.push_back(std::make_pair(leaf, u));
+    edges.emplace_back(leaf, u);
     if (--degree[u] == 1) {
       leaves.insert(u);
     }
   }
-  edges.push_back(std::make_pair(*leaves.begin(), *leaves.rbegin()));
+  edges.emplace_back(*leaves.begin(), *leaves.rbegin());
   return edges;
 }
 

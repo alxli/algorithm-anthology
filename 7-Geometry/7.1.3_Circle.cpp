@@ -26,7 +26,7 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -42,7 +42,7 @@ struct Circle {
   double h, k, r;
 
   Circle() : h(0), k(0), r(0) {}
-  Circle(double r) : h(0), k(0), r(fabs(r)) {}
+  explicit Circle(double r) : h(0), k(0), r(fabs(r)) {}
   Circle(const point &o, double r) : h(o.x), k(o.y), r(fabs(r)) {}
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 

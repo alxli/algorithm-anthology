@@ -19,7 +19,7 @@ Space Complexity:
 
 */
 
-typedef unsigned long long uint64;
+using uint64 = unsigned long long;
 
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
   uint64 a = 0, b = x % m;
@@ -48,8 +48,8 @@ uint64 powmod(uint64 x, uint64 n, uint64 m) {
 #include <cassert>
 
 int main() {
-  assert(powmod(2, 10, 1000000007) == 1024);
-  assert(powmod(2, 62, 1000000) == 387904);
-  assert(powmod(10001, 10001, 100000) == 10001);
+  assert(powmod(2, 10, 1'000'000'007) == 1024);
+  assert(powmod(2, 62, 1'000'000) == 387904);
+  assert(powmod(10001, 10001, 100'000) == 10001);
   return 0;
 }

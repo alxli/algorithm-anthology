@@ -62,11 +62,12 @@ std::vector<double> find_all_roots(
     const std::vector<double> &p, double a = -1e20, double b = 1e20, const double EPS = 1e-15
 ) {
   std::vector<double> pprime;
+  pprime.reserve(p.size() > 0 ? p.size() - 1 : 0);
   for (int i = 1; i < static_cast<int>(p.size()); i++) {
     pprime.push_back(p[i] * i);
   }
   if (pprime.empty()) {
-    return std::vector<double>();
+    return {};
   }
   std::vector<double> res, r = find_all_roots(pprime, a, b, EPS);
   r.push_back(b);

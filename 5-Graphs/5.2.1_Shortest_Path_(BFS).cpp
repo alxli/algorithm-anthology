@@ -20,7 +20,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = 0x3f3f'3f3f;
 std::vector<int> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
@@ -31,20 +31,18 @@ void bfs(int nodes, int start) {
     pred[i] = -1;
   }
   std::queue<std::pair<int, int>> q;
-  q.push(std::make_pair(start, 0));
+  q.emplace(start, 0);
   while (!q.empty()) {
-    int u = q.front().first;
-    int d = q.front().second;
+    auto [u, d] = q.front();
     q.pop();
     visit[u] = true;
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      int v = adj[u][j];
+    for (int v : adj[u]) {
       if (visit[v]) {
         continue;
       }
       dist[v] = d + 1;
       pred[v] = u;
-      q.push(std::make_pair(v, d + 1));
+      q.emplace(v, d + 1);
     }
   }
 }

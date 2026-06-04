@@ -80,7 +80,7 @@ class HuffmanTree {
       pq.pop();
       int b = pq.top();
       pq.pop();
-      nodes.push_back(Node(nodes[a].freq + nodes[b].freq, 0, a, b));
+      nodes.emplace_back(nodes[a].freq + nodes[b].freq, 0, a, b);
       pq.push(static_cast<int>(nodes.size()) - 1);
     }
     root = pq.top();

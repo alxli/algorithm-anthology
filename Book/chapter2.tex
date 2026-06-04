@@ -224,7 +224,7 @@ This implementation combines a doubly linked list (\inlinecode{std::list}) with 
 
 template<class Key, class Value>
 class LRUCache {
-  typedef typename std::list<std::pair<Key, Value>>::iterator list_iter;
+  using list_iter = typename std::list<std::pair<Key, Value>>::iterator;
 
   int cap;
   std::list<std::pair<Key, Value>> items;
@@ -236,7 +236,7 @@ class LRUCache {
   int size() const { return items.size(); }
 
   bool get(const Key &key, Value *value) {
-    typename std::map<Key, list_iter>::iterator it = where.find(key);
+    auto it = where.find(key);
     if (it == where.end()) {
       return false;
     }
@@ -247,7 +247,7 @@ class LRUCache {
   }
 
   void put(const Key &key, const Value &value) {
-    typename std::map<Key, list_iter>::iterator it = where.find(key);
+    auto it = where.find(key);
     if (it != where.end()) {
       it->second->second = value;
       items.splice(items.begin(), items, it->second);
@@ -261,7 +261,7 @@ class LRUCache {
       where.erase(items.back().first);
       items.pop_back();
     }
-    items.push_front(std::make_pair(key, value));
+    items.push_front({key, value});
     where[key] = items.begin();
   }
 };
@@ -444,7 +444,7 @@ class SkewHeap {
     T value;
     Node *left, *right;
 
-    Node(const T &v) : value(v), left(nullptr), right(nullptr) {}
+    explicit Node(const T &v) : value(v), left(nullptr), right(nullptr) {}
   } *root;
 
   int num_nodes;
@@ -579,7 +579,7 @@ class PairingHeap {
     T value;
     Node *left, *next;
 
-    Node(const T &v) : value(v), left(nullptr), next(nullptr) {}
+    explicit Node(const T &v) : value(v), left(nullptr), next(nullptr) {}
 
     void add_child(Node *n) {
       if (left == nullptr) {
@@ -2005,7 +2005,7 @@ class SBTree {
     } else if (r > rank) {
       return select(n->right, r - rank - 1);
     }
-    return std::make_pair(n->key, n->value);
+    return {n->key, n->value};
   }
 
   static int rank(Node *n, const K &k) {
@@ -2150,7 +2150,7 @@ Maintain a map from closed, one-dimensional intervals to values while supporting
 
 template<class K, class V>
 class IntervalTreap {
-  typedef std::pair<K, K> interval_t;
+  using interval_t = std::pair<K, K>;
 
   struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
@@ -2293,7 +2293,7 @@ class IntervalTreap {
   bool empty() const { return root == nullptr; }
 
   bool insert(const K &lo, const K &hi, const V &v) {
-    if (insert(root, std::make_pair(lo, hi), v)) {
+    if (insert(root, interval_t{lo, hi}, v)) {
       num_nodes++;
       return true;
     }
@@ -2301,7 +2301,7 @@ class IntervalTreap {
   }
 
   bool erase(const K &lo, const K &hi) {
-    if (erase(root, std::make_pair(lo, hi))) {
+    if (erase(root, interval_t{lo, hi})) {
       num_nodes--;
       return true;
     }
@@ -2309,18 +2309,18 @@ class IntervalTreap {
   }
 
   const interval_t *find_key(const K &lo, const K &hi) const {
-    Node *n = find_any(root, std::make_pair(lo, hi));
+    Node *n = find_any(root, interval_t{lo, hi});
     return (n == nullptr) ? nullptr : &(n->interval);
   }
 
   const V *find_value(const K &lo, const K &hi) const {
-    Node *n = find_any(root, std::make_pair(lo, hi));
+    Node *n = find_any(root, interval_t{lo, hi});
     return (n == nullptr) ? nullptr : &(n->value);
   }
 
   template<class KVFunction>
   void find_all(const K &lo, const K &hi, KVFunction f) const {
-    find_all(root, std::make_pair(lo, hi), f);
+    find_all(root, interval_t{lo, hi}, f);
   }
 
   template<class KVFunction>
@@ -2351,7 +2351,7 @@ int main() {
   assert(!t.insert(5, 20, 'x'));
   t.erase(17, 19);
   assert(t.size() == 5);
-  assert(*t.find_key(3, 9) == make_pair(5, 20));
+  assert(*t.find_key(3, 9) == (pair<int, int>{5, 20}));
   assert(*t.find_value(3, 9) == 'd');
   cout << "Intervals intersecting [16, 20]:";
   t.find_all(16, 20, print);
@@ -2415,17 +2415,16 @@ class HashMap {
     table_size = 2 * table_size;
     table = new std::list<HashMapEntry>[table_size];
     num_entries = 0;
-    typename std::list<HashMapEntry>::iterator it;
     for (int i = 0; i < old_size; i++) {
-      for (it = old[i].begin(); it != old[i].end(); ++it) {
-        insert(it->key, it->value);
+      for (auto &entry : old[i]) {
+        insert(entry.key, entry.value);
       }
     }
     delete[] old;
   }
 
  public:
-  HashMap(int size = 128) : table_size(size), num_entries(0) {
+  explicit HashMap(int size = 128) : table_size(size), num_entries(0) {
     table = new std::list<HashMapEntry>[table_size];
   }
 
@@ -2441,14 +2440,14 @@ class HashMap {
       double_capacity_and_rehash();
     }
     unsigned int i = Hash()(k) % table_size;
-    table[i].push_back(HashMapEntry(k, v));
+    table[i].emplace_back(k, v);
     num_entries++;
     return true;
   }
 
   bool erase(const K &k) {
     unsigned int i = Hash()(k) % table_size;
-    typename std::list<HashMapEntry>::iterator it = table[i].begin();
+    auto it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
       ++it;
     }
@@ -2462,7 +2461,7 @@ class HashMap {
 
   V *find(const K &k) const {
     unsigned int i = Hash()(k) % table_size;
-    typename std::list<HashMapEntry>::iterator it = table[i].begin();
+    auto it = table[i].begin();
     while (it != table[i].end() && !(it->key == k)) {
       ++it;
     }
@@ -2484,9 +2483,8 @@ class HashMap {
   template<class KVFunction>
   void walk(KVFunction f) const {
     for (int i = 0; i < table_size; i++) {
-      typename std::list<HashMapEntry>::iterator it;
-      for (it = table[i].begin(); it != table[i].end(); ++it) {
-        f(it->key, it->value);
+      for (const auto &entry : table[i]) {
+        f(entry.key, entry.value);
       }
     }
   }
@@ -2524,8 +2522,8 @@ struct ClassHash {
   // Jenkins's one-at-a-time hash.
   unsigned int operator()(const std::string &k) {
     unsigned int hash = 0;
-    for (unsigned int i = 0; i < k.size(); i++) {
-      hash += ((hash + k[i]) << 10);
+    for (char c : k) {
+      hash += ((hash + static_cast<unsigned char>(c)) << 10);
       hash ^= (hash >> 6);
     }
     hash += (hash << 3);
@@ -2624,8 +2622,8 @@ class SkipList {
 
  public:
   SkipList() : head(new Node(K(), V(), MAX_LEVELS)), num_nodes(0) {
-    for (int i = 0; i < static_cast<int>(head->next.size()); i++) {
-      head->next[i] = nullptr;
+    for (auto &ptr : head->next) {
+      ptr = nullptr;
     }
   }
 
@@ -2673,7 +2671,7 @@ class SkipList {
     }
     n = n->next[0];
     if (n != nullptr && n->key == k) {
-      for (int i = 0; i < static_cast<int>(update.size()); i++) {
+      for (int i = 0, levels = static_cast<int>(update.size()); i < levels; i++) {
         if (update[i]->next[i] != n) {
           break;
         }
@@ -2862,7 +2860,7 @@ class SqrtDecomposition {
   }
 
  public:
-  SqrtDecomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
+  explicit SqrtDecomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
 
   template<class It>
   SqrtDecomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
@@ -3025,7 +3023,7 @@ class SegTree {
   }
 
  public:
-  SegTree(int n, const T &v = T()) : len(n), value(4 * len) {
+  explicit SegTree(int n, const T &v = T()) : len(n), value(4 * len) {
     if (len > 0) {
       build(0, 0, len - 1, v);
     }
@@ -3192,7 +3190,7 @@ class SegTree {
   }
 
  public:
-  SegTree(int n, const T &v = T())
+  explicit SegTree(int n, const T &v = T())
       : len(n), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
       build(0, 0, len - 1, v);
@@ -3288,7 +3286,7 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 
 template<class T>
 class SegTree {
-  static const int MAXN = 1000000000;
+  static const int MAXN = 1'000'000'000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_segment(const T &v, int len) { return v; }
@@ -3303,7 +3301,7 @@ class SegTree {
     bool pending;
     Node *left, *right;
 
-    Node(const T &v) : value(v), pending(false), left(nullptr), right(nullptr) {}
+    explicit Node(const T &v) : value(v), pending(false), left(nullptr), right(nullptr) {}
   } *root;
 
   T init;
@@ -3381,7 +3379,7 @@ class SegTree {
   }
 
  public:
-  SegTree(const T &v = T()) : root(nullptr), init(v) {}
+  explicit SegTree(const T &v = T()) : root(nullptr), init(v) {}
 
   ~SegTree() { clean_up(root); }
   T at(int i) { return query(i, i); }
@@ -3466,19 +3464,19 @@ class PersistentSegTree {
 
   int build(const std::vector<int> &a, int lo, int hi) {
     if (lo == hi) {
-      tree.push_back(node(a[lo]));
+      tree.emplace_back(a[lo]);
       return static_cast<int>(tree.size()) - 1;
     }
     int mid = lo + (hi - lo) / 2;
     int left = build(a, lo, mid);
     int right = build(a, mid + 1, hi);
-    tree.push_back(node(tree[left].sum + tree[right].sum, left, right));
+    tree.emplace_back(tree[left].sum + tree[right].sum, left, right);
     return static_cast<int>(tree.size()) - 1;
   }
 
   int update(int cur, int lo, int hi, int index, int value) {
     if (lo == hi) {
-      tree.push_back(node(value));
+      tree.emplace_back(value);
       return static_cast<int>(tree.size()) - 1;
     }
     int mid = lo + (hi - lo) / 2;
@@ -3488,7 +3486,7 @@ class PersistentSegTree {
     } else {
       right = update(right, mid + 1, hi, index, value);
     }
-    tree.push_back(node(tree[left].sum + tree[right].sum, left, right));
+    tree.emplace_back(tree[left].sum + tree[right].sum, left, right);
     return static_cast<int>(tree.size()) - 1;
   }
 
@@ -3532,8 +3530,7 @@ class PersistentSegTree {
 using namespace std;
 
 int main() {
-  int raw[] = {1, 2, 3, 4};
-  vector<int> a(raw, raw + 4);
+  vector<int> a{1, 2, 3, 4};
   PersistentSegTree t(a);
   int v1 = t.update(0, 1, 10);
   int v2 = t.update(v1, 3, -1);
@@ -3569,7 +3566,7 @@ struct CartesianTree {
   explicit CartesianTree(const std::vector<int> &a)
       : root(-1), parent(a.size(), -1), left(a.size(), -1), right(a.size(), -1) {
     std::vector<int> st;
-    for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    for (int i = 0, n = static_cast<int>(a.size()); i < n; i++) {
       int last = -1;
       while (!st.empty() && a[i] < a[st.back()]) {
         last = st.back();
@@ -3604,8 +3601,7 @@ void inorder(const CartesianTree &t, int u, vector<int> *order) {
 }
 
 int main() {
-  int raw[] = {3, 2, 6, 1, 9};
-  vector<int> a(raw, raw + 5);
+  vector<int> a{3, 2, 6, 1, 9};
   CartesianTree t(a);
   assert(t.root == 3);
   assert(t.parent[1] == 3);
@@ -3665,7 +3661,7 @@ class ImplicitTreap {
     int size, priority;
     Node *left, *right;
 
-    Node(const T &v)
+    explicit Node(const T &v)
         : value(v),
           subtree_value(v),
           pending(false),
@@ -3791,7 +3787,7 @@ class ImplicitTreap {
   }
 
  public:
-  ImplicitTreap(int n = 0, const T &v = T()) : root(nullptr) {
+  explicit ImplicitTreap(int n = 0, const T &v = T()) : root(nullptr) {
     for (int i = 0; i < n; i++) {
       push_back(v);
     }
@@ -3904,8 +3900,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 
 template<class T>
 class Quadtree {
-  static const int MAXR = 1000000000;
-  static const int MAXC = 1000000000;
+  static const int MAXR = 1'000'000'000;
+  static const int MAXC = 1'000'000'000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_region(const T &v, int area) { return v; }
@@ -3915,9 +3911,9 @@ class Quadtree {
     T value;
     Node *child[4];
 
-    Node(const T &v) : value(v) {
-      for (int i = 0; i < 4; i++) {
-        child[i] = nullptr;
+    explicit Node(const T &v) : value(v) {
+      for (auto &c : child) {
+        c = nullptr;
       }
     }
   };
@@ -3975,23 +3971,23 @@ class Quadtree {
     update(n->child[2], r1, cmid + 1, rmid, c2);
     update(n->child[3], rmid + 1, cmid + 1, r2, c2);
     bool found = false;
-    for (int i = 0; i < 4; i++) {
-      n->value = found ? join_values(n->value, n->child[i]->value) : n->child[i]->value;
+    for (auto *c : n->child) {
+      n->value = found ? join_values(n->value, c->value) : c->value;
       found = true;
     }
   }
 
   static void clean_up(Node *n) {
     if (n != nullptr) {
-      for (int i = 0; i < 4; i++) {
-        clean_up(n->child[i]);
+      for (auto *c : n->child) {
+        clean_up(c);
       }
       delete n;
     }
   }
 
  public:
-  Quadtree(const T &v = T()) : root(nullptr), init(v) {}
+  explicit Quadtree(const T &v = T()) : root(nullptr), init(v) {}
 
   ~Quadtree() { clean_up(root); }
   T at(int r, int c) { return query(r, c, r, c); }
@@ -4038,9 +4034,9 @@ int main() {
   assert(t.query(0, 0, 0, 1) == 6);
   assert(t.query(0, 0, 1, 0) == 5);
   assert(t.query(1, 1, 2, 2) == 0);
-  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
+  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == 0);
   t.update(500000000, 500000000, -100);
-  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
+  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == -100);
   return 0;
 }
 \end{lstlisting}
@@ -4089,8 +4085,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 
 template<class T>
 class Quadtree {
-  static const int MAXR = 1000000000;
-  static const int MAXC = 1000000000;
+  static const int MAXR = 1'000'000'000;
+  static const int MAXC = 1'000'000'000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_region(const T &v, int area) { return v; }
@@ -4105,9 +4101,9 @@ class Quadtree {
     bool pending;
     Node *child[4];
 
-    Node(const T &v) : value(v), pending(false) {
-      for (int i = 0; i < 4; i++) {
-        child[i] = nullptr;
+    explicit Node(const T &v) : value(v), pending(false) {
+      for (auto &c : child) {
+        c = nullptr;
       }
     }
   } *root;
@@ -4196,15 +4192,15 @@ class Quadtree {
 
   static void clean_up(Node *n) {
     if (n != nullptr) {
-      for (int i = 0; i < 4; i++) {
-        clean_up(n->child[i]);
+      for (auto *c : n->child) {
+        clean_up(c);
       }
       delete n;
     }
   }
 
  public:
-  Quadtree(const T &v = T()) : root(nullptr), init(v) {}
+  explicit Quadtree(const T &v = T()) : root(nullptr), init(v) {}
 
   ~Quadtree() { clean_up(root); }
   T at(int r, int c) { return query(r, c, r, c); }
@@ -4255,9 +4251,9 @@ int main() {
   assert(t.query(0, 0, 0, 1) == 6);
   assert(t.query(0, 0, 1, 0) == 5);
   assert(t.query(1, 1, 2, 2) == 0);
-  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
+  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == 0);
   t.update(500000000, 500000000, -100);
-  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
+  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == -100);
   return 0;
 }
 \end{lstlisting}
@@ -4299,8 +4295,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 
 template<class T>
 class SegTree2D {
-  static const int MAXR = 1000000000;
-  static const int MAXC = 1000000000;
+  static const int MAXR = 1'000'000'000;
+  static const int MAXC = 1'000'000'000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_region(const T &v, int area) { return v; }
@@ -4465,7 +4461,7 @@ class SegTree2D {
   }
 
  public:
-  SegTree2D(const T &v = T()) : root(new OuterNode(0, MAXR, v)), init(v) {}
+  explicit SegTree2D(const T &v = T()) : root(new OuterNode(0, MAXR, v)), init(v) {}
 
   ~SegTree2D() { clean_up(root); }
 
@@ -4507,9 +4503,9 @@ int main() {
   assert(t.query(0, 0, 0, 1) == 6);
   assert(t.query(0, 0, 1, 0) == 5);
   assert(t.query(1, 1, 2, 2) == 0);
-  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
+  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == 0);
   t.update(500000000, 500000000, -100);
-  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
+  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == -100);
   return 0;
 }
 \end{lstlisting}
@@ -4547,8 +4543,8 @@ Maintain a set of two-dimensional points while supporting queries for all points
 
 template<class T>
 class RangeTree {
-  typedef std::pair<T, T> point;
-  typedef std::pair<int, T> colindex;
+  using point = std::pair<T, T>;
+  using colindex = std::pair<int, T>;
 
   std::vector<point> points;
   std::vector<std::vector<colindex>> columns;
@@ -4559,7 +4555,7 @@ class RangeTree {
   void build(int n, int lo, int hi) {
     if (points[lo].first == points[hi].first) {
       for (int i = lo; i <= hi; i++) {
-        columns[n].push_back(point(i, points[i].second));
+        columns[n].emplace_back(i, points[i].second);
       }
       return;
     }
@@ -4583,8 +4579,7 @@ class RangeTree {
     }
     if (!(points[lo].first < x1 || x2 < points[hi].first)) {
       if (!columns[n].empty() && !(y2 < y1)) {
-        typename std::vector<point>::iterator it;
-        it = std::lower_bound(columns[n].begin(), columns[n].end(), y1, comp2);
+        auto it = std::lower_bound(columns[n].begin(), columns[n].end(), y1, comp2);
         for (; it != columns[n].end() && it->second <= y2; ++it) {
           f(it->first, points[it->first]);
         }
@@ -4630,7 +4625,7 @@ int main() {
                       {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   vector<pair<int, int>> v;
   for (int i = 0; i < n; i++) {
-    v.push_back(make_pair(points[i][0], points[i][1]));
+    v.push_back({points[i][0], points[i][1]});
   }
   RangeTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);
@@ -4671,7 +4666,7 @@ Maintain a set of two-dimensional points while supporting queries for all points
 
 template<class T>
 class KDTree {
-  typedef std::pair<T, T> point;
+  using point = std::pair<T, T>;
 
   static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
   static inline bool comp2(const point &a, const point &b) { return a.second < b.second; }
@@ -4766,7 +4761,7 @@ int main() {
                       {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   vector<pair<int, int>> v;
   for (int i = 0; i < n; i++) {
-    v.push_back(make_pair(points[i][0], points[i][1]));
+    v.push_back({points[i][0], points[i][1]});
   }
   KDTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);
@@ -4809,7 +4804,7 @@ Maintain a set of two-dimensional points while supporting queries for the closes
 
 template<class T>
 class KDTree {
-  typedef std::pair<T, T> point;
+  using point = std::pair<T, T>;
 
   static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
   static inline bool comp2(const point &a, const point &b) { return a.second < b.second; }
@@ -4897,14 +4892,14 @@ using namespace std;
 
 int main() {
   pair<int, int> p[3];
-  p[0] = make_pair(0, 2);
-  p[1] = make_pair(0, 3);
-  p[2] = make_pair(-1, 0);
+  p[0] = {0, 2};
+  p[1] = {0, 3};
+  p[2] = {-1, 0};
   KDTree<int> t(p, p + 3);
-  assert(t.nearest(0, 2, true) == make_pair(0, 2));
-  assert(t.nearest(0, 2, false) == make_pair(0, 3));
-  assert(t.nearest(0, 0) == make_pair(-1, 0));
-  assert(t.nearest(-10000, 0) == make_pair(-1, 0));
+  assert(t.nearest(0, 2, true) == (pair<int, int>{0, 2}));
+  assert(t.nearest(0, 2, false) == (pair<int, int>{0, 3}));
+  assert(t.nearest(0, 0) == (pair<int, int>{-1, 0}));
+  assert(t.nearest(-10000, 0) == (pair<int, int>{-1, 0}));
   return 0;
 }
 \end{lstlisting}
@@ -5026,7 +5021,7 @@ class FenwickTree {
   std::vector<int> t;
 
  public:
-  FenwickTree(int n) : len(n), t(n + 2) {}
+  explicit FenwickTree(int n) : len(n), t(n + 2) {}
 
   int size() const { return len; }
 
@@ -5105,7 +5100,7 @@ class FenwickTree {
   std::vector<int> a, t;
 
  public:
-  FenwickTree(int n) : len(n), a(n + 1), t(n + 1) {}
+  explicit FenwickTree(int n) : len(n), a(n + 1), t(n + 1) {}
 
   int size() const { return len; }
   T at(int i) const { return a[i + 1]; }
@@ -5207,7 +5202,7 @@ class FenwickTree {
   }
 
  public:
-  FenwickTree(int n) : len(n), t1(n + 2), t2(n + 2) {}
+  explicit FenwickTree(int n) : len(n), t1(n + 2), t2(n + 2) {}
 
   int size() const { return len; }
 
@@ -5305,11 +5300,11 @@ class FenwickTree {
   T sum(int hi) {
     T mul = 0, add = 0;
     for (int i = hi; i >= 0; i = (i & (i + 1)) - 1) {
-      if (tmul.find(i) != tmul.end()) {
-        mul += tmul[i];
+      if (auto it = tmul.find(i); it != tmul.end()) {
+        mul += it->second;
       }
-      if (tadd.find(i) != tadd.end()) {
-        add += tadd[i];
+      if (auto it = tadd.find(i); it != tadd.end()) {
+        add += it->second;
       }
     }
     return mul * hi + add;
@@ -5342,7 +5337,7 @@ int main() {
   t.add(500000001, 500000010, 3);
   t.add(500000011, 500000015, 5);
   t.set(500000000, 10);
-  assert(t.sum(0, 1000000000) == 92);
+  assert(t.sum(0, 1'000'000'000) == 92);
   return 0;
 }
 \end{lstlisting}
@@ -5554,7 +5549,7 @@ class FenwickTree2D {
   void add(Map &tree, int r, int c, const T &x) {
     for (int i = r + 1; i <= MAXR; i += i & -i) {
       for (int j = c + 1; j <= MAXC; j += j & -j) {
-        tree[std::make_pair(i, j)] += x;
+        tree[{i, j}] += x;
       }
     }
   }
@@ -5588,11 +5583,10 @@ class FenwickTree2D {
     T s1 = 0, s2 = 0, s3 = 0, s4 = 0;
     for (int i = r; i > 0; i -= i & -i) {
       for (int j = c; j > 0; j -= j & -j) {
-        const std::pair<int, int> ij(i, j);
-        s1 += t1[ij];
-        s2 += t2[ij];
-        s3 += t3[ij];
-        s4 += t4[ij];
+        s1 += t1[{i, j}];
+        s2 += t2[{i, j}];
+        s3 += t3[{i, j}];
+        s4 += t4[{i, j}];
       }
     }
     return s1 * r * c + s2 * r + s3 * c + s4;
@@ -5630,7 +5624,7 @@ int main() {
   assert(t.sum(0, 0, 1, 0) == 8);
   assert(t.sum(1, 1, 2, 2) == 29);
   t.set(500000000, 500000000, 100);
-  assert(t.sum(0, 0, 1000000000, 1000000000) == 143);
+  assert(t.sum(0, 0, 1'000'000'000, 1'000'000'000) == 143);
   return 0;
 }
 \end{lstlisting}
@@ -5811,12 +5805,12 @@ class DisjointSetForest {
 
   std::vector<std::vector<T>> get_all_sets() {
     std::map<int, std::vector<T>> tmp;
-    for (typename std::map<T, int>::iterator it = id.begin(); it != id.end(); ++it) {
-      tmp[find_root(it->second)].push_back(it->first);
+    for (auto &[key, val] : id) {
+      tmp[find_root(val)].push_back(key);
     }
     std::vector<std::vector<T>> res;
-    for (typename std::map<int, std::vector<T>>::iterator it = tmp.begin(); it != tmp.end(); ++it) {
-      res.push_back(it->second);
+    for (auto &[key, val] : tmp) {
+      res.push_back(val);
     }
     return res;
   }
@@ -5839,11 +5833,15 @@ int main() {
   dsf.unite('d', 'g');
   assert(dsf.size() == 7);
   assert(dsf.sets() == 3);
-  vector<vector<char>> s = dsf.get_all_sets();
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    cout << (i > 0 ? ", [" : "[");
-    for (int j = 0; j < static_cast<int>(s[i].size()); j++) {
-      cout << (j > 0 ? ", " : "") << s[i][j];
+  auto s = dsf.get_all_sets();
+  bool first_set = true;
+  for (const auto &set : s) {
+    cout << (first_set ? "[" : ", [");
+    first_set = false;
+    bool first_value = true;
+    for (char value : set) {
+      cout << (first_value ? "" : ", ") << value;
+      first_value = false;
     }
     cout << "]";
   }
@@ -5878,6 +5876,7 @@ Path compression is intentionally not used, because it is hard to undo. Union by
 \textbf{Space Complexity}: $O(n + q)$ for $q$ successful unions stored in the rollback history.
 
 \begin{lstlisting}[language=C++]
+#include <numeric>
 #include <vector>
 
 class RollbackDSU {
@@ -5902,9 +5901,7 @@ class RollbackDSU {
     size.assign(n, 1);
     history.clear();
     sets = n;
-    for (int i = 0; i < n; i++) {
-      root[i] = i;
-    }
+    std::iota(root.begin(), root.end(), 0);
   }
 
   int count_sets() const { return sets; }
@@ -5929,7 +5926,7 @@ class RollbackDSU {
       u = v;
       v = tmp;
     }
-    history.push_back(Change(u, v, size[v]));
+    history.emplace_back(u, v, size[v]);
     root[u] = v;
     size[v] += size[u];
     sets--;
@@ -5998,8 +5995,7 @@ void dfs(int u, int p) {
   for (int i = 1; i < len; i++) {
     dp[u][i] = dp[dp[u][i - 1]][i - 1];
   }
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    int v = adj[u][j];
+  for (int v : adj[u]) {
     if (v != p) {
       dfs(v, u);
     }
@@ -6085,8 +6081,7 @@ int len, counter, depth[MAXN], dfs_order[2 * MAXN], first[MAXN], minpos[8 * MAXN
 void dfs(int u, int d) {
   depth[u] = d;
   dfs_order[counter++] = u;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    int v = adj[u][j];
+  for (int v : adj[u]) {
     if (depth[v] == -1) {
       dfs(v, d + 1);
       dfs_order[counter++] = u;
@@ -6219,8 +6214,7 @@ class HeavyLight {
     tin[u] = counter++;
     parent[u] = p;
     size[u] = 1;
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      int v = adj[u][j];
+    for (int v : adj[u]) {
       if (v != p) {
         dfs(v, u);
         size[u] += size[v];
@@ -6237,8 +6231,7 @@ class HeavyLight {
   void build_paths(int u, int path) {
     this->path[u] = path;
     pathpos[u] = pathlen[path]++;
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      int v = adj[u][j];
+    for (int v : adj[u]) {
       if (v != parent[u]) {
         build_paths(v, (2 * size[v] >= size[u]) ? path : new_path(v));
       }
@@ -6497,7 +6490,7 @@ class LinkCutForest {
     bool rev, pending;
     Node *left, *right, *parent;
 
-    Node(const T &v)
+    explicit Node(const T &v)
         : value(v),
           subtree_value(v),
           size(1),
@@ -6620,9 +6613,8 @@ class LinkCutForest {
   Node *u, *v;
 
   void get_uv(int a, int b) {
-    typename std::map<int, Node *>::iterator it1, it2;
-    it1 = nodes.find(a);
-    it2 = nodes.find(b);
+    auto it1 = nodes.find(a);
+    auto it2 = nodes.find(b);
     if (it1 == nodes.end() || it2 == nodes.end()) {
       throw std::runtime_error("Queried node ID does not exist in forest.");
     }
@@ -6634,9 +6626,8 @@ class LinkCutForest {
   LinkCutForest() : num_trees(0) {}
 
   ~LinkCutForest() {
-    typename std::map<int, Node *>::iterator it;
-    for (it = nodes.begin(); it != nodes.end(); ++it) {
-      delete it->second;
+    for (auto &[key, node] : nodes) {
+      delete node;
     }
   }
 
@@ -6644,7 +6635,7 @@ class LinkCutForest {
   int trees() const { return num_trees; }
 
   void make_root(int i, const T &v = T()) {
-    if (nodes.find(i) != nodes.end()) {
+    if (auto it = nodes.find(i); it != nodes.end()) {
       throw std::runtime_error("Cannot make a root with an existing ID.");
     }
     Node *n = new Node(v);

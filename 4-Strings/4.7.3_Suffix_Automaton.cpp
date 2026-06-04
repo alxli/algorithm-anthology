@@ -49,14 +49,14 @@ class SuffixAutomaton {
   SuffixAutomaton() : st(1), last(0) {}
 
   explicit SuffixAutomaton(const string &s) : st(1), last(0) {
-    for (int i = 0; i < static_cast<int>(s.size()); i++) {
-      extend(s[i]);
+    for (char c : s) {
+      extend(c);
     }
   }
 
   void extend(char c) {
     int cur = st.size();
-    st.push_back(State());
+    st.emplace_back();
     st[cur].len = st[last].len + 1;
     st[cur].first_pos = st[cur].len - 1;
 
@@ -87,12 +87,12 @@ class SuffixAutomaton {
 
   bool contains(const string &t) const {
     int v = 0;
-    for (int i = 0; i < static_cast<int>(t.size()); i++) {
-      std::map<char, int>::const_iterator it = st[v].next.find(t[i]);
-      if (it == st[v].next.end()) {
+    for (char c : t) {
+      if (auto it = st[v].next.find(c); it != st[v].next.end()) {
+        v = it->second;
+      } else {
         return false;
       }
-      v = it->second;
     }
     return true;
   }
@@ -112,8 +112,7 @@ class SuffixAutomaton {
         v = st[v].link;
         len = st[v].len;
       }
-      std::map<char, int>::const_iterator it = st[v].next.find(t[i]);
-      if (it != st[v].next.end()) {
+      if (auto it = st[v].next.find(t[i]); it != st[v].next.end()) {
         v = it->second;
         len++;
       } else {

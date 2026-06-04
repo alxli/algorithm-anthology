@@ -30,7 +30,7 @@ struct Point {
   Point() : x(0), y(0) {}
   Point(double x, double y) : x(x), y(y) {}
   Point(const Point &p) : x(p.x), y(p.y) {}
-  Point(const std::pair<double, double> &p) : x(p.first), y(p.second) {}
+  explicit Point(const std::pair<double, double> &p) : x(p.first), y(p.second) {}
 
   bool operator<(const Point &p) const { return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x); }
   bool operator>(const Point &p) const { return EQ(x, p.x) ? LT(p.y, y) : LT(p.x, x); }
@@ -301,7 +301,7 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -317,7 +317,7 @@ struct Circle {
   double h, k, r;
 
   Circle() : h(0), k(0), r(0) {}
-  Circle(double r) : h(0), k(0), r(fabs(r)) {}
+  explicit Circle(double r) : h(0), k(0), r(fabs(r)) {}
   Circle(const point &o, double r) : h(o.x), k(o.y), r(fabs(r)) {}
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
@@ -441,7 +441,7 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -529,7 +529,7 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -655,7 +655,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -774,7 +774,7 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -900,7 +900,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -1115,7 +1115,7 @@ const double EPS = 1e-9, PI = acos(-1.0);
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -1172,7 +1172,7 @@ struct Line {
 int tangent(const Circle &c, const point &p, Line *l1 = nullptr, Line *l2 = nullptr) {
   point vop(p.x - c.h, p.y - c.k);
   if (EQ(sqnorm(vop), c.r * c.r)) {  // Point on an edge.
-    if (l1 != 0) {                   // Get perpendicular line through p.
+    if (l1 != nullptr) {             // Get perpendicular line through p.
       *l1 = Line(point(c.h, c.k), p);
       *l1 = Line(-l1->b, l1->a, l1->b * p.x - l1->a * p.y);
     }
@@ -1336,6 +1336,7 @@ Given a list of distinct points in two-dimensions, order them into a valid polyg
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
+#include <random>
 #include <stdexcept>
 #include <utility>
 
@@ -1345,7 +1346,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -1362,10 +1363,11 @@ point mean_center(It lo, It hi) {
   if (lo == hi) {
     throw std::runtime_error("Cannot get center of an empty range.");
   }
-  double x_sum = 0, y_sum = 0, num_points = hi - lo;
-  for (; lo != hi; ++lo) {
-    x_sum += lo->x;
-    y_sum += lo->y;
+  double x_sum = 0, y_sum = 0;
+  double num_points = hi - lo;
+  for (It it = lo; it != hi; ++it) {
+    x_sum += it->x;
+    y_sum += it->y;
   }
   return point(x_sum / num_points, y_sum / num_points);
 }
@@ -1391,17 +1393,13 @@ bool cw_comp(const point &a, const point &b, const point &c) {
   return det < 0;
 }
 
-struct CWComparator {
-  point c;
-  CWComparator(const point &c) : c(c) {}
-  bool operator()(const point &a, const point &b) const { return cw_comp(a, b, c); }
-};
+auto CWComparator(const point &c) {
+  return [c](const point &a, const point &b) { return cw_comp(a, b, c); };
+}
 
-struct CCWComparator {
-  point c;
-  CCWComparator(const point &c) : c(c) {}
-  bool operator()(const point &a, const point &b) const { return cw_comp(b, a, c); }
-};
+auto CCWComparator(const point &c) {
+  return [c](const point &a, const point &b) { return cw_comp(b, a, c); };
+}
 
 template<class It>
 double polygon_area(It lo, It hi) {
@@ -1428,14 +1426,16 @@ int main() {
   // Irregular pentagon with only the vertex (1, 2) not on its convex hull. The ordering here is
   // already sorted in ccw order around their mean center, though we will shuffle them to verify our
   // sorting comparator.
-  point points[] = {point(1, 3), point(1, 2), point(2, 1), point(0, 0), point(-1, 3)};
-  vector<point> v(points, points + 5);
-  std::random_shuffle(v.begin(), v.end());
+  vector<point> points{point(1, 3), point(1, 2), point(2, 1), point(0, 0), point(-1, 3)};
+  vector<point> v(points);
+  std::mt19937 rng(12345);
+  std::shuffle(v.begin(), v.end(), rng);
   point c = mean_center(v.begin(), v.end());
   assert(EQ(c.x, 0.6) && EQ(c.y, 1.8));
   sort(v.begin(), v.end(), CWComparator(c));
-  for (int i = 0; i < static_cast<int>(v.size()); i++) {
-    assert(v[i] == points[i]);
+  auto expected = points.begin();
+  for (const auto &p : v) {
+    assert(p == *expected++);
   }
   assert(EQ(polygon_area(v.begin(), v.end()), 5));
   return 0;
@@ -1462,7 +1462,7 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -1521,6 +1521,7 @@ Given a list of points in two dimensions, determine the convex hull using the mo
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
+#include <random>
 #include <utility>
 #include <vector>
 
@@ -1528,7 +1529,7 @@ const double EPS = 1e-9;
 
 #define GE(a, b) ((a) >= (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -1570,10 +1571,10 @@ std::pair<point, point> diametral_pair(It lo, It hi) {
   std::vector<point> h = convex_hull(lo, hi);
   int m = h.size();
   if (m == 1) {
-    return std::make_pair(h[0], h[0]);
+    return {h[0], h[0]};
   }
   if (m == 2) {
-    return std::make_pair(h[0], h[1]);
+    return {h[0], h[1]};
   }
   int k = 1;
   while (fabs(cross(h[0], h[(k + 1) % m], h[m - 1])) > fabs(cross(h[0], h[k], h[m - 1]))) {
@@ -1585,14 +1586,14 @@ std::pair<point, point> diametral_pair(It lo, It hi) {
     d = sqnorm(point(h[i].x - h[j].x, h[i].y - h[j].y));
     if (d > maxdist) {
       maxdist = d;
-      res = std::make_pair(h[i], h[j]);
+      res = {h[i], h[j]};
     }
     while (j < m && fabs(cross(h[(i + 1) % m], h[(j + 1) % m], h[i])) >
                         fabs(cross(h[(i + 1) % m], h[j], h[i]))) {
       d = sqnorm(point(h[i].x - h[(j + 1) % m].x, h[i].y - h[(j + 1) % m].y));
       if (d > maxdist) {
         maxdist = d;
-        res = std::make_pair(h[i], h[(j + 1) % m]);
+        res = {h[i], h[(j + 1) % m]};
       }
       j++;
     }
@@ -1608,29 +1609,30 @@ using namespace std;
 int main() {
   {  // Irregular pentagon with only the vertex (1, 2) not on the hull.
     vector<point> v;
-    v.push_back(point(1, 3));
-    v.push_back(point(1, 2));
-    v.push_back(point(2, 1));
-    v.push_back(point(0, 0));
-    v.push_back(point(-1, 3));
-    std::random_shuffle(v.begin(), v.end());
+    v.emplace_back(1, 3);
+    v.emplace_back(1, 2);
+    v.emplace_back(2, 1);
+    v.emplace_back(0, 0);
+    v.emplace_back(-1, 3);
+    std::mt19937 rng(12345);
+    std::shuffle(v.begin(), v.end(), rng);
     vector<point> h;
-    h.push_back(point(-1, 3));
-    h.push_back(point(1, 3));
-    h.push_back(point(2, 1));
-    h.push_back(point(0, 0));
+    h.emplace_back(-1, 3);
+    h.emplace_back(1, 3);
+    h.emplace_back(2, 1);
+    h.emplace_back(0, 0);
     assert(convex_hull(v.begin(), v.end()) == h);
   }
   {
     vector<point> v;
-    v.push_back(point(0, 0));
-    v.push_back(point(3, 0));
-    v.push_back(point(0, 3));
-    v.push_back(point(1, 1));
-    v.push_back(point(4, 4));
-    pair<point, point> res = diametral_pair(v.begin(), v.end());
-    assert(res.first == point(0, 0));
-    assert(res.second == point(4, 4));
+    v.emplace_back(0, 0);
+    v.emplace_back(3, 0);
+    v.emplace_back(0, 3);
+    v.emplace_back(1, 1);
+    v.emplace_back(4, 4);
+    auto [p1, p2] = diametral_pair(v.begin(), v.end());
+    assert(p1 == point(0, 0));
+    assert(p2 == point(4, 4));
   }
   return 0;
 }
@@ -1649,6 +1651,7 @@ Given a list of points in two dimensions, find the circle with smallest area whi
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
+#include <random>
 #include <stdexcept>
 #include <utility>
 
@@ -1657,7 +1660,7 @@ const double EPS = 1e-9;
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -1710,7 +1713,8 @@ Circle minimum_enclosing_circle(It lo, It hi) {
   if (lo + 1 == hi) {
     return Circle(lo->x, lo->y, 0);
   }
-  std::random_shuffle(lo, hi);
+  static std::mt19937 rng(std::random_device{}());
+  std::shuffle(lo, hi, rng);
   Circle res(*lo, *(lo + 1));
   for (It i = lo + 2; i != hi; ++i) {
     if (res.contains(*i)) {
@@ -1740,10 +1744,10 @@ using namespace std;
 
 int main() {
   vector<point> v;
-  v.push_back(point(0, 0));
-  v.push_back(point(0, 1));
-  v.push_back(point(1, 0));
-  v.push_back(point(1, 1));
+  v.emplace_back(0, 0);
+  v.emplace_back(0, 1);
+  v.emplace_back(1, 0);
+  v.emplace_back(1, 1);
   Circle res = minimum_enclosing_circle(v.begin(), v.end());
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
   return 0;
@@ -1772,7 +1776,7 @@ const double EPS = 1e-9;
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -1805,8 +1809,8 @@ double closest_pair(
       t.push_back(it);
     }
   }
-  for (int i = 0; i < static_cast<int>(t.size()); i++) {
-    for (int j = i + 1; j < static_cast<int>(t.size()); j++) {
+  for (size_t i = 0; i < t.size(); i++) {
+    for (size_t j = i + 1; j < t.size(); j++) {
       point a(*t[i]), b(*t[j]);
       if (b.y - a.y >= mindist) {
         break;
@@ -1815,7 +1819,7 @@ double closest_pair(
       if (mindist > dist) {
         mindist = dist;
         if (res) {
-          *res = std::make_pair(a, b);
+          *res = {a, b};
         }
       }
     }
@@ -1831,16 +1835,17 @@ using namespace std;
 
 int main() {
   vector<point> v;
-  v.push_back(point(2, 3));
-  v.push_back(point(12, 30));
-  v.push_back(point(40, 50));
-  v.push_back(point(5, 1));
-  v.push_back(point(12, 10));
-  v.push_back(point(3, 4));
-  pair<point, point> res;
+  v.emplace_back(2, 3);
+  v.emplace_back(12, 30);
+  v.emplace_back(40, 50);
+  v.emplace_back(5, 1);
+  v.emplace_back(12, 10);
+  v.emplace_back(3, 4);
+  std::pair<point, point> res;
   assert(EQ(closest_pair(v.begin(), v.end(), &res), sqrt(2)));
-  assert(res.first == point(2, 3));
-  assert(res.second == point(3, 4));
+  auto [p1, p2] = res;
+  assert(p1 == point(2, 3));
+  assert(p2 == point(3, 4));
   return 0;
 }
 \end{lstlisting}
@@ -1869,7 +1874,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -2008,19 +2013,19 @@ bool find_intersection(It lo, It hi, Segment *res1, Segment *res2) {
     if (it->p > it->q) {
       std::swap(it->p, it->q);
     }
-    e.push_back(Event<It>(it->p, 1, it));
-    e.push_back(Event<It>(it->q, -1, it));
+    e.emplace_back(it->p, 1, it);
+    e.emplace_back(it->q, -1, it);
   }
   std::sort(e.begin(), e.end());
-  typedef std::set<It, SegmentComparator<It>> active_set;
+  using active_set = std::set<It, SegmentComparator<It>>;
   active_set s((SegmentComparator<It>(lo)));
   std::vector<typename active_set::iterator> position(hi - lo);
-  for (int i = 0; i < static_cast<int>(e.size()); i++) {
-    It seg = e[i].seg;
-    if (e[i].type == 1) {
-      typename active_set::iterator it = s.insert(seg).first;
+  for (const auto &ev : e) {
+    It seg = ev.seg;
+    if (ev.type == 1) {
+      auto it = s.insert(seg).first;
       position[seg - lo] = it;
-      typename active_set::iterator next = it;
+      auto next = it;
       if (++next != s.end() && intersect(**next, *seg)) {
         *res1 = **next;
         *res2 = *seg;
@@ -2032,10 +2037,10 @@ bool find_intersection(It lo, It hi, Segment *res1, Segment *res2) {
         return true;
       }
     } else {
-      typename active_set::iterator it = position[seg - lo];
-      typename active_set::iterator next = it;
+      auto it = position[seg - lo];
+      auto next = it;
       if (++next != s.end() && it != s.begin()) {
-        typename active_set::iterator prev = it;
+        auto prev = it;
         if (intersect(**next, **--prev)) {
           *res1 = **next;
           *res2 = **prev;
@@ -2055,10 +2060,10 @@ using namespace std;
 
 int main() {
   vector<Segment> v;
-  v.push_back(Segment(point(0, 0), point(2, 2)));
-  v.push_back(Segment(point(3, 0), point(0, -1)));
-  v.push_back(Segment(point(0, 2), point(2, -2)));
-  v.push_back(Segment(point(0, 3), point(9, 0)));
+  v.emplace_back(point(0, 0), point(2, 2));
+  v.emplace_back(point(3, 0), point(0, -1));
+  v.emplace_back(point(0, 2), point(2, -2));
+  v.emplace_back(point(0, 3), point(9, 0));
   Segment res1, res2;
   assert(find_intersection(v.begin(), v.end(), &res1, &res2));
   assert(res1.p == point(0, 0) && res1.q == point(2, 2));
@@ -2094,7 +2099,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -2153,32 +2158,32 @@ using namespace std;
 int main() {
   {
     vector<point> v;
-    v.push_back(point(1, 3));
-    v.push_back(point(2, 2));
-    v.push_back(point(2, 1));
-    v.push_back(point(0, 0));
-    v.push_back(point(-1, 3));
+    v.emplace_back(1, 3);
+    v.emplace_back(2, 2);
+    v.emplace_back(2, 1);
+    v.emplace_back(0, 0);
+    v.emplace_back(-1, 3);
     // Cut using the vertical line through (0, 0).
     vector<point> c;
-    c.push_back(point(-1, 3));
-    c.push_back(point(0, 3));
-    c.push_back(point(0, 0));
+    c.emplace_back(-1, 3);
+    c.emplace_back(0, 3);
+    c.emplace_back(0, 0);
     assert(convex_cut(v.begin(), v.end(), point(0, 0), point(0, 1)) == c);
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
     vector<point> v;
-    v.push_back(point(0, 0));
-    v.push_back(point(2, 2));
-    v.push_back(point(0, 4));
-    v.push_back(point(3, 4));
-    v.push_back(point(3, 0));
+    v.emplace_back(0, 0);
+    v.emplace_back(2, 2);
+    v.emplace_back(0, 4);
+    v.emplace_back(3, 4);
+    v.emplace_back(3, 0);
     vector<point> c;
-    c.push_back(point(1, 0));
-    c.push_back(point(0, 0));
-    c.push_back(point(1, 1));
-    c.push_back(point(1, 3));
-    c.push_back(point(0, 4));
-    c.push_back(point(1, 4));
+    c.emplace_back(1, 0);
+    c.emplace_back(0, 0);
+    c.emplace_back(1, 1);
+    c.emplace_back(1, 3);
+    c.emplace_back(0, 4);
+    c.emplace_back(1, 4);
     assert(convex_cut(v.begin(), v.end(), point(1, 0), point(1, 4)) == c);
   }
   return 0;
@@ -2209,7 +2214,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -2294,10 +2299,7 @@ struct Event {
   double y;
   int mask_delta;
 
-  Event(double y = 0, int mask_delta = 0) {
-    this->y = y;
-    this->mask_delta = mask_delta;
-  }
+  Event(double y = 0, int mask_delta = 0) : y(y), mask_delta(mask_delta) {}
 
   bool operator<(const Event &e) const {
     if (y != e.y) {
@@ -2311,11 +2313,11 @@ template<class It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   It plo[2] = {lo1, lo2}, phi[] = {hi1, hi2};
   std::set<double> xs;
-  for (It i1 = lo1; i1 != hi1; ++i1) {
-    xs.insert(i1->x);
+  for (It it = lo1; it != hi1; ++it) {
+    xs.insert(it->x);
   }
-  for (It i2 = lo2; i2 != hi2; ++i2) {
-    xs.insert(i2->x);
+  for (It it = lo2; it != hi2; ++it) {
+    xs.insert(it->x);
   }
   for (It i1 = lo1, j1 = hi1 - 1; i1 != hi1; j1 = i1++) {
     for (It i2 = lo2, j2 = hi2 - 1; i2 != hi2; j2 = i2++) {
@@ -2327,7 +2329,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   }
   std::vector<double> xsa(xs.begin(), xs.end());
   double res = 0;
-  for (int k = 0; k < static_cast<int>(xsa.size()) - 1; k++) {
+  for (size_t k = 0; k + 1 < xsa.size(); k++) {
     double x = (xsa[k] + xsa[k + 1]) / 2;
     point sweep0(x, 0), sweep1(x, 1);
     std::vector<Event> events;
@@ -2343,9 +2345,9 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
           double y = p.y, x0 = i->x, x1 = j->x;
           int sgn_area = (area < 0 ? -1 : (area > 0 ? 1 : 0));
           if (x0 < x && x1 > x) {
-            events.push_back(Event(y, sgn_area * (1 << poly)));
+            events.emplace_back(y, sgn_area * (1 << poly));
           } else if (x0 > x && x1 < x) {
-            events.push_back(Event(y, -sgn_area * (1 << poly)));
+            events.emplace_back(y, -sgn_area * (1 << poly));
           }
         }
       }
@@ -2353,7 +2355,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     std::sort(events.begin(), events.end());
     double a = 0;
     int mask = 0;
-    for (int j = 0; j < static_cast<int>(events.size()); j++) {
+    for (size_t j = 0; j < events.size(); j++) {
       if (mask == 3) {
         a += events[j].y - events[j - 1].y;
       }
@@ -2392,16 +2394,16 @@ using namespace std;
 int main() {
   vector<point> p, s;
   // Irregular pentagon a triangle of area 1.5 overlapping quadrant 2.
-  p.push_back(point(1, 3));
-  p.push_back(point(1, 2));
-  p.push_back(point(2, 1));
-  p.push_back(point(0, 0));
-  p.push_back(point(-1, 3));
+  p.emplace_back(1, 3);
+  p.emplace_back(1, 2);
+  p.emplace_back(2, 1);
+  p.emplace_back(0, 0);
+  p.emplace_back(-1, 3);
   // Square of area 12.5 in quadrant 2.
-  s.push_back(point(0, 0));
-  s.push_back(point(0, 3));
-  s.push_back(point(-3, 3));
-  s.push_back(point(-3, 0));
+  s.emplace_back(0, 0);
+  s.emplace_back(0, 3);
+  s.emplace_back(-3, 3);
+  s.emplace_back(-3, 0);
   assert(EQ(1.5, intersection_area(p.begin(), p.end(), s.begin(), s.end())));
   assert(EQ(12.5, union_area(p.begin(), p.end(), s.begin(), s.end())));
   return 0;
@@ -2432,7 +2434,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -2511,9 +2513,9 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
   int n = hi - lo;
   std::vector<double> x, y, z;
   for (It it = lo; it != hi; ++it) {
-    x.push_back(it->x);
-    y.push_back(it->y);
-    z.push_back(sqnorm(*it));
+    x.emplace_back(it->x);
+    y.emplace_back(it->y);
+    z.emplace_back(sqnorm(*it));
   }
   std::vector<Triangle> res;
   for (int i = 0; i < n - 2; i++) {
@@ -2535,8 +2537,8 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
           }
         }
         // Handle four points on a circle.
-        for (int t = 0; t < static_cast<int>(res.size()); t++) {
-          point s2[] = {res[t].a, res[t].b, res[t].c, res[t].a};
+        for (const auto &tri : res) {
+          point s2[] = {tri.a, tri.b, tri.c, tri.a};
           for (int u = 0; u < 3; u++) {
             for (int v = 0; v < 3; v++) {
               if (seg_intersection(s1[u], s1[u + 1], s2[v], s2[v + 1]) == 0) {
@@ -2545,7 +2547,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
             }
           }
         }
-        res.push_back(Triangle(lo[i], lo[j], lo[k]));
+        res.emplace_back(lo[i], lo[j], lo[k]);
       skip:;
       }
     }
@@ -2560,16 +2562,16 @@ using namespace std;
 
 int main() {
   vector<point> v;
-  v.push_back(point(1, 3));
-  v.push_back(point(1, 2));
-  v.push_back(point(2, 1));
-  v.push_back(point(0, 0));
-  v.push_back(point(-1, 3));
+  v.emplace_back(1, 3);
+  v.emplace_back(1, 2);
+  v.emplace_back(2, 1);
+  v.emplace_back(0, 0);
+  v.emplace_back(-1, 3);
   vector<Triangle> t;
-  t.push_back(Triangle(point(1, 3), point(1, 2), point(-1, 3)));
-  t.push_back(Triangle(point(1, 3), point(2, 1), point(1, 2)));
-  t.push_back(Triangle(point(1, 2), point(2, 1), point(0, 0)));
-  t.push_back(Triangle(point(1, 2), point(0, 0), point(-1, 3)));
+  t.emplace_back(point(1, 3), point(1, 2), point(-1, 3));
+  t.emplace_back(point(1, 3), point(2, 1), point(1, 2));
+  t.emplace_back(point(1, 2), point(2, 1), point(0, 0));
+  t.emplace_back(point(1, 2), point(0, 0), point(-1, 3));
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
   return 0;
 }
@@ -2599,7 +2601,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -2635,8 +2637,8 @@ struct QuadEdgePool {
   std::vector<Edge *> edges;
 
   ~QuadEdgePool() {
-    for (int i = 0; i < static_cast<int>(edges.size()); i++) {
-      delete edges[i];
+    for (Edge *e : edges) {
+      delete e;
     }
   }
 
@@ -2699,7 +2701,7 @@ std::pair<Edge *, Edge *> build_triangulation(
 ) {
   if (hi - lo == 1) {
     Edge *a = pool.make_edge(p[lo], p[hi]);
-    return std::make_pair(a, a->rev());
+    return {a, a->rev()};
   }
   if (hi - lo == 2) {
     Edge *a = pool.make_edge(p[lo], p[lo + 1]);
@@ -2709,19 +2711,17 @@ std::pair<Edge *, Edge *> build_triangulation(
                    ? 1
                    : (LT(cross(p[lo], p[lo + 1], p[hi]), 0) ? -1 : 0);
     if (side == 0) {
-      return std::make_pair(a, b->rev());
+      return {a, b->rev()};
     }
     Edge *c = pool.connect(b, a);
-    return side == 1 ? std::make_pair(a, b->rev()) : std::make_pair(c->rev(), c);
+    if (side == 1) {
+      return {a, b->rev()};
+    }
+    return {c->rev(), c};
   }
   int mid = (lo + hi) / 2;
-  Edge *ldo, *ldi, *rdi, *rdo;
-  std::pair<Edge *, Edge *> left = build_triangulation(p, lo, mid, pool);
-  std::pair<Edge *, Edge *> right = build_triangulation(p, mid + 1, hi, pool);
-  ldo = left.first;
-  ldi = left.second;
-  rdi = right.first;
-  rdo = right.second;
+  auto [ldo, ldi] = build_triangulation(p, lo, mid, pool);
+  auto [rdi, rdo] = build_triangulation(p, mid + 1, hi, pool);
   for (;;) {
     if (left_of(rdi->origin, ldi)) {
       ldi = ldi->lnext();
@@ -2767,7 +2767,7 @@ std::pair<Edge *, Edge *> build_triangulation(
       base = pool.connect(base->rev(), lcand->rev());
     }
   }
-  return std::make_pair(ldo, rdo);
+  return {ldo, rdo};
 }
 
 struct Triangle {
@@ -2803,8 +2803,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
   QuadEdgePool pool;
   build_triangulation(p, 0, p.size() - 1, pool);
   std::vector<Triangle> res;
-  for (int i = 0; i < static_cast<int>(pool.edges.size()); i++) {
-    Edge *start = pool.edges[i];
+  for (Edge *start : pool.edges) {
     if (!start->primal || start->deleted || start->used) {
       continue;
     }
@@ -2816,7 +2815,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
       curr = curr->lnext();
     } while (curr != start);
     if (face.size() == 3 && GT(cross(face[0], face[1], face[2]), 0)) {
-      res.push_back(Triangle(face[0], face[1], face[2]));
+      res.emplace_back(face[0], face[1], face[2]);
     }
   }
   std::sort(res.begin(), res.end());
@@ -2830,16 +2829,16 @@ using namespace std;
 
 int main() {
   vector<point> v;
-  v.push_back(point(1, 3));
-  v.push_back(point(1, 2));
-  v.push_back(point(2, 1));
-  v.push_back(point(0, 0));
-  v.push_back(point(-1, 3));
+  v.emplace_back(1, 3);
+  v.emplace_back(1, 2);
+  v.emplace_back(2, 1);
+  v.emplace_back(0, 0);
+  v.emplace_back(-1, 3);
   vector<Triangle> t;
-  t.push_back(Triangle(point(-1, 3), point(0, 0), point(1, 2)));
-  t.push_back(Triangle(point(-1, 3), point(1, 2), point(1, 3)));
-  t.push_back(Triangle(point(0, 0), point(2, 1), point(1, 2)));
-  t.push_back(Triangle(point(1, 2), point(2, 1), point(1, 3)));
+  t.emplace_back(point(-1, 3), point(0, 0), point(1, 2));
+  t.emplace_back(point(-1, 3), point(1, 2), point(1, 3));
+  t.emplace_back(point(0, 0), point(2, 1), point(1, 2));
+  t.emplace_back(point(1, 2), point(2, 1), point(1, 3));
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
   return 0;
 }
@@ -2886,7 +2885,7 @@ struct Point {
   Point() : x(0), y(0) {}
   Point(double x, double y) : x(x), y(y) {}
   Point(const Point &p) : x(p.x), y(p.y) {}
-  Point(const std::pair<double, double> &p) : x(p.first), y(p.second) {}
+  explicit Point(const std::pair<double, double> &p) : x(p.first), y(p.second) {}
 
   bool operator<(const Point &p) const { return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x); }
   bool operator>(const Point &p) const { return EQ(x, p.x) ? LT(p.y, y) : LT(p.x, x); }

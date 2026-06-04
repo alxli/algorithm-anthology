@@ -25,6 +25,7 @@ Space Complexity:
 
 */
 
+#include <numeric>
 #include <vector>
 
 class RollbackDSU {
@@ -49,9 +50,7 @@ class RollbackDSU {
     size.assign(n, 1);
     history.clear();
     sets = n;
-    for (int i = 0; i < n; i++) {
-      root[i] = i;
-    }
+    std::iota(root.begin(), root.end(), 0);
   }
 
   int count_sets() const { return sets; }
@@ -76,7 +75,7 @@ class RollbackDSU {
       u = v;
       v = tmp;
     }
-    history.push_back(Change(u, v, size[v]));
+    history.emplace_back(u, v, size[v]);
     root[u] = v;
     size[v] += size[u];
     sets--;

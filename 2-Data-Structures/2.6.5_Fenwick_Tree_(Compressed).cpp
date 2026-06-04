@@ -50,11 +50,11 @@ class FenwickTree {
   T sum(int hi) {
     T mul = 0, add = 0;
     for (int i = hi; i >= 0; i = (i & (i + 1)) - 1) {
-      if (tmul.find(i) != tmul.end()) {
-        mul += tmul[i];
+      if (auto it = tmul.find(i); it != tmul.end()) {
+        mul += it->second;
       }
-      if (tadd.find(i) != tadd.end()) {
-        add += tadd[i];
+      if (auto it = tadd.find(i); it != tadd.end()) {
+        add += it->second;
       }
     }
     return mul * hi + add;
@@ -91,6 +91,6 @@ int main() {
   t.add(500000001, 500000010, 3);
   t.add(500000011, 500000015, 5);
   t.set(500000000, 10);
-  assert(t.sum(0, 1000000000) == 92);
+  assert(t.sum(0, 1'000'000'000) == 92);
   return 0;
 }

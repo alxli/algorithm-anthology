@@ -48,7 +48,7 @@ int simplex_solve(
   double p1 = 0, p2 = 0;
   bool done = true;
   do {
-    double mn = std::numeric_limits<double>::max(), xmax = 0, v;
+    double mn = std::numeric_limits<double>::max(), xmax = 0;
     for (int j = 2; j <= n + 1; j++) {
       if (t[1][j] > 0 && t[1][j] > xmax) {
         p2 = j;
@@ -56,7 +56,7 @@ int simplex_solve(
       }
     }
     for (int i = 2; i <= m + 1; i++) {
-      v = fabs(t[i][1] / t[i][p2]);
+      double v = fabs(t[i][1] / t[i][p2]);
       if (t[i][p2] < 0 && mn > v) {
         mn = v;
         p1 = i;
@@ -121,21 +121,14 @@ int main() {
   //  -2x +    1y <=  0
   //   1x + 0.85y <=  9
   //   1x +    2y <= 14
-  const int equations = 3, unknowns = 2;
-  double a[equations][unknowns] = {{-2, 1}, {1, 0.85}, {1, 2}};
-  double b[equations] = {0, 9, 14};
-  double c[unknowns] = {3, 4};
-  vector<vector<double>> va(equations, vector<double>(unknowns));
-  vector<double> vb(b, b + equations), vc(c, c + unknowns), x;
-  for (int i = 0; i < equations; i++) {
-    for (int j = 0; j < unknowns; j++) {
-      va[i][j] = a[i][j];
-    }
-  }
+  vector<vector<double>> va{{-2, 1}, {1, 0.85}, {1, 2}};
+  vector<double> vb = {0, 9, 14};
+  vector<double> vc = {3, 4};
+  vector<double> x;
   assert(simplex_solve(va, vb, vc, &x) == 0);
   double maxval = 0;
   for (int i = 0; i < static_cast<int>(x.size()); i++) {
-    maxval += c[i] * x[i];
+    maxval += vc[i] * x[i];
   }
   cout << "Solution = " << maxval << " at (" << x[0];
   for (int i = 1; i < static_cast<int>(x.size()); i++) {

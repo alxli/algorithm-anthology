@@ -29,7 +29,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -88,32 +88,32 @@ using namespace std;
 int main() {
   {
     vector<point> v;
-    v.push_back(point(1, 3));
-    v.push_back(point(2, 2));
-    v.push_back(point(2, 1));
-    v.push_back(point(0, 0));
-    v.push_back(point(-1, 3));
+    v.emplace_back(1, 3);
+    v.emplace_back(2, 2);
+    v.emplace_back(2, 1);
+    v.emplace_back(0, 0);
+    v.emplace_back(-1, 3);
     // Cut using the vertical line through (0, 0).
     vector<point> c;
-    c.push_back(point(-1, 3));
-    c.push_back(point(0, 3));
-    c.push_back(point(0, 0));
+    c.emplace_back(-1, 3);
+    c.emplace_back(0, 3);
+    c.emplace_back(0, 0);
     assert(convex_cut(v.begin(), v.end(), point(0, 0), point(0, 1)) == c);
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
     vector<point> v;
-    v.push_back(point(0, 0));
-    v.push_back(point(2, 2));
-    v.push_back(point(0, 4));
-    v.push_back(point(3, 4));
-    v.push_back(point(3, 0));
+    v.emplace_back(0, 0);
+    v.emplace_back(2, 2);
+    v.emplace_back(0, 4);
+    v.emplace_back(3, 4);
+    v.emplace_back(3, 0);
     vector<point> c;
-    c.push_back(point(1, 0));
-    c.push_back(point(0, 0));
-    c.push_back(point(1, 1));
-    c.push_back(point(1, 3));
-    c.push_back(point(0, 4));
-    c.push_back(point(1, 4));
+    c.emplace_back(1, 0);
+    c.emplace_back(0, 0);
+    c.emplace_back(1, 1);
+    c.emplace_back(1, 3);
+    c.emplace_back(0, 4);
+    c.emplace_back(1, 4);
     assert(convex_cut(v.begin(), v.end(), point(1, 0), point(1, 4)) == c);
   }
   return 0;

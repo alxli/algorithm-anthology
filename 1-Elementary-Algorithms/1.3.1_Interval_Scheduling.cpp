@@ -24,22 +24,21 @@ Space Complexity:
 struct Interval {
   int start, finish, id;
 
-  Interval(int start = 0, int finish = 0, int id = 0) : start(start), finish(finish), id(id) {}
+  explicit Interval(int start = 0, int finish = 0, int id = 0)
+      : start(start), finish(finish), id(id) {}
 };
 
-bool earlier_finish(const Interval &a, const Interval &b) {
-  return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
-}
-
 std::vector<Interval> interval_scheduling(std::vector<Interval> intervals) {
-  std::sort(intervals.begin(), intervals.end(), earlier_finish);
+  std::sort(intervals.begin(), intervals.end(), [](const Interval &a, const Interval &b) {
+    return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
+  });
   std::vector<Interval> res;
   int last_finish = 0;
   bool first = true;
-  for (int i = 0; i < static_cast<int>(intervals.size()); i++) {
-    if (first || intervals[i].start >= last_finish) {
-      res.push_back(intervals[i]);
-      last_finish = intervals[i].finish;
+  for (const auto &iv : intervals) {
+    if (first || iv.start >= last_finish) {
+      res.push_back(iv);
+      last_finish = iv.finish;
       first = false;
     }
   }
@@ -53,11 +52,11 @@ using namespace std;
 
 int main() {
   vector<Interval> intervals;
-  intervals.push_back(Interval(1, 4, 0));
-  intervals.push_back(Interval(3, 5, 1));
-  intervals.push_back(Interval(0, 6, 2));
-  intervals.push_back(Interval(5, 7, 3));
-  intervals.push_back(Interval(8, 9, 4));
+  intervals.emplace_back(1, 4, 0);
+  intervals.emplace_back(3, 5, 1);
+  intervals.emplace_back(0, 6, 2);
+  intervals.emplace_back(5, 7, 3);
+  intervals.emplace_back(8, 9, 4);
   vector<Interval> chosen = interval_scheduling(intervals);
   assert(chosen.size() == 3);
   assert(chosen[0].id == 0);

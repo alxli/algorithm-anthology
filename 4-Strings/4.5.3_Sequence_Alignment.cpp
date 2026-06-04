@@ -74,7 +74,7 @@ std::pair<string, string> align_sequences(
   }
   std::reverse(res1.begin(), res1.end());
   std::reverse(res2.begin(), res2.end());
-  return std::make_pair(res1, res2);
+  return {res1, res2};
 }
 
 template<class It>
@@ -140,7 +140,7 @@ std::pair<string, string> hirschberg_align_sequences(
   }
   string res1, res2;
   hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res1, &res2, gap_cost, sub_cost);
-  return std::make_pair(res1, res2);
+  return {res1, res2};
 }
 
 /*** Example Usage ***/
@@ -148,10 +148,12 @@ std::pair<string, string> hirschberg_align_sequences(
 #include <cassert>
 
 int main() {
-  assert(align_sequences("AGGGCT", "AGGCA", 2, 3) == make_pair(string("AGGGCT"), string("A_GGCA")));
+  assert(
+      align_sequences("AGGGCT", "AGGCA", 2, 3) == (std::pair<string, string>{"AGGGCT", "A_GGCA"})
+  );
   assert(
       hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) ==
-      make_pair(string("AGGGCT"), string("A_GGCA"))
+      (std::pair<string, string>{"AGGGCT", "A_GGCA"})
   );
   return 0;
 }

@@ -28,8 +28,7 @@ int len, counter, depth[MAXN], dfs_order[2 * MAXN], first[MAXN], minpos[8 * MAXN
 void dfs(int u, int d) {
   depth[u] = d;
   dfs_order[counter++] = u;
-  for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-    int v = adj[u][j];
+  for (int v : adj[u]) {
     if (depth[v] == -1) {
       dfs(v, d + 1);
       dfs_order[counter++] = u;

@@ -25,8 +25,8 @@ Space Complexity:
 
 int nim_sum(const std::vector<int> &piles) {
   int x = 0;
-  for (int i = 0; i < static_cast<int>(piles.size()); i++) {
-    x ^= piles[i];
+  for (int p : piles) {
+    x ^= p;
   }
   return x;
 }
@@ -38,15 +38,14 @@ bool first_player_wins(const std::vector<int> &piles) {
 std::pair<int, int> winning_move(const std::vector<int> &piles) {
   int x = nim_sum(piles);
   if (x == 0) {
-    return std::make_pair(-1, -1);
+    return {-1, -1};
   }
   for (int i = 0; i < static_cast<int>(piles.size()); i++) {
-    int target = piles[i] ^ x;
-    if (target < piles[i]) {
-      return std::make_pair(i, target);
+    if (int target = piles[i] ^ x; target < piles[i]) {
+      return {i, target};
     }
   }
-  return std::make_pair(-1, -1);
+  return {-1, -1};
 }
 
 /*** Example Usage ***/
@@ -55,16 +54,14 @@ std::pair<int, int> winning_move(const std::vector<int> &piles) {
 using namespace std;
 
 int main() {
-  int raw[] = {3, 4, 5};
-  vector<int> piles(raw, raw + 3);
+  vector<int> piles = {3, 4, 5};
   assert(nim_sum(piles) == 2);
   assert(first_player_wins(piles));
-  pair<int, int> move = winning_move(piles);
-  piles[move.first] = move.second;
+  auto [pile_idx, new_size] = winning_move(piles);
+  piles[pile_idx] = new_size;
   assert(nim_sum(piles) == 0);
 
-  int losing_raw[] = {1, 2, 3};
-  vector<int> losing(losing_raw, losing_raw + 3);
+  vector<int> losing = {1, 2, 3};
   assert(!first_player_wins(losing));
   assert(winning_move(losing).first == -1);
   return 0;

@@ -33,8 +33,8 @@ Space Complexity:
 #include <cstdlib>
 #include <vector>
 
-typedef std::complex<double> cdouble;
-typedef std::vector<cdouble> cpoly;
+using cdouble = std::complex<double>;
+using cpoly = std::vector<cdouble>;
 
 std::pair<cdouble, cpoly> horner_eval(const cpoly &p, const cdouble &x) {
   int n = p.size();
@@ -42,7 +42,7 @@ std::pair<cdouble, cpoly> horner_eval(const cpoly &p, const cdouble &x) {
   for (int i = n - 1; i > 0; i--) {
     b[i - 1] = p[i] + (i < n - 1 ? b[i] * x : 0);
   }
-  return std::make_pair(p[0] + b[0] * x, b);
+  return {p[0] + b[0] * x, b};
 }
 
 cpoly derivative(const cpoly &p) {
@@ -117,8 +117,8 @@ Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
 using namespace std;
 
 void print_roots(const vector<cdouble> &x) {
-  for (int i = 0; i < static_cast<int>(x.size()); i++) {
-    printf("(%.5lf, %.5lf)\n", x[i].real(), x[i].imag());
+  for (const auto &z : x) {
+    printf("(%.5lf, %.5lf)\n", z.real(), z.imag());
   }
 }
 
@@ -136,11 +136,11 @@ int main() {
     // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
     printf("Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):\n");
     cpoly p;
-    p.push_back(cdouble(-24, 36));
-    p.push_back(cdouble(-26, 12));
-    p.push_back(cdouble(-30, 40));
-    p.push_back(cdouble(-26, 12));
-    p.push_back(cdouble(-6, 4));
+    p.emplace_back(-24, 36);
+    p.emplace_back(-26, 12);
+    p.emplace_back(-30, 40);
+    p.emplace_back(-26, 12);
+    p.emplace_back(-6, 4);
     print_roots(find_all_roots(p));
   }
   return 0;

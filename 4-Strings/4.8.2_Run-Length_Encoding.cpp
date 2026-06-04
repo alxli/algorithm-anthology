@@ -28,7 +28,7 @@ std::vector<std::pair<char, int>> run_length_encode(const string &s) {
   std::vector<std::pair<char, int>> res;
   for (int i = 0; i < static_cast<int>(s.size()); i++) {
     if (res.empty() || res.back().first != s[i]) {
-      res.push_back(std::make_pair(s[i], 1));
+      res.emplace_back(s[i], 1);
     } else {
       res.back().second++;
     }
@@ -53,8 +53,8 @@ int main() {
   string s = "aaabccccdd";
   vector<pair<char, int>> runs = run_length_encode(s);
   assert(runs.size() == 4);
-  assert(runs[0] == make_pair('a', 3));
-  assert(runs[2] == make_pair('c', 4));
+  assert(runs[0] == (pair<char, int>{'a', 3}));
+  assert(runs[2] == (pair<char, int>{'c', 4}));
   assert(run_length_decode(runs) == s);
   return 0;
 }

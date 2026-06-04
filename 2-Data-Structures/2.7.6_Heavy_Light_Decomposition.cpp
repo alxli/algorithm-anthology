@@ -70,8 +70,7 @@ class HeavyLight {
     tin[u] = counter++;
     parent[u] = p;
     size[u] = 1;
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      int v = adj[u][j];
+    for (int v : adj[u]) {
       if (v != p) {
         dfs(v, u);
         size[u] += size[v];
@@ -88,8 +87,7 @@ class HeavyLight {
   void build_paths(int u, int path) {
     this->path[u] = path;
     pathpos[u] = pathlen[path]++;
-    for (int j = 0; j < static_cast<int>(adj[u].size()); j++) {
-      int v = adj[u][j];
+    for (int v : adj[u]) {
       if (v != parent[u]) {
         build_paths(v, (2 * size[v] >= size[u]) ? path : new_path(v));
       }

@@ -27,7 +27,7 @@ Space Complexity:
 
 template<class T>
 class KDTree {
-  typedef std::pair<T, T> point;
+  using point = std::pair<T, T>;
 
   static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
   static inline bool comp2(const point &a, const point &b) { return a.second < b.second; }
@@ -115,13 +115,13 @@ using namespace std;
 
 int main() {
   pair<int, int> p[3];
-  p[0] = make_pair(0, 2);
-  p[1] = make_pair(0, 3);
-  p[2] = make_pair(-1, 0);
+  p[0] = {0, 2};
+  p[1] = {0, 3};
+  p[2] = {-1, 0};
   KDTree<int> t(p, p + 3);
-  assert(t.nearest(0, 2, true) == make_pair(0, 2));
-  assert(t.nearest(0, 2, false) == make_pair(0, 3));
-  assert(t.nearest(0, 0) == make_pair(-1, 0));
-  assert(t.nearest(-10000, 0) == make_pair(-1, 0));
+  assert(t.nearest(0, 2, true) == (pair<int, int>{0, 2}));
+  assert(t.nearest(0, 2, false) == (pair<int, int>{0, 3}));
+  assert(t.nearest(0, 0) == (pair<int, int>{-1, 0}));
+  assert(t.nearest(-10000, 0) == (pair<int, int>{-1, 0}));
   return 0;
 }

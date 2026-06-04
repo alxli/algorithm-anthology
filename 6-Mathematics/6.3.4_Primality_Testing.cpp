@@ -44,7 +44,7 @@ bool is_prime(Int n) {
   return true;
 }
 
-typedef unsigned long long uint64;
+using uint64 = unsigned long long;
 
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
   uint64 a = 0, b = x % m;

@@ -33,9 +33,9 @@ Space Complexity:
 #include <complex>
 #include <vector>
 
-typedef long double LD;
-typedef std::complex<LD> cdouble;
-typedef std::vector<cdouble> cpoly;
+using LD = long double;
+using cdouble = std::complex<LD>;
+using cpoly = std::vector<cdouble>;
 
 const LD PI = acosl(-1.0L);
 const LD ZERO_EPS = 1e-30L;   // Treat coefficients and denominators this small as zero.
@@ -58,7 +58,7 @@ std::pair<cdouble, cdouble> eval_with_derivative(const cpoly &p, const cdouble &
     derivative = derivative * x + value;
     value = value * x + p[i];
   }
-  return std::make_pair(value, derivative);
+  return {value, derivative};
 }
 
 LD root_bound(const cpoly &p) {
@@ -121,8 +121,8 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
     bool done = true;
     cpoly next = z;
     for (int i = 0; i < n; i++) {
-      std::pair<cdouble, cdouble> ev = eval_with_derivative(p, z[i]);
-      if (std::abs(ev.first) <= EPS) {
+      auto [fx, dfx] = eval_with_derivative(p, z[i]);
+      if (std::abs(fx) <= EPS) {
         continue;
       }
       cdouble repulsion = 0;
@@ -136,13 +136,13 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
           repulsion += cdouble(1) / diff;
         }
       }
-      cdouble denom = ev.second - ev.first * repulsion;
+      cdouble denom = dfx - fx * repulsion;
       if (is_zero(denom)) {
         continue;
       }
-      cdouble step = ev.first / denom;
-      if (!is_finite(step) && !is_zero(ev.second)) {
-        step = ev.first / ev.second;
+      cdouble step = fx / denom;
+      if (!is_finite(step) && !is_zero(dfx)) {
+        step = fx / dfx;
       }
       if (!is_finite(step)) {
         continue;
@@ -169,7 +169,7 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
     }
   }
   for (int i = 0; i < n; i++) {
-    roots.push_back(clean_root(z[i]));
+    roots.emplace_back(z[i]);
   }
   std::sort(roots.begin(), roots.end(), root_less);
   return roots;
@@ -205,8 +205,8 @@ cdouble eval(const cpoly &p, const cdouble &x) {
 }
 
 void print_roots(const vector<cdouble> &x) {
-  for (int i = 0; i < static_cast<int>(x.size()); i++) {
-    printf("(%.5Lf, %.5Lf)\n", x[i].real(), x[i].imag());
+  for (const auto &z : x) {
+    printf("(%.5Lf, %.5Lf)\n", z.real(), z.imag());
   }
 }
 
@@ -217,8 +217,8 @@ int main() {
     vector<LD> p(poly, poly + 4);
     vector<cdouble> roots = find_all_roots(p);
     assert(roots.size() == 3);
-    for (int i = 0; i < static_cast<int>(roots.size()); i++) {
-      assert(abs(eval(cpoly(p.begin(), p.end()), roots[i])) < CHECK_EPS);
+    for (const auto &root : roots) {
+      assert(abs(eval(cpoly(p.begin(), p.end()), root)) < CHECK_EPS);
     }
     print_roots(roots);
   }
@@ -226,15 +226,15 @@ int main() {
     // = ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
     printf("Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):\n");
     cpoly p;
-    p.push_back(cdouble(-24, 36));
-    p.push_back(cdouble(-26, 12));
-    p.push_back(cdouble(-30, 40));
-    p.push_back(cdouble(-26, 12));
-    p.push_back(cdouble(-6, 4));
+    p.emplace_back(-24, 36);
+    p.emplace_back(-26, 12);
+    p.emplace_back(-30, 40);
+    p.emplace_back(-26, 12);
+    p.emplace_back(-6, 4);
     vector<cdouble> roots = find_all_roots(p);
     assert(roots.size() == 4);
-    for (int i = 0; i < static_cast<int>(roots.size()); i++) {
-      assert(abs(eval(p, roots[i])) < CHECK_EPS);
+    for (const auto &root : roots) {
+      assert(abs(eval(p, root)) < CHECK_EPS);
     }
     print_roots(roots);
   }

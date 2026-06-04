@@ -26,6 +26,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
+#include <random>
 #include <utility>
 #include <vector>
 
@@ -33,7 +34,7 @@ const double EPS = 1e-9;
 
 #define GE(a, b) ((a) >= (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -75,10 +76,10 @@ std::pair<point, point> diametral_pair(It lo, It hi) {
   std::vector<point> h = convex_hull(lo, hi);
   int m = h.size();
   if (m == 1) {
-    return std::make_pair(h[0], h[0]);
+    return {h[0], h[0]};
   }
   if (m == 2) {
-    return std::make_pair(h[0], h[1]);
+    return {h[0], h[1]};
   }
   int k = 1;
   while (fabs(cross(h[0], h[(k + 1) % m], h[m - 1])) > fabs(cross(h[0], h[k], h[m - 1]))) {
@@ -90,14 +91,14 @@ std::pair<point, point> diametral_pair(It lo, It hi) {
     d = sqnorm(point(h[i].x - h[j].x, h[i].y - h[j].y));
     if (d > maxdist) {
       maxdist = d;
-      res = std::make_pair(h[i], h[j]);
+      res = {h[i], h[j]};
     }
     while (j < m && fabs(cross(h[(i + 1) % m], h[(j + 1) % m], h[i])) >
                         fabs(cross(h[(i + 1) % m], h[j], h[i]))) {
       d = sqnorm(point(h[i].x - h[(j + 1) % m].x, h[i].y - h[(j + 1) % m].y));
       if (d > maxdist) {
         maxdist = d;
-        res = std::make_pair(h[i], h[(j + 1) % m]);
+        res = {h[i], h[(j + 1) % m]};
       }
       j++;
     }
@@ -113,29 +114,30 @@ using namespace std;
 int main() {
   {  // Irregular pentagon with only the vertex (1, 2) not on the hull.
     vector<point> v;
-    v.push_back(point(1, 3));
-    v.push_back(point(1, 2));
-    v.push_back(point(2, 1));
-    v.push_back(point(0, 0));
-    v.push_back(point(-1, 3));
-    std::random_shuffle(v.begin(), v.end());
+    v.emplace_back(1, 3);
+    v.emplace_back(1, 2);
+    v.emplace_back(2, 1);
+    v.emplace_back(0, 0);
+    v.emplace_back(-1, 3);
+    std::mt19937 rng(12345);
+    std::shuffle(v.begin(), v.end(), rng);
     vector<point> h;
-    h.push_back(point(-1, 3));
-    h.push_back(point(1, 3));
-    h.push_back(point(2, 1));
-    h.push_back(point(0, 0));
+    h.emplace_back(-1, 3);
+    h.emplace_back(1, 3);
+    h.emplace_back(2, 1);
+    h.emplace_back(0, 0);
     assert(convex_hull(v.begin(), v.end()) == h);
   }
   {
     vector<point> v;
-    v.push_back(point(0, 0));
-    v.push_back(point(3, 0));
-    v.push_back(point(0, 3));
-    v.push_back(point(1, 1));
-    v.push_back(point(4, 4));
-    pair<point, point> res = diametral_pair(v.begin(), v.end());
-    assert(res.first == point(0, 0));
-    assert(res.second == point(4, 4));
+    v.emplace_back(0, 0);
+    v.emplace_back(3, 0);
+    v.emplace_back(0, 3);
+    v.emplace_back(1, 1);
+    v.emplace_back(4, 4);
+    auto [p1, p2] = diametral_pair(v.begin(), v.end());
+    assert(p1 == point(0, 0));
+    assert(p2 == point(4, 4));
   }
   return 0;
 }

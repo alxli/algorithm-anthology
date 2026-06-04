@@ -28,9 +28,9 @@ std::vector<std::vector<int>> scc;
 
 void dfs(std::vector<int> g[], std::vector<int> &res, int u) {
   visit[u] = true;
-  for (int j = 0; j < static_cast<int>(g[u].size()); j++) {
-    if (!visit[g[u][j]]) {
-      dfs(g, res, g[u][j]);
+  for (int v : g[u]) {
+    if (!visit[v]) {
+      dfs(g, res, v);
     }
   }
   res.push_back(u);
@@ -48,17 +48,17 @@ void kosaraju(int nodes) {
   std::reverse(order.begin(), order.end());
   std::fill(visit.begin(), visit.end(), false);
   for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < static_cast<int>(adj[i].size()); j++) {
-      rev[adj[i][j]].push_back(i);
+    for (int v : adj[i]) {
+      rev[v].push_back(i);
     }
   }
   scc.clear();
-  for (int i = 0; i < static_cast<int>(order.size()); i++) {
-    if (visit[order[i]]) {
+  for (int u : order) {
+    if (visit[u]) {
       continue;
     }
     std::vector<int> component;
-    dfs(rev, component, order[i]);
+    dfs(rev, component, u);
     scc.push_back(component);
   }
 }
@@ -91,9 +91,9 @@ int main() {
   adj[7].push_back(6);
   kosaraju(8);
   cout << "Components:" << endl;
-  for (int i = 0; i < static_cast<int>(scc.size()); i++) {
-    for (int j = 0; j < static_cast<int>(scc[i].size()); j++) {
-      cout << scc[i][j] << " ";
+  for (auto &comp : scc) {
+    for (int v : comp) {
+      cout << v << " ";
     }
     cout << endl;
   }

@@ -50,8 +50,8 @@ Space Complexity:
 
 template<class T>
 class Quadtree {
-  static const int MAXR = 1000000000;
-  static const int MAXC = 1000000000;
+  static const int MAXR = 1'000'000'000;
+  static const int MAXC = 1'000'000'000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_region(const T &v, int area) { return v; }
@@ -66,9 +66,9 @@ class Quadtree {
     bool pending;
     Node *child[4];
 
-    Node(const T &v) : value(v), pending(false) {
-      for (int i = 0; i < 4; i++) {
-        child[i] = nullptr;
+    explicit Node(const T &v) : value(v), pending(false) {
+      for (auto &c : child) {
+        c = nullptr;
       }
     }
   } *root;
@@ -157,15 +157,15 @@ class Quadtree {
 
   static void clean_up(Node *n) {
     if (n != nullptr) {
-      for (int i = 0; i < 4; i++) {
-        clean_up(n->child[i]);
+      for (auto *c : n->child) {
+        clean_up(c);
       }
       delete n;
     }
   }
 
  public:
-  Quadtree(const T &v = T()) : root(nullptr), init(v) {}
+  explicit Quadtree(const T &v = T()) : root(nullptr), init(v) {}
 
   ~Quadtree() { clean_up(root); }
   T at(int r, int c) { return query(r, c, r, c); }
@@ -223,8 +223,8 @@ int main() {
   assert(t.query(0, 0, 0, 1) == 6);
   assert(t.query(0, 0, 1, 0) == 5);
   assert(t.query(1, 1, 2, 2) == 0);
-  assert(t.query(0, 0, 1000000000, 1000000000) == 0);
+  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == 0);
   t.update(500000000, 500000000, -100);
-  assert(t.query(0, 0, 1000000000, 1000000000) == -100);
+  assert(t.query(0, 0, 1'000'000'000, 1'000'000'000) == -100);
   return 0;
 }

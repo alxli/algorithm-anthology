@@ -40,7 +40,7 @@ class FenwickTree2D {
   void add(Map &tree, int r, int c, const T &x) {
     for (int i = r + 1; i <= MAXR; i += i & -i) {
       for (int j = c + 1; j <= MAXC; j += j & -j) {
-        tree[std::make_pair(i, j)] += x;
+        tree[{i, j}] += x;
       }
     }
   }
@@ -74,11 +74,10 @@ class FenwickTree2D {
     T s1 = 0, s2 = 0, s3 = 0, s4 = 0;
     for (int i = r; i > 0; i -= i & -i) {
       for (int j = c; j > 0; j -= j & -j) {
-        const std::pair<int, int> ij(i, j);
-        s1 += t1[ij];
-        s2 += t2[ij];
-        s3 += t3[ij];
-        s4 += t4[ij];
+        s1 += t1[{i, j}];
+        s2 += t2[{i, j}];
+        s3 += t3[{i, j}];
+        s4 += t4[{i, j}];
       }
     }
     return s1 * r * c + s2 * r + s3 * c + s4;
@@ -123,6 +122,6 @@ int main() {
   assert(t.sum(0, 0, 1, 0) == 8);
   assert(t.sum(1, 1, 2, 2) == 29);
   t.set(500000000, 500000000, 100);
-  assert(t.sum(0, 0, 1000000000, 1000000000) == 143);
+  assert(t.sum(0, 0, 1'000'000'000, 1'000'000'000) == 143);
   return 0;
 }

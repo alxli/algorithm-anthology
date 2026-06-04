@@ -36,10 +36,9 @@ class Graph {
   void dfs(int n, std::vector<bool> &visit, ReportFunction f) const {
     f(n);
     visit[n] = true;
-    std::vector<int>::const_iterator it;
-    for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (!visit[*it]) {
-        dfs(*it, visit, f);
+    for (int v : adj[n]) {
+      if (!visit[v]) {
+        dfs(v, visit, f);
       }
     }
   }
@@ -47,15 +46,14 @@ class Graph {
   bool has_cycle(int n, int prev, std::vector<bool> &visit, std::vector<bool> &onstack) const {
     visit[n] = true;
     onstack[n] = true;
-    std::vector<int>::const_iterator it;
-    for (it = adj[n].begin(); it != adj[n].end(); ++it) {
-      if (directed && onstack[*it]) {
+    for (int v : adj[n]) {
+      if (directed && onstack[v]) {
         return true;
       }
-      if (!directed && visit[*it] && *it != prev) {
+      if (!directed && visit[v] && v != prev) {
         return true;
       }
-      if (!visit[*it] && has_cycle(*it, n, visit, onstack)) {
+      if (!visit[v] && has_cycle(v, n, visit, onstack)) {
         return true;
       }
     }

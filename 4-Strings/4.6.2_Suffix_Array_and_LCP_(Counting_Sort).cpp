@@ -35,34 +35,27 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <numeric>
 #include <string>
 #include <utility>
 #include <vector>
 using std::string;
 
 class SuffixArray {
-  struct comp {
-    const string &s;
-    comp(const string &s) : s(s) {}
-    bool operator()(int i, int j) { return s[i] < s[j]; }
-  };
-
   string s;
   std::vector<int> sa, rank;
 
  public:
-  SuffixArray(const string &s) : s(s), sa(s.size()), rank(s.size()) {
+  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rank(s.size()) {
     int n = s.size();
+    std::iota(sa.rbegin(), sa.rend(), 0);
     for (int i = 0; i < n; i++) {
-      sa[i] = n - 1 - i;
       rank[i] = static_cast<int>(s[i]);
     }
-    std::stable_sort(sa.begin(), sa.end(), comp(s));
+    std::stable_sort(sa.begin(), sa.end(), [&](int i, int j) { return s[i] < s[j]; });
     for (int gap = 1; gap < n; gap *= 2) {
       std::vector<int> prev_rank(rank), prev_sa(sa), cnt(n);
-      for (int i = 0; i < n; i++) {
-        cnt[i] = i;
-      }
+      std::iota(cnt.begin(), cnt.end(), 0);
       for (int i = 0; i < n; i++) {
         rank[sa[i]] = (i > 0 && prev_rank[sa[i - 1]] == prev_rank[sa[i]] && sa[i - 1] + gap < n &&
                        prev_rank[sa[i - 1] + gap / 2] == prev_rank[sa[i] + gap / 2])

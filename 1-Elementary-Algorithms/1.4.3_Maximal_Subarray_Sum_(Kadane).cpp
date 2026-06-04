@@ -39,10 +39,9 @@ Space Complexity:
 #include <vector>
 
 template<class It>
-typename std::iterator_traits<It>::value_type max_subarray_sum(
-    It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr
-) {
-  typedef typename std::iterator_traits<It>::value_type T;
+auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr) ->
+    typename std::iterator_traits<It>::value_type {
+  using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
     return T();
   }

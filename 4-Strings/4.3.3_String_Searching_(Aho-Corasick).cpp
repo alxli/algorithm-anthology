@@ -58,21 +58,19 @@ class AhoCorasick {
   }
 
  public:
-  AhoCorasick(const std::vector<string> &needles) : needles(needles) {
+  explicit AhoCorasick(const std::vector<string> &needles) : needles(needles) {
     int total_len = 0;
-    for (int i = 0; i < static_cast<int>(needles.size()); i++) {
-      total_len += needles[i].size();
+    for (const auto &needle : needles) {
+      total_len += needle.size();
     }
     fail.resize(total_len, -1);
     graph.resize(total_len);
     out.resize(total_len);
     int states = 1;
-    std::map<char, int>::iterator it;
     for (int i = 0; i < static_cast<int>(needles.size()); i++) {
       int curr = 0;
-      for (int j = 0; j < static_cast<int>(needles[i].size()); j++) {
-        char c = needles[i][j];
-        if ((it = graph[curr].find(c)) != graph[curr].end()) {
+      for (char c : needles[i]) {
+        if (auto it = graph[curr].find(c); it != graph[curr].end()) {
           curr = it->second;
         } else {
           curr = graph[curr][c] = states++;
@@ -81,21 +79,21 @@ class AhoCorasick {
       out[curr].insert(i);
     }
     std::queue<int> q;
-    for (it = graph[0].begin(); it != graph[0].end(); ++it) {
-      if (it->second != 0) {
-        fail[it->second] = 0;
-        q.push(it->second);
+    for (auto &[c, v] : graph[0]) {
+      if (v != 0) {
+        fail[v] = 0;
+        q.push(v);
       }
     }
     while (!q.empty()) {
       int u = q.front();
       q.pop();
-      for (it = graph[u].begin(); it != graph[u].end(); ++it) {
-        int v = it->second, f = fail[u];
-        while (graph[f].find(it->first) == graph[f].end()) {
+      for (auto &[c, v] : graph[u]) {
+        int f = fail[u];
+        while (graph[f].find(c) == graph[f].end()) {
           f = fail[f];
         }
-        f = graph[f].find(it->first)->second;
+        f = graph[f].find(c)->second;
         fail[v] = f;
         out[v].insert(out[f].begin(), out[f].end());
         q.push(v);
@@ -106,11 +104,10 @@ class AhoCorasick {
   template<class ReportFunction>
   void find_all_in(const string &haystack, ReportFunction report_match) {
     int state = 0;
-    std::set<int>::iterator it;
     for (int i = 0; i < static_cast<int>(haystack.size()); i++) {
       state = next_state(state, haystack[i]);
-      for (it = out[state].begin(); it != out[state].end(); ++it) {
-        report_match(needles[*it], i - needles[*it].size() + 1);
+      for (int idx : out[state]) {
+        report_match(needles[idx], i - static_cast<int>(needles[idx].size()) + 1);
       }
     }
   }

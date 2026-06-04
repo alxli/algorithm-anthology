@@ -25,23 +25,22 @@ Space Complexity:
 
 template<class T, class It>
 std::map<T, int> misra_gries(It lo, It hi, int k) {
-  typedef std::map<T, int> counter_map;
+  using counter_map = std::map<T, int>;
   counter_map count;
   for (It it = lo; it != hi; ++it) {
-    typename counter_map::iterator found = count.find(*it);
-    if (found != count.end()) {
+    if (auto found = count.find(*it); found != count.end()) {
       found->second++;
     } else if (static_cast<int>(count.size()) < k - 1) {
       count[*it] = 1;
     } else {
       std::vector<T> erase;
-      for (typename counter_map::iterator jt = count.begin(); jt != count.end(); ++jt) {
-        if (--jt->second == 0) {
-          erase.push_back(jt->first);
+      for (auto &[key, val] : count) {
+        if (--val == 0) {
+          erase.push_back(key);
         }
       }
-      for (int i = 0; i < static_cast<int>(erase.size()); i++) {
-        count.erase(erase[i]);
+      for (const auto &key : erase) {
+        count.erase(key);
       }
     }
   }

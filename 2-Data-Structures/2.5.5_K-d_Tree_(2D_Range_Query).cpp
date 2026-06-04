@@ -28,7 +28,7 @@ Space Complexity:
 
 template<class T>
 class KDTree {
-  typedef std::pair<T, T> point;
+  using point = std::pair<T, T>;
 
   static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
   static inline bool comp2(const point &a, const point &b) { return a.second < b.second; }
@@ -128,7 +128,7 @@ int main() {
                       {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   vector<pair<int, int>> v;
   for (int i = 0; i < n; i++) {
-    v.push_back(make_pair(points[i][0], points[i][1]));
+    v.push_back({points[i][0], points[i][1]});
   }
   KDTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);

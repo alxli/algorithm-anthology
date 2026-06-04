@@ -42,7 +42,7 @@ const double EPS = 1e-9, PI = acos(-1.0);
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -99,7 +99,7 @@ struct Line {
 int tangent(const Circle &c, const point &p, Line *l1 = nullptr, Line *l2 = nullptr) {
   point vop(p.x - c.h, p.y - c.k);
   if (EQ(sqnorm(vop), c.r * c.r)) {  // Point on an edge.
-    if (l1 != 0) {                   // Get perpendicular line through p.
+    if (l1 != nullptr) {             // Get perpendicular line through p.
       *l1 = Line(point(c.h, c.k), p);
       *l1 = Line(-l1->b, l1->a, l1->b * p.x - l1->a * p.y);
     }

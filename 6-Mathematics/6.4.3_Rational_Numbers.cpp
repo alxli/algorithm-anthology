@@ -216,7 +216,7 @@ class Rational {
 
 int main() {
 #define EQ(a, b) (fabs((a) - (b)) <= 1E-9)
-  typedef Rational<long long> Rational;
+  using Rational = Rational<long long>;
 
   assert(Rational(-21, 1) % 2 == -1);
   Rational r(Rational(-53, 10) % Rational(-17, 10));

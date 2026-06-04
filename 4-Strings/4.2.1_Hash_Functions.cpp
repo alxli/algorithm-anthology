@@ -46,7 +46,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-typedef unsigned long long uint64;
+using uint64 = unsigned long long;
 
 unsigned int mix32(unsigned int x) {
   x ^= x >> 16;
@@ -70,7 +70,7 @@ unsigned int hash32(Int x) {
 
 template<class Int>
 uint64 hash64(Int x) {
-  return mix64((uint64)x);
+  return mix64(static_cast<uint64>(x));
 }
 
 unsigned int hash_combine32(unsigned int h, unsigned int x) {
@@ -101,8 +101,8 @@ uint64 hash_double(double x) {
 
 unsigned int hash_string_fnv1a32(const std::string &s) {
   unsigned int h = 2166136261U;
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    h ^= static_cast<unsigned char>(s[i]);
+  for (unsigned char c : s) {
+    h ^= c;
     h *= 16777619U;
   }
   return h;
@@ -110,8 +110,8 @@ unsigned int hash_string_fnv1a32(const std::string &s) {
 
 uint64 hash_string_fnv1a64(const std::string &s) {
   uint64 h = 14695981039346656037ULL;
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    h ^= static_cast<unsigned char>(s[i]);
+  for (unsigned char c : s) {
+    h ^= c;
     h *= 1099511628211ULL;
   }
   return h;
@@ -139,7 +139,7 @@ template<class Int>
 struct IntHasher {
   std::size_t operator()(Int x) const {
     static const uint64 RANDOM = std::chrono::steady_clock::now().time_since_epoch().count();
-    return (std::size_t)mix64((uint64)x + RANDOM);
+    return static_cast<std::size_t>(mix64(static_cast<uint64>(x) + RANDOM));
   }
 };
 
@@ -153,16 +153,16 @@ struct ScalarHasher {
 
 template<class T>
 struct ScalarHasher<T, true> {
-  std::size_t operator()(T x) const { return IntHasher<T>()(x); }
+  std::size_t operator()(T x) const { return IntHasher<T>{}(x); }
 };
 
 template<class A, class B>
 struct PairHasher {
   std::size_t operator()(const std::pair<A, B> &p) const {
     uint64 h = 0;
-    h = hash_combine64(h, (uint64)GenericHasher<A>()(p.first));
-    h = hash_combine64(h, (uint64)GenericHasher<B>()(p.second));
-    return (std::size_t)h;
+    h = hash_combine64(h, static_cast<uint64>(GenericHasher<A>()(p.first)));
+    h = hash_combine64(h, static_cast<uint64>(GenericHasher<B>()(p.second)));
+    return static_cast<std::size_t>(h);
   }
 };
 
@@ -170,10 +170,10 @@ template<class T>
 struct VectorHasher {
   std::size_t operator()(const std::vector<T> &v) const {
     uint64 h = 0;
-    for (int i = 0; i < static_cast<int>(v.size()); i++) {
-      h = hash_combine64(h, (uint64)GenericHasher<T>()(v[i]));
+    for (const auto &x : v) {
+      h = hash_combine64(h, static_cast<uint64>(GenericHasher<T>()(x)));
     }
-    return (std::size_t)h;
+    return static_cast<std::size_t>(h);
   }
 };
 
@@ -212,7 +212,7 @@ int main() {
   count[1000000000000LL] = 7;
   assert(count[1000000000000LL] == 7);
 
-  typedef pair<int, int> point;
+  using point = pair<int, int>;
   unordered_map<point, int, PairHasher<int, int>> dist;
   dist[point(3, 4)] = 5;
   assert(dist[point(3, 4)] == 5);
@@ -221,7 +221,7 @@ int main() {
   seen[v] = 1;
   assert(seen[v] == 1);
 
-  typedef pair<vector<int>, int> state;
+  using state = pair<vector<int>, int>;
   unordered_map<state, int, GenericHasher<state>> dp;
   dp[state(v, 4)] = 9;
   assert(dp[state(v, 4)] == 9);

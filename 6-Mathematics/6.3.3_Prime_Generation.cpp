@@ -79,16 +79,15 @@ using namespace std;
 
 int main() {
   int pmax = 10000000;
-  vector<int> p;
   time_t start;
   double delta;
 
   start = clock();
-  p = sieve(pmax);
+  auto p = sieve(pmax);
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve(n=" << pmax << "): " << delta << "s" << endl;
 
-  int l = 1000000000, h = 1005000000;
+  int l = 1'000'000'000, h = 1005000000;
   start = clock();
   p = sieve(l, h);
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;

@@ -46,7 +46,7 @@ double f(double x) {
 }
 
 int main() {
-  double PI = acos(-1.0);
+  const double PI = acos(-1.0);
   assert(fabs(integrate(f, 0.0, PI / 2) - 1) < 1e-10);
   return 0;
 }

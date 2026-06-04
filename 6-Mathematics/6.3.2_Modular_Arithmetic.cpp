@@ -59,7 +59,7 @@ T inverse(T a, T m) {
 template<class T>
 class Modular {
  public:
-  typedef typename T::value_type value_type;
+  using value_type = typename T::value_type;
 
  private:
   value_type v;
@@ -169,7 +169,7 @@ class ModCombinatorics {
   std::vector<Mint> fact, inv_fact;
 
   void ensure(int n) {
-    int old = fact.size();
+    auto old = static_cast<int>(fact.size());
     if (old > n) {
       return;
     }
@@ -212,11 +212,11 @@ class ModCombinatorics {
 };
 
 struct Mod100000007 {
-  typedef int value_type;
-  static const int value = 1000000007;
+  using value_type = int;
+  static const int value = 1'000'000'007;
 };
 
-typedef Modular<Mod100000007> Mint;
+using Mint = Modular<Mod100000007>;
 
 /*** Example Usage ***/
 

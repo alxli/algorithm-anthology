@@ -142,8 +142,8 @@ class PartitionEnumerator : public AbstractEnumerator {
 
   long long count(const std::vector<int> &prefix) {
     int n = static_cast<int>(prefix.size()), sum = 0;
-    for (int i = 0; i < n; i++) {
-      sum += prefix[i];
+    for (int x : prefix) {
+      sum += x;
     }
     if (sum == range - 1) {
       return 1;

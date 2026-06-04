@@ -101,16 +101,16 @@ struct OnlineBridges {
         v = parent[v];
       }
     }
-    for (int i = 0; i < static_cast<int>(path_a.size()); i++) {
-      dsu_2ecc[path_a[i]] = lca;
-      if (path_a[i] == lca) {
+    for (int v : path_a) {
+      dsu_2ecc[v] = lca;
+      if (v == lca) {
         break;
       }
       bridges--;
     }
-    for (int i = 0; i < static_cast<int>(path_b.size()); i++) {
-      dsu_2ecc[path_b[i]] = lca;
-      if (path_b[i] == lca) {
+    for (int v : path_b) {
+      dsu_2ecc[v] = lca;
+      if (v == lca) {
         break;
       }
       bridges--;

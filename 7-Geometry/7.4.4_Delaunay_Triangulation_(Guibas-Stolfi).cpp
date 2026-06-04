@@ -34,7 +34,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-typedef std::pair<double, double> point;
+using point = std::pair<double, double>;
 #define x first
 #define y second
 
@@ -70,8 +70,8 @@ struct QuadEdgePool {
   std::vector<Edge *> edges;
 
   ~QuadEdgePool() {
-    for (int i = 0; i < static_cast<int>(edges.size()); i++) {
-      delete edges[i];
+    for (Edge *e : edges) {
+      delete e;
     }
   }
 
@@ -134,7 +134,7 @@ std::pair<Edge *, Edge *> build_triangulation(
 ) {
   if (hi - lo == 1) {
     Edge *a = pool.make_edge(p[lo], p[hi]);
-    return std::make_pair(a, a->rev());
+    return {a, a->rev()};
   }
   if (hi - lo == 2) {
     Edge *a = pool.make_edge(p[lo], p[lo + 1]);
@@ -144,19 +144,17 @@ std::pair<Edge *, Edge *> build_triangulation(
                    ? 1
                    : (LT(cross(p[lo], p[lo + 1], p[hi]), 0) ? -1 : 0);
     if (side == 0) {
-      return std::make_pair(a, b->rev());
+      return {a, b->rev()};
     }
     Edge *c = pool.connect(b, a);
-    return side == 1 ? std::make_pair(a, b->rev()) : std::make_pair(c->rev(), c);
+    if (side == 1) {
+      return {a, b->rev()};
+    }
+    return {c->rev(), c};
   }
   int mid = (lo + hi) / 2;
-  Edge *ldo, *ldi, *rdi, *rdo;
-  std::pair<Edge *, Edge *> left = build_triangulation(p, lo, mid, pool);
-  std::pair<Edge *, Edge *> right = build_triangulation(p, mid + 1, hi, pool);
-  ldo = left.first;
-  ldi = left.second;
-  rdi = right.first;
-  rdo = right.second;
+  auto [ldo, ldi] = build_triangulation(p, lo, mid, pool);
+  auto [rdi, rdo] = build_triangulation(p, mid + 1, hi, pool);
   for (;;) {
     if (left_of(rdi->origin, ldi)) {
       ldi = ldi->lnext();
@@ -202,7 +200,7 @@ std::pair<Edge *, Edge *> build_triangulation(
       base = pool.connect(base->rev(), lcand->rev());
     }
   }
-  return std::make_pair(ldo, rdo);
+  return {ldo, rdo};
 }
 
 struct Triangle {
@@ -238,8 +236,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
   QuadEdgePool pool;
   build_triangulation(p, 0, p.size() - 1, pool);
   std::vector<Triangle> res;
-  for (int i = 0; i < static_cast<int>(pool.edges.size()); i++) {
-    Edge *start = pool.edges[i];
+  for (Edge *start : pool.edges) {
     if (!start->primal || start->deleted || start->used) {
       continue;
     }
@@ -251,7 +248,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
       curr = curr->lnext();
     } while (curr != start);
     if (face.size() == 3 && GT(cross(face[0], face[1], face[2]), 0)) {
-      res.push_back(Triangle(face[0], face[1], face[2]));
+      res.emplace_back(face[0], face[1], face[2]);
     }
   }
   std::sort(res.begin(), res.end());
@@ -265,16 +262,16 @@ using namespace std;
 
 int main() {
   vector<point> v;
-  v.push_back(point(1, 3));
-  v.push_back(point(1, 2));
-  v.push_back(point(2, 1));
-  v.push_back(point(0, 0));
-  v.push_back(point(-1, 3));
+  v.emplace_back(1, 3);
+  v.emplace_back(1, 2);
+  v.emplace_back(2, 1);
+  v.emplace_back(0, 0);
+  v.emplace_back(-1, 3);
   vector<Triangle> t;
-  t.push_back(Triangle(point(-1, 3), point(0, 0), point(1, 2)));
-  t.push_back(Triangle(point(-1, 3), point(1, 2), point(1, 3)));
-  t.push_back(Triangle(point(0, 0), point(2, 1), point(1, 2)));
-  t.push_back(Triangle(point(1, 2), point(2, 1), point(1, 3)));
+  t.emplace_back(point(-1, 3), point(0, 0), point(1, 2));
+  t.emplace_back(point(-1, 3), point(1, 2), point(1, 3));
+  t.emplace_back(point(0, 0), point(2, 1), point(1, 2));
+  t.emplace_back(point(1, 2), point(2, 1), point(1, 3));
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
   return 0;
 }

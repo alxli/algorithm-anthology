@@ -19,12 +19,12 @@ Space Complexity:
 #include <vector>
 
 template<class It>
-std::vector<typename std::iterator_traits<It>::value_type> longest_increasing_subsequence(
-    It lo, It hi
-) {
+auto longest_increasing_subsequence(It lo, It hi)
+    -> std::vector<typename std::iterator_traits<It>::value_type> {
+  using T = typename std::iterator_traits<It>::value_type;
   int len = 0, n = hi - lo;
   if (n == 0) {
-    return std::vector<typename std::iterator_traits<It>::value_type>();
+    return {};
   }
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
@@ -43,7 +43,7 @@ std::vector<typename std::iterator_traits<It>::value_type> longest_increasing_su
     prev[i] = right > 0 ? tail[right - 1] : -1;
     tail[right] = i;
   }
-  std::vector<typename std::iterator_traits<It>::value_type> res(len);
+  std::vector<T> res(len);
   for (int i = tail[len - 1]; i != -1; i = prev[i]) {
     res[--len] = *(lo + i);
   }

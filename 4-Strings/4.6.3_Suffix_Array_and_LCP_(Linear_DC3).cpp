@@ -126,7 +126,7 @@ class SuffixArray {
   std::vector<int> sa;
 
  public:
-  SuffixArray(const string &s) : s(s), sa(s.size() + 1) {
+  explicit SuffixArray(const string &s) : s(s), sa(s.size() + 1) {
     int n = s.size();
     std::vector<int> scopy(s.begin(), s.end());
     scopy.resize(n + 4);
@@ -139,7 +139,7 @@ class SuffixArray {
   std::vector<int> get_lcp() {
     int n = s.size();
     if (n == 0) {
-      return std::vector<int>();
+      return {};
     }
     std::vector<int> rank(n), lcp(n - 1);
     for (int i = 0; i < n; i++) {

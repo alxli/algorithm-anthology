@@ -52,7 +52,7 @@ Space Complexity:
 
 template<class T>
 class SegTree {
-  static const int MAXN = 1000000000;
+  static const int MAXN = 1'000'000'000;
 
   static T join_values(const T &a, const T &b) { return std::min(a, b); }
   static T join_segment(const T &v, int len) { return v; }
@@ -67,7 +67,7 @@ class SegTree {
     bool pending;
     Node *left, *right;
 
-    Node(const T &v) : value(v), pending(false), left(nullptr), right(nullptr) {}
+    explicit Node(const T &v) : value(v), pending(false), left(nullptr), right(nullptr) {}
   } *root;
 
   T init;
@@ -145,7 +145,7 @@ class SegTree {
   }
 
  public:
-  SegTree(const T &v = T()) : root(nullptr), init(v) {}
+  explicit SegTree(const T &v = T()) : root(nullptr), init(v) {}
 
   ~SegTree() { clean_up(root); }
   T at(int i) { return query(i, i); }

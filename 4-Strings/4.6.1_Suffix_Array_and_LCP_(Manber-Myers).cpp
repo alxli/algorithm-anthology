@@ -34,34 +34,29 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <numeric>
 #include <string>
 #include <utility>
 #include <vector>
 using std::string;
 
 class SuffixArray {
-  struct Comparator {
-    const std::vector<std::pair<int, int>> &rank;
-    Comparator(const std::vector<std::pair<int, int>> &rank) : rank(rank) {}
-    bool operator()(int i, int j) { return rank[i] < rank[j]; }
-  };
-
   string s;
   std::vector<int> sa, rank;
 
  public:
-  SuffixArray(const string &s) : s(s), sa(s.size()), rank(s.size()) {
+  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rank(s.size()) {
     int n = s.size();
+    std::iota(sa.begin(), sa.end(), 0);
     for (int i = 0; i < n; i++) {
-      sa[i] = i;
       rank[i] = static_cast<int>(s[i]);
     }
     std::vector<std::pair<int, int>> rank2(n);
     for (int gap = 1; gap < n; gap *= 2) {
       for (int i = 0; i < n; i++) {
-        rank2[i] = std::make_pair(rank[i], i + gap < n ? rank[i + gap] + 1 : 0);
+        rank2[i] = {rank[i], i + gap < n ? rank[i + gap] + 1 : 0};
       }
-      std::sort(sa.begin(), sa.end(), Comparator(rank2));
+      std::sort(sa.begin(), sa.end(), [&](int i, int j) { return rank2[i] < rank2[j]; });
       for (int i = 0; i < n; i++) {
         rank[sa[i]] = (i > 0 && rank2[sa[i - 1]] == rank2[sa[i]]) ? rank[sa[i - 1]] : i;
       }

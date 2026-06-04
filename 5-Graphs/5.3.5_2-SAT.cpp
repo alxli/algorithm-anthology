@@ -57,8 +57,7 @@ struct TwoSAT {
 
   void dfs_order(int u, std::vector<bool> &visited) {
     visited[u] = true;
-    for (int i = 0; i < static_cast<int>(graph[u].size()); i++) {
-      int v = graph[u][i];
+    for (int v : graph[u]) {
       if (!visited[v]) {
         dfs_order(v, visited);
       }
@@ -68,8 +67,7 @@ struct TwoSAT {
 
   void dfs_component(int u, int id) {
     component[u] = id;
-    for (int i = 0; i < static_cast<int>(reverse_graph[u].size()); i++) {
-      int v = reverse_graph[u][i];
+    for (int v : reverse_graph[u]) {
       if (component[v] == -1) {
         dfs_component(v, id);
       }
@@ -87,9 +85,9 @@ struct TwoSAT {
     }
     std::reverse(order.begin(), order.end());
     int id = 0;
-    for (int i = 0; i < static_cast<int>(order.size()); i++) {
-      if (component[order[i]] == -1) {
-        dfs_component(order[i], id++);
+    for (int u : order) {
+      if (component[u] == -1) {
+        dfs_component(u, id++);
       }
     }
     for (int i = 0; i < variables; i++) {

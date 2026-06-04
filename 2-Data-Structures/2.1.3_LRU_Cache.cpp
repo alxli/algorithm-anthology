@@ -30,7 +30,7 @@ Space Complexity:
 
 template<class Key, class Value>
 class LRUCache {
-  typedef typename std::list<std::pair<Key, Value>>::iterator list_iter;
+  using list_iter = typename std::list<std::pair<Key, Value>>::iterator;
 
   int cap;
   std::list<std::pair<Key, Value>> items;
@@ -42,7 +42,7 @@ class LRUCache {
   int size() const { return items.size(); }
 
   bool get(const Key &key, Value *value) {
-    typename std::map<Key, list_iter>::iterator it = where.find(key);
+    auto it = where.find(key);
     if (it == where.end()) {
       return false;
     }
@@ -53,7 +53,7 @@ class LRUCache {
   }
 
   void put(const Key &key, const Value &value) {
-    typename std::map<Key, list_iter>::iterator it = where.find(key);
+    auto it = where.find(key);
     if (it != where.end()) {
       it->second->second = value;
       items.splice(items.begin(), items, it->second);
@@ -67,7 +67,7 @@ class LRUCache {
       where.erase(items.back().first);
       items.pop_back();
     }
-    items.push_front(std::make_pair(key, value));
+    items.push_front({key, value});
     where[key] = items.begin();
   }
 };

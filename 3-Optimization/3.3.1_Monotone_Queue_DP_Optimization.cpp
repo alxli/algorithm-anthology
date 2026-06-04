@@ -30,7 +30,7 @@ Space Complexity:
 
 template<class T, class Compare>
 class MonotoneQueue {
-  typedef std::pair<int, T> entry;
+  using entry = std::pair<int, T>;
 
   std::deque<entry> q;
   Compare better;
@@ -42,7 +42,7 @@ class MonotoneQueue {
     while (!q.empty() && !better(q.back().second, value)) {
       q.pop_back();
     }
-    q.push_back(entry(index, value));
+    q.emplace_back(index, value);
   }
 
   void expire(int first_valid) {
@@ -61,8 +61,7 @@ class MonotoneQueue {
 using namespace std;
 
 int main() {
-  int raw[] = {4, 2, 7, 1, 3, 6};
-  vector<int> a(raw, raw + 6);
+  vector<int> a = {4, 2, 7, 1, 3, 6};
 
   MonotoneQueue<int, less<int>> minq;
   vector<int> window_min;
