@@ -4212,7 +4212,7 @@ Matrix &row_reduce(Matrix &a) {
 
 template<class Matrix, class T>
 int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
-  if (x == NULL || a.empty() || a.size() != b.size()) {
+  if (x == nullptr || a.empty() || a.size() != b.size()) {
     return -1;
   }
   int r = a.size(), c = a[0].size();

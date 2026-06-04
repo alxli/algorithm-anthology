@@ -134,11 +134,11 @@ int main() {
   }
   assert(simplex_solve(va, vb, vc, &x) == 0);
   double maxval = 0;
-  for (int i = 0; i < (int)x.size(); i++) {
+  for (int i = 0; i < static_cast<int>(x.size()); i++) {
     maxval += c[i] * x[i];
   }
   cout << "Solution = " << maxval << " at (" << x[0];
-  for (int i = 1; i < (int)x.size(); i++) {
+  for (int i = 1; i < static_cast<int>(x.size()); i++) {
     cout << ", " << x[i];
   }
   cout << ")." << endl;
