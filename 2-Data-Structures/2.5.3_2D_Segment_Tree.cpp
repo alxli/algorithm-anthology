@@ -4,34 +4,32 @@ Maintain a two-dimensional array while supporting dynamic queries of rectangular
 dynamic updates of individual indices. This implementation uses lazy initialization of nodes to
 conserve memory while supporting large indices.
 
-The query operation is defined by the `join_values()` and `join_region()` functions where
-`join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)` for all values `x`, `y`, and
-`z` in the array. The `join_region(v, area)` function must be defined in conjunction to efficiently
-return the result of `join_values()` applied to a rectangular sub-array of `area` elements. The
-default code below assumes a numerical array type, defining queries for the "min" of the target
-range. Another possible query operation is "sum", in which case `join_values(a, b)` should return $a
-+ b$ and `join_region(v, area)` should return $v \cdot area$.
+The query operation is defined by a commutative associative aggregate function `combine(a, b)`.
+Because untouched regions are implicit, `repeat_value(v, area)` must return the aggregate summary of
+`area` copies of the initial value `v`. The default code below assumes a numerical array type,
+defining queries for the "min" of the target range. For rectangle-sum queries, `combine(a, b)`
+should return $a + b$ and `repeat_value(v, area)` should return $v \cdot area$.
 
-The update operation is defined by the `join_value_with_delta()` function, which determines the
-change made to array values. The default code below defines updates that "set" the chosen array
-index to a new value. Another possible update operation is "increment", in which
-`join_value_with_delta(v, d)` should be defined to return $v + d$.
+The point update operation is defined by `apply_delta(v, d)`, which returns the new value at one
+updated cell. The default code below defines updates that "set" the chosen cell to a new value.
+Another possible update operation is "increment", in which case `apply_delta(v, d)` should return
+$v + d$.
 
-- `SegTree2D(v)` constructs a two-dimensional array with rows from 0 to `MAXR` and columns
-  from 0 to `MAXC`, inclusive. All values are implicitly initialized to `v`.
+- `SegTree2D(v)` constructs a two-dimensional array with rows from 0 to `R` and columns
+  from 0 to `C`, inclusive. All values are implicitly initialized to `v`.
 - `at(r, c)` returns the value at row `r`, column `c`.
-- `query(r1, c1, r2, c2)` returns the result of `join_values()` applied to every value in the
+- `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows from `r1` to `r2`, inclusive, and columns from `c1` to `c2`,
   inclusive.
-- `update(r, c, d)` assigns the value `v` at (`r`, `c`) to `join_value_with_delta(v, d)`.
+- `update(r, c, d)` assigns the value `v` at (`r`, `c`) to `apply_delta(v, d)`.
 
 Time Complexity:
 - O(1) per call to the constructor.
-- O(log(MAXR)*log(MAXC)) per call to `at()`, `update()`, and `query()`.
+- O(log(R)*log(C)) per call to `at()`, `update()`, and `query()`.
 
 Space Complexity:
-- O(n) for storage of the array elements, where $n$ is the number of updated entries in the array.
-- O(log(MAXR) + log(MAXC)) auxiliary stack space for `update()`, `query()`, and `at()`.
+- O(n log(R) log(C)) for storage after $n$ point updates.
+- O(log(R) + log(C)) auxiliary stack space for `update()`, `query()`, and `at()`.
 
 */
 
@@ -40,12 +38,12 @@ Space Complexity:
 
 template<class T>
 class SegTree2D {
-  static const int MAXR = 1000000000;
-  static const int MAXC = 1000000000;
+  static const int R = 1000000000;
+  static const int C = 1000000000;
 
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_region(const T &v, int area) { return v; }
-  static T join_value_with_delta(const T &v, const T &d) { return d; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T repeat_value(const T &v, long long area) { return v; }
+  static T apply_delta(const T &v, const T &d) { return d; }
 
   struct InnerNode {
     T value;
@@ -62,68 +60,91 @@ class SegTree2D {
     OuterNode *left, *right;
 
     OuterNode(int lo, int hi, const T &v)
-        : root(0, MAXC, v), low(lo), high(hi), left(nullptr), right(nullptr) {}
+        : root(0, C, v), low(lo), high(hi), left(nullptr), right(nullptr) {}
   } *root;
 
   T init;
 
   // Helper variables for query() and update().
-  int tgt_r1, tgt_c1, tgt_r2, tgt_c2, width;
+  int tgt_r1, tgt_c1, tgt_r2, tgt_c2;
+  long long width;
 
-  template<class Node>
-  inline T call_query(Node *n, int area) {
-    return (n != nullptr) ? query(n) : join_region(init, area);
+  static long long length(int lo, int hi) { return hi - lo + 1LL; }
+
+  void append_result(T &res, bool &found, const T &v) {
+    res = found ? combine(res, v) : v;
+    found = true;
   }
 
-  T query(InnerNode *n) {
-    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
-    if (tgt_c1 <= lo && hi <= tgt_c2) {
-      T res = n->value;
-      if (tgt_c1 < lo) {
-        res = join_values(res, join_region(init, lo - tgt_c1 + 1));
-      }
-      if (hi < tgt_c2) {
-        res = join_values(res, join_region(init, tgt_c2 - hi + 1));
-      }
-      return res;
-    } else if (tgt_c2 <= mid) {
-      return call_query(n->left, tgt_c2 - tgt_c1 + 1);
-    } else if (mid < tgt_c1) {
-      return call_query(n->right, tgt_c2 - tgt_c1 + 1);
+  T query(InnerNode *n, int qlo, int qhi, long long rows) {
+    if (n == nullptr) {
+      return repeat_value(init, rows * length(qlo, qhi));
     }
-    return join_values(
-        call_query(n->left, std::min(tgt_c2, mid) - tgt_c1 + 1),
-        call_query(n->right, tgt_c2 - std::max(tgt_c1, mid + 1) + 1)
-    );
-  }
-
-  T query(OuterNode *n) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
-    if (tgt_r1 <= lo && hi <= tgt_r2) {
-      T res = query(&(n->root));
-      if (tgt_r1 < lo) {
-        res = join_values(res, join_region(init, width * (lo - tgt_r1 + 1)));
-      }
-      if (hi < tgt_r2) {
-        res = join_values(res, join_region(init, width * (tgt_r2 - hi + 1)));
-      }
-      return res;
-    } else if (tgt_r2 <= mid) {
-      return call_query(n->left, tgt_r2 - tgt_r1 + 1);
-    } else if (mid < tgt_r1) {
-      return call_query(n->right, tgt_r2 - tgt_r1 + 1);
+    T res;
+    bool found = false;
+    if (qlo < lo) {
+      int missing_hi = std::min(qhi, lo - 1);
+      append_result(res, found, repeat_value(init, rows * length(qlo, missing_hi)));
     }
-    return join_values(
-        call_query(n->left, width * (std::min(tgt_r2, mid) - tgt_r1 + 1)),
-        call_query(n->right, width * (tgt_r2 - std::max(tgt_r1, mid + 1) + 1))
-    );
+    int overlap_lo = std::max(qlo, lo), overlap_hi = std::min(qhi, hi);
+    if (overlap_lo <= overlap_hi) {
+      if (overlap_lo == lo && overlap_hi == hi) {
+        append_result(res, found, n->value);
+      } else {
+        if (overlap_lo <= mid) {
+          append_result(res, found, query(n->left, overlap_lo, std::min(overlap_hi, mid), rows));
+        }
+        if (mid < overlap_hi) {
+          append_result(
+              res, found, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi, rows)
+          );
+        }
+      }
+    }
+    if (hi < qhi) {
+      int missing_lo = std::max(qlo, hi + 1);
+      append_result(res, found, repeat_value(init, rows * length(missing_lo, qhi)));
+    }
+    return res;
   }
 
-  void update(InnerNode *n, int c, const T &d, bool leaf_row) {
+  T query(OuterNode *n, int qlo, int qhi) {
+    if (n == nullptr) {
+      return repeat_value(init, width * length(qlo, qhi));
+    }
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
+    T res;
+    bool found = false;
+    if (qlo < lo) {
+      int missing_hi = std::min(qhi, lo - 1);
+      append_result(res, found, repeat_value(init, width * length(qlo, missing_hi)));
+    }
+    int overlap_lo = std::max(qlo, lo), overlap_hi = std::min(qhi, hi);
+    if (overlap_lo <= overlap_hi) {
+      if (overlap_lo == lo && overlap_hi == hi) {
+        append_result(res, found, query(&(n->root), tgt_c1, tgt_c2, length(lo, hi)));
+      } else {
+        if (overlap_lo <= mid) {
+          append_result(res, found, query(n->left, overlap_lo, std::min(overlap_hi, mid)));
+        }
+        if (mid < overlap_hi) {
+          append_result(res, found, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi));
+        }
+      }
+    }
+    if (hi < qhi) {
+      int missing_lo = std::max(qlo, hi + 1);
+      append_result(res, found, repeat_value(init, width * length(missing_lo, qhi)));
+    }
+    return res;
+  }
+
+  void update(InnerNode *n, int c, const T &d, bool leaf_row, long long rows) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
     if (lo == hi) {
       if (leaf_row) {
-        n->value = join_value_with_delta(n->value, d);
+        n->value = apply_delta(n->value, d);
       } else {
         n->value = d;
       }
@@ -131,60 +152,66 @@ class SegTree2D {
     }
     InnerNode *&target = (c <= mid) ? n->left : n->right;
     if (target == nullptr) {
-      target = new InnerNode(c, c, init);
+      target = new InnerNode(c, c, repeat_value(init, rows));
     }
     if (target->low <= c && c <= target->high) {
-      update(target, c, d, leaf_row);
+      update(target, c, d, leaf_row, rows);
     } else {
+      int split_lo = lo, split_hi = hi, split_mid = mid;
       do {
-        if (c <= mid) {
-          hi = mid;
+        if (c <= split_mid) {
+          split_hi = split_mid;
         } else {
-          lo = mid + 1;
+          split_lo = split_mid + 1;
         }
-        mid = lo + (hi - lo) / 2;
-      } while ((c <= mid) == (target->low <= mid));
-      InnerNode *tmp = new InnerNode(lo, hi, init);
-      if (target->low <= mid) {
+        split_mid = split_lo + (split_hi - split_lo) / 2;
+      } while ((c <= split_mid) == (target->low <= split_mid));
+      InnerNode *tmp =
+          new InnerNode(split_lo, split_hi, repeat_value(init, rows * length(split_lo, split_hi)));
+      if (target->low <= split_mid) {
         tmp->left = target;
       } else {
         tmp->right = target;
       }
       target = tmp;
-      update(tmp, c, d, leaf_row);
+      update(tmp, c, d, leaf_row, rows);
     }
-    T left_value = (n->left != nullptr) ? n->left->value : join_region(init, mid - lo + 1);
-    T right_value = (n->right != nullptr) ? n->right->value : join_region(init, hi - mid);
-    n->value = join_values(left_value, right_value);
+    T left_value =
+        (n->left != nullptr) ? n->left->value : repeat_value(init, rows * length(lo, mid));
+    T right_value =
+        (n->right != nullptr) ? n->right->value : repeat_value(init, rows * length(mid + 1, hi));
+    n->value = combine(left_value, right_value);
   }
 
   void update(OuterNode *n, int r, int c, const T &d) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
+    long long rows = length(lo, hi);
     if (lo == hi) {
-      update(&(n->root), c, d, true);
+      update(&(n->root), c, d, true, 1);
       return;
     }
     if (r <= mid) {
       if (n->left == nullptr) {
-        n->left = new OuterNode(lo, mid, init);
+        n->left = new OuterNode(lo, mid, repeat_value(init, length(lo, mid) * length(0, C)));
       }
       update(n->left, r, c, d);
     } else {
       if (n->right == nullptr) {
-        n->right = new OuterNode(mid + 1, hi, init);
+        n->right =
+            new OuterNode(mid + 1, hi, repeat_value(init, length(mid + 1, hi) * length(0, C)));
       }
       update(n->right, r, c, d);
     }
-    T value = join_region(init, hi - lo + 1);
+    T value = repeat_value(init, rows);
     if (n->left != nullptr || n->right != nullptr) {
       tgt_c1 = tgt_c2 = c;
-      T left_value =
-          (n->left != nullptr) ? query(&(n->left->root)) : join_region(init, mid - lo + 1);
-      T right_value =
-          (n->right != nullptr) ? query(&(n->right->root)) : join_region(init, hi - mid);
-      value = join_values(left_value, right_value);
+      T left_value = (n->left != nullptr) ? query(&(n->left->root), c, c, length(lo, mid))
+                                          : repeat_value(init, length(lo, mid));
+      T right_value = (n->right != nullptr) ? query(&(n->right->root), c, c, length(mid + 1, hi))
+                                            : repeat_value(init, length(mid + 1, hi));
+      value = combine(left_value, right_value);
     }
-    update(&(n->root), c, value, false);
+    update(&(n->root), c, value, false, rows);
   }
 
   static void clean_up(InnerNode *n) {
@@ -206,7 +233,8 @@ class SegTree2D {
   }
 
  public:
-  explicit SegTree2D(const T &v = T()) : root(new OuterNode(0, MAXR, v)), init(v) {}
+  explicit SegTree2D(const T &v = T())
+      : root(new OuterNode(0, R, repeat_value(v, length(0, R) * length(0, C)))), init(v) {}
 
   ~SegTree2D() { clean_up(root); }
   T at(int r, int c) { return query(r, c, r, c); }
@@ -216,8 +244,8 @@ class SegTree2D {
     tgt_c1 = c1;
     tgt_r2 = r2;
     tgt_c2 = c2;
-    width = c2 - c1;
-    return query(root);
+    width = length(c1, c2);
+    return query(root, r1, r2);
   }
 
   void update(int r, int c, const T &d) { update(root, r, c, d); }

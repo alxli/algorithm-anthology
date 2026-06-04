@@ -4,34 +4,32 @@ Maintain a two-dimensional array while supporting dynamic queries of rectangular
 dynamic updates of individual indices. This implementation uses lazy initialization of nodes to
 conserve memory while supporting large indices.
 
-The query operation is defined by the `join_values()` and `join_region()` functions where
-`join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)` for all values `x`, `y`, and
-`z` in the array. The `join_region(v, area)` function must be defined in conjunction to efficiently
-return the result of `join_values()` applied to a rectangular sub-array of `area` elements. The
-default code below assumes a numerical array type, defining queries for the "min" of the target
-range. Another possible query operation is "sum", in which case `join_values(a, b)` should return $a
-+ b$ and `join_region(v, area)` should return $v \cdot area$.
+The query operation is defined by a commutative associative aggregate function `combine(a, b)`.
+Because untouched regions are implicit, `repeat_value(v, area)` must return the aggregate summary of
+`area` copies of the initial value `v`. The default code below assumes a numerical array type,
+defining queries for the "min" of the target range. For rectangle-sum queries, `combine(a, b)`
+should return $a + b$ and `repeat_value(v, area)` should return $v \cdot area$.
 
-The update operation is defined by the `join_value_with_delta()` function, which determines the
-change made to array values. The default code below defines updates that "set" the chosen array
-index to a new value. Another possible update operation is "increment", in which
-`join_value_with_delta(v, d)` should be defined to return $v + d$.
+The point update operation is defined by `apply_delta(v, d)`, which returns the new value at one
+updated cell. The default code below defines updates that "set" the chosen cell to a new value.
+Another possible update operation is "increment", in which case `apply_delta(v, d)` should return
+$v + d$.
 
-- `Quadtree(v)` constructs a two-dimensional array with rows from 0 to `MAXR` and columns from 0 to
-  `MAXC`, inclusive. All values are implicitly initialized to `v`.
+- `Quadtree(v)` constructs a two-dimensional array with rows from 0 to `R` and columns from 0 to
+  `C`, inclusive. All values are implicitly initialized to `v`.
 - `at(r, c)` returns the value at row `r`, column `c`.
-- `query(r1, c1, r2, c2)` returns the result of `join_values()` applied to every value in the
+- `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows from `r1` to `r2`, inclusive, and columns from `c1` to `c2`,
   inclusive.
-- `update(r, c, d)` assigns the value `v` at (`r`, `c`) to `join_value_with_delta(v, d)`.
+- `update(r, c, d)` assigns the value `v` at (`r`, `c`) to `apply_delta(v, d)`.
 
 Time Complexity:
 - O(1) per call to the constructor.
-- O(max(MAXR, MAXC)) per call to `at()`, `update()`, and `query()`.
+- O(max(R, C)) per call to `at()`, `update()`, and `query()`.
 
 Space Complexity:
-- O(n) for storage of the array elements, where $n$ is the number of updated entries in the array.
-- O(sqrt(max(MAXR, MAXC))) auxiliary stack space for `update()`, `query()`, and `at()`.
+- O(n log(max(R, C))) for storage of the quadtree nodes after $n$ point updates.
+- O(log(max(R, C))) auxiliary stack space for `update()`, `query()`, and `at()`.
 
 */
 
@@ -40,12 +38,12 @@ Space Complexity:
 
 template<class T>
 class Quadtree {
-  static const int MAXR = 1000000000;
-  static const int MAXC = 1000000000;
+  static const int R = 1000000000;
+  static const int C = 1000000000;
 
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_region(const T &v, int area) { return v; }
-  static T join_value_with_delta(const T &v, const T &d) { return d; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T repeat_value(const T &v, long long area) { return v; }
+  static T apply_delta(const T &v, const T &d) { return d; }
 
   struct Node {
     T value;
@@ -66,6 +64,19 @@ class Quadtree {
   T res;
   bool found;
 
+  static long long area(int r1, int c1, int r2, int c2) {
+    return static_cast<long long>(r2 - r1 + 1) * (c2 - c1 + 1);
+  }
+
+  void append_result(const T &v) {
+    res = found ? combine(res, v) : v;
+    found = true;
+  }
+
+  T child_value(Node *n, int r1, int c1, int r2, int c2) {
+    return (n != nullptr) ? n->value : repeat_value(init, area(r1, c1, r2, c2));
+  }
+
   void query(Node *n, int r1, int c1, int r2, int c2) {
     if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
       return;
@@ -73,14 +84,11 @@ class Quadtree {
     if (n == nullptr) {
       int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
       int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
-      T v = join_region(init, rlen * clen);
-      res = found ? join_values(res, v) : v;
-      found = true;
+      append_result(repeat_value(init, static_cast<long long>(rlen) * clen));
       return;
     }
     if (tgt_r1 <= r1 && r2 <= tgt_r2 && tgt_c1 <= c1 && c2 <= tgt_c2) {
-      res = found ? join_values(res, n->value) : n->value;
-      found = true;
+      append_result(n->value);
       return;
     }
     int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
@@ -95,14 +103,14 @@ class Quadtree {
   T delta;
 
   void update(Node *&n, int r1, int c1, int r2, int c2) {
-    if (n == nullptr) {
-      n = new Node(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
-    }
     if (tgt_r < r1 || tgt_r > r2 || tgt_c < c1 || tgt_c > c2) {
       return;
     }
+    if (n == nullptr) {
+      n = new Node(repeat_value(init, area(r1, c1, r2, c2)));
+    }
     if (r1 == r2 && c1 == c2) {
-      n->value = join_value_with_delta(n->value, delta);
+      n->value = apply_delta(n->value, delta);
       return;
     }
     int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
@@ -110,11 +118,16 @@ class Quadtree {
     update(n->child[1], rmid + 1, c1, r2, cmid);
     update(n->child[2], r1, cmid + 1, rmid, c2);
     update(n->child[3], rmid + 1, cmid + 1, r2, c2);
-    bool found = false;
-    for (auto *c : n->child) {
-      n->value = found ? join_values(n->value, c->value) : c->value;
-      found = true;
-    }
+    n->value = combine(
+        combine(
+            child_value(n->child[0], r1, c1, rmid, cmid),
+            child_value(n->child[1], rmid + 1, c1, r2, cmid)
+        ),
+        combine(
+            child_value(n->child[2], r1, cmid + 1, rmid, c2),
+            child_value(n->child[3], rmid + 1, cmid + 1, r2, c2)
+        )
+    );
   }
 
   static void clean_up(Node *n) {
@@ -138,15 +151,15 @@ class Quadtree {
     tgt_r2 = r2;
     tgt_c2 = c2;
     found = false;
-    query(root, 0, 0, MAXR, MAXC);
-    return found ? res : join_region(init, (r2 - r1 + 1) * (c2 - c1 + 1));
+    query(root, 0, 0, R, C);
+    return found ? res : repeat_value(init, area(r1, c1, r2, c2));
   }
 
   void update(int r, int c, const T &d) {
     tgt_r = r;
     tgt_c = c;
     delta = d;
-    update(root, 0, 0, MAXR, MAXC);
+    update(root, 0, 0, R, C);
   }
 };
 

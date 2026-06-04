@@ -4,6 +4,7 @@
 Usage:
   python3 tools/run_tests.py              # build + run, show failures only
   python3 tools/run_tests.py --output     # also print stdout from each file
+  python3 tools/run_tests.py --chapter 2  # run one chapter
   python3 tools/run_tests.py 2-Data-Structures/2.3.2_Treap.cpp  # single file
 """
 
@@ -54,18 +55,33 @@ def compile_and_run(src: Path, show_output: bool) -> tuple[bool, str]:
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('files', nargs='*', help='Specific .cpp files (default: all chapters)')
+    parser.add_argument('--chapter', '-c', type=int, help='Run all .cpp files in one chapter')
     parser.add_argument('--output', '-o', action='store_true', help='Print stdout from each file')
     args = parser.parse_args()
 
     root = Path(__file__).parent.parent
 
-    if args.files:
+    if args.files and args.chapter is not None:
+        parser.error('--chapter cannot be combined with explicit files')
+
+    chapter_dirs = [
+        d
+        for d in root.iterdir()
+        if re.match(r'\d+-', d.name) and d.is_dir()
+    ]
+
+    if args.chapter is not None:
+        prefix = f'{args.chapter}-'
+        dirs = [d for d in chapter_dirs if d.name.startswith(prefix)]
+        if not dirs:
+            parser.error(f'chapter {args.chapter} directory not found')
+        paths = sorted(p for d in dirs for p in d.glob('*.cpp'))
+    elif args.files:
         paths = [Path(f).resolve() for f in args.files]
     else:
         paths = sorted(
             p
-            for d in root.iterdir()
-            if re.match(r'\d+-', d.name) and d.is_dir()
+            for d in chapter_dirs
             for p in sorted(d.glob('*.cpp'))
         )
 

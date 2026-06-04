@@ -4,23 +4,20 @@ Maintain a fixed-size array while supporting both dynamic queries and updates of
 subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes
 to conserve memory while supporting large indices.
 
-The query operation is defined by an associative `join_values()` function which satisfies
-`join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)` for all values `x`, `y`, and
-`z` in the array. The default code below assumes a numerical array type, defining queries for the
-"min" of the target range. Another possible query operation is "sum", in which case the
-`join_values()` function should be defined to return $a + b$.
+The query operation is defined by an associative aggregate function `combine(a, b)`. Since untouched
+nodes are implicit, `repeat_value(v, len)` must return the aggregate summary of `len` copies of the
+initial value `v`. The default code below assumes a numerical array type, defining queries for the
+"min" of the target range. For range-sum queries, `combine(a, b)` should return $a + b$ and
+`repeat_value(v, len)` should return $v \cdot len$.
 
-The update operation is defined by the `join_value_with_delta()` and `join_deltas()` functions,
-which determines the change made to array values. These must satisfy:
-- `join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3)`.
-- `join_value_with_delta(join_values(v, ..., v), d, m)` should be equal to
-  `join_values(join_value_with_delta(v, d, 1), ...)`, with $m$ values on each side.
-- if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then
-  `join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1)` should be equivalent to $m$ sequential
-  calls to `join_value_with_delta(v, d_i, 1)` for $i = 1, ..., m$.
-The default code below defines updates that "set" the chosen array index to a new value. Another
-possible update operation is "increment", in which case `join_value_with_delta(v, d, len)` should be
-defined to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined to return $d1 + d2$.
+Range updates are defined by `apply_delta(v, d, len)`, which applies an update delta `d` to an
+aggregate summary `v` representing `len` array values, and by `compose_deltas(old, d)`, which
+combines a pending older delta with a newer delta in that order. These functions do not support
+arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to
+each child segment and then combining the results, and composed deltas must be equivalent to
+performing their updates sequentially. The default code below defines range assignment. For range
+increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
+`v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
 - `SegTree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
   and all values initialized to `v`.
@@ -28,12 +25,11 @@ defined to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined 
   initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`, where `i` is between 0 and `size() - 1`.
-- `query(lo, hi)` returns the result of `join_values()` applied to all indices from `lo` to `hi`,
-  inclusive. If the distance between `lo` and `hi` is 1, then the single specified value is
-  returned.
-- `update(i, d)` assigns the value `v` at index `i` to `join_value_with_delta(v, d)`.
+- `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
+  inclusive. If `lo == hi`, then the single specified value is returned.
+- `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
 - `update(lo, hi, d)` modifies the value at each array index from `lo` to `hi`, inclusive, by
-  respectively joining them with `d` using `join_value_with_delta()`.
+  applying the delta `d` to each value.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
@@ -54,10 +50,10 @@ template<class T>
 class SegTree {
   static const int MAXN = 1000000000;
 
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_segment(const T &v, int len) { return v; }
-  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-  static T join_deltas(const T &d1, const T &d2) { return d2; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T repeat_value(const T &v, long long len) { return v; }
+  static T apply_delta(const T &v, const T &d, long long len) { return d; }
+  static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
     T value, delta;
@@ -69,11 +65,11 @@ class SegTree {
 
   T init;
 
-  void update_delta(Node *&n, const T &d, int len) {
+  void update_delta(Node *&n, const T &d, long long len) {
     if (n == nullptr) {
-      n = new Node(join_segment(init, len));
+      n = new Node(repeat_value(init, len));
     }
-    n->delta = n->pending ? join_deltas(n->delta, d) : d;
+    n->delta = n->pending ? compose_deltas(n->delta, d) : d;
     n->pending = true;
   }
 
@@ -82,7 +78,7 @@ class SegTree {
       return;
     }
     if (n->pending) {
-      n->value = join_value_with_delta(n->value, n->delta, hi - lo + 1);
+      n->value = apply_delta(n->value, n->delta, hi - lo + 1);
       if (lo != hi) {
         int mid = lo + (hi - lo) / 2;
         update_delta(n->left, n->delta, mid - lo + 1);
@@ -94,7 +90,7 @@ class SegTree {
 
   T query(Node *n, int lo, int hi, int tgt_lo, int tgt_hi) {
     if (n == nullptr) {
-      return join_segment(init, hi - lo + 1);
+      return repeat_value(init, hi - lo + 1);
     }
     push_delta(n, lo, hi);
     if (lo == tgt_lo && hi == tgt_hi) {
@@ -102,7 +98,7 @@ class SegTree {
     }
     int mid = lo + (hi - lo) / 2;
     if (tgt_lo <= mid && mid < tgt_hi) {
-      return join_values(
+      return combine(
           query(n->left, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
           query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi)
       );
@@ -115,9 +111,13 @@ class SegTree {
 
   void update(Node *&n, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
     if (n == nullptr) {
-      n = new Node(join_segment(init, hi - lo + 1));
+      if (hi < tgt_lo || lo > tgt_hi) {
+        return;
+      }
+      n = new Node(repeat_value(init, hi - lo + 1));
+    } else {
+      push_delta(n, lo, hi);
     }
-    push_delta(n, lo, hi);
     if (hi < tgt_lo || lo > tgt_hi) {
       return;
     }
@@ -130,7 +130,9 @@ class SegTree {
     int mid = lo + (hi - lo) / 2;
     update(n->left, lo, mid, tgt_lo, tgt_hi, d);
     update(n->right, mid + 1, hi, tgt_lo, tgt_hi, d);
-    n->value = join_values(n->left->value, n->right->value);
+    T left_value = (n->left != nullptr) ? n->left->value : repeat_value(init, mid - lo + 1);
+    T right_value = (n->right != nullptr) ? n->right->value : repeat_value(init, hi - mid);
+    n->value = combine(left_value, right_value);
   }
 
   void clean_up(Node *n) {

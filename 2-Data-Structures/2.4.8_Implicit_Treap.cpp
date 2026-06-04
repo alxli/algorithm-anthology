@@ -5,23 +5,18 @@ queries and updates of contiguous subarrays via the lazy propagation technique. 
 balanced binary tree structure by preserving the heap property on the randomly generated priority
 values of nodes, thereby making insertions and deletions run in O(log n) with high probability.
 
-The query operation is defined by an associative `join_values()` function which satisfies
-`join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)` for all values `x`, `y`, and
-`z` in the array. The default code below assumes a numerical array type, defining queries for the
-"min" of the target range. Another possible query operation is "sum", in which case the
-`join_values()` function should be defined to return $a + b$.
+The query operation is defined by an associative aggregate function `combine(a, b)`. The default
+code below assumes a numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case `combine(a, b)` should return $a + b$.
 
-The update operation is defined by the `join_value_with_delta()` and `join_deltas()` functions,
-which determines the change made to array values. These must satisfy:
-- `join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3)`.
-- `join_value_with_delta(join_values(v, ..., v), d, m)` should be equal to
-  `join_values(join_value_with_delta(v, d, 1), ...)`, with $m$ values on each side.
-- if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then
-  `join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1)` should be equivalent to $m$ sequential
-  calls to `join_value_with_delta(v, d_i, 1)` for $i = 1, ..., m$.
-The default code below defines updates that "set" the chosen array index to a new value. Another
-possible update operation is "increment", in which case `join_value_with_delta(v, d, len)` should be
-defined to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined to return $d1 + d2$.
+Range updates are defined by `apply_delta(v, d, len)`, which applies an update delta `d` to an
+aggregate summary `v` representing `len` array values, and by `compose_deltas(old, d)`, which
+combines a pending older delta with a newer delta in that order. These functions do not support
+arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to
+each child segment and then combining the results, and composed deltas must be equivalent to
+performing their updates sequentially. The default code below defines range assignment. For range
+increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
+`v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
 This data structure shares every operation of one-dimensional segment trees in this section, with
 the additional operations `empty()`, `insert()`, `erase()`, `push_back()`, and `pop_back()`
@@ -44,9 +39,9 @@ Space Complexity:
 
 template<class T>
 class ImplicitTreap {
-  static T join_values(const T &a, const T &b) { return a < b ? a : b; }
-  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-  static T join_deltas(const T &d1, const T &d2) { return d2; }
+  static T combine(const T &a, const T &b) { return a < b ? a : b; }
+  static T apply_delta(const T &v, const T &d, long long len) { return d; }
+  static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
@@ -74,19 +69,19 @@ class ImplicitTreap {
     }
     n->subtree_value = n->value;
     if (n->left != nullptr) {
-      n->subtree_value = join_values(n->subtree_value, n->left->subtree_value);
+      n->subtree_value = combine(n->subtree_value, n->left->subtree_value);
     }
     if (n->right != nullptr) {
-      n->subtree_value = join_values(n->subtree_value, n->right->subtree_value);
+      n->subtree_value = combine(n->subtree_value, n->right->subtree_value);
     }
     n->size = 1 + size(n->left) + size(n->right);
   }
 
   static void update_delta(Node *n, const T &d) {
     if (n != nullptr) {
-      n->value = join_value_with_delta(n->value, d, 1);
-      n->subtree_value = join_value_with_delta(n->subtree_value, d, n->size);
-      n->delta = n->pending ? join_deltas(n->delta, d) : d;
+      n->value = apply_delta(n->value, d, 1);
+      n->subtree_value = apply_delta(n->subtree_value, d, n->size);
+      n->delta = n->pending ? compose_deltas(n->delta, d) : d;
       n->pending = true;
     }
   }

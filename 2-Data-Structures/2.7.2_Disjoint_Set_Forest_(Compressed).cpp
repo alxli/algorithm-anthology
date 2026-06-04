@@ -3,8 +3,8 @@
 Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees.
 Each partition is assigned a unique representative known as the parent, or root. The following
 implements two well-known optimizations known as union-by-rank and path compression. This version
-uses an `std::map` for storage and coordinate compression (thus, element types must meet the
-requirements of key types for `std::map`).
+uses an `std::unordered_map` for storage and coordinate compression (thus, element types must meet the
+requirements of key types for `std::unordered_map`).
 
 - `make_set(u)` creates a new partition consisting of the single element `u`, which must not have
   been previously added to the data structure.
@@ -33,13 +33,13 @@ Space Complexity:
 
 */
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 template<class T>
 class DisjointSetForest {
   int num_elements, num_sets;
-  std::map<T, int> id;
+  std::unordered_map<T, int> id;
   std::vector<int> root, rank;
 
   int find_root(int u) {
@@ -84,7 +84,7 @@ class DisjointSetForest {
   }
 
   std::vector<std::vector<T>> get_all_sets() {
-    std::map<int, std::vector<T>> tmp;
+    std::unordered_map<int, std::vector<T>> tmp;
     for (auto &[key, val] : id) {
       tmp[find_root(val)].push_back(key);
     }

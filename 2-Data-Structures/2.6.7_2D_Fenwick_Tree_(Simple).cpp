@@ -2,8 +2,8 @@
 
 Maintain a 2D array of numerical type, allowing for updates of individual cells in the matrix (point
 update) and queries for the sum of rectangular sub-matrices (range query). This implementation
-assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to `MAXR`, inclusive,
-and columns have valid indices from 1 to `MAXC`, inclusive).
+assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to `R`, inclusive,
+and columns have valid indices from 1 to `C`, inclusive).
 
 - `initialize()` resets the data structure.
 - `a[r][c]` stores the value at index (`r`, `c`).
@@ -15,23 +15,22 @@ and columns have valid indices from 1 to `MAXC`, inclusive).
   lower-right corner (`r2`, `c2`).
 
 Time Complexity:
-- O(n*m) per call to `initialize()`, where $n$ is the number of rows and $m$ is the number of
-  columns.
-- O(log(n)*log(m)) per call to all other operations.
+- O(R*C) per call to `initialize()`.
+- O(log(R)*log(C)) per call to all other operations.
 
 Space Complexity:
-- O(n*m) for storage of the array elements.
+- O(R*C) for storage of the array elements.
 - O(1) auxiliary for all operations.
 
 */
 
-const int MAXR = 100, MAXC = 100;
-int a[MAXR + 1][MAXC + 1];
-int bits[MAXR + 1][MAXC + 1];
+const int R = 100, C = 100;
+int a[R + 1][C + 1];
+int bits[R + 1][C + 1];
 
 void initialize() {
-  for (int i = 0; i <= MAXR; i++) {
-    for (int j = 0; j <= MAXC; j++) {
+  for (int i = 0; i <= R; i++) {
+    for (int j = 0; j <= C; j++) {
       a[i][j] = bits[i][j] = 0;
     }
   }
@@ -39,8 +38,8 @@ void initialize() {
 
 void add(int r, int c, int x) {
   a[r][c] += x;
-  for (int i = r; i <= MAXR; i += i & -i) {
-    for (int j = c; j <= MAXC; j += j & -j) {
+  for (int i = r; i <= R; i += i & -i) {
+    for (int j = c; j <= C; j += j & -j) {
       bits[i][j] += x;
     }
   }

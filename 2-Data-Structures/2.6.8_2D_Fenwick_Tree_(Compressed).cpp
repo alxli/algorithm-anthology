@@ -2,9 +2,9 @@
 
 Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to be simultaneously
 incremented by arbitrary values (range update) and queries for the sum of rectangular sub-matrices
-(range query). This implementation uses `std::map` for coordinate compression, allowing for large
-indices to be accessed with efficient space complexity. That is, rows have valid indices from 0 to
-`MAXR`, inclusive, and columns have valid indices from 0 to `MAXC`, inclusive.
+(range query). This implementation uses `std::unordered_map` for coordinate compression, allowing
+for large indices to be accessed with efficient space complexity. That is, rows have valid indices
+from 0 to `R`, inclusive, and columns have valid indices from 0 to `C`, inclusive.
 
 - `add(r, c, x)` adds `x` to the value at index (`r`, `c`).
 - `add(r1, c1, r2, c2, x)` adds `x` to all indices in the rectangle with upper-left corner (`r1`,
@@ -17,30 +17,36 @@ indices to be accessed with efficient space complexity. That is, rows have valid
 - `at(r, c)` returns the value at index (`r`, `c`).
 
 Time Complexity:
-- O(log^2(MAXR)*log^2(MAXC)) per call to all member functions. If `std::map` is replaced with
-  `std::unordered_map`, then the amortized running time will become O(log(MAXR)*log(MAXC)).
+- O(log(R)*log(C)) per call to all member functions.
 
 Space Complexity:
-- O(n*log(MAXR)*log(MAXC)) for storage of the array elements, where $n$ is the number of distinct
-  indices that have been accessed across all of the operations so far.
+- O(n*log(R)*log(C)) for storage of the array elements, where $n$ is the number of
+  distinct indices that have been accessed across all of the operations so far.
 - O(1) auxiliary for all operations.
 
 */
 
-#include <map>
+#include <unordered_map>
 #include <utility>
 
 template<class T>
 class FenwickTree2D {
-  static const int MAXR = 1000000001;
-  static const int MAXC = 1000000001;
-  std::map<std::pair<int, int>, T> t1, t2, t3, t4;
+  static const int R = 1000000001;
+  static const int C = 1000000001;
+
+  std::unordered_map<long long, T> t1, t2, t3, t4;
 
   template<class Map>
-  void add(Map &tree, int r, int c, const T &x) {
-    for (int i = r + 1; i <= MAXR; i += i & -i) {
-      for (int j = c + 1; j <= MAXC; j += j & -j) {
-        tree[{i, j}] += x;
+  static T get(const Map &tree, int r, int c) {
+    auto it = tree.find(static_cast<long long>(r) * C + c);
+    return it == tree.end() ? T() : it->second;
+  }
+
+  template<class Map>
+  static void add(Map &tree, int r, int c, const T &x) {
+    for (int i = r + 1; i <= R; i += i & -i) {
+      for (int j = c + 1; j <= C; j += j & -j) {
+        tree[static_cast<long long>(i) * C + j] += x;
       }
     }
   }
@@ -74,10 +80,10 @@ class FenwickTree2D {
     T s1 = 0, s2 = 0, s3 = 0, s4 = 0;
     for (int i = r; i > 0; i -= i & -i) {
       for (int j = c; j > 0; j -= j & -j) {
-        s1 += t1[{i, j}];
-        s2 += t2[{i, j}];
-        s3 += t3[{i, j}];
-        s4 += t4[{i, j}];
+        s1 += get(t1, i, j);
+        s2 += get(t2, i, j);
+        s3 += get(t3, i, j);
+        s4 += get(t4, i, j);
       }
     }
     return s1 * r * c + s2 * r + s3 * c + s4;

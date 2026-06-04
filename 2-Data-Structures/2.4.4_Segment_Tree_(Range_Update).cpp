@@ -3,23 +3,18 @@
 Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous
 subarrays via the lazy propagation technique.
 
-The query operation is defined by an associative `join_values()` function which satisfies
-`join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)` for all values `x`, `y`, and
-`z` in the array. The default code below assumes a numerical array type, defining queries for the
-"min" of the target range. Another possible query operation is "sum", in which case the
-`join_values()` function should be defined to return $a + b$.
+The query operation is defined by an associative aggregate function `combine(a, b)`. The default
+code below assumes a numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case `combine(a, b)` should return $a + b$.
 
-The update operation is defined by the `join_value_with_delta()` and `join_deltas()` functions,
-which determines the change made to array values. These must satisfy:
-- `join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3)`.
-- `join_value_with_delta(join_values(v, ..., v), d, m)` should be equal to
-  `join_values(join_value_with_delta(v, d, 1), ...)`, with $m$ values on each side.
-- if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then
-  `join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1)` should be equivalent to $m$ sequential
-  calls to `join_value_with_delta(v, d_i, 1)` for $i = 1, ..., m$.
-The default code below defines updates that "set" the chosen array index to a new value. Another
-possible update operation is "increment", in which case `join_value_with_delta(v, d, len)` should be
-defined to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined to return $d1 + d2$.
+Range updates are defined by `apply_delta(v, d, len)`, which applies an update delta `d` to an
+aggregate summary `v` representing `len` array values, and by `compose_deltas(old, d)`, which
+combines a pending older delta with a newer delta in that order. These functions do not support
+arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to
+each child segment and then combining the results, and composed deltas must be equivalent to
+performing their updates sequentially. The default code below defines range assignment. For range
+increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
+`v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
 - `SegTree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
   and all values initialized to `v`.
@@ -27,12 +22,11 @@ defined to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined 
   initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`, where `i` is between 0 and `size() - 1`.
-- `query(lo, hi)` returns the result of `join_values()` applied to all indices from `lo` to `hi`,
-  inclusive. If the distance between `lo` and `hi` is 1, then the single specified value is
-  returned.
-- `update(i, d)` assigns the value `v` at index `i` to `join_value_with_delta(v, d)`.
+- `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
+  inclusive. If `lo == hi`, then the single specified value is returned.
+- `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
 - `update(lo, hi, d)` modifies the value at each array index from `lo` to `hi`, inclusive, by
-  respectively joining them with `d` using `join_value_with_delta()`.
+  applying the delta `d` to each value.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
@@ -51,9 +45,9 @@ Space Complexity:
 
 template<class T>
 class SegTree {
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-  static T join_deltas(const T &d1, const T &d2) { return d2; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T apply_delta(const T &v, const T &d, long long len) { return d; }
+  static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   int len;
   std::vector<T> value, delta;
@@ -67,7 +61,7 @@ class SegTree {
     int mid = lo + (hi - lo) / 2;
     build(i * 2 + 1, lo, mid, v);
     build(i * 2 + 2, mid + 1, hi, v);
-    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
+    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   template<class It>
@@ -79,16 +73,16 @@ class SegTree {
     int mid = lo + (hi - lo) / 2;
     build(i * 2 + 1, lo, mid, arr);
     build(i * 2 + 2, mid + 1, hi, arr);
-    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
+    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   void push_delta(int i, int lo, int hi) {
     if (pending[i]) {
-      value[i] = join_value_with_delta(value[i], delta[i], hi - lo + 1);
+      value[i] = apply_delta(value[i], delta[i], hi - lo + 1);
       if (lo != hi) {
         int l = 2 * i + 1, r = 2 * i + 2;
-        delta[l] = pending[l] ? join_deltas(delta[l], delta[i]) : delta[i];
-        delta[r] = pending[r] ? join_deltas(delta[r], delta[i]) : delta[i];
+        delta[l] = pending[l] ? compose_deltas(delta[l], delta[i]) : delta[i];
+        delta[r] = pending[r] ? compose_deltas(delta[r], delta[i]) : delta[i];
         pending[l] = pending[r] = true;
       }
       pending[i] = false;
@@ -102,7 +96,7 @@ class SegTree {
     }
     int mid = lo + (hi - lo) / 2;
     if (tgt_lo <= mid && mid < tgt_hi) {
-      return join_values(
+      return combine(
           query(i * 2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
           query(i * 2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi)
       );
@@ -126,7 +120,7 @@ class SegTree {
     }
     update(2 * i + 1, lo, (lo + hi) / 2, tgt_lo, tgt_hi, d);
     update(2 * i + 2, (lo + hi) / 2 + 1, hi, tgt_lo, tgt_hi, d);
-    value[i] = join_values(value[2 * i + 1], value[2 * i + 2]);
+    value[i] = combine(value[2 * i + 1], value[2 * i + 2]);
   }
 
  public:

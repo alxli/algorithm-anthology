@@ -6,23 +6,22 @@ addition, support testing of whether two nodes are connected in the forest, as w
 and spliting of trees by adding or removing specific edges. Link/cut forests divide each of its
 trees into vertex-disjoint paths, each represented by a splay tree.
 
-The query operation is defined by an associative `join_values()` function which satisfies
-`join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)` for all values `x`, `y`, and
-`z` in the forest. The default code below assumes a numerical forest type, defining queries for the
-"min" of the target range. Another possible query operation is "sum", in which case the
-`join_values()` function should be defined to return $a + b$.
+The query operation is defined by an associative `combine()` function which satisfies
+`combine(x, combine(y, z)) = combine(combine(x, y), z)` for all values `x`, `y`, and `z` in the
+forest. The default code below assumes a numerical forest type, defining queries for the "min" of
+the target range. Another possible query operation is "sum", in which case `combine(a, b)` should
+return $a + b$. For direction-independent path queries, `combine()` should also be commutative;
+otherwise, store enough information in each aggregate to combine paths in the required order.
 
-The update operation is defined by the `join_value_with_delta()` and `join_deltas()` functions,
-which determines the change made to values. These must satisfy:
-- `join_deltas(d1, join_deltas(d2, d3)) = join_deltas(join_deltas(d1, d2), d3)`.
-- `join_value_with_delta(join_values(v, ..., v), d, m)` should be equal to
-  `join_values(join_value_with_delta(v, d, 1), ...)`, with $m$ values on each side.
-- if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then
-  `join_value_with_delta(v, join_deltas(d_1, ..., d_m), 1)` should be equivalent to $m$ sequential
-  calls to `join_value_with_delta(v, d_i, 1)` for $i = 1, ..., m$.
-The default code below defines updates that "set" a path's nodes to a new value. Another possible
-update operation is "increment", in which case `join_value_with_delta(v, d, len)` should be defined
-to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined to return $d1 + d2$.
+The update operation is defined by `apply_delta()` and `compose_deltas()`. A delta must act on an
+aggregate summary of a path of length `len`: `apply_delta(v, d, len)` returns the aggregate after
+applying update `d` to every element represented by aggregate `v`. Pending deltas are combined in
+chronological order by `compose_deltas(old, d)`, meaning "apply `old`, then apply `d`". These hooks
+do not support arbitrary query/update pairings; the delta operation must distribute over
+`combine()`, and composed deltas must have the same effect as applying their updates sequentially.
+The default code below defines updates that "set" a path's nodes to a new value. For range increment
+updates, `apply_delta(v, d, len)` would return `v + d` for min/max queries, or `v + d * len` for sum
+queries, and `compose_deltas(old, d)` would return `old + d`.
 
 - `LinkCutForest()` constructs an empty forest with no trees.
 - `size()` returns the number of nodes in the forest.
@@ -34,10 +33,10 @@ to return $v + d \cdot len$ and `join_deltas(d1, d2)` should be defined to retur
   connected.
 - `cut(a, b)` removes the edge between the nodes `a` and `b`, both of which must exist and be
   connected.
-- `query(a, b)` returns the result of `join_values()` applied to all values on the path from the
-  node `a` to node `b`.
+- `query(a, b)` returns the result of `combine()` applied to all values on the path from the node
+  `a` to node `b`.
 - `update(a, b, d)` modifies all the values on the path from node `a` to node `b` by respectively
-  joining them with `d` using `join_value_with_delta()`.
+  applying the delta `d`.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `trees()`.
@@ -56,9 +55,9 @@ Space Complexity:
 
 template<class T>
 class LinkCutForest {
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-  static T join_deltas(const T &d1, const T &d2) { return d2; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T apply_delta(const T &v, const T &d, int len) { return d; }
+  static T compose_deltas(const T &old, const T &d) { return d; }
 
   struct Node {
     T value, subtree_value, delta;
@@ -81,7 +80,7 @@ class LinkCutForest {
     }
 
     inline T get_subtree_value() const {
-      return pending ? join_value_with_delta(subtree_value, delta, size) : subtree_value;
+      return pending ? apply_delta(subtree_value, delta, size) : subtree_value;
     }
 
     void push() {
@@ -96,14 +95,14 @@ class LinkCutForest {
         }
       }
       if (pending) {
-        value = join_value_with_delta(value, delta, 1);
-        subtree_value = join_value_with_delta(subtree_value, delta, size);
+        value = apply_delta(value, delta, 1);
+        subtree_value = apply_delta(subtree_value, delta, size);
         if (left != nullptr) {
-          left->delta = left->pending ? join_deltas(left->delta, delta) : delta;
+          left->delta = left->pending ? compose_deltas(left->delta, delta) : delta;
           left->pending = true;
         }
         if (right != nullptr) {
-          right->delta = right->pending ? join_deltas(right->delta, delta) : delta;
+          right->delta = right->pending ? compose_deltas(right->delta, delta) : delta;
           right->pending = true;
         }
         pending = false;
@@ -114,11 +113,11 @@ class LinkCutForest {
       size = 1;
       subtree_value = value;
       if (left != nullptr) {
-        subtree_value = join_values(subtree_value, left->get_subtree_value());
+        subtree_value = combine(subtree_value, left->get_subtree_value());
         size += left->size;
       }
       if (right != nullptr) {
-        subtree_value = join_values(subtree_value, right->get_subtree_value());
+        subtree_value = combine(subtree_value, right->get_subtree_value());
         size += right->size;
       }
     }
@@ -274,7 +273,7 @@ class LinkCutForest {
     expose(u);
     u->rev = !u->rev;
     expose(v);
-    v->delta = v->pending ? join_deltas(v->delta, d) : d;
+    v->delta = v->pending ? compose_deltas(v->delta, d) : d;
     v->pending = true;
   }
 };

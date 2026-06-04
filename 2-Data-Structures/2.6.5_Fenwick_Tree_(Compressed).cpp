@@ -2,9 +2,9 @@
 
 Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously
 incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays
-(range query). This implementation uses `std::map` for coordinate compression, allowing for large
-indices to be accessed with efficient space complexity. That is, all array indices from 0 to `MAXN`,
-inclusive, are accessible.
+(range query). This implementation uses `std::unordered_map` for coordinate compression, allowing
+for large indices to be accessed with efficient space complexity. That is, all array indices from 0
+to `MAXN`, inclusive, are accessible.
 
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
@@ -14,22 +14,22 @@ inclusive, are accessible.
 - `sum(lo, hi)` returns the sum of all values at indices from `lo` to `hi`, inclusive.
 
 Time Complexity:
-- O(log^2 MAXN) per call to all member functions. If `std::map` is replaced with
-  `std::unordered_map`, then the amortized running time will become O(log MAXN).
+- O(log n) per call to all member functions, where $n$ is the number of distinct indices that have
+  been accessed.
 
 Space Complexity:
-- O(n log MAXN) for storage of the array elements, where $n$ is the number of distinct indices that
+- O(n log n) for storage of the array elements, where $n$ is the number of distinct indices that
   have been accessed across all of the operations so far.
 - O(1) auxiliary for all operations.
 
 */
 
-#include <map>
+#include <unordered_map>
 
 template<class T>
 class FenwickTree {
   static const int MAXN = 1000000001;
-  std::map<int, T> tmul, tadd;
+  std::unordered_map<int, T> tmul, tadd;
 
   void add_helper(int at, int mul, T add) {
     for (int i = at; i <= MAXN; i |= i + 1) {

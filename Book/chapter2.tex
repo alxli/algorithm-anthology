@@ -2785,9 +2785,9 @@ int main() {
 \subsection{Square Root Decomposition}
 Maintain a fixed-size array (from 0 to \inlinecode{size() - 1}) while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
 
-The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The default definition below assumes a numerical array type, supporting queries for the "min" of the target range. Another possible query operation is "sum", in which the \inlinecode{join\_values()} function should be defined to return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default definition below assumes a numerical array type, supporting queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$.
 
-The update operation is defined by the \inlinecode{join\_value\_with\_delta()} function which determines the change made to array values. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which \inlinecode{join\_value\_with\_delta(v, d)} should be defined to return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
 
 The operations supported by this data structure are identical to those of the point update segment tree found in this section.
 
@@ -2811,20 +2811,20 @@ The operations supported by this data structure are identical to those of the po
 
 template<class T>
 class SqrtDecomposition {
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_value_with_delta(const T &v, const T &d) { return d; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T apply_delta(const T &v, const T &d) { return d; }
 
   int len, blocklen;
   std::vector<T> value, block;
 
   void init() {
-    blocklen = static_cast<int>(sqrt(len));
+    blocklen = std::max(1, static_cast<int>(sqrt(len)));
     int nblocks = (len + blocklen - 1) / blocklen;
     for (int i = 0; i < nblocks; i++) {
       T blockval = value[i * blocklen];
       int blockhi = std::min(len, (i + 1) * blocklen);
       for (int j = i * blocklen + 1; j < blockhi; j++) {
-        blockval = join_values(blockval, value[j]);
+        blockval = combine(blockval, value[j]);
       }
       block.push_back(blockval);
     }
@@ -2847,30 +2847,30 @@ class SqrtDecomposition {
     if (blocklo > blockhi) {
       res = value[lo];
       for (int i = lo + 1; i <= hi; i++) {
-        res = join_values(res, value[i]);
+        res = combine(res, value[i]);
       }
     } else {
       res = block[blocklo];
       for (int i = blocklo + 1; i <= blockhi; i++) {
-        res = join_values(res, block[i]);
+        res = combine(res, block[i]);
       }
       for (int i = lo; i < blocklo * blocklen; i++) {
-        res = join_values(res, value[i]);
+        res = combine(res, value[i]);
       }
       for (int i = (blockhi + 1) * blocklen; i <= hi; i++) {
-        res = join_values(res, value[i]);
+        res = combine(res, value[i]);
       }
     }
     return res;
   }
 
   void update(int i, const T &d) {
-    value[i] = join_value_with_delta(value[i], d);
+    value[i] = apply_delta(value[i], d);
     int b = i / blocklen;
     int blockhi = std::min(len, (b + 1) * blocklen);
     block[b] = value[b * blocklen];
     for (int i = b * blocklen + 1; i < blockhi; i++) {
-      block[b] = join_values(block[b], value[i]);
+      block[b] = combine(block[b], value[i]);
     }
   }
 };
@@ -2900,17 +2900,17 @@ Values: 6 -2 4 8 10
 \subsection{Segment Tree (Point Update)}
 Maintain a fixed-size array while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
 
-The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$.
 
-The update operation is defined by the \inlinecode{join\_value\_with\_delta()} function, which determines the change made to array values. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which \inlinecode{join\_value\_with\_delta(v, d)} should be defined to return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
 
 \begin{compactitem}
   \item \inlinecode{SegTree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
   \item \inlinecode{SegTree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
-  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
-  \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{join\_value\_with\_delta(v, d)}.
+  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
+  \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
@@ -2933,8 +2933,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 
 template<class T>
 class SegTree {
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_value_with_delta(const T &v, const T &d) { return d; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T apply_delta(const T &v, const T &d) { return d; }
 
   int len;
   std::vector<T> value;
@@ -2947,7 +2947,7 @@ class SegTree {
     int mid = lo + (hi - lo) / 2;
     build(i * 2 + 1, lo, mid, v);
     build(i * 2 + 2, mid + 1, hi, v);
-    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
+    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   template<class It>
@@ -2959,7 +2959,7 @@ class SegTree {
     int mid = lo + (hi - lo) / 2;
     build(i * 2 + 1, lo, mid, arr);
     build(i * 2 + 2, mid + 1, hi, arr);
-    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
+    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) const {
@@ -2968,7 +2968,7 @@ class SegTree {
     }
     int mid = lo + (hi - lo) / 2;
     if (tgt_lo <= mid && mid < tgt_hi) {
-      return join_values(
+      return combine(
           query(i * 2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
           query(i * 2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi)
       );
@@ -2984,13 +2984,13 @@ class SegTree {
       return;
     }
     if (lo == hi) {
-      value[i] = join_value_with_delta(value[i], d);
+      value[i] = apply_delta(value[i], d);
       return;
     }
     int mid = lo + (hi - lo) / 2;
     update(i * 2 + 1, lo, mid, target, d);
     update(i * 2 + 2, mid + 1, hi, target, d);
-    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
+    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
  public:
@@ -3039,24 +3039,18 @@ The minimum value in the range [0, 3] is -2.
 \subsection{Segment Tree (Range Update)}
 Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique.
 
-The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$.
 
-The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to array values. These must satisfy:
-
-\begin{compactitem}
-  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
-  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
-  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, len)} should be defined to return $v + d \cdot len$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
-\end{compactitem}
+Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
   \item \inlinecode{SegTree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
   \item \inlinecode{SegTree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
-  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
-  \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{join\_value\_with\_delta(v, d)}.
-  \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by respectively joining them with \inlinecode{d} using \inlinecode{join\_value\_with\_delta()}.
+  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
+  \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
+  \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by applying the delta \inlinecode{d} to each value.
 \end{compactitem}
 
 \textbf{Time Complexity}:
@@ -3079,9 +3073,9 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 
 template<class T>
 class SegTree {
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-  static T join_deltas(const T &d1, const T &d2) { return d2; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T apply_delta(const T &v, const T &d, long long len) { return d; }
+  static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   int len;
   std::vector<T> value, delta;
@@ -3095,7 +3089,7 @@ class SegTree {
     int mid = lo + (hi - lo) / 2;
     build(i * 2 + 1, lo, mid, v);
     build(i * 2 + 2, mid + 1, hi, v);
-    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
+    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   template<class It>
@@ -3107,16 +3101,16 @@ class SegTree {
     int mid = lo + (hi - lo) / 2;
     build(i * 2 + 1, lo, mid, arr);
     build(i * 2 + 2, mid + 1, hi, arr);
-    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
+    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   void push_delta(int i, int lo, int hi) {
     if (pending[i]) {
-      value[i] = join_value_with_delta(value[i], delta[i], hi - lo + 1);
+      value[i] = apply_delta(value[i], delta[i], hi - lo + 1);
       if (lo != hi) {
         int l = 2 * i + 1, r = 2 * i + 2;
-        delta[l] = pending[l] ? join_deltas(delta[l], delta[i]) : delta[i];
-        delta[r] = pending[r] ? join_deltas(delta[r], delta[i]) : delta[i];
+        delta[l] = pending[l] ? compose_deltas(delta[l], delta[i]) : delta[i];
+        delta[r] = pending[r] ? compose_deltas(delta[r], delta[i]) : delta[i];
         pending[l] = pending[r] = true;
       }
       pending[i] = false;
@@ -3130,7 +3124,7 @@ class SegTree {
     }
     int mid = lo + (hi - lo) / 2;
     if (tgt_lo <= mid && mid < tgt_hi) {
-      return join_values(
+      return combine(
           query(i * 2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
           query(i * 2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi)
       );
@@ -3154,7 +3148,7 @@ class SegTree {
     }
     update(2 * i + 1, lo, (lo + hi) / 2, tgt_lo, tgt_hi, d);
     update(2 * i + 2, (lo + hi) / 2 + 1, hi, tgt_lo, tgt_hi, d);
-    value[i] = join_values(value[2 * i + 1], value[2 * i + 2]);
+    value[i] = combine(value[2 * i + 1], value[2 * i + 2]);
   }
 
  public:
@@ -3214,24 +3208,18 @@ Values: 5 5 5 1 5
 \subsection{Segment Tree (Compressed)}
 Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{repeat\_value(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. For range-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, len)} should return $v \cdot len$.
 
-The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to array values. These must satisfy:
-
-\begin{compactitem}
-  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
-  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
-  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, len)} should be defined to return $v + d \cdot len$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
-\end{compactitem}
+Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
   \item \inlinecode{SegTree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
   \item \inlinecode{SegTree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
-  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{join\_values()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If the distance between \inlinecode{lo} and \inlinecode{hi} is 1, then the single specified value is returned.
-  \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{join\_value\_with\_delta(v, d)}.
-  \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by respectively joining them with \inlinecode{d} using \inlinecode{join\_value\_with\_delta()}.
+  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
+  \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
+  \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by applying the delta \inlinecode{d} to each value.
 \end{compactitem}
 
 \textbf{Time Complexity}:
@@ -3256,10 +3244,10 @@ template<class T>
 class SegTree {
   static const int MAXN = 1000000000;
 
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_segment(const T &v, int len) { return v; }
-  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-  static T join_deltas(const T &d1, const T &d2) { return d2; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T repeat_value(const T &v, long long len) { return v; }
+  static T apply_delta(const T &v, const T &d, long long len) { return d; }
+  static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
     T value, delta;
@@ -3271,11 +3259,11 @@ class SegTree {
 
   T init;
 
-  void update_delta(Node *&n, const T &d, int len) {
+  void update_delta(Node *&n, const T &d, long long len) {
     if (n == nullptr) {
-      n = new Node(join_segment(init, len));
+      n = new Node(repeat_value(init, len));
     }
-    n->delta = n->pending ? join_deltas(n->delta, d) : d;
+    n->delta = n->pending ? compose_deltas(n->delta, d) : d;
     n->pending = true;
   }
 
@@ -3284,7 +3272,7 @@ class SegTree {
       return;
     }
     if (n->pending) {
-      n->value = join_value_with_delta(n->value, n->delta, hi - lo + 1);
+      n->value = apply_delta(n->value, n->delta, hi - lo + 1);
       if (lo != hi) {
         int mid = lo + (hi - lo) / 2;
         update_delta(n->left, n->delta, mid - lo + 1);
@@ -3296,7 +3284,7 @@ class SegTree {
 
   T query(Node *n, int lo, int hi, int tgt_lo, int tgt_hi) {
     if (n == nullptr) {
-      return join_segment(init, hi - lo + 1);
+      return repeat_value(init, hi - lo + 1);
     }
     push_delta(n, lo, hi);
     if (lo == tgt_lo && hi == tgt_hi) {
@@ -3304,7 +3292,7 @@ class SegTree {
     }
     int mid = lo + (hi - lo) / 2;
     if (tgt_lo <= mid && mid < tgt_hi) {
-      return join_values(
+      return combine(
           query(n->left, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
           query(n->right, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi)
       );
@@ -3317,9 +3305,13 @@ class SegTree {
 
   void update(Node *&n, int lo, int hi, int tgt_lo, int tgt_hi, const T &d) {
     if (n == nullptr) {
-      n = new Node(join_segment(init, hi - lo + 1));
+      if (hi < tgt_lo || lo > tgt_hi) {
+        return;
+      }
+      n = new Node(repeat_value(init, hi - lo + 1));
+    } else {
+      push_delta(n, lo, hi);
     }
-    push_delta(n, lo, hi);
     if (hi < tgt_lo || lo > tgt_hi) {
       return;
     }
@@ -3332,7 +3324,9 @@ class SegTree {
     int mid = lo + (hi - lo) / 2;
     update(n->left, lo, mid, tgt_lo, tgt_hi, d);
     update(n->right, mid + 1, hi, tgt_lo, tgt_hi, d);
-    n->value = join_values(n->left->value, n->right->value);
+    T left_value = (n->left != nullptr) ? n->left->value : repeat_value(init, mid - lo + 1);
+    T right_value = (n->right != nullptr) ? n->right->value : repeat_value(init, hi - mid);
+    n->value = combine(left_value, right_value);
   }
 
   void clean_up(Node *n) {
@@ -3583,15 +3577,9 @@ int main() {
 \subsection{Implicit Treap}
 Maintain a dynamically-sized array using a balanced binary search tree while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. A treap maintains a balanced binary tree structure by preserving the heap property on the randomly generated priority values of nodes, thereby making insertions and deletions run in $O(\log n)$ with high probability.
 
-The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$.
 
-The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to array values. These must satisfy:
-
-\begin{compactitem}
-  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
-  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
-  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, len)} should be defined to return $v + d \cdot len$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
-\end{compactitem}
+Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 This data structure shares every operation of one-dimensional segment trees in this section, with the additional operations \inlinecode{empty()}, \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{push\_back()}, and \inlinecode{pop\_back()} analogous to those of \inlinecode{std::vector} (here, \inlinecode{insert()} and \inlinecode{erase()} both take an index instead of an iterator).
 
@@ -3614,9 +3602,9 @@ This data structure shares every operation of one-dimensional segment trees in t
 
 template<class T>
 class ImplicitTreap {
-  static T join_values(const T &a, const T &b) { return a < b ? a : b; }
-  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-  static T join_deltas(const T &d1, const T &d2) { return d2; }
+  static T combine(const T &a, const T &b) { return a < b ? a : b; }
+  static T apply_delta(const T &v, const T &d, long long len) { return d; }
+  static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
     static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
@@ -3644,19 +3632,19 @@ class ImplicitTreap {
     }
     n->subtree_value = n->value;
     if (n->left != nullptr) {
-      n->subtree_value = join_values(n->subtree_value, n->left->subtree_value);
+      n->subtree_value = combine(n->subtree_value, n->left->subtree_value);
     }
     if (n->right != nullptr) {
-      n->subtree_value = join_values(n->subtree_value, n->right->subtree_value);
+      n->subtree_value = combine(n->subtree_value, n->right->subtree_value);
     }
     n->size = 1 + size(n->left) + size(n->right);
   }
 
   static void update_delta(Node *n, const T &d) {
     if (n != nullptr) {
-      n->value = join_value_with_delta(n->value, d, 1);
-      n->subtree_value = join_value_with_delta(n->subtree_value, d, n->size);
-      n->delta = n->pending ? join_deltas(n->delta, d) : d;
+      n->value = apply_delta(n->value, d, 1);
+      n->subtree_value = apply_delta(n->subtree_value, d, n->size);
+      n->delta = n->pending ? compose_deltas(n->delta, d) : d;
       n->pending = true;
     }
   }
@@ -3836,27 +3824,27 @@ Values: 2 2 1 8 10 11 (min: 1)
 \subsection{Quadtree (Point Update)}
 Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by the \inlinecode{join\_values()} and \inlinecode{join\_region()} functions where \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The \inlinecode{join\_region(v, area)} function must be defined in conjunction to efficiently return the result of \inlinecode{join\_values()} applied to a rectangular sub-array of \inlinecode{area} elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{join\_values(a, b)} should return $a + b$ and \inlinecode{join\_region(v, area)} should return $v \cdot area$.
+The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
 
-The update operation is defined by the \inlinecode{join\_value\_with\_delta()} function, which determines the change made to array values. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which \inlinecode{join\_value\_with\_delta(v, d)} should be defined to return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that "set" the chosen cell to a new value. Another possible update operation is "increment", in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
 
 \begin{compactitem}
-  \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
-  \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{join\_values()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
-  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{join\_value\_with\_delta(v, d)}.
+  \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
-  \item $O(\max\left(\text{MAXR}, \text{MAXC}\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
+  \item $O(\max\left(R, C\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the array elements, where $n$ is the number of updated entries in the array.
-  \item $O(\sqrt{\max\left(\text{MAXR}, \text{MAXC}\right)})$ auxiliary stack space for \inlinecode{update()}, \inlinecode{query()}, and \inlinecode{at()}.
+  \item $O(n \log\left(\max\left(R, C\right)\right))$ for storage of the quadtree nodes after $n$ point updates.
+  \item $O(\log\left(\max\left(R, C\right)\right))$ auxiliary stack space for \inlinecode{update()}, \inlinecode{query()}, and \inlinecode{at()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3865,12 +3853,12 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 
 template<class T>
 class Quadtree {
-  static const int MAXR = 1000000000;
-  static const int MAXC = 1000000000;
+  static const int R = 1000000000;
+  static const int C = 1000000000;
 
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_region(const T &v, int area) { return v; }
-  static T join_value_with_delta(const T &v, const T &d) { return d; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T repeat_value(const T &v, long long area) { return v; }
+  static T apply_delta(const T &v, const T &d) { return d; }
 
   struct Node {
     T value;
@@ -3891,6 +3879,19 @@ class Quadtree {
   T res;
   bool found;
 
+  static long long area(int r1, int c1, int r2, int c2) {
+    return static_cast<long long>(r2 - r1 + 1) * (c2 - c1 + 1);
+  }
+
+  void append_result(const T &v) {
+    res = found ? combine(res, v) : v;
+    found = true;
+  }
+
+  T child_value(Node *n, int r1, int c1, int r2, int c2) {
+    return (n != nullptr) ? n->value : repeat_value(init, area(r1, c1, r2, c2));
+  }
+
   void query(Node *n, int r1, int c1, int r2, int c2) {
     if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
       return;
@@ -3898,14 +3899,11 @@ class Quadtree {
     if (n == nullptr) {
       int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
       int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
-      T v = join_region(init, rlen * clen);
-      res = found ? join_values(res, v) : v;
-      found = true;
+      append_result(repeat_value(init, static_cast<long long>(rlen) * clen));
       return;
     }
     if (tgt_r1 <= r1 && r2 <= tgt_r2 && tgt_c1 <= c1 && c2 <= tgt_c2) {
-      res = found ? join_values(res, n->value) : n->value;
-      found = true;
+      append_result(n->value);
       return;
     }
     int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
@@ -3920,14 +3918,14 @@ class Quadtree {
   T delta;
 
   void update(Node *&n, int r1, int c1, int r2, int c2) {
-    if (n == nullptr) {
-      n = new Node(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
-    }
     if (tgt_r < r1 || tgt_r > r2 || tgt_c < c1 || tgt_c > c2) {
       return;
     }
+    if (n == nullptr) {
+      n = new Node(repeat_value(init, area(r1, c1, r2, c2)));
+    }
     if (r1 == r2 && c1 == c2) {
-      n->value = join_value_with_delta(n->value, delta);
+      n->value = apply_delta(n->value, delta);
       return;
     }
     int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
@@ -3935,11 +3933,16 @@ class Quadtree {
     update(n->child[1], rmid + 1, c1, r2, cmid);
     update(n->child[2], r1, cmid + 1, rmid, c2);
     update(n->child[3], rmid + 1, cmid + 1, r2, c2);
-    bool found = false;
-    for (auto *c : n->child) {
-      n->value = found ? join_values(n->value, c->value) : c->value;
-      found = true;
-    }
+    n->value = combine(
+        combine(
+            child_value(n->child[0], r1, c1, rmid, cmid),
+            child_value(n->child[1], rmid + 1, c1, r2, cmid)
+        ),
+        combine(
+            child_value(n->child[2], r1, cmid + 1, rmid, c2),
+            child_value(n->child[3], rmid + 1, cmid + 1, r2, c2)
+        )
+    );
   }
 
   static void clean_up(Node *n) {
@@ -3963,15 +3966,15 @@ class Quadtree {
     tgt_r2 = r2;
     tgt_c2 = c2;
     found = false;
-    query(root, 0, 0, MAXR, MAXC);
-    return found ? res : join_region(init, (r2 - r1 + 1) * (c2 - c1 + 1));
+    query(root, 0, 0, R, C);
+    return found ? res : repeat_value(init, area(r1, c1, r2, c2));
   }
 
   void update(int r, int c, const T &d) {
     tgt_r = r;
     tgt_c = c;
     delta = d;
-    update(root, 0, 0, MAXR, MAXC);
+    update(root, 0, 0, R, C);
   }
 };
 \end{lstlisting}
@@ -4014,34 +4017,28 @@ Values:
 \subsection{Quadtree (Range Update)}
 Maintain a two-dimensional array while supporting both dynamic queries and updates of rectangular sub-arrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by the \inlinecode{join\_values()} and \inlinecode{join\_region()} functions where \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The \inlinecode{join\_region(v, area)} function must be defined in conjunction to efficiently return the result of \inlinecode{join\_values()} applied to a rectangular sub-array of \inlinecode{area} elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{join\_values(a, b)} should return $a + b$ and \inlinecode{join\_region(v, area)} should return $v \cdot area$.
+The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
 
-The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to array values. These must satisfy:
-
-\begin{compactitem}
-  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
-  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
-  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, area)} should be defined to return $v + d \cdot area$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
-\end{compactitem}
+Range updates are defined by \inlinecode{apply\_delta(v, d, area)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{area} cells, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined region must be equivalent to applying it to each child region and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines rectangle assignment. For rectangle increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, area)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * area} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
-  \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{join\_values()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
-  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{join\_value\_with\_delta(v, d)}.
-  \item \inlinecode{update(r1, c1, r2, c2)} modifies the value at each index of the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive, by respectively joining them with \inlinecode{d} using \inlinecode{join\_value\_with\_delta()}.
+  \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
+  \item \inlinecode{update(r1, c1, r2, c2)} modifies the value at each index of the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive, by applying the delta \inlinecode{d} to each value.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
-  \item $O(\max\left(\text{MAXR}, \text{MAXC}\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
+  \item $O(\max\left(R, C\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the array elements, where $n$ is the number of updated entries in the array.
-  \item $O(\sqrt{\max\left(\text{MAXR}, \text{MAXC}\right)})$ auxiliary stack space for \inlinecode{update()}, \inlinecode{query()}, and \inlinecode{at()}.
+  \item $O(n \log\left(\max\left(R, C\right)\right))$ for storage of the quadtree nodes after $n$ point or rectangle updates.
+  \item $O(\log\left(\max\left(R, C\right)\right))$ auxiliary stack space for \inlinecode{update()}, \inlinecode{query()}, and \inlinecode{at()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4050,13 +4047,13 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 
 template<class T>
 class Quadtree {
-  static const int MAXR = 1000000000;
-  static const int MAXC = 1000000000;
+  static const int R = 1000000000;
+  static const int C = 1000000000;
 
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_region(const T &v, int area) { return v; }
-  static T join_value_with_delta(const T &v, const T &d, int area) { return d; }
-  static T join_deltas(const T &d1, const T &d2) { return d2; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T repeat_value(const T &v, long long area) { return v; }
+  static T apply_delta(const T &v, const T &d, long long area) { return d; }
+  static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
     T value, delta;
@@ -4072,26 +4069,31 @@ class Quadtree {
 
   T init;
 
-  void update_delta(Node *&n, const T &d, int area) {
+  static long long area(int r1, int c1, int r2, int c2) {
+    return static_cast<long long>(r2 - r1 + 1) * (c2 - c1 + 1);
+  }
+
+  void update_delta(Node *&n, const T &d, long long area) {
     if (n == nullptr) {
-      n = new Node(join_region(init, area));
+      n = new Node(repeat_value(init, area));
     }
-    n->delta = n->pending ? join_deltas(n->delta, d) : d;
+    n->delta = n->pending ? compose_deltas(n->delta, d) : d;
     n->pending = true;
   }
 
   void push_delta(Node *n, int r1, int c1, int r2, int c2) {
     if (n->pending) {
       int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
-      int rlen = r2 - r1 + 1, clen = c2 - c1 + 1;
-      n->value = join_value_with_delta(n->value, n->delta, rlen * clen);
-      if (rlen * clen > 1) {
+      long long cur_area = area(r1, c1, r2, c2);
+      n->value = apply_delta(n->value, n->delta, cur_area);
+      if (cur_area > 1) {
+        int rlen = r2 - r1 + 1, clen = c2 - c1 + 1;
         int rlen1 = rmid - r1 + 1, rlen2 = rlen - rlen1;
         int clen1 = cmid - c1 + 1, clen2 = clen - clen1;
-        update_delta(n->child[0], n->delta, rlen1 * clen1);
-        update_delta(n->child[1], n->delta, rlen2 * clen1);
-        update_delta(n->child[2], n->delta, rlen1 * clen2);
-        update_delta(n->child[3], n->delta, rlen2 * clen2);
+        update_delta(n->child[0], n->delta, static_cast<long long>(rlen1) * clen1);
+        update_delta(n->child[1], n->delta, static_cast<long long>(rlen2) * clen1);
+        update_delta(n->child[2], n->delta, static_cast<long long>(rlen1) * clen2);
+        update_delta(n->child[3], n->delta, static_cast<long long>(rlen2) * clen2);
       }
       n->pending = false;
     }
@@ -4102,6 +4104,15 @@ class Quadtree {
   T res, delta;
   bool found;
 
+  void append_result(const T &v) {
+    res = found ? combine(res, v) : v;
+    found = true;
+  }
+
+  T child_value(Node *n, int r1, int c1, int r2, int c2) {
+    return (n != nullptr) ? n->value : repeat_value(init, area(r1, c1, r2, c2));
+  }
+
   void query(Node *n, int r1, int c1, int r2, int c2) {
     if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
       return;
@@ -4109,15 +4120,12 @@ class Quadtree {
     if (n == nullptr) {
       int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
       int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
-      T v = join_region(init, rlen * clen);
-      res = found ? join_values(res, v) : v;
-      found = true;
+      append_result(repeat_value(init, static_cast<long long>(rlen) * clen));
       return;
     }
     push_delta(n, r1, c1, r2, c2);
     if (tgt_r1 <= r1 && r2 <= tgt_r2 && tgt_c1 <= c1 && c2 <= tgt_c2) {
-      res = found ? join_values(res, n->value) : n->value;
-      found = true;
+      append_result(n->value);
       return;
     }
     int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
@@ -4129,12 +4137,16 @@ class Quadtree {
 
   void update(Node *&n, int r1, int c1, int r2, int c2) {
     if (n == nullptr) {
-      n = new Node(join_region(init, (r2 - r1 + 1) * (c2 - r1 + 1)));
+      if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
+        return;
+      }
+      n = new Node(repeat_value(init, area(r1, c1, r2, c2)));
+    } else {
+      push_delta(n, r1, c1, r2, c2);
     }
     if (tgt_r2 < r1 || tgt_r1 > r2 || tgt_c2 < c1 || tgt_c1 > c2) {
       return;
     }
-    push_delta(n, r1, c1, r2, c2);
     if (tgt_r1 <= r1 && r2 <= tgt_r2 && tgt_c1 <= c1 && c2 <= tgt_c2) {
       n->delta = delta;
       n->pending = true;
@@ -4146,10 +4158,16 @@ class Quadtree {
     update(n->child[1], rmid + 1, c1, r2, cmid);
     update(n->child[2], r1, cmid + 1, rmid, c2);
     update(n->child[3], rmid + 1, cmid + 1, r2, c2);
-    n->value = n->child[0]->value;
-    for (int i = 1; i < 4; i++) {
-      n->value = join_values(n->value, n->child[i]->value);
-    }
+    n->value = combine(
+        combine(
+            child_value(n->child[0], r1, c1, rmid, cmid),
+            child_value(n->child[1], rmid + 1, c1, r2, cmid)
+        ),
+        combine(
+            child_value(n->child[2], r1, cmid + 1, rmid, c2),
+            child_value(n->child[3], rmid + 1, cmid + 1, r2, c2)
+        )
+    );
   }
 
   static void clean_up(Node *n) {
@@ -4173,8 +4191,8 @@ class Quadtree {
     tgt_r2 = r2;
     tgt_c2 = c2;
     found = false;
-    query(root, 0, 0, MAXR, MAXC);
-    return found ? res : join_region(init, (r2 - r1 + 1) * (c2 - c1 + 1));
+    query(root, 0, 0, R, C);
+    return found ? res : repeat_value(init, area(r1, c1, r2, c2));
   }
 
   void update(int r, int c, const T &d) { update(r, c, r, c, d); }
@@ -4185,7 +4203,7 @@ class Quadtree {
     tgt_r2 = r2;
     tgt_c2 = c2;
     delta = d;
-    update(root, 0, 0, MAXR, MAXC);
+    update(root, 0, 0, R, C);
   }
 };
 \end{lstlisting}
@@ -4228,27 +4246,27 @@ Values:
 \subsection{2D Segment Tree}
 Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by the \inlinecode{join\_values()} and \inlinecode{join\_region()} functions where \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the array. The \inlinecode{join\_region(v, area)} function must be defined in conjunction to efficiently return the result of \inlinecode{join\_values()} applied to a rectangular sub-array of \inlinecode{area} elements. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{join\_values(a, b)} should return $a + b$ and \inlinecode{join\_region(v, area)} should return $v \cdot area$.
+The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
 
-The update operation is defined by the \inlinecode{join\_value\_with\_delta()} function, which determines the change made to array values. The default code below defines updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which \inlinecode{join\_value\_with\_delta(v, d)} should be defined to return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that "set" the chosen cell to a new value. Another possible update operation is "increment", in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
 
 \begin{compactitem}
-  \item \inlinecode{SegTree2D(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{MAXR} and columns from 0 to \inlinecode{MAXC}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{SegTree2D(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
-  \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{join\_values()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
-  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{join\_value\_with\_delta(v, d)}.
+  \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
-  \item $O(\log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
+  \item $O(\log\left(R\right) \cdot \log\left(C\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the array elements, where $n$ is the number of updated entries in the array.
-  \item $O(\log\left(\text{MAXR}\right) + \log\left(\text{MAXC}\right))$ auxiliary stack space for \inlinecode{update()}, \inlinecode{query()}, and \inlinecode{at()}.
+  \item $O(n \log\left(R\right) \log\left(C\right))$ for storage after $n$ point updates.
+  \item $O(\log\left(R\right) + \log\left(C\right))$ auxiliary stack space for \inlinecode{update()}, \inlinecode{query()}, and \inlinecode{at()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -4257,12 +4275,12 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} f
 
 template<class T>
 class SegTree2D {
-  static const int MAXR = 1000000000;
-  static const int MAXC = 1000000000;
+  static const int R = 1000000000;
+  static const int C = 1000000000;
 
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_region(const T &v, int area) { return v; }
-  static T join_value_with_delta(const T &v, const T &d) { return d; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T repeat_value(const T &v, long long area) { return v; }
+  static T apply_delta(const T &v, const T &d) { return d; }
 
   struct InnerNode {
     T value;
@@ -4279,68 +4297,91 @@ class SegTree2D {
     OuterNode *left, *right;
 
     OuterNode(int lo, int hi, const T &v)
-        : root(0, MAXC, v), low(lo), high(hi), left(nullptr), right(nullptr) {}
+        : root(0, C, v), low(lo), high(hi), left(nullptr), right(nullptr) {}
   } *root;
 
   T init;
 
   // Helper variables for query() and update().
-  int tgt_r1, tgt_c1, tgt_r2, tgt_c2, width;
+  int tgt_r1, tgt_c1, tgt_r2, tgt_c2;
+  long long width;
 
-  template<class Node>
-  inline T call_query(Node *n, int area) {
-    return (n != nullptr) ? query(n) : join_region(init, area);
+  static long long length(int lo, int hi) { return hi - lo + 1LL; }
+
+  void append_result(T &res, bool &found, const T &v) {
+    res = found ? combine(res, v) : v;
+    found = true;
   }
 
-  T query(InnerNode *n) {
-    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
-    if (tgt_c1 <= lo && hi <= tgt_c2) {
-      T res = n->value;
-      if (tgt_c1 < lo) {
-        res = join_values(res, join_region(init, lo - tgt_c1 + 1));
-      }
-      if (hi < tgt_c2) {
-        res = join_values(res, join_region(init, tgt_c2 - hi + 1));
-      }
-      return res;
-    } else if (tgt_c2 <= mid) {
-      return call_query(n->left, tgt_c2 - tgt_c1 + 1);
-    } else if (mid < tgt_c1) {
-      return call_query(n->right, tgt_c2 - tgt_c1 + 1);
+  T query(InnerNode *n, int qlo, int qhi, long long rows) {
+    if (n == nullptr) {
+      return repeat_value(init, rows * length(qlo, qhi));
     }
-    return join_values(
-        call_query(n->left, std::min(tgt_c2, mid) - tgt_c1 + 1),
-        call_query(n->right, tgt_c2 - std::max(tgt_c1, mid + 1) + 1)
-    );
-  }
-
-  T query(OuterNode *n) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
-    if (tgt_r1 <= lo && hi <= tgt_r2) {
-      T res = query(&(n->root));
-      if (tgt_r1 < lo) {
-        res = join_values(res, join_region(init, width * (lo - tgt_r1 + 1)));
-      }
-      if (hi < tgt_r2) {
-        res = join_values(res, join_region(init, width * (tgt_r2 - hi + 1)));
-      }
-      return res;
-    } else if (tgt_r2 <= mid) {
-      return call_query(n->left, tgt_r2 - tgt_r1 + 1);
-    } else if (mid < tgt_r1) {
-      return call_query(n->right, tgt_r2 - tgt_r1 + 1);
+    T res;
+    bool found = false;
+    if (qlo < lo) {
+      int missing_hi = std::min(qhi, lo - 1);
+      append_result(res, found, repeat_value(init, rows * length(qlo, missing_hi)));
     }
-    return join_values(
-        call_query(n->left, width * (std::min(tgt_r2, mid) - tgt_r1 + 1)),
-        call_query(n->right, width * (tgt_r2 - std::max(tgt_r1, mid + 1) + 1))
-    );
+    int overlap_lo = std::max(qlo, lo), overlap_hi = std::min(qhi, hi);
+    if (overlap_lo <= overlap_hi) {
+      if (overlap_lo == lo && overlap_hi == hi) {
+        append_result(res, found, n->value);
+      } else {
+        if (overlap_lo <= mid) {
+          append_result(res, found, query(n->left, overlap_lo, std::min(overlap_hi, mid), rows));
+        }
+        if (mid < overlap_hi) {
+          append_result(
+              res, found, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi, rows)
+          );
+        }
+      }
+    }
+    if (hi < qhi) {
+      int missing_lo = std::max(qlo, hi + 1);
+      append_result(res, found, repeat_value(init, rows * length(missing_lo, qhi)));
+    }
+    return res;
   }
 
-  void update(InnerNode *n, int c, const T &d, bool leaf_row) {
+  T query(OuterNode *n, int qlo, int qhi) {
+    if (n == nullptr) {
+      return repeat_value(init, width * length(qlo, qhi));
+    }
+    int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
+    T res;
+    bool found = false;
+    if (qlo < lo) {
+      int missing_hi = std::min(qhi, lo - 1);
+      append_result(res, found, repeat_value(init, width * length(qlo, missing_hi)));
+    }
+    int overlap_lo = std::max(qlo, lo), overlap_hi = std::min(qhi, hi);
+    if (overlap_lo <= overlap_hi) {
+      if (overlap_lo == lo && overlap_hi == hi) {
+        append_result(res, found, query(&(n->root), tgt_c1, tgt_c2, length(lo, hi)));
+      } else {
+        if (overlap_lo <= mid) {
+          append_result(res, found, query(n->left, overlap_lo, std::min(overlap_hi, mid)));
+        }
+        if (mid < overlap_hi) {
+          append_result(res, found, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi));
+        }
+      }
+    }
+    if (hi < qhi) {
+      int missing_lo = std::max(qlo, hi + 1);
+      append_result(res, found, repeat_value(init, width * length(missing_lo, qhi)));
+    }
+    return res;
+  }
+
+  void update(InnerNode *n, int c, const T &d, bool leaf_row, long long rows) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
     if (lo == hi) {
       if (leaf_row) {
-        n->value = join_value_with_delta(n->value, d);
+        n->value = apply_delta(n->value, d);
       } else {
         n->value = d;
       }
@@ -4348,60 +4389,66 @@ class SegTree2D {
     }
     InnerNode *&target = (c <= mid) ? n->left : n->right;
     if (target == nullptr) {
-      target = new InnerNode(c, c, init);
+      target = new InnerNode(c, c, repeat_value(init, rows));
     }
     if (target->low <= c && c <= target->high) {
-      update(target, c, d, leaf_row);
+      update(target, c, d, leaf_row, rows);
     } else {
+      int split_lo = lo, split_hi = hi, split_mid = mid;
       do {
-        if (c <= mid) {
-          hi = mid;
+        if (c <= split_mid) {
+          split_hi = split_mid;
         } else {
-          lo = mid + 1;
+          split_lo = split_mid + 1;
         }
-        mid = lo + (hi - lo) / 2;
-      } while ((c <= mid) == (target->low <= mid));
-      InnerNode *tmp = new InnerNode(lo, hi, init);
-      if (target->low <= mid) {
+        split_mid = split_lo + (split_hi - split_lo) / 2;
+      } while ((c <= split_mid) == (target->low <= split_mid));
+      InnerNode *tmp =
+          new InnerNode(split_lo, split_hi, repeat_value(init, rows * length(split_lo, split_hi)));
+      if (target->low <= split_mid) {
         tmp->left = target;
       } else {
         tmp->right = target;
       }
       target = tmp;
-      update(tmp, c, d, leaf_row);
+      update(tmp, c, d, leaf_row, rows);
     }
-    T left_value = (n->left != nullptr) ? n->left->value : join_region(init, mid - lo + 1);
-    T right_value = (n->right != nullptr) ? n->right->value : join_region(init, hi - mid);
-    n->value = join_values(left_value, right_value);
+    T left_value =
+        (n->left != nullptr) ? n->left->value : repeat_value(init, rows * length(lo, mid));
+    T right_value =
+        (n->right != nullptr) ? n->right->value : repeat_value(init, rows * length(mid + 1, hi));
+    n->value = combine(left_value, right_value);
   }
 
   void update(OuterNode *n, int r, int c, const T &d) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
+    long long rows = length(lo, hi);
     if (lo == hi) {
-      update(&(n->root), c, d, true);
+      update(&(n->root), c, d, true, 1);
       return;
     }
     if (r <= mid) {
       if (n->left == nullptr) {
-        n->left = new OuterNode(lo, mid, init);
+        n->left = new OuterNode(lo, mid, repeat_value(init, length(lo, mid) * length(0, C)));
       }
       update(n->left, r, c, d);
     } else {
       if (n->right == nullptr) {
-        n->right = new OuterNode(mid + 1, hi, init);
+        n->right =
+            new OuterNode(mid + 1, hi, repeat_value(init, length(mid + 1, hi) * length(0, C)));
       }
       update(n->right, r, c, d);
     }
-    T value = join_region(init, hi - lo + 1);
+    T value = repeat_value(init, rows);
     if (n->left != nullptr || n->right != nullptr) {
       tgt_c1 = tgt_c2 = c;
-      T left_value =
-          (n->left != nullptr) ? query(&(n->left->root)) : join_region(init, mid - lo + 1);
-      T right_value =
-          (n->right != nullptr) ? query(&(n->right->root)) : join_region(init, hi - mid);
-      value = join_values(left_value, right_value);
+      T left_value = (n->left != nullptr) ? query(&(n->left->root), c, c, length(lo, mid))
+                                          : repeat_value(init, length(lo, mid));
+      T right_value = (n->right != nullptr) ? query(&(n->right->root), c, c, length(mid + 1, hi))
+                                            : repeat_value(init, length(mid + 1, hi));
+      value = combine(left_value, right_value);
     }
-    update(&(n->root), c, value, false);
+    update(&(n->root), c, value, false, rows);
   }
 
   static void clean_up(InnerNode *n) {
@@ -4423,7 +4470,8 @@ class SegTree2D {
   }
 
  public:
-  explicit SegTree2D(const T &v = T()) : root(new OuterNode(0, MAXR, v)), init(v) {}
+  explicit SegTree2D(const T &v = T())
+      : root(new OuterNode(0, R, repeat_value(v, length(0, R) * length(0, C)))), init(v) {}
 
   ~SegTree2D() { clean_up(root); }
   T at(int r, int c) { return query(r, c, r, c); }
@@ -4433,8 +4481,8 @@ class SegTree2D {
     tgt_c1 = c1;
     tgt_r2 = r2;
     tgt_c2 = c2;
-    width = c2 - c1;
-    return query(root);
+    width = length(c1, c2);
+    return query(root, r1, r2);
   }
 
   void update(int r, int c, const T &d) { update(root, r, c, d); }
@@ -5202,7 +5250,7 @@ int main() {
 Values: 15 6 7 -5 4
 \end{exampleoutput}
 \subsection{Fenwick Tree (Compressed)}
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation uses \inlinecode{std::map} for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, all array indices from 0 to \inlinecode{MAXN}, inclusive, are accessible.
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation uses \inlinecode{std::unordered\_map} for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, all array indices from 0 to \inlinecode{MAXN}, inclusive, are accessible.
 
 \begin{compactitem}
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
@@ -5213,21 +5261,21 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log^{2} \text{MAXN})$ per call to all member functions. If \inlinecode{std::map} is replaced with \inlinecode{std::unordered\_map}, then the amortized running time will become $O(\log \text{MAXN})$.
+\textbf{Time Complexity}: $O(\log n)$ per call to all member functions, where $n$ is the number of distinct indices that have been accessed.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \log \text{MAXN})$ for storage of the array elements, where $n$ is the number of distinct indices that have been accessed across all of the operations so far.
+  \item $O(n \log n)$ for storage of the array elements, where $n$ is the number of distinct indices that have been accessed across all of the operations so far.
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <map>
+#include <unordered_map>
 
 template<class T>
 class FenwickTree {
   static const int MAXN = 1000000001;
-  std::map<int, T> tmul, tadd;
+  std::unordered_map<int, T> tmul, tadd;
 
   void add_helper(int at, int mul, T add) {
     for (int i = at; i <= MAXN; i |= i + 1) {
@@ -5368,7 +5416,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{2D Fenwick Tree (Simple)}
-Maintain a 2D array of numerical type, allowing for updates of individual cells in the matrix (point update) and queries for the sum of rectangular sub-matrices (range query). This implementation assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to \inlinecode{MAXR}, inclusive, and columns have valid indices from 1 to \inlinecode{MAXC}, inclusive).
+Maintain a 2D array of numerical type, allowing for updates of individual cells in the matrix (point update) and queries for the sum of rectangular sub-matrices (range query). This implementation assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to \inlinecode{R}, inclusive, and columns have valid indices from 1 to \inlinecode{C}, inclusive).
 
 \begin{compactitem}
   \item \inlinecode{initialize()} resets the data structure.
@@ -5381,24 +5429,24 @@ Maintain a 2D array of numerical type, allowing for updates of individual cells 
 
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \cdot m)$ per call to \inlinecode{initialize()}, where $n$ is the number of rows and $m$ is the number of columns.
-  \item $O(\log\left(n\right) \cdot \log\left(m\right))$ per call to all other operations.
+  \item $O(R \cdot C)$ per call to \inlinecode{initialize()}.
+  \item $O(\log\left(R\right) \cdot \log\left(C\right))$ per call to all other operations.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \cdot m)$ for storage of the array elements.
+  \item $O(R \cdot C)$ for storage of the array elements.
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-const int MAXR = 100, MAXC = 100;
-int a[MAXR + 1][MAXC + 1];
-int bits[MAXR + 1][MAXC + 1];
+const int R = 100, C = 100;
+int a[R + 1][C + 1];
+int bits[R + 1][C + 1];
 
 void initialize() {
-  for (int i = 0; i <= MAXR; i++) {
-    for (int j = 0; j <= MAXC; j++) {
+  for (int i = 0; i <= R; i++) {
+    for (int j = 0; j <= C; j++) {
       a[i][j] = bits[i][j] = 0;
     }
   }
@@ -5406,8 +5454,8 @@ void initialize() {
 
 void add(int r, int c, int x) {
   a[r][c] += x;
-  for (int i = r; i <= MAXR; i += i & -i) {
-    for (int j = c; j <= MAXC; j += j & -j) {
+  for (int i = r; i <= R; i += i & -i) {
+    for (int j = c; j <= C; j += j & -j) {
       bits[i][j] += x;
     }
   }
@@ -5464,7 +5512,7 @@ Values:
 0 0 9
 \end{exampleoutput}
 \subsection{2D Fenwick Tree (Compressed)}
-Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to be simultaneously incremented by arbitrary values (range update) and queries for the sum of rectangular sub-matrices (range query). This implementation uses \inlinecode{std::map} for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, rows have valid indices from 0 to \inlinecode{MAXR}, inclusive, and columns have valid indices from 0 to \inlinecode{MAXC}, inclusive.
+Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to be simultaneously incremented by arbitrary values (range update) and queries for the sum of rectangular sub-matrices (range query). This implementation uses \inlinecode{std::unordered\_map} for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, rows have valid indices from 0 to \inlinecode{R}, inclusive, and columns have valid indices from 0 to \inlinecode{C}, inclusive.
 
 \begin{compactitem}
   \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
@@ -5475,29 +5523,36 @@ Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to 
   \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log^{2}(\text{MAXR}) \cdot \log^{2}(\text{MAXC}))$ per call to all member functions. If \inlinecode{std::map} is replaced with \inlinecode{std::unordered\_map}, then the amortized running time will become $O(\log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$.
+\textbf{Time Complexity}: $O(\log\left(R\right) \cdot \log\left(C\right))$ per call to all member functions.
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \cdot \log\left(\text{MAXR}\right) \cdot \log\left(\text{MAXC}\right))$ for storage of the array elements, where $n$ is the number of distinct indices that have been accessed across all of the operations so far.
+  \item $O(n \cdot \log\left(R\right) \cdot \log\left(C\right))$ for storage of the array elements, where $n$ is the number of distinct indices that have been accessed across all of the operations so far.
   \item $O(1)$ auxiliary for all operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <map>
+#include <unordered_map>
 #include <utility>
 
 template<class T>
 class FenwickTree2D {
-  static const int MAXR = 1000000001;
-  static const int MAXC = 1000000001;
-  std::map<std::pair<int, int>, T> t1, t2, t3, t4;
+  static const int R = 1000000001;
+  static const int C = 1000000001;
+
+  std::unordered_map<long long, T> t1, t2, t3, t4;
 
   template<class Map>
-  void add(Map &tree, int r, int c, const T &x) {
-    for (int i = r + 1; i <= MAXR; i += i & -i) {
-      for (int j = c + 1; j <= MAXC; j += j & -j) {
-        tree[{i, j}] += x;
+  static T get(const Map &tree, int r, int c) {
+    auto it = tree.find(static_cast<long long>(r) * C + c);
+    return it == tree.end() ? T() : it->second;
+  }
+
+  template<class Map>
+  static void add(Map &tree, int r, int c, const T &x) {
+    for (int i = r + 1; i <= R; i += i & -i) {
+      for (int j = c + 1; j <= C; j += j & -j) {
+        tree[static_cast<long long>(i) * C + j] += x;
       }
     }
   }
@@ -5531,10 +5586,10 @@ class FenwickTree2D {
     T s1 = 0, s2 = 0, s3 = 0, s4 = 0;
     for (int i = r; i > 0; i -= i & -i) {
       for (int j = c; j > 0; j -= j & -j) {
-        s1 += t1[{i, j}];
-        s2 += t2[{i, j}];
-        s3 += t3[{i, j}];
-        s4 += t4[{i, j}];
+        s1 += get(t1, i, j);
+        s2 += get(t2, i, j);
+        s3 += get(t3, i, j);
+        s4 += get(t4, i, j);
       }
     }
     return s1 * r * c + s2 * r + s3 * c + s4;
@@ -5674,7 +5729,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Disjoint Set Forest (Compressed)}
-Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version uses an \inlinecode{std::map} for storage and coordinate compression (thus, element types must meet the requirements of key types for \inlinecode{std::map}).
+Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version uses an \inlinecode{std::unordered\_map} for storage and coordinate compression (thus, element types must meet the requirements of key types for \inlinecode{std::unordered\_map}).
 
 \begin{compactitem}
   \item \inlinecode{make\_set(u)} creates a new partition consisting of the single element \inlinecode{u}, which must not have been previously added to the data structure.
@@ -5701,13 +5756,13 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 template<class T>
 class DisjointSetForest {
   int num_elements, num_sets;
-  std::map<T, int> id;
+  std::unordered_map<T, int> id;
   std::vector<int> root, rank;
 
   int find_root(int u) {
@@ -5752,7 +5807,7 @@ class DisjointSetForest {
   }
 
   std::vector<std::vector<T>> get_all_sets() {
-    std::map<int, std::vector<T>> tmp;
+    std::unordered_map<int, std::vector<T>> tmp;
     for (auto &[key, val] : id) {
       tmp[find_root(val)].push_back(key);
     }
@@ -6105,26 +6160,20 @@ int main() {
 \subsection{Heavy Light Decomposition}
 Maintain a tree with values associated with either its edges or nodes, while supporting both dynamic queries and dynamic updates of all values on a given path between two nodes in the tree. Heavy-light decomposition partitions the nodes of the tree into disjoint paths where all nodes have degree two, except the endpoints of a path which has degree one.
 
-The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the tree. The default code below assumes a numerical tree type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
+The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the tree. The default code below assumes a numerical tree type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
 
-The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to values. These must satisfy:
-
-\begin{compactitem}
-  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
-  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
-  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" a path's edges or nodes to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, len)} should be defined to return $v + d \cdot len$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
-\end{compactitem}
+The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning "apply \inlinecode{old}, then apply \inlinecode{d}". These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that "set" a path's edges or nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 
 \begin{compactitem}
   \item \inlinecode{HeavyLight(n, adj[], v)} constructs a new heavy light decomposition on a tree with \inlinecode{n} nodes defined by the adjacency list \inlinecode{adj[]}, with all values initialized to \inlinecode{v}. The adjacency list must be a size \inlinecode{n} array of vectors consisting of only the integers from 0 to \inlinecode{n - 1}, inclusive. No duplicate edges should exist, and the graph must be connected.
-  \item \inlinecode{query(u, v)} returns the result of \inlinecode{join\_values()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}.
-  \item \inlinecode{update(u, v, d)} modifies all values on the path from node \inlinecode{u} to node \inlinecode{v} by respectively joining them with \inlinecode{d} using \inlinecode{join\_value\_with\_delta()}.
+  \item \inlinecode{query(u, v)} returns the result of \inlinecode{combine()} applied to all values on the path from node \inlinecode{u} to node \inlinecode{v}.
+  \item \inlinecode{update(u, v, d)} modifies all values on the path from node \inlinecode{u} to node \inlinecode{v} by respectively applying the delta \inlinecode{d}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to the constructor, where $n$ is the number of nodes.
-  \item $O(\log n)$ per call to \inlinecode{query()} and \inlinecode{update()};
+  \item $O(\log^{2} n)$ per call to \inlinecode{query()} and \inlinecode{update()};
 \end{compactitem}
 
 \textbf{Space Complexity}:
@@ -6144,9 +6193,9 @@ class HeavyLight {
   // Set this to true to store values on edges, false to store values on nodes.
   static const bool VALUES_ON_EDGES = true;
 
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-  static T join_deltas(const T &d1, const T &d2) { return d2; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T apply_delta(const T &v, const T &d, int len) { return d; }
+  static T compose_deltas(const T &old, const T &d) { return d; }
 
   int counter, paths;
   std::vector<std::vector<T>> value, delta;
@@ -6183,8 +6232,8 @@ class HeavyLight {
     }
   }
 
-  inline T join_value_with_delta(int path, int i) {
-    return pending[path][i] ? join_value_with_delta(value[path][i], delta[path][i], len[path][i])
+  inline T applied_value(int path, int i) {
+    return pending[path][i] ? apply_delta(value[path][i], delta[path][i], len[path][i])
                             : value[path][i];
   }
 
@@ -6196,11 +6245,11 @@ class HeavyLight {
     for (d -= 2; d >= 0; d--) {
       int l = (i >> d), r = (l ^ 1), n = l / 2;
       if (pending[path][n]) {
-        value[path][n] = join_value_with_delta(path, n);
+        value[path][n] = applied_value(path, n);
         delta[path][l] =
-            pending[path][l] ? join_deltas(delta[path][l], delta[path][n]) : delta[path][n];
+            pending[path][l] ? compose_deltas(delta[path][l], delta[path][n]) : delta[path][n];
         delta[path][r] =
-            pending[path][r] ? join_deltas(delta[path][r], delta[path][n]) : delta[path][n];
+            pending[path][r] ? compose_deltas(delta[path][r], delta[path][n]) : delta[path][n];
         pending[path][l] = pending[path][r] = true;
         pending[path][n] = false;
       }
@@ -6213,13 +6262,13 @@ class HeavyLight {
     bool found = false;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
-        T value = join_value_with_delta(path, u);
-        *res = found ? join_values(*res, value) : value;
+        T value = applied_value(path, u);
+        *res = found ? combine(*res, value) : value;
         found = true;
       }
       if ((v & 1) == 0) {
-        T value = join_value_with_delta(path, v);
-        *res = found ? join_values(*res, value) : value;
+        T value = applied_value(path, v);
+        *res = found ? combine(*res, value) : value;
         found = true;
       }
     }
@@ -6232,14 +6281,14 @@ class HeavyLight {
     int tu = -1, tv = -1;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
-        delta[path][u] = pending[path][u] ? join_deltas(delta[path][u], d) : d;
+        delta[path][u] = pending[path][u] ? compose_deltas(delta[path][u], d) : d;
         pending[path][u] = true;
         if (tu == -1) {
           tu = u;
         }
       }
       if ((v & 1) == 0) {
-        delta[path][v] = pending[path][v] ? join_deltas(delta[path][v], d) : d;
+        delta[path][v] = pending[path][v] ? compose_deltas(delta[path][v], d) : d;
         pending[path][v] = true;
         if (tv == -1) {
           tv = v;
@@ -6247,12 +6296,10 @@ class HeavyLight {
       }
     }
     for (int i = tu; i > 1; i /= 2) {
-      value[path][i / 2] =
-          join_values(join_value_with_delta(path, i), join_value_with_delta(path, i ^ 1));
+      value[path][i / 2] = combine(applied_value(path, i), applied_value(path, i ^ 1));
     }
     for (int i = tv; i > 1; i /= 2) {
-      value[path][i / 2] =
-          join_values(join_value_with_delta(path, i), join_value_with_delta(path, i ^ 1));
+      value[path][i / 2] = combine(applied_value(path, i), applied_value(path, i ^ 1));
     }
   }
 
@@ -6286,7 +6333,7 @@ class HeavyLight {
       pending[i].assign(2 * m, false);
       len[i].assign(2 * m, 1);
       for (int j = 2 * m - 1; j > 1; j -= 2) {
-        value[i][j / 2] = join_values(value[i][j], value[i][j ^ 1]);
+        value[i][j / 2] = combine(value[i][j], value[i][j ^ 1]);
         len[i][j / 2] = len[i][j] + len[i][j ^ 1];
       }
     }
@@ -6301,14 +6348,14 @@ class HeavyLight {
     int root;
     while (!is_ancestor(root = pathroot[path[u]], v)) {
       if (query(path[u], 0, pathpos[u], &value)) {
-        res = found ? join_values(res, value) : value;
+        res = found ? combine(res, value) : value;
         found = true;
       }
       u = parent[root];
     }
     while (!is_ancestor(root = pathroot[path[v]], u)) {
       if (query(path[v], 0, pathpos[v], &value)) {
-        res = found ? join_values(res, value) : value;
+        res = found ? combine(res, value) : value;
         found = true;
       }
       v = parent[root];
@@ -6317,7 +6364,7 @@ class HeavyLight {
             path[u], std::min(pathpos[u], pathpos[v]) + static_cast<int>(VALUES_ON_EDGES),
             std::max(pathpos[u], pathpos[v]), &value
         )) {
-      res = found ? join_values(res, value) : value;
+      res = found ? combine(res, value) : value;
       found = true;
     }
     if (!found) {
@@ -6381,15 +6428,9 @@ int main() {
 \subsection{Link-Cut Tree}
 Maintain a forest of trees with values associated with its nodes, while supporting both dynamic queries and dynamic updates of all values on any path between two nodes in a given tree. In addition, support testing of whether two nodes are connected in the forest, as well as the merging and spliting of trees by adding or removing specific edges. Link/cut forests divide each of its trees into vertex-disjoint paths, each represented by a splay tree.
 
-The query operation is defined by an associative \inlinecode{join\_values()} function which satisfies \inlinecode{join\_values(x, join\_values(y, z)) = join\_values(join\_values(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the forest. The default code below assumes a numerical forest type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case the \inlinecode{join\_values()} function should be defined to return $a + b$.
+The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the forest. The default code below assumes a numerical forest type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
 
-The update operation is defined by the \inlinecode{join\_value\_with\_delta()} and \inlinecode{join\_deltas()} functions, which determines the change made to values. These must satisfy:
-
-\begin{compactitem}
-  \item \inlinecode{join\_deltas(d1, join\_deltas(d2, d3)) = join\_deltas(join\_deltas(d1, d2), d3)}.
-  \item \inlinecode{join\_value\_with\_delta(join\_values(v, ..., v), d, m)} should be equal to \inlinecode{join\_values(join\_value\_with\_delta(v, d, 1), ...)}, with $m$ values on each side.
-  \item if a sequence $d_1, ..., d_m$ of deltas is used to update a value $v$, then \inlinecode{join\_value\_with\_delta(v, join\_deltas(d\_1, ..., d\_m), 1)} should be equivalent to $m$ sequential calls to \inlinecode{join\_value\_with\_delta(v, d\_i, 1)} for $i = 1, ..., m$. The default code below defines updates that "set" a path's nodes to a new value. Another possible update operation is "increment", in which case \inlinecode{join\_value\_with\_delta(v, d, len)} should be defined to return $v + d \cdot len$ and \inlinecode{join\_deltas(d1, d2)} should be defined to return $d1 + d2$.
-\end{compactitem}
+The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning "apply \inlinecode{old}, then apply \inlinecode{d}". These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that "set" a path's nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 
 \begin{compactitem}
   \item \inlinecode{LinkCutForest()} constructs an empty forest with no trees.
@@ -6399,8 +6440,8 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
   \item \inlinecode{is\_connected(a, b)} returns whether nodes \inlinecode{a} and \inlinecode{b} are connected.
   \item \inlinecode{link(a, b)} adds an edge between the nodes \inlinecode{a} and \inlinecode{b}, both of which must exist and not be connected.
   \item \inlinecode{cut(a, b)} removes the edge between the nodes \inlinecode{a} and \inlinecode{b}, both of which must exist and be connected.
-  \item \inlinecode{query(a, b)} returns the result of \inlinecode{join\_values()} applied to all values on the path from the node \inlinecode{a} to node \inlinecode{b}.
-  \item \inlinecode{update(a, b, d)} modifies all the values on the path from node \inlinecode{a} to node \inlinecode{b} by respectively joining them with \inlinecode{d} using \inlinecode{join\_value\_with\_delta()}.
+  \item \inlinecode{query(a, b)} returns the result of \inlinecode{combine()} applied to all values on the path from the node \inlinecode{a} to node \inlinecode{b}.
+  \item \inlinecode{update(a, b, d)} modifies all the values on the path from node \inlinecode{a} to node \inlinecode{b} by respectively applying the delta \inlinecode{d}.
 \end{compactitem}
 
 \textbf{Time Complexity}:
@@ -6423,9 +6464,9 @@ The update operation is defined by the \inlinecode{join\_value\_with\_delta()} a
 
 template<class T>
 class LinkCutForest {
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_value_with_delta(const T &v, const T &d, int len) { return d; }
-  static T join_deltas(const T &d1, const T &d2) { return d2; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T apply_delta(const T &v, const T &d, int len) { return d; }
+  static T compose_deltas(const T &old, const T &d) { return d; }
 
   struct Node {
     T value, subtree_value, delta;
@@ -6448,7 +6489,7 @@ class LinkCutForest {
     }
 
     inline T get_subtree_value() const {
-      return pending ? join_value_with_delta(subtree_value, delta, size) : subtree_value;
+      return pending ? apply_delta(subtree_value, delta, size) : subtree_value;
     }
 
     void push() {
@@ -6463,14 +6504,14 @@ class LinkCutForest {
         }
       }
       if (pending) {
-        value = join_value_with_delta(value, delta, 1);
-        subtree_value = join_value_with_delta(subtree_value, delta, size);
+        value = apply_delta(value, delta, 1);
+        subtree_value = apply_delta(subtree_value, delta, size);
         if (left != nullptr) {
-          left->delta = left->pending ? join_deltas(left->delta, delta) : delta;
+          left->delta = left->pending ? compose_deltas(left->delta, delta) : delta;
           left->pending = true;
         }
         if (right != nullptr) {
-          right->delta = right->pending ? join_deltas(right->delta, delta) : delta;
+          right->delta = right->pending ? compose_deltas(right->delta, delta) : delta;
           right->pending = true;
         }
         pending = false;
@@ -6481,11 +6522,11 @@ class LinkCutForest {
       size = 1;
       subtree_value = value;
       if (left != nullptr) {
-        subtree_value = join_values(subtree_value, left->get_subtree_value());
+        subtree_value = combine(subtree_value, left->get_subtree_value());
         size += left->size;
       }
       if (right != nullptr) {
-        subtree_value = join_values(subtree_value, right->get_subtree_value());
+        subtree_value = combine(subtree_value, right->get_subtree_value());
         size += right->size;
       }
     }
@@ -6641,7 +6682,7 @@ class LinkCutForest {
     expose(u);
     u->rev = !u->rev;
     expose(v);
-    v->delta = v->pending ? join_deltas(v->delta, d) : d;
+    v->delta = v->pending ? compose_deltas(v->delta, d) : d;
     v->pending = true;
   }
 };

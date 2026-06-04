@@ -3,16 +3,14 @@
 Maintain a fixed-size array while supporting dynamic queries of contiguous sub-arrays and dynamic
 updates of individual indices.
 
-The query operation is defined by an associative `join_values()` function which satisfies
-`join_values(x, join_values(y, z)) = join_values(join_values(x, y), z)` for all values `x`, `y`, and
-`z` in the array. The default code below assumes a numerical array type, defining queries for the
-"min" of the target range. Another possible query operation is "sum", in which case the
-`join_values()` function should be defined to return $a + b$.
+The query operation is defined by an associative aggregate function `combine(a, b)`. The default
+code below assumes a numerical array type, defining queries for the "min" of the target range.
+Another possible query operation is "sum", in which case `combine(a, b)` should return $a + b$.
 
-The update operation is defined by the `join_value_with_delta()` function, which determines the
-change made to array values. The default definition below supports updates that "set" the chosen
-array index to a new value. Another possible update operation is "increment", in which
-`join_value_with_delta(v, d)` should be defined to return $v + d$.
+The point update operation is defined by `apply_delta(v, d)`, which returns the new value at a
+single updated index. The default definition below supports updates that "set" the chosen array
+index to a new value. Another possible update operation is "increment", in which case
+`apply_delta(v, d)` should return $v + d$.
 
 - `SegTree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
   and all values initialized to `v`.
@@ -20,10 +18,9 @@ array index to a new value. Another possible update operation is "increment", in
   initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
-- `query(lo, hi)` returns the result of `join_values()` applied to all indices from `lo` to `hi`,
-  inclusive. If the distance between `lo` and `hi` is 1, then the single specified value is
-  returned.
-- `update(i, d)` assigns the value `v` at index `i` to `join_value_with_delta(v, d)`.
+- `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
+  inclusive. If `lo == hi`, then the single specified value is returned.
+- `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
@@ -42,8 +39,8 @@ Space Complexity:
 
 template<class T>
 class SegTree {
-  static T join_values(const T &a, const T &b) { return std::min(a, b); }
-  static T join_value_with_delta(const T &v, const T &d) { return d; }
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+  static T apply_delta(const T &v, const T &d) { return d; }
 
   int len;
   std::vector<T> value;
@@ -56,7 +53,7 @@ class SegTree {
     int mid = lo + (hi - lo) / 2;
     build(i * 2 + 1, lo, mid, v);
     build(i * 2 + 2, mid + 1, hi, v);
-    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
+    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   template<class It>
@@ -68,7 +65,7 @@ class SegTree {
     int mid = lo + (hi - lo) / 2;
     build(i * 2 + 1, lo, mid, arr);
     build(i * 2 + 2, mid + 1, hi, arr);
-    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
+    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
   T query(int i, int lo, int hi, int tgt_lo, int tgt_hi) const {
@@ -77,7 +74,7 @@ class SegTree {
     }
     int mid = lo + (hi - lo) / 2;
     if (tgt_lo <= mid && mid < tgt_hi) {
-      return join_values(
+      return combine(
           query(i * 2 + 1, lo, mid, tgt_lo, std::min(tgt_hi, mid)),
           query(i * 2 + 2, mid + 1, hi, std::max(tgt_lo, mid + 1), tgt_hi)
       );
@@ -93,13 +90,13 @@ class SegTree {
       return;
     }
     if (lo == hi) {
-      value[i] = join_value_with_delta(value[i], d);
+      value[i] = apply_delta(value[i], d);
       return;
     }
     int mid = lo + (hi - lo) / 2;
     update(i * 2 + 1, lo, mid, target, d);
     update(i * 2 + 2, mid + 1, hi, target, d);
-    value[i] = join_values(value[i * 2 + 1], value[i * 2 + 2]);
+    value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
  public:
