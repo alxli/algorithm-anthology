@@ -118,8 +118,8 @@ class HashMap {
     return *find(k);
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     for (int i = 0; i < table_size; i++) {
       for (const auto &entry : table[i]) {
         f(entry.key, entry.value);

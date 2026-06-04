@@ -312,40 +312,36 @@ int main() {
     assert(sorted(a, a + 8));
   }
   {  // STL containers work too.
-    int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
-    vector<int> v(a, a + 8);
+    vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};
     quicksort(v.begin(), v.end());
     assert(sorted(v.begin(), v.end()));
   }
   {  // Reverse iterators work as expected.
-    int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
-    vector<int> v(a, a + 8);
+    vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};
     heapsort(v.rbegin(), v.rend());
     assert(sorted(v.rbegin(), v.rend()));
   }
   {  // We can sort doubles just as well.
-    double a[] = {1.1, -5.0, 6.23, 4.123, 155.2};
-    vector<double> v(a, a + 5);
+    vector<double> v{1.1, -5.0, 6.23, 4.123, 155.2};
     combsort(v.begin(), v.end());
     assert(sorted(v.begin(), v.end()));
   }
   {  // Must use radix_sort with unsigned values, but sorting in reverse works!
-    int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
-    vector<int> v(a, a + 8);
+    vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};
     radix_sort(v.rbegin(), v.rend());
     assert(sorted(v.rbegin(), v.rend()));
   }
 
   // Example from: http://www.cplusplus.com/reference/algorithm/stable_sort
-  double a[] = {3.14, 1.41, 2.72, 4.67, 1.73, 1.32, 1.62, 2.58};
+  const vector<double> a{3.14, 1.41, 2.72, 4.67, 1.73, 1.32, 1.62, 2.58};
   {
-    vector<double> v(a, a + 8);
+    vector<double> v(a);
     cout << "mergesort() with default comparisons: ";
     mergesort(v.begin(), v.end());
     print_range(v.begin(), v.end());
   }
   {
-    vector<double> v(a, a + 8);
+    vector<double> v(a);
     cout << "mergesort() with 'compare_as_ints()': ";
     mergesort(v.begin(), v.end(), compare_as_ints);
     print_range(v.begin(), v.end());

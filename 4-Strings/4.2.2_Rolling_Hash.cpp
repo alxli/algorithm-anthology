@@ -174,9 +174,7 @@ int main() {
   assert(hv.get(0, 2) == hv.get(3, 5));  // [1, 2] == [1, 2]
   assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
-  vector<point> poly;
-  poly.emplace_back(1, 2);
-  poly.emplace_back(3, 4);
+  vector<point> poly{{1, 2}, {3, 4}};
   RollingHash<point, PointHasher> hp(poly);
   assert((hp.get(0, 2) == RollingHash<point, PointHasher>::hash(poly)));
   return 0;

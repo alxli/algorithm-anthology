@@ -107,13 +107,13 @@ struct Line {
   bool is_parallel(const Line &l) const { return EQ(a, l.a) && EQ(b, l.b); }
   bool is_perpendicular(const Line &l) const { return EQ(-a * l.a, b * l.b); }
 
-  // Return the parallel line passing through point p.
+  // Return the parallel line passing through Point p.
   template<class Point>
   Line parallel(const Point &p) const {
     return Line(a, b, -a * p.x - b * p.y);
   }
 
-  // Return the perpendicular line passing through point p.
+  // Return the perpendicular line passing through Point p.
   template<class Point>
   Line perpendicular(const Point &p) const {
     return Line(-b, a, b * p.x - a * p.y);

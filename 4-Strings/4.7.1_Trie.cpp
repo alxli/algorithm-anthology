@@ -72,8 +72,8 @@ class Trie {
     return true;
   }
 
-  template<class KVFunction>
-  static void walk(Node *n, string &s, KVFunction f) {
+  template<class Fn>
+  static void walk(Node *n, string &s, Fn f) {
     if (n->is_terminal) {
       f(s, n->value);
     }
@@ -137,8 +137,8 @@ class Trie {
     return n->is_terminal ? &(n->value) : nullptr;
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     string s;
     walk(root, s, f);
   }

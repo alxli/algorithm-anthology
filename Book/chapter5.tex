@@ -30,8 +30,8 @@ class Graph {
   std::vector<std::vector<int>> adj;
   bool directed;
 
-  template<class ReportFunction>
-  void dfs(int n, std::vector<bool> &visit, ReportFunction f) const {
+  template<class Fn>
+  void dfs(int n, std::vector<bool> &visit, Fn f) const {
     f(n);
     visit[n] = true;
     for (int v : adj[n]) {
@@ -92,8 +92,8 @@ class Graph {
   bool is_tree() const { return !directed && !has_cycle(); }
   bool is_dag() const { return directed && !has_cycle(); }
 
-  template<class ReportFunction>
-  void dfs(int start, ReportFunction f) const {
+  template<class Fn>
+  void dfs(int start, Fn f) const {
     std::vector<bool> visit(adj.size(), false);
     dfs(start, visit, f);
   }
@@ -308,6 +308,7 @@ An unweighted tree possesses a center, centroid, and diameter. The following fun
 \textbf{Space Complexity}: $O(n)$ auxiliary stack space for \inlinecode{find\_centers()}, \inlinecode{find\_centroid()}, and \inlinecode{diameter()}, where $n$ is the number of nodes.
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <utility>
 #include <vector>
 
@@ -358,10 +359,10 @@ int find_centroid(int nodes, int u = 0, int p = -1) {
 }
 
 std::pair<int, int> dfs(int u, int p, int depth) {
-  std::pair<int, int> res = {depth, u};
+  std::pair<int, int> res{depth, u};
   for (int v : adj[u]) {
     if (v != p) {
-      res = max(res, dfs(v, u, depth + 1));
+      res = std::max(res, dfs(v, u, depth + 1));
     }
   }
   return res;
@@ -713,33 +714,31 @@ Given a starting node in an unweighted, directed graph, visit every connected no
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <climits>
 #include <queue>
-#include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = INT_MAX / 2;
 std::vector<int> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
 void bfs(int nodes, int start) {
-  std::vector<bool> visit(nodes, false);
-  for (int i = 0; i < nodes; i++) {
-    dist[i] = INF;
-    pred[i] = -1;
-  }
-  std::queue<std::pair<int, int>> q;
-  q.emplace(start, 0);
+  std::fill(dist, dist + nodes, INF);
+  std::fill(pred, pred + nodes, -1);
+  std::queue<int> q;
+  dist[start] = 0;
+  q.push(start);
   while (!q.empty()) {
-    auto [u, d] = q.front();
+    int u = q.front();
     q.pop();
-    visit[u] = true;
     for (int v : adj[u]) {
-      if (visit[v]) {
+      if (dist[v] != INF) {
         continue;
       }
-      dist[v] = d + 1;
+      dist[v] = dist[u] + 1;
       pred[v] = u;
-      q.emplace(v, d + 1);
+      q.push(v);
     }
   }
 }
@@ -765,11 +764,9 @@ void print_path(int dest) {
 int main() {
   int start = 0, dest = 3;
   adj[0].push_back(1);
-  adj[0].push_back(3);
   adj[1].push_back(2);
   adj[1].push_back(3);
   adj[2].push_back(3);
-  adj[0].push_back(3);
   bfs(4, start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;
@@ -834,7 +831,7 @@ void zero_one_bfs(int nodes, int start) {
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].emplace_back(v, w);
+  adj[u].push_back({v, w});
 }
 
 int main() {
@@ -853,7 +850,7 @@ int main() {
 \subsection{Shortest Path (Dijkstra)}
 Given a starting node in a weighted, directed graph with nonnegative weights only, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred[]}. \inlinecode{dijkstra()} applies to a global, pre-populated adjacency list \inlinecode{adj[]} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
-Since \inlinecode{std::priority\_queue} is by default a max-heap, we simulate a min-heap by negating node distances before pushing them and negating them again after popping them. Alternatively, the container can be declared with the following template arguments (\inlinecode{\#include \textless{}functional\textgreater{}} to access \inlinecode{std::greater}): \inlinecode{priority\_queue\textless{}pair\textless{}int, int\textgreater{}, vector\textless{}pair\textless{}int, int\textgreater{} \textgreater{}, greater\textless{}pair\textless{}int, int\textgreater{} \textgreater{} \textgreater{} pq;}
+Since \inlinecode{std::priority\_queue} is by default a max-heap, we store negated node distances so the closest candidate is popped first.
 
 Dijkstra's algorithm may be modified to support negative edge weights by allowing nodes to be re-visited (removing the visited array check in the inner for-loop). This is known as the Shortest Path Faster Algorithm (SPFA), which has a larger running time of $O(n \cdot m)$ on the number of nodes and edges respectively. While it is as slow in the worst case as the Bellman-Ford algorithm, the SPFA still tends to outperform in the average case.
 
@@ -885,8 +882,11 @@ void dijkstra(int nodes, int start) {
   std::priority_queue<std::pair<int, int>> pq;
   pq.emplace(0, start);
   while (!pq.empty()) {
-    int u = pq.top().second;
+    auto [neg_d, u] = pq.top();
     pq.pop();
+    if (visit[u]) {
+      continue;
+    }
     visit[u] = true;
     for (auto &[v, w] : adj[u]) {
       if (visit[v]) {
@@ -1036,11 +1036,12 @@ The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <climits>
 #include <queue>
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = INT_MAX / 2;
 std::vector<std::pair<int, int>> adj[MAXN];
 int dist[MAXN], pred[MAXN], relax_count[MAXN];
 bool in_queue[MAXN];
@@ -1081,7 +1082,7 @@ bool spfa(int nodes, int start) {
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].emplace_back(v, w);
+  adj[u].push_back({v, w});
 }
 
 int main() {
@@ -1396,6 +1397,7 @@ Condensing each maximal component without a bridge into a single node, we can de
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 const int MAXN = 100;
@@ -1833,10 +1835,13 @@ Since \inlinecode{std::priority\_queue} is by default a max-heap, we simulate a 
 
 \begin{lstlisting}[language=C++]
 #include <queue>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 const int MAXN = 100;
+using QueueEntry = std::tuple<int, int, int>;  // (-weight, from, to)
+
 std::vector<std::pair<int, int>> adj[MAXN], mst;
 
 int prim(int nodes) {
@@ -1848,13 +1853,12 @@ int prim(int nodes) {
       continue;
     }
     visit[i] = true;
-    std::priority_queue<std::pair<int, std::pair<int, int>>> pq;
-    for (auto &[nb, w] : adj[i]) {
-      pq.emplace(-w, std::pair<int, int>{i, nb});
+    std::priority_queue<QueueEntry> pq;
+    for (auto &[v, w] : adj[i]) {
+      pq.emplace(-w, i, v);
     }
     while (!pq.empty()) {
-      auto [neg_w, endpoints] = pq.top();
-      auto [u, v] = endpoints;
+      auto [neg_w, u, v] = pq.top();
       int w = -neg_w;
       pq.pop();
       if (visit[u] && !visit[v]) {
@@ -1864,7 +1868,7 @@ int prim(int nodes) {
           total_dist += w;
         }
         for (auto &[nb, ew] : adj[v]) {
-          pq.emplace(-ew, std::pair<int, int>{v, nb});
+          pq.emplace(-ew, v, nb);
         }
       }
     }
@@ -2248,9 +2252,10 @@ Although the push-relabel algorithm is considered one of the most efficient maxi
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <climits>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = INT_MAX / 2;
 int cap[MAXN][MAXN], f[MAXN][MAXN];
 
 int push_relabel(int nodes, int source, int sink) {
@@ -2355,6 +2360,10 @@ struct Edge {
   Edge(int v_, int rev_, int cap_, int cost_) : v(v_), rev(rev_), cap(cap_), cost(cost_) {}
 };
 
+struct FlowResult {
+  int flow, cost;
+};
+
 const int MCMF_INF = INT_MAX / 2;
 
 struct MinCostMaxFlow {
@@ -2369,7 +2378,7 @@ struct MinCostMaxFlow {
     adj[v].emplace_back(u, static_cast<int>(adj[u].size()) - 1, 0, -cost);
   }
 
-  std::pair<int, int> min_cost_flow(int source, int sink, int target_flow) {
+  FlowResult min_cost_flow(int source, int sink, int target_flow) {
     int nodes = adj.size(), flow = 0, cost = 0;
     std::vector<int> dist(nodes), parent_node(nodes), parent_edge(nodes);
     std::vector<bool> in_queue(nodes);
@@ -2428,9 +2437,9 @@ int main() {
   graph.add_edge(1, 2, 1, 1);
   graph.add_edge(1, 3, 1, 3);
   graph.add_edge(2, 3, 2, 1);
-  pair<int, int> result = graph.min_cost_flow(0, 3, 3);
-  assert(result.first == 3);
-  assert(result.second == 13);
+  FlowResult result = graph.min_cost_flow(0, 3, 3);
+  assert(result.flow == 3);
+  assert(result.cost == 13);
   return 0;
 }
 \end{lstlisting}
@@ -3014,8 +3023,9 @@ Given a weighted graph, determine a cycle of minimum total distance which visits
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <climits>
 
-const int MAXN = 20, INF = 0x3f3f3f3f;
+const int MAXN = 20, INF = INT_MAX / 2;
 int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
 
 void add_edge(int u, int v, int w) {
@@ -3104,8 +3114,9 @@ Given a weighted, directed graph, determine a path of minimum total distance whi
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <climits>
 
-const int MAXN = 20, INF = 0x3f3f3f3f;
+const int MAXN = 20, INF = INT_MAX / 2;
 int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
 
 int shortest_hamiltonian_path(int nodes) {

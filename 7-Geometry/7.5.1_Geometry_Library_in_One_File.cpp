@@ -84,16 +84,16 @@ struct Point {
     return Point(x * cos(t) - y * sin(t), x * sin(t) + y * cos(t));
   }
 
-  // Returns (x, y) rotated t radians clockwise about Point p.
+  // Returns (x, y) rotated t radians clockwise about point p.
   Point rotateCW(const Point &p, double t) const { return (*this - p).rotateCW(t) + p; }
 
-  // Returns (x, y) rotated t radians counter-clockwise about the Point p.
+  // Returns (x, y) rotated t radians counter-clockwise about the point p.
   Point rotateCCW(const Point &p, double t) const { return (*this - p).rotateCCW(t) + p; }
 
-  // Returns (x, y) reflected across Point p.
+  // Returns (x, y) reflected across point p.
   Point reflect(const Point &p) const { return Point(2 * p.x - x, 2 * p.y - y); }
 
-  // Returns (x, y) reflected across the line containing Points p and q.
+  // Returns (x, y) reflected across the line containing points p and q.
   Point reflect(const Point &p, const Point &q) const {
     if (p == q) {
       return reflect(p);
@@ -461,7 +461,7 @@ Point closest_Point(const Line &l, const Point &p) {
   return res;
 }
 
-// Returns the point on line segment ab that is closest to point p.
+// Returns the Point on line segment ab that is closest to Point p.
 Point closest_Point(const Point &a, const Point &b, const Point &p) {
   if (a == b) {
     return a;
@@ -733,7 +733,7 @@ bool point_in_rectangle(const Point &p, const Point &v, double w, double h) {
                         : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
 }
 
-// Returns whether Point p lies within the rectangle with opposing vertices a and b. If the Point
+// Returns whether point p lies within the rectangle with opposing vertices a and b. If the point
 // lies on or close to an edge (by roughly EPS), then the result will depend on the setting of
 // EDGE_IS_INSIDE in the function above.
 bool point_in_rectangle(const Point &p, const Point &a, const Point &b) {
@@ -855,7 +855,7 @@ int main() {
 #define test(a, b, c, d, e, f, g, h) \
   seg_intersection(Point(a, b), Point(c, d), Point(e, f), Point(g, h), &p, &q)
 
-    // Intersection is a Point.
+    // Intersection is a point.
     assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && p == Point(0, 0));
     assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && p == Point(2, 2));
     assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && p == Point(-2, 0));

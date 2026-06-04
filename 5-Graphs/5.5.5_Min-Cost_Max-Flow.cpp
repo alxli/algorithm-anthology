@@ -29,6 +29,10 @@ struct Edge {
   Edge(int v_, int rev_, int cap_, int cost_) : v(v_), rev(rev_), cap(cap_), cost(cost_) {}
 };
 
+struct FlowResult {
+  int flow, cost;
+};
+
 const int MCMF_INF = INT_MAX / 2;
 
 struct MinCostMaxFlow {
@@ -43,7 +47,7 @@ struct MinCostMaxFlow {
     adj[v].emplace_back(u, static_cast<int>(adj[u].size()) - 1, 0, -cost);
   }
 
-  std::pair<int, int> min_cost_flow(int source, int sink, int target_flow) {
+  FlowResult min_cost_flow(int source, int sink, int target_flow) {
     int nodes = adj.size(), flow = 0, cost = 0;
     std::vector<int> dist(nodes), parent_node(nodes), parent_edge(nodes);
     std::vector<bool> in_queue(nodes);
@@ -102,8 +106,8 @@ int main() {
   graph.add_edge(1, 2, 1, 1);
   graph.add_edge(1, 3, 1, 3);
   graph.add_edge(2, 3, 2, 1);
-  pair<int, int> result = graph.min_cost_flow(0, 3, 3);
-  assert(result.first == 3);
-  assert(result.second == 13);
+  FlowResult result = graph.min_cost_flow(0, 3, 3);
+  assert(result.flow == 3);
+  assert(result.cost == 13);
   return 0;
 }

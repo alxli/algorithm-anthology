@@ -27,9 +27,9 @@ Space Complexity:
 
 const long long INF = (1LL << 62);
 
-template<class CostFunction>
+template<class Cost>
 std::vector<std::vector<long long>> knuth_interval_dp(
-    int n, CostFunction cost, std::vector<std::vector<int>> *opt_out = nullptr
+    int n, Cost cost, std::vector<std::vector<int>> *opt_out = nullptr
 ) {
   std::vector<std::vector<long long>> dp(n + 1, std::vector<long long>(n + 1, 0));
   std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));

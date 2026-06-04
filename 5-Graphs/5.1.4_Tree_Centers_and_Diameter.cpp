@@ -24,6 +24,7 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <utility>
 #include <vector>
 
@@ -74,10 +75,10 @@ int find_centroid(int nodes, int u = 0, int p = -1) {
 }
 
 std::pair<int, int> dfs(int u, int p, int depth) {
-  std::pair<int, int> res = {depth, u};
+  std::pair<int, int> res{depth, u};
   for (int v : adj[u]) {
     if (v != p) {
-      res = max(res, dfs(v, u, depth + 1));
+      res = std::max(res, dfs(v, u, depth + 1));
     }
   }
   return res;

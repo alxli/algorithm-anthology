@@ -645,9 +645,7 @@ int main() {
   assert(hv.get(0, 2) == hv.get(3, 5));  // [1, 2] == [1, 2]
   assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
-  vector<point> poly;
-  poly.emplace_back(1, 2);
-  poly.emplace_back(3, 4);
+  vector<point> poly{{1, 2}, {3, 4}};
   RollingHash<point, PointHasher> hp(poly);
   assert((hp.get(0, 2) == RollingHash<point, PointHasher>::hash(poly)));
   return 0;
@@ -976,8 +974,8 @@ class AhoCorasick {
     }
   }
 
-  template<class ReportFunction>
-  void find_all_in(const string &haystack, ReportFunction report_match) {
+  template<class Fn>
+  void find_all_in(const string &haystack, Fn report_match) {
     int state = 0;
     for (int i = 0; i < static_cast<int>(haystack.size()); i++) {
       state = next_state(state, haystack[i]);
@@ -1253,6 +1251,11 @@ using Operand = double;
 using UnaryOp = Operand (*)(Operand a);
 using BinaryOp = Operand (*)(Operand a, Operand b);
 
+struct BinaryRule {
+  BinaryOp op;
+  int precedence;
+};
+
 bool is_operand(const string &s) {
   int npoints = 0;
   for (char c : s) {
@@ -1276,7 +1279,7 @@ Operand eval_operand(const string &s) {
 
 class parser {
   using unary_op_map = std::map<string, UnaryOp>;
-  using binary_op_map = std::map<string, std::pair<BinaryOp, int>>;
+  using binary_op_map = std::map<string, BinaryRule>;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
   std::set<string> ops;
@@ -1309,10 +1312,10 @@ class parser {
     Operand v = eval_binary(lo, hi, precedence + 1);
     while (lo != hi) {
       auto it = binary_ops.find(*lo);
-      if (it == binary_ops.end() || it->second.second != precedence) {
+      if (it == binary_ops.end() || it->second.precedence != precedence) {
         return v;
       }
-      v = (it->second.first)(v, eval_binary(++lo, hi, precedence + 1));
+      v = (it->second.op)(v, eval_binary(++lo, hi, precedence + 1));
     }
     return v;
   }
@@ -1333,7 +1336,7 @@ class parser {
     max_precedence = 0;
     for (const auto &[op, fn_prec] : binary_ops) {
       ops.insert(op);
-      max_precedence = std::max(max_precedence, fn_prec.second);
+      max_precedence = std::max(max_precedence, fn_prec.precedence);
     }
   }
 
@@ -1418,7 +1421,7 @@ int main() {
   unary_ops["+"] = pos;
   unary_ops["-"] = neg;
 
-  map<string, pair<BinaryOp, int>> binary_ops;
+  map<string, BinaryRule> binary_ops;
   binary_ops["+"] = {static_cast<BinaryOp>(add), 0};
   binary_ops["-"] = {static_cast<BinaryOp>(sub), 0};
   binary_ops["*"] = {static_cast<BinaryOp>(mul), 1};
@@ -1490,6 +1493,11 @@ using Operand = double;
 using UnaryOp = Operand (*)(Operand a);
 using BinaryOp = Operand (*)(Operand a, Operand b);
 
+struct BinaryRule {
+  BinaryOp op;
+  int precedence;
+};
+
 bool is_operand(const string &s) {
   int npoints = 0;
   for (char c : s) {
@@ -1513,7 +1521,7 @@ Operand eval_operand(const string &s) {
 
 class parser {
   using unary_op_map = std::map<string, UnaryOp>;
-  using binary_op_map = std::map<string, std::pair<BinaryOp, int>>;
+  using binary_op_map = std::map<string, BinaryRule>;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
   std::set<string> ops;
@@ -1604,8 +1612,8 @@ class parser {
           auto [op, is_unary] = ops.top();
           auto it1 = binary_ops.find(op);
           auto it2 = binary_ops.find(curr);
-          if (!is_unary && (it1 == binary_ops.end() ? -1 : it1->second.second) <
-                               (it2 == binary_ops.end() ? -1 : it2->second.second)) {
+          if (!is_unary && (it1 == binary_ops.end() ? -1 : it1->second.precedence) <
+                               (it2 == binary_ops.end() ? -1 : it2->second.precedence)) {
             break;
           }
           ops.pop();
@@ -1626,7 +1634,7 @@ class parser {
             if (it1 == binary_ops.end()) {
               throw std::runtime_error("Failed to eval binary op: " + op);
             }
-            vals.push((it1->second.first)(a, b));
+            vals.push((it1->second.op)(a, b));
           }
         }
         if (curr != ")") {
@@ -1664,7 +1672,7 @@ int main() {
   unary_ops["+"] = pos;
   unary_ops["-"] = neg;
 
-  map<string, pair<BinaryOp, int>> binary_ops;
+  map<string, BinaryRule> binary_ops;
   binary_ops["+"] = {static_cast<BinaryOp>(add), 0};
   binary_ops["-"] = {static_cast<BinaryOp>(sub), 0};
   binary_ops["*"] = {static_cast<BinaryOp>(mul), 1};
@@ -2493,8 +2501,8 @@ class Trie {
     return true;
   }
 
-  template<class KVFunction>
-  static void walk(Node *n, string &s, KVFunction f) {
+  template<class Fn>
+  static void walk(Node *n, string &s, Fn f) {
     if (n->is_terminal) {
       f(s, n->value);
     }
@@ -2558,8 +2566,8 @@ class Trie {
     return n->is_terminal ? &(n->value) : nullptr;
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     string s;
     walk(root, s, f);
   }
@@ -2734,8 +2742,8 @@ class RadixTree {
     return false;
   }
 
-  template<class KVFunction>
-  static void walk(Node *n, string &s, KVFunction f) {
+  template<class Fn>
+  static void walk(Node *n, string &s, Fn f) {
     if (n->is_terminal) {
       f(s, n->value);
     }
@@ -2798,8 +2806,8 @@ class RadixTree {
     return n->is_terminal ? &(n->value) : nullptr;
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     string s;
     walk(root, s, f);
   }

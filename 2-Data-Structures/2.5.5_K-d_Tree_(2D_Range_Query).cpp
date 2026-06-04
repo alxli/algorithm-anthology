@@ -61,8 +61,8 @@ class KDTree {
   // Helper variables for query().
   T x1, y1, x2, y2;
 
-  template<class ReportFunction>
-  void query(int lo, int hi, ReportFunction f) {
+  template<class Fn>
+  void query(int lo, int hi, Fn f) {
     if (lo >= hi) {
       return;
     }
@@ -98,8 +98,8 @@ class KDTree {
     build(0, n, true);
   }
 
-  template<class ReportFunction>
-  void query(const T &x1, const T &y1, const T &x2, const T &y2, ReportFunction f) {
+  template<class Fn>
+  void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
     this->x1 = x1;
     this->y1 = y1;
     this->x2 = x2;
@@ -123,13 +123,8 @@ void print(const pair<int, int> &p) {
 }
 
 int main() {
-  const int n = 10;
-  int points[n][2] = {{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
-                      {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
-  vector<pair<int, int>> v;
-  for (int i = 0; i < n; i++) {
-    v.push_back({points[i][0], points[i][1]});
-  }
+  vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
+                           {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   KDTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);
   cout << endl;

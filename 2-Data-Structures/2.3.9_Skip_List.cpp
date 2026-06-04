@@ -152,8 +152,8 @@ class SkipList {
     return *find(k);
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     Node *n = head->next[0];
     while (n != nullptr) {
       f(n->key, n->value);

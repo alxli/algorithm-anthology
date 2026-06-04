@@ -25,16 +25,21 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 template<class It>
-bool point_in_polygon(const point &p, It lo, It hi) {
+bool point_in_polygon(const Point &p, It lo, It hi) {
   static const bool EDGE_IS_INSIDE = true;
   bool res = false;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
@@ -61,10 +66,10 @@ using namespace std;
 
 int main() {
   // Irregular trapezoid.
-  point p[] = {point(-1, 3), point(1, 3), point(2, 1), point(0, 0)};
-  assert(point_in_polygon(point(1, 2), p, p + 4));
-  assert(point_in_polygon(point(0, 3), p, p + 4));
-  assert(!point_in_polygon(point(0, 3.01), p, p + 4));
-  assert(!point_in_polygon(point(2, 2), p, p + 4));
+  Point p[] = {Point(-1, 3), Point(1, 3), Point(2, 1), Point(0, 0)};
+  assert(point_in_polygon(Point(1, 2), p, p + 4));
+  assert(point_in_polygon(Point(0, 3), p, p + 4));
+  assert(!point_in_polygon(Point(0, 3.01), p, p + 4));
+  assert(!point_in_polygon(Point(2, 2), p, p + 4));
   return 0;
 }

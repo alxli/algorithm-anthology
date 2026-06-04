@@ -24,10 +24,9 @@ Space Complexity:
 #include <cmath>
 #include <stdexcept>
 
-template<class ContinuousFunction>
+template<class Fn>
 double newton_root(
-    ContinuousFunction f, ContinuousFunction fprime, double x0, const double EPS = 1e-15,
-    const int ITERATIONS = 100
+    Fn f, Fn fprime, double x0, const double EPS = 1e-15, const int ITERATIONS = 100
 ) {
   double x = x0, error = EPS + 1;
   for (int i = 0; error > EPS && i < ITERATIONS; i++) {
@@ -41,9 +40,9 @@ double newton_root(
   return x;
 }
 
-template<class ContinuousFunction>
+template<class Fn>
 double secant_root(
-    ContinuousFunction f, double x0, double x1, const double EPS = 1e-15, const int ITERATIONS = 100
+    Fn f, double x0, double x1, const double EPS = 1e-15, const int ITERATIONS = 100
 ) {
   double xold = x0, fxold = f(x0), x = x1, error = EPS + 1;
   for (int i = 0; error > EPS && i < ITERATIONS; i++) {

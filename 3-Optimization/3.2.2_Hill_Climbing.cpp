@@ -25,11 +25,10 @@ Space Complexity:
 #include <cmath>
 #include <cstddef>
 
-template<class ContinuousFunction>
+template<class Fn>
 double find_min(
-    ContinuousFunction f, double x0, double y0, double *critical_x = nullptr,
-    double *critical_y = nullptr, const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6,
-    const int NUM_DIRECTIONS = 6
+    Fn f, double x0, double y0, double *critical_x = nullptr, double *critical_y = nullptr,
+    const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6, const int NUM_DIRECTIONS = 6
 ) {
   static const double PI = acos(-1.0);
   double x = x0, y = y0, res = f(x0, y0);

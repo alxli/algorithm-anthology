@@ -263,40 +263,36 @@ int main() {
     assert(sorted(a, a + 8));
   }
   {  // STL containers work too.
-    int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
-    vector<int> v(a, a + 8);
+    vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};
     quicksort(v.begin(), v.end());
     assert(sorted(v.begin(), v.end()));
   }
   {  // Reverse iterators work as expected.
-    int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
-    vector<int> v(a, a + 8);
+    vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};
     heapsort(v.rbegin(), v.rend());
     assert(sorted(v.rbegin(), v.rend()));
   }
   {  // We can sort doubles just as well.
-    double a[] = {1.1, -5.0, 6.23, 4.123, 155.2};
-    vector<double> v(a, a + 5);
+    vector<double> v{1.1, -5.0, 6.23, 4.123, 155.2};
     combsort(v.begin(), v.end());
     assert(sorted(v.begin(), v.end()));
   }
   {  // Must use radix_sort with unsigned values, but sorting in reverse works!
-    int a[] = {32, 71, 12, 45, 26, 80, 53, 33};
-    vector<int> v(a, a + 8);
+    vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};
     radix_sort(v.rbegin(), v.rend());
     assert(sorted(v.rbegin(), v.rend()));
   }
 
   // Example from: http://www.cplusplus.com/reference/algorithm/stable_sort
-  double a[] = {3.14, 1.41, 2.72, 4.67, 1.73, 1.32, 1.62, 2.58};
+  const vector<double> a{3.14, 1.41, 2.72, 4.67, 1.73, 1.32, 1.62, 2.58};
   {
-    vector<double> v(a, a + 8);
+    vector<double> v(a);
     cout << "mergesort() with default comparisons: ";
     mergesort(v.begin(), v.end());
     print_range(v.begin(), v.end());
   }
   {
-    vector<double> v(a, a + 8);
+    vector<double> v(a);
     cout << "mergesort() with 'compare_as_ints()': ";
     mergesort(v.begin(), v.end(), compare_as_ints);
     print_range(v.begin(), v.end());
@@ -417,8 +413,7 @@ int main() {
   assert(v0 == v1 && v0 == v2 && v0 == v3);
 
   // Example from: http://en.cppreference.com/w/cpp/algorithm/rotate
-  int a[] = {2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
-  vector<int> v(a, a + 10);
+  vector<int> v{2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
   cout << "before sort:  ";
   for (const auto &x : v) {
     cout << x << " ";
@@ -781,14 +776,14 @@ Precomputes prefix sums so range-sum queries can be answered in constant time. T
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{prefix\_sums(a)}, where $n$ is the array size.
-  \item $O(RC)$ per call to \inlinecode{prefix\_sums\_2d(a)}, where $R$ and $C$ are matrix dimensions.
+  \item $O(r \cdot c)$ per call to \inlinecode{prefix\_sums\_2d(a)}, where $r$ and $c$ are matrix dimensions.
   \item $O(1)$ per range or rectangle query.
 \end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for one-dimensional prefix sums.
-  \item $O(RC)$ for two-dimensional prefix sums.
+  \item $O(r \cdot c)$ for two-dimensional prefix sums.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -912,12 +907,11 @@ Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying
 #include <vector>
 
 template<class It>
-auto longest_increasing_subsequence(It lo, It hi)
-    -> std::vector<typename std::iterator_traits<It>::value_type> {
+auto longest_increasing_subsequence(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   int len = 0, n = hi - lo;
   if (n == 0) {
-    return {};
+    return std::vector<T>();
   }
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
@@ -957,8 +951,8 @@ void print_range(It lo, It hi) {
 }
 
 int main() {
-  int a[] = {-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
-  vector<int> res = longest_increasing_subsequence(a, a + 10);
+  vector<int> a{-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
+  vector<int> res = longest_increasing_subsequence(a.begin(), a.end());
   print_range(res.begin(), res.end());
   return 0;
 }
@@ -1384,9 +1378,6 @@ Intervals are represented as half-open ranges \inlinecode{[start, finish)}, so t
 
 struct Interval {
   int start, finish, id;
-
-  explicit Interval(int start = 0, int finish = 0, int id = 0)
-      : start(start), finish(finish), id(id) {}
 };
 
 std::vector<Interval> interval_scheduling(std::vector<Interval> intervals) {
@@ -1412,12 +1403,7 @@ std::vector<Interval> interval_scheduling(std::vector<Interval> intervals) {
 using namespace std;
 
 int main() {
-  vector<Interval> intervals;
-  intervals.emplace_back(1, 4, 0);
-  intervals.emplace_back(3, 5, 1);
-  intervals.emplace_back(0, 6, 2);
-  intervals.emplace_back(5, 7, 3);
-  intervals.emplace_back(8, 9, 4);
+  vector<Interval> intervals{{1, 4, 0}, {3, 5, 1}, {0, 6, 2}, {5, 7, 3}, {8, 9, 4}};
   vector<Interval> chosen = interval_scheduling(intervals);
   assert(chosen.size() == 3);
   assert(chosen[0].id == 0);
@@ -1447,9 +1433,6 @@ Intervals are represented as half-open ranges \inlinecode{[start, finish)}, so t
 struct WeightedInterval {
   int start, finish;
   long long weight;
-
-  explicit WeightedInterval(int start = 0, int finish = 0, long long weight = 0)
-      : start(start), finish(finish), weight(weight) {}
 };
 
 long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) {
@@ -1478,12 +1461,7 @@ long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) 
 using namespace std;
 
 int main() {
-  vector<WeightedInterval> intervals;
-  intervals.emplace_back(1, 3, 5);
-  intervals.emplace_back(2, 5, 6);
-  intervals.emplace_back(4, 6, 5);
-  intervals.emplace_back(6, 7, 4);
-  intervals.emplace_back(5, 8, 11);
+  vector<WeightedInterval> intervals{{1, 3, 5}, {2, 5, 6}, {4, 6, 5}, {6, 7, 4}, {5, 8, 11}};
   assert(weighted_interval_scheduling(intervals) == 17);
   return 0;
 }
@@ -1504,15 +1482,13 @@ The greedy algorithm sorts intervals by start time and reuses the group whose cu
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <functional>
 #include <queue>
 #include <utility>
 #include <vector>
 
 struct PartitionInterval {
   int start, finish, id;
-
-  explicit PartitionInterval(int start = 0, int finish = 0, int id = 0)
-      : start(start), finish(finish), id(id) {}
 };
 
 std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals) {
@@ -1548,10 +1524,7 @@ std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals)
 using namespace std;
 
 int main() {
-  vector<PartitionInterval> intervals;
-  intervals.emplace_back(0, 30, 0);
-  intervals.emplace_back(5, 10, 1);
-  intervals.emplace_back(15, 20, 2);
+  vector<PartitionInterval> intervals{{0, 30, 0}, {5, 10, 1}, {15, 20, 2}};
   vector<int> room = interval_partitioning(intervals);
   assert(1 + *max_element(room.begin(), room.end()) == 2);
   assert(room[1] == room[2]);
@@ -1581,8 +1554,6 @@ This is a compact scheduling pattern that combines sorting with a disjoint-set f
 struct Job {
   int deadline;
   long long profit;
-
-  explicit Job(int deadline = 0, long long profit = 0) : deadline(deadline), profit(profit) {}
 };
 
 class SlotDSU {
@@ -1627,12 +1598,7 @@ long long schedule_deadline_jobs(std::vector<Job> jobs) {
 using namespace std;
 
 int main() {
-  vector<Job> jobs;
-  jobs.emplace_back(2, 100);
-  jobs.emplace_back(1, 19);
-  jobs.emplace_back(2, 27);
-  jobs.emplace_back(1, 25);
-  jobs.emplace_back(3, 15);
+  vector<Job> jobs{{2, 100}, {1, 19}, {2, 27}, {1, 25}, {3, 15}};
   assert(schedule_deadline_jobs(jobs) == 142);
   return 0;
 }
@@ -1656,8 +1622,6 @@ Selects a maximum-size subset of jobs that can all be completed by their deadlin
 
 struct TimedJob {
   int duration, deadline;
-
-  explicit TimedJob(int duration = 0, int deadline = 0) : duration(duration), deadline(deadline) {}
 };
 
 int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
@@ -1683,11 +1647,7 @@ int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
 using namespace std;
 
 int main() {
-  vector<TimedJob> jobs;
-  jobs.emplace_back(3, 4);
-  jobs.emplace_back(2, 3);
-  jobs.emplace_back(1, 2);
-  jobs.emplace_back(2, 7);
+  vector<TimedJob> jobs{{3, 4}, {2, 3}, {1, 2}, {2, 7}};
   assert(maximize_on_time_jobs(jobs) == 3);
   return 0;
 }
@@ -1762,7 +1722,7 @@ Selects uniformly random samples from a stream whose length may be unknown in ad
 #include <vector>
 
 template<class It>
-typename std::iterator_traits<It>::value_type reservoir_sample_one(It lo, It hi) {
+auto reservoir_sample_one(It lo, It hi) {
   assert(lo != hi);
   auto sample = *lo;
   int seen = 0;
@@ -1776,8 +1736,7 @@ typename std::iterator_traits<It>::value_type reservoir_sample_one(It lo, It hi)
 }
 
 template<class It>
-auto reservoir_sample_k(It lo, It hi, int k)
-    -> std::vector<typename std::iterator_traits<It>::value_type> {
+auto reservoir_sample_k(It lo, It hi, int k) {
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> res;
   int seen = 0;
@@ -1846,8 +1805,7 @@ Given an array of numbers, determine the maximum possible sum of any contiguous 
 #include <vector>
 
 template<class It>
-auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr) ->
-    typename std::iterator_traits<It>::value_type {
+auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
     return T();
@@ -2130,10 +2088,12 @@ Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm", i
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-#include <utility>
+struct Cycle {
+  int start, length;
+};
 
-template<class IntFunction>
-std::pair<int, int> find_cycle_floyd(IntFunction f, int x0) {
+template<class Fn>
+Cycle find_cycle_floyd(Fn f, int x0) {
   int tortoise = f(x0), hare = f(f(x0));
   while (tortoise != hare) {
     tortoise = f(tortoise);
@@ -2203,10 +2163,12 @@ While Floyd's cycle-finding algorithm finds cycles by simultaneously moving two 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-#include <utility>
+struct Cycle {
+  int start, length;
+};
 
-template<class IntFunction>
-std::pair<int, int> find_cycle_brent(IntFunction f, int x0) {
+template<class Fn>
+Cycle find_cycle_brent(Fn f, int x0) {
   int power = 1, length = 1, tortoise = x0, hare = f(x0);
   while (tortoise != hare) {
     if (power == length) {

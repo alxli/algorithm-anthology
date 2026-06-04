@@ -42,20 +42,25 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) {
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double cross(const point &a, const point &b) {
+double cross(const Point &a, const Point &b) {
   return a.x * b.y - a.y * b.x;
 }
 
 template<class It>
-point mean_center(It lo, It hi) {
+Point mean_center(It lo, It hi) {
   if (lo == hi) {
     throw std::runtime_error("Cannot get center of an empty range.");
   }
@@ -65,10 +70,10 @@ point mean_center(It lo, It hi) {
     x_sum += it->x;
     y_sum += it->y;
   }
-  return point(x_sum / num_points, y_sum / num_points);
+  return Point(x_sum / num_points, y_sum / num_points);
 }
 
-bool cw_comp(const point &a, const point &b, const point &c) {
+bool cw_comp(const Point &a, const Point &b, const Point &c) {
   if (GE(a.x - c.x, 0) && LT(b.x - c.x, 0)) {
     return true;
   }
@@ -81,7 +86,7 @@ bool cw_comp(const point &a, const point &b, const point &c) {
     }
     return b.y > a.y;
   }
-  point ac(a.x - c.x, a.y - c.y), bc(b.x - c.x, b.y - c.y);
+  Point ac(a.x - c.x, a.y - c.y), bc(b.x - c.x, b.y - c.y);
   double det = cross(ac, bc);
   if (EQ(det, 0)) {
     return sqnorm(ac) > sqnorm(bc);
@@ -89,12 +94,12 @@ bool cw_comp(const point &a, const point &b, const point &c) {
   return det < 0;
 }
 
-auto CWComparator(const point &c) {
-  return [c](const point &a, const point &b) { return cw_comp(a, b, c); };
+auto CWComparator(const Point &c) {
+  return [c](const Point &a, const Point &b) { return cw_comp(a, b, c); };
 }
 
-auto CCWComparator(const point &c) {
-  return [c](const point &a, const point &b) { return cw_comp(b, a, c); };
+auto CCWComparator(const Point &c) {
+  return [c](const Point &a, const Point &b) { return cw_comp(b, a, c); };
 }
 
 template<class It>
@@ -122,11 +127,11 @@ int main() {
   // Irregular pentagon with only the vertex (1, 2) not on its convex hull. The ordering here is
   // already sorted in ccw order around their mean center, though we will shuffle them to verify our
   // sorting comparator.
-  vector<point> points{point(1, 3), point(1, 2), point(2, 1), point(0, 0), point(-1, 3)};
-  vector<point> v(points);
+  vector<Point> points{Point(1, 3), Point(1, 2), Point(2, 1), Point(0, 0), Point(-1, 3)};
+  vector<Point> v(points);
   std::mt19937 rng(12345);
   std::shuffle(v.begin(), v.end(), rng);
-  point c = mean_center(v.begin(), v.end());
+  Point c = mean_center(v.begin(), v.end());
   assert(EQ(c.x, 0.6) && EQ(c.y, 1.8));
   sort(v.begin(), v.end(), CWComparator(c));
   auto expected = points.begin();

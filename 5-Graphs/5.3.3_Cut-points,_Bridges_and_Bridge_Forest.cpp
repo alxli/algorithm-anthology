@@ -30,6 +30,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 const int MAXN = 100;

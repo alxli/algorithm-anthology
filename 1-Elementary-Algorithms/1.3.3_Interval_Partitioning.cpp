@@ -20,15 +20,13 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <functional>
 #include <queue>
 #include <utility>
 #include <vector>
 
 struct PartitionInterval {
   int start, finish, id;
-
-  explicit PartitionInterval(int start = 0, int finish = 0, int id = 0)
-      : start(start), finish(finish), id(id) {}
 };
 
 std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals) {
@@ -64,10 +62,7 @@ std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals)
 using namespace std;
 
 int main() {
-  vector<PartitionInterval> intervals;
-  intervals.emplace_back(0, 30, 0);
-  intervals.emplace_back(5, 10, 1);
-  intervals.emplace_back(15, 20, 2);
+  vector<PartitionInterval> intervals{{0, 30, 0}, {5, 10, 1}, {15, 20, 2}};
   vector<int> room = interval_partitioning(intervals);
   assert(1 + *max_element(room.begin(), room.end()) == 2);
   assert(room[1] == room[2]);

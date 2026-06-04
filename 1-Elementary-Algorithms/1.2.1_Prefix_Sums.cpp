@@ -11,12 +11,12 @@ difference arrays, and two-dimensional grids.
 
 Time Complexity:
 - O(n) per call to `prefix_sums(a)`, where $n$ is the array size.
-- O(RC) per call to `prefix_sums_2d(a)`, where $R$ and $C$ are matrix dimensions.
+- O(r*c) per call to `prefix_sums_2d(a)`, where $r$ and $c$ are matrix dimensions.
 - O(1) per range or rectangle query.
 
 Space Complexity:
 - O(n) for one-dimensional prefix sums.
-- O(RC) for two-dimensional prefix sums.
+- O(r*c) for two-dimensional prefix sums.
 
 */
 

@@ -34,30 +34,35 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) {
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double dot(const point &a, const point &b) {
+double dot(const Point &a, const Point &b) {
   return a.x * b.x + a.y * b.y;
 }
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 int seg_intersection(
-    const point &a, const point &b, const point &c, const point &d, point *p = nullptr,
-    point *q = nullptr
+    const Point &a, const Point &b, const Point &c, const Point &d, Point *p = nullptr,
+    Point *q = nullptr
 ) {
   static const bool TOUCH_IS_INTERSECT = true;
-  point ab(b.x - a.x, b.y - a.y);
-  point ac(c.x - a.x, c.y - a.y);
-  point cd(d.x - c.x, d.y - c.y);
+  Point ab(b.x - a.x, b.y - a.y);
+  Point ac(c.x - a.x, c.y - a.y);
+  Point cd(d.x - c.x, d.y - c.y);
   double c1 = cross(ab, cd), c2 = cross(ac, ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     double t0 = dot(ac, ab) / sqnorm(ab);
@@ -65,8 +70,8 @@ int seg_intersection(
     double mint = std::min(t0, t1), maxt = std::max(t0, t1);
     bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
     if (overlap) {
-      point res1 = std::max(std::min(a, b), std::min(c, d));
-      point res2 = std::min(std::max(a, b), std::max(c, d));
+      Point res1 = std::max(std::min(a, b), std::min(c, d));
+      Point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
         if (p != nullptr) {
           *p = res1;
@@ -90,7 +95,7 @@ int seg_intersection(
   bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
     if (p != nullptr) {
-      *p = point(a.x + t * ab.x, a.y + t * ab.y);
+      *p = Point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
   }
@@ -98,7 +103,7 @@ int seg_intersection(
 }
 
 int line_intersection(
-    const point &p1, const point &p2, const point &p3, const point &p4, point *p = nullptr
+    const Point &p1, const Point &p2, const Point &p3, const Point &p4, Point *p = nullptr
 ) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -110,7 +115,7 @@ int line_intersection(
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
   if (p != nullptr) {
-    *p = point(x / det, y / det);
+    *p = Point(x / det, y / det);
   }
   return 0;
 }
@@ -141,7 +146,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   }
   for (It i1 = lo1, j1 = hi1 - 1; i1 != hi1; j1 = i1++) {
     for (It i2 = lo2, j2 = hi2 - 1; i2 != hi2; j2 = i2++) {
-      point p;
+      Point p;
       if (seg_intersection(*i1, *j1, *i2, *j2, &p) == 0) {
         xs.insert(p.x);
       }
@@ -151,7 +156,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   double res = 0;
   for (size_t k = 0; k + 1 < xsa.size(); k++) {
     double x = (xsa[k] + xsa[k + 1]) / 2;
-    point sweep0(x, 0), sweep1(x, 1);
+    Point sweep0(x, 0), sweep1(x, 1);
     std::vector<Event> events;
     for (int poly = 0; poly < 2; poly++) {
       It lo = plo[poly], hi = phi[poly];
@@ -160,7 +165,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
         area += (j->x - i->x) * (j->y + i->y);
       }
       for (It j = lo, i = hi - 1; j != hi; i = j++) {
-        point p;
+        Point p;
         if (line_intersection(*j, *i, sweep0, sweep1, &p) == 0) {
           double y = p.y, x0 = i->x, x1 = j->x;
           int sgn_area = (area < 0 ? -1 : (area > 0 ? 1 : 0));
@@ -212,7 +217,7 @@ double union_area(It lo1, It hi1, It lo2, It hi2) {
 using namespace std;
 
 int main() {
-  vector<point> p, s;
+  vector<Point> p, s;
   // Irregular pentagon a triangle of area 1.5 overlapping quadrant 2.
   p.emplace_back(1, 3);
   p.emplace_back(1, 2);

@@ -780,8 +780,8 @@ class BST {
     return true;
   }
 
-  template<class KVFunction>
-  static void walk(Node *n, KVFunction f) {
+  template<class Fn>
+  static void walk(Node *n, Fn f) {
     if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
@@ -834,8 +834,8 @@ class BST {
     return nullptr;
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     walk(root, f);
   }
 };
@@ -973,8 +973,8 @@ class Treap {
     return true;
   }
 
-  template<class KVFunction>
-  static void walk(Node *n, KVFunction f) {
+  template<class Fn>
+  static void walk(Node *n, Fn f) {
     if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
@@ -1027,8 +1027,8 @@ class Treap {
     return nullptr;
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     walk(root, f);
   }
 };
@@ -1203,8 +1203,8 @@ class AVLTree {
     return false;
   }
 
-  template<class KVFunction>
-  static void walk(Node *n, KVFunction f) {
+  template<class Fn>
+  static void walk(Node *n, Fn f) {
     if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
@@ -1257,8 +1257,8 @@ class AVLTree {
     return nullptr;
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     walk(root, f);
   }
 };
@@ -1481,8 +1481,8 @@ class RedBlackTree {
     n->color = BLACK;
   }
 
-  template<class KVFunction>
-  void walk(Node *n, KVFunction f) const {
+  template<class Fn>
+  void walk(Node *n, Fn f) const {
     if (n != LEAF_NIL) {
       walk(n->left, f);
       f(n->key, n->value);
@@ -1598,8 +1598,8 @@ class RedBlackTree {
     return nullptr;
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     walk(root, f);
   }
 };
@@ -1767,8 +1767,8 @@ class SplayTree {
     return true;
   }
 
-  template<class KVFunction>
-  static void walk(Node *n, KVFunction f) {
+  template<class Fn>
+  static void walk(Node *n, Fn f) {
     if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
@@ -1812,8 +1812,8 @@ class SplayTree {
     return (k < root->key || root->key < k) ? nullptr : &(root->value);
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     walk(root, f);
   }
 };
@@ -2006,8 +2006,8 @@ class SBTree {
     return r;
   }
 
-  template<class KVFunction>
-  static void walk(Node *n, KVFunction f) {
+  template<class Fn>
+  static void walk(Node *n, Fn f) {
     if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
@@ -2054,8 +2054,8 @@ class SBTree {
     return select(root, r);
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     walk(root, f);
   }
 };
@@ -2238,8 +2238,8 @@ class IntervalTreap {
     return find_any(n->right, i);
   }
 
-  template<class KVFunction>
-  static void find_all(Node *n, const Interval &i, KVFunction f) {
+  template<class Fn>
+  static void find_all(Node *n, const Interval &i, Fn f) {
     if (n == nullptr || n->max < i.first) {
       return;
     }
@@ -2250,8 +2250,8 @@ class IntervalTreap {
     find_all(n->right, i, f);
   }
 
-  template<class KVFunction>
-  static void walk(Node *n, KVFunction f) {
+  template<class Fn>
+  static void walk(Node *n, Fn f) {
     if (n != nullptr) {
       walk(n->left, f);
       f(n->interval.first, n->interval.second, n->value);
@@ -2300,13 +2300,13 @@ class IntervalTreap {
     return (n == nullptr) ? nullptr : &(n->value);
   }
 
-  template<class KVFunction>
-  void find_all(const K &lo, const K &hi, KVFunction f) const {
+  template<class Fn>
+  void find_all(const K &lo, const K &hi, Fn f) const {
     find_all(root, Interval{lo, hi}, f);
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     walk(root, f);
   }
 };
@@ -2459,8 +2459,8 @@ class HashMap {
     return *find(k);
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     for (int i = 0; i < table_size; i++) {
       for (const auto &entry : table[i]) {
         f(entry.key, entry.value);
@@ -2679,8 +2679,8 @@ class SkipList {
     return *find(k);
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     Node *n = head->next[0];
     while (n != nullptr) {
       f(n->key, n->value);
@@ -4533,8 +4533,8 @@ class RangeTree {
   // Helper variables for query().
   T x1, y1, x2, y2;
 
-  template<class ReportFunction>
-  void query(int n, int lo, int hi, ReportFunction f) {
+  template<class Fn>
+  void query(int n, int lo, int hi, Fn f) {
     if (points[hi].first < x1 || x2 < points[lo].first) {
       return;
     }
@@ -4561,8 +4561,8 @@ class RangeTree {
     build(0, 0, n - 1);
   }
 
-  template<class ReportFunction>
-  void query(const T &x1, const T &y1, const T &x2, const T &y2, ReportFunction f) {
+  template<class Fn>
+  void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
     this->x1 = x1;
     this->y1 = y1;
     this->x2 = x2;
@@ -4581,13 +4581,8 @@ void print(int i, const pair<int, int> &p) {
 }
 
 int main() {
-  const int n = 10;
-  int points[n][2] = {{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
-                      {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
-  vector<pair<int, int>> v;
-  for (int i = 0; i < n; i++) {
-    v.push_back({points[i][0], points[i][1]});
-  }
+  vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
+                           {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   RangeTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);
   cout << endl;
@@ -4660,8 +4655,8 @@ class KDTree {
   // Helper variables for query().
   T x1, y1, x2, y2;
 
-  template<class ReportFunction>
-  void query(int lo, int hi, ReportFunction f) {
+  template<class Fn>
+  void query(int lo, int hi, Fn f) {
     if (lo >= hi) {
       return;
     }
@@ -4697,8 +4692,8 @@ class KDTree {
     build(0, n, true);
   }
 
-  template<class ReportFunction>
-  void query(const T &x1, const T &y1, const T &x2, const T &y2, ReportFunction f) {
+  template<class Fn>
+  void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
     this->x1 = x1;
     this->y1 = y1;
     this->x2 = x2;
@@ -4717,13 +4712,8 @@ void print(const pair<int, int> &p) {
 }
 
 int main() {
-  const int n = 10;
-  int points[n][2] = {{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
-                      {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
-  vector<pair<int, int>> v;
-  for (int i = 0; i < n; i++) {
-    v.push_back({points[i][0], points[i][1]});
-  }
+  vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
+                           {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
   KDTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);
   cout << endl;
@@ -4852,11 +4842,8 @@ class KDTree {
 using namespace std;
 
 int main() {
-  pair<int, int> p[3];
-  p[0] = {0, 2};
-  p[1] = {0, 3};
-  p[2] = {-1, 0};
-  KDTree<int> t(p, p + 3);
+  vector<pair<int, int>> p{{0, 2}, {0, 3}, {-1, 0}};
+  KDTree<int> t(p.begin(), p.end());
   assert(t.nearest(0, 2, true) == (pair<int, int>{0, 2}));
   assert(t.nearest(0, 2, false) == (pair<int, int>{0, 3}));
   assert(t.nearest(0, 0) == (pair<int, int>{-1, 0}));

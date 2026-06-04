@@ -87,13 +87,13 @@ using namespace std;
 
 int main() {
   {  // -1 + 2x - 6x^2 + 2x^3
-    int poly[] = {-1, 2, -6, 2};
-    vector<double> p(poly, poly + 4), roots = find_all_roots(p);
+    vector<double> p{-1.0, 2.0, -6.0, 2.0};
+    vector<double> roots = find_all_roots(p);
     assert(roots.size() == 1 && fabs(horner_eval(p, roots[0])) < 1e-10);
   }
   {  // -20 + 4x + 3x^2
-    int poly[] = {-20, 4, 3};
-    vector<double> p(poly, poly + 3), roots = find_all_roots(p);
+    vector<double> p{-20.0, 4.0, 3.0};
+    vector<double> roots = find_all_roots(p);
     assert(roots.size() == 2);
     assert(fabs(horner_eval(p, roots[0])) < 1e-10);
     assert(fabs(horner_eval(p, roots[1])) < 1e-10);

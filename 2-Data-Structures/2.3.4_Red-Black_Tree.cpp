@@ -190,8 +190,8 @@ class RedBlackTree {
     n->color = BLACK;
   }
 
-  template<class KVFunction>
-  void walk(Node *n, KVFunction f) const {
+  template<class Fn>
+  void walk(Node *n, Fn f) const {
     if (n != LEAF_NIL) {
       walk(n->left, f);
       f(n->key, n->value);
@@ -307,8 +307,8 @@ class RedBlackTree {
     return nullptr;
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     walk(root, f);
   }
 };

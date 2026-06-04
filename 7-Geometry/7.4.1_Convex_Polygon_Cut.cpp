@@ -29,21 +29,26 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-int turn(const point &a, const point &o, const point &b) {
+int turn(const Point &a, const Point &o, const Point &b) {
   double c = cross(a, b, o);
   return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
 }
 
 int line_intersection(
-    const point &p1, const point &p2, const point &p3, const point &p4, point *p = nullptr
+    const Point &p1, const Point &p2, const Point &p3, const Point &p4, Point *p = nullptr
 ) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -55,24 +60,24 @@ int line_intersection(
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
   if (p != nullptr) {
-    *p = point(x / det, y / det);
+    *p = Point(x / det, y / det);
   }
   return 0;
 }
 
 template<class It>
-std::vector<point> convex_cut(It lo, It hi, const point &p, const point &q) {
+std::vector<Point> convex_cut(It lo, It hi, const Point &p, const Point &q) {
   if (EQ(p.x, q.x) && EQ(p.y, q.y)) {
     throw std::runtime_error("Cannot cut using line from identical points.");
   }
-  std::vector<point> res;
+  std::vector<Point> res;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     int d1 = turn(q, p, *j), d2 = turn(q, p, *i);
     if (d1 >= 0) {
       res.push_back(*j);
     }
     if (d1 * d2 < 0) {
-      point r;
+      Point r;
       line_intersection(p, q, *j, *i, &r);
       res.push_back(r);
     }
@@ -87,34 +92,15 @@ using namespace std;
 
 int main() {
   {
-    vector<point> v;
-    v.emplace_back(1, 3);
-    v.emplace_back(2, 2);
-    v.emplace_back(2, 1);
-    v.emplace_back(0, 0);
-    v.emplace_back(-1, 3);
+    vector<Point> v{{1, 3}, {2, 2}, {2, 1}, {0, 0}, {-1, 3}};
     // Cut using the vertical line through (0, 0).
-    vector<point> c;
-    c.emplace_back(-1, 3);
-    c.emplace_back(0, 3);
-    c.emplace_back(0, 0);
-    assert(convex_cut(v.begin(), v.end(), point(0, 0), point(0, 1)) == c);
+    vector<Point> c{{-1, 3}, {0, 3}, {0, 0}};
+    assert(convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1)) == c);
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
-    vector<point> v;
-    v.emplace_back(0, 0);
-    v.emplace_back(2, 2);
-    v.emplace_back(0, 4);
-    v.emplace_back(3, 4);
-    v.emplace_back(3, 0);
-    vector<point> c;
-    c.emplace_back(1, 0);
-    c.emplace_back(0, 0);
-    c.emplace_back(1, 1);
-    c.emplace_back(1, 3);
-    c.emplace_back(0, 4);
-    c.emplace_back(1, 4);
-    assert(convex_cut(v.begin(), v.end(), point(1, 0), point(1, 4)) == c);
+    vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};
+    vector<Point> c{{1, 0}, {0, 0}, {1, 1}, {1, 3}, {0, 4}, {1, 4}};
+    assert(convex_cut(v.begin(), v.end(), Point(1, 0), Point(1, 4)) == c);
   }
   return 0;
 }

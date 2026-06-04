@@ -27,10 +27,10 @@ Space Complexity:
 
 const long long INF = (1LL << 62);
 
-template<class CostFunction>
+template<class Cost>
 void compute_dc_layer(
     const std::vector<long long> &dp_prev, std::vector<long long> &dp_cur, int l, int r, int opt_l,
-    int opt_r, CostFunction cost
+    int opt_r, Cost cost
 ) {
   if (l > r) {
     return;

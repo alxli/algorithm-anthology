@@ -19,8 +19,8 @@ Space Complexity:
 
 */
 
-template<class Int, class IntPredicate>
-Int exponential_search_first_true(Int lo, IntPredicate pred) {  // 000[1]11
+template<class Int, class Pred>
+Int exponential_search_first_true(Int lo, Pred pred) {  // 000[1]11
   if (pred(lo)) {
     return lo;
   }

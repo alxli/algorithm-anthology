@@ -27,10 +27,12 @@ Space Complexity:
 
 */
 
-#include <utility>
+struct Cycle {
+  int start, length;
+};
 
-template<class IntFunction>
-std::pair<int, int> find_cycle_floyd(IntFunction f, int x0) {
+template<class Fn>
+Cycle find_cycle_floyd(Fn f, int x0) {
   int tortoise = f(x0), hare = f(f(x0));
   while (tortoise != hare) {
     tortoise = f(tortoise);

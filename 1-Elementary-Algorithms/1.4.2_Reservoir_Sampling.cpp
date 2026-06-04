@@ -24,7 +24,7 @@ Space Complexity:
 #include <vector>
 
 template<class It>
-typename std::iterator_traits<It>::value_type reservoir_sample_one(It lo, It hi) {
+auto reservoir_sample_one(It lo, It hi) {
   assert(lo != hi);
   auto sample = *lo;
   int seen = 0;
@@ -38,8 +38,7 @@ typename std::iterator_traits<It>::value_type reservoir_sample_one(It lo, It hi)
 }
 
 template<class It>
-auto reservoir_sample_k(It lo, It hi, int k)
-    -> std::vector<typename std::iterator_traits<It>::value_type> {
+auto reservoir_sample_k(It lo, It hi, int k) {
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> res;
   int seen = 0;

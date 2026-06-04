@@ -149,8 +149,8 @@ class IntervalTreap {
     return find_any(n->right, i);
   }
 
-  template<class KVFunction>
-  static void find_all(Node *n, const Interval &i, KVFunction f) {
+  template<class Fn>
+  static void find_all(Node *n, const Interval &i, Fn f) {
     if (n == nullptr || n->max < i.first) {
       return;
     }
@@ -161,8 +161,8 @@ class IntervalTreap {
     find_all(n->right, i, f);
   }
 
-  template<class KVFunction>
-  static void walk(Node *n, KVFunction f) {
+  template<class Fn>
+  static void walk(Node *n, Fn f) {
     if (n != nullptr) {
       walk(n->left, f);
       f(n->interval.first, n->interval.second, n->value);
@@ -211,13 +211,13 @@ class IntervalTreap {
     return (n == nullptr) ? nullptr : &(n->value);
   }
 
-  template<class KVFunction>
-  void find_all(const K &lo, const K &hi, KVFunction f) const {
+  template<class Fn>
+  void find_all(const K &lo, const K &hi, Fn f) const {
     find_all(root, Interval{lo, hi}, f);
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     walk(root, f);
   }
 };

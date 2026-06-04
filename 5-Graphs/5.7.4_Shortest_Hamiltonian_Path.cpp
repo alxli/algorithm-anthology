@@ -16,8 +16,9 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <climits>
 
-const int MAXN = 20, INF = 0x3f3f3f3f;
+const int MAXN = 20, INF = INT_MAX / 2;
 int adj[MAXN][MAXN], dp[1 << MAXN][MAXN], order[MAXN];
 
 int shortest_hamiltonian_path(int nodes) {

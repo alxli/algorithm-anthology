@@ -28,15 +28,20 @@ const double EPS = 1e-9;
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) {
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double norm(const point &a) {
+double norm(const Point &a) {
   return sqrt(sqnorm(a));
 }
 
@@ -47,17 +52,17 @@ struct Circle {
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
   // Circle with the line segment ab as a diameter.
-  Circle(const point &a, const point &b) {
+  Circle(const Point &a, const Point &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
-    r = norm(point(a.x - h, a.y - k));
+    r = norm(Point(a.x - h, a.y - k));
   }
 
   // Circumcircle of three points.
-  Circle(const point &a, const point &b, const point &c) {
-    double an = sqnorm(point(b.x - c.x, b.y - c.y));
-    double bn = sqnorm(point(a.x - c.x, a.y - c.y));
-    double cn = sqnorm(point(a.x - b.x, a.y - b.y));
+  Circle(const Point &a, const Point &b, const Point &c) {
+    double an = sqnorm(Point(b.x - c.x, b.y - c.y));
+    double bn = sqnorm(Point(a.x - c.x, a.y - c.y));
+    double cn = sqnorm(Point(a.x - b.x, a.y - b.y));
     double wa = an * (bn + cn - an);
     double wb = bn * (an + cn - bn);
     double wc = cn * (an + bn - cn);
@@ -67,10 +72,10 @@ struct Circle {
     }
     h = (wa * a.x + wb * b.x + wc * c.x) / w;
     k = (wa * a.y + wb * b.y + wc * c.y) / w;
-    r = norm(point(a.x - h, a.y - k));
+    r = norm(Point(a.x - h, a.y - k));
   }
 
-  bool contains(const point &p) const { return LE(sqnorm(point(p.x - h, p.y - k)), r * r); }
+  bool contains(const Point &p) const { return LE(sqnorm(Point(p.x - h, p.y - k)), r * r); }
 };
 
 template<class It>
@@ -111,11 +116,7 @@ Circle minimum_enclosing_circle(It lo, It hi) {
 using namespace std;
 
 int main() {
-  vector<point> v;
-  v.emplace_back(0, 0);
-  v.emplace_back(0, 1);
-  v.emplace_back(1, 0);
-  v.emplace_back(1, 1);
+  vector<Point> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
   Circle res = minimum_enclosing_circle(v.begin(), v.end());
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
   return 0;

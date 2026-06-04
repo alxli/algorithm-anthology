@@ -29,20 +29,25 @@ const double EPS = 1e-9;
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
 // clang-format off
-double sqnorm(const point &a) { return a.x * a.x + a.y * a.y; }
-double norm(const point &a) { return sqrt(sqnorm(a)); }
-bool cmp_x(const point &a, const point &b) { return (a.x == b.x) ? (a.y < b.y) : (a.x < b.x); }
-bool cmp_y(const point &a, const point &b) { return (a.y == b.y) ? (a.x < b.x) : (a.y < b.y); }
+double sqnorm(const Point &a) { return a.x * a.x + a.y * a.y; }
+double norm(const Point &a) { return sqrt(sqnorm(a)); }
+bool cmp_x(const Point &a, const Point &b) { return (a.x == b.x) ? (a.y < b.y) : (a.x < b.x); }
+bool cmp_y(const Point &a, const Point &b) { return (a.y == b.y) ? (a.x < b.x) : (a.y < b.y); }
 // clang-format on
 
 template<class It>
 double closest_pair(
-    It lo, It hi, std::pair<point, point> *res = nullptr,
+    It lo, It hi, std::pair<Point, Point> *res = nullptr,
     double mindist = std::numeric_limits<double>::max(), bool sort_x = true
 ) {
   if (lo == hi) {
@@ -66,11 +71,11 @@ double closest_pair(
   }
   for (size_t i = 0; i < t.size(); i++) {
     for (size_t j = i + 1; j < t.size(); j++) {
-      point a(*t[i]), b(*t[j]);
+      Point a(*t[i]), b(*t[j]);
       if (b.y - a.y >= mindist) {
         break;
       }
-      double dist = norm(point(a.x - b.x, a.y - b.y));
+      double dist = norm(Point(a.x - b.x, a.y - b.y));
       if (mindist > dist) {
         mindist = dist;
         if (res) {
@@ -89,17 +94,11 @@ double closest_pair(
 using namespace std;
 
 int main() {
-  vector<point> v;
-  v.emplace_back(2, 3);
-  v.emplace_back(12, 30);
-  v.emplace_back(40, 50);
-  v.emplace_back(5, 1);
-  v.emplace_back(12, 10);
-  v.emplace_back(3, 4);
-  std::pair<point, point> res;
+  vector<Point> v{{2, 3}, {12, 30}, {40, 50}, {5, 1}, {12, 10}, {3, 4}};
+  std::pair<Point, Point> res;
   assert(EQ(closest_pair(v.begin(), v.end(), &res), sqrt(2)));
   auto [p1, p2] = res;
-  assert(p1 == point(2, 3));
-  assert(p2 == point(3, 4));
+  assert(p1 == Point(2, 3));
+  assert(p2 == Point(3, 4));
   return 0;
 }

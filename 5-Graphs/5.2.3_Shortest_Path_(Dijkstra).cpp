@@ -7,12 +7,8 @@ path to a specific destination node using the shortest-path tree from the predec
 consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes
 (exclusive), as passed in the function argument.
 
-Since `std::priority_queue` is by default a max-heap, we simulate a min-heap by negating node
-distances before pushing them and negating them again after popping them. Alternatively, the
-container can be declared with the following template arguments (`#include <functional>` to access
-`std::greater`):
-  `priority_queue<pair<int, int>, vector<pair<int, int> >,
-                  greater<pair<int, int> > > pq;`
+Since `std::priority_queue` is by default a max-heap, we store negated node distances so the
+closest candidate is popped first.
 
 Dijkstra's algorithm may be modified to support negative edge weights by allowing nodes to be
 re-visited (removing the visited array check in the inner for-loop). This is known as the Shortest
@@ -49,8 +45,11 @@ void dijkstra(int nodes, int start) {
   std::priority_queue<std::pair<int, int>> pq;
   pq.emplace(0, start);
   while (!pq.empty()) {
-    int u = pq.top().second;
+    auto [neg_d, u] = pq.top();
     pq.pop();
+    if (visit[u]) {
+      continue;
+    }
     visit[u] = true;
     for (auto &[v, w] : adj[u]) {
       if (visit[v]) {

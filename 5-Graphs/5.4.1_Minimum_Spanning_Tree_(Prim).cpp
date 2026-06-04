@@ -23,10 +23,13 @@ Space Complexity:
 */
 
 #include <queue>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 const int MAXN = 100;
+using QueueEntry = std::tuple<int, int, int>;  // (-weight, from, to)
+
 std::vector<std::pair<int, int>> adj[MAXN], mst;
 
 int prim(int nodes) {
@@ -38,13 +41,12 @@ int prim(int nodes) {
       continue;
     }
     visit[i] = true;
-    std::priority_queue<std::pair<int, std::pair<int, int>>> pq;
-    for (auto &[nb, w] : adj[i]) {
-      pq.emplace(-w, std::pair<int, int>{i, nb});
+    std::priority_queue<QueueEntry> pq;
+    for (auto &[v, w] : adj[i]) {
+      pq.emplace(-w, i, v);
     }
     while (!pq.empty()) {
-      auto [neg_w, endpoints] = pq.top();
-      auto [u, v] = endpoints;
+      auto [neg_w, u, v] = pq.top();
       int w = -neg_w;
       pq.pop();
       if (visit[u] && !visit[v]) {
@@ -54,7 +56,7 @@ int prim(int nodes) {
           total_dist += w;
         }
         for (auto &[nb, ew] : adj[v]) {
-          pq.emplace(-ew, std::pair<int, int>{v, nb});
+          pq.emplace(-ew, v, nb);
         }
       }
     }

@@ -27,10 +27,12 @@ Space Complexity:
 
 */
 
-#include <utility>
+struct Cycle {
+  int start, length;
+};
 
-template<class IntFunction>
-std::pair<int, int> find_cycle_brent(IntFunction f, int x0) {
+template<class Fn>
+Cycle find_cycle_brent(Fn f, int x0) {
   int power = 1, length = 1, tortoise = x0, hare = f(x0);
   while (tortoise != hare) {
     if (power == length) {

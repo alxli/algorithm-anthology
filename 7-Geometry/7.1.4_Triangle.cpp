@@ -38,16 +38,23 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
 
-double cross(const point &a, const point &b) {
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
+
+double cross(const Point &a, const Point &b) {
   return a.x * b.y - a.y * b.x;
 }
 
-double triangle_area(const point &a, const point &b, const point &c) {
-  point ac(a.x - c.x, a.y - c.y), bc(b.x - c.x, b.y - c.y);
+double triangle_area(const Point &a, const Point &b, const Point &c) {
+  Point ac(a.x - c.x, a.y - c.y), bc(b.x - c.x, b.y - c.y);
   return fabs(cross(ac, bc)) / 2.0;
 }
 
@@ -69,15 +76,15 @@ double triangle_area_altitudes(double h1, double h2, double h3) {
   return 1.0 / sqrt(v - 1.0 / (x * x) - 1.0 / (y * y) - 1.0 / (z * z));
 }
 
-bool same_side(const point &p1, const point &p2, const point &a, const point &b) {
+bool same_side(const Point &p1, const Point &p2, const Point &a, const Point &b) {
   static const bool EDGE_IS_SAME_SIDE = true;
-  point ab(b.x - a.x, b.y - a.y);
-  point p1a(p1.x - a.x, p1.y - a.y), p2a(p2.x - a.x, p2.y - a.y);
+  Point ab(b.x - a.x, b.y - a.y);
+  Point p1a(p1.x - a.x, p1.y - a.y), p2a(p2.x - a.x, p2.y - a.y);
   double c1 = cross(ab, p1a), c2 = cross(ab, p2a);
   return EDGE_IS_SAME_SIDE ? GE(c1 * c2, 0) : GT(c1 * c2, 0);
 }
 
-bool point_in_triangle(const point &p, const point &a, const point &b, const point &c) {
+bool point_in_triangle(const Point &p, const Point &a, const Point &b, const Point &c) {
   return same_side(p, a, b, c) && same_side(p, b, a, c) && same_side(p, c, a, b);
 }
 
@@ -86,14 +93,14 @@ bool point_in_triangle(const point &p, const point &a, const point &b, const poi
 #include <cassert>
 
 int main() {
-  assert(EQ(6, triangle_area(point(0, -1), point(4, -1), point(0, -4))));
+  assert(EQ(6, triangle_area(Point(0, -1), Point(4, -1), Point(0, -4))));
   assert(EQ(6, triangle_area_sides(3, 4, 5)));
   assert(EQ(6, triangle_area_medians(3.605551275, 2.5, 4.272001873)));
   assert(EQ(6, triangle_area_altitudes(3, 4, 2.4)));
 
-  assert(point_in_triangle(point(0, 0), point(-1, 0), point(0, -2), point(4, 0)));
-  assert(!point_in_triangle(point(0, 1), point(-1, 0), point(0, -2), point(4, 0)));
-  assert(point_in_triangle(point(-2.44, 0.82), point(-1, 0), point(-3, 1), point(4, 0)));
-  assert(!point_in_triangle(point(-2.44, 0.7), point(-1, 0), point(-3, 1), point(4, 0)));
+  assert(point_in_triangle(Point(0, 0), Point(-1, 0), Point(0, -2), Point(4, 0)));
+  assert(!point_in_triangle(Point(0, 1), Point(-1, 0), Point(0, -2), Point(4, 0)));
+  assert(point_in_triangle(Point(-2.44, 0.82), Point(-1, 0), Point(-3, 1), Point(4, 0)));
+  assert(!point_in_triangle(Point(-2.44, 0.7), Point(-1, 0), Point(-3, 1), Point(4, 0)));
   return 0;
 }

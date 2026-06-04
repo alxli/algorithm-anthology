@@ -34,25 +34,30 @@ const double EPS = 1e-9;
 
 #define GE(a, b) ((a) >= (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) {
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 template<class It>
-std::vector<point> convex_hull(It lo, It hi) {
+std::vector<Point> convex_hull(It lo, It hi) {
   int k = 0;
   if (hi - lo <= 1) {
-    return std::vector<point>(lo, hi);
+    return std::vector<Point>(lo, hi);
   }
-  std::vector<point> res(2 * static_cast<int>((hi - lo)));
+  std::vector<Point> res(2 * static_cast<int>((hi - lo)));
   std::sort(lo, hi);
   for (It it = lo; it != hi; ++it) {
     while (k >= 2 && GE(cross(res[k - 1], *it, res[k - 2]), 0)) {
@@ -72,8 +77,8 @@ std::vector<point> convex_hull(It lo, It hi) {
 }
 
 template<class It>
-std::pair<point, point> diametral_pair(It lo, It hi) {
-  std::vector<point> h = convex_hull(lo, hi);
+std::pair<Point, Point> diametral_pair(It lo, It hi) {
+  std::vector<Point> h = convex_hull(lo, hi);
   int m = h.size();
   if (m == 1) {
     return {h[0], h[0]};
@@ -86,16 +91,16 @@ std::pair<point, point> diametral_pair(It lo, It hi) {
     k++;
   }
   double maxdist = 0, d;
-  std::pair<point, point> res;
+  std::pair<Point, Point> res;
   for (int i = 0, j = k; i <= k && j < m; i++) {
-    d = sqnorm(point(h[i].x - h[j].x, h[i].y - h[j].y));
+    d = sqnorm(Point(h[i].x - h[j].x, h[i].y - h[j].y));
     if (d > maxdist) {
       maxdist = d;
       res = {h[i], h[j]};
     }
     while (j < m && fabs(cross(h[(i + 1) % m], h[(j + 1) % m], h[i])) >
                         fabs(cross(h[(i + 1) % m], h[j], h[i]))) {
-      d = sqnorm(point(h[i].x - h[(j + 1) % m].x, h[i].y - h[(j + 1) % m].y));
+      d = sqnorm(Point(h[i].x - h[(j + 1) % m].x, h[i].y - h[(j + 1) % m].y));
       if (d > maxdist) {
         maxdist = d;
         res = {h[i], h[(j + 1) % m]};
@@ -113,31 +118,17 @@ using namespace std;
 
 int main() {
   {  // Irregular pentagon with only the vertex (1, 2) not on the hull.
-    vector<point> v;
-    v.emplace_back(1, 3);
-    v.emplace_back(1, 2);
-    v.emplace_back(2, 1);
-    v.emplace_back(0, 0);
-    v.emplace_back(-1, 3);
+    vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
     std::mt19937 rng(12345);
     std::shuffle(v.begin(), v.end(), rng);
-    vector<point> h;
-    h.emplace_back(-1, 3);
-    h.emplace_back(1, 3);
-    h.emplace_back(2, 1);
-    h.emplace_back(0, 0);
+    vector<Point> h{{-1, 3}, {1, 3}, {2, 1}, {0, 0}};
     assert(convex_hull(v.begin(), v.end()) == h);
   }
   {
-    vector<point> v;
-    v.emplace_back(0, 0);
-    v.emplace_back(3, 0);
-    v.emplace_back(0, 3);
-    v.emplace_back(1, 1);
-    v.emplace_back(4, 4);
+    vector<Point> v{{0, 0}, {3, 0}, {0, 3}, {1, 1}, {4, 4}};
     auto [p1, p2] = diametral_pair(v.begin(), v.end());
-    assert(p1 == point(0, 0));
-    assert(p2 == point(4, 4));
+    assert(p1 == Point(0, 0));
+    assert(p2 == Point(4, 4));
   }
   return 0;
 }

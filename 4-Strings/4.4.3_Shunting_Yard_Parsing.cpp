@@ -65,6 +65,11 @@ using Operand = double;
 using UnaryOp = Operand (*)(Operand a);
 using BinaryOp = Operand (*)(Operand a, Operand b);
 
+struct BinaryRule {
+  BinaryOp op;
+  int precedence;
+};
+
 bool is_operand(const string &s) {
   int npoints = 0;
   for (char c : s) {
@@ -88,7 +93,7 @@ Operand eval_operand(const string &s) {
 
 class parser {
   using unary_op_map = std::map<string, UnaryOp>;
-  using binary_op_map = std::map<string, std::pair<BinaryOp, int>>;
+  using binary_op_map = std::map<string, BinaryRule>;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
   std::set<string> ops;
@@ -179,8 +184,8 @@ class parser {
           auto [op, is_unary] = ops.top();
           auto it1 = binary_ops.find(op);
           auto it2 = binary_ops.find(curr);
-          if (!is_unary && (it1 == binary_ops.end() ? -1 : it1->second.second) <
-                               (it2 == binary_ops.end() ? -1 : it2->second.second)) {
+          if (!is_unary && (it1 == binary_ops.end() ? -1 : it1->second.precedence) <
+                               (it2 == binary_ops.end() ? -1 : it2->second.precedence)) {
             break;
           }
           ops.pop();
@@ -201,7 +206,7 @@ class parser {
             if (it1 == binary_ops.end()) {
               throw std::runtime_error("Failed to eval binary op: " + op);
             }
-            vals.push((it1->second.first)(a, b));
+            vals.push((it1->second.op)(a, b));
           }
         }
         if (curr != ")") {
@@ -241,7 +246,7 @@ int main() {
   unary_ops["+"] = pos;
   unary_ops["-"] = neg;
 
-  map<string, pair<BinaryOp, int>> binary_ops;
+  map<string, BinaryRule> binary_ops;
   binary_ops["+"] = {static_cast<BinaryOp>(add), 0};
   binary_ops["-"] = {static_cast<BinaryOp>(sub), 0};
   binary_ops["*"] = {static_cast<BinaryOp>(mul), 1};

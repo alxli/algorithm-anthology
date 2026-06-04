@@ -26,15 +26,22 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
 
-double sqnorm(const point &a) {
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
+
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double norm(const point &a) {
+double norm(const Point &a) {
   return sqrt(sqnorm(a));
 }
 
@@ -43,21 +50,21 @@ struct Circle {
 
   Circle() : h(0), k(0), r(0) {}
   explicit Circle(double r) : h(0), k(0), r(fabs(r)) {}
-  Circle(const point &o, double r) : h(o.x), k(o.y), r(fabs(r)) {}
+  Circle(const Point &o, double r) : h(o.x), k(o.y), r(fabs(r)) {}
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
   // Circle with the line segment ab as a diameter.
-  Circle(const point &a, const point &b) {
+  Circle(const Point &a, const Point &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
-    r = norm(point(a.x - h, a.y - k));
+    r = norm(Point(a.x - h, a.y - k));
   }
 
   // Circumcircle of three points.
-  Circle(const point &a, const point &b, const point &c) {
-    double an = sqnorm(point(b.x - c.x, b.y - c.y));
-    double bn = sqnorm(point(a.x - c.x, a.y - c.y));
-    double cn = sqnorm(point(a.x - b.x, a.y - b.y));
+  Circle(const Point &a, const Point &b, const Point &c) {
+    double an = sqnorm(Point(b.x - c.x, b.y - c.y));
+    double bn = sqnorm(Point(a.x - c.x, a.y - c.y));
+    double cn = sqnorm(Point(a.x - b.x, a.y - b.y));
     double wa = an * (bn + cn - an);
     double wb = bn * (an + cn - bn);
     double wc = cn * (an + bn - cn);
@@ -67,7 +74,7 @@ struct Circle {
     }
     h = (wa * a.x + wb * b.x + wc * c.x) / w;
     k = (wa * a.y + wb * b.y + wc * c.y) / w;
-    r = norm(point(a.x - h, a.y - k));
+    r = norm(Point(a.x - h, a.y - k));
   }
 
   // Circle of radius r that contains points a and b. In the general case, there will be two
@@ -75,13 +82,13 @@ struct Circle {
   // dist(a, b) = 2*r, then there is only one possible center. If points a and b are identical, then
   // there are infinite circles. If the points are too far away relative to the radius, then there
   // is no possible Circle. In the latter two cases, an exception is thrown.
-  Circle(const point &a, const point &b, double r) : r(fabs(r)) {
+  Circle(const Point &a, const Point &b, double r) : r(fabs(r)) {
     if (LE(r, 0) && a == b) {  // Circle with zero area.
       h = a.x;
       k = a.y;
       return;
     }
-    double d = norm(point(b.x - a.x, b.y - a.y));
+    double d = norm(Point(b.x - a.x, b.y - a.y));
     if (EQ(d, 0)) {
       throw std::runtime_error("Identical points, infinite circles.");
     }
@@ -89,7 +96,7 @@ struct Circle {
       throw std::runtime_error("Points too far away to make Circle.");
     }
     double v = sqrt(r * r - d * d / 4.0) / d;
-    point m((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
+    Point m((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
     h = m.x + v * (a.y - b.y);
     k = m.y + v * (b.x - a.x);
     // The other answer is (h, k) = (m.x - v*(a.y - b.y), m.y - v*(b.x - a.x)).
@@ -97,9 +104,9 @@ struct Circle {
 
   bool operator==(const Circle &c) const { return EQ(h, c.h) && EQ(k, c.k) && EQ(r, c.r); }
   bool operator!=(const Circle &c) const { return !(*this == c); }
-  point center() const { return point(h, k); }
-  bool contains(const point &p) const { return LE(sqnorm(point(p.x - h, p.y - k)), r * r); }
-  bool on_edge(const point &p) const { return EQ(sqnorm(point(p.x - h, p.y - k)), r * r); }
+  Point center() const { return Point(h, k); }
+  bool contains(const Point &p) const { return LE(sqnorm(Point(p.x - h, p.y - k)), r * r); }
+  bool on_edge(const Point &p) const { return EQ(sqnorm(Point(p.x - h, p.y - k)), r * r); }
 
   friend std::ostream &operator<<(std::ostream &out, const Circle &c) {
     return out << std::showpos << "(x" << -(fabs(c.h) < EPS ? 0 : c.h) << ")^2+"
@@ -109,12 +116,12 @@ struct Circle {
 };
 
 // Returns the Circle inscribed inside the triangle abc.
-Circle incircle(const point &a, const point &b, const point &c) {
-  double al = norm(point(b.x - c.x, b.y - c.y));
-  double bl = norm(point(a.x - c.x, a.y - c.y));
-  double cl = norm(point(a.x - b.x, a.y - b.y));
+Circle incircle(const Point &a, const Point &b, const Point &c) {
+  double al = norm(Point(b.x - c.x, b.y - c.y));
+  double bl = norm(Point(a.x - c.x, a.y - c.y));
+  double cl = norm(Point(a.x - b.x, a.y - b.y));
   double l = al + bl + cl;
-  point p(a.x - c.x, a.y - c.y), q(b.x - c.x, b.y - c.y);
+  Point p(a.x - c.x, a.y - c.y), q(b.x - c.x, b.y - c.y);
   return EQ(l, 0) ? Circle(a.x, a.y, 0)
                   : Circle(
                         (al * a.x + bl * b.x + cl * c.x) / l, (al * a.y + bl * b.y + cl * c.y) / l,
@@ -128,11 +135,11 @@ Circle incircle(const point &a, const point &b, const point &c) {
 
 int main() {
   Circle c(-2, 5, sqrt(10));
-  assert(c == Circle(point(-2, 5), sqrt(10)));
-  assert(c == Circle(point(1, 6), point(-5, 4)));
-  assert(c == Circle(point(-3, 2), point(-3, 8), point(-1, 8)));
-  assert(c == incircle(point(-12, 5), point(3, 0), point(0, 9)));
-  assert(c.contains(point(-2, 8)) && !c.contains(point(-2, 9)));
-  assert(c.on_edge(point(-1, 2)) && !c.on_edge(point(-1.01, 2)));
+  assert(c == Circle(Point(-2, 5), sqrt(10)));
+  assert(c == Circle(Point(1, 6), Point(-5, 4)));
+  assert(c == Circle(Point(-3, 2), Point(-3, 8), Point(-1, 8)));
+  assert(c == incircle(Point(-12, 5), Point(3, 0), Point(0, 9)));
+  assert(c.contains(Point(-2, 8)) && !c.contains(Point(-2, 9)));
+  assert(c.on_edge(Point(-1, 2)) && !c.on_edge(Point(-1.01, 2)));
   return 0;
 }

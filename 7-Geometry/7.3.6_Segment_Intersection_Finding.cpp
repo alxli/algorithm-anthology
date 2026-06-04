@@ -32,33 +32,38 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
 // clang-format off
-double sqnorm(const point &a) { return a.x * a.x + a.y * a.y;}
-double norm(const point &a) { return sqrt(sqnorm(a)); }
-double dot(const point &a, const point &b) { return a.x * b.x + a.y * b.y; }
+double sqnorm(const Point &a) { return a.x * a.x + a.y * a.y;}
+double norm(const Point &a) { return sqrt(sqnorm(a)); }
+double dot(const Point &a, const Point &b) { return a.x * b.x + a.y * b.y; }
 // clang-format on
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-bool point_on_segment(const point &p, const point &a, const point &b) {
+bool point_on_segment(const Point &p, const Point &a, const Point &b) {
   return EQ(cross(p, b, a), 0) && LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x)) &&
          LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
 }
 
 int seg_intersection(
-    const point &a, const point &b, const point &c, const point &d, point *p = nullptr,
-    point *q = nullptr
+    const Point &a, const Point &b, const Point &c, const Point &d, Point *p = nullptr,
+    Point *q = nullptr
 ) {
   static const bool TOUCH_IS_INTERSECT = true;
-  point ab(b.x - a.x, b.y - a.y);
-  point ac(c.x - a.x, c.y - a.y);
-  point cd(d.x - c.x, d.y - c.y);
+  Point ab(b.x - a.x, b.y - a.y);
+  Point ac(c.x - a.x, c.y - a.y);
+  Point cd(d.x - c.x, d.y - c.y);
   if (EQ(sqnorm(ab), 0)) {
     if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
       if (p != nullptr) *p = a;
@@ -80,8 +85,8 @@ int seg_intersection(
     double mint = std::min(t0, t1), maxt = std::max(t0, t1);
     bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
     if (overlap) {
-      point res1 = std::max(std::min(a, b), std::min(c, d));
-      point res2 = std::min(std::max(a, b), std::max(c, d));
+      Point res1 = std::max(std::min(a, b), std::min(c, d));
+      Point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
         if (p != nullptr) {
           *p = res1;
@@ -105,7 +110,7 @@ int seg_intersection(
   bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
     if (p != nullptr) {
-      *p = point(a.x + t * ab.x, a.y + t * ab.y);
+      *p = Point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
   }
@@ -113,10 +118,10 @@ int seg_intersection(
 }
 
 struct Segment {
-  point p, q;
+  Point p, q;
 
   Segment() {}
-  Segment(const point &p, const point &q) : p(min(p, q)), q(max(p, q)) {}
+  Segment(const Point &p, const Point &q) : p(std::min(p, q)), q(std::max(p, q)) {}
 };
 
 double get_y(const Segment &s, double x) {
@@ -144,12 +149,12 @@ struct SegmentComparator {
 
 template<class SegIt>
 struct Event {
-  point p;
+  Point p;
   int type;
   SegIt seg;
 
   Event() {}
-  Event(const point &p, int type, SegIt seg) : p(p), type(type), seg(seg) {}
+  Event(const Point &p, int type, SegIt seg) : p(p), type(type), seg(seg) {}
 
   bool operator<(const Event &rhs) const {
     if (p.x != rhs.p.x) {
@@ -219,14 +224,13 @@ bool find_intersection(It lo, It hi, Segment *res1, Segment *res2) {
 using namespace std;
 
 int main() {
-  vector<Segment> v;
-  v.emplace_back(point(0, 0), point(2, 2));
-  v.emplace_back(point(3, 0), point(0, -1));
-  v.emplace_back(point(0, 2), point(2, -2));
-  v.emplace_back(point(0, 3), point(9, 0));
+  vector<Segment> v{
+      Segment(Point(0, 0), Point(2, 2)), Segment(Point(3, 0), Point(0, -1)),
+      Segment(Point(0, 2), Point(2, -2)), Segment(Point(0, 3), Point(9, 0))
+  };
   Segment res1, res2;
   assert(find_intersection(v.begin(), v.end(), &res1, &res2));
-  assert(res1.p == point(0, 0) && res1.q == point(2, 2));
-  assert(res2.p == point(0, 2) && res2.q == point(2, -2));
+  assert(res1.p == Point(0, 0) && res1.q == Point(2, 2));
+  assert(res2.p == Point(0, 2) && res2.q == Point(2, -2));
   return 0;
 }

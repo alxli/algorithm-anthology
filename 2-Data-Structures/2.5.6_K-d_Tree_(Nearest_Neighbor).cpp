@@ -114,11 +114,8 @@ class KDTree {
 using namespace std;
 
 int main() {
-  pair<int, int> p[3];
-  p[0] = {0, 2};
-  p[1] = {0, 3};
-  p[2] = {-1, 0};
-  KDTree<int> t(p, p + 3);
+  vector<pair<int, int>> p{{0, 2}, {0, 3}, {-1, 0}};
+  KDTree<int> t(p.begin(), p.end());
   assert(t.nearest(0, 2, true) == (pair<int, int>{0, 2}));
   assert(t.nearest(0, 2, false) == (pair<int, int>{0, 3}));
   assert(t.nearest(0, 0) == (pair<int, int>{-1, 0}));

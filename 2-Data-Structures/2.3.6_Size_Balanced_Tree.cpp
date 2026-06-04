@@ -163,8 +163,8 @@ class SBTree {
     return r;
   }
 
-  template<class KVFunction>
-  static void walk(Node *n, KVFunction f) {
+  template<class Fn>
+  static void walk(Node *n, Fn f) {
     if (n != nullptr) {
       walk(n->left, f);
       f(n->key, n->value);
@@ -211,8 +211,8 @@ class SBTree {
     return select(root, r);
   }
 
-  template<class KVFunction>
-  void walk(KVFunction f) const {
+  template<class Fn>
+  void walk(Fn f) const {
     walk(root, f);
   }
 };

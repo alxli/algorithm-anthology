@@ -34,15 +34,20 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-long double incircle(const point &a, const point &b, const point &c, const point &d) {
+long double incircle(const Point &a, const Point &b, const Point &c, const Point &d) {
   long double adx = a.x - d.x, ady = a.y - d.y;
   long double bdx = b.x - d.x, bdy = b.y - d.y;
   long double cdx = c.x - d.x, cdy = c.y - d.y;
@@ -56,14 +61,14 @@ long double incircle(const point &a, const point &b, const point &c, const point
 }
 
 struct Edge {
-  point origin;
+  Point origin;
   Edge *rot, *onext;
   bool primal, deleted, used;
 
   Edge *rev() const { return rot->rot; }
   Edge *lnext() const { return rot->rev()->onext->rot; }
   Edge *oprev() const { return rot->onext->rot; }
-  point dest() const { return rev()->origin; }
+  Point dest() const { return rev()->origin; }
 };
 
 struct QuadEdgePool {
@@ -75,7 +80,7 @@ struct QuadEdgePool {
     }
   }
 
-  Edge *make_edge(const point &from, const point &to) {
+  Edge *make_edge(const Point &from, const Point &to) {
     Edge *e1 = new Edge, *e2 = new Edge, *e3 = new Edge, *e4 = new Edge;
     edges.push_back(e1);
     edges.push_back(e2);
@@ -117,20 +122,20 @@ struct QuadEdgePool {
   }
 };
 
-bool left_of(const point &p, Edge *e) {
+bool left_of(const Point &p, Edge *e) {
   return GT(cross(e->origin, e->dest(), p), 0);
 }
 
-bool right_of(const point &p, Edge *e) {
+bool right_of(const Point &p, Edge *e) {
   return LT(cross(e->origin, e->dest(), p), 0);
 }
 
-bool in_circle(const point &a, const point &b, const point &c, const point &d) {
+bool in_circle(const Point &a, const Point &b, const Point &c, const Point &d) {
   return incircle(a, b, c, d) > EPS;
 }
 
 std::pair<Edge *, Edge *> build_triangulation(
-    std::vector<point> &p, int lo, int hi, QuadEdgePool &pool
+    std::vector<Point> &p, int lo, int hi, QuadEdgePool &pool
 ) {
   if (hi - lo == 1) {
     Edge *a = pool.make_edge(p[lo], p[hi]);
@@ -204,9 +209,9 @@ std::pair<Edge *, Edge *> build_triangulation(
 }
 
 struct Triangle {
-  point a, b, c;
+  Point a, b, c;
 
-  Triangle(const point &a, const point &b, const point &c) : a(a), b(b), c(c) {
+  Triangle(const Point &a, const Point &b, const Point &c) : a(a), b(b), c(c) {
     if (b < a && b < c) {
       this->a = b;
       this->b = c;
@@ -227,7 +232,7 @@ struct Triangle {
 
 template<class It>
 std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
-  std::vector<point> p(lo, hi);
+  std::vector<Point> p(lo, hi);
   std::sort(p.begin(), p.end());
   p.erase(std::unique(p.begin(), p.end()), p.end());
   if (p.size() < 3) {
@@ -240,7 +245,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
     if (!start->primal || start->deleted || start->used) {
       continue;
     }
-    std::vector<point> face;
+    std::vector<Point> face;
     Edge *curr = start;
     do {
       curr->used = true;
@@ -261,17 +266,13 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
 using namespace std;
 
 int main() {
-  vector<point> v;
-  v.emplace_back(1, 3);
-  v.emplace_back(1, 2);
-  v.emplace_back(2, 1);
-  v.emplace_back(0, 0);
-  v.emplace_back(-1, 3);
-  vector<Triangle> t;
-  t.emplace_back(point(-1, 3), point(0, 0), point(1, 2));
-  t.emplace_back(point(-1, 3), point(1, 2), point(1, 3));
-  t.emplace_back(point(0, 0), point(2, 1), point(1, 2));
-  t.emplace_back(point(1, 2), point(2, 1), point(1, 3));
+  vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<Triangle> t{
+      Triangle(Point(-1, 3), Point(0, 0), Point(1, 2)),
+      Triangle(Point(-1, 3), Point(1, 2), Point(1, 3)),
+      Triangle(Point(0, 0), Point(2, 1), Point(1, 2)),
+      Triangle(Point(1, 2), Point(2, 1), Point(1, 3))
+  };
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
   return 0;
 }

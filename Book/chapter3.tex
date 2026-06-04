@@ -21,8 +21,8 @@ Binary search can be generally used to find the input value corresponding to any
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
-template<class Int, class IntPredicate>
-Int binary_search_first_true(Int lo, Int hi, IntPredicate pred) {  // 000[1]11
+template<class Int, class Pred>
+Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
   Int mid, _hi = hi;
   while (lo < hi) {
     mid = lo + (hi - lo) / 2;
@@ -38,8 +38,8 @@ Int binary_search_first_true(Int lo, Int hi, IntPredicate pred) {  // 000[1]11
   return lo;
 }
 
-template<class Int, class IntPredicate>
-Int binary_search_last_true(Int lo, Int hi, IntPredicate pred) {  // 11[1]000
+template<class Int, class Pred>
+Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
   Int mid, _hi = hi--;
   while (lo < hi) {
     mid = lo + (hi - lo + 1) / 2;
@@ -55,8 +55,8 @@ Int binary_search_last_true(Int lo, Int hi, IntPredicate pred) {  // 11[1]000
   return lo;
 }
 
-template<class DoublePredicate>
-double fbinary_search(double lo, double hi, DoublePredicate pred) {  // 000[1]11
+template<class Pred>
+double fbinary_search(double lo, double hi, Pred pred) {  // 000[1]11
   double mid;
   for (int i = 0; i < 100; i++) {
     mid = (lo + hi) / 2.0;
@@ -105,8 +105,8 @@ This is useful for answer-search problems over unbounded or very large integer d
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-template<class Int, class IntPredicate>
-Int exponential_search_first_true(Int lo, IntPredicate pred) {  // 000[1]11
+template<class Int, class Pred>
+Int exponential_search_first_true(Int lo, Pred pred) {  // 000[1]11
   if (pred(lo)) {
     return lo;
   }
@@ -165,8 +165,8 @@ Given a unimodal function \inlinecode{f(x)} taking a single \inlinecode{double} 
 \textbf{Space Complexity}: $O(1)$ auxiliary for both operations.
 
 \begin{lstlisting}[language=C++]
-template<class UnimodalFunction>
-double ternary_search_min(double lo, double hi, UnimodalFunction f, const double EPS = 1e-12) {
+template<class Fn>
+double ternary_search_min(double lo, double hi, Fn f, const double EPS = 1e-12) {
   double lthird, hthird;
   while (hi - lo > EPS) {
     lthird = lo + (hi - lo) / 3;
@@ -180,8 +180,8 @@ double ternary_search_min(double lo, double hi, UnimodalFunction f, const double
   return lo;
 }
 
-template<class UnimodalFunction>
-double ternary_search_max(double lo, double hi, UnimodalFunction f, const double EPS = 1e-12) {
+template<class Fn>
+double ternary_search_max(double lo, double hi, Fn f, const double EPS = 1e-12) {
   double lthird, hthird;
   while (hi - lo > EPS) {
     lthird = lo + (hi - lo) / 3;
@@ -239,11 +239,10 @@ Hill-climbing is a heuristic which starts at the guess, then considers taking a 
 #include <cmath>
 #include <cstddef>
 
-template<class ContinuousFunction>
+template<class Fn>
 double find_min(
-    ContinuousFunction f, double x0, double y0, double *critical_x = nullptr,
-    double *critical_y = nullptr, const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6,
-    const int NUM_DIRECTIONS = 6
+    Fn f, double x0, double y0, double *critical_x = nullptr, double *critical_y = nullptr,
+    const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6, const int NUM_DIRECTIONS = 6
 ) {
   static const double PI = acos(-1.0);
   double x = x0, y = y0, res = f(x0, y0);
@@ -501,10 +500,10 @@ The function below computes \inlinecode{dp\_cur[l..r]} by evaluating the midpoin
 
 const long long INF = (1LL << 62);
 
-template<class CostFunction>
+template<class Cost>
 void compute_dc_layer(
     const std::vector<long long> &dp_prev, std::vector<long long> &dp_cur, int l, int r, int opt_l,
-    int opt_r, CostFunction cost
+    int opt_r, Cost cost
 ) {
   if (l > r) {
     return;
@@ -583,9 +582,9 @@ Common applications include optimal binary search trees and some range merging p
 
 const long long INF = (1LL << 62);
 
-template<class CostFunction>
+template<class Cost>
 std::vector<std::vector<long long>> knuth_interval_dp(
-    int n, CostFunction cost, std::vector<std::vector<int>> *opt_out = nullptr
+    int n, Cost cost, std::vector<std::vector<int>> *opt_out = nullptr
 ) {
   std::vector<std::vector<long long>> dp(n + 1, std::vector<long long>(n + 1, 0));
   std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));

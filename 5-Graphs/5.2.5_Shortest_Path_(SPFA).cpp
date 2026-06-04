@@ -23,11 +23,12 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <climits>
 #include <queue>
 #include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = INT_MAX / 2;
 std::vector<std::pair<int, int>> adj[MAXN];
 int dist[MAXN], pred[MAXN], relax_count[MAXN];
 bool in_queue[MAXN];
@@ -68,7 +69,7 @@ bool spfa(int nodes, int start) {
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].emplace_back(v, w);
+  adj[u].push_back({v, w});
 }
 
 int main() {

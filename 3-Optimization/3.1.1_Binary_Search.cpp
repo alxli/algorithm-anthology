@@ -42,8 +42,8 @@ Space Complexity:
 
 */
 
-template<class Int, class IntPredicate>
-Int binary_search_first_true(Int lo, Int hi, IntPredicate pred) {  // 000[1]11
+template<class Int, class Pred>
+Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
   Int mid, _hi = hi;
   while (lo < hi) {
     mid = lo + (hi - lo) / 2;
@@ -59,8 +59,8 @@ Int binary_search_first_true(Int lo, Int hi, IntPredicate pred) {  // 000[1]11
   return lo;
 }
 
-template<class Int, class IntPredicate>
-Int binary_search_last_true(Int lo, Int hi, IntPredicate pred) {  // 11[1]000
+template<class Int, class Pred>
+Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
   Int mid, _hi = hi--;
   while (lo < hi) {
     mid = lo + (hi - lo + 1) / 2;
@@ -76,8 +76,8 @@ Int binary_search_last_true(Int lo, Int hi, IntPredicate pred) {  // 11[1]000
   return lo;
 }
 
-template<class DoublePredicate>
-double fbinary_search(double lo, double hi, DoublePredicate pred) {  // 000[1]11
+template<class Pred>
+double fbinary_search(double lo, double hi, Pred pred) {  // 000[1]11
   double mid;
   for (int i = 0; i < 100; i++) {
     mid = (lo + hi) / 2.0;

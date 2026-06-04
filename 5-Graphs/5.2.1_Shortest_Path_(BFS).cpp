@@ -16,33 +16,31 @@ Space Complexity:
 
 */
 
+#include <algorithm>
+#include <climits>
 #include <queue>
-#include <utility>
 #include <vector>
 
-const int MAXN = 100, INF = 0x3f3f3f3f;
+const int MAXN = 100, INF = INT_MAX / 2;
 std::vector<int> adj[MAXN];
 int dist[MAXN], pred[MAXN];
 
 void bfs(int nodes, int start) {
-  std::vector<bool> visit(nodes, false);
-  for (int i = 0; i < nodes; i++) {
-    dist[i] = INF;
-    pred[i] = -1;
-  }
-  std::queue<std::pair<int, int>> q;
-  q.emplace(start, 0);
+  std::fill(dist, dist + nodes, INF);
+  std::fill(pred, pred + nodes, -1);
+  std::queue<int> q;
+  dist[start] = 0;
+  q.push(start);
   while (!q.empty()) {
-    auto [u, d] = q.front();
+    int u = q.front();
     q.pop();
-    visit[u] = true;
     for (int v : adj[u]) {
-      if (visit[v]) {
+      if (dist[v] != INF) {
         continue;
       }
-      dist[v] = d + 1;
+      dist[v] = dist[u] + 1;
       pred[v] = u;
-      q.emplace(v, d + 1);
+      q.push(v);
     }
   }
 }
@@ -73,11 +71,9 @@ void print_path(int dest) {
 int main() {
   int start = 0, dest = 3;
   adj[0].push_back(1);
-  adj[0].push_back(3);
   adj[1].push_back(2);
   adj[1].push_back(3);
   adj[2].push_back(3);
-  adj[0].push_back(3);
   bfs(4, start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;

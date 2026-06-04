@@ -42,25 +42,30 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
 // clang-format off
-double sqnorm(const point &a) { return a.x * a.x + a.y * a.y; }
-double norm(const point &a) { return sqrt(sqnorm(a)); }
-double dot(const point &a, const point &b) { return a.x * b.x + a.y * b.y; }
-double cross(const point &a, const point &b) { return a.x * b.y - a.y * b.x; }
+double sqnorm(const Point &a) { return a.x * a.x + a.y * a.y; }
+double norm(const Point &a) { return sqrt(sqnorm(a)); }
+double dot(const Point &a, const Point &b) { return a.x * b.x + a.y * b.y; }
+double cross(const Point &a, const Point &b) { return a.x * b.y - a.y * b.x; }
 // clang-format on
 
-bool point_on_segment(const point &p, const point &a, const point &b) {
-  return EQ(cross(point(p.x - a.x, p.y - a.y), point(b.x - a.x, b.y - a.y)), 0) &&
+bool point_on_segment(const Point &p, const Point &a, const Point &b) {
+  return EQ(cross(Point(p.x - a.x, p.y - a.y), Point(b.x - a.x, b.y - a.y)), 0) &&
          LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x)) &&
          LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
 }
 
 int line_intersection(
-    double a1, double b1, double c1, double a2, double b2, double c2, point *p = nullptr
+    double a1, double b1, double c1, double a2, double b2, double c2, Point *p = nullptr
 ) {
   if (EQ(a1, a2) && EQ(b1, b2)) {
     return EQ(c1, c2) ? 1 : -1;
@@ -77,7 +82,7 @@ int line_intersection(
 }
 
 int line_intersection(
-    const point &p1, const point &p2, const point &p3, const point &p4, point *p = nullptr
+    const Point &p1, const Point &p2, const Point &p3, const Point &p4, Point *p = nullptr
 ) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -89,19 +94,19 @@ int line_intersection(
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
   if (p != nullptr) {
-    *p = point(x / det, y / det);
+    *p = Point(x / det, y / det);
   }
   return 0;
 }
 
 int seg_intersection(
-    const point &a, const point &b, const point &c, const point &d, point *p = nullptr,
-    point *q = nullptr
+    const Point &a, const Point &b, const Point &c, const Point &d, Point *p = nullptr,
+    Point *q = nullptr
 ) {
   static const bool TOUCH_IS_INTERSECT = true;
-  point ab(b.x - a.x, b.y - a.y);
-  point ac(c.x - a.x, c.y - a.y);
-  point cd(d.x - c.x, d.y - c.y);
+  Point ab(b.x - a.x, b.y - a.y);
+  Point ac(c.x - a.x, c.y - a.y);
+  Point cd(d.x - c.x, d.y - c.y);
   if (EQ(sqnorm(ab), 0)) {
     if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
       if (p != nullptr) *p = a;
@@ -123,8 +128,8 @@ int seg_intersection(
     double mint = std::min(t0, t1), maxt = std::max(t0, t1);
     bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
     if (overlap) {
-      point res1 = std::max(std::min(a, b), std::min(c, d));
-      point res2 = std::min(std::max(a, b), std::max(c, d));
+      Point res1 = std::max(std::min(a, b), std::min(c, d));
+      Point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
         if (p != nullptr) {
           *p = res1;
@@ -148,66 +153,65 @@ int seg_intersection(
   bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
     if (p != nullptr) {
-      *p = point(a.x + t * ab.x, a.y + t * ab.y);
+      *p = Point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
   }
   return -1;  // Non-parallel with no intersections.
 }
 
-point closest_point(double a, double b, double c, const point &p) {
+Point closest_point(double a, double b, double c, const Point &p) {
   if (EQ(a, 0)) {
-    return point(p.x, -c / b);  // Horizontal line.
+    return Point(p.x, -c / b);  // Horizontal line.
   }
   if (EQ(b, 0)) {
-    return point(-c / a, p.y);  // Vertical line.
+    return Point(-c / a, p.y);  // Vertical line.
   }
-  point res;
+  Point res;
   line_intersection(a, b, c, -b, a, b * p.x - a * p.y, &res);
   return res;
 }
 
-point closest_point(const point &a, const point &b, const point &p) {
+Point closest_point(const Point &a, const Point &b, const Point &p) {
   if (a == b) return a;
-  point ap(p.x - a.x, p.y - a.y), ab(b.x - a.x, b.y - a.y);
+  Point ap(p.x - a.x, p.y - a.y), ab(b.x - a.x, b.y - a.y);
   double t = dot(ap, ab) / sqnorm(ab);
   if (t <= 0) return a;
   if (t >= 1) return b;
-  return point(a.x + t * ab.x, a.y + t * ab.y);
+  return Point(a.x + t * ab.x, a.y + t * ab.y);
 }
 
 /*** Example Usage ***/
 
 #include <cassert>
-#define point point
 
-bool EQP(const point &a, const point &b) {
+bool EQP(const Point &a, const Point &b) {
   return EQ(a.x, b.x) && EQ(a.y, b.y);
 }
 
 int main() {
-  point p, q;
+  Point p, q;
 
   assert(line_intersection(-1, 1, 0, 1, 1, -3, &p) == 0);
-  assert(EQP(p, point(1.5, 1.5)));
-  assert(line_intersection(point(0, 0), point(1, 1), point(0, 4), point(4, 0), &p) == 0);
-  assert(EQP(p, point(2, 2)));
+  assert(EQP(p, Point(1.5, 1.5)));
+  assert(line_intersection(Point(0, 0), Point(1, 1), Point(0, 4), Point(4, 0), &p) == 0);
+  assert(EQP(p, Point(2, 2)));
 
   {
 #define test(a, b, c, d, e, f, g, h) \
-  seg_intersection(point(a, b), point(c, d), point(e, f), point(g, h), &p, &q)
+  seg_intersection(Point(a, b), Point(c, d), Point(e, f), Point(g, h), &p, &q)
 
-    // Intersection is a point.
-    assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && EQP(p, point(0, 0)));
-    assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && EQP(p, point(2, 2)));
-    assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && EQP(p, point(-2, 0)));
-    assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && EQP(p, point(4, 4)));
+    // Intersection is a Point.
+    assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && EQP(p, Point(0, 0)));
+    assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && EQP(p, Point(2, 2)));
+    assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && EQP(p, Point(-2, 0)));
+    assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && EQP(p, Point(4, 4)));
 
     // Intersection is a segment.
     assert(1 == test(10, 10, 0, 0, 2, 2, 6, 6));
-    assert(EQP(p, point(2, 2)) && EQP(q, point(6, 6)));
+    assert(EQP(p, Point(2, 2)) && EQP(q, Point(6, 6)));
     assert(1 == test(6, 8, 14, -2, 14, -2, 6, 8));
-    assert(EQP(p, point(6, 8)) && EQP(q, point(14, -2)));
+    assert(EQP(p, Point(6, 8)) && EQP(q, Point(14, -2)));
 
     // No intersection.
     assert(-1 == test(6, 8, 8, 10, 12, 12, 4, 4));
@@ -220,12 +224,12 @@ int main() {
     assert(-1 == test(4, 2, 4, 4, 0, 8, 10, 0));
   }
 
-  assert(EQP(point(2.5, 2.5), closest_point(-1, -1, 5, point(0, 0))));
-  assert(EQP(point(3, 0), closest_point(1, 0, -3, point(0, 0))));
-  assert(EQP(point(0, 3), closest_point(0, 1, -3, point(0, 0))));
+  assert(EQP(Point(2.5, 2.5), closest_point(-1, -1, 5, Point(0, 0))));
+  assert(EQP(Point(3, 0), closest_point(1, 0, -3, Point(0, 0))));
+  assert(EQP(Point(0, 3), closest_point(0, 1, -3, Point(0, 0))));
 
-  assert(EQP(point(3, 0), closest_point(point(3, 0), point(3, 3), point(0, 0))));
-  assert(EQP(point(2, -1), closest_point(point(2, -1), point(4, -1), point(0, 0))));
-  assert(EQP(point(4, -1), closest_point(point(2, -1), point(4, -1), point(5, 0))));
+  assert(EQP(Point(3, 0), closest_point(Point(3, 0), Point(3, 3), Point(0, 0))));
+  assert(EQP(Point(2, -1), closest_point(Point(2, -1), Point(4, -1), Point(0, 0))));
+  assert(EQP(Point(4, -1), closest_point(Point(2, -1), Point(4, -1), Point(5, 0))));
   return 0;
 }

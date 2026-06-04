@@ -65,6 +65,11 @@ using Operand = double;
 using UnaryOp = Operand (*)(Operand a);
 using BinaryOp = Operand (*)(Operand a, Operand b);
 
+struct BinaryRule {
+  BinaryOp op;
+  int precedence;
+};
+
 bool is_operand(const string &s) {
   int npoints = 0;
   for (char c : s) {
@@ -88,7 +93,7 @@ Operand eval_operand(const string &s) {
 
 class parser {
   using unary_op_map = std::map<string, UnaryOp>;
-  using binary_op_map = std::map<string, std::pair<BinaryOp, int>>;
+  using binary_op_map = std::map<string, BinaryRule>;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
   std::set<string> ops;
@@ -121,10 +126,10 @@ class parser {
     Operand v = eval_binary(lo, hi, precedence + 1);
     while (lo != hi) {
       auto it = binary_ops.find(*lo);
-      if (it == binary_ops.end() || it->second.second != precedence) {
+      if (it == binary_ops.end() || it->second.precedence != precedence) {
         return v;
       }
-      v = (it->second.first)(v, eval_binary(++lo, hi, precedence + 1));
+      v = (it->second.op)(v, eval_binary(++lo, hi, precedence + 1));
     }
     return v;
   }
@@ -145,7 +150,7 @@ class parser {
     max_precedence = 0;
     for (const auto &[op, fn_prec] : binary_ops) {
       ops.insert(op);
-      max_precedence = std::max(max_precedence, fn_prec.second);
+      max_precedence = std::max(max_precedence, fn_prec.precedence);
     }
   }
 
@@ -232,7 +237,7 @@ int main() {
   unary_ops["+"] = pos;
   unary_ops["-"] = neg;
 
-  map<string, pair<BinaryOp, int>> binary_ops;
+  map<string, BinaryRule> binary_ops;
   binary_ops["+"] = {static_cast<BinaryOp>(add), 0};
   binary_ops["-"] = {static_cast<BinaryOp>(sub), 0};
   binary_ops["*"] = {static_cast<BinaryOp>(mul), 1};

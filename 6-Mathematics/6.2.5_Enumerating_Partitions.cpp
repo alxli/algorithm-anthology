@@ -96,11 +96,9 @@ long long rank_by_partition(const std::vector<int> &p) {
   return res;
 }
 
-using ReportFunction = void (*)(std::vector<int>::iterator, std::vector<int>::iterator);
+using Fn = void (*)(std::vector<int>::iterator, std::vector<int>::iterator);
 
-void generate_increasing_partitions(
-    int left, int prev, int i, std::vector<int> &p, ReportFunction f
-) {
+void generate_increasing_partitions(int left, int prev, int i, std::vector<int> &p, Fn f) {
   if (left == 0) {
     f(p.begin(), p.begin() + i);
     return;
@@ -110,7 +108,7 @@ void generate_increasing_partitions(
   }
 }
 
-void generate_increasing_partitions(int n, ReportFunction f) {
+void generate_increasing_partitions(int n, Fn f) {
   std::vector<int> p(n, 0);
   generate_increasing_partitions(n, 0, 0, p, f);
 }

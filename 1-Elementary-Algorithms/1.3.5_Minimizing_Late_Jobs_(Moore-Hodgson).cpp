@@ -23,8 +23,6 @@ Space Complexity:
 
 struct TimedJob {
   int duration, deadline;
-
-  explicit TimedJob(int duration = 0, int deadline = 0) : duration(duration), deadline(deadline) {}
 };
 
 int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
@@ -50,11 +48,7 @@ int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
 using namespace std;
 
 int main() {
-  vector<TimedJob> jobs;
-  jobs.emplace_back(3, 4);
-  jobs.emplace_back(2, 3);
-  jobs.emplace_back(1, 2);
-  jobs.emplace_back(2, 7);
+  vector<TimedJob> jobs{{3, 4}, {2, 3}, {1, 2}, {2, 7}};
   assert(maximize_on_time_jobs(jobs) == 3);
   return 0;
 }

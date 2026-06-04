@@ -24,9 +24,6 @@ Space Complexity:
 struct WeightedInterval {
   int start, finish;
   long long weight;
-
-  explicit WeightedInterval(int start = 0, int finish = 0, long long weight = 0)
-      : start(start), finish(finish), weight(weight) {}
 };
 
 long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) {
@@ -55,12 +52,7 @@ long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) 
 using namespace std;
 
 int main() {
-  vector<WeightedInterval> intervals;
-  intervals.emplace_back(1, 3, 5);
-  intervals.emplace_back(2, 5, 6);
-  intervals.emplace_back(4, 6, 5);
-  intervals.emplace_back(6, 7, 4);
-  intervals.emplace_back(5, 8, 11);
+  vector<WeightedInterval> intervals{{1, 3, 5}, {2, 5, 6}, {4, 6, 5}, {6, 7, 4}, {5, 8, 11}};
   assert(weighted_interval_scheduling(intervals) == 17);
   return 0;
 }

@@ -58,7 +58,7 @@ void zero_one_bfs(int nodes, int start) {
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].emplace_back(v, w);
+  adj[u].push_back({v, w});
 }
 
 int main() {

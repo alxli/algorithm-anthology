@@ -22,8 +22,8 @@ Space Complexity:
 
 */
 
-template<class UnimodalFunction>
-double ternary_search_min(double lo, double hi, UnimodalFunction f, const double EPS = 1e-12) {
+template<class Fn>
+double ternary_search_min(double lo, double hi, Fn f, const double EPS = 1e-12) {
   double lthird, hthird;
   while (hi - lo > EPS) {
     lthird = lo + (hi - lo) / 3;
@@ -37,8 +37,8 @@ double ternary_search_min(double lo, double hi, UnimodalFunction f, const double
   return lo;
 }
 
-template<class UnimodalFunction>
-double ternary_search_max(double lo, double hi, UnimodalFunction f, const double EPS = 1e-12) {
+template<class Fn>
+double ternary_search_max(double lo, double hi, Fn f, const double EPS = 1e-12) {
   double lthird, hthird;
   while (hi - lo > EPS) {
     lthird = lo + (hi - lo) / 3;

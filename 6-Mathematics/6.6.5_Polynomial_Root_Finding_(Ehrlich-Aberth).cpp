@@ -213,8 +213,7 @@ void print_roots(const vector<cdouble> &x) {
 int main() {
   {  // -1 + 2x - 6x^2 + 2x^3
     printf("Roots of -1 + 2x - 6x^2 + 2x^3:\n");
-    LD poly[] = {-1, 2, -6, 2};
-    vector<LD> p(poly, poly + 4);
+    vector<LD> p{-1.0, 2.0, -6.0, 2.0};
     vector<cdouble> roots = find_all_roots(p);
     assert(roots.size() == 3);
     for (const auto &root : roots) {

@@ -18,13 +18,13 @@ Space Complexity:
 
 #include <cmath>
 
-template<class ContinuousFunction>
-double simpsons(ContinuousFunction f, double a, double b) {
+template<class Fn>
+double simpsons(Fn f, double a, double b) {
   return (f(a) + 4 * f((a + b) / 2) + f(b)) * (b - a) / 6;
 }
 
-template<class ContinuousFunction>
-double integrate(ContinuousFunction f, double a, double b, const double EPS = 1e-15) {
+template<class Fn>
+double integrate(Fn f, double a, double b, const double EPS = 1e-15) {
   double m = (a + b) / 2;
   double am = simpsons(f, a, m);
   double mb = simpsons(f, m, b);

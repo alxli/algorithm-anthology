@@ -1309,11 +1309,9 @@ long long rank_by_partition(const std::vector<int> &p) {
   return res;
 }
 
-using ReportFunction = void (*)(std::vector<int>::iterator, std::vector<int>::iterator);
+using Fn = void (*)(std::vector<int>::iterator, std::vector<int>::iterator);
 
-void generate_increasing_partitions(
-    int left, int prev, int i, std::vector<int> &p, ReportFunction f
-) {
+void generate_increasing_partitions(int left, int prev, int i, std::vector<int> &p, Fn f) {
   if (left == 0) {
     f(p.begin(), p.begin() + i);
     return;
@@ -1323,7 +1321,7 @@ void generate_increasing_partitions(
   }
 }
 
-void generate_increasing_partitions(int n, ReportFunction f) {
+void generate_increasing_partitions(int n, Fn f) {
   std::vector<int> p(n, 0);
   generate_increasing_partitions(n, 0, 0, p, f);
 }
@@ -4641,8 +4639,8 @@ Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(
 \begin{lstlisting}[language=C++]
 #include <stdexcept>
 
-template<class ContinuousFunction>
-double bisection_root(ContinuousFunction f, double a, double b, const int ITERATIONS = 100) {
+template<class Fn>
+double bisection_root(Fn f, double a, double b, const int ITERATIONS = 100) {
   if (a > b || f(a) * f(b) > 0) {
     throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");
   }
@@ -4658,8 +4656,8 @@ double bisection_root(ContinuousFunction f, double a, double b, const int ITERAT
   return m;
 }
 
-template<class ContinuousFunction>
-double falsi_illinois_root(ContinuousFunction f, double a, double b, const int ITERATIONS = 100) {
+template<class Fn>
+double falsi_illinois_root(Fn f, double a, double b, const int ITERATIONS = 100) {
   if (a > b || f(a) * f(b) > 0) {
     throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");
   }
@@ -4720,10 +4718,9 @@ Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative 
 #include <cmath>
 #include <stdexcept>
 
-template<class ContinuousFunction>
+template<class Fn>
 double newton_root(
-    ContinuousFunction f, ContinuousFunction fprime, double x0, const double EPS = 1e-15,
-    const int ITERATIONS = 100
+    Fn f, Fn fprime, double x0, const double EPS = 1e-15, const int ITERATIONS = 100
 ) {
   double x = x0, error = EPS + 1;
   for (int i = 0; error > EPS && i < ITERATIONS; i++) {
@@ -4737,9 +4734,9 @@ double newton_root(
   return x;
 }
 
-template<class ContinuousFunction>
+template<class Fn>
 double secant_root(
-    ContinuousFunction f, double x0, double x1, const double EPS = 1e-15, const int ITERATIONS = 100
+    Fn f, double x0, double x1, const double EPS = 1e-15, const int ITERATIONS = 100
 ) {
   double xold = x0, fxold = f(x0), x = x1, error = EPS + 1;
   for (int i = 0; error > EPS && i < ITERATIONS; i++) {
@@ -4856,13 +4853,13 @@ using namespace std;
 
 int main() {
   {  // -1 + 2x - 6x^2 + 2x^3
-    int poly[] = {-1, 2, -6, 2};
-    vector<double> p(poly, poly + 4), roots = find_all_roots(p);
+    vector<double> p{-1.0, 2.0, -6.0, 2.0};
+    vector<double> roots = find_all_roots(p);
     assert(roots.size() == 1 && fabs(horner_eval(p, roots[0])) < 1e-10);
   }
   {  // -20 + 4x + 3x^2
-    int poly[] = {-20, 4, 3};
-    vector<double> p(poly, poly + 3), roots = find_all_roots(p);
+    vector<double> p{-20.0, 4.0, 3.0};
+    vector<double> roots = find_all_roots(p);
     assert(roots.size() == 2);
     assert(fabs(horner_eval(p, roots[0])) < 1e-10);
     assert(fabs(horner_eval(p, roots[1])) < 1e-10);
@@ -5205,8 +5202,7 @@ void print_roots(const vector<cdouble> &x) {
 int main() {
   {  // -1 + 2x - 6x^2 + 2x^3
     printf("Roots of -1 + 2x - 6x^2 + 2x^3:\n");
-    LD poly[] = {-1, 2, -6, 2};
-    vector<LD> p(poly, poly + 4);
+    vector<LD> p{-1.0, 2.0, -6.0, 2.0};
     vector<cdouble> roots = find_all_roots(p);
     assert(roots.size() == 3);
     for (const auto &root : roots) {
@@ -5258,13 +5254,13 @@ Computes the definite integral from $a$ to $b$ for a continuous function $f$ usi
 \begin{lstlisting}[language=C++]
 #include <cmath>
 
-template<class ContinuousFunction>
-double simpsons(ContinuousFunction f, double a, double b) {
+template<class Fn>
+double simpsons(Fn f, double a, double b) {
   return (f(a) + 4 * f((a + b) / 2) + f(b)) * (b - a) / 6;
 }
 
-template<class ContinuousFunction>
-double integrate(ContinuousFunction f, double a, double b, const double EPS = 1e-15) {
+template<class Fn>
+double integrate(Fn f, double a, double b, const double EPS = 1e-15) {
   double m = (a + b) / 2;
   double am = simpsons(f, a, m);
   double mb = simpsons(f, m, b);

@@ -240,13 +240,13 @@ struct Line {
   bool is_parallel(const Line &l) const { return EQ(a, l.a) && EQ(b, l.b); }
   bool is_perpendicular(const Line &l) const { return EQ(-a * l.a, b * l.b); }
 
-  // Return the parallel line passing through point p.
+  // Return the parallel line passing through Point p.
   template<class Point>
   Line parallel(const Point &p) const {
     return Line(a, b, -a * p.x - b * p.y);
   }
 
-  // Return the perpendicular line passing through point p.
+  // Return the perpendicular line passing through Point p.
   template<class Point>
   Line perpendicular(const Point &p) const {
     return Line(-b, a, b * p.x - a * p.y);
@@ -301,15 +301,22 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
 
-double sqnorm(const point &a) {
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
+
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double norm(const point &a) {
+double norm(const Point &a) {
   return sqrt(sqnorm(a));
 }
 
@@ -318,21 +325,21 @@ struct Circle {
 
   Circle() : h(0), k(0), r(0) {}
   explicit Circle(double r) : h(0), k(0), r(fabs(r)) {}
-  Circle(const point &o, double r) : h(o.x), k(o.y), r(fabs(r)) {}
+  Circle(const Point &o, double r) : h(o.x), k(o.y), r(fabs(r)) {}
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
   // Circle with the line segment ab as a diameter.
-  Circle(const point &a, const point &b) {
+  Circle(const Point &a, const Point &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
-    r = norm(point(a.x - h, a.y - k));
+    r = norm(Point(a.x - h, a.y - k));
   }
 
   // Circumcircle of three points.
-  Circle(const point &a, const point &b, const point &c) {
-    double an = sqnorm(point(b.x - c.x, b.y - c.y));
-    double bn = sqnorm(point(a.x - c.x, a.y - c.y));
-    double cn = sqnorm(point(a.x - b.x, a.y - b.y));
+  Circle(const Point &a, const Point &b, const Point &c) {
+    double an = sqnorm(Point(b.x - c.x, b.y - c.y));
+    double bn = sqnorm(Point(a.x - c.x, a.y - c.y));
+    double cn = sqnorm(Point(a.x - b.x, a.y - b.y));
     double wa = an * (bn + cn - an);
     double wb = bn * (an + cn - bn);
     double wc = cn * (an + bn - cn);
@@ -342,7 +349,7 @@ struct Circle {
     }
     h = (wa * a.x + wb * b.x + wc * c.x) / w;
     k = (wa * a.y + wb * b.y + wc * c.y) / w;
-    r = norm(point(a.x - h, a.y - k));
+    r = norm(Point(a.x - h, a.y - k));
   }
 
   // Circle of radius r that contains points a and b. In the general case, there will be two
@@ -350,13 +357,13 @@ struct Circle {
   // dist(a, b) = 2*r, then there is only one possible center. If points a and b are identical, then
   // there are infinite circles. If the points are too far away relative to the radius, then there
   // is no possible Circle. In the latter two cases, an exception is thrown.
-  Circle(const point &a, const point &b, double r) : r(fabs(r)) {
+  Circle(const Point &a, const Point &b, double r) : r(fabs(r)) {
     if (LE(r, 0) && a == b) {  // Circle with zero area.
       h = a.x;
       k = a.y;
       return;
     }
-    double d = norm(point(b.x - a.x, b.y - a.y));
+    double d = norm(Point(b.x - a.x, b.y - a.y));
     if (EQ(d, 0)) {
       throw std::runtime_error("Identical points, infinite circles.");
     }
@@ -364,7 +371,7 @@ struct Circle {
       throw std::runtime_error("Points too far away to make Circle.");
     }
     double v = sqrt(r * r - d * d / 4.0) / d;
-    point m((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
+    Point m((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
     h = m.x + v * (a.y - b.y);
     k = m.y + v * (b.x - a.x);
     // The other answer is (h, k) = (m.x - v*(a.y - b.y), m.y - v*(b.x - a.x)).
@@ -372,9 +379,9 @@ struct Circle {
 
   bool operator==(const Circle &c) const { return EQ(h, c.h) && EQ(k, c.k) && EQ(r, c.r); }
   bool operator!=(const Circle &c) const { return !(*this == c); }
-  point center() const { return point(h, k); }
-  bool contains(const point &p) const { return LE(sqnorm(point(p.x - h, p.y - k)), r * r); }
-  bool on_edge(const point &p) const { return EQ(sqnorm(point(p.x - h, p.y - k)), r * r); }
+  Point center() const { return Point(h, k); }
+  bool contains(const Point &p) const { return LE(sqnorm(Point(p.x - h, p.y - k)), r * r); }
+  bool on_edge(const Point &p) const { return EQ(sqnorm(Point(p.x - h, p.y - k)), r * r); }
 
   friend std::ostream &operator<<(std::ostream &out, const Circle &c) {
     return out << std::showpos << "(x" << -(fabs(c.h) < EPS ? 0 : c.h) << ")^2+"
@@ -384,12 +391,12 @@ struct Circle {
 };
 
 // Returns the Circle inscribed inside the triangle abc.
-Circle incircle(const point &a, const point &b, const point &c) {
-  double al = norm(point(b.x - c.x, b.y - c.y));
-  double bl = norm(point(a.x - c.x, a.y - c.y));
-  double cl = norm(point(a.x - b.x, a.y - b.y));
+Circle incircle(const Point &a, const Point &b, const Point &c) {
+  double al = norm(Point(b.x - c.x, b.y - c.y));
+  double bl = norm(Point(a.x - c.x, a.y - c.y));
+  double cl = norm(Point(a.x - b.x, a.y - b.y));
   double l = al + bl + cl;
-  point p(a.x - c.x, a.y - c.y), q(b.x - c.x, b.y - c.y);
+  Point p(a.x - c.x, a.y - c.y), q(b.x - c.x, b.y - c.y);
   return EQ(l, 0) ? Circle(a.x, a.y, 0)
                   : Circle(
                         (al * a.x + bl * b.x + cl * c.x) / l, (al * a.y + bl * b.y + cl * c.y) / l,
@@ -403,12 +410,12 @@ Circle incircle(const point &a, const point &b, const point &c) {
 
 int main() {
   Circle c(-2, 5, sqrt(10));
-  assert(c == Circle(point(-2, 5), sqrt(10)));
-  assert(c == Circle(point(1, 6), point(-5, 4)));
-  assert(c == Circle(point(-3, 2), point(-3, 8), point(-1, 8)));
-  assert(c == incircle(point(-12, 5), point(3, 0), point(0, 9)));
-  assert(c.contains(point(-2, 8)) && !c.contains(point(-2, 9)));
-  assert(c.on_edge(point(-1, 2)) && !c.on_edge(point(-1.01, 2)));
+  assert(c == Circle(Point(-2, 5), sqrt(10)));
+  assert(c == Circle(Point(1, 6), Point(-5, 4)));
+  assert(c == Circle(Point(-3, 2), Point(-3, 8), Point(-1, 8)));
+  assert(c == incircle(Point(-12, 5), Point(3, 0), Point(0, 9)));
+  assert(c.contains(Point(-2, 8)) && !c.contains(Point(-2, 9)));
+  assert(c.on_edge(Point(-1, 2)) && !c.on_edge(Point(-1.01, 2)));
   return 0;
 }
 \end{lstlisting}
@@ -441,16 +448,23 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
 
-double cross(const point &a, const point &b) {
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
+
+double cross(const Point &a, const Point &b) {
   return a.x * b.y - a.y * b.x;
 }
 
-double triangle_area(const point &a, const point &b, const point &c) {
-  point ac(a.x - c.x, a.y - c.y), bc(b.x - c.x, b.y - c.y);
+double triangle_area(const Point &a, const Point &b, const Point &c) {
+  Point ac(a.x - c.x, a.y - c.y), bc(b.x - c.x, b.y - c.y);
   return fabs(cross(ac, bc)) / 2.0;
 }
 
@@ -472,15 +486,15 @@ double triangle_area_altitudes(double h1, double h2, double h3) {
   return 1.0 / sqrt(v - 1.0 / (x * x) - 1.0 / (y * y) - 1.0 / (z * z));
 }
 
-bool same_side(const point &p1, const point &p2, const point &a, const point &b) {
+bool same_side(const Point &p1, const Point &p2, const Point &a, const Point &b) {
   static const bool EDGE_IS_SAME_SIDE = true;
-  point ab(b.x - a.x, b.y - a.y);
-  point p1a(p1.x - a.x, p1.y - a.y), p2a(p2.x - a.x, p2.y - a.y);
+  Point ab(b.x - a.x, b.y - a.y);
+  Point p1a(p1.x - a.x, p1.y - a.y), p2a(p2.x - a.x, p2.y - a.y);
   double c1 = cross(ab, p1a), c2 = cross(ab, p2a);
   return EDGE_IS_SAME_SIDE ? GE(c1 * c2, 0) : GT(c1 * c2, 0);
 }
 
-bool point_in_triangle(const point &p, const point &a, const point &b, const point &c) {
+bool point_in_triangle(const Point &p, const Point &a, const Point &b, const Point &c) {
   return same_side(p, a, b, c) && same_side(p, b, a, c) && same_side(p, c, a, b);
 }
 \end{lstlisting}
@@ -489,15 +503,15 @@ bool point_in_triangle(const point &p, const point &a, const point &b, const poi
 #include <cassert>
 
 int main() {
-  assert(EQ(6, triangle_area(point(0, -1), point(4, -1), point(0, -4))));
+  assert(EQ(6, triangle_area(Point(0, -1), Point(4, -1), Point(0, -4))));
   assert(EQ(6, triangle_area_sides(3, 4, 5)));
   assert(EQ(6, triangle_area_medians(3.605551275, 2.5, 4.272001873)));
   assert(EQ(6, triangle_area_altitudes(3, 4, 2.4)));
 
-  assert(point_in_triangle(point(0, 0), point(-1, 0), point(0, -2), point(4, 0)));
-  assert(!point_in_triangle(point(0, 1), point(-1, 0), point(0, -2), point(4, 0)));
-  assert(point_in_triangle(point(-2.44, 0.82), point(-1, 0), point(-3, 1), point(4, 0)));
-  assert(!point_in_triangle(point(-2.44, 0.7), point(-1, 0), point(-3, 1), point(4, 0)));
+  assert(point_in_triangle(Point(0, 0), Point(-1, 0), Point(0, -2), Point(4, 0)));
+  assert(!point_in_triangle(Point(0, 1), Point(-1, 0), Point(0, -2), Point(4, 0)));
+  assert(point_in_triangle(Point(-2.44, 0.82), Point(-1, 0), Point(-3, 1), Point(4, 0)));
+  assert(!point_in_triangle(Point(-2.44, 0.7), Point(-1, 0), Point(-3, 1), Point(4, 0)));
   return 0;
 }
 \end{lstlisting}
@@ -529,35 +543,40 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double rectangle_area(const point &a, const point &b) {
+double rectangle_area(const Point &a, const Point &b) {
   return fabs((a.x - b.x) * (a.y - b.y));
 }
 
-bool point_in_rectangle(const point &p, const point &v, double w, double h) {
+bool point_in_rectangle(const Point &p, const Point &v, double w, double h) {
   static const bool EDGE_IS_INSIDE = true;
   if (w < 0) {
-    return point_in_rectangle(p, point(v.x + w, v.y), -w, h);
+    return point_in_rectangle(p, Point(v.x + w, v.y), -w, h);
   }
   if (h < 0) {
-    return point_in_rectangle(p, point(v.x, v.y + h), w, -h);
+    return point_in_rectangle(p, Point(v.x, v.y + h), w, -h);
   }
   return EDGE_IS_INSIDE ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
                         : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
 }
 
-bool point_in_rectangle(const point &p, const point &a, const point &b) {
+bool point_in_rectangle(const Point &p, const Point &a, const Point &b) {
   double xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   double xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(p, point(xl, yl), xh - xl, yh - yl);
+  return point_in_rectangle(p, Point(xl, yl), xh - xl, yh - yl);
 }
 
 int rectangle_intersection(
-    const point &a1, const point &b1, const point &a2, const point &b2, point *p = nullptr,
-    point *q = nullptr
+    const Point &a1, const Point &b1, const Point &a2, const Point &b2, Point *p = nullptr,
+    Point *q = nullptr
 ) {
   bool a1in2 = point_in_rectangle(a1, a2, b2);
   bool b1in2 = point_in_rectangle(b1, a2, b2);
@@ -597,27 +616,27 @@ int rectangle_intersection(
 \begin{lstlisting}[language=C++]
 #include <cassert>
 
-bool EQP(const point &a, const point &b) {
+bool EQP(const Point &a, const Point &b) {
   return EQ(a.x, b.x) && EQ(a.y, b.y);
 }
 
 int main() {
-  assert(EQ(20, rectangle_area(point(1, 1), point(5, 6))));
+  assert(EQ(20, rectangle_area(Point(1, 1), Point(5, 6))));
 
-  assert(point_in_rectangle(point(0, -1), point(0, -3), 3, 2));
-  assert(point_in_rectangle(point(2, -2), point(3, -3), -3, 2));
-  assert(!point_in_rectangle(point(0, 0), point(3, -1), -3, -2));
-  assert(point_in_rectangle(point(2, -2), point(3, -3), point(0, -1)));
-  assert(!point_in_rectangle(point(-1, -2), point(3, -3), point(0, -1)));
+  assert(point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2));
+  assert(point_in_rectangle(Point(2, -2), Point(3, -3), -3, 2));
+  assert(!point_in_rectangle(Point(0, 0), Point(3, -1), -3, -2));
+  assert(point_in_rectangle(Point(2, -2), Point(3, -3), Point(0, -1)));
+  assert(!point_in_rectangle(Point(-1, -2), Point(3, -3), Point(0, -1)));
 
-  point p, q;
-  assert(-1 == rectangle_intersection(point(0, 0), point(1, 1), point(2, 2), point(3, 3)));
-  assert(0 == rectangle_intersection(point(1, 1), point(7, 7), point(5, 5), point(0, 0), &p, &q));
-  assert(EQP(p, point(1, 1)) && EQP(q, point(5, 5)));
-  assert(1 == rectangle_intersection(point(1, 1), point(0, 0), point(0, 0), point(1, 10), &p, &q));
-  assert(EQP(p, point(0, 0)) && EQP(q, point(1, 1)));
-  assert(2 == rectangle_intersection(point(0, 5), point(5, 7), point(1, 6), point(2, 5), &p, &q));
-  assert(EQP(p, point(1, 6)) && EQP(q, point(2, 5)));
+  Point p, q;
+  assert(-1 == rectangle_intersection(Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)));
+  assert(0 == rectangle_intersection(Point(1, 1), Point(7, 7), Point(5, 5), Point(0, 0), &p, &q));
+  assert(EQP(p, Point(1, 1)) && EQP(q, Point(5, 5)));
+  assert(1 == rectangle_intersection(Point(1, 1), Point(0, 0), Point(0, 0), Point(1, 10), &p, &q));
+  assert(EQP(p, Point(0, 0)) && EQP(q, Point(1, 1)));
+  assert(2 == rectangle_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
+  assert(EQP(p, Point(1, 6)) && EQP(q, Point(2, 5)));
 
   return 0;
 }
@@ -655,15 +674,20 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) {
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double norm(const point &a) {
+double norm(const Point &a) {
   return sqrt(sqnorm(a));
 }
 
@@ -689,21 +713,21 @@ double reduce_rad(double t) {
   return (t >= 2 * PI) ? fmod(t, 2 * PI) : t;
 }
 
-point polar_point(double r, double t) {
-  return point(r * cos(t), r * sin(t));
+Point polar_point(double r, double t) {
+  return Point(r * cos(t), r * sin(t));
 }
 
-double polar_angle(const point &p) {
+double polar_angle(const Point &p) {
   double t = atan2(p.y, p.x);
   return (t < 0) ? (t + 2 * PI) : t;
 }
 
-double angle(const point &a, const point &o, const point &b) {
-  point u(o.x - a.x, o.y - a.y), v(o.x - b.x, o.y - b.y);
+double angle(const Point &a, const Point &o, const Point &b) {
+  Point u(o.x - a.x, o.y - a.y), v(o.x - b.x, o.y - b.y);
   return acos((u.x * v.x + u.y * v.y) / (norm(u) * norm(v)));
 }
 
-double angle_between(const point &a, const point &b) {
+double angle_between(const Point &a, const Point &b) {
   double t = atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
   return (t < 0) ? (t + 2 * PI) : t;
 }
@@ -716,11 +740,11 @@ double angle_between(const double &a1, const double &b1, const double &a2, const
   return GT(t, PI / 2) ? (PI - t) : t;
 }
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-int turn(const point &a, const point &o, const point &b) {
+int turn(const Point &a, const Point &o, const Point &b) {
   double c = cross(a, b, o);
   return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
 }
@@ -729,21 +753,21 @@ int turn(const point &a, const point &o, const point &b) {
 \begin{lstlisting}[language=C++]
 #include <cassert>
 
-bool EQP(const point &a, const point &b) {
+bool EQP(const Point &a, const Point &b) {
   return EQ(a.x, b.x) && EQ(a.y, b.y);
 }
 
 int main() {
   assert(EQ(123, reduce_deg(-8 * 360 + 123)));
   assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
-  assert(EQP(polar_point(4, PI), point(-4, 0)));
-  assert(EQP(polar_point(4, -PI / 2), point(0, -4)));
-  assert(EQ(45, polar_angle(point(5, 5)) * RAD));
-  assert(EQ(135 * DEG, polar_angle(point(-4, 4))));
-  assert(EQ(90 * DEG, angle(point(5, 0), point(0, 5), point(-5, 0))));
-  assert(EQ(225 * DEG, angle_between(point(0, 5), point(5, -5))));
-  assert(-1 == cross(point(0, 1), point(1, 0), point(0, 0)));
-  assert(1 == turn(point(0, 1), point(0, 0), point(-5, -5)));
+  assert(EQP(polar_point(4, PI), Point(-4, 0)));
+  assert(EQP(polar_point(4, -PI / 2), Point(0, -4)));
+  assert(EQ(45, polar_angle(Point(5, 5)) * RAD));
+  assert(EQ(135 * DEG, polar_angle(Point(-4, 4))));
+  assert(EQ(90 * DEG, angle(Point(5, 0), Point(0, 5), Point(-5, 0))));
+  assert(EQ(225 * DEG, angle_between(Point(0, 5), Point(5, -5))));
+  assert(-1 == cross(Point(0, 1), Point(1, 0), Point(0, 0)));
+  assert(1 == turn(Point(0, 1), Point(0, 0), Point(-5, -5)));
   return 0;
 }
 \end{lstlisting}
@@ -774,27 +798,32 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) { return a.x * a.x + a.y * a.y; }
-double norm(const point &a) { return sqrt(sqnorm(a)); }
-double dot(const point &a, const point &b) { return a.x * b.x + a.y * b.y; }
-double cross(const point &a, const point &b) { return a.x * b.y - a.y * b.x; }
-double dist(const point &a, const point &b) { return norm(point(b.x - a.x, b.y - a.y)); }
-double sqdist(const point &a, const point &b) { return sqnorm(point(b.x - a.x, b.y - a.y)); }
+double sqnorm(const Point &a) { return a.x * a.x + a.y * a.y; }
+double norm(const Point &a) { return sqrt(sqnorm(a)); }
+double dot(const Point &a, const Point &b) { return a.x * b.x + a.y * b.y; }
+double cross(const Point &a, const Point &b) { return a.x * b.y - a.y * b.x; }
+double dist(const Point &a, const Point &b) { return norm(Point(b.x - a.x, b.y - a.y)); }
+double sqdist(const Point &a, const Point &b) { return sqnorm(Point(b.x - a.x, b.y - a.y)); }
 
-double line_dist(const point &p, double a, double b, double c) {
+double line_dist(const Point &p, double a, double b, double c) {
   return fabs(a * p.x + b * p.y + c) / sqrt(a * a + b * b);
 }
 
-double line_dist(const point &p, const point &a, const point &b) {
+double line_dist(const Point &p, const Point &a, const Point &b) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return dist(p, a);
   }
   double u = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / sqdist(a, b);
-  return norm(point(a.x + u * (b.x - a.x) - p.x, a.y + u * (b.y - a.y) - p.y));
+  return norm(Point(a.x + u * (b.x - a.x) - p.x, a.y + u * (b.y - a.y) - p.y));
 }
 
 double line_dist(double a1, double b1, double c1, double a2, double b2, double c2) {
@@ -805,29 +834,29 @@ double line_dist(double a1, double b1, double c1, double a2, double b2, double c
   return 0;
 }
 
-double seg_dist(const point &p, const point &a, const point &b) {
+double seg_dist(const Point &p, const Point &a, const Point &b) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return dist(p, a);
   }
-  point ab(b.x - a.x, b.y - a.y), ap(p.x - a.x, p.y - a.y);
+  Point ab(b.x - a.x, b.y - a.y), ap(p.x - a.x, p.y - a.y);
   double n = sqnorm(ab), d = dot(ab, ap);
   if (LE(d, 0) || EQ(n, 0)) {
     return norm(ap);
   }
-  return GE(d, n) ? norm(point(ap.x - ab.x, ap.y - ab.y))
-                  : norm(point(ap.x - ab.x * (d / n), ap.y - ab.y * (d / n)));
+  return GE(d, n) ? norm(Point(ap.x - ab.x, ap.y - ab.y))
+                  : norm(Point(ap.x - ab.x * (d / n), ap.y - ab.y * (d / n)));
 }
 
-double seg_dist(const point &a, const point &b, const point &c, const point &d) {
+double seg_dist(const Point &a, const Point &b, const Point &c, const Point &d) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return seg_dist(a, c, d);
   }
   if (EQ(c.x, d.x) && EQ(c.y, d.y)) {
     return seg_dist(c, a, b);
   }
-  point ab(b.x - a.x, b.y - a.y);
-  point ac(c.x - a.x, c.y - a.y);
-  point cd(d.x - c.x, d.y - c.y);
+  Point ab(b.x - a.x, b.y - a.y);
+  Point ac(c.x - a.x, c.y - a.y);
+  Point cd(d.x - c.x, d.y - c.y);
   double c1 = cross(ab, cd), c2 = cross(ac, ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {
     double t0 = dot(ac, ab) / sqnorm(ab), t1 = t0 + dot(cd, ab) / sqnorm(ab);
@@ -845,13 +874,13 @@ double seg_dist(const point &a, const point &b, const point &c, const point &d) 
   );
 }
 
-point closest_point(const point &a, const point &b, const point &p) {
+Point closest_point(const Point &a, const Point &b, const Point &p) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return a;
   }
-  point ap(p.x - a.x, p.y - a.y), ab(b.x - a.x, b.y - a.y);
+  Point ap(p.x - a.x, p.y - a.y), ab(b.x - a.x, b.y - a.y);
   double t = dot(ap, ab) / sqnorm(ab);
-  return (t <= 0) ? a : ((t >= 1) ? b : point(a.x + t * ab.x, a.y + t * ab.y));
+  return (t <= 0) ? a : ((t >= 1) ? b : Point(a.x + t * ab.x, a.y + t * ab.y));
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -859,17 +888,17 @@ point closest_point(const point &a, const point &b, const point &p) {
 #include <cassert>
 
 int main() {
-  assert(EQ(5, dist(point(-1, -1), point(2, 3))));
-  assert(EQ(25, sqdist(point(-1, -1), point(2, 3))));
-  assert(EQ(1.2, line_dist(point(2, 1), -4, 3, -1)));
-  assert(EQ(0.8, line_dist(point(3, 3), point(-1, -1), point(2, 3))));
-  assert(EQ(1.2, line_dist(point(2, 1), point(-1, -1), point(2, 3))));
+  assert(EQ(5, dist(Point(-1, -1), Point(2, 3))));
+  assert(EQ(25, sqdist(Point(-1, -1), Point(2, 3))));
+  assert(EQ(1.2, line_dist(Point(2, 1), -4, 3, -1)));
+  assert(EQ(0.8, line_dist(Point(3, 3), Point(-1, -1), Point(2, 3))));
+  assert(EQ(1.2, line_dist(Point(2, 1), Point(-1, -1), Point(2, 3))));
   assert(EQ(0, line_dist(-4, 3, -1, 8, 6, 2)));
   assert(EQ(0.8, line_dist(-4, 3, -1, -8, 6, -10)));
-  assert(EQ(1.0, seg_dist(point(3, 3), point(-1, -1), point(2, 3))));
-  assert(EQ(1.2, seg_dist(point(2, 1), point(-1, -1), point(2, 3))));
-  assert(EQ(0, seg_dist(point(0, 2), point(3, 3), point(-1, -1), point(2, 3))));
-  assert(EQ(0.6, seg_dist(point(-1, 0), point(-2, 2), point(-1, -1), point(2, 3))));
+  assert(EQ(1.0, seg_dist(Point(3, 3), Point(-1, -1), Point(2, 3))));
+  assert(EQ(1.2, seg_dist(Point(2, 1), Point(-1, -1), Point(2, 3))));
+  assert(EQ(0, seg_dist(Point(0, 2), Point(3, 3), Point(-1, -1), Point(2, 3))));
+  assert(EQ(0.6, seg_dist(Point(-1, 0), Point(-2, 2), Point(-1, -1), Point(2, 3))));
   return 0;
 }
 \end{lstlisting}
@@ -900,23 +929,28 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) { return a.x * a.x + a.y * a.y; }
-double norm(const point &a) { return sqrt(sqnorm(a)); }
-double dot(const point &a, const point &b) { return a.x * b.x + a.y * b.y; }
-double cross(const point &a, const point &b) { return a.x * b.y - a.y * b.x; }
+double sqnorm(const Point &a) { return a.x * a.x + a.y * a.y; }
+double norm(const Point &a) { return sqrt(sqnorm(a)); }
+double dot(const Point &a, const Point &b) { return a.x * b.x + a.y * b.y; }
+double cross(const Point &a, const Point &b) { return a.x * b.y - a.y * b.x; }
 
-bool point_on_segment(const point &p, const point &a, const point &b) {
-  return EQ(cross(point(p.x - a.x, p.y - a.y), point(b.x - a.x, b.y - a.y)), 0) &&
+bool point_on_segment(const Point &p, const Point &a, const Point &b) {
+  return EQ(cross(Point(p.x - a.x, p.y - a.y), Point(b.x - a.x, b.y - a.y)), 0) &&
          LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x)) &&
          LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
 }
 
 int line_intersection(
-    double a1, double b1, double c1, double a2, double b2, double c2, point *p = nullptr
+    double a1, double b1, double c1, double a2, double b2, double c2, Point *p = nullptr
 ) {
   if (EQ(a1, a2) && EQ(b1, b2)) {
     return EQ(c1, c2) ? 1 : -1;
@@ -933,7 +967,7 @@ int line_intersection(
 }
 
 int line_intersection(
-    const point &p1, const point &p2, const point &p3, const point &p4, point *p = nullptr
+    const Point &p1, const Point &p2, const Point &p3, const Point &p4, Point *p = nullptr
 ) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -945,19 +979,19 @@ int line_intersection(
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
   if (p != nullptr) {
-    *p = point(x / det, y / det);
+    *p = Point(x / det, y / det);
   }
   return 0;
 }
 
 int seg_intersection(
-    const point &a, const point &b, const point &c, const point &d, point *p = nullptr,
-    point *q = nullptr
+    const Point &a, const Point &b, const Point &c, const Point &d, Point *p = nullptr,
+    Point *q = nullptr
 ) {
   static const bool TOUCH_IS_INTERSECT = true;
-  point ab(b.x - a.x, b.y - a.y);
-  point ac(c.x - a.x, c.y - a.y);
-  point cd(d.x - c.x, d.y - c.y);
+  Point ab(b.x - a.x, b.y - a.y);
+  Point ac(c.x - a.x, c.y - a.y);
+  Point cd(d.x - c.x, d.y - c.y);
   if (EQ(sqnorm(ab), 0)) {
     if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
       if (p != nullptr) *p = a;
@@ -979,8 +1013,8 @@ int seg_intersection(
     double mint = std::min(t0, t1), maxt = std::max(t0, t1);
     bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
     if (overlap) {
-      point res1 = std::max(std::min(a, b), std::min(c, d));
-      point res2 = std::min(std::max(a, b), std::max(c, d));
+      Point res1 = std::max(std::min(a, b), std::min(c, d));
+      Point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
         if (p != nullptr) {
           *p = res1;
@@ -1004,66 +1038,65 @@ int seg_intersection(
   bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
     if (p != nullptr) {
-      *p = point(a.x + t * ab.x, a.y + t * ab.y);
+      *p = Point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
   }
   return -1;  // Non-parallel with no intersections.
 }
 
-point closest_point(double a, double b, double c, const point &p) {
+Point closest_point(double a, double b, double c, const Point &p) {
   if (EQ(a, 0)) {
-    return point(p.x, -c / b);  // Horizontal line.
+    return Point(p.x, -c / b);  // Horizontal line.
   }
   if (EQ(b, 0)) {
-    return point(-c / a, p.y);  // Vertical line.
+    return Point(-c / a, p.y);  // Vertical line.
   }
-  point res;
+  Point res;
   line_intersection(a, b, c, -b, a, b * p.x - a * p.y, &res);
   return res;
 }
 
-point closest_point(const point &a, const point &b, const point &p) {
+Point closest_point(const Point &a, const Point &b, const Point &p) {
   if (a == b) return a;
-  point ap(p.x - a.x, p.y - a.y), ab(b.x - a.x, b.y - a.y);
+  Point ap(p.x - a.x, p.y - a.y), ab(b.x - a.x, b.y - a.y);
   double t = dot(ap, ab) / sqnorm(ab);
   if (t <= 0) return a;
   if (t >= 1) return b;
-  return point(a.x + t * ab.x, a.y + t * ab.y);
+  return Point(a.x + t * ab.x, a.y + t * ab.y);
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#define point point
 
-bool EQP(const point &a, const point &b) {
+bool EQP(const Point &a, const Point &b) {
   return EQ(a.x, b.x) && EQ(a.y, b.y);
 }
 
 int main() {
-  point p, q;
+  Point p, q;
 
   assert(line_intersection(-1, 1, 0, 1, 1, -3, &p) == 0);
-  assert(EQP(p, point(1.5, 1.5)));
-  assert(line_intersection(point(0, 0), point(1, 1), point(0, 4), point(4, 0), &p) == 0);
-  assert(EQP(p, point(2, 2)));
+  assert(EQP(p, Point(1.5, 1.5)));
+  assert(line_intersection(Point(0, 0), Point(1, 1), Point(0, 4), Point(4, 0), &p) == 0);
+  assert(EQP(p, Point(2, 2)));
 
   {
 #define test(a, b, c, d, e, f, g, h) \
-  seg_intersection(point(a, b), point(c, d), point(e, f), point(g, h), &p, &q)
+  seg_intersection(Point(a, b), Point(c, d), Point(e, f), Point(g, h), &p, &q)
 
-    // Intersection is a point.
-    assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && EQP(p, point(0, 0)));
-    assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && EQP(p, point(2, 2)));
-    assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && EQP(p, point(-2, 0)));
-    assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && EQP(p, point(4, 4)));
+    // Intersection is a Point.
+    assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && EQP(p, Point(0, 0)));
+    assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && EQP(p, Point(2, 2)));
+    assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && EQP(p, Point(-2, 0)));
+    assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && EQP(p, Point(4, 4)));
 
     // Intersection is a segment.
     assert(1 == test(10, 10, 0, 0, 2, 2, 6, 6));
-    assert(EQP(p, point(2, 2)) && EQP(q, point(6, 6)));
+    assert(EQP(p, Point(2, 2)) && EQP(q, Point(6, 6)));
     assert(1 == test(6, 8, 14, -2, 14, -2, 6, 8));
-    assert(EQP(p, point(6, 8)) && EQP(q, point(14, -2)));
+    assert(EQP(p, Point(6, 8)) && EQP(q, Point(14, -2)));
 
     // No intersection.
     assert(-1 == test(6, 8, 8, 10, 12, 12, 4, 4));
@@ -1076,13 +1109,13 @@ int main() {
     assert(-1 == test(4, 2, 4, 4, 0, 8, 10, 0));
   }
 
-  assert(EQP(point(2.5, 2.5), closest_point(-1, -1, 5, point(0, 0))));
-  assert(EQP(point(3, 0), closest_point(1, 0, -3, point(0, 0))));
-  assert(EQP(point(0, 3), closest_point(0, 1, -3, point(0, 0))));
+  assert(EQP(Point(2.5, 2.5), closest_point(-1, -1, 5, Point(0, 0))));
+  assert(EQP(Point(3, 0), closest_point(1, 0, -3, Point(0, 0))));
+  assert(EQP(Point(0, 3), closest_point(0, 1, -3, Point(0, 0))));
 
-  assert(EQP(point(3, 0), closest_point(point(3, 0), point(3, 3), point(0, 0))));
-  assert(EQP(point(2, -1), closest_point(point(2, -1), point(4, -1), point(0, 0))));
-  assert(EQP(point(4, -1), closest_point(point(2, -1), point(4, -1), point(5, 0))));
+  assert(EQP(Point(3, 0), closest_point(Point(3, 0), Point(3, 3), Point(0, 0))));
+  assert(EQP(Point(2, -1), closest_point(Point(2, -1), Point(4, -1), Point(0, 0))));
+  assert(EQP(Point(4, -1), closest_point(Point(2, -1), Point(4, -1), Point(5, 0))));
   return 0;
 }
 \end{lstlisting}
@@ -1115,15 +1148,20 @@ const double EPS = 1e-9, PI = acos(-1.0);
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) {
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double norm(const point &a) {
+double norm(const Point &a) {
   return sqrt(sqnorm(a));
 }
 
@@ -1154,7 +1192,7 @@ struct Line {
     }
   }
 
-  Line(const point &p, const point &q) : a(0), b(0), c(0) {
+  Line(const Point &p, const Point &q) : a(0), b(0), c(0) {
     if (EQ(p.x, q.x)) {
       if (NE(p.y, q.y)) {  // Vertical line.
         a = 1;
@@ -1169,11 +1207,11 @@ struct Line {
   }
 };
 
-int tangent(const Circle &c, const point &p, Line *l1 = nullptr, Line *l2 = nullptr) {
-  point vop(p.x - c.h, p.y - c.k);
+int tangent(const Circle &c, const Point &p, Line *l1 = nullptr, Line *l2 = nullptr) {
+  Point vop(p.x - c.h, p.y - c.k);
   if (EQ(sqnorm(vop), c.r * c.r)) {  // Point on an edge.
     if (l1 != nullptr) {             // Get perpendicular line through p.
-      *l1 = Line(point(c.h, c.k), p);
+      *l1 = Line(Point(c.h, c.k), p);
       *l1 = Line(-l1->b, l1->a, l1->b * p.x - l1->a * p.y);
     }
     return 0;
@@ -1181,9 +1219,9 @@ int tangent(const Circle &c, const point &p, Line *l1 = nullptr, Line *l2 = null
   if (LE(sqnorm(vop), c.r * c.r)) {
     return -1;  // Point inside Circle, no intersection.
   }
-  point q(vop.x / c.r, vop.y / c.r);
+  Point q(vop.x / c.r, vop.y / c.r);
   double n = sqnorm(q), d = q.y * sqrt(sqnorm(q) - 1.0);
-  point t1((q.x - d) / n, c.k), t2((q.x + d) / n, c.k);
+  Point t1((q.x - d) / n, c.k), t2((q.x + d) / n, c.k);
   if (NE(q.y, 0)) {  // Common case.
     t1.y += c.r * (1.0 - t1.x * q.x) / q.y;
     t2.y += c.r * (1.0 - t2.x * q.x) / q.y;
@@ -1202,7 +1240,7 @@ int tangent(const Circle &c, const point &p, Line *l1 = nullptr, Line *l2 = null
   return 1;
 }
 
-int intersection(const Circle &c, const Line &l, point *p = nullptr, point *q = nullptr) {
+int intersection(const Circle &c, const Line &l, Point *p = nullptr, Point *q = nullptr) {
   double v = c.h * l.a + c.k * l.b + l.c;
   double aabb = l.a * l.a + l.b * l.b;
   double disc = v * v / aabb - c.r * c.r;
@@ -1212,23 +1250,23 @@ int intersection(const Circle &c, const Line &l, point *p = nullptr, point *q = 
   double x0 = -l.a * l.c / aabb, y0 = -l.b * v / aabb;
   if (disc > -EPS) {
     if (p != nullptr) {
-      *p = point(x0 + c.h, y0 + c.k);
+      *p = Point(x0 + c.h, y0 + c.k);
     }
     return 0;
   }
   double k = sqrt(std::max(0.0, disc / -aabb));
   if (p != nullptr && q != nullptr) {
-    *p = point(x0 + k * l.b + c.h, y0 - k * l.a + c.k);
-    *q = point(x0 - k * l.b + c.h, y0 + k * l.a + c.k);
+    *p = Point(x0 + k * l.b + c.h, y0 - k * l.a + c.k);
+    *q = Point(x0 - k * l.b + c.h, y0 + k * l.a + c.k);
   }
   return 1;
 }
 
-int intersection(const Circle &c1, const Circle &c2, point *p = nullptr, point *q = nullptr) {
+int intersection(const Circle &c1, const Circle &c2, Point *p = nullptr, Point *q = nullptr) {
   if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k)) {
     return EQ(c1.r, c2.r) ? 3 : (c1.r > c2.r ? -1 : -2);
   }
-  point d12(point(c2.h - c1.h, c2.k - c1.k));
+  Point d12(Point(c2.h - c1.h, c2.k - c1.k));
   double d = norm(d12);
   if (GT(d, c1.r + c2.r)) {
     return 0;
@@ -1241,20 +1279,20 @@ int intersection(const Circle &c1, const Circle &c2, point *p = nullptr, point *
   double s = sqrt(c1.r * c1.r - a * a), rx = -d12.y * s / d, ry = d12.x * s / d;
   if (EQ(rx, 0) && EQ(ry, 0)) {
     if (p != nullptr) {
-      *p = point(x0, y0);
+      *p = Point(x0, y0);
     }
     return 1;
   }
   if (p != nullptr && q != nullptr) {
-    *p = point(x0 - rx, y0 - ry);
-    *q = point(x0 + rx, y0 + ry);
+    *p = Point(x0 - rx, y0 - ry);
+    *q = Point(x0 + rx, y0 + ry);
   }
   return 2;
 }
 
 double intersection_area(const Circle &c1, const Circle &c2) {
   double r = std::min(c1.r, c2.r), R = std::max(c1.r, c2.r);
-  double d = norm(point(c2.h - c1.h, c2.k - c1.k));
+  double d = norm(Point(c2.h - c1.h, c2.k - c1.k));
   if (LE(d, R - r)) {
     return PI * r * r;
   }
@@ -1270,7 +1308,7 @@ double intersection_area(const Circle &c1, const Circle &c2) {
 \begin{lstlisting}[language=C++]
 #include <cassert>
 
-bool EQP(const point &a, const point &b) {
+bool EQP(const Point &a, const Point &b) {
   return EQ(a.x, b.x) && EQ(a.y, b.y);
 }
 
@@ -1280,29 +1318,29 @@ bool EQL(const Line &l1, const Line &l2) {
 
 int main() {
   Line l1, l2;
-  assert(-1 == tangent(Circle(0, 0, 4), point(1, 1), &l1, &l2));
-  assert(0 == tangent(Circle(0, 0, sqrt(2)), point(1, 1), &l1, &l2));
+  assert(-1 == tangent(Circle(0, 0, 4), Point(1, 1), &l1, &l2));
+  assert(0 == tangent(Circle(0, 0, sqrt(2)), Point(1, 1), &l1, &l2));
   assert(EQL(l1, Line(-1, -1, 2)));
-  assert(1 == tangent(Circle(0, 0, 2), point(2, 2), &l1, &l2));
+  assert(1 == tangent(Circle(0, 0, 2), Point(2, 2), &l1, &l2));
   assert(EQL(l1, Line(0, -2, 4)));
   assert(EQL(l2, Line(2, 0, -4)));
 
-  point p, q;
+  Point p, q;
   assert(-1 == intersection(Circle(1, 1, 3), Line(5, 3, -30), &p, &q));
   assert(0 == intersection(Circle(1, 1, 3), Line(0, 1, -4), &p, &q));
-  assert(EQP(p, point(1, 4)));
+  assert(EQP(p, Point(1, 4)));
   assert(1 == intersection(Circle(1, 1, 3), Line(0, 1, -1), &p, &q));
-  assert(EQP(p, point(4, 1)));
-  assert(EQP(q, point(-2, 1)));
+  assert(EQP(p, Point(4, 1)));
+  assert(EQP(q, Point(-2, 1)));
 
   assert(-2 == intersection(Circle(1, 1, 1), Circle(0, 0, 3), &p, &q));
   assert(-1 == intersection(Circle(0, 0, 3), Circle(1, 1, 1), &p, &q));
   assert(0 == intersection(Circle(5, 0, 4), Circle(-5, 0, 4), &p, &q));
   assert(1 == intersection(Circle(-5, 0, 5), Circle(5, 0, 5), &p, &q));
-  assert(EQP(p, point(0, 0)));
+  assert(EQP(p, Point(0, 0)));
   assert(2 == intersection(Circle(-0.5, 0, 1), Circle(0.5, 0, 1), &p, &q));
-  assert(EQP(p, point(0, -sqrt(3) / 2)));
-  assert(EQP(q, point(0, sqrt(3) / 2)));
+  assert(EQP(p, Point(0, -sqrt(3) / 2)));
+  assert(EQP(q, Point(0, sqrt(3) / 2)));
 
   // Each circle passes through the other's center.
   double r = 3, a = intersection_area(Circle(-r / 2, 0, r), Circle(r / 2, 0, r));
@@ -1346,20 +1384,25 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) {
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double cross(const point &a, const point &b) {
+double cross(const Point &a, const Point &b) {
   return a.x * b.y - a.y * b.x;
 }
 
 template<class It>
-point mean_center(It lo, It hi) {
+Point mean_center(It lo, It hi) {
   if (lo == hi) {
     throw std::runtime_error("Cannot get center of an empty range.");
   }
@@ -1369,10 +1412,10 @@ point mean_center(It lo, It hi) {
     x_sum += it->x;
     y_sum += it->y;
   }
-  return point(x_sum / num_points, y_sum / num_points);
+  return Point(x_sum / num_points, y_sum / num_points);
 }
 
-bool cw_comp(const point &a, const point &b, const point &c) {
+bool cw_comp(const Point &a, const Point &b, const Point &c) {
   if (GE(a.x - c.x, 0) && LT(b.x - c.x, 0)) {
     return true;
   }
@@ -1385,7 +1428,7 @@ bool cw_comp(const point &a, const point &b, const point &c) {
     }
     return b.y > a.y;
   }
-  point ac(a.x - c.x, a.y - c.y), bc(b.x - c.x, b.y - c.y);
+  Point ac(a.x - c.x, a.y - c.y), bc(b.x - c.x, b.y - c.y);
   double det = cross(ac, bc);
   if (EQ(det, 0)) {
     return sqnorm(ac) > sqnorm(bc);
@@ -1393,12 +1436,12 @@ bool cw_comp(const point &a, const point &b, const point &c) {
   return det < 0;
 }
 
-auto CWComparator(const point &c) {
-  return [c](const point &a, const point &b) { return cw_comp(a, b, c); };
+auto CWComparator(const Point &c) {
+  return [c](const Point &a, const Point &b) { return cw_comp(a, b, c); };
 }
 
-auto CCWComparator(const point &c) {
-  return [c](const point &a, const point &b) { return cw_comp(b, a, c); };
+auto CCWComparator(const Point &c) {
+  return [c](const Point &a, const Point &b) { return cw_comp(b, a, c); };
 }
 
 template<class It>
@@ -1426,11 +1469,11 @@ int main() {
   // Irregular pentagon with only the vertex (1, 2) not on its convex hull. The ordering here is
   // already sorted in ccw order around their mean center, though we will shuffle them to verify our
   // sorting comparator.
-  vector<point> points{point(1, 3), point(1, 2), point(2, 1), point(0, 0), point(-1, 3)};
-  vector<point> v(points);
+  vector<Point> points{Point(1, 3), Point(1, 2), Point(2, 1), Point(0, 0), Point(-1, 3)};
+  vector<Point> v(points);
   std::mt19937 rng(12345);
   std::shuffle(v.begin(), v.end(), rng);
-  point c = mean_center(v.begin(), v.end());
+  Point c = mean_center(v.begin(), v.end());
   assert(EQ(c.x, 0.6) && EQ(c.y, 1.8));
   sort(v.begin(), v.end(), CWComparator(c));
   auto expected = points.begin();
@@ -1462,16 +1505,21 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 template<class It>
-bool point_in_polygon(const point &p, It lo, It hi) {
+bool point_in_polygon(const Point &p, It lo, It hi) {
   static const bool EDGE_IS_INSIDE = true;
   bool res = false;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
@@ -1498,11 +1546,11 @@ using namespace std;
 
 int main() {
   // Irregular trapezoid.
-  point p[] = {point(-1, 3), point(1, 3), point(2, 1), point(0, 0)};
-  assert(point_in_polygon(point(1, 2), p, p + 4));
-  assert(point_in_polygon(point(0, 3), p, p + 4));
-  assert(!point_in_polygon(point(0, 3.01), p, p + 4));
-  assert(!point_in_polygon(point(2, 2), p, p + 4));
+  Point p[] = {Point(-1, 3), Point(1, 3), Point(2, 1), Point(0, 0)};
+  assert(point_in_polygon(Point(1, 2), p, p + 4));
+  assert(point_in_polygon(Point(0, 3), p, p + 4));
+  assert(!point_in_polygon(Point(0, 3.01), p, p + 4));
+  assert(!point_in_polygon(Point(2, 2), p, p + 4));
   return 0;
 }
 \end{lstlisting}
@@ -1529,25 +1577,30 @@ const double EPS = 1e-9;
 
 #define GE(a, b) ((a) >= (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) {
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 template<class It>
-std::vector<point> convex_hull(It lo, It hi) {
+std::vector<Point> convex_hull(It lo, It hi) {
   int k = 0;
   if (hi - lo <= 1) {
-    return std::vector<point>(lo, hi);
+    return std::vector<Point>(lo, hi);
   }
-  std::vector<point> res(2 * static_cast<int>((hi - lo)));
+  std::vector<Point> res(2 * static_cast<int>((hi - lo)));
   std::sort(lo, hi);
   for (It it = lo; it != hi; ++it) {
     while (k >= 2 && GE(cross(res[k - 1], *it, res[k - 2]), 0)) {
@@ -1567,8 +1620,8 @@ std::vector<point> convex_hull(It lo, It hi) {
 }
 
 template<class It>
-std::pair<point, point> diametral_pair(It lo, It hi) {
-  std::vector<point> h = convex_hull(lo, hi);
+std::pair<Point, Point> diametral_pair(It lo, It hi) {
+  std::vector<Point> h = convex_hull(lo, hi);
   int m = h.size();
   if (m == 1) {
     return {h[0], h[0]};
@@ -1581,16 +1634,16 @@ std::pair<point, point> diametral_pair(It lo, It hi) {
     k++;
   }
   double maxdist = 0, d;
-  std::pair<point, point> res;
+  std::pair<Point, Point> res;
   for (int i = 0, j = k; i <= k && j < m; i++) {
-    d = sqnorm(point(h[i].x - h[j].x, h[i].y - h[j].y));
+    d = sqnorm(Point(h[i].x - h[j].x, h[i].y - h[j].y));
     if (d > maxdist) {
       maxdist = d;
       res = {h[i], h[j]};
     }
     while (j < m && fabs(cross(h[(i + 1) % m], h[(j + 1) % m], h[i])) >
                         fabs(cross(h[(i + 1) % m], h[j], h[i]))) {
-      d = sqnorm(point(h[i].x - h[(j + 1) % m].x, h[i].y - h[(j + 1) % m].y));
+      d = sqnorm(Point(h[i].x - h[(j + 1) % m].x, h[i].y - h[(j + 1) % m].y));
       if (d > maxdist) {
         maxdist = d;
         res = {h[i], h[(j + 1) % m]};
@@ -1608,31 +1661,17 @@ using namespace std;
 
 int main() {
   {  // Irregular pentagon with only the vertex (1, 2) not on the hull.
-    vector<point> v;
-    v.emplace_back(1, 3);
-    v.emplace_back(1, 2);
-    v.emplace_back(2, 1);
-    v.emplace_back(0, 0);
-    v.emplace_back(-1, 3);
+    vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
     std::mt19937 rng(12345);
     std::shuffle(v.begin(), v.end(), rng);
-    vector<point> h;
-    h.emplace_back(-1, 3);
-    h.emplace_back(1, 3);
-    h.emplace_back(2, 1);
-    h.emplace_back(0, 0);
+    vector<Point> h{{-1, 3}, {1, 3}, {2, 1}, {0, 0}};
     assert(convex_hull(v.begin(), v.end()) == h);
   }
   {
-    vector<point> v;
-    v.emplace_back(0, 0);
-    v.emplace_back(3, 0);
-    v.emplace_back(0, 3);
-    v.emplace_back(1, 1);
-    v.emplace_back(4, 4);
+    vector<Point> v{{0, 0}, {3, 0}, {0, 3}, {1, 1}, {4, 4}};
     auto [p1, p2] = diametral_pair(v.begin(), v.end());
-    assert(p1 == point(0, 0));
-    assert(p2 == point(4, 4));
+    assert(p1 == Point(0, 0));
+    assert(p2 == Point(4, 4));
   }
   return 0;
 }
@@ -1660,15 +1699,20 @@ const double EPS = 1e-9;
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) {
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double norm(const point &a) {
+double norm(const Point &a) {
   return sqrt(sqnorm(a));
 }
 
@@ -1679,17 +1723,17 @@ struct Circle {
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
   // Circle with the line segment ab as a diameter.
-  Circle(const point &a, const point &b) {
+  Circle(const Point &a, const Point &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
-    r = norm(point(a.x - h, a.y - k));
+    r = norm(Point(a.x - h, a.y - k));
   }
 
   // Circumcircle of three points.
-  Circle(const point &a, const point &b, const point &c) {
-    double an = sqnorm(point(b.x - c.x, b.y - c.y));
-    double bn = sqnorm(point(a.x - c.x, a.y - c.y));
-    double cn = sqnorm(point(a.x - b.x, a.y - b.y));
+  Circle(const Point &a, const Point &b, const Point &c) {
+    double an = sqnorm(Point(b.x - c.x, b.y - c.y));
+    double bn = sqnorm(Point(a.x - c.x, a.y - c.y));
+    double cn = sqnorm(Point(a.x - b.x, a.y - b.y));
     double wa = an * (bn + cn - an);
     double wb = bn * (an + cn - bn);
     double wc = cn * (an + bn - cn);
@@ -1699,10 +1743,10 @@ struct Circle {
     }
     h = (wa * a.x + wb * b.x + wc * c.x) / w;
     k = (wa * a.y + wb * b.y + wc * c.y) / w;
-    r = norm(point(a.x - h, a.y - k));
+    r = norm(Point(a.x - h, a.y - k));
   }
 
-  bool contains(const point &p) const { return LE(sqnorm(point(p.x - h, p.y - k)), r * r); }
+  bool contains(const Point &p) const { return LE(sqnorm(Point(p.x - h, p.y - k)), r * r); }
 };
 
 template<class It>
@@ -1743,11 +1787,7 @@ Circle minimum_enclosing_circle(It lo, It hi) {
 using namespace std;
 
 int main() {
-  vector<point> v;
-  v.emplace_back(0, 0);
-  v.emplace_back(0, 1);
-  v.emplace_back(1, 0);
-  v.emplace_back(1, 1);
+  vector<Point> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
   Circle res = minimum_enclosing_circle(v.begin(), v.end());
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
   return 0;
@@ -1776,18 +1816,23 @@ const double EPS = 1e-9;
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) { return a.x * a.x + a.y * a.y; }
-double norm(const point &a) { return sqrt(sqnorm(a)); }
-bool cmp_x(const point &a, const point &b) { return (a.x == b.x) ? (a.y < b.y) : (a.x < b.x); }
-bool cmp_y(const point &a, const point &b) { return (a.y == b.y) ? (a.x < b.x) : (a.y < b.y); }
+double sqnorm(const Point &a) { return a.x * a.x + a.y * a.y; }
+double norm(const Point &a) { return sqrt(sqnorm(a)); }
+bool cmp_x(const Point &a, const Point &b) { return (a.x == b.x) ? (a.y < b.y) : (a.x < b.x); }
+bool cmp_y(const Point &a, const Point &b) { return (a.y == b.y) ? (a.x < b.x) : (a.y < b.y); }
 
 template<class It>
 double closest_pair(
-    It lo, It hi, std::pair<point, point> *res = nullptr,
+    It lo, It hi, std::pair<Point, Point> *res = nullptr,
     double mindist = std::numeric_limits<double>::max(), bool sort_x = true
 ) {
   if (lo == hi) {
@@ -1811,11 +1856,11 @@ double closest_pair(
   }
   for (size_t i = 0; i < t.size(); i++) {
     for (size_t j = i + 1; j < t.size(); j++) {
-      point a(*t[i]), b(*t[j]);
+      Point a(*t[i]), b(*t[j]);
       if (b.y - a.y >= mindist) {
         break;
       }
-      double dist = norm(point(a.x - b.x, a.y - b.y));
+      double dist = norm(Point(a.x - b.x, a.y - b.y));
       if (mindist > dist) {
         mindist = dist;
         if (res) {
@@ -1834,18 +1879,12 @@ double closest_pair(
 using namespace std;
 
 int main() {
-  vector<point> v;
-  v.emplace_back(2, 3);
-  v.emplace_back(12, 30);
-  v.emplace_back(40, 50);
-  v.emplace_back(5, 1);
-  v.emplace_back(12, 10);
-  v.emplace_back(3, 4);
-  std::pair<point, point> res;
+  vector<Point> v{{2, 3}, {12, 30}, {40, 50}, {5, 1}, {12, 10}, {3, 4}};
+  std::pair<Point, Point> res;
   assert(EQ(closest_pair(v.begin(), v.end(), &res), sqrt(2)));
   auto [p1, p2] = res;
-  assert(p1 == point(2, 3));
-  assert(p2 == point(3, 4));
+  assert(p1 == Point(2, 3));
+  assert(p2 == Point(3, 4));
   return 0;
 }
 \end{lstlisting}
@@ -1874,31 +1913,36 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) { return a.x * a.x + a.y * a.y;}
-double norm(const point &a) { return sqrt(sqnorm(a)); }
-double dot(const point &a, const point &b) { return a.x * b.x + a.y * b.y; }
+double sqnorm(const Point &a) { return a.x * a.x + a.y * a.y;}
+double norm(const Point &a) { return sqrt(sqnorm(a)); }
+double dot(const Point &a, const Point &b) { return a.x * b.x + a.y * b.y; }
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-bool point_on_segment(const point &p, const point &a, const point &b) {
+bool point_on_segment(const Point &p, const Point &a, const Point &b) {
   return EQ(cross(p, b, a), 0) && LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x)) &&
          LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
 }
 
 int seg_intersection(
-    const point &a, const point &b, const point &c, const point &d, point *p = nullptr,
-    point *q = nullptr
+    const Point &a, const Point &b, const Point &c, const Point &d, Point *p = nullptr,
+    Point *q = nullptr
 ) {
   static const bool TOUCH_IS_INTERSECT = true;
-  point ab(b.x - a.x, b.y - a.y);
-  point ac(c.x - a.x, c.y - a.y);
-  point cd(d.x - c.x, d.y - c.y);
+  Point ab(b.x - a.x, b.y - a.y);
+  Point ac(c.x - a.x, c.y - a.y);
+  Point cd(d.x - c.x, d.y - c.y);
   if (EQ(sqnorm(ab), 0)) {
     if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
       if (p != nullptr) *p = a;
@@ -1920,8 +1964,8 @@ int seg_intersection(
     double mint = std::min(t0, t1), maxt = std::max(t0, t1);
     bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
     if (overlap) {
-      point res1 = std::max(std::min(a, b), std::min(c, d));
-      point res2 = std::min(std::max(a, b), std::max(c, d));
+      Point res1 = std::max(std::min(a, b), std::min(c, d));
+      Point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
         if (p != nullptr) {
           *p = res1;
@@ -1945,7 +1989,7 @@ int seg_intersection(
   bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
     if (p != nullptr) {
-      *p = point(a.x + t * ab.x, a.y + t * ab.y);
+      *p = Point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
   }
@@ -1953,10 +1997,10 @@ int seg_intersection(
 }
 
 struct Segment {
-  point p, q;
+  Point p, q;
 
   Segment() {}
-  Segment(const point &p, const point &q) : p(min(p, q)), q(max(p, q)) {}
+  Segment(const Point &p, const Point &q) : p(std::min(p, q)), q(std::max(p, q)) {}
 };
 
 double get_y(const Segment &s, double x) {
@@ -1984,12 +2028,12 @@ struct SegmentComparator {
 
 template<class SegIt>
 struct Event {
-  point p;
+  Point p;
   int type;
   SegIt seg;
 
   Event() {}
-  Event(const point &p, int type, SegIt seg) : p(p), type(type), seg(seg) {}
+  Event(const Point &p, int type, SegIt seg) : p(p), type(type), seg(seg) {}
 
   bool operator<(const Event &rhs) const {
     if (p.x != rhs.p.x) {
@@ -2059,15 +2103,14 @@ bool find_intersection(It lo, It hi, Segment *res1, Segment *res2) {
 using namespace std;
 
 int main() {
-  vector<Segment> v;
-  v.emplace_back(point(0, 0), point(2, 2));
-  v.emplace_back(point(3, 0), point(0, -1));
-  v.emplace_back(point(0, 2), point(2, -2));
-  v.emplace_back(point(0, 3), point(9, 0));
+  vector<Segment> v{
+      Segment(Point(0, 0), Point(2, 2)), Segment(Point(3, 0), Point(0, -1)),
+      Segment(Point(0, 2), Point(2, -2)), Segment(Point(0, 3), Point(9, 0))
+  };
   Segment res1, res2;
   assert(find_intersection(v.begin(), v.end(), &res1, &res2));
-  assert(res1.p == point(0, 0) && res1.q == point(2, 2));
-  assert(res2.p == point(0, 2) && res2.q == point(2, -2));
+  assert(res1.p == Point(0, 0) && res1.q == Point(2, 2));
+  assert(res2.p == Point(0, 2) && res2.q == Point(2, -2));
   return 0;
 }
 \end{lstlisting}
@@ -2099,21 +2142,26 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-int turn(const point &a, const point &o, const point &b) {
+int turn(const Point &a, const Point &o, const Point &b) {
   double c = cross(a, b, o);
   return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
 }
 
 int line_intersection(
-    const point &p1, const point &p2, const point &p3, const point &p4, point *p = nullptr
+    const Point &p1, const Point &p2, const Point &p3, const Point &p4, Point *p = nullptr
 ) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -2125,24 +2173,24 @@ int line_intersection(
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
   if (p != nullptr) {
-    *p = point(x / det, y / det);
+    *p = Point(x / det, y / det);
   }
   return 0;
 }
 
 template<class It>
-std::vector<point> convex_cut(It lo, It hi, const point &p, const point &q) {
+std::vector<Point> convex_cut(It lo, It hi, const Point &p, const Point &q) {
   if (EQ(p.x, q.x) && EQ(p.y, q.y)) {
     throw std::runtime_error("Cannot cut using line from identical points.");
   }
-  std::vector<point> res;
+  std::vector<Point> res;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     int d1 = turn(q, p, *j), d2 = turn(q, p, *i);
     if (d1 >= 0) {
       res.push_back(*j);
     }
     if (d1 * d2 < 0) {
-      point r;
+      Point r;
       line_intersection(p, q, *j, *i, &r);
       res.push_back(r);
     }
@@ -2157,34 +2205,15 @@ using namespace std;
 
 int main() {
   {
-    vector<point> v;
-    v.emplace_back(1, 3);
-    v.emplace_back(2, 2);
-    v.emplace_back(2, 1);
-    v.emplace_back(0, 0);
-    v.emplace_back(-1, 3);
+    vector<Point> v{{1, 3}, {2, 2}, {2, 1}, {0, 0}, {-1, 3}};
     // Cut using the vertical line through (0, 0).
-    vector<point> c;
-    c.emplace_back(-1, 3);
-    c.emplace_back(0, 3);
-    c.emplace_back(0, 0);
-    assert(convex_cut(v.begin(), v.end(), point(0, 0), point(0, 1)) == c);
+    vector<Point> c{{-1, 3}, {0, 3}, {0, 0}};
+    assert(convex_cut(v.begin(), v.end(), Point(0, 0), Point(0, 1)) == c);
   }
   {  // On a non-convex input, the result may be multiple disjoint polygons!
-    vector<point> v;
-    v.emplace_back(0, 0);
-    v.emplace_back(2, 2);
-    v.emplace_back(0, 4);
-    v.emplace_back(3, 4);
-    v.emplace_back(3, 0);
-    vector<point> c;
-    c.emplace_back(1, 0);
-    c.emplace_back(0, 0);
-    c.emplace_back(1, 1);
-    c.emplace_back(1, 3);
-    c.emplace_back(0, 4);
-    c.emplace_back(1, 4);
-    assert(convex_cut(v.begin(), v.end(), point(1, 0), point(1, 4)) == c);
+    vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};
+    vector<Point> c{{1, 0}, {0, 0}, {1, 1}, {1, 3}, {0, 4}, {1, 4}};
+    assert(convex_cut(v.begin(), v.end(), Point(1, 0), Point(1, 4)) == c);
   }
   return 0;
 }
@@ -2214,30 +2243,35 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) {
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double dot(const point &a, const point &b) {
+double dot(const Point &a, const Point &b) {
   return a.x * b.x + a.y * b.y;
 }
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 int seg_intersection(
-    const point &a, const point &b, const point &c, const point &d, point *p = nullptr,
-    point *q = nullptr
+    const Point &a, const Point &b, const Point &c, const Point &d, Point *p = nullptr,
+    Point *q = nullptr
 ) {
   static const bool TOUCH_IS_INTERSECT = true;
-  point ab(b.x - a.x, b.y - a.y);
-  point ac(c.x - a.x, c.y - a.y);
-  point cd(d.x - c.x, d.y - c.y);
+  Point ab(b.x - a.x, b.y - a.y);
+  Point ac(c.x - a.x, c.y - a.y);
+  Point cd(d.x - c.x, d.y - c.y);
   double c1 = cross(ab, cd), c2 = cross(ac, ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     double t0 = dot(ac, ab) / sqnorm(ab);
@@ -2245,8 +2279,8 @@ int seg_intersection(
     double mint = std::min(t0, t1), maxt = std::max(t0, t1);
     bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
     if (overlap) {
-      point res1 = std::max(std::min(a, b), std::min(c, d));
-      point res2 = std::min(std::max(a, b), std::max(c, d));
+      Point res1 = std::max(std::min(a, b), std::min(c, d));
+      Point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
         if (p != nullptr) {
           *p = res1;
@@ -2270,7 +2304,7 @@ int seg_intersection(
   bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
     if (p != nullptr) {
-      *p = point(a.x + t * ab.x, a.y + t * ab.y);
+      *p = Point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
   }
@@ -2278,7 +2312,7 @@ int seg_intersection(
 }
 
 int line_intersection(
-    const point &p1, const point &p2, const point &p3, const point &p4, point *p = nullptr
+    const Point &p1, const Point &p2, const Point &p3, const Point &p4, Point *p = nullptr
 ) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -2290,7 +2324,7 @@ int line_intersection(
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
   if (p != nullptr) {
-    *p = point(x / det, y / det);
+    *p = Point(x / det, y / det);
   }
   return 0;
 }
@@ -2321,7 +2355,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   }
   for (It i1 = lo1, j1 = hi1 - 1; i1 != hi1; j1 = i1++) {
     for (It i2 = lo2, j2 = hi2 - 1; i2 != hi2; j2 = i2++) {
-      point p;
+      Point p;
       if (seg_intersection(*i1, *j1, *i2, *j2, &p) == 0) {
         xs.insert(p.x);
       }
@@ -2331,7 +2365,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   double res = 0;
   for (size_t k = 0; k + 1 < xsa.size(); k++) {
     double x = (xsa[k] + xsa[k + 1]) / 2;
-    point sweep0(x, 0), sweep1(x, 1);
+    Point sweep0(x, 0), sweep1(x, 1);
     std::vector<Event> events;
     for (int poly = 0; poly < 2; poly++) {
       It lo = plo[poly], hi = phi[poly];
@@ -2340,7 +2374,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
         area += (j->x - i->x) * (j->y + i->y);
       }
       for (It j = lo, i = hi - 1; j != hi; i = j++) {
-        point p;
+        Point p;
         if (line_intersection(*j, *i, sweep0, sweep1, &p) == 0) {
           double y = p.y, x0 = i->x, x1 = j->x;
           int sgn_area = (area < 0 ? -1 : (area > 0 ? 1 : 0));
@@ -2392,7 +2426,7 @@ double union_area(It lo1, It hi1, It lo2, It hi2) {
 using namespace std;
 
 int main() {
-  vector<point> p, s;
+  vector<Point> p, s;
   // Irregular pentagon a triangle of area 1.5 overlapping quadrant 2.
   p.emplace_back(1, 3);
   p.emplace_back(1, 2);
@@ -2434,30 +2468,35 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double sqnorm(const point &a) {
+double sqnorm(const Point &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double dot(const point &a, const point &b) {
+double dot(const Point &a, const Point &b) {
   return a.x * b.x + a.y * b.y;
 }
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 int seg_intersection(
-    const point &a, const point &b, const point &c, const point &d, point *p = nullptr,
-    point *q = nullptr
+    const Point &a, const Point &b, const Point &c, const Point &d, Point *p = nullptr,
+    Point *q = nullptr
 ) {
   static const bool TOUCH_IS_INTERSECT = false;  // false is important!
-  point ab(b.x - a.x, b.y - a.y);
-  point ac(c.x - a.x, c.y - a.y);
-  point cd(d.x - c.x, d.y - c.y);
+  Point ab(b.x - a.x, b.y - a.y);
+  Point ac(c.x - a.x, c.y - a.y);
+  Point cd(d.x - c.x, d.y - c.y);
   double c1 = cross(ab, cd), c2 = cross(ac, ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     double t0 = dot(ac, ab) / sqnorm(ab);
@@ -2465,8 +2504,8 @@ int seg_intersection(
     double mint = std::min(t0, t1), maxt = std::max(t0, t1);
     bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
     if (overlap) {
-      point res1 = std::max(std::min(a, b), std::min(c, d));
-      point res2 = std::min(std::max(a, b), std::max(c, d));
+      Point res1 = std::max(std::min(a, b), std::min(c, d));
+      Point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
         if (p != nullptr) {
           *p = res1;
@@ -2490,7 +2529,7 @@ int seg_intersection(
   bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
   if (t_between_01 && u_between_01) {
     if (p != nullptr) {
-      *p = point(a.x + t * ab.x, a.y + t * ab.y);
+      *p = Point(a.x + t * ab.x, a.y + t * ab.y);
     }
     return 0;  // Non-parallel with one intersection.
   }
@@ -2498,9 +2537,9 @@ int seg_intersection(
 }
 
 struct Triangle {
-  point a, b, c;
+  Point a, b, c;
 
-  Triangle(const point &a, const point &b, const point &c) : a(a), b(b), c(c) {}
+  Triangle(const Point &a, const Point &b, const Point &c) : a(a), b(b), c(c) {}
 
   bool operator==(const Triangle &t) const {
     return EQ(a.x, t.a.x) && EQ(a.y, t.a.y) && EQ(b.x, t.b.x) && EQ(b.y, t.b.y) && EQ(c.x, t.c.x) &&
@@ -2530,7 +2569,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
         if (LE(0, nz)) {
           continue;
         }
-        point s1[] = {lo[i], lo[j], lo[k], lo[i]};
+        Point s1[] = {lo[i], lo[j], lo[k], lo[i]};
         for (int m = 0; m < n; m++) {
           if (nx * (x[m] - x[i]) + ny * (y[m] - y[i]) + nz * (z[m] - z[i]) > 0) {
             goto skip;
@@ -2538,7 +2577,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
         }
         // Handle four points on a circle.
         for (const auto &tri : res) {
-          point s2[] = {tri.a, tri.b, tri.c, tri.a};
+          Point s2[] = {tri.a, tri.b, tri.c, tri.a};
           for (int u = 0; u < 3; u++) {
             for (int v = 0; v < 3; v++) {
               if (seg_intersection(s1[u], s1[u + 1], s2[v], s2[v + 1]) == 0) {
@@ -2561,17 +2600,13 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
 using namespace std;
 
 int main() {
-  vector<point> v;
-  v.emplace_back(1, 3);
-  v.emplace_back(1, 2);
-  v.emplace_back(2, 1);
-  v.emplace_back(0, 0);
-  v.emplace_back(-1, 3);
-  vector<Triangle> t;
-  t.emplace_back(point(1, 3), point(1, 2), point(-1, 3));
-  t.emplace_back(point(1, 3), point(2, 1), point(1, 2));
-  t.emplace_back(point(1, 2), point(2, 1), point(0, 0));
-  t.emplace_back(point(1, 2), point(0, 0), point(-1, 3));
+  vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<Triangle> t{
+      Triangle(Point(1, 3), Point(1, 2), Point(-1, 3)),
+      Triangle(Point(1, 3), Point(2, 1), Point(1, 2)),
+      Triangle(Point(1, 2), Point(2, 1), Point(0, 0)),
+      Triangle(Point(1, 2), Point(0, 0), Point(-1, 3))
+  };
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
   return 0;
 }
@@ -2601,15 +2636,20 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GT(a, b) ((a) > (b) + EPS)
 
-using point = std::pair<double, double>;
-#define x first
-#define y second
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
 
-double cross(const point &a, const point &b, const point &o = point(0, 0)) {
+double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-long double incircle(const point &a, const point &b, const point &c, const point &d) {
+long double incircle(const Point &a, const Point &b, const Point &c, const Point &d) {
   long double adx = a.x - d.x, ady = a.y - d.y;
   long double bdx = b.x - d.x, bdy = b.y - d.y;
   long double cdx = c.x - d.x, cdy = c.y - d.y;
@@ -2623,14 +2663,14 @@ long double incircle(const point &a, const point &b, const point &c, const point
 }
 
 struct Edge {
-  point origin;
+  Point origin;
   Edge *rot, *onext;
   bool primal, deleted, used;
 
   Edge *rev() const { return rot->rot; }
   Edge *lnext() const { return rot->rev()->onext->rot; }
   Edge *oprev() const { return rot->onext->rot; }
-  point dest() const { return rev()->origin; }
+  Point dest() const { return rev()->origin; }
 };
 
 struct QuadEdgePool {
@@ -2642,7 +2682,7 @@ struct QuadEdgePool {
     }
   }
 
-  Edge *make_edge(const point &from, const point &to) {
+  Edge *make_edge(const Point &from, const Point &to) {
     Edge *e1 = new Edge, *e2 = new Edge, *e3 = new Edge, *e4 = new Edge;
     edges.push_back(e1);
     edges.push_back(e2);
@@ -2684,20 +2724,20 @@ struct QuadEdgePool {
   }
 };
 
-bool left_of(const point &p, Edge *e) {
+bool left_of(const Point &p, Edge *e) {
   return GT(cross(e->origin, e->dest(), p), 0);
 }
 
-bool right_of(const point &p, Edge *e) {
+bool right_of(const Point &p, Edge *e) {
   return LT(cross(e->origin, e->dest(), p), 0);
 }
 
-bool in_circle(const point &a, const point &b, const point &c, const point &d) {
+bool in_circle(const Point &a, const Point &b, const Point &c, const Point &d) {
   return incircle(a, b, c, d) > EPS;
 }
 
 std::pair<Edge *, Edge *> build_triangulation(
-    std::vector<point> &p, int lo, int hi, QuadEdgePool &pool
+    std::vector<Point> &p, int lo, int hi, QuadEdgePool &pool
 ) {
   if (hi - lo == 1) {
     Edge *a = pool.make_edge(p[lo], p[hi]);
@@ -2771,9 +2811,9 @@ std::pair<Edge *, Edge *> build_triangulation(
 }
 
 struct Triangle {
-  point a, b, c;
+  Point a, b, c;
 
-  Triangle(const point &a, const point &b, const point &c) : a(a), b(b), c(c) {
+  Triangle(const Point &a, const Point &b, const Point &c) : a(a), b(b), c(c) {
     if (b < a && b < c) {
       this->a = b;
       this->b = c;
@@ -2794,7 +2834,7 @@ struct Triangle {
 
 template<class It>
 std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
-  std::vector<point> p(lo, hi);
+  std::vector<Point> p(lo, hi);
   std::sort(p.begin(), p.end());
   p.erase(std::unique(p.begin(), p.end()), p.end());
   if (p.size() < 3) {
@@ -2807,7 +2847,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
     if (!start->primal || start->deleted || start->used) {
       continue;
     }
-    std::vector<point> face;
+    std::vector<Point> face;
     Edge *curr = start;
     do {
       curr->used = true;
@@ -2828,17 +2868,13 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
 using namespace std;
 
 int main() {
-  vector<point> v;
-  v.emplace_back(1, 3);
-  v.emplace_back(1, 2);
-  v.emplace_back(2, 1);
-  v.emplace_back(0, 0);
-  v.emplace_back(-1, 3);
-  vector<Triangle> t;
-  t.emplace_back(point(-1, 3), point(0, 0), point(1, 2));
-  t.emplace_back(point(-1, 3), point(1, 2), point(1, 3));
-  t.emplace_back(point(0, 0), point(2, 1), point(1, 2));
-  t.emplace_back(point(1, 2), point(2, 1), point(1, 3));
+  vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<Triangle> t{
+      Triangle(Point(-1, 3), Point(0, 0), Point(1, 2)),
+      Triangle(Point(-1, 3), Point(1, 2), Point(1, 3)),
+      Triangle(Point(0, 0), Point(2, 1), Point(1, 2)),
+      Triangle(Point(1, 2), Point(2, 1), Point(1, 3))
+  };
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
   return 0;
 }
@@ -2929,16 +2965,16 @@ struct Point {
     return Point(x * cos(t) - y * sin(t), x * sin(t) + y * cos(t));
   }
 
-  // Returns (x, y) rotated t radians clockwise about Point p.
+  // Returns (x, y) rotated t radians clockwise about point p.
   Point rotateCW(const Point &p, double t) const { return (*this - p).rotateCW(t) + p; }
 
-  // Returns (x, y) rotated t radians counter-clockwise about the Point p.
+  // Returns (x, y) rotated t radians counter-clockwise about the point p.
   Point rotateCCW(const Point &p, double t) const { return (*this - p).rotateCCW(t) + p; }
 
-  // Returns (x, y) reflected across Point p.
+  // Returns (x, y) reflected across point p.
   Point reflect(const Point &p) const { return Point(2 * p.x - x, 2 * p.y - y); }
 
-  // Returns (x, y) reflected across the line containing Points p and q.
+  // Returns (x, y) reflected across the line containing points p and q.
   Point reflect(const Point &p, const Point &q) const {
     if (p == q) {
       return reflect(p);
@@ -3306,7 +3342,7 @@ Point closest_Point(const Line &l, const Point &p) {
   return res;
 }
 
-// Returns the point on line segment ab that is closest to point p.
+// Returns the Point on line segment ab that is closest to Point p.
 Point closest_Point(const Point &a, const Point &b, const Point &p) {
   if (a == b) {
     return a;
@@ -3578,7 +3614,7 @@ bool point_in_rectangle(const Point &p, const Point &v, double w, double h) {
                         : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
 }
 
-// Returns whether Point p lies within the rectangle with opposing vertices a and b. If the Point
+// Returns whether point p lies within the rectangle with opposing vertices a and b. If the point
 // lies on or close to an edge (by roughly EPS), then the result will depend on the setting of
 // EDGE_IS_INSIDE in the function above.
 bool point_in_rectangle(const Point &p, const Point &a, const Point &b) {
@@ -3700,7 +3736,7 @@ int main() {
 #define test(a, b, c, d, e, f, g, h) \
   seg_intersection(Point(a, b), Point(c, d), Point(e, f), Point(g, h), &p, &q)
 
-    // Intersection is a Point.
+    // Intersection is a point.
     assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && p == Point(0, 0));
     assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && p == Point(2, 2));
     assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && p == Point(-2, 0));

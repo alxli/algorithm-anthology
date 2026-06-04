@@ -25,8 +25,6 @@ Space Complexity:
 struct Job {
   int deadline;
   long long profit;
-
-  explicit Job(int deadline = 0, long long profit = 0) : deadline(deadline), profit(profit) {}
 };
 
 class SlotDSU {
@@ -71,12 +69,7 @@ long long schedule_deadline_jobs(std::vector<Job> jobs) {
 using namespace std;
 
 int main() {
-  vector<Job> jobs;
-  jobs.emplace_back(2, 100);
-  jobs.emplace_back(1, 19);
-  jobs.emplace_back(2, 27);
-  jobs.emplace_back(1, 25);
-  jobs.emplace_back(3, 15);
+  vector<Job> jobs{{2, 100}, {1, 19}, {2, 27}, {1, 25}, {3, 15}};
   assert(schedule_deadline_jobs(jobs) == 142);
   return 0;
 }

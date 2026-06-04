@@ -23,9 +23,6 @@ Space Complexity:
 
 struct Interval {
   int start, finish, id;
-
-  explicit Interval(int start = 0, int finish = 0, int id = 0)
-      : start(start), finish(finish), id(id) {}
 };
 
 std::vector<Interval> interval_scheduling(std::vector<Interval> intervals) {
@@ -51,12 +48,7 @@ std::vector<Interval> interval_scheduling(std::vector<Interval> intervals) {
 using namespace std;
 
 int main() {
-  vector<Interval> intervals;
-  intervals.emplace_back(1, 4, 0);
-  intervals.emplace_back(3, 5, 1);
-  intervals.emplace_back(0, 6, 2);
-  intervals.emplace_back(5, 7, 3);
-  intervals.emplace_back(8, 9, 4);
+  vector<Interval> intervals{{1, 4, 0}, {3, 5, 1}, {0, 6, 2}, {5, 7, 3}, {8, 9, 4}};
   vector<Interval> chosen = interval_scheduling(intervals);
   assert(chosen.size() == 3);
   assert(chosen[0].id == 0);
