@@ -230,9 +230,13 @@ struct Triangle {
   }
 };
 
+// Accepts any point type with numeric .x/.y; inputs are copied to double Points.
 template<class It>
 std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
-  std::vector<Point> p(lo, hi);
+  std::vector<Point> p;
+  for (It it = lo; it != hi; ++it) {
+    p.emplace_back(it->x, it->y);
+  }
   std::sort(p.begin(), p.end());
   p.erase(std::unique(p.begin(), p.end()), p.end());
   if (p.size() < 3) {
@@ -265,6 +269,10 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
 #include <cassert>
 using namespace std;
 
+struct PointI {
+  int x, y;
+};
+
 int main() {
   vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
   vector<Triangle> t{
@@ -274,5 +282,10 @@ int main() {
       Triangle(Point(1, 2), Point(2, 1), Point(1, 3))
   };
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
+
+  // Integer-coordinate inputs are accepted (triangulation computed in double).
+  vector<PointI> iv{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  assert(delaunay_triangulation(iv.begin(), iv.end()) == t);
+
   return 0;
 }

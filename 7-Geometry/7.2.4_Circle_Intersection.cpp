@@ -5,8 +5,8 @@ Circle tangent and intersection calculations in two dimensions.
 - `tangent(c, p, &l1, &l2)` determines the line(s) tangent to circle $c$ that pass through point
   $p$, returning $-1$ if there is no tangent line because $p$ is strictly inside $c$, 0 if there is
   exactly one tangent line because $p$ is on the boundary of $c$ (in which case the line will be
-  stored into pointer `l1` if it's not `nullptr`), or 1 if there are two tangent lines because $p$ is
-  strictly outside of $c$ (in which case the lines will be stored into pointers `l1` and `l2` if
+  stored into pointer `l1` if it's not `nullptr`), or 1 if there are two tangent lines because $p$
+  is strictly outside of $c$ (in which case the lines will be stored into pointers `l1` and `l2` if
   they are not `nullptr`).
 - `intersection(c, l, &p, &q)` determines the intersection between the circle $c$ and line $l$,
   returning $-1$ if there is no intersection, 0 if the line has one intersection point because the
@@ -42,6 +42,14 @@ const double EPS = 1e-9, PI = acos(-1.0);
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
+// SFINAE guard: valid only when Pt exposes numeric .x/.y members, so templated
+// point overloads don't hijack double-argument calls.
+template<class Pt>
+using if_point = decltype(std::declval<const Pt &>().x, std::declval<const Pt &>().y, void());
+
+// Circle and Line are floating-point by nature; this file computes in double. The
+// point inputs (tangent's p, Line's two-point constructor) accept any Pt type, and
+// the Point outputs are this file's double Point.
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
@@ -86,7 +94,8 @@ struct Line {
     }
   }
 
-  Line(const Point &p, const Point &q) : a(0), b(0), c(0) {
+  template<class Pt, class = if_point<Pt>>
+  Line(const Pt &p, const Pt &q) : a(0), b(0), c(0) {
     if (EQ(p.x, q.x)) {
       if (NE(p.y, q.y)) {  // Vertical line.
         a = 1;
@@ -94,14 +103,15 @@ struct Line {
         c = -p.x;
       }  // Else, invalid line.
     } else {
-      a = -(p.y - q.y) / (p.x - q.x);
+      a = -(double)(p.y - q.y) / (p.x - q.x);
       b = 1;
       c = -(a * p.x) - (b * p.y);
     }
   }
 };
 
-int tangent(const Circle &c, const Point &p, Line *l1 = nullptr, Line *l2 = nullptr) {
+template<class Pt>
+int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr) {
   Point vop(p.x - c.h, p.y - c.k);
   if (EQ(sqnorm(vop), c.r * c.r)) {  // Point on an edge.
     if (l1 != nullptr) {             // Get perpendicular line through p.
@@ -126,7 +136,7 @@ int tangent(const Circle &c, const Point &p, Line *l1 = nullptr, Line *l2 = null
   }
   t1.x = t1.x * c.r + c.h;
   t2.x = t2.x * c.r + c.h;
-  //note: here, t1 and t2 are the two points of tangencies
+  // Note: here, t1 and t2 are the two points of tangencies
   if (l1 != nullptr && l2 != nullptr) {
     *l1 = Line(p, t1);
     *l2 = Line(p, t2);
@@ -202,10 +212,6 @@ double intersection_area(const Circle &c1, const Circle &c2) {
 
 #include <cassert>
 
-bool EQP(const Point &a, const Point &b) {
-  return EQ(a.x, b.x) && EQ(a.y, b.y);
-}
-
 bool EQL(const Line &l1, const Line &l2) {
   return EQ(l1.a, l2.a) && EQ(l1.b, l2.b) && EQ(l1.c, l2.c);
 }
@@ -222,22 +228,23 @@ int main() {
   Point p, q;
   assert(-1 == intersection(Circle(1, 1, 3), Line(5, 3, -30), &p, &q));
   assert(0 == intersection(Circle(1, 1, 3), Line(0, 1, -4), &p, &q));
-  assert(EQP(p, Point(1, 4)));
+  assert((p == Point{1, 4}));
   assert(1 == intersection(Circle(1, 1, 3), Line(0, 1, -1), &p, &q));
-  assert(EQP(p, Point(4, 1)));
-  assert(EQP(q, Point(-2, 1)));
+  assert((p == Point{4, 1}));
+  assert((q == Point{-2, 1}));
 
   assert(-2 == intersection(Circle(1, 1, 1), Circle(0, 0, 3), &p, &q));
   assert(-1 == intersection(Circle(0, 0, 3), Circle(1, 1, 1), &p, &q));
   assert(0 == intersection(Circle(5, 0, 4), Circle(-5, 0, 4), &p, &q));
   assert(1 == intersection(Circle(-5, 0, 5), Circle(5, 0, 5), &p, &q));
-  assert(EQP(p, Point(0, 0)));
+  assert((p == Point{0, 0}));
   assert(2 == intersection(Circle(-0.5, 0, 1), Circle(0.5, 0, 1), &p, &q));
-  assert(EQP(p, Point(0, -sqrt(3) / 2)));
-  assert(EQP(q, Point(0, sqrt(3) / 2)));
+  assert((p == Point{0, -sqrt(3) / 2}));
+  assert((q == Point{0, sqrt(3) / 2}));
 
   // Each circle passes through the other's center.
   double r = 3, a = intersection_area(Circle(-r / 2, 0, r), Circle(r / 2, 0, r));
   assert(EQ(a, r * r * (2 * PI / 3 - sqrt(3) / 2)));
+
   return 0;
 }

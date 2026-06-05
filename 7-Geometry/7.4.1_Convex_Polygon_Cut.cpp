@@ -1,13 +1,16 @@
 /*
 
-Given a convex polygon (a polygon such that every line crossing through it will only do so once) in
-two dimensions, and two points specifying an infinite line, cut off the right part of the polygon,
-and return the resulting left part.
+Given a convex polygon and two points specifying an infinite line, cuts off the right part and
+returns the resulting left part.
 
-- `convex_cut(lo, hi, p, q)` returns the points of the left side of a polygon, in clockwise order,
-  after it has been cut by the line containing points $p$ and $q$. The original convex polygon is
-  given by the range `[lo, hi)` of points in clockwise order, where `lo` and `hi` must be
-  random-access iterators.
+The function is templated on the iterator type. The local `Point` struct (double coordinates) is the
+default; replace it with `PointD`/ `PointI` from 7.1.1 or any struct with numeric `.x` and `.y`
+fields. The `turn` classification uses cross products and is exact for integer-coordinate points;
+the edge-cut intersection point uses floating-point arithmetic (the output `Point` always has double
+coordinates).
+
+- `convex_cut(lo, hi, p, q)` returns the left-side polygon in clockwise order after cutting with the
+  line through $p$ and $q$.
 
 Time Complexity:
 - O(n) per call to `convex_cut(lo, hi, p, q)`, where $n$ is the distance between `lo` and `hi`.
@@ -65,6 +68,8 @@ int line_intersection(
   return 0;
 }
 
+// Input polygon vertices can be any type with numeric .x and .y; cut line points
+// and output polygon are always the local double Point.
 template<class It>
 std::vector<Point> convex_cut(It lo, It hi, const Point &p, const Point &q) {
   if (EQ(p.x, q.x) && EQ(p.y, q.y)) {
@@ -72,13 +77,14 @@ std::vector<Point> convex_cut(It lo, It hi, const Point &p, const Point &q) {
   }
   std::vector<Point> res;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    int d1 = turn(q, p, *j), d2 = turn(q, p, *i);
+    Point pj((double)j->x, (double)j->y), pi((double)i->x, (double)i->y);
+    int d1 = turn(q, p, pj), d2 = turn(q, p, pi);
     if (d1 >= 0) {
-      res.push_back(*j);
+      res.push_back(pj);
     }
     if (d1 * d2 < 0) {
       Point r;
-      line_intersection(p, q, *j, *i, &r);
+      line_intersection(p, q, pj, pi, &r);
       res.push_back(r);
     }
   }

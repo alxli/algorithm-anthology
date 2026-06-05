@@ -44,60 +44,38 @@ struct Point {
   bool operator>(const Point &p) const { return p < *this; }
 };
 
-double sqnorm(const Point &a) {
-  return a.x * a.x + a.y * a.y;
-}
-
-double dot(const Point &a, const Point &b) {
-  return a.x * b.x + a.y * b.y;
-}
-
 double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-int seg_intersection(
-    const Point &a, const Point &b, const Point &c, const Point &d, Point *p = nullptr,
-    Point *q = nullptr
-) {
+int seg_intersection(const Point &a, const Point &b, const Point &c, const Point &d) {
   static const bool TOUCH_IS_INTERSECT = false;  // false is important!
-  Point ab(b.x - a.x, b.y - a.y);
-  Point ac(c.x - a.x, c.y - a.y);
-  Point cd(d.x - c.x, d.y - c.y);
-  double c1 = cross(ab, cd), c2 = cross(ac, ab);
+  double ab_x = b.x - a.x, ab_y = b.y - a.y;
+  double ac_x = c.x - a.x, ac_y = c.y - a.y;
+  double cd_x = d.x - c.x, cd_y = d.y - c.y;
+  double c1 = ab_x * cd_y - ab_y * cd_x;
+  double c2 = ac_x * ab_y - ac_y * ab_x;
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
-    double t0 = dot(ac, ab) / sqnorm(ab);
-    double t1 = t0 + dot(cd, ab) / sqnorm(ab);
-    double mint = std::min(t0, t1), maxt = std::max(t0, t1);
-    bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
-    if (overlap) {
-      Point res1 = std::max(std::min(a, b), std::min(c, d));
-      Point res2 = std::min(std::max(a, b), std::max(c, d));
-      if (res1 == res2) {
-        if (p != nullptr) {
-          *p = res1;
-        }
-        return 0;  // Collinear and meeting at an endpoint.
-      }
-      if (p != nullptr && q != nullptr) {
-        *p = res1;
-        *q = res2;
-      }
+    Point res1 = std::max(std::min(a, b), std::min(c, d));
+    Point res2 = std::min(std::max(a, b), std::max(c, d));
+    if (TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2)) {
       return 1;  // Collinear and overlapping.
-    } else {
-      return -1;  // Collinear and disjoint.
     }
+    return -1;  // Collinear and disjoint.
   }
   if (EQ(c1, 0)) {
     return -1;  // Parallel and disjoint.
   }
-  double t = cross(ac, cd) / c1, u = c2 / c1;
-  bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1)) : (LT(0, t) && LT(t, 1));
-  bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
+  double t_num = ac_x * cd_y - ac_y * cd_x;
+  bool c1_pos = c1 > 0;
+  bool t_between_01 = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, t_num) && LE(t_num, c1))
+                                                   : (LT(0, t_num) && LT(t_num, c1)))
+                             : (TOUCH_IS_INTERSECT ? (LE(t_num, 0) && LE(c1, t_num))
+                                                   : (LT(t_num, 0) && LT(c1, t_num)));
+  bool u_between_01 =
+      c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
+             : (TOUCH_IS_INTERSECT ? (LE(c2, 0) && LE(c1, c2)) : (LT(c2, 0) && LT(c1, c2)));
   if (t_between_01 && u_between_01) {
-    if (p != nullptr) {
-      *p = Point(a.x + t * ab.x, a.y + t * ab.y);
-    }
     return 0;  // Non-parallel with one intersection.
   }
   return -1;  // Non-parallel with no intersections.
@@ -114,14 +92,17 @@ struct Triangle {
   }
 };
 
+// Accepts any point type with numeric .x/.y; inputs are copied to double Points.
 template<class It>
 std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
   int n = hi - lo;
+  std::vector<Point> pts;
   std::vector<double> x, y, z;
   for (It it = lo; it != hi; ++it) {
+    pts.emplace_back(it->x, it->y);
     x.emplace_back(it->x);
     y.emplace_back(it->y);
-    z.emplace_back(sqnorm(*it));
+    z.emplace_back((double)it->x * it->x + (double)it->y * it->y);
   }
   std::vector<Triangle> res;
   for (int i = 0; i < n - 2; i++) {
@@ -136,7 +117,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
         if (LE(0, nz)) {
           continue;
         }
-        std::vector<Point> s1{lo[i], lo[j], lo[k], lo[i]};
+        std::vector<Point> s1{pts[i], pts[j], pts[k], pts[i]};
         for (int m = 0; m < n; m++) {
           if (nx * (x[m] - x[i]) + ny * (y[m] - y[i]) + nz * (z[m] - z[i]) > 0) {
             goto skip;
@@ -153,7 +134,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
             }
           }
         }
-        res.emplace_back(lo[i], lo[j], lo[k]);
+        res.emplace_back(pts[i], pts[j], pts[k]);
       skip:;
       }
     }
@@ -166,6 +147,10 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
 #include <cassert>
 using namespace std;
 
+struct PointI {
+  int x, y;
+};
+
 int main() {
   vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
   vector<Triangle> t{
@@ -175,5 +160,10 @@ int main() {
       Triangle(Point(1, 2), Point(0, 0), Point(-1, 3))
   };
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
+
+  // Integer-coordinate inputs are accepted (triangulation computed in double).
+  vector<PointI> iv{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  assert(delaunay_triangulation(iv.begin(), iv.end()) == t);
+
   return 0;
 }

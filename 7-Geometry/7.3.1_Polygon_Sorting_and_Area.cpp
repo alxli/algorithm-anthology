@@ -3,27 +3,25 @@
 Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the
 area.
 
-- `mean_center(lo, hi)` returns the arithmetic mean of a range `[lo, hi)` of points, where `lo` and
-  `hi` must be random-access iterators. This point is mathematically guaranteed to lie within the
-  non-self-intersecting closed polygon constructed by sorting all other points clockwise about it.
-  Note that this is different from the geometric centroid (a.k.a. barycenter) of a polygon.
-- `cw_comp(a, b, c)` returns whether point $a$ compares clockwise "before" point $b$ when using $c$
-  as a central reference point.
-- `CWComparator(c)` constructs a wrapper class of `cw_comp()` that may be passed to `std::sort()` a
-  range of points clockwise to produce a valid polygon.
-- `CCWComparator(c)` constructs a wrapper class of `cw_comp()` that may be passed to `std::sort()`
-  a range of points counter-clockwise to produce a valid polygon.
-- `polygon_area(lo, hi)` returns the area of the polygon specified by the range `[lo, hi)` of
-  points, where `lo` and `hi` must be BidirectionalIterators. The points are interpreted as a
-  polygon based on the order given in the range. The input polygon does not have to be sorted using
-  the methods above, but must be given in some ordering that yields a valid non-self-intersecting
-  closed polygon. Optionally, the last point may be equal to the first point in the input without
-  affecting the result. The area is computed using the shoelace formula.
+The functions below are templated on the point type. The local `Point` struct (double coordinates)
+is the default; replace it with `PointD`/ `PointI` from 7.1.1 or any struct with numeric `.x` and
+`.y` fields and `<` / `==` operators.
+
+`polygon_area_2x` returns twice the area as the coordinate type - exact for integer points (avoids
+floating-point entirely). `polygon_area` always returns `double`.
+
+- `mean_center(lo, hi)` returns the arithmetic mean of a range of points (as the local `Point` type
+  with double coordinates).
+- `cw_comp(a, b, c)` returns whether point $a$ compares clockwise before $b$ about $c$.
+- `CWComparator(c)` / `CCWComparator(c)` return comparators for `std::sort`.
+- `polygon_area_2x(lo, hi)` returns exactly $2 \times \text{area}$ (integer for integer points,
+  double for float points). For integer vertices, divide by 2 in the caller if the exact fractional
+  area is needed.
+- `polygon_area(lo, hi)` returns the area as `double`.
 
 Time Complexity:
-- O(n) per call to `mean_center(lo, hi)` and `polygon_area(lo, hi)`, where $n$ is the distance
-  between `lo` and `hi`.
-- O(1) per call to `cw_comp()` and the related class comparators.
+- O(n) per call to `mean_center` and `polygon_area`, where $n$ is the number of points.
+- O(1) per call to `cw_comp` and the comparators.
 
 Space Complexity:
 - O(1) auxiliary for all operations.
@@ -42,38 +40,18 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
-double sqnorm(const Point &a) {
+template<class Pt>
+auto sqnorm(const Pt &a) {
   return a.x * a.x + a.y * a.y;
 }
 
-double cross(const Point &a, const Point &b) {
+template<class Pt>
+auto cross(const Pt &a, const Pt &b) {
   return a.x * b.y - a.y * b.x;
 }
 
-template<class It>
-Point mean_center(It lo, It hi) {
-  if (lo == hi) {
-    throw std::runtime_error("Cannot get center of an empty range.");
-  }
-  double x_sum = 0, y_sum = 0;
-  double num_points = hi - lo;
-  for (It it = lo; it != hi; ++it) {
-    x_sum += it->x;
-    y_sum += it->y;
-  }
-  return Point(x_sum / num_points, y_sum / num_points);
-}
-
-bool cw_comp(const Point &a, const Point &b, const Point &c) {
+template<class Pt>
+bool cw_comp(const Pt &a, const Pt &b, const Pt &c) {
   if (GE(a.x - c.x, 0) && LT(b.x - c.x, 0)) {
     return true;
   }
@@ -86,35 +64,45 @@ bool cw_comp(const Point &a, const Point &b, const Point &c) {
     }
     return b.y > a.y;
   }
-  Point ac(a.x - c.x, a.y - c.y), bc(b.x - c.x, b.y - c.y);
-  double det = cross(ac, bc);
+  Pt ac{a.x - c.x, a.y - c.y};
+  Pt bc{b.x - c.x, b.y - c.y};
+  auto det = cross(ac, bc);
   if (EQ(det, 0)) {
     return sqnorm(ac) > sqnorm(bc);
   }
   return det < 0;
 }
 
-auto CWComparator(const Point &c) {
-  return [c](const Point &a, const Point &b) { return cw_comp(a, b, c); };
+template<class Pt>
+auto CWComparator(const Pt &c) {
+  return [c](const Pt &a, const Pt &b) { return cw_comp(a, b, c); };
 }
 
-auto CCWComparator(const Point &c) {
-  return [c](const Point &a, const Point &b) { return cw_comp(b, a, c); };
+template<class Pt>
+auto CCWComparator(const Pt &c) {
+  return [c](const Pt &a, const Pt &b) { return cw_comp(b, a, c); };
+}
+
+// Returns 2 * area. Result is exact (integer) for integer-coordinate points.
+template<class It>
+auto polygon_area_2x(It lo, It hi) {
+  using T = decltype(lo->x * lo->y);
+  if (lo == hi) {
+    return T(0);
+  }
+  T area = 0;
+  if (*lo != *--hi) {
+    area += (T)(lo->x - hi->x) * (T)(lo->y + hi->y);
+  }
+  for (It i = hi, j = --hi; i != lo; --i, --j) {
+    area += (T)(i->x - j->x) * (T)(i->y + j->y);
+  }
+  return area < T(0) ? -area : area;
 }
 
 template<class It>
 double polygon_area(It lo, It hi) {
-  if (lo == hi) {
-    return 0;
-  }
-  double area = 0;
-  if (*lo != *--hi) {
-    area += (lo->x - hi->x) * (lo->y + hi->y);
-  }
-  for (It i = hi, j = --hi; i != lo; --i, --j) {
-    area += (i->x - j->x) * (i->y + j->y);
-  }
-  return fabs(area / 2.0);
+  return (double)polygon_area_2x(lo, hi) / 2.0;
 }
 
 /*** Example Usage ***/
@@ -123,10 +111,37 @@ double polygon_area(It lo, It hi) {
 #include <vector>
 using namespace std;
 
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const Point &p) const { return p < *this; }
+};
+
+struct PointI {
+  int x, y;
+  bool operator==(const PointI &p) const { return x == p.x && y == p.y; }
+  bool operator!=(const PointI &p) const { return !(*this == p); }
+  bool operator<(const PointI &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator>(const PointI &p) const { return p < *this; }
+};
+
+template<class It>
+Point mean_center(It lo, It hi) {
+  if (lo == hi) {
+    throw std::runtime_error("Cannot get center of an empty range.");
+  }
+  double x_sum = 0, y_sum = 0, n = hi - lo;
+  for (It it = lo; it != hi; ++it) {
+    x_sum += it->x;
+    y_sum += it->y;
+  }
+  return Point(x_sum / n, y_sum / n);
+}
+
 int main() {
-  // Irregular pentagon with only the vertex (1, 2) not on its convex hull. The ordering here is
-  // already sorted in ccw order around their mean center, though we will shuffle them to verify our
-  // sorting comparator.
   vector<Point> points{Point(1, 3), Point(1, 2), Point(2, 1), Point(0, 0), Point(-1, 3)};
   vector<Point> v(points);
   std::mt19937 rng(12345);
@@ -135,9 +150,13 @@ int main() {
   assert(EQ(c.x, 0.6) && EQ(c.y, 1.8));
   sort(v.begin(), v.end(), CWComparator(c));
   auto expected = points.begin();
-  for (const auto &p : v) {
-    assert(p == *expected++);
-  }
+  for (const auto &p : v) assert(p == *expected++);
   assert(EQ(polygon_area(v.begin(), v.end()), 5));
+
+  // Integer points: polygon_area_2x is exact (no float arithmetic).
+  vector<PointI> iv{{0, 0}, {4, 0}, {0, 3}};            // right triangle, area = 6
+  assert(polygon_area_2x(iv.begin(), iv.end()) == 12);  // exact int
+  assert(EQ(polygon_area(iv.begin(), iv.end()), 6.0));
+
   return 0;
 }

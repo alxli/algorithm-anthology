@@ -2,20 +2,22 @@
 
 Distance calculations in two dimensions for points, lines, and line segments.
 
+The functions below are templated on the point type `Pt`. The local `Point` struct (double
+coordinates) is the default; replace it with `PointD`/ `PointI` from 7.1.1 or any struct with
+numeric `.x` and `.y` fields. `sqnorm`, `dot`, `cross`, and `sqdist` preserve the coordinate type
+and are exact for integer points. Functions that return actual distances or projected points use
+`double` only for the final division/square root.
+
 - `dist(a, b)` and `sqdist(a, b)` respectively return the distance and squared distance between
   points $a$ and $b$.
-- `line_dist(p, a, b, c)` returns the distance from point $p$ to the line $ax + by + c = 0$. If the
-  line is invalid (i.e. $a = b = 0$), then `-INF`, `INF`, or `NaN` is returned based on the sign of
-  $c$.
+- `line_dist(p, a, b, c)` returns the distance from point $p$ to the line $ax + by + c = 0$.
 - `line_dist(p, a, b)` returns the distance from point $p$ to the infinite line containing points
-  $a$ and $b$. If the line is invalid (i.e. $a = b$), then the distance from $p$ to the single point
-  is returned.
-- `line_dist(a1, b1, c1, a2, b2, c2)` returns the distance between two lines. If the lines are
-  non-parallel then the distance is considered to be 0. Otherwise, the distance is considered to be
-  the perpendicular distance from any point on one line to the other line.
+  $a$ and $b$. If $a = b$, returns the distance from $p$ to $a$.
+- `line_dist(a1, b1, c1, a2, b2, c2)` returns the distance between two lines.
 - `seg_dist(p, a, b)` returns the distance from point $p$ to the line segment $ab$.
-- `seg_dist(a, b, c, d)` returns the minimum distance from any point on the line segment $ab$ to any
-  point on the line segment $cd$. This is 0 if the segments touch or intersect.
+- `seg_dist(a, b, c, d)` returns the minimum distance between line segments $ab$ and $cd$. Returns 0
+  if the segments touch or intersect.
+- `closest_point(a, b, p)` returns the point on segment $ab$ closest to point $p$.
 
 Time Complexity:
 - O(1) for all operations.
@@ -32,79 +34,107 @@ Space Complexity:
 const double EPS = 1e-9;
 
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
+#define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
   bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
+  bool operator<(const Point &p) const { return LT(x, p.x) || (EQ(x, p.x) && LT(y, p.y)); }
   bool operator>(const Point &p) const { return p < *this; }
 };
 
 // clang-format off
-double sqnorm(const Point &a) { return a.x * a.x + a.y * a.y; }
-double norm(const Point &a) { return sqrt(sqnorm(a)); }
-double dot(const Point &a, const Point &b) { return a.x * b.x + a.y * b.y; }
-double cross(const Point &a, const Point &b) { return a.x * b.y - a.y * b.x; }
-double dist(const Point &a, const Point &b) { return norm(Point(b.x - a.x, b.y - a.y)); }
-double sqdist(const Point &a, const Point &b) { return sqnorm(Point(b.x - a.x, b.y - a.y)); }
+template<class Pt> auto sqnorm(const Pt &a) { return a.x*a.x + a.y*a.y; }
+template<class Pt> double norm(const Pt &a) { return sqrt((double)sqnorm(a)); }
+template<class Pt> auto dot(const Pt &a, const Pt &b) { return a.x*b.x + a.y*b.y; }
+template<class Pt> auto cross(const Pt &a, const Pt &b) { return a.x*b.y - a.y*b.x; }
 // clang-format on
 
-double line_dist(const Point &p, double a, double b, double c) {
-  return fabs(a * p.x + b * p.y + c) / sqrt(a * a + b * b);
+// sqdist returns the coordinate type (exact for integer points).
+template<class Pt>
+auto sqdist(const Pt &a, const Pt &b) {
+  auto dx = b.x - a.x, dy = b.y - a.y;
+  return dx * dx + dy * dy;
 }
 
-double line_dist(const Point &p, const Point &a, const Point &b) {
-  if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
-    return dist(p, a);
-  }
-  double u = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / sqdist(a, b);
-  return norm(Point(a.x + u * (b.x - a.x) - p.x, a.y + u * (b.y - a.y) - p.y));
+template<class Pt>
+double dist(const Pt &a, const Pt &b) {
+  return sqrt((double)sqdist(a, b));
 }
 
-double line_dist(double a1, double b1, double c1, double a2, double b2, double c2) {
+template<class Pt, class T>
+double line_dist(const Pt &p, T a, T b, T c) {
+  return fabs((double)a * p.x + (double)b * p.y + c) / sqrt((double)a * a + (double)b * b);
+}
+
+template<class Pt>
+double line_dist(const Pt &p, const Pt &a, const Pt &b) {
+  if (EQ(a.x, b.x) && EQ(a.y, b.y)) return dist(p, a);
+  auto n = sqdist(a, b);
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
+  double u = (double)d / n;
+  return norm(Point{a.x + u * (b.x - a.x) - p.x, a.y + u * (b.y - a.y) - p.y});
+}
+
+template<class T>
+double line_dist(T a1, T b1, T c1, T a2, T b2, T c2) {
   if (EQ(a1 * b2, a2 * b1)) {
-    double factor = EQ(b1, 0) ? (a1 / a2) : (b1 / b2);
-    return EQ(c1, c2 * factor) ? 0 : fabs(c2 * factor - c1) / sqrt(a1 * a1 + b1 * b1);
+    double factor = EQ(b1, 0) ? ((double)a1 / a2) : ((double)b1 / b2);
+    return EQ(c1, c2 * factor) ? 0
+                               : fabs(c2 * factor - c1) / sqrt((double)a1 * a1 + (double)b1 * b1);
   }
   return 0;
 }
 
-double seg_dist(const Point &p, const Point &a, const Point &b) {
+template<class Pt>
+double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return dist(p, a);
   }
-  Point ab(b.x - a.x, b.y - a.y), ap(p.x - a.x, p.y - a.y);
-  double n = sqnorm(ab), d = dot(ab, ap);
+  auto n = sqdist(a, b);
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
   if (LE(d, 0) || EQ(n, 0)) {
-    return norm(ap);
+    return dist(p, a);
   }
-  return GE(d, n) ? norm(Point(ap.x - ab.x, ap.y - ab.y))
-                  : norm(Point(ap.x - ab.x * (d / n), ap.y - ab.y * (d / n)));
+  if (GE(d, n)) {
+    return dist(p, b);
+  }
+  double t = (double)d / n;
+  return dist(p, Point{a.x + t * (b.x - a.x), a.y + t * (b.y - a.y)});
 }
 
-double seg_dist(const Point &a, const Point &b, const Point &c, const Point &d) {
+template<class Pt>
+double seg_dist(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return seg_dist(a, c, d);
   }
   if (EQ(c.x, d.x) && EQ(c.y, d.y)) {
     return seg_dist(c, a, b);
   }
-  Point ab(b.x - a.x, b.y - a.y);
-  Point ac(c.x - a.x, c.y - a.y);
-  Point cd(d.x - c.x, d.y - c.y);
-  double c1 = cross(ab, cd), c2 = cross(ac, ab);
+  auto ab_x = b.x - a.x, ab_y = b.y - a.y;
+  auto ac_x = c.x - a.x, ac_y = c.y - a.y;
+  auto cd_x = d.x - c.x, cd_y = d.y - c.y;
+  auto c1 = ab_x * cd_y - ab_y * cd_x;
+  auto c2 = ac_x * ab_y - ac_y * ab_x;
   if (EQ(c1, 0) && EQ(c2, 0)) {
-    double t0 = dot(ac, ab) / sqnorm(ab), t1 = t0 + dot(cd, ab) / sqnorm(ab);
-    if (LE(std::min(t0, t1), 1) && LE(0, std::max(t0, t1))) {
+    auto less = [](const Pt &u, const Pt &v) { return u.x != v.x ? u.x < v.x : u.y < v.y; };
+    auto minp = [&](const Pt &u, const Pt &v) -> const Pt & { return less(v, u) ? v : u; };
+    auto maxp = [&](const Pt &u, const Pt &v) -> const Pt & { return less(u, v) ? v : u; };
+    const Pt &res1 = maxp(minp(a, b), minp(c, d));
+    const Pt &res2 = minp(maxp(a, b), maxp(c, d));
+    if (!less(res2, res1)) {
       return 0;
     }
   } else if (!EQ(c1, 0)) {
-    double t = cross(ac, cd) / c1, u = c2 / c1;
-    if (LE(0, t) && LE(t, 1) && LE(0, u) && LE(u, 1)) {
+    auto t_num = ac_x * cd_y - ac_y * cd_x;
+    bool c1_pos = c1 > 0;
+    bool t_between_01 = c1_pos ? (LE(0, t_num) && LE(t_num, c1)) : (LE(t_num, 0) && LE(c1, t_num));
+    bool u_between_01 = c1_pos ? (LE(0, c2) && LE(c2, c1)) : (LE(c2, 0) && LE(c1, c2));
+    if (t_between_01 && u_between_01) {
       return 0;
     }
   }
@@ -113,30 +143,49 @@ double seg_dist(const Point &a, const Point &b, const Point &c, const Point &d) 
   );
 }
 
-Point closest_point(const Point &a, const Point &b, const Point &p) {
+template<class Pt>
+Point closest_point(const Pt &a, const Pt &b, const Pt &p) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
-    return a;
+    return Point{a.x, a.y};
   }
-  Point ap(p.x - a.x, p.y - a.y), ab(b.x - a.x, b.y - a.y);
-  double t = dot(ap, ab) / sqnorm(ab);
-  return (t <= 0) ? a : ((t >= 1) ? b : Point(a.x + t * ab.x, a.y + t * ab.y));
+  auto n = sqdist(a, b);
+  auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
+  double t = (double)d / n;
+  if (t <= 0) {
+    return Point{a.x, a.y};
+  }
+  if (t >= 1) {
+    return Point{b.x, b.y};
+  }
+  return Point{a.x + t * (b.x - a.x), a.y + t * (b.y - a.y)};
 }
 
 /*** Example Usage ***/
 
 #include <cassert>
 
+struct PointI {
+  int x, y;
+};
+
 int main() {
-  assert(EQ(5, dist(Point(-1, -1), Point(2, 3))));
-  assert(EQ(25, sqdist(Point(-1, -1), Point(2, 3))));
-  assert(EQ(1.2, line_dist(Point(2, 1), -4, 3, -1)));
-  assert(EQ(0.8, line_dist(Point(3, 3), Point(-1, -1), Point(2, 3))));
-  assert(EQ(1.2, line_dist(Point(2, 1), Point(-1, -1), Point(2, 3))));
+  assert(EQ(5, dist(Point{-1, -1}, Point{2, 3})));
+  assert(EQ(25, sqdist(Point{-1, -1}, Point{2, 3})));
+  assert(EQ(1.2, line_dist(Point{2, 1}, -4, 3, -1)));
+  assert(EQ(0.8, line_dist(Point{3, 3}, Point{-1, -1}, Point{2, 3})));
+  assert(EQ(1.2, line_dist(Point{2, 1}, Point{-1, -1}, Point{2, 3})));
   assert(EQ(0, line_dist(-4, 3, -1, 8, 6, 2)));
   assert(EQ(0.8, line_dist(-4, 3, -1, -8, 6, -10)));
-  assert(EQ(1.0, seg_dist(Point(3, 3), Point(-1, -1), Point(2, 3))));
-  assert(EQ(1.2, seg_dist(Point(2, 1), Point(-1, -1), Point(2, 3))));
-  assert(EQ(0, seg_dist(Point(0, 2), Point(3, 3), Point(-1, -1), Point(2, 3))));
-  assert(EQ(0.6, seg_dist(Point(-1, 0), Point(-2, 2), Point(-1, -1), Point(2, 3))));
+  assert(EQ(1.0, seg_dist(Point{3, 3}, Point{-1, -1}, Point{2, 3})));
+  assert(EQ(1.2, seg_dist(Point{2, 1}, Point{-1, -1}, Point{2, 3})));
+  assert(EQ(0, seg_dist(Point{0, 2}, Point{3, 3}, Point{-1, -1}, Point{2, 3})));
+  assert(EQ(0.6, seg_dist(Point{-1, 0}, Point{-2, 2}, Point{-1, -1}, Point{2, 3})));
+
+  // Integer points: sqdist is exact, dist returns double.
+  PointI ia{-1, -1}, ib{2, 3};
+  assert(sqdist(ia, ib) == 25);   // int result
+  assert(dot(ia, ib) == -5);      // int result
+  assert(EQ(dist(ia, ib), 5.0));  // double result
+
   return 0;
 }

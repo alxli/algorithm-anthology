@@ -43,79 +43,70 @@ struct Point {
   bool operator>(const Point &p) const { return p < *this; }
 };
 
-double sqnorm(const Point &a) {
-  return a.x * a.x + a.y * a.y;
-}
-
-double dot(const Point &a, const Point &b) {
-  return a.x * b.x + a.y * b.y;
-}
-
-double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
-  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-}
-
-int seg_intersection(
-    const Point &a, const Point &b, const Point &c, const Point &d, Point *p = nullptr,
-    Point *q = nullptr
-) {
+template<class Pt>
+int seg_intersection(const Pt &A, const Pt &B, const Pt &C, const Pt &D, Point *p = nullptr) {
+  auto less = [](const Pt &u, const Pt &v) { return u.x != v.x ? u.x < v.x : u.y < v.y; };
+  auto minp = [&](const Pt &u, const Pt &v) -> const Pt & { return less(v, u) ? v : u; };
+  auto maxp = [&](const Pt &u, const Pt &v) -> const Pt & { return less(u, v) ? v : u; };
   static const bool TOUCH_IS_INTERSECT = true;
-  Point ab(b.x - a.x, b.y - a.y);
-  Point ac(c.x - a.x, c.y - a.y);
-  Point cd(d.x - c.x, d.y - c.y);
-  double c1 = cross(ab, cd), c2 = cross(ac, ab);
+  auto ab_x = B.x - A.x, ab_y = B.y - A.y;
+  auto ac_x = C.x - A.x, ac_y = C.y - A.y;
+  auto cd_x = D.x - C.x, cd_y = D.y - C.y;
+  auto c1 = ab_x * cd_y - ab_y * cd_x;
+  auto c2 = ac_x * ab_y - ac_y * ab_x;
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
-    double t0 = dot(ac, ab) / sqnorm(ab);
-    double t1 = t0 + dot(cd, ab) / sqnorm(ab);
-    double mint = std::min(t0, t1), maxt = std::max(t0, t1);
-    bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
+    const Pt &res1 = maxp(minp(A, B), minp(C, D));
+    const Pt &res2 = minp(maxp(A, B), maxp(C, D));
+    bool overlap = TOUCH_IS_INTERSECT ? !less(res2, res1) : less(res1, res2);
     if (overlap) {
-      Point res1 = std::max(std::min(a, b), std::min(c, d));
-      Point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
         if (p != nullptr) {
-          *p = res1;
+          *p = Point{(double)res1.x, (double)res1.y};
         }
         return 0;  // Collinear and meeting at an endpoint.
       }
-      if (p != nullptr && q != nullptr) {
-        *p = res1;
-        *q = res2;
-      }
       return 1;  // Collinear and overlapping.
-    } else {
-      return -1;  // Collinear and disjoint.
     }
+    return -1;  // Collinear and disjoint.
   }
   if (EQ(c1, 0)) {
     return -1;  // Parallel and disjoint.
   }
-  double t = cross(ac, cd) / c1, u = c2 / c1;
-  bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1)) : (LT(0, t) && LT(t, 1));
-  bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
+  auto t_num = ac_x * cd_y - ac_y * cd_x;
+  bool c1_pos = c1 > 0;
+  bool t_between_01 = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, t_num) && LE(t_num, c1))
+                                                   : (LT(0, t_num) && LT(t_num, c1)))
+                             : (TOUCH_IS_INTERSECT ? (LE(t_num, 0) && LE(c1, t_num))
+                                                   : (LT(t_num, 0) && LT(c1, t_num)));
+  bool u_between_01 =
+      c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
+             : (TOUCH_IS_INTERSECT ? (LE(c2, 0) && LE(c1, c2)) : (LT(c2, 0) && LT(c1, c2)));
   if (t_between_01 && u_between_01) {
     if (p != nullptr) {
-      *p = Point(a.x + t * ab.x, a.y + t * ab.y);
+      double t = (double)t_num / c1;
+      *p = Point{A.x + t * ab_x, A.y + t * ab_y};
     }
     return 0;  // Non-parallel with one intersection.
   }
   return -1;  // Non-parallel with no intersections.
 }
 
+// The two segments may use different point types (e.g. polygon edge vs. sweep line).
+template<class PtA, class PtB>
 int line_intersection(
-    const Point &p1, const Point &p2, const Point &p3, const Point &p4, Point *p = nullptr
+    const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, Point *p = nullptr
 ) {
-  double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
-  double c1 = -(p1.x * p2.y - p2.x * p1.y);
-  double a2 = p4.y - p3.y, b2 = p3.x - p4.x;
-  double c2 = -(p3.x * p4.y - p4.x * p3.y);
-  double x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
-  double det = a1 * b2 - a2 * b1;
+  auto a1 = p2.y - p1.y, b1 = p1.x - p2.x;
+  auto c1 = -(p1.x * p2.y - p2.x * p1.y);
+  auto a2 = p4.y - p3.y, b2 = p3.x - p4.x;
+  auto c2 = -(p3.x * p4.y - p4.x * p3.y);
+  auto x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
+  auto det = a1 * b2 - a2 * b1;
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
   if (p != nullptr) {
-    *p = Point(x / det, y / det);
+    *p = Point{(double)x / det, (double)y / det};
   }
   return 0;
 }
@@ -125,13 +116,6 @@ struct Event {
   int mask_delta;
 
   Event(double y = 0, int mask_delta = 0) : y(y), mask_delta(mask_delta) {}
-
-  bool operator<(const Event &e) const {
-    if (y != e.y) {
-      return y < e.y;
-    }
-    return mask_delta < e.mask_delta;
-  }
 };
 
 template<class It>
@@ -177,7 +161,12 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
         }
       }
     }
-    std::sort(events.begin(), events.end());
+    std::sort(events.begin(), events.end(), [](const Event &e1, const Event &e2) {
+      if (e1.y != e2.y) {
+        return e1.y < e2.y;
+      }
+      return e1.mask_delta < e2.mask_delta;
+    });
     double a = 0;
     int mask = 0;
     for (size_t j = 0; j < events.size(); j++) {
@@ -216,6 +205,12 @@ double union_area(It lo1, It hi1, It lo2, It hi2) {
 #include <cassert>
 using namespace std;
 
+struct PointI {
+  int x, y;
+  bool operator==(const PointI &o) const { return x == o.x && y == o.y; }
+  bool operator!=(const PointI &o) const { return !(*this == o); }
+};
+
 int main() {
   vector<Point> p, s;
   // Irregular pentagon a triangle of area 1.5 overlapping quadrant 2.
@@ -231,5 +226,12 @@ int main() {
   s.emplace_back(-3, 0);
   assert(EQ(1.5, intersection_area(p.begin(), p.end(), s.begin(), s.end())));
   assert(EQ(12.5, union_area(p.begin(), p.end(), s.begin(), s.end())));
+
+  // Integer-coordinate polygons are accepted (computation proceeds in double).
+  vector<PointI> ip{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<PointI> is{{0, 0}, {0, 3}, {-3, 3}, {-3, 0}};
+  assert(EQ(1.5, intersection_area(ip.begin(), ip.end(), is.begin(), is.end())));
+  assert(EQ(12.5, union_area(ip.begin(), ip.end(), is.begin(), is.end())));
+
   return 0;
 }

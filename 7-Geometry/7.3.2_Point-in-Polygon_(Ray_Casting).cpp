@@ -1,15 +1,17 @@
 /*
 
-Given a point $p$ and a polygon in two dimensions, determine whether $p$ lies inside the polygon
-using a ray casting algorithm.
+Given a point $p$ and a polygon, determines whether $p$ lies inside using ray casting.
 
-- `point_in_polygon(p, lo, hi)` returns whether $p$ lies within the polygon defined by the range
-  `[lo, hi)` of points specifying the vertices in either clockwise or counter-clockwise order, where
-  `lo` and `hi` must be random-access iterators. If $p$ lies barely on an edge (within `EPS`), then
-  the result will depend on the setting of `EDGE_IS_INSIDE`.
+The function is templated on the point type `Pt`. The local `Point` struct (double coordinates) is
+the default; replace it with `PointD`/ `PointI` from 7.1.1 or any struct with numeric `.x` and `.y`
+fields. With integer-coordinate points the cross-product comparisons are exact.
+
+- `point_in_polygon(p, lo, hi)` returns whether $p$ lies within the polygon given by range
+  `[lo, hi)` in clockwise or counter-clockwise order. If $p$ lies on an edge (within `EPS`), the
+  result depends on `EDGE_IS_INSIDE`.
 
 Time Complexity:
-- O(n) per call to `point_in_polygon(p, lo, hi)`, where $n$ is the distance between `lo` and `hi`.
+- O(n) per call, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(1) auxiliary.
@@ -22,36 +24,29 @@ Space Complexity:
 const double EPS = 1e-9;
 
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
+#define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
-#define GT(a, b) ((a) > (b) + EPS)
 
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
-double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
+template<class Pt>
+auto cross(const Pt &a, const Pt &b, const Pt &o) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-template<class It>
-bool point_in_polygon(const Point &p, It lo, It hi) {
+// Detection is exact for integer-coordinate Pt.
+template<class Pt, class It>
+bool point_in_polygon(const Pt &p, It lo, It hi) {
   static const bool EDGE_IS_INSIDE = true;
   bool res = false;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     if (EQ(i->y, p.y) && (EQ(i->x, p.x) || (EQ(j->y, p.y) && (LE(i->x, p.x) || LE(j->x, p.x))))) {
       return EDGE_IS_INSIDE;
     }
-    if (GT(i->y, p.y) != GT(j->y, p.y)) {
-      double det = cross(*i, *j, p);
+    if (LT(p.y, i->y) != LT(p.y, j->y)) {
+      auto det = cross(*i, *j, p);
       if (EQ(det, 0)) {
         return EDGE_IS_INSIDE;
       }
-      if (GT(det, 0) != GT(j->y, i->y)) {
+      if (LT(0, det) != LT(i->y, j->y)) {
         res = !res;
       }
     }
@@ -65,12 +60,25 @@ bool point_in_polygon(const Point &p, It lo, It hi) {
 #include <vector>
 using namespace std;
 
+struct Point {
+  double x, y;
+};
+
+struct PointI {
+  int x, y;
+};
+
 int main() {
-  // Irregular trapezoid.
-  vector<Point> p{Point(-1, 3), Point(1, 3), Point(2, 1), Point(0, 0)};
-  assert(point_in_polygon(Point(1, 2), p.begin(), p.end()));
-  assert(point_in_polygon(Point(0, 3), p.begin(), p.end()));
-  assert(!point_in_polygon(Point(0, 3.01), p.begin(), p.end()));
-  assert(!point_in_polygon(Point(2, 2), p.begin(), p.end()));
+  vector<Point> poly{Point{-1, 3}, Point{1, 3}, Point{2, 1}, Point{0, 0}};
+  assert(point_in_polygon(Point{1, 2}, poly.begin(), poly.end()));
+  assert(point_in_polygon(Point{0, 3}, poly.begin(), poly.end()));
+  assert(!point_in_polygon(Point{0, 3.01}, poly.begin(), poly.end()));
+  assert(!point_in_polygon(Point{2, 2}, poly.begin(), poly.end()));
+
+  // Integer-coordinate points: exact detection.
+  vector<PointI> ipoly{{0, 0}, {4, 0}, {4, 4}, {0, 4}};
+  assert(point_in_polygon(PointI{2, 2}, ipoly.begin(), ipoly.end()));
+  assert(!point_in_polygon(PointI{5, 2}, ipoly.begin(), ipoly.end()));
+
   return 0;
 }

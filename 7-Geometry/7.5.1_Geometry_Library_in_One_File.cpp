@@ -1,7 +1,9 @@
 /*
 
-This combines the next few subsections in this chapter in a cross-dependent manner. All of these
-algorithms apply to a two-dimensional Cartesian plane.
+This combines the next few subsections in this chapter in a cross-dependent manner. Point, Line,
+Circle, and all algorithms here operate on floating-point (double) coordinates on a 2D Cartesian
+plane. For more generic point<T> and line<T> supporting integer-coordinate exact arithmetic, see the
+first few subsections of this chapter.
 
 Time Complexity:
 - O(1) for all operations.
@@ -31,28 +33,28 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-// A 2D point class that behaves like std::complex while supporting epsilon comparisons.
+// A 2D double-precision point class.
 struct Point {
   double x, y;
 
   Point() : x(0), y(0) {}
   Point(double x, double y) : x(x), y(y) {}
-  Point(const Point &p) : x(p.x), y(p.y) {}
   explicit Point(const std::pair<double, double> &p) : x(p.first), y(p.second) {}
 
-  // clang-format off
   bool operator<(const Point &p) const { return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x); }
-  bool operator>(const Point &p) const { return EQ(x, p.x) ? LT(p.y, y) : LT(p.x, x); }
+  bool operator>(const Point &p) const { return p < *this; }
   bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
   bool operator!=(const Point &p) const { return !(*this == p); }
   bool operator<=(const Point &p) const { return !(*this > p); }
   bool operator>=(const Point &p) const { return !(*this < p); }
-  Point operator+(const Point &p) const { return Point(x + p.x, y + p.y); }
-  Point operator-(const Point &p) const { return Point(x - p.x, y - p.y); }
-  Point operator+(double v) const { return Point(x + v, y + v); }
-  Point operator-(double v) const { return Point(x - v, y - v); }
-  Point operator*(double v) const { return Point(x * v, y * v); }
-  Point operator/(double v) const { return Point(x / v, y / v); }
+  Point operator+(const Point &p) const { return {x + p.x, y + p.y}; }
+  Point operator-(const Point &p) const { return {x - p.x, y - p.y}; }
+  Point operator+(double v) const { return {x + v, y + v}; }
+  Point operator-(double v) const { return {x - v, y - v}; }
+  Point operator*(double v) const { return {x * v, y * v}; }
+  Point operator/(double v) const { return {x / v, y / v}; }
+
+  // clang-format off
   Point &operator+=(const Point &p) { x += p.x; y += p.y; return *this; }
   Point &operator-=(const Point &p) { x -= p.x; y -= p.y; return *this; }
   Point &operator+=(double v) { x += v; y += v; return *this; }
@@ -71,40 +73,47 @@ struct Point {
   double proj(const Point &p) const { return dot(p) / p.norm(); }
 
   // Returns a proportional unit vector (p, q) = c(x, y) where p^2 + q^2 = 1.
-  Point normalize() const { return (EQ(x, 0) && EQ(y, 0)) ? Point(0, 0) : (Point(x, y) / norm()); }
+  Point normalize() const {
+    double n = norm();
+    return (n < 1e-30) ? Point(0, 0) : Point(x / n, y / n);
+  }
 
   // Returns (x, y) rotated 90/180/270 degrees counter-clockwise about the origin.
-  Point rotate90() const { return Point(-y, x); }
-  Point rotate180() const { return Point(-x, -y); }
-  Point rotate270() const { return Point(y, -x); }
+  Point rotate90() const { return {-y, x}; }
+  Point rotate180() const { return {-x, -y}; }
+  Point rotate270() const { return {y, -x}; }
+
+  // Returns (x, y) rotated 90/180/270 degrees counter-clockwise about point p.
+  Point rotate90(const Point &p) const { return (*this - p).rotate90() + p; }
+  Point rotate180(const Point &p) const { return (*this - p).rotate180() + p; }
+  Point rotate270(const Point &p) const { return (*this - p).rotate270() + p; }
 
   // Returns (x, y) rotated t radians clockwise about the origin.
-  Point rotateCW(double t) const { return Point(x * cos(t) + y * sin(t), y * cos(t) - x * sin(t)); }
+  Point rotateCW(double t) const { return {x * cos(t) + y * sin(t), y * cos(t) - x * sin(t)}; }
 
   // Returns (x, y) rotated t radians counter-clockwise about the origin.
-  Point rotateCCW(double t) const {
-    return Point(x * cos(t) - y * sin(t), x * sin(t) + y * cos(t));
-  }
+  Point rotateCCW(double t) const { return {x * cos(t) - y * sin(t), x * sin(t) + y * cos(t)}; }
 
   // Returns (x, y) rotated t radians clockwise about point p.
   Point rotateCW(const Point &p, double t) const { return (*this - p).rotateCW(t) + p; }
 
-  // Returns (x, y) rotated t radians counter-clockwise about the point p.
+  // Returns (x, y) rotated t radians counter-clockwise about point p.
   Point rotateCCW(const Point &p, double t) const { return (*this - p).rotateCCW(t) + p; }
 
   // Returns (x, y) reflected across point p.
-  Point reflect(const Point &p) const { return Point(2 * p.x - x, 2 * p.y - y); }
+  Point reflect(const Point &p) const { return {2 * p.x - x, 2 * p.y - y}; }
 
   // Returns (x, y) reflected across the line containing points p and q.
   Point reflect(const Point &p, const Point &q) const {
-    if (p == q) {
-      return reflect(p);
-    }
+    if (p == q) return reflect(p);
     Point r(*this - p), s = q - p;
     r = Point(r.x * s.x + r.y * s.y, r.x * s.y - r.y * s.x) / s.sqnorm();
-    r = Point(r.x * s.x - r.y * s.y, r.x * s.y + r.y * s.x) + p;
-    return r;
+    return Point(r.x * s.x - r.y * s.y, r.x * s.y + r.y * s.x) + p;
   }
+
+  // Convenience conversions (identity for double, useful in generic contexts).
+  Point to_double() const { return *this; }
+  Point to_ldouble() const { return *this; }
 
   friend double sqnorm(const Point &p) { return p.sqnorm(); }
   friend double norm(const Point &p) { return p.norm(); }
@@ -116,6 +125,9 @@ struct Point {
   friend Point rotate90(const Point &p) { return p.rotate90(); }
   friend Point rotate180(const Point &p) { return p.rotate180(); }
   friend Point rotate270(const Point &p) { return p.rotate270(); }
+  friend Point rotate90(const Point &p, const Point &q) { return p.rotate90(q); }
+  friend Point rotate180(const Point &p, const Point &q) { return p.rotate180(q); }
+  friend Point rotate270(const Point &p, const Point &q) { return p.rotate270(q); }
   friend Point rotateCW(const Point &p, double t) { return p.rotateCW(t); }
   friend Point rotateCCW(const Point &p, double t) { return p.rotateCCW(t); }
   friend Point rotateCW(const Point &p, const Point &q, double t) { return p.rotateCW(q, t); }
@@ -404,13 +416,10 @@ int seg_intersection(
   }
   double c1 = ab.cross(cd), c2 = ac.cross(ab);
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
-    double t0 = ac.dot(ab) / sqnorm(ab);
-    double t1 = t0 + cd.dot(ab) / sqnorm(ab);
-    double mint = std::min(t0, t1), maxt = std::max(t0, t1);
-    bool overlap = TOUCH_IS_INTERSECT ? (LE(mint, 1) && LE(0, maxt)) : (LT(mint, 1) && LT(0, maxt));
+    Point res1 = std::max(std::min(a, b), std::min(c, d));
+    Point res2 = std::min(std::max(a, b), std::max(c, d));
+    bool overlap = TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2);
     if (overlap) {
-      Point res1 = std::max(std::min(a, b), std::min(c, d));
-      Point res2 = std::min(std::max(a, b), std::max(c, d));
       if (res1 == res2) {
         if (p != nullptr) {
           *p = res1;
@@ -429,11 +438,18 @@ int seg_intersection(
   if (EQ(c1, 0)) {
     return -1;  // Parallel and disjoint.
   }
-  double t = ac.cross(cd) / c1, u = c2 / c1;
-  bool t_between_01 = TOUCH_IS_INTERSECT ? (LE(0, t) && LE(t, 1)) : (LT(0, t) && LT(t, 1));
-  bool u_between_01 = TOUCH_IS_INTERSECT ? (LE(0, u) && LE(u, 1)) : (LT(0, u) && LT(u, 1));
+  double t_num = ac.cross(cd);
+  bool c1_pos = c1 > 0;
+  bool t_between_01 = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, t_num) && LE(t_num, c1))
+                                                   : (LT(0, t_num) && LT(t_num, c1)))
+                             : (TOUCH_IS_INTERSECT ? (LE(t_num, 0) && LE(c1, t_num))
+                                                   : (LT(t_num, 0) && LT(c1, t_num)));
+  bool u_between_01 =
+      c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
+             : (TOUCH_IS_INTERSECT ? (LE(c2, 0) && LE(c1, c2)) : (LT(c2, 0) && LT(c1, c2)));
   if (t_between_01 && u_between_01) {
     if (p != nullptr) {
+      double t = t_num / c1;
       *p = a + t * ab;
     }
     return 0;  // Non-parallel with one intersection.
@@ -717,21 +733,16 @@ bool Point_in_triangle(const Point &p, const Point &a, const Point &b, const Poi
   return same_side(p, a, b, c) && same_side(p, b, a, c) && same_side(p, c, a, b);
 }
 
-// Returns the area of a rectangle with opposing vertices a and b.
-double rectangle_area(const Point &a, const Point &b) {
-  return fabs((a.x - b.x) * (a.y - b.y));
-}
-
 // Returns whether point p lies within the rectangle defined by a vertex at v (x, y), a width of w,
 // and a height of h. Note that negative widths and heights are supported. If the point lies on or
 // close to an edge (by roughly EPS), then the result will depend on the setting of EDGE_IS_INSIDE.
 bool point_in_rectangle(const Point &p, const Point &v, double w, double h) {
   static const bool EDGE_IS_INSIDE = true;
   if (w < 0) {
-    return point_in_rectangle(p, Point(v.x + w, v.y), -w, h);
+    return point_in_rectangle(p, Point{v.x + w, v.y}, -w, h);
   }
   if (h < 0) {
-    return point_in_rectangle(p, Point(v.x, v.y + h), w, -h);
+    return point_in_rectangle(p, Point{v.x, v.y + h}, w, -h);
   }
   return EDGE_IS_INSIDE ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
                         : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
@@ -743,52 +754,45 @@ bool point_in_rectangle(const Point &p, const Point &v, double w, double h) {
 bool point_in_rectangle(const Point &p, const Point &a, const Point &b) {
   double xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   double xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(p, Point(xl, yl), xh - xl, yh - yl);
+  return point_in_rectangle(p, Point{xl, yl}, xh - xl, yh - yl);
 }
 
 // Determines the intersection region of the rectangle with opposing vertices a1 and b1 and the
 // rectangle with opposing vertices a2 and b2. Returns -1 if the rectangles are completely disjoint,
 // 0 if the rectangles partially intersect, 1 if the first rectangle is completely inside the
 // second, and 2 if the second rectangle is completely inside the first. If there is an intersection,
-// the opposing vertices of the intersection rectangle will be stored into pointers p and q if they
-// are not nullptr. If the intersection is a single point or line segment, then the result will
-// depend on the setting of EDGE_IS_INSIDE in the point_in_rectangle function above.
+// the lower-left and upper-right vertices of the normalized intersection rectangle will be stored
+// into pointers p and q if they are not nullptr. If the intersection is a single point or line
+// segment, then the result will depend on the setting of EDGE_IS_INSIDE in the point_in_rectangle
+// function above.
 int rectangle_intersection(
     const Point &a1, const Point &b1, const Point &a2, const Point &b2, Point *p = nullptr,
     Point *q = nullptr
 ) {
-  bool a1in2 = point_in_rectangle(a1, a2, b2);
-  bool b1in2 = point_in_rectangle(b1, a2, b2);
-  if (a1in2 && b1in2) {
-    if (p != nullptr && q != nullptr) {
-      *p = std::min(a1, b1);
-      *q = std::max(a1, b1);
-    }
-    return 1;  // Rectangle 1 completely inside 2.
-  }
-  if (!a1in2 && !b1in2) {
-    if (point_in_rectangle(a2, a1, b1)) {
-      if (p != nullptr && q != nullptr) {
-        *p = std::min(a2, b2);
-        *q = std::max(a2, b2);
-      }
-      return 2;  // Rectangle 2 completely inside 1.
-    }
+  static const bool EDGE_IS_INSIDE = true;
+  double xl1 = std::min(a1.x, b1.x), xh1 = std::max(a1.x, b1.x);
+  double yl1 = std::min(a1.y, b1.y), yh1 = std::max(a1.y, b1.y);
+  double xl2 = std::min(a2.x, b2.x), xh2 = std::max(a2.x, b2.x);
+  double yl2 = std::min(a2.y, b2.y), yh2 = std::max(a2.y, b2.y);
+  double ixl = std::max(xl1, xl2), ixh = std::min(xh1, xh2);
+  double iyl = std::max(yl1, yl2), iyh = std::min(yh1, yh2);
+  bool disjoint = EDGE_IS_INSIDE ? (GT(ixl, ixh) || GT(iyl, iyh)) : (GE(ixl, ixh) || GE(iyl, iyh));
+  if (disjoint) {
     return -1;  // Completely disjoint.
   }
-  if (p != nullptr && q != nullptr) {
-    if (a1in2) {
-      *p = a1;
-      *q = (a1 < b1) ? std::max(a2, b2) : std::min(a2, b2);
-    } else {
-      *p = b1;
-      *q = (b1 < a1) ? std::max(a2, b2) : std::min(a2, b2);
-    }
-    if (*p > *q) {
-      std::swap(p, q);
-    }
+  if (p != nullptr) {
+    *p = Point{ixl, iyl};
   }
-  return 0;
+  if (q != nullptr) {
+    *q = Point{ixh, iyh};
+  }
+  if (EQ(ixl, xl1) && EQ(ixh, xh1) && EQ(iyl, yl1) && EQ(iyh, yh1)) {
+    return 1;  // Rectangle 1 completely inside 2.
+  }
+  if (EQ(ixl, xl2) && EQ(ixh, xh2) && EQ(iyl, yl2) && EQ(iyh, yh2)) {
+    return 2;  // Rectangle 2 completely inside 1.
+  }
+  return 0;  // Partial intersection.
 }
 
 /*** Example Usage ***/
@@ -796,8 +800,6 @@ int rectangle_intersection(
 #include <cassert>
 #include <iostream>
 using namespace std;
-
-#define EQP(p, q) (EQ((p).x, (q).x) && EQ((p).y, (q).y))
 
 int main() {
   Point p, q;
@@ -938,21 +940,19 @@ int main() {
   assert(Point_in_triangle(Point(-2.44, 0.82), Point(-1, 0), Point(-3, 1), Point(4, 0)));
   assert(!Point_in_triangle(Point(-2.44, 0.7), Point(-1, 0), Point(-3, 1), Point(4, 0)));
 
-  assert(EQ(20, rectangle_area(Point(1, 1), Point(5, 6))));
+  assert(point_in_rectangle(Point{0, -1}, Point{0, -3}, 3, 2));
+  assert(point_in_rectangle(Point{2, -2}, Point{3, -3}, -3, 2));
+  assert(!point_in_rectangle(Point{0, 0}, Point{3, -1}, -3, -2));
+  assert(point_in_rectangle(Point{2, -2}, Point{3, -3}, Point{0, -1}));
+  assert(!point_in_rectangle(Point{-1, -2}, Point{3, -3}, Point{0, -1}));
 
-  assert(point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2));
-  assert(point_in_rectangle(Point(2, -2), Point(3, -3), -3, 2));
-  assert(!point_in_rectangle(Point(0, 0), Point(3, -1), -3, -2));
-  assert(point_in_rectangle(Point(2, -2), Point(3, -3), Point(0, -1)));
-  assert(!point_in_rectangle(Point(-1, -2), Point(3, -3), Point(0, -1)));
-
-  assert(-1 == rectangle_intersection(Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)));
-  assert(0 == rectangle_intersection(Point(1, 1), Point(7, 7), Point(5, 5), Point(0, 0), &p, &q));
-  assert(EQP(p, Point(1, 1)) && EQP(q, Point(5, 5)));
-  assert(1 == rectangle_intersection(Point(1, 1), Point(0, 0), Point(0, 0), Point(1, 10), &p, &q));
-  assert(EQP(p, Point(0, 0)) && EQP(q, Point(1, 1)));
-  assert(2 == rectangle_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
-  assert(EQP(p, Point(1, 6)) && EQP(q, Point(2, 5)));
+  assert(-1 == rectangle_intersection(Point{0, 0}, Point{1, 1}, Point{2, 2}, Point{3, 3}));
+  assert(0 == rectangle_intersection(Point{1, 1}, Point{7, 7}, Point{5, 5}, Point{0, 0}, &p, &q));
+  assert((p == Point{1, 1} && q == Point{5, 5}));
+  assert(1 == rectangle_intersection(Point{1, 1}, Point{0, 0}, Point{0, 0}, Point{1, 10}, &p, &q));
+  assert((p == Point{0, 0} && q == Point{1, 1}));
+  assert(2 == rectangle_intersection(Point{0, 5}, Point{5, 7}, Point{1, 6}, Point{2, 5}, &p, &q));
+  assert((p == Point{1, 5} && q == Point{2, 6}));
 
   return 0;
 }

@@ -2,6 +2,17 @@
 
 Common triangle calculations in two dimensions.
 
+The functions are templated on the point type `Pt`, which should work with `Point`/ `PointD`/
+`PointI` from 7.1.1, std::pair, or any struct with numeric `.x` and `.y` fields. `triangle_area()`
+returns `double` regardless of input type (the area is fractional via the `/2`). `same_side` and
+`point_in_triangle` do all arithmetic in the point's own coordinate type and are exact for integer
+points: they reduce each cross product to a sign before combining, so no precision is lost and no
+overflow occurs from multiplying two cross products.
+
+Note: with an integer point type, coordinates must be integers - fractional literals like `-2.44`
+cannot be represented (and brace-initialization `PointI{-2.44, ...}` is a narrowing error). Use a
+floating-point point type for fractional coordinates.
+
 - `triangle_area(a, b, c)` returns the area of the triangle $abc$.
 - `triangle_area_sides(s1, s2, s3)` returns the area of a triangle with side lengths $s_1$, $s_2$,
   and $s_3$. The given lengths must be non-negative and form a valid triangle.
@@ -34,26 +45,12 @@ const double EPS = 1e-9;
 
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LT(a, b) ((a) < (b) - EPS)
-#define GT(a, b) ((a) > (b) + EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
-#define GE(a, b) ((a) >= (b) - EPS)
 
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
-double cross(const Point &a, const Point &b) {
-  return a.x * b.y - a.y * b.x;
-}
-
-double triangle_area(const Point &a, const Point &b, const Point &c) {
-  Point ac(a.x - c.x, a.y - c.y), bc(b.x - c.x, b.y - c.y);
-  return fabs(cross(ac, bc)) / 2.0;
+template<class Pt>
+double triangle_area(const Pt &a, const Pt &b, const Pt &c) {
+  double acx = a.x - c.x, acy = a.y - c.y, bcx = b.x - c.x, bcy = b.y - c.y;
+  return fabs(acx * bcy - acy * bcx) / 2.0;
 }
 
 double triangle_area_sides(double s1, double s2, double s3) {
@@ -74,15 +71,20 @@ double triangle_area_altitudes(double h1, double h2, double h3) {
   return 1.0 / sqrt(v - 1.0 / (x * x) - 1.0 / (y * y) - 1.0 / (z * z));
 }
 
-bool same_side(const Point &p1, const Point &p2, const Point &a, const Point &b) {
+template<class Pt>
+bool same_side(const Pt &p1, const Pt &p2, const Pt &a, const Pt &b) {
   static const bool EDGE_IS_SAME_SIDE = true;
-  Point ab(b.x - a.x, b.y - a.y);
-  Point p1a(p1.x - a.x, p1.y - a.y), p2a(p2.x - a.x, p2.y - a.y);
-  double c1 = cross(ab, p1a), c2 = cross(ab, p2a);
-  return EDGE_IS_SAME_SIDE ? GE(c1 * c2, 0) : GT(c1 * c2, 0);
+  // Cross products in the point's native coordinate type (exact for integer points).
+  auto c1 = (b.x - a.x) * (p1.y - a.y) - (b.y - a.y) * (p1.x - a.x);
+  auto c2 = (b.x - a.x) * (p2.y - a.y) - (b.y - a.y) * (p2.x - a.x);
+  // Compare the signs, not the product c1 * c2, to avoid integer overflow.
+  int s1 = LT(0, c1) ? 1 : (LT(c1, 0) ? -1 : 0);
+  int s2 = LT(0, c2) ? 1 : (LT(c2, 0) ? -1 : 0);
+  return EDGE_IS_SAME_SIDE ? (s1 * s2 >= 0) : (s1 * s2 > 0);
 }
 
-bool point_in_triangle(const Point &p, const Point &a, const Point &b, const Point &c) {
+template<class Pt>
+bool point_in_triangle(const Pt &p, const Pt &a, const Pt &b, const Pt &c) {
   return same_side(p, a, b, c) && same_side(p, b, a, c) && same_side(p, c, a, b);
 }
 
@@ -90,15 +92,31 @@ bool point_in_triangle(const Point &p, const Point &a, const Point &b, const Poi
 
 #include <cassert>
 
+struct Point {
+  double x, y;
+};
+
+struct PointI {
+  int x, y;
+};
+
 int main() {
-  assert(EQ(6, triangle_area(Point(0, -1), Point(4, -1), Point(0, -4))));
+  assert(EQ(6, triangle_area(Point{0, -1}, Point{4, -1}, Point{0, -4})));
   assert(EQ(6, triangle_area_sides(3, 4, 5)));
   assert(EQ(6, triangle_area_medians(3.605551275, 2.5, 4.272001873)));
   assert(EQ(6, triangle_area_altitudes(3, 4, 2.4)));
 
-  assert(point_in_triangle(Point(0, 0), Point(-1, 0), Point(0, -2), Point(4, 0)));
-  assert(!point_in_triangle(Point(0, 1), Point(-1, 0), Point(0, -2), Point(4, 0)));
-  assert(point_in_triangle(Point(-2.44, 0.82), Point(-1, 0), Point(-3, 1), Point(4, 0)));
-  assert(!point_in_triangle(Point(-2.44, 0.7), Point(-1, 0), Point(-3, 1), Point(4, 0)));
+  // Fractional coordinates require a floating-point point type.
+  assert(point_in_triangle(Point{0, 0}, Point{-1, 0}, Point{0, -2}, Point{4, 0}));
+  assert(!point_in_triangle(Point{0, 1}, Point{-1, 0}, Point{0, -2}, Point{4, 0}));
+  assert(point_in_triangle(Point{-2.44, 0.82}, Point{-1, 0}, Point{-3, 1}, Point{4, 0}));
+  assert(!point_in_triangle(Point{-2.44, 0.7}, Point{-1, 0}, Point{-3, 1}, Point{4, 0}));
+
+  // Integer coordinates: same_side / point_in_triangle are computed exactly in int.
+  assert(EQ(8, triangle_area(PointI{0, 0}, PointI{4, 0}, PointI{0, 4})));
+  assert(point_in_triangle(PointI{1, 1}, PointI{0, 0}, PointI{4, 0}, PointI{0, 4}));
+  assert(!point_in_triangle(PointI{5, 5}, PointI{0, 0}, PointI{4, 0}, PointI{0, 4}));
+  assert(point_in_triangle(PointI{2, 2}, PointI{0, 0}, PointI{4, 0}, PointI{0, 4}));  // on edge
+
   return 0;
 }
