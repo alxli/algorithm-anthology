@@ -18,7 +18,7 @@ Time Complexity:
 - O(1) per call to the first constructor, `size()`, `empty()`, and `top()`.
 - O(log n) per call to `push()` and `pop()`, where $n$ is the number of elements in the priority
   queue.
-- O(n) per call to the second constructor on the distance between lo and hi.
+- O(n) per call to the second constructor on the distance between lo and hi (bottom-up heapify).
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.
@@ -34,13 +34,31 @@ template<class T>
 class BinaryHeap {
   std::vector<T> heap;
 
+  void sift_down(int i) {
+    for (;;) {
+      int child = 2 * i + 1;
+      if (child >= static_cast<int>(heap.size())) {
+        break;
+      }
+      if (child + 1 < static_cast<int>(heap.size()) && heap[child + 1] < heap[child]) {
+        child++;
+      }
+      if (heap[child] < heap[i]) {
+        std::swap(heap[i], heap[child]);
+        i = child;
+      } else {
+        break;
+      }
+    }
+  }
+
  public:
   BinaryHeap() {}
 
   template<class It>
-  BinaryHeap(It lo, It hi) {
-    while (lo != hi) {
-      push(*(lo++));
+  BinaryHeap(It lo, It hi) : heap(lo, hi) {
+    for (int i = static_cast<int>(heap.size()) / 2 - 1; i >= 0; i--) {
+      sift_down(i);
     }
   }
 
@@ -66,21 +84,8 @@ class BinaryHeap {
     }
     heap[0] = heap.back();
     heap.pop_back();
-    int i = 0;
-    for (;;) {
-      int child = 2 * i + 1;
-      if (child >= static_cast<int>(heap.size())) {
-        break;
-      }
-      if (child + 1 < static_cast<int>(heap.size()) && heap[child + 1] < heap[child]) {
-        child++;
-      }
-      if (heap[child] < heap[i]) {
-        std::swap(heap[i], heap[child]);
-        i = child;
-      } else {
-        break;
-      }
+    if (!heap.empty()) {
+      sift_down(0);
     }
   }
 

@@ -11,7 +11,7 @@ Time Complexity:
 
 Space Complexity:
 - O(n^2) for storage of the graph, where $n$ is the number of nodes.
-- O(2^n * n^2) auxiliary heap space for `shortest_hamiltonian_path()`.
+- O(2^n * n) auxiliary heap space for `shortest_hamiltonian_path()`.
 
 */
 
@@ -33,9 +33,9 @@ int shortest_hamiltonian_path() {
   }
   for (int mask = 1; mask <= max_mask; mask += 2) {
     for (int i = 0; i < nodes; i++) {
-      if ((mask & 1 << i) != 0) {
+      if ((mask & (1 << i)) != 0) {
         for (int j = 0; j < nodes; j++) {
-          if ((mask & 1 << j) != 0)
+          if ((mask & (1 << j)) != 0)
             dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
         }
       }
@@ -49,8 +49,8 @@ int shortest_hamiltonian_path() {
   for (int i = nodes - 1; i >= 0; i--) {
     int bj = -1;
     for (int j = 0; j < nodes; j++) {
-      if ((mask & 1 << j) != 0 && (bj == -1 || dp[mask][bj] + (old == -1 ? 0 : adj[bj][old]) >
-                                                   dp[mask][j] + (old == -1 ? 0 : adj[j][old]))) {
+      if ((mask & (1 << j)) != 0 && (bj == -1 || dp[mask][bj] + (old == -1 ? 0 : adj[bj][old]) >
+                                                     dp[mask][j] + (old == -1 ? 0 : adj[j][old]))) {
         bj = j;
       }
     }

@@ -5,8 +5,9 @@ connected node and determine the minimum distance to each such node. Optionally,
 path to a specific destination node using the shortest-path tree from the predecessor array
 `pred`. `dijkstra()` applies to a global, pre-populated adjacency list `adj`.
 
-Since `std::priority_queue` is by default a max-heap, we store negated node distances so the
-closest candidate is popped first.
+Since `std::priority_queue` is by default a max-heap, negated distances are stored so the
+closest candidate is popped first. The negated value is discarded after the pop; `dist[u]` holds
+the real distance.
 
 Dijkstra's algorithm may be modified to support negative edge weights by allowing nodes to be
 re-visited (removing the visited array check in the inner for-loop). This is known as the Shortest
@@ -42,7 +43,7 @@ void dijkstra(int start) {
   std::priority_queue<std::pair<int, int>> pq;
   pq.emplace(0, start);
   while (!pq.empty()) {
-    auto [neg_d, u] = pq.top();
+    int u = pq.top().second;
     pq.pop();
     if (visit[u]) {
       continue;

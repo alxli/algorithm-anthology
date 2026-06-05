@@ -29,7 +29,7 @@ Space Complexity:
 */
 
 #include <cmath>
-#include <cstdlib>
+#include <random>
 
 const double TEMPERATURE_START = 10.0;
 const double TEMPERATURE_END = 1e-7;
@@ -37,7 +37,8 @@ const double COOLING_RATE = 0.997;
 const int NUM_RESTARTS = 8;
 
 double random_unit() {
-  return static_cast<double>(rand()) / RAND_MAX;
+  static std::mt19937 rng(std::random_device{}());
+  return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
 }
 
 template<class Fn>
@@ -88,7 +89,6 @@ double f(double x, double y) {
 }
 
 int main() {
-  srand(1);
   double x, y;
   double value = anneal_min(f, 0, 0, &x, &y);
   assert(value < 1e-4);

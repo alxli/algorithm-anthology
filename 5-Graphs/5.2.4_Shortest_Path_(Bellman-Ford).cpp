@@ -30,24 +30,24 @@ struct Edge {
 };
 
 const int INF = INT_MAX / 2;
-std::vector<Edge> e;
+std::vector<Edge> edges;
 std::vector<int> dist, pred;
 
 void bellman_ford(int nodes, int start) {
   dist.assign(nodes, INF);
   pred.assign(nodes, -1);
   dist[start] = 0;
-  for (int i = 0; i < nodes; i++) {
-    for (auto &edge : e) {
-      if (dist[edge.v] > dist[edge.u] + edge.w) {
-        dist[edge.v] = dist[edge.u] + edge.w;
-        pred[edge.v] = edge.u;
+  for (int i = 0; i < nodes - 1; i++) {
+    for (auto &[u, v, w] : edges) {
+      if (dist[v] > dist[u] + w) {
+        dist[v] = dist[u] + w;
+        pred[v] = u;
       }
     }
   }
   // Optional: Report negative-weighted cycles.
-  for (auto &edge : e) {
-    if (dist[edge.v] > dist[edge.u] + edge.w) {
+  for (auto &[u, v, w] : edges) {
+    if (dist[v] > dist[u] + w) {
       throw std::runtime_error("Negative-weight cycle found.");
     }
   }
@@ -78,9 +78,9 @@ void print_path(int dest) {
 
 int main() {
   int start = 0, dest = 2;
-  e.push_back(Edge{0, 1, 1});
-  e.push_back(Edge{1, 2, 2});
-  e.push_back(Edge{0, 2, 5});
+  edges.push_back(Edge{0, 1, 1});
+  edges.push_back(Edge{1, 2, 2});
+  edges.push_back(Edge{0, 2, 5});
   bellman_ford(3, start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
        << endl;

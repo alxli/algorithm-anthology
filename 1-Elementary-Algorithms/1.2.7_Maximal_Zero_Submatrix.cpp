@@ -23,33 +23,36 @@ int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
     return 0;
   }
   int n = matrix.size(), m = matrix[0].size(), res = 0;
-  std::vector<int> d(m, -1), d1(m), d2(m);
+  // last1[c] = row index of the most recent 1 in column c (-1 if none yet).
+  // left_wall[c] = nearest column left of c whose last1 value >= last1[c] (exclusive left bound).
+  // right_wall[c] = nearest column right of c whose last1 value >= last1[c] (exclusive right bound).
+  std::vector<int> last1(m, -1), left_wall(m), right_wall(m);
   for (int r = 0; r < n; r++) {
     for (int c = 0; c < m; c++) {
       if (matrix[r][c]) {
-        d[c] = r;
+        last1[c] = r;
       }
     }
     std::stack<int> s;
     for (int c = 0; c < m; c++) {
-      while (!s.empty() && d[s.top()] <= d[c]) {
+      while (!s.empty() && last1[s.top()] <= last1[c]) {
         s.pop();
       }
-      d1[c] = s.empty() ? -1 : s.top();
+      left_wall[c] = s.empty() ? -1 : s.top();
       s.push(c);
     }
     while (!s.empty()) {
       s.pop();
     }
     for (int c = m - 1; c >= 0; c--) {
-      while (!s.empty() && d[s.top()] <= d[c]) {
+      while (!s.empty() && last1[s.top()] <= last1[c]) {
         s.pop();
       }
-      d2[c] = s.empty() ? m : s.top();
+      right_wall[c] = s.empty() ? m : s.top();
       s.push(c);
     }
     for (int j = 0; j < m; j++) {
-      res = std::max(res, (r - d[j]) * (d2[j] - d1[j] - 1));
+      res = std::max(res, (r - last1[j]) * (right_wall[j] - left_wall[j] - 1));
     }
   }
   return res;

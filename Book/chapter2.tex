@@ -306,7 +306,7 @@ Maintain a min-priority queue, that is, a collection of elements with support fo
 \begin{compactitem}
   \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{top()}.
   \item $O(\log n)$ per call to \inlinecode{push()} and \inlinecode{pop()}, where $n$ is the number of elements in the priority queue.
-  \item $O(n)$ per call to the second constructor on the distance between lo and hi.
+  \item $O(n)$ per call to the second constructor on the distance between lo and hi (bottom-up heapify).
 \end{compactitem}
 
 \textbf{Space Complexity}:
@@ -324,13 +324,31 @@ template<class T>
 class BinaryHeap {
   std::vector<T> heap;
 
+  void sift_down(int i) {
+    for (;;) {
+      int child = 2 * i + 1;
+      if (child >= static_cast<int>(heap.size())) {
+        break;
+      }
+      if (child + 1 < static_cast<int>(heap.size()) && heap[child + 1] < heap[child]) {
+        child++;
+      }
+      if (heap[child] < heap[i]) {
+        std::swap(heap[i], heap[child]);
+        i = child;
+      } else {
+        break;
+      }
+    }
+  }
+
  public:
   BinaryHeap() {}
 
   template<class It>
-  BinaryHeap(It lo, It hi) {
-    while (lo != hi) {
-      push(*(lo++));
+  BinaryHeap(It lo, It hi) : heap(lo, hi) {
+    for (int i = static_cast<int>(heap.size()) / 2 - 1; i >= 0; i--) {
+      sift_down(i);
     }
   }
 
@@ -356,21 +374,8 @@ class BinaryHeap {
     }
     heap[0] = heap.back();
     heap.pop_back();
-    int i = 0;
-    for (;;) {
-      int child = 2 * i + 1;
-      if (child >= static_cast<int>(heap.size())) {
-        break;
-      }
-      if (child + 1 < static_cast<int>(heap.size()) && heap[child + 1] < heap[child]) {
-        child++;
-      }
-      if (heap[child] < heap[i]) {
-        std::swap(heap[i], heap[child]);
-        i = child;
-      } else {
-        break;
-      }
+    if (!heap.empty()) {
+      sift_down(0);
     }
   }
 
@@ -510,7 +515,9 @@ class SkewHeap {
 
   void absorb(SkewHeap &h) {
     root = merge(root, h.root);
+    num_nodes += h.num_nodes;
     h.root = nullptr;
+    h.num_nodes = 0;
   }
 };
 \end{lstlisting}
@@ -663,7 +670,9 @@ class PairingHeap {
 
   void absorb(PairingHeap &h) {
     root = merge(root, h.root);
+    num_nodes += h.num_nodes;
     h.root = nullptr;
+    h.num_nodes = 0;
   }
 };
 \end{lstlisting}
@@ -871,7 +880,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Treap}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A Treap is a binary search tree that is balanced by preserving a heap property on the randomly generated priority value assigned to every node, thereby making insertions and deletions run in $O(\log n)$ with high probability.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A Treap is a binary search tree where each node holds a randomly assigned priority. The tree satisfies the BST property on keys and the min-heap property on priorities (lower priority value = closer to root). Since priorities are random, this keeps the tree balanced with high probability, making insertions and deletions run in $O(\log n)$.
 
 \begin{compactitem}
   \item \inlinecode{Treap()} constructs an empty map.
@@ -898,12 +907,15 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <cstdlib>
+#include <random>
 
 template<class K, class V>
 class Treap {
   struct Node {
-    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
+    static inline int rand32() {
+      static std::mt19937 rng(std::random_device{}());
+      return static_cast<int>(rng());
+    }
 
     K key;
     V value;
@@ -2447,12 +2459,16 @@ class HashMap {
   }
 
   V &operator[](const K &k) {
-    V *ptr = find(k);
-    if (ptr != nullptr) {
+    if (V *ptr = find(k); ptr != nullptr) {
       return *ptr;
     }
-    insert(k, V());
-    return *find(k);
+    if (num_entries >= table_size) {
+      double_capacity_and_rehash();
+    }
+    unsigned int i = Hash()(k) % table_size;
+    table[i].emplace_back(k, V());
+    num_entries++;
+    return table[i].back().value;
   }
 
   template<class Fn>
@@ -2555,8 +2571,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <cmath>
-#include <cstdlib>
+#include <random>
 #include <vector>
 
 template<class K, class V>
@@ -2574,12 +2589,13 @@ class SkipList {
   int num_nodes;
 
   static int random_level() {
-    static const double p = 0.5;
+    static std::mt19937 rng(std::random_device{}());
+    static std::uniform_int_distribution<int> coin(0, 1);
     int level = 1;
-    while ((static_cast<double>(rand()) / RAND_MAX) < p && std::abs(level) < MAX_LEVELS) {
+    while (coin(rng) && level < MAX_LEVELS) {
       level++;
     }
-    return std::abs(level);
+    return level;
   }
 
   static int node_level(const std::vector<Node *> &v) {

@@ -43,10 +43,11 @@ class AhoCorasick {
 
   int next_state(int curr, char c) {
     int next = curr;
-    while (adj[next].find(c) == adj[next].end()) {
+    while (next != 0 && adj[next].find(c) == adj[next].end()) {
       next = fail[next];
     }
-    return adj[next][c];
+    auto it = adj[next].find(c);
+    return (it != adj[next].end()) ? it->second : 0;
   }
 
  public:
@@ -82,10 +83,11 @@ class AhoCorasick {
       q.pop();
       for (auto &[c, v] : adj[u]) {
         int f = fail[u];
-        while (adj[f].find(c) == adj[f].end()) {
+        while (f != 0 && adj[f].find(c) == adj[f].end()) {
           f = fail[f];
         }
-        f = adj[f].find(c)->second;
+        auto fit = adj[f].find(c);
+        f = (fit != adj[f].end()) ? fit->second : 0;
         fail[v] = f;
         out[v].insert(out[f].begin(), out[f].end());
         q.push(v);

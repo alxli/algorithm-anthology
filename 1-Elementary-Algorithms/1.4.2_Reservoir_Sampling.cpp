@@ -3,23 +3,28 @@
 Selects uniformly random samples from a stream whose length may be unknown in advance. Reservoir
 sampling keeps only the chosen sample or samples in memory while processing each element once.
 
-- `reservoir_sample_one(lo, hi)` returns one uniformly random element from `[lo, hi)`. The range
-  must be nonempty.
-- `reservoir_sample_k(lo, hi, k)` returns `k` uniformly random elements without replacement from
-  `[lo, hi)`, or the whole range if it has fewer than `k` elements.
+Each class maintains its reservoir incrementally; call `add(x)` once per stream element in any
+order, then `get()` to retrieve the result.
+
+- `ReservoirSampleOne<T>()` constructs a single-element sampler.
+- `ReservoirSampleK<T>(k)` constructs a k-element sampler.
+- `add(x)` incorporates one more stream element.
+- `get()` returns the current sample. For `ReservoirSampleOne`, `get()` requires at least one
+  `add()` call; for `ReservoirSampleK`, returns the full reservoir (may be fewer than `k` elements
+  if the stream was shorter).
+- `count()` returns the number of stream elements seen so far.
 
 Time Complexity:
-- O(n) per call, where $n$ is the number of stream elements.
+- O(1) per call to `add(x)`.
+- O(n) to process a range of `n` elements.
 
 Space Complexity:
-- O(1) auxiliary for `reservoir_sample_one(lo, hi)`.
-- O(k) auxiliary heap space for `reservoir_sample_k(lo, hi, k)`.
+- O(1) auxiliary for `ReservoirSampleOne`.
+- O(k) auxiliary heap space for `ReservoirSampleK`.
 
 */
 
-#include <algorithm>
 #include <cassert>
-#include <iterator>
 #include <random>
 #include <vector>
 
@@ -28,38 +33,51 @@ int rand_int(int lo, int hi) {
   return std::uniform_int_distribution<int>(lo, hi)(rng);
 }
 
-template<class It>
-auto reservoir_sample_one(It lo, It hi) {
-  assert(lo != hi);
-  auto sample = *lo;
-  int seen = 0;
-  for (It it = lo; it != hi; ++it) {
-    seen++;
-    if (rand_int(0, seen - 1) == 0) {
-      sample = *it;
+template<class T>
+class ReservoirSampleOne {
+  T sample{};
+  int seen;
+
+ public:
+  ReservoirSampleOne() : seen(0) {}
+
+  void add(const T &x) {
+    if (rand_int(0, seen++) == 0) {
+      sample = x;
     }
   }
-  return sample;
-}
 
-template<class It>
-auto reservoir_sample_k(It lo, It hi, int k) {
-  using T = typename std::iterator_traits<It>::value_type;
-  std::vector<T> res;
-  int seen = 0;
-  for (It it = lo; it != hi; ++it) {
-    seen++;
-    if (static_cast<int>(res.size()) < k) {
-      res.push_back(*it);
+  const T &get() const {
+    assert(seen > 0);
+    return sample;
+  }
+
+  int count() const { return seen; }
+};
+
+template<class T>
+class ReservoirSampleK {
+  int k, seen;
+  std::vector<T> reservoir;
+
+ public:
+  explicit ReservoirSampleK(int k) : k(k), seen(0) {}
+
+  void add(const T &x) {
+    ++seen;
+    if (static_cast<int>(reservoir.size()) < k) {
+      reservoir.push_back(x);
     } else {
       int j = rand_int(0, seen - 1);
       if (j < k) {
-        res[j] = *it;
+        reservoir[j] = x;
       }
     }
   }
-  return res;
-}
+
+  const std::vector<T> &get() const { return reservoir; }
+  int count() const { return seen; }
+};
 
 /*** Example Usage ***/
 
@@ -69,17 +87,18 @@ using namespace std;
 int main() {
   vector<int> a{10, 20, 30, 40, 50};
 
-  int one = reservoir_sample_one(a.begin(), a.end());
+  // Streaming interface: feed elements one at a time.
+  ReservoirSampleOne<int> s1;
+  for (int x : a) {
+    s1.add(x);
+  }
+  int one = s1.get();
   assert(one == 10 || one == 20 || one == 30 || one == 40 || one == 50);
 
-  vector<int> sample = reservoir_sample_k(a.begin(), a.end(), 3);
-  assert(sample.size() == 3);
-  for (int s : sample) {
-    bool found = false;
-    for (int x : a) {
-      found = found || s == x;
-    }
-    assert(found);
+  ReservoirSampleK<int> sk(3);
+  for (int x : a) {
+    sk.add(x);
   }
+  assert(static_cast<int>(sk.get().size()) == 3);
   return 0;
 }

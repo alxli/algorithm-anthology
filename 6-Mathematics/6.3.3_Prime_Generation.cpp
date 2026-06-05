@@ -47,9 +47,9 @@ std::vector<int> sieve(int lo, int hi) {
       }
     }
   }
-  for (int i = 2, n = hi - lo; i <= sqrt_hi; i++) {
+  for (int i = 2, len = hi - lo; i <= sqrt_hi; i++) {
     if (prime1[i]) {
-      for (int j = (lo / i) * i - lo; j <= n; j += i) {
+      for (int j = (lo / i) * i - lo; j <= len; j += i) {
         if (j >= 0 && j + lo != i) {
           prime2[j] = false;
         }
@@ -67,9 +67,8 @@ std::vector<int> sieve(int lo, int hi) {
 
 /*** Example Usage and Output:
 
-sieve(n=10000000): 0.059s
-atkins(n=10000000): 0.08s
-sieve([1000000000, 1005000000]): 0.034s
+sieve(n=10000000): 0.042641s
+sieve([1000000000, 1005000000]): 0.01969s
 
 ***/
 

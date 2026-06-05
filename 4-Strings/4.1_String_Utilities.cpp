@@ -132,7 +132,7 @@ string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
 string &rstrip(string &s, const string &delim = " \n\t\v\f\r") {
   size_t pos = s.find_last_not_of(delim);
   if (pos != string::npos) {
-    s.erase(pos);
+    s.erase(pos + 1);
   }
   return s;
 }

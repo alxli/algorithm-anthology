@@ -19,8 +19,8 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <cmath>
 #include <cfloat>
+#include <cmath>
 #include <utility>
 #include <vector>
 
@@ -47,8 +47,8 @@ bool cmp_y(const Point &a, const Point &b) { return (a.y == b.y) ? (a.x < b.x) :
 
 template<class It>
 double closest_pair(
-    It lo, It hi, std::pair<Point, Point> *res = nullptr,
-    double mindist = DBL_MAX, bool sort_x = true
+    It lo, It hi, std::pair<Point, Point> *res = nullptr, double mindist = DBL_MAX,
+    bool sort_x = true
 ) {
   if (lo == hi) {
     return DBL_MAX;

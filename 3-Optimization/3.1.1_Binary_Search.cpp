@@ -61,7 +61,8 @@ Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
 
 template<class Int, class Pred>
 Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
-  Int mid, _hi = hi--;
+  Int _hi = hi, mid;
+  hi--;
   while (lo < hi) {
     mid = lo + (hi - lo + 1) / 2;
     if (pred(mid)) {
@@ -95,21 +96,14 @@ double fbinary_search(double lo, double hi, Pred pred) {  // 000[1]11
 #include <cassert>
 #include <cmath>
 
-// Simple predicate examples.
-
-// clang-format off
-bool pred1(int x) { return x >= 3; }
-bool pred2(int x) { return false; }
-bool pred3(int x) { return x <= 5; }
-bool pred4(int x) { return true; }
-bool pred5(double x) { return x >= 1.2345; }
-// clang-format on
-
 int main() {
-  assert(binary_search_first_true(0, 7, pred1) == 3);
-  assert(binary_search_first_true(0, 7, pred2) == 7);
-  assert(binary_search_last_true(0, 7, pred3) == 5);
-  assert(binary_search_last_true(0, 7, pred4) == 6);
-  assert(fabs(fbinary_search(-10.0, 10.0, pred5) - 1.2345) < 1e-15);
+  assert(binary_search_first_true(0, 7, [](int x) { return x >= 3; }) == 3);
+  assert(binary_search_first_true(0, 7, [](int x) { return false; }) == 7);
+
+  assert(binary_search_last_true(0, 7, [](int x) { return x <= 5; }) == 5);
+  assert(binary_search_last_true(0, 7, [](int x) { return true; }) == 6);
+
+  double res = fbinary_search(-10.0, 10.0, [](double x) { return x >= 1.2345; });
+  assert(fabs(res - 1.2345) < 1e-15);
   return 0;
 }

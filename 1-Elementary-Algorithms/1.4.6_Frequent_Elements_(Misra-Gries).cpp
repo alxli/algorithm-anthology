@@ -12,8 +12,10 @@ input and count only the returned candidates.
   `k = 2` for the Boyer-Moore majority-candidate special case.
 
 Time Complexity:
-- O(nk) expected for this compact hash-table implementation, where $n$ is the number of stream
-  values.
+- O(n) amortized per call on average: each element either hits an existing counter (O(1)) or
+  triggers a full-table decrement (O(k)), but the table-full event can occur at most $n/(k-1)$
+  times total, so the amortized cost per element is O(1 + k/(k-1)) = O(1). In the worst case a
+  single call is O(nk), but that cannot be sustained across a long stream.
 
 Space Complexity:
 - O(k) auxiliary heap space.

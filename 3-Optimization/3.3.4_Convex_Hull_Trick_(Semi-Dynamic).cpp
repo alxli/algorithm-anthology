@@ -11,6 +11,7 @@ preconditions of descending `m` and ascending `x` are satisfied. As a result, it
 sort the lines and queries before calling the functions. In that case, the overall time complexity
 will be dominated by the sorting step.
 
+- `SemiDynamicCHT()` constructs an empty hull.
 - `add_line(m, b)` inserts line $y = mx + b$. The slope `m` must be less than or equal to the slope
   of every line added so far.
 - `query(x)` returns the minimum y-value among all inserted lines at coordinate `x`. Query
@@ -30,44 +31,47 @@ Space Complexity:
 
 #include <vector>
 
-std::vector<long long> M, B;
-int ptr = 0;
+struct SemiDynamicCHT {
+  std::vector<long long> M, B;
+  int ptr = 0;
 
-void add_line(long long m, long long b) {
-  int len = M.size();
-  while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
-                        (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
-    len--;
+  void add_line(long long m, long long b) {
+    int len = M.size();
+    while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
+                          (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
+      len--;
+    }
+    M.resize(len);
+    B.resize(len);
+    M.push_back(m);
+    B.push_back(b);
   }
-  M.resize(len);
-  B.resize(len);
-  M.push_back(m);
-  B.push_back(b);
-}
 
-long long query(long long x) {
-  if (ptr >= static_cast<int>(M.size())) {
-    ptr = static_cast<int>(M.size()) - 1;
+  long long query(long long x) {
+    if (ptr >= static_cast<int>(M.size())) {
+      ptr = static_cast<int>(M.size()) - 1;
+    }
+    while (ptr + 1 < static_cast<int>(M.size()) &&
+           M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
+      ptr++;
+    }
+    return M[ptr] * x + B[ptr];
   }
-  while (ptr + 1 < static_cast<int>(M.size()) &&
-         M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
-    ptr++;
-  }
-  return M[ptr] * x + B[ptr];
-}
+};
 
 /*** Example Usage ***/
 
 #include <cassert>
 
 int main() {
-  add_line(3, 0);
-  add_line(2, 1);
-  add_line(1, 2);
-  add_line(0, 6);
-  assert(query(0) == 0);
-  assert(query(1) == 3);
-  assert(query(2) == 4);
-  assert(query(3) == 5);
+  SemiDynamicCHT cht;
+  cht.add_line(3, 0);
+  cht.add_line(2, 1);
+  cht.add_line(1, 2);
+  cht.add_line(0, 6);
+  assert(cht.query(0) == 0);
+  assert(cht.query(1) == 3);
+  assert(cht.query(2) == 4);
+  assert(cht.query(3) == 5);
   return 0;
 }

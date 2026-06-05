@@ -40,7 +40,8 @@ Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
 
 template<class Int, class Pred>
 Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
-  Int mid, _hi = hi--;
+  Int _hi = hi, mid;
+  hi--;
   while (lo < hi) {
     mid = lo + (hi - lo + 1) / 2;
     if (pred(mid)) {
@@ -74,20 +75,15 @@ double fbinary_search(double lo, double hi, Pred pred) {  // 000[1]11
 #include <cassert>
 #include <cmath>
 
-// Simple predicate examples.
-
-bool pred1(int x) { return x >= 3; }
-bool pred2(int x) { return false; }
-bool pred3(int x) { return x <= 5; }
-bool pred4(int x) { return true; }
-bool pred5(double x) { return x >= 1.2345; }
-
 int main() {
-  assert(binary_search_first_true(0, 7, pred1) == 3);
-  assert(binary_search_first_true(0, 7, pred2) == 7);
-  assert(binary_search_last_true(0, 7, pred3) == 5);
-  assert(binary_search_last_true(0, 7, pred4) == 6);
-  assert(fabs(fbinary_search(-10.0, 10.0, pred5) - 1.2345) < 1e-15);
+  assert(binary_search_first_true(0, 7, [](int x) { return x >= 3; }) == 3);
+  assert(binary_search_first_true(0, 7, [](int x) { return false; }) == 7);
+
+  assert(binary_search_last_true(0, 7, [](int x) { return x <= 5; }) == 5);
+  assert(binary_search_last_true(0, 7, [](int x) { return true; }) == 6);
+
+  double res = fbinary_search(-10.0, 10.0, [](double x) { return x >= 1.2345; });
+  assert(fabs(res - 1.2345) < 1e-15);
   return 0;
 }
 \end{lstlisting}
@@ -316,7 +312,7 @@ Simulated annealing is not a proof of optimality. Its quality depends heavily on
 
 \begin{lstlisting}[language=C++]
 #include <cmath>
-#include <cstdlib>
+#include <random>
 
 const double TEMPERATURE_START = 10.0;
 const double TEMPERATURE_END = 1e-7;
@@ -324,7 +320,8 @@ const double COOLING_RATE = 0.997;
 const int NUM_RESTARTS = 8;
 
 double random_unit() {
-  return static_cast<double>(rand()) / RAND_MAX;
+  static std::mt19937 rng(std::random_device{}());
+  return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
 }
 
 template<class Fn>
@@ -375,7 +372,6 @@ double f(double x, double y) {
 }
 
 int main() {
-  srand(1);
   double x, y;
   double value = anneal_min(f, 0, 0, &x, &y);
   assert(value < 1e-4);
@@ -643,6 +639,7 @@ Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process
 The following implementation is a concise, semi-dynamic version of the convex hull optimization technique. It supports an interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, as long as the preconditions of descending \inlinecode{m} and ascending \inlinecode{x} are satisfied. As a result, it may be necessary to sort the lines and queries before calling the functions. In that case, the overall time complexity will be dominated by the sorting step.
 
 \begin{compactitem}
+  \item \inlinecode{SemiDynamicCHT()} constructs an empty hull.
   \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$. The slope \inlinecode{m} must be less than or equal to the slope of every line added so far.
   \item \inlinecode{query(x)} returns the minimum y-value among all inserted lines at coordinate \inlinecode{x}. Query coordinates must be nondecreasing across calls.
 \end{compactitem}
@@ -658,45 +655,48 @@ The following implementation is a concise, semi-dynamic version of the convex hu
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-std::vector<long long> M, B;
-int ptr = 0;
+struct SemiDynamicCHT {
+  std::vector<long long> M, B;
+  int ptr = 0;
 
-void add_line(long long m, long long b) {
-  int len = M.size();
-  while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
-                        (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
-    len--;
+  void add_line(long long m, long long b) {
+    int len = M.size();
+    while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
+                          (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
+      len--;
+    }
+    M.resize(len);
+    B.resize(len);
+    M.push_back(m);
+    B.push_back(b);
   }
-  M.resize(len);
-  B.resize(len);
-  M.push_back(m);
-  B.push_back(b);
-}
 
-long long query(long long x) {
-  if (ptr >= static_cast<int>(M.size())) {
-    ptr = static_cast<int>(M.size()) - 1;
+  long long query(long long x) {
+    if (ptr >= static_cast<int>(M.size())) {
+      ptr = static_cast<int>(M.size()) - 1;
+    }
+    while (ptr + 1 < static_cast<int>(M.size()) &&
+           M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
+      ptr++;
+    }
+    return M[ptr] * x + B[ptr];
   }
-  while (ptr + 1 < static_cast<int>(M.size()) &&
-         M[ptr + 1] * x + B[ptr + 1] <= M[ptr] * x + B[ptr]) {
-    ptr++;
-  }
-  return M[ptr] * x + B[ptr];
-}
+};
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
 
 int main() {
-  add_line(3, 0);
-  add_line(2, 1);
-  add_line(1, 2);
-  add_line(0, 6);
-  assert(query(0) == 0);
-  assert(query(1) == 3);
-  assert(query(2) == 4);
-  assert(query(3) == 5);
+  SemiDynamicCHT cht;
+  cht.add_line(3, 0);
+  cht.add_line(2, 1);
+  cht.add_line(1, 2);
+  cht.add_line(0, 6);
+  assert(cht.query(0) == 0);
+  assert(cht.query(1) == 3);
+  assert(cht.query(2) == 4);
+  assert(cht.query(3) == 5);
   return 0;
 }
 \end{lstlisting}
@@ -929,7 +929,7 @@ int main() {
 Solves a linear programming problem using Dantzig's simplex algorithm. The canonical form of a linear programming problem is to maximize (or minimize) the dot product $cx$, subject to $ax \leq b$ and $x \geq 0$, where $x$ is a vector of unknowns to be solved, $c$ is a vector of coefficients, $a$ is a matrix of linear equation coefficients, and $b$ is a vector of boundary coefficients.
 
 \begin{compactitem}
-  \item \inlinecode{simplex\_solve(a, b, c, \&x)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning 0 if a solution was found or $-1$ if there are no solutions. If a solution is found, then the vector pointed to by \inlinecode{x} is populated with the solution vector of length $n$.
+  \item \inlinecode{simplex\_solve(a, b, c, \&x)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning 0 if a solution was found or $-1$ if there are no solutions. If a solution is found, then the vector pointed to by \inlinecode{x} is populated with the solution values for basic (nonzero) variables only; non-basic variables have value 0 and are omitted. The caller should zero-initialize \inlinecode{x} to length $n$ before calling if a dense solution vector is needed.
 \end{compactitem}
 
 \textbf{Time Complexity}: Polynomial (average) on the number of equations and unknowns, but exponential in the worst case.
@@ -937,8 +937,8 @@ Solves a linear programming problem using Dantzig's simplex algorithm. The canon
 \textbf{Space Complexity}: $O(m \cdot n)$ auxiliary heap space.
 
 \begin{lstlisting}[language=C++]
-#include <cmath>
 #include <cfloat>
+#include <cmath>
 #include <vector>
 
 template<class Matrix>
@@ -964,7 +964,7 @@ int simplex_solve(
   for (int i = n + 1; i <= m + n; i++) {
     t[i - n + 1][0] = i;
   }
-  double p1 = 0, p2 = 0;
+  int p1 = 0, p2 = 0;
   bool done = true;
   do {
     double mn = DBL_MAX, xmax = 0;

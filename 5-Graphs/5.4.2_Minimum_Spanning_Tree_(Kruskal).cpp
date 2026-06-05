@@ -7,7 +7,8 @@ If the input graph is not connected, then this implementation will find the mini
 
 Time Complexity:
 - O(m log n) per call to `kruskal()`, where $m$ is the number of edges and $n$ is the number of
-  nodes.
+  nodes. The internal DSU uses path compression but not union-by-rank (simplified for brevity);
+  `find_root()` is O(log n) amortized rather than O(alpha(n)).
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of

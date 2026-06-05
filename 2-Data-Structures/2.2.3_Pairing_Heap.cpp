@@ -120,7 +120,9 @@ class PairingHeap {
 
   void absorb(PairingHeap &h) {
     root = merge(root, h.root);
+    num_nodes += h.num_nodes;
     h.root = nullptr;
+    h.num_nodes = 0;
   }
 };
 

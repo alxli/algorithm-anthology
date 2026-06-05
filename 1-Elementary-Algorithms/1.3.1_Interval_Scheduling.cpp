@@ -19,6 +19,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 struct Interval {
@@ -30,13 +31,11 @@ std::vector<Interval> interval_scheduling(std::vector<Interval> intervals) {
     return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
   });
   std::vector<Interval> res;
-  int last_finish = 0;
-  bool first = true;
+  int last_finish = std::numeric_limits<int>::min();
   for (const auto &iv : intervals) {
-    if (first || iv.start >= last_finish) {
+    if (iv.start >= last_finish) {
       res.push_back(iv);
       last_finish = iv.finish;
-      first = false;
     }
   }
   return res;

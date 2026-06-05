@@ -120,7 +120,7 @@ string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
 string &rstrip(string &s, const string &delim = " \n\t\v\f\r") {
   size_t pos = s.find_last_not_of(delim);
   if (pos != string::npos) {
-    s.erase(pos);
+    s.erase(pos + 1);
   }
   return s;
 }
@@ -541,6 +541,8 @@ uint64 hash_mix(uint64 x) {
 
 template<class T>
 struct RollingValueHasher {
+  // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
+  // hash is invisible and enables trivial collisions.
   uint64 operator()(const T &x) const { return hash_mix((uint64)x) % (HASH_MOD - 1) + 1; }
 };
 
@@ -924,10 +926,11 @@ class AhoCorasick {
 
   int next_state(int curr, char c) {
     int next = curr;
-    while (adj[next].find(c) == adj[next].end()) {
+    while (next != 0 && adj[next].find(c) == adj[next].end()) {
       next = fail[next];
     }
-    return adj[next][c];
+    auto it = adj[next].find(c);
+    return (it != adj[next].end()) ? it->second : 0;
   }
 
  public:
@@ -963,10 +966,11 @@ class AhoCorasick {
       q.pop();
       for (auto &[c, v] : adj[u]) {
         int f = fail[u];
-        while (adj[f].find(c) == adj[f].end()) {
+        while (f != 0 && adj[f].find(c) == adj[f].end()) {
           f = fail[f];
         }
-        f = adj[f].find(c)->second;
+        auto fit = adj[f].find(c);
+        f = (fit != adj[f].end()) ? fit->second : 0;
         fail[v] = f;
         out[v].insert(out[f].begin(), out[f].end());
         q.push(v);
@@ -1027,7 +1031,7 @@ For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \in
 
 \begin{compactitem}
   \item \inlinecode{Manacher(s)} constructs the palindromic radii arrays for string \inlinecode{s}.
-  \item \inlinecode{is\_palindrome(lo, r)} returns whether substring \inlinecode{[l, r)} is a palindrome.
+  \item \inlinecode{is\_palindrome(lo, hi)} returns whether substring \inlinecode{[lo, hi)} is a palindrome.
   \item \inlinecode{longest\_palindrome()} returns one longest palindromic substring of \inlinecode{s}.
   \item \inlinecode{count\_palindromes()} returns the total number of palindromic substrings of \inlinecode{s}, counted with multiplicity by position.
 \end{compactitem}
@@ -2050,39 +2054,39 @@ using std::string;
 
 class SuffixArray {
   string s;
-  std::vector<int> sa, rank;
+  std::vector<int> sa, rk;
 
  public:
-  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rank(s.size()) {
+  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rk(s.size()) {
     int n = s.size();
     std::iota(sa.begin(), sa.end(), 0);
     for (int i = 0; i < n; i++) {
-      rank[i] = static_cast<int>(s[i]);
+      rk[i] = static_cast<int>(s[i]);
     }
-    std::vector<std::pair<int, int>> rank2(n);
+    std::vector<std::pair<int, int>> rk2(n);
     for (int gap = 1; gap < n; gap *= 2) {
       for (int i = 0; i < n; i++) {
-        rank2[i] = {rank[i], i + gap < n ? rank[i + gap] + 1 : 0};
+        rk2[i] = {rk[i], i + gap < n ? rk[i + gap] + 1 : 0};
       }
-      std::sort(sa.begin(), sa.end(), [&](int i, int j) { return rank2[i] < rank2[j]; });
+      std::sort(sa.begin(), sa.end(), [&](int i, int j) { return rk2[i] < rk2[j]; });
       for (int i = 0; i < n; i++) {
-        rank[sa[i]] = (i > 0 && rank2[sa[i - 1]] == rank2[sa[i]]) ? rank[sa[i - 1]] : i;
+        rk[sa[i]] = (i > 0 && rk2[sa[i - 1]] == rk2[sa[i]]) ? rk[sa[i - 1]] : i;
       }
     }
   }
 
-  std::vector<int> get_sa() { return sa; }
+  const std::vector<int> &get_sa() const { return sa; }
 
-  std::vector<int> get_lcp() {
+  std::vector<int> get_lcp() const {
     int n = s.size();
     std::vector<int> lcp(n - 1);
     for (int i = 0, k = 0; i < n; i++) {
-      if (rank[i] < n - 1) {
-        int j = sa[rank[i] + 1];
+      if (rk[i] < n - 1) {
+        int j = sa[rk[i] + 1];
         while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
           k++;
         }
-        lcp[rank[i]] = k;
+        lcp[rk[i]] = k;
         if (k > 0) {
           k--;
         }
@@ -2162,46 +2166,46 @@ using std::string;
 
 class SuffixArray {
   string s;
-  std::vector<int> sa, rank;
+  std::vector<int> sa, rk;
 
  public:
-  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rank(s.size()) {
+  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rk(s.size()) {
     int n = s.size();
     std::iota(sa.rbegin(), sa.rend(), 0);
     for (int i = 0; i < n; i++) {
-      rank[i] = static_cast<int>(s[i]);
+      rk[i] = static_cast<int>(s[i]);
     }
     std::stable_sort(sa.begin(), sa.end(), [&](int i, int j) { return s[i] < s[j]; });
     for (int gap = 1; gap < n; gap *= 2) {
-      std::vector<int> prev_rank(rank), prev_sa(sa), cnt(n);
+      std::vector<int> prev_rk(rk), prev_sa(sa), cnt(n);
       std::iota(cnt.begin(), cnt.end(), 0);
       for (int i = 0; i < n; i++) {
-        rank[sa[i]] = (i > 0 && prev_rank[sa[i - 1]] == prev_rank[sa[i]] && sa[i - 1] + gap < n &&
-                       prev_rank[sa[i - 1] + gap / 2] == prev_rank[sa[i] + gap / 2])
-                          ? rank[sa[i - 1]]
-                          : i;
+        rk[sa[i]] = (i > 0 && prev_rk[sa[i - 1]] == prev_rk[sa[i]] && sa[i - 1] + gap < n &&
+                     prev_rk[sa[i - 1] + gap / 2] == prev_rk[sa[i] + gap / 2])
+                        ? rk[sa[i - 1]]
+                        : i;
       }
       for (int i = 0; i < n; i++) {
         int s1 = prev_sa[i] - gap;
         if (s1 >= 0) {
-          sa[cnt[rank[s1]]++] = s1;
+          sa[cnt[rk[s1]]++] = s1;
         }
       }
     }
   }
 
-  std::vector<int> get_sa() { return sa; }
+  const std::vector<int> &get_sa() const { return sa; }
 
-  std::vector<int> get_lcp() {
+  std::vector<int> get_lcp() const {
     int n = s.size();
     std::vector<int> lcp(n - 1);
     for (int i = 0, k = 0; i < n; i++) {
-      if (rank[i] < n - 1) {
-        int j = sa[rank[i] + 1];
+      if (rk[i] < n - 1) {
+        int j = sa[rk[i] + 1];
         while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
           k++;
         }
-        lcp[rank[i]] = k;
+        lcp[rk[i]] = k;
         if (k > 0) {
           k--;
         }
@@ -2536,10 +2540,11 @@ class Trie {
   bool insert(const string &s, const V &v) {
     Node *n = root;
     for (char c : s) {
-      if (n->children.find(c) == n->children.end()) {
-        n->children[c] = new Node();
+      auto [it, inserted] = n->children.try_emplace(c, nullptr);
+      if (inserted) {
+        it->second = new Node();
       }
-      n = n->children[c];
+      n = it->second;
     }
     if (n->is_terminal) {
       return false;
@@ -2924,7 +2929,7 @@ class SuffixAutomaton {
     st[cur].first_pos = st[cur].len - 1;
 
     int p = last;
-    while (p != -1 && !st[p].next.count(c)) {
+    while (p != -1 && st[p].next.find(c) == st[p].next.end()) {
       st[p].next[c] = cur;
       p = st[p].link;
     }

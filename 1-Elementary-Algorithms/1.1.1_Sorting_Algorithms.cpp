@@ -98,15 +98,8 @@ void mergesort(It lo, It hi, Compare comp) {
   while (a <= mid && c < hi) {
     merged.push_back(comp(*c, *a) ? *c++ : *a++);
   }
-  if (a > mid) {
-    for (It it = c; it < hi; ++it) {
-      merged.push_back(*it);
-    }
-  } else {
-    for (It it = a; it <= mid; ++it) {
-      merged.push_back(*it);
-    }
-  }
+  merged.insert(merged.end(), a, mid + 1);
+  merged.insert(merged.end(), c, hi);
   std::copy(merged.begin(), merged.end(), lo);
 }
 
@@ -125,6 +118,11 @@ than quicksort and also a better space complexity than merge sort.
 
 The C++ standard library equivalent is calling `std::make_heap(lo, hi)`, followed by
 `std::sort_heap(lo, hi)`.
+
+The loop below has two modes controlled by whether `i > lo`. While `i > lo`, it is heapifying
+(Floyd's O(n) bottom-up heap build: sift down each non-leaf from right to left). Once `i == lo`,
+the heap is built, and the loop switches to extraction: repeatedly swap the root to the back of
+the unsorted region (`*j`) and sift down the new root.
 
 Time Complexity (Average): O(n log n).
 Time Complexity (Worst): O(n log n).
@@ -195,7 +193,7 @@ void combsort(It lo, It hi, Compare comp) {
   bool swapped = true;
   while (gap > 1 || swapped) {
     if (gap > 1) {
-      gap = static_cast<int>((static_cast<double>(gap) / 1.3));
+      gap = gap * 10 / 13;
     }
     swapped = false;
     for (It it = lo; it + gap < hi; ++it) {

@@ -83,15 +83,8 @@ void mergesort(It lo, It hi, Compare comp) {
   while (a <= mid && c < hi) {
     merged.push_back(comp(*c, *a) ? *c++ : *a++);
   }
-  if (a > mid) {
-    for (It it = c; it < hi; ++it) {
-      merged.push_back(*it);
-    }
-  } else {
-    for (It it = a; it <= mid; ++it) {
-      merged.push_back(*it);
-    }
-  }
+  merged.insert(merged.end(), a, mid + 1);
+  merged.insert(merged.end(), c, hi);
   std::copy(merged.begin(), merged.end(), lo);
 }
 
@@ -104,6 +97,8 @@ void mergesort(It lo, It hi) {
 Heapsort first rearranges an array to satisfy the max-heap property. Then, it repeatedly pops the max element of the heap (the left, unsorted subrange), moving it to the beginning of the right, sorted subrange until the entire range is sorted. Heapsort has a better worst case time complexity than quicksort and also a better space complexity than merge sort.
 
 The C++ standard library equivalent is calling \inlinecode{std::make\_heap(lo, hi)}, followed by \inlinecode{std::sort\_heap(lo, hi)}.
+
+The loop below has two modes controlled by whether \inlinecode{i \textgreater{} lo}. While \inlinecode{i \textgreater{} lo}, it is heapifying (Floyd's $O(n)$ bottom-up heap build: sift down each non-leaf from right to left). Once \inlinecode{i == lo}, the heap is built, and the loop switches to extraction: repeatedly swap the root to the back of the unsorted region (\inlinecode{*j}) and sift down the new root.
 
 \textbf{Time Complexity (Average)}: $O(n \log n)$.
 
@@ -169,7 +164,7 @@ void combsort(It lo, It hi, Compare comp) {
   bool swapped = true;
   while (gap > 1 || swapped) {
     if (gap > 1) {
-      gap = static_cast<int>((static_cast<double>(gap) / 1.3));
+      gap = gap * 10 / 13;
     }
     swapped = false;
     for (It it = lo; it + gap < hi; ++it) {
@@ -911,6 +906,8 @@ auto longest_increasing_subsequence(It lo, It hi) {
   if (n == 0) {
     return std::vector<T>();
   }
+  // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i+1.
+  // prev[i] = index of the predecessor of element i in its LIS (or -1 if first).
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
     int left = -1, right = len;
@@ -961,7 +958,7 @@ int main() {
 \subsection{Subset Sum (Meet-in-the-Middle)}
 Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of integers, return the maximum sum of any subset of the range that is at most a given integer \inlinecode{v}. This is a common meet-in-the-middle version of subset sum: enumerate subset sums for each half, sort one side, and binary search for the best compatible partner. Note that 64-bit integers are used in intermediate calculations to avoid overflow.
 
-\textbf{Time Complexity}: $O(n \cdot 2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \textbf{Space Complexity}: $O(2^{n/2})$ auxiliary heap space.
 
@@ -974,19 +971,13 @@ template<class It>
 long long max_subset_sum_at_most(It lo, It hi, long long v) {
   int n = hi - lo, llen = 1 << (n / 2), hlen = 1 << (n - n / 2);
   std::vector<long long> lsum(llen), hsum(hlen);
-  for (int mask = 0; mask < llen; mask++) {
-    for (int i = 0; i < n / 2; i++) {
-      if ((mask >> i) & 1) {
-        lsum[mask] += *(lo + i);
-      }
-    }
+  for (int mask = 1; mask < llen; mask++) {
+    int bit = __builtin_ctz(mask);
+    lsum[mask] = lsum[mask ^ (1 << bit)] + *(lo + bit);
   }
-  for (int mask = 0; mask < hlen; mask++) {
-    for (int i = 0; i < (n - n / 2); i++) {
-      if ((mask >> i) & 1) {
-        hsum[mask] += *(lo + i + n / 2);
-      }
-    }
+  for (int mask = 1; mask < hlen; mask++) {
+    int bit = __builtin_ctz(mask);
+    hsum[mask] = hsum[mask ^ (1 << bit)] + *(lo + n / 2 + bit);
   }
   std::sort(hsum.begin(), hsum.end());
   long long res = LLONG_MIN;
@@ -1141,33 +1132,36 @@ int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
     return 0;
   }
   int n = matrix.size(), m = matrix[0].size(), res = 0;
-  std::vector<int> d(m, -1), d1(m), d2(m);
+  // last1[c] = row index of the most recent 1 in column c (-1 if none yet).
+  // left_wall[c] = nearest column left of c whose last1 value >= last1[c] (exclusive left bound).
+  // right_wall[c] = nearest column right of c whose last1 value >= last1[c] (exclusive right bound).
+  std::vector<int> last1(m, -1), left_wall(m), right_wall(m);
   for (int r = 0; r < n; r++) {
     for (int c = 0; c < m; c++) {
       if (matrix[r][c]) {
-        d[c] = r;
+        last1[c] = r;
       }
     }
     std::stack<int> s;
     for (int c = 0; c < m; c++) {
-      while (!s.empty() && d[s.top()] <= d[c]) {
+      while (!s.empty() && last1[s.top()] <= last1[c]) {
         s.pop();
       }
-      d1[c] = s.empty() ? -1 : s.top();
+      left_wall[c] = s.empty() ? -1 : s.top();
       s.push(c);
     }
     while (!s.empty()) {
       s.pop();
     }
     for (int c = m - 1; c >= 0; c--) {
-      while (!s.empty() && d[s.top()] <= d[c]) {
+      while (!s.empty() && last1[s.top()] <= last1[c]) {
         s.pop();
       }
-      d2[c] = s.empty() ? m : s.top();
+      right_wall[c] = s.empty() ? m : s.top();
       s.push(c);
     }
     for (int j = 0; j < m; j++) {
-      res = std::max(res, (r - d[j]) * (d2[j] - d1[j] - 1));
+      res = std::max(res, (r - last1[j]) * (right_wall[j] - left_wall[j] - 1));
     }
   }
   return res;
@@ -1366,6 +1360,7 @@ Intervals are represented as half-open ranges \inlinecode{[start, finish)}, so t
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 struct Interval {
@@ -1377,13 +1372,11 @@ std::vector<Interval> interval_scheduling(std::vector<Interval> intervals) {
     return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
   });
   std::vector<Interval> res;
-  int last_finish = 0;
-  bool first = true;
+  int last_finish = std::numeric_limits<int>::min();
   for (const auto &iv : intervals) {
-    if (first || iv.start >= last_finish) {
+    if (iv.start >= last_finish) {
       res.push_back(iv);
       last_finish = iv.finish;
-      first = false;
     }
   }
   return res;
@@ -1630,7 +1623,7 @@ int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
       durations.pop();
     }
   }
-  return durations.size();
+  return static_cast<int>(durations.size());
 }
 \end{lstlisting}
 \textbf{Example Usage}\par
@@ -1694,23 +1687,30 @@ int main() {
 \subsection{Reservoir Sampling}
 Selects uniformly random samples from a stream whose length may be unknown in advance. Reservoir sampling keeps only the chosen sample or samples in memory while processing each element once.
 
+Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once per stream element in any order, then \inlinecode{get()} to retrieve the result.
+
 \begin{compactitem}
-  \item \inlinecode{reservoir\_sample\_one(lo, hi)} returns one uniformly random element from \inlinecode{[lo, hi)}. The range must be nonempty.
-  \item \inlinecode{reservoir\_sample\_k(lo, hi, k)} returns \inlinecode{k} uniformly random elements without replacement from \inlinecode{[lo, hi)}, or the whole range if it has fewer than \inlinecode{k} elements.
+  \item \inlinecode{ReservoirSampleOne\textless{}T\textgreater{}()} constructs a single-element sampler.
+  \item \inlinecode{ReservoirSampleK\textless{}T\textgreater{}(k)} constructs a k-element sampler.
+  \item \inlinecode{add(x)} incorporates one more stream element.
+  \item \inlinecode{get()} returns the current sample. For \inlinecode{ReservoirSampleOne}, \inlinecode{get()} requires at least one \inlinecode{add()} call; for \inlinecode{ReservoirSampleK}, returns the full reservoir (may be fewer than \inlinecode{k} elements if the stream was shorter).
+  \item \inlinecode{count()} returns the number of stream elements seen so far.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of stream elements.
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to \inlinecode{add(x)}.
+  \item $O(n)$ to process a range of \inlinecode{n} elements.
+\end{compactitem}
 
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ auxiliary for \inlinecode{reservoir\_sample\_one(lo, hi)}.
-  \item $O(k)$ auxiliary heap space for \inlinecode{reservoir\_sample\_k(lo, hi, k)}.
+  \item $O(1)$ auxiliary for \inlinecode{ReservoirSampleOne}.
+  \item $O(k)$ auxiliary heap space for \inlinecode{ReservoirSampleK}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <cassert>
-#include <iterator>
 #include <random>
 #include <vector>
 
@@ -1719,38 +1719,51 @@ int rand_int(int lo, int hi) {
   return std::uniform_int_distribution<int>(lo, hi)(rng);
 }
 
-template<class It>
-auto reservoir_sample_one(It lo, It hi) {
-  assert(lo != hi);
-  auto sample = *lo;
-  int seen = 0;
-  for (It it = lo; it != hi; ++it) {
-    seen++;
-    if (rand_int(0, seen - 1) == 0) {
-      sample = *it;
+template<class T>
+class ReservoirSampleOne {
+  T sample{};
+  int seen;
+
+ public:
+  ReservoirSampleOne() : seen(0) {}
+
+  void add(const T &x) {
+    if (rand_int(0, seen++) == 0) {
+      sample = x;
     }
   }
-  return sample;
-}
 
-template<class It>
-auto reservoir_sample_k(It lo, It hi, int k) {
-  using T = typename std::iterator_traits<It>::value_type;
-  std::vector<T> res;
-  int seen = 0;
-  for (It it = lo; it != hi; ++it) {
-    seen++;
-    if (static_cast<int>(res.size()) < k) {
-      res.push_back(*it);
+  const T &get() const {
+    assert(seen > 0);
+    return sample;
+  }
+
+  int count() const { return seen; }
+};
+
+template<class T>
+class ReservoirSampleK {
+  int k, seen;
+  std::vector<T> reservoir;
+
+ public:
+  explicit ReservoirSampleK(int k) : k(k), seen(0) {}
+
+  void add(const T &x) {
+    ++seen;
+    if (static_cast<int>(reservoir.size()) < k) {
+      reservoir.push_back(x);
     } else {
       int j = rand_int(0, seen - 1);
       if (j < k) {
-        res[j] = *it;
+        reservoir[j] = x;
       }
     }
   }
-  return res;
-}
+
+  const std::vector<T> &get() const { return reservoir; }
+  int count() const { return seen; }
+};
 \end{lstlisting}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
@@ -1760,18 +1773,19 @@ using namespace std;
 int main() {
   vector<int> a{10, 20, 30, 40, 50};
 
-  int one = reservoir_sample_one(a.begin(), a.end());
+  // Streaming interface: feed elements one at a time.
+  ReservoirSampleOne<int> s1;
+  for (int x : a) {
+    s1.add(x);
+  }
+  int one = s1.get();
   assert(one == 10 || one == 20 || one == 30 || one == 40 || one == 50);
 
-  vector<int> sample = reservoir_sample_k(a.begin(), a.end(), 3);
-  assert(sample.size() == 3);
-  for (int s : sample) {
-    bool found = false;
-    for (int x : a) {
-      found = found || s == x;
-    }
-    assert(found);
+  ReservoirSampleK<int> sk(3);
+  for (int x : a) {
+    sk.add(x);
   }
+  assert(static_cast<int>(sk.get().size()) == 3);
   return 0;
 }
 \end{lstlisting}
@@ -1906,7 +1920,7 @@ Maximal sum submatrix:
 -1 8
 \end{exampleoutput}
 \subsection{Majority Element (Boyer-Moore)}
-Given two ForwardIterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of $n$ elements, return an iterator to the first occurrence of the majority element, or the iterator \inlinecode{hi} if there is no majority element. The majority element is defined as an element which occurs strictly more than $\lfloor n/2 \rfloor$ times in the range. This implementation requires \inlinecode{operator ==} to be defined on the iterator's value type.
+Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of $n$ elements, return an iterator to the first occurrence of the majority element, or the iterator \inlinecode{hi} if there is no majority element. The majority element is defined as an element which occurs strictly more than $\lfloor n/2 \rfloor$ times in the range. This implementation requires \inlinecode{operator ==} to be defined on the iterator's value type.
 
 \textbf{Time Complexity}: $O(n)$ per call to \inlinecode{majority()}, where $n$ is the size of the array.
 
@@ -2020,7 +2034,7 @@ The candidates are not automatically verified, since the algorithm intentionally
   \item \inlinecode{misra\_gries(lo, hi, k)} returns a hash table of candidate values to their residual counters. Use \inlinecode{k = 2} for the Boyer-Moore majority-candidate special case.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(nk)$ expected for this compact hash-table implementation, where $n$ is the number of stream values.
+\textbf{Time Complexity}: $O(n)$ amortized per call on average: each element either hits an existing counter ($O(1)$) or triggers a full-table decrement ($O(k)$), but the table-full event can occur at most $n/(k-1)$ times total, so the amortized cost per element is $O(1 + k/(k-1))$ = $O(1)$. In the worst case a single call is $O(nk)$, but that cannot be sustained across a long stream.
 
 \textbf{Space Complexity}: $O(k)$ auxiliary heap space.
 

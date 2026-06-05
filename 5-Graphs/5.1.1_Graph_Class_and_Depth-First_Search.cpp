@@ -13,14 +13,14 @@ increase based on the maximum node index passed to `add_edge()` so far.
 Time Complexity:
 - O(1) amortized per call to `add_edge()`, or O(max(n, m)) for $n$ calls where the maximum node
   index passed as an argument is $m$.
-- O(max(n, m)) per call for `dfs()`, `has_cycle()`, `is_tree()`, or `is_dag()`, where $n$ is the
+- O(max(n, m)) per call for `dfs()`, `has_cycle()`, `is_forest()`, or `is_dag()`, where $n$ is the
   number of nodes and $m$ is the number of edges.
 - O(1) per call to all other public member functions.
 
 Space Complexity:
 - O(max(n, m)) for storage of the Graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(n) auxiliary stack space for `dfs()`, `has_cycle()`, `is_tree()`, and `is_dag()`.
+- O(n) auxiliary stack space for `dfs()`, `has_cycle()`, `is_forest()`, and `is_dag()`.
 - O(1) auxiliary for all other public member functions.
 
 */
@@ -78,8 +78,6 @@ class Graph {
     }
   }
 
-  bool is_directed() const { return directed; }
-
   bool has_cycle() const {
     int n = adj.size();
     std::vector<bool> visit(n, false), onstack(n, false);
@@ -91,7 +89,8 @@ class Graph {
     return false;
   }
 
-  bool is_tree() const { return !directed && !has_cycle(); }
+  bool is_directed() const { return directed; }
+  bool is_forest() const { return !directed && !has_cycle(); }
   bool is_dag() const { return directed && !has_cycle(); }
 
   template<class Fn>
@@ -138,10 +137,10 @@ int main() {
     tree.add_edge(0, 2);
     tree.add_edge(1, 3);
     tree.add_edge(1, 4);
-    assert(tree.is_tree());
+    assert(tree.is_forest());
     assert(!tree.is_dag());
     tree.add_edge(2, 3);
-    assert(!tree.is_tree());
+    assert(!tree.is_forest());
   }
   return 0;
 }

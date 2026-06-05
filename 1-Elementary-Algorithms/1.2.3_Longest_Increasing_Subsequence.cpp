@@ -25,6 +25,8 @@ auto longest_increasing_subsequence(It lo, It hi) {
   if (n == 0) {
     return std::vector<T>();
   }
+  // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i+1.
+  // prev[i] = index of the predecessor of element i in its LIS (or -1 if first).
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
     int left = -1, right = len;

@@ -43,46 +43,46 @@ using std::string;
 
 class SuffixArray {
   string s;
-  std::vector<int> sa, rank;
+  std::vector<int> sa, rk;
 
  public:
-  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rank(s.size()) {
+  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rk(s.size()) {
     int n = s.size();
     std::iota(sa.rbegin(), sa.rend(), 0);
     for (int i = 0; i < n; i++) {
-      rank[i] = static_cast<int>(s[i]);
+      rk[i] = static_cast<int>(s[i]);
     }
     std::stable_sort(sa.begin(), sa.end(), [&](int i, int j) { return s[i] < s[j]; });
     for (int gap = 1; gap < n; gap *= 2) {
-      std::vector<int> prev_rank(rank), prev_sa(sa), cnt(n);
+      std::vector<int> prev_rk(rk), prev_sa(sa), cnt(n);
       std::iota(cnt.begin(), cnt.end(), 0);
       for (int i = 0; i < n; i++) {
-        rank[sa[i]] = (i > 0 && prev_rank[sa[i - 1]] == prev_rank[sa[i]] && sa[i - 1] + gap < n &&
-                       prev_rank[sa[i - 1] + gap / 2] == prev_rank[sa[i] + gap / 2])
-                          ? rank[sa[i - 1]]
-                          : i;
+        rk[sa[i]] = (i > 0 && prev_rk[sa[i - 1]] == prev_rk[sa[i]] && sa[i - 1] + gap < n &&
+                     prev_rk[sa[i - 1] + gap / 2] == prev_rk[sa[i] + gap / 2])
+                        ? rk[sa[i - 1]]
+                        : i;
       }
       for (int i = 0; i < n; i++) {
         int s1 = prev_sa[i] - gap;
         if (s1 >= 0) {
-          sa[cnt[rank[s1]]++] = s1;
+          sa[cnt[rk[s1]]++] = s1;
         }
       }
     }
   }
 
-  std::vector<int> get_sa() { return sa; }
+  const std::vector<int> &get_sa() const { return sa; }
 
-  std::vector<int> get_lcp() {
+  std::vector<int> get_lcp() const {
     int n = s.size();
     std::vector<int> lcp(n - 1);
     for (int i = 0, k = 0; i < n; i++) {
-      if (rank[i] < n - 1) {
-        int j = sa[rank[i] + 1];
+      if (rk[i] < n - 1) {
+        int j = sa[rk[i] + 1];
         while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
           k++;
         }
-        lcp[rank[i]] = k;
+        lcp[rk[i]] = k;
         if (k > 0) {
           k--;
         }

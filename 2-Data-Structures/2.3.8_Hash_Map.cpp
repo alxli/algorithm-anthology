@@ -106,12 +106,16 @@ class HashMap {
   }
 
   V &operator[](const K &k) {
-    V *ptr = find(k);
-    if (ptr != nullptr) {
+    if (V *ptr = find(k); ptr != nullptr) {
       return *ptr;
     }
-    insert(k, V());
-    return *find(k);
+    if (num_entries >= table_size) {
+      double_capacity_and_rehash();
+    }
+    unsigned int i = Hash()(k) % table_size;
+    table[i].emplace_back(k, V());
+    num_entries++;
+    return table[i].back().value;
   }
 
   template<class Fn>

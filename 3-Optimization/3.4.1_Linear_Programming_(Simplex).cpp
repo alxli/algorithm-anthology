@@ -8,7 +8,9 @@ is a matrix of linear equation coefficients, and $b$ is a vector of boundary coe
 - `simplex_solve(a, b, c, &x)` solves the linear programming problem for an $m$ by $n$ matrix `a` of
   real values, a length $m$ vector `b`, and a length $n$ vector `c`, returning 0 if a solution was
   found or $-1$ if there are no solutions. If a solution is found, then the vector pointed to by `x`
-  is populated with the solution vector of length $n$.
+  is populated with the solution values for basic (nonzero) variables only; non-basic variables have
+  value 0 and are omitted. The caller should zero-initialize `x` to length $n$ before calling if a
+  dense solution vector is needed.
 
 Time Complexity:
 - Polynomial (average) on the number of equations and unknowns, but exponential in the worst case.
@@ -18,8 +20,8 @@ Space Complexity:
 
 */
 
-#include <cmath>
 #include <cfloat>
+#include <cmath>
 #include <vector>
 
 template<class Matrix>
@@ -45,7 +47,7 @@ int simplex_solve(
   for (int i = n + 1; i <= m + n; i++) {
     t[i - n + 1][0] = i;
   }
-  double p1 = 0, p2 = 0;
+  int p1 = 0, p2 = 0;
   bool done = true;
   do {
     double mn = DBL_MAX, xmax = 0;

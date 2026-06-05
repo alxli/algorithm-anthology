@@ -42,39 +42,39 @@ using std::string;
 
 class SuffixArray {
   string s;
-  std::vector<int> sa, rank;
+  std::vector<int> sa, rk;
 
  public:
-  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rank(s.size()) {
+  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rk(s.size()) {
     int n = s.size();
     std::iota(sa.begin(), sa.end(), 0);
     for (int i = 0; i < n; i++) {
-      rank[i] = static_cast<int>(s[i]);
+      rk[i] = static_cast<int>(s[i]);
     }
-    std::vector<std::pair<int, int>> rank2(n);
+    std::vector<std::pair<int, int>> rk2(n);
     for (int gap = 1; gap < n; gap *= 2) {
       for (int i = 0; i < n; i++) {
-        rank2[i] = {rank[i], i + gap < n ? rank[i + gap] + 1 : 0};
+        rk2[i] = {rk[i], i + gap < n ? rk[i + gap] + 1 : 0};
       }
-      std::sort(sa.begin(), sa.end(), [&](int i, int j) { return rank2[i] < rank2[j]; });
+      std::sort(sa.begin(), sa.end(), [&](int i, int j) { return rk2[i] < rk2[j]; });
       for (int i = 0; i < n; i++) {
-        rank[sa[i]] = (i > 0 && rank2[sa[i - 1]] == rank2[sa[i]]) ? rank[sa[i - 1]] : i;
+        rk[sa[i]] = (i > 0 && rk2[sa[i - 1]] == rk2[sa[i]]) ? rk[sa[i - 1]] : i;
       }
     }
   }
 
-  std::vector<int> get_sa() { return sa; }
+  const std::vector<int> &get_sa() const { return sa; }
 
-  std::vector<int> get_lcp() {
+  std::vector<int> get_lcp() const {
     int n = s.size();
     std::vector<int> lcp(n - 1);
     for (int i = 0, k = 0; i < n; i++) {
-      if (rank[i] < n - 1) {
-        int j = sa[rank[i] + 1];
+      if (rk[i] < n - 1) {
+        int j = sa[rk[i] + 1];
         while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
           k++;
         }
-        lcp[rank[i]] = k;
+        lcp[rk[i]] = k;
         if (k > 0) {
           k--;
         }

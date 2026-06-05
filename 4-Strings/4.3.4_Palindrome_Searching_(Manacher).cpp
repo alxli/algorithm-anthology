@@ -10,7 +10,7 @@ is the radius centered between `s[i - 1]` and `s[i]`. Thus the palindrome spans
 `[i - even[i], i + even[i])`.
 
 - `Manacher(s)` constructs the palindromic radii arrays for string `s`.
-- `is_palindrome(lo, r)` returns whether substring `[l, r)` is a palindrome.
+- `is_palindrome(lo, hi)` returns whether substring `[lo, hi)` is a palindrome.
 - `longest_palindrome()` returns one longest palindromic substring of `s`.
 - `count_palindromes()` returns the total number of palindromic substrings of `s`, counted with
   multiplicity by position.

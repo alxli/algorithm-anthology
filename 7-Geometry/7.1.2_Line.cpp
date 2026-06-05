@@ -25,6 +25,7 @@ const double EPS = 1e-9;
 const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
+#define NE(a, b) (fabs((a) - (b)) > EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
 struct Line {

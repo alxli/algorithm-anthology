@@ -70,6 +70,8 @@ uint64 hash_mix(uint64 x) {
 
 template<class T>
 struct RollingValueHasher {
+  // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
+  // hash is invisible and enables trivial collisions.
   uint64 operator()(const T &x) const { return hash_mix((uint64)x) % (HASH_MOD - 1) + 1; }
 };
 

@@ -71,7 +71,7 @@ int line_intersection(
     return EQ(c1, c2) ? 1 : -1;
   }
   if (p != nullptr) {
-    p->x = (b1 * c1 - b1 * c2) / (a2 * b1 - a1 * b2);
+    p->x = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1);
     if (!EQ(b1, 0)) {
       p->y = -(a1 * p->x + c1) / b1;
     } else {

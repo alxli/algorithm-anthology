@@ -39,7 +39,7 @@ int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
       durations.pop();
     }
   }
-  return durations.size();
+  return static_cast<int>(durations.size());
 }
 
 /*** Example Usage ***/

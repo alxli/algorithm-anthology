@@ -104,7 +104,9 @@ class SkewHeap {
 
   void absorb(SkewHeap &h) {
     root = merge(root, h.root);
+    num_nodes += h.num_nodes;
     h.root = nullptr;
+    h.num_nodes = 0;
   }
 };
 

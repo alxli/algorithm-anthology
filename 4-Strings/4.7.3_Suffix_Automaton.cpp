@@ -60,7 +60,7 @@ class SuffixAutomaton {
     st[cur].first_pos = st[cur].len - 1;
 
     int p = last;
-    while (p != -1 && !st[p].next.count(c)) {
+    while (p != -1 && st[p].next.find(c) == st[p].next.end()) {
       st[p].next[c] = cur;
       p = st[p].link;
     }

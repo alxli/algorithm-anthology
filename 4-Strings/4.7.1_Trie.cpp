@@ -105,10 +105,11 @@ class Trie {
   bool insert(const string &s, const V &v) {
     Node *n = root;
     for (char c : s) {
-      if (n->children.find(c) == n->children.end()) {
-        n->children[c] = new Node();
+      auto [it, inserted] = n->children.try_emplace(c, nullptr);
+      if (inserted) {
+        it->second = new Node();
       }
-      n = n->children[c];
+      n = it->second;
     }
     if (n->is_terminal) {
       return false;

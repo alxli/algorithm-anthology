@@ -7,7 +7,7 @@ binary search for the best compatible partner. Note that 64-bit integers are use
 calculations to avoid overflow.
 
 Time Complexity:
-- O(n*2^(n/2)) per call to `max_subset_sum_at_most()`, where $n$ is the distance between `lo` and
+- O(2^(n/2)) per call to `max_subset_sum_at_most()`, where $n$ is the distance between `lo` and
   `hi`.
 
 Space Complexity:
@@ -23,19 +23,13 @@ template<class It>
 long long max_subset_sum_at_most(It lo, It hi, long long v) {
   int n = hi - lo, llen = 1 << (n / 2), hlen = 1 << (n - n / 2);
   std::vector<long long> lsum(llen), hsum(hlen);
-  for (int mask = 0; mask < llen; mask++) {
-    for (int i = 0; i < n / 2; i++) {
-      if ((mask >> i) & 1) {
-        lsum[mask] += *(lo + i);
-      }
-    }
+  for (int mask = 1; mask < llen; mask++) {
+    int bit = __builtin_ctz(mask);
+    lsum[mask] = lsum[mask ^ (1 << bit)] + *(lo + bit);
   }
-  for (int mask = 0; mask < hlen; mask++) {
-    for (int i = 0; i < (n - n / 2); i++) {
-      if ((mask >> i) & 1) {
-        hsum[mask] += *(lo + i + n / 2);
-      }
-    }
+  for (int mask = 1; mask < hlen; mask++) {
+    int bit = __builtin_ctz(mask);
+    hsum[mask] = hsum[mask ^ (1 << bit)] + *(lo + n / 2 + bit);
   }
   std::sort(hsum.begin(), hsum.end());
   long long res = LLONG_MIN;

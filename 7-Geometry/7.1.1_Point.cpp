@@ -2,7 +2,9 @@
 
 A 2D real-valued point class supporting epsilon comparisons. Operations include element-wise
 arithmetic, `norm()`, `arg()`, `dot()`, `cross()`, `proj()`, `normalize()`, `rotate90()`,
-`rotateCW()`, `rotateCCW()`, and `reflect()`. See also `std::complex`.
+`rotate180()`, `rotate270()`, `rotateCW()`, `rotateCCW()`, and `reflect()`. The cardinal
+rotations (`rotate90/180/270`) use the counter-clockwise convention; `rotate270()` is equivalent
+to a 90-degree clockwise rotation. See also `std::complex`.
 
 Time Complexity:
 - O(1) per call to the constructor and all other operations.
@@ -63,8 +65,10 @@ struct Point {
   // Returns a proportional unit vector (p, q) = c(x, y) where p^2 + q^2 = 1.
   Point normalize() const { return (EQ(x, 0) && EQ(y, 0)) ? Point(0, 0) : (Point(x, y) / norm()); }
 
-  // Returns (x, y) rotated 90 degrees clockwise about the origin.
+  // Returns (x, y) rotated 90/180/270 degrees counter-clockwise about the origin.
   Point rotate90() const { return Point(-y, x); }
+  Point rotate180() const { return Point(-x, -y); }
+  Point rotate270() const { return Point(y, -x); }
 
   // Returns (x, y) rotated t radians clockwise about the origin.
   Point rotateCW(double t) const { return Point(x * cos(t) + y * sin(t), y * cos(t) - x * sin(t)); }
@@ -102,6 +106,8 @@ struct Point {
   friend double proj(const Point &p, const Point &q) { return p.proj(q); }
   friend Point normalize(const Point &p) { return p.normalize(); }
   friend Point rotate90(const Point &p) { return p.rotate90(); }
+  friend Point rotate180(const Point &p) { return p.rotate180(); }
+  friend Point rotate270(const Point &p) { return p.rotate270(); }
   friend Point rotateCW(const Point &p, double t) { return p.rotateCW(t); }
   friend Point rotateCCW(const Point &p, double t) { return p.rotateCCW(t); }
   friend Point rotateCW(const Point &p, const Point &q, double t) { return p.rotateCW(q, t); }
@@ -131,6 +137,8 @@ int main() {
   assert(EQ(10, p.proj(Point(-10, 0))));
   assert(EQ(1, p.normalize().norm()));
   assert(Point(-3, -10) == p.rotate90());
+  assert(Point(10, -3) == p.rotate180());
+  assert(Point(3, 10) == p.rotate270());
   assert(Point(3, 12) == p.rotateCW(Point(1, 1), PI / 2));
   assert(Point(1, -10) == p.rotateCCW(Point(2, 2), PI / 2));
   assert(Point(10, -3) == p.reflect(Point(0, 0)));

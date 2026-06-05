@@ -27,6 +27,8 @@ const int INF = INT_MAX / 2;
 std::vector<std::vector<int>> adj;
 std::vector<int> currstack;
 int timer;
+// lowlink[u] = discovery time of u, or INF once u is assigned to a finished SCC.
+// "Is u still on the stack?" is tested as lowlink[u] < INF rather than a separate bool.
 std::vector<int> lowlink;
 std::vector<bool> visit;
 std::vector<std::vector<int>> scc;
@@ -52,9 +54,8 @@ void dfs(int u) {
   int v;
   do {
     v = currstack.back();
-    visit[v] = true;
     currstack.pop_back();
-    lowlink[v] = INF;
+    lowlink[v] = INF;  // marks v as removed from the stack
     component.push_back(v);
   } while (u != v);
   scc.push_back(component);

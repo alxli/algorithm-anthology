@@ -54,6 +54,8 @@ std::vector<int> find_centers() {
   return leaves;
 }
 
+// Returns the centroid node index if found in this subtree, or -(subtree size) to propagate
+// the size up to the parent so it can check the complementary component's size.
 int find_centroid(int u = 0, int p = -1) {
   int nodes = adj.size();
   int count = 1;

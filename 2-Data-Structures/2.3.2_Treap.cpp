@@ -2,9 +2,10 @@
 
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
 once in the collection. This implementations requires an ordering on the set of possible keys
-defined by `operator <` on the key type. A Treap is a binary search tree that is balanced by
-preserving a heap property on the randomly generated priority value assigned to every node, thereby
-making insertions and deletions run in O(log n) with high probability.
+defined by `operator <` on the key type. A Treap is a binary search tree where each node holds a
+randomly assigned priority. The tree satisfies the BST property on keys and the min-heap property
+on priorities (lower priority value = closer to root). Since priorities are random, this keeps the
+tree balanced with high probability, making insertions and deletions run in O(log n).
 
 - `Treap()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -31,12 +32,15 @@ Space Complexity:
 
 */
 
-#include <cstdlib>
+#include <random>
 
 template<class K, class V>
 class Treap {
   struct Node {
-    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
+    static inline int rand32() {
+      static std::mt19937 rng(std::random_device{}());
+      return static_cast<int>(rng());
+    }
 
     K key;
     V value;

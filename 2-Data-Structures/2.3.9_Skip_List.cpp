@@ -33,8 +33,7 @@ Space Complexity:
 
 */
 
-#include <cmath>
-#include <cstdlib>
+#include <random>
 #include <vector>
 
 template<class K, class V>
@@ -52,12 +51,13 @@ class SkipList {
   int num_nodes;
 
   static int random_level() {
-    static const double p = 0.5;
+    static std::mt19937 rng(std::random_device{}());
+    static std::uniform_int_distribution<int> coin(0, 1);
     int level = 1;
-    while ((static_cast<double>(rand()) / RAND_MAX) < p && std::abs(level) < MAX_LEVELS) {
+    while (coin(rng) && level < MAX_LEVELS) {
       level++;
     }
-    return std::abs(level);
+    return level;
   }
 
   static int node_level(const std::vector<Node *> &v) {

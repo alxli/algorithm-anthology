@@ -25,7 +25,7 @@ Space Complexity:
 std::vector<std::vector<int>> adj;
 std::vector<bool> visit, done;
 
-void dfs(int u, std::vector<int>& res) {
+void dfs(int u, std::vector<int> &res) {
   if (visit[u]) {
     throw std::runtime_error("Not a directed acyclic graph.");
   }

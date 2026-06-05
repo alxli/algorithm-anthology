@@ -35,7 +35,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
-#include <cstdlib>
+#include <random>
 #include <vector>
 
 template<class Int>
@@ -125,9 +125,8 @@ uint64 powmod(uint64 x, uint64 n, uint64 m) {
 }
 
 uint64 rand64u() {
-  return ((uint64)(rand() & 0xf) << 60) | ((uint64)(rand() & 0x7fff) << 45) |
-         ((uint64)(rand() & 0x7fff) << 30) | ((uint64)(rand() & 0x7fff) << 15) |
-         ((uint64)(rand() & 0x7fff));
+  static std::mt19937_64 rng(std::random_device{}());
+  return rng();
 }
 
 uint64 gcd(uint64 a, uint64 b) {
