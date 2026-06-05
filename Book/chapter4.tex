@@ -217,6 +217,7 @@ std::vector<string> explode(const string &s, const string &delim) {
   return res;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -272,6 +273,7 @@ The standalone functions below are deterministic. The \inlinecode{IntHasher} fun
   \item \inlinecode{GenericHasher\textless{}T\textgreater{}} recursively handles integer, pair, and vector keys, and falls back to \inlinecode{std::hash\textless{}T\textgreater{}} for other hashable types.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the integer, combiner, and floating-point hash functions.
@@ -432,6 +434,7 @@ struct GenericHasher<std::pair<A, B>> : PairHasher<A, B> {};
 template<class T>
 struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -490,12 +493,14 @@ By default, each sequence value is cast to \inlinecode{uint64} and mixed. For no
   \item \inlinecode{concat(left, right, right\_len)} returns the hash of the concatenation of a sequence with hash \inlinecode{left} and a sequence with hash \inlinecode{right} and length \inlinecode{right\_len}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per constructor call and whole-sequence hash, where $n$ is the sequence length.
   \item $O(1)$ per call to \inlinecode{get(l, r)} and \inlinecode{concat(left, right, right\_len)}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of prefix hashes and powers, where $n$ is the maximum sequence length processed so far.
@@ -610,6 +615,7 @@ class RollingHash {
 template<class T, class ValueHasher>
 std::vector<uint64> RollingHash<T, ValueHasher>::pow_base(1, 1);
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -665,12 +671,14 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
   \item \inlinecode{distinct\_prefix\_hashes(lo, hi)} returns prefix hashes where each distinct key in the range \inlinecode{[lo, hi)} contributes only on its first occurrence.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ expected per call to \inlinecode{get(x)} and \inlinecode{toggle(h, x)}.
   \item $O(n)$ expected per call to \inlinecode{distinct\_prefix\_hashes(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for stored key tokens, where $n$ is the number of distinct keys seen so far.
@@ -725,6 +733,7 @@ class ZobristHash {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -760,12 +769,14 @@ Given a single string (needle) and subsequent queries of texts (haystacks) to be
   \item \inlinecode{find\_in(haystack)} returns the first position that \inlinecode{needle} occurs in \inlinecode{haystack}, or \inlinecode{std::string::npos} if it cannot be found. Note that the function can be modified to return all matches by simply letting the loop run and storing the results instead of returning early.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(m)$ per call to the constructor, where $m$ is the length of \inlinecode{needle}.
   \item $O(n)$ per call to \inlinecode{find\_in(haystack)}, where $n$ is the length of \inlinecode{haystack}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(m)$ for storage of the partial match table, where $m$ is the length of \inlinecode{needle}.
@@ -814,6 +825,7 @@ class KMP {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -833,12 +845,14 @@ The \inlinecode{find()} function below calls the Z algorithm on the concatenatio
   \item \inlinecode{find(haystack, needle)} returns the first position that \inlinecode{needle} occurs in \inlinecode{haystack}, or \inlinecode{std::string::npos} if it cannot be found. Note that the function can be modified to return all matches by simply letting the loop run and storing the results instead of returning early.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{z\_array(s)}, where $n$ is the length of \inlinecode{s}.
   \item $O(n + m)$ per call to \inlinecode{find(haystack, needle)}, where $n$ is the length of \inlinecode{haystack} and $m$ is the length of \inlinecode{needle}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary heap space for \inlinecode{z\_array(s)}, where $n$ is the length of \inlinecode{s}.
@@ -879,6 +893,7 @@ size_t find(const string &haystack, const string &needle) {
   return string::npos;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -898,12 +913,14 @@ This implementation stores transitions in hash tables, which keeps lookups expec
   \item \inlinecode{find\_all\_in(haystack, report\_match)} calls the function \inlinecode{report\_match(s, pos)} once on each occurrence of each needle that occurs in the \inlinecode{haystack}, where \inlinecode{pos} is the starting position in the \inlinecode{haystack} at which string \inlinecode{s} (a matched needle) occurs. The matches will be reported in increasing order of their ending positions within the \inlinecode{haystack}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(m \cdot l + z \log m)$ expected per call to the constructor, where $m$ is the number of needles, $l$ is the maximum length of any needle, and $z$ is the total number of inherited output entries.
   \item $O(n + z)$ expected per call to \inlinecode{find\_all\_in(haystack, report\_match)}, where $n$ is the length of \inlinecode{haystack} and $z$ is the number of matches.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(m \cdot l)$ for storage of the automaton, where $m$ is the number of needles and $l$ is the maximum length for any needle.
@@ -990,6 +1007,7 @@ class AhoCorasick {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <iostream>
@@ -1036,6 +1054,7 @@ For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \in
   \item \inlinecode{count\_palindromes()} returns the total number of palindromic substrings of \inlinecode{s}, counted with multiplicity by position.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per constructor call, where $n$ is the length of \inlinecode{s}.
@@ -1043,6 +1062,7 @@ For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \in
   \item $O(n)$ per call to \inlinecode{longest\_palindrome()} and \inlinecode{count\_palindromes()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the radii arrays.
@@ -1122,6 +1142,7 @@ class Manacher {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1200,6 +1221,7 @@ int eval(const std::string &s) {
   return eval(it, 2);
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1224,6 +1246,7 @@ Operators may be non-empty strings of any length, but should not contain any par
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
@@ -1232,6 +1255,7 @@ Operators may be non-empty strings of any length, but should not contain any par
   \item $O(nmk + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(mk)$ for storage of the $m$ operators, of maximum length $k$.
@@ -1405,6 +1429,7 @@ class parser {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1465,6 +1490,7 @@ Operators may be non-empty strings of any length, but should not contain any par
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
@@ -1473,6 +1499,7 @@ Operators may be non-empty strings of any length, but should not contain any par
   \item $O(nmk + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(mk)$ for storage of the $m$ operators, of maximum length $k$.
@@ -1656,6 +1683,7 @@ class parser {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1745,6 +1773,7 @@ string longest_common_substring(const string &s1, const string &s2) {
   return s1.substr(pos, len);
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1755,7 +1784,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Longest Common Subsequence}
-Given two strings, determine their longest common subsequence. A subsequence is a string that can be derived from the original string by deleting some elements without changing the order of the remaining elements (e.g. "ACE" is a subsequence of "ABCDE", but "BAE" is not).
+Given two strings, determine their longest common subsequence. A subsequence is a string that can be derived from the original string by deleting some elements without changing the order of the remaining elements (e.g. ``ACE'' is a subsequence of ``ABCDE'', but ``BAE'' is not).
 
 \begin{compactitem}
   \item \inlinecode{longest\_common\_subsequence(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using a classic dynamic programming approach. This implementation computes $dp[i][j]$ (the length of the longest common subsequence for the length $i$ prefix of \inlinecode{s1} and the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer.
@@ -1764,6 +1793,7 @@ Given two strings, determine their longest common subsequence. A subsequence is 
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{longest\_common\_subsequence(s1, s2)} as well as \inlinecode{hirschberg\_lcs(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{longest\_common\_subsequence(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
@@ -1856,6 +1886,7 @@ string hirschberg_lcs(const string &s1, const string &s2) {
   return res;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1876,6 +1907,7 @@ Given two strings, determine their minimum-cost alignment. An alignment of two s
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{align\_sequences(s1, s2)} as well as \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of s1 and s2, respectively.
@@ -1998,6 +2030,7 @@ std::pair<string, string> hirschberg_align_sequences(
   return {res1, res2};
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2018,9 +2051,9 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Suffix Array and LCP (Manber-Myers)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes "cab", "ab", and "b". When sorted, the indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes ``cab'', ``ab'', and ``b''. When sorted, the indices of the suffixes are ``ab'', ``b'', and ``cab'', so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
 
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of \inlinecode{[1, 0]}.
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, ``baa'' has the sorted suffixes ``a'', ``aa'', and ``baa'', with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
   \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a comparison-based sort.
@@ -2029,6 +2062,7 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log^{2} n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
@@ -2037,6 +2071,7 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
   \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
@@ -2112,6 +2147,7 @@ class SuffixArray {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2130,9 +2166,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Counting Sort)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes "cab", "ab", and "b". When sorted, the indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes ``cab'', ``ab'', and ``b''. When sorted, the indices of the suffixes are ``ab'', ``b'', and ``cab'', so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
 
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of \inlinecode{[1, 0]}.
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, ``baa'' has the sorted suffixes ``a'', ``aa'', and ``baa'', with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
   \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a counting sort instead of a comparison-based sort to reduce the running time to $O(n \log n)$.
@@ -2141,6 +2177,7 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
@@ -2149,6 +2186,7 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
   \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
@@ -2231,6 +2269,7 @@ class SuffixArray {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2249,9 +2288,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Linear DC3)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes "cab", "ab", and "b". When sorted, the indices of the suffixes are "ab", "b", and "cab", so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes ``cab'', ``ab'', and ``b''. When sorted, the indices of the suffixes are ``ab'', ``b'', and ``cab'', so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
 
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of \inlinecode{[1, 0]}.
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, ``baa'' has the sorted suffixes ``a'', ``aa'', and ``baa'', with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
   \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
@@ -2260,6 +2299,7 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
@@ -2268,6 +2308,7 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
   \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
@@ -2420,6 +2461,7 @@ class SuffixArray {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2454,6 +2496,7 @@ Maintain a map of strings to values using a tree data structure. Each node corre
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ expected per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}.
@@ -2461,6 +2504,7 @@ Maintain a map of strings to values using a tree data structure. Each node corre
   \item $O(1)$ per call to all other operations.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(l)$ for storage of the Trie, where $l$ is the total length of string keys that are currently in the map.
@@ -2582,6 +2626,7 @@ class Trie {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2638,6 +2683,7 @@ Maintain a map of strings to values using a compressed tree data structure. Each
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ expected per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}, assuming the number of outgoing compressed edges checked at each node is small.
@@ -2645,6 +2691,7 @@ Maintain a map of strings to values using a compressed tree data structure. Each
   \item $O(1)$ per call to all other operations.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(l)$ for storage of the radix tree, where $l$ is the total length of string keys that are currently in the map.
@@ -2826,6 +2873,7 @@ class RadixTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2883,6 +2931,7 @@ Each state represents an equivalence class of substrings with the same set of en
   \item \inlinecode{longest\_common\_substring(t)} returns one longest substring common to the built string and string \inlinecode{t}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ expected to construct the automaton for a string of length $n$.
@@ -2890,6 +2939,7 @@ Each state represents an equivalence class of substrings with the same set of en
   \item $O(n)$ per call to \inlinecode{count\_distinct\_substrings()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ transition storage and $O(n)$ states.
@@ -2996,6 +3046,7 @@ class SuffixAutomaton {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3030,6 +3081,7 @@ The structure has two roots: one of length $-1$, which simplifies boundary cases
   \item \inlinecode{count\_occurrences()} propagates occurrence counts through suffix links and returns \inlinecode{occ[v]} for each node \inlinecode{v}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ expected to build the tree for a string of length $n$.
@@ -3037,6 +3089,7 @@ The structure has two roots: one of length $-1$, which simplifies boundary cases
   \item $O(n)$ per call to \inlinecode{count\_occurrences()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ transition storage and $O(n)$ nodes.
@@ -3126,6 +3179,7 @@ class Eertree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3170,12 +3224,14 @@ For a string with symbol probabilities $p_i$, empirical entropy is $H = -\sum_i 
   \item \inlinecode{expected\_code\_length(freq, length)} returns the average encoded bits per symbol for code lengths \inlinecode{length[c]}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n + A)$ per call to \inlinecode{entropy(s)}, where $n$ is the string length and $A = 256$.
   \item $O(A)$ per call to \inlinecode{entropy(freq)} and \inlinecode{expected\_code\_length(freq, length)}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(A)$ auxiliary heap space for \inlinecode{byte\_frequencies(s)}.
@@ -3234,6 +3290,7 @@ double expected_code_length(const std::vector<int> &freq, const std::vector<int>
   return res;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3270,6 +3327,7 @@ The representation below stores runs in a vector of pairs rather than formatting
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the input or output length.
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(r)$ for encoded output, where $r$ is the number of runs.
@@ -3302,6 +3360,7 @@ string run_length_decode(const std::vector<std::pair<char, int>> &runs) {
   return res;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3383,6 +3442,7 @@ string base64_decode(const string &text) {
   return res;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3406,12 +3466,14 @@ The implementation below stores encoded bits as a string of \inlinecode{\textquo
   \item \inlinecode{decode(bits)} returns the decoded text.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n + A \log A)$ to construct the tree, where $n$ is the input length and $A$ is the number of distinct characters.
   \item $O(n)$ to encode or decode, plus the number of produced or consumed bits.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(A)$ for the tree and code table.
@@ -3509,6 +3571,7 @@ class HuffmanTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>

@@ -151,6 +151,17 @@ class Rational {
   }
 
   // clang-format off
+  Rational operator-() const { return Rational(-num, den); }
+  Rational operator++(int) { Rational t(*this); operator++(); return t; }
+  Rational operator--(int) { Rational t(*this); operator--(); return t; }
+  Rational &operator++() { *this = *this + 1; return *this; }
+  Rational &operator--() { *this = *this - 1; return *this; }
+  Rational &operator+=(const Rational &r) { *this = *this + r; return *this; }
+  Rational &operator-=(const Rational &r) { *this = *this - r; return *this; }
+  Rational &operator*=(const Rational &r) { *this = *this * r; return *this; }
+  Rational &operator/=(const Rational &r) { *this = *this / r; return *this; }
+  Rational &operator%=(const Rational &r) { *this = *this % r; return *this; }
+
   template<class T>
   friend Rational operator+(const T &a, const Rational &b) { return Rational(a) + b; }
 
@@ -166,47 +177,6 @@ class Rational {
   template<class T>
   friend Rational operator%(const T &a, const Rational &b) { return Rational(a) % b; }
   // clang-format on
-
-  Rational operator-() const { return Rational(-num, den); }
-
-  Rational operator++(int) {
-    Rational t(*this);
-    operator++();
-    return t;
-  }
-  Rational operator--(int) {
-    Rational t(*this);
-    operator--();
-    return t;
-  }
-  Rational &operator++() {
-    *this = *this + 1;
-    return *this;
-  }
-  Rational &operator--() {
-    *this = *this - 1;
-    return *this;
-  }
-  Rational &operator+=(const Rational &r) {
-    *this = *this + r;
-    return *this;
-  }
-  Rational &operator-=(const Rational &r) {
-    *this = *this - r;
-    return *this;
-  }
-  Rational &operator*=(const Rational &r) {
-    *this = *this * r;
-    return *this;
-  }
-  Rational &operator/=(const Rational &r) {
-    *this = *this / r;
-    return *this;
-  }
-  Rational &operator%=(const Rational &r) {
-    *this = *this % r;
-    return *this;
-  }
 };
 
 /*** Example Usage ***/

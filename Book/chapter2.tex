@@ -15,6 +15,7 @@ For production C++, prefer containers such as \inlinecode{std::list}, \inlinecod
   \item For linked-list cycle detection, use Floyd or Brent cycle detection from Chapter 1, Section 4.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{reverse\_list(head)} and \inlinecode{split\_half(head, \&second)}.
@@ -76,6 +77,7 @@ ListNode *split_half(ListNode *head, ListNode **second) {
   return head;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -121,6 +123,7 @@ The functions below use a dummy head node for each list. This makes insertions a
   \item \inlinecode{splice\_range\_after(pos, before\_first, last)} moves the half-open range \inlinecode{(before\_first, last)} so it appears after \inlinecode{pos}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to \inlinecode{splice\_after(pos, before)}.
@@ -163,6 +166,7 @@ void splice_range_after(ListNode *pos, ListNode *before_first, ListNode *last) {
   pos->next = first;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -266,6 +270,7 @@ class LRUCache {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -302,6 +307,7 @@ Maintain a min-priority queue, that is, a collection of elements with support fo
   \item \inlinecode{top()} returns the minimum element in the priority queue.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{top()}.
@@ -309,6 +315,7 @@ Maintain a min-priority queue, that is, a collection of elements with support fo
   \item $O(n)$ per call to the second constructor on the distance between lo and hi (bottom-up heapify).
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the priority queue elements.
@@ -387,6 +394,7 @@ class BinaryHeap {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <iostream>
@@ -424,6 +432,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
   \item \inlinecode{absorb(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{top()}.
@@ -431,6 +440,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
   \item $O(n)$ per call to the second constructor, where $n$ is the distance between lo and hi.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the priority queue elements.
@@ -521,6 +531,7 @@ class SkewHeap {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <iostream>
@@ -562,6 +573,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
   \item \inlinecode{absorb(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, \inlinecode{top()}, \inlinecode{push()}, and \inlinecode{absorb()}.
@@ -569,6 +581,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
   \item $O(n)$ per call to the second constructor on the distance between lo and hi.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the priority queue elements.
@@ -676,6 +689,7 @@ class PairingHeap {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <iostream>
@@ -720,12 +734,14 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
   \item $O(n)$ per call to \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{find()}, and \inlinecode{walk()}, where $n$ is the number of nodes currently in the map.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
@@ -849,6 +865,7 @@ class BST {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -892,6 +909,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
@@ -899,6 +917,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
@@ -1045,6 +1064,7 @@ class Treap {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1088,6 +1108,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
@@ -1095,6 +1116,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
@@ -1275,6 +1297,7 @@ class AVLTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1318,6 +1341,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
@@ -1325,6 +1349,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
@@ -1616,6 +1641,7 @@ class RedBlackTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1659,6 +1685,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
@@ -1666,6 +1693,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
@@ -1830,6 +1858,7 @@ class SplayTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1875,6 +1904,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
@@ -1882,6 +1912,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
@@ -2072,6 +2103,7 @@ class SBTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2123,6 +2155,7 @@ Maintain a map from closed, one-dimensional intervals to values while supporting
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(lo, hi, v)} on each interval in the map, in lexicographically ascending order of intervals.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
@@ -2131,6 +2164,7 @@ Maintain a map from closed, one-dimensional intervals to values while supporting
   \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
@@ -2323,6 +2357,7 @@ class IntervalTreap {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2370,6 +2405,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in no guaranteed order.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
@@ -2377,6 +2413,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item $O(n)$ per call to \inlinecode{walk()}, where $n$ is the number of entries in the map.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the map elements.
@@ -2481,6 +2518,7 @@ class HashMap {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2556,6 +2594,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
@@ -2563,6 +2602,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ on average for storage of the map elements.
@@ -2700,6 +2740,7 @@ class SkipList {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2739,12 +2780,14 @@ Given a static array with indices from $0$ to $n - 1$, precompute a table that m
 
 The dynamic programming state $dp[i][j]$ holds the index of the minimum value in the sub-array starting at $i$ and having length $2^j$. Each $dp[i][j]$ will always be equal to either $dp[i][j - 1]$ or $dp[i + 2^{j - 1}][j - 1]$, whichever of the indices corresponds to the smaller value in the array.
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to \inlinecode{build()}, where $n$ is the size of the array.
   \item $O(1)$ per call to \inlinecode{query()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ for storage of the sparse table, where $n$ is the size of the array.
@@ -2784,6 +2827,7 @@ int query(const std::vector<int> &a, int lo, int hi) {
   return (a[x] < a[y]) ? a[x] : a[y];
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2798,12 +2842,13 @@ int main() {
 \subsection{Square Root Decomposition}
 Maintain a fixed-size array (from 0 to \inlinecode{size() - 1}) while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default definition below assumes a numerical array type, supporting queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default definition below assumes a numerical array type, supporting queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$.
 
-The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
 
 The operations supported by this data structure are identical to those of the point update segment tree found in this section.
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to both constructors, where $n$ is the size of the array.
@@ -2811,6 +2856,7 @@ The operations supported by this data structure are identical to those of the po
   \item $O(\sqrt{n})$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
@@ -2888,6 +2934,7 @@ class SqrtDecomposition {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2913,9 +2960,9 @@ Values: 6 -2 4 8 10
 \subsection{Segment Tree (Point Update)}
 Maintain a fixed-size array while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$.
 
-The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that "set" the chosen array index to a new value. Another possible update operation is "increment", in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
 
 \begin{compactitem}
   \item \inlinecode{SegTree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
@@ -2926,6 +2973,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to both constructors, where $n$ is the size of the array.
@@ -2933,6 +2981,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
   \item $O(\log n)$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
@@ -3026,6 +3075,7 @@ class SegTree {
   void update(int i, const T &d) { update(0, 0, len - 1, i, d); }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3052,7 +3102,7 @@ The minimum value in the range [0, 3] is -2.
 \subsection{Segment Tree (Range Update)}
 Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
@@ -3066,6 +3116,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by applying the delta \inlinecode{d} to each value.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to both constructors, where $n$ is the size of the array.
@@ -3073,6 +3124,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
   \item $O(\log n)$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
@@ -3186,6 +3238,7 @@ class SegTree {
   void update(int lo, int hi, const T &d) { update(0, 0, len - 1, lo, hi, d); }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3221,7 +3274,7 @@ Values: 5 5 5 1 5
 \subsection{Segment Tree (Compressed)}
 Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{repeat\_value(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. For range-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, len)} should return $v \cdot len$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{repeat\_value(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For range-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, len)} should return $v \cdot len$.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
@@ -3235,6 +3288,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by applying the delta \inlinecode{d} to each value.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to both constructors, where $n$ is the size of the array.
@@ -3242,6 +3296,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
   \item $O(\log n)$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
@@ -3360,6 +3415,7 @@ class SegTree {
   void update(int lo, int hi, const T &d) { return update(root, 0, MAXN, lo, hi, d); }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3407,12 +3463,14 @@ The implementation below stores sums over a fixed index range \inlinecode{[0, n 
   \item \inlinecode{versions()} returns the number of stored roots.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ for construction.
   \item $O(\log n)$ per call to \inlinecode{update(version, index, value)} and \inlinecode{query(version, lo, hi)}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n + q \log n)$ for $q$ updates.
@@ -3496,6 +3554,7 @@ class PersistentSegTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3558,6 +3617,7 @@ struct CartesianTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -3590,12 +3650,13 @@ int main() {
 \subsection{Implicit Treap}
 Maintain a dynamically-sized array using a balanced binary search tree while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. A treap maintains a balanced binary tree structure by preserving the heap property on the randomly generated priority values of nodes, thereby making insertions and deletions run in $O(\log n)$ with high probability.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 This data structure shares every operation of one-dimensional segment trees in this section, with the additional operations \inlinecode{empty()}, \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{push\_back()}, and \inlinecode{pop\_back()} analogous to those of \inlinecode{std::vector} (here, \inlinecode{insert()} and \inlinecode{erase()} both take an index instead of an iterator).
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to both constructors, where $n$ is the size of the array.
@@ -3603,6 +3664,7 @@ This data structure shares every operation of one-dimensional segment trees in t
   \item $O(\log n)$ on average per call to all other operations.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
@@ -3797,6 +3859,7 @@ class ImplicitTreap {
   void update(int i, const T &d) { update(i, i, d); }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <iostream>
@@ -3838,9 +3901,9 @@ Values: 2 2 1 8 10 11 (min: 1)
 \subsection{Quadtree (Point Update)}
 Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
+The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
 
-The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that "set" the chosen cell to a new value. Another possible update operation is "increment", in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that ``set'' the chosen cell to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
 
 \begin{compactitem}
   \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
@@ -3849,12 +3912,14 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
   \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
   \item $O(\max\left(R, C\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \log\left(\max\left(R, C\right)\right))$ for storage of the quadtree nodes after $n$ point updates.
@@ -3992,6 +4057,7 @@ class Quadtree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -4031,7 +4097,7 @@ Values:
 \subsection{Quadtree (Range Update)}
 Maintain a two-dimensional array while supporting both dynamic queries and updates of rectangular sub-arrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
+The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, area)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{area} cells, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined region must be equivalent to applying it to each child region and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines rectangle assignment. For rectangle increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, area)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * area} for range-sum queries.
 
@@ -4043,12 +4109,14 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, area)}, which applie
   \item \inlinecode{update(r1, c1, r2, c2)} modifies the value at each index of the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive, by applying the delta \inlinecode{d} to each value.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
   \item $O(\max\left(R, C\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \log\left(\max\left(R, C\right)\right))$ for storage of the quadtree nodes after $n$ point or rectangle updates.
@@ -4221,6 +4289,7 @@ class Quadtree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -4260,9 +4329,9 @@ Values:
 \subsection{2D Segment Tree}
 Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
 
-The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the "min" of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
+The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
 
-The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that "set" the chosen cell to a new value. Another possible update operation is "increment", in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that ``set'' the chosen cell to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
 
 \begin{compactitem}
   \item \inlinecode{SegTree2D(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
@@ -4271,12 +4340,14 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
   \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
   \item $O(\log\left(R\right) \cdot \log\left(C\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \log\left(R\right) \log\left(C\right))$ for storage after $n$ point updates.
@@ -4502,6 +4573,7 @@ class SegTree2D {
   void update(int r, int c, const T &d) { update(root, r, c, d); }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -4546,12 +4618,14 @@ Maintain a set of two-dimensional points while supporting queries for all points
   \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to the constructor, where $n$ is the number of points.
   \item $O(\log^{2}(n) + m)$ per call to \inlinecode{query()}, where $m$ is the number of points that are reported by the query.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ for storage of the points.
@@ -4633,6 +4707,7 @@ class RangeTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <iostream>
@@ -4665,12 +4740,14 @@ Maintain a set of two-dimensional points while supporting queries for all points
   \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to the constructor, where $n$ is the number of points.
   \item $O(\log\left(n\right) + m)$ on average per call to \inlinecode{query()}, where $m$ is the number of points that are reported by the query.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the points.
@@ -4764,6 +4841,7 @@ class KDTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <iostream>
@@ -4796,12 +4874,14 @@ Maintain a set of two-dimensional points while supporting queries for the closes
   \item \inlinecode{nearest(x, y, can\_equal)} returns a point in the set that is closest to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance. This may be equal to (\inlinecode{x}, \inlinecode{y}) only if \inlinecode{can\_equal} is \inlinecode{true}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to the constructor, where $n$ is the number of points.
   \item $O(\log n)$ on average per call to \inlinecode{nearest()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the points.
@@ -4898,6 +4978,7 @@ class KDTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -4929,12 +5010,14 @@ Maintain an array of numerical type, allowing for updates of individual indices 
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{initialize(n)}, where $n$ is the size of the array.
   \item $O(\log n)$ per call to all other operations.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
@@ -4974,6 +5057,7 @@ int sum(int lo, int hi) {
   return sum(hi) - sum(lo - 1);
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -5010,6 +5094,7 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
   \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to the constructor, where $n$ is the size of the array.
@@ -5017,6 +5102,7 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
   \item $O(\log n)$ per call to \inlinecode{at()} and both \inlinecode{add()} functions.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
@@ -5056,6 +5142,7 @@ class FenwickTree {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <iostream>
@@ -5089,6 +5176,7 @@ Maintain an array of numerical type, allowing for updates of individual indices 
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to the constructor, where $n$ is the size of the array.
@@ -5096,6 +5184,7 @@ Maintain an array of numerical type, allowing for updates of individual indices 
   \item $O(\log n)$ per call to \inlinecode{add()}, \inlinecode{set()}, and both \inlinecode{sum()} functions.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
@@ -5139,6 +5228,7 @@ class FenwickTree {
   T sum(int lo, int hi) { return sum(hi) - sum(lo - 1); }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -5177,6 +5267,7 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
   \item \inlinecode{sum(lo, hi)} returns the sum of all values at indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to the constructor, where $n$ is the size of the array.
@@ -5184,6 +5275,7 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
   \item $O(\log n)$ per call to all other operations.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the array elements.
@@ -5238,6 +5330,7 @@ class FenwickTree {
   T at(int i) { return sum(i, i); }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -5278,6 +5371,7 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
 
 \textbf{Time Complexity}: $O(\log n)$ per call to all member functions, where $n$ is the number of distinct indices that have been accessed.
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ for storage of the array elements, where $n$ is the number of distinct indices that have been accessed across all of the operations so far.
@@ -5325,6 +5419,7 @@ class FenwickTree {
   T at(int i) { return sum(i, i); }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -5366,6 +5461,7 @@ Maintains frequencies over a 1-based integer domain and finds order statistics b
   \item \inlinecode{kth(k)} returns the smallest index \inlinecode{i} such that \inlinecode{sum(i) \textgreater{}= k}. The argument \inlinecode{k} is 1-based and must satisfy \inlinecode{1 \textless{}= k \textless{}= sum(n)}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{initialize()}.
@@ -5413,6 +5509,7 @@ int kth(int k) {
   return idx + 1;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -5442,12 +5539,14 @@ Maintain a 2D array of numerical type, allowing for updates of individual cells 
   \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner (\inlinecode{r1}, \inlinecode{c1}) and lower-right corner (\inlinecode{r2}, \inlinecode{c2}).
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(R \cdot C)$ per call to \inlinecode{initialize(R, C)}.
   \item $O(\log\left(R\right) \cdot \log\left(C\right))$ per call to all other operations.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(R \cdot C)$ for storage of the array elements.
@@ -5492,6 +5591,7 @@ int sum(int r1, int c1, int r2, int c2) {
   return sum(r2, c2) + sum(r1 - 1, c1 - 1) - sum(r1 - 1, c2) - sum(r2, c1 - 1);
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -5538,6 +5638,7 @@ Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to 
 
 \textbf{Time Complexity}: $O(\log\left(R\right) \cdot \log\left(C\right))$ per call to all member functions.
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \cdot \log\left(R\right) \cdot \log\left(C\right))$ for storage of the array elements, where $n$ is the number of distinct indices that have been accessed across all of the operations so far.
@@ -5615,6 +5716,7 @@ class FenwickTree2D {
   T at(int r, int c) { return sum(r, c, r, c); }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -5667,12 +5769,14 @@ Maintain a set of elements partitioned into non-overlapping subsets. Each partit
 
 A precondition to the last three operations is that \inlinecode{make\_set()} must have been previously called on their arguments.
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to \inlinecode{initialize()} and \inlinecode{make\_set()}.
   \item $O(\alpha\left(n\right))$ per call to \inlinecode{find\_root()}, \inlinecode{is\_united()}, and \inlinecode{unite()}, where $n$ is the number of elements that has been added via \inlinecode{make\_set()} so far, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of $n$).
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the disjoint set forest elements.
@@ -5728,6 +5832,7 @@ void unite(int u, int v) {
   }
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -5761,6 +5866,7 @@ Maintain a set of elements partitioned into non-overlapping subsets using a coll
 
 A precondition to the last three operations is that \inlinecode{make\_set()} must have been previously called on their arguments.
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
@@ -5769,6 +5875,7 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
   \item $O(n)$ per call to \inlinecode{get\_all\_sets()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the disjoint set forest elements.
@@ -5840,6 +5947,7 @@ class DisjointSetForest {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -5890,6 +5998,7 @@ Path compression is intentionally not used, because it is hard to undo. Union by
   \item \inlinecode{rollback(s)} undoes all changes made after snapshot \inlinecode{s}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{initialize(n)}.
@@ -5970,6 +6079,7 @@ class RollbackDSU {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -5993,12 +6103,14 @@ int main() {
 \subsection{Lowest Common Ancestor (Sparse Table)}
 Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to \inlinecode{build()}, where $n$ is the number of nodes.
   \item $O(\log n)$ per call to \inlinecode{lca()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ to store the sparse table, where $n$ is the number of nodes.
@@ -6058,6 +6170,7 @@ int lca(int u, int v) {
   return dp[u][0];
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -6083,12 +6196,14 @@ int main() {
 \subsection{Lowest Common Ancestor (Segment Tree)}
 Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to \inlinecode{build()}, where $n$ is the number of nodes.
   \item $O(\log n)$ per call to \inlinecode{lca()}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the segment tree, where $n$ is the number of nodes.
@@ -6162,6 +6277,7 @@ int lca(int u, int v) {
   return get_minpos(std::min(first[u], first[v]), std::max(first[u], first[v]), 0, 0, len - 1);
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -6187,9 +6303,9 @@ int main() {
 \subsection{Heavy Light Decomposition}
 Maintain a tree with values associated with either its edges or nodes, while supporting both dynamic queries and dynamic updates of all values on a given path between two nodes in the tree. Heavy-light decomposition partitions the nodes of the tree into disjoint paths where all nodes have degree two, except the endpoints of a path which has degree one.
 
-The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the tree. The default code below assumes a numerical tree type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
+The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the tree. The default code below assumes a numerical tree type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
 
-The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning "apply \inlinecode{old}, then apply \inlinecode{d}". These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that "set" a path's edges or nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
+The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning ``apply \inlinecode{old}, then apply \inlinecode{d}''. These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that ``set'' a path's edges or nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 
 \begin{compactitem}
   \item \inlinecode{HeavyLight(adj, v)} constructs a new heavy light decomposition on a tree defined by the adjacency list \inlinecode{adj}, with all values initialized to \inlinecode{v}. The adjacency list must consist of only the integers from 0 to \inlinecode{adj.size() - 1}, inclusive. No duplicate edges should exist, and the graph must be connected.
@@ -6197,12 +6313,14 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
   \item \inlinecode{update(u, v, d)} modifies all values on the path from node \inlinecode{u} to node \inlinecode{v} by respectively applying the delta \inlinecode{d}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to the constructor, where $n$ is the number of nodes.
   \item $O(\log^{2} n)$ per call to \inlinecode{query()} and \inlinecode{update()};
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the decomposition.
@@ -6420,6 +6538,7 @@ class HeavyLight {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -6455,9 +6574,9 @@ int main() {
 \subsection{Link-Cut Tree}
 Maintain a forest of trees with values associated with its nodes, while supporting both dynamic queries and dynamic updates of all values on any path between two nodes in a given tree. In addition, support testing of whether two nodes are connected in the forest, as well as the merging and spliting of trees by adding or removing specific edges. Link/cut forests divide each of its trees into vertex-disjoint paths, each represented by a splay tree.
 
-The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the forest. The default code below assumes a numerical forest type, defining queries for the "min" of the target range. Another possible query operation is "sum", in which case \inlinecode{combine(a, b)} should return $a + b$. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
+The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the forest. The default code below assumes a numerical forest type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
 
-The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning "apply \inlinecode{old}, then apply \inlinecode{d}". These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that "set" a path's nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
+The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning ``apply \inlinecode{old}, then apply \inlinecode{d}''. These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that ``set'' a path's nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 
 \begin{compactitem}
   \item \inlinecode{LinkCutForest()} constructs an empty forest with no trees.
@@ -6471,12 +6590,14 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
   \item \inlinecode{update(a, b, d)} modifies all the values on the path from node \inlinecode{a} to node \inlinecode{b} by respectively applying the delta \inlinecode{d}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{trees()}.
   \item $O(\log n)$ amortized per call to all other operations, where $n$ is the number of nodes.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the forest, where $n$ is the number of nodes.
@@ -6714,6 +6835,7 @@ class LinkCutForest {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>

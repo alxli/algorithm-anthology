@@ -8,6 +8,7 @@
 \usepackage{hyperref}
 \usepackage{listings}
 \usepackage{makeidx}
+\usepackage{needspace}
 \usepackage{paralist}
 \usepackage{sectsty}
 \usepackage{tcolorbox}
@@ -15,6 +16,16 @@
 \usepackage{upquote}
 \tcbuselibrary{breakable,listings}
 \geometry{left=2cm,right=2cm,top=2.5cm,bottom=2.5cm}
+
+% Keep natural vertical spacing instead of stretching glue to fill each page,
+% which otherwise opens large gaps (e.g. below headings) around big listings.
+\raggedbottom
+
+% Never strand the first or last line of a paragraph (or code listing, which
+% is set as one paragraph) alone at a page boundary.
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
 
 % Lowercase section headers
 \let\MakeUppercase\relax
@@ -41,7 +52,7 @@
   keepspaces=true,
   keywordstyle=\color{blue},
   language=C++,
-  % literate={\ \ }{{\ \ \ \ }}1,  % Convert 2 spaces to 4 
+  % literate={\ \ }{{\ \ \ \ }}1,  % Convert 2 spaces to 4
   rulecolor=\color{black},
   showstringspaces=false,
   stringstyle=\color{mauve},
@@ -75,7 +86,7 @@
   top=0mm,
   bottom=0mm,
   before skip=0.5em,
-  after skip=0pt,
+  after skip=\baselineskip,
   fonttitle=\small\bfseries,
   colbacktitle=black!7,
   coltitle=black
@@ -194,6 +205,7 @@ Programs target ISO C++17, except in the following regards:
 	\item Hacks that may depend on the platform (e.g. endianness), such as getting the signbit with type-punned pointers. Be weary of portability for all bitwise/lower level code.
 \end{itemize}
 
+\pdfbookmark[0]{Contents}{toc}
 \tableofcontents
 
 \mainmatter

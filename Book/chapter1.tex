@@ -16,7 +16,7 @@ These functions are not meant to compete with standard library implementations i
 \end{lstlisting}
 Quicksort repeatedly selects a pivot and partitions the range so that elements comparing less than the pivot precede it, elements comparing equal stay in the middle, and elements comparing greater follow it. Divide and conquer is then applied to the two outer ranges until the original range is sorted. Despite having a worst case of $O(n^{2})$, quicksort is often faster in practice than merge sort and heapsort, which both have a worst case time complexity of $O(n \log n)$.
 
-The pivot chosen in this implementation is always a middle element of the range to be sorted. To reduce the likelihood of encountering the worst case, the pivot can be chosen in better ways (e.g. randomly, or using the "median of three" technique).
+The pivot chosen in this implementation is always a middle element of the range to be sorted. To reduce the likelihood of encountering the worst case, the pivot can be chosen in better ways (e.g. randomly, or using the ``median of three'' technique).
 
 \textbf{Time Complexity (Average)}: $O(n \log n)$.
 
@@ -219,6 +219,7 @@ void radix_sort(It lo, It hi) {
   }
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -386,6 +387,7 @@ void rotate3(It lo, It mid, It hi) {
   }
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -451,19 +453,21 @@ rotate left:  1 2 2 3 4 5 7 7 10 0
 rotate right: 0 1 2 2 3 4 5 7 7 10
 \end{exampleoutput}
 \subsection{Counting Inversions}
-The number of inversions for a sequence \inlinecode{a} is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how "close" an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions.
+The number of inversions for a sequence \inlinecode{a} is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how ``close'' an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions.
 
 \begin{compactitem}
   \item \inlinecode{inversions(lo, hi)} uses merge sort to return the number of inversions given two random-access iterators as a range \inlinecode{[lo, hi)}. The input range will be sorted after the function call. This requires \inlinecode{operator \textless{}} to be defined on the iterators' value type.
   \item \inlinecode{inversions(a)} uses coordinate compression and a Fenwick tree to return the number of inversions in an integer vector without modifying it.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to \inlinecode{inversion(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
   \item $O(n \log n)$ per call to \inlinecode{inversions(a)}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary space and $O(\log n)$ stack space for \inlinecode{inversions(lo, hi)}.
@@ -528,6 +532,7 @@ long long inversions(const std::vector<int> &a) {
   return res;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -586,6 +591,7 @@ void compress2(It lo, It hi) {
   }
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <iostream>
@@ -663,6 +669,7 @@ void nth_element2(It lo, It nth, It hi) {
   }
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -725,6 +732,7 @@ void sort_012(It lo, It hi) {
   partition_three_way(lo, hi, 1);
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -766,6 +774,7 @@ Precomputes prefix sums so range-sum queries can be answered in constant time. T
   \item \inlinecode{rectangle\_sum(pref, r1, c1, r2, c2)} returns the sum of rows \inlinecode{[r1, r2)} and columns \inlinecode{[c1, c2)}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{prefix\_sums(a)}, where $n$ is the array size.
@@ -773,6 +782,7 @@ Precomputes prefix sums so range-sum queries can be answered in constant time. T
   \item $O(1)$ per range or rectangle query.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for one-dimensional prefix sums.
@@ -811,6 +821,7 @@ long long rectangle_sum(
   return pref[r2][c2] - pref[r1][c2] - pref[r2][c1] + pref[r1][c1];
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -837,6 +848,7 @@ Applies many range-add updates to an array in linear total time using a differen
   \item \inlinecode{build()} returns the final array after all range updates.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to \inlinecode{add(lo, hi, delta)}.
@@ -870,6 +882,7 @@ class DifferenceArray {
   }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -932,6 +945,7 @@ auto longest_increasing_subsequence(It lo, It hi) {
   return res;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <iostream>
@@ -990,6 +1004,7 @@ long long max_subset_sum_at_most(It lo, It hi, long long v) {
   return res;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1035,6 +1050,7 @@ long long knapsack_01(
   return dp[capacity];
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1060,12 +1076,14 @@ For unbounded maximum-value knapsack, weights are iterated in increasing order s
   \item All capacities must be nonnegative integers. Weights and coin denominations should be positive to avoid infinitely many uses of a zero-weight item.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(nW)$ for \inlinecode{unbounded\_knapsack(weight, value, capacity)}, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
   \item $O(ct)$ for \inlinecode{count\_coin\_change(coins, target)}, where $c$ is the number of coin denominations and $t$ is \inlinecode{target}.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(W)$ auxiliary heap space for \inlinecode{unbounded\_knapsack(weight, value, capacity)}.
@@ -1100,6 +1118,7 @@ long long count_coin_change(const std::vector<int> &coins, int target) {
   return dp[target];
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1167,6 +1186,7 @@ int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
   return res;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1195,6 +1215,7 @@ Computes the minimum excluded nonnegative integer, commonly called the MEX. The 
   \item \inlinecode{get()} returns the current MEX.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{mex(lo, hi)}, where $n$ is the number of values.
@@ -1250,6 +1271,7 @@ class DynamicMex {
   int get() const { return *missing.begin(); }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1283,6 +1305,7 @@ The examples below cover two common patterns: finding the shortest subarray with
 
 \textbf{Time Complexity}: $O(n)$ expected per call, where $n$ is the array size.
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{min\_length\_at\_least(a, target)}.
@@ -1326,6 +1349,7 @@ int longest_at_most_k_distinct(const std::vector<int> &a, int k) {
   return best;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1382,6 +1406,7 @@ std::vector<Interval> interval_scheduling(std::vector<Interval> intervals) {
   return res;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1440,6 +1465,7 @@ long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) 
   return dp[n];
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1502,6 +1528,7 @@ std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals)
   return room;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -1577,6 +1604,7 @@ long long schedule_deadline_jobs(std::vector<Job> jobs) {
   return res;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1626,6 +1654,7 @@ int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
   return static_cast<int>(durations.size());
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1669,6 +1698,7 @@ void fisher_yates_shuffle(It lo, It hi) {
   }
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -1697,12 +1727,14 @@ Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once 
   \item \inlinecode{count()} returns the number of stream elements seen so far.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to \inlinecode{add(x)}.
   \item $O(n)$ to process a range of \inlinecode{n} elements.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{ReservoirSampleOne}.
@@ -1765,6 +1797,7 @@ class ReservoirSampleK {
   int count() const { return seen; }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1797,12 +1830,14 @@ Given an array of numbers, determine the maximum possible sum of any contiguous 
   \item \inlinecode{max\_submatrix\_sum(matrix, \&r1, \&c1, \&r2, \&c2)} returns the largest sum of any rectangular submatrix for a matrix of $n$ rows by $m$ columns. The matrix should be given as a 2-dimensional vector, where the outer vector must contain $n$ vectors each of size $m$. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, four \inlinecode{int} pointers may be passed to store the boundary indices of the resulting subarray, with \inlinecode{(r1, c1)} specifiying the top-left index and \inlinecode{(r2, c2)} specifying the bottom-right index. By convention, the empty submatrix is allowed, so an input matrix consisting of only negative values returns \inlinecode{0} with an empty result interval.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{max\_subarray\_sum()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
   \item $O(n \cdot m^{2})$ per call to \inlinecode{max\_submatrix\_sum()}, where $n$ is the number of rows and $m$ is the number of columns in the matrix.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{max\_subarray\_sum()}.
@@ -1874,6 +1909,7 @@ T max_submatrix_sum(
   return max_sum;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -1953,6 +1989,7 @@ It majority(It lo, It hi) {
   return candidate;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2004,6 +2041,7 @@ class OnlineStatistics {
   double variance_sample() const { return n <= 1 ? 0 : m2 / (n - 1); }
 };
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2065,6 +2103,7 @@ std::unordered_map<T, int> misra_gries(It lo, It hi, int k) {
   return count;
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2088,7 +2127,7 @@ Given a function $f$ mapping a set of integers to itself and an x-coordinate in 
 
 There must exist a pair of indices $i$ and $j$ ($i < j$) such that $x_i = x_j$. When this happens, the rest of the sequence will consist of the subsequence from $x_i$ to $x_{j - 1}$ repeating indefinitely. The cycle detection problem asks to find such an $i$, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
 
-Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm", is a space-efficient algorithm that moves two pointers through the sequence at different speeds. Each step in the algorithm moves the "tortoise" one step forward and the "hare" two steps forward in the sequence, comparing the sequence values at each step. Their first meeting point is somewhere in the cycle; a second phase then finds the cycle's starting position.
+Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient algorithm that moves two pointers through the sequence at different speeds. Each step in the algorithm moves the ``tortoise'' one step forward and the ``hare'' two steps forward in the sequence, comparing the sequence values at each step. Their first meeting point is somewhere in the cycle; a second phase then finds the cycle's starting position.
 
 \textbf{Time Complexity}: $O(m + n)$ per call to \inlinecode{find\_cycle\_floyd()}, where $m$ is the smallest index of the sequence which is the beginning of a cycle, and $n$ is the cycle's length.
 
@@ -2122,6 +2161,7 @@ Cycle find_cycle_floyd(Fn f, int x0) {
   return {start, length};
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
@@ -2200,6 +2240,7 @@ Cycle find_cycle_brent(Fn f, int x0) {
   return {start, length};
 }
 \end{lstlisting}
+\Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>

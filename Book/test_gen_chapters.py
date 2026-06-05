@@ -25,6 +25,43 @@ class GeneratorTest(unittest.TestCase):
             r'\textquotesingle{}}, then don'
             r"'t panic.")
 
+    def test_prose_double_quotes_become_directional(self):
+        self.assertEqual(
+            gen_chapters.format_text('Updates that "set" a path to a value.'),
+            "Updates that ``set'' a path to a value.")
+
+    def test_prose_apostrophes_and_possessives_stay_right_quotes(self):
+        self.assertEqual(
+            gen_chapters.format_text("Dijkstra's and the iterators' value type."),
+            "Dijkstra's and the iterators' value type.")
+        self.assertEqual(gen_chapters.format_text("only 0's and 1's"),
+                         "only 0's and 1's")
+
+    def test_prose_single_quoted_phrase_becomes_directional(self):
+        self.assertEqual(gen_chapters.format_text("the 'word' here"),
+                         "the `word' here")
+
+    def test_quote_after_inline_code_closes(self):
+        self.assertEqual(
+            gen_chapters.format_text('apply `d`". Done.'),
+            "apply \\inlinecode{d}''. Done.")
+
+    def test_possessive_after_inline_code_stays_right_quote(self):
+        self.assertEqual(
+            gen_chapters.format_text("reference to key `k`'s associated value"),
+            "reference to key \\inlinecode{k}'s associated value")
+
+    def test_quotes_inside_inline_code_are_untouched(self):
+        self.assertEqual(
+            gen_chapters.format_text("a `'0'` bit and \"min\" mode"),
+            'a \\inlinecode{\\textquotesingle{}0\\textquotesingle{}} bit '
+            "and ``min'' mode")
+
+    def test_quotes_inside_emphasis_resolve_at_boundary(self):
+        self.assertEqual(
+            gen_chapters.format_text('a **the "set" case** here'),
+            "a \\textbf{the ``set'' case} here")
+
     def test_render_comment(self):
         comment = r'''
 Soft-wrapped text with a 50% chance and path C:\tmp.
@@ -47,6 +84,31 @@ Stable?: No.
             '  \\item $O(1)$ for setup.\n'
             '  \\item $O(n^{2})$ for work with foo\\_bar.\n'
             '\\end{compactitem}\n\n')
+
+    def test_multiline_complexity_label_is_kept_with_its_list(self):
+        rendered = gen_chapters.render_comment('''
+Time Complexity:
+- O(n) to build.
+- O(log n) per query.
+''')
+        self.assertEqual(
+            rendered,
+            '\\Needspace*{3\\baselineskip}\n\\textbf{Time Complexity}:\n'
+            '\\begin{compactitem}\n'
+            '  \\item $O(n)$ to build.\n'
+            '  \\item $O(\\log n)$ per query.\n'
+            '\\end{compactitem}\n\n')
+
+    def test_inline_complexity_label_does_not_force_keep(self):
+        rendered = gen_chapters.render_comment('Time Complexity: O(n log n).')
+        self.assertNotIn('Needspace', rendered)
+
+    def test_example_usage_heading_is_kept_with_listing(self):
+        rendered = gen_chapters.render_source('''/*** Example Usage ***/
+int main() {}
+''')
+        self.assertIn('\\Needspace*{4\\baselineskip}\n\\textbf{Example Usage}\\par',
+                      rendered)
 
     def test_single_complexity_item_is_inlined(self):
         comment = '''
