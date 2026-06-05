@@ -9,15 +9,15 @@ and are exact for integer points. Functions that return actual distances or proj
 `double` only for the final division/square root.
 
 - `dist(a, b)` and `sqdist(a, b)` respectively return the distance and squared distance between
-  points $a$ and $b$.
-- `line_dist(p, a, b, c)` returns the distance from point $p$ to the line $ax + by + c = 0$.
-- `line_dist(p, a, b)` returns the distance from point $p$ to the infinite line containing points
-  $a$ and $b$. If $a = b$, returns the distance from $p$ to $a$.
+  points `a` and `b`.
+- `line_dist(p, a, b, c)` returns the distance from point `p` to the line $`a`x + `b`y + `c` = 0$.
+- `line_dist(p, a, b)` returns the distance from point `p` to the infinite line containing points
+  `a` and `b`. If `a` = `b`, returns the distance from `p` to `a`.
 - `line_dist(a1, b1, c1, a2, b2, c2)` returns the distance between two lines.
-- `seg_dist(p, a, b)` returns the distance from point $p$ to the line segment $ab$.
-- `seg_dist(a, b, c, d)` returns the minimum distance between line segments $ab$ and $cd$. Returns 0
+- `seg_dist(p, a, b)` returns the distance from point `p` to the line segment $ab$.
+- `seg_dist(a, b, c, d)` returns the minimum distance between line segments `ab` and `cd`. Returns 0
   if the segments touch or intersect.
-- `closest_point(a, b, p)` returns the point on segment $ab$ closest to point $p$.
+- `closest_point(a, b, p)` returns the point on segment `ab` closest to point `p`.
 
 Time Complexity:
 - O(1) for all operations.

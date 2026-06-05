@@ -2,13 +2,11 @@
 
 Given a list of points, finds the closest pair using divide and conquer.
 
-The function is templated on the iterator type. The returned minimum squared distance preserves the
-coordinate arithmetic type, so integer-coordinate inputs stay exact. The result pair contains the
-original point type.
-
 - `closest_pair(lo, hi, &res)` returns the minimum squared distance between any two points in
   `[lo, hi)`. The input range is sorted after the call. The closest pair is stored into `res` if
-  non-null.
+  non-null. The function is templated on the iterator type. The returned minimum squared distance
+  preserves the coordinate arithmetic type, so integer-coordinate inputs stay exact. The result pair
+  contains the original point type.
 
 Time Complexity:
 - O(n log^2 n) per call, where $n$ is the distance between `lo` and `hi`.

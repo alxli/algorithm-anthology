@@ -10,12 +10,15 @@ For `seg_intersection()` detection-only use (`p=nullptr`/`q=nullptr`), calculati
 `Pt` has integer coordinates. Segment intersection point output may use a different floating-point
 point type, e.g. integer endpoints with `Point*` outputs.
 
-- `line_intersection(a1,b1,c1,a2,b2,c2,&p)` intersects lines $a_1x+b_1y+c_1=0$ and
-  $a_2x+b_2y+c_2=0$, returning -1 (parallel), 0 (one point, stored in `p`), or 1 (identical).
-- `line_intersection(p1,p2,p3,p4,&p)` intersects the infinite lines through $p_1p_2$ and $p_3p_4$.
-- `seg_intersection(a,b,c,d,&p,&q)` intersects segments $ab$ and $cd$, returning -1 (none), 0 (one
-   point), or 1 (overlapping segment). Touching behavior is controlled by `TOUCH_IS_INTERSECT`.
-- `closest_point(a,b,c,p)` returns the closest point on line $ax+by+c=0$ to $p$.
+- `line_intersection(a1, b1, c1, a2, b2, c2, &p)` intersects lines $`a1`x + `b1`y + `c1`=0$ and
+  $`a2`x + `b2`y + `c2` = 0$, returning $-1$ (parallel), 0 (one point, stored in `p`), or 1
+  (identical).
+- `line_intersection(p1, p2, p3, p4, &p)` intersects the infinite lines through `p1`-`p2` and
+  `p3`-`p4`.
+- `seg_intersection(a, b, c, d, &p, &q)` intersects segments `a`-`b` and `c`-`d`, returning $-1$
+  (none), 0 (one point), or 1 (overlapping segment). Touching behavior is controlled by
+  `TOUCH_IS_INTERSECT`.
+- `closest_point(a, b, c, p)` returns the closest point on line $`a`x + `b`y + `c`=0$ to $p$.
 
 Time Complexity:
 - O(1) for all operations.

@@ -3,12 +3,10 @@
 Given a list of points in two dimensions, finds the circle with smallest area containing all points
 using a randomized algorithm.
 
-The function is templated on the iterator type and works with any point type `Pt` having numeric
-`.x` and `.y` fields. The output is always a `Circle` with double coordinates, so integer-coordinate
-input points are accepted and converted internally.
-
-- `minimum_enclosing_circle(lo, hi)` returns the minimum enclosing `Circle` given a range `[lo, hi)`
-  of points. The input range is shuffled after the call.
+- `minimum_enclosing_circle(lo, hi)` returns the minimum enclosing circle given a range `[lo, hi)`
+  of points. The input range is shuffled after the call. The function is templated on the iterator
+  type and works with any point type `Pt` having numeric `.x` and `.y` fields. The output is always
+  a `Circle` with `double` coordinates, so integral inputs are accepted and converted internally.
 
 Time Complexity:
 - O(n) on average, where $n$ is the distance between `lo` and `hi`.

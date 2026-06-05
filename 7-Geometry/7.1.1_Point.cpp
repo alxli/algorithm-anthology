@@ -1,27 +1,26 @@
 /*
 
-A 2D point class template supporting epsilon comparisons. The coordinate type T defaults to
+A 2D point class template supporting epsilon comparisons. The coordinate type `T` defaults to
 `double`. Integer types (e.g. `int`) fully support all exact operations. Floating-point-only
 operations (`norm`, `arg`, `normalize`, `rotateCW/CCW`, `reflect` across a line) return coordinates
-of type `fp_type<T>`, which is `double` when T is integral and T itself otherwise.
+of type `fp_t`, which is `double` when `T` is integral and `T` itself otherwise.
 
-Exact operations (return `Point<T>` or T, no precision lost for integers):
+Exact operations (return `Point<T>` or `T`, no precision lost for integers):
 - element-wise arithmetic, `dot()`, `cross()`, `sqnorm()`, cardinal rotations, `reflect(point)`,
   comparisons.
 
-Floating-point-only operations (return `Point<fp_type<T>>` or `fp_type<T>`):
+Floating-point-only operations (return `Point<fp_t>` or `fp_t`):
 - `norm()`, `arg()`, `proj()`, `normalize()`, `rotateCW()`, `rotateCCW()`, `reflect(line)`.
-- `operator /` also promotes to `fp_type<T>`.
+- `operator /` also promotes to `fp_t`.
 
-Implicit conversion from `Point<U>` to `Point<T>` is provided when U is integral and T is
+Implicit conversion from `Point<U>` to `Point<T>` is provided when `U` is integral and `T` is
 floating-point, so `PointI` can be passed wherever `PointD` is expected.
 
 Type aliases:
-- `PointI  = Point<int>`: exact integer geometry
-- `PointD  = Point<double>`: standard floating-point (default)
+- `PointI = Point<int>`: exact integer geometry
+- `PointD = Point<double>`: standard floating-point
 - `PointLD = Point<long double>`: extra precision
-
-See also `std::complex`.
+- `Point = PointD`: default point type is double
 
 Time Complexity:
 - O(1) per call to the constructor and all other operations.

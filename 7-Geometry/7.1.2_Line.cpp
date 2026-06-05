@@ -1,11 +1,11 @@
 /*
 
-A straight line in two dimensions, templated on the coordinate type T (default double). The line $ax
-+ by + c = 0$ is stored UN-normalized, so a line through integer points keeps integer coefficients:
-`a = q.y - p.y`, `b = p.x - q.x`, `c = -(a*p.x + b*p.y)`. Storage and the exact predicates
-`contains()`, `is_parallel()`, and `is_perpendicular()` therefore stay exact for integer T. The
-inherently-fractional operations `slope()`, `x()`, and `y()` return `fp_t`, which is `double` when T
-is integral and T itself otherwise.
+A straight line in two dimensions, templated on the coordinate type `T` (default `double`). The line
+$ax + by + c = 0$ is stored **un**normalized, so a line through integer points keeps integer
+coefficients: `a = q.y - p.y`, `b = p.x - q.x`, `c = -(a*p.x + b*p.y)`. Storage and the exact
+predicates `contains()`, `is_parallel()`, and `is_perpendicular()` therefore stay exact for integer
+`T`. The inherently-fractional operations `slope()`, `x()`, and `y()` return `fp_t`, which is
+`double` when `T` is integral and `T` itself otherwise.
 
 Because coefficients are not normalized to a canonical form, `operator==` compares lines by
 proportionality (whether they are the same geometric line) rather than by coefficient equality.
@@ -16,10 +16,10 @@ another line is parallel or perpendicular with `is_parallel()` or `is_perpendicu
 the `parallel()` or `perpendicular()` line through a point.
 
 Type aliases:
-- `LineI  = line<int>`: exact integer-coefficient lines
-- `LineD  = line<double>`: standard floating-point (default)
+- `LineI = line<int>`: exact integer-coefficient lines
+- `LineD = line<double>`: standard floating-point
 - `LineLD = line<long double>`: extra precision
-- `Line   = LineD`
+- `Line = LineD`: default line type is double
 
 Time Complexity:
 - O(1) per call to the constructor and all other operations.

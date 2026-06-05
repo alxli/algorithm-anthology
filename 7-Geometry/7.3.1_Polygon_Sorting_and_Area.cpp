@@ -3,20 +3,20 @@
 Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the
 area.
 
-The functions below are templated on the point type. The local `Point` struct (double coordinates)
-is the default; replace it with `PointD`/ `PointI` from 7.1.1 or any struct with numeric `.x` and
-`.y` fields and `<` / `==` operators.
+The functions below are templated on the point type. The local `Point` struct (`double` coordinates)
+is the default; replace it with `Point`/`PointD`/ `PointI` from 7.1.1 or any struct with numeric
+`.x` and `.y` fields and `<` / `==` operators.
 
 `polygon_area_2x` returns twice the area as the coordinate type - exact for integer points (avoids
 floating-point entirely). `polygon_area` always returns `double`.
 
 - `mean_center(lo, hi)` returns the arithmetic mean of a range of points (as the local `Point` type
-  with double coordinates).
-- `cw_comp(a, b, c)` returns whether point $a$ compares clockwise before $b$ about $c$.
+  with `double` coordinates).
+- `cw_comp(a, b, c)` returns whether point `a` compares clockwise before `b` about `c`.
 - `CWComparator(c)` / `CCWComparator(c)` return comparators for `std::sort`.
-- `polygon_area_2x(lo, hi)` returns exactly $2 \times \text{area}$ (integer for integer points,
-  double for float points). For integer vertices, divide by 2 in the caller if the exact fractional
-  area is needed.
+- `polygon_area_2x(lo, hi)` returns exactly double the area of the polygon with vertices specified
+  by the input range `[lo, hi)`. The return value is integral or floating-point, depending on the
+  input point type). For integer vertices, divide by 2 in the caller if the exact area is needed.
 - `polygon_area(lo, hi)` returns the area as `double`.
 
 Time Complexity:
@@ -73,16 +73,6 @@ bool cw_comp(const Pt &a, const Pt &b, const Pt &c) {
   return det < 0;
 }
 
-template<class Pt>
-auto CWComparator(const Pt &c) {
-  return [c](const Pt &a, const Pt &b) { return cw_comp(a, b, c); };
-}
-
-template<class Pt>
-auto CCWComparator(const Pt &c) {
-  return [c](const Pt &a, const Pt &b) { return cw_comp(b, a, c); };
-}
-
 // Returns 2 * area. Result is exact (integer) for integer-coordinate points.
 template<class It>
 auto polygon_area_2x(It lo, It hi) {
@@ -105,10 +95,16 @@ double polygon_area(It lo, It hi) {
   return (double)polygon_area_2x(lo, hi) / 2.0;
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
+
+Clockwise vertices: (1, 3) (1, 2) (2, 1) (0, 0) (-1, 3) 
+Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3) 
+
+***/
 
 #include <cassert>
 #include <vector>
+#include <iostream>
 using namespace std;
 
 struct Point {
@@ -148,9 +144,24 @@ int main() {
   std::shuffle(v.begin(), v.end(), rng);
   Point c = mean_center(v.begin(), v.end());
   assert(EQ(c.x, 0.6) && EQ(c.y, 1.8));
-  sort(v.begin(), v.end(), CWComparator(c));
-  auto expected = points.begin();
-  for (const auto &p : v) assert(p == *expected++);
+  sort(v.begin(), v.end(), [c](const Point &a, const Point &b) {
+    return cw_comp(a, b, c);
+  });
+  cout << "Clockwise vertices: ";
+  for (const auto &p : v) {
+    cout << "(" << p.x << ", " << p.y << ") ";
+  }
+  cout << endl;
+  assert(EQ(polygon_area(v.begin(), v.end()), 5));
+
+  sort(v.begin(), v.end(), [c](const Point &a, const Point &b) {
+    return cw_comp(b, a, c);
+  });
+  cout << "Counterclockwise vertices: ";
+  for (const auto &p : v) {
+    cout << "(" << p.x << ", " << p.y << ") ";
+  }
+  cout << endl;
   assert(EQ(polygon_area(v.begin(), v.end()), 5));
 
   // Integer points: polygon_area_2x is exact (no float arithmetic).

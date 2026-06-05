@@ -8,13 +8,13 @@ circumcircle, checking if a point falls inside the circle with `contains()` or o
 
 Circle is floating-point by nature (the radius requires a square root), so it always stores and
 computes in `double`. The center of a circumcircle is rational and the radius irrational even for
-integer inputs, so there is no exact integer Circle to store; instead, every point-accepting
+integer inputs, so there is no exact integer `Circle` to store; instead, every point-accepting
 constructor and predicate is templated on the point type `Pt` and only reads `.x`/ `.y`, accepting
 `Point`/ `PointD`/ `PointI` from 7.1.1, `std::pair`, or any struct with numeric `.x`/ `.y` fields.
 
 When exact integer reasoning about a circumcircle is needed, use `in_circumcircle(a, b, c, d)`,
-which tests whether `d` lies inside the circle through `a, b, c` using a determinant (no square
-root) and is therefore exact for integer coordinates without ever building a Circle.
+which tests whether `d` lies inside the circle through `a`, `b`, `c` using a determinant (no square
+root) and is therefore exact for integer coordinates without ever building a `Circle`.
 
 Time Complexity:
 - O(1) per call to the constructors and all other operations.

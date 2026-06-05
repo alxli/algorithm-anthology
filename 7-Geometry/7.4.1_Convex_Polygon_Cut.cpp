@@ -3,14 +3,12 @@
 Given a convex polygon and two points specifying an infinite line, cuts off the right part and
 returns the resulting left part.
 
-The function is templated on the iterator type. The local `Point` struct (double coordinates) is the
-default; replace it with `PointD`/ `PointI` from 7.1.1 or any struct with numeric `.x` and `.y`
-fields. The `turn` classification uses cross products and is exact for integer-coordinate points;
-the edge-cut intersection point uses floating-point arithmetic (the output `Point` always has double
-coordinates).
-
 - `convex_cut(lo, hi, p, q)` returns the left-side polygon in clockwise order after cutting with the
-  line through $p$ and $q$.
+  line through `p` and `q`. The function is templated on the iterator type. The local `Point` struct
+  (`double` coordinates) is the default; replace it with `Point`/`PointD`/`PointI` from 7.1.1 or any
+  struct with numeric `.x` and `.y` fields. The `turn` classification uses cross products and is
+  exact for integer-coordinate points; the edge-cut intersection point uses floating-point
+  arithmetic (the output `Point` always has `double` coordinates).
 
 Time Complexity:
 - O(n) per call to `convex_cut(lo, hi, p, q)`, where $n$ is the distance between `lo` and `hi`.
@@ -68,8 +66,8 @@ int line_intersection(
   return 0;
 }
 
-// Input polygon vertices can be any type with numeric .x and .y; cut line points
-// and output polygon are always the local double Point.
+// Input polygon vertices can be any type with numeric .x and .y; cut line points and output polygon
+// are always the local double Point.
 template<class It>
 std::vector<Point> convex_cut(It lo, It hi, const Point &p, const Point &q) {
   if (EQ(p.x, q.x) && EQ(p.y, q.y)) {

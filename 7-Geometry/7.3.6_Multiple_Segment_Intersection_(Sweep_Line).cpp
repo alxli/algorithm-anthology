@@ -4,9 +4,9 @@ Given a list of line segments in two dimensions, determine whether any pair of s
 using a sweep line algorithm.
 
 `Segment<Pt>` is templated on the point type, so endpoints may be integer (`PointI`) or
-floating-point (`Point`). The cross-product sign tests in `seg_intersection` are exact for integer
-endpoints, so intersection detection is exact. The sweep-line y-ordering compares interpolated
-y-values by cross-multiplication, avoiding division.
+floating-point (`Point`/`PointD`). The cross-product sign tests in `seg_intersection` are exact for
+integer endpoints, so intersection detection is exact. The sweep-line y-ordering compares
+interpolated y-values by cross-multiplication, avoiding division.
 
 - `find_intersection(lo, hi, &res1, &res2)` returns whether any pair of segments intersect given a
   range `[lo, hi)` of segments, where `lo` and `hi` are random-access iterators. If an intersection

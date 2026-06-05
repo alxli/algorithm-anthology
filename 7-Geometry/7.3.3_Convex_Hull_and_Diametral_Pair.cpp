@@ -4,10 +4,10 @@ Given a list of points in two dimensions, computes the convex hull using the mon
 algorithm and the diametral pair using rotating calipers.
 
 The functions are templated on the iterator type; the value type of the iterator is used as the
-point type. The local `Point` struct (double coordinates) is the default; replace it with `PointD`/
-`PointI` from 7.1.1 or any struct with numeric `.x` and `.y` fields, `<`, `==`, and `!=` operators.
-`convex_hull` uses only cross product comparisons and is exact for integer-coordinate points.
-`diametral_pair` uses squared-distance comparisons and is also exact for integer points.
+point type. The local `Point` struct (`double` coordinates) is the default; replace it with `Point`/
+`PointD`/`PointI` from 7.1.1 or any struct with numeric `.x` and `.y` fields, `<`, `==`, and `!=`
+operators. `convex_hull()` uses only cross product comparisons and is exact for integer-coordinate
+points. `diametral_pair()` uses squared-distance comparisons and is also exact for integer points.
 
 - `convex_hull(lo, hi)` returns the convex hull in clockwise order. The input range is sorted
   lexicographically after the call. To produce CCW order, replace every `GE` with `LE`.

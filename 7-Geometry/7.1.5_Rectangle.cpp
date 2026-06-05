@@ -6,16 +6,16 @@ The functions are templated on the point type `Pt`, which should work with `Poin
 `PointI` from 7.1.1, or any struct with numeric `.x` and `.y` fields. All operations use comparisons
 only and are exact for integer-coordinate points.
 
-- `point_in_rectangle(p, v, w, h)` returns whether point $p$ lies within the rectangle defined by a
-  vertex `v` at $(x, y)$, a width of $w$, and a height of $h$. Note that negative widths and heights
-  are supported. If the point lies on or close to an edge (by roughly `EPS`), then the result will
+- `point_in_rectangle(p, v, w, h)` returns whether point `p` lies within the rectangle defined by a
+  vertex `v`, a width of `w`, and a height of `h`. Note that negative widths and heights are
+  supported. If the point lies on or close to an edge (by roughly `EPS`), then the result will
   depend on the setting of `EDGE_IS_INSIDE`.
-- `point_in_rectangle(p, a, b)` returns whether point $p$ lies within the rectangle with opposing
-  vertices $a$ and $b$. If the point lies on or close to an edge (by roughly `EPS`), then the result
+- `point_in_rectangle(p, a, b)` returns whether point `p` lies within the rectangle with opposing
+  vertices `a` and `b`. If the point lies on or close to an edge (by roughly `EPS`), then the result
   will depend on the setting of `EDGE_IS_INSIDE`.
 - `rectangle_intersection(a1, b1, a2, b2, &p, &q)` determines the intersection region of the
-  rectangle with opposing vertices $a_1$ and $b_1$ and the rectangle with opposing vertices $a_2$
-  and $b_2$. Returns $-1$ if the rectangles are completely disjoint, 0 if the rectangles partially
+  rectangle with opposing vertices `a_1` and `b_1` and the rectangle with opposing vertices `a_2`
+  and `b_2`. Returns `-1` if the rectangles are completely disjoint, 0 if the rectangles partially
   intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle
   is completely inside the first. If there is an intersection, the lower-left and upper-right
   vertices of the normalized intersection rectangle will be stored into pointers `p` and `q` if they

@@ -1,13 +1,13 @@
 /*
 
-Given a point $p$ and a polygon, determines whether $p$ lies inside using ray casting.
+Given a point `p` and a polygon, determines whether `p` lies inside using ray casting.
 
-The function is templated on the point type `Pt`. The local `Point` struct (double coordinates) is
-the default; replace it with `PointD`/ `PointI` from 7.1.1 or any struct with numeric `.x` and `.y`
-fields. With integer-coordinate points the cross-product comparisons are exact.
+The function is templated on the point type `Pt`. The local `Point` struct (`double` coordinates) is
+the default; replace it with `Point`/`PointD`/ `PointI` from 7.1.1 or any struct with numeric `.x`
+and `.y` fields. With integer-coordinate points the cross-product comparisons are exact.
 
-- `point_in_polygon(p, lo, hi)` returns whether $p$ lies within the polygon given by range
-  `[lo, hi)` in clockwise or counter-clockwise order. If $p$ lies on an edge (within `EPS`), the
+- `point_in_polygon(p, lo, hi)` returns whether `p` lies within the polygon given by range
+  `[lo, hi)` in clockwise or counter-clockwise order. If `p` lies on an edge (within `EPS`), the
   result depends on `EDGE_IS_INSIDE`.
 
 Time Complexity:
