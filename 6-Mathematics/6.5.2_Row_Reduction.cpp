@@ -80,6 +80,7 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
     m[i].push_back(b[i]);
   }
   row_reduce(m);
+  int rank = 0;
   for (int i = 0; i < r; i++) {
     int lead = -1;
     for (int j = 0; j < c && lead < 0; j++) {
@@ -87,12 +88,19 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
         lead = j;
       }
     }
-    if (lead < 0 && fabs(m[i][c]) > EPS) {
-      return -1;
+    if (lead < 0) {
+      // A zero coefficient row with a nonzero constant means 0 = nonzero (no solution).
+      if (fabs(m[i][c]) > EPS) {
+        return -1;
+      }
+    } else {
+      rank++;
     }
-    if (lead > i) {
-      return -2;
-    }
+  }
+  // A unique solution requires a pivot in every column; fewer means free variables remain. This
+  // also catches trailing free columns, which a per-row `lead > i` test alone would miss.
+  if (rank < c) {
+    return -2;
   }
   x->resize(c);
   for (int i = 0; i < c; i++) {

@@ -102,6 +102,11 @@ class HuffmanTree {
     if (root == -1) {
       return text;
     }
+    // Degenerate tree: the input had a single distinct character, so the root is itself a leaf and
+    // each symbol was encoded as one bit. Walking children would dereference node -1.
+    if (nodes[root].left == -1 && nodes[root].right == -1) {
+      return string(bits.size(), static_cast<char>(nodes[root].ch));
+    }
     int u = root;
     for (int i = 0; i < static_cast<int>(bits.size()); i++) {
       u = bits[i] == '0' ? nodes[u].left : nodes[u].right;

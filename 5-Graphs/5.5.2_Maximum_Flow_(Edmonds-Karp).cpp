@@ -35,9 +35,9 @@ void add_edge(int u, int v, int cap) {
   adj[v].push_back(edge{v, u, static_cast<int>(adj[u].size()) - 1, 0, 0});
 }
 
-int edmonds_karp(int source, int sink) {
+long long edmonds_karp(int source, int sink) {
   int nodes = adj.size();
-  int max_flow = 0;
+  long long max_flow = 0;
   for (;;) {
     std::vector<edge *> pred(nodes, nullptr);
     std::queue<int> q;

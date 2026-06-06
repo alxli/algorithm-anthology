@@ -73,9 +73,10 @@ int dinic_dfs(int u, int f, int sink) {
   return 0;
 }
 
-int dinic(int source, int sink) {
+long long dinic(int source, int sink) {
   int nodes = adj.size();
-  int flow, max_flow = 0;
+  int flow;
+  long long max_flow = 0;
   while (dinic_bfs(source, sink)) {
     ptr.assign(nodes, 0);
     while ((flow = dinic_dfs(source, INF, sink)) != 0) {

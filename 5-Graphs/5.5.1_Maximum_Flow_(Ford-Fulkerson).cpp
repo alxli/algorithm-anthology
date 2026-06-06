@@ -48,9 +48,9 @@ int dfs(int u, int f) {
   return 0;
 }
 
-int ford_fulkerson() {
+long long ford_fulkerson() {
   int nodes = cap.size();
-  int max_flow = 0;
+  long long max_flow = 0;
   for (;;) {
     visit.assign(nodes, false);
     int flow = dfs(source, INF);

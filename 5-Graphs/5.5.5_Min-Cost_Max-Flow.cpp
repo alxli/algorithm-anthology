@@ -30,10 +30,11 @@ struct Edge {
 };
 
 struct FlowResult {
-  int flow, cost;
+  int flow;
+  long long cost;  // Total cost can exceed 32 bits even with int capacities and edge costs.
 };
 
-const int MCMF_INF = INT_MAX / 2;
+const long long MCMF_INF = LLONG_MAX / 4;
 
 struct MinCostMaxFlow {
   std::vector<std::vector<Edge>> adj;
@@ -48,8 +49,10 @@ struct MinCostMaxFlow {
   }
 
   FlowResult min_cost_flow(int source, int sink, int target_flow) {
-    int nodes = adj.size(), flow = 0, cost = 0;
-    std::vector<int> dist(nodes), parent_node(nodes), parent_edge(nodes);
+    int nodes = adj.size(), flow = 0;
+    long long cost = 0;
+    std::vector<long long> dist(nodes);
+    std::vector<int> parent_node(nodes), parent_edge(nodes);
     std::vector<bool> in_queue(nodes);
     while (flow < target_flow) {
       std::fill(dist.begin(), dist.end(), MCMF_INF);
@@ -86,7 +89,7 @@ struct MinCostMaxFlow {
         Edge &e = adj[parent_node[v]][parent_edge[v]];
         e.cap -= aug;
         adj[v][e.rev].cap += aug;
-        cost += aug * e.cost;
+        cost += static_cast<long long>(aug) * e.cost;
       }
       flow += aug;
     }

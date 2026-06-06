@@ -14,6 +14,10 @@ is the default; replace it with `Point`/`PointD`/ `PointI` from 7.1.1 or any str
   input point type). For integer vertices, divide by 2 in the caller if the exact area is needed.
 - `polygon_area(lo, hi)` returns the area as `double`.
 
+Overflow warning: `cw_comp` and `polygon_area_2x` form cross products that grow like the squared
+coordinate magnitude (and the shoelace sum accumulates over all vertices). For integer point types
+use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) for large or numerous coordinates.
+
 Time Complexity:
 - O(n) per call to `mean_center` and `polygon_area`, where $n$ is the number of points.
 - O(1) per call to `cw_comp` and the comparators.

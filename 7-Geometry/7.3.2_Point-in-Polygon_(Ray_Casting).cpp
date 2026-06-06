@@ -6,6 +6,10 @@ replace it with `Point`/`PointD`/ `PointI` from 7.1.1 or any struct with numeric
 fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent
 comparison to be correct, and the result is exact for integer-coordinate points.
 
+Overflow warning: the edge orientation test forms a cross product that grows like the squared
+coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. `PointL` from
+7.1.1) once coordinates exceed a few tens of thousands.
+
 - `point_in_polygon(p, lo, hi)` returns whether `p` lies within the polygon given by range
   `[lo, hi)` in clockwise or counter-clockwise order. If `p` lies exactly on an edge or vertex, the
   result depends on `EDGE_IS_INSIDE`.

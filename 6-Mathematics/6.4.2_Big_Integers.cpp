@@ -272,12 +272,13 @@ class BigInt {
   BigInt(const char *s) { read(strlen(s), s); }
   BigInt(const std::string &s) { read(s.size(), s.c_str()); }
 
-  void operator=(const BigInt &v) {
+  BigInt &operator=(const BigInt &v) {
     sign = v.sign;
     digits = v.digits;
+    return *this;
   }
 
-  void operator=(long long v) {
+  BigInt &operator=(long long v) {
     sign = 1;
     if (v < 0) {
       sign = -1;
@@ -287,6 +288,7 @@ class BigInt {
     for (; v > 0; v /= BASE) {
       digits.push_back(v % BASE);
     }
+    return *this;
   }
 
   int size() const {

@@ -2,13 +2,12 @@
 
 Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence of length $n - 2$
 that uniquely represents a labeled tree on nodes $0, 1, \ldots, n - 1$. It is useful for counting
-labeled trees, generating test cases, and converting between trees and compact sequences.
+labeled trees, generating test cases, and converting between trees and compact sequences. Both
+functions choose the smallest available leaf at each step. This makes the implementation
+deterministic and matches the usual textbook convention.
 
 - `encode_prufer()` takes a tree adjacency list and returns its Prufer code.
 - `decode_prufer()` takes a Prufer code and returns the corresponding tree edges.
-
-Both functions choose the smallest available leaf at each step. This makes the implementation
-deterministic and matches the usual textbook convention.
 
 Time Complexity:
 - O(n log n) per call to `encode_prufer()` or `decode_prufer()`, where $n$ is the number of nodes in
@@ -30,13 +29,14 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int>> &tree) {
   if (nodes <= 2) {
     return code;
   }
-  int root = 0;
+  // Root at node n - 1, which is guaranteed to survive smallest-leaf removal (it is never the
+  // smallest leaf while other nodes remain). Rooting elsewhere risks recording parent[root] == -2 if
+  // the chosen root itself gets stripped to a leaf (e.g. when n - 1 happens to be a leaf).
+  int root = nodes - 1;
   for (int u = 0; u < nodes; u++) {
     degree[u] = tree[u].size();
     if (degree[u] == 1) {
       leaves.insert(u);
-    } else {
-      root = u;
     }
   }
   std::vector<int> stack(1, root);

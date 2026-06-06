@@ -26,7 +26,7 @@ const int INF = INT_MAX / 2;
 std::vector<std::vector<int>> cap;
 std::vector<std::vector<int>> f;
 
-int push_relabel(int source, int sink) {
+long long push_relabel(int source, int sink) {
   int nodes = cap.size();
   f.assign(nodes, std::vector<int>(nodes, 0));
   std::vector<int> e(nodes, 0), h(nodes, 0), maxh(nodes, 0);
@@ -82,7 +82,7 @@ int push_relabel(int source, int sink) {
       }
     }
   }
-  int max_flow = 0;
+  long long max_flow = 0;
   for (int i = 0; i < nodes; i++) {
     max_flow += f[source][i];
   }

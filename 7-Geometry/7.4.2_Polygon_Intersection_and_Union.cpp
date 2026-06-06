@@ -10,6 +10,10 @@ and the inclusion-exclusion principle.
   two ranges `[lo1, hi1)` and `[lo2, hi2)` of vertices in clockwise order, where `lo1`, `hi1`,
   `lo2`, and `hi2` must be random-access iterators.
 
+Overflow warning: the segment-intersection tests form cross products in the input point's coordinate
+type, which grow like the squared coordinate magnitude. For integer point types use long long (e.g.
+`PointL` from 7.1.1) if necessary.
+
 Time Complexity:
 - O(n^2 log n) per call to `intersection_area(lo1, hi1, lo2, hi2)` and
   `union_area(lo1, hi1, lo2, hi2)` where $n$ is the sum of distances between `lo1` and `hi1` and

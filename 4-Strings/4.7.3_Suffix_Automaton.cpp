@@ -12,14 +12,15 @@ state representing the longest proper suffix of that class.
 - `SuffixAutomaton(s)` constructs the automaton for string `s`.
 - `extend(c)` appends character `c` to the current string.
 - `contains(t)` returns whether string `t` occurs as a substring.
+- `first_occurrence(t)` returns the starting index of the first occurrence of `t`, or $-1$ if absent.
 - `count_distinct_substrings()` returns the number of distinct nonempty substrings.
 - `longest_common_substring(t)` returns one longest substring common to the built string and string
   `t`.
 
 Time Complexity:
 - O(n) expected to construct the automaton for a string of length $n$.
-- O(m) expected per call to `contains(t)` or `longest_common_substring(t)`, where $m$ is the length
-  of `t`.
+- O(m) expected per call to `contains(t)`, `first_occurrence(t)`, or `longest_common_substring(t)`,
+  where $m$ is the length of `t`.
 - O(n) per call to `count_distinct_substrings()`.
 
 Space Complexity:
@@ -96,6 +97,21 @@ class SuffixAutomaton {
     return true;
   }
 
+  // Returns the starting index of the first (leftmost) occurrence of `t` as a substring, or -1 if
+  // `t` does not occur. `first_pos` stores the end index of the first occurrence of each state's
+  // class, so subtracting the length of `t` recovers its start.
+  int first_occurrence(const string &t) const {
+    int v = 0;
+    for (char c : t) {
+      auto it = st[v].next.find(c);
+      if (it == st[v].next.end()) {
+        return -1;
+      }
+      v = it->second;
+    }
+    return st[v].first_pos - static_cast<int>(t.size()) + 1;
+  }
+
   long long count_distinct_substrings() const {
     long long res = 0;
     for (int v = 1; v < static_cast<int>(st.size()); v++) {
@@ -138,6 +154,9 @@ int main() {
   assert(!sa.contains("abba"));
   assert(sa.count_distinct_substrings() == 9);
   assert(sa.longest_common_substring("zzbabab") == "baba");
+  assert(sa.first_occurrence("aba") == 0);
+  assert(sa.first_occurrence("bab") == 1);
+  assert(sa.first_occurrence("abba") == -1);
 
   SuffixAutomaton online;
   online.extend('a');

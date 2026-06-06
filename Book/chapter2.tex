@@ -2590,7 +2590,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
-  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
+  \item \inlinecode{find(k)} returns a pointer to the value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{operator[]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
@@ -3273,17 +3273,15 @@ Values: 6 -2 4 8 10
 Values: 5 5 5 1 5
 \end{exampleoutput}
 \subsection{Segment Tree (Compressed)}
-Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
+Maintain an array over a large index range while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory: only the nodes covering touched indices are ever allocated, so indices up to \inlinecode{N} are supported without preallocating the whole tree.
 
 The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{repeat\_value(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For range-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, len)} should return $v \cdot len$.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{SegTree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
-  \item \inlinecode{SegTree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
-  \item \inlinecode{size()} returns the size of the array.
-  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
+  \item \inlinecode{SegTree(v)} constructs an array over indices 0 to \inlinecode{N}, inclusive, with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{N}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by applying the delta \inlinecode{d} to each value.
@@ -3292,17 +3290,15 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to both constructors, where $n$ is the size of the array.
-  \item $O(1)$ per call to \inlinecode{size()}.
-  \item $O(\log n)$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
+  \item $O(1)$ per call to the constructor.
+  \item $O(\log N)$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the array elements.
-  \item $O(\log n)$ auxiliary stack space for \inlinecode{update()} and \inlinecode{query()}.
-  \item $O(1)$ auxiliary for \inlinecode{size()}.
+  \item $O(k \log\left(N\right))$ for storage after $k$ index updates.
+  \item $O(\log N)$ auxiliary stack space for \inlinecode{update()} and \inlinecode{query()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3311,7 +3307,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
 
 template<class T>
 class SegTree {
-  static const int MAXN = 1000000000;
+  static const int N = 1000000000;
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, long long len) { return v; }
@@ -3411,9 +3407,9 @@ class SegTree {
 
   ~SegTree() { clean_up(root); }
   T at(int i) { return query(i, i); }
-  T query(int lo, int hi) { return query(root, 0, MAXN, lo, hi); }
+  T query(int lo, int hi) { return query(root, 0, N, lo, hi); }
   void update(int i, const T &d) { return update(i, i, d); }
-  void update(int lo, int hi, const T &d) { return update(root, 0, MAXN, lo, hi, d); }
+  void update(int lo, int hi, const T &d) { return update(root, 0, N, lo, hi, d); }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -5116,7 +5112,7 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
 template<class T>
 class FenwickTree {
   int len;
-  std::vector<int> tree;
+  std::vector<T> tree;
 
  public:
   explicit FenwickTree(int n) : len(n), tree(n + 2) {}
@@ -5198,7 +5194,7 @@ Maintain an array of numerical type, allowing for updates of individual indices 
 template<class T>
 class FenwickTree {
   int len;
-  std::vector<int> vals, tree;
+  std::vector<T> vals, tree;
 
  public:
   explicit FenwickTree(int n) : len(n), vals(n + 1), tree(n + 1) {}
@@ -5359,7 +5355,7 @@ int main() {
 Values: 15 6 7 -5 4
 \end{exampleoutput}
 \subsection{Fenwick Tree (Compressed)}
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation uses \inlinecode{std::unordered\_map} for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, all array indices from 0 to \inlinecode{MAXN}, inclusive, are accessible.
+Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation uses \inlinecode{std::unordered\_map} for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, all array indices from 0 to \inlinecode{N}, inclusive, are accessible.
 
 \begin{compactitem}
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
@@ -5384,11 +5380,11 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
 
 template<class T>
 class FenwickTree {
-  static const int MAXN = 1000000001;
+  static const int N = 1000000001;
   std::unordered_map<int, T> tmul, tadd;
 
   void add_helper(int at, int mul, T add) {
-    for (int i = at; i <= MAXN; i |= i + 1) {
+    for (int i = at; i <= N; i |= i + 1) {
       tmul[i] += mul;
       tadd[i] += add;
     }

@@ -956,9 +956,13 @@ class AhoCorasick {
     for (const auto &needle : needles) {
       total_len += needle.size();
     }
-    fail.resize(total_len, -1);
-    adj.resize(total_len);
-    out.resize(total_len);
+    // The trie has at most total_len + 1 states: the root plus one per character when no prefixes
+    // are shared. Sizing to total_len alone overflows for low-sharing needle sets (e.g. a single
+    // needle, which still needs the root plus one node).
+    int max_states = total_len + 1;
+    fail.resize(max_states, -1);
+    adj.resize(max_states);
+    out.resize(max_states);
     int states = 1;
     for (int i = 0; i < static_cast<int>(needles.size()); i++) {
       int curr = 0;
@@ -2114,6 +2118,9 @@ class SuffixArray {
 
   std::vector<int> get_lcp() const {
     int n = s.size();
+    if (n == 0) {
+      return {};  // Avoid constructing a vector of size (size_t)(-1).
+    }
     std::vector<int> lcp(n - 1);
     for (int i = 0, k = 0; i < n; i++) {
       if (rk[i] < n - 1) {
@@ -2236,6 +2243,9 @@ class SuffixArray {
 
   std::vector<int> get_lcp() const {
     int n = s.size();
+    if (n == 0) {
+      return {};  // Avoid constructing a vector of size (size_t)(-1).
+    }
     std::vector<int> lcp(n - 1);
     for (int i = 0, k = 0; i < n; i++) {
       if (rk[i] < n - 1) {
@@ -2776,6 +2786,11 @@ class RadixTree {
       if (len == 0) {
         continue;
       }
+      // The entire edge label must be consumed; a partial match means the key is not present, so
+      // erasing must fail rather than descend (otherwise erase("te") would remove "tea").
+      if (len < static_cast<int>(it->first.size())) {
+        return false;
+      }
       Node *child = it->second;
       if (!erase(child, s, i + len)) {
         return false;
@@ -2853,7 +2868,12 @@ class RadixTree {
       bool found = false;
       for (auto &[key, child] : n->children) {
         if (key[0] == s[i]) {
-          i += lcp_len(key, s, i);
+          // The entire edge label must be consumed; a partial match (s ends mid-edge or diverges
+          // from it) means the key is not present.
+          if (lcp_len(key, s, i) < static_cast<int>(key.size())) {
+            return nullptr;
+          }
+          i += static_cast<int>(key.size());
           n = child;
           found = true;
           break;
@@ -2927,6 +2947,7 @@ Each state represents an equivalence class of substrings with the same set of en
   \item \inlinecode{SuffixAutomaton(s)} constructs the automaton for string \inlinecode{s}.
   \item \inlinecode{extend(c)} appends character \inlinecode{c} to the current string.
   \item \inlinecode{contains(t)} returns whether string \inlinecode{t} occurs as a substring.
+  \item \inlinecode{first\_occurrence(t)} returns the starting index of the first occurrence of \inlinecode{t}, or $-1$ if absent.
   \item \inlinecode{count\_distinct\_substrings()} returns the number of distinct nonempty substrings.
   \item \inlinecode{longest\_common\_substring(t)} returns one longest substring common to the built string and string \inlinecode{t}.
 \end{compactitem}
@@ -2935,7 +2956,7 @@ Each state represents an equivalence class of substrings with the same set of en
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ expected to construct the automaton for a string of length $n$.
-  \item $O(m)$ expected per call to \inlinecode{contains(t)} or \inlinecode{longest\_common\_substring(t)}, where $m$ is the length of \inlinecode{t}.
+  \item $O(m)$ expected per call to \inlinecode{contains(t)}, \inlinecode{first\_occurrence(t)}, or \inlinecode{longest\_common\_substring(t)}, where $m$ is the length of \inlinecode{t}.
   \item $O(n)$ per call to \inlinecode{count\_distinct\_substrings()}.
 \end{compactitem}
 
@@ -3015,6 +3036,21 @@ class SuffixAutomaton {
     return true;
   }
 
+  // Returns the starting index of the first (leftmost) occurrence of `t` as a substring, or -1 if
+  // `t` does not occur. `first_pos` stores the end index of the first occurrence of each state's
+  // class, so subtracting the length of `t` recovers its start.
+  int first_occurrence(const string &t) const {
+    int v = 0;
+    for (char c : t) {
+      auto it = st[v].next.find(c);
+      if (it == st[v].next.end()) {
+        return -1;
+      }
+      v = it->second;
+    }
+    return st[v].first_pos - static_cast<int>(t.size()) + 1;
+  }
+
   long long count_distinct_substrings() const {
     long long res = 0;
     for (int v = 1; v < static_cast<int>(st.size()); v++) {
@@ -3058,6 +3094,9 @@ int main() {
   assert(!sa.contains("abba"));
   assert(sa.count_distinct_substrings() == 9);
   assert(sa.longest_common_substring("zzbabab") == "baba");
+  assert(sa.first_occurrence("aba") == 0);
+  assert(sa.first_occurrence("bab") == 1);
+  assert(sa.first_occurrence("abba") == -1);
 
   SuffixAutomaton online;
   online.extend('a');
@@ -3558,6 +3597,11 @@ class HuffmanTree {
     string text;
     if (root == -1) {
       return text;
+    }
+    // Degenerate tree: the input had a single distinct character, so the root is itself a leaf and
+    // each symbol was encoded as one bit. Walking children would dereference node -1.
+    if (nodes[root].left == -1 && nodes[root].right == -1) {
+      return string(bits.size(), static_cast<char>(nodes[root].ch));
     }
     int u = root;
     for (int i = 0; i < static_cast<int>(bits.size()); i++) {

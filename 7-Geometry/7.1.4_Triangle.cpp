@@ -5,7 +5,11 @@ which should work with `Point`/ `PointD`/`PointI` from 7.1.1 or any struct with 
 `.x` and `.y` fields. `triangle_area()` returns `double` regardless of input type (the area is
 fractional via the `/2`). `same_side()` and `point_in_triangle()` do all arithmetic in the point's
 own coordinate type and are exact for integer points: they reduce each cross product to a sign
-before combining, so no precision is lost and no overflow occurs from multiplying cross products.
+before combining, so no precision is lost and cross products are never multiplied together.
+
+Overflow warning: each individual cross product is still on the order of the squared coordinate
+magnitude, so for integer point types use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) once
+coordinates exceed a few tens of thousands.
 
 Note: with an integer point type, coordinates must be integers - fractional literals like `-2.44`
 cannot be represented. Use a

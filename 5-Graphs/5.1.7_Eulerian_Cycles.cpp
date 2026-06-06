@@ -14,6 +14,11 @@ indices stored in the input adjacency lists must be valid indices into `adj`. In
 `euler_cycle_undirected()` requires that for every node $v$ which is found in `adj[u]`, node $u$
 must also be found in `adj[v]`.
 
+Limitation: `euler_cycle_undirected()` marks used edges by their endpoint pair, so it does not
+support multigraphs (parallel edges between the same pair of nodes) -- the duplicate edge would be
+seen as already used. Supporting parallel edges requires marking edges by a unique edge id instead.
+The directed version has no such restriction.
+
 Time Complexity:
 - O(max(n, m)) per call to either function, where $n$ and $m$ are the numbers of nodes and edges
   respectively.

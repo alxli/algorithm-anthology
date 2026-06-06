@@ -9,6 +9,11 @@ e.g. integer endpoints with a floating-point output point.
 `seg_intersection()` has a detection-only overload (called without the output pointers) whose
 calculations are exact when `Pt` has integer coordinates.
 
+Overflow warning: the exact integer paths multiply coordinate differences (cross products and
+squared lengths), which grow like the squared coordinate magnitude. With 32-bit `int` coordinates
+these overflow once coordinates exceed a few tens of thousands, so for larger integer inputs use a
+point type with 64-bit (`long long`) coordinates.
+
 - `line_intersection(a1, b1, c1, a2, b2, c2, &p)` intersects lines $`a1`x + `b1`y + `c1`=0$ and
   $`a2`x + `b2`y + `c2` = 0$, returning $-1$ (parallel), 0 (one point, stored in `p`), or 1
   (identical).
@@ -39,6 +44,7 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 
 // clang-format off
+// Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary
 template<class Pt> auto sqnorm(const Pt &a) { return a.x*a.x + a.y*a.y; }
 template<class Pt> auto dot(const Pt &a, const Pt &b) { return a.x*b.x + a.y*b.y; }
 template<class Pt> auto cross(const Pt &a, const Pt &b) { return a.x*b.y - a.y*b.x; }
@@ -52,6 +58,7 @@ void set_point(OutPt *p, double x, double y) {
 
 template<class Pt>
 bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
+  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary.
   return EQ((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x), 0) &&
          LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x)) &&
          LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));

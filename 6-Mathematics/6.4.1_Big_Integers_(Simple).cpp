@@ -40,13 +40,11 @@ class BigInt {
     size_t pos = digits.find_last_not_of('0');
     if (pos != std::string::npos) {
       digits.erase(pos + 1);
-    }
-    if (digits.empty()) {
-      digits = "0";
+    } else {
+      digits = "0";  // An all-zero (or empty) magnitude collapses to a single "0".
     }
     if (digits.size() == 1 && digits[0] == '0') {
       sign = 1;
-      return;
     }
   }
 
@@ -175,13 +173,20 @@ class BigInt {
   }
 
   friend BigInt div(const BigInt &a, const BigInt &b) {
+    if (b.digits.size() == 1 && b.digits[0] == '0') {
+      throw std::runtime_error("Division by zero in BigInt.");
+    }
     BigInt res, row;
     res.digits.assign(a.digits.size(), '0');
+    row.digits.clear();  // Running remainder; kept normalized and nonnegative below.
     for (int i = static_cast<int>(a.digits.size()) - 1; i >= 0; i--) {
       row.digits.insert(row.digits.begin(), a.digits[i]);
-      while (comp(row.digits, b.digits, row.sign, 1) > 0) {
+      row.normalize();  // Strip the spurious high-order zero left by the previous remainder.
+      // Subtract while the remainder is >= b. A strict ">" undercounts the quotient digit when the
+      // remainder equals b, and leaves the remainder too large, overflowing the next digit past '9'.
+      while (comp(row.digits, b.digits, 1, 1) >= 0) {
         res.digits[i]++;
-        row = sub(row.digits, b.digits, row.sign, 1);
+        row = sub(row.digits, b.digits, 1, 1);
       }
     }
     res.sign = a.sign * b.sign;

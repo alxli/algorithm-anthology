@@ -44,7 +44,9 @@ void floyd_warshall() {
   for (int k = 0; k < nodes; k++) {
     for (int i = 0; i < nodes; i++) {
       for (int j = 0; j < nodes; j++) {
-        if (dist[i][j] > dist[i][k] + dist[k][j]) {
+        // The INF guards avoid relaxing through an unreachable intermediate: with a negative edge,
+        // INF + w < INF would otherwise give an unreachable pair a bogus finite distance.
+        if (dist[i][k] != INF && dist[k][j] != INF && dist[i][j] > dist[i][k] + dist[k][j]) {
           dist[i][j] = dist[i][k] + dist[k][j];
           parent[i][j] = parent[i][k];
         }

@@ -13,6 +13,10 @@ connected components in the graph.
 A bridge is an edge such that when deleted, the number of connected components in the graph is
 increased. An edge is a bridge if and only if it is not part of any cycle.
 
+Limitation: the DFS skips the parent by node id (`v == p`), so parallel edges (multigraphs) are not
+supported -- a doubled edge `u`-`v` would be misreported as a bridge even though it lies on a cycle.
+To support multigraphs, skip the specific edge used to reach a node by its edge id instead.
+
 Condensing each maximal component without a bridge into a single node, we can decompose any
 connected graph into a bridge-block tree (a.k.a. bridge-tree or block-tree), with bridges connecting
 each block. An unconnected graph will thus decompose into a "bridge-block forest."

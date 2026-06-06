@@ -7,8 +7,10 @@ path to a specific destination node using the shortest-path tree from the predec
 nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as
 passed in the function argument.
 
-This function will also detect whether the graph contains negative-weighted cycles, in which case
-there is no shortest path and an error will be thrown.
+This function will also detect whether the graph contains a negative-weight cycle reachable from the
+start node, in which case the affected shortest paths are undefined and an error will be thrown. (To
+detect a negative cycle anywhere in the graph, add a virtual source with zero-weight edges to every
+node and start from it.)
 
 Time Complexity:
 - O(n*m) per call to `bellman_ford()`, where $n$ is the number of nodes and $m$ is the number of
@@ -39,15 +41,17 @@ void bellman_ford(int nodes, int start) {
   dist[start] = 0;
   for (int i = 0; i < nodes - 1; i++) {
     for (auto &[u, v, w] : edges) {
-      if (dist[v] > dist[u] + w) {
+      // The dist[u] != INF guard avoids relaxing out of unreachable nodes: a negative edge from an
+      // unreachable u would otherwise give v a bogus finite distance (INF + w < INF).
+      if (dist[u] != INF && dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
       }
     }
   }
-  // Optional: Report negative-weighted cycles.
+  // Optional: report a negative-weight cycle reachable from the start node.
   for (auto &[u, v, w] : edges) {
-    if (dist[v] > dist[u] + w) {
+    if (dist[u] != INF && dist[v] > dist[u] + w) {
       throw std::runtime_error("Negative-weight cycle found.");
     }
   }

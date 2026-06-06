@@ -8,6 +8,11 @@ floating-point (`Point`/`PointD`). The cross-product sign tests in `seg_intersec
 integer endpoints, so intersection detection is exact. The sweep-line y-ordering compares
 interpolated y-values by cross-multiplication, avoiding division.
 
+Overflow warning: `seg_intersection` forms the usual quadratic cross products, but the y-ordering
+cross-multiplication (`ay * bdx`) is cubic in the coordinate magnitude. With 32-bit `int` endpoints
+this overflows once coordinates reach the low thousands, so use a 64-bit (`long long`) coordinate
+type for any non-trivial integer inputs.
+
 - `find_intersection(lo, hi, &res1, &res2)` returns whether any pair of segments intersect given a
   range `[lo, hi)` of segments, where `lo` and `hi` are random-access iterators. If an intersection
   is found, then one such pair of segments will be stored into pointers `res1` and `res2`. Touching
@@ -116,9 +121,11 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
     }
     return a.p.y < b.p.y;
   });
+  // Compare y-values at sweep coordinate x without division: y = (p.y*dx + dy*(x - p.x)) / dx.
+  // Vertical segments use their lower endpoint
   auto ycmp = [](const auto &a, const auto &b, auto x) {
-    // Compare y-values at sweep coordinate x without division:
-    // y = (p.y*dx + dy*(x - p.x)) / dx. Vertical segments use their lower endpoint.
+    // Overflow risk for integer Pt: the final cross-multiply is ~O(max_coord^3); use 64-bit
+    // coordinates for non-trivial integer inputs.
     auto adx = a.q.x - a.p.x, bdx = b.q.x - b.p.x;
     auto ay = a.p.y * adx + (a.q.y - a.p.y) * (x - a.p.x);
     auto by = b.p.y * bdx + (b.q.y - b.p.y) * (x - b.p.x);

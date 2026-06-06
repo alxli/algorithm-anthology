@@ -2184,6 +2184,9 @@ bool is_prime(Int n) {
 
 using uint64 = unsigned long long;
 
+// Hot path: Can simply `return (unsigned __int128)x * n % m;` for a major constant-factor speedup
+// if the GCC/Clang __int128 extension is available. Otherwise, use the portable double-and-add
+// version below, which still won't overflow a signed 64-bit `long long`.
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
   uint64 a = 0, b = x % m;
   for (; n > 0; n >>= 1) {
@@ -2395,6 +2398,9 @@ long long fermat(long long n) {
 
 using uint64 = unsigned long long;
 
+// Hot path: Can simply `return (unsigned __int128)x * n % m;` for a major constant-factor speedup
+// if the GCC/Clang __int128 extension is available. Otherwise, use the portable double-and-add
+// version below, which still won't overflow a signed 64-bit `long long`.
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
   uint64 a = 0, b = x % m;
   for (; n > 0; n >>= 1) {
@@ -2739,13 +2745,11 @@ class BigInt {
     size_t pos = digits.find_last_not_of('0');
     if (pos != std::string::npos) {
       digits.erase(pos + 1);
-    }
-    if (digits.empty()) {
-      digits = "0";
+    } else {
+      digits = "0";  // An all-zero (or empty) magnitude collapses to a single "0".
     }
     if (digits.size() == 1 && digits[0] == '0') {
       sign = 1;
-      return;
     }
   }
 
@@ -2874,13 +2878,20 @@ class BigInt {
   }
 
   friend BigInt div(const BigInt &a, const BigInt &b) {
+    if (b.digits.size() == 1 && b.digits[0] == '0') {
+      throw std::runtime_error("Division by zero in BigInt.");
+    }
     BigInt res, row;
     res.digits.assign(a.digits.size(), '0');
+    row.digits.clear();  // Running remainder; kept normalized and nonnegative below.
     for (int i = static_cast<int>(a.digits.size()) - 1; i >= 0; i--) {
       row.digits.insert(row.digits.begin(), a.digits[i]);
-      while (comp(row.digits, b.digits, row.sign, 1) > 0) {
+      row.normalize();  // Strip the spurious high-order zero left by the previous remainder.
+      // Subtract while the remainder is >= b. A strict ">" undercounts the quotient digit when the
+      // remainder equals b, and leaves the remainder too large, overflowing the next digit past '9'.
+      while (comp(row.digits, b.digits, 1, 1) >= 0) {
         res.digits[i]++;
-        row = sub(row.digits, b.digits, row.sign, 1);
+        row = sub(row.digits, b.digits, 1, 1);
       }
     }
     res.sign = a.sign * b.sign;
@@ -3164,12 +3175,13 @@ class BigInt {
   BigInt(const char *s) { read(strlen(s), s); }
   BigInt(const std::string &s) { read(s.size(), s.c_str()); }
 
-  void operator=(const BigInt &v) {
+  BigInt &operator=(const BigInt &v) {
     sign = v.sign;
     digits = v.digits;
+    return *this;
   }
 
-  void operator=(long long v) {
+  BigInt &operator=(long long v) {
     sign = 1;
     if (v < 0) {
       sign = -1;
@@ -3179,6 +3191,7 @@ class BigInt {
     for (; v > 0; v /= BASE) {
       digits.push_back(v % BASE);
     }
+    return *this;
   }
 
   int size() const {
@@ -3965,30 +3978,14 @@ matrix operator*(const matrix &a, const matrix &b) {
 }
 
 matrix &operator*=(matrix &a, const matrix &b) { return a = a * b; }
-
-template<class T>
-matrix operator+(const matrix &a, const T &v) { matrix m(a); return m += v; }
-
-template<class T>
-matrix operator-(const matrix &a, const T &v) { matrix m(a); return m -= v; }
-
-template<class T>
-matrix operator*(const matrix &a, const T &v) { matrix m(a); return m *= v; }
-
-template<class T>
-matrix operator/(const matrix &a, const T &v) { matrix m(a); return m /= v; }
-
-template<class T>
-matrix operator+(const T &v, const matrix &a) { return a + v; }
-
-template<class T>
-matrix operator-(const T &v, const matrix &a) { return a - v; }
-
-template<class T>
-matrix operator*(const T &v, const matrix &a) { return a * v; }
-
-template<class T>
-matrix operator/(const T &v, const matrix &a) { return a / v; }
+template<class T> matrix operator+(const matrix &a, const T &v) { matrix m(a); return m += v; }
+template<class T> matrix operator-(const matrix &a, const T &v) { matrix m(a); return m -= v; }
+template<class T> matrix operator*(const matrix &a, const T &v) { matrix m(a); return m *= v; }
+template<class T> matrix operator/(const matrix &a, const T &v) { matrix m(a); return m /= v; }
+template<class T> matrix operator+(const T &v, const matrix &a) { return a + v; }
+template<class T> matrix operator-(const T &v, const matrix &a) { return a - v; }
+template<class T> matrix operator*(const T &v, const matrix &a) { return a * v; }
+template<class T> matrix operator/(const T &v, const matrix &a) { return a / v; }
 
 matrix operator^(const matrix &a, unsigned int p) {
   if (rows(a) != columns(a)) {
@@ -4100,16 +4097,13 @@ matrix &rotate_in_place(matrix &a, int degrees = 90) {
       break;
     }
     case 180: {
-      for (int i = 0; i < columns(a); i++) {
-        for (int j = 0, k = n - 1; j < k; j++, k--) {
-          std::swap(a[i][j], a[i][k]);
-        }
+      // A 180-degree rotation is a horizontal flip (reverse each row) followed by a vertical flip
+      // (reverse the row order). This works for non-square matrices too, unlike a row/column index
+      // scheme keyed on a single dimension.
+      for (auto &row : a) {
+        std::reverse(row.begin(), row.end());
       }
-      for (int j = 0; j < n; j++) {
-        for (int i = 0, k = columns(a) - 1; i < k; i++, k--) {
-          std::swap(a[i][j], a[k][j]);
-        }
-      }
+      std::reverse(a.begin(), a.end());
       break;
     }
     case 270: {
@@ -4240,6 +4234,7 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
     m[i].push_back(b[i]);
   }
   row_reduce(m);
+  int rank = 0;
   for (int i = 0; i < r; i++) {
     int lead = -1;
     for (int j = 0; j < c && lead < 0; j++) {
@@ -4247,12 +4242,19 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
         lead = j;
       }
     }
-    if (lead < 0 && fabs(m[i][c]) > EPS) {
-      return -1;
+    if (lead < 0) {
+      // A zero coefficient row with a nonzero constant means 0 = nonzero (no solution).
+      if (fabs(m[i][c]) > EPS) {
+        return -1;
+      }
+    } else {
+      rank++;
     }
-    if (lead > i) {
-      return -2;
-    }
+  }
+  // A unique solution requires a pivot in every column; fewer means free variables remain. This
+  // also catches trailing free columns, which a per-row `lead > i` test alone would miss.
+  if (rank < c) {
+    return -2;
   }
   x->resize(c);
   for (int i = 0; i < c; i++) {
@@ -4344,29 +4346,28 @@ double det(const SquareMatrix &a, double EPS = 1e-10) {
   SquareMatrix b(a);
   int n = a.size();
   double res = 1.0;
-  std::vector<bool> used(n, false);
   for (int i = 0; i < n; i++) {
-    int p;
-    for (p = 0; p < n; p++) {
-      if (!used[p] && fabs(b[p][i]) > EPS) {
-        break;
+    // Partial pivoting: bring the largest-magnitude entry in column i to the diagonal. Each row
+    // swap negates the determinant, so the swap sign must be tracked. Selecting pivot rows out of
+    // order without this sign correction can return |det| with the wrong sign.
+    int p = i;
+    for (int r = i + 1; r < n; r++) {
+      if (fabs(b[r][i]) > fabs(b[p][i])) {
+        p = r;
       }
     }
-    if (p >= n) {
+    if (fabs(b[p][i]) < EPS) {
       return 0;
     }
-    res *= b[p][i];
-    used[p] = true;
-    double z = 1.0 / b[p][i];
-    for (int j = 0; j < n; j++) {
-      b[p][j] *= z;
+    if (p != i) {
+      std::swap(b[p], b[i]);
+      res = -res;
     }
-    for (int j = 0; j < n; j++) {
-      if (j != p) {
-        z = b[j][i];
-        for (int k = 0; k < n; k++) {
-          b[j][k] -= z * b[p][k];
-        }
+    res *= b[i][i];
+    for (int j = i + 1; j < n; j++) {
+      double z = b[j][i] / b[i][i];
+      for (int k = i; k < n; k++) {
+        b[j][k] -= z * b[i][k];
       }
     }
   }
@@ -4383,6 +4384,16 @@ SquareMatrix &invert(SquareMatrix &a) {
     }
   }
   for (int i = 0; i < n; i++) {
+    // Partial pivoting: without it a zero on the diagonal divides by zero and fails even for an
+    // invertible matrix (e.g. a permutation matrix). Picking the largest-magnitude pivot also
+    // improves numerical stability.
+    int p = i;
+    for (int r = i + 1; r < n; r++) {
+      if (fabs(a[r][i]) > fabs(a[p][i])) {
+        p = r;
+      }
+    }
+    std::swap(a[p], a[i]);
     double z = a[i][i];
     for (int j = i; j < n * 2; j++) {
       a[i][j] /= z;
@@ -4540,7 +4551,9 @@ int solve_system(
     for (int j = 0; j < c; j++) {
       val += a[i][j] * (*x)[j];
     }
-    if (fabs(val - b[i]) / b[i] > EPS) {
+    // Mixed absolute/relative tolerance: dividing by b[i] alone would skip the check for negative
+    // b[i] (ratio goes negative) and divide by zero when b[i] == 0.
+    if (fabs(val - b[i]) > EPS * (1.0 + fabs(b[i]))) {
       return -1;
     }
   }
@@ -4695,7 +4708,7 @@ double falsi_illinois_root(Fn f, double a, double b, const int ITERATIONS = 100)
     } else if (fa * fm > 0) {
       a = m;
       fa = fm;
-      if (side > 1) {
+      if (side > 0) {
         fb /= 2;
       }
       side = 1;
@@ -5070,7 +5083,6 @@ using cpoly = std::vector<cdouble>;
 const LD PI = acosl(-1.0L);
 const LD ZERO_EPS = 1e-30L;   // Treat coefficients and denominators this small as zero.
 const LD ROOT_EPS = 1e-18L;   // Stop once root updates are this small relative to the root.
-const LD CLEAN_EPS = 1e-12L;  // Round tiny real or imaginary output parts down to zero.
 const LD CHECK_EPS = 1e-12L;  // Residual tolerance used by the example assertions.
 
 bool is_zero(const cdouble &z, const LD EPS = ZERO_EPS) {
@@ -5108,12 +5120,6 @@ bool root_less(const cdouble &a, const cdouble &b) {
     return a.real() < b.real();
   }
   return a.imag() < b.imag();
-}
-
-cdouble clean_root(const cdouble &z) {
-  LD real = fabsl(z.real()) < CLEAN_EPS ? 0 : z.real();
-  LD imag = fabsl(z.imag()) < CLEAN_EPS ? 0 : z.imag();
-  return cdouble(real, imag);
 }
 
 cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 2000) {
@@ -5271,40 +5277,33 @@ Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
 (0.00000, 1.00000)
 \end{exampleoutput}
 \subsection{Integration (Simpson)}
-Computes the definite integral from $a$ to $b$ for a continuous function $f$ using Simpson's approximation: $\text{integral} \sim [f(a) + 4f((a + b) / 2) + f(b)](b - a) / 6$.
+Computes the definite integral from $a$ to $b$ for a continuous function $f$ using the composite Simpson's rule: the interval is split into \inlinecode{n} equal subintervals and each consecutive pair is approximated by a parabola, giving $\text{integral} \sim h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a) / n$.
 
 \begin{compactitem}
-  \item \inlinecode{simpsons(f, a, b)} returns the definite integral for a function $f$ from $a$ to $b$, to a tolerance of \inlinecode{EPS} in absolute error.
+  \item \inlinecode{integrate(f, a, b, n)} returns the definite integral of a function $f$ from $a$ to $b$ using \inlinecode{n} subintervals, where \inlinecode{n} must be even. Larger \inlinecode{n} trades runtime for accuracy: the error is $O((b - a) \cdot h^4)$, so for a smooth $f$ a value of \inlinecode{n} on the order of $10^6$ reaches near double precision.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(p)$ per call to \inlinecode{integrate()}, where $p = -\log_{10}(\text{EPS})$ is the number of digits of absolute precision that is desired.
+Unlike adaptive quadrature, the step size here is uniform, so a feature narrower than \inlinecode{h} may be under-resolved. The benefit is a simple, non-recursive routine with predictable cost that is not fooled by the premature-termination heuristic that adaptive Simpson's rule can suffer on functions whose coarse sample points happen to fit a parabola.
 
-\textbf{Space Complexity}: $O(p)$ auxiliary stack and $O(1)$ auxiliary heap space, where $p = -\log_{10}(\text{EPS})$ is the number of digits of absolute precision that is desired.
+\textbf{Time Complexity}: $O(n)$ per call to \inlinecode{integrate()}, requiring $n + 1$ evaluations of $f$.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-#include <cmath>
-
 template<class Fn>
-double simpsons(Fn f, double a, double b) {
-  return (f(a) + 4 * f((a + b) / 2) + f(b)) * (b - a) / 6;
-}
-
-template<class Fn>
-double integrate(Fn f, double a, double b, const double EPS = 1e-15) {
-  double m = (a + b) / 2;
-  double am = simpsons(f, a, m);
-  double mb = simpsons(f, m, b);
-  double ab = simpsons(f, a, b);
-  if (fabs(am + mb - ab) < EPS) {
-    return ab;
+double integrate(Fn f, double a, double b, int n = 1000000) {
+  double h = (b - a) / n, s = f(a) + f(b);
+  for (int i = 1; i < n; i++) {
+    s += f(a + h * i) * (i & 1 ? 4 : 2);
   }
-  return integrate(f, a, m) + integrate(f, m, b);
+  return s * h / 3;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <cmath>
 #include <cstdio>
 using namespace std;
 

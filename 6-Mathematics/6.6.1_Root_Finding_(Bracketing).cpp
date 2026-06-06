@@ -62,7 +62,7 @@ double falsi_illinois_root(Fn f, double a, double b, const int ITERATIONS = 100)
     } else if (fa * fm > 0) {
       a = m;
       fa = fm;
-      if (side > 1) {
+      if (side > 0) {
         fb /= 2;
       }
       side = 1;

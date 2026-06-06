@@ -9,6 +9,12 @@ Exact operations (return `point<T>` or `T`, no precision lost for integers):
 - element-wise arithmetic, `dot()`, `cross()`, `sqnorm()`, cardinal rotations, `reflect(point)`,
   comparisons.
 
+Overflow warning: the exact products `dot()`, `cross()`, and `sqnorm()` compute values on the order
+of the squared coordinate magnitude. With `point<int>` and coordinates around $10^4$ to $10^5$ they
+already overflow a 32-bit `int` (and `sqdist`-style differences overflow even sooner). For integer
+geometry with coordinates beyond a few thousand, use `PointL` (`point<long long>`) so these products
+stay exact.
+
 Floating-point-only operations (return `point<fp_t>` or `fp_t`):
 - `norm()`, `arg()`, `proj()`, `normalize()`, `rotateCW()`, `rotateCCW()`, `reflect(line)`.
 - `operator/` also promotes to `fp_t`.
@@ -22,7 +28,8 @@ rather than epsilon comparisons. The floating-point-only operations are simply n
 unless called.
 
 Type aliases:
-- `PointI = Point<int>`: exact integer geometry
+- `PointI = Point<int>`: exact integer geometry (small coordinates only; see overflow warning)
+- `PointL = Point<long long>`: exact integer geometry for large coordinates
 - `PointD = Point<double>`: standard floating-point
 - `PointLD = Point<long double>`: extra precision
 - `Point = PointD`: default point type is double
@@ -103,6 +110,8 @@ struct point {
 
   // --- Exact operations: return T or point<T>, work for any coordinate type ---
 
+  // Overflow warning: these products grow like the squared coordinate magnitude, so for integer T
+  // with large coordinates (beyond a few thousand for 32-bit int) use a wider type such as PointL.
   T sqnorm() const { return x * x + y * y; }
   T dot(const point &p) const { return x * p.x + y * p.y; }
   T cross(const point &p) const { return x * p.y - y * p.x; }
@@ -218,6 +227,7 @@ struct point {
 };
 
 using PointI = point<int>;
+using PointL = point<long long>;
 using PointD = point<double>;
 using PointLD = point<long double>;
 using Point = PointD;  // Default point type is double.

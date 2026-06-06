@@ -4,7 +4,7 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
 incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays
 (range query). This implementation uses `std::unordered_map` for coordinate compression, allowing
 for large indices to be accessed with efficient space complexity. That is, all array indices from 0
-to `MAXN`, inclusive, are accessible.
+to `N`, inclusive, are accessible.
 
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
@@ -28,11 +28,11 @@ Space Complexity:
 
 template<class T>
 class FenwickTree {
-  static const int MAXN = 1000000001;
+  static const int N = 1000000001;
   std::unordered_map<int, T> tmul, tadd;
 
   void add_helper(int at, int mul, T add) {
-    for (int i = at; i <= MAXN; i |= i + 1) {
+    for (int i = at; i <= N; i |= i + 1) {
       tmul[i] += mul;
       tadd[i] += add;
     }

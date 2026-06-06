@@ -8,6 +8,10 @@ Given a list of points, finds the closest pair using divide and conquer.
   preserves the coordinate arithmetic type, so integer-coordinate inputs stay exact. The result pair
   contains the original point type.
 
+Overflow warning: the squared distance grows like the squared coordinate magnitude. For integer
+inputs use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) once coordinates exceed a few tens of
+thousands, or the 32-bit products overflow.
+
 Time Complexity:
 - O(n log^2 n) per call, where $n$ is the distance between `lo` and `hi`.
 

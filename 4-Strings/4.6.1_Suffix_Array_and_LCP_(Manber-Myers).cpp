@@ -68,6 +68,9 @@ class SuffixArray {
 
   std::vector<int> get_lcp() const {
     int n = s.size();
+    if (n == 0) {
+      return {};  // Avoid constructing a vector of size (size_t)(-1).
+    }
     std::vector<int> lcp(n - 1);
     for (int i = 0, k = 0; i < n; i++) {
       if (rk[i] < n - 1) {

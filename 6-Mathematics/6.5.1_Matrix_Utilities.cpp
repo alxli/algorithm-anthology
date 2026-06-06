@@ -215,30 +215,14 @@ matrix operator*(const matrix &a, const matrix &b) {
 
 // clang-format off
 matrix &operator*=(matrix &a, const matrix &b) { return a = a * b; }
-
-template<class T>
-matrix operator+(const matrix &a, const T &v) { matrix m(a); return m += v; }
-
-template<class T>
-matrix operator-(const matrix &a, const T &v) { matrix m(a); return m -= v; }
-
-template<class T>
-matrix operator*(const matrix &a, const T &v) { matrix m(a); return m *= v; }
-
-template<class T>
-matrix operator/(const matrix &a, const T &v) { matrix m(a); return m /= v; }
-
-template<class T>
-matrix operator+(const T &v, const matrix &a) { return a + v; }
-
-template<class T>
-matrix operator-(const T &v, const matrix &a) { return a - v; }
-
-template<class T>
-matrix operator*(const T &v, const matrix &a) { return a * v; }
-
-template<class T>
-matrix operator/(const T &v, const matrix &a) { return a / v; }
+template<class T> matrix operator+(const matrix &a, const T &v) { matrix m(a); return m += v; }
+template<class T> matrix operator-(const matrix &a, const T &v) { matrix m(a); return m -= v; }
+template<class T> matrix operator*(const matrix &a, const T &v) { matrix m(a); return m *= v; }
+template<class T> matrix operator/(const matrix &a, const T &v) { matrix m(a); return m /= v; }
+template<class T> matrix operator+(const T &v, const matrix &a) { return a + v; }
+template<class T> matrix operator-(const T &v, const matrix &a) { return a - v; }
+template<class T> matrix operator*(const T &v, const matrix &a) { return a * v; }
+template<class T> matrix operator/(const T &v, const matrix &a) { return a / v; }
 // clang-format on
 
 matrix operator^(const matrix &a, unsigned int p) {
@@ -351,16 +335,13 @@ matrix &rotate_in_place(matrix &a, int degrees = 90) {
       break;
     }
     case 180: {
-      for (int i = 0; i < columns(a); i++) {
-        for (int j = 0, k = n - 1; j < k; j++, k--) {
-          std::swap(a[i][j], a[i][k]);
-        }
+      // A 180-degree rotation is a horizontal flip (reverse each row) followed by a vertical flip
+      // (reverse the row order). This works for non-square matrices too, unlike a row/column index
+      // scheme keyed on a single dimension.
+      for (auto &row : a) {
+        std::reverse(row.begin(), row.end());
       }
-      for (int j = 0; j < n; j++) {
-        for (int i = 0, k = columns(a) - 1; i < k; i++, k--) {
-          std::swap(a[i][j], a[k][j]);
-        }
-      }
+      std::reverse(a.begin(), a.end());
       break;
     }
     case 270: {

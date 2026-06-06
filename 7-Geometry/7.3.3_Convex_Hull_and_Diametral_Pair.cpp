@@ -6,6 +6,10 @@ iterator type; the value type of the iterator is used as the point type. Both fu
 either floating-point or integral coordinates, but since they use only cross product comparisons,
 they happen to be exact for integral points.
 
+Overflow warning: `cross()` and the squared distance in `diametral_pair()` grow like the squared
+coordinate magnitude. With 32-bit `int` coordinates they overflow once coordinates exceed a few tens
+of thousands; use a 64-bit (`long long`) coordinate type for larger integer inputs.
+
 - `convex_hull(lo, hi)` returns the convex hull in clockwise order. The input range is sorted
   lexicographically after the call. To produce CCW order, replace every `>= 0` with `<= 0`.
 - `diametral_pair(lo, hi)` returns the maximum-distance pair of points.
@@ -26,6 +30,7 @@ Space Complexity:
 
 template<class Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
+  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary.
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
@@ -73,6 +78,7 @@ auto diametral_pair(It lo, It hi) {
     k++;
   }
   auto sqdist = [](const Pt &a, const Pt &b) {
+    // Overflow risk for integer Pt: ~O(max_coord^2); use long long if necessary.
     auto dx = a.x - b.x, dy = a.y - b.y;
     return dx * dx + dy * dy;
   };

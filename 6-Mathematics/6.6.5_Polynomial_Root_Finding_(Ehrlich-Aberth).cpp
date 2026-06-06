@@ -40,7 +40,6 @@ using cpoly = std::vector<cdouble>;
 const LD PI = acosl(-1.0L);
 const LD ZERO_EPS = 1e-30L;   // Treat coefficients and denominators this small as zero.
 const LD ROOT_EPS = 1e-18L;   // Stop once root updates are this small relative to the root.
-const LD CLEAN_EPS = 1e-12L;  // Round tiny real or imaginary output parts down to zero.
 const LD CHECK_EPS = 1e-12L;  // Residual tolerance used by the example assertions.
 
 bool is_zero(const cdouble &z, const LD EPS = ZERO_EPS) {
@@ -78,12 +77,6 @@ bool root_less(const cdouble &a, const cdouble &b) {
     return a.real() < b.real();
   }
   return a.imag() < b.imag();
-}
-
-cdouble clean_root(const cdouble &z) {
-  LD real = fabsl(z.real()) < CLEAN_EPS ? 0 : z.real();
-  LD imag = fabsl(z.imag()) < CLEAN_EPS ? 0 : z.imag();
-  return cdouble(real, imag);
 }
 
 cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 2000) {

@@ -1,8 +1,9 @@
 /*
 
-Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous
-subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes
-to conserve memory while supporting large indices.
+Maintain an array over a large index range while supporting both dynamic queries and updates of
+contiguous subarrays via the lazy propagation technique. This implementation uses lazy
+initialization of nodes to conserve memory: only the nodes covering touched indices are ever
+allocated, so indices up to `N` are supported without preallocating the whole tree.
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. Since untouched
 nodes are implicit, `repeat_value(v, len)` must return the aggregate summary of `len` copies of the
@@ -19,12 +20,9 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-- `SegTree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
-  and all values initialized to `v`.
-- `SegTree(lo, hi)` constructs an array from two random-access iterators as a range `[lo, hi)`,
-  initialized to the elements of the range in the same order.
-- `size()` returns the size of the array.
-- `at(i)` returns the value at index `i`, where `i` is between 0 and `size() - 1`.
+- `SegTree(v)` constructs an array over indices 0 to `N`, inclusive, with every value implicitly
+  initialized to `v`. Nodes are allocated lazily as indices are touched.
+- `at(i)` returns the value at index `i`, where `i` is between 0 and `N`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
   inclusive. If `lo == hi`, then the single specified value is returned.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
@@ -32,14 +30,12 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
   applying the delta `d` to each value.
 
 Time Complexity:
-- O(n) per call to both constructors, where $n$ is the size of the array.
-- O(1) per call to `size()`.
-- O(log n) per call to `at()`, `update()`, and `query()`.
+- O(1) per call to the constructor.
+- O(log N) per call to `at()`, `update()`, and `query()`.
 
 Space Complexity:
-- O(n) for storage of the array elements.
-- O(log n) auxiliary stack space for `update()` and `query()`.
-- O(1) auxiliary for `size()`.
+- O(k log(N)) for storage after $k$ index updates.
+- O(log N) auxiliary stack space for `update()` and `query()`.
 
 */
 
@@ -48,7 +44,7 @@ Space Complexity:
 
 template<class T>
 class SegTree {
-  static const int MAXN = 1000000000;
+  static const int N = 1000000000;
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, long long len) { return v; }
@@ -148,9 +144,9 @@ class SegTree {
 
   ~SegTree() { clean_up(root); }
   T at(int i) { return query(i, i); }
-  T query(int lo, int hi) { return query(root, 0, MAXN, lo, hi); }
+  T query(int lo, int hi) { return query(root, 0, N, lo, hi); }
   void update(int i, const T &d) { return update(i, i, d); }
-  void update(int lo, int hi, const T &d) { return update(root, 0, MAXN, lo, hi, d); }
+  void update(int lo, int hi, const T &d) { return update(root, 0, N, lo, hi, d); }
 };
 
 /*** Example Usage and Output:

@@ -10,13 +10,19 @@ predicates `contains()`, `is_parallel()`, and `is_perpendicular()` therefore sta
 Because coefficients are not normalized to a canonical form, `operator==` compares lines by
 proportionality (whether they are the same geometric line) rather than by coefficient equality.
 
+Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in
+`is_parallel()`/`is_perpendicular()` and `a*p.x + b*p.y` in `contains()`), which grow like the
+squared coordinate magnitude. For integer `T`, use `LineL` (`line<long long>`) once coordinates
+exceed a few tens of thousands, or the 32-bit products overflow.
+
 Operations include `horizontal()`, `vertical()`, `slope()`, evaluating $y$ at some $x$ with `y()`
 (and vice versa with `x()`), checking if a point falls on the line with `contains()`, checking if
 another line is parallel or perpendicular with `is_parallel()` or `is_perpendicular()`, and finding
 the `parallel()` or `perpendicular()` line through a point.
 
 Type aliases:
-- `LineI = line<int>`: exact integer-coefficient lines
+- `LineI = line<int>`: exact integer-coefficient lines (small values only; see overflow warning)
+- `LineL = line<long long>`: exact integer-coefficient lines for large coordinates
 - `LineD = line<double>`: standard floating-point
 - `LineLD = line<long double>`: extra precision
 - `Line = LineD`: default line type is double
@@ -126,6 +132,7 @@ struct line {
 };
 
 using LineI = line<int>;
+using LineL = line<long long>;
 using LineD = line<double>;
 using LineLD = line<long double>;
 using Line = LineD;  // Default line type is double.

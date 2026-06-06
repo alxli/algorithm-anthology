@@ -1,43 +1,41 @@
 /*
 
-Computes the definite integral from $a$ to $b$ for a continuous function $f$ using Simpson's
-approximation: $\text{integral} \sim [f(a) + 4f((a + b) / 2) + f(b)](b - a) / 6$.
+Computes the definite integral from $a$ to $b$ for a continuous function $f$ using the composite
+Simpson's rule: the interval is split into `n` equal subintervals and each consecutive pair is
+approximated by a parabola, giving $\text{integral} \sim h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) +
+\ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a) / n$.
 
-- `simpsons(f, a, b)` returns the definite integral for a function $f$ from $a$ to $b$, to a
-  tolerance of `EPS` in absolute error.
+- `integrate(f, a, b, n)` returns the definite integral of a function $f$ from $a$ to $b$ using `n`
+  subintervals, where `n` must be even. Larger `n` trades runtime for accuracy: the error is
+  $O((b - a) \cdot h^4)$, so for a smooth $f$ a value of `n` on the order of $10^6$ reaches near
+  double precision.
+
+Unlike adaptive quadrature, the step size here is uniform, so a feature narrower than `h` may be
+under-resolved. The benefit is a simple, non-recursive routine with predictable cost that is not
+fooled by the premature-termination heuristic that adaptive Simpson's rule can suffer on functions
+whose coarse sample points happen to fit a parabola.
 
 Time Complexity:
-- O(p) per call to `integrate()`, where $p = -\log_{10}(\text{EPS})$ is the number of digits of
-  absolute precision that is desired.
+- O(n) per call to `integrate()`, requiring $n + 1$ evaluations of $f$.
 
 Space Complexity:
-- O(p) auxiliary stack and O(1) auxiliary heap space, where $p = -\log_{10}(\text{EPS})$ is the
-  number of digits of absolute precision that is desired.
+- O(1) auxiliary.
 
 */
 
-#include <cmath>
-
 template<class Fn>
-double simpsons(Fn f, double a, double b) {
-  return (f(a) + 4 * f((a + b) / 2) + f(b)) * (b - a) / 6;
-}
-
-template<class Fn>
-double integrate(Fn f, double a, double b, const double EPS = 1e-15) {
-  double m = (a + b) / 2;
-  double am = simpsons(f, a, m);
-  double mb = simpsons(f, m, b);
-  double ab = simpsons(f, a, b);
-  if (fabs(am + mb - ab) < EPS) {
-    return ab;
+double integrate(Fn f, double a, double b, int n = 1000000) {
+  double h = (b - a) / n, s = f(a) + f(b);
+  for (int i = 1; i < n; i++) {
+    s += f(a + h * i) * (i & 1 ? 4 : 2);
   }
-  return integrate(f, a, m) + integrate(f, m, b);
+  return s * h / 3;
 }
 
 /*** Example Usage ***/
 
 #include <cassert>
+#include <cmath>
 #include <cstdio>
 using namespace std;
 

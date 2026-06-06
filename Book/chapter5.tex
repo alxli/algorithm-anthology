@@ -502,14 +502,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Prufer Code}
-Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence of length $n - 2$ that uniquely represents a labeled tree on nodes $0, 1, \ldots, n - 1$. It is useful for counting labeled trees, generating test cases, and converting between trees and compact sequences.
+Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence of length $n - 2$ that uniquely represents a labeled tree on nodes $0, 1, \ldots, n - 1$. It is useful for counting labeled trees, generating test cases, and converting between trees and compact sequences. Both functions choose the smallest available leaf at each step. This makes the implementation deterministic and matches the usual textbook convention.
 
 \begin{compactitem}
   \item \inlinecode{encode\_prufer()} takes a tree adjacency list and returns its Prufer code.
   \item \inlinecode{decode\_prufer()} takes a Prufer code and returns the corresponding tree edges.
 \end{compactitem}
-
-Both functions choose the smallest available leaf at each step. This makes the implementation deterministic and matches the usual textbook convention.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{encode\_prufer()} or \inlinecode{decode\_prufer()}, where $n$ is the number of nodes in the tree.
 
@@ -527,13 +525,14 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int>> &tree) {
   if (nodes <= 2) {
     return code;
   }
-  int root = 0;
+  // Root at node n - 1, which is guaranteed to survive smallest-leaf removal (it is never the
+  // smallest leaf while other nodes remain). Rooting elsewhere risks recording parent[root] == -2 if
+  // the chosen root itself gets stripped to a leaf (e.g. when n - 1 happens to be a leaf).
+  int root = nodes - 1;
   for (int u = 0; u < nodes; u++) {
     degree[u] = tree[u].size();
     if (degree[u] == 1) {
       leaves.insert(u);
-    } else {
-      root = u;
     }
   }
   std::vector<int> stack(1, root);
@@ -612,6 +611,8 @@ int main() {
 A Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an Eulerian cycle if and only if every node has an in-degree equal to its out-degree, and all of its nodes with nonzero degree belong to a single strongly connected component. An undirected graph has an Eulerian cycle if and only if every node has even degree, and all of its nodes with nonzero degree belong to a single connected component.
 
 Given a graph as an adjacency list along with the starting node of the cycle, both functions below return a vector containing all nodes reachable from the starting node in an order which forms an Eulerian cycle. The first node of the cycle will be repeated as the last element of the vector. All indices stored in the input adjacency lists must be valid indices into \inlinecode{adj}. In addition, \inlinecode{euler\_cycle\_undirected()} requires that for every node $v$ which is found in \inlinecode{adj[u]}, node $u$ must also be found in \inlinecode{adj[v]}.
+
+Limitation: \inlinecode{euler\_cycle\_undirected()} marks used edges by their endpoint pair, so it does not support multigraphs (parallel edges between the same pair of nodes) -- the duplicate edge would be seen as already used. Supporting parallel edges requires marking edges by a unique edge id instead. The directed version has no such restriction.
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to either function, where $n$ and $m$ are the numbers of nodes and edges respectively.
 
@@ -969,7 +970,7 @@ Take the path: 0->1->2->3.
 \subsection{Shortest Path (Bellman-Ford)}
 Given a starting node in a weighted, directed graph with possibly negative weights, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred}. \inlinecode{bellman\_ford()} applies to a global, pre-populated edge list which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
 
-This function will also detect whether the graph contains negative-weighted cycles, in which case there is no shortest path and an error will be thrown.
+This function will also detect whether the graph contains a negative-weight cycle reachable from the start node, in which case the affected shortest paths are undefined and an error will be thrown. (To detect a negative cycle anywhere in the graph, add a virtual source with zero-weight edges to every node and start from it.)
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{bellman\_ford()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
@@ -999,15 +1000,17 @@ void bellman_ford(int nodes, int start) {
   dist[start] = 0;
   for (int i = 0; i < nodes - 1; i++) {
     for (auto &[u, v, w] : edges) {
-      if (dist[v] > dist[u] + w) {
+      // The dist[u] != INF guard avoids relaxing out of unreachable nodes: a negative edge from an
+      // unreachable u would otherwise give v a bogus finite distance (INF + w < INF).
+      if (dist[u] != INF && dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
       }
     }
   }
-  // Optional: Report negative-weighted cycles.
+  // Optional: report a negative-weight cycle reachable from the start node.
   for (auto &[u, v, w] : edges) {
-    if (dist[v] > dist[u] + w) {
+    if (dist[u] != INF && dist[v] > dist[u] + w) {
       throw std::runtime_error("Negative-weight cycle found.");
     }
   }
@@ -1173,7 +1176,9 @@ void floyd_warshall() {
   for (int k = 0; k < nodes; k++) {
     for (int i = 0; i < nodes; i++) {
       for (int j = 0; j < nodes; j++) {
-        if (dist[i][j] > dist[i][k] + dist[k][j]) {
+        // The INF guards avoid relaxing through an unreachable intermediate: with a negative edge,
+        // INF + w < INF would otherwise give an unreachable pair a bogus finite distance.
+        if (dist[i][k] != INF && dist[k][j] != INF && dist[i][j] > dist[i][k] + dist[k][j]) {
           dist[i][j] = dist[i][k] + dist[k][j];
           parent[i][j] = parent[i][k];
         }
@@ -1436,6 +1441,8 @@ Given an undirected graph, compute the following properties of the graph using T
 A cut-point (i.e. cut-node, or articulation point) is any node whose removal increases the number of connected components in the graph.
 
 A bridge is an edge such that when deleted, the number of connected components in the graph is increased. An edge is a bridge if and only if it is not part of any cycle.
+
+Limitation: the DFS skips the parent by node id (\inlinecode{v == p}), so parallel edges (multigraphs) are not supported -- a doubled edge \inlinecode{u}-\inlinecode{v} would be misreported as a bridge even though it lies on a cycle. To support multigraphs, skip the specific edge used to reach a node by its edge id instead.
 
 Condensing each maximal component without a bridge into a single node, we can decompose any connected graph into a bridge-block tree (a.k.a. bridge-tree or block-tree), with bridges connecting each block. An unconnected graph will thus decompose into a ``bridge-block forest.''
 
@@ -2101,9 +2108,9 @@ int dfs(int u, int f) {
   return 0;
 }
 
-int ford_fulkerson() {
+long long ford_fulkerson() {
   int nodes = cap.size();
-  int max_flow = 0;
+  long long max_flow = 0;
   for (;;) {
     visit.assign(nodes, false);
     int flow = dfs(source, INF);
@@ -2164,9 +2171,9 @@ void add_edge(int u, int v, int cap) {
   adj[v].push_back(edge{v, u, static_cast<int>(adj[u].size()) - 1, 0, 0});
 }
 
-int edmonds_karp(int source, int sink) {
+long long edmonds_karp(int source, int sink) {
   int nodes = adj.size();
-  int max_flow = 0;
+  long long max_flow = 0;
   for (;;) {
     std::vector<edge *> pred(nodes, nullptr);
     std::queue<int> q;
@@ -2287,9 +2294,10 @@ int dinic_dfs(int u, int f, int sink) {
   return 0;
 }
 
-int dinic(int source, int sink) {
+long long dinic(int source, int sink) {
   int nodes = adj.size();
-  int flow, max_flow = 0;
+  int flow;
+  long long max_flow = 0;
   while (dinic_bfs(source, sink)) {
     ptr.assign(nodes, 0);
     while ((flow = dinic_dfs(source, INF, sink)) != 0) {
@@ -2342,7 +2350,7 @@ const int INF = INT_MAX / 2;
 std::vector<std::vector<int>> cap;
 std::vector<std::vector<int>> f;
 
-int push_relabel(int source, int sink) {
+long long push_relabel(int source, int sink) {
   int nodes = cap.size();
   f.assign(nodes, std::vector<int>(nodes, 0));
   std::vector<int> e(nodes, 0), h(nodes, 0), maxh(nodes, 0);
@@ -2398,7 +2406,7 @@ int push_relabel(int source, int sink) {
       }
     }
   }
-  int max_flow = 0;
+  long long max_flow = 0;
   for (int i = 0; i < nodes; i++) {
     max_flow += f[source][i];
   }
@@ -2447,10 +2455,11 @@ struct Edge {
 };
 
 struct FlowResult {
-  int flow, cost;
+  int flow;
+  long long cost;  // Total cost can exceed 32 bits even with int capacities and edge costs.
 };
 
-const int MCMF_INF = INT_MAX / 2;
+const long long MCMF_INF = LLONG_MAX / 4;
 
 struct MinCostMaxFlow {
   std::vector<std::vector<Edge>> adj;
@@ -2465,8 +2474,10 @@ struct MinCostMaxFlow {
   }
 
   FlowResult min_cost_flow(int source, int sink, int target_flow) {
-    int nodes = adj.size(), flow = 0, cost = 0;
-    std::vector<int> dist(nodes), parent_node(nodes), parent_edge(nodes);
+    int nodes = adj.size(), flow = 0;
+    long long cost = 0;
+    std::vector<long long> dist(nodes);
+    std::vector<int> parent_node(nodes), parent_edge(nodes);
     std::vector<bool> in_queue(nodes);
     while (flow < target_flow) {
       std::fill(dist.begin(), dist.end(), MCMF_INF);
@@ -2503,7 +2514,7 @@ struct MinCostMaxFlow {
         Edge &e = adj[parent_node[v]][parent_edge[v]];
         e.cap -= aug;
         adj[v][e.rev].cap += aug;
-        cost += aug * e.cost;
+        cost += static_cast<long long>(aug) * e.cost;
       }
       flow += aug;
     }
@@ -2715,7 +2726,7 @@ Matched 3 pair(s):
 2 2
 \end{exampleoutput}
 \subsection{Maximum Graph Matching (Edmonds)}
-Given a directed graph, determine a maximum subset of its edges such that no node is shared between different edges in the resulting subset. \inlinecode{edmonds()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as inferred from \inlinecode{adj.size()}.
+Given an undirected graph, determine a maximum matching: a maximum subset of its edges such that no node is shared between different edges in the resulting subset. \inlinecode{edmonds()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as inferred from \inlinecode{adj.size()}. The adjacency list must be symmetric: for every edge \inlinecode{u}-\inlinecode{v}, both \inlinecode{v} is in \inlinecode{adj[u]} and \inlinecode{u} is in \inlinecode{adj[v]}.
 
 \textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{edmonds()}, where $n$ is the number of nodes.
 

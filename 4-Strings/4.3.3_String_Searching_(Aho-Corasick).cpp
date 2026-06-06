@@ -56,9 +56,13 @@ class AhoCorasick {
     for (const auto &needle : needles) {
       total_len += needle.size();
     }
-    fail.resize(total_len, -1);
-    adj.resize(total_len);
-    out.resize(total_len);
+    // The trie has at most total_len + 1 states: the root plus one per character when no prefixes
+    // are shared. Sizing to total_len alone overflows for low-sharing needle sets (e.g. a single
+    // needle, which still needs the root plus one node).
+    int max_states = total_len + 1;
+    fail.resize(max_states, -1);
+    adj.resize(max_states);
+    out.resize(max_states);
     int states = 1;
     for (int i = 0; i < static_cast<int>(needles.size()); i++) {
       int curr = 0;

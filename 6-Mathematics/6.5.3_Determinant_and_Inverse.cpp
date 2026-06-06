@@ -63,29 +63,28 @@ double det(const SquareMatrix &a, double EPS = 1e-10) {
   SquareMatrix b(a);
   int n = a.size();
   double res = 1.0;
-  std::vector<bool> used(n, false);
   for (int i = 0; i < n; i++) {
-    int p;
-    for (p = 0; p < n; p++) {
-      if (!used[p] && fabs(b[p][i]) > EPS) {
-        break;
+    // Partial pivoting: bring the largest-magnitude entry in column i to the diagonal. Each row
+    // swap negates the determinant, so the swap sign must be tracked. Selecting pivot rows out of
+    // order without this sign correction can return |det| with the wrong sign.
+    int p = i;
+    for (int r = i + 1; r < n; r++) {
+      if (fabs(b[r][i]) > fabs(b[p][i])) {
+        p = r;
       }
     }
-    if (p >= n) {
+    if (fabs(b[p][i]) < EPS) {
       return 0;
     }
-    res *= b[p][i];
-    used[p] = true;
-    double z = 1.0 / b[p][i];
-    for (int j = 0; j < n; j++) {
-      b[p][j] *= z;
+    if (p != i) {
+      std::swap(b[p], b[i]);
+      res = -res;
     }
-    for (int j = 0; j < n; j++) {
-      if (j != p) {
-        z = b[j][i];
-        for (int k = 0; k < n; k++) {
-          b[j][k] -= z * b[p][k];
-        }
+    res *= b[i][i];
+    for (int j = i + 1; j < n; j++) {
+      double z = b[j][i] / b[i][i];
+      for (int k = i; k < n; k++) {
+        b[j][k] -= z * b[i][k];
       }
     }
   }
@@ -102,6 +101,16 @@ SquareMatrix &invert(SquareMatrix &a) {
     }
   }
   for (int i = 0; i < n; i++) {
+    // Partial pivoting: without it a zero on the diagonal divides by zero and fails even for an
+    // invertible matrix (e.g. a permutation matrix). Picking the largest-magnitude pivot also
+    // improves numerical stability.
+    int p = i;
+    for (int r = i + 1; r < n; r++) {
+      if (fabs(a[r][i]) > fabs(a[p][i])) {
+        p = r;
+      }
+    }
+    std::swap(a[p], a[i]);
     double z = a[i][i];
     for (int j = i; j < n * 2; j++) {
       a[i][j] /= z;

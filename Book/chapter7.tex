@@ -12,6 +12,8 @@ Exact operations (return \inlinecode{point\textless{}T\textgreater{}} or \inline
   \item element-wise arithmetic, \inlinecode{dot()}, \inlinecode{cross()}, \inlinecode{sqnorm()}, cardinal rotations, \inlinecode{reflect(point)}, comparisons.
 \end{compactitem}
 
+Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} compute values on the order of the squared coordinate magnitude. With \inlinecode{point\textless{}int\textgreater{}} and coordinates around $10^4$ to $10^5$ they already overflow a 32-bit \inlinecode{int} (and \inlinecode{sqdist}-style differences overflow even sooner). For integer geometry with coordinates beyond a few thousand, use \inlinecode{PointL} (\inlinecode{point\textless{}long long\textgreater{}}) so these products stay exact.
+
 Floating-point-only operations (return \inlinecode{point\textless{}fp\_t\textgreater{}} or \inlinecode{fp\_t}):
 
 \begin{compactitem}
@@ -26,7 +28,8 @@ Non-floating-point coordinate types such as \inlinecode{Modular} or \inlinecode{
 Type aliases:
 
 \begin{compactitem}
-  \item \inlinecode{PointI = Point\textless{}int\textgreater{}}: exact integer geometry
+  \item \inlinecode{PointI = Point\textless{}int\textgreater{}}: exact integer geometry (small coordinates only; see overflow warning)
+  \item \inlinecode{PointL = Point\textless{}long long\textgreater{}}: exact integer geometry for large coordinates
   \item \inlinecode{PointD = Point\textless{}double\textgreater{}}: standard floating-point
   \item \inlinecode{PointLD = Point\textless{}long double\textgreater{}}: extra precision
   \item \inlinecode{Point = PointD}: default point type is double
@@ -107,6 +110,8 @@ struct point {
 
   // --- Exact operations: return T or point<T>, work for any coordinate type ---
 
+  // Overflow warning: these products grow like the squared coordinate magnitude, so for integer T
+  // with large coordinates (beyond a few thousand for 32-bit int) use a wider type such as PointL.
   T sqnorm() const { return x * x + y * y; }
   T dot(const point &p) const { return x * p.x + y * p.y; }
   T cross(const point &p) const { return x * p.y - y * p.x; }
@@ -222,6 +227,7 @@ struct point {
 };
 
 using PointI = point<int>;
+using PointL = point<long long>;
 using PointD = point<double>;
 using PointLD = point<long double>;
 using Point = PointD;  // Default point type is double.
@@ -284,12 +290,15 @@ A straight line in two dimensions, templated on the coordinate type \inlinecode{
 
 Because coefficients are not normalized to a canonical form, \inlinecode{operator==} compares lines by proportionality (whether they are the same geometric line) rather than by coefficient equality.
 
+Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in \inlinecode{is\_parallel()}/\inlinecode{is\_perpendicular()} and \inlinecode{a*p.x + b*p.y} in \inlinecode{contains()}), which grow like the squared coordinate magnitude. For integer \inlinecode{T}, use \inlinecode{LineL} (\inlinecode{line\textless{}long long\textgreater{}}) once coordinates exceed a few tens of thousands, or the 32-bit products overflow.
+
 Operations include \inlinecode{horizontal()}, \inlinecode{vertical()}, \inlinecode{slope()}, evaluating $y$ at some $x$ with \inlinecode{y()} (and vice versa with \inlinecode{x()}), checking if a point falls on the line with \inlinecode{contains()}, checking if another line is parallel or perpendicular with \inlinecode{is\_parallel()} or \inlinecode{is\_perpendicular()}, and finding the \inlinecode{parallel()} or \inlinecode{perpendicular()} line through a point.
 
 Type aliases:
 
 \begin{compactitem}
-  \item \inlinecode{LineI = line\textless{}int\textgreater{}}: exact integer-coefficient lines
+  \item \inlinecode{LineI = line\textless{}int\textgreater{}}: exact integer-coefficient lines (small values only; see overflow warning)
+  \item \inlinecode{LineL = line\textless{}long long\textgreater{}}: exact integer-coefficient lines for large coordinates
   \item \inlinecode{LineD = line\textless{}double\textgreater{}}: standard floating-point
   \item \inlinecode{LineLD = line\textless{}long double\textgreater{}}: extra precision
   \item \inlinecode{Line = LineD}: default line type is double
@@ -401,6 +410,7 @@ struct line {
 };
 
 using LineI = line<int>;
+using LineL = line<long long>;
 using LineD = line<double>;
 using LineLD = line<long double>;
 using Line = LineD;  // Default line type is double.
@@ -641,7 +651,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Triangle}
-Common triangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should work with \inlinecode{Point}/ \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. \inlinecode{triangle\_area()} returns \inlinecode{double} regardless of input type (the area is fractional via the \inlinecode{/2}). \inlinecode{same\_side()} and \inlinecode{point\_in\_triangle()} do all arithmetic in the point's own coordinate type and are exact for integer points: they reduce each cross product to a sign before combining, so no precision is lost and no overflow occurs from multiplying cross products.
+Common triangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should work with \inlinecode{Point}/ \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. \inlinecode{triangle\_area()} returns \inlinecode{double} regardless of input type (the area is fractional via the \inlinecode{/2}). \inlinecode{same\_side()} and \inlinecode{point\_in\_triangle()} do all arithmetic in the point's own coordinate type and are exact for integer points: they reduce each cross product to a sign before combining, so no precision is lost and cross products are never multiplied together.
+
+Overflow warning: each individual cross product is still on the order of the squared coordinate magnitude, so for integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed a few tens of thousands.
 
 Note: with an integer point type, coordinates must be integers - fractional literals like \inlinecode{-2.44} cannot be represented. Use a floating-point point type for fractional coordinates.
 
@@ -1173,6 +1185,8 @@ Intersection calculations in two dimensions for straight lines and line segments
 
 \inlinecode{seg\_intersection()} has a detection-only overload (called without the output pointers) whose calculations are exact when \inlinecode{Pt} has integer coordinates.
 
+Overflow warning: the exact integer paths multiply coordinate differences (cross products and squared lengths), which grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates these overflow once coordinates exceed a few tens of thousands, so for larger integer inputs use a point type with 64-bit (\inlinecode{long long}) coordinates.
+
 \begin{compactitem}
   \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $`a1`x + `b1`y + `c1`=0$ and $`a2`x + `b2`y + `c2` = 0$, returning $-1$ (parallel), 0 (one point, stored in \inlinecode{p}), or 1 (identical).
   \item \inlinecode{line\_intersection(p1, p2, p3, p4, \&p)} intersects the infinite lines through \inlinecode{p1}-\inlinecode{p2} and \inlinecode{p3}-\inlinecode{p4}.
@@ -1196,6 +1210,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
+// Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary
 template<class Pt> auto sqnorm(const Pt &a) { return a.x*a.x + a.y*a.y; }
 template<class Pt> auto dot(const Pt &a, const Pt &b) { return a.x*b.x + a.y*b.y; }
 template<class Pt> auto cross(const Pt &a, const Pt &b) { return a.x*b.y - a.y*b.x; }
@@ -1208,6 +1223,7 @@ void set_point(OutPt *p, double x, double y) {
 
 template<class Pt>
 bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
+  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary.
   return EQ((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x), 0) &&
          LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x)) &&
          LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
@@ -1633,6 +1649,8 @@ Given a list of distinct points in two-dimensions, order them into a valid polyg
   \item \inlinecode{polygon\_area(lo, hi)} returns the area as \inlinecode{double}.
 \end{compactitem}
 
+Overflow warning: \inlinecode{cw\_comp} and \inlinecode{polygon\_area\_2x} form cross products that grow like the squared coordinate magnitude (and the shoelace sum accumulates over all vertices). For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) for large or numerous coordinates.
+
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
@@ -1780,6 +1798,8 @@ Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3)
 \subsection{Point-in-Polygon (Ray Casting)}
 Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
 
+Overflow warning: the edge orientation test forms a cross product that grows like the squared coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed a few tens of thousands.
+
 \begin{compactitem}
   \item \inlinecode{point\_in\_polygon(p, lo, hi)} returns whether \inlinecode{p} lies within the polygon given by range \inlinecode{[lo, hi)} in clockwise or counter-clockwise order. If \inlinecode{p} lies exactly on an edge or vertex, the result depends on \inlinecode{EDGE\_IS\_INSIDE}.
 \end{compactitem}
@@ -1851,6 +1871,8 @@ int main() {
 \subsection{Convex Hull and Diametral Pair}
 Given a list of points in two dimensions, computes the convex hull using the monotone chain algorithm and the diametral pair using rotating calipers. The functions are templated on the iterator type; the value type of the iterator is used as the point type. Both functions accept either floating-point or integral coordinates, but since they use only cross product comparisons, they happen to be exact for integral points.
 
+Overflow warning: \inlinecode{cross()} and the squared distance in \inlinecode{diametral\_pair()} grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates they overflow once coordinates exceed a few tens of thousands; use a 64-bit (\inlinecode{long long}) coordinate type for larger integer inputs.
+
 \begin{compactitem}
   \item \inlinecode{convex\_hull(lo, hi)} returns the convex hull in clockwise order. The input range is sorted lexicographically after the call. To produce CCW order, replace every \inlinecode{\textgreater{}= 0} with \inlinecode{\textless{}= 0}.
   \item \inlinecode{diametral\_pair(lo, hi)} returns the maximum-distance pair of points.
@@ -1869,6 +1891,7 @@ Given a list of points in two dimensions, computes the convex hull using the mon
 
 template<class Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
+  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary.
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
@@ -1916,6 +1939,7 @@ auto diametral_pair(It lo, It hi) {
     k++;
   }
   auto sqdist = [](const Pt &a, const Pt &b) {
+    // Overflow risk for integer Pt: ~O(max_coord^2); use long long if necessary.
     auto dx = a.x - b.x, dy = a.y - b.y;
     return dx * dx + dy * dy;
   };
@@ -2121,6 +2145,8 @@ Given a list of points, finds the closest pair using divide and conquer.
   \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in \inlinecode{[lo, hi)}. The input range is sorted after the call. The closest pair is stored into \inlinecode{res} if non-null. The function is templated on the iterator type. The returned minimum squared distance preserves the coordinate arithmetic type, so integer-coordinate inputs stay exact. The result pair contains the original point type.
 \end{compactitem}
 
+Overflow warning: the squared distance grows like the squared coordinate magnitude. For integer inputs use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed a few tens of thousands, or the 32-bit products overflow.
+
 \textbf{Time Complexity}: $O(n \log^{2} n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \textbf{Space Complexity}: $O(n \log^{2} n)$ auxiliary stack space.
@@ -2238,6 +2264,8 @@ Given a list of line segments in two dimensions, determine whether any pair of s
 
 \inlinecode{Segment\textless{}Pt\textgreater{}} is templated on the point type, so endpoints may be integer (\inlinecode{PointI}) or floating-point (\inlinecode{Point}/\inlinecode{PointD}). The cross-product sign tests in \inlinecode{seg\_intersection} are exact for integer endpoints, so intersection detection is exact. The sweep-line y-ordering compares interpolated y-values by cross-multiplication, avoiding division.
 
+Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross products, but the y-ordering cross-multiplication (\inlinecode{ay * bdx}) is cubic in the coordinate magnitude. With 32-bit \inlinecode{int} endpoints this overflows once coordinates reach the low thousands, so use a 64-bit (\inlinecode{long long}) coordinate type for any non-trivial integer inputs.
+
 \begin{compactitem}
   \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2)} returns whether any pair of segments intersect given a range \inlinecode{[lo, hi)} of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments will be stored into pointers \inlinecode{res1} and \inlinecode{res2}. Touching behavior is controlled by \inlinecode{TOUCH\_IS\_INTERSECT}.
 \end{compactitem}
@@ -2340,9 +2368,11 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
     }
     return a.p.y < b.p.y;
   });
+  // Compare y-values at sweep coordinate x without division: y = (p.y*dx + dy*(x - p.x)) / dx.
+  // Vertical segments use their lower endpoint
   auto ycmp = [](const auto &a, const auto &b, auto x) {
-    // Compare y-values at sweep coordinate x without division:
-    // y = (p.y*dx + dy*(x - p.x)) / dx. Vertical segments use their lower endpoint.
+    // Overflow risk for integer Pt: the final cross-multiply is ~O(max_coord^3); use 64-bit
+    // coordinates for non-trivial integer inputs.
     auto adx = a.q.x - a.p.x, bdx = b.q.x - b.p.x;
     auto ay = a.p.y * adx + (a.q.y - a.p.y) * (x - a.p.x);
     auto by = b.p.y * bdx + (b.q.y - b.p.y) * (x - b.p.x);
@@ -2460,7 +2490,7 @@ int main() {
 Given a convex polygon and two points specifying an infinite line, cuts off the right part and returns the resulting left part.
 
 \begin{compactitem}
-  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the left-side polygon in clockwise order after cutting with the line through \inlinecode{p} and \inlinecode{q}. The function is templated on the input point type. The \inlinecode{turn} classification uses cross products and is exact for integer-coordinate points; the edge-cut intersection point uses floating-point arithmetic, and the output \inlinecode{Point} always has \inlinecode{double} coordinates.
+  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the left-side polygon in clockwise order after cutting with the line through \inlinecode{p} and \inlinecode{q}. The function is templated on the input point type. The \inlinecode{turn} classification uses cross products and is exact for integer-coordinate points; the edge-cut intersection point uses floating-point arithmetic, and the output \inlinecode{Point} always has \inlinecode{double} coordinates. Overflow warning: those cross products grow like the squared coordinate magnitude, so for integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) for large coordinates.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call to \inlinecode{convex\_cut(lo, hi, p, q)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
@@ -2574,6 +2604,8 @@ Given two polygons, determine the areas of their intersection and union using a 
   \item \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} returns the intersection area of two polygons respectively specified by two ranges \inlinecode{[lo1, hi1)} and \inlinecode{[lo2, hi2)} of vertices in clockwise order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
   \item \inlinecode{union\_area(lo1, hi1, lo2, hi2)} returns the union area of two polygons respectively specified by two ranges \inlinecode{[lo1, hi1)} and \inlinecode{[lo2, hi2)} of vertices in clockwise order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
 \end{compactitem}
+
+Overflow warning: the segment-intersection tests form cross products in the input point's coordinate type, which grow like the squared coordinate magnitude. For integer point types use long long (e.g. \inlinecode{PointL} from 7.1.1) if necessary.
 
 \textbf{Time Complexity}: $O(n^{2} \log n)$ per call to \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} and \inlinecode{union\_area(lo1, hi1, lo2, hi2)} where $n$ is the sum of distances between \inlinecode{lo1} and \inlinecode{hi1} and \inlinecode{lo2} and \inlinecode{hi2} respectively.
 

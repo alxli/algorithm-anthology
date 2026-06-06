@@ -7,6 +7,8 @@ returns the resulting left part.
   line through `p` and `q`. The function is templated on the input point type. The `turn`
   classification uses cross products and is exact for integer-coordinate points; the edge-cut
   intersection point uses floating-point arithmetic, and the output `Point` always has `double`
+  coordinates. Overflow warning: those cross products grow like the squared coordinate magnitude, so
+  for integer point types use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) for large
   coordinates.
 
 Time Complexity:

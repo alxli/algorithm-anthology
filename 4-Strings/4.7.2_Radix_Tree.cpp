@@ -111,6 +111,11 @@ class RadixTree {
       if (len == 0) {
         continue;
       }
+      // The entire edge label must be consumed; a partial match means the key is not present, so
+      // erasing must fail rather than descend (otherwise erase("te") would remove "tea").
+      if (len < static_cast<int>(it->first.size())) {
+        return false;
+      }
       Node *child = it->second;
       if (!erase(child, s, i + len)) {
         return false;
@@ -188,7 +193,12 @@ class RadixTree {
       bool found = false;
       for (auto &[key, child] : n->children) {
         if (key[0] == s[i]) {
-          i += lcp_len(key, s, i);
+          // The entire edge label must be consumed; a partial match (s ends mid-edge or diverges
+          // from it) means the key is not present.
+          if (lcp_len(key, s, i) < static_cast<int>(key.size())) {
+            return nullptr;
+          }
+          i += static_cast<int>(key.size());
           n = child;
           found = true;
           break;

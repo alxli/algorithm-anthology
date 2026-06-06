@@ -103,6 +103,9 @@ long long fermat(long long n) {
 
 using uint64 = unsigned long long;
 
+// Hot path: Can simply `return (unsigned __int128)x * n % m;` for a major constant-factor speedup
+// if the GCC/Clang __int128 extension is available. Otherwise, use the portable double-and-add
+// version below, which still won't overflow a signed 64-bit `long long`.
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
   uint64 a = 0, b = x % m;
   for (; n > 0; n >>= 1) {

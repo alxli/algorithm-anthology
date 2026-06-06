@@ -1,9 +1,10 @@
 /*
 
-Given a directed graph, determine a maximum subset of its edges such that no node is shared between
-different edges in the resulting subset. `edmonds()` applies to a global, pre-populated adjacency
-list `adj` which must only consist of nodes numbered with integers between 0 (inclusive) and the
-total number of nodes (exclusive), as inferred from `adj.size()`.
+Given an undirected graph, determine a maximum matching: a maximum subset of its edges such that no
+node is shared between different edges in the resulting subset. `edmonds()` applies to a global,
+pre-populated adjacency list `adj` which must only consist of nodes numbered with integers between 0
+(inclusive) and the total number of nodes (exclusive), as inferred from `adj.size()`. The adjacency
+list must be symmetric: for every edge `u`-`v`, both `v` is in `adj[u]` and `u` is in `adj[v]`.
 
 Time Complexity:
 - O(n^3) per call to `edmonds()`, where $n$ is the number of nodes.

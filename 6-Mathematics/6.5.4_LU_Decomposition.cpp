@@ -123,7 +123,9 @@ int solve_system(
     for (int j = 0; j < c; j++) {
       val += a[i][j] * (*x)[j];
     }
-    if (fabs(val - b[i]) / b[i] > EPS) {
+    // Mixed absolute/relative tolerance: dividing by b[i] alone would skip the check for negative
+    // b[i] (ratio goes negative) and divide by zero when b[i] == 0.
+    if (fabs(val - b[i]) > EPS * (1.0 + fabs(b[i]))) {
       return -1;
     }
   }
