@@ -8,9 +8,9 @@ arbitrary epsilon, it is simpler to let the loop run for a desired number of ite
 floating point arithmetic break down. 100 iterations is usually sufficient, since the search space
 will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
 
-- `bisection_root(f, a, b)` returns a root in an interval $[a, b]$ for a continuous function $f$
+- `bisection_root(f, a, b)` returns a root in an interval `[a, b]` for a continuous function $f$
   where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method.
-- `falsi_illinois_root(f, a, b)` returns a root in an interval $[a, b]$ for a continuous function
+- `falsi_illinois_root(f, a, b)` returns a root in an interval `[a, b]` for a continuous function
   $f$ where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the Illinois algorithm
   variant of the false position (a.k.a. regula falsi) method.
 

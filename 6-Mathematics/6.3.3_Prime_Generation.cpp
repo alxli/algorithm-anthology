@@ -7,11 +7,11 @@ Generate prime numbers using the Sieve of Eratosthenes.
 
 Time Complexity:
 - O(n log(log(n))) per call to `sieve(n)`.
-- O(sqrt(hi)*log(log(hi - lo))) per call to `sieve(lo, hi)`.
+- O(sqrt(`hi`)*log(log(`hi` - `lo`))) per call to `sieve(lo, hi)`.
 
 Space Complexity:
 - O(n) auxiliary heap space per call to `sieve(n)`.
-- O(hi - lo + sqrt(hi)) auxiliary heap space per call to `sieve(lo, hi)`.
+- O(`hi` - `lo` + sqrt(`hi`)) auxiliary heap space per call to `sieve(lo, hi)`.
 
 */
 

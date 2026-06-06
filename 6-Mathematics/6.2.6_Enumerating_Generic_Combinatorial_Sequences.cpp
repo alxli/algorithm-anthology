@@ -28,6 +28,7 @@ class AbstractEnumerator {
   int range, length;
 
   AbstractEnumerator(int r, int l) : range(r), length(l) {}
+  virtual ~AbstractEnumerator() = default;
   virtual long long count(const std::vector<int> &prefix) { return 0; }
   std::vector<int> next(std::vector<int> &a) { return from_rank(to_rank(a) + 1); }
   long long total_count() { return count(std::vector<int>(0)); }
@@ -62,7 +63,9 @@ class AbstractEnumerator {
     return a;
   }
 
-  void enumerate(void (*f)(std::vector<int>::iterator, std::vector<int>::iterator)) {
+  // Accepts any callable f(lo, hi), including capturing lambdas and functors.
+  template<class Fn>
+  void enumerate(Fn f) {
     long long total = total_count();
     for (long long i = 0; i < total; i++) {
       std::vector<int> curr = from_rank(i);
@@ -164,7 +167,7 @@ class PartitionEnumerator : public AbstractEnumerator {
 3 permute 2 arrangements:
 {0,1} {0,2} {1,0} {1,2} {2,0} {2,1}
 
-Permutatations of [0, 3):
+Permutations of [0, 3):
 {0,1,2} {0,2,1} {1,0,2} {1,2,0} {2,0,1} {2,1,0}
 
 4 choose 3 combinations:
@@ -189,27 +192,27 @@ void print_range(It lo, It hi) {
 
 int main() {
   {
-    cout << "3 permute 2 ArrangementEnumerator:" << endl;
+    cout << "3 permute 2 arrangements:" << endl;
     ArrangementEnumerator arr(3, 2);
-    arr.enumerate(print_range);
+    arr.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
     cout << endl;
   }
   {
-    cout << "\nPermutatations of [0, 3):" << endl;
+    cout << "\nPermutations of [0, 3):" << endl;
     PermutationEnumerator perm(3);
-    perm.enumerate(print_range);
+    perm.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
     cout << endl;
   }
   {
     cout << "\n4 choose 3 combinations:" << endl;
     CombinationEnumerator comb(4, 3);
-    comb.enumerate(print_range);
+    comb.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
     cout << endl;
   }
   {
     cout << "\nPartition of 4:" << endl;
     PartitionEnumerator part(4);
-    part.enumerate(print_range);
+    part.enumerate([](auto lo, auto hi) { print_range(lo, hi); });
     cout << endl;
   }
   return 0;

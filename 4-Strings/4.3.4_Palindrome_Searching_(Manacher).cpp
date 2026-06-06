@@ -67,7 +67,7 @@ class Manacher {
     if (len <= 0) {
       return true;
     }
-    int mid = (lo + hi) / 2;
+    int mid = lo + (hi - lo) / 2;
     return (len % 2) ? odd[mid] >= len / 2 + 1 : even[mid] >= len / 2;
   }
 

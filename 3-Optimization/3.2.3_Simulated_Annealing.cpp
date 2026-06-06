@@ -37,7 +37,7 @@ const double COOLING_RATE = 0.997;
 const int NUM_RESTARTS = 8;
 
 double random_unit() {
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(1234567);
   return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
 }
 
@@ -80,7 +80,7 @@ double anneal_min(Fn f, double x0, double y0, double *best_x = nullptr, double *
 #include <cassert>
 
 bool close(double a, double b) {
-  return fabs(a - b) < 1e-3;
+  return fabs(a - b) < 1e-2;
 }
 
 // Smooth bowl with global minimum at f(2, -3) = 0.

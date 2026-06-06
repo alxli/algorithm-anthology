@@ -2,7 +2,7 @@
 
 Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying
 and extraction of the minimum as well as efficient merging with other instances. This implementation
-requires an ordering on the set of possible elements defined by `operator <`. A pairing heap is a
+requires an ordering on the set of possible elements defined by `operator<`. A pairing heap is a
 heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion.
 
 - `PairingHeap()` constructs an empty priority queue.
@@ -18,7 +18,7 @@ heap-ordered multi-way tree, using a two-pass merge to self-adjust during each d
 Time Complexity:
 - O(1) per call to the first constructor, `size()`, `empty()`, `top()`, `push()`, and `absorb()`.
 - O(log n) amortized per call to `pop()`.
-- O(n) per call to the second constructor on the distance between lo and hi.
+- O(n) per call to the second constructor on the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.

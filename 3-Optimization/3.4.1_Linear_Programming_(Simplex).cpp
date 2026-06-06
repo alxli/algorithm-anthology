@@ -124,8 +124,8 @@ int main() {
   //   1x + 0.85y <=  9
   //   1x +    2y <= 14
   vector<vector<double>> va{{-2, 1}, {1, 0.85}, {1, 2}};
-  vector<double> vb = {0, 9, 14};
-  vector<double> vc = {3, 4};
+  vector<double> vb{0, 9, 14};
+  vector<double> vc{3, 4};
   vector<double> x;
   assert(simplex_solve(va, vb, vc, &x) == 0);
   double maxval = 0;

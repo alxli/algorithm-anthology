@@ -1,8 +1,8 @@
 /*
 
 Angle calculations in two dimensions. All operations are inherently floating-point (`atan2`, `acos`,
-trigonometry), so these functions use the local double-coordinate `Point` type. Convert integer
-points to `Point`/ `PointD` when asking for angles. The constants `DEG` and `RAD` may be used as
+trigonometry), so these functions use the local double-coordinate `PointD` type. Convert integer
+points to `PointD` when asking for angles. The constants `DEG` and `RAD` may be used as
 multipliers to convert between degrees and radians. For example, if $t$ is a value in radians, then
 $t \cdot \text{DEG}$ is the equivalent angle in degrees.
 
@@ -38,31 +38,12 @@ Space Complexity:
 #include <cmath>
 
 const double EPS = 1e-9;
-
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define GT(a, b) ((a) > (b) + EPS)
-
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return LT(x, p.x) || (EQ(x, p.x) && LT(y, p.y)); }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
-double sqnorm(const Point &a) {
-  return a.x * a.x + a.y * a.y;
-}
-
-double norm(const Point &a) {
-  return sqrt(sqnorm(a));
-}
-
 const double PI = acos(-1.0);
 const double DEG = PI / 180;
 const double RAD = 180 / PI;
+
+#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+#define LT(a, b) ((a) < (b) - EPS)
 
 double reduce_deg(double t) {
   if (t < -360) {
@@ -84,21 +65,26 @@ double reduce_rad(double t) {
   return (t >= 2 * PI) ? fmod(t, 2 * PI) : t;
 }
 
-Point polar_point(double r, double t) {
-  return Point{r * cos(t), r * sin(t)};
+template<class OutPt>
+OutPt polar_point(double r, double t) {
+  return OutPt(r * cos(t), r * sin(t));
 }
 
-double polar_angle(const Point &p) {
-  double t = atan2(p.y, p.x);
+template<class Pt>
+double polar_angle(const Pt &p) {
+  double t = atan2((double)p.y, (double)p.x);
   return (t < 0) ? (t + 2 * PI) : t;
 }
 
-double angle(const Point &a, const Point &o, const Point &b) {
-  Point u{o.x - a.x, o.y - a.y}, v{o.x - b.x, o.y - b.y};
-  return acos((u.x * v.x + u.y * v.y) / (norm(u) * norm(v)));
+template<class Pt>
+double angle(const Pt &a, const Pt &o, const Pt &b) {
+  double ux = o.x - a.x, uy = o.y - a.y;
+  double vx = o.x - b.x, vy = o.y - b.y;
+  return acos((ux * vx + uy * vy) / (std::hypot(ux, uy) * std::hypot(vx, vy)));
 }
 
-double angle_between(const Point &a, const Point &b) {
+template<class Pt>
+double angle_between(const Pt &a, const Pt &b) {
   double t = atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
   return (t < 0) ? (t + 2 * PI) : t;
 }
@@ -108,33 +94,40 @@ double angle_between(const double &a1, const double &b1, const double &a2, const
   if (t < 0) {
     t += PI;
   }
-  return GT(t, PI / 2) ? (PI - t) : t;
+  return LT(PI / 2, t) ? (PI - t) : t;
 }
 
-double cross(const Point &a, const Point &b, const Point &o = Point{0, 0}) {
+template<class Pt>
+auto cross(const Pt &a, const Pt &b, const Pt &o = Pt(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-int turn(const Point &a, const Point &o, const Point &b) {
-  double c = cross(a, b, o);
-  return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
+template<class Pt>
+int turn(const Pt &a, const Pt &o, const Pt &b) {
+  auto c = cross(a, b, o);
+  return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
 }
 
 /*** Example Usage ***/
+
+struct PointD {
+  double x, y;
+  PointD(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+};
 
 #include <cassert>
 
 int main() {
   assert(EQ(123, reduce_deg(-8 * 360 + 123)));
   assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
-  assert((polar_point(4, PI) == Point{-4, 0}));
-  assert((polar_point(4, -PI / 2) == Point{0, -4}));
-  assert(EQ(45, polar_angle(Point{5, 5}) * RAD));
-  assert(EQ(135 * DEG, polar_angle(Point{-4, 4})));
-  assert(EQ(90 * DEG, angle(Point{5, 0}, Point{0, 5}, Point{-5, 0})));
-  assert(EQ(225 * DEG, angle_between(Point{0, 5}, Point{5, -5})));
-  assert(-1 == cross(Point{0, 1}, Point{1, 0}, Point{0, 0}));
-  assert(1 == turn(Point{0, 1}, Point{0, 0}, Point{-5, -5}));
-
+  assert(polar_point<PointD>(4, PI) == PointD(-4, 0));
+  assert(polar_point<PointD>(4, -PI / 2) == PointD(0, -4));
+  assert(EQ(45, polar_angle(PointD(5, 5)) * RAD));
+  assert(EQ(135 * DEG, polar_angle(PointD(-4, 4))));
+  assert(EQ(90 * DEG, angle(PointD(5, 0), PointD(0, 5), PointD(-5, 0))));
+  assert(EQ(225 * DEG, angle_between(PointD(0, 5), PointD(5, -5))));
+  assert(-1 == cross(PointD(0, 1), PointD(1, 0), PointD(0, 0)));
+  assert(1 == turn(PointD(0, 1), PointD(0, 0), PointD(-5, -5)));
   return 0;
 }

@@ -4,7 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Sorting Algorithms}
-These functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a range \inlinecode{[lo, hi)} to be sorted. Elements between \inlinecode{lo} and \inlinecode{hi} (including the element pointed to by \inlinecode{lo} but excluding the element pointed to by \inlinecode{hi}) will be sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator \textless{}}.
+These functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a range \inlinecode{[lo, hi)} to be sorted. Elements between \inlinecode{lo} and \inlinecode{hi} (including the element pointed to by \inlinecode{lo} but excluding the element pointed to by \inlinecode{hi}) will be sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
 
 These functions are not meant to compete with standard library implementations in terms of speed. Instead, they are meant to demonstrate how common sorting algorithms can be concisely implemented in C++.
 
@@ -57,7 +57,7 @@ void quicksort(It lo, It hi) {
   quicksort(lo, hi, std::less<T>());
 }
 \end{lstlisting}
-Merge sort first divides a list into n sublists of one element each, then recursively merges the sublists into sorted order until only a single sorted sublist remains. Merge sort is a stable sort, meaning that it preserves the relative order of elements which compare equal by \inlinecode{operator \textless{}} or the custom comparator given.
+Merge sort first divides a list into n sublists of one element each, then recursively merges the sublists into sorted order until only a single sorted sublist remains. Merge sort is a stable sort, meaning that it preserves the relative order of elements which compare equal by \inlinecode{operator\textless{}} or the custom comparator given.
 
 An analogous function in the C++ standard library is \inlinecode{std::stable\_sort()}, except that the implementation here requires sufficient memory to be available. When $O(n)$ auxiliary memory is not available, \inlinecode{std::stable\_sort()} falls back to a time complexity of $O(n \log^{2} n)$ whereas the implementation here will simply fail.
 
@@ -188,7 +188,7 @@ In this implementation, a power of two is chosen to be the base for the sort so 
 
 \textbf{Time Complexity}: $O(n \cdot w)$ for $n$ integers of $w$ bits each.
 
-\textbf{Space Complexity}: $O(n + w)$ auxiliary.
+\textbf{Space Complexity}: $O(n + 2^{b})$ auxiliary for a radix of $b$ bits, i.e. $O(n)$ for constant $b$.
 
 \begin{lstlisting}[language=C++]
 template<class It>
@@ -274,7 +274,7 @@ int main() {
     assert(sorted(v.begin(), v.end()));
   }
   {  // Must use radix_sort with unsigned values, but sorting in reverse works!
-    vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};
+    vector<unsigned int> v{32, 71, 12, 45, 26, 80, 53, 33};
     radix_sort(v.rbegin(), v.rend());
     assert(sorted(v.rbegin(), v.rend()));
   }
@@ -456,7 +456,7 @@ rotate right: 0 1 2 2 3 4 5 7 7 10
 The number of inversions for a sequence \inlinecode{a} is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how ``close'' an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions.
 
 \begin{compactitem}
-  \item \inlinecode{inversions(lo, hi)} uses merge sort to return the number of inversions given two random-access iterators as a range \inlinecode{[lo, hi)}. The input range will be sorted after the function call. This requires \inlinecode{operator \textless{}} to be defined on the iterators' value type.
+  \item \inlinecode{inversions(lo, hi)} uses merge sort to return the number of inversions given two random-access iterators as a range \inlinecode{[lo, hi)}. The input range will be sorted after the function call. This requires \inlinecode{operator\textless{}} to be defined on the iterators' value type.
   \item \inlinecode{inversions(a)} uses coordinate compression and a Fenwick tree to return the number of inversions in an integer vector without modifying it.
 \end{compactitem}
 
@@ -552,7 +552,7 @@ int main() {
 \subsection{Coordinate Compression}
 Given two ForwardIterators as a range \inlinecode{[lo, hi)} of $n$ numerical elements, reassign each element in the range to an integer in $[0, k)$, where $k$ is the number of distinct elements in the original range, while preserving the initial relative ordering of elements. That is, if $a$ is the array of original values and $b$ is the array of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if and only if $b[i] < b[j]$.
 
-Both implementations below require \inlinecode{operator \textless{}} to be defined on the iterator's value type. Version 1 performs the compression by sorting the array, removing duplicates, and binary searching for the position of each original value. Version 2 achieves the same result by inserting all values in a balanced binary search tree (\inlinecode{std::map}) which automatically removes duplicate values and supports efficient lookups of the compressed values.
+Both implementations below require \inlinecode{operator\textless{}} to be defined on the iterator's value type. Version 1 performs the compression by sorting the array, removing duplicates, and binary searching for the position of each original value. Version 2 achieves the same result by inserting all values in a balanced binary search tree (\inlinecode{std::map}) which automatically removes duplicate values and supports efficient lookups of the compressed values.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call to either function, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -645,7 +645,7 @@ The pivot is chosen uniformly at random, and the partition step groups equal key
 
 template<class It>
 void nth_element2(It lo, It nth, It hi) {
-  static std::mt19937 rng(1);
+  static std::mt19937 rng(std::random_device{}());
   while (hi - lo > 1) {
     std::uniform_int_distribution<int> dist(0, hi - lo - 1);
     auto pivot = *(lo + dist(rng));
@@ -673,29 +673,25 @@ void nth_element2(It lo, It nth, It hi) {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <iostream>
+#include <vector>
 using namespace std;
-
-template<class It>
-void print_range(It lo, It hi) {
-  while (lo != hi) {
-    cout << *lo++ << " ";
-  }
-  cout << endl;
-}
 
 int main() {
   vector<int> a{5, 6, 4, 3, 2, 6, 7, 9, 3};
   int n = a.size();
   nth_element2(a.begin(), a.begin() + n / 2, a.end());
   assert(a[n / 2] == 5);
-  print_range(a.begin(), a.end());
+  // Values left of the median are <= it and values right are >= it (the exact
+  // order within each side is randomized, since the pivot is chosen at random).
+  for (int i = 0; i < n / 2; i++) {
+    assert(a[i] <= a[n / 2]);
+  }
+  for (int i = n / 2 + 1; i < n; i++) {
+    assert(a[i] >= a[n / 2]);
+  }
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
-2 3 3 4 5 9 6 7 6
-\end{exampleoutput}
 \subsection{3-Way Partitioning (Dutch National Flag)}
 Partitions a range into three consecutive groups according to a pivot value: elements less than the pivot, elements equal to the pivot, and elements greater than the pivot. This is the Dutch National Flag algorithm, and is the core partitioning step used in three-way quicksort and arrays with many duplicate keys.
 
@@ -902,7 +898,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Longest Increasing Subsequence}
-Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)}, determine a longest subsequence of the range such that all of its elements are in strictly ascending order. This implementation requires \inlinecode{operator \textless{}} to be defined on the iterator's value type. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed using binary search and dynamic programming.
+Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)}, determine a longest subsequence of the range such that all of its elements are in strictly ascending order. This implementation requires \inlinecode{operator\textless{}} to be defined on the iterator's value type. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed using binary search and dynamic programming.
 
 \textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{longest\_increasing\_subsequence()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -925,7 +921,7 @@ auto longest_increasing_subsequence(It lo, It hi) {
   for (int i = 0; i < n; i++) {
     int left = -1, right = len;
     while (right - left > 1) {
-      int mid = (left + right) / 2;
+      int mid = left + (right - left) / 2;
       if (*(lo + tail[mid]) < *(lo + i)) {
         left = mid;
       } else {
@@ -1079,8 +1075,8 @@ For unbounded maximum-value knapsack, weights are iterated in increasing order s
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(nW)$ for \inlinecode{unbounded\_knapsack(weight, value, capacity)}, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
-  \item $O(ct)$ for \inlinecode{count\_coin\_change(coins, target)}, where $c$ is the number of coin denominations and $t$ is \inlinecode{target}.
+  \item $O(n \cdot W)$ for \inlinecode{unbounded\_knapsack(weight, value, capacity)}, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
+  \item $O(c \cdot t)$ for \inlinecode{count\_coin\_change(coins, target)}, where $c$ is the number of coin denominations and $t$ is \inlinecode{target}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1210,7 +1206,7 @@ Computes the minimum excluded nonnegative integer, commonly called the MEX. The 
 \begin{compactitem}
   \item \inlinecode{mex(lo, hi)} returns the MEX of the values in \inlinecode{[lo, hi)}.
   \item \inlinecode{DynamicMex(n)} maintains counts of values in \inlinecode{[0, n]}, enough to track the MEX of a multiset of at most \inlinecode{n} relevant nonnegative values.
-  \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if \inlinecode{0 \textless{}= x \textless{}= n}.
+  \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if $0 \leq `x` \leq n$.
   \item \inlinecode{remove(x)} removes one copy of value \inlinecode{x} if present.
   \item \inlinecode{get()} returns the current MEX.
 \end{compactitem}
@@ -1299,7 +1295,7 @@ Uses two moving indices to process subarrays in linear time. This technique is m
 The examples below cover two common patterns: finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most \inlinecode{k} distinct values.
 
 \begin{compactitem}
-  \item \inlinecode{min\_length\_at\_least(a, target)} returns the minimum length of a contiguous subarray with sum at least \inlinecode{target}, or \inlinecode{-1} if none exists. Values in \inlinecode{a} must be nonnegative.
+  \item \inlinecode{min\_length\_at\_least(a, target)} returns the minimum length of a contiguous subarray with sum at least \inlinecode{target}, or $-1$ if none exists. Values in \inlinecode{a} must be nonnegative.
   \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns the maximum length of a contiguous subarray containing at most \inlinecode{k} distinct values.
 \end{compactitem}
 
@@ -1956,7 +1952,7 @@ Maximal sum submatrix:
 -1 8
 \end{exampleoutput}
 \subsection{Majority Element (Boyer-Moore)}
-Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of $n$ elements, return an iterator to the first occurrence of the majority element, or the iterator \inlinecode{hi} if there is no majority element. The majority element is defined as an element which occurs strictly more than $\lfloor n/2 \rfloor$ times in the range. This implementation requires \inlinecode{operator ==} to be defined on the iterator's value type.
+Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of $n$ elements, return an iterator to the first occurrence of the majority element, or the iterator \inlinecode{hi} if there is no majority element. The majority element is defined as an element which occurs strictly more than $\lfloor n/2 \rfloor$ times in the range. This implementation requires \inlinecode{operator==} to be defined on the iterator's value type.
 
 \textbf{Time Complexity}: $O(n)$ per call to \inlinecode{majority()}, where $n$ is the size of the array.
 

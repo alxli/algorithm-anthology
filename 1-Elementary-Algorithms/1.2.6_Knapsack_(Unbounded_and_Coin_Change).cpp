@@ -17,9 +17,9 @@ counted once, independent of ordering.
   avoid infinitely many uses of a zero-weight item.
 
 Time Complexity:
-- O(nW) for `unbounded_knapsack(weight, value, capacity)`, where $n$ is the number of items and $W$
+- O(n*W) for `unbounded_knapsack(weight, value, capacity)`, where $n$ is the number of items and $W$
   is `capacity`.
-- O(ct) for `count_coin_change(coins, target)`, where $c$ is the number of coin denominations and
+- O(c*t) for `count_coin_change(coins, target)`, where $c$ is the number of coin denominations and
   $t$ is `target`.
 
 Space Complexity:

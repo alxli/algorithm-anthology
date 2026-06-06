@@ -2,7 +2,7 @@
 
 Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest
 helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all
-answers are taken modulo a number such as `1000000007`.
+answers are taken modulo a number such as $10^9 + 7$.
 
 The implementation is intentionally close to common contest "Mint" templates: normalization happens
 at construction, arithmetic operators are overloaded, mixed integer operations are supported through
@@ -204,12 +204,12 @@ class ModCombinatorics {
   Mint multichoose(int n, int k) { return choose(n + k - 1, k); }
 };
 
-struct Mod100000007 {
+struct Mod1000000007 {
   using value_type = int;
   static const int value = 1000000007;
 };
 
-using Mint = Modular<Mod100000007>;
+using Mint = Modular<Mod1000000007>;
 
 /*** Example Usage ***/
 

@@ -118,8 +118,8 @@ class SegTree {
       push_delta(i, lo, hi);
       return;
     }
-    update(2 * i + 1, lo, (lo + hi) / 2, tgt_lo, tgt_hi, d);
-    update(2 * i + 2, (lo + hi) / 2 + 1, hi, tgt_lo, tgt_hi, d);
+    update(2 * i + 1, lo, lo + (hi - lo) / 2, tgt_lo, tgt_hi, d);
+    update(2 * i + 2, lo + (hi - lo) / 2 + 1, hi, tgt_lo, tgt_hi, d);
     value[i] = combine(value[2 * i + 1], value[2 * i + 2]);
   }
 

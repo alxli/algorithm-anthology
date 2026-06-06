@@ -1,7 +1,7 @@
 /*
 
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
-once in the collection. This implementation requires `operator ==` to be defined on the key type. A
+once in the collection. This implementation requires `operator==` to be defined on the key type. A
 hash map implements a map by hashing keys into buckets using a hash function. This implementation
 resolves collisions by chaining entries hashed to the same bucket into a linked list.
 
@@ -13,7 +13,7 @@ resolves collisions by chaining entries hashed to the same bucket into a linked 
   old value associated with the key is preserved).
 - `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
   successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was not
+- `find(k)` returns a pointer to the value associated with key `k`, or `nullptr` if the key was not
   found.
 - `operator[]` returns a reference to key `k`'s associated value (which may be modified), or if
   necessary, inserts and returns a new entry with the default constructed value if key `k` was not

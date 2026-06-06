@@ -54,14 +54,14 @@ std::pair<int, int> winning_move(const std::vector<int> &piles) {
 using namespace std;
 
 int main() {
-  vector<int> piles = {3, 4, 5};
+  vector<int> piles{3, 4, 5};
   assert(nim_sum(piles) == 2);
   assert(first_player_wins(piles));
   auto [pile_idx, new_size] = winning_move(piles);
   piles[pile_idx] = new_size;
   assert(nim_sum(piles) == 0);
 
-  vector<int> losing = {1, 2, 3};
+  vector<int> losing{1, 2, 3};
   assert(!first_player_wins(losing));
   assert(winning_move(losing).first == -1);
   return 0;

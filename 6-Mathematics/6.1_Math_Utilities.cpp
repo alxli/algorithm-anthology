@@ -3,6 +3,11 @@
 Common mathematic constants and functions, many of which are substitutes for features which are not
 available in standard C++, or may not be available on compilers that do not support C++11 and later.
 
+On a C++11-or-later compiler, prefer the standard `std::` equivalent named in each entry (for
+example `std::signbit()`, `std::copysign()`, `std::trunc()`, `std::round()`, `std::erf()`,
+`std::tgamma()`, `std::lgamma()`). The implementations below are retained as self-contained
+reference versions and to document how each result is derived.
+
 Time Complexity:
 - O(1) for all operations.
 
@@ -29,10 +34,6 @@ const double M_E = exp(1.0);
 const double M_PHI = (1.0 + sqrt(5.0)) / 2.0;
 const double M_INF = std::numeric_limits<double>::infinity();
 const double M_NAN = std::numeric_limits<double>::quiet_NaN();
-
-#ifndef isnan
-#define isnan(x) ((x) != (x))
-#endif
 
 /*
 
@@ -62,7 +63,7 @@ const double EPS = 1e-9;
 
 Sign Functions:
 
-- `sgn(x)` returns $-1$ (if $x < 0$), 0 (if $x = 0$), or 1 (if $x > 0$). Unlike `signbit()` or
+- `sgn(x)` returns $-1$ (if $x < 0$), $0$ (if $x = 0$), or $1$ (if $x > 0$). Unlike `signbit()` or
   `copysign()`, this does not handle the sign of `NaN`.
 - `signbit_(x)` is analogous to `std::signbit()` in C++11 and later, returning whether the sign bit
   of the floating point number is set to true. If so, then `x` is considered "negative." Note that
@@ -153,7 +154,7 @@ Double round_half_even(const Double &x, const Double &eps = 1e-9) {
   }
   Double ipart;
   modf(x, &ipart);
-  if (x - (ipart + 0.5) < eps) {
+  if (fabs(x - (ipart + 0.5)) < eps) {  // exactly halfway: break the tie towards even
     return (fmod(ipart, 2.0) < eps) ? ipart : ceil0(ipart + 0.5);
   }
   return round_half_from0(x);
@@ -332,21 +333,20 @@ std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
     x += di * power;
     power *= a;
   }
-  int n = ceil(log(x + 1) / log(b));
   std::vector<int> res;
-  for (int i = 0; i < n; i++) {
+  do {  // do-while so that a value of 0 yields the single digit {0}
     res.push_back(x % b);
     x /= b;
-  }
+  } while (x != 0);
   return res;
 }
 
 std::vector<int> to_base(unsigned int x, int b = 10) {
   std::vector<int> res;
-  while (x != 0) {
+  do {  // do-while so that a value of 0 yields the single digit {0}
     res.push_back(x % b);
     x /= b;
-  }
+  } while (x != 0);
   return res;
 }
 
@@ -393,6 +393,7 @@ int main() {
   assert(EQ(round_half_to0(+1.5), +1) && EQ(round_half_from0(+1.5), +2));
   assert(EQ(round_half_to0(-1.5), -1) && EQ(round_half_from0(-1.5), -2));
   assert(EQ(round_half_even(+1.5), +2) && EQ(round_half_even(-1.5), -2));
+  assert(EQ(round_half_even(3.1), 3) && EQ(round_half_even(3.4), 3));  // non-ties round normally
   assert(NE(round_half_alternate(+1.5), round_half_alternate(+1.5)));
   assert(NE(round_half_alternate0(-1.5), round_half_alternate0(-1.5)));
   assert(EQ(round_n_places(-1.23456, 3, round_half_to0<double>), -1.235));

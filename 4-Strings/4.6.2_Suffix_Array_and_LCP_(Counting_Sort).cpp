@@ -3,12 +3,13 @@
 Given a string `s`, a suffix array is the array of the smallest starting positions for the sorted
 suffixes of `s`. That is, the $i$-th position of the suffix array stores the starting position of
 the $i$-th lexicographically smallest suffix of `s`. For example, `s = "cab"` has the suffixes
-"cab", "ab", and "b". When sorted, the indices of the suffixes are "ab", "b", and "cab", so the
-suffix array (assuming zero-based indices) is `[1, 2, 0]`.
+`"cab"`, `"ab"`, and `"b"`. When sorted, the indices of the suffixes are `"ab"`, `"b"`, and `"cab"`,
+so the suffix array (assuming zero-based indices) is `[1, 2, 0]`.
 
 For a string `s` of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the
 lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in
-`s`. For example, "baa" has the sorted suffixes "a", "aa", and "baa", with an LCP array of `[1, 0]`.
+`s`. For example, `"baa"` has the sorted suffixes `"a"`, `"aa"`, and `"baa"`, with an LCP array of
+`[1, 0]`.
 
 - `SuffixArray(s)` constructs a suffix array from the given string `s` using the original
   Manber-Myers gap partitioning algorithm with a counting sort instead of a comparison-based sort to

@@ -35,7 +35,7 @@ void compute_dc_layer(
   if (l > r) {
     return;
   }
-  int mid = (l + r) / 2;
+  int mid = l + (r - l) / 2;
   long long best = INF;
   int best_k = opt_l;
   int upper = std::min(mid, opt_r);
@@ -72,7 +72,7 @@ struct SquareSegmentCost {
 };
 
 int main() {
-  vector<int> a = {1, 2, 3, 4};
+  vector<int> a{1, 2, 3, 4};
   int n = a.size();
   SquareSegmentCost cost(a);
 

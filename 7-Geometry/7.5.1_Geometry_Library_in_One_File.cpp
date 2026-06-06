@@ -1,9 +1,9 @@
 /*
 
-This combines the next few subsections in this chapter in a cross-dependent manner. Point, Line,
-Circle, and all algorithms here operate on floating-point (double) coordinates on a 2D Cartesian
-plane. For more generic point<T> and line<T> supporting integer-coordinate exact arithmetic, see the
-first few subsections of this chapter.
+This combines floating-point versions of many sections this chapter in a cross-dependent manner.
+Point, Line, Circle, and all algorithms here operate on floating-point (double) coordinates on a 2D
+Cartesian plane. For more generic `point<T>` and `line<T>` versions supporting integer-coordinate
+exact arithmetic, see their respective sections.
 
 Time Complexity:
 - O(1) for all operations.
@@ -739,10 +739,10 @@ bool Point_in_triangle(const Point &p, const Point &a, const Point &b, const Poi
 bool point_in_rectangle(const Point &p, const Point &v, double w, double h) {
   static const bool EDGE_IS_INSIDE = true;
   if (w < 0) {
-    return point_in_rectangle(p, Point{v.x + w, v.y}, -w, h);
+    return point_in_rectangle(p, Point(v.x + w, v.y), -w, h);
   }
   if (h < 0) {
-    return point_in_rectangle(p, Point{v.x, v.y + h}, w, -h);
+    return point_in_rectangle(p, Point(v.x, v.y + h), w, -h);
   }
   return EDGE_IS_INSIDE ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
                         : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
@@ -754,7 +754,7 @@ bool point_in_rectangle(const Point &p, const Point &v, double w, double h) {
 bool point_in_rectangle(const Point &p, const Point &a, const Point &b) {
   double xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   double xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(p, Point{xl, yl}, xh - xl, yh - yl);
+  return point_in_rectangle(p, Point(xl, yl), xh - xl, yh - yl);
 }
 
 // Determines the intersection region of the rectangle with opposing vertices a1 and b1 and the
@@ -781,10 +781,10 @@ int rectangle_intersection(
     return -1;  // Completely disjoint.
   }
   if (p != nullptr) {
-    *p = Point{ixl, iyl};
+    *p = Point(ixl, iyl);
   }
   if (q != nullptr) {
-    *q = Point{ixh, iyh};
+    *q = Point(ixh, iyh);
   }
   if (EQ(ixl, xl1) && EQ(ixh, xh1) && EQ(iyl, yl1) && EQ(iyh, yh1)) {
     return 1;  // Rectangle 1 completely inside 2.
@@ -940,19 +940,19 @@ int main() {
   assert(Point_in_triangle(Point(-2.44, 0.82), Point(-1, 0), Point(-3, 1), Point(4, 0)));
   assert(!Point_in_triangle(Point(-2.44, 0.7), Point(-1, 0), Point(-3, 1), Point(4, 0)));
 
-  assert(point_in_rectangle(Point{0, -1}, Point{0, -3}, 3, 2));
-  assert(point_in_rectangle(Point{2, -2}, Point{3, -3}, -3, 2));
-  assert(!point_in_rectangle(Point{0, 0}, Point{3, -1}, -3, -2));
-  assert(point_in_rectangle(Point{2, -2}, Point{3, -3}, Point{0, -1}));
-  assert(!point_in_rectangle(Point{-1, -2}, Point{3, -3}, Point{0, -1}));
+  assert(point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2));
+  assert(point_in_rectangle(Point(2, -2), Point(3, -3), -3, 2));
+  assert(!point_in_rectangle(Point(0, 0), Point(3, -1), -3, -2));
+  assert(point_in_rectangle(Point(2, -2), Point(3, -3), Point(0, -1)));
+  assert(!point_in_rectangle(Point(-1, -2), Point(3, -3), Point(0, -1)));
 
-  assert(-1 == rectangle_intersection(Point{0, 0}, Point{1, 1}, Point{2, 2}, Point{3, 3}));
-  assert(0 == rectangle_intersection(Point{1, 1}, Point{7, 7}, Point{5, 5}, Point{0, 0}, &p, &q));
-  assert((p == Point{1, 1} && q == Point{5, 5}));
-  assert(1 == rectangle_intersection(Point{1, 1}, Point{0, 0}, Point{0, 0}, Point{1, 10}, &p, &q));
-  assert((p == Point{0, 0} && q == Point{1, 1}));
-  assert(2 == rectangle_intersection(Point{0, 5}, Point{5, 7}, Point{1, 6}, Point{2, 5}, &p, &q));
-  assert((p == Point{1, 5} && q == Point{2, 6}));
+  assert(-1 == rectangle_intersection(Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)));
+  assert(0 == rectangle_intersection(Point(1, 1), Point(7, 7), Point(5, 5), Point(0, 0), &p, &q));
+  assert(p == Point(1, 1) && q == Point(5, 5));
+  assert(1 == rectangle_intersection(Point(1, 1), Point(0, 0), Point(0, 0), Point(1, 10), &p, &q));
+  assert(p == Point(0, 0) && q == Point(1, 1));
+  assert(2 == rectangle_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
+  assert(p == Point(1, 5) && q == Point(2, 6));
 
   return 0;
 }

@@ -6,7 +6,7 @@ range, while preserving the initial relative ordering of elements. That is, if $
 original values and $b$ is the array of compressed values, then every pair of indices $i, j$ in $[0,
 n)$ shall satisfy $a[i] < a[j]$ if and only if $b[i] < b[j]$.
 
-Both implementations below require `operator <` to be defined on the iterator's value type. Version
+Both implementations below require `operator<` to be defined on the iterator's value type. Version
 1 performs the compression by sorting the array, removing duplicates, and binary searching for the
 position of each original value. Version 2 achieves the same result by inserting all values in a
 balanced binary search tree (`std::map`) which automatically removes duplicate values and supports

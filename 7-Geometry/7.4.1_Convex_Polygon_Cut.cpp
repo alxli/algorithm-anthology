@@ -4,11 +4,10 @@ Given a convex polygon and two points specifying an infinite line, cuts off the 
 returns the resulting left part.
 
 - `convex_cut(lo, hi, p, q)` returns the left-side polygon in clockwise order after cutting with the
-  line through `p` and `q`. The function is templated on the iterator type. The local `Point` struct
-  (`double` coordinates) is the default; replace it with `Point`/`PointD`/`PointI` from 7.1.1 or any
-  struct with numeric `.x` and `.y` fields. The `turn` classification uses cross products and is
-  exact for integer-coordinate points; the edge-cut intersection point uses floating-point
-  arithmetic (the output `Point` always has `double` coordinates).
+  line through `p` and `q`. The function is templated on the input point type. The `turn`
+  classification uses cross products and is exact for integer-coordinate points; the edge-cut
+  intersection point uses floating-point arithmetic, and the output `Point` always has `double`
+  coordinates.
 
 Time Complexity:
 - O(n) per call to `convex_cut(lo, hi, p, q)`, where $n$ is the distance between `lo` and `hi`.
@@ -28,28 +27,27 @@ const double EPS = 1e-9;
 
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LT(a, b) ((a) < (b) - EPS)
-#define GT(a, b) ((a) > (b) + EPS)
 
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
   bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
 };
 
-double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
+template<class PtA, class PtB, class PtO>
+double cross(const PtA &a, const PtB &b, const PtO &o) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-int turn(const Point &a, const Point &o, const Point &b) {
+template<class PtA, class PtO, class PtB>
+int turn(const PtA &a, const PtO &o, const PtB &b) {
   double c = cross(a, b, o);
-  return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
+  return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
 }
 
+template<class PtA, class PtB>
 int line_intersection(
-    const Point &p1, const Point &p2, const Point &p3, const Point &p4, Point *p = nullptr
+    const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, Point *p = nullptr
 ) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -66,10 +64,8 @@ int line_intersection(
   return 0;
 }
 
-// Input polygon vertices can be any type with numeric .x and .y; cut line points and output polygon
-// are always the local double Point.
-template<class It>
-std::vector<Point> convex_cut(It lo, It hi, const Point &p, const Point &q) {
+template<class It, class Pt>
+std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
   if (EQ(p.x, q.x) && EQ(p.y, q.y)) {
     throw std::runtime_error("Cannot cut using line from identical points.");
   }
@@ -94,6 +90,11 @@ std::vector<Point> convex_cut(It lo, It hi, const Point &p, const Point &q) {
 #include <cassert>
 using namespace std;
 
+struct PointI {
+  int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
+};
+
 int main() {
   {
     vector<Point> v{{1, 3}, {2, 2}, {2, 1}, {0, 0}, {-1, 3}};
@@ -105,6 +106,11 @@ int main() {
     vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};
     vector<Point> c{{1, 0}, {0, 0}, {1, 1}, {1, 3}, {0, 4}, {1, 4}};
     assert(convex_cut(v.begin(), v.end(), Point(1, 0), Point(1, 4)) == c);
+  }
+  {
+    vector<PointI> v{{0, 0}, {4, 0}, {4, 4}, {0, 4}};
+    vector<Point> c{{0, 4}, {0, 0}, {2, 0}, {2, 4}};
+    assert(convex_cut(v.begin(), v.end(), PointI(2, 0), PointI(2, 4)) == c);
   }
   return 0;
 }

@@ -28,23 +28,14 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
-// Replace with PointD/PointI from 7.1.1, or any struct with numeric .x and .y.
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
-double sqnorm(const Point &a) {
-  return a.x * a.x + a.y * a.y;
+double sqnorm(double x, double y) {
+  return x * x + y * y;
 }
 
-double norm(const Point &a) {
-  return sqrt(sqnorm(a));
-}
+// SFINAE guard: valid only when Pt exposes numeric .x/.y members. This keeps the templated point
+// constructors from hijacking calls like Circle(double, double, double).
+template<class Pt>
+using if_point = decltype(std::declval<const Pt &>().x, std::declval<const Pt &>().y, void());
 
 struct Circle {
   double h, k, r;
@@ -52,16 +43,18 @@ struct Circle {
   Circle() : h(0), k(0), r(0) {}
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
-  Circle(const Point &a, const Point &b) {
+  template<class Pt, class = if_point<Pt>>
+  Circle(const Pt &a, const Pt &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
-    r = norm(Point(a.x - h, a.y - k));
+    r = std::hypot(a.x - h, a.y - k);
   }
 
-  Circle(const Point &a, const Point &b, const Point &c) {
-    double an = sqnorm(Point(b.x - c.x, b.y - c.y));
-    double bn = sqnorm(Point(a.x - c.x, a.y - c.y));
-    double cn = sqnorm(Point(a.x - b.x, a.y - b.y));
+  template<class Pt, class = if_point<Pt>>
+  Circle(const Pt &a, const Pt &b, const Pt &c) {
+    double an = sqnorm(b.x - c.x, b.y - c.y);
+    double bn = sqnorm(a.x - c.x, a.y - c.y);
+    double cn = sqnorm(a.x - b.x, a.y - b.y);
     double wa = an * (bn + cn - an), wb = bn * (an + cn - bn), wc = cn * (an + bn - cn);
     double w = wa + wb + wc;
     if (EQ(w, 0)) {
@@ -69,10 +62,13 @@ struct Circle {
     }
     h = (wa * a.x + wb * b.x + wc * c.x) / w;
     k = (wa * a.y + wb * b.y + wc * c.y) / w;
-    r = norm(Point(a.x - h, a.y - k));
+    r = std::hypot(a.x - h, a.y - k);
   }
 
-  bool contains(const Point &p) const { return LE(sqnorm(Point(p.x - h, p.y - k)), r * r); }
+  template<class Pt, class = if_point<Pt>>
+  bool contains(const Pt &p) const {
+    return LE(sqnorm(p.x - h, p.y - k), r * r);
+  }
 };
 
 // Input points can be any type with .x and .y fields; Circle output is always double.
@@ -86,22 +82,20 @@ Circle minimum_enclosing_circle(It lo, It hi) {
   }
   static std::mt19937 rng(std::random_device{}());
   std::shuffle(lo, hi, rng);
-  // Helper converts any Pt to the local double Point.
-  auto pt = [](const auto &p) { return Point((double)p.x, (double)p.y); };
-  Circle res(pt(*lo), pt(*(lo + 1)));
+  Circle res(*lo, *(lo + 1));
   for (It i = lo + 2; i != hi; ++i) {
-    if (res.contains(pt(*i))) {
+    if (res.contains(*i)) {
       continue;
     }
-    res = Circle(pt(*lo), pt(*i));
+    res = Circle(*lo, *i);
     for (It j = lo + 1; j != i; ++j) {
-      if (res.contains(pt(*j))) {
+      if (res.contains(*j)) {
         continue;
       }
-      res = Circle(pt(*i), pt(*j));
+      res = Circle(*i, *j);
       for (It k = lo; k != j; ++k) {
-        if (!res.contains(pt(*k))) {
-          res = Circle(pt(*i), pt(*j), pt(*k));
+        if (!res.contains(*k)) {
+          res = Circle(*i, *j, *k);
         }
       }
     }
@@ -115,12 +109,19 @@ Circle minimum_enclosing_circle(It lo, It hi) {
 #include <vector>
 using namespace std;
 
+struct PointD {
+  double x, y;
+  PointD(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+};
+
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
-  vector<Point> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+  vector<PointD> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
   Circle res = minimum_enclosing_circle(v.begin(), v.end());
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
 

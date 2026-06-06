@@ -13,7 +13,7 @@ Grundy numbers. This is the Sprague-Grundy theorem.
 - `sum_grundy(grundies)` returns the xor of component Grundy numbers.
 
 Time Complexity:
-- O(nm) for `subtraction_game_grundy(max_stones, moves)`, where $n$ is `max_stones` and $m$ is the
+- O(n*m) for `subtraction_game_grundy(max_stones, moves)`, where $n$ is `max_stones` and $m$ is the
   number of allowed moves.
 
 Space Complexity:
@@ -66,7 +66,7 @@ int sum_grundy(const std::vector<int> &grundies) {
 using namespace std;
 
 int main() {
-  vector<int> moves = {1, 3, 4};
+  vector<int> moves{1, 3, 4};
   auto g = subtraction_game_grundy(10, moves);
   assert(g[0] == 0);
   assert(g[1] == 1);
@@ -74,7 +74,7 @@ int main() {
   assert(g[4] == 2);
   assert(g[7] == 0);
 
-  vector<int> heaps = {g[5], g[7], g[10]};
+  vector<int> heaps{g[5], g[7], g[10]};
   assert(sum_grundy(heaps) == (g[5] ^ g[7] ^ g[10]));
   return 0;
 }

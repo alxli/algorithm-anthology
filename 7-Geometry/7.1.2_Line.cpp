@@ -1,7 +1,7 @@
 /*
 
 A straight line in two dimensions, templated on the coordinate type `T` (default `double`). The line
-$ax + by + c = 0$ is stored **un**normalized, so a line through integer points keeps integer
+$ax + by + c = 0$ is stored UN-normalized, so a line through integer points keeps the integer
 coefficients: `a = q.y - p.y`, `b = p.x - q.x`, `c = -(a*p.x + b*p.y)`. Storage and the exact
 predicates `contains()`, `is_parallel()`, and `is_perpendicular()` therefore stay exact for integer
 `T`. The inherently-fractional operations `slope()`, `x()`, and `y()` return `fp_t`, which is
@@ -39,8 +39,6 @@ Space Complexity:
 const double EPS = 1e-9;
 const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-
 // SFINAE guard: valid only when Pt exposes numeric .x/.y members, so templated point constructors
 // don't hijack scalar-argument calls.
 template<class Pt>
@@ -67,37 +65,47 @@ struct line {
       class = std::enable_if_t<std::is_floating_point<U>::value>>
   line(fp_t slope, const Pt &p) : a(-slope), b(1), c(slope * p.x - p.y) {}
 
+  // Epsilon-aware for floating-point T; exact for int and for coordinate types like Modular or
+  // Rational, which therefore compose for all of the predicates below.
+  template<class A, class B>
+  static bool eq(const A &p, const B &q) {
+    if constexpr (std::is_floating_point<T>::value) {
+      return fabs(p - q) <= EPS;
+    }
+    return p == q;
+  }
+
   // Two lines are equal iff their coefficient vectors are proportional (the same line).
   bool operator==(const line &l) const {
-    return EQ(a * l.b, l.a * b) && EQ(b * l.c, l.b * c) && EQ(a * l.c, l.a * c);
+    return eq(a * l.b, l.a * b) && eq(b * l.c, l.b * c) && eq(a * l.c, l.a * c);
   }
 
   bool operator!=(const line &l) const { return !(*this == l); }
 
   // Returns whether the line is a valid line (not both a and b zero).
-  bool valid() const { return !(EQ(a, 0) && EQ(b, 0)); }
-  bool horizontal() const { return valid() && EQ(a, 0); }
-  bool vertical() const { return valid() && EQ(b, 0); }
+  bool valid() const { return !(eq(a, 0) && eq(b, 0)); }
+  bool horizontal() const { return valid() && eq(a, 0); }
+  bool vertical() const { return valid() && eq(b, 0); }
 
   // Slope -a/b, or NaN if the line is vertical or invalid.
-  fp_t slope() const { return (!valid() || EQ(b, 0)) ? M_NAN : -(fp_t)a / b; }
+  fp_t slope() const { return (!valid() || eq(b, 0)) ? M_NAN : -(fp_t)a / b; }
 
   // Solve for x at a given y (NaN if horizontal or invalid).
-  fp_t x(fp_t y) const { return (!valid() || EQ(a, 0)) ? M_NAN : -((fp_t)b * y + c) / a; }
+  fp_t x(fp_t y) const { return (!valid() || eq(a, 0)) ? M_NAN : -((fp_t)b * y + c) / a; }
 
   // Solve for y at a given x (NaN if vertical or invalid).
-  fp_t y(fp_t x) const { return (!valid() || EQ(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
+  fp_t y(fp_t x) const { return (!valid() || eq(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
 
   // Whether point p lies on the line. Exact for integer T and integer p.
   template<class Pt>
   bool contains(const Pt &p) const {
-    return EQ(a * p.x + b * p.y + c, 0);
+    return eq(a * p.x + b * p.y + c, 0);
   }
 
   // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are
   // perpendicular (dot == 0). Both exact for integer T.
-  bool is_parallel(const line &l) const { return EQ(a * l.b, l.a * b); }
-  bool is_perpendicular(const line &l) const { return EQ(a * l.a, -(b * l.b)); }
+  bool is_parallel(const line &l) const { return eq(a * l.b, l.a * b); }
+  bool is_perpendicular(const line &l) const { return eq(a * l.a, -(b * l.b)); }
 
   // Parallel/perpendicular line through point p. Exact for integer T and integer p.
   template<class Pt, class = if_point<Pt>>
@@ -128,31 +136,33 @@ using Line = LineD;  // Default line type is double.
 
 struct Point {
   double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
 };
 
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
   // Floating-point line.
   Line l(2, -5, -8);
-  Line para = Line(2, -5, -8).parallel(Point{-6, -2});
-  Line perp = Line(2, -5, -8).perpendicular(Point{-6, -2});
+  Line para = Line(2, -5, -8).parallel(Point(-6, -2));
+  Line perp = Line(2, -5, -8).perpendicular(Point(-6, -2));
   assert(l.is_parallel(para) && l.is_perpendicular(perp));
   assert(l.slope() == 0.4);
   // operator== is proportionality-based: para is the same line as -0.4x + y - 0.4 = 0.
   assert(para == Line(-0.4, 1, -0.4));
   assert(perp == Line(2.5, 1, 17));
-  assert(l.contains(Point{1.5, -1}));  // 2(1.5) - 5(-1) - 8 = 0.
+  assert(l.contains(Point(1.5, -1)));  // 2(1.5) - 5(-1) - 8 = 0.
 
   // Integer line through integer points - exact coefficients and predicates.
-  LineI il(PointI{0, 0}, PointI{2, 1});  // a=1, b=-2, c=0  ->  x - 2y = 0
+  LineI il(PointI(0, 0), PointI(2, 1));  // a=1, b=-2, c=0  ->  x - 2y = 0
   assert(il.a == 1 && il.b == -2 && il.c == 0);
-  assert(il.contains(PointI{4, 2}));  // exact integer check
-  assert(!il.contains(PointI{4, 3}));
-  assert(il.is_parallel(LineI(PointI{1, 1}, PointI{3, 2})));        // both slope 1/2
-  assert(il.is_perpendicular(LineI(PointI{0, 0}, PointI{1, -2})));  // dot of normals = 0
+  assert(il.contains(PointI(4, 2)));  // exact integer check
+  assert(!il.contains(PointI(4, 3)));
+  assert(il.is_parallel(LineI(PointI(1, 1), PointI(3, 2))));        // both slope 1/2
+  assert(il.is_perpendicular(LineI(PointI(0, 0), PointI(1, -2))));  // dot of normals = 0
   assert(il.slope() == 0.5);                                        // fp_t result
 
   return 0;

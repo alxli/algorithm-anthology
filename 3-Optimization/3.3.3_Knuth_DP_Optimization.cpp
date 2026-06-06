@@ -78,7 +78,7 @@ struct MergeCost {
 };
 
 int main() {
-  vector<int> a = {1, 2, 3, 4};
+  vector<int> a{1, 2, 3, 4};
   vector<vector<long long>> dp = knuth_interval_dp(a.size(), MergeCost(a));
   assert(dp[0][4] == 19);
   return 0;

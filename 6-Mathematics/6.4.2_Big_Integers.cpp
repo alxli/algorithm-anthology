@@ -7,7 +7,7 @@ one operand is a `BigInt` at any given level of evaluation.
 
 - `BigInt(n)` constructs a big integer from a long long (default: 0).
 - `BigInt(s)` constructs a big integer from a C string or an `std::string` `s`.
-- `operator =` is defined to copy from another big integer or to assign from an 64-bit integer
+- `operator=` is defined to copy from another big integer or to assign from an 64-bit integer
   primitive.
 - `size()` returns the number of digits in the base-10 representation.
 - Operators `>>` and `<<` are defined to support stream-based input and output.
@@ -39,7 +39,8 @@ Time Complexity:
   `USE_FFT_MULT` is set to true or false.
 - O(n*m) per call to division and modulo operations, where $n$ and $m$ are the number of digits in
   the dividend and divisor, respectively.
-- O(M(m) log n) per call to `pow(n)`, where $m$ is the length of the big integer.
+- O(M(m) log n) per call to `pow(n)`, where $M(m)$ is cost to multiply two big integers of length
+  $m$, depending on the multiplication method used.
 
 Space Complexity:
 - O(n) for storage of the big integer.

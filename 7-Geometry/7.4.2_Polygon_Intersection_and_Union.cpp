@@ -34,17 +34,10 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
 template<class Pt>
-int seg_intersection(const Pt &A, const Pt &B, const Pt &C, const Pt &D, Point *p = nullptr) {
+int seg_intersection1(
+    const Pt &A, const Pt &B, const Pt &C, const Pt &D, double *outx, double *outy
+) {
   auto less = [](const Pt &u, const Pt &v) { return u.x != v.x ? u.x < v.x : u.y < v.y; };
   auto minp = [&](const Pt &u, const Pt &v) -> const Pt & { return less(v, u) ? v : u; };
   auto maxp = [&](const Pt &u, const Pt &v) -> const Pt & { return less(u, v) ? v : u; };
@@ -60,9 +53,8 @@ int seg_intersection(const Pt &A, const Pt &B, const Pt &C, const Pt &D, Point *
     bool overlap = TOUCH_IS_INTERSECT ? !less(res2, res1) : less(res1, res2);
     if (overlap) {
       if (res1 == res2) {
-        if (p != nullptr) {
-          *p = Point{(double)res1.x, (double)res1.y};
-        }
+        *outx = (double)res1.x;
+        *outy = (double)res1.y;
         return 0;  // Collinear and meeting at an endpoint.
       }
       return 1;  // Collinear and overlapping.
@@ -82,10 +74,9 @@ int seg_intersection(const Pt &A, const Pt &B, const Pt &C, const Pt &D, Point *
       c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
              : (TOUCH_IS_INTERSECT ? (LE(c2, 0) && LE(c1, c2)) : (LT(c2, 0) && LT(c1, c2)));
   if (t_between_01 && u_between_01) {
-    if (p != nullptr) {
-      double t = (double)t_num / c1;
-      *p = Point{A.x + t * ab_x, A.y + t * ab_y};
-    }
+    double t = (double)t_num / c1;
+    *outx = A.x + t * ab_x;
+    *outy = A.y + t * ab_y;
     return 0;  // Non-parallel with one intersection.
   }
   return -1;  // Non-parallel with no intersections.
@@ -93,8 +84,8 @@ int seg_intersection(const Pt &A, const Pt &B, const Pt &C, const Pt &D, Point *
 
 // The two segments may use different point types (e.g. polygon edge vs. sweep line).
 template<class PtA, class PtB>
-int line_intersection(
-    const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, Point *p = nullptr
+int line_intersection1(
+    const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, double *outx, double *outy
 ) {
   auto a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   auto c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -105,8 +96,9 @@ int line_intersection(
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
-  if (p != nullptr) {
-    *p = Point{(double)x / det, (double)y / det};
+  if (outx != nullptr && outy != nullptr) {
+    *outx = (double)x / det;
+    *outy = (double)y / det;
   }
   return 0;
 }
@@ -114,12 +106,14 @@ int line_intersection(
 struct Event {
   double y;
   int mask_delta;
-
   Event(double y = 0, int mask_delta = 0) : y(y), mask_delta(mask_delta) {}
 };
 
 template<class It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
+  struct _PointD {
+    double x, y;
+  };  // For line intersection with the sweep line.
   std::vector<It> plo{lo1, lo2}, phi{hi1, hi2};
   std::set<double> xs;
   for (It it = lo1; it != hi1; ++it) {
@@ -130,9 +124,9 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   }
   for (It i1 = lo1, j1 = hi1 - 1; i1 != hi1; j1 = i1++) {
     for (It i2 = lo2, j2 = hi2 - 1; i2 != hi2; j2 = i2++) {
-      Point p;
-      if (seg_intersection(*i1, *j1, *i2, *j2, &p) == 0) {
-        xs.insert(p.x);
+      double outx, outy;
+      if (seg_intersection1(*i1, *j1, *i2, *j2, &outx, &outy) == 0) {
+        xs.insert(outx);
       }
     }
   }
@@ -140,7 +134,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   double res = 0;
   for (size_t k = 0; k + 1 < xsa.size(); k++) {
     double x = (xsa[k] + xsa[k + 1]) / 2;
-    Point sweep0(x, 0), sweep1(x, 1);
+    _PointD sweep0{x, 0}, sweep1{x, 1};
     std::vector<Event> events;
     for (int poly = 0; poly < 2; poly++) {
       It lo = plo[poly], hi = phi[poly];
@@ -149,9 +143,9 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
         area += (j->x - i->x) * (j->y + i->y);
       }
       for (It j = lo, i = hi - 1; j != hi; i = j++) {
-        Point p;
-        if (line_intersection(*j, *i, sweep0, sweep1, &p) == 0) {
-          double y = p.y, x0 = i->x, x1 = j->x;
+        double px, py;
+        if (line_intersection1(*j, *i, sweep0, sweep1, &px, &py) == 0) {
+          double y = py, x0 = i->x, x1 = j->x;
           int sgn_area = (area < 0 ? -1 : (area > 0 ? 1 : 0));
           if (x0 < x && x1 > x) {
             events.emplace_back(y, sgn_area * (1 << poly));
@@ -205,14 +199,24 @@ double union_area(It lo1, It hi1, It lo2, It hi2) {
 #include <cassert>
 using namespace std;
 
+struct PointD {
+  double x, y;
+  PointD(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator!=(const PointD &p) const { return !(*this == p); }
+  bool operator<(const PointD &p) const { return x != p.x ? x < p.x : y < p.y; }
+};
+
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
   bool operator==(const PointI &o) const { return x == o.x && y == o.y; }
-  bool operator!=(const PointI &o) const { return !(*this == o); }
+  bool operator!=(const PointI &p) const { return !(*this == p); }
+  bool operator<(const PointI &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
 
 int main() {
-  vector<Point> p, s;
+  vector<PointD> p, s;
   // Irregular pentagon a triangle of area 1.5 overlapping quadrant 2.
   p.emplace_back(1, 3);
   p.emplace_back(1, 2);

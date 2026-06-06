@@ -6,20 +6,22 @@
 \subsection{Point}
 A 2D point class template supporting epsilon comparisons. The coordinate type \inlinecode{T} defaults to \inlinecode{double}. Integer types (e.g. \inlinecode{int}) fully support all exact operations. Floating-point-only operations (\inlinecode{norm}, \inlinecode{arg}, \inlinecode{normalize}, \inlinecode{rotateCW/CCW}, \inlinecode{reflect} across a line) return coordinates of type \inlinecode{fp\_t}, which is \inlinecode{double} when \inlinecode{T} is integral and \inlinecode{T} itself otherwise.
 
-Exact operations (return \inlinecode{Point\textless{}T\textgreater{}} or \inlinecode{T}, no precision lost for integers):
+Exact operations (return \inlinecode{point\textless{}T\textgreater{}} or \inlinecode{T}, no precision lost for integers):
 
 \begin{compactitem}
   \item element-wise arithmetic, \inlinecode{dot()}, \inlinecode{cross()}, \inlinecode{sqnorm()}, cardinal rotations, \inlinecode{reflect(point)}, comparisons.
 \end{compactitem}
 
-Floating-point-only operations (return \inlinecode{Point\textless{}fp\_t\textgreater{}} or \inlinecode{fp\_t}):
+Floating-point-only operations (return \inlinecode{point\textless{}fp\_t\textgreater{}} or \inlinecode{fp\_t}):
 
 \begin{compactitem}
   \item \inlinecode{norm()}, \inlinecode{arg()}, \inlinecode{proj()}, \inlinecode{normalize()}, \inlinecode{rotateCW()}, \inlinecode{rotateCCW()}, \inlinecode{reflect(line)}.
-  \item \inlinecode{operator /} also promotes to \inlinecode{fp\_t}.
+  \item \inlinecode{operator/} also promotes to \inlinecode{fp\_t}.
 \end{compactitem}
 
-Implicit conversion from \inlinecode{Point\textless{}U\textgreater{}} to \inlinecode{Point\textless{}T\textgreater{}} is provided when \inlinecode{U} is integral and \inlinecode{T} is floating-point, so \inlinecode{PointI} can be passed wherever \inlinecode{PointD} is expected.
+Implicit conversion from \inlinecode{point\textless{}U\textgreater{}} to \inlinecode{point\textless{}T\textgreater{}} is provided when \inlinecode{U} is integral and \inlinecode{T} is floating-point, so \inlinecode{PointI} can be passed wherever \inlinecode{PointD} is expected.
+
+Non-floating-point coordinate types such as \inlinecode{Modular} or \inlinecode{Rational} compose for the exact operations (arithmetic, \inlinecode{dot}, \inlinecode{cross}, \inlinecode{sqnorm}, comparisons): these route to exact \inlinecode{==}/\inlinecode{\textless{}} rather than epsilon comparisons. The floating-point-only operations are simply not instantiated unless called.
 
 Type aliases:
 
@@ -61,26 +63,26 @@ struct point {
   point(T x, T y) : x(x), y(y) {}
   explicit point(const std::pair<T, T> &p) : x(p.first), y(p.second) {}
 
-  // Implicit conversion from integral point to floating-point point.
+  // Implicit conversion from integral to floating-point point (optional, can just use to_double()).
   template<
       typename U,
       typename = std::enable_if_t<std::is_integral<U>::value && std::is_floating_point<T>::value>>
   point(const point<U> &p) : x(static_cast<T>(p.x)), y(static_cast<T>(p.y)) {}
 
   bool operator==(const point &p) const {
-    if (std::is_integral<T>::value) {
-      return x == p.x && y == p.y;
+    if constexpr (std::is_floating_point<T>::value) {
+      return EQ(x, p.x) && EQ(y, p.y);
     }
-    return EQ(x, p.x) && EQ(y, p.y);
+    return x == p.x && y == p.y;  // exact for ints and types like Modular/Rational
   }
 
   bool operator!=(const point &p) const { return !(*this == p); }
 
   bool operator<(const point &p) const {
-    if (std::is_integral<T>::value) {
-      return x != p.x ? x < p.x : y < p.y;
+    if constexpr (std::is_floating_point<T>::value) {
+      return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
     }
-    return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
+    return x == p.x ? y < p.y : x < p.x;  // exact for ints and types like Modular/Rational
   }
 
   bool operator>(const point &p) const { return p < *this; }
@@ -91,6 +93,7 @@ struct point {
   point operator+(T v) const { return {x + v, y + v}; }
   point operator-(T v) const { return {x - v, y - v}; }
   point operator*(T v) const { return {x * v, y * v}; }
+
   // Division always promotes to fp_t to avoid integer truncation.
   point<fp_t> operator/(fp_t v) const { return {(fp_t)x / v, (fp_t)y / v}; }
 
@@ -116,8 +119,8 @@ struct point {
 
   point<fp_t> normalize() const {
     fp_t n = norm();
-    if (n < static_cast<fp_t>(1e-30)) {
-      return {fp_t(0), fp_t(0)};
+    if (n < static_cast<fp_t>(1e-30)) {  // guard against dividing by a near-zero norm, not a
+      return {fp_t(0), fp_t(0)};         // geometric tolerance (EPS is too coarse here)
     }
     return {static_cast<fp_t>(x) / n, static_cast<fp_t>(y) / n};
   }
@@ -210,10 +213,11 @@ struct point {
   }
 
   friend std::ostream &operator<<(std::ostream &out, const point &p) {
-    if (std::is_integral<T>::value) {
+    if constexpr (std::is_floating_point<T>::value) {
+      return out << "(" << (fabs(p.x) < EPS ? 0 : p.x) << "," << (fabs(p.y) < EPS ? 0 : p.y) << ")";
+    } else {
       return out << "(" << p.x << "," << p.y << ")";
     }
-    return out << "(" << (fabs(p.x) < EPS ? 0 : p.x) << "," << (fabs(p.y) < EPS ? 0 : p.y) << ")";
   }
 };
 
@@ -276,7 +280,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line}
-A straight line in two dimensions, templated on the coordinate type \inlinecode{T} (default \inlinecode{double}). The line $ax + by + c = 0$ is stored **un**normalized, so a line through integer points keeps integer coefficients: \inlinecode{a = q.y - p.y}, \inlinecode{b = p.x - q.x}, \inlinecode{c = -(a*p.x + b*p.y)}. Storage and the exact predicates \inlinecode{contains()}, \inlinecode{is\_parallel()}, and \inlinecode{is\_perpendicular()} therefore stay exact for integer \inlinecode{T}. The inherently-fractional operations \inlinecode{slope()}, \inlinecode{x()}, and \inlinecode{y()} return \inlinecode{fp\_t}, which is \inlinecode{double} when \inlinecode{T} is integral and \inlinecode{T} itself otherwise.
+A straight line in two dimensions, templated on the coordinate type \inlinecode{T} (default \inlinecode{double}). The line $ax + by + c = 0$ is stored UN-normalized, so a line through integer points keeps the integer coefficients: \inlinecode{a = q.y - p.y}, \inlinecode{b = p.x - q.x}, \inlinecode{c = -(a*p.x + b*p.y)}. Storage and the exact predicates \inlinecode{contains()}, \inlinecode{is\_parallel()}, and \inlinecode{is\_perpendicular()} therefore stay exact for integer \inlinecode{T}. The inherently-fractional operations \inlinecode{slope()}, \inlinecode{x()}, and \inlinecode{y()} return \inlinecode{fp\_t}, which is \inlinecode{double} when \inlinecode{T} is integral and \inlinecode{T} itself otherwise.
 
 Because coefficients are not normalized to a canonical form, \inlinecode{operator==} compares lines by proportionality (whether they are the same geometric line) rather than by coefficient equality.
 
@@ -310,8 +314,6 @@ Type aliases:
 const double EPS = 1e-9;
 const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-
 // SFINAE guard: valid only when Pt exposes numeric .x/.y members, so templated point constructors
 // don't hijack scalar-argument calls.
 template<class Pt>
@@ -338,37 +340,47 @@ struct line {
       class = std::enable_if_t<std::is_floating_point<U>::value>>
   line(fp_t slope, const Pt &p) : a(-slope), b(1), c(slope * p.x - p.y) {}
 
+  // Epsilon-aware for floating-point T; exact for int and for coordinate types like Modular or
+  // Rational, which therefore compose for all of the predicates below.
+  template<class A, class B>
+  static bool eq(const A &p, const B &q) {
+    if constexpr (std::is_floating_point<T>::value) {
+      return fabs(p - q) <= EPS;
+    }
+    return p == q;
+  }
+
   // Two lines are equal iff their coefficient vectors are proportional (the same line).
   bool operator==(const line &l) const {
-    return EQ(a * l.b, l.a * b) && EQ(b * l.c, l.b * c) && EQ(a * l.c, l.a * c);
+    return eq(a * l.b, l.a * b) && eq(b * l.c, l.b * c) && eq(a * l.c, l.a * c);
   }
 
   bool operator!=(const line &l) const { return !(*this == l); }
 
   // Returns whether the line is a valid line (not both a and b zero).
-  bool valid() const { return !(EQ(a, 0) && EQ(b, 0)); }
-  bool horizontal() const { return valid() && EQ(a, 0); }
-  bool vertical() const { return valid() && EQ(b, 0); }
+  bool valid() const { return !(eq(a, 0) && eq(b, 0)); }
+  bool horizontal() const { return valid() && eq(a, 0); }
+  bool vertical() const { return valid() && eq(b, 0); }
 
   // Slope -a/b, or NaN if the line is vertical or invalid.
-  fp_t slope() const { return (!valid() || EQ(b, 0)) ? M_NAN : -(fp_t)a / b; }
+  fp_t slope() const { return (!valid() || eq(b, 0)) ? M_NAN : -(fp_t)a / b; }
 
   // Solve for x at a given y (NaN if horizontal or invalid).
-  fp_t x(fp_t y) const { return (!valid() || EQ(a, 0)) ? M_NAN : -((fp_t)b * y + c) / a; }
+  fp_t x(fp_t y) const { return (!valid() || eq(a, 0)) ? M_NAN : -((fp_t)b * y + c) / a; }
 
   // Solve for y at a given x (NaN if vertical or invalid).
-  fp_t y(fp_t x) const { return (!valid() || EQ(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
+  fp_t y(fp_t x) const { return (!valid() || eq(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
 
   // Whether point p lies on the line. Exact for integer T and integer p.
   template<class Pt>
   bool contains(const Pt &p) const {
-    return EQ(a * p.x + b * p.y + c, 0);
+    return eq(a * p.x + b * p.y + c, 0);
   }
 
   // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are
   // perpendicular (dot == 0). Both exact for integer T.
-  bool is_parallel(const line &l) const { return EQ(a * l.b, l.a * b); }
-  bool is_perpendicular(const line &l) const { return EQ(a * l.a, -(b * l.b)); }
+  bool is_parallel(const line &l) const { return eq(a * l.b, l.a * b); }
+  bool is_perpendicular(const line &l) const { return eq(a * l.a, -(b * l.b)); }
 
   // Parallel/perpendicular line through point p. Exact for integer T and integer p.
   template<class Pt, class = if_point<Pt>>
@@ -400,31 +412,33 @@ using Line = LineD;  // Default line type is double.
 
 struct Point {
   double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
 };
 
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
   // Floating-point line.
   Line l(2, -5, -8);
-  Line para = Line(2, -5, -8).parallel(Point{-6, -2});
-  Line perp = Line(2, -5, -8).perpendicular(Point{-6, -2});
+  Line para = Line(2, -5, -8).parallel(Point(-6, -2));
+  Line perp = Line(2, -5, -8).perpendicular(Point(-6, -2));
   assert(l.is_parallel(para) && l.is_perpendicular(perp));
   assert(l.slope() == 0.4);
   // operator== is proportionality-based: para is the same line as -0.4x + y - 0.4 = 0.
   assert(para == Line(-0.4, 1, -0.4));
   assert(perp == Line(2.5, 1, 17));
-  assert(l.contains(Point{1.5, -1}));  // 2(1.5) - 5(-1) - 8 = 0.
+  assert(l.contains(Point(1.5, -1)));  // 2(1.5) - 5(-1) - 8 = 0.
 
   // Integer line through integer points - exact coefficients and predicates.
-  LineI il(PointI{0, 0}, PointI{2, 1});  // a=1, b=-2, c=0  ->  x - 2y = 0
+  LineI il(PointI(0, 0), PointI(2, 1));  // a=1, b=-2, c=0  ->  x - 2y = 0
   assert(il.a == 1 && il.b == -2 && il.c == 0);
-  assert(il.contains(PointI{4, 2}));  // exact integer check
-  assert(!il.contains(PointI{4, 3}));
-  assert(il.is_parallel(LineI(PointI{1, 1}, PointI{3, 2})));        // both slope 1/2
-  assert(il.is_perpendicular(LineI(PointI{0, 0}, PointI{1, -2})));  // dot of normals = 0
+  assert(il.contains(PointI(4, 2)));  // exact integer check
+  assert(!il.contains(PointI(4, 3)));
+  assert(il.is_parallel(LineI(PointI(1, 1), PointI(3, 2))));        // both slope 1/2
+  assert(il.is_perpendicular(LineI(PointI(0, 0), PointI(1, -2))));  // dot of normals = 0
   assert(il.slope() == 0.5);                                        // fp_t result
 
   return 0;
@@ -433,7 +447,7 @@ int main() {
 \subsection{Circle}
 A circle in two dimensions supporting epsilon comparisons. The circle centered at $(h, k)$ is represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a non-negative number. Operations include constructing a circle from a line segment, constructing a circumcircle, checking if a point falls inside the circle with \inlinecode{contains()} or on its edge with \inlinecode{on\_edge()}, and constructing an incircle with \inlinecode{incircle()}.
 
-Circle is floating-point by nature (the radius requires a square root), so it always stores and computes in \inlinecode{double}. The center of a circumcircle is rational and the radius irrational even for integer inputs, so there is no exact integer \inlinecode{Circle} to store; instead, every point-accepting constructor and predicate is templated on the point type \inlinecode{Pt} and only reads \inlinecode{.x}/ \inlinecode{.y}, accepting \inlinecode{Point}/ \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1, \inlinecode{std::pair}, or any struct with numeric \inlinecode{.x}/ \inlinecode{.y} fields.
+Circle is floating-point by nature (the radius requires a square root), so it always stores and computes in \inlinecode{double}. The center of a circumcircle is rational and the radius irrational even for integer inputs, so there is no exact integer \inlinecode{Circle} to store; instead, every point-accepting constructor and predicate is templated on the point type \inlinecode{Pt} and only reads \inlinecode{.x}/ \inlinecode{.y}, accepting \inlinecode{Point}/ \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x}/ \inlinecode{.y} fields.
 
 When exact integer reasoning about a circumcircle is needed, use \inlinecode{in\_circumcircle(a, b, c, d)}, which tests whether \inlinecode{d} lies inside the circle through \inlinecode{a}, \inlinecode{b}, \inlinecode{c} using a determinant (no square root) and is therefore exact for integer coordinates without ever building a \inlinecode{Circle}.
 
@@ -588,46 +602,48 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
 
 struct Point {
   double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
 };
 
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
   Circle c(-2, 5, sqrt(10));
-  assert(c == Circle(Point{-2, 5}, sqrt(10)));
-  assert(c == Circle(Point{1, 6}, Point{-5, 4}));
-  assert(c == Circle(Point{-3, 2}, Point{-3, 8}, Point{-1, 8}));
-  assert(c == incircle(Point{-12, 5}, Point{3, 0}, Point{0, 9}));
-  assert(c.contains(Point{-2, 8}) && !c.contains(Point{-2, 9}));
-  assert(c.on_edge(Point{-1, 2}) && !c.on_edge(Point{-1.01, 2}));
+  assert(c == Circle(Point(-2, 5), sqrt(10)));
+  assert(c == Circle(Point(1, 6), Point(-5, 4)));
+  assert(c == Circle(Point(-3, 2), Point(-3, 8), Point(-1, 8)));
+  assert(c == incircle(Point(-12, 5), Point(3, 0), Point(0, 9)));
+  assert(c.contains(Point(-2, 8)) && !c.contains(Point(-2, 9)));
+  assert(c.on_edge(Point(-1, 2)) && !c.on_edge(Point(-1.01, 2)));
 
   // Integer-coordinate points are accepted; the Circle is computed in double.
-  assert(c == Circle(PointI{1, 6}, PointI{-5, 4}));
-  assert(c == Circle(PointI{-3, 2}, PointI{-3, 8}, PointI{-1, 8}));
-  assert(c == incircle(PointI{-12, 5}, PointI{3, 0}, PointI{0, 9}));
-  assert(c.contains(PointI{-2, 8}) && !c.contains(PointI{-2, 9}));
-  assert(c.on_edge(PointI{-1, 2}));
+  assert(c == Circle(PointI(1, 6), PointI(-5, 4)));
+  assert(c == Circle(PointI(-3, 2), PointI(-3, 8), PointI(-1, 8)));
+  assert(c == incircle(PointI(-12, 5), PointI(3, 0), PointI(0, 9)));
+  assert(c.contains(PointI(-2, 8)) && !c.contains(PointI(-2, 9)));
+  assert(c.on_edge(PointI(-1, 2)));
 
   // Exact integer in-circle predicate: unit circle through (1,0), (0,1), (-1,0).
-  assert(in_circumcircle(PointI{1, 0}, PointI{0, 1}, PointI{-1, 0}, PointI{0, 0}) == 1);  // inside
+  assert(in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, 0)) == 1);  // inside
   assert(
-      in_circumcircle(PointI{1, 0}, PointI{0, 1}, PointI{-1, 0}, PointI{2, 0}) == -1
+      in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(2, 0)) == -1
   );  // outside
   assert(
-      in_circumcircle(PointI{1, 0}, PointI{0, 1}, PointI{-1, 0}, PointI{0, -1}) == 0
+      in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, -1)) == 0
   );  // on edge
   // Orientation-independent: reversing a, b, c gives the same answer.
-  assert(in_circumcircle(PointI{-1, 0}, PointI{0, 1}, PointI{1, 0}, PointI{0, 0}) == 1);
+  assert(in_circumcircle(PointI(-1, 0), PointI(0, 1), PointI(1, 0), PointI(0, 0)) == 1);
 
   return 0;
 }
 \end{lstlisting}
 \subsection{Triangle}
-Common triangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should work with \inlinecode{Point}/ \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, std::pair, or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. \inlinecode{triangle\_area()} returns \inlinecode{double} regardless of input type (the area is fractional via the \inlinecode{/2}). \inlinecode{same\_side()} and \inlinecode{point\_in\_triangle()} do all arithmetic in the point's own coordinate type and are exact for integer points: they reduce each cross product to a sign before combining, so no precision is lost and no overflow occurs from multiplying cross products.
+Common triangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should work with \inlinecode{Point}/ \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. \inlinecode{triangle\_area()} returns \inlinecode{double} regardless of input type (the area is fractional via the \inlinecode{/2}). \inlinecode{same\_side()} and \inlinecode{point\_in\_triangle()} do all arithmetic in the point's own coordinate type and are exact for integer points: they reduce each cross product to a sign before combining, so no precision is lost and no overflow occurs from multiplying cross products.
 
-Note: with an integer point type, coordinates must be integers - fractional literals like \inlinecode{-2.44} cannot be represented (and brace-initialization \inlinecode{PointI\{-2.44, ...\}} is a narrowing error). Use a floating-point point type for fractional coordinates.
+Note: with an integer point type, coordinates must be integers - fractional literals like \inlinecode{-2.44} cannot be represented. Use a floating-point point type for fractional coordinates.
 
 \begin{compactitem}
   \item \inlinecode{triangle\_area(a, b, c)} returns the area of the triangle $abc$.
@@ -701,42 +717,42 @@ bool point_in_triangle(const Pt &p, const Pt &a, const Pt &b, const Pt &c) {
 
 struct Point {
   double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
 };
 
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
-  assert(EQ(6, triangle_area(Point{0, -1}, Point{4, -1}, Point{0, -4})));
+  assert(EQ(6, triangle_area(Point(0, -1), Point(4, -1), Point(0, -4))));
   assert(EQ(6, triangle_area_sides(3, 4, 5)));
   assert(EQ(6, triangle_area_medians(3.605551275, 2.5, 4.272001873)));
   assert(EQ(6, triangle_area_altitudes(3, 4, 2.4)));
 
   // Fractional coordinates require a floating-point point type.
-  assert(point_in_triangle(Point{0, 0}, Point{-1, 0}, Point{0, -2}, Point{4, 0}));
-  assert(!point_in_triangle(Point{0, 1}, Point{-1, 0}, Point{0, -2}, Point{4, 0}));
-  assert(point_in_triangle(Point{-2.44, 0.82}, Point{-1, 0}, Point{-3, 1}, Point{4, 0}));
-  assert(!point_in_triangle(Point{-2.44, 0.7}, Point{-1, 0}, Point{-3, 1}, Point{4, 0}));
+  assert(point_in_triangle(Point(0, 0), Point(-1, 0), Point(0, -2), Point(4, 0)));
+  assert(!point_in_triangle(Point(0, 1), Point(-1, 0), Point(0, -2), Point(4, 0)));
+  assert(point_in_triangle(Point(-2.44, 0.82), Point(-1, 0), Point(-3, 1), Point(4, 0)));
+  assert(!point_in_triangle(Point(-2.44, 0.7), Point(-1, 0), Point(-3, 1), Point(4, 0)));
 
   // Integer coordinates: same_side / point_in_triangle are computed exactly in int.
-  assert(EQ(8, triangle_area(PointI{0, 0}, PointI{4, 0}, PointI{0, 4})));
-  assert(point_in_triangle(PointI{1, 1}, PointI{0, 0}, PointI{4, 0}, PointI{0, 4}));
-  assert(!point_in_triangle(PointI{5, 5}, PointI{0, 0}, PointI{4, 0}, PointI{0, 4}));
-  assert(point_in_triangle(PointI{2, 2}, PointI{0, 0}, PointI{4, 0}, PointI{0, 4}));  // on edge
+  assert(EQ(8, triangle_area(PointI(0, 0), PointI(4, 0), PointI(0, 4))));
+  assert(point_in_triangle(PointI(1, 1), PointI(0, 0), PointI(4, 0), PointI(0, 4)));
+  assert(!point_in_triangle(PointI(5, 5), PointI(0, 0), PointI(4, 0), PointI(0, 4)));
+  assert(point_in_triangle(PointI(2, 2), PointI(0, 0), PointI(4, 0), PointI(0, 4)));  // on edge
 
   return 0;
 }
 \end{lstlisting}
 \subsection{Rectangle}
-Common rectangle calculations in two dimensions.
-
-The functions are templated on the point type \inlinecode{Pt}, which should work with \inlinecode{Point}/ \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1, or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All operations use comparisons only and are exact for integer-coordinate points.
+Common rectangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should work with \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All operations use comparisons only and are exact for integer-coordinate points.
 
 \begin{compactitem}
   \item \inlinecode{point\_in\_rectangle(p, v, w, h)} returns whether point \inlinecode{p} lies within the rectangle defined by a vertex \inlinecode{v}, a width of \inlinecode{w}, and a height of \inlinecode{h}. Note that negative widths and heights are supported. If the point lies on or close to an edge (by roughly \inlinecode{EPS}), then the result will depend on the setting of \inlinecode{EDGE\_IS\_INSIDE}.
   \item \inlinecode{point\_in\_rectangle(p, a, b)} returns whether point \inlinecode{p} lies within the rectangle with opposing vertices \inlinecode{a} and \inlinecode{b}. If the point lies on or close to an edge (by roughly \inlinecode{EPS}), then the result will depend on the setting of \inlinecode{EDGE\_IS\_INSIDE}.
-  \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q)} determines the intersection region of the rectangle with opposing vertices \inlinecode{a\_1} and \inlinecode{b\_1} and the rectangle with opposing vertices \inlinecode{a\_2} and \inlinecode{b\_2}. Returns \inlinecode{-1} if the rectangles are completely disjoint, 0 if the rectangles partially intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle is completely inside the first. If there is an intersection, the lower-left and upper-right vertices of the normalized intersection rectangle will be stored into pointers \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}. If the intersection is a single point or line segment, then the result will depend on the setting of \inlinecode{EDGE\_IS\_INSIDE} within \inlinecode{point\_in\_rectangle()}.
+  \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q)} determines the intersection region of the rectangle with opposing vertices \inlinecode{a\_1} and \inlinecode{b\_1} and the rectangle with opposing vertices \inlinecode{a\_2} and \inlinecode{b\_2}. Returns $-1$ if the rectangles are completely disjoint, 0 if the rectangles partially intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle is completely inside the first. If there is an intersection, the lower-left and upper-right vertices of the normalized intersection rectangle will be stored into pointers \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}. If the intersection is a single point or line segment, then the result will depend on the setting of \inlinecode{EDGE\_IS\_INSIDE} within \inlinecode{point\_in\_rectangle()}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(1)$ for all operations.
@@ -758,13 +774,13 @@ const double EPS = 1e-9;
 #define GE(a, b) ((a) >= (b) - EPS)
 
 template<class Pt, class T>
-bool point_in_rectangle(const Pt &p, const Pt &v, T w, T h) {
+bool point_in_rectangle(const Pt &p, const Pt &v, const T &w, const T &h) {
   static const bool EDGE_IS_INSIDE = true;
   if (w < 0) {
-    return point_in_rectangle(p, Pt{v.x + w, v.y}, -w, h);
+    return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h);
   }
   if (h < 0) {
-    return point_in_rectangle(p, Pt{v.x, v.y + h}, w, -h);
+    return point_in_rectangle(p, Pt(v.x, v.y + h), w, -h);
   }
   return EDGE_IS_INSIDE ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
                         : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
@@ -774,7 +790,7 @@ template<class Pt>
 bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(Pt{p.x, p.y}, Pt{xl, yl}, xh - xl, yh - yl);
+  return point_in_rectangle(Pt(p.x, p.y), Pt(xl, yl), xh - xl, yh - yl);
 }
 
 template<class Pt>
@@ -797,10 +813,10 @@ int rectangle_intersection(
   }
   // Opposing corners of the overlap: bottom-left in p, top-right in q.
   if (p != nullptr) {
-    *p = Pt{ixl, iyl};
+    *p = Pt(ixl, iyl);
   }
   if (q != nullptr) {
-    *q = Pt{ixh, iyh};
+    *q = Pt(ixh, iyh);
   }
   // The overlap equals a rectangle exactly when that rectangle is contained in the other.
   if (EQ(ixl, xl1) && EQ(ixh, xh1) && EQ(iyl, yl1) && EQ(iyh, yh1)) {
@@ -824,20 +840,20 @@ struct Point {
 };
 
 int main() {
-  assert(point_in_rectangle(Point{0, -1}, Point{0, -3}, 3, 2));
-  assert(point_in_rectangle(Point{2, -2}, Point{3, -3}, -3, 2));
-  assert(!point_in_rectangle(Point{0, 0}, Point{3, -1}, -3, -2));
-  assert(point_in_rectangle(Point{2, -2}, Point{3, -3}, Point{0, -1}));
-  assert(!point_in_rectangle(Point{-1, -2}, Point{3, -3}, Point{0, -1}));
+  assert(point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2));
+  assert(point_in_rectangle(Point(2, -2), Point(3, -3), -3, 2));
+  assert(!point_in_rectangle(Point(0, 0), Point(3, -1), -3, -2));
+  assert(point_in_rectangle(Point(2, -2), Point(3, -3), Point(0, -1)));
+  assert(!point_in_rectangle(Point(-1, -2), Point(3, -3), Point(0, -1)));
 
   Point p, q;
-  assert(-1 == rectangle_intersection(Point{0, 0}, Point{1, 1}, Point{2, 2}, Point{3, 3}));
-  assert(0 == rectangle_intersection(Point{1, 1}, Point{7, 7}, Point{5, 5}, Point{0, 0}, &p, &q));
-  assert((p == Point{1, 1} && q == Point{5, 5}));
-  assert(1 == rectangle_intersection(Point{1, 1}, Point{0, 0}, Point{0, 0}, Point{1, 10}, &p, &q));
-  assert((p == Point{0, 0} && q == Point{1, 1}));
-  assert(2 == rectangle_intersection(Point{0, 5}, Point{5, 7}, Point{1, 6}, Point{2, 5}, &p, &q));
-  assert((p == Point{1, 5} && q == Point{2, 6}));
+  assert(-1 == rectangle_intersection(Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)));
+  assert(0 == rectangle_intersection(Point(1, 1), Point(7, 7), Point(5, 5), Point(0, 0), &p, &q));
+  assert(p == Point(1, 1) && q == Point(5, 5));
+  assert(1 == rectangle_intersection(Point(1, 1), Point(0, 0), Point(0, 0), Point(1, 10), &p, &q));
+  assert(p == Point(0, 0) && q == Point(1, 1));
+  assert(2 == rectangle_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
+  assert(p == Point(1, 5) && q == Point(2, 6));
 
   return 0;
 }
@@ -847,7 +863,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Angles}
-Angle calculations in two dimensions. All operations are inherently floating-point (\inlinecode{atan2}, \inlinecode{acos}, trigonometry), so these functions use the local double-coordinate \inlinecode{Point} type. Convert integer points to \inlinecode{Point}/ \inlinecode{PointD} when asking for angles. The constants \inlinecode{DEG} and \inlinecode{RAD} may be used as multipliers to convert between degrees and radians. For example, if $t$ is a value in radians, then $t \cdot \text{DEG}$ is the equivalent angle in degrees.
+Angle calculations in two dimensions. All operations are inherently floating-point (\inlinecode{atan2}, \inlinecode{acos}, trigonometry), so these functions use the local double-coordinate \inlinecode{PointD} type. Convert integer points to \inlinecode{PointD} when asking for angles. The constants \inlinecode{DEG} and \inlinecode{RAD} may be used as multipliers to convert between degrees and radians. For example, if $t$ is a value in radians, then $t \cdot \text{DEG}$ is the equivalent angle in degrees.
 
 \begin{compactitem}
   \item \inlinecode{reduce\_deg(t)} takes an angle \inlinecode{t} degrees and returns an equivalent angle in the range $[0, 360)$ degrees. E.g. $-630$ becomes $90$.
@@ -869,31 +885,12 @@ Angle calculations in two dimensions. All operations are inherently floating-poi
 #include <cmath>
 
 const double EPS = 1e-9;
-
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define GT(a, b) ((a) > (b) + EPS)
-
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return LT(x, p.x) || (EQ(x, p.x) && LT(y, p.y)); }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
-double sqnorm(const Point &a) {
-  return a.x * a.x + a.y * a.y;
-}
-
-double norm(const Point &a) {
-  return sqrt(sqnorm(a));
-}
-
 const double PI = acos(-1.0);
 const double DEG = PI / 180;
 const double RAD = 180 / PI;
+
+#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+#define LT(a, b) ((a) < (b) - EPS)
 
 double reduce_deg(double t) {
   if (t < -360) {
@@ -915,21 +912,26 @@ double reduce_rad(double t) {
   return (t >= 2 * PI) ? fmod(t, 2 * PI) : t;
 }
 
-Point polar_point(double r, double t) {
-  return Point{r * cos(t), r * sin(t)};
+template<class OutPt>
+OutPt polar_point(double r, double t) {
+  return OutPt(r * cos(t), r * sin(t));
 }
 
-double polar_angle(const Point &p) {
-  double t = atan2(p.y, p.x);
+template<class Pt>
+double polar_angle(const Pt &p) {
+  double t = atan2((double)p.y, (double)p.x);
   return (t < 0) ? (t + 2 * PI) : t;
 }
 
-double angle(const Point &a, const Point &o, const Point &b) {
-  Point u{o.x - a.x, o.y - a.y}, v{o.x - b.x, o.y - b.y};
-  return acos((u.x * v.x + u.y * v.y) / (norm(u) * norm(v)));
+template<class Pt>
+double angle(const Pt &a, const Pt &o, const Pt &b) {
+  double ux = o.x - a.x, uy = o.y - a.y;
+  double vx = o.x - b.x, vy = o.y - b.y;
+  return acos((ux * vx + uy * vy) / (std::hypot(ux, uy) * std::hypot(vx, vy)));
 }
 
-double angle_between(const Point &a, const Point &b) {
+template<class Pt>
+double angle_between(const Pt &a, const Pt &b) {
   double t = atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
   return (t < 0) ? (t + 2 * PI) : t;
 }
@@ -939,42 +941,47 @@ double angle_between(const double &a1, const double &b1, const double &a2, const
   if (t < 0) {
     t += PI;
   }
-  return GT(t, PI / 2) ? (PI - t) : t;
+  return LT(PI / 2, t) ? (PI - t) : t;
 }
 
-double cross(const Point &a, const Point &b, const Point &o = Point{0, 0}) {
+template<class Pt>
+auto cross(const Pt &a, const Pt &b, const Pt &o = Pt(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-int turn(const Point &a, const Point &o, const Point &b) {
-  double c = cross(a, b, o);
-  return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
+template<class Pt>
+int turn(const Pt &a, const Pt &o, const Pt &b) {
+  auto c = cross(a, b, o);
+  return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+struct PointD {
+  double x, y;
+  PointD(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+};
+
 #include <cassert>
 
 int main() {
   assert(EQ(123, reduce_deg(-8 * 360 + 123)));
   assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
-  assert((polar_point(4, PI) == Point{-4, 0}));
-  assert((polar_point(4, -PI / 2) == Point{0, -4}));
-  assert(EQ(45, polar_angle(Point{5, 5}) * RAD));
-  assert(EQ(135 * DEG, polar_angle(Point{-4, 4})));
-  assert(EQ(90 * DEG, angle(Point{5, 0}, Point{0, 5}, Point{-5, 0})));
-  assert(EQ(225 * DEG, angle_between(Point{0, 5}, Point{5, -5})));
-  assert(-1 == cross(Point{0, 1}, Point{1, 0}, Point{0, 0}));
-  assert(1 == turn(Point{0, 1}, Point{0, 0}, Point{-5, -5}));
-
+  assert(polar_point<PointD>(4, PI) == PointD(-4, 0));
+  assert(polar_point<PointD>(4, -PI / 2) == PointD(0, -4));
+  assert(EQ(45, polar_angle(PointD(5, 5)) * RAD));
+  assert(EQ(135 * DEG, polar_angle(PointD(-4, 4))));
+  assert(EQ(90 * DEG, angle(PointD(5, 0), PointD(0, 5), PointD(-5, 0))));
+  assert(EQ(225 * DEG, angle_between(PointD(0, 5), PointD(5, -5))));
+  assert(-1 == cross(PointD(0, 1), PointD(1, 0), PointD(0, 0)));
+  assert(1 == turn(PointD(0, 1), PointD(0, 0), PointD(-5, -5)));
   return 0;
 }
 \end{lstlisting}
 \subsection{Distances}
-Distance calculations in two dimensions for points, lines, and line segments.
-
-The functions below are templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (double coordinates) is the default; replace it with \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. \inlinecode{sqnorm}, \inlinecode{dot}, \inlinecode{cross}, and \inlinecode{sqdist} preserve the coordinate type and are exact for integer points. Functions that return actual distances or projected points use \inlinecode{double} only for the final division/square root.
+Distance calculations in two dimensions for points, lines, and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1, or the local example struct). \inlinecode{sqnorm}, \inlinecode{dot}, \inlinecode{cross}, and \inlinecode{sqdist} preserve the coordinate type and are exact for integer points. Functions that return an actual distance use \inlinecode{double} for the final division/square root. \inlinecode{closest\_point} returns a point of the same type as its inputs, so use a floating-point \inlinecode{Pt} there for a meaningful (non-truncated) result.
 
 \begin{compactitem}
   \item \inlinecode{dist(a, b)} and \inlinecode{sqdist(a, b)} respectively return the distance and squared distance between points \inlinecode{a} and \inlinecode{b}.
@@ -1002,15 +1009,6 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return LT(x, p.x) || (EQ(x, p.x) && LT(y, p.y)); }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
 template<class Pt> auto sqnorm(const Pt &a) { return a.x*a.x + a.y*a.y; }
 template<class Pt> double norm(const Pt &a) { return sqrt((double)sqnorm(a)); }
 template<class Pt> auto dot(const Pt &a, const Pt &b) { return a.x*b.x + a.y*b.y; }
@@ -1029,21 +1027,24 @@ double dist(const Pt &a, const Pt &b) {
 }
 
 template<class Pt, class T>
-double line_dist(const Pt &p, T a, T b, T c) {
+double line_dist(const Pt &p, const T &a, const T &b, const T &c) {
   return fabs((double)a * p.x + (double)b * p.y + c) / sqrt((double)a * a + (double)b * b);
 }
 
 template<class Pt>
 double line_dist(const Pt &p, const Pt &a, const Pt &b) {
-  if (EQ(a.x, b.x) && EQ(a.y, b.y)) return dist(p, a);
+  if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
+    return dist(p, a);
+  }
   auto n = sqdist(a, b);
   auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
   double u = (double)d / n;
-  return norm(Point{a.x + u * (b.x - a.x) - p.x, a.y + u * (b.y - a.y) - p.y});
+  double dx = a.x + u * (b.x - a.x) - p.x, dy = a.y + u * (b.y - a.y) - p.y;
+  return sqrt(dx * dx + dy * dy);
 }
 
 template<class T>
-double line_dist(T a1, T b1, T c1, T a2, T b2, T c2) {
+double line_dist(const T &a1, const T &b1, const T &c1, const T &a2, const T &b2, const T &c2) {
   if (EQ(a1 * b2, a2 * b1)) {
     double factor = EQ(b1, 0) ? ((double)a1 / a2) : ((double)b1 / b2);
     return EQ(c1, c2 * factor) ? 0
@@ -1066,7 +1067,8 @@ double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
     return dist(p, b);
   }
   double t = (double)d / n;
-  return dist(p, Point{a.x + t * (b.x - a.x), a.y + t * (b.y - a.y)});
+  double dx = a.x + t * (b.x - a.x) - p.x, dy = a.y + t * (b.y - a.y) - p.y;
+  return sqrt(dx * dx + dy * dy);
 }
 
 template<class Pt>
@@ -1106,20 +1108,27 @@ double seg_dist(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
 }
 
 template<class Pt>
-Point closest_point(const Pt &a, const Pt &b, const Pt &p) {
+Pt closest_point(const Pt &a, const Pt &b, const Pt &p) {
+  Pt res{};
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
-    return Point{a.x, a.y};
+    res.x = a.x;
+    res.y = a.y;
+    return res;
   }
   auto n = sqdist(a, b);
   auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
   double t = (double)d / n;
   if (t <= 0) {
-    return Point{a.x, a.y};
+    res.x = a.x;
+    res.y = a.y;
+  } else if (t >= 1) {
+    res.x = b.x;
+    res.y = b.y;
+  } else {
+    res.x = a.x + t * (b.x - a.x);
+    res.y = a.y + t * (b.y - a.y);
   }
-  if (t >= 1) {
-    return Point{b.x, b.y};
-  }
-  return Point{a.x + t * (b.x - a.x), a.y + t * (b.y - a.y)};
+  return res;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -1127,22 +1136,28 @@ Point closest_point(const Pt &a, const Pt &b, const Pt &p) {
 \begin{lstlisting}[language=C++]
 #include <cassert>
 
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+};
+
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
-  assert(EQ(5, dist(Point{-1, -1}, Point{2, 3})));
-  assert(EQ(25, sqdist(Point{-1, -1}, Point{2, 3})));
-  assert(EQ(1.2, line_dist(Point{2, 1}, -4, 3, -1)));
-  assert(EQ(0.8, line_dist(Point{3, 3}, Point{-1, -1}, Point{2, 3})));
-  assert(EQ(1.2, line_dist(Point{2, 1}, Point{-1, -1}, Point{2, 3})));
+  assert(EQ(5, dist(Point(-1, -1), Point(2, 3))));
+  assert(EQ(25, sqdist(Point(-1, -1), Point(2, 3))));
+  assert(EQ(1.2, line_dist(Point(2, 1), -4, 3, -1)));
+  assert(EQ(0.8, line_dist(Point(3, 3), Point(-1, -1), Point(2, 3))));
+  assert(EQ(1.2, line_dist(Point(2, 1), Point(-1, -1), Point(2, 3))));
   assert(EQ(0, line_dist(-4, 3, -1, 8, 6, 2)));
   assert(EQ(0.8, line_dist(-4, 3, -1, -8, 6, -10)));
-  assert(EQ(1.0, seg_dist(Point{3, 3}, Point{-1, -1}, Point{2, 3})));
-  assert(EQ(1.2, seg_dist(Point{2, 1}, Point{-1, -1}, Point{2, 3})));
-  assert(EQ(0, seg_dist(Point{0, 2}, Point{3, 3}, Point{-1, -1}, Point{2, 3})));
-  assert(EQ(0.6, seg_dist(Point{-1, 0}, Point{-2, 2}, Point{-1, -1}, Point{2, 3})));
+  assert(EQ(1.0, seg_dist(Point(3, 3), Point(-1, -1), Point(2, 3))));
+  assert(EQ(1.2, seg_dist(Point(2, 1), Point(-1, -1), Point(2, 3))));
+  assert(EQ(0, seg_dist(Point(0, 2), Point(3, 3), Point(-1, -1), Point(2, 3))));
+  assert(EQ(0.6, seg_dist(Point(-1, 0), Point(-2, 2), Point(-1, -1), Point(2, 3))));
 
   // Integer points: sqdist is exact, dist returns double.
   PointI ia{-1, -1}, ib{2, 3};
@@ -1154,11 +1169,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line Intersection}
-Intersection calculations in two dimensions for straight lines and line segments.
+Intersection calculations in two dimensions for straight lines and line segments. The functions are templated on the point type \inlinecode{Pt}: pass any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields (for example \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1, or the local example struct). Point outputs are written through a caller-supplied pointer whose type is deduced, so the output point type may differ from the input -- e.g. integer endpoints with a floating-point output point.
 
-The functions below are templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (double coordinates) is the default; replace it with \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
-
-For \inlinecode{seg\_intersection()} detection-only use (\inlinecode{p=nullptr}/\inlinecode{q=nullptr}), calculations are exact when \inlinecode{Pt} has integer coordinates. Segment intersection point output may use a different floating-point point type, e.g. integer endpoints with \inlinecode{Point*} outputs.
+\inlinecode{seg\_intersection()} has a detection-only overload (called without the output pointers) whose calculations are exact when \inlinecode{Pt} has integer coordinates.
 
 \begin{compactitem}
   \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $`a1`x + `b1`y + `c1`=0$ and $`a2`x + `b2`y + `c2` = 0$, returning $-1$ (parallel), 0 (one point, stored in \inlinecode{p}), or 1 (identical).
@@ -1183,18 +1196,15 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return LT(x, p.x) || (EQ(x, p.x) && LT(y, p.y)); }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
 template<class Pt> auto sqnorm(const Pt &a) { return a.x*a.x + a.y*a.y; }
 template<class Pt> auto dot(const Pt &a, const Pt &b) { return a.x*b.x + a.y*b.y; }
 template<class Pt> auto cross(const Pt &a, const Pt &b) { return a.x*b.y - a.y*b.x; }
+
+template<class OutPt>
+void set_point(OutPt *p, double x, double y) {
+  p->x = x;
+  p->y = y;
+}
 
 template<class Pt>
 bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
@@ -1203,38 +1213,41 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
          LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
 }
 
-int line_intersection(
-    double a1, double b1, double c1, double a2, double b2, double c2, Point *p = nullptr
-) {
-  if (EQ(a1, a2) && EQ(b1, b2)) return EQ(c1, c2) ? 1 : -1;
-  if (p != nullptr) {
-    // Cramer's rule for a1*x + b1*y = -c1, a2*x + b2*y = -c2.
-    double det = a1 * b2 - a2 * b1;
-    p->x = (b1 * c2 - b2 * c1) / det;
-    if (!EQ(b1, 0)) {
-      p->y = -(a1 * p->x + c1) / b1;
-    } else {
-      p->y = -(a2 * p->x + c2) / b2;
-    }
+template<class OutPt>
+int line_intersection(double a1, double b1, double c1, double a2, double b2, double c2, OutPt *p) {
+  // Cramer's rule for a1*x + b1*y = -c1, a2*x + b2*y = -c2.
+  double det = a1 * b2 - a2 * b1;
+  if (EQ(det, 0)) {  // Parallel (lines need not be given in normalized form).
+    // Identical iff the other two 2x2 determinants also vanish.
+    return (EQ(a1 * c2 - a2 * c1, 0) && EQ(b1 * c2 - b2 * c1, 0)) ? 1 : -1;
+  }
+  p->x = (b1 * c2 - b2 * c1) / det;
+  if (!EQ(b1, 0)) {
+    p->y = -(a1 * p->x + c1) / b1;
+  } else {
+    p->y = -(a2 * p->x + c2) / b2;
   }
   return 0;
 }
 
-template<class Pt>
-int line_intersection(const Pt &p1, const Pt &p2, const Pt &p3, const Pt &p4, Point *p = nullptr) {
+template<class Pt, class OutPt>
+int line_intersection(const Pt &p1, const Pt &p2, const Pt &p3, const Pt &p4, OutPt *p) {
   auto a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   auto c1 = -(p1.x * p2.y - p2.x * p1.y);
   auto a2 = p4.y - p3.y, b2 = p3.x - p4.x;
   auto c2 = -(p3.x * p4.y - p4.x * p3.y);
   auto x = -(c1 * b2 - c2 * b1), y = -(a1 * c2 - a2 * c1);
   auto det = a1 * b2 - a2 * b1;
-  if (EQ(det, 0)) return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
-  if (p != nullptr) *p = Point{(double)x / det, (double)y / det};
+  if (EQ(det, 0)) {
+    return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
+  }
+  p->x = (double)x / det;
+  p->y = (double)y / det;
   return 0;
 }
 
 // Detection is exact for integer Pt. Intersection point output may use a separate float OutPt.
-template<class Pt, class OutPt = Point>
+template<class Pt, class OutPt>
 int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, OutPt *p = nullptr, OutPt *q = nullptr
 ) {
@@ -1247,7 +1260,7 @@ int seg_intersection(
   if (EQ(ab2, 0)) {
     if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
       if (p != nullptr) {
-        *p = OutPt{(double)a.x, (double)a.y};
+        set_point(p, (double)a.x, (double)a.y);
       }
       return 0;
     }
@@ -1256,7 +1269,7 @@ int seg_intersection(
   if (EQ(cd2, 0)) {
     if (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) {
       if (p != nullptr) {
-        *p = OutPt{(double)c.x, (double)c.y};
+        set_point(p, (double)c.x, (double)c.y);
       }
       return 0;
     }
@@ -1271,19 +1284,21 @@ int seg_intersection(
     if (overlap) {
       if (res1 == res2) {
         if (p != nullptr) {
-          *p = OutPt{(double)res1.x, (double)res1.y};
+          set_point(p, (double)res1.x, (double)res1.y);
         }
         return 0;
       }
       if (p != nullptr && q != nullptr) {
-        *p = OutPt{(double)res1.x, (double)res1.y};
-        *q = OutPt{(double)res2.x, (double)res2.y};
+        set_point(p, (double)res1.x, (double)res1.y);
+        set_point(q, (double)res2.x, (double)res2.y);
       }
       return 1;
     }
     return -1;
   }
-  if (EQ(c1, 0)) return -1;
+  if (EQ(c1, 0)) {
+    return -1;
+  }
   auto t_num = ac_x * cd_y - ac_y * cd_x;
   bool c1_pos = c1 > 0;
   bool t_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, t_num) && LE(t_num, c1))
@@ -1295,18 +1310,31 @@ int seg_intersection(
   if (t_ok && u_ok) {
     if (p != nullptr) {
       double t = (double)t_num / c1;
-      *p = OutPt{a.x + t * ab_x, a.y + t * ab_y};
+      set_point(p, (double)(a.x + t * ab_x), (double)(a.y + t * ab_y));
     }
     return 0;
   }
   return -1;
 }
 
-Point closest_point(double a, double b, double c, const Point &p) {
-  if (EQ(a, 0)) return Point{p.x, -c / b};
-  if (EQ(b, 0)) return Point{-c / a, p.y};
-  Point res;
-  line_intersection(a, b, c, -b, a, b * p.x - a * p.y, &res);
+// Detection-only overload: no output point needed, exact for integer Pt.
+template<class Pt>
+int seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
+  return seg_intersection(a, b, c, d, static_cast<Pt *>(nullptr), static_cast<Pt *>(nullptr));
+}
+
+template<class Pt>
+Pt closest_point(double a, double b, double c, const Pt &p) {
+  Pt res{};
+  if (EQ(a, 0)) {
+    res.x = p.x;
+    res.y = -c / b;
+  } else if (EQ(b, 0)) {
+    res.x = -c / a;
+    res.y = p.y;
+  } else {
+    line_intersection(a, b, c, -b, a, b * p.x - a * p.y, &res);
+  }
   return res;
 }
 \end{lstlisting}
@@ -1315,8 +1343,18 @@ Point closest_point(double a, double b, double c, const Point &p) {
 \begin{lstlisting}[language=C++]
 #include <cassert>
 
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return LT(x, p.x) || (EQ(x, p.x) && LT(y, p.y)); }
+  bool operator>(const Point &p) const { return p < *this; }
+};
+
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
   bool operator==(const PointI &p) const { return x == p.x && y == p.y; }
   bool operator!=(const PointI &p) const { return !(*this == p); }
   bool operator<(const PointI &p) const { return x != p.x ? x < p.x : y < p.y; }
@@ -1327,41 +1365,41 @@ int main() {
   Point p, q;
 
   assert(line_intersection(-1.0, 1.0, 0.0, 1.0, 1.0, -3.0, &p) == 0);
-  assert((p == Point{1.5, 1.5}));
-  assert(line_intersection(Point{0, 0}, Point{1, 1}, Point{0, 4}, Point{4, 0}, &p) == 0);
-  assert((p == Point{2, 2}));
+  assert(p == Point(1.5, 1.5));
+  assert(line_intersection(Point(0, 0), Point(1, 1), Point(0, 4), Point(4, 0), &p) == 0);
+  assert(p == Point(2, 2));
 
   {
 #define test(a, b, c, d, e, f, g, h) \
-  seg_intersection(Point{a, b}, Point{c, d}, Point{e, f}, Point{g, h}, &p, &q)
+  seg_intersection(Point(a, b), Point(c, d), Point(e, f), Point(g, h), &p, &q)
 
-    assert((0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && p == Point{0, 0}));
-    assert((0 == test(0, 0, 10, 10, 2, 2, 16, 4) && p == Point{2, 2}));
-    assert((0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && p == Point{-2, 0}));
-    assert((0 == test(0, 4, 4, 4, 4, 0, 4, 8) && p == Point{4, 4}));
+    assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && p == Point(0, 0));
+    assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && p == Point(2, 2));
+    assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && p == Point(-2, 0));
+    assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && p == Point(4, 4));
     assert(1 == test(10, 10, 0, 0, 2, 2, 6, 6));
-    assert((p == Point{2, 2} && q == Point{6, 6}));
+    assert(p == Point(2, 2) && q == Point(6, 6));
     assert(-1 == test(6, 8, 8, 10, 12, 12, 4, 4));
     assert(-1 == test(-4, 2, -8, 8, 0, 0, -4, 6));
   }
 
-  assert((Point{2.5, 2.5} == closest_point(-1.0, -1.0, 5.0, Point{0, 0})));
-  assert((Point{3, 0} == closest_point(1.0, 0.0, -3.0, Point{0, 0})));
+  assert(Point(2.5, 2.5) == closest_point(-1.0, -1.0, 5.0, Point(0, 0)));
+  assert(Point(3, 0) == closest_point(1.0, 0.0, -3.0, Point(0, 0)));
 
   // Detection-only with integer coordinates (exact, no float needed).
-  assert(seg_intersection(PointI{0, 0}, PointI{4, 4}, PointI{0, 4}, PointI{4, 0}) == 0);
-  assert(seg_intersection(PointI{0, 0}, PointI{1, 0}, PointI{2, 0}, PointI{3, 0}) == -1);
-  assert(seg_intersection(PointI{0, 0}, PointI{4, 4}, PointI{0, 4}, PointI{4, 0}, &p) == 0);
-  assert((p == Point{2, 2}));
+  assert(seg_intersection(PointI(0, 0), PointI(4, 4), PointI(0, 4), PointI(4, 0)) == 0);
+  assert(seg_intersection(PointI(0, 0), PointI(1, 0), PointI(2, 0), PointI(3, 0)) == -1);
+  assert(seg_intersection(PointI(0, 0), PointI(4, 4), PointI(0, 4), PointI(4, 0), &p) == 0);
+  assert(p == Point(2, 2));
 
   return 0;
 }
 \end{lstlisting}
 \subsection{Circle Intersection}
-Circle tangent and intersection calculations in two dimensions.
+Circle tangent and intersection calculations in two dimensions. Such calculations are floating-point by nature, so this section mostly computes in double. The input point \inlinecode{p} to \inlinecode{tangent()} can be any type with numeric \inlinecode{.x} and \inlinecode{.y} fields, and intersection point outputs are written through a caller-supplied point type.
 
 \begin{compactitem}
-  \item \inlinecode{tangent(c, p, \&l1, \&l2)} determines the line(s) tangent to circle \inlinecode{c} that pass through point \inlinecode{p}, returning \inlinecode{-1} if there is no tangent line because \inlinecode{p} is strictly inside \inlinecode{c}, 0 if there is exactly one tangent line because \inlinecode{p} is on the boundary of \inlinecode{c} (in which case the line will be stored into pointer \inlinecode{l1} if it's not \inlinecode{nullptr}), or 1 if there are two tangent lines because \inlinecode{p} is strictly outside of \inlinecode{c} (in which case the lines will be stored into pointers \inlinecode{l1} and \inlinecode{l2} if they are not \inlinecode{nullptr}).
+  \item \inlinecode{tangent(c, p, \&l1, \&l2)} determines the line(s) tangent to circle \inlinecode{c} that pass through point \inlinecode{p}, returning $-1$ if there is no tangent line because \inlinecode{p} is strictly inside \inlinecode{c}, 0 if there is exactly one tangent line because \inlinecode{p} is on the boundary of \inlinecode{c} (in which case the line will be stored into pointer \inlinecode{l1} if it's not \inlinecode{nullptr}), or 1 if there are two tangent lines because \inlinecode{p} is strictly outside of \inlinecode{c} (in which case the lines will be stored into pointers \inlinecode{l1} and \inlinecode{l2} if they are not \inlinecode{nullptr}).
   \item \inlinecode{intersection(c, l, \&p, \&q)} determines the intersection between the circle \inlinecode{c} and line \inlinecode{l}, returning $-1$ if there is no intersection, 0 if the line has one intersection point because the line is tangent (in which case it will be stored into pointer \inlinecode{p} if it's not \inlinecode{nullptr}), or 1 if there are two intersection points because the line crosses through the circle (in which case they will be stored into pointers \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}).
   \item \inlinecode{intersection(c1, c2, \&p, \&q)} determines the intersection points between two circles \inlinecode{c1} and \inlinecode{c2}, returning $-2$ if circle \inlinecode{c2} completely encloses circle \inlinecode{c1}, $-1$ if circle \inlinecode{c1} completely encloses circle \inlinecode{c2}, 0 if the circles are completely disjoint, 1 if the circles are tangent with one intersection (stored in \inlinecode{p}), 2 if the circles intersect at two points (stored in \inlinecode{p} and \inlinecode{q}), 3 if the circles are equal and intersect at infinite points.
   \item \inlinecode{intersection\_area(c1, c2)} returns the intersection area of circles \inlinecode{c1} and \inlinecode{c2}.
@@ -1380,36 +1418,8 @@ Circle tangent and intersection calculations in two dimensions.
 const double EPS = 1e-9, PI = acos(-1.0);
 
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define NE(a, b) (fabs((a) - (b)) > EPS)
 #define LT(a, b) ((a) < (b) - EPS)
-#define GT(a, b) ((a) > (b) + EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
-#define GE(a, b) ((a) >= (b) - EPS)
-
-// SFINAE guard: valid only when Pt exposes numeric .x/.y members, so templated
-// point overloads don't hijack double-argument calls.
-template<class Pt>
-using if_point = decltype(std::declval<const Pt &>().x, std::declval<const Pt &>().y, void());
-
-// Circle and Line are floating-point by nature; this file computes in double. The
-// point inputs (tangent's p, Line's two-point constructor) accept any Pt type, and
-// the Point outputs are this file's double Point.
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
-double sqnorm(const Point &a) {
-  return a.x * a.x + a.y * a.y;
-}
-
-double norm(const Point &a) {
-  return sqrt(sqnorm(a));
-}
 
 struct Circle {
   double h, k, r;
@@ -1438,57 +1448,62 @@ struct Line {
     }
   }
 
-  template<class Pt, class = if_point<Pt>>
-  Line(const Pt &p, const Pt &q) : a(0), b(0), c(0) {
-    if (EQ(p.x, q.x)) {
-      if (NE(p.y, q.y)) {  // Vertical line.
+  Line(double px, double py, double qx, double qy) : a(0), b(0), c(0) {
+    if (EQ(px, qx)) {
+      if (!EQ(py, qy)) {  // Vertical line.
         a = 1;
         b = 0;
-        c = -p.x;
+        c = -px;
       }  // Else, invalid line.
     } else {
-      a = -(double)(p.y - q.y) / (p.x - q.x);
+      a = -(double)(py - qy) / (px - qx);
       b = 1;
-      c = -(a * p.x) - (b * p.y);
+      c = -(a * px) - (b * py);
     }
   }
+
+  bool operator==(const Line &l) const { return EQ(a, l.a) && EQ(b, l.b) && EQ(c, l.c); }
 };
 
 template<class Pt>
 int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr) {
-  Point vop(p.x - c.h, p.y - c.k);
-  if (EQ(sqnorm(vop), c.r * c.r)) {  // Point on an edge.
-    if (l1 != nullptr) {             // Get perpendicular line through p.
-      *l1 = Line(Point(c.h, c.k), p);
-      *l1 = Line(-l1->b, l1->a, l1->b * p.x - l1->a * p.y);
+  auto sqnorm = [](double x, double y) { return x * x + y * y; };
+  double vopx = p.x - c.h, vopy = p.y - c.k;
+  if (EQ(sqnorm(vopx, vopy), c.r * c.r)) {  // Point on an edge.
+    if (l1 != nullptr) {                    // Tangent through p is perpendicular to the radius cp.
+      *l1 = Line(vopx, vopy, -(vopx * p.x + vopy * p.y));
     }
     return 0;
   }
-  if (LE(sqnorm(vop), c.r * c.r)) {
+  if (LE(sqnorm(vopx, vopy), c.r * c.r)) {
     return -1;  // Point inside Circle, no intersection.
   }
-  Point q(vop.x / c.r, vop.y / c.r);
-  double n = sqnorm(q), d = q.y * sqrt(sqnorm(q) - 1.0);
-  Point t1((q.x - d) / n, c.k), t2((q.x + d) / n, c.k);
-  if (NE(q.y, 0)) {  // Common case.
-    t1.y += c.r * (1.0 - t1.x * q.x) / q.y;
-    t2.y += c.r * (1.0 - t2.x * q.x) / q.y;
+  double qx = vopx / c.r, qy = vopy / c.r;
+  double n = sqnorm(qx, qy), d = qy * sqrt(sqnorm(qx, qy) - 1.0);
+  double t1x = (qx - d) / n, t1y = c.k;
+  double t2x = (qx + d) / n, t2y = c.k;
+  if (!EQ(qy, 0)) {  // Common case.
+    t1y += c.r * (1.0 - t1x * qx) / qy;
+    t2y += c.r * (1.0 - t2x * qx) / qy;
   } else {  // Point at center horizontal, y = 0.
-    d = c.r * sqrt(1.0 - t1.x * t1.x);
-    t1.y += d;
-    t2.y -= d;
+    d = c.r * sqrt(1.0 - t1x * t1x);
+    t1y += d;
+    t2y -= d;
   }
-  t1.x = t1.x * c.r + c.h;
-  t2.x = t2.x * c.r + c.h;
+  t1x = t1x * c.r + c.h;
+  t2x = t2x * c.r + c.h;
   // Note: here, t1 and t2 are the two points of tangencies
-  if (l1 != nullptr && l2 != nullptr) {
-    *l1 = Line(p, t1);
-    *l2 = Line(p, t2);
+  if (l1 != nullptr) {
+    *l1 = Line(p.x, p.y, t1x, t1y);
+  }
+  if (l2 != nullptr) {
+    *l2 = Line(p.x, p.y, t2x, t2y);
   }
   return 1;
 }
 
-int intersection(const Circle &c, const Line &l, Point *p = nullptr, Point *q = nullptr) {
+template<class OutPt>
+int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = nullptr) {
   double v = c.h * l.a + c.k * l.b + l.c;
   double aabb = l.a * l.a + l.b * l.b;
   double disc = v * v / aabb - c.r * c.r;
@@ -1498,53 +1513,60 @@ int intersection(const Circle &c, const Line &l, Point *p = nullptr, Point *q = 
   double x0 = -l.a * l.c / aabb, y0 = -l.b * v / aabb;
   if (disc > -EPS) {
     if (p != nullptr) {
-      *p = Point(x0 + c.h, y0 + c.k);
+      p->x = x0 + c.h;
+      p->y = y0 + c.k;
     }
     return 0;
   }
   double k = sqrt(std::max(0.0, disc / -aabb));
   if (p != nullptr && q != nullptr) {
-    *p = Point(x0 + k * l.b + c.h, y0 - k * l.a + c.k);
-    *q = Point(x0 - k * l.b + c.h, y0 + k * l.a + c.k);
+    p->x = x0 + k * l.b + c.h;
+    p->y = y0 - k * l.a + c.k;
+    q->x = x0 - k * l.b + c.h;
+    q->y = y0 + k * l.a + c.k;
   }
   return 1;
 }
 
-int intersection(const Circle &c1, const Circle &c2, Point *p = nullptr, Point *q = nullptr) {
+template<class OutPt>
+int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *q = nullptr) {
   if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k)) {
     return EQ(c1.r, c2.r) ? 3 : (c1.r > c2.r ? -1 : -2);
   }
-  Point d12(Point(c2.h - c1.h, c2.k - c1.k));
-  double d = norm(d12);
-  if (GT(d, c1.r + c2.r)) {
+  double d12x = c2.h - c1.h, d12y = c2.k - c1.k;
+  double d = hypot(d12x, d12y);
+  if (LT(c1.r + c2.r, d)) {
     return 0;
   }
   if (LT(d, fabs(c1.r - c2.r))) {
     return c1.r > c2.r ? -1 : -2;
   }
   double a = (c1.r * c1.r - c2.r * c2.r + d * d) / (2 * d);
-  double x0 = c1.h + (d12.x * a / d), y0 = c1.k + (d12.y * a / d);
-  double s = sqrt(c1.r * c1.r - a * a), rx = -d12.y * s / d, ry = d12.x * s / d;
+  double x0 = c1.h + (d12x * a / d), y0 = c1.k + (d12y * a / d);
+  double s = sqrt(c1.r * c1.r - a * a), rx = -d12y * s / d, ry = d12x * s / d;
   if (EQ(rx, 0) && EQ(ry, 0)) {
     if (p != nullptr) {
-      *p = Point(x0, y0);
+      p->x = x0;
+      p->y = y0;
     }
     return 1;
   }
   if (p != nullptr && q != nullptr) {
-    *p = Point(x0 - rx, y0 - ry);
-    *q = Point(x0 + rx, y0 + ry);
+    p->x = x0 - rx;
+    p->y = y0 - ry;
+    q->x = x0 + rx;
+    q->y = y0 + ry;
   }
   return 2;
 }
 
 double intersection_area(const Circle &c1, const Circle &c2) {
   double r = std::min(c1.r, c2.r), R = std::max(c1.r, c2.r);
-  double d = norm(Point(c2.h - c1.h, c2.k - c1.k));
+  double d = std::hypot(c2.h - c1.h, c2.k - c1.k);
   if (LE(d, R - r)) {
     return PI * r * r;
   }
-  if (GE(d, R + r)) {
+  if (LE(R + r, d)) {
     return 0;
   }
   return r * r * acos((d * d + r * r - R * R) / 2 / d / r) +
@@ -1557,35 +1579,37 @@ double intersection_area(const Circle &c1, const Circle &c2) {
 \begin{lstlisting}[language=C++]
 #include <cassert>
 
-bool EQL(const Line &l1, const Line &l2) {
-  return EQ(l1.a, l2.a) && EQ(l1.b, l2.b) && EQ(l1.c, l2.c);
-}
+struct PointD {
+  double x, y;
+  PointD(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+};
 
 int main() {
   Line l1, l2;
-  assert(-1 == tangent(Circle(0, 0, 4), Point(1, 1), &l1, &l2));
-  assert(0 == tangent(Circle(0, 0, sqrt(2)), Point(1, 1), &l1, &l2));
-  assert(EQL(l1, Line(-1, -1, 2)));
-  assert(1 == tangent(Circle(0, 0, 2), Point(2, 2), &l1, &l2));
-  assert(EQL(l1, Line(0, -2, 4)));
-  assert(EQL(l2, Line(2, 0, -4)));
+  assert(-1 == tangent(Circle(0, 0, 4), PointD(1, 1), &l1, &l2));
+  assert(0 == tangent(Circle(0, 0, sqrt(2)), PointD(1, 1), &l1, &l2));
+  assert(l1 == Line(-1, -1, 2));
+  assert(1 == tangent(Circle(0, 0, 2), PointD(2, 2), &l1, &l2));
+  assert(l1 == Line(0, -2, 4));
+  assert(l2 == Line(2, 0, -4));
 
-  Point p, q;
+  PointD p, q;
   assert(-1 == intersection(Circle(1, 1, 3), Line(5, 3, -30), &p, &q));
   assert(0 == intersection(Circle(1, 1, 3), Line(0, 1, -4), &p, &q));
-  assert((p == Point{1, 4}));
+  assert(p == PointD(1, 4));
   assert(1 == intersection(Circle(1, 1, 3), Line(0, 1, -1), &p, &q));
-  assert((p == Point{4, 1}));
-  assert((q == Point{-2, 1}));
+  assert(p == PointD(4, 1));
+  assert(q == PointD(-2, 1));
 
   assert(-2 == intersection(Circle(1, 1, 1), Circle(0, 0, 3), &p, &q));
   assert(-1 == intersection(Circle(0, 0, 3), Circle(1, 1, 1), &p, &q));
   assert(0 == intersection(Circle(5, 0, 4), Circle(-5, 0, 4), &p, &q));
   assert(1 == intersection(Circle(-5, 0, 5), Circle(5, 0, 5), &p, &q));
-  assert((p == Point{0, 0}));
+  assert(p == PointD(0, 0));
   assert(2 == intersection(Circle(-0.5, 0, 1), Circle(0.5, 0, 1), &p, &q));
-  assert((p == Point{0, -sqrt(3) / 2}));
-  assert((q == Point{0, sqrt(3) / 2}));
+  assert(p == PointD(0, -sqrt(3) / 2));
+  assert(q == PointD(0, sqrt(3) / 2));
 
   // Each circle passes through the other's center.
   double r = 3, a = intersection_area(Circle(-r / 2, 0, r), Circle(r / 2, 0, r));
@@ -1599,11 +1623,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Polygon Sorting and Area}
-Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the area.
-
-The functions below are templated on the point type. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields and \inlinecode{\textless{}} / \inlinecode{==} operators.
-
-\inlinecode{polygon\_area\_2x} returns twice the area as the coordinate type - exact for integer points (avoids floating-point entirely). \inlinecode{polygon\_area} always returns \inlinecode{double}.
+Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the area. The functions are templated on the point type. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields and \inlinecode{\textless{}} / \inlinecode{==} operators.
 
 \begin{compactitem}
   \item \inlinecode{mean\_center(lo, hi)} returns the arithmetic mean of a range of points (as the local \inlinecode{Point} type with \inlinecode{double} coordinates).
@@ -1632,38 +1652,31 @@ The functions below are templated on the point type. The local \inlinecode{Point
 const double EPS = 1e-9;
 
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define GE(a, b) ((a) >= (b) - EPS)
 
-template<class Pt>
-auto sqnorm(const Pt &a) {
-  return a.x * a.x + a.y * a.y;
-}
-
-template<class Pt>
-auto cross(const Pt &a, const Pt &b) {
-  return a.x * b.y - a.y * b.x;
-}
-
+// Comparator (clockwise angular order about c). Exact: comparisons are pure sign tests on
+// coordinate differences and the cross product, so it is a valid strict weak ordering and is
+// exact for integer-coordinate points.
 template<class Pt>
 bool cw_comp(const Pt &a, const Pt &b, const Pt &c) {
-  if (GE(a.x - c.x, 0) && LT(b.x - c.x, 0)) {
+  if (a.x - c.x >= 0 && b.x - c.x < 0) {
     return true;
   }
-  if (LT(a.x - c.x, 0) && GE(b.x - c.x, 0)) {
+  if (a.x - c.x < 0 && b.x - c.x >= 0) {
     return false;
   }
-  if (EQ(a.x - c.x, 0) && EQ(b.x - c.x, 0)) {
-    if (GE(a.y - c.y, 0) || GE(b.y - c.y, 0)) {
+  if (a.x - c.x == 0 && b.x - c.x == 0) {
+    if (a.y - c.y >= 0 || b.y - c.y >= 0) {
       return a.y > b.y;
     }
     return b.y > a.y;
   }
-  Pt ac{a.x - c.x, a.y - c.y};
-  Pt bc{b.x - c.x, b.y - c.y};
-  auto det = cross(ac, bc);
-  if (EQ(det, 0)) {
-    return sqnorm(ac) > sqnorm(bc);
+  auto acx = a.x - c.x, acy = a.y - c.y;
+  auto bcx = b.x - c.x, bcy = b.y - c.y;
+  auto det = acx * bcy - acy * bcx;
+  if (det == 0) {
+    auto acnorm = acx * acx + acy * acy;
+    auto bcnorm = bcx * bcx + bcy * bcy;
+    return acnorm > bcnorm;
   }
   return det < 0;
 }
@@ -1709,6 +1722,7 @@ struct Point {
 
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
   bool operator==(const PointI &p) const { return x == p.x && y == p.y; }
   bool operator!=(const PointI &p) const { return !(*this == p); }
   bool operator<(const PointI &p) const { return x != p.x ? x < p.x : y < p.y; }
@@ -1731,7 +1745,7 @@ Point mean_center(It lo, It hi) {
 int main() {
   vector<Point> points{Point(1, 3), Point(1, 2), Point(2, 1), Point(0, 0), Point(-1, 3)};
   vector<Point> v(points);
-  std::mt19937 rng(12345);
+  std::mt19937 rng(1234567);
   std::shuffle(v.begin(), v.end(), rng);
   Point c = mean_center(v.begin(), v.end());
   assert(EQ(c.x, 0.6) && EQ(c.y, 1.8));
@@ -1764,12 +1778,10 @@ Clockwise vertices: (1, 3) (1, 2) (2, 1) (0, 0) (-1, 3)
 Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3)
 \end{exampleoutput}
 \subsection{Point-in-Polygon (Ray Casting)}
-Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting.
-
-The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. With integer-coordinate points the cross-product comparisons are exact.
+Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
 
 \begin{compactitem}
-  \item \inlinecode{point\_in\_polygon(p, lo, hi)} returns whether \inlinecode{p} lies within the polygon given by range \inlinecode{[lo, hi)} in clockwise or counter-clockwise order. If \inlinecode{p} lies on an edge (within \inlinecode{EPS}), the result depends on \inlinecode{EDGE\_IS\_INSIDE}.
+  \item \inlinecode{point\_in\_polygon(p, lo, hi)} returns whether \inlinecode{p} lies within the polygon given by range \inlinecode{[lo, hi)} in clockwise or counter-clockwise order. If \inlinecode{p} lies exactly on an edge or vertex, the result depends on \inlinecode{EDGE\_IS\_INSIDE}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
@@ -1777,15 +1789,6 @@ The function is templated on the point type \inlinecode{Pt}. The local \inlineco
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-#include <cmath>
-#include <utility>
-
-const double EPS = 1e-9;
-
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
-
 template<class Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
@@ -1797,15 +1800,15 @@ bool point_in_polygon(const Pt &p, It lo, It hi) {
   static const bool EDGE_IS_INSIDE = true;
   bool res = false;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    if (EQ(i->y, p.y) && (EQ(i->x, p.x) || (EQ(j->y, p.y) && (LE(i->x, p.x) || LE(j->x, p.x))))) {
+    if (i->y == p.y && (i->x == p.x || (j->y == p.y && (i->x <= p.x || j->x <= p.x)))) {
       return EDGE_IS_INSIDE;
     }
-    if (LT(p.y, i->y) != LT(p.y, j->y)) {
+    if ((p.y < i->y) != (p.y < j->y)) {
       auto det = cross(*i, *j, p);
-      if (EQ(det, 0)) {
+      if (det == 0) {
         return EDGE_IS_INSIDE;
       }
-      if (LT(0, det) != LT(i->y, j->y)) {
+      if ((0 < det) != (i->y < j->y)) {
         res = !res;
       }
     }
@@ -1822,34 +1825,34 @@ using namespace std;
 
 struct Point {
   double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
 };
 
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
-  vector<Point> poly{Point{-1, 3}, Point{1, 3}, Point{2, 1}, Point{0, 0}};
-  assert(point_in_polygon(Point{1, 2}, poly.begin(), poly.end()));
-  assert(point_in_polygon(Point{0, 3}, poly.begin(), poly.end()));
-  assert(!point_in_polygon(Point{0, 3.01}, poly.begin(), poly.end()));
-  assert(!point_in_polygon(Point{2, 2}, poly.begin(), poly.end()));
+  vector<Point> poly{Point(-1, 3), Point(1, 3), Point(2, 1), Point(0, 0)};
+  assert(point_in_polygon(Point(1, 2), poly.begin(), poly.end()));
+  assert(point_in_polygon(Point(0, 3), poly.begin(), poly.end()));
+  assert(!point_in_polygon(Point(0, 3.01), poly.begin(), poly.end()));
+  assert(!point_in_polygon(Point(2, 2), poly.begin(), poly.end()));
 
   // Integer-coordinate points: exact detection.
   vector<PointI> ipoly{{0, 0}, {4, 0}, {4, 4}, {0, 4}};
-  assert(point_in_polygon(PointI{2, 2}, ipoly.begin(), ipoly.end()));
-  assert(!point_in_polygon(PointI{5, 2}, ipoly.begin(), ipoly.end()));
+  assert(point_in_polygon(PointI(2, 2), ipoly.begin(), ipoly.end()));
+  assert(!point_in_polygon(PointI(5, 2), ipoly.begin(), ipoly.end()));
 
   return 0;
 }
 \end{lstlisting}
 \subsection{Convex Hull and Diametral Pair}
-Given a list of points in two dimensions, computes the convex hull using the monotone chain algorithm and the diametral pair using rotating calipers.
-
-The functions are templated on the iterator type; the value type of the iterator is used as the point type. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/ \inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields, \inlinecode{\textless{}}, \inlinecode{==}, and \inlinecode{!=} operators. \inlinecode{convex\_hull()} uses only cross product comparisons and is exact for integer-coordinate points. \inlinecode{diametral\_pair()} uses squared-distance comparisons and is also exact for integer points.
+Given a list of points in two dimensions, computes the convex hull using the monotone chain algorithm and the diametral pair using rotating calipers. The functions are templated on the iterator type; the value type of the iterator is used as the point type. Both functions accept either floating-point or integral coordinates, but since they use only cross product comparisons, they happen to be exact for integral points.
 
 \begin{compactitem}
-  \item \inlinecode{convex\_hull(lo, hi)} returns the convex hull in clockwise order. The input range is sorted lexicographically after the call. To produce CCW order, replace every \inlinecode{GE} with \inlinecode{LE}.
+  \item \inlinecode{convex\_hull(lo, hi)} returns the convex hull in clockwise order. The input range is sorted lexicographically after the call. To produce CCW order, replace every \inlinecode{\textgreater{}= 0} with \inlinecode{\textless{}= 0}.
   \item \inlinecode{diametral\_pair(lo, hi)} returns the maximum-distance pair of points.
 \end{compactitem}
 
@@ -1863,11 +1866,6 @@ The functions are templated on the iterator type; the value type of the iterator
 #include <random>
 #include <utility>
 #include <vector>
-
-const double EPS = 1e-9;
-
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define GE(a, b) ((a) >= (b) - EPS)
 
 template<class Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
@@ -1885,14 +1883,14 @@ auto convex_hull(It lo, It hi) {
   std::vector<Pt> res(2 * (int)(hi - lo));
   std::sort(lo, hi);
   for (It it = lo; it != hi; ++it) {
-    while (k >= 2 && GE(cross(res[k - 1], *it, res[k - 2]), 0)) {
+    while (k >= 2 && cross(res[k - 1], *it, res[k - 2]) >= 0) {
       k--;
     }
     res[k++] = *it;
   }
   int t = k + 1;
   for (It it = hi - 2; it != lo - 1; --it) {
-    while (k >= t && GE(cross(res[k - 1], *it, res[k - 2]), 0)) {
+    while (k >= t && cross(res[k - 1], *it, res[k - 2]) >= 0) {
       k--;
     }
     res[k++] = *it;
@@ -1907,11 +1905,16 @@ auto diametral_pair(It lo, It hi) {
   using Pt = typename std::iterator_traits<It>::value_type;
   auto h = convex_hull(lo, hi);
   int m = h.size();
-  if (m == 1) return std::pair<Pt, Pt>{h[0], h[0]};
-  if (m == 2) return std::pair<Pt, Pt>{h[0], h[1]};
+  if (m == 1) {
+    return std::pair<Pt, Pt>{h[0], h[0]};
+  }
+  if (m == 2) {
+    return std::pair<Pt, Pt>{h[0], h[1]};
+  }
   int k = 1;
-  while (std::abs(cross(h[0], h[(k + 1) % m], h[m - 1])) > std::abs(cross(h[0], h[k], h[m - 1])))
+  while (std::abs(cross(h[0], h[(k + 1) % m], h[m - 1])) > std::abs(cross(h[0], h[k], h[m - 1]))) {
     k++;
+  }
   auto sqdist = [](const Pt &a, const Pt &b) {
     auto dx = a.x - b.x, dy = a.y - b.y;
     return dx * dx + dy * dy;
@@ -1944,17 +1947,9 @@ auto diametral_pair(It lo, It hi) {
 #include <vector>
 using namespace std;
 
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
   bool operator==(const PointI &o) const { return x == o.x && y == o.y; }
   bool operator!=(const PointI &o) const { return !(*this == o); }
   bool operator<(const PointI &o) const { return x != o.x ? x < o.x : y < o.y; }
@@ -1963,20 +1958,18 @@ struct PointI {
 
 int main() {
   {
-    vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+    vector<PointI> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
     std::mt19937 rng(12345);
     std::shuffle(v.begin(), v.end(), rng);
-    vector<Point> h{{-1, 3}, {1, 3}, {2, 1}, {0, 0}};
+    vector<PointI> h{{-1, 3}, {1, 3}, {2, 1}, {0, 0}};
     assert(convex_hull(v.begin(), v.end()) == h);
   }
   {
-    vector<Point> v{{0, 0}, {3, 0}, {0, 3}, {1, 1}, {4, 4}};
+    vector<PointI> v{{0, 0}, {3, 0}, {0, 3}, {1, 1}, {4, 4}};
     auto [p1, p2] = diametral_pair(v.begin(), v.end());
-    assert((p1 == Point{0, 0}));
-    assert((p2 == Point{4, 4}));
+    assert(p1 == PointI(0, 0));
+    assert(p2 == PointI(4, 4));
   }
-
-  // Integer-coordinate points: hull and diametral pair are exact.
   {
     vector<PointI> v{{0, 0}, {4, 0}, {4, 4}, {0, 4}, {2, 2}};
     auto h = convex_hull(v.begin(), v.end());
@@ -1984,8 +1977,8 @@ int main() {
     auto [p1, p2] = diametral_pair(v.begin(), v.end());
     // diametral pair is exact
     assert(
-        (p1 == PointI{0, 0} && p2 == PointI{4, 4}) || (p1 == PointI{4, 4} && p2 == PointI{0, 0}) ||
-        (p1 == PointI{4, 0} && p2 == PointI{0, 4}) || (p1 == PointI{0, 4} && p2 == PointI{4, 0})
+        (p1 == PointI(0, 0) && p2 == PointI(4, 4)) || (p1 == PointI(4, 4) && p2 == PointI(0, 0)) ||
+        (p1 == PointI(4, 0) && p2 == PointI(0, 4)) || (p1 == PointI(0, 4) && p2 == PointI(4, 0))
     );
   }
   return 0;
@@ -2015,23 +2008,14 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 
-// Replace with PointD/PointI from 7.1.1, or any struct with numeric .x and .y.
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
-double sqnorm(const Point &a) {
-  return a.x * a.x + a.y * a.y;
+double sqnorm(double x, double y) {
+  return x * x + y * y;
 }
 
-double norm(const Point &a) {
-  return sqrt(sqnorm(a));
-}
+// SFINAE guard: valid only when Pt exposes numeric .x/.y members. This keeps the templated point
+// constructors from hijacking calls like Circle(double, double, double).
+template<class Pt>
+using if_point = decltype(std::declval<const Pt &>().x, std::declval<const Pt &>().y, void());
 
 struct Circle {
   double h, k, r;
@@ -2039,16 +2023,18 @@ struct Circle {
   Circle() : h(0), k(0), r(0) {}
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
-  Circle(const Point &a, const Point &b) {
+  template<class Pt, class = if_point<Pt>>
+  Circle(const Pt &a, const Pt &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
-    r = norm(Point(a.x - h, a.y - k));
+    r = std::hypot(a.x - h, a.y - k);
   }
 
-  Circle(const Point &a, const Point &b, const Point &c) {
-    double an = sqnorm(Point(b.x - c.x, b.y - c.y));
-    double bn = sqnorm(Point(a.x - c.x, a.y - c.y));
-    double cn = sqnorm(Point(a.x - b.x, a.y - b.y));
+  template<class Pt, class = if_point<Pt>>
+  Circle(const Pt &a, const Pt &b, const Pt &c) {
+    double an = sqnorm(b.x - c.x, b.y - c.y);
+    double bn = sqnorm(a.x - c.x, a.y - c.y);
+    double cn = sqnorm(a.x - b.x, a.y - b.y);
     double wa = an * (bn + cn - an), wb = bn * (an + cn - bn), wc = cn * (an + bn - cn);
     double w = wa + wb + wc;
     if (EQ(w, 0)) {
@@ -2056,10 +2042,13 @@ struct Circle {
     }
     h = (wa * a.x + wb * b.x + wc * c.x) / w;
     k = (wa * a.y + wb * b.y + wc * c.y) / w;
-    r = norm(Point(a.x - h, a.y - k));
+    r = std::hypot(a.x - h, a.y - k);
   }
 
-  bool contains(const Point &p) const { return LE(sqnorm(Point(p.x - h, p.y - k)), r * r); }
+  template<class Pt, class = if_point<Pt>>
+  bool contains(const Pt &p) const {
+    return LE(sqnorm(p.x - h, p.y - k), r * r);
+  }
 };
 
 // Input points can be any type with .x and .y fields; Circle output is always double.
@@ -2073,22 +2062,20 @@ Circle minimum_enclosing_circle(It lo, It hi) {
   }
   static std::mt19937 rng(std::random_device{}());
   std::shuffle(lo, hi, rng);
-  // Helper converts any Pt to the local double Point.
-  auto pt = [](const auto &p) { return Point((double)p.x, (double)p.y); };
-  Circle res(pt(*lo), pt(*(lo + 1)));
+  Circle res(*lo, *(lo + 1));
   for (It i = lo + 2; i != hi; ++i) {
-    if (res.contains(pt(*i))) {
+    if (res.contains(*i)) {
       continue;
     }
-    res = Circle(pt(*lo), pt(*i));
+    res = Circle(*lo, *i);
     for (It j = lo + 1; j != i; ++j) {
-      if (res.contains(pt(*j))) {
+      if (res.contains(*j)) {
         continue;
       }
-      res = Circle(pt(*i), pt(*j));
+      res = Circle(*i, *j);
       for (It k = lo; k != j; ++k) {
-        if (!res.contains(pt(*k))) {
-          res = Circle(pt(*i), pt(*j), pt(*k));
+        if (!res.contains(*k)) {
+          res = Circle(*i, *j, *k);
         }
       }
     }
@@ -2103,12 +2090,19 @@ Circle minimum_enclosing_circle(It lo, It hi) {
 #include <vector>
 using namespace std;
 
+struct PointD {
+  double x, y;
+  PointD(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+};
+
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
-  vector<Point> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+  vector<PointD> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
   Circle res = minimum_enclosing_circle(v.begin(), v.end());
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
 
@@ -2214,18 +2208,12 @@ struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
   bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
 };
 
 struct PointI {
   int x, y;
   PointI(int x = 0, int y = 0) : x(x), y(y) {}
   bool operator==(const PointI &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const PointI &p) const { return !(*this == p); }
-  bool operator<(const PointI &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const PointI &p) const { return p < *this; }
 };
 
 int main() {
@@ -2240,7 +2228,7 @@ int main() {
   pair<PointI, PointI> ires;
   assert(closest_pair(iv.begin(), iv.end(), &ires) == 25);  // (0,0)-(3,4) or (3,4)-(0,0)
   auto [i1, i2] = ires;
-  assert((i1 == PointI{0, 0} && i2 == PointI{3, 4}) || (i1 == PointI{3, 4} && i2 == PointI{0, 0}));
+  assert((i1 == PointI(0, 0) && i2 == PointI(3, 4)) || (i1 == PointI(3, 4) && i2 == PointI(0, 0)));
 
   return 0;
 }
@@ -2335,7 +2323,6 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
     int type;
     It seg;
   };
-
   std::vector<Event> e;
   for (It it = lo; it != hi; ++it) {
     if (it->p > it->q) {
@@ -2353,7 +2340,6 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
     }
     return a.p.y < b.p.y;
   });
-
   auto ycmp = [](const auto &a, const auto &b, auto x) {
     // Compare y-values at sweep coordinate x without division:
     // y = (p.y*dx + dy*(x - p.x)) / dx. Vertical segments use their lower endpoint.
@@ -2371,7 +2357,6 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
     auto lhs = ay * bdx, rhs = by * adx;
     return (lhs < rhs) ? -1 : ((rhs < lhs) ? 1 : 0);
   };
-
   auto cmp = [lo, ycmp](It a, It b) {
     if (a == b) {
       return false;
@@ -2475,7 +2460,7 @@ int main() {
 Given a convex polygon and two points specifying an infinite line, cuts off the right part and returns the resulting left part.
 
 \begin{compactitem}
-  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the left-side polygon in clockwise order after cutting with the line through \inlinecode{p} and \inlinecode{q}. The function is templated on the iterator type. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. The \inlinecode{turn} classification uses cross products and is exact for integer-coordinate points; the edge-cut intersection point uses floating-point arithmetic (the output \inlinecode{Point} always has \inlinecode{double} coordinates).
+  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the left-side polygon in clockwise order after cutting with the line through \inlinecode{p} and \inlinecode{q}. The function is templated on the input point type. The \inlinecode{turn} classification uses cross products and is exact for integer-coordinate points; the edge-cut intersection point uses floating-point arithmetic, and the output \inlinecode{Point} always has \inlinecode{double} coordinates.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call to \inlinecode{convex\_cut(lo, hi, p, q)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
@@ -2493,28 +2478,27 @@ const double EPS = 1e-9;
 
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LT(a, b) ((a) < (b) - EPS)
-#define GT(a, b) ((a) > (b) + EPS)
 
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
   bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
 };
 
-double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
+template<class PtA, class PtB, class PtO>
+double cross(const PtA &a, const PtB &b, const PtO &o) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-int turn(const Point &a, const Point &o, const Point &b) {
+template<class PtA, class PtO, class PtB>
+int turn(const PtA &a, const PtO &o, const PtB &b) {
   double c = cross(a, b, o);
-  return LT(c, 0) ? -1 : (GT(c, 0) ? 1 : 0);
+  return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
 }
 
+template<class PtA, class PtB>
 int line_intersection(
-    const Point &p1, const Point &p2, const Point &p3, const Point &p4, Point *p = nullptr
+    const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, Point *p = nullptr
 ) {
   double a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   double c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -2531,10 +2515,8 @@ int line_intersection(
   return 0;
 }
 
-// Input polygon vertices can be any type with numeric .x and .y; cut line points and output polygon
-// are always the local double Point.
-template<class It>
-std::vector<Point> convex_cut(It lo, It hi, const Point &p, const Point &q) {
+template<class It, class Pt>
+std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
   if (EQ(p.x, q.x) && EQ(p.y, q.y)) {
     throw std::runtime_error("Cannot cut using line from identical points.");
   }
@@ -2560,6 +2542,11 @@ std::vector<Point> convex_cut(It lo, It hi, const Point &p, const Point &q) {
 #include <cassert>
 using namespace std;
 
+struct PointI {
+  int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
+};
+
 int main() {
   {
     vector<Point> v{{1, 3}, {2, 2}, {2, 1}, {0, 0}, {-1, 3}};
@@ -2571,6 +2558,11 @@ int main() {
     vector<Point> v{{0, 0}, {2, 2}, {0, 4}, {3, 4}, {3, 0}};
     vector<Point> c{{1, 0}, {0, 0}, {1, 1}, {1, 3}, {0, 4}, {1, 4}};
     assert(convex_cut(v.begin(), v.end(), Point(1, 0), Point(1, 4)) == c);
+  }
+  {
+    vector<PointI> v{{0, 0}, {4, 0}, {4, 4}, {0, 4}};
+    vector<Point> c{{0, 4}, {0, 0}, {2, 0}, {2, 4}};
+    assert(convex_cut(v.begin(), v.end(), PointI(2, 0), PointI(2, 4)) == c);
   }
   return 0;
 }
@@ -2600,17 +2592,10 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
 template<class Pt>
-int seg_intersection(const Pt &A, const Pt &B, const Pt &C, const Pt &D, Point *p = nullptr) {
+int seg_intersection1(
+    const Pt &A, const Pt &B, const Pt &C, const Pt &D, double *outx, double *outy
+) {
   auto less = [](const Pt &u, const Pt &v) { return u.x != v.x ? u.x < v.x : u.y < v.y; };
   auto minp = [&](const Pt &u, const Pt &v) -> const Pt & { return less(v, u) ? v : u; };
   auto maxp = [&](const Pt &u, const Pt &v) -> const Pt & { return less(u, v) ? v : u; };
@@ -2626,9 +2611,8 @@ int seg_intersection(const Pt &A, const Pt &B, const Pt &C, const Pt &D, Point *
     bool overlap = TOUCH_IS_INTERSECT ? !less(res2, res1) : less(res1, res2);
     if (overlap) {
       if (res1 == res2) {
-        if (p != nullptr) {
-          *p = Point{(double)res1.x, (double)res1.y};
-        }
+        *outx = (double)res1.x;
+        *outy = (double)res1.y;
         return 0;  // Collinear and meeting at an endpoint.
       }
       return 1;  // Collinear and overlapping.
@@ -2648,10 +2632,9 @@ int seg_intersection(const Pt &A, const Pt &B, const Pt &C, const Pt &D, Point *
       c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
              : (TOUCH_IS_INTERSECT ? (LE(c2, 0) && LE(c1, c2)) : (LT(c2, 0) && LT(c1, c2)));
   if (t_between_01 && u_between_01) {
-    if (p != nullptr) {
-      double t = (double)t_num / c1;
-      *p = Point{A.x + t * ab_x, A.y + t * ab_y};
-    }
+    double t = (double)t_num / c1;
+    *outx = A.x + t * ab_x;
+    *outy = A.y + t * ab_y;
     return 0;  // Non-parallel with one intersection.
   }
   return -1;  // Non-parallel with no intersections.
@@ -2659,8 +2642,8 @@ int seg_intersection(const Pt &A, const Pt &B, const Pt &C, const Pt &D, Point *
 
 // The two segments may use different point types (e.g. polygon edge vs. sweep line).
 template<class PtA, class PtB>
-int line_intersection(
-    const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, Point *p = nullptr
+int line_intersection1(
+    const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, double *outx, double *outy
 ) {
   auto a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   auto c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -2671,8 +2654,9 @@ int line_intersection(
   if (EQ(det, 0)) {
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
-  if (p != nullptr) {
-    *p = Point{(double)x / det, (double)y / det};
+  if (outx != nullptr && outy != nullptr) {
+    *outx = (double)x / det;
+    *outy = (double)y / det;
   }
   return 0;
 }
@@ -2680,12 +2664,14 @@ int line_intersection(
 struct Event {
   double y;
   int mask_delta;
-
   Event(double y = 0, int mask_delta = 0) : y(y), mask_delta(mask_delta) {}
 };
 
 template<class It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
+  struct _PointD {
+    double x, y;
+  };  // For line intersection with the sweep line.
   std::vector<It> plo{lo1, lo2}, phi{hi1, hi2};
   std::set<double> xs;
   for (It it = lo1; it != hi1; ++it) {
@@ -2696,9 +2682,9 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   }
   for (It i1 = lo1, j1 = hi1 - 1; i1 != hi1; j1 = i1++) {
     for (It i2 = lo2, j2 = hi2 - 1; i2 != hi2; j2 = i2++) {
-      Point p;
-      if (seg_intersection(*i1, *j1, *i2, *j2, &p) == 0) {
-        xs.insert(p.x);
+      double outx, outy;
+      if (seg_intersection1(*i1, *j1, *i2, *j2, &outx, &outy) == 0) {
+        xs.insert(outx);
       }
     }
   }
@@ -2706,7 +2692,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   double res = 0;
   for (size_t k = 0; k + 1 < xsa.size(); k++) {
     double x = (xsa[k] + xsa[k + 1]) / 2;
-    Point sweep0(x, 0), sweep1(x, 1);
+    _PointD sweep0{x, 0}, sweep1{x, 1};
     std::vector<Event> events;
     for (int poly = 0; poly < 2; poly++) {
       It lo = plo[poly], hi = phi[poly];
@@ -2715,9 +2701,9 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
         area += (j->x - i->x) * (j->y + i->y);
       }
       for (It j = lo, i = hi - 1; j != hi; i = j++) {
-        Point p;
-        if (line_intersection(*j, *i, sweep0, sweep1, &p) == 0) {
-          double y = p.y, x0 = i->x, x1 = j->x;
+        double px, py;
+        if (line_intersection1(*j, *i, sweep0, sweep1, &px, &py) == 0) {
+          double y = py, x0 = i->x, x1 = j->x;
           int sgn_area = (area < 0 ? -1 : (area > 0 ? 1 : 0));
           if (x0 < x && x1 > x) {
             events.emplace_back(y, sgn_area * (1 << poly));
@@ -2772,14 +2758,24 @@ double union_area(It lo1, It hi1, It lo2, It hi2) {
 #include <cassert>
 using namespace std;
 
+struct PointD {
+  double x, y;
+  PointD(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator!=(const PointD &p) const { return !(*this == p); }
+  bool operator<(const PointD &p) const { return x != p.x ? x < p.x : y < p.y; }
+};
+
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
   bool operator==(const PointI &o) const { return x == o.x && y == o.y; }
-  bool operator!=(const PointI &o) const { return !(*this == o); }
+  bool operator!=(const PointI &p) const { return !(*this == p); }
+  bool operator<(const PointI &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
 
 int main() {
-  vector<Point> p, s;
+  vector<PointD> p, s;
   // Irregular pentagon a triangle of area 1.5 overlapping quadrant 2.
   p.emplace_back(1, 3);
   p.emplace_back(1, 2);
@@ -2818,6 +2814,7 @@ The triangulation may not exist (e.g. for a set of collinear points), or may not
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <utility>
 #include <vector>
@@ -2828,20 +2825,8 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
-double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
-  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-}
-
-int seg_intersection(const Point &a, const Point &b, const Point &c, const Point &d) {
+template<class Pt>
+int seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   static const bool TOUCH_IS_INTERSECT = false;  // false is important!
   double ab_x = b.x - a.x, ab_y = b.y - a.y;
   double ac_x = c.x - a.x, ac_y = c.y - a.y;
@@ -2849,8 +2834,8 @@ int seg_intersection(const Point &a, const Point &b, const Point &c, const Point
   double c1 = ab_x * cd_y - ab_y * cd_x;
   double c2 = ac_x * ab_y - ac_y * ab_x;
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
-    Point res1 = std::max(std::min(a, b), std::min(c, d));
-    Point res2 = std::min(std::max(a, b), std::max(c, d));
+    Pt res1 = std::max(std::min(a, b), std::min(c, d));
+    Pt res2 = std::min(std::max(a, b), std::max(c, d));
     if (TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2)) {
       return 1;  // Collinear and overlapping.
     }
@@ -2875,21 +2860,23 @@ int seg_intersection(const Point &a, const Point &b, const Point &c, const Point
 }
 
 struct Triangle {
-  Point a, b, c;
+  double ax, ay, bx, by, cx, cy;
 
-  Triangle(const Point &a, const Point &b, const Point &c) : a(a), b(b), c(c) {}
+  Triangle(double ax, double ay, double bx, double by, double cx, double cy)
+      : ax(ax), ay(ay), bx(bx), by(by), cx(cx), cy(cy) {}
 
   bool operator==(const Triangle &t) const {
-    return EQ(a.x, t.a.x) && EQ(a.y, t.a.y) && EQ(b.x, t.b.x) && EQ(b.y, t.b.y) && EQ(c.x, t.c.x) &&
-           EQ(c.y, t.c.y);
+    return EQ(ax, t.ax) && EQ(ay, t.ay) && EQ(bx, t.bx) && EQ(by, t.by) && EQ(cx, t.cx) &&
+           EQ(cy, t.cy);
   }
 };
 
-// Accepts any point type with numeric .x/.y; inputs are copied to double Points.
+// Accepts any point type with numeric .x/.y; coordinates are copied to double arrays.
 template<class It>
 std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
+  using Pt = typename std::iterator_traits<It>::value_type;
   int n = hi - lo;
-  std::vector<Point> pts;
+  std::vector<Pt> pts;
   std::vector<double> x, y, z;
   for (It it = lo; it != hi; ++it) {
     pts.emplace_back(it->x, it->y);
@@ -2898,6 +2885,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
     z.emplace_back((double)it->x * it->x + (double)it->y * it->y);
   }
   std::vector<Triangle> res;
+  std::vector<std::array<int, 3>> res_idx;
   for (int i = 0; i < n - 2; i++) {
     for (int j = i + 1; j < n; j++) {
       for (int k = i + 1; k < n; k++) {
@@ -2910,15 +2898,15 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
         if (LE(0, nz)) {
           continue;
         }
-        std::vector<Point> s1{pts[i], pts[j], pts[k], pts[i]};
+        std::vector<Pt> s1{pts[i], pts[j], pts[k], pts[i]};
         for (int m = 0; m < n; m++) {
           if (nx * (x[m] - x[i]) + ny * (y[m] - y[i]) + nz * (z[m] - z[i]) > 0) {
             goto skip;
           }
         }
         // Handle four points on a circle.
-        for (const auto &tri : res) {
-          std::vector<Point> s2{tri.a, tri.b, tri.c, tri.a};
+        for (const auto &tri : res_idx) {
+          std::vector<Pt> s2{pts[tri[0]], pts[tri[1]], pts[tri[2]], pts[tri[0]]};
           for (int u = 0; u < 3; u++) {
             for (int v = 0; v < 3; v++) {
               if (seg_intersection(s1[u], s1[u + 1], s2[v], s2[v + 1]) == 0) {
@@ -2927,7 +2915,8 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
             }
           }
         }
-        res.emplace_back(pts[i], pts[j], pts[k]);
+        res.emplace_back(pts[i].x, pts[i].y, pts[j].x, pts[j].y, pts[k].x, pts[k].y);
+        res_idx.push_back({i, j, k});
       skip:;
       }
     }
@@ -2941,17 +2930,25 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
 #include <cassert>
 using namespace std;
 
+struct PointD {
+  double x, y;
+  PointD(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator<(const PointD &p) const { return x != p.x ? x < p.x : y < p.y; }
+};
+
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
+  bool operator==(const PointI &p) const { return x == p.x && y == p.y; }
+  bool operator<(const PointI &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
 
 int main() {
-  vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<PointD> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
   vector<Triangle> t{
-      Triangle(Point(1, 3), Point(1, 2), Point(-1, 3)),
-      Triangle(Point(1, 3), Point(2, 1), Point(1, 2)),
-      Triangle(Point(1, 2), Point(2, 1), Point(0, 0)),
-      Triangle(Point(1, 2), Point(0, 0), Point(-1, 3))
+      Triangle(1, 3, 1, 2, -1, 3), Triangle(1, 3, 2, 1, 1, 2), Triangle(1, 2, 2, 1, 0, 0),
+      Triangle(1, 2, 0, 0, -1, 3)
   };
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
 
@@ -3110,7 +3107,7 @@ std::pair<Edge *, Edge *> build_triangulation(
     }
     return {c->rev(), c};
   }
-  int mid = (lo + hi) / 2;
+  int mid = lo + (hi - lo) / 2;
   auto [ldo, ldi] = build_triangulation(p, lo, mid, pool);
   auto [rdi, rdo] = build_triangulation(p, mid + 1, hi, pool);
   for (;;) {
@@ -3225,6 +3222,7 @@ using namespace std;
 
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
@@ -3249,7 +3247,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Geometry Library in One File}
-This combines the next few subsections in this chapter in a cross-dependent manner. Point, Line, Circle, and all algorithms here operate on floating-point (double) coordinates on a 2D Cartesian plane. For more generic point\textless{}T\textgreater{} and line\textless{}T\textgreater{} supporting integer-coordinate exact arithmetic, see the first few subsections of this chapter.
+This combines floating-point versions of many sections this chapter in a cross-dependent manner. Point, Line, Circle, and all algorithms here operate on floating-point (double) coordinates on a 2D Cartesian plane. For more generic \inlinecode{point\textless{}T\textgreater{}} and \inlinecode{line\textless{}T\textgreater{}} versions supporting integer-coordinate exact arithmetic, see their respective sections.
 
 \textbf{Time Complexity}: $O(1)$ for all operations.
 
@@ -3984,10 +3982,10 @@ bool Point_in_triangle(const Point &p, const Point &a, const Point &b, const Poi
 bool point_in_rectangle(const Point &p, const Point &v, double w, double h) {
   static const bool EDGE_IS_INSIDE = true;
   if (w < 0) {
-    return point_in_rectangle(p, Point{v.x + w, v.y}, -w, h);
+    return point_in_rectangle(p, Point(v.x + w, v.y), -w, h);
   }
   if (h < 0) {
-    return point_in_rectangle(p, Point{v.x, v.y + h}, w, -h);
+    return point_in_rectangle(p, Point(v.x, v.y + h), w, -h);
   }
   return EDGE_IS_INSIDE ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
                         : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
@@ -3999,7 +3997,7 @@ bool point_in_rectangle(const Point &p, const Point &v, double w, double h) {
 bool point_in_rectangle(const Point &p, const Point &a, const Point &b) {
   double xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   double xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(p, Point{xl, yl}, xh - xl, yh - yl);
+  return point_in_rectangle(p, Point(xl, yl), xh - xl, yh - yl);
 }
 
 // Determines the intersection region of the rectangle with opposing vertices a1 and b1 and the
@@ -4026,10 +4024,10 @@ int rectangle_intersection(
     return -1;  // Completely disjoint.
   }
   if (p != nullptr) {
-    *p = Point{ixl, iyl};
+    *p = Point(ixl, iyl);
   }
   if (q != nullptr) {
-    *q = Point{ixh, iyh};
+    *q = Point(ixh, iyh);
   }
   if (EQ(ixl, xl1) && EQ(ixh, xh1) && EQ(iyl, yl1) && EQ(iyh, yh1)) {
     return 1;  // Rectangle 1 completely inside 2.
@@ -4186,19 +4184,19 @@ int main() {
   assert(Point_in_triangle(Point(-2.44, 0.82), Point(-1, 0), Point(-3, 1), Point(4, 0)));
   assert(!Point_in_triangle(Point(-2.44, 0.7), Point(-1, 0), Point(-3, 1), Point(4, 0)));
 
-  assert(point_in_rectangle(Point{0, -1}, Point{0, -3}, 3, 2));
-  assert(point_in_rectangle(Point{2, -2}, Point{3, -3}, -3, 2));
-  assert(!point_in_rectangle(Point{0, 0}, Point{3, -1}, -3, -2));
-  assert(point_in_rectangle(Point{2, -2}, Point{3, -3}, Point{0, -1}));
-  assert(!point_in_rectangle(Point{-1, -2}, Point{3, -3}, Point{0, -1}));
+  assert(point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2));
+  assert(point_in_rectangle(Point(2, -2), Point(3, -3), -3, 2));
+  assert(!point_in_rectangle(Point(0, 0), Point(3, -1), -3, -2));
+  assert(point_in_rectangle(Point(2, -2), Point(3, -3), Point(0, -1)));
+  assert(!point_in_rectangle(Point(-1, -2), Point(3, -3), Point(0, -1)));
 
-  assert(-1 == rectangle_intersection(Point{0, 0}, Point{1, 1}, Point{2, 2}, Point{3, 3}));
-  assert(0 == rectangle_intersection(Point{1, 1}, Point{7, 7}, Point{5, 5}, Point{0, 0}, &p, &q));
-  assert((p == Point{1, 1} && q == Point{5, 5}));
-  assert(1 == rectangle_intersection(Point{1, 1}, Point{0, 0}, Point{0, 0}, Point{1, 10}, &p, &q));
-  assert((p == Point{0, 0} && q == Point{1, 1}));
-  assert(2 == rectangle_intersection(Point{0, 5}, Point{5, 7}, Point{1, 6}, Point{2, 5}, &p, &q));
-  assert((p == Point{1, 5} && q == Point{2, 6}));
+  assert(-1 == rectangle_intersection(Point(0, 0), Point(1, 1), Point(2, 2), Point(3, 3)));
+  assert(0 == rectangle_intersection(Point(1, 1), Point(7, 7), Point(5, 5), Point(0, 0), &p, &q));
+  assert(p == Point(1, 1) && q == Point(5, 5));
+  assert(1 == rectangle_intersection(Point(1, 1), Point(0, 0), Point(0, 0), Point(1, 10), &p, &q));
+  assert(p == Point(0, 0) && q == Point(1, 1));
+  assert(2 == rectangle_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
+  assert(p == Point(1, 5) && q == Point(2, 6));
 
   return 0;
 }

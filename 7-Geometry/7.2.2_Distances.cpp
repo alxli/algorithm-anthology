@@ -1,12 +1,11 @@
 /*
 
-Distance calculations in two dimensions for points, lines, and line segments.
-
-The functions below are templated on the point type `Pt`. The local `Point` struct (double
-coordinates) is the default; replace it with `PointD`/ `PointI` from 7.1.1 or any struct with
-numeric `.x` and `.y` fields. `sqnorm`, `dot`, `cross`, and `sqdist` preserve the coordinate type
-and are exact for integer points. Functions that return actual distances or projected points use
-`double` only for the final division/square root.
+Distance calculations in two dimensions for points, lines, and line segments. The functions are
+templated on the point type `Pt`: pass any struct with numeric `.x` and `.y` fields (for example
+`PointD`/ `PointI` from 7.1.1, or the local example struct). `sqnorm`, `dot`, `cross`, and `sqdist`
+preserve the coordinate type and are exact for integer points. Functions that return an actual
+distance use `double` for the final division/square root. `closest_point` returns a point of the
+same type as its inputs, so use a floating-point `Pt` there for a meaningful (non-truncated) result.
 
 - `dist(a, b)` and `sqdist(a, b)` respectively return the distance and squared distance between
   points `a` and `b`.
@@ -38,15 +37,6 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
 
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return LT(x, p.x) || (EQ(x, p.x) && LT(y, p.y)); }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
 // clang-format off
 template<class Pt> auto sqnorm(const Pt &a) { return a.x*a.x + a.y*a.y; }
 template<class Pt> double norm(const Pt &a) { return sqrt((double)sqnorm(a)); }
@@ -67,21 +57,24 @@ double dist(const Pt &a, const Pt &b) {
 }
 
 template<class Pt, class T>
-double line_dist(const Pt &p, T a, T b, T c) {
+double line_dist(const Pt &p, const T &a, const T &b, const T &c) {
   return fabs((double)a * p.x + (double)b * p.y + c) / sqrt((double)a * a + (double)b * b);
 }
 
 template<class Pt>
 double line_dist(const Pt &p, const Pt &a, const Pt &b) {
-  if (EQ(a.x, b.x) && EQ(a.y, b.y)) return dist(p, a);
+  if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
+    return dist(p, a);
+  }
   auto n = sqdist(a, b);
   auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
   double u = (double)d / n;
-  return norm(Point{a.x + u * (b.x - a.x) - p.x, a.y + u * (b.y - a.y) - p.y});
+  double dx = a.x + u * (b.x - a.x) - p.x, dy = a.y + u * (b.y - a.y) - p.y;
+  return sqrt(dx * dx + dy * dy);
 }
 
 template<class T>
-double line_dist(T a1, T b1, T c1, T a2, T b2, T c2) {
+double line_dist(const T &a1, const T &b1, const T &c1, const T &a2, const T &b2, const T &c2) {
   if (EQ(a1 * b2, a2 * b1)) {
     double factor = EQ(b1, 0) ? ((double)a1 / a2) : ((double)b1 / b2);
     return EQ(c1, c2 * factor) ? 0
@@ -104,7 +97,8 @@ double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
     return dist(p, b);
   }
   double t = (double)d / n;
-  return dist(p, Point{a.x + t * (b.x - a.x), a.y + t * (b.y - a.y)});
+  double dx = a.x + t * (b.x - a.x) - p.x, dy = a.y + t * (b.y - a.y) - p.y;
+  return sqrt(dx * dx + dy * dy);
 }
 
 template<class Pt>
@@ -144,42 +138,55 @@ double seg_dist(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
 }
 
 template<class Pt>
-Point closest_point(const Pt &a, const Pt &b, const Pt &p) {
+Pt closest_point(const Pt &a, const Pt &b, const Pt &p) {
+  Pt res{};
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
-    return Point{a.x, a.y};
+    res.x = a.x;
+    res.y = a.y;
+    return res;
   }
   auto n = sqdist(a, b);
   auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
   double t = (double)d / n;
   if (t <= 0) {
-    return Point{a.x, a.y};
+    res.x = a.x;
+    res.y = a.y;
+  } else if (t >= 1) {
+    res.x = b.x;
+    res.y = b.y;
+  } else {
+    res.x = a.x + t * (b.x - a.x);
+    res.y = a.y + t * (b.y - a.y);
   }
-  if (t >= 1) {
-    return Point{b.x, b.y};
-  }
-  return Point{a.x + t * (b.x - a.x), a.y + t * (b.y - a.y)};
+  return res;
 }
 
 /*** Example Usage ***/
 
 #include <cassert>
 
+struct Point {
+  double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+};
+
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
-  assert(EQ(5, dist(Point{-1, -1}, Point{2, 3})));
-  assert(EQ(25, sqdist(Point{-1, -1}, Point{2, 3})));
-  assert(EQ(1.2, line_dist(Point{2, 1}, -4, 3, -1)));
-  assert(EQ(0.8, line_dist(Point{3, 3}, Point{-1, -1}, Point{2, 3})));
-  assert(EQ(1.2, line_dist(Point{2, 1}, Point{-1, -1}, Point{2, 3})));
+  assert(EQ(5, dist(Point(-1, -1), Point(2, 3))));
+  assert(EQ(25, sqdist(Point(-1, -1), Point(2, 3))));
+  assert(EQ(1.2, line_dist(Point(2, 1), -4, 3, -1)));
+  assert(EQ(0.8, line_dist(Point(3, 3), Point(-1, -1), Point(2, 3))));
+  assert(EQ(1.2, line_dist(Point(2, 1), Point(-1, -1), Point(2, 3))));
   assert(EQ(0, line_dist(-4, 3, -1, 8, 6, 2)));
   assert(EQ(0.8, line_dist(-4, 3, -1, -8, 6, -10)));
-  assert(EQ(1.0, seg_dist(Point{3, 3}, Point{-1, -1}, Point{2, 3})));
-  assert(EQ(1.2, seg_dist(Point{2, 1}, Point{-1, -1}, Point{2, 3})));
-  assert(EQ(0, seg_dist(Point{0, 2}, Point{3, 3}, Point{-1, -1}, Point{2, 3})));
-  assert(EQ(0.6, seg_dist(Point{-1, 0}, Point{-2, 2}, Point{-1, -1}, Point{2, 3})));
+  assert(EQ(1.0, seg_dist(Point(3, 3), Point(-1, -1), Point(2, 3))));
+  assert(EQ(1.2, seg_dist(Point(2, 1), Point(-1, -1), Point(2, 3))));
+  assert(EQ(0, seg_dist(Point(0, 2), Point(3, 3), Point(-1, -1), Point(2, 3))));
+  assert(EQ(0.6, seg_dist(Point(-1, 0), Point(-2, 2), Point(-1, -1), Point(2, 3))));
 
   // Integer points: sqdist is exact, dist returns double.
   PointI ia{-1, -1}, ib{2, 3};

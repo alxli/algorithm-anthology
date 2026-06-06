@@ -7,7 +7,7 @@ problems, game theory with Grundy numbers, and dynamic programming states.
 - `mex(lo, hi)` returns the MEX of the values in `[lo, hi)`.
 - `DynamicMex(n)` maintains counts of values in `[0, n]`, enough to track the MEX of a multiset of
   at most `n` relevant nonnegative values.
-- `add(x)` inserts one copy of value `x` if `0 <= x <= n`.
+- `add(x)` inserts one copy of value `x` if $0 \leq `x` \leq n$.
 - `remove(x)` removes one copy of value `x` if present.
 - `get()` returns the current MEX.
 

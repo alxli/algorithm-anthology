@@ -2,7 +2,7 @@
 
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
 once in the collection. This implementation requires an ordering on the set of possible keys defined
-by `operator <` on the key type. A splay tree is a balanced binary search tree with the additional
+by `operator<` on the key type. A splay tree is a balanced binary search tree with the additional
 property that recently accessed elements are quick to access again.
 
 - `SplayTree()` constructs an empty map.

@@ -25,6 +25,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <utility>
 #include <vector>
@@ -35,20 +36,8 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
-};
-
-double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
-  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
-}
-
-int seg_intersection(const Point &a, const Point &b, const Point &c, const Point &d) {
+template<class Pt>
+int seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   static const bool TOUCH_IS_INTERSECT = false;  // false is important!
   double ab_x = b.x - a.x, ab_y = b.y - a.y;
   double ac_x = c.x - a.x, ac_y = c.y - a.y;
@@ -56,8 +45,8 @@ int seg_intersection(const Point &a, const Point &b, const Point &c, const Point
   double c1 = ab_x * cd_y - ab_y * cd_x;
   double c2 = ac_x * ab_y - ac_y * ab_x;
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
-    Point res1 = std::max(std::min(a, b), std::min(c, d));
-    Point res2 = std::min(std::max(a, b), std::max(c, d));
+    Pt res1 = std::max(std::min(a, b), std::min(c, d));
+    Pt res2 = std::min(std::max(a, b), std::max(c, d));
     if (TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2)) {
       return 1;  // Collinear and overlapping.
     }
@@ -82,21 +71,23 @@ int seg_intersection(const Point &a, const Point &b, const Point &c, const Point
 }
 
 struct Triangle {
-  Point a, b, c;
+  double ax, ay, bx, by, cx, cy;
 
-  Triangle(const Point &a, const Point &b, const Point &c) : a(a), b(b), c(c) {}
+  Triangle(double ax, double ay, double bx, double by, double cx, double cy)
+      : ax(ax), ay(ay), bx(bx), by(by), cx(cx), cy(cy) {}
 
   bool operator==(const Triangle &t) const {
-    return EQ(a.x, t.a.x) && EQ(a.y, t.a.y) && EQ(b.x, t.b.x) && EQ(b.y, t.b.y) && EQ(c.x, t.c.x) &&
-           EQ(c.y, t.c.y);
+    return EQ(ax, t.ax) && EQ(ay, t.ay) && EQ(bx, t.bx) && EQ(by, t.by) && EQ(cx, t.cx) &&
+           EQ(cy, t.cy);
   }
 };
 
-// Accepts any point type with numeric .x/.y; inputs are copied to double Points.
+// Accepts any point type with numeric .x/.y; coordinates are copied to double arrays.
 template<class It>
 std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
+  using Pt = typename std::iterator_traits<It>::value_type;
   int n = hi - lo;
-  std::vector<Point> pts;
+  std::vector<Pt> pts;
   std::vector<double> x, y, z;
   for (It it = lo; it != hi; ++it) {
     pts.emplace_back(it->x, it->y);
@@ -105,6 +96,7 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
     z.emplace_back((double)it->x * it->x + (double)it->y * it->y);
   }
   std::vector<Triangle> res;
+  std::vector<std::array<int, 3>> res_idx;
   for (int i = 0; i < n - 2; i++) {
     for (int j = i + 1; j < n; j++) {
       for (int k = i + 1; k < n; k++) {
@@ -117,15 +109,15 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
         if (LE(0, nz)) {
           continue;
         }
-        std::vector<Point> s1{pts[i], pts[j], pts[k], pts[i]};
+        std::vector<Pt> s1{pts[i], pts[j], pts[k], pts[i]};
         for (int m = 0; m < n; m++) {
           if (nx * (x[m] - x[i]) + ny * (y[m] - y[i]) + nz * (z[m] - z[i]) > 0) {
             goto skip;
           }
         }
         // Handle four points on a circle.
-        for (const auto &tri : res) {
-          std::vector<Point> s2{tri.a, tri.b, tri.c, tri.a};
+        for (const auto &tri : res_idx) {
+          std::vector<Pt> s2{pts[tri[0]], pts[tri[1]], pts[tri[2]], pts[tri[0]]};
           for (int u = 0; u < 3; u++) {
             for (int v = 0; v < 3; v++) {
               if (seg_intersection(s1[u], s1[u + 1], s2[v], s2[v + 1]) == 0) {
@@ -134,7 +126,8 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
             }
           }
         }
-        res.emplace_back(pts[i], pts[j], pts[k]);
+        res.emplace_back(pts[i].x, pts[i].y, pts[j].x, pts[j].y, pts[k].x, pts[k].y);
+        res_idx.push_back({i, j, k});
       skip:;
       }
     }
@@ -147,17 +140,25 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
 #include <cassert>
 using namespace std;
 
+struct PointD {
+  double x, y;
+  PointD(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator<(const PointD &p) const { return x != p.x ? x < p.x : y < p.y; }
+};
+
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
+  bool operator==(const PointI &p) const { return x == p.x && y == p.y; }
+  bool operator<(const PointI &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
 
 int main() {
-  vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<PointD> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
   vector<Triangle> t{
-      Triangle(Point(1, 3), Point(1, 2), Point(-1, 3)),
-      Triangle(Point(1, 3), Point(2, 1), Point(1, 2)),
-      Triangle(Point(1, 2), Point(2, 1), Point(0, 0)),
-      Triangle(Point(1, 2), Point(0, 0), Point(-1, 3))
+      Triangle(1, 3, 1, 2, -1, 3), Triangle(1, 3, 2, 1, 1, 2), Triangle(1, 2, 2, 1, 0, 0),
+      Triangle(1, 2, 0, 0, -1, 3)
   };
   assert(delaunay_triangulation(v.begin(), v.end()) == t);
 

@@ -12,8 +12,9 @@ For production C++, prefer containers such as \inlinecode{std::list}, \inlinecod
   \item \inlinecode{reverse\_list(head)} reverses a singly linked list and returns the new head.
   \item \inlinecode{merge\_sorted\_lists(a, b)} merges two sorted lists using a dummy node and returns the merged head.
   \item \inlinecode{split\_half(head, \&second)} cuts a list into two halves, returning the first half and storing the second half in \inlinecode{second}.
-  \item For linked-list cycle detection, use Floyd or Brent cycle detection from Chapter 1, Section 4.
 \end{compactitem}
+
+For linked-list cycle detection, use Floyd or Brent cycle detection from section 1.5.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -295,7 +296,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Binary Heap}
-Maintain a min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A binary min-heap implements a priority queue by inserting and deleting nodes into a binary tree such that the parent of any node is always less than its children.
+Maintain a min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}}. A binary min-heap implements a priority queue by inserting and deleting nodes into a binary tree such that the parent of any node is always less than its children.
 
 \begin{compactitem}
   \item \inlinecode{BinaryHeap()} constructs an empty priority queue.
@@ -312,7 +313,7 @@ Maintain a min-priority queue, that is, a collection of elements with support fo
 \begin{compactitem}
   \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{top()}.
   \item $O(\log n)$ per call to \inlinecode{push()} and \inlinecode{pop()}, where $n$ is the number of elements in the priority queue.
-  \item $O(n)$ per call to the second constructor on the distance between lo and hi (bottom-up heapify).
+  \item $O(n)$ per call to the second constructor on the distance between \inlinecode{lo} and \inlinecode{hi} (bottom-up heapify).
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -419,7 +420,7 @@ int main() {
 12
 \end{exampleoutput}
 \subsection{Skew Heap}
-Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A skew heap attempts to maintain balance by unconditionally swapping all nodes in the merge path when merging.
+Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}}. A skew heap attempts to maintain balance by unconditionally swapping all nodes in the merge path when merging.
 
 \begin{compactitem}
   \item \inlinecode{SkewHeap()} constructs an empty priority queue.
@@ -437,7 +438,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 \begin{compactitem}
   \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{top()}.
   \item $O(\log n)$ amortized auxiliary per call to \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{absorb()}, where $n$ is the number of elements in the priority queue.
-  \item $O(n)$ per call to the second constructor, where $n$ is the distance between lo and hi.
+  \item $O(n)$ per call to the second constructor, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -560,7 +561,7 @@ int main() {
 12
 \end{exampleoutput}
 \subsection{Pairing Heap}
-Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator \textless{}}. A pairing heap is a heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion.
+Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}}. A pairing heap is a heap-ordered multi-way tree, using a two-pass merge to self-adjust during each deletion.
 
 \begin{compactitem}
   \item \inlinecode{PairingHeap()} constructs an empty priority queue.
@@ -578,7 +579,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 \begin{compactitem}
   \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, \inlinecode{top()}, \inlinecode{push()}, and \inlinecode{absorb()}.
   \item $O(\log n)$ amortized per call to \inlinecode{pop()}.
-  \item $O(n)$ per call to the second constructor on the distance between lo and hi.
+  \item $O(n)$ per call to the second constructor on the distance between \inlinecode{lo} and \inlinecode{hi}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -722,7 +723,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Binary Search Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A binary search tree implements this map by inserting and deleting keys into a binary tree such that every node's left child has a lesser key and every node's right child has a greater key.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A binary search tree implements this map by inserting and deleting keys into a binary tree such that every node's left child has a lesser key and every node's right child has a greater key.
 
 \begin{compactitem}
   \item \inlinecode{BST()} constructs an empty map.
@@ -897,7 +898,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Treap}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A Treap is a binary search tree where each node holds a randomly assigned priority. The tree satisfies the BST property on keys and the min-heap property on priorities (lower priority value = closer to root). Since priorities are random, this keeps the tree balanced with high probability, making insertions and deletions run in $O(\log n)$.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A Treap is a binary search tree where each node holds a randomly assigned priority. The tree satisfies the BST property on keys and the min-heap property on priorities (lower priority value is closer to root). Since priorities are random, this keeps the tree balanced with high probability, making insertions and deletions run in $O(\log n)$.
 
 \begin{compactitem}
   \item \inlinecode{Treap()} constructs an empty map.
@@ -1096,7 +1097,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{AVL Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. An AVL tree is a binary search tree balanced by height, guaranteeing $O(\log n)$ worst-case running time in insertions and deletions by making sure that the heights of the left and right subtrees at every node differ by at most 1.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. An AVL tree is a binary search tree balanced by height, guaranteeing $O(\log n)$ worst-case running time in insertions and deletions by making sure that the heights of the left and right subtrees at every node differ by at most 1.
 
 \begin{compactitem}
   \item \inlinecode{AVLTree()} constructs an empty map.
@@ -1329,7 +1330,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Red-Black Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A red black tree is a binary search tree balanced by coloring its nodes red or black, then constraining node colors on any simple path from the root to a leaf.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A red black tree is a binary search tree balanced by coloring its nodes red or black, then constraining node colors on any simple path from the root to a leaf.
 
 \begin{compactitem}
   \item \inlinecode{RedBlackTree()} constructs an empty map.
@@ -1673,7 +1674,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Splay Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A splay tree is a balanced binary search tree with the additional property that recently accessed elements are quick to access again.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A splay tree is a balanced binary search tree with the additional property that recently accessed elements are quick to access again.
 
 \begin{compactitem}
   \item \inlinecode{SplayTree()} constructs an empty map.
@@ -1890,7 +1891,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Size Balanced Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. In addition, support queries for keys given their ranks as well as queries for the ranks of given keys. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator \textless{}} on the key type. A size balanced tree augments each nodes with the size of its subtree, using it to maintain balance and compute order statistics.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. In addition, support queries for keys given their ranks as well as queries for the ranks of given keys. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A size balanced tree augments each nodes with the size of its subtree, using it to maintain balance and compute order statistics.
 
 \begin{compactitem}
   \item \inlinecode{SBTree()} constructs an empty map.
@@ -2392,7 +2393,7 @@ Intervals intersecting [16, 20]: [15, 20] [10, 30] [5, 20] [10, 40]
 All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
 \end{exampleoutput}
 \subsection{Hash Map}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires \inlinecode{operator ==} to be defined on the key type. A hash map implements a map by hashing keys into buckets using a hash function. This implementation resolves collisions by chaining entries hashed to the same bucket into a linked list.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires \inlinecode{operator==} to be defined on the key type. A hash map implements a map by hashing keys into buckets using a hash function. This implementation resolves collisions by chaining entries hashed to the same bucket into a linked list.
 
 \begin{compactitem}
   \item \inlinecode{HashMap()} constructs an empty map.
@@ -2400,7 +2401,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if an new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
-  \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
+  \item \inlinecode{find(k)} returns a pointer to the value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
   \item \inlinecode{operator[]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in no guaranteed order.
 \end{compactitem}
@@ -3211,8 +3212,8 @@ class SegTree {
       push_delta(i, lo, hi);
       return;
     }
-    update(2 * i + 1, lo, (lo + hi) / 2, tgt_lo, tgt_hi, d);
-    update(2 * i + 2, (lo + hi) / 2 + 1, hi, tgt_lo, tgt_hi, d);
+    update(2 * i + 1, lo, lo + (hi - lo) / 2, tgt_lo, tgt_hi, d);
+    update(2 * i + 2, lo + (hi - lo) / 2 + 1, hi, tgt_lo, tgt_hi, d);
     value[i] = combine(value[2 * i + 1], value[2 * i + 2]);
   }
 
@@ -3580,7 +3581,7 @@ Cartesian trees connect arrays, stacks, range minimum queries, treaps, and large
 \begin{compactitem}
   \item \inlinecode{CartesianTree(a)} constructs the tree for array \inlinecode{a}.
   \item \inlinecode{root} stores the root index.
-  \item \inlinecode{parent[i]}, \inlinecode{left[i]}, and \inlinecode{right[i]} store neighboring node indices, or \inlinecode{-1} if absent.
+  \item \inlinecode{parent[i]}, \inlinecode{left[i]}, and \inlinecode{right[i]} store neighboring node indices, or $-1$ if absent.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ construction time, where $n$ is the array size.

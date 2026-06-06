@@ -45,7 +45,8 @@ std::vector<Int> prime_factorize(Int n) {
   }
   std::vector<Int> res;
   for (Int i = 2;; i++) {
-    int p = 0, q = n / i, r = n - q * i;
+    int p = 0;
+    Int q = n / i, r = n - q * i;
     if (i > q || (i == q && r > 0)) {
       break;
     }
@@ -171,7 +172,7 @@ long long pollards_rho_brent(long long n) {
 }
 
 bool is_prime(long long n) {
-  static const int np = 9, p[] = {2, 3, 5, 7, 11, 13, 17, 19, 23};
+  static const int np = 12, p[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
   for (int i = 0; i < np; i++) {
     if (n % p[i] == 0) {
       return n == p[i];

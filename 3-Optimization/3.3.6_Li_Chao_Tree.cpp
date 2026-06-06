@@ -10,8 +10,8 @@ The implementation below stores the lower envelope of lines over the inclusive d
 O(log C), where $C =$ `X_MAX` $-$ `X_MIN` $+ 1$.
 
 - `LiChaoTree(lo, hi)` constructs an empty tree over integer domain `[lo, hi]`.
-- `add_line(m, b)` inserts line $y = mx + b$.
-- `query(x)` returns the minimum y-value among all inserted lines at coordinate `x`.
+- `add_line(m, b)` inserts line $y = mx + b$ (can be called in any order).
+- `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`.
 
 Time Complexity:
 - O(log C) per call to `add_line(m, b)` and `query(x)`, where $C$ is the domain size.

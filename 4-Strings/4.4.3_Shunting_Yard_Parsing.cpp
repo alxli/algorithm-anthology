@@ -7,7 +7,7 @@ multiplication by juxtaposition is not. Evaluation is performed using the shunti
 An arbitrary operand type is supported, with its string representation defined by a user-specified
 `is_operand()` and `eval_operand()` functions. For maximum reliability, the string representation of
 operands should not use characters shared by any operator. For instance, the best practice instead
-of accepting `-1` as a valid operand (since the `-` sign may conflict with the identical binary
+of accepting $-1$ as a valid operand (since the `-` sign may conflict with the identical binary
 operator), is to specify non-negative number as operands alongside the unary operator `-`.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared
@@ -31,15 +31,15 @@ lexicographical ordering of conflicting operators.
 
 Time Complexity:
 - O(m) per call to the constructor, where $m$ is the total number of operators.
-- O(nmk) per call to `split(s)`, where $n$ is the length of `s`, $m$ is the total number of
+- O(n*m*k) per call to `split(s)`, where $n$ is the length of `s`, $m$ is the total number of
   operators defined for the parser instance, and $k$ is the maximum length for any operator
   representation.
 - O(n) expected per call to `eval(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
-- O(nmk + n) expected per call to `eval(s)`, where $n$ is the distance between `lo` and `hi`, and
+- O(n*m*k + n) expected per call to `eval(s)`, where $n$ is the distance between `lo` and `hi`, and
   $m$ and $k$ are as defined previous.
 
 Space Complexity:
-- O(mk) for storage of the $m$ operators, of maximum length $k$.
+- O(m*k) for storage of the $m$ operators, of maximum length $k$.
 - O(n) auxiliary stack space for `split(s)`, `eval(lo, hi)`, and `eval(s)`, where $n$ is the length
   of the argument.
 

@@ -1,8 +1,8 @@
 /*
 
 Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of
-x-coordinate queries each asking to find the minimum y-value when any of the given lines are
-evaluated at the specified x. To instead have the queries optimize for maximum y-value, call the
+x-coordinate queries each asking to find the minimum $y$-value when any of the given lines are
+evaluated at the specified $x$. To instead have the queries optimize for maximum $y$-value, call the
 constructor with `query_max = true`. This is useful for dynamic programming recurrences of the form
 `dp[i] = min(m[j] * x[i] + b[j])` when line slopes and query coordinates are not monotone.
 
@@ -12,8 +12,8 @@ and `query()` in any desired order.
 
 - `HullOptimizer(query_max)` constructs an empty hull. By default, `query(x)` minimizes; if
   `query_max` is true, `query(x)` maximizes.
-- `add_line(m, b)` inserts line $y = mx + b$ in arbitrary order.
-- `query(x)` returns the best y-value among all inserted lines at coordinate `x`. At least one line
+- `add_line(m, b)` inserts line $y = mx + b$ (can be called in any order).
+- `query(x)` returns the best $y$-value among all inserted lines at coordinate `x`. At least one line
   must have been inserted.
 
 Time Complexity:

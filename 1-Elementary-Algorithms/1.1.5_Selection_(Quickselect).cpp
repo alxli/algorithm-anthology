@@ -24,7 +24,7 @@ Space Complexity:
 
 template<class It>
 void nth_element2(It lo, It nth, It hi) {
-  static std::mt19937 rng(1);
+  static std::mt19937 rng(std::random_device{}());
   while (hi - lo > 1) {
     std::uniform_int_distribution<int> dist(0, hi - lo - 1);
     auto pivot = *(lo + dist(rng));
@@ -48,29 +48,24 @@ void nth_element2(It lo, It nth, It hi) {
   }
 }
 
-/*** Example Usage and Output:
-
-2 3 3 4 5 9 6 7 6
-
-***/
+/*** Example Usage ***/
 
 #include <cassert>
-#include <iostream>
+#include <vector>
 using namespace std;
-
-template<class It>
-void print_range(It lo, It hi) {
-  while (lo != hi) {
-    cout << *lo++ << " ";
-  }
-  cout << endl;
-}
 
 int main() {
   vector<int> a{5, 6, 4, 3, 2, 6, 7, 9, 3};
   int n = a.size();
   nth_element2(a.begin(), a.begin() + n / 2, a.end());
   assert(a[n / 2] == 5);
-  print_range(a.begin(), a.end());
+  // Values left of the median are <= it and values right are >= it (the exact
+  // order within each side is randomized, since the pivot is chosen at random).
+  for (int i = 0; i < n / 2; i++) {
+    assert(a[i] <= a[n / 2]);
+  }
+  for (int i = n / 2 + 1; i < n; i++) {
+    assert(a[i] >= a[n / 2]);
+  }
   return 0;
 }

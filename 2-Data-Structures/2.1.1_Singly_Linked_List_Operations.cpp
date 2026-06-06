@@ -12,7 +12,8 @@ nodes, or when manual pointer manipulation is the point of the exercise.
 - `merge_sorted_lists(a, b)` merges two sorted lists using a dummy node and returns the merged head.
 - `split_half(head, &second)` cuts a list into two halves, returning the first half and storing the
   second half in `second`.
-- For linked-list cycle detection, use Floyd or Brent cycle detection from Chapter 1, Section 4.
+
+For linked-list cycle detection, use Floyd or Brent cycle detection from section 1.5.
 
 Time Complexity:
 - O(n) per call to `reverse_list(head)` and `split_half(head, &second)`.

@@ -5,16 +5,21 @@ A 2D point class template supporting epsilon comparisons. The coordinate type `T
 operations (`norm`, `arg`, `normalize`, `rotateCW/CCW`, `reflect` across a line) return coordinates
 of type `fp_t`, which is `double` when `T` is integral and `T` itself otherwise.
 
-Exact operations (return `Point<T>` or `T`, no precision lost for integers):
+Exact operations (return `point<T>` or `T`, no precision lost for integers):
 - element-wise arithmetic, `dot()`, `cross()`, `sqnorm()`, cardinal rotations, `reflect(point)`,
   comparisons.
 
-Floating-point-only operations (return `Point<fp_t>` or `fp_t`):
+Floating-point-only operations (return `point<fp_t>` or `fp_t`):
 - `norm()`, `arg()`, `proj()`, `normalize()`, `rotateCW()`, `rotateCCW()`, `reflect(line)`.
-- `operator /` also promotes to `fp_t`.
+- `operator/` also promotes to `fp_t`.
 
-Implicit conversion from `Point<U>` to `Point<T>` is provided when `U` is integral and `T` is
+Implicit conversion from `point<U>` to `point<T>` is provided when `U` is integral and `T` is
 floating-point, so `PointI` can be passed wherever `PointD` is expected.
+
+Non-floating-point coordinate types such as `Modular` or `Rational` compose for the exact
+operations (arithmetic, `dot`, `cross`, `sqnorm`, comparisons): these route to exact `==`/`<`
+rather than epsilon comparisons. The floating-point-only operations are simply not instantiated
+unless called.
 
 Type aliases:
 - `PointI = Point<int>`: exact integer geometry
@@ -52,26 +57,26 @@ struct point {
   point(T x, T y) : x(x), y(y) {}
   explicit point(const std::pair<T, T> &p) : x(p.first), y(p.second) {}
 
-  // Implicit conversion from integral point to floating-point point.
+  // Implicit conversion from integral to floating-point point (optional, can just use to_double()).
   template<
       typename U,
       typename = std::enable_if_t<std::is_integral<U>::value && std::is_floating_point<T>::value>>
   point(const point<U> &p) : x(static_cast<T>(p.x)), y(static_cast<T>(p.y)) {}
 
   bool operator==(const point &p) const {
-    if (std::is_integral<T>::value) {
-      return x == p.x && y == p.y;
+    if constexpr (std::is_floating_point<T>::value) {
+      return EQ(x, p.x) && EQ(y, p.y);
     }
-    return EQ(x, p.x) && EQ(y, p.y);
+    return x == p.x && y == p.y;  // exact for ints and types like Modular/Rational
   }
 
   bool operator!=(const point &p) const { return !(*this == p); }
 
   bool operator<(const point &p) const {
-    if (std::is_integral<T>::value) {
-      return x != p.x ? x < p.x : y < p.y;
+    if constexpr (std::is_floating_point<T>::value) {
+      return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
     }
-    return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
+    return x == p.x ? y < p.y : x < p.x;  // exact for ints and types like Modular/Rational
   }
 
   bool operator>(const point &p) const { return p < *this; }
@@ -82,6 +87,7 @@ struct point {
   point operator+(T v) const { return {x + v, y + v}; }
   point operator-(T v) const { return {x - v, y - v}; }
   point operator*(T v) const { return {x * v, y * v}; }
+
   // Division always promotes to fp_t to avoid integer truncation.
   point<fp_t> operator/(fp_t v) const { return {(fp_t)x / v, (fp_t)y / v}; }
 
@@ -109,8 +115,8 @@ struct point {
 
   point<fp_t> normalize() const {
     fp_t n = norm();
-    if (n < static_cast<fp_t>(1e-30)) {
-      return {fp_t(0), fp_t(0)};
+    if (n < static_cast<fp_t>(1e-30)) {  // guard against dividing by a near-zero norm, not a
+      return {fp_t(0), fp_t(0)};         // geometric tolerance (EPS is too coarse here)
     }
     return {static_cast<fp_t>(x) / n, static_cast<fp_t>(y) / n};
   }
@@ -203,10 +209,11 @@ struct point {
   }
 
   friend std::ostream &operator<<(std::ostream &out, const point &p) {
-    if (std::is_integral<T>::value) {
+    if constexpr (std::is_floating_point<T>::value) {
+      return out << "(" << (fabs(p.x) < EPS ? 0 : p.x) << "," << (fabs(p.y) < EPS ? 0 : p.y) << ")";
+    } else {
       return out << "(" << p.x << "," << p.y << ")";
     }
-    return out << "(" << (fabs(p.x) < EPS ? 0 : p.x) << "," << (fabs(p.y) < EPS ? 0 : p.y) << ")";
   }
 };
 

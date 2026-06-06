@@ -10,7 +10,7 @@ Circle is floating-point by nature (the radius requires a square root), so it al
 computes in `double`. The center of a circumcircle is rational and the radius irrational even for
 integer inputs, so there is no exact integer `Circle` to store; instead, every point-accepting
 constructor and predicate is templated on the point type `Pt` and only reads `.x`/ `.y`, accepting
-`Point`/ `PointD`/ `PointI` from 7.1.1, `std::pair`, or any struct with numeric `.x`/ `.y` fields.
+`Point`/ `PointD`/ `PointI` from 7.1.1 or any struct with numeric `.x`/ `.y` fields.
 
 When exact integer reasoning about a circumcircle is needed, use `in_circumcircle(a, b, c, d)`,
 which tests whether `d` lies inside the circle through `a`, `b`, `c` using a determinant (no square
@@ -165,38 +165,40 @@ int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
 
 struct Point {
   double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
 };
 
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
   Circle c(-2, 5, sqrt(10));
-  assert(c == Circle(Point{-2, 5}, sqrt(10)));
-  assert(c == Circle(Point{1, 6}, Point{-5, 4}));
-  assert(c == Circle(Point{-3, 2}, Point{-3, 8}, Point{-1, 8}));
-  assert(c == incircle(Point{-12, 5}, Point{3, 0}, Point{0, 9}));
-  assert(c.contains(Point{-2, 8}) && !c.contains(Point{-2, 9}));
-  assert(c.on_edge(Point{-1, 2}) && !c.on_edge(Point{-1.01, 2}));
+  assert(c == Circle(Point(-2, 5), sqrt(10)));
+  assert(c == Circle(Point(1, 6), Point(-5, 4)));
+  assert(c == Circle(Point(-3, 2), Point(-3, 8), Point(-1, 8)));
+  assert(c == incircle(Point(-12, 5), Point(3, 0), Point(0, 9)));
+  assert(c.contains(Point(-2, 8)) && !c.contains(Point(-2, 9)));
+  assert(c.on_edge(Point(-1, 2)) && !c.on_edge(Point(-1.01, 2)));
 
   // Integer-coordinate points are accepted; the Circle is computed in double.
-  assert(c == Circle(PointI{1, 6}, PointI{-5, 4}));
-  assert(c == Circle(PointI{-3, 2}, PointI{-3, 8}, PointI{-1, 8}));
-  assert(c == incircle(PointI{-12, 5}, PointI{3, 0}, PointI{0, 9}));
-  assert(c.contains(PointI{-2, 8}) && !c.contains(PointI{-2, 9}));
-  assert(c.on_edge(PointI{-1, 2}));
+  assert(c == Circle(PointI(1, 6), PointI(-5, 4)));
+  assert(c == Circle(PointI(-3, 2), PointI(-3, 8), PointI(-1, 8)));
+  assert(c == incircle(PointI(-12, 5), PointI(3, 0), PointI(0, 9)));
+  assert(c.contains(PointI(-2, 8)) && !c.contains(PointI(-2, 9)));
+  assert(c.on_edge(PointI(-1, 2)));
 
   // Exact integer in-circle predicate: unit circle through (1,0), (0,1), (-1,0).
-  assert(in_circumcircle(PointI{1, 0}, PointI{0, 1}, PointI{-1, 0}, PointI{0, 0}) == 1);  // inside
+  assert(in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, 0)) == 1);  // inside
   assert(
-      in_circumcircle(PointI{1, 0}, PointI{0, 1}, PointI{-1, 0}, PointI{2, 0}) == -1
+      in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(2, 0)) == -1
   );  // outside
   assert(
-      in_circumcircle(PointI{1, 0}, PointI{0, 1}, PointI{-1, 0}, PointI{0, -1}) == 0
+      in_circumcircle(PointI(1, 0), PointI(0, 1), PointI(-1, 0), PointI(0, -1)) == 0
   );  // on edge
   // Orientation-independent: reversing a, b, c gives the same answer.
-  assert(in_circumcircle(PointI{-1, 0}, PointI{0, 1}, PointI{1, 0}, PointI{0, 0}) == 1);
+  assert(in_circumcircle(PointI(-1, 0), PointI(0, 1), PointI(1, 0), PointI(0, 0)) == 1);
 
   return 0;
 }

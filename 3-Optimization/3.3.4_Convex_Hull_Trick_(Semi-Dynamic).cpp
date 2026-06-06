@@ -1,8 +1,8 @@
 /*
 
 Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of
-x-coordinate queries each asking to find the minimum y-value when any of the given lines are
-evaluated at the specified x. This is useful for dynamic programming recurrences of the form
+x-coordinate queries each asking to find the minimum $y$-value when any of the given lines are
+evaluated at the specified $x$. This is useful for dynamic programming recurrences of the form
 `dp[i] = min(m[j] * x[i] + b[j])`.
 
 The following implementation is a concise, semi-dynamic version of the convex hull optimization
@@ -12,9 +12,9 @@ sort the lines and queries before calling the functions. In that case, the overa
 will be dominated by the sorting step.
 
 - `SemiDynamicCHT()` constructs an empty hull.
-- `add_line(m, b)` inserts line $y = mx + b$. The slope `m` must be less than or equal to the slope
-  of every line added so far.
-- `query(x)` returns the minimum y-value among all inserted lines at coordinate `x`. Query
+- `add_line(m, b)` inserts the line $y = mx + b$. The slope `m` must be less than or equal to the
+  slope of every line added so far.
+- `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`. Query
   coordinates must be nondecreasing across calls.
 
 Time Complexity:

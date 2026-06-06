@@ -12,7 +12,7 @@ limit is added.
   `pred(x)` is true.
 
 Time Complexity:
-- O(log ans) calls to `pred()`, where `ans` is the distance from `lo` to the first true value.
+- O(log n) calls to `pred()`, where $n$ is the distance from `lo` to the first true value.
 
 Space Complexity:
 - O(1) auxiliary.

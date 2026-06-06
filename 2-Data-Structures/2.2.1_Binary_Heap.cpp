@@ -2,7 +2,7 @@
 
 Maintain a min-priority queue, that is, a collection of elements with support for querying and
 extraction of the minimum. This implementation requires an ordering on the set of possible elements
-defined by `operator <`. A binary min-heap implements a priority queue by inserting and deleting
+defined by `operator<`. A binary min-heap implements a priority queue by inserting and deleting
 nodes into a binary tree such that the parent of any node is always less than its children.
 
 - `BinaryHeap()` constructs an empty priority queue.
@@ -18,7 +18,7 @@ Time Complexity:
 - O(1) per call to the first constructor, `size()`, `empty()`, and `top()`.
 - O(log n) per call to `push()` and `pop()`, where $n$ is the number of elements in the priority
   queue.
-- O(n) per call to the second constructor on the distance between lo and hi (bottom-up heapify).
+- O(n) per call to the second constructor on the distance between `lo` and `hi` (bottom-up heapify).
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.

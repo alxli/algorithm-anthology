@@ -99,7 +99,6 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
     int type;
     It seg;
   };
-
   std::vector<Event> e;
   for (It it = lo; it != hi; ++it) {
     if (it->p > it->q) {
@@ -117,7 +116,6 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
     }
     return a.p.y < b.p.y;
   });
-
   auto ycmp = [](const auto &a, const auto &b, auto x) {
     // Compare y-values at sweep coordinate x without division:
     // y = (p.y*dx + dy*(x - p.x)) / dx. Vertical segments use their lower endpoint.
@@ -135,7 +133,6 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
     auto lhs = ay * bdx, rhs = by * adx;
     return (lhs < rhs) ? -1 : ((rhs < lhs) ? 1 : 0);
   };
-
   auto cmp = [lo, ycmp](It a, It b) {
     if (a == b) {
       return false;

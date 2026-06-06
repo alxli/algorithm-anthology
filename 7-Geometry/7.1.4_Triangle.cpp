@@ -1,14 +1,14 @@
 /*
 
 Common triangle calculations in two dimensions. The functions are templated on the point type `Pt`,
-which should work with `Point`/ `PointD`/`PointI` from 7.1.1, std::pair, or any struct with numeric
+which should work with `Point`/ `PointD`/`PointI` from 7.1.1 or any struct with numeric
 `.x` and `.y` fields. `triangle_area()` returns `double` regardless of input type (the area is
 fractional via the `/2`). `same_side()` and `point_in_triangle()` do all arithmetic in the point's
 own coordinate type and are exact for integer points: they reduce each cross product to a sign
 before combining, so no precision is lost and no overflow occurs from multiplying cross products.
 
 Note: with an integer point type, coordinates must be integers - fractional literals like `-2.44`
-cannot be represented (and brace-initialization `PointI{-2.44, ...}` is a narrowing error). Use a
+cannot be represented. Use a
 floating-point point type for fractional coordinates.
 
 - `triangle_area(a, b, c)` returns the area of the triangle $abc$.
@@ -92,29 +92,31 @@ bool point_in_triangle(const Pt &p, const Pt &a, const Pt &b, const Pt &c) {
 
 struct Point {
   double x, y;
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
 };
 
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {
-  assert(EQ(6, triangle_area(Point{0, -1}, Point{4, -1}, Point{0, -4})));
+  assert(EQ(6, triangle_area(Point(0, -1), Point(4, -1), Point(0, -4))));
   assert(EQ(6, triangle_area_sides(3, 4, 5)));
   assert(EQ(6, triangle_area_medians(3.605551275, 2.5, 4.272001873)));
   assert(EQ(6, triangle_area_altitudes(3, 4, 2.4)));
 
   // Fractional coordinates require a floating-point point type.
-  assert(point_in_triangle(Point{0, 0}, Point{-1, 0}, Point{0, -2}, Point{4, 0}));
-  assert(!point_in_triangle(Point{0, 1}, Point{-1, 0}, Point{0, -2}, Point{4, 0}));
-  assert(point_in_triangle(Point{-2.44, 0.82}, Point{-1, 0}, Point{-3, 1}, Point{4, 0}));
-  assert(!point_in_triangle(Point{-2.44, 0.7}, Point{-1, 0}, Point{-3, 1}, Point{4, 0}));
+  assert(point_in_triangle(Point(0, 0), Point(-1, 0), Point(0, -2), Point(4, 0)));
+  assert(!point_in_triangle(Point(0, 1), Point(-1, 0), Point(0, -2), Point(4, 0)));
+  assert(point_in_triangle(Point(-2.44, 0.82), Point(-1, 0), Point(-3, 1), Point(4, 0)));
+  assert(!point_in_triangle(Point(-2.44, 0.7), Point(-1, 0), Point(-3, 1), Point(4, 0)));
 
   // Integer coordinates: same_side / point_in_triangle are computed exactly in int.
-  assert(EQ(8, triangle_area(PointI{0, 0}, PointI{4, 0}, PointI{0, 4})));
-  assert(point_in_triangle(PointI{1, 1}, PointI{0, 0}, PointI{4, 0}, PointI{0, 4}));
-  assert(!point_in_triangle(PointI{5, 5}, PointI{0, 0}, PointI{4, 0}, PointI{0, 4}));
-  assert(point_in_triangle(PointI{2, 2}, PointI{0, 0}, PointI{4, 0}, PointI{0, 4}));  // on edge
+  assert(EQ(8, triangle_area(PointI(0, 0), PointI(4, 0), PointI(0, 4))));
+  assert(point_in_triangle(PointI(1, 1), PointI(0, 0), PointI(4, 0), PointI(0, 4)));
+  assert(!point_in_triangle(PointI(5, 5), PointI(0, 0), PointI(4, 0), PointI(0, 4)));
+  assert(point_in_triangle(PointI(2, 2), PointI(0, 0), PointI(4, 0), PointI(0, 4)));  // on edge
 
   return 0;
 }

@@ -9,7 +9,7 @@ target when all values are nonnegative, and finding the longest subarray with at
 values.
 
 - `min_length_at_least(a, target)` returns the minimum length of a contiguous subarray with sum at
-  least `target`, or `-1` if none exists. Values in `a` must be nonnegative.
+  least `target`, or $-1$ if none exists. Values in `a` must be nonnegative.
 - `longest_at_most_k_distinct(a, k)` returns the maximum length of a contiguous subarray containing
   at most `k` distinct values.
 

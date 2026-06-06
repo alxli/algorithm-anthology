@@ -2,7 +2,7 @@
 
 Given two strings, determine their longest common subsequence. A subsequence is a string that can be
 derived from the original string by deleting some elements without changing the order of the
-remaining elements (e.g. "ACE" is a subsequence of "ABCDE", but "BAE" is not).
+remaining elements (e.g. `"ACE"` is a subsequence of `"ABCDE"`, but `"BAE"` is not).
 
 - `longest_common_subsequence(s1, s2)` returns the longest common subsequence of strings `s1` and
   `s2` using a classic dynamic programming approach. This implementation computes $dp[i][j]$ (the

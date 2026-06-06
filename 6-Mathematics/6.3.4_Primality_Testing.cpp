@@ -97,7 +97,7 @@ bool is_probable_prime(long long n, int k = 20) {
 }
 
 bool is_prime_fast(long long n) {
-  static const int np = 9, p[] = {2, 3, 5, 7, 11, 13, 17, 19, 23};
+  static const int np = 12, p[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
   for (int i = 0; i < np; i++) {
     if (n % p[i] == 0) {
       return n == p[i];

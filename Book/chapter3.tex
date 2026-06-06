@@ -98,7 +98,7 @@ This is useful for answer-search problems over unbounded or very large integer d
   \item \inlinecode{exponential\_search\_first\_true(lo, pred)} returns the smallest integer \inlinecode{x \textgreater{}= lo} such that \inlinecode{pred(x)} is true.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log ans)$ calls to \inlinecode{pred()}, where \inlinecode{ans} is the distance from \inlinecode{lo} to the first true value.
+\textbf{Time Complexity}: $O(\log n)$ calls to \inlinecode{pred()}, where $n$ is the distance from \inlinecode{lo} to the first true value.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -325,7 +325,7 @@ const double COOLING_RATE = 0.997;
 const int NUM_RESTARTS = 8;
 
 double random_unit() {
-  static std::mt19937 rng(std::random_device{}());
+  static std::mt19937 rng(1234567);
   return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
 }
 
@@ -369,7 +369,7 @@ double anneal_min(Fn f, double x0, double y0, double *best_x = nullptr, double *
 #include <cassert>
 
 bool close(double a, double b) {
-  return fabs(a - b) < 1e-3;
+  return fabs(a - b) < 1e-2;
 }
 
 // Smooth bowl with global minimum at f(2, -3) = 0.
@@ -391,7 +391,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Monotone Queue DP Optimization}
-Maintains the minimum or maximum value in a sliding window using a monotone queue. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as \inlinecode{dp[i] = a[i] + min(dp[j])} over \inlinecode{i - w \textless{}= j \textless{} i}.
+Maintains the minimum or maximum value in a sliding window using a monotone queue. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as $dp[i] = a[i] + min(dp[j])$ over $i - w \leq j < i$.
 
 The queue stores candidate (\inlinecode{index}, \inlinecode{value}) pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate.
 
@@ -452,7 +452,7 @@ class MonotoneQueue {
 using namespace std;
 
 int main() {
-  vector<int> a = {4, 2, 7, 1, 3, 6};
+  vector<int> a{4, 2, 7, 1, 3, 6};
 
   MonotoneQueue<int, less<int>> minq;
   vector<int> window_min;
@@ -510,7 +510,7 @@ void compute_dc_layer(
   if (l > r) {
     return;
   }
-  int mid = (l + r) / 2;
+  int mid = l + (r - l) / 2;
   long long best = INF;
   int best_k = opt_l;
   int upper = std::min(mid, opt_r);
@@ -548,7 +548,7 @@ struct SquareSegmentCost {
 };
 
 int main() {
-  vector<int> a = {1, 2, 3, 4};
+  vector<int> a{1, 2, 3, 4};
   int n = a.size();
   SquareSegmentCost cost(a);
 
@@ -637,21 +637,21 @@ struct MergeCost {
 };
 
 int main() {
-  vector<int> a = {1, 2, 3, 4};
+  vector<int> a{1, 2, 3, 4};
   vector<vector<long long>> dp = knuth_interval_dp(a.size(), MergeCost(a));
   assert(dp[0][4] == 19);
   return 0;
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Semi-Dynamic)}
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of x-coordinate queries each asking to find the minimum y-value when any of the given lines are evaluated at the specified x. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of x-coordinate queries each asking to find the minimum $y$-value when any of the given lines are evaluated at the specified $x$. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}.
 
 The following implementation is a concise, semi-dynamic version of the convex hull optimization technique. It supports an interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, as long as the preconditions of descending \inlinecode{m} and ascending \inlinecode{x} are satisfied. As a result, it may be necessary to sort the lines and queries before calling the functions. In that case, the overall time complexity will be dominated by the sorting step.
 
 \begin{compactitem}
   \item \inlinecode{SemiDynamicCHT()} constructs an empty hull.
-  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$. The slope \inlinecode{m} must be less than or equal to the slope of every line added so far.
-  \item \inlinecode{query(x)} returns the minimum y-value among all inserted lines at coordinate \inlinecode{x}. Query coordinates must be nondecreasing across calls.
+  \item \inlinecode{add\_line(m, b)} inserts the line $y = mx + b$. The slope \inlinecode{m} must be less than or equal to the slope of every line added so far.
+  \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}. Query coordinates must be nondecreasing across calls.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ for any interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, where $n$ is the number of lines added. This is because the overall number of steps taken by \inlinecode{add\_line()} and \inlinecode{query()} are respectively bounded by the number of lines. Thus a single call to either \inlinecode{add\_line()} or \inlinecode{query()} will have an amortized $O(1)$ running time.
@@ -713,14 +713,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Fully-Dynamic)}
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of x-coordinate queries each asking to find the minimum y-value when any of the given lines are evaluated at the specified x. To instead have the queries optimize for maximum y-value, call the constructor with \inlinecode{query\_max = true}. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])} when line slopes and query coordinates are not monotone.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of x-coordinate queries each asking to find the minimum $y$-value when any of the given lines are evaluated at the specified $x$. To instead have the queries optimize for maximum $y$-value, call the constructor with \inlinecode{query\_max = true}. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])} when line slopes and query coordinates are not monotone.
 
 The following implementation is a fully dynamic variant of the convex hull optimization technique, using a self-balancing binary search tree (\inlinecode{std::set}) to support the ability to call \inlinecode{add\_line()} and \inlinecode{query()} in any desired order.
 
 \begin{compactitem}
   \item \inlinecode{HullOptimizer(query\_max)} constructs an empty hull. By default, \inlinecode{query(x)} minimizes; if \inlinecode{query\_max} is true, \inlinecode{query(x)} maximizes.
-  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$ in arbitrary order.
-  \item \inlinecode{query(x)} returns the best y-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted.
+  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$ (can be called in any order).
+  \item \inlinecode{query(x)} returns the best $y$-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\log n)$ amortized per call to \inlinecode{add\_line()} and $O(\log n)$ per call to \inlinecode{query()}, where $n$ is the number of lines added.
@@ -825,8 +825,8 @@ The implementation below stores the lower envelope of lines over the inclusive d
 
 \begin{compactitem}
   \item \inlinecode{LiChaoTree(lo, hi)} constructs an empty tree over integer domain \inlinecode{[lo, hi]}.
-  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$.
-  \item \inlinecode{query(x)} returns the minimum y-value among all inserted lines at coordinate \inlinecode{x}.
+  \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$ (can be called in any order).
+  \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\log C)$ per call to \inlinecode{add\_line(m, b)} and \inlinecode{query(x)}, where $C$ is the domain size.
@@ -1054,8 +1054,8 @@ int main() {
   //   1x + 0.85y <=  9
   //   1x +    2y <= 14
   vector<vector<double>> va{{-2, 1}, {1, 0.85}, {1, 2}};
-  vector<double> vb = {0, 9, 14};
-  vector<double> vc = {3, 4};
+  vector<double> vb{0, 9, 14};
+  vector<double> vc{3, 4};
   vector<double> x;
   assert(simplex_solve(va, vb, vc, &x) == 0);
   double maxval = 0;

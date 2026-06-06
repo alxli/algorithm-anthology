@@ -157,7 +157,7 @@ std::pair<Edge *, Edge *> build_triangulation(
     }
     return {c->rev(), c};
   }
-  int mid = (lo + hi) / 2;
+  int mid = lo + (hi - lo) / 2;
   auto [ldo, ldi] = build_triangulation(p, lo, mid, pool);
   auto [rdi, rdo] = build_triangulation(p, mid + 1, hi, pool);
   for (;;) {
@@ -271,6 +271,7 @@ using namespace std;
 
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
 };
 
 int main() {

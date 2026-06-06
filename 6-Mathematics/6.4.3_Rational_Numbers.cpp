@@ -2,15 +2,17 @@
 
 Perform operations on Rational numbers internally represented as two integers, a numerator and a
 denominator. The template integer type must support streamed input/output, comparisons, and
-arithmetic operations. Overflow is not checked for in internal operations.
+arithmetic operations. Overflow is not checked for in internal operations: comparisons and
+arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type
+(such as `__int128`) if the values may grow large.
 
 - `Rational(n)` constructs a Rational with numerator `n` and denominator 1.
 - `Rational(n, d)` constructs a Rational with numerator `n` and denominator `d`.
-- `operator >>` inputs a Rational using the next integer from the stream as the numerator and 1 as
+- `operator>>` inputs a Rational using the next integer from the stream as the numerator and 1 as
   the denominator.
-- `operator <<` outputs a Rational as a string consisting of possibly a minus sign followed by the
+- `operator<<` outputs a Rational as a string consisting of possibly a minus sign followed by the
   numerator, followed by a slash, followed by the denominator.
-- `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the big integer `v`
+- `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the rational `v`
   converted to an `std::string`, `long long`, `double`, and `long double` respectively.
 - Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
   `/=`, and `%=` are defined analogous to those on numerical primitives.
@@ -60,7 +62,6 @@ class Rational {
   }
 
   friend std::istream &operator>>(std::istream &in, Rational &r) {
-    std::string s;
     in >> r.num;
     r.den = 1;
     return in;
@@ -73,12 +74,12 @@ class Rational {
 
   std::string to_string() const {
     std::stringstream ss;
-    ss << num << " " << den;
-    std::string n, d;
-    ss >> n >> d;
-    return n + "/" + d;
+    ss << num << "/" << den;
+    return ss.str();
   }
 
+  // to_llong/to_double/to_ldouble round-trip through a stringstream so that any Int supporting
+  // streamed I/O (e.g. a big-integer type) converts, even without a direct cast to the target type.
   long long to_llong() const {
     std::stringstream ss;
     ss << num << " " << den;

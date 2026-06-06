@@ -4,7 +4,7 @@ These functions are equivalent to `std::sort()`, taking random-access iterators 
 `[lo, hi)` to be sorted. Elements between `lo` and `hi` (including the element pointed to by `lo`
 but excluding the element pointed to by `hi`) will be sorted into ascending order after the function
 call. Optionally, a comparison function object specifying a strict weak ordering may be specified to
-replace the default `operator <`.
+replace the default `operator<`.
 
 These functions are not meant to compete with standard library implementations in terms of speed.
 Instead, they are meant to demonstrate how common sorting algorithms can be concisely implemented
@@ -70,7 +70,7 @@ void quicksort(It lo, It hi) {
 
 Merge sort first divides a list into n sublists of one element each, then recursively merges the
 sublists into sorted order until only a single sorted sublist remains. Merge sort is a stable sort,
-meaning that it preserves the relative order of elements which compare equal by `operator <` or the
+meaning that it preserves the relative order of elements which compare equal by `operator<` or the
 custom comparator given.
 
 An analogous function in the C++ standard library is `std::stable_sort()`, except that the
@@ -226,7 +226,7 @@ $2^8$ is the best choice for sorting 32-bit integers (approximately 5 times fast
 the base).
 
 Time Complexity: O(n*w) for $n$ integers of $w$ bits each.
-Space Complexity: O(n + w) auxiliary.
+Space Complexity: O(n + 2^b) auxiliary for a radix of $b$ bits, i.e. O(n) for constant $b$.
 
 */
 
@@ -325,7 +325,7 @@ int main() {
     assert(sorted(v.begin(), v.end()));
   }
   {  // Must use radix_sort with unsigned values, but sorting in reverse works!
-    vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};
+    vector<unsigned int> v{32, 71, 12, 45, 26, 80, 53, 33};
     radix_sort(v.rbegin(), v.rend());
     assert(sorted(v.rbegin(), v.rend()));
   }

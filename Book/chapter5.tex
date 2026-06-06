@@ -412,11 +412,10 @@ int main() {
 \subsection{Centroid Decomposition}
 Given a tree, build its centroid decomposition. A centroid is a node whose removal splits the current subtree into connected components of size at most half of that subtree. Recursively choosing centroids creates a decomposition tree of height $O(\log n)$, which is useful for queries based on distances to marked nodes, nearest special node, and other ``path through a centroid'' problems.
 
-\inlinecode{build\_centroid\_tree()} applies to a global, pre-populated adjacency list \inlinecode{adj} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}.
-
 \begin{compactitem}
+  \item \inlinecode{build\_centroid\_tree()} applies to a global, pre-populated adjacency list \inlinecode{adj} which satisfies the precondition that for every node $v$ in \inlinecode{adj[u]}, node $u$ also exists in \inlinecode{adj[v]}.
   \item \inlinecode{centroid\_parent[u]} stores the parent of node $u$ in the centroid tree.
-  \item The root centroid has parent \inlinecode{-1}.
+  \item The root centroid has parent $-1$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{build\_centroid\_tree()}, where $n$ is the number of nodes.

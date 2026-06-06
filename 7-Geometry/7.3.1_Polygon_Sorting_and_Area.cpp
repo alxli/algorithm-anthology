@@ -1,14 +1,9 @@
 /*
 
 Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the
-area.
-
-The functions below are templated on the point type. The local `Point` struct (`double` coordinates)
+area. The functions are templated on the point type. The local `Point` struct (`double` coordinates)
 is the default; replace it with `Point`/`PointD`/ `PointI` from 7.1.1 or any struct with numeric
 `.x` and `.y` fields and `<` / `==` operators.
-
-`polygon_area_2x` returns twice the area as the coordinate type - exact for integer points (avoids
-floating-point entirely). `polygon_area` always returns `double`.
 
 - `mean_center(lo, hi)` returns the arithmetic mean of a range of points (as the local `Point` type
   with `double` coordinates).
@@ -37,38 +32,31 @@ Space Complexity:
 const double EPS = 1e-9;
 
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define GE(a, b) ((a) >= (b) - EPS)
 
-template<class Pt>
-auto sqnorm(const Pt &a) {
-  return a.x * a.x + a.y * a.y;
-}
-
-template<class Pt>
-auto cross(const Pt &a, const Pt &b) {
-  return a.x * b.y - a.y * b.x;
-}
-
+// Comparator (clockwise angular order about c). Exact: comparisons are pure sign tests on
+// coordinate differences and the cross product, so it is a valid strict weak ordering and is
+// exact for integer-coordinate points.
 template<class Pt>
 bool cw_comp(const Pt &a, const Pt &b, const Pt &c) {
-  if (GE(a.x - c.x, 0) && LT(b.x - c.x, 0)) {
+  if (a.x - c.x >= 0 && b.x - c.x < 0) {
     return true;
   }
-  if (LT(a.x - c.x, 0) && GE(b.x - c.x, 0)) {
+  if (a.x - c.x < 0 && b.x - c.x >= 0) {
     return false;
   }
-  if (EQ(a.x - c.x, 0) && EQ(b.x - c.x, 0)) {
-    if (GE(a.y - c.y, 0) || GE(b.y - c.y, 0)) {
+  if (a.x - c.x == 0 && b.x - c.x == 0) {
+    if (a.y - c.y >= 0 || b.y - c.y >= 0) {
       return a.y > b.y;
     }
     return b.y > a.y;
   }
-  Pt ac{a.x - c.x, a.y - c.y};
-  Pt bc{b.x - c.x, b.y - c.y};
-  auto det = cross(ac, bc);
-  if (EQ(det, 0)) {
-    return sqnorm(ac) > sqnorm(bc);
+  auto acx = a.x - c.x, acy = a.y - c.y;
+  auto bcx = b.x - c.x, bcy = b.y - c.y;
+  auto det = acx * bcy - acy * bcx;
+  if (det == 0) {
+    auto acnorm = acx * acx + acy * acy;
+    auto bcnorm = bcx * bcx + bcy * bcy;
+    return acnorm > bcnorm;
   }
   return det < 0;
 }
@@ -118,6 +106,7 @@ struct Point {
 
 struct PointI {
   int x, y;
+  PointI(int x = 0, int y = 0) : x(x), y(y) {}
   bool operator==(const PointI &p) const { return x == p.x && y == p.y; }
   bool operator!=(const PointI &p) const { return !(*this == p); }
   bool operator<(const PointI &p) const { return x != p.x ? x < p.x : y < p.y; }
@@ -140,7 +129,7 @@ Point mean_center(It lo, It hi) {
 int main() {
   vector<Point> points{Point(1, 3), Point(1, 2), Point(2, 1), Point(0, 0), Point(-1, 3)};
   vector<Point> v(points);
-  std::mt19937 rng(12345);
+  std::mt19937 rng(1234567);
   std::shuffle(v.begin(), v.end(), rng);
   Point c = mean_center(v.begin(), v.end());
   assert(EQ(c.x, 0.6) && EQ(c.y, 1.8));

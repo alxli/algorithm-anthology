@@ -8,7 +8,7 @@ two functions are each techniques to efficiently count inversions.
 
 - `inversions(lo, hi)` uses merge sort to return the number of inversions given two random-access
   iterators as a range `[lo, hi)`. The input range will be sorted after the function call. This
-  requires `operator <` to be defined on the iterators' value type.
+  requires `operator<` to be defined on the iterators' value type.
 - `inversions(a)` uses coordinate compression and a Fenwick tree to return the number of
   inversions in an integer vector without modifying it.
 

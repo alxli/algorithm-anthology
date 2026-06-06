@@ -97,18 +97,12 @@ struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
   bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
 };
 
 struct PointI {
   int x, y;
   PointI(int x = 0, int y = 0) : x(x), y(y) {}
   bool operator==(const PointI &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const PointI &p) const { return !(*this == p); }
-  bool operator<(const PointI &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const PointI &p) const { return p < *this; }
 };
 
 int main() {
@@ -123,7 +117,7 @@ int main() {
   pair<PointI, PointI> ires;
   assert(closest_pair(iv.begin(), iv.end(), &ires) == 25);  // (0,0)-(3,4) or (3,4)-(0,0)
   auto [i1, i2] = ires;
-  assert((i1 == PointI{0, 0} && i2 == PointI{3, 4}) || (i1 == PointI{3, 4} && i2 == PointI{0, 0}));
+  assert((i1 == PointI(0, 0) && i2 == PointI(3, 4)) || (i1 == PointI(3, 4) && i2 == PointI(0, 0)));
 
   return 0;
 }

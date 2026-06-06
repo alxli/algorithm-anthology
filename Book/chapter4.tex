@@ -1111,7 +1111,7 @@ class Manacher {
     if (len <= 0) {
       return true;
     }
-    int mid = (lo + hi) / 2;
+    int mid = lo + (hi - lo) / 2;
     return (len % 2) ? odd[mid] >= len / 2 + 1 : even[mid] >= len / 2;
   }
 
@@ -1235,7 +1235,7 @@ int main() {
 \subsection{Recursive Descent Parsing (Generic)}
 Evaluate an expression using a generalized parser class for custom-defined operand types, prefix unary operators, binary operators, and precedences. Typical parentheses behavior is supported, but multiplication by juxtaposition is not. Evaluation is performed using the recursive descent algorithm.
 
-An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator \inlinecode{-}.
+An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting $-1$ as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator \inlinecode{-}.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
 
@@ -1250,15 +1250,15 @@ Operators may be non-empty strings of any length, but should not contain any par
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
-  \item $O(nmk)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
+  \item $O(n \cdot m \cdot k)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
   \item $O(n)$ expected per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(nmk + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
+  \item $O(n \cdot m \cdot k + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(mk)$ for storage of the $m$ operators, of maximum length $k$.
+  \item $O(m \cdot k)$ for storage of the $m$ operators, of maximum length $k$.
   \item $O(n)$ auxiliary stack space for \inlinecode{split(s)}, \inlinecode{eval(lo, hi)}, and \inlinecode{eval(s)}, where $n$ is the length of the argument.
 \end{compactitem}
 
@@ -1479,7 +1479,7 @@ int main() {
 \subsection{Shunting Yard Parsing}
 Evaluate an expression using a generalized parser class for custom-defined operand types, prefix unary operators, binary operators, and precedences. Typical parentheses behavior is supported, but multiplication by juxtaposition is not. Evaluation is performed using the shunting yard algorithm.
 
-An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator \inlinecode{-}.
+An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting $-1$ as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator \inlinecode{-}.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
 
@@ -1494,15 +1494,15 @@ Operators may be non-empty strings of any length, but should not contain any par
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
-  \item $O(nmk)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
+  \item $O(n \cdot m \cdot k)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
   \item $O(n)$ expected per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(nmk + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
+  \item $O(n \cdot m \cdot k + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(mk)$ for storage of the $m$ operators, of maximum length $k$.
+  \item $O(m \cdot k)$ for storage of the $m$ operators, of maximum length $k$.
   \item $O(n)$ auxiliary stack space for \inlinecode{split(s)}, \inlinecode{eval(lo, hi)}, and \inlinecode{eval(s)}, where $n$ is the length of the argument.
 \end{compactitem}
 
@@ -1784,7 +1784,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Longest Common Subsequence}
-Given two strings, determine their longest common subsequence. A subsequence is a string that can be derived from the original string by deleting some elements without changing the order of the remaining elements (e.g. ``ACE'' is a subsequence of ``ABCDE'', but ``BAE'' is not).
+Given two strings, determine their longest common subsequence. A subsequence is a string that can be derived from the original string by deleting some elements without changing the order of the remaining elements (e.g. \inlinecode{"ACE"} is a subsequence of \inlinecode{"ABCDE"}, but \inlinecode{"BAE"} is not).
 
 \begin{compactitem}
   \item \inlinecode{longest\_common\_subsequence(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using a classic dynamic programming approach. This implementation computes $dp[i][j]$ (the length of the longest common subsequence for the length $i$ prefix of \inlinecode{s1} and the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer.
@@ -1910,7 +1910,7 @@ Given two strings, determine their minimum-cost alignment. An alignment of two s
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of s1 and s2, respectively.
+  \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
   \item $O(\log \max\left(n, m\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 \end{compactitem}
 
@@ -2051,9 +2051,9 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Suffix Array and LCP (Manber-Myers)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes ``cab'', ``ab'', and ``b''. When sorted, the indices of the suffixes are ``ab'', ``b'', and ``cab'', so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
 
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, ``baa'' has the sorted suffixes ``a'', ``aa'', and ``baa'', with an LCP array of \inlinecode{[1, 0]}.
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
   \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a comparison-based sort.
@@ -2166,9 +2166,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Counting Sort)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes ``cab'', ``ab'', and ``b''. When sorted, the indices of the suffixes are ``ab'', ``b'', and ``cab'', so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
 
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, ``baa'' has the sorted suffixes ``a'', ``aa'', and ``baa'', with an LCP array of \inlinecode{[1, 0]}.
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
   \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a counting sort instead of a comparison-based sort to reduce the running time to $O(n \log n)$.
@@ -2288,9 +2288,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Linear DC3)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes ``cab'', ``ab'', and ``b''. When sorted, the indices of the suffixes are ``ab'', ``b'', and ``cab'', so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
 
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, ``baa'' has the sorted suffixes ``a'', ``aa'', and ``baa'', with an LCP array of \inlinecode{[1, 0]}.
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
   \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
