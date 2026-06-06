@@ -653,6 +653,8 @@ The following implementation is a concise, semi-dynamic version of the convex hu
   \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}. Query coordinates must be nondecreasing across calls.
 \end{compactitem}
 
+Overflow warning: \inlinecode{add\_line()} compares intersections by cross-multiplying slope and intercept differences, a product on the order of the squared coefficient magnitude. For large \inlinecode{m}/\inlinecode{b} (roughly beyond $10^9$ with 64-bit \inlinecode{long long}), cast that comparison to \inlinecode{\_\_int128}. \inlinecode{query()} only forms the single product \inlinecode{m * x}, which simply needs to fit in \inlinecode{long long}.
+
 \textbf{Time Complexity}: $O(n)$ for any interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, where $n$ is the number of lines added. This is because the overall number of steps taken by \inlinecode{add\_line()} and \inlinecode{query()} are respectively bounded by the number of lines. Thus a single call to either \inlinecode{add\_line()} or \inlinecode{query()} will have an amortized $O(1)$ running time.
 
 \Needspace*{3\baselineskip}
@@ -682,6 +684,7 @@ struct SemiDynamicCHT {
         ptr = len;
       }
     }
+    // Overflow risk: this cross-multiplication is ~O(coeff^2); cast to __int128 for large m/b.
     while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
                           (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
       len--;

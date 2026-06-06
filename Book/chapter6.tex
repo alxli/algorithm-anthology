@@ -15,8 +15,8 @@ On a C++11-or-later compiler, prefer the standard \inlinecode{std::} equivalent 
 #include <cfloat>
 #include <climits>
 #include <cmath>
-#include <cstdlib>
 #include <limits>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -153,7 +153,8 @@ Double round_half_alternate0(const Double &x) {
 
 template<class Double>
 Double round_half_random(const Double &x) {
-  return (rand() % 2 == 0) ? round_half_from0(x) : round_half_to0(x);
+  static std::mt19937 rng(std::random_device{}());
+  return (rng() % 2 == 0) ? round_half_from0(x) : round_half_to0(x);
 }
 
 template<class Double, class RoundingFunction>
@@ -2255,7 +2256,7 @@ bool is_probable_prime(long long n, int k = 20) {
     s >>= 1;
   }
   for (int i = 0; i < k; i++) {
-    uint64 x, r = powmod(rand64u() % p + 1, s, n);
+    uint64 x, r = powmod(rand64u() % (n - 3) + 2, s, n);  // random witness base in [2, n - 2]
     for (x = s; x != p && r != 1 && r != p; x <<= 1) {
       r = mulmod(r, r, n);
     }
@@ -2498,7 +2499,7 @@ long long pollards_rho_brent(long long n) {
   return g;
 }
 
-bool is_prime(long long n) {
+bool is_prime_fast(long long n) {
   static const int np = 12, p[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
   for (int i = 0; i < np; i++) {
     if (n % p[i] == 0) {
@@ -2549,7 +2550,7 @@ std::vector<long long> prime_factorize_big(
     }
     w = 6 - w;
   }
-  for (long long p; n > trial_division_cutoff && !is_prime(n); n /= p) {
+  for (long long p; n > trial_division_cutoff && !is_prime_fast(n); n /= p) {
     do {
       p = pollards_rho_brent(n);
     } while (p == n);
@@ -2570,13 +2571,13 @@ std::vector<long long> prime_factorize_big(
 using namespace std;
 
 void validate(long long n, const vector<long long> &factors) {
-  if (n == 1 || is_prime(n)) {
+  if (n == 1 || is_prime_fast(n)) {
     assert(factors == vector<long long>(1, n));
     return;
   }
   long long prod = 1;
   for (long long f : factors) {
-    assert(is_prime(f));
+    assert(is_prime_fast(f));
     prod *= f;
   }
   assert(prod == n);
@@ -2694,6 +2695,9 @@ Binary exponentiation, also known as exponentiation by squaring, decomposes the 
 \begin{lstlisting}[language=C++]
 using uint64 = unsigned long long;
 
+// Hot path: Can simply `return (unsigned __int128)x * n % m;` for a major constant-factor speedup
+// if the GCC/Clang __int128 extension is available. Otherwise, use the portable double-and-add
+// version below, which still won't overflow a signed 64-bit `long long`.
 uint64 mulmod(uint64 x, uint64 n, uint64 m) {
   uint64 a = 0, b = x % m;
   for (; n > 0; n >>= 1) {
@@ -4959,7 +4963,7 @@ Finds every complex root $x$ for a polynomial $p$ with complex coefficients such
 
 \begin{lstlisting}[language=C++]
 #include <complex>
-#include <cstdlib>
+#include <random>
 #include <vector>
 
 using cdouble = std::complex<double>;
@@ -5017,8 +5021,10 @@ std::vector<cdouble> find_all_roots(
 ) {
   std::vector<cdouble> res;
   cpoly q = p;
+  static std::mt19937 rng(std::random_device{}());
+  std::uniform_real_distribution<double> unit(0.0, 1.0);
   while (q.size() > 2) {
-    cdouble z = cdouble(rand(), rand()) / static_cast<double>(RAND_MAX);
+    cdouble z(unit(rng), unit(rng));
     z = find_one_root(p, find_one_root(q, z, EPS, ITERATIONS), EPS, ITERATIONS);
     q = horner_eval(q, z).second;
     res.push_back(z);

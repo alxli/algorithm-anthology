@@ -30,7 +30,7 @@ Space Complexity:
 */
 
 #include <complex>
-#include <cstdlib>
+#include <random>
 #include <vector>
 
 using cdouble = std::complex<double>;
@@ -88,8 +88,10 @@ std::vector<cdouble> find_all_roots(
 ) {
   std::vector<cdouble> res;
   cpoly q = p;
+  static std::mt19937 rng(std::random_device{}());
+  std::uniform_real_distribution<double> unit(0.0, 1.0);
   while (q.size() > 2) {
-    cdouble z = cdouble(rand(), rand()) / static_cast<double>(RAND_MAX);
+    cdouble z(unit(rng), unit(rng));
     z = find_one_root(p, find_one_root(q, z, EPS, ITERATIONS), EPS, ITERATIONS);
     q = horner_eval(q, z).second;
     res.push_back(z);

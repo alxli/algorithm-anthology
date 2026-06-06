@@ -17,6 +17,11 @@ will be dominated by the sorting step.
 - `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`. Query
   coordinates must be nondecreasing across calls.
 
+Overflow warning: `add_line()` compares intersections by cross-multiplying slope and intercept
+differences, a product on the order of the squared coefficient magnitude. For large `m`/`b` (roughly
+beyond $10^9$ with 64-bit `long long`), cast that comparison to `__int128`. `query()` only forms the
+single product `m * x`, which simply needs to fit in `long long`.
+
 Time Complexity:
 - O(n) for any interlaced sequence of `add_line()` and `query()` calls, where $n$ is the number of
   lines added. This is because the overall number of steps taken by `add_line()` and `query()` are
@@ -48,6 +53,7 @@ struct SemiDynamicCHT {
         ptr = len;
       }
     }
+    // Overflow risk: this cross-multiplication is ~O(coeff^2); cast to __int128 for large m/b.
     while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
                           (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
       len--;

@@ -963,6 +963,9 @@ auto cross(const Pt &a, const Pt &b, const Pt &o = Pt(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
+// Built on cross(a, b, o), whose sign is the opposite of the path-direction cross product, so a
+// positive cross here is a right turn: this returns +1 for right/clockwise (NOT the more common
+// +1 = counter-clockwise convention), -1 for left/counter-clockwise, and 0 if collinear.
 template<class Pt>
 int turn(const Pt &a, const Pt &o, const Pt &b) {
   auto c = cross(a, b, o);

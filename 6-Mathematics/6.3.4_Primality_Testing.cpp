@@ -88,7 +88,7 @@ bool is_probable_prime(long long n, int k = 20) {
     s >>= 1;
   }
   for (int i = 0; i < k; i++) {
-    uint64 x, r = powmod(rand64u() % p + 1, s, n);
+    uint64 x, r = powmod(rand64u() % (n - 3) + 2, s, n);  // random witness base in [2, n - 2]
     for (x = s; x != p && r != 1 && r != p; x <<= 1) {
       r = mulmod(r, r, n);
     }

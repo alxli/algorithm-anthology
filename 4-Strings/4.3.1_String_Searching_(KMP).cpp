@@ -2,7 +2,7 @@
 
 Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine
 the first positions in which the needle occurs within the given haystacks in linear time using the
-Knuth-Morris-Pratt algorithm. In comparison, `std::string::find` runs in quadratic time.
+Knuth-Morris-Pratt algorithm. In comparison, `std::string::find` runs in O(n^2) in the worst case.
 
 - `KMP(needle)` constructs the partial match table for a string `needle` that is to be searched for
   subsequently in `haystack` queries.

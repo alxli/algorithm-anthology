@@ -20,8 +20,8 @@ Space Complexity:
 #include <cfloat>
 #include <climits>
 #include <cmath>
-#include <cstdlib>
 #include <limits>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -174,7 +174,8 @@ Double round_half_alternate0(const Double &x) {
 
 template<class Double>
 Double round_half_random(const Double &x) {
-  return (rand() % 2 == 0) ? round_half_from0(x) : round_half_to0(x);
+  static std::mt19937 rng(std::random_device{}());
+  return (rng() % 2 == 0) ? round_half_from0(x) : round_half_to0(x);
 }
 
 template<class Double, class RoundingFunction>

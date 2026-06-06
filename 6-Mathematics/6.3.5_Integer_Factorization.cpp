@@ -174,7 +174,7 @@ long long pollards_rho_brent(long long n) {
   return g;
 }
 
-bool is_prime(long long n) {
+bool is_prime_fast(long long n) {
   static const int np = 12, p[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
   for (int i = 0; i < np; i++) {
     if (n % p[i] == 0) {
@@ -225,7 +225,7 @@ std::vector<long long> prime_factorize_big(
     }
     w = 6 - w;
   }
-  for (long long p; n > trial_division_cutoff && !is_prime(n); n /= p) {
+  for (long long p; n > trial_division_cutoff && !is_prime_fast(n); n /= p) {
     do {
       p = pollards_rho_brent(n);
     } while (p == n);
@@ -245,13 +245,13 @@ std::vector<long long> prime_factorize_big(
 using namespace std;
 
 void validate(long long n, const vector<long long> &factors) {
-  if (n == 1 || is_prime(n)) {
+  if (n == 1 || is_prime_fast(n)) {
     assert(factors == vector<long long>(1, n));
     return;
   }
   long long prod = 1;
   for (long long f : factors) {
-    assert(is_prime(f));
+    assert(is_prime_fast(f));
     prod *= f;
   }
   assert(prod == n);
