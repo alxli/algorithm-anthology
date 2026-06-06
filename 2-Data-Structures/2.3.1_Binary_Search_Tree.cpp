@@ -1,7 +1,7 @@
 /*
 
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
-once in the collection. This implementations requires an ordering on the set of possible keys
+once in the collection. This implementation requires an ordering on the set of possible keys
 defined by `operator<` on the key type. A binary search tree implements this map by inserting and
 deleting keys into a binary tree such that every node's left child has a lesser key and every node's
 right child has a greater key.
@@ -106,6 +106,8 @@ class BST {
   BST() : root(nullptr), num_nodes(0) {}
 
   ~BST() { clean_up(root); }
+  BST(const BST &) = delete;
+  BST &operator=(const BST &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 

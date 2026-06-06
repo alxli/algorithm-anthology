@@ -71,6 +71,9 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
   if (EQ(p.x, q.x) && EQ(p.y, q.y)) {
     throw std::runtime_error("Cannot cut using line from identical points.");
   }
+  if (lo == hi) {
+    return {};
+  }
   std::vector<Point> res;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     Point pj((double)j->x, (double)j->y), pi((double)i->x, (double)i->y);

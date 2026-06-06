@@ -167,6 +167,8 @@ class RadixTree {
   RadixTree() : root(new Node()), num_terminals(0) {}
 
   ~RadixTree() { clean_up(root); }
+  RadixTree(const RadixTree &) = delete;
+  RadixTree &operator=(const RadixTree &) = delete;
   int size() const { return num_terminals; }
   bool empty() const { return num_terminals == 0; }
 

@@ -77,6 +77,8 @@ class SkewHeap {
   }
 
   ~SkewHeap() { clean_up(root); }
+  SkewHeap(const SkewHeap &) = delete;
+  SkewHeap &operator=(const SkewHeap &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 

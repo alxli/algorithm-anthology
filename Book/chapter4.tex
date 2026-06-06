@@ -4,6 +4,15 @@
 \setcounter{section}{1}
 Common string functions, many of which are substitutes for features which are not available in standard C++, or may not be available on compilers that do not support C++11 and later. These operations are naive implementations and often depend on certain \inlinecode{std::string} functions that have unspecified complexity.
 
+\textbf{Time Complexity}: $O(n)$ per call to most operations, where $n$ is the length of the input string or total length of all input strings. Exceptions are noted with the individual helpers below.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary heap space per call to operations that return a new string or vector of strings.
+  \item $O(1)$ auxiliary space per call to in-place operations.
+\end{compactitem}
+
 \begin{lstlisting}[language=C++]
 #include <cctype>
 #include <sstream>
@@ -838,7 +847,7 @@ int main() {
 \subsection{String Searching (Z Algorithm)}
 Given a single string (needle) and a single text (haystack) to be searched, determine the first position in which the needle occurs within the haystack in linear time using the Z algorithm. In comparison, \inlinecode{std::string::find} runs in quadratic time.
 
-The \inlinecode{find()} function below calls the Z algorithm on the concatenation of \inlinecode{needle} and \inlinecode{haystack}, separated by a sentinel character (in this case \inlinecode{\textquotesingle{}\textbackslash{}0\textquotesingle{}}), which should be chosen such that it does not occur within either of the input strings.
+The \inlinecode{find()} function below calls the Z algorithm on the concatenation of \inlinecode{needle} and \inlinecode{haystack}, separated by a sentinel value that is guaranteed not to collide with any byte in either input.
 
 \begin{compactitem}
   \item \inlinecode{z\_array(s)} constructs the Z array for a string \inlinecode{needle} that can be used for string searching. The Z array on an input string \inlinecode{s} is an array \inlinecode{z} where \inlinecode{z[i]} is the length of the longest substring starting from \inlinecode{s[i]} which is also a prefix of \inlinecode{s}.
@@ -865,7 +874,8 @@ The \inlinecode{find()} function below calls the Z algorithm on the concatenatio
 #include <vector>
 using std::string;
 
-std::vector<int> z_array(const string &s) {
+template<class Seq>
+std::vector<int> z_array(const Seq &s) {
   std::vector<int> z(s.size());
   for (int i = 1, l = 0, r = 0; i < static_cast<int>(z.size()); i++) {
     if (i <= r) {
@@ -883,7 +893,19 @@ std::vector<int> z_array(const string &s) {
 }
 
 size_t find(const string &haystack, const string &needle) {
-  auto z = z_array(needle + '\0' + haystack);
+  if (needle.empty()) {
+    return 0;
+  }
+  std::vector<int> s;
+  s.reserve(needle.size() + haystack.size() + 1);
+  for (unsigned char c : needle) {
+    s.push_back(c + 1);
+  }
+  s.push_back(0);
+  for (unsigned char c : haystack) {
+    s.push_back(c + 1);
+  }
+  auto z = z_array(s);
   int m = static_cast<int>(needle.size());
   for (int i = m + 1; i < static_cast<int>(z.size()); i++) {
     if (z[i] == m) {
@@ -909,7 +931,7 @@ Given a set of strings (needles) and subsequent queries of texts (haystacks) to 
 This implementation stores transitions in hash tables, which keeps lookups expected constant time without assuming a fixed alphabet size. The output tables are stored as ordered sets so matches ending at the same position are reported in deterministic needle order.
 
 \begin{compactitem}
-  \item \inlinecode{AhoCorasick(needles)} constructs the finite-state automaton for a set of needle strings that are to be searched for subsequently in haystack queries.
+  \item \inlinecode{AhoCorasick(needles)} constructs the finite-state automaton for a set of needle strings that are to be searched for subsequently in haystack queries. Empty needles are ignored.
   \item \inlinecode{find\_all\_in(haystack, report\_match)} calls the function \inlinecode{report\_match(s, pos)} once on each occurrence of each needle that occurs in the \inlinecode{haystack}, where \inlinecode{pos} is the starting position in the \inlinecode{haystack} at which string \inlinecode{s} (a matched needle) occurs. The matches will be reported in increasing order of their ending positions within the \inlinecode{haystack}.
 \end{compactitem}
 
@@ -965,6 +987,9 @@ class AhoCorasick {
     out.resize(max_states);
     int states = 1;
     for (int i = 0; i < static_cast<int>(needles.size()); i++) {
+      if (needles[i].empty()) {
+        continue;
+      }
       int curr = 0;
       for (char c : needles[i]) {
         if (auto it = adj[curr].find(c); it != adj[curr].end()) {
@@ -2100,7 +2125,7 @@ class SuffixArray {
     int n = s.size();
     std::iota(sa.begin(), sa.end(), 0);
     for (int i = 0; i < n; i++) {
-      rk[i] = static_cast<int>(s[i]);
+      rk[i] = static_cast<unsigned char>(s[i]);
     }
     std::vector<std::pair<int, int>> rk2(n);
     for (int gap = 1; gap < n; gap *= 2) {
@@ -2138,6 +2163,9 @@ class SuffixArray {
   }
 
   size_t find(const string &needle) {
+    if (needle.empty()) {
+      return 0;
+    }
     int lo = 0, hi = static_cast<int>(s.size()) - 1;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
@@ -2218,9 +2246,11 @@ class SuffixArray {
     int n = s.size();
     std::iota(sa.rbegin(), sa.rend(), 0);
     for (int i = 0; i < n; i++) {
-      rk[i] = static_cast<int>(s[i]);
+      rk[i] = static_cast<unsigned char>(s[i]);
     }
-    std::stable_sort(sa.begin(), sa.end(), [&](int i, int j) { return s[i] < s[j]; });
+    std::stable_sort(sa.begin(), sa.end(), [&](int i, int j) {
+      return static_cast<unsigned char>(s[i]) < static_cast<unsigned char>(s[j]);
+    });
     for (int gap = 1; gap < n; gap *= 2) {
       std::vector<int> prev_rk(rk), prev_sa(sa), cnt(n);
       std::iota(cnt.begin(), cnt.end(), 0);
@@ -2263,6 +2293,9 @@ class SuffixArray {
   }
 
   size_t find(const string &needle) {
+    if (needle.empty()) {
+      return 0;
+    }
     int lo = 0, hi = static_cast<int>(s.size()) - 1;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
@@ -2422,15 +2455,18 @@ class SuffixArray {
  public:
   explicit SuffixArray(const string &s) : s(s), sa(s.size() + 1) {
     int n = s.size();
-    std::vector<int> scopy(s.begin(), s.end());
+    std::vector<int> scopy(n);
+    for (int i = 0; i < n; i++) {
+      scopy[i] = static_cast<unsigned char>(s[i]) + 1;
+    }
     scopy.resize(n + 4);
-    suffix_array_dc3(scopy.begin(), sa.begin(), n + 1, 255);
+    suffix_array_dc3(scopy.begin(), sa.begin(), n + 1, 256);
     sa.erase(sa.begin());
   }
 
-  std::vector<int> get_sa() { return sa; }
+  const std::vector<int> &get_sa() const { return sa; }
 
-  std::vector<int> get_lcp() {
+  std::vector<int> get_lcp() const {
     int n = s.size();
     if (n == 0) {
       return {};
@@ -2455,6 +2491,9 @@ class SuffixArray {
   }
 
   size_t find(const string &needle) {
+    if (needle.empty()) {
+      return 0;
+    }
     int lo = 0, hi = static_cast<int>(s.size()) - 1;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;
@@ -2588,6 +2627,8 @@ class Trie {
   Trie() : root(new Node()), num_terminals(0) {}
 
   ~Trie() { clean_up(root); }
+  Trie(const Trie &) = delete;
+  Trie &operator=(const Trie &) = delete;
   int size() const { return num_terminals; }
   bool empty() const { return num_terminals == 0; }
 
@@ -2842,6 +2883,8 @@ class RadixTree {
   RadixTree() : root(new Node()), num_terminals(0) {}
 
   ~RadixTree() { clean_up(root); }
+  RadixTree(const RadixTree &) = delete;
+  RadixTree &operator=(const RadixTree &) = delete;
   int size() const { return num_terminals; }
   bool empty() const { return num_terminals == 0; }
 

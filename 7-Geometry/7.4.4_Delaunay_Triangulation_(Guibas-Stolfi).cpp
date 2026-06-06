@@ -74,11 +74,16 @@ struct Edge {
 struct QuadEdgePool {
   std::vector<Edge *> edges;
 
+  QuadEdgePool() = default;
+
   ~QuadEdgePool() {
     for (Edge *e : edges) {
       delete e;
     }
   }
+
+  QuadEdgePool(const QuadEdgePool &) = delete;
+  QuadEdgePool &operator=(const QuadEdgePool &) = delete;
 
   Edge *make_edge(const Point &from, const Point &to) {
     Edge *e1 = new Edge, *e2 = new Edge, *e3 = new Edge, *e4 = new Edge;

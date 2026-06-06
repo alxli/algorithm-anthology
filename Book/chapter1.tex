@@ -348,6 +348,9 @@ All three versions below achieve the same result using in-place algorithms. Vers
 
 template<class It>
 void rotate1(It lo, It mid, It hi) {
+  if (lo == mid || mid == hi) {
+    return;
+  }
   It next = mid;
   while (lo != next) {
     std::iter_swap(lo++, next++);
@@ -361,6 +364,9 @@ void rotate1(It lo, It mid, It hi) {
 
 template<class It>
 void rotate2(It lo, It mid, It hi) {
+  if (lo == mid || mid == hi) {
+    return;
+  }
   std::reverse(lo, mid);
   std::reverse(mid, hi);
   std::reverse(lo, hi);
@@ -372,6 +378,9 @@ int gcd(int a, int b) {
 
 template<class It>
 void rotate3(It lo, It mid, It hi) {
+  if (lo == mid || mid == hi) {
+    return;
+  }
   int n = hi - lo, jump = mid - lo;
   int g = gcd(jump, n), cycle = n / g;
   for (int i = 0; i < g; i++) {
@@ -979,15 +988,16 @@ Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a r
 
 template<class It>
 long long max_subset_sum_at_most(It lo, It hi, long long v) {
-  int n = hi - lo, llen = 1 << (n / 2), hlen = 1 << (n - n / 2);
+  int n = hi - lo;
+  long long llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
   std::vector<long long> lsum(llen), hsum(hlen);
-  for (int mask = 1; mask < llen; mask++) {
-    int bit = __builtin_ctz(mask);
-    lsum[mask] = lsum[mask ^ (1 << bit)] + *(lo + bit);
+  for (long long mask = 1; mask < llen; mask++) {
+    int bit = __builtin_ctzll(mask);
+    lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);
   }
-  for (int mask = 1; mask < hlen; mask++) {
-    int bit = __builtin_ctz(mask);
-    hsum[mask] = hsum[mask ^ (1 << bit)] + *(lo + n / 2 + bit);
+  for (long long mask = 1; mask < hlen; mask++) {
+    int bit = __builtin_ctzll(mask);
+    hsum[mask] = hsum[mask ^ (1LL << bit)] + *(lo + n / 2 + bit);
   }
   std::sort(hsum.begin(), hsum.end());
   long long res = LLONG_MIN;

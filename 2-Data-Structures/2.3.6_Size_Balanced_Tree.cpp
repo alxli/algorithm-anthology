@@ -184,6 +184,8 @@ class SBTree {
   SBTree() : root(nullptr) {}
 
   ~SBTree() { clean_up(root); }
+  SBTree(const SBTree &) = delete;
+  SBTree &operator=(const SBTree &) = delete;
   int size() const { return size(root); }
   bool empty() const { return root == nullptr; }
   bool insert(const K &k, const V &v) { return insert(root, k, v); }

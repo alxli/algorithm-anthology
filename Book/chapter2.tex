@@ -499,6 +499,8 @@ class SkewHeap {
   }
 
   ~SkewHeap() { clean_up(root); }
+  SkewHeap(const SkewHeap &) = delete;
+  SkewHeap &operator=(const SkewHeap &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 
@@ -657,6 +659,8 @@ class PairingHeap {
   }
 
   ~PairingHeap() { clean_up(root); }
+  PairingHeap(const PairingHeap &) = delete;
+  PairingHeap &operator=(const PairingHeap &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 
@@ -723,7 +727,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Binary Search Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A binary search tree implements this map by inserting and deleting keys into a binary tree such that every node's left child has a lesser key and every node's right child has a greater key.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A binary search tree implements this map by inserting and deleting keys into a binary tree such that every node's left child has a lesser key and every node's right child has a greater key.
 
 \begin{compactitem}
   \item \inlinecode{BST()} constructs an empty map.
@@ -827,6 +831,8 @@ class BST {
   BST() : root(nullptr), num_nodes(0) {}
 
   ~BST() { clean_up(root); }
+  BST(const BST &) = delete;
+  BST &operator=(const BST &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 
@@ -898,7 +904,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Treap}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementations requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A Treap is a binary search tree where each node holds a randomly assigned priority. The tree satisfies the BST property on keys and the min-heap property on priorities (lower priority value is closer to root). Since priorities are random, this keeps the tree balanced with high probability, making insertions and deletions run in $O(\log n)$.
+Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A Treap is a binary search tree where each node holds a randomly assigned priority. The tree satisfies the BST property on keys and the min-heap property on priorities (lower priority value is closer to root). Since priorities are random, this keeps the tree balanced with high probability, making insertions and deletions run in $O(\log n)$.
 
 \begin{compactitem}
   \item \inlinecode{Treap()} constructs an empty map.
@@ -927,19 +933,22 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <random>
+#include <cstdint>
 
 template<class K, class V>
 class Treap {
   struct Node {
-    static inline int rand32() {
-      static std::mt19937 rng(std::random_device{}());
-      return static_cast<int>(rng());
+    static uint32_t rand32() {
+      static uint32_t x = 123456789;
+      x ^= x << 13;
+      x ^= x >> 17;
+      x ^= x << 5;
+      return x;
     }
 
     K key;
     V value;
-    int priority;
+    uint32_t priority;
     Node *left, *right;
 
     Node(const K &k, const V &v)
@@ -1026,6 +1035,8 @@ class Treap {
   Treap() : root(nullptr), num_nodes(0) {}
 
   ~Treap() { clean_up(root); }
+  Treap(const Treap &) = delete;
+  Treap &operator=(const Treap &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 
@@ -1259,6 +1270,8 @@ class AVLTree {
   AVLTree() : root(nullptr), num_nodes(0) {}
 
   ~AVLTree() { clean_up(root); }
+  AVLTree(const AVLTree &) = delete;
+  AVLTree &operator=(const AVLTree &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 
@@ -1544,6 +1557,8 @@ class RedBlackTree {
     delete LEAF_NIL;
   }
 
+  RedBlackTree(const RedBlackTree &) = delete;
+  RedBlackTree &operator=(const RedBlackTree &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return num_nodes == 0; }
 
@@ -1829,6 +1844,8 @@ class SplayTree {
   SplayTree() : root(nullptr), num_nodes(0) {}
 
   ~SplayTree() { clean_up(root); }
+  SplayTree(const SplayTree &) = delete;
+  SplayTree &operator=(const SplayTree &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 
@@ -2071,6 +2088,8 @@ class SBTree {
   SBTree() : root(nullptr) {}
 
   ~SBTree() { clean_up(root); }
+  SBTree(const SBTree &) = delete;
+  SBTree &operator=(const SBTree &) = delete;
   int size() const { return size(root); }
   bool empty() const { return root == nullptr; }
   bool insert(const K &k, const V &v) { return insert(root, k, v); }
@@ -2174,7 +2193,7 @@ Maintain a map from closed, one-dimensional intervals to values while supporting
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <cstdlib>
+#include <cstdint>
 #include <utility>
 
 template<class K, class V>
@@ -2182,12 +2201,18 @@ class IntervalTreap {
   using Interval = std::pair<K, K>;
 
   struct Node {
-    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
+    static uint32_t rand32() {
+      static uint32_t x = 123456789;
+      x ^= x << 13;
+      x ^= x >> 17;
+      x ^= x << 5;
+      return x;
+    }
 
     Interval interval;
     V value;
     K max;
-    int priority;
+    uint32_t priority;
     Node *left, *right;
 
     Node(const Interval &i, const V &v)
@@ -2290,11 +2315,13 @@ class IntervalTreap {
     if (n == nullptr || n->max < i.first) {
       return;
     }
+    find_all(n->left, i, f);
     if (n->interval.first <= i.second && i.first <= n->interval.second) {
       f(n->interval.first, n->interval.second, n->value);
     }
-    find_all(n->left, i, f);
-    find_all(n->right, i, f);
+    if (n->interval.first <= i.second) {
+      find_all(n->right, i, f);
+    }
   }
 
   template<class Fn>
@@ -2318,6 +2345,8 @@ class IntervalTreap {
   IntervalTreap() : root(nullptr), num_nodes(0) {}
 
   ~IntervalTreap() { clean_up(root); }
+  IntervalTreap(const IntervalTreap &) = delete;
+  IntervalTreap &operator=(const IntervalTreap &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 
@@ -2389,7 +2418,7 @@ int main() {
 }
 \end{lstlisting}
 \begin{exampleoutput}
-Intervals intersecting [16, 20]: [15, 20] [10, 30] [5, 20] [10, 40]
+Intervals intersecting [16, 20]: [5, 20] [10, 30] [10, 40] [15, 20]
 All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
 \end{exampleoutput}
 \subsection{Hash Map}
@@ -2655,6 +2684,8 @@ class SkipList {
   }
 
   ~SkipList() { delete head; }
+  SkipList(const SkipList &) = delete;
+  SkipList &operator=(const SkipList &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return num_nodes == 0; }
 
@@ -2812,7 +2843,7 @@ void build(const std::vector<int> &a) {
     dp[i].resize(table[n] + 1);
     dp[i][0] = i;
   }
-  for (int j = 1; (1 << j) < n; j++) {
+  for (int j = 1; (1 << j) <= n; j++) {
     for (int i = 0; i + (1 << j) <= n; i++) {
       int x = dp[i][j - 1];
       int y = dp[i + (1 << (j - 1))][j - 1];
@@ -2822,7 +2853,7 @@ void build(const std::vector<int> &a) {
 }
 
 int query(const std::vector<int> &a, int lo, int hi) {
-  int j = table[hi - lo];
+  int j = table[hi - lo + 1];
   int x = dp[lo][j];
   int y = dp[hi - (1 << j) + 1][j];
   return (a[x] < a[y]) ? a[x] : a[y];
@@ -3092,6 +3123,7 @@ int main() {
     cout << " " << t.at(i);
   }
   cout << endl;
+  cout << "The minimum value in the range [0, 3] is " << t.query(0, 3) << "." << endl;
   assert(t.query(0, 3) == -2);
   return 0;
 }
@@ -3406,6 +3438,8 @@ class SegTree {
   explicit SegTree(const T &v = T()) : root(nullptr), init(v) {}
 
   ~SegTree() { clean_up(root); }
+  SegTree(const SegTree &) = delete;
+  SegTree &operator=(const SegTree &) = delete;
   T at(int i) { return query(i, i); }
   T query(int lo, int hi) { return query(root, 0, N, lo, hi); }
   void update(int i, const T &d) { return update(i, i, d); }
@@ -3670,7 +3704,7 @@ This data structure shares every operation of one-dimensional segment trees in t
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <cstdlib>
+#include <cstdint>
 
 template<class T>
 class ImplicitTreap {
@@ -3679,11 +3713,18 @@ class ImplicitTreap {
   static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
-    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
+    static uint32_t rand32() {
+      static uint32_t x = 123456789;
+      x ^= x << 13;
+      x ^= x >> 17;
+      x ^= x << 5;
+      return x;
+    }
 
     T value, subtree_value, delta;
     bool pending;
-    int size, priority;
+    int size;
+    uint32_t priority;
     Node *left, *right;
 
     explicit Node(const T &v)
@@ -3826,6 +3867,8 @@ class ImplicitTreap {
   }
 
   ~ImplicitTreap() { clean_up(root); }
+  ImplicitTreap(const ImplicitTreap &) = delete;
+  ImplicitTreap &operator=(const ImplicitTreap &) = delete;
   int size() const { return size(root); }
   bool empty() const { return root == nullptr; }
   void insert(int i, const T &v) { insert(root, new Node(v), i); }
@@ -3906,7 +3949,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
   \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
-  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at \inlinecode{(r, c)} to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4034,6 +4077,8 @@ class Quadtree {
   explicit Quadtree(const T &v = T()) : root(nullptr), init(v) {}
 
   ~Quadtree() { clean_up(root); }
+  Quadtree(const Quadtree &) = delete;
+  Quadtree &operator=(const Quadtree &) = delete;
   T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -4102,7 +4147,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, area)}, which applie
   \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
-  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at \inlinecode{(r, c)} to \inlinecode{apply\_delta(v, d)}.
   \item \inlinecode{update(r1, c1, r2, c2)} modifies the value at each index of the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive, by applying the delta \inlinecode{d} to each value.
 \end{compactitem}
 
@@ -4262,6 +4307,8 @@ class Quadtree {
   explicit Quadtree(const T &v = T()) : root(nullptr), init(v) {}
 
   ~Quadtree() { clean_up(root); }
+  Quadtree(const Quadtree &) = delete;
+  Quadtree &operator=(const Quadtree &) = delete;
   T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -4334,7 +4381,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
   \item \inlinecode{SegTree2D(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
-  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at (\inlinecode{r}, \inlinecode{c}) to \inlinecode{apply\_delta(v, d)}.
+  \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at \inlinecode{(r, c)} to \inlinecode{apply\_delta(v, d)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4556,6 +4603,8 @@ class SegTree2D {
       : root(new OuterNode(0, R, repeat_value(v, length(0, R) * length(0, C)))), init(v) {}
 
   ~SegTree2D() { clean_up(root); }
+  SegTree2D(const SegTree2D &) = delete;
+  SegTree2D &operator=(const SegTree2D &) = delete;
   T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -4868,7 +4917,7 @@ Maintain a set of two-dimensional points while supporting queries for the closes
 
 \begin{compactitem}
   \item \inlinecode{KDTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
-  \item \inlinecode{nearest(x, y, can\_equal)} returns a point in the set that is closest to (\inlinecode{x}, \inlinecode{y}) by Euclidean distance. This may be equal to (\inlinecode{x}, \inlinecode{y}) only if \inlinecode{can\_equal} is \inlinecode{true}.
+  \item \inlinecode{nearest(x, y, can\_equal)} returns a point in the set that is closest to \inlinecode{(x, y)} by Euclidean distance. This may be equal to \inlinecode{(x, y)} only if \inlinecode{can\_equal} is \inlinecode{true}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4962,7 +5011,7 @@ class KDTree {
   KDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     if (n <= 1) {
-      throw std::runtime_error("K-d tree must be have at least 2 points.");
+      throw std::runtime_error("K-d tree must have at least 2 points.");
     }
     div_x.resize(n);
     build(0, n);
@@ -4999,7 +5048,7 @@ int main() {
 Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 1-based (i.e. has valid indices from 1 to \inlinecode{n}, inclusive).
 
 \begin{compactitem}
-  \item \inlinecode{initialize(n)} resets the dat structure.
+  \item \inlinecode{initialize(n)} resets the data structure.
   \item \inlinecode{vals[i]} stores the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
@@ -5065,12 +5114,12 @@ int main() {
   vector<int> v{10, 1, 2, 3, 4};
   int n = 5;
   initialize(n);
-  for (int i = 1; i < n; i++) {
+  for (int i = 1; i <= n; i++) {
     set(i, v[i - 1]);
   }
   add(1, -5);
   cout << "Values: ";
-  for (int i = 1; i < n; i++) {
+  for (int i = 1; i <= n; i++) {
     cout << vals[i] << " ";
   }
   cout << endl;
@@ -5529,11 +5578,11 @@ Maintain a 2D array of numerical type, allowing for updates of individual cells 
 
 \begin{compactitem}
   \item \inlinecode{initialize(R, C)} resets the data structure.
-  \item \inlinecode{vals[r][c]} stores the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with upper-left corner (1, 1) and lower-right corner (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner (\inlinecode{r1}, \inlinecode{c1}) and lower-right corner (\inlinecode{r2}, \inlinecode{c2}).
+  \item \inlinecode{vals[r][c]} stores the value at index \inlinecode{(r, c)}.
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index \inlinecode{(r, c)}.
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index \inlinecode{(r, c)}.
+  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with upper-left corner (1, 1) and lower-right corner \inlinecode{(r, c)}.
+  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner \inlinecode{(r1, c1)} and lower-right corner \inlinecode{(r2, c2)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5625,12 +5674,12 @@ Values:
 Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to be simultaneously incremented by arbitrary values (range update) and queries for the sum of rectangular sub-matrices (range query). This implementation uses \inlinecode{std::unordered\_map} for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, rows have valid indices from 0 to \inlinecode{R}, inclusive, and columns have valid indices from 0 to \inlinecode{C}, inclusive.
 
 \begin{compactitem}
-  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{add(r1, c1, r2, c2, x)} adds \inlinecode{x} to all indices in the rectangle with upper-left corner (\inlinecode{r1}, \inlinecode{c1}) and lower-right corner (\inlinecode{r2}, \inlinecode{c2}).
-  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with upper-left corner (0, 0) and lower-right corner (\inlinecode{r}, \inlinecode{c}).
-  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner (\inlinecode{r1}, \inlinecode{c1}) and lower-right corner (\inlinecode{r2}, \inlinecode{c2}).
-  \item \inlinecode{at(r, c)} returns the value at index (\inlinecode{r}, \inlinecode{c}).
+  \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index \inlinecode{(r, c)}.
+  \item \inlinecode{add(r1, c1, r2, c2, x)} adds \inlinecode{x} to all indices in the rectangle with upper-left corner \inlinecode{(r1, c1)} and lower-right corner \inlinecode{(r2, c2)}.
+  \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index \inlinecode{(r, c)}.
+  \item \inlinecode{sum(r, c)} returns the sum of the rectangle with upper-left corner (0, 0) and lower-right corner \inlinecode{(r, c)}.
+  \item \inlinecode{sum(r1, c1, r2, c2)} returns the sum of the rectangle with upper-left corner \inlinecode{(r1, c1)} and lower-right corner \inlinecode{(r2, c2)}.
+  \item \inlinecode{at(r, c)} returns the value at index \inlinecode{(r, c)}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\log\left(R\right) \cdot \log\left(C\right))$ per call to all member functions.
@@ -5852,7 +5901,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Disjoint Set Forest (Compressed)}
-Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version uses an \inlinecode{std::unordered\_map} for storage and coordinate compression (thus, element types must meet the requirements of key types for \inlinecode{std::unordered\_map}).
+Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version uses an \inlinecode{std::unordered\_map} for storage and coordinate compression (thus, element types must meet the requirements of key types for \inlinecode{std::unordered\_map}). The order of sets returned by \inlinecode{get\_all\_sets()} is unspecified.
 
 \begin{compactitem}
   \item \inlinecode{make\_set(u)} creates a new partition consisting of the single element \inlinecode{u}, which must not have been previously added to the data structure.
@@ -5867,8 +5916,8 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
-  \item $O(\log n)$ per call to \inlinecode{make\_set()}, where $n$ is the number of elements that have been added via \inlinecode{make\_set()} so far.
-  \item $O(\alpha\left(n\right) \log n)$ per call to \inlinecode{is\_united()} and \inlinecode{unite()}, where $n$ is the number of elements that have been added via \inlinecode{make\_set()} so far, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of $n$).
+  \item $O(1)$ on average per call to \inlinecode{make\_set()}, where $n$ is the number of elements that have been added via \inlinecode{make\_set()} so far.
+  \item $O(\alpha\left(n\right))$ on average per call to \inlinecode{is\_united()} and \inlinecode{unite()}, where $n$ is the number of elements that have been added via \inlinecode{make\_set()} so far, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of $n$).
   \item $O(n)$ per call to \inlinecode{get\_all\_sets()}.
 \end{compactitem}
 
@@ -5881,6 +5930,7 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <unordered_map>
 #include <vector>
 
@@ -5963,6 +6013,10 @@ int main() {
   assert(dsf.size() == 7);
   assert(dsf.sets() == 3);
   auto s = dsf.get_all_sets();
+  for (auto &set : s) {
+    sort(set.begin(), set.end());
+  }
+  sort(s.begin(), s.end());
   bool first_set = true;
   for (const auto &set : s) {
     cout << (first_set ? "[" : ", [");
@@ -6098,7 +6152,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lowest Common Ancestor (Sparse Table)}
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A node is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument. The adjacency list must define one connected tree rooted at \inlinecode{root}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -6191,7 +6245,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lowest Common Ancestor (Segment Tree)}
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A nodes is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument.
+Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A node is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument. The adjacency list must define one connected tree rooted at \inlinecode{root}.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -6204,7 +6258,7 @@ Given a tree, determine the lowest common ancestor of any two nodes in the tree.
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the segment tree, where $n$ is the number of nodes.
-  \item $O(n \log n)$ auxiliary stack space for \inlinecode{build()}.
+  \item $O(n)$ auxiliary stack space for \inlinecode{build()}.
   \item $O(\log n)$ auxiliary stack space for \inlinecode{lca()}.
 \end{compactitem}
 
@@ -6759,6 +6813,8 @@ class LinkCutForest {
       delete node;
     }
   }
+  LinkCutForest(const LinkCutForest &) = delete;
+  LinkCutForest &operator=(const LinkCutForest &) = delete;
 
   int size() const { return nodes.size(); }
   int trees() const { return num_trees; }

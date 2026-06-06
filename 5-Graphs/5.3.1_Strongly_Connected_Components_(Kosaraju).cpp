@@ -65,6 +65,7 @@ void kosaraju() {
 
 /*** Example Usage and Output:
 
+Components:
 1 4 0
 7 3 2
 5 6

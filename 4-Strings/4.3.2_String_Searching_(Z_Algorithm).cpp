@@ -5,8 +5,7 @@ position in which the needle occurs within the haystack in linear time using the
 comparison, `std::string::find` runs in quadratic time.
 
 The `find()` function below calls the Z algorithm on the concatenation of `needle` and `haystack`,
-separated by a sentinel character (in this case `'\0'`), which should be chosen such that it does
-not occur within either of the input strings.
+separated by a sentinel value that is guaranteed not to collide with any byte in either input.
 
 - `z_array(s)` constructs the Z array for a string `needle` that can be used for string searching.
   The Z array on an input string `s` is an array `z` where `z[i]` is the length of the longest
@@ -32,7 +31,8 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-std::vector<int> z_array(const string &s) {
+template<class Seq>
+std::vector<int> z_array(const Seq &s) {
   std::vector<int> z(s.size());
   for (int i = 1, l = 0, r = 0; i < static_cast<int>(z.size()); i++) {
     if (i <= r) {
@@ -50,7 +50,19 @@ std::vector<int> z_array(const string &s) {
 }
 
 size_t find(const string &haystack, const string &needle) {
-  auto z = z_array(needle + '\0' + haystack);
+  if (needle.empty()) {
+    return 0;
+  }
+  std::vector<int> s;
+  s.reserve(needle.size() + haystack.size() + 1);
+  for (unsigned char c : needle) {
+    s.push_back(c + 1);
+  }
+  s.push_back(0);
+  for (unsigned char c : haystack) {
+    s.push_back(c + 1);
+  }
+  auto z = z_array(s);
   int m = static_cast<int>(needle.size());
   for (int i = m + 1; i < static_cast<int>(z.size()); i++) {
     if (z[i] == m) {

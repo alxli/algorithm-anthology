@@ -31,9 +31,10 @@ struct Edge {
   int u, v, w;
 };
 
-const int INF = INT_MAX / 2;
+const long long INF = LLONG_MAX / 4;
 std::vector<Edge> edges;
-std::vector<int> dist, pred;
+std::vector<long long> dist;
+std::vector<int> pred;
 
 void bellman_ford(int nodes, int start) {
   dist.assign(nodes, INF);

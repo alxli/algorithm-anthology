@@ -20,7 +20,7 @@ Space Complexity:
 
 int phi(int n) {
   int res = n;
-  for (int i = 2; i * i <= n; i++) {
+  for (int i = 2; i <= n / i; i++) {
     if (n % i == 0) {
       while (n % i == 0) {
         n /= i;

@@ -93,6 +93,8 @@ class PairingHeap {
   }
 
   ~PairingHeap() { clean_up(root); }
+  PairingHeap(const PairingHeap &) = delete;
+  PairingHeap &operator=(const PairingHeap &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 

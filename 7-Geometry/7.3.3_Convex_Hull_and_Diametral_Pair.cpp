@@ -51,7 +51,8 @@ auto convex_hull(It lo, It hi) {
     res[k++] = *it;
   }
   int t = k + 1;
-  for (It it = hi - 2; it != lo - 1; --it) {
+  for (It it = hi - 1; it != lo;) {
+    --it;
     while (k >= t && cross(res[k - 1], *it, res[k - 2]) >= 0) {
       k--;
     }

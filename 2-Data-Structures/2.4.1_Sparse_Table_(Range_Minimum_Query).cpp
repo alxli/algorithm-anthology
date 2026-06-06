@@ -35,7 +35,7 @@ void build(const std::vector<int> &a) {
     dp[i].resize(table[n] + 1);
     dp[i][0] = i;
   }
-  for (int j = 1; (1 << j) < n; j++) {
+  for (int j = 1; (1 << j) <= n; j++) {
     for (int i = 0; i + (1 << j) <= n; i++) {
       int x = dp[i][j - 1];
       int y = dp[i + (1 << (j - 1))][j - 1];
@@ -45,7 +45,7 @@ void build(const std::vector<int> &a) {
 }
 
 int query(const std::vector<int> &a, int lo, int hi) {
-  int j = table[hi - lo];
+  int j = table[hi - lo + 1];
   int x = dp[lo][j];
   int y = dp[hi - (1 << j) + 1][j];
   return (a[x] < a[y]) ? a[x] : a[y];

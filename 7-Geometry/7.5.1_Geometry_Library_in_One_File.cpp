@@ -268,7 +268,8 @@ double polar_angle(const Point &p) {
 // Returns the smallest angle in radians formed by the points a, o, b with vertex at point o.
 double angle(const Point &a, const Point &o, const Point &b) {
   Point u(o - a), v(o - b);
-  return acos(u.dot(v) / (norm(u) * norm(v)));
+  double cosine = u.dot(v) / (norm(u) * norm(v));
+  return acos(std::max(-1.0, std::min(1.0, cosine)));
 }
 
 // Returns the angle in radians of segment from point a to point b, relative counterclockwise to the
@@ -622,7 +623,7 @@ int intersection(const Circle &c, const Line &l, Point *p = nullptr, Point *q = 
   if (disc > EPS) {
     return -1;
   }
-  double x0 = -l.a * l.c / aabb, y0 = -l.b * v / aabb;
+  double x0 = -l.a * v / aabb, y0 = -l.b * v / aabb;
   if (disc > -EPS) {
     if (p != nullptr) {
       *p = Point(x0 + c.h, y0 + c.k);
@@ -682,8 +683,9 @@ double intersection_area(const Circle &c1, const Circle &c2) {
   if (GE(d, R + r)) {
     return 0;
   }
-  return r * r * acos((d * d + r * r - R * R) / 2 / d / r) +
-         R * R * acos((d * d + R * R - r * r) / 2 / d / R) -
+  double alpha = std::max(-1.0, std::min(1.0, (d * d + r * r - R * R) / 2 / d / r));
+  double beta = std::max(-1.0, std::min(1.0, (d * d + R * R - r * r) / 2 / d / R));
+  return r * r * acos(alpha) + R * R * acos(beta) -
          0.5 * sqrt((-d + r + R) * (d + r - R) * (d - r + R) * (d + r + R));
 }
 

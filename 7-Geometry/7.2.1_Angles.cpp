@@ -3,8 +3,9 @@
 Angle calculations in two dimensions. All operations are inherently floating-point (`atan2`, `acos`,
 trigonometry), so these functions use the local double-coordinate `PointD` type. Convert integer
 points to `PointD` when asking for angles. The constants `DEG` and `RAD` may be used as
-multipliers to convert between degrees and radians. For example, if $t$ is a value in radians, then
-$t \cdot \text{DEG}$ is the equivalent angle in degrees.
+multipliers to convert between degrees and radians. For example, if $t$ is a value in degrees, then
+$t \cdot \text{DEG}$ is the equivalent angle in radians; if $t$ is in radians, then
+$t \cdot \text{RAD}$ is the equivalent angle in degrees.
 
 - `reduce_deg(t)` takes an angle `t` degrees and returns an equivalent angle in the range $[0, 360)$
   degrees. E.g. $-630$ becomes $90$.
@@ -35,6 +36,7 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <cmath>
 
 const double EPS = 1e-9;
@@ -80,7 +82,8 @@ template<class Pt>
 double angle(const Pt &a, const Pt &o, const Pt &b) {
   double ux = o.x - a.x, uy = o.y - a.y;
   double vx = o.x - b.x, vy = o.y - b.y;
-  return acos((ux * vx + uy * vy) / (std::hypot(ux, uy) * std::hypot(vx, vy)));
+  double cosine = (ux * vx + uy * vy) / (std::hypot(ux, uy) * std::hypot(vx, vy));
+  return acos(std::max(-1.0, std::min(1.0, cosine)));
 }
 
 template<class Pt>
@@ -110,10 +113,10 @@ int turn(const Pt &a, const Pt &o, const Pt &b) {
 
 /*** Example Usage ***/
 
-struct PointD {
+struct Point {
   double x, y;
-  PointD(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
 };
 
 #include <cassert>
@@ -121,13 +124,13 @@ struct PointD {
 int main() {
   assert(EQ(123, reduce_deg(-8 * 360 + 123)));
   assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
-  assert(polar_point<PointD>(4, PI) == PointD(-4, 0));
-  assert(polar_point<PointD>(4, -PI / 2) == PointD(0, -4));
-  assert(EQ(45, polar_angle(PointD(5, 5)) * RAD));
-  assert(EQ(135 * DEG, polar_angle(PointD(-4, 4))));
-  assert(EQ(90 * DEG, angle(PointD(5, 0), PointD(0, 5), PointD(-5, 0))));
-  assert(EQ(225 * DEG, angle_between(PointD(0, 5), PointD(5, -5))));
-  assert(-1 == cross(PointD(0, 1), PointD(1, 0), PointD(0, 0)));
-  assert(1 == turn(PointD(0, 1), PointD(0, 0), PointD(-5, -5)));
+  assert(polar_point<Point>(4, PI) == Point(-4, 0));
+  assert(polar_point<Point>(4, -PI / 2) == Point(0, -4));
+  assert(EQ(45, polar_angle(Point(5, 5)) * RAD));
+  assert(EQ(135 * DEG, polar_angle(Point(-4, 4))));
+  assert(EQ(90 * DEG, angle(Point(5, 0), Point(0, 5), Point(-5, 0))));
+  assert(EQ(225 * DEG, angle_between(Point(0, 5), Point(5, -5))));
+  assert(-1 == cross(Point(0, 1), Point(1, 0), Point(0, 0)));
+  assert(1 == turn(Point(0, 1), Point(0, 0), Point(-5, -5)));
   return 0;
 }

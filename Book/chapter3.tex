@@ -24,27 +24,26 @@ Binary search can be generally used to find the input value corresponding to any
 \begin{lstlisting}[language=C++]
 template<class Int, class Pred>
 Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
-  Int mid, _hi = hi;
   while (lo < hi) {
-    mid = lo + (hi - lo) / 2;
+    Int mid = lo + (hi - lo) / 2;
     if (pred(mid)) {
       hi = mid;
     } else {
       lo = mid + 1;
     }
   }
-  if (!pred(lo)) {
-    return _hi;  // All false.
-  }
   return lo;
 }
 
 template<class Int, class Pred>
 Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
-  Int _hi = hi, mid;
+  Int _hi = hi;
+  if (lo == hi) {
+    return _hi;
+  }
   hi--;
   while (lo < hi) {
-    mid = lo + (hi - lo + 1) / 2;
+    Int mid = lo + (hi - lo + 1) / 2;
     if (pred(mid)) {
       lo = mid;
     } else {
@@ -672,6 +671,17 @@ struct SemiDynamicCHT {
 
   void add_line(long long m, long long b) {
     int len = M.size();
+    if (len > 0 && M.back() == m) {
+      if (B.back() <= b) {
+        return;
+      }
+      M.pop_back();
+      B.pop_back();
+      len--;
+      if (ptr > len) {
+        ptr = len;
+      }
+    }
     while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
                           (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
       len--;
@@ -913,6 +923,9 @@ class LiChaoTree {
 
   ~LiChaoTree() { clean_up(root); }
 
+  LiChaoTree(const LiChaoTree &) = delete;
+  LiChaoTree &operator=(const LiChaoTree &) = delete;
+
   void add_line(long long m, long long b) { add_line(root, lo, hi, Line(m, b)); }
 
   long long query(long long x) const {
@@ -945,7 +958,7 @@ int main() {
 Solves a linear programming problem using Dantzig's simplex algorithm. The canonical form of a linear programming problem is to maximize (or minimize) the dot product $cx$, subject to $ax \leq b$ and $x \geq 0$, where $x$ is a vector of unknowns to be solved, $c$ is a vector of coefficients, $a$ is a matrix of linear equation coefficients, and $b$ is a vector of boundary coefficients.
 
 \begin{compactitem}
-  \item \inlinecode{simplex\_solve(a, b, c, \&x)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning 0 if a solution was found or $-1$ if there are no solutions. If a solution is found, then the vector pointed to by \inlinecode{x} is populated with the solution values for basic (nonzero) variables only; non-basic variables have value 0 and are omitted. The caller should zero-initialize \inlinecode{x} to length $n$ before calling if a dense solution vector is needed.
+  \item \inlinecode{simplex\_solve(a, b, c, \&x)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning 0 if an optimum was found, $-1$ if there are no feasible solutions, or 1 if the objective is unbounded. If an optimum is found, then the vector pointed to by \inlinecode{x} is populated with a dense solution vector.
 \end{compactitem}
 
 \textbf{Time Complexity}: Polynomial (average) on the number of equations and unknowns, but exponential in the worst case.
@@ -980,22 +993,30 @@ int simplex_solve(
   for (int i = n + 1; i <= m + n; i++) {
     t[i - n + 1][0] = i;
   }
-  int p1 = 0, p2 = 0;
-  bool done = true;
-  do {
-    double mn = DBL_MAX, xmax = 0;
+  for (;;) {
+    int p1 = 0, p2 = 0;
+    double mn = DBL_MAX, xmax = EPS;
     for (int j = 2; j <= n + 1; j++) {
-      if (t[1][j] > 0 && t[1][j] > xmax) {
+      if (t[1][j] > xmax) {
         p2 = j;
         xmax = t[1][j];
       }
     }
+    if (p2 == 0) {
+      break;
+    }
     for (int i = 2; i <= m + 1; i++) {
-      double v = fabs(t[i][1] / t[i][p2]);
-      if (t[i][p2] < 0 && mn > v) {
+      if (t[i][p2] < -EPS) {
+        double v = fabs(t[i][1] / t[i][p2]);
+        if (mn <= v) {
+          continue;
+        }
         mn = v;
         p1 = i;
       }
+    }
+    if (p1 == 0) {
+      return 1;
     }
     std::swap(t[p1][0], t[0][p2]);
     for (int i = 1; i <= m + 1; i++) {
@@ -1023,18 +1044,12 @@ int simplex_solve(
         return -1;
       }
     }
-    done = true;
-    for (int j = 2; j <= n + 1; j++) {
-      if (t[1][j] > 0) {
-        done = false;
-      }
-    }
-  } while (!done);
-  x->clear();
+  }
+  x->assign(n, 0);
   for (int j = 1; j <= n; j++) {
     for (int i = 2; i <= m + 1; i++) {
       if (fabs(t[i][0] - j) < EPS) {
-        x->push_back(t[i][1]);
+        (*x)[j - 1] = t[i][1];
       }
     }
   }

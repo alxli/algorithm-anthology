@@ -156,6 +156,8 @@ class SplayTree {
   SplayTree() : root(nullptr), num_nodes(0) {}
 
   ~SplayTree() { clean_up(root); }
+  SplayTree(const SplayTree &) = delete;
+  SplayTree &operator=(const SplayTree &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 

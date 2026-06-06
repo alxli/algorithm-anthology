@@ -4,7 +4,8 @@ Maintain a set of elements partitioned into non-overlapping subsets using a coll
 Each partition is assigned a unique representative known as the parent, or root. The following
 implements two well-known optimizations known as union-by-rank and path compression. This version
 uses an `std::unordered_map` for storage and coordinate compression (thus, element types must meet the
-requirements of key types for `std::unordered_map`).
+requirements of key types for `std::unordered_map`). The order of sets returned by `get_all_sets()`
+is unspecified.
 
 - `make_set(u)` creates a new partition consisting of the single element `u`, which must not have
   been previously added to the data structure.
@@ -18,12 +19,12 @@ their arguments.
 
 Time Complexity:
 - O(1) per call to the constructor.
-- O(log n) per call to `make_set()`, where $n$ is the number of elements that have been added via
-  `make_set()` so far.
-- O(alpha(n) log n) per call to `is_united()` and `unite()`, where $n$ is the number of elements
-  that have been added via `make_set()` so far, and $\alpha(n)$ is the extremely slow growing
-  inverse of the Ackermann function (effectively a very small constant for all practical values of
-  $n$).
+- O(1) on average per call to `make_set()`, where $n$ is the number of elements that have been added
+  via `make_set()` so far.
+- O(alpha(n)) on average per call to `is_united()` and `unite()`, where $n$ is the number of
+  elements that have been added via `make_set()` so far, and $\alpha(n)$ is the extremely slow
+  growing inverse of the Ackermann function (effectively a very small constant for all practical
+  values of $n$).
 - O(n) per call to `get_all_sets()`.
 
 Space Complexity:
@@ -33,6 +34,7 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <unordered_map>
 #include <vector>
 
@@ -118,6 +120,10 @@ int main() {
   assert(dsf.size() == 7);
   assert(dsf.sets() == 3);
   auto s = dsf.get_all_sets();
+  for (auto &set : s) {
+    sort(set.begin(), set.end());
+  }
+  sort(s.begin(), s.end());
   bool first_set = true;
   for (const auto &set : s) {
     cout << (first_set ? "[" : ", [");

@@ -37,6 +37,17 @@ struct SemiDynamicCHT {
 
   void add_line(long long m, long long b) {
     int len = M.size();
+    if (len > 0 && M.back() == m) {
+      if (B.back() <= b) {
+        return;
+      }
+      M.pop_back();
+      B.pop_back();
+      len--;
+      if (ptr > len) {
+        ptr = len;
+      }
+    }
     while (len > 1 && (B[len - 2] - B[len - 1]) * (m - M[len - 1]) >=
                           (B[len - 1] - b) * (M[len - 1] - M[len - 2])) {
       len--;

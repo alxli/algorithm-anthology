@@ -759,6 +759,9 @@ int main() {
       assert(a == b);
       assert(rank_by_arrangement(n, a) == count);
       count++;
+      if (count == 10 || count == 20) {
+        cout << endl;
+      }
     } while (next_arrangement(n, a));
     cout << endl;
   }
@@ -766,8 +769,13 @@ int main() {
     int n = 4, k = 2;
     vector<int> a{0, 0};
     cout << endl << n << "^" << k << " arrangements with repeats:" << endl;
+    int count = 0;
     do {
       print_range(a.begin(), a.end());
+      count++;
+      if (count == 13) {
+        cout << endl;
+      }
     } while (next_arrangement_with_repeats(n, a));
     cout << endl;
   }
@@ -958,6 +966,9 @@ int main() {
       assert(d == a);
       assert(rank_by_permutation(a) == count);
       count++;
+      if (count == 8 || count == 16) {
+        cout << endl;
+      }
       std::next_permutation(b.begin(), b.end());
       next_permutation(c);
     } while (next_permutation(a));
@@ -1094,6 +1105,9 @@ bool next_combination(int n, std::vector<int> &a) {
 }
 
 long long next_combination_mask(long long x) {
+  if (x == 0) {
+    return 0;
+  }
   long long s = x & -x, r = x + s;
   return r | (((x ^ r) >> 2) / s);
 }
@@ -1615,7 +1629,7 @@ Partition of 4:
 Common number theory operations relating to modular arithmetic.
 
 \begin{compactitem}
-  \item \inlinecode{gcd(a, b)} and \inlinecode{gcd2(a, b)} both return the greatest common division of \inlinecode{a} and \inlinecode{b} using the Euclidean algorithm.
+  \item \inlinecode{gcd(a, b)} and \inlinecode{gcd2(a, b)} both return the greatest common divisor of \inlinecode{a} and \inlinecode{b} using the Euclidean algorithm.
   \item \inlinecode{lcm(a, b)} returns the lowest common multiple of \inlinecode{a} and \inlinecode{b}.
   \item \inlinecode{extended\_euclid(a, b)} and \inlinecode{extended\_euclid2(a, b)} both return a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
   \item \inlinecode{mod(a, b)} returns the value of \inlinecode{a} mod \inlinecode{b} under the true Euclidean definition of modulo, that is, the smallest nonnegative integer $m$ satisfying $a + bn = m$ for some integer $n$. Note that this is identical to the remainder operator \inlinecode{\%} in C++ for nonnegative operands \inlinecode{a} and \inlinecode{b}, but the result will differ when an operand is negative.
@@ -1665,6 +1679,9 @@ Int gcd2(Int a, Int b) {
 
 template<class Int>
 Int lcm(Int a, Int b) {
+  if (a == 0 || b == 0) {
+    return 0;
+  }
   Int res = a / gcd(a, b) * b;
   return (res < 0 ? -res : res);
 }
@@ -1736,7 +1753,7 @@ long long garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
   if (n == 0) {
     return 0;
   }
-  std::vector<int> x(a);
+  std::vector<long long> x(a.begin(), a.end());
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
       x[i] =
@@ -2064,15 +2081,18 @@ Generate prime numbers using the Sieve of Eratosthenes.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cmath>
 #include <vector>
 
 std::vector<int> sieve(int n) {
+  if (n < 2) {
+    return {};
+  }
   std::vector<bool> prime(n + 1, true);
-  int sqrtn = ceil(sqrt(n));
-  for (int i = 2; i <= sqrtn; i++) {
+  for (int i = 2; i <= n / i; i++) {
     if (prime[i]) {
-      for (int j = i * i; j <= n; j += i) {
+      for (long long j = 1LL * i * i; j <= n; j += i) {
         prime[j] = false;
       }
     }
@@ -2087,21 +2107,30 @@ std::vector<int> sieve(int n) {
 }
 
 std::vector<int> sieve(int lo, int hi) {
-  int sqrt_hi = ceil(sqrt(hi)), fourth_root_hi = ceil(sqrt(sqrt_hi));
+  if (hi < 2 || lo > hi) {
+    return {};
+  }
+  int sqrt_hi = sqrt(hi);
+  while (1LL * (sqrt_hi + 1) * (sqrt_hi + 1) <= hi) {
+    sqrt_hi++;
+  }
+  int fourth_root_hi = sqrt(sqrt_hi);
+  while (1LL * (fourth_root_hi + 1) * (fourth_root_hi + 1) <= sqrt_hi) {
+    fourth_root_hi++;
+  }
   std::vector<bool> prime1(sqrt_hi + 1, true), prime2(hi - lo + 1, true);
   for (int i = 2; i <= fourth_root_hi; i++) {
     if (prime1[i]) {
-      for (int j = i * i; j <= sqrt_hi; j += i) {
+      for (long long j = 1LL * i * i; j <= sqrt_hi; j += i) {
         prime1[j] = false;
       }
     }
   }
   for (int i = 2, len = hi - lo; i <= sqrt_hi; i++) {
     if (prime1[i]) {
-      for (int j = (lo / i) * i - lo; j <= len; j += i) {
-        if (j >= 0 && j + lo != i) {
-          prime2[j] = false;
-        }
+      long long start = std::max(1LL * i * i, ((static_cast<long long>(lo) + i - 1) / i) * i);
+      for (long long j = start; j <= hi; j += i) {
+        prime2[j - lo] = false;
       }
     }
   }
@@ -2173,7 +2202,7 @@ bool is_prime(Int n) {
   if (n < 2 || n % 2 == 0 || n % 3 == 0) {
     return false;
   }
-  for (Int i = 5, w = 4; i * i <= n; i += w) {
+  for (Int i = 5, w = 4; i <= n / i; i += w) {
     if (n % i == 0) {
       return false;
     }
@@ -2367,10 +2396,10 @@ std::vector<Int> get_divisors(Int n) {
     return (n < 1) ? std::vector<Int>() : std::vector<Int>(1, 1);
   }
   std::vector<Int> res;
-  for (Int i = 1; i * i <= n; i++) {
+  for (Int i = 1; i <= n / i; i++) {
     if (n % i == 0) {
       res.push_back(i);
-      if (i * i != n) {
+      if (i != n / i) {
         res.push_back(n / i);
       }
     }
@@ -2514,7 +2543,7 @@ std::vector<long long> prime_factorize_big(
   for (; n % 3 == 0; n /= 3) {
     res.push_back(3);
   }
-  for (int i = 5, w = 4; i <= trial_division_cutoff && i * i <= n; i += w) {
+  for (long long i = 5, w = 4; i <= trial_division_cutoff && i <= n / i; i += w) {
     for (; n % i == 0; n /= i) {
       res.push_back(i);
     }
@@ -2610,7 +2639,7 @@ Euler's totient function \inlinecode{phi(n)} returns the number of positive inte
 
 int phi(int n) {
   int res = n;
-  for (int i = 2; i * i <= n; i++) {
+  for (int i = 2; i <= n / i; i++) {
     if (n % i == 0) {
       while (n % i == 0) {
         n /= i;
@@ -5001,13 +5030,19 @@ std::vector<cdouble> find_all_roots(
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cstdio>
 #include <iostream>
 using namespace std;
 
-void print_roots(const vector<cdouble> &x) {
+void print_roots(vector<cdouble> x) {
+  sort(x.begin(), x.end(), [](const cdouble &a, const cdouble &b) {
+    return abs(a.real() - b.real()) > 0.5e-5 ? a.real() < b.real() : a.imag() < b.imag();
+  });
   for (const auto &z : x) {
-    printf("(%.5lf, %.5lf)\n", z.real(), z.imag());
+    double real = abs(z.real()) < 0.5e-5 ? 0 : z.real();
+    double imag = abs(z.imag()) < 0.5e-5 ? 0 : z.imag();
+    printf("(%.5lf, %.5lf)\n", real, imag);
   }
 }
 
@@ -5037,14 +5072,14 @@ int main() {
 \end{lstlisting}
 \begin{exampleoutput}
 Roots of 140 - 13x - 8x^2 + x^3:
+(-4.00000, 0.00000)
 (5.00000, 0.00000)
-(-4.00000, -0.00000)
-(7.00000, -0.00000)
+(7.00000, 0.00000)
 Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
-(0.00000, 1.00000)
-(0.00000, -1.00000)
-(-0.92308, 1.38462)
 (-3.00000, -2.00000)
+(-0.92308, 1.38462)
+(0.00000, -1.00000)
+(0.00000, 1.00000)
 \end{exampleoutput}
 \subsection{Polynomial Root Finding (Ehrlich-Aberth)}
 Finds every complex root $x$ for a polynomial $p$ such that $p(x) = 0$ using the Ehrlich-Aberth method. This is a simultaneous iteration: every root estimate is updated using both the Newton correction and a repulsion term from the other estimates.
@@ -5229,9 +5264,14 @@ cdouble eval(const cpoly &p, const cdouble &x) {
   return eval_with_derivative(p, x).first;
 }
 
-void print_roots(const vector<cdouble> &x) {
+void print_roots(vector<cdouble> x) {
+  sort(x.begin(), x.end(), [](const cdouble &a, const cdouble &b) {
+    return abs(a.real() - b.real()) > 0.5e-5 ? a.real() < b.real() : a.imag() < b.imag();
+  });
   for (const auto &z : x) {
-    printf("(%.5Lf, %.5Lf)\n", z.real(), z.imag());
+    LD real = abs(z.real()) < 0.5e-5 ? 0 : z.real();
+    LD imag = abs(z.imag()) < 0.5e-5 ? 0 : z.imag();
+    printf("(%.5Lf, %.5Lf)\n", real, imag);
   }
 }
 

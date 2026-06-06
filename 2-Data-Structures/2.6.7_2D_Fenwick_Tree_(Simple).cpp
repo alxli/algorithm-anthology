@@ -6,13 +6,13 @@ assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 t
 and columns have valid indices from 1 to `C`, inclusive).
 
 - `initialize(R, C)` resets the data structure.
-- `vals[r][c]` stores the value at index (`r`, `c`).
-- `add(r, c, x)` adds `x` to the value at index (`r`, `c`).
-- `set(r, c, x)` assigns `x` to the value at index (`r`, `c`).
+- `vals[r][c]` stores the value at index `(r, c)`.
+- `add(r, c, x)` adds `x` to the value at index `(r, c)`.
+- `set(r, c, x)` assigns `x` to the value at index `(r, c)`.
 - `sum(r, c)` returns the sum of the rectangle with upper-left corner (1, 1) and lower-right corner
-  (`r`, `c`).
-- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner (`r1`, `c1`) and
-  lower-right corner (`r2`, `c2`).
+  `(r, c)`.
+- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner `(r1, c1)` and
+  lower-right corner `(r2, c2)`.
 
 Time Complexity:
 - O(R*C) per call to `initialize(R, C)`.

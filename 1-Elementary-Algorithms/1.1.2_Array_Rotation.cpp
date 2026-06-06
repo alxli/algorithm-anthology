@@ -25,6 +25,9 @@ Space Complexity:
 
 template<class It>
 void rotate1(It lo, It mid, It hi) {
+  if (lo == mid || mid == hi) {
+    return;
+  }
   It next = mid;
   while (lo != next) {
     std::iter_swap(lo++, next++);
@@ -38,6 +41,9 @@ void rotate1(It lo, It mid, It hi) {
 
 template<class It>
 void rotate2(It lo, It mid, It hi) {
+  if (lo == mid || mid == hi) {
+    return;
+  }
   std::reverse(lo, mid);
   std::reverse(mid, hi);
   std::reverse(lo, hi);
@@ -49,6 +55,9 @@ int gcd(int a, int b) {
 
 template<class It>
 void rotate3(It lo, It mid, It hi) {
+  if (lo == mid || mid == hi) {
+    return;
+  }
   int n = hi - lo, jump = mid - lo;
   int g = gcd(jump, n), cycle = n / g;
   for (int i = 0; i < g; i++) {

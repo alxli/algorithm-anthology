@@ -205,6 +205,8 @@ class LinkCutForest {
       delete node;
     }
   }
+  LinkCutForest(const LinkCutForest &) = delete;
+  LinkCutForest &operator=(const LinkCutForest &) = delete;
 
   int size() const { return nodes.size(); }
   int trees() const { return num_trees; }

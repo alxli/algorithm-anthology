@@ -215,6 +215,8 @@ class RedBlackTree {
     delete LEAF_NIL;
   }
 
+  RedBlackTree(const RedBlackTree &) = delete;
+  RedBlackTree &operator=(const RedBlackTree &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return num_nodes == 0; }
 

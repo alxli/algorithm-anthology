@@ -875,7 +875,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Angles}
-Angle calculations in two dimensions. All operations are inherently floating-point (\inlinecode{atan2}, \inlinecode{acos}, trigonometry), so these functions use the local double-coordinate \inlinecode{PointD} type. Convert integer points to \inlinecode{PointD} when asking for angles. The constants \inlinecode{DEG} and \inlinecode{RAD} may be used as multipliers to convert between degrees and radians. For example, if $t$ is a value in radians, then $t \cdot \text{DEG}$ is the equivalent angle in degrees.
+Angle calculations in two dimensions. All operations are inherently floating-point (\inlinecode{atan2}, \inlinecode{acos}, trigonometry), so these functions use the local double-coordinate \inlinecode{PointD} type. Convert integer points to \inlinecode{PointD} when asking for angles. The constants \inlinecode{DEG} and \inlinecode{RAD} may be used as multipliers to convert between degrees and radians. For example, if $t$ is a value in degrees, then $t \cdot \text{DEG}$ is the equivalent angle in radians; if $t$ is in radians, then $t \cdot \text{RAD}$ is the equivalent angle in degrees.
 
 \begin{compactitem}
   \item \inlinecode{reduce\_deg(t)} takes an angle \inlinecode{t} degrees and returns an equivalent angle in the range $[0, 360)$ degrees. E.g. $-630$ becomes $90$.
@@ -894,6 +894,7 @@ Angle calculations in two dimensions. All operations are inherently floating-poi
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cmath>
 
 const double EPS = 1e-9;
@@ -939,7 +940,8 @@ template<class Pt>
 double angle(const Pt &a, const Pt &o, const Pt &b) {
   double ux = o.x - a.x, uy = o.y - a.y;
   double vx = o.x - b.x, vy = o.y - b.y;
-  return acos((ux * vx + uy * vy) / (std::hypot(ux, uy) * std::hypot(vx, vy)));
+  double cosine = (ux * vx + uy * vy) / (std::hypot(ux, uy) * std::hypot(vx, vy));
+  return acos(std::max(-1.0, std::min(1.0, cosine)));
 }
 
 template<class Pt>
@@ -970,10 +972,10 @@ int turn(const Pt &a, const Pt &o, const Pt &b) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-struct PointD {
+struct Point {
   double x, y;
-  PointD(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
 };
 
 #include <cassert>
@@ -981,14 +983,14 @@ struct PointD {
 int main() {
   assert(EQ(123, reduce_deg(-8 * 360 + 123)));
   assert(EQ(1.2345, reduce_rad(2 * PI * 8 + 1.2345)));
-  assert(polar_point<PointD>(4, PI) == PointD(-4, 0));
-  assert(polar_point<PointD>(4, -PI / 2) == PointD(0, -4));
-  assert(EQ(45, polar_angle(PointD(5, 5)) * RAD));
-  assert(EQ(135 * DEG, polar_angle(PointD(-4, 4))));
-  assert(EQ(90 * DEG, angle(PointD(5, 0), PointD(0, 5), PointD(-5, 0))));
-  assert(EQ(225 * DEG, angle_between(PointD(0, 5), PointD(5, -5))));
-  assert(-1 == cross(PointD(0, 1), PointD(1, 0), PointD(0, 0)));
-  assert(1 == turn(PointD(0, 1), PointD(0, 0), PointD(-5, -5)));
+  assert(polar_point<Point>(4, PI) == Point(-4, 0));
+  assert(polar_point<Point>(4, -PI / 2) == Point(0, -4));
+  assert(EQ(45, polar_angle(Point(5, 5)) * RAD));
+  assert(EQ(135 * DEG, polar_angle(Point(-4, 4))));
+  assert(EQ(90 * DEG, angle(Point(5, 0), Point(0, 5), Point(-5, 0))));
+  assert(EQ(225 * DEG, angle_between(Point(0, 5), Point(5, -5))));
+  assert(-1 == cross(Point(0, 1), Point(1, 0), Point(0, 0)));
+  assert(1 == turn(Point(0, 1), Point(0, 0), Point(-5, -5)));
   return 0;
 }
 \end{lstlisting}
@@ -1526,7 +1528,7 @@ int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = 
   if (disc > EPS) {
     return -1;
   }
-  double x0 = -l.a * l.c / aabb, y0 = -l.b * v / aabb;
+  double x0 = -l.a * v / aabb, y0 = -l.b * v / aabb;
   if (disc > -EPS) {
     if (p != nullptr) {
       p->x = x0 + c.h;
@@ -1585,8 +1587,9 @@ double intersection_area(const Circle &c1, const Circle &c2) {
   if (LE(R + r, d)) {
     return 0;
   }
-  return r * r * acos((d * d + r * r - R * R) / 2 / d / r) +
-         R * R * acos((d * d + R * R - r * r) / 2 / d / R) -
+  double alpha = std::max(-1.0, std::min(1.0, (d * d + r * r - R * R) / 2 / d / r));
+  double beta = std::max(-1.0, std::min(1.0, (d * d + R * R - r * r) / 2 / d / R));
+  return r * r * acos(alpha) + R * R * acos(beta) -
          0.5 * sqrt((-d + r + R) * (d + r - R) * (d - r + R) * (d + r + R));
 }
 \end{lstlisting}
@@ -1595,37 +1598,37 @@ double intersection_area(const Circle &c1, const Circle &c2) {
 \begin{lstlisting}[language=C++]
 #include <cassert>
 
-struct PointD {
+struct Point {
   double x, y;
-  PointD(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
 };
 
 int main() {
   Line l1, l2;
-  assert(-1 == tangent(Circle(0, 0, 4), PointD(1, 1), &l1, &l2));
-  assert(0 == tangent(Circle(0, 0, sqrt(2)), PointD(1, 1), &l1, &l2));
+  assert(-1 == tangent(Circle(0, 0, 4), Point(1, 1), &l1, &l2));
+  assert(0 == tangent(Circle(0, 0, sqrt(2)), Point(1, 1), &l1, &l2));
   assert(l1 == Line(-1, -1, 2));
-  assert(1 == tangent(Circle(0, 0, 2), PointD(2, 2), &l1, &l2));
+  assert(1 == tangent(Circle(0, 0, 2), Point(2, 2), &l1, &l2));
   assert(l1 == Line(0, -2, 4));
   assert(l2 == Line(2, 0, -4));
 
-  PointD p, q;
+  Point p, q;
   assert(-1 == intersection(Circle(1, 1, 3), Line(5, 3, -30), &p, &q));
   assert(0 == intersection(Circle(1, 1, 3), Line(0, 1, -4), &p, &q));
-  assert(p == PointD(1, 4));
+  assert(p == Point(1, 4));
   assert(1 == intersection(Circle(1, 1, 3), Line(0, 1, -1), &p, &q));
-  assert(p == PointD(4, 1));
-  assert(q == PointD(-2, 1));
+  assert(p == Point(4, 1));
+  assert(q == Point(-2, 1));
 
   assert(-2 == intersection(Circle(1, 1, 1), Circle(0, 0, 3), &p, &q));
   assert(-1 == intersection(Circle(0, 0, 3), Circle(1, 1, 1), &p, &q));
   assert(0 == intersection(Circle(5, 0, 4), Circle(-5, 0, 4), &p, &q));
   assert(1 == intersection(Circle(-5, 0, 5), Circle(5, 0, 5), &p, &q));
-  assert(p == PointD(0, 0));
+  assert(p == Point(0, 0));
   assert(2 == intersection(Circle(-0.5, 0, 1), Circle(0.5, 0, 1), &p, &q));
-  assert(p == PointD(0, -sqrt(3) / 2));
-  assert(q == PointD(0, sqrt(3) / 2));
+  assert(p == Point(0, -sqrt(3) / 2));
+  assert(q == Point(0, sqrt(3) / 2));
 
   // Each circle passes through the other's center.
   double r = 3, a = intersection_area(Circle(-r / 2, 0, r), Circle(r / 2, 0, r));
@@ -1707,11 +1710,8 @@ auto polygon_area_2x(It lo, It hi) {
     return T(0);
   }
   T area = 0;
-  if (*lo != *--hi) {
-    area += (T)(lo->x - hi->x) * (T)(lo->y + hi->y);
-  }
-  for (It i = hi, j = --hi; i != lo; --i, --j) {
-    area += (T)(i->x - j->x) * (T)(i->y + j->y);
+  for (It i = lo, j = hi - 1; i != hi; j = i++) {
+    area += (T)(j->x - i->x) * (T)(j->y + i->y);
   }
   return area < T(0) ? -area : area;
 }
@@ -1818,6 +1818,9 @@ auto cross(const Pt &a, const Pt &b, const Pt &o) {
 template<class Pt, class It>
 bool point_in_polygon(const Pt &p, It lo, It hi) {
   static const bool EDGE_IS_INSIDE = true;
+  if (lo == hi) {
+    return false;
+  }
   bool res = false;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     if (i->y == p.y && (i->x == p.x || (j->y == p.y && (i->x <= p.x || j->x <= p.x)))) {
@@ -1912,7 +1915,8 @@ auto convex_hull(It lo, It hi) {
     res[k++] = *it;
   }
   int t = k + 1;
-  for (It it = hi - 2; it != lo - 1; --it) {
+  for (It it = hi - 1; it != lo;) {
+    --it;
     while (k >= t && cross(res[k - 1], *it, res[k - 2]) >= 0) {
       k--;
     }
@@ -2114,10 +2118,10 @@ Circle minimum_enclosing_circle(It lo, It hi) {
 #include <vector>
 using namespace std;
 
-struct PointD {
+struct Point {
   double x, y;
-  PointD(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
 };
 
 struct PointI {
@@ -2126,7 +2130,7 @@ struct PointI {
 };
 
 int main() {
-  vector<PointD> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+  vector<Point> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
   Circle res = minimum_enclosing_circle(v.begin(), v.end());
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
 
@@ -2550,6 +2554,9 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
   if (EQ(p.x, q.x) && EQ(p.y, q.y)) {
     throw std::runtime_error("Cannot cut using line from identical points.");
   }
+  if (lo == hi) {
+    return {};
+  }
   std::vector<Point> res;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     Point pj((double)j->x, (double)j->y), pi((double)i->x, (double)i->y);
@@ -2701,6 +2708,9 @@ struct Event {
 
 template<class It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
+  if (lo1 == hi1 || lo2 == hi2) {
+    return 0;
+  }
   struct _PointD {
     double x, y;
   };  // For line intersection with the sweep line.
@@ -2770,11 +2780,8 @@ double polygon_area(It lo, It hi) {
     return 0;
   }
   double area = 0;
-  if (*lo != *--hi) {
-    area += (lo->x - hi->x) * (lo->y + hi->y);
-  }
-  for (It i = hi, j = --hi; i != lo; --i, --j) {
-    area += (i->x - j->x) * (i->y + j->y);
+  for (It i = lo, j = hi - 1; i != hi; j = i++) {
+    area += (j->x - i->x) * (j->y + i->y);
   }
   return fabs(area / 2.0);
 }
@@ -2790,12 +2797,12 @@ double union_area(It lo1, It hi1, It lo2, It hi2) {
 #include <cassert>
 using namespace std;
 
-struct PointD {
+struct Point {
   double x, y;
-  PointD(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const PointD &p) const { return !(*this == p); }
-  bool operator<(const PointD &p) const { return x != p.x ? x < p.x : y < p.y; }
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
 
 struct PointI {
@@ -2807,7 +2814,7 @@ struct PointI {
 };
 
 int main() {
-  vector<PointD> p, s;
+  vector<Point> p, s;
   // Irregular pentagon a triangle of area 1.5 overlapping quadrant 2.
   p.emplace_back(1, 3);
   p.emplace_back(1, 2);
@@ -2962,11 +2969,11 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
 #include <cassert>
 using namespace std;
 
-struct PointD {
+struct Point {
   double x, y;
-  PointD(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator<(const PointD &p) const { return x != p.x ? x < p.x : y < p.y; }
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
 
 struct PointI {
@@ -2977,7 +2984,7 @@ struct PointI {
 };
 
 int main() {
-  vector<PointD> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
   vector<Triangle> t{
       Triangle(1, 3, 1, 2, -1, 3), Triangle(1, 3, 2, 1, 1, 2), Triangle(1, 2, 2, 1, 0, 0),
       Triangle(1, 2, 0, 0, -1, 3)
@@ -3056,11 +3063,16 @@ struct Edge {
 struct QuadEdgePool {
   std::vector<Edge *> edges;
 
+  QuadEdgePool() = default;
+
   ~QuadEdgePool() {
     for (Edge *e : edges) {
       delete e;
     }
   }
+
+  QuadEdgePool(const QuadEdgePool &) = delete;
+  QuadEdgePool &operator=(const QuadEdgePool &) = delete;
 
   Edge *make_edge(const Point &from, const Point &to) {
     Edge *e1 = new Edge, *e2 = new Edge, *e3 = new Edge, *e4 = new Edge;
@@ -3543,7 +3555,8 @@ double polar_angle(const Point &p) {
 // Returns the smallest angle in radians formed by the points a, o, b with vertex at point o.
 double angle(const Point &a, const Point &o, const Point &b) {
   Point u(o - a), v(o - b);
-  return acos(u.dot(v) / (norm(u) * norm(v)));
+  double cosine = u.dot(v) / (norm(u) * norm(v));
+  return acos(std::max(-1.0, std::min(1.0, cosine)));
 }
 
 // Returns the angle in radians of segment from point a to point b, relative counterclockwise to the
@@ -3897,7 +3910,7 @@ int intersection(const Circle &c, const Line &l, Point *p = nullptr, Point *q = 
   if (disc > EPS) {
     return -1;
   }
-  double x0 = -l.a * l.c / aabb, y0 = -l.b * v / aabb;
+  double x0 = -l.a * v / aabb, y0 = -l.b * v / aabb;
   if (disc > -EPS) {
     if (p != nullptr) {
       *p = Point(x0 + c.h, y0 + c.k);
@@ -3957,8 +3970,9 @@ double intersection_area(const Circle &c1, const Circle &c2) {
   if (GE(d, R + r)) {
     return 0;
   }
-  return r * r * acos((d * d + r * r - R * R) / 2 / d / r) +
-         R * R * acos((d * d + R * R - r * r) / 2 / d / R) -
+  double alpha = std::max(-1.0, std::min(1.0, (d * d + r * r - R * R) / 2 / d / r));
+  double beta = std::max(-1.0, std::min(1.0, (d * d + R * R - r * r) / 2 / d / R));
+  return r * r * acos(alpha) + R * R * acos(beta) -
          0.5 * sqrt((-d + r + R) * (d + r - R) * (d - r + R) * (d + r + R));
 }
 

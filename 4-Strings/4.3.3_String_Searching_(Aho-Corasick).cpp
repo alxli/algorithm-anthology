@@ -9,7 +9,7 @@ without assuming a fixed alphabet size. The output tables are stored as ordered 
 ending at the same position are reported in deterministic needle order.
 
 - `AhoCorasick(needles)` constructs the finite-state automaton for a set of needle strings that are
-  to be searched for subsequently in haystack queries.
+  to be searched for subsequently in haystack queries. Empty needles are ignored.
 - `find_all_in(haystack, report_match)` calls the function `report_match(s, pos)` once on each
   occurrence of each needle that occurs in the `haystack`, where `pos` is the starting position in
   the `haystack` at which string `s` (a matched needle) occurs. The matches will be reported in
@@ -65,6 +65,9 @@ class AhoCorasick {
     out.resize(max_states);
     int states = 1;
     for (int i = 0; i < static_cast<int>(needles.size()); i++) {
+      if (needles[i].empty()) {
+        continue;
+      }
       int curr = 0;
       for (char c : needles[i]) {
         if (auto it = adj[curr].find(c); it != adj[curr].end()) {

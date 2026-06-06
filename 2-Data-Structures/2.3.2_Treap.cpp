@@ -1,7 +1,7 @@
 /*
 
 Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
-once in the collection. This implementations requires an ordering on the set of possible keys
+once in the collection. This implementation requires an ordering on the set of possible keys
 defined by `operator<` on the key type. A Treap is a binary search tree where each node holds a
 randomly assigned priority. The tree satisfies the BST property on keys and the min-heap property
 on priorities (lower priority value is closer to root). Since priorities are random, this keeps the
@@ -32,19 +32,22 @@ Space Complexity:
 
 */
 
-#include <random>
+#include <cstdint>
 
 template<class K, class V>
 class Treap {
   struct Node {
-    static inline int rand32() {
-      static std::mt19937 rng(std::random_device{}());
-      return static_cast<int>(rng());
+    static uint32_t rand32() {
+      static uint32_t x = 123456789;
+      x ^= x << 13;
+      x ^= x >> 17;
+      x ^= x << 5;
+      return x;
     }
 
     K key;
     V value;
-    int priority;
+    uint32_t priority;
     Node *left, *right;
 
     Node(const K &k, const V &v)
@@ -131,6 +134,8 @@ class Treap {
   Treap() : root(nullptr), num_nodes(0) {}
 
   ~Treap() { clean_up(root); }
+  Treap(const Treap &) = delete;
+  Treap &operator=(const Treap &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 

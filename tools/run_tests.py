@@ -9,13 +9,14 @@ Usage:
 """
 
 import argparse
+import os
 import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
-CXX = '/opt/homebrew/bin/g++-15'
+CXX = os.environ.get('CXX', '/opt/homebrew/bin/g++-15')
 CXXFLAGS = ['-std=c++17', '-O2', '-Wall', '-Wno-unused-variable']
 TIMEOUT = 30  # seconds per file
 

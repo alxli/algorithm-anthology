@@ -35,7 +35,7 @@ bool is_prime(Int n) {
   if (n < 2 || n % 2 == 0 || n % 3 == 0) {
     return false;
   }
-  for (Int i = 5, w = 4; i * i <= n; i += w) {
+  for (Int i = 5, w = 4; i <= n / i; i += w) {
     if (n % i == 0) {
       return false;
     }

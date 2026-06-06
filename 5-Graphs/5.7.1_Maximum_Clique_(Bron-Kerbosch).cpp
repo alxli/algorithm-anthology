@@ -42,7 +42,7 @@ std::vector<uint64> build_mask_graph() {
 }
 
 int max_clique_rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
-  if (pool == 0 && excl == 0) {
+  if (pool == 0) {
     return __builtin_popcountll(curr);
   }
   int res = 0;
@@ -65,7 +65,7 @@ int max_clique() {
 }
 
 int max_clique_weighted_rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
-  if (pool == 0 && excl == 0) {
+  if (pool == 0) {
     int res = 0;
     while (curr != 0) {
       int u = __builtin_ctzll(curr);
@@ -73,9 +73,6 @@ int max_clique_weighted_rec(const std::vector<uint64> &g, uint64 curr, uint64 po
       curr &= curr - 1;
     }
     return res;
-  }
-  if (pool == 0) {
-    return -1;
   }
   int res = -1, pivot = __builtin_ctzll(pool | excl);
   uint64 z = pool & ~g[pivot];

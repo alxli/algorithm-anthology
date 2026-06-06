@@ -140,11 +140,11 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
 #include <cassert>
 using namespace std;
 
-struct PointD {
+struct Point {
   double x, y;
-  PointD(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator<(const PointD &p) const { return x != p.x ? x < p.x : y < p.y; }
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
 
 struct PointI {
@@ -155,7 +155,7 @@ struct PointI {
 };
 
 int main() {
-  vector<PointD> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
   vector<Triangle> t{
       Triangle(1, 3, 1, 2, -1, 3), Triangle(1, 3, 2, 1, 1, 2), Triangle(1, 2, 2, 1, 0, 0),
       Triangle(1, 2, 0, 0, -1, 3)

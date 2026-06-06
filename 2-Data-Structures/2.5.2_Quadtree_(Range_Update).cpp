@@ -24,7 +24,7 @@ for range-min/range-max queries, and `v + d * area` for range-sum queries.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows from `r1` to `r2` and columns from `c1` to `c2`, inclusive.
-- `update(r, c, d)` assigns the value `v` at (`r`, `c`) to `apply_delta(v, d)`.
+- `update(r, c, d)` assigns the value `v` at `(r, c)` to `apply_delta(v, d)`.
 - `update(r1, c1, r2, c2)` modifies the value at each index of the rectangular region consisting of
   rows from `r1` to `r2` and columns from `c1` to `c2`, inclusive, by applying the delta `d` to each
   value.
@@ -180,6 +180,8 @@ class Quadtree {
   explicit Quadtree(const T &v = T()) : root(nullptr), init(v) {}
 
   ~Quadtree() { clean_up(root); }
+  Quadtree(const Quadtree &) = delete;
+  Quadtree &operator=(const Quadtree &) = delete;
   T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {

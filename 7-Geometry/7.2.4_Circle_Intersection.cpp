@@ -131,7 +131,7 @@ int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = 
   if (disc > EPS) {
     return -1;
   }
-  double x0 = -l.a * l.c / aabb, y0 = -l.b * v / aabb;
+  double x0 = -l.a * v / aabb, y0 = -l.b * v / aabb;
   if (disc > -EPS) {
     if (p != nullptr) {
       p->x = x0 + c.h;
@@ -190,8 +190,9 @@ double intersection_area(const Circle &c1, const Circle &c2) {
   if (LE(R + r, d)) {
     return 0;
   }
-  return r * r * acos((d * d + r * r - R * R) / 2 / d / r) +
-         R * R * acos((d * d + R * R - r * r) / 2 / d / R) -
+  double alpha = std::max(-1.0, std::min(1.0, (d * d + r * r - R * R) / 2 / d / r));
+  double beta = std::max(-1.0, std::min(1.0, (d * d + R * R - r * r) / 2 / d / R));
+  return r * r * acos(alpha) + R * R * acos(beta) -
          0.5 * sqrt((-d + r + R) * (d + r - R) * (d - r + R) * (d + r + R));
 }
 
@@ -199,37 +200,37 @@ double intersection_area(const Circle &c1, const Circle &c2) {
 
 #include <cassert>
 
-struct PointD {
+struct Point {
   double x, y;
-  PointD(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
 };
 
 int main() {
   Line l1, l2;
-  assert(-1 == tangent(Circle(0, 0, 4), PointD(1, 1), &l1, &l2));
-  assert(0 == tangent(Circle(0, 0, sqrt(2)), PointD(1, 1), &l1, &l2));
+  assert(-1 == tangent(Circle(0, 0, 4), Point(1, 1), &l1, &l2));
+  assert(0 == tangent(Circle(0, 0, sqrt(2)), Point(1, 1), &l1, &l2));
   assert(l1 == Line(-1, -1, 2));
-  assert(1 == tangent(Circle(0, 0, 2), PointD(2, 2), &l1, &l2));
+  assert(1 == tangent(Circle(0, 0, 2), Point(2, 2), &l1, &l2));
   assert(l1 == Line(0, -2, 4));
   assert(l2 == Line(2, 0, -4));
 
-  PointD p, q;
+  Point p, q;
   assert(-1 == intersection(Circle(1, 1, 3), Line(5, 3, -30), &p, &q));
   assert(0 == intersection(Circle(1, 1, 3), Line(0, 1, -4), &p, &q));
-  assert(p == PointD(1, 4));
+  assert(p == Point(1, 4));
   assert(1 == intersection(Circle(1, 1, 3), Line(0, 1, -1), &p, &q));
-  assert(p == PointD(4, 1));
-  assert(q == PointD(-2, 1));
+  assert(p == Point(4, 1));
+  assert(q == Point(-2, 1));
 
   assert(-2 == intersection(Circle(1, 1, 1), Circle(0, 0, 3), &p, &q));
   assert(-1 == intersection(Circle(0, 0, 3), Circle(1, 1, 1), &p, &q));
   assert(0 == intersection(Circle(5, 0, 4), Circle(-5, 0, 4), &p, &q));
   assert(1 == intersection(Circle(-5, 0, 5), Circle(5, 0, 5), &p, &q));
-  assert(p == PointD(0, 0));
+  assert(p == Point(0, 0));
   assert(2 == intersection(Circle(-0.5, 0, 1), Circle(0.5, 0, 1), &p, &q));
-  assert(p == PointD(0, -sqrt(3) / 2));
-  assert(q == PointD(0, sqrt(3) / 2));
+  assert(p == Point(0, -sqrt(3) / 2));
+  assert(q == Point(0, sqrt(3) / 2));
 
   // Each circle passes through the other's center.
   double r = 3, a = intersection_area(Circle(-r / 2, 0, r), Circle(r / 2, 0, r));

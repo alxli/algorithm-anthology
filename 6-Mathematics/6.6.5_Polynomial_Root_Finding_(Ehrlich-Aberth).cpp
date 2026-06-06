@@ -197,9 +197,14 @@ cdouble eval(const cpoly &p, const cdouble &x) {
   return eval_with_derivative(p, x).first;
 }
 
-void print_roots(const vector<cdouble> &x) {
+void print_roots(vector<cdouble> x) {
+  sort(x.begin(), x.end(), [](const cdouble &a, const cdouble &b) {
+    return abs(a.real() - b.real()) > 0.5e-5 ? a.real() < b.real() : a.imag() < b.imag();
+  });
   for (const auto &z : x) {
-    printf("(%.5Lf, %.5Lf)\n", z.real(), z.imag());
+    LD real = abs(z.real()) < 0.5e-5 ? 0 : z.real();
+    LD imag = abs(z.imag()) < 0.5e-5 ? 0 : z.imag();
+    printf("(%.5Lf, %.5Lf)\n", real, imag);
   }
 }
 

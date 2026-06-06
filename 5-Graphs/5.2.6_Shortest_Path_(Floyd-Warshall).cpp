@@ -25,11 +25,12 @@ Space Complexity:
 #include <stdexcept>
 #include <vector>
 
-const int INF = INT_MAX / 2;
-std::vector<std::vector<int>> dist, parent;
+const long long INF = LLONG_MAX / 4;
+std::vector<std::vector<long long>> dist;
+std::vector<std::vector<int>> parent;
 
 void initialize(int nodes) {
-  dist.assign(nodes, std::vector<int>(nodes));
+  dist.assign(nodes, std::vector<long long>(nodes));
   parent.assign(nodes, std::vector<int>(nodes));
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
@@ -72,7 +73,7 @@ Take the path: 0->1->2.
 using namespace std;
 
 void print_path(int u, int v) {
-  cout << "Take the path " << u;
+  cout << "Take the path: " << u;
   while (u != v) {
     u = parent[u][v];
     cout << "->" << u;

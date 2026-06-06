@@ -1,6 +1,6 @@
 /*
 
-A graph consists of a set of objects (a.k.a vertices, or nodes) and a set of connections (a.k.a.
+A graph consists of a set of objects (a.k.a. vertices, or nodes) and a set of connections (a.k.a.
 edges) between pairs of said objects. A graph may be stored as an adjacency list, which is a space
 efficient representation that is also time-efficient for traversals.
 
@@ -8,7 +8,9 @@ The following class implements a simple graph using adjacency lists, along with 
 and a few other applications. The constructor takes a Boolean argument which specifies whether the
 instance is a directed or undirected graph. The nodes of the graph are identified by integers
 indices numbered consecutively starting from 0. The total number of nodes will automatically
-increase based on the maximum node index passed to `add_edge()` so far.
+increase based on the maximum node index passed to `add_edge()` so far. For undirected graphs,
+`has_cycle()` assumes a simple graph; parallel edges are not distinguished from the tree edge back
+to the parent.
 
 Time Complexity:
 - O(1) amortized per call to `add_edge()`, or O(max(n, m)) for $n$ calls where the maximum node

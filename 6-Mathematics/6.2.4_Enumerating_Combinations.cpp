@@ -110,6 +110,9 @@ bool next_combination(int n, std::vector<int> &a) {
 }
 
 long long next_combination_mask(long long x) {
+  if (x == 0) {
+    return 0;
+  }
   long long s = x & -x, r = x + s;
   return r | (((x ^ r) >> 2) / s);
 }

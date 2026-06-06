@@ -28,9 +28,10 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-const int INF = INT_MAX / 2;
+const long long INF = LLONG_MAX / 4;
 std::vector<std::vector<std::pair<int, int>>> adj;
-std::vector<int> dist, pred, relax_count;
+std::vector<long long> dist;
+std::vector<int> pred, relax_count;
 std::vector<bool> in_queue;
 
 bool spfa(int start) {

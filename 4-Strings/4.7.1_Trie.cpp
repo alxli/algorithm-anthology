@@ -99,6 +99,8 @@ class Trie {
   Trie() : root(new Node()), num_terminals(0) {}
 
   ~Trie() { clean_up(root); }
+  Trie(const Trie &) = delete;
+  Trie &operator=(const Trie &) = delete;
   int size() const { return num_terminals; }
   bool empty() const { return num_terminals == 0; }
 

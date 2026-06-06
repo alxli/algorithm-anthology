@@ -143,6 +143,8 @@ class SegTree {
   explicit SegTree(const T &v = T()) : root(nullptr), init(v) {}
 
   ~SegTree() { clean_up(root); }
+  SegTree(const SegTree &) = delete;
+  SegTree &operator=(const SegTree &) = delete;
   T at(int i) { return query(i, i); }
   T query(int lo, int hi) { return query(root, 0, N, lo, hi); }
   void update(int i, const T &d) { return update(i, i, d); }

@@ -139,6 +139,7 @@ int main() {
     cout << " " << t.at(i);
   }
   cout << endl;
+  cout << "The minimum value in the range [0, 3] is " << t.query(0, 3) << "." << endl;
   assert(t.query(0, 3) == -2);
   return 0;
 }

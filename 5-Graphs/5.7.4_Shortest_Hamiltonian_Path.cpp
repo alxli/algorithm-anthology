@@ -1,10 +1,10 @@
 /*
 
-Given a weighted, directed graph, determine a path of minimum total distance which visits each node
-exactly once. Unlike the traveling salesman problem, we do not have to return to the starting
-vertex. Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes
-must be less than 32. `shortest_hamiltonian_path()` applies to a global adjacency matrix `adj`
-which must be populated before the function call.
+Given a complete weighted, directed graph, determine a path of minimum total distance which visits
+each node exactly once. Unlike the traveling salesman problem, we do not have to return to the
+starting vertex. Since this implementation uses bitmasks with signed 32-bit integers, the maximum
+number of nodes must be less than 31. `shortest_hamiltonian_path()` applies to a global adjacency
+matrix `adj` which must be populated before the function call.
 
 Time Complexity:
 - O(2^n * n^2) per call to `shortest_hamiltonian_path()`, where $n$ is the number of nodes.
@@ -19,30 +19,31 @@ Space Complexity:
 #include <climits>
 #include <vector>
 
-const int INF = INT_MAX / 2;
-std::vector<std::vector<int>> adj, dp;
+const long long INF = LLONG_MAX / 4;
+std::vector<std::vector<long long>> adj, dp;
 std::vector<int> order;
 
-int shortest_hamiltonian_path() {
+long long shortest_hamiltonian_path() {
   int nodes = adj.size();
   int max_mask = (1 << nodes) - 1;
-  dp.assign(max_mask + 1, std::vector<int>(nodes, INF));
+  dp.assign(max_mask + 1, std::vector<long long>(nodes, INF));
   order.assign(nodes, 0);
   for (int i = 0; i < nodes; i++) {
     dp[1 << i][i] = 0;
   }
-  for (int mask = 1; mask <= max_mask; mask += 2) {
+  for (int mask = 1; mask <= max_mask; mask++) {
     for (int i = 0; i < nodes; i++) {
       if ((mask & (1 << i)) != 0) {
         for (int j = 0; j < nodes; j++) {
-          if ((mask & (1 << j)) != 0)
+          if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
             dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
+          }
         }
       }
     }
   }
-  int res = INF + INF;
-  for (int i = 1; i < nodes; i++) {
+  long long res = INF;
+  for (int i = 0; i < nodes; i++) {
     res = std::min(res, dp[max_mask][i]);
   }
   int mask = max_mask, old = -1;
@@ -73,7 +74,7 @@ using namespace std;
 
 int main() {
   int nodes = 3;
-  adj.assign(nodes, std::vector<int>(nodes));
+  adj.assign(nodes, std::vector<long long>(nodes));
   adj[0][1] = 1;
   adj[0][2] = 1;
   adj[1][0] = 7;

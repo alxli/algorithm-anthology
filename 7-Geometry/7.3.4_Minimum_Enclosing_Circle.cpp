@@ -109,10 +109,10 @@ Circle minimum_enclosing_circle(It lo, It hi) {
 #include <vector>
 using namespace std;
 
-struct PointD {
+struct Point {
   double x, y;
-  PointD(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
 };
 
 struct PointI {
@@ -121,7 +121,7 @@ struct PointI {
 };
 
 int main() {
-  vector<PointD> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
+  vector<Point> v{{0, 0}, {0, 1}, {1, 0}, {1, 1}};
   Circle res = minimum_enclosing_circle(v.begin(), v.end());
   assert(EQ(res.h, 0.5) && EQ(res.k, 0.5) && EQ(res.r, 1 / sqrt(2)));
 

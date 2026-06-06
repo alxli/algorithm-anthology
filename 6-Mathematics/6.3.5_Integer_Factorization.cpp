@@ -72,10 +72,10 @@ std::vector<Int> get_divisors(Int n) {
     return (n < 1) ? std::vector<Int>() : std::vector<Int>(1, 1);
   }
   std::vector<Int> res;
-  for (Int i = 1; i * i <= n; i++) {
+  for (Int i = 1; i <= n / i; i++) {
     if (n % i == 0) {
       res.push_back(i);
-      if (i * i != n) {
+      if (i != n / i) {
         res.push_back(n / i);
       }
     }
@@ -219,7 +219,7 @@ std::vector<long long> prime_factorize_big(
   for (; n % 3 == 0; n /= 3) {
     res.push_back(3);
   }
-  for (int i = 5, w = 4; i <= trial_division_cutoff && i * i <= n; i += w) {
+  for (long long i = 5, w = 4; i <= trial_division_cutoff && i <= n / i; i += w) {
     for (; n % i == 0; n /= i) {
       res.push_back(i);
     }

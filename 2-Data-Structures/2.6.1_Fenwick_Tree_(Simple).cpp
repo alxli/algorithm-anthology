@@ -4,7 +4,7 @@ Maintain an array of numerical type, allowing for updates of individual indices 
 queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the
 array is 1-based (i.e. has valid indices from 1 to `n`, inclusive).
 
-- `initialize(n)` resets the dat structure.
+- `initialize(n)` resets the data structure.
 - `vals[i]` stores the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `set(i, x)` assigns the value at index `i` to `x`.
@@ -67,12 +67,12 @@ int main() {
   vector<int> v{10, 1, 2, 3, 4};
   int n = 5;
   initialize(n);
-  for (int i = 1; i < n; i++) {
+  for (int i = 1; i <= n; i++) {
     set(i, v[i - 1]);
   }
   add(1, -5);
   cout << "Values: ";
-  for (int i = 1; i < n; i++) {
+  for (int i = 1; i <= n; i++) {
     cout << vals[i] << " ";
   }
   cout << endl;

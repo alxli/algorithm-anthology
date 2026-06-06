@@ -173,7 +173,7 @@ int main() {
   for (auto &[u, v] : bridges) {
     cout << u << " " << v << endl;
   }
-  cout << "Blocks, or Edge-Biconnected Components:" << endl;
+  cout << "Blocks, a.k.a. Edge-Biconnected Components:" << endl;
   for (auto &blk : block) {
     for (int v : blk) {
       cout << v << " ";

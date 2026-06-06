@@ -31,6 +31,9 @@ auto cross(const Pt &a, const Pt &b, const Pt &o) {
 template<class Pt, class It>
 bool point_in_polygon(const Pt &p, It lo, It hi) {
   static const bool EDGE_IS_INSIDE = true;
+  if (lo == hi) {
+    return false;
+  }
   bool res = false;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     if (i->y == p.y && (i->x == p.x || (j->y == p.y && (i->x <= p.x || j->x <= p.x)))) {

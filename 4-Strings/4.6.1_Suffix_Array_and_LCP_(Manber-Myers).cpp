@@ -50,7 +50,7 @@ class SuffixArray {
     int n = s.size();
     std::iota(sa.begin(), sa.end(), 0);
     for (int i = 0; i < n; i++) {
-      rk[i] = static_cast<int>(s[i]);
+      rk[i] = static_cast<unsigned char>(s[i]);
     }
     std::vector<std::pair<int, int>> rk2(n);
     for (int gap = 1; gap < n; gap *= 2) {
@@ -88,6 +88,9 @@ class SuffixArray {
   }
 
   size_t find(const string &needle) {
+    if (needle.empty()) {
+      return 0;
+    }
     int lo = 0, hi = static_cast<int>(s.size()) - 1;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;

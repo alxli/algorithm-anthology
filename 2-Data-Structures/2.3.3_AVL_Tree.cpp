@@ -164,6 +164,8 @@ class AVLTree {
   AVLTree() : root(nullptr), num_nodes(0) {}
 
   ~AVLTree() { clean_up(root); }
+  AVLTree(const AVLTree &) = delete;
+  AVLTree &operator=(const AVLTree &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 

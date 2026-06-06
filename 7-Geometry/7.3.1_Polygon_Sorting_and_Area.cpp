@@ -73,11 +73,8 @@ auto polygon_area_2x(It lo, It hi) {
     return T(0);
   }
   T area = 0;
-  if (*lo != *--hi) {
-    area += (T)(lo->x - hi->x) * (T)(lo->y + hi->y);
-  }
-  for (It i = hi, j = --hi; i != lo; --i, --j) {
-    area += (T)(i->x - j->x) * (T)(i->y + j->y);
+  for (It i = lo, j = hi - 1; i != hi; j = i++) {
+    area += (T)(j->x - i->x) * (T)(j->y + i->y);
   }
   return area < T(0) ? -area : area;
 }

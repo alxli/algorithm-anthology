@@ -6,11 +6,9 @@ and $x \geq 0$, where $x$ is a vector of unknowns to be solved, $c$ is a vector 
 is a matrix of linear equation coefficients, and $b$ is a vector of boundary coefficients.
 
 - `simplex_solve(a, b, c, &x)` solves the linear programming problem for an $m$ by $n$ matrix `a` of
-  real values, a length $m$ vector `b`, and a length $n$ vector `c`, returning 0 if a solution was
-  found or $-1$ if there are no solutions. If a solution is found, then the vector pointed to by `x`
-  is populated with the solution values for basic (nonzero) variables only; non-basic variables have
-  value 0 and are omitted. The caller should zero-initialize `x` to length $n$ before calling if a
-  dense solution vector is needed.
+  real values, a length $m$ vector `b`, and a length $n$ vector `c`, returning 0 if an optimum was
+  found, $-1$ if there are no feasible solutions, or 1 if the objective is unbounded. If an optimum
+  is found, then the vector pointed to by `x` is populated with a dense solution vector.
 
 Time Complexity:
 - Polynomial (average) on the number of equations and unknowns, but exponential in the worst case.
@@ -47,22 +45,30 @@ int simplex_solve(
   for (int i = n + 1; i <= m + n; i++) {
     t[i - n + 1][0] = i;
   }
-  int p1 = 0, p2 = 0;
-  bool done = true;
-  do {
-    double mn = DBL_MAX, xmax = 0;
+  for (;;) {
+    int p1 = 0, p2 = 0;
+    double mn = DBL_MAX, xmax = EPS;
     for (int j = 2; j <= n + 1; j++) {
-      if (t[1][j] > 0 && t[1][j] > xmax) {
+      if (t[1][j] > xmax) {
         p2 = j;
         xmax = t[1][j];
       }
     }
+    if (p2 == 0) {
+      break;
+    }
     for (int i = 2; i <= m + 1; i++) {
-      double v = fabs(t[i][1] / t[i][p2]);
-      if (t[i][p2] < 0 && mn > v) {
+      if (t[i][p2] < -EPS) {
+        double v = fabs(t[i][1] / t[i][p2]);
+        if (mn <= v) {
+          continue;
+        }
         mn = v;
         p1 = i;
       }
+    }
+    if (p1 == 0) {
+      return 1;
     }
     std::swap(t[p1][0], t[0][p2]);
     for (int i = 1; i <= m + 1; i++) {
@@ -90,18 +96,12 @@ int simplex_solve(
         return -1;
       }
     }
-    done = true;
-    for (int j = 2; j <= n + 1; j++) {
-      if (t[1][j] > 0) {
-        done = false;
-      }
-    }
-  } while (!done);
-  x->clear();
+  }
+  x->assign(n, 0);
   for (int j = 1; j <= n; j++) {
     for (int i = 2; i <= m + 1; i++) {
       if (fabs(t[i][0] - j) < EPS) {
-        x->push_back(t[i][1]);
+        (*x)[j - 1] = t[i][1];
       }
     }
   }

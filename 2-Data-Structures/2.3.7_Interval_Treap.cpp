@@ -38,7 +38,7 @@ Space Complexity:
 
 */
 
-#include <cstdlib>
+#include <cstdint>
 #include <utility>
 
 template<class K, class V>
@@ -46,12 +46,18 @@ class IntervalTreap {
   using Interval = std::pair<K, K>;
 
   struct Node {
-    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
+    static uint32_t rand32() {
+      static uint32_t x = 123456789;
+      x ^= x << 13;
+      x ^= x >> 17;
+      x ^= x << 5;
+      return x;
+    }
 
     Interval interval;
     V value;
     K max;
-    int priority;
+    uint32_t priority;
     Node *left, *right;
 
     Node(const Interval &i, const V &v)
@@ -154,11 +160,13 @@ class IntervalTreap {
     if (n == nullptr || n->max < i.first) {
       return;
     }
+    find_all(n->left, i, f);
     if (n->interval.first <= i.second && i.first <= n->interval.second) {
       f(n->interval.first, n->interval.second, n->value);
     }
-    find_all(n->left, i, f);
-    find_all(n->right, i, f);
+    if (n->interval.first <= i.second) {
+      find_all(n->right, i, f);
+    }
   }
 
   template<class Fn>
@@ -182,6 +190,8 @@ class IntervalTreap {
   IntervalTreap() : root(nullptr), num_nodes(0) {}
 
   ~IntervalTreap() { clean_up(root); }
+  IntervalTreap(const IntervalTreap &) = delete;
+  IntervalTreap &operator=(const IntervalTreap &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
 
@@ -224,7 +234,7 @@ class IntervalTreap {
 
 /*** Example Usage and Output:
 
-Intervals intersecting [16, 20]: [15, 20] [10, 30] [5, 20] [10, 40]
+Intervals intersecting [16, 20]: [5, 20] [10, 30] [10, 40] [15, 20]
 All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
 
 ***/

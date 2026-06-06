@@ -2,7 +2,7 @@
 
 Common number theory operations relating to modular arithmetic.
 
-- `gcd(a, b)` and `gcd2(a, b)` both return the greatest common division of `a` and `b` using the
+- `gcd(a, b)` and `gcd2(a, b)` both return the greatest common divisor of `a` and `b` using the
   Euclidean algorithm.
 - `lcm(a, b)` returns the lowest common multiple of `a` and `b`.
 - `extended_euclid(a, b)` and `extended_euclid2(a, b)` both return a pair $(x, y)$ of integers such
@@ -58,6 +58,9 @@ Int gcd2(Int a, Int b) {
 
 template<class Int>
 Int lcm(Int a, Int b) {
+  if (a == 0 || b == 0) {
+    return 0;
+  }
   Int res = a / gcd(a, b) * b;
   return (res < 0 ? -res : res);
 }
@@ -129,7 +132,7 @@ long long garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
   if (n == 0) {
     return 0;
   }
-  std::vector<int> x(a);
+  std::vector<long long> x(a.begin(), a.end());
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
       x[i] =

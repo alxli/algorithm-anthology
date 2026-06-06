@@ -51,9 +51,11 @@ class SuffixArray {
     int n = s.size();
     std::iota(sa.rbegin(), sa.rend(), 0);
     for (int i = 0; i < n; i++) {
-      rk[i] = static_cast<int>(s[i]);
+      rk[i] = static_cast<unsigned char>(s[i]);
     }
-    std::stable_sort(sa.begin(), sa.end(), [&](int i, int j) { return s[i] < s[j]; });
+    std::stable_sort(sa.begin(), sa.end(), [&](int i, int j) {
+      return static_cast<unsigned char>(s[i]) < static_cast<unsigned char>(s[j]);
+    });
     for (int gap = 1; gap < n; gap *= 2) {
       std::vector<int> prev_rk(rk), prev_sa(sa), cnt(n);
       std::iota(cnt.begin(), cnt.end(), 0);
@@ -96,6 +98,9 @@ class SuffixArray {
   }
 
   size_t find(const string &needle) {
+    if (needle.empty()) {
+      return 0;
+    }
     int lo = 0, hi = static_cast<int>(s.size()) - 1;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;

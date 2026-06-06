@@ -44,27 +44,26 @@ Space Complexity:
 
 template<class Int, class Pred>
 Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
-  Int mid, _hi = hi;
   while (lo < hi) {
-    mid = lo + (hi - lo) / 2;
+    Int mid = lo + (hi - lo) / 2;
     if (pred(mid)) {
       hi = mid;
     } else {
       lo = mid + 1;
     }
   }
-  if (!pred(lo)) {
-    return _hi;  // All false.
-  }
   return lo;
 }
 
 template<class Int, class Pred>
 Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
-  Int _hi = hi, mid;
+  Int _hi = hi;
+  if (lo == hi) {
+    return _hi;
+  }
   hi--;
   while (lo < hi) {
-    mid = lo + (hi - lo + 1) / 2;
+    Int mid = lo + (hi - lo + 1) / 2;
     if (pred(mid)) {
       lo = mid;
     } else {

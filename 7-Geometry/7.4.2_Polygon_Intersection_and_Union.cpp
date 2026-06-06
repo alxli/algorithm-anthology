@@ -115,6 +115,9 @@ struct Event {
 
 template<class It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
+  if (lo1 == hi1 || lo2 == hi2) {
+    return 0;
+  }
   struct _PointD {
     double x, y;
   };  // For line intersection with the sweep line.
@@ -184,11 +187,8 @@ double polygon_area(It lo, It hi) {
     return 0;
   }
   double area = 0;
-  if (*lo != *--hi) {
-    area += (lo->x - hi->x) * (lo->y + hi->y);
-  }
-  for (It i = hi, j = --hi; i != lo; --i, --j) {
-    area += (i->x - j->x) * (i->y + j->y);
+  for (It i = lo, j = hi - 1; i != hi; j = i++) {
+    area += (j->x - i->x) * (j->y + i->y);
   }
   return fabs(area / 2.0);
 }
@@ -203,12 +203,12 @@ double union_area(It lo1, It hi1, It lo2, It hi2) {
 #include <cassert>
 using namespace std;
 
-struct PointD {
+struct Point {
   double x, y;
-  PointD(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const PointD &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  bool operator!=(const PointD &p) const { return !(*this == p); }
-  bool operator<(const PointD &p) const { return x != p.x ? x < p.x : y < p.y; }
+  Point(double x = 0, double y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator!=(const Point &p) const { return !(*this == p); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
 
 struct PointI {
@@ -220,7 +220,7 @@ struct PointI {
 };
 
 int main() {
-  vector<PointD> p, s;
+  vector<Point> p, s;
   // Irregular pentagon a triangle of area 1.5 overlapping quadrant 2.
   p.emplace_back(1, 3);
   p.emplace_back(1, 2);

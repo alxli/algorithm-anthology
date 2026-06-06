@@ -5,15 +5,8 @@ connected node and determine the minimum distance to each such node. Optionally,
 path to a specific destination node using the shortest-path tree from the predecessor array
 `pred`. `dijkstra()` applies to a global, pre-populated adjacency list `adj`.
 
-Since `std::priority_queue` is by default a max-heap, negated distances are stored so the
-closest candidate is popped first. The negated value is discarded after the pop; `dist[u]` holds
-the real distance.
-
-Dijkstra's algorithm may be modified to support negative edge weights by allowing nodes to be
-re-visited (removing the visited array check in the inner for-loop). This is known as the Shortest
-Path Faster Algorithm (SPFA), which has a larger running time of O(n*m) on the number of nodes and
-edges respectively. While it is as slow in the worst case as the Bellman-Ford algorithm, the SPFA
-still tends to outperform in the average case.
+Dijkstra's algorithm requires nonnegative edge weights. Use Bellman-Ford or SPFA instead when
+negative edges are present.
 
 Time Complexity:
 - O(m log n) for `dijkstra()`, where $m$ is the number of edges and $n$ is the number of nodes.
@@ -26,13 +19,15 @@ Space Complexity:
 */
 
 #include <climits>
+#include <functional>
 #include <queue>
 #include <utility>
 #include <vector>
 
-const int INF = INT_MAX / 2;
+const long long INF = LLONG_MAX / 4;
 std::vector<std::vector<std::pair<int, int>>> adj;
-std::vector<int> dist, pred;
+std::vector<long long> dist;
+std::vector<int> pred;
 
 void dijkstra(int start) {
   int nodes = adj.size();
@@ -40,12 +35,15 @@ void dijkstra(int start) {
   dist.assign(nodes, INF);
   pred.assign(nodes, -1);
   dist[start] = 0;
-  std::priority_queue<std::pair<int, int>> pq;
+  std::priority_queue<
+      std::pair<long long, int>, std::vector<std::pair<long long, int>>,
+      std::greater<std::pair<long long, int>>>
+      pq;
   pq.emplace(0, start);
   while (!pq.empty()) {
-    int u = pq.top().second;
+    auto [du, u] = pq.top();
     pq.pop();
-    if (visit[u]) {
+    if (visit[u] || du != dist[u]) {
       continue;
     }
     visit[u] = true;
@@ -56,7 +54,7 @@ void dijkstra(int start) {
       if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
-        pq.emplace(-dist[v], v);
+        pq.emplace(dist[v], v);
       }
     }
   }

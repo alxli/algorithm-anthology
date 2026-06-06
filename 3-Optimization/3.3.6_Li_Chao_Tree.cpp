@@ -96,6 +96,9 @@ class LiChaoTree {
 
   ~LiChaoTree() { clean_up(root); }
 
+  LiChaoTree(const LiChaoTree &) = delete;
+  LiChaoTree &operator=(const LiChaoTree &) = delete;
+
   void add_line(long long m, long long b) { add_line(root, lo, hi, Line(m, b)); }
 
   long long query(long long x) const {

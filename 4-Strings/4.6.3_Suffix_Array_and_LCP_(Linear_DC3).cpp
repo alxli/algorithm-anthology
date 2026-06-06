@@ -129,15 +129,18 @@ class SuffixArray {
  public:
   explicit SuffixArray(const string &s) : s(s), sa(s.size() + 1) {
     int n = s.size();
-    std::vector<int> scopy(s.begin(), s.end());
+    std::vector<int> scopy(n);
+    for (int i = 0; i < n; i++) {
+      scopy[i] = static_cast<unsigned char>(s[i]) + 1;
+    }
     scopy.resize(n + 4);
-    suffix_array_dc3(scopy.begin(), sa.begin(), n + 1, 255);
+    suffix_array_dc3(scopy.begin(), sa.begin(), n + 1, 256);
     sa.erase(sa.begin());
   }
 
-  std::vector<int> get_sa() { return sa; }
+  const std::vector<int> &get_sa() const { return sa; }
 
-  std::vector<int> get_lcp() {
+  std::vector<int> get_lcp() const {
     int n = s.size();
     if (n == 0) {
       return {};
@@ -162,6 +165,9 @@ class SuffixArray {
   }
 
   size_t find(const string &needle) {
+    if (needle.empty()) {
+      return 0;
+    }
     int lo = 0, hi = static_cast<int>(s.size()) - 1;
     while (lo <= hi) {
       int mid = lo + (hi - lo) / 2;

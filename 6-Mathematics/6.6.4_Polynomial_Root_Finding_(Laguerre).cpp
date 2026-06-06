@@ -101,24 +101,30 @@ std::vector<cdouble> find_all_roots(
 /*** Example Usage and Output:
 
 Roots of 140 - 13x - 8x^2 + x^3:
+(-4.00000, 0.00000)
 (5.00000, 0.00000)
-(-4.00000, -0.00000)
-(7.00000, -0.00000)
+(7.00000, 0.00000)
 Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
-(0.00000, 1.00000)
-(0.00000, -1.00000)
-(-0.92308, 1.38462)
 (-3.00000, -2.00000)
+(-0.92308, 1.38462)
+(0.00000, -1.00000)
+(0.00000, 1.00000)
 
 ***/
 
+#include <algorithm>
 #include <cstdio>
 #include <iostream>
 using namespace std;
 
-void print_roots(const vector<cdouble> &x) {
+void print_roots(vector<cdouble> x) {
+  sort(x.begin(), x.end(), [](const cdouble &a, const cdouble &b) {
+    return abs(a.real() - b.real()) > 0.5e-5 ? a.real() < b.real() : a.imag() < b.imag();
+  });
   for (const auto &z : x) {
-    printf("(%.5lf, %.5lf)\n", z.real(), z.imag());
+    double real = abs(z.real()) < 0.5e-5 ? 0 : z.real();
+    double imag = abs(z.imag()) < 0.5e-5 ? 0 : z.imag();
+    printf("(%.5lf, %.5lf)\n", real, imag);
   }
 }
 

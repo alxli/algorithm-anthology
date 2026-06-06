@@ -76,6 +76,8 @@ class SkipList {
   }
 
   ~SkipList() { delete head; }
+  SkipList(const SkipList &) = delete;
+  SkipList &operator=(const SkipList &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return num_nodes == 0; }
 

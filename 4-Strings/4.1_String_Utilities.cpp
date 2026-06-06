@@ -5,6 +5,14 @@ standard C++, or may not be available on compilers that do not support C++11 and
 operations are naive implementations and often depend on certain `std::string` functions that have
 unspecified complexity.
 
+Time Complexity:
+- O(n) per call to most operations, where $n$ is the length of the input string or total length of
+  all input strings. Exceptions are noted with the individual helpers below.
+
+Space Complexity:
+- O(n) auxiliary heap space per call to operations that return a new string or vector of strings.
+- O(1) auxiliary space per call to in-place operations.
+
 */
 
 #include <cctype>

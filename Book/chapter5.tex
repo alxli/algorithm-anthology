@@ -4,9 +4,9 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Graph Class and Depth-First Search}
-A graph consists of a set of objects (a.k.a vertices, or nodes) and a set of connections (a.k.a. edges) between pairs of said objects. A graph may be stored as an adjacency list, which is a space efficient representation that is also time-efficient for traversals.
+A graph consists of a set of objects (a.k.a. vertices, or nodes) and a set of connections (a.k.a. edges) between pairs of said objects. A graph may be stored as an adjacency list, which is a space efficient representation that is also time-efficient for traversals.
 
-The following class implements a simple graph using adjacency lists, along with depth-first search and a few other applications. The constructor takes a Boolean argument which specifies whether the instance is a directed or undirected graph. The nodes of the graph are identified by integers indices numbered consecutively starting from 0. The total number of nodes will automatically increase based on the maximum node index passed to \inlinecode{add\_edge()} so far.
+The following class implements a simple graph using adjacency lists, along with depth-first search and a few other applications. The constructor takes a Boolean argument which specifies whether the instance is a directed or undirected graph. The nodes of the graph are identified by integers indices numbered consecutively starting from 0. The total number of nodes will automatically increase based on the maximum node index passed to \inlinecode{add\_edge()} so far. For undirected graphs, \inlinecode{has\_cycle()} assumes a simple graph; parallel edges are not distinguished from the tree edge back to the parent.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -878,9 +878,7 @@ int main() {
 \subsection{Shortest Path (Dijkstra)}
 Given a starting node in a weighted, directed graph with nonnegative weights only, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred}. \inlinecode{dijkstra()} applies to a global, pre-populated adjacency list \inlinecode{adj}.
 
-Since \inlinecode{std::priority\_queue} is by default a max-heap, negated distances are stored so the closest candidate is popped first. The negated value is discarded after the pop; \inlinecode{dist[u]} holds the real distance.
-
-Dijkstra's algorithm may be modified to support negative edge weights by allowing nodes to be re-visited (removing the visited array check in the inner for-loop). This is known as the Shortest Path Faster Algorithm (SPFA), which has a larger running time of $O(n \cdot m)$ on the number of nodes and edges respectively. While it is as slow in the worst case as the Bellman-Ford algorithm, the SPFA still tends to outperform in the average case.
+Dijkstra's algorithm requires nonnegative edge weights. Use Bellman-Ford or SPFA instead when negative edges are present.
 
 \textbf{Time Complexity}: $O(m \log n)$ for \inlinecode{dijkstra()}, where $m$ is the number of edges and $n$ is the number of nodes.
 
@@ -893,13 +891,15 @@ Dijkstra's algorithm may be modified to support negative edge weights by allowin
 
 \begin{lstlisting}[language=C++]
 #include <climits>
+#include <functional>
 #include <queue>
 #include <utility>
 #include <vector>
 
-const int INF = INT_MAX / 2;
+const long long INF = LLONG_MAX / 4;
 std::vector<std::vector<std::pair<int, int>>> adj;
-std::vector<int> dist, pred;
+std::vector<long long> dist;
+std::vector<int> pred;
 
 void dijkstra(int start) {
   int nodes = adj.size();
@@ -907,12 +907,15 @@ void dijkstra(int start) {
   dist.assign(nodes, INF);
   pred.assign(nodes, -1);
   dist[start] = 0;
-  std::priority_queue<std::pair<int, int>> pq;
+  std::priority_queue<
+      std::pair<long long, int>, std::vector<std::pair<long long, int>>,
+      std::greater<std::pair<long long, int>>>
+      pq;
   pq.emplace(0, start);
   while (!pq.empty()) {
-    int u = pq.top().second;
+    auto [du, u] = pq.top();
     pq.pop();
-    if (visit[u]) {
+    if (visit[u] || du != dist[u]) {
       continue;
     }
     visit[u] = true;
@@ -923,7 +926,7 @@ void dijkstra(int start) {
       if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
-        pq.emplace(-dist[v], v);
+        pq.emplace(dist[v], v);
       }
     }
   }
@@ -990,9 +993,10 @@ struct Edge {
   int u, v, w;
 };
 
-const int INF = INT_MAX / 2;
+const long long INF = LLONG_MAX / 4;
 std::vector<Edge> edges;
-std::vector<int> dist, pred;
+std::vector<long long> dist;
+std::vector<int> pred;
 
 void bellman_ford(int nodes, int start) {
   dist.assign(nodes, INF);
@@ -1074,9 +1078,10 @@ The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford
 #include <utility>
 #include <vector>
 
-const int INF = INT_MAX / 2;
+const long long INF = LLONG_MAX / 4;
 std::vector<std::vector<std::pair<int, int>>> adj;
-std::vector<int> dist, pred, relax_count;
+std::vector<long long> dist;
+std::vector<int> pred, relax_count;
 std::vector<bool> in_queue;
 
 bool spfa(int start) {
@@ -1157,11 +1162,12 @@ This function will also detect whether the graph contains negative-weighted cycl
 #include <stdexcept>
 #include <vector>
 
-const int INF = INT_MAX / 2;
-std::vector<std::vector<int>> dist, parent;
+const long long INF = LLONG_MAX / 4;
+std::vector<std::vector<long long>> dist;
+std::vector<std::vector<int>> parent;
 
 void initialize(int nodes) {
-  dist.assign(nodes, std::vector<int>(nodes));
+  dist.assign(nodes, std::vector<long long>(nodes));
   parent.assign(nodes, std::vector<int>(nodes));
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
@@ -1200,7 +1206,7 @@ void floyd_warshall() {
 using namespace std;
 
 void print_path(int u, int v) {
-  cout << "Take the path " << u;
+  cout << "Take the path: " << u;
   while (u != v) {
     u = parent[u][v];
     cout << "->" << u;
@@ -1322,6 +1328,7 @@ int main() {
 }
 \end{lstlisting}
 \begin{exampleoutput}
+Components:
 1 4 0
 7 3 2
 5 6
@@ -1576,7 +1583,7 @@ int main() {
   for (auto &[u, v] : bridges) {
     cout << u << " " << v << endl;
   }
-  cout << "Blocks, or Edge-Biconnected Components:" << endl;
+  cout << "Blocks, a.k.a. Edge-Biconnected Components:" << endl;
   for (auto &blk : block) {
     for (int v : blk) {
       cout << v << " ";
@@ -2176,13 +2183,16 @@ long long edmonds_karp(int source, int sink) {
   long long max_flow = 0;
   for (;;) {
     std::vector<edge *> pred(nodes, nullptr);
+    std::vector<bool> visit(nodes, false);
     std::queue<int> q;
     q.push(source);
+    visit[source] = true;
     while (!q.empty() && !pred[sink]) {
       int u = q.front();
       q.pop();
       for (edge &e : adj[u]) {
-        if (!pred[e.v] && e.cap > e.f) {
+        if (!visit[e.v] && e.cap > e.f) {
+          visit[e.v] = true;
           pred[e.v] = &e;
           q.push(e.v);
         }
@@ -2546,7 +2556,7 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Maximum Bipartite Matching (Kuhn)}
-Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{kuhn()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and $n_2$ (exclusive). The left side size is inferred from \inlinecode{adj.size()}.
+Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{kuhn()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and $n_2$ (exclusive). The left side size is inferred from \inlinecode{adj.size()}.
 
 \textbf{Time Complexity}: $O(m \cdot (n_{1} + n_{2}))$ per call to \inlinecode{kuhn()}, where $m$ is the number of edges.
 
@@ -2617,7 +2627,7 @@ Matched 3 pair(s):
 2 2
 \end{exampleoutput}
 \subsection{Maximum Bipartite Matching (Hopcroft-Karp)}
-Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$ such that $n_1 < n_2$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{hopcroft\_karp()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and $n_2$ (exclusive). The left side size is inferred from \inlinecode{adj.size()}.
+Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node. \inlinecode{hopcroft\_karp()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and $n_2$ (exclusive). The left side size is inferred from \inlinecode{adj.size()}.
 
 \textbf{Time Complexity}: $O(m \cdot \sqrt{n_{1} + n_{2}})$ per call to \inlinecode{hopcroft\_karp()}, where $m$ is the number of edges.
 
@@ -2914,7 +2924,7 @@ std::vector<uint64> build_mask_graph() {
 }
 
 int max_clique_rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
-  if (pool == 0 && excl == 0) {
+  if (pool == 0) {
     return __builtin_popcountll(curr);
   }
   int res = 0;
@@ -2937,7 +2947,7 @@ int max_clique() {
 }
 
 int max_clique_weighted_rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
-  if (pool == 0 && excl == 0) {
+  if (pool == 0) {
     int res = 0;
     while (curr != 0) {
       int u = __builtin_ctzll(curr);
@@ -2945,9 +2955,6 @@ int max_clique_weighted_rec(const std::vector<uint64> &g, uint64 curr, uint64 po
       curr &= curr - 1;
     }
     return res;
-  }
-  if (pool == 0) {
-    return -1;
   }
   int res = -1, pivot = __builtin_ctzll(pool | excl);
   uint64 z = pool & ~g[pivot];
@@ -3122,7 +3129,7 @@ Color 2: 1 2
 Color 3: 4
 \end{exampleoutput}
 \subsection{Shortest Hamiltonian Cycle (TSP)}
-Given a weighted graph, determine a cycle of minimum total distance which visits each node exactly once and returns to the starting node. This is known as the traveling salesman problem (TSP). Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. \inlinecode{shortest\_hamiltonian\_cycle()} applies to a global adjacency matrix \inlinecode{adj}, which must be populated with \inlinecode{add\_edge()} before the function call.
+Given a complete weighted graph, determine a cycle of minimum total distance which visits each node exactly once and returns to the starting node. This is known as the traveling salesman problem (TSP). Since this implementation uses bitmasks with signed 32-bit integers, the maximum number of nodes must be less than 31. \inlinecode{shortest\_hamiltonian\_cycle()} applies to a global adjacency matrix \inlinecode{adj}, which must be populated with \inlinecode{add\_edge()} before the function call.
 
 \textbf{Time Complexity}: $O(2^{n} \cdot n^{2})$ per call to \inlinecode{shortest\_hamiltonian\_cycle()}, where $n$ is the number of nodes.
 
@@ -3138,33 +3145,33 @@ Given a weighted graph, determine a cycle of minimum total distance which visits
 #include <climits>
 #include <vector>
 
-const int INF = INT_MAX / 2;
-std::vector<std::vector<int>> adj, dp;
+const long long INF = LLONG_MAX / 4;
+std::vector<std::vector<long long>> adj, dp;
 std::vector<int> order;
 
-void add_edge(int u, int v, int w) {
+void add_edge(int u, int v, long long w) {
   adj[u][v] = w;
   adj[v][u] = w;  // Remove this line if the graph is directed.
 }
 
-int shortest_hamiltonian_cycle() {
+long long shortest_hamiltonian_cycle() {
   int nodes = adj.size();
   int max_mask = (1 << nodes) - 1;
-  dp.assign(max_mask + 1, std::vector<int>(nodes, INF));
+  dp.assign(max_mask + 1, std::vector<long long>(nodes, INF));
   order.assign(nodes, 0);
   dp[1][0] = 0;
   for (int mask = 1; mask <= max_mask; mask += 2) {
     for (int i = 1; i < nodes; i++) {
       if ((mask & 1 << i) != 0) {
         for (int j = 0; j < nodes; j++) {
-          if ((mask & 1 << j) != 0) {
+          if ((mask & 1 << j) != 0 && dp[mask ^ (1 << i)][j] != INF) {
             dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
           }
         }
       }
     }
   }
-  int res = INF + INF;
+  long long res = INF;
   for (int i = 1; i < nodes; i++) {
     res = std::min(res, dp[max_mask][i] + adj[i][0]);
   }
@@ -3192,7 +3199,7 @@ using namespace std;
 
 int main() {
   int nodes = 5;
-  adj.assign(nodes, std::vector<int>(nodes));
+  adj.assign(nodes, std::vector<long long>(nodes));
   add_edge(0, 1, 1);
   add_edge(0, 2, 10);
   add_edge(0, 3, 1);
@@ -3218,7 +3225,7 @@ The shortest hamiltonian cycle has length 5.
 Take the path: 0->3->2->4->1->0.
 \end{exampleoutput}
 \subsection{Shortest Hamiltonian Path}
-Given a weighted, directed graph, determine a path of minimum total distance which visits each node exactly once. Unlike the traveling salesman problem, we do not have to return to the starting vertex. Since this implementation uses bitmasks with 32-bit integers, the maximum number of nodes must be less than 32. \inlinecode{shortest\_hamiltonian\_path()} applies to a global adjacency matrix \inlinecode{adj} which must be populated before the function call.
+Given a complete weighted, directed graph, determine a path of minimum total distance which visits each node exactly once. Unlike the traveling salesman problem, we do not have to return to the starting vertex. Since this implementation uses bitmasks with signed 32-bit integers, the maximum number of nodes must be less than 31. \inlinecode{shortest\_hamiltonian\_path()} applies to a global adjacency matrix \inlinecode{adj} which must be populated before the function call.
 
 \textbf{Time Complexity}: $O(2^{n} \cdot n^{2})$ per call to \inlinecode{shortest\_hamiltonian\_path()}, where $n$ is the number of nodes.
 
@@ -3234,30 +3241,31 @@ Given a weighted, directed graph, determine a path of minimum total distance whi
 #include <climits>
 #include <vector>
 
-const int INF = INT_MAX / 2;
-std::vector<std::vector<int>> adj, dp;
+const long long INF = LLONG_MAX / 4;
+std::vector<std::vector<long long>> adj, dp;
 std::vector<int> order;
 
-int shortest_hamiltonian_path() {
+long long shortest_hamiltonian_path() {
   int nodes = adj.size();
   int max_mask = (1 << nodes) - 1;
-  dp.assign(max_mask + 1, std::vector<int>(nodes, INF));
+  dp.assign(max_mask + 1, std::vector<long long>(nodes, INF));
   order.assign(nodes, 0);
   for (int i = 0; i < nodes; i++) {
     dp[1 << i][i] = 0;
   }
-  for (int mask = 1; mask <= max_mask; mask += 2) {
+  for (int mask = 1; mask <= max_mask; mask++) {
     for (int i = 0; i < nodes; i++) {
       if ((mask & (1 << i)) != 0) {
         for (int j = 0; j < nodes; j++) {
-          if ((mask & (1 << j)) != 0)
+          if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
             dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
+          }
         }
       }
     }
   }
-  int res = INF + INF;
-  for (int i = 1; i < nodes; i++) {
+  long long res = INF;
+  for (int i = 0; i < nodes; i++) {
     res = std::min(res, dp[max_mask][i]);
   }
   int mask = max_mask, old = -1;
@@ -3284,7 +3292,7 @@ using namespace std;
 
 int main() {
   int nodes = 3;
-  adj.assign(nodes, std::vector<int>(nodes));
+  adj.assign(nodes, std::vector<long long>(nodes));
   adj[0][1] = 1;
   adj[0][2] = 1;
   adj[1][0] = 7;

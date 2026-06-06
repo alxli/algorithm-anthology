@@ -40,13 +40,16 @@ long long edmonds_karp(int source, int sink) {
   long long max_flow = 0;
   for (;;) {
     std::vector<edge *> pred(nodes, nullptr);
+    std::vector<bool> visit(nodes, false);
     std::queue<int> q;
     q.push(source);
+    visit[source] = true;
     while (!q.empty() && !pred[sink]) {
       int u = q.front();
       q.pop();
       for (edge &e : adj[u]) {
-        if (!pred[e.v] && e.cap > e.f) {
+        if (!visit[e.v] && e.cap > e.f) {
+          visit[e.v] = true;
           pred[e.v] = &e;
           q.push(e.v);
         }

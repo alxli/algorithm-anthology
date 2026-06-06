@@ -149,6 +149,9 @@ int main() {
       assert(a == b);
       assert(rank_by_arrangement(n, a) == count);
       count++;
+      if (count == 10 || count == 20) {
+        cout << endl;
+      }
     } while (next_arrangement(n, a));
     cout << endl;
   }
@@ -156,8 +159,13 @@ int main() {
     int n = 4, k = 2;
     vector<int> a{0, 0};
     cout << endl << n << "^" << k << " arrangements with repeats:" << endl;
+    int count = 0;
     do {
       print_range(a.begin(), a.end());
+      count++;
+      if (count == 13) {
+        cout << endl;
+      }
     } while (next_arrangement_with_repeats(n, a));
     cout << endl;
   }

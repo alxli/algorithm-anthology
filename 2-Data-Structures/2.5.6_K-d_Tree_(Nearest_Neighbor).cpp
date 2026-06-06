@@ -6,8 +6,8 @@ operators `<`, `==`, `-`, and `long double` casting to be defined on the numeric
 
 - `KDTree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
   `[lo, hi)` of points.
-- `nearest(x, y, can_equal)` returns a point in the set that is closest to (`x`, `y`) by Euclidean
-  distance. This may be equal to (`x`, `y`) only if `can_equal` is `true`.
+- `nearest(x, y, can_equal)` returns a point in the set that is closest to `(x, y)` by Euclidean
+  distance. This may be equal to `(x, y)` only if `can_equal` is `true`.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the number of points.
@@ -95,7 +95,7 @@ class KDTree {
   KDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     if (n <= 1) {
-      throw std::runtime_error("K-d tree must be have at least 2 points.");
+      throw std::runtime_error("K-d tree must have at least 2 points.");
     }
     div_x.resize(n);
     build(0, n);

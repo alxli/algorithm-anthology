@@ -195,6 +195,9 @@ int main() {
       assert(d == a);
       assert(rank_by_permutation(a) == count);
       count++;
+      if (count == 8 || count == 16) {
+        cout << endl;
+      }
       std::next_permutation(b.begin(), b.end());
       next_permutation(c);
     } while (next_permutation(a));

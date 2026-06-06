@@ -35,7 +35,7 @@ Space Complexity:
 
 */
 
-#include <cstdlib>
+#include <cstdint>
 
 template<class T>
 class ImplicitTreap {
@@ -44,11 +44,18 @@ class ImplicitTreap {
   static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
-    static inline int rand32() { return (rand() & 0x7fff) | ((rand() & 0x7fff) << 15); }
+    static uint32_t rand32() {
+      static uint32_t x = 123456789;
+      x ^= x << 13;
+      x ^= x >> 17;
+      x ^= x << 5;
+      return x;
+    }
 
     T value, subtree_value, delta;
     bool pending;
-    int size, priority;
+    int size;
+    uint32_t priority;
     Node *left, *right;
 
     explicit Node(const T &v)
@@ -191,6 +198,8 @@ class ImplicitTreap {
   }
 
   ~ImplicitTreap() { clean_up(root); }
+  ImplicitTreap(const ImplicitTreap &) = delete;
+  ImplicitTreap &operator=(const ImplicitTreap &) = delete;
   int size() const { return size(root); }
   bool empty() const { return root == nullptr; }
   void insert(int i, const T &v) { insert(root, new Node(v), i); }
