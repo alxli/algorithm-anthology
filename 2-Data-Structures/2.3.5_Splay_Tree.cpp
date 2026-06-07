@@ -8,7 +8,7 @@ property that recently accessed elements are quick to access again.
 - `SplayTree()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
-- `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if an new
+- `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new
   entry was added or `false` if the key already exists (in which case the map is unchanged and the
   old value associated with the key is preserved).
 - `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was

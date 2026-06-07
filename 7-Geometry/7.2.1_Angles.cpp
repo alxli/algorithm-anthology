@@ -19,8 +19,8 @@ $t \cdot \text{RAD}$ is the equivalent angle in degrees.
   vertex at point `o`.
 - `angle_between(a, b)` returns the angle in radians of segment from point `a` to point `b`,
   relative counterclockwise to the positive $x$-axis.
-- `angle_between(a1, b1, a2, b2)` returns the smaller angle in radians between two lines $`a1`x +
-  `b1`y + `c1` = 0$ and $`a2`x + `b2`y + `c2` = 0$, limited to $[0, \pi / 2]$.
+- `angle_between(a1, b1, a2, b2)` returns the smaller angle in radians between two lines
+  `a1`$x$ + `b1`$y$ + `c1` = 0 and `a2`$x$ + `b2`$y$ + `c2` = 0, limited to $[0, \pi / 2]$.
 - `cross(a, b, o)` returns the magnitude (Euclidean norm) of the three-dimensional cross product
   between points `a` and `b` where the `z`-component is implicitly zero and the origin is implicitly
   shifted to point `o`. This operation is also equal to double the signed area of the triangle from

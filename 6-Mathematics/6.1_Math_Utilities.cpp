@@ -1,12 +1,8 @@
 /*
 
-Common mathematic constants and functions, many of which are substitutes for features which are not
-available in standard C++, or may not be available on compilers that do not support C++11 and later.
-
-On a C++11-or-later compiler, prefer the standard `std::` equivalent named in each entry (for
-example `std::signbit()`, `std::copysign()`, `std::trunc()`, `std::round()`, `std::erf()`,
-`std::tgamma()`, `std::lgamma()`). The implementations below are retained as self-contained
-reference versions and to document how each result is derived.
+Common mathematic constants and functions, most of which already have standard STL equivalents:
+`std::signbit()`, `std::copysign()`, `std::trunc()`, `std::round()`, `std::erf()`, `std::tgamma()`,
+`std::lgamma()`). These are written for educational purposes, without heavy optimizations.
 
 Time Complexity:
 - O(1) for all operations.
@@ -65,13 +61,13 @@ Sign Functions:
 
 - `sgn(x)` returns $-1$ (if $x < 0$), $0$ (if $x = 0$), or $1$ (if $x > 0$). Unlike `signbit()` or
   `copysign()`, this does not handle the sign of `NaN`.
-- `signbit_(x)` is analogous to `std::signbit()` in C++11 and later, returning whether the sign bit
-  of the floating point number is set to true. If so, then `x` is considered "negative." Note that
-  this works as expected on `+0.0`, `-0.0`, `Inf`, `-Inf`, `NaN`, as well as `-NaN`. Warning: This
-  assumes that the sign bit is the leading (most significant) bit in the internal representation of
-  the IEEE floating point value.
-- `copysign_(x, y)` is analogous to `std::copysign()` in C++11 and later, returning a number with
-  the magnitude of `x` but the sign of `y`.
+- `signbit_(x)` is analogous to `std::signbit()`, returning whether the sign bit of the floating
+  point number is set to true. If so, then `x` is considered "negative." Note that this works as
+  expected on `+0.0`, `-0.0`, `Inf`, `-Inf`, `NaN`, as well as `-NaN`. Warning: This assumes that
+  the sign bit is the leading (most significant) bit in the internal representation of the IEEE
+  floating point value.
+- `copysign_(x, y)` is analogous to `std::copysign()`, returning a number with the magnitude of `x`
+  but the sign of `y`.
 
 */
 
@@ -95,9 +91,9 @@ Double copysign_(Double x, Double y) {
 Rounding Functions:
 
 - `floor0(x)` returns `x` rounded down, symmetrically towards zero. This function is analogous to
-  `trunc()` in C++11 and later.
+  `std::trunc()`.
 - `ceil0(x)` returns `x` rounded up, symmetrically away from zero. This function is analogous to
-  `round()` in C++11 and later.
+  `std::round()`.
 - `round_half_up(x)` returns `x` rounded half up, towards positive infinity.
 - `round_half_down(x)` returns `x` rounded half down, towards negative infinity.
 - `round_half_to0(x)` returns `x` rounded half down, symmetrically towards zero.
@@ -187,10 +183,10 @@ Double round_n_places(const Double &x, unsigned int n, RoundingFunction f) {
 
 Error Function:
 
-- `erf_(x)` returns the error encountered in integrating the normal distribution. Its value is $2 /
-  \sqrt{\pi} \int_0^x e^{-t^2} \, dt$. This function is analogous to `erf(x)` in C++11 and later.
+- `erf_(x)` returns the error encountered in integrating the normal distribution. Its value is
+  $2 / \sqrt{\pi} \int_0^x e^{-t^2} \, dt$. This function is analogous to `std::erf(x)`.
 - `erfc_(x)` returns the error function complement, that is, 1 - `erf_(x)`. This function is
-  analogous to `erfc(x)` in C++11 and later.
+  analogous to `std::erfc(x)`.
 
 */
 
@@ -244,11 +240,10 @@ double erfc_(double x) {
 
 Gamma Functions:
 
-- `tgamma_(x)` returns the gamma function of `x`. Unlike the `tgamma()` function in C++11 and later,
-  this version only supports positive `x`, returning `NaN` if `x` is less than or equal to 0.
+- `tgamma_(x)` returns the gamma function of `x`. Unlike `std::tgamma()`, this version only supports
+   positive `x`, returning `NaN` if `x` $\leq 0$.
 - `lgamma_(x)` returns the natural logarithm of the absolute value of the gamma function of `x`.
-  Unlike the `lgamma()` function in C++11 and later, this version only supports positive `x`,
-  returning `NaN` if `x` is less than or equal to 0.
+  Unlike `std::lgamma()`, this version only supports positive `x`, returning `NaN` if `x` $\leq 0$.
 
 */
 

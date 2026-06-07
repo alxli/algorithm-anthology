@@ -1,22 +1,19 @@
 /*
 
 Given a list of line segments in two dimensions, determine whether any pair of segments intersect
-using a sweep line algorithm.
-
-`Segment<Pt>` is templated on the point type, so endpoints may be integer (`PointI`) or
-floating-point (`Point`/`PointD`). The cross-product sign tests in `seg_intersection` are exact for
-integer endpoints, so intersection detection is exact. The sweep-line y-ordering compares
-interpolated y-values by cross-multiplication, avoiding division.
-
-Overflow warning: `seg_intersection` forms the usual quadratic cross products, but the y-ordering
-cross-multiplication (`ay * bdx`) is cubic in the coordinate magnitude. With 32-bit `int` endpoints
-this overflows once coordinates reach the low thousands, so use a 64-bit (`long long`) coordinate
-type for any non-trivial integer inputs.
+using a sweep line algorithm. The input type `Segment<Pt>` is templated on the point type, so
+endpoints may be integer (`PointI`) or floating-point (`Point`/`PointD`). The cross-product sign
+tests in `seg_intersection` are exact for integer endpoints, so intersection detection is exact.
 
 - `find_intersection(lo, hi, &res1, &res2)` returns whether any pair of segments intersect given a
   range `[lo, hi)` of segments, where `lo` and `hi` are random-access iterators. If an intersection
   is found, then one such pair of segments will be stored into pointers `res1` and `res2`. Touching
   behavior is controlled by `TOUCH_IS_INTERSECT`.
+
+Overflow warning: `seg_intersection` forms the usual quadratic cross products, but the $y$-ordering
+cross-multiplication (`ay * bdx`) is cubic in the coordinate magnitude. With 32-bit `int` endpoints
+this overflows once coordinates reach the low thousands, so use a 64-bit (`long long`) coordinate
+type for any non-trivial integer inputs.
 
 Time Complexity:
 - O(n log n) per call to `find_intersection(lo, hi, &res1, &res2)`, where $n$ is the distance

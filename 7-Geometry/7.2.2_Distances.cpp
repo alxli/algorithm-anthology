@@ -9,7 +9,7 @@ same type as its inputs, so use a floating-point `Pt` there for a meaningful (no
 
 - `dist(a, b)` and `sqdist(a, b)` respectively return the distance and squared distance between
   points `a` and `b`.
-- `line_dist(p, a, b, c)` returns the distance from point `p` to the line $`a`x + `b`y + `c` = 0$.
+- `line_dist(p, a, b, c)` returns the distance from point `p` to the line $ax + by + c = 0$.
 - `line_dist(p, a, b)` returns the distance from point `p` to the infinite line containing points
   `a` and `b`. If `a` = `b`, returns the distance from `p` to `a`.
 - `line_dist(a1, b1, c1, a2, b2, c2)` returns the distance between two lines.

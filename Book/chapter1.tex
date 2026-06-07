@@ -1140,7 +1140,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Maximal Zero Submatrix}
+\subsection{Largest Zero Submatrix}
 Given a rectangular matrix with $n$ rows and $m$ columns consisting of only 0's and 1's as a two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of only 0's. This solution uses a reduction to the problem of finding the maximum rectangular area under a histogram, which is efficiently solved using a stack algorithm.
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{max\_zero\_submatrix()}, where $n$ is the number of rows and $m$ is the number of columns in the matrix.
@@ -1828,7 +1828,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Maximal Subarray Sum (Kadane)}
+\subsection{Maximum Subarray Sum (Kadane)}
 Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans through the array, at each index computing the maximum nonnegative sum subarray ending there. Either this subarray is empty (in which case its sum is zero), or it consists of one more element than the maximum sequence ending at the previous position. This can be adapted to compute the maximal submatrix sum as well.
 
 \begin{compactitem}

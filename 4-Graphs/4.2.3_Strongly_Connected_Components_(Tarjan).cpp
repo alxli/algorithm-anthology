@@ -1,0 +1,116 @@
+/*
+
+Given a directed graph, determine the strongly connected components (SCCs) using Tarjan's algorithm.
+A strongly connected component is a maximal set of vertices where every vertex can reach every other
+vertex. Condensing each SCC into one node produces a directed acyclic graph.
+
+- `TarjanSCC(n)` constructs a directed graph on nodes numbered from 0 to `n - 1`.
+- `add_edge(u, v)` adds the directed edge from `u` to `v`.
+- `build_scc()` populates `scc` with the strongly connected components.
+
+Time Complexity:
+- O(max(n, m)) per call to `build_scc()`, where $n$ is the number of nodes and $m$ is the number of
+  edges.
+
+Space Complexity:
+- O(max(n, m)) for storage of the graph and SCCs.
+- O(n) auxiliary stack space.
+
+*/
+
+#include <algorithm>
+#include <climits>
+#include <vector>
+
+struct TarjanSCC {
+  static const int INF = INT_MAX / 2;
+  std::vector<std::vector<int>> adj, scc;
+  std::vector<int> currstack, lowlink;
+  std::vector<bool> visited;
+  int timer;
+
+  TarjanSCC(int nodes = 0) : adj(nodes) {}
+
+  void add_edge(int u, int v) { adj[u].push_back(v); }
+
+  void dfs(int u) {
+    lowlink[u] = timer++;
+    visited[u] = true;
+    currstack.push_back(u);
+    bool is_component_root = true;
+    for (int v : adj[u]) {
+      if (!visited[v]) {
+        dfs(v);
+      }
+      if (lowlink[u] > lowlink[v]) {
+        lowlink[u] = lowlink[v];
+        is_component_root = false;
+      }
+    }
+    if (!is_component_root) {
+      return;
+    }
+    std::vector<int> component;
+    int v;
+    do {
+      v = currstack.back();
+      currstack.pop_back();
+      lowlink[v] = INF;  // marks v as removed from the stack
+      component.push_back(v);
+    } while (u != v);
+    scc.push_back(component);
+  }
+
+  void build_scc() {
+    int nodes = adj.size();
+    scc.clear();
+    currstack.clear();
+    lowlink.assign(nodes, 0);
+    visited.assign(nodes, false);
+    timer = 0;
+    for (int i = 0; i < nodes; i++) {
+      if (!visited[i]) {
+        dfs(i);
+      }
+    }
+  }
+};
+
+/*** Example Usage and Output:
+
+Components:
+5 6
+7 3 2
+4 1 0
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  TarjanSCC g(8);
+  g.add_edge(0, 1);
+  g.add_edge(1, 2);
+  g.add_edge(1, 4);
+  g.add_edge(1, 5);
+  g.add_edge(2, 3);
+  g.add_edge(2, 6);
+  g.add_edge(3, 2);
+  g.add_edge(3, 7);
+  g.add_edge(4, 0);
+  g.add_edge(4, 5);
+  g.add_edge(5, 6);
+  g.add_edge(6, 5);
+  g.add_edge(7, 3);
+  g.add_edge(7, 6);
+  g.build_scc();
+  cout << "Components:" << endl;
+  for (auto &component : g.scc) {
+    for (int v : component) {
+      cout << v << " ";
+    }
+    cout << endl;
+  }
+  return 0;
+}

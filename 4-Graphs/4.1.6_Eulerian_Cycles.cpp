@@ -1,0 +1,127 @@
+/*
+
+A Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or
+circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an
+Eulerian cycle if and only if every node has an in-degree equal to its out-degree, and all of its
+nodes with nonzero degree belong to a single strongly connected component. An undirected graph has
+an Eulerian cycle if and only if every node has even degree, and all of its nodes with nonzero
+degree belong to a single connected component.
+
+- `euler_cycle_directed(adj, u)` returns a vector of all nodes in a directed graph that are
+  reachable from the starting node `u` in an order which forms an Eulerian cycle. The first node
+  will be repeated as the last element of the vector. The directed graph given by adjacency list
+  `adj` must consist of nodes numbered from 0 to `adj.size() - 1`.
+- `euler_cycle_undirected(adj, u)` returns a vector of all nodes in a undirected graph that are
+  reachable from the starting node `u` in an order which forms an Eulerian cycle. The first node
+  will be repeated as the last element of the vector. The undirected graph given by adjacency list
+  `adj` must consist of bidirectional edges with nodes numbered from 0 to `adj.size() - 1`.
+
+Limitation: `euler_cycle_undirected()` marks used edges by their endpoint pair, so it does not
+support multigraphs (parallel edges between the same pair of nodes) -- the duplicate edge would be
+seen as already used. Supporting parallel edges requires marking edges by a unique edge ID instead.
+The directed version has no such restriction.
+
+Time Complexity:
+- O(max(n, m)) per call to either function, where $n$ and $m$ are the numbers of nodes and edges
+  respectively.
+
+Space Complexity:
+- O(n) auxiliary heap space for `euler_cycle_directed()`, where $n$ is the number of nodes.
+- O(n^2) auxiliary heap space for `euler_cycle_undirected()`, where $n$ is the number of nodes. This
+  can be reduced to O(m) auxiliary heap space on the number of edges if the `used` bit matrix is
+  replaced with an `std::unordered_set<std::pair<int, int>>`.
+
+*/
+
+#include <algorithm>
+#include <vector>
+
+std::vector<int> euler_cycle_directed(const std::vector<std::vector<int>> &adj, int u) {
+  int nodes = adj.size();
+  std::vector<int> stack, curr_edge(nodes), res;
+  stack.push_back(u);
+  while (!stack.empty()) {
+    u = stack.back();
+    stack.pop_back();
+    while (curr_edge[u] < static_cast<int>(adj[u].size())) {
+      stack.push_back(u);
+      u = adj[u][curr_edge[u]++];
+    }
+    res.push_back(u);
+  }
+  std::reverse(res.begin(), res.end());
+  return res;
+}
+
+std::vector<int> euler_cycle_undirected(const std::vector<std::vector<int>> &adj, int u) {
+  int nodes = adj.size();
+  std::vector<std::vector<bool>> used(nodes, std::vector<bool>(nodes));
+  std::vector<int> stack, curr_edge(nodes), res;
+  stack.push_back(u);
+  while (!stack.empty()) {
+    u = stack.back();
+    stack.pop_back();
+    while (curr_edge[u] < static_cast<int>(adj[u].size())) {
+      int v = adj[u][curr_edge[u]++];
+      int mn = std::min(u, v), mx = std::max(u, v);
+      if (!used[mn][mx]) {
+        used[mn][mx] = true;
+        stack.push_back(u);
+        u = v;
+      }
+    }
+    res.push_back(u);
+  }
+  std::reverse(res.begin(), res.end());
+  return res;
+}
+
+/*** Example Usage and Output:
+
+Eulerian cycle from 0 (directed): 0 1 3 4 1 2 0
+Eulerian cycle from 2 (undirected): 2 1 3 4 1 0 2
+
+***/
+
+#include <iostream>
+using namespace std;
+
+int main() {
+  {
+    vector<vector<int>> g(5);
+    g[0].push_back(1);
+    g[1].push_back(2);
+    g[2].push_back(0);
+    g[1].push_back(3);
+    g[3].push_back(4);
+    g[4].push_back(1);
+    vector<int> cycle = euler_cycle_directed(g, 0);
+    cout << "Eulerian cycle from 0 (directed):";
+    for (int v : cycle) {
+      cout << " " << v;
+    }
+    cout << endl;
+  }
+  {
+    vector<vector<int>> g(5);
+    g[0].push_back(1);
+    g[1].push_back(0);
+    g[1].push_back(2);
+    g[2].push_back(1);
+    g[2].push_back(0);
+    g[0].push_back(2);
+    g[1].push_back(3);
+    g[3].push_back(1);
+    g[3].push_back(4);
+    g[4].push_back(3);
+    g[4].push_back(1);
+    g[1].push_back(4);
+    vector<int> cycle = euler_cycle_undirected(g, 2);
+    cout << "Eulerian cycle from 2 (undirected):";
+    for (int v : cycle) {
+      cout << " " << v;
+    }
+    cout << endl;
+  }
+  return 0;
+}

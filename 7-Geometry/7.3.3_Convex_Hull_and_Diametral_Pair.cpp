@@ -11,7 +11,8 @@ coordinate magnitude. With 32-bit `int` coordinates they overflow once coordinat
 of thousands; use a 64-bit (`long long`) coordinate type for larger integer inputs.
 
 - `convex_hull(lo, hi)` returns the convex hull in clockwise order. The input range is sorted
-  lexicographically after the call. To produce CCW order, replace every `>= 0` with `<= 0`.
+  lexicographically after the call. To instead return the hull points counter-clockwise order,
+  replace every `>= 0` with `<= 0`.
 - `diametral_pair(lo, hi)` returns the maximum-distance pair of points.
 
 Time Complexity:
