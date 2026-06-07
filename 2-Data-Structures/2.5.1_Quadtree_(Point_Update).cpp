@@ -1,8 +1,8 @@
 /*
 
-Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and
-dynamic updates of individual indices. This implementation uses lazy initialization of nodes to
-conserve memory while supporting large indices.
+Maintain a two-dimensional array over a huge grid while supporting point updates and rectangle
+queries. The quadtree recursively splits each rectangle into four quadrants, and lazily allocates
+only the nodes touched by updates or needed to summarize queried regions.
 
 The query operation is defined by a commutative associative aggregate function `combine(a, b)`.
 Because untouched regions are implicit, `repeat_value(v, area)` must return the aggregate summary of

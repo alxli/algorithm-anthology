@@ -1,7 +1,8 @@
 /*
 
-Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous
-subarrays via the lazy propagation technique.
+Maintain a fixed-size array while supporting range updates and range aggregate queries. A lazy
+segment tree stores one aggregate value for each recursively split interval, plus pending updates
+that are pushed to children only when needed.
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. The default
 code below assumes a numerical array type, defining queries for the "min" of the target range.
@@ -16,9 +17,9 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-- `SegTree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
+- `LazySegTree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
   and all values initialized to `v`.
-- `SegTree(lo, hi)` constructs an array from two random-access iterators as a range `[lo, hi)`,
+- `LazySegTree(lo, hi)` constructs an array from two random-access iterators as a range `[lo, hi)`,
   initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`, where `i` is between 0 and `size() - 1`.
@@ -44,7 +45,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class SegTree {
+class LazySegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, long long len) { return d; }
   static T compose_deltas(const T &d1, const T &d2) { return d2; }
@@ -124,7 +125,7 @@ class SegTree {
   }
 
  public:
-  explicit SegTree(int n, const T &v = T())
+  explicit LazySegTree(int n, const T &v = T())
       : len(n), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
       build(0, 0, len - 1, v);
@@ -132,7 +133,8 @@ class SegTree {
   }
 
   template<class It>
-  SegTree(It lo, It hi) : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
+  LazySegTree(It lo, It hi)
+      : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
       build(0, 0, len - 1, lo);
     }
@@ -158,7 +160,7 @@ using namespace std;
 
 int main() {
   vector<int> arr{6, -2, 1, 8, 10};
-  SegTree<int> t(arr.begin(), arr.end());
+  LazySegTree<int> t(arr.begin(), arr.end());
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {

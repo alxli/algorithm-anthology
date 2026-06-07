@@ -1,11 +1,14 @@
 /*
 
-Maintain a set of two-dimensional points while supporting queries for the closest point in the set
-to a given query point. This implementation uses `std::pair` to represent points, requiring
-operators `<`, `==`, `-`, and `long double` casting to be defined on the numeric template type.
+Maintain a static set of two-dimensional points while supporting nearest-neighbor queries. A k-d
+tree recursively splits points by the coordinate with larger spread, searches the more promising
+side first, and only explores the other side when its splitting plane can still improve the answer.
 
-- `KDTree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
-  `[lo, hi)` of points.
+This implementation uses `std::pair` to represent points, requiring operators `<`, `==`, `-`, and
+`long double` casting to be defined on the numeric template type.
+
+- `NearestKDTree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a
+  range `[lo, hi)` of points.
 - `nearest(x, y, can_equal)` returns a point in the set that is closest to `(x, y)` by Euclidean
   distance. This may be equal to `(x, y)` only if `can_equal` is `true`.
 
@@ -26,7 +29,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class KDTree {
+class NearestKDTree {
   using point = std::pair<T, T>;
 
   static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
@@ -92,7 +95,7 @@ class KDTree {
 
  public:
   template<class It>
-  KDTree(It lo, It hi) : tree(lo, hi) {
+  NearestKDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     if (n <= 1) {
       throw std::runtime_error("K-d tree must have at least 2 points.");
@@ -115,7 +118,7 @@ using namespace std;
 
 int main() {
   vector<pair<int, int>> p{{0, 2}, {0, 3}, {-1, 0}};
-  KDTree<int> t(p.begin(), p.end());
+  NearestKDTree<int> t(p.begin(), p.end());
   assert(t.nearest(0, 2, true) == (pair<int, int>{0, 2}));
   assert(t.nearest(0, 2, false) == (pair<int, int>{0, 3}));
   assert(t.nearest(0, 0) == (pair<int, int>{-1, 0}));

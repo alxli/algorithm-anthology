@@ -1,8 +1,11 @@
 /*
 
-Maintains frequencies over a 1-based integer domain and finds order statistics by binary lifting on
-a Fenwick tree. This is useful for dynamic multisets of bounded integer values,
-coordinate-compressed kth-element queries, and online rank queries.
+Maintain frequencies over a 1-based integer domain and find order statistics by binary lifting on a
+Fenwick tree. The tree stores prefix counts; `kth(k)` greedily walks the implicit binary lifting
+structure to find the first index whose prefix count reaches `k`.
+
+This is useful for dynamic multisets of bounded integer values, coordinate-compressed kth-element
+queries, and online rank queries.
 
 - `initialize(n)` resets all frequencies.
 - `add(i, delta)` adds `delta` to the frequency of value/index `i`.

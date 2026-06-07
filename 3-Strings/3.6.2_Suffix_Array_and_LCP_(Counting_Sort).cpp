@@ -11,9 +11,9 @@ lengths of the longest common prefixes between all pairs of lexicographically ad
 `s`. For example, `"baa"` has the sorted suffixes `"a"`, `"aa"`, and `"baa"`, with an LCP array of
 `[1, 0]`.
 
-- `SuffixArray(s)` constructs a suffix array from the given string `s` using the original
-  Manber-Myers gap partitioning algorithm with a counting sort instead of a comparison-based sort to
-  reduce the running time to O(n log n).
+- `SuffixArrayCountingSort(s)` constructs a suffix array from the given string `s` using the original
+  Manber-Myers doubling algorithm with counting-sort-style rank updates to reduce the running time
+  to O(n log n).
 - `get_sa()` returns the constructed suffix array.
 - `get_lcp()` returns the corresponding LCP array for the suffix array.
 - `find(needle)` returns one position that `needle` occurs in `s` (not necessarily the first), or
@@ -42,12 +42,12 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-class SuffixArray {
+class SuffixArrayCountingSort {
   string s;
   std::vector<int> sa, rk;
 
  public:
-  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rk(s.size()) {
+  explicit SuffixArrayCountingSort(const string &s) : s(s), sa(s.size()), rk(s.size()) {
     int n = s.size();
     std::iota(sa.rbegin(), sa.rend(), 0);
     for (int i = 0; i < n; i++) {
@@ -123,7 +123,7 @@ class SuffixArray {
 using namespace std;
 
 int main() {
-  SuffixArray sa("banana");
+  SuffixArrayCountingSort sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
   vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
   vector<int> lcp_expected{1, 3, 0, 0, 2};

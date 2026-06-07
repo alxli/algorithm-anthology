@@ -1261,15 +1261,15 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Recursive Descent Parsing (Generic)}
-Evaluate an expression using a generalized parser class for custom-defined operand types, prefix unary operators, binary operators, and precedences. Typical parentheses behavior is supported, but multiplication by juxtaposition is not. Evaluation is performed using the recursive descent algorithm.
+\subsection{Recursive Descent Parsing}
+Evaluate an expression with custom operand types, prefix unary operators, binary operators, and precedences. Evaluation is performed by recursive descent: the parser recursively evaluates tighter precedence levels before looser ones. Parentheses are supported, but multiplication by juxtaposition is not.
 
 An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting $-1$ as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator \inlinecode{-}.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
-  \item \inlinecode{parser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item \inlinecode{RecursiveDescentParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
   \item \inlinecode{eval(lo, hi)} returns the evaluation of a range \inlinecode{[lo, hi)} of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
@@ -1334,7 +1334,7 @@ Operand eval_operand(const string &s) {
   return res;
 }
 
-class parser {
+class RecursiveDescentParser {
   using unary_op_map = std::unordered_map<string, UnaryOp>;
   using binary_op_map = std::unordered_map<string, BinaryRule>;
   unary_op_map unary_ops;
@@ -1385,7 +1385,7 @@ class parser {
   }
 
  public:
-  parser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
+  RecursiveDescentParser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, _] : unary_ops) {
       ops.insert(op);
@@ -1486,7 +1486,7 @@ int main() {
   binary_ops["/"] = {static_cast<BinaryOp>(div), 1};
   binary_ops["^"] = {static_cast<BinaryOp>(pow), 2};
 
-  parser p(unary_ops, binary_ops);
+  RecursiveDescentParser p(unary_ops, binary_ops);
   assert(EQ(p.eval("-+-((--(-+1)))"), -1));
   assert(EQ(p.eval("5*(3+3)-2-2"), 26));
   assert(EQ(p.eval("1+2*3*4+3*(+2)-100"), -69));
@@ -1506,14 +1506,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Shunting Yard Parsing}
-Evaluate an expression using a generalized parser class for custom-defined operand types, prefix unary operators, binary operators, and precedences. Typical parentheses behavior is supported, but multiplication by juxtaposition is not. Evaluation is performed using the shunting yard algorithm.
+Evaluate an expression with custom operand types, prefix unary operators, binary operators, and precedences. Evaluation is performed using the shunting yard algorithm, which maintains operator and value stacks while respecting precedence and parentheses. Multiplication by juxtaposition is not supported.
 
 An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting $-1$ as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator \inlinecode{-}.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
-  \item \inlinecode{parser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item \inlinecode{ShuntingYardParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
   \item \inlinecode{eval(lo, hi)} returns the evaluation of a range \inlinecode{[lo, hi)} of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
@@ -1579,7 +1579,7 @@ Operand eval_operand(const string &s) {
   return res;
 }
 
-class parser {
+class ShuntingYardParser {
   using unary_op_map = std::unordered_map<string, UnaryOp>;
   using binary_op_map = std::unordered_map<string, BinaryRule>;
   unary_op_map unary_ops;
@@ -1594,7 +1594,7 @@ class parser {
   }
 
  public:
-  parser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
+  ShuntingYardParser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, fn] : unary_ops) {
       ops.insert(op);
@@ -1740,7 +1740,7 @@ int main() {
   binary_ops["/"] = {static_cast<BinaryOp>(div), 1};
   binary_ops["^"] = {static_cast<BinaryOp>(pow), 2};
 
-  parser p(unary_ops, binary_ops);
+  ShuntingYardParser p(unary_ops, binary_ops);
   assert(EQ(p.eval("-+-((--(-+1)))"), -1));
   assert(EQ(p.eval("5*(3+3)-2-2"), 26));
   assert(EQ(p.eval("1+2*3*4+3*(+2)-100"), -69));
@@ -2085,7 +2085,7 @@ Given a string \inlinecode{s}, a suffix array is the array of the smallest start
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
-  \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a comparison-based sort.
+  \item \inlinecode{SuffixArrayManberMyers(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers doubling algorithm with a comparison-based sort.
   \item \inlinecode{get\_sa()} returns the constructed suffix array.
   \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
@@ -2116,12 +2116,12 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
 #include <vector>
 using std::string;
 
-class SuffixArray {
+class SuffixArrayManberMyers {
   string s;
   std::vector<int> sa, rk;
 
  public:
-  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rk(s.size()) {
+  explicit SuffixArrayManberMyers(const string &s) : s(s), sa(s.size()), rk(s.size()) {
     int n = s.size();
     std::iota(sa.begin(), sa.end(), 0);
     for (int i = 0; i < n; i++) {
@@ -2189,7 +2189,7 @@ class SuffixArray {
 using namespace std;
 
 int main() {
-  SuffixArray sa("banana");
+  SuffixArrayManberMyers sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
   vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
   vector<int> lcp_expected{1, 3, 0, 0, 2};
@@ -2206,7 +2206,7 @@ Given a string \inlinecode{s}, a suffix array is the array of the smallest start
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
-  \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers gap partitioning algorithm with a counting sort instead of a comparison-based sort to reduce the running time to $O(n \log n)$.
+  \item \inlinecode{SuffixArrayCountingSort(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers doubling algorithm with counting-sort-style rank updates to reduce the running time to $O(n \log n)$.
   \item \inlinecode{get\_sa()} returns the constructed suffix array.
   \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
@@ -2237,12 +2237,12 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
 #include <vector>
 using std::string;
 
-class SuffixArray {
+class SuffixArrayCountingSort {
   string s;
   std::vector<int> sa, rk;
 
  public:
-  explicit SuffixArray(const string &s) : s(s), sa(s.size()), rk(s.size()) {
+  explicit SuffixArrayCountingSort(const string &s) : s(s), sa(s.size()), rk(s.size()) {
     int n = s.size();
     std::iota(sa.rbegin(), sa.rend(), 0);
     for (int i = 0; i < n; i++) {
@@ -2319,7 +2319,7 @@ class SuffixArray {
 using namespace std;
 
 int main() {
-  SuffixArray sa("banana");
+  SuffixArrayCountingSort sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
   vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
   vector<int> lcp_expected{1, 3, 0, 0, 2};
@@ -2336,7 +2336,7 @@ Given a string \inlinecode{s}, a suffix array is the array of the smallest start
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
 
 \begin{compactitem}
-  \item \inlinecode{SuffixArray(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
+  \item \inlinecode{SuffixArrayDC3(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
   \item \inlinecode{get\_sa()} returns the constructed suffix array.
   \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
@@ -2366,7 +2366,7 @@ For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array
 #include <vector>
 using std::string;
 
-class SuffixArray {
+class SuffixArrayDC3 {
   static bool leq(int a1, int a2, int b1, int b2) { return (a1 < b1) || (a1 == b1 && a2 <= b2); }
 
   static bool leq(int a1, int a2, int a3, int b1, int b2, int b3) {
@@ -2453,7 +2453,7 @@ class SuffixArray {
   std::vector<int> sa;
 
  public:
-  explicit SuffixArray(const string &s) : s(s), sa(s.size() + 1) {
+  explicit SuffixArrayDC3(const string &s) : s(s), sa(s.size() + 1) {
     int n = s.size();
     std::vector<int> scopy(n);
     for (int i = 0; i < n; i++) {
@@ -2517,7 +2517,7 @@ class SuffixArray {
 using namespace std;
 
 int main() {
-  SuffixArray sa("banana");
+  SuffixArrayDC3 sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
   vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
   vector<int> lcp_expected{1, 3, 0, 0, 2};

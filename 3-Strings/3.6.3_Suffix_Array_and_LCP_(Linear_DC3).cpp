@@ -11,7 +11,7 @@ lengths of the longest common prefixes between all pairs of lexicographically ad
 `s`. For example, `"baa"` has the sorted suffixes `"a"`, `"aa"`, and `"baa"`, with an LCP array of
 `[1, 0]`.
 
-- `SuffixArray(s)` constructs a suffix array from the given string `s` using the linear time
+- `SuffixArrayDC3(s)` constructs a suffix array from the given string `s` using the linear time
   DC3/skew algorithm by Karkkainen & Sanders (2003) with radix sort.
 - `get_sa()` returns the constructed suffix array.
 - `get_lcp()` returns the corresponding LCP array for the suffix array.
@@ -40,7 +40,7 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-class SuffixArray {
+class SuffixArrayDC3 {
   static bool leq(int a1, int a2, int b1, int b2) { return (a1 < b1) || (a1 == b1 && a2 <= b2); }
 
   static bool leq(int a1, int a2, int a3, int b1, int b2, int b3) {
@@ -127,7 +127,7 @@ class SuffixArray {
   std::vector<int> sa;
 
  public:
-  explicit SuffixArray(const string &s) : s(s), sa(s.size() + 1) {
+  explicit SuffixArrayDC3(const string &s) : s(s), sa(s.size() + 1) {
     int n = s.size();
     std::vector<int> scopy(n);
     for (int i = 0; i < n; i++) {
@@ -190,7 +190,7 @@ class SuffixArray {
 using namespace std;
 
 int main() {
-  SuffixArray sa("banana");
+  SuffixArrayDC3 sa("banana");
   vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
   vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
   vector<int> lcp_expected{1, 3, 0, 0, 2};

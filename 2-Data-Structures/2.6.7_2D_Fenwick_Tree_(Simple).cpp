@@ -1,9 +1,11 @@
 /*
 
-Maintain a 2D array of numerical type, allowing for updates of individual cells in the matrix (point
-update) and queries for the sum of rectangular sub-matrices (range query). This implementation
-assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to `R`, inclusive,
-and columns have valid indices from 1 to `C`, inclusive).
+Maintain a 2D numerical array while supporting point increments and rectangle-sum queries. This is
+the two-dimensional form of the standard Fenwick tree: each internal entry stores a rectangular
+block sum, and prefix queries combine O(log R * log C) disjoint blocks.
+
+This implementation uses 1-based indices, so rows are from 1 to `R`, inclusive, and columns are
+from 1 to `C`, inclusive.
 
 - `initialize(R, C)` resets the data structure.
 - `vals[r][c]` stores the value at index `(r, c)`.

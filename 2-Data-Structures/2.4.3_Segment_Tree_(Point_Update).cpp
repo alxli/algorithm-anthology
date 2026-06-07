@@ -1,7 +1,8 @@
 /*
 
-Maintain a fixed-size array while supporting dynamic queries of contiguous sub-arrays and dynamic
-updates of individual indices.
+Maintain a fixed-size array while supporting point updates and range aggregate queries. A segment
+tree stores one aggregate value for each recursively split interval, so an update only rebuilds the
+O(log n) intervals on the path from one leaf to the root.
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. The default
 code below assumes a numerical array type, defining queries for the "min" of the target range.

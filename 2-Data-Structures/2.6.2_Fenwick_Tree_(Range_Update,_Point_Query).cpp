@@ -1,10 +1,13 @@
 /*
 
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously
-incremented by arbitrary values (range update) and values at individual indices to be queried (point
-query). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to
-`size() - 1`, inclusive).
+Maintain a numerical array while supporting range increments and point queries. This is done by
+storing the difference array in a Fenwick tree: adding `x` to `[lo, hi]` adds `+x` at `lo` and `-x`
+after `hi`, and the value at index `i` is the prefix sum of those differences through `i`.
 
+This implementation uses 0-based array indices, so valid indices are from 0 to `size() - 1`,
+inclusive.
+
+- `FenwickRUPQ(n)` constructs an array of size `n` with every value initialized to 0.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
@@ -24,12 +27,12 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class FenwickTree {
+class FenwickRUPQ {
   int len;
   std::vector<T> tree;
 
  public:
-  explicit FenwickTree(int n) : len(n), tree(n + 2) {}
+  explicit FenwickRUPQ(int n) : len(n), tree(n + 2) {}
 
   int size() const { return len; }
 
@@ -63,7 +66,7 @@ Values: 5 10 15 10 10
 using namespace std;
 
 int main() {
-  FenwickTree<int> t(5);
+  FenwickRUPQ<int> t(5);
   t.add(0, 1, 5);
   t.add(1, 2, 5);
   t.add(2, 4, 10);

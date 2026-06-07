@@ -1,9 +1,9 @@
 /*
 
-Evaluate an expression using a generalized parser class for custom-defined operand types, prefix
-unary operators, binary operators, and precedences. Typical parentheses behavior is supported, but
-multiplication by juxtaposition is not. Evaluation is performed using the recursive descent
-algorithm.
+Evaluate an expression with custom operand types, prefix unary operators, binary operators, and
+precedences. Evaluation is performed by recursive descent: the parser recursively evaluates tighter
+precedence levels before looser ones. Parentheses are supported, but multiplication by juxtaposition
+is not.
 
 An arbitrary operand type is supported, with its string representation defined by a user-specified
 `is_operand()` and `eval_operand()` functions. For maximum reliability, the string representation of
@@ -17,10 +17,10 @@ suffixes of one another, else the tokenization process may be ambiguous. For exa
 `+` are both operators, then `++` may be split into either `["+", "+"]` or `["++"]` depending on the
 lexicographical ordering of conflicting operators.
 
-- `parser(unary_op, binary_op)` initializes a parser with operators specified by hash tables
-  `unary_op` (of operator to function pointer) and `binary_op` (of operator to pair of function
-  pointer and operator precedence). Operator precedences should be numbered upwards starting at 0
-  (lowest precedence, evaluated last).
+- `RecursiveDescentParser(unary_op, binary_op)` initializes a parser with operators specified by
+  hash tables `unary_op` (of operator to function pointer) and `binary_op` (of operator to pair of
+  function pointer and operator precedence). Operator precedences should be numbered upwards
+  starting at 0 (lowest precedence, evaluated last).
 - `split(s)` returns a vector of tokens for the expression `s`, split on the given operators during
   construction. Each parenthesis, operator, and operand satisfying `is_operand()` will be split into
   a separate token. The algorithm is naive, matching operators lazily in the case of overlapping
@@ -88,7 +88,7 @@ Operand eval_operand(const string &s) {
   return res;
 }
 
-class parser {
+class RecursiveDescentParser {
   using unary_op_map = std::unordered_map<string, UnaryOp>;
   using binary_op_map = std::unordered_map<string, BinaryRule>;
   unary_op_map unary_ops;
@@ -139,7 +139,7 @@ class parser {
   }
 
  public:
-  parser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
+  RecursiveDescentParser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, _] : unary_ops) {
       ops.insert(op);
@@ -241,7 +241,7 @@ int main() {
   binary_ops["/"] = {static_cast<BinaryOp>(div), 1};
   binary_ops["^"] = {static_cast<BinaryOp>(pow), 2};
 
-  parser p(unary_ops, binary_ops);
+  RecursiveDescentParser p(unary_ops, binary_ops);
   assert(EQ(p.eval("-+-((--(-+1)))"), -1));
   assert(EQ(p.eval("5*(3+3)-2-2"), 26));
   assert(EQ(p.eval("1+2*3*4+3*(+2)-100"), -69));

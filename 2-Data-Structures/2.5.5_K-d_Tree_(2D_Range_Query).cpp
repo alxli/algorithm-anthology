@@ -1,10 +1,13 @@
 /*
 
-Maintain a set of two-dimensional points while supporting queries for all points that fall inside
-given rectangular regions. This implementation uses `std::pair` to represent points, requiring
-operators `<` and `==` to be defined on the numeric template type.
+Maintain a static set of two-dimensional points while supporting rectangle reporting queries. A
+k-d tree recursively splits points by alternating coordinates and stores a bounding box for each
+subtree, allowing whole subtrees to be accepted or pruned during a query.
 
-- `KDTree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
+This implementation uses `std::pair` to represent points, requiring operators `<` and `==` to be
+defined on the numeric template type.
+
+- `RangeKDTree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
   `[lo, hi)` of points.
 - `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point in the set that falls into
   the rectangular region consisting of rows from `x1` to `x2`, inclusive, and columns from `y1` to
@@ -27,7 +30,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class KDTree {
+class RangeKDTree {
   using point = std::pair<T, T>;
 
   static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
@@ -89,7 +92,7 @@ class KDTree {
 
  public:
   template<class It>
-  KDTree(It lo, It hi) : tree(lo, hi) {
+  RangeKDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     l_index.resize(n);
     h_index.resize(n);
@@ -125,7 +128,7 @@ void print(const pair<int, int> &p) {
 int main() {
   vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
                            {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
-  KDTree<int> t(v.begin(), v.end());
+  RangeKDTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);
   cout << endl;
   t.query(1, 1, 4, 8, print);

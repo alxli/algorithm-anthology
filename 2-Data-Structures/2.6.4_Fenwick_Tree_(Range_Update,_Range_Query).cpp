@@ -1,10 +1,13 @@
 /*
 
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously
-incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays
-(range query). This implementation assumes that the array is 0-based (i.e. has valid indices from 0
-to `size() - 1`, inclusive).
+Maintain a numerical array while supporting range increments and range-sum queries. This uses two
+Fenwick trees to recover prefix sums after difference-array updates: if the difference array stores
+range additions, then the prefix sum through `hi` can be written as `hi * sum(t1, hi) - sum(t2, hi)`.
 
+This implementation uses 0-based array indices externally, so valid indices are from 0 to
+`size() - 1`, inclusive.
+
+- `FenwickRURQ(n)` constructs an array of size `n` with every value initialized to 0.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` increments the value at index `i` by `x`.
@@ -27,7 +30,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class FenwickTree {
+class FenwickRURQ {
   int len;
   std::vector<T> t1, t2;
 
@@ -46,7 +49,7 @@ class FenwickTree {
   }
 
  public:
-  explicit FenwickTree(int n) : len(n), t1(n + 2), t2(n + 2) {}
+  explicit FenwickRURQ(int n) : len(n), t1(n + 2), t2(n + 2) {}
 
   int size() const { return len; }
 
@@ -83,7 +86,7 @@ using namespace std;
 
 int main() {
   vector<int> a{10, 1, 2, 3, 4};
-  FenwickTree<int> t(5);
+  FenwickRURQ<int> t(5);
   for (int i = 0; i < t.size(); i++) {
     t.set(i, a[i]);
   }

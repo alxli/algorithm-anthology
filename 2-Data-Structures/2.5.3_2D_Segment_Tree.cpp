@@ -2,7 +2,9 @@
 
 Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and
 dynamic updates of individual indices. This implementation uses lazy initialization of nodes to
-conserve memory while supporting large indices.
+conserve memory while supporting large indices, making it the two-dimensional analogue of a sparse
+(a.k.a. dynamic or implicit) segment tree: row and column nodes are allocated lazily as cells are
+touched.
 
 The query operation is defined by a commutative associative aggregate function `combine(a, b)`.
 Because untouched regions are implicit, `repeat_value(v, area)` must return the aggregate summary of
@@ -15,8 +17,8 @@ updated cell. The default code below defines updates that "set" the chosen cell 
 Another possible update operation is "increment", in which case `apply_delta(v, d)` should return
 $v + d$.
 
-- `SegTree2D(v)` constructs a two-dimensional array with rows from 0 to `R` and columns
-  from 0 to `C`, inclusive. All values are implicitly initialized to `v`.
+- `SegTree2D(v)` constructs a two-dimensional array with rows from 0 to `R` and columns from 0 to
+  `C`, inclusive. All values are implicitly initialized to `v`.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows from `r1` to `r2`, inclusive, and columns from `c1` to `c2`,

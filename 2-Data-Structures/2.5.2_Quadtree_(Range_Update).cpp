@@ -1,8 +1,8 @@
 /*
 
-Maintain a two-dimensional array while supporting both dynamic queries and updates of rectangular
-sub-arrays via the lazy propagation technique. This implementation uses lazy initialization of nodes
-to conserve memory while supporting large indices.
+Maintain a two-dimensional array over a huge grid while supporting rectangle updates and rectangle
+queries. The quadtree recursively splits each rectangle into four quadrants, lazily allocates touched
+nodes, and stores pending rectangle updates with lazy propagation.
 
 The query operation is defined by a commutative associative aggregate function `combine(a, b)`.
 Because untouched regions are implicit, `repeat_value(v, area)` must return the aggregate summary of
@@ -19,7 +19,7 @@ updates sequentially. The default code below defines rectangle assignment. For r
 `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, area)` should return `v + d`
 for range-min/range-max queries, and `v + d * area` for range-sum queries.
 
-- `Quadtree(v)` constructs a two-dimensional array with rows from 0 to `R` and columns from 0 to
+- `LazyQuadtree(v)` constructs a two-dimensional array with rows from 0 to `R` and columns from 0 to
   `C`, inclusive. All values are implicitly initialized to `v`.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
@@ -43,7 +43,7 @@ Space Complexity:
 #include <cstddef>
 
 template<class T>
-class Quadtree {
+class LazyQuadtree {
   static const int R = 1000000000;
   static const int C = 1000000000;
 
@@ -177,11 +177,11 @@ class Quadtree {
   }
 
  public:
-  explicit Quadtree(const T &v = T()) : root(nullptr), init(v) {}
+  explicit LazyQuadtree(const T &v = T()) : root(nullptr), init(v) {}
 
-  ~Quadtree() { clean_up(root); }
-  Quadtree(const Quadtree &) = delete;
-  Quadtree &operator=(const Quadtree &) = delete;
+  ~LazyQuadtree() { clean_up(root); }
+  LazyQuadtree(const LazyQuadtree &) = delete;
+  LazyQuadtree &operator=(const LazyQuadtree &) = delete;
   T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -220,7 +220,7 @@ Values:
 using namespace std;
 
 int main() {
-  Quadtree<int> t(0);
+  LazyQuadtree<int> t(0);
   t.update(0, 0, 7);
   t.update(0, 1, 6);
   t.update(1, 0, 5);

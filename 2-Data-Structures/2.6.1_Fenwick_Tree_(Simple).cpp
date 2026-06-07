@@ -1,8 +1,11 @@
 /*
 
-Maintain an array of numerical type, allowing for updates of individual indices (point update) and
-queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the
-array is 1-based (i.e. has valid indices from 1 to `n`, inclusive).
+Maintain a numerical array while supporting point increments and range-sum queries. A Fenwick tree
+stores partial prefix sums: each `tree[i]` covers the block of indices ending at `i` whose length is
+the lowest set bit of `i`. Updating one value adds to O(log n) covering blocks, and querying a
+prefix sum walks through O(log n) disjoint blocks.
+
+This implementation uses 1-based array indices, so valid indices are from 1 to `n`, inclusive.
 
 - `initialize(n)` resets the data structure.
 - `vals[i]` stores the value at index `i`.

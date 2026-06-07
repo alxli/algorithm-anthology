@@ -1,11 +1,14 @@
 /*
 
-Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to be simultaneously
-incremented by arbitrary values (range update) and queries for the sum of rectangular sub-matrices
-(range query). This implementation uses `std::unordered_map` for coordinate compression, allowing
-for large indices to be accessed with efficient space complexity. That is, rows have valid indices
-from 0 to `R`, inclusive, and columns have valid indices from 0 to `C`, inclusive.
+Maintain a 2D numerical array over a huge index range while supporting rectangle increments and
+rectangle-sum queries. This is the sparse two-dimensional analogue of range-update/range-query
+Fenwick trees: four sparse trees store the inclusion-exclusion coefficients needed to recover any
+prefix rectangle sum.
 
+This implementation uses 0-based indices, so rows are from 0 to `R`, inclusive, and columns are from
+0 to `C`, inclusive.
+
+- `SparseFenwick2D()` constructs an initially zero 2D array over rows 0 to `R` and columns 0 to `C`.
 - `add(r, c, x)` adds `x` to the value at index `(r, c)`.
 - `add(r1, c1, r2, c2, x)` adds `x` to all indices in the rectangle with upper-left corner
   `(r1, c1)` and lower-right corner `(r2, c2)`.
@@ -30,7 +33,7 @@ Space Complexity:
 #include <utility>
 
 template<class T>
-class FenwickTree2D {
+class SparseFenwick2D {
   static const int R = 1000000001;
   static const int C = 1000000001;
 
@@ -110,7 +113,7 @@ Values:
 using namespace std;
 
 int main() {
-  FenwickTree2D<int> t;
+  SparseFenwick2D<int> t;
   t.set(0, 0, 5);
   t.set(0, 1, 6);
   t.set(1, 0, 7);

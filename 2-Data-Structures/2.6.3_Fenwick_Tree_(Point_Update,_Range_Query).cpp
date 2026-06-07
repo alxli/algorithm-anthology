@@ -1,9 +1,13 @@
 /*
 
-Maintain an array of numerical type, allowing for updates of individual indices (point update) and
-queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the
-array is 0-based (i.e. has valid indices from 0 to `size() - 1`, inclusive).
+Maintain a numerical array while supporting point increments and range-sum queries. This is the
+standard Fenwick tree pattern: each internal entry stores a block sum, `add(i, x)` updates all
+blocks containing `i`, and `sum(hi)` combines disjoint blocks to obtain a prefix sum.
 
+This implementation uses 0-based array indices externally, so valid indices are from 0 to
+`size() - 1`, inclusive.
+
+- `FenwickPURQ(n)` constructs an array of size `n` with every value initialized to 0.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
@@ -25,12 +29,12 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class FenwickTree {
+class FenwickPURQ {
   int len;
   std::vector<T> vals, tree;
 
  public:
-  explicit FenwickTree(int n) : len(n), vals(n + 1), tree(n + 1) {}
+  explicit FenwickPURQ(int n) : len(n), vals(n + 1), tree(n + 1) {}
 
   int size() const { return len; }
   T at(int i) const { return vals[i + 1]; }
@@ -70,7 +74,7 @@ using namespace std;
 
 int main() {
   vector<int> a{10, 1, 2, 3, 4};
-  FenwickTree<int> t(5);
+  FenwickPURQ<int> t(5);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     t.set(i, a[i]);
   }

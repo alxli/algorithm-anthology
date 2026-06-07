@@ -1,11 +1,14 @@
 /*
 
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously
-incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays
-(range query). This implementation uses `std::unordered_map` for coordinate compression, allowing
-for large indices to be accessed with efficient space complexity. That is, all array indices from 0
-to `N`, inclusive, are accessible.
+Maintain a numerical array over a huge index range while supporting range increments and range-sum
+queries. This is the sparse version of the two-tree Fenwick range-update/range-query trick: only
+Fenwick nodes reached by previous operations are stored, using `std::unordered_map` instead of dense
+vectors.
 
+This implementation uses 0-based array indices, so all indices from 0 to `N`, inclusive, are
+accessible.
+
+- `SparseFenwickRURQ()` constructs an initially zero array over indices 0 to `N`.
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `add(lo, hi, x)` adds `x` to the values at all indices from `lo` to `hi`, inclusive.
@@ -27,7 +30,7 @@ Space Complexity:
 #include <unordered_map>
 
 template<class T>
-class FenwickTree {
+class SparseFenwickRURQ {
   static const int N = 1000000001;
   std::unordered_map<int, T> tmul, tadd;
 
@@ -77,7 +80,7 @@ using namespace std;
 
 int main() {
   vector<int> a{10, 1, 2, 3, 4};
-  FenwickTree<int> t;
+  SparseFenwickRURQ<int> t;
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     t.set(i, a[i]);
   }

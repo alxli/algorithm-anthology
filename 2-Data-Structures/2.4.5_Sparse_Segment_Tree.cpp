@@ -1,9 +1,10 @@
 /*
 
-Maintain an array over a large index range while supporting both dynamic queries and updates of
-contiguous subarrays via the lazy propagation technique. This implementation uses lazy
-initialization of nodes to conserve memory: only the nodes covering touched indices are ever
-allocated, so indices up to `N` are supported without preallocating the whole tree.
+A sparse segment tree (also commonly called a dynamic or implicit segment tree) maintains an array
+over a large index range while supporting both dynamic queries and updates of contiguous subarrays
+via the lazy propagation technique. This implementation uses lazy initialization of nodes to
+conserve memory: only the nodes covering touched indices are ever allocated, so indices up to `N`
+are supported without preallocating the whole tree.
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. Since untouched
 nodes are implicit, `repeat_value(v, len)` must return the aggregate summary of `len` copies of the
@@ -20,8 +21,8 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-- `SegTree(v)` constructs an array over indices 0 to `N`, inclusive, with every value implicitly
-  initialized to `v`. Nodes are allocated lazily as indices are touched.
+- `SparseSegTree(v)` constructs an array over indices 0 to `N`, inclusive, with every value
+  implicitly initialized to `v`. Nodes are allocated lazily as indices are touched.
 - `at(i)` returns the value at index `i`, where `i` is between 0 and `N`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
   inclusive. If `lo == hi`, then the single specified value is returned.
@@ -43,7 +44,7 @@ Space Complexity:
 #include <cstddef>
 
 template<class T>
-class SegTree {
+class SparseSegTree {
   static const int N = 1000000000;
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
@@ -140,11 +141,11 @@ class SegTree {
   }
 
  public:
-  explicit SegTree(const T &v = T()) : root(nullptr), init(v) {}
+  explicit SparseSegTree(const T &v = T()) : root(nullptr), init(v) {}
 
-  ~SegTree() { clean_up(root); }
-  SegTree(const SegTree &) = delete;
-  SegTree &operator=(const SegTree &) = delete;
+  ~SparseSegTree() { clean_up(root); }
+  SparseSegTree(const SparseSegTree &) = delete;
+  SparseSegTree &operator=(const SparseSegTree &) = delete;
   T at(int i) { return query(i, i); }
   T query(int lo, int hi) { return query(root, 0, N, lo, hi); }
   void update(int i, const T &d) { return update(i, i, d); }
@@ -163,7 +164,7 @@ Values: 5 5 5 1 5
 using namespace std;
 
 int main() {
-  SegTree<int> t(0);
+  SparseSegTree<int> t(0);
   t.update(0, 6);
   t.update(1, -2);
   t.update(2, 4);

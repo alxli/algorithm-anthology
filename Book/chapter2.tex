@@ -2990,7 +2990,7 @@ int main() {
 Values: 6 -2 4 8 10
 \end{exampleoutput}
 \subsection{Segment Tree (Point Update)}
-Maintain a fixed-size array while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
+Maintain a fixed-size array while supporting point updates and range aggregate queries. A segment tree stores one aggregate value for each recursively split interval, so an update only rebuilds the $O(\log n)$ intervals on the path from one leaf to the root.
 
 The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$.
 
@@ -3133,15 +3133,15 @@ Values: 6 -2 4 8 10
 The minimum value in the range [0, 3] is -2.
 \end{exampleoutput}
 \subsection{Segment Tree (Range Update)}
-Maintain a fixed-size array while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique.
+Maintain a fixed-size array while supporting range updates and range aggregate queries. A lazy segment tree stores one aggregate value for each recursively split interval, plus pending updates that are pushed to children only when needed.
 
 The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{SegTree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
-  \item \inlinecode{SegTree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
+  \item \inlinecode{LazySegTree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{LazySegTree(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
@@ -3170,7 +3170,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
 #include <vector>
 
 template<class T>
-class SegTree {
+class LazySegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, long long len) { return d; }
   static T compose_deltas(const T &d1, const T &d2) { return d2; }
@@ -3250,7 +3250,7 @@ class SegTree {
   }
 
  public:
-  explicit SegTree(int n, const T &v = T())
+  explicit LazySegTree(int n, const T &v = T())
       : len(n), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
       build(0, 0, len - 1, v);
@@ -3258,7 +3258,8 @@ class SegTree {
   }
 
   template<class It>
-  SegTree(It lo, It hi) : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
+  LazySegTree(It lo, It hi)
+      : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
       build(0, 0, len - 1, lo);
     }
@@ -3280,7 +3281,7 @@ using namespace std;
 
 int main() {
   vector<int> arr{6, -2, 1, 8, 10};
-  SegTree<int> t(arr.begin(), arr.end());
+  LazySegTree<int> t(arr.begin(), arr.end());
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {
@@ -3304,15 +3305,15 @@ int main() {
 Values: 6 -2 4 8 10
 Values: 5 5 5 1 5
 \end{exampleoutput}
-\subsection{Segment Tree (Compressed)}
-Maintain an array over a large index range while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory: only the nodes covering touched indices are ever allocated, so indices up to \inlinecode{N} are supported without preallocating the whole tree.
+\subsection{Sparse Segment Tree}
+A sparse segment tree (also commonly called a dynamic or implicit segment tree) maintains an array over a large index range while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory: only the nodes covering touched indices are ever allocated, so indices up to \inlinecode{N} are supported without preallocating the whole tree.
 
 The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{repeat\_value(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For range-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, len)} should return $v \cdot len$.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{SegTree(v)} constructs an array over indices 0 to \inlinecode{N}, inclusive, with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
+  \item \inlinecode{SparseSegTree(v)} constructs an array over indices 0 to \inlinecode{N}, inclusive, with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{N}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
@@ -3338,7 +3339,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
 #include <cstddef>
 
 template<class T>
-class SegTree {
+class SparseSegTree {
   static const int N = 1000000000;
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
@@ -3435,11 +3436,11 @@ class SegTree {
   }
 
  public:
-  explicit SegTree(const T &v = T()) : root(nullptr), init(v) {}
+  explicit SparseSegTree(const T &v = T()) : root(nullptr), init(v) {}
 
-  ~SegTree() { clean_up(root); }
-  SegTree(const SegTree &) = delete;
-  SegTree &operator=(const SegTree &) = delete;
+  ~SparseSegTree() { clean_up(root); }
+  SparseSegTree(const SparseSegTree &) = delete;
+  SparseSegTree &operator=(const SparseSegTree &) = delete;
   T at(int i) { return query(i, i); }
   T query(int lo, int hi) { return query(root, 0, N, lo, hi); }
   void update(int i, const T &d) { return update(i, i, d); }
@@ -3454,7 +3455,7 @@ class SegTree {
 using namespace std;
 
 int main() {
-  SegTree<int> t(0);
+  SparseSegTree<int> t(0);
   t.update(0, 6);
   t.update(1, -2);
   t.update(2, 4);
@@ -3482,7 +3483,7 @@ int main() {
 Values: 6 -2 4 8 10
 Values: 5 5 5 1 5
 \end{exampleoutput}
-\subsection{Segment Tree (Persistent)}
+\subsection{Persistent Segment Tree}
 Maintains immutable versions of a segment tree under point updates. Each update creates a new root by copying only the nodes on the path from the root to the updated leaf, while all unchanged subtrees are shared with previous versions.
 
 The implementation below stores sums over a fixed index range \inlinecode{[0, n - 1]}. Persistent segment trees are useful for offline order-statistics queries, rollback-like histories, and functional dynamic programming states.
@@ -3939,7 +3940,7 @@ Values: 2 2 1 8 10 11 (min: 1)
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Quadtree (Point Update)}
-Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
+Maintain a two-dimensional array over a huge grid while supporting point updates and rectangle queries. The quadtree recursively splits each rectangle into four quadrants, and lazily allocates only the nodes touched by updates or needed to summarize queried regions.
 
 The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
 
@@ -4137,14 +4138,14 @@ Values:
 0 1 9
 \end{exampleoutput}
 \subsection{Quadtree (Range Update)}
-Maintain a two-dimensional array while supporting both dynamic queries and updates of rectangular sub-arrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
+Maintain a two-dimensional array over a huge grid while supporting rectangle updates and rectangle queries. The quadtree recursively splits each rectangle into four quadrants, lazily allocates touched nodes, and stores pending rectangle updates with lazy propagation.
 
 The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, area)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{area} cells, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined region must be equivalent to applying it to each child region and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines rectangle assignment. For rectangle increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, area)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * area} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{LazyQuadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
   \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at \inlinecode{(r, c)} to \inlinecode{apply\_delta(v, d)}.
@@ -4170,7 +4171,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, area)}, which applie
 #include <cstddef>
 
 template<class T>
-class Quadtree {
+class LazyQuadtree {
   static const int R = 1000000000;
   static const int C = 1000000000;
 
@@ -4304,11 +4305,11 @@ class Quadtree {
   }
 
  public:
-  explicit Quadtree(const T &v = T()) : root(nullptr), init(v) {}
+  explicit LazyQuadtree(const T &v = T()) : root(nullptr), init(v) {}
 
-  ~Quadtree() { clean_up(root); }
-  Quadtree(const Quadtree &) = delete;
-  Quadtree &operator=(const Quadtree &) = delete;
+  ~LazyQuadtree() { clean_up(root); }
+  LazyQuadtree(const LazyQuadtree &) = delete;
+  LazyQuadtree &operator=(const LazyQuadtree &) = delete;
   T at(int r, int c) { return query(r, c, r, c); }
 
   T query(int r1, int c1, int r2, int c2) {
@@ -4341,7 +4342,7 @@ class Quadtree {
 using namespace std;
 
 int main() {
-  Quadtree<int> t(0);
+  LazyQuadtree<int> t(0);
   t.update(0, 0, 7);
   t.update(0, 1, 6);
   t.update(1, 0, 5);
@@ -4371,7 +4372,7 @@ Values:
 0 1 9
 \end{exampleoutput}
 \subsection{2D Segment Tree}
-Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices.
+Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices, making it the two-dimensional analogue of a sparse (a.k.a. dynamic or implicit) segment tree: row and column nodes are allocated lazily as cells are touched.
 
 The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
 
@@ -4779,10 +4780,12 @@ int main() {
 (1, 4) (2, 2) (3, 1)
 \end{exampleoutput}
 \subsection{K-d Tree (2D Range Query)}
-Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type.
+Maintain a static set of two-dimensional points while supporting rectangle reporting queries. A k-d tree recursively splits points by alternating coordinates and stores a bounding box for each subtree, allowing whole subtrees to be accepted or pruned during a query.
+
+This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type.
 
 \begin{compactitem}
-  \item \inlinecode{KDTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
+  \item \inlinecode{RangeKDTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
   \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
@@ -4806,7 +4809,7 @@ Maintain a set of two-dimensional points while supporting queries for all points
 #include <vector>
 
 template<class T>
-class KDTree {
+class RangeKDTree {
   using point = std::pair<T, T>;
 
   static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
@@ -4868,7 +4871,7 @@ class KDTree {
 
  public:
   template<class It>
-  KDTree(It lo, It hi) : tree(lo, hi) {
+  RangeKDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     l_index.resize(n);
     h_index.resize(n);
@@ -4900,7 +4903,7 @@ void print(const pair<int, int> &p) {
 int main() {
   vector<pair<int, int>> v{{1, 4},  {5, 4},  {2, 2},   {3, 1},   {6, -5},
                            {5, -1}, {3, -3}, {-1, -2}, {-1, -1}, {2, -1}};
-  KDTree<int> t(v.begin(), v.end());
+  RangeKDTree<int> t(v.begin(), v.end());
   t.query(-1, -1, 2, 5, print);
   cout << endl;
   t.query(1, 1, 4, 8, print);
@@ -4913,10 +4916,12 @@ int main() {
 (1, 4) (2, 2) (3, 1)
 \end{exampleoutput}
 \subsection{K-d Tree (Nearest Neighbor)}
-Maintain a set of two-dimensional points while supporting queries for the closest point in the set to a given query point. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}}, \inlinecode{==}, \inlinecode{-}, and \inlinecode{long double} casting to be defined on the numeric template type.
+Maintain a static set of two-dimensional points while supporting nearest-neighbor queries. A k-d tree recursively splits points by the coordinate with larger spread, searches the more promising side first, and only explores the other side when its splitting plane can still improve the answer.
+
+This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}}, \inlinecode{==}, \inlinecode{-}, and \inlinecode{long double} casting to be defined on the numeric template type.
 
 \begin{compactitem}
-  \item \inlinecode{KDTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
+  \item \inlinecode{NearestKDTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
   \item \inlinecode{nearest(x, y, can\_equal)} returns a point in the set that is closest to \inlinecode{(x, y)} by Euclidean distance. This may be equal to \inlinecode{(x, y)} only if \inlinecode{can\_equal} is \inlinecode{true}.
 \end{compactitem}
 
@@ -4942,7 +4947,7 @@ Maintain a set of two-dimensional points while supporting queries for the closes
 #include <vector>
 
 template<class T>
-class KDTree {
+class NearestKDTree {
   using point = std::pair<T, T>;
 
   static inline bool comp1(const point &a, const point &b) { return a.first < b.first; }
@@ -5008,7 +5013,7 @@ class KDTree {
 
  public:
   template<class It>
-  KDTree(It lo, It hi) : tree(lo, hi) {
+  NearestKDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     if (n <= 1) {
       throw std::runtime_error("K-d tree must have at least 2 points.");
@@ -5032,7 +5037,7 @@ using namespace std;
 
 int main() {
   vector<pair<int, int>> p{{0, 2}, {0, 3}, {-1, 0}};
-  KDTree<int> t(p.begin(), p.end());
+  NearestKDTree<int> t(p.begin(), p.end());
   assert(t.nearest(0, 2, true) == (pair<int, int>{0, 2}));
   assert(t.nearest(0, 2, false) == (pair<int, int>{0, 3}));
   assert(t.nearest(0, 0) == (pair<int, int>{-1, 0}));
@@ -5045,7 +5050,9 @@ int main() {
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Fenwick Tree (Simple)}
-Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 1-based (i.e. has valid indices from 1 to \inlinecode{n}, inclusive).
+Maintain a numerical array while supporting point increments and range-sum queries. A Fenwick tree stores partial prefix sums: each \inlinecode{tree[i]} covers the block of indices ending at \inlinecode{i} whose length is the lowest set bit of \inlinecode{i}. Updating one value adds to $O(\log n)$ covering blocks, and querying a prefix sum walks through $O(\log n)$ disjoint blocks.
+
+This implementation uses 1-based array indices, so valid indices are from 1 to \inlinecode{n}, inclusive.
 
 \begin{compactitem}
   \item \inlinecode{initialize(n)} resets the data structure.
@@ -5131,9 +5138,12 @@ int main() {
 Values: 5 1 2 3 4
 \end{exampleoutput}
 \subsection{Fenwick Tree (Range Update, Point Query)}
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and values at individual indices to be queried (point query). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to \inlinecode{size() - 1}, inclusive).
+Maintain a numerical array while supporting range increments and point queries. This is done by storing the difference array in a Fenwick tree: adding \inlinecode{x} to \inlinecode{[lo, hi]} adds \inlinecode{+x} at \inlinecode{lo} and \inlinecode{-x} after \inlinecode{hi}, and the value at index \inlinecode{i} is the prefix sum of those differences through \inlinecode{i}.
+
+This implementation uses 0-based array indices, so valid indices are from 0 to \inlinecode{size() - 1}, inclusive.
 
 \begin{compactitem}
+  \item \inlinecode{FenwickRUPQ(n)} constructs an array of size \inlinecode{n} with every value initialized to 0.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
@@ -5159,12 +5169,12 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
 #include <vector>
 
 template<class T>
-class FenwickTree {
+class FenwickRUPQ {
   int len;
   std::vector<T> tree;
 
  public:
-  explicit FenwickTree(int n) : len(n), tree(n + 2) {}
+  explicit FenwickRUPQ(int n) : len(n), tree(n + 2) {}
 
   int size() const { return len; }
 
@@ -5195,7 +5205,7 @@ class FenwickTree {
 using namespace std;
 
 int main() {
-  FenwickTree<int> t(5);
+  FenwickRUPQ<int> t(5);
   t.add(0, 1, 5);
   t.add(1, 2, 5);
   t.add(2, 4, 10);
@@ -5211,9 +5221,12 @@ int main() {
 Values: 5 10 15 10 10
 \end{exampleoutput}
 \subsection{Fenwick Tree (Point Update, Range Query)}
-Maintain an array of numerical type, allowing for updates of individual indices (point update) and queries for the sum of contiguous sub-arrays (range queries). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to \inlinecode{size() - 1}, inclusive).
+Maintain a numerical array while supporting point increments and range-sum queries. This is the standard Fenwick tree pattern: each internal entry stores a block sum, \inlinecode{add(i, x)} updates all blocks containing \inlinecode{i}, and \inlinecode{sum(hi)} combines disjoint blocks to obtain a prefix sum.
+
+This implementation uses 0-based array indices externally, so valid indices are from 0 to \inlinecode{size() - 1}, inclusive.
 
 \begin{compactitem}
+  \item \inlinecode{FenwickPURQ(n)} constructs an array of size \inlinecode{n} with every value initialized to 0.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
@@ -5241,12 +5254,12 @@ Maintain an array of numerical type, allowing for updates of individual indices 
 #include <vector>
 
 template<class T>
-class FenwickTree {
+class FenwickPURQ {
   int len;
   std::vector<T> vals, tree;
 
  public:
-  explicit FenwickTree(int n) : len(n), vals(n + 1), tree(n + 1) {}
+  explicit FenwickPURQ(int n) : len(n), vals(n + 1), tree(n + 1) {}
 
   int size() const { return len; }
   T at(int i) const { return vals[i + 1]; }
@@ -5283,7 +5296,7 @@ using namespace std;
 
 int main() {
   vector<int> a{10, 1, 2, 3, 4};
-  FenwickTree<int> t(5);
+  FenwickPURQ<int> t(5);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     t.set(i, a[i]);
   }
@@ -5301,9 +5314,12 @@ int main() {
 Values: 5 1 2 3 4
 \end{exampleoutput}
 \subsection{Fenwick Tree (Range Update, Range Query)}
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation assumes that the array is 0-based (i.e. has valid indices from 0 to \inlinecode{size() - 1}, inclusive).
+Maintain a numerical array while supporting range increments and range-sum queries. This uses two Fenwick trees to recover prefix sums after difference-array updates: if the difference array stores range additions, then the prefix sum through \inlinecode{hi} can be written as \inlinecode{hi * sum(t1, hi) - sum(t2, hi)}.
+
+This implementation uses 0-based array indices externally, so valid indices are from 0 to \inlinecode{size() - 1}, inclusive.
 
 \begin{compactitem}
+  \item \inlinecode{FenwickRURQ(n)} constructs an array of size \inlinecode{n} with every value initialized to 0.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} increments the value at index \inlinecode{i} by \inlinecode{x}.
@@ -5332,7 +5348,7 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
 #include <vector>
 
 template<class T>
-class FenwickTree {
+class FenwickRURQ {
   int len;
   std::vector<T> t1, t2;
 
@@ -5351,7 +5367,7 @@ class FenwickTree {
   }
 
  public:
-  explicit FenwickTree(int n) : len(n), t1(n + 2), t2(n + 2) {}
+  explicit FenwickRURQ(int n) : len(n), t1(n + 2), t2(n + 2) {}
 
   int size() const { return len; }
 
@@ -5385,7 +5401,7 @@ using namespace std;
 
 int main() {
   vector<int> a{10, 1, 2, 3, 4};
-  FenwickTree<int> t(5);
+  FenwickRURQ<int> t(5);
   for (int i = 0; i < t.size(); i++) {
     t.set(i, a[i]);
   }
@@ -5403,10 +5419,13 @@ int main() {
 \begin{exampleoutput}
 Values: 15 6 7 -5 4
 \end{exampleoutput}
-\subsection{Fenwick Tree (Compressed)}
-Maintain an array of numerical type, allowing for contiguous sub-arrays to be simultaneously incremented by arbitrary values (range update) and queries for the sum of contiguous sub-arrays (range query). This implementation uses \inlinecode{std::unordered\_map} for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, all array indices from 0 to \inlinecode{N}, inclusive, are accessible.
+\subsection{Sparse Fenwick Tree (Range Update, Range Query)}
+Maintain a numerical array over a huge index range while supporting range increments and range-sum queries. This is the sparse version of the two-tree Fenwick range-update/range-query trick: only Fenwick nodes reached by previous operations are stored, using \inlinecode{std::unordered\_map} instead of dense vectors.
+
+This implementation uses 0-based array indices, so all indices from 0 to \inlinecode{N}, inclusive, are accessible.
 
 \begin{compactitem}
+  \item \inlinecode{SparseFenwickRURQ()} constructs an initially zero array over indices 0 to \inlinecode{N}.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
   \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
@@ -5428,7 +5447,7 @@ Maintain an array of numerical type, allowing for contiguous sub-arrays to be si
 #include <unordered_map>
 
 template<class T>
-class FenwickTree {
+class SparseFenwickRURQ {
   static const int N = 1000000001;
   std::unordered_map<int, T> tmul, tadd;
 
@@ -5475,7 +5494,7 @@ using namespace std;
 
 int main() {
   vector<int> a{10, 1, 2, 3, 4};
-  FenwickTree<int> t;
+  SparseFenwickRURQ<int> t;
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     t.set(i, a[i]);
   }
@@ -5498,7 +5517,9 @@ int main() {
 Values: 15 6 7 -5 4
 \end{exampleoutput}
 \subsection{Fenwick Tree (Order Statistic)}
-Maintains frequencies over a 1-based integer domain and finds order statistics by binary lifting on a Fenwick tree. This is useful for dynamic multisets of bounded integer values, coordinate-compressed kth-element queries, and online rank queries.
+Maintain frequencies over a 1-based integer domain and find order statistics by binary lifting on a Fenwick tree. The tree stores prefix counts; \inlinecode{kth(k)} greedily walks the implicit binary lifting structure to find the first index whose prefix count reaches \inlinecode{k}.
+
+This is useful for dynamic multisets of bounded integer values, coordinate-compressed kth-element queries, and online rank queries.
 
 \begin{compactitem}
   \item \inlinecode{initialize(n)} resets all frequencies.
@@ -5574,7 +5595,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{2D Fenwick Tree (Simple)}
-Maintain a 2D array of numerical type, allowing for updates of individual cells in the matrix (point update) and queries for the sum of rectangular sub-matrices (range query). This implementation assumes that array dimensions are 1-based (i.e. rows have valid indices from 1 to \inlinecode{R}, inclusive, and columns have valid indices from 1 to \inlinecode{C}, inclusive).
+Maintain a 2D numerical array while supporting point increments and rectangle-sum queries. This is the two-dimensional form of the standard Fenwick tree: each internal entry stores a rectangular block sum, and prefix queries combine $O(\log R \cdot \log C)$ disjoint blocks.
+
+This implementation uses 1-based indices, so rows are from 1 to \inlinecode{R}, inclusive, and columns are from 1 to \inlinecode{C}, inclusive.
 
 \begin{compactitem}
   \item \inlinecode{initialize(R, C)} resets the data structure.
@@ -5670,10 +5693,13 @@ Values:
 3 0 0
 0 0 9
 \end{exampleoutput}
-\subsection{2D Fenwick Tree (Compressed)}
-Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to be simultaneously incremented by arbitrary values (range update) and queries for the sum of rectangular sub-matrices (range query). This implementation uses \inlinecode{std::unordered\_map} for coordinate compression, allowing for large indices to be accessed with efficient space complexity. That is, rows have valid indices from 0 to \inlinecode{R}, inclusive, and columns have valid indices from 0 to \inlinecode{C}, inclusive.
+\subsection{2D Sparse Fenwick Tree}
+Maintain a 2D numerical array over a huge index range while supporting rectangle increments and rectangle-sum queries. This is the sparse two-dimensional analogue of range-update/range-query Fenwick trees: four sparse trees store the inclusion-exclusion coefficients needed to recover any prefix rectangle sum.
+
+This implementation uses 0-based indices, so rows are from 0 to \inlinecode{R}, inclusive, and columns are from 0 to \inlinecode{C}, inclusive.
 
 \begin{compactitem}
+  \item \inlinecode{SparseFenwick2D()} constructs an initially zero 2D array over rows 0 to \inlinecode{R} and columns 0 to \inlinecode{C}.
   \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index \inlinecode{(r, c)}.
   \item \inlinecode{add(r1, c1, r2, c2, x)} adds \inlinecode{x} to all indices in the rectangle with upper-left corner \inlinecode{(r1, c1)} and lower-right corner \inlinecode{(r2, c2)}.
   \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index \inlinecode{(r, c)}.
@@ -5696,7 +5722,7 @@ Maintain a 2D array of numerical type, allowing for rectangular sub-matrices to 
 #include <utility>
 
 template<class T>
-class FenwickTree2D {
+class SparseFenwick2D {
   static const int R = 1000000001;
   static const int C = 1000000001;
 
@@ -5770,7 +5796,7 @@ class FenwickTree2D {
 using namespace std;
 
 int main() {
-  FenwickTree2D<int> t;
+  SparseFenwick2D<int> t;
   t.set(0, 0, 5);
   t.set(0, 1, 6);
   t.set(1, 0, 7);
