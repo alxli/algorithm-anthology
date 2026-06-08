@@ -451,7 +451,6 @@ int main() {
     cout << x << " ";
   }
   cout << endl;
-
   return 0;
 }
 \end{lstlisting}
@@ -906,6 +905,350 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Two Pointers}
+Uses two moving indices to process subarrays in linear time. This technique is most useful when expanding the right endpoint of a window monotonically and shrinking the left endpoint monotonically preserves enough state to test a condition or update an answer.
+
+The examples below cover two common patterns: finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most \inlinecode{k} distinct values.
+
+\begin{compactitem}
+  \item \inlinecode{min\_length\_at\_least(a, target)} returns the minimum length of a contiguous subarray with sum at least \inlinecode{target}, or $-1$ if none exists. Values in \inlinecode{a} must be nonnegative.
+  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns the maximum length of a contiguous subarray containing at most \inlinecode{k} distinct values.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ expected per call, where $n$ is the array size.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{min\_length\_at\_least(a, target)}.
+  \item $O(k)$ auxiliary heap space for \inlinecode{longest\_at\_most\_k\_distinct(a, k)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <unordered_map>
+#include <vector>
+
+int min_length_at_least(const std::vector<int> &a, long long target) {
+  int best = static_cast<int>(a.size()) + 1;
+  long long sum = 0;
+  for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
+    sum += a[r];
+    while (sum >= target) {
+      best = std::min(best, r - l + 1);
+      sum -= a[l++];
+    }
+  }
+  return best == static_cast<int>(a.size()) + 1 ? -1 : best;
+}
+
+int longest_at_most_k_distinct(const std::vector<int> &a, int k) {
+  if (k <= 0) {
+    return 0;
+  }
+  std::unordered_map<int, int> count;
+  int best = 0;
+  for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
+    count[a[r]]++;
+    while (static_cast<int>(count.size()) > k) {
+      if (--count[a[l]] == 0) {
+        count.erase(a[l]);
+      }
+      l++;
+    }
+    best = std::max(best, r - l + 1);
+  }
+  return best;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<int> a{2, 3, 1, 2, 4, 3};
+  assert(min_length_at_least(a, 7) == 2);  // [4, 3].
+
+  vector<int> b{1, 2, 1, 3, 4, 3, 5};
+  assert(longest_at_most_k_distinct(b, 2) == 3);  // [1, 2, 1].
+  return 0;
+}
+\end{lstlisting}
+\subsection{Sliding Window Maximum}
+Given an array and a fixed window length \inlinecode{k}, report the maximum (or minimum) of every contiguous window of that length as the window slides from left to right. A monotonic deque of indices answers all windows in linear total time: it holds the indices of candidates that could still become a window maximum, kept in decreasing order of value. Each new element pops every smaller element off the back, since those can never again be the maximum while the larger newer element is in the window, and indices that fall outside the window are dropped from the front. The front of the deque is always the maximum of the current window. This is the windowed counterpart of the monotonic stack: each index is pushed and popped at most once.
+
+Both functions take a vector \inlinecode{a} of \inlinecode{n} comparable values and a window length \inlinecode{k} with $1 \leq k \leq n$, and return a vector of \inlinecode{n - k + 1} results, one per window in left-to-right order.
+
+\begin{compactitem}
+  \item \inlinecode{sliding\_window\_maximum(a, k)} returns the maximum of each window of length \inlinecode{k}.
+  \item \inlinecode{sliding\_window\_minimum(a, k)} returns the minimum of each window of length \inlinecode{k}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call to both functions, where $n$ is the size of the input.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for the result, plus $O(k)$ for the deque.
+
+\begin{lstlisting}[language=C++]
+#include <deque>
+#include <vector>
+
+template<class T>
+std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
+  int n = a.size();
+  std::deque<int> window;
+  std::vector<T> res;
+  for (int i = 0; i < n; i++) {
+    while (!window.empty() && a[window.back()] <= a[i]) {
+      window.pop_back();
+    }
+    window.push_back(i);
+    if (window.front() <= i - k) {
+      window.pop_front();
+    }
+    if (i >= k - 1) {
+      res.push_back(a[window.front()]);
+    }
+  }
+  return res;
+}
+
+template<class T>
+std::vector<T> sliding_window_minimum(const std::vector<T> &a, int k) {
+  int n = a.size();
+  std::deque<int> window;
+  std::vector<T> res;
+  for (int i = 0; i < n; i++) {
+    while (!window.empty() && a[window.back()] >= a[i]) {
+      window.pop_back();
+    }
+    window.push_back(i);
+    if (window.front() <= i - k) {
+      window.pop_front();
+    }
+    if (i >= k - 1) {
+      res.push_back(a[window.front()]);
+    }
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<int> a{1, 3, -1, -3, 5, 3, 6, 7};
+  assert((sliding_window_maximum(a, 3) == vector<int>{3, 3, 5, 5, 6, 7}));
+  assert((sliding_window_minimum(a, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Monotonic Stack}
+A monotonic stack maintains its elements in sorted order as values are pushed, popping away any entries that would violate the ordering. Scanning an array once while keeping such a stack of indices answers, for every position, where the nearest smaller or larger neighbor lies. These ``nearest smaller/greater'' relationships underlie many array problems, the most famous being the largest rectangle in a histogram. Each index is pushed and popped at most once, so a full scan runs in linear time.
+
+All functions below take a vector \inlinecode{a} of \inlinecode{n} comparable values and return a vector of \inlinecode{n} indices. A ``less'' query uses a strictly smaller neighbor and a ``greater'' query uses a strictly larger one; changing the comparison from strict to non-strict (e.g. \inlinecode{\textgreater{}=} to \inlinecode{\textgreater{}}) toggles how ties are handled.
+
+\begin{compactitem}
+  \item \inlinecode{previous\_less(a)} returns, for each \inlinecode{i}, the largest index \inlinecode{j \textless{} i} with \inlinecode{a[j] \textless{} a[i]}, or \inlinecode{-1}.
+  \item \inlinecode{next\_less(a)} returns, for each \inlinecode{i}, the smallest index \inlinecode{j \textgreater{} i} with \inlinecode{a[j] \textless{} a[i]}, or \inlinecode{n}.
+  \item \inlinecode{previous\_greater(a)} returns, for each \inlinecode{i}, the largest index \inlinecode{j \textless{} i} with \inlinecode{a[j] \textgreater{} a[i]}, or \inlinecode{-1}.
+  \item \inlinecode{next\_greater(a)} returns, for each \inlinecode{i}, the smallest index \inlinecode{j \textgreater{} i} with \inlinecode{a[j] \textgreater{} a[i]}, or \inlinecode{n}.
+  \item \inlinecode{largest\_rectangle(heights)} returns the maximum area of an axis-aligned rectangle that fits under the given histogram, where bar \inlinecode{i} has width 1 and height \inlinecode{heights[i]}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call to all functions, where $n$ is the size of the input.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for the stack and result.
+
+\begin{lstlisting}[language=C++]
+#include <stack>
+#include <vector>
+
+template<class T>
+std::vector<int> previous_less(const std::vector<T> &a) {
+  int n = a.size();
+  std::vector<int> res(n);
+  std::stack<int> s;
+  for (int i = 0; i < n; i++) {
+    while (!s.empty() && a[s.top()] >= a[i]) {
+      s.pop();
+    }
+    res[i] = s.empty() ? -1 : s.top();
+    s.push(i);
+  }
+  return res;
+}
+
+template<class T>
+std::vector<int> next_less(const std::vector<T> &a) {
+  int n = a.size();
+  std::vector<int> res(n);
+  std::stack<int> s;
+  for (int i = n - 1; i >= 0; i--) {
+    while (!s.empty() && a[s.top()] >= a[i]) {
+      s.pop();
+    }
+    res[i] = s.empty() ? n : s.top();
+    s.push(i);
+  }
+  return res;
+}
+
+template<class T>
+std::vector<int> previous_greater(const std::vector<T> &a) {
+  int n = a.size();
+  std::vector<int> res(n);
+  std::stack<int> s;
+  for (int i = 0; i < n; i++) {
+    while (!s.empty() && a[s.top()] <= a[i]) {
+      s.pop();
+    }
+    res[i] = s.empty() ? -1 : s.top();
+    s.push(i);
+  }
+  return res;
+}
+
+template<class T>
+std::vector<int> next_greater(const std::vector<T> &a) {
+  int n = a.size();
+  std::vector<int> res(n);
+  std::stack<int> s;
+  for (int i = n - 1; i >= 0; i--) {
+    while (!s.empty() && a[s.top()] <= a[i]) {
+      s.pop();
+    }
+    res[i] = s.empty() ? n : s.top();
+    s.push(i);
+  }
+  return res;
+}
+
+template<class T>
+T largest_rectangle(const std::vector<T> &heights) {
+  int n = heights.size();
+  std::vector<int> left = previous_less(heights), right = next_less(heights);
+  T best = 0;
+  for (int i = 0; i < n; i++) {
+    T area = heights[i] * (right[i] - left[i] - 1);
+    if (area > best) {
+      best = area;
+    }
+  }
+  return best;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<int> a{2, 1, 4, 3};
+  assert((previous_less(a) == vector<int>{-1, -1, 1, 1}));
+  assert((next_less(a) == vector<int>{1, 4, 3, 4}));
+  assert((previous_greater(a) == vector<int>{-1, 0, -1, 2}));
+  assert((next_greater(a) == vector<int>{2, 2, 4, 4}));
+
+  vector<int> hist{2, 1, 5, 6, 2, 3};
+  assert(largest_rectangle(hist) == 10);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Minimum Excluded Value (MEX)}
+Computes the minimum excluded nonnegative integer, commonly called the MEX. The MEX of a set is the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states.
+
+\begin{compactitem}
+  \item \inlinecode{mex(lo, hi)} returns the MEX of the values in \inlinecode{[lo, hi)}.
+  \item \inlinecode{DynamicMex(n)} maintains counts of values in \inlinecode{[0, n]}, enough to track the MEX of a multiset of at most \inlinecode{n} relevant nonnegative values.
+  \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if $0 \leq `x` \leq n$.
+  \item \inlinecode{remove(x)} removes one copy of value \inlinecode{x} if present.
+  \item \inlinecode{get()} returns the current MEX.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{mex(lo, hi)}, where $n$ is the number of values.
+  \item $O(\log n)$ per call to \inlinecode{add(x)}, \inlinecode{remove(x)}, and \inlinecode{get()} for \inlinecode{DynamicMex}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for both approaches.
+
+\begin{lstlisting}[language=C++]
+#include <set>
+#include <vector>
+
+template<class It>
+int mex(It lo, It hi) {
+  int n = hi - lo;
+  std::vector<bool> seen(n + 1, false);
+  for (It it = lo; it != hi; ++it) {
+    if (0 <= *it && *it <= n) {
+      seen[*it] = true;
+    }
+  }
+  for (int x = 0; x <= n; x++) {
+    if (!seen[x]) {
+      return x;
+    }
+  }
+  return n + 1;
+}
+
+class DynamicMex {
+  std::vector<int> count;
+  std::set<int> missing;
+
+ public:
+  explicit DynamicMex(int n) : count(n + 1, 0) {
+    for (int x = 0; x <= n; x++) {
+      missing.insert(x);
+    }
+  }
+
+  void add(int x) {
+    if (0 <= x && x < static_cast<int>(count.size()) && count[x]++ == 0) {
+      missing.erase(x);
+    }
+  }
+
+  void remove(int x) {
+    if (0 <= x && x < static_cast<int>(count.size()) && count[x] > 0 && --count[x] == 0) {
+      missing.insert(x);
+    }
+  }
+
+  int get() const { return *missing.begin(); }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<int> a{0, 1, 4, 2, 1};
+  assert(mex(a.begin(), a.end()) == 3);
+
+  DynamicMex m(5);
+  m.add(0);
+  m.add(1);
+  m.add(3);
+  assert(m.get() == 2);
+  m.add(2);
+  assert(m.get() == 4);
+  m.remove(1);
+  assert(m.get() == 1);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Longest Increasing Subsequence}
 Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)}, determine a longest subsequence of the range such that all of its elements are in strictly ascending order. This implementation requires \inlinecode{operator\textless{}} to be defined on the iterator's value type. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed using binary search and dynamic programming.
 
@@ -974,55 +1317,6 @@ int main() {
 \begin{exampleoutput}
 -5 1 9 10 11 13
 \end{exampleoutput}
-\subsection{Subset Sum (Meet-in-the-Middle)}
-Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of integers, return the maximum sum of any subset of the range that is at most a given integer \inlinecode{v}. This is a common meet-in-the-middle version of subset sum: enumerate subset sums for each half, sort one side, and binary search for the best compatible partner. Note that 64-bit integers are used in intermediate calculations to avoid overflow.
-
-\textbf{Time Complexity}: $O(2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-
-\textbf{Space Complexity}: $O(2^{n/2})$ auxiliary heap space.
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <climits>
-#include <vector>
-
-template<class It>
-long long max_subset_sum_at_most(It lo, It hi, long long v) {
-  int n = hi - lo;
-  long long llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
-  std::vector<long long> lsum(llen), hsum(hlen);
-  for (long long mask = 1; mask < llen; mask++) {
-    int bit = __builtin_ctzll(mask);
-    lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);
-  }
-  for (long long mask = 1; mask < hlen; mask++) {
-    int bit = __builtin_ctzll(mask);
-    hsum[mask] = hsum[mask ^ (1LL << bit)] + *(lo + n / 2 + bit);
-  }
-  std::sort(hsum.begin(), hsum.end());
-  long long res = LLONG_MIN;
-  for (long long x : lsum) {
-    auto it = std::upper_bound(hsum.begin(), hsum.end(), v - x);
-    if (it != hsum.begin()) {
-      res = std::max(res, x + *--it);
-    }
-  }
-  return res;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  std::vector<int> a{9, 1, 5, 0, 1, 11, 5};
-  assert(max_subset_sum_at_most(a.begin(), a.end(), 8) == 7);
-  std::vector<int> b{-7, -3, -2, 5, 8};
-  assert(max_subset_sum_at_most(b.begin(), b.end(), 0) == 0);
-  return 0;
-}
-\end{lstlisting}
 \subsection{Knapsack (0-1)}
 Solves the 0/1 knapsack problem: given items with nonnegative integer weights and values, choose each item at most once to maximize total value without exceeding a capacity limit.
 
@@ -1140,6 +1434,55 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Subset Sum (Meet-in-the-Middle)}
+Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of integers, return the maximum sum of any subset of the range that is at most a given integer \inlinecode{v}. This is a common meet-in-the-middle version of subset sum: enumerate subset sums for each half, sort one side, and binary search for the best compatible partner. Note that 64-bit integers are used in intermediate calculations to avoid overflow.
+
+\textbf{Time Complexity}: $O(2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+
+\textbf{Space Complexity}: $O(2^{n/2})$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <climits>
+#include <vector>
+
+template<class It>
+long long max_subset_sum_at_most(It lo, It hi, long long v) {
+  int n = hi - lo;
+  long long llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
+  std::vector<long long> lsum(llen), hsum(hlen);
+  for (long long mask = 1; mask < llen; mask++) {
+    int bit = __builtin_ctzll(mask);
+    lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);
+  }
+  for (long long mask = 1; mask < hlen; mask++) {
+    int bit = __builtin_ctzll(mask);
+    hsum[mask] = hsum[mask ^ (1LL << bit)] + *(lo + n / 2 + bit);
+  }
+  std::sort(hsum.begin(), hsum.end());
+  long long res = LLONG_MIN;
+  for (long long x : lsum) {
+    auto it = std::upper_bound(hsum.begin(), hsum.end(), v - x);
+    if (it != hsum.begin()) {
+      res = std::max(res, x + *--it);
+    }
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  std::vector<int> a{9, 1, 5, 0, 1, 11, 5};
+  assert(max_subset_sum_at_most(a.begin(), a.end(), 8) == 7);
+  std::vector<int> b{-7, -3, -2, 5, 8};
+  assert(max_subset_sum_at_most(b.begin(), b.end(), 0) == 0);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Largest Zero Submatrix}
 Given a rectangular matrix with $n$ rows and $m$ columns consisting of only 0's and 1's as a two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of only 0's. This solution uses a reduction to the problem of finding the maximum rectangular area under a histogram, which is efficiently solved using a stack algorithm.
 
@@ -1207,166 +1550,6 @@ int main() {
       {1, 0, 1, 0, 0, 1}
   };
   assert(max_zero_submatrix(matrix) == 6);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Minimum Excluded Value (MEX)}
-Computes the minimum excluded nonnegative integer, commonly called the MEX. The MEX of a set is the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states.
-
-\begin{compactitem}
-  \item \inlinecode{mex(lo, hi)} returns the MEX of the values in \inlinecode{[lo, hi)}.
-  \item \inlinecode{DynamicMex(n)} maintains counts of values in \inlinecode{[0, n]}, enough to track the MEX of a multiset of at most \inlinecode{n} relevant nonnegative values.
-  \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if $0 \leq `x` \leq n$.
-  \item \inlinecode{remove(x)} removes one copy of value \inlinecode{x} if present.
-  \item \inlinecode{get()} returns the current MEX.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{mex(lo, hi)}, where $n$ is the number of values.
-  \item $O(\log n)$ per call to \inlinecode{add(x)}, \inlinecode{remove(x)}, and \inlinecode{get()} for \inlinecode{DynamicMex}.
-\end{compactitem}
-
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space for both approaches.
-
-\begin{lstlisting}[language=C++]
-#include <set>
-#include <vector>
-
-template<class It>
-int mex(It lo, It hi) {
-  int n = hi - lo;
-  std::vector<bool> seen(n + 1, false);
-  for (It it = lo; it != hi; ++it) {
-    if (0 <= *it && *it <= n) {
-      seen[*it] = true;
-    }
-  }
-  for (int x = 0; x <= n; x++) {
-    if (!seen[x]) {
-      return x;
-    }
-  }
-  return n + 1;
-}
-
-class DynamicMex {
-  std::vector<int> count;
-  std::set<int> missing;
-
- public:
-  explicit DynamicMex(int n) : count(n + 1, 0) {
-    for (int x = 0; x <= n; x++) {
-      missing.insert(x);
-    }
-  }
-
-  void add(int x) {
-    if (0 <= x && x < static_cast<int>(count.size()) && count[x]++ == 0) {
-      missing.erase(x);
-    }
-  }
-
-  void remove(int x) {
-    if (0 <= x && x < static_cast<int>(count.size()) && count[x] > 0 && --count[x] == 0) {
-      missing.insert(x);
-    }
-  }
-
-  int get() const { return *missing.begin(); }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  vector<int> a{0, 1, 4, 2, 1};
-  assert(mex(a.begin(), a.end()) == 3);
-
-  DynamicMex m(5);
-  m.add(0);
-  m.add(1);
-  m.add(3);
-  assert(m.get() == 2);
-  m.add(2);
-  assert(m.get() == 4);
-  m.remove(1);
-  assert(m.get() == 1);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Two Pointers and Sliding Window}
-Uses two moving indices to process subarrays in linear time. This technique is most useful when expanding the right endpoint of a window monotonically and shrinking the left endpoint monotonically preserves enough state to test a condition or update an answer.
-
-The examples below cover two common patterns: finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most \inlinecode{k} distinct values.
-
-\begin{compactitem}
-  \item \inlinecode{min\_length\_at\_least(a, target)} returns the minimum length of a contiguous subarray with sum at least \inlinecode{target}, or $-1$ if none exists. Values in \inlinecode{a} must be nonnegative.
-  \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns the maximum length of a contiguous subarray containing at most \inlinecode{k} distinct values.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(n)$ expected per call, where $n$ is the array size.
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(1)$ auxiliary for \inlinecode{min\_length\_at\_least(a, target)}.
-  \item $O(k)$ auxiliary heap space for \inlinecode{longest\_at\_most\_k\_distinct(a, k)}.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <unordered_map>
-#include <vector>
-
-int min_length_at_least(const std::vector<int> &a, long long target) {
-  int best = static_cast<int>(a.size()) + 1;
-  long long sum = 0;
-  for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
-    sum += a[r];
-    while (sum >= target) {
-      best = std::min(best, r - l + 1);
-      sum -= a[l++];
-    }
-  }
-  return best == static_cast<int>(a.size()) + 1 ? -1 : best;
-}
-
-int longest_at_most_k_distinct(const std::vector<int> &a, int k) {
-  if (k <= 0) {
-    return 0;
-  }
-  std::unordered_map<int, int> count;
-  int best = 0;
-  for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
-    count[a[r]]++;
-    while (static_cast<int>(count.size()) > k) {
-      if (--count[a[l]] == 0) {
-        count.erase(a[l]);
-      }
-      l++;
-    }
-    best = std::max(best, r - l + 1);
-  }
-  return best;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  vector<int> a{2, 3, 1, 2, 4, 3};
-  assert(min_length_at_least(a, 7) == 2);  // [4, 3].
-
-  vector<int> b{1, 2, 1, 3, 4, 3, 5};
-  assert(longest_at_most_k_distinct(b, 2) == 3);  // [1, 2, 1].
   return 0;
 }
 \end{lstlisting}
@@ -2280,6 +2463,289 @@ int main() {
   auto [start, length] = find_cycle_brent(f, x0);
   assert(start == 4 && length == 2);
   verify(x0, start, length);
+  return 0;
+}
+\end{lstlisting}
+
+\section{Bit Manipulation}
+\setcounter{section}{6}
+\setcounter{subsection}{0}
+\subsection{Bit Operations and Masks}
+Integers double as fixed-size sets of bits, where bit \inlinecode{b} (counting from 0 at the least significant end) is ``present'' when it is set to 1. Treating an integer as a bitmask makes set membership, insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below operate on \inlinecode{unsigned} masks; to use 64-bit masks, replace \inlinecode{unsigned} with \inlinecode{unsigned long long}, the literal \inlinecode{1u} with \inlinecode{1ull}, and the \inlinecode{1u \textless{}\textless{} 31} inside \inlinecode{clz()} with \inlinecode{1ull \textless{}\textless{} 63}.
+
+\begin{compactitem}
+  \item \inlinecode{test\_bit(x, b)} returns whether bit \inlinecode{b} of \inlinecode{x} is set.
+  \item \inlinecode{set\_bit(x, b)}, \inlinecode{clear\_bit(x, b)}, and \inlinecode{toggle\_bit(x, b)} return \inlinecode{x} with bit \inlinecode{b} respectively forced to 1, forced to 0, or flipped.
+  \item \inlinecode{lowest\_set\_bit(x)} returns the value of the lowest set bit of \inlinecode{x} (a power of two), or 0 if \inlinecode{x} is 0. \inlinecode{clear\_lowest\_set\_bit(x)} returns \inlinecode{x} with its lowest set bit removed.
+  \item \inlinecode{popcount(x)} returns the number of set bits, analogous to \inlinecode{\_\_builtin\_popcount()}.
+  \item \inlinecode{ctz(x)} returns the number of trailing 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_ctz()}.
+  \item \inlinecode{clz(x)} returns the number of leading 0-bits (undefined for 0), analgoous to \inlinecode{\_\_builtin\_clz()}.
+  \item \inlinecode{is\_power\_of\_two(x)} returns whether \inlinecode{x} has exactly one set bit.
+  \item \inlinecode{floor\_pow2(x)} and \inlinecode{ceil\_pow2(x)} return the largest power of two that is \inlinecode{\textless{}= x} and the smallest that is \inlinecode{\textgreater{}= x}, respectively (with \inlinecode{x \textgreater{} 0}).
+  \item \inlinecode{for\_each\_set\_bit(x, f)} calls \inlinecode{f(b)} once for each set bit position \inlinecode{b} of \inlinecode{x}, in increasing order.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(B)$ worst case per call to \inlinecode{popcount(x)}, \inlinecode{ctz(x)}, \inlinecode{clz(x)}, and \inlinecode{for\_each\_set\_bit(x, f)}, where $B$ is the bit width of the mask (32 here).
+  \item $O(1)$ for all other operations.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
+
+\begin{lstlisting}[language=C++]
+bool test_bit(unsigned x, int b) {  return (x >> b) & 1u; }
+unsigned set_bit(unsigned x, int b) { return x | (1u << b); }
+unsigned clear_bit(unsigned x, int b) { return x & ~(1u << b); }
+unsigned toggle_bit(unsigned x, int b) { return x ^ (1u << b); }
+unsigned lowest_set_bit(unsigned x) { return x & (0u - x); }
+unsigned clear_lowest_set_bit(unsigned x) { return x & (x - 1); }
+
+// popcount(), ctz(), and clz() are spelled out here for educational purposes.
+// Production code should use the compiler intrinsics named in the comments below.
+int popcount(unsigned x) {  // __builtin_popcount(x)
+  int count = 0;
+  for (; x != 0; x = clear_lowest_set_bit(x)) {
+    count++;
+  }
+  return count;
+}
+
+int ctz(unsigned x) {  // __builtin_ctz(x); undefined when x == 0.
+  int count = 0;
+  for (; (x & 1u) == 0; x >>= 1) {
+    count++;
+  }
+  return count;
+}
+
+int clz(unsigned x) {  // __builtin_clz(x); undefined when x == 0.
+  int count = 0;
+  for (unsigned mask = 1u << 31; (x & mask) == 0; mask >>= 1) {
+    count++;
+  }
+  return count;
+}
+
+bool is_power_of_two(unsigned x) {
+  return x != 0 && (x & (x - 1)) == 0;
+}
+
+unsigned floor_pow2(unsigned x) {
+  return 1u << (31 - __builtin_clz(x));
+}
+
+unsigned ceil_pow2(unsigned x) {
+  return is_power_of_two(x) ? x : 1u << (32 - __builtin_clz(x));
+}
+
+template<class Fn>
+void for_each_set_bit(unsigned x, Fn f) {
+  while (x != 0) {
+    f(ctz(x));
+    x = clear_lowest_set_bit(x);
+  }
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+int main() {
+  unsigned x = 0b101100;
+  assert(test_bit(x, 2) == true);
+  assert(test_bit(x, 0) == false);
+  assert(set_bit(x, 0) == 0b101101u);
+  assert(clear_bit(x, 2) == 0b101000u);
+  assert(toggle_bit(x, 3) == 0b100100u);
+
+  assert(lowest_set_bit(x) == 0b100u);
+  assert(clear_lowest_set_bit(x) == 0b101000u);
+  assert(popcount(x) == 3);
+  assert(ctz(x) == 2);
+
+  assert(is_power_of_two(16) == true);
+  assert(is_power_of_two(24) == false);
+  assert(floor_pow2(20) == 16u);
+  assert(ceil_pow2(20) == 32u);
+  assert(ceil_pow2(16) == 16u);
+
+  vector<int> bits;
+  for_each_set_bit(x, [&](int b) { bits.push_back(b); });
+  assert((bits == vector<int>{2, 3, 5}));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Subset and Submask Iteration}
+Many bitmask algorithms must visit related masks in a structured order: every submask of a fixed mask, every mask with a fixed number of set bits, or every mask while accumulating contributions from its submasks. Each pattern has a short, well-known idiom.
+
+The classic submask loop \inlinecode{for (int s = m; s \textgreater{} 0; s = (s - 1) \& m)} walks every nonzero submask of \inlinecode{m} in decreasing order; subtracting 1 borrows through the zero bits of \inlinecode{m}, and the \inlinecode{\& m} masks them back off. Summed over all masks \inlinecode{m} of \inlinecode{n} bits, the total work is $\sum_k \binom{n}{k} 2^k = 3^n$, since each of the \inlinecode{n} bit positions is independently absent, present in \inlinecode{m} only, or present in both \inlinecode{m} and \inlinecode{s}.
+
+\begin{compactitem}
+  \item \inlinecode{submasks(m)} returns all submasks of \inlinecode{m}, including \inlinecode{m} itself and 0, in decreasing order.
+  \item \inlinecode{next\_popcount(x)} returns the smallest integer greater than \inlinecode{x} with the same number of set bits (Gosper's hack), for \inlinecode{x \textgreater{} 0}.
+  \item \inlinecode{masks\_with\_popcount(n, k)} returns all \inlinecode{k}-bit subsets of an \inlinecode{n}-bit universe as masks, in increasing order.
+  \item \inlinecode{subset\_sum\_transform(f)} overwrites \inlinecode{f} (indexed by mask over \inlinecode{n} bits) so that \inlinecode{f[m]} becomes the sum of the original \inlinecode{f[s]} over all submasks \inlinecode{s} of \inlinecode{m}. This ``sum over subsets'' (SOS) DP is the bitmask analog of a prefix sum, accumulating one bit dimension at a time.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item O(2\textasciicircum{}\inlinecode{popcount(m)}) per call to \inlinecode{submasks(m)}.
+  \item $O(1)$ per call to \inlinecode{next\_popcount(x)}.
+  \item $O(\binom{n}{k})$ per call to \inlinecode{masks\_with\_popcount(n, k)}.
+  \item $O(n \cdot 2^{n})$ per call to \inlinecode{subset\_sum\_transform(f)}, where \inlinecode{f} has $2^n$ entries.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{next\_popcount(x)} and \inlinecode{subset\_sum\_transform(f)}.
+  \item $O(s)$ auxiliary for \inlinecode{submasks(m)} and \inlinecode{masks\_with\_popcount(n, k)}, where $s$ is the result size.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+std::vector<unsigned> submasks(unsigned m) {
+  std::vector<unsigned> res;
+  unsigned s = m;
+  while (true) {
+    res.push_back(s);
+    if (s == 0) {
+      break;
+    }
+    s = (s - 1) & m;
+  }
+  return res;
+}
+
+unsigned next_popcount(unsigned x) {
+  unsigned c = x & (0u - x), r = x + c;
+  return r | (((x ^ r) >> 2) / c);
+}
+
+std::vector<unsigned> masks_with_popcount(int n, int k) {
+  std::vector<unsigned> res;
+  if (k == 0) {
+    return {0u};
+  }
+  unsigned limit = 1u << n;
+  for (unsigned x = (1u << k) - 1; x < limit; x = next_popcount(x)) {
+    res.push_back(x);
+  }
+  return res;
+}
+
+template<class T>
+void subset_sum_transform(std::vector<T> &f) {
+  int n = __builtin_ctz(f.size());  // f.size() must be a power of two, 2^n.
+  for (int b = 0; b < n; b++) {
+    for (unsigned m = 0; m < f.size(); m++) {
+      if (m & (1u << b)) {
+        f[m] += f[m ^ (1u << b)];
+      }
+    }
+  }
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert((submasks(0b101) == vector<unsigned>{0b101, 0b100, 0b001, 0b000}));
+
+  assert(next_popcount(0b0110) == 0b1001u);
+  assert((
+      masks_with_popcount(4, 2) == vector<unsigned>{0b0011, 0b0101, 0b0110, 0b1001, 0b1010, 0b1100}
+  ));
+
+  // f[m] = 1 for every mask; after the transform f[m] counts submasks of m = 2^popcount(m).
+  vector<int> f(1 << 3, 1);
+  subset_sum_transform(f);
+  assert(f[0b000] == 1);
+  assert(f[0b101] == 4);
+  assert(f[0b111] == 8);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Gray Code}
+The binary reflected Gray code is an ordering of all $2^n$ bitmasks in which consecutive masks differ in exactly one bit. It is useful whenever the cost of moving between adjacent states depends on a single bit flip: enumerating subsets while incrementally maintaining a value, hardware where only one bit may toggle at a time, and constructions like Hamiltonian paths on the hypercube.
+
+The \inlinecode{k}-th Gray code is obtained from the ordinary binary value \inlinecode{k} by \inlinecode{k \textasciicircum{} (k \textgreater{}\textgreater{} 1)}, a bijection on \inlinecode{[0, 2\textasciicircum{}n)}. Its inverse recovers the rank of a given Gray code, which tells how many flips into the sequence a mask sits.
+
+\begin{compactitem}
+  \item \inlinecode{gray\_code(k)} returns the \inlinecode{k}-th mask in Gray code order.
+  \item \inlinecode{inverse\_gray\_code(g)} returns the rank \inlinecode{k} such that \inlinecode{gray\_code(k) == g}.
+  \item \inlinecode{gray\_sequence(n)} returns all $2^n$ masks in Gray code order; consecutive entries (and the last with the first) differ in exactly one bit.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to \inlinecode{gray\_code(k)}.
+  \item $O(\log g)$ per call to \inlinecode{inverse\_gray\_code(g)}.
+  \item $O(2^{n})$ per call to \inlinecode{gray\_sequence(n)}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{gray\_code(k)} and \inlinecode{inverse\_gray\_code(g)}.
+  \item $O(2^{n})$ auxiliary for \inlinecode{gray\_sequence(n)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+unsigned gray_code(unsigned k) {
+  return k ^ (k >> 1);
+}
+
+unsigned inverse_gray_code(unsigned g) {
+  for (unsigned shift = 1; (g >> shift) != 0; shift <<= 1) {
+    g ^= g >> shift;
+  }
+  return g;
+}
+
+std::vector<unsigned> gray_sequence(int n) {
+  std::vector<unsigned> res(1u << n);
+  for (unsigned k = 0; k < res.size(); k++) {
+    res[k] = gray_code(k);
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(gray_code(0) == 0b000u);
+  assert(gray_code(1) == 0b001u);
+  assert(gray_code(2) == 0b011u);
+  assert(gray_code(3) == 0b010u);
+
+  for (unsigned k = 0; k < 256; k++) {
+    assert(inverse_gray_code(gray_code(k)) == k);
+  }
+
+  vector<unsigned> seq = gray_sequence(3);
+  assert(seq.size() == 8);
+  for (size_t i = 0; i < seq.size(); i++) {
+    unsigned diff = seq[i] ^ seq[(i + 1) % seq.size()];
+    assert(__builtin_popcount(diff) == 1);  // Cyclically, one bit changes per step.
+  }
   return 0;
 }
 \end{lstlisting}

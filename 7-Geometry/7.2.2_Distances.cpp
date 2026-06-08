@@ -193,6 +193,5 @@ int main() {
   assert(sqdist(ia, ib) == 25);   // int result
   assert(dot(ia, ib) == -5);      // int result
   assert(EQ(dist(ia, ib), 5.0));  // double result
-
   return 0;
 }

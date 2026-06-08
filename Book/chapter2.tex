@@ -2807,76 +2807,188 @@ bcde
 \section{Range Queries in One Dimension}
 \setcounter{section}{4}
 \setcounter{subsection}{0}
-\subsection{Sparse Table (Range Minimum Query)}
-Given a static array with indices from $0$ to $n - 1$, precompute a table that may later be used to perform range minimum queries on the array in constant time. This version is simplified to only work on integer arrays.
+\subsection{Sparse Table}
+Given a static array, precompute a table that answers range minimum queries in constant time. More generally, the sparse table works for any range query whose combining operation is both associative and idempotent, meaning \inlinecode{combine(x, x) == x}. The canonical examples are ``min'', ``max'', ``gcd'', and the bitwise ``and'' and ``or''.
 
-The dynamic programming state \inlinecode{dp[i][j]} holds the index of the minimum value in the sub-array starting at $i$ and having length $2^j$. Each \inlinecode{dp[i][j]} will always be equal to either \inlinecode{dp[i][j - 1]} or \inlinecode{dp[i + (1 \textless{}\textless{} (j - 1))][j - 1]}, whichever of the indices corresponds to the smaller value in the array.
+For each level $j$, the entry \inlinecode{dp[j][i]} holds the result of \inlinecode{combine()} over the half-open range \inlinecode{[i, i + 2\textasciicircum{}j)}, built by combining two ranges of length $2^{j-1}$. A query over \inlinecode{[lo, hi]} is answered by combining the two overlapping ranges of length $2^j$ that are anchored at \inlinecode{lo} and at \inlinecode{hi}, where $2^j$ is the largest power of two not exceeding the length of the range. Because these two ranges overlap whenever the query length is not a power of two, the elements in the overlap are folded in twice; this is harmless only when \inlinecode{combine()} is idempotent. To support a non-idempotent but associative operation such as ``sum'' or ``xor'' in constant time, use the disjoint sparse table in the next section instead, whose ranges meet at a center and never overlap.
+
+The query operation is defined by an associative and idempotent function \inlinecode{combine(a, b)}. The default code below returns the ``min'' of the range; for ``gcd'', \inlinecode{combine(a, b)} should return \inlinecode{gcd(a, b)}.
+
+\begin{compactitem}
+  \item \inlinecode{SparseTable(lo, hi)} builds the table from the range \inlinecode{[lo, hi)} of a random-access iterator.
+  \item \inlinecode{size()} returns the size of the array.
+  \item \inlinecode{query(lo, hi)} returns \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
+\end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ per call to \inlinecode{build()}, where $n$ is the size of the array.
-  \item $O(1)$ per call to \inlinecode{query()}.
+  \item $O(n \log n)$ per call to the constructor, where $n$ is the size of the array.
+  \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{query()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ for storage of the sparse table, where $n$ is the size of the array.
+  \item $O(n \log n)$ for storage of the table.
   \item $O(1)$ auxiliary for \inlinecode{query()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <vector>
 
-std::vector<int> table;
-std::vector<std::vector<int>> dp;
+template<class T>
+class SparseTable {
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
 
-void build(const std::vector<int> &a) {
-  int n = a.size();
-  table.resize(n + 1);
-  dp.assign(n, std::vector<int>());
-  for (int i = 2; i <= n; i++) {
-    table[i] = table[i >> 1] + 1;
-  }
-  for (int i = 0; i < n; i++) {
-    dp[i].resize(table[n] + 1);
-    dp[i][0] = i;
-  }
-  for (int j = 1; (1 << j) <= n; j++) {
-    for (int i = 0; i + (1 << j) <= n; i++) {
-      int x = dp[i][j - 1];
-      int y = dp[i + (1 << (j - 1))][j - 1];
-      dp[i][j] = (a[x] < a[y]) ? x : y;
+  int len;
+  std::vector<int> log2;
+  std::vector<std::vector<T>> dp;  // dp[j][i] = combine() over [i, i + 2^j).
+
+ public:
+  template<class It>
+  SparseTable(It lo, It hi) {
+    std::vector<T> a(lo, hi);
+    len = a.size();
+    log2.assign(len + 1, 0);
+    for (int i = 2; i <= len; i++) {
+      log2[i] = log2[i >> 1] + 1;
+    }
+    dp.assign(log2[len] + 1, std::vector<T>(len));
+    dp[0] = std::move(a);
+    for (int j = 1; (1 << j) <= len; j++) {
+      for (int i = 0; i + (1 << j) <= len; i++) {
+        dp[j][i] = combine(dp[j - 1][i], dp[j - 1][i + (1 << (j - 1))]);
+      }
     }
   }
-}
 
-int query(const std::vector<int> &a, int lo, int hi) {
-  int j = table[hi - lo + 1];
-  int x = dp[lo][j];
-  int y = dp[hi - (1 << j) + 1][j];
-  return (a[x] < a[y]) ? a[x] : a[y];
-}
+  int size() const { return len; }
+
+  T query(int lo, int hi) const {
+    int j = log2[hi - lo + 1];
+    return combine(dp[j][lo], dp[j][hi - (1 << j) + 1]);
+  }
+};
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+using namespace std;
 
 int main() {
-  std::vector<int> a{6, -2, 1, 8, 10};
-  build(a);
-  assert(query(a, 0, 3) == -2);
+  vector<int> a{6, -2, 1, 8, 10};
+  SparseTable<int> t(a.begin(), a.end());
+  assert(t.size() == 5);
+  assert(t.query(0, 3) == -2);
+  assert(t.query(2, 4) == 1);
+  assert(t.query(3, 3) == 8);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Disjoint Sparse Table}
+Given a static array, precompute a table that answers range queries for any associative operation in constant time. Unlike the ordinary sparse table for range minimum queries, the disjoint sparse table does not require the operation to be idempotent, so it also handles sums, products, and matrix products where overlapping the two query halves would double-count.
+
+The array is divided into blocks whose size doubles at each of the $O(\log n)$ levels. At the level whose block size is $2^{k+1}$, every block is split at its center, and the table stores, for each position, the fold of the contiguous run from that position up to (or down to) the center. To answer a query \inlinecode{[lo, hi]}, find the level at which \inlinecode{lo} and \inlinecode{hi} first fall on opposite sides of a center: this is the position of the highest set bit of \inlinecode{lo xor hi}. At that level, \inlinecode{lo} lies in the block's left half and \inlinecode{hi} in its right half, so the answer is the stored suffix fold ending at the center combined with the stored prefix fold beginning at the center.
+
+The query operation is defined by an associative function \inlinecode{combine(a, b)}. The default code below returns the ``min'' of the range; for ``sum'', \inlinecode{combine(a, b)} should return \inlinecode{a + b}.
+
+\begin{compactitem}
+  \item \inlinecode{DisjointSparseTable(lo, hi)} builds the table from the range \inlinecode{[lo, hi)} of a random-access iterator.
+  \item \inlinecode{size()} returns the size of the array.
+  \item \inlinecode{query(lo, hi)} returns \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to the constructor, where $n$ is the size of the array.
+  \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{query()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ for storage of the table.
+  \item $O(1)$ auxiliary for \inlinecode{query()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <vector>
+
+template<class T>
+class DisjointSparseTable {
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+
+  int len;
+  std::vector<T> a;
+  std::vector<std::vector<T>> fold;
+
+ public:
+  template<class It>
+  DisjointSparseTable(It lo, It hi) : a(lo, hi) {
+    len = a.size();
+    int levels = 1;
+    while ((1 << levels) < len) {
+      levels++;
+    }
+    fold.assign(levels, std::vector<T>(len));
+    for (int level = 0; level < levels; level++) {
+      int range = 1 << (level + 1), half = 1 << level;
+      for (int center = half; center < len + half; center += range) {
+        int left = center - half, right = std::min(len, center + half);
+        int top = std::min(center, len) - 1;  // Suffix folds over [i, center).
+        fold[level][top] = a[top];
+        for (int i = top - 1; i >= left; i--) {
+          fold[level][i] = combine(a[i], fold[level][i + 1]);
+        }
+        if (center < len) {  // Prefix folds over [center, i].
+          fold[level][center] = a[center];
+          for (int i = center + 1; i < right; i++) {
+            fold[level][i] = combine(fold[level][i - 1], a[i]);
+          }
+        }
+      }
+    }
+  }
+
+  int size() const { return len; }
+
+  T query(int lo, int hi) const {
+    if (lo == hi) {
+      return a[lo];
+    }
+    int level = 31 - __builtin_clz((unsigned)(lo ^ hi));
+    return combine(fold[level][lo], fold[level][hi]);
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<int> a{6, -2, 1, 8, 10, -5, 3};
+  DisjointSparseTable<int> t(a.begin(), a.end());
+  assert(t.size() == 7);
+  assert(t.query(0, 6) == -5);
+  assert(t.query(1, 3) == -2);
+  assert(t.query(4, 4) == 10);
+  assert(t.query(2, 4) == 1);
   return 0;
 }
 \end{lstlisting}
 \subsection{Square Root Decomposition}
 Maintain a fixed-size array (from 0 to \inlinecode{size() - 1}) while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default definition below assumes a numerical array type, supporting queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default definition below assumes a numerical array type, supporting queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return \inlinecode{a + b}.
 
-The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 The operations supported by this data structure are identical to those of the point update segment tree found in this section.
 
@@ -2989,12 +3101,87 @@ int main() {
 \begin{exampleoutput}
 Values: 6 -2 4 8 10
 \end{exampleoutput}
+\subsection{Mo's Algorithm}
+Mo's algorithm answers a batch of range queries offline by reordering them so that the current window \inlinecode{[cur\_l, cur\_r]} can be transformed into the next query's range with as few single-element insertions and deletions as possible. It applies whenever there is no fast direct formula, but extending or shrinking the window by one element updates the answer cheaply, as with the number of distinct values in a range or the sum of squares of element frequencies.
+
+The trick is the query order. Sort queries by the block of their left endpoint, where each block spans about $n / \sqrt{q}$ indices, breaking ties by right endpoint. The left pointer then travels $O(n / \sqrt{q})$ per query, for $O(n\sqrt{q})$ moves in all, while within each block the right pointer sweeps monotonically across the array, contributing $O(n)$ per block over the $\sqrt{q}$ blocks, again $O(n\sqrt{q})$. So the pointers move $O(n\sqrt{q})$ times in total. Sorting the right endpoint in alternating directions between consecutive blocks (a ``boustrophedon'' order) avoids resetting the right pointer at every block boundary.
+
+\begin{compactitem}
+  \item \inlinecode{mos\_algorithm(n, queries, add, remove, current)} answers the given inclusive 0-based ranges over an array of size \inlinecode{n}. The caller supplies three callbacks that maintain an arbitrary window state: \inlinecode{add(i)} and \inlinecode{remove(i)} insert or delete index \inlinecode{i} from the current window, and \inlinecode{current()} returns the answer for the window in its present state. The result is a vector of answers in the original query order, with element type matching the return type of \inlinecode{current()}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \sqrt{q})$ calls to \inlinecode{add()} and \inlinecode{remove()} in total, plus $O(q \log q)$ to sort, where $n$ is the array size and $q$ is the number of queries.
+
+\textbf{Space Complexity}: $O(q)$ auxiliary, excluding whatever window state the callbacks maintain.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cmath>
+#include <numeric>
+#include <utility>
+#include <vector>
+
+template<class AddFn, class RemoveFn, class CurrentFn>
+std::vector<decltype(std::declval<CurrentFn>()())> mos_algorithm(
+    int n, const std::vector<std::pair<int, int>> &queries, AddFn add, RemoveFn remove,
+    CurrentFn current
+) {
+  int q = queries.size();
+  int block = std::max(1, (int)(n / std::max(1.0, std::sqrt((double)q))));
+  std::vector<int> order(q);
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(), [&](int x, int y) {
+    int bx = queries[x].first / block, by = queries[y].first / block;
+    if (bx != by) {
+      return bx < by;
+    }
+    return (bx & 1) ? queries[x].second > queries[y].second : queries[x].second < queries[y].second;
+  });
+  std::vector<decltype(current())> res(q);
+  int cur_l = 0, cur_r = -1;  // Window [cur_l, cur_r] is initially empty.
+  for (int idx : order) {
+    int l = queries[idx].first, r = queries[idx].second;
+    while (cur_r < r) add(++cur_r);
+    while (cur_l > l) add(--cur_l);
+    while (cur_r > r) remove(cur_r--);
+    while (cur_l < l) remove(cur_l++);
+    res[idx] = current();
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // Answer "number of distinct values in [l, r]" for several ranges.
+  vector<int> a{1, 1, 2, 1, 3, 2, 3};
+  vector<int> freq(4, 0);
+  int distinct = 0;
+  auto add = [&](int i) {
+    if (freq[a[i]]++ == 0) distinct++;
+  };
+  auto remove = [&](int i) {
+    if (--freq[a[i]] == 0) distinct--;
+  };
+  auto current = [&]() { return distinct; };
+
+  vector<pair<int, int>> queries{{0, 6}, {0, 2}, {3, 5}, {1, 1}, {2, 4}};
+  vector<int> ans = mos_algorithm(a.size(), queries, add, remove, current);
+
+  assert((ans == vector<int>{3, 2, 3, 1, 3}));
+  return 0;
+}
+\end{lstlisting}
 \subsection{Segment Tree (Point Update)}
 Maintain a fixed-size array while supporting point updates and range aggregate queries. A segment tree stores one aggregate value for each recursively split interval, so an update only rebuilds the $O(\log n)$ intervals on the path from one leaf to the root.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return \inlinecode{a + b}.
 
-The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 \begin{compactitem}
   \item \inlinecode{SegTree(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
@@ -3135,7 +3322,7 @@ The minimum value in the range [0, 3] is -2.
 \subsection{Segment Tree (Range Update)}
 Maintain a fixed-size array while supporting range updates and range aggregate queries. A lazy segment tree stores one aggregate value for each recursively split interval, plus pending updates that are pushed to children only when needed.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return \inlinecode{a + b}.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
@@ -3308,7 +3495,7 @@ Values: 5 5 5 1 5
 \subsection{Sparse Segment Tree}
 A sparse segment tree (also commonly called a dynamic or implicit segment tree) maintains an array over a large index range while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. This implementation uses lazy initialization of nodes to conserve memory: only the nodes covering touched indices are ever allocated, so indices up to \inlinecode{N} are supported without preallocating the whole tree.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{repeat\_value(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For range-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, len)} should return $v \cdot len$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. Since untouched nodes are implicit, \inlinecode{repeat\_value(v, len)} must return the aggregate summary of \inlinecode{len} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For range-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{repeat\_value(v, len)} should return \inlinecode{v * len}.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
@@ -3604,6 +3791,218 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Merge Sort Tree}
+A merge sort tree is a static segment tree in which every node stores the sorted multiset of the values in its range. The nodes are exactly the ranges visited by a merge sort, and each node's sorted list is the merge of its two children's lists. This supports queries that count, within a range of indices, how many values fall below a threshold or inside a value interval: decompose the index range into $O(\log n)$ canonical nodes and binary search each node's sorted list.
+
+The structure is built once and not modified afterward. All index ranges are inclusive \inlinecode{[lo, hi]} with 0-based indices, and values may be of any comparable type.
+
+\begin{compactitem}
+  \item \inlinecode{MergeSortTree(a)} builds the tree over the array \inlinecode{a}.
+  \item \inlinecode{count\_leq(lo, hi, x)} returns the number of indices \inlinecode{i} in \inlinecode{[lo, hi]} with \inlinecode{a[i] \textless{}= x}.
+  \item \inlinecode{count\_in(lo, hi, x, y)} returns the number of indices \inlinecode{i} in \inlinecode{[lo, hi]} with \inlinecode{x \textless{}= a[i] \textless{}= y}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to the constructor, where $n$ is the size of the array.
+  \item $O(\log^{2} n)$ per call to \inlinecode{count\_leq()} and \inlinecode{count\_in()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ for storage of the tree.
+  \item $O(\log n)$ auxiliary stack space per query.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <iterator>
+#include <vector>
+
+template<class T>
+class MergeSortTree {
+  int len;
+  std::vector<std::vector<T>> tree;
+
+  void build(int node, int lo, int hi, const std::vector<T> &a) {
+    if (lo == hi) {
+      tree[node] = {a[lo]};
+      return;
+    }
+    int mid = lo + (hi - lo) / 2;
+    build(2 * node, lo, mid, a);
+    build(2 * node + 1, mid + 1, hi, a);
+    std::merge(
+        tree[2 * node].begin(), tree[2 * node].end(), tree[2 * node + 1].begin(),
+        tree[2 * node + 1].end(), std::back_inserter(tree[node])
+    );
+  }
+
+  template<class Fn>
+  int query(int node, int lo, int hi, int tgt_lo, int tgt_hi, Fn count_node) const {
+    if (tgt_hi < lo || hi < tgt_lo) {
+      return 0;
+    }
+    if (tgt_lo <= lo && hi <= tgt_hi) {
+      return count_node(tree[node]);
+    }
+    int mid = lo + (hi - lo) / 2;
+    return query(2 * node, lo, mid, tgt_lo, tgt_hi, count_node) +
+           query(2 * node + 1, mid + 1, hi, tgt_lo, tgt_hi, count_node);
+  }
+
+ public:
+  MergeSortTree(const std::vector<T> &a) : len(a.size()), tree(4 * a.size()) {
+    if (len > 0) {
+      build(1, 0, len - 1, a);
+    }
+  }
+
+  int count_leq(int lo, int hi, const T &x) const {
+    return query(1, 0, len - 1, lo, hi, [&](const std::vector<T> &v) {
+      return (int)(std::upper_bound(v.begin(), v.end(), x) - v.begin());
+    });
+  }
+
+  int count_in(int lo, int hi, const T &x, const T &y) const {
+    return query(1, 0, len - 1, lo, hi, [&](const std::vector<T> &v) {
+      return (int)(std::upper_bound(v.begin(), v.end(), y) -
+                   std::lower_bound(v.begin(), v.end(), x));
+    });
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<int> a{5, 2, 8, 6, 1, 9, 3};
+  MergeSortTree<int> t(a);
+
+  assert(t.count_leq(0, 6, 5) == 4);    // 5, 2, 1, 3
+  assert(t.count_leq(2, 4, 6) == 2);    // 6, 1
+  assert(t.count_in(0, 6, 3, 8) == 4);  // 5, 8, 6, 3
+  assert(t.count_in(1, 5, 2, 6) == 2);  // 2, 6 (8, 1, 9 excluded)
+  return 0;
+}
+\end{lstlisting}
+\subsection{Wavelet Tree}
+A wavelet tree is a static structure over an integer array with values in a known range \inlinecode{[min\_val, max\_val]}. The root splits the value range at its midpoint, recording for every prefix of the array how many of its elements belong to the lower value half, then stably partitions the array so that those elements form the left child and the rest form the right child. Recursing on each half builds a balanced tree of height $O(\log \sigma)$, where $\sigma$ is the size of the value range.
+
+The recorded prefix counts let a query at any node translate a range of array positions into the corresponding range of positions in either child, so a single root-to-leaf descent answers order statistics and rank queries. This is strictly more powerful than a merge sort tree: besides counting values below a threshold, it reports the $k$-th smallest value of a range in $O(\log \sigma)$ time.
+
+All position ranges are inclusive \inlinecode{[lo, hi]} with 0-based indices. If the values are large or sparse, compress them to a small contiguous range first.
+
+\begin{compactitem}
+  \item \inlinecode{WaveletTree(a, min\_val, max\_val)} builds the tree over the array \inlinecode{a}, whose values must all lie in \inlinecode{[min\_val, max\_val]}.
+  \item \inlinecode{kth\_smallest(lo, hi, k)} returns the \inlinecode{k}-th smallest value among positions \inlinecode{[lo, hi]}, where \inlinecode{k} is 1-based (so \inlinecode{k == 1} returns the minimum).
+  \item \inlinecode{count\_leq(lo, hi, x)} returns the number of positions \inlinecode{i} in \inlinecode{[lo, hi]} with \inlinecode{a[i] \textless{}= x}.
+  \item \inlinecode{count\_in(lo, hi, x, y)} returns the number of positions \inlinecode{i} in \inlinecode{[lo, hi]} with \inlinecode{x \textless{}= a[i] \textless{}= y}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log \sigma)$ per call to the constructor, where $n$ is the size of the array and $\sigma$ is the size of the value range.
+  \item $O(\log \sigma)$ per call to \inlinecode{kth\_smallest()}, \inlinecode{count\_leq()}, and \inlinecode{count\_in()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \log \sigma)$ for storage of the tree.
+  \item $O(\log \sigma)$ auxiliary stack space per query.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <memory>
+#include <vector>
+
+class WaveletTree {
+  int min_val, max_val;  // The value range this node covers.
+  std::unique_ptr<WaveletTree> left, right;
+  std::vector<int> b;  // b[i] = number of the first i elements that go to the left child.
+
+  WaveletTree(std::vector<int>::iterator lo, std::vector<int>::iterator hi, int x, int y)
+      : min_val(x), max_val(y) {
+    if (lo >= hi) {
+      return;
+    }
+    int mid = min_val + (max_val - min_val) / 2;
+    auto go_left = [mid](int v) { return v <= mid; };
+    b.reserve((hi - lo) + 1);
+    b.push_back(0);
+    for (auto it = lo; it != hi; ++it) {
+      b.push_back(b.back() + (go_left(*it) ? 1 : 0));
+    }
+    if (min_val == max_val) {
+      return;
+    }
+    auto pivot = std::stable_partition(lo, hi, go_left);
+    left.reset(new WaveletTree(lo, pivot, min_val, mid));
+    right.reset(new WaveletTree(pivot, hi, mid + 1, max_val));
+  }
+
+  // 1-based positions [lo, hi] for the recursion below.
+  int kth(int lo, int hi, int k) const {
+    if (min_val == max_val) {
+      return min_val;
+    }
+    int in_left = b[hi] - b[lo - 1];
+    if (k <= in_left) {
+      return left->kth(b[lo - 1] + 1, b[hi], k);
+    }
+    return right->kth(lo - b[lo - 1], hi - b[hi], k - in_left);
+  }
+
+  int leq(int lo, int hi, int x) const {
+    if (lo > hi || x < min_val) {
+      return 0;
+    }
+    if (max_val <= x) {
+      return hi - lo + 1;
+    }
+    return left->leq(b[lo - 1] + 1, b[hi], x) + right->leq(lo - b[lo - 1], hi - b[hi], x);
+  }
+
+ public:
+  WaveletTree(std::vector<int> a, int min_val, int max_val)
+      : WaveletTree(a.begin(), a.end(), min_val, max_val) {}
+
+  int kth_smallest(int lo, int hi, int k) const { return kth(lo + 1, hi + 1, k); }
+  int count_leq(int lo, int hi, int x) const { return leq(lo + 1, hi + 1, x); }
+
+  int count_in(int lo, int hi, int x, int y) const {
+    return leq(lo + 1, hi + 1, y) - leq(lo + 1, hi + 1, x - 1);
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<int> a{5, 2, 8, 6, 1, 9, 3};
+  WaveletTree t(a, 1, 9);
+
+  assert(t.kth_smallest(0, 6, 1) == 1);  // Minimum of the whole array.
+  assert(t.kth_smallest(0, 6, 4) == 5);  // Median of the whole array.
+  assert(t.kth_smallest(2, 4, 2) == 6);  // {8, 6, 1} -> 6 is 2nd smallest.
+
+  assert(t.count_leq(0, 6, 5) == 4);    // 5, 2, 1, 3
+  assert(t.count_in(0, 6, 3, 8) == 4);  // 5, 8, 6, 3
+  assert(t.count_in(1, 5, 2, 6) == 2);  // 2, 6
+  return 0;
+}
+\end{lstlisting}
 \subsection{Cartesian Tree}
 Builds the min Cartesian tree of an array in linear time. A Cartesian tree is a binary tree whose inorder traversal is the original array order and whose heap property is determined by array values. For a min Cartesian tree, each parent has value less than or equal to its children.
 
@@ -3682,7 +4081,7 @@ int main() {
 \subsection{Implicit Treap}
 Maintain a dynamically-sized array using a balanced binary search tree while supporting both dynamic queries and updates of contiguous subarrays via the lazy propagation technique. A treap maintains a balanced binary tree structure by preserving the heap property on the randomly generated priority values of nodes, thereby making insertions and deletions run in $O(\log n)$ with high probability.
 
-The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$.
+The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return \inlinecode{a + b}.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
@@ -3942,9 +4341,9 @@ Values: 2 2 1 8 10 11 (min: 1)
 \subsection{Quadtree (Point Update)}
 Maintain a two-dimensional array over a huge grid while supporting point updates and rectangle queries. The quadtree recursively splits each rectangle into four quadrants, and lazily allocates only the nodes touched by updates or needed to summarize queried regions.
 
-The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
+The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{repeat\_value(v, area)} should return \inlinecode{v * area}.
 
-The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that ``set'' the chosen cell to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that ``set'' the chosen cell to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 \begin{compactitem}
   \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
@@ -3957,7 +4356,8 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
-  \item $O(\max\left(R, C\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
+  \item $O(\log\left(\max\left(R, C\right)\right))$ per call to \inlinecode{at()} and \inlinecode{update()}, which descend a single root-to-cell path.
+  \item $O(R + C)$ worst case per call to \inlinecode{query()}, attained when the queried rectangle straddles the quadrant boundaries at every level (for example a one-cell-thick full-width strip); rectangles that align with a few large quadrants are far cheaper.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -4140,7 +4540,7 @@ Values:
 \subsection{Quadtree (Range Update)}
 Maintain a two-dimensional array over a huge grid while supporting rectangle updates and rectangle queries. The quadtree recursively splits each rectangle into four quadrants, lazily allocates touched nodes, and stores pending rectangle updates with lazy propagation.
 
-The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
+The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{repeat\_value(v, area)} should return \inlinecode{v * area}.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, area)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{area} cells, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined region must be equivalent to applying it to each child region and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines rectangle assignment. For rectangle increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, area)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * area} for range-sum queries.
 
@@ -4156,13 +4556,14 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, area)}, which applie
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
-  \item $O(\max\left(R, C\right))$ per call to \inlinecode{at()}, \inlinecode{update()}, and \inlinecode{query()}.
+  \item $O(\log\left(\max\left(R, C\right)\right))$ per call to \inlinecode{at()}, which descends a single root-to-cell path.
+  \item $O(R + C)$ worst case per call to \inlinecode{update()} and \inlinecode{query()}, attained when the rectangle straddles quadrant boundaries at many levels; rectangles that align with a few large quadrants are far cheaper.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \log\left(\max\left(R, C\right)\right))$ for storage of the quadtree nodes after $n$ point or rectangle updates.
+  \item $O(n (R + C))$ worst-case storage after $n$ rectangle updates, although aligned rectangles and point updates allocate far fewer nodes.
   \item $O(\log\left(\max\left(R, C\right)\right))$ auxiliary stack space for \inlinecode{update()}, \inlinecode{query()}, and \inlinecode{at()}.
 \end{compactitem}
 
@@ -4374,9 +4775,9 @@ Values:
 \subsection{2D Segment Tree}
 Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices, making it the two-dimensional analogue of a sparse (a.k.a. dynamic or implicit) segment tree: row and column nodes are allocated lazily as cells are touched.
 
-The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return $a + b$ and \inlinecode{repeat\_value(v, area)} should return $v \cdot area$.
+The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{repeat\_value(v, area)} should return \inlinecode{v * area}.
 
-The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that ``set'' the chosen cell to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return $v + d$.
+The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that ``set'' the chosen cell to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
 \begin{compactitem}
   \item \inlinecode{SegTree2D(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
@@ -5055,7 +5456,7 @@ Maintain a numerical array while supporting point increments and range-sum queri
 This implementation uses 1-based array indices, so valid indices are from 1 to \inlinecode{n}, inclusive.
 
 \begin{compactitem}
-  \item \inlinecode{initialize(n)} resets the data structure.
+  \item \inlinecode{initialize(n)} initializes array indices \inlinecode{1} to \inlinecode{n} to 0.
   \item \inlinecode{vals[i]} stores the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
@@ -5522,7 +5923,7 @@ Maintain frequencies over a 1-based integer domain and find order statistics by 
 This is useful for dynamic multisets of bounded integer values, coordinate-compressed kth-element queries, and online rank queries.
 
 \begin{compactitem}
-  \item \inlinecode{initialize(n)} resets all frequencies.
+  \item \inlinecode{initialize(n)} initializes array indices \inlinecode{1} to \inlinecode{n} to 0.
   \item \inlinecode{add(i, delta)} adds \inlinecode{delta} to the frequency of value/index \inlinecode{i}.
   \item \inlinecode{sum(i)} returns the total frequency over indices \inlinecode{[1, i]}.
   \item \inlinecode{kth(k)} returns the smallest index \inlinecode{i} such that \inlinecode{sum(i) \textgreater{}= k}. The argument \inlinecode{k} is 1-based and must satisfy \inlinecode{1 \textless{}= k \textless{}= sum(n)}.
@@ -6380,7 +6781,7 @@ int main() {
 \subsection{Heavy Light Decomposition}
 Maintain a tree with values associated with either its edges or nodes, while supporting both dynamic queries and dynamic updates of all values on a given path between two nodes in the tree. Heavy-light decomposition partitions the nodes of the tree into disjoint paths where all nodes have degree two, except the endpoints of a path which has degree one.
 
-The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the tree. The default code below assumes a numerical tree type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
+The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the tree. The default code below assumes a numerical tree type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return \inlinecode{a + b}. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
 
 The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning ``apply \inlinecode{old}, then apply \inlinecode{d}''. These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that ``set'' a path's edges or nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 
@@ -6651,7 +7052,7 @@ int main() {
 \subsection{Link-Cut Tree}
 Maintain a forest of trees with values associated with its nodes, while supporting both dynamic queries and dynamic updates of all values on any path between two nodes in a given tree. In addition, support testing of whether two nodes are connected in the forest, as well as the merging and spliting of trees by adding or removing specific edges. Link/cut forests divide each of its trees into vertex-disjoint paths, each represented by a splay tree.
 
-The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the forest. The default code below assumes a numerical forest type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return $a + b$. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
+The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the forest. The default code below assumes a numerical forest type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return \inlinecode{a + b}. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
 
 The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning ``apply \inlinecode{old}, then apply \inlinecode{d}''. These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that ``set'' a path's nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 

@@ -7,7 +7,7 @@ values of nodes, thereby making insertions and deletions run in O(log n) with hi
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. The default
 code below assumes a numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case `combine(a, b)` should return $a + b$.
+Another possible query operation is "sum", in which case `combine(a, b)` should return `a + b`.
 
 Range updates are defined by `apply_delta(v, d, len)`, which applies an update delta `d` to an
 aggregate summary `v` representing `len` array values, and by `compose_deltas(old, d)`, which

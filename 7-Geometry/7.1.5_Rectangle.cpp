@@ -121,6 +121,5 @@ int main() {
   assert(p == Point(0, 0) && q == Point(1, 1));
   assert(2 == rectangle_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
   assert(p == Point(1, 5) && q == Point(2, 6));
-
   return 0;
 }

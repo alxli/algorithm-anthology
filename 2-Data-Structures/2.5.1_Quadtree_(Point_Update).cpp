@@ -8,12 +8,12 @@ The query operation is defined by a commutative associative aggregate function `
 Because untouched regions are implicit, `repeat_value(v, area)` must return the aggregate summary of
 `area` copies of the initial value `v`. The default code below assumes a numerical array type,
 defining queries for the "min" of the target range. For rectangle-sum queries, `combine(a, b)`
-should return $a + b$ and `repeat_value(v, area)` should return $v \cdot area$.
+should return `a + b` and `repeat_value(v, area)` should return `v * area`.
 
 The point update operation is defined by `apply_delta(v, d)`, which returns the new value at one
 updated cell. The default code below defines updates that "set" the chosen cell to a new value.
 Another possible update operation is "increment", in which case `apply_delta(v, d)` should return
-$v + d$.
+`v + d`.
 
 - `Quadtree(v)` constructs a two-dimensional array with rows from 0 to `R` and columns from 0 to
   `C`, inclusive. All values are implicitly initialized to `v`.
@@ -25,7 +25,10 @@ $v + d$.
 
 Time Complexity:
 - O(1) per call to the constructor.
-- O(max(R, C)) per call to `at()`, `update()`, and `query()`.
+- O(log(max(R, C))) per call to `at()` and `update()`, which descend a single root-to-cell path.
+- O(R + C) worst case per call to `query()`, attained when the queried rectangle straddles the
+  quadrant boundaries at every level (for example a one-cell-thick full-width strip); rectangles that
+  align with a few large quadrants are far cheaper.
 
 Space Complexity:
 - O(n log(max(R, C))) for storage of the quadtree nodes after $n$ point updates.

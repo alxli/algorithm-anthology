@@ -280,6 +280,5 @@ int main() {
   // Implicit conversion PointI -> PointD.
   PointD promoted = PointI(1, 2);
   assert(promoted == PointD(1, 2));
-
   return 0;
 }

@@ -121,6 +121,5 @@ int main() {
   assert(point_in_triangle(PointI(1, 1), PointI(0, 0), PointI(4, 0), PointI(0, 4)));
   assert(!point_in_triangle(PointI(5, 5), PointI(0, 0), PointI(4, 0), PointI(0, 4)));
   assert(point_in_triangle(PointI(2, 2), PointI(0, 0), PointI(4, 0), PointI(0, 4)));  // on edge
-
   return 0;
 }

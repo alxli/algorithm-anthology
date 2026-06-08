@@ -240,6 +240,5 @@ int main() {
   vector<PointI> is{{0, 0}, {0, 3}, {-3, 3}, {-3, 0}};
   assert(EQ(1.5, intersection_area(ip.begin(), ip.end(), is.begin(), is.end())));
   assert(EQ(12.5, union_area(ip.begin(), ip.end(), is.begin(), is.end())));
-
   return 0;
 }

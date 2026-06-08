@@ -6,12 +6,12 @@ O(log n) intervals on the path from one leaf to the root.
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. The default
 code below assumes a numerical array type, defining queries for the "min" of the target range.
-Another possible query operation is "sum", in which case `combine(a, b)` should return $a + b$.
+Another possible query operation is "sum", in which case `combine(a, b)` should return `a + b`.
 
 The point update operation is defined by `apply_delta(v, d)`, which returns the new value at a
 single updated index. The default definition below supports updates that "set" the chosen array
 index to a new value. Another possible update operation is "increment", in which case
-`apply_delta(v, d)` should return $v + d$.
+`apply_delta(v, d)` should return `v + d`.
 
 - `SegTree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
   and all values initialized to `v`.

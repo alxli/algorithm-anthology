@@ -1,0 +1,107 @@
+/*
+
+The fast Fourier transform (FFT) multiplies two polynomials, or equivalently convolves two sequences,
+in $O(n \log n)$ time by evaluating them at the complex roots of unity. Like the number theoretic
+transform of the previous section, it replaces a coefficient vector with its evaluations at the
+powers of a root of unity, multiplies two such evaluation vectors pointwise, and transforms back. The
+difference is the arithmetic: the FFT works over the complex numbers with $e^{2\pi i / n}$ as the
+root of unity, so it convolves arbitrary real coefficients rather than residues modulo a prime.
+
+The trade-off is precision. Complex arithmetic in double precision accumulates rounding error, so the
+result is recovered by rounding each output to the nearest integer; this is reliable as long as the
+true coefficients stay well within the roughly 15 significant decimal digits a `double` can hold.
+When exact results modulo a prime are required, or coefficients are large, prefer the number
+theoretic transform; use the FFT for real-valued convolution or big-integer multiplication.
+
+- `fft(a, invert)` transforms the complex vector `a` in place, whose length must be a power of two.
+  The forward transform uses `invert == false`; the inverse uses `invert == true`.
+- `convolve(a, b)` returns the convolution of two integer sequences `a` and `b`, that is, the
+  coefficients of the product of the two polynomials whose coefficients are the inputs. The result
+  has length `a.size() + b.size() - 1`, with each entry rounded to the nearest integer.
+
+Time Complexity:
+- O(n log n) per call to `fft()`, where $n$ is the length of the vector.
+- O(n log n) per call to `convolve()`, where $n$ is the size of the result.
+
+Space Complexity:
+- O(1) auxiliary for `fft()`, transforming in place.
+- O(n) auxiliary heap space for `convolve()`.
+
+*/
+
+#include <cmath>
+#include <complex>
+#include <vector>
+
+typedef std::complex<double> cd;
+const double PI = acos(-1.0);
+
+void fft(std::vector<cd> &a, bool invert) {
+  int n = a.size();
+  for (int i = 1, j = 0; i < n; i++) {
+    int bit = n >> 1;
+    for (; j & bit; bit >>= 1) {
+      j ^= bit;
+    }
+    j ^= bit;
+    if (i < j) {
+      std::swap(a[i], a[j]);
+    }
+  }
+  for (int len = 2; len <= n; len <<= 1) {
+    double angle = 2 * PI / len * (invert ? -1 : 1);
+    cd root(cos(angle), sin(angle));
+    for (int i = 0; i < n; i += len) {
+      cd w(1);
+      for (int k = 0; k < len / 2; k++) {
+        cd u = a[i + k], v = a[i + k + len / 2] * w;
+        a[i + k] = u + v;
+        a[i + k + len / 2] = u - v;
+        w *= root;
+      }
+    }
+  }
+  if (invert) {
+    for (cd &x : a) {
+      x /= n;
+    }
+  }
+}
+
+std::vector<long long> convolve(const std::vector<long long> &a, const std::vector<long long> &b) {
+  if (a.empty() || b.empty()) {
+    return {};
+  }
+  int result_size = a.size() + b.size() - 1;
+  int n = 1;
+  while (n < result_size) {
+    n <<= 1;
+  }
+  std::vector<cd> fa(a.begin(), a.end()), fb(b.begin(), b.end());
+  fa.resize(n);
+  fb.resize(n);
+  fft(fa, false);
+  fft(fb, false);
+  for (int i = 0; i < n; i++) {
+    fa[i] *= fb[i];
+  }
+  fft(fa, true);
+  std::vector<long long> res(result_size);
+  for (int i = 0; i < result_size; i++) {
+    res[i] = llround(fa[i].real());
+  }
+  return res;
+}
+
+/*** Example Usage ***/
+
+#include <cassert>
+using namespace std;
+
+int main() {
+  // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
+  vector<long long> a{1, 2, 3}, b{4, 5, 6};
+  vector<long long> c = convolve(a, b);
+  assert((c == vector<long long>{4, 13, 28, 27, 18}));
+  return 0;
+}

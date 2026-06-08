@@ -390,7 +390,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Monotone Queue DP Optimization}
-Maintains the minimum or maximum value in a sliding window using a monotone queue. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as \inlinecode{dp[i] = a[i] + min(dp[j])} for \inlinecode{j} $\in$ `[i - w, i - 1)\$.
+Maintains the minimum or maximum value in a sliding window using a monotone queue. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as \inlinecode{dp[i] = a[i] + min(dp[j])} for \inlinecode{j} $\in$ \inlinecode{[i - w, i - 1)}.
 
 The queue stores candidate \inlinecode{(index, value)} pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate.
 
@@ -419,9 +419,7 @@ The queue stores candidate \inlinecode{(index, value)} pairs in monotone order. 
 
 template<class T, class Compare>
 class MonotoneQueue {
-  using entry = std::pair<int, T>;
-
-  std::deque<entry> q;
+  std::deque<std::pair<int, T>> q;
   Compare better;
 
  public:
@@ -440,7 +438,7 @@ class MonotoneQueue {
     }
   }
 
-  entry top() const { return q.front(); }
+  std::pair<int, T> top() const { return q.front(); }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -487,8 +485,7 @@ Computes one layer of a dynamic programming recurrence whose optimal transition 
 The function below computes \inlinecode{dp\_cur[l..r]} by evaluating the midpoint first, then recursing on the left half with a restricted upper bound on the optimal \inlinecode{k}, and on the right half with a restricted lower bound. The caller is responsible for checking that the recurrence satisfies the required monotonicity condition.
 
 \begin{compactitem}
-  \item \inlinecode{compute\_dc\_layer(dp\_prev, dp\_cur, l, r, opt\_l, opt\_r, cost)} fills \inlinecode{dp\_cur[l..r]} using candidate transition indices in \inlinecode{[opt\_l, opt\_r]}.
-  \item \inlinecode{cost(k, i)} must return the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
+  \item \inlinecode{compute\_dc\_layer(dp\_prev, dp\_cur, l, r, opt\_l, opt\_r, cost)} fills \inlinecode{dp\_cur[l..r]} using candidate transition indices in \inlinecode{[opt\_l, opt\_r]}. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(k, i)} returns the transition cost from previous state \inlinecode{k} to current state \inlinecode{i}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ calls to \inlinecode{cost(k, i)} per layer when each state has $O(n)$ possible transitions.

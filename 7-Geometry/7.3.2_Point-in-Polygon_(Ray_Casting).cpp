@@ -79,6 +79,5 @@ int main() {
   vector<PointI> ipoly{{0, 0}, {4, 0}, {4, 4}, {0, 4}};
   assert(point_in_polygon(PointI(2, 2), ipoly.begin(), ipoly.end()));
   assert(!point_in_polygon(PointI(5, 2), ipoly.begin(), ipoly.end()));
-
   return 0;
 }

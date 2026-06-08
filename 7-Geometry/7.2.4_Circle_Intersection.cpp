@@ -235,6 +235,5 @@ int main() {
   // Each circle passes through the other's center.
   double r = 3, a = intersection_area(Circle(-r / 2, 0, r), Circle(r / 2, 0, r));
   assert(EQ(a, r * r * (2 * PI / 3 - sqrt(3) / 2)));
-
   return 0;
 }

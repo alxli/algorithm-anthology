@@ -281,7 +281,6 @@ int main() {
   // Implicit conversion PointI -> PointD.
   PointD promoted = PointI(1, 2);
   assert(promoted == PointD(1, 2));
-
   return 0;
 }
 \end{lstlisting}
@@ -290,7 +289,7 @@ A straight line in two dimensions, templated on the coordinate type \inlinecode{
 
 Because coefficients are not normalized to a canonical form, \inlinecode{operator==} compares lines by proportionality (whether they are the same geometric line) rather than by coefficient equality.
 
-Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in \inlinecode{is\_parallel()}/\inlinecode{is\_perpendicular()} and \inlinecode{a*p.x + b*p.y} in \inlinecode{contains()}), which grow like the squared coordinate magnitude. For integer \inlinecode{T}, use \inlinecode{LineL} (\inlinecode{line\textless{}long long\textgreater{}}) once coordinates exceed a few tens of thousands, or the 32-bit products overflow.
+Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in \inlinecode{is\_parallel()}/\inlinecode{is\_perpendicular()} and \inlinecode{a*p.x + b*p.y} in \inlinecode{contains()}), which grow like the squared coordinate magnitude. For integral type \inlinecode{T}, use \inlinecode{LineL} (\inlinecode{line\textless{}long long\textgreater{}}) once coordinates exceed a few tens of thousands, or the 32-bit products overflow.
 
 Operations include \inlinecode{horizontal()}, \inlinecode{vertical()}, \inlinecode{slope()}, evaluating $y$ at some $x$ with \inlinecode{y()} (and vice versa with \inlinecode{x()}), checking if a point falls on the line with \inlinecode{contains()}, checking if another line is parallel or perpendicular with \inlinecode{is\_parallel()} or \inlinecode{is\_perpendicular()}, and finding the \inlinecode{parallel()} or \inlinecode{perpendicular()} line through a point.
 
@@ -450,7 +449,6 @@ int main() {
   assert(il.is_parallel(LineI(PointI(1, 1), PointI(3, 2))));        // both slope 1/2
   assert(il.is_perpendicular(LineI(PointI(0, 0), PointI(1, -2))));  // dot of normals = 0
   assert(il.slope() == 0.5);                                        // fp_t result
-
   return 0;
 }
 \end{lstlisting}
@@ -646,7 +644,6 @@ int main() {
   );  // on edge
   // Orientation-independent: reversing a, b, c gives the same answer.
   assert(in_circumcircle(PointI(-1, 0), PointI(0, 1), PointI(1, 0), PointI(0, 0)) == 1);
-
   return 0;
 }
 \end{lstlisting}
@@ -754,7 +751,6 @@ int main() {
   assert(point_in_triangle(PointI(1, 1), PointI(0, 0), PointI(4, 0), PointI(0, 4)));
   assert(!point_in_triangle(PointI(5, 5), PointI(0, 0), PointI(4, 0), PointI(0, 4)));
   assert(point_in_triangle(PointI(2, 2), PointI(0, 0), PointI(4, 0), PointI(0, 4)));  // on edge
-
   return 0;
 }
 \end{lstlisting}
@@ -866,7 +862,6 @@ int main() {
   assert(p == Point(0, 0) && q == Point(1, 1));
   assert(2 == rectangle_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
   assert(p == Point(1, 5) && q == Point(2, 6));
-
   return 0;
 }
 \end{lstlisting}
@@ -1181,7 +1176,6 @@ int main() {
   assert(sqdist(ia, ib) == 25);   // int result
   assert(dot(ia, ib) == -5);      // int result
   assert(EQ(dist(ia, ib), 5.0));  // double result
-
   return 0;
 }
 \end{lstlisting}
@@ -1412,7 +1406,6 @@ int main() {
   assert(seg_intersection(PointI(0, 0), PointI(1, 0), PointI(2, 0), PointI(3, 0)) == -1);
   assert(seg_intersection(PointI(0, 0), PointI(4, 4), PointI(0, 4), PointI(4, 0), &p) == 0);
   assert(p == Point(2, 2));
-
   return 0;
 }
 \end{lstlisting}
@@ -1636,7 +1629,6 @@ int main() {
   // Each circle passes through the other's center.
   double r = 3, a = intersection_area(Circle(-r / 2, 0, r), Circle(r / 2, 0, r));
   assert(EQ(a, r * r * (2 * PI / 3 - sqrt(3) / 2)));
-
   return 0;
 }
 \end{lstlisting}
@@ -1790,7 +1782,6 @@ int main() {
   vector<PointI> iv{{0, 0}, {4, 0}, {0, 3}};            // right triangle, area = 6
   assert(polygon_area_2x(iv.begin(), iv.end()) == 12);  // exact int
   assert(EQ(polygon_area(iv.begin(), iv.end()), 6.0));
-
   return 0;
 }
 \end{lstlisting}
@@ -1870,7 +1861,6 @@ int main() {
   vector<PointI> ipoly{{0, 0}, {4, 0}, {4, 4}, {0, 4}};
   assert(point_in_polygon(PointI(2, 2), ipoly.begin(), ipoly.end()));
   assert(!point_in_polygon(PointI(5, 2), ipoly.begin(), ipoly.end()));
-
   return 0;
 }
 \end{lstlisting}
@@ -2141,7 +2131,6 @@ int main() {
   vector<PointI> iv{{0, 0}, {0, 2}, {2, 0}, {2, 2}};
   Circle ic = minimum_enclosing_circle(iv.begin(), iv.end());
   assert(EQ(ic.h, 1.0) && EQ(ic.k, 1.0));
-
   return 0;
 }
 \end{lstlisting}
@@ -2262,7 +2251,6 @@ int main() {
   assert(closest_pair(iv.begin(), iv.end(), &ires) == 25);  // (0,0)-(3,4) or (3,4)-(0,0)
   auto [i1, i2] = ires;
   assert((i1 == PointI(0, 0) && i2 == PointI(3, 4)) || (i1 == PointI(3, 4) && i2 == PointI(0, 0)));
-
   return 0;
 }
 \end{lstlisting}
@@ -2835,7 +2823,6 @@ int main() {
   vector<PointI> is{{0, 0}, {0, 3}, {-3, 3}, {-3, 0}};
   assert(EQ(1.5, intersection_area(ip.begin(), ip.end(), is.begin(), is.end())));
   assert(EQ(12.5, union_area(ip.begin(), ip.end(), is.begin(), is.end())));
-
   return 0;
 }
 \end{lstlisting}
@@ -2995,7 +2982,6 @@ int main() {
   // Integer-coordinate inputs are accepted (triangulation computed in double).
   vector<PointI> iv{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
   assert(delaunay_triangulation(iv.begin(), iv.end()) == t);
-
   return 0;
 }
 \end{lstlisting}
@@ -3283,7 +3269,6 @@ int main() {
   // Integer-coordinate inputs are accepted (triangulation computed in double).
   vector<PointI> iv{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
   assert(delaunay_triangulation(iv.begin(), iv.end()) == t);
-
   return 0;
 }
 \end{lstlisting}

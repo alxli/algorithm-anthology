@@ -6,12 +6,12 @@ sub-arrays and dynamic updates of individual indices.
 The query operation is defined by an associative aggregate function `combine(a, b)`. The default
 definition below assumes a numerical array type, supporting queries for the "min" of the target
 range. Another possible query operation is "sum", in which case `combine(a, b)` should return
-$a + b$.
+`a + b`.
 
 The point update operation is defined by `apply_delta(v, d)`, which returns the new value at a
 single updated index. The default definition below supports updates that "set" the chosen array
 index to a new value. Another possible update operation is "increment", in which case
-`apply_delta(v, d)` should return $v + d$.
+`apply_delta(v, d)` should return `v + d`.
 
 The operations supported by this data structure are identical to those of the point update segment
 tree found in this section.

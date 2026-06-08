@@ -154,6 +154,5 @@ int main() {
   vector<PointI> iv{{0, 0}, {4, 0}, {0, 3}};            // right triangle, area = 6
   assert(polygon_area_2x(iv.begin(), iv.end()) == 12);  // exact int
   assert(EQ(polygon_area(iv.begin(), iv.end()), 6.0));
-
   return 0;
 }

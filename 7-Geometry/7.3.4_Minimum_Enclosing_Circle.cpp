@@ -129,6 +129,5 @@ int main() {
   vector<PointI> iv{{0, 0}, {0, 2}, {2, 0}, {2, 2}};
   Circle ic = minimum_enclosing_circle(iv.begin(), iv.end());
   assert(EQ(ic.h, 1.0) && EQ(ic.k, 1.0));
-
   return 0;
 }

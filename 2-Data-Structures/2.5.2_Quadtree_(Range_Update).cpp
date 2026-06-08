@@ -8,7 +8,7 @@ The query operation is defined by a commutative associative aggregate function `
 Because untouched regions are implicit, `repeat_value(v, area)` must return the aggregate summary of
 `area` copies of the initial value `v`. The default code below assumes a numerical array type,
 defining queries for the "min" of the target range. For rectangle-sum queries, `combine(a, b)`
-should return $a + b$ and `repeat_value(v, area)` should return $v \cdot area$.
+should return `a + b` and `repeat_value(v, area)` should return `v * area`.
 
 Range updates are defined by `apply_delta(v, d, area)`, which applies an update delta `d` to an
 aggregate summary `v` representing `area` cells, and by `compose_deltas(old, d)`, which combines a
@@ -31,10 +31,14 @@ for range-min/range-max queries, and `v + d * area` for range-sum queries.
 
 Time Complexity:
 - O(1) per call to the constructor.
-- O(max(R, C)) per call to `at()`, `update()`, and `query()`.
+- O(log(max(R, C))) per call to `at()`, which descends a single root-to-cell path.
+- O(R + C) worst case per call to `update()` and `query()`, attained when the rectangle straddles
+  quadrant boundaries at many levels; rectangles that align with a few large quadrants are far
+  cheaper.
 
 Space Complexity:
-- O(n log(max(R, C))) for storage of the quadtree nodes after $n$ point or rectangle updates.
+- O(n (R + C)) worst-case storage after $n$ rectangle updates, although aligned rectangles and point
+  updates allocate far fewer nodes.
 - O(log(max(R, C))) auxiliary stack space for `update()`, `query()`, and `at()`.
 
 */

@@ -7,7 +7,7 @@ prefix sum walks through O(log n) disjoint blocks.
 
 This implementation uses 1-based array indices, so valid indices are from 1 to `n`, inclusive.
 
-- `initialize(n)` resets the data structure.
+- `initialize(n)` initializes array indices `1` to `n` to 0.
 - `vals[i]` stores the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `set(i, x)` assigns the value at index `i` to `x`.

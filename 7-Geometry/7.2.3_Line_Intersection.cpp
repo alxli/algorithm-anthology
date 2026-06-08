@@ -241,6 +241,5 @@ int main() {
   assert(seg_intersection(PointI(0, 0), PointI(1, 0), PointI(2, 0), PointI(3, 0)) == -1);
   assert(seg_intersection(PointI(0, 0), PointI(4, 4), PointI(0, 4), PointI(4, 0), &p) == 0);
   assert(p == Point(2, 2));
-
   return 0;
 }

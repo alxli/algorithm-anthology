@@ -10,12 +10,12 @@ The query operation is defined by a commutative associative aggregate function `
 Because untouched regions are implicit, `repeat_value(v, area)` must return the aggregate summary of
 `area` copies of the initial value `v`. The default code below assumes a numerical array type,
 defining queries for the "min" of the target range. For rectangle-sum queries, `combine(a, b)`
-should return $a + b$ and `repeat_value(v, area)` should return $v \cdot area$.
+should return `a + b` and `repeat_value(v, area)` should return `v * area`.
 
 The point update operation is defined by `apply_delta(v, d)`, which returns the new value at one
 updated cell. The default code below defines updates that "set" the chosen cell to a new value.
 Another possible update operation is "increment", in which case `apply_delta(v, d)` should return
-$v + d$.
+`v + d`.
 
 - `SegTree2D(v)` constructs a two-dimensional array with rows from 0 to `R` and columns from 0 to
   `C`, inclusive. All values are implicitly initialized to `v`.

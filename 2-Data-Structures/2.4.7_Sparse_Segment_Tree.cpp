@@ -9,8 +9,8 @@ are supported without preallocating the whole tree.
 The query operation is defined by an associative aggregate function `combine(a, b)`. Since untouched
 nodes are implicit, `repeat_value(v, len)` must return the aggregate summary of `len` copies of the
 initial value `v`. The default code below assumes a numerical array type, defining queries for the
-"min" of the target range. For range-sum queries, `combine(a, b)` should return $a + b$ and
-`repeat_value(v, len)` should return $v \cdot len$.
+"min" of the target range. For range-sum queries, `combine(a, b)` should return `a + b` and
+`repeat_value(v, len)` should return `v * len`.
 
 Range updates are defined by `apply_delta(v, d, len)`, which applies an update delta `d` to an
 aggregate summary `v` representing `len` array values, and by `compose_deltas(old, d)`, which

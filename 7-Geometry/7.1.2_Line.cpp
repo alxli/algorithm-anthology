@@ -12,8 +12,8 @@ proportionality (whether they are the same geometric line) rather than by coeffi
 
 Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in
 `is_parallel()`/`is_perpendicular()` and `a*p.x + b*p.y` in `contains()`), which grow like the
-squared coordinate magnitude. For integer `T`, use `LineL` (`line<long long>`) once coordinates
-exceed a few tens of thousands, or the 32-bit products overflow.
+squared coordinate magnitude. For integral type `T`, use `LineL` (`line<long long>`) once
+coordinates exceed a few tens of thousands, or the 32-bit products overflow.
 
 Operations include `horizontal()`, `vertical()`, `slope()`, evaluating $y$ at some $x$ with `y()`
 (and vice versa with `x()`), checking if a point falls on the line with `contains()`, checking if
@@ -171,6 +171,5 @@ int main() {
   assert(il.is_parallel(LineI(PointI(1, 1), PointI(3, 2))));        // both slope 1/2
   assert(il.is_perpendicular(LineI(PointI(0, 0), PointI(1, -2))));  // dot of normals = 0
   assert(il.slope() == 0.5);                                        // fp_t result
-
   return 0;
 }

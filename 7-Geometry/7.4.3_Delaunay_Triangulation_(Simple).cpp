@@ -165,6 +165,5 @@ int main() {
   // Integer-coordinate inputs are accepted (triangulation computed in double).
   vector<PointI> iv{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
   assert(delaunay_triangulation(iv.begin(), iv.end()) == t);
-
   return 0;
 }

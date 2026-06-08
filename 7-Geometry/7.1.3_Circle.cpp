@@ -199,6 +199,5 @@ int main() {
   );  // on edge
   // Orientation-independent: reversing a, b, c gives the same answer.
   assert(in_circumcircle(PointI(-1, 0), PointI(0, 1), PointI(1, 0), PointI(0, 0)) == 1);
-
   return 0;
 }

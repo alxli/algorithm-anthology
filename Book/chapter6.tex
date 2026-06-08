@@ -1631,7 +1631,7 @@ Common number theory operations relating to modular arithmetic.
   \item \inlinecode{gcd(a, b)} and \inlinecode{gcd2(a, b)} both return the greatest common divisor of \inlinecode{a} and \inlinecode{b} using the Euclidean algorithm.
   \item \inlinecode{lcm(a, b)} returns the lowest common multiple of \inlinecode{a} and \inlinecode{b}.
   \item \inlinecode{extended\_euclid(a, b)} and \inlinecode{extended\_euclid2(a, b)} both return a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
-  \item \inlinecode{mod(a, b)} returns the value of \inlinecode{a} mod \inlinecode{b} under the true Euclidean definition of modulo, that is, the smallest nonnegative integer $m$ satisfying $a + bn = m$ for some integer $n$. Note that this is identical to the remainder operator \inlinecode{\%} in C++ for nonnegative operands \inlinecode{a} and \inlinecode{b}, but the result will differ when an operand is negative.
+  \item \inlinecode{mod(a, b)} returns the value of \inlinecode{a} mod \inlinecode{b} under the true Euclidean definition of modulo, that is, the smallest nonnegative integer $m$ satisfying $a + b*n = m$ for some integer $n$. Note that this is identical to the remainder operator \inlinecode{\%} in C++ for nonnegative operands \inlinecode{a} and \inlinecode{b}, but the result will differ when an operand is negative.
   \item \inlinecode{mod\_inverse(a, m)} and \inlinecode{mod\_inverse2(a, m)} both return an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
   \item \inlinecode{generate\_inverse(p)} returns a vector $v$ of integers where for each index $i$ in the vector, $i \cdot \text{v[i]} \equiv 1 \pmod p$, where the argument $p$ is prime.
   \item \inlinecode{simple\_restore(a, p)} and \inlinecode{garner\_restore(a, p)} both return the solution $x$ for the system of simultaneous congruences $x \equiv \text{a[i]} \pmod{\text{p[i]}}$ for all indices $i$ in $[0, n)$, where \inlinecode{p} consists of pairwise coprime integers. The solution $x$ is guaranteed to be unique by the Chinese remainder theorem.
@@ -2727,6 +2727,132 @@ int main() {
   assert(powmod(2, 10, 1000000007) == 1024);
   assert(powmod(2, 62, 1000000) == 387904);
   assert(powmod(10001, 10001, 100000) == 10001);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Mobius Function and Inclusion-Exclusion}
+The Mobius function \inlinecode{mu(n)} is the multiplicative function defined as 1 if $n = 1$, 0 if $n$ is divisible by the square of a prime, and $(-1)^k$ if $n$ is a product of $k$ distinct primes. It is the coefficient that appears in Mobius inversion: if $g(n) = \sum_{d \mid n} f(d)$ for all $n$, then $f(n) = \sum_{d \mid n} \mu(d) \, g(n / d)$. This formalizes the principle of inclusion-exclusion in the divisor lattice, letting one recover a summand function from its divisor sums.
+
+Inclusion-exclusion itself counts the size of a union by alternately adding and subtracting the sizes of intersections. A canonical number-theoretic instance is counting integers in $[1, n]$ that are coprime to a modulus $m$: subtract the multiples of each prime factor of $m$, add back those counted twice, and so on. The signed terms are precisely the values of \inlinecode{mu} over the squarefree divisors of $m$, so \inlinecode{count\_coprime(n, m)} equals $\sum_{d \mid m} \mu(d) \lfloor n / d \rfloor$.
+
+\begin{compactitem}
+  \item \inlinecode{mobius(n)} returns \inlinecode{mu(n)} for a single $n$ by trial division.
+  \item \inlinecode{mobius\_sieve(n)} returns a vector \inlinecode{v} of length $n + 1$ where \inlinecode{v[i]} is \inlinecode{mu(i)}, computed together with a linear sieve.
+  \item \inlinecode{count\_coprime(n, m)} returns the number of integers in $[1, n]$ that are coprime to $m$, via inclusion-exclusion over the distinct prime factors of $m$.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\sqrt{n})$ per call to \inlinecode{mobius(n)}.
+  \item $O(n)$ per call to \inlinecode{mobius\_sieve(n)}.
+  \item $O(\sqrt{m} + 2^{k} \cdot k)$ per call to \inlinecode{count\_coprime(n, m)}, where $k$ is the number of distinct prime factors of $m$ (at most 15 for $m$ within 64-bit range).
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary heap space for \inlinecode{mobius\_sieve(n)}.
+  \item $O(k)$ auxiliary heap space for \inlinecode{count\_coprime(n, m)}.
+  \item $O(1)$ auxiliary for \inlinecode{mobius(n)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+int mobius(int n) {
+  if (n == 1) {
+    return 1;
+  }
+  int res = 1;
+  for (int p = 2; p <= n / p; p++) {
+    if (n % p == 0) {
+      n /= p;
+      if (n % p == 0) {
+        return 0;  // p^2 divides the original n.
+      }
+      res = -res;
+    }
+  }
+  if (n > 1) {
+    res = -res;  // One remaining prime factor larger than its square root.
+  }
+  return res;
+}
+
+std::vector<int> mobius_sieve(int n) {
+  std::vector<int> mu(n + 1, 0), primes;
+  std::vector<bool> composite(n + 1, false);
+  if (n >= 1) {
+    mu[1] = 1;
+  }
+  for (int i = 2; i <= n; i++) {
+    if (!composite[i]) {
+      primes.push_back(i);
+      mu[i] = -1;
+    }
+    for (int p : primes) {
+      if (p > n / i) {
+        break;
+      }
+      composite[i * p] = true;
+      if (i % p == 0) {
+        mu[i * p] = 0;  // p^2 divides i * p.
+        break;
+      }
+      mu[i * p] = -mu[i];
+    }
+  }
+  return mu;
+}
+
+long long count_coprime(long long n, long long m) {
+  std::vector<long long> primes;
+  for (long long p = 2; p <= m / p; p++) {
+    if (m % p == 0) {
+      primes.push_back(p);
+      while (m % p == 0) {
+        m /= p;
+      }
+    }
+  }
+  if (m > 1) {
+    primes.push_back(m);
+  }
+  int k = primes.size();
+  long long total = 0;
+  for (int mask = 0; mask < (1 << k); mask++) {
+    long long product = 1;
+    int bits = 0;
+    for (int i = 0; i < k; i++) {
+      if ((mask >> i) & 1) {
+        product *= primes[i];
+        bits++;
+      }
+    }
+    total += (bits & 1 ? -1 : 1) * (n / product);
+  }
+  return total;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(mobius(1) == 1);
+  assert(mobius(2) == -1);
+  assert(mobius(6) == 1);    // 2 * 3, two distinct primes.
+  assert(mobius(12) == 0);   // Divisible by 2^2.
+  assert(mobius(30) == -1);  // 2 * 3 * 5, three distinct primes.
+
+  vector<int> mu = mobius_sieve(12);
+  assert((mu == vector<int>{0, 1, -1, -1, 0, -1, 1, -1, 0, 0, 1, -1, 0}));
+
+  assert(count_coprime(10, 6) == 3);  // 1, 5, 7
+  assert(count_coprime(100, 1) == 100);
   return 0;
 }
 \end{lstlisting}
@@ -4683,9 +4809,409 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{XOR Basis}
+A XOR basis (also called a linear basis over the field GF(2)) is the analog of a vector space basis for integers under the bitwise XOR operation. Each integer is treated as a vector of bits, where XOR plays the role of vector addition. Inserting a set of integers one at a time and keeping only those that are linearly independent yields a basis whose XOR-combinations (subset XORs) span exactly the same set of values as the original integers. From a basis of size $r$, exactly $2^r$ distinct values are reachable, and queries such as the maximum attainable XOR become a simple greedy scan.
+
+The basis is kept in reduced form: \inlinecode{basis[i]} is either 0 or a value whose highest set bit is bit \inlinecode{i}, and no two basis elements share the same highest bit. Reducing a value means XORing it against the basis elements from the highest bit down, eliminating each set bit that a basis element covers.
+
+\begin{compactitem}
+  \item \inlinecode{insert(x)} adds \inlinecode{x} to the basis, returning \inlinecode{true} if \inlinecode{x} was linearly independent of the current basis (increasing its size), or \inlinecode{false} if \inlinecode{x} was already representable as a subset XOR.
+  \item \inlinecode{contains(x)} returns whether \inlinecode{x} is representable as the XOR of some subset of the inserted values, i.e. whether it reduces to 0 against the basis.
+  \item \inlinecode{max\_xor(base)} returns the maximum value of \inlinecode{base} XORed with some subset XOR of the basis. With the default \inlinecode{base} of 0, this is the maximum subset XOR.
+  \item \inlinecode{size()} returns the number of elements in the basis (its rank).
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(b)$ per call to \inlinecode{insert()}, \inlinecode{contains()}, and \inlinecode{max\_xor()}, where $b$ is the number of bits.
+  \item $O(1)$ per call to \inlinecode{size()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(b)$ for storage of the basis.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <array>
+#include <climits>
+
+using uint64 = unsigned long long;
+
+class XorBasis {
+  static const int BITS = sizeof(uint64) * CHAR_BIT;
+
+  std::array<uint64, BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
+  int sz = 0;
+
+ public:
+  bool insert(uint64 x) {
+    for (int i = BITS - 1; i >= 0; i--) {
+      if (!((x >> i) & 1)) {
+        continue;
+      }
+      if (basis[i] == 0) {
+        basis[i] = x;
+        sz++;
+        return true;
+      }
+      x ^= basis[i];
+    }
+    return false;
+  }
+
+  bool contains(uint64 x) const {
+    for (int i = BITS - 1; i >= 0; i--) {
+      if (((x >> i) & 1) && basis[i] != 0) {
+        x ^= basis[i];
+      }
+    }
+    return x == 0;
+  }
+
+  uint64 max_xor(uint64 base = 0) const {
+    for (int i = BITS - 1; i >= 0; i--) {
+      if ((base ^ basis[i]) > base) {
+        base ^= basis[i];
+      }
+    }
+    return base;
+  }
+
+  int size() const { return sz; }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  XorBasis b;
+  assert(b.insert(1));   // 001
+  assert(b.insert(2));   // 010
+  assert(!b.insert(3));  // 011 = 1 ^ 2, already representable.
+  assert(b.size() == 2);
+
+  assert(b.contains(3));
+  assert(b.contains(0));
+  assert(!b.contains(4));
+
+  assert(b.max_xor() == 3);   // Best subset XOR over {0, 1, 2, 3}.
+  assert(b.max_xor(4) == 7);  // 4 ^ 3.
+  return 0;
+}
+\end{lstlisting}
+
+\section{Polynomials}
+\setcounter{section}{6}
+\setcounter{subsection}{0}
+\subsection{Number Theoretic Transform}
+The number theoretic transform (NTT) is the discrete Fourier transform carried out in modular arithmetic instead of over the complex numbers. It multiplies two polynomials (equivalently, computes the convolution of two sequences) modulo a prime in $O(n \log n)$ time, with no floating point error. The modulus must be of the form $c \cdot 2^k + 1$ so that the ring of integers modulo it contains a $2^k$-th root of unity, which limits transform sizes to powers of two up to $2^k$. The code below uses the common prime $998244353 = 119 \cdot 2^{23} + 1$ with primitive root $3$, supporting transforms of any power-of-two length up to $2^{23}$.
+
+The transform replaces a coefficient vector with its evaluations at the powers of a root of unity; pointwise multiplying two such evaluation vectors and transforming back gives their convolution. This is the same divide-and-conquer butterfly as the fast Fourier transform, with the root of unity and all arithmetic taken modulo the prime.
+
+\begin{compactitem}
+  \item \inlinecode{ntt(a, invert)} transforms the vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert == false}; the inverse uses \inlinecode{invert == true}.
+  \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}. Input values are assumed to lie in \inlinecode{[0, MOD)}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to \inlinecode{ntt()}, where $n$ is the length of the vector.
+  \item $O(n \log n)$ per call to \inlinecode{convolve()}, where $n$ is the size of the result.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{ntt()}, transforming in place.
+  \item $O(n)$ auxiliary heap space for \inlinecode{convolve()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <vector>
+
+const long long MOD = 998244353;
+const long long ROOT = 3;
+
+long long powmod(long long b, long long e, long long m) {
+  long long res = 1;
+  for (b %= m; e > 0; e >>= 1) {
+    if (e & 1) {
+      res = res * b % m;
+    }
+    b = b * b % m;
+  }
+  return res;
+}
+
+void ntt(std::vector<long long> &a, bool invert) {
+  int n = a.size();
+  for (int i = 1, j = 0; i < n; i++) {
+    int bit = n >> 1;
+    for (; j & bit; bit >>= 1) {
+      j ^= bit;
+    }
+    j ^= bit;
+    if (i < j) {
+      std::swap(a[i], a[j]);
+    }
+  }
+  for (int len = 2; len <= n; len <<= 1) {
+    long long root = powmod(ROOT, (MOD - 1) / len, MOD);
+    if (invert) {
+      root = powmod(root, MOD - 2, MOD);
+    }
+    for (int i = 0; i < n; i += len) {
+      long long w = 1;
+      for (int k = 0; k < len / 2; k++) {
+        long long u = a[i + k], v = a[i + k + len / 2] * w % MOD;
+        a[i + k] = (u + v) % MOD;
+        a[i + k + len / 2] = (u - v + MOD) % MOD;
+        w = w * root % MOD;
+      }
+    }
+  }
+  if (invert) {
+    long long n_inv = powmod(n, MOD - 2, MOD);
+    for (long long &x : a) {
+      x = x * n_inv % MOD;
+    }
+  }
+}
+
+std::vector<long long> convolve(std::vector<long long> a, std::vector<long long> b) {
+  if (a.empty() || b.empty()) {
+    return {};
+  }
+  int result_size = a.size() + b.size() - 1;
+  int n = 1;
+  while (n < result_size) {
+    n <<= 1;
+  }
+  a.resize(n);
+  b.resize(n);
+  ntt(a, false);
+  ntt(b, false);
+  for (int i = 0; i < n; i++) {
+    a[i] = a[i] * b[i] % MOD;
+  }
+  ntt(a, true);
+  a.resize(result_size);
+  return a;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
+  vector<long long> a{1, 2, 3}, b{4, 5, 6};
+  vector<long long> c = convolve(a, b);
+  assert((c == vector<long long>{4, 13, 28, 27, 18}));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Fast Fourier Transform}
+The fast Fourier transform (FFT) multiplies two polynomials, or equivalently convolves two sequences, in $O(n \log n)$ time by evaluating them at the complex roots of unity. Like the number theoretic transform of the previous section, it replaces a coefficient vector with its evaluations at the powers of a root of unity, multiplies two such evaluation vectors pointwise, and transforms back. The difference is the arithmetic: the FFT works over the complex numbers with $e^{2\pi i / n}$ as the root of unity, so it convolves arbitrary real coefficients rather than residues modulo a prime.
+
+The trade-off is precision. Complex arithmetic in double precision accumulates rounding error, so the result is recovered by rounding each output to the nearest integer; this is reliable as long as the true coefficients stay well within the roughly 15 significant decimal digits a \inlinecode{double} can hold. When exact results modulo a prime are required, or coefficients are large, prefer the number theoretic transform; use the FFT for real-valued convolution or big-integer multiplication.
+
+\begin{compactitem}
+  \item \inlinecode{fft(a, invert)} transforms the complex vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert == false}; the inverse uses \inlinecode{invert == true}.
+  \item \inlinecode{convolve(a, b)} returns the convolution of two integer sequences \inlinecode{a} and \inlinecode{b}, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, with each entry rounded to the nearest integer.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to \inlinecode{fft()}, where $n$ is the length of the vector.
+  \item $O(n \log n)$ per call to \inlinecode{convolve()}, where $n$ is the size of the result.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{fft()}, transforming in place.
+  \item $O(n)$ auxiliary heap space for \inlinecode{convolve()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cmath>
+#include <complex>
+#include <vector>
+
+typedef std::complex<double> cd;
+const double PI = acos(-1.0);
+
+void fft(std::vector<cd> &a, bool invert) {
+  int n = a.size();
+  for (int i = 1, j = 0; i < n; i++) {
+    int bit = n >> 1;
+    for (; j & bit; bit >>= 1) {
+      j ^= bit;
+    }
+    j ^= bit;
+    if (i < j) {
+      std::swap(a[i], a[j]);
+    }
+  }
+  for (int len = 2; len <= n; len <<= 1) {
+    double angle = 2 * PI / len * (invert ? -1 : 1);
+    cd root(cos(angle), sin(angle));
+    for (int i = 0; i < n; i += len) {
+      cd w(1);
+      for (int k = 0; k < len / 2; k++) {
+        cd u = a[i + k], v = a[i + k + len / 2] * w;
+        a[i + k] = u + v;
+        a[i + k + len / 2] = u - v;
+        w *= root;
+      }
+    }
+  }
+  if (invert) {
+    for (cd &x : a) {
+      x /= n;
+    }
+  }
+}
+
+std::vector<long long> convolve(const std::vector<long long> &a, const std::vector<long long> &b) {
+  if (a.empty() || b.empty()) {
+    return {};
+  }
+  int result_size = a.size() + b.size() - 1;
+  int n = 1;
+  while (n < result_size) {
+    n <<= 1;
+  }
+  std::vector<cd> fa(a.begin(), a.end()), fb(b.begin(), b.end());
+  fa.resize(n);
+  fb.resize(n);
+  fft(fa, false);
+  fft(fb, false);
+  for (int i = 0; i < n; i++) {
+    fa[i] *= fb[i];
+  }
+  fft(fa, true);
+  std::vector<long long> res(result_size);
+  for (int i = 0; i < result_size; i++) {
+    res[i] = llround(fa[i].real());
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
+  vector<long long> a{1, 2, 3}, b{4, 5, 6};
+  vector<long long> c = convolve(a, b);
+  assert((c == vector<long long>{4, 13, 28, 27, 18}));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Berlekamp-Massey}
+The Berlekamp-Massey algorithm finds the shortest linear recurrence that generates a given sequence over a field. Given the first terms of a sequence taken modulo a prime, it returns coefficients $\Lambda_0, \dots, \Lambda_{L-1}$ of the minimal recurrence $s_i = \Lambda_0 \, s_{i-1} + \Lambda_1 \, s_{i-2} + \dots + \Lambda_{L-1} \, s_{i-L} \pmod{p}$, holding for every $i \geq L$. It scans the sequence once, maintaining a current candidate recurrence and correcting it whenever a term fails to match the prediction, using the last position where a correction was needed. The order $L$ never decreases, and $2L + 1$ terms suffice to certify a recurrence of order $L$. This is the standard tool for guessing a linear recurrence from sampled values, after which the sequence can be extended or its $n$-th term found by fast methods.
+
+The code operates modulo the prime 998244353; change \inlinecode{MOD} to use a different prime field.
+
+\begin{compactitem}
+  \item \inlinecode{berlekamp\_massey(s)} returns the coefficients of the shortest recurrence that the sequence \inlinecode{s} satisfies, as described above. The returned length is the order $L$ of the recurrence. An empty vector is returned when \inlinecode{s} is entirely zero (no recurrence is needed).
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{2} + n \log p)$ per call, where $n$ is the length of \inlinecode{s} and $p$ is the modulus.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+const long long MOD = 998244353;
+
+long long powmod(long long b, long long e, long long m) {
+  long long res = 1;
+  for (b %= m; e > 0; e >>= 1) {
+    if (e & 1) {
+      res = res * b % m;
+    }
+    b = b * b % m;
+  }
+  return res;
+}
+
+std::vector<long long> berlekamp_massey(const std::vector<long long> &s) {
+  int n = s.size(), len = 0, m = 0;
+  std::vector<long long> cur(n), last(n), prev;
+  cur[0] = last[0] = 1;
+  long long last_delta = 1;
+  for (int i = 0; i < n; i++) {
+    m++;
+    long long delta = s[i] % MOD;
+    for (int j = 1; j <= len; j++) {
+      delta = (delta + cur[j] * (s[i - j] % MOD)) % MOD;
+    }
+    if (delta == 0) {
+      continue;
+    }
+    prev = cur;
+    long long coef = delta * powmod(last_delta, MOD - 2, MOD) % MOD;
+    for (int j = m; j < n; j++) {
+      cur[j] = (cur[j] - coef * last[j - m] % MOD + MOD) % MOD;
+    }
+    if (2 * len > i) {
+      continue;
+    }
+    len = i + 1 - len;
+    last = prev;
+    last_delta = delta;
+    m = 0;
+  }
+  cur.resize(len + 1);
+  cur.erase(cur.begin());
+  for (long long &x : cur) {
+    x = (MOD - x) % MOD;
+  }
+  return cur;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // Fibonacci: s[i] = s[i-1] + s[i-2].
+  vector<long long> fib{1, 1, 2, 3, 5, 8, 13, 21};
+  assert((berlekamp_massey(fib) == vector<long long>{1, 1}));
+
+  // Geometric: s[i] = 2 * s[i-1].
+  vector<long long> geo{1, 2, 4, 8, 16, 32};
+  assert((berlekamp_massey(geo) == vector<long long>{2}));
+
+  // Tribonacci: s[i] = s[i-1] + s[i-2] + s[i-3].
+  vector<long long> trib{0, 1, 1, 2, 4, 7, 13, 24, 44};
+  assert((berlekamp_massey(trib) == vector<long long>{1, 1, 1}));
+  return 0;
+}
+\end{lstlisting}
 
 \section{Game Theory}
-\setcounter{section}{6}
+\setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Nim}
 Solves normal-play Nim and related impartial games where each position is the disjoint sum of independent piles. In normal play, the player who makes the last move wins. A Nim position is losing exactly when the xor of all pile sizes is 0.

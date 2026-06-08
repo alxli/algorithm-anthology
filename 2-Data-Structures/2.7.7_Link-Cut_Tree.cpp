@@ -10,7 +10,7 @@ The query operation is defined by an associative `combine()` function which sati
 `combine(x, combine(y, z)) = combine(combine(x, y), z)` for all values `x`, `y`, and `z` in the
 forest. The default code below assumes a numerical forest type, defining queries for the "min" of
 the target range. Another possible query operation is "sum", in which case `combine(a, b)` should
-return $a + b$. For direction-independent path queries, `combine()` should also be commutative;
+return `a + b`. For direction-independent path queries, `combine()` should also be commutative;
 otherwise, store enough information in each aggregate to combine paths in the required order.
 
 The update operation is defined by `apply_delta()` and `compose_deltas()`. A delta must act on an

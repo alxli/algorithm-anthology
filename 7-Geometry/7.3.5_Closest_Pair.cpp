@@ -122,6 +122,5 @@ int main() {
   assert(closest_pair(iv.begin(), iv.end(), &ires) == 25);  // (0,0)-(3,4) or (3,4)-(0,0)
   auto [i1, i2] = ires;
   assert((i1 == PointI(0, 0) && i2 == PointI(3, 4)) || (i1 == PointI(3, 4) && i2 == PointI(0, 0)));
-
   return 0;
 }

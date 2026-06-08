@@ -1573,6 +1573,342 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Functional Graph}
+A functional graph is a directed graph in which every node has exactly one outgoing edge, given by a successor function \inlinecode{f}, where \inlinecode{f[i]} is the node reached in one step from node \inlinecode{i}. Following the edges from any node eventually enters a cycle, so each weakly connected component consists of one directed cycle with trees of nodes feeding into it. This structure underlies problems about iterating a function: where a sequence \inlinecode{i}, \inlinecode{f[i]}, \inlinecode{f[f[i]]}, ... ends up, and how far it is from repeating.
+
+Building the structure peels away nodes of in-degree zero to expose the cycles (the survivors), then labels each cycle and walks the remaining tail nodes to record their distance to the cycle. A binary lifting table stores \inlinecode{f} applied $2^k$ times, so any number of steps can be taken in logarithmic time. Together these answer, for any node, which cycle it eventually reaches, how many steps until it gets there, and exactly where it lands after a huge number of steps.
+
+\begin{compactitem}
+  \item \inlinecode{FunctionalGraph(f)} builds the structure for the successor function \inlinecode{f} over nodes numbered from 0 to \inlinecode{f.size() - 1}.
+  \item \inlinecode{on\_cycle(i)} returns whether node \inlinecode{i} lies on a cycle.
+  \item \inlinecode{dist\_to\_cycle(i)} returns the number of steps from \inlinecode{i} to the first cycle node it reaches (0 if \inlinecode{i} is itself on a cycle).
+  \item \inlinecode{cycle\_id(i)} returns an identifier for the cycle that \inlinecode{i} eventually reaches; two nodes share an identifier exactly when they funnel into the same cycle.
+  \item \inlinecode{cycle\_length(id)} returns the length of the cycle with the given identifier.
+  \item \inlinecode{num\_cycles()} returns the number of distinct cycles.
+  \item \inlinecode{successor(i, steps)} returns the node reached from \inlinecode{i} after applying \inlinecode{f} exactly \inlinecode{steps} times, for any \inlinecode{steps \textgreater{}= 0} (which may be astronomically large).
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to the constructor, where $n$ is the number of nodes.
+  \item $O(\log n)$ per call to \inlinecode{successor()}.
+  \item $O(1)$ per call to all other member functions.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n \log n)$ for storage of the binary lifting table.
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+class FunctionalGraph {
+  int n, LOG;
+  std::vector<std::vector<int>> up;  // up[k][i] = f applied 2^k times to i.
+  std::vector<bool> on_cyc;
+  std::vector<int> to_cyc;  // Steps from i to the first cycle node.
+  std::vector<int> comp;    // Identifier of the cycle that i reaches.
+  std::vector<int> clen;    // clen[c] = length of cycle c.
+
+  int jump(int i, long long steps) const {
+    for (int k = 0; steps > 0; k++, steps >>= 1) {
+      if (steps & 1) {
+        i = up[k][i];
+      }
+    }
+    return i;
+  }
+
+ public:
+  FunctionalGraph(const std::vector<int> &f) : n(f.size()) {
+    LOG = 1;
+    while ((1 << LOG) < n) {
+      LOG++;
+    }
+    up.assign(LOG + 1, std::vector<int>(n));
+    up[0] = f;
+    for (int k = 1; k <= LOG; k++) {
+      for (int i = 0; i < n; i++) {
+        up[k][i] = up[k - 1][up[k - 1][i]];
+      }
+    }
+
+    // Peel nodes of in-degree zero; the survivors are exactly the cycle nodes.
+    std::vector<int> indeg(n, 0);
+    for (int i = 0; i < n; i++) {
+      indeg[f[i]]++;
+    }
+    std::vector<bool> removed(n, false);
+    std::vector<int> stack;
+    for (int i = 0; i < n; i++) {
+      if (indeg[i] == 0) {
+        stack.push_back(i);
+      }
+    }
+    while (!stack.empty()) {
+      int u = stack.back();
+      stack.pop_back();
+      removed[u] = true;
+      if (--indeg[f[u]] == 0) {
+        stack.push_back(f[u]);
+      }
+    }
+    on_cyc.assign(n, false);
+    for (int i = 0; i < n; i++) {
+      on_cyc[i] = !removed[i];
+    }
+
+    // Label each cycle and record its length.
+    comp.assign(n, -1);
+    to_cyc.assign(n, 0);
+    for (int i = 0; i < n; i++) {
+      if (on_cyc[i] && comp[i] == -1) {
+        int len = 0;
+        for (int u = i; comp[u] == -1; u = f[u]) {
+          comp[u] = clen.size();
+          len++;
+        }
+        clen.push_back(len);
+      }
+    }
+
+    // Walk each tail to the cycle, assigning its component and distance.
+    for (int i = 0; i < n; i++) {
+      if (comp[i] != -1) {
+        continue;
+      }
+      std::vector<int> path;
+      int u = i;
+      while (comp[u] == -1) {
+        path.push_back(u);
+        u = f[u];
+      }
+      for (int j = path.size() - 1, step = 1; j >= 0; j--, step++) {
+        comp[path[j]] = comp[u];
+        to_cyc[path[j]] = to_cyc[u] + step;
+      }
+    }
+  }
+
+  bool on_cycle(int i) const { return on_cyc[i]; }
+  int dist_to_cycle(int i) const { return to_cyc[i]; }
+  int cycle_id(int i) const { return comp[i]; }
+  int cycle_length(int id) const { return clen[id]; }
+  int num_cycles() const { return clen.size(); }
+
+  int successor(int i, long long steps) const {
+    if (steps <= to_cyc[i]) {
+      return jump(i, steps);
+    }
+    steps -= to_cyc[i];
+    i = jump(i, to_cyc[i]);  // Advance to the cycle entry node.
+    steps %= clen[comp[i]];
+    return jump(i, steps);
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // Cycle 0 -> 1 -> 2 -> 0, with a tail 5 -> 4 -> 3 -> 1 and 6 -> 2.
+  vector<int> f{1, 2, 0, 1, 3, 4, 2};
+  FunctionalGraph g(f);
+
+  assert(g.on_cycle(0) && g.on_cycle(1) && g.on_cycle(2));
+  assert(!g.on_cycle(3) && !g.on_cycle(5));
+  assert(g.num_cycles() == 1);
+  assert(g.cycle_length(0) == 3);
+
+  assert(g.dist_to_cycle(2) == 0);
+  assert(g.dist_to_cycle(5) == 3);
+  assert(g.dist_to_cycle(6) == 1);
+  assert(g.cycle_id(5) == g.cycle_id(0));
+
+  assert(g.successor(5, 1) == 4);
+  assert(g.successor(5, 3) == 1);    // 5 -> 4 -> 3 -> 1.
+  assert(g.successor(5, 4) == 2);    // One more step around into the cycle.
+  assert(g.successor(0, 100) == 1);  // 100 mod 3 == 1 step around the cycle.
+  return 0;
+}
+\end{lstlisting}
+\subsection{Offline Dynamic Connectivity}
+Maintains the number of connected components of an undirected graph as edges are added and removed over time, answering queries offline once the entire sequence of operations is known. Each edge is alive over a contiguous interval of time, from when it is added until it is removed. These intervals are placed into a segment tree over the time axis, so that each edge appears in $O(log T)$ nodes whose ranges it spans. A depth-first traversal of this segment tree unites the edges stored at each node on the way down and undoes them on the way back up, so at each leaf the disjoint set forest reflects exactly the edges alive at that moment.
+
+Undoing unions requires a disjoint set forest with rollback (see the disjoint sets section): it joins by size or rank without path compression, recording each change on a stack so it can be reversed. Path compression is incompatible with rollback, so finding a representative costs $O(log n)$ rather than near-constant time.
+
+\begin{compactitem}
+  \item \inlinecode{OfflineDynamicConnectivity(n)} creates a structure on \inlinecode{n} vertices numbered from 0 to \inlinecode{n - 1}, initially with no edges.
+  \item \inlinecode{add\_edge(u, v)} and \inlinecode{remove\_edge(u, v)} record adding or removing the undirected edge \inlinecode{(u, v)} at the current time, then advance the time by one step. Each edge may be present at most once at a time: \inlinecode{add\_edge} must not name an edge that is already present, and \inlinecode{remove\_edge} must name one that is. Both preconditions are checked with \inlinecode{assert}.
+  \item \inlinecode{count\_components()} records a query at the current time and advances the time by one step.
+  \item \inlinecode{solve()} processes all recorded operations and returns a vector holding, for each \inlinecode{count\_components()} query in the order issued, the number of connected components at that time.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O((T + m \log T) \log n)$ for \inlinecode{solve()}, where $T$ is the number of operations, $m$ is the number of edge insertions, and $n$ is the number of vertices.
+  \item $O(1)$ amortized per call to \inlinecode{add\_edge()}, \inlinecode{remove\_edge()}, and \inlinecode{count\_components()}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n + m \log T)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <map>
+#include <numeric>
+#include <utility>
+#include <vector>
+
+class OfflineDynamicConnectivity {
+  static const int ADD = 0, REMOVE = 1, QUERY = 2;
+  struct Op {
+    int type, u, v;
+  };
+  struct Edge {
+    int u, v;
+  };
+
+  int n, comps;
+  std::vector<Op> ops;
+  std::vector<int> par, rnk;
+  std::vector<std::pair<int, int>> undo;  // (child root, whether its parent's rank increased)
+  std::vector<std::vector<Edge>> seg;
+  std::vector<int> answers;
+
+  int find(int x) const {
+    while (par[x] != x) {
+      x = par[x];
+    }
+    return x;
+  }
+
+  void unite(int a, int b) {
+    a = find(a);
+    b = find(b);
+    if (a == b) {
+      undo.emplace_back(-1, 0);
+      return;
+    }
+    if (rnk[a] < rnk[b]) {
+      std::swap(a, b);
+    }
+    undo.emplace_back(b, rnk[a] == rnk[b] ? 1 : 0);
+    par[b] = a;
+    if (rnk[a] == rnk[b]) {
+      rnk[a]++;
+    }
+    comps--;
+  }
+
+  void rollback() {
+    auto [b, raised] = undo.back();
+    undo.pop_back();
+    if (b == -1) {
+      return;
+    }
+    rnk[par[b]] -= raised;
+    par[b] = b;
+    comps++;
+  }
+
+  void add_interval(int node, int lo, int hi, int l, int r, const Edge &e) {
+    if (r < lo || hi < l) {
+      return;
+    }
+    if (l <= lo && hi <= r) {
+      seg[node].push_back(e);
+      return;
+    }
+    int mid = lo + (hi - lo) / 2;
+    add_interval(2 * node, lo, mid, l, r, e);
+    add_interval(2 * node + 1, mid + 1, hi, l, r, e);
+  }
+
+  void dfs(int node, int lo, int hi) {
+    int applied = 0;
+    for (const Edge &e : seg[node]) {
+      unite(e.u, e.v);
+      applied++;
+    }
+    if (lo == hi) {
+      if (ops[lo].type == QUERY) {
+        answers.push_back(comps);
+      }
+    } else {
+      int mid = lo + (hi - lo) / 2;
+      dfs(2 * node, lo, mid);
+      dfs(2 * node + 1, mid + 1, hi);
+    }
+    while (applied-- > 0) {
+      rollback();
+    }
+  }
+
+ public:
+  OfflineDynamicConnectivity(int n) : n(n) {}
+
+  void add_edge(int u, int v) { ops.push_back({ADD, std::min(u, v), std::max(u, v)}); }
+  void remove_edge(int u, int v) { ops.push_back({REMOVE, std::min(u, v), std::max(u, v)}); }
+  void count_components() { ops.push_back({QUERY, 0, 0}); }
+
+  std::vector<int> solve() {
+    int t = ops.size();
+    answers.clear();
+    if (t == 0) {
+      return answers;
+    }
+    seg.assign(4 * t, {});
+    std::map<std::pair<int, int>, int> active;
+    for (int i = 0; i < t; i++) {
+      std::pair<int, int> key(ops[i].u, ops[i].v);
+      if (ops[i].type == ADD) {
+        assert(active.find(key) == active.end());  // The edge must not already be present.
+        active[key] = i;
+      } else if (ops[i].type == REMOVE) {
+        auto it = active.find(key);
+        assert(it != active.end());  // The edge must currently be present.
+        add_interval(1, 0, t - 1, it->second, i - 1, {ops[i].u, ops[i].v});
+        active.erase(it);
+      }
+    }
+    for (const auto &[key, start] : active) {
+      add_interval(1, 0, t - 1, start, t - 1, {key.first, key.second});
+    }
+    par.resize(n);
+    std::iota(par.begin(), par.end(), 0);
+    rnk.assign(n, 0);
+    comps = n;
+    undo.clear();
+    dfs(1, 0, t - 1);
+    return answers;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  OfflineDynamicConnectivity dc(4);
+  dc.count_components();  // 4 isolated vertices.
+  dc.add_edge(0, 1);
+  dc.add_edge(2, 3);
+  dc.count_components();  // {0,1} {2,3} -> 2 components.
+  dc.add_edge(1, 2);
+  dc.count_components();  // All four connected -> 1 component.
+  dc.remove_edge(1, 2);
+  dc.count_components();  // Back to 2 components.
+
+  assert((dc.solve() == vector<int>{4, 2, 1, 2}));
+  return 0;
+}
+\end{lstlisting}
 
 \section{BFS and Shortest Paths}
 \setcounter{section}{3}
@@ -2108,6 +2444,88 @@ int main() {
 The shortest distance from 0 to 2 is 3.
 Take the path: 0->1->2.
 \end{exampleoutput}
+\subsection{Shortest Path (DAG)}
+Given a starting node in a weighted, directed acyclic graph (DAG), determine the minimum distance to every reachable node. Because the graph is acyclic, its nodes admit a topological ordering in which every edge points forward. Relaxing edges in this order settles each node's distance in a single pass, with no priority queue and no restriction on edge signs. This makes it both faster than Dijkstra's algorithm and able to handle negative edge weights, as long as the graph has no cycles. The same pass computes longest paths if the relaxation comparison is reversed, which is the standard way to find the critical path in a schedule of dependent tasks.
+
+\begin{compactitem}
+  \item \inlinecode{dag\_shortest\_path(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} whose nodes are numbered from 0 to \inlinecode{adj.size() - 1}. Each edge is stored as \inlinecode{(neighbor, weight)} and may have any sign. \inlinecode{dist[v]} is set to \inlinecode{INF} for nodes not reachable from \inlinecode{start}, and \inlinecode{pred} stores the shortest-path tree for path reconstruction.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n + m)$ per call to \inlinecode{dag\_shortest\_path()}, where $n$ is the number of nodes and $m$ is the number of edges.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(\max\left(n, m\right))$ for storage of the graph.
+  \item $O(n)$ auxiliary heap space for \inlinecode{dag\_shortest\_path()}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <climits>
+#include <utility>
+#include <vector>
+
+const long long INF = LLONG_MAX / 4;
+std::vector<std::vector<std::pair<int, int>>> adj;
+std::vector<long long> dist;
+std::vector<int> pred;
+
+void topological_dfs(int u, std::vector<bool> &visit, std::vector<int> &order) {
+  visit[u] = true;
+  for (auto &[v, w] : adj[u]) {
+    if (!visit[v]) {
+      topological_dfs(v, visit, order);
+    }
+  }
+  order.push_back(u);
+}
+
+void dag_shortest_path(int start) {
+  int nodes = adj.size();
+  std::vector<bool> visit(nodes, false);
+  std::vector<int> order;
+  for (int i = 0; i < nodes; i++) {
+    if (!visit[i]) {
+      topological_dfs(i, visit, order);
+    }
+  }
+  std::reverse(order.begin(), order.end());
+  dist.assign(nodes, INF);
+  pred.assign(nodes, -1);
+  dist[start] = 0;
+  for (int u : order) {
+    if (dist[u] == INF) {
+      continue;
+    }
+    for (auto &[v, w] : adj[u]) {
+      if (dist[u] + w < dist[v]) {
+        dist[v] = dist[u] + w;
+        pred[v] = u;
+      }
+    }
+  }
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  adj.assign(5, {});
+  adj[0] = {{1, 1}, {2, 5}};
+  adj[1] = {{2, 1}, {3, -2}};  // A negative edge, which Dijkstra could not handle.
+  adj[2] = {{3, 1}};
+  adj[3] = {{4, 3}};
+
+  dag_shortest_path(0);
+  assert((dist == vector<long long>{0, 1, 2, -1, 2}));
+  assert(pred[3] == 1 && pred[4] == 3);
+  return 0;
+}
+\end{lstlisting}
 
 \section{Spanning Trees}
 \setcounter{section}{4}
@@ -2293,6 +2711,109 @@ Total distance: 13
 5 <-> 6
 0 <-> 1
 \end{exampleoutput}
+\subsection{Minimum Spanning Arborescence (Edmonds)}
+A spanning arborescence rooted at a node \inlinecode{root} of a weighted, directed graph is a set of edges forming a tree in which every other node is reachable from the root along directed edges, that is, every node except the root has exactly one incoming edge. The minimum spanning arborescence minimizes the total edge weight, and is the directed analog of the minimum spanning tree. Edmonds' algorithm (also called the Chu-Liu/Edmonds algorithm) computes it.
+
+The algorithm first selects, for each non-root node, its cheapest incoming edge. If these choices form no cycle, they already constitute the answer. Otherwise each cycle is contracted into a single supernode, and every edge entering the cycle has its weight reduced by the cost of the edge it would replace inside the cycle. Solving the problem on the contracted graph and expanding the cycles back yields the optimum. The implementation below repeats this contraction in rounds, accumulating the selected weights, until no cycle remains.
+
+Edges are given as \inlinecode{(from, to, weight)} triples; parallel edges and self-loops are allowed, with self-loops simply ignored.
+
+\begin{compactitem}
+  \item \inlinecode{directed\_mst(n, root, edges)} returns the total weight of the minimum spanning arborescence rooted at \inlinecode{root} over \inlinecode{n} nodes numbered from 0 to \inlinecode{n - 1}, or \inlinecode{-1} if some node is unreachable from the root (no arborescence exists).
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
+
+\textbf{Space Complexity}: $O(n + m)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <climits>
+#include <vector>
+
+struct Edge {
+  int from, to;
+  long long weight;
+};
+
+long long directed_mst(int n, int root, std::vector<Edge> edges) {
+  const long long INF = LLONG_MAX / 4;
+  long long result = 0;
+  while (true) {
+    std::vector<long long> min_in(n, INF);
+    std::vector<int> pre(n, -1);
+    for (const Edge &e : edges) {
+      if (e.from != e.to && e.weight < min_in[e.to]) {
+        min_in[e.to] = e.weight;
+        pre[e.to] = e.from;
+      }
+    }
+    for (int v = 0; v < n; v++) {
+      if (v != root && min_in[v] == INF) {
+        return -1;  // Node v has no incoming edge, so it is unreachable.
+      }
+    }
+
+    // Identify cycles formed by the chosen incoming edges, labeling each with an id in `comp`.
+    int cycles = 0;
+    std::vector<int> comp(n, -1), seen(n, -1);
+    min_in[root] = 0;
+    for (int v = 0; v < n; v++) {
+      result += min_in[v];
+      int u = v;
+      while (seen[u] != v && comp[u] == -1 && u != root) {
+        seen[u] = v;
+        u = pre[u];
+      }
+      if (u != root && comp[u] == -1) {
+        for (int w = pre[u]; w != u; w = pre[w]) {
+          comp[w] = cycles;
+        }
+        comp[u] = cycles++;
+      }
+    }
+    if (cycles == 0) {
+      break;  // No cycle remains; the selected edges form the arborescence.
+    }
+
+    // Contract each cycle into a supernode and reduce the weights of edges entering it.
+    for (int v = 0; v < n; v++) {
+      if (comp[v] == -1) {
+        comp[v] = cycles++;
+      }
+    }
+    for (Edge &e : edges) {
+      int from = comp[e.from], to = comp[e.to];
+      if (from != to) {
+        e.weight -= min_in[e.to];
+      }
+      e.from = from;
+      e.to = to;
+    }
+    n = cycles;
+    root = comp[root];
+  }
+  return result;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // Root 0. Cheapest incoming edges 1<-0 (1), 2<-1 (2), 3<-2 (3) form a tree of weight 6.
+  vector<Edge> edges{
+      {0, 1, 1}, {0, 2, 5}, {1, 2, 2}, {2, 3, 3}, {3, 1, 4},
+  };
+  assert(directed_mst(4, 0, edges) == 6);
+
+  // Node 3 is unreachable from root 0.
+  vector<Edge> disconnected{{0, 1, 1}, {1, 2, 1}};
+  assert(directed_mst(4, 0, disconnected) == -1);
+  return 0;
+}
+\end{lstlisting}
 
 \section{Flows and Cuts}
 \setcounter{section}{5}
@@ -2800,6 +3321,79 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Global Minimum Cut (Stoer-Wagner)}
+Given a connected, undirected graph with nonnegative edge weights, the global minimum cut is the partition of the vertices into two nonempty sets that minimizes the total weight of edges crossing between them. Unlike a minimum s-t cut, no source or sink is fixed; the goal is the cheapest way to split the graph in two. The Stoer-Wagner algorithm finds it without any maximum flow computation by repeatedly running a ``minimum cut phase''.
+
+A phase grows a set, starting from an arbitrary vertex, by repeatedly adding the most tightly connected outside vertex (the one with the greatest total weight to the set so far), exactly as in Prim's algorithm. The last vertex added, together with its connection weight, yields one candidate cut, the ``cut of the phase''. The last two vertices added are then merged into a single supernode and the next phase begins on the smaller graph. After $n - 1$ phases every candidate has been considered, and the smallest is the global minimum cut.
+
+The graph is given as a symmetric adjacency matrix \inlinecode{graph}, where \inlinecode{graph[i][j]} is the weight of the edge between \inlinecode{i} and \inlinecode{j} (0 if absent), and the diagonal is 0. The graph must have at least two vertices.
+
+\begin{compactitem}
+  \item \inlinecode{stoer\_wagner(graph)} returns a pair \inlinecode{(weight, side)}, where \inlinecode{weight} is the total weight of the global minimum cut and \inlinecode{side} lists the vertices on one side of that cut.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of vertices.
+
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <climits>
+#include <utility>
+#include <vector>
+
+std::pair<long long, std::vector<int>> stoer_wagner(std::vector<std::vector<long long>> graph) {
+  int n = graph.size();
+  const long long NEG = LLONG_MIN / 4;  // A "merged away" sentinel that additions cannot revive.
+  std::pair<long long, std::vector<int>> best = {LLONG_MAX, {}};
+  std::vector<std::vector<int>> groups(n);
+  for (int i = 0; i < n; i++) {
+    groups[i] = {i};
+  }
+  for (int phase = 1; phase < n; phase++) {
+    std::vector<long long> weight = graph[0];
+    int s = 0, t = 0;
+    for (int added = 0; added < n - phase; added++) {
+      weight[t] = NEG;
+      s = t;
+      t = std::max_element(weight.begin(), weight.end()) - weight.begin();
+      for (int i = 0; i < n; i++) {
+        weight[i] += graph[t][i];
+      }
+    }
+    if (weight[t] - graph[t][t] < best.first) {
+      best = {weight[t] - graph[t][t], groups[t]};
+    }
+    groups[s].insert(groups[s].end(), groups[t].begin(), groups[t].end());
+    for (int i = 0; i < n; i++) {
+      graph[s][i] += graph[t][i];
+      graph[i][s] = graph[s][i];
+    }
+    graph[0][t] = NEG;
+  }
+  return best;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // Triangle with edge weights 0-1: 2, 1-2: 3, 0-2: 1.
+  // Cuts: {0}|{1,2} = 3, {1}|{0,2} = 5, {2}|{0,1} = 4. Minimum is 3.
+  vector<vector<long long>> graph{
+      {0, 2, 1},
+      {2, 0, 3},
+      {1, 3, 0},
+  };
+  auto [weight, side] = stoer_wagner(graph);
+  assert(weight == 3);
+  assert((side == vector<int>{1, 2}));  // The shore {1, 2}, opposite the single vertex 0.
+  return 0;
+}
+\end{lstlisting}
 
 \section{Matching and Assignment}
 \setcounter{section}{6}
@@ -3241,6 +3835,75 @@ Matched 2 pair(s):
 0 1
 2 3
 \end{exampleoutput}
+\subsection{Stable Marriage (Gale-Shapley)}
+The stable marriage problem pairs \inlinecode{n} men with \inlinecode{n} women, given that every person ranks all members of the opposite group in strict order of preference. A perfect matching is stable if no man and woman both prefer each other to their assigned partners; such a pair would otherwise abandon their matches. Unlike maximum matching, the goal is not the size of the matching (it is always perfect) but its stability with respect to the preference lists.
+
+The Gale-Shapley algorithm produces a stable matching, and a stable matching always exists. Each free man proposes to the most preferred woman who has not yet rejected him. A woman provisionally accepts her best proposal so far and rejects the rest, possibly breaking a previous engagement when a man she prefers proposes later. Because every man descends his list at most once and each proposal is constant work after precomputing the women's rankings, the algorithm runs in quadratic time. The result is man-optimal: every man receives the best partner he could have in any stable matching.
+
+Both preference lists are given as \inlinecode{n} by \inlinecode{n} arrays. \inlinecode{men\_pref[m]} lists the women in \inlinecode{m}'s order of preference, most preferred first, and \inlinecode{women\_pref[w]} lists the men in \inlinecode{w}'s order of preference.
+
+\begin{compactitem}
+  \item \inlinecode{stable\_marriage(men\_pref, women\_pref)} returns a vector \inlinecode{wife} where \inlinecode{wife[m]} is the woman matched to man \inlinecode{m} in the man-optimal stable matching.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{2})$ per call, where $n$ is the number of men (equivalently, women).
+
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary heap space for the precomputed rankings.
+
+\begin{lstlisting}[language=C++]
+#include <queue>
+#include <vector>
+
+std::vector<int> stable_marriage(
+    const std::vector<std::vector<int>> &men_pref, const std::vector<std::vector<int>> &women_pref
+) {
+  int n = men_pref.size();
+  std::vector<std::vector<int>> rank(n, std::vector<int>(n));
+  for (int w = 0; w < n; w++) {
+    for (int i = 0; i < n; i++) {
+      rank[w][women_pref[w][i]] = i;  // How woman w ranks each man (smaller is better).
+    }
+  }
+  std::vector<int> next_proposal(n, 0), husband(n, -1), wife(n, -1);
+  std::queue<int> free_men;
+  for (int m = 0; m < n; m++) {
+    free_men.push(m);
+  }
+  while (!free_men.empty()) {
+    int m = free_men.front();
+    free_men.pop();
+    int w = men_pref[m][next_proposal[m]++];
+    if (husband[w] == -1) {
+      husband[w] = m;
+      wife[m] = w;
+    } else if (rank[w][m] < rank[w][husband[w]]) {
+      wife[husband[w]] = -1;
+      free_men.push(husband[w]);
+      husband[w] = m;
+      wife[m] = w;
+    } else {
+      free_men.push(m);  // Rejected; m remains free and will propose to the next woman.
+    }
+  }
+  return wife;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // All three men prefer w0 > w1 > w2; all three women prefer m2 > m1 > m0.
+  vector<vector<int>> men_pref{{0, 1, 2}, {0, 1, 2}, {0, 1, 2}};
+  vector<vector<int>> women_pref{{2, 1, 0}, {2, 1, 0}, {2, 1, 0}};
+
+  // Cascading proposals leave m2 with w0, m1 with w1, m0 with w2.
+  assert((stable_marriage(men_pref, women_pref) == vector<int>{2, 1, 0}));
+  return 0;
+}
+\end{lstlisting}
 
 \section{Exponential Graph Problems}
 \setcounter{section}{7}

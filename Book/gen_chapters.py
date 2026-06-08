@@ -29,6 +29,7 @@ SECTION_NAMES = {
     (1, 3): 'Greedy and Scheduling',
     (1, 4): 'Streaming and Randomized Algorithms',
     (1, 5): 'Cycle Detection',
+    (1, 6): 'Bit Manipulation',
     (2, 1): 'Linked Lists',
     (2, 2): 'Heaps and Priority Queues',
     (2, 3): 'Dictionaries and Ordered Sets',
@@ -60,7 +61,8 @@ SECTION_NAMES = {
     (6, 3): 'Number Theory',
     (6, 4): 'Arbitrary Precision Arithmetic',
     (6, 5): 'Linear Algebra',
-    (6, 6): 'Game Theory',
+    (6, 6): 'Polynomials',
+    (6, 7): 'Game Theory',
     (7, 1): 'Geometry Primitives',
     (7, 2): 'Angles, Distances, and Intersections',
     (7, 3): 'Polygons and Planar Searches',
@@ -96,8 +98,7 @@ def escape_latex_code(text):
 def format_math_expression(expression):
     functions = {'alpha': r'\alpha', 'exp': r'\exp', 'log': r'\log', 'max': r'\max',
                  'min': r'\min'}
-    constants = {'MAXC': r'\text{MAXC}', 'MAXR': r'\text{MAXR}',
-                 'MAXN': r'\text{MAXN}', 'MOD': r'\text{MOD}'}
+    constants = {'MOD': r'\text{MOD}'}
     result = []
 
     def format_word(word):

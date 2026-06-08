@@ -8,7 +8,7 @@ Common number theory operations relating to modular arithmetic.
 - `extended_euclid(a, b)` and `extended_euclid2(a, b)` both return a pair $(x, y)$ of integers such
   that $\gcd(a, b) = ax + by$.
 - `mod(a, b)` returns the value of `a` mod `b` under the true Euclidean definition of modulo, that
-  is, the smallest nonnegative integer $m$ satisfying $a + bn = m$ for some integer $n$. Note that
+  is, the smallest nonnegative integer $m$ satisfying $a + b*n = m$ for some integer $n$. Note that
   this is identical to the remainder operator `%` in C++ for nonnegative operands `a` and `b`, but
   the result will differ when an operand is negative.
 - `mod_inverse(a, m)` and `mod_inverse2(a, m)` both return an integer $x$ such that $ax \equiv 1
