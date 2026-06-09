@@ -4,6 +4,11 @@ Given a flow network with integer capacities, find the maximum flow from a given
 given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at
 every node other than the source and sink.
 
+Rather than augmenting along whole paths, the push-relabel algorithm maintains a preflow and a
+height label on each node, repeatedly pushing excess flow to lower-labeled neighbors and relabeling
+(raising) a node whose excess cannot yet be pushed, until no node other than the source and sink
+holds excess.
+
 - `push_relabel(source, sink)` returns maximum flow for a global capacity matrix `cap` whose nodes
   are numbered from 0 to `cap.size() - 1`.
 

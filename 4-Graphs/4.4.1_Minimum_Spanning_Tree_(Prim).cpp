@@ -5,6 +5,10 @@ tree (MST) is a subgraph which is a tree that connects all nodes with a subset o
 that their total weight is minimized. If the input graph is not connected, then this implementation
 will find the minimum spanning forest.
 
+Prim's algorithm grows the tree from an arbitrary start node, repeatedly adding the minimum-weight
+edge that joins a new node to the current tree, with a priority queue supplying the cheapest such
+edge at each step.
+
 - `prim_mst()` populates `mst` with the minimum spanning tree edges (returning the total MST weight)
   for a global, bidirectionally pre-populated adjacency list `adj` which must consist of nodes
   numbered from 0 to `adj.size() - 1`. Each edge is stored as `(neighbor, weight)`.
@@ -15,7 +19,8 @@ implementation to find the maximum spanning tree, the two negation steps can be 
 prioritize the max edges.
 
 Time Complexity:
-- O(m log n) per call to `prim_mst()`, where $m$ is the number of edges and $n$ is the number of nodes.
+- O(m log n) per call to `prim_mst()`, where $m$ is the number of edges and $n$ is the number of
+  nodes.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of

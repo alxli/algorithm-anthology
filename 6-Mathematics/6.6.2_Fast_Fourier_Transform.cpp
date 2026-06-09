@@ -1,23 +1,25 @@
 /*
 
-The fast Fourier transform (FFT) multiplies two polynomials, or equivalently convolves two sequences,
-in $O(n \log n)$ time by evaluating them at the complex roots of unity. Like the number theoretic
-transform of the previous section, it replaces a coefficient vector with its evaluations at the
-powers of a root of unity, multiplies two such evaluation vectors pointwise, and transforms back. The
-difference is the arithmetic: the FFT works over the complex numbers with $e^{2\pi i / n}$ as the
-root of unity, so it convolves arbitrary real coefficients rather than residues modulo a prime.
+The fast Fourier transform (FFT) multiplies two polynomials, or equivalently convolves two
+sequences, in O(n log n) time by evaluating them at the complex roots of unity. Like the number
+theoretic transform of the previous section, it replaces a coefficient vector with its evaluations
+at the powers of a root of unity, multiplies two such evaluation vectors pointwise, and transforms
+back. The difference is the arithmetic: the FFT works over the complex numbers with $e^{2\pi i / n}$
+as the root of unity, so it convolves arbitrary real coefficients rather than residues modulo a
+prime.
 
-The trade-off is precision. Complex arithmetic in double precision accumulates rounding error, so the
-result is recovered by rounding each output to the nearest integer; this is reliable as long as the
-true coefficients stay well within the roughly 15 significant decimal digits a `double` can hold.
-When exact results modulo a prime are required, or coefficients are large, prefer the number
+The trade-off is precision. Complex arithmetic in double precision accumulates rounding error, so
+the result is recovered by rounding each output to the nearest integer; this is reliable as long as
+the true coefficients stay well within the roughly 15 significant decimal digits a `double` can
+hold. When exact results modulo a prime are required, or coefficients are large, prefer the number
 theoretic transform; use the FFT for real-valued convolution or big-integer multiplication.
 
 - `fft(a, invert)` transforms the complex vector `a` in place, whose length must be a power of two.
   The forward transform uses `invert == false`; the inverse uses `invert == true`.
 - `convolve(a, b)` returns the convolution of two integer sequences `a` and `b`, that is, the
   coefficients of the product of the two polynomials whose coefficients are the inputs. The result
-  has length `a.size() + b.size() - 1`, with each entry rounded to the nearest integer.
+  has length `a.size() + b.size() - 1`, or is empty if either input is empty, with each entry
+  rounded to the nearest integer.
 
 Time Complexity:
 - O(n log n) per call to `fft()`, where $n$ is the length of the vector.

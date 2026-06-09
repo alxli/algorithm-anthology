@@ -15,8 +15,8 @@ tree balanced with high probability, making insertions and deletions run in O(lo
   old value associated with the key is preserved).
 - `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
   successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was not
-  found.
+- `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
+  not found.
 - `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending order of keys.
 
 Time Complexity:

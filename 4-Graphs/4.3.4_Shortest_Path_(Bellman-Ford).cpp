@@ -5,8 +5,16 @@ connected node and determine the minimum distance to each such node. Optionally,
 path to a specific destination node using the shortest-path tree from the predecessor array
 `pred`.
 
+Bellman-Ford relaxes every edge in the graph $n - 1$ times. Since any shortest path uses at most
+$n - 1$ edges, all distances are correct after these passes unless a negative-weight cycle keeps
+reducing them, which a further pass detects.
+
 - `bellman_ford(nodes, start)` populates `dist` and `pred` for a global, pre-populated edge list
   `edges` whose endpoints must be numbered from 0 to `nodes - 1`.
+
+For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
+`start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
+destination to `start`, then reverse that sequence to recover the path.
 
 This function will also detect whether the graph contains a negative-weight cycle reachable from the
 start node, in which case the affected shortest paths are undefined and an error will be thrown. (To

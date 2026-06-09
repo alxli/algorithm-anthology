@@ -6,9 +6,16 @@ but excluding the element pointed to by `hi`) will be sorted into ascending orde
 call. Optionally, a comparison function object specifying a strict weak ordering may be specified to
 replace the default `operator<`.
 
-These functions are not meant to compete with standard library implementations in terms of speed.
-Instead, they are meant to demonstrate how common sorting algorithms can be concisely implemented
-in C++.
+- `quicksort(lo, hi)` sorts the range using quicksort.
+- `mergesort(lo, hi)` sorts the range using merge sort, which is stable.
+- `heapsort(lo, hi)` sorts the range using heapsort.
+- `combsort(lo, hi)` sorts the range using comb sort.
+- `radix_sort(lo, hi)` sorts the range using least-significant-byte radix sort.
+
+`radix_sort()` is the exception to the shared interface above: it takes no comparator and requires
+an integer value type. These functions are not meant to compete with standard library
+implementations in terms of speed. Instead, they are meant to demonstrate how common sorting
+algorithms can be concisely implemented in C++.
 
 */
 

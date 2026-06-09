@@ -2984,13 +2984,22 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Square Root Decomposition}
-Maintain a fixed-size array (from 0 to \inlinecode{size() - 1}) while supporting dynamic queries of contiguous sub-arrays and dynamic updates of individual indices.
+Maintain a fixed-size array while supporting point updates and contiguous range aggregate queries. Square root decomposition partitions the array into contiguous blocks of about $\sqrt{n}$ elements, each caching the aggregate of its block. A range query combines the cached aggregates of the whole blocks contained in the range with the individual elements of the partial blocks at either end, while a point update refreshes only the single block containing the changed index.
 
 The query operation is defined by an associative aggregate function \inlinecode{combine(a, b)}. The default definition below assumes a numerical array type, supporting queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return \inlinecode{a + b}.
 
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at a single updated index. The default definition below supports updates that ``set'' the chosen array index to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
 
-The operations supported by this data structure are identical to those of the point update segment tree found in this section.
+\begin{compactitem}
+  \item \inlinecode{SqrtDecomposition(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
+  \item \inlinecode{SqrtDecomposition(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
+  \item \inlinecode{size()} returns the size of the array.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
+  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
+  \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
+\end{compactitem}
+
+The supported operations are identical to those of the point-update segment tree in this section.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4085,7 +4094,22 @@ The query operation is defined by an associative aggregate function \inlinecode{
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
-This data structure shares every operation of one-dimensional segment trees in this section, with the additional operations \inlinecode{empty()}, \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{push\_back()}, and \inlinecode{pop\_back()} analogous to those of \inlinecode{std::vector} (here, \inlinecode{insert()} and \inlinecode{erase()} both take an index instead of an iterator).
+\begin{compactitem}
+  \item \inlinecode{ImplicitTreap(n, v)} constructs an array of size \inlinecode{n} with all values initialized to \inlinecode{v}.
+  \item \inlinecode{ImplicitTreap(lo, hi)} constructs an array from two iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
+  \item \inlinecode{size()} returns the size of the array.
+  \item \inlinecode{empty()} returns whether the array is empty.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
+  \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
+  \item \inlinecode{update(lo, hi, d)} applies the delta \inlinecode{d} to every index from \inlinecode{lo} to \inlinecode{hi}, inclusive.
+  \item \inlinecode{update(i, d)} applies the delta \inlinecode{d} to the single index \inlinecode{i}.
+  \item \inlinecode{insert(i, v)} inserts a new value \inlinecode{v} before index \inlinecode{i}, shifting later elements one position right.
+  \item \inlinecode{erase(i)} removes the element at index \inlinecode{i}, shifting later elements one position left.
+  \item \inlinecode{push\_back(v)} appends a new value \inlinecode{v} to the end of the array.
+  \item \inlinecode{pop\_back()} removes the last element of the array.
+\end{compactitem}
+
+The query and update operations match those of the point- and range-update segment trees in this section; \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{push\_back()}, and \inlinecode{pop\_back()} are additionally analogous to those of \inlinecode{std::vector} (here, \inlinecode{insert()} and \inlinecode{erase()} take an index instead of an iterator).
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4339,11 +4363,13 @@ Values: 2 2 1 8 10 11 (min: 1)
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Quadtree (Point Update)}
-Maintain a two-dimensional array over a huge grid while supporting point updates and rectangle queries. The quadtree recursively splits each rectangle into four quadrants, and lazily allocates only the nodes touched by updates or needed to summarize queried regions.
+Maintain a two-dimensional array over a huge grid while supporting point updates and rectangle queries. This is a sparse (a.k.a. dynamic or implicit) quadtree: it recursively splits each rectangle into four quadrants, and lazily allocates only the nodes touched by updates or needed to summarize queried regions.
 
 The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{repeat\_value(v, area)} should return \inlinecode{v * area}.
 
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that ``set'' the chosen cell to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
+
+Choose this over a sparse 2D segment tree when the grid is huge and touched cells or queried rectangles are sparse or naturally align with large quadrants. Choose the sparse 2D segment tree instead when many thin or adversarial rectangles are expected and a predictable $O(\log\left(R\right) \cdot \log\left(C\right))$ bound matters more than lower constant factors on aligned regions.
 
 \begin{compactitem}
   \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
@@ -4538,11 +4564,13 @@ Values:
 0 1 9
 \end{exampleoutput}
 \subsection{Quadtree (Range Update)}
-Maintain a two-dimensional array over a huge grid while supporting rectangle updates and rectangle queries. The quadtree recursively splits each rectangle into four quadrants, lazily allocates touched nodes, and stores pending rectangle updates with lazy propagation.
+Maintain a two-dimensional array over a huge grid while supporting rectangle updates and rectangle queries. This is a sparse (a.k.a. dynamic or implicit) quadtree: it recursively splits each rectangle into four quadrants, lazily allocates touched nodes, and stores pending rectangle updates with lazy propagation.
 
 The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{repeat\_value(v, area)} should return \inlinecode{v * area}.
 
 Range updates are defined by \inlinecode{apply\_delta(v, d, area)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{area} cells, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined region must be equivalent to applying it to each child region and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines rectangle assignment. For rectangle increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, area)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * area} for range-sum queries.
+
+Choose this over a sparse 2D segment tree when rectangle updates or queries often cover large aligned regions of a huge sparse grid. Choose a sparse 2D segment tree when worst-case rectangles may be long, thin, or otherwise poorly aligned with quadrant boundaries; the quadtree can visit many boundary nodes in those cases.
 
 \begin{compactitem}
   \item \inlinecode{LazyQuadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
@@ -4773,11 +4801,15 @@ Values:
 0 1 9
 \end{exampleoutput}
 \subsection{2D Segment Tree}
-Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This implementation uses lazy initialization of nodes to conserve memory while supporting large indices, making it the two-dimensional analogue of a sparse (a.k.a. dynamic or implicit) segment tree: row and column nodes are allocated lazily as cells are touched.
+Maintain a two-dimensional array over a huge grid while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This is a sparse (a.k.a. dynamic or implicit) 2D segment tree: row and column nodes are allocated lazily as cells are touched, so large coordinate bounds are supported without allocating the full grid.
 
 The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{repeat\_value(v, area)} should return \inlinecode{v * area}.
 
 The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which returns the new value at one updated cell. The default code below defines updates that ``set'' the chosen cell to a new value. Another possible update operation is ``increment'', in which case \inlinecode{apply\_delta(v, d)} should return \inlinecode{v + d}.
+
+Compared with the quadtrees in the previous sections, this structure splits rows and columns independently, so every rectangle query decomposes into $O(\log\left(R\right) \cdot \log\left(C\right))$ canonical rectangles. That makes it preferable when queries may be thin, off-center, or adversarially placed: a quadtree can degrade to visiting $O(R + C)$ boundary nodes for such rectangles. The trade-off is a larger tree and less benefit from queries that happen to align with big square quadrants.
+
+For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.7. A dense vector-backed 2D segment tree can be simpler and faster on modest grids with custom aggregates such as min/max, but it needs $O(R \cdot C)$ storage with large constants, so this sparse version is usually the safer codebook default.
 
 \begin{compactitem}
   \item \inlinecode{SegTree2D(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
@@ -5055,6 +5087,8 @@ Values:
 \subsection{2D Range Tree}
 Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type.
 
+Use this for static point-reporting queries when guaranteed worst-case bounds are more important than memory. Compared with a range k-d tree, it uses more space but gives $O(\log^{2}(n) + m)$ query time regardless of point distribution; the k-d tree is lighter and often faster on typical inputs, but its pruning is more distribution-dependent.
+
 \begin{compactitem}
   \item \inlinecode{RangeTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
   \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
@@ -5178,6 +5212,8 @@ int main() {
 Maintain a static set of two-dimensional points while supporting rectangle reporting queries. A k-d tree recursively splits points by alternating coordinates and stores a bounding box for each subtree, allowing whole subtrees to be accepted or pruned during a query.
 
 This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type.
+
+Use this for static point-reporting queries when $O(n)$ space and good average performance are more important than a strict worst-case guarantee. Use the 2D range tree instead when adversarial point sets or query rectangles are expected and the extra $O(n \log n)$ space is acceptable.
 
 \begin{compactitem}
   \item \inlinecode{RangeKDTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
@@ -5315,6 +5351,8 @@ Maintain a static set of two-dimensional points while supporting nearest-neighbo
 
 This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}}, \inlinecode{==}, \inlinecode{-}, and \inlinecode{long double} casting to be defined on the numeric template type.
 
+Use this for static nearest-neighbor queries on point sets in low dimensions. It is a geometric search tree rather than an aggregate structure: for rectangle reporting use the range k-d tree or 2D range tree, and for grid cell updates or rectangle sums/minima use a Fenwick tree, quadtree, or 2D segment tree.
+
 \begin{compactitem}
   \item \inlinecode{NearestKDTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
   \item \inlinecode{nearest(x, y, can\_equal)} returns a point in the set that is closest to \inlinecode{(x, y)} by Euclidean distance. This may be equal to \inlinecode{(x, y)} only if \inlinecode{can\_equal} is \inlinecode{true}.
@@ -5444,7 +5482,7 @@ int main() {
 \section{Fenwick Trees}
 \setcounter{section}{6}
 \setcounter{subsection}{0}
-\subsection{Fenwick Tree (Simple)}
+\subsection{Fenwick Tree}
 Maintain a numerical array while supporting point increments and range-sum queries. A Fenwick tree stores partial prefix sums: each \inlinecode{tree[i]} covers the block of indices ending at \inlinecode{i} whose length is the lowest set bit of \inlinecode{i}. Updating one value adds to $O(\log n)$ covering blocks, and querying a prefix sum walks through $O(\log n)$ disjoint blocks.
 
 This implementation uses 1-based array indices, so valid indices are from 1 to \inlinecode{n}, inclusive.
@@ -5709,7 +5747,7 @@ int main() {
 Values: 5 1 2 3 4
 \end{exampleoutput}
 \subsection{Fenwick Tree (Range Update, Range Query)}
-Maintain a numerical array while supporting range increments and range-sum queries. This uses two Fenwick trees to recover prefix sums after difference-array updates: if the difference array stores range additions, then the prefix sum through \inlinecode{hi} can be written as \inlinecode{hi * sum(t1, hi) - sum(t2, hi)}.
+Maintain a numerical array while supporting range increments and range-sum queries. This uses two Fenwick trees to recover prefix sums after difference-array updates: if the difference array stores range additions, then the prefix sum through \inlinecode{hi} can be written as \inlinecode{hi*sum(t1, hi) - sum(t2, hi)}.
 
 This implementation uses 0-based array indices externally, so valid indices are from 0 to \inlinecode{size() - 1}, inclusive.
 
@@ -5989,10 +6027,12 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{2D Fenwick Tree (Simple)}
+\subsection{2D Fenwick Tree}
 Maintain a 2D numerical array while supporting point increments and rectangle-sum queries. This is the two-dimensional form of the standard Fenwick tree: each internal entry stores a rectangular block sum, and prefix queries combine $O(\log R \cdot \log C)$ disjoint blocks.
 
 This implementation uses 1-based indices, so rows are from 1 to \inlinecode{R}, inclusive, and columns are from 1 to \inlinecode{C}, inclusive.
+
+Choose this for dense grids with additive point updates and rectangle-sum queries; it is simpler and lighter than a 2D segment tree when sums are the only aggregate needed. For huge sparse grids, use the sparse 2D Fenwick tree; for non-additive aggregates such as min/max with custom updates, use a 2D segment tree or quadtree.
 
 \begin{compactitem}
   \item \inlinecode{initialize(R, C)} resets the data structure.
@@ -6092,6 +6132,8 @@ Values:
 Maintain a 2D numerical array over a huge index range while supporting rectangle increments and rectangle-sum queries. This is the sparse two-dimensional analogue of range-update/range-query Fenwick trees: four sparse trees store the inclusion-exclusion coefficients needed to recover any prefix rectangle sum.
 
 This implementation uses 0-based indices, so rows are from 0 to \inlinecode{R}, inclusive, and columns are from 0 to \inlinecode{C}, inclusive.
+
+Choose this for huge sparse grids when the operation is additive: point/rectangle increments and rectangle sums. It avoids allocating the dense \inlinecode{R*C} table of the simple 2D Fenwick tree, but it is less general than the sparse 2D segment tree or quadtrees because Fenwick-tree algebra relies on addition and subtraction.
 
 \begin{compactitem}
   \item \inlinecode{SparseFenwick2D()} constructs an initially zero 2D array over rows 0 to \inlinecode{R} and columns 0 to \inlinecode{C}.
@@ -6326,6 +6368,8 @@ Maintain a set of elements partitioned into non-overlapping subsets using a coll
 
 \begin{compactitem}
   \item \inlinecode{DisjointSetUnion()} constructs an empty set.
+  \item \inlinecode{size()} returns the number of elements that have been added.
+  \item \inlinecode{sets()} returns the current number of disjoint sets.
   \item \inlinecode{make\_set(u)} creates a new partition consisting of the single element \inlinecode{u}, which must not have been previously added to the data structure.
   \item \inlinecode{is\_united(u, v)} returns whether elements \inlinecode{u} and \inlinecode{v} belong to the same partition.
   \item \inlinecode{unite(u, v)} replaces the partitions containing \inlinecode{u} and \inlinecode{v} with a single new partition consisting of the union of elements in the original partitions.
@@ -6338,6 +6382,7 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor.
+  \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{sets()}.
   \item $O(1)$ on average per call to \inlinecode{make\_set()}, where $n$ is the number of elements that have been added via \inlinecode{make\_set()} so far.
   \item $O(\alpha\left(n\right))$ on average per call to \inlinecode{is\_united()} and \inlinecode{unite()}, where $n$ is the number of elements that have been added via \inlinecode{make\_set()} so far, and $\alpha(n)$ is the extremely slow growing inverse of the Ackermann function (effectively a very small constant for all practical values of $n$).
   \item $O(n)$ per call to \inlinecode{get\_all\_sets()}.
@@ -6464,6 +6509,7 @@ Path compression is intentionally not used, because it is hard to undo. Union by
 
 \begin{compactitem}
   \item \inlinecode{RollbackDSU(n)} constructs \inlinecode{n} singleton sets over elements \inlinecode{0} through \inlinecode{n - 1}.
+  \item \inlinecode{count\_sets()} returns the current number of disjoint sets.
   \item \inlinecode{find\_root(u)} returns the representative of the set containing \inlinecode{u}.
   \item \inlinecode{is\_united(u, v)} returns whether \inlinecode{u} and \inlinecode{v} are in the same set.
   \item \inlinecode{unite(u, v)} merges two sets and returns whether a merge occurred.
@@ -6474,7 +6520,8 @@ Path compression is intentionally not used, because it is hard to undo. Union by
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{initialize(n)}.
+  \item $O(n)$ per call to \inlinecode{RollbackDSU(n)}.
+  \item $O(1)$ per call to \inlinecode{count\_sets()}.
   \item $O(\log n)$ worst-case per call to \inlinecode{find\_root(u)}, \inlinecode{is\_united(u, v)}, and \inlinecode{unite(u, v)}.
   \item $O(1)$ per undone union during \inlinecode{rollback(s)}.
 \end{compactitem}
@@ -6571,7 +6618,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Lowest Common Ancestor (Sparse Table)}
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A node is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument. The adjacency list must define one connected tree rooted at \inlinecode{root}.
+Given a tree, determine the lowest common ancestor of any two nodes. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A node is considered to be a descendant of itself.
+
+This implementation preprocesses binary ancestor jumps. During a depth-first search, it records entry and exit times so ancestry can be tested in $O(1)$, and stores \inlinecode{dp[u][i]}, the $2^i$-th ancestor of each node \inlinecode{u}. To answer \inlinecode{lca(u, v)}, it first handles the case where one node is already an ancestor of the other, then jumps \inlinecode{u} upward by decreasing powers of two until its parent is the lowest common ancestor.
+
+\begin{compactitem}
+  \item \inlinecode{build(root)} builds the structure over a global, bidirectionally pre-populated adjacency list \inlinecode{adj} of nodes numbered 0 to \inlinecode{adj.size() - 1}, which must define one connected tree rooted at \inlinecode{root} (default 0).
+  \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}.
+\end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -6583,7 +6637,7 @@ Given a tree, determine the lowest common ancestor of any two nodes in the tree.
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ to store the sparse table, where $n$ is the number of nodes.
+  \item $O(n \log n)$ to store the binary ancestor table, where $n$ is the number of nodes.
   \item $O(n)$ auxiliary stack space for \inlinecode{build()}.
   \item $O(1)$ auxiliary for \inlinecode{lca()}.
 \end{compactitem}
@@ -6609,7 +6663,8 @@ void dfs(int u, int p) {
   tout[u] = timer++;
 }
 
-void build(int nodes, int root = 0) {
+void build(int root = 0) {
+  int nodes = static_cast<int>(adj.size());
   len = 1;
   while ((1 << len) <= nodes) {
     len++;
@@ -6646,25 +6701,32 @@ int lca(int u, int v) {
 #include <cassert>
 using namespace std;
 
+void add_edge(int u, int v) {
+  adj[u].push_back(v);
+  adj[v].push_back(u);
+}
+
 int main() {
-  int nodes = 5;
-  adj.resize(nodes);
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(2);
-  adj[2].push_back(1);
-  adj[3].push_back(1);
-  adj[1].push_back(3);
-  adj[0].push_back(4);
-  adj[4].push_back(0);
-  build(nodes, 0);
+  adj.assign(5, {});
+  add_edge(0, 1);
+  add_edge(0, 4);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  build(0);
   assert(lca(3, 2) == 1);
   assert(lca(2, 4) == 0);
   return 0;
 }
 \end{lstlisting}
 \subsection{Lowest Common Ancestor (Segment Tree)}
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A node is considered to be a descendant of itself. \inlinecode{build()} applies to a global, pre-populated adjacency list \inlinecode{adj} which must only consist of nodes numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in the function argument. The adjacency list must define one connected tree rooted at \inlinecode{root}.
+Given a tree, determine the lowest common ancestor of any two nodes. The lowest common ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$ and $v$ as its descendant. A node is considered to be a descendant of itself.
+
+This reduces LCA to a range-minimum query. An Euler tour of the tree records, at each visit to a node, that node's depth; the lowest common ancestor of $u$ and $v$ is the shallowest node visited between their first occurrences in the tour, found by a range-minimum query over the depth sequence. This version answers those queries with a segment tree.
+
+\begin{compactitem}
+  \item \inlinecode{build(root)} builds the structure over a global, bidirectionally pre-populated adjacency list \inlinecode{adj} of nodes numbered 0 to \inlinecode{adj.size() - 1}, which must define one connected tree rooted at \inlinecode{root} (default 0).
+  \item \inlinecode{lca(u, v)} returns the lowest common ancestor of nodes \inlinecode{u} and \inlinecode{v}.
+\end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -6711,7 +6773,8 @@ void build(int n, int lo, int hi) {
   minpos[n] = depth[minpos[lchild]] < depth[minpos[rchild]] ? minpos[lchild] : minpos[rchild];
 }
 
-void build(int nodes, int root) {
+void build(int root = 0) {
+  int nodes = static_cast<int>(adj.size());
   depth.assign(nodes, -1);
   dfs_order.assign(2 * nodes, 0);
   first.assign(nodes, -1);
@@ -6753,18 +6816,18 @@ int lca(int u, int v) {
 #include <cassert>
 using namespace std;
 
+void add_edge(int u, int v) {
+  adj[u].push_back(v);
+  adj[v].push_back(u);
+}
+
 int main() {
-  int nodes = 5;
-  adj.resize(nodes);
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(2);
-  adj[2].push_back(1);
-  adj[3].push_back(1);
-  adj[1].push_back(3);
-  adj[0].push_back(4);
-  adj[4].push_back(0);
-  build(nodes, 0);
+  adj.assign(5, {});
+  add_edge(0, 1);
+  add_edge(0, 4);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  build(0);
   assert(lca(3, 2) == 1);
   assert(lca(2, 4) == 0);
   return 0;
@@ -7042,7 +7105,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Link-Cut Tree}
-Maintain a forest of trees with values associated with its nodes, while supporting both dynamic queries and dynamic updates of all values on any path between two nodes in a given tree. In addition, support testing of whether two nodes are connected in the forest, as well as the merging and spliting of trees by adding or removing specific edges. Link/cut forests divide each of its trees into vertex-disjoint paths, each represented by a splay tree.
+Maintain a forest of trees with values associated with its nodes, while supporting both dynamic queries and dynamic updates of all values on any path between two nodes in a given tree. In addition, support testing of whether two nodes are connected in the forest, as well as the merging and splitting of trees by adding or removing specific edges. Link/cut forests divide each of its trees into vertex-disjoint paths, each represented by a splay tree.
 
 The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the forest. The default code below assumes a numerical forest type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return \inlinecode{a + b}. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
 

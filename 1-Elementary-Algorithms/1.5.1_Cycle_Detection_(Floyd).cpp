@@ -18,6 +18,9 @@ algorithm moves the "tortoise" one step forward and the "hare" two steps forward
 comparing the sequence values at each step. Their first meeting point is somewhere in the cycle; a
 second phase then finds the cycle's starting position.
 
+- `find_cycle_floyd(f, x0)` returns the cycle as a `(position, length)` pair, where `position` is
+  the index at which the cycle begins and `length` is the number of elements in it.
+
 Time Complexity:
 - O(m + n) per call to `find_cycle_floyd()`, where $m$ is the smallest index of the sequence which
   is the beginning of a cycle, and $n$ is the cycle's length.

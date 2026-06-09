@@ -1,10 +1,21 @@
 /*
 
-Given two random-access iterators `lo` and `hi` specifying a range `[lo, hi)` of $n$ elements,
-return an iterator to the first occurrence of the majority element, or the iterator `hi` if there
-is no majority element. The majority element is defined as an element which occurs strictly more
-than $\lfloor n/2 \rfloor$ times in the range. This implementation requires `operator==` to be
-defined on the iterator's value type.
+Given a range of $n$ elements, find the majority element: an element that occurs strictly more than
+$\lfloor n/2 \rfloor$ times in the range.
+
+This uses the Boyer-Moore voting algorithm. A first pass maintains a single candidate and a counter,
+incrementing it on a match and decrementing on a mismatch, replacing the candidate when the counter
+reaches zero; any majority element necessarily survives as the final candidate. Because the absence
+of a majority must also be reported, a second pass then counts the candidate's occurrences to
+confirm it truly holds a majority. The range is therefore traversed twice, so it only needs to be
+supplied as ForwardIterators rather than random-access.
+
+If a majority element is guaranteed in advance to exist, the verification pass can be dropped and
+the candidate returned directly. The candidate phase alone is single-pass, so that variant needs
+only InputIterators.
+
+- `majority(lo, hi)` returns an iterator to the first occurrence of the majority element of the
+  range `[lo, hi)`, or `hi` if no majority element exists. Requires `operator==` on the value type.
 
 Time Complexity:
 - O(n) per call to `majority()`, where $n$ is the size of the array.
@@ -16,9 +27,10 @@ Space Complexity:
 
 template<class It>
 It majority(It lo, It hi) {
-  int count = 0;
+  int count = 0, n = 0;
   It candidate = lo;
   for (It it = lo; it != hi; ++it) {
+    n++;  // Tally the size to avoid a O(n) std::distance() pass in case of ForwardIterators.
     if (count == 0) {
       candidate = it;
       count = 1;
@@ -28,13 +40,14 @@ It majority(It lo, It hi) {
       count--;
     }
   }
+  // Second pass: verify the candidate. Omit this if a majority is guaranteed to exist.
   count = 0;
   for (It it = lo; it != hi; ++it) {
     if (*it == *candidate) {
       count++;
     }
   }
-  if (count <= (hi - lo) / 2) {
+  if (count <= n / 2) {
     return hi;
   }
   return candidate;

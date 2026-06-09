@@ -4,9 +4,22 @@
 \setcounter{section}{1}
 Common mathematic constants and functions, most of which already have standard STL equivalents: \inlinecode{std::signbit()}, \inlinecode{std::copysign()}, \inlinecode{std::trunc()}, \inlinecode{std::round()}, \inlinecode{std::erf()}, \inlinecode{std::tgamma()}, \inlinecode{std::lgamma()}). These are written for educational purposes, without heavy optimizations.
 
-\textbf{Time Complexity}: $O(1)$ for all operations.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ for most operations.
+  \item $O(d + e)$ for \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
+  \item $O(log_b(x + 1) + 1)$ for \inlinecode{to\_base(x, b)}.
+  \item $O(x / 1000 + 1)$ for \inlinecode{to\_roman(x)}, due to the repeated \inlinecode{M} prefix.
+\end{compactitem}
 
-\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for most operations.
+  \item $O(e)$ auxiliary heap space for \inlinecode{convert\_base(d, a, b)} and \inlinecode{to\_base(x, b)}, where $e$ is the number of output digits.
+  \item $O(x / 1000 + 1)$ auxiliary heap space for \inlinecode{to\_roman(x)}.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -405,7 +418,7 @@ The following functions implement common operations in combinatorics. All inputs
   \item $O(n)$ for \inlinecode{factorial(n, m)}.
   \item $O(p \log n)$ for \inlinecode{factorialp(n, p)}.
   \item $O(n^{2})$ for \inlinecode{binomial\_table(n, m)}.
-  \item $O(k)$ for \inlinecode{permute(n, k, p)}.
+  \item $O(k)$ for \inlinecode{permute(n, k, m)}.
   \item $O(\min\left(k, n - k\right))$ for \inlinecode{choose(n, k, p)}.
   \item $O(k)$ for \inlinecode{multichoose(n, k, p)}.
   \item $O(n)$ for \inlinecode{catalan(n, p)}.
@@ -1022,7 +1035,7 @@ A combination is a subset of size $k$ chosen from a total of $n$ (not necessaril
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{next\_combination(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n)$ per call to \inlinecode{next\_combination(lo, mid, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
   \item $O(k)$ per call to \inlinecode{next\_combination(n, a)} and \inlinecode{next\_combination\_with\_repeats(n, a)}, where $k$ is the size of \inlinecode{a}.
   \item $O(1)$ per call to \inlinecode{next\_combination\_mask(x)}.
   \item $O(n \cdot k)$ per call to \inlinecode{combination\_by\_rank()} and \inlinecode{rank\_by\_combination()}.
@@ -1823,7 +1836,10 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
   \item \inlinecode{pow(e)} returns this value raised to nonnegative exponent \inlinecode{e}.
   \item \inlinecode{inv()} returns the multiplicative inverse, asserting it exists.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, comparison, increment, decrement, and stream I/O are overloaded.
+  \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::factorial(n)} returns $n!$ using a lazy factorial table.
   \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::choose(n, k)} returns $\binom n k$ using lazy factorial and inverse-factorial tables.
+  \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::permute(n, k)} returns the number of ordered selections of \inlinecode{k} distinct elements from \inlinecode{n}.
+  \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::multichoose(n, k)} returns the number of size-\inlinecode{k} multisets drawn from \inlinecode{n} types.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1832,7 +1848,7 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
   \item $O(1)$ per addition, subtraction, multiplication, comparison, and stream output.
   \item $O(\log e)$ per call to \inlinecode{pow(e)}.
   \item $O(\log \text{MOD})$ per call to \inlinecode{inv()} and division.
-  \item $O(n)$ total table growth to answer combinations up to size \inlinecode{n}.
+  \item $O(n)$ total table growth to answer factorials and combinations up to size \inlinecode{n}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2057,7 +2073,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Prime Generation}
-Generate prime numbers using the Sieve of Eratosthenes.
+Generate prime numbers using the Sieve of Eratosthenes, which repeatedly marks the multiples of each prime as composite.
+
+The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting primes in a high but narrow window be found without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{hi}$, it first sieves the primes up to $\sqrt{hi}$, then uses only those primes to mark composites within \inlinecode{[lo, hi]} (each prime $p$ starting at the first of its multiples that is at least both $p*p$ and \inlinecode{lo}). This needs only O(\inlinecode{hi} - \inlinecode{lo} + sqrt(\inlinecode{hi})) space instead of the O(\inlinecode{hi}) that sieving all of \inlinecode{[2, hi]} would require.
 
 \begin{compactitem}
   \item \inlinecode{sieve(n)} returns a vector of all the primes less than or equal to \inlinecode{n}.
@@ -2175,7 +2193,7 @@ Determine whether an integer $n$ is prime. This can be done deterministically by
 
 \begin{compactitem}
   \item \inlinecode{is\_prime(n)} returns whether the integer \inlinecode{n} is prime using an optimized trial division technique based on the fact that all primes greater than 6 must take the form $6n + 1$ or $6n - 1$.
-  \item \inlinecode{is\_probable\_prime(n, k)} returns true if the integer \inlinecode{n} is prime, or false with an error probability of $(1 / 4)^k$ if \inlinecode{n} is composite. In other words, the result is guaranteed to be correct if \inlinecode{n} is prime, but could be wrong with probability $(1 / 4)^k$ if \inlinecode{n} is composite. This implementation uses exponentiation by squaring to support all signed 64-bit integers (up to and including $2^{63} - 1$).
+  \item \inlinecode{is\_probable\_prime(n, k)} returns whether \inlinecode{n} is probably prime using \inlinecode{k} random Miller-Rabin bases. The result is guaranteed correct when \inlinecode{n} is prime. When \inlinecode{n} is composite, it returns false with probability at least $1 - (1 / 4)^k$, so a true result has one-sided error probability at most $(1 / 4)^k$. This implementation uses exponentiation by squaring to support all signed 64-bit integers (up to and including $2^{63} - 1$).
   \item \inlinecode{is\_prime\_fast(n)} returns whether the signed 64-bit integer \inlinecode{n} is prime using a fully deterministic version of the Miller-Rabin test.
 \end{compactitem}
 
@@ -2341,7 +2359,7 @@ Compute the prime factorization of an integer. In the following implementations,
   \item \inlinecode{prime\_factorize(n)} returns the prime factorization of \inlinecode{n} using trial division.
   \item \inlinecode{get\_divisors(n)} returns a sorted vector of all (not merely prime) divisors of \inlinecode{n} using trial division.
   \item \inlinecode{fermat(n)} returns a factor of \inlinecode{n} (possibly 1 or itself) that is not necessarily prime. This algorithm is efficient for integers with two factors near $\sqrt{n}$, but is roughly as slow as trial division otherwise.
-  \item \inlinecode{pollards\_rho\_brent(n)} returns a factor of \inlinecode{n} that is not necessarily prime using Pollard's rho algorithm with Brent's optimization. If \inlinecode{n} is prime, then \inlinecode{n} itself is returned. While this algorithm is non-deterministic and may fail to detect factors on certain runs of the same input, it can be placed in a loop to deterministically factor large integers, as done in \inlinecode{prime\_factorize\_big()}.
+  \item \inlinecode{pollards\_rho\_brent(n)} returns a factor of \inlinecode{n} that is not necessarily prime using Pollard's rho algorithm with Brent's optimization. If \inlinecode{n} is prime, then \inlinecode{n} itself is returned. While this algorithm is non-deterministic and may fail to detect factors on certain runs of the same input, it can be retried until a nontrivial factor is found, as done in \inlinecode{prime\_factorize\_big()}.
   \item \inlinecode{prime\_factorize\_big(n, trial\_division\_cutoff)} returns the prime factorization of a 64-bit integer \inlinecode{n} using a combination of trial division, the Miller-Rabin primality test, and Pollard's rho algorithm. \inlinecode{trial\_division\_cutoff} specifies the largest factor to test with trial division before falling back to the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
 \end{compactitem}
 
@@ -2620,18 +2638,37 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Euler's Totient Function}
-Euler's totient function \inlinecode{phi(n)} returns the number of positive integers less than or equal to $n$ that are relatively prime to $n$. That is, \inlinecode{phi(n)} is the number of integers $k$ in the range $[1, n]$ for which $\gcd(n, k) = 1$. The computation of \inlinecode{phi(1..n)} can be performed simultaneously, as done so by \inlinecode{phi\_table(n)} which returns a vector \inlinecode{v} such that \inlinecode{v[i]} stores \inlinecode{phi(i)} for $i$ in the range $[0, n]$.
+Euler's totient function $\phi(n)$ returns the number of positive integers less than or equal to $n$ that are relatively prime to $n$; that is, the number of integers $k$ in the range $[1, n]$ for which $\gcd(n, k) = 1$.
 
-\textbf{Time Complexity}: $O(n \log\left(\log\left(n\right)\right))$ per call to \inlinecode{phi(n)} and \inlinecode{phi\_table(n)}.
+The function is multiplicative, with $\phi(p^k) = p^k - p^{k-1}$ for a prime power, which yields the product formula $\phi(n) = n \prod_{p \mid n} (1 - 1/p)$ taken over the distinct primes $p$ dividing $n$. \inlinecode{phi(n)} applies this formula directly, factoring \inlinecode{n} by trial division. \inlinecode{phi\_table(n)} computes the whole range at once with a sieve of Eratosthenes: starting from \inlinecode{v[i] = i}, it sweeps each prime $p$ across its multiples \inlinecode{j} and folds in the factor $(1 - 1/p)$ by replacing \inlinecode{v[j]} with \inlinecode{v[j] - v[j] / p}. This is faster than the alternative that uses the divisor-sum identity $\sum_{d \mid n} \phi(d) = n$ to subtract each \inlinecode{v[i]} from its multiples, which costs $O(n \log n)$.
+
+The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but narrow range with a segmented sieve, analogous to the segmented prime sieve. It sieves the primes up to $\sqrt{hi}$, applies each one's $(1 - 1/p)$ factor to its multiples within \inlinecode{[lo, hi]} while dividing that prime out of a parallel copy of every value, and finally folds in any single leftover prime factor greater than $\sqrt{hi}$ (a number at most \inlinecode{hi} can have at most one such factor).
+
+\begin{compactitem}
+  \item \inlinecode{phi(n)} returns Euler's totient of \inlinecode{n}.
+  \item \inlinecode{phi\_table(n)} returns a vector \inlinecode{v} of length \inlinecode{n + 1} such that \inlinecode{v[i]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range $[0, n]$.
+  \item \inlinecode{phi\_table(lo, hi)} returns a vector \inlinecode{v} of length \inlinecode{hi - lo + 1} such that \inlinecode{v[i - lo]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range $[lo, hi]$. This overload assumes \inlinecode{lo \textgreater{}= 0}; if \inlinecode{hi \textless{} lo}, it returns an empty vector.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(\sqrt{n})$ per call to \inlinecode{phi(n)}.
+  \item $O(n \log \log n)$ per call to \inlinecode{phi\_table(n)}.
+  \item $O((hi - lo) \log \log hi + \sqrt{hi})$ per call to \inlinecode{phi\_table(lo, hi)}.
+\end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary space for \inlinecode{phi(n)}.
   \item $O(n)$ auxiliary heap space for \inlinecode{phi\_table(n)}.
+  \item $O(hi - lo + \sqrt{hi})$ auxiliary heap space for \inlinecode{phi\_table(lo, hi)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cmath>
 #include <numeric>
 #include <vector>
 
@@ -2654,9 +2691,56 @@ int phi(int n) {
 std::vector<int> phi_table(int n) {
   std::vector<int> res(n + 1);
   std::iota(res.begin(), res.end(), 0);
-  for (int i = 1; i <= n; i++) {
-    for (int j = 2 * i; j <= n; j += i) {
-      res[j] -= res[i];
+  for (int i = 2; i <= n; i++) {
+    if (res[i] == i) {  // i is prime, so apply its (1 - 1/i) factor to every multiple.
+      for (int j = i; j <= n; j += i) {
+        res[j] -= res[j] / i;
+      }
+    }
+  }
+  return res;
+}
+
+std::vector<int> phi_table(int lo, int hi) {
+  if (hi < lo) {
+    return {};
+  }
+  int root = static_cast<int>(sqrt(hi));
+  while (1LL * (root + 1) * (root + 1) <= hi) {
+    root++;
+  }
+  // Sieve the primes up to sqrt(hi); these are the only ones that can divide a value in [lo, hi].
+  std::vector<bool> composite(root + 1, false);
+  std::vector<int> primes;
+  for (int i = 2; i <= root; i++) {
+    if (!composite[i]) {
+      primes.push_back(i);
+      for (long long j = 1LL * i * i; j <= root; j += i) {
+        composite[j] = true;
+      }
+    }
+  }
+  std::vector<int> res(hi - lo + 1);
+  std::vector<long long> remaining(hi - lo + 1);
+  for (int i = lo; i <= hi; i++) {
+    res[i - lo] = i;
+    remaining[i - lo] = i;
+  }
+  for (int p : primes) {
+    // Start at the first multiple of p that is >= lo, but never below p itself (this skips 0).
+    long long start = std::max(1LL * p, ((1LL * lo + p - 1) / p) * p);
+    for (long long j = start; j <= hi; j += p) {
+      int idx = static_cast<int>(j - lo);
+      res[idx] -= res[idx] / p;
+      while (remaining[idx] % p == 0) {
+        remaining[idx] /= p;
+      }
+    }
+  }
+  for (int i = lo; i <= hi; i++) {
+    int idx = i - lo;
+    if (remaining[idx] > 1) {  // a single prime factor greater than sqrt(hi) is left over
+      res[idx] -= static_cast<int>(res[idx] / remaining[idx]);
     }
   }
   return res;
@@ -2677,13 +2761,29 @@ int main() {
   for (int i = 0; i <= n; i++) {
     assert(v[i] == phi(i));
   }
+  // The segmented overload agrees with phi(), including over a low range (with 0 and 1) and a
+  // high, narrow window where many values have a prime factor exceeding sqrt(hi).
+  vector<int> lo_range = phi_table(0, 50);
+  for (int i = 0; i <= 50; i++) {
+    assert(lo_range[i] == phi(i));
+  }
+  int lo = 1000000000, hi = 1000000100;
+  vector<int> hi_range = phi_table(lo, hi);
+  for (int i = lo; i <= hi; i++) {
+    assert(hi_range[i - lo] == phi(i));
+  }
   return 0;
 }
 \end{lstlisting}
 \subsection{Binary Exponentiation}
-Given three unsigned 64-bit integers $x$, $n$, and $m$, \inlinecode{powmod()} returns $x$ raised to the power of $n$ (modulo $m$). \inlinecode{mulmod()} returns $x$ multiplied by $n$ (modulo $m$). Despite the fact that both functions use unsigned 64-bit integers for arguments and intermediate calculations, arguments $x$ and $n$ must not exceed $2^{63} - 1$ (the maximum value of a signed 64-bit integer) for the result to be correctly computed without overflow.
+\inlinecode{powmod()} and \inlinecode{mulmod()} compute modular powers and products using binary exponentiation, also known as exponentiation by squaring, which decomposes the operation into a logarithmic number of multiplications while avoiding overflow. To further prevent overflow in the intermediate squaring computations, multiplication is itself performed using a similar double-and-add principle of repeated addition.
 
-Binary exponentiation, also known as exponentiation by squaring, decomposes the exponentiation into a logarithmic number of multiplications while avoiding overflow. To further prevent overflow in the intermediate squaring computations, multiplication is performed using a similar principle of repeated addition.
+\begin{compactitem}
+  \item \inlinecode{mulmod(x, n, m)} returns \inlinecode{x} multiplied by \inlinecode{n}, modulo \inlinecode{m}.
+  \item \inlinecode{powmod(x, n, m)} returns \inlinecode{x} raised to the power \inlinecode{n}, modulo \inlinecode{m}.
+\end{compactitem}
+
+All arguments are unsigned 64-bit integers, but \inlinecode{x} and \inlinecode{n} must not exceed $2^{63} - 1$ (the maximum value of a signed 64-bit integer) for the result to be computed correctly without overflow.
 
 \textbf{Time Complexity}: $O(\log n)$ per call to \inlinecode{mulmod()} and \inlinecode{powmod()}, where $n$ is the second argument.
 
@@ -2862,10 +2962,12 @@ int main() {
 \subsection{Big Integers (Simple)}
 Perform simple arithmetic operations on arbitrary precision big integers whose digits are internally represented as an \inlinecode{std::string} in little-endian order.
 
+This version is intentionally small and decimal-oriented. Addition and subtraction are the usual schoolbook digit scans with carry or borrow. Multiplication keeps a shifted copy of the left operand for each digit of the right operand, adds that row once per digit value, then shifts by one decimal place. Division is long division: it scans the dividend from most significant digit to least, maintains a running remainder, and repeatedly subtracts the divisor to discover each quotient digit.
+
 \begin{compactitem}
   \item \inlinecode{BigInt(n)} constructs a big integer from a long long (default: 0).
   \item \inlinecode{BigInt(s)} constructs a big integer from a string \inlinecode{s}, which must strictly consist of a sequence of numeric digits, optionally preceded by a minus sign.
-  \item \inlinecode{str()} returns the string representation of the big integer.
+  \item \inlinecode{to\_string()} returns the string representation of the big integer.
   \item \inlinecode{comp(a, b)} returns $-1$, $0$, or $1$ depending on whether the big integers \inlinecode{a} and \inlinecode{b} compare less, equal, or greater, respectively.
   \item \inlinecode{add(a, b)} returns the sum of big integers \inlinecode{a} and \inlinecode{b}.
   \item \inlinecode{sub(a, b)} returns the difference of big integers \inlinecode{a} and \inlinecode{b}.
@@ -2876,15 +2978,15 @@ Perform simple arithmetic operations on arbitrary precision big integers whose d
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n)$ per call to the constructor, \inlinecode{str()}, \inlinecode{comp()}, \inlinecode{add()}, and \inlinecode{sub()}, where $n$ is total number of digits in the arguments and result for each operation.
+  \item $O(n)$ per call to the constructor, \inlinecode{to\_string()}, \inlinecode{comp()}, \inlinecode{add()}, and \inlinecode{sub()}, where $n$ is the total number of digits in the arguments and result for each operation.
   \item $O(n \cdot m)$ per call to \inlinecode{mul(a, b)} and \inlinecode{div(a, b)} where $n$ is the number of digits in \inlinecode{a} and $m$ is the number of digits in \inlinecode{b}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for storage of the big integer, where $n$ is the number of the digits.
-  \item $O(n)$ auxiliary heap space for \inlinecode{str()}, \inlinecode{add()}, \inlinecode{sub()}, \inlinecode{mul()}, and \inlinecode{div()}, where $n$ is the total number of digits in the arguments and result for each operation.
+  \item $O(n)$ for storage of the big integer, where $n$ is the number of digits.
+  \item $O(n)$ auxiliary heap space for \inlinecode{to\_string()}, \inlinecode{add()}, \inlinecode{sub()}, \inlinecode{mul()}, and \inlinecode{div()}, where $n$ is the total number of digits in the arguments and result for each operation.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -3044,7 +3146,7 @@ class BigInt {
       row.digits.insert(row.digits.begin(), a.digits[i]);
       row.normalize();  // Strip the spurious high-order zero left by the previous remainder.
       // Subtract while the remainder is >= b. A strict ">" undercounts the quotient digit when the
-      // remainder equals b, and leaves the remainder too large, overflowing the next digit past '9'.
+      // remainder equals b, and leaves the remainder too large, overflowing the next digit past 9.
       while (comp(row.digits, b.digits, 1, 1) >= 0) {
         res.digits[i]++;
         row = sub(row.digits, b.digits, 1, 1);
@@ -3077,13 +3179,13 @@ Perform operations on arbitrary precision big integers internally represented as
 \begin{compactitem}
   \item \inlinecode{BigInt(n)} constructs a big integer from a long long (default: 0).
   \item \inlinecode{BigInt(s)} constructs a big integer from a C string or an \inlinecode{std::string} \inlinecode{s}.
-  \item \inlinecode{operator=} is defined to copy from another big integer or to assign from an 64-bit integer primitive.
+  \item \inlinecode{operator=} is defined to copy from another big integer or to assign from a 64-bit integer primitive.
   \item \inlinecode{size()} returns the number of digits in the base-10 representation.
   \item Operators \inlinecode{\textgreater{}\textgreater{}} and \inlinecode{\textless{}\textless{}} are defined to support stream-based input and output.
   \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the big integer \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} respectively. For the latter three data types, overflow behavior is based on that of inputting from \inlinecode{std::istream}.
   \item \inlinecode{v.abs()} returns the absolute value of big integer \inlinecode{v}.
   \item \inlinecode{a.comp(b)} returns $-1$, $0$, or $1$ depending on whether the big integers \inlinecode{a} and \inlinecode{b} compare less, equal, or greater, respectively.
-  \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives. Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication is performed using a combination of the grade school algorithm (for smaller inputs) and either the Karatsuba algorithm (if the \inlinecode{USE\_FFT\_MULT} flag is set to false) or the Schonhage-Strassen algorithm (if \inlinecode{USE\_FFT\_MULT} is set to true). Division and modulo are computed simultaneously using the grade school method.
+  \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives. Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication first converts limbs from base $10^9$ to base $10^4$ so coefficient products fit safely, then uses either Karatsuba multiplication (if \inlinecode{USE\_FFT\_MULT} is false) or complex FFT convolution (if \inlinecode{USE\_FFT\_MULT} is true), converting the result back to base $10^9$. Division and modulo are computed together by normalized long division: scale the operands so the divisor's leading limb is large, estimate each quotient limb from the top one or two limbs of the running remainder, correct the estimate by adding the divisor back if necessary, then unscale the remainder.
   \item \inlinecode{a.div(b)} returns a pair consisting of the quotient and remainder.
   \item \inlinecode{v.pow(n)} returns \inlinecode{v} raised to the power of $n$.
   \item \inlinecode{v.sqrt()} returns the integral part of the square root of big integer \inlinecode{v}.
@@ -3091,13 +3193,15 @@ Perform operations on arbitrary precision big integers internally represented as
   \item \inlinecode{rand(n)} returns a random, positive big integer with $n$ digits.
 \end{compactitem}
 
+\inlinecode{pow(n)} uses binary exponentiation. \inlinecode{sqrt()} uses a digit-by-digit square-root algorithm in the internal base, while \inlinecode{nth\_root(n)} uses binary search over the answer range.
+
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to the constructors, \inlinecode{size()}, \inlinecode{to\_string()}, \inlinecode{to\_llong()}, \inlinecode{to\_double()}, \inlinecode{to\_ldouble()}, \inlinecode{abs()}, \inlinecode{comp()}, \inlinecode{rand()}, and all comparison and arithmetic operators except multiplication, division, and modulo, where $n$ is total number of digits in the arguments and result for each operation.
   \item $O(n \cdot \log\left(n\right) \cdot \log\left(\log\left(n\right)\right))$ or $O(n^{1.585})$ per call to multiplication operations, depending on whether \inlinecode{USE\_FFT\_MULT} is set to true or false.
   \item $O(n \cdot m)$ per call to division and modulo operations, where $n$ and $m$ are the number of digits in the dividend and divisor, respectively.
-  \item $O(M(m) \log n)$ per call to \inlinecode{pow(n)}, where $M(m)$ is cost to multiply two big integers of length $m$, depending on the multiplication method used.
+  \item $O(M(d) \log n)$ per call to \inlinecode{pow(n)}, where $d$ is the maximum digit length reached during exponentiation and $M(d)$ denotes the cost of one multiplication of two $d$-digit big integers using the selected multiplication method above.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3741,6 +3845,7 @@ Perform operations on rational numbers internally represented as two integers: a
   \item \inlinecode{operator\textgreater{}\textgreater{}} inputs a rational number using the next integer from the stream as the numerator and 1 as the denominator.
   \item \inlinecode{operator\textless{}\textless{}} outputs the rational number as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
   \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the rational \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} respectively.
+  \item \inlinecode{v.abs()}, \inlinecode{abs(v)}, \inlinecode{v.floor()}, and \inlinecode{v.ceil()} return the absolute value, floor, and ceiling of rational \inlinecode{v}.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on numerical primitives.
 \end{compactitem}
 
@@ -3955,8 +4060,8 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
   \item $O(n \cdot m)$ for construction, output, comparison, and scalar arithmetic of $n$ by $m$ matrices.
   \item $O(1)$ for \inlinecode{rows(a)} and \inlinecode{columns(a)}.
   \item $O(n \cdot m)$ for matrix-matrix addition and subtraction of $n$ by $m$ matrices.
-  \item $O(n \cdot m \cdot \log\left(p\right))$ for exponentiation of an $n$ by $m$ matrix to power $p$.
-  \item $O(n \cdot m \cdot \log^{2}(p))$ for power sum of an $n$ by $m$ matrix to power $p$.
+  \item $O(n^{3} \log p)$ for exponentiation of an $n$ by $n$ matrix to power $p$.
+  \item $O(n^{3} \log p)$ for power sum of an $n$ by $n$ matrix to power $p$.
   \item $O(n \cdot m \cdot k)$ for multiplication of an $n$ by $m$ matrix by an $m$ by $k$ matrix.
   \item $O(n \cdot m)$ for \inlinecode{transpose()}, \inlinecode{transpose\_in\_place()}, \inlinecode{rotate()}, and \inlinecode{rotate\_in\_place()} of $n$ by $m$ matrices.
 \end{compactitem}
@@ -3965,7 +4070,7 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary space for \inlinecode{rows()}, \inlinecode{columns()}, \inlinecode{a[i][j]} access, comparison operators, and in-place operations.
-  \item $O(n \cdot m \cdot \log\left(p\right))$ auxiliary stack and heap space for exponentiation of an $n$ by $m$ matrix to power $p$, as well as the power sum of an $n$ by $m$ matrix up to power $p$.
+  \item $O(n^{2} \log p)$ auxiliary stack and heap space for exponentiation of an $n$ by $n$ matrix to power $p$, as well as the power sum of an $n$ by $n$ matrix up to power $p$.
   \item $O(n \cdot m)$ auxiliary heap space for all non-in-place operations returning an $n$ by $m$ matrix, \inlinecode{transpose()}, and \inlinecode{rotate()}.
 \end{compactitem}
 
@@ -4602,7 +4707,7 @@ int main() {
 The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions.
 
 \begin{compactitem}
-  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $r$ by $c$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either 0 or 1 denoting the ``sign'' of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j] = l[i][j]} for $i > j$ and \inlinecode{lu[i][j] = u[i][j]} for $i \leq j$. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to 1 in row $i$ of the permutation matrix $P$ (all other columns in row $i$ of $P$ are implicitly 0). The resulting $P$ corresponds to \inlinecode{p1col} will satisfy $P$\inlinecode{a} = \inlinecode{lu}.
+  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $r$ by $c$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either 0 or 1 denoting the ``sign'' of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j] = l[i][j]} for $i > j$ and \inlinecode{lu[i][j] = u[i][j]} for $i \leq j$. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to 1 in row $i$ of the permutation matrix $P$ (all other columns in row $i$ of $P$ are implicitly 0). The permutation matrix $P$ corresponding to \inlinecode{p1col} satisfies $P a = lu$.
   \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $r$ by $c$ matrix \inlinecode{a} of real values, and a length $r$ vector \inlinecode{b}, returning 0 if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the vector pointed to by \inlinecode{x} is populated with the solution vector of length $c$.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using LU decomposition.
   \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning 0 if the inversion was successful or $-1$ if \inlinecode{a} has no inverse.
@@ -4612,14 +4717,14 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(r^{2} \cdot c)$ per call to \inlinecode{lu\_decompose(a)} and \inlinecode{solve\_system(a, b)}, where $r$ and $c$ are the number of rows and columns respectively, in accordance to the functions' descriptions above.
-  \item $O(n^{3})$ per call to \inlinecode{det(a)} and \inlinecode{inverse(a)}, where $n$ is the dimension of \inlinecode{a}.
+  \item $O(n^{3})$ per call to \inlinecode{det(a)} and \inlinecode{invert(a)}, where $n$ is the dimension of \inlinecode{a}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{lu\_decompose()}.
-  \item $O(n^{2})$ for \inlinecode{det(a)} and \inlinecode{inverse(a)}.
+  \item $O(n^{2})$ for \inlinecode{det(a)} and \inlinecode{invert(a)}.
   \item $O(r \cdot c)$ auxiliary heap space for \inlinecode{solve\_system(a, b)}.
 \end{compactitem}
 
@@ -4915,7 +5020,7 @@ The transform replaces a coefficient vector with its evaluations at the powers o
 
 \begin{compactitem}
   \item \inlinecode{ntt(a, invert)} transforms the vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert == false}; the inverse uses \inlinecode{invert == true}.
-  \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}. Input values are assumed to lie in \inlinecode{[0, MOD)}.
+  \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, or is empty if either input is empty. Input values are assumed to lie in \inlinecode{[0, MOD)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5027,7 +5132,7 @@ The trade-off is precision. Complex arithmetic in double precision accumulates r
 
 \begin{compactitem}
   \item \inlinecode{fft(a, invert)} transforms the complex vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert == false}; the inverse uses \inlinecode{invert == true}.
-  \item \inlinecode{convolve(a, b)} returns the convolution of two integer sequences \inlinecode{a} and \inlinecode{b}, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, with each entry rounded to the nearest integer.
+  \item \inlinecode{convolve(a, b)} returns the convolution of two integer sequences \inlinecode{a} and \inlinecode{b}, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, or is empty if either input is empty, with each entry rounded to the nearest integer.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}

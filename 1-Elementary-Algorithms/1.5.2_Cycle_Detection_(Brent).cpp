@@ -18,6 +18,9 @@ teleporting it to the hare pointer at every power of two. Once the two pointers 
 length is known, and a second phase finds the cycle's starting position. This improves upon the
 constant factor of Floyd's algorithm by reducing the number of calls made to $f$.
 
+- `find_cycle_brent(f, x0)` returns the cycle as a `(position, length)` pair, where `position` is
+  the index at which the cycle begins and `length` is the number of elements in it.
+
 Time Complexity:
 - O(m + n) per call to `find_cycle_brent()`, where $m$ is the smallest index of the sequence which
   is the beginning of a cycle, and $n$ is the cycle's length.

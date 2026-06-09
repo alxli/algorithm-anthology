@@ -11,9 +11,9 @@ lengths of the longest common prefixes between all pairs of lexicographically ad
 `s`. For example, `"baa"` has the sorted suffixes `"a"`, `"aa"`, and `"baa"`, with an LCP array of
 `[1, 0]`.
 
-- `SuffixArrayCountingSort(s)` constructs a suffix array from the given string `s` using the original
-  Manber-Myers doubling algorithm with counting-sort-style rank updates to reduce the running time
-  to O(n log n).
+- `SuffixArrayCountingSort(s)` constructs a suffix array from the given string `s` using the
+  original Manber-Myers doubling algorithm with counting-sort-style rank updates to reduce the
+  running time to O(n log n).
 - `get_sa()` returns the constructed suffix array.
 - `get_lcp()` returns the corresponding LCP array for the suffix array.
 - `find(needle)` returns one position that `needle` occurs in `s` (not necessarily the first), or

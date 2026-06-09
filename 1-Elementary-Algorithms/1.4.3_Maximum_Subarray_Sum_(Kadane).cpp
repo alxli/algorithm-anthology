@@ -73,10 +73,9 @@ T max_submatrix_sum(
     return T();
   }
   int n = static_cast<int>(matrix.size()), m = static_cast<int>(matrix[0].size());
-  std::vector<T> sums(n);
   T sum, max_sum = 0;
   for (int clo = 0; clo < m; clo++) {
-    std::fill(sums.begin(), sums.end(), 0);
+    std::vector<T> sums(n, 0);
     for (int chi = clo; chi < m; chi++) {
       for (int i = 0; i < n; i++) {
         sums[i] += matrix[i][chi];

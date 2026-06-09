@@ -2,9 +2,7 @@
 
 A circle in two dimensions supporting epsilon comparisons. The circle centered at $(h, k)$ is
 represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a
-non-negative number. Operations include constructing a circle from a line segment, constructing a
-circumcircle, checking if a point falls inside the circle with `contains()` or on its edge with
-`on_edge()`, and constructing an incircle with `incircle()`.
+non-negative number.
 
 Circle is floating-point by nature (the radius requires a square root), so it always stores and
 computes in `double`. The center of a circumcircle is rational and the radius irrational even for
@@ -12,9 +10,26 @@ integer inputs, so there is no exact integer `Circle` to store; instead, every p
 constructor and predicate is templated on the point type `Pt` and only reads `.x`/ `.y`, accepting
 `Point`/ `PointD`/ `PointI` from 7.1.1 or any struct with numeric `.x`/ `.y` fields.
 
+- `Circle()` constructs the zero-radius circle centered at the origin.
+- `Circle(r)` constructs a circle of radius `abs(r)` centered at the origin.
+- `Circle(h, k, r)` constructs a circle of radius `abs(r)` centered at `(h, k)`.
+- `Circle(o, r)` constructs a circle of radius `abs(r)` centered at point `o`.
+- `Circle(a, b)` constructs the circle whose diameter is segment `a`-`b`.
+- `Circle(a, b, c)` constructs the circumcircle through non-collinear points `a`, `b`, and `c`.
+- `Circle(a, b, r)` constructs one circle of radius `abs(r)` passing through points `a` and `b`,
+  throwing if the inputs admit no finite circle.
+- `operator==` and `operator!=` compare centers and radii using `EPS`.
+- `contains(p)` returns whether point `p` lies inside or on the circle.
+- `on_edge(p)` returns whether point `p` lies on the circle boundary.
+- `incircle(a, b, c)` returns the circle inscribed inside triangle `abc`.
+- `in_circumcircle(a, b, c, d)` returns 1 if `d` lies strictly inside the circle through `a`, `b`,
+  and `c`, 0 if it lies on the circle, or $-1$ if it lies outside.
+
 When exact integer reasoning about a circumcircle is needed, use `in_circumcircle(a, b, c, d)`,
 which tests whether `d` lies inside the circle through `a`, `b`, `c` using a determinant (no square
-root) and is therefore exact for integer coordinates without ever building a `Circle`.
+root) and is therefore exact for integer coordinates without ever building a `Circle`. The
+determinant has degree four in the coordinate magnitude, so use a wider coordinate type for large
+integer inputs.
 
 Time Complexity:
 - O(1) per call to the constructors and all other operations.

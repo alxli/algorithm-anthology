@@ -14,7 +14,7 @@ backbone of subset dynamic programming and many low-level tricks. The helpers be
   is 0. `clear_lowest_set_bit(x)` returns `x` with its lowest set bit removed.
 - `popcount(x)` returns the number of set bits, analogous to `__builtin_popcount()`.
 - `ctz(x)` returns the number of trailing 0-bits (undefined for 0), analogous to `__builtin_ctz()`.
-- `clz(x)` returns the number of leading 0-bits (undefined for 0), analgoous to `__builtin_clz()`.
+- `clz(x)` returns the number of leading 0-bits (undefined for 0), analogous to `__builtin_clz()`.
 - `is_power_of_two(x)` returns whether `x` has exactly one set bit.
 - `floor_pow2(x)` returns the largest power of 2 that is $\leq$ `x` (for `x` $> 0$).
 - `ceil_pow2(x)` returns the smallest power of 2 that is $\geq$ `x` (for `x` $> 0$).

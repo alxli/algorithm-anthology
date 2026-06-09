@@ -6,7 +6,21 @@
 \subsection{Graph Class and Depth-First Search}
 A graph consists of a set of objects (a.k.a. vertices, or nodes) and a set of connections (a.k.a. edges) between pairs of said objects. A graph may be stored as an adjacency list, which is a space efficient representation that is also time-efficient for traversals.
 
-The following class implements a simple graph using adjacency lists, along with depth-first search and a few other applications. The constructor takes a Boolean argument which specifies whether the instance is a directed or undirected graph. The nodes of the graph are identified by integers indices numbered consecutively starting from 0. The total number of nodes will automatically increase based on the maximum node index passed to \inlinecode{add\_edge()} so far. For undirected graphs, \inlinecode{has\_cycle()} assumes a simple graph; parallel edges are not distinguished from the tree edge back to the parent.
+The following class implements a simple graph using adjacency lists, along with depth-first search and a few other applications. The constructor takes a Boolean argument which specifies whether the instance is a directed or undirected graph. The nodes of the graph are identified by integer indices numbered consecutively starting from 0. The total number of nodes automatically increases based on the maximum node index passed to \inlinecode{add\_edge()} so far.
+
+\begin{compactitem}
+  \item \inlinecode{Graph(directed)} constructs an empty graph, directed if \inlinecode{directed} is true (the default) and undirected otherwise.
+  \item \inlinecode{nodes()} returns the current number of nodes.
+  \item \inlinecode{operator[](n)} returns a reference to the adjacency list (a \inlinecode{std::vector\textless{}int\textgreater{}}) of node \inlinecode{n}.
+  \item \inlinecode{add\_edge(u, v)} adds an edge from \inlinecode{u} to \inlinecode{v}, plus the reverse edge if the graph is undirected, growing the node count to accommodate the larger index if necessary.
+  \item \inlinecode{dfs(start, f)} runs a depth-first search from node \inlinecode{start}, calling \inlinecode{f(n)} on each node \inlinecode{n} in the order it is first visited.
+  \item \inlinecode{has\_cycle()} returns whether the graph contains a cycle.
+  \item \inlinecode{is\_directed()} returns whether the graph is directed.
+  \item \inlinecode{is\_forest()} returns whether the graph is undirected and acyclic.
+  \item \inlinecode{is\_dag()} returns whether the graph is directed and acyclic.
+\end{compactitem}
+
+For undirected graphs, \inlinecode{has\_cycle()} assumes a simple graph; parallel edges are not distinguished from the tree edge back to the parent.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -339,7 +353,7 @@ int main() {
 Given a tree, build its centroid decomposition. A centroid is a node whose removal splits the current subtree into connected components of size at most half of that subtree. Recursively choosing centroids creates a decomposition tree of height $O(\log n)$, which is useful for queries based on distances to marked nodes, nearest special node, and other ``path through a centroid'' problems.
 
 \begin{compactitem}
-  \item \inlinecode{build\_centroid\_tree()} populates \inlinecode{subtree\_size}, \inlinecode{centroid\_parent}, and \inlinecode{subtree\_size} for the global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must form a valid tree with nodes numbered from 0 to \inlinecode{adj.size() - 1}.
+  \item \inlinecode{build\_centroid\_tree()} populates \inlinecode{subtree\_size}, \inlinecode{removed}, and \inlinecode{centroid\_parent} for the global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must form a valid tree with nodes numbered from 0 to \inlinecode{adj.size() - 1}.
   \item \inlinecode{centroid\_parent[u]} stores the parent of node $u$ in the centroid tree.
   \item The root centroid has parent $-1$.
 \end{compactitem}
@@ -451,8 +465,8 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int>> &adj) {
     return code;
   }
   // Root at node n - 1, which is guaranteed to survive smallest-leaf removal (it is never the
-  // smallest leaf while other nodes remain). Rooting elsewhere risks recording parent[root] == -2 if
-  // the chosen root itself gets stripped to a leaf (e.g. when n - 1 happens to be a leaf).
+  // smallest leaf while other nodes remain). Rooting elsewhere risks recording parent[root] == -2
+  // if the chosen root itself gets stripped to a leaf (e.g. when n - 1 happens to be a leaf).
   int root = nodes - 1;
   for (int u = 0; u < nodes; u++) {
     degree[u] = static_cast<int>(adj[u].size());
@@ -538,7 +552,7 @@ A Eulerian trail is a path in a graph which contains every edge exactly once. An
 
 \begin{compactitem}
   \item \inlinecode{euler\_cycle\_directed(adj, u)} returns a vector of all nodes in a directed graph that are reachable from the starting node \inlinecode{u} in an order which forms an Eulerian cycle. The first node will be repeated as the last element of the vector. The directed graph given by adjacency list \inlinecode{adj} must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}.
-  \item \inlinecode{euler\_cycle\_undirected(adj, u)} returns a vector of all nodes in a undirected graph that are reachable from the starting node \inlinecode{u} in an order which forms an Eulerian cycle. The first node will be repeated as the last element of the vector. The undirected graph given by adjacency list \inlinecode{adj} must consist of bidirectional edges with nodes numbered from 0 to \inlinecode{adj.size() - 1}.
+  \item \inlinecode{euler\_cycle\_undirected(adj, u)} returns a vector of all nodes in an undirected graph that are reachable from the starting node \inlinecode{u} in an order which forms an Eulerian cycle. The first node will be repeated as the last element of the vector. The undirected graph given by adjacency list \inlinecode{adj} must consist of bidirectional edges with nodes numbered from 0 to \inlinecode{adj.size() - 1}.
 \end{compactitem}
 
 Limitation: \inlinecode{euler\_cycle\_undirected()} marks used edges by their endpoint pair, so it does not support multigraphs (parallel edges between the same pair of nodes) -- the duplicate edge would be seen as already used. Supporting parallel edges requires marking edges by a unique edge ID instead. The directed version has no such restriction.
@@ -1301,7 +1315,7 @@ Adjacency List for Bridge Forest:
 4 =>
 5 => 2
 \end{exampleoutput}
-\subsection{Bridge Finding (Online)}
+\subsection{Online Bridge Finding}
 Maintain the number of bridges in an undirected graph while edges are inserted one at a time, along with the 2-edge-connected components and ordinary connected components.
 
 \begin{compactitem}
@@ -1458,12 +1472,23 @@ Solve a Boolean formula in 2-CNF, where each clause contains at most two literal
 Variables are numbered from $0$ to $n - 1$. A literal is represented by \inlinecode{literal(variable, value)}, where \inlinecode{value == true} means the variable itself and \inlinecode{value == false} means its negation.
 
 \begin{compactitem}
+  \item \inlinecode{TwoSAT(n)} constructs an empty formula over \inlinecode{n} variables.
+  \item \inlinecode{init(n)} clears the formula and resets it to \inlinecode{n} variables.
+  \item \inlinecode{literal(variable, value)} returns the integer ID for a variable or its negation.
+  \item \inlinecode{add\_implication(a, b)} adds the implication $a \rightarrow b$.
   \item \inlinecode{add\_or(a, b)} adds the clause $(a \lor b)$.
   \item \inlinecode{add\_true(a)} forces literal \inlinecode{a} to be true.
+  \item \inlinecode{add\_false(a)} forces literal \inlinecode{a} to be false.
   \item \inlinecode{satisfiable()} returns whether all added clauses can be satisfied and stores one valid assignment in \inlinecode{answer}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{satisfiable()}, where $n$ is the number of variables and $m$ is the number of clauses.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructor or \inlinecode{init(n)}, where $n$ is the number of variables.
+  \item $O(1)$ per call to \inlinecode{literal()}, \inlinecode{add\_implication()}, \inlinecode{add\_or()}, \inlinecode{add\_true()}, and \inlinecode{add\_false()}.
+  \item $O(\max\left(n, m\right))$ per call to \inlinecode{satisfiable()}, where $n$ is the number of variables and $m$ is the number of clauses.
+\end{compactitem}
 
 \textbf{Space Complexity}: $O(\max\left(n, m\right))$ for the implication graph and DFS stacks.
 
@@ -1913,6 +1938,8 @@ Given a starting node in an unweighted, directed graph, visit every connected no
   \item \inlinecode{bfs(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}.
 \end{compactitem}
 
+For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
+
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{bfs()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
@@ -1997,6 +2024,8 @@ Given a starting node in a weighted graph whose edge weights are only 0 or 1, co
   \item \inlinecode{bfs\_zero\_one(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}. Each edge is stored as \inlinecode{(neighbor, weight)}, where \inlinecode{weight} is either 0 or 1.
 \end{compactitem}
 
+For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
+
 This is a specialized version of Dijkstra's algorithm. Because every relaxation changes the distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push weight-0 relaxations to the front and weight-1 relaxations to the back.
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{bfs\_zero\_one()}, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -2071,9 +2100,13 @@ int main() {
 \subsection{Shortest Path (Dijkstra)}
 Given a starting node in a weighted, directed graph with nonnegative weights only, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
 
+Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative distance using a priority queue and relaxes its outgoing edges. Because the weights are nonnegative, a node's distance is final the first time it is removed from the queue.
+
 \begin{compactitem}
   \item \inlinecode{dijkstra(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}. Each edge is stored as \inlinecode{(neighbor, weight)}, where \inlinecode{weight} is nonnegative.
 \end{compactitem}
+
+For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
 
 Dijkstra's algorithm requires nonnegative edge weights. Use Bellman-Ford or SPFA instead when negative edges are present.
 
@@ -2149,8 +2182,8 @@ void print_path(int dest) {
 }
 
 int main() {
-  int nodes = 4, start = 0, dest = 3;
-  adj.assign(nodes, {});
+  int start = 0, dest = 3;
+  adj.assign(4, {});
   adj[0].push_back({1, 2});
   adj[0].push_back({3, 8});
   adj[1].push_back({2, 2});
@@ -2170,9 +2203,13 @@ Take the path: 0->1->2->3.
 \subsection{Shortest Path (Bellman-Ford)}
 Given a starting node in a weighted, directed graph with possibly negative weights, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor array \inlinecode{pred}.
 
+Bellman-Ford relaxes every edge in the graph $n - 1$ times. Since any shortest path uses at most $n - 1$ edges, all distances are correct after these passes unless a negative-weight cycle keeps reducing them, which a further pass detects.
+
 \begin{compactitem}
   \item \inlinecode{bellman\_ford(nodes, start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered from 0 to \inlinecode{nodes - 1}.
 \end{compactitem}
+
+For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
 
 This function will also detect whether the graph contains a negative-weight cycle reachable from the start node, in which case the affected shortest paths are undefined and an error will be thrown. (To detect a negative cycle anywhere in the graph, add a virtual source with zero-weight edges to every node and start from it.)
 
@@ -2263,6 +2300,8 @@ Given a starting node in a weighted directed graph, compute shortest paths even 
   \item \inlinecode{spfa(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}. Each edge is stored as \inlinecode{(neighbor, weight)}. The function returns \inlinecode{false} if it detects a reachable negative cycle, and returns \inlinecode{true} otherwise.
 \end{compactitem}
 
+For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
+
 The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford. It is often fast on benign inputs, but it still has Bellman-Ford's worst-case behavior and can be forced to run in $O(n \cdot m)$. Prefer Dijkstra for nonnegative weights, and use SPFA mainly when negative edges are present and the input is not adversarial.
 
 \textbf{Time Complexity}: $O(n \cdot m)$ in the worst case for \inlinecode{spfa()}, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -2342,12 +2381,16 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Shortest Path (Floyd-Warshall)}
-Given a weighted, directed graph with possibly negative weights, determine the minimum distance between all pairs of start and destination nodes in the graph. Optionally, output the shortest path between two nodes using the shortest-path tree precomputed into the \inlinecode{pred} matrix.
+Given a weighted, directed graph with possibly negative weights, determine the minimum distance between all pairs of start and destination nodes in the graph. Optionally, output the shortest path between two nodes using the next-hop matrix precomputed into \inlinecode{next\_node}.
+
+It is a dynamic program over intermediate nodes: for each node \inlinecode{k} in turn, every pair \inlinecode{(i, j)} is relaxed by considering a path through \inlinecode{k}, so once all \inlinecode{k} have been processed the matrix holds the all-pairs shortest distances.
 
 \begin{compactitem}
-  \item \inlinecode{initialize(nodes)} initializes \inlinecode{dist} and \inlinecode{pred} for nodes numbered from 0 to \inlinecode{nodes - 1}.
-  \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest path from $u$ to $v$, and updates \inlinecode{pred} for path reconstruction. If the graph contains negative-weighted cycles, there is no shortest path and an error will be thrown.
+  \item \inlinecode{initialize(nodes)} initializes \inlinecode{dist} and \inlinecode{next\_node} for nodes numbered from 0 to \inlinecode{nodes - 1}.
+  \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest path from $u$ to $v$, and updates \inlinecode{next\_node} for path reconstruction. If the graph contains negative-weighted cycles, there is no shortest path and an error will be thrown.
 \end{compactitem}
+
+For path reconstruction, \inlinecode{next\_node[i][j]} stores the next node to visit after \inlinecode{i} on a current shortest path from \inlinecode{i} to \inlinecode{j}. It is initialized to \inlinecode{j} for every pair and, when a shorter route \inlinecode{i -\textgreater{} k -\textgreater{} j} is found, becomes \inlinecode{next\_node[i][k]}. Repeatedly replacing \inlinecode{i} with \inlinecode{next\_node[i][j]} therefore walks the path from source to destination.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -2370,15 +2413,15 @@ Given a weighted, directed graph with possibly negative weights, determine the m
 
 const long long INF = LLONG_MAX / 4;
 std::vector<std::vector<long long>> dist;
-std::vector<std::vector<int>> pred;
+std::vector<std::vector<int>> next_node;
 
 void initialize(int nodes) {
   dist.assign(nodes, std::vector<long long>(nodes));
-  pred.assign(nodes, std::vector<int>(nodes));
+  next_node.assign(nodes, std::vector<int>(nodes));
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
       dist[i][j] = (i == j) ? 0 : INF;
-      pred[i][j] = j;
+      next_node[i][j] = j;
     }
   }
 }
@@ -2392,7 +2435,7 @@ void floyd_warshall() {
         // INF + w < INF would otherwise give an unreachable pair a bogus finite distance.
         if (dist[i][k] != INF && dist[k][j] != INF && dist[i][j] > dist[i][k] + dist[k][j]) {
           dist[i][j] = dist[i][k] + dist[k][j];
-          pred[i][j] = pred[i][k];
+          next_node[i][j] = next_node[i][k];
         }
       }
     }
@@ -2414,7 +2457,7 @@ using namespace std;
 void print_path(int u, int v) {
   cout << "Take the path: " << u;
   while (u != v) {
-    u = pred[u][v];
+    u = next_node[u][v];
     cout << "->" << u;
   }
   cout << "." << endl;
@@ -2443,6 +2486,8 @@ Given a starting node in a weighted, directed acyclic graph (DAG), determine the
 \begin{compactitem}
   \item \inlinecode{dag\_shortest\_path(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} whose nodes are numbered from 0 to \inlinecode{adj.size() - 1}. Each edge is stored as \inlinecode{(neighbor, weight)} and may have any sign. \inlinecode{dist[v]} is set to \inlinecode{INF} for nodes not reachable from \inlinecode{start}, and \inlinecode{pred} stores the shortest-path tree for path reconstruction.
 \end{compactitem}
+
+For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
 
 \textbf{Time Complexity}: $O(n + m)$ per call to \inlinecode{dag\_shortest\_path()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
@@ -2525,6 +2570,8 @@ int main() {
 \setcounter{subsection}{0}
 \subsection{Minimum Spanning Tree (Prim)}
 Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree (MST) is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. If the input graph is not connected, then this implementation will find the minimum spanning forest.
+
+Prim's algorithm grows the tree from an arbitrary start node, repeatedly adding the minimum-weight edge that joins a new node to the current tree, with a priority queue supplying the cheapest such edge at each step.
 
 \begin{compactitem}
   \item \inlinecode{prim\_mst()} populates \inlinecode{mst} with the minimum spanning tree edges (returning the total MST weight) for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}. Each edge is stored as \inlinecode{(neighbor, weight)}.
@@ -2621,6 +2668,8 @@ Total distance: 13
 \end{exampleoutput}
 \subsection{Minimum Spanning Tree (Kruskal)}
 Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree (MST) is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. If the input graph is not connected, then this implementation will find the minimum spanning forest.
+
+Kruskal's algorithm scans the edges in nondecreasing weight order, adding each edge whose endpoints lie in different components (tracked with a disjoint-set structure) and skipping any edge that would form a cycle.
 
 \begin{compactitem}
   \item \inlinecode{kruskal\_mst(nodes)} populates \inlinecode{mst} with the minimum spanning tree edges (returning the total MST weight) for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered from 0 to \inlinecode{nodes - 1}. Each edge is stored as \inlinecode{(weight, u, v)} and will be sorted by weight after the call.
@@ -2814,6 +2863,8 @@ int main() {
 \subsection{Maximum Flow (Ford-Fulkerson)}
 Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
 
+The Ford-Fulkerson method repeatedly finds any augmenting path from source to sink in the residual graph (here by depth-first search) and pushes as much flow as the path allows, until no augmenting path remains.
+
 \begin{compactitem}
   \item \inlinecode{ford\_fulkerson()} uses global \inlinecode{source} and \inlinecode{sink}, modifies the global residual capacity matrix \inlinecode{cap}, and returns maximum flow. Nodes are numbered from 0 to \inlinecode{cap.size() - 1}.
 \end{compactitem}
@@ -2896,6 +2947,8 @@ int main() {
 \end{lstlisting}
 \subsection{Maximum Flow (Edmonds-Karp)}
 Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
+
+Edmonds-Karp is the Ford-Fulkerson method with the augmenting path always chosen as a shortest one (fewest edges) via breadth-first search. This bounds the number of augmentations at $O(n m)$, independent of the capacity magnitudes.
 
 \begin{compactitem}
   \item \inlinecode{add\_edge(u, v, cap)} adds a directed residual-network edge.
@@ -2984,6 +3037,8 @@ int main() {
 \end{lstlisting}
 \subsection{Maximum Flow (Dinic)}
 Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
+
+Dinic's algorithm proceeds in phases. Each phase runs a breadth-first search to build a level graph of shortest residual distances from the source, then finds a blocking flow that saturates that level graph using depth-first search, before repeating on the new residual graph.
 
 \begin{compactitem}
   \item \inlinecode{add\_edge(u, v, cap)} adds a directed residual-network edge.
@@ -3092,6 +3147,8 @@ int main() {
 \end{lstlisting}
 \subsection{Maximum Flow (Push-Relabel)}
 Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
+
+Rather than augmenting along whole paths, the push-relabel algorithm maintains a preflow and a height label on each node, repeatedly pushing excess flow to lower-labeled neighbors and relabeling (raising) a node whose excess cannot yet be pushed, until no node other than the source and sink holds excess.
 
 \begin{compactitem}
   \item \inlinecode{push\_relabel(source, sink)} returns maximum flow for a global capacity matrix \inlinecode{cap} whose nodes are numbered from 0 to \inlinecode{cap.size() - 1}.
@@ -3205,13 +3262,20 @@ Given a flow network with integer capacities and edge costs, find a minimum-cost
 
 \begin{compactitem}
   \item \inlinecode{MinCostMaxFlow(nodes)} constructs an empty residual network whose nodes are numbered from 0 to \inlinecode{nodes - 1}.
+  \item \inlinecode{init(nodes)} clears the residual network and resets it to contain \inlinecode{nodes} nodes.
   \item \inlinecode{add\_edge(u, v, cap, cost)} adds a directed residual-network edge.
   \item \inlinecode{min\_cost\_flow(source, sink, target\_flow)} sends up to \inlinecode{target\_flow} units of flow and returns \inlinecode{(flow, cost)}. If the returned flow is smaller than \inlinecode{target\_flow}, the network cannot carry the requested amount.
 \end{compactitem}
 
 This implementation uses shortest augmenting paths with SPFA, so it supports negative edge costs as long as the residual graph has no reachable negative-cost cycle. For dense or adversarial inputs, a potential-based Dijkstra version is usually faster when reduced costs are nonnegative.
 
-\textbf{Time Complexity}: $O(f \cdot n \cdot m)$ per call to \inlinecode{min\_cost\_flow()}, where $f$ is the amount of flow sent, $n$ is the number of nodes, and $m$ is the number of edges.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructor or \inlinecode{init(n)}, where $n$ is the number of nodes.
+  \item $O(1)$ per call to \inlinecode{add\_edge()}.
+  \item $O(f \cdot n \cdot m)$ per call to \inlinecode{min\_cost\_flow()}, where $f$ is the amount of flow sent, $n$ is the number of nodes, and $m$ is the number of edges.
+\end{compactitem}
 
 \textbf{Space Complexity}: $O(\max\left(n, m\right))$ for storage of the residual network and auxiliary arrays.
 
@@ -3394,6 +3458,8 @@ int main() {
 \subsection{Maximum Bipartite Matching (Kuhn)}
 Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node.
 
+Kuhn's algorithm builds the matching one left node at a time. For each, a depth-first search looks for an augmenting path: an alternating sequence of unmatched and matched edges that reaches a free right node. Flipping the edges along such a path enlarges the matching by one.
+
 \begin{compactitem}
   \item \inlinecode{kuhn(n2)} populates \inlinecode{match} and returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj} whose left-side nodes are numbered from 0 to \inlinecode{adj.size() - 1} and whose right-side neighbors are numbered from 0 to \inlinecode{n2 - 1}.
 \end{compactitem}
@@ -3468,6 +3534,8 @@ Matched 3 pair(s):
 \end{exampleoutput}
 \subsection{Maximum Bipartite Matching (Hopcroft-Karp)}
 Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node.
+
+Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set of vertex-disjoint shortest augmenting paths to flip at once, giving $O(m \sqrt{n})$ overall.
 
 \begin{compactitem}
   \item \inlinecode{hopcroft\_karp(n2)} populates \inlinecode{match} and returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj} whose left-side nodes are numbered from 0 to \inlinecode{adj.size() - 1} and whose right-side neighbors are numbered from 0 to \inlinecode{n2 - 1}.
@@ -3676,6 +3744,8 @@ int main() {
 \end{lstlisting}
 \subsection{Maximum Graph Matching (Edmonds)}
 Given an undirected graph, determine a maximum matching: a maximum subset of its edges such that no node is shared between different edges in the resulting subset.
+
+Edmonds' blossom algorithm extends augmenting-path search to general (non-bipartite) graphs, where odd-length cycles called blossoms can conceal augmenting paths. Each blossom is contracted into a single node so the search can proceed, and is expanded afterward to recover the matching.
 
 \begin{compactitem}
   \item \inlinecode{edmonds()} populates \inlinecode{match} and returns matching size for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}.
@@ -3900,7 +3970,9 @@ int main() {
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Maximum Clique (Bron-Kerbosch)}
-Given an undirected graph, \inlinecode{max\_clique()} returns the size of the maximum clique, that is, the largest subset of nodes such that all pairs of nodes in the subset are connected by an edge. \inlinecode{max\_clique\_weighted()} additionally uses a global array \inlinecode{w} specifying a weight value for each node, returning the clique in the graph that has maximum total weight.
+Given an undirected graph, determine a maximum clique: a largest subset of nodes in which every pair is connected by an edge. A weighted variant instead seeks the clique of maximum total node weight, given a weight for each node.
+
+The Bron-Kerbosch algorithm recursively extends a growing clique, tracking the set of candidate nodes that may still be added and the set of nodes already excluded. Choosing a pivot node to avoid branching on its neighbors prunes large parts of the search, keeping it efficient on most graphs.
 
 \begin{compactitem}
   \item \inlinecode{max\_clique()} returns the maximum clique size for a global, bidirectionally pre-populated adjacency matrix \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}.
@@ -4026,6 +4098,8 @@ int main() {
 \subsection{Graph Coloring}
 Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the same color, and that the total number of colors used is minimized.
 
+It finds the chromatic number by backtracking: nodes (ordered by degree to prune sooner) are colored one at a time, each tried with every color already in use plus one new color, while the fewest colors seen in a complete coloring so far bounds the search and cuts off any branch at least as costly.
+
 \begin{compactitem}
   \item \inlinecode{color\_graph()} populates \inlinecode{color} and returns minimum color count for a global, bidirectionally pre-populated adjacency matrix \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}.
 \end{compactitem}
@@ -4150,11 +4224,15 @@ Color 2: 1 2
 Color 3: 4
 \end{exampleoutput}
 \subsection{Shortest Hamiltonian Cycle (TSP)}
-Given a complete weighted graph, determine a cycle of minimum total distance which visits each node exactly once and returns to the starting node. This is known as the traveling salesman problem (TSP). Since this implementation uses bitmasks with signed 32-bit integers, the maximum number of nodes must be less than 31.
+Given a complete weighted graph, determine a cycle of minimum total distance which visits each node exactly once and returns to the starting node. This is known as the traveling salesman problem (TSP).
+
+It is solved by the Held-Karp dynamic program over subsets: \inlinecode{dp[S][i]} is the length of the shortest path that starts at a fixed node, visits exactly the set \inlinecode{S} of nodes, and ends at node \inlinecode{i}, built up by iterating over the subsets in increasing order of their bitmask.
 
 \begin{compactitem}
   \item \inlinecode{shortest\_hamiltonian\_cycle()} populates \inlinecode{order} and returns minimum cycle length for a global, bidirectionally pre-populated adjacency matrix \inlinecode{adj} which must represent a complete graph on nodes numbered from 0 to \inlinecode{adj.size() - 1}.
 \end{compactitem}
+
+Since this implementation uses bitmasks with signed 32-bit integers, the maximum number of nodes must be less than 31.
 
 \textbf{Time Complexity}: $O(2^{n} \cdot n^{2})$ per call to \inlinecode{shortest\_hamiltonian\_cycle()}, where $n$ is the number of nodes.
 
@@ -4250,11 +4328,15 @@ The shortest hamiltonian cycle has length 5.
 Take the path: 0->3->2->4->1->0.
 \end{exampleoutput}
 \subsection{Shortest Hamiltonian Path}
-Given a complete weighted, directed graph, determine a path of minimum total distance which visits each node exactly once. Unlike the traveling salesman problem, we do not have to return to the starting vertex. Since this implementation uses bitmasks with signed 32-bit integers, the maximum number of nodes must be less than 31.
+Given a complete weighted, directed graph, determine a path of minimum total distance which visits each node exactly once. Unlike the traveling salesman problem, we do not have to return to the starting vertex.
+
+It uses the same Held-Karp subset dynamic program as the traveling salesman cycle, where \inlinecode{dp[S][i]} is the shortest path visiting exactly the nodes in \inlinecode{S} and ending at node \inlinecode{i}. The answer is the minimum over all end nodes for the full set, with no return edge added.
 
 \begin{compactitem}
   \item \inlinecode{shortest\_hamiltonian\_path()} populates \inlinecode{order} and returns minimum path length for a global, pre-populated adjacency matrix \inlinecode{adj} which must represent a complete directed graph on nodes numbered from 0 to \inlinecode{adj.size() - 1}.
 \end{compactitem}
+
+Since this implementation uses bitmasks with signed 32-bit integers, the maximum number of nodes must be less than 31.
 
 \textbf{Time Complexity}: $O(2^{n} \cdot n^{2})$ per call to \inlinecode{shortest\_hamiltonian\_path()}, where $n$ is the number of nodes.
 

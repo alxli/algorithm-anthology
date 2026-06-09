@@ -5,9 +5,17 @@ connected node and determine the minimum distance to each such node. Optionally,
 path to a specific destination node using the shortest-path tree from the predecessor array
 `pred`.
 
+Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative distance using a
+priority queue and relaxes its outgoing edges. Because the weights are nonnegative, a node's
+distance is final the first time it is removed from the queue.
+
 - `dijkstra(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj`
   which must consist of nodes numbered from 0 to `adj.size() - 1`. Each edge is stored as
   `(neighbor, weight)`, where `weight` is nonnegative.
+
+For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
+`start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
+destination to `start`, then reverse that sequence to recover the path.
 
 Dijkstra's algorithm requires nonnegative edge weights. Use Bellman-Ford or SPFA instead when
 negative edges are present.
@@ -88,8 +96,8 @@ void print_path(int dest) {
 }
 
 int main() {
-  int nodes = 4, start = 0, dest = 3;
-  adj.assign(nodes, {});
+  int start = 0, dest = 3;
+  adj.assign(4, {});
   adj[0].push_back({1, 2});
   adj[0].push_back({3, 8});
   adj[1].push_back({2, 2});

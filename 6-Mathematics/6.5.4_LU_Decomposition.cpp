@@ -18,8 +18,8 @@ solutions.
   and upper triangular matrices should be accessed via the `getl(lu, i, j)` and `getu(lu, i, j)`
   functions. Optionally, a `vector<int>` pointer `p1col` may be passed to return the permutation
   vector `p1col` where `p1col[i]` stores the only column that is equal to 1 in row $i$ of the
-  permutation matrix $P$ (all other columns in row $i$ of $P$ are implicitly 0). The resulting $P$
-  corresponds to `p1col` will satisfy $P$`a` = `lu`.
+  permutation matrix $P$ (all other columns in row $i$ of $P$ are implicitly 0). The permutation
+  matrix $P$ corresponding to `p1col` satisfies $P a = lu$.
 - `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an $r$ by $c$ matrix
   `a` of real values, and a length $r$ vector `b`, returning 0 if there is one solution or $-1$ if
   there are zero or infinite solutions. If there is exactly one solution, then the vector pointed to
@@ -31,11 +31,11 @@ solutions.
 Time Complexity:
 - O(r^2*c) per call to `lu_decompose(a)` and `solve_system(a, b)`, where $r$ and $c$ are the number
   of rows and columns respectively, in accordance to the functions' descriptions above.
-- O(n^3) per call to `det(a)` and `inverse(a)`, where $n$ is the dimension of `a`.
+- O(n^3) per call to `det(a)` and `invert(a)`, where $n$ is the dimension of `a`.
 
 Space Complexity:
 - O(1) auxiliary for `lu_decompose()`.
-- O(n^2) for `det(a)` and `inverse(a)`.
+- O(n^2) for `det(a)` and `invert(a)`.
 - O(r*c) auxiliary heap space for `solve_system(a, b)`.
 
 */

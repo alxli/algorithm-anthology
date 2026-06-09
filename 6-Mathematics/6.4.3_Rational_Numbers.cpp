@@ -14,6 +14,8 @@ arithmetic cross-multiply numerators and denominators, so instantiate with a wid
   by the numerator, followed by a slash, followed by the denominator.
 - `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the rational `v`
   converted to an `std::string`, `long long`, `double`, and `long double` respectively.
+- `v.abs()`, `abs(v)`, `v.floor()`, and `v.ceil()` return the absolute value, floor, and ceiling of
+  rational `v`.
 - Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
   `/=`, and `%=` are defined analogous to those on numerical primitives.
 

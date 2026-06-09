@@ -4,6 +4,11 @@ Maintain a set of two-dimensional points while supporting queries for all points
 given rectangular regions. This implementation uses `std::pair` to represent points, requiring
 operators `<` and `==` to be defined on the numeric template type.
 
+Use this for static point-reporting queries when guaranteed worst-case bounds are more important
+than memory. Compared with a range k-d tree, it uses more space but gives O(log^2(n) + m) query time
+regardless of point distribution; the k-d tree is lighter and often faster on typical inputs, but
+its pruning is more distribution-dependent.
+
 - `RangeTree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
   `[lo, hi)` of points.
 - `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point in the set that falls into

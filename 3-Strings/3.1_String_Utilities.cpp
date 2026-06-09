@@ -187,11 +187,10 @@ Joining and Splitting:
 
 - `join(v, delim)` returns the strings in vector `v` concatenated, separated by the given delimiter.
 - `split(s, char delim)` returns a vector of tokens of `s`, split on a single character delimiter.
-  Note that this version will not skip empty tokens. For example, `split("a::b", ":")` returns
-  `{"a", "b"}`, not `{"a", "", "b"}`.
+  Empty tokens are skipped, so `split("a::b", ':')` returns `{"a", "b"}`, not `{"a", "", "b"}`.
 - `split(s, string delim)` returns a vector of tokens of `s`, split on a set of many possible single
   character delimiters. All characters of `delim` will be removed from `s`, and the remaining
-  token(s) of `s` will be added sequentially to a vector and returned. Unlike the first version,
+  token(s) of `s` will be added sequentially to a vector and returned. As with the first version,
   empty tokens are skipped. For example, `split("a::b", ":")` returns `{"a", "b"}`, not
   `{"a", "", "b"}`.
 - `explode(s, delim)` returns a vector of tokens of `s`, split on the entire delimiter string
@@ -215,7 +214,9 @@ std::vector<string> split(const string &s, char delim) {
   std::stringstream ss(s);
   string curr;
   while (std::getline(ss, curr, delim)) {
-    res.push_back(curr);
+    if (!curr.empty()) {
+      res.push_back(curr);
+    }
   }
   return res;
 }
@@ -277,6 +278,7 @@ int main() {
   assert(replace("abcdabba", "ab", "00") == "00cd00ba");
 
   assert(join(split("a\nb\ncde\nf", '\n'), "|") == "a|b|cde|f");  // split v1
+  assert(join(split("a::b", ':'), "|") == "a|b");                 // split v1 skips empty tokens
   assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");   // split v2
   assert(join(explode("a..b.cde....f", ".."), "|") == "a|b.cde||f");
   return 0;

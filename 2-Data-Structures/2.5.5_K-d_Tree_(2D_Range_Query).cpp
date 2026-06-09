@@ -7,6 +7,10 @@ subtree, allowing whole subtrees to be accepted or pruned during a query.
 This implementation uses `std::pair` to represent points, requiring operators `<` and `==` to be
 defined on the numeric template type.
 
+Use this for static point-reporting queries when O(n) space and good average performance are more
+important than a strict worst-case guarantee. Use the 2D range tree instead when adversarial point
+sets or query rectangles are expected and the extra O(n log n) space is acceptable.
+
 - `RangeKDTree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a range
   `[lo, hi)` of points.
 - `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point in the set that falls into

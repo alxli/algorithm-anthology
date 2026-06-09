@@ -8,6 +8,10 @@ weights are negative.
   `(neighbor, weight)`. The function returns `false` if it detects a reachable negative cycle, and
   returns `true` otherwise.
 
+For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
+`start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
+destination to `start`, then reverse that sequence to recover the path.
+
 The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford. It is often fast
 on benign inputs, but it still has Bellman-Ford's worst-case behavior and can be forced to run in
 O(n*m). Prefer Dijkstra for nonnegative weights, and use SPFA mainly when negative edges are present

@@ -1,9 +1,12 @@
 /*
 
-Given an undirected graph, `max_clique()` returns the size of the maximum clique, that is, the
-largest subset of nodes such that all pairs of nodes in the subset are connected by an edge.
-`max_clique_weighted()` additionally uses a global array `w` specifying a weight value for each
-node, returning the clique in the graph that has maximum total weight.
+Given an undirected graph, determine a maximum clique: a largest subset of nodes in which every pair
+is connected by an edge. A weighted variant instead seeks the clique of maximum total node weight,
+given a weight for each node.
+
+The Bron-Kerbosch algorithm recursively extends a growing clique, tracking the set of candidate
+nodes that may still be added and the set of nodes already excluded. Choosing a pivot node to avoid
+branching on its neighbors prunes large parts of the search, keeping it efficient on most graphs.
 
 - `max_clique()` returns the maximum clique size for a global, bidirectionally pre-populated
   adjacency matrix `adj` which must consist of nodes numbered from 0 to `adj.size() - 1`.

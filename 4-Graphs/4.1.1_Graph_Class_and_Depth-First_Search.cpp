@@ -6,11 +6,25 @@ efficient representation that is also time-efficient for traversals.
 
 The following class implements a simple graph using adjacency lists, along with depth-first search
 and a few other applications. The constructor takes a Boolean argument which specifies whether the
-instance is a directed or undirected graph. The nodes of the graph are identified by integers
-indices numbered consecutively starting from 0. The total number of nodes will automatically
-increase based on the maximum node index passed to `add_edge()` so far. For undirected graphs,
-`has_cycle()` assumes a simple graph; parallel edges are not distinguished from the tree edge back
-to the parent.
+instance is a directed or undirected graph. The nodes of the graph are identified by integer indices
+numbered consecutively starting from 0. The total number of nodes automatically increases based on
+the maximum node index passed to `add_edge()` so far.
+
+- `Graph(directed)` constructs an empty graph, directed if `directed` is true (the default) and
+  undirected otherwise.
+- `nodes()` returns the current number of nodes.
+- `operator[](n)` returns a reference to the adjacency list (a `std::vector<int>`) of node `n`.
+- `add_edge(u, v)` adds an edge from `u` to `v`, plus the reverse edge if the graph is undirected,
+  growing the node count to accommodate the larger index if necessary.
+- `dfs(start, f)` runs a depth-first search from node `start`, calling `f(n)` on each node `n` in
+  the order it is first visited.
+- `has_cycle()` returns whether the graph contains a cycle.
+- `is_directed()` returns whether the graph is directed.
+- `is_forest()` returns whether the graph is undirected and acyclic.
+- `is_dag()` returns whether the graph is directed and acyclic.
+
+For undirected graphs, `has_cycle()` assumes a simple graph; parallel edges are not distinguished
+from the tree edge back to the parent.
 
 Time Complexity:
 - O(1) amortized per call to `add_edge()`, or O(max(n, m)) for $n$ calls where the maximum node

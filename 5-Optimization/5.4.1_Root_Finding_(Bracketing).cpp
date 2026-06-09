@@ -5,7 +5,7 @@ intermediate value theorem, a root must exist in $[a, b]$ if the signs of $f(a)$
 The answer is found with an absolute error of roughly $1 / 2^n$, where $n$ is the number of
 iterations. Although it is possible to control the error by looping while $b - a$ is greater than an
 arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until
-floating point arithmetic break down. 100 iterations is usually sufficient, since the search space
+floating point arithmetic breaks down. 100 iterations is usually sufficient, since the search space
 will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
 
 - `bisection_root(f, a, b)` returns a root in an interval `[a, b]` for a continuous function $f$

@@ -8,12 +8,19 @@ connected component of the implication graph.
 Variables are numbered from $0$ to $n - 1$. A literal is represented by `literal(variable, value)`,
 where `value == true` means the variable itself and `value == false` means its negation.
 
+- `TwoSAT(n)` constructs an empty formula over `n` variables.
+- `init(n)` clears the formula and resets it to `n` variables.
+- `literal(variable, value)` returns the integer ID for a variable or its negation.
+- `add_implication(a, b)` adds the implication $a \rightarrow b$.
 - `add_or(a, b)` adds the clause $(a \lor b)$.
 - `add_true(a)` forces literal `a` to be true.
+- `add_false(a)` forces literal `a` to be false.
 - `satisfiable()` returns whether all added clauses can be satisfied and stores one valid assignment
   in `answer`.
 
 Time Complexity:
+- O(n) per call to the constructor or `init(n)`, where $n$ is the number of variables.
+- O(1) per call to `literal()`, `add_implication()`, `add_or()`, `add_true()`, and `add_false()`.
 - O(max(n, m)) per call to `satisfiable()`, where $n$ is the number of variables and $m$ is the
   number of clauses.
 

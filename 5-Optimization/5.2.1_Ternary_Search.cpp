@@ -3,6 +3,10 @@
 Given a unimodal function `f(x)` taking a single `double` argument, find its global maximum or
 minimum point to a specified absolute error.
 
+Ternary search evaluates the function at two interior points of the current interval and discards
+the outer third on the side that cannot contain the optimum, shrinking the interval by a constant
+factor each step until it is within the target error.
+
 - `ternary_search_min()` takes the domain `[lo, hi]` of a continuous function `f(x)` and returns a
   number `x` such that `f` is strictly decreasing on the interval `[lo, x]` and strictly increasing
   on the interval `[x, hi]`. For the function to be correct and deterministic, such an `x` must

@@ -285,7 +285,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Line}
-A straight line in two dimensions, templated on the coordinate type \inlinecode{T} (default \inlinecode{double}). The line $ax + by + c = 0$ is stored UN-normalized, so a line through integer points keeps the integer coefficients: \inlinecode{a = q.y - p.y}, \inlinecode{b = p.x - q.x}, \inlinecode{c = -(a*p.x + b*p.y)}. Storage and the exact predicates \inlinecode{contains()}, \inlinecode{is\_parallel()}, and \inlinecode{is\_perpendicular()} therefore stay exact for integer \inlinecode{T}. The inherently-fractional operations \inlinecode{slope()}, \inlinecode{x()}, and \inlinecode{y()} return \inlinecode{fp\_t}, which is \inlinecode{double} when \inlinecode{T} is integral and \inlinecode{T} itself otherwise.
+A straight line in two dimensions, templated on the coordinate type \inlinecode{T} (default \inlinecode{double}). The line $ax + by + c = 0$ is stored unnormalized, so a line through integer points keeps the integer coefficients: \inlinecode{a = q.y - p.y}, \inlinecode{b = p.x - q.x}, \inlinecode{c = -(a*p.x + b*p.y)}. Storage and the exact predicates \inlinecode{contains()}, \inlinecode{is\_parallel()}, and \inlinecode{is\_perpendicular()} therefore stay exact for integer \inlinecode{T}. The inherently-fractional operations \inlinecode{slope()}, \inlinecode{x()}, and \inlinecode{y()} return \inlinecode{fp\_t}, which is \inlinecode{double} when \inlinecode{T} is integral and \inlinecode{T} itself otherwise.
 
 Because coefficients are not normalized to a canonical form, \inlinecode{operator==} compares lines by proportionality (whether they are the same geometric line) rather than by coefficient equality.
 
@@ -453,11 +453,26 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Circle}
-A circle in two dimensions supporting epsilon comparisons. The circle centered at $(h, k)$ is represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a non-negative number. Operations include constructing a circle from a line segment, constructing a circumcircle, checking if a point falls inside the circle with \inlinecode{contains()} or on its edge with \inlinecode{on\_edge()}, and constructing an incircle with \inlinecode{incircle()}.
+A circle in two dimensions supporting epsilon comparisons. The circle centered at $(h, k)$ is represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a non-negative number.
 
 Circle is floating-point by nature (the radius requires a square root), so it always stores and computes in \inlinecode{double}. The center of a circumcircle is rational and the radius irrational even for integer inputs, so there is no exact integer \inlinecode{Circle} to store; instead, every point-accepting constructor and predicate is templated on the point type \inlinecode{Pt} and only reads \inlinecode{.x}/ \inlinecode{.y}, accepting \inlinecode{Point}/ \inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x}/ \inlinecode{.y} fields.
 
-When exact integer reasoning about a circumcircle is needed, use \inlinecode{in\_circumcircle(a, b, c, d)}, which tests whether \inlinecode{d} lies inside the circle through \inlinecode{a}, \inlinecode{b}, \inlinecode{c} using a determinant (no square root) and is therefore exact for integer coordinates without ever building a \inlinecode{Circle}.
+\begin{compactitem}
+  \item \inlinecode{Circle()} constructs the zero-radius circle centered at the origin.
+  \item \inlinecode{Circle(r)} constructs a circle of radius \inlinecode{abs(r)} centered at the origin.
+  \item \inlinecode{Circle(h, k, r)} constructs a circle of radius \inlinecode{abs(r)} centered at \inlinecode{(h, k)}.
+  \item \inlinecode{Circle(o, r)} constructs a circle of radius \inlinecode{abs(r)} centered at point \inlinecode{o}.
+  \item \inlinecode{Circle(a, b)} constructs the circle whose diameter is segment \inlinecode{a}-\inlinecode{b}.
+  \item \inlinecode{Circle(a, b, c)} constructs the circumcircle through non-collinear points \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}.
+  \item \inlinecode{Circle(a, b, r)} constructs one circle of radius \inlinecode{abs(r)} passing through points \inlinecode{a} and \inlinecode{b}, throwing if the inputs admit no finite circle.
+  \item \inlinecode{operator==} and \inlinecode{operator!=} compare centers and radii using \inlinecode{EPS}.
+  \item \inlinecode{contains(p)} returns whether point \inlinecode{p} lies inside or on the circle.
+  \item \inlinecode{on\_edge(p)} returns whether point \inlinecode{p} lies on the circle boundary.
+  \item \inlinecode{incircle(a, b, c)} returns the circle inscribed inside triangle \inlinecode{abc}.
+  \item \inlinecode{in\_circumcircle(a, b, c, d)} returns 1 if \inlinecode{d} lies strictly inside the circle through \inlinecode{a}, \inlinecode{b}, and \inlinecode{c}, 0 if it lies on the circle, or $-1$ if it lies outside.
+\end{compactitem}
+
+When exact integer reasoning about a circumcircle is needed, use \inlinecode{in\_circumcircle(a, b, c, d)}, which tests whether \inlinecode{d} lies inside the circle through \inlinecode{a}, \inlinecode{b}, \inlinecode{c} using a determinant (no square root) and is therefore exact for integer coordinates without ever building a \inlinecode{Circle}. The determinant has degree four in the coordinate magnitude, so use a wider coordinate type for large integer inputs.
 
 \textbf{Time Complexity}: $O(1)$ per call to the constructors and all other operations.
 
@@ -656,7 +671,7 @@ Note: with an integer point type, coordinates must be integers - fractional lite
 
 \begin{compactitem}
   \item \inlinecode{triangle\_area(a, b, c)} returns the area of the triangle $abc$.
-  \item \inlinecode{triangle\_area\_sides(s1, s2, s3)} returns the area of a triangle with side lengths \inlinecode{s1}, \inlinecode{s2}, and \inlinecode{s\_3}. The given lengths must be non-negative and form a valid triangle.
+  \item \inlinecode{triangle\_area\_sides(s1, s2, s3)} returns the area of a triangle with side lengths \inlinecode{s1}, \inlinecode{s2}, and \inlinecode{s3}. The given lengths must be non-negative and form a valid triangle.
   \item \inlinecode{triangle\_area\_medians(m1, m2, m3)} returns the area of a triangle with medians of lengths \inlinecode{m1}, \inlinecode{m2}, and \inlinecode{m3}. The median of a triangle is a line segment joining a vertex to the midpoint of the opposing edge.
   \item \inlinecode{triangle\_area\_altitudes(h1, h2, h3)} returns the area of a triangle with altitudes \inlinecode{h1}, \inlinecode{h2}, and \inlinecode{h3}. An altitude of a triangle is the shortest line between a vertex and the infinite line that is extended from its opposite edge.
   \item \inlinecode{same\_side(p1, p2, a, b)} returns whether points \inlinecode{p1} and \inlinecode{p2} lie on the same side of the line containing points \inlinecode{a} and \inlinecode{b}. If one or both points lie exactly on the line, then the result will depend on the setting of \inlinecode{EDGE\_IS\_SAME\_SIDE}.
@@ -760,7 +775,7 @@ Common rectangle calculations in two dimensions. The functions are templated on 
 \begin{compactitem}
   \item \inlinecode{point\_in\_rectangle(p, v, w, h)} returns whether point \inlinecode{p} lies within the rectangle defined by a vertex \inlinecode{v}, a width of \inlinecode{w}, and a height of \inlinecode{h}. Note that negative widths and heights are supported. If the point lies on or close to an edge (by roughly \inlinecode{EPS}), then the result will depend on the setting of \inlinecode{EDGE\_IS\_INSIDE}.
   \item \inlinecode{point\_in\_rectangle(p, a, b)} returns whether point \inlinecode{p} lies within the rectangle with opposing vertices \inlinecode{a} and \inlinecode{b}. If the point lies on or close to an edge (by roughly \inlinecode{EPS}), then the result will depend on the setting of \inlinecode{EDGE\_IS\_INSIDE}.
-  \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q)} determines the intersection region of the rectangle with opposing vertices \inlinecode{a\_1} and \inlinecode{b\_1} and the rectangle with opposing vertices \inlinecode{a\_2} and \inlinecode{b\_2}. Returns $-1$ if the rectangles are completely disjoint, 0 if the rectangles partially intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle is completely inside the first. If there is an intersection, the lower-left and upper-right vertices of the normalized intersection rectangle will be stored into pointers \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}. If the intersection is a single point or line segment, then the result will depend on the setting of \inlinecode{EDGE\_IS\_INSIDE} within \inlinecode{point\_in\_rectangle()}.
+  \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q)} determines the intersection region of the rectangle with opposing vertices \inlinecode{a1} and \inlinecode{b1} and the rectangle with opposing vertices \inlinecode{a2} and \inlinecode{b2}. Returns $-1$ if the rectangles are completely disjoint, 0 if the rectangles partially intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle is completely inside the first. If there is an intersection, the lower-left and upper-right vertices of the normalized intersection rectangle will be stored into pointers \inlinecode{p} and \inlinecode{q} if they are not \inlinecode{nullptr}. If the intersection is a single point or line segment, then the result will depend on the setting of \inlinecode{EDGE\_IS\_INSIDE} within \inlinecode{point\_in\_rectangle()}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(1)$ for all operations.
@@ -1643,7 +1658,7 @@ Given a list of distinct points in two-dimensions, order them into a valid polyg
   \item \inlinecode{mean\_center(lo, hi)} returns the arithmetic mean of a range of points (as the local \inlinecode{Point} type with \inlinecode{double} coordinates).
   \item \inlinecode{cw\_comp(a, b, c)} returns whether point \inlinecode{a} compares clockwise before \inlinecode{b} about \inlinecode{c}.
   \item \inlinecode{CWComparator(c)} / \inlinecode{CCWComparator(c)} return comparators for \inlinecode{std::sort}.
-  \item \inlinecode{polygon\_area\_2x(lo, hi)} returns exactly double the area of the polygon with vertices specified by the input range \inlinecode{[lo, hi)}. The return value is integral or floating-point, depending on the input point type). For integer vertices, divide by 2 in the caller if the exact area is needed.
+  \item \inlinecode{polygon\_area\_2x(lo, hi)} returns exactly double the area of the polygon with vertices specified by the input range \inlinecode{[lo, hi)}. The return value is integral or floating-point, depending on the input point type. For integer vertices, divide by 2 in the caller if the exact area is needed.
   \item \inlinecode{polygon\_area(lo, hi)} returns the area as \inlinecode{double}.
 \end{compactitem}
 
@@ -2827,9 +2842,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Delaunay Triangulation (Simple)}
-Given a set $P$ of two dimensional points, the Delaunay triangulation of $P$ is a set of non-overlapping triangles that covers the entire convex hull of $P$ such that no point in $P$ lies within the circumcircle of any of the resulting triangles. For any point $p$ in the convex hull of $P$ (but not necessarily in $P$), the nearest point is guaranteed to be a vertex of the enclosing triangle from the triangulation.
+Given a set $P$ of two-dimensional points, the Delaunay triangulation of $P$ is a set of non-overlapping triangles that covers the entire convex hull of $P$ such that no point in $P$ lies within the circumcircle of any of the resulting triangles. For any point $p$ in the convex hull of $P$ (but not necessarily in $P$), the nearest point is guaranteed to be a vertex of the enclosing triangle from the triangulation.
 
-The triangulation may not exist (e.g. for a set of collinear points), or may not be unique if it does exist. The following program assumes its existence and produces one such valid result using a simple algorithm which encases each triangle in a circle and rejects the triangle if another point in the tessellation is within the generalized circle.
+The triangulation may not exist (e.g. for a set of collinear points), or may not be unique if it does exist. This implementation produces one valid result using a simple algorithm which encases each triangle in a circle and rejects the triangle if another point in the tessellation is within the generalized circle.
 
 \begin{compactitem}
   \item \inlinecode{delaunay\_triangulation(lo, hi)} returns a Delaunay triangulation for the input range \inlinecode{[lo, hi)} of points, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators, or an empty vector if a triangulation does not exist.
@@ -2986,7 +3001,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Delaunay Triangulation (Guibas-Stolfi)}
-Given a set $P$ of two dimensional points, the Delaunay triangulation of $P$ is a set of non-overlapping triangles that covers the entire convex hull of $P$ such that no point in $P$ lies within the circumcircle of any of the resulting triangles. For any point $p$ in the convex hull of $P$ (but not necessarily in $P$), the nearest point is guaranteed to be a vertex of the enclosing triangle from the triangulation.
+Given a set $P$ of two-dimensional points, the Delaunay triangulation of $P$ is a set of non-overlapping triangles that covers the entire convex hull of $P$ such that no point in $P$ lies within the circumcircle of any of the resulting triangles. For any point $p$ in the convex hull of $P$ (but not necessarily in $P$), the nearest point is guaranteed to be a vertex of the enclosing triangle from the triangulation.
 
 The triangulation may not exist (e.g. for a set of collinear points), or may not be unique if it does exist. The following program produces one such valid result using the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data structure. A full description is available in the original paper: https://people.eecs.berkeley.edu/\textasciitilde{}jrs/meshpapers/GuibasStolfi.pdf
 

@@ -7,9 +7,9 @@
 Binary search can be generally used to find the input value corresponding to any output value of a monotonic (strictly non-increasing or strictly non-decreasing) function in $O(\log n)$ time with respect to the domain size. This is a special case of finding the exact point at which any given monotonic Boolean function changes from true to false or vice versa. Unlike searching through an array, discrete binary search is not restricted by available memory, making it useful for handling infinitely large search spaces such as real number intervals.
 
 \begin{compactitem}
-  \item \inlinecode{binary\_search\_first\_true(lo, hi)} takes integer boundaries for the search space \inlinecode{[lo, hi)} (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the smallest integer \inlinecode{k} in \inlinecode{[lo, hi)} for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly empty) suffix. E.g., patterns \inlinecode{"01"}, \inlinecode{"00"}, and \inlinecode{"11"} are allowed, but \inlinecode{"10"} is disallowed.
-  \item \inlinecode{binary\_search\_last\_true()} takes integer boundaries for the search space \inlinecode{[lo, hi)} (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the largest integer \inlinecode{k} in \inlinecode{[lo, hi)} for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all true for some (possibly empty) prefix, followed by all false in some (possibly empty) suffix. E.g., patterns \inlinecode{"10"}, \inlinecode{"00"}, and \inlinecode{"11"} are allowed, but \inlinecode{"01"} is disallowed.
-  \item \inlinecode{fbinary\_search()} is the equivalent of \inlinecode{binary\_search\_first\_true()} on floating point predicates. Since any interval of real numbers is dense, the exact target cannot be found due to floating point error. Instead, a value that is very close to the border between false and true is returned. The precision of the answer depends on the number of repetitions the function performs. Since each repetition bisects the search space, the absolute error of the answer is $1/(2^n)$ times the distance between \inlinecode{lo} and \inlinecode{hi} after n repetitions. Although it is possible to control the error by looping while \inlinecode{hi - lo} is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic break down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size. This implementation can be modified to find the ``last true'' point in the range by simply interchanging the assignments of \inlinecode{lo} and \inlinecode{hi} in the if-else statements.
+  \item \inlinecode{binary\_search\_first\_true(lo, hi, pred)} takes integer boundaries for the search space \inlinecode{[lo, hi)} (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the smallest integer \inlinecode{k} in \inlinecode{[lo, hi)} for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly empty) suffix. E.g., patterns \inlinecode{"01"}, \inlinecode{"00"}, and \inlinecode{"11"} are allowed, but \inlinecode{"10"} is disallowed.
+  \item \inlinecode{binary\_search\_last\_true(lo, hi, pred)} takes integer boundaries for the search space \inlinecode{[lo, hi)} (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the largest integer \inlinecode{k} in \inlinecode{[lo, hi)} for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all true for some (possibly empty) prefix, followed by all false in some (possibly empty) suffix. E.g., patterns \inlinecode{"10"}, \inlinecode{"00"}, and \inlinecode{"11"} are allowed, but \inlinecode{"01"} is disallowed.
+  \item \inlinecode{fbinary\_search(lo, hi, pred)} is the equivalent of \inlinecode{binary\_search\_first\_true()} on floating point predicates. Since any interval of real numbers is dense, the exact target cannot be found due to floating point error. Instead, a value that is very close to the border between false and true is returned. The precision of the answer depends on the number of repetitions the function performs. Since each repetition bisects the search space, the absolute error of the answer is $1/(2^n)$ times the distance between \inlinecode{lo} and \inlinecode{hi} after n repetitions. Although it is possible to control the error by looping while \inlinecode{hi - lo} is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size. This implementation can be modified to find the ``last true'' point in the range by simply interchanging the assignments of \inlinecode{lo} and \inlinecode{hi} in the if-else statements.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -150,6 +150,8 @@ int main() {
 \subsection{Ternary Search}
 Given a unimodal function \inlinecode{f(x)} taking a single \inlinecode{double} argument, find its global maximum or minimum point to a specified absolute error.
 
+Ternary search evaluates the function at two interior points of the current interval and discards the outer third on the side that cannot contain the optimum, shrinking the interval by a constant factor each step until it is within the target error.
+
 \begin{compactitem}
   \item \inlinecode{ternary\_search\_min()} takes the domain \inlinecode{[lo, hi]} of a continuous function \inlinecode{f(x)} and returns a number \inlinecode{x} such that \inlinecode{f} is strictly decreasing on the interval \inlinecode{[lo, x]} and strictly increasing on the interval \inlinecode{[x, hi]}. For the function to be correct and deterministic, such an \inlinecode{x} must exist and be unique.
 \end{compactitem}
@@ -226,11 +228,15 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Hill Climbing}
-Given a continuous function \inlinecode{f(x, y)} to \inlinecode{double} and a (possibly arbitrary) starting guess \inlinecode{(x0, y0)}, return a potential global minimum found through hill-climbing. Optionally, two \inlinecode{double} pointers \inlinecode{critical\_x} and \inlinecode{critical\_y} may be passed to store the input points to \inlinecode{f} at which the returned minimum value is attained.
+Given a continuous function \inlinecode{f(x, y)} returning a \inlinecode{double} and a (possibly arbitrary) starting guess \inlinecode{(x0, y0)}, search for a global minimum using the hill-climbing heuristic.
 
 Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each of a fixed number of directions. The direction with the best (in this case, minimum) value is chosen, and further steps are taken in it until the answer no longer improves. When this happens, the step size is reduced and the same process repeats until a desired absolute error is reached. The technique's success heavily depends on the behavior of \inlinecode{f} and the initial guess. Therefore, the result is not guaranteed to be the global minimum.
 
-\textbf{Time Complexity}: $O(d \log n)$ call will be made to \inlinecode{f}, where $d$ is the number of directions considered at each position and $n$ is the search space that is approximately proportional to the maximum possible step size divided by the minimum possible step size.
+\begin{compactitem}
+  \item \inlinecode{find\_min(f, x0, y0, critical\_x, critical\_y)} returns a candidate global minimum value of \inlinecode{f} reached by hill-climbing from the starting guess \inlinecode{(x0, y0)}. If the optional pointers \inlinecode{critical\_x} and \inlinecode{critical\_y} are supplied, the point attaining the returned value is stored through them. The step-size bounds and number of directions sampled are additional optional parameters.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(d \log n)$ calls will be made to \inlinecode{f}, where $d$ is the number of directions considered at each position and $n$ is the search space that is approximately proportional to the maximum possible step size divided by the minimum possible step size.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -951,7 +957,7 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Root Finding (Bracketing)}
-Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(x) = 0$. By the intermediate value theorem, a root must exist in $[a, b]$ if the signs of $f(a)$ and $f(b)$ differ. The answer is found with an absolute error of roughly $1 / 2^n$, where $n$ is the number of iterations. Although it is possible to control the error by looping while $b - a$ is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic break down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
+Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(x) = 0$. By the intermediate value theorem, a root must exist in $[a, b]$ if the signs of $f(a)$ and $f(b)$ differ. The answer is found with an absolute error of roughly $1 / 2^n$, where $n$ is the number of iterations. Although it is possible to control the error by looping while $b - a$ is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
 
 \begin{compactitem}
   \item \inlinecode{bisection\_root(f, a, b)} returns a root in an interval \inlinecode{[a, b]} for a continuous function $f$ where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method.
@@ -1201,8 +1207,10 @@ int main() {
 \subsection{Polynomial Root Finding (Laguerre)}
 Finds every complex root $x$ for a polynomial $p$ with complex coefficients such that $p(x) = 0$ using Laguerre's method.
 
+Laguerre's method is a root-finding iteration with reliable, near-cubic convergence from almost any starting point. Once a root is found it is removed by polynomial deflation, and the iteration repeats on the lower-degree quotient until every root has been extracted.
+
 \begin{compactitem}
-  \item \inlinecode{horner\_eval(p, x)} evaluates the complex polynomial \inlinecode{p} of degree $d$ (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) at \inlinecode{x}, using Horner's method, returning a pair where the first value is a vector of sub-evaluations and the second value is the final result $p(x)$.
+  \item \inlinecode{horner\_eval(p, x)} evaluates the complex polynomial \inlinecode{p} of degree $d$ (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) at \inlinecode{x}, using Horner's method, returning a pair where the first value is the final result $p(x)$ and the second value is the quotient polynomial produced by synthetic division by $(X - x)$.
   \item \inlinecode{find\_one\_root(p, x0)} returns a complex root $x$ for a polynomial \inlinecode{p} (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) using an initial guess \inlinecode{x0} which should be relatively close to $x$. The root is found to a tolerance of \inlinecode{EPS} in absolute or relative error (whichever is reached first).
   \item \inlinecode{find\_all\_roots(p)} returns a vector of all complex roots for a complex polynomial \inlinecode{p}. The roots are found to a tolerance of \inlinecode{EPS} in absolute or relative error (whichever is reached first).
 \end{compactitem}
@@ -1219,7 +1227,7 @@ Finds every complex root $x$ for a polynomial $p$ with complex coefficients such
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary heap space and $O(1)$ auxiliary stack space for \inlinecode{horner\_eval()} and \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial.
-  \item $O(n)$ auxiliary heap and $O(1)$ auxiliary stack space per for \inlinecode{find\_one\_root()} and \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial.
+  \item $O(n)$ auxiliary heap and $O(1)$ auxiliary stack space for \inlinecode{find\_one\_root()} and \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -1362,7 +1370,7 @@ This routine is intended for well-scaled polynomials when all complex roots are 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{eval\_with\_derivative(p, x)}, where $n$ is the degree of the polynomial.
-  \item $O(n^{2} p)$ per call to \inlinecode{find\_all\_roots(p, EPS, ITERATIONS)}, where $n$ is the degree of the polynomial and $p$ is the number of iterations required to reach the desired precision.
+  \item $O(n^{2} t)$ per call to \inlinecode{find\_all\_roots(p, EPS, ITERATIONS)}, where $n$ is the degree of the polynomial and $t$ is the number of iterations required to reach the desired precision.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1626,6 +1634,8 @@ int main() {
 \end{lstlisting}
 \subsection{Linear Programming (Simplex)}
 Solves a linear programming problem using Dantzig's simplex algorithm. The canonical form of a linear programming problem is to maximize (or minimize) the dot product $cx$, subject to $ax \leq b$ and $x \geq 0$, where $x$ is a vector of unknowns to be solved, $c$ is a vector of coefficients, $a$ is a matrix of linear equation coefficients, and $b$ is a vector of boundary coefficients.
+
+The simplex algorithm walks between vertices of the feasible polytope, at each step pivoting to an adjacent vertex that improves the objective, until no improving move remains (an optimum is reached) or an unbounded improving direction is found.
 
 \begin{compactitem}
   \item \inlinecode{simplex\_solve(a, b, c, \&x)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning 0 if an optimum was found, $-1$ if there are no feasible solutions, or 1 if the objective is unbounded. If an optimum is found, then the vector pointed to by \inlinecode{x} is populated with a dense solution vector.

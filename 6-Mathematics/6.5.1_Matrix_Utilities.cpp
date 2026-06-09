@@ -34,8 +34,8 @@ Time Complexity:
 - O(n*m) for construction, output, comparison, and scalar arithmetic of $n$ by $m$ matrices.
 - O(1) for `rows(a)` and `columns(a)`.
 - O(n*m) for matrix-matrix addition and subtraction of $n$ by $m$ matrices.
-- O(n*m*log(p)) for exponentiation of an $n$ by $m$ matrix to power $p$.
-- O(n*m*log^2(p)) for power sum of an $n$ by $m$ matrix to power $p$.
+- O(n^3 log p) for exponentiation of an $n$ by $n$ matrix to power $p$.
+- O(n^3 log p) for power sum of an $n$ by $n$ matrix to power $p$.
 - O(n*m*k) for multiplication of an $n$ by $m$ matrix by an $m$ by $k$ matrix.
 - O(n*m) for `transpose()`, `transpose_in_place()`, `rotate()`, and `rotate_in_place()` of $n$ by
   $m$ matrices.
@@ -43,8 +43,8 @@ Time Complexity:
 Space Complexity:
 - O(1) auxiliary space for `rows()`, `columns()`, `a[i][j]` access, comparison operators, and
   in-place operations.
-- O(n*m*log(p)) auxiliary stack and heap space for exponentiation of an $n$ by $m$ matrix to power
-  $p$, as well as the power sum of an $n$ by $m$ matrix up to power $p$.
+- O(n^2 log p) auxiliary stack and heap space for exponentiation of an $n$ by $n$ matrix to power
+  $p$, as well as the power sum of an $n$ by $n$ matrix up to power $p$.
 - O(n*m) auxiliary heap space for all non-in-place operations returning an $n$ by $m$ matrix,
   `transpose()`, and `rotate()`.
 

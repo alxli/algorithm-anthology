@@ -6,7 +6,15 @@
 \subsection{Sorting Algorithms}
 These functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a range \inlinecode{[lo, hi)} to be sorted. Elements between \inlinecode{lo} and \inlinecode{hi} (including the element pointed to by \inlinecode{lo} but excluding the element pointed to by \inlinecode{hi}) will be sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
 
-These functions are not meant to compete with standard library implementations in terms of speed. Instead, they are meant to demonstrate how common sorting algorithms can be concisely implemented in C++.
+\begin{compactitem}
+  \item \inlinecode{quicksort(lo, hi)} sorts the range using quicksort.
+  \item \inlinecode{mergesort(lo, hi)} sorts the range using merge sort, which is stable.
+  \item \inlinecode{heapsort(lo, hi)} sorts the range using heapsort.
+  \item \inlinecode{combsort(lo, hi)} sorts the range using comb sort.
+  \item \inlinecode{radix\_sort(lo, hi)} sorts the range using least-significant-byte radix sort.
+\end{compactitem}
+
+\inlinecode{radix\_sort()} is the exception to the shared interface above: it takes no comparator and requires an integer value type. These functions are not meant to compete with standard library implementations in terms of speed. Instead, they are meant to demonstrate how common sorting algorithms can be concisely implemented in C++.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -335,11 +343,17 @@ combsort():   0.827s
 radix_sort(): 0.076s
 \end{exampleoutput}
 \subsection{Array Rotation}
-These functions are equivalent to \inlinecode{std::rotate()}, taking three iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} (\inlinecode{lo} $\leq$ \inlinecode{mid} $\leq$ \inlinecode{hi}) to perform a left rotation on the range \inlinecode{[lo, hi)}. After the function call, \inlinecode{[lo, hi)} will consist of the concatenation of the elements originally in \inlinecode{[mid, hi)} + \inlinecode{[lo, mid)}. That is, the range \inlinecode{[lo, hi)} will be rearranged in such a way that the element at \inlinecode{mid} becomes the first element of the new range and the element at \inlinecode{mid - 1} becomes the last element, all while preserving the relative ordering of elements within the two rotated subarrays.
+These functions are equivalent to \inlinecode{std::rotate()}, taking three iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} (\inlinecode{lo} $\leq$ \inlinecode{mid} $\leq$ \inlinecode{hi}) to perform a left rotation on the range \inlinecode{[lo, hi)}. After the function call, \inlinecode{[lo, hi)} will consist of the concatenation of elements originally in \inlinecode{[mid, hi)} + \inlinecode{[lo, mid)}. That is, the range \inlinecode{[lo, hi)} will be rearranged in such a way that the element at \inlinecode{mid} becomes the first element of the new range and the element at \inlinecode{mid - 1} becomes the last element, all while preserving the relative ordering of elements within the two rotated subarrays.
 
-All three versions below achieve the same result using in-place algorithms. Version 1 uses a straightforward swapping algorithm requiring ForwardIterators. Version 2 requires BidirectionalIterators, employing a well-known trick with three simple inversions. Version 3 requires random-access iterators, applying a juggling algorithm which first divides the range into \inlinecode{gcd(hi - lo, mid - lo)} sets and then rotates the corresponding elements in each set.
+All three versions below achieve the same result using in-place algorithms.
 
-\textbf{Time Complexity}: $O(n)$ per call to both functions, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\begin{compactitem}
+  \item \inlinecode{rotate1(lo, mid, hi)} uses a straightforward swapping algorithm requiring ForwardIterators.
+  \item \inlinecode{rotate2(lo, mid, hi)} requires BidirectionalIterators, employing a well-known trick with three simple inversions.
+  \item \inlinecode{rotate3(lo, mid, hi)} requires random-access iterators, applying a juggling algorithm which first divides the range into \inlinecode{gcd(hi - lo, mid - lo)} sets and then rotates the corresponding elements in each set.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n)$ per call to all versions, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all versions
 
@@ -471,7 +485,7 @@ The number of inversions for a sequence \inlinecode{a} is the number of ordered 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log n)$ per call to \inlinecode{inversion(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n \log n)$ per call to \inlinecode{inversions(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
   \item $O(n \log n)$ per call to \inlinecode{inversions(a)}.
 \end{compactitem}
 
@@ -558,9 +572,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Coordinate Compression}
-Given two ForwardIterators as a range \inlinecode{[lo, hi)} of $n$ numerical elements, reassign each element in the range to an integer in $[0, k)$, where $k$ is the number of distinct elements in the original range, while preserving the initial relative ordering of elements. That is, if $a$ is the array of original values and $b$ is the array of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if and only if $b[i] < b[j]$.
+Given a range \inlinecode{[lo, hi)} of $n$ numerical elements, reassign each element to an integer in $[0, k)$, where $k$ is the number of distinct elements in the original range, while preserving the initial relative ordering of elements. That is, if $a$ is the array of original values and $b$ is the array of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if and only if $b[i] < b[j]$.
 
-Both implementations below require \inlinecode{operator\textless{}} to be defined on the iterator's value type. Version 1 performs the compression by sorting the array, removing duplicates, and binary searching for the position of each original value. Version 2 achieves the same result by inserting all values in a balanced binary search tree (\inlinecode{std::map}) which automatically removes duplicate values and supports efficient lookups of the compressed values.
+Both implementations below take the range as ForwardIterators and require \inlinecode{operator\textless{}} on the value type.
+
+\begin{compactitem}
+  \item \inlinecode{compress1(lo, hi)} performs the compression by sorting the array, removing duplicates, and binary searching for the position of each original value.
+  \item \inlinecode{compress2(lo, hi)} achieves the same result by inserting all values into a balanced binary search tree (\inlinecode{std::map}), which automatically removes duplicate values and supports efficient lookups of the compressed values.
+\end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call to either function, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -638,7 +657,11 @@ int main() {
 1 0 2 0 3 1
 \end{exampleoutput}
 \subsection{Selection (Quickselect)}
-\inlinecode{nth\_element2()} is equivalent to \inlinecode{std::nth\_element()}, taking random-access iterators \inlinecode{lo}, \inlinecode{nth}, and \inlinecode{hi} as the range \inlinecode{[lo, hi)} to be partially sorted. The values in \inlinecode{[lo, hi)} are rearranged such that the value pointed to by \inlinecode{nth} is the element that would be there if the range were sorted. Furthermore, the range is partitioned such that no value in \inlinecode{[lo, nth)} compares greater than the value pointed to by \inlinecode{nth} and no value in \inlinecode{(nth, hi)} compares less. This implementation requires \inlinecode{operator \textless{}} to be defined on the iterator's value type.
+Partially sort a range so that one chosen position ends up holding its final sorted element, like \inlinecode{std::nth\_element()}.
+
+\begin{compactitem}
+  \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges the range \inlinecode{[lo, hi)} such that the value pointed to by \inlinecode{nth} is the element that would be there if the range were fully sorted. Furthermore, the range is partitioned such that no value in \inlinecode{[lo, nth)} compares greater than the value pointed to by \inlinecode{nth} and no value in \inlinecode{(nth, hi)} compares less. Requires \inlinecode{operator\textless{}} on the iterator's value type.
+\end{compactitem}
 
 The pivot is chosen uniformly at random, and the partition step groups equal keys together so arrays with many duplicate values remain efficient.
 
@@ -1053,10 +1076,10 @@ A monotonic stack maintains its elements in sorted order as values are pushed, p
 All functions below take a vector \inlinecode{a} of \inlinecode{n} comparable values and return a vector of \inlinecode{n} indices. A ``less'' query uses a strictly smaller neighbor and a ``greater'' query uses a strictly larger one; changing the comparison from strict to non-strict (e.g. \inlinecode{\textgreater{}=} to \inlinecode{\textgreater{}}) toggles how ties are handled.
 
 \begin{compactitem}
-  \item \inlinecode{previous\_less(a)} returns, for each \inlinecode{i}, the largest index \inlinecode{j \textless{} i} with \inlinecode{a[j] \textless{} a[i]}, or \inlinecode{-1}.
-  \item \inlinecode{next\_less(a)} returns, for each \inlinecode{i}, the smallest index \inlinecode{j \textgreater{} i} with \inlinecode{a[j] \textless{} a[i]}, or \inlinecode{n}.
-  \item \inlinecode{previous\_greater(a)} returns, for each \inlinecode{i}, the largest index \inlinecode{j \textless{} i} with \inlinecode{a[j] \textgreater{} a[i]}, or \inlinecode{-1}.
-  \item \inlinecode{next\_greater(a)} returns, for each \inlinecode{i}, the smallest index \inlinecode{j \textgreater{} i} with \inlinecode{a[j] \textgreater{} a[i]}, or \inlinecode{n}.
+  \item \inlinecode{previous\_less(a)} returns, for each \inlinecode{i}, the largest index \inlinecode{j \textless{} i} with \inlinecode{a[j] \textless{} a[i]}, or $-1$ if there's no such index.
+  \item \inlinecode{next\_less(a)} returns, for each \inlinecode{i}, the smallest index \inlinecode{j \textgreater{} i} with \inlinecode{a[j] \textless{} a[i]}, or \inlinecode{n} if there's no such index.
+  \item \inlinecode{previous\_greater(a)} returns, for each \inlinecode{i}, the largest index \inlinecode{j \textless{} i} with \inlinecode{a[j] \textgreater{} a[i]}, or $-1$ if there's no such index.
+  \item \inlinecode{next\_greater(a)} returns, for each \inlinecode{i}, the smallest index \inlinecode{j \textgreater{} i} with \inlinecode{a[j] \textgreater{} a[i]}, or \inlinecode{n} if there's no such index.
   \item \inlinecode{largest\_rectangle(heights)} returns the maximum area of an axis-aligned rectangle that fits under the given histogram, where bar \inlinecode{i} has width 1 and height \inlinecode{heights[i]}.
 \end{compactitem}
 
@@ -1250,7 +1273,13 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Longest Increasing Subsequence}
-Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)}, determine a longest subsequence of the range such that all of its elements are in strictly ascending order. This implementation requires \inlinecode{operator\textless{}} to be defined on the iterator's value type. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. The answer is computed using binary search and dynamic programming.
+Given a range \inlinecode{[lo, hi)}, determine a longest subsequence of the range such that all of its elements are in strictly ascending order. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. This implementation requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
+
+The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence.
+
+\begin{compactitem}
+  \item \inlinecode{longest\_increasing\_subsequence(lo, hi)} returns a longest strictly increasing subsequence of \inlinecode{[lo, hi)} as a \inlinecode{std::vector} of the selected values, in order.
+\end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{longest\_increasing\_subsequence()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -1435,7 +1464,13 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Subset Sum (Meet-in-the-Middle)}
-Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of integers, return the maximum sum of any subset of the range that is at most a given integer \inlinecode{v}. This is a common meet-in-the-middle version of subset sum: enumerate subset sums for each half, sort one side, and binary search for the best compatible partner. Note that 64-bit integers are used in intermediate calculations to avoid overflow.
+Given a range \inlinecode{[lo, hi)} of integers, return the maximum sum of any subset of the range that is at most a given integer \inlinecode{v}. This is a common meet-in-the-middle version of subset sum: enumerate subset sums for each half, sort one side, and binary search for the best compatible partner.
+
+\begin{compactitem}
+  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, v)} returns the maximum sum of any subset of \inlinecode{[lo, hi)} that does not exceed \inlinecode{v}.
+\end{compactitem}
+
+The range is supplied as random-access iterators. 64-bit integers are used in intermediate calculations to avoid overflow.
 
 \textbf{Time Complexity}: $O(2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -1484,7 +1519,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Largest Zero Submatrix}
-Given a rectangular matrix with $n$ rows and $m$ columns consisting of only 0's and 1's as a two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of only 0's. This solution uses a reduction to the problem of finding the maximum rectangular area under a histogram, which is efficiently solved using a stack algorithm.
+Given a rectangular matrix with $n$ rows and $m$ columns consisting of only 0's and 1's as a two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of only 0's. This solution sweeps the rows from top to bottom, maintaining for each column the height of the run of 0's ending at the current row. Each row then reduces to finding the maximum rectangular area under a histogram, which is solved in linear time with a monotonic stack.
+
+\begin{compactitem}
+  \item \inlinecode{max\_zero\_submatrix(matrix)} returns the area of the largest all-zero rectangular submatrix of \inlinecode{matrix}, a two-dimensional vector of bool.
+\end{compactitem}
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{max\_zero\_submatrix()}, where $n$ is the number of rows and $m$ is the number of columns in the matrix.
 
@@ -1502,8 +1541,8 @@ int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
   int n = static_cast<int>(matrix.size()), m = static_cast<int>(matrix[0].size());
   int res = 0;
   // last1[c] = row index of the most recent 1 in column c (-1 if none yet).
-  // left_wall[c] = nearest column left of c whose last1 value >= last1[c] (exclusive left bound).
-  // right_wall[c] = nearest column right of c whose last1 value >= last1[c] (exclusive right bound).
+  // left_wall[c] = nearest col left of c whose last1 value >= last1[c] (exclusive left bound).
+  // right_wall[c] = nearest col right of c whose last1 value >= last1[c] (exclusive right bound).
   std::vector<int> last1(m, -1), left_wall(m), right_wall(m);
   for (int r = 0; r < n; r++) {
     for (int c = 0; c < m; c++) {
@@ -1810,8 +1849,7 @@ int main() {
 Selects a maximum-size subset of jobs that can all be completed by their deadlines. Each job has a processing time and deadline, and all jobs are available at time 0. The Moore-Hodgson algorithm sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the schedule becomes late, it removes the longest accepted job.
 
 \begin{compactitem}
-  \item \inlinecode{maximize\_on\_time\_jobs(jobs)} returns the maximum number of jobs that can finish by their deadlines.
-  \item \inlinecode{TimedJob} stores \inlinecode{duration} and \inlinecode{deadline}.
+  \item \inlinecode{maximize\_on\_time\_jobs(jobs)} returns the maximum number of jobs that can finish by their deadlines. Note that the input will be sorted by deadline after the call.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and heap operations.
@@ -1827,7 +1865,7 @@ struct TimedJob {
   int duration, deadline;
 };
 
-int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
+int maximize_on_time_jobs(std::vector<TimedJob> &jobs) {
   std::sort(jobs.begin(), jobs.end(), [](const TimedJob &a, const TimedJob &b) {
     return a.deadline != b.deadline ? a.deadline < b.deadline : a.duration < b.duration;
   });
@@ -2075,10 +2113,9 @@ T max_submatrix_sum(
     return T();
   }
   int n = static_cast<int>(matrix.size()), m = static_cast<int>(matrix[0].size());
-  std::vector<T> sums(n);
   T sum, max_sum = 0;
   for (int clo = 0; clo < m; clo++) {
-    std::fill(sums.begin(), sums.end(), 0);
+    std::vector<T> sums(n, 0);
     for (int chi = clo; chi < m; chi++) {
       for (int i = 0; i < n; i++) {
         sums[i] += matrix[i][chi];
@@ -2146,7 +2183,15 @@ Maximal sum submatrix:
 -1 8
 \end{exampleoutput}
 \subsection{Majority Element (Boyer-Moore)}
-Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a range \inlinecode{[lo, hi)} of $n$ elements, return an iterator to the first occurrence of the majority element, or the iterator \inlinecode{hi} if there is no majority element. The majority element is defined as an element which occurs strictly more than $\lfloor n/2 \rfloor$ times in the range. This implementation requires \inlinecode{operator==} to be defined on the iterator's value type.
+Given a range of $n$ elements, find the majority element: an element that occurs strictly more than $\lfloor n/2 \rfloor$ times in the range.
+
+This uses the Boyer-Moore voting algorithm. A first pass maintains a single candidate and a counter, incrementing it on a match and decrementing on a mismatch, replacing the candidate when the counter reaches zero; any majority element necessarily survives as the final candidate. Because the absence of a majority must also be reported, a second pass then counts the candidate's occurrences to confirm it truly holds a majority. The range is therefore traversed twice, so it only needs to be supplied as ForwardIterators rather than random-access.
+
+If a majority element is guaranteed in advance to exist, the verification pass can be dropped and the candidate returned directly. The candidate phase alone is single-pass, so that variant needs only InputIterators.
+
+\begin{compactitem}
+  \item \inlinecode{majority(lo, hi)} returns an iterator to the first occurrence of the majority element of the range \inlinecode{[lo, hi)}, or \inlinecode{hi} if no majority element exists. Requires \inlinecode{operator==} on the value type.
+\end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call to \inlinecode{majority()}, where $n$ is the size of the array.
 
@@ -2155,9 +2200,10 @@ Given two random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying
 \begin{lstlisting}[language=C++]
 template<class It>
 It majority(It lo, It hi) {
-  int count = 0;
+  int count = 0, n = 0;
   It candidate = lo;
   for (It it = lo; it != hi; ++it) {
+    n++;  // Tally the size to avoid a O(n) std::distance() pass in case of ForwardIterators.
     if (count == 0) {
       candidate = it;
       count = 1;
@@ -2167,13 +2213,14 @@ It majority(It lo, It hi) {
       count--;
     }
   }
+  // Second pass: verify the candidate. Omit this if a majority is guaranteed to exist.
   count = 0;
   for (It it = lo; it != hi; ++it) {
     if (*it == *candidate) {
       count++;
     }
   }
-  if (count <= (hi - lo) / 2) {
+  if (count <= n / 2) {
     return hi;
   }
   return candidate;
@@ -2319,6 +2366,10 @@ There must exist a pair of indices $i$ and $j$ ($i < j$) such that $x_i = x_j$. 
 
 Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient algorithm that moves two pointers through the sequence at different speeds. Each step in the algorithm moves the ``tortoise'' one step forward and the ``hare'' two steps forward in the sequence, comparing the sequence values at each step. Their first meeting point is somewhere in the cycle; a second phase then finds the cycle's starting position.
 
+\begin{compactitem}
+  \item \inlinecode{find\_cycle\_floyd(f, x0)} returns the cycle as a \inlinecode{(position, length)} pair, where \inlinecode{position} is the index at which the cycle begins and \inlinecode{length} is the number of elements in it.
+\end{compactitem}
+
 \textbf{Time Complexity}: $O(m + n)$ per call to \inlinecode{find\_cycle\_floyd()}, where $m$ is the smallest index of the sequence which is the beginning of a cycle, and $n$ is the cycle's length.
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
@@ -2394,6 +2445,10 @@ Given a function $f$ mapping a set of integers to itself and an x-coordinate in 
 There must exist a pair of indices $i$ and $j$ ($i < j$) such that $x_i = x_j$. When this happens, the rest of the sequence will consist of the subsequence from $x_i$ to $x_{j - 1}$ repeating indefinitely. The cycle detection problem asks to find such an $i$, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
 
 While Floyd's cycle-finding algorithm finds cycles by simultaneously moving two pointers at different speeds, Brent's algorithm keeps the tortoise pointer stationary in every iteration, only teleporting it to the hare pointer at every power of two. Once the two pointers meet, the cycle length is known, and a second phase finds the cycle's starting position. This improves upon the constant factor of Floyd's algorithm by reducing the number of calls made to $f$.
+
+\begin{compactitem}
+  \item \inlinecode{find\_cycle\_brent(f, x0)} returns the cycle as a \inlinecode{(position, length)} pair, where \inlinecode{position} is the index at which the cycle begins and \inlinecode{length} is the number of elements in it.
+\end{compactitem}
 
 \textbf{Time Complexity}: $O(m + n)$ per call to \inlinecode{find\_cycle\_brent()}, where $m$ is the smallest index of the sequence which is the beginning of a cycle, and $n$ is the cycle's length.
 
@@ -2480,7 +2535,7 @@ Integers double as fixed-size sets of bits, where bit \inlinecode{b} (counting f
   \item \inlinecode{lowest\_set\_bit(x)} returns the value of the lowest set bit of \inlinecode{x} (a power of 2), or 0 if \inlinecode{x} is 0. \inlinecode{clear\_lowest\_set\_bit(x)} returns \inlinecode{x} with its lowest set bit removed.
   \item \inlinecode{popcount(x)} returns the number of set bits, analogous to \inlinecode{\_\_builtin\_popcount()}.
   \item \inlinecode{ctz(x)} returns the number of trailing 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_ctz()}.
-  \item \inlinecode{clz(x)} returns the number of leading 0-bits (undefined for 0), analgoous to \inlinecode{\_\_builtin\_clz()}.
+  \item \inlinecode{clz(x)} returns the number of leading 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_clz()}.
   \item \inlinecode{is\_power\_of\_two(x)} returns whether \inlinecode{x} has exactly one set bit.
   \item \inlinecode{floor\_pow2(x)} returns the largest power of 2 that is $\leq$ \inlinecode{x} (for \inlinecode{x} $> 0$).
   \item \inlinecode{ceil\_pow2(x)} returns the smallest power of 2 that is $\geq$ \inlinecode{x} (for \inlinecode{x} $> 0$).

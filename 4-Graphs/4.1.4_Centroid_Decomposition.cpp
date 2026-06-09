@@ -5,7 +5,7 @@ current subtree into connected components of size at most half of that subtree. 
 centroids creates a decomposition tree of height O(log n), which is useful for queries based on
 distances to marked nodes, nearest special node, and other "path through a centroid" problems.
 
-- `build_centroid_tree()` populates `subtree_size`, `centroid_parent`, and `subtree_size` for the
+- `build_centroid_tree()` populates `subtree_size`, `removed`, and `centroid_parent` for the
   global, bidirectionally pre-populated adjacency list `adj` which must form a valid tree with nodes
   numbered from 0 to `adj.size() - 1`.
 - `centroid_parent[u]` stores the parent of node $u$ in the centroid tree.

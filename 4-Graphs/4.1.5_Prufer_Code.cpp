@@ -31,8 +31,8 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int>> &adj) {
     return code;
   }
   // Root at node n - 1, which is guaranteed to survive smallest-leaf removal (it is never the
-  // smallest leaf while other nodes remain). Rooting elsewhere risks recording parent[root] == -2 if
-  // the chosen root itself gets stripped to a leaf (e.g. when n - 1 happens to be a leaf).
+  // smallest leaf while other nodes remain). Rooting elsewhere risks recording parent[root] == -2
+  // if the chosen root itself gets stripped to a leaf (e.g. when n - 1 happens to be a leaf).
   int root = nodes - 1;
   for (int u = 0; u < nodes; u++) {
     degree[u] = static_cast<int>(adj[u].size());

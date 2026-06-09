@@ -5,10 +5,17 @@ Common mathematic constants and functions, most of which already have standard S
 `std::lgamma()`). These are written for educational purposes, without heavy optimizations.
 
 Time Complexity:
-- O(1) for all operations.
+- O(1) for most operations.
+- O(d + e) for `convert_base(d, a, b)`, where $d$ is the number of input digits and $e$ is the
+  number of output digits.
+- O(log_b(x + 1) + 1) for `to_base(x, b)`.
+- O(x / 1000 + 1) for `to_roman(x)`, due to the repeated `M` prefix.
 
 Space Complexity:
-- O(1) auxiliary for all operations.
+- O(1) auxiliary for most operations.
+- O(e) auxiliary heap space for `convert_base(d, a, b)` and `to_base(x, b)`, where $e$ is the
+  number of output digits.
+- O(x / 1000 + 1) auxiliary heap space for `to_roman(x)`.
 
 */
 

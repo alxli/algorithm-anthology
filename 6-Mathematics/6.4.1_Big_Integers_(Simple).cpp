@@ -3,10 +3,16 @@
 Perform simple arithmetic operations on arbitrary precision big integers whose digits are internally
 represented as an `std::string` in little-endian order.
 
+This version is intentionally small and decimal-oriented. Addition and subtraction are the usual
+schoolbook digit scans with carry or borrow. Multiplication keeps a shifted copy of the left operand
+for each digit of the right operand, adds that row once per digit value, then shifts by one decimal
+place. Division is long division: it scans the dividend from most significant digit to least,
+maintains a running remainder, and repeatedly subtracts the divisor to discover each quotient digit.
+
 - `BigInt(n)` constructs a big integer from a long long (default: 0).
 - `BigInt(s)` constructs a big integer from a string `s`, which must strictly consist of a sequence
   of numeric digits, optionally preceded by a minus sign.
-- `str()` returns the string representation of the big integer.
+- `to_string()` returns the string representation of the big integer.
 - `comp(a, b)` returns $-1$, $0$, or $1$ depending on whether the big integers `a` and `b` compare
   less, equal, or greater, respectively.
 - `add(a, b)` returns the sum of big integers `a` and `b`.
@@ -15,15 +21,15 @@ represented as an `std::string` in little-endian order.
 - `div(a, b)` returns the quotient of big integers `a` and `b`.
 
 Time Complexity:
-- O(n) per call to the constructor, `str()`, `comp()`, `add()`, and `sub()`, where $n$ is total
-  number of digits in the arguments and result for each operation.
+- O(n) per call to the constructor, `to_string()`, `comp()`, `add()`, and `sub()`, where $n$ is
+  the total number of digits in the arguments and result for each operation.
 - O(n*m) per call to `mul(a, b)` and `div(a, b)` where $n$ is the number of digits in `a` and $m$ is
   the number of digits in `b`.
 
 Space Complexity:
-- O(n) for storage of the big integer, where $n$ is the number of the digits.
-- O(n) auxiliary heap space for `str()`, `add()`, `sub()`, `mul()`, and `div()`, where $n$ is the
-  total number of digits in the arguments and result for each operation.
+- O(n) for storage of the big integer, where $n$ is the number of digits.
+- O(n) auxiliary heap space for `to_string()`, `add()`, `sub()`, `mul()`, and `div()`, where $n$ is
+  the total number of digits in the arguments and result for each operation.
 
 */
 
@@ -183,7 +189,7 @@ class BigInt {
       row.digits.insert(row.digits.begin(), a.digits[i]);
       row.normalize();  // Strip the spurious high-order zero left by the previous remainder.
       // Subtract while the remainder is >= b. A strict ">" undercounts the quotient digit when the
-      // remainder equals b, and leaves the remainder too large, overflowing the next digit past '9'.
+      // remainder equals b, and leaves the remainder too large, overflowing the next digit past 9.
       while (comp(row.digits, b.digits, 1, 1) >= 0) {
         res.digits[i]++;
         row = sub(row.digits, b.digits, 1, 1);

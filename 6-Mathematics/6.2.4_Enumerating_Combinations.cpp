@@ -19,19 +19,18 @@ elements, where order does not matter.
   that this does not generate combinations in the same order as `next_combination()`, nor does it
   work if the corresponding $n$ items are not distinct (in that case, duplicate combinations will be
   generated).
-- `combination_by_rank(n, k, r)` returns the combination of $k$ distinct integers in the range $[0,
-  n)$ that is lexicographically ranked $r$, where $r$ is a zero-based rank in the range $[0,
-  \binom{n}{k})$.
+- `combination_by_rank(n, k, r)` returns the combination of $k$ distinct integers in the range
+  $[0, n)$ that is lexicographically ranked $r$, where $r$ is a zero-based rank in the range
+  $[0, \binom{n}{k})$.
 - `rank_by_combination(n, a)` returns an integer representing the zero-based rank of combination
   `a`, which must contain sorted distinct integers in $[0, n)$.
 - `next_combination_with_repeats(n, a)` rearranges `a` to become the next lexicographically greater
   combination of not necessarily distinct integers in the range $[0, n)$. The vector `a` must be
-  sorted. Note that there is a total of $n
-  \mathbin{\text{multichoose}} k$ combinations if repetition is allowed, where $n
-  \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
+  sorted. Note that there is a total of $n \mathbin{\text{multichoose}} k$ combinations if
+  repetition is allowed, where $n \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
 
 Time Complexity:
-- O(n) per call to `next_combination(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
+- O(n) per call to `next_combination(lo, mid, hi)`, where $n$ is the distance between `lo` and `hi`.
 - O(k) per call to `next_combination(n, a)` and `next_combination_with_repeats(n, a)`, where $k$ is
   the size of `a`.
 - O(1) per call to `next_combination_mask(x)`.

@@ -3,11 +3,13 @@
 Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees.
 Each partition is assigned a unique representative known as the parent, or root. The following
 implements two well-known optimizations known as union-by-rank and path compression. This version
-uses an `std::unordered_map` for storage and coordinate compression (thus, element types must meet the
-requirements of key types for `std::unordered_map`). The order of sets returned by `get_all_sets()`
-is unspecified.
+uses an `std::unordered_map` for storage and coordinate compression (thus, element types must meet
+the requirements of key types for `std::unordered_map`). The order of sets returned by
+`get_all_sets()` is unspecified.
 
 - `DisjointSetUnion()` constructs an empty set.
+- `size()` returns the number of elements that have been added.
+- `sets()` returns the current number of disjoint sets.
 - `make_set(u)` creates a new partition consisting of the single element `u`, which must not have
   been previously added to the data structure.
 - `is_united(u, v)` returns whether elements `u` and `v` belong to the same partition.
@@ -20,6 +22,7 @@ their arguments.
 
 Time Complexity:
 - O(1) per call to the constructor.
+- O(1) per call to `size()` and `sets()`.
 - O(1) on average per call to `make_set()`, where $n$ is the number of elements that have been added
   via `make_set()` so far.
 - O(alpha(n)) on average per call to `is_united()` and `unite()`, where $n$ is the number of

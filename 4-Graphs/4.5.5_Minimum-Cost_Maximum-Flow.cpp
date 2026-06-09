@@ -5,6 +5,7 @@ node to a sink node.
 
 - `MinCostMaxFlow(nodes)` constructs an empty residual network whose nodes are numbered from 0 to
   `nodes - 1`.
+- `init(nodes)` clears the residual network and resets it to contain `nodes` nodes.
 - `add_edge(u, v, cap, cost)` adds a directed residual-network edge.
 - `min_cost_flow(source, sink, target_flow)` sends up to `target_flow` units of flow and returns
   `(flow, cost)`. If the returned flow is smaller than `target_flow`, the network cannot carry the
@@ -15,6 +16,8 @@ long as the residual graph has no reachable negative-cost cycle. For dense or ad
 potential-based Dijkstra version is usually faster when reduced costs are nonnegative.
 
 Time Complexity:
+- O(n) per call to the constructor or `init(n)`, where $n$ is the number of nodes.
+- O(1) per call to `add_edge()`.
 - O(f*n*m) per call to `min_cost_flow()`, where $f$ is the amount of flow sent, $n$ is the number of
   nodes, and $m$ is the number of edges.
 

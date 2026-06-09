@@ -1,9 +1,13 @@
 /*
 
-Given random-access iterators `lo` and `hi` specifying a range `[lo, hi)` of integers, return the
-maximum sum of any subset of the range that is at most a given integer `v`. This is a common
-meet-in-the-middle version of subset sum: enumerate subset sums for each half, sort one side, and
-binary search for the best compatible partner. Note that 64-bit integers are used in intermediate
+Given a range `[lo, hi)` of integers, return the maximum sum of any subset of the range that is at
+most a given integer `v`. This is a common meet-in-the-middle version of subset sum: enumerate
+subset sums for each half, sort one side, and binary search for the best compatible partner.
+
+- `max_subset_sum_at_most(lo, hi, v)` returns the maximum sum of any subset of `[lo, hi)` that does
+  not exceed `v`.
+
+The range is supplied as random-access iterators. 64-bit integers are used in intermediate
 calculations to avoid overflow.
 
 Time Complexity:

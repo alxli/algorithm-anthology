@@ -3,10 +3,14 @@
 Finds every complex root $x$ for a polynomial $p$ with complex coefficients such that $p(x) = 0$
 using Laguerre's method.
 
+Laguerre's method is a root-finding iteration with reliable, near-cubic convergence from almost any
+starting point. Once a root is found it is removed by polynomial deflation, and the iteration
+repeats on the lower-degree quotient until every root has been extracted.
+
 - `horner_eval(p, x)` evaluates the complex polynomial `p` of degree $d$ (represented as a vector of
   size $d + 1$ where `p[i]` stores the complex coefficient for the $x^i$ term) at `x`, using
-  Horner's method, returning a pair where the first value is a vector of sub-evaluations and the
-  second value is the final result $p(x)$.
+  Horner's method, returning a pair where the first value is the final result $p(x)$ and the second
+  value is the quotient polynomial produced by synthetic division by $(X - x)$.
 - `find_one_root(p, x0)` returns a complex root $x$ for a polynomial `p` (represented as a vector of
   size $d + 1$ where `p[i]` stores the complex coefficient for the $x^i$ term) using an initial
   guess `x0` which should be relatively close to $x$. The root is found to a tolerance of `EPS` in
@@ -24,8 +28,8 @@ Time Complexity:
 Space Complexity:
 - O(n) auxiliary heap space and O(1) auxiliary stack space for `horner_eval()` and
   `find_one_root()`, where $n$ is the degree of the polynomial.
-- O(n) auxiliary heap and O(1) auxiliary stack space per for `find_one_root()` and
-  `find_all_roots()`, where $n$ is the degree of the polynomial.
+- O(n) auxiliary heap and O(1) auxiliary stack space for `find_one_root()` and `find_all_roots()`,
+  where $n$ is the degree of the polynomial.
 
 */
 

@@ -1,18 +1,26 @@
 /*
 
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common
-ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while
-having both $u$ and $v$ as its descendant. A node is considered to be a descendant of itself.
-`build()` applies to a global, pre-populated adjacency list `adj` which must only consist of nodes
-numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in
-the function argument. The adjacency list must define one connected tree rooted at `root`.
+Given a tree, determine the lowest common ancestor of any two nodes. The lowest common ancestor of
+two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$
+and $v$ as its descendant. A node is considered to be a descendant of itself.
+
+This implementation preprocesses binary ancestor jumps. During a depth-first search, it records
+entry and exit times so ancestry can be tested in O(1), and stores `dp[u][i]`, the $2^i$-th ancestor
+of each node `u`. To answer `lca(u, v)`, it first handles the case where one node is already an
+ancestor of the other, then jumps `u` upward by decreasing powers of two until its parent is the
+lowest common ancestor.
+
+- `build(root)` builds the structure over a global, bidirectionally pre-populated adjacency list
+  `adj` of nodes numbered 0 to `adj.size() - 1`, which must define one connected tree rooted at
+  `root` (default 0).
+- `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`.
 
 Time Complexity:
 - O(n log n) per call to `build()`, where $n$ is the number of nodes.
 - O(log n) per call to `lca()`.
 
 Space Complexity:
-- O(n log n) to store the sparse table, where $n$ is the number of nodes.
+- O(n log n) to store the binary ancestor table, where $n$ is the number of nodes.
 - O(n) auxiliary stack space for `build()`.
 - O(1) auxiliary for `lca()`.
 
@@ -38,7 +46,8 @@ void dfs(int u, int p) {
   tout[u] = timer++;
 }
 
-void build(int nodes, int root = 0) {
+void build(int root = 0) {
+  int nodes = static_cast<int>(adj.size());
   len = 1;
   while ((1 << len) <= nodes) {
     len++;
@@ -74,18 +83,18 @@ int lca(int u, int v) {
 #include <cassert>
 using namespace std;
 
+void add_edge(int u, int v) {
+  adj[u].push_back(v);
+  adj[v].push_back(u);
+}
+
 int main() {
-  int nodes = 5;
-  adj.resize(nodes);
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(2);
-  adj[2].push_back(1);
-  adj[3].push_back(1);
-  adj[1].push_back(3);
-  adj[0].push_back(4);
-  adj[4].push_back(0);
-  build(nodes, 0);
+  adj.assign(5, {});
+  add_edge(0, 1);
+  add_edge(0, 4);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  build(0);
   assert(lca(3, 2) == 1);
   assert(lca(2, 4) == 0);
   return 0;

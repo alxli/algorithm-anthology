@@ -2,12 +2,21 @@
 
 Given a weighted, directed graph with possibly negative weights, determine the minimum distance
 between all pairs of start and destination nodes in the graph. Optionally, output the shortest path
-between two nodes using the shortest-path tree precomputed into the `pred` matrix.
+between two nodes using the next-hop matrix precomputed into `next_node`.
 
-- `initialize(nodes)` initializes `dist` and `pred` for nodes numbered from 0 to `nodes - 1`.
+It is a dynamic program over intermediate nodes: for each node `k` in turn, every pair `(i, j)` is
+relaxed by considering a path through `k`, so once all `k` have been processed the matrix holds the
+all-pairs shortest distances.
+
+- `initialize(nodes)` initializes `dist` and `next_node` for nodes numbered from 0 to `nodes - 1`.
 - `floyd_warshall()` updates the global adjacency matrix `dist` so `dist[u][v]` stores the shortest
-  path from $u$ to $v$, and updates `pred` for path reconstruction. If the graph contains
+  path from $u$ to $v$, and updates `next_node` for path reconstruction. If the graph contains
   negative-weighted cycles, there is no shortest path and an error will be thrown.
+
+For path reconstruction, `next_node[i][j]` stores the next node to visit after `i` on a current
+shortest path from `i` to `j`. It is initialized to `j` for every pair and, when a shorter route
+`i -> k -> j` is found, becomes `next_node[i][k]`. Repeatedly replacing `i` with `next_node[i][j]`
+therefore walks the path from source to destination.
 
 Time Complexity:
 - O(n^2) per call to `initialize()`, where $n$ is the number of nodes.
@@ -25,15 +34,15 @@ Space Complexity:
 
 const long long INF = LLONG_MAX / 4;
 std::vector<std::vector<long long>> dist;
-std::vector<std::vector<int>> pred;
+std::vector<std::vector<int>> next_node;
 
 void initialize(int nodes) {
   dist.assign(nodes, std::vector<long long>(nodes));
-  pred.assign(nodes, std::vector<int>(nodes));
+  next_node.assign(nodes, std::vector<int>(nodes));
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
       dist[i][j] = (i == j) ? 0 : INF;
-      pred[i][j] = j;
+      next_node[i][j] = j;
     }
   }
 }
@@ -47,7 +56,7 @@ void floyd_warshall() {
         // INF + w < INF would otherwise give an unreachable pair a bogus finite distance.
         if (dist[i][k] != INF && dist[k][j] != INF && dist[i][j] > dist[i][k] + dist[k][j]) {
           dist[i][j] = dist[i][k] + dist[k][j];
-          pred[i][j] = pred[i][k];
+          next_node[i][j] = next_node[i][k];
         }
       }
     }
@@ -73,7 +82,7 @@ using namespace std;
 void print_path(int u, int v) {
   cout << "Take the path: " << u;
   while (u != v) {
-    u = pred[u][v];
+    u = next_node[u][v];
     cout << "->" << u;
   }
   cout << "." << endl;

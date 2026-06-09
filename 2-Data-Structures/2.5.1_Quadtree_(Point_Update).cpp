@@ -1,8 +1,9 @@
 /*
 
 Maintain a two-dimensional array over a huge grid while supporting point updates and rectangle
-queries. The quadtree recursively splits each rectangle into four quadrants, and lazily allocates
-only the nodes touched by updates or needed to summarize queried regions.
+queries. This is a sparse (a.k.a. dynamic or implicit) quadtree: it recursively splits each
+rectangle into four quadrants, and lazily allocates only the nodes touched by updates or needed to
+summarize queried regions.
 
 The query operation is defined by a commutative associative aggregate function `combine(a, b)`.
 Because untouched regions are implicit, `repeat_value(v, area)` must return the aggregate summary of
@@ -14,6 +15,11 @@ The point update operation is defined by `apply_delta(v, d)`, which returns the 
 updated cell. The default code below defines updates that "set" the chosen cell to a new value.
 Another possible update operation is "increment", in which case `apply_delta(v, d)` should return
 `v + d`.
+
+Choose this over a sparse 2D segment tree when the grid is huge and touched cells or queried
+rectangles are sparse or naturally align with large quadrants. Choose the sparse 2D segment tree
+instead when many thin or adversarial rectangles are expected and a predictable O(log(R)*log(C))
+bound matters more than lower constant factors on aligned regions.
 
 - `Quadtree(v)` constructs a two-dimensional array with rows from 0 to `R` and columns from 0 to
   `C`, inclusive. All values are implicitly initialized to `v`.
@@ -27,8 +33,8 @@ Time Complexity:
 - O(1) per call to the constructor.
 - O(log(max(R, C))) per call to `at()` and `update()`, which descend a single root-to-cell path.
 - O(R + C) worst case per call to `query()`, attained when the queried rectangle straddles the
-  quadrant boundaries at every level (for example a one-cell-thick full-width strip); rectangles that
-  align with a few large quadrants are far cheaper.
+  quadrant boundaries at every level (for example a one-cell-thick full-width strip); rectangles
+  that align with a few large quadrants are far cheaper.
 
 Space Complexity:
 - O(n log(max(R, C))) for storage of the quadtree nodes after $n$ point updates.

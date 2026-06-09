@@ -4,13 +4,14 @@ Given an array and a fixed window length `k`, report the maximum (or minimum) of
 window of that length as the window slides from left to right. A monotonic deque of indices answers
 all windows in linear total time: it holds the indices of candidates that could still become a
 window maximum, kept in decreasing order of value. Each new element pops every smaller element off
-the back, since those can never again be the maximum while the larger newer element is in the window,
-and indices that fall outside the window are dropped from the front. The front of the deque is always
-the maximum of the current window. This is the windowed counterpart of the monotonic stack: each
-index is pushed and popped at most once.
+the back, since those can never again be the maximum while the larger newer element is in the
+window, and indices that fall outside the window are dropped from the front. The front of the deque
+is always the maximum of the current window. This is the windowed counterpart of the monotonic
+stack: each index is pushed and popped at most once.
 
 Both functions take a vector `a` of `n` comparable values and a window length `k` with
-$1 \leq k \leq n$, and return a vector of `n - k + 1` results, one per window in left-to-right order.
+$1 \leq k \leq n$, and return a vector of `n - k + 1` results, one per window in left-to-right
+order.
 
 - `sliding_window_maximum(a, k)` returns the maximum of each window of length `k`.
 - `sliding_window_minimum(a, k)` returns the minimum of each window of length `k`.

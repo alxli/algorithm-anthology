@@ -2,8 +2,12 @@
 
 Given a rectangular matrix with $n$ rows and $m$ columns consisting of only 0's and 1's as a
 two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of
-only 0's. This solution uses a reduction to the problem of finding the maximum rectangular area
-under a histogram, which is efficiently solved using a stack algorithm.
+only 0's. This solution sweeps the rows from top to bottom, maintaining for each column the height
+of the run of 0's ending at the current row. Each row then reduces to finding the maximum
+rectangular area under a histogram, which is solved in linear time with a monotonic stack.
+
+- `max_zero_submatrix(matrix)` returns the area of the largest all-zero rectangular submatrix of
+  `matrix`, a two-dimensional vector of bool.
 
 Time Complexity:
 - O(n*m) per call to `max_zero_submatrix()`, where $n$ is the number of rows and $m$ is the number
@@ -25,8 +29,8 @@ int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
   int n = static_cast<int>(matrix.size()), m = static_cast<int>(matrix[0].size());
   int res = 0;
   // last1[c] = row index of the most recent 1 in column c (-1 if none yet).
-  // left_wall[c] = nearest column left of c whose last1 value >= last1[c] (exclusive left bound).
-  // right_wall[c] = nearest column right of c whose last1 value >= last1[c] (exclusive right bound).
+  // left_wall[c] = nearest col left of c whose last1 value >= last1[c] (exclusive left bound).
+  // right_wall[c] = nearest col right of c whose last1 value >= last1[c] (exclusive right bound).
   std::vector<int> last1(m, -1), left_wall(m), right_wall(m);
   for (int r = 0; r < n; r++) {
     for (int c = 0; c < m; c++) {

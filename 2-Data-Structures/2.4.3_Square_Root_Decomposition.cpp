@@ -1,7 +1,10 @@
 /*
 
-Maintain a fixed-size array (from 0 to `size() - 1`) while supporting dynamic queries of contiguous
-sub-arrays and dynamic updates of individual indices.
+Maintain a fixed-size array while supporting point updates and contiguous range aggregate queries.
+Square root decomposition partitions the array into contiguous blocks of about $\sqrt{n}$ elements,
+each caching the aggregate of its block. A range query combines the cached aggregates of the whole
+blocks contained in the range with the individual elements of the partial blocks at either end,
+while a point update refreshes only the single block containing the changed index.
 
 The query operation is defined by an associative aggregate function `combine(a, b)`. The default
 definition below assumes a numerical array type, supporting queries for the "min" of the target
@@ -13,8 +16,17 @@ single updated index. The default definition below supports updates that "set" t
 index to a new value. Another possible update operation is "increment", in which case
 `apply_delta(v, d)` should return `v + d`.
 
-The operations supported by this data structure are identical to those of the point update segment
-tree found in this section.
+- `SqrtDecomposition(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`,
+  inclusive, and all values initialized to `v`.
+- `SqrtDecomposition(lo, hi)` constructs an array from two random-access iterators as a range
+  `[lo, hi)`, initialized to the elements of the range in the same order.
+- `size()` returns the size of the array.
+- `at(i)` returns the value at index `i`.
+- `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
+  inclusive.
+- `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
+
+The supported operations are identical to those of the point-update segment tree in this section.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.

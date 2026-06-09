@@ -4,6 +4,10 @@ Given a flow network with integer capacities, find the maximum flow from a given
 given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at
 every node other than the source and sink.
 
+Dinic's algorithm proceeds in phases. Each phase runs a breadth-first search to build a level graph
+of shortest residual distances from the source, then finds a blocking flow that saturates that level
+graph using depth-first search, before repeating on the new residual graph.
+
 - `add_edge(u, v, cap)` adds a directed residual-network edge.
 - `dinic(source, sink)` modifies the global adjacency list `adj` and returns maximum flow. Nodes are
   numbered from 0 to `adj.size() - 1`.

@@ -1,16 +1,19 @@
 /*
 
-Given two ForwardIterators as a range `[lo, hi)` of $n$ numerical elements, reassign each element in
-the range to an integer in $[0, k)$, where $k$ is the number of distinct elements in the original
-range, while preserving the initial relative ordering of elements. That is, if $a$ is the array of
-original values and $b$ is the array of compressed values, then every pair of indices $i, j$ in $[0,
-n)$ shall satisfy $a[i] < a[j]$ if and only if $b[i] < b[j]$.
+Given a range `[lo, hi)` of $n$ numerical elements, reassign each element to an integer in $[0, k)$,
+where $k$ is the number of distinct elements in the original range, while preserving the initial
+relative ordering of elements. That is, if $a$ is the array of original values and $b$ is the array
+of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if
+and only if $b[i] < b[j]$.
 
-Both implementations below require `operator<` to be defined on the iterator's value type. Version
-1 performs the compression by sorting the array, removing duplicates, and binary searching for the
-position of each original value. Version 2 achieves the same result by inserting all values in a
-balanced binary search tree (`std::map`) which automatically removes duplicate values and supports
-efficient lookups of the compressed values.
+Both implementations below take the range as ForwardIterators and require `operator<` on the value
+type.
+
+- `compress1(lo, hi)` performs the compression by sorting the array, removing duplicates, and binary
+  searching for the position of each original value.
+- `compress2(lo, hi)` achieves the same result by inserting all values into a balanced binary search
+  tree (`std::map`), which automatically removes duplicate values and supports efficient lookups of
+  the compressed values.
 
 Time Complexity:
 - O(n log n) per call to either function, where $n$ is the distance between `lo` and `hi`.

@@ -15,8 +15,7 @@ vector consisting of a single element - the input itself.
 - `pollards_rho_brent(n)` returns a factor of `n` that is not necessarily prime using Pollard's rho
   algorithm with Brent's optimization. If `n` is prime, then `n` itself is returned. While this
   algorithm is non-deterministic and may fail to detect factors on certain runs of the same input,
-  it can be placed in a loop to deterministically factor large integers, as done in
-  `prime_factorize_big()`.
+  it can be retried until a nontrivial factor is found, as done in `prime_factorize_big()`.
 - `prime_factorize_big(n, trial_division_cutoff)` returns the prime factorization of a 64-bit
   integer `n` using a combination of trial division, the Miller-Rabin primality test, and Pollard's
   rho algorithm. `trial_division_cutoff` specifies the largest factor to test with trial division

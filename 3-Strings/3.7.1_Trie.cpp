@@ -13,8 +13,8 @@ preserve lexicographic traversal.
   and the old value associated with the string key is preserved).
 - `erase(s)` removes the entry with string key `s` from the map, returning `true` if the removal was
   successful or `false` if the string to be removed was not found.
-- `find(s)` returns a pointer to a const value associated with string key `s`, or `nullptr` if the key
-  was not found.
+- `find(s)` returns a pointer to a const value associated with string key `s`, or `nullptr` if the
+  key was not found.
 - `walk(f)` calls the function `f(s, v)` on each entry of the map, in lexicographically ascending
   order of the string keys.
 

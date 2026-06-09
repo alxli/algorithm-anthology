@@ -23,7 +23,7 @@ Time Complexity:
 - O(n) for `factorial(n, m)`.
 - O(p log n) for `factorialp(n, p)`.
 - O(n^2) for `binomial_table(n, m)`.
-- O(k) for `permute(n, k, p)`.
+- O(k) for `permute(n, k, m)`.
 - O(min(k, n - k)) for `choose(n, k, p)`.
 - O(k) for `multichoose(n, k, p)`.
 - O(n) for `catalan(n, p)`.

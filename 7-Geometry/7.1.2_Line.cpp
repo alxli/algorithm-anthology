@@ -1,7 +1,7 @@
 /*
 
 A straight line in two dimensions, templated on the coordinate type `T` (default `double`). The line
-$ax + by + c = 0$ is stored UN-normalized, so a line through integer points keeps the integer
+$ax + by + c = 0$ is stored unnormalized, so a line through integer points keeps the integer
 coefficients: `a = q.y - p.y`, `b = p.x - q.x`, `c = -(a*p.x + b*p.y)`. Storage and the exact
 predicates `contains()`, `is_parallel()`, and `is_perpendicular()` therefore stay exact for integer
 `T`. The inherently-fractional operations `slope()`, `x()`, and `y()` return `fp_t`, which is

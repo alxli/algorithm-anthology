@@ -1,10 +1,9 @@
 /*
 
-Maintain a two-dimensional array while supporting dynamic queries of rectangular sub-arrays and
-dynamic updates of individual indices. This implementation uses lazy initialization of nodes to
-conserve memory while supporting large indices, making it the two-dimensional analogue of a sparse
-(a.k.a. dynamic or implicit) segment tree: row and column nodes are allocated lazily as cells are
-touched.
+Maintain a two-dimensional array over a huge grid while supporting dynamic queries of rectangular
+sub-arrays and dynamic updates of individual indices. This is a sparse (a.k.a. dynamic or implicit)
+2D segment tree: row and column nodes are allocated lazily as cells are touched, so large coordinate
+bounds are supported without allocating the full grid.
 
 The query operation is defined by a commutative associative aggregate function `combine(a, b)`.
 Because untouched regions are implicit, `repeat_value(v, area)` must return the aggregate summary of
@@ -16,6 +15,17 @@ The point update operation is defined by `apply_delta(v, d)`, which returns the 
 updated cell. The default code below defines updates that "set" the chosen cell to a new value.
 Another possible update operation is "increment", in which case `apply_delta(v, d)` should return
 `v + d`.
+
+Compared with the quadtrees in the previous sections, this structure splits rows and columns
+independently, so every rectangle query decomposes into O(log(R)*log(C)) canonical rectangles. That
+makes it preferable when queries may be thin, off-center, or adversarially placed: a quadtree can
+degrade to visiting O(R + C) boundary nodes for such rectangles. The trade-off is a larger tree and
+less benefit from queries that happen to align with big square quadrants.
+
+For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.7. A dense vector-backed
+2D segment tree can be simpler and faster on modest grids with custom aggregates such as min/max,
+but it needs O(R*C) storage with large constants, so this sparse version is usually the safer
+codebook default.
 
 - `SegTree2D(v)` constructs a two-dimensional array with rows from 0 to `R` and columns from 0 to
   `C`, inclusive. All values are implicitly initialized to `v`.

@@ -9,6 +9,7 @@ height logarithmic, and every successful union records enough information to res
 state.
 
 - `RollbackDSU(n)` constructs `n` singleton sets over elements `0` through `n - 1`.
+- `count_sets()` returns the current number of disjoint sets.
 - `find_root(u)` returns the representative of the set containing `u`.
 - `is_united(u, v)` returns whether `u` and `v` are in the same set.
 - `unite(u, v)` merges two sets and returns whether a merge occurred.
@@ -16,7 +17,8 @@ state.
 - `rollback(s)` undoes all changes made after snapshot `s`.
 
 Time Complexity:
-- O(n) per call to `initialize(n)`.
+- O(n) per call to `RollbackDSU(n)`.
+- O(1) per call to `count_sets()`.
 - O(log n) worst-case per call to `find_root(u)`, `is_united(u, v)`, and `unite(u, v)`.
 - O(1) per undone union during `rollback(s)`.
 

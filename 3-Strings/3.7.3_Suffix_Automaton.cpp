@@ -12,7 +12,8 @@ state representing the longest proper suffix of that class.
 - `SuffixAutomaton(s)` constructs the automaton for string `s`.
 - `extend(c)` appends character `c` to the current string.
 - `contains(t)` returns whether string `t` occurs as a substring.
-- `first_occurrence(t)` returns the starting index of the first occurrence of `t`, or $-1$ if absent.
+- `first_occurrence(t)` returns the starting index of the first occurrence of `t`, or $-1$ if
+  absent.
 - `count_distinct_substrings()` returns the number of distinct nonempty substrings.
 - `longest_common_substring(t)` returns one longest substring common to the built string and string
   `t`.

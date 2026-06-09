@@ -5,6 +5,10 @@ tree (MST) is a subgraph which is a tree that connects all nodes with a subset o
 that their total weight is minimized. If the input graph is not connected, then this implementation
 will find the minimum spanning forest.
 
+Kruskal's algorithm scans the edges in nondecreasing weight order, adding each edge whose endpoints
+lie in different components (tracked with a disjoint-set structure) and skipping any edge that would
+form a cycle.
+
 - `kruskal_mst(nodes)` populates `mst` with the minimum spanning tree edges (returning the total MST
   weight) for a global, pre-populated edge list `edges` whose endpoints must be numbered from 0 to
   `nodes - 1`. Each edge is stored as `(weight, u, v)` and will be sorted by weight after the call.

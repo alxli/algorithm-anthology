@@ -11,7 +11,7 @@ degree belong to a single connected component.
   reachable from the starting node `u` in an order which forms an Eulerian cycle. The first node
   will be repeated as the last element of the vector. The directed graph given by adjacency list
   `adj` must consist of nodes numbered from 0 to `adj.size() - 1`.
-- `euler_cycle_undirected(adj, u)` returns a vector of all nodes in a undirected graph that are
+- `euler_cycle_undirected(adj, u)` returns a vector of all nodes in an undirected graph that are
   reachable from the starting node `u` in an order which forms an Eulerian cycle. The first node
   will be repeated as the last element of the vector. The undirected graph given by adjacency list
   `adj` must consist of bidirectional edges with nodes numbered from 0 to `adj.size() - 1`.

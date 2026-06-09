@@ -14,8 +14,8 @@ its subtree, using it to maintain balance and compute order statistics.
   old value associated with the key is preserved).
 - `erase(k)` removes the entry with key `k` from the map, returning `true` if the removal was
   successful or `false` if the key to be removed was not found.
-- `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was not
-  found.
+- `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
+  not found.
 - `select(r)` returns a key-value pair of the node with a key of zero-based rank `r` in the map,
   throwing an exception if the rank is not between 0 and `size() - 1`.
 - `rank(k)` returns the zero-based rank of key `k` in the map, throwing an exception if the key was

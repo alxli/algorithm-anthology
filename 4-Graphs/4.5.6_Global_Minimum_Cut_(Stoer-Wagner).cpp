@@ -10,8 +10,8 @@ A phase grows a set, starting from an arbitrary vertex, by repeatedly adding the
 connected outside vertex (the one with the greatest total weight to the set so far), exactly as in
 Prim's algorithm. The last vertex added, together with its connection weight, yields one candidate
 cut, the "cut of the phase". The last two vertices added are then merged into a single supernode and
-the next phase begins on the smaller graph. After $n - 1$ phases every candidate has been considered,
-and the smallest is the global minimum cut.
+the next phase begins on the smaller graph. After $n - 1$ phases every candidate has been
+considered, and the smallest is the global minimum cut.
 
 The graph is given as a symmetric adjacency matrix `adj`, where `adj[i][j]` is the weight of the
 edge between `i` and `j` (0 if absent), and the diagonal is 0. The graph must have at least two

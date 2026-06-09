@@ -2,12 +2,18 @@
 
 Given a complete weighted, directed graph, determine a path of minimum total distance which visits
 each node exactly once. Unlike the traveling salesman problem, we do not have to return to the
-starting vertex. Since this implementation uses bitmasks with signed 32-bit integers, the maximum
-number of nodes must be less than 31.
+starting vertex.
+
+It uses the same Held-Karp subset dynamic program as the traveling salesman cycle, where `dp[S][i]`
+is the shortest path visiting exactly the nodes in `S` and ending at node `i`. The answer is the
+minimum over all end nodes for the full set, with no return edge added.
 
 - `shortest_hamiltonian_path()` populates `order` and returns minimum path length for a global,
   pre-populated adjacency matrix `adj` which must represent a complete directed graph on nodes
   numbered from 0 to `adj.size() - 1`.
+
+Since this implementation uses bitmasks with signed 32-bit integers, the maximum number of nodes
+must be less than 31.
 
 Time Complexity:
 - O(2^n * n^2) per call to `shortest_hamiltonian_path()`, where $n$ is the number of nodes.

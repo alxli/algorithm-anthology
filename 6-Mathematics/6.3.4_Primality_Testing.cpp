@@ -7,11 +7,11 @@ purposes here).
 
 - `is_prime(n)` returns whether the integer `n` is prime using an optimized trial division technique
   based on the fact that all primes greater than 6 must take the form $6n + 1$ or $6n - 1$.
-- `is_probable_prime(n, k)` returns true if the integer `n` is prime, or false with an error
-  probability of $(1 / 4)^k$ if `n` is composite. In other words, the result is guaranteed to be
-  correct if `n` is prime, but could be wrong with probability $(1 / 4)^k$ if `n` is composite. This
-  implementation uses exponentiation by squaring to support all signed 64-bit integers (up to and
-  including $2^{63} - 1$).
+- `is_probable_prime(n, k)` returns whether `n` is probably prime using `k` random Miller-Rabin
+  bases. The result is guaranteed correct when `n` is prime. When `n` is composite, it returns
+  false with probability at least $1 - (1 / 4)^k$, so a true result has one-sided error probability
+  at most $(1 / 4)^k$. This implementation uses exponentiation by squaring to support all signed
+  64-bit integers (up to and including $2^{63} - 1$).
 - `is_prime_fast(n)` returns whether the signed 64-bit integer `n` is prime using a fully
   deterministic version of the Miller-Rabin test.
 

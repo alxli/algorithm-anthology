@@ -13,8 +13,8 @@ and `query()` in any desired order.
 - `HullOptimizer(query_max)` constructs an empty hull. By default, `query(x)` minimizes; if
   `query_max` is true, `query(x)` maximizes.
 - `add_line(m, b)` inserts line $y = mx + b$ (can be called in any order).
-- `query(x)` returns the best $y$-value among all inserted lines at coordinate `x`. At least one line
-  must have been inserted.
+- `query(x)` returns the best $y$-value among all inserted lines at coordinate `x`. At least one
+  line must have been inserted.
 
 Time Complexity:
 - O(log n) amortized per call to `add_line()` and O(log n) per call to `query()`, where $n$ is the

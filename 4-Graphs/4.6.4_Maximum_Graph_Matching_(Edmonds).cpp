@@ -3,6 +3,10 @@
 Given an undirected graph, determine a maximum matching: a maximum subset of its edges such that no
 node is shared between different edges in the resulting subset.
 
+Edmonds' blossom algorithm extends augmenting-path search to general (non-bipartite) graphs, where
+odd-length cycles called blossoms can conceal augmenting paths. Each blossom is contracted into a
+single node so the search can proceed, and is expanded afterward to recover the matching.
+
 - `edmonds()` populates `match` and returns matching size for a global, bidirectionally
   pre-populated adjacency list `adj` which must consist of nodes numbered from 0 to
   `adj.size() - 1`.

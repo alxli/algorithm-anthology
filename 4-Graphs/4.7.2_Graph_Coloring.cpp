@@ -3,6 +3,11 @@
 Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the
 same color, and that the total number of colors used is minimized.
 
+It finds the chromatic number by backtracking: nodes (ordered by degree to prune sooner) are colored
+one at a time, each tried with every color already in use plus one new color, while the fewest
+colors seen in a complete coloring so far bounds the search and cuts off any branch at least as
+costly.
+
 - `color_graph()` populates `color` and returns minimum color count for a global, bidirectionally
   pre-populated adjacency matrix `adj` which must consist of nodes numbered from 0 to
   `adj.size() - 1`.

@@ -1,8 +1,9 @@
 /*
 
 Maintain a two-dimensional array over a huge grid while supporting rectangle updates and rectangle
-queries. The quadtree recursively splits each rectangle into four quadrants, lazily allocates touched
-nodes, and stores pending rectangle updates with lazy propagation.
+queries. This is a sparse (a.k.a. dynamic or implicit) quadtree: it recursively splits each
+rectangle into four quadrants, lazily allocates touched nodes, and stores pending rectangle updates
+with lazy propagation.
 
 The query operation is defined by a commutative associative aggregate function `combine(a, b)`.
 Because untouched regions are implicit, `repeat_value(v, area)` must return the aggregate summary of
@@ -18,6 +19,11 @@ region and then combining the results, and composed deltas must be equivalent to
 updates sequentially. The default code below defines rectangle assignment. For rectangle increment,
 `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, area)` should return `v + d`
 for range-min/range-max queries, and `v + d * area` for range-sum queries.
+
+Choose this over a sparse 2D segment tree when rectangle updates or queries often cover large
+aligned regions of a huge sparse grid. Choose a sparse 2D segment tree when worst-case rectangles
+may be long, thin, or otherwise poorly aligned with quadrant boundaries; the quadtree can visit many
+boundary nodes in those cases.
 
 - `LazyQuadtree(v)` constructs a two-dimensional array with rows from 0 to `R` and columns from 0 to
   `C`, inclusive. All values are implicitly initialized to `v`.

@@ -11,14 +11,14 @@ Common number theory operations relating to modular arithmetic.
   is, the smallest nonnegative integer $m$ satisfying $a + b*n = m$ for some integer $n$. Note that
   this is identical to the remainder operator `%` in C++ for nonnegative operands `a` and `b`, but
   the result will differ when an operand is negative.
-- `mod_inverse(a, m)` and `mod_inverse2(a, m)` both return an integer $x$ such that $ax \equiv 1
-  \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
+- `mod_inverse(a, m)` and `mod_inverse2(a, m)` both return an integer $x$ such that
+  $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
 - `generate_inverse(p)` returns a vector $v$ of integers where for each index $i$ in the vector, $i
   \cdot \text{v[i]} \equiv 1 \pmod p$, where the argument $p$ is prime.
-- `simple_restore(a, p)` and `garner_restore(a, p)` both return the solution $x$ for the
-  system of simultaneous congruences $x \equiv \text{a[i]} \pmod{\text{p[i]}}$ for all indices $i$
-  in $[0, n)$, where `p` consists of pairwise coprime integers. The solution $x$ is guaranteed to
-  be unique by the Chinese remainder theorem.
+- `simple_restore(a, p)` and `garner_restore(a, p)` both return the solution $x$ for the system of
+  simultaneous congruences $x \equiv \text{a[i]} \pmod{\text{p[i]}}$ for all indices $i$ in
+  $[0, n)$, where `p` consists of pairwise coprime integers. The solution $x$ is guaranteed to be
+  unique by the Chinese remainder theorem.
 
 Time Complexity:
 - O(log(a + b)) per call to `gcd(a, b)`, `gcd2(a, b)`, `lcm(a, b)`, `extended_euclid(a, b)`,

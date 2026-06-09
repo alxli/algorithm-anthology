@@ -3,7 +3,7 @@
 Maintain a forest of trees with values associated with its nodes, while supporting both dynamic
 queries and dynamic updates of all values on any path between two nodes in a given tree. In
 addition, support testing of whether two nodes are connected in the forest, as well as the merging
-and spliting of trees by adding or removing specific edges. Link/cut forests divide each of its
+and splitting of trees by adding or removing specific edges. Link/cut forests divide each of its
 trees into vertex-disjoint paths, each represented by a splay tree.
 
 The query operation is defined by an associative `combine()` function which satisfies

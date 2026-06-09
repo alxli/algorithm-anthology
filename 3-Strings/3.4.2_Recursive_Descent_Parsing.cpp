@@ -9,7 +9,7 @@ An arbitrary operand type is supported, with its string representation defined b
 `is_operand()` and `eval_operand()` functions. For maximum reliability, the string representation of
 operands should not use characters shared by any operator. For instance, the best practice instead
 of accepting $-1$ as a valid operand (since the `-` sign may conflict with the identical binary
-operator), is to specify non-negative number as operands alongside the unary operator `-`.
+operator), is to specify non-negative numbers as operands alongside the unary operator `-`.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared
 characters with the string representations of operands. Ideally, operators should not be prefixes or
@@ -36,8 +36,8 @@ Time Complexity:
   operators defined for the parser instance, and $k$ is the maximum length for any operator
   representation.
 - O(n) expected per call to `eval(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
-- O(n*m*k + n) expected per call to `eval(s)`, where $n$ is the distance between `lo` and `hi`, and
-  $m$ and $k$ are as defined previous.
+- O(n*m*k + n) expected per call to `eval(s)`, where $n$ is the length of `s`, and $m$ and $k$ are
+  as defined previously.
 
 Space Complexity:
 - O(m*k) for storage of the $m$ operators, of maximum length $k$.

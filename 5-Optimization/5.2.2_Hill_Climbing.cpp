@@ -1,9 +1,7 @@
 /*
 
-Given a continuous function `f(x, y)` to `double` and a (possibly arbitrary) starting guess
-`(x0, y0)`, return a potential global minimum found through hill-climbing. Optionally, two `double`
-pointers `critical_x` and `critical_y` may be passed to store the input points to `f` at which the
-returned minimum value is attained.
+Given a continuous function `f(x, y)` returning a `double` and a (possibly arbitrary) starting guess
+`(x0, y0)`, search for a global minimum using the hill-climbing heuristic.
 
 Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each
 of a fixed number of directions. The direction with the best (in this case, minimum) value is
@@ -12,8 +10,13 @@ the step size is reduced and the same process repeats until a desired absolute e
 technique's success heavily depends on the behavior of `f` and the initial guess. Therefore, the
 result is not guaranteed to be the global minimum.
 
+- `find_min(f, x0, y0, critical_x, critical_y)` returns a candidate global minimum value of `f`
+  reached by hill-climbing from the starting guess `(x0, y0)`. If the optional pointers `critical_x`
+  and `critical_y` are supplied, the point attaining the returned value is stored through them. The
+  step-size bounds and number of directions sampled are additional optional parameters.
+
 Time Complexity:
-- O(d log n) call will be made to `f`, where $d$ is the number of directions considered at each
+- O(d log n) calls will be made to `f`, where $d$ is the number of directions considered at each
   position and $n$ is the search space that is approximately proportional to the maximum possible
   step size divided by the minimum possible step size.
 

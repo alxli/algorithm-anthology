@@ -13,7 +13,7 @@ two functions are each techniques to efficiently count inversions.
   inversions in an integer vector without modifying it.
 
 Time Complexity:
-- O(n log n) per call to `inversion(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
+- O(n log n) per call to `inversions(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
 - O(n log n) per call to `inversions(a)`.
 
 Space Complexity:

@@ -4,6 +4,10 @@ Given a flow network with integer capacities, find the maximum flow from a given
 given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at
 every node other than the source and sink.
 
+Edmonds-Karp is the Ford-Fulkerson method with the augmenting path always chosen as a shortest one
+(fewest edges) via breadth-first search. This bounds the number of augmentations at $O(n m)$,
+independent of the capacity magnitudes.
+
 - `add_edge(u, v, cap)` adds a directed residual-network edge.
 - `edmonds_karp(source, sink)` modifies the global adjacency list `adj` and returns maximum flow.
   Nodes are numbered from 0 to `adj.size() - 1`.

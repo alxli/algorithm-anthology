@@ -7,6 +7,11 @@ block sum, and prefix queries combine O(log R * log C) disjoint blocks.
 This implementation uses 1-based indices, so rows are from 1 to `R`, inclusive, and columns are
 from 1 to `C`, inclusive.
 
+Choose this for dense grids with additive point updates and rectangle-sum queries; it is simpler and
+lighter than a 2D segment tree when sums are the only aggregate needed. For huge sparse grids, use
+the sparse 2D Fenwick tree; for non-additive aggregates such as min/max with custom updates, use a
+2D segment tree or quadtree.
+
 - `initialize(R, C)` resets the data structure.
 - `vals[r][c]` stores the value at index `(r, c)`.
 - `add(r, c, x)` adds `x` to the value at index `(r, c)`.

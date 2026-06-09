@@ -14,8 +14,9 @@ folded in twice; this is harmless only when `combine()` is idempotent. To suppor
 but associative operation such as "sum" or "XOR" in constant time, use the disjoint sparse table in
 the next section instead, whose ranges meet at a center and never overlap.
 
-The query operation is defined by an associative and idempotent function `combine(a, b)`. The default
-code below returns the "min" of the range; for "gcd", `combine(a, b)` should return `gcd(a, b)`.
+The query operation is defined by an associative and idempotent function `combine(a, b)`. The
+default code below returns the "min" of the range; for "gcd", `combine(a, b)` should return
+`gcd(a, b)`.
 
 - `SparseTable(lo, hi)` builds the table from the range `[lo, hi)` of a random-access iterator.
 - `size()` returns the size of the array.

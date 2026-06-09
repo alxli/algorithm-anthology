@@ -4,6 +4,10 @@ Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots,
 well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the
 largest possible subset of $E$ containing no edges that share the same node.
 
+Kuhn's algorithm builds the matching one left node at a time. For each, a depth-first search looks
+for an augmenting path: an alternating sequence of unmatched and matched edges that reaches a free
+right node. Flipping the edges along such a path enlarges the matching by one.
+
 - `kuhn(n2)` populates `match` and returns maximum matching size for a global, pre-populated
   adjacency list `adj` whose left-side nodes are numbered from 0 to `adj.size() - 1` and whose
   right-side neighbors are numbered from 0 to `n2 - 1`.

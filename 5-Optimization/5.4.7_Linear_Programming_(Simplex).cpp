@@ -5,6 +5,10 @@ linear programming problem is to maximize (or minimize) the dot product $cx$, su
 and $x \geq 0$, where $x$ is a vector of unknowns to be solved, $c$ is a vector of coefficients, $a$
 is a matrix of linear equation coefficients, and $b$ is a vector of boundary coefficients.
 
+The simplex algorithm walks between vertices of the feasible polytope, at each step pivoting to an
+adjacent vertex that improves the objective, until no improving move remains (an optimum is reached)
+or an unbounded improving direction is found.
+
 - `simplex_solve(a, b, c, &x)` solves the linear programming problem for an $m$ by $n$ matrix `a` of
   real values, a length $m$ vector `b`, and a length $n$ vector `c`, returning 0 if an optimum was
   found, $-1$ if there are no feasible solutions, or 1 if the objective is unbounded. If an optimum

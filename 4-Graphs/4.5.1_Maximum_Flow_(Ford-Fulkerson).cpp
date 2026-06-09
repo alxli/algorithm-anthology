@@ -4,6 +4,10 @@ Given a flow network with integer capacities, find the maximum flow from a given
 given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at
 every node other than the source and sink.
 
+The Ford-Fulkerson method repeatedly finds any augmenting path from source to sink in the residual
+graph (here by depth-first search) and pushes as much flow as the path allows, until no augmenting
+path remains.
+
 - `ford_fulkerson()` uses global `source` and `sink`, modifies the global residual capacity matrix
   `cap`, and returns maximum flow. Nodes are numbered from 0 to `cap.size() - 1`.
 

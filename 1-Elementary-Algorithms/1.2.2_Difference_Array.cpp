@@ -1,8 +1,8 @@
 /*
 
 Applies many range-add updates to an array in linear total time using a difference array. Instead of
-immediately adding `delta` to every element of `[lo, hi)`, add `delta` at `diff[lo]` and subtract it at
-`diff[hi]`; a final prefix sum reconstructs the updated values.
+immediately adding `delta` to every element of `[lo, hi)`, add `delta` at `diff[lo]` and subtract it
+at `diff[hi]`; a final prefix sum reconstructs the updated values.
 
 - `DifferenceArray(n)` constructs an initially zero array of size `n`.
 - `add(lo, hi, delta)` adds `delta` to every position in the half-open range `[lo, hi)`.

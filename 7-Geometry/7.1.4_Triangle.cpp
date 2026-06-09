@@ -17,7 +17,7 @@ floating-point point type for fractional coordinates.
 
 - `triangle_area(a, b, c)` returns the area of the triangle $abc$.
 - `triangle_area_sides(s1, s2, s3)` returns the area of a triangle with side lengths `s1`, `s2`, and
-  `s_3`. The given lengths must be non-negative and form a valid triangle.
+  `s3`. The given lengths must be non-negative and form a valid triangle.
 - `triangle_area_medians(m1, m2, m3)` returns the area of a triangle with medians of lengths `m1`,
   `m2`, and `m3`. The median of a triangle is a line segment joining a vertex to the midpoint of
   the opposing edge.

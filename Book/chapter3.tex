@@ -173,8 +173,8 @@ Joining and Splitting:
 
 \begin{compactitem}
   \item \inlinecode{join(v, delim)} returns the strings in vector \inlinecode{v} concatenated, separated by the given delimiter.
-  \item \inlinecode{split(s, char delim)} returns a vector of tokens of \inlinecode{s}, split on a single character delimiter. Note that this version will not skip empty tokens. For example, \inlinecode{split("a::b", ":")} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
-  \item \inlinecode{split(s, string delim)} returns a vector of tokens of \inlinecode{s}, split on a set of many possible single character delimiters. All characters of \inlinecode{delim} will be removed from \inlinecode{s}, and the remaining token(s) of \inlinecode{s} will be added sequentially to a vector and returned. Unlike the first version, empty tokens are skipped. For example, \inlinecode{split("a::b", ":")} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
+  \item \inlinecode{split(s, char delim)} returns a vector of tokens of \inlinecode{s}, split on a single character delimiter. Empty tokens are skipped, so \inlinecode{split("a::b", \textquotesingle{}:\textquotesingle{})} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
+  \item \inlinecode{split(s, string delim)} returns a vector of tokens of \inlinecode{s}, split on a set of many possible single character delimiters. All characters of \inlinecode{delim} will be removed from \inlinecode{s}, and the remaining token(s) of \inlinecode{s} will be added sequentially to a vector and returned. As with the first version, empty tokens are skipped. For example, \inlinecode{split("a::b", ":")} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
   \item \inlinecode{explode(s, delim)} returns a vector of tokens of \inlinecode{s}, split on the entire delimiter string \inlinecode{delim}. Unlike the \inlinecode{split()} functions above, \inlinecode{delim} is treated as a contiguous boundary string, not merely a set of possible boundary characters. This will not skip empty tokens. For example, \inlinecode{explode("a::::b", "::")} yields \inlinecode{\{"a", "", "b"\}}, not \inlinecode{\{"a", "b"\}}.
 \end{compactitem}
 
@@ -193,7 +193,9 @@ std::vector<string> split(const string &s, char delim) {
   std::stringstream ss(s);
   string curr;
   while (std::getline(ss, curr, delim)) {
-    res.push_back(curr);
+    if (!curr.empty()) {
+      res.push_back(curr);
+    }
   }
   return res;
 }
@@ -256,6 +258,7 @@ int main() {
   assert(replace("abcdabba", "ab", "00") == "00cd00ba");
 
   assert(join(split("a\nb\ncde\nf", '\n'), "|") == "a|b|cde|f");  // split v1
+  assert(join(split("a::b", ':'), "|") == "a|b");                 // split v1 skips empty tokens
   assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");   // split v2
   assert(join(explode("a..b.cde....f", ".."), "|") == "a|b.cde||f");
   return 0;
@@ -488,6 +491,8 @@ int main() {
 \end{lstlisting}
 \subsection{Rolling Hash}
 Computes polynomial rolling hashes for sequences, supporting $O(1)$ contiguous subsequence hash queries after preprocessing. This is useful for probabilistic string matching, substring equality checks, repeated subarray detection, and binary-searching over candidate lengths.
+
+Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Equivalently, it is built left-to-right by the recurrence \inlinecode{pref[i + 1] = pref[i] * HASH\_BASE + h(a[i])}. A subsequence hash for \inlinecode{[l, r)} is obtained by subtracting away the prefix before \inlinecode{l}: \inlinecode{pref[r] - pref[l] * HASH\_BASE\textasciicircum{}(r-l)}.
 
 The implementation works modulo the Mersenne prime $2^{61} - 1$ and uses \inlinecode{\_\_uint128\_t} for multiplication. The base \inlinecode{HASH\_BASE} should be changed or chosen randomly for open-hacking environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic and should not be used as proof of equality when exact verification is required.
 
@@ -1264,7 +1269,7 @@ int main() {
 \subsection{Recursive Descent Parsing}
 Evaluate an expression with custom operand types, prefix unary operators, binary operators, and precedences. Evaluation is performed by recursive descent: the parser recursively evaluates tighter precedence levels before looser ones. Parentheses are supported, but multiplication by juxtaposition is not.
 
-An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting $-1$ as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator \inlinecode{-}.
+An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting $-1$ as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative numbers as operands alongside the unary operator \inlinecode{-}.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
 
@@ -1281,7 +1286,7 @@ Operators may be non-empty strings of any length, but should not contain any par
   \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
   \item $O(n \cdot m \cdot k)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
   \item $O(n)$ expected per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(n \cdot m \cdot k + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
+  \item $O(n \cdot m \cdot k + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the length of \inlinecode{s}, and $m$ and $k$ are as defined previously.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1508,7 +1513,7 @@ int main() {
 \subsection{Shunting Yard Parsing}
 Evaluate an expression with custom operand types, prefix unary operators, binary operators, and precedences. Evaluation is performed using the shunting yard algorithm, which maintains operator and value stacks while respecting precedence and parentheses. Multiplication by juxtaposition is not supported.
 
-An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting $-1$ as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative number as operands alongside the unary operator \inlinecode{-}.
+An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting $-1$ as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative numbers as operands alongside the unary operator \inlinecode{-}.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
 
@@ -1525,7 +1530,7 @@ Operators may be non-empty strings of any length, but should not contain any par
   \item $O(m)$ per call to the constructor, where $m$ is the total number of operators.
   \item $O(n \cdot m \cdot k)$ per call to \inlinecode{split(s)}, where $n$ is the length of \inlinecode{s}, $m$ is the total number of operators defined for the parser instance, and $k$ is the maximum length for any operator representation.
   \item $O(n)$ expected per call to \inlinecode{eval(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(n \cdot m \cdot k + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}, and $m$ and $k$ are as defined previous.
+  \item $O(n \cdot m \cdot k + n)$ expected per call to \inlinecode{eval(s)}, where $n$ is the length of \inlinecode{s}, and $m$ and $k$ are as defined previously.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1757,7 +1762,11 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Longest Common Substring}
-Given two strings, determine their longest common substring (i.e. consecutive subsequence) using dynamic programming.
+Given two strings, determine their longest common substring: a contiguous run of characters that appears in both. A dynamic program computes, for each pair of prefixes, the length of their longest common suffix; the largest value over all pairs locates a longest common substring. Only the previous row of the table is retained, so the auxiliary space is linear in the shorter string.
+
+\begin{compactitem}
+  \item \inlinecode{longest\_common\_substring(s1, s2)} returns a longest common substring of \inlinecode{s1} and \inlinecode{s2} (one such substring if several are tied in length), or the empty string if they have none in common.
+\end{compactitem}
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{longest\_common\_substring(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
 

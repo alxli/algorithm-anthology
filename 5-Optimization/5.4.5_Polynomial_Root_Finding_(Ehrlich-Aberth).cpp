@@ -18,8 +18,8 @@ scales may require rescaling the input or using multiprecision arithmetic.
 
 Time Complexity:
 - O(n) per call to `eval_with_derivative(p, x)`, where $n$ is the degree of the polynomial.
-- O(n^2 p) per call to `find_all_roots(p, EPS, ITERATIONS)`, where $n$ is the degree of the
-  polynomial and $p$ is the number of iterations required to reach the desired precision.
+- O(n^2 t) per call to `find_all_roots(p, EPS, ITERATIONS)`, where $n$ is the degree of the
+  polynomial and $t$ is the number of iterations required to reach the desired precision.
 
 Space Complexity:
 - O(1) auxiliary space for `eval_with_derivative(p, x)`.

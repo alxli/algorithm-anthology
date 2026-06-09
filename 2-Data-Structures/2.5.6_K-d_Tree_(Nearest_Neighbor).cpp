@@ -7,6 +7,11 @@ side first, and only explores the other side when its splitting plane can still 
 This implementation uses `std::pair` to represent points, requiring operators `<`, `==`, `-`, and
 `long double` casting to be defined on the numeric template type.
 
+Use this for static nearest-neighbor queries on point sets in low dimensions. It is a geometric
+search tree rather than an aggregate structure: for rectangle reporting use the range k-d tree or
+2D range tree, and for grid cell updates or rectangle sums/minima use a Fenwick tree, quadtree, or
+2D segment tree.
+
 - `NearestKDTree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a
   range `[lo, hi)` of points.
 - `nearest(x, y, can_equal)` returns a point in the set that is closest to `(x, y)` by Euclidean

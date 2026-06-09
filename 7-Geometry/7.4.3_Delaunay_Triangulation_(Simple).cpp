@@ -1,15 +1,15 @@
 /*
 
-Given a set $P$ of two dimensional points, the Delaunay triangulation of $P$ is a set of
+Given a set $P$ of two-dimensional points, the Delaunay triangulation of $P$ is a set of
 non-overlapping triangles that covers the entire convex hull of $P$ such that no point in $P$ lies
 within the circumcircle of any of the resulting triangles. For any point $p$ in the convex hull of
 $P$ (but not necessarily in $P$), the nearest point is guaranteed to be a vertex of the enclosing
 triangle from the triangulation.
 
 The triangulation may not exist (e.g. for a set of collinear points), or may not be unique if it
-does exist. The following program assumes its existence and produces one such valid result using a
-simple algorithm which encases each triangle in a circle and rejects the triangle if another point
-in the tessellation is within the generalized circle.
+does exist. This implementation produces one valid result using a simple algorithm which encases
+each triangle in a circle and rejects the triangle if another point in the tessellation is within
+the generalized circle.
 
 - `delaunay_triangulation(lo, hi)` returns a Delaunay triangulation for the input range `[lo, hi)`
   of points, where `lo` and `hi` must be random-access iterators, or an empty vector if a

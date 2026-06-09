@@ -4,6 +4,10 @@ Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots,
 well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the
 largest possible subset of $E$ containing no edges that share the same node.
 
+Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a
+breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set
+of vertex-disjoint shortest augmenting paths to flip at once, giving $O(m \sqrt{n})$ overall.
+
 - `hopcroft_karp(n2)` populates `match` and returns maximum matching size for a global,
   pre-populated adjacency list `adj` whose left-side nodes are numbered from 0 to `adj.size() - 1`
   and whose right-side neighbors are numbered from 0 to `n2 - 1`.

@@ -11,8 +11,8 @@ corresponding range of positions in either child, so a single root-to-leaf desce
 statistics and rank queries. This is strictly more powerful than a merge sort tree: besides counting
 values below a threshold, it reports the $k$-th smallest value of a range in $O(\log \sigma)$ time.
 
-All position ranges are inclusive `[lo, hi]` with 0-based indices. If the values are large or sparse,
-compress them to a small contiguous range first.
+All position ranges are inclusive `[lo, hi]` with 0-based indices. If the values are large or
+sparse, compress them to a small contiguous range first.
 
 - `WaveletTree(a, min_val, max_val)` builds the tree over the array `a`, whose values must all lie
   in `[min_val, max_val]`.
@@ -22,8 +22,8 @@ compress them to a small contiguous range first.
 - `count_in(lo, hi, x, y)` returns the number of positions `i` in `[lo, hi]` with `x <= a[i] <= y`.
 
 Time Complexity:
-- O(n log \sigma) per call to the constructor, where $n$ is the size of the array and $\sigma$ is the
-  size of the value range.
+- O(n log \sigma) per call to the constructor, where $n$ is the size of the array and $\sigma$ is
+  the size of the value range.
 - O(log \sigma) per call to `kth_smallest()`, `count_leq()`, and `count_in()`.
 
 Space Complexity:

@@ -7,6 +7,10 @@ node using the shortest-path tree from the predecessor vector `pred`.
 - `bfs(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj` which
   must consist of nodes numbered from 0 to `adj.size() - 1`.
 
+For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
+`start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
+destination to `start`, then reverse that sequence to recover the path.
+
 Time Complexity:
 - O(max(n, m)) per call to `bfs()`, where $n$ is the number of nodes and $m$ is the number of edges.
 

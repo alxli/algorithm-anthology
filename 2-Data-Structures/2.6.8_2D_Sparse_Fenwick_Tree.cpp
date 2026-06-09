@@ -8,6 +8,11 @@ prefix rectangle sum.
 This implementation uses 0-based indices, so rows are from 0 to `R`, inclusive, and columns are from
 0 to `C`, inclusive.
 
+Choose this for huge sparse grids when the operation is additive: point/rectangle increments and
+rectangle sums. It avoids allocating the dense `R*C` table of the simple 2D Fenwick tree, but it is
+less general than the sparse 2D segment tree or quadtrees because Fenwick-tree algebra relies on
+addition and subtraction.
+
 - `SparseFenwick2D()` constructs an initially zero 2D array over rows 0 to `R` and columns 0 to `C`.
 - `add(r, c, x)` adds `x` to the value at index `(r, c)`.
 - `add(r1, c1, r2, c2, x)` adds `x` to all indices in the rectangle with upper-left corner

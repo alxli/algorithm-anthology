@@ -17,14 +17,19 @@ prime and the requested factorials are invertible modulo `MOD`.
 - `pow(e)` returns this value raised to nonnegative exponent `e`.
 - `inv()` returns the multiplicative inverse, asserting it exists.
 - Operators `+`, `-`, `*`, `/`, comparison, increment, decrement, and stream I/O are overloaded.
+- `ModCombinatorics<Mint>::factorial(n)` returns $n!$ using a lazy factorial table.
 - `ModCombinatorics<Mint>::choose(n, k)` returns $\binom n k$ using lazy factorial and
   inverse-factorial tables.
+- `ModCombinatorics<Mint>::permute(n, k)` returns the number of ordered selections of `k` distinct
+  elements from `n`.
+- `ModCombinatorics<Mint>::multichoose(n, k)` returns the number of size-`k` multisets drawn from
+  `n` types.
 
 Time Complexity:
 - O(1) per addition, subtraction, multiplication, comparison, and stream output.
 - O(log e) per call to `pow(e)`.
 - O(log MOD) per call to `inv()` and division.
-- O(n) total table growth to answer combinations up to size `n`.
+- O(n) total table growth to answer factorials and combinations up to size `n`.
 
 Space Complexity:
 - O(1) auxiliary for Modular arithmetic.

@@ -7,7 +7,7 @@ one operand is a `BigInt` at any given level of evaluation.
 
 - `BigInt(n)` constructs a big integer from a long long (default: 0).
 - `BigInt(s)` constructs a big integer from a C string or an `std::string` `s`.
-- `operator=` is defined to copy from another big integer or to assign from an 64-bit integer
+- `operator=` is defined to copy from another big integer or to assign from a 64-bit integer
   primitive.
 - `size()` returns the number of digits in the base-10 representation.
 - Operators `>>` and `<<` are defined to support stream-based input and output.
@@ -19,16 +19,21 @@ one operand is a `BigInt` at any given level of evaluation.
   less, equal, or greater, respectively.
 - Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
   `/=`, and `%=` are defined analogous to those on integer primitives. Addition, subtraction, and
-  comparisons are performed using the standard linear algorithms. Multiplication is performed using
-  a combination of the grade school algorithm (for smaller inputs) and either the Karatsuba
-  algorithm (if the `USE_FFT_MULT` flag is set to false) or the Schonhage-Strassen algorithm (if
-  `USE_FFT_MULT` is set to true). Division and modulo are computed simultaneously using the grade
-  school method.
+  comparisons are performed using the standard linear algorithms. Multiplication first converts
+  limbs from base $10^9$ to base $10^4$ so coefficient products fit safely, then uses either
+  Karatsuba multiplication (if `USE_FFT_MULT` is false) or complex FFT convolution (if
+  `USE_FFT_MULT` is true), converting the result back to base $10^9$. Division and modulo are
+  computed together by normalized long division: scale the operands so the divisor's leading limb is
+  large, estimate each quotient limb from the top one or two limbs of the running remainder, correct
+  the estimate by adding the divisor back if necessary, then unscale the remainder.
 - `a.div(b)` returns a pair consisting of the quotient and remainder.
 - `v.pow(n)` returns `v` raised to the power of $n$.
 - `v.sqrt()` returns the integral part of the square root of big integer `v`.
 - `v.nth_root(n)` returns the integral part of the $n$th root of big integer `v`.
 - `rand(n)` returns a random, positive big integer with $n$ digits.
+
+`pow(n)` uses binary exponentiation. `sqrt()` uses a digit-by-digit square-root algorithm in the
+internal base, while `nth_root(n)` uses binary search over the answer range.
 
 Time Complexity:
 - O(n) per call to the constructors, `size()`, `to_string()`, `to_llong()`, `to_double()`,
@@ -39,8 +44,9 @@ Time Complexity:
   `USE_FFT_MULT` is set to true or false.
 - O(n*m) per call to division and modulo operations, where $n$ and $m$ are the number of digits in
   the dividend and divisor, respectively.
-- O(M(m) log n) per call to `pow(n)`, where $M(m)$ is cost to multiply two big integers of length
-  $m$, depending on the multiplication method used.
+- O(M(d) log n) per call to `pow(n)`, where $d$ is the maximum digit length reached during
+  exponentiation and $M(d)$ denotes the cost of one multiplication of two $d$-digit big integers
+  using the selected multiplication method above.
 
 Space Complexity:
 - O(n) for storage of the big integer.

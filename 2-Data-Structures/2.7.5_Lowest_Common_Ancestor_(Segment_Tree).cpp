@@ -1,11 +1,18 @@
 /*
 
-Given a tree, determine the lowest common ancestor of any two nodes in the tree. The lowest common
-ancestor of two nodes $u$ and $v$ is the node that has the longest distance from the root while
-having both $u$ and $v$ as its descendant. A node is considered to be a descendant of itself.
-`build()` applies to a global, pre-populated adjacency list `adj` which must only consist of nodes
-numbered with integers between 0 (inclusive) and the total number of nodes (exclusive), as passed in
-the function argument. The adjacency list must define one connected tree rooted at `root`.
+Given a tree, determine the lowest common ancestor of any two nodes. The lowest common ancestor of
+two nodes $u$ and $v$ is the node that has the longest distance from the root while having both $u$
+and $v$ as its descendant. A node is considered to be a descendant of itself.
+
+This reduces LCA to a range-minimum query. An Euler tour of the tree records, at each visit to a
+node, that node's depth; the lowest common ancestor of $u$ and $v$ is the shallowest node visited
+between their first occurrences in the tour, found by a range-minimum query over the depth sequence.
+This version answers those queries with a segment tree.
+
+- `build(root)` builds the structure over a global, bidirectionally pre-populated adjacency list
+  `adj` of nodes numbered 0 to `adj.size() - 1`, which must define one connected tree rooted at
+  `root` (default 0).
+- `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`.
 
 Time Complexity:
 - O(n log n) per call to `build()`, where $n$ is the number of nodes.
@@ -47,7 +54,8 @@ void build(int n, int lo, int hi) {
   minpos[n] = depth[minpos[lchild]] < depth[minpos[rchild]] ? minpos[lchild] : minpos[rchild];
 }
 
-void build(int nodes, int root) {
+void build(int root = 0) {
+  int nodes = static_cast<int>(adj.size());
   depth.assign(nodes, -1);
   dfs_order.assign(2 * nodes, 0);
   first.assign(nodes, -1);
@@ -88,18 +96,18 @@ int lca(int u, int v) {
 #include <cassert>
 using namespace std;
 
+void add_edge(int u, int v) {
+  adj[u].push_back(v);
+  adj[v].push_back(u);
+}
+
 int main() {
-  int nodes = 5;
-  adj.resize(nodes);
-  adj[0].push_back(1);
-  adj[1].push_back(0);
-  adj[1].push_back(2);
-  adj[2].push_back(1);
-  adj[3].push_back(1);
-  adj[1].push_back(3);
-  adj[0].push_back(4);
-  adj[4].push_back(0);
-  build(nodes, 0);
+  adj.assign(5, {});
+  add_edge(0, 1);
+  add_edge(0, 4);
+  add_edge(1, 2);
+  add_edge(1, 3);
+  build(0);
   assert(lca(3, 2) == 1);
   assert(lca(2, 4) == 0);
   return 0;

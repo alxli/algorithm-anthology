@@ -18,10 +18,25 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-This data structure shares every operation of one-dimensional segment trees in this section, with
-the additional operations `empty()`, `insert()`, `erase()`, `push_back()`, and `pop_back()`
-analogous to those of `std::vector` (here, `insert()` and `erase()` both take an index instead of an
-iterator).
+- `ImplicitTreap(n, v)` constructs an array of size `n` with all values initialized to `v`.
+- `ImplicitTreap(lo, hi)` constructs an array from two iterators as a range `[lo, hi)`, initialized
+  to the elements of the range in the same order.
+- `size()` returns the size of the array.
+- `empty()` returns whether the array is empty.
+- `at(i)` returns the value at index `i`.
+- `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
+  inclusive.
+- `update(lo, hi, d)` applies the delta `d` to every index from `lo` to `hi`, inclusive.
+- `update(i, d)` applies the delta `d` to the single index `i`.
+- `insert(i, v)` inserts a new value `v` before index `i`, shifting later elements one position
+  right.
+- `erase(i)` removes the element at index `i`, shifting later elements one position left.
+- `push_back(v)` appends a new value `v` to the end of the array.
+- `pop_back()` removes the last element of the array.
+
+The query and update operations match those of the point- and range-update segment trees in this
+section; `insert()`, `erase()`, `push_back()`, and `pop_back()` are additionally analogous to those
+of `std::vector` (here, `insert()` and `erase()` take an index instead of an iterator).
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.

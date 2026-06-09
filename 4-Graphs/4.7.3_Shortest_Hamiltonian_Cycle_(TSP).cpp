@@ -2,12 +2,18 @@
 
 Given a complete weighted graph, determine a cycle of minimum total distance which visits each node
 exactly once and returns to the starting node. This is known as the traveling salesman problem
-(TSP). Since this implementation uses bitmasks with signed 32-bit integers, the maximum number of
-nodes must be less than 31.
+(TSP).
+
+It is solved by the Held-Karp dynamic program over subsets: `dp[S][i]` is the length of the shortest
+path that starts at a fixed node, visits exactly the set `S` of nodes, and ends at node `i`, built
+up by iterating over the subsets in increasing order of their bitmask.
 
 - `shortest_hamiltonian_cycle()` populates `order` and returns minimum cycle length for a global,
   bidirectionally pre-populated adjacency matrix `adj` which must represent a complete graph on
   nodes numbered from 0 to `adj.size() - 1`.
+
+Since this implementation uses bitmasks with signed 32-bit integers, the maximum number of nodes
+must be less than 31.
 
 Time Complexity:
 - O(2^n * n^2) per call to `shortest_hamiltonian_cycle()`, where $n$ is the number of nodes.

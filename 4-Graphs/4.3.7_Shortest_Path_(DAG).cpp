@@ -13,6 +13,10 @@ way to find the critical path in a schedule of dependent tasks.
   `(neighbor, weight)` and may have any sign. `dist[v]` is set to `INF` for nodes not reachable from
   `start`, and `pred` stores the shortest-path tree for path reconstruction.
 
+For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
+`start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
+destination to `start`, then reverse that sequence to recover the path.
+
 Time Complexity:
 - O(n + m) per call to `dag_shortest_path()`, where $n$ is the number of nodes and $m$ is the number
   of edges.
