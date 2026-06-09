@@ -2810,7 +2810,7 @@ bcde
 \subsection{Sparse Table}
 Given a static array, precompute a table that answers range minimum queries in constant time. More generally, the sparse table works for any range query whose combining operation is both associative and idempotent, meaning \inlinecode{combine(x, x) == x}. The canonical examples are ``min'', ``max'', ``gcd'', and the bitwise ``and'' and ``or''.
 
-For each level $j$, the entry \inlinecode{dp[j][i]} holds the result of \inlinecode{combine()} over the half-open range \inlinecode{[i, i + 2\textasciicircum{}j)}, built by combining two ranges of length $2^{j-1}$. A query over \inlinecode{[lo, hi]} is answered by combining the two overlapping ranges of length $2^j$ that are anchored at \inlinecode{lo} and at \inlinecode{hi}, where $2^j$ is the largest power of two not exceeding the length of the range. Because these two ranges overlap whenever the query length is not a power of two, the elements in the overlap are folded in twice; this is harmless only when \inlinecode{combine()} is idempotent. To support a non-idempotent but associative operation such as ``sum'' or ``xor'' in constant time, use the disjoint sparse table in the next section instead, whose ranges meet at a center and never overlap.
+For each level $j$, the entry \inlinecode{dp[j][i]} holds the result of \inlinecode{combine()} over the half-open range \inlinecode{[i, i + 2\textasciicircum{}j)}, built by combining two ranges of length $2^{j-1}$. A query over \inlinecode{[lo, hi]} is answered by combining the two overlapping ranges of length $2^j$ that are anchored at \inlinecode{lo} and at \inlinecode{hi}, where $2^j$ is the largest power of two not exceeding the length of the range. Because these two ranges overlap whenever the query length is not a power of two, the elements in the overlap are folded in twice; this is harmless only when \inlinecode{combine()} is idempotent. To support a non-idempotent but associative operation such as ``sum'' or ``XOR'' in constant time, use the disjoint sparse table in the next section instead, whose ranges meet at a center and never overlap.
 
 The query operation is defined by an associative and idempotent function \inlinecode{combine(a, b)}. The default code below returns the ``min'' of the range; for ``gcd'', \inlinecode{combine(a, b)} should return \inlinecode{gcd(a, b)}.
 
@@ -4803,6 +4803,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 
 template<class T>
 class SegTree2D {
@@ -4839,42 +4840,36 @@ class SegTree2D {
 
   static long long length(int lo, int hi) { return hi - lo + 1LL; }
 
-  void append_result(T &res, bool &found, const T &v) {
-    res = found ? combine(res, v) : v;
-    found = true;
-  }
+  void append_result(std::optional<T> &res, const T &v) { res = res ? combine(*res, v) : v; }
 
   T query(InnerNode *n, int qlo, int qhi, long long rows) {
     if (n == nullptr) {
       return repeat_value(init, rows * length(qlo, qhi));
     }
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
-    T res;
-    bool found = false;
+    std::optional<T> res;
     if (qlo < lo) {
       int missing_hi = std::min(qhi, lo - 1);
-      append_result(res, found, repeat_value(init, rows * length(qlo, missing_hi)));
+      append_result(res, repeat_value(init, rows * length(qlo, missing_hi)));
     }
     int overlap_lo = std::max(qlo, lo), overlap_hi = std::min(qhi, hi);
     if (overlap_lo <= overlap_hi) {
       if (overlap_lo == lo && overlap_hi == hi) {
-        append_result(res, found, n->value);
+        append_result(res, n->value);
       } else {
         if (overlap_lo <= mid) {
-          append_result(res, found, query(n->left, overlap_lo, std::min(overlap_hi, mid), rows));
+          append_result(res, query(n->left, overlap_lo, std::min(overlap_hi, mid), rows));
         }
         if (mid < overlap_hi) {
-          append_result(
-              res, found, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi, rows)
-          );
+          append_result(res, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi, rows));
         }
       }
     }
     if (hi < qhi) {
       int missing_lo = std::max(qlo, hi + 1);
-      append_result(res, found, repeat_value(init, rows * length(missing_lo, qhi)));
+      append_result(res, repeat_value(init, rows * length(missing_lo, qhi)));
     }
-    return res;
+    return *res;
   }
 
   T query(OuterNode *n, int qlo, int qhi) {
@@ -4882,30 +4877,29 @@ class SegTree2D {
       return repeat_value(init, width * length(qlo, qhi));
     }
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
-    T res;
-    bool found = false;
+    std::optional<T> res;
     if (qlo < lo) {
       int missing_hi = std::min(qhi, lo - 1);
-      append_result(res, found, repeat_value(init, width * length(qlo, missing_hi)));
+      append_result(res, repeat_value(init, width * length(qlo, missing_hi)));
     }
     int overlap_lo = std::max(qlo, lo), overlap_hi = std::min(qhi, hi);
     if (overlap_lo <= overlap_hi) {
       if (overlap_lo == lo && overlap_hi == hi) {
-        append_result(res, found, query(&(n->root), tgt_c1, tgt_c2, length(lo, hi)));
+        append_result(res, query(&(n->root), tgt_c1, tgt_c2, length(lo, hi)));
       } else {
         if (overlap_lo <= mid) {
-          append_result(res, found, query(n->left, overlap_lo, std::min(overlap_hi, mid)));
+          append_result(res, query(n->left, overlap_lo, std::min(overlap_hi, mid)));
         }
         if (mid < overlap_hi) {
-          append_result(res, found, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi));
+          append_result(res, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi));
         }
       }
     }
     if (hi < qhi) {
       int missing_lo = std::max(qlo, hi + 1);
-      append_result(res, found, repeat_value(init, width * length(missing_lo, qhi)));
+      append_result(res, repeat_value(init, width * length(missing_lo, qhi)));
     }
-    return res;
+    return *res;
   }
 
   void update(InnerNode *n, int c, const T &d, bool leaf_row, long long rows) {
@@ -5917,7 +5911,7 @@ int main() {
 \begin{exampleoutput}
 Values: 15 6 7 -5 4
 \end{exampleoutput}
-\subsection{Fenwick Tree (Order Statistic)}
+\subsection{Fenwick Tree for Order Statistics (Binary Lifting)}
 Maintain frequencies over a 1-based integer domain and find order statistics by binary lifting on a Fenwick tree. The tree stores prefix counts; \inlinecode{kth(k)} greedily walks the implicit binary lifting structure to find the first index whose prefix count reaches \inlinecode{k}.
 
 This is useful for dynamic multisets of bounded integer values, coordinate-compressed kth-element queries, and online rank queries.
@@ -5949,7 +5943,7 @@ void initialize(int n) {
 }
 
 void add(int i, int delta) {
-  for (; i < tree.size(); i += i & -i) {
+  for (; i < static_cast<int>(tree.size()); i += i & -i) {
     tree[i] += delta;
   }
 }
@@ -5963,13 +5957,13 @@ int sum(int i) {
 }
 
 int kth(int k) {
-  int idx = 0, bits = 1;
-  while (bits * 2 < tree.size()) {
+  int idx = 0, bits = 1, sz = static_cast<int>(tree.size());
+  while (bits * 2 < sz) {
     bits *= 2;
   }
   for (; bits > 0; bits >>= 1) {
     int next = idx + bits;
-    if (next < tree.size() && tree[next] < k) {
+    if (next < sz && tree[next] < k) {
       idx = next;
       k -= tree[next];
     }
@@ -6229,7 +6223,7 @@ Values:
 \section{Disjoint Sets and Tree Structures}
 \setcounter{section}{7}
 \setcounter{subsection}{0}
-\subsection{Disjoint Set Forest (Simple)}
+\subsection{Disjoint Set Union}
 Maintain a set of elements partitioned into non-overlapping subsets. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version is simplified to only work on integer elements.
 
 \begin{compactitem}
@@ -6327,10 +6321,11 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Disjoint Set Forest (Compressed)}
+\subsection{Disjoint Set Union (Sparse)}
 Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version uses an \inlinecode{std::unordered\_map} for storage and coordinate compression (thus, element types must meet the requirements of key types for \inlinecode{std::unordered\_map}). The order of sets returned by \inlinecode{get\_all\_sets()} is unspecified.
 
 \begin{compactitem}
+  \item \inlinecode{DisjointSetUnion()} constructs an empty set.
   \item \inlinecode{make\_set(u)} creates a new partition consisting of the single element \inlinecode{u}, which must not have been previously added to the data structure.
   \item \inlinecode{is\_united(u, v)} returns whether elements \inlinecode{u} and \inlinecode{v} belong to the same partition.
   \item \inlinecode{unite(u, v)} replaces the partitions containing \inlinecode{u} and \inlinecode{v} with a single new partition consisting of the union of elements in the original partitions.
@@ -6362,7 +6357,7 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
 #include <vector>
 
 template<class T>
-class DisjointSetForest {
+class DisjointSetUnion {
   int num_elements, num_sets;
   std::unordered_map<T, int> id;
   std::vector<int> root, rank;
@@ -6375,7 +6370,7 @@ class DisjointSetForest {
   }
 
  public:
-  DisjointSetForest() : num_elements(0), num_sets(0) {}
+  DisjointSetUnion() : num_elements(0), num_sets(0) {}
 
   int size() const { return num_elements; }
   int sets() const { return num_sets; }
@@ -6429,17 +6424,17 @@ class DisjointSetForest {
 using namespace std;
 
 int main() {
-  DisjointSetForest<char> dsf;
+  DisjointSetUnion<char> dsu;
   for (char c = 'a'; c <= 'g'; c++) {
-    dsf.make_set(c);
+    dsu.make_set(c);
   }
-  dsf.unite('a', 'b');
-  dsf.unite('b', 'f');
-  dsf.unite('d', 'e');
-  dsf.unite('d', 'g');
-  assert(dsf.size() == 7);
-  assert(dsf.sets() == 3);
-  auto s = dsf.get_all_sets();
+  dsu.unite('a', 'b');
+  dsu.unite('b', 'f');
+  dsu.unite('d', 'e');
+  dsu.unite('d', 'g');
+  assert(dsu.size() == 7);
+  assert(dsu.sets() == 3);
+  auto s = dsu.get_all_sets();
   for (auto &set : s) {
     sort(set.begin(), set.end());
   }
@@ -6462,13 +6457,13 @@ int main() {
 \begin{exampleoutput}
 [a, b, f], [c], [d, e, g]
 \end{exampleoutput}
-\subsection{Disjoint Set Forest (Rollback)}
+\subsection{Disjoint Set Union (Rollback)}
 Maintains disjoint sets while supporting rollback to previous snapshots. Rollback DSU is useful for offline dynamic connectivity, divide-and-conquer over time, and backtracking search where unions must be undone.
 
 Path compression is intentionally not used, because it is hard to undo. Union by size keeps tree height logarithmic, and every successful union records enough information to restore the previous state.
 
 \begin{compactitem}
-  \item \inlinecode{initialize(n)} creates singleton sets over elements \inlinecode{0} through \inlinecode{n - 1}.
+  \item \inlinecode{RollbackDSU(n)} constructs \inlinecode{n} singleton sets over elements \inlinecode{0} through \inlinecode{n - 1}.
   \item \inlinecode{find\_root(u)} returns the representative of the set containing \inlinecode{u}.
   \item \inlinecode{is\_united(u, v)} returns whether \inlinecode{u} and \inlinecode{v} are in the same set.
   \item \inlinecode{unite(u, v)} merges two sets and returns whether a merge occurred.
@@ -6502,12 +6497,17 @@ class RollbackDSU {
   std::vector<Change> history;
   int sets;
 
+  int find_root(int u) const {
+    while (root[u] != u) {
+      u = root[u];
+    }
+    return u;
+  }
+
  public:
   RollbackDSU() : sets(0) {}
 
-  explicit RollbackDSU(int n) { initialize(n); }
-
-  void initialize(int n) {
+  explicit RollbackDSU(int n) {
     root.resize(n);
     size.assign(n, 1);
     history.clear();
@@ -6516,14 +6516,6 @@ class RollbackDSU {
   }
 
   int count_sets() const { return sets; }
-
-  int find_root(int u) const {
-    while (root[u] != u) {
-      u = root[u];
-    }
-    return u;
-  }
-
   bool is_united(int u, int v) const { return find_root(u) == find_root(v); }
 
   bool unite(int u, int v) {
@@ -7057,7 +7049,7 @@ The query operation is defined by an associative \inlinecode{combine()} function
 The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{compose\_deltas()}. A delta must act on an aggregate summary of a path of length \inlinecode{len}: \inlinecode{apply\_delta(v, d, len)} returns the aggregate after applying update \inlinecode{d} to every element represented by aggregate \inlinecode{v}. Pending deltas are combined in chronological order by \inlinecode{compose\_deltas(old, d)}, meaning ``apply \inlinecode{old}, then apply \inlinecode{d}''. These hooks do not support arbitrary query/update pairings; the delta operation must distribute over \inlinecode{combine()}, and composed deltas must have the same effect as applying their updates sequentially. The default code below defines updates that ``set'' a path's nodes to a new value. For range increment updates, \inlinecode{apply\_delta(v, d, len)} would return \inlinecode{v + d} for min/max queries, or \inlinecode{v + d * len} for sum queries, and \inlinecode{compose\_deltas(old, d)} would return \inlinecode{old + d}.
 
 \begin{compactitem}
-  \item \inlinecode{LinkCutForest()} constructs an empty forest with no trees.
+  \item \inlinecode{LinkCut()} constructs an empty forest.
   \item \inlinecode{size()} returns the number of nodes in the forest.
   \item \inlinecode{trees()} returns the number of trees in the forest.
   \item \inlinecode{make\_root(i, v)} creates a new tree in the forest consisting of a single node labeled with the integer \inlinecode{i} and value initialized to \inlinecode{v}.
@@ -7089,7 +7081,7 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
 #include <unordered_map>
 
 template<class T>
-class LinkCutForest {
+class LinkCut {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, int len) { return d; }
   static T compose_deltas(const T &old, const T &d) { return d; }
@@ -7233,16 +7225,16 @@ class LinkCutForest {
   }
 
  public:
-  LinkCutForest() : num_trees(0) {}
+  LinkCut() : num_trees(0) {}
 
-  ~LinkCutForest() {
+  ~LinkCut() {
     for (auto &[key, node] : nodes) {
       delete node;
     }
   }
-  LinkCutForest(const LinkCutForest &) = delete;
-  LinkCutForest &operator=(const LinkCutForest &) = delete;
 
+  LinkCut(const LinkCut &) = delete;
+  LinkCut &operator=(const LinkCut &) = delete;
   int size() const { return nodes.size(); }
   int trees() const { return num_trees; }
 
@@ -7322,7 +7314,7 @@ class LinkCutForest {
 using namespace std;
 
 int main() {
-  LinkCutForest<int> lcf;
+  LinkCut<int> lcf;
   lcf.make_root(0, 10);
   lcf.make_root(1, 40);
   lcf.make_root(2, 20);

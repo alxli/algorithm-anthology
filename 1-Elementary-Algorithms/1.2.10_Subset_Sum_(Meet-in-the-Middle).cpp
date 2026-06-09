@@ -21,7 +21,7 @@ Space Complexity:
 
 template<class It>
 long long max_subset_sum_at_most(It lo, It hi, long long v) {
-  int n = hi - lo;
+  int n = static_cast<int>(hi - lo);
   long long llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
   std::vector<long long> lsum(llen), hsum(hlen);
   for (long long mask = 1; mask < llen; mask++) {

@@ -37,7 +37,7 @@ class Manacher {
 
  public:
   explicit Manacher(const string &s) : s(s), odd(s.size()), even(s.size()) {
-    int n = s.size();
+    int n = static_cast<int>(s.size());
     for (int i = 0, l = 0, r = -1; i < n; i++) {
       int k = (i > r) ? 1 : std::min(odd[l + r - i], r - i + 1);
       while (0 <= i - k && i + k < n && s[i - k] == s[i + k]) {

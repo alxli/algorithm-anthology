@@ -1,7 +1,7 @@
 /*
 
 Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of
-x-coordinate queries each asking to find the minimum $y$-value when any of the given lines are
+$x$-coordinate queries each asking to find the minimum $y$-value when any of the given lines are
 evaluated at the specified $x$. This is useful for dynamic programming recurrences of the form
 `dp[i] = min(m[j] * x[i] + b[j])`.
 
@@ -12,10 +12,10 @@ sort the lines and queries before calling the functions. In that case, the overa
 will be dominated by the sorting step.
 
 - `SemiDynamicCHT()` constructs an empty hull.
-- `add_line(m, b)` inserts the line $y = mx + b$. The slope `m` must be less than or equal to the
-  slope of every line added so far.
-- `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`. Query
-  coordinates must be nondecreasing across calls.
+- `add_line(m, b)` inserts the line $y = mx + b$. The caller must ensure that slope `m` is less than
+  or equal to the slope of every line added so far.
+- `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`. The caller
+  must ensure that query coordinates are nondecreasing across calls.
 
 Overflow warning: `add_line()` compares intersections by cross-multiplying slope and intercept
 differences, a product on the order of the squared coefficient magnitude. For large `m`/`b` (roughly

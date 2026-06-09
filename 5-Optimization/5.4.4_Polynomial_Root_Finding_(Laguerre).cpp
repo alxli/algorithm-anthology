@@ -37,7 +37,7 @@ using cdouble = std::complex<double>;
 using cpoly = std::vector<cdouble>;
 
 std::pair<cdouble, cpoly> horner_eval(const cpoly &p, const cdouble &x) {
-  int n = p.size();
+  int n = static_cast<int>(p.size());
   cpoly b(std::max(1, n - 1));
   for (int i = n - 1; i > 0; i--) {
     b[i - 1] = p[i] + (i < n - 1 ? b[i] * x : 0);
@@ -46,7 +46,7 @@ std::pair<cdouble, cpoly> horner_eval(const cpoly &p, const cdouble &x) {
 }
 
 cpoly derivative(const cpoly &p) {
-  int n = p.size();
+  int n = static_cast<int>(p.size());
   cpoly res(std::max(1, n - 1));
   for (int i = 1; i < n; i++) {
     res[i - 1] = p[i] * cdouble(i);
@@ -63,7 +63,7 @@ cdouble find_one_root(
     const cpoly &p, const cdouble &x0, const double EPS = 1e-15, const int ITERATIONS = 10000
 ) {
   cdouble x = x0;
-  int n = p.size() - 1;
+  int n = static_cast<int>(p.size()) - 1;
   cpoly p1 = derivative(p), p2 = derivative(p1);
   for (int i = 0; i < ITERATIONS; i++) {
     cdouble y0 = horner_eval(p, x).first;

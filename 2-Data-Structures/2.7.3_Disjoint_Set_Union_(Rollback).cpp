@@ -8,7 +8,7 @@ Path compression is intentionally not used, because it is hard to undo. Union by
 height logarithmic, and every successful union records enough information to restore the previous
 state.
 
-- `initialize(n)` creates singleton sets over elements `0` through `n - 1`.
+- `RollbackDSU(n)` constructs `n` singleton sets over elements `0` through `n - 1`.
 - `find_root(u)` returns the representative of the set containing `u`.
 - `is_united(u, v)` returns whether `u` and `v` are in the same set.
 - `unite(u, v)` merges two sets and returns whether a merge occurred.
@@ -40,12 +40,17 @@ class RollbackDSU {
   std::vector<Change> history;
   int sets;
 
+  int find_root(int u) const {
+    while (root[u] != u) {
+      u = root[u];
+    }
+    return u;
+  }
+
  public:
   RollbackDSU() : sets(0) {}
 
-  explicit RollbackDSU(int n) { initialize(n); }
-
-  void initialize(int n) {
+  explicit RollbackDSU(int n) {
     root.resize(n);
     size.assign(n, 1);
     history.clear();
@@ -54,14 +59,6 @@ class RollbackDSU {
   }
 
   int count_sets() const { return sets; }
-
-  int find_root(int u) const {
-    while (root[u] != u) {
-      u = root[u];
-    }
-    return u;
-  }
-
   bool is_united(int u, int v) const { return find_root(u) == find_root(v); }
 
   bool unite(int u, int v) {

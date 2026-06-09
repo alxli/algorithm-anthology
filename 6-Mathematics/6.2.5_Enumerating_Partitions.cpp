@@ -34,7 +34,7 @@ Space Complexity:
 #include <vector>
 
 bool next_partition(std::vector<int> &p) {
-  int n = p.size();
+  int n = static_cast<int>(p.size());
   if (n <= 1) {
     return false;
   }

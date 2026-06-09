@@ -7,6 +7,7 @@ uses an `std::unordered_map` for storage and coordinate compression (thus, eleme
 requirements of key types for `std::unordered_map`). The order of sets returned by `get_all_sets()`
 is unspecified.
 
+- `DisjointSetUnion()` constructs an empty set.
 - `make_set(u)` creates a new partition consisting of the single element `u`, which must not have
   been previously added to the data structure.
 - `is_united(u, v)` returns whether elements `u` and `v` belong to the same partition.
@@ -39,7 +40,7 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class DisjointSetForest {
+class DisjointSetUnion {
   int num_elements, num_sets;
   std::unordered_map<T, int> id;
   std::vector<int> root, rank;
@@ -52,7 +53,7 @@ class DisjointSetForest {
   }
 
  public:
-  DisjointSetForest() : num_elements(0), num_sets(0) {}
+  DisjointSetUnion() : num_elements(0), num_sets(0) {}
 
   int size() const { return num_elements; }
   int sets() const { return num_sets; }
@@ -109,17 +110,17 @@ class DisjointSetForest {
 using namespace std;
 
 int main() {
-  DisjointSetForest<char> dsf;
+  DisjointSetUnion<char> dsu;
   for (char c = 'a'; c <= 'g'; c++) {
-    dsf.make_set(c);
+    dsu.make_set(c);
   }
-  dsf.unite('a', 'b');
-  dsf.unite('b', 'f');
-  dsf.unite('d', 'e');
-  dsf.unite('d', 'g');
-  assert(dsf.size() == 7);
-  assert(dsf.sets() == 3);
-  auto s = dsf.get_all_sets();
+  dsu.unite('a', 'b');
+  dsu.unite('b', 'f');
+  dsu.unite('d', 'e');
+  dsu.unite('d', 'g');
+  assert(dsu.size() == 7);
+  assert(dsu.sets() == 3);
+  auto s = dsu.get_all_sets();
   for (auto &set : s) {
     sort(set.begin(), set.end());
   }

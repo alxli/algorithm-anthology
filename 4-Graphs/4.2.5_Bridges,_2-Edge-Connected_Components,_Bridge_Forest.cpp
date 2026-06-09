@@ -155,7 +155,6 @@ int main() {
   g.add_edge(3, 7);
   g.add_edge(4, 5);
   g.build_bridges();
-  g.build_bridge_forest();
   cout << "Bridges:" << endl;
   for (auto &[u, v] : g.bridges) {
     cout << u << " " << v << endl;
@@ -167,6 +166,7 @@ int main() {
     }
     cout << endl;
   }
+  g.build_bridge_forest();
   cout << "Adjacency List for Bridge Forest:" << endl;
   for (int i = 0, n = static_cast<int>(g.bridge_forest.size()); i < n; i++) {
     cout << i << " =>";

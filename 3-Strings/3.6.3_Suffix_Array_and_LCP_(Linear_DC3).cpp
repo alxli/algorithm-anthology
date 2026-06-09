@@ -128,7 +128,7 @@ class SuffixArrayDC3 {
 
  public:
   explicit SuffixArrayDC3(const string &s) : s(s), sa(s.size() + 1) {
-    int n = s.size();
+    int n = static_cast<int>(s.size());
     std::vector<int> scopy(n);
     for (int i = 0; i < n; i++) {
       scopy[i] = static_cast<unsigned char>(s[i]) + 1;
@@ -141,7 +141,7 @@ class SuffixArrayDC3 {
   const std::vector<int> &get_sa() const { return sa; }
 
   std::vector<int> get_lcp() const {
-    int n = s.size();
+    int n = static_cast<int>(s.size());
     if (n == 0) {
       return {};
     }

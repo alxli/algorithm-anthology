@@ -18,7 +18,7 @@ Space Complexity:
 using std::string;
 
 string longest_common_substring(const string &s1, const string &s2) {
-  int n = s1.size(), m = s2.size();
+  int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
   if (n == 0 || m == 0) {
     return "";
   }

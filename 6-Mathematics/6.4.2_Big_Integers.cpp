@@ -542,7 +542,7 @@ class BigInt {
     while (v.digits.empty() || v.digits.size() % 2 == 1) {
       v.digits.push_back(0);
     }
-    int n = v.digits.size();
+    int n = static_cast<int>(v.digits.size());
     int ldig = (int)::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
     int norm = BASE / (ldig + 1);
     v *= norm;

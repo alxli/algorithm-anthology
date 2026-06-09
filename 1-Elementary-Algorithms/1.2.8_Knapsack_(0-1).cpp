@@ -29,7 +29,7 @@ Space Complexity:
 long long knapsack_01(
     const std::vector<int> &weight, const std::vector<long long> &value, int capacity
 ) {
-  int n = weight.size();
+  int n = static_cast<int>(weight.size());
   std::vector<long long> dp(capacity + 1, 0);
   for (int i = 0; i < n; i++) {
     for (int w = capacity; w >= weight[i]; w--) {

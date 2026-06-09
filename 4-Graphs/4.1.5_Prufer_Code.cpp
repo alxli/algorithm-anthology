@@ -23,10 +23,8 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-std::vector<std::vector<int>> adj;
-
-std::vector<int> encode_prufer() {
-  int nodes = adj.size();
+std::vector<int> encode_prufer(const std::vector<std::vector<int>> &adj) {
+  int nodes = static_cast<int>(adj.size());
   std::vector<int> degree(nodes), parent(nodes, -1), code;
   std::set<int> leaves;
   if (nodes <= 2) {
@@ -37,7 +35,7 @@ std::vector<int> encode_prufer() {
   // the chosen root itself gets stripped to a leaf (e.g. when n - 1 happens to be a leaf).
   int root = nodes - 1;
   for (int u = 0; u < nodes; u++) {
-    degree[u] = adj[u].size();
+    degree[u] = static_cast<int>(adj[u].size());
     if (degree[u] == 1) {
       leaves.insert(u);
     }
@@ -67,7 +65,7 @@ std::vector<int> encode_prufer() {
 }
 
 std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
-  int nodes = code.size() + 2;
+  int nodes = static_cast<int>(code.size()) + 2;
   std::vector<int> degree(nodes, 1);
   std::set<int> leaves;
   std::vector<std::pair<int, int>> edges;
@@ -96,18 +94,18 @@ std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
 #include <cassert>
 using namespace std;
 
-void add_edge(int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
+  vector<vector<int>> adj;
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
   adj.assign(5, {});
   add_edge(0, 3);
   add_edge(1, 3);
   add_edge(2, 3);
   add_edge(3, 4);
-  vector<int> code = encode_prufer();
+  vector<int> code = encode_prufer(adj);
   assert(code.size() == 3 && code[0] == 3 && code[1] == 3 && code[2] == 3);
   vector<pair<int, int>> edges = decode_prufer(code);
   assert(edges.size() == 4);

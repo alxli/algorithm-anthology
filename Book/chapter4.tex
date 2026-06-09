@@ -68,7 +68,7 @@ class Graph {
   std::vector<int> &operator[](int n) { return adj[n]; }
 
   void add_edge(int u, int v) {
-    int n = adj.size();
+    int n = static_cast<int>(adj.size());
     if (u >= n || v >= n) {
       adj.resize(std::max(u, v) + 1);
     }
@@ -79,7 +79,7 @@ class Graph {
   }
 
   bool has_cycle() const {
-    int n = adj.size();
+    int n = static_cast<int>(adj.size());
     std::vector<bool> visit(n, false), onstack(n, false);
     for (int i = 0; i < n; i++) {
       if (!visit[i] && has_cycle(i, -1, visit, onstack)) {
@@ -443,10 +443,8 @@ Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence 
 #include <utility>
 #include <vector>
 
-std::vector<std::vector<int>> adj;
-
-std::vector<int> encode_prufer() {
-  int nodes = adj.size();
+std::vector<int> encode_prufer(const std::vector<std::vector<int>> &adj) {
+  int nodes = static_cast<int>(adj.size());
   std::vector<int> degree(nodes), parent(nodes, -1), code;
   std::set<int> leaves;
   if (nodes <= 2) {
@@ -457,7 +455,7 @@ std::vector<int> encode_prufer() {
   // the chosen root itself gets stripped to a leaf (e.g. when n - 1 happens to be a leaf).
   int root = nodes - 1;
   for (int u = 0; u < nodes; u++) {
-    degree[u] = adj[u].size();
+    degree[u] = static_cast<int>(adj[u].size());
     if (degree[u] == 1) {
       leaves.insert(u);
     }
@@ -487,7 +485,7 @@ std::vector<int> encode_prufer() {
 }
 
 std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
-  int nodes = code.size() + 2;
+  int nodes = static_cast<int>(code.size()) + 2;
   std::vector<int> degree(nodes, 1);
   std::set<int> leaves;
   std::vector<std::pair<int, int>> edges;
@@ -517,18 +515,18 @@ std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
 #include <cassert>
 using namespace std;
 
-void add_edge(int u, int v) {
-  adj[u].push_back(v);
-  adj[v].push_back(u);
-}
-
 int main() {
+  vector<vector<int>> adj;
+  auto add_edge = [&](int u, int v) {
+    adj[u].push_back(v);
+    adj[v].push_back(u);
+  };
   adj.assign(5, {});
   add_edge(0, 3);
   add_edge(1, 3);
   add_edge(2, 3);
   add_edge(3, 4);
-  vector<int> code = encode_prufer();
+  vector<int> code = encode_prufer(adj);
   assert(code.size() == 3 && code[0] == 3 && code[1] == 3 && code[2] == 3);
   vector<pair<int, int>> edges = decode_prufer(code);
   assert(edges.size() == 4);
@@ -1092,7 +1090,6 @@ int main() {
   g.add_edge(3, 7);
   g.add_edge(4, 5);
   g.build_bcc();
-  g.build_block_cut_forest();
   cout << "Articulation points:";
   for (int v : g.articulation_points) {
     cout << " " << v;
@@ -1104,6 +1101,7 @@ int main() {
     }
     cout << endl;
   }
+  g.build_block_cut_forest();
   cout << "Adjacency List for Block-Cut Forest:" << endl;
   for (int i = 0, n = static_cast<int>(g.block_cut_forest.size()); i < n; i++) {
     cout << i << " =>";
@@ -1260,7 +1258,6 @@ int main() {
   g.add_edge(3, 7);
   g.add_edge(4, 5);
   g.build_bridges();
-  g.build_bridge_forest();
   cout << "Bridges:" << endl;
   for (auto &[u, v] : g.bridges) {
     cout << u << " " << v << endl;
@@ -1272,6 +1269,7 @@ int main() {
     }
     cout << endl;
   }
+  g.build_bridge_forest();
   cout << "Adjacency List for Bridge Forest:" << endl;
   for (int i = 0, n = static_cast<int>(g.bridge_forest.size()); i < n; i++) {
     cout << i << " =>";
@@ -1304,18 +1302,13 @@ Adjacency List for Bridge Forest:
 5 => 2
 \end{exampleoutput}
 \subsection{Bridge Finding (Online)}
-Maintain the number of bridges in an undirected graph while edges are inserted one at a time.
+Maintain the number of bridges in an undirected graph while edges are inserted one at a time, along with the 2-edge-connected components and ordinary connected components.
 
 \begin{compactitem}
   \item \inlinecode{OnlineBridges(nodes)} constructs a graph with \inlinecode{nodes} isolated nodes.
-  \item \inlinecode{add\_edge()} adds an undirected edge and updates \inlinecode{bridges} to store the current number of bridges.
-\end{compactitem}
-
-This data structure maintains two disjoint-set forests:
-
-\begin{compactitem}
-  \item \inlinecode{dsu\_2ecc} tracks the current $2$-edge-connected components.
-  \item \inlinecode{dsu\_cc} tracks the ordinary connected components.
+  \item \inlinecode{add\_edge(u, v)} adds the undirected edge \inlinecode{u}-\inlinecode{v} and updates: \inlinecode{bridges} with the current number of bridges, and the disjoint-set parent arrays \inlinecode{dsu\_2ecc[]} and \inlinecode{dsu\_cc[]}, which partition the nodes into 2-edge-connected components and ordinary connected components respectively.
+  \item \inlinecode{find\_2ecc(u)} returns node \inlinecode{u}'s representative in the 2-edge-connected components partition.
+  \item \inlinecode{find\_cc(u)} returns node \inlinecode{u}'s representative in the ordinary connected components partition.
 \end{compactitem}
 
 When an inserted edge joins two different connected components, it creates a new bridge. When it joins two nodes already in the same connected component, it creates a cycle and every bridge on the path between the two endpoints stops being a bridge.
@@ -1345,33 +1338,33 @@ struct OnlineBridges {
     }
   }
 
-  int find_2ecc(int v) {
-    if (v == -1) {
+  int find_2ecc(int u) {
+    if (u == -1) {
       return -1;
     }
-    if (dsu_2ecc[v] == v) {
-      return v;
+    if (dsu_2ecc[u] == u) {
+      return u;
     }
-    return dsu_2ecc[v] = find_2ecc(dsu_2ecc[v]);
+    return dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
   }
 
-  int find_cc(int v) {
-    v = find_2ecc(v);
-    if (dsu_cc[v] == v) {
-      return v;
+  int find_cc(int u) {
+    u = find_2ecc(u);
+    if (dsu_cc[u] == u) {
+      return u;
     }
-    return dsu_cc[v] = find_cc(dsu_cc[v]);
+    return dsu_cc[u] = find_cc(dsu_cc[u]);
   }
 
-  void make_root(int v) {
-    v = find_2ecc(v);
-    int root = v, child = -1;
-    while (v != -1) {
-      int p = find_2ecc(parent[v]);
-      parent[v] = child;
-      dsu_cc[v] = root;
-      child = v;
-      v = p;
+  void make_root(int u) {
+    u = find_2ecc(u);
+    int root = u, child = -1;
+    while (u != -1) {
+      int p = find_2ecc(parent[u]);
+      parent[u] = child;
+      dsu_cc[u] = root;
+      child = u;
+      u = p;
     }
     dsu_cc_size[root] = dsu_cc_size[child];
   }
@@ -1402,16 +1395,16 @@ struct OnlineBridges {
         v = parent[v];
       }
     }
-    for (int v : path_a) {
-      dsu_2ecc[v] = lca;
-      if (v == lca) {
+    for (int a : path_a) {
+      dsu_2ecc[a] = lca;
+      if (a == lca) {
         break;
       }
       bridges--;
     }
-    for (int v : path_b) {
-      dsu_2ecc[v] = lca;
-      if (v == lca) {
+    for (int b : path_b) {
+      dsu_2ecc[b] = lca;
+      if (b == lca) {
         break;
       }
       bridges--;
@@ -1735,9 +1728,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Offline Dynamic Connectivity}
-Maintains the number of connected components of an undirected graph as edges are added and removed over time, answering queries offline once the entire sequence of operations is known. Each edge is alive over a contiguous interval of time, from when it is added until it is removed. These intervals are placed into a segment tree over the time axis, so that each edge appears in $O(log T)$ nodes whose ranges it spans. A depth-first traversal of this segment tree unites the edges stored at each node on the way down and undoes them on the way back up, so at each leaf the disjoint set forest reflects exactly the edges alive at that moment.
+Maintains the number of connected components of an undirected graph as edges are added and removed over time, answering queries offline once the entire sequence of operations is known. Each edge is alive over a contiguous interval of time, from when it is added until it is removed. These intervals are placed into a segment tree over the time axis, so that each edge appears in $O(\log T)$ nodes whose ranges it spans. A depth-first traversal of this segment tree unites the edges stored at each node on the way down and undoes them on the way back up, so at each leaf the disjoint set forest reflects exactly the edges alive at that moment.
 
-Undoing unions requires a disjoint set forest with rollback (see the disjoint sets section): it joins by size or rank without path compression, recording each change on a stack so it can be reversed. Path compression is incompatible with rollback, so finding a representative costs $O(log n)$ rather than near-constant time.
+Undoing unions requires a disjoint set forest with rollback (see the disjoint sets section): it joins by size or rank without path compression, recording each change on a stack so it can be reversed. Path compression is incompatible with rollback, so finding a representative costs $O(\log n)$ rather than near-constant time.
 
 \begin{compactitem}
   \item \inlinecode{OfflineDynamicConnectivity(n)} creates a structure on \inlinecode{n} vertices numbered from 0 to \inlinecode{n - 1}, initially with no edges.
@@ -2349,11 +2342,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Shortest Path (Floyd-Warshall)}
-Given a weighted, directed graph with possibly negative weights, determine the minimum distance between all pairs of start and destination nodes in the graph. Optionally, output the shortest path between two nodes using the shortest-path tree precomputed into the \inlinecode{parent} matrix.
+Given a weighted, directed graph with possibly negative weights, determine the minimum distance between all pairs of start and destination nodes in the graph. Optionally, output the shortest path between two nodes using the shortest-path tree precomputed into the \inlinecode{pred} matrix.
 
 \begin{compactitem}
-  \item \inlinecode{initialize(nodes)} initializes \inlinecode{dist} and \inlinecode{parent} for nodes numbered from 0 to \inlinecode{nodes - 1}.
-  \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest path from $u$ to $v$, and updates \inlinecode{parent} for path reconstruction. If the graph contains negative-weighted cycles, there is no shortest path and an error will be thrown.
+  \item \inlinecode{initialize(nodes)} initializes \inlinecode{dist} and \inlinecode{pred} for nodes numbered from 0 to \inlinecode{nodes - 1}.
+  \item \inlinecode{floyd\_warshall()} updates the global adjacency matrix \inlinecode{dist} so \inlinecode{dist[u][v]} stores the shortest path from $u$ to $v$, and updates \inlinecode{pred} for path reconstruction. If the graph contains negative-weighted cycles, there is no shortest path and an error will be thrown.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2377,15 +2370,15 @@ Given a weighted, directed graph with possibly negative weights, determine the m
 
 const long long INF = LLONG_MAX / 4;
 std::vector<std::vector<long long>> dist;
-std::vector<std::vector<int>> parent;
+std::vector<std::vector<int>> pred;
 
 void initialize(int nodes) {
   dist.assign(nodes, std::vector<long long>(nodes));
-  parent.assign(nodes, std::vector<int>(nodes));
+  pred.assign(nodes, std::vector<int>(nodes));
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
       dist[i][j] = (i == j) ? 0 : INF;
-      parent[i][j] = j;
+      pred[i][j] = j;
     }
   }
 }
@@ -2399,7 +2392,7 @@ void floyd_warshall() {
         // INF + w < INF would otherwise give an unreachable pair a bogus finite distance.
         if (dist[i][k] != INF && dist[k][j] != INF && dist[i][j] > dist[i][k] + dist[k][j]) {
           dist[i][j] = dist[i][k] + dist[k][j];
-          parent[i][j] = parent[i][k];
+          pred[i][j] = pred[i][k];
         }
       }
     }
@@ -2421,7 +2414,7 @@ using namespace std;
 void print_path(int u, int v) {
   cout << "Take the path: " << u;
   while (u != v) {
-    u = parent[u][v];
+    u = pred[u][v];
     cout << "->" << u;
   }
   cout << "." << endl;
@@ -2531,10 +2524,10 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Minimum Spanning Tree (Prim)}
-Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. If the input graph is not connected, then this implementation will find the minimum spanning forest.
+Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree (MST) is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. If the input graph is not connected, then this implementation will find the minimum spanning forest.
 
 \begin{compactitem}
-  \item \inlinecode{prim\_mst()} populates \inlinecode{mst} and returns total weight for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}. Each edge is stored as \inlinecode{(neighbor, weight)}.
+  \item \inlinecode{prim\_mst()} populates \inlinecode{mst} with the minimum spanning tree edges (returning the total MST weight) for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}. Each edge is stored as \inlinecode{(neighbor, weight)}.
 \end{compactitem}
 
 Since \inlinecode{std::priority\_queue} is by default a max-heap, we simulate a min-heap by negating node distances before pushing them and negating them again after popping them. To modify this implementation to find the maximum spanning tree, the two negation steps can be skipped to prioritize the max edges.
@@ -2627,10 +2620,10 @@ Total distance: 13
 5 <-> 6
 \end{exampleoutput}
 \subsection{Minimum Spanning Tree (Kruskal)}
-Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. If the input graph is not connected, then this implementation will find the minimum spanning forest.
+Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning tree (MST) is a subgraph which is a tree that connects all nodes with a subset of its edges such that their total weight is minimized. If the input graph is not connected, then this implementation will find the minimum spanning forest.
 
 \begin{compactitem}
-  \item \inlinecode{kruskal\_mst(nodes)} populates \inlinecode{mst} and returns total weight for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered from 0 to \inlinecode{nodes - 1}. Each edge is stored as \inlinecode{(weight, u, v)}.
+  \item \inlinecode{kruskal\_mst(nodes)} populates \inlinecode{mst} with the minimum spanning tree edges (returning the total MST weight) for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered from 0 to \inlinecode{nodes - 1}. Each edge is stored as \inlinecode{(weight, u, v)} and will be sorted by weight after the call.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(m \log n)$ per call to \inlinecode{kruskal\_mst()}, where $m$ is the number of edges and $n$ is the number of nodes. The internal DSU uses path compression but not union-by-rank (simplified for brevity); \inlinecode{find\_root()} is $O(\log n)$ amortized rather than $O(\alpha\left(n\right))$.
@@ -2719,7 +2712,7 @@ The algorithm first selects, for each non-root node, its cheapest incoming edge.
 Edges are given as \inlinecode{(from, to, weight)} triples; parallel edges and self-loops are allowed, with self-loops simply ignored.
 
 \begin{compactitem}
-  \item \inlinecode{directed\_mst(n, root, edges)} returns the total weight of the minimum spanning arborescence rooted at \inlinecode{root} over \inlinecode{n} nodes numbered from 0 to \inlinecode{n - 1}, or \inlinecode{-1} if some node is unreachable from the root (no arborescence exists).
+  \item \inlinecode{directed\_mst(n, root, edges)} returns the total weight of the minimum spanning arborescence rooted at \inlinecode{root} over \inlinecode{n} nodes numbered from 0 to \inlinecode{n - 1}, or $-1$ if some node is unreachable from the root (no arborescence exists).
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \cdot m)$ per call, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -2825,7 +2818,7 @@ Given a flow network with integer capacities, find the maximum flow from a given
   \item \inlinecode{ford\_fulkerson()} uses global \inlinecode{source} and \inlinecode{sink}, modifies the global residual capacity matrix \inlinecode{cap}, and returns maximum flow. Nodes are numbered from 0 to \inlinecode{cap.size() - 1}.
 \end{compactitem}
 
-The Ford-Fulkerson algorithm is only optimal on graphs with integer capacities, as there exists certain real-valued flow inputs for which the algorithm never terminates. The Edmonds-Karp algorithm is an improvement using breadth-first search, addressing this problem.
+The Ford-Fulkerson algorithm should only be used on graphs with integer capacities, as there exists certain real-valued flow inputs for which the algorithm never terminates. The Edmonds-Karp algorithm is an improvement using breadth-first search, addressing this problem.
 
 \textbf{Time Complexity}: $O(n^{2} \cdot f)$ per call to \inlinecode{ford\_fulkerson()}, where $n$ is the number of nodes and $f$ is the maximum flow.
 
@@ -3218,7 +3211,7 @@ Given a flow network with integer capacities and edge costs, find a minimum-cost
 
 This implementation uses shortest augmenting paths with SPFA, so it supports negative edge costs as long as the residual graph has no reachable negative-cost cycle. For dense or adversarial inputs, a potential-based Dijkstra version is usually faster when reduced costs are nonnegative.
 
-\textbf{Time Complexity}: $O(F \cdot n \cdot m)$ per call to \inlinecode{min\_cost\_flow()}, where $F$ is the amount of flow sent, $n$ is the number of nodes, and $m$ is the number of edges.
+\textbf{Time Complexity}: $O(f \cdot n \cdot m)$ per call to \inlinecode{min\_cost\_flow()}, where $f$ is the amount of flow sent, $n$ is the number of nodes, and $m$ is the number of edges.
 
 \textbf{Space Complexity}: $O(\max\left(n, m\right))$ for storage of the residual network and auxiliary arrays.
 
@@ -3326,10 +3319,10 @@ Given a connected, undirected graph with nonnegative edge weights, the global mi
 
 A phase grows a set, starting from an arbitrary vertex, by repeatedly adding the most tightly connected outside vertex (the one with the greatest total weight to the set so far), exactly as in Prim's algorithm. The last vertex added, together with its connection weight, yields one candidate cut, the ``cut of the phase''. The last two vertices added are then merged into a single supernode and the next phase begins on the smaller graph. After $n - 1$ phases every candidate has been considered, and the smallest is the global minimum cut.
 
-The graph is given as a symmetric adjacency matrix \inlinecode{graph}, where \inlinecode{graph[i][j]} is the weight of the edge between \inlinecode{i} and \inlinecode{j} (0 if absent), and the diagonal is 0. The graph must have at least two vertices.
+The graph is given as a symmetric adjacency matrix \inlinecode{adj}, where \inlinecode{adj[i][j]} is the weight of the edge between \inlinecode{i} and \inlinecode{j} (0 if absent), and the diagonal is 0. The graph must have at least two vertices.
 
 \begin{compactitem}
-  \item \inlinecode{stoer\_wagner(graph)} returns a pair \inlinecode{(weight, side)}, where \inlinecode{weight} is the total weight of the global minimum cut and \inlinecode{side} lists the vertices on one side of that cut.
+  \item \inlinecode{stoer\_wagner(adj)} returns a pair \inlinecode{(weight, side)}, where \inlinecode{weight} is the total weight of the global minimum cut and \inlinecode{side} lists the vertices on one side of that cut.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of vertices.
@@ -3342,8 +3335,8 @@ The graph is given as a symmetric adjacency matrix \inlinecode{graph}, where \in
 #include <utility>
 #include <vector>
 
-std::pair<long long, std::vector<int>> stoer_wagner(std::vector<std::vector<long long>> graph) {
-  int n = graph.size();
+std::pair<long long, std::vector<int>> stoer_wagner(std::vector<std::vector<long long>> adj) {
+  int n = static_cast<int>(adj.size());
   const long long NEG = LLONG_MIN / 4;  // A "merged away" sentinel that additions cannot revive.
   std::pair<long long, std::vector<int>> best = {LLONG_MAX, {}};
   std::vector<std::vector<int>> groups(n);
@@ -3351,25 +3344,25 @@ std::pair<long long, std::vector<int>> stoer_wagner(std::vector<std::vector<long
     groups[i] = {i};
   }
   for (int phase = 1; phase < n; phase++) {
-    std::vector<long long> weight = graph[0];
+    std::vector<long long> weight = adj[0];
     int s = 0, t = 0;
     for (int added = 0; added < n - phase; added++) {
       weight[t] = NEG;
       s = t;
       t = std::max_element(weight.begin(), weight.end()) - weight.begin();
       for (int i = 0; i < n; i++) {
-        weight[i] += graph[t][i];
+        weight[i] += adj[t][i];
       }
     }
-    if (weight[t] - graph[t][t] < best.first) {
-      best = {weight[t] - graph[t][t], groups[t]};
+    if (weight[t] - adj[t][t] < best.first) {
+      best = {weight[t] - adj[t][t], groups[t]};
     }
     groups[s].insert(groups[s].end(), groups[t].begin(), groups[t].end());
     for (int i = 0; i < n; i++) {
-      graph[s][i] += graph[t][i];
-      graph[i][s] = graph[s][i];
+      adj[s][i] += adj[t][i];
+      adj[i][s] = adj[s][i];
     }
-    graph[0][t] = NEG;
+    adj[0][t] = NEG;
   }
   return best;
 }
@@ -3383,12 +3376,12 @@ using namespace std;
 int main() {
   // Triangle with edge weights 0-1: 2, 1-2: 3, 0-2: 1.
   // Cuts: {0}|{1,2} = 3, {1}|{0,2} = 5, {2}|{0,1} = 4. Minimum is 3.
-  vector<vector<long long>> graph{
+  vector<vector<long long>> adj{
       {0, 2, 1},
       {2, 0, 3},
       {1, 3, 0},
   };
-  auto [weight, side] = stoer_wagner(graph);
+  auto [weight, side] = stoer_wagner(adj);
   assert(weight == 3);
   assert((side == vector<int>{1, 2}));  // The shore {1, 2}, opposite the single vertex 0.
   return 0;
@@ -3607,12 +3600,12 @@ The implementation below is the classical Hungarian algorithm using potentials. 
 #include <vector>
 
 long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector<int> *assignment) {
-  int n = cost.size(), m = cost.empty() ? 0 : cost[0].size();
+  int n = static_cast<int>(cost.size());
+  int m = cost.empty() ? 0 : static_cast<int>(cost[0].size());
   assert(n <= m);
   const long long INF = LLONG_MAX / 4;
   std::vector<long long> u(n + 1), v(m + 1);
   std::vector<int> p(m + 1), way(m + 1);
-
   for (int i = 1; i <= n; i++) {
     p[0] = i;
     int j0 = 0;
@@ -3646,14 +3639,12 @@ long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector
       }
       j0 = j1;
     } while (p[j0] != 0);
-
     do {
       int j1 = way[j0];
       p[j0] = p[j1];
       j0 = j1;
     } while (j0 != 0);
   }
-
   assignment->assign(n, -1);
   for (int j = 1; j <= m; j++) {
     if (p[j] != 0) {
@@ -3840,7 +3831,7 @@ The stable marriage problem pairs \inlinecode{n} men with \inlinecode{n} women, 
 
 The Gale-Shapley algorithm produces a stable matching, and a stable matching always exists. Each free man proposes to the most preferred woman who has not yet rejected him. A woman provisionally accepts her best proposal so far and rejects the rest, possibly breaking a previous engagement when a man she prefers proposes later. Because every man descends his list at most once and each proposal is constant work after precomputing the women's rankings, the algorithm runs in quadratic time. The result is man-optimal: every man receives the best partner he could have in any stable matching.
 
-Both preference lists are given as \inlinecode{n} by \inlinecode{n} arrays. \inlinecode{men\_pref[m]} lists the women in \inlinecode{m}'s order of preference, most preferred first, and \inlinecode{women\_pref[w]} lists the men in \inlinecode{w}'s order of preference.
+Both preference lists are given as \inlinecode{n} by \inlinecode{n} matrices. \inlinecode{men\_pref[m]} lists the women in \inlinecode{m}'s order of preference, most preferred first, and \inlinecode{women\_pref[w]} lists the men in \inlinecode{w}'s order of preference.
 
 \begin{compactitem}
   \item \inlinecode{stable\_marriage(men\_pref, women\_pref)} returns a vector \inlinecode{wife} where \inlinecode{wife[m]} is the woman matched to man \inlinecode{m} in the man-optimal stable matching.
@@ -3857,7 +3848,7 @@ Both preference lists are given as \inlinecode{n} by \inlinecode{n} arrays. \inl
 std::vector<int> stable_marriage(
     const std::vector<std::vector<int>> &men_pref, const std::vector<std::vector<int>> &women_pref
 ) {
-  int n = men_pref.size();
+  int n = static_cast<int>(men_pref.size());
   std::vector<std::vector<int>> rank(n, std::vector<int>(n));
   for (int w = 0; w < n; w++) {
     for (int i = 0; i < n; i++) {

@@ -25,7 +25,7 @@ Space Complexity:
 
 template<class It>
 int mex(It lo, It hi) {
-  int n = hi - lo;
+  int n = static_cast<int>(hi - lo);
   std::vector<bool> seen(n + 1, false);
   for (It it = lo; it != hi; ++it) {
     if (0 <= *it && *it <= n) {

@@ -30,7 +30,7 @@ Space Complexity:
 
 template<class SquareMatrix>
 double det_naive(const SquareMatrix &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   if (n == 1) {
     return a[0][0];
   }
@@ -61,7 +61,7 @@ double det_naive(const SquareMatrix &a) {
 template<class SquareMatrix>
 double det(const SquareMatrix &a, double EPS = 1e-10) {
   SquareMatrix b(a);
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   double res = 1.0;
   for (int i = 0; i < n; i++) {
     // Partial pivoting: bring the largest-magnitude entry in column i to the diagonal. Each row
@@ -93,7 +93,7 @@ double det(const SquareMatrix &a, double EPS = 1e-10) {
 
 template<class SquareMatrix>
 SquareMatrix &invert(SquareMatrix &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   for (int i = 0; i < n; i++) {
     a[i].resize(2 * n);
     for (int j = n; j < n * 2; j++) {

@@ -8,8 +8,8 @@ This is useful for answer-search problems over unbounded or very large integer d
 predicate must eventually become true, or the search may overflow or run forever unless an explicit
 limit is added.
 
-- `exponential_search_first_true(lo, pred)` returns the smallest integer `x >= lo` such that
-  `pred(x)` is true.
+- `exponential_search_first_true(lo, pred)` returns the smallest integer `x` greater than or equal
+  to `lo` such that `pred(x)` is true.
 
 Time Complexity:
 - O(log n) calls to `pred()`, where $n$ is the distance from `lo` to the first true value.

@@ -14,15 +14,15 @@ squared lengths), which grow like the squared coordinate magnitude. With 32-bit 
 these overflow once coordinates exceed a few tens of thousands, so for larger integer inputs use a
 point type with 64-bit (`long long`) coordinates.
 
-- `line_intersection(a1, b1, c1, a2, b2, c2, &p)` intersects lines `a1`$x$ + `b1`$y$ + `c1` = 0 and
-  `a2`x + `b2`y + `c2` = 0, returning $-1$ (parallel), 0 (one point, stored in `p`), or 1
+- `line_intersection(a1, b1, c1, a2, b2, c2, &p)` intersects lines $a_1 x + b_1 y + c_1 = 0$ and
+  $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), 0 (one point, stored into `p`), or 1
   (identical).
 - `line_intersection(p1, p2, p3, p4, &p)` intersects the infinite lines through `p1`-`p2` and
   `p3`-`p4`.
 - `seg_intersection(a, b, c, d, &p, &q)` intersects segments `a`-`b` and `c`-`d`, returning $-1$
   (none), 0 (one point), or 1 (overlapping segment). Touching behavior is controlled by
   `TOUCH_IS_INTERSECT`.
-- `closest_point(a, b, c, p)` returns the closest point on line `a`$x$ + `b`$y$ + `c` = 0 to $p$.
+- `closest_point(a, b, c, p)` returns the closest point on line $ax + by + c = 0$ to $p$.
 
 Time Complexity:
 - O(1) for all operations.

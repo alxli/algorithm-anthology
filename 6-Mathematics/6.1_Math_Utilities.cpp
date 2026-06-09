@@ -59,8 +59,8 @@ const double EPS = 1e-9;
 
 Sign Functions:
 
-- `sgn(x)` returns $-1$ (if $x < 0$), $0$ (if $x = 0$), or $1$ (if $x > 0$). Unlike `signbit()` or
-  `copysign()`, this does not handle the sign of `NaN`.
+- `sgn(x)` returns $-1$ (if $x < 0$), $0$ (if $x = 0$), or $1$ (if $x > 0$). Unlike `std::signbit()`
+  or `std::copysign()`, this does not handle the sign of `NaN`.
 - `signbit_(x)` is analogous to `std::signbit()`, returning whether the sign bit of the floating
   point number is set to true. If so, then `x` is considered "negative." Note that this works as
   expected on `+0.0`, `-0.0`, `Inf`, `-Inf`, `NaN`, as well as `-NaN`. Warning: This assumes that

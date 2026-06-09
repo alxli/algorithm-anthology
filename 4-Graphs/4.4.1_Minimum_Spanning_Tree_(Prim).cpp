@@ -1,13 +1,13 @@
 /*
 
 Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning
-tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that
-their total weight is minimized. If the input graph is not connected, then this implementation will
-find the minimum spanning forest.
+tree (MST) is a subgraph which is a tree that connects all nodes with a subset of its edges such
+that their total weight is minimized. If the input graph is not connected, then this implementation
+will find the minimum spanning forest.
 
-- `prim_mst()` populates `mst` and returns total weight for a global, bidirectionally pre-populated
-  adjacency list `adj` which must consist of nodes numbered from 0 to `adj.size() - 1`. Each edge is
-  stored as `(neighbor, weight)`.
+- `prim_mst()` populates `mst` with the minimum spanning tree edges (returning the total MST weight)
+  for a global, bidirectionally pre-populated adjacency list `adj` which must consist of nodes
+  numbered from 0 to `adj.size() - 1`. Each edge is stored as `(neighbor, weight)`.
 
 Since `std::priority_queue` is by default a max-heap, we simulate a min-heap by negating node
 distances before pushing them and negating them again after popping them. To modify this

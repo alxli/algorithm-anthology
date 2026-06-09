@@ -32,7 +32,7 @@ void initialize(int n) {
 }
 
 void add(int i, int delta) {
-  for (; i < tree.size(); i += i & -i) {
+  for (; i < static_cast<int>(tree.size()); i += i & -i) {
     tree[i] += delta;
   }
 }
@@ -46,13 +46,13 @@ int sum(int i) {
 }
 
 int kth(int k) {
-  int idx = 0, bits = 1;
-  while (bits * 2 < tree.size()) {
+  int idx = 0, bits = 1, sz = static_cast<int>(tree.size());
+  while (bits * 2 < sz) {
     bits *= 2;
   }
   for (; bits > 0; bits >>= 1) {
     int next = idx + bits;
-    if (next < tree.size() && tree[next] < k) {
+    if (next < sz && tree[next] < k) {
       idx = next;
       k -= tree[next];
     }

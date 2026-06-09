@@ -73,7 +73,7 @@ struct SquareSegmentCost {
 
 int main() {
   vector<int> a{1, 2, 3, 4};
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   SquareSegmentCost cost(a);
 
   vector<long long> dp_prev(n + 1, INF), dp_cur(n + 1, INF);

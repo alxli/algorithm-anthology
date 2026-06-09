@@ -173,7 +173,6 @@ int main() {
   g.add_edge(3, 7);
   g.add_edge(4, 5);
   g.build_bcc();
-  g.build_block_cut_forest();
   cout << "Articulation points:";
   for (int v : g.articulation_points) {
     cout << " " << v;
@@ -185,6 +184,7 @@ int main() {
     }
     cout << endl;
   }
+  g.build_block_cut_forest();
   cout << "Adjacency List for Block-Cut Forest:" << endl;
   for (int i = 0, n = static_cast<int>(g.block_cut_forest.size()); i < n; i++) {
     cout << i << " =>";

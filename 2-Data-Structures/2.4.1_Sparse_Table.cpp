@@ -11,7 +11,7 @@ answered by combining the two overlapping ranges of length $2^j$ that are anchor
 `hi`, where $2^j$ is the largest power of two not exceeding the length of the range. Because these
 two ranges overlap whenever the query length is not a power of two, the elements in the overlap are
 folded in twice; this is harmless only when `combine()` is idempotent. To support a non-idempotent
-but associative operation such as "sum" or "xor" in constant time, use the disjoint sparse table in
+but associative operation such as "sum" or "XOR" in constant time, use the disjoint sparse table in
 the next section instead, whose ranges meet at a center and never overlap.
 
 The query operation is defined by an associative and idempotent function `combine(a, b)`. The default

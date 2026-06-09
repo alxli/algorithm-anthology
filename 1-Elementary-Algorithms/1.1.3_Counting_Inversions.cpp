@@ -61,7 +61,7 @@ long long inversions(It lo, It hi) {
 }
 
 long long inversions(const std::vector<int> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<int> values(a.begin(), a.end());
   std::sort(values.begin(), values.end());
   values.erase(std::unique(values.begin(), values.end()), values.end());

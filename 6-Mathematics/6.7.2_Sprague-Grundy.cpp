@@ -4,13 +4,13 @@ Computes Grundy numbers for finite impartial games. The Grundy number `g[p]` of 
 the minimum excluded nonnegative integer (MEX) of the Grundy numbers reachable in one move. A
 position is losing exactly when its Grundy number is 0.
 
-For a sum of independent impartial games, the combined Grundy number is the xor of the component
+For a sum of independent impartial games, the combined Grundy number is the XOR of the component
 Grundy numbers. This is the Sprague-Grundy theorem.
 
 - `mex(values)` returns the minimum excluded nonnegative integer.
 - `subtraction_game_grundy(max_stones, moves)` computes Grundy numbers for a game where a move
   subtracts one value in `moves` from the pile.
-- `sum_grundy(grundies)` returns the xor of component Grundy numbers.
+- `sum_grundy(grundies)` returns the XOR of component Grundy numbers.
 
 Time Complexity:
 - O(n*m) for `subtraction_game_grundy(max_stones, moves)`, where $n$ is `max_stones` and $m$ is the

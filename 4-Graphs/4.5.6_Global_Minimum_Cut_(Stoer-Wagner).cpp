@@ -13,11 +13,11 @@ cut, the "cut of the phase". The last two vertices added are then merged into a 
 the next phase begins on the smaller graph. After $n - 1$ phases every candidate has been considered,
 and the smallest is the global minimum cut.
 
-The graph is given as a symmetric adjacency matrix `graph`, where `graph[i][j]` is the weight of the
+The graph is given as a symmetric adjacency matrix `adj`, where `adj[i][j]` is the weight of the
 edge between `i` and `j` (0 if absent), and the diagonal is 0. The graph must have at least two
 vertices.
 
-- `stoer_wagner(graph)` returns a pair `(weight, side)`, where `weight` is the total weight of the
+- `stoer_wagner(adj)` returns a pair `(weight, side)`, where `weight` is the total weight of the
   global minimum cut and `side` lists the vertices on one side of that cut.
 
 Time Complexity:
@@ -33,8 +33,8 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-std::pair<long long, std::vector<int>> stoer_wagner(std::vector<std::vector<long long>> graph) {
-  int n = graph.size();
+std::pair<long long, std::vector<int>> stoer_wagner(std::vector<std::vector<long long>> adj) {
+  int n = static_cast<int>(adj.size());
   const long long NEG = LLONG_MIN / 4;  // A "merged away" sentinel that additions cannot revive.
   std::pair<long long, std::vector<int>> best = {LLONG_MAX, {}};
   std::vector<std::vector<int>> groups(n);
@@ -42,25 +42,25 @@ std::pair<long long, std::vector<int>> stoer_wagner(std::vector<std::vector<long
     groups[i] = {i};
   }
   for (int phase = 1; phase < n; phase++) {
-    std::vector<long long> weight = graph[0];
+    std::vector<long long> weight = adj[0];
     int s = 0, t = 0;
     for (int added = 0; added < n - phase; added++) {
       weight[t] = NEG;
       s = t;
       t = std::max_element(weight.begin(), weight.end()) - weight.begin();
       for (int i = 0; i < n; i++) {
-        weight[i] += graph[t][i];
+        weight[i] += adj[t][i];
       }
     }
-    if (weight[t] - graph[t][t] < best.first) {
-      best = {weight[t] - graph[t][t], groups[t]};
+    if (weight[t] - adj[t][t] < best.first) {
+      best = {weight[t] - adj[t][t], groups[t]};
     }
     groups[s].insert(groups[s].end(), groups[t].begin(), groups[t].end());
     for (int i = 0; i < n; i++) {
-      graph[s][i] += graph[t][i];
-      graph[i][s] = graph[s][i];
+      adj[s][i] += adj[t][i];
+      adj[i][s] = adj[s][i];
     }
-    graph[0][t] = NEG;
+    adj[0][t] = NEG;
   }
   return best;
 }
@@ -73,12 +73,12 @@ using namespace std;
 int main() {
   // Triangle with edge weights 0-1: 2, 1-2: 3, 0-2: 1.
   // Cuts: {0}|{1,2} = 3, {1}|{0,2} = 5, {2}|{0,1} = 4. Minimum is 3.
-  vector<vector<long long>> graph{
+  vector<vector<long long>> adj{
       {0, 2, 1},
       {2, 0, 3},
       {1, 3, 0},
   };
-  auto [weight, side] = stoer_wagner(graph);
+  auto [weight, side] = stoer_wagner(adj);
   assert(weight == 3);
   assert((side == vector<int>{1, 2}));  // The shore {1, 2}, opposite the single vertex 0.
   return 0;

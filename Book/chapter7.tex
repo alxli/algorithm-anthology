@@ -870,7 +870,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Angles}
-Angle calculations in two dimensions. All operations are inherently floating-point (\inlinecode{atan2}, \inlinecode{acos}, trigonometry), so these functions use the local double-coordinate \inlinecode{PointD} type. Convert integer points to \inlinecode{PointD} when asking for angles. The constants \inlinecode{DEG} and \inlinecode{RAD} may be used as multipliers to convert between degrees and radians. For example, if $t$ is a value in degrees, then $t \cdot \text{DEG}$ is the equivalent angle in radians; if $t$ is in radians, then $t \cdot \text{RAD}$ is the equivalent angle in degrees.
+Angle calculations in two dimensions. All operations are inherently floating-point (\inlinecode{atan2}, \inlinecode{acos}, trigonometry), so these functions use the local double-coordinate \inlinecode{PointD} type. Convert integer points to \inlinecode{PointD} when asking for angles. The constants \inlinecode{DEG} and \inlinecode{RAD} may be used as multipliers to convert between degrees and radians. For example, if $t$ is a value in degrees, then $t \cdot$ \inlinecode{DEG} is the equivalent angle in radians; if $t$ is in radians, then $t \cdot$ \inlinecode{RAD} is the equivalent angle in degrees.
 
 \begin{compactitem}
   \item \inlinecode{reduce\_deg(t)} takes an angle \inlinecode{t} degrees and returns an equivalent angle in the range $[0, 360)$ degrees. E.g. $-630$ becomes $90$.
@@ -879,7 +879,7 @@ Angle calculations in two dimensions. All operations are inherently floating-poi
   \item \inlinecode{polar\_angle(p)} returns the angle in radians of the line segment from $(0, 0)$ to point \inlinecode{p}, relative counterclockwise to the positive $x$-axis.
   \item \inlinecode{angle(a, o, b)} returns the smallest angle in radians formed by the points \inlinecode{a}, \inlinecode{o}, \inlinecode{b} with vertex at point \inlinecode{o}.
   \item \inlinecode{angle\_between(a, b)} returns the angle in radians of segment from point \inlinecode{a} to point \inlinecode{b}, relative counterclockwise to the positive $x$-axis.
-  \item \inlinecode{angle\_between(a1, b1, a2, b2)} returns the smaller angle in radians between two lines \inlinecode{a1}$x$ + \inlinecode{b1}$y$ + \inlinecode{c1} = 0 and \inlinecode{a2}$x$ + \inlinecode{b2}$y$ + \inlinecode{c2} = 0, limited to $[0, \pi / 2]$.
+  \item \inlinecode{angle\_between(a1, b1, a2, b2)} returns the smaller angle in radians between two lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, limited to $[0, \pi / 2]$.
   \item \inlinecode{cross(a, b, o)} returns the magnitude (Euclidean norm) of the three-dimensional cross product between points \inlinecode{a} and \inlinecode{b} where the \inlinecode{z}-component is implicitly zero and the origin is implicitly shifted to point \inlinecode{o}. This operation is also equal to double the signed area of the triangle from these three points.
   \item \inlinecode{turn(a, o, b)} returns $-1$ if the path \inlinecode{a} $\to$ \inlinecode{o} $\to$ \inlinecode{b} forms a left turn on the plane, 0 if the path forms a straight line segment, or 1 if it forms a right turn.
 \end{compactitem}
@@ -1000,9 +1000,9 @@ Distance calculations in two dimensions for points, lines, and line segments. Th
   \item \inlinecode{line\_dist(p, a, b, c)} returns the distance from point \inlinecode{p} to the line $ax + by + c = 0$.
   \item \inlinecode{line\_dist(p, a, b)} returns the distance from point \inlinecode{p} to the infinite line containing points \inlinecode{a} and \inlinecode{b}. If \inlinecode{a} = \inlinecode{b}, returns the distance from \inlinecode{p} to \inlinecode{a}.
   \item \inlinecode{line\_dist(a1, b1, c1, a2, b2, c2)} returns the distance between two lines.
-  \item \inlinecode{seg\_dist(p, a, b)} returns the distance from point \inlinecode{p} to the line segment $ab$.
-  \item \inlinecode{seg\_dist(a, b, c, d)} returns the minimum distance between line segments \inlinecode{ab} and \inlinecode{cd}. Returns 0 if the segments touch or intersect.
-  \item \inlinecode{closest\_point(a, b, p)} returns the point on segment \inlinecode{ab} closest to point \inlinecode{p}.
+  \item \inlinecode{seg\_dist(p, a, b)} returns the distance from point \inlinecode{p} to the line segment \inlinecode{a}-\inlinecode{b}.
+  \item \inlinecode{seg\_dist(a, b, c, d)} returns the minimum distance between line segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, or 0 if the segments touch or intersect.
+  \item \inlinecode{closest\_point(a, b, p)} returns the point on segment \inlinecode{a}-\inlinecode{b} closest to point \inlinecode{p}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(1)$ for all operations.
@@ -1187,10 +1187,10 @@ Intersection calculations in two dimensions for straight lines and line segments
 Overflow warning: the exact integer paths multiply coordinate differences (cross products and squared lengths), which grow like the squared coordinate magnitude. With 32-bit \inlinecode{int} coordinates these overflow once coordinates exceed a few tens of thousands, so for larger integer inputs use a point type with 64-bit (\inlinecode{long long}) coordinates.
 
 \begin{compactitem}
-  \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines \inlinecode{a1}$x$ + \inlinecode{b1}$y$ + \inlinecode{c1} = 0 and \inlinecode{a2}x + \inlinecode{b2}y + \inlinecode{c2} = 0, returning $-1$ (parallel), 0 (one point, stored in \inlinecode{p}), or 1 (identical).
+  \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), 0 (one point, stored into \inlinecode{p}), or 1 (identical).
   \item \inlinecode{line\_intersection(p1, p2, p3, p4, \&p)} intersects the infinite lines through \inlinecode{p1}-\inlinecode{p2} and \inlinecode{p3}-\inlinecode{p4}.
   \item \inlinecode{seg\_intersection(a, b, c, d, \&p, \&q)} intersects segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, returning $-1$ (none), 0 (one point), or 1 (overlapping segment). Touching behavior is controlled by \inlinecode{TOUCH\_IS\_INTERSECT}.
-  \item \inlinecode{closest\_point(a, b, c, p)} returns the closest point on line \inlinecode{a}$x$ + \inlinecode{b}$y$ + \inlinecode{c} = 0 to $p$.
+  \item \inlinecode{closest\_point(a, b, c, p)} returns the closest point on line $ax + by + c = 0$ to $p$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(1)$ for all operations.

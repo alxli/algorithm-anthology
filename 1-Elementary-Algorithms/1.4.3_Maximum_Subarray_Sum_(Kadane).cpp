@@ -72,7 +72,7 @@ T max_submatrix_sum(
   if (matrix.empty() || matrix[0].empty()) {
     return T();
   }
-  int n = matrix.size(), m = matrix[0].size();
+  int n = static_cast<int>(matrix.size()), m = static_cast<int>(matrix[0].size());
   std::vector<T> sums(n);
   T sum, max_sum = 0;
   for (int clo = 0; clo < m; clo++) {

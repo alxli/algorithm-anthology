@@ -152,10 +152,10 @@ long long pollards_rho_brent(long long n) {
   uint64 g = 1, r = 1, q = 1, ys = 0, x = 0;
   for (r = 1; g == 1; r <<= 1) {
     x = y;
-    for (int i = 0; i < r; i++) {
+    for (uint64 i = 0; i < r; i++) {
       y = (mulmod(y, y, n) + c) % n;
     }
-    for (long long k = 0; k < r && g == 1; k += m) {
+    for (uint64 k = 0; k < r && g == 1; k += m) {
       ys = y;
       long long lim = std::min(m, r - k);
       for (int j = 0; j < lim; j++) {
@@ -165,7 +165,7 @@ long long pollards_rho_brent(long long n) {
       g = gcd(q, n);
     }
   }
-  if (g == n) {
+  if (g == static_cast<uint64>(n)) {
     do {
       ys = (mulmod(ys, ys, n) + c) % n;
       g = gcd((x > ys) ? (x - ys) : (ys - x), n);

@@ -2,11 +2,11 @@
 
 Given a weighted, directed graph with possibly negative weights, determine the minimum distance
 between all pairs of start and destination nodes in the graph. Optionally, output the shortest path
-between two nodes using the shortest-path tree precomputed into the `parent` matrix.
+between two nodes using the shortest-path tree precomputed into the `pred` matrix.
 
-- `initialize(nodes)` initializes `dist` and `parent` for nodes numbered from 0 to `nodes - 1`.
+- `initialize(nodes)` initializes `dist` and `pred` for nodes numbered from 0 to `nodes - 1`.
 - `floyd_warshall()` updates the global adjacency matrix `dist` so `dist[u][v]` stores the shortest
-  path from $u$ to $v$, and updates `parent` for path reconstruction. If the graph contains
+  path from $u$ to $v$, and updates `pred` for path reconstruction. If the graph contains
   negative-weighted cycles, there is no shortest path and an error will be thrown.
 
 Time Complexity:
@@ -25,15 +25,15 @@ Space Complexity:
 
 const long long INF = LLONG_MAX / 4;
 std::vector<std::vector<long long>> dist;
-std::vector<std::vector<int>> parent;
+std::vector<std::vector<int>> pred;
 
 void initialize(int nodes) {
   dist.assign(nodes, std::vector<long long>(nodes));
-  parent.assign(nodes, std::vector<int>(nodes));
+  pred.assign(nodes, std::vector<int>(nodes));
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
       dist[i][j] = (i == j) ? 0 : INF;
-      parent[i][j] = j;
+      pred[i][j] = j;
     }
   }
 }
@@ -47,7 +47,7 @@ void floyd_warshall() {
         // INF + w < INF would otherwise give an unreachable pair a bogus finite distance.
         if (dist[i][k] != INF && dist[k][j] != INF && dist[i][j] > dist[i][k] + dist[k][j]) {
           dist[i][j] = dist[i][k] + dist[k][j];
-          parent[i][j] = parent[i][k];
+          pred[i][j] = pred[i][k];
         }
       }
     }
@@ -73,7 +73,7 @@ using namespace std;
 void print_path(int u, int v) {
   cout << "Take the path: " << u;
   while (u != v) {
-    u = parent[u][v];
+    u = pred[u][v];
     cout << "->" << u;
   }
   cout << "." << endl;

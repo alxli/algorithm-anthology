@@ -1,7 +1,7 @@
 /*
 
 Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of
-x-coordinate queries each asking to find the minimum $y$-value when any of the given lines are
+$x$-coordinate queries each asking to find the minimum $y$-value when any of the given lines are
 evaluated at the specified $x$. To instead have the queries optimize for maximum $y$-value, call the
 constructor with `query_max = true`. This is useful for dynamic programming recurrences of the form
 `dp[i] = min(m[j] * x[i] + b[j])` when line slopes and query coordinates are not monotone.

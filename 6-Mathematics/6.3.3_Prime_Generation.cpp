@@ -60,7 +60,7 @@ std::vector<int> sieve(int lo, int hi) {
       }
     }
   }
-  for (int i = 2, len = hi - lo; i <= sqrt_hi; i++) {
+  for (int i = 2; i <= sqrt_hi; i++) {
     if (prime1[i]) {
       long long start = std::max(1LL * i * i, ((static_cast<long long>(lo) + i - 1) / i) * i);
       for (long long j = start; j <= hi; j += i) {

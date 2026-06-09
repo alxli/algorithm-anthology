@@ -62,8 +62,8 @@ std::pair<cdouble, cdouble> eval_with_derivative(const cpoly &p, const cdouble &
 
 LD root_bound(const cpoly &p) {
   LD res = 0;
-  int n = p.size() - 1;
-  for (int i = 0; i + 1 < static_cast<int>(p.size()); i++) {
+  int n = static_cast<int>(p.size()) - 1;
+  for (int i = 0; i < n; i++) {
     LD ratio = std::abs(p[i] / p.back());
     if (ratio > 0) {
       res = std::max(res, powl(ratio, 1.0L / (n - i)));
@@ -98,7 +98,7 @@ cpoly find_all_roots(cpoly p, const LD EPS = ROOT_EPS, const int ITERATIONS = 20
   for (int i = 0; i < static_cast<int>(p.size()); i++) {
     p[i] /= scale;
   }
-  int n = p.size() - 1;
+  int n = static_cast<int>(p.size()) - 1;
   if (n == 1) {
     roots.push_back(-p[0] / p[1]);
     return roots;

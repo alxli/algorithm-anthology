@@ -17,20 +17,21 @@ import tempfile
 from pathlib import Path
 
 CXX = os.environ.get('CXX', '/opt/homebrew/bin/g++-15')
-CXXFLAGS = ['-std=c++17', '-O2', '-Wall', '-Wno-unused-variable']
+CXXFLAGS = ['-std=c++17', '-O2', '-Wall', '-pedantic', '-Wno-psabi']
 TIMEOUT = 30  # seconds per file
 
 
-def compile_and_run(src: Path, show_output: bool) -> tuple[bool, str]:
-    """Compile and run one file. Returns (ok, message)."""
+def compile_and_run(src: Path, show_output: bool) -> tuple[bool, str, str]:
+    """Compile and run one file. Returns (ok, message, warnings)."""
     with tempfile.NamedTemporaryFile(suffix='', delete=True) as tmp:
         exe = tmp.name
 
-    # Compile
+    # Compile (capture warnings even on success).
     compile_cmd = [CXX, *CXXFLAGS, str(src), '-o', exe]
     comp = subprocess.run(compile_cmd, capture_output=True, text=True)
+    warnings = comp.stderr.strip()
     if comp.returncode != 0:
-        return False, f'COMPILE ERROR:\n{comp.stderr.strip()}'
+        return False, f'COMPILE ERROR:\n{warnings}', ''
 
     # Run
     try:
@@ -38,7 +39,7 @@ def compile_and_run(src: Path, show_output: bool) -> tuple[bool, str]:
             [exe], capture_output=True, text=True, timeout=TIMEOUT
         )
     except subprocess.TimeoutExpired:
-        return False, f'TIMEOUT after {TIMEOUT}s'
+        return False, f'TIMEOUT after {TIMEOUT}s', warnings
     finally:
         Path(exe).unlink(missing_ok=True)
 
@@ -46,11 +47,11 @@ def compile_and_run(src: Path, show_output: bool) -> tuple[bool, str]:
         msg = f'RUNTIME ERROR (exit {run.returncode})'
         if run.stderr.strip():
             msg += f':\n{run.stderr.strip()}'
-        return False, msg
+        return False, msg, warnings
 
     if show_output and run.stdout.strip():
-        return True, run.stdout.rstrip()
-    return True, ''
+        return True, run.stdout.rstrip(), warnings
+    return True, '', warnings
 
 
 def main():
@@ -86,15 +87,15 @@ def main():
             for p in sorted(d.glob('*.cpp'))
         )
 
-    passed = failed = 0
+    passed = failed = warned = 0
     failures = []
 
     for p in paths:
         rel = p.relative_to(root)
-        ok, msg = compile_and_run(p, args.output)
+        ok, msg, warnings = compile_and_run(p, args.output)
         if ok:
             passed += 1
-            status = 'PASS'
+            status = 'WARN' if warnings else 'PASS'
             if msg:
                 print(f'\n{rel}:')
                 print(msg)
@@ -107,12 +108,18 @@ def main():
             for line in msg.splitlines():
                 print(f'        {line}')
 
+        if warnings:
+            warned += 1
+            for line in warnings.splitlines():
+                print(f'        {line}')
+
     total = passed + failed
     print(f'\n{passed}/{total} passed', end='')
     if failed:
-        print(f', {failed} failed')
-    else:
-        print()
+        print(f', {failed} failed', end='')
+    if warned:
+        print(f', {warned} with warnings', end='')
+    print()
 
     return 1 if failed else 0
 

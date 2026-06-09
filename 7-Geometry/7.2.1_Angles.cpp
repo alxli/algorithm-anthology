@@ -2,10 +2,10 @@
 
 Angle calculations in two dimensions. All operations are inherently floating-point (`atan2`, `acos`,
 trigonometry), so these functions use the local double-coordinate `PointD` type. Convert integer
-points to `PointD` when asking for angles. The constants `DEG` and `RAD` may be used as
-multipliers to convert between degrees and radians. For example, if $t$ is a value in degrees, then
-$t \cdot \text{DEG}$ is the equivalent angle in radians; if $t$ is in radians, then
-$t \cdot \text{RAD}$ is the equivalent angle in degrees.
+points to `PointD` when asking for angles. The constants `DEG` and `RAD` may be used as multipliers
+to convert between degrees and radians. For example, if $t$ is a value in degrees, then
+$t \cdot$ `DEG` is the equivalent angle in radians; if $t$ is in radians, then $t \cdot$ `RAD` is
+the equivalent angle in degrees.
 
 - `reduce_deg(t)` takes an angle `t` degrees and returns an equivalent angle in the range $[0, 360)$
   degrees. E.g. $-630$ becomes $90$.
@@ -20,7 +20,7 @@ $t \cdot \text{RAD}$ is the equivalent angle in degrees.
 - `angle_between(a, b)` returns the angle in radians of segment from point `a` to point `b`,
   relative counterclockwise to the positive $x$-axis.
 - `angle_between(a1, b1, a2, b2)` returns the smaller angle in radians between two lines
-  `a1`$x$ + `b1`$y$ + `c1` = 0 and `a2`$x$ + `b2`$y$ + `c2` = 0, limited to $[0, \pi / 2]$.
+  $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, limited to $[0, \pi / 2]$.
 - `cross(a, b, o)` returns the magnitude (Euclidean norm) of the three-dimensional cross product
   between points `a` and `b` where the `z`-component is implicitly zero and the origin is implicitly
   shifted to point `o`. This operation is also equal to double the signed area of the triangle from

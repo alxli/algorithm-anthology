@@ -68,33 +68,33 @@ struct BinaryRule {
   int precedence;
 };
 
-bool is_operand(const string &s) {
-  int npoints = 0;
-  for (char c : s) {
-    if (c == '.') {
-      if (++npoints > 1) {
+class ShuntingYardParser {
+  using UnaryOpMap = std::unordered_map<string, UnaryOp>;
+  using BinaryOpMap = std::unordered_map<string, BinaryRule>;
+  UnaryOpMap unary_ops;
+  BinaryOpMap binary_ops;
+  std::set<string> ops;
+
+  static Operand eval_operand(const string &s) {
+    Operand res;
+    std::stringstream ss(s);
+    ss >> res;
+    return res;
+  }
+
+  static bool is_operand(const string &s) {
+    int npoints = 0;
+    for (char c : s) {
+      if (c == '.') {
+        if (++npoints > 1) {
+          return false;
+        }
+      } else if (!isdigit(static_cast<unsigned char>(c))) {
         return false;
       }
-    } else if (!isdigit(static_cast<unsigned char>(c))) {
-      return false;
     }
+    return !s.empty();
   }
-  return !s.empty();
-}
-
-Operand eval_operand(const string &s) {
-  Operand res;
-  std::stringstream ss(s);
-  ss >> res;
-  return res;
-}
-
-class ShuntingYardParser {
-  using unary_op_map = std::unordered_map<string, UnaryOp>;
-  using binary_op_map = std::unordered_map<string, BinaryRule>;
-  unary_op_map unary_ops;
-  binary_op_map binary_ops;
-  std::set<string> ops;
 
   static string strip(string s) {
     auto not_space = [](unsigned char c) { return !std::isspace(c); };
@@ -104,7 +104,7 @@ class ShuntingYardParser {
   }
 
  public:
-  ShuntingYardParser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
+  ShuntingYardParser(const UnaryOpMap &unary_ops, const BinaryOpMap &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, fn] : unary_ops) {
       ops.insert(op);
@@ -230,26 +230,17 @@ using namespace std;
 
 #define EQ(a, b) (fabs((a) - (b)) < 1e-7)
 
-// clang-format off
-double pos(double a) { return +a; }
-double neg(double a) { return -a; }
-double add(double a, double b) { return a + b; }
-double sub(double a, double b) { return a - b; }
-double mul(double a, double b) { return a * b; }
-double div(double a, double b) { return a / b; }
-// clang-format on
-
 int main() {
   unordered_map<string, UnaryOp> unary_ops;
-  unary_ops["+"] = pos;
-  unary_ops["-"] = neg;
+  unary_ops["+"] = [](double x) { return +x; };
+  unary_ops["-"] = [](double x) { return -x; };
 
   unordered_map<string, BinaryRule> binary_ops;
-  binary_ops["+"] = {static_cast<BinaryOp>(add), 0};
-  binary_ops["-"] = {static_cast<BinaryOp>(sub), 0};
-  binary_ops["*"] = {static_cast<BinaryOp>(mul), 1};
-  binary_ops["/"] = {static_cast<BinaryOp>(div), 1};
-  binary_ops["^"] = {static_cast<BinaryOp>(pow), 2};
+  binary_ops["+"] = {[](double a, double b) { return a + b; }, 0};
+  binary_ops["-"] = {[](double a, double b) { return a - b; }, 0};
+  binary_ops["*"] = {[](double a, double b) { return a * b; }, 1};
+  binary_ops["/"] = {[](double a, double b) { return a / b; }, 1};
+  binary_ops["^"] = {std::pow, 2};
 
   ShuntingYardParser p(unary_ops, binary_ops);
   assert(EQ(p.eval("-+-((--(-+1)))"), -1));

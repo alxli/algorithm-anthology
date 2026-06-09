@@ -13,10 +13,10 @@ same type as its inputs, so use a floating-point `Pt` there for a meaningful (no
 - `line_dist(p, a, b)` returns the distance from point `p` to the infinite line containing points
   `a` and `b`. If `a` = `b`, returns the distance from `p` to `a`.
 - `line_dist(a1, b1, c1, a2, b2, c2)` returns the distance between two lines.
-- `seg_dist(p, a, b)` returns the distance from point `p` to the line segment $ab$.
-- `seg_dist(a, b, c, d)` returns the minimum distance between line segments `ab` and `cd`. Returns 0
-  if the segments touch or intersect.
-- `closest_point(a, b, p)` returns the point on segment `ab` closest to point `p`.
+- `seg_dist(p, a, b)` returns the distance from point `p` to the line segment `a`-`b`.
+- `seg_dist(a, b, c, d)` returns the minimum distance between line segments `a`-`b` and `c`-`d`, or
+  0 if the segments touch or intersect.
+- `closest_point(a, b, p)` returns the point on segment `a`-`b` closest to point `p`.
 
 Time Complexity:
 - O(1) for all operations.

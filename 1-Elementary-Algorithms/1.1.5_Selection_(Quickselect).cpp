@@ -56,7 +56,7 @@ using namespace std;
 
 int main() {
   vector<int> a{5, 6, 4, 3, 2, 6, 7, 9, 3};
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   nth_element2(a.begin(), a.begin() + n / 2, a.end());
   assert(a[n / 2] == 5);
   // Values left of the median are <= it and values right are >= it (the exact

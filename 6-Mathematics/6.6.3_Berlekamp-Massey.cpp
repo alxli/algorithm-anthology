@@ -40,7 +40,7 @@ long long powmod(long long b, long long e, long long m) {
 }
 
 std::vector<long long> berlekamp_massey(const std::vector<long long> &s) {
-  int n = s.size(), len = 0, m = 0;
+  int n = static_cast<int>(s.size()), len = 0, m = 0;
   std::vector<long long> cur(n), last(n), prev;
   cur[0] = last[0] = 1;
   long long last_delta = 1;

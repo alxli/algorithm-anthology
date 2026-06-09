@@ -28,25 +28,23 @@ Space Complexity:
 
 const long long INF = LLONG_MAX / 4;
 
-struct Line {
-  long long m, b;
-
-  Line(long long m = 0, long long b = INF) : m(m), b(b) {}
-  long long eval(long long x) const { return m * x + b; }
-};
-
 class LiChaoTree {
-  struct node {
-    Line f;
-    node *left, *right;
-
-    explicit node(const Line &f) : f(f), left(nullptr), right(nullptr) {}
+  struct Line {
+    long long m, b;
+    Line(long long m = 0, long long b = INF) : m(m), b(b) {}
+    long long eval(long long x) const { return m * x + b; }
   };
 
-  node *root;
+  struct Node {
+    Line f;
+    Node *left, *right;
+    explicit Node(const Line &f) : f(f), left(nullptr), right(nullptr) {}
+  };
+
+  Node *root;
   long long lo, hi;
 
-  static void clean_up(node *n) {
+  static void clean_up(Node *n) {
     if (n == nullptr) {
       return;
     }
@@ -55,9 +53,9 @@ class LiChaoTree {
     delete n;
   }
 
-  static void add_line(node *&n, long long l, long long r, Line f) {
+  static void add_line(Node *&n, long long l, long long r, Line f) {
     if (n == nullptr) {
-      n = new node(f);
+      n = new Node(f);
       return;
     }
     long long mid = l + (r - l) / 2;
@@ -76,7 +74,7 @@ class LiChaoTree {
     }
   }
 
-  static long long query(node *n, long long l, long long r, long long x) {
+  static long long query(Node *n, long long l, long long r, long long x) {
     if (n == nullptr) {
       return INF;
     }
@@ -95,10 +93,8 @@ class LiChaoTree {
   LiChaoTree(long long lo, long long hi) : root(nullptr), lo(lo), hi(hi) {}
 
   ~LiChaoTree() { clean_up(root); }
-
   LiChaoTree(const LiChaoTree &) = delete;
   LiChaoTree &operator=(const LiChaoTree &) = delete;
-
   void add_line(long long m, long long b) { add_line(root, lo, hi, Line(m, b)); }
 
   long long query(long long x) const {

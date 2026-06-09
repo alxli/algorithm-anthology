@@ -2,9 +2,9 @@
 
 A spanning arborescence rooted at a node `root` of a weighted, directed graph is a set of edges
 forming a tree in which every other node is reachable from the root along directed edges, that is,
-every node except the root has exactly one incoming edge. The minimum spanning arborescence minimizes
-the total edge weight, and is the directed analog of the minimum spanning tree. Edmonds' algorithm
-(also called the Chu-Liu/Edmonds algorithm) computes it.
+every node except the root has exactly one incoming edge. The minimum spanning arborescence
+minimizes the total edge weight, and is the directed analog of the minimum spanning tree. Edmonds'
+algorithm (also called the Chu-Liu/Edmonds algorithm) computes it.
 
 The algorithm first selects, for each non-root node, its cheapest incoming edge. If these choices
 form no cycle, they already constitute the answer. Otherwise each cycle is contracted into a single
@@ -16,9 +16,9 @@ selected weights, until no cycle remains.
 Edges are given as `(from, to, weight)` triples; parallel edges and self-loops are allowed, with
 self-loops simply ignored.
 
-- `directed_mst(n, root, edges)` returns the total weight of the minimum spanning arborescence rooted
-  at `root` over `n` nodes numbered from 0 to `n - 1`, or `-1` if some node is unreachable from the
-  root (no arborescence exists).
+- `directed_mst(n, root, edges)` returns the total weight of the minimum spanning arborescence
+  rooted at `root` over `n` nodes numbered from 0 to `n - 1`, or $-1$ if some node is unreachable
+  from the root (no arborescence exists).
 
 Time Complexity:
 - O(n * m) per call, where $n$ is the number of nodes and $m$ is the number of edges.

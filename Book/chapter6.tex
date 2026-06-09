@@ -52,7 +52,7 @@ const double EPS = 1e-9;
 Sign Functions:
 
 \begin{compactitem}
-  \item \inlinecode{sgn(x)} returns $-1$ (if $x < 0$), $0$ (if $x = 0$), or $1$ (if $x > 0$). Unlike \inlinecode{signbit()} or \inlinecode{copysign()}, this does not handle the sign of \inlinecode{NaN}.
+  \item \inlinecode{sgn(x)} returns $-1$ (if $x < 0$), $0$ (if $x = 0$), or $1$ (if $x > 0$). Unlike \inlinecode{std::signbit()} or \inlinecode{std::copysign()}, this does not handle the sign of \inlinecode{NaN}.
   \item \inlinecode{signbit\_(x)} is analogous to \inlinecode{std::signbit()}, returning whether the sign bit of the floating point number is set to true. If so, then \inlinecode{x} is considered ``negative.'' Note that this works as expected on \inlinecode{+0.0}, \inlinecode{-0.0}, \inlinecode{Inf}, \inlinecode{-Inf}, \inlinecode{NaN}, as well as \inlinecode{-NaN}. Warning: This assumes that the sign bit is the leading (most significant) bit in the internal representation of the IEEE floating point value.
   \item \inlinecode{copysign\_(x, y)} is analogous to \inlinecode{std::copysign()}, returning a number with the magnitude of \inlinecode{x} but the sign of \inlinecode{y}.
 \end{compactitem}
@@ -800,7 +800,7 @@ A permutation is an ordered list consisting of $n$ (not necessarily distinct) el
   \item \inlinecode{next\_permutation(x)} returns the next lexicographically greater permutation of the binary digits of the integer \inlinecode{x}, that is, the lowest integer greater than \inlinecode{x} with the same number of 1-bits. This can be used to generate combinations of a set of $n$ items by treating each 1 bit as whether to ``take'' the item at the corresponding position.
   \item \inlinecode{permutation\_by\_rank(n, r)} returns the permutation of the integers in the range $[0, n)$ which is lexicographically ranked $r$, where $r$ is a zero-based rank in the range $[0, n!)$.
   \item \inlinecode{rank\_by\_permutation(a)} returns an integer representing the zero-based rank of permutation \inlinecode{a}, which must be a permutation of the integers $[0, n)$.
-  \item \inlinecode{permutation\_cycles(a)} returns the decomposition of the permutation \inlinecode{a} into cycles. A permutation cycle is a subset of a permutation whose elements are consecutively swapped, relative to a sorted set. For example, $\{3, 1, 0, 2\}$ decomposes to $\{0, 3, 2\}$ and $\{1\}$, meaning that starting from the sorted order $\{0, 1, 2, 3\}$, the 0th value is replaced by the 3rd, the 3rd by the 2nd, and the 2nd by the 0th ($0 \to 3 \to 2 \to 0$).
+  \item \inlinecode{permutation\_cycles(a)} returns the decomposition of the permutation \inlinecode{a} into cycles. A permutation cycle is a subset of a permutation whose elements are consecutively swapped, relative to a sorted set. For example, $\{3, 1, 0, 2\}$ decomposes to $\{0, 3, 2\}$ and $\{1\}$, meaning that starting from the sorted order $\{0, 1, 2, 3\}$, the 0-th value is replaced by the 3rd, the 3rd by the 2nd, and the 2nd by the 0-th ($0 \to 3 \to 2 \to 0$).
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -854,7 +854,7 @@ bool next_permutation_(It lo, It hi) {
 
 template<class T>
 bool next_permutation(std::vector<T> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   for (int i = n - 2; i >= 0; i--) {
     if (a[i] < a[i + 1]) {
       for (int j = n - 1;; j--) {
@@ -894,7 +894,7 @@ std::vector<int> permutation_by_rank(int n, long long x) {
 }
 
 long long rank_by_permutation(const std::vector<int> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<long long> factorial(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {
@@ -916,7 +916,7 @@ long long rank_by_permutation(const std::vector<int> &a) {
 using cycles = std::vector<std::vector<int>>;
 
 cycles permutation_cycles(const std::vector<int> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<bool> visit(n);
   cycles res;
   for (int i = 0; i < n; i++) {
@@ -984,7 +984,6 @@ int main() {
     cout << endl;
   }
   {  // Decomposition into cycles.
-    const int n = 4;
     vector<int> a{3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     cycles c = permutation_cycles(a);
@@ -1283,7 +1282,7 @@ A partition of a natural number $n$ is a way to write $n$ as a sum of positive i
 #include <vector>
 
 bool next_partition(std::vector<int> &p) {
-  int n = p.size();
+  int n = static_cast<int>(p.size());
   if (n <= 1) {
     return false;
   }
@@ -1414,7 +1413,7 @@ Enumerate combinatorial sequences by inheriting an abstract class. Child classes
 
 \begin{compactitem}
   \item \inlinecode{to\_rank(a)} returns an integer representing the zero-based rank of the combinatorial sequence \inlinecode{a}.
-  \item \inlinecode{from\_rank(r)} returns a combinatorial sequence of integers that is lexicographically ranked $r$, where $r$ is a zero-based rank in the range \inlinecode{[0, total\_count())}.
+  \item \inlinecode{from\_rank(r)} returns a combinatorial sequence of integers that is lexicographically ranked \inlinecode{r}, where \inlinecode{r} is a zero-based rank in the range \inlinecode{[0, total\_count())}.
   \item \inlinecode{enumerate(f)} calls the function \inlinecode{f(lo, hi)} on every specified combinatorial sequence in lexicographically increasing order, where \inlinecode{lo} and \inlinecode{hi} are two random-access iterators to a range \inlinecode{[lo, hi)} of integers.
 \end{compactitem}
 
@@ -1481,7 +1480,7 @@ class ArrangementEnumerator : public AbstractEnumerator {
   ArrangementEnumerator(int n, int k) : AbstractEnumerator(n, k) {}
 
   long long count(const std::vector<int> &prefix) {
-    int n = prefix.size();
+    int n = static_cast<int>(prefix.size());
     for (int i = 0; i < n - 1; i++) {
       if (prefix[i] == prefix[n - 1]) {
         return 0;
@@ -1514,7 +1513,7 @@ class CombinationEnumerator : public AbstractEnumerator {
   }
 
   long long count(const std::vector<int> &prefix) {
-    int n = prefix.size();
+    int n = static_cast<int>(prefix.size());
     if (n >= 2 && prefix[n - 1] <= prefix[n - 2]) {
       return 0;
     }
@@ -1736,7 +1735,7 @@ std::vector<int> generate_inverse(int p) {
 }
 
 long long simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   long long res = 0, m = 1;
   for (int i = 0; i < n; i++) {
     while (res % p[i] != a[i]) {
@@ -1748,7 +1747,7 @@ long long simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
 }
 
 long long garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   if (n == 0) {
     return 0;
   }
@@ -1800,7 +1799,7 @@ int main() {
   }
   {
     vector<int> a{2, 3, 1}, m{3, 4, 5};
-    int n = a.size();
+    int n = static_cast<int>(a.size());
     int x = simple_restore(a, m);
     assert(x == garner_restore(a, m));
     for (int i = 0; i < n; i++) {
@@ -2125,7 +2124,7 @@ std::vector<int> sieve(int lo, int hi) {
       }
     }
   }
-  for (int i = 2, len = hi - lo; i <= sqrt_hi; i++) {
+  for (int i = 2; i <= sqrt_hi; i++) {
     if (prime1[i]) {
       long long start = std::max(1LL * i * i, ((static_cast<long long>(lo) + i - 1) / i) * i);
       for (long long j = start; j <= hi; j += i) {
@@ -2475,10 +2474,10 @@ long long pollards_rho_brent(long long n) {
   uint64 g = 1, r = 1, q = 1, ys = 0, x = 0;
   for (r = 1; g == 1; r <<= 1) {
     x = y;
-    for (int i = 0; i < r; i++) {
+    for (uint64 i = 0; i < r; i++) {
       y = (mulmod(y, y, n) + c) % n;
     }
-    for (long long k = 0; k < r && g == 1; k += m) {
+    for (uint64 k = 0; k < r && g == 1; k += m) {
       ys = y;
       long long lim = std::min(m, r - k);
       for (int j = 0; j < lim; j++) {
@@ -2488,7 +2487,7 @@ long long pollards_rho_brent(long long n) {
       g = gcd(q, n);
     }
   }
-  if (g == n) {
+  if (g == static_cast<uint64>(n)) {
     do {
       ys = (mulmod(ys, ys, n) + c) % n;
       g = gcd((x > ys) ? (x - ys) : (ys - x), n);
@@ -2736,8 +2735,8 @@ The Mobius function \inlinecode{mu(n)} is the multiplicative function defined as
 Inclusion-exclusion itself counts the size of a union by alternately adding and subtracting the sizes of intersections. A canonical number-theoretic instance is counting integers in $[1, n]$ that are coprime to a modulus $m$: subtract the multiples of each prime factor of $m$, add back those counted twice, and so on. The signed terms are precisely the values of \inlinecode{mu} over the squarefree divisors of $m$, so \inlinecode{count\_coprime(n, m)} equals $\sum_{d \mid m} \mu(d) \lfloor n / d \rfloor$.
 
 \begin{compactitem}
-  \item \inlinecode{mobius(n)} returns \inlinecode{mu(n)} for a single $n$ by trial division.
-  \item \inlinecode{mobius\_sieve(n)} returns a vector \inlinecode{v} of length $n + 1$ where \inlinecode{v[i]} is \inlinecode{mu(i)}, computed together with a linear sieve.
+  \item \inlinecode{mobius(n)} returns $\mu(n)$ for a single $n$ by trial division.
+  \item \inlinecode{mobius\_sieve(n)} returns a vector of length $n + 1$ where index $i$ holds $\mu(i)$, computed together with a linear sieve.
   \item \inlinecode{count\_coprime(n, m)} returns the number of integers in $[1, n]$ that are coprime to $m$, via inclusion-exclusion over the distinct prime factors of $m$.
 \end{compactitem}
 
@@ -3598,7 +3597,7 @@ class BigInt {
     while (v.digits.empty() || v.digits.size() % 2 == 1) {
       v.digits.push_back(0);
     }
-    int n = v.digits.size();
+    int n = static_cast<int>(v.digits.size());
     int ldig = (int)::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
     int norm = BASE / (ldig + 1);
     v *= norm;
@@ -3734,13 +3733,13 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rational Numbers}
-Perform operations on Rational numbers internally represented as two integers, a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations: comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}) if the values may grow large.
+Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations: comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, \inlinecode{BigInt}, or even \inlinecode{Mint}) if the values may grow large.
 
 \begin{compactitem}
-  \item \inlinecode{Rational(n)} constructs a Rational with numerator \inlinecode{n} and denominator 1.
-  \item \inlinecode{Rational(n, d)} constructs a Rational with numerator \inlinecode{n} and denominator \inlinecode{d}.
-  \item \inlinecode{operator\textgreater{}\textgreater{}} inputs a Rational using the next integer from the stream as the numerator and 1 as the denominator.
-  \item \inlinecode{operator\textless{}\textless{}} outputs a Rational as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
+  \item \inlinecode{Rational(n)} constructs a rational number with numerator \inlinecode{n} and denominator 1.
+  \item \inlinecode{Rational(n, d)} constructs a rational number with numerator \inlinecode{n} and denominator \inlinecode{d}.
+  \item \inlinecode{operator\textgreater{}\textgreater{}} inputs a rational number using the next integer from the stream as the numerator and 1 as the denominator.
+  \item \inlinecode{operator\textless{}\textless{}} outputs the rational number as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
   \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the rational \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} respectively.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on numerical primitives.
 \end{compactitem}
@@ -3755,7 +3754,7 @@ Perform operations on Rational numbers internally represented as two integers, a
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(1)$ for storage of the Rational.
+  \item $O(1)$ for storage of the rational number.
   \item $O(1)$ auxiliary space for all operations.
 \end{compactitem}
 
@@ -4470,7 +4469,7 @@ Computes the determinant and inverse of a square matrix using Gaussian eliminati
 
 template<class SquareMatrix>
 double det_naive(const SquareMatrix &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   if (n == 1) {
     return a[0][0];
   }
@@ -4501,7 +4500,7 @@ double det_naive(const SquareMatrix &a) {
 template<class SquareMatrix>
 double det(const SquareMatrix &a, double EPS = 1e-10) {
   SquareMatrix b(a);
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   double res = 1.0;
   for (int i = 0; i < n; i++) {
     // Partial pivoting: bring the largest-magnitude entry in column i to the diagonal. Each row
@@ -4533,7 +4532,7 @@ double det(const SquareMatrix &a, double EPS = 1e-10) {
 
 template<class SquareMatrix>
 SquareMatrix &invert(SquareMatrix &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   for (int i = 0; i < n; i++) {
     a[i].resize(2 * n);
     for (int j = n; j < n * 2; j++) {
@@ -4603,7 +4602,7 @@ int main() {
 The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions.
 
 \begin{compactitem}
-  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $r$ by $c$ matrix \inlinecode{a} to merged LU decomposition matrix $lu$, returning either 0 or 1 denoting the ``sign'' of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or -1 denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix $lu$ has \inlinecode{lu[i][j] = l[i][j]} for $i > j$ and \inlinecode{lu[i][j] = u[i][j]} for $i \leq j$. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to 1 in row $i$ of the permutation matrix $P$ (all other columns in row $i$ of $P$ are implicitly 0). The resulting $P$ corresponds to \inlinecode{p1col} will satisfy $P*`a` = `lu`$.
+  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $r$ by $c$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either 0 or 1 denoting the ``sign'' of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j] = l[i][j]} for $i > j$ and \inlinecode{lu[i][j] = u[i][j]} for $i \leq j$. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to 1 in row $i$ of the permutation matrix $P$ (all other columns in row $i$ of $P$ are implicitly 0). The resulting $P$ corresponds to \inlinecode{p1col} will satisfy $P$\inlinecode{a} = \inlinecode{lu}.
   \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $r$ by $c$ matrix \inlinecode{a} of real values, and a length $r$ vector \inlinecode{b}, returning 0 if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the vector pointed to by \inlinecode{x} is populated with the solution vector of length $c$.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using LU decomposition.
   \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning 0 if the inversion was successful or $-1$ if \inlinecode{a} has no inverse.
@@ -4719,7 +4718,7 @@ int solve_system(
 
 template<class T>
 double det(const T &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   T lu;
   int status = lu_decompose(lu = a);
   if (status < 0) {
@@ -4734,7 +4733,7 @@ double det(const T &a) {
 
 template<class T>
 int invert(T &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<int> p1col;
   int status = lu_decompose(a, &p1col);
   if (status < 0) {
@@ -4952,7 +4951,7 @@ long long powmod(long long b, long long e, long long m) {
 }
 
 void ntt(std::vector<long long> &a, bool invert) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   for (int i = 1, j = 0; i < n; i++) {
     int bit = n >> 1;
     for (; j & bit; bit >>= 1) {
@@ -5054,7 +5053,7 @@ typedef std::complex<double> cd;
 const double PI = acos(-1.0);
 
 void fft(std::vector<cd> &a, bool invert) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   for (int i = 1, j = 0; i < n; i++) {
     int bit = n >> 1;
     for (; j & bit; bit >>= 1) {
@@ -5154,7 +5153,7 @@ long long powmod(long long b, long long e, long long m) {
 }
 
 std::vector<long long> berlekamp_massey(const std::vector<long long> &s) {
-  int n = s.size(), len = 0, m = 0;
+  int n = static_cast<int>(s.size()), len = 0, m = 0;
   std::vector<long long> cur(n), last(n), prev;
   cur[0] = last[0] = 1;
   long long last_delta = 1;
@@ -5214,14 +5213,14 @@ int main() {
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Nim}
-Solves normal-play Nim and related impartial games where each position is the disjoint sum of independent piles. In normal play, the player who makes the last move wins. A Nim position is losing exactly when the xor of all pile sizes is 0.
+Solves normal-play Nim and related impartial games where each position is the disjoint sum of independent piles. In normal play, the player who makes the last move wins. A Nim position is losing exactly when the XOR of all pile sizes is 0.
 
-This is the base case of the Sprague-Grundy theorem: every finite impartial game position is equivalent to a Nim pile of size equal to its Grundy number, and sums of games combine by xor.
+This is the base case of the Sprague-Grundy theorem: every finite impartial game position is equivalent to a Nim pile of size equal to its Grundy number, and sums of games combine by XOR.
 
 \begin{compactitem}
-  \item \inlinecode{nim\_sum(piles)} returns the xor of all pile sizes.
+  \item \inlinecode{nim\_sum(piles)} returns the XOR of all pile sizes.
   \item \inlinecode{first\_player\_wins(piles)} returns whether the player to move has a winning strategy.
-  \item \inlinecode{winning\_move(piles)} returns a move \inlinecode{(pile, new\_size)} that moves to xor 0, or \inlinecode{(-1, -1)} if the position is losing.
+  \item \inlinecode{winning\_move(piles)} returns a move \inlinecode{(pile, new\_size)} that moves to XOR 0, or \inlinecode{(-1, -1)} if the position is losing.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of piles.
@@ -5280,12 +5279,12 @@ int main() {
 \subsection{Sprague-Grundy}
 Computes Grundy numbers for finite impartial games. The Grundy number \inlinecode{g[p]} of a position \inlinecode{p} is the minimum excluded nonnegative integer (MEX) of the Grundy numbers reachable in one move. A position is losing exactly when its Grundy number is 0.
 
-For a sum of independent impartial games, the combined Grundy number is the xor of the component Grundy numbers. This is the Sprague-Grundy theorem.
+For a sum of independent impartial games, the combined Grundy number is the XOR of the component Grundy numbers. This is the Sprague-Grundy theorem.
 
 \begin{compactitem}
   \item \inlinecode{mex(values)} returns the minimum excluded nonnegative integer.
   \item \inlinecode{subtraction\_game\_grundy(max\_stones, moves)} computes Grundy numbers for a game where a move subtracts one value in \inlinecode{moves} from the pile.
-  \item \inlinecode{sum\_grundy(grundies)} returns the xor of component Grundy numbers.
+  \item \inlinecode{sum\_grundy(grundies)} returns the XOR of component Grundy numbers.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \cdot m)$ for \inlinecode{subtraction\_game\_grundy(max\_stones, moves)}, where $n$ is \inlinecode{max\_stones} and $m$ is the number of allowed moves.

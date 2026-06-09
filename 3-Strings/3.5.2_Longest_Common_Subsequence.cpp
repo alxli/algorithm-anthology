@@ -30,7 +30,7 @@ Space Complexity:
 using std::string;
 
 string longest_common_subsequence(const string &s1, const string &s2) {
-  int n = s1.size(), m = s2.size();
+  int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
   std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= m; j++) {

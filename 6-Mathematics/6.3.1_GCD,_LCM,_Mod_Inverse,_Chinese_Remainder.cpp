@@ -116,7 +116,7 @@ std::vector<int> generate_inverse(int p) {
 }
 
 long long simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   long long res = 0, m = 1;
   for (int i = 0; i < n; i++) {
     while (res % p[i] != a[i]) {
@@ -128,7 +128,7 @@ long long simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
 }
 
 long long garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   if (n == 0) {
     return 0;
   }
@@ -179,7 +179,7 @@ int main() {
   }
   {
     vector<int> a{2, 3, 1}, m{3, 4, 5};
-    int n = a.size();
+    int n = static_cast<int>(a.size());
     int x = simple_restore(a, m);
     assert(x == garner_restore(a, m));
     for (int i = 0; i < n; i++) {

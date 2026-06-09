@@ -22,7 +22,8 @@ int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
   if (matrix.empty()) {
     return 0;
   }
-  int n = matrix.size(), m = matrix[0].size(), res = 0;
+  int n = static_cast<int>(matrix.size()), m = static_cast<int>(matrix[0].size());
+  int res = 0;
   // last1[c] = row index of the most recent 1 in column c (-1 if none yet).
   // left_wall[c] = nearest column left of c whose last1 value >= last1[c] (exclusive left bound).
   // right_wall[c] = nearest column right of c whose last1 value >= last1[c] (exclusive right bound).

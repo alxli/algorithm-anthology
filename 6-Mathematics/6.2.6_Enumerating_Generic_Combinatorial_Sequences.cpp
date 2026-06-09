@@ -6,8 +6,8 @@ combinatorial sequences starting with the given prefix.
 
 - `to_rank(a)` returns an integer representing the zero-based rank of the combinatorial sequence
   `a`.
-- `from_rank(r)` returns a combinatorial sequence of integers that is lexicographically ranked $r$,
-  where $r$ is a zero-based rank in the range `[0, total_count())`.
+- `from_rank(r)` returns a combinatorial sequence of integers that is lexicographically ranked `r`,
+  where `r` is a zero-based rank in the range `[0, total_count())`.
 - `enumerate(f)` calls the function `f(lo, hi)` on every specified combinatorial sequence in
   lexicographically increasing order, where `lo` and `hi` are two random-access iterators to a range
   `[lo, hi)` of integers.
@@ -79,7 +79,7 @@ class ArrangementEnumerator : public AbstractEnumerator {
   ArrangementEnumerator(int n, int k) : AbstractEnumerator(n, k) {}
 
   long long count(const std::vector<int> &prefix) {
-    int n = prefix.size();
+    int n = static_cast<int>(prefix.size());
     for (int i = 0; i < n - 1; i++) {
       if (prefix[i] == prefix[n - 1]) {
         return 0;
@@ -112,7 +112,7 @@ class CombinationEnumerator : public AbstractEnumerator {
   }
 
   long long count(const std::vector<int> &prefix) {
-    int n = prefix.size();
+    int n = static_cast<int>(prefix.size());
     if (n >= 2 && prefix[n - 1] <= prefix[n - 2]) {
       return 0;
     }

@@ -21,8 +21,8 @@ A permutation is an ordered list consisting of $n$ (not necessarily distinct) el
 - `permutation_cycles(a)` returns the decomposition of the permutation `a` into cycles. A
   permutation cycle is a subset of a permutation whose elements are consecutively swapped, relative
   to a sorted set. For example, $\{3, 1, 0, 2\}$ decomposes to $\{0, 3, 2\}$ and $\{1\}$, meaning
-  that starting from the sorted order $\{0, 1, 2, 3\}$, the 0th value is replaced by the 3rd, the
-  3rd by the 2nd, and the 2nd by the 0th ($0 \to 3 \to 2 \to 0$).
+  that starting from the sorted order $\{0, 1, 2, 3\}$, the 0-th value is replaced by the 3rd, the
+  3rd by the 2nd, and the 2nd by the 0-th ($0 \to 3 \to 2 \to 0$).
 
 Time Complexity:
 - O(n^2) per call to `next_permutation_(lo, hi)`, where $n$ is the distance between `lo` and `hi`.
@@ -72,7 +72,7 @@ bool next_permutation_(It lo, It hi) {
 
 template<class T>
 bool next_permutation(std::vector<T> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   for (int i = n - 2; i >= 0; i--) {
     if (a[i] < a[i + 1]) {
       for (int j = n - 1;; j--) {
@@ -112,7 +112,7 @@ std::vector<int> permutation_by_rank(int n, long long x) {
 }
 
 long long rank_by_permutation(const std::vector<int> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<long long> factorial(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {
@@ -134,7 +134,7 @@ long long rank_by_permutation(const std::vector<int> &a) {
 using cycles = std::vector<std::vector<int>>;
 
 cycles permutation_cycles(const std::vector<int> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<bool> visit(n);
   cycles res;
   for (int i = 0; i < n; i++) {
@@ -214,7 +214,6 @@ int main() {
     cout << endl;
   }
   {  // Decomposition into cycles.
-    const int n = 4;
     vector<int> a{3, 1, 0, 2};
     cout << "\nDecomposition of {3,1,0,2} into cycles:" << endl;
     cycles c = permutation_cycles(a);

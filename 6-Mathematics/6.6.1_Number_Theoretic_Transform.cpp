@@ -47,7 +47,7 @@ long long powmod(long long b, long long e, long long m) {
 }
 
 void ntt(std::vector<long long> &a, bool invert) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   for (int i = 1, j = 0; i < n; i++) {
     int bit = n >> 1;
     for (; j & bit; bit >>= 1) {

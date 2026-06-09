@@ -7,7 +7,7 @@ every node other than the source and sink.
 - `ford_fulkerson()` uses global `source` and `sink`, modifies the global residual capacity matrix
   `cap`, and returns maximum flow. Nodes are numbered from 0 to `cap.size() - 1`.
 
-The Ford-Fulkerson algorithm is only optimal on graphs with integer capacities, as there exists
+The Ford-Fulkerson algorithm should only be used on graphs with integer capacities, as there exists
 certain real-valued flow inputs for which the algorithm never terminates. The Edmonds-Karp algorithm
 is an improvement using breadth-first search, addressing this problem.
 

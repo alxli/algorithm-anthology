@@ -1,13 +1,13 @@
 /*
 
 Given a connected, undirected, weighted graph with possibly negative weights, its minimum spanning
-tree is a subgraph which is a tree that connects all nodes with a subset of its edges such that
-their total weight is minimized. If the input graph is not connected, then this implementation will
-find the minimum spanning forest.
+tree (MST) is a subgraph which is a tree that connects all nodes with a subset of its edges such
+that their total weight is minimized. If the input graph is not connected, then this implementation
+will find the minimum spanning forest.
 
-- `kruskal_mst(nodes)` populates `mst` and returns total weight for a global, pre-populated edge
-  list `edges` whose endpoints must be numbered from 0 to `nodes - 1`. Each edge is stored as
-  `(weight, u, v)`.
+- `kruskal_mst(nodes)` populates `mst` with the minimum spanning tree edges (returning the total MST
+  weight) for a global, pre-populated edge list `edges` whose endpoints must be numbered from 0 to
+  `nodes - 1`. Each edge is stored as `(weight, u, v)` and will be sorted by weight after the call.
 
 Time Complexity:
 - O(m log n) per call to `kruskal_mst()`, where $m$ is the number of edges and $n$ is the number of

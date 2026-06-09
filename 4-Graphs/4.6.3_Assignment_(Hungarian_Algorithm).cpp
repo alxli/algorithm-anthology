@@ -25,12 +25,12 @@ Space Complexity:
 #include <vector>
 
 long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector<int> *assignment) {
-  int n = cost.size(), m = cost.empty() ? 0 : cost[0].size();
+  int n = static_cast<int>(cost.size());
+  int m = cost.empty() ? 0 : static_cast<int>(cost[0].size());
   assert(n <= m);
   const long long INF = LLONG_MAX / 4;
   std::vector<long long> u(n + 1), v(m + 1);
   std::vector<int> p(m + 1), way(m + 1);
-
   for (int i = 1; i <= n; i++) {
     p[0] = i;
     int j0 = 0;
@@ -64,14 +64,12 @@ long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector
       }
       j0 = j1;
     } while (p[j0] != 0);
-
     do {
       int j1 = way[j0];
       p[j0] = p[j1];
       j0 = j1;
     } while (j0 != 0);
   }
-
   assignment->assign(n, -1);
   for (int j = 1; j <= m; j++) {
     if (p[j] != 0) {

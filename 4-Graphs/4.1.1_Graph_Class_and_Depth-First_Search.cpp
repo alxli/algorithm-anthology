@@ -70,7 +70,7 @@ class Graph {
   std::vector<int> &operator[](int n) { return adj[n]; }
 
   void add_edge(int u, int v) {
-    int n = adj.size();
+    int n = static_cast<int>(adj.size());
     if (u >= n || v >= n) {
       adj.resize(std::max(u, v) + 1);
     }
@@ -81,7 +81,7 @@ class Graph {
   }
 
   bool has_cycle() const {
-    int n = adj.size();
+    int n = static_cast<int>(adj.size());
     std::vector<bool> visit(n, false), onstack(n, false);
     for (int i = 0; i < n; i++) {
       if (!visit[i] && has_cycle(i, -1, visit, onstack)) {

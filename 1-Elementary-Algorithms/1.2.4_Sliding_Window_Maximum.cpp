@@ -28,7 +28,7 @@ Space Complexity:
 
 template<class T>
 std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::deque<int> window;
   std::vector<T> res;
   for (int i = 0; i < n; i++) {
@@ -48,7 +48,7 @@ std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
 
 template<class T>
 std::vector<T> sliding_window_minimum(const std::vector<T> &a, int k) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::deque<int> window;
   std::vector<T> res;
   for (int i = 0; i < n; i++) {

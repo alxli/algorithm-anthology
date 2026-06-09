@@ -37,6 +37,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 
 template<class T>
 class SegTree2D {
@@ -73,42 +74,36 @@ class SegTree2D {
 
   static long long length(int lo, int hi) { return hi - lo + 1LL; }
 
-  void append_result(T &res, bool &found, const T &v) {
-    res = found ? combine(res, v) : v;
-    found = true;
-  }
+  void append_result(std::optional<T> &res, const T &v) { res = res ? combine(*res, v) : v; }
 
   T query(InnerNode *n, int qlo, int qhi, long long rows) {
     if (n == nullptr) {
       return repeat_value(init, rows * length(qlo, qhi));
     }
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
-    T res;
-    bool found = false;
+    std::optional<T> res;
     if (qlo < lo) {
       int missing_hi = std::min(qhi, lo - 1);
-      append_result(res, found, repeat_value(init, rows * length(qlo, missing_hi)));
+      append_result(res, repeat_value(init, rows * length(qlo, missing_hi)));
     }
     int overlap_lo = std::max(qlo, lo), overlap_hi = std::min(qhi, hi);
     if (overlap_lo <= overlap_hi) {
       if (overlap_lo == lo && overlap_hi == hi) {
-        append_result(res, found, n->value);
+        append_result(res, n->value);
       } else {
         if (overlap_lo <= mid) {
-          append_result(res, found, query(n->left, overlap_lo, std::min(overlap_hi, mid), rows));
+          append_result(res, query(n->left, overlap_lo, std::min(overlap_hi, mid), rows));
         }
         if (mid < overlap_hi) {
-          append_result(
-              res, found, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi, rows)
-          );
+          append_result(res, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi, rows));
         }
       }
     }
     if (hi < qhi) {
       int missing_lo = std::max(qlo, hi + 1);
-      append_result(res, found, repeat_value(init, rows * length(missing_lo, qhi)));
+      append_result(res, repeat_value(init, rows * length(missing_lo, qhi)));
     }
-    return res;
+    return *res;
   }
 
   T query(OuterNode *n, int qlo, int qhi) {
@@ -116,30 +111,29 @@ class SegTree2D {
       return repeat_value(init, width * length(qlo, qhi));
     }
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
-    T res;
-    bool found = false;
+    std::optional<T> res;
     if (qlo < lo) {
       int missing_hi = std::min(qhi, lo - 1);
-      append_result(res, found, repeat_value(init, width * length(qlo, missing_hi)));
+      append_result(res, repeat_value(init, width * length(qlo, missing_hi)));
     }
     int overlap_lo = std::max(qlo, lo), overlap_hi = std::min(qhi, hi);
     if (overlap_lo <= overlap_hi) {
       if (overlap_lo == lo && overlap_hi == hi) {
-        append_result(res, found, query(&(n->root), tgt_c1, tgt_c2, length(lo, hi)));
+        append_result(res, query(&(n->root), tgt_c1, tgt_c2, length(lo, hi)));
       } else {
         if (overlap_lo <= mid) {
-          append_result(res, found, query(n->left, overlap_lo, std::min(overlap_hi, mid)));
+          append_result(res, query(n->left, overlap_lo, std::min(overlap_hi, mid)));
         }
         if (mid < overlap_hi) {
-          append_result(res, found, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi));
+          append_result(res, query(n->right, std::max(overlap_lo, mid + 1), overlap_hi));
         }
       }
     }
     if (hi < qhi) {
       int missing_lo = std::max(qlo, hi + 1);
-      append_result(res, found, repeat_value(init, width * length(missing_lo, qhi)));
+      append_result(res, repeat_value(init, width * length(missing_lo, qhi)));
     }
-    return res;
+    return *res;
   }
 
   void update(InnerNode *n, int c, const T &d, bool leaf_row, long long rows) {

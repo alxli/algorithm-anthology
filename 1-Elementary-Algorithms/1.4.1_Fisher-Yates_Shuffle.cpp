@@ -22,7 +22,7 @@ Space Complexity:
 template<class It>
 void fisher_yates_shuffle(It lo, It hi) {
   static std::mt19937 rng(std::random_device{}());
-  int n = hi - lo;
+  int n = static_cast<int>(hi - lo);
   for (int i = n - 1; i > 0; i--) {
     std::uniform_int_distribution<int> dist(0, i);
     int j = dist(rng);

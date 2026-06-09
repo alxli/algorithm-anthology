@@ -522,7 +522,7 @@ long long inversions(It lo, It hi) {
 }
 
 long long inversions(const std::vector<int> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<int> values(a.begin(), a.end());
   std::sort(values.begin(), values.end());
   values.erase(std::unique(values.begin(), values.end()), values.end());
@@ -686,7 +686,7 @@ using namespace std;
 
 int main() {
   vector<int> a{5, 6, 4, 3, 2, 6, 7, 9, 3};
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   nth_element2(a.begin(), a.begin() + n / 2, a.end());
   assert(a[n / 2] == 5);
   // Values left of the median are <= it and values right are >= it (the exact
@@ -996,7 +996,7 @@ Both functions take a vector \inlinecode{a} of \inlinecode{n} comparable values 
 
 template<class T>
 std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::deque<int> window;
   std::vector<T> res;
   for (int i = 0; i < n; i++) {
@@ -1016,7 +1016,7 @@ std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
 
 template<class T>
 std::vector<T> sliding_window_minimum(const std::vector<T> &a, int k) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::deque<int> window;
   std::vector<T> res;
   for (int i = 0; i < n; i++) {
@@ -1070,7 +1070,7 @@ All functions below take a vector \inlinecode{a} of \inlinecode{n} comparable va
 
 template<class T>
 std::vector<int> previous_less(const std::vector<T> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
   for (int i = 0; i < n; i++) {
@@ -1085,7 +1085,7 @@ std::vector<int> previous_less(const std::vector<T> &a) {
 
 template<class T>
 std::vector<int> next_less(const std::vector<T> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
   for (int i = n - 1; i >= 0; i--) {
@@ -1100,7 +1100,7 @@ std::vector<int> next_less(const std::vector<T> &a) {
 
 template<class T>
 std::vector<int> previous_greater(const std::vector<T> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
   for (int i = 0; i < n; i++) {
@@ -1115,7 +1115,7 @@ std::vector<int> previous_greater(const std::vector<T> &a) {
 
 template<class T>
 std::vector<int> next_greater(const std::vector<T> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
   for (int i = n - 1; i >= 0; i--) {
@@ -1130,7 +1130,7 @@ std::vector<int> next_greater(const std::vector<T> &a) {
 
 template<class T>
 T largest_rectangle(const std::vector<T> &heights) {
-  int n = heights.size();
+  int n = static_cast<int>(heights.size());
   std::vector<int> left = previous_less(heights), right = next_less(heights);
   T best = 0;
   for (int i = 0; i < n; i++) {
@@ -1160,7 +1160,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Minimum Excluded Value (MEX)}
+\subsection{Minimum Excluded Value}
 Computes the minimum excluded nonnegative integer, commonly called the MEX. The MEX of a set is the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states.
 
 \begin{compactitem}
@@ -1186,7 +1186,7 @@ Computes the minimum excluded nonnegative integer, commonly called the MEX. The 
 
 template<class It>
 int mex(It lo, It hi) {
-  int n = hi - lo;
+  int n = static_cast<int>(hi - lo);
   std::vector<bool> seen(n + 1, false);
   for (It it = lo; it != hi; ++it) {
     if (0 <= *it && *it <= n) {
@@ -1340,7 +1340,7 @@ The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best
 long long knapsack_01(
     const std::vector<int> &weight, const std::vector<long long> &value, int capacity
 ) {
-  int n = weight.size();
+  int n = static_cast<int>(weight.size());
   std::vector<long long> dp(capacity + 1, 0);
   for (int i = 0; i < n; i++) {
     for (int w = capacity; w >= weight[i]; w--) {
@@ -1397,7 +1397,7 @@ For unbounded maximum-value knapsack, weights are iterated in increasing order s
 long long unbounded_knapsack(
     const std::vector<int> &weight, const std::vector<long long> &value, int capacity
 ) {
-  int n = weight.size();
+  int n = static_cast<int>(weight.size());
   std::vector<long long> dp(capacity + 1, 0);
   for (int i = 0; i < n; i++) {
     for (int w = weight[i]; w <= capacity; w++) {
@@ -1448,7 +1448,7 @@ Given random-access iterators \inlinecode{lo} and \inlinecode{hi} specifying a r
 
 template<class It>
 long long max_subset_sum_at_most(It lo, It hi, long long v) {
-  int n = hi - lo;
+  int n = static_cast<int>(hi - lo);
   long long llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
   std::vector<long long> lsum(llen), hsum(hlen);
   for (long long mask = 1; mask < llen; mask++) {
@@ -1499,7 +1499,8 @@ int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
   if (matrix.empty()) {
     return 0;
   }
-  int n = matrix.size(), m = matrix[0].size(), res = 0;
+  int n = static_cast<int>(matrix.size()), m = static_cast<int>(matrix[0].size());
+  int res = 0;
   // last1[c] = row index of the most recent 1 in column c (-1 if none yet).
   // left_wall[c] = nearest column left of c whose last1 value >= last1[c] (exclusive left bound).
   // right_wall[c] = nearest column right of c whose last1 value >= last1[c] (exclusive right bound).
@@ -1640,7 +1641,7 @@ long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) 
         return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
       }
   );
-  int n = intervals.size();
+  int n = static_cast<int>(intervals.size());
   std::vector<int> finish;
   finish.reserve(n);
   for (const auto &iv : intervals) {
@@ -1879,7 +1880,7 @@ The algorithm scans from right to left. At position \inlinecode{i}, it chooses a
 template<class It>
 void fisher_yates_shuffle(It lo, It hi) {
   static std::mt19937 rng(std::random_device{}());
-  int n = hi - lo;
+  int n = static_cast<int>(hi - lo);
   for (int i = n - 1; i > 0; i--) {
     std::uniform_int_distribution<int> dist(0, i);
     int j = dist(rng);
@@ -2073,7 +2074,7 @@ T max_submatrix_sum(
   if (matrix.empty() || matrix[0].empty()) {
     return T();
   }
-  int n = matrix.size(), m = matrix[0].size();
+  int n = static_cast<int>(matrix.size()), m = static_cast<int>(matrix[0].size());
   std::vector<T> sums(n);
   T sum, max_sum = 0;
   for (int clo = 0; clo < m; clo++) {
@@ -2476,19 +2477,20 @@ Integers double as fixed-size sets of bits, where bit \inlinecode{b} (counting f
 \begin{compactitem}
   \item \inlinecode{test\_bit(x, b)} returns whether bit \inlinecode{b} of \inlinecode{x} is set.
   \item \inlinecode{set\_bit(x, b)}, \inlinecode{clear\_bit(x, b)}, and \inlinecode{toggle\_bit(x, b)} return \inlinecode{x} with bit \inlinecode{b} respectively forced to 1, forced to 0, or flipped.
-  \item \inlinecode{lowest\_set\_bit(x)} returns the value of the lowest set bit of \inlinecode{x} (a power of two), or 0 if \inlinecode{x} is 0. \inlinecode{clear\_lowest\_set\_bit(x)} returns \inlinecode{x} with its lowest set bit removed.
+  \item \inlinecode{lowest\_set\_bit(x)} returns the value of the lowest set bit of \inlinecode{x} (a power of 2), or 0 if \inlinecode{x} is 0. \inlinecode{clear\_lowest\_set\_bit(x)} returns \inlinecode{x} with its lowest set bit removed.
   \item \inlinecode{popcount(x)} returns the number of set bits, analogous to \inlinecode{\_\_builtin\_popcount()}.
   \item \inlinecode{ctz(x)} returns the number of trailing 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_ctz()}.
   \item \inlinecode{clz(x)} returns the number of leading 0-bits (undefined for 0), analgoous to \inlinecode{\_\_builtin\_clz()}.
   \item \inlinecode{is\_power\_of\_two(x)} returns whether \inlinecode{x} has exactly one set bit.
-  \item \inlinecode{floor\_pow2(x)} and \inlinecode{ceil\_pow2(x)} return the largest power of two that is \inlinecode{\textless{}= x} and the smallest that is \inlinecode{\textgreater{}= x}, respectively (with \inlinecode{x \textgreater{} 0}).
+  \item \inlinecode{floor\_pow2(x)} returns the largest power of 2 that is $\leq$ \inlinecode{x} (for \inlinecode{x} $> 0$).
+  \item \inlinecode{ceil\_pow2(x)} returns the smallest power of 2 that is $\geq$ \inlinecode{x} (for \inlinecode{x} $> 0$).
   \item \inlinecode{for\_each\_set\_bit(x, f)} calls \inlinecode{f(b)} once for each set bit position \inlinecode{b} of \inlinecode{x}, in increasing order.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(B)$ worst case per call to \inlinecode{popcount(x)}, \inlinecode{ctz(x)}, \inlinecode{clz(x)}, and \inlinecode{for\_each\_set\_bit(x, f)}, where $B$ is the bit width of the mask (32 here).
+  \item $O(b)$ worst case per call to \inlinecode{popcount(x)}, \inlinecode{ctz(x)}, \inlinecode{clz(x)}, and \inlinecode{for\_each\_set\_bit(x, f)}, where $b$ is the bit width of the mask (32 here).
   \item $O(1)$ for all other operations.
 \end{compactitem}
 

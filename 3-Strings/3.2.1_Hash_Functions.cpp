@@ -138,8 +138,8 @@ uint64 hash_range64(It first, It last) {
 template<class Int>
 struct IntHasher {
   std::size_t operator()(Int x) const {
-    static const uint64 RANDOM = std::chrono::steady_clock::now().time_since_epoch().count();
-    return static_cast<std::size_t>(mix64(static_cast<uint64>(x) + RANDOM));
+    static const uint64 RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
+    return static_cast<std::size_t>(mix64(static_cast<uint64>(x) + RAND_SEED));
   }
 };
 

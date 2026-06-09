@@ -1,13 +1,14 @@
 /*
 
-Maintain the number of bridges in an undirected graph while edges are inserted one at a time.
+Maintain the number of bridges in an undirected graph while edges are inserted one at a time, along
+with the 2-edge-connected components and ordinary connected components.
 
-- `OnlineBridges(nodes)` constructs a graph with `nodes` isolated nodes. 
-- `add_edge()` adds an undirected edge and updates `bridges` to store the current number of bridges.
-
-This data structure maintains two disjoint-set forests:
-- `dsu_2ecc` tracks the current $2$-edge-connected components.
-- `dsu_cc` tracks the ordinary connected components.
+- `OnlineBridges(nodes)` constructs a graph with `nodes` isolated nodes.
+- `add_edge(u, v)` adds the undirected edge `u`-`v` and updates: `bridges` with the current number
+  of bridges, and the disjoint-set parent arrays `dsu_2ecc[]` and `dsu_cc[]`, which partition the
+  nodes into 2-edge-connected components and ordinary connected components respectively.
+- `find_2ecc(u)` returns node `u`'s representative in the 2-edge-connected components partition.
+- `find_cc(u)` returns node `u`'s representative in the ordinary connected components partition.
 
 When an inserted edge joins two different connected components, it creates a new bridge. When it
 joins two nodes already in the same connected component, it creates a cycle and every bridge on the
@@ -42,33 +43,33 @@ struct OnlineBridges {
     }
   }
 
-  int find_2ecc(int v) {
-    if (v == -1) {
+  int find_2ecc(int u) {
+    if (u == -1) {
       return -1;
     }
-    if (dsu_2ecc[v] == v) {
-      return v;
+    if (dsu_2ecc[u] == u) {
+      return u;
     }
-    return dsu_2ecc[v] = find_2ecc(dsu_2ecc[v]);
+    return dsu_2ecc[u] = find_2ecc(dsu_2ecc[u]);
   }
 
-  int find_cc(int v) {
-    v = find_2ecc(v);
-    if (dsu_cc[v] == v) {
-      return v;
+  int find_cc(int u) {
+    u = find_2ecc(u);
+    if (dsu_cc[u] == u) {
+      return u;
     }
-    return dsu_cc[v] = find_cc(dsu_cc[v]);
+    return dsu_cc[u] = find_cc(dsu_cc[u]);
   }
 
-  void make_root(int v) {
-    v = find_2ecc(v);
-    int root = v, child = -1;
-    while (v != -1) {
-      int p = find_2ecc(parent[v]);
-      parent[v] = child;
-      dsu_cc[v] = root;
-      child = v;
-      v = p;
+  void make_root(int u) {
+    u = find_2ecc(u);
+    int root = u, child = -1;
+    while (u != -1) {
+      int p = find_2ecc(parent[u]);
+      parent[u] = child;
+      dsu_cc[u] = root;
+      child = u;
+      u = p;
     }
     dsu_cc_size[root] = dsu_cc_size[child];
   }
@@ -99,16 +100,16 @@ struct OnlineBridges {
         v = parent[v];
       }
     }
-    for (int v : path_a) {
-      dsu_2ecc[v] = lca;
-      if (v == lca) {
+    for (int a : path_a) {
+      dsu_2ecc[a] = lca;
+      if (a == lca) {
         break;
       }
       bridges--;
     }
-    for (int v : path_b) {
-      dsu_2ecc[v] = lca;
-      if (v == lca) {
+    for (int b : path_b) {
+      dsu_2ecc[b] = lca;
+      if (b == lca) {
         break;
       }
       bridges--;

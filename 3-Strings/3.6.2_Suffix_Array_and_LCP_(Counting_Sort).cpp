@@ -48,7 +48,7 @@ class SuffixArrayCountingSort {
 
  public:
   explicit SuffixArrayCountingSort(const string &s) : s(s), sa(s.size()), rk(s.size()) {
-    int n = s.size();
+    int n = static_cast<int>(s.size());
     std::iota(sa.rbegin(), sa.rend(), 0);
     for (int i = 0; i < n; i++) {
       rk[i] = static_cast<unsigned char>(s[i]);
@@ -77,7 +77,7 @@ class SuffixArrayCountingSort {
   const std::vector<int> &get_sa() const { return sa; }
 
   std::vector<int> get_lcp() const {
-    int n = s.size();
+    int n = static_cast<int>(s.size());
     if (n == 0) {
       return {};  // Avoid constructing a vector of size (size_t)(-1).
     }

@@ -31,7 +31,7 @@ Space Complexity:
 
 template<class T>
 std::vector<int> previous_less(const std::vector<T> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
   for (int i = 0; i < n; i++) {
@@ -46,7 +46,7 @@ std::vector<int> previous_less(const std::vector<T> &a) {
 
 template<class T>
 std::vector<int> next_less(const std::vector<T> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
   for (int i = n - 1; i >= 0; i--) {
@@ -61,7 +61,7 @@ std::vector<int> next_less(const std::vector<T> &a) {
 
 template<class T>
 std::vector<int> previous_greater(const std::vector<T> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
   for (int i = 0; i < n; i++) {
@@ -76,7 +76,7 @@ std::vector<int> previous_greater(const std::vector<T> &a) {
 
 template<class T>
 std::vector<int> next_greater(const std::vector<T> &a) {
-  int n = a.size();
+  int n = static_cast<int>(a.size());
   std::vector<int> res(n);
   std::stack<int> s;
   for (int i = n - 1; i >= 0; i--) {
@@ -91,7 +91,7 @@ std::vector<int> next_greater(const std::vector<T> &a) {
 
 template<class T>
 T largest_rectangle(const std::vector<T> &heights) {
-  int n = heights.size();
+  int n = static_cast<int>(heights.size());
   std::vector<int> left = previous_less(heights), right = next_less(heights);
   T best = 0;
   for (int i = 0; i < n; i++) {

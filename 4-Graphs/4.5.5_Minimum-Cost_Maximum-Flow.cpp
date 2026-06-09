@@ -15,7 +15,7 @@ long as the residual graph has no reachable negative-cost cycle. For dense or ad
 potential-based Dijkstra version is usually faster when reduced costs are nonnegative.
 
 Time Complexity:
-- O(F*n*m) per call to `min_cost_flow()`, where $F$ is the amount of flow sent, $n$ is the number of
+- O(f*n*m) per call to `min_cost_flow()`, where $f$ is the amount of flow sent, $n$ is the number of
   nodes, and $m$ is the number of edges.
 
 Space Complexity:

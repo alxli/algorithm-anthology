@@ -32,7 +32,7 @@ long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) 
         return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
       }
   );
-  int n = intervals.size();
+  int n = static_cast<int>(intervals.size());
   std::vector<int> finish;
   finish.reserve(n);
   for (const auto &iv : intervals) {

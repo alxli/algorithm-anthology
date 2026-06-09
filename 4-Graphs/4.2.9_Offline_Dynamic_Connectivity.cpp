@@ -3,7 +3,7 @@
 Maintains the number of connected components of an undirected graph as edges are added and removed
 over time, answering queries offline once the entire sequence of operations is known. Each edge is
 alive over a contiguous interval of time, from when it is added until it is removed. These intervals
-are placed into a segment tree over the time axis, so that each edge appears in $O(log T)$ nodes
+are placed into a segment tree over the time axis, so that each edge appears in O(log T) nodes
 whose ranges it spans. A depth-first traversal of this segment tree unites the edges stored at each
 node on the way down and undoes them on the way back up, so at each leaf the disjoint set forest
 reflects exactly the edges alive at that moment.
@@ -11,7 +11,7 @@ reflects exactly the edges alive at that moment.
 Undoing unions requires a disjoint set forest with rollback (see the disjoint sets section): it
 joins by size or rank without path compression, recording each change on a stack so it can be
 reversed. Path compression is incompatible with rollback, so finding a representative costs
-$O(log n)$ rather than near-constant time.
+O(log n) rather than near-constant time.
 
 - `OfflineDynamicConnectivity(n)` creates a structure on `n` vertices numbered from 0 to `n - 1`,
   initially with no edges.

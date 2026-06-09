@@ -23,7 +23,7 @@ The default code below defines updates that "set" a path's nodes to a new value.
 updates, `apply_delta(v, d, len)` would return `v + d` for min/max queries, or `v + d * len` for sum
 queries, and `compose_deltas(old, d)` would return `old + d`.
 
-- `LinkCutForest()` constructs an empty forest with no trees.
+- `LinkCut()` constructs an empty forest.
 - `size()` returns the number of nodes in the forest.
 - `trees()` returns the number of trees in the forest.
 - `make_root(i, v)` creates a new tree in the forest consisting of a single node labeled with the
@@ -54,7 +54,7 @@ Space Complexity:
 #include <unordered_map>
 
 template<class T>
-class LinkCutForest {
+class LinkCut {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, int len) { return d; }
   static T compose_deltas(const T &old, const T &d) { return d; }
@@ -198,16 +198,16 @@ class LinkCutForest {
   }
 
  public:
-  LinkCutForest() : num_trees(0) {}
+  LinkCut() : num_trees(0) {}
 
-  ~LinkCutForest() {
+  ~LinkCut() {
     for (auto &[key, node] : nodes) {
       delete node;
     }
   }
-  LinkCutForest(const LinkCutForest &) = delete;
-  LinkCutForest &operator=(const LinkCutForest &) = delete;
 
+  LinkCut(const LinkCut &) = delete;
+  LinkCut &operator=(const LinkCut &) = delete;
   int size() const { return nodes.size(); }
   int trees() const { return num_trees; }
 
@@ -286,7 +286,7 @@ class LinkCutForest {
 using namespace std;
 
 int main() {
-  LinkCutForest<int> lcf;
+  LinkCut<int> lcf;
   lcf.make_root(0, 10);
   lcf.make_root(1, 40);
   lcf.make_root(2, 20);
