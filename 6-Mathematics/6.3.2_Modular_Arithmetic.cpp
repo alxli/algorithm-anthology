@@ -2,19 +2,19 @@
 
 Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest
 helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all
-answers are taken modulo a number such as $10^9 + 7$.
+answers are taken modulo some number $P$ such as $10^9 + 7$.
 
 The implementation is intentionally close to common contest "Mint" templates: normalization happens
 at construction, arithmetic operators are overloaded, mixed integer operations are supported through
 implicit construction, and combinations can be computed from lazy factorial tables.
 
 Division uses the extended Euclidean algorithm, so the divisor only needs to be coprime to the
-modulus. For the factorial-table combination helper, the usual contest assumption is that `MOD` is
-prime and the requested factorials are invertible modulo `MOD`.
+modulus. For the factorial-table combination helper, the usual contest assumption is that $P$ is
+prime and the requested factorials are invertible modulo $P$.
 
 - `Modular<T>(x)` constructs the residue class of integer `x` modulo `T::value`.
-- `value()` and `operator()()` return the stored representative in `[0, MOD)`.
-- `pow(e)` returns this value raised to nonnegative exponent `e`.
+- `value()` and `operator()()` return the stored representative in $[0, P)$.
+- `pow(n)` returns this value raised to nonnegative integer exponent `n`.
 - `inv()` returns the multiplicative inverse, asserting it exists.
 - Operators `+`, `-`, `*`, `/`, comparison, increment, decrement, and stream I/O are overloaded.
 - `ModCombinatorics<Mint>::factorial(n)` returns $n!$ using a lazy factorial table.
@@ -27,8 +27,8 @@ prime and the requested factorials are invertible modulo `MOD`.
 
 Time Complexity:
 - O(1) per addition, subtraction, multiplication, comparison, and stream output.
-- O(log e) per call to `pow(e)`.
-- O(log MOD) per call to `inv()` and division.
+- O(log n) per call to `pow(n)`.
+- O(log P) per call to `inv()` and division.
 - O(n) total table growth to answer factorials and combinations up to size `n`.
 
 Space Complexity:
@@ -63,16 +63,8 @@ T inverse(T a, T m) {
 
 template<class T>
 class Modular {
- public:
   using value_type = typename T::value_type;
-
- private:
   value_type v;
-
- public:
-  Modular(long long x = 0) { v = normalize(x); }
-
-  static value_type mod() { return T::value; }
 
   static value_type normalize(long long x) {
     if (-static_cast<long long>(mod()) <= x && x < static_cast<long long>(mod())) {
@@ -86,18 +78,22 @@ class Modular {
     return (value_type)x;
   }
 
+ public:
+  Modular(long long x = 0) { v = normalize(x); }
+
+  static value_type mod() { return T::value; }
   value_type value() const { return v; }
   value_type operator()() const { return v; }
 
-  Modular pow(long long e) const {
-    assert(e >= 0);
+  Modular pow(long long n) const {
+    assert(n >= 0);
     Modular base = *this, res = 1;
-    while (e > 0) {
-      if (e & 1) {
+    while (n > 0) {
+      if (n & 1) {
         res *= base;
       }
       base *= base;
-      e >>= 1;
+      n >>= 1;
     }
     return res;
   }

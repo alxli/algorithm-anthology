@@ -4,10 +4,8 @@ Maintain a numerical array while supporting point increments and range-sum queri
 standard Fenwick tree pattern: each internal entry stores a block sum, `add(i, x)` updates all
 blocks containing `i`, and `sum(hi)` combines disjoint blocks to obtain a prefix sum.
 
-This implementation uses 0-based array indices externally, so valid indices are from 0 to
-`size() - 1`, inclusive.
-
-- `FenwickPURQ(n)` constructs an array of size `n` with every value initialized to 0.
+- `FenwickPURQ(n)` constructs an array with 0-based indices from 0 to `n - 1`, inclusive, with
+  values set to 0.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.

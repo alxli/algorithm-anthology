@@ -7,7 +7,7 @@ indices answers, for every position, where the nearest smaller or larger neighbo
 largest rectangle in a histogram. Each index is pushed and popped at most once, so a full scan runs
 in linear time.
 
-All functions below take a vector `a` of `n` comparable values and return a vector of `n` indices.
+All functions below take a vector `a` of $n$ comparable values and return a vector of $n$ indices.
 A "less" query uses a strictly smaller neighbor and a "greater" query uses a strictly larger one;
 changing the comparison from strict to non-strict (e.g. `>=` to `>`) toggles how ties are handled.
 

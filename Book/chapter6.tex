@@ -1,6 +1,6 @@
-\chapter{Mathematics}
+\chapter{\texorpdfstring{Mathematics}{6. Mathematics}}
 
-\section{Math Utilities}
+\section{\texorpdfstring{Math Utilities}{6.1 Math Utilities}}
 \setcounter{section}{1}
 Common mathematic constants and functions, most of which already have standard STL equivalents: \inlinecode{std::signbit()}, \inlinecode{std::copysign()}, \inlinecode{std::trunc()}, \inlinecode{std::round()}, \inlinecode{std::erf()}, \inlinecode{std::tgamma()}, \inlinecode{std::lgamma()}). These are written for educational purposes, without heavy optimizations.
 
@@ -9,7 +9,7 @@ Common mathematic constants and functions, most of which already have standard S
 \begin{compactitem}
   \item $O(1)$ for most operations.
   \item $O(d + e)$ for \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
-  \item $O(log_b(x + 1) + 1)$ for \inlinecode{to\_base(x, b)}.
+  \item $O(\log_{b}\left(x + 1\right) + 1)$ for \inlinecode{to\_base(x, b)}.
   \item $O(x / 1000 + 1)$ for \inlinecode{to\_roman(x)}, due to the repeated \inlinecode{M} prefix.
 \end{compactitem}
 
@@ -44,11 +44,11 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 Epsilon Comparisons:
 
 \begin{compactitem}
-  \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$ accounting for absolute error. For any $x$, the range of values considered equal barring absolute error is $[x - \text{EPS}, x + \text{EPS}]$. Values outside of this range are considered not equal (strictly less or strictly greater).
+  \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$ accounting for absolute error. For any $x$, the range of values considered equal barring absolute error is $[x - {\inlinecodemath{EPS}}, x + {\inlinecodemath{EPS}}]$. Values outside of this range are considered not equal (strictly less or strictly greater).
 \end{compactitem}
 
 \begin{compactitem}
-  \item \inlinecode{rEQ()} returns whether $x$ and $y$ are equal barring relative error. For any $x$, the range of values considered equal is $[x(1 - \text{EPS}), x(1 + \text{EPS})]$.
+  \item \inlinecode{rEQ()} returns whether $x$ and $y$ are equal barring relative error. For any $x$, the range of values considered equal is $[x(1 - {\inlinecodemath{EPS}}), x(1 + {\inlinecodemath{EPS}})]$.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -390,7 +390,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Combinatorics}
+\section{\texorpdfstring{Combinatorics}{6.2 Combinatorics}}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Combinatorial Calculations}
@@ -645,8 +645,8 @@ For the purposes of this section, we define a ``size $k$ arrangement of $n$'' to
 
 \begin{compactitem}
   \item \inlinecode{next\_arrangement(n, a)} tries to rearrange \inlinecode{a} to the next lexicographically greater arrangement, returning true if such an arrangement exists or false if the array is already in descending order (in which case \inlinecode{a} is unchanged). The input \inlinecode{a} must consist of distinct integers in the range $[0, n)$.
-  \item \inlinecode{arrangement\_by\_rank(n, k, r)} returns the size $k$ arrangement of $n$ which is lexicographically ranked $r$ out of all size $k$ arrangements of $n$, where $r$ is a zero-based rank in the range $[0, n \mathbin{\text{permute}} k)$.
-  \item \inlinecode{rank\_by\_arrangement(n, a)} returns an integer representing the zero-based rank of arrangement \inlinecode{a}, which must consist of distinct integers in the range $[0, n)$.
+  \item \inlinecode{arrangement\_by\_rank(n, k, r)} returns the size $k$ arrangement of $n$ which is lexicographically ranked $r$ out of all size $k$ arrangements of $n$, where $r$ is a 0-based rank in the range $[0, n \mathbin{\text{permute}} k)$.
+  \item \inlinecode{rank\_by\_arrangement(n, a)} returns an integer representing the 0-based rank of arrangement \inlinecode{a}, which must consist of distinct integers in the range $[0, n)$.
   \item \inlinecode{next\_arrangement\_with\_repeats(n, a)} tries to rearrange \inlinecode{a} to the next lexicographically greater arrangement with repeats, returning true if such an arrangement exists or false if the array is already in descending order (in which case \inlinecode{a} is unchanged). The input \inlinecode{a} must consist of integers in the range $[0, n)$. If \inlinecode{a} were interpreted as a $k$ digit integer in base $n$, this function could be thought of as incrementing the integer.
 \end{compactitem}
 
@@ -811,8 +811,8 @@ A permutation is an ordered list consisting of $n$ (not necessarily distinct) el
   \item \inlinecode{next\_permutation\_(lo, hi)} is analogous to \inlinecode{std::next\_permutation(lo, hi)}, taking two BidirectionalIterators \inlinecode{lo} and \inlinecode{hi} as a range \inlinecode{[lo, hi)} for which the function tries to rearrange to the next lexicographically greater permutation. The function returns true if such a permutation exists, or false if the range is already in descending order (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by the \inlinecode{\textless{}} operator on the iterator's value type.
   \item \inlinecode{next\_permutation(a)} is analogous to \inlinecode{next\_permutation()}, except that it takes a vector instead of a range.
   \item \inlinecode{next\_permutation(x)} returns the next lexicographically greater permutation of the binary digits of the integer \inlinecode{x}, that is, the lowest integer greater than \inlinecode{x} with the same number of 1-bits. This can be used to generate combinations of a set of $n$ items by treating each 1 bit as whether to ``take'' the item at the corresponding position.
-  \item \inlinecode{permutation\_by\_rank(n, r)} returns the permutation of the integers in the range $[0, n)$ which is lexicographically ranked $r$, where $r$ is a zero-based rank in the range $[0, n!)$.
-  \item \inlinecode{rank\_by\_permutation(a)} returns an integer representing the zero-based rank of permutation \inlinecode{a}, which must be a permutation of the integers $[0, n)$.
+  \item \inlinecode{permutation\_by\_rank(n, r)} returns the permutation of the integers in the range $[0, n)$ which is lexicographically ranked $r$, where $r$ is a 0-based rank in the range $[0, n!)$.
+  \item \inlinecode{rank\_by\_permutation(a)} returns an integer representing the 0-based rank of permutation \inlinecode{a}, which must be a permutation of the integers $[0, n)$.
   \item \inlinecode{permutation\_cycles(a)} returns the decomposition of the permutation \inlinecode{a} into cycles. A permutation cycle is a subset of a permutation whose elements are consecutively swapped, relative to a sorted set. For example, $\{3, 1, 0, 2\}$ decomposes to $\{0, 3, 2\}$ and $\{1\}$, meaning that starting from the sorted order $\{0, 1, 2, 3\}$, the 0-th value is replaced by the 3rd, the 3rd by the 2nd, and the 2nd by the 0-th ($0 \to 3 \to 2 \to 0$).
 \end{compactitem}
 
@@ -1027,8 +1027,8 @@ A combination is a subset of size $k$ chosen from a total of $n$ (not necessaril
   \item \inlinecode{next\_combination(lo, mid, hi)} takes random-access iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} as a range \inlinecode{[lo, hi)} of $n$ elements for which the function will rearrange such that the $k$ elements in \inlinecode{[lo, mid)} become the next lexicographically greater combination. The function returns true if such a combination exists, or false if \inlinecode{[lo, mid)} already consists of the lexicographically greatest combination of the elements in \inlinecode{[lo, hi)} (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}} on the iterator's value type.
   \item \inlinecode{next\_combination(n, a)} rearranges \inlinecode{a} to become the next lexicographically greater combination of distinct integers in the range $[0, n)$. The vector \inlinecode{a} must be sorted and contain distinct integers in the range $[0, n)$.
   \item \inlinecode{next\_combination\_mask(x)} interprets the bits of an integer \inlinecode{x} as a mask with 1-bits specifying the chosen items for a combination and returns the mask of the next lexicographically greater combination (that is, the lowest integer greater than \inlinecode{x} with the same number of 1 bits). Note that this does not generate combinations in the same order as \inlinecode{next\_combination()}, nor does it work if the corresponding $n$ items are not distinct (in that case, duplicate combinations will be generated).
-  \item \inlinecode{combination\_by\_rank(n, k, r)} returns the combination of $k$ distinct integers in the range $[0, n)$ that is lexicographically ranked $r$, where $r$ is a zero-based rank in the range $[0, \binom{n}{k})$.
-  \item \inlinecode{rank\_by\_combination(n, a)} returns an integer representing the zero-based rank of combination \inlinecode{a}, which must contain sorted distinct integers in $[0, n)$.
+  \item \inlinecode{combination\_by\_rank(n, k, r)} returns the combination of $k$ distinct integers in the range $[0, n)$ that is lexicographically ranked $r$, where $r$ is a 0-based rank in the range $[0, \binom{n}{k})$.
+  \item \inlinecode{rank\_by\_combination(n, a)} returns an integer representing the 0-based rank of combination \inlinecode{a}, which must contain sorted distinct integers in $[0, n)$.
   \item \inlinecode{next\_combination\_with\_repeats(n, a)} rearranges \inlinecode{a} to become the next lexicographically greater combination of not necessarily distinct integers in the range $[0, n)$. The vector \inlinecode{a} must be sorted. Note that there is a total of $n \mathbin{\text{multichoose}} k$ combinations if repetition is allowed, where $n \mathbin{\text{multichoose}} k = \binom{n + k - 1}{k}$.
 \end{compactitem}
 
@@ -1270,8 +1270,8 @@ A partition of a natural number $n$ is a way to write $n$ as a sum of positive i
 
 \begin{compactitem}
   \item \inlinecode{next\_partition(p)} takes a reference to a vector \inlinecode{p} of positive integers as a partition of $n$ for which the function will re-assign to become the next lexicographically greater partition. The function returns true if such a partition exists, or false if \inlinecode{p} already consists of the lexicographically greatest partition (i.e. the single integer $n$).
-  \item \inlinecode{partition\_by\_rank(n, r)} returns the partition of $n$ that is lexicographically ranked $r$ if addends in each partition were sorted in non-increasing order, where $r$ is a zero-based rank in the range $[0, \text{partitions}(n))$.
-  \item \inlinecode{rank\_by\_partition(p)} returns an integer representing the zero-based rank of the partition specified by vector \inlinecode{p}, which must consist of positive integers sorted in non-increasing order.
+  \item \inlinecode{partition\_by\_rank(n, r)} returns the partition of $n$ that is lexicographically ranked $r$ if addends in each partition were sorted in non-increasing order, where $r$ is a 0-based rank in the range $[0, \text{partitions}(n))$.
+  \item \inlinecode{rank\_by\_partition(p)} returns an integer representing the 0-based rank of the partition specified by vector \inlinecode{p}, which must consist of positive integers sorted in non-increasing order.
   \item \inlinecode{generate\_increasing\_partitions(n, f)} calls the function \inlinecode{f(lo, hi)} on strictly increasing partitions of $n$ in lexicographically increasing order of partition, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to a range \inlinecode{[lo, hi)} of integers. Note that non-strictly increasing partitions like $\{1, 1, 1, 1\}$ are skipped.
 \end{compactitem}
 
@@ -1425,8 +1425,8 @@ Increasing partitions of 8:
 Enumerate combinatorial sequences by inheriting an abstract class. Child classes of \inlinecode{AbstractEnumerator} must implement the \inlinecode{count()} function which should return the number of combinatorial sequences starting with the given prefix.
 
 \begin{compactitem}
-  \item \inlinecode{to\_rank(a)} returns an integer representing the zero-based rank of the combinatorial sequence \inlinecode{a}.
-  \item \inlinecode{from\_rank(r)} returns a combinatorial sequence of integers that is lexicographically ranked \inlinecode{r}, where \inlinecode{r} is a zero-based rank in the range \inlinecode{[0, total\_count())}.
+  \item \inlinecode{to\_rank(a)} returns an integer representing the 0-based rank of the combinatorial sequence \inlinecode{a}.
+  \item \inlinecode{from\_rank(r)} returns a combinatorial sequence of integers that is lexicographically ranked \inlinecode{r}, where \inlinecode{r} is a 0-based rank in the range \inlinecode{[0, total\_count())}.
   \item \inlinecode{enumerate(f)} calls the function \inlinecode{f(lo, hi)} on every specified combinatorial sequence in lexicographically increasing order, where \inlinecode{lo} and \inlinecode{hi} are two random-access iterators to a range \inlinecode{[lo, hi)} of integers.
 \end{compactitem}
 
@@ -1633,7 +1633,7 @@ Partition of 4:
 {1,1,1,1} {2,1,1,0} {2,2,0,0} {3,1,0,0} {4,0,0,0}
 \end{exampleoutput}
 
-\section{Number Theory}
+\section{\texorpdfstring{Number Theory}{6.3 Number Theory}}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{GCD, LCM, Mod Inverse, Chinese Remainder}
@@ -1824,16 +1824,16 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Modular Arithmetic}
-Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all answers are taken modulo a number such as $10^9 + 7$.
+Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all answers are taken modulo some number $P$ such as $10^9 + 7$.
 
 The implementation is intentionally close to common contest ``Mint'' templates: normalization happens at construction, arithmetic operators are overloaded, mixed integer operations are supported through implicit construction, and combinations can be computed from lazy factorial tables.
 
-Division uses the extended Euclidean algorithm, so the divisor only needs to be coprime to the modulus. For the factorial-table combination helper, the usual contest assumption is that \inlinecode{MOD} is prime and the requested factorials are invertible modulo \inlinecode{MOD}.
+Division uses the extended Euclidean algorithm, so the divisor only needs to be coprime to the modulus. For the factorial-table combination helper, the usual contest assumption is that $P$ is prime and the requested factorials are invertible modulo $P$.
 
 \begin{compactitem}
   \item \inlinecode{Modular\textless{}T\textgreater{}(x)} constructs the residue class of integer \inlinecode{x} modulo \inlinecode{T::value}.
-  \item \inlinecode{value()} and \inlinecode{operator()()} return the stored representative in \inlinecode{[0, MOD)}.
-  \item \inlinecode{pow(e)} returns this value raised to nonnegative exponent \inlinecode{e}.
+  \item \inlinecode{value()} and \inlinecode{operator()()} return the stored representative in $[0, P)$.
+  \item \inlinecode{pow(n)} returns this value raised to nonnegative integer exponent \inlinecode{n}.
   \item \inlinecode{inv()} returns the multiplicative inverse, asserting it exists.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, comparison, increment, decrement, and stream I/O are overloaded.
   \item \inlinecode{ModCombinatorics\textless{}Mint\textgreater{}::factorial(n)} returns $n!$ using a lazy factorial table.
@@ -1846,8 +1846,8 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per addition, subtraction, multiplication, comparison, and stream output.
-  \item $O(\log e)$ per call to \inlinecode{pow(e)}.
-  \item $O(\log \text{MOD})$ per call to \inlinecode{inv()} and division.
+  \item $O(\log n)$ per call to \inlinecode{pow(n)}.
+  \item $O(\log P)$ per call to \inlinecode{inv()} and division.
   \item $O(n)$ total table growth to answer factorials and combinations up to size \inlinecode{n}.
 \end{compactitem}
 
@@ -1885,16 +1885,8 @@ T inverse(T a, T m) {
 
 template<class T>
 class Modular {
- public:
   using value_type = typename T::value_type;
-
- private:
   value_type v;
-
- public:
-  Modular(long long x = 0) { v = normalize(x); }
-
-  static value_type mod() { return T::value; }
 
   static value_type normalize(long long x) {
     if (-static_cast<long long>(mod()) <= x && x < static_cast<long long>(mod())) {
@@ -1908,18 +1900,22 @@ class Modular {
     return (value_type)x;
   }
 
+ public:
+  Modular(long long x = 0) { v = normalize(x); }
+
+  static value_type mod() { return T::value; }
   value_type value() const { return v; }
   value_type operator()() const { return v; }
 
-  Modular pow(long long e) const {
-    assert(e >= 0);
+  Modular pow(long long n) const {
+    assert(n >= 0);
     Modular base = *this, res = 1;
-    while (e > 0) {
-      if (e & 1) {
+    while (n > 0) {
+      if (n & 1) {
         res *= base;
       }
       base *= base;
-      e >>= 1;
+      n >>= 1;
     }
     return res;
   }
@@ -2075,7 +2071,7 @@ int main() {
 \subsection{Prime Generation}
 Generate prime numbers using the Sieve of Eratosthenes, which repeatedly marks the multiples of each prime as composite.
 
-The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting primes in a high but narrow window be found without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{hi}$, it first sieves the primes up to $\sqrt{hi}$, then uses only those primes to mark composites within \inlinecode{[lo, hi]} (each prime $p$ starting at the first of its multiples that is at least both $p*p$ and \inlinecode{lo}). This needs only O(\inlinecode{hi} - \inlinecode{lo} + sqrt(\inlinecode{hi})) space instead of the O(\inlinecode{hi}) that sieving all of \inlinecode{[2, hi]} would require.
+The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting primes in a high but narrow window be found without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within \inlinecode{[lo, hi]} (each prime $p$ starting at the first of its multiples that is at least both $p*p$ and \inlinecode{lo}). This needs only $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ space instead of the $O({\inlinecodemath{hi}})$ that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
 
 \begin{compactitem}
   \item \inlinecode{sieve(n)} returns a vector of all the primes less than or equal to \inlinecode{n}.
@@ -2086,14 +2082,14 @@ The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting pr
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log\left(\log\left(n\right)\right))$ per call to \inlinecode{sieve(n)}.
-  \item O(sqrt(\inlinecode{hi})*log(log(\inlinecode{hi} - \inlinecode{lo}))) per call to \inlinecode{sieve(lo, hi)}.
+  \item $O(\sqrt{{\inlinecodemath{hi}}} \cdot \log\left(\log\left({\inlinecodemath{hi}} - {\inlinecodemath{lo}}\right)\right))$ per call to \inlinecode{sieve(lo, hi)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary heap space per call to \inlinecode{sieve(n)}.
-  \item O(\inlinecode{hi} - \inlinecode{lo} + sqrt(\inlinecode{hi})) auxiliary heap space per call to \inlinecode{sieve(lo, hi)}.
+  \item $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ auxiliary heap space per call to \inlinecode{sieve(lo, hi)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2642,12 +2638,12 @@ Euler's totient function $\phi(n)$ returns the number of positive integers less 
 
 The function is multiplicative, with $\phi(p^k) = p^k - p^{k-1}$ for a prime power, which yields the product formula $\phi(n) = n \prod_{p \mid n} (1 - 1/p)$ taken over the distinct primes $p$ dividing $n$. \inlinecode{phi(n)} applies this formula directly, factoring \inlinecode{n} by trial division. \inlinecode{phi\_table(n)} computes the whole range at once with a sieve of Eratosthenes: starting from \inlinecode{v[i] = i}, it sweeps each prime $p$ across its multiples \inlinecode{j} and folds in the factor $(1 - 1/p)$ by replacing \inlinecode{v[j]} with \inlinecode{v[j] - v[j] / p}. This is faster than the alternative that uses the divisor-sum identity $\sum_{d \mid n} \phi(d) = n$ to subtract each \inlinecode{v[i]} from its multiples, which costs $O(n \log n)$.
 
-The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but narrow range with a segmented sieve, analogous to the segmented prime sieve. It sieves the primes up to $\sqrt{hi}$, applies each one's $(1 - 1/p)$ factor to its multiples within \inlinecode{[lo, hi]} while dividing that prime out of a parallel copy of every value, and finally folds in any single leftover prime factor greater than $\sqrt{hi}$ (a number at most \inlinecode{hi} can have at most one such factor).
+The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but narrow range with a segmented sieve, analogous to the segmented prime sieve. It sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, applies each one's $(1 - 1/p)$ factor to its multiples within \inlinecode{[lo, hi]} while dividing that prime out of a parallel copy of every value, and finally folds in any single leftover prime factor greater than $\sqrt{{\inlinecodemath{hi}}}$ (a number at most \inlinecode{hi} can have at most one such factor).
 
 \begin{compactitem}
   \item \inlinecode{phi(n)} returns Euler's totient of \inlinecode{n}.
   \item \inlinecode{phi\_table(n)} returns a vector \inlinecode{v} of length \inlinecode{n + 1} such that \inlinecode{v[i]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range $[0, n]$.
-  \item \inlinecode{phi\_table(lo, hi)} returns a vector \inlinecode{v} of length \inlinecode{hi - lo + 1} such that \inlinecode{v[i - lo]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range $[lo, hi]$. This overload assumes \inlinecode{lo \textgreater{}= 0}; if \inlinecode{hi \textless{} lo}, it returns an empty vector.
+  \item \inlinecode{phi\_table(lo, hi)} returns a vector \inlinecode{v} of length \inlinecode{hi - lo + 1} such that \inlinecode{v[i - lo]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range \inlinecode{[lo, hi]}. This overload assumes \inlinecode{lo} $\geq 0$; if \inlinecode{hi} \textless{} \inlinecode{lo}, it returns an empty vector.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2655,7 +2651,7 @@ The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but
 \begin{compactitem}
   \item $O(\sqrt{n})$ per call to \inlinecode{phi(n)}.
   \item $O(n \log \log n)$ per call to \inlinecode{phi\_table(n)}.
-  \item $O((hi - lo) \log \log hi + \sqrt{hi})$ per call to \inlinecode{phi\_table(lo, hi)}.
+  \item $O(({\inlinecodemath{hi}} - {\inlinecodemath{lo}}) \cdot \log\left(\log\left({\inlinecodemath{hi}}\right)\right) + \sqrt{{\inlinecodemath{hi}}})$ per call to \inlinecode{phi\_table(lo, hi)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2663,7 +2659,7 @@ The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but
 \begin{compactitem}
   \item $O(1)$ auxiliary space for \inlinecode{phi(n)}.
   \item $O(n)$ auxiliary heap space for \inlinecode{phi\_table(n)}.
-  \item $O(hi - lo + \sqrt{hi})$ auxiliary heap space for \inlinecode{phi\_table(lo, hi)}.
+  \item $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ auxiliary heap space for \inlinecode{phi\_table(lo, hi)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2757,20 +2753,20 @@ int main() {
   assert(phi(9) == 6);
   assert(phi(1234567) == 1224720);
   const int n = 1000;
-  vector<int> v = phi_table(n);
+  vector<int> pt = phi_table(n);
   for (int i = 0; i <= n; i++) {
-    assert(v[i] == phi(i));
+    assert(pt[i] == phi(i));
   }
   // The segmented overload agrees with phi(), including over a low range (with 0 and 1) and a
   // high, narrow window where many values have a prime factor exceeding sqrt(hi).
-  vector<int> lo_range = phi_table(0, 50);
+  vector<int> lphi = phi_table(0, 50);
   for (int i = 0; i <= 50; i++) {
-    assert(lo_range[i] == phi(i));
+    assert(lphi[i] == phi(i));
   }
   int lo = 1000000000, hi = 1000000100;
-  vector<int> hi_range = phi_table(lo, hi);
+  vector<int> hphi = phi_table(lo, hi);
   for (int i = lo; i <= hi; i++) {
-    assert(hi_range[i - lo] == phi(i));
+    assert(hphi[i - lo] == phi(i));
   }
   return 0;
 }
@@ -2956,7 +2952,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Arbitrary Precision Arithmetic}
+\section{\texorpdfstring{Arbitrary Precision Arithmetic}{6.4 Arbitrary Precision Arithmetic}}
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Big Integers (Simple)}
@@ -3837,7 +3833,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Rational Numbers}
-Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations: comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, \inlinecode{BigInt}, or even \inlinecode{Mint}) if the values may grow large.
+Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations: comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, or even \inlinecode{BigInt}) if the values may grow large.
 
 \begin{compactitem}
   \item \inlinecode{Rational(n)} constructs a rational number with numerator \inlinecode{n} and denominator 1.
@@ -4018,10 +4014,10 @@ class Rational {
 #include <cassert>
 #include <cmath>
 
-int main() {
-#define EQ(a, b) (fabs((a) - (b)) <= 1E-9)
-  using Rational = Rational<long long>;
+#define EQ(a, b) (fabs((a) - (b)) <= 1e-9)
 
+int main() {
+  using Rational = Rational<long long>;
   assert(Rational(-21, 1) % 2 == -1);
   Rational r(Rational(-53, 10) % Rational(-17, 10));
   assert(EQ(r.to_ldouble(), fmod(-5.3, -1.7)));
@@ -4030,7 +4026,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Linear Algebra}
+\section{\texorpdfstring{Linear Algebra}{6.5 Linear Algebra}}
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Matrix Utilities}
@@ -5010,7 +5006,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Polynomials}
+\section{\texorpdfstring{Polynomials}{6.6 Polynomials}}
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Number Theoretic Transform}
@@ -5314,7 +5310,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Game Theory}
+\section{\texorpdfstring{Game Theory}{6.7 Game Theory}}
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Nim}
@@ -5462,8 +5458,7 @@ Computes Grundy numbers for impartial games whose positions form a directed acyc
 The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles are present, the usual finite impartial-game Grundy recurrence is not directly valid without additional analysis.
 
 \begin{compactitem}
-  \item \inlinecode{grundy\_on\_dag(g)} returns the Grundy number of every vertex in graph \inlinecode{g}.
-  \item \inlinecode{g[u]} contains all positions reachable from position \inlinecode{u} in one move.
+  \item \inlinecode{grundy\_on\_dag(g)} returns the Grundy number of every vertex in graph \inlinecode{g}, where \inlinecode{g[u]} contains all positions reachable from position \inlinecode{u} in one move.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n + m + s)$, where $n$ is the number of vertices, $m$ is the number of edges, and $s$ is the total cost of MEX sets over outgoing edges.

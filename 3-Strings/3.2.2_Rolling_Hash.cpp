@@ -8,7 +8,7 @@ Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each 
 the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is `HASH_BASE` and $M$
 is `HASH_MOD`. Equivalently, it is built left-to-right by the recurrence
 `pref[i + 1] = pref[i] * HASH_BASE + h(a[i])`. A subsequence hash for `[l, r)` is obtained by
-subtracting away the prefix before `l`: `pref[r] - pref[l] * HASH_BASE^(r-l)`.
+subtracting away the prefix before `l`: `pref[r] - pref[l] * pow(HASH_BASE, r - l)`.
 
 The implementation works modulo the Mersenne prime $2^{61} - 1$ and uses `__uint128_t` for
 multiplication. The base `HASH_BASE` should be changed or chosen randomly for open-hacking

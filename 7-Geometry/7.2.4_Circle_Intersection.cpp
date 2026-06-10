@@ -19,8 +19,9 @@ caller-supplied point type.
 - `intersection(c1, c2, &p, &q)` determines the intersection points between two circles `c1` and
   `c2`, returning $-2$ if circle `c2` completely encloses circle `c1`, $-1$ if circle `c1`
   completely encloses circle `c2`, 0 if the circles are completely disjoint, 1 if the circles are
-  tangent with one intersection (stored in `p`), 2 if the circles intersect at two points (stored in
-  `p` and `q`), 3 if the circles are equal and intersect at infinite points.
+  tangent with one intersection (stored in `p` if it's not `nullptr`), 2 if the circles intersect at
+  two points (stored in `p` and `q` if they are not `nullptr`), 3 if the circles are equal and
+  intersect at infinite points.
 - `intersection_area(c1, c2)` returns the intersection area of circles `c1` and `c2`.
 
 Time Complexity:

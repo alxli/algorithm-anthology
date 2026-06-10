@@ -1,26 +1,25 @@
 /*
 
-Given a set $P$ of two-dimensional points, the Delaunay triangulation of $P$ is a set of
+Given a set $P$ of distinct two-dimensional points, the Delaunay triangulation of $P$ is a set of
 non-overlapping triangles that covers the entire convex hull of $P$ such that no point in $P$ lies
-within the circumcircle of any of the resulting triangles. For any point $p$ in the convex hull of
-$P$ (but not necessarily in $P$), the nearest point is guaranteed to be a vertex of the enclosing
-triangle from the triangulation.
+within the circumcircle of any of the resulting triangles.
 
-The triangulation may not exist (e.g. for a set of collinear points), or may not be unique if it
-does exist. This implementation produces one valid result using a simple algorithm which encases
-each triangle in a circle and rejects the triangle if another point in the tessellation is within
-the generalized circle.
+The Delaunay triangulation is not necessarily unique when four or more points are cocircular.
+This implementation produces one valid triangulation using a simple brute-force algorithm. Each
+candidate triangle is tested against the empty-circumcircle condition, and candidates whose edges
+would properly cross already accepted triangles are rejected.
 
 - `delaunay_triangulation(lo, hi)` returns a Delaunay triangulation for the input range `[lo, hi)`
-  of points, where `lo` and `hi` must be random-access iterators, or an empty vector if a
+  of distinct points, where `lo` and `hi` must be random-access iterators, or an empty vector if a
   triangulation does not exist.
 
 Time Complexity:
-- O(n^4) per call to `delaunay_triangulation(lo, hi)`, where $n$ is the distance between `lo` and
-  `hi`.
+- O(n^6) per call to `delaunay_triangulation(lo, hi)`, where $n$ is the distance between `lo` and
+  `hi`. The empty-circumcircle test contributes O(n^4); the remaining factor comes from checking
+  candidate triangles against previously accepted triangles.
 
 Space Complexity:
-- O(n) auxiliary heap space for storage of the Delaunay triangulation.
+- O(n) auxiliary heap space, excluding the returned triangulation.
 
 */
 
@@ -36,38 +35,19 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
+// Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = false,
+// i.e. we're detecting proper crossings of two non-parallel segments whose interiors intersect.
 template<class Pt>
-int seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
-  static const bool TOUCH_IS_INTERSECT = false;  // false is important!
-  double ab_x = b.x - a.x, ab_y = b.y - a.y;
-  double ac_x = c.x - a.x, ac_y = c.y - a.y;
-  double cd_x = d.x - c.x, cd_y = d.y - c.y;
-  double c1 = ab_x * cd_y - ab_y * cd_x;
-  double c2 = ac_x * ab_y - ac_y * ab_x;
-  if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
-    Pt res1 = std::max(std::min(a, b), std::min(c, d));
-    Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    if (TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2)) {
-      return 1;  // Collinear and overlapping.
-    }
-    return -1;  // Collinear and disjoint.
-  }
-  if (EQ(c1, 0)) {
-    return -1;  // Parallel and disjoint.
-  }
-  double t_num = ac_x * cd_y - ac_y * cd_x;
-  bool c1_pos = c1 > 0;
-  bool t_between_01 = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, t_num) && LE(t_num, c1))
-                                                   : (LT(0, t_num) && LT(t_num, c1)))
-                             : (TOUCH_IS_INTERSECT ? (LE(t_num, 0) && LE(c1, t_num))
-                                                   : (LT(t_num, 0) && LT(c1, t_num)));
-  bool u_between_01 =
-      c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
-             : (TOUCH_IS_INTERSECT ? (LE(c2, 0) && LE(c1, c2)) : (LT(c2, 0) && LT(c1, c2)));
-  if (t_between_01 && u_between_01) {
-    return 0;  // Non-parallel with one intersection.
-  }
-  return -1;  // Non-parallel with no intersections.
+bool proper_seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
+  auto cross = [](const Pt &o, const Pt &p, const Pt &q) {
+    return (p.x - o.x) * (q.y - o.y) - (p.y - o.y) * (q.x - o.x);  // Overflow warning!
+  };
+  auto c1 = cross(a, b, c);
+  auto c2 = cross(a, b, d);
+  auto c3 = cross(c, d, a);
+  auto c4 = cross(c, d, b);
+  return ((LT(c1, 0) && LT(0, c2)) || (LT(c2, 0) && LT(0, c1))) &&
+         ((LT(c3, 0) && LT(0, c4)) || (LT(c4, 0) && LT(0, c3)));
 }
 
 struct Triangle {
@@ -111,16 +91,16 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
         }
         std::vector<Pt> s1{pts[i], pts[j], pts[k], pts[i]};
         for (int m = 0; m < n; m++) {
-          if (nx * (x[m] - x[i]) + ny * (y[m] - y[i]) + nz * (z[m] - z[i]) > 0) {
+          if (LT(0, nx * (x[m] - x[i]) + ny * (y[m] - y[i]) + nz * (z[m] - z[i]))) {
             goto skip;
           }
         }
-        // Handle four points on a circle.
+        // Reject candidates whose edges properly cross already accepted triangles.
         for (const auto &tri : res_idx) {
           std::vector<Pt> s2{pts[tri[0]], pts[tri[1]], pts[tri[2]], pts[tri[0]]};
           for (int u = 0; u < 3; u++) {
             for (int v = 0; v < 3; v++) {
-              if (seg_intersection(s1[u], s1[u + 1], s2[v], s2[v + 1]) == 0) {
+              if (proper_seg_intersection(s1[u], s1[u + 1], s2[v], s2[v + 1])) {
                 goto skip;
               }
             }

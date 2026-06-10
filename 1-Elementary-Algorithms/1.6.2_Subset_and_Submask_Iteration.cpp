@@ -20,7 +20,7 @@ present in `m` only, or present in both `m` and `s`.
   the bitmask analog of a prefix sum, accumulating one bit dimension at a time.
 
 Time Complexity:
-- O(2^`popcount(m)`) per call to `submasks(m)`.
+- O(2^p) per call to `submasks(m)` where $p$ = `popcount(m)`.
 - O(1) per call to `next_popcount(x)`.
 - O(\binom{n}{k}) per call to `masks_with_popcount(n, k)`.
 - O(n*2^n) per call to `subset_sum_transform(f)`, where `f` has $2^n$ entries.

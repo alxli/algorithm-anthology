@@ -132,8 +132,8 @@ The minimum value in the range [0, 3] is -2.
 using namespace std;
 
 int main() {
-  vector<int> arr{6, -2, 1, 8, 10};
-  SegTree<int> t(arr.begin(), arr.end());
+  vector<int> a{6, -2, 1, 8, 10};
+  SegTree<int> t(a.begin(), a.end());
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {

@@ -15,8 +15,8 @@ A permutation is an ordered list consisting of $n$ (not necessarily distinct) el
   This can be used to generate combinations of a set of $n$ items by treating each 1 bit as whether
   to "take" the item at the corresponding position.
 - `permutation_by_rank(n, r)` returns the permutation of the integers in the range $[0, n)$ which is
-  lexicographically ranked $r$, where $r$ is a zero-based rank in the range $[0, n!)$.
-- `rank_by_permutation(a)` returns an integer representing the zero-based rank of permutation `a`,
+  lexicographically ranked $r$, where $r$ is a 0-based rank in the range $[0, n!)$.
+- `rank_by_permutation(a)` returns an integer representing the 0-based rank of permutation `a`,
   which must be a permutation of the integers $[0, n)$.
 - `permutation_cycles(a)` returns the decomposition of the permutation `a` into cycles. A
   permutation cycle is a subset of a permutation whose elements are consecutively swapped, relative

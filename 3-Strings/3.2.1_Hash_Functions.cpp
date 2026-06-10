@@ -2,12 +2,24 @@
 
 Provides a small library of non-cryptographic hash functions and hash functors for common contest
 keys. These helpers are useful for fingerprinting values, combining keys, seeding randomized
-algorithms, and defining `std::unordered_map` keys for pairs and vectors. They are not suitable for
-passwords, signatures, or adversarial security.
+algorithms, and defining `std::unordered_map` keys for pairs, tuples, and vectors. They are not
+suitable for passwords, signatures, or adversarial security.
 
 The standalone functions below are deterministic. The `IntHasher` functor adds a per-run random
 seed before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test
 contests.
+
+The composite hashers separate the mixing primitive (`mix64`/`hash_combine64`) from each type's
+traversal of its parts, so swapping in a different mixing function only requires editing one place.
+
+FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Starting from a fixed
+offset basis, it XORs each byte into the accumulator and then multiplies by a fixed prime; the `1a`
+variant XORs before multiplying, which mixes slightly better than the original FNV-1. Reach for it
+when the key is a string or byte buffer, whereas `mix32` and `mix64` are finalizers for a single
+fixed-width integer. Its appeal is simplicity: a few lines, no lookup tables, and no seed, with
+distribution good enough for the short keys common in contests. For very long inputs a block hash
+such as MurmurHash or xxHash is faster and mixes more thoroughly, and because FNV-1a is unseeded it
+offers no protection against adversarial inputs.
 
 - `mix32(x)` mixes a 32-bit unsigned integer `x`, using the MurmurHash3 finalizer.
 - `mix64(x)` mixes a 64-bit unsigned integer `x`, using the SplitMix64 finalizer.
@@ -20,10 +32,17 @@ contests.
 - `hash_string_fnv1a32(s)` and `hash_string_fnv1a64(s)` compute FNV-1a hashes of string `s`.
 - `hash_range32(first, last)` and `hash_range64(first, last)` hash a sequence of integer-like
   values.
-- `IntHasher<Int>`, `PairHasher<A, B>`, and `VectorHasher<T>` are hash functors for
-  `std::unordered_map` and `std::unordered_set`.
-- `GenericHasher<T>` recursively handles integer, pair, and vector keys, and falls back to
+- `PairIntHasher` is a self-contained hasher for `std::pair<int, int>` keys, written without any
+  dependency on the templates below so that it can be copy-pasted on its own.
+- `IntHasher<Int>`, `PairHasher<A, B>`, `TupleHasher<Ts...>`, and `VectorHasher<T>` are hash
+  functors passed as the third template argument of `std::unordered_map` or `std::unordered_set`.
+- `GenericHasher<T>` recursively handles integer, pair, tuple, and vector keys, and falls back to
   `std::hash<T>` for other hashable types.
+- Specializations of `std::hash` for `std::pair` and `std::tuple` are also provided, letting those
+  keys be used in `std::unordered_map`/`std::unordered_set` without an explicit hasher argument.
+  Specializing `std::hash` for purely standard types is technically nonstandard, so the functor
+  forms above are the portable alternative. (Vector keys are left to the functors to avoid clashing
+  with the standard `std::hash<std::vector<bool>>`.)
 
 Time Complexity:
 - O(1) per call to the integer, combiner, and floating-point hash functions.
@@ -41,6 +60,7 @@ Space Complexity:
 #include <cstring>
 #include <functional>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -146,14 +166,31 @@ struct IntHasher {
 template<class T>
 struct GenericHasher;
 
+// Use std::hash by default.
 template<class T, bool IsInteger>
 struct ScalarHasher {
   std::size_t operator()(const T &x) const { return std::hash<T>()(x); }
 };
 
+// Optional: Use our seeded hasher for ints in open-hacking environments.
 template<class T>
 struct ScalarHasher<T, true> {
   std::size_t operator()(T x) const { return IntHasher<T>{}(x); }
+};
+
+// A self-contained hasher for std::pair<int, int> keys: copy just this struct when you do not need
+// the rest of this file. The two 32-bit halves pack losslessly into one 64-bit word, which the
+// SplitMix64 mixer (the same one used by mix64 above) then scrambles. Add a random seed to `key`
+// before mixing, as IntHasher does, if you need anti-hacking protection.
+struct PairIntHasher {
+  std::size_t operator()(const std::pair<int, int> &p) const {
+    uint64 key = (static_cast<uint64>(static_cast<unsigned int>(p.first)) << 32) |
+                 static_cast<unsigned int>(p.second);
+    key += 0x9e3779b97f4a7c15ULL;
+    key = (key ^ (key >> 30)) * 0xbf58476d1ce4e5b9ULL;
+    key = (key ^ (key >> 27)) * 0x94d049bb133111ebULL;
+    return static_cast<std::size_t>(key ^ (key >> 31));
+  }
 };
 
 template<class A, class B>
@@ -173,6 +210,21 @@ struct VectorHasher {
     for (const auto &x : v) {
       h = hash_combine64(h, static_cast<uint64>(GenericHasher<T>()(x)));
     }
+    h = hash_combine64(h, v.size());  // Mix in the length so different sizes (e.g. empty) separate.
+    return static_cast<std::size_t>(h);
+  }
+};
+
+template<class... Ts>
+struct TupleHasher {
+  std::size_t operator()(const std::tuple<Ts...> &t) const {
+    uint64 h = 0;
+    std::apply(
+        [&](const Ts &...xs) {
+          ((h = hash_combine64(h, static_cast<uint64>(GenericHasher<Ts>()(xs)))), ...);
+        },
+        t
+    );
     return static_cast<std::size_t>(h);
   }
 };
@@ -183,8 +235,31 @@ struct GenericHasher : ScalarHasher<T, std::is_integral<T>::value> {};
 template<class A, class B>
 struct GenericHasher<std::pair<A, B>> : PairHasher<A, B> {};
 
+template<class... Ts>
+struct GenericHasher<std::tuple<Ts...>> : TupleHasher<Ts...> {};
+
 template<class T>
 struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
+
+// Specializing std::hash lets pair and tuple keys be used directly in std::unordered_map and
+// std::unordered_set, with no explicit hasher template argument. The C++ standard only sanctions
+// specializing std::hash when a user-defined type is involved, so the functors above remain the
+// portable choice; these specializations are a widely supported contest convenience. Vector keys
+// are intentionally left out here to avoid clashing with the standard library's own
+// std::hash<std::vector<bool>>; pass VectorHasher or GenericHasher explicitly for those.
+namespace std {
+
+template<class A, class B>
+struct hash<pair<A, B>> {
+  size_t operator()(const pair<A, B> &p) const { return ::GenericHasher<pair<A, B>>()(p); }
+};
+
+template<class... Ts>
+struct hash<tuple<Ts...>> {
+  size_t operator()(const tuple<Ts...> &t) const { return ::GenericHasher<tuple<Ts...>>()(t); }
+};
+
+}  // namespace std
 
 /*** Example Usage ***/
 
@@ -212,18 +287,38 @@ int main() {
   count[1000000000000LL] = 7;
   assert(count[1000000000000LL] == 7);
 
-  using point = pair<int, int>;
-  unordered_map<point, int, PairHasher<int, int>> dist;
-  dist[point(3, 4)] = 5;
-  assert(dist[point(3, 4)] == 5);
+  using Point = pair<int, int>;
+  unordered_map<Point, int, PairHasher<int, int>> dist;
+  dist[Point(3, 4)] = 5;
+  assert(dist[Point(3, 4)] == 5);
+
+  // The standalone PairIntHasher is the quick choice for pair<int, int> keys.
+  unordered_map<Point, int, PairIntHasher> dist_fast;
+  dist_fast[Point(3, 4)] = 5;
+  assert(dist_fast[Point(3, 4)] == 5);
 
   unordered_map<vector<int>, int, VectorHasher<int>> seen;
   seen[v] = 1;
   assert(seen[v] == 1);
 
-  using state = pair<vector<int>, int>;
-  unordered_map<state, int, GenericHasher<state>> dp;
-  dp[state(v, 4)] = 9;
-  assert(dp[state(v, 4)] == 9);
+  using State = pair<vector<int>, double>;
+  unordered_map<State, int, GenericHasher<State>> dp;
+  dp[State(v, 4.5)] = 9;
+  assert(dp[State(v, 4.5)] == 9);
+
+  // Tuple keys via the explicit functor.
+  using Triple = tuple<int, char, double>;
+  unordered_map<Triple, int, GenericHasher<Triple>> grid;
+  grid[Triple(1, 'a', 3.14)] = 6;
+  assert(grid[Triple(1, 'a', 3.14)] == 6);
+
+  // With the std::hash specializations, pair and tuple keys need no hasher argument.
+  unordered_map<Point, int> dist_default;
+  dist_default[Point(3, 4)] = 5;
+  assert(dist_default[Point(3, 4)] == 5);
+
+  unordered_map<Triple, int> grid_default;
+  grid_default[Triple(1, 'a', 3.14)] = 6;
+  assert(grid_default[Triple(1, 'a', 3.14)] == 6);
   return 0;
 }

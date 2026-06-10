@@ -9,8 +9,8 @@ problems. Equal values are broken by position, so earlier equal values become an
 equal values.
 
 - `CartesianTree(a)` constructs the tree for array `a`.
-- `root` stores the root index.
-- `parent[i]`, `left[i]`, and `right[i]` store neighboring node indices, or $-1$ if absent.
+- `root[]` stores the root index.
+- `parent[]`, `left[]`, and `right[]` store neighboring node indices, or $-1$ if absent.
 
 Time Complexity:
 - O(n) construction time, where $n$ is the array size.

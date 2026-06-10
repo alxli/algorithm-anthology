@@ -15,7 +15,7 @@ resolves collisions by chaining entries hashed to the same bucket into a linked 
   successful or `false` if the key to be removed was not found.
 - `find(k)` returns a pointer to the value associated with key `k`, or `nullptr` if the key was not
   found.
-- `operator[]` returns a reference to key `k`'s associated value (which may be modified), or if
+- `operator[k]` returns a reference to key `k`'s associated value (which may be modified), or if
   necessary, inserts and returns a new entry with the default constructed value if key `k` was not
   originally found.
 - `walk(f)` calls the function `f(k, v)` on each entry of the map, in no guaranteed order.

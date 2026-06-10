@@ -5,10 +5,8 @@ queries. This is the sparse version of the two-tree Fenwick range-update/range-q
 Fenwick nodes reached by previous operations are stored, using `std::unordered_map` instead of dense
 vectors.
 
-This implementation uses 0-based array indices, so all indices from 0 to `N`, inclusive, are
-accessible.
-
-- `SparseFenwickRURQ()` constructs an initially zero array over indices 0 to `N`.
+- `SparseFenwickRURQ()` constructs an array with 0-based indices 0 to `N` (inclusive), implicitly
+  initialized to 0.
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `add(lo, hi, x)` adds `x` to the values at all indices from `lo` to `hi`, inclusive.

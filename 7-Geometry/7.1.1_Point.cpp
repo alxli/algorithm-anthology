@@ -9,11 +9,9 @@ Exact operations (return `point<T>` or `T`, no precision lost for integers):
 - element-wise arithmetic, `dot()`, `cross()`, `sqnorm()`, cardinal rotations, `reflect(point)`,
   comparisons.
 
-Overflow warning: the exact products `dot()`, `cross()`, and `sqnorm()` compute values on the order
-of the squared coordinate magnitude. With `point<int>` and coordinates around $10^4$ to $10^5$ they
-already overflow a 32-bit `int` (and `sqdist`-style differences overflow even sooner). For integer
-geometry with coordinates beyond a few thousand, use `PointL` (`point<long long>`) so these products
-stay exact.
+Overflow warning: the exact products `dot()`, `cross()`, and `sqnorm()` grow like the squared
+coordinate magnitude. With `point<int>` these overflow a 32-bit `int` once coordinates exceed
+~46000, so use `PointL` (`point<long long>`) for larger integer coordinates.
 
 Floating-point-only operations (return `point<fp_t>` or `fp_t`):
 - `norm()`, `arg()`, `proj()`, `normalize()`, `rotateCW()`, `rotateCCW()`, `reflect(line)`.
@@ -239,7 +237,6 @@ using Point = PointD;  // Default point type is double.
 const double PI = acos(-1.0);
 
 int main() {
-  // Float point - same API as before.
   Point p(-10, 3);
   assert(Point(-18, 29) == p + Point(-3, 9) * 6.0 / 2.0 - Point(-1, 1));
   assert(EQ(109, p.sqnorm()));

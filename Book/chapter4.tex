@@ -1,6 +1,6 @@
-\chapter{Graphs}
+\chapter{\texorpdfstring{Graphs}{4. Graphs}}
 
-\section{DFS and Tree Algorithms}
+\section{\texorpdfstring{DFS and Tree Algorithms}{4.1 DFS and Tree Algorithms}}
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Graph Class and Depth-First Search}
@@ -11,7 +11,7 @@ The following class implements a simple graph using adjacency lists, along with 
 \begin{compactitem}
   \item \inlinecode{Graph(directed)} constructs an empty graph, directed if \inlinecode{directed} is true (the default) and undirected otherwise.
   \item \inlinecode{nodes()} returns the current number of nodes.
-  \item \inlinecode{operator[](n)} returns a reference to the adjacency list (a \inlinecode{std::vector\textless{}int\textgreater{}}) of node \inlinecode{n}.
+  \item \inlinecode{operator[n]} returns a reference to the adjacency list (a \inlinecode{std::vector\textless{}int\textgreater{}}) of node \inlinecode{n}.
   \item \inlinecode{add\_edge(u, v)} adds an edge from \inlinecode{u} to \inlinecode{v}, plus the reverse edge if the graph is undirected, growing the node count to accommodate the larger index if necessary.
   \item \inlinecode{dfs(start, f)} runs a depth-first search from node \inlinecode{start}, calling \inlinecode{f(n)} on each node \inlinecode{n} in the order it is first visited.
   \item \inlinecode{has\_cycle()} returns whether the graph contains a cycle.
@@ -661,7 +661,7 @@ Eulerian cycle from 0 (directed): 0 1 3 4 1 2 0
 Eulerian cycle from 2 (undirected): 2 1 3 4 1 0 2
 \end{exampleoutput}
 
-\section{Connectivity}
+\section{\texorpdfstring{Connectivity}{4.2 Connectivity}}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Connected Components}
@@ -1767,7 +1767,7 @@ Undoing unions requires a disjoint set forest with rollback (see the disjoint se
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O((T + m \log T) \log n)$ for \inlinecode{solve()}, where $T$ is the number of operations, $m$ is the number of edge insertions, and $n$ is the number of vertices.
+  \item $O((T + m \log T) \log n)$ for \inlinecode{solve()}, where $T$ is the total number of operations (\inlinecode{add\_edge}, \inlinecode{remove\_edge}, and \inlinecode{count\_components} combined), $m$ is the number of \inlinecode{add\_edge} operations, and $n$ is the number of vertices.
   \item $O(1)$ amortized per call to \inlinecode{add\_edge()}, \inlinecode{remove\_edge()}, and \inlinecode{count\_components()}.
 \end{compactitem}
 
@@ -1783,9 +1783,11 @@ Undoing unions requires a disjoint set forest with rollback (see the disjoint se
 
 class OfflineDynamicConnectivity {
   static const int ADD = 0, REMOVE = 1, QUERY = 2;
+
   struct Op {
     int type, u, v;
   };
+
   struct Edge {
     int u, v;
   };
@@ -1928,7 +1930,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{BFS and Shortest Paths}
+\section{\texorpdfstring{BFS and Shortest Paths}{4.3 BFS and Shortest Paths}}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Shortest Path (BFS)}
@@ -2565,7 +2567,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Spanning Trees}
+\section{\texorpdfstring{Spanning Trees}{4.4 Spanning Trees}}
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Minimum Spanning Tree (Prim)}
@@ -2857,7 +2859,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Flows and Cuts}
+\section{\texorpdfstring{Flows and Cuts}{4.5 Flows and Cuts}}
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Maximum Flow (Ford-Fulkerson)}
@@ -2948,7 +2950,7 @@ int main() {
 \subsection{Maximum Flow (Edmonds-Karp)}
 Given a flow network with integer capacities, find the maximum flow from a given source node to a given sink node. The flow along each edge may not exceed its capacity, and flow is conserved at every node other than the source and sink.
 
-Edmonds-Karp is the Ford-Fulkerson method with the augmenting path always chosen as a shortest one (fewest edges) via breadth-first search. This bounds the number of augmentations at $O(n m)$, independent of the capacity magnitudes.
+Edmonds-Karp is the Ford-Fulkerson method with the augmenting path always chosen as a shortest one (fewest edges) via breadth-first search. This bounds the number of augmentations at $O(n \cdot m)$, independent of the capacity magnitudes.
 
 \begin{compactitem}
   \item \inlinecode{add\_edge(u, v, cap)} adds a directed residual-network edge.
@@ -3452,7 +3454,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Matching and Assignment}
+\section{\texorpdfstring{Matching and Assignment}{4.6 Matching and Assignment}}
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Maximum Bipartite Matching (Kuhn)}
@@ -3647,101 +3649,6 @@ Matched 3 pair(s):
 0 1
 2 2
 \end{exampleoutput}
-\subsection{Assignment (Hungarian Algorithm)}
-Solves the minimum-cost assignment problem for a rectangular cost matrix. Given $n$ workers and $m$ jobs with $n \leq m$, choose a distinct job for each worker so that the total assignment cost is minimized.
-
-The implementation below is the classical Hungarian algorithm using potentials. It is 1-indexed internally, but the input matrix \inlinecode{cost} is 0-indexed. The returned assignment vector has length $n$, where \inlinecode{assignment[i]} is the chosen job for worker \inlinecode{i}, using 0-indexed job numbers.
-
-\begin{compactitem}
-  \item \inlinecode{hungarian(cost, \&assignment)} returns the minimum total assignment cost.
-  \item \inlinecode{cost[i][j]} is the cost of assigning worker \inlinecode{i} to job \inlinecode{j}.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(n^{2} \cdot m)$, where \inlinecode{cost} has $n$ rows and $m$ columns.
-
-\textbf{Space Complexity}: $O(n + m)$ auxiliary heap space, not counting the input matrix and returned assignment.
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cassert>
-#include <climits>
-#include <vector>
-
-long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector<int> *assignment) {
-  int n = static_cast<int>(cost.size());
-  int m = cost.empty() ? 0 : static_cast<int>(cost[0].size());
-  assert(n <= m);
-  const long long INF = LLONG_MAX / 4;
-  std::vector<long long> u(n + 1), v(m + 1);
-  std::vector<int> p(m + 1), way(m + 1);
-  for (int i = 1; i <= n; i++) {
-    p[0] = i;
-    int j0 = 0;
-    std::vector<long long> minv(m + 1, INF);
-    std::vector<char> used(m + 1, false);
-    do {
-      used[j0] = true;
-      int i0 = p[j0], j1 = 0;
-      long long delta = INF;
-      for (int j = 1; j <= m; j++) {
-        if (used[j]) {
-          continue;
-        }
-        long long cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
-        if (cur < minv[j]) {
-          minv[j] = cur;
-          way[j] = j0;
-        }
-        if (minv[j] < delta) {
-          delta = minv[j];
-          j1 = j;
-        }
-      }
-      for (int j = 0; j <= m; j++) {
-        if (used[j]) {
-          u[p[j]] += delta;
-          v[j] -= delta;
-        } else {
-          minv[j] -= delta;
-        }
-      }
-      j0 = j1;
-    } while (p[j0] != 0);
-    do {
-      int j1 = way[j0];
-      p[j0] = p[j1];
-      j0 = j1;
-    } while (j0 != 0);
-  }
-  assignment->assign(n, -1);
-  for (int j = 1; j <= m; j++) {
-    if (p[j] != 0) {
-      (*assignment)[p[j] - 1] = j - 1;
-    }
-  }
-  return -v[0];
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  vector<vector<long long>> cost{
-      {9, 2, 7, 8},
-      {6, 4, 3, 7},
-      {5, 8, 1, 8},
-  };
-  vector<int> assignment;
-  assert(hungarian(cost, &assignment) == 9);
-  assert(assignment[0] == 1);
-  assert(assignment[1] == 0);
-  assert(assignment[2] == 2);
-  return 0;
-}
-\end{lstlisting}
 \subsection{Maximum Graph Matching (Edmonds)}
 Given an undirected graph, determine a maximum matching: a maximum subset of its edges such that no node is shared between different edges in the resulting subset.
 
@@ -3896,6 +3803,100 @@ Matched 2 pair(s):
 0 1
 2 3
 \end{exampleoutput}
+\subsection{Assignment (Hungarian Algorithm)}
+Solves the minimum-cost assignment problem for a rectangular cost matrix. Given $n$ workers and $m$ jobs (with $n \leq m$) where assigning worker \inlinecode{i} to complete job \inlinecode{j} would cost \inlinecode{cost[i][j]}, choose a distinct job for each worker so that the total assignment cost is minimized.
+
+The classical Hungarian algorithm using potentials transforms a cost matrix using the principle that adding or subtracting constants from rows or columns does not change the optimal assignment. Note that while the input matrix is 0-based here, the internal calculations are 1-based.
+
+\begin{compactitem}
+  \item \inlinecode{hungarian(cost, \&assignment)} returns the minimum total assignment cost for a 0-based \inlinecode{cost} matrix, while populating \inlinecode{assignment} with $n$ values where \inlinecode{assignment[i]} is the chosen job for worker \inlinecode{i}, using 0-based job numbers.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{2} \cdot m)$, where \inlinecode{cost} has $n$ rows and $m$ columns.
+
+\textbf{Space Complexity}: $O(n + m)$ auxiliary heap space, not counting the input matrix and returned assignment.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <climits>
+#include <vector>
+
+long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector<int> *assignment) {
+  int n = static_cast<int>(cost.size());
+  int m = cost.empty() ? 0 : static_cast<int>(cost[0].size());
+  assert(n <= m);
+  const long long INF = LLONG_MAX / 4;
+  std::vector<long long> u(n + 1), v(m + 1);
+  std::vector<int> p(m + 1), way(m + 1);
+  for (int i = 1; i <= n; i++) {
+    p[0] = i;
+    int j0 = 0;
+    std::vector<long long> minv(m + 1, INF);
+    std::vector<char> used(m + 1, false);
+    do {
+      used[j0] = true;
+      int i0 = p[j0], j1 = 0;
+      long long delta = INF;
+      for (int j = 1; j <= m; j++) {
+        if (used[j]) {
+          continue;
+        }
+        long long cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+        if (cur < minv[j]) {
+          minv[j] = cur;
+          way[j] = j0;
+        }
+        if (minv[j] < delta) {
+          delta = minv[j];
+          j1 = j;
+        }
+      }
+      for (int j = 0; j <= m; j++) {
+        if (used[j]) {
+          u[p[j]] += delta;
+          v[j] -= delta;
+        } else {
+          minv[j] -= delta;
+        }
+      }
+      j0 = j1;
+    } while (p[j0] != 0);
+    do {
+      int j1 = way[j0];
+      p[j0] = p[j1];
+      j0 = j1;
+    } while (j0 != 0);
+  }
+  assignment->assign(n, -1);
+  for (int j = 1; j <= m; j++) {
+    if (p[j] != 0) {
+      (*assignment)[p[j] - 1] = j - 1;
+    }
+  }
+  return -v[0];
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<vector<long long>> cost{
+      {9, 2, 7, 8},
+      {6, 4, 3, 7},
+      {5, 8, 1, 8},
+  };
+  vector<int> assignment;
+  assert(hungarian(cost, &assignment) == 9);
+  assert(assignment[0] == 1);
+  assert(assignment[1] == 0);
+  assert(assignment[2] == 2);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Stable Marriage (Gale-Shapley)}
 The stable marriage problem pairs \inlinecode{n} men with \inlinecode{n} women, given that every person ranks all members of the opposite group in strict order of preference. A perfect matching is stable if no man and woman both prefer each other to their assigned partners; such a pair would otherwise abandon their matches. Unlike maximum matching, the goal is not the size of the matching (it is always perfect) but its stability with respect to the preference lists.
 
@@ -3966,7 +3967,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Exponential Graph Problems}
+\section{\texorpdfstring{Exponential Graph Problems}{4.7 Exponential Graph Problems}}
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Maximum Clique (Bron-Kerbosch)}

@@ -5,7 +5,7 @@ given sink node. The flow along each edge may not exceed its capacity, and flow 
 every node other than the source and sink.
 
 Edmonds-Karp is the Ford-Fulkerson method with the augmenting path always chosen as a shortest one
-(fewest edges) via breadth-first search. This bounds the number of augmentations at $O(n m)$,
+(fewest edges) via breadth-first search. This bounds the number of augmentations at O(n*m),
 independent of the capacity magnitudes.
 
 - `add_edge(u, v, cap)` adds a directed residual-network edge.

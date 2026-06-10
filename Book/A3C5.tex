@@ -106,6 +106,23 @@
   fontupper=\footnotesize\ttfamily
 }
 
+% Same grey rounded box as \inlinecode, but a step smaller, for code (e.g. variable
+% names) that appears inside math mode. \mbox keeps the tcolorbox safe within a formula.
+\newtcbox{\inlinecodemathbox}{
+  on line,
+  colback=black!5,
+  colframe=black!20,
+  boxrule=0.3pt,
+  arc=0.8mm,
+  boxsep=0.2mm,
+  left=0.5mm,
+  right=0.5mm,
+  top=0mm,
+  bottom=0mm,
+  fontupper=\scriptsize\ttfamily
+}
+\newcommand{\inlinecodemath}[1]{\mbox{\inlinecodemathbox{#1}}}
+
 \begin{document} 
  
 \frontmatter
@@ -121,7 +138,7 @@
 	\\[1.0\baselineskip]
 	\textbf{\Large Common Code for Contests in Concise C++}
 	\\[1.0\baselineskip]
-	{\large\textit{Draft v0.96, Jun 6, 2026}}
+	{\large\textit{Draft v0.97, Jun 10, 2026}}
 
 	\vspace*{11 cm}
 

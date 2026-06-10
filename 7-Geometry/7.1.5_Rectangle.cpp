@@ -1,24 +1,25 @@
 /*
 
-Common rectangle calculations in two dimensions. The functions are templated on the point type `Pt`,
-which should work with `Point`/`PointD`/`PointI` from 7.1.1, or any struct with numeric `.x` and
-`.y` fields. All operations use comparisons only and are exact for integer-coordinate points.
+Common axis-aligned rectangle calculations in two dimensions. The functions are templated on the
+point type `Pt`, which should work with `Point`/`PointD`/`PointI` from 7.1.1, or any struct with
+numeric `.x` and `.y` fields.
 
-- `point_in_rectangle(p, v, w, h)` returns whether point `p` lies within the rectangle defined by a
-  vertex `v`, a width of `w`, and a height of `h`. Note that negative widths and heights are
-  supported. If the point lies on or close to an edge (by roughly `EPS`), then the result will
-  depend on the setting of `EDGE_IS_INSIDE`.
-- `point_in_rectangle(p, a, b)` returns whether point `p` lies within the rectangle with opposing
-  vertices `a` and `b`. If the point lies on or close to an edge (by roughly `EPS`), then the result
-  will depend on the setting of `EDGE_IS_INSIDE`.
-- `rectangle_intersection(a1, b1, a2, b2, &p, &q)` determines the intersection region of the
-  rectangle with opposing vertices `a1` and `b1` and the rectangle with opposing vertices `a2`
-  and `b2`. Returns $-1$ if the rectangles are completely disjoint, 0 if the rectangles partially
-  intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle
-  is completely inside the first. If there is an intersection, the lower-left and upper-right
-  vertices of the normalized intersection rectangle will be stored into pointers `p` and `q` if they
-  are not `nullptr`. If the intersection is a single point or line segment, then the result will
-  depend on the setting of `EDGE_IS_INSIDE` within `point_in_rectangle()`.
+- `point_in_rectangle(p, v, w, h)` returns whether point `p` lies inside the axis-aligned rectangle
+  with corner `v`, width `w`, and height `h`. Negative widths and heights are supported.
+- `point_in_rectangle(p, a, b)` returns whether point `p` lies inside the axis-aligned rectangle
+  with opposite corners `a` and `b`.
+- `rectangle_intersection(a1, b1, a2, b2, &p, &q)` computes the intersection of two axis-aligned
+  rectangles, where `a1`/`b1` and `a2`/`b2` are opposite-corner pairs. Returns -1 if the rectangles
+  are disjoint, 0 if they partially intersect, 1 if the first rectangle is completely inside the
+  second, and 2 if the second rectangle is completely inside the first. If an intersection exists,
+  its lower-left and upper-right corners are stored in `p` and `q` when those pointers are non-null.
+
+Boundary behavior is controlled independently inside each function by `EDGE_IS_INSIDE`. If true,
+rectangle edges count as inside/intersecting; if false, boundary-only contact is treated as
+outside/disjoint.
+
+For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions,
+subtractions, and min/max values do not overflow. Floating-point inputs use EPS-based comparisons.
 
 Time Complexity:
 - O(1) for all operations.
@@ -58,7 +59,7 @@ template<class Pt>
 bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(Pt(p.x, p.y), Pt(xl, yl), xh - xl, yh - yl);
+  return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl);
 }
 
 template<class Pt>

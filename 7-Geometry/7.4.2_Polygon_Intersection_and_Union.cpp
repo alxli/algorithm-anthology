@@ -1,7 +1,7 @@
 /*
 
-Given two polygons, determine the areas of their intersection and union using a sweep line algorithm
-and the inclusion-exclusion principle.
+Given two simple (non-self-intersecting) polygons, determine the areas of their intersection and
+union using a sweep line algorithm and the inclusion-exclusion principle.
 
 - `intersection_area(lo1, hi1, lo2, hi2)` returns the intersection area of two polygons respectively
   specified by two ranges `[lo1, hi1)` and `[lo2, hi2)` of vertices in clockwise order, where `lo1`,
@@ -15,12 +15,12 @@ type, which grow like the squared coordinate magnitude. For integer point types 
 `PointL` from 7.1.1) if necessary.
 
 Time Complexity:
-- O(n^2 log n) per call to `intersection_area(lo1, hi1, lo2, hi2)` and
-  `union_area(lo1, hi1, lo2, hi2)` where $n$ is the sum of distances between `lo1` and `hi1` and
-  `lo2` and `hi2` respectively.
+- O(n*m*(n + m)*log(n + m)) per call to `intersection_area(lo1, hi1, lo2, hi2)` and
+  `union_area(lo1, hi1, lo2, hi2)`, where $n$ the number of vertices in the first polygon, and $m$
+  is the number of points in the second polygon (or equivalently O(N^3 log N) for $N = n + m$).
 
 Space Complexity:
-- O(n) auxiliary heap space for `intersection_area(lo1, hi1, lo2, hi2)` and
+- O(nm) auxiliary heap space for `intersection_area(lo1, hi1, lo2, hi2)` and
   `union_area(lo1, hi1, lo2, hi2)`, where $n$ is the sum of distances between `lo1` and `hi1` and
   `lo2` and `hi2` respectively.
 
@@ -39,51 +39,69 @@ const double EPS = 1e-9;
 #define LE(a, b) ((a) <= (b) + EPS)
 
 template<class Pt>
+bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
+  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary.
+  return EQ((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x), 0) &&
+         LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x)) &&
+         LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
+}
+
+// Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = true,
+// returning -1 for no intersection, 0 for one intersection point, 1 for positive length overlap.
+template<class Pt>
 int seg_intersection1(
-    const Pt &A, const Pt &B, const Pt &C, const Pt &D, double *outx, double *outy
+    const Pt &a, const Pt &b, const Pt &c, const Pt &d, double *outx, double *outy
 ) {
-  auto less = [](const Pt &u, const Pt &v) { return u.x != v.x ? u.x < v.x : u.y < v.y; };
-  auto minp = [&](const Pt &u, const Pt &v) -> const Pt & { return less(v, u) ? v : u; };
-  auto maxp = [&](const Pt &u, const Pt &v) -> const Pt & { return less(u, v) ? v : u; };
-  static const bool TOUCH_IS_INTERSECT = true;
-  auto ab_x = B.x - A.x, ab_y = B.y - A.y;
-  auto ac_x = C.x - A.x, ac_y = C.y - A.y;
-  auto cd_x = D.x - C.x, cd_y = D.y - C.y;
+  auto ab_x = b.x - a.x, ab_y = b.y - a.y;
+  auto ac_x = c.x - a.x, ac_y = c.y - a.y;
+  auto cd_x = d.x - c.x, cd_y = d.y - c.y;
+  auto ab2 = ab_x * ab_x + ab_y * ab_y;
+  auto cd2 = cd_x * cd_x + cd_y * cd_y;
+  if (EQ(ab2, 0)) {
+    if (point_on_segment(a, c, d)) {
+      *outx = a.x;
+      *outy = a.y;
+      return 0;
+    }
+    return -1;
+  }
+  if (EQ(cd2, 0)) {
+    if (point_on_segment(c, a, b)) {
+      *outx = c.x;
+      *outy = c.y;
+      return 0;
+    }
+    return -1;
+  }
   auto c1 = ab_x * cd_y - ab_y * cd_x;
   auto c2 = ac_x * ab_y - ac_y * ab_x;
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
-    const Pt &res1 = maxp(minp(A, B), minp(C, D));
-    const Pt &res2 = minp(maxp(A, B), maxp(C, D));
-    bool overlap = TOUCH_IS_INTERSECT ? !less(res2, res1) : less(res1, res2);
-    if (overlap) {
+    Pt res1 = std::max(std::min(a, b), std::min(c, d));
+    Pt res2 = std::min(std::max(a, b), std::max(c, d));
+    if (!(res2 < res1)) {
       if (res1 == res2) {
-        *outx = (double)res1.x;
-        *outy = (double)res1.y;
-        return 0;  // Collinear and meeting at an endpoint.
+        *outx = static_cast<double>(res1.x);
+        *outy = static_cast<double>(res1.y);
+        return 0;
       }
-      return 1;  // Collinear and overlapping.
+      return 1;
     }
-    return -1;  // Collinear and disjoint.
+    return -1;
   }
   if (EQ(c1, 0)) {
-    return -1;  // Parallel and disjoint.
+    return -1;
   }
   auto t_num = ac_x * cd_y - ac_y * cd_x;
   bool c1_pos = c1 > 0;
-  bool t_between_01 = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, t_num) && LE(t_num, c1))
-                                                   : (LT(0, t_num) && LT(t_num, c1)))
-                             : (TOUCH_IS_INTERSECT ? (LE(t_num, 0) && LE(c1, t_num))
-                                                   : (LT(t_num, 0) && LT(c1, t_num)));
-  bool u_between_01 =
-      c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
-             : (TOUCH_IS_INTERSECT ? (LE(c2, 0) && LE(c1, c2)) : (LT(c2, 0) && LT(c1, c2)));
-  if (t_between_01 && u_between_01) {
+  bool t_ok = c1_pos ? (LE(0, t_num) && LE(t_num, c1)) : (LE(c1, t_num) && LE(t_num, 0));
+  bool u_ok = c1_pos ? (LE(0, c2) && LE(c2, c1)) : (LE(c1, c2) && LE(c2, 0));
+  if (t_ok && u_ok) {
     double t = (double)t_num / c1;
-    *outx = A.x + t * ab_x;
-    *outy = A.y + t * ab_y;
-    return 0;  // Non-parallel with one intersection.
+    *outx = static_cast<double>(a.x + t * ab_x);
+    *outy = static_cast<double>(a.y + t * ab_y);
+    return 0;
   }
-  return -1;  // Non-parallel with no intersections.
+  return -1;
 }
 
 // The two segments may use different point types (e.g. polygon edge vs. sweep line).
@@ -153,7 +171,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
         double px, py;
         if (line_intersection1(*j, *i, sweep0, sweep1, &px, &py) == 0) {
           double y = py, x0 = i->x, x1 = j->x;
-          int sgn_area = (area < 0 ? -1 : (area > 0 ? 1 : 0));
+          int sgn_area = (area < 0 ? 1 : (area > 0 ? -1 : 0));
           if (x0 < x && x1 > x) {
             events.emplace_back(y, sgn_area * (1 << poly));
           } else if (x0 > x && x1 < x) {
@@ -163,18 +181,20 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
       }
     }
     std::sort(events.begin(), events.end(), [](const Event &e1, const Event &e2) {
-      if (e1.y != e2.y) {
+      if (!EQ(e1.y, e2.y)) {
         return e1.y < e2.y;
       }
       return e1.mask_delta < e2.mask_delta;
     });
     double a = 0;
-    int mask = 0;
+    int cnt[2] = {0, 0};
     for (size_t j = 0; j < events.size(); j++) {
-      if (mask == 3) {
+      if (cnt[0] != 0 && cnt[1] != 0) {
         a += events[j].y - events[j - 1].y;
       }
-      mask += events[j].mask_delta;
+      int bit = std::abs(events[j].mask_delta);
+      int poly = (bit == 1 ? 0 : 1);
+      cnt[poly] += events[j].mask_delta / bit;
     }
     res += a * (xsa[k + 1] - xsa[k]);
   }

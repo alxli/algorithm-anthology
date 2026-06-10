@@ -2,8 +2,9 @@
 
 Given a list of line segments in two dimensions, determine whether any pair of segments intersect
 using a sweep line algorithm. The input type `Segment<Pt>` is templated on the point type, so
-endpoints may be integer (`PointI`) or floating-point (`Point`/`PointD`). The cross-product sign
-tests in `seg_intersection` are exact for integer endpoints, so intersection detection is exact.
+endpoints may be integer (`PointI`) or floating-point (`Point`/`PointD`), but must support
+`operator<` which orders points lexicographically. The cross-product sign tests in
+`seg_intersection` are exact for integer endpoints, so intersection detection is exact.
 
 - `find_intersection(lo, hi, &res1, &res2)` returns whether any pair of segments intersect given a
   range `[lo, hi)` of segments, where `lo` and `hi` are random-access iterators. If an intersection
@@ -38,8 +39,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
          p.x <= std::max(a.x, b.x) && std::min(a.y, b.y) <= p.y && p.y <= std::max(a.y, b.y);
 }
 
-// Simplified detection-only version of `seg_intersection` from 7.2.3, with exact arithmetic for
-// integer-coordinate Pt.
+// Simplified detection-only version of `seg_intersection()` from 7.2.3, with exact for integer Pt.
 template<class Pt>
 int seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   static const bool TOUCH_IS_INTERSECT = true;
@@ -72,9 +72,9 @@ int seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   bool c1_pos = c1 > 0;
   bool t_between_01 =
       c1_pos ? (TOUCH_IS_INTERSECT ? (0 <= t_num && t_num <= c1) : (0 < t_num && t_num < c1))
-             : (TOUCH_IS_INTERSECT ? (t_num <= 0 && c1 <= t_num) : (t_num < 0 && c1 < t_num));
+             : (TOUCH_IS_INTERSECT ? (c1 <= t_num && t_num <= 0) : (c1 < t_num && t_num < 0));
   bool u_between_01 = c1_pos ? (TOUCH_IS_INTERSECT ? (0 <= c2 && c2 <= c1) : (0 < c2 && c2 < c1))
-                             : (TOUCH_IS_INTERSECT ? (c2 <= 0 && c1 <= c2) : (c2 < 0 && c1 < c2));
+                             : (TOUCH_IS_INTERSECT ? (c1 <= c2 && c2 <= 0) : (c1 < c2 && c2 < 0));
   return (t_between_01 && u_between_01) ? 0 : -1;
 }
 
@@ -88,7 +88,7 @@ struct Segment {
 };
 
 template<class Pt>
-bool intersect(const Segment<Pt> &s1, const Segment<Pt> &s2) {
+bool intersects(const Segment<Pt> &s1, const Segment<Pt> &s2) {
   return seg_intersection(s1.p, s1.q, s2.p, s2.q) >= 0;
 }
 
@@ -154,12 +154,12 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
       auto it = s.insert(seg).first;
       position[seg - lo] = it;
       auto next = it;
-      if (++next != s.end() && intersect(**next, *seg)) {
+      if (++next != s.end() && intersects(**next, *seg)) {
         *res1 = **next;
         *res2 = *seg;
         return true;
       }
-      if (it != s.begin() && intersect(**--it, *seg)) {
+      if (it != s.begin() && intersects(**--it, *seg)) {
         *res1 = **it;
         *res2 = *seg;
         return true;
@@ -169,7 +169,7 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2) {
       auto next = it;
       if (++next != s.end() && it != s.begin()) {
         auto prev = it;
-        if (intersect(**next, **--prev)) {
+        if (intersects(**next, **--prev)) {
           *res1 = **next;
           *res2 = **prev;
           return true;

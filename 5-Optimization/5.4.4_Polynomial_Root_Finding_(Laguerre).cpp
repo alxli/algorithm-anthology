@@ -20,10 +20,10 @@ repeats on the lower-degree quotient until every root has been extracted.
 
 Time Complexity:
 - O(n) per call to `horner_eval()`, where $n$ is the degree of the polynomial.
-- O(n log p) per call to `find_one_root()`, where $n$ is the degree of the polynomial and $p =
-  -\log_{10}(\text{EPS})$ is the number of digits of absolute or relative precision that is desired.
-- O(n^2 log p) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and $p =
-  -\log_{10}(\text{EPS})$ is the number of digits of absolute or relative precision that is desired.
+- O(n log p) per call to `find_one_root()`, where $n$ is the degree of the polynomial and
+  $p = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
+- O(n^2 log p) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and
+  $p = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
 
 Space Complexity:
 - O(n) auxiliary heap space and O(1) auxiliary stack space for `horner_eval()` and

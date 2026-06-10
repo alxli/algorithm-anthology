@@ -1,9 +1,9 @@
-\chapter{Data Structures}
+\chapter{\texorpdfstring{Data Structures}{2. Data Structures}}
 
-\section{Linked Lists}
+\section{\texorpdfstring{Linked Lists}{2.1 Linked Lists}}
 \setcounter{section}{1}
 \setcounter{subsection}{0}
-\subsection{Singly Linked List Operations}
+\subsection{Singly Linked List}
 Implements common singly linked list operations using raw nodes. Linked lists are rarely the best contest choice compared with arrays, vectors, and \inlinecode{std::list}, but the pointer patterns are useful for interview-style problems and for understanding constant-time splicing.
 
 For production C++, prefer containers such as \inlinecode{std::list}, \inlinecode{std::forward\_list}, or \inlinecode{std::vector} when they fit the problem. Use the raw-node style below when the problem statement already gives nodes, or when manual pointer manipulation is the point of the exercise.
@@ -12,7 +12,11 @@ For production C++, prefer containers such as \inlinecode{std::list}, \inlinecod
   \item \inlinecode{reverse\_list(head)} reverses a singly linked list and returns the new head.
   \item \inlinecode{merge\_sorted\_lists(a, b)} merges two sorted lists using a dummy node and returns the merged head.
   \item \inlinecode{split\_half(head, \&second)} cuts a list into two halves, returning the first half and storing the second half in \inlinecode{second}.
+  \item \inlinecode{splice\_after(pos, before)} moves the node after \inlinecode{before} so it appears after \inlinecode{pos}.
+  \item \inlinecode{splice\_range\_after(pos, before\_first, last)} moves the half-open range \inlinecode{(before\_first, last)} so it appears after \inlinecode{pos}.
 \end{compactitem}
+
+The splicing helpers use the same ``after'' convention as \inlinecode{std::forward\_list::splice\_after()}. They work naturally with a dummy head node, which makes insertions and removals at the beginning of a list match all other positions. For doubly linked list splicing, use the next section.
 
 For linked-list cycle detection, use Floyd or Brent cycle detection from section 1.5.
 
@@ -21,6 +25,8 @@ For linked-list cycle detection, use Floyd or Brent cycle detection from section
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{reverse\_list(head)} and \inlinecode{split\_half(head, \&second)}.
   \item $O(n + m)$ per call to \inlinecode{merge\_sorted\_lists(a, b)}.
+  \item $O(1)$ per call to \inlinecode{splice\_after(pos, before)}.
+  \item $O(k)$ per call to \inlinecode{splice\_range\_after(pos, before\_first, last)}, where $k$ is the number of moved nodes. The actual pointer splicing is $O(1)$, but this compact version walks to the end of the moved range.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
@@ -77,6 +83,30 @@ ListNode *split_half(ListNode *head, ListNode **second) {
   slow->next = nullptr;
   return head;
 }
+
+void splice_after(ListNode *pos, ListNode *before) {
+  ListNode *node = before->next;
+  if (node == nullptr || pos == before || pos == node) {
+    return;
+  }
+  before->next = node->next;
+  node->next = pos->next;
+  pos->next = node;
+}
+
+void splice_range_after(ListNode *pos, ListNode *before_first, ListNode *last) {
+  ListNode *first = before_first->next;
+  if (first == last) {
+    return;
+  }
+  ListNode *tail = first;
+  while (tail->next != last) {
+    tail = tail->next;
+  }
+  before_first->next = last;
+  tail->next = pos->next;
+  pos->next = first;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -111,60 +141,114 @@ int main() {
   assert(values(first).size() == 3);
   assert(values(second).size() == 3);
   assert(values(reverse_list(first))[0] == 3);
+
+  ListNode dummy(0), w(1), x(2), y(3), z(4);
+  dummy.next = &w;
+  w.next = &x;
+  x.next = &y;
+  y.next = &z;
+  splice_after(&dummy, &y);  // Move 4 to the front: 4, 1, 2, 3.
+  assert((values(dummy.next) == vector<int>{4, 1, 2, 3}));
+  splice_range_after(&z, &w, nullptr);  // Move 2, 3 after 4: 4, 2, 3, 1.
+  assert((values(dummy.next) == vector<int>{4, 2, 3, 1}));
   return 0;
 }
 \end{lstlisting}
-\subsection{Linked List Splicing}
-Moves nodes or ranges between singly linked lists in $O(1)$ pointer changes once the neighboring nodes are known. Splicing is the main operation that makes linked lists useful: it moves existing nodes without copying values or invalidating pointers to the moved nodes.
+\subsection{Doubly Linked List}
+Implements common doubly linked list operations using raw intrusive nodes. A node is intrusive when the \inlinecode{prev} and \inlinecode{next} pointers live inside the stored object itself, rather than inside a separate container allocation. This is useful when a problem already gives node pointers, when values must not be copied, or when a map needs to jump directly to a list node in $O(1)$ time, as in an LRU cache.
 
-The functions below use a dummy head node for each list. This makes insertions and removals at the beginning of a list match all other positions. In the C++ standard library, \inlinecode{std::list::splice()} provides analogous operations for doubly linked lists, while \inlinecode{std::forward\_list::splice\_after()} provides analogous operations for singly linked lists.
+The functions below use a circular sentinel node. When the list is empty, \inlinecode{sentinel.next} and \inlinecode{sentinel.prev} both point back to \inlinecode{sentinel}. This removes special cases for inserting or erasing at the front and back of the list.
 
 \begin{compactitem}
-  \item \inlinecode{splice\_after(pos, before)} moves the node after \inlinecode{before} so it appears after \inlinecode{pos}.
-  \item \inlinecode{splice\_range\_after(pos, before\_first, last)} moves the half-open range \inlinecode{(before\_first, last)} so it appears after \inlinecode{pos}.
+  \item \inlinecode{init\_list(sentinel)} initializes an empty circular list around \inlinecode{sentinel}.
+  \item \inlinecode{insert\_after(pos, node)} inserts detached \inlinecode{node} immediately after \inlinecode{pos}.
+  \item \inlinecode{insert\_before(pos, node)} inserts detached \inlinecode{node} immediately before \inlinecode{pos}.
+  \item \inlinecode{erase(node)} removes \inlinecode{node} from its current list and leaves it detached.
+  \item \inlinecode{push\_front(sentinel, node)} inserts detached \inlinecode{node} at the front of the list.
+  \item \inlinecode{push\_back(sentinel, node)} inserts detached \inlinecode{node} at the back of the list.
+  \item \inlinecode{move\_to\_front(sentinel, node)} moves an already-linked \inlinecode{node} to the front of the list.
+  \item \inlinecode{splice(pos, node)} moves an already-linked \inlinecode{node} so it appears immediately before \inlinecode{pos}.
+  \item \inlinecode{splice\_range(pos, first, last)} moves the half-open range \inlinecode{[first, last)} so it appears immediately before \inlinecode{pos}.
+  \item \inlinecode{empty(sentinel)} returns whether the list has no data nodes.
 \end{compactitem}
 
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(1)$ per call to \inlinecode{splice\_after(pos, before)}.
-  \item $O(k)$ per call to \inlinecode{splice\_range\_after(pos, before\_first, last)}, where $k$ is the number of moved nodes. The actual pointer splicing is $O(1)$, but this compact version walks to the end of the moved range.
-\end{compactitem}
+The data nodes passed to insertion functions must be detached, meaning their \inlinecode{prev} and \inlinecode{next} pointers are both null. The node passed to \inlinecode{erase()} or \inlinecode{move\_to\_front()} must already be linked into a list and must not be the sentinel. For \inlinecode{splice\_range(pos, first, last)}, the \inlinecode{pos} node must not lie inside the moved range.
 
-\textbf{Space Complexity}: $O(1)$ auxiliary.
+\textbf{Time Complexity}: $O(1)$ per call to all operations.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
 #include <cstddef>
 
-struct ListNode {
+struct DListNode {
   int value;
-  ListNode *next;
+  DListNode *prev, *next;
 
-  explicit ListNode(int value = 0) : value(value), next(nullptr) {}
+  explicit DListNode(int value = 0) : value(value), prev(nullptr), next(nullptr) {}
 };
 
-void splice_after(ListNode *pos, ListNode *before) {
-  ListNode *node = before->next;
-  if (node == nullptr || pos == before || pos == node) {
-    return;
-  }
-  before->next = node->next;
+void init_list(DListNode *sentinel) {
+  sentinel->prev = sentinel;
+  sentinel->next = sentinel;
+}
+
+bool empty(DListNode *sentinel) {
+  return sentinel->next == sentinel;
+}
+
+void insert_after(DListNode *pos, DListNode *node) {
+  node->prev = pos;
   node->next = pos->next;
+  pos->next->prev = node;
   pos->next = node;
 }
 
-void splice_range_after(ListNode *pos, ListNode *before_first, ListNode *last) {
-  ListNode *first = before_first->next;
-  if (first == last) {
+void insert_before(DListNode *pos, DListNode *node) {
+  insert_after(pos->prev, node);
+}
+
+DListNode *erase(DListNode *node) {
+  node->prev->next = node->next;
+  node->next->prev = node->prev;
+  node->prev = nullptr;
+  node->next = nullptr;
+  return node;
+}
+
+void push_front(DListNode *sentinel, DListNode *node) {
+  insert_after(sentinel, node);
+}
+
+void push_back(DListNode *sentinel, DListNode *node) {
+  insert_before(sentinel, node);
+}
+
+void move_to_front(DListNode *sentinel, DListNode *node) {
+  push_front(sentinel, erase(node));
+}
+
+void splice(DListNode *pos, DListNode *node) {
+  if (pos == node || pos == node->next) {
     return;
   }
-  ListNode *tail = first;
-  while (tail->next != last) {
-    tail = tail->next;
+  insert_before(pos, erase(node));
+}
+
+void splice_range(DListNode *pos, DListNode *first, DListNode *last) {
+  if (first == last || pos == first) {
+    return;
   }
+  DListNode *before_first = first->prev;
+  DListNode *tail = last->prev;
   before_first->next = last;
-  tail->next = pos->next;
-  pos->next = first;
+  last->prev = before_first;
+
+  DListNode *before_pos = pos->prev;
+  before_pos->next = first;
+  first->prev = before_pos;
+  tail->next = pos;
+  pos->prev = tail;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -174,35 +258,44 @@ void splice_range_after(ListNode *pos, ListNode *before_first, ListNode *last) {
 #include <vector>
 using namespace std;
 
-vector<int> values(ListNode *dummy) {
+// Returns the data values from front to back (walks the circular list until it loops to sentinel).
+vector<int> values(DListNode *sentinel) {
   vector<int> res;
-  for (ListNode *p = dummy->next; p != nullptr; p = p->next) {
+  for (DListNode *p = sentinel->next; p != sentinel; p = p->next) {
     res.push_back(p->value);
   }
   return res;
 }
 
 int main() {
-  ListNode dummy(0), a(1), b(2), c(3), d(4), e(5);
-  dummy.next = &a;
-  a.next = &b;
-  b.next = &c;
-  c.next = &d;
-  d.next = &e;
+  // `dummy` is the sentinel; a, b, c, d start detached. push_back/push_front link at back/front.
+  DListNode dummy, a(1), b(2), c(3), d(4);
+  init_list(&dummy);
+  assert(empty(&dummy));
 
-  splice_after(&dummy, &c);  // Move 4 to the front: 4, 1, 2, 3, 5.
-  vector<int> v = values(&dummy);
-  vector<int> expected1{4, 1, 2, 3, 5};
-  for (int i = 0; i < static_cast<int>(expected1.size()); i++) {
-    assert(v[i] == expected1[i]);
-  }
+  push_back(&dummy, &a);
+  push_back(&dummy, &b);
+  push_back(&dummy, &c);
+  push_front(&dummy, &d);
+  assert((values(&dummy) == vector<int>{4, 1, 2, 3}));
 
-  splice_range_after(&d, &a, &e);  // Move 2, 3 after 4: 4, 2, 3, 1, 5.
-  v = values(&dummy);
-  vector<int> expected2{4, 2, 3, 1, 5};
-  for (int i = 0; i < static_cast<int>(expected2.size()); i++) {
-    assert(v[i] == expected2[i]);
-  }
+  move_to_front(&dummy, &b);  // list: 2 4 1 3
+  assert((values(&dummy) == vector<int>{2, 4, 1, 3}));
+
+  erase(&d);  // detach d; list: 2 1 3
+  assert((values(&dummy) == vector<int>{2, 1, 3}));
+
+  insert_before(&dummy, &d);  // before the sentinel == the back; list: 2 1 3 4
+  assert((values(&dummy) == vector<int>{2, 1, 3, 4}));
+
+  splice(&d, &a);  // move a to just before d; list: 2 3 1 4
+  assert((values(&dummy) == vector<int>{2, 3, 1, 4}));
+
+  splice_range(&dummy, &a, &dummy);  // range {a, d} already at the back: no-op
+  assert((values(&dummy) == vector<int>{2, 3, 1, 4}));
+
+  splice_range(&b, &a, &dummy);  // move {a, d} to before b; list: 1 4 2 3
+  assert((values(&dummy) == vector<int>{1, 4, 2, 3}));
   return 0;
 }
 \end{lstlisting}
@@ -210,6 +303,8 @@ int main() {
 Maintains a least-recently-used cache with fixed capacity. The cache supports lookups and updates by key, evicting the least recently used entry whenever an insertion would exceed capacity.
 
 This implementation combines a doubly linked list (\inlinecode{std::list}) with a map from keys to list iterators. The front of the list stores the most recently used item. The operation \inlinecode{items.splice(items.begin(), items, it)} is the standard-library way to move an existing list node to the front in $O(1)$ time.
+
+To implement the same cache without \inlinecode{std::list}, use the intrusive doubly linked list operations from section 2.1.2. Store a \inlinecode{Node*} in the map instead of a list iterator, move hits to the front with \inlinecode{move\_to\_front(\&sentinel, node)}, and evict \inlinecode{sentinel.prev}.
 
 \begin{compactitem}
   \item \inlinecode{LRUCache(capacity)} constructs an empty cache holding at most \inlinecode{capacity} keys.
@@ -226,6 +321,12 @@ This implementation combines a doubly linked list (\inlinecode{std::list}) with 
 #include <list>
 #include <unordered_map>
 #include <utility>
+
+// Manual-list variant sketch:
+// struct Node { Key key; Value value; Node *prev, *next; };
+// std::unordered_map<Key, Node*> where;
+// On get: move_to_front(&sentinel, where[key]).
+// On eviction: Node *old = sentinel.prev; erase(old); where.erase(old->key).
 
 template<class Key, class Value>
 class LRUCache {
@@ -292,7 +393,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Heaps and Priority Queues}
+\section{\texorpdfstring{Heaps and Priority Queues}{2.2 Heaps and Priority Queues}}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Binary Heap}
@@ -723,7 +824,7 @@ int main() {
 12
 \end{exampleoutput}
 
-\section{Dictionaries and Ordered Sets}
+\section{\texorpdfstring{Dictionaries and Ordered Sets}{2.3 Dictionaries and Ordered Sets}}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Binary Search Tree}
@@ -1917,8 +2018,8 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
   \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
-  \item \inlinecode{select(r)} returns a key-value pair of the node with a key of zero-based rank \inlinecode{r} in the map, throwing an exception if the rank is not between 0 and \inlinecode{size() - 1}.
-  \item \inlinecode{rank(k)} returns the zero-based rank of key \inlinecode{k} in the map, throwing an exception if the key was not found in the map.
+  \item \inlinecode{select(r)} returns a key-value pair of the node with a key of 0-based rank \inlinecode{r} in the map, throwing an exception if the rank is not between 0 and \inlinecode{size() - 1}.
+  \item \inlinecode{rank(k)} returns the 0-based rank of key \inlinecode{k} in the map, throwing an exception if the key was not found in the map.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
@@ -2431,7 +2532,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
   \item \inlinecode{find(k)} returns a pointer to the value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
-  \item \inlinecode{operator[]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
+  \item \inlinecode{operator[k]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in no guaranteed order.
 \end{compactitem}
 
@@ -2620,7 +2721,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
   \item \inlinecode{find(k)} returns a pointer to the value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
-  \item \inlinecode{operator[]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
+  \item \inlinecode{operator[k]} returns a reference to key \inlinecode{k}'s associated value (which may be modified), or if necessary, inserts and returns a new entry with the default constructed value if key \inlinecode{k} was not originally found.
   \item \inlinecode{walk(f)} calls the function \inlinecode{f(k, v)} on each entry of the map, in ascending order of keys.
 \end{compactitem}
 
@@ -2804,18 +2905,18 @@ abcde
 bcde
 \end{exampleoutput}
 
-\section{Range Queries in One Dimension}
+\section{\texorpdfstring{Range Queries in One Dimension}{2.4 Range Queries in One Dimension}}
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Sparse Table}
 Given a static array, precompute a table that answers range minimum queries in constant time. More generally, the sparse table works for any range query whose combining operation is both associative and idempotent, meaning \inlinecode{combine(x, x) == x}. The canonical examples are ``min'', ``max'', ``gcd'', and the bitwise ``and'' and ``or''.
 
-For each level $j$, the entry \inlinecode{dp[j][i]} holds the result of \inlinecode{combine()} over the half-open range \inlinecode{[i, i + 2\textasciicircum{}j)}, built by combining two ranges of length $2^{j-1}$. A query over \inlinecode{[lo, hi]} is answered by combining the two overlapping ranges of length $2^j$ that are anchored at \inlinecode{lo} and at \inlinecode{hi}, where $2^j$ is the largest power of two not exceeding the length of the range. Because these two ranges overlap whenever the query length is not a power of two, the elements in the overlap are folded in twice; this is harmless only when \inlinecode{combine()} is idempotent. To support a non-idempotent but associative operation such as ``sum'' or ``XOR'' in constant time, use the disjoint sparse table in the next section instead, whose ranges meet at a center and never overlap.
+For each level $j$, the entry \inlinecode{dp[j][i]} holds the result of \inlinecode{combine()} over the half-open range $[i, i + 2^j)$, built by combining two ranges of length $2^{j-1}$. A query over \inlinecode{[lo, hi]} is answered by combining the two overlapping ranges of length $2^j$ that are anchored at \inlinecode{lo} and at \inlinecode{hi}, where $2^j$ is the largest power of two not exceeding the length of the range. Because these two ranges overlap whenever the query length is not a power of two, the elements in the overlap are folded in twice; this is harmless only when \inlinecode{combine()} is idempotent. To support a non-idempotent but associative operation such as ``sum'' or ``XOR'' in constant time, use the disjoint sparse table in the next section instead, whose ranges meet at a center and never overlap.
 
 The query operation is defined by an associative and idempotent function \inlinecode{combine(a, b)}. The default code below returns the ``min'' of the range; for ``gcd'', \inlinecode{combine(a, b)} should return \inlinecode{gcd(a, b)}.
 
 \begin{compactitem}
-  \item \inlinecode{SparseTable(lo, hi)} builds the table from the range \inlinecode{[lo, hi)} of a random-access iterator.
+  \item \inlinecode{SparseTable(lo, hi)} builds the table from two random-access iterators.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{query(lo, hi)} returns \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
@@ -2896,7 +2997,7 @@ The array is divided into blocks whose size doubles at each of the $O(\log n)$ l
 The query operation is defined by an associative function \inlinecode{combine(a, b)}. The default code below returns the ``min'' of the range; for ``sum'', \inlinecode{combine(a, b)} should return \inlinecode{a + b}.
 
 \begin{compactitem}
-  \item \inlinecode{DisjointSparseTable(lo, hi)} builds the table from the range \inlinecode{[lo, hi)} of a random-access iterator.
+  \item \inlinecode{DisjointSparseTable(lo, hi)} builds the table from two random-access iterators.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{query(lo, hi)} returns \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
 \end{compactitem}
@@ -2992,7 +3093,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
 
 \begin{compactitem}
   \item \inlinecode{SqrtDecomposition(n, v)} constructs an array of size \inlinecode{n} with indices from 0 to \inlinecode{n - 1}, inclusive, and all values initialized to \inlinecode{v}.
-  \item \inlinecode{SqrtDecomposition(lo, hi)} constructs an array from two random-access iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
+  \item \inlinecode{SqrtDecomposition(lo, hi)} constructs an array from two random-access iterators, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
@@ -3054,24 +3155,23 @@ class SqrtDecomposition {
   T at(int i) const { return query(i, i); }
 
   T query(int lo, int hi) const {
-    T res;
     int blocklo = ceil(static_cast<double>(lo) / blocklen), blockhi = (hi + 1) / blocklen - 1;
     if (blocklo > blockhi) {
-      res = value[lo];
+      T res = value[lo];
       for (int i = lo + 1; i <= hi; i++) {
         res = combine(res, value[i]);
       }
-    } else {
-      res = block[blocklo];
-      for (int i = blocklo + 1; i <= blockhi; i++) {
-        res = combine(res, block[i]);
-      }
-      for (int i = lo; i < blocklo * blocklen; i++) {
-        res = combine(res, value[i]);
-      }
-      for (int i = (blockhi + 1) * blocklen; i <= hi; i++) {
-        res = combine(res, value[i]);
-      }
+      return res;
+    }
+    T res = block[blocklo];
+    for (int i = blocklo + 1; i <= blockhi; i++) {
+      res = combine(res, block[i]);
+    }
+    for (int i = lo; i < blocklo * blocklen; i++) {
+      res = combine(res, value[i]);
+    }
+    for (int i = (blockhi + 1) * blocklen; i <= hi; i++) {
+      res = combine(res, value[i]);
     }
     return res;
   }
@@ -3095,8 +3195,8 @@ class SqrtDecomposition {
 using namespace std;
 
 int main() {
-  vector<int> arr{6, -2, 1, 8, 10};
-  SqrtDecomposition<int> sd(arr.begin(), arr.end());
+  vector<int> a{6, -2, 1, 8, 10};
+  SqrtDecomposition<int> sd(a.begin(), a.end());
   sd.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < sd.size(); i++) {
@@ -3311,8 +3411,8 @@ class SegTree {
 using namespace std;
 
 int main() {
-  vector<int> arr{6, -2, 1, 8, 10};
-  SegTree<int> t(arr.begin(), arr.end());
+  vector<int> a{6, -2, 1, 8, 10};
+  SegTree<int> t(a.begin(), a.end());
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {
@@ -3476,8 +3576,8 @@ class LazySegTree {
 using namespace std;
 
 int main() {
-  vector<int> arr{6, -2, 1, 8, 10};
-  LazySegTree<int> t(arr.begin(), arr.end());
+  vector<int> a{6, -2, 1, 8, 10};
+  LazySegTree<int> t(a.begin(), a.end());
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {
@@ -3509,7 +3609,7 @@ The query operation is defined by an associative aggregate function \inlinecode{
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{SparseSegTree(v)} constructs an array over indices 0 to \inlinecode{N}, inclusive, with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
+  \item \inlinecode{SparseSegTree(v)} constructs an array over indices 0 to $N$ (inclusive), with every value implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{N}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
@@ -3682,7 +3782,7 @@ Values: 5 5 5 1 5
 \subsection{Persistent Segment Tree}
 Maintains immutable versions of a segment tree under point updates. Each update creates a new root by copying only the nodes on the path from the root to the updated leaf, while all unchanged subtrees are shared with previous versions.
 
-The implementation below stores sums over a fixed index range \inlinecode{[0, n - 1]}. Persistent segment trees are useful for offline order-statistics queries, rollback-like histories, and functional dynamic programming states.
+The implementation below stores sums over a fixed index range $[0, n)$. Persistent segment trees are useful for offline order-statistics queries, rollback-like histories, and functional dynamic programming states.
 
 \begin{compactitem}
   \item \inlinecode{PersistentSegTree(a)} constructs version 0 from array \inlinecode{a}.
@@ -4019,8 +4119,8 @@ Cartesian trees connect arrays, stacks, range minimum queries, treaps, and large
 
 \begin{compactitem}
   \item \inlinecode{CartesianTree(a)} constructs the tree for array \inlinecode{a}.
-  \item \inlinecode{root} stores the root index.
-  \item \inlinecode{parent[i]}, \inlinecode{left[i]}, and \inlinecode{right[i]} store neighboring node indices, or $-1$ if absent.
+  \item \inlinecode{root[]} stores the root index.
+  \item \inlinecode{parent[]}, \inlinecode{left[]}, and \inlinecode{right[]} store neighboring node indices, or $-1$ if absent.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ construction time, where $n$ is the array size.
@@ -4095,7 +4195,7 @@ The query operation is defined by an associative aggregate function \inlinecode{
 Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies an update delta \inlinecode{d} to an aggregate summary \inlinecode{v} representing \inlinecode{len} array values, and by \inlinecode{compose\_deltas(old, d)}, which combines a pending older delta with a newer delta in that order. These functions do not support arbitrary combinations: applying a delta to a combined segment must be equivalent to applying it to each child segment and then combining the results, and composed deltas must be equivalent to performing their updates sequentially. The default code below defines range assignment. For range increment, \inlinecode{compose\_deltas(old, d)} should return \inlinecode{old + d}; \inlinecode{apply\_delta(v, d, len)} should return \inlinecode{v + d} for range-min/range-max queries, and \inlinecode{v + d * len} for range-sum queries.
 
 \begin{compactitem}
-  \item \inlinecode{ImplicitTreap(n, v)} constructs an array of size \inlinecode{n} with all values initialized to \inlinecode{v}.
+  \item \inlinecode{ImplicitTreap(n, v)} constructs an array of size \inlinecode{n}, with indices from 0 to \inlinecode{n - 1} (inclusive), with all values initialized to \inlinecode{v}.
   \item \inlinecode{ImplicitTreap(lo, hi)} constructs an array from two iterators as a range \inlinecode{[lo, hi)}, initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{empty()} returns whether the array is empty.
@@ -4339,8 +4439,8 @@ void print(ImplicitTreap<int> &t) {
 }
 
 int main() {
-  vector<int> arr{99, -2, 1, 8, 10};
-  ImplicitTreap<int> t(arr.begin(), arr.end());
+  vector<int> a{99, -2, 1, 8, 10};
+  ImplicitTreap<int> t(a.begin(), a.end());
   t.push_back(11);
   t.push_back(12);
   t.pop_back();
@@ -4359,7 +4459,7 @@ Values: 90 -2 1 8 10 11 (min: -2)
 Values: 2 2 1 8 10 11 (min: 1)
 \end{exampleoutput}
 
-\section{Range Queries in Two Dimensions}
+\section{\texorpdfstring{Range Queries in Two Dimensions}{2.5 Range Queries in Two Dimensions}}
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Quadtree (Point Update)}
@@ -4372,7 +4472,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
 Choose this over a sparse 2D segment tree when the grid is huge and touched cells or queried rectangles are sparse or naturally align with large quadrants. Choose the sparse 2D segment tree instead when many thin or adversarial rectangles are expected and a predictable $O(\log\left(R\right) \cdot \log\left(C\right))$ bound matters more than lower constant factors on aligned regions.
 
 \begin{compactitem}
-  \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{Quadtree(v)} constructs a two-dimensional array with rows from 0 to $R$ (inclusive) and columns from 0 to $C$ (inclusive), where $R$ and $C$ are large bounds hardcoded in the class. All array values are initialized to \inlinecode{v}.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
   \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at \inlinecode{(r, c)} to \inlinecode{apply\_delta(v, d)}.
@@ -4573,7 +4673,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, area)}, which applie
 Choose this over a sparse 2D segment tree when rectangle updates or queries often cover large aligned regions of a huge sparse grid. Choose a sparse 2D segment tree when worst-case rectangles may be long, thin, or otherwise poorly aligned with quadrant boundaries; the quadtree can visit many boundary nodes in those cases.
 
 \begin{compactitem}
-  \item \inlinecode{LazyQuadtree(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{LazyQuadtree(v)} constructs a 2D array with rows 0 to $R$ (inclusive) and columns 0 to $C$ (inclusive), where $R$ and $C$ are large bounds hardcoded in the class. All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2} and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
   \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at \inlinecode{(r, c)} to \inlinecode{apply\_delta(v, d)}.
@@ -4801,7 +4901,7 @@ Values:
 0 1 9
 \end{exampleoutput}
 \subsection{2D Segment Tree}
-Maintain a two-dimensional array over a huge grid while supporting dynamic queries of rectangular sub-arrays and dynamic updates of individual indices. This is a sparse (a.k.a. dynamic or implicit) 2D segment tree: row and column nodes are allocated lazily as cells are touched, so large coordinate bounds are supported without allocating the full grid.
+Maintain a two-dimensional array over a huge grid while supporting dynamic queries of rectangular subarrays and dynamic updates of individual indices. This is a sparse (a.k.a. dynamic or implicit) 2D segment tree: row and column nodes are allocated lazily as cells are touched, so large coordinate bounds are supported without allocating the full grid.
 
 The query operation is defined by a commutative associative aggregate function \inlinecode{combine(a, b)}. Because untouched regions are implicit, \inlinecode{repeat\_value(v, area)} must return the aggregate summary of \inlinecode{area} copies of the initial value \inlinecode{v}. The default code below assumes a numerical array type, defining queries for the ``min'' of the target range. For rectangle-sum queries, \inlinecode{combine(a, b)} should return \inlinecode{a + b} and \inlinecode{repeat\_value(v, area)} should return \inlinecode{v * area}.
 
@@ -4812,7 +4912,7 @@ Compared with the quadtrees in the previous sections, this structure splits rows
 For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.7. A dense vector-backed 2D segment tree can be simpler and faster on modest grids with custom aggregates such as min/max, but it needs $O(R \cdot C)$ storage with large constants, so this sparse version is usually the safer codebook default.
 
 \begin{compactitem}
-  \item \inlinecode{SegTree2D(v)} constructs a two-dimensional array with rows from 0 to \inlinecode{R} and columns from 0 to \inlinecode{C}, inclusive. All values are implicitly initialized to \inlinecode{v}.
+  \item \inlinecode{SegTree2D(v)} constructs a two-dimensional array with rows from 0 to $R$ (inclusive) and columns from 0 to $C$ (inclusive), where $R$ and $C$ are large bounds hardcoded in the class. All array values are implicitly initialized to \inlinecode{v}. Nodes are allocated lazily as indices are touched.
   \item \inlinecode{at(r, c)} returns the value at row \inlinecode{r}, column \inlinecode{c}.
   \item \inlinecode{query(r1, c1, r2, c2)} returns the result of \inlinecode{combine()} applied to every value in the rectangular region consisting of rows from \inlinecode{r1} to \inlinecode{r2}, inclusive, and columns from \inlinecode{c1} to \inlinecode{c2}, inclusive.
   \item \inlinecode{update(r, c, d)} assigns the value \inlinecode{v} at \inlinecode{(r, c)} to \inlinecode{apply\_delta(v, d)}.
@@ -5091,7 +5191,7 @@ Use this for static point-reporting queries when guaranteed worst-case bounds ar
 
 \begin{compactitem}
   \item \inlinecode{RangeTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
-  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
+  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the 0-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5217,7 +5317,7 @@ Use this for static point-reporting queries when $O(n)$ space and good average p
 
 \begin{compactitem}
   \item \inlinecode{RangeKDTree(lo, hi)} constructs a set from two random-access iterators to \inlinecode{std::pair} as a range \inlinecode{[lo, hi)} of points.
-  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the zero-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
+  \item \inlinecode{query(x1, y1, x2, y2, f)} calls the function \inlinecode{f(i, p)} on each point in the set that falls into the rectangular region consisting of rows from \inlinecode{x1} to \inlinecode{x2}, inclusive, and columns from \inlinecode{y1} to \inlinecode{y2}, inclusive. The first argument to \inlinecode{f} is the 0-based index of the point in the original range given to the constructor. The second argument is the point itself as an \inlinecode{std::pair}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5479,16 +5579,14 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Fenwick Trees}
+\section{\texorpdfstring{Fenwick Trees}{2.6 Fenwick Trees}}
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Fenwick Tree}
 Maintain a numerical array while supporting point increments and range-sum queries. A Fenwick tree stores partial prefix sums: each \inlinecode{tree[i]} covers the block of indices ending at \inlinecode{i} whose length is the lowest set bit of \inlinecode{i}. Updating one value adds to $O(\log n)$ covering blocks, and querying a prefix sum walks through $O(\log n)$ disjoint blocks.
 
-This implementation uses 1-based array indices, so valid indices are from 1 to \inlinecode{n}, inclusive.
-
 \begin{compactitem}
-  \item \inlinecode{initialize(n)} initializes array indices \inlinecode{1} to \inlinecode{n} to 0.
+  \item \inlinecode{initialize(n)} constructs an array of size \inlinecode{n} with 1-based indices from 1 to \inlinecode{n}, inclusive, and all values initialized to 0.
   \item \inlinecode{vals[i]} stores the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
@@ -5573,10 +5671,8 @@ Values: 5 1 2 3 4
 \subsection{Fenwick Tree (Range Update, Point Query)}
 Maintain a numerical array while supporting range increments and point queries. This is done by storing the difference array in a Fenwick tree: adding \inlinecode{x} to \inlinecode{[lo, hi]} adds \inlinecode{+x} at \inlinecode{lo} and \inlinecode{-x} after \inlinecode{hi}, and the value at index \inlinecode{i} is the prefix sum of those differences through \inlinecode{i}.
 
-This implementation uses 0-based array indices, so valid indices are from 0 to \inlinecode{size() - 1}, inclusive.
-
 \begin{compactitem}
-  \item \inlinecode{FenwickRUPQ(n)} constructs an array of size \inlinecode{n} with every value initialized to 0.
+  \item \inlinecode{FenwickRUPQ(n)} constructs an array with 0-based indices from 0 to \inlinecode{n - 1}, inclusive, with values set to 0.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
@@ -5656,10 +5752,8 @@ Values: 5 10 15 10 10
 \subsection{Fenwick Tree (Point Update, Range Query)}
 Maintain a numerical array while supporting point increments and range-sum queries. This is the standard Fenwick tree pattern: each internal entry stores a block sum, \inlinecode{add(i, x)} updates all blocks containing \inlinecode{i}, and \inlinecode{sum(hi)} combines disjoint blocks to obtain a prefix sum.
 
-This implementation uses 0-based array indices externally, so valid indices are from 0 to \inlinecode{size() - 1}, inclusive.
-
 \begin{compactitem}
-  \item \inlinecode{FenwickPURQ(n)} constructs an array of size \inlinecode{n} with every value initialized to 0.
+  \item \inlinecode{FenwickPURQ(n)} constructs an array with 0-based indices from 0 to \inlinecode{n - 1}, inclusive, with values set to 0.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
@@ -5749,10 +5843,8 @@ Values: 5 1 2 3 4
 \subsection{Fenwick Tree (Range Update, Range Query)}
 Maintain a numerical array while supporting range increments and range-sum queries. This uses two Fenwick trees to recover prefix sums after difference-array updates: if the difference array stores range additions, then the prefix sum through \inlinecode{hi} can be written as \inlinecode{hi*sum(t1, hi) - sum(t2, hi)}.
 
-This implementation uses 0-based array indices externally, so valid indices are from 0 to \inlinecode{size() - 1}, inclusive.
-
 \begin{compactitem}
-  \item \inlinecode{FenwickRURQ(n)} constructs an array of size \inlinecode{n} with every value initialized to 0.
+  \item \inlinecode{FenwickRURQ(n)} constructs an array with 0-based indices from 0 to \inlinecode{n - 1}, inclusive, with values set to 0.
   \item \inlinecode{size()} returns the size of the array.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} increments the value at index \inlinecode{i} by \inlinecode{x}.
@@ -5855,10 +5947,8 @@ Values: 15 6 7 -5 4
 \subsection{Sparse Fenwick Tree (Range Update, Range Query)}
 Maintain a numerical array over a huge index range while supporting range increments and range-sum queries. This is the sparse version of the two-tree Fenwick range-update/range-query trick: only Fenwick nodes reached by previous operations are stored, using \inlinecode{std::unordered\_map} instead of dense vectors.
 
-This implementation uses 0-based array indices, so all indices from 0 to \inlinecode{N}, inclusive, are accessible.
-
 \begin{compactitem}
-  \item \inlinecode{SparseFenwickRURQ()} constructs an initially zero array over indices 0 to \inlinecode{N}.
+  \item \inlinecode{SparseFenwickRURQ()} constructs an array with 0-based indices 0 to \inlinecode{N} (inclusive), implicitly initialized to 0.
   \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{add(i, x)} adds \inlinecode{x} to the value at index \inlinecode{i}.
   \item \inlinecode{add(lo, hi, x)} adds \inlinecode{x} to the values at all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive.
@@ -5955,10 +6045,10 @@ Maintain frequencies over a 1-based integer domain and find order statistics by 
 This is useful for dynamic multisets of bounded integer values, coordinate-compressed kth-element queries, and online rank queries.
 
 \begin{compactitem}
-  \item \inlinecode{initialize(n)} initializes array indices \inlinecode{1} to \inlinecode{n} to 0.
+  \item \inlinecode{initialize(n)} initializes a frequency array with 1-based indices \inlinecode{1} to \inlinecode{n} (inclusive) with values set to 0.
   \item \inlinecode{add(i, delta)} adds \inlinecode{delta} to the frequency of value/index \inlinecode{i}.
   \item \inlinecode{sum(i)} returns the total frequency over indices \inlinecode{[1, i]}.
-  \item \inlinecode{kth(k)} returns the smallest index \inlinecode{i} such that \inlinecode{sum(i) \textgreater{}= k}. The argument \inlinecode{k} is 1-based and must satisfy \inlinecode{1 \textless{}= k \textless{}= sum(n)}.
+  \item \inlinecode{kth(k)} returns the smallest index \inlinecode{i} such that \inlinecode{sum(i)} $\geq$ \inlinecode{k}. The argument \inlinecode{k} is 1-based and must be between \inlinecode{1} and \inlinecode{sum(n)}, inclusive.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6028,14 +6118,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{2D Fenwick Tree}
-Maintain a 2D numerical array while supporting point increments and rectangle-sum queries. This is the two-dimensional form of the standard Fenwick tree: each internal entry stores a rectangular block sum, and prefix queries combine $O(\log R \cdot \log C)$ disjoint blocks.
-
-This implementation uses 1-based indices, so rows are from 1 to \inlinecode{R}, inclusive, and columns are from 1 to \inlinecode{C}, inclusive.
+Maintain a two-dimensional numerical array while supporting point increments and rectangle-sum queries. This is the two-dimensional form of the standard Fenwick tree: each internal entry stores a rectangular block sum, and prefix queries combine $O(\log R \cdot \log C)$ disjoint blocks.
 
 Choose this for dense grids with additive point updates and rectangle-sum queries; it is simpler and lighter than a 2D segment tree when sums are the only aggregate needed. For huge sparse grids, use the sparse 2D Fenwick tree; for non-additive aggregates such as min/max with custom updates, use a 2D segment tree or quadtree.
 
 \begin{compactitem}
-  \item \inlinecode{initialize(R, C)} resets the data structure.
+  \item \inlinecode{initialize(R, C)} initializes a 2D array with 1-based indices: rows 1 to \inlinecode{R} (inclusive) and columns 1 to \inlinecode{C} (inclusive), and all values initialized to 0.
   \item \inlinecode{vals[r][c]} stores the value at index \inlinecode{(r, c)}.
   \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index \inlinecode{(r, c)}.
   \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index \inlinecode{(r, c)}.
@@ -6131,12 +6219,10 @@ Values:
 \subsection{2D Sparse Fenwick Tree}
 Maintain a 2D numerical array over a huge index range while supporting rectangle increments and rectangle-sum queries. This is the sparse two-dimensional analogue of range-update/range-query Fenwick trees: four sparse trees store the inclusion-exclusion coefficients needed to recover any prefix rectangle sum.
 
-This implementation uses 0-based indices, so rows are from 0 to \inlinecode{R}, inclusive, and columns are from 0 to \inlinecode{C}, inclusive.
-
 Choose this for huge sparse grids when the operation is additive: point/rectangle increments and rectangle sums. It avoids allocating the dense \inlinecode{R*C} table of the simple 2D Fenwick tree, but it is less general than the sparse 2D segment tree or quadtrees because Fenwick-tree algebra relies on addition and subtraction.
 
 \begin{compactitem}
-  \item \inlinecode{SparseFenwick2D()} constructs an initially zero 2D array over rows 0 to \inlinecode{R} and columns 0 to \inlinecode{C}.
+  \item \inlinecode{SparseFenwick2D()} constructs a 2D array over rows 0 to $R$ (inclusive) and columns 0 to $C$ (inclusive), where $R$ and $C$ are large bounds hardcoded in the class. All values are implicitly initialized to 0, as nodes are allocated lazily as indices are touched.
   \item \inlinecode{add(r, c, x)} adds \inlinecode{x} to the value at index \inlinecode{(r, c)}.
   \item \inlinecode{add(r1, c1, r2, c2, x)} adds \inlinecode{x} to all indices in the rectangle with upper-left corner \inlinecode{(r1, c1)} and lower-right corner \inlinecode{(r2, c2)}.
   \item \inlinecode{set(r, c, x)} assigns \inlinecode{x} to the value at index \inlinecode{(r, c)}.
@@ -6262,7 +6348,7 @@ Values:
 0 5 14
 \end{exampleoutput}
 
-\section{Disjoint Sets and Tree Structures}
+\section{\texorpdfstring{Disjoint Sets and Tree Structures}{2.7 Disjoint Sets and Tree Structures}}
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Disjoint Set Union}

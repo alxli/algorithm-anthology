@@ -2,7 +2,7 @@
 
 Maintains the minimum or maximum value in a sliding window using a monotone queue. This is useful
 for dynamic programming recurrences where each transition may only come from one of the last $w$
-states, such as `dp[i] = a[i] + min(dp[j])` for `j` $\in$ `[i - w, i - 1)`.
+states, such as `dp[i] = a[i] + min(dp[j])` for $j \in [i - w, i - 1)$.
 
 The queue stores candidate `(index, value)` pairs in monotone order. Expired indices are removed
 from the front, and dominated values are removed from the back before inserting a new candidate.

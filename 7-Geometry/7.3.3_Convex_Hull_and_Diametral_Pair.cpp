@@ -6,14 +6,14 @@ iterator type; the value type of the iterator is used as the point type. Both fu
 either floating-point or integral coordinates, but since they use only cross product comparisons,
 they happen to be exact for integral points.
 
+- `convex_hull(lo, hi)` returns the convex hull in clockwise order for an input range `[lo, hi)` of
+  points. The input range is sorted lexicographically after the call. To instead return the hull
+  points counter-clockwise order, replace every `>= 0` with `<= 0`.
+- `diametral_pair(lo, hi)` returns the maximum-distance pair of points.
+
 Overflow warning: `cross()` and the squared distance in `diametral_pair()` grow like the squared
 coordinate magnitude. With 32-bit `int` coordinates they overflow once coordinates exceed a few tens
 of thousands; use a 64-bit (`long long`) coordinate type for larger integer inputs.
-
-- `convex_hull(lo, hi)` returns the convex hull in clockwise order. The input range is sorted
-  lexicographically after the call. To instead return the hull points counter-clockwise order,
-  replace every `>= 0` with `<= 0`.
-- `diametral_pair(lo, hi)` returns the maximum-distance pair of points.
 
 Time Complexity:
 - O(n log n) per call, where $n$ is the distance between `lo` and `hi`.
@@ -69,6 +69,9 @@ auto diametral_pair(It lo, It hi) {
   using Pt = typename std::iterator_traits<It>::value_type;
   auto h = convex_hull(lo, hi);
   int m = h.size();
+  if (m == 0) {
+    return std::pair<Pt, Pt>{};
+  }
   if (m == 1) {
     return std::pair<Pt, Pt>{h[0], h[0]};
   }

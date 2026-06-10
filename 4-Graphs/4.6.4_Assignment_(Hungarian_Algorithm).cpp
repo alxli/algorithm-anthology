@@ -1,15 +1,16 @@
 /*
 
 Solves the minimum-cost assignment problem for a rectangular cost matrix. Given $n$ workers and $m$
-jobs with $n \leq m$, choose a distinct job for each worker so that the total assignment cost is
-minimized.
+jobs (with $n \leq m$) where assigning worker `i` to complete job `j` would cost `cost[i][j]`,
+choose a distinct job for each worker so that the total assignment cost is minimized.
 
-The implementation below is the classical Hungarian algorithm using potentials. It is 1-indexed
-internally, but the input matrix `cost` is 0-indexed. The returned assignment vector has length $n$,
-where `assignment[i]` is the chosen job for worker `i`, using 0-indexed job numbers.
+The classical Hungarian algorithm using potentials transforms a cost matrix using the principle that
+adding or subtracting constants from rows or columns does not change the optimal assignment. Note
+that while the input matrix is 0-based here, the internal calculations are 1-based.
 
-- `hungarian(cost, &assignment)` returns the minimum total assignment cost.
-- `cost[i][j]` is the cost of assigning worker `i` to job `j`.
+- `hungarian(cost, &assignment)` returns the minimum total assignment cost for a 0-based `cost`
+  matrix, while populating `assignment` with $n$ values where `assignment[i]` is the chosen job for
+  worker `i`, using 0-based job numbers.
 
 Time Complexity:
 - O(n^2*m), where `cost` has $n$ rows and $m$ columns.

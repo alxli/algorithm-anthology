@@ -15,6 +15,7 @@ Space Complexity:
 */
 
 #include <cctype>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -31,6 +32,9 @@ Integer Conversion:
 - `itoa(value, &str, base)` implements the non-standard C function which converts `value` into a C
   string, storing it into pointer `str` in the given `base`. For more generalized base conversion,
   see the math utilities section.
+- `is_integer(s)` returns whether `s` is a valid base-10 integer literal with an optional sign.
+- `is_number(s)` returns whether `s` is a decimal number literal with optional sign, decimal point,
+  and exponent.
 
 */
 
@@ -72,6 +76,52 @@ char *itoa(int value, char *str, int base = 10) {
     *ptr-- = *ptr1;
   }
   return str;
+}
+
+bool is_integer(const string &s) {
+  int i = (s.empty() || (s[0] != '-' && s[0] != '+')) ? 0 : 1;
+  if (i == static_cast<int>(s.size())) {
+    return false;
+  }
+  for (; i < static_cast<int>(s.size()); i++) {
+    if (!isdigit(static_cast<unsigned char>(s[i]))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool is_number(const string &s) {
+  int i = (s.empty() || (s[0] != '-' && s[0] != '+')) ? 0 : 1;
+  bool seen_digit = false, seen_dot = false;
+  for (; i < static_cast<int>(s.size()); i++) {
+    unsigned char c = s[i];
+    if (isdigit(c)) {
+      seen_digit = true;
+    } else if (c == '.' && !seen_dot) {
+      seen_dot = true;
+    } else {
+      break;
+    }
+  }
+  if (!seen_digit) {
+    return false;
+  }
+  if (i < static_cast<int>(s.size()) && (s[i] == 'e' || s[i] == 'E')) {
+    i++;
+    if (i < static_cast<int>(s.size()) && (s[i] == '-' || s[i] == '+')) {
+      i++;
+    }
+    bool seen_exp_digit = false;
+    for (; i < static_cast<int>(s.size()); i++) {
+      if (!isdigit(static_cast<unsigned char>(s[i]))) {
+        return false;
+      }
+      seen_exp_digit = true;
+    }
+    return seen_exp_digit;
+  }
+  return i == static_cast<int>(s.size());
 }
 
 /*
@@ -124,6 +174,7 @@ Stripping:
 - `rstrip(s)` strips the right side of `s` in-place using the given delimiters and returns a
   reference to the stripped string.
 - `strip(s)` strips both sides of `s` in-place and returns a reference to the stripped string.
+- `ltrimmed(s)`, `rtrimmed(s)`, and `trimmed(s)` do not modify `s` and returns stripped copies.
 
 */
 
@@ -147,16 +198,49 @@ string &strip(string &s, const string &delim = " \n\t\v\f\r") {
   return lstrip(rstrip(s));
 }
 
+string ltrimmed(string s, const string &delim = " \n\t\v\f\r") {
+  return lstrip(s, delim);
+}
+
+string rtrimmed(string s, const string &delim = " \n\t\v\f\r") {
+  return rstrip(s, delim);
+}
+
+string trimmed(string s, const string &delim = " \n\t\v\f\r") {
+  return strip(s, delim);
+}
+
 /*
 
 Find and Replace:
 
+- `starts_with(s, prefix)` returns whether `s` begins with `prefix`.
+- `ends_with(s, suffix)` returns whether `s` ends with `suffix`.
+- `contains(s, needle)` returns whether `needle` occurs in `s`.
 - `find_all(haystack, needle)` returns a vector of all positions where the string `needle` appears
   in the string `haystack`.
 - `replace(s, old, replacement)` returns a copy of `s` with all occurrences of the string `old`
   replaced with the given `replacement`.
+- `regex_find_all(s, pattern)` returns every substring of `s` matched by `pattern`.
+- `regex_groups(s, pattern)` returns the capture groups of the first match of `pattern` in `s`,
+  excluding the full match. If there is no match, returns an empty vector.
+- `regex_replace_all(s, pattern, replacement)` returns a copy of `s` with every regex match replaced
+  by `replacement`.
 
 */
+
+bool starts_with(const string &s, const string &prefix) {
+  return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
+}
+
+bool ends_with(const string &s, const string &suffix) {
+  return s.size() >= suffix.size() &&
+         s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+bool contains(const string &s, const string &needle) {
+  return s.find(needle) != string::npos;
+}
 
 std::vector<int> find_all(const string &haystack, const string &needle) {
   std::vector<int> res;
@@ -181,11 +265,34 @@ string replace(const string &s, const string &old, const string &replacement) {
   return res;
 }
 
+std::vector<string> regex_find_all(const string &s, const string &pattern) {
+  std::regex re(pattern);
+  return {std::sregex_token_iterator(s.begin(), s.end(), re, 0), std::sregex_token_iterator()};
+}
+
+std::vector<string> regex_groups(const string &s, const string &pattern) {
+  std::smatch match;
+  if (!std::regex_search(s, match, std::regex(pattern))) {
+    return {};
+  }
+  std::vector<string> res;
+  for (int i = 1; i < static_cast<int>(match.size()); i++) {
+    res.push_back(match[i].str());
+  }
+  return res;
+}
+
+string regex_replace_all(const string &s, const string &pattern, const string &replacement) {
+  return std::regex_replace(s, std::regex(pattern), replacement);
+}
+
 /*
 
 Joining and Splitting:
 
 - `join(v, delim)` returns the strings in vector `v` concatenated, separated by the given delimiter.
+- `pad_left(s, width, ch)` returns `s` left-padded with `ch` until its length is at least `width`.
+- `pad_right(s, width, ch)` returns `s` right-padded with `ch` until its length is at least `width`.
 - `split(s, char delim)` returns a vector of tokens of `s`, split on a single character delimiter.
   Empty tokens are skipped, so `split("a::b", ':')` returns `{"a", "b"}`, not `{"a", "", "b"}`.
 - `split(s, string delim)` returns a vector of tokens of `s`, split on a set of many possible single
@@ -197,6 +304,8 @@ Joining and Splitting:
   `delim`. Unlike the `split()` functions above, `delim` is treated as a contiguous boundary string,
   not merely a set of possible boundary characters. This will not skip empty tokens. For example,
   `explode("a::::b", "::")` yields `{"a", "", "b"}`, not `{"a", "b"}`.
+- `explode(s, char delim)` is the single-character delimiter version that also preserves empty
+  tokens.
 
 */
 
@@ -207,6 +316,16 @@ string join(const std::vector<string> &v, const string &delim = " ") {
     res += v[i];
   }
   return res;
+}
+
+string pad_left(const string &s, int width, char ch = ' ') {
+  int pad = width - static_cast<int>(s.size());
+  return pad > 0 ? string(pad, ch) + s : s;
+}
+
+string pad_right(const string &s, int width, char ch = ' ') {
+  int pad = width - static_cast<int>(s.size());
+  return pad > 0 ? s + string(pad, ch) : s;
 }
 
 std::vector<string> split(const string &s, char delim) {
@@ -249,6 +368,17 @@ std::vector<string> explode(const string &s, const string &delim) {
   return res;
 }
 
+std::vector<string> explode(const string &s, char delim) {
+  std::vector<string> res;
+  size_t last = 0, next = 0;
+  while ((next = s.find(delim, last)) != string::npos) {
+    res.push_back(s.substr(last, next - last));
+    last = next + 1;
+  }
+  res.push_back(s.substr(last));
+  return res;
+}
+
 /*** Example Usage ***/
 
 #include <cassert>
@@ -261,6 +391,8 @@ int main() {
   assert(string(itoa(1750, buffer.data(), 10)) == "1750");
   assert(string(itoa(1750, buffer.data(), 16)) == "6d6");
   assert(string(itoa(1750, buffer.data(), 2)) == "11011010110");
+  assert(is_integer("-123") && !is_integer("12.3"));
+  assert(is_number("-.5e+2") && is_number("123.") && !is_number("1e"));
 
   assert(to_upper("Hello world") == "HELLO WORLD");
   assert(to_lower("Hello World") == "hello world");
@@ -270,16 +402,26 @@ int main() {
   string t = s;
   assert(lstrip(s) == "abc \n");
   assert(rstrip(s) == strip(t));
+  assert(trimmed(" \t abc \n") == "abc");
 
   vector<int> pos;
   pos.push_back(0);
   pos.push_back(7);
+  assert(starts_with("abracadabra", "abra"));
+  assert(ends_with("abracadabra", "dabra"));
+  assert(contains("abracadabra", "cad"));
   assert(find_all("abracadabra", "ab") == pos);
   assert(replace("abcdabba", "ab", "00") == "00cd00ba");
+  assert(join(regex_find_all("a12b345", "[0-9]+"), "|") == "12|345");
+  assert(join(regex_groups("abc-123", "([a-z]+)-([0-9]+)"), "|") == "abc|123");
+  assert(regex_replace_all("a12b345", "[0-9]+", "#") == "a#b#");
 
+  assert(pad_left("42", 5, '0') == "00042");
+  assert(pad_right("hi", 4, '.') == "hi..");
   assert(join(split("a\nb\ncde\nf", '\n'), "|") == "a|b|cde|f");  // split v1
   assert(join(split("a::b", ':'), "|") == "a|b");                 // split v1 skips empty tokens
   assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");   // split v2
   assert(join(explode("a..b.cde....f", ".."), "|") == "a|b.cde||f");
+  assert(join(explode("a::b:", ':'), "|") == "a||b|");
   return 0;
 }

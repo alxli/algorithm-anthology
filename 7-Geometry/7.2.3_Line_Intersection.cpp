@@ -2,17 +2,13 @@
 
 Intersection calculations in two dimensions for straight lines and line segments. The functions
 are templated on the point type `Pt`: pass any struct with numeric `.x` and `.y` fields (for example
-`PointD`/ `PointI` from 7.1.1, or the local example struct). Point outputs are written through a
-caller-supplied pointer whose type is deduced, so the output point type may differ from the input --
-e.g. integer endpoints with a floating-point output point.
+`PointD`/ `PointI` from 7.1.1, or the local example struct) for which `operator<` orders points
+lexicographically. Point outputs are written through a caller-supplied pointer whose type is
+deduced, so the output point type may differ from the input -- e.g. integer endpoints with a
+floating-point output point.
 
 `seg_intersection()` has a detection-only overload (called without the output pointers) whose
 calculations are exact when `Pt` has integer coordinates.
-
-Overflow warning: the exact integer paths multiply coordinate differences (cross products and
-squared lengths), which grow like the squared coordinate magnitude. With 32-bit `int` coordinates
-these overflow once coordinates exceed a few tens of thousands, so for larger integer inputs use a
-point type with 64-bit (`long long`) coordinates.
 
 - `line_intersection(a1, b1, c1, a2, b2, c2, &p)` intersects lines $a_1 x + b_1 y + c_1 = 0$ and
   $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), 0 (one point, stored into `p`), or 1
@@ -20,9 +16,19 @@ point type with 64-bit (`long long`) coordinates.
 - `line_intersection(p1, p2, p3, p4, &p)` intersects the infinite lines through `p1`-`p2` and
   `p3`-`p4`.
 - `seg_intersection(a, b, c, d, &p, &q)` intersects segments `a`-`b` and `c`-`d`, returning $-1$
-  (none), 0 (one point), or 1 (overlapping segment). Touching behavior is controlled by
-  `TOUCH_IS_INTERSECT`.
-- `closest_point(a, b, c, p)` returns the closest point on line $ax + by + c = 0$ to $p$.
+  (none), 0 (one point), or 1 (overlapping segment). Whether barely touching segments are considered
+  to intersect is determined by the setting of `TOUCH_IS_INTERSECT`. If the intersection is a point
+  (and `p` is not `nullptr`), it will be stored into `p`. If the intersection is an overlapping
+  segment (and `p` and `q` are not `nullptr`) then their endpoints will be stored into `p` and `q`.
+  The output types `p` and `q` must be floating-point points. 
+- `seg_intersection(a, b, c, d)` is a simplified, detection-only version of the above. Both versions
+  are exact for detection if the input `Pt` type is integral.
+- `closest_point(a, b, c, p)` returns the closest point on line $ax + by + c = 0$ to point `p`.
+
+Overflow warning: the exact integer paths multiply coordinate differences (cross products and
+squared lengths), which grow like the squared coordinate magnitude. With 32-bit `int` coordinates
+these overflow once coordinates exceed ~46000, so for larger integer inputs use a point type with
+64-bit (`long long`) coordinates.
 
 Time Complexity:
 - O(1) for all operations.
@@ -42,27 +48,6 @@ const double EPS = 1e-9;
 #define EQ(a, b) (fabs((a) - (b)) <= EPS)
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
-
-// clang-format off
-// Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary
-template<class Pt> auto sqnorm(const Pt &a) { return a.x*a.x + a.y*a.y; }
-template<class Pt> auto dot(const Pt &a, const Pt &b) { return a.x*b.x + a.y*b.y; }
-template<class Pt> auto cross(const Pt &a, const Pt &b) { return a.x*b.y - a.y*b.x; }
-// clang-format on
-
-template<class OutPt>
-void set_point(OutPt *p, double x, double y) {
-  p->x = x;
-  p->y = y;
-}
-
-template<class Pt>
-bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
-  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary.
-  return EQ((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x), 0) &&
-         LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x)) &&
-         LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
-}
 
 template<class OutPt>
 int line_intersection(double a1, double b1, double c1, double a2, double b2, double c2, OutPt *p) {
@@ -97,6 +82,14 @@ int line_intersection(const Pt &p1, const Pt &p2, const Pt &p3, const Pt &p4, Ou
   return 0;
 }
 
+template<class Pt>
+bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
+  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary.
+  return EQ((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x), 0) &&
+         LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x)) &&
+         LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
+}
+
 // Detection is exact for integer Pt. Intersection point output may use a separate float OutPt.
 template<class Pt, class OutPt>
 int seg_intersection(
@@ -111,20 +104,22 @@ int seg_intersection(
   if (EQ(ab2, 0)) {
     if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
       if (p != nullptr) {
-        set_point(p, (double)a.x, (double)a.y);
+        p->x = static_cast<double>(a.x);
+        p->y = static_cast<double>(a.y);
       }
-      return 0;
+      return 0;  // Degenerate: first segment is a point intersecting the second segment.
     }
-    return -1;
+    return -1;  // Degenerate: first segment is a point not intersecting the second segment.
   }
   if (EQ(cd2, 0)) {
     if (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) {
       if (p != nullptr) {
-        set_point(p, (double)c.x, (double)c.y);
+        p->x = static_cast<double>(c.x);
+        p->y = static_cast<double>(c.y);
       }
-      return 0;
+      return 0;  // Degenerate: second segment is a point intersecting the first segment.
     }
-    return -1;
+    return -1;  // Degenerate: second segment is a point not intersecting the first segment.
   }
   auto c1 = ab_x * cd_y - ab_y * cd_x;
   auto c2 = ac_x * ab_y - ac_y * ab_x;
@@ -135,15 +130,67 @@ int seg_intersection(
     if (overlap) {
       if (res1 == res2) {
         if (p != nullptr) {
-          set_point(p, (double)res1.x, (double)res1.y);
+          p->x = static_cast<double>(res1.x);
+          p->y = static_cast<double>(res1.y);
         }
-        return 0;
+        return 0;  // Collinear and overlapping: touch at one endpoint.
       }
       if (p != nullptr && q != nullptr) {
-        set_point(p, (double)res1.x, (double)res1.y);
-        set_point(q, (double)res2.x, (double)res2.y);
+        p->x = static_cast<double>(res1.x);
+        p->y = static_cast<double>(res1.y);
+        q->x = static_cast<double>(res2.x);
+        q->y = static_cast<double>(res2.y);
       }
-      return 1;
+      return 1;  // Collinear and overlapping: overlap is a segment.
+    }
+    return -1;  // Collinear and disjoint.
+  }
+  if (EQ(c1, 0)) {
+    return -1;  // Parallel and disjoint.
+  }
+  auto t_num = ac_x * cd_y - ac_y * cd_x;
+  bool c1_pos = c1 > 0;
+  bool t_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, t_num) && LE(t_num, c1))
+                                           : (LT(0, t_num) && LT(t_num, c1)))
+                     : (TOUCH_IS_INTERSECT ? (LE(c1, t_num) && LE(t_num, 0))
+                                           : (LT(c1, t_num) && LT(t_num, 0)));
+  bool u_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
+                     : (TOUCH_IS_INTERSECT ? (LE(c1, c2) && LE(c2, 0)) : (LT(c1, c2) && LT(c2, 0)));
+  if (t_ok && u_ok) {
+    if (p != nullptr) {
+      double t = (double)t_num / c1;
+      p->x = static_cast<double>(a.x + t * ab_x);
+      p->y = static_cast<double>(a.y + t * ab_y);
+    }
+    return 0;  // Non-parallel with one intersection.
+  }
+  return -1;  // Non-parallel with no intersection.
+}
+
+// Simplified detection-only version (no output points needed); exact for integer Pt.
+// Alternatively, just call the version above and pass static_cast<Pt *>(nullptr) for p and q.
+template<class Pt>
+int seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
+  static const bool TOUCH_IS_INTERSECT = true;
+  auto ab_x = b.x - a.x, ab_y = b.y - a.y;
+  auto ac_x = c.x - a.x, ac_y = c.y - a.y;
+  auto cd_x = d.x - c.x, cd_y = d.y - c.y;
+  auto ab2 = ab_x * ab_x + ab_y * ab_y;
+  auto cd2 = cd_x * cd_x + cd_y * cd_y;
+  if (EQ(ab2, 0)) {
+    return (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) ? 0 : -1;
+  }
+  if (EQ(cd2, 0)) {
+    return (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) ? 0 : -1;
+  }
+  auto c1 = ab_x * cd_y - ab_y * cd_x;
+  auto c2 = ac_x * ab_y - ac_y * ab_x;
+  if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
+    Pt res1 = std::max(std::min(a, b), std::min(c, d));
+    Pt res2 = std::min(std::max(a, b), std::max(c, d));
+    bool overlap = TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2);
+    if (overlap) {
+      return (res1 == res2) ? 0 : 1;
     }
     return -1;
   }
@@ -158,20 +205,7 @@ int seg_intersection(
                                            : (LT(t_num, 0) && LT(c1, t_num)));
   bool u_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
                      : (TOUCH_IS_INTERSECT ? (LE(c2, 0) && LE(c1, c2)) : (LT(c2, 0) && LT(c1, c2)));
-  if (t_ok && u_ok) {
-    if (p != nullptr) {
-      double t = (double)t_num / c1;
-      set_point(p, (double)(a.x + t * ab_x), (double)(a.y + t * ab_y));
-    }
-    return 0;
-  }
-  return -1;
-}
-
-// Detection-only overload: no output point needed, exact for integer Pt.
-template<class Pt>
-int seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
-  return seg_intersection(a, b, c, d, static_cast<Pt *>(nullptr), static_cast<Pt *>(nullptr));
+  return (t_ok && u_ok) ? 0 : -1;
 }
 
 template<class Pt>

@@ -5,11 +5,11 @@ precedences. Evaluation is performed by recursive descent: the parser recursivel
 precedence levels before looser ones. Parentheses are supported, but multiplication by juxtaposition
 is not.
 
-An arbitrary operand type is supported, with its string representation defined by a user-specified
-`is_operand()` and `eval_operand()` functions. For maximum reliability, the string representation of
-operands should not use characters shared by any operator. For instance, the best practice instead
-of accepting $-1$ as a valid operand (since the `-` sign may conflict with the identical binary
-operator), is to specify non-negative numbers as operands alongside the unary operator `-`.
+An arbitrary operand type is supported by changing the `Operand` alias and the static `is_operand()`
+and `eval_operand()` helpers. For maximum reliability, the string representation of operands should
+not use characters shared by any operator. For instance, the best practice instead of accepting `-1`
+as a valid operand (since the `-` sign may conflict with the identical binary operator), is to
+specify non-negative numbers as operands alongside the unary operator `-`.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared
 characters with the string representations of operands. Ideally, operators should not be prefixes or
@@ -18,9 +18,9 @@ suffixes of one another, else the tokenization process may be ambiguous. For exa
 lexicographical ordering of conflicting operators.
 
 - `RecursiveDescentParser(unary_op, binary_op)` initializes a parser with operators specified by
-  hash tables `unary_op` (of operator to function pointer) and `binary_op` (of operator to pair of
-  function pointer and operator precedence). Operator precedences should be numbered upwards
-  starting at 0 (lowest precedence, evaluated last).
+  hash tables `unary_op` (of operator to unary function object) and `binary_op` (of operator to pair
+  of binary function object and operator precedence). Operator precedences should be numbered
+  upwards starting at 0 (lowest precedence, evaluated last).
 - `split(s)` returns a vector of tokens for the expression `s`, split on the given operators during
   construction. Each parenthesis, operator, and operand satisfying `is_operand()` will be split into
   a separate token. The algorithm is naive, matching operators lazily in the case of overlapping
@@ -48,6 +48,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cctype>
+#include <functional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -59,42 +60,42 @@ using std::string;
 
 // Define the custom operand type and representation below.
 using Operand = double;
-using UnaryOp = Operand (*)(Operand a);
-using BinaryOp = Operand (*)(Operand a, Operand b);
+using UnaryOp = std::function<Operand(Operand)>;
+using BinaryOp = std::function<Operand(Operand, Operand)>;
 
 struct BinaryRule {
   BinaryOp op;
   int precedence;
 };
 
-bool is_operand(const string &s) {
-  int npoints = 0;
-  for (char c : s) {
-    if (c == '.') {
-      if (++npoints > 1) {
-        return false;
-      }
-    } else if (!isdigit(static_cast<unsigned char>(c))) {
-      return false;
-    }
-  }
-  return !s.empty();
-}
-
-Operand eval_operand(const string &s) {
-  Operand res;
-  std::stringstream ss(s);
-  ss >> res;
-  return res;
-}
-
 class RecursiveDescentParser {
   using unary_op_map = std::unordered_map<string, UnaryOp>;
   using binary_op_map = std::unordered_map<string, BinaryRule>;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
-  std::set<string> ops;
+  std::set<string> op_tokens;
   int max_precedence;
+
+  static bool is_operand(const string &s) {
+    int npoints = 0;
+    for (char c : s) {
+      if (c == '.') {
+        if (++npoints > 1) {
+          return false;
+        }
+      } else if (!isdigit(static_cast<unsigned char>(c))) {
+        return false;
+      }
+    }
+    return !s.empty();
+  }
+
+  static Operand eval_operand(const string &s) {
+    Operand res;
+    std::stringstream ss(s);
+    ss >> res;
+    return res;
+  }
 
   template<class StrIt>
   Operand eval_unary(StrIt &lo, StrIt hi) {
@@ -116,7 +117,7 @@ class RecursiveDescentParser {
   }
 
   template<class StrIt>
-  Operand eval_binary(StrIt &lo, StrIt hi, Operand precedence) {
+  Operand eval_binary(StrIt &lo, StrIt hi, int precedence) {
     if (precedence > max_precedence) {
       return eval_unary(lo, hi);
     }
@@ -142,11 +143,11 @@ class RecursiveDescentParser {
   RecursiveDescentParser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, _] : unary_ops) {
-      ops.insert(op);
+      op_tokens.insert(op);
     }
     max_precedence = 0;
     for (const auto &[op, fn_prec] : binary_ops) {
-      ops.insert(op);
+      op_tokens.insert(op);
       max_precedence = std::max(max_precedence, fn_prec.precedence);
     }
   }
@@ -168,7 +169,7 @@ class RecursiveDescentParser {
         int found = next_paren;
         string found_op;
         for (int j = i; j < next_paren && found == next_paren; j++) {
-          for (const auto &op : ops) {
+          for (const auto &op : op_tokens) {
             if (s.substr(j, op.size()) == op) {
               found = j;
               found_op = op;
@@ -220,26 +221,17 @@ using namespace std;
 
 #define EQ(a, b) (fabs((a) - (b)) < 1e-7)
 
-// clang-format off
-double pos(double a) { return +a; }
-double neg(double a) { return -a; }
-double add(double a, double b) { return a + b; }
-double sub(double a, double b) { return a - b; }
-double mul(double a, double b) { return a * b; }
-double div(double a, double b) { return a / b; }
-// clang-format on
-
 int main() {
   unordered_map<string, UnaryOp> unary_ops;
-  unary_ops["+"] = pos;
-  unary_ops["-"] = neg;
+  unary_ops["+"] = [](double x) { return +x; };
+  unary_ops["-"] = [](double x) { return -x; };
 
   unordered_map<string, BinaryRule> binary_ops;
-  binary_ops["+"] = {static_cast<BinaryOp>(add), 0};
-  binary_ops["-"] = {static_cast<BinaryOp>(sub), 0};
-  binary_ops["*"] = {static_cast<BinaryOp>(mul), 1};
-  binary_ops["/"] = {static_cast<BinaryOp>(div), 1};
-  binary_ops["^"] = {static_cast<BinaryOp>(pow), 2};
+  binary_ops["+"] = {[](double a, double b) { return a + b; }, 0};
+  binary_ops["-"] = {[](double a, double b) { return a - b; }, 0};
+  binary_ops["*"] = {[](double a, double b) { return a * b; }, 1};
+  binary_ops["/"] = {[](double a, double b) { return a / b; }, 1};
+  binary_ops["^"] = {[](double a, double b) { return std::pow(a, b); }, 2};
 
   RecursiveDescentParser p(unary_ops, binary_ops);
   assert(EQ(p.eval("-+-((--(-+1)))"), -1));

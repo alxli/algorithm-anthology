@@ -267,16 +267,16 @@ void radix_sort(It lo, It hi) {
 
 /*** Example Usage and Output:
 
-mergesort() with default comparisons: 1.32 1.41 1.62 1.73 2.58 2.72 3.14 4.67
-mergesort() with 'compare_as_ints()': 1.41 1.73 1.32 1.62 2.72 2.58 3.14 4.67
+mergesort() with default comparisons: 1.32 1.41 1.62 1.73 2.58 2.72 3.14 4.67 
+mergesort() with 'compare_as_ints()': 1.41 1.73 1.32 1.62 2.72 2.58 3.14 4.67 
 ------
 Sorting five million integers...
-std::sort():  0.355s
-quicksort():  0.426s
-mergesort():  1.263s
-heapsort():   1.093s
-combsort():   0.827s
-radix_sort(): 0.076s
+std::sort():  0.223s
+quicksort():  0.253s
+mergesort():  0.621s
+heapsort():   0.439s
+combsort():   0.365s
+radix_sort(): 0.016s
 
 ***/
 
@@ -317,24 +317,24 @@ int main() {
     assert(sorted(a.begin(), a.end()));
   }
   {  // STL containers work too.
-    vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};
-    quicksort(v.begin(), v.end());
-    assert(sorted(v.begin(), v.end()));
+    vector<int> a{32, 71, 12, 45, 26, 80, 53, 33};
+    quicksort(a.begin(), a.end());
+    assert(sorted(a.begin(), a.end()));
   }
   {  // Reverse iterators work as expected.
-    vector<int> v{32, 71, 12, 45, 26, 80, 53, 33};
-    heapsort(v.rbegin(), v.rend());
-    assert(sorted(v.rbegin(), v.rend()));
+    vector<int> a{32, 71, 12, 45, 26, 80, 53, 33};
+    heapsort(a.rbegin(), a.rend());
+    assert(sorted(a.rbegin(), a.rend()));
   }
   {  // We can sort doubles just as well.
-    vector<double> v{1.1, -5.0, 6.23, 4.123, 155.2};
-    combsort(v.begin(), v.end());
-    assert(sorted(v.begin(), v.end()));
+    vector<double> a{1.1, -5.0, 6.23, 4.123, 155.2};
+    combsort(a.begin(), a.end());
+    assert(sorted(a.begin(), a.end()));
   }
   {  // Must use radix_sort with unsigned values, but sorting in reverse works!
-    vector<unsigned int> v{32, 71, 12, 45, 26, 80, 53, 33};
-    radix_sort(v.rbegin(), v.rend());
-    assert(sorted(v.rbegin(), v.rend()));
+    vector<unsigned int> a{32, 71, 12, 45, 26, 80, 53, 33};
+    radix_sort(a.rbegin(), a.rend());
+    assert(sorted(a.rbegin(), a.rend()));
   }
 
   // Example from: http://www.cplusplus.com/reference/algorithm/stable_sort

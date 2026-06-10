@@ -101,14 +101,38 @@ def format_math_expression(expression):
     constants = {'MOD': r'\text{MOD}'}
     result = []
 
+    def split_function(word):
+        # A known function, optionally with a base subscript such as log_b or log_2. The subscript is
+        # restricted to a single letter or a run of digits so identifiers like convert_base or
+        # max_flow are not mistaken for a subscripted function.
+        subscripted = re.fullmatch(r'([A-Za-z]+)_([A-Za-z]|[0-9]+)', word)
+        if subscripted is not None and subscripted.group(1) in functions:
+            base, sub = subscripted.groups()
+            return functions[base] + '_{' + sub + '}'
+        if word in functions:
+            return functions[word]
+        return None
+
     def format_word(word):
         subscript = re.fullmatch(r'([A-Za-z])([0-9]+)', word)
         if subscript is not None:
             return '{}_{{{}}}'.format(*subscript.groups())
-        return constants.get(word, functions.get(word, word))
+        if word in constants:
+            return constants[word]
+        head = split_function(word)
+        return head if head is not None else word
 
     i = 0
     while i < len(expression):
+        if expression[i] == '`':
+            # Inline code inside a formula (e.g. a variable name) renders as the smaller grey
+            # \inlinecodemath box within math mode.
+            close = expression.find('`', i + 1)
+            if close != -1:
+                # Wrapped in braces so it is a valid single operand after `^` or `_`.
+                result.append(r'{\inlinecodemath{' + escape_latex_code(expression[i + 1:close]) + '}}')
+                i = close + 1
+                continue
         match = re.match(r'[A-Za-z_][A-Za-z_0-9]*', expression[i:])
         if match is None:
             result.append(expression[i])
@@ -127,10 +151,11 @@ def format_math_expression(expression):
                 end += 1
             if depth == 0:
                 argument = format_math_expression(expression[i + 1:end - 1])
+                head = split_function(word)
                 if word == 'sqrt':
                     result.append(r'\sqrt{' + argument + '}')
-                elif word in functions:
-                    result.append(functions[word] + r'\left(' + argument +
+                elif head is not None:
+                    result.append(head + r'\left(' + argument +
                                   r'\right)')
                 else:
                     result.append(word + '(' + argument + ')')
@@ -256,12 +281,37 @@ def format_text(text):
     parts = []
     pos = 0
     while pos < len(text):
-        match = re.search(r'[`$]', text[pos:])
+        match = re.search(r'\bO\(|[`$]', text[pos:])
         if match is None:
             parts.append(format_plain_text(text[pos:], text[pos - 1] if pos else ''))
             break
         start = pos + match.start()
-        delimiter = text[start]
+        token = match.group(0)
+        if token not in ('`', '$'):
+            # A big-O term. Capture the whole balanced O(...) span (including any inline code inside
+            # it) so format_complexity renders it as a single math expression rather than letting an
+            # inner backtick break it apart.
+            depth = 0
+            end = start + 1
+            while end < len(text):
+                if text[end] == '(':
+                    depth += 1
+                elif text[end] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        end += 1
+                        break
+                end += 1
+            if depth == 0:
+                parts.append(format_plain_text(text[pos:start], text[pos - 1] if pos else ''))
+                parts.append(format_complexity(text[start + 2:end - 1]))
+                pos = end
+                continue
+            # Unbalanced parentheses: emit the literal "O(" and keep scanning past it.
+            parts.append(format_plain_text(text[pos:start + 2], text[pos - 1] if pos else ''))
+            pos = start + 2
+            continue
+        delimiter = token
         end = text.find(delimiter, start + 1)
         if end == -1:
             parts.append(format_plain_text(text[pos:], text[pos - 1] if pos else ''))
@@ -271,7 +321,9 @@ def format_text(text):
         if delimiter == '`':
             parts.append(r'\inlinecode{' + escape_latex_code(contents) + '}')
         else:
-            parts.append('$' + contents + '$')
+            # Inline code inside an author-written formula renders as the smaller grey
+            # \inlinecodemath box within the math. Braces keep it a valid `^`/`_` operand.
+            parts.append('$' + re.sub(r'`([^`]*)`', r'{\\inlinecodemath{\1}}', contents) + '$')
         pos = end + 1
     return ''.join(parts)
 
@@ -434,7 +486,12 @@ def gen_chapter(dirname, chapter, chapter_name):
         entries.append(entry)
 
     with open(join(BOOK_PATH, f'chapter{chapter}.tex'), 'w') as fout:
-        fout.write('\\chapter{{{}}}\n'.format(chapter_name.replace('-', ' ')))
+        # \texorpdfstring keeps the body/TOC heading unnumbered (LaTeX adds the number
+        # automatically) while prefixing the number to the PDF bookmark only.
+        chap_name = chapter_name.replace('-', ' ')
+        fout.write(
+            '\\chapter{{\\texorpdfstring{{{0}}}{{{1}. {0}}}}}\n'.format(chap_name, chapter)
+        )
 
         prev_section = None
         for (chapter, section, subsection, name, file) in sorted(entries):
@@ -442,7 +499,11 @@ def gen_chapter(dirname, chapter, chapter_name):
                 continue
             if section != prev_section:
                 section_name = SECTION_NAMES.get((chapter, section), "")
-                fout.write(f'\n\\section{{{section_name}}}\n')
+                # Number the PDF bookmark only; the body/TOC number is added by LaTeX.
+                fout.write(
+                    '\n\\section{{\\texorpdfstring{{{0}}}{{{1}.{2} {0}}}}}\n'.format(
+                        section_name, chapter, section)
+                )
                 fout.write(f'\\setcounter{{section}}{{{section}}}\n')
                 if subsection:
                     fout.write(f'\\setcounter{{subsection}}{{0}}\n')

@@ -2,8 +2,8 @@
 
 Computes one layer of a dynamic programming recurrence whose optimal transition indices are
 monotone. This optimization applies to recurrences of the form
-`dp_cur[i] = min(dp_prev[k] + cost(k, i))`, where the minimizing index for `i` never decreases as
-`i` increases.
+`dp_cur[i] = min(dp_prev[k] + cost(k, i))`, where the minimizing index for $i$ never decreases as
+$i$ increases.
 
 The function below computes `dp_cur[l..r]` by evaluating the midpoint first, then recursing on the
 left half with a restricted upper bound on the optimal `k`, and on the right half with a restricted

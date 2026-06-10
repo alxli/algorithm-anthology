@@ -4,7 +4,7 @@ Perform operations on rational numbers internally represented as two integers: a
 denominator. The template integer type must support streamed input/output, comparisons, and
 arithmetic operations. Overflow is not checked for in internal operations: comparisons and
 arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type
-(such as `__int128`, `BigInt`, or even `Mint`) if the values may grow large.
+(such as `__int128`, or even `BigInt`) if the values may grow large.
 
 - `Rational(n)` constructs a rational number with numerator `n` and denominator 1.
 - `Rational(n, d)` constructs a rational number with numerator `n` and denominator `d`.
@@ -187,10 +187,10 @@ class Rational {
 #include <cassert>
 #include <cmath>
 
-int main() {
-#define EQ(a, b) (fabs((a) - (b)) <= 1E-9)
-  using Rational = Rational<long long>;
+#define EQ(a, b) (fabs((a) - (b)) <= 1e-9)
 
+int main() {
+  using Rational = Rational<long long>;
   assert(Rational(-21, 1) % 2 == -1);
   Rational r(Rational(-53, 10) % Rational(-17, 10));
   assert(EQ(r.to_ldouble(), fmod(-5.3, -1.7)));

@@ -5,9 +5,8 @@ stores partial prefix sums: each `tree[i]` covers the block of indices ending at
 the lowest set bit of `i`. Updating one value adds to O(log n) covering blocks, and querying a
 prefix sum walks through O(log n) disjoint blocks.
 
-This implementation uses 1-based array indices, so valid indices are from 1 to `n`, inclusive.
-
-- `initialize(n)` initializes array indices `1` to `n` to 0.
+- `initialize(n)` constructs an array of size `n` with 1-based indices from 1 to `n`, inclusive,
+  and all values initialized to 0.
 - `vals[i]` stores the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `set(i, x)` assigns the value at index `i` to `x`.

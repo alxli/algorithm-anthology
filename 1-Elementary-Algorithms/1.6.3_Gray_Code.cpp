@@ -6,7 +6,7 @@ on a single bit flip: enumerating subsets while incrementally maintaining a valu
 only one bit may toggle at a time, and constructions like Hamiltonian paths on the hypercube.
 
 The `k`-th Gray code is obtained from the ordinary binary value `k` by `k ^ (k >> 1)`, a bijection
-on `[0, 2^n)`. Its inverse recovers the rank of a given Gray code, which tells how many flips into
+on $[0, 2^n)$. Its inverse recovers the rank of a given Gray code, which tells how many flips into
 the sequence a mask sits.
 
 - `gray_code(k)` returns the `k`-th mask in Gray code order.

@@ -6,7 +6,7 @@ and idempotent, meaning `combine(x, x) == x`. The canonical examples are "min", 
 the bitwise "and" and "or".
 
 For each level $j$, the entry `dp[j][i]` holds the result of `combine()` over the half-open range
-`[i, i + 2^j)`, built by combining two ranges of length $2^{j-1}$. A query over `[lo, hi]` is
+$[i, i + 2^j)$, built by combining two ranges of length $2^{j-1}$. A query over `[lo, hi]` is
 answered by combining the two overlapping ranges of length $2^j$ that are anchored at `lo` and at
 `hi`, where $2^j$ is the largest power of two not exceeding the length of the range. Because these
 two ranges overlap whenever the query length is not a power of two, the elements in the overlap are
@@ -18,7 +18,7 @@ The query operation is defined by an associative and idempotent function `combin
 default code below returns the "min" of the range; for "gcd", `combine(a, b)` should return
 `gcd(a, b)`.
 
-- `SparseTable(lo, hi)` builds the table from the range `[lo, hi)` of a random-access iterator.
+- `SparseTable(lo, hi)` builds the table from two random-access iterators.
 - `size()` returns the size of the array.
 - `query(lo, hi)` returns `combine()` applied to all indices from `lo` to `hi`, inclusive.
 

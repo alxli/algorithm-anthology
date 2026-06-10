@@ -5,9 +5,10 @@ most common array preprocessing tools, and also appears as a building block for 
 difference arrays, and two-dimensional grids.
 
 - `prefix_sums(a)` returns array `pref` with `pref[0] = 0` and `pref[i + 1] = a[0] + ... + a[i]`.
-- `range_sum(pref, lo, hi)` returns the sum of the half-open range `[lo, hi)`.
+- `range_sum(pref, lo, hi)` returns the sum of the inclusive range `[lo, hi]`.
 - `prefix_sums_2d(a)` returns a two-dimensional prefix sum table for matrix `a`.
-- `rectangle_sum(pref, r1, c1, r2, c2)` returns the sum of rows `[r1, r2)` and columns `[c1, c2)`.
+- `rectangle_sum(pref, r1, c1, r2, c2)` returns the sum of the rectangle with top left at `(r1, c1)`
+  and bottom right at `(r2, c2)`.
 
 Time Complexity:
 - O(n) per call to `prefix_sums(a)`, where $n$ is the array size.
@@ -31,7 +32,7 @@ std::vector<long long> prefix_sums(const std::vector<int> &a) {
 }
 
 long long range_sum(const std::vector<long long> &pref, int lo, int hi) {
-  return pref[hi] - pref[lo];
+  return pref[hi + 1] - pref[lo];
 }
 
 std::vector<std::vector<long long>> prefix_sums_2d(const std::vector<std::vector<int>> &a) {
@@ -48,7 +49,7 @@ std::vector<std::vector<long long>> prefix_sums_2d(const std::vector<std::vector
 long long rectangle_sum(
     const std::vector<std::vector<long long>> &pref, int r1, int c1, int r2, int c2
 ) {
-  return pref[r2][c2] - pref[r1][c2] - pref[r2][c1] + pref[r1][c1];
+  return pref[r2 + 1][c2 + 1] - pref[r1][c2 + 1] - pref[r2 + 1][c1] + pref[r1][c1];
 }
 
 /*** Example Usage ***/
@@ -58,12 +59,17 @@ using namespace std;
 
 int main() {
   vector<int> a{3, -1, 4, 1, 5};
-  vector<long long> pref = prefix_sums(a);
-  assert(range_sum(pref, 0, 5) == 12);
-  assert(range_sum(pref, 1, 4) == 4);
+  auto pref = prefix_sums(a);
+  assert(range_sum(pref, 0, 4) == 12);  // Whole array a[0..4]
+  assert(range_sum(pref, 1, 3) == 4);   // -1 + 4 + 1
 
-  vector<vector<int>> grid{{1, 2, 3}, {4, 5, 6}};
-  vector<vector<long long>> ps = prefix_sums_2d(grid);
-  assert(rectangle_sum(ps, 0, 1, 2, 3) == 16);
+  // clang-format off
+  vector<vector<int>> grid{
+    {1, 2, 3},
+    {4, 5, 6}
+  };
+  // clang-format on
+  auto pre2 = prefix_sums_2d(grid);
+  assert(rectangle_sum(pre2, 0, 1, 1, 2) == 16);  // rows 0..1, cols 1..2
   return 0;
 }

@@ -9,9 +9,9 @@ is responsible for verifying the quadrangle inequality and monotonicity assumpti
 `cost(l, r)`.
 
 - `knuth_interval_dp(n, cost, &opt)` computes minimum costs for all half-open intervals `[l, r)`
-  over `n` items.
-- `cost(l, r)` must return the interval cost added after choosing the best split.
-- If `opt` is not `nullptr`, it is filled with the chosen split points.
+  over `n` items. The template parameter `cost` must be callable such that `cost(l, r)` returns the
+  interval cost added after choosing the best split. If `opt` is not `nullptr`, it is filled with
+  the chosen split points.
 
 Time Complexity:
 - O(n^2) calls to `cost(l, r)` and O(n^2) candidate split checks.

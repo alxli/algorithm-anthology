@@ -159,8 +159,8 @@ Values: 5 5 5 1 5
 using namespace std;
 
 int main() {
-  vector<int> arr{6, -2, 1, 8, 10};
-  LazySegTree<int> t(arr.begin(), arr.end());
+  vector<int> a{6, -2, 1, 8, 10};
+  LazySegTree<int> t(a.begin(), a.end());
   t.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < t.size(); i++) {

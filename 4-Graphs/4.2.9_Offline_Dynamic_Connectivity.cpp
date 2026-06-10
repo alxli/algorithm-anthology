@@ -24,8 +24,9 @@ O(log n) rather than near-constant time.
   `count_components()` query in the order issued, the number of connected components at that time.
 
 Time Complexity:
-- O((T + m log T) log n) for `solve()`, where $T$ is the number of operations, $m$ is the number of
-  edge insertions, and $n$ is the number of vertices.
+- O((T + m log T) log n) for `solve()`, where $T$ is the total number of operations (`add_edge`,
+  `remove_edge`, and `count_components` combined), $m$ is the number of `add_edge` operations, and
+  $n$ is the number of vertices.
 - O(1) amortized per call to `add_edge()`, `remove_edge()`, and `count_components()`.
 
 Space Complexity:
@@ -42,9 +43,11 @@ Space Complexity:
 
 class OfflineDynamicConnectivity {
   static const int ADD = 0, REMOVE = 1, QUERY = 2;
+
   struct Op {
     int type, u, v;
   };
+
   struct Edge {
     int u, v;
   };

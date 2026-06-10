@@ -7,15 +7,10 @@ fractional via the `/2`). `same_side()` and `point_in_triangle()` do all arithme
 own coordinate type and are exact for integer points: they reduce each cross product to a sign
 before combining, so no precision is lost and cross products are never multiplied together.
 
-Overflow warning: each individual cross product is still on the order of the squared coordinate
-magnitude, so for integer point types use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) once
-coordinates exceed a few tens of thousands.
-
 Note: with an integer point type, coordinates must be integers - fractional literals like `-2.44`
-cannot be represented. Use a
-floating-point point type for fractional coordinates.
+cannot be represented. Use a floating-point point type for fractional coordinates.
 
-- `triangle_area(a, b, c)` returns the area of the triangle $abc$.
+- `triangle_area(a, b, c)` returns the area of the triangle with vertices `a`, `b`, and `c`.
 - `triangle_area_sides(s1, s2, s3)` returns the area of a triangle with side lengths `s1`, `s2`, and
   `s3`. The given lengths must be non-negative and form a valid triangle.
 - `triangle_area_medians(m1, m2, m3)` returns the area of a triangle with medians of lengths `m1`,
@@ -27,9 +22,13 @@ floating-point point type for fractional coordinates.
 - `same_side(p1, p2, a, b)` returns whether points `p1` and `p2` lie on the same side of the line
   containing points `a` and `b`. If one or both points lie exactly on the line, then the result will
   depend on the setting of `EDGE_IS_SAME_SIDE`.
-- `point_in_triangle(p, a, b, c)` returns whether point `p` lies within the triangle `abc`. If the
-  point lies on or close to an edge (by roughly `EPS`), then the result will depend on the setting
-  of `EDGE_IS_SAME_SIDE` in the function above.
+- `point_in_triangle(p, a, b, c)` returns whether point `p` lies within the triangle with vertices
+  `a`, `b`, and `c`. If the point lies on or close to an edge (by roughly `EPS`), then the result
+  will depend on the setting of `EDGE_IS_SAME_SIDE` in the function above.
+
+Overflow warning: each individual cross product is still on the order of the squared coordinate
+magnitude, so for integer point types use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) once
+coordinates exceed ~46000.
 
 Time Complexity:
 - O(1) for all operations.

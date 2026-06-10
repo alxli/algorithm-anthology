@@ -1,21 +1,25 @@
 /*
 
-Given a convex polygon and two points specifying an infinite line, cuts off the right part and
-returns the resulting left part.
+Given a convex polygon and a directed line from `p` to `q`, clips the polygon to the closed left
+half-plane of that line.
 
-- `convex_cut(lo, hi, p, q)` returns the left-side polygon in clockwise order after cutting with the
-  line through `p` and `q`. The function is templated on the input point type. The `turn`
-  classification uses cross products and is exact for integer-coordinate points; the edge-cut
-  intersection point uses floating-point arithmetic, and the output `Point` always has `double`
-  coordinates. Overflow warning: those cross products grow like the squared coordinate magnitude, so
-  for integer point types use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) for large
-  coordinates.
+- `convex_cut(lo, hi, p, q)` returns the portion of the polygon lying on or to the left of the
+  directed line `p -> q`. The input range `[lo, hi)` must contain the vertices of a convex polygon
+  in boundary order, either clockwise or counterclockwise. The returned polygon preserves that
+  boundary order.
+
+The function is templated on the input point type. Side classification is done with cross products.
+For integer-coordinate inputs, classification is exact only if the intermediate products do not
+overflow. Edge-line intersection points are computed in floating point, and the returned polygon
+uses `Point` with `double` coordinates.
+
+If `p == q`, the cutting line is invalid and `std::runtime_error` is thrown.
 
 Time Complexity:
 - O(n) per call to `convex_cut(lo, hi, p, q)`, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
-- O(n) auxiliary for storage of the resulting convex cut.
+- O(n) auxiliary space for the returned polygon.
 
 */
 
@@ -33,7 +37,7 @@ const double EPS = 1e-9;
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
 };
 
 template<class PtA, class PtB, class PtO>

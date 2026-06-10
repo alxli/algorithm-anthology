@@ -13,7 +13,7 @@ the maximum node index passed to `add_edge()` so far.
 - `Graph(directed)` constructs an empty graph, directed if `directed` is true (the default) and
   undirected otherwise.
 - `nodes()` returns the current number of nodes.
-- `operator[](n)` returns a reference to the adjacency list (a `std::vector<int>`) of node `n`.
+- `operator[n]` returns a reference to the adjacency list (a `std::vector<int>`) of node `n`.
 - `add_edge(u, v)` adds an edge from `u` to `v`, plus the reverse edge if the graph is undirected,
   growing the node count to accommodate the larger index if necessary.
 - `dfs(start, f)` runs a depth-first search from node `start`, calling `f(n)` on each node `n` in

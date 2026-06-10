@@ -20,10 +20,10 @@ elements, where order does not matter.
   work if the corresponding $n$ items are not distinct (in that case, duplicate combinations will be
   generated).
 - `combination_by_rank(n, k, r)` returns the combination of $k$ distinct integers in the range
-  $[0, n)$ that is lexicographically ranked $r$, where $r$ is a zero-based rank in the range
+  $[0, n)$ that is lexicographically ranked $r$, where $r$ is a 0-based rank in the range
   $[0, \binom{n}{k})$.
-- `rank_by_combination(n, a)` returns an integer representing the zero-based rank of combination
-  `a`, which must contain sorted distinct integers in $[0, n)$.
+- `rank_by_combination(n, a)` returns an integer representing the 0-based rank of combination `a`,
+  which must contain sorted distinct integers in $[0, n)$.
 - `next_combination_with_repeats(n, a)` rearranges `a` to become the next lexicographically greater
   combination of not necessarily distinct integers in the range $[0, n)$. The vector `a` must be
   sorted. Note that there is a total of $n \mathbin{\text{multichoose}} k$ combinations if

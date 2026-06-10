@@ -1,22 +1,29 @@
 /*
 
-Given a list of points, finds the closest pair using divide and conquer.
+Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer
+algorithm.
 
-- `closest_pair(lo, hi, &res)` returns the minimum squared distance between any two points in
-  `[lo, hi)`. The input range is sorted after the call. The closest pair is stored into `res` if
-  non-null. The function is templated on the iterator type. The returned minimum squared distance
-  preserves the coordinate arithmetic type, so integer-coordinate inputs stay exact. The result pair
-  contains the original point type.
+- `closest_pair(lo, hi, &res)` returns the minimum squared distance between any two points in the
+  range `[lo, hi)`, where `lo` and `hi` must be random-access iterators. The input range is
+  reordered during the computation and is sorted by y-coordinate on return. If `res` is non-null,
+  one closest pair is stored there in lexicographic order. The function is templated on the point
+  type and works with any type exposing numeric `.x` and `.y` members.
 
-Overflow warning: the squared distance grows like the squared coordinate magnitude. For integer
-inputs use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) once coordinates exceed a few tens of
-thousands, or the 32-bit products overflow.
+The returned distance preserves the coordinate arithmetic type. For integer-coordinate inputs, the
+result is therefore an exact squared distance provided intermediate products do not overflow. The
+returned pair contains the original point type.
+
+Overflow warning: squared distances grow like the square of the coordinate magnitude. For integer
+point types, use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) when coordinates may exceed a
+few tens of thousands.
 
 Time Complexity:
-- O(n log^2 n) per call, where $n$ is the distance between `lo` and `hi`.
+- O(n log^2 n) per call to `closest_pair(lo, hi, &res)`, where n is the distance between `lo` and
+  `hi`.
 
 Space Complexity:
-- O(n log^2 n) auxiliary stack space.
+- O(n) auxiliary heap space.
+- O(log n) recursion stack space.
 
 */
 
@@ -27,57 +34,80 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-const double EPS = 1e-9;
-
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+template<class Pt>
+auto sqdist(const Pt &a, const Pt &b) {
+  auto dx = a.x - b.x, dy = a.y - b.y;
+  return dx * dx + dy * dy;  // Overflow warning!
+}
 
 template<class It, class T>
-T closest_pair(
+T closest_pair_rec(
     It lo, It hi,
     std::pair<
         typename std::iterator_traits<It>::value_type,
-        typename std::iterator_traits<It>::value_type> *res = nullptr,
-    T mindist = std::numeric_limits<T>::max(), bool sort_x = true
+        typename std::iterator_traits<It>::value_type> *res
 ) {
   using Pt = typename std::iterator_traits<It>::value_type;
-  if (lo == hi) {
-    return mindist;
+  int n = hi - lo;
+  if (n < 2) {
+    return std::numeric_limits<T>::max();
   }
-  if (sort_x) {
-    std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.x != b.x ? a.x < b.x : a.y < b.y; });
+  std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.x != b.x ? a.x < b.x : a.y < b.y; });
+  if (n <= 3) {
+    T best = std::numeric_limits<T>::max();
+    for (It i = lo; i != hi; ++i) {
+      for (It j = i + 1; j != hi; ++j) {
+        T d = sqdist(*i, *j);
+        if (d < best) {
+          best = d;
+          if (res != nullptr) {
+            *res = std::minmax(*i, *j);
+          }
+        }
+      }
+    }
+    return best;
   }
-  It mid = lo + (hi - lo) / 2;
+  It mid = lo + n / 2;
   auto midx = mid->x;
-  T d1 = closest_pair(lo, mid, res, mindist, false);
-  mindist = std::min(mindist, d1);
-  T d2 = closest_pair(mid + 1, hi, res, mindist, false);
-  mindist = std::min(mindist, d2);
-  std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; });
-  std::vector<It> t;
-  for (It it = lo; it != hi; ++it) {
-    auto dx = it->x - midx;
-    if (dx * dx < mindist) {
-      t.push_back(it);
+  std::pair<Pt, Pt> lres, rres;
+  T dl = closest_pair_rec<It, T>(lo, mid, &lres);
+  T dr = closest_pair_rec<It, T>(mid, hi, &rres);
+  T best;
+  if (dl <= dr) {
+    best = dl;
+    if (res && dl != std::numeric_limits<T>::max()) {
+      *res = lres;
+    }
+  } else {
+    best = dr;
+    if (res && dr != std::numeric_limits<T>::max()) {
+      *res = rres;
     }
   }
-  for (int i = 0; i < static_cast<int>(t.size()); i++) {
-    for (int j = i + 1; j < static_cast<int>(t.size()); j++) {
-      const auto &a = *t[i], &b = *t[j];
-      auto dy = b.y - a.y;
-      if (dy * dy >= mindist) {
-        break;
-      }
-      auto dx = a.x - b.x;
-      auto dist = dx * dx + dy * dy;
-      if (mindist > dist) {
-        mindist = dist;
-        if (res) {
-          *res = {a, b};
+  std::sort(lo, hi, [](const Pt &a, const Pt &b) { return a.y != b.y ? a.y < b.y : a.x < b.x; });
+  std::vector<It> strip;
+  for (It it = lo; it != hi; ++it) {
+    auto dx = it->x - midx;
+    if (dx * dx < best) {
+      strip.push_back(it);
+    }
+  }
+  for (int i = 0; i < (int)strip.size(); i++) {
+    for (int j = i + 1; j < (int)strip.size(); j++) {
+      auto dy = strip[j]->y - strip[i]->y;
+      if (dy * dy >= best) break;
+
+      T d = sqdist(*strip[i], *strip[j]);
+      if (d < best) {
+        best = d;
+        if (res != nullptr) {
+          *res = std::minmax(*strip[i], *strip[j]);
         }
       }
     }
   }
-  return mindist;
+  return best;
 }
 
 template<class It>
@@ -87,8 +117,8 @@ auto closest_pair(
         typename std::iterator_traits<It>::value_type,
         typename std::iterator_traits<It>::value_type> *res = nullptr
 ) {
-  using T = decltype((lo->x - lo->x) * (lo->x - lo->x) + (lo->y - lo->y) * (lo->y - lo->y));
-  return closest_pair(lo, hi, res, std::numeric_limits<T>::max(), true);
+  using T = decltype(sqdist(*lo, *lo));
+  return closest_pair_rec<It, T>(lo, hi, res);
 }
 
 /*** Example Usage ***/
@@ -97,16 +127,21 @@ auto closest_pair(
 #include <vector>
 using namespace std;
 
+const double EPS = 1e-9;
+#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+
 struct Point {
   double x, y;
   Point(double x = 0, double y = 0) : x(x), y(y) {}
   bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
 };
 
 struct PointI {
   int x, y;
   PointI(int x = 0, int y = 0) : x(x), y(y) {}
   bool operator==(const PointI &p) const { return x == p.x && y == p.y; }
+  bool operator<(const PointI &o) const { return x != o.x ? x < o.x : y < o.y; }
 };
 
 int main() {

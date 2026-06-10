@@ -1,6 +1,6 @@
-\chapter{Strings}
+\chapter{\texorpdfstring{Strings}{3. Strings}}
 
-\section{String Utilities}
+\section{\texorpdfstring{String Utilities}{3.1 String Utilities}}
 \setcounter{section}{1}
 Common string functions, many of which already have standard STL equivalents. These are written for educational purposes, without heavy optimizations (often depending on certain \inlinecode{std::string} functions that have unspecified complexity).
 
@@ -15,6 +15,7 @@ Common string functions, many of which already have standard STL equivalents. Th
 
 \begin{lstlisting}[language=C++]
 #include <cctype>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -27,6 +28,8 @@ Integer Conversion:
   \item \inlinecode{to\_str(i)} returns the string representation of integer \inlinecode{i}, much like \inlinecode{std::to\_string()}.
   \item \inlinecode{to\_int(s)} returns the integer representation of string \inlinecode{s}, much like \inlinecode{std::atoi()}, except here we handle special cases of overflow by throwing an exception.
   \item \inlinecode{itoa(value, \&str, base)} implements the non-standard C function which converts \inlinecode{value} into a C string, storing it into pointer \inlinecode{str} in the given \inlinecode{base}. For more generalized base conversion, see the math utilities section.
+  \item \inlinecode{is\_integer(s)} returns whether \inlinecode{s} is a valid base-10 integer literal with an optional sign.
+  \item \inlinecode{is\_number(s)} returns whether \inlinecode{s} is a decimal number literal with optional sign, decimal point, and exponent.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -68,6 +71,52 @@ char *itoa(int value, char *str, int base = 10) {
     *ptr-- = *ptr1;
   }
   return str;
+}
+
+bool is_integer(const string &s) {
+  int i = (s.empty() || (s[0] != '-' && s[0] != '+')) ? 0 : 1;
+  if (i == static_cast<int>(s.size())) {
+    return false;
+  }
+  for (; i < static_cast<int>(s.size()); i++) {
+    if (!isdigit(static_cast<unsigned char>(s[i]))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool is_number(const string &s) {
+  int i = (s.empty() || (s[0] != '-' && s[0] != '+')) ? 0 : 1;
+  bool seen_digit = false, seen_dot = false;
+  for (; i < static_cast<int>(s.size()); i++) {
+    unsigned char c = s[i];
+    if (isdigit(c)) {
+      seen_digit = true;
+    } else if (c == '.' && !seen_dot) {
+      seen_dot = true;
+    } else {
+      break;
+    }
+  }
+  if (!seen_digit) {
+    return false;
+  }
+  if (i < static_cast<int>(s.size()) && (s[i] == 'e' || s[i] == 'E')) {
+    i++;
+    if (i < static_cast<int>(s.size()) && (s[i] == '-' || s[i] == '+')) {
+      i++;
+    }
+    bool seen_exp_digit = false;
+    for (; i < static_cast<int>(s.size()); i++) {
+      if (!isdigit(static_cast<unsigned char>(s[i]))) {
+        return false;
+      }
+      seen_exp_digit = true;
+    }
+    return seen_exp_digit;
+  }
+  return i == static_cast<int>(s.size());
 }
 \end{lstlisting}
 Case Conversion:
@@ -115,6 +164,7 @@ Stripping:
   \item \inlinecode{lstrip(s)} strips the left side of \inlinecode{s} in-place (that is, the input is modified) using the given delimiters and returns a reference to the stripped string.
   \item \inlinecode{rstrip(s)} strips the right side of \inlinecode{s} in-place using the given delimiters and returns a reference to the stripped string.
   \item \inlinecode{strip(s)} strips both sides of \inlinecode{s} in-place and returns a reference to the stripped string.
+  \item \inlinecode{ltrimmed(s)}, \inlinecode{rtrimmed(s)}, and \inlinecode{trimmed(s)} do not modify \inlinecode{s} and returns stripped copies.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -137,15 +187,46 @@ string &rstrip(string &s, const string &delim = " \n\t\v\f\r") {
 string &strip(string &s, const string &delim = " \n\t\v\f\r") {
   return lstrip(rstrip(s));
 }
+
+string ltrimmed(string s, const string &delim = " \n\t\v\f\r") {
+  return lstrip(s, delim);
+}
+
+string rtrimmed(string s, const string &delim = " \n\t\v\f\r") {
+  return rstrip(s, delim);
+}
+
+string trimmed(string s, const string &delim = " \n\t\v\f\r") {
+  return strip(s, delim);
+}
 \end{lstlisting}
 Find and Replace:
 
 \begin{compactitem}
+  \item \inlinecode{starts\_with(s, prefix)} returns whether \inlinecode{s} begins with \inlinecode{prefix}.
+  \item \inlinecode{ends\_with(s, suffix)} returns whether \inlinecode{s} ends with \inlinecode{suffix}.
+  \item \inlinecode{contains(s, needle)} returns whether \inlinecode{needle} occurs in \inlinecode{s}.
   \item \inlinecode{find\_all(haystack, needle)} returns a vector of all positions where the string \inlinecode{needle} appears in the string \inlinecode{haystack}.
   \item \inlinecode{replace(s, old, replacement)} returns a copy of \inlinecode{s} with all occurrences of the string \inlinecode{old} replaced with the given \inlinecode{replacement}.
+  \item \inlinecode{regex\_find\_all(s, pattern)} returns every substring of \inlinecode{s} matched by \inlinecode{pattern}.
+  \item \inlinecode{regex\_groups(s, pattern)} returns the capture groups of the first match of \inlinecode{pattern} in \inlinecode{s}, excluding the full match. If there is no match, returns an empty vector.
+  \item \inlinecode{regex\_replace\_all(s, pattern, replacement)} returns a copy of \inlinecode{s} with every regex match replaced by \inlinecode{replacement}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+bool starts_with(const string &s, const string &prefix) {
+  return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
+}
+
+bool ends_with(const string &s, const string &suffix) {
+  return s.size() >= suffix.size() &&
+         s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+bool contains(const string &s, const string &needle) {
+  return s.find(needle) != string::npos;
+}
+
 std::vector<int> find_all(const string &haystack, const string &needle) {
   std::vector<int> res;
   size_t pos = haystack.find(needle, 0);
@@ -168,14 +249,38 @@ string replace(const string &s, const string &old, const string &replacement) {
   }
   return res;
 }
+
+std::vector<string> regex_find_all(const string &s, const string &pattern) {
+  std::regex re(pattern);
+  return {std::sregex_token_iterator(s.begin(), s.end(), re, 0), std::sregex_token_iterator()};
+}
+
+std::vector<string> regex_groups(const string &s, const string &pattern) {
+  std::smatch match;
+  if (!std::regex_search(s, match, std::regex(pattern))) {
+    return {};
+  }
+  std::vector<string> res;
+  for (int i = 1; i < static_cast<int>(match.size()); i++) {
+    res.push_back(match[i].str());
+  }
+  return res;
+}
+
+string regex_replace_all(const string &s, const string &pattern, const string &replacement) {
+  return std::regex_replace(s, std::regex(pattern), replacement);
+}
 \end{lstlisting}
 Joining and Splitting:
 
 \begin{compactitem}
   \item \inlinecode{join(v, delim)} returns the strings in vector \inlinecode{v} concatenated, separated by the given delimiter.
+  \item \inlinecode{pad\_left(s, width, ch)} returns \inlinecode{s} left-padded with \inlinecode{ch} until its length is at least \inlinecode{width}.
+  \item \inlinecode{pad\_right(s, width, ch)} returns \inlinecode{s} right-padded with \inlinecode{ch} until its length is at least \inlinecode{width}.
   \item \inlinecode{split(s, char delim)} returns a vector of tokens of \inlinecode{s}, split on a single character delimiter. Empty tokens are skipped, so \inlinecode{split("a::b", \textquotesingle{}:\textquotesingle{})} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
   \item \inlinecode{split(s, string delim)} returns a vector of tokens of \inlinecode{s}, split on a set of many possible single character delimiters. All characters of \inlinecode{delim} will be removed from \inlinecode{s}, and the remaining token(s) of \inlinecode{s} will be added sequentially to a vector and returned. As with the first version, empty tokens are skipped. For example, \inlinecode{split("a::b", ":")} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
   \item \inlinecode{explode(s, delim)} returns a vector of tokens of \inlinecode{s}, split on the entire delimiter string \inlinecode{delim}. Unlike the \inlinecode{split()} functions above, \inlinecode{delim} is treated as a contiguous boundary string, not merely a set of possible boundary characters. This will not skip empty tokens. For example, \inlinecode{explode("a::::b", "::")} yields \inlinecode{\{"a", "", "b"\}}, not \inlinecode{\{"a", "b"\}}.
+  \item \inlinecode{explode(s, char delim)} is the single-character delimiter version that also preserves empty tokens.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -186,6 +291,16 @@ string join(const std::vector<string> &v, const string &delim = " ") {
     res += v[i];
   }
   return res;
+}
+
+string pad_left(const string &s, int width, char ch = ' ') {
+  int pad = width - static_cast<int>(s.size());
+  return pad > 0 ? string(pad, ch) + s : s;
+}
+
+string pad_right(const string &s, int width, char ch = ' ') {
+  int pad = width - static_cast<int>(s.size());
+  return pad > 0 ? s + string(pad, ch) : s;
 }
 
 std::vector<string> split(const string &s, char delim) {
@@ -227,6 +342,17 @@ std::vector<string> explode(const string &s, const string &delim) {
   res.push_back(s.substr(last));
   return res;
 }
+
+std::vector<string> explode(const string &s, char delim) {
+  std::vector<string> res;
+  size_t last = 0, next = 0;
+  while ((next = s.find(delim, last)) != string::npos) {
+    res.push_back(s.substr(last, next - last));
+    last = next + 1;
+  }
+  res.push_back(s.substr(last));
+  return res;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -241,6 +367,8 @@ int main() {
   assert(string(itoa(1750, buffer.data(), 10)) == "1750");
   assert(string(itoa(1750, buffer.data(), 16)) == "6d6");
   assert(string(itoa(1750, buffer.data(), 2)) == "11011010110");
+  assert(is_integer("-123") && !is_integer("12.3"));
+  assert(is_number("-.5e+2") && is_number("123.") && !is_number("1e"));
 
   assert(to_upper("Hello world") == "HELLO WORLD");
   assert(to_lower("Hello World") == "hello world");
@@ -250,28 +378,42 @@ int main() {
   string t = s;
   assert(lstrip(s) == "abc \n");
   assert(rstrip(s) == strip(t));
+  assert(trimmed(" \t abc \n") == "abc");
 
   vector<int> pos;
   pos.push_back(0);
   pos.push_back(7);
+  assert(starts_with("abracadabra", "abra"));
+  assert(ends_with("abracadabra", "dabra"));
+  assert(contains("abracadabra", "cad"));
   assert(find_all("abracadabra", "ab") == pos);
   assert(replace("abcdabba", "ab", "00") == "00cd00ba");
+  assert(join(regex_find_all("a12b345", "[0-9]+"), "|") == "12|345");
+  assert(join(regex_groups("abc-123", "([a-z]+)-([0-9]+)"), "|") == "abc|123");
+  assert(regex_replace_all("a12b345", "[0-9]+", "#") == "a#b#");
 
+  assert(pad_left("42", 5, '0') == "00042");
+  assert(pad_right("hi", 4, '.') == "hi..");
   assert(join(split("a\nb\ncde\nf", '\n'), "|") == "a|b|cde|f");  // split v1
   assert(join(split("a::b", ':'), "|") == "a|b");                 // split v1 skips empty tokens
   assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");   // split v2
   assert(join(explode("a..b.cde....f", ".."), "|") == "a|b.cde||f");
+  assert(join(explode("a::b:", ':'), "|") == "a||b|");
   return 0;
 }
 \end{lstlisting}
 
-\section{Hashing}
+\section{\texorpdfstring{Hashing}{3.2 Hashing}}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Hash Functions}
-Provides a small library of non-cryptographic hash functions and hash functors for common contest keys. These helpers are useful for fingerprinting values, combining keys, seeding randomized algorithms, and defining \inlinecode{std::unordered\_map} keys for pairs and vectors. They are not suitable for passwords, signatures, or adversarial security.
+Provides a small library of non-cryptographic hash functions and hash functors for common contest keys. These helpers are useful for fingerprinting values, combining keys, seeding randomized algorithms, and defining \inlinecode{std::unordered\_map} keys for pairs, tuples, and vectors. They are not suitable for passwords, signatures, or adversarial security.
 
 The standalone functions below are deterministic. The \inlinecode{IntHasher} functor adds a per-run random seed before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test contests.
+
+The composite hashers separate the mixing primitive (\inlinecode{mix64}/\inlinecode{hash\_combine64}) from each type's traversal of its parts, so swapping in a different mixing function only requires editing one place.
+
+FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Starting from a fixed offset basis, it XORs each byte into the accumulator and then multiplies by a fixed prime; the \inlinecode{1a} variant XORs before multiplying, which mixes slightly better than the original FNV-1. Reach for it when the key is a string or byte buffer, whereas \inlinecode{mix32} and \inlinecode{mix64} are finalizers for a single fixed-width integer. Its appeal is simplicity: a few lines, no lookup tables, and no seed, with distribution good enough for the short keys common in contests. For very long inputs a block hash such as MurmurHash or xxHash is faster and mixes more thoroughly, and because FNV-1a is unseeded it offers no protection against adversarial inputs.
 
 \begin{compactitem}
   \item \inlinecode{mix32(x)} mixes a 32-bit unsigned integer \inlinecode{x}, using the MurmurHash3 finalizer.
@@ -281,8 +423,10 @@ The standalone functions below are deterministic. The \inlinecode{IntHasher} fun
   \item \inlinecode{hash\_float(x)} and \inlinecode{hash\_double(x)} hash floating-point bit patterns, normalizing \inlinecode{-0.0} to \inlinecode{0.0}. Different NaN representations may still hash differently.
   \item \inlinecode{hash\_string\_fnv1a32(s)} and \inlinecode{hash\_string\_fnv1a64(s)} compute FNV-1a hashes of string \inlinecode{s}.
   \item \inlinecode{hash\_range32(first, last)} and \inlinecode{hash\_range64(first, last)} hash a sequence of integer-like values.
-  \item \inlinecode{IntHasher\textless{}Int\textgreater{}}, \inlinecode{PairHasher\textless{}A, B\textgreater{}}, and \inlinecode{VectorHasher\textless{}T\textgreater{}} are hash functors for \inlinecode{std::unordered\_map} and \inlinecode{std::unordered\_set}.
-  \item \inlinecode{GenericHasher\textless{}T\textgreater{}} recursively handles integer, pair, and vector keys, and falls back to \inlinecode{std::hash\textless{}T\textgreater{}} for other hashable types.
+  \item \inlinecode{PairIntHasher} is a self-contained hasher for \inlinecode{std::pair\textless{}int, int\textgreater{}} keys, written without any dependency on the templates below so that it can be copy-pasted on its own.
+  \item \inlinecode{IntHasher\textless{}Int\textgreater{}}, \inlinecode{PairHasher\textless{}A, B\textgreater{}}, \inlinecode{TupleHasher\textless{}Ts...\textgreater{}}, and \inlinecode{VectorHasher\textless{}T\textgreater{}} are hash functors passed as the third template argument of \inlinecode{std::unordered\_map} or \inlinecode{std::unordered\_set}.
+  \item \inlinecode{GenericHasher\textless{}T\textgreater{}} recursively handles integer, pair, tuple, and vector keys, and falls back to \inlinecode{std::hash\textless{}T\textgreater{}} for other hashable types.
+  \item Specializations of \inlinecode{std::hash} for \inlinecode{std::pair} and \inlinecode{std::tuple} are also provided, letting those keys be used in \inlinecode{std::unordered\_map}/\inlinecode{std::unordered\_set} without an explicit hasher argument. Specializing \inlinecode{std::hash} for purely standard types is technically nonstandard, so the functor forms above are the portable alternative. (Vector keys are left to the functors to avoid clashing with the standard \inlinecode{std::hash\textless{}std::vector\textless{}bool\textgreater{}\textgreater{}}.)
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -301,6 +445,7 @@ The standalone functions below are deterministic. The \inlinecode{IntHasher} fun
 #include <cstring>
 #include <functional>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
@@ -406,14 +551,31 @@ struct IntHasher {
 template<class T>
 struct GenericHasher;
 
+// Use std::hash by default.
 template<class T, bool IsInteger>
 struct ScalarHasher {
   std::size_t operator()(const T &x) const { return std::hash<T>()(x); }
 };
 
+// Optional: Use our seeded hasher for ints in open-hacking environments.
 template<class T>
 struct ScalarHasher<T, true> {
   std::size_t operator()(T x) const { return IntHasher<T>{}(x); }
+};
+
+// A self-contained hasher for std::pair<int, int> keys: copy just this struct when you do not need
+// the rest of this file. The two 32-bit halves pack losslessly into one 64-bit word, which the
+// SplitMix64 mixer (the same one used by mix64 above) then scrambles. Add a random seed to `key`
+// before mixing, as IntHasher does, if you need anti-hacking protection.
+struct PairIntHasher {
+  std::size_t operator()(const std::pair<int, int> &p) const {
+    uint64 key = (static_cast<uint64>(static_cast<unsigned int>(p.first)) << 32) |
+                 static_cast<unsigned int>(p.second);
+    key += 0x9e3779b97f4a7c15ULL;
+    key = (key ^ (key >> 30)) * 0xbf58476d1ce4e5b9ULL;
+    key = (key ^ (key >> 27)) * 0x94d049bb133111ebULL;
+    return static_cast<std::size_t>(key ^ (key >> 31));
+  }
 };
 
 template<class A, class B>
@@ -433,6 +595,21 @@ struct VectorHasher {
     for (const auto &x : v) {
       h = hash_combine64(h, static_cast<uint64>(GenericHasher<T>()(x)));
     }
+    h = hash_combine64(h, v.size());  // Mix in the length so different sizes (e.g. empty) separate.
+    return static_cast<std::size_t>(h);
+  }
+};
+
+template<class... Ts>
+struct TupleHasher {
+  std::size_t operator()(const std::tuple<Ts...> &t) const {
+    uint64 h = 0;
+    std::apply(
+        [&](const Ts &...xs) {
+          ((h = hash_combine64(h, static_cast<uint64>(GenericHasher<Ts>()(xs)))), ...);
+        },
+        t
+    );
     return static_cast<std::size_t>(h);
   }
 };
@@ -443,8 +620,31 @@ struct GenericHasher : ScalarHasher<T, std::is_integral<T>::value> {};
 template<class A, class B>
 struct GenericHasher<std::pair<A, B>> : PairHasher<A, B> {};
 
+template<class... Ts>
+struct GenericHasher<std::tuple<Ts...>> : TupleHasher<Ts...> {};
+
 template<class T>
 struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
+
+// Specializing std::hash lets pair and tuple keys be used directly in std::unordered_map and
+// std::unordered_set, with no explicit hasher template argument. The C++ standard only sanctions
+// specializing std::hash when a user-defined type is involved, so the functors above remain the
+// portable choice; these specializations are a widely supported contest convenience. Vector keys
+// are intentionally left out here to avoid clashing with the standard library's own
+// std::hash<std::vector<bool>>; pass VectorHasher or GenericHasher explicitly for those.
+namespace std {
+
+template<class A, class B>
+struct hash<pair<A, B>> {
+  size_t operator()(const pair<A, B> &p) const { return ::GenericHasher<pair<A, B>>()(p); }
+};
+
+template<class... Ts>
+struct hash<tuple<Ts...>> {
+  size_t operator()(const tuple<Ts...> &t) const { return ::GenericHasher<tuple<Ts...>>()(t); }
+};
+
+}  // namespace std
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -473,26 +673,46 @@ int main() {
   count[1000000000000LL] = 7;
   assert(count[1000000000000LL] == 7);
 
-  using point = pair<int, int>;
-  unordered_map<point, int, PairHasher<int, int>> dist;
-  dist[point(3, 4)] = 5;
-  assert(dist[point(3, 4)] == 5);
+  using Point = pair<int, int>;
+  unordered_map<Point, int, PairHasher<int, int>> dist;
+  dist[Point(3, 4)] = 5;
+  assert(dist[Point(3, 4)] == 5);
+
+  // The standalone PairIntHasher is the quick choice for pair<int, int> keys.
+  unordered_map<Point, int, PairIntHasher> dist_fast;
+  dist_fast[Point(3, 4)] = 5;
+  assert(dist_fast[Point(3, 4)] == 5);
 
   unordered_map<vector<int>, int, VectorHasher<int>> seen;
   seen[v] = 1;
   assert(seen[v] == 1);
 
-  using state = pair<vector<int>, int>;
-  unordered_map<state, int, GenericHasher<state>> dp;
-  dp[state(v, 4)] = 9;
-  assert(dp[state(v, 4)] == 9);
+  using State = pair<vector<int>, double>;
+  unordered_map<State, int, GenericHasher<State>> dp;
+  dp[State(v, 4.5)] = 9;
+  assert(dp[State(v, 4.5)] == 9);
+
+  // Tuple keys via the explicit functor.
+  using Triple = tuple<int, char, double>;
+  unordered_map<Triple, int, GenericHasher<Triple>> grid;
+  grid[Triple(1, 'a', 3.14)] = 6;
+  assert(grid[Triple(1, 'a', 3.14)] == 6);
+
+  // With the std::hash specializations, pair and tuple keys need no hasher argument.
+  unordered_map<Point, int> dist_default;
+  dist_default[Point(3, 4)] = 5;
+  assert(dist_default[Point(3, 4)] == 5);
+
+  unordered_map<Triple, int> grid_default;
+  grid_default[Triple(1, 'a', 3.14)] = 6;
+  assert(grid_default[Triple(1, 'a', 3.14)] == 6);
   return 0;
 }
 \end{lstlisting}
 \subsection{Rolling Hash}
 Computes polynomial rolling hashes for sequences, supporting $O(1)$ contiguous subsequence hash queries after preprocessing. This is useful for probabilistic string matching, substring equality checks, repeated subarray detection, and binary-searching over candidate lengths.
 
-Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Equivalently, it is built left-to-right by the recurrence \inlinecode{pref[i + 1] = pref[i] * HASH\_BASE + h(a[i])}. A subsequence hash for \inlinecode{[l, r)} is obtained by subtracting away the prefix before \inlinecode{l}: \inlinecode{pref[r] - pref[l] * HASH\_BASE\textasciicircum{}(r-l)}.
+Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Equivalently, it is built left-to-right by the recurrence \inlinecode{pref[i + 1] = pref[i] * HASH\_BASE + h(a[i])}. A subsequence hash for \inlinecode{[l, r)} is obtained by subtracting away the prefix before \inlinecode{l}: \inlinecode{pref[r] - pref[l] * pow(HASH\_BASE, r - l)}.
 
 The implementation works modulo the Mersenne prime $2^{61} - 1$ and uses \inlinecode{\_\_uint128\_t} for multiplication. The base \inlinecode{HASH\_BASE} should be changed or chosen randomly for open-hacking environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic and should not be used as proof of equality when exact verification is required.
 
@@ -772,7 +992,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Pattern Matching}
+\section{\texorpdfstring{Pattern Matching}{3.3 Pattern Matching}}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{String Searching (KMP)}
@@ -1196,7 +1416,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Expression Parsing}
+\section{\texorpdfstring{Expression Parsing}{3.4 Expression Parsing}}
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Recursive Descent Parsing (Simple)}
@@ -1269,12 +1489,12 @@ int main() {
 \subsection{Recursive Descent Parsing}
 Evaluate an expression with custom operand types, prefix unary operators, binary operators, and precedences. Evaluation is performed by recursive descent: the parser recursively evaluates tighter precedence levels before looser ones. Parentheses are supported, but multiplication by juxtaposition is not.
 
-An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting $-1$ as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative numbers as operands alongside the unary operator \inlinecode{-}.
+An arbitrary operand type is supported by changing the \inlinecode{Operand} alias and the static \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} helpers. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative numbers as operands alongside the unary operator \inlinecode{-}.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
-  \item \inlinecode{RecursiveDescentParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item \inlinecode{RecursiveDescentParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to unary function object) and \inlinecode{binary\_op} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
   \item \inlinecode{eval(lo, hi)} returns the evaluation of a range \inlinecode{[lo, hi)} of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
@@ -1299,6 +1519,7 @@ Operators may be non-empty strings of any length, but should not contain any par
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cctype>
+#include <functional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -1310,42 +1531,42 @@ using std::string;
 
 // Define the custom operand type and representation below.
 using Operand = double;
-using UnaryOp = Operand (*)(Operand a);
-using BinaryOp = Operand (*)(Operand a, Operand b);
+using UnaryOp = std::function<Operand(Operand)>;
+using BinaryOp = std::function<Operand(Operand, Operand)>;
 
 struct BinaryRule {
   BinaryOp op;
   int precedence;
 };
 
-bool is_operand(const string &s) {
-  int npoints = 0;
-  for (char c : s) {
-    if (c == '.') {
-      if (++npoints > 1) {
-        return false;
-      }
-    } else if (!isdigit(static_cast<unsigned char>(c))) {
-      return false;
-    }
-  }
-  return !s.empty();
-}
-
-Operand eval_operand(const string &s) {
-  Operand res;
-  std::stringstream ss(s);
-  ss >> res;
-  return res;
-}
-
 class RecursiveDescentParser {
   using unary_op_map = std::unordered_map<string, UnaryOp>;
   using binary_op_map = std::unordered_map<string, BinaryRule>;
   unary_op_map unary_ops;
   binary_op_map binary_ops;
-  std::set<string> ops;
+  std::set<string> op_tokens;
   int max_precedence;
+
+  static bool is_operand(const string &s) {
+    int npoints = 0;
+    for (char c : s) {
+      if (c == '.') {
+        if (++npoints > 1) {
+          return false;
+        }
+      } else if (!isdigit(static_cast<unsigned char>(c))) {
+        return false;
+      }
+    }
+    return !s.empty();
+  }
+
+  static Operand eval_operand(const string &s) {
+    Operand res;
+    std::stringstream ss(s);
+    ss >> res;
+    return res;
+  }
 
   template<class StrIt>
   Operand eval_unary(StrIt &lo, StrIt hi) {
@@ -1367,7 +1588,7 @@ class RecursiveDescentParser {
   }
 
   template<class StrIt>
-  Operand eval_binary(StrIt &lo, StrIt hi, Operand precedence) {
+  Operand eval_binary(StrIt &lo, StrIt hi, int precedence) {
     if (precedence > max_precedence) {
       return eval_unary(lo, hi);
     }
@@ -1393,11 +1614,11 @@ class RecursiveDescentParser {
   RecursiveDescentParser(const unary_op_map &unary_ops, const binary_op_map &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, _] : unary_ops) {
-      ops.insert(op);
+      op_tokens.insert(op);
     }
     max_precedence = 0;
     for (const auto &[op, fn_prec] : binary_ops) {
-      ops.insert(op);
+      op_tokens.insert(op);
       max_precedence = std::max(max_precedence, fn_prec.precedence);
     }
   }
@@ -1419,7 +1640,7 @@ class RecursiveDescentParser {
         int found = next_paren;
         string found_op;
         for (int j = i; j < next_paren && found == next_paren; j++) {
-          for (const auto &op : ops) {
+          for (const auto &op : op_tokens) {
             if (s.substr(j, op.size()) == op) {
               found = j;
               found_op = op;
@@ -1472,24 +1693,17 @@ using namespace std;
 
 #define EQ(a, b) (fabs((a) - (b)) < 1e-7)
 
-double pos(double a) { return +a; }
-double neg(double a) { return -a; }
-double add(double a, double b) { return a + b; }
-double sub(double a, double b) { return a - b; }
-double mul(double a, double b) { return a * b; }
-double div(double a, double b) { return a / b; }
-
 int main() {
   unordered_map<string, UnaryOp> unary_ops;
-  unary_ops["+"] = pos;
-  unary_ops["-"] = neg;
+  unary_ops["+"] = [](double x) { return +x; };
+  unary_ops["-"] = [](double x) { return -x; };
 
   unordered_map<string, BinaryRule> binary_ops;
-  binary_ops["+"] = {static_cast<BinaryOp>(add), 0};
-  binary_ops["-"] = {static_cast<BinaryOp>(sub), 0};
-  binary_ops["*"] = {static_cast<BinaryOp>(mul), 1};
-  binary_ops["/"] = {static_cast<BinaryOp>(div), 1};
-  binary_ops["^"] = {static_cast<BinaryOp>(pow), 2};
+  binary_ops["+"] = {[](double a, double b) { return a + b; }, 0};
+  binary_ops["-"] = {[](double a, double b) { return a - b; }, 0};
+  binary_ops["*"] = {[](double a, double b) { return a * b; }, 1};
+  binary_ops["/"] = {[](double a, double b) { return a / b; }, 1};
+  binary_ops["^"] = {[](double a, double b) { return std::pow(a, b); }, 2};
 
   RecursiveDescentParser p(unary_ops, binary_ops);
   assert(EQ(p.eval("-+-((--(-+1)))"), -1));
@@ -1513,12 +1727,12 @@ int main() {
 \subsection{Shunting Yard Parsing}
 Evaluate an expression with custom operand types, prefix unary operators, binary operators, and precedences. Evaluation is performed using the shunting yard algorithm, which maintains operator and value stacks while respecting precedence and parentheses. Multiplication by juxtaposition is not supported.
 
-An arbitrary operand type is supported, with its string representation defined by a user-specified \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} functions. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting $-1$ as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative numbers as operands alongside the unary operator \inlinecode{-}.
+An arbitrary operand type is supported by changing the \inlinecode{Operand} alias and the static \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} helpers. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative numbers as operands alongside the unary operator \inlinecode{-}.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
-  \item \inlinecode{ShuntingYardParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to function pointer) and \inlinecode{binary\_op} (of operator to pair of function pointer and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
+  \item \inlinecode{ShuntingYardParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to unary function object) and \inlinecode{binary\_op} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
   \item \inlinecode{eval(lo, hi)} returns the evaluation of a range \inlinecode{[lo, hi)} of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
@@ -1543,6 +1757,7 @@ Operators may be non-empty strings of any length, but should not contain any par
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cctype>
+#include <functional>
 #include <set>
 #include <sstream>
 #include <stack>
@@ -1555,8 +1770,8 @@ using std::string;
 
 // Define the custom operand type and representation below.
 using Operand = double;
-using UnaryOp = Operand (*)(Operand a);
-using BinaryOp = Operand (*)(Operand a, Operand b);
+using UnaryOp = std::function<Operand(Operand)>;
+using BinaryOp = std::function<Operand(Operand, Operand)>;
 
 struct BinaryRule {
   BinaryOp op;
@@ -1568,7 +1783,7 @@ class ShuntingYardParser {
   using BinaryOpMap = std::unordered_map<string, BinaryRule>;
   UnaryOpMap unary_ops;
   BinaryOpMap binary_ops;
-  std::set<string> ops;
+  std::set<string> op_tokens;
 
   static Operand eval_operand(const string &s) {
     Operand res;
@@ -1602,10 +1817,10 @@ class ShuntingYardParser {
   ShuntingYardParser(const UnaryOpMap &unary_ops, const BinaryOpMap &binary_ops)
       : unary_ops(unary_ops), binary_ops(binary_ops) {
     for (const auto &[op, fn] : unary_ops) {
-      ops.insert(op);
+      op_tokens.insert(op);
     }
     for (const auto &[op, fn_prec] : binary_ops) {
-      ops.insert(op);
+      op_tokens.insert(op);
     }
   }
 
@@ -1626,7 +1841,7 @@ class ShuntingYardParser {
         int found = next_paren;
         string found_op;
         for (int j = i; j < next_paren && found == next_paren; j++) {
-          for (const auto &op : ops) {
+          for (const auto &op : op_tokens) {
             if (s.substr(j, op.size()) == op) {
               found = j;
               found_op = op;
@@ -1658,30 +1873,30 @@ class ShuntingYardParser {
   template<class StrIt>
   Operand eval(StrIt lo, StrIt hi) {
     std::stack<Operand> vals;
-    std::stack<std::pair<string, bool>> ops;
-    ops.emplace("(", false);
+    std::stack<std::pair<string, bool>> op_stack;
+    op_stack.emplace("(", false);
     StrIt prev = hi;
     do {
       string curr = (lo == hi) ? ")" : *lo;
       if (is_operand(curr)) {
         vals.push(eval_operand(curr));
       } else if (curr == "(") {
-        ops.emplace(curr, false);
+        op_stack.emplace(curr, false);
       } else if (
           unary_ops.find(curr) != unary_ops.end() &&
           (prev == hi || *prev == "(" || binary_ops.find(*prev) != binary_ops.end())
       ) {
-        ops.emplace(curr, true);
+        op_stack.emplace(curr, true);
       } else {
         for (;;) {
-          auto [op, is_unary] = ops.top();
+          auto [op, is_unary] = op_stack.top();
           auto it1 = binary_ops.find(op);
           auto it2 = binary_ops.find(curr);
           if (!is_unary && (it1 == binary_ops.end() ? -1 : it1->second.precedence) <
                                (it2 == binary_ops.end() ? -1 : it2->second.precedence)) {
             break;
           }
-          ops.pop();
+          op_stack.pop();
           if (op == "(") {
             break;
           }
@@ -1703,7 +1918,7 @@ class ShuntingYardParser {
           }
         }
         if (curr != ")") {
-          ops.emplace(*lo, false);
+          op_stack.emplace(*lo, false);
         }
       }
       prev = lo;
@@ -1736,7 +1951,7 @@ int main() {
   binary_ops["-"] = {[](double a, double b) { return a - b; }, 0};
   binary_ops["*"] = {[](double a, double b) { return a * b; }, 1};
   binary_ops["/"] = {[](double a, double b) { return a / b; }, 1};
-  binary_ops["^"] = {std::pow, 2};
+  binary_ops["^"] = {[](double a, double b) { return std::pow(a, b); }, 2};
 
   ShuntingYardParser p(unary_ops, binary_ops);
   assert(EQ(p.eval("-+-((--(-+1)))"), -1));
@@ -1758,7 +1973,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Sequence Dynamic Programming}
+\section{\texorpdfstring{Sequence Dynamic Programming}{3.5 Sequence Dynamic Programming}}
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Longest Common Substring}
@@ -2078,13 +2293,13 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Suffix Arrays and LCP}
+\section{\texorpdfstring{Suffix Arrays and LCP}{3.6 Suffix Arrays and LCP}}
 \setcounter{section}{6}
 \setcounter{subsection}{0}
 \subsection{Suffix Array and LCP (Manber-Myers)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is \inlinecode{[1, 2, 0]}.
 
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
 \begin{compactitem}
   \item \inlinecode{SuffixArrayManberMyers(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers doubling algorithm with a comparison-based sort.
@@ -2203,7 +2418,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Counting Sort)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is \inlinecode{[1, 2, 0]}.
 
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
 
@@ -2333,9 +2548,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Linear DC3)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming zero-based indices) is \inlinecode{[1, 2, 0]}.
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
 \begin{compactitem}
   \item \inlinecode{SuffixArrayDC3(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
@@ -2531,7 +2746,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{String Data Structures}
+\section{\texorpdfstring{String Data Structures}{3.7 String Data Structures}}
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Trie}
@@ -3293,7 +3508,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Encoding and Compression}
+\section{\texorpdfstring{Encoding and Compression}{3.8 Encoding and Compression}}
 \setcounter{section}{8}
 \setcounter{subsection}{0}
 \subsection{Entropy and Frequency Tables}

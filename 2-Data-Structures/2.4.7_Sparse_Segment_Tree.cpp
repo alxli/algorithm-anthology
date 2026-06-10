@@ -21,7 +21,7 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-- `SparseSegTree(v)` constructs an array over indices 0 to `N`, inclusive, with every value
+- `SparseSegTree(v)` constructs an array over indices 0 to $N$ (inclusive), with every value
   implicitly initialized to `v`. Nodes are allocated lazily as indices are touched.
 - `at(i)` returns the value at index `i`, where `i` is between 0 and `N`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,

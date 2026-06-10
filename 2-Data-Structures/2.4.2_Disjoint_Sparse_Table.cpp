@@ -16,8 +16,7 @@ combined with the stored prefix fold beginning at the center.
 The query operation is defined by an associative function `combine(a, b)`. The default code below
 returns the "min" of the range; for "sum", `combine(a, b)` should return `a + b`.
 
-- `DisjointSparseTable(lo, hi)` builds the table from the range `[lo, hi)` of a random-access
-  iterator.
+- `DisjointSparseTable(lo, hi)` builds the table from two random-access iterators.
 - `size()` returns the size of the array.
 - `query(lo, hi)` returns `combine()` applied to all indices from `lo` to `hi`, inclusive.
 

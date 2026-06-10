@@ -6,13 +6,13 @@ replace it with `Point`/`PointD`/ `PointI` from 7.1.1 or any struct with numeric
 fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent
 comparison to be correct, and the result is exact for integer-coordinate points.
 
+- `point_in_polygon(p, lo, hi)` returns whether `p` lies within the polygon with vertices specified
+  by the range `[lo, hi)` of points in either clockwise or counter-clockwise order. If `p` lies
+  exactly on an edge or vertex, the result will depend on the value of `EDGE_IS_INSIDE`.
+
 Overflow warning: the edge orientation test forms a cross product that grows like the squared
 coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. `PointL` from
-7.1.1) once coordinates exceed a few tens of thousands.
-
-- `point_in_polygon(p, lo, hi)` returns whether `p` lies within the polygon given by range
-  `[lo, hi)` in clockwise or counter-clockwise order. If `p` lies exactly on an edge or vertex, the
-  result depends on `EDGE_IS_INSIDE`.
+7.1.1) once coordinates exceed ~46000.
 
 Time Complexity:
 - O(n) per call, where $n$ is the distance between `lo` and `hi`.
@@ -24,6 +24,7 @@ Space Complexity:
 
 template<class Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
+  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary.
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 

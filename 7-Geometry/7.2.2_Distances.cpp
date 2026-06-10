@@ -2,16 +2,16 @@
 
 Distance calculations in two dimensions for points, lines, and line segments. The functions are
 templated on the point type `Pt`: pass any struct with numeric `.x` and `.y` fields (for example
-`PointD`/ `PointI` from 7.1.1, or the local example struct). `sqnorm`, `dot`, `cross`, and `sqdist`
-preserve the coordinate type and are exact for integer points. Functions that return an actual
-distance use `double` for the final division/square root. `closest_point` returns a point of the
-same type as its inputs, so use a floating-point `Pt` there for a meaningful (non-truncated) result.
+`PointD`/ `PointI` from 7.1.1, or the local example struct). `sqdist` preverses the coordinate type
+and is exact for integer points. Functions that return an actual distance use `double` for the final
+division/square root. `closest_point` returns a point of the same type as its inputs, so use a
+floating-point `Pt` there for a meaningful (non-truncated) result.
 
 - `dist(a, b)` and `sqdist(a, b)` respectively return the distance and squared distance between
   points `a` and `b`.
 - `line_dist(p, a, b, c)` returns the distance from point `p` to the line $ax + by + c = 0$.
 - `line_dist(p, a, b)` returns the distance from point `p` to the infinite line containing points
-  `a` and `b`. If `a` = `b`, returns the distance from `p` to `a`.
+  `a` and `b`. If `a` = `b`, the distance from `p` to `a` is returned.
 - `line_dist(a1, b1, c1, a2, b2, c2)` returns the distance between two lines.
 - `seg_dist(p, a, b)` returns the distance from point `p` to the line segment `a`-`b`.
 - `seg_dist(a, b, c, d)` returns the minimum distance between line segments `a`-`b` and `c`-`d`, or
@@ -36,13 +36,6 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 #define GE(a, b) ((a) >= (b) - EPS)
-
-// clang-format off
-template<class Pt> auto sqnorm(const Pt &a) { return a.x*a.x + a.y*a.y; }
-template<class Pt> double norm(const Pt &a) { return sqrt((double)sqnorm(a)); }
-template<class Pt> auto dot(const Pt &a, const Pt &b) { return a.x*b.x + a.y*b.y; }
-template<class Pt> auto cross(const Pt &a, const Pt &b) { return a.x*b.y - a.y*b.x; }
-// clang-format on
 
 // sqdist returns the coordinate type (exact for integer points).
 template<class Pt>
@@ -191,7 +184,6 @@ int main() {
   // Integer points: sqdist is exact, dist returns double.
   PointI ia{-1, -1}, ib{2, 3};
   assert(sqdist(ia, ib) == 25);   // int result
-  assert(dot(ia, ib) == -5);      // int result
   assert(EQ(dist(ia, ib), 5.0));  // double result
   return 0;
 }

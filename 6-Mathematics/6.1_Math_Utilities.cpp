@@ -44,11 +44,11 @@ Epsilon Comparisons:
 
 - `EQ()`, `NE()`, `LT()`, `GT()`, `LE()`, and `GE()` relationally compare two values $x$ and $y$
   accounting for absolute error. For any $x$, the range of values considered equal barring absolute
-  error is $[x - \text{EPS}, x + \text{EPS}]$. Values outside of this range are considered not equal
+  error is $[x - `EPS`, x + `EPS`]$. Values outside of this range are considered not equal
   (strictly less or strictly greater).
 
 - `rEQ()` returns whether $x$ and $y$ are equal barring relative error. For any $x$, the range of
-  values considered equal is $[x(1 - \text{EPS}), x(1 + \text{EPS})]$.
+  values considered equal is $[x(1 - `EPS`), x(1 + `EPS`)]$.
 
 */
 

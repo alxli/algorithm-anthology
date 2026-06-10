@@ -1,14 +1,14 @@
 /*
 
-Integers double as fixed-size sets of bits, where bit `b` (counting from 0 at the least significant
-end) is "present" when it is set to 1. Treating an integer as a bitmask makes set membership,
+Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant
+bit where $i = 0$) is "present" when set to 1. Treating an `int` as a bitmask makes set membership,
 insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the
 backbone of subset dynamic programming and many low-level tricks. The helpers below operate on
 `unsigned` masks; to use 64-bit masks, replace `unsigned` with `unsigned long long`, the literal
 `1u` with `1ull`, and the `1u << 31` inside `clz()` with `1ull << 63`.
 
-- `test_bit(x, b)` returns whether bit `b` of `x` is set.
-- `set_bit(x, b)`, `clear_bit(x, b)`, and `toggle_bit(x, b)` return `x` with bit `b` respectively
+- `test_bit(x, i)` returns whether the `i`-th bit of `x` is set.
+- `set_bit(x, i)`, `clear_bit(x, i)`, and `toggle_bit(x, i)` return `x` with the `i`-th respectively
   forced to 1, forced to 0, or flipped.
 - `lowest_set_bit(x)` returns the value of the lowest set bit of `x` (a power of 2), or 0 if `x`
   is 0. `clear_lowest_set_bit(x)` returns `x` with its lowest set bit removed.
@@ -18,7 +18,7 @@ backbone of subset dynamic programming and many low-level tricks. The helpers be
 - `is_power_of_two(x)` returns whether `x` has exactly one set bit.
 - `floor_pow2(x)` returns the largest power of 2 that is $\leq$ `x` (for `x` $> 0$).
 - `ceil_pow2(x)` returns the smallest power of 2 that is $\geq$ `x` (for `x` $> 0$).
-- `for_each_set_bit(x, f)` calls `f(b)` once for each set bit position `b` of `x`, in increasing
+- `for_each_set_bit(x, f)` calls `f(i)` once for each set bit position `i` of `x`, in increasing
   order.
 
 Time Complexity:
@@ -32,10 +32,10 @@ Space Complexity:
 */
 
 // clang-format off
-bool test_bit(unsigned x, int b) {  return (x >> b) & 1u; }
-unsigned set_bit(unsigned x, int b) { return x | (1u << b); }
-unsigned clear_bit(unsigned x, int b) { return x & ~(1u << b); }
-unsigned toggle_bit(unsigned x, int b) { return x ^ (1u << b); }
+bool test_bit(unsigned x, int i) {  return (x >> i) & 1u; }
+unsigned set_bit(unsigned x, int i) { return x | (1u << i); }
+unsigned clear_bit(unsigned x, int i) { return x & ~(1u << i); }
+unsigned toggle_bit(unsigned x, int i) { return x ^ (1u << i); }
 unsigned lowest_set_bit(unsigned x) { return x & (0u - x); }
 unsigned clear_lowest_set_bit(unsigned x) { return x & (x - 1); }
 // clang-format on

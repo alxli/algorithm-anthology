@@ -4,32 +4,31 @@ A circle in two dimensions supporting epsilon comparisons. The circle centered a
 represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a
 non-negative number.
 
-Circle is floating-point by nature (the radius requires a square root), so it always stores and
-computes in `double`. The center of a circumcircle is rational and the radius irrational even for
-integer inputs, so there is no exact integer `Circle` to store; instead, every point-accepting
-constructor and predicate is templated on the point type `Pt` and only reads `.x`/ `.y`, accepting
-`Point`/ `PointD`/ `PointI` from 7.1.1 or any struct with numeric `.x`/ `.y` fields.
+This implementation stores and computes circle parameters in `double`. Point-accepting
+constructors and predicates are templated on the point type `Pt` and only read `.x`/`.y`, so they
+accept `Point`/`PointD`/`PointI` from 7.1.1 or any struct with numeric `.x` and `.y` fields.
 
 - `Circle()` constructs the zero-radius circle centered at the origin.
 - `Circle(r)` constructs a circle of radius `abs(r)` centered at the origin.
 - `Circle(h, k, r)` constructs a circle of radius `abs(r)` centered at `(h, k)`.
 - `Circle(o, r)` constructs a circle of radius `abs(r)` centered at point `o`.
 - `Circle(a, b)` constructs the circle whose diameter is segment `a`-`b`.
-- `Circle(a, b, c)` constructs the circumcircle through non-collinear points `a`, `b`, and `c`.
+- `Circle(a, b, c)` constructs the circumcircle through non-collinear points `a`, `b`, and `c`,
+  throwing if the points are collinear.
 - `Circle(a, b, r)` constructs one circle of radius `abs(r)` passing through points `a` and `b`,
-  throwing if the inputs admit no finite circle.
+  throwing if no finite circle is determined by the inputs.
 - `operator==` and `operator!=` compare centers and radii using `EPS`.
 - `contains(p)` returns whether point `p` lies inside or on the circle.
 - `on_edge(p)` returns whether point `p` lies on the circle boundary.
-- `incircle(a, b, c)` returns the circle inscribed inside triangle `abc`.
+- `incircle(a, b, c)` returns the circle inscribed in triangle `abc`.
 - `in_circumcircle(a, b, c, d)` returns 1 if `d` lies strictly inside the circle through `a`, `b`,
   and `c`, 0 if it lies on the circle, or $-1$ if it lies outside.
 
-When exact integer reasoning about a circumcircle is needed, use `in_circumcircle(a, b, c, d)`,
-which tests whether `d` lies inside the circle through `a`, `b`, `c` using a determinant (no square
-root) and is therefore exact for integer coordinates without ever building a `Circle`. The
-determinant has degree four in the coordinate magnitude, so use a wider coordinate type for large
-integer inputs.
+When exact integer reasoning about a circumcircle is needed, use `in_circumcircle(a, b, c, d)`.
+It evaluates the determinant directly, without constructing a `Circle` or taking a square root.
+For integer inputs, the sign test is exact provided the chosen intermediate type does not overflow.
+The determinant has degree four in the coordinate magnitude, so use a wider type for large integer
+coordinates.
 
 Time Complexity:
 - O(1) per call to the constructors and all other operations.
@@ -39,7 +38,6 @@ Space Complexity:
 - O(1) auxiliary for all operations.
 
 */
-
 #include <cmath>
 #include <ostream>
 #include <stdexcept>
@@ -100,7 +98,7 @@ struct Circle {
   // is no possible Circle. In the latter two cases, an exception is thrown.
   template<class Pt, class = if_point<Pt>>
   Circle(const Pt &a, const Pt &b, double r) : r(fabs(r)) {
-    if (LE(r, 0) && EQ(a.x, b.x) && EQ(a.y, b.y)) {  // Circle with zero area.
+    if (LE(r, 0) && EQ(a.x, b.x) && EQ(a.y, b.y)) {  // Zero-radius circle.
       h = a.x;
       k = a.y;
       return;

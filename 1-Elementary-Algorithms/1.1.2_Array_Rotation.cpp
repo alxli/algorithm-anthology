@@ -92,48 +92,48 @@ rotate right: 0 1 2 2 3 4 5 7 7 10
 using namespace std;
 
 int main() {
-  vector<int> v0, v1, v2, v3;
+  vector<int> a0, a1, a2, a3;
   for (int i = 0; i < 10000; i++) {
-    v0.push_back(i);
+    a0.push_back(i);
   }
-  v1 = v2 = v3 = v0;
+  a1 = a2 = a3 = a0;
   int mid = 5678;
-  std::rotate(v0.begin(), v0.begin() + mid, v0.end());
-  rotate1(v1.begin(), v1.begin() + mid, v1.end());
-  rotate2(v2.begin(), v2.begin() + mid, v2.end());
-  rotate3(v3.begin(), v3.begin() + mid, v3.end());
-  assert(v0 == v1 && v0 == v2 && v0 == v3);
+  std::rotate(a0.begin(), a0.begin() + mid, a0.end());
+  rotate1(a1.begin(), a1.begin() + mid, a1.end());
+  rotate2(a2.begin(), a2.begin() + mid, a2.end());
+  rotate3(a3.begin(), a3.begin() + mid, a3.end());
+  assert(a0 == a1 && a0 == a2 && a0 == a3);
 
   // Example from: http://en.cppreference.com/w/cpp/algorithm/rotate
-  vector<int> v{2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
+  vector<int> a{2, 4, 2, 0, 5, 10, 7, 3, 7, 1};
   cout << "before sort:  ";
-  for (const auto &x : v) {
+  for (const auto &x : a) {
     cout << x << " ";
   }
   cout << endl;
 
   // Insertion sort.
-  for (auto i = v.begin(); i != v.end(); ++i) {
-    rotate1(std::upper_bound(v.begin(), i, *i), i, i + 1);
+  for (auto i = a.begin(); i != a.end(); ++i) {
+    rotate1(std::upper_bound(a.begin(), i, *i), i, i + 1);
   }
   cout << "after sort:   ";
-  for (const auto &x : v) {
+  for (const auto &x : a) {
     cout << x << " ";
   }
   cout << endl;
 
   // Simple rotation to the left.
-  rotate2(v.begin(), v.begin() + 1, v.end());
+  rotate2(a.begin(), a.begin() + 1, a.end());
   cout << "rotate left:  ";
-  for (const auto &x : v) {
+  for (const auto &x : a) {
     cout << x << " ";
   }
   cout << endl;
 
   // Simple rotation to the right.
-  rotate3(v.rbegin(), v.rbegin() + 1, v.rend());
+  rotate3(a.rbegin(), a.rbegin() + 1, a.rend());
   cout << "rotate right: ";
-  for (const auto &x : v) {
+  for (const auto &x : a) {
     cout << x << " ";
   }
   cout << endl;

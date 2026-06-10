@@ -1,7 +1,7 @@
 /*
 
 Maintain a two-dimensional array over a huge grid while supporting dynamic queries of rectangular
-sub-arrays and dynamic updates of individual indices. This is a sparse (a.k.a. dynamic or implicit)
+subarrays and dynamic updates of individual indices. This is a sparse (a.k.a. dynamic or implicit)
 2D segment tree: row and column nodes are allocated lazily as cells are touched, so large coordinate
 bounds are supported without allocating the full grid.
 
@@ -27,8 +27,9 @@ For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.7. A
 but it needs O(R*C) storage with large constants, so this sparse version is usually the safer
 codebook default.
 
-- `SegTree2D(v)` constructs a two-dimensional array with rows from 0 to `R` and columns from 0 to
-  `C`, inclusive. All values are implicitly initialized to `v`.
+- `SegTree2D(v)` constructs a two-dimensional array with rows from 0 to $R$ (inclusive) and
+  columns from 0 to $C$ (inclusive), where $R$ and $C$ are large bounds hardcoded in the class. All
+  array values are implicitly initialized to `v`. Nodes are allocated lazily as indices are touched.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows from `r1` to `r2`, inclusive, and columns from `c1` to `c2`,

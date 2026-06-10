@@ -1,15 +1,21 @@
 /*
 
-Given a list of points in two dimensions, finds the circle with smallest area containing all points
-using a randomized algorithm.
+Given a set of points in two dimensions, finds the unique circle of minimum radius (equivalently,
+minimum area) containing all points.
 
-- `minimum_enclosing_circle(lo, hi)` returns the minimum enclosing circle given a range `[lo, hi)`
-  of points. The input range is shuffled after the call. The function is templated on the iterator
-  type and works with any point type `Pt` having numeric `.x` and `.y` fields. The output is always
-  a `Circle` with `double` coordinates, so integral inputs are accepted and converted internally.
+This implementation uses Welzl's randomized incremental algorithm. The points are shuffled and
+processed one at a time while maintaining the current minimum enclosing circle. Whenever a point
+lies outside the current circle, the circle is rebuilt with that point constrained to lie on the
+boundary. The final circle is determined by at most three boundary points.
+
+- `minimum_enclosing_circle(lo, hi)` returns the minimum enclosing circle for the range `[lo, hi)`
+  of points, where `lo` and `hi` must be random-access iterators. The input range is shuffled in
+  place. The point type may be any type exposing numeric `.x` and `.y` members. The returned circle
+  always uses `double` coordinates, so integer-coordinate inputs are accepted.
 
 Time Complexity:
-- O(n) on average, where $n$ is the distance between `lo` and `hi`.
+- O(n) expected time per call to `minimum_enclosing_circle(lo, hi)`, where $n$ is the distance
+  between `lo` and `hi`, or O(n^3) in the worst-case for a particular shuffle order.
 
 Space Complexity:
 - O(1) auxiliary.

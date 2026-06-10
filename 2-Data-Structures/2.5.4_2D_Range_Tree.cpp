@@ -13,7 +13,7 @@ its pruning is more distribution-dependent.
   `[lo, hi)` of points.
 - `query(x1, y1, x2, y2, f)` calls the function `f(i, p)` on each point in the set that falls into
   the rectangular region consisting of rows from `x1` to `x2`, inclusive, and columns from `y1` to
-  `y2`, inclusive. The first argument to `f` is the zero-based index of the point in the original
+  `y2`, inclusive. The first argument to `f` is the 0-based index of the point in the original
   range given to the constructor. The second argument is the point itself as an `std::pair`.
 
 Time Complexity:

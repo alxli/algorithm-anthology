@@ -18,8 +18,8 @@ index to a new value. Another possible update operation is "increment", in which
 
 - `SqrtDecomposition(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`,
   inclusive, and all values initialized to `v`.
-- `SqrtDecomposition(lo, hi)` constructs an array from two random-access iterators as a range
-  `[lo, hi)`, initialized to the elements of the range in the same order.
+- `SqrtDecomposition(lo, hi)` constructs an array from two random-access iterators, initialized to
+  the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
@@ -76,24 +76,23 @@ class SqrtDecomposition {
   T at(int i) const { return query(i, i); }
 
   T query(int lo, int hi) const {
-    T res;
     int blocklo = ceil(static_cast<double>(lo) / blocklen), blockhi = (hi + 1) / blocklen - 1;
     if (blocklo > blockhi) {
-      res = value[lo];
+      T res = value[lo];
       for (int i = lo + 1; i <= hi; i++) {
         res = combine(res, value[i]);
       }
-    } else {
-      res = block[blocklo];
-      for (int i = blocklo + 1; i <= blockhi; i++) {
-        res = combine(res, block[i]);
-      }
-      for (int i = lo; i < blocklo * blocklen; i++) {
-        res = combine(res, value[i]);
-      }
-      for (int i = (blockhi + 1) * blocklen; i <= hi; i++) {
-        res = combine(res, value[i]);
-      }
+      return res;
+    }
+    T res = block[blocklo];
+    for (int i = blocklo + 1; i <= blockhi; i++) {
+      res = combine(res, block[i]);
+    }
+    for (int i = lo; i < blocklo * blocklen; i++) {
+      res = combine(res, value[i]);
+    }
+    for (int i = (blockhi + 1) * blocklen; i <= hi; i++) {
+      res = combine(res, value[i]);
     }
     return res;
   }
@@ -120,8 +119,8 @@ Values: 6 -2 4 8 10
 using namespace std;
 
 int main() {
-  vector<int> arr{6, -2, 1, 8, 10};
-  SqrtDecomposition<int> sd(arr.begin(), arr.end());
+  vector<int> a{6, -2, 1, 8, 10};
+  SqrtDecomposition<int> sd(a.begin(), a.end());
   sd.update(2, 4);
   cout << "Values:";
   for (int i = 0; i < sd.size(); i++) {

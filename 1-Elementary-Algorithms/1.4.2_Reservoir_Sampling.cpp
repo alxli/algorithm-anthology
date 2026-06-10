@@ -7,7 +7,7 @@ Each class maintains its reservoir incrementally; call `add(x)` once per stream 
 order, then `get()` to retrieve the result.
 
 - `ReservoirSampleOne<T>()` constructs a single-element sampler.
-- `ReservoirSampleK<T>(k)` constructs a k-element sampler.
+- `ReservoirSampleK<T>(k)` constructs a `k`-element sampler.
 - `add(x)` incorporates one more stream element.
 - `get()` returns the current sample. For `ReservoirSampleOne`, `get()` requires at least one
   `add()` call; for `ReservoirSampleK`, returns the full reservoir (may be fewer than `k` elements
@@ -16,7 +16,7 @@ order, then `get()` to retrieve the result.
 
 Time Complexity:
 - O(1) per call to `add(x)`.
-- O(n) to process a range of `n` elements.
+- O(n) to process a range of $n$ elements.
 
 Space Complexity:
 - O(1) auxiliary for `ReservoirSampleOne`.

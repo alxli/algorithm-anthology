@@ -10,10 +10,10 @@ values are allowed.
   descending order (in which case `a` is unchanged). The input `a` must consist of distinct integers
   in the range $[0, n)$.
 - `arrangement_by_rank(n, k, r)` returns the size $k$ arrangement of $n$ which is lexicographically
-  ranked $r$ out of all size $k$ arrangements of $n$, where $r$ is a zero-based rank in the range
+  ranked $r$ out of all size $k$ arrangements of $n$, where $r$ is a 0-based rank in the range
   $[0, n \mathbin{\text{permute}} k)$.
-- `rank_by_arrangement(n, a)` returns an integer representing the zero-based rank of arrangement
-  `a`, which must consist of distinct integers in the range $[0, n)$.
+- `rank_by_arrangement(n, a)` returns an integer representing the 0-based rank of arrangement `a`,
+  which must consist of distinct integers in the range $[0, n)$.
 - `next_arrangement_with_repeats(n, a)` tries to rearrange `a` to the next lexicographically
   greater arrangement with repeats, returning true if such an arrangement exists or false if the
   array is already in descending order (in which case `a` is unchanged). The input `a` must

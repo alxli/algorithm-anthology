@@ -4,8 +4,8 @@ Finds every root $x$ for a polynomial $p$ such that $p(x) = 0$ by differentiatio
 pair of local extrema is searched using the bisection method, where local extrema are recursively
 found by finding the root of the derivative.
 
-- `horner_eval(p, x)` evaluates the polynomial `p` of degree $d$ (represented as a vector of size $d
-  + 1$ where `p[i]` stores the coefficient for the $x^i$ term) at `x`, using Horner's method.
+- `horner_eval(p, x)` evaluates the polynomial `p` of degree $d$ (represented as a vector of size
+  $d + 1$ where `p[i]` stores the coefficient for the $x^i$ term) at `x`, using Horner's method.
 - `find_one_root(p, a, b, EPS)` returns a root in the interval `[a, b]` for a polynomial `p` where
   $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method. If this
   precondition is not satisfied, then `NaN` is returned. The root is found to a tolerance of `EPS`
@@ -16,10 +16,10 @@ found by finding the root of the derivative.
 
 Time Complexity:
 - O(n) per call to `horner_eval()`, where $n$ is the degree of the polynomial.
-- O(n log p) per call to `find_one_root()`, where $n$ is the degree of the polynomial and $p =
-  -\log_{10}(\text{EPS})$ is the number of digits of absolute or relative precision that is desired.
-- O(n^3 log p) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and $p =
-  -\log_{10}(\text{EPS})$ is the number of digits of absolute or relative precision that is desired.
+- O(n log p) per call to `find_one_root()`, where $n$ is the degree of the polynomial and
+  $p = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
+- O(n^3 log p) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and
+  $p = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
 
 Space Complexity:
 - O(1) auxiliary space for `horner_eval()` and `find_one_root()`.

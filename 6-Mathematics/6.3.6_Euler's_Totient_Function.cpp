@@ -13,27 +13,27 @@ each prime $p$ across its multiples `j` and folds in the factor $(1 - 1/p)$ by r
 $\sum_{d \mid n} \phi(d) = n$ to subtract each `v[i]` from its multiples, which costs O(n log n).
 
 The overload `phi_table(lo, hi)` computes the totients of a high but narrow range with a segmented
-sieve, analogous to the segmented prime sieve. It sieves the primes up to $\sqrt{hi}$, applies each
-one's $(1 - 1/p)$ factor to its multiples within `[lo, hi]` while dividing that prime out of a
+sieve, analogous to the segmented prime sieve. It sieves the primes up to $\sqrt{`hi`}$, applies
+each one's $(1 - 1/p)$ factor to its multiples within `[lo, hi]` while dividing that prime out of a
 parallel copy of every value, and finally folds in any single leftover prime factor greater than
-$\sqrt{hi}$ (a number at most `hi` can have at most one such factor).
+$\sqrt{`hi`}$ (a number at most `hi` can have at most one such factor).
 
 - `phi(n)` returns Euler's totient of `n`.
 - `phi_table(n)` returns a vector `v` of length `n + 1` such that `v[i]` stores `phi(i)` for every
   `i` in the range $[0, n]$.
 - `phi_table(lo, hi)` returns a vector `v` of length `hi - lo + 1` such that `v[i - lo]` stores
-  `phi(i)` for every `i` in the range $[lo, hi]$. This overload assumes `lo >= 0`; if `hi < lo`, it
-  returns an empty vector.
+  `phi(i)` for every `i` in the range `[lo, hi]`. This overload assumes `lo` $\geq 0$; if `hi` <
+  `lo`, it returns an empty vector.
 
 Time Complexity:
 - O(sqrt n) per call to `phi(n)`.
 - O(n log log n) per call to `phi_table(n)`.
-- O((hi - lo) log log hi + sqrt(hi)) per call to `phi_table(lo, hi)`.
+- O((`hi` - `lo`)*log(log(`hi`)) + sqrt(`hi`)) per call to `phi_table(lo, hi)`.
 
 Space Complexity:
 - O(1) auxiliary space for `phi(n)`.
 - O(n) auxiliary heap space for `phi_table(n)`.
-- O(hi - lo + sqrt(hi)) auxiliary heap space for `phi_table(lo, hi)`.
+- O(`hi` - `lo` + sqrt(`hi`)) auxiliary heap space for `phi_table(lo, hi)`.
 
 */
 
@@ -126,20 +126,20 @@ int main() {
   assert(phi(9) == 6);
   assert(phi(1234567) == 1224720);
   const int n = 1000;
-  vector<int> v = phi_table(n);
+  vector<int> pt = phi_table(n);
   for (int i = 0; i <= n; i++) {
-    assert(v[i] == phi(i));
+    assert(pt[i] == phi(i));
   }
   // The segmented overload agrees with phi(), including over a low range (with 0 and 1) and a
   // high, narrow window where many values have a prime factor exceeding sqrt(hi).
-  vector<int> lo_range = phi_table(0, 50);
+  vector<int> lphi = phi_table(0, 50);
   for (int i = 0; i <= 50; i++) {
-    assert(lo_range[i] == phi(i));
+    assert(lphi[i] == phi(i));
   }
   int lo = 1000000000, hi = 1000000100;
-  vector<int> hi_range = phi_table(lo, hi);
+  vector<int> hphi = phi_table(lo, hi);
   for (int i = lo; i <= hi; i++) {
-    assert(hi_range[i - lo] == phi(i));
+    assert(hphi[i - lo] == phi(i));
   }
   return 0;
 }

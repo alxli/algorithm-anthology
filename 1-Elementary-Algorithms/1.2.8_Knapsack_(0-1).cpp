@@ -15,7 +15,7 @@ during the current item update.
   once.
 
 Time Complexity:
-- O(nW), where $n$ is the number of items and $W$ is `capacity`.
+- O(n*W), where $n$ is the number of items and $W$ is `capacity`.
 
 Space Complexity:
 - O(W) auxiliary heap space.

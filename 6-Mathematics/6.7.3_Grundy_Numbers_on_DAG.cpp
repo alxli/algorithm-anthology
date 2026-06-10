@@ -7,8 +7,8 @@ number 0; all other vertices take the MEX of their successors' Grundy numbers.
 The implementation uses memoized DFS. It assumes the graph is acyclic; if cycles are present, the
 usual finite impartial-game Grundy recurrence is not directly valid without additional analysis.
 
-- `grundy_on_dag(g)` returns the Grundy number of every vertex in graph `g`.
-- `g[u]` contains all positions reachable from position `u` in one move.
+- `grundy_on_dag(g)` returns the Grundy number of every vertex in graph `g`, where `g[u]` contains
+  all positions reachable from position `u` in one move.
 
 Time Complexity:
 - O(n + m + s), where $n$ is the number of vertices, $m$ is the number of edges, and $s$ is the

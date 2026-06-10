@@ -1,6 +1,6 @@
-\chapter{Optimization}
+\chapter{\texorpdfstring{Optimization}{5. Optimization}}
 
-\section{Monotone Predicate Search}
+\section{\texorpdfstring{Monotone Predicate Search}{5.1 Monotone Predicate Search}}
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Binary Search}
@@ -144,7 +144,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Unimodal and Continuous Search}
+\section{\texorpdfstring{Unimodal and Continuous Search}{5.2 Unimodal and Continuous Search}}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Ternary Search}
@@ -392,11 +392,11 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Dynamic Programming Optimization}
+\section{\texorpdfstring{Dynamic Programming Optimization}{5.3 Dynamic Programming Optimization}}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Monotone Queue DP Optimization}
-Maintains the minimum or maximum value in a sliding window using a monotone queue. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as \inlinecode{dp[i] = a[i] + min(dp[j])} for \inlinecode{j} $\in$ \inlinecode{[i - w, i - 1)}.
+Maintains the minimum or maximum value in a sliding window using a monotone queue. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as \inlinecode{dp[i] = a[i] + min(dp[j])} for $j \in [i - w, i - 1)$.
 
 The queue stores candidate \inlinecode{(index, value)} pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate.
 
@@ -486,7 +486,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Divide-and-Conquer DP Optimization}
-Computes one layer of a dynamic programming recurrence whose optimal transition indices are monotone. This optimization applies to recurrences of the form \inlinecode{dp\_cur[i] = min(dp\_prev[k] + cost(k, i))}, where the minimizing index for \inlinecode{i} never decreases as \inlinecode{i} increases.
+Computes one layer of a dynamic programming recurrence whose optimal transition indices are monotone. This optimization applies to recurrences of the form \inlinecode{dp\_cur[i] = min(dp\_prev[k] + cost(k, i))}, where the minimizing index for $i$ never decreases as $i$ increases.
 
 The function below computes \inlinecode{dp\_cur[l..r]} by evaluating the midpoint first, then recursing on the left half with a restricted upper bound on the optimal \inlinecode{k}, and on the right half with a restricted lower bound. The caller is responsible for checking that the recurrence satisfies the required monotonicity condition.
 
@@ -571,9 +571,7 @@ Computes interval dynamic programming recurrences whose optimal split points are
 Common applications include optimal binary search trees and some range merging problems. The caller is responsible for verifying the quadrangle inequality and monotonicity assumptions for the chosen \inlinecode{cost(l, r)}.
 
 \begin{compactitem}
-  \item \inlinecode{knuth\_interval\_dp(n, cost, \&opt)} computes minimum costs for all half-open intervals \inlinecode{[l, r)} over \inlinecode{n} items.
-  \item \inlinecode{cost(l, r)} must return the interval cost added after choosing the best split.
-  \item If \inlinecode{opt} is not \inlinecode{nullptr}, it is filled with the chosen split points.
+  \item \inlinecode{knuth\_interval\_dp(n, cost, \&opt)} computes minimum costs for all half-open intervals \inlinecode{[l, r)} over \inlinecode{n} items. The template parameter \inlinecode{cost} must be callable such that \inlinecode{cost(l, r)} returns the interval cost added after choosing the best split. If \inlinecode{opt} is not \inlinecode{nullptr}, it is filled with the chosen split points.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{2})$ calls to \inlinecode{cost(l, r)} and $O(n^{2})$ candidate split checks.
@@ -953,7 +951,7 @@ int main() {
 }
 \end{lstlisting}
 
-\section{Numerical Methods}
+\section{\texorpdfstring{Numerical Methods}{5.4 Numerical Methods}}
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Root Finding (Bracketing)}
@@ -1118,8 +1116,8 @@ Finds every root $x$ for a polynomial $p$ such that $p(x) = 0$ by differentiatio
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{horner\_eval()}, where $n$ is the degree of the polynomial.
-  \item $O(n \log p)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $p = -\log_{10}(\text{EPS})$ is the number of digits of absolute or relative precision that is desired.
-  \item $O(n^{3} \log p)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $p = -\log_{10}(\text{EPS})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n \log p)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $p = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n^{3} \log p)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $p = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1219,8 +1217,8 @@ Laguerre's method is a root-finding iteration with reliable, near-cubic converge
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{horner\_eval()}, where $n$ is the degree of the polynomial.
-  \item $O(n \log p)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $p = -\log_{10}(\text{EPS})$ is the number of digits of absolute or relative precision that is desired.
-  \item $O(n^{2} \log p)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $p = -\log_{10}(\text{EPS})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n \log p)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $p = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n^{2} \log p)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $p = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}

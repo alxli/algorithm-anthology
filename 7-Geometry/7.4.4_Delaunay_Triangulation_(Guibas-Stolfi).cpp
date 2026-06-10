@@ -1,25 +1,25 @@
 /*
 
-Given a set $P$ of two-dimensional points, the Delaunay triangulation of $P$ is a set of
-non-overlapping triangles that covers the entire convex hull of $P$ such that no point in $P$ lies
-within the circumcircle of any of the resulting triangles. For any point $p$ in the convex hull of
-$P$ (but not necessarily in $P$), the nearest point is guaranteed to be a vertex of the enclosing
-triangle from the triangulation.
+Given a set of two-dimensional points, computes a Delaunay triangulation: a triangulation of the
+convex hull such that no input point lies strictly inside the circumcircle of any triangle.
 
-The triangulation may not exist (e.g. for a set of collinear points), or may not be unique if it
-does exist. The following program produces one such valid result using the Guibas-Stolfi
-divide-and-conquer algorithm with a quad-edge data structure. A full description is available in the
-original paper: https://people.eecs.berkeley.edu/~jrs/meshpapers/GuibasStolfi.pdf
+This implementation uses the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data
+structure. Input points are copied to `Point` with `double` coordinates, sorted lexicographically,
+and duplicates are removed. If four or more points are cocircular, the Delaunay triangulation is
+not unique; this implementation returns one valid triangulation.
 
-- `delaunay_triangulation(lo, hi)` returns a Delaunay triangulation for the input range `[lo, hi)`
-  of points, or an empty vector if a triangulation does not exist. Duplicate points are ignored.
+- `delaunay_triangulation(lo, hi)` returns the triangles of one Delaunay triangulation for the input
+  range `[lo, hi)`. The input iterator value type may be any point type with numeric `.x` and `.y`
+  members. The returned triangles use `Point` with `double` coordinates. Duplicate points are
+  ignored. If fewer than three non-collinear unique points are available, the result is empty. Note
+  that all predicates are evaluated using floating-point arithmetic, so results are subject to
+  numerical error on nearly collinear or nearly cocircular inputs.
 
 Time Complexity:
-- O(n log n) per call to `delaunay_triangulation(lo, hi)`, where $n$ is the distance between `lo`
-  and `hi`.
+- O(n log n) per call to `delaunay_triangulation(lo, hi)`, where $n$ is the number of input points.
 
 Space Complexity:
-- O(n) auxiliary heap space for storage of the Delaunay triangulation.
+- O(n) heap space for the quad-edge structure and returned triangulation.
 
 */
 
