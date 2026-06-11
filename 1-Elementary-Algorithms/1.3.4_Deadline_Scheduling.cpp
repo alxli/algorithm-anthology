@@ -7,8 +7,8 @@ decreasing profit order and places each chosen job in the latest available slot 
 This is a compact scheduling pattern that combines sorting with a disjoint-set forest over available
 time slots.
 
-- `schedule_deadline_jobs(jobs)` returns the maximum total profit.
-- `Job` stores `deadline` and `profit`. Deadlines are positive integer time slots.
+- `schedule_deadline_jobs(jobs)` returns the maximum total profit for a vector of `Job` with fields
+  `deadline` and `profit`. Deadlines are positive integer time slots.
 
 Time Complexity:
 - O(n log n) per call due to sorting, with near-constant disjoint-set operations.

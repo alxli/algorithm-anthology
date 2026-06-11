@@ -1,10 +1,12 @@
 /*
 
-Maintain a map from closed, one-dimensional intervals to values while supporting efficient reporting
-of any or all entries that intersect with a given query interval. This implementation uses
+Maintain an ordered map from closed, one-dimensional intervals to values while supporting efficient
+reporting of any or all entries that intersect with a given query interval. This implementation uses
 `std::pair` to represent intervals, requiring operators `<` and `==` to be defined on the numeric
 key type. A treap is used to process the entries, where keys are compared lexicographically as
-pairs.
+pairs. Each node is additionally augmented with the maximum upper endpoint among the intervals in
+its subtree, letting intersection queries skip any subtree whose maximum falls below the query
+interval's lower bound.
 
 - `IntervalTreap()` constructs an empty map.
 - `size()` returns the size of the map.

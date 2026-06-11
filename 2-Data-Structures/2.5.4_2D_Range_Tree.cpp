@@ -2,7 +2,10 @@
 
 Maintain a set of two-dimensional points while supporting queries for all points that fall inside
 given rectangular regions. This implementation uses `std::pair` to represent points, requiring
-operators `<` and `==` to be defined on the numeric template type.
+operators `<` and `==` to be defined on the numeric template type. A balanced tree over the points
+sorted by $x$ stores at each node its subrange of points sorted by $y$, merged from its children's
+lists as in a merge sort tree. A query decomposes the $x$-range into O(log n) nodes and binary
+searches each node's list for the matching $y$-range.
 
 Use this for static point-reporting queries when guaranteed worst-case bounds are more important
 than memory. Compared with a range k-d tree, it uses more space but gives O(log^2(n) + m) query time

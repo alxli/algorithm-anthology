@@ -2,11 +2,13 @@
 
 Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(x) = 0$. By the
 intermediate value theorem, a root must exist in $[a, b]$ if the signs of $f(a)$ and $f(b)$ differ.
-The answer is found with an absolute error of roughly $1 / 2^n$, where $n$ is the number of
-iterations. Although it is possible to control the error by looping while $b - a$ is greater than an
-arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until
-floating point arithmetic breaks down. 100 iterations is usually sufficient, since the search space
-will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
+Each bisection step evaluates the midpoint of the interval and keeps the half whose endpoints still
+differ in sign, so a root always remains bracketed. The answer is found with an absolute error of
+roughly $1 / 2^n$, where $n$ is the number of iterations. Although it is possible to control the
+error by looping while $b - a$ is greater than an arbitrary epsilon, it is simpler to let the loop
+run for a desired number of iterations until floating point arithmetic breaks down. 100 iterations
+is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$)
+times its original size.
 
 - `bisection_root(f, a, b)` returns a root in an interval `[a, b]` for a continuous function $f$
   where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method.

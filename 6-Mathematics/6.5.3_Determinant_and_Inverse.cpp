@@ -3,9 +3,12 @@
 Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a
 matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$
 exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or
-non-singular. In practice, simple Gaussian elimination is prone to rounding error on certain
-matrices. For a more accurate algorithm for solving systems of linear equations, use LU
-decomposition with row partial pivoting.
+non-singular. The determinant falls out of elimination as the product of the pivots, negated once
+per row swap. The inverse is found by appending the identity matrix and row-reducing the combined
+matrix: the operations that turn `a` into the identity turn the identity into the inverse. In
+practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more
+accurate algorithm for solving systems of linear equations, use LU decomposition with row partial
+pivoting.
 
 - `det_naive(a)` returns the determinant of an $n$ by $n$ matrix `a`, using the classic
   divide-and-conquer algorithm by Laplace expansions.

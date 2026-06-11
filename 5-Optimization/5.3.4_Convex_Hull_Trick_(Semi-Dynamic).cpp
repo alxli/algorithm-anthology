@@ -3,7 +3,9 @@
 Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of
 $x$-coordinate queries each asking to find the minimum $y$-value when any of the given lines are
 evaluated at the specified $x$. This is useful for dynamic programming recurrences of the form
-`dp[i] = min(m[j] * x[i] + b[j])`.
+`dp[i] = min(m[j] * x[i] + b[j])`. Only the lower envelope of the lines can ever answer a query, so
+each added line pops previously stored lines that it renders useless, and ascending queries advance
+a pointer along the envelope so every line is visited at most twice.
 
 The following implementation is a concise, semi-dynamic version of the convex hull optimization
 technique. It supports an interlaced sequence of `add_line()` and `query()` calls, as long as the

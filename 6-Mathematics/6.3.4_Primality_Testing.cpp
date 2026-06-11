@@ -3,7 +3,9 @@
 Determine whether an integer $n$ is prime. This can be done deterministically by testing all numbers
 under $\sqrt{n}$ using trial division, probabilistically using the Miller-Rabin test, or
 deterministically using the Miller-Rabin test if the maximum input is known ($2^{63} - 1$ for the
-purposes here).
+purposes here). The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly,
+checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the
+pattern is a witness that $n$ is composite.
 
 - `is_prime(n)` returns whether the integer `n` is prime using an optimized trial division technique
   based on the fact that all primes greater than 6 must take the form $6n + 1$ or $6n - 1$.

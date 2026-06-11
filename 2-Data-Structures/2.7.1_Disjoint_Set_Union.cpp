@@ -1,9 +1,11 @@
 /*
 
 Maintain a set of elements partitioned into non-overlapping subsets. Each partition is assigned a
-unique representative known as the parent, or root. The following implements two well-known
-optimizations known as union-by-rank and path compression. This version is simplified to only work
-on integer elements.
+unique representative known as the parent, or root. Each subset is stored as a tree whose nodes
+point toward its root: finding a representative follows parent pointers, redirecting visited nodes
+straight to the root along the way (path compression), while unions attach the shallower tree
+beneath the root of the deeper one (union-by-rank). Together these keep the trees nearly flat. This
+version is simplified to only work on integer elements.
 
 - `initialize()` resets the data structure.
 - `make_set(u)` creates a new partition consisting of the single element `u`, which must not have

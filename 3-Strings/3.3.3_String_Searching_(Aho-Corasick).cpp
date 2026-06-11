@@ -2,7 +2,9 @@
 
 Given a set of strings (needles) and subsequent queries of texts (haystacks) to be searched,
 determine all positions in which needles occur within the given haystacks in linear time using the
-Aho-Corasick algorithm.
+Aho-Corasick algorithm. The needles are arranged in a trie whose nodes carry failure links to the
+longest proper suffix that is also a trie node. Scanning the haystack once while following
+transitions and failure links then reports every match through each node's output set.
 
 This implementation stores transitions in hash tables, which keeps lookups expected constant time
 without assuming a fixed alphabet size. The output tables are stored as ordered sets so matches

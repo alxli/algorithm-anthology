@@ -2,7 +2,9 @@
 
 Computes all odd- and even-length palindromic radii of a string in linear time using Manacher's
 algorithm. These radii can be used to test whether any substring is a palindrome in O(1), find the
-longest palindromic substring, or count all palindromic substrings.
+longest palindromic substring, or count all palindromic substrings. The algorithm tracks the
+rightmost known palindrome and seeds each new center with the radius of its mirror inside that
+window, so characters are only ever compared when a palindrome is extended past the window.
 
 For odd palindromes, `odd[i]` is the radius centered at character `s[i]`, including the center
 character. Thus the palindrome spans `[i - odd[i] + 1, i + odd[i])`. For even palindromes, `even[i]`

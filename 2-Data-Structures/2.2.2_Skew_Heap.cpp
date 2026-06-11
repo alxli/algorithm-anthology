@@ -2,8 +2,10 @@
 
 Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying
 and extraction of the minimum as well as efficient merging with other instances. This implementation
-requires an ordering on the set of possible elements defined by `operator<`. A skew heap attempts
-to maintain balance by unconditionally swapping all nodes in the merge path when merging.
+requires an ordering on the set of possible elements defined by `operator<`. A skew heap attempts to
+maintain balance by unconditionally swapping all nodes in the merge path when merging. Every other
+operation reduces to this merge: insertion merges a one-node heap, and extraction of the minimum
+merges the root's two subtrees.
 
 - `SkewHeap()` constructs an empty priority queue.
 - `SkewHeap(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of elements

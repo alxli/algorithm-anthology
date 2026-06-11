@@ -2,6 +2,9 @@
 
 Maintains the mean and variance of a stream of numbers in one pass using Welford's algorithm. This
 is more numerically stable than maintaining the sum of values and the sum of squares separately.
+Each new value shifts the running mean by its deviation divided by the new count, and accumulates
+the product of its deviations from the old and new means into a running sum of squared deviations,
+from which both population and sample variance follow directly.
 
 - `OnlineStatistics()` constructs an empty summary.
 - `add(x)` incorporates one more value `x` into the summary.

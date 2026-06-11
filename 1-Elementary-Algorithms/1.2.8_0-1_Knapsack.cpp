@@ -8,11 +8,10 @@ with total weight at most `w` after processing some prefix of the items. Iterati
 decreasing order is what enforces the 0-1 constraint; it prevents the same item from being reused
 during the current item update.
 
-- `knapsack_01(weight, value, capacity)` returns the maximum value achievable with total weight at
-  most `capacity`.
-- `weight[i]` and `value[i]` are the weight and value of item `i`.
-- All weights must be nonnegative integers. Items with weight `0` are allowed and can each be taken
-  once.
+- `knapsack_01(weight, value, capacity)` returns the maximum total value achievable by choosing a
+  0-1 subset of $n$ items such that their total weight is at most `capacity`, where item `i` has
+  weight `weight[i]` and value `value[i]`. All weights must be nonnegative integers. Items with
+  weight 0 are allowed and can each be taken once.
 
 Time Complexity:
 - O(n*W), where $n$ is the number of items and $W$ is `capacity`.

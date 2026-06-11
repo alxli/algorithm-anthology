@@ -1,8 +1,10 @@
 /*
 
 Given a starting node in an unweighted, directed graph, visit every connected node and determine the
-minimum distance to each such node. Optionally, output the shortest path to a specific destination
-node using the shortest-path tree from the predecessor vector `pred`.
+minimum distance to each such node. Breadth-first search explores nodes in order of increasing
+distance using a queue, so the first time a node is reached is via a shortest path. Optionally,
+output the shortest path to a specific destination node using the shortest-path tree from the
+predecessor vector `pred`.
 
 - `bfs(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj` which
   must consist of nodes numbered from 0 to `adj.size() - 1`.

@@ -4,7 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Binary Search}
-Binary search can be generally used to find the input value corresponding to any output value of a monotonic (strictly non-increasing or strictly non-decreasing) function in $O(\log n)$ time with respect to the domain size. This is a special case of finding the exact point at which any given monotonic Boolean function changes from true to false or vice versa. Unlike searching through an array, discrete binary search is not restricted by available memory, making it useful for handling infinitely large search spaces such as real number intervals.
+Binary search can be generally used to find the input value corresponding to any output value of a monotonic (strictly non-increasing or strictly non-decreasing) function in $O(\log n)$ time with respect to the domain size. This is a special case of finding the exact point at which any given monotonic Boolean function changes from true to false or vice versa. Each step evaluates the midpoint of the current interval and keeps the half that still contains the transition point, halving the search space until it closes on the answer. Unlike searching through an array, discrete binary search is not restricted by available memory, making it useful for handling infinitely large search spaces such as real number intervals.
 
 \begin{compactitem}
   \item \inlinecode{binary\_search\_first\_true(lo, hi, pred)} takes integer boundaries for the search space \inlinecode{[lo, hi)} (i.e. including \inlinecode{lo}, but excluding \inlinecode{hi}) and returns the smallest integer \inlinecode{k} in \inlinecode{[lo, hi)} for which the predicate \inlinecode{pred(k)} tests true. If \inlinecode{pred(k)} tests false for the entire input range, then \inlinecode{hi} is returned. The caller must ensure \inlinecode{pred} is monotonic on the input range, i.e. returning all false for some (possibly empty) prefix, followed by all true in some (possibly empty) suffix. E.g., patterns \inlinecode{"01"}, \inlinecode{"00"}, and \inlinecode{"11"} are allowed, but \inlinecode{"10"} is disallowed.
@@ -644,7 +644,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull Trick (Semi-Dynamic)}
-Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of $x$-coordinate queries each asking to find the minimum $y$-value when any of the given lines are evaluated at the specified $x$. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}.
+Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of $x$-coordinate queries each asking to find the minimum $y$-value when any of the given lines are evaluated at the specified $x$. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}. Only the lower envelope of the lines can ever answer a query, so each added line pops previously stored lines that it renders useless, and ascending queries advance a pointer along the envelope so every line is visited at most twice.
 
 The following implementation is a concise, semi-dynamic version of the convex hull optimization technique. It supports an interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, as long as the preconditions of descending \inlinecode{m} and ascending \inlinecode{x} are satisfied. As a result, it may be necessary to sort the lines and queries before calling the functions. In that case, the overall time complexity will be dominated by the sorting step.
 
@@ -729,7 +729,7 @@ int main() {
 \subsection{Convex Hull Trick (Fully-Dynamic)}
 Given a set of pairs $(m, b)$ specifying lines of the form $y = mx + b$, process a set of $x$-coordinate queries each asking to find the minimum $y$-value when any of the given lines are evaluated at the specified $x$. To instead have the queries optimize for maximum $y$-value, call the constructor with \inlinecode{query\_max = true}. This is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])} when line slopes and query coordinates are not monotone.
 
-The following implementation is a fully dynamic variant of the convex hull optimization technique, using a self-balancing binary search tree (\inlinecode{std::set}) to support the ability to call \inlinecode{add\_line()} and \inlinecode{query()} in any desired order.
+The following implementation is a fully dynamic variant of the convex hull optimization technique, using a self-balancing binary search tree (\inlinecode{std::set}) to support the ability to call \inlinecode{add\_line()} and \inlinecode{query()} in any desired order. The tree stores the lower envelope of the lines sorted by slope: inserting a line removes any neighbors it dominates, and each line records the interval of queries for which it is the best, so a query is a single tree lookup.
 
 \begin{compactitem}
   \item \inlinecode{HullOptimizer(query\_max)} constructs an empty hull. By default, \inlinecode{query(x)} minimizes; if \inlinecode{query\_max} is true, \inlinecode{query(x)} maximizes.
@@ -833,23 +833,23 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Li Chao Tree}
-Maintains a dynamic set of lines and answers minimum value queries at points in a fixed integer domain. A Li Chao tree is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}, especially when line slopes and query points arrive in arbitrary order.
+Maintains a dynamic set of lines and answers minimum value queries at points in a fixed integer domain. A Li Chao tree is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}, especially when line slopes and query points arrive in arbitrary order. Each node of a segment tree over the domain keeps the line that wins at its segment's midpoint; inserting a line keeps the midpoint winner and recurses only into the half where the losing line may still win, and a query takes the best line along one root-to-leaf path.
 
-The implementation below stores the lower envelope of lines over the inclusive domain \inlinecode{[X\_MIN, X\_MAX]}. It supports adding arbitrary lines and querying arbitrary integer $x$-coordinates in $O(\log C)$, where $C =$ \inlinecode{X\_MAX} $-$ \inlinecode{X\_MIN} $+ 1$.
+This implementation stores the lower envelope of lines over the inclusive domain \inlinecode{[lo, hi]}. It supports adding arbitrary lines and querying arbitrary integer $x$-coordinates in logarithmic time with respect to the domain size.
 
 \begin{compactitem}
   \item \inlinecode{LiChaoTree(lo, hi)} constructs an empty tree over integer domain \inlinecode{[lo, hi]}.
   \item \inlinecode{add\_line(m, b)} inserts line $y = mx + b$ (can be called in any order).
-  \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}.
+  \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}. At least one line must have been inserted.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log C)$ per call to \inlinecode{add\_line(m, b)} and \inlinecode{query(x)}, where $C$ is the domain size.
+\textbf{Time Complexity}: $O(\log d)$ per call to \inlinecode{add\_line(m, b)} and \inlinecode{query(x)}, where $d$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n \log C)$ worst-case node storage for $n$ inserted lines, usually much less.
-  \item $O(\log C)$ auxiliary stack space per operation.
+  \item $O(n \log d)$ worst-case node storage for $n$ line inserted, usually much less.
+  \item $O(\log d)$ auxiliary stack space per operation.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -955,7 +955,7 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Root Finding (Bracketing)}
-Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(x) = 0$. By the intermediate value theorem, a root must exist in $[a, b]$ if the signs of $f(a)$ and $f(b)$ differ. The answer is found with an absolute error of roughly $1 / 2^n$, where $n$ is the number of iterations. Although it is possible to control the error by looping while $b - a$ is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
+Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(x) = 0$. By the intermediate value theorem, a root must exist in $[a, b]$ if the signs of $f(a)$ and $f(b)$ differ. Each bisection step evaluates the midpoint of the interval and keeps the half whose endpoints still differ in sign, so a root always remains bracketed. The answer is found with an absolute error of roughly $1 / 2^n$, where $n$ is the number of iterations. Although it is possible to control the error by looping while $b - a$ is greater than an arbitrary epsilon, it is simpler to let the loop run for a desired number of iterations until floating point arithmetic breaks down. 100 iterations is usually sufficient, since the search space will be reduced to $2^{-100}$ (roughly $10^{-30}$) times its original size.
 
 \begin{compactitem}
   \item \inlinecode{bisection\_root(f, a, b)} returns a root in an interval \inlinecode{[a, b]} for a continuous function $f$ where $\operatorname{sgn}(f(a)) \neq \operatorname{sgn}(f(b))$, using the bisection method.
@@ -1034,7 +1034,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Root Finding (Iteration)}
-Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative approximation by an initial guess that is close to the answer. Newton's method requires an explicit definition of the function's derivative while the secant method starts with two initial guesses and approximates the derivative using the secant slope from the previous iteration. For $n$ iterations and a good initial guess, the methods below compute approximately $2^n$ digits of precision, with the secant method converging approximately 1.6 times slower than Newton's.
+Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative approximation by an initial guess that is close to the answer. Each step follows the tangent line at the current guess down to its $x$-intercept, that is, $x \leftarrow x - f(x)/f'(x)$. Newton's method requires an explicit definition of the function's derivative while the secant method starts with two initial guesses and approximates the derivative using the secant slope from the previous iteration. For $n$ iterations and a good initial guess, the methods below compute approximately $2^n$ digits of precision, with the secant method converging approximately 1.6 times slower than Newton's.
 
 \begin{compactitem}
   \item \inlinecode{newton\_root(f, fprime, x0)} returns a root $x$ for a function \inlinecode{f} with derivative \inlinecode{fprime} using an initial guess \inlinecode{x0} which should be relatively close to $x$.
@@ -1593,7 +1593,7 @@ Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
 Computes the definite integral from $a$ to $b$ for a continuous function $f$ using the composite Simpson's rule: the interval is split into \inlinecode{n} equal subintervals and each consecutive pair is approximated by a parabola, giving $\text{integral} \sim h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a) / n$.
 
 \begin{compactitem}
-  \item \inlinecode{integrate(f, a, b, n)} returns the definite integral of a function $f$ from $a$ to $b$ using \inlinecode{n} subintervals, where \inlinecode{n} must be even. Larger \inlinecode{n} trades runtime for accuracy: the error is $O((b - a) \cdot h^4)$, so for a smooth $f$ a value of \inlinecode{n} on the order of $10^6$ reaches near double precision.
+  \item \inlinecode{integrate(f, a, b, n)} returns the definite integral of a function \inlinecode{f} from \inlinecode{a} to \inlinecode{b} using \inlinecode{n} subintervals, where \inlinecode{n} must be even. Larger \inlinecode{n} trades runtime for accuracy: the error is $O((b - a) \cdot h^{4})$, so for a smooth \inlinecode{f} a value of \inlinecode{n} on the order of $10^6$ reaches near double precision.
 \end{compactitem}
 
 Unlike adaptive quadrature, the step size here is uniform, so a feature narrower than \inlinecode{h} may be under-resolved. The benefit is a simple, non-recursive routine with predictable cost that is not fooled by the premature-termination heuristic that adaptive Simpson's rule can suffer on functions whose coarse sample points happen to fit a parabola.

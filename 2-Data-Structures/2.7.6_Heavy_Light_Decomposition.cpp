@@ -3,7 +3,10 @@
 Maintain a tree with values associated with either its edges or nodes, while supporting both dynamic
 queries and dynamic updates of all values on a given path between two nodes in the tree. Heavy-light
 decomposition partitions the nodes of the tree into disjoint paths where all nodes have degree two,
-except the endpoints of a path which has degree one.
+except the endpoints of a path which has degree one. A node stays on its parent's path when its
+subtree contains at least half of its parent's nodes, so walking from any node to the root crosses
+O(log n) different paths. Each path stores its values in its own lazy segment tree, decomposing any
+path query or update into O(log n) contiguous range operations.
 
 The query operation is defined by an associative `combine()` function which satisfies
 `combine(x, combine(y, z)) = combine(combine(x, y), z)` for all values `x`, `y`, and `z` in the

@@ -5,7 +5,9 @@ circuit is an Eulerian trail which begins and ends on the same node. A directed 
 Eulerian cycle if and only if every node has an in-degree equal to its out-degree, and all of its
 nodes with nonzero degree belong to a single strongly connected component. An undirected graph has
 an Eulerian cycle if and only if every node has even degree, and all of its nodes with nonzero
-degree belong to a single connected component.
+degree belong to a single connected component. The cycles are found with Hierholzer's algorithm:
+walk unused edges until returning to a node with none left, emit that node, and back up, which
+splices every closed detour into one cycle output in reverse.
 
 - `euler_cycle_directed(adj, u)` returns a vector of all nodes in a directed graph that are
   reachable from the starting node `u` in an order which forms an Eulerian cycle. The first node

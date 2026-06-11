@@ -1,7 +1,10 @@
 /*
 
 Selects uniformly random samples from a stream whose length may be unknown in advance. Reservoir
-sampling keeps only the chosen sample or samples in memory while processing each element once.
+sampling keeps only the chosen sample or samples in memory while processing each element once. The
+first arrivals fill the reservoir, and the $i$-th element then replaces a uniformly chosen occupant
+with probability $1/i$ (or $k/i$ when keeping $k$ samples), which by induction leaves every element
+seen so far equally likely to be in the sample.
 
 Each class maintains its reservoir incrementally; call `add(x)` once per stream element in any
 order, then `get()` to retrieve the result.

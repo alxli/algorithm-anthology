@@ -1,6 +1,6 @@
 /*
 
-Given an array and a fixed window length `k`, report the maximum (or minimum) of every contiguous
+Given an array and a fixed window length $k$, report the maximum (or minimum) of every contiguous
 window of that length as the window slides from left to right. A monotonic deque of indices answers
 all windows in linear total time: it holds the indices of candidates that could still become a
 window maximum, kept in decreasing order of value. Each new element pops every smaller element off

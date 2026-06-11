@@ -1,10 +1,12 @@
 /*
 
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
-once in the collection. In addition, support queries for keys given their ranks as well as queries
-for the ranks of given keys. This implementation requires an ordering on the set of possible keys
-defined by `operator<` on the key type. A size balanced tree augments each nodes with the size of
-its subtree, using it to maintain balance and compute order statistics.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible
+key appears at most once in the collection. In addition, support queries for keys given their ranks
+as well as queries for the ranks of given keys. This implementation requires an ordering on the set
+of possible keys defined by `operator<` on the key type. A size balanced tree augments each node
+with the size of its subtree, using it to maintain balance and compute order statistics. After each
+update, rotations restore the invariant that every subtree is at least as large as each of its
+sibling's child subtrees, keeping the height logarithmic.
 
 - `SBTree()` constructs an empty map.
 - `size()` returns the size of the map.

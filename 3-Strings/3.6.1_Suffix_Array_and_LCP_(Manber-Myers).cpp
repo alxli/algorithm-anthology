@@ -11,6 +11,10 @@ lengths of the longest common prefixes between all pairs of lexicographically ad
 `s`. For example, `"baa"` has the sorted suffixes `"a"`, `"aa"`, and `"baa"`, with an LCP array of
 $[1, 0]$.
 
+The doubling algorithm sorts the suffixes by their first $2^k$ characters for increasing $k$: each
+round orders suffixes by their pair of ranks from the previous round, so a comparison costs O(1)
+and the full order emerges after O(log n) rounds.
+
 - `SuffixArrayManberMyers(s)` constructs a suffix array from the given string `s` using the original
   Manber-Myers doubling algorithm with a comparison-based sort.
 - `get_sa()` returns the constructed suffix array.

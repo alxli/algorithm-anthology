@@ -5,8 +5,8 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 - `make_matrix(r, c, v)` constructs and returns a matrix with `r` rows and `c` columns where the
   value at every index is initialized to `v`.
 - `make_matrix(a)` returns a matrix constructed from the two-dimensional vector `a`.
-- `identity_matrix(n)` returns the $n$ by $n$ identity matrix, that is, a matrix where `a[i][j]`
-  equals 1 (if $i = j$), or 0 otherwise, for every $i$ and $j$ in $[0, n)$.
+- `identity_matrix(n)` returns the $n$ by $n$ identity matrix, that is, a matrix where each
+  `a[i][j]` equals 1 if $i = j$, or 0 otherwise.
 - `rows(a)` returns the number of rows $m$ in matrix `a`.
 - `columns(a)` returns the number of columns $n$ in matrix `a`.
 - `a[i][j]` may be used to access or modify the entry at row $i$, column $j$ of an $m$ by $n$ matrix
@@ -16,9 +16,9 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 - Operators `+`, `-`, `*`, `/`, `+=`, `-=`, `*=`, and `/=` define scalar addition, subtraction,
   multiplication, and division involving a matrix and a numeric scalar value.
 - Operators `*` and `*=` define vector and matrix multiplication.
-- Operators `^` and `^=` define matrix exponentiation of a square matrix $a$ by an integer power
-  $p$.
-- `power_sum(a, p)` returns the power sum of a square matrix $a$ up to an integer power $p$, that
+- Operators `^` and `^=` define matrix exponentiation of a square matrix `a` by an integer power
+  `p`.
+- `power_sum(a, p)` returns the power sum of a square matrix `a` up to an integer power `p`, that
   is, $a + a^2 + \ldots + a^p$.
 - `transpose(a)` returns the transpose of an $m$ by $n$ matrix `a`, that is, a new $n$ by $m$ matrix
   $b$ such that `a[i][j]` $=$ `b[j][i]` for every `i` in `[0, m)` and `j` in `[0, n)`.

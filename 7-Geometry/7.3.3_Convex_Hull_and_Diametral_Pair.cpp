@@ -1,10 +1,13 @@
 /*
 
 Given a list of points in two dimensions, computes the convex hull using the monotone chain
-algorithm and the diametral pair using rotating calipers. The functions are templated on the
-iterator type; the value type of the iterator is used as the point type. Both functions accept
-either floating-point or integral coordinates, but since they use only cross product comparisons,
-they happen to be exact for integral points.
+algorithm and the diametral pair using rotating calipers. Monotone chain sorts the points
+lexicographically and builds the lower and upper hulls in one pass each, popping any point that
+would create a clockwise turn. Rotating calipers then walks two antipodal pointers around the hull,
+advancing whichever increases the separation, visiting every candidate diametral pair in linear
+time. The functions are templated on the iterator type; the value type of the iterator is used as
+the point type. Both functions accept either floating-point or integral coordinates, but since they
+use only cross product comparisons, they happen to be exact for integral points.
 
 - `convex_hull(lo, hi)` returns the convex hull in clockwise order for an input range `[lo, hi)` of
   points. The input range is sorted lexicographically after the call. To instead return the hull

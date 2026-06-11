@@ -3,9 +3,11 @@
 Binary search can be generally used to find the input value corresponding to any output value of a
 monotonic (strictly non-increasing or strictly non-decreasing) function in O(log n) time with
 respect to the domain size. This is a special case of finding the exact point at which any given
-monotonic Boolean function changes from true to false or vice versa. Unlike searching through an
-array, discrete binary search is not restricted by available memory, making it useful for handling
-infinitely large search spaces such as real number intervals.
+monotonic Boolean function changes from true to false or vice versa. Each step evaluates the
+midpoint of the current interval and keeps the half that still contains the transition point,
+halving the search space until it closes on the answer. Unlike searching through an array, discrete
+binary search is not restricted by available memory, making it useful for handling infinitely large
+search spaces such as real number intervals.
 
 - `binary_search_first_true(lo, hi, pred)` takes integer boundaries for the search space `[lo, hi)`
   (i.e. including `lo`, but excluding `hi`) and returns the smallest integer `k` in `[lo, hi)` for

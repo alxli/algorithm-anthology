@@ -1,9 +1,10 @@
 /*
 
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
-once in the collection. This implementation requires `operator==` to be defined on the key type. A
-hash map implements a map by hashing keys into buckets using a hash function. This implementation
-resolves collisions by chaining entries hashed to the same bucket into a linked list.
+Maintain an unordered map, that is, a unordered collection of key-value pairs such that each
+possible key appears at most once in the collection. This implementation requires `operator==` to be
+defined on the key type. A hash map implements a map by hashing keys into buckets using a hash
+function. This implementation resolves collisions by chaining entries hashed to the same bucket into
+a linked list.
 
 - `HashMap()` constructs an empty map.
 - `size()` returns the size of the map.

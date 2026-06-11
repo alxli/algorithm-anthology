@@ -7,9 +7,10 @@ of rooms needed for meetings.
 The greedy algorithm sorts intervals by start time and reuses the group whose current finish time is
 earliest whenever possible. Otherwise, it creates a new group.
 
-- `interval_partitioning(intervals)` returns `room[id]`, the assigned room for each original
-  interval id.
-- The number of rooms used is `1 + max(room[id])`, or 0 if there are no intervals.
+- `interval_partitioning(intervals)` returns a vector `room`, where `room[id]` is the assigned room
+  for each input interval given as a vector of `PartitionInterval` with fields `start`, `finish`,
+  and `id`. The number of rooms used in the returned assignment is $1 + \max(`room[id]`)$, or 0 if 
+  there are no intervals.
 
 Time Complexity:
 - O(n log n) per call due to sorting and priority queue operations.
@@ -41,16 +42,15 @@ std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals)
       std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>>
       pq;
   int rooms = 0;
-  for (const auto &iv : intervals) {
-    int id = iv.id;
-    if (!pq.empty() && pq.top().first <= iv.start) {
+  for (const auto &[start, finish, id] : intervals) {
+    if (!pq.empty() && pq.top().first <= start) {
       int r = pq.top().second;
       pq.pop();
       room[id] = r;
     } else {
       room[id] = rooms++;
     }
-    pq.emplace(iv.finish, room[id]);
+    pq.emplace(finish, room[id]);
   }
   return room;
 }

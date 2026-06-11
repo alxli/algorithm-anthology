@@ -4,12 +4,17 @@ Given a single string (needle) and a single text (haystack) to be searched, dete
 position in which the needle occurs within the haystack in linear time using the Z algorithm. In
 comparison, `std::string::find` runs in quadratic time.
 
-The `find()` function below calls the Z algorithm on the concatenation of `needle` and `haystack`,
-separated by a sentinel value that is guaranteed not to collide with any byte in either input.
+The Z array stores, for each position of a string, the length of the longest substring starting
+there that matches a prefix of the whole string. It is computed in linear time by maintaining the
+rightmost matched window and seeding each position from its mirror earlier in that window.
 
-- `z_array(s)` constructs the Z array for a string `needle` that can be used for string searching.
-  The Z array on an input string `s` is an array `z` where `z[i]` is the length of the longest
-  substring starting from `s[i]` which is also a prefix of `s`.
+The `find()` function below calls the Z algorithm on the concatenation of `needle` and `haystack`,
+separated by a sentinel value that is guaranteed not to collide with any byte in either input. Any
+position whose Z value reaches the needle's length marks an occurrence.
+
+- `z_array(s)` constructs the Z array for a needle string `s` that can be used for string searching.
+  Each resulting value `z[i]` stores the length of the longest substring starting from `s[i]` which
+  is also a prefix of the needle `s`.
 - `find(haystack, needle)` returns the first position that `needle` occurs in `haystack`, or
   `std::string::npos` if it cannot be found. Note that the function can be modified to return all
   matches by simply letting the loop run and storing the results instead of returning early.

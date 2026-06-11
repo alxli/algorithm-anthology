@@ -4,7 +4,9 @@ Compute the prime factorization of an integer. In the following implementations,
 factorization of $n$ is represented as a sorted vector of prime integers which together multiply to
 $n$. Note that factors are duplicated in the vector in accordance to their multiplicity in the prime
 factorization of $n$. For 0, 1, and prime numbers, the prime factorization is considered to be a
-vector consisting of a single element - the input itself.
+vector consisting of a single element - the input itself. For large inputs, Pollard's rho algorithm
+iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor
+reveal that factor through a GCD with their difference.
 
 - `prime_factorize(n)` returns the prime factorization of `n` using trial division.
 - `get_divisors(n)` returns a sorted vector of all (not merely prime) divisors of `n` using trial

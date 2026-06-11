@@ -1,8 +1,11 @@
 /*
 
-An unweighted tree possesses a center, centroid, and diameter. The following functions apply to a
-global, bidirectionally pre-populated adjacency list `adj` which must form a valid tree with nodes
-numbered from 0 to `adj.size() - 1`.
+An unweighted tree possesses a center, centroid, and diameter. The centers are found by repeatedly
+peeling away the leaves of the tree until one or two nodes remain. The diameter relies on the fact
+that the farthest node from any start is always one endpoint of a diameter, so a second traversal
+from that endpoint measures the full diameter. The following functions apply to a global,
+bidirectionally pre-populated adjacency list `adj` which must form a valid tree with nodes numbered
+from 0 to `adj.size() - 1`.
 
 - `find_centers()` returns a vector of either one or two tree Jordan centers. The Jordan center of a
   tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the

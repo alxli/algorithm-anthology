@@ -4,9 +4,9 @@ Given a weighted, directed graph with possibly negative weights, determine the m
 between all pairs of start and destination nodes in the graph. Optionally, output the shortest path
 between two nodes using the next-hop matrix precomputed into `next_node`.
 
-It is a dynamic program over intermediate nodes: for each node `k` in turn, every pair `(i, j)` is
-relaxed by considering a path through `k`, so once all `k` have been processed the matrix holds the
-all-pairs shortest distances.
+Floyd-Warshall's algorithm is a dynamic program over intermediate nodes: for each node `k` in turn,
+every pair `(i, j)` is relaxed by considering a path through `k`, so once all `k` have been
+processed the matrix holds the all-pairs shortest distances.
 
 - `initialize(nodes)` initializes `dist` and `next_node` for nodes numbered from 0 to `nodes - 1`.
 - `floyd_warshall()` updates the global adjacency matrix `dist` so `dist[u][v]` stores the shortest

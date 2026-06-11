@@ -1,9 +1,11 @@
 /*
 
 Converts a matrix to reduced row echelon form using Gaussian elimination to solve a system of linear
-equations as well as compute the determinant. In practice, this method is prone to rounding error on
-certain matrices. For a more accurate algorithm for solving systems of linear equations, LU
-decomposition with row partial pivoting should be used.
+equations as well as compute the determinant. Each round finds a row with a nonzero entry in the
+current leading column, normalizes that row, and subtracts multiples of it from every other row to
+clear the column. In practice, this method is prone to rounding error on certain matrices. For a
+more accurate algorithm for solving systems of linear equations, LU decomposition with row partial
+pivoting should be used.
 
 - `row_reduce(a)` assigns the matrix `a` to its reduced row echelon form, returning a reference to
   the modified argument itself.

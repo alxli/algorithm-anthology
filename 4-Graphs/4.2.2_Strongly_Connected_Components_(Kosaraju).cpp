@@ -2,7 +2,10 @@
 
 Given a directed graph, determine the strongly connected components (SCCs) using the Kosaraju-Sharir
 algorithm. A strongly connected component is a maximal set of vertices where every vertex can reach
-every other vertex. Condensing each SCC into one node produces a directed acyclic graph.
+every other vertex. Condensing each SCC into one node produces a directed acyclic graph. The
+algorithm runs two passes of depth-first search: the first records the order in which nodes finish,
+and the second explores the transposed graph in reverse finish order, with each search collecting
+exactly one component.
 
 - `KosarajuSCC(n)` constructs a directed graph on nodes numbered from 0 to `n - 1`.
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.

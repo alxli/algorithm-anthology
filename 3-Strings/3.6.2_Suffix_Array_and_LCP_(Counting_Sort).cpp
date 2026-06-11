@@ -11,6 +11,11 @@ lengths of the longest common prefixes between all pairs of lexicographically ad
 `s`. For example, `"baa"` has the sorted suffixes `"a"`, `"aa"`, and `"baa"`, with an LCP array of
 `[1, 0]`.
 
+The doubling algorithm sorts the suffixes by their first $2^k$ characters for increasing $k$: each
+round orders suffixes by their pair of ranks from the previous round, so a comparison costs O(1)
+and the full order emerges after O(log n) rounds. Replacing the comparison sort of each round with
+counting-sort-style rank updates removes a logarithmic factor.
+
 - `SuffixArrayCountingSort(s)` constructs a suffix array from the given string `s` using the
   original Manber-Myers doubling algorithm with counting-sort-style rank updates to reduce the
   running time to O(n log n).

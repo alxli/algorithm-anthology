@@ -1,7 +1,12 @@
 /*
 
 Given a starting node in a weighted directed graph, compute shortest paths even when some edge
-weights are negative.
+weights are negative. The Shortest Path Faster Algorithm is a queue-based optimization of
+Bellman-Ford: instead of relaxing every edge in every round, it keeps a queue of nodes whose
+distances have improved and relaxes only their outgoing edges. It is often fast on benign inputs,
+but it still has Bellman-Ford's worst-case behavior and can be forced to run in O(n*m). Prefer
+Dijkstra for nonnegative weights, and use SPFA mainly when negative edges are present and the input
+is not adversarial.
 
 - `spfa(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj` which
   must consist of nodes numbered from 0 to `adj.size() - 1`. Each edge is stored as
@@ -11,11 +16,6 @@ weights are negative.
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
 destination to `start`, then reverse that sequence to recover the path.
-
-The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford. It is often fast
-on benign inputs, but it still has Bellman-Ford's worst-case behavior and can be forced to run in
-O(n*m). Prefer Dijkstra for nonnegative weights, and use SPFA mainly when negative edges are present
-and the input is not adversarial.
 
 Time Complexity:
 - O(n*m) in the worst case for `spfa()`, where $n$ is the number of nodes and $m$ is the number of

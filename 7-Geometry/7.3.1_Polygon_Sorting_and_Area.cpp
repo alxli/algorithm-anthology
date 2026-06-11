@@ -1,9 +1,11 @@
 /*
 
 Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the
-area. The functions are templated on the point type. The local `Point` struct (`double` coordinates)
-is the default; replace it with `Point`/`PointD`/ `PointI` from 7.1.1 or any struct with numeric
-`.x` and `.y` fields and `<` / `==` operators.
+area. The sorting comparators order two points by the sign of their cross product around a chosen
+center, that is, by angle. The area functions use the shoelace formula, summing the cross products
+of consecutive vertex pairs. The functions are templated on the point type. The local `Point` struct
+(`double` coordinates) is the default; replace it with `Point`/`PointD`/ `PointI` from 7.1.1 or any
+struct with numeric `.x` and `.y` fields and `<` / `==` operators.
 
 - `cw_comp(a, b, c)` returns whether point `a` compares clockwise before `b` about `c`.
 - `CWComparator(c)` / `CCWComparator(c)` return comparators for `std::sort`.

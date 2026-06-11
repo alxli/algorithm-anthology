@@ -1,7 +1,10 @@
 /*
 
 Given a flow network with integer capacities and edge costs, find a minimum-cost flow from a source
-node to a sink node.
+node to a sink node. This is the successive shortest path method: repeatedly find a minimum-cost
+augmenting path from source to sink in the residual graph and push as much flow as it allows, until
+the flow target is met or no path remains. The path search uses SPFA (queue-based Bellman-Ford),
+since residual edges carry negated costs.
 
 - `MinCostMaxFlow(nodes)` constructs an empty residual network whose nodes are numbered from 0 to
   `nodes - 1`.

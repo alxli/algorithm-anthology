@@ -3,7 +3,10 @@
 Maintain a min-priority queue, that is, a collection of elements with support for querying and
 extraction of the minimum. This implementation requires an ordering on the set of possible elements
 defined by `operator<`. A binary min-heap implements a priority queue by inserting and deleting
-nodes into a binary tree such that the parent of any node is always less than its children.
+nodes into a binary tree such that the parent of any node is always less than its children. The tree
+is stored implicitly in an array, where the children of the node at index $i$ live at indices
+$2i + 1$ and $2i + 2$. Insertion appends the new element and bubbles it up toward the root, while
+extraction moves the last element to the root and sifts it down.
 
 - `BinaryHeap()` constructs an empty priority queue.
 - `BinaryHeap(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of

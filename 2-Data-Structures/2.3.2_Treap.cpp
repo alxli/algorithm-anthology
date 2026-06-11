@@ -1,11 +1,12 @@
 /*
 
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
-once in the collection. This implementation requires an ordering on the set of possible keys
-defined by `operator<` on the key type. A Treap is a binary search tree where each node holds a
-randomly assigned priority. The tree satisfies the BST property on keys and the min-heap property
-on priorities (lower priority value is closer to root). Since priorities are random, this keeps the
-tree balanced with high probability, making insertions and deletions run in O(log n).
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementation requires an ordering on the set of
+possible keys defined by `operator<` on the key type. A treap is a binary search tree where each
+node holds a randomly assigned priority. The tree satisfies the BST property on keys and the
+min-heap property on priorities (lower priority value is closer to root). Since priorities are
+random, this keeps the tree balanced with high probability, making insertions and deletions run in
+O(log n).
 
 - `Treap()` constructs an empty map.
 - `size()` returns the size of the map.

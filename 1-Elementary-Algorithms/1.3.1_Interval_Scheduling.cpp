@@ -7,8 +7,8 @@ Intervals are represented as half-open ranges `[start, finish)`, so two interval
 the next interval's `start` is at least the previous interval's `finish`.
 
 - `interval_scheduling(intervals)` returns one maximum-size compatible subset of intervals, in the
-  order they are selected.
-- `Interval` stores `start`, `finish`, and the original `id`.
+  order they are selected, from an input vector of `Interval` with fields `start`, `finish`, and the
+  original `id`.
 
 Time Complexity:
 - O(n log n) per call due to sorting, where $n$ is the number of intervals.

@@ -2,7 +2,9 @@
 
 Precomputes prefix sums so range-sum queries can be answered in constant time. This is one of the
 most common array preprocessing tools, and also appears as a building block for subarray sums,
-difference arrays, and two-dimensional grids.
+difference arrays, and two-dimensional grids. Each table entry stores the sum of all elements before
+it, so any range sum is the difference of two entries; in two dimensions, rectangle sums combine
+four entries by inclusion-exclusion.
 
 - `prefix_sums(a)` returns array `pref` with `pref[0] = 0` and `pref[i + 1] = a[0] + ... + a[i]`.
 - `range_sum(pref, lo, hi)` returns the sum of the inclusive range `[lo, hi]`.
@@ -13,7 +15,7 @@ difference arrays, and two-dimensional grids.
 Time Complexity:
 - O(n) per call to `prefix_sums(a)`, where $n$ is the array size.
 - O(m*n) per call to `prefix_sums_2d(a)`, where $m$ and $n$ are the number of rows and columns of
-  $a$, respectively.
+  `a`, respectively.
 - O(1) per range or rectangle query.
 
 Space Complexity:

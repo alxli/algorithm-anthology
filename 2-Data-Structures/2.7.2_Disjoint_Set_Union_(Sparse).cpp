@@ -1,8 +1,10 @@
 /*
 
 Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees.
-Each partition is assigned a unique representative known as the parent, or root. The following
-implements two well-known optimizations known as union-by-rank and path compression. This version
+Each partition is assigned a unique representative known as the parent, or root. Each subset is
+stored as a tree whose nodes point toward its root: finding a representative follows parent
+pointers, redirecting visited nodes straight to the root along the way (path compression), while
+unions attach the shallower tree beneath the root of the deeper one (union-by-rank). This version
 uses an `std::unordered_map` for storage and coordinate compression (thus, element types must meet
 the requirements of key types for `std::unordered_map`). The order of sets returned by
 `get_all_sets()` is unspecified.

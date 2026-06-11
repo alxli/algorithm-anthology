@@ -11,6 +11,10 @@ lengths of the longest common prefixes between all pairs of lexicographically ad
 `s`. For example, `"baa"` has the sorted suffixes `"a"`, `"aa"`, and `"baa"`, with an LCP array of
 $[1, 0]$.
 
+The DC3/skew algorithm recursively constructs the suffix array of the suffixes starting at positions
+not divisible by 3, uses that order to sort the remaining suffixes with radix sort, and merges the
+two sorted groups in linear time.
+
 - `SuffixArrayDC3(s)` constructs a suffix array from the given string `s` using the linear time
   DC3/skew algorithm by Karkkainen & Sanders (2003) with radix sort.
 - `get_sa()` returns the constructed suffix array.

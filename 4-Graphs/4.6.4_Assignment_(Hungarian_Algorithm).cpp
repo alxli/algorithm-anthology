@@ -5,8 +5,11 @@ jobs (with $n \leq m$) where assigning worker `i` to complete job `j` would cost
 choose a distinct job for each worker so that the total assignment cost is minimized.
 
 The classical Hungarian algorithm using potentials transforms a cost matrix using the principle that
-adding or subtracting constants from rows or columns does not change the optimal assignment. Note
-that while the input matrix is 0-based here, the internal calculations are 1-based.
+adding or subtracting constants from rows or columns does not change the optimal assignment. Workers
+are assigned one row at a time: each new row triggers a search for a least-cost augmenting path over
+zero-slack edges, with the potentials adjusted along the way to expose new zero-slack edges until
+the path reaches a free job. Note that while the input matrix is 0-based here, the internal
+calculations are 1-based.
 
 - `hungarian(cost, &assignment)` returns the minimum total assignment cost for a 0-based `cost`
   matrix, while populating `assignment` with $n$ values where `assignment[i]` is the chosen job for

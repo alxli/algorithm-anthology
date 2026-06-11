@@ -3,7 +3,9 @@
 Given an undirected graph, compute bridges, 2-edge-connected components, and the bridge forest using
 Tarjan's algorithm. A bridge is an edge whose removal increases the number of connected components
 in the graph. A 2-edge-connected component is a maximal set of vertices connected without crossing
-any bridge.
+any bridge. A single depth-first search tracks each node's low-link, the earliest entry time
+reachable from its subtree: a tree edge is a bridge exactly when the child's subtree cannot reach
+back to the parent's side by any other route.
 
 After each 2-edge-connected component is condensed into one node, the original bridges connect those
 nodes into a bridge tree, or a bridge forest when the original graph is disconnected. This differs

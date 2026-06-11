@@ -11,15 +11,13 @@ compute the maximal submatrix sum as well.
   requires operators `+` and `<` to be defined on the iterators' value type. Optionally, two `int`
   pointers may be passed to store the inclusive boundary indices `[res_lo, res_hi]` of the resulting
   subarray. By convention, the empty subarray is allowed, so an input range consisting of only
-  negative values returns `0` with an empty result interval.
-- `max_submatrix_sum(a, &r1, &c1, &r2, &c2)` returns the largest sum of any rectangular
-  submatrix for a matrix of $m$ rows by $n$ columns. The matrix should be given as a 2-dimensional
-  vector, where the outer vector must contain $m$ vectors each of size $n$. This implementation
-  requires operators `+` and `<` to be defined on the iterators' value type. Optionally, four `int`
-  pointers may be passed to store the boundary indices of the resulting subarray, with `(r1, c1)`
-  specifiying the top-left index and `(r2, c2)` specifying the bottom-right index. By convention,
-  the empty submatrix is allowed, so an input matrix consisting of only negative values returns `0`
-  with an empty result interval.
+  negative values returns 0 with an empty result interval.
+- `max_submatrix_sum(a, &r1, &c1, &r2, &c2)` returns the largest sum of any rectangular submatrix
+  for a matrix `a` with $m$ rows and $n$ columns. This implementation requires operators `+` and `<`
+  to be defined on the iterators' value type. Optionally, four `int` pointers may be passed to store
+  the boundary indices of the resulting subarray, with `(r1, c1)` specifiying the top-left index and
+  `(r2, c2)` specifying the bottom-right index. By convention, the empty submatrix is allowed, so an
+  input matrix consisting of only negative values returns 0 with an empty result interval.
 
 Time Complexity:
 - O(n) per call to `max_subarray_sum()`, where $n$ is the distance between `lo` and `hi`.
@@ -66,8 +64,8 @@ auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr
 
 template<class T>
 T max_submatrix_sum(
-    const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr,
-    int *r2 = nullptr, int *c2 = nullptr
+    const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr, int *r2 = nullptr,
+    int *c2 = nullptr
 ) {
   if (a.empty() || a[0].empty()) {
     return T();

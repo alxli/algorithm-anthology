@@ -35,8 +35,8 @@ The pivot chosen in this implementation is always a middle element of the range 
 \textbf{Stable?}: No.
 
 \begin{lstlisting}[language=C++]
-template<class It, class Compare>
-void quicksort(It lo, It hi, Compare comp) {
+template<class It, class Compare = std::less<>>
+void quicksort(It lo, It hi, Compare comp = Compare()) {
   while (hi - lo >= 2) {
     auto pivot = *(lo + (hi - lo) / 2);
     It lt = lo, i = lo, gt = hi;
@@ -58,12 +58,6 @@ void quicksort(It lo, It hi, Compare comp) {
     }
   }
 }
-
-template<class It>
-void quicksort(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  quicksort(lo, hi, std::less<T>());
-}
 \end{lstlisting}
 Merge sort first divides a list into n sublists of one element each, then recursively merges the sublists into sorted order until only a single sorted sublist remains. Merge sort is a stable sort, meaning that it preserves the relative order of elements which compare equal by \inlinecode{operator\textless{}} or the custom comparator given.
 
@@ -78,8 +72,8 @@ An analogous function in the C++ standard library is \inlinecode{std::stable\_so
 \textbf{Stable?}: Yes.
 
 \begin{lstlisting}[language=C++]
-template<class It, class Compare>
-void mergesort(It lo, It hi, Compare comp) {
+template<class It, class Compare = std::less<>>
+void mergesort(It lo, It hi, Compare comp = Compare()) {
   if (hi - lo < 2) {
     return;
   }
@@ -94,12 +88,6 @@ void mergesort(It lo, It hi, Compare comp) {
   merged.insert(merged.end(), a, mid + 1);
   merged.insert(merged.end(), c, hi);
   std::copy(merged.begin(), merged.end(), lo);
-}
-
-template<class It>
-void mergesort(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  mergesort(lo, hi, std::less<T>());
 }
 \end{lstlisting}
 Heapsort first rearranges an array to satisfy the max-heap property. Then, it repeatedly pops the max element of the heap (the left, unsorted subrange), moving it to the beginning of the right, sorted subrange until the entire range is sorted. Heapsort has a better worst case time complexity than quicksort and also a better space complexity than merge sort.
@@ -117,8 +105,8 @@ The loop below has two modes controlled by whether \inlinecode{i \textgreater{} 
 \textbf{Stable?}: No.
 
 \begin{lstlisting}[language=C++]
-template<class It, class Compare>
-void heapsort(It lo, It hi, Compare comp) {
+template<class It, class Compare = std::less<>>
+void heapsort(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
   T tmp;
   It i = lo + (hi - lo) / 2, j = hi, parent, child;
@@ -148,12 +136,6 @@ void heapsort(It lo, It hi, Compare comp) {
     *(lo + (parent - lo)) = tmp;
   }
 }
-
-template<class It>
-void heapsort(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  heapsort(lo, hi, std::less<T>());
-}
 \end{lstlisting}
 Comb sort is an improved bubble sort. While bubble sort increments the gap between swapped elements for every inner loop iteration, comb sort fixes the gap size in the inner loop, decreasing it by a particular shrink factor in every iteration of the outer loop. The shrink factor of 1.3 is empirically determined to be the most effective.
 
@@ -166,8 +148,8 @@ Even though the worst case time complexity is $O(n^{2})$, a well chosen shrink f
 \textbf{Stable?}: No.
 
 \begin{lstlisting}[language=C++]
-template<class It, class Compare>
-void combsort(It lo, It hi, Compare comp) {
+template<class It, class Compare = std::less<>>
+void combsort(It lo, It hi, Compare comp = Compare()) {
   int gap = hi - lo;
   bool swapped = true;
   while (gap > 1 || swapped) {
@@ -182,12 +164,6 @@ void combsort(It lo, It hi, Compare comp) {
       }
     }
   }
-}
-
-template<class It>
-void combsort(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  combsort(lo, hi, std::less<T>());
 }
 \end{lstlisting}
 Radix sort is used to sort integer elements with a constant number of bits in linear time. This implementation only works on ranges pointing to unsigned integer primitives. The elements in the input range do not strictly have to be unsigned types, as long as their values are nonnegative integers.
@@ -475,10 +451,10 @@ rotate left:  1 2 2 3 4 5 7 7 10 0
 rotate right: 0 1 2 2 3 4 5 7 7 10
 \end{exampleoutput}
 \subsection{Counting Inversions}
-The number of inversions for a sequence \inlinecode{a} is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how ``close'' an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions.
+The number of inversions for a sequence \inlinecode{a} is the number of ordered pairs $(i, j)$ such that $i < j$ and $a[i] > a[j]$. This is roughly how ``close'' an array is to being sorted, but is \textit{not} the minimum number of swaps required to sort the array. If the array is sorted, then the inversion count is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following two functions are each techniques to efficiently count inversions. In the merge sort approach, whenever the merge step emits an element from the right half, that element jumps ahead of every unmerged left-half element, and exactly that many inversions are added to the count.
 
 \begin{compactitem}
-  \item \inlinecode{inversions(lo, hi)} uses merge sort to return the number of inversions given two random-access iterators as a range \inlinecode{[lo, hi)}. The input range will be sorted after the function call. This requires \inlinecode{operator\textless{}} to be defined on the iterators' value type.
+  \item \inlinecode{inversions(lo, hi)} uses merge sort to return the number of inversions given two random-access iterators as a range \inlinecode{[lo, hi)}. The input range will be sorted after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
   \item \inlinecode{inversions(a)} uses coordinate compression and a Fenwick tree to return the number of inversions in an integer vector without modifying it.
 \end{compactitem}
 
@@ -498,22 +474,23 @@ The number of inversions for a sequence \inlinecode{a} is the number of ordered 
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <functional>
 #include <iterator>
 #include <vector>
 
-template<class It>
-long long inversions(It lo, It hi) {
+template<class It, class Compare = std::less<>>
+long long inversions(It lo, It hi, Compare comp = Compare()) {
   if (hi - lo < 2) {
     return 0;
   }
   It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   long long res = 0;
-  res += inversions(lo, mid + 1);
-  res += inversions(mid + 1, hi);
+  res += inversions(lo, mid + 1, comp);
+  res += inversions(mid + 1, hi, comp);
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> merged;
   while (a <= mid && c < hi) {
-    if (*c < *a) {
+    if (comp(*c, *a)) {
       merged.push_back(*(c++));
       res += (mid - a) + 1;
     } else {
@@ -664,7 +641,7 @@ Partially sort a range so that one chosen position ends up holding its final sor
   \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges the range \inlinecode{[lo, hi)} such that the value pointed to by \inlinecode{nth} is the element that would be there if the range were fully sorted. Furthermore, the range is partitioned such that no value in \inlinecode{[lo, nth)} compares greater than the value pointed to by \inlinecode{nth} and no value in \inlinecode{(nth, hi)} compares less. Requires \inlinecode{operator\textless{}} on the iterator's value type.
 \end{compactitem}
 
-The pivot is chosen uniformly at random, and the partition step groups equal keys together so arrays with many duplicate values remain efficient.
+The pivot is chosen uniformly at random, and the partition step groups equal keys together so arrays with many duplicate values remain efficient. After each partition, the search continues in only the side that contains \inlinecode{nth}, shrinking the expected remaining work geometrically for a linear average.
 
 \textbf{Time Complexity}: $O(n)$ on average per call to \inlinecode{nth\_element2()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -725,7 +702,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{3-Way Partitioning (Dutch National Flag)}
-Partitions a range into three consecutive groups according to a pivot value: elements less than the pivot, elements equal to the pivot, and elements greater than the pivot. This is the Dutch National Flag algorithm, and is the core partitioning step used in three-way quicksort and arrays with many duplicate keys.
+Partitions a range into three consecutive groups according to a pivot value: elements less than the pivot, elements equal to the pivot, and elements greater than the pivot. This is the Dutch National Flag algorithm, and is the core partitioning step used in three-way quicksort and arrays with many duplicate keys. A single pass maintains the three groups in-place using two boundary iterators, swapping each examined element into the region where it belongs.
 
 \begin{compactitem}
   \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges the range \inlinecode{[lo, hi)} in-place and returns iterators \inlinecode{(mid\_lo, mid\_hi)}, where \inlinecode{[lo, mid\_lo)} is less than \inlinecode{pivot}, \inlinecode{[mid\_lo, mid\_hi)} is equal to \inlinecode{pivot}, and \inlinecode{[mid\_hi, hi)} is greater than \inlinecode{pivot}.
@@ -793,7 +770,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Prefix Sums}
-Precomputes prefix sums so range-sum queries can be answered in constant time. This is one of the most common array preprocessing tools, and also appears as a building block for subarray sums, difference arrays, and two-dimensional grids.
+Precomputes prefix sums so range-sum queries can be answered in constant time. This is one of the most common array preprocessing tools, and also appears as a building block for subarray sums, difference arrays, and two-dimensional grids. Each table entry stores the sum of all elements before it, so any range sum is the difference of two entries; in two dimensions, rectangle sums combine four entries by inclusion-exclusion.
 
 \begin{compactitem}
   \item \inlinecode{prefix\_sums(a)} returns array \inlinecode{pref} with \inlinecode{pref[0] = 0} and \inlinecode{pref[i + 1] = a[0] + ... + a[i]}.
@@ -806,7 +783,7 @@ Precomputes prefix sums so range-sum queries can be answered in constant time. T
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{prefix\_sums(a)}, where $n$ is the array size.
-  \item $O(m \cdot n)$ per call to \inlinecode{prefix\_sums\_2d(a)}, where $m$ and $n$ are the number of rows and columns of $a$, respectively.
+  \item $O(m \cdot n)$ per call to \inlinecode{prefix\_sums\_2d(a)}, where $m$ and $n$ are the number of rows and columns of \inlinecode{a}, respectively.
   \item $O(1)$ per range or rectangle query.
 \end{compactitem}
 
@@ -1006,7 +983,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Sliding Window Maximum}
-Given an array and a fixed window length \inlinecode{k}, report the maximum (or minimum) of every contiguous window of that length as the window slides from left to right. A monotonic deque of indices answers all windows in linear total time: it holds the indices of candidates that could still become a window maximum, kept in decreasing order of value. Each new element pops every smaller element off the back, since those can never again be the maximum while the larger newer element is in the window, and indices that fall outside the window are dropped from the front. The front of the deque is always the maximum of the current window. This is the windowed counterpart of the monotonic stack: each index is pushed and popped at most once.
+Given an array and a fixed window length $k$, report the maximum (or minimum) of every contiguous window of that length as the window slides from left to right. A monotonic deque of indices answers all windows in linear total time: it holds the indices of candidates that could still become a window maximum, kept in decreasing order of value. Each new element pops every smaller element off the back, since those can never again be the maximum while the larger newer element is in the window, and indices that fall outside the window are dropped from the front. The front of the deque is always the maximum of the current window. This is the windowed counterpart of the monotonic stack: each index is pushed and popped at most once.
 
 Both functions take a vector \inlinecode{a} of $n$ comparable values and a window length $k \in [1, n]$, returning a vector of $n - k + 1$ results, one per window in left-to-right order.
 
@@ -1190,12 +1167,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minimum Excluded Value}
-Computes the minimum excluded nonnegative integer, commonly called the MEX. The MEX of a set is the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states.
+Computes the minimum excluded nonnegative integer, commonly called the MEX. The MEX of a set is the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ elements never exceeds $n$, the one-shot version simply marks which of the values $0$ to $n$ occur and scans for the first gap. The dynamic version keeps a count per value plus an ordered set of absent values, whose smallest member is always the current MEX.
 
 \begin{compactitem}
   \item \inlinecode{mex(lo, hi)} returns the MEX of the values in \inlinecode{[lo, hi)}.
   \item \inlinecode{DynamicMex(n)} maintains counts of values in \inlinecode{[0, n]}, enough to track the MEX of a multiset of at most \inlinecode{n} relevant nonnegative values.
-  \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if $0 \leq {\inlinecodemath{x}} \leq n$.
+  \item \inlinecode{add(x)} inserts one copy of value \inlinecode{x} if \inlinecode{x} $\in$ \inlinecode{[0, n]}.
   \item \inlinecode{remove(x)} removes one copy of value \inlinecode{x} if present.
   \item \inlinecode{get()} returns the current MEX.
 \end{compactitem}
@@ -1358,9 +1335,7 @@ Solves the 0-1 knapsack problem: given items with nonnegative integer weights an
 The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best value that can be achieved with total weight at most \inlinecode{w} after processing some prefix of the items. Iterating weights in decreasing order is what enforces the 0-1 constraint; it prevents the same item from being reused during the current item update.
 
 \begin{compactitem}
-  \item \inlinecode{knapsack\_01(weight, value, capacity)} returns the maximum value achievable with total weight at most \inlinecode{capacity}.
-  \item \inlinecode{weight[i]} and \inlinecode{value[i]} are the weight and value of item \inlinecode{i}.
-  \item All weights must be nonnegative integers. Items with weight \inlinecode{0} are allowed and can each be taken once.
+  \item \inlinecode{knapsack\_01(weight, value, capacity)} returns the maximum total value achievable by choosing a 0-1 subset of $n$ items such that their total weight is at most \inlinecode{capacity}, where item \inlinecode{i} has weight \inlinecode{weight[i]} and value \inlinecode{value[i]}. All weights must be nonnegative integers. Items with weight 0 are allowed and can each be taken once.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \cdot W)$, where $n$ is the number of items and $W$ is \inlinecode{capacity}.
@@ -1400,7 +1375,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Unbounded Knapsack and Coin Change}
+\subsection{Knapsack (Unbounded and Coin Change)}
 Solves two common unbounded knapsack variants, where each item may be used any number of times. In the maximum-value version, each item has a weight and value, and the goal is to maximize total value subject to a capacity limit. In the coin change version, each coin denomination may be used any number of times, and the goal is to count unordered ways to form a target sum.
 
 For unbounded maximum-value knapsack, weights are iterated in increasing order so the current item may be reused. For unordered coin change, coins are the outer loop so each multiset of coins is counted once, independent of ordering.
@@ -1609,8 +1584,7 @@ Selects the maximum number of non-overlapping intervals using the classic greedy
 Intervals are represented as half-open ranges \inlinecode{[start, finish)}, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
 \begin{compactitem}
-  \item \inlinecode{interval\_scheduling(intervals)} returns one maximum-size compatible subset of intervals, in the order they are selected.
-  \item \inlinecode{Interval} stores \inlinecode{start}, \inlinecode{finish}, and the original \inlinecode{id}.
+  \item \inlinecode{interval\_scheduling(intervals)} returns one maximum-size compatible subset of intervals, in the order they are selected, from an input vector of \inlinecode{Interval} with fields \inlinecode{start}, \inlinecode{finish}, and the original \inlinecode{id}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, where $n$ is the number of intervals.
@@ -1658,13 +1632,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Weighted Interval Scheduling}
-Selects a maximum-weight subset of non-overlapping intervals using dynamic programming and binary search. Unlike unweighted interval scheduling, the earliest finish-time greedy choice is not sufficient when intervals have weights.
+Selects a maximum-weight subset of non-overlapping intervals using dynamic programming and binary search. Unlike unweighted interval scheduling, the earliest finish-time greedy choice is not sufficient when intervals have weights. With intervals sorted by finish time, the best total for the first $i$ intervals either skips interval $i$ or adds its weight to the best total over intervals finishing no later than its start, with that predecessor located by binary search.
 
 Intervals are represented as half-open ranges \inlinecode{[start, finish)}, so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
 \begin{compactitem}
-  \item \inlinecode{weighted\_interval\_scheduling(intervals)} returns the maximum total weight of a compatible subset.
-  \item \inlinecode{WeightedInterval} stores \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}.
+  \item \inlinecode{weighted\_interval\_scheduling(intervals)} returns the maximum total weight of a compatible subset from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and binary searching compatible intervals.
@@ -1718,8 +1691,7 @@ Assigns intervals to the minimum number of groups so that no two intervals in th
 The greedy algorithm sorts intervals by start time and reuses the group whose current finish time is earliest whenever possible. Otherwise, it creates a new group.
 
 \begin{compactitem}
-  \item \inlinecode{interval\_partitioning(intervals)} returns \inlinecode{room[id]}, the assigned room for each original interval id.
-  \item The number of rooms used is \inlinecode{1 + max(room[id])}, or 0 if there are no intervals.
+  \item \inlinecode{interval\_partitioning(intervals)} returns a vector \inlinecode{room}, where \inlinecode{room[id]} is the assigned room for each input interval given as a vector of \inlinecode{PartitionInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{id}. The number of rooms used in the returned assignment is $1 + \max({\inlinecodemath{room[id]}})$, or 0 if there are no intervals.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and priority queue operations.
@@ -1749,16 +1721,15 @@ std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals)
       std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>>
       pq;
   int rooms = 0;
-  for (const auto &iv : intervals) {
-    int id = iv.id;
-    if (!pq.empty() && pq.top().first <= iv.start) {
+  for (const auto &[start, finish, id] : intervals) {
+    if (!pq.empty() && pq.top().first <= start) {
       int r = pq.top().second;
       pq.pop();
       room[id] = r;
     } else {
       room[id] = rooms++;
     }
-    pq.emplace(iv.finish, room[id]);
+    pq.emplace(finish, room[id]);
   }
   return room;
 }
@@ -1785,8 +1756,7 @@ Schedules unit-time jobs with deadlines and profits to maximize total profit. Ea
 This is a compact scheduling pattern that combines sorting with a disjoint-set forest over available time slots.
 
 \begin{compactitem}
-  \item \inlinecode{schedule\_deadline\_jobs(jobs)} returns the maximum total profit.
-  \item \inlinecode{Job} stores \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integer time slots.
+  \item \inlinecode{schedule\_deadline\_jobs(jobs)} returns the maximum total profit for a vector of \inlinecode{Job} with fields \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integer time slots.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting, with near-constant disjoint-set operations.
@@ -1855,7 +1825,7 @@ int main() {
 Selects a maximum-size subset of jobs that can all be completed by their deadlines. Each job has a processing time and deadline, and all jobs are available at time 0. The Moore-Hodgson algorithm sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the schedule becomes late, it removes the longest accepted job.
 
 \begin{compactitem}
-  \item \inlinecode{maximize\_on\_time\_jobs(jobs)} returns the maximum number of jobs that can finish by their deadlines. Note that the input will be sorted by deadline after the call.
+  \item \inlinecode{maximize\_on\_time\_jobs(jobs)} returns the maximum number of jobs that can finish by their deadlines for an input vector of \inlinecode{TimedJob} with fields \inlinecode{duration} and \inlinecode{deadline}.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and heap operations.
@@ -1871,7 +1841,7 @@ struct TimedJob {
   int duration, deadline;
 };
 
-int maximize_on_time_jobs(std::vector<TimedJob> &jobs) {
+int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
   std::sort(jobs.begin(), jobs.end(), [](const TimedJob &a, const TimedJob &b) {
     return a.deadline != b.deadline ? a.deadline < b.deadline : a.duration < b.duration;
   });
@@ -1949,7 +1919,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Reservoir Sampling}
-Selects uniformly random samples from a stream whose length may be unknown in advance. Reservoir sampling keeps only the chosen sample or samples in memory while processing each element once.
+Selects uniformly random samples from a stream whose length may be unknown in advance. Reservoir sampling keeps only the chosen sample or samples in memory while processing each element once. The first arrivals fill the reservoir, and the $i$-th element then replaces a uniformly chosen occupant with probability $1/i$ (or $k/i$ when keeping $k$ samples), which by induction leaves every element seen so far equally likely to be in the sample.
 
 Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once per stream element in any order, then \inlinecode{get()} to retrieve the result.
 
@@ -2060,8 +2030,8 @@ int main() {
 Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans through the array, at each index computing the maximum nonnegative sum subarray ending there. Either this subarray is empty (in which case its sum is zero), or it consists of one more element than the maximum sequence ending at the previous position. This can be adapted to compute the maximal submatrix sum as well.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subarray\_sum(lo, hi, \&res\_lo, \&res\_hi)} returns the maximal subarray sum for the range \inlinecode{[lo, hi)}, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, two \inlinecode{int} pointers may be passed to store the inclusive boundary indices \inlinecode{[res\_lo, res\_hi]} of the resulting subarray. By convention, the empty subarray is allowed, so an input range consisting of only negative values returns \inlinecode{0} with an empty result interval.
-  \item \inlinecode{max\_submatrix\_sum(a, \&r1, \&c1, \&r2, \&c2)} returns the largest sum of any rectangular submatrix for a matrix of $m$ rows by $n$ columns. The matrix should be given as a 2-dimensional vector, where the outer vector must contain $m$ vectors each of size $n$. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, four \inlinecode{int} pointers may be passed to store the boundary indices of the resulting subarray, with \inlinecode{(r1, c1)} specifiying the top-left index and \inlinecode{(r2, c2)} specifying the bottom-right index. By convention, the empty submatrix is allowed, so an input matrix consisting of only negative values returns \inlinecode{0} with an empty result interval.
+  \item \inlinecode{max\_subarray\_sum(lo, hi, \&res\_lo, \&res\_hi)} returns the maximal subarray sum for the range \inlinecode{[lo, hi)}, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, two \inlinecode{int} pointers may be passed to store the inclusive boundary indices \inlinecode{[res\_lo, res\_hi]} of the resulting subarray. By convention, the empty subarray is allowed, so an input range consisting of only negative values returns 0 with an empty result interval.
+  \item \inlinecode{max\_submatrix\_sum(a, \&r1, \&c1, \&r2, \&c2)} returns the largest sum of any rectangular submatrix for a matrix \inlinecode{a} with $m$ rows and $n$ columns. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, four \inlinecode{int} pointers may be passed to store the boundary indices of the resulting subarray, with \inlinecode{(r1, c1)} specifiying the top-left index and \inlinecode{(r2, c2)} specifying the bottom-right index. By convention, the empty submatrix is allowed, so an input matrix consisting of only negative values returns 0 with an empty result interval.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2112,8 +2082,8 @@ auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr
 
 template<class T>
 T max_submatrix_sum(
-    const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr,
-    int *r2 = nullptr, int *c2 = nullptr
+    const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr, int *r2 = nullptr,
+    int *c2 = nullptr
 ) {
   if (a.empty() || a[0].empty()) {
     return T();
@@ -2247,7 +2217,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Online Statistics (Welford)}
-Maintains the mean and variance of a stream of numbers in one pass using Welford's algorithm. This is more numerically stable than maintaining the sum of values and the sum of squares separately.
+Maintains the mean and variance of a stream of numbers in one pass using Welford's algorithm. This is more numerically stable than maintaining the sum of values and the sum of squares separately. Each new value shifts the running mean by its deviation divided by the new count, and accumulates the product of its deviations from the old and new means into a running sum of squared deviations, from which both population and sample variance follow directly.
 
 \begin{compactitem}
   \item \inlinecode{OnlineStatistics()} constructs an empty summary.
@@ -2307,7 +2277,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Frequent Elements (Misra-Gries)}
-Finds candidate frequent elements in a stream using the Misra-Gries algorithm. With parameter $k$, the algorithm keeps at most $k - 1$ counters and guarantees that every value occurring more than $\lfloor n/k \rfloor$ times appears among the returned candidates.
+Finds candidate frequent elements in a stream using the Misra-Gries algorithm. With parameter $k$, the algorithm keeps at most $k - 1$ counters and guarantees that every value occurring more than $\lfloor n/k \rfloor$ times appears among the returned candidates. Each element increments its counter if already tracked, claims a counter if one of the $k - 1$ slots is free, and otherwise decrements every counter, discarding those that reach zero. Since a decrement step cancels $k$ distinct occurrences at once, it can happen at most $\lfloor n/k \rfloor$ times, so any value occurring more often must survive.
 
 The candidates are not automatically verified, since the algorithm intentionally uses sublinear memory and does not retain the stream. If exact frequencies are needed, make a second pass over the input and count only the returned candidates.
 
@@ -2315,7 +2285,7 @@ The candidates are not automatically verified, since the algorithm intentionally
   \item \inlinecode{misra\_gries(lo, hi, k)} returns a hash table of candidate values to their residual counters. Use \inlinecode{k = 2} for the Boyer-Moore majority-candidate special case.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ amortized per call on average: each element either hits an existing counter ($O(1)$) or triggers a full-table decrement ($O(k)$), but the table-full event can occur at most $n/(k-1)$ times total, so the amortized cost per element is $O(1 + k/(k-1))$ = $O(1)$. In the worst case a single call is $O(nk)$, but that cannot be sustained across a long stream.
+\textbf{Time Complexity}: $O(n)$ amortized per call on average: each element either hits an existing counter, taking $O(1)$, or triggers a full-table decrement, taking $O(k)$, but the table-full event can occur at most $n/(k-1)$ times total, so the amortized cost per element is $O(1 + k/(k-1))$ = $O(1)$. In the worst case, a single call is $O(n \cdot k)$, but that cannot be sustained across a long stream.
 
 \textbf{Space Complexity}: $O(k)$ auxiliary heap space.
 

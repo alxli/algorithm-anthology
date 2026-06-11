@@ -9,7 +9,8 @@ Partially sort a range so that one chosen position ends up holding its final sor
   and no value in `(nth, hi)` compares less. Requires `operator<` on the iterator's value type.
 
 The pivot is chosen uniformly at random, and the partition step groups equal keys together so arrays
-with many duplicate values remain efficient.
+with many duplicate values remain efficient. After each partition, the search continues in only the
+side that contains `nth`, shrinking the expected remaining work geometrically for a linear average.
 
 Time Complexity:
 - O(n) on average per call to `nth_element2()`, where $n$ is the distance between `lo` and `hi`.

@@ -2,7 +2,8 @@
 
 Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every
 edge from node $u$ to $v$, $u$ comes before $v$ in the ordering. Depth-first search is used to
-traverse all nodes in post-order.
+traverse all nodes in post-order. A node finishes only after every node it points to has finished,
+so the reverse of the finish order is a valid topological ordering.
 
 - `toposort()` returns a valid topological ordering, or throws if the graph contains a cycle.
 

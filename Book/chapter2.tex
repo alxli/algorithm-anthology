@@ -397,7 +397,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Binary Heap}
-Maintain a min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}}. A binary min-heap implements a priority queue by inserting and deleting nodes into a binary tree such that the parent of any node is always less than its children.
+Maintain a min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}}. A binary min-heap implements a priority queue by inserting and deleting nodes into a binary tree such that the parent of any node is always less than its children. The tree is stored implicitly in an array, where the children of the node at index $i$ live at indices $2i + 1$ and $2i + 2$. Insertion appends the new element and bubbles it up toward the root, while extraction moves the last element to the root and sifts it down.
 
 \begin{compactitem}
   \item \inlinecode{BinaryHeap()} constructs an empty priority queue.
@@ -521,7 +521,7 @@ int main() {
 12
 \end{exampleoutput}
 \subsection{Skew Heap}
-Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}}. A skew heap attempts to maintain balance by unconditionally swapping all nodes in the merge path when merging.
+Maintain a mergeable min-priority queue, that is, a collection of elements with support for querying and extraction of the minimum as well as efficient merging with other instances. This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}}. A skew heap attempts to maintain balance by unconditionally swapping all nodes in the merge path when merging. Every other operation reduces to this merge: insertion merges a one-node heap, and extraction of the minimum merges the root's two subtrees.
 
 \begin{compactitem}
   \item \inlinecode{SkewHeap()} constructs an empty priority queue.
@@ -828,7 +828,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Binary Search Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A binary search tree implements this map by inserting and deleting keys into a binary tree such that every node's left child has a lesser key and every node's right child has a greater key.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A binary search tree (a.k.a. BST) implements this map by inserting and deleting keys into a binary tree while upholding the BST property: for each node in the BST, every node in its left subtree has a lesser key and every node in its right subtree has a greater key.
 
 \begin{compactitem}
   \item \inlinecode{BST()} constructs an empty map.
@@ -1005,7 +1005,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Treap}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A Treap is a binary search tree where each node holds a randomly assigned priority. The tree satisfies the BST property on keys and the min-heap property on priorities (lower priority value is closer to root). Since priorities are random, this keeps the tree balanced with high probability, making insertions and deletions run in $O(\log n)$.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A treap is a binary search tree where each node holds a randomly assigned priority. The tree satisfies the BST property on keys and the min-heap property on priorities (lower priority value is closer to root). Since priorities are random, this keeps the tree balanced with high probability, making insertions and deletions run in $O(\log n)$.
 
 \begin{compactitem}
   \item \inlinecode{Treap()} constructs an empty map.
@@ -1209,7 +1209,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{AVL Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. An AVL tree is a binary search tree balanced by height, guaranteeing $O(\log n)$ worst-case running time in insertions and deletions by making sure that the heights of the left and right subtrees at every node differ by at most 1.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. An AVL tree is a binary search tree balanced by height, guaranteeing $O(\log n)$ worst-case running time in insertions and deletions by making sure that the heights of the left and right subtrees at every node differ by at most 1. Whenever an insertion or deletion breaks this invariant, it is repaired with one or two rotations at each affected node along the search path.
 
 \begin{compactitem}
   \item \inlinecode{AVLTree()} constructs an empty map.
@@ -1444,7 +1444,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Red-Black Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A red black tree is a binary search tree balanced by coloring its nodes red or black, then constraining node colors on any simple path from the root to a leaf.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A red-black tree is a binary search tree balanced by coloring its nodes red or black, then constraining node colors on any simple path from the root to a leaf. Specifically, a red node may never have a red child, and every path from the root to a null leaf must pass through the same number of black nodes, which together bound the tree's height to $O(\log n)$. Insertions and deletions repair these invariants by recoloring nodes and performing rotations.
 
 \begin{compactitem}
   \item \inlinecode{RedBlackTree()} constructs an empty map.
@@ -1790,7 +1790,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Splay Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A splay tree is a balanced binary search tree with the additional property that recently accessed elements are quick to access again.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A splay tree is a balanced binary search tree with the additional property that recently accessed elements are quick to access again. Every operation ``splays'' its target node up to the root through a series of rotations, reshaping the tree so that frequently accessed keys settle near the top. A single operation may degrade to $O(n)$, but any sequence of operations averages out to $O(\log n)$ amortized each.
 
 \begin{compactitem}
   \item \inlinecode{SplayTree()} constructs an empty map.
@@ -1806,7 +1806,7 @@ Maintain a map, that is, a collection of key-value pairs such that each possible
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
-  \item $O(\log n)$ per call to \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{find()}, where $n$ is the number of entries currently in the map.
+  \item $O(\log n)$ amortized per call to \inlinecode{insert()}, \inlinecode{erase()}, and \inlinecode{find()}, where $n$ is the number of entries currently in the map.
   \item $O(n)$ per call to \inlinecode{walk()}.
 \end{compactitem}
 
@@ -2009,7 +2009,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Size Balanced Tree}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. In addition, support queries for keys given their ranks as well as queries for the ranks of given keys. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A size balanced tree augments each nodes with the size of its subtree, using it to maintain balance and compute order statistics.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. In addition, support queries for keys given their ranks as well as queries for the ranks of given keys. This implementation requires an ordering on the set of possible keys defined by \inlinecode{operator\textless{}} on the key type. A size balanced tree augments each node with the size of its subtree, using it to maintain balance and compute order statistics. After each update, rotations restore the invariant that every subtree is at least as large as each of its sibling's child subtrees, keeping the height logarithmic.
 
 \begin{compactitem}
   \item \inlinecode{SBTree()} constructs an empty map.
@@ -2262,7 +2262,7 @@ abcde
 bcde
 \end{exampleoutput}
 \subsection{Interval Treap}
-Maintain a map from closed, one-dimensional intervals to values while supporting efficient reporting of any or all entries that intersect with a given query interval. This implementation uses \inlinecode{std::pair} to represent intervals, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric key type. A treap is used to process the entries, where keys are compared lexicographically as pairs.
+Maintain an ordered map from closed, one-dimensional intervals to values while supporting efficient reporting of any or all entries that intersect with a given query interval. This implementation uses \inlinecode{std::pair} to represent intervals, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric key type. A treap is used to process the entries, where keys are compared lexicographically as pairs. Each node is additionally augmented with the maximum upper endpoint among the intervals in its subtree, letting intersection queries skip any subtree whose maximum falls below the query interval's lower bound.
 
 \begin{compactitem}
   \item \inlinecode{IntervalTreap()} constructs an empty map.
@@ -2523,7 +2523,7 @@ Intervals intersecting [16, 20]: [5, 20] [10, 30] [10, 40] [15, 20]
 All intervals: [5, 20] [10, 30] [10, 40] [12, 15] [15, 20]
 \end{exampleoutput}
 \subsection{Hash Map}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires \inlinecode{operator==} to be defined on the key type. A hash map implements a map by hashing keys into buckets using a hash function. This implementation resolves collisions by chaining entries hashed to the same bucket into a linked list.
+Maintain an unordered map, that is, a unordered collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires \inlinecode{operator==} to be defined on the key type. A hash map implements a map by hashing keys into buckets using a hash function. This implementation resolves collisions by chaining entries hashed to the same bucket into a linked list.
 
 \begin{compactitem}
   \item \inlinecode{HashMap()} constructs an empty map.
@@ -2712,7 +2712,7 @@ int main() {
 cab
 \end{exampleoutput}
 \subsection{Skip List}
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the key type. A skip list maintains a linked hierarchy of sorted subsequences with each successive subsequence skipping over fewer elements than the previous one.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible key appears at most once in the collection. This implementation requires operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the key type. A skip list maintains a linked hierarchy of sorted subsequences with each successive subsequence skipping over fewer elements than the previous one. Each new node joins a number of levels decided by repeated coin flips, and a search starts at the sparsest level, moving forward until the next key would overshoot and then dropping down a level, which makes operations take $O(\log n)$ with high probability.
 
 \begin{compactitem}
   \item \inlinecode{SkipList()} constructs an empty map.
@@ -5186,7 +5186,7 @@ Values:
 0 1 9
 \end{exampleoutput}
 \subsection{2D Range Tree}
-Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type.
+Maintain a set of two-dimensional points while supporting queries for all points that fall inside given rectangular regions. This implementation uses \inlinecode{std::pair} to represent points, requiring operators \inlinecode{\textless{}} and \inlinecode{==} to be defined on the numeric template type. A balanced tree over the points sorted by $x$ stores at each node its subrange of points sorted by $y$, merged from its children's lists as in a merge sort tree. A query decomposes the $x$-range into $O(\log n)$ nodes and binary searches each node's list for the matching $y$-range.
 
 Use this for static point-reporting queries when guaranteed worst-case bounds are more important than memory. Compared with a range k-d tree, it uses more space but gives $O(\log^{2}(n) + m)$ query time regardless of point distribution; the k-d tree is lighter and often faster on typical inputs, but its pruning is more distribution-dependent.
 
@@ -6353,7 +6353,7 @@ Values:
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Disjoint Set Union}
-Maintain a set of elements partitioned into non-overlapping subsets. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version is simplified to only work on integer elements.
+Maintain a set of elements partitioned into non-overlapping subsets. Each partition is assigned a unique representative known as the parent, or root. Each subset is stored as a tree whose nodes point toward its root: finding a representative follows parent pointers, redirecting visited nodes straight to the root along the way (path compression), while unions attach the shallower tree beneath the root of the deeper one (union-by-rank). Together these keep the trees nearly flat. This version is simplified to only work on integer elements.
 
 \begin{compactitem}
   \item \inlinecode{initialize()} resets the data structure.
@@ -6451,7 +6451,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Disjoint Set Union (Sparse)}
-Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees. Each partition is assigned a unique representative known as the parent, or root. The following implements two well-known optimizations known as union-by-rank and path compression. This version uses an \inlinecode{std::unordered\_map} for storage and coordinate compression (thus, element types must meet the requirements of key types for \inlinecode{std::unordered\_map}). The order of sets returned by \inlinecode{get\_all\_sets()} is unspecified.
+Maintain a set of elements partitioned into non-overlapping subsets using a collection of trees. Each partition is assigned a unique representative known as the parent, or root. Each subset is stored as a tree whose nodes point toward its root: finding a representative follows parent pointers, redirecting visited nodes straight to the root along the way (path compression), while unions attach the shallower tree beneath the root of the deeper one (union-by-rank). This version uses an \inlinecode{std::unordered\_map} for storage and coordinate compression (thus, element types must meet the requirements of key types for \inlinecode{std::unordered\_map}). The order of sets returned by \inlinecode{get\_all\_sets()} is unspecified.
 
 \begin{compactitem}
   \item \inlinecode{DisjointSetUnion()} constructs an empty set.
@@ -6595,7 +6595,7 @@ Maintains disjoint sets while supporting rollback to previous snapshots. Rollbac
 Path compression is intentionally not used, because it is hard to undo. Union by size keeps tree height logarithmic, and every successful union records enough information to restore the previous state.
 
 \begin{compactitem}
-  \item \inlinecode{RollbackDSU(n)} constructs \inlinecode{n} singleton sets over elements \inlinecode{0} through \inlinecode{n - 1}.
+  \item \inlinecode{RollbackDSU(n)} constructs \inlinecode{n} singleton sets over elements 0 through \inlinecode{n - 1}.
   \item \inlinecode{count\_sets()} returns the current number of disjoint sets.
   \item \inlinecode{find\_root(u)} returns the representative of the set containing \inlinecode{u}.
   \item \inlinecode{is\_united(u, v)} returns whether \inlinecode{u} and \inlinecode{v} are in the same set.
@@ -6921,7 +6921,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Heavy Light Decomposition}
-Maintain a tree with values associated with either its edges or nodes, while supporting both dynamic queries and dynamic updates of all values on a given path between two nodes in the tree. Heavy-light decomposition partitions the nodes of the tree into disjoint paths where all nodes have degree two, except the endpoints of a path which has degree one.
+Maintain a tree with values associated with either its edges or nodes, while supporting both dynamic queries and dynamic updates of all values on a given path between two nodes in the tree. Heavy-light decomposition partitions the nodes of the tree into disjoint paths where all nodes have degree two, except the endpoints of a path which has degree one. A node stays on its parent's path when its subtree contains at least half of its parent's nodes, so walking from any node to the root crosses $O(\log n)$ different paths. Each path stores its values in its own lazy segment tree, decomposing any path query or update into $O(\log n)$ contiguous range operations.
 
 The query operation is defined by an associative \inlinecode{combine()} function which satisfies \inlinecode{combine(x, combine(y, z)) = combine(combine(x, y), z)} for all values \inlinecode{x}, \inlinecode{y}, and \inlinecode{z} in the tree. The default code below assumes a numerical tree type, defining queries for the ``min'' of the target range. Another possible query operation is ``sum'', in which case \inlinecode{combine(a, b)} should return \inlinecode{a + b}. For direction-independent path queries, \inlinecode{combine()} should also be commutative; otherwise, store enough information in each aggregate to combine paths in the required order.
 

@@ -1,19 +1,18 @@
 /*
 
 Given a convex polygon and a directed line from `p` to `q`, clips the polygon to the closed left
-half-plane of that line.
+half-plane of that line. The polygon is walked edge by edge: vertices on the left side of the line
+are kept, and whenever an edge crosses the line, the intersection point is appended to the output.
 
 - `convex_cut(lo, hi, p, q)` returns the portion of the polygon lying on or to the left of the
   directed line `p -> q`. The input range `[lo, hi)` must contain the vertices of a convex polygon
   in boundary order, either clockwise or counterclockwise. The returned polygon preserves that
-  boundary order.
+  boundary order. If `p == q`, the cutting line is invalid and an error is thrown.
 
 The function is templated on the input point type. Side classification is done with cross products.
 For integer-coordinate inputs, classification is exact only if the intermediate products do not
 overflow. Edge-line intersection points are computed in floating point, and the returned polygon
 uses `Point` with `double` coordinates.
-
-If `p == q`, the cutting line is invalid and `std::runtime_error` is thrown.
 
 Time Complexity:
 - O(n) per call to `convex_cut(lo, hi, p, q)`, where $n$ is the distance between `lo` and `hi`.

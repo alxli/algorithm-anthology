@@ -2,7 +2,7 @@
 
 \section{\texorpdfstring{Math Utilities}{6.1 Math Utilities}}
 \setcounter{section}{1}
-Common mathematic constants and functions, most of which already have standard STL equivalents: \inlinecode{std::signbit()}, \inlinecode{std::copysign()}, \inlinecode{std::trunc()}, \inlinecode{std::round()}, \inlinecode{std::erf()}, \inlinecode{std::tgamma()}, \inlinecode{std::lgamma()}). These are written for educational purposes, without heavy optimizations.
+Common mathematic constants and functions, most of which already have standard STL equivalents: \inlinecode{std::signbit()}, \inlinecode{std::copysign()}, \inlinecode{std::trunc()}, \inlinecode{std::round()}, \inlinecode{std::erf()}, \inlinecode{std::tgamma()}, \inlinecode{std::lgamma()}. The implementations below are for educational purposes only, and may not be as heavily optimized as their standard library counterparts.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -299,7 +299,7 @@ double lgamma_(double x) {
 Base Conversion:
 
 \begin{compactitem}
-  \item Given an integer in base $a$ as a vector \inlinecode{d} of digits (where \inlinecode{d[0]} is the least significant digit), \inlinecode{convert\_base(d, a, b)} returns a vector of the integer's digits when converted base \inlinecode{b} (again with index 0 storing the least significant digit). The actual value of the entire integer to be converted must be able to fit within an unsigned 64-bit integer for intermediate storage.
+  \item Given an integer in base \inlinecode{a} as a vector \inlinecode{d} of digits (where \inlinecode{d[0]} is the least significant digit), \inlinecode{convert\_base(d, a, b)} returns a vector of the integer's digits when converted base \inlinecode{b} (again with index 0 storing the least significant digit). The actual value of the entire integer to be converted must be able to fit within an unsigned 64-bit integer for intermediate storage.
   \item \inlinecode{to\_base(x, b)} returns the digits of the unsigned integer \inlinecode{x} in base \inlinecode{b}, where index 0 of the result stores the least significant digit.
   \item \inlinecode{to\_roman(x)} returns the Roman numeral representation of the unsigned integer \inlinecode{x} as an \inlinecode{std::string}.
 \end{compactitem}
@@ -2185,7 +2185,7 @@ sieve(n=10000000): 0.042641s
 sieve([1000000000, 1005000000]): 0.01969s
 \end{exampleoutput}
 \subsection{Primality Testing}
-Determine whether an integer $n$ is prime. This can be done deterministically by testing all numbers under $\sqrt{n}$ using trial division, probabilistically using the Miller-Rabin test, or deterministically using the Miller-Rabin test if the maximum input is known ($2^{63} - 1$ for the purposes here).
+Determine whether an integer $n$ is prime. This can be done deterministically by testing all numbers under $\sqrt{n}$ using trial division, probabilistically using the Miller-Rabin test, or deterministically using the Miller-Rabin test if the maximum input is known ($2^{63} - 1$ for the purposes here). The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite.
 
 \begin{compactitem}
   \item \inlinecode{is\_prime(n)} returns whether the integer \inlinecode{n} is prime using an optimized trial division technique based on the fact that all primes greater than 6 must take the form $6n + 1$ or $6n - 1$.
@@ -2349,7 +2349,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Integer Factorization}
-Compute the prime factorization of an integer. In the following implementations, the prime factorization of $n$ is represented as a sorted vector of prime integers which together multiply to $n$. Note that factors are duplicated in the vector in accordance to their multiplicity in the prime factorization of $n$. For 0, 1, and prime numbers, the prime factorization is considered to be a vector consisting of a single element - the input itself.
+Compute the prime factorization of an integer. In the following implementations, the prime factorization of $n$ is represented as a sorted vector of prime integers which together multiply to $n$. Note that factors are duplicated in the vector in accordance to their multiplicity in the prime factorization of $n$. For 0, 1, and prime numbers, the prime factorization is considered to be a vector consisting of a single element - the input itself. For large inputs, Pollard's rho algorithm iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference.
 
 \begin{compactitem}
   \item \inlinecode{prime\_factorize(n)} returns the prime factorization of \inlinecode{n} using trial division.
@@ -4036,15 +4036,15 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 \begin{compactitem}
   \item \inlinecode{make\_matrix(r, c, v)} constructs and returns a matrix with \inlinecode{r} rows and \inlinecode{c} columns where the value at every index is initialized to \inlinecode{v}.
   \item \inlinecode{make\_matrix(a)} returns a matrix constructed from the two-dimensional vector \inlinecode{a}.
-  \item \inlinecode{identity\_matrix(n)} returns the $n$ by $n$ identity matrix, that is, a matrix where \inlinecode{a[i][j]} equals 1 (if $i = j$), or 0 otherwise, for every $i$ and $j$ in $[0, n)$.
+  \item \inlinecode{identity\_matrix(n)} returns the $n$ by $n$ identity matrix, that is, a matrix where each \inlinecode{a[i][j]} equals 1 if $i = j$, or 0 otherwise.
   \item \inlinecode{rows(a)} returns the number of rows $m$ in matrix \inlinecode{a}.
   \item \inlinecode{columns(a)} returns the number of columns $n$ in matrix \inlinecode{a}.
   \item \inlinecode{a[i][j]} may be used to access or modify the entry at row $i$, column $j$ of an $m$ by $n$ matrix \inlinecode{a}, for every \inlinecode{i} in \inlinecode{[0, m)} and \inlinecode{j} in \inlinecode{[0, n)}.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, and \inlinecode{!=} define lexicographical comparison based on that of \inlinecode{std::vector}.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, and \inlinecode{/=} define scalar addition, subtraction, multiplication, and division involving a matrix and a numeric scalar value.
   \item Operators \inlinecode{*} and \inlinecode{*=} define vector and matrix multiplication.
-  \item Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define matrix exponentiation of a square matrix $a$ by an integer power $p$.
-  \item \inlinecode{power\_sum(a, p)} returns the power sum of a square matrix $a$ up to an integer power $p$, that is, $a + a^2 + \ldots + a^p$.
+  \item Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define matrix exponentiation of a square matrix \inlinecode{a} by an integer power \inlinecode{p}.
+  \item \inlinecode{power\_sum(a, p)} returns the power sum of a square matrix \inlinecode{a} up to an integer power \inlinecode{p}, that is, $a + a^2 + \ldots + a^p$.
   \item \inlinecode{transpose(a)} returns the transpose of an $m$ by $n$ matrix \inlinecode{a}, that is, a new $n$ by $m$ matrix $b$ such that \inlinecode{a[i][j]} $=$ \inlinecode{b[j][i]} for every \inlinecode{i} in \inlinecode{[0, m)} and \inlinecode{j} in \inlinecode{[0, n)}.
   \item \inlinecode{transpose\_in\_place(a)} assigns the square matrix \inlinecode{a} to its transpose, returning a reference to the modified argument itself.
   \item \inlinecode{rotate(a, d)} returns the matrix \inlinecode{a} rotated \inlinecode{d} degrees clockwise. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
@@ -4418,7 +4418,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Row Reduction}
-Converts a matrix to reduced row echelon form using Gaussian elimination to solve a system of linear equations as well as compute the determinant. In practice, this method is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, LU decomposition with row partial pivoting should be used.
+Converts a matrix to reduced row echelon form using Gaussian elimination to solve a system of linear equations as well as compute the determinant. Each round finds a row with a nonzero entry in the current leading column, normalizes that row, and subtracts multiples of it from every other row to clear the column. In practice, this method is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, LU decomposition with row partial pivoting should be used.
 
 \begin{compactitem}
   \item \inlinecode{row\_reduce(a)} assigns the matrix \inlinecode{a} to its reduced row echelon form, returning a reference to the modified argument itself.
@@ -4544,7 +4544,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Determinant and Inverse}
-Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$ exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or non-singular. In practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, use LU decomposition with row partial pivoting.
+Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$ exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or non-singular. The determinant falls out of elimination as the product of the pivots, negated once per row swap. The inverse is found by appending the identity matrix and row-reducing the combined matrix: the operations that turn \inlinecode{a} into the identity turn the identity into the inverse. In practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, use LU decomposition with row partial pivoting.
 
 \begin{compactitem}
   \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions.

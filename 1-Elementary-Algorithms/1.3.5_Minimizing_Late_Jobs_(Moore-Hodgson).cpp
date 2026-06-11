@@ -6,7 +6,7 @@ sorts by deadline and keeps the accepted jobs in a max-heap by processing time; 
 schedule becomes late, it removes the longest accepted job.
 
 - `maximize_on_time_jobs(jobs)` returns the maximum number of jobs that can finish by their
-  deadlines. Note that the input will be sorted by deadline after the call.
+  deadlines for an input vector of `TimedJob` with fields `duration` and `deadline`.
 
 Time Complexity:
 - O(n log n) per call due to sorting and heap operations.
@@ -24,7 +24,7 @@ struct TimedJob {
   int duration, deadline;
 };
 
-int maximize_on_time_jobs(std::vector<TimedJob> &jobs) {
+int maximize_on_time_jobs(std::vector<TimedJob> jobs) {
   std::sort(jobs.begin(), jobs.end(), [](const TimedJob &a, const TimedJob &b) {
     return a.deadline != b.deadline ? a.deadline < b.deadline : a.duration < b.duration;
   });

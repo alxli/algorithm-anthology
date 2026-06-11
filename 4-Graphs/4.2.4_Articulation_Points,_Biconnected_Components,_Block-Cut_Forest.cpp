@@ -4,7 +4,10 @@ Given an undirected graph, compute articulation points, vertex-biconnected compo
 the block-cut forest using Tarjan's algorithm. An articulation point (a.k.a. cut vertex) is a vertex
 whose removal increases the number of connected components in the graph. A vertex-biconnected
 component is a maximal subgraph that cannot be disconnected by removing one vertex, with single-edge
-and isolated-vertex components handled as degenerate cases.
+and isolated-vertex components handled as degenerate cases. A single depth-first search tracks each
+node's low-link, the earliest entry time reachable from its subtree: a node is an articulation point
+exactly when some child's subtree cannot reach above it, and the edges of each BCC are collected on
+a stack popped at that moment.
 
 The block-cut forest is a bipartite forest with one node for each BCC and one node for each
 articulation point, with an edge whenever an articulation point belongs to a BCC. Note that this

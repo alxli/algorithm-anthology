@@ -160,7 +160,7 @@ int main() {
 DFS order: 0 1 2 3 4 5 6 7 8 9 10 11
 \end{exampleoutput}
 \subsection{Topological Sorting}
-Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every edge from node $u$ to $v$, $u$ comes before $v$ in the ordering. Depth-first search is used to traverse all nodes in post-order.
+Given a directed acyclic graph, find one of possibly many orderings of the nodes such that for every edge from node $u$ to $v$, $u$ comes before $v$ in the ordering. Depth-first search is used to traverse all nodes in post-order. A node finishes only after every node it points to has finished, so the reverse of the finish order is a valid topological ordering.
 
 \begin{compactitem}
   \item \inlinecode{toposort()} returns a valid topological ordering, or throws if the graph contains a cycle.
@@ -243,7 +243,7 @@ int main() {
 The topological order: 2 1 0 4 3 7 6 5
 \end{exampleoutput}
 \subsection{Tree Centers and Diameter}
-An unweighted tree possesses a center, centroid, and diameter. The following functions apply to a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must form a valid tree with nodes numbered from 0 to \inlinecode{adj.size() - 1}.
+An unweighted tree possesses a center, centroid, and diameter. The centers are found by repeatedly peeling away the leaves of the tree until one or two nodes remain. The diameter relies on the fact that the farthest node from any start is always one endpoint of a diameter, so a second traversal from that endpoint measures the full diameter. The following functions apply to a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must form a valid tree with nodes numbered from 0 to \inlinecode{adj.size() - 1}.
 
 \begin{compactitem}
   \item \inlinecode{find\_centers()} returns a vector of either one or two tree Jordan centers. The Jordan center of a tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the maximum distance to all other nodes in the tree is minimal.
@@ -441,7 +441,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Prufer Code}
-Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence of length $n - 2$ that uniquely represents a labeled tree on nodes $0, 1, \ldots, n - 1$. It is useful for counting labeled trees, generating test cases, and converting between trees and compact sequences. Both functions choose the smallest available leaf at each step. This makes the implementation deterministic and matches the usual textbook convention.
+Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence of length $n - 2$ that uniquely represents a labeled tree on nodes $0, 1, \ldots, n - 1$. It is useful for counting labeled trees, generating test cases, and converting between trees and compact sequences. Encoding repeatedly removes a leaf and records its neighbor until two nodes remain; decoding reverses this, deducing each removed leaf from the node degrees implied by the code. Both functions choose the smallest available leaf at each step. This makes the implementation deterministic and matches the usual textbook convention.
 
 \begin{compactitem}
   \item \inlinecode{encode\_prufer()} returns the prufer code for the global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must form a valid tree with nodes numbered from 0 to \inlinecode{adj.size() - 1}.
@@ -548,7 +548,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Eulerian Cycles}
-A Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an Eulerian cycle if and only if every node has an in-degree equal to its out-degree, and all of its nodes with nonzero degree belong to a single strongly connected component. An undirected graph has an Eulerian cycle if and only if every node has even degree, and all of its nodes with nonzero degree belong to a single connected component.
+A Eulerian trail is a path in a graph which contains every edge exactly once. An Eulerian cycle or circuit is an Eulerian trail which begins and ends on the same node. A directed graph has an Eulerian cycle if and only if every node has an in-degree equal to its out-degree, and all of its nodes with nonzero degree belong to a single strongly connected component. An undirected graph has an Eulerian cycle if and only if every node has even degree, and all of its nodes with nonzero degree belong to a single connected component. The cycles are found with Hierholzer's algorithm: walk unused edges until returning to a node with none left, emit that node, and back up, which splices every closed detour into one cycle output in reverse.
 
 \begin{compactitem}
   \item \inlinecode{euler\_cycle\_directed(adj, u)} returns a vector of all nodes in a directed graph that are reachable from the starting node \inlinecode{u} in an order which forms an Eulerian cycle. The first node will be repeated as the last element of the vector. The directed graph given by adjacency list \inlinecode{adj} must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}.
@@ -735,7 +735,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Strongly Connected Components (Kosaraju)}
-Given a directed graph, determine the strongly connected components (SCCs) using the Kosaraju-Sharir algorithm. A strongly connected component is a maximal set of vertices where every vertex can reach every other vertex. Condensing each SCC into one node produces a directed acyclic graph.
+Given a directed graph, determine the strongly connected components (SCCs) using the Kosaraju-Sharir algorithm. A strongly connected component is a maximal set of vertices where every vertex can reach every other vertex. Condensing each SCC into one node produces a directed acyclic graph. The algorithm runs two passes of depth-first search: the first records the order in which nodes finish, and the second explores the transposed graph in reverse finish order, with each search collecting exactly one component.
 
 \begin{compactitem}
   \item \inlinecode{KosarajuSCC(n)} constructs a directed graph on nodes numbered from 0 to \inlinecode{n - 1}.
@@ -840,7 +840,7 @@ Components:
 5 6
 \end{exampleoutput}
 \subsection{Strongly Connected Components (Tarjan)}
-Given a directed graph, determine the strongly connected components (SCCs) using Tarjan's algorithm. A strongly connected component is a maximal set of vertices where every vertex can reach every other vertex. Condensing each SCC into one node produces a directed acyclic graph.
+Given a directed graph, determine the strongly connected components (SCCs) using Tarjan's algorithm. A strongly connected component is a maximal set of vertices where every vertex can reach every other vertex. Condensing each SCC into one node produces a directed acyclic graph. A single depth-first search keeps visited nodes on a stack and tracks each node's low-link, the smallest entry time reachable from its subtree; a node whose low-link equals its own entry time roots a component, which is popped off the stack in one piece.
 
 \begin{compactitem}
   \item \inlinecode{TarjanSCC(n)} constructs a directed graph on nodes numbered from 0 to \inlinecode{n - 1}.
@@ -956,7 +956,7 @@ Components:
 4 1 0
 \end{exampleoutput}
 \subsection{Articulation Points, Biconnected Components, Block-Cut Forest}
-Given an undirected graph, compute articulation points, vertex-biconnected components (BCCs), and the block-cut forest using Tarjan's algorithm. An articulation point (a.k.a. cut vertex) is a vertex whose removal increases the number of connected components in the graph. A vertex-biconnected component is a maximal subgraph that cannot be disconnected by removing one vertex, with single-edge and isolated-vertex components handled as degenerate cases.
+Given an undirected graph, compute articulation points, vertex-biconnected components (BCCs), and the block-cut forest using Tarjan's algorithm. An articulation point (a.k.a. cut vertex) is a vertex whose removal increases the number of connected components in the graph. A vertex-biconnected component is a maximal subgraph that cannot be disconnected by removing one vertex, with single-edge and isolated-vertex components handled as degenerate cases. A single depth-first search tracks each node's low-link, the earliest entry time reachable from its subtree: a node is an articulation point exactly when some child's subtree cannot reach above it, and the edges of each BCC are collected on a stack popped at that moment.
 
 The block-cut forest is a bipartite forest with one node for each BCC and one node for each articulation point, with an edge whenever an articulation point belongs to a BCC. Note that this differs from a bridge forest: the block-cut forest describes vertex connectivity, while a bridge forest describes edge connectivity after compressing 2-edge-connected components.
 
@@ -1145,7 +1145,7 @@ Adjacency List for Block-Cut Forest:
 6 => 1 2
 \end{exampleoutput}
 \subsection{Bridges, 2-Edge-Connected Components, Bridge Forest}
-Given an undirected graph, compute bridges, 2-edge-connected components, and the bridge forest using Tarjan's algorithm. A bridge is an edge whose removal increases the number of connected components in the graph. A 2-edge-connected component is a maximal set of vertices connected without crossing any bridge.
+Given an undirected graph, compute bridges, 2-edge-connected components, and the bridge forest using Tarjan's algorithm. A bridge is an edge whose removal increases the number of connected components in the graph. A 2-edge-connected component is a maximal set of vertices connected without crossing any bridge. A single depth-first search tracks each node's low-link, the earliest entry time reachable from its subtree: a tree edge is a bridge exactly when the child's subtree cannot reach back to the parent's side by any other route.
 
 After each 2-edge-connected component is condensed into one node, the original bridges connect those nodes into a bridge tree, or a bridge forest when the original graph is disconnected. This differs from a block-cut forest: the bridge forest describes edge connectivity, while the block-cut forest describes vertex connectivity using articulation points and vertex-biconnected components.
 
@@ -1934,7 +1934,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Shortest Path (BFS)}
-Given a starting node in an unweighted, directed graph, visit every connected node and determine the minimum distance to each such node. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor vector \inlinecode{pred}.
+Given a starting node in an unweighted, directed graph, visit every connected node and determine the minimum distance to each such node. Breadth-first search explores nodes in order of increasing distance using a queue, so the first time a node is reached is via a shortest path. Optionally, output the shortest path to a specific destination node using the shortest-path tree from the predecessor vector \inlinecode{pred}.
 
 \begin{compactitem}
   \item \inlinecode{bfs(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}.
@@ -2020,15 +2020,13 @@ The shortest distance from 0 to 3 is 2.
 Take the path: 0->1->3.
 \end{exampleoutput}
 \subsection{Shortest Path (0-1 BFS)}
-Given a starting node in a weighted graph whose edge weights are only 0 or 1, compute the shortest distance to every reachable node.
+Given a starting node in a weighted graph whose edge weights are only 0 or 1, compute the shortest distance to every reachable node. 0-1 BFS is a specialized version of Dijkstra's algorithm. Because every relaxation changes the distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push weight-0 relaxations to the front and weight-1 relaxations to the back.
 
 \begin{compactitem}
   \item \inlinecode{bfs\_zero\_one(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}. Each edge is stored as \inlinecode{(neighbor, weight)}, where \inlinecode{weight} is either 0 or 1.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
-
-This is a specialized version of Dijkstra's algorithm. Because every relaxation changes the distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push weight-0 relaxations to the front and weight-1 relaxations to the back.
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{bfs\_zero\_one()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
@@ -2296,15 +2294,13 @@ The shortest distance from 0 to 2 is 3.
 Take the path: 0->1->2.
 \end{exampleoutput}
 \subsection{Shortest Path (SPFA)}
-Given a starting node in a weighted directed graph, compute shortest paths even when some edge weights are negative.
+Given a starting node in a weighted directed graph, compute shortest paths even when some edge weights are negative. The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford: instead of relaxing every edge in every round, it keeps a queue of nodes whose distances have improved and relaxes only their outgoing edges. It is often fast on benign inputs, but it still has Bellman-Ford's worst-case behavior and can be forced to run in $O(n \cdot m)$. Prefer Dijkstra for nonnegative weights, and use SPFA mainly when negative edges are present and the input is not adversarial.
 
 \begin{compactitem}
   \item \inlinecode{spfa(start)} populates \inlinecode{dist} and \inlinecode{pred} for a global, pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}. Each edge is stored as \inlinecode{(neighbor, weight)}. The function returns \inlinecode{false} if it detects a reachable negative cycle, and returns \inlinecode{true} otherwise.
 \end{compactitem}
 
 For path reconstruction, \inlinecode{pred[v]} stores the node immediately before \inlinecode{v} on the shortest path from \inlinecode{start} to \inlinecode{v}, or $-1$ if \inlinecode{v} is \inlinecode{start} or unreachable. Follow \inlinecode{pred} backward from the destination to \inlinecode{start}, then reverse that sequence to recover the path.
-
-The Shortest Path Faster Algorithm is a queue-based optimization of Bellman-Ford. It is often fast on benign inputs, but it still has Bellman-Ford's worst-case behavior and can be forced to run in $O(n \cdot m)$. Prefer Dijkstra for nonnegative weights, and use SPFA mainly when negative edges are present and the input is not adversarial.
 
 \textbf{Time Complexity}: $O(n \cdot m)$ in the worst case for \inlinecode{spfa()}, where $n$ is the number of nodes and $m$ is the number of edges.
 
@@ -2385,7 +2381,7 @@ int main() {
 \subsection{Shortest Path (Floyd-Warshall)}
 Given a weighted, directed graph with possibly negative weights, determine the minimum distance between all pairs of start and destination nodes in the graph. Optionally, output the shortest path between two nodes using the next-hop matrix precomputed into \inlinecode{next\_node}.
 
-It is a dynamic program over intermediate nodes: for each node \inlinecode{k} in turn, every pair \inlinecode{(i, j)} is relaxed by considering a path through \inlinecode{k}, so once all \inlinecode{k} have been processed the matrix holds the all-pairs shortest distances.
+Floyd-Warshall's algorithm is a dynamic program over intermediate nodes: for each node \inlinecode{k} in turn, every pair \inlinecode{(i, j)} is relaxed by considering a path through \inlinecode{k}, so once all \inlinecode{k} have been processed the matrix holds the all-pairs shortest distances.
 
 \begin{compactitem}
   \item \inlinecode{initialize(nodes)} initializes \inlinecode{dist} and \inlinecode{next\_node} for nodes numbered from 0 to \inlinecode{nodes - 1}.
@@ -3260,7 +3256,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minimum-Cost Maximum-Flow}
-Given a flow network with integer capacities and edge costs, find a minimum-cost flow from a source node to a sink node.
+Given a flow network with integer capacities and edge costs, find a minimum-cost flow from a source node to a sink node. This is the successive shortest path method: repeatedly find a minimum-cost augmenting path from source to sink in the residual graph and push as much flow as it allows, until the flow target is met or no path remains. The path search uses SPFA (queue-based Bellman-Ford), since residual edges carry negated costs.
 
 \begin{compactitem}
   \item \inlinecode{MinCostMaxFlow(nodes)} constructs an empty residual network whose nodes are numbered from 0 to \inlinecode{nodes - 1}.
@@ -3806,7 +3802,7 @@ Matched 2 pair(s):
 \subsection{Assignment (Hungarian Algorithm)}
 Solves the minimum-cost assignment problem for a rectangular cost matrix. Given $n$ workers and $m$ jobs (with $n \leq m$) where assigning worker \inlinecode{i} to complete job \inlinecode{j} would cost \inlinecode{cost[i][j]}, choose a distinct job for each worker so that the total assignment cost is minimized.
 
-The classical Hungarian algorithm using potentials transforms a cost matrix using the principle that adding or subtracting constants from rows or columns does not change the optimal assignment. Note that while the input matrix is 0-based here, the internal calculations are 1-based.
+The classical Hungarian algorithm using potentials transforms a cost matrix using the principle that adding or subtracting constants from rows or columns does not change the optimal assignment. Workers are assigned one row at a time: each new row triggers a search for a least-cost augmenting path over zero-slack edges, with the potentials adjusted along the way to expose new zero-slack edges until the path reaches a free job. Note that while the input matrix is 0-based here, the internal calculations are 1-based.
 
 \begin{compactitem}
   \item \inlinecode{hungarian(cost, \&assignment)} returns the minimum total assignment cost for a 0-based \inlinecode{cost} matrix, while populating \inlinecode{assignment} with $n$ values where \inlinecode{assignment[i]} is the chosen job for worker \inlinecode{i}, using 0-based job numbers.

@@ -43,8 +43,8 @@ Stable?: No.
 
 */
 
-template<class It, class Compare>
-void quicksort(It lo, It hi, Compare comp) {
+template<class It, class Compare = std::less<>>
+void quicksort(It lo, It hi, Compare comp = Compare()) {
   while (hi - lo >= 2) {
     auto pivot = *(lo + (hi - lo) / 2);
     It lt = lo, i = lo, gt = hi;
@@ -67,12 +67,6 @@ void quicksort(It lo, It hi, Compare comp) {
   }
 }
 
-template<class It>
-void quicksort(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  quicksort(lo, hi, std::less<T>());
-}
-
 /*
 
 Merge sort first divides a list into n sublists of one element each, then recursively merges the
@@ -92,8 +86,8 @@ Stable?: Yes.
 
 */
 
-template<class It, class Compare>
-void mergesort(It lo, It hi, Compare comp) {
+template<class It, class Compare = std::less<>>
+void mergesort(It lo, It hi, Compare comp = Compare()) {
   if (hi - lo < 2) {
     return;
   }
@@ -108,12 +102,6 @@ void mergesort(It lo, It hi, Compare comp) {
   merged.insert(merged.end(), a, mid + 1);
   merged.insert(merged.end(), c, hi);
   std::copy(merged.begin(), merged.end(), lo);
-}
-
-template<class It>
-void mergesort(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  mergesort(lo, hi, std::less<T>());
 }
 
 /*
@@ -138,8 +126,8 @@ Stable?: No.
 
 */
 
-template<class It, class Compare>
-void heapsort(It lo, It hi, Compare comp) {
+template<class It, class Compare = std::less<>>
+void heapsort(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
   T tmp;
   It i = lo + (hi - lo) / 2, j = hi, parent, child;
@@ -170,12 +158,6 @@ void heapsort(It lo, It hi, Compare comp) {
   }
 }
 
-template<class It>
-void heapsort(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  heapsort(lo, hi, std::less<T>());
-}
-
 /*
 
 Comb sort is an improved bubble sort. While bubble sort increments the gap between swapped elements
@@ -194,8 +176,8 @@ Stable?: No.
 
 */
 
-template<class It, class Compare>
-void combsort(It lo, It hi, Compare comp) {
+template<class It, class Compare = std::less<>>
+void combsort(It lo, It hi, Compare comp = Compare()) {
   int gap = hi - lo;
   bool swapped = true;
   while (gap > 1 || swapped) {
@@ -210,12 +192,6 @@ void combsort(It lo, It hi, Compare comp) {
       }
     }
   }
-}
-
-template<class It>
-void combsort(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  combsort(lo, hi, std::less<T>());
 }
 
 /*

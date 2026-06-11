@@ -1,7 +1,9 @@
 /*
 
 Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer
-algorithm.
+algorithm. The points are split in half by $x$-coordinate and each half is solved recursively; the
+combining step then only needs to examine points within the best distance so far of the dividing
+line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
 - `closest_pair(lo, hi, &res)` returns the minimum squared distance between any two points in the
   range `[lo, hi)`, where `lo` and `hi` must be random-access iterators. The input range is

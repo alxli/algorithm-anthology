@@ -996,7 +996,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{String Searching (KMP)}
-Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine the first positions in which the needle occurs within the given haystacks in linear time using the Knuth-Morris-Pratt algorithm. In comparison, \inlinecode{std::string::find} runs in $O(n^{2})$ in the worst case.
+Given a single string (needle) and subsequent queries of texts (haystacks) to be searched, determine the first positions in which the needle occurs within the given haystacks in linear time using the Knuth-Morris-Pratt algorithm. In comparison, \inlinecode{std::string::find} runs in $O(n^{2})$ in the worst case. KMP precomputes, for every prefix of the needle, the length of its longest proper border (a prefix that is also a suffix). On a mismatch, the needle falls back to that border instead of restarting, so the position in the haystack never moves backward.
 
 \begin{compactitem}
   \item \inlinecode{KMP(needle)} constructs the partial match table for a string \inlinecode{needle} that is to be searched for subsequently in \inlinecode{haystack} queries.
@@ -1072,10 +1072,12 @@ int main() {
 \subsection{String Searching (Z Algorithm)}
 Given a single string (needle) and a single text (haystack) to be searched, determine the first position in which the needle occurs within the haystack in linear time using the Z algorithm. In comparison, \inlinecode{std::string::find} runs in quadratic time.
 
-The \inlinecode{find()} function below calls the Z algorithm on the concatenation of \inlinecode{needle} and \inlinecode{haystack}, separated by a sentinel value that is guaranteed not to collide with any byte in either input.
+The Z array stores, for each position of a string, the length of the longest substring starting there that matches a prefix of the whole string. It is computed in linear time by maintaining the rightmost matched window and seeding each position from its mirror earlier in that window.
+
+The \inlinecode{find()} function below calls the Z algorithm on the concatenation of \inlinecode{needle} and \inlinecode{haystack}, separated by a sentinel value that is guaranteed not to collide with any byte in either input. Any position whose Z value reaches the needle's length marks an occurrence.
 
 \begin{compactitem}
-  \item \inlinecode{z\_array(s)} constructs the Z array for a string \inlinecode{needle} that can be used for string searching. The Z array on an input string \inlinecode{s} is an array \inlinecode{z} where \inlinecode{z[i]} is the length of the longest substring starting from \inlinecode{s[i]} which is also a prefix of \inlinecode{s}.
+  \item \inlinecode{z\_array(s)} constructs the Z array for a needle string \inlinecode{s} that can be used for string searching. Each resulting value \inlinecode{z[i]} stores the length of the longest substring starting from \inlinecode{s[i]} which is also a prefix of the needle \inlinecode{s}.
   \item \inlinecode{find(haystack, needle)} returns the first position that \inlinecode{needle} occurs in \inlinecode{haystack}, or \inlinecode{std::string::npos} if it cannot be found. Note that the function can be modified to return all matches by simply letting the loop run and storing the results instead of returning early.
 \end{compactitem}
 
@@ -1151,7 +1153,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{String Searching (Aho-Corasick)}
-Given a set of strings (needles) and subsequent queries of texts (haystacks) to be searched, determine all positions in which needles occur within the given haystacks in linear time using the Aho-Corasick algorithm.
+Given a set of strings (needles) and subsequent queries of texts (haystacks) to be searched, determine all positions in which needles occur within the given haystacks in linear time using the Aho-Corasick algorithm. The needles are arranged in a trie whose nodes carry failure links to the longest proper suffix that is also a trie node. Scanning the haystack once while following transitions and failure links then reports every match through each node's output set.
 
 This implementation stores transitions in hash tables, which keeps lookups expected constant time without assuming a fixed alphabet size. The output tables are stored as ordered sets so matches ending at the same position are reported in deterministic needle order.
 
@@ -1297,7 +1299,7 @@ Matched "ab" at position 4.
 Matched "abccab" at position 0.
 \end{exampleoutput}
 \subsection{Palindrome Searching (Manacher)}
-Computes all odd- and even-length palindromic radii of a string in linear time using Manacher's algorithm. These radii can be used to test whether any substring is a palindrome in $O(1)$, find the longest palindromic substring, or count all palindromic substrings.
+Computes all odd- and even-length palindromic radii of a string in linear time using Manacher's algorithm. These radii can be used to test whether any substring is a palindrome in $O(1)$, find the longest palindromic substring, or count all palindromic substrings. The algorithm tracks the rightmost known palindrome and seeds each new center with the radius of its mirror inside that window, so characters are only ever compared when a palindrome is extended past the window.
 
 For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \inlinecode{s[i]}, including the center character. Thus the palindrome spans \inlinecode{[i - odd[i] + 1, i + odd[i])}. For even palindromes, \inlinecode{even[i]} is the radius centered between \inlinecode{s[i - 1]} and \inlinecode{s[i]}. Thus the palindrome spans \inlinecode{[i - even[i], i + even[i])}.
 
@@ -1420,7 +1422,7 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Recursive Descent Parsing (Simple)}
-Evaluate an expression in accordance to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators.
+Evaluate an expression in accordance to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators. Each precedence level is parsed by its own function that obtains operands by calling the next-tighter level, so the call structure itself enforces the order of operations.
 
 \begin{compactitem}
   \item \inlinecode{eval(s)} returns an evaluation of the arithmetic expression \inlinecode{s}.
@@ -2301,6 +2303,8 @@ Given a string \inlinecode{s}, a suffix array is the array of the smallest start
 
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
+The doubling algorithm sorts the suffixes by their first $2^k$ characters for increasing $k$: each round orders suffixes by their pair of ranks from the previous round, so a comparison costs $O(1)$ and the full order emerges after $O(\log n)$ rounds.
+
 \begin{compactitem}
   \item \inlinecode{SuffixArrayManberMyers(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers doubling algorithm with a comparison-based sort.
   \item \inlinecode{get\_sa()} returns the constructed suffix array.
@@ -2421,6 +2425,8 @@ int main() {
 Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is \inlinecode{[1, 2, 0]}.
 
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
+
+The doubling algorithm sorts the suffixes by their first $2^k$ characters for increasing $k$: each round orders suffixes by their pair of ranks from the previous round, so a comparison costs $O(1)$ and the full order emerges after $O(\log n)$ rounds. Replacing the comparison sort of each round with counting-sort-style rank updates removes a logarithmic factor.
 
 \begin{compactitem}
   \item \inlinecode{SuffixArrayCountingSort(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers doubling algorithm with counting-sort-style rank updates to reduce the running time to $O(n \log n)$.
@@ -2551,6 +2557,8 @@ int main() {
 Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
+
+The DC3/skew algorithm recursively constructs the suffix array of the suffixes starting at positions not divisible by 3, uses that order to sort the remaining suffixes with radix sort, and merges the two sorted groups in linear time.
 
 \begin{compactitem}
   \item \inlinecode{SuffixArrayDC3(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
@@ -3676,7 +3684,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Base64 Encoding}
-Encodes binary data as printable ASCII using Base64, and decodes Base64 text back to bytes. Base64 is an encoding, not encryption or compression: it preserves all input data exactly, but usually increases size by about one third.
+Encodes binary data as printable ASCII using Base64, and decodes Base64 text back to bytes. Base64 is an encoding, not encryption or compression: it preserves all input data exactly, but usually increases size by about one third. Each group of three input bytes is split into four 6-bit values, each selecting one character of a 64-symbol alphabet, with \inlinecode{=} padding marking a final group of only one or two bytes.
 
 This implementation uses the standard alphabet with \inlinecode{+}, \inlinecode{/}, and \inlinecode{=} padding. Whitespace is not skipped by the decoder; clean the input first if line breaks or spaces may appear.
 
@@ -3754,7 +3762,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Huffman Coding}
-Builds a Huffman code for a string and uses it to encode and decode that string. Huffman coding is a lossless prefix-code compression algorithm: more frequent characters receive shorter bit strings, and no code is a prefix of another code.
+Builds a Huffman code for a string and uses it to encode and decode that string. Huffman coding is a lossless prefix-code compression algorithm: more frequent characters receive shorter bit strings, and no code is a prefix of another code. The code tree is built greedily with a priority queue by repeatedly merging the two lowest-frequency subtrees until one tree remains; each character's bit string is then read off its root-to-leaf path.
 
 The implementation below stores encoded bits as a string of \inlinecode{\textquotesingle{}0\textquotesingle{}} and \inlinecode{\textquotesingle{}1\textquotesingle{}} characters for clarity. For real compression, pack those bits into bytes. The tree is also needed to decode the bit string, so compressed data normally stores enough metadata to reconstruct the same tree.
 

@@ -1,9 +1,12 @@
 /*
 
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
-once in the collection. This implementation requires operators `<` and `==` to be defined on the key
-type. A skip list maintains a linked hierarchy of sorted subsequences with each successive
-subsequence skipping over fewer elements than the previous one.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementation requires operators `<` and `==` to
+be defined on the key type. A skip list maintains a linked hierarchy of sorted subsequences with
+each successive subsequence skipping over fewer elements than the previous one. Each new node joins
+a number of levels decided by repeated coin flips, and a search starts at the sparsest level, moving
+forward until the next key would overshoot and then dropping down a level, which makes operations
+take O(log n) with high probability.
 
 - `SkipList()` constructs an empty map.
 - `size()` returns the size of the map.

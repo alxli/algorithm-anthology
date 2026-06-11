@@ -3,22 +3,26 @@
 Maintains a dynamic set of lines and answers minimum value queries at points in a fixed integer
 domain. A Li Chao tree is useful for dynamic programming recurrences of the form
 `dp[i] = min(m[j] * x[i] + b[j])`, especially when line slopes and query points arrive in arbitrary
-order.
+order. Each node of a segment tree over the domain keeps the line that wins at its segment's
+midpoint; inserting a line keeps the midpoint winner and recurses only into the half where the
+losing line may still win, and a query takes the best line along one root-to-leaf path.
 
-The implementation below stores the lower envelope of lines over the inclusive domain
-`[X_MIN, X_MAX]`. It supports adding arbitrary lines and querying arbitrary integer $x$-coordinates
-in O(log C), where $C =$ `X_MAX` $-$ `X_MIN` $+ 1$.
+This implementation stores the lower envelope of lines over the inclusive domain `[lo, hi]`.
+It supports adding arbitrary lines and querying arbitrary integer $x$-coordinates in logarithmic
+time with respect to the domain size.
 
 - `LiChaoTree(lo, hi)` constructs an empty tree over integer domain `[lo, hi]`.
 - `add_line(m, b)` inserts line $y = mx + b$ (can be called in any order).
-- `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`.
+- `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`. At least one
+  line must have been inserted.
 
 Time Complexity:
-- O(log C) per call to `add_line(m, b)` and `query(x)`, where $C$ is the domain size.
+- O(log d) per call to `add_line(m, b)` and `query(x)`, where $d$ is the distance between `lo` and
+  `hi`.
 
 Space Complexity:
-- O(n log C) worst-case node storage for $n$ inserted lines, usually much less.
-- O(log C) auxiliary stack space per operation.
+- O(n log d) worst-case node storage for $n$ line inserted, usually much less.
+- O(log d) auxiliary stack space per operation.
 
 */
 

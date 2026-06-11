@@ -1,10 +1,12 @@
 /*
 
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
-once in the collection. This implementation requires an ordering on the set of possible keys defined
-by `operator<` on the key type. An AVL tree is a binary search tree balanced by height,
-guaranteeing O(log n) worst-case running time in insertions and deletions by making sure that the
-heights of the left and right subtrees at every node differ by at most 1.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementation requires an ordering on the set of
+possible keys defined by `operator<` on the key type. An AVL tree is a binary search tree balanced
+by height, guaranteeing O(log n) worst-case running time in insertions and deletions by making sure
+that the heights of the left and right subtrees at every node differ by at most 1. Whenever an
+insertion or deletion breaks this invariant, it is repaired with one or two rotations at each
+affected node along the search path.
 
 - `AVLTree()` constructs an empty map.
 - `size()` returns the size of the map.

@@ -8,7 +8,9 @@ constructor with `query_max = true`. This is useful for dynamic programming recu
 
 The following implementation is a fully dynamic variant of the convex hull optimization technique,
 using a self-balancing binary search tree (`std::set`) to support the ability to call `add_line()`
-and `query()` in any desired order.
+and `query()` in any desired order. The tree stores the lower envelope of the lines sorted by slope:
+inserting a line removes any neighbors it dominates, and each line records the interval of queries
+for which it is the best, so a query is a single tree lookup.
 
 - `HullOptimizer(query_max)` constructs an empty hull. By default, `query(x)` minimizes; if
   `query_max` is true, `query(x)` maximizes.

@@ -1680,7 +1680,7 @@ int main() {
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Polygon Sorting and Area}
-Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the area. The functions are templated on the point type. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields and \inlinecode{\textless{}} / \inlinecode{==} operators.
+Given a list of distinct points in two-dimensions, order them into a valid polygon and determine the area. The sorting comparators order two points by the sign of their cross product around a chosen center, that is, by angle. The area functions use the shoelace formula, summing the cross products of consecutive vertex pairs. The functions are templated on the point type. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields and \inlinecode{\textless{}} / \inlinecode{==} operators.
 
 \begin{compactitem}
   \item \inlinecode{cw\_comp(a, b, c)} returns whether point \inlinecode{a} compares clockwise before \inlinecode{b} about \inlinecode{c}.
@@ -1832,7 +1832,7 @@ Clockwise vertices: (1, 3) (1, 2) (2, 1) (0, 0) (-1, 3)
 Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3)
 \end{exampleoutput}
 \subsection{Point-in-Polygon (Ray Casting)}
-Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
+Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
 
 \begin{compactitem}
   \item \inlinecode{point\_in\_polygon(p, lo, hi)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range \inlinecode{[lo, hi)} of points in either clockwise or counter-clockwise order. If \inlinecode{p} lies exactly on an edge or vertex, the result will depend on the value of \inlinecode{EDGE\_IS\_INSIDE}.
@@ -1908,7 +1908,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Convex Hull and Diametral Pair}
-Given a list of points in two dimensions, computes the convex hull using the monotone chain algorithm and the diametral pair using rotating calipers. The functions are templated on the iterator type; the value type of the iterator is used as the point type. Both functions accept either floating-point or integral coordinates, but since they use only cross product comparisons, they happen to be exact for integral points.
+Given a list of points in two dimensions, computes the convex hull using the monotone chain algorithm and the diametral pair using rotating calipers. Monotone chain sorts the points lexicographically and builds the lower and upper hulls in one pass each, popping any point that would create a clockwise turn. Rotating calipers then walks two antipodal pointers around the hull, advancing whichever increases the separation, visiting every candidate diametral pair in linear time. The functions are templated on the iterator type; the value type of the iterator is used as the point type. Both functions accept either floating-point or integral coordinates, but since they use only cross product comparisons, they happen to be exact for integral points.
 
 \begin{compactitem}
   \item \inlinecode{convex\_hull(lo, hi)} returns the convex hull in clockwise order for an input range \inlinecode{[lo, hi)} of points. The input range is sorted lexicographically after the call. To instead return the hull points counter-clockwise order, replace every \inlinecode{\textgreater{}= 0} with \inlinecode{\textless{}= 0}.
@@ -2183,7 +2183,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Closest Pair}
-Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer algorithm.
+Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer algorithm. The points are split in half by $x$-coordinate and each half is solved recursively; the combining step then only needs to examine points within the best distance so far of the dividing line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
 \begin{compactitem}
   \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range \inlinecode{[lo, hi)}, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is reordered during the computation and is sorted by $y$-coordinate on return. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members.
@@ -2338,7 +2338,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Multiple Segment Intersection (Sweep Line)}
-Given a list of line segments in two dimensions, determine whether any pair of segments intersect using a sweep line algorithm. The input type \inlinecode{Segment\textless{}Pt\textgreater{}} is templated on the point type, so endpoints may be integer (\inlinecode{PointI}) or floating-point (\inlinecode{Point}/\inlinecode{PointD}), but must support \inlinecode{operator\textless{}} which orders points lexicographically. The cross-product sign tests in \inlinecode{seg\_intersection} are exact for integer endpoints, so intersection detection is exact.
+Given a list of line segments in two dimensions, determine whether any pair of segments intersect using a sweep line algorithm. Endpoint events are processed from left to right while an ordered set maintains the segments currently crossing the sweep line, sorted by $y$; only segments that become adjacent in this set need to be tested, since any leftmost intersection must involve a pair that is adjacent just before it occurs. The input type \inlinecode{Segment\textless{}Pt\textgreater{}} is templated on the point type, so endpoints may be integer (\inlinecode{PointI}) or floating-point (\inlinecode{Point}/\inlinecode{PointD}), but must support \inlinecode{operator\textless{}} which orders points lexicographically. The cross-product sign tests in \inlinecode{seg\_intersection} are exact for integer endpoints, so intersection detection is exact.
 
 \begin{compactitem}
   \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2)} returns whether any pair of segments intersect given a range \inlinecode{[lo, hi)} of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments will be stored into pointers \inlinecode{res1} and \inlinecode{res2}. Touching behavior is controlled by \inlinecode{TOUCH\_IS\_INTERSECT}.
@@ -2562,15 +2562,13 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Convex Polygon Cut}
-Given a convex polygon and a directed line from \inlinecode{p} to \inlinecode{q}, clips the polygon to the closed left half-plane of that line.
+Given a convex polygon and a directed line from \inlinecode{p} to \inlinecode{q}, clips the polygon to the closed left half-plane of that line. The polygon is walked edge by edge: vertices on the left side of the line are kept, and whenever an edge crosses the line, the intersection point is appended to the output.
 
 \begin{compactitem}
-  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the portion of the polygon lying on or to the left of the directed line \inlinecode{p -\textgreater{} q}. The input range \inlinecode{[lo, hi)} must contain the vertices of a convex polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves that boundary order.
+  \item \inlinecode{convex\_cut(lo, hi, p, q)} returns the portion of the polygon lying on or to the left of the directed line \inlinecode{p -\textgreater{} q}. The input range \inlinecode{[lo, hi)} must contain the vertices of a convex polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves that boundary order. If \inlinecode{p == q}, the cutting line is invalid and an error is thrown.
 \end{compactitem}
 
 The function is templated on the input point type. Side classification is done with cross products. For integer-coordinate inputs, classification is exact only if the intermediate products do not overflow. Edge-line intersection points are computed in floating point, and the returned polygon uses \inlinecode{Point} with \inlinecode{double} coordinates.
-
-If \inlinecode{p == q}, the cutting line is invalid and \inlinecode{std::runtime\_error} is thrown.
 
 \textbf{Time Complexity}: $O(n)$ per call to \inlinecode{convex\_cut(lo, hi, p, q)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 
@@ -2680,7 +2678,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Polygon Intersection and Union}
-Given two simple (non-self-intersecting) polygons, determine the areas of their intersection and union using a sweep line algorithm and the inclusion-exclusion principle.
+Given two simple (non-self-intersecting) polygons, determine the areas of their intersection and union using a sweep line algorithm and the inclusion-exclusion principle. Every vertex and every pairwise edge intersection contributes its $x$-coordinate as a sweep boundary, so within each vertical slab between consecutive boundaries the two borders cannot cross, and the slab's overlap is accumulated exactly from trapezoid areas. The union then follows by inclusion-exclusion as area(A) + area(B) minus the intersection.
 
 \begin{compactitem}
   \item \inlinecode{intersection\_area(lo1, hi1, lo2, hi2)} returns the intersection area of two polygons respectively specified by two ranges \inlinecode{[lo1, hi1)} and \inlinecode{[lo2, hi2)} of vertices in clockwise order, where \inlinecode{lo1}, \inlinecode{hi1}, \inlinecode{lo2}, and \inlinecode{hi2} must be random-access iterators.
@@ -3075,7 +3073,7 @@ int main() {
 \subsection{Delaunay Triangulation (Guibas-Stolfi)}
 Given a set of two-dimensional points, computes a Delaunay triangulation: a triangulation of the convex hull such that no input point lies strictly inside the circumcircle of any triangle.
 
-This implementation uses the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data structure. Input points are copied to \inlinecode{Point} with \inlinecode{double} coordinates, sorted lexicographically, and duplicates are removed. If four or more points are cocircular, the Delaunay triangulation is not unique; this implementation returns one valid triangulation.
+This implementation uses the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data structure. The point set is split in half, each half is triangulated recursively, and the halves are stitched together from the bottom up by a sequence of cross edges, with circumcircle tests deciding each connecting edge and deleting invalidated ones. Input points are copied to \inlinecode{Point} with \inlinecode{double} coordinates, sorted lexicographically, and duplicates are removed. If four or more points are cocircular, the Delaunay triangulation is not unique; this implementation returns one valid triangulation.
 
 \begin{compactitem}
   \item \inlinecode{delaunay\_triangulation(lo, hi)} returns the triangles of one Delaunay triangulation for the input range \inlinecode{[lo, hi)}. The input iterator value type may be any point type with numeric \inlinecode{.x} and \inlinecode{.y} members. The returned triangles use \inlinecode{Point} with \inlinecode{double} coordinates. Duplicate points are ignored. If fewer than three non-collinear unique points are available, the result is empty. Note that all predicates are evaluated using floating-point arithmetic, so results are subject to numerical error on nearly collinear or nearly cocircular inputs.

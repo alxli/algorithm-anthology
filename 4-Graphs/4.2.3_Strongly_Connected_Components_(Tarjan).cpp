@@ -2,7 +2,10 @@
 
 Given a directed graph, determine the strongly connected components (SCCs) using Tarjan's algorithm.
 A strongly connected component is a maximal set of vertices where every vertex can reach every other
-vertex. Condensing each SCC into one node produces a directed acyclic graph.
+vertex. Condensing each SCC into one node produces a directed acyclic graph. A single depth-first
+search keeps visited nodes on a stack and tracks each node's low-link, the smallest entry time
+reachable from its subtree; a node whose low-link equals its own entry time roots a component, which
+is popped off the stack in one piece.
 
 - `TarjanSCC(n)` constructs a directed graph on nodes numbered from 0 to `n - 1`.
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.

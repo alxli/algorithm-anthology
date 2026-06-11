@@ -2,9 +2,11 @@
 
 Encode and decode labeled trees using Prufer codes. A Prufer code is a sequence of length $n - 2$
 that uniquely represents a labeled tree on nodes $0, 1, \ldots, n - 1$. It is useful for counting
-labeled trees, generating test cases, and converting between trees and compact sequences. Both
-functions choose the smallest available leaf at each step. This makes the implementation
-deterministic and matches the usual textbook convention.
+labeled trees, generating test cases, and converting between trees and compact sequences. Encoding
+repeatedly removes a leaf and records its neighbor until two nodes remain; decoding reverses this,
+deducing each removed leaf from the node degrees implied by the code. Both functions choose the
+smallest available leaf at each step. This makes the implementation deterministic and matches the
+usual textbook convention.
 
 - `encode_prufer()` returns the prufer code for the global, bidirectionally pre-populated adjacency
   list `adj` which must form a valid tree with nodes numbered from 0 to `adj.size() - 1`.

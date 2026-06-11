@@ -2,7 +2,9 @@
 
 Encodes binary data as printable ASCII using Base64, and decodes Base64 text back to bytes. Base64
 is an encoding, not encryption or compression: it preserves all input data exactly, but usually
-increases size by about one third.
+increases size by about one third. Each group of three input bytes is split into four 6-bit values,
+each selecting one character of a 64-symbol alphabet, with `=` padding marking a final group of
+only one or two bytes.
 
 This implementation uses the standard alphabet with `+`, `/`, and `=` padding. Whitespace is not
 skipped by the decoder; clean the input first if line breaks or spaces may appear.

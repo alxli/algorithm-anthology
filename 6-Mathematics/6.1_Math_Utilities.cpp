@@ -2,7 +2,8 @@
 
 Common mathematic constants and functions, most of which already have standard STL equivalents:
 `std::signbit()`, `std::copysign()`, `std::trunc()`, `std::round()`, `std::erf()`, `std::tgamma()`,
-`std::lgamma()`). These are written for educational purposes, without heavy optimizations.
+`std::lgamma()`. The implementations below are for educational purposes only, and may not be as
+heavily optimized as their standard library counterparts.
 
 Time Complexity:
 - O(1) for most operations.
@@ -319,7 +320,7 @@ double lgamma_(double x) {
 
 Base Conversion:
 
-- Given an integer in base $a$ as a vector `d` of digits (where `d[0]` is the least significant
+- Given an integer in base `a` as a vector `d` of digits (where `d[0]` is the least significant
   digit), `convert_base(d, a, b)` returns a vector of the integer's digits when converted base `b`
   (again with index 0 storing the least significant digit). The actual value of the entire integer
   to be converted must be able to fit within an unsigned 64-bit integer for intermediate storage.

@@ -4,11 +4,14 @@ The number of inversions for a sequence `a` is the number of ordered pairs $(i, 
 $i < j$ and $a[i] > a[j]$. This is roughly how "close" an array is to being sorted, but is *not* the
 minimum number of swaps required to sort the array. If the array is sorted, then the inversion count
 is 0. If the array is sorted in decreasing order, then the inversion count is maximal. The following
-two functions are each techniques to efficiently count inversions.
+two functions are each techniques to efficiently count inversions. In the merge sort approach,
+whenever the merge step emits an element from the right half, that element jumps ahead of every
+unmerged left-half element, and exactly that many inversions are added to the count.
 
 - `inversions(lo, hi)` uses merge sort to return the number of inversions given two random-access
-  iterators as a range `[lo, hi)`. The input range will be sorted after the function call. This
-  requires `operator<` to be defined on the iterators' value type.
+  iterators as a range `[lo, hi)`. The input range will be sorted after the function call. 
+  Optionally, a comparison function object specifying a strict weak ordering may be specified to
+  replace the default `operator<`.
 - `inversions(a)` uses coordinate compression and a Fenwick tree to return the number of
   inversions in an integer vector without modifying it.
 
@@ -23,22 +26,23 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <functional>
 #include <iterator>
 #include <vector>
 
-template<class It>
-long long inversions(It lo, It hi) {
+template<class It, class Compare = std::less<>>
+long long inversions(It lo, It hi, Compare comp = Compare()) {
   if (hi - lo < 2) {
     return 0;
   }
   It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
   long long res = 0;
-  res += inversions(lo, mid + 1);
-  res += inversions(mid + 1, hi);
+  res += inversions(lo, mid + 1, comp);
+  res += inversions(mid + 1, hi, comp);
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> merged;
   while (a <= mid && c < hi) {
-    if (*c < *a) {
+    if (comp(*c, *a)) {
       merged.push_back(*(c++));
       res += (mid - a) + 1;
     } else {

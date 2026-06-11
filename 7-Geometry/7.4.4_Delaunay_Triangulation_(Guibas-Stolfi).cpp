@@ -4,9 +4,12 @@ Given a set of two-dimensional points, computes a Delaunay triangulation: a tria
 convex hull such that no input point lies strictly inside the circumcircle of any triangle.
 
 This implementation uses the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data
-structure. Input points are copied to `Point` with `double` coordinates, sorted lexicographically,
-and duplicates are removed. If four or more points are cocircular, the Delaunay triangulation is
-not unique; this implementation returns one valid triangulation.
+structure. The point set is split in half, each half is triangulated recursively, and the halves are
+stitched together from the bottom up by a sequence of cross edges, with circumcircle tests deciding
+each connecting edge and deleting invalidated ones. Input points are copied to `Point` with `double`
+coordinates, sorted lexicographically, and duplicates are removed. If four or more points are
+cocircular, the Delaunay triangulation is not unique; this implementation returns one valid
+triangulation.
 
 - `delaunay_triangulation(lo, hi)` returns the triangles of one Delaunay triangulation for the input
   range `[lo, hi)`. The input iterator value type may be any point type with numeric `.x` and `.y`

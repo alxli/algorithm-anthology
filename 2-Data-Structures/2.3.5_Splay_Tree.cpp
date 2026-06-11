@@ -1,9 +1,12 @@
 /*
 
-Maintain a map, that is, a collection of key-value pairs such that each possible key appears at most
-once in the collection. This implementation requires an ordering on the set of possible keys defined
-by `operator<` on the key type. A splay tree is a balanced binary search tree with the additional
-property that recently accessed elements are quick to access again.
+Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible
+key appears at most once in the collection. This implementation requires an ordering on the set of
+possible keys defined by `operator<` on the key type. A splay tree is a balanced binary search tree
+with the additional property that recently accessed elements are quick to access again. Every
+operation "splays" its target node up to the root through a series of rotations, reshaping the tree
+so that frequently accessed keys settle near the top. A single operation may degrade to O(n), but
+any sequence of operations averages out to O(log n) amortized each.
 
 - `SplayTree()` constructs an empty map.
 - `size()` returns the size of the map.
@@ -19,8 +22,8 @@ property that recently accessed elements are quick to access again.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
-- O(log n) per call to `insert()`, `erase()`, and `find()`, where $n$ is the number of entries
-  currently in the map.
+- O(log n) amortized per call to `insert()`, `erase()`, and `find()`, where $n$ is the number of
+  entries currently in the map.
 - O(n) per call to `walk()`.
 
 Space Complexity:
