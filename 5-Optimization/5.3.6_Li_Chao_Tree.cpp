@@ -6,8 +6,8 @@ domain. A Li Chao tree is useful for dynamic programming recurrences of the form
 order.
 
 The implementation below stores the lower envelope of lines over the inclusive domain
-`[X_MIN, X_MAX]`. It supports adding arbitrary lines and querying arbitrary integer x-coordinates in
-O(log C), where $C =$ `X_MAX` $-$ `X_MIN` $+ 1$.
+`[X_MIN, X_MAX]`. It supports adding arbitrary lines and querying arbitrary integer $x$-coordinates
+in O(log C), where $C =$ `X_MAX` $-$ `X_MIN` $+ 1$.
 
 - `LiChaoTree(lo, hi)` constructs an empty tree over integer domain `[lo, hi]`.
 - `add_line(m, b)` inserts line $y = mx + b$ (can be called in any order).

@@ -1,6 +1,6 @@
 /*
 
-Given a function $f$ mapping a set of integers to itself and an x-coordinate in the set, return a
+Given a function $f$ mapping a set of integers to itself and an $x$-coordinate in the set, return a
 pair containing the (position, length) of a cycle in the sequence of numbers obtained from
 repeatedly composing $f$ with itself starting with the initial $x$. Formally, since $f$ maps a
 finite set $S$ to itself, some value is guaranteed to eventually repeat in the sequence:

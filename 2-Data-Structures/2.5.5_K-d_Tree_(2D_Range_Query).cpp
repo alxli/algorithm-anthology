@@ -111,7 +111,7 @@ class RangeKDTree {
     this->y1 = y1;
     this->x2 = x2;
     this->y2 = y2;
-    query(0, tree.size(), f);
+    query(0, static_cast<int>(tree.size()), f);
   }
 };
 

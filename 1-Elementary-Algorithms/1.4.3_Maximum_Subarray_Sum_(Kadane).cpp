@@ -12,9 +12,9 @@ compute the maximal submatrix sum as well.
   pointers may be passed to store the inclusive boundary indices `[res_lo, res_hi]` of the resulting
   subarray. By convention, the empty subarray is allowed, so an input range consisting of only
   negative values returns `0` with an empty result interval.
-- `max_submatrix_sum(matrix, &r1, &c1, &r2, &c2)` returns the largest sum of any rectangular
-  submatrix for a matrix of $n$ rows by $m$ columns. The matrix should be given as a 2-dimensional
-  vector, where the outer vector must contain $n$ vectors each of size $m$. This implementation
+- `max_submatrix_sum(a, &r1, &c1, &r2, &c2)` returns the largest sum of any rectangular
+  submatrix for a matrix of $m$ rows by $n$ columns. The matrix should be given as a 2-dimensional
+  vector, where the outer vector must contain $m$ vectors each of size $n$. This implementation
   requires operators `+` and `<` to be defined on the iterators' value type. Optionally, four `int`
   pointers may be passed to store the boundary indices of the resulting subarray, with `(r1, c1)`
   specifiying the top-left index and `(r2, c2)` specifying the bottom-right index. By convention,
@@ -23,12 +23,12 @@ compute the maximal submatrix sum as well.
 
 Time Complexity:
 - O(n) per call to `max_subarray_sum()`, where $n$ is the distance between `lo` and `hi`.
-- O(n*m^2) per call to `max_submatrix_sum()`, where $n$ is the number of rows and $m$ is the number
+- O(m*n^2) per call to `max_submatrix_sum()`, where $m$ is the number of rows and $n$ is the number
   of columns in the matrix.
 
 Space Complexity:
 - O(1) auxiliary for `max_subarray_sum()`.
-- O(n) auxiliary heap space for `max_submatrix_sum()`, where $n$ is the number of rows in the
+- O(m) auxiliary heap space for `max_submatrix_sum()`, where $m$ is the number of rows in the
   matrix.
 
 */
@@ -66,19 +66,19 @@ auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr
 
 template<class T>
 T max_submatrix_sum(
-    const std::vector<std::vector<T>> &matrix, int *r1 = nullptr, int *c1 = nullptr,
+    const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr,
     int *r2 = nullptr, int *c2 = nullptr
 ) {
-  if (matrix.empty() || matrix[0].empty()) {
+  if (a.empty() || a[0].empty()) {
     return T();
   }
-  int n = static_cast<int>(matrix.size()), m = static_cast<int>(matrix[0].size());
+  int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
   T sum, max_sum = 0;
-  for (int clo = 0; clo < m; clo++) {
-    std::vector<T> sums(n, 0);
-    for (int chi = clo; chi < m; chi++) {
-      for (int i = 0; i < n; i++) {
-        sums[i] += matrix[i][chi];
+  for (int clo = 0; clo < cols; clo++) {
+    std::vector<T> sums(rows, 0);
+    for (int chi = clo; chi < cols; chi++) {
+      for (int i = 0; i < rows; i++) {
+        sums[i] += a[i][chi];
       }
       int rlo, rhi;
       sum = max_subarray_sum(sums.begin(), sums.end(), &rlo, &rhi);
@@ -126,17 +126,17 @@ int main() {
   }
   {
     // clang-format off
-    vector<vector<int>> matrix{{0, -2, -7, 0, 5},
-                               {9, 2, -6, 2, -4},
-                               {-4, 1, -4, 1, 0},
-                               {-1, 8, 0, -2, 3}};
+    vector<vector<int>> a{{0, -2, -7, 0, 5},
+                          {9, 2, -6, 2, -4},
+                          {-4, 1, -4, 1, 0},
+                          {-1, 8, 0, -2, 3}};
     // clang-format on
     int r1 = 0, c1 = 0, r2 = 0, c2 = 0;
-    assert(max_submatrix_sum(matrix, &r1, &c1, &r2, &c2) == 15);
+    assert(max_submatrix_sum(a, &r1, &c1, &r2, &c2) == 15);
     cout << "\nMaximal sum submatrix:" << endl;
     for (int i = r1; i <= r2; i++) {
       for (int j = c1; j <= c2; j++) {
-        cout << matrix[i][j] << " ";
+        cout << a[i][j] << " ";
       }
       cout << endl;
     }

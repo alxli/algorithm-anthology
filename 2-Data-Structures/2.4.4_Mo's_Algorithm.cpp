@@ -82,8 +82,9 @@ int main() {
   };
   auto current = [&]() { return distinct; };
 
+  int n = static_cast<int>(a.size());
   vector<pair<int, int>> queries{{0, 6}, {0, 2}, {3, 5}, {1, 1}, {2, 4}};
-  vector<int> ans = mos_algorithm(a.size(), queries, add, remove, current);
+  vector<int> ans = mos_algorithm(n, queries, add, remove, current);
 
   assert((ans == vector<int>{3, 2, 3, 1, 3}));
   return 0;

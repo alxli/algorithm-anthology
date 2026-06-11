@@ -2186,7 +2186,7 @@ int main() {
 Given a list of points in two dimensions, finds the closest pair using a divide-and-conquer algorithm.
 
 \begin{compactitem}
-  \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range \inlinecode{[lo, hi)}, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is reordered during the computation and is sorted by y-coordinate on return. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members.
+  \item \inlinecode{closest\_pair(lo, hi, \&res)} returns the minimum squared distance between any two points in the range \inlinecode{[lo, hi)}, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators. The input range is reordered during the computation and is sorted by $y$-coordinate on return. If \inlinecode{res} is non-null, one closest pair is stored there in lexicographic order. The function is templated on the point type and works with any type exposing numeric \inlinecode{.x} and \inlinecode{.y} members.
 \end{compactitem}
 
 The returned distance preserves the coordinate arithmetic type. For integer-coordinate inputs, the result is therefore an exact squared distance provided intermediate products do not overflow. The returned pair contains the original point type.

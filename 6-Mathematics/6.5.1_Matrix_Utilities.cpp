@@ -7,10 +7,10 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 - `make_matrix(a)` returns a matrix constructed from the two-dimensional vector `a`.
 - `identity_matrix(n)` returns the $n$ by $n$ identity matrix, that is, a matrix where `a[i][j]`
   equals 1 (if $i = j$), or 0 otherwise, for every $i$ and $j$ in $[0, n)$.
-- `rows(a)` returns the number of rows $r$ in an $r$ by $c$ matrix `a`.
-- `columns(a)` returns the number of columns $c$ in an $r$ by $c$ matrix `a`.
-- `a[i][j]` may be used to access or modify the entry at row $i$, column $j$ of an $r$ by $c$ matrix
-  `a`, for every `i` in `[0, r)` and `j` in `[0, c)`.
+- `rows(a)` returns the number of rows $m$ in matrix `a`.
+- `columns(a)` returns the number of columns $n$ in matrix `a`.
+- `a[i][j]` may be used to access or modify the entry at row $i$, column $j$ of an $m$ by $n$ matrix
+  `a`, for every `i` in `[0, m)` and `j` in `[0, n)`.
 - Operators `<`, `>`, `<=`, `>=`, `==`, and `!=` define lexicographical comparison based on that of
   `std::vector`.
 - Operators `+`, `-`, `*`, `/`, `+=`, `-=`, `*=`, and `/=` define scalar addition, subtraction,
@@ -20,8 +20,8 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
   $p$.
 - `power_sum(a, p)` returns the power sum of a square matrix $a$ up to an integer power $p$, that
   is, $a + a^2 + \ldots + a^p$.
-- `transpose(a)` returns the transpose of an $r$ by $c$ matrix `a`, that is, a new $c$ by $r$ matrix
-  $b$ such that `a[i][j]` $=$ `b[j][i]` for every `i` in `[0, r)` and `j` in `[0, c)`.
+- `transpose(a)` returns the transpose of an $m$ by $n$ matrix `a`, that is, a new $n$ by $m$ matrix
+  $b$ such that `a[i][j]` $=$ `b[j][i]` for every `i` in `[0, m)` and `j` in `[0, n)`.
 - `transpose_in_place(a)` assigns the square matrix `a` to its transpose, returning a reference to
   the modified argument itself.
 - `rotate(a, d)` returns the matrix `a` rotated `d` degrees clockwise. A negative `d` specifies a
@@ -31,21 +31,21 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
   counter-clockwise rotation, and `d` must be a multiple of 90.
 
 Time Complexity:
-- O(n*m) for construction, output, comparison, and scalar arithmetic of $n$ by $m$ matrices.
+- O(m*n) for construction, output, comparison, and scalar arithmetic of $m$ by $n$ matrices.
 - O(1) for `rows(a)` and `columns(a)`.
-- O(n*m) for matrix-matrix addition and subtraction of $n$ by $m$ matrices.
+- O(m*n) for matrix-matrix addition and subtraction of $m$ by $n$ matrices.
 - O(n^3 log p) for exponentiation of an $n$ by $n$ matrix to power $p$.
 - O(n^3 log p) for power sum of an $n$ by $n$ matrix to power $p$.
-- O(n*m*k) for multiplication of an $n$ by $m$ matrix by an $m$ by $k$ matrix.
-- O(n*m) for `transpose()`, `transpose_in_place()`, `rotate()`, and `rotate_in_place()` of $n$ by
-  $m$ matrices.
+- O(m*n*k) for multiplication of an $m$ by $n$ matrix by an $n$ by $k$ matrix.
+- O(m*n) for `transpose()`, `transpose_in_place()`, `rotate()`, and `rotate_in_place()` of $m$ by
+  $n$ matrices.
 
 Space Complexity:
 - O(1) auxiliary space for `rows()`, `columns()`, `a[i][j]` access, comparison operators, and
   in-place operations.
 - O(n^2 log p) auxiliary stack and heap space for exponentiation of an $n$ by $n$ matrix to power
   $p$, as well as the power sum of an $n$ by $n$ matrix up to power $p$.
-- O(n*m) auxiliary heap space for all non-in-place operations returning an $n$ by $m$ matrix,
+- O(m*n) auxiliary heap space for all non-in-place operations returning an $m$ by $n$ matrix,
   `transpose()`, and `rotate()`.
 
 */
@@ -70,10 +70,11 @@ matrix make_matrix(int r, int c, const T &v) {
 
 template<class T>
 matrix make_matrix(const std::vector<std::vector<T>> &a) {
-  int r = a.size(), c = a.empty() ? 0 : a[0].size();
-  matrix res(r, matrix::value_type(c));
-  for (int i = 0; i < r; i++) {
-    for (int j = 0; j < c; j++) {
+  int rows = static_cast<int>(a.size());
+  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
+  matrix res(rows, matrix::value_type(cols));
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
       res[i][j] = a[i][j];
     }
   }

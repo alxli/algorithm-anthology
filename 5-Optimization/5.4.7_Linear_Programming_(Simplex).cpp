@@ -31,7 +31,7 @@ int simplex_solve(
     const Matrix &a, const std::vector<double> &b, const std::vector<double> &c,
     std::vector<double> *x, const bool MAXIMIZE = true, const double EPS = 1e-10
 ) {
-  int m = a.size(), n = c.size();
+  int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
   Matrix t(m + 2, std::vector<double>(n + 2));
   t[1][1] = 0;
   for (int j = 1; j <= n; j++) {

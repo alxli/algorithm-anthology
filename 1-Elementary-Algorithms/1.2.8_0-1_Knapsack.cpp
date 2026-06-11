@@ -1,11 +1,11 @@
 /*
 
-Solves the 0/1 knapsack problem: given items with nonnegative integer weights and values, choose
+Solves the 0-1 knapsack problem: given items with nonnegative integer weights and values, choose
 each item at most once to maximize total value without exceeding a capacity limit.
 
 The one-dimensional dynamic programming array `dp[w]` stores the best value that can be achieved
 with total weight at most `w` after processing some prefix of the items. Iterating weights in
-decreasing order is what enforces the 0/1 constraint; it prevents the same item from being reused
+decreasing order is what enforces the 0-1 constraint; it prevents the same item from being reused
 during the current item update.
 
 - `knapsack_01(weight, value, capacity)` returns the maximum value achievable with total weight at

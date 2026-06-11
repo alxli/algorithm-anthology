@@ -12,12 +12,14 @@ difference arrays, and two-dimensional grids.
 
 Time Complexity:
 - O(n) per call to `prefix_sums(a)`, where $n$ is the array size.
-- O(r*c) per call to `prefix_sums_2d(a)`, where $r$ and $c$ are matrix dimensions.
+- O(m*n) per call to `prefix_sums_2d(a)`, where $m$ and $n$ are the number of rows and columns of
+  $a$, respectively.
 - O(1) per range or rectangle query.
 
 Space Complexity:
-- O(n) for one-dimensional prefix sums.
-- O(r*c) for two-dimensional prefix sums.
+- O(n) for `prefix_sums(a)`.
+- O(m*n) for `prefix_sums_2d(a)`.
+- O(1) auxiliary for `range_sum()` and `rectangle_sum()`.
 
 */
 
@@ -36,11 +38,12 @@ long long range_sum(const std::vector<long long> &pref, int lo, int hi) {
 }
 
 std::vector<std::vector<long long>> prefix_sums_2d(const std::vector<std::vector<int>> &a) {
-  int rows = a.size(), cols = rows == 0 ? 0 : a[0].size();
+  int rows = static_cast<int>(a.size());
+  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   std::vector<std::vector<long long>> pref(rows + 1, std::vector<long long>(cols + 1, 0));
-  for (int r = 0; r < rows; r++) {
-    for (int c = 0; c < cols; c++) {
-      pref[r + 1][c + 1] = a[r][c] + pref[r][c + 1] + pref[r + 1][c] - pref[r][c];
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      pref[i + 1][j + 1] = a[i][j] + pref[i][j + 1] + pref[i + 1][j] - pref[i][j];
     }
   }
   return pref;

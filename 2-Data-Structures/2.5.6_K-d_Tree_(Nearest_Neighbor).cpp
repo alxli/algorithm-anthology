@@ -111,7 +111,7 @@ class NearestKDTree {
 
   point nearest(const T &x, const T &y, bool can_equal = true) {
     min_dist = LDBL_MAX;
-    nearest(0, tree.size(), x, y, can_equal);
+    nearest(0, static_cast<int>(tree.size()), x, y, can_equal);
     return tree[id];
   }
 };

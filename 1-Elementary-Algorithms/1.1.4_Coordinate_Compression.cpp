@@ -11,9 +11,8 @@ type.
 
 - `compress1(lo, hi)` performs the compression by sorting the array, removing duplicates, and binary
   searching for the position of each original value.
-- `compress2(lo, hi)` achieves the same result by inserting all values into a balanced binary search
-  tree (`std::map`), which automatically removes duplicate values and supports efficient lookups of
-  the compressed values.
+- `compress2(lo, hi)` achieves the same result by inserting all values into an `std::map`, which
+  automatically removes duplicate values and supports efficient lookups of the compressed values.
 
 Time Complexity:
 - O(n log n) per call to either function, where $n$ is the distance between `lo` and `hi`.
@@ -35,7 +34,7 @@ void compress1(It lo, It hi) {
   std::sort(v.begin(), v.end());
   v.resize(std::unique(v.begin(), v.end()) - v.begin());
   for (It it = lo; it != hi; ++it) {
-    *it = static_cast<int>((std::lower_bound(v.begin(), v.end(), *it) - v.begin()));
+    *it = static_cast<int>(std::lower_bound(v.begin(), v.end(), *it) - v.begin());
   }
 }
 

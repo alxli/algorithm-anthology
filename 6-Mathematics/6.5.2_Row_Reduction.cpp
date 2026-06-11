@@ -7,18 +7,18 @@ decomposition with row partial pivoting should be used.
 
 - `row_reduce(a)` assigns the matrix `a` to its reduced row echelon form, returning a reference to
   the modified argument itself.
-- `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an $r$ by $c$ matrix
-  `a` of real values, and a length $r$ vector `b`, returning 0 if there is one solution, $-1$ if
-  there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one
-  solution, then the vector pointed to by `x` is populated with the solution vector of length $c$.
+- `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix
+  `a` of real values, and a length $m$ vector `b`, returning 0 if there is one solution, $-1$
+  if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one
+  solution, then the vector pointed to by `x` is populated with the solution vector of length $n$.
 
 Time Complexity:
-- O(r^2*c) per call to `row_reduce(a)` and `solve_system(a)`, where $r$ and $c$ are the number of
-  rows and columns of `a` respectively.
+- O(m^2*n) per call to `row_reduce(a)` and `solve_system(a)`, where $m$ and $n$ are the number of
+  rows and columns of `a`, respectively.
 
 Space Complexity:
 - O(1) auxiliary for `row_reduce(a)`.
-- O(r*c) auxiliary heap space for `solve_system(a)`.
+- O(m*n) auxiliary heap space for `solve_system(a)`.
 
 */
 
@@ -34,34 +34,34 @@ Matrix &row_reduce(Matrix &a) {
   if (a.empty()) {
     return a;
   }
-  int r = a.size(), c = a[0].size(), lead = 0;
-  for (int row = 0; row < r && lead < c; row++) {
-    int i = row;
+  int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
+  for (int r = 0, lead = 0; r < rows && lead < cols; r++) {
+    int i = r;
     while (fabs(a[i][lead]) < EPS) {
-      if (++i == r) {
-        i = row;
-        if (++lead == c) {
+      if (++i == rows) {
+        i = r;
+        if (++lead == cols) {
           return a;
         }
       }
     }
-    std::swap(a[i], a[row]);
-    auto lv = a[row][lead];
-    for (int j = 0; j < c; j++) {
-      a[row][j] /= lv;
+    std::swap(a[i], a[r]);
+    auto lv = a[r][lead];
+    for (int j = 0; j < cols; j++) {
+      a[r][j] /= lv;
     }
-    for (int i = 0; i < r; i++) {
-      if (i != row) {
+    for (int i = 0; i < rows; i++) {
+      if (i != r) {
         lv = a[i][lead];
-        for (int j = 0; j < c; j++) {
-          a[i][j] -= lv * a[row][j];
+        for (int j = 0; j < cols; j++) {
+          a[i][j] -= lv * a[r][j];
         }
       }
     }
     for (int j = 0; j < lead; j++) {
-      a[row][j] = 0;
+      a[r][j] = 0;
     }
-    a[row][lead++] = 1;
+    a[r][lead++] = 1;
   }
   return a;
 }
@@ -71,26 +71,26 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
   if (x == nullptr || a.empty() || a.size() != b.size()) {
     return -1;
   }
-  int r = a.size(), c = a[0].size();
-  if (r < c) {
+  int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
+  if (rows < cols) {
     return -2;
   }
   Matrix m(a);
-  for (int i = 0; i < r; i++) {
+  for (int i = 0; i < rows; i++) {
     m[i].push_back(b[i]);
   }
   row_reduce(m);
   int rank = 0;
-  for (int i = 0; i < r; i++) {
+  for (int i = 0; i < rows; i++) {
     int lead = -1;
-    for (int j = 0; j < c && lead < 0; j++) {
+    for (int j = 0; j < cols && lead < 0; j++) {
       if (fabs(m[i][j]) > EPS) {
         lead = j;
       }
     }
     if (lead < 0) {
       // A zero coefficient row with a nonzero constant means 0 = nonzero (no solution).
-      if (fabs(m[i][c]) > EPS) {
+      if (fabs(m[i][cols]) > EPS) {
         return -1;
       }
     } else {
@@ -99,12 +99,12 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
   }
   // A unique solution requires a pivot in every column; fewer means free variables remain. This
   // also catches trailing free columns, which a per-row `lead > i` test alone would miss.
-  if (rank < c) {
+  if (rank < cols) {
     return -2;
   }
-  x->resize(c);
-  for (int i = 0; i < c; i++) {
-    (*x)[i] = m[i][c];
+  x->resize(cols);
+  for (int i = 0; i < cols; i++) {
+    (*x)[i] = m[i][cols];
   }
   return 0;
 }

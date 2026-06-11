@@ -8,7 +8,7 @@ duplicate keys.
 - `partition_three_way(lo, hi, pivot)` rearranges the range `[lo, hi)` in-place and returns
   iterators `(mid_lo, mid_hi)`, where `[lo, mid_lo)` is less than `pivot`, `[mid_lo, mid_hi)` is
   equal to `pivot`, and `[mid_hi, hi)` is greater than `pivot`.
-- `sort_012(lo, hi)` sorts a range whose values are all `0`, `1`, or `2`.
+- `sort_012(lo, hi)` sorts a range consisting of only the values 0, 1, and 2.
 
 Time Complexity:
 - O(n) per call, where $n$ is the distance between `lo` and `hi`.

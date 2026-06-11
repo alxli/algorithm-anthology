@@ -835,7 +835,7 @@ int main() {
 \subsection{Li Chao Tree}
 Maintains a dynamic set of lines and answers minimum value queries at points in a fixed integer domain. A Li Chao tree is useful for dynamic programming recurrences of the form \inlinecode{dp[i] = min(m[j] * x[i] + b[j])}, especially when line slopes and query points arrive in arbitrary order.
 
-The implementation below stores the lower envelope of lines over the inclusive domain \inlinecode{[X\_MIN, X\_MAX]}. It supports adding arbitrary lines and querying arbitrary integer x-coordinates in $O(\log C)$, where $C =$ \inlinecode{X\_MAX} $-$ \inlinecode{X\_MIN} $+ 1$.
+The implementation below stores the lower envelope of lines over the inclusive domain \inlinecode{[X\_MIN, X\_MAX]}. It supports adding arbitrary lines and querying arbitrary integer $x$-coordinates in $O(\log C)$, where $C =$ \inlinecode{X\_MAX} $-$ \inlinecode{X\_MIN} $+ 1$.
 
 \begin{compactitem}
   \item \inlinecode{LiChaoTree(lo, hi)} constructs an empty tree over integer domain \inlinecode{[lo, hi]}.
@@ -1653,7 +1653,7 @@ int simplex_solve(
     const Matrix &a, const std::vector<double> &b, const std::vector<double> &c,
     std::vector<double> *x, const bool MAXIMIZE = true, const double EPS = 1e-10
 ) {
-  int m = a.size(), n = c.size();
+  int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
   Matrix t(m + 2, std::vector<double>(n + 2));
   t[1][1] = 0;
   for (int j = 1; j <= n; j++) {

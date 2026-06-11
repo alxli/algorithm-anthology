@@ -11,8 +11,8 @@ confirm it truly holds a majority. The range is therefore traversed twice, so it
 supplied as ForwardIterators rather than random-access.
 
 If a majority element is guaranteed in advance to exist, the verification pass can be dropped and
-the candidate returned directly. The candidate phase alone is single-pass, so that variant needs
-only InputIterators.
+the candidate returned directly. The candidate phase alone is single-pass, so that variant could be
+written as a "true" streaming API with one element per call. 
 
 - `majority(lo, hi)` returns an iterator to the first occurrence of the majority element of the
   range `[lo, hi)`, or `hi` if no majority element exists. Requires `operator==` on the value type.

@@ -1,7 +1,7 @@
 /*
 
-Finds candidate frequent elements in a stream using the Misra-Gries algorithm. With parameter `k`,
-the algorithm keeps at most `k - 1` counters and guarantees that every value occurring more than
+Finds candidate frequent elements in a stream using the Misra-Gries algorithm. With parameter $k$,
+the algorithm keeps at most $k - 1$ counters and guarantees that every value occurring more than
 $\lfloor n/k \rfloor$ times appears among the returned candidates.
 
 The candidates are not automatically verified, since the algorithm intentionally uses sublinear

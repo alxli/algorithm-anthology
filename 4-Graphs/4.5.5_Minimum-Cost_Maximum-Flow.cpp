@@ -57,7 +57,7 @@ struct MinCostMaxFlow {
   }
 
   FlowResult min_cost_flow(int source, int sink, int target_flow) {
-    int nodes = adj.size(), flow = 0;
+    int nodes = static_cast<int>(adj.size()), flow = 0;
     long long cost = 0;
     std::vector<long long> dist(nodes);
     std::vector<int> parent_node(nodes), parent_edge(nodes);

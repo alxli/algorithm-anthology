@@ -543,7 +543,8 @@ long long inversions(const std::vector<int> &a) {
   std::vector<int> bit(values.size() + 1, 0);
   long long res = 0;
   for (int i = n - 1; i >= 0; i--) {
-    int id = std::lower_bound(values.begin(), values.end(), a[i]) - values.begin() + 1;
+    int id =
+        static_cast<int>(std::lower_bound(values.begin(), values.end(), a[i]) - values.begin()) + 1;
     for (int j = id - 1; j > 0; j -= j & -j) {
       res += bit[j];
     }
@@ -578,7 +579,7 @@ Both implementations below take the range as ForwardIterators and require \inlin
 
 \begin{compactitem}
   \item \inlinecode{compress1(lo, hi)} performs the compression by sorting the array, removing duplicates, and binary searching for the position of each original value.
-  \item \inlinecode{compress2(lo, hi)} achieves the same result by inserting all values into a balanced binary search tree (\inlinecode{std::map}), which automatically removes duplicate values and supports efficient lookups of the compressed values.
+  \item \inlinecode{compress2(lo, hi)} achieves the same result by inserting all values into an \inlinecode{std::map}, which automatically removes duplicate values and supports efficient lookups of the compressed values.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call to either function, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
@@ -598,7 +599,7 @@ void compress1(It lo, It hi) {
   std::sort(v.begin(), v.end());
   v.resize(std::unique(v.begin(), v.end()) - v.begin());
   for (It it = lo; it != hi; ++it) {
-    *it = static_cast<int>((std::lower_bound(v.begin(), v.end(), *it) - v.begin()));
+    *it = static_cast<int>(std::lower_bound(v.begin(), v.end(), *it) - v.begin());
   }
 }
 
@@ -728,7 +729,7 @@ Partitions a range into three consecutive groups according to a pivot value: ele
 
 \begin{compactitem}
   \item \inlinecode{partition\_three\_way(lo, hi, pivot)} rearranges the range \inlinecode{[lo, hi)} in-place and returns iterators \inlinecode{(mid\_lo, mid\_hi)}, where \inlinecode{[lo, mid\_lo)} is less than \inlinecode{pivot}, \inlinecode{[mid\_lo, mid\_hi)} is equal to \inlinecode{pivot}, and \inlinecode{[mid\_hi, hi)} is greater than \inlinecode{pivot}.
-  \item \inlinecode{sort\_012(lo, hi)} sorts a range whose values are all \inlinecode{0}, \inlinecode{1}, or \inlinecode{2}.
+  \item \inlinecode{sort\_012(lo, hi)} sorts a range consisting of only the values 0, 1, and 2.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
@@ -805,15 +806,16 @@ Precomputes prefix sums so range-sum queries can be answered in constant time. T
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{prefix\_sums(a)}, where $n$ is the array size.
-  \item $O(r \cdot c)$ per call to \inlinecode{prefix\_sums\_2d(a)}, where $r$ and $c$ are matrix dimensions.
+  \item $O(m \cdot n)$ per call to \inlinecode{prefix\_sums\_2d(a)}, where $m$ and $n$ are the number of rows and columns of $a$, respectively.
   \item $O(1)$ per range or rectangle query.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for one-dimensional prefix sums.
-  \item $O(r \cdot c)$ for two-dimensional prefix sums.
+  \item $O(n)$ for \inlinecode{prefix\_sums(a)}.
+  \item $O(m \cdot n)$ for \inlinecode{prefix\_sums\_2d(a)}.
+  \item $O(1)$ auxiliary for \inlinecode{range\_sum()} and \inlinecode{rectangle\_sum()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -832,11 +834,12 @@ long long range_sum(const std::vector<long long> &pref, int lo, int hi) {
 }
 
 std::vector<std::vector<long long>> prefix_sums_2d(const std::vector<std::vector<int>> &a) {
-  int rows = a.size(), cols = rows == 0 ? 0 : a[0].size();
+  int rows = static_cast<int>(a.size());
+  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
   std::vector<std::vector<long long>> pref(rows + 1, std::vector<long long>(cols + 1, 0));
-  for (int r = 0; r < rows; r++) {
-    for (int c = 0; c < cols; c++) {
-      pref[r + 1][c + 1] = a[r][c] + pref[r][c + 1] + pref[r + 1][c] - pref[r][c];
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      pref[i + 1][j + 1] = a[i][j] + pref[i][j + 1] + pref[i + 1][j] - pref[i][j];
     }
   }
   return pref;
@@ -1349,10 +1352,10 @@ int main() {
 \begin{exampleoutput}
 -5 1 9 10 11 13
 \end{exampleoutput}
-\subsection{Knapsack (0-1)}
-Solves the 0/1 knapsack problem: given items with nonnegative integer weights and values, choose each item at most once to maximize total value without exceeding a capacity limit.
+\subsection{0-1 Knapsack}
+Solves the 0-1 knapsack problem: given items with nonnegative integer weights and values, choose each item at most once to maximize total value without exceeding a capacity limit.
 
-The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best value that can be achieved with total weight at most \inlinecode{w} after processing some prefix of the items. Iterating weights in decreasing order is what enforces the 0/1 constraint; it prevents the same item from being reused during the current item update.
+The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best value that can be achieved with total weight at most \inlinecode{w} after processing some prefix of the items. Iterating weights in decreasing order is what enforces the 0-1 constraint; it prevents the same item from being reused during the current item update.
 
 \begin{compactitem}
   \item \inlinecode{knapsack\_01(weight, value, capacity)} returns the maximum value achievable with total weight at most \inlinecode{capacity}.
@@ -1397,7 +1400,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Knapsack (Unbounded and Coin Change)}
+\subsection{Unbounded Knapsack and Coin Change}
 Solves two common unbounded knapsack variants, where each item may be used any number of times. In the maximum-value version, each item has a weight and value, and the goal is to maximize total value subject to a capacity limit. In the coin change version, each coin denomination may be used any number of times, and the goal is to count unordered ways to form a target sum.
 
 For unbounded maximum-value knapsack, weights are iterated in increasing order so the current item may be reused. For unordered coin change, coins are the outer loop so each multiset of coins is counted once, independent of ordering.
@@ -1522,57 +1525,57 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Largest Zero Submatrix}
-Given a rectangular matrix with $n$ rows and $m$ columns consisting of only 0's and 1's as a two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of only 0's. This solution sweeps the rows from top to bottom, maintaining for each column the height of the run of 0's ending at the current row. Each row then reduces to finding the maximum rectangular area under a histogram, which is solved in linear time with a monotonic stack.
+Given a rectangular matrix with $m$ rows and $n$ columns consisting of only 0's and 1's as a two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of only 0's. This solution sweeps the rows from top to bottom, maintaining for each column the height of the run of 0's ending at the current row. Each row then reduces to finding the maximum rectangular area under a histogram, which is solved in linear time with a monotonic stack.
 
 \begin{compactitem}
-  \item \inlinecode{max\_zero\_submatrix(matrix)} returns the area of the largest all-zero rectangular submatrix of \inlinecode{matrix}, a two-dimensional vector of bool.
+  \item \inlinecode{max\_zero\_submatrix(a)} returns the area of the largest all-zero rectangular submatrix of \inlinecode{a}, a two-dimensional vector of bool.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{max\_zero\_submatrix()}, where $n$ is the number of rows and $m$ is the number of columns in the matrix.
+\textbf{Time Complexity}: $O(m \cdot n)$ per call to \inlinecode{max\_zero\_submatrix()}, where $m$ is the number of rows and $n$ is the number of columns in the matrix.
 
-\textbf{Space Complexity}: $O(m)$ auxiliary heap space, where $m$ is the number of columns in the matrix.
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space, where $n$ is the number of columns in the matrix.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <stack>
 #include <vector>
 
-int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
-  if (matrix.empty()) {
+int max_zero_submatrix(const std::vector<std::vector<bool>> &a) {
+  if (a.empty()) {
     return 0;
   }
-  int n = static_cast<int>(matrix.size()), m = static_cast<int>(matrix[0].size());
+  int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
   int res = 0;
-  // last1[c] = row index of the most recent 1 in column c (-1 if none yet).
-  // left_wall[c] = nearest col left of c whose last1 value >= last1[c] (exclusive left bound).
-  // right_wall[c] = nearest col right of c whose last1 value >= last1[c] (exclusive right bound).
-  std::vector<int> last1(m, -1), left_wall(m), right_wall(m);
-  for (int r = 0; r < n; r++) {
-    for (int c = 0; c < m; c++) {
-      if (matrix[r][c]) {
-        last1[c] = r;
+  // last1[j] = row index of the most recent 1 in column j (-1 if none yet).
+  // left_wall[j] = nearest col left of j whose last1 value >= last1[j] (exclusive left bound).
+  // right_wall[j] = nearest col right of j whose last1 value >= last1[j] (exclusive right bound).
+  std::vector<int> last1(cols, -1), left_wall(cols), right_wall(cols);
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      if (a[i][j]) {
+        last1[j] = i;
       }
     }
     std::stack<int> s;
-    for (int c = 0; c < m; c++) {
-      while (!s.empty() && last1[s.top()] <= last1[c]) {
+    for (int j = 0; j < cols; j++) {
+      while (!s.empty() && last1[s.top()] <= last1[j]) {
         s.pop();
       }
-      left_wall[c] = s.empty() ? -1 : s.top();
-      s.push(c);
+      left_wall[j] = s.empty() ? -1 : s.top();
+      s.push(j);
     }
     while (!s.empty()) {
       s.pop();
     }
-    for (int c = m - 1; c >= 0; c--) {
-      while (!s.empty() && last1[s.top()] <= last1[c]) {
+    for (int j = cols - 1; j >= 0; j--) {
+      while (!s.empty() && last1[s.top()] <= last1[j]) {
         s.pop();
       }
-      right_wall[c] = s.empty() ? m : s.top();
-      s.push(c);
+      right_wall[j] = s.empty() ? cols : s.top();
+      s.push(j);
     }
-    for (int j = 0; j < m; j++) {
-      res = std::max(res, (r - last1[j]) * (right_wall[j] - left_wall[j] - 1));
+    for (int j = 0; j < cols; j++) {
+      res = std::max(res, (i - last1[j]) * (right_wall[j] - left_wall[j] - 1));
     }
   }
   return res;
@@ -1585,14 +1588,14 @@ int max_zero_submatrix(const std::vector<std::vector<bool>> &matrix) {
 using namespace std;
 
 int main() {
-  vector<vector<bool>> matrix{
+  vector<vector<bool>> a{
       {1, 0, 1, 1, 0, 0},
       {1, 0, 0, 1, 0, 0},
       {0, 0, 0, 0, 0, 1},
       {1, 0, 0, 1, 0, 0},
       {1, 0, 1, 0, 0, 1}
   };
-  assert(max_zero_submatrix(matrix) == 6);
+  assert(max_zero_submatrix(a) == 6);
   return 0;
 }
 \end{lstlisting}
@@ -1904,7 +1907,7 @@ int main() {
 \subsection{Fisher-Yates Shuffle}
 Randomly permutes a range in-place using the Fisher-Yates shuffle. Each possible permutation is produced with equal probability, assuming the random number source is uniform.
 
-The algorithm scans from right to left. At position \inlinecode{i}, it chooses a random position \inlinecode{j} from \inlinecode{[0, i]} and swaps the two elements. This fixes one uniformly random remaining element at a time.
+The algorithm scans from right to left. At each position $i$, it chooses a random position $j$ from $[0, i]$ and swaps the two elements. This fixes one uniformly random remaining element at a time.
 
 \begin{compactitem}
   \item \inlinecode{fisher\_yates\_shuffle(lo, hi)} randomly shuffles the range \inlinecode{[lo, hi)}.
@@ -2058,21 +2061,21 @@ Given an array of numbers, determine the maximum possible sum of any contiguous 
 
 \begin{compactitem}
   \item \inlinecode{max\_subarray\_sum(lo, hi, \&res\_lo, \&res\_hi)} returns the maximal subarray sum for the range \inlinecode{[lo, hi)}, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, two \inlinecode{int} pointers may be passed to store the inclusive boundary indices \inlinecode{[res\_lo, res\_hi]} of the resulting subarray. By convention, the empty subarray is allowed, so an input range consisting of only negative values returns \inlinecode{0} with an empty result interval.
-  \item \inlinecode{max\_submatrix\_sum(matrix, \&r1, \&c1, \&r2, \&c2)} returns the largest sum of any rectangular submatrix for a matrix of $n$ rows by $m$ columns. The matrix should be given as a 2-dimensional vector, where the outer vector must contain $n$ vectors each of size $m$. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, four \inlinecode{int} pointers may be passed to store the boundary indices of the resulting subarray, with \inlinecode{(r1, c1)} specifiying the top-left index and \inlinecode{(r2, c2)} specifying the bottom-right index. By convention, the empty submatrix is allowed, so an input matrix consisting of only negative values returns \inlinecode{0} with an empty result interval.
+  \item \inlinecode{max\_submatrix\_sum(a, \&r1, \&c1, \&r2, \&c2)} returns the largest sum of any rectangular submatrix for a matrix of $m$ rows by $n$ columns. The matrix should be given as a 2-dimensional vector, where the outer vector must contain $m$ vectors each of size $n$. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, four \inlinecode{int} pointers may be passed to store the boundary indices of the resulting subarray, with \inlinecode{(r1, c1)} specifiying the top-left index and \inlinecode{(r2, c2)} specifying the bottom-right index. By convention, the empty submatrix is allowed, so an input matrix consisting of only negative values returns \inlinecode{0} with an empty result interval.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{max\_subarray\_sum()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(n \cdot m^{2})$ per call to \inlinecode{max\_submatrix\_sum()}, where $n$ is the number of rows and $m$ is the number of columns in the matrix.
+  \item $O(m \cdot n^{2})$ per call to \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows and $n$ is the number of columns in the matrix.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{max\_subarray\_sum()}.
-  \item $O(n)$ auxiliary heap space for \inlinecode{max\_submatrix\_sum()}, where $n$ is the number of rows in the matrix.
+  \item $O(m)$ auxiliary heap space for \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows in the matrix.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2109,19 +2112,19 @@ auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr
 
 template<class T>
 T max_submatrix_sum(
-    const std::vector<std::vector<T>> &matrix, int *r1 = nullptr, int *c1 = nullptr,
+    const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr,
     int *r2 = nullptr, int *c2 = nullptr
 ) {
-  if (matrix.empty() || matrix[0].empty()) {
+  if (a.empty() || a[0].empty()) {
     return T();
   }
-  int n = static_cast<int>(matrix.size()), m = static_cast<int>(matrix[0].size());
+  int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
   T sum, max_sum = 0;
-  for (int clo = 0; clo < m; clo++) {
-    std::vector<T> sums(n, 0);
-    for (int chi = clo; chi < m; chi++) {
-      for (int i = 0; i < n; i++) {
-        sums[i] += matrix[i][chi];
+  for (int clo = 0; clo < cols; clo++) {
+    std::vector<T> sums(rows, 0);
+    for (int chi = clo; chi < cols; chi++) {
+      for (int i = 0; i < rows; i++) {
+        sums[i] += a[i][chi];
       }
       int rlo, rhi;
       sum = max_subarray_sum(sums.begin(), sums.end(), &rlo, &rhi);
@@ -2159,16 +2162,16 @@ int main() {
     cout << endl;
   }
   {
-    vector<vector<int>> matrix{{0, -2, -7, 0, 5},
-                               {9, 2, -6, 2, -4},
-                               {-4, 1, -4, 1, 0},
-                               {-1, 8, 0, -2, 3}};
+    vector<vector<int>> a{{0, -2, -7, 0, 5},
+                          {9, 2, -6, 2, -4},
+                          {-4, 1, -4, 1, 0},
+                          {-1, 8, 0, -2, 3}};
     int r1 = 0, c1 = 0, r2 = 0, c2 = 0;
-    assert(max_submatrix_sum(matrix, &r1, &c1, &r2, &c2) == 15);
+    assert(max_submatrix_sum(a, &r1, &c1, &r2, &c2) == 15);
     cout << "\nMaximal sum submatrix:" << endl;
     for (int i = r1; i <= r2; i++) {
       for (int j = c1; j <= c2; j++) {
-        cout << matrix[i][j] << " ";
+        cout << a[i][j] << " ";
       }
       cout << endl;
     }
@@ -2190,7 +2193,7 @@ Given a range of $n$ elements, find the majority element: an element that occurs
 
 This uses the Boyer-Moore voting algorithm. A first pass maintains a single candidate and a counter, incrementing it on a match and decrementing on a mismatch, replacing the candidate when the counter reaches zero; any majority element necessarily survives as the final candidate. Because the absence of a majority must also be reported, a second pass then counts the candidate's occurrences to confirm it truly holds a majority. The range is therefore traversed twice, so it only needs to be supplied as ForwardIterators rather than random-access.
 
-If a majority element is guaranteed in advance to exist, the verification pass can be dropped and the candidate returned directly. The candidate phase alone is single-pass, so that variant needs only InputIterators.
+If a majority element is guaranteed in advance to exist, the verification pass can be dropped and the candidate returned directly. The candidate phase alone is single-pass, so that variant could be written as a ``true'' streaming API with one element per call.
 
 \begin{compactitem}
   \item \inlinecode{majority(lo, hi)} returns an iterator to the first occurrence of the majority element of the range \inlinecode{[lo, hi)}, or \inlinecode{hi} if no majority element exists. Requires \inlinecode{operator==} on the value type.
@@ -2304,7 +2307,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Frequent Elements (Misra-Gries)}
-Finds candidate frequent elements in a stream using the Misra-Gries algorithm. With parameter \inlinecode{k}, the algorithm keeps at most \inlinecode{k - 1} counters and guarantees that every value occurring more than $\lfloor n/k \rfloor$ times appears among the returned candidates.
+Finds candidate frequent elements in a stream using the Misra-Gries algorithm. With parameter $k$, the algorithm keeps at most $k - 1$ counters and guarantees that every value occurring more than $\lfloor n/k \rfloor$ times appears among the returned candidates.
 
 The candidates are not automatically verified, since the algorithm intentionally uses sublinear memory and does not retain the stream. If exact frequencies are needed, make a second pass over the input and count only the returned candidates.
 
@@ -2363,7 +2366,7 @@ int main() {
 \setcounter{section}{5}
 \setcounter{subsection}{0}
 \subsection{Cycle Detection (Floyd)}
-Given a function $f$ mapping a set of integers to itself and an x-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing $f$ with itself starting with the initial $x$. Formally, since $f$ maps a finite set $S$ to itself, some value is guaranteed to eventually repeat in the sequence: $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
+Given a function $f$ mapping a set of integers to itself and an $x$-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing $f$ with itself starting with the initial $x$. Formally, since $f$ maps a finite set $S$ to itself, some value is guaranteed to eventually repeat in the sequence: $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
 
 There must exist a pair of indices $i$ and $j$ ($i < j$) such that $x_i = x_j$. When this happens, the rest of the sequence will consist of the subsequence from $x_i$ to $x_{j - 1}$ repeating indefinitely. The cycle detection problem asks to find such an $i$, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
 
@@ -2443,7 +2446,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Cycle Detection (Brent)}
-Given a function $f$ mapping a set of integers to itself and an x-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing $f$ with itself starting with the initial $x$. Formally, since $f$ maps a finite set $S$ to itself, some value is guaranteed to eventually repeat in the sequence: $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
+Given a function $f$ mapping a set of integers to itself and an $x$-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing $f$ with itself starting with the initial $x$. Formally, since $f$ maps a finite set $S$ to itself, some value is guaranteed to eventually repeat in the sequence: $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
 
 There must exist a pair of indices $i$ and $j$ ($i < j$) such that $x_i = x_j$. When this happens, the rest of the sequence will consist of the subsequence from $x_i$ to $x_{j - 1}$ repeating indefinitely. The cycle detection problem asks to find such an $i$, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
 

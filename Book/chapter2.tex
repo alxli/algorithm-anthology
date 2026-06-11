@@ -3278,8 +3278,9 @@ int main() {
   };
   auto current = [&]() { return distinct; };
 
+  int n = static_cast<int>(a.size());
   vector<pair<int, int>> queries{{0, 6}, {0, 2}, {3, 5}, {1, 1}, {2, 4}};
-  vector<int> ans = mos_algorithm(a.size(), queries, add, remove, current);
+  vector<int> ans = mos_algorithm(n, queries, add, remove, current);
 
   assert((ans == vector<int>{3, 2, 3, 1, 3}));
   return 0;
@@ -5417,7 +5418,7 @@ class RangeKDTree {
     this->y1 = y1;
     this->x2 = x2;
     this->y2 = y2;
-    query(0, tree.size(), f);
+    query(0, static_cast<int>(tree.size()), f);
   }
 };
 \end{lstlisting}
@@ -5557,7 +5558,7 @@ class NearestKDTree {
 
   point nearest(const T &x, const T &y, bool can_equal = true) {
     min_dist = LDBL_MAX;
-    nearest(0, tree.size(), x, y, can_equal);
+    nearest(0, static_cast<int>(tree.size()), x, y, can_equal);
     return tree[id];
   }
 };

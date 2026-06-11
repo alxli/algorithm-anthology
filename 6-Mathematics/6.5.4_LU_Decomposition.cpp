@@ -8,7 +8,7 @@ An improvement on basic row reduction, LU decomposition by row-partial pivoting 
 magnitude of matrix values small, thus reducing the relative error due to rounding in computed
 solutions.
 
-- `lu_decompose(a, &p1col)` assigns the $r$ by $c$ matrix `a` to merged LU decomposition matrix
+- `lu_decompose(a, &p1col)` assigns the $m$ by $n$ matrix `a` to merged LU decomposition matrix
   `lu`, returning either 0 or 1 denoting the "sign" of the permutation parity (0 if the number of
   overall row swaps performed is even, or 1 if it is odd), or $-1$ denoting a degenerate matrix
   (i.e. singular for square matrices). The merged matrix `lu` has `lu[i][j] = l[i][j]` for $i > j$
@@ -20,23 +20,23 @@ solutions.
   vector `p1col` where `p1col[i]` stores the only column that is equal to 1 in row $i$ of the
   permutation matrix $P$ (all other columns in row $i$ of $P$ are implicitly 0). The permutation
   matrix $P$ corresponding to `p1col` satisfies $P a = lu$.
-- `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an $r$ by $c$ matrix
-  `a` of real values, and a length $r$ vector `b`, returning 0 if there is one solution or $-1$ if
+- `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix
+  `a` of real values, and a length $m$ vector `b`, returning 0 if there is one solution or $-1$ if
   there are zero or infinite solutions. If there is exactly one solution, then the vector pointed to
-  by `x` is populated with the solution vector of length $c$.
+  by `x` is populated with the solution vector of length $n$.
 - `det(a)` returns the determinant of an $n$ by $n$ matrix `a` using LU decomposition.
 - `invert(a)` assigns the $n$ by $n$ matrix `a` to its inverse (if it exists), returning 0 if the
   inversion was successful or $-1$ if `a` has no inverse.
 
 Time Complexity:
-- O(r^2*c) per call to `lu_decompose(a)` and `solve_system(a, b)`, where $r$ and $c$ are the number
-  of rows and columns respectively, in accordance to the functions' descriptions above.
-- O(n^3) per call to `det(a)` and `invert(a)`, where $n$ is the dimension of `a`.
+- O(m^2*n) per call to `lu_decompose(a)` and `solve_system(a, b)`, where $m$ and $n$ are the number
+  of rows and columns of `a`, respectively.
+- O(n^3) per call to `det(a)` and `invert(a)`, where $n$ is the length of square matrix `a`.
 
 Space Complexity:
 - O(1) auxiliary for `lu_decompose()`.
 - O(n^2) for `det(a)` and `invert(a)`.
-- O(r*c) auxiliary heap space for `solve_system(a, b)`.
+- O(m*n) auxiliary heap space for `solve_system(a, b)`.
 
 */
 
@@ -49,14 +49,16 @@ Space Complexity:
 
 template<class Matrix>
 int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS = 1e-10) {
-  int r = a.size(), c = a[0].size(), parity = 0;
+  int rows = static_cast<int>(a.size());
+  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
+  int parity = 0;
   if (p1col != nullptr) {
-    p1col->resize(r);
+    p1col->resize(rows);
     std::iota(p1col->begin(), p1col->end(), 0);
   }
-  for (int i = 0; i < r && i < c; i++) {
+  for (int i = 0; i < rows && i < cols; i++) {
     int pi = i;
-    for (int k = i + 1; k < r; k++) {
+    for (int k = i + 1; k < rows; k++) {
       if (fabs(a[k][i]) > fabs(a[pi][i])) {
         pi = k;
       }
@@ -71,9 +73,9 @@ int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS 
       std::iter_swap(a.begin() + i, a.begin() + pi);
       parity = 1 - parity;
     }
-    for (int j = i + 1; j < r; j++) {
+    for (int j = i + 1; j < rows; j++) {
       a[j][i] /= a[i][i];
-      for (int k = i + 1; k < c; k++) {
+      for (int k = i + 1; k < cols; k++) {
         a[j][k] -= a[j][i] * a[i][k];
       }
     }
@@ -95,32 +97,33 @@ template<class Matrix, class T>
 int solve_system(
     const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double EPS = 1e-10
 ) {
-  int r = a.size(), c = a[0].size();
-  if (x == nullptr || a.empty() || a.size() != b.size() || r < c) {
+  int rows = static_cast<int>(a.size());
+  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
+  if (x == nullptr || a.empty() || a.size() != b.size() || rows < cols) {
     return -1;
   }
-  x->resize(c);
+  x->resize(cols);
   std::vector<int> p1col;
   Matrix lu;
   int status = lu_decompose(lu = a, &p1col, EPS);
   if (status < 0) {
     return status;
   }
-  for (int i = 0; i < c; i++) {
+  for (int i = 0; i < cols; i++) {
     (*x)[i] = b[p1col[i]];
     for (int k = 0; k < i; k++) {
       (*x)[i] -= getl(lu, i, k) * (*x)[k];
     }
   }
-  for (int i = c - 1; i >= 0; i--) {
-    for (int k = i + 1; k < c; k++) {
+  for (int i = cols - 1; i >= 0; i--) {
+    for (int k = i + 1; k < cols; k++) {
       (*x)[i] -= getu(lu, i, k) * (*x)[k];
     }
     (*x)[i] /= getu(lu, i, i);
   }
-  for (int i = 0; i < r; i++) {
+  for (int i = 0; i < rows; i++) {
     double val = 0;
-    for (int j = 0; j < c; j++) {
+    for (int j = 0; j < cols; j++) {
       val += a[i][j] * (*x)[j];
     }
     // Mixed absolute/relative tolerance: dividing by b[i] alone would skip the check for negative
@@ -183,6 +186,8 @@ int invert(T &a) {
 #include <cassert>
 using namespace std;
 
+#define EQ(a, b) (fabs((a) - (b)) < 1e-10)
+
 int main() {
   {  // Solve a system.
     vector<vector<double>> a{{-1, 2, 5}, {1, 0, -6}, {-4, 2, 2}};
@@ -191,15 +196,15 @@ int main() {
     assert(solve_system(a, b, &x) == 0);
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
       double sum = 0;
-      for (int j = 0; j < static_cast<int>(a[i].size()); j++) {
+      for (int j = 0; j < static_cast<int>(a[0].size()); j++) {
         sum += a[i][j] * x[j];
       }
-      assert(fabs(sum - b[i]) < 1e-10);
+      assert(EQ(sum, b[i]));
     }
   }
   {  // Find the determinant.
     vector<vector<double>> a{{1, 3, 5}, {2, 4, 7}, {1, 1, 0}};
-    assert(fabs(det(a) - 4) < 1e-10);
+    assert(EQ(det(a), 4));
   }
   {  // Find the inverse.
     vector<vector<double>> a{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
@@ -216,7 +221,7 @@ int main() {
     }
     for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
-        assert(fabs(res[i][j] - (i == j ? 1 : 0)) < 1e-10);
+        assert(EQ(res[i][j], i == j ? 1 : 0));
       }
     }
   }

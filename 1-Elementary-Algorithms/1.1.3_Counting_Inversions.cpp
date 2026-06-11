@@ -68,7 +68,8 @@ long long inversions(const std::vector<int> &a) {
   std::vector<int> bit(values.size() + 1, 0);
   long long res = 0;
   for (int i = n - 1; i >= 0; i--) {
-    int id = std::lower_bound(values.begin(), values.end(), a[i]) - values.begin() + 1;
+    int id =
+        static_cast<int>(std::lower_bound(values.begin(), values.end(), a[i]) - values.begin()) + 1;
     for (int j = id - 1; j > 0; j -= j & -j) {
       res += bit[j];
     }

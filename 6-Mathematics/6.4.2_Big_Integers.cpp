@@ -571,7 +571,8 @@ class BigInt {
       }
       res = res * BASE + q;
       if (j > 0) {
-        int sz1 = res.digits.size(), sz2 = r.digits.size();
+        int sz1 = static_cast<int>(res.digits.size());
+        int sz2 = static_cast<int>(r.digits.size());
         int d1 = (sz1 + 2 < sz2) ? r.digits[sz1 + 2] : 0;
         int d2 = (sz1 + 1 < sz2) ? r.digits[sz1 + 1] : 0;
         int d3 = (sz1 < sz2) ? r.digits[sz1] : 0;
