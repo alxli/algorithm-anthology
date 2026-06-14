@@ -32,15 +32,15 @@ Space Complexity:
 std::vector<std::vector<int>> adj;
 
 std::vector<int> find_centers() {
-  int nodes = adj.size();
+  int nodes = static_cast<int>(adj.size());
   std::vector<int> leaves, degree(nodes);
   for (int i = 0; i < nodes; i++) {
-    degree[i] = adj[i].size();
+    degree[i] = static_cast<int>(adj[i].size());
     if (degree[i] <= 1) {
       leaves.push_back(i);
     }
   }
-  int removed = leaves.size();
+  int removed = static_cast<int>(leaves.size());
   while (removed < nodes) {
     std::vector<int> nleaves;
     for (int u : leaves) {
@@ -51,7 +51,7 @@ std::vector<int> find_centers() {
       }
     }
     leaves = nleaves;
-    removed += leaves.size();
+    removed += static_cast<int>(leaves.size());
   }
   return leaves;
 }
@@ -59,7 +59,7 @@ std::vector<int> find_centers() {
 // Returns the centroid node index if found in this subtree, or -(subtree size) to propagate
 // the size up to the parent so it can check the complementary component's size.
 int find_centroid(int u = 0, int p = -1) {
-  int nodes = adj.size();
+  int nodes = static_cast<int>(adj.size());
   int count = 1;
   bool good_center = true;
   for (int v : adj[u]) {

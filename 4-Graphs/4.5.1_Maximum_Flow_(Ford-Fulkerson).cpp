@@ -27,22 +27,22 @@ Space Complexity:
 
 #include <algorithm>
 #include <climits>
+#include <cstdint>
 #include <vector>
 
 const int INF = INT_MAX / 2;
-int source, sink;
 std::vector<std::vector<int>> cap;
 std::vector<bool> visit;
 
-int dfs(int u, int f) {
-  int nodes = cap.size();
+int dfs(int u, int f, int sink) {
+  int nodes = static_cast<int>(cap.size());
   if (u == sink) {
     return f;
   }
   visit[u] = true;
   for (int v = 0; v < nodes; v++) {
     if (!visit[v] && cap[u][v] > 0) {
-      int flow = dfs(v, std::min(f, cap[u][v]));
+      int flow = dfs(v, std::min(f, cap[u][v]), sink);
       if (flow > 0) {
         cap[u][v] -= flow;
         cap[v][u] += flow;
@@ -53,12 +53,12 @@ int dfs(int u, int f) {
   return 0;
 }
 
-long long ford_fulkerson() {
-  int nodes = cap.size();
-  long long max_flow = 0;
+int64_t ford_fulkerson(int source, int sink) {
+  int nodes = static_cast<int>(cap.size());
+  int64_t max_flow = 0;
   for (;;) {
     visit.assign(nodes, false);
-    int flow = dfs(source, INF);
+    int flow = dfs(source, INF, sink);
     if (flow == 0) {
       break;
     }
@@ -73,17 +73,25 @@ long long ford_fulkerson() {
 
 int main() {
   int nodes = 6;
-  source = 0;
-  sink = 5;
   cap.assign(nodes, std::vector<int>(nodes));
-  cap[0][1] = 3;
+  // Example graph after max flow, with each edge labeled flow/capacity:
+  //            2/2
+  //       1 --------> 3
+  //      / \          |
+  // 3/4 /   \ 1/1     | 2/2
+  //    /     v        v
+  //   0       4 ----> 5
+  //    \     ^   3/3
+  // 2/3 \   / 2/2
+  //      v /
+  //       2
+  cap[0][1] = 4;
   cap[0][2] = 3;
-  cap[1][2] = 2;
-  cap[1][3] = 3;
+  cap[1][3] = 2;
+  cap[1][4] = 1;
   cap[2][4] = 2;
-  cap[3][4] = 1;
   cap[3][5] = 2;
   cap[4][5] = 3;
-  assert(ford_fulkerson() == 5);
+  assert(ford_fulkerson(0, 5) == 5);
   return 0;
 }

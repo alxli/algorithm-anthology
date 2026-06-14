@@ -82,7 +82,7 @@ auto polygon_area_2x(It lo, It hi) {
 
 template<class It>
 double polygon_area(It lo, It hi) {
-  return (double)polygon_area_2x(lo, hi) / 2.0;
+  return static_cast<double>(polygon_area_2x(lo, hi)) / 2.0;
 }
 
 /*** Example Usage and Output:

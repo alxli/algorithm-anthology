@@ -23,24 +23,25 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
-const long long INF = (1LL << 62);
+const int64_t INF = (1LL << 62);
 
 template<class Cost>
 void compute_dc_layer(
-    const std::vector<long long> &dp_prev, std::vector<long long> &dp_cur, int l, int r, int opt_l,
+    const std::vector<int64_t> &dp_prev, std::vector<int64_t> &dp_cur, int l, int r, int opt_l,
     int opt_r, Cost cost
 ) {
   if (l > r) {
     return;
   }
   int mid = l + (r - l) / 2;
-  long long best = INF;
+  int64_t best = INF;
   int best_k = opt_l;
   int upper = std::min(mid, opt_r);
   for (int k = opt_l; k <= upper; k++) {
-    long long candidate = dp_prev[k] + cost(k, mid);
+    int64_t candidate = dp_prev[k] + cost(k, mid);
     if (candidate < best) {
       best = candidate;
       best_k = k;
@@ -57,7 +58,7 @@ void compute_dc_layer(
 using namespace std;
 
 struct SquareSegmentCost {
-  vector<long long> prefix;
+  vector<int64_t> prefix;
 
   explicit SquareSegmentCost(const vector<int> &a) : prefix(a.size() + 1) {
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
@@ -65,8 +66,8 @@ struct SquareSegmentCost {
     }
   }
 
-  long long operator()(int k, int i) const {
-    long long sum = prefix[i] - prefix[k];
+  int64_t operator()(int k, int i) const {
+    int64_t sum = prefix[i] - prefix[k];
     return sum * sum;
   }
 };
@@ -76,12 +77,12 @@ int main() {
   int n = static_cast<int>(a.size());
   SquareSegmentCost cost(a);
 
-  vector<long long> dp_prev(n + 1, INF), dp_cur(n + 1, INF);
+  vector<int64_t> dp_prev(n + 1, INF), dp_cur(n + 1, INF);
   dp_prev[0] = 0;
   compute_dc_layer(dp_prev, dp_cur, 1, n, 0, n - 1, cost);
   assert(dp_cur[4] == 100);  // One group: (1 + 2 + 3 + 4)^2.
 
-  vector<long long> dp_two(n + 1, INF);
+  vector<int64_t> dp_two(n + 1, INF);
   compute_dc_layer(dp_cur, dp_two, 1, n, 0, n - 1, cost);
   assert(dp_two[4] == 52);  // Split as [1, 2] and [3, 4].
   return 0;

@@ -16,7 +16,7 @@ use only cross product comparisons, they happen to be exact for integral points.
 
 Overflow warning: `cross()` and the squared distance in `diametral_pair()` grow like the squared
 coordinate magnitude. With 32-bit `int` coordinates they overflow once coordinates exceed a few tens
-of thousands; use a 64-bit (`long long`) coordinate type for larger integer inputs.
+of thousands; use a 64-bit (`int64_t`) coordinate type for larger integer inputs.
 
 Time Complexity:
 - O(n log n) per call, where $n$ is the distance between `lo` and `hi`.
@@ -28,13 +28,14 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <random>
 #include <utility>
 #include <vector>
 
 template<class Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
-  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary.
+  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
@@ -46,7 +47,7 @@ auto convex_hull(It lo, It hi) {
   if (hi - lo <= 1) {
     return std::vector<Pt>(lo, hi);
   }
-  std::vector<Pt> res(2 * (int)(hi - lo));
+  std::vector<Pt> res(2 * static_cast<int>(hi - lo));
   std::sort(lo, hi);
   for (It it = lo; it != hi; ++it) {
     while (k >= 2 && cross(res[k - 1], *it, res[k - 2]) >= 0) {
@@ -71,7 +72,7 @@ template<class It>
 auto diametral_pair(It lo, It hi) {
   using Pt = typename std::iterator_traits<It>::value_type;
   auto h = convex_hull(lo, hi);
-  int m = h.size();
+  int m = static_cast<int>(h.size());
   if (m == 0) {
     return std::pair<Pt, Pt>{};
   }
@@ -86,7 +87,7 @@ auto diametral_pair(It lo, It hi) {
     k++;
   }
   auto sqdist = [](const Pt &a, const Pt &b) {
-    // Overflow risk for integer Pt: ~O(max_coord^2); use long long if necessary.
+    // Overflow risk for integer Pt: ~O(max_coord^2); use int64_t if necessary.
     auto dx = a.x - b.x, dy = a.y - b.y;
     return dx * dx + dy * dy;
   };

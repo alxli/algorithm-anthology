@@ -25,24 +25,25 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <vector>
 
-std::vector<long long> prefix_sums(const std::vector<int> &a) {
-  std::vector<long long> pref(a.size() + 1, 0);
+std::vector<int64_t> prefix_sums(const std::vector<int> &a) {
+  std::vector<int64_t> pref(a.size() + 1, 0);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     pref[i + 1] = pref[i] + a[i];
   }
   return pref;
 }
 
-long long range_sum(const std::vector<long long> &pref, int lo, int hi) {
+int64_t range_sum(const std::vector<int64_t> &pref, int lo, int hi) {
   return pref[hi + 1] - pref[lo];
 }
 
-std::vector<std::vector<long long>> prefix_sums_2d(const std::vector<std::vector<int>> &a) {
+std::vector<std::vector<int64_t>> prefix_sums_2d(const std::vector<std::vector<int>> &a) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
-  std::vector<std::vector<long long>> pref(rows + 1, std::vector<long long>(cols + 1, 0));
+  std::vector<std::vector<int64_t>> pref(rows + 1, std::vector<int64_t>(cols + 1, 0));
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
       pref[i + 1][j + 1] = a[i][j] + pref[i][j + 1] + pref[i + 1][j] - pref[i][j];
@@ -51,8 +52,8 @@ std::vector<std::vector<long long>> prefix_sums_2d(const std::vector<std::vector
   return pref;
 }
 
-long long rectangle_sum(
-    const std::vector<std::vector<long long>> &pref, int r1, int c1, int r2, int c2
+int64_t rectangle_sum(
+    const std::vector<std::vector<int64_t>> &pref, int r1, int c1, int r2, int c2
 ) {
   return pref[r2 + 1][c2 + 1] - pref[r1][c2 + 1] - pref[r2 + 1][c1] + pref[r1][c1];
 }

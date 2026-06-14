@@ -74,7 +74,7 @@ OutPt polar_point(double r, double t) {
 
 template<class Pt>
 double polar_angle(const Pt &p) {
-  double t = atan2((double)p.y, (double)p.x);
+  double t = atan2(static_cast<double>(p.y), static_cast<double>(p.x));
   return (t < 0) ? (t + 2 * PI) : t;
 }
 

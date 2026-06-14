@@ -39,6 +39,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <numeric>
 #include <vector>
 
@@ -89,13 +90,13 @@ bool next_permutation(std::vector<T> &a) {
   return false;
 }
 
-long long next_permutation(long long x) {
-  long long s = x & -x, r = x + s;
+int64_t next_permutation(int64_t x) {
+  int64_t s = x & -x, r = x + s;
   return r | (((x ^ r) >> 2) / s);
 }
 
-std::vector<int> permutation_by_rank(int n, long long x) {
-  std::vector<long long> factorial(n);
+std::vector<int> permutation_by_rank(int n, int64_t x) {
+  std::vector<int64_t> factorial(n);
   std::vector<int> values(n), res(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {
@@ -111,14 +112,14 @@ std::vector<int> permutation_by_rank(int n, long long x) {
   return res;
 }
 
-long long rank_by_permutation(const std::vector<int> &a) {
+int64_t rank_by_permutation(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
-  std::vector<long long> factorial(n);
+  std::vector<int64_t> factorial(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {
     factorial[i] = i * factorial[i - 1];
   }
-  long long res = 0;
+  int64_t res = 0;
   for (int i = 0; i < n; i++) {
     int v = a[i];
     for (int j = 0; j < i; j++) {

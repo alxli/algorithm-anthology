@@ -15,8 +15,8 @@ area(A) + area(B) minus the intersection.
   `lo2`, and `hi2` must be random-access iterators.
 
 Overflow warning: the segment-intersection tests form cross products in the input point's coordinate
-type, which grow like the squared coordinate magnitude. For integer point types use long long (e.g.
-`PointL` from 7.1.1) if necessary.
+type, which grow like the squared coordinate magnitude. For integral point types, use 64-bit
+coordinates (e.g. `PointL` from 7.1.1) if necessary.
 
 Time Complexity:
 - O(n*m*(n + m)*log(n + m)) per call to `intersection_area(lo1, hi1, lo2, hi2)` and
@@ -32,6 +32,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <set>
 #include <utility>
 #include <vector>
@@ -44,13 +45,13 @@ const double EPS = 1e-9;
 
 template<class Pt>
 bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
-  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use long long if necessary.
+  // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return EQ((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x), 0) &&
          LE(std::min(a.x, b.x), p.x) && LE(p.x, std::max(a.x, b.x)) &&
          LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
 }
 
-// Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = true,
+// Specialized version of seg_intersection() from 7.2.3, simplified for touch_is_intersect = true,
 // returning -1 for no intersection, 0 for one intersection point, 1 for positive length overlap.
 template<class Pt>
 int seg_intersection1(
@@ -100,7 +101,7 @@ int seg_intersection1(
   bool t_ok = c1_pos ? (LE(0, t_num) && LE(t_num, c1)) : (LE(c1, t_num) && LE(t_num, 0));
   bool u_ok = c1_pos ? (LE(0, c2) && LE(c2, c1)) : (LE(c1, c2) && LE(c2, 0));
   if (t_ok && u_ok) {
-    double t = (double)t_num / c1;
+    double t = static_cast<double>(t_num) / c1;
     *outx = static_cast<double>(a.x + t * ab_x);
     *outy = static_cast<double>(a.y + t * ab_y);
     return 0;
@@ -123,8 +124,8 @@ int line_intersection1(
     return (EQ(x, 0) && EQ(y, 0)) ? 1 : -1;
   }
   if (outx != nullptr && outy != nullptr) {
-    *outx = (double)x / det;
-    *outy = (double)y / det;
+    *outx = static_cast<double>(x) / det;
+    *outy = static_cast<double>(y) / det;
   }
   return 0;
 }
@@ -161,7 +162,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   }
   std::vector<double> xsa(xs.begin(), xs.end());
   double res = 0;
-  for (size_t k = 0; k + 1 < xsa.size(); k++) {
+  for (int k = 0; k + 1 < static_cast<int>(xsa.size()); k++) {
     double x = (xsa[k] + xsa[k + 1]) / 2;
     _PointD sweep0{x, 0}, sweep1{x, 1};
     std::vector<Event> events;
@@ -192,7 +193,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
     });
     double a = 0;
     int cnt[2] = {0, 0};
-    for (size_t j = 0; j < events.size(); j++) {
+    for (int j = 0; j < static_cast<int>(events.size()); j++) {
       if (cnt[0] != 0 && cnt[1] != 0) {
         a += events[j].y - events[j - 1].y;
       }

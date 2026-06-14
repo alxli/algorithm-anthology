@@ -31,13 +31,14 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
-const long long MOD = 998244353;
-const long long ROOT = 3;
+const int64_t MOD = 998244353;
+const int64_t ROOT = 3;
 
-long long powmod(long long b, long long e, long long m) {
-  long long res = 1;
+int64_t powmod(int64_t b, int64_t e, int64_t m) {
+  int64_t res = 1;
   for (b %= m; e > 0; e >>= 1) {
     if (e & 1) {
       res = res * b % m;
@@ -47,7 +48,7 @@ long long powmod(long long b, long long e, long long m) {
   return res;
 }
 
-void ntt(std::vector<long long> &a, bool invert) {
+void ntt(std::vector<int64_t> &a, bool invert) {
   int n = static_cast<int>(a.size());
   for (int i = 1, j = 0; i < n; i++) {
     int bit = n >> 1;
@@ -60,14 +61,14 @@ void ntt(std::vector<long long> &a, bool invert) {
     }
   }
   for (int len = 2; len <= n; len <<= 1) {
-    long long root = powmod(ROOT, (MOD - 1) / len, MOD);
+    int64_t root = powmod(ROOT, (MOD - 1) / len, MOD);
     if (invert) {
       root = powmod(root, MOD - 2, MOD);
     }
     for (int i = 0; i < n; i += len) {
-      long long w = 1;
+      int64_t w = 1;
       for (int k = 0; k < len / 2; k++) {
-        long long u = a[i + k], v = a[i + k + len / 2] * w % MOD;
+        int64_t u = a[i + k], v = a[i + k + len / 2] * w % MOD;
         a[i + k] = (u + v) % MOD;
         a[i + k + len / 2] = (u - v + MOD) % MOD;
         w = w * root % MOD;
@@ -75,14 +76,14 @@ void ntt(std::vector<long long> &a, bool invert) {
     }
   }
   if (invert) {
-    long long n_inv = powmod(n, MOD - 2, MOD);
-    for (long long &x : a) {
+    int64_t n_inv = powmod(n, MOD - 2, MOD);
+    for (int64_t &x : a) {
       x = x * n_inv % MOD;
     }
   }
 }
 
-std::vector<long long> convolve(std::vector<long long> a, std::vector<long long> b) {
+std::vector<int64_t> convolve(std::vector<int64_t> a, std::vector<int64_t> b) {
   if (a.empty() || b.empty()) {
     return {};
   }
@@ -110,8 +111,8 @@ using namespace std;
 
 int main() {
   // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
-  vector<long long> a{1, 2, 3}, b{4, 5, 6};
-  vector<long long> c = convolve(a, b);
-  assert((c == vector<long long>{4, 13, 28, 27, 18}));
+  vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
+  vector<int64_t> c = convolve(a, b);
+  assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
   return 0;
 }

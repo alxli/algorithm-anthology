@@ -25,30 +25,33 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <climits>
+#include <cstdint>
+#include <limits>
 #include <vector>
 
-long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector<int> *assignment) {
+template<class T>
+T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignment) {
+  static const T INF = std::numeric_limits<T>::max() / 4;
   int n = static_cast<int>(cost.size());
   int m = cost.empty() ? 0 : static_cast<int>(cost[0].size());
   assert(n <= m);
-  const long long INF = LLONG_MAX / 4;
-  std::vector<long long> u(n + 1), v(m + 1);
+  std::vector<T> u(n + 1), v(m + 1), minv(m + 1);
   std::vector<int> p(m + 1), way(m + 1);
+  std::vector<bool> used(m + 1);
   for (int i = 1; i <= n; i++) {
+    std::fill(minv.begin(), minv.end(), INF);
+    std::fill(used.begin(), used.end(), false);
     p[0] = i;
     int j0 = 0;
-    std::vector<long long> minv(m + 1, INF);
-    std::vector<char> used(m + 1, false);
     do {
       used[j0] = true;
       int i0 = p[j0], j1 = 0;
-      long long delta = INF;
+      T delta = INF;
       for (int j = 1; j <= m; j++) {
         if (used[j]) {
           continue;
         }
-        long long cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+        T cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
         if (cur < minv[j]) {
           minv[j] = cur;
           way[j] = j0;
@@ -89,7 +92,7 @@ long long hungarian(const std::vector<std::vector<long long>> &cost, std::vector
 using namespace std;
 
 int main() {
-  vector<vector<long long>> cost{
+  vector<vector<int64_t>> cost{
       {9, 2, 7, 8},
       {6, 4, 3, 7},
       {5, 8, 1, 8},

@@ -56,7 +56,7 @@ class AhoCorasick {
   explicit AhoCorasick(const std::vector<string> &needles) : needles(needles) {
     int total_len = 0;
     for (const auto &needle : needles) {
-      total_len += needle.size();
+      total_len += static_cast<int>(needle.size());
     }
     // The trie has at most total_len + 1 states: the root plus one per character when no prefixes
     // are shared. Sizing to total_len alone overflows for low-sharing needle sets (e.g. a single

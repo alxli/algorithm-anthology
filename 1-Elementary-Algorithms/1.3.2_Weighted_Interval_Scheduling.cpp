@@ -21,14 +21,15 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
 struct WeightedInterval {
   int start, finish;
-  long long weight;
+  int64_t weight;
 };
 
-long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) {
+int64_t weighted_interval_scheduling(std::vector<WeightedInterval> intervals) {
   std::sort(
       intervals.begin(), intervals.end(), [](const WeightedInterval &a, const WeightedInterval &b) {
         return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
@@ -40,7 +41,7 @@ long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) 
   for (const auto &iv : intervals) {
     finish.push_back(iv.finish);
   }
-  std::vector<long long> dp(n + 1, 0);
+  std::vector<int64_t> dp(n + 1, 0);
   for (int i = 1; i <= n; i++) {
     int j = std::upper_bound(finish.begin(), finish.end(), intervals[i - 1].start) - finish.begin();
     dp[i] = std::max(dp[i - 1], dp[j] + intervals[i - 1].weight);

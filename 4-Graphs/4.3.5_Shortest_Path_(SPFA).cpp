@@ -29,19 +29,19 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <climits>
+#include <cstdint>
 #include <queue>
 #include <utility>
 #include <vector>
 
-const long long INF = LLONG_MAX / 4;
+const int64_t INF = INT64_MAX / 4;
 std::vector<std::vector<std::pair<int, int>>> adj;
-std::vector<long long> dist;
+std::vector<int64_t> dist;
 std::vector<int> pred, relax_count;
 std::vector<bool> in_queue;
 
 bool spfa(int start) {
-  int nodes = adj.size();
+  int nodes = static_cast<int>(adj.size());
   dist.assign(nodes, INF);
   pred.assign(nodes, -1);
   relax_count.assign(nodes, 0);
@@ -71,24 +71,42 @@ bool spfa(int start) {
   return true;
 }
 
-/*** Example Usage ***/
+/*** Example Usage and Output:
 
-#include <cassert>
+The shortest distance from 0 to 3 is 5.
+Take the path: 0->1->2->3.
+
+***/
+
+#include <iostream>
 using namespace std;
 
 void add_edge(int u, int v, int w) {
   adj[u].push_back({v, w});
 }
 
+void print_path(int dest) {
+  vector<int> path;
+  for (int j = dest; pred[j] != -1; j = pred[j]) {
+    path.push_back(pred[j]);
+  }
+  cout << "Take the path: ";
+  while (!path.empty()) {
+    cout << path.back() << "->";
+    path.pop_back();
+  }
+  cout << dest << "." << endl;
+}
+
 int main() {
-  int nodes = 4;
-  adj.assign(nodes, {});
+  int start = 0, dest = 3;
+  adj.assign(4, {});
   add_edge(0, 1, 4);
   add_edge(0, 2, 5);
   add_edge(1, 2, -2);
   add_edge(2, 3, 3);
-  assert(spfa(0));
-  assert(dist[3] == 5);
-  assert(pred[2] == 1);
+  spfa(start);
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
+  print_path(dest);
   return 0;
 }

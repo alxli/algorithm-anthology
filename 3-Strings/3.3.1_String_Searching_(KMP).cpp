@@ -45,7 +45,7 @@ class KMP {
   }
 
   size_t find_in(const string &haystack) {
-    int m = needle.size();
+    int m = static_cast<int>(needle.size());
     if (m == 0) {
       return 0;
     }

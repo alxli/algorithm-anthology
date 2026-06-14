@@ -68,14 +68,15 @@ class MergeSortTree {
 
   int count_leq(int lo, int hi, const T &x) const {
     return query(1, 0, len - 1, lo, hi, [&](const std::vector<T> &v) {
-      return (int)(std::upper_bound(v.begin(), v.end(), x) - v.begin());
+      return static_cast<int>(std::upper_bound(v.begin(), v.end(), x) - v.begin());
     });
   }
 
   int count_in(int lo, int hi, const T &x, const T &y) const {
     return query(1, 0, len - 1, lo, hi, [&](const std::vector<T> &v) {
-      return (int)(std::upper_bound(v.begin(), v.end(), y) -
-                   std::lower_bound(v.begin(), v.end(), x));
+      return static_cast<int>(
+          std::upper_bound(v.begin(), v.end(), y) - std::lower_bound(v.begin(), v.end(), x)
+      );
     });
   }
 };

@@ -38,7 +38,7 @@ void dfs(int u, int id) {
 }
 
 void connected_components() {
-  int nodes = adj.size();
+  int nodes = static_cast<int>(adj.size());
   components.clear();
   comp_id.assign(nodes, -1);
   for (int u = 0; u < nodes; u++) {

@@ -43,6 +43,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <iterator>
 #include <vector>
 
@@ -95,7 +96,7 @@ bool next_combination(It lo, It mid, It hi) {
 }
 
 bool next_combination(int n, std::vector<int> &a) {
-  int k = a.size();
+  int k = static_cast<int>(a.size());
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - k + i) {
       a[i]++;
@@ -108,32 +109,32 @@ bool next_combination(int n, std::vector<int> &a) {
   return false;
 }
 
-long long next_combination_mask(long long x) {
+int64_t next_combination_mask(int64_t x) {
   if (x == 0) {
     return 0;
   }
-  long long s = x & -x, r = x + s;
+  int64_t s = x & -x, r = x + s;
   return r | (((x ^ r) >> 2) / s);
 }
 
-long long n_choose_k(long long n, long long k) {
+int64_t n_choose_k(int64_t n, int64_t k) {
   if (k > n - k) {
     k = n - k;
   }
-  long long res = 1;
+  int64_t res = 1;
   for (int i = 0; i < k; i++) {
     res = res * (n - i) / (i + 1);
   }
   return res;
 }
 
-std::vector<int> combination_by_rank(int n, int k, long long r) {
+std::vector<int> combination_by_rank(int n, int k, int64_t r) {
   std::vector<int> res(k);
   int count = n;
   for (int i = 0; i < k; i++) {
     int j = 1;
     for (;; j++) {
-      long long am = n_choose_k(count - j, k - 1 - i);
+      int64_t am = n_choose_k(count - j, k - 1 - i);
       if (r < am) {
         break;
       }
@@ -145,9 +146,9 @@ std::vector<int> combination_by_rank(int n, int k, long long r) {
   return res;
 }
 
-long long rank_by_combination(int n, const std::vector<int> &a) {
-  int k = a.size();
-  long long res = 0;
+int64_t rank_by_combination(int n, const std::vector<int> &a) {
+  int k = static_cast<int>(a.size());
+  int64_t res = 0;
   int prev = -1;
   for (int i = 0; i < k; i++) {
     for (int j = prev + 1; j < a[i]; j++) {
@@ -159,7 +160,7 @@ long long rank_by_combination(int n, const std::vector<int> &a) {
 }
 
 bool next_combination_with_repeats(int n, std::vector<int> &a) {
-  int k = a.size();
+  int k = static_cast<int>(a.size());
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - 1) {
       for (++a[i]; ++i < k;) {
@@ -214,7 +215,7 @@ int main() {
     int n = 5, k = 3;
     string char_set = "abcde";  // Must be distinct.
     cout << "\n\"" << char_set << "\" choose " << k << " with masks:" << endl;
-    long long mask = 0, dest = 0;
+    int64_t mask = 0, dest = 0;
     for (int i = 0; i < k; i++) {
       mask |= (1 << i);
     }

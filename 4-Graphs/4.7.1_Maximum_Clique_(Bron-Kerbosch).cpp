@@ -26,16 +26,15 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <vector>
-
-using uint64 = unsigned long long;
 
 std::vector<std::vector<bool>> adj;
 std::vector<int> w;
 
-std::vector<uint64> build_mask_graph() {
-  int nodes = adj.size();
-  std::vector<uint64> g(nodes);
+std::vector<uint64_t> build_mask_graph() {
+  int nodes = static_cast<int>(adj.size());
+  std::vector<uint64_t> g(nodes);
   for (int i = 0; i < nodes; i++) {
     for (int j = 0; j < nodes; j++) {
       if (adj[i][j]) {
@@ -46,13 +45,13 @@ std::vector<uint64> build_mask_graph() {
   return g;
 }
 
-int max_clique_rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
+int max_clique_rec(const std::vector<uint64_t> &g, uint64_t curr, uint64_t pool, uint64_t excl) {
   if (pool == 0) {
     return __builtin_popcountll(curr);
   }
   int res = 0;
   int pivot = __builtin_ctzll(pool | excl);
-  uint64 candidates = pool & ~g[pivot];
+  uint64_t candidates = pool & ~g[pivot];
   while (candidates != 0) {
     int u = __builtin_ctzll(candidates);
     res = std::max(res, max_clique_rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
@@ -64,12 +63,14 @@ int max_clique_rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint6
 }
 
 int max_clique() {
-  int nodes = adj.size();
-  std::vector<uint64> g = build_mask_graph();
+  int nodes = static_cast<int>(adj.size());
+  std::vector<uint64_t> g = build_mask_graph();
   return max_clique_rec(g, 0, (1ULL << nodes) - 1, 0);
 }
 
-int max_clique_weighted_rec(const std::vector<uint64> &g, uint64 curr, uint64 pool, uint64 excl) {
+int max_clique_weighted_rec(
+    const std::vector<uint64_t> &g, uint64_t curr, uint64_t pool, uint64_t excl
+) {
   if (pool == 0) {
     int res = 0;
     while (curr != 0) {
@@ -80,7 +81,7 @@ int max_clique_weighted_rec(const std::vector<uint64> &g, uint64 curr, uint64 po
     return res;
   }
   int res = -1, pivot = __builtin_ctzll(pool | excl);
-  uint64 z = pool & ~g[pivot];
+  uint64_t z = pool & ~g[pivot];
   while (z != 0) {
     int u = __builtin_ctzll(z);
     res = std::max(res, max_clique_weighted_rec(g, curr | (1ULL << u), pool & g[u], excl & g[u]));
@@ -92,8 +93,8 @@ int max_clique_weighted_rec(const std::vector<uint64> &g, uint64 curr, uint64 po
 }
 
 int max_clique_weighted() {
-  int nodes = adj.size();
-  std::vector<uint64> g = build_mask_graph();
+  int nodes = static_cast<int>(adj.size());
+  std::vector<uint64_t> g = build_mask_graph();
   return max_clique_weighted_rec(g, 0, (1ULL << nodes) - 1, 0);
 }
 

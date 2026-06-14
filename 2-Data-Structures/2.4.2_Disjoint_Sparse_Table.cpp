@@ -31,6 +31,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
 template<class T>
@@ -44,7 +45,7 @@ class DisjointSparseTable {
  public:
   template<class It>
   DisjointSparseTable(It lo, It hi) : a(lo, hi) {
-    len = a.size();
+    len = static_cast<int>(a.size());
     int levels = 1;
     while ((1 << levels) < len) {
       levels++;
@@ -75,7 +76,7 @@ class DisjointSparseTable {
     if (lo == hi) {
       return a[lo];
     }
-    int level = 31 - __builtin_clz((unsigned)(lo ^ hi));
+    int level = 31 - __builtin_clz(static_cast<uint32_t>(lo ^ hi));
     return combine(fold[level][lo], fold[level][hi]);
   }
 };

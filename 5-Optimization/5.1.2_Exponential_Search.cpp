@@ -19,6 +19,8 @@ Space Complexity:
 
 */
 
+#include <cstdint>
+
 template<class Int, class Pred>
 Int exponential_search_first_true(Int lo, Pred pred) {  // 000[1]11
   if (pred(lo)) {
@@ -48,7 +50,7 @@ bool at_least_1000(int x) {
   return x >= 1000;
 }
 
-bool square_large_enough(long long x) {
+bool square_large_enough(int64_t x) {
   return x * x >= 123456789LL;
 }
 

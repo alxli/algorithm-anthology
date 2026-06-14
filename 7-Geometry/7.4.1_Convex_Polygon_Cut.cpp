@@ -5,9 +5,9 @@ half-plane of that line. The polygon is walked edge by edge: vertices on the lef
 are kept, and whenever an edge crosses the line, the intersection point is appended to the output.
 
 - `convex_cut(lo, hi, p, q)` returns the portion of the polygon lying on or to the left of the
-  directed line `p -> q`. The input range `[lo, hi)` must contain the vertices of a convex polygon
-  in boundary order, either clockwise or counterclockwise. The returned polygon preserves that
-  boundary order. If `p == q`, the cutting line is invalid and an error is thrown.
+  directed line `p` $\to$ `q`. The input range `[lo, hi)` must contain the vertices of a convex
+  polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves
+  that boundary order. If `p == q`, the cutting line is invalid and an error is thrown.
 
 The function is templated on the input point type. Side classification is done with cross products.
 For integer-coordinate inputs, classification is exact only if the intermediate products do not
@@ -79,7 +79,8 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
   }
   std::vector<Point> res;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
-    Point pj((double)j->x, (double)j->y), pi((double)i->x, (double)i->y);
+    Point pj(static_cast<double>(j->x), static_cast<double>(j->y));
+    Point pi(static_cast<double>(i->x), static_cast<double>(i->y));
     int d1 = turn(q, p, pj), d2 = turn(q, p, pi);
     if (d1 >= 0) {
       res.push_back(pj);

@@ -26,8 +26,8 @@ queries, and `compose_deltas(old, d)` would return `old + d`.
 - `LinkCut()` constructs an empty forest.
 - `size()` returns the number of nodes in the forest.
 - `trees()` returns the number of trees in the forest.
-- `make_root(i, v)` creates a new tree in the forest consisting of a single node labeled with the
-  integer `i` and value initialized to `v`.
+- `add_node(i, v)` adds a new single-node tree to the forest, labeled with the integer `i` and with
+  value initialized to `v`.
 - `is_connected(a, b)` returns whether nodes `a` and `b` are connected.
 - `link(a, b)` adds an edge between the nodes `a` and `b`, both of which must exist and not be
   connected.
@@ -37,6 +37,14 @@ queries, and `compose_deltas(old, d)` would return `old + d`.
   `a` to node `b`.
 - `update(a, b, d)` modifies all the values on the path from node `a` to node `b` by respectively
   applying the delta `d`.
+- `reroot(i)` makes node `i` the root of its tree.
+- `find_root(i)` returns the label of the root of the tree containing node `i`.
+- `lca(a, b)` returns the lowest common ancestor of `a` and `b` relative to the tree's current root.
+
+The forest is unrooted: a tree's root is whichever node was most recently established as such.
+`reroot(i)` sets it explicitly, while `link`, `query`, and `update` reroot implicitly (the latter
+two at their first argument). `find_root(i)` and `lca(a, b)` are therefore relative to the current
+root, so call `reroot(r)` first whenever a specific root `r` is intended.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `trees()`.
@@ -60,13 +68,15 @@ class LinkCut {
   static T compose_deltas(const T &old, const T &d) { return d; }
 
   struct Node {
+    int id;
     T value, subtree_value, delta;
     int size;
     bool rev, pending;
     Node *left, *right, *parent;
 
-    explicit Node(const T &v)
-        : value(v),
+    Node(int id, const T &v)
+        : id(id),
+          value(v),
           subtree_value(v),
           size(1),
           rev(false),
@@ -113,7 +123,8 @@ class LinkCut {
       size = 1;
       subtree_value = value;
       if (left != nullptr) {
-        subtree_value = combine(subtree_value, left->get_subtree_value());
+        // Combine in in-order (left, value, right) so non-commutative aggregates stay correct.
+        subtree_value = combine(left->get_subtree_value(), subtree_value);
         size += left->size;
       }
       if (right != nullptr) {
@@ -173,11 +184,15 @@ class LinkCut {
     n->update();
   }
 
+  // Convention: a node's left child leads toward the tree's root, so an exposed path is ordered by
+  // depth with the root as its leftmost node (matching the standard link/cut tree presentation).
+  // cut() and find_root() rely on this orientation.
   static Node *expose(Node *n) {
     Node *prev = nullptr;
     for (Node *curr = n; curr != nullptr; curr = curr->parent) {
       splay(curr);
-      curr->left = prev;
+      curr->right = prev;
+      curr->update();
       prev = curr;
     }
     splay(n);
@@ -208,14 +223,14 @@ class LinkCut {
 
   LinkCut(const LinkCut &) = delete;
   LinkCut &operator=(const LinkCut &) = delete;
-  int size() const { return nodes.size(); }
+  int size() const { return static_cast<int>(nodes.size()); }
   int trees() const { return num_trees; }
 
-  void make_root(int i, const T &v = T()) {
+  void add_node(int i, const T &v = T()) {
     if (auto it = nodes.find(i); it != nodes.end()) {
-      throw std::runtime_error("Cannot make a root with an existing ID.");
+      throw std::runtime_error("Cannot add a node with an existing ID.");
     }
-    Node *n = new Node(v);
+    Node *n = new Node(i, v);
     expose(n);
     n->rev = !n->rev;
     nodes[i] = n;
@@ -248,11 +263,11 @@ class LinkCut {
     expose(u);
     u->rev = !u->rev;
     expose(v);
-    if (v->right != u || u->left != nullptr) {
+    if (v->left != u || u->right != nullptr) {
       throw std::runtime_error("Cannot cut edge that does not exist.");
     }
-    v->right->parent = nullptr;
-    v->right = nullptr;
+    v->left->parent = nullptr;
+    v->left = nullptr;
     num_trees++;
   }
 
@@ -278,6 +293,44 @@ class LinkCut {
     v->delta = v->pending ? compose_deltas(v->delta, d) : d;
     v->pending = true;
   }
+
+  void reroot(int i) {
+    auto it = nodes.find(i);
+    if (it == nodes.end()) {
+      throw std::runtime_error("Rerooted node ID does not exist in forest.");
+    }
+    expose(it->second);
+    it->second->rev = !it->second->rev;
+  }
+
+  int find_root(int i) {
+    auto it = nodes.find(i);
+    if (it == nodes.end()) {
+      throw std::runtime_error("Queried node ID does not exist in forest.");
+    }
+    Node *n = it->second;
+    expose(n);
+    while (n->left != nullptr) {  // The leftmost node of the exposed path is the tree's root.
+      n = n->left;
+      n->push();
+    }
+    splay(n);
+    return n->id;
+  }
+
+  int lca(int a, int b) {
+    get_uv(a, b);
+    if (a == b) {
+      return a;
+    }
+    expose(u);
+    expose(v);
+    if (u->parent == nullptr) {
+      throw std::runtime_error("Cannot compute LCA of nodes that are not connected.");
+    }
+    splay(u);  // u->parent is now the node where u's path rejoins v's exposed path, i.e. the LCA.
+    return u->parent != nullptr ? u->parent->id : u->id;
+  }
 };
 
 /*** Example Usage ***/
@@ -287,11 +340,11 @@ using namespace std;
 
 int main() {
   LinkCut<int> lcf;
-  lcf.make_root(0, 10);
-  lcf.make_root(1, 40);
-  lcf.make_root(2, 20);
-  lcf.make_root(3, 10);
-  lcf.make_root(4, 30);
+  lcf.add_node(0, 10);
+  lcf.add_node(1, 40);
+  lcf.add_node(2, 20);
+  lcf.add_node(3, 10);
+  lcf.add_node(4, 30);
   assert(lcf.size() == 5);
   assert(lcf.trees() == 5);
   lcf.link(0, 1);
@@ -306,6 +359,15 @@ int main() {
   //                      ----------4
   //                               v=30
   assert(lcf.query(1, 4) == 20);
+
+  // find_root and lca are relative to the current root, set explicitly via reroot.
+  lcf.reroot(0);
+  assert(lcf.find_root(3) == 0 && lcf.find_root(4) == 0);
+  assert(lcf.lca(3, 4) == 2);  // Paths 3-2 and 4-2 meet at 2 under root 0.
+  assert(lcf.lca(1, 4) == 1);  // 1 is an ancestor of 4 under root 0.
+  lcf.reroot(4);
+  assert(lcf.lca(0, 3) == 2);  // Rerooting at 4 changes the LCA of 0 and 3.
+
   lcf.update(1, 1, 100);
   lcf.update(2, 4, 100);
 

@@ -34,11 +34,12 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <numeric>
 #include <vector>
 
 bool next_arrangement(int n, std::vector<int> &a) {
-  int k = a.size();
+  int k = static_cast<int>(a.size());
   std::vector<bool> used(n);
   for (int i = 0; i < k; i++) {
     used[a[i]] = true;
@@ -61,19 +62,19 @@ bool next_arrangement(int n, std::vector<int> &a) {
   return false;
 }
 
-long long n_permute_k(int n, int k) {
-  long long res = 1;
+int64_t n_permute_k(int n, int k) {
+  int64_t res = 1;
   for (int i = 0; i < k; i++) {
     res *= n - i;
   }
   return res;
 }
 
-std::vector<int> arrangement_by_rank(int n, int k, long long r) {
+std::vector<int> arrangement_by_rank(int n, int k, int64_t r) {
   std::vector<int> values(n), res(k);
   std::iota(values.begin(), values.end(), 0);
   for (int i = 0; i < k; i++) {
-    long long count = n_permute_k(n - 1 - i, k - 1 - i);
+    int64_t count = n_permute_k(n - 1 - i, k - 1 - i);
     int pos = r / count;
     res[i] = values[pos];
     std::copy(values.begin() + pos + 1, values.end(), values.begin() + pos);
@@ -82,9 +83,9 @@ std::vector<int> arrangement_by_rank(int n, int k, long long r) {
   return res;
 }
 
-long long rank_by_arrangement(int n, const std::vector<int> &a) {
-  int k = a.size();
-  long long res = 0;
+int64_t rank_by_arrangement(int n, const std::vector<int> &a) {
+  int k = static_cast<int>(a.size());
+  int64_t res = 0;
   std::vector<bool> used(n);
   for (int i = 0; i < k; i++) {
     int count = 0;
@@ -100,7 +101,7 @@ long long rank_by_arrangement(int n, const std::vector<int> &a) {
 }
 
 bool next_arrangement_with_repeats(int n, std::vector<int> &a) {
-  int k = a.size();
+  int k = static_cast<int>(a.size());
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - 1) {
       a[i]++;

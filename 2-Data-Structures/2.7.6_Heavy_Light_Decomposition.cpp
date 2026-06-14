@@ -1,12 +1,12 @@
 /*
 
-Maintain a tree with values associated with either its edges or nodes, while supporting both dynamic
-queries and dynamic updates of all values on a given path between two nodes in the tree. Heavy-light
-decomposition partitions the nodes of the tree into disjoint paths where all nodes have degree two,
-except the endpoints of a path which has degree one. A node stays on its parent's path when its
-subtree contains at least half of its parent's nodes, so walking from any node to the root crosses
-O(log n) different paths. Each path stores its values in its own lazy segment tree, decomposing any
-path query or update into O(log n) contiguous range operations.
+Maintain a tree or forest with values associated with either edges or nodes, while supporting both
+dynamic queries and dynamic updates of all values on a given path between two nodes in the tree.
+Heavy-light decomposition partitions the nodes of the tree into disjoint paths where all nodes have
+degree two, except the endpoints of a path which has degree one. A node stays on its parent's path
+when its subtree contains at least half of its parent's nodes, so walking from any node to the root
+crosses O(log n) different paths. Each path stores its values in its own lazy segment tree,
+decomposing any path query or update into O(log n) contiguous range operations.
 
 The query operation is defined by an associative `combine()` function which satisfies
 `combine(x, combine(y, z)) = combine(combine(x, y), z)` for all values `x`, `y`, and `z` in the
@@ -25,18 +25,23 @@ The default code below defines updates that "set" a path's edges or nodes to a n
 increment updates, `apply_delta(v, d, len)` would return `v + d` for min/max queries, or
 `v + d * len` for sum queries, and `compose_deltas(old, d)` would return `old + d`.
 
-- `HeavyLight(adj, v)` constructs a new heavy light decomposition on a tree defined by the adjacency
-  list `adj`, with all values initialized to `v`. The adjacency list must consist of only the
-  integers from 0 to `adj.size() - 1`, inclusive. No duplicate edges should exist, and the graph
-  must be connected.
+- `HeavyLight(adj, v)` constructs a new heavy light decomposition on a forest defined by the
+  adjacency list `adj`, with all values initialized to `v`. The adjacency list must consist of only
+  the integers from 0 to `adj.size() - 1`, inclusive. No duplicate edges should exist.
 - `query(u, v)` returns the result of `combine()` applied to all values on the path from node `u` to
-  node `v`.
+  node `v`, or throws if `u` and `v` are in different trees.
 - `update(u, v, d)` modifies all values on the path from node `u` to node `v` by respectively
-  applying the delta `d`.
+  applying the delta `d`, or throws if `u` and `v` are in different trees.
+- `for_each_path(u, v, include_lca, f)` decomposes the path from node `u` to node `v` into heavy
+  path ranges and calls `f(path, lo, hi, up)` on each range, where `up` says the path segment is
+  traversed upward from `u` toward the LCA. If values are stored on edges, pass
+  `include_lca = false` to skip the LCA's vertex slot. Returns false if `u` and `v` are in
+  different trees.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the number of nodes.
-- O(log^2 n) per call to `query()` and `update()`;
+- O(log n) calls to `f()` per call to `for_each_path()`.
+- O(log^2 n) per call to `query()` and `update()`.
 
 Space Complexity:
 - O(n) for storage of the decomposition.
@@ -47,6 +52,8 @@ Space Complexity:
 
 #include <algorithm>
 #include <stdexcept>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 template<class T>
@@ -58,20 +65,21 @@ class HeavyLight {
   static T apply_delta(const T &v, const T &d, int len) { return d; }
   static T compose_deltas(const T &old, const T &d) { return d; }
 
-  int counter, paths;
+  std::vector<std::vector<int>> adj;
   std::vector<std::vector<T>> value, delta;
   std::vector<std::vector<bool>> pending;
   std::vector<std::vector<int>> len;
-  std::vector<int> size, parent, tin, tout, path, pathlen, pathpos, pathroot;
-  const std::vector<std::vector<int>> &adj;
+  std::vector<int> size, parent, root, tin, tout, path, pathlen, pathpos, pathroot;
+  int counter, paths;
 
-  void dfs(int u, int p) {
+  void dfs(int u, int p, int r) {
     tin[u] = counter++;
     parent[u] = p;
+    root[u] = r;
     size[u] = 1;
     for (int v : adj[u]) {
       if (v != p) {
-        dfs(v, u);
+        dfs(v, u, r);
         size[u] += size[v];
       }
     }
@@ -118,8 +126,8 @@ class HeavyLight {
   }
 
   bool query(int path, int u, int v, T *res) {
-    push_delta(path, u += value[path].size() / 2);
-    push_delta(path, v += value[path].size() / 2);
+    push_delta(path, u += static_cast<int>(value[path].size()) / 2);
+    push_delta(path, v += static_cast<int>(value[path].size()) / 2);
     bool found = false;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
@@ -137,8 +145,8 @@ class HeavyLight {
   }
 
   void update(int path, int u, int v, const T &d) {
-    push_delta(path, u += value[path].size() / 2);
-    push_delta(path, v += value[path].size() / 2);
+    push_delta(path, u += static_cast<int>(value[path].size()) / 2);
+    push_delta(path, v += static_cast<int>(value[path].size()) / 2);
     int tu = -1, tv = -1;
     for (; u <= v; u = (u + 1) / 2, v = (v - 1) / 2) {
       if ((u & 1) != 0) {
@@ -170,19 +178,24 @@ class HeavyLight {
 
  public:
   explicit HeavyLight(const std::vector<std::vector<int>> &adj, const T &v = T())
-      : counter(0),
-        paths(0),
+      : adj(adj),
         size(adj.size()),
         parent(adj.size()),
+        root(adj.size(), -1),
         tin(adj.size()),
         tout(adj.size()),
         path(adj.size()),
         pathlen(adj.size()),
         pathpos(adj.size()),
         pathroot(adj.size()),
-        adj(adj) {
-    dfs(0, -1);
-    build_paths(0, new_path(0));
+        counter(0),
+        paths(0) {
+    for (int u = 0; u < static_cast<int>(adj.size()); u++) {
+      if (root[u] == -1) {
+        dfs(u, -1, u);
+        build_paths(u, new_path(u));
+      }
+    }
     value.resize(paths);
     delta.resize(paths);
     pending.resize(paths);
@@ -200,34 +213,49 @@ class HeavyLight {
     }
   }
 
+  template<class Fn>
+  bool for_each_path(int u, int v, bool include_lca, Fn f) {
+    if (root[u] != root[v]) {
+      return false;
+    }
+    int path_root;
+    while (!is_ancestor(path_root = pathroot[path[u]], v)) {
+      f(path[u], 0, pathpos[u], true);
+      u = parent[path_root];
+    }
+    std::vector<std::tuple<int, int, int>> down_parts;
+    while (!is_ancestor(path_root = pathroot[path[v]], u)) {
+      down_parts.emplace_back(path[v], 0, pathpos[v]);
+      v = parent[path_root];
+    }
+    int lo = std::min(pathpos[u], pathpos[v]) + static_cast<int>(!include_lca);
+    int hi = std::max(pathpos[u], pathpos[v]);
+    if (lo <= hi) {
+      f(path[u], lo, hi, pathpos[u] > pathpos[v]);
+    }
+    for (int i = static_cast<int>(down_parts.size()) - 1; i >= 0; i--) {
+      int path, lo, hi;
+      std::tie(path, lo, hi) = down_parts[i];
+      f(path, lo, hi, false);
+    }
+    return true;
+  }
+
   T query(int u, int v) {
+    if (root[u] != root[v]) {
+      throw std::runtime_error("No path exists between nodes in different trees.");
+    }
     if (VALUES_ON_EDGES && u == v) {
       throw std::runtime_error("No edge between u and v to be queried.");
     }
     bool found = false;
     T res = T(), value;
-    int root;
-    while (!is_ancestor(root = pathroot[path[u]], v)) {
-      if (query(path[u], 0, pathpos[u], &value)) {
+    for_each_path(u, v, !VALUES_ON_EDGES, [&](int path, int lo, int hi, bool) {
+      if (query(path, lo, hi, &value)) {
         res = found ? combine(res, value) : value;
         found = true;
       }
-      u = parent[root];
-    }
-    while (!is_ancestor(root = pathroot[path[v]], u)) {
-      if (query(path[v], 0, pathpos[v], &value)) {
-        res = found ? combine(res, value) : value;
-        found = true;
-      }
-      v = parent[root];
-    }
-    if (query(
-            path[u], std::min(pathpos[u], pathpos[v]) + static_cast<int>(VALUES_ON_EDGES),
-            std::max(pathpos[u], pathpos[v]), &value
-        )) {
-      res = found ? combine(res, value) : value;
-      found = true;
-    }
+    });
     if (!found) {
       throw std::runtime_error("Unexpected error: No values found.");
     }
@@ -235,22 +263,15 @@ class HeavyLight {
   }
 
   void update(int u, int v, const T &d) {
+    if (root[u] != root[v]) {
+      throw std::runtime_error("No path exists between nodes in different trees.");
+    }
     if (VALUES_ON_EDGES && u == v) {
       return;
     }
-    int root;
-    while (!is_ancestor(root = pathroot[path[u]], v)) {
-      update(path[u], 0, pathpos[u], d);
-      u = parent[root];
-    }
-    while (!is_ancestor(root = pathroot[path[v]], u)) {
-      update(path[v], 0, pathpos[v], d);
-      v = parent[root];
-    }
-    update(
-        path[u], std::min(pathpos[u], pathpos[v]) + static_cast<int>(VALUES_ON_EDGES),
-        std::max(pathpos[u], pathpos[v]), d
-    );
+    for_each_path(u, v, !VALUES_ON_EDGES, [&](int path, int lo, int hi, bool) {
+      update(path, lo, hi, d);
+    });
   }
 };
 
@@ -260,12 +281,12 @@ class HeavyLight {
 using namespace std;
 
 int main() {
-  //     w=40      w=20      w=10
-  // 0---------1---------2---------3
-  //                     |
-  //                     ----------4
-  //                         w=30
-  vector<vector<int>> adj(5);
+  //   w=40   w=20   w=10
+  // 0------1------2------3    5------6
+  //                \
+  //                 -----4
+  //                  w=30
+  vector<vector<int>> adj(7);
   adj[0].push_back(1);
   adj[1].push_back(0);
   adj[1].push_back(2);
@@ -274,6 +295,8 @@ int main() {
   adj[3].push_back(2);
   adj[2].push_back(4);
   adj[4].push_back(2);
+  adj[5].push_back(6);
+  adj[6].push_back(5);
   HeavyLight<int> hld(adj, 0);
   hld.update(0, 1, 40);
   hld.update(1, 2, 20);
@@ -283,5 +306,8 @@ int main() {
   assert(hld.query(2, 4) == 30);
   hld.update(3, 4, 5);
   assert(hld.query(1, 4) == 5);
+  hld.update(5, 6, 7);
+  assert(hld.query(5, 6) == 7);
+  assert(!hld.for_each_path(0, 5, true, [](int, int, int, bool) {}));
   return 0;
 }

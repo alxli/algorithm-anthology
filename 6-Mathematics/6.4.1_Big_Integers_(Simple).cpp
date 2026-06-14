@@ -9,7 +9,7 @@ for each digit of the right operand, adds that row once per digit value, then sh
 place. Division is long division: it scans the dividend from most significant digit to least,
 maintains a running remainder, and repeatedly subtracts the divisor to discover each quotient digit.
 
-- `BigInt(n)` constructs a big integer from a long long (default: 0).
+- `BigInt(n)` constructs a big integer from an integer `n` (default: 0).
 - `BigInt(s)` constructs a big integer from a string `s`, which must strictly consist of a sequence
   of numeric digits, optionally preceded by a minus sign.
 - `to_string()` returns the string representation of the big integer.
@@ -35,6 +35,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 
@@ -118,7 +119,7 @@ class BigInt {
   }
 
  public:
-  BigInt(long long n = 0) {
+  BigInt(int64_t n = 0) {
     sign = (n < 0) ? -1 : 1;
     if (n == 0) {
       digits = "0";

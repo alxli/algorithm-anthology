@@ -90,11 +90,11 @@ matrix identity_matrix(int n) {
 }
 
 int rows(const matrix &a) {
-  return a.size();
+  return static_cast<int>(a.size());
 }
 
 int columns(const matrix &a) {
-  return a.empty() ? 0 : a[0].size();
+  return a.empty() ? 0 : static_cast<int>(a[0].size());
 }
 
 std::ostream &operator<<(std::ostream &out, const matrix &a) {

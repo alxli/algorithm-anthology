@@ -1,8 +1,8 @@
 /*
 
 Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$, as
-well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the
-largest possible subset of $E$ containing no edges that share the same node.
+well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset
+of $E$ containing no edges that share the same node.
 
 Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a
 breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set
@@ -31,7 +31,7 @@ std::vector<bool> used, visit;
 std::vector<int> match, dist;
 
 void bfs() {
-  int n1 = adj.size();
+  int n1 = static_cast<int>(adj.size());
   dist.assign(n1, -1);
   std::queue<int> q;
   for (int u = 0; u < n1; u++) {
@@ -67,7 +67,7 @@ bool dfs(int u) {
 }
 
 int hopcroft_karp(int n2) {
-  int n1 = adj.size();
+  int n1 = static_cast<int>(adj.size());
   match.assign(n2, -1);
   used.assign(n1, false);
   int res = 0;

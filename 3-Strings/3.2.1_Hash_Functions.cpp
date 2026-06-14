@@ -23,8 +23,8 @@ offers no protection against adversarial inputs.
 
 - `mix32(x)` mixes a 32-bit unsigned integer `x`, using the MurmurHash3 finalizer.
 - `mix64(x)` mixes a 64-bit unsigned integer `x`, using the SplitMix64 finalizer.
-- `hash32(x)` and `hash64(x)` hash any integer type that can be converted to `unsigned int` or
-  `uint64`, respectively.
+- `hash32(x)` and `hash64(x)` hash any integer type that can be converted to `uint32_t` or
+  `uint64_t`, respectively.
 - `hash_combine32(h, x)` and `hash_combine64(h, x)` fold another already-hashed value into an
   existing hash accumulator.
 - `hash_float(x)` and `hash_double(x)` hash floating-point bit patterns, normalizing `-0.0` to
@@ -57,6 +57,7 @@ Space Complexity:
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <functional>
 #include <string>
@@ -66,9 +67,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-using uint64 = unsigned long long;
-
-unsigned int mix32(unsigned int x) {
+uint32_t mix32(uint32_t x) {
   x ^= x >> 16;
   x *= 0x85ebca6bU;
   x ^= x >> 13;
@@ -76,7 +75,7 @@ unsigned int mix32(unsigned int x) {
   return x ^ (x >> 16);
 }
 
-uint64 mix64(uint64 x) {
+uint64_t mix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -84,43 +83,43 @@ uint64 mix64(uint64 x) {
 }
 
 template<class Int>
-unsigned int hash32(Int x) {
-  return mix32(static_cast<unsigned int>(x));
+uint32_t hash32(Int x) {
+  return mix32(static_cast<uint32_t>(x));
 }
 
 template<class Int>
-uint64 hash64(Int x) {
-  return mix64(static_cast<uint64>(x));
+uint64_t hash64(Int x) {
+  return mix64(static_cast<uint64_t>(x));
 }
 
-unsigned int hash_combine32(unsigned int h, unsigned int x) {
+uint32_t hash_combine32(uint32_t h, uint32_t x) {
   return mix32(h ^ (x + 0x9e3779b9U + (h << 6) + (h >> 2)));
 }
 
-uint64 hash_combine64(uint64 h, uint64 x) {
+uint64_t hash_combine64(uint64_t h, uint64_t x) {
   return mix64(h ^ (x + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2)));
 }
 
-unsigned int hash_float(float x) {
+uint32_t hash_float(float x) {
   if (x == 0.0f) {
     x = 0.0f;  // Normalize -0.0.
   }
-  unsigned int bits = 0;
+  uint32_t bits = 0;
   std::memcpy(&bits, &x, sizeof(bits));
   return mix32(bits);
 }
 
-uint64 hash_double(double x) {
+uint64_t hash_double(double x) {
   if (x == 0.0) {
     x = 0.0;  // Normalize -0.0.
   }
-  uint64 bits = 0;
+  uint64_t bits = 0;
   std::memcpy(&bits, &x, sizeof(bits));
   return mix64(bits);
 }
 
-unsigned int hash_string_fnv1a32(const std::string &s) {
-  unsigned int h = 2166136261U;
+uint32_t hash_string_fnv1a32(const std::string &s) {
+  uint32_t h = 2166136261U;
   for (unsigned char c : s) {
     h ^= c;
     h *= 16777619U;
@@ -128,8 +127,8 @@ unsigned int hash_string_fnv1a32(const std::string &s) {
   return h;
 }
 
-uint64 hash_string_fnv1a64(const std::string &s) {
-  uint64 h = 14695981039346656037ULL;
+uint64_t hash_string_fnv1a64(const std::string &s) {
+  uint64_t h = 14695981039346656037ULL;
   for (unsigned char c : s) {
     h ^= c;
     h *= 1099511628211ULL;
@@ -138,8 +137,8 @@ uint64 hash_string_fnv1a64(const std::string &s) {
 }
 
 template<class It>
-unsigned int hash_range32(It first, It last) {
-  unsigned int h = 0;
+uint32_t hash_range32(It first, It last) {
+  uint32_t h = 0;
   for (It it = first; it != last; ++it) {
     h = hash_combine32(h, hash32(*it));
   }
@@ -147,8 +146,8 @@ unsigned int hash_range32(It first, It last) {
 }
 
 template<class It>
-uint64 hash_range64(It first, It last) {
-  uint64 h = 0;
+uint64_t hash_range64(It first, It last) {
+  uint64_t h = 0;
   for (It it = first; it != last; ++it) {
     h = hash_combine64(h, hash64(*it));
   }
@@ -158,8 +157,8 @@ uint64 hash_range64(It first, It last) {
 template<class Int>
 struct IntHasher {
   std::size_t operator()(Int x) const {
-    static const uint64 RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
-    return static_cast<std::size_t>(mix64(static_cast<uint64>(x) + RAND_SEED));
+    static const uint64_t RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
+    return static_cast<std::size_t>(mix64(static_cast<uint64_t>(x) + RAND_SEED));
   }
 };
 
@@ -184,8 +183,8 @@ struct ScalarHasher<T, true> {
 // before mixing, as IntHasher does, if you need anti-hacking protection.
 struct PairIntHasher {
   std::size_t operator()(const std::pair<int, int> &p) const {
-    uint64 key = (static_cast<uint64>(static_cast<unsigned int>(p.first)) << 32) |
-                 static_cast<unsigned int>(p.second);
+    uint64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(p.first)) << 32) |
+                   static_cast<uint32_t>(p.second);
     key += 0x9e3779b97f4a7c15ULL;
     key = (key ^ (key >> 30)) * 0xbf58476d1ce4e5b9ULL;
     key = (key ^ (key >> 27)) * 0x94d049bb133111ebULL;
@@ -196,9 +195,9 @@ struct PairIntHasher {
 template<class A, class B>
 struct PairHasher {
   std::size_t operator()(const std::pair<A, B> &p) const {
-    uint64 h = 0;
-    h = hash_combine64(h, static_cast<uint64>(GenericHasher<A>()(p.first)));
-    h = hash_combine64(h, static_cast<uint64>(GenericHasher<B>()(p.second)));
+    uint64_t h = 0;
+    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<A>()(p.first)));
+    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<B>()(p.second)));
     return static_cast<std::size_t>(h);
   }
 };
@@ -206,9 +205,9 @@ struct PairHasher {
 template<class T>
 struct VectorHasher {
   std::size_t operator()(const std::vector<T> &v) const {
-    uint64 h = 0;
+    uint64_t h = 0;
     for (const auto &x : v) {
-      h = hash_combine64(h, static_cast<uint64>(GenericHasher<T>()(x)));
+      h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<T>()(x)));
     }
     h = hash_combine64(h, v.size());  // Mix in the length so different sizes (e.g. empty) separate.
     return static_cast<std::size_t>(h);
@@ -218,10 +217,10 @@ struct VectorHasher {
 template<class... Ts>
 struct TupleHasher {
   std::size_t operator()(const std::tuple<Ts...> &t) const {
-    uint64 h = 0;
+    uint64_t h = 0;
     std::apply(
         [&](const Ts &...xs) {
-          ((h = hash_combine64(h, static_cast<uint64>(GenericHasher<Ts>()(xs)))), ...);
+          ((h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<Ts>()(xs)))), ...);
         },
         t
     );
@@ -283,7 +282,7 @@ int main() {
   assert(hash_range32(v.begin(), v.end()) == hash_range32(v.begin(), v.end()));
   assert(hash_range64(v.begin(), v.end()) == hash_range64(v.begin(), v.end()));
 
-  unordered_map<long long, int, IntHasher<long long>> count;
+  unordered_map<int64_t, int, IntHasher<int64_t>> count;
   count[1000000000000LL] = 7;
   assert(count[1000000000000LL] == 7);
 

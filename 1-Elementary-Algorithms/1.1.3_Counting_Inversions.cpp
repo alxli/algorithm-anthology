@@ -26,17 +26,18 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <iterator>
 #include <vector>
 
 template<class It, class Compare = std::less<>>
-long long inversions(It lo, It hi, Compare comp = Compare()) {
+int64_t inversions(It lo, It hi, Compare comp = Compare()) {
   if (hi - lo < 2) {
     return 0;
   }
   It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
-  long long res = 0;
+  int64_t res = 0;
   res += inversions(lo, mid + 1, comp);
   res += inversions(mid + 1, hi, comp);
   using T = typename std::iterator_traits<It>::value_type;
@@ -64,13 +65,13 @@ long long inversions(It lo, It hi, Compare comp = Compare()) {
   return res;
 }
 
-long long inversions(const std::vector<int> &a) {
+int64_t inversions(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> values(a.begin(), a.end());
   std::sort(values.begin(), values.end());
   values.erase(std::unique(values.begin(), values.end()), values.end());
   std::vector<int> bit(values.size() + 1, 0);
-  long long res = 0;
+  int64_t res = 0;
   for (int i = n - 1; i >= 0; i--) {
     int id =
         static_cast<int>(std::lower_bound(values.begin(), values.end(), a[i]) - values.begin()) + 1;

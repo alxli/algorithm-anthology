@@ -31,17 +31,16 @@ Space Complexity:
 
 #include <array>
 #include <climits>
-
-using uint64 = unsigned long long;
+#include <cstdint>
 
 class XorBasis {
-  static const int BITS = sizeof(uint64) * CHAR_BIT;
+  static const int BITS = sizeof(uint64_t) * CHAR_BIT;
 
-  std::array<uint64, BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
+  std::array<uint64_t, BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
   int sz = 0;
 
  public:
-  bool insert(uint64 x) {
+  bool insert(uint64_t x) {
     for (int i = BITS - 1; i >= 0; i--) {
       if (!((x >> i) & 1)) {
         continue;
@@ -56,7 +55,7 @@ class XorBasis {
     return false;
   }
 
-  bool contains(uint64 x) const {
+  bool contains(uint64_t x) const {
     for (int i = BITS - 1; i >= 0; i--) {
       if (((x >> i) & 1) && basis[i] != 0) {
         x ^= basis[i];
@@ -65,7 +64,7 @@ class XorBasis {
     return x == 0;
   }
 
-  uint64 max_xor(uint64 base = 0) const {
+  uint64_t max_xor(uint64_t base = 0) const {
     for (int i = BITS - 1; i >= 0; i--) {
       if ((base ^ basis[i]) > base) {
         base ^= basis[i];

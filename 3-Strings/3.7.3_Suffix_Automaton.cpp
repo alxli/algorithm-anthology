@@ -30,6 +30,7 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -56,11 +57,10 @@ class SuffixAutomaton {
   }
 
   void extend(char c) {
-    int cur = st.size();
+    int cur = static_cast<int>(st.size());
     st.emplace_back();
     st[cur].len = st[last].len + 1;
     st[cur].first_pos = st[cur].len - 1;
-
     int p = last;
     while (p != -1 && st[p].next.find(c) == st[p].next.end()) {
       st[p].next[c] = cur;
@@ -73,7 +73,7 @@ class SuffixAutomaton {
       if (st[p].len + 1 == st[q].len) {
         st[cur].link = q;
       } else {
-        int clone = st.size();
+        int clone = static_cast<int>(st.size());
         st.push_back(st[q]);
         st[clone].len = st[p].len + 1;
         while (p != -1 && st[p].next[c] == q) {
@@ -113,8 +113,8 @@ class SuffixAutomaton {
     return st[v].first_pos - static_cast<int>(t.size()) + 1;
   }
 
-  long long count_distinct_substrings() const {
-    long long res = 0;
+  int64_t count_distinct_substrings() const {
+    int64_t res = 0;
     for (int v = 1; v < static_cast<int>(st.size()); v++) {
       res += st[v].len - st[st[v].link].len;
     }

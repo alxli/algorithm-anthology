@@ -20,7 +20,7 @@ The splicing helpers use the same "after" convention as `std::forward_list::spli
 work naturally with a dummy head node, which makes insertions and removals at the beginning of a
 list match all other positions. For doubly linked list splicing, use the next section.
 
-For linked-list cycle detection, use Floyd or Brent cycle detection from section 1.5.
+For linked-list cycle detection, use the functional graph cycle detection section.
 
 Time Complexity:
 - O(n) per call to `reverse_list(head)` and `split_half(head, &second)`.

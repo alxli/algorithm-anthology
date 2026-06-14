@@ -20,6 +20,7 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <vector>
 
 class AbstractEnumerator {
@@ -28,13 +29,13 @@ class AbstractEnumerator {
 
   AbstractEnumerator(int r, int l) : range(r), length(l) {}
   virtual ~AbstractEnumerator() = default;
-  virtual long long count(const std::vector<int> &prefix) { return 0; }
+  virtual int64_t count(const std::vector<int> &prefix) { return 0; }
   std::vector<int> next(std::vector<int> &a) { return from_rank(to_rank(a) + 1); }
-  long long total_count() { return count(std::vector<int>(0)); }
+  int64_t total_count() { return count(std::vector<int>(0)); }
 
  public:
-  long long to_rank(const std::vector<int> &a) {
-    long long res = 0;
+  int64_t to_rank(const std::vector<int> &a) {
+    int64_t res = 0;
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
       std::vector<int> prefix(a.begin(), a.end());
       prefix.resize(i + 1);
@@ -45,13 +46,13 @@ class AbstractEnumerator {
     return res;
   }
 
-  std::vector<int> from_rank(long long r) {
+  std::vector<int> from_rank(int64_t r) {
     std::vector<int> a(length);
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
       std::vector<int> prefix(a.begin(), a.end());
       prefix.resize(i + 1);
       for (prefix[i] = 0; prefix[i] < range; ++prefix[i]) {
-        long long curr = count(prefix);
+        int64_t curr = count(prefix);
         if (r < curr) {
           break;
         }
@@ -65,8 +66,8 @@ class AbstractEnumerator {
   // Accepts any callable f(lo, hi), including capturing lambdas and functors.
   template<class Fn>
   void enumerate(Fn f) {
-    long long total = total_count();
-    for (long long i = 0; i < total; i++) {
+    int64_t total = total_count();
+    for (int64_t i = 0; i < total; i++) {
       std::vector<int> curr = from_rank(i);
       f(curr.begin(), curr.end());
     }
@@ -77,14 +78,14 @@ class ArrangementEnumerator : public AbstractEnumerator {
  public:
   ArrangementEnumerator(int n, int k) : AbstractEnumerator(n, k) {}
 
-  long long count(const std::vector<int> &prefix) {
+  int64_t count(const std::vector<int> &prefix) {
     int n = static_cast<int>(prefix.size());
     for (int i = 0; i < n - 1; i++) {
       if (prefix[i] == prefix[n - 1]) {
         return 0;
       }
     }
-    long long res = 1;
+    int64_t res = 1;
     for (int i = 0; i < length - n; i++) {
       res *= range - n - i;
     }
@@ -98,11 +99,11 @@ class PermutationEnumerator : public ArrangementEnumerator {
 };
 
 class CombinationEnumerator : public AbstractEnumerator {
-  std::vector<std::vector<long long>> table;
+  std::vector<std::vector<int64_t>> table;
 
  public:
   CombinationEnumerator(int n, int k)
-      : AbstractEnumerator(n, k), table(n + 1, std::vector<long long>(n + 1)) {
+      : AbstractEnumerator(n, k), table(n + 1, std::vector<int64_t>(n + 1)) {
     for (int i = 0; i <= n; i++) {
       for (int j = 0; j <= i; j++) {
         table[i][j] = (j == 0) ? 1 : table[i - 1][j - 1] + table[i - 1][j];
@@ -110,7 +111,7 @@ class CombinationEnumerator : public AbstractEnumerator {
     }
   }
 
-  long long count(const std::vector<int> &prefix) {
+  int64_t count(const std::vector<int> &prefix) {
     int n = static_cast<int>(prefix.size());
     if (n >= 2 && prefix[n - 1] <= prefix[n - 2]) {
       return 0;
@@ -123,12 +124,12 @@ class CombinationEnumerator : public AbstractEnumerator {
 };
 
 class PartitionEnumerator : public AbstractEnumerator {
-  std::vector<std::vector<long long>> table;
+  std::vector<std::vector<int64_t>> table;
 
  public:
   PartitionEnumerator(int n)
-      : AbstractEnumerator(n + 1, n), table(n + 1, std::vector<long long>(n + 1)) {
-    std::vector<std::vector<long long>> tmp(table);
+      : AbstractEnumerator(n + 1, n), table(n + 1, std::vector<int64_t>(n + 1)) {
+    std::vector<std::vector<int64_t>> tmp(table);
     tmp[0][0] = 1;
     for (int i = 1; i <= n; i++) {
       for (int j = 1; j <= i; j++) {
@@ -142,7 +143,7 @@ class PartitionEnumerator : public AbstractEnumerator {
     }
   }
 
-  long long count(const std::vector<int> &prefix) {
+  int64_t count(const std::vector<int> &prefix) {
     int n = static_cast<int>(prefix.size()), sum = 0;
     for (int x : prefix) {
       sum += x;

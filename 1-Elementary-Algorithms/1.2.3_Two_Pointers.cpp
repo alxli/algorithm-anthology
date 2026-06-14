@@ -23,12 +23,13 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <unordered_map>
 #include <vector>
 
-int min_length_at_least(const std::vector<int> &a, long long target) {
+int min_length_at_least(const std::vector<int> &a, int64_t target) {
   int best = static_cast<int>(a.size()) + 1;
-  long long sum = 0;
+  int64_t sum = 0;
   for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
     sum += a[r];
     while (sum >= target) {

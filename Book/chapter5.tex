@@ -102,6 +102,8 @@ This is useful for answer-search problems over unbounded or very large integer d
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
+
 template<class Int, class Pred>
 Int exponential_search_first_true(Int lo, Pred pred) {  // 000[1]11
   if (pred(lo)) {
@@ -132,7 +134,7 @@ bool at_least_1000(int x) {
   return x >= 1000;
 }
 
-bool square_large_enough(long long x) {
+bool square_large_enough(int64_t x) {
   return x * x >= 123456789LL;
 }
 
@@ -500,24 +502,25 @@ The function below computes \inlinecode{dp\_cur[l..r]} by evaluating the midpoin
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
-const long long INF = (1LL << 62);
+const int64_t INF = (1LL << 62);
 
 template<class Cost>
 void compute_dc_layer(
-    const std::vector<long long> &dp_prev, std::vector<long long> &dp_cur, int l, int r, int opt_l,
+    const std::vector<int64_t> &dp_prev, std::vector<int64_t> &dp_cur, int l, int r, int opt_l,
     int opt_r, Cost cost
 ) {
   if (l > r) {
     return;
   }
   int mid = l + (r - l) / 2;
-  long long best = INF;
+  int64_t best = INF;
   int best_k = opt_l;
   int upper = std::min(mid, opt_r);
   for (int k = opt_l; k <= upper; k++) {
-    long long candidate = dp_prev[k] + cost(k, mid);
+    int64_t candidate = dp_prev[k] + cost(k, mid);
     if (candidate < best) {
       best = candidate;
       best_k = k;
@@ -535,7 +538,7 @@ void compute_dc_layer(
 using namespace std;
 
 struct SquareSegmentCost {
-  vector<long long> prefix;
+  vector<int64_t> prefix;
 
   explicit SquareSegmentCost(const vector<int> &a) : prefix(a.size() + 1) {
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
@@ -543,8 +546,8 @@ struct SquareSegmentCost {
     }
   }
 
-  long long operator()(int k, int i) const {
-    long long sum = prefix[i] - prefix[k];
+  int64_t operator()(int k, int i) const {
+    int64_t sum = prefix[i] - prefix[k];
     return sum * sum;
   }
 };
@@ -554,12 +557,12 @@ int main() {
   int n = static_cast<int>(a.size());
   SquareSegmentCost cost(a);
 
-  vector<long long> dp_prev(n + 1, INF), dp_cur(n + 1, INF);
+  vector<int64_t> dp_prev(n + 1, INF), dp_cur(n + 1, INF);
   dp_prev[0] = 0;
   compute_dc_layer(dp_prev, dp_cur, 1, n, 0, n - 1, cost);
   assert(dp_cur[4] == 100);  // One group: (1 + 2 + 3 + 4)^2.
 
-  vector<long long> dp_two(n + 1, INF);
+  vector<int64_t> dp_two(n + 1, INF);
   compute_dc_layer(dp_cur, dp_two, 1, n, 0, n - 1, cost);
   assert(dp_two[4] == 52);  // Split as [1, 2] and [3, 4].
   return 0;
@@ -581,15 +584,16 @@ Common applications include optimal binary search trees and some range merging p
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 
-const long long INF = (1LL << 62);
+const int64_t INF = (1LL << 62);
 
 template<class Cost>
-std::vector<std::vector<long long>> knuth_interval_dp(
+std::vector<std::vector<int64_t>> knuth_interval_dp(
     int n, Cost cost, std::vector<std::vector<int>> *opt_out = nullptr
 ) {
-  std::vector<std::vector<long long>> dp(n + 1, std::vector<long long>(n + 1, 0));
+  std::vector<std::vector<int64_t>> dp(n + 1, std::vector<int64_t>(n + 1, 0));
   std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));
   for (int i = 0; i <= n; i++) {
     opt[i][i] = i;
@@ -604,7 +608,7 @@ std::vector<std::vector<long long>> knuth_interval_dp(
       int start = std::max(opt[l][r - 1], l + 1);
       int finish = std::min(opt[l + 1][r], r - 1);
       for (int k = start; k <= finish; k++) {
-        long long candidate = dp[l][k] + dp[k][r] + cost(l, r);
+        int64_t candidate = dp[l][k] + dp[k][r] + cost(l, r);
         if (candidate < dp[l][r]) {
           dp[l][r] = candidate;
           opt[l][r] = k;
@@ -625,7 +629,7 @@ std::vector<std::vector<long long>> knuth_interval_dp(
 using namespace std;
 
 struct MergeCost {
-  vector<long long> prefix;
+  vector<int64_t> prefix;
 
   explicit MergeCost(const vector<int> &a) : prefix(a.size() + 1) {
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
@@ -633,12 +637,12 @@ struct MergeCost {
     }
   }
 
-  long long operator()(int l, int r) const { return prefix[r] - prefix[l]; }
+  int64_t operator()(int l, int r) const { return prefix[r] - prefix[l]; }
 };
 
 int main() {
   vector<int> a{1, 2, 3, 4};
-  vector<vector<long long>> dp = knuth_interval_dp(a.size(), MergeCost(a));
+  vector<vector<int64_t>> dp = knuth_interval_dp(a.size(), MergeCost(a));
   assert(dp[0][4] == 19);
   return 0;
 }
@@ -654,7 +658,7 @@ The following implementation is a concise, semi-dynamic version of the convex hu
   \item \inlinecode{query(x)} returns the minimum $y$-value among all inserted lines at coordinate \inlinecode{x}. The caller must ensure that query coordinates are nondecreasing across calls.
 \end{compactitem}
 
-Overflow warning: \inlinecode{add\_line()} compares intersections by cross-multiplying slope and intercept differences, a product on the order of the squared coefficient magnitude. For large \inlinecode{m}/\inlinecode{b} (roughly beyond $10^9$ with 64-bit \inlinecode{long long}), cast that comparison to \inlinecode{\_\_int128}. \inlinecode{query()} only forms the single product \inlinecode{m * x}, which simply needs to fit in \inlinecode{long long}.
+Overflow warning: \inlinecode{add\_line()} compares intersections by cross-multiplying slope and intercept differences, a product on the order of the squared coefficient magnitude. For large \inlinecode{m}/\inlinecode{b} (roughly beyond $10^9$ with \inlinecode{int64\_t}), cast that comparison to \inlinecode{\_\_int128}. \inlinecode{query()} only forms the single product \inlinecode{m * x}, which simply needs to fit in \inlinecode{int64\_t}.
 
 \textbf{Time Complexity}: $O(n)$ for any interlaced sequence of \inlinecode{add\_line()} and \inlinecode{query()} calls, where $n$ is the number of lines added. This is because the overall number of steps taken by \inlinecode{add\_line()} and \inlinecode{query()} are respectively bounded by the number of lines. Thus a single call to either \inlinecode{add\_line()} or \inlinecode{query()} will have an amortized $O(1)$ running time.
 
@@ -666,14 +670,15 @@ Overflow warning: \inlinecode{add\_line()} compares intersections by cross-multi
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <vector>
 
 struct SemiDynamicCHT {
-  std::vector<long long> M, B;
+  std::vector<int64_t> M, B;
   int ptr = 0;
 
-  void add_line(long long m, long long b) {
-    int len = M.size();
+  void add_line(int64_t m, int64_t b) {
+    int len = static_cast<int>(M.size());
     if (len > 0 && M.back() == m) {
       if (B.back() <= b) {
         return;
@@ -696,7 +701,7 @@ struct SemiDynamicCHT {
     B.push_back(b);
   }
 
-  long long query(long long x) {
+  int64_t query(int64_t x) {
     if (ptr >= static_cast<int>(M.size())) {
       ptr = static_cast<int>(M.size()) - 1;
     }
@@ -748,16 +753,16 @@ The following implementation is a fully dynamic variant of the convex hull optim
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
-#include <climits>
+#include <cstdint>
 #include <set>
 
 class HullOptimizer {
   struct Line {
-    long long m, b;
-    mutable long long xhi;
+    int64_t m, b;
+    mutable int64_t xhi;
     bool is_query;
 
-    Line(long long m, long long b, long long xhi = 0, bool is_query = false)
+    Line(int64_t m, int64_t b, int64_t xhi = 0, bool is_query = false)
         : m(m), b(b), xhi(xhi), is_query(is_query) {}
 
     bool operator<(const Line &l) const { return l.is_query ? xhi < l.xhi : m < l.m; }
@@ -768,15 +773,15 @@ class HullOptimizer {
 
   using hulliter = std::multiset<Line>::iterator;
 
-  static long long div_floor(long long a, long long b) { return a / b - ((a ^ b) < 0 && a % b); }
+  static int64_t div_floor(int64_t a, int64_t b) { return a / b - ((a ^ b) < 0 && a % b); }
 
   bool update_border(hulliter x, hulliter y) {
     if (y == hull.end()) {
-      x->xhi = LLONG_MAX;
+      x->xhi = INT64_MAX;
       return false;
     }
     if (x->m == y->m) {
-      x->xhi = (x->b > y->b) ? LLONG_MAX : LLONG_MIN;
+      x->xhi = (x->b > y->b) ? INT64_MAX : INT64_MIN;
     } else {
       x->xhi = div_floor(y->b - x->b, x->m - y->m);
     }
@@ -786,7 +791,7 @@ class HullOptimizer {
  public:
   explicit HullOptimizer(bool query_max = false) : query_max(query_max) {}
 
-  void add_line(long long m, long long b) {
+  void add_line(int64_t m, int64_t b) {
     if (!query_max) {
       m = -m;
       b = -b;
@@ -805,11 +810,11 @@ class HullOptimizer {
     }
   }
 
-  long long query(long long x) const {
+  int64_t query(int64_t x) const {
     assert(!hull.empty());
     Line q(0, 0, x, true);
     auto it = hull.lower_bound(q);
-    long long res = it->m * x + it->b;
+    int64_t res = it->m * x + it->b;
     return query_max ? res : -res;
   }
 };
@@ -855,15 +860,15 @@ This implementation stores the lower envelope of lines over the inclusive domain
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
-#include <climits>
+#include <cstdint>
 
-const long long INF = LLONG_MAX / 4;
+const int64_t INF = INT64_MAX / 4;
 
 class LiChaoTree {
   struct Line {
-    long long m, b;
-    Line(long long m = 0, long long b = INF) : m(m), b(b) {}
-    long long eval(long long x) const { return m * x + b; }
+    int64_t m, b;
+    Line(int64_t m = 0, int64_t b = INF) : m(m), b(b) {}
+    int64_t eval(int64_t x) const { return m * x + b; }
   };
 
   struct Node {
@@ -873,7 +878,7 @@ class LiChaoTree {
   };
 
   Node *root;
-  long long lo, hi;
+  int64_t lo, hi;
 
   static void clean_up(Node *n) {
     if (n == nullptr) {
@@ -884,12 +889,12 @@ class LiChaoTree {
     delete n;
   }
 
-  static void add_line(Node *&n, long long l, long long r, Line f) {
+  static void add_line(Node *&n, int64_t l, int64_t r, Line f) {
     if (n == nullptr) {
       n = new Node(f);
       return;
     }
-    long long mid = l + (r - l) / 2;
+    int64_t mid = l + (r - l) / 2;
     bool left_better = f.eval(l) < n->f.eval(l);
     bool mid_better = f.eval(mid) < n->f.eval(mid);
     if (mid_better) {
@@ -905,15 +910,15 @@ class LiChaoTree {
     }
   }
 
-  static long long query(Node *n, long long l, long long r, long long x) {
+  static int64_t query(Node *n, int64_t l, int64_t r, int64_t x) {
     if (n == nullptr) {
       return INF;
     }
-    long long res = n->f.eval(x);
+    int64_t res = n->f.eval(x);
     if (l == r) {
       return res;
     }
-    long long mid = l + (r - l) / 2;
+    int64_t mid = l + (r - l) / 2;
     if (x <= mid) {
       return std::min(res, query(n->left, l, mid, x));
     }
@@ -921,14 +926,14 @@ class LiChaoTree {
   }
 
  public:
-  LiChaoTree(long long lo, long long hi) : root(nullptr), lo(lo), hi(hi) {}
+  LiChaoTree(int64_t lo, int64_t hi) : root(nullptr), lo(lo), hi(hi) {}
 
   ~LiChaoTree() { clean_up(root); }
   LiChaoTree(const LiChaoTree &) = delete;
   LiChaoTree &operator=(const LiChaoTree &) = delete;
-  void add_line(long long m, long long b) { add_line(root, lo, hi, Line(m, b)); }
+  void add_line(int64_t m, int64_t b) { add_line(root, lo, hi, Line(m, b)); }
 
-  long long query(long long x) const {
+  int64_t query(int64_t x) const {
     assert(lo <= x && x <= hi);
     return query(root, lo, hi, x);
   }

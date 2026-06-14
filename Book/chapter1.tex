@@ -335,6 +335,7 @@ All three versions below achieve the same result using in-place algorithms.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <numeric>
 
 template<class It>
 void rotate1(It lo, It mid, It hi) {
@@ -362,17 +363,13 @@ void rotate2(It lo, It mid, It hi) {
   std::reverse(lo, hi);
 }
 
-int gcd(int a, int b) {
-  return (b == 0) ? a : gcd(b, a % b);
-}
-
 template<class It>
 void rotate3(It lo, It mid, It hi) {
   if (lo == mid || mid == hi) {
     return;
   }
   int n = hi - lo, jump = mid - lo;
-  int g = gcd(jump, n), cycle = n / g;
+  int g = std::gcd(jump, n), cycle = n / g;
   for (int i = 0; i < g; i++) {
     int curr = i, next;
     for (int j = 0; j < cycle - 1; j++) {
@@ -474,17 +471,18 @@ The number of inversions for a sequence \inlinecode{a} is the number of ordered 
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <functional>
 #include <iterator>
 #include <vector>
 
 template<class It, class Compare = std::less<>>
-long long inversions(It lo, It hi, Compare comp = Compare()) {
+int64_t inversions(It lo, It hi, Compare comp = Compare()) {
   if (hi - lo < 2) {
     return 0;
   }
   It mid = lo + (hi - lo - 1) / 2, a = lo, c = mid + 1;
-  long long res = 0;
+  int64_t res = 0;
   res += inversions(lo, mid + 1, comp);
   res += inversions(mid + 1, hi, comp);
   using T = typename std::iterator_traits<It>::value_type;
@@ -512,13 +510,13 @@ long long inversions(It lo, It hi, Compare comp = Compare()) {
   return res;
 }
 
-long long inversions(const std::vector<int> &a) {
+int64_t inversions(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> values(a.begin(), a.end());
   std::sort(values.begin(), values.end());
   values.erase(std::unique(values.begin(), values.end()), values.end());
   std::vector<int> bit(values.size() + 1, 0);
-  long long res = 0;
+  int64_t res = 0;
   for (int i = n - 1; i >= 0; i--) {
     int id =
         static_cast<int>(std::lower_bound(values.begin(), values.end(), a[i]) - values.begin()) + 1;
@@ -552,19 +550,42 @@ int main() {
 \subsection{Coordinate Compression}
 Given a range \inlinecode{[lo, hi)} of $n$ numerical elements, reassign each element to an integer in $[0, k)$, where $k$ is the number of distinct elements in the original range, while preserving the initial relative ordering of elements. That is, if $a$ is the array of original values and $b$ is the array of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if and only if $b[i] < b[j]$.
 
-Both implementations below take the range as ForwardIterators and require \inlinecode{operator\textless{}} on the value type.
+All implementations below take ranges as ForwardIterators and require \inlinecode{operator\textless{}} on the value type. The two \inlinecode{compress()} functions rewrite a range in place and then discard the mapping.
 
 \begin{compactitem}
   \item \inlinecode{compress1(lo, hi)} performs the compression by sorting the array, removing duplicates, and binary searching for the position of each original value.
   \item \inlinecode{compress2(lo, hi)} achieves the same result by inserting all values into an \inlinecode{std::map}, which automatically removes duplicate values and supports efficient lookups of the compressed values.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \log n)$ per call to either function, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\inlinecode{CoordinateCompressor} is a class version that retains the sorted table of distinct values so that arbitrary values can be mapped to and from compressed ranks long after construction (e.g. for offline queries arriving separately from the array being compressed).
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+\begin{compactitem}
+  \item \inlinecode{CoordinateCompressor(lo, hi)} constructs a compressor over the values of \inlinecode{[lo, hi)}, ready for querying. Alternatively, use the default constructor and register values with \inlinecode{add(x)}, then call \inlinecode{build()} once after all values are registered and before the first query.
+  \item \inlinecode{size()} returns the number of distinct registered values $k$.
+  \item \inlinecode{value(r)} returns the original value with rank \inlinecode{r}, inverting \inlinecode{rank()}.
+  \item \inlinecode{rank(x)} returns the compressed value (rank) of \inlinecode{x} in $[0, k)$. \inlinecode{x} must have been registered.
+  \item \inlinecode{contains(x)} returns whether \inlinecode{x} is a registered value.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to \inlinecode{compress1(lo, hi)}, \inlinecode{compress2(lo, hi)}, and \inlinecode{CoordinateCompressor(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(1)$ amortized per call to \inlinecode{add(x)}, and $O(m \log m)$ per call to \inlinecode{build()}, where $m$ is the total number of values registered.
+  \item $O(\log k)$ per call to \inlinecode{rank(x)} and \inlinecode{contains(x)}, where $k$ is the number of distinct values.
+  \item $O(1)$ per call to \inlinecode{value(r)} and \inlinecode{size()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary heap space for \inlinecode{compress1()} and \inlinecode{compress2()}.
+  \item $O(k)$ storage for \inlinecode{CoordinateCompressor}.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <map>
 #include <vector>
@@ -595,6 +616,36 @@ void compress2(It lo, It hi) {
     *it = m[*it];
   }
 }
+
+template<class T>
+class CoordinateCompressor {
+  std::vector<T> values;
+
+ public:
+  CoordinateCompressor() {}
+
+  template<class It>
+  CoordinateCompressor(It lo, It hi) : values(lo, hi) {
+    build();
+  }
+
+  int size() const { return static_cast<int>(values.size()); }
+  const T &value(int r) const { return values[r]; }
+  void add(const T &x) { values.push_back(x); }
+
+  void build() {
+    std::sort(values.begin(), values.end());
+    values.resize(std::unique(values.begin(), values.end()) - values.begin());
+  }
+
+  int rank(const T &x) const {
+    int r = static_cast<int>(std::lower_bound(values.begin(), values.end(), x) - values.begin());
+    assert(r < size() && !(x < values[r]));  // x must be registered.
+    return r;
+  }
+
+  bool contains(const T &x) const { return std::binary_search(values.begin(), values.end(), x); }
+};
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -625,6 +676,25 @@ int main() {
     vector<double> a{0.5, -1.0, 3, -1.0, 20, 0.5};
     compress1(a.begin(), a.end());
     print_range(a.begin(), a.end());
+  }
+  {
+    vector<int> a{10, 5, 30, 5, 20};
+    CoordinateCompressor<int> cc(a.begin(), a.end());
+    assert(cc.size() == 4);
+    assert(cc.rank(5) == 0);
+    assert(cc.rank(30) == 3);
+    assert(cc.value(2) == 20);
+    assert(cc.contains(10) && !cc.contains(7));
+  }
+  {  // Register values incrementally, then build once before querying.
+    CoordinateCompressor<double> cc;
+    cc.add(0.5);
+    cc.add(-1.0);
+    cc.add(0.5);
+    cc.build();
+    assert(cc.size() == 2);
+    assert(cc.rank(0.5) == 1);
+    assert(cc.value(0) == -1.0);
   }
   return 0;
 }
@@ -796,24 +866,25 @@ Precomputes prefix sums so range-sum queries can be answered in constant time. T
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <vector>
 
-std::vector<long long> prefix_sums(const std::vector<int> &a) {
-  std::vector<long long> pref(a.size() + 1, 0);
+std::vector<int64_t> prefix_sums(const std::vector<int> &a) {
+  std::vector<int64_t> pref(a.size() + 1, 0);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     pref[i + 1] = pref[i] + a[i];
   }
   return pref;
 }
 
-long long range_sum(const std::vector<long long> &pref, int lo, int hi) {
+int64_t range_sum(const std::vector<int64_t> &pref, int lo, int hi) {
   return pref[hi + 1] - pref[lo];
 }
 
-std::vector<std::vector<long long>> prefix_sums_2d(const std::vector<std::vector<int>> &a) {
+std::vector<std::vector<int64_t>> prefix_sums_2d(const std::vector<std::vector<int>> &a) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
-  std::vector<std::vector<long long>> pref(rows + 1, std::vector<long long>(cols + 1, 0));
+  std::vector<std::vector<int64_t>> pref(rows + 1, std::vector<int64_t>(cols + 1, 0));
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
       pref[i + 1][j + 1] = a[i][j] + pref[i][j + 1] + pref[i + 1][j] - pref[i][j];
@@ -822,8 +893,8 @@ std::vector<std::vector<long long>> prefix_sums_2d(const std::vector<std::vector
   return pref;
 }
 
-long long rectangle_sum(
-    const std::vector<std::vector<long long>> &pref, int r1, int c1, int r2, int c2
+int64_t rectangle_sum(
+    const std::vector<std::vector<int64_t>> &pref, int r1, int c1, int r2, int c2
 ) {
   return pref[r2 + 1][c2 + 1] - pref[r1][c2 + 1] - pref[r2 + 1][c1] + pref[r1][c1];
 }
@@ -850,43 +921,82 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Difference Array}
-Applies many range-add updates to an array in linear total time using a difference array. Instead of immediately adding \inlinecode{delta} to every element of \inlinecode{[lo, hi)}, add \inlinecode{delta} at \inlinecode{diff[lo]} and subtract it at \inlinecode{diff[hi]}; a final prefix sum reconstructs the updated values.
+Applies many range-add updates to an array in linear total time using a difference array. Instead of immediately adding \inlinecode{delta} to every element of the inclusive range \inlinecode{[lo, hi]}, add \inlinecode{delta} at \inlinecode{diff[lo]} and subtract it at \inlinecode{diff[hi + 1]}; a final prefix sum reconstructs the updated values. The idea extends to two dimensions: a rectangle update touches just the four corner cells of a difference grid by inclusion-exclusion, and a final two-dimensional prefix sum reconstructs the grid.
 
 \begin{compactitem}
   \item \inlinecode{DifferenceArray(n)} constructs an initially zero array of size \inlinecode{n}.
-  \item \inlinecode{add(lo, hi, delta)} adds \inlinecode{delta} to every position in the half-open range \inlinecode{[lo, hi)}.
+  \item \inlinecode{add(lo, hi, delta)} adds \inlinecode{delta} to every position in the inclusive range \inlinecode{[lo, hi]}.
   \item \inlinecode{build()} returns the final array after all range updates.
+  \item \inlinecode{DifferenceArray2D(rows, cols)} constructs an initially zero grid with \inlinecode{rows} rows and \inlinecode{cols} columns.
+  \item \inlinecode{add(r1, c1, r2, c2, delta)} adds \inlinecode{delta} to every cell of the rectangle with top left at \inlinecode{(r1, c1)} and bottom right at \inlinecode{(r2, c2)}, inclusive.
+  \item \inlinecode{build()} returns the final grid after all rectangle updates.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to \inlinecode{add(lo, hi, delta)}.
-  \item $O(n)$ per call to \inlinecode{build()}.
+  \item $O(1)$ per call to \inlinecode{add()} of either version.
+  \item $O(n)$ per call to \inlinecode{build()} of \inlinecode{DifferenceArray}, where $n$ is the array size.
+  \item $O(m \cdot n)$ per call to \inlinecode{build()} of \inlinecode{DifferenceArray2D}, where $m$ and $n$ are the number of rows and columns, respectively.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(n)$ for the difference array.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for the one-dimensional difference array.
+  \item $O(m \cdot n)$ for the two-dimensional difference grid.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <vector>
 
 class DifferenceArray {
-  std::vector<long long> diff;
+  std::vector<int64_t> diff;
 
  public:
   explicit DifferenceArray(int n) : diff(n + 1, 0) {}
 
-  void add(int lo, int hi, long long delta) {
+  void add(int lo, int hi, int64_t delta) {
     diff[lo] += delta;
-    diff[hi] -= delta;
+    diff[hi + 1] -= delta;
   }
 
-  std::vector<long long> build() const {
-    std::vector<long long> res(diff.size() - 1);
-    long long cur = 0;
+  std::vector<int64_t> build() const {
+    std::vector<int64_t> res(static_cast<int>(diff.size()) - 1);
+    int64_t cur = 0;
     for (int i = 0; i < static_cast<int>(res.size()); i++) {
       cur += diff[i];
       res[i] = cur;
+    }
+    return res;
+  }
+};
+
+class DifferenceArray2D {
+  std::vector<std::vector<int64_t>> diff;
+
+ public:
+  DifferenceArray2D(int rows, int cols) : diff(rows + 1, std::vector<int64_t>(cols + 1, 0)) {}
+
+  void add(int r1, int c1, int r2, int c2, int64_t delta) {
+    diff[r1][c1] += delta;
+    diff[r1][c2 + 1] -= delta;
+    diff[r2 + 1][c1] -= delta;
+    diff[r2 + 1][c2 + 1] += delta;
+  }
+
+  std::vector<std::vector<int64_t>> build() const {
+    int rows = static_cast<int>(diff.size()) - 1;
+    int cols = static_cast<int>(diff[0].size()) - 1;
+    std::vector<std::vector<int64_t>> res(rows, std::vector<int64_t>(cols));
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        int64_t up = i > 0 ? res[i - 1][j] : 0;
+        int64_t left = j > 0 ? res[i][j - 1] : 0;
+        int64_t diag = i > 0 && j > 0 ? res[i - 1][j - 1] : 0;
+        res[i][j] = diff[i][j] + up + left - diag;
+      }
     }
     return res;
   }
@@ -900,14 +1010,25 @@ using namespace std;
 
 int main() {
   DifferenceArray d(5);
-  d.add(0, 3, 2);
-  d.add(1, 5, 4);
-  d.add(2, 4, -1);
-  vector<long long> a = d.build();
-  vector<long long> expected{2, 6, 5, 3, 4};
+  d.add(0, 2, 2);   // a[0..2] += 2
+  d.add(1, 4, 4);   // a[1..4] += 4
+  d.add(2, 3, -1);  // a[2..3] -= 1
+  vector<int64_t> a = d.build();
+  vector<int64_t> expected{2, 6, 5, 3, 4};
   for (int i = 0; i < static_cast<int>(expected.size()); i++) {
     assert(a[i] == expected[i]);
   }
+
+  DifferenceArray2D d2(3, 4);
+  d2.add(0, 0, 1, 2, 1);  // Rows 0..1, cols 0..2 += 1
+  d2.add(1, 1, 2, 3, 2);  // Rows 1..2, cols 1..3 += 2
+  vector<vector<int64_t>> g = d2.build();
+  vector<vector<int64_t>> expected2{
+    {1, 1, 1, 0},
+    {1, 3, 3, 2},
+    {0, 2, 2, 2}
+  };
+  assert(g == expected2);
   return 0;
 }
 \end{lstlisting}
@@ -932,12 +1053,13 @@ The examples below cover two common patterns: finding the shortest subarray with
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <unordered_map>
 #include <vector>
 
-int min_length_at_least(const std::vector<int> &a, long long target) {
+int min_length_at_least(const std::vector<int> &a, int64_t target) {
   int best = static_cast<int>(a.size()) + 1;
-  long long sum = 0;
+  int64_t sum = 0;
   for (int l = 0, r = 0; r < static_cast<int>(a.size()); r++) {
     sum += a[r];
     while (sum >= target) {
@@ -979,6 +1101,131 @@ int main() {
 
   vector<int> b{1, 2, 1, 3, 4, 3, 5};
   assert(longest_at_most_k_distinct(b, 2) == 3);  // [1, 2, 1].
+  return 0;
+}
+\end{lstlisting}
+\subsection{Iterated Function Cycle Detection}
+Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the position and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever.
+
+This is useful for detecting cycles in functional graphs, pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if \inlinecode{nums} has size $n + 1$ and all values are in $[1, n]$, then \inlinecode{f(i) = nums[i]} forms a functional graph; the duplicate value is the entry point of the cycle reached from 0.
+
+Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient default choice: it moves two pointers through the sequence at different speeds, finds a meeting point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice, using three calls to $f$ per step.
+
+\begin{compactitem}
+  \item \inlinecode{find\_cycle\_floyd(f, x0)} returns the reached cycle as a pair \inlinecode{(start, length)}, where \inlinecode{start} is the smallest index $i$ such that $x_i$ is in the cycle, and \inlinecode{length} is the number of distinct values in the cycle.
+  \item \inlinecode{find\_cycle\_brent(f, x0)} does the same with fewer calls to $f$ in many cases.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(m + n)$ per call, where $m$ is the first index in the cycle and $n$ is the cycle length.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <utility>
+
+template<class Fn, class T>
+std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
+  T tortoise = f(x0), hare = f(f(x0));
+  while (tortoise != hare) {
+    tortoise = f(tortoise);
+    hare = f(f(hare));
+  }
+  int start = 0;
+  tortoise = x0;
+  while (tortoise != hare) {
+    tortoise = f(tortoise);
+    hare = f(hare);
+    start++;
+  }
+  int length = 1;
+  hare = f(tortoise);
+  while (tortoise != hare) {
+    hare = f(hare);
+    length++;
+  }
+  return {start, length};
+}
+
+template<class Fn, class T>
+std::pair<int, int> find_cycle_brent(Fn f, T x0) {
+  int power = 1, length = 1;
+  T tortoise = x0, hare = f(x0);
+  while (tortoise != hare) {
+    if (power == length) {
+      tortoise = hare;
+      power *= 2;
+      length = 0;
+    }
+    hare = f(hare);
+    length++;
+  }
+  hare = x0;
+  for (int i = 0; i < length; i++) {
+    hare = f(hare);
+  }
+  int start = 0;
+  tortoise = x0;
+  while (tortoise != hare) {
+    tortoise = f(tortoise);
+    hare = f(hare);
+    start++;
+  }
+  return {start, length};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <set>
+#include <vector>
+using namespace std;
+
+int f(int x) {
+  return (123 * x * x + 4567890) % 1337;
+}
+
+void verify(int x0, int start, int length) {
+  set<int> s;
+  int x = x0;
+  for (int i = 0; i < start; i++) {
+    assert(!s.count(x));
+    s.insert(x);
+    x = f(x);
+  }
+  int startx = x;
+  s.clear();
+  for (int i = 0; i < length; i++) {
+    assert(!s.count(x));
+    s.insert(x);
+    x = f(x);
+  }
+  assert(startx == x);
+}
+
+// Given n + 1 integers within [1, n], where one value in [1, n] is present 2 or more times (but
+// other values in [1, n] are present at most once), find the duplicate without modifying the array.
+// Interpret each value as a pointer to the next index; the duplicate is the cycle entry.
+int find_duplicate_integer(const vector<int> &nums) {
+  auto [start, _] = find_cycle_floyd([&](int i) { return nums[i]; }, 0);
+  int res = 0;
+  for (int i = 0; i < start; i++) {
+    res = nums[res];
+  }
+  return res;
+}
+
+int main() {
+  int x0 = 0;
+  auto [floyd_start, floyd_len] = find_cycle_floyd(f, x0);
+  assert(floyd_start == 4 && floyd_len == 2);
+  verify(x0, floyd_start, floyd_len);
+
+  auto [brent_start, brent_len] = find_cycle_brent(f, x0);
+  assert(brent_start == floyd_start && brent_len == floyd_len);
+
+  assert(find_duplicate_integer({1, 3, 4, 2, 2}) == 2);
+  assert(find_duplicate_integer({3, 1, 3, 4, 2}) == 3);
   return 0;
 }
 \end{lstlisting}
@@ -1050,6 +1297,124 @@ int main() {
   vector<int> a{1, 3, -1, -3, 5, 3, 6, 7};
   assert((sliding_window_maximum(a, 3) == vector<int>{3, 3, 5, 5, 6, 7}));
   assert((sliding_window_minimum(a, 3) == vector<int>{-1, -3, -3, -3, 3, 3}));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Aggregate Queue}
+Maintain a first-in, first-out queue that additionally answers, in $O(1)$ amortized time, the fold of an associative operation over all elements currently in the queue. This is the ``sliding window aggregation'' (SWAG) technique: by pushing new elements and popping old ones as a window advances, it reports an aggregate of every window in linear total time.
+
+Unlike the monotonic deque used for the sliding-window maximum (see 1.2.4), the operation need only be associative, not order-based, so the same structure handles min, max, sum, gcd, matrix products, and other monoids. It is sometimes called a ``monotonic queue,'' but that term usually denotes the monotonic deque of 1.2.4 (which handles only min/max); the two are different structures. The queue is built from two stacks: a back stack receives pushes while a front stack serves pops, and each stack stores running folds so the two halves combine in $O(1)$. Whenever the front stack empties, the back stack is flipped onto it; this costs $O(1)$ amortized per element, since each element is moved between stacks at most once.
+
+The fold is defined by an associative \inlinecode{combine(a, b)} function. The default code below returns the ``min'' of the elements; for ``sum'', \inlinecode{combine(a, b)} should return \inlinecode{a + b}. The fold is taken in queue order (front to back), so non-commutative operations such as matrix products are also supported.
+
+\begin{compactitem}
+  \item \inlinecode{AggregateQueue()} constructs an empty queue.
+  \item \inlinecode{empty()} returns whether the queue is empty.
+  \item \inlinecode{size()} returns the number of elements in the queue.
+  \item \inlinecode{push(x)} appends \inlinecode{x} to the back of the queue.
+  \item \inlinecode{pop()} removes the element at the front of the queue, which must be non-empty.
+  \item \inlinecode{front()} returns the element at the front of the queue, which must be non-empty.
+  \item \inlinecode{fold()} returns \inlinecode{combine()} applied to all elements in queue order; the queue must be non-empty.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ per call to the constructor, \inlinecode{empty()}, \inlinecode{size()}, \inlinecode{front()}, and \inlinecode{fold()}.
+  \item $O(1)$ amortized per call to \inlinecode{push()} and \inlinecode{pop()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage of the queue elements, where $n$ is the number of elements.
+  \item $O(1)$ auxiliary per operation, amortized (a \inlinecode{pop()} may flip the back stack onto the front stack).
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <utility>
+#include <vector>
+
+template<class T>
+class AggregateQueue {
+  static T combine(const T &a, const T &b) { return std::min(a, b); }
+
+  // Each stack entry is (value, fold), where fold combines the value with all entries between it
+  // and its end of the queue (the front for front_stack, the back for back_stack).
+  std::vector<std::pair<T, T>> front_stack, back_stack;
+
+ public:
+  bool empty() const { return front_stack.empty() && back_stack.empty(); }
+  int size() const { return static_cast<int>(front_stack.size() + back_stack.size()); }
+
+  void push(const T &x) {
+    T acc = back_stack.empty() ? x : combine(back_stack.back().second, x);
+    back_stack.emplace_back(x, acc);
+  }
+
+  void pop() {
+    if (front_stack.empty()) {
+      // Flip the back stack onto the front stack, reversing order so the oldest element ends up on
+      // top, and recompute the front folds in queue order.
+      while (!back_stack.empty()) {
+        T x = back_stack.back().first;
+        back_stack.pop_back();
+        T acc = front_stack.empty() ? x : combine(x, front_stack.back().second);
+        front_stack.emplace_back(x, acc);
+      }
+    }
+    front_stack.pop_back();
+  }
+
+  T front() const {
+    return front_stack.empty() ? back_stack.front().first : front_stack.back().first;
+  }
+
+  T fold() const {
+    if (front_stack.empty()) {
+      return back_stack.back().second;
+    }
+    if (back_stack.empty()) {
+      return front_stack.back().second;
+    }
+    return combine(front_stack.back().second, back_stack.back().second);
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // Used directly as a FIFO queue with an O(1) min query.
+  AggregateQueue<int> q;
+  q.push(5);
+  q.push(3);
+  q.push(8);
+  assert(q.front() == 5 && q.size() == 3);
+  assert(q.fold() == 3);  // min(5, 3, 8)
+  q.pop();                // Removes 5.
+  assert(q.fold() == 3);  // min(3, 8)
+  q.pop();                // Removes 3.
+  assert(q.fold() == 8);
+
+  // Canonical use: the minimum of every width-3 window, advancing the window by push/pop.
+  vector<int> a{4, 2, 5, 1, 3, 6};
+  AggregateQueue<int> w;
+  vector<int> mins;
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    w.push(a[i]);
+    if (w.size() > 3) {
+      w.pop();
+    }
+    if (w.size() == 3) {
+      mins.push_back(w.fold());
+    }
+  }
+  assert((mins == vector<int>{2, 1, 1, 1}));  // min of [4,2,5], [2,5,1], [5,1,3], [1,3,6]
   return 0;
 }
 \end{lstlisting}
@@ -1345,13 +1710,14 @@ The one-dimensional dynamic programming array \inlinecode{dp[w]} stores the best
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <vector>
 
-long long knapsack_01(
-    const std::vector<int> &weight, const std::vector<long long> &value, int capacity
+int64_t knapsack_01(
+    const std::vector<int> &weight, const std::vector<int64_t> &value, int capacity
 ) {
   int n = static_cast<int>(weight.size());
-  std::vector<long long> dp(capacity + 1, 0);
+  std::vector<int64_t> dp(capacity + 1, 0);
   for (int i = 0; i < n; i++) {
     for (int w = capacity; w >= weight[i]; w--) {
       dp[w] = std::max(dp[w], dp[w - weight[i]] + value[i]);
@@ -1368,7 +1734,7 @@ using namespace std;
 
 int main() {
   vector<int> weight{3, 4, 5, 9};
-  vector<long long> value{4, 5, 7, 10};
+  vector<int64_t> value{4, 5, 7, 10};
 
   assert(knapsack_01(weight, value, 8) == 11);   // Items of weight 3 and 5.
   assert(knapsack_01(weight, value, 10) == 12);  // Items of weight 4 and 5.
@@ -1402,13 +1768,14 @@ For unbounded maximum-value knapsack, weights are iterated in increasing order s
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
-long long unbounded_knapsack(
-    const std::vector<int> &weight, const std::vector<long long> &value, int capacity
+int64_t unbounded_knapsack(
+    const std::vector<int> &weight, const std::vector<int64_t> &value, int capacity
 ) {
   int n = static_cast<int>(weight.size());
-  std::vector<long long> dp(capacity + 1, 0);
+  std::vector<int64_t> dp(capacity + 1, 0);
   for (int i = 0; i < n; i++) {
     for (int w = weight[i]; w <= capacity; w++) {
       dp[w] = std::max(dp[w], dp[w - weight[i]] + value[i]);
@@ -1417,8 +1784,8 @@ long long unbounded_knapsack(
   return dp[capacity];
 }
 
-long long count_coin_change(const std::vector<int> &coins, int target) {
-  std::vector<long long> dp(target + 1, 0);
+int64_t count_coin_change(const std::vector<int> &coins, int target) {
+  std::vector<int64_t> dp(target + 1, 0);
   dp[0] = 1;
   for (int coin : coins) {
     for (int sum = coin; sum <= target; sum++) {
@@ -1436,7 +1803,7 @@ using namespace std;
 
 int main() {
   vector<int> weight{3, 4, 5};
-  vector<long long> value{4, 5, 7};
+  vector<int64_t> value{4, 5, 7};
   assert(unbounded_knapsack(weight, value, 10) == 14);  // Two weight-5 items.
 
   vector<int> coins{1, 2, 5};
@@ -1459,25 +1826,25 @@ The range is supplied as random-access iterators. 64-bit integers are used in in
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
-#include <climits>
+#include <cstdint>
 #include <vector>
 
 template<class It>
-long long max_subset_sum_at_most(It lo, It hi, long long v) {
+int64_t max_subset_sum_at_most(It lo, It hi, int64_t v) {
   int n = static_cast<int>(hi - lo);
-  long long llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
-  std::vector<long long> lsum(llen), hsum(hlen);
-  for (long long mask = 1; mask < llen; mask++) {
+  int64_t llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
+  std::vector<int64_t> lsum(llen), hsum(hlen);
+  for (int64_t mask = 1; mask < llen; mask++) {
     int bit = __builtin_ctzll(mask);
     lsum[mask] = lsum[mask ^ (1LL << bit)] + *(lo + bit);
   }
-  for (long long mask = 1; mask < hlen; mask++) {
+  for (int64_t mask = 1; mask < hlen; mask++) {
     int bit = __builtin_ctzll(mask);
     hsum[mask] = hsum[mask ^ (1LL << bit)] + *(lo + n / 2 + bit);
   }
   std::sort(hsum.begin(), hsum.end());
-  long long res = LLONG_MIN;
-  for (long long x : lsum) {
+  int64_t res = INT64_MIN;
+  for (int64_t x : lsum) {
     auto it = std::upper_bound(hsum.begin(), hsum.end(), v - x);
     if (it != hsum.begin()) {
       res = std::max(res, x + *--it);
@@ -1646,14 +2013,15 @@ Intervals are represented as half-open ranges \inlinecode{[start, finish)}, so t
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
 struct WeightedInterval {
   int start, finish;
-  long long weight;
+  int64_t weight;
 };
 
-long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) {
+int64_t weighted_interval_scheduling(std::vector<WeightedInterval> intervals) {
   std::sort(
       intervals.begin(), intervals.end(), [](const WeightedInterval &a, const WeightedInterval &b) {
         return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
@@ -1665,7 +2033,7 @@ long long weighted_interval_scheduling(std::vector<WeightedInterval> intervals) 
   for (const auto &iv : intervals) {
     finish.push_back(iv.finish);
   }
-  std::vector<long long> dp(n + 1, 0);
+  std::vector<int64_t> dp(n + 1, 0);
   for (int i = 1; i <= n; i++) {
     int j = std::upper_bound(finish.begin(), finish.end(), intervals[i - 1].start) - finish.begin();
     dp[i] = std::max(dp[i - 1], dp[j] + intervals[i - 1].weight);
@@ -1765,12 +2133,13 @@ This is a compact scheduling pattern that combines sorting with a disjoint-set f
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <numeric>
 #include <vector>
 
 struct Job {
   int deadline;
-  long long profit;
+  int64_t profit;
 };
 
 class SlotDSU {
@@ -1789,7 +2158,7 @@ class SlotDSU {
   void occupy(int u) { root[u] = find_root(u - 1); }
 };
 
-long long schedule_deadline_jobs(std::vector<Job> jobs) {
+int64_t schedule_deadline_jobs(std::vector<Job> jobs) {
   std::sort(jobs.begin(), jobs.end(), [](const Job &a, const Job &b) {
     return a.profit != b.profit ? a.profit > b.profit : a.deadline < b.deadline;
   });
@@ -1798,7 +2167,7 @@ long long schedule_deadline_jobs(std::vector<Job> jobs) {
     max_deadline = std::max(max_deadline, j.deadline);
   }
   SlotDSU slots(max_deadline);
-  long long res = 0;
+  int64_t res = 0;
   for (const auto &j : jobs) {
     int slot = slots.find_root(j.deadline);
     if (slot > 0) {
@@ -2022,7 +2391,7 @@ int main() {
   for (int x : a) {
     sk.add(x);
   }
-  assert(static_cast<int>(sk.get().size()) == 3);
+  assert(sk.get().size() == 3);
   return 0;
 }
 \end{lstlisting}
@@ -2332,212 +2701,50 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Cycle Detection}{1.5 Cycle Detection}}
+\section{\texorpdfstring{Bit Manipulation}{1.5 Bit Manipulation}}
 \setcounter{section}{5}
 \setcounter{subsection}{0}
-\subsection{Cycle Detection (Floyd)}
-Given a function $f$ mapping a set of integers to itself and an $x$-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing $f$ with itself starting with the initial $x$. Formally, since $f$ maps a finite set $S$ to itself, some value is guaranteed to eventually repeat in the sequence: $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
-
-There must exist a pair of indices $i$ and $j$ ($i < j$) such that $x_i = x_j$. When this happens, the rest of the sequence will consist of the subsequence from $x_i$ to $x_{j - 1}$ repeating indefinitely. The cycle detection problem asks to find such an $i$, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
-
-Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient algorithm that moves two pointers through the sequence at different speeds. Each step in the algorithm moves the ``tortoise'' one step forward and the ``hare'' two steps forward in the sequence, comparing the sequence values at each step. Their first meeting point is somewhere in the cycle; a second phase then finds the cycle's starting position.
-
-\begin{compactitem}
-  \item \inlinecode{find\_cycle\_floyd(f, x0)} returns the cycle as a \inlinecode{(position, length)} pair, where \inlinecode{position} is the index at which the cycle begins and \inlinecode{length} is the number of elements in it.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(m + n)$ per call to \inlinecode{find\_cycle\_floyd()}, where $m$ is the smallest index of the sequence which is the beginning of a cycle, and $n$ is the cycle's length.
-
-\textbf{Space Complexity}: $O(1)$ auxiliary.
-
-\begin{lstlisting}[language=C++]
-struct Cycle {
-  int start, length;
-};
-
-template<class Fn>
-Cycle find_cycle_floyd(Fn f, int x0) {
-  int tortoise = f(x0), hare = f(f(x0));
-  while (tortoise != hare) {
-    tortoise = f(tortoise);
-    hare = f(f(hare));
-  }
-  int start = 0;
-  tortoise = x0;
-  while (tortoise != hare) {
-    tortoise = f(tortoise);
-    hare = f(hare);
-    start++;
-  }
-  int length = 1;
-  hare = f(tortoise);
-  while (tortoise != hare) {
-    hare = f(hare);
-    length++;
-  }
-  return {start, length};
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <set>
-using namespace std;
-
-int f(int x) {
-  return (123 * x * x + 4567890) % 1337;
-}
-
-void verify(int x0, int start, int length) {
-  set<int> s;
-  int x = x0;
-  for (int i = 0; i < start; i++) {
-    assert(!s.count(x));
-    s.insert(x);
-    x = f(x);
-  }
-  int startx = x;
-  s.clear();
-  for (int i = 0; i < length; i++) {
-    assert(!s.count(x));
-    s.insert(x);
-    x = f(x);
-  }
-  assert(startx == x);
-}
-
-int main() {
-  int x0 = 0;
-  auto [start, length] = find_cycle_floyd(f, x0);
-  assert(start == 4 && length == 2);
-  verify(x0, start, length);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Cycle Detection (Brent)}
-Given a function $f$ mapping a set of integers to itself and an $x$-coordinate in the set, return a pair containing the (position, length) of a cycle in the sequence of numbers obtained from repeatedly composing $f$ with itself starting with the initial $x$. Formally, since $f$ maps a finite set $S$ to itself, some value is guaranteed to eventually repeat in the sequence: $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
-
-There must exist a pair of indices $i$ and $j$ ($i < j$) such that $x_i = x_j$. When this happens, the rest of the sequence will consist of the subsequence from $x_i$ to $x_{j - 1}$ repeating indefinitely. The cycle detection problem asks to find such an $i$, along with the length of the repeating subsequence. A well-known special case is the problem of cycle-detection in a degenerate linked list.
-
-While Floyd's cycle-finding algorithm finds cycles by simultaneously moving two pointers at different speeds, Brent's algorithm keeps the tortoise pointer stationary in every iteration, only teleporting it to the hare pointer at every power of two. Once the two pointers meet, the cycle length is known, and a second phase finds the cycle's starting position. This improves upon the constant factor of Floyd's algorithm by reducing the number of calls made to $f$.
-
-\begin{compactitem}
-  \item \inlinecode{find\_cycle\_brent(f, x0)} returns the cycle as a \inlinecode{(position, length)} pair, where \inlinecode{position} is the index at which the cycle begins and \inlinecode{length} is the number of elements in it.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(m + n)$ per call to \inlinecode{find\_cycle\_brent()}, where $m$ is the smallest index of the sequence which is the beginning of a cycle, and $n$ is the cycle's length.
-
-\textbf{Space Complexity}: $O(1)$ auxiliary.
-
-\begin{lstlisting}[language=C++]
-struct Cycle {
-  int start, length;
-};
-
-template<class Fn>
-Cycle find_cycle_brent(Fn f, int x0) {
-  int power = 1, length = 1, tortoise = x0, hare = f(x0);
-  while (tortoise != hare) {
-    if (power == length) {
-      tortoise = hare;
-      power *= 2;
-      length = 0;
-    }
-    hare = f(hare);
-    length++;
-  }
-  hare = x0;
-  for (int i = 0; i < length; i++) {
-    hare = f(hare);
-  }
-  int start = 0;
-  tortoise = x0;
-  while (tortoise != hare) {
-    tortoise = f(tortoise);
-    hare = f(hare);
-    start++;
-  }
-  return {start, length};
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <set>
-using namespace std;
-
-int f(int x) {
-  return (123 * x * x + 4567890) % 1337;
-}
-
-void verify(int x0, int start, int length) {
-  set<int> s;
-  int x = x0;
-  for (int i = 0; i < start; i++) {
-    assert(!s.count(x));
-    s.insert(x);
-    x = f(x);
-  }
-  int startx = x;
-  s.clear();
-  for (int i = 0; i < length; i++) {
-    assert(!s.count(x));
-    s.insert(x);
-    x = f(x);
-  }
-  assert(startx == x);
-}
-
-int main() {
-  int x0 = 0;
-  auto [start, length] = find_cycle_brent(f, x0);
-  assert(start == 4 && length == 2);
-  verify(x0, start, length);
-  return 0;
-}
-\end{lstlisting}
-
-\section{\texorpdfstring{Bit Manipulation}{1.6 Bit Manipulation}}
-\setcounter{section}{6}
-\setcounter{subsection}{0}
 \subsection{Bit Operations and Masks}
-Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant bit where $i = 0$) is ``present'' when set to 1. Treating an \inlinecode{int} as a bitmask makes set membership, insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below operate on \inlinecode{unsigned} masks; to use 64-bit masks, replace \inlinecode{unsigned} with \inlinecode{unsigned long long}, the literal \inlinecode{1u} with \inlinecode{1ull}, and the \inlinecode{1u \textless{}\textless{} 31} inside \inlinecode{clz()} with \inlinecode{1ull \textless{}\textless{} 63}.
+Integers are all fixed-size sets of bits, where the $i$-th bit (counting from the least significant bit where $i = 0$) is ``present'' when set to 1. Treating an \inlinecode{int} as a bitmask makes set membership, insertion, deletion, and iteration into single machine instructions, which is why bitmasks are the backbone of subset dynamic programming and many low-level tricks. The helpers below operate on \inlinecode{uint32\_t} masks; to use 64-bit masks, replace \inlinecode{uint32\_t} with \inlinecode{uint64\_t}, the literal \inlinecode{1u} with \inlinecode{1ull}, and the \inlinecode{1u \textless{}\textless{} 31} inside \inlinecode{clz()} with \inlinecode{1ull \textless{}\textless{} 63}. The loop implementations below exist for education only; production code should prefer the GCC built-ins named in the inline comments whenever available, or on C++20 systems the \inlinecode{\textless{}bit\textgreater{}} header, whose generic \inlinecode{constexpr} equivalents (also named in the comments) are additionally well-defined at 0.
 
 \begin{compactitem}
   \item \inlinecode{test\_bit(x, i)} returns whether the \inlinecode{i}-th bit of \inlinecode{x} is set.
   \item \inlinecode{set\_bit(x, i)}, \inlinecode{clear\_bit(x, i)}, and \inlinecode{toggle\_bit(x, i)} return \inlinecode{x} with the \inlinecode{i}-th respectively forced to 1, forced to 0, or flipped.
   \item \inlinecode{lowest\_set\_bit(x)} returns the value of the lowest set bit of \inlinecode{x} (a power of 2), or 0 if \inlinecode{x} is 0. \inlinecode{clear\_lowest\_set\_bit(x)} returns \inlinecode{x} with its lowest set bit removed.
-  \item \inlinecode{popcount(x)} returns the number of set bits, analogous to \inlinecode{\_\_builtin\_popcount()}.
-  \item \inlinecode{ctz(x)} returns the number of trailing 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_ctz()}.
-  \item \inlinecode{clz(x)} returns the number of leading 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_clz()}.
-  \item \inlinecode{is\_power\_of\_two(x)} returns whether \inlinecode{x} has exactly one set bit.
-  \item \inlinecode{floor\_pow2(x)} returns the largest power of 2 that is $\leq$ \inlinecode{x} (for \inlinecode{x} $> 0$).
-  \item \inlinecode{ceil\_pow2(x)} returns the smallest power of 2 that is $\geq$ \inlinecode{x} (for \inlinecode{x} $> 0$).
+  \item \inlinecode{popcount(x)} returns the number of set bits, analogous to \inlinecode{\_\_builtin\_popcount()} and C++20's \inlinecode{std::popcount()}.
+  \item \inlinecode{parity(x)} returns 1 if the number of set bits is odd and 0 otherwise, analogous to \inlinecode{\_\_builtin\_parity()}.
+  \item \inlinecode{ctz(x)} returns the number of trailing 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_ctz()} and C++20's \inlinecode{std::countr\_zero()}.
+  \item \inlinecode{ffs(x)} returns one plus the position of the lowest 1-bit of \inlinecode{x}, or 0 if \inlinecode{x} is 0, analogous to \inlinecode{\_\_builtin\_ffs()}.
+  \item \inlinecode{clz(x)} returns the number of leading 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_clz()} and C++20's \inlinecode{std::countl\_zero()}.
+  \item \inlinecode{is\_pow2(x)} returns whether \inlinecode{x} has exactly one set bit, analogous to C++20's \inlinecode{std::has\_single\_bit()}.
+  \item \inlinecode{floor\_pow2(x)} returns the largest power of 2 that is $\leq$ \inlinecode{x} (for \inlinecode{x} $> 0$), analogous to C++20's \inlinecode{std::bit\_floor()}.
+  \item \inlinecode{ceil\_pow2(x)} returns the smallest power of 2 that is $\geq$ \inlinecode{x} (for \inlinecode{x} $> 0$), analogous to C++20's \inlinecode{std::bit\_ceil()}.
   \item \inlinecode{for\_each\_set\_bit(x, f)} calls \inlinecode{f(i)} once for each set bit position \inlinecode{i} of \inlinecode{x}, in increasing order.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(b)$ worst case per call to \inlinecode{popcount(x)}, \inlinecode{ctz(x)}, \inlinecode{clz(x)}, and \inlinecode{for\_each\_set\_bit(x, f)}, where $b$ is the bit width of the mask (32 here).
+  \item $O(b)$ worst case per call to \inlinecode{popcount(x)}, \inlinecode{parity(x)}, \inlinecode{ctz(x)}, \inlinecode{ffs(x)}, \inlinecode{clz(x)}, and \inlinecode{for\_each\_set\_bit(x, f)}, where $b$ is the bit width of the mask (32 here).
   \item $O(1)$ for all other operations.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
-bool test_bit(unsigned x, int i) {  return (x >> i) & 1u; }
-unsigned set_bit(unsigned x, int i) { return x | (1u << i); }
-unsigned clear_bit(unsigned x, int i) { return x & ~(1u << i); }
-unsigned toggle_bit(unsigned x, int i) { return x ^ (1u << i); }
-unsigned lowest_set_bit(unsigned x) { return x & (0u - x); }
-unsigned clear_lowest_set_bit(unsigned x) { return x & (x - 1); }
+#include <cstdint>
 
-// popcount(), ctz(), and clz() are spelled out here for educational purposes.
+bool test_bit(uint32_t x, int i) {  return (x >> i) & 1u; }
+uint32_t set_bit(uint32_t x, int i) { return x | (1u << i); }
+uint32_t clear_bit(uint32_t x, int i) { return x & ~(1u << i); }
+uint32_t toggle_bit(uint32_t x, int i) { return x ^ (1u << i); }
+uint32_t lowest_set_bit(uint32_t x) { return x & (0u - x); }
+uint32_t clear_lowest_set_bit(uint32_t x) { return x & (x - 1); }
+
+// popcount(), parity(), ctz(), ffs(), and clz() are spelled out here for educational purposes.
 // Production code should use the compiler intrinsics named in the comments below.
-int popcount(unsigned x) {  // __builtin_popcount(x)
+
+int popcount(uint32_t x) {  // __builtin_popcount(x); std::popcount(x) in C++20.
   int count = 0;
   for (; x != 0; x = clear_lowest_set_bit(x)) {
     count++;
@@ -2545,7 +2752,11 @@ int popcount(unsigned x) {  // __builtin_popcount(x)
   return count;
 }
 
-int ctz(unsigned x) {  // __builtin_ctz(x); undefined when x == 0.
+int parity(uint32_t x) {  // __builtin_parity(x)
+  return popcount(x) & 1;
+}
+
+int ctz(uint32_t x) {  // __builtin_ctz(x); undefined when x == 0. std::countr_zero(x) in C++20.
   int count = 0;
   for (; (x & 1u) == 0; x >>= 1) {
     count++;
@@ -2553,28 +2764,32 @@ int ctz(unsigned x) {  // __builtin_ctz(x); undefined when x == 0.
   return count;
 }
 
-int clz(unsigned x) {  // __builtin_clz(x); undefined when x == 0.
+int ffs(uint32_t x) {  // __builtin_ffs(x); returns 0 when x == 0.
+  return x == 0 ? 0 : ctz(x) + 1;
+}
+
+int clz(uint32_t x) {  // __builtin_clz(x); undefined when x == 0. std::countl_zero(x) in C++20.
   int count = 0;
-  for (unsigned mask = 1u << 31; (x & mask) == 0; mask >>= 1) {
+  for (uint32_t mask = 1u << 31; (x & mask) == 0; mask >>= 1) {
     count++;
   }
   return count;
 }
 
-bool is_power_of_two(unsigned x) {
+bool is_pow2(uint32_t x) {  // std::has_single_bit(x) in C++20.
   return x != 0 && (x & (x - 1)) == 0;
 }
 
-unsigned floor_pow2(unsigned x) {
+uint32_t floor_pow2(uint32_t x) {  // std::bit_floor(x) in C++20.
   return 1u << (31 - __builtin_clz(x));
 }
 
-unsigned ceil_pow2(unsigned x) {
-  return is_power_of_two(x) ? x : 1u << (32 - __builtin_clz(x));
+uint32_t ceil_pow2(uint32_t x) {  // std::bit_ceil(x) in C++20.
+  return is_pow2(x) ? x : 1u << (32 - __builtin_clz(x));
 }
 
 template<class Fn>
-void for_each_set_bit(unsigned x, Fn f) {
+void for_each_set_bit(uint32_t x, Fn f) {
   while (x != 0) {
     f(ctz(x));
     x = clear_lowest_set_bit(x);
@@ -2589,7 +2804,7 @@ void for_each_set_bit(unsigned x, Fn f) {
 using namespace std;
 
 int main() {
-  unsigned x = 0b101100;
+  uint32_t x = 0b101100;
   assert(test_bit(x, 2) == true);
   assert(test_bit(x, 0) == false);
   assert(set_bit(x, 0) == 0b101101u);
@@ -2599,10 +2814,15 @@ int main() {
   assert(lowest_set_bit(x) == 0b100u);
   assert(clear_lowest_set_bit(x) == 0b101000u);
   assert(popcount(x) == 3);
+  assert(parity(x) == 1);
+  assert(parity(0b101101u) == 0);
   assert(ctz(x) == 2);
+  assert(ffs(x) == 3);
+  assert(ffs(0) == 0);
+  assert(clz(x) == 26);
 
-  assert(is_power_of_two(16) == true);
-  assert(is_power_of_two(24) == false);
+  assert(is_pow2(16) == true);
+  assert(is_pow2(24) == false);
   assert(floor_pow2(20) == 16u);
   assert(ceil_pow2(20) == 32u);
   assert(ceil_pow2(16) == 16u);
@@ -2642,11 +2862,12 @@ The classic submask loop \inlinecode{for (int s = m; s \textgreater{} 0; s = (s 
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <vector>
 
-std::vector<unsigned> submasks(unsigned m) {
-  std::vector<unsigned> res;
-  unsigned s = m;
+std::vector<uint32_t> submasks(uint32_t m) {
+  std::vector<uint32_t> res;
+  uint32_t s = m;
   while (true) {
     res.push_back(s);
     if (s == 0) {
@@ -2657,18 +2878,18 @@ std::vector<unsigned> submasks(unsigned m) {
   return res;
 }
 
-unsigned next_popcount(unsigned x) {
-  unsigned c = x & (0u - x), r = x + c;
+uint32_t next_popcount(uint32_t x) {
+  uint32_t c = x & (0u - x), r = x + c;
   return r | (((x ^ r) >> 2) / c);
 }
 
-std::vector<unsigned> masks_with_popcount(int n, int k) {
-  std::vector<unsigned> res;
+std::vector<uint32_t> masks_with_popcount(int n, int k) {
+  std::vector<uint32_t> res;
   if (k == 0) {
     return {0u};
   }
-  unsigned limit = 1u << n;
-  for (unsigned x = (1u << k) - 1; x < limit; x = next_popcount(x)) {
+  uint32_t limit = 1u << n;
+  for (uint32_t x = (1u << k) - 1; x < limit; x = next_popcount(x)) {
     res.push_back(x);
   }
   return res;
@@ -2678,7 +2899,7 @@ template<class T>
 void subset_sum_transform(std::vector<T> &f) {
   int n = __builtin_ctz(f.size());  // f.size() must be a power of two, 2^n.
   for (int b = 0; b < n; b++) {
-    for (unsigned m = 0; m < f.size(); m++) {
+    for (uint32_t m = 0; m < static_cast<uint32_t>(f.size()); m++) {
       if (m & (1u << b)) {
         f[m] += f[m ^ (1u << b)];
       }
@@ -2693,11 +2914,11 @@ void subset_sum_transform(std::vector<T> &f) {
 using namespace std;
 
 int main() {
-  assert((submasks(0b101) == vector<unsigned>{0b101, 0b100, 0b001, 0b000}));
+  assert((submasks(0b101) == vector<uint32_t>{0b101, 0b100, 0b001, 0b000}));
 
   assert(next_popcount(0b0110) == 0b1001u);
   assert((
-      masks_with_popcount(4, 2) == vector<unsigned>{0b0011, 0b0101, 0b0110, 0b1001, 0b1010, 0b1100}
+      masks_with_popcount(4, 2) == vector<uint32_t>{0b0011, 0b0101, 0b0110, 0b1001, 0b1010, 0b1100}
   ));
 
   // f[m] = 1 for every mask; after the transform f[m] counts submasks of m = 2^popcount(m).
@@ -2736,22 +2957,23 @@ The \inlinecode{k}-th Gray code is obtained from the ordinary binary value \inli
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <vector>
 
-unsigned gray_code(unsigned k) {
+uint32_t gray_code(uint32_t k) {
   return k ^ (k >> 1);
 }
 
-unsigned inverse_gray_code(unsigned g) {
-  for (unsigned shift = 1; (g >> shift) != 0; shift <<= 1) {
+uint32_t inverse_gray_code(uint32_t g) {
+  for (uint32_t shift = 1; (g >> shift) != 0; shift <<= 1) {
     g ^= g >> shift;
   }
   return g;
 }
 
-std::vector<unsigned> gray_sequence(int n) {
-  std::vector<unsigned> res(1u << n);
-  for (unsigned k = 0; k < res.size(); k++) {
+std::vector<uint32_t> gray_sequence(int n) {
+  std::vector<uint32_t> res(1u << n);
+  for (uint32_t k = 0; k < static_cast<uint32_t>(res.size()); k++) {
     res[k] = gray_code(k);
   }
   return res;
@@ -2769,14 +2991,14 @@ int main() {
   assert(gray_code(2) == 0b011u);
   assert(gray_code(3) == 0b010u);
 
-  for (unsigned k = 0; k < 256; k++) {
+  for (uint32_t k = 0; k < 256; k++) {
     assert(inverse_gray_code(gray_code(k)) == k);
   }
 
-  vector<unsigned> seq = gray_sequence(3);
+  vector<uint32_t> seq = gray_sequence(3);
   assert(seq.size() == 8);
-  for (size_t i = 0; i < seq.size(); i++) {
-    unsigned diff = seq[i] ^ seq[(i + 1) % seq.size()];
+  for (int i = 0; i < static_cast<int>(seq.size()); i++) {
+    uint32_t diff = seq[i] ^ seq[(i + 1) % seq.size()];
     assert(__builtin_popcount(diff) == 1);  // Cyclically, one bit changes per step.
   }
   return 0;

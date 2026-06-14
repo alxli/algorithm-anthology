@@ -359,10 +359,10 @@ std::vector<string> split(const string &s, const string &delim = " \n\t\v\f\r") 
 
 std::vector<string> explode(const string &s, const string &delim) {
   std::vector<string> res;
-  size_t last = 0, next = 0;
+  std::size_t last = 0, next = 0;
   while ((next = s.find(delim, last)) != string::npos) {
     res.push_back(s.substr(last, next - last));
-    last = next + delim.size();
+    last = next + static_cast<int>(delim.size());
   }
   res.push_back(s.substr(last));
   return res;
@@ -370,7 +370,7 @@ std::vector<string> explode(const string &s, const string &delim) {
 
 std::vector<string> explode(const string &s, char delim) {
   std::vector<string> res;
-  size_t last = 0, next = 0;
+  std::size_t last = 0, next = 0;
   while ((next = s.find(delim, last)) != string::npos) {
     res.push_back(s.substr(last, next - last));
     last = next + 1;

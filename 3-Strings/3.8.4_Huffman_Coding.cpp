@@ -77,7 +77,7 @@ class HuffmanTree {
     if (pq.empty()) {
       return;
     }
-    while (pq.size() > 1) {
+    while (static_cast<int>(pq.size()) > 1) {
       int a = pq.top();
       pq.pop();
       int b = pq.top();

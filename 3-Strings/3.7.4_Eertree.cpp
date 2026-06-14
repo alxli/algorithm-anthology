@@ -71,7 +71,7 @@ class Eertree {
 
   bool add(char c) {
     s += c;
-    int pos = s.size() - 1;
+    int pos = static_cast<int>(s.size()) - 1;
     int cur = get_suffix(last, pos, c);
     auto it = tree[cur].next.find(c);
     if (it != tree[cur].next.end()) {
@@ -79,12 +79,10 @@ class Eertree {
       tree[last].occ++;
       return false;
     }
-
-    last = tree.size();
+    last = static_cast<int>(tree.size());
     tree.emplace_back(tree[cur].len + 2);
     tree[last].occ = 1;
     tree[cur].next[c] = last;
-
     if (tree[last].len == 1) {
       tree[last].link = 1;
       return true;

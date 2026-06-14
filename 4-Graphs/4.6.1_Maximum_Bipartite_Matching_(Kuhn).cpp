@@ -8,9 +8,9 @@ Kuhn's algorithm builds the matching one left node at a time. For each, a depth-
 for an augmenting path: an alternating sequence of unmatched and matched edges that reaches a free
 right node. Flipping the edges along such a path enlarges the matching by one.
 
-- `kuhn(n2)` populates `match` and returns maximum matching size for a global, pre-populated
-  adjacency list `adj` whose left-side nodes are numbered from 0 to `adj.size() - 1` and whose
-  right-side neighbors are numbered from 0 to `n2 - 1`.
+- `kuhn(n2)` populates `match_left` and `match_right`, then returns maximum matching size for a
+  global, pre-populated adjacency list `adj` whose left-side nodes are numbered from 0 to
+  `adj.size() - 1` and whose right-side neighbors are numbered from 0 to `n2 - 1`.
 
 Time Complexity:
 - O(m*(n1 + n2)) per call to `kuhn()`, where $m$ is the number of edges.
@@ -20,19 +20,27 @@ Space Complexity:
 
 */
 
-#include <algorithm>
 #include <vector>
 
-std::vector<int> match;
-std::vector<bool> visit;
+std::vector<int> match_left, match_right;
+std::vector<int> visit;
 std::vector<std::vector<int>> adj;
+int visit_time;
 
 bool dfs(int u) {
-  visit[u] = true;
+  visit[u] = visit_time;
   for (int nb : adj[u]) {
-    int v = match[nb];
-    if (v == -1 || (!visit[v] && dfs(v))) {
-      match[nb] = u;
+    if (match_right[nb] == -1) {
+      match_left[u] = nb;
+      match_right[nb] = u;
+      return true;
+    }
+  }
+  for (int nb : adj[u]) {
+    int v = match_right[nb];
+    if (visit[v] != visit_time && dfs(v)) {
+      match_left[u] = nb;
+      match_right[nb] = u;
       return true;
     }
   }
@@ -40,12 +48,14 @@ bool dfs(int u) {
 }
 
 int kuhn(int n2) {
-  int n1 = adj.size();
-  visit.assign(n1, false);
-  match.assign(n2, -1);
+  int n1 = static_cast<int>(adj.size());
+  match_left.assign(n1, -1);
+  match_right.assign(n2, -1);
+  visit.assign(n1, 0);
+  visit_time = 0;
   int matches = 0;
   for (int i = 0; i < n1; i++) {
-    visit.assign(n1, false);
+    visit_time++;
     if (dfs(i)) {
       matches++;
     }
@@ -76,8 +86,8 @@ int main() {
   adj[2].push_back(3);
   cout << "Matched " << kuhn(n2) << " pair(s):" << endl;
   for (int i = 0; i < n2; i++) {
-    if (match[i] != -1) {
-      cout << match[i] << " " << i << endl;
+    if (match_right[i] != -1) {
+      cout << match_right[i] << " " << i << endl;
     }
   }
   return 0;

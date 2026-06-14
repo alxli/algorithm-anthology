@@ -182,6 +182,9 @@ class SplayTree {
 
   const V *find(const K &k) {
     splay(root, k);
+    if (root == nullptr) {
+      return nullptr;
+    }
     return (k < root->key || root->key < k) ? nullptr : &(root->value);
   }
 

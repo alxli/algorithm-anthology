@@ -334,10 +334,10 @@ std::vector<string> split(const string &s, const string &delim = " \n\t\v\f\r") 
 
 std::vector<string> explode(const string &s, const string &delim) {
   std::vector<string> res;
-  size_t last = 0, next = 0;
+  std::size_t last = 0, next = 0;
   while ((next = s.find(delim, last)) != string::npos) {
     res.push_back(s.substr(last, next - last));
-    last = next + delim.size();
+    last = next + static_cast<int>(delim.size());
   }
   res.push_back(s.substr(last));
   return res;
@@ -345,7 +345,7 @@ std::vector<string> explode(const string &s, const string &delim) {
 
 std::vector<string> explode(const string &s, char delim) {
   std::vector<string> res;
-  size_t last = 0, next = 0;
+  std::size_t last = 0, next = 0;
   while ((next = s.find(delim, last)) != string::npos) {
     res.push_back(s.substr(last, next - last));
     last = next + 1;
@@ -418,7 +418,7 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
 \begin{compactitem}
   \item \inlinecode{mix32(x)} mixes a 32-bit unsigned integer \inlinecode{x}, using the MurmurHash3 finalizer.
   \item \inlinecode{mix64(x)} mixes a 64-bit unsigned integer \inlinecode{x}, using the SplitMix64 finalizer.
-  \item \inlinecode{hash32(x)} and \inlinecode{hash64(x)} hash any integer type that can be converted to \inlinecode{unsigned int} or \inlinecode{uint64}, respectively.
+  \item \inlinecode{hash32(x)} and \inlinecode{hash64(x)} hash any integer type that can be converted to \inlinecode{uint32\_t} or \inlinecode{uint64\_t}, respectively.
   \item \inlinecode{hash\_combine32(h, x)} and \inlinecode{hash\_combine64(h, x)} fold another already-hashed value into an existing hash accumulator.
   \item \inlinecode{hash\_float(x)} and \inlinecode{hash\_double(x)} hash floating-point bit patterns, normalizing \inlinecode{-0.0} to \inlinecode{0.0}. Different NaN representations may still hash differently.
   \item \inlinecode{hash\_string\_fnv1a32(s)} and \inlinecode{hash\_string\_fnv1a64(s)} compute FNV-1a hashes of string \inlinecode{s}.
@@ -442,6 +442,7 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
 \begin{lstlisting}[language=C++]
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <functional>
 #include <string>
@@ -451,9 +452,7 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
 #include <utility>
 #include <vector>
 
-using uint64 = unsigned long long;
-
-unsigned int mix32(unsigned int x) {
+uint32_t mix32(uint32_t x) {
   x ^= x >> 16;
   x *= 0x85ebca6bU;
   x ^= x >> 13;
@@ -461,7 +460,7 @@ unsigned int mix32(unsigned int x) {
   return x ^ (x >> 16);
 }
 
-uint64 mix64(uint64 x) {
+uint64_t mix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -469,43 +468,43 @@ uint64 mix64(uint64 x) {
 }
 
 template<class Int>
-unsigned int hash32(Int x) {
-  return mix32(static_cast<unsigned int>(x));
+uint32_t hash32(Int x) {
+  return mix32(static_cast<uint32_t>(x));
 }
 
 template<class Int>
-uint64 hash64(Int x) {
-  return mix64(static_cast<uint64>(x));
+uint64_t hash64(Int x) {
+  return mix64(static_cast<uint64_t>(x));
 }
 
-unsigned int hash_combine32(unsigned int h, unsigned int x) {
+uint32_t hash_combine32(uint32_t h, uint32_t x) {
   return mix32(h ^ (x + 0x9e3779b9U + (h << 6) + (h >> 2)));
 }
 
-uint64 hash_combine64(uint64 h, uint64 x) {
+uint64_t hash_combine64(uint64_t h, uint64_t x) {
   return mix64(h ^ (x + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2)));
 }
 
-unsigned int hash_float(float x) {
+uint32_t hash_float(float x) {
   if (x == 0.0f) {
     x = 0.0f;  // Normalize -0.0.
   }
-  unsigned int bits = 0;
+  uint32_t bits = 0;
   std::memcpy(&bits, &x, sizeof(bits));
   return mix32(bits);
 }
 
-uint64 hash_double(double x) {
+uint64_t hash_double(double x) {
   if (x == 0.0) {
     x = 0.0;  // Normalize -0.0.
   }
-  uint64 bits = 0;
+  uint64_t bits = 0;
   std::memcpy(&bits, &x, sizeof(bits));
   return mix64(bits);
 }
 
-unsigned int hash_string_fnv1a32(const std::string &s) {
-  unsigned int h = 2166136261U;
+uint32_t hash_string_fnv1a32(const std::string &s) {
+  uint32_t h = 2166136261U;
   for (unsigned char c : s) {
     h ^= c;
     h *= 16777619U;
@@ -513,8 +512,8 @@ unsigned int hash_string_fnv1a32(const std::string &s) {
   return h;
 }
 
-uint64 hash_string_fnv1a64(const std::string &s) {
-  uint64 h = 14695981039346656037ULL;
+uint64_t hash_string_fnv1a64(const std::string &s) {
+  uint64_t h = 14695981039346656037ULL;
   for (unsigned char c : s) {
     h ^= c;
     h *= 1099511628211ULL;
@@ -523,8 +522,8 @@ uint64 hash_string_fnv1a64(const std::string &s) {
 }
 
 template<class It>
-unsigned int hash_range32(It first, It last) {
-  unsigned int h = 0;
+uint32_t hash_range32(It first, It last) {
+  uint32_t h = 0;
   for (It it = first; it != last; ++it) {
     h = hash_combine32(h, hash32(*it));
   }
@@ -532,8 +531,8 @@ unsigned int hash_range32(It first, It last) {
 }
 
 template<class It>
-uint64 hash_range64(It first, It last) {
-  uint64 h = 0;
+uint64_t hash_range64(It first, It last) {
+  uint64_t h = 0;
   for (It it = first; it != last; ++it) {
     h = hash_combine64(h, hash64(*it));
   }
@@ -543,8 +542,8 @@ uint64 hash_range64(It first, It last) {
 template<class Int>
 struct IntHasher {
   std::size_t operator()(Int x) const {
-    static const uint64 RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
-    return static_cast<std::size_t>(mix64(static_cast<uint64>(x) + RAND_SEED));
+    static const uint64_t RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
+    return static_cast<std::size_t>(mix64(static_cast<uint64_t>(x) + RAND_SEED));
   }
 };
 
@@ -569,8 +568,8 @@ struct ScalarHasher<T, true> {
 // before mixing, as IntHasher does, if you need anti-hacking protection.
 struct PairIntHasher {
   std::size_t operator()(const std::pair<int, int> &p) const {
-    uint64 key = (static_cast<uint64>(static_cast<unsigned int>(p.first)) << 32) |
-                 static_cast<unsigned int>(p.second);
+    uint64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(p.first)) << 32) |
+                   static_cast<uint32_t>(p.second);
     key += 0x9e3779b97f4a7c15ULL;
     key = (key ^ (key >> 30)) * 0xbf58476d1ce4e5b9ULL;
     key = (key ^ (key >> 27)) * 0x94d049bb133111ebULL;
@@ -581,9 +580,9 @@ struct PairIntHasher {
 template<class A, class B>
 struct PairHasher {
   std::size_t operator()(const std::pair<A, B> &p) const {
-    uint64 h = 0;
-    h = hash_combine64(h, static_cast<uint64>(GenericHasher<A>()(p.first)));
-    h = hash_combine64(h, static_cast<uint64>(GenericHasher<B>()(p.second)));
+    uint64_t h = 0;
+    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<A>()(p.first)));
+    h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<B>()(p.second)));
     return static_cast<std::size_t>(h);
   }
 };
@@ -591,9 +590,9 @@ struct PairHasher {
 template<class T>
 struct VectorHasher {
   std::size_t operator()(const std::vector<T> &v) const {
-    uint64 h = 0;
+    uint64_t h = 0;
     for (const auto &x : v) {
-      h = hash_combine64(h, static_cast<uint64>(GenericHasher<T>()(x)));
+      h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<T>()(x)));
     }
     h = hash_combine64(h, v.size());  // Mix in the length so different sizes (e.g. empty) separate.
     return static_cast<std::size_t>(h);
@@ -603,10 +602,10 @@ struct VectorHasher {
 template<class... Ts>
 struct TupleHasher {
   std::size_t operator()(const std::tuple<Ts...> &t) const {
-    uint64 h = 0;
+    uint64_t h = 0;
     std::apply(
         [&](const Ts &...xs) {
-          ((h = hash_combine64(h, static_cast<uint64>(GenericHasher<Ts>()(xs)))), ...);
+          ((h = hash_combine64(h, static_cast<uint64_t>(GenericHasher<Ts>()(xs)))), ...);
         },
         t
     );
@@ -669,7 +668,7 @@ int main() {
   assert(hash_range32(v.begin(), v.end()) == hash_range32(v.begin(), v.end()));
   assert(hash_range64(v.begin(), v.end()) == hash_range64(v.begin(), v.end()));
 
-  unordered_map<long long, int, IntHasher<long long>> count;
+  unordered_map<int64_t, int, IntHasher<int64_t>> count;
   count[1000000000000LL] = 7;
   assert(count[1000000000000LL] == 7);
 
@@ -714,9 +713,9 @@ Computes polynomial rolling hashes for sequences, supporting $O(1)$ contiguous s
 
 Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Equivalently, it is built left-to-right by the recurrence \inlinecode{pref[i + 1] = pref[i] * HASH\_BASE + h(a[i])}. A subsequence hash for \inlinecode{[l, r)} is obtained by subtracting away the prefix before \inlinecode{l}: \inlinecode{pref[r] - pref[l] * pow(HASH\_BASE, r - l)}.
 
-The implementation works modulo the Mersenne prime $2^{61} - 1$ and uses \inlinecode{\_\_uint128\_t} for multiplication. The base \inlinecode{HASH\_BASE} should be changed or chosen randomly for open-hacking environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic and should not be used as proof of equality when exact verification is required.
+The implementation works modulo the Mersenne prime $2^{61} - 1$, using \inlinecode{\_\_uint128\_t} for the multiplication where available and falling back to a double-and-add modular multiply otherwise. The base \inlinecode{HASH\_BASE} should be changed or chosen randomly for open-hacking environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic and should not be used as proof of equality when exact verification is required.
 
-By default, each sequence value is cast to \inlinecode{uint64} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in \inlinecode{[1, HASH\_MOD)}.
+By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in \inlinecode{[1, HASH\_MOD)}.
 
 \begin{compactitem}
   \item \inlinecode{RollingHash\textless{}T\textgreater{}(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
@@ -742,36 +741,43 @@ By default, each sequence value is cast to \inlinecode{uint64} and mixed. For no
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <string>
 #include <utility>
 #include <vector>
 
-using uint64 = unsigned long long;
+const uint64_t HASH_MOD = (1ULL << 61) - 1;
+const uint64_t HASH_BASE = 911382323ULL;  // Change or randomize.
 
-const uint64 HASH_MOD = (1ULL << 61) - 1;
-const uint64 HASH_BASE = 911382323ULL;  // Change or randomize.
-
-uint64 hash_add(uint64 a, uint64 b) {
-  uint64 c = a + b;
+uint64_t hash_add(uint64_t a, uint64_t b) {
+  uint64_t c = a + b;
   return c >= HASH_MOD ? c - HASH_MOD : c;
 }
 
-uint64 hash_sub(uint64 a, uint64 b) {
+uint64_t hash_sub(uint64_t a, uint64_t b) {
   return a >= b ? a - b : a + HASH_MOD - b;
 }
 
-uint64 hash_mul(uint64 a, uint64 b) {
-  __uint128_t p = (__uint128_t)a * b;
-  uint64 low = (uint64)p & HASH_MOD;
-  uint64 high = (uint64)(p >> 61);
-  uint64 res = low + high;
-  if (res >= HASH_MOD) {
-    res -= HASH_MOD;
+uint64_t hash_mul(uint64_t a, uint64_t b) {
+#if defined(__SIZEOF_INT128__)
+  __uint128_t p = static_cast<__uint128_t>(a) * b;
+  uint64_t low = static_cast<uint64_t>(p) & HASH_MOD;
+  uint64_t high = static_cast<uint64_t>(p >> 61);
+  return hash_add(low, high);
+#else
+  // Portable fallback when no 128-bit type exists: double-and-add modular multiply.
+  uint64_t res = 0;
+  for (a %= HASH_MOD; b > 0; b >>= 1) {
+    if (b & 1) {
+      res = hash_add(res, a);
+    }
+    a = hash_add(a, a);
   }
   return res;
+#endif
 }
 
-uint64 hash_mix(uint64 x) {
+uint64_t hash_mix(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -782,13 +788,13 @@ template<class T>
 struct RollingValueHasher {
   // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
   // hash is invisible and enables trivial collisions.
-  uint64 operator()(const T &x) const { return hash_mix((uint64)x) % (HASH_MOD - 1) + 1; }
+  uint64_t operator()(const T &x) const { return hash_mix((uint64_t)x) % (HASH_MOD - 1) + 1; }
 };
 
 template<class T, class ValueHasher = RollingValueHasher<T>>
 class RollingHash {
-  static std::vector<uint64> pow_base;
-  std::vector<uint64> pref;
+  static std::vector<uint64_t> pow_base;
+  std::vector<uint64_t> pref;
   ValueHasher value_hasher;
 
   static void ensure_powers(int n) {
@@ -804,7 +810,7 @@ class RollingHash {
     for (; first != last; ++first) {
       pref.push_back(hash_add(hash_mul(pref.back(), HASH_BASE), value_hasher(*first)));
     }
-    ensure_powers(pref.size() - 1);
+    ensure_powers(static_cast<int>(pref.size()) - 1);
   }
 
  public:
@@ -825,29 +831,29 @@ class RollingHash {
 
   int size() const { return static_cast<int>(pref.size()) - 1; }
 
-  uint64 get(int lo, int hi) const {
+  uint64_t get(int lo, int hi) const {
     return hash_sub(pref[hi], hash_mul(pref[lo], pow_base[hi - lo]));
   }
 
   template<class It>
-  static uint64 hash(It first, It last, const ValueHasher &hasher = ValueHasher()) {
+  static uint64_t hash(It first, It last, const ValueHasher &hasher = ValueHasher()) {
     RollingHash<T, ValueHasher> h(first, last, hasher);
     return h.get(0, h.size());
   }
 
-  static uint64 hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher()) {
+  static uint64_t hash(const std::vector<T> &v, const ValueHasher &hasher = ValueHasher()) {
     RollingHash<T, ValueHasher> h(v, hasher);
     return h.get(0, h.size());
   }
 
-  static uint64 concat(uint64 left, uint64 right, int right_len) {
+  static uint64_t concat(uint64_t left, uint64_t right, int right_len) {
     ensure_powers(right_len);
     return hash_add(hash_mul(left, pow_base[right_len]), right);
   }
 };
 
 template<class T, class ValueHasher>
-std::vector<uint64> RollingHash<T, ValueHasher>::pow_base(1, 1);
+std::vector<uint64_t> RollingHash<T, ValueHasher>::pow_base(1, 1);
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -855,11 +861,15 @@ std::vector<uint64> RollingHash<T, ValueHasher>::pow_base(1, 1);
 #include <cassert>
 using namespace std;
 
-using point = pair<int, int>;
+using PointI = pair<int, int>;
 
 struct PointHasher {
-  uint64 operator()(const point &p) const {
-    return hash_mix((uint64)p.first * 1000003ULL + (uint64)p.second) % (HASH_MOD - 1) + 1;
+  uint64_t operator()(const PointI &p) const {
+    // Pack the two 32-bit coordinates losslessly into one 64-bit key before mixing, so distinct
+    // points never collide pre-mix (a small-multiplier combine like a * C + b would).
+    uint64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(p.first)) << 32) |
+                   static_cast<uint32_t>(p.second);
+    return hash_mix(key) % (HASH_MOD - 1) + 1;
   }
 };
 
@@ -870,7 +880,7 @@ int main() {
   assert(hs.get(0, 4) != hs.get(3, 7));   // "abra" != "acad"
 
   string a = "abc", b = "def";
-  uint64 ab = RollingHash<char>::concat(
+  uint64_t ab = RollingHash<char>::concat(
       RollingHash<char>::hash(a.begin(), a.end()), RollingHash<char>::hash(b.begin(), b.end()),
       b.size()
   );
@@ -887,9 +897,9 @@ int main() {
   assert(hv.get(0, 2) == hv.get(3, 5));  // [1, 2] == [1, 2]
   assert(hv.get(0, 3) == RollingHash<int>::hash(v.begin(), v.begin() + 3));
 
-  vector<point> poly{{1, 2}, {3, 4}};
-  RollingHash<point, PointHasher> hp(poly);
-  assert((hp.get(0, 2) == RollingHash<point, PointHasher>::hash(poly)));
+  vector<PointI> poly{{1, 2}, {3, 4}};
+  RollingHash<PointI, PointHasher> hp(poly);
+  assert((hp.get(0, 2) == RollingHash<PointI, PointHasher>::hash(poly)));
   return 0;
 }
 \end{lstlisting}
@@ -920,18 +930,17 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-using uint64 = unsigned long long;
-
 template<class T>
 class ZobristHash {
-  std::unordered_map<T, uint64> token;
-  uint64 state;
+  std::unordered_map<T, uint64_t> token;
+  uint64_t state;
 
-  static uint64 splitmix64(uint64 x) {
+  static uint64_t splitmix64(uint64_t x) {
     x += 0x9e3779b97f4a7c15ULL;
     x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
     x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -939,9 +948,9 @@ class ZobristHash {
   }
 
  public:
-  explicit ZobristHash(uint64 seed = 0) : state(seed) {}
+  explicit ZobristHash(uint64_t seed = 0) : state(seed) {}
 
-  uint64 get(const T &x) {
+  uint64_t get(const T &x) {
     if (auto it = token.find(x); it != token.end()) {
       return it->second;
     }
@@ -950,13 +959,13 @@ class ZobristHash {
     return state;
   }
 
-  uint64 toggle(uint64 h, const T &x) { return h ^ get(x); }
+  uint64_t toggle(uint64_t h, const T &x) { return h ^ get(x); }
 
   template<class It>
-  std::vector<uint64> distinct_prefix_hashes(It lo, It hi) {
+  std::vector<uint64_t> distinct_prefix_hashes(It lo, It hi) {
     std::unordered_set<T> seen;
-    std::vector<uint64> res(1, 0);
-    uint64 h = 0;
+    std::vector<uint64_t> res(1, 0);
+    uint64_t h = 0;
     for (It it = lo; it != hi; ++it) {
       if (seen.insert(*it).second) {
         h ^= get(*it);
@@ -977,13 +986,13 @@ int main() {
   vector<int> a{1, 2, 1, 3};
   vector<int> b{2, 1, 3};
   ZobristHash<int> zh(123);
-  vector<uint64> pa = zh.distinct_prefix_hashes(a.begin(), a.end());
-  vector<uint64> pb = zh.distinct_prefix_hashes(b.begin(), b.end());
+  vector<uint64_t> pa = zh.distinct_prefix_hashes(a.begin(), a.end());
+  vector<uint64_t> pb = zh.distinct_prefix_hashes(b.begin(), b.end());
 
   assert(pa[2] == pb[2]);  // Distinct sets {1, 2} and {2, 1}.
   assert(pa[4] == pb[3]);  // Distinct sets {1, 2, 3} and {2, 1, 3}.
 
-  uint64 h = 0;
+  uint64_t h = 0;
   h = zh.toggle(h, 5);
   assert(h != 0);
   h = zh.toggle(h, 5);
@@ -1040,7 +1049,7 @@ class KMP {
   }
 
   size_t find_in(const string &haystack) {
-    int m = needle.size();
+    int m = static_cast<int>(needle.size());
     if (m == 0) {
       return 0;
     }
@@ -1203,7 +1212,7 @@ class AhoCorasick {
   explicit AhoCorasick(const std::vector<string> &needles) : needles(needles) {
     int total_len = 0;
     for (const auto &needle : needles) {
-      total_len += needle.size();
+      total_len += static_cast<int>(needle.size());
     }
     // The trie has at most total_len + 1 states: the root plus one per character when no prefixes
     // are shared. Sizing to total_len alone overflows for low-sharing needle sets (e.g. a single
@@ -1327,6 +1336,7 @@ For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \in
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <string>
 #include <vector>
 using std::string;
@@ -1389,8 +1399,8 @@ class Manacher {
     return s.substr(best_l, best_len);
   }
 
-  long long count_palindromes() const {
-    long long res = 0;
+  int64_t count_palindromes() const {
+    int64_t res = 0;
     for (int i = 0; i < static_cast<int>(s.size()); i++) {
       res += odd[i] + even[i];
     }
@@ -3236,6 +3246,7 @@ Each state represents an equivalence class of substrings with the same set of en
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -3262,11 +3273,10 @@ class SuffixAutomaton {
   }
 
   void extend(char c) {
-    int cur = st.size();
+    int cur = static_cast<int>(st.size());
     st.emplace_back();
     st[cur].len = st[last].len + 1;
     st[cur].first_pos = st[cur].len - 1;
-
     int p = last;
     while (p != -1 && st[p].next.find(c) == st[p].next.end()) {
       st[p].next[c] = cur;
@@ -3279,7 +3289,7 @@ class SuffixAutomaton {
       if (st[p].len + 1 == st[q].len) {
         st[cur].link = q;
       } else {
-        int clone = st.size();
+        int clone = static_cast<int>(st.size());
         st.push_back(st[q]);
         st[clone].len = st[p].len + 1;
         while (p != -1 && st[p].next[c] == q) {
@@ -3319,8 +3329,8 @@ class SuffixAutomaton {
     return st[v].first_pos - static_cast<int>(t.size()) + 1;
   }
 
-  long long count_distinct_substrings() const {
-    long long res = 0;
+  int64_t count_distinct_substrings() const {
+    int64_t res = 0;
     for (int v = 1; v < static_cast<int>(st.size()); v++) {
       res += st[v].len - st[st[v].link].len;
     }
@@ -3448,7 +3458,7 @@ class Eertree {
 
   bool add(char c) {
     s += c;
-    int pos = s.size() - 1;
+    int pos = static_cast<int>(s.size()) - 1;
     int cur = get_suffix(last, pos, c);
     auto it = tree[cur].next.find(c);
     if (it != tree[cur].next.end()) {
@@ -3456,12 +3466,10 @@ class Eertree {
       tree[last].occ++;
       return false;
     }
-
-    last = tree.size();
+    last = static_cast<int>(tree.size());
     tree.emplace_back(tree[cur].len + 2);
     tree[last].occ = 1;
     tree[cur].next[c] = last;
-
     if (tree[last].len == 1) {
       tree[last].link = 1;
       return true;
@@ -3839,7 +3847,7 @@ class HuffmanTree {
     if (pq.empty()) {
       return;
     }
-    while (pq.size() > 1) {
+    while (static_cast<int>(pq.size()) > 1) {
       int a = pq.top();
       pq.pop();
       int b = pq.top();

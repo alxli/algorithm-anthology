@@ -35,7 +35,7 @@ int mex(const std::vector<int> &values) {
       return i;
     }
   }
-  return seen.size();
+  return static_cast<int>(seen.size());
 }
 
 std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> &moves) {

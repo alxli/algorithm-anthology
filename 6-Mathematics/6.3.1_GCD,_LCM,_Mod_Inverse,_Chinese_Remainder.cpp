@@ -3,12 +3,14 @@
 Common number theory operations relating to modular arithmetic.
 
 - `gcd(a, b)` and `gcd2(a, b)` both return the greatest common divisor of `a` and `b` using the
-  Euclidean algorithm.
-- `lcm(a, b)` returns the lowest common multiple of `a` and `b`.
+  Euclidean algorithm. The implementations are mainly for educational purposes, as `std::gcd(a, b)`
+  from `<numeric>` is available as of C++17 (`__gcd(a, b)` from `<algorithm>` in C++14 and earlier).
+- `lcm(a, b)` returns the lowest common multiple of `a` and `b`. This implemention is mainly for
+  educational purposes, as `std::lcm(a, b)` from `<numeric>` is available as of C++17.
 - `extended_euclid(a, b)` and `extended_euclid2(a, b)` both return a pair $(x, y)$ of integers such
   that $\gcd(a, b) = ax + by$.
 - `mod(a, b)` returns the value of `a` mod `b` under the true Euclidean definition of modulo, that
-  is, the smallest nonnegative integer $m$ satisfying $a + b*n = m$ for some integer $n$. Note that
+  is, the smallest nonnegative integer $m$ satisfying $a + bn = m$ for some integer $n$. Note that
   this is identical to the remainder operator `%` in C++ for nonnegative operands `a` and `b`, but
   the result will differ when an operand is negative.
 - `mod_inverse(a, m)` and `mod_inverse2(a, m)` both return an integer $x$ such that
@@ -37,6 +39,7 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <cstdlib>
 #include <utility>
 #include <vector>
@@ -53,7 +56,7 @@ Int gcd(Int a, Int b) {
 
 template<class Int>
 Int gcd2(Int a, Int b) {
-  return (b == 0) ? (a < 0 ? -a : a) : gcd(b, a % b);
+  return (b == 0) ? (a < 0 ? -a : a) : gcd2(b, a % b);
 }
 
 template<class Int>
@@ -115,9 +118,9 @@ std::vector<int> generate_inverse(int p) {
   return res;
 }
 
-long long simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
+int64_t simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
   int n = static_cast<int>(a.size());
-  long long res = 0, m = 1;
+  int64_t res = 0, m = 1;
   for (int i = 0; i < n; i++) {
     while (res % p[i] != a[i]) {
       res += m;
@@ -127,20 +130,19 @@ long long simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
   return res;
 }
 
-long long garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
+int64_t garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
   int n = static_cast<int>(a.size());
   if (n == 0) {
     return 0;
   }
-  std::vector<long long> x(a.begin(), a.end());
+  std::vector<int64_t> x(a.begin(), a.end());
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
-      x[i] =
-          mod_inverse(static_cast<long long>(p[j]), static_cast<long long>(p[i])) * (x[i] - x[j]);
+      x[i] = mod_inverse(static_cast<int64_t>(p[j]), static_cast<int64_t>(p[i])) * (x[i] - x[j]);
     }
     x[i] = (x[i] % p[i] + p[i]) % p[i];
   }
-  long long res = x[0], m = 1;
+  int64_t res = x[0], m = 1;
   for (int i = 1; i < n; i++) {
     m *= p[i - 1];
     res += x[i] * m;

@@ -17,12 +17,12 @@ the `parallel()` or `perpendicular()` line through a point.
 
 Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in
 `is_parallel()`/`is_perpendicular()` and `a*p.x + b*p.y` in `contains()`), which grow like the
-squared coordinate magnitude. For integral type `T`, use `LineL` (`line<long long>`) once
+squared coordinate magnitude. For integral type `T`, use `LineL` (`line<int64_t>`) once
 coordinates exceed ~46000, or the 32-bit products overflow.
 
 Type aliases:
 - `LineI = line<int>`: exact integer-coefficient lines (small values only; see overflow warning)
-- `LineL = line<long long>`: exact integer-coefficient lines for large coordinates
+- `LineL = line<int64_t>`: exact integer-coefficient lines for large coordinates
 - `LineD = line<double>`: standard floating-point
 - `LineLD = line<long double>`: extra precision
 - `Line = LineD`: default line type is double
@@ -37,6 +37,7 @@ Space Complexity:
 */
 
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <ostream>
 #include <type_traits>
@@ -125,14 +126,16 @@ struct line {
   }
 
   friend std::ostream &operator<<(std::ostream &out, const line &l) {
-    auto clean = [](T v) -> double { return fabs((double)v) < EPS ? 0 : (double)v; };
+    auto clean = [](T v) -> double {
+      return fabs(static_cast<double>(v)) < EPS ? 0 : static_cast<double>(v);
+    };
     return out << clean(l.a) << "x" << std::showpos << clean(l.b) << "y" << clean(l.c) << "=0"
                << std::noshowpos;
   }
 };
 
 using LineI = line<int>;
-using LineL = line<long long>;
+using LineL = line<int64_t>;
 using LineD = line<double>;
 using LineLD = line<long double>;
 using Line = LineD;  // Default line type is double.

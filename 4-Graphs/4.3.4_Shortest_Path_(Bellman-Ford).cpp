@@ -32,7 +32,7 @@ Space Complexity:
 
 */
 
-#include <climits>
+#include <cstdint>
 #include <stdexcept>
 #include <vector>
 
@@ -40,9 +40,9 @@ struct Edge {
   int u, v, w;
 };
 
-const long long INF = LLONG_MAX / 4;
+const int64_t INF = INT64_MAX / 4;
 std::vector<Edge> edges;
-std::vector<long long> dist;
+std::vector<int64_t> dist;
 std::vector<int> pred;
 
 void bellman_ford(int nodes, int start) {
@@ -91,13 +91,12 @@ void print_path(int dest) {
 }
 
 int main() {
-  int start = 0, dest = 2;
   edges.push_back(Edge{0, 1, 1});
   edges.push_back(Edge{1, 2, 2});
   edges.push_back(Edge{0, 2, 5});
+  int start = 0, dest = 2;
   bellman_ford(3, start);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
-       << endl;
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(dest);
   return 0;
 }

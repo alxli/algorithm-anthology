@@ -24,12 +24,13 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <vector>
 
-const long long MOD = 998244353;
+const int64_t MOD = 998244353;
 
-long long powmod(long long b, long long e, long long m) {
-  long long res = 1;
+int64_t powmod(int64_t b, int64_t e, int64_t m) {
+  int64_t res = 1;
   for (b %= m; e > 0; e >>= 1) {
     if (e & 1) {
       res = res * b % m;
@@ -39,14 +40,14 @@ long long powmod(long long b, long long e, long long m) {
   return res;
 }
 
-std::vector<long long> berlekamp_massey(const std::vector<long long> &s) {
+std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
   int n = static_cast<int>(s.size()), len = 0, m = 0;
-  std::vector<long long> cur(n), last(n), prev;
+  std::vector<int64_t> cur(n), last(n), prev;
   cur[0] = last[0] = 1;
-  long long last_delta = 1;
+  int64_t last_delta = 1;
   for (int i = 0; i < n; i++) {
     m++;
-    long long delta = s[i] % MOD;
+    int64_t delta = s[i] % MOD;
     for (int j = 1; j <= len; j++) {
       delta = (delta + cur[j] * (s[i - j] % MOD)) % MOD;
     }
@@ -54,7 +55,7 @@ std::vector<long long> berlekamp_massey(const std::vector<long long> &s) {
       continue;
     }
     prev = cur;
-    long long coef = delta * powmod(last_delta, MOD - 2, MOD) % MOD;
+    int64_t coef = delta * powmod(last_delta, MOD - 2, MOD) % MOD;
     for (int j = m; j < n; j++) {
       cur[j] = (cur[j] - coef * last[j - m] % MOD + MOD) % MOD;
     }
@@ -68,7 +69,7 @@ std::vector<long long> berlekamp_massey(const std::vector<long long> &s) {
   }
   cur.resize(len + 1);
   cur.erase(cur.begin());
-  for (long long &x : cur) {
+  for (int64_t &x : cur) {
     x = (MOD - x) % MOD;
   }
   return cur;
@@ -81,15 +82,15 @@ using namespace std;
 
 int main() {
   // Fibonacci: s[i] = s[i-1] + s[i-2].
-  vector<long long> fib{1, 1, 2, 3, 5, 8, 13, 21};
-  assert((berlekamp_massey(fib) == vector<long long>{1, 1}));
+  vector<int64_t> fib{1, 1, 2, 3, 5, 8, 13, 21};
+  assert((berlekamp_massey(fib) == vector<int64_t>{1, 1}));
 
   // Geometric: s[i] = 2 * s[i-1].
-  vector<long long> geo{1, 2, 4, 8, 16, 32};
-  assert((berlekamp_massey(geo) == vector<long long>{2}));
+  vector<int64_t> geo{1, 2, 4, 8, 16, 32};
+  assert((berlekamp_massey(geo) == vector<int64_t>{2}));
 
   // Tribonacci: s[i] = s[i-1] + s[i-2] + s[i-3].
-  vector<long long> trib{0, 1, 1, 2, 4, 7, 13, 24, 44};
-  assert((berlekamp_massey(trib) == vector<long long>{1, 1, 1}));
+  vector<int64_t> trib{0, 1, 1, 2, 4, 7, 13, 24, 44};
+  assert((berlekamp_massey(trib) == vector<int64_t>{1, 1, 1}));
   return 0;
 }

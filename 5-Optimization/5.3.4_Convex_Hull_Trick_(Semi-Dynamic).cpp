@@ -21,8 +21,8 @@ will be dominated by the sorting step.
 
 Overflow warning: `add_line()` compares intersections by cross-multiplying slope and intercept
 differences, a product on the order of the squared coefficient magnitude. For large `m`/`b` (roughly
-beyond $10^9$ with 64-bit `long long`), cast that comparison to `__int128`. `query()` only forms the
-single product `m * x`, which simply needs to fit in `long long`.
+beyond $10^9$ with `int64_t`), cast that comparison to `__int128`. `query()` only forms the
+single product `m * x`, which simply needs to fit in `int64_t`.
 
 Time Complexity:
 - O(n) for any interlaced sequence of `add_line()` and `query()` calls, where $n$ is the number of
@@ -36,14 +36,15 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <vector>
 
 struct SemiDynamicCHT {
-  std::vector<long long> M, B;
+  std::vector<int64_t> M, B;
   int ptr = 0;
 
-  void add_line(long long m, long long b) {
-    int len = M.size();
+  void add_line(int64_t m, int64_t b) {
+    int len = static_cast<int>(M.size());
     if (len > 0 && M.back() == m) {
       if (B.back() <= b) {
         return;
@@ -66,7 +67,7 @@ struct SemiDynamicCHT {
     B.push_back(b);
   }
 
-  long long query(long long x) {
+  int64_t query(int64_t x) {
     if (ptr >= static_cast<int>(M.size())) {
       ptr = static_cast<int>(M.size()) - 1;
     }

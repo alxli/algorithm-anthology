@@ -2,17 +2,17 @@
 
 Perform operations on arbitrary precision big integers internally represented as a vector of
 base-$10^9$ digits in little-endian order. Typical arithmetic operations involving mixed numeric
-primitives and strings are supported using templates and operator overloading, as long as at least
-one operand is a `BigInt` at any given level of evaluation.
+primitives and strings are supported through implicit construction and hidden friend operators, as
+long as at least one operand is a `BigInt` at any given level of evaluation.
 
-- `BigInt(n)` constructs a big integer from a long long (default: 0).
+- `BigInt(n)` constructs a big integer from an integer `n` (default: 0).
 - `BigInt(s)` constructs a big integer from a C string or an `std::string` `s`.
 - `operator=` is defined to copy from another big integer or to assign from a 64-bit integer
   primitive.
 - `size()` returns the number of digits in the base-10 representation.
 - Operators `>>` and `<<` are defined to support stream-based input and output.
 - `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the big integer `v`
-  converted to an `std::string`, `long long`, `double`, and `long double` respectively. For the
+  converted to an `std::string`, `int64_t`, `double`, and `long double` respectively. For the
   latter three data types, overflow behavior is based on that of inputting from `std::istream`.
 - `v.abs()` returns the absolute value of big integer `v`.
 - `a.comp(b)` returns $-1$, $0$, or $1$ depending on whether the big integers `a` and `b` compare
@@ -59,6 +59,7 @@ Space Complexity:
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <iomanip>
@@ -75,7 +76,7 @@ class BigInt {
   static const bool USE_FFT_MULT = true;
 
   using vint = std::vector<int>;
-  using vll = std::vector<long long>;
+  using vint64 = std::vector<int64_t>;
   using vcd = std::vector<std::complex<double>>;
 
   vint digits;
@@ -170,13 +171,13 @@ class BigInt {
   }
 
   static vint convert_base(const vint &digits, int l1, int l2) {
-    vll p(std::max(l1, l2) + 1);
+    vint64 p(std::max(l1, l2) + 1);
     p[0] = 1;
     for (int i = 1; i < static_cast<int>(p.size()); i++) {
       p[i] = p[i - 1] * 10;
     }
     vint res;
-    long long curr = 0;
+    int64_t curr = 0;
     for (int i = 0, curr_digits = 0; i < static_cast<int>(digits.size()); i++) {
       curr += digits[i] * p[curr_digits];
       curr_digits += l1;
@@ -194,9 +195,9 @@ class BigInt {
   }
 
   template<class It>
-  static vll karatsuba(It alo, It ahi, It blo, It bhi) {
+  static vint64 karatsuba(It alo, It ahi, It blo, It bhi) {
     int n = std::distance(alo, ahi), k = n / 2;
-    vll res(n * 2);
+    vint64 res(n * 2);
     if (n <= 32) {
       for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
@@ -207,7 +208,7 @@ class BigInt {
     }
     auto a1b1 = karatsuba(alo, alo + k, blo, blo + k);
     auto a2b2 = karatsuba(alo + k, ahi, blo + k, bhi);
-    vll a2(alo + k, ahi), b2(blo + k, bhi);
+    vint64 a2(alo + k, ahi), b2(blo + k, bhi);
     for (int i = 0; i < k; i++) {
       a2[i] += alo[i];
       b2[i] += blo[i];
@@ -273,8 +274,8 @@ class BigInt {
 
  public:
   BigInt() : sign(1) {}
-  BigInt(int v) { *this = static_cast<long long>(v); }
-  BigInt(long long v) { *this = v; }
+  BigInt(int v) { *this = static_cast<int64_t>(v); }
+  BigInt(int64_t v) { *this = v; }
   BigInt(const char *s) { read(strlen(s), s); }
   BigInt(const std::string &s) { read(s.size(), s.c_str()); }
 
@@ -284,7 +285,7 @@ class BigInt {
     return *this;
   }
 
-  BigInt &operator=(long long v) {
+  BigInt &operator=(int64_t v) {
     sign = 1;
     if (v < 0) {
       sign = -1;
@@ -336,8 +337,8 @@ class BigInt {
     return oss.str();
   }
 
-  long long to_llong() const {
-    long long res = 0;
+  int64_t to_llong() const {
+    int64_t res = 0;
     for (int i = static_cast<int>(digits.size()) - 1; i >= 0; i--) {
       res = res * BASE + digits[i];
     }
@@ -359,26 +360,28 @@ class BigInt {
   }
 
   int comp(const BigInt &v) const { return comp(digits, v.digits, sign, v.sign); }
-  bool operator<(const BigInt &v) const { return comp(v) < 0; }
-  bool operator>(const BigInt &v) const { return comp(v) > 0; }
-  bool operator<=(const BigInt &v) const { return comp(v) <= 0; }
-  bool operator>=(const BigInt &v) const { return comp(v) >= 0; }
-  bool operator==(const BigInt &v) const { return comp(v) == 0; }
-  bool operator!=(const BigInt &v) const { return comp(v) != 0; }
 
+  // The comparison and binary arithmetic operators are hidden friends, so a raw integer operand on
+  // either side converts through the implicit constructor.
   // clang-format off
-  template<class T> friend bool operator<(const T &a, const BigInt &b) { return BigInt(a) < b; }
-  template<class T> friend bool operator>(const T &a, const BigInt &b) { return BigInt(a) > b; }
-  template<class T> friend bool operator<=(const T &a, const BigInt &b) { return BigInt(a) <= b; }
-  template<class T> friend bool operator>=(const T &a, const BigInt &b) { return BigInt(a) >= b; }
-  template<class T> friend bool operator==(const T &a, const BigInt &b) { return BigInt(a) == b; }
-  template<class T> friend bool operator!=(const T &a, const BigInt &b) { return BigInt(a) != b; }
+  friend bool operator<(const BigInt &a, const BigInt &b) { return a.comp(b) < 0; }
+  friend bool operator>(const BigInt &a, const BigInt &b) { return a.comp(b) > 0; }
+  friend bool operator<=(const BigInt &a, const BigInt &b) { return a.comp(b) <= 0; }
+  friend bool operator>=(const BigInt &a, const BigInt &b) { return a.comp(b) >= 0; }
+  friend bool operator==(const BigInt &a, const BigInt &b) { return a.comp(b) == 0; }
+  friend bool operator!=(const BigInt &a, const BigInt &b) { return a.comp(b) != 0; }
 
   BigInt abs() const { BigInt res(*this); res.sign = 1; return res; }
   BigInt operator-() const { BigInt res(*this); res.sign = -sign; return res; }
-  BigInt operator+(const BigInt &v) const { return add(digits, v.digits, sign, v.sign); }
-  BigInt operator-(const BigInt &v) const { return sub(digits, v.digits, sign, v.sign); }
   // clang-format on
+
+  friend BigInt operator+(const BigInt &a, const BigInt &b) {
+    return add(a.digits, b.digits, a.sign, b.sign);
+  }
+
+  friend BigInt operator-(const BigInt &a, const BigInt &b) {
+    return sub(a.digits, b.digits, a.sign, b.sign);
+  }
 
   void operator*=(int v) {
     if (v < 0) {
@@ -389,7 +392,7 @@ class BigInt {
       if (i == static_cast<int>(digits.size())) {
         digits.push_back(0);
       }
-      long long curr = digits[i] * static_cast<long long>(v) + carry;
+      int64_t curr = digits[i] * static_cast<int64_t>(v) + carry;
       carry = static_cast<int>((curr / BASE));
       digits[i] = static_cast<int>((curr % BASE));
     }
@@ -402,9 +405,9 @@ class BigInt {
     return res;
   }
 
-  BigInt operator*(const BigInt &v) const {
+  friend BigInt operator*(const BigInt &u, const BigInt &v) {
     static const int TEMP_BASE = 10000, TEMP_BASE_DIGITS = 4;
-    vint a = convert_base(digits, BASE_DIGITS, TEMP_BASE_DIGITS);
+    vint a = convert_base(u.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
     vint b = convert_base(v.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
     int n = 1;
     while (n < 2 * static_cast<int>(std::max(a.size(), b.size()))) {
@@ -412,7 +415,7 @@ class BigInt {
     }
     a.resize(n, 0);
     b.resize(n, 0);
-    vll c;
+    vint64 c;
     if (USE_FFT_MULT) {
       auto at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
       for (int i = 0; i < n; i++) {
@@ -427,9 +430,9 @@ class BigInt {
       c = karatsuba(a.begin(), a.end(), b.begin(), b.end());
     }
     BigInt res;
-    res.sign = sign * v.sign;
+    res.sign = u.sign * v.sign;
     for (int i = 0, carry = 0; i < static_cast<int>(c.size()); i++) {
-      long long d = c[i] + carry;
+      int64_t d = c[i] + carry;
       res.digits.push_back(d % TEMP_BASE);
       carry = d / TEMP_BASE;
     }
@@ -447,7 +450,7 @@ class BigInt {
       v = -v;
     }
     for (int i = static_cast<int>(digits.size()) - 1, rem = 0; i >= 0; i--) {
-      long long curr = digits[i] + rem * static_cast<long long>(BASE);
+      int64_t curr = digits[i] + rem * static_cast<int64_t>(BASE);
       digits[i] = static_cast<int>((curr / v));
       rem = static_cast<int>((curr % v));
     }
@@ -470,7 +473,7 @@ class BigInt {
     }
     int m = 0;
     for (int i = static_cast<int>(digits.size()) - 1; i >= 0; i--) {
-      m = (digits[i] + m * static_cast<long long>(BASE)) % v;
+      m = (digits[i] + m * static_cast<int64_t>(BASE)) % v;
     }
     return m * sign;
   }
@@ -490,7 +493,7 @@ class BigInt {
       r += an.digits[i];
       int s1 = (r.digits.size() <= bn.digits.size()) ? 0 : r.digits[bn.digits.size()];
       int s2 = (r.digits.size() <= bn.digits.size() - 1) ? 0 : r.digits[bn.digits.size() - 1];
-      int d = (static_cast<long long>(s1) * BASE + s2) / bn.digits.back();
+      int d = (static_cast<int64_t>(s1) * BASE + s2) / bn.digits.back();
       for (r -= bn * d; r < 0; r += bn) {
         d--;
       }
@@ -504,8 +507,8 @@ class BigInt {
   }
 
   // clang-format off
-  BigInt operator/(const BigInt &v) const { return div(v).first; }
-  BigInt operator%(const BigInt &v) const { return div(v).second; }
+  friend BigInt operator/(const BigInt &a, const BigInt &b) { return a.div(b).first; }
+  friend BigInt operator%(const BigInt &a, const BigInt &b) { return a.div(b).second; }
   BigInt operator++(int){ BigInt t(*this); operator++(); return t; }
   BigInt operator--(int){ BigInt t(*this); operator--(); return t; }
   BigInt &operator++() { *this = *this + BigInt(1); return *this; }
@@ -515,12 +518,6 @@ class BigInt {
   BigInt &operator*=(const BigInt &v) { *this = *this * v; return *this; }
   BigInt &operator/=(const BigInt &v) { *this = *this / v; return *this; }
   BigInt &operator%=(const BigInt &v) { *this = *this % v; return *this; }
-
-  template<class T>
-  friend BigInt operator+(const T &a, const BigInt &b) { return BigInt(a) + b; }
-  
-  template<class T>
-  friend BigInt operator-(const T &a, const BigInt &b) { return BigInt(a) - b; }
   // clang-format on
 
   BigInt pow(int n) const {
@@ -549,21 +546,23 @@ class BigInt {
       v.digits.push_back(0);
     }
     int n = static_cast<int>(v.digits.size());
-    int ldig = (int)::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
+    int ldig =
+        static_cast<int>(::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]));
     int norm = BASE / (ldig + 1);
     v *= norm;
     v *= norm;
     while (v.digits.empty() || v.digits.size() % 2 == 1) {
       v.digits.push_back(0);
     }
-    BigInt r(static_cast<long long>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
-    int q = ldig = (int)::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
+    BigInt r(static_cast<int64_t>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
+    int q = ldig =
+        static_cast<int>(::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]));
     BigInt res;
     for (int j = n / 2 - 1; j >= 0; j--) {
       for (;; q--) {
         BigInt r1 =
             (r - (res * 2 * BASE + q) * q) * BASE * BASE +
-            (j > 0 ? static_cast<long long>(v.digits[2 * j - 1]) * BASE + v.digits[2 * j - 2] : 0);
+            (j > 0 ? static_cast<int64_t>(v.digits[2 * j - 1]) * BASE + v.digits[2 * j - 2] : 0);
         if (r1 >= 0) {
           r = r1;
           break;
@@ -576,7 +575,7 @@ class BigInt {
         int d1 = (sz1 + 2 < sz2) ? r.digits[sz1 + 2] : 0;
         int d2 = (sz1 + 1 < sz2) ? r.digits[sz1 + 1] : 0;
         int d3 = (sz1 < sz2) ? r.digits[sz1] : 0;
-        q = (static_cast<long long>(d1) * BASE * BASE + static_cast<long long>(d2) * BASE + d3) /
+        q = (static_cast<int64_t>(d1) * BASE * BASE + static_cast<int64_t>(d2) * BASE + d3) /
             (ldig * 2);
       }
     }
@@ -642,6 +641,12 @@ int main() {
   assert(a - b == "-9912217419970436338");
   assert(a * b == "-122739196911503356525379735104870536");
   assert(a / b == "-798");
+
+  // Raw integers and strings work on either side of comparisons and arithmetic.
+  assert("12398124981294214" == b);
+  assert(5 + BigInt(7) == 12);
+  assert(-100 < b && 5 % BigInt(3) == 2);
+
   assert(BigInt(20).pow(12345).size() == 16062);
   assert(BigInt("9812985918924981892491829").nth_root(4) == 1769906);
   for (int i = -100; i <= 100; i++) {
@@ -656,8 +661,8 @@ int main() {
         assert(BigInt(i) / BigInt(j) == i / j);
       }
       if (0 < i && i <= 10 && 0 < j && j <= 10) {
-        assert(BigInt(i).nth_root(j) == static_cast<long long>((pow(i, 1.0 / j) + 1E-5)));
-        long long p = 1;
+        assert(BigInt(i).nth_root(j) == static_cast<int64_t>((pow(i, 1.0 / j) + 1E-5)));
+        int64_t p = 1;
         for (int k = 0; k < j; k++) {
           p *= i;
         }

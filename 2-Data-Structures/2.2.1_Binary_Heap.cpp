@@ -65,12 +65,12 @@ class BinaryHeap {
     }
   }
 
-  int size() const { return heap.size(); }
+  int size() const { return static_cast<int>(heap.size()); }
   bool empty() const { return heap.empty(); }
 
   void push(const T &v) {
     heap.push_back(v);
-    int i = heap.size() - 1;
+    int i = static_cast<int>(heap.size()) - 1;
     while (i > 0) {
       int parent = (i - 1) / 2;
       if (!(heap[i] < heap[parent])) {

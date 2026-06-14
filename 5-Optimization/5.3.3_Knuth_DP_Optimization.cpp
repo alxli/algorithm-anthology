@@ -23,15 +23,16 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 
-const long long INF = (1LL << 62);
+const int64_t INF = (1LL << 62);
 
 template<class Cost>
-std::vector<std::vector<long long>> knuth_interval_dp(
+std::vector<std::vector<int64_t>> knuth_interval_dp(
     int n, Cost cost, std::vector<std::vector<int>> *opt_out = nullptr
 ) {
-  std::vector<std::vector<long long>> dp(n + 1, std::vector<long long>(n + 1, 0));
+  std::vector<std::vector<int64_t>> dp(n + 1, std::vector<int64_t>(n + 1, 0));
   std::vector<std::vector<int>> opt(n + 1, std::vector<int>(n + 1, 0));
   for (int i = 0; i <= n; i++) {
     opt[i][i] = i;
@@ -46,7 +47,7 @@ std::vector<std::vector<long long>> knuth_interval_dp(
       int start = std::max(opt[l][r - 1], l + 1);
       int finish = std::min(opt[l + 1][r], r - 1);
       for (int k = start; k <= finish; k++) {
-        long long candidate = dp[l][k] + dp[k][r] + cost(l, r);
+        int64_t candidate = dp[l][k] + dp[k][r] + cost(l, r);
         if (candidate < dp[l][r]) {
           dp[l][r] = candidate;
           opt[l][r] = k;
@@ -66,7 +67,7 @@ std::vector<std::vector<long long>> knuth_interval_dp(
 using namespace std;
 
 struct MergeCost {
-  vector<long long> prefix;
+  vector<int64_t> prefix;
 
   explicit MergeCost(const vector<int> &a) : prefix(a.size() + 1) {
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
@@ -74,12 +75,12 @@ struct MergeCost {
     }
   }
 
-  long long operator()(int l, int r) const { return prefix[r] - prefix[l]; }
+  int64_t operator()(int l, int r) const { return prefix[r] - prefix[l]; }
 };
 
 int main() {
   vector<int> a{1, 2, 3, 4};
-  vector<vector<long long>> dp = knuth_interval_dp(a.size(), MergeCost(a));
+  vector<vector<int64_t>> dp = knuth_interval_dp(a.size(), MergeCost(a));
   assert(dp[0][4] == 19);
   return 0;
 }

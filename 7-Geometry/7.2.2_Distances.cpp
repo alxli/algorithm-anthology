@@ -46,12 +46,13 @@ auto sqdist(const Pt &a, const Pt &b) {
 
 template<class Pt>
 double dist(const Pt &a, const Pt &b) {
-  return sqrt((double)sqdist(a, b));
+  return sqrt(static_cast<double>(sqdist(a, b)));
 }
 
 template<class Pt, class T>
 double line_dist(const Pt &p, const T &a, const T &b, const T &c) {
-  return fabs((double)a * p.x + (double)b * p.y + c) / sqrt((double)a * a + (double)b * b);
+  return fabs(static_cast<double>(a) * p.x + static_cast<double>(b) * p.y + c) /
+         sqrt(static_cast<double>(a) * a + static_cast<double>(b) * b);
 }
 
 template<class Pt>
@@ -61,7 +62,7 @@ double line_dist(const Pt &p, const Pt &a, const Pt &b) {
   }
   auto n = sqdist(a, b);
   auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
-  double u = (double)d / n;
+  double u = static_cast<double>(d) / n;
   double dx = a.x + u * (b.x - a.x) - p.x, dy = a.y + u * (b.y - a.y) - p.y;
   return sqrt(dx * dx + dy * dy);
 }
@@ -69,9 +70,11 @@ double line_dist(const Pt &p, const Pt &a, const Pt &b) {
 template<class T>
 double line_dist(const T &a1, const T &b1, const T &c1, const T &a2, const T &b2, const T &c2) {
   if (EQ(a1 * b2, a2 * b1)) {
-    double factor = EQ(b1, 0) ? ((double)a1 / a2) : ((double)b1 / b2);
-    return EQ(c1, c2 * factor) ? 0
-                               : fabs(c2 * factor - c1) / sqrt((double)a1 * a1 + (double)b1 * b1);
+    double factor = EQ(b1, 0) ? (static_cast<double>(a1) / a2) : (static_cast<double>(b1) / b2);
+    return EQ(c1, c2 * factor)
+               ? 0
+               : fabs(c2 * factor - c1) /
+                     sqrt(static_cast<double>(a1) * a1 + static_cast<double>(b1) * b1);
   }
   return 0;
 }
@@ -89,7 +92,7 @@ double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
   if (GE(d, n)) {
     return dist(p, b);
   }
-  double t = (double)d / n;
+  double t = static_cast<double>(d) / n;
   double dx = a.x + t * (b.x - a.x) - p.x, dy = a.y + t * (b.y - a.y) - p.y;
   return sqrt(dx * dx + dy * dy);
 }
@@ -140,7 +143,7 @@ Pt closest_point(const Pt &a, const Pt &b, const Pt &p) {
   }
   auto n = sqdist(a, b);
   auto d = (p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y);
-  double t = (double)d / n;
+  double t = static_cast<double>(d) / n;
   if (t <= 0) {
     res.x = a.x;
     res.y = a.y;

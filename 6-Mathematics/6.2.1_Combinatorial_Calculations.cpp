@@ -39,9 +39,10 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <vector>
 
-using int64 = long long;
+using int64 = int64_t;
 using table = std::vector<std::vector<int64>>;
 
 int64 factorial(int n, int m = 1000000007) {

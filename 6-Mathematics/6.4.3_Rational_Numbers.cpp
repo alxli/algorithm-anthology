@@ -13,11 +13,12 @@ arithmetic cross-multiply numerators and denominators, so instantiate with a wid
 - `operator<<` outputs the rational number as a string consisting of possibly a minus sign followed
   by the numerator, followed by a slash, followed by the denominator.
 - `v.to_string()`, `v.to_llong()`, `v.to_double()`, and `v.to_ldouble()` return the rational `v`
-  converted to an `std::string`, `long long`, `double`, and `long double` respectively.
+  converted to an `std::string`, `int64_t`, `double`, and `long double` respectively.
 - `v.abs()`, `abs(v)`, `v.floor()`, and `v.ceil()` return the absolute value, floor, and ceiling of
   rational `v`.
 - Operators `<`, `>`, `<=`, `>=`, `==`, `!=`, `+`, `-`, `*`, `/`, `%`, `++`, `--`, `+=`, `-=`, `*=`,
-  `/=`, and `%=` are defined analogous to those on numerical primitives.
+  `/=`, and `%=` are defined analogous to those on numerical primitives. The comparisons and binary
+  arithmetic are hidden friends, so a raw integer operand works on either side.
 
 Time Complexity:
 - O(log(n + d)) per call to constructor `Rational(n, d)`.
@@ -30,12 +31,13 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <istream>
 #include <ostream>
 #include <sstream>
 #include <string>
 
-template<class Int = long long>
+template<class Int>
 class Rational {
   Int num, den;
 
@@ -82,10 +84,10 @@ class Rational {
 
   // to_llong/to_double/to_ldouble round-trip through a stringstream so that any Int supporting
   // streamed I/O (e.g. a big-integer type) converts, even without a direct cast to the target type.
-  long long to_llong() const {
+  int64_t to_llong() const {
     std::stringstream ss;
     ss << num << " " << den;
-    long long n, d;
+    int64_t n, d;
     ss >> n >> d;
     return n / d;
   }
@@ -106,31 +108,21 @@ class Rational {
     return n / d;
   }
 
-  bool operator<(const Rational &r) const { return num * r.den < r.num * den; }
-  bool operator>(const Rational &r) const { return r.num * den < num * r.den; }
-  bool operator<=(const Rational &r) const { return !(r < *this); }
-  bool operator>=(const Rational &r) const { return !(*this < r); }
-  bool operator==(const Rational &r) const { return num == r.num && den == r.den; }
-  bool operator!=(const Rational &r) const { return num != r.num || den != r.den; }
+  // The comparison and binary arithmetic operators are hidden friends, so a raw integer operand on
+  // either side converts through the implicit constructor.
+  friend bool operator<(const Rational &a, const Rational &b) {
+    return a.num * b.den < b.num * a.den;
+  }
+
+  friend bool operator==(const Rational &a, const Rational &b) {
+    return a.num == b.num && a.den == b.den;
+  }
 
   // clang-format off
-  template<class T>
-  friend bool operator<(const T &a, const Rational &b) { return Rational(a) < b; }
-
-  template<class T>
-  friend bool operator>(const T &a, const Rational &b) { return Rational(a) > b; }
-
-  template<class T>
-  friend bool operator<=(const T &a, const Rational &b) { return Rational(a) <= b; }
-
-  template<class T>
-  friend bool operator>=(const T &a, const Rational &b) { return Rational(a) >= b; }
-
-  template<class T>
-  friend bool operator==(const T &a, const Rational &b) { return Rational(a) == b; }
-
-  template<class T>
-  friend bool operator!=(const T &a, const Rational &b) { return Rational(a) != b; }
+  friend bool operator>(const Rational &a, const Rational &b) { return b < a; }
+  friend bool operator<=(const Rational &a, const Rational &b) { return !(b < a); }
+  friend bool operator>=(const Rational &a, const Rational &b) { return !(a < b); }
+  friend bool operator!=(const Rational &a, const Rational &b) { return !(a == b); }
   // clang-format on
 
   Rational abs() const { return Rational(num < 0 ? -num : num, den); }
@@ -138,19 +130,24 @@ class Rational {
   Int floor() const { return num < 0 ? -((-num + den - 1) / den) : num / den; }
   Int ceil() const { return num < 0 ? -(-num / den) : (num + den - 1) / den; }
 
-  Rational operator+(const Rational &r) const {
-    return Rational(num * r.den + r.num * den, den * r.den);
+  friend Rational operator+(const Rational &a, const Rational &b) {
+    return Rational(a.num * b.den + b.num * a.den, a.den * b.den);
   }
 
-  Rational operator-(const Rational &r) const {
-    return Rational(num * r.den - r.num * den, r.den * den);
+  friend Rational operator-(const Rational &a, const Rational &b) {
+    return Rational(a.num * b.den - b.num * a.den, a.den * b.den);
   }
 
-  Rational operator*(const Rational &r) const { return Rational(num * r.num, r.den * den); }
-  Rational operator/(const Rational &r) const { return Rational(num * r.den, den * r.num); }
+  friend Rational operator*(const Rational &a, const Rational &b) {
+    return Rational(a.num * b.num, a.den * b.den);
+  }
 
-  Rational operator%(const Rational &r) const {
-    return *this - r * Rational(num * r.den / (r.num * den), 1);
+  friend Rational operator/(const Rational &a, const Rational &b) {
+    return Rational(a.num * b.den, a.den * b.num);
+  }
+
+  friend Rational operator%(const Rational &a, const Rational &b) {
+    return a - b * Rational(a.num * b.den / (b.num * a.den), 1);
   }
 
   // clang-format off
@@ -164,21 +161,6 @@ class Rational {
   Rational &operator*=(const Rational &r) { *this = *this * r; return *this; }
   Rational &operator/=(const Rational &r) { *this = *this / r; return *this; }
   Rational &operator%=(const Rational &r) { *this = *this % r; return *this; }
-
-  template<class T>
-  friend Rational operator+(const T &a, const Rational &b) { return Rational(a) + b; }
-
-  template<class T>
-  friend Rational operator-(const T &a, const Rational &b) { return Rational(a) - b; }
-
-  template<class T>
-  friend Rational operator*(const T &a, const Rational &b) { return Rational(a) * b; }
-
-  template<class T>
-  friend Rational operator/(const T &a, const Rational &b) { return Rational(a) / b; }
-
-  template<class T>
-  friend Rational operator%(const T &a, const Rational &b) { return Rational(a) % b; }
   // clang-format on
 };
 
@@ -190,10 +172,15 @@ class Rational {
 #define EQ(a, b) (fabs((a) - (b)) <= 1e-9)
 
 int main() {
-  using Rational = Rational<long long>;
+  using Rational = Rational<int64_t>;
   assert(Rational(-21, 1) % 2 == -1);
   Rational r(Rational(-53, 10) % Rational(-17, 10));
   assert(EQ(r.to_ldouble(), fmod(-5.3, -1.7)));
   assert(r.to_string() == "-1/5");
+
+  // Raw integers work on either side of comparisons and arithmetic.
+  assert(2 + Rational(1, 2) == Rational(5, 2));
+  assert(1 < Rational(3, 2) && Rational(3, 2) < 2);
+  assert(2 % Rational(3, 4) == Rational(1, 2));
   return 0;
 }

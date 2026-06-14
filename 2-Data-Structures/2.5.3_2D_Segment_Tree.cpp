@@ -22,7 +22,7 @@ makes it preferable when queries may be thin, off-center, or adversarially place
 degrade to visiting O(R + C) boundary nodes for such rectangles. The trade-off is a larger tree and
 less benefit from queries that happen to align with big square quadrants.
 
-For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.7. A dense vector-backed
+For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.5. A dense vector-backed
 2D segment tree can be simpler and faster on modest grids with custom aggregates such as min/max,
 but it needs O(R*C) storage with large constants, so this sparse version is usually the safer
 codebook default.
@@ -48,6 +48,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 
 template<class T>
@@ -56,7 +57,7 @@ class SegTree2D {
   static const int C = 1000000000;
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
-  static T repeat_value(const T &v, long long area) { return v; }
+  static T repeat_value(const T &v, int64_t area) { return v; }
   static T apply_delta(const T &v, const T &d) { return d; }
 
   struct InnerNode {
@@ -81,13 +82,13 @@ class SegTree2D {
 
   // Helper variables for query() and update().
   int tgt_r1, tgt_c1, tgt_r2, tgt_c2;
-  long long width;
+  int64_t width;
 
-  static long long length(int lo, int hi) { return hi - lo + 1LL; }
+  static int64_t length(int lo, int hi) { return hi - lo + 1LL; }
 
   void append_result(std::optional<T> &res, const T &v) { res = res ? combine(*res, v) : v; }
 
-  T query(InnerNode *n, int qlo, int qhi, long long rows) {
+  T query(InnerNode *n, int qlo, int qhi, int64_t rows) {
     if (n == nullptr) {
       return repeat_value(init, rows * length(qlo, qhi));
     }
@@ -147,7 +148,7 @@ class SegTree2D {
     return *res;
   }
 
-  void update(InnerNode *n, int c, const T &d, bool leaf_row, long long rows) {
+  void update(InnerNode *n, int c, const T &d, bool leaf_row, int64_t rows) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
     if (lo == hi) {
       if (leaf_row) {
@@ -192,7 +193,7 @@ class SegTree2D {
 
   void update(OuterNode *n, int r, int c, const T &d) {
     int lo = n->low, hi = n->high, mid = lo + (hi - lo) / 2;
-    long long rows = length(lo, hi);
+    int64_t rows = length(lo, hi);
     if (lo == hi) {
       update(&(n->root), c, d, true, 1);
       return;

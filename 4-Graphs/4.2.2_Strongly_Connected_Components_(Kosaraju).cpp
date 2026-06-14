@@ -9,14 +9,16 @@ exactly one component.
 
 - `KosarajuSCC(n)` constructs a directed graph on nodes numbered from 0 to `n - 1`.
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.
-- `build_scc()` populates `scc` with the strongly connected components.
+- `build_scc()` populates `scc` with the strongly connected components and `component[v]` with
+  the component ID containing vertex `v`. Component IDs are in topological order: for every edge
+  from component `a` to a different component `b`, `a < b`.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_scc()`, where $n$ is the number of nodes and $m$ is the number of
   edges.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph, reverse graph, and SCCs.
+- O(max(n, m)) for storage of the graph, reverse graph, SCCs, and component IDs.
 - O(n) auxiliary stack space.
 
 */
@@ -26,6 +28,7 @@ Space Complexity:
 
 struct KosarajuSCC {
   std::vector<std::vector<int>> adj, rev, scc;
+  std::vector<int> component;
   std::vector<bool> visited;
 
   KosarajuSCC(int nodes = 0) : adj(nodes), rev(nodes) {}
@@ -45,8 +48,19 @@ struct KosarajuSCC {
     res.push_back(u);
   }
 
+  void dfs_component(int u, int id, std::vector<int> &res) {
+    visited[u] = true;
+    component[u] = id;
+    res.push_back(u);
+    for (int v : rev[u]) {
+      if (!visited[v]) {
+        dfs_component(v, id, res);
+      }
+    }
+  }
+
   void build_scc() {
-    int nodes = adj.size();
+    int nodes = static_cast<int>(adj.size());
     visited.assign(nodes, false);
     std::vector<int> order;
     for (int i = 0; i < nodes; i++) {
@@ -56,14 +70,15 @@ struct KosarajuSCC {
     }
     std::reverse(order.begin(), order.end());
     visited.assign(nodes, false);
+    component.assign(nodes, -1);
     scc.clear();
     for (int u : order) {
       if (visited[u]) {
         continue;
       }
-      std::vector<int> component;
-      dfs(rev, component, u);
-      scc.push_back(component);
+      std::vector<int> component_vertices;
+      dfs_component(u, static_cast<int>(scc.size()), component_vertices);
+      scc.push_back(component_vertices);
     }
   }
 };

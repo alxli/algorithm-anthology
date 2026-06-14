@@ -42,6 +42,7 @@ Space Complexity:
 */
 
 #include <cmath>
+#include <cstdint>
 #include <ostream>
 #include <type_traits>
 #include <utility>
@@ -187,8 +188,11 @@ struct point {
 
   // --- Explicit type conversions ---
 
-  point<double> to_double() const { return {(double)x, (double)y}; }
-  point<long double> to_ldouble() const { return {(long double)x, (long double)y}; }
+  point<double> to_double() const { return {static_cast<double>(x), static_cast<double>(y)}; }
+
+  point<long double> to_ldouble() const {
+    return {static_cast<long double>(x), static_cast<long double>(y)};
+  }
 
   // --- Friend free-function versions ---
 

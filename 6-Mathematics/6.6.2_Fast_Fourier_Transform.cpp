@@ -33,6 +33,7 @@ Space Complexity:
 
 #include <cmath>
 #include <complex>
+#include <cstdint>
 #include <vector>
 
 typedef std::complex<double> cd;
@@ -70,7 +71,7 @@ void fft(std::vector<cd> &a, bool invert) {
   }
 }
 
-std::vector<long long> convolve(const std::vector<long long> &a, const std::vector<long long> &b) {
+std::vector<int64_t> convolve(const std::vector<int64_t> &a, const std::vector<int64_t> &b) {
   if (a.empty() || b.empty()) {
     return {};
   }
@@ -88,7 +89,7 @@ std::vector<long long> convolve(const std::vector<long long> &a, const std::vect
     fa[i] *= fb[i];
   }
   fft(fa, true);
-  std::vector<long long> res(result_size);
+  std::vector<int64_t> res(result_size);
   for (int i = 0; i < result_size; i++) {
     res[i] = llround(fa[i].real());
   }
@@ -102,8 +103,8 @@ using namespace std;
 
 int main() {
   // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
-  vector<long long> a{1, 2, 3}, b{4, 5, 6};
-  vector<long long> c = convolve(a, b);
-  assert((c == vector<long long>{4, 13, 28, 27, 18}));
+  vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
+  vector<int64_t> c = convolve(a, b);
+  assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
   return 0;
 }

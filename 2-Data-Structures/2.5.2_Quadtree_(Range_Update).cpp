@@ -52,6 +52,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 
 template<class T>
 class LazyQuadtree {
@@ -59,8 +60,8 @@ class LazyQuadtree {
   static const int C = 1000000000;
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
-  static T repeat_value(const T &v, long long area) { return v; }
-  static T apply_delta(const T &v, const T &d, long long area) { return d; }
+  static T repeat_value(const T &v, int64_t area) { return v; }
+  static T apply_delta(const T &v, const T &d, int64_t area) { return d; }
   static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {
@@ -77,11 +78,11 @@ class LazyQuadtree {
 
   T init;
 
-  static long long area(int r1, int c1, int r2, int c2) {
-    return static_cast<long long>(r2 - r1 + 1) * (c2 - c1 + 1);
+  static int64_t area(int r1, int c1, int r2, int c2) {
+    return static_cast<int64_t>(r2 - r1 + 1) * (c2 - c1 + 1);
   }
 
-  void update_delta(Node *&n, const T &d, long long area) {
+  void update_delta(Node *&n, const T &d, int64_t area) {
     if (n == nullptr) {
       n = new Node(repeat_value(init, area));
     }
@@ -92,16 +93,16 @@ class LazyQuadtree {
   void push_delta(Node *n, int r1, int c1, int r2, int c2) {
     if (n->pending) {
       int rmid = r1 + (r2 - r1) / 2, cmid = c1 + (c2 - c1) / 2;
-      long long cur_area = area(r1, c1, r2, c2);
+      int64_t cur_area = area(r1, c1, r2, c2);
       n->value = apply_delta(n->value, n->delta, cur_area);
       if (cur_area > 1) {
         int rlen = r2 - r1 + 1, clen = c2 - c1 + 1;
         int rlen1 = rmid - r1 + 1, rlen2 = rlen - rlen1;
         int clen1 = cmid - c1 + 1, clen2 = clen - clen1;
-        update_delta(n->child[0], n->delta, static_cast<long long>(rlen1) * clen1);
-        update_delta(n->child[1], n->delta, static_cast<long long>(rlen2) * clen1);
-        update_delta(n->child[2], n->delta, static_cast<long long>(rlen1) * clen2);
-        update_delta(n->child[3], n->delta, static_cast<long long>(rlen2) * clen2);
+        update_delta(n->child[0], n->delta, static_cast<int64_t>(rlen1) * clen1);
+        update_delta(n->child[1], n->delta, static_cast<int64_t>(rlen2) * clen1);
+        update_delta(n->child[2], n->delta, static_cast<int64_t>(rlen1) * clen2);
+        update_delta(n->child[3], n->delta, static_cast<int64_t>(rlen2) * clen2);
       }
       n->pending = false;
     }
@@ -128,7 +129,7 @@ class LazyQuadtree {
     if (n == nullptr) {
       int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
       int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
-      append_result(repeat_value(init, static_cast<long long>(rlen) * clen));
+      append_result(repeat_value(init, static_cast<int64_t>(rlen) * clen));
       return;
     }
     push_delta(n, r1, c1, r2, c2);

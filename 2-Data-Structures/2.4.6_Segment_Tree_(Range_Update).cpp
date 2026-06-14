@@ -28,11 +28,16 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
 - `update(lo, hi, d)` modifies the value at each array index from `lo` to `hi`, inclusive, by
   applying the delta `d` to each value.
+- `find_first(lo, hi, pred)` returns the smallest index in `[lo, hi]` matching the search, or $-1$
+  if none, in O(log n). `pred(v)` takes a node aggregate and must be monotone: if it is false, no
+  element under that node qualifies (e.g. for the default min tree, `pred(v) = (v <= x)` finds the
+  leftmost element `<= x`).
+- `find_last(lo, hi, pred)` is the analogous query returning the largest such index.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
 - O(1) per call to `size()`.
-- O(log n) per call to `at()`, `update()`, and `query()`.
+- O(log n) per call to `at()`, `update()`, `query()`, `find_first()`, and `find_last()`.
 
 Space Complexity:
 - O(n) for storage of the array elements.
@@ -42,12 +47,13 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
 template<class T>
 class LazySegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
-  static T apply_delta(const T &v, const T &d, long long len) { return d; }
+  static T apply_delta(const T &v, const T &d, int64_t len) { return d; }
   static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   int len;
@@ -124,6 +130,34 @@ class LazySegTree {
     value[i] = combine(value[2 * i + 1], value[2 * i + 2]);
   }
 
+  template<class Pred>
+  int find_first(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) {
+    push_delta(i, lo, hi);
+    if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
+      return -1;
+    }
+    if (lo == hi) {
+      return lo;
+    }
+    int mid = lo + (hi - lo) / 2;
+    int res = find_first(i * 2 + 1, lo, mid, tgt_lo, tgt_hi, pred);
+    return res != -1 ? res : find_first(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi, pred);
+  }
+
+  template<class Pred>
+  int find_last(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) {
+    push_delta(i, lo, hi);
+    if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
+      return -1;
+    }
+    if (lo == hi) {
+      return lo;
+    }
+    int mid = lo + (hi - lo) / 2;
+    int res = find_last(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi, pred);
+    return res != -1 ? res : find_last(i * 2 + 1, lo, mid, tgt_lo, tgt_hi, pred);
+  }
+
  public:
   explicit LazySegTree(int n, const T &v = T())
       : len(n), value(4 * len), delta(4 * len), pending(4 * len, false) {
@@ -145,6 +179,16 @@ class LazySegTree {
   T query(int lo, int hi) { return query(0, 0, len - 1, lo, hi); }
   void update(int i, const T &d) { update(0, 0, len - 1, i, i, d); }
   void update(int lo, int hi, const T &d) { update(0, 0, len - 1, lo, hi, d); }
+
+  template<class Pred>
+  int find_first(int lo, int hi, const Pred &pred) {
+    return find_first(0, 0, len - 1, lo, hi, pred);
+  }
+
+  template<class Pred>
+  int find_last(int lo, int hi, const Pred &pred) {
+    return find_last(0, 0, len - 1, lo, hi, pred);
+  }
 };
 
 /*** Example Usage and Output:
@@ -177,5 +221,11 @@ int main() {
   }
   cout << endl;
   assert(t.query(0, 3) == 1);
+
+  // Segment-tree descent works through lazy updates too; values are now {5, 5, 5, 1, 5}.
+  auto at_most_1 = [](int v) { return v <= 1; };
+  assert(t.find_first(0, 4, at_most_1) == 3);  // only index 3 (value 1) qualifies
+  assert(t.find_last(0, 4, at_most_1) == 3);
+  assert(t.find_first(0, 2, at_most_1) == -1);  // no value <= 1 in [0, 2]
   return 0;
 }

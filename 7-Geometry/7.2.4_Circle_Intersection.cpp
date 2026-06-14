@@ -78,7 +78,7 @@ struct Line {
         c = -px;
       }  // Else, invalid line.
     } else {
-      a = -(double)(py - qy) / (px - qx);
+      a = -static_cast<double>(py - qy) / (px - qx);
       b = 1;
       c = -(a * px) - (b * py);
     }

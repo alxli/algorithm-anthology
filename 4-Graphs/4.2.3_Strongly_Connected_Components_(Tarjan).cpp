@@ -9,14 +9,16 @@ is popped off the stack in one piece.
 
 - `TarjanSCC(n)` constructs a directed graph on nodes numbered from 0 to `n - 1`.
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.
-- `build_scc()` populates `scc` with the strongly connected components.
+- `build_scc()` populates `scc` with the strongly connected components and `component[v]` with
+  the component ID containing vertex `v`. Component IDs are in reverse topological order: for every
+  edge from component `a` to a different component `b`, `a > b`.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_scc()`, where $n$ is the number of nodes and $m$ is the number of
   edges.
 
 Space Complexity:
-- O(max(n, m)) for storage of the graph and SCCs.
+- O(max(n, m)) for storage of the graph, SCCs, and component IDs.
 - O(n) auxiliary stack space.
 
 */
@@ -28,7 +30,7 @@ Space Complexity:
 struct TarjanSCC {
   static const int INF = INT_MAX / 2;
   std::vector<std::vector<int>> adj, scc;
-  std::vector<int> currstack, lowlink;
+  std::vector<int> component, curstack, lowlink;
   std::vector<bool> visited;
   int timer;
 
@@ -39,7 +41,7 @@ struct TarjanSCC {
   void dfs(int u) {
     lowlink[u] = timer++;
     visited[u] = true;
-    currstack.push_back(u);
+    curstack.push_back(u);
     bool is_component_root = true;
     for (int v : adj[u]) {
       if (!visited[v]) {
@@ -53,21 +55,24 @@ struct TarjanSCC {
     if (!is_component_root) {
       return;
     }
-    std::vector<int> component;
+    std::vector<int> comp_nodes;
+    int id = static_cast<int>(scc.size());
     int v;
     do {
-      v = currstack.back();
-      currstack.pop_back();
+      v = curstack.back();
+      curstack.pop_back();
       lowlink[v] = INF;  // marks v as removed from the stack
-      component.push_back(v);
+      component[v] = id;
+      comp_nodes.push_back(v);
     } while (u != v);
-    scc.push_back(component);
+    scc.push_back(comp_nodes);
   }
 
   void build_scc() {
-    int nodes = adj.size();
+    int nodes = static_cast<int>(adj.size());
     scc.clear();
-    currstack.clear();
+    component.assign(nodes, -1);
+    curstack.clear();
     lowlink.assign(nodes, 0);
     visited.assign(nodes, false);
     timer = 0;

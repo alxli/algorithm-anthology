@@ -28,18 +28,17 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
-using uint64 = unsigned long long;
-
 template<class T>
 class ZobristHash {
-  std::unordered_map<T, uint64> token;
-  uint64 state;
+  std::unordered_map<T, uint64_t> token;
+  uint64_t state;
 
-  static uint64 splitmix64(uint64 x) {
+  static uint64_t splitmix64(uint64_t x) {
     x += 0x9e3779b97f4a7c15ULL;
     x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
     x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -47,9 +46,9 @@ class ZobristHash {
   }
 
  public:
-  explicit ZobristHash(uint64 seed = 0) : state(seed) {}
+  explicit ZobristHash(uint64_t seed = 0) : state(seed) {}
 
-  uint64 get(const T &x) {
+  uint64_t get(const T &x) {
     if (auto it = token.find(x); it != token.end()) {
       return it->second;
     }
@@ -58,13 +57,13 @@ class ZobristHash {
     return state;
   }
 
-  uint64 toggle(uint64 h, const T &x) { return h ^ get(x); }
+  uint64_t toggle(uint64_t h, const T &x) { return h ^ get(x); }
 
   template<class It>
-  std::vector<uint64> distinct_prefix_hashes(It lo, It hi) {
+  std::vector<uint64_t> distinct_prefix_hashes(It lo, It hi) {
     std::unordered_set<T> seen;
-    std::vector<uint64> res(1, 0);
-    uint64 h = 0;
+    std::vector<uint64_t> res(1, 0);
+    uint64_t h = 0;
     for (It it = lo; it != hi; ++it) {
       if (seen.insert(*it).second) {
         h ^= get(*it);
@@ -84,13 +83,13 @@ int main() {
   vector<int> a{1, 2, 1, 3};
   vector<int> b{2, 1, 3};
   ZobristHash<int> zh(123);
-  vector<uint64> pa = zh.distinct_prefix_hashes(a.begin(), a.end());
-  vector<uint64> pb = zh.distinct_prefix_hashes(b.begin(), b.end());
+  vector<uint64_t> pa = zh.distinct_prefix_hashes(a.begin(), a.end());
+  vector<uint64_t> pb = zh.distinct_prefix_hashes(b.begin(), b.end());
 
   assert(pa[2] == pb[2]);  // Distinct sets {1, 2} and {2, 1}.
   assert(pa[4] == pb[3]);  // Distinct sets {1, 2, 3} and {2, 1, 3}.
 
-  uint64 h = 0;
+  uint64_t h = 0;
   h = zh.toggle(h, 5);
   assert(h != 0);
   h = zh.toggle(h, 5);

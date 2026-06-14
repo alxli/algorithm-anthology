@@ -8,6 +8,7 @@ Common mathematic constants and functions, most of which already have standard S
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ for most operations.
+  \item $O(\log n)$ per call to \inlinecode{mulmod()} and \inlinecode{powmod()}, where $n$ is the second argument.
   \item $O(d + e)$ for \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
   \item $O(\log_{b}\left(x + 1\right) + 1)$ for \inlinecode{to\_base(x, b)}.
   \item $O(x / 1000 + 1)$ for \inlinecode{to\_roman(x)}, due to the repeated \inlinecode{M} prefix.
@@ -26,16 +27,17 @@ Common mathematic constants and functions, most of which already have standard S
 #include <cfloat>
 #include <climits>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <random>
 #include <string>
 #include <vector>
 
 #ifndef M_PI
-const double M_PI = acos(-1.0);
+const double M_PI = acos(-1.0);  // or std::numbers::pi and std::numbers::pi_v<> in C++20 and later
 #endif
 #ifndef M_E
-const double M_E = exp(1.0);
+const double M_E = exp(1.0);  // or std::numbers::e and std::numbers::e_v<> in C++20 and later
 #endif
 const double M_PHI = (1.0 + sqrt(5.0)) / 2.0;
 const double M_INF = std::numeric_limits<double>::infinity();
@@ -296,6 +298,42 @@ double lgamma_(double x) {
   return (x - 0.5) * log(x) - x + 0.91893853320467274178032973640562 + sum / x;
 }
 \end{lstlisting}
+Binary Exponentiation:
+
+\inlinecode{powmod()} and \inlinecode{mulmod()} compute modular powers and products using binary exponentiation, also known as exponentiation by squaring. When \inlinecode{\_\_uint128\_t} is available, \inlinecode{mulmod()} uses a single 128-bit product; otherwise, it uses portable double-and-add multiplication. In the fallback path, the inputs must not exceed $2^{63} - 1$.
+
+\begin{compactitem}
+  \item \inlinecode{mulmod(x, n, m)} returns \inlinecode{x} multiplied by \inlinecode{n}, modulo \inlinecode{m}.
+  \item \inlinecode{powmod(x, n, m)} returns \inlinecode{x} raised to the power \inlinecode{n}, modulo \inlinecode{m}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
+#if defined(__SIZEOF_INT128__)
+  return static_cast<uint64_t>(static_cast<__uint128_t>(x) * n % m);
+#else
+  uint64_t a = 0, b = x % m;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = (a + b) % m;
+    }
+    b = (b << 1) % m;
+  }
+  return a % m;
+#endif
+}
+
+uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
+  uint64_t a = 1, b = x;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = mulmod(a, b, m);
+    }
+    b = mulmod(b, b, m);
+  }
+  return a % m;
+}
+\end{lstlisting}
 Base Conversion:
 
 \begin{compactitem}
@@ -306,7 +344,7 @@ Base Conversion:
 
 \begin{lstlisting}[language=C++]
 std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
-  unsigned long long x = 0, power = 1;
+  uint64_t x = 0, power = 1;
   for (int di : d) {
     x += di * power;
     power *= a;
@@ -381,6 +419,10 @@ int main() {
   assert(EQ(tgamma_(0.5), 1.7724538509) && EQ(tgamma_(1.0), 1.0));
   assert(EQ(lgamma_(0.5), 0.5723649429) && EQ(lgamma_(1.0), 0.0));
 
+  assert(powmod(2, 10, 1000000007) == 1024);
+  assert(powmod(2, 62, 1000000) == 387904);
+  assert(powmod(10001, 10001, 100000) == 10001);
+
   std::vector<int> digits{6, 5, 4, 3, 2, 1};
   std::vector<int> base20 = to_base(123456, 20);
   assert(convert_base(base20, 20, 10) == digits);
@@ -435,9 +477,10 @@ The following functions implement common operations in combinatorics. All inputs
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <vector>
 
-using int64 = long long;
+using int64 = int64_t;
 using table = std::vector<std::vector<int64>>;
 
 int64 factorial(int n, int m = 1000000007) {
@@ -666,11 +709,12 @@ For the purposes of this section, we define a ``size $k$ arrangement of $n$'' to
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <numeric>
 #include <vector>
 
 bool next_arrangement(int n, std::vector<int> &a) {
-  int k = a.size();
+  int k = static_cast<int>(a.size());
   std::vector<bool> used(n);
   for (int i = 0; i < k; i++) {
     used[a[i]] = true;
@@ -693,19 +737,19 @@ bool next_arrangement(int n, std::vector<int> &a) {
   return false;
 }
 
-long long n_permute_k(int n, int k) {
-  long long res = 1;
+int64_t n_permute_k(int n, int k) {
+  int64_t res = 1;
   for (int i = 0; i < k; i++) {
     res *= n - i;
   }
   return res;
 }
 
-std::vector<int> arrangement_by_rank(int n, int k, long long r) {
+std::vector<int> arrangement_by_rank(int n, int k, int64_t r) {
   std::vector<int> values(n), res(k);
   std::iota(values.begin(), values.end(), 0);
   for (int i = 0; i < k; i++) {
-    long long count = n_permute_k(n - 1 - i, k - 1 - i);
+    int64_t count = n_permute_k(n - 1 - i, k - 1 - i);
     int pos = r / count;
     res[i] = values[pos];
     std::copy(values.begin() + pos + 1, values.end(), values.begin() + pos);
@@ -714,9 +758,9 @@ std::vector<int> arrangement_by_rank(int n, int k, long long r) {
   return res;
 }
 
-long long rank_by_arrangement(int n, const std::vector<int> &a) {
-  int k = a.size();
-  long long res = 0;
+int64_t rank_by_arrangement(int n, const std::vector<int> &a) {
+  int k = static_cast<int>(a.size());
+  int64_t res = 0;
   std::vector<bool> used(n);
   for (int i = 0; i < k; i++) {
     int count = 0;
@@ -732,7 +776,7 @@ long long rank_by_arrangement(int n, const std::vector<int> &a) {
 }
 
 bool next_arrangement_with_repeats(int n, std::vector<int> &a) {
-  int k = a.size();
+  int k = static_cast<int>(a.size());
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - 1) {
       a[i]++;
@@ -834,6 +878,7 @@ A permutation is an ordered list consisting of $n$ (not necessarily distinct) el
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <numeric>
 #include <vector>
 
@@ -884,13 +929,13 @@ bool next_permutation(std::vector<T> &a) {
   return false;
 }
 
-long long next_permutation(long long x) {
-  long long s = x & -x, r = x + s;
+int64_t next_permutation(int64_t x) {
+  int64_t s = x & -x, r = x + s;
   return r | (((x ^ r) >> 2) / s);
 }
 
-std::vector<int> permutation_by_rank(int n, long long x) {
-  std::vector<long long> factorial(n);
+std::vector<int> permutation_by_rank(int n, int64_t x) {
+  std::vector<int64_t> factorial(n);
   std::vector<int> values(n), res(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {
@@ -906,14 +951,14 @@ std::vector<int> permutation_by_rank(int n, long long x) {
   return res;
 }
 
-long long rank_by_permutation(const std::vector<int> &a) {
+int64_t rank_by_permutation(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
-  std::vector<long long> factorial(n);
+  std::vector<int64_t> factorial(n);
   factorial[0] = 1;
   for (int i = 1; i < n; i++) {
     factorial[i] = i * factorial[i - 1];
   }
-  long long res = 0;
+  int64_t res = 0;
   for (int i = 0; i < n; i++) {
     int v = a[i];
     for (int j = 0; j < i; j++) {
@@ -1050,6 +1095,7 @@ A combination is a subset of size $k$ chosen from a total of $n$ (not necessaril
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <iterator>
 #include <vector>
 
@@ -1102,7 +1148,7 @@ bool next_combination(It lo, It mid, It hi) {
 }
 
 bool next_combination(int n, std::vector<int> &a) {
-  int k = a.size();
+  int k = static_cast<int>(a.size());
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - k + i) {
       a[i]++;
@@ -1115,32 +1161,32 @@ bool next_combination(int n, std::vector<int> &a) {
   return false;
 }
 
-long long next_combination_mask(long long x) {
+int64_t next_combination_mask(int64_t x) {
   if (x == 0) {
     return 0;
   }
-  long long s = x & -x, r = x + s;
+  int64_t s = x & -x, r = x + s;
   return r | (((x ^ r) >> 2) / s);
 }
 
-long long n_choose_k(long long n, long long k) {
+int64_t n_choose_k(int64_t n, int64_t k) {
   if (k > n - k) {
     k = n - k;
   }
-  long long res = 1;
+  int64_t res = 1;
   for (int i = 0; i < k; i++) {
     res = res * (n - i) / (i + 1);
   }
   return res;
 }
 
-std::vector<int> combination_by_rank(int n, int k, long long r) {
+std::vector<int> combination_by_rank(int n, int k, int64_t r) {
   std::vector<int> res(k);
   int count = n;
   for (int i = 0; i < k; i++) {
     int j = 1;
     for (;; j++) {
-      long long am = n_choose_k(count - j, k - 1 - i);
+      int64_t am = n_choose_k(count - j, k - 1 - i);
       if (r < am) {
         break;
       }
@@ -1152,9 +1198,9 @@ std::vector<int> combination_by_rank(int n, int k, long long r) {
   return res;
 }
 
-long long rank_by_combination(int n, const std::vector<int> &a) {
-  int k = a.size();
-  long long res = 0;
+int64_t rank_by_combination(int n, const std::vector<int> &a) {
+  int k = static_cast<int>(a.size());
+  int64_t res = 0;
   int prev = -1;
   for (int i = 0; i < k; i++) {
     for (int j = prev + 1; j < a[i]; j++) {
@@ -1166,7 +1212,7 @@ long long rank_by_combination(int n, const std::vector<int> &a) {
 }
 
 bool next_combination_with_repeats(int n, std::vector<int> &a) {
-  int k = a.size();
+  int k = static_cast<int>(a.size());
   for (int i = k - 1; i >= 0; i--) {
     if (a[i] < n - 1) {
       for (++a[i]; ++i < k;) {
@@ -1208,7 +1254,7 @@ int main() {
     int n = 5, k = 3;
     string char_set = "abcde";  // Must be distinct.
     cout << "\n\"" << char_set << "\" choose " << k << " with masks:" << endl;
-    long long mask = 0, dest = 0;
+    int64_t mask = 0, dest = 0;
     for (int i = 0; i < k; i++) {
       mask |= (1 << i);
     }
@@ -1292,6 +1338,7 @@ A partition of a natural number $n$ is a way to write $n$ as a sum of positive i
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <vector>
 
 bool next_partition(std::vector<int> &p) {
@@ -1311,10 +1358,10 @@ bool next_partition(std::vector<int> &p) {
   return true;
 }
 
-long long partition_function(int a, int b) {
-  static std::vector<std::vector<long long>> p(1, std::vector<long long>(1, 1));
+int64_t partition_function(int a, int b) {
+  static std::vector<std::vector<int64_t>> p(1, std::vector<int64_t>(1, 1));
   if (a >= static_cast<int>(p.size())) {
-    int old = p.size();
+    int old = static_cast<int>(p.size());
     p.resize(a + 1);
     p[0].resize(a + 1);
     for (int i = 1; i <= a; i++) {
@@ -1327,11 +1374,11 @@ long long partition_function(int a, int b) {
   return p[a][b];
 }
 
-std::vector<int> partition_by_rank(int n, long long r) {
+std::vector<int> partition_by_rank(int n, int64_t r) {
   std::vector<int> res;
   for (int i = n, j; i > 0; i -= j) {
     for (j = 1;; j++) {
-      long long count = partition_function(i, j);
+      int64_t count = partition_function(i, j);
       if (r < count) {
         break;
       }
@@ -1342,8 +1389,8 @@ std::vector<int> partition_by_rank(int n, long long r) {
   return res;
 }
 
-long long rank_by_partition(const std::vector<int> &p) {
-  long long res = 0;
+int64_t rank_by_partition(const std::vector<int> &p) {
+  int64_t res = 0;
   int sum = 0;
   for (int x : p) {
     sum += x;
@@ -1435,6 +1482,7 @@ Enumerate combinatorial sequences by inheriting an abstract class. Child classes
 \textbf{Space Complexity}: $O(n)$ auxiliary heap space per call to all operations.
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <vector>
 
 class AbstractEnumerator {
@@ -1443,13 +1491,13 @@ class AbstractEnumerator {
 
   AbstractEnumerator(int r, int l) : range(r), length(l) {}
   virtual ~AbstractEnumerator() = default;
-  virtual long long count(const std::vector<int> &prefix) { return 0; }
+  virtual int64_t count(const std::vector<int> &prefix) { return 0; }
   std::vector<int> next(std::vector<int> &a) { return from_rank(to_rank(a) + 1); }
-  long long total_count() { return count(std::vector<int>(0)); }
+  int64_t total_count() { return count(std::vector<int>(0)); }
 
  public:
-  long long to_rank(const std::vector<int> &a) {
-    long long res = 0;
+  int64_t to_rank(const std::vector<int> &a) {
+    int64_t res = 0;
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
       std::vector<int> prefix(a.begin(), a.end());
       prefix.resize(i + 1);
@@ -1460,13 +1508,13 @@ class AbstractEnumerator {
     return res;
   }
 
-  std::vector<int> from_rank(long long r) {
+  std::vector<int> from_rank(int64_t r) {
     std::vector<int> a(length);
     for (int i = 0; i < static_cast<int>(a.size()); i++) {
       std::vector<int> prefix(a.begin(), a.end());
       prefix.resize(i + 1);
       for (prefix[i] = 0; prefix[i] < range; ++prefix[i]) {
-        long long curr = count(prefix);
+        int64_t curr = count(prefix);
         if (r < curr) {
           break;
         }
@@ -1480,8 +1528,8 @@ class AbstractEnumerator {
   // Accepts any callable f(lo, hi), including capturing lambdas and functors.
   template<class Fn>
   void enumerate(Fn f) {
-    long long total = total_count();
-    for (long long i = 0; i < total; i++) {
+    int64_t total = total_count();
+    for (int64_t i = 0; i < total; i++) {
       std::vector<int> curr = from_rank(i);
       f(curr.begin(), curr.end());
     }
@@ -1492,14 +1540,14 @@ class ArrangementEnumerator : public AbstractEnumerator {
  public:
   ArrangementEnumerator(int n, int k) : AbstractEnumerator(n, k) {}
 
-  long long count(const std::vector<int> &prefix) {
+  int64_t count(const std::vector<int> &prefix) {
     int n = static_cast<int>(prefix.size());
     for (int i = 0; i < n - 1; i++) {
       if (prefix[i] == prefix[n - 1]) {
         return 0;
       }
     }
-    long long res = 1;
+    int64_t res = 1;
     for (int i = 0; i < length - n; i++) {
       res *= range - n - i;
     }
@@ -1513,11 +1561,11 @@ class PermutationEnumerator : public ArrangementEnumerator {
 };
 
 class CombinationEnumerator : public AbstractEnumerator {
-  std::vector<std::vector<long long>> table;
+  std::vector<std::vector<int64_t>> table;
 
  public:
   CombinationEnumerator(int n, int k)
-      : AbstractEnumerator(n, k), table(n + 1, std::vector<long long>(n + 1)) {
+      : AbstractEnumerator(n, k), table(n + 1, std::vector<int64_t>(n + 1)) {
     for (int i = 0; i <= n; i++) {
       for (int j = 0; j <= i; j++) {
         table[i][j] = (j == 0) ? 1 : table[i - 1][j - 1] + table[i - 1][j];
@@ -1525,7 +1573,7 @@ class CombinationEnumerator : public AbstractEnumerator {
     }
   }
 
-  long long count(const std::vector<int> &prefix) {
+  int64_t count(const std::vector<int> &prefix) {
     int n = static_cast<int>(prefix.size());
     if (n >= 2 && prefix[n - 1] <= prefix[n - 2]) {
       return 0;
@@ -1538,12 +1586,12 @@ class CombinationEnumerator : public AbstractEnumerator {
 };
 
 class PartitionEnumerator : public AbstractEnumerator {
-  std::vector<std::vector<long long>> table;
+  std::vector<std::vector<int64_t>> table;
 
  public:
   PartitionEnumerator(int n)
-      : AbstractEnumerator(n + 1, n), table(n + 1, std::vector<long long>(n + 1)) {
-    std::vector<std::vector<long long>> tmp(table);
+      : AbstractEnumerator(n + 1, n), table(n + 1, std::vector<int64_t>(n + 1)) {
+    std::vector<std::vector<int64_t>> tmp(table);
     tmp[0][0] = 1;
     for (int i = 1; i <= n; i++) {
       for (int j = 1; j <= i; j++) {
@@ -1557,7 +1605,7 @@ class PartitionEnumerator : public AbstractEnumerator {
     }
   }
 
-  long long count(const std::vector<int> &prefix) {
+  int64_t count(const std::vector<int> &prefix) {
     int n = static_cast<int>(prefix.size()), sum = 0;
     for (int x : prefix) {
       sum += x;
@@ -1640,10 +1688,10 @@ Partition of 4:
 Common number theory operations relating to modular arithmetic.
 
 \begin{compactitem}
-  \item \inlinecode{gcd(a, b)} and \inlinecode{gcd2(a, b)} both return the greatest common divisor of \inlinecode{a} and \inlinecode{b} using the Euclidean algorithm.
-  \item \inlinecode{lcm(a, b)} returns the lowest common multiple of \inlinecode{a} and \inlinecode{b}.
+  \item \inlinecode{gcd(a, b)} and \inlinecode{gcd2(a, b)} both return the greatest common divisor of \inlinecode{a} and \inlinecode{b} using the Euclidean algorithm. The implementations are mainly for educational purposes, as \inlinecode{std::gcd(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17 (\inlinecode{\_\_gcd(a, b)} from \inlinecode{\textless{}algorithm\textgreater{}} in C++14 and earlier).
+  \item \inlinecode{lcm(a, b)} returns the lowest common multiple of \inlinecode{a} and \inlinecode{b}. This implemention is mainly for educational purposes, as \inlinecode{std::lcm(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17.
   \item \inlinecode{extended\_euclid(a, b)} and \inlinecode{extended\_euclid2(a, b)} both return a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
-  \item \inlinecode{mod(a, b)} returns the value of \inlinecode{a} mod \inlinecode{b} under the true Euclidean definition of modulo, that is, the smallest nonnegative integer $m$ satisfying $a + b*n = m$ for some integer $n$. Note that this is identical to the remainder operator \inlinecode{\%} in C++ for nonnegative operands \inlinecode{a} and \inlinecode{b}, but the result will differ when an operand is negative.
+  \item \inlinecode{mod(a, b)} returns the value of \inlinecode{a} mod \inlinecode{b} under the true Euclidean definition of modulo, that is, the smallest nonnegative integer $m$ satisfying $a + bn = m$ for some integer $n$. Note that this is identical to the remainder operator \inlinecode{\%} in C++ for nonnegative operands \inlinecode{a} and \inlinecode{b}, but the result will differ when an operand is negative.
   \item \inlinecode{mod\_inverse(a, m)} and \inlinecode{mod\_inverse2(a, m)} both return an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
   \item \inlinecode{generate\_inverse(p)} returns a vector $v$ of integers where for each index $i$ in the vector, $i \cdot \text{v[i]} \equiv 1 \pmod p$, where the argument $p$ is prime.
   \item \inlinecode{simple\_restore(a, p)} and \inlinecode{garner\_restore(a, p)} both return the solution $x$ for the system of simultaneous congruences $x \equiv \text{a[i]} \pmod{\text{p[i]}}$ for all indices $i$ in $[0, n)$, where \inlinecode{p} consists of pairwise coprime integers. The solution $x$ is guaranteed to be unique by the Chinese remainder theorem.
@@ -1669,6 +1717,7 @@ Common number theory operations relating to modular arithmetic.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <cstdlib>
 #include <utility>
 #include <vector>
@@ -1685,7 +1734,7 @@ Int gcd(Int a, Int b) {
 
 template<class Int>
 Int gcd2(Int a, Int b) {
-  return (b == 0) ? (a < 0 ? -a : a) : gcd(b, a % b);
+  return (b == 0) ? (a < 0 ? -a : a) : gcd2(b, a % b);
 }
 
 template<class Int>
@@ -1747,9 +1796,9 @@ std::vector<int> generate_inverse(int p) {
   return res;
 }
 
-long long simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
+int64_t simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
   int n = static_cast<int>(a.size());
-  long long res = 0, m = 1;
+  int64_t res = 0, m = 1;
   for (int i = 0; i < n; i++) {
     while (res % p[i] != a[i]) {
       res += m;
@@ -1759,20 +1808,19 @@ long long simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
   return res;
 }
 
-long long garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
+int64_t garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
   int n = static_cast<int>(a.size());
   if (n == 0) {
     return 0;
   }
-  std::vector<long long> x(a.begin(), a.end());
+  std::vector<int64_t> x(a.begin(), a.end());
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < i; j++) {
-      x[i] =
-          mod_inverse(static_cast<long long>(p[j]), static_cast<long long>(p[i])) * (x[i] - x[j]);
+      x[i] = mod_inverse(static_cast<int64_t>(p[j]), static_cast<int64_t>(p[i])) * (x[i] - x[j]);
     }
     x[i] = (x[i] % p[i] + p[i]) % p[i];
   }
-  long long res = x[0], m = 1;
+  int64_t res = x[0], m = 1;
   for (int i = 1; i < n; i++) {
     m *= p[i - 1];
     res += x[i] * m;
@@ -1826,12 +1874,16 @@ int main() {
 \subsection{Modular Arithmetic}
 Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all answers are taken modulo some number $P$ such as $10^9 + 7$.
 
-The implementation is intentionally close to common contest ``Mint'' templates: normalization happens at construction, arithmetic operators are overloaded, mixed integer operations are supported through implicit construction, and combinations can be computed from lazy factorial tables.
+The implementation is intentionally close to common contest ``Mint'' templates: normalization happens at construction, arithmetic operators are overloaded, mixed integer operations are supported through implicit construction, and combinations can be computed from lazy factorial tables. The operators use the hidden friend idiom: each \inlinecode{friend} defined inside the class is a non-template function, so mixed expressions like \inlinecode{2 + Mint(3)} convert the integer operand through the implicit constructor. (Free function template operators cannot do this - template argument deduction ignores implicit conversions - which is why some contest templates carry per-operator \inlinecode{Modular op U} and \inlinecode{U op Modular} overloads instead.)
+
+The modulus is supplied directly as the \inlinecode{auto} template argument, so \inlinecode{Modular\textless{}1000000007\textgreater{}} and \inlinecode{Modular\textless{}998244353\textgreater{}} are all that is needed. Its literal type determines the storage type, so a 64-bit modulus (e.g. \inlinecode{Modular\textless{}(1LL \textless{}\textless{} 61) - 1\textgreater{}}) is stored in 64 bits without any extra annotation. The modulus must be a compile-time constant; a runtime-chosen modulus is not supported by this design.
+
+Two integer types are at play: the type of the modulus stores the representative, while construction, multiplication, and inverses widen through an intermediate type chosen automatically from the storage width - \inlinecode{int64\_t} for 32-bit storage, or \inlinecode{\_\_int128} (a GCC/Clang extension, in line with this book's use of \inlinecode{\_\_builtin} functions) for 64-bit storage; on compilers without \inlinecode{\_\_int128}, only 32-bit moduli are supported. The requirements are that $2P$ fits the storage type (for addition) and $(P - 1)^2$ fits the intermediate type (for the widening multiply), so any modulus up to half the storage type's range works out of the box; 64-bit moduli simply pay the cost of slower 128-bit multiplies. (Some contest templates instead estimate the multiply's quotient in \inlinecode{long double} to avoid \inlinecode{\_\_int128}; beware that this requires x86's 80-bit \inlinecode{long double} and silently breaks for large moduli on ARM, where \inlinecode{long double} is only 64-bit.)
 
 Division uses the extended Euclidean algorithm, so the divisor only needs to be coprime to the modulus. For the factorial-table combination helper, the usual contest assumption is that $P$ is prime and the requested factorials are invertible modulo $P$.
 
 \begin{compactitem}
-  \item \inlinecode{Modular\textless{}T\textgreater{}(x)} constructs the residue class of integer \inlinecode{x} modulo \inlinecode{T::value}.
+  \item \inlinecode{Modular\textless{}MOD\textgreater{}(x)} constructs the residue class of integer \inlinecode{x} modulo \inlinecode{MOD}.
   \item \inlinecode{value()} and \inlinecode{operator()()} return the stored representative in $[0, P)$.
   \item \inlinecode{pow(n)} returns this value raised to nonnegative integer exponent \inlinecode{n}.
   \item \inlinecode{inv()} returns the multiplicative inverse, asserting it exists.
@@ -1860,7 +1912,10 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <cstdint>
 #include <iostream>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 template<class T>
@@ -1870,44 +1925,50 @@ T inverse(T a, T m) {
   while (a != 0) {
     T q = m / a;
     m -= q * a;
-    T tmp = a;
-    a = m;
-    m = tmp;
+    std::swap(a, m);
     u -= q * v;
-    tmp = v;
-    v = u;
-    u = tmp;
+    std::swap(u, v);
   }
   assert(m == 1);
   u %= original_m;
   return u < 0 ? u + original_m : u;
 }
 
-template<class T>
+template<auto MOD>
 class Modular {
-  using value_type = typename T::value_type;
-  value_type v;
+  using value_t = decltype(MOD);
 
-  static value_type normalize(long long x) {
-    if (-static_cast<long long>(mod()) <= x && x < static_cast<long long>(mod())) {
-      value_type y = (value_type)x;
+  // Widen through int64_t for 32-bit storage, or __int128 for 64-bit storage where it exists
+  // (__extension__ silences -pedantic). Without __int128, only 32-bit moduli are supported.
+#if defined(__SIZEOF_INT128__)
+  __extension__ typedef std::conditional_t<sizeof(value_t) <= 4, int64_t, __int128> wide_t;
+#else
+  using wide_t = int64_t;
+  static_assert(sizeof(value_t) <= 4, "64-bit moduli require __int128, which is unavailable");
+#endif
+
+  value_t v;
+
+  static value_t normalize(wide_t x) {
+    if (-static_cast<wide_t>(mod()) <= x && x < static_cast<wide_t>(mod())) {
+      value_t y = static_cast<value_t>(x);
       return y < 0 ? y + mod() : y;
     }
     x %= mod();
     if (x < 0) {
       x += mod();
     }
-    return (value_type)x;
+    return static_cast<value_t>(x);
   }
 
  public:
-  Modular(long long x = 0) { v = normalize(x); }
+  Modular(wide_t x = 0) { v = normalize(x); }
 
-  static value_type mod() { return T::value; }
-  value_type value() const { return v; }
-  value_type operator()() const { return v; }
+  static value_t mod() { return MOD; }
+  value_t value() const { return v; }
+  value_t operator()() const { return v; }
 
-  Modular pow(long long n) const {
+  Modular pow(int64_t n) const {
     assert(n >= 0);
     Modular base = *this, res = 1;
     while (n > 0) {
@@ -1922,7 +1983,7 @@ class Modular {
 
   Modular inv() const {
     assert(v != 0);
-    return Modular(inverse(static_cast<long long>(v), static_cast<long long>(mod())));
+    return Modular(inverse(static_cast<wide_t>(v), static_cast<wide_t>(mod())));
   }
 
   Modular &operator+=(const Modular &other) {
@@ -1942,7 +2003,7 @@ class Modular {
   }
 
   Modular &operator*=(const Modular &other) {
-    v = normalize(static_cast<long long>(v) * other.v);
+    v = normalize(static_cast<wide_t>(v) * other.v);
     return *this;
   }
 
@@ -1950,19 +2011,8 @@ class Modular {
   Modular &operator++() { return *this += 1; }
   Modular &operator--() { return *this -= 1; }
   Modular &operator/=(const Modular &other) { return *this *= other.inv(); }
-
-  Modular operator++(int) {
-    Modular res = *this;
-    ++*this;
-    return res;
-  }
-
-  Modular operator--(int) {
-    Modular res = *this;
-    --*this;
-    return res;
-  }
-
+  Modular operator++(int) { Modular res = *this; ++*this; return res; }
+  Modular operator--(int) { Modular res = *this; --*this; return res; }
   friend Modular operator+(Modular a, const Modular &b) { return a += b; }
   friend Modular operator-(Modular a, const Modular &b) { return a -= b; }
   friend Modular operator*(Modular a, const Modular &b) { return a *= b; }
@@ -1973,7 +2023,7 @@ class Modular {
   friend std::ostream &operator<<(std::ostream &os, const Modular &x) { return os << x.v; }
 
   friend std::istream &operator>>(std::istream &is, Modular &x) {
-    long long value;
+    int64_t value;
     is >> value;
     x = Modular(value);
     return is;
@@ -2027,12 +2077,7 @@ class ModCombinatorics {
   Mint multichoose(int n, int k) { return choose(n + k - 1, k); }
 };
 
-struct Mod1000000007 {
-  using value_type = int;
-  static const int value = 1000000007;
-};
-
-using Mint = Modular<Mod1000000007>;
+using Mint = Modular<1000000007>;
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -2065,6 +2110,16 @@ int main() {
   assert(comb.choose(5, 2) == 10);
   assert(comb.permute(5, 2) == 20);
   assert(comb.multichoose(3, 2) == 6);
+
+  // Each distinct modulus is just another instantiation.
+  using Mint2 = Modular<998244353>;
+  assert(Mint2(2).pow(10) == 1024);
+  assert(Mint2(-1) == Mint2::mod() - 1);
+
+  // A 64-bit modulus (deduced as long long) automatically widens through __int128.
+  using Mint3 = Modular<(1LL << 61) - 1>;
+  assert(Mint3(2).pow(62) == 2);  // 2^62 mod (2^61 - 1)
+  assert(Mint3(3).inv() * 3 == 1);
   return 0;
 }
 \end{lstlisting}
@@ -2076,6 +2131,7 @@ The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting pr
 \begin{compactitem}
   \item \inlinecode{sieve(n)} returns a vector of all the primes less than or equal to \inlinecode{n}.
   \item \inlinecode{sieve(lo, hi)} returns a vector of all the primes in the range \inlinecode{[lo, hi]}.
+  \item \inlinecode{linear\_sieve(n, least\_out)} returns a vector of all primes less than or equal to \inlinecode{n} in linear time. If \inlinecode{least\_out} is not null, it is filled so that \inlinecode{(*least\_out)[x]} is the least prime factor of \inlinecode{x} for every \inlinecode{x} $\geq 2$.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2083,6 +2139,7 @@ The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting pr
 \begin{compactitem}
   \item $O(n \log\left(\log\left(n\right)\right))$ per call to \inlinecode{sieve(n)}.
   \item $O(\sqrt{{\inlinecodemath{hi}}} \cdot \log\left(\log\left({\inlinecodemath{hi}} - {\inlinecodemath{lo}}\right)\right))$ per call to \inlinecode{sieve(lo, hi)}.
+  \item $O(n)$ per call to \inlinecode{linear\_sieve(n, least\_out)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2090,11 +2147,13 @@ The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting pr
 \begin{compactitem}
   \item $O(n)$ auxiliary heap space per call to \inlinecode{sieve(n)}.
   \item $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ auxiliary heap space per call to \inlinecode{sieve(lo, hi)}.
+  \item $O(n)$ auxiliary heap space per call to \inlinecode{linear\_sieve(n, least\_out)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <vector>
 
 std::vector<int> sieve(int n) {
@@ -2104,7 +2163,7 @@ std::vector<int> sieve(int n) {
   std::vector<bool> prime(n + 1, true);
   for (int i = 2; i <= n / i; i++) {
     if (prime[i]) {
-      for (long long j = 1LL * i * i; j <= n; j += i) {
+      for (int64_t j = 1LL * i * i; j <= n; j += i) {
         prime[j] = false;
       }
     }
@@ -2133,15 +2192,15 @@ std::vector<int> sieve(int lo, int hi) {
   std::vector<bool> prime1(sqrt_hi + 1, true), prime2(hi - lo + 1, true);
   for (int i = 2; i <= fourth_root_hi; i++) {
     if (prime1[i]) {
-      for (long long j = 1LL * i * i; j <= sqrt_hi; j += i) {
+      for (int64_t j = 1LL * i * i; j <= sqrt_hi; j += i) {
         prime1[j] = false;
       }
     }
   }
   for (int i = 2; i <= sqrt_hi; i++) {
     if (prime1[i]) {
-      long long start = std::max(1LL * i * i, ((static_cast<long long>(lo) + i - 1) / i) * i);
-      for (long long j = start; j <= hi; j += i) {
+      int64_t start = std::max(1LL * i * i, ((static_cast<int64_t>(lo) + i - 1) / i) * i);
+      for (int64_t j = start; j <= hi; j += i) {
         prime2[j - lo] = false;
       }
     }
@@ -2154,10 +2213,37 @@ std::vector<int> sieve(int lo, int hi) {
   }
   return res;
 }
+
+std::vector<int> linear_sieve(int n, std::vector<int> *least_out = nullptr) {
+  if (n < 2) {
+    if (least_out != nullptr) {
+      least_out->assign(std::max(n + 1, 0), 0);
+    }
+    return {};
+  }
+  std::vector<int> least(n + 1, 0), primes;
+  for (int i = 2; i <= n; i++) {
+    if (least[i] == 0) {
+      least[i] = i;
+      primes.push_back(i);
+    }
+    for (int p : primes) {
+      if (p > least[i] || i > n / p) {
+        break;
+      }
+      least[i * p] = p;
+    }
+  }
+  if (least_out != nullptr) {
+    *least_out = least;
+  }
+  return primes;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 #include <ctime>
 #include <iostream>
 using namespace std;
@@ -2172,6 +2258,11 @@ int main() {
   delta = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC;
   cout << "sieve(n=" << pmax << "): " << delta << "s" << endl;
 
+  vector<int> least;
+  assert(linear_sieve(pmax, &least) == p);
+  assert(least[999983] == 999983);
+  assert(least[999984] == 2);
+
   int l = 1000000000, h = 1005000000;
   start = clock();
   p = sieve(l, h);
@@ -2184,30 +2275,53 @@ int main() {
 sieve(n=10000000): 0.042641s
 sieve([1000000000, 1005000000]): 0.01969s
 \end{exampleoutput}
-\subsection{Primality Testing}
-Determine whether an integer $n$ is prime. This can be done deterministically by testing all numbers under $\sqrt{n}$ using trial division, probabilistically using the Miller-Rabin test, or deterministically using the Miller-Rabin test if the maximum input is known ($2^{63} - 1$ for the purposes here). The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite.
+\subsection{Prime Tests and Factorization}
+Test whether an integer is prime and compute the prime factorization of an integer $n$. The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. Prime factorizations are represented as sorted vectors of \inlinecode{(prime, exponent)} pairs. For 0 and 1, the prime factorization is empty.
 
 \begin{compactitem}
-  \item \inlinecode{is\_prime(n)} returns whether the integer \inlinecode{n} is prime using an optimized trial division technique based on the fact that all primes greater than 6 must take the form $6n + 1$ or $6n - 1$.
-  \item \inlinecode{is\_probable\_prime(n, k)} returns whether \inlinecode{n} is probably prime using \inlinecode{k} random Miller-Rabin bases. The result is guaranteed correct when \inlinecode{n} is prime. When \inlinecode{n} is composite, it returns false with probability at least $1 - (1 / 4)^k$, so a true result has one-sided error probability at most $(1 / 4)^k$. This implementation uses exponentiation by squaring to support all signed 64-bit integers (up to and including $2^{63} - 1$).
-  \item \inlinecode{is\_prime\_fast(n)} returns whether the signed 64-bit integer \inlinecode{n} is prime using a fully deterministic version of the Miller-Rabin test.
+  \item \inlinecode{is\_prime\_slow(n)} returns whether the integer \inlinecode{n} is prime using trial division.
+  \item \inlinecode{is\_probable\_prime(n, k)} returns whether \inlinecode{n} is probably prime using \inlinecode{k} random Miller-Rabin bases. The result is guaranteed correct when \inlinecode{n} is prime. When \inlinecode{n} is composite, it returns false with probability at least $1 - (1 / 4)^k$, so a true result has one-sided error probability at most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit deterministic setting.
+  \item \inlinecode{is\_prime(n)} returns whether the signed 64-bit integer \inlinecode{n} is prime using deterministic Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
+  \item \inlinecode{factorize\_slow(n)} returns the prime factorization of \inlinecode{n} using trial division.
+  \item \inlinecode{get\_divisors\_slow(n)} returns a sorted vector of all divisors of \inlinecode{n} using trial division.
+  \item \inlinecode{rho\_factor(n)} returns a factor of \inlinecode{n} that is not necessarily prime using Pollard's rho with Brent's optimization. If \inlinecode{n} is prime, then \inlinecode{n} itself is returned. While this algorithm is non-deterministic and may fail to detect factors on certain runs of the same input, it can be retried until a nontrivial factor is found, as done in \inlinecode{factorize()}.
+  \item \inlinecode{cached\_primes(n)} returns a cached vector of primes up to and including \inlinecode{n}, rebuilding it with a linear sieve if needed.
+  \item \inlinecode{merge\_factors(a, b)} merges two sorted compressed factorizations.
+  \item \inlinecode{factorize\_rho(n)} returns the prime factorization of a 64-bit integer using Miller-Rabin and Pollard's rho without initial trial division.
+  \item \inlinecode{factorize(n, trial\_division\_cutoff)} returns the prime factorization of a 64-bit integer \inlinecode{n} using a combination of trial division, the Miller-Rabin primality test, and Pollard's rho algorithm. \inlinecode{trial\_division\_cutoff} specifies the largest prime to test with trial division before falling back to the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
+  \item \inlinecode{divisors\_from\_factors(factors)} returns all divisors from a compressed factorization.
+  \item \inlinecode{get\_divisors(n)} returns all divisors of a 64-bit integer using \inlinecode{factorize()} followed by \inlinecode{divisors\_from\_factors()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\sqrt{n})$ per call to \inlinecode{is\_prime(n)}.
+  \item $O(\sqrt{n})$ per call to \inlinecode{is\_prime\_slow(n)}.
   \item $O(k \log^{3}(n))$ per call to \inlinecode{is\_probable\_prime(n, k)}.
-  \item $O(\log^{3}(n))$ per call to \inlinecode{is\_prime\_fast(n)}.
+  \item $O(\log^{3}(n))$ per call to \inlinecode{is\_prime(n)}.
+  \item $O(\sqrt{n})$ per call to \inlinecode{factorize\_slow(n)} and \inlinecode{get\_divisors\_slow(n)}.
+  \item $O(n)$ to rebuild the prime cache in \inlinecode{cached\_primes(n)}.
+  \item Unknown, but approximately $O(n^{1/4})$ per call to \inlinecode{rho\_factor(n)} and \inlinecode{factorize(n)}.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O(1)$ auxiliary space for all operations.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(f)$ auxiliary heap space for all operations, where $f$ is the number of factors returned.
+  \item $O(c)$ cached heap space for the largest \inlinecode{cached\_primes(c)} call.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <numeric>
 #include <random>
+#include <utility>
+#include <vector>
 
 template<class Int>
-bool is_prime(Int n) {
+bool is_prime_slow(Int n) {
   if (n == 2 || n == 3) {
     return true;
   }
@@ -2223,13 +2337,53 @@ bool is_prime(Int n) {
   return true;
 }
 
-using uint64 = unsigned long long;
+template<class Int>
+std::vector<std::pair<Int, int>> factorize_slow(Int n) {
+  if (n <= 1) {
+    return {};
+  }
+  std::vector<std::pair<Int, int>> res;
+  for (Int i = 2; i <= n / i; i++) {
+    if (n % i == 0) {
+      int p = 0;
+      do {
+        n /= i;
+        p++;
+      } while (n % i == 0);
+      res.emplace_back(i, p);
+    }
+  }
+  if (n > 1) {
+    res.emplace_back(n, 1);
+  }
+  return res;
+}
 
-// Hot path: Can simply `return (unsigned __int128)x * n % m;` for a major constant-factor speedup
-// if the GCC/Clang __int128 extension is available. Otherwise, use the portable double-and-add
-// version below, which still won't overflow a signed 64-bit `long long`.
-uint64 mulmod(uint64 x, uint64 n, uint64 m) {
-  uint64 a = 0, b = x % m;
+template<class Int>
+std::vector<Int> get_divisors_slow(Int n) {
+  if (n <= 1) {
+    return (n < 1) ? std::vector<Int>() : std::vector<Int>(1, 1);
+  }
+  std::vector<Int> res{1};
+  for (const auto &factor : factorize_slow(n)) {
+    int old_size = static_cast<int>(res.size());
+    Int power = 1;
+    for (int e = 1; e <= factor.second; e++) {
+      power *= factor.first;
+      for (int i = 0; i < old_size; i++) {
+        res.push_back(res[i] * power);
+      }
+    }
+  }
+  std::sort(res.begin(), res.end());
+  return res;
+}
+
+uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
+#if defined(__SIZEOF_INT128__)
+  return static_cast<uint64_t>(static_cast<__uint128_t>(x) * n % m);
+#else
+  uint64_t a = 0, b = x % m;
   for (; n > 0; n >>= 1) {
     if (n & 1) {
       a = (a + b) % m;
@@ -2237,10 +2391,11 @@ uint64 mulmod(uint64 x, uint64 n, uint64 m) {
     b = (b << 1) % m;
   }
   return a % m;
+#endif
 }
 
-uint64 powmod(uint64 x, uint64 n, uint64 m) {
-  uint64 a = 1, b = x;
+uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
+  uint64_t a = 1, b = x;
   for (; n > 0; n >>= 1) {
     if (n & 1) {
       a = mulmod(a, b, m);
@@ -2250,24 +2405,24 @@ uint64 powmod(uint64 x, uint64 n, uint64 m) {
   return a % m;
 }
 
-uint64 rand64u() {
+uint64_t rand64u() {
   static std::mt19937_64 rng(std::random_device{}());
   return rng();
 }
 
-bool is_probable_prime(long long n, int k = 20) {
+bool is_probable_prime(int64_t n, int k = 20) {
   if (n == 2 || n == 3) {
     return true;
   }
   if (n < 2 || n % 2 == 0 || n % 3 == 0) {
     return false;
   }
-  uint64 s = n - 1, p = n - 1;
+  uint64_t s = n - 1, p = n - 1;
   while (!(s & 1)) {
     s >>= 1;
   }
   for (int i = 0; i < k; i++) {
-    uint64 x, r = powmod(rand64u() % (n - 3) + 2, s, n);  // random witness base in [2, n - 2]
+    uint64_t x, r = powmod(rand64u() % (n - 3) + 2, s, n);  // random witness base in [2, n - 2]
     for (x = s; x != p && r != 1 && r != p; x <<= 1) {
       r = mulmod(r, r, n);
     }
@@ -2278,29 +2433,68 @@ bool is_probable_prime(long long n, int k = 20) {
   return true;
 }
 
-bool is_prime_fast(long long n) {
-  static const int np = 12, p[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
-  for (int i = 0; i < np; i++) {
-    if (n % p[i] == 0) {
-      return n == p[i];
+int64_t rho_factor(int64_t n) {
+  if (n % 2 == 0) {
+    return 2;
+  }
+  uint64_t y = rand64u() % (n - 1) + 1;
+  uint64_t c = rand64u() % (n - 1) + 1;
+  uint64_t m = rand64u() % (n - 1) + 1;
+  uint64_t g = 1, r = 1, q = 1, ys = 0, x = 0;
+  for (r = 1; g == 1; r <<= 1) {
+    x = y;
+    for (uint64_t i = 0; i < r; i++) {
+      y = (mulmod(y, y, n) + c) % n;
+    }
+    for (uint64_t k = 0; k < r && g == 1; k += m) {
+      ys = y;
+      int64_t lim = std::min(m, r - k);
+      for (int j = 0; j < lim; j++) {
+        y = (mulmod(y, y, n) + c) % n;
+        q = mulmod(q, (x > y) ? (x - y) : (y - x), n);
+      }
+      g = std::gcd(q, n);
     }
   }
-  if (n < p[np - 1]) {
+  if (g == static_cast<uint64_t>(n)) {
+    do {
+      ys = (mulmod(ys, ys, n) + c) % n;
+      g = std::gcd((x > ys) ? (x - ys) : (ys - x), n);
+    } while (g <= 1);
+  }
+  return g;
+}
+
+bool is_prime(int64_t n) {
+  if (n < 2) {
     return false;
   }
-  uint64 t;
+  static const int small_primes[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
+  for (int p : small_primes) {
+    if (n % p == 0) {
+      return n == p;
+    }
+  }
+  if (n < 31 * 31) {
+    return true;
+  }
+  uint64_t t;
   int s = 0;
   for (t = n - 1; !(t & 1); t >>= 1) {
     s++;
   }
-  for (int i = 0; i < np; i++) {
-    uint64 r = powmod(p[i], t, n);
+  static const uint64_t bases[] = {2, 325, 9375, 28178, 450775, 9780504, 1795265022};
+  for (uint64_t a : bases) {
+    if (a % n == 0) {
+      continue;
+    }
+    uint64_t r = powmod(a, t, n);
     if (r == 1) {
       continue;
     }
     bool ok = false;
     for (int j = 0; j < s && !ok; j++) {
-      ok |= (r == (uint64)n - 1);
+      ok |= (r == static_cast<uint64_t>(n) - 1);
       r = mulmod(r, r, n);
     }
     if (!ok) {
@@ -2309,110 +2503,102 @@ bool is_prime_fast(long long n) {
   }
   return true;
 }
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <vector>
 
-int main() {
-  std::vector<long long> tests{
-      -1,
-      0,
-      1,
-      2,
-      3,
-      4,
-      5,
-      1000000LL,
-      772023803LL,
-      792904103LL,
-      813815117LL,
-      834753187LL,
-      855718739LL,
-      876717799LL,
-      897746119LL,
-      2147483647LL,
-      5705234089LL,
-      5914686649LL,
-      6114145249LL,
-      6339503641LL,
-      6548531929LL
-  };
-  for (long long test : tests) {
-    bool p = is_prime(test);
-    assert(p == is_prime_fast(test));
-    assert(p == is_probable_prime(test));
+std::vector<int> cached_primes(int n) {
+  static int limit = 1;
+  static std::vector<int> primes;
+  if (n <= limit) {
+    return primes;
   }
-  return 0;
+  std::vector<int> least(n + 1, 0);
+  primes.clear();
+  for (int i = 2; i <= n; i++) {
+    if (least[i] == 0) {
+      least[i] = i;
+      primes.push_back(i);
+    }
+    for (int p : primes) {
+      if (p > least[i] || i > n / p) {
+        break;
+      }
+      least[i * p] = p;
+    }
+  }
+  limit = n;
+  return primes;
 }
-\end{lstlisting}
-\subsection{Integer Factorization}
-Compute the prime factorization of an integer. In the following implementations, the prime factorization of $n$ is represented as a sorted vector of prime integers which together multiply to $n$. Note that factors are duplicated in the vector in accordance to their multiplicity in the prime factorization of $n$. For 0, 1, and prime numbers, the prime factorization is considered to be a vector consisting of a single element - the input itself. For large inputs, Pollard's rho algorithm iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference.
 
-\begin{compactitem}
-  \item \inlinecode{prime\_factorize(n)} returns the prime factorization of \inlinecode{n} using trial division.
-  \item \inlinecode{get\_divisors(n)} returns a sorted vector of all (not merely prime) divisors of \inlinecode{n} using trial division.
-  \item \inlinecode{fermat(n)} returns a factor of \inlinecode{n} (possibly 1 or itself) that is not necessarily prime. This algorithm is efficient for integers with two factors near $\sqrt{n}$, but is roughly as slow as trial division otherwise.
-  \item \inlinecode{pollards\_rho\_brent(n)} returns a factor of \inlinecode{n} that is not necessarily prime using Pollard's rho algorithm with Brent's optimization. If \inlinecode{n} is prime, then \inlinecode{n} itself is returned. While this algorithm is non-deterministic and may fail to detect factors on certain runs of the same input, it can be retried until a nontrivial factor is found, as done in \inlinecode{prime\_factorize\_big()}.
-  \item \inlinecode{prime\_factorize\_big(n, trial\_division\_cutoff)} returns the prime factorization of a 64-bit integer \inlinecode{n} using a combination of trial division, the Miller-Rabin primality test, and Pollard's rho algorithm. \inlinecode{trial\_division\_cutoff} specifies the largest factor to test with trial division before falling back to the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
-\end{compactitem}
+using vfactors = std::vector<std::pair<int64_t, int>>;
 
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(\sqrt{n})$ per call to \inlinecode{prime\_factorize(n)}, \inlinecode{get\_divisors(n)}, and \inlinecode{fermat(n)}.
-  \item Unknown, but approximately $O(n^{1/4})$ per call to \inlinecode{pollards\_rho\_brent(n)} and \inlinecode{prime\_factorize\_big(n)}.
-\end{compactitem}
-
-\textbf{Space Complexity}: $O(f)$ auxiliary heap space for all operations, where $f$ is the number of factors returned.
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cmath>
-#include <random>
-#include <vector>
-
-template<class Int>
-std::vector<Int> prime_factorize(Int n) {
-  if (n <= 3) {
-    return std::vector<Int>(1, n);
-  }
-  std::vector<Int> res;
-  for (Int i = 2;; i++) {
-    int p = 0;
-    Int q = n / i, r = n - q * i;
-    if (i > q || (i == q && r > 0)) {
-      break;
+vfactors merge_factors(const vfactors &a, const vfactors &b) {
+  vfactors res;
+  int i = 0, j = 0;
+  while (i < static_cast<int>(a.size()) || j < static_cast<int>(b.size())) {
+    if (i < static_cast<int>(a.size()) && j < static_cast<int>(b.size()) &&
+        a[i].first == b[j].first) {
+      res.emplace_back(a[i].first, a[i].second + b[j].second);
+      i++;
+      j++;
+    } else if (
+        j == static_cast<int>(b.size()) ||
+        (i < static_cast<int>(a.size()) && a[i].first < b[j].first)
+    ) {
+      res.push_back(a[i++]);
+    } else {
+      res.push_back(b[j++]);
     }
-    while (r == 0) {
-      p++;
-      n = q;
-      q = n / i;
-      r = n - q * i;
-    }
-    for (int j = 0; j < p; j++) {
-      res.push_back(i);
-    }
-  }
-  if (n > 1) {
-    res.push_back(n);
   }
   return res;
 }
 
-template<class Int>
-std::vector<Int> get_divisors(Int n) {
+vfactors factorize_rho(int64_t n) {
   if (n <= 1) {
-    return (n < 1) ? std::vector<Int>() : std::vector<Int>(1, 1);
+    return {};
   }
-  std::vector<Int> res;
-  for (Int i = 1; i <= n / i; i++) {
-    if (n % i == 0) {
-      res.push_back(i);
-      if (i != n / i) {
-        res.push_back(n / i);
+  if (n % 2 == 0) {
+    return merge_factors(vfactors{{2, 1}}, factorize_rho(n / 2));
+  }
+  if (is_prime(n)) {
+    return {{n, 1}};
+  }
+  int64_t p;
+  do {
+    p = rho_factor(n);
+  } while (p == n);
+  return merge_factors(factorize_rho(p), factorize_rho(n / p));
+}
+
+vfactors factorize(int64_t n, int trial_division_cutoff = 1000000) {
+  if (n <= 1) {
+    return {};
+  }
+  vfactors res;
+  auto primes = cached_primes(trial_division_cutoff);
+  for (int p : primes) {
+    if (p > trial_division_cutoff || static_cast<int64_t>(p) > n / p) {
+      break;
+    }
+    if (n % p == 0) {
+      int cnt = 0;
+      do {
+        n /= p;
+        cnt++;
+      } while (n % p == 0);
+      res.emplace_back(p, cnt);
+    }
+  }
+  return merge_factors(res, factorize_rho(n));
+}
+
+std::vector<int64_t> divisors_from_factors(const vfactors &factors) {
+  std::vector<int64_t> res{1};
+  for (const auto &factor : factors) {
+    int old_size = static_cast<int>(res.size());
+    int64_t power = 1;
+    for (int e = 1; e <= factor.second; e++) {
+      power *= factor.first;
+      for (int i = 0; i < old_size; i++) {
+        res.push_back(res[i] * power);
       }
     }
   }
@@ -2420,188 +2606,102 @@ std::vector<Int> get_divisors(Int n) {
   return res;
 }
 
-long long fermat(long long n) {
-  if (n % 2 == 0) {
-    return 2;
+std::vector<int64_t> get_divisors(int64_t n) {
+  if (n <= 1) {
+    return (n < 1) ? std::vector<int64_t>() : std::vector<int64_t>(1, 1);
   }
-  long long x = sqrt(n), y = 0, r = x * x - y * y - n;
-  while (r != 0) {
-    if (r < 0) {
-      r += x + x + 1;
-      x++;
-    } else {
-      r -= y + y + 1;
-      y++;
-    }
-  }
-  return (x == y) ? (x + y) : (x - y);
-}
-
-using uint64 = unsigned long long;
-
-// Hot path: Can simply `return (unsigned __int128)x * n % m;` for a major constant-factor speedup
-// if the GCC/Clang __int128 extension is available. Otherwise, use the portable double-and-add
-// version below, which still won't overflow a signed 64-bit `long long`.
-uint64 mulmod(uint64 x, uint64 n, uint64 m) {
-  uint64 a = 0, b = x % m;
-  for (; n > 0; n >>= 1) {
-    if (n & 1) {
-      a = (a + b) % m;
-    }
-    b = (b << 1) % m;
-  }
-  return a % m;
-}
-
-uint64 powmod(uint64 x, uint64 n, uint64 m) {
-  uint64 a = 1, b = x;
-  for (; n > 0; n >>= 1) {
-    if (n & 1) {
-      a = mulmod(a, b, m);
-    }
-    b = mulmod(b, b, m);
-  }
-  return a % m;
-}
-
-uint64 rand64u() {
-  static std::mt19937_64 rng(std::random_device{}());
-  return rng();
-}
-
-uint64 gcd(uint64 a, uint64 b) {
-  while (b != 0) {
-    uint64 t = b;
-    b = a % b;
-    a = t;
-  }
-  return a;
-}
-
-long long pollards_rho_brent(long long n) {
-  if (n % 2 == 0) {
-    return 2;
-  }
-  uint64 y = rand64u() % (n - 1) + 1;
-  uint64 c = rand64u() % (n - 1) + 1;
-  uint64 m = rand64u() % (n - 1) + 1;
-  uint64 g = 1, r = 1, q = 1, ys = 0, x = 0;
-  for (r = 1; g == 1; r <<= 1) {
-    x = y;
-    for (uint64 i = 0; i < r; i++) {
-      y = (mulmod(y, y, n) + c) % n;
-    }
-    for (uint64 k = 0; k < r && g == 1; k += m) {
-      ys = y;
-      long long lim = std::min(m, r - k);
-      for (int j = 0; j < lim; j++) {
-        y = (mulmod(y, y, n) + c) % n;
-        q = mulmod(q, (x > y) ? (x - y) : (y - x), n);
-      }
-      g = gcd(q, n);
-    }
-  }
-  if (g == static_cast<uint64>(n)) {
-    do {
-      ys = (mulmod(ys, ys, n) + c) % n;
-      g = gcd((x > ys) ? (x - ys) : (ys - x), n);
-    } while (g <= 1);
-  }
-  return g;
-}
-
-bool is_prime_fast(long long n) {
-  static const int np = 12, p[] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
-  for (int i = 0; i < np; i++) {
-    if (n % p[i] == 0) {
-      return n == p[i];
-    }
-  }
-  if (n < p[np - 1]) {
-    return false;
-  }
-  uint64 t;
-  int s = 0;
-  for (t = n - 1; !(t & 1); t >>= 1) {
-    s++;
-  }
-  for (int i = 0; i < np; i++) {
-    uint64 r = powmod(p[i], t, n);
-    if (r == 1) {
-      continue;
-    }
-    bool ok = false;
-    for (int j = 0; j < s && !ok; j++) {
-      ok |= (r == (uint64)n - 1);
-      r = mulmod(r, r, n);
-    }
-    if (!ok) {
-      return false;
-    }
-  }
-  return true;
-}
-
-std::vector<long long> prime_factorize_big(
-    long long n, long long trial_division_cutoff = 1000000LL
-) {
-  if (n <= 3) {
-    return std::vector<long long>(1, n);
-  }
-  std::vector<long long> res;
-  for (; n % 2 == 0; n /= 2) {
-    res.push_back(2);
-  }
-  for (; n % 3 == 0; n /= 3) {
-    res.push_back(3);
-  }
-  for (long long i = 5, w = 4; i <= trial_division_cutoff && i <= n / i; i += w) {
-    for (; n % i == 0; n /= i) {
-      res.push_back(i);
-    }
-    w = 6 - w;
-  }
-  for (long long p; n > trial_division_cutoff && !is_prime_fast(n); n /= p) {
-    do {
-      p = pollards_rho_brent(n);
-    } while (p == n);
-    res.push_back(p);
-  }
-  if (n != 1) {
-    res.push_back(n);
-  }
-  sort(res.begin(), res.end());
-  return res;
+  return divisors_from_factors(factorize(n));
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <ctime>
+#include <iomanip>
+#include <iostream>
 #include <set>
 using namespace std;
 
-void validate(long long n, const vector<long long> &factors) {
-  if (n == 1 || is_prime_fast(n)) {
-    assert(factors == vector<long long>(1, n));
+void validate(int64_t n, const vfactors &factors) {
+  if (n <= 1) {
+    assert(factors.empty());
     return;
   }
-  long long prod = 1;
-  for (long long f : factors) {
-    assert(is_prime_fast(f));
-    prod *= f;
+  if (is_prime(n)) {
+    assert((factors == vfactors{{n, 1}}));
+    return;
+  }
+  int64_t prod = 1;
+  for (const auto &factor : factors) {
+    assert(is_prime(factor.first));
+    for (int i = 0; i < factor.second; i++) {
+      prod *= factor.first;
+    }
   }
   assert(prod == n);
 }
 
 int main() {
-  {  // Small tests.
-    for (int i = 1; i <= 10000; i++) {
-      auto v1 = prime_factorize(static_cast<long long>(i));
-      auto v2 = prime_factorize_big(i);
+  {  // Small primality tests.
+    vector<pair<int, bool>> cases{
+        {-10, false}, {-1, false}, {0, false}, {1, false}, // non-primes
+        {2, true}, {3, true}, {4, false}, {5, true},
+        {9, false},    // divisible by 3
+        {25, false},   // square of small prime
+        {29, true},    // last small-prime table entry
+        {31, true},    // just past small-prime table
+        {49, false},   // square, not divisible by 2 or 3
+        {121, false},  // 11^2
+        {169, false},  // 13^2
+        {961, false},  // 31^2, boundary for n < 31*31 shortcut
+        {997, true},   // prime near 1000
+        {1001, false}, // 7*11*13
+        {2047, false}, // 23*89, pseudoprime to base 2
+        {341, false},  // 11*31, Fermat pseudoprime to base 2
+        {561, false},  // Carmichael number
+    };
+    for (const auto [n, expected] : cases) {
+      assert(is_prime_slow(n) == expected);
+      assert(is_probable_prime(n) == expected);
+      assert(is_prime(n) == expected);
+    }
+  }
+  {  // Primality test benchmark.
+    vector<int64_t> nums{
+        772023803LL, 2147483647LL, 5705234089LL, 6339503641LL, 999966000289LL,
+    };
+    cout << "Primality test:" << endl;
+    cout << setw(15) << left << "num:";
+    cout << setw(18) << left << "is_prime_slow():";
+    cout << setw(20) << left << "is_probable_prime():";
+    cout << setw(13) << right << "is_prime():" << endl;
+    cout << fixed << setprecision(3);
+    for (int64_t n : nums) {
+      clock_t start = clock();
+      bool p1 = is_prime_slow(n);
+      double t1 = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
+      start = clock();
+      bool p2 = is_probable_prime(n);
+      double t2 = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
+      start = clock();
+      bool p3 = is_prime(n);
+      double t3 = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
+      assert(p1 == p2 && p1 == p3);
+      cout << setw(12) << left << n << right;
+      cout << setw(14) << 1000 * t1 << "ms";
+      cout << setw(16) << 1000 * t2 << "ms";
+      cout << setw(16) << 1000 * t3 << "ms" << endl;
+    }
+    cout << endl;
+  }
+  {  // Small factorization tests.
+    for (int64_t i = 1; i <= 10000; i++) {
+      auto v1 = factorize_slow(i);
+      auto v2 = factorize(i);
       validate(i, v1);
       assert(v1 == v2);
-      auto d = get_divisors(i);
+      auto d = get_divisors_slow(i);
       set<int> s(d.begin(), d.end());
       assert(d.size() == s.size());
       for (int j = 1; j <= i; j++) {
@@ -2611,28 +2711,66 @@ int main() {
       }
     }
   }
-  {  // Fermat works best for numbers with two factors close to each other.
-    long long n = 1000003LL * 100000037;
-    assert(fermat(n) == 1000003);
+  for (int64_t i : {1, 2, 36, 9999, 10000}) {
+    auto d = get_divisors_slow(i);
+    assert(std::vector<int64_t>(d.begin(), d.end()) == get_divisors(i));
   }
-  {  // Large tests.
-    const vector<long long> tests{
-        3LL * 3 * 5 * 7 * 9949 * 9967 * 1000003,
-        2LL * 1000003 * 1000000007,
-        999961LL * 1000033,
-        357267896789127671LL,
-        2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 11 * 13 * 17 * 19 * 23 * 29 *
-            31 * 37,
-        2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 35336848213,
-        2LL * 2 * 2 * 2 * 2 * 2 * 2 * 3 * 3 * 3 * 3 * 5 * 5 * 7 * 7 * 186917 * 186947,
+  {  // Compressed factors are convenient for building divisors.
+    vfactors factors{{2, 3}, {3, 2}, {5, 1}};
+    vector<int64_t> divisors = divisors_from_factors(factors);
+    assert(divisors.size() == 24);
+    assert(divisors.front() == 1 && divisors.back() == 360);
+    assert(factorize(360) == factors);
+    assert(get_divisors(360) == get_divisors_slow<int64_t>(360));
+  }
+  {  // Large factorization tests.
+    const vector<int64_t> nums{
+        (1LL << 62),                    // high power of 2
+        9223372036854775807LL,          // 2^63 - 1, many small factors
+        999983LL * 999983,              // square of a large prime
+        1900009LL * 1910009 * 2541547,  // three medium-size prime factors
+        50000017LL * 50001037,          // 16-digit semiprime
     };
-    for (const auto t : tests) {
-      validate(t, prime_factorize_big(t));
+    cout << "Factorization test:" << endl;
+    cout << setw(24) << left << "num:";
+    cout << setw(20) << left << "factorize_slow():";
+    cout << "factorize():" << endl;
+    cout << fixed << setprecision(3);
+    for (int64_t n : nums) {
+      clock_t start = clock();
+      vfactors factors1 = factorize_slow(n);
+      double t1 = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
+      start = clock();
+      vfactors factors2 = factorize(n);
+      double t2 = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
+      validate(n, factors1);
+      validate(n, factors2);
+      assert(factors1 == factors2);
+      cout << setw(26) << left << n << right << setw(8) << 1000 * t1 << "ms";
+      cout << setw(16) << 1000 * t2 << "ms" << endl;
+      cout << left;
     }
   }
   return 0;
 }
 \end{lstlisting}
+\begin{exampleoutput}
+Primality test:
+num:           is_prime_slow():  is_probable_prime():  is_prime():
+772023803            0.008ms           0.006ms           0.003ms
+2147483647           0.009ms           0.006ms           0.002ms
+5705234089           0.013ms           0.000ms           0.000ms
+6339503641           0.013ms           0.001ms           0.001ms
+999966000289         0.162ms           0.001ms           0.000ms
+
+Factorization test:
+num:                    factorize_slow():   factorize():
+4611686018427387904          0.002ms           0.006ms
+9223372036854775807          0.044ms           0.010ms
+999966000289                 0.469ms           0.043ms
+9223361212852495307          0.902ms           0.105ms
+2500052700017629            24.283ms           0.123ms
+\end{exampleoutput}
 \subsection{Euler's Totient Function}
 Euler's totient function $\phi(n)$ returns the number of positive integers less than or equal to $n$ that are relatively prime to $n$; that is, the number of integers $k$ in the range $[1, n]$ for which $\gcd(n, k) = 1$.
 
@@ -2665,6 +2803,7 @@ The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <numeric>
 #include <vector>
 
@@ -2711,21 +2850,21 @@ std::vector<int> phi_table(int lo, int hi) {
   for (int i = 2; i <= root; i++) {
     if (!composite[i]) {
       primes.push_back(i);
-      for (long long j = 1LL * i * i; j <= root; j += i) {
+      for (int64_t j = 1LL * i * i; j <= root; j += i) {
         composite[j] = true;
       }
     }
   }
   std::vector<int> res(hi - lo + 1);
-  std::vector<long long> remaining(hi - lo + 1);
+  std::vector<int64_t> remaining(hi - lo + 1);
   for (int i = lo; i <= hi; i++) {
     res[i - lo] = i;
     remaining[i - lo] = i;
   }
   for (int p : primes) {
     // Start at the first multiple of p that is >= lo, but never below p itself (this skips 0).
-    long long start = std::max(1LL * p, ((1LL * lo + p - 1) / p) * p);
-    for (long long j = start; j <= hi; j += p) {
+    int64_t start = std::max(1LL * p, ((1LL * lo + p - 1) / p) * p);
+    for (int64_t j = start; j <= hi; j += p) {
       int idx = static_cast<int>(j - lo);
       res[idx] -= res[idx] / p;
       while (remaining[idx] % p == 0) {
@@ -2771,62 +2910,8 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Binary Exponentiation}
-\inlinecode{powmod()} and \inlinecode{mulmod()} compute modular powers and products using binary exponentiation, also known as exponentiation by squaring, which decomposes the operation into a logarithmic number of multiplications while avoiding overflow. To further prevent overflow in the intermediate squaring computations, multiplication is itself performed using a similar double-and-add principle of repeated addition.
-
-\begin{compactitem}
-  \item \inlinecode{mulmod(x, n, m)} returns \inlinecode{x} multiplied by \inlinecode{n}, modulo \inlinecode{m}.
-  \item \inlinecode{powmod(x, n, m)} returns \inlinecode{x} raised to the power \inlinecode{n}, modulo \inlinecode{m}.
-\end{compactitem}
-
-All arguments are unsigned 64-bit integers, but \inlinecode{x} and \inlinecode{n} must not exceed $2^{63} - 1$ (the maximum value of a signed 64-bit integer) for the result to be computed correctly without overflow.
-
-\textbf{Time Complexity}: $O(\log n)$ per call to \inlinecode{mulmod()} and \inlinecode{powmod()}, where $n$ is the second argument.
-
-\textbf{Space Complexity}: $O(1)$ auxiliary.
-
-\begin{lstlisting}[language=C++]
-using uint64 = unsigned long long;
-
-// Hot path: Can simply `return (unsigned __int128)x * n % m;` for a major constant-factor speedup
-// if the GCC/Clang __int128 extension is available. Otherwise, use the portable double-and-add
-// version below, which still won't overflow a signed 64-bit `long long`.
-uint64 mulmod(uint64 x, uint64 n, uint64 m) {
-  uint64 a = 0, b = x % m;
-  for (; n > 0; n >>= 1) {
-    if (n & 1) {
-      a = (a + b) % m;
-    }
-    b = (b << 1) % m;
-  }
-  return a % m;
-}
-
-uint64 powmod(uint64 x, uint64 n, uint64 m) {
-  uint64 a = 1, b = x;
-  for (; n > 0; n >>= 1) {
-    if (n & 1) {
-      a = mulmod(a, b, m);
-    }
-    b = mulmod(b, b, m);
-  }
-  return a % m;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  assert(powmod(2, 10, 1000000007) == 1024);
-  assert(powmod(2, 62, 1000000) == 387904);
-  assert(powmod(10001, 10001, 100000) == 10001);
-  return 0;
-}
-\end{lstlisting}
 \subsection{Mobius Function and Inclusion-Exclusion}
-The Mobius function \inlinecode{mu(n)} is the multiplicative function defined as 1 if $n = 1$, 0 if $n$ is divisible by the square of a prime, and $(-1)^k$ if $n$ is a product of $k$ distinct primes. It is the coefficient that appears in Mobius inversion: if $g(n) = \sum_{d \mid n} f(d)$ for all $n$, then $f(n) = \sum_{d \mid n} \mu(d) \, g(n / d)$. This formalizes the principle of inclusion-exclusion in the divisor lattice, letting one recover a summand function from its divisor sums.
+The Mobius function $\mu(n)$ is the multiplicative function defined as 1 if $n = 1$, 0 if $n$ is divisible by the square of a prime, and $(-1)^k$ if $n$ is a product of $k$ distinct primes. It is the coefficient that appears in Mobius inversion: if $g(n) = \sum_{d \mid n} f(d)$ for all $n$, then $f(n) = \sum_{d \mid n} \mu(d) \, g(n / d)$. This formalizes the principle of inclusion-exclusion in the divisor lattice, letting one recover a summand function from its divisor sums.
 
 Inclusion-exclusion itself counts the size of a union by alternately adding and subtracting the sizes of intersections. A canonical number-theoretic instance is counting integers in $[1, n]$ that are coprime to a modulus $m$: subtract the multiples of each prime factor of $m$, add back those counted twice, and so on. The signed terms are precisely the values of \inlinecode{mu} over the squarefree divisors of $m$, so \inlinecode{count\_coprime(n, m)} equals $\sum_{d \mid m} \mu(d) \lfloor n / d \rfloor$.
 
@@ -2853,6 +2938,7 @@ Inclusion-exclusion itself counts the size of a union by alternately adding and 
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <vector>
 
 int mobius(int n) {
@@ -2901,9 +2987,9 @@ std::vector<int> mobius_sieve(int n) {
   return mu;
 }
 
-long long count_coprime(long long n, long long m) {
-  std::vector<long long> primes;
-  for (long long p = 2; p <= m / p; p++) {
+int64_t count_coprime(int64_t n, int64_t m) {
+  std::vector<int64_t> primes;
+  for (int64_t p = 2; p <= m / p; p++) {
     if (m % p == 0) {
       primes.push_back(p);
       while (m % p == 0) {
@@ -2914,10 +3000,10 @@ long long count_coprime(long long n, long long m) {
   if (m > 1) {
     primes.push_back(m);
   }
-  int k = primes.size();
-  long long total = 0;
+  int k = static_cast<int>(primes.size());
+  int64_t total = 0;
   for (int mask = 0; mask < (1 << k); mask++) {
-    long long product = 1;
+    int64_t product = 1;
     int bits = 0;
     for (int i = 0; i < k; i++) {
       if ((mask >> i) & 1) {
@@ -2961,7 +3047,7 @@ Perform simple arithmetic operations on arbitrary precision big integers whose d
 This version is intentionally small and decimal-oriented. Addition and subtraction are the usual schoolbook digit scans with carry or borrow. Multiplication keeps a shifted copy of the left operand for each digit of the right operand, adds that row once per digit value, then shifts by one decimal place. Division is long division: it scans the dividend from most significant digit to least, maintains a running remainder, and repeatedly subtracts the divisor to discover each quotient digit.
 
 \begin{compactitem}
-  \item \inlinecode{BigInt(n)} constructs a big integer from a long long (default: 0).
+  \item \inlinecode{BigInt(n)} constructs a big integer from an integer \inlinecode{n} (default: 0).
   \item \inlinecode{BigInt(s)} constructs a big integer from a string \inlinecode{s}, which must strictly consist of a sequence of numeric digits, optionally preceded by a minus sign.
   \item \inlinecode{to\_string()} returns the string representation of the big integer.
   \item \inlinecode{comp(a, b)} returns $-1$, $0$, or $1$ depending on whether the big integers \inlinecode{a} and \inlinecode{b} compare less, equal, or greater, respectively.
@@ -2988,6 +3074,7 @@ This version is intentionally small and decimal-oriented. Addition and subtracti
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 
@@ -3071,7 +3158,7 @@ class BigInt {
   }
 
  public:
-  BigInt(long long n = 0) {
+  BigInt(int64_t n = 0) {
     sign = (n < 0) ? -1 : 1;
     if (n == 0) {
       digits = "0";
@@ -3170,15 +3257,15 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Big Integers}
-Perform operations on arbitrary precision big integers internally represented as a vector of base-$10^9$ digits in little-endian order. Typical arithmetic operations involving mixed numeric primitives and strings are supported using templates and operator overloading, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
+Perform operations on arbitrary precision big integers internally represented as a vector of base-$10^9$ digits in little-endian order. Typical arithmetic operations involving mixed numeric primitives and strings are supported through implicit construction and hidden friend operators, as long as at least one operand is a \inlinecode{BigInt} at any given level of evaluation.
 
 \begin{compactitem}
-  \item \inlinecode{BigInt(n)} constructs a big integer from a long long (default: 0).
+  \item \inlinecode{BigInt(n)} constructs a big integer from an integer \inlinecode{n} (default: 0).
   \item \inlinecode{BigInt(s)} constructs a big integer from a C string or an \inlinecode{std::string} \inlinecode{s}.
   \item \inlinecode{operator=} is defined to copy from another big integer or to assign from a 64-bit integer primitive.
   \item \inlinecode{size()} returns the number of digits in the base-10 representation.
   \item Operators \inlinecode{\textgreater{}\textgreater{}} and \inlinecode{\textless{}\textless{}} are defined to support stream-based input and output.
-  \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the big integer \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} respectively. For the latter three data types, overflow behavior is based on that of inputting from \inlinecode{std::istream}.
+  \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the big integer \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively. For the latter three data types, overflow behavior is based on that of inputting from \inlinecode{std::istream}.
   \item \inlinecode{v.abs()} returns the absolute value of big integer \inlinecode{v}.
   \item \inlinecode{a.comp(b)} returns $-1$, $0$, or $1$ depending on whether the big integers \inlinecode{a} and \inlinecode{b} compare less, equal, or greater, respectively.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on integer primitives. Addition, subtraction, and comparisons are performed using the standard linear algorithms. Multiplication first converts limbs from base $10^9$ to base $10^4$ so coefficient products fit safely, then uses either Karatsuba multiplication (if \inlinecode{USE\_FFT\_MULT} is false) or complex FFT convolution (if \inlinecode{USE\_FFT\_MULT} is true), converting the result back to base $10^9$. Division and modulo are computed together by normalized long division: scale the operands so the divisor's leading limb is large, estimate each quotient limb from the top one or two limbs of the running remainder, correct the estimate by adding the divisor back if necessary, then unscale the remainder.
@@ -3212,6 +3299,7 @@ Perform operations on arbitrary precision big integers internally represented as
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <iomanip>
@@ -3228,7 +3316,7 @@ class BigInt {
   static const bool USE_FFT_MULT = true;
 
   using vint = std::vector<int>;
-  using vll = std::vector<long long>;
+  using vint64 = std::vector<int64_t>;
   using vcd = std::vector<std::complex<double>>;
 
   vint digits;
@@ -3323,13 +3411,13 @@ class BigInt {
   }
 
   static vint convert_base(const vint &digits, int l1, int l2) {
-    vll p(std::max(l1, l2) + 1);
+    vint64 p(std::max(l1, l2) + 1);
     p[0] = 1;
     for (int i = 1; i < static_cast<int>(p.size()); i++) {
       p[i] = p[i - 1] * 10;
     }
     vint res;
-    long long curr = 0;
+    int64_t curr = 0;
     for (int i = 0, curr_digits = 0; i < static_cast<int>(digits.size()); i++) {
       curr += digits[i] * p[curr_digits];
       curr_digits += l1;
@@ -3347,9 +3435,9 @@ class BigInt {
   }
 
   template<class It>
-  static vll karatsuba(It alo, It ahi, It blo, It bhi) {
+  static vint64 karatsuba(It alo, It ahi, It blo, It bhi) {
     int n = std::distance(alo, ahi), k = n / 2;
-    vll res(n * 2);
+    vint64 res(n * 2);
     if (n <= 32) {
       for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
@@ -3360,7 +3448,7 @@ class BigInt {
     }
     auto a1b1 = karatsuba(alo, alo + k, blo, blo + k);
     auto a2b2 = karatsuba(alo + k, ahi, blo + k, bhi);
-    vll a2(alo + k, ahi), b2(blo + k, bhi);
+    vint64 a2(alo + k, ahi), b2(blo + k, bhi);
     for (int i = 0; i < k; i++) {
       a2[i] += alo[i];
       b2[i] += blo[i];
@@ -3426,8 +3514,8 @@ class BigInt {
 
  public:
   BigInt() : sign(1) {}
-  BigInt(int v) { *this = static_cast<long long>(v); }
-  BigInt(long long v) { *this = v; }
+  BigInt(int v) { *this = static_cast<int64_t>(v); }
+  BigInt(int64_t v) { *this = v; }
   BigInt(const char *s) { read(strlen(s), s); }
   BigInt(const std::string &s) { read(s.size(), s.c_str()); }
 
@@ -3437,7 +3525,7 @@ class BigInt {
     return *this;
   }
 
-  BigInt &operator=(long long v) {
+  BigInt &operator=(int64_t v) {
     sign = 1;
     if (v < 0) {
       sign = -1;
@@ -3489,8 +3577,8 @@ class BigInt {
     return oss.str();
   }
 
-  long long to_llong() const {
-    long long res = 0;
+  int64_t to_llong() const {
+    int64_t res = 0;
     for (int i = static_cast<int>(digits.size()) - 1; i >= 0; i--) {
       res = res * BASE + digits[i];
     }
@@ -3512,24 +3600,26 @@ class BigInt {
   }
 
   int comp(const BigInt &v) const { return comp(digits, v.digits, sign, v.sign); }
-  bool operator<(const BigInt &v) const { return comp(v) < 0; }
-  bool operator>(const BigInt &v) const { return comp(v) > 0; }
-  bool operator<=(const BigInt &v) const { return comp(v) <= 0; }
-  bool operator>=(const BigInt &v) const { return comp(v) >= 0; }
-  bool operator==(const BigInt &v) const { return comp(v) == 0; }
-  bool operator!=(const BigInt &v) const { return comp(v) != 0; }
 
-  template<class T> friend bool operator<(const T &a, const BigInt &b) { return BigInt(a) < b; }
-  template<class T> friend bool operator>(const T &a, const BigInt &b) { return BigInt(a) > b; }
-  template<class T> friend bool operator<=(const T &a, const BigInt &b) { return BigInt(a) <= b; }
-  template<class T> friend bool operator>=(const T &a, const BigInt &b) { return BigInt(a) >= b; }
-  template<class T> friend bool operator==(const T &a, const BigInt &b) { return BigInt(a) == b; }
-  template<class T> friend bool operator!=(const T &a, const BigInt &b) { return BigInt(a) != b; }
+  // The comparison and binary arithmetic operators are hidden friends, so a raw integer operand on
+  // either side converts through the implicit constructor.
+  friend bool operator<(const BigInt &a, const BigInt &b) { return a.comp(b) < 0; }
+  friend bool operator>(const BigInt &a, const BigInt &b) { return a.comp(b) > 0; }
+  friend bool operator<=(const BigInt &a, const BigInt &b) { return a.comp(b) <= 0; }
+  friend bool operator>=(const BigInt &a, const BigInt &b) { return a.comp(b) >= 0; }
+  friend bool operator==(const BigInt &a, const BigInt &b) { return a.comp(b) == 0; }
+  friend bool operator!=(const BigInt &a, const BigInt &b) { return a.comp(b) != 0; }
 
   BigInt abs() const { BigInt res(*this); res.sign = 1; return res; }
   BigInt operator-() const { BigInt res(*this); res.sign = -sign; return res; }
-  BigInt operator+(const BigInt &v) const { return add(digits, v.digits, sign, v.sign); }
-  BigInt operator-(const BigInt &v) const { return sub(digits, v.digits, sign, v.sign); }
+
+  friend BigInt operator+(const BigInt &a, const BigInt &b) {
+    return add(a.digits, b.digits, a.sign, b.sign);
+  }
+
+  friend BigInt operator-(const BigInt &a, const BigInt &b) {
+    return sub(a.digits, b.digits, a.sign, b.sign);
+  }
 
   void operator*=(int v) {
     if (v < 0) {
@@ -3540,7 +3630,7 @@ class BigInt {
       if (i == static_cast<int>(digits.size())) {
         digits.push_back(0);
       }
-      long long curr = digits[i] * static_cast<long long>(v) + carry;
+      int64_t curr = digits[i] * static_cast<int64_t>(v) + carry;
       carry = static_cast<int>((curr / BASE));
       digits[i] = static_cast<int>((curr % BASE));
     }
@@ -3553,9 +3643,9 @@ class BigInt {
     return res;
   }
 
-  BigInt operator*(const BigInt &v) const {
+  friend BigInt operator*(const BigInt &u, const BigInt &v) {
     static const int TEMP_BASE = 10000, TEMP_BASE_DIGITS = 4;
-    vint a = convert_base(digits, BASE_DIGITS, TEMP_BASE_DIGITS);
+    vint a = convert_base(u.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
     vint b = convert_base(v.digits, BASE_DIGITS, TEMP_BASE_DIGITS);
     int n = 1;
     while (n < 2 * static_cast<int>(std::max(a.size(), b.size()))) {
@@ -3563,7 +3653,7 @@ class BigInt {
     }
     a.resize(n, 0);
     b.resize(n, 0);
-    vll c;
+    vint64 c;
     if (USE_FFT_MULT) {
       auto at = fft(a.begin(), a.end()), bt = fft(b.begin(), b.end());
       for (int i = 0; i < n; i++) {
@@ -3578,9 +3668,9 @@ class BigInt {
       c = karatsuba(a.begin(), a.end(), b.begin(), b.end());
     }
     BigInt res;
-    res.sign = sign * v.sign;
+    res.sign = u.sign * v.sign;
     for (int i = 0, carry = 0; i < static_cast<int>(c.size()); i++) {
-      long long d = c[i] + carry;
+      int64_t d = c[i] + carry;
       res.digits.push_back(d % TEMP_BASE);
       carry = d / TEMP_BASE;
     }
@@ -3598,7 +3688,7 @@ class BigInt {
       v = -v;
     }
     for (int i = static_cast<int>(digits.size()) - 1, rem = 0; i >= 0; i--) {
-      long long curr = digits[i] + rem * static_cast<long long>(BASE);
+      int64_t curr = digits[i] + rem * static_cast<int64_t>(BASE);
       digits[i] = static_cast<int>((curr / v));
       rem = static_cast<int>((curr % v));
     }
@@ -3621,7 +3711,7 @@ class BigInt {
     }
     int m = 0;
     for (int i = static_cast<int>(digits.size()) - 1; i >= 0; i--) {
-      m = (digits[i] + m * static_cast<long long>(BASE)) % v;
+      m = (digits[i] + m * static_cast<int64_t>(BASE)) % v;
     }
     return m * sign;
   }
@@ -3641,7 +3731,7 @@ class BigInt {
       r += an.digits[i];
       int s1 = (r.digits.size() <= bn.digits.size()) ? 0 : r.digits[bn.digits.size()];
       int s2 = (r.digits.size() <= bn.digits.size() - 1) ? 0 : r.digits[bn.digits.size() - 1];
-      int d = (static_cast<long long>(s1) * BASE + s2) / bn.digits.back();
+      int d = (static_cast<int64_t>(s1) * BASE + s2) / bn.digits.back();
       for (r -= bn * d; r < 0; r += bn) {
         d--;
       }
@@ -3654,8 +3744,8 @@ class BigInt {
     return {q, r / norm};
   }
 
-  BigInt operator/(const BigInt &v) const { return div(v).first; }
-  BigInt operator%(const BigInt &v) const { return div(v).second; }
+  friend BigInt operator/(const BigInt &a, const BigInt &b) { return a.div(b).first; }
+  friend BigInt operator%(const BigInt &a, const BigInt &b) { return a.div(b).second; }
   BigInt operator++(int){ BigInt t(*this); operator++(); return t; }
   BigInt operator--(int){ BigInt t(*this); operator--(); return t; }
   BigInt &operator++() { *this = *this + BigInt(1); return *this; }
@@ -3665,12 +3755,6 @@ class BigInt {
   BigInt &operator*=(const BigInt &v) { *this = *this * v; return *this; }
   BigInt &operator/=(const BigInt &v) { *this = *this / v; return *this; }
   BigInt &operator%=(const BigInt &v) { *this = *this % v; return *this; }
-
-  template<class T>
-  friend BigInt operator+(const T &a, const BigInt &b) { return BigInt(a) + b; }
-
-  template<class T>
-  friend BigInt operator-(const T &a, const BigInt &b) { return BigInt(a) - b; }
 
   BigInt pow(int n) const {
     if (n == 0) {
@@ -3698,21 +3782,23 @@ class BigInt {
       v.digits.push_back(0);
     }
     int n = static_cast<int>(v.digits.size());
-    int ldig = (int)::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
+    int ldig =
+        static_cast<int>(::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]));
     int norm = BASE / (ldig + 1);
     v *= norm;
     v *= norm;
     while (v.digits.empty() || v.digits.size() % 2 == 1) {
       v.digits.push_back(0);
     }
-    BigInt r(static_cast<long long>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
-    int q = ldig = (int)::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
+    BigInt r(static_cast<int64_t>(v.digits[n - 1]) * BASE + v.digits[n - 2]);
+    int q = ldig =
+        static_cast<int>(::sqrt(static_cast<double>(v.digits[n - 1]) * BASE + v.digits[n - 2]));
     BigInt res;
     for (int j = n / 2 - 1; j >= 0; j--) {
       for (;; q--) {
         BigInt r1 =
             (r - (res * 2 * BASE + q) * q) * BASE * BASE +
-            (j > 0 ? static_cast<long long>(v.digits[2 * j - 1]) * BASE + v.digits[2 * j - 2] : 0);
+            (j > 0 ? static_cast<int64_t>(v.digits[2 * j - 1]) * BASE + v.digits[2 * j - 2] : 0);
         if (r1 >= 0) {
           r = r1;
           break;
@@ -3725,7 +3811,7 @@ class BigInt {
         int d1 = (sz1 + 2 < sz2) ? r.digits[sz1 + 2] : 0;
         int d2 = (sz1 + 1 < sz2) ? r.digits[sz1 + 1] : 0;
         int d3 = (sz1 < sz2) ? r.digits[sz1] : 0;
-        q = (static_cast<long long>(d1) * BASE * BASE + static_cast<long long>(d2) * BASE + d3) /
+        q = (static_cast<int64_t>(d1) * BASE * BASE + static_cast<int64_t>(d2) * BASE + d3) /
             (ldig * 2);
       }
     }
@@ -3792,6 +3878,12 @@ int main() {
   assert(a - b == "-9912217419970436338");
   assert(a * b == "-122739196911503356525379735104870536");
   assert(a / b == "-798");
+
+  // Raw integers and strings work on either side of comparisons and arithmetic.
+  assert("12398124981294214" == b);
+  assert(5 + BigInt(7) == 12);
+  assert(-100 < b && 5 % BigInt(3) == 2);
+
   assert(BigInt(20).pow(12345).size() == 16062);
   assert(BigInt("9812985918924981892491829").nth_root(4) == 1769906);
   for (int i = -100; i <= 100; i++) {
@@ -3806,8 +3898,8 @@ int main() {
         assert(BigInt(i) / BigInt(j) == i / j);
       }
       if (0 < i && i <= 10 && 0 < j && j <= 10) {
-        assert(BigInt(i).nth_root(j) == static_cast<long long>((pow(i, 1.0 / j) + 1E-5)));
-        long long p = 1;
+        assert(BigInt(i).nth_root(j) == static_cast<int64_t>((pow(i, 1.0 / j) + 1E-5)));
+        int64_t p = 1;
         for (int k = 0; k < j; k++) {
           p *= i;
         }
@@ -3841,9 +3933,9 @@ Perform operations on rational numbers internally represented as two integers: a
   \item \inlinecode{Rational(n, d)} constructs a rational number with numerator \inlinecode{n} and denominator \inlinecode{d}.
   \item \inlinecode{operator\textgreater{}\textgreater{}} inputs a rational number using the next integer from the stream as the numerator and 1 as the denominator.
   \item \inlinecode{operator\textless{}\textless{}} outputs the rational number as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
-  \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the rational \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{long long}, \inlinecode{double}, and \inlinecode{long double} respectively.
+  \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the rational \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively.
   \item \inlinecode{v.abs()}, \inlinecode{abs(v)}, \inlinecode{v.floor()}, and \inlinecode{v.ceil()} return the absolute value, floor, and ceiling of rational \inlinecode{v}.
-  \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on numerical primitives.
+  \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, \inlinecode{!=}, \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{\%}, \inlinecode{++}, \inlinecode{--}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, \inlinecode{/=}, and \inlinecode{\%=} are defined analogous to those on numerical primitives. The comparisons and binary arithmetic are hidden friends, so a raw integer operand works on either side.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3861,12 +3953,13 @@ Perform operations on rational numbers internally represented as two integers: a
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <istream>
 #include <ostream>
 #include <sstream>
 #include <string>
 
-template<class Int = long long>
+template<class Int>
 class Rational {
   Int num, den;
 
@@ -3913,10 +4006,10 @@ class Rational {
 
   // to_llong/to_double/to_ldouble round-trip through a stringstream so that any Int supporting
   // streamed I/O (e.g. a big-integer type) converts, even without a direct cast to the target type.
-  long long to_llong() const {
+  int64_t to_llong() const {
     std::stringstream ss;
     ss << num << " " << den;
-    long long n, d;
+    int64_t n, d;
     ss >> n >> d;
     return n / d;
   }
@@ -3937,49 +4030,44 @@ class Rational {
     return n / d;
   }
 
-  bool operator<(const Rational &r) const { return num * r.den < r.num * den; }
-  bool operator>(const Rational &r) const { return r.num * den < num * r.den; }
-  bool operator<=(const Rational &r) const { return !(r < *this); }
-  bool operator>=(const Rational &r) const { return !(*this < r); }
-  bool operator==(const Rational &r) const { return num == r.num && den == r.den; }
-  bool operator!=(const Rational &r) const { return num != r.num || den != r.den; }
+  // The comparison and binary arithmetic operators are hidden friends, so a raw integer operand on
+  // either side converts through the implicit constructor.
+  friend bool operator<(const Rational &a, const Rational &b) {
+    return a.num * b.den < b.num * a.den;
+  }
 
-  template<class T>
-  friend bool operator<(const T &a, const Rational &b) { return Rational(a) < b; }
+  friend bool operator==(const Rational &a, const Rational &b) {
+    return a.num == b.num && a.den == b.den;
+  }
 
-  template<class T>
-  friend bool operator>(const T &a, const Rational &b) { return Rational(a) > b; }
-
-  template<class T>
-  friend bool operator<=(const T &a, const Rational &b) { return Rational(a) <= b; }
-
-  template<class T>
-  friend bool operator>=(const T &a, const Rational &b) { return Rational(a) >= b; }
-
-  template<class T>
-  friend bool operator==(const T &a, const Rational &b) { return Rational(a) == b; }
-
-  template<class T>
-  friend bool operator!=(const T &a, const Rational &b) { return Rational(a) != b; }
+  friend bool operator>(const Rational &a, const Rational &b) { return b < a; }
+  friend bool operator<=(const Rational &a, const Rational &b) { return !(b < a); }
+  friend bool operator>=(const Rational &a, const Rational &b) { return !(a < b); }
+  friend bool operator!=(const Rational &a, const Rational &b) { return !(a == b); }
 
   Rational abs() const { return Rational(num < 0 ? -num : num, den); }
   friend Rational abs(const Rational &r) { return r.abs(); }
   Int floor() const { return num < 0 ? -((-num + den - 1) / den) : num / den; }
   Int ceil() const { return num < 0 ? -(-num / den) : (num + den - 1) / den; }
 
-  Rational operator+(const Rational &r) const {
-    return Rational(num * r.den + r.num * den, den * r.den);
+  friend Rational operator+(const Rational &a, const Rational &b) {
+    return Rational(a.num * b.den + b.num * a.den, a.den * b.den);
   }
 
-  Rational operator-(const Rational &r) const {
-    return Rational(num * r.den - r.num * den, r.den * den);
+  friend Rational operator-(const Rational &a, const Rational &b) {
+    return Rational(a.num * b.den - b.num * a.den, a.den * b.den);
   }
 
-  Rational operator*(const Rational &r) const { return Rational(num * r.num, r.den * den); }
-  Rational operator/(const Rational &r) const { return Rational(num * r.den, den * r.num); }
+  friend Rational operator*(const Rational &a, const Rational &b) {
+    return Rational(a.num * b.num, a.den * b.den);
+  }
 
-  Rational operator%(const Rational &r) const {
-    return *this - r * Rational(num * r.den / (r.num * den), 1);
+  friend Rational operator/(const Rational &a, const Rational &b) {
+    return Rational(a.num * b.den, a.den * b.num);
+  }
+
+  friend Rational operator%(const Rational &a, const Rational &b) {
+    return a - b * Rational(a.num * b.den / (b.num * a.den), 1);
   }
 
   Rational operator-() const { return Rational(-num, den); }
@@ -3992,21 +4080,6 @@ class Rational {
   Rational &operator*=(const Rational &r) { *this = *this * r; return *this; }
   Rational &operator/=(const Rational &r) { *this = *this / r; return *this; }
   Rational &operator%=(const Rational &r) { *this = *this % r; return *this; }
-
-  template<class T>
-  friend Rational operator+(const T &a, const Rational &b) { return Rational(a) + b; }
-
-  template<class T>
-  friend Rational operator-(const T &a, const Rational &b) { return Rational(a) - b; }
-
-  template<class T>
-  friend Rational operator*(const T &a, const Rational &b) { return Rational(a) * b; }
-
-  template<class T>
-  friend Rational operator/(const T &a, const Rational &b) { return Rational(a) / b; }
-
-  template<class T>
-  friend Rational operator%(const T &a, const Rational &b) { return Rational(a) % b; }
 };
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -4018,11 +4091,16 @@ class Rational {
 #define EQ(a, b) (fabs((a) - (b)) <= 1e-9)
 
 int main() {
-  using Rational = Rational<long long>;
+  using Rational = Rational<int64_t>;
   assert(Rational(-21, 1) % 2 == -1);
   Rational r(Rational(-53, 10) % Rational(-17, 10));
   assert(EQ(r.to_ldouble(), fmod(-5.3, -1.7)));
   assert(r.to_string() == "-1/5");
+
+  // Raw integers work on either side of comparisons and arithmetic.
+  assert(2 + Rational(1, 2) == Rational(5, 2));
+  assert(1 < Rational(3, 2) && Rational(3, 2) < 2);
+  assert(2 % Rational(3, 4) == Rational(1, 2));
   return 0;
 }
 \end{lstlisting}
@@ -4112,11 +4190,11 @@ matrix identity_matrix(int n) {
 }
 
 int rows(const matrix &a) {
-  return a.size();
+  return static_cast<int>(a.size());
 }
 
 int columns(const matrix &a) {
-  return a.empty() ? 0 : a[0].size();
+  return a.empty() ? 0 : static_cast<int>(a[0].size());
 }
 
 std::ostream &operator<<(std::ostream &out, const matrix &a) {
@@ -4945,17 +5023,16 @@ The basis is kept in reduced form: \inlinecode{basis[i]} is either 0 or a value 
 \begin{lstlisting}[language=C++]
 #include <array>
 #include <climits>
-
-using uint64 = unsigned long long;
+#include <cstdint>
 
 class XorBasis {
-  static const int BITS = sizeof(uint64) * CHAR_BIT;
+  static const int BITS = sizeof(uint64_t) * CHAR_BIT;
 
-  std::array<uint64, BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
+  std::array<uint64_t, BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
   int sz = 0;
 
  public:
-  bool insert(uint64 x) {
+  bool insert(uint64_t x) {
     for (int i = BITS - 1; i >= 0; i--) {
       if (!((x >> i) & 1)) {
         continue;
@@ -4970,7 +5047,7 @@ class XorBasis {
     return false;
   }
 
-  bool contains(uint64 x) const {
+  bool contains(uint64_t x) const {
     for (int i = BITS - 1; i >= 0; i--) {
       if (((x >> i) & 1) && basis[i] != 0) {
         x ^= basis[i];
@@ -4979,7 +5056,7 @@ class XorBasis {
     return x == 0;
   }
 
-  uint64 max_xor(uint64 base = 0) const {
+  uint64_t max_xor(uint64_t base = 0) const {
     for (int i = BITS - 1; i >= 0; i--) {
       if ((base ^ basis[i]) > base) {
         base ^= basis[i];
@@ -5042,13 +5119,14 @@ The transform replaces a coefficient vector with its evaluations at the powers o
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
-const long long MOD = 998244353;
-const long long ROOT = 3;
+const int64_t MOD = 998244353;
+const int64_t ROOT = 3;
 
-long long powmod(long long b, long long e, long long m) {
-  long long res = 1;
+int64_t powmod(int64_t b, int64_t e, int64_t m) {
+  int64_t res = 1;
   for (b %= m; e > 0; e >>= 1) {
     if (e & 1) {
       res = res * b % m;
@@ -5058,7 +5136,7 @@ long long powmod(long long b, long long e, long long m) {
   return res;
 }
 
-void ntt(std::vector<long long> &a, bool invert) {
+void ntt(std::vector<int64_t> &a, bool invert) {
   int n = static_cast<int>(a.size());
   for (int i = 1, j = 0; i < n; i++) {
     int bit = n >> 1;
@@ -5071,14 +5149,14 @@ void ntt(std::vector<long long> &a, bool invert) {
     }
   }
   for (int len = 2; len <= n; len <<= 1) {
-    long long root = powmod(ROOT, (MOD - 1) / len, MOD);
+    int64_t root = powmod(ROOT, (MOD - 1) / len, MOD);
     if (invert) {
       root = powmod(root, MOD - 2, MOD);
     }
     for (int i = 0; i < n; i += len) {
-      long long w = 1;
+      int64_t w = 1;
       for (int k = 0; k < len / 2; k++) {
-        long long u = a[i + k], v = a[i + k + len / 2] * w % MOD;
+        int64_t u = a[i + k], v = a[i + k + len / 2] * w % MOD;
         a[i + k] = (u + v) % MOD;
         a[i + k + len / 2] = (u - v + MOD) % MOD;
         w = w * root % MOD;
@@ -5086,14 +5164,14 @@ void ntt(std::vector<long long> &a, bool invert) {
     }
   }
   if (invert) {
-    long long n_inv = powmod(n, MOD - 2, MOD);
-    for (long long &x : a) {
+    int64_t n_inv = powmod(n, MOD - 2, MOD);
+    for (int64_t &x : a) {
       x = x * n_inv % MOD;
     }
   }
 }
 
-std::vector<long long> convolve(std::vector<long long> a, std::vector<long long> b) {
+std::vector<int64_t> convolve(std::vector<int64_t> a, std::vector<int64_t> b) {
   if (a.empty() || b.empty()) {
     return {};
   }
@@ -5122,9 +5200,9 @@ using namespace std;
 
 int main() {
   // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
-  vector<long long> a{1, 2, 3}, b{4, 5, 6};
-  vector<long long> c = convolve(a, b);
-  assert((c == vector<long long>{4, 13, 28, 27, 18}));
+  vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
+  vector<int64_t> c = convolve(a, b);
+  assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
   return 0;
 }
 \end{lstlisting}
@@ -5155,6 +5233,7 @@ The trade-off is precision. Complex arithmetic in double precision accumulates r
 \begin{lstlisting}[language=C++]
 #include <cmath>
 #include <complex>
+#include <cstdint>
 #include <vector>
 
 typedef std::complex<double> cd;
@@ -5192,7 +5271,7 @@ void fft(std::vector<cd> &a, bool invert) {
   }
 }
 
-std::vector<long long> convolve(const std::vector<long long> &a, const std::vector<long long> &b) {
+std::vector<int64_t> convolve(const std::vector<int64_t> &a, const std::vector<int64_t> &b) {
   if (a.empty() || b.empty()) {
     return {};
   }
@@ -5210,7 +5289,7 @@ std::vector<long long> convolve(const std::vector<long long> &a, const std::vect
     fa[i] *= fb[i];
   }
   fft(fa, true);
-  std::vector<long long> res(result_size);
+  std::vector<int64_t> res(result_size);
   for (int i = 0; i < result_size; i++) {
     res[i] = llround(fa[i].real());
   }
@@ -5225,9 +5304,9 @@ using namespace std;
 
 int main() {
   // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
-  vector<long long> a{1, 2, 3}, b{4, 5, 6};
-  vector<long long> c = convolve(a, b);
-  assert((c == vector<long long>{4, 13, 28, 27, 18}));
+  vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
+  vector<int64_t> c = convolve(a, b);
+  assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
   return 0;
 }
 \end{lstlisting}
@@ -5245,12 +5324,13 @@ The code operates modulo the prime 998244353; change \inlinecode{MOD} to use a d
 \textbf{Space Complexity}: $O(n)$ auxiliary heap space.
 
 \begin{lstlisting}[language=C++]
+#include <cstdint>
 #include <vector>
 
-const long long MOD = 998244353;
+const int64_t MOD = 998244353;
 
-long long powmod(long long b, long long e, long long m) {
-  long long res = 1;
+int64_t powmod(int64_t b, int64_t e, int64_t m) {
+  int64_t res = 1;
   for (b %= m; e > 0; e >>= 1) {
     if (e & 1) {
       res = res * b % m;
@@ -5260,14 +5340,14 @@ long long powmod(long long b, long long e, long long m) {
   return res;
 }
 
-std::vector<long long> berlekamp_massey(const std::vector<long long> &s) {
+std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
   int n = static_cast<int>(s.size()), len = 0, m = 0;
-  std::vector<long long> cur(n), last(n), prev;
+  std::vector<int64_t> cur(n), last(n), prev;
   cur[0] = last[0] = 1;
-  long long last_delta = 1;
+  int64_t last_delta = 1;
   for (int i = 0; i < n; i++) {
     m++;
-    long long delta = s[i] % MOD;
+    int64_t delta = s[i] % MOD;
     for (int j = 1; j <= len; j++) {
       delta = (delta + cur[j] * (s[i - j] % MOD)) % MOD;
     }
@@ -5275,7 +5355,7 @@ std::vector<long long> berlekamp_massey(const std::vector<long long> &s) {
       continue;
     }
     prev = cur;
-    long long coef = delta * powmod(last_delta, MOD - 2, MOD) % MOD;
+    int64_t coef = delta * powmod(last_delta, MOD - 2, MOD) % MOD;
     for (int j = m; j < n; j++) {
       cur[j] = (cur[j] - coef * last[j - m] % MOD + MOD) % MOD;
     }
@@ -5289,7 +5369,7 @@ std::vector<long long> berlekamp_massey(const std::vector<long long> &s) {
   }
   cur.resize(len + 1);
   cur.erase(cur.begin());
-  for (long long &x : cur) {
+  for (int64_t &x : cur) {
     x = (MOD - x) % MOD;
   }
   return cur;
@@ -5303,16 +5383,16 @@ using namespace std;
 
 int main() {
   // Fibonacci: s[i] = s[i-1] + s[i-2].
-  vector<long long> fib{1, 1, 2, 3, 5, 8, 13, 21};
-  assert((berlekamp_massey(fib) == vector<long long>{1, 1}));
+  vector<int64_t> fib{1, 1, 2, 3, 5, 8, 13, 21};
+  assert((berlekamp_massey(fib) == vector<int64_t>{1, 1}));
 
   // Geometric: s[i] = 2 * s[i-1].
-  vector<long long> geo{1, 2, 4, 8, 16, 32};
-  assert((berlekamp_massey(geo) == vector<long long>{2}));
+  vector<int64_t> geo{1, 2, 4, 8, 16, 32};
+  assert((berlekamp_massey(geo) == vector<int64_t>{2}));
 
   // Tribonacci: s[i] = s[i-1] + s[i-2] + s[i-3].
-  vector<long long> trib{0, 1, 1, 2, 4, 7, 13, 24, 44};
-  assert((berlekamp_massey(trib) == vector<long long>{1, 1, 1}));
+  vector<int64_t> trib{0, 1, 1, 2, 4, 7, 13, 24, 44};
+  assert((berlekamp_massey(trib) == vector<int64_t>{1, 1, 1}));
   return 0;
 }
 \end{lstlisting}
@@ -5414,7 +5494,7 @@ int mex(const std::vector<int> &values) {
       return i;
     }
   }
-  return seen.size();
+  return static_cast<int>(seen.size());
 }
 
 std::vector<int> subtraction_game_grundy(int max_stones, const std::vector<int> &moves) {

@@ -29,6 +29,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <string>
 #include <vector>
 using std::string;
@@ -91,8 +92,8 @@ class Manacher {
     return s.substr(best_l, best_len);
   }
 
-  long long count_palindromes() const {
-    long long res = 0;
+  int64_t count_palindromes() const {
+    int64_t res = 0;
     for (int i = 0; i < static_cast<int>(s.size()); i++) {
       res += odd[i] + even[i];
     }

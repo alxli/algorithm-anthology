@@ -102,6 +102,6 @@ int main() {
   for (int x : a) {
     sk.add(x);
   }
-  assert(static_cast<int>(sk.get().size()) == 3);
+  assert(sk.get().size() == 3);
   return 0;
 }

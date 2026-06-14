@@ -39,6 +39,7 @@ Space Complexity:
 
 */
 #include <cmath>
+#include <cstdint>
 #include <ostream>
 #include <stdexcept>
 #include <type_traits>
@@ -76,9 +77,12 @@ struct Circle {
   // Circumcircle of three points.
   template<class Pt, class = if_point<Pt>>
   Circle(const Pt &a, const Pt &b, const Pt &c) {
-    double an = (double)(b.x - c.x) * (b.x - c.x) + (double)(b.y - c.y) * (b.y - c.y);
-    double bn = (double)(a.x - c.x) * (a.x - c.x) + (double)(a.y - c.y) * (a.y - c.y);
-    double cn = (double)(a.x - b.x) * (a.x - b.x) + (double)(a.y - b.y) * (a.y - b.y);
+    double an =
+        static_cast<double>(b.x - c.x) * (b.x - c.x) + static_cast<double>(b.y - c.y) * (b.y - c.y);
+    double bn =
+        static_cast<double>(a.x - c.x) * (a.x - c.x) + static_cast<double>(a.y - c.y) * (a.y - c.y);
+    double cn =
+        static_cast<double>(a.x - b.x) * (a.x - b.x) + static_cast<double>(a.y - b.y) * (a.y - b.y);
     double wa = an * (bn + cn - an);
     double wb = bn * (an + cn - bn);
     double wc = cn * (an + bn - cn);
@@ -122,12 +126,16 @@ struct Circle {
 
   template<class Pt>
   bool contains(const Pt &p) const {
-    return LE((double)(p.x - h) * (p.x - h) + (double)(p.y - k) * (p.y - k), r * r);
+    return LE(
+        static_cast<double>(p.x - h) * (p.x - h) + static_cast<double>(p.y - k) * (p.y - k), r * r
+    );
   }
 
   template<class Pt>
   bool on_edge(const Pt &p) const {
-    return EQ((double)(p.x - h) * (p.x - h) + (double)(p.y - k) * (p.y - k), r * r);
+    return EQ(
+        static_cast<double>(p.x - h) * (p.x - h) + static_cast<double>(p.y - k) * (p.y - k), r * r
+    );
   }
 
   friend std::ostream &operator<<(std::ostream &out, const Circle &c) {
@@ -154,13 +162,13 @@ Circle incircle(const Pt &a, const Pt &b, const Pt &c) {
 
 // Returns +1 if point d lies strictly inside the circle through a, b, c, 0 if d lies exactly on
 // it, or -1 if d is outside. This uses a determinant (no square root), so it is exact for integer
-// coordinates: the result is computed in `long long` for integral inputs (watch overflow for large
+// coordinates: the result is computed in `int64_t` for integral inputs (watch overflow for large
 // coordinates, where the determinant is degree four) and `long double` otherwise. The points a, b,
 // c must not be collinear; the result does not depend on their orientation.
 template<class Pt>
 int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   using CoordT = decltype(a.x + a.x);
-  using W = std::conditional_t<std::is_integral<CoordT>::value, long long, long double>;
+  using W = std::conditional_t<std::is_integral<CoordT>::value, int64_t, long double>;
   W adx = (W)a.x - d.x, ady = (W)a.y - d.y;
   W bdx = (W)b.x - d.x, bdy = (W)b.y - d.y;
   W cdx = (W)c.x - d.x, cdy = (W)c.y - d.y;

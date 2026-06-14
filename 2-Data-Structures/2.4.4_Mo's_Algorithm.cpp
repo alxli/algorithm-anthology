@@ -40,8 +40,8 @@ std::vector<decltype(std::declval<CurrentFn>()())> mos_algorithm(
     int n, const std::vector<std::pair<int, int>> &queries, AddFn add, RemoveFn remove,
     CurrentFn current
 ) {
-  int q = queries.size();
-  int block = std::max(1, (int)(n / std::max(1.0, std::sqrt((double)q))));
+  int q = static_cast<int>(queries.size());
+  int block = std::max(1, static_cast<int>(n / std::max(1.0, std::sqrt(static_cast<double>(q)))));
   std::vector<int> order(q);
   std::iota(order.begin(), order.end(), 0);
   std::sort(order.begin(), order.end(), [&](int x, int y) {

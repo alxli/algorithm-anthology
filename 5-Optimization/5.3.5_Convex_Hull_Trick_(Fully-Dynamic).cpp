@@ -29,16 +29,16 @@ Space Complexity:
 */
 
 #include <cassert>
-#include <climits>
+#include <cstdint>
 #include <set>
 
 class HullOptimizer {
   struct Line {
-    long long m, b;
-    mutable long long xhi;
+    int64_t m, b;
+    mutable int64_t xhi;
     bool is_query;
 
-    Line(long long m, long long b, long long xhi = 0, bool is_query = false)
+    Line(int64_t m, int64_t b, int64_t xhi = 0, bool is_query = false)
         : m(m), b(b), xhi(xhi), is_query(is_query) {}
 
     bool operator<(const Line &l) const { return l.is_query ? xhi < l.xhi : m < l.m; }
@@ -49,15 +49,15 @@ class HullOptimizer {
 
   using hulliter = std::multiset<Line>::iterator;
 
-  static long long div_floor(long long a, long long b) { return a / b - ((a ^ b) < 0 && a % b); }
+  static int64_t div_floor(int64_t a, int64_t b) { return a / b - ((a ^ b) < 0 && a % b); }
 
   bool update_border(hulliter x, hulliter y) {
     if (y == hull.end()) {
-      x->xhi = LLONG_MAX;
+      x->xhi = INT64_MAX;
       return false;
     }
     if (x->m == y->m) {
-      x->xhi = (x->b > y->b) ? LLONG_MAX : LLONG_MIN;
+      x->xhi = (x->b > y->b) ? INT64_MAX : INT64_MIN;
     } else {
       x->xhi = div_floor(y->b - x->b, x->m - y->m);
     }
@@ -67,7 +67,7 @@ class HullOptimizer {
  public:
   explicit HullOptimizer(bool query_max = false) : query_max(query_max) {}
 
-  void add_line(long long m, long long b) {
+  void add_line(int64_t m, int64_t b) {
     if (!query_max) {
       m = -m;
       b = -b;
@@ -86,11 +86,11 @@ class HullOptimizer {
     }
   }
 
-  long long query(long long x) const {
+  int64_t query(int64_t x) const {
     assert(!hull.empty());
     Line q(0, 0, x, true);
     auto it = hull.lower_bound(q);
-    long long res = it->m * x + it->b;
+    int64_t res = it->m * x + it->b;
     return query_max ? res : -res;
   }
 };

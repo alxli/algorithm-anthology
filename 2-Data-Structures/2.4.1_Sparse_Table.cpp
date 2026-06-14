@@ -40,14 +40,14 @@ class SparseTable {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
 
   int len;
-  std::vector<int> log2;
+  std::vector<int> log2;  // Can also use 31 - __builtin_clz(n) instead of precomputing log2[n].
   std::vector<std::vector<T>> dp;  // dp[j][i] = combine() over [i, i + 2^j).
 
  public:
   template<class It>
   SparseTable(It lo, It hi) {
     std::vector<T> a(lo, hi);
-    len = a.size();
+    len = static_cast<int>(a.size());
     log2.assign(len + 1, 0);
     for (int i = 2; i <= len; i++) {
       log2[i] = log2[i >> 1] + 1;

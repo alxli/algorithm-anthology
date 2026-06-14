@@ -2,10 +2,12 @@
 """Build and run all chapter .cpp files, verifying they compile and exit cleanly.
 
 Usage:
-  python3 tools/run_tests.py              # build + run, show failures only
-  python3 tools/run_tests.py --output     # also print stdout from each file
-  python3 tools/run_tests.py --chapter 2  # run one chapter
-  python3 tools/run_tests.py 2-Data-Structures/2.3.2_Treap.cpp  # single file
+  python3 tools/run_examples.py              # build + run, show failures only
+  python3 tools/run_examples.py --output     # also print stdout from each file
+  python3 tools/run_examples.py -c 2         # run one chapter
+  python3 tools/run_examples.py -c 4.2       # run one section
+  python3 tools/run_examples.py -c 4.2.4     # run one subsection
+  python3 tools/run_examples.py 2-Data-Structures/2.3.2_Treap.cpp  # single file
 """
 
 import argparse
@@ -15,10 +17,22 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import Optional
 
 CXX = os.environ.get('CXX', '/opt/homebrew/bin/g++-15')
 CXXFLAGS = ['-std=c++17', '-O2', '-Wall', '-pedantic', '-Wno-psabi']
 TIMEOUT = 30  # seconds per file
+
+
+def section_key(path: Path) -> Optional[str]:
+    """Return the leading numeric section key from a filename, e.g. '4.2.4'."""
+    match = re.match(r'(\d+(?:\.\d+)*)_', path.name)
+    return match.group(1) if match else None
+
+
+def matches_chapter_filter(path: Path, chapter: str) -> bool:
+    key = section_key(path)
+    return key == chapter or (key is not None and key.startswith(f'{chapter}.'))
 
 
 def compile_and_run(src: Path, show_output: bool) -> tuple[bool, str, str]:
@@ -57,7 +71,7 @@ def compile_and_run(src: Path, show_output: bool) -> tuple[bool, str, str]:
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('files', nargs='*', help='Specific .cpp files (default: all chapters)')
-    parser.add_argument('--chapter', '-c', type=int, help='Run all .cpp files in one chapter')
+    parser.add_argument('--chapter', '-c', help='Run a chapter/section/subsection, e.g. 4, 4.2, 4.2.4')
     parser.add_argument('--output', '-o', action='store_true', help='Print stdout from each file')
     args = parser.parse_args()
 
@@ -65,6 +79,8 @@ def main():
 
     if args.files and args.chapter is not None:
         parser.error('--chapter cannot be combined with explicit files')
+    if args.chapter is not None and not re.fullmatch(r'\d+(?:\.\d+)*', args.chapter):
+        parser.error('--chapter must be a numeric prefix like 4, 4.2, or 4.2.4')
 
     chapter_dirs = [
         d
@@ -73,11 +89,18 @@ def main():
     ]
 
     if args.chapter is not None:
-        prefix = f'{args.chapter}-'
-        dirs = [d for d in chapter_dirs if d.name.startswith(prefix)]
+        chapter_num = args.chapter.split('.')[0]
+        dirs = [d for d in chapter_dirs if d.name.startswith(f'{chapter_num}-')]
         if not dirs:
-            parser.error(f'chapter {args.chapter} directory not found')
-        paths = sorted(p for d in dirs for p in d.glob('*.cpp'))
+            parser.error(f'chapter {chapter_num} directory not found')
+        paths = sorted(
+            p
+            for d in dirs
+            for p in d.glob('*.cpp')
+            if matches_chapter_filter(p, args.chapter)
+        )
+        if not paths:
+            parser.error(f'no .cpp files found for chapter filter {args.chapter}')
     elif args.files:
         paths = [Path(f).resolve() for f in args.files]
     else:

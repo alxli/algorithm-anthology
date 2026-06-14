@@ -9,14 +9,12 @@ Prim's algorithm grows the tree from an arbitrary start node, repeatedly adding 
 edge that joins a new node to the current tree, with a priority queue supplying the cheapest such
 edge at each step.
 
-- `prim_mst()` populates `mst` with the minimum spanning tree edges (returning the total MST weight)
-  for a global, bidirectionally pre-populated adjacency list `adj` which must consist of nodes
-  numbered from 0 to `adj.size() - 1`. Each edge is stored as `(neighbor, weight)`.
+- `prim_mst()` populates `mst` with the edge IDs in the minimum spanning tree (returning the total
+  MST weight) for a global, bidirectionally pre-populated adjacency list `adj` which must consist of
+  nodes numbered from 0 to `adj.size() - 1`. Each edge is stored as `(neighbor, weight, edge_id)`.
 
-Since `std::priority_queue` is by default a max-heap, we simulate a min-heap by negating node
-distances before pushing them and negating them again after popping them. To modify this
-implementation to find the maximum spanning tree, the two negation steps can be skipped to
-prioritize the max edges.
+The priority queue stores candidate edges as `(weight, from, to, edge_id)` and uses `std::greater`
+to make it a min-heap. To find a maximum spanning tree instead, use the default max-heap ordering.
 
 Time Complexity:
 - O(m log n) per call to `prim_mst()`, where $m$ is the number of edges and $n$ is the number of
@@ -29,16 +27,17 @@ Space Complexity:
 
 */
 
+#include <functional>
 #include <queue>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-std::vector<std::vector<std::pair<int, int>>> adj;
-std::vector<std::pair<int, int>> mst;
+std::vector<std::vector<std::tuple<int, int, int>>> adj;  // adj[u] = {(v, weight, edge_id), ...}
+std::vector<int> mst;
 
 int prim_mst() {
-  int nodes = adj.size();
+  int nodes = static_cast<int>(adj.size());
   mst.clear();
   std::vector<bool> visit(nodes);
   int total_dist = 0;
@@ -47,22 +46,22 @@ int prim_mst() {
       continue;
     }
     visit[i] = true;
-    std::priority_queue<std::tuple<int, int, int>> pq;  // (-weight, from, to)
-    for (auto &[v, w] : adj[i]) {
-      pq.emplace(-w, i, v);
+    using qnode = std::tuple<int, int, int, int>;  // (weight, from, to, edge_id)
+    std::priority_queue<qnode, std::vector<qnode>, std::greater<qnode>> pq;
+    for (auto &[v, w, id] : adj[i]) {
+      pq.emplace(w, i, v, id);
     }
     while (!pq.empty()) {
-      auto [neg_w, u, v] = pq.top();
-      int w = -neg_w;
+      auto [w, u, v, id] = pq.top();
       pq.pop();
       if (visit[u] && !visit[v]) {
         visit[v] = true;
         if (v != i) {
-          mst.emplace_back(u, v);
+          mst.push_back(id);
           total_dist += w;
         }
-        for (auto &[nb, ew] : adj[v]) {
-          pq.emplace(-ew, v, nb);
+        for (auto &[nb, ew, eid] : adj[v]) {
+          pq.emplace(ew, v, nb, eid);
         }
       }
     }
@@ -84,9 +83,13 @@ Total distance: 13
 #include <iostream>
 using namespace std;
 
+vector<pair<int, int>> edge_endpoints;
+
 void add_edge(int u, int v, int w) {
-  adj[u].push_back({v, w});
-  adj[v].push_back({u, w});
+  int id = static_cast<int>(edge_endpoints.size());
+  edge_endpoints.push_back({u, v});
+  adj[u].push_back({v, w, id});
+  adj[v].push_back({u, w, id});
 }
 
 int main() {
@@ -100,7 +103,8 @@ int main() {
   add_edge(5, 6, 3);
   add_edge(6, 4, 4);
   cout << "Total distance: " << prim_mst() << endl;
-  for (auto &[u, v] : mst) {
+  for (int id : mst) {
+    auto &[u, v] = edge_endpoints[id];
     cout << u << " <-> " << v << endl;
   }
   return 0;

@@ -7,6 +7,7 @@ heavily optimized as their standard library counterparts.
 
 Time Complexity:
 - O(1) for most operations.
+- O(log n) per call to `mulmod()` and `powmod()`, where $n$ is the second argument.
 - O(d + e) for `convert_base(d, a, b)`, where $d$ is the number of input digits and $e$ is the
   number of output digits.
 - O(log_b(x + 1) + 1) for `to_base(x, b)`.
@@ -24,16 +25,17 @@ Space Complexity:
 #include <cfloat>
 #include <climits>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <random>
 #include <string>
 #include <vector>
 
 #ifndef M_PI
-const double M_PI = acos(-1.0);
+const double M_PI = acos(-1.0);  // or std::numbers::pi and std::numbers::pi_v<> in C++20 and later
 #endif
 #ifndef M_E
-const double M_E = exp(1.0);
+const double M_E = exp(1.0);  // or std::numbers::e and std::numbers::e_v<> in C++20 and later
 #endif
 const double M_PHI = (1.0 + sqrt(5.0)) / 2.0;
 const double M_INF = std::numeric_limits<double>::infinity();
@@ -318,6 +320,46 @@ double lgamma_(double x) {
 
 /*
 
+Binary Exponentiation:
+
+`powmod()` and `mulmod()` compute modular powers and products using binary exponentiation, also
+known as exponentiation by squaring. When `__uint128_t` is available, `mulmod()` uses a single
+128-bit product; otherwise, it uses portable double-and-add multiplication. In the fallback path,
+the inputs must not exceed $2^{63} - 1$.
+
+- `mulmod(x, n, m)` returns `x` multiplied by `n`, modulo `m`.
+- `powmod(x, n, m)` returns `x` raised to the power `n`, modulo `m`.
+
+*/
+
+uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
+#if defined(__SIZEOF_INT128__)
+  return static_cast<uint64_t>(static_cast<__uint128_t>(x) * n % m);
+#else
+  uint64_t a = 0, b = x % m;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = (a + b) % m;
+    }
+    b = (b << 1) % m;
+  }
+  return a % m;
+#endif
+}
+
+uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
+  uint64_t a = 1, b = x;
+  for (; n > 0; n >>= 1) {
+    if (n & 1) {
+      a = mulmod(a, b, m);
+    }
+    b = mulmod(b, b, m);
+  }
+  return a % m;
+}
+
+/*
+
 Base Conversion:
 
 - Given an integer in base `a` as a vector `d` of digits (where `d[0]` is the least significant
@@ -332,7 +374,7 @@ Base Conversion:
 */
 
 std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
-  unsigned long long x = 0, power = 1;
+  uint64_t x = 0, power = 1;
   for (int di : d) {
     x += di * power;
     power *= a;
@@ -405,6 +447,10 @@ int main() {
   assert(EQ(erf_(1.0), 0.8427007929) && EQ(erf_(-1.0), -0.8427007929));
   assert(EQ(tgamma_(0.5), 1.7724538509) && EQ(tgamma_(1.0), 1.0));
   assert(EQ(lgamma_(0.5), 0.5723649429) && EQ(lgamma_(1.0), 0.0));
+
+  assert(powmod(2, 10, 1000000007) == 1024);
+  assert(powmod(2, 62, 1000000) == 387904);
+  assert(powmod(10001, 10001, 100000) == 10001);
 
   std::vector<int> digits{6, 5, 4, 3, 2, 1};
   std::vector<int> base20 = to_base(123456, 20);

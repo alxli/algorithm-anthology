@@ -19,12 +19,13 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cstdint>
 #include <numeric>
 #include <vector>
 
 struct Job {
   int deadline;
-  long long profit;
+  int64_t profit;
 };
 
 class SlotDSU {
@@ -43,7 +44,7 @@ class SlotDSU {
   void occupy(int u) { root[u] = find_root(u - 1); }
 };
 
-long long schedule_deadline_jobs(std::vector<Job> jobs) {
+int64_t schedule_deadline_jobs(std::vector<Job> jobs) {
   std::sort(jobs.begin(), jobs.end(), [](const Job &a, const Job &b) {
     return a.profit != b.profit ? a.profit > b.profit : a.deadline < b.deadline;
   });
@@ -52,7 +53,7 @@ long long schedule_deadline_jobs(std::vector<Job> jobs) {
     max_deadline = std::max(max_deadline, j.deadline);
   }
   SlotDSU slots(max_deadline);
-  long long res = 0;
+  int64_t res = 0;
   for (const auto &j : jobs) {
     int slot = slots.find_root(j.deadline);
     if (slot > 0) {

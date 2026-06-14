@@ -28,15 +28,15 @@ Space Complexity:
 
 #include <algorithm>
 #include <cassert>
-#include <climits>
+#include <cstdint>
 
-const long long INF = LLONG_MAX / 4;
+const int64_t INF = INT64_MAX / 4;
 
 class LiChaoTree {
   struct Line {
-    long long m, b;
-    Line(long long m = 0, long long b = INF) : m(m), b(b) {}
-    long long eval(long long x) const { return m * x + b; }
+    int64_t m, b;
+    Line(int64_t m = 0, int64_t b = INF) : m(m), b(b) {}
+    int64_t eval(int64_t x) const { return m * x + b; }
   };
 
   struct Node {
@@ -46,7 +46,7 @@ class LiChaoTree {
   };
 
   Node *root;
-  long long lo, hi;
+  int64_t lo, hi;
 
   static void clean_up(Node *n) {
     if (n == nullptr) {
@@ -57,12 +57,12 @@ class LiChaoTree {
     delete n;
   }
 
-  static void add_line(Node *&n, long long l, long long r, Line f) {
+  static void add_line(Node *&n, int64_t l, int64_t r, Line f) {
     if (n == nullptr) {
       n = new Node(f);
       return;
     }
-    long long mid = l + (r - l) / 2;
+    int64_t mid = l + (r - l) / 2;
     bool left_better = f.eval(l) < n->f.eval(l);
     bool mid_better = f.eval(mid) < n->f.eval(mid);
     if (mid_better) {
@@ -78,15 +78,15 @@ class LiChaoTree {
     }
   }
 
-  static long long query(Node *n, long long l, long long r, long long x) {
+  static int64_t query(Node *n, int64_t l, int64_t r, int64_t x) {
     if (n == nullptr) {
       return INF;
     }
-    long long res = n->f.eval(x);
+    int64_t res = n->f.eval(x);
     if (l == r) {
       return res;
     }
-    long long mid = l + (r - l) / 2;
+    int64_t mid = l + (r - l) / 2;
     if (x <= mid) {
       return std::min(res, query(n->left, l, mid, x));
     }
@@ -94,14 +94,14 @@ class LiChaoTree {
   }
 
  public:
-  LiChaoTree(long long lo, long long hi) : root(nullptr), lo(lo), hi(hi) {}
+  LiChaoTree(int64_t lo, int64_t hi) : root(nullptr), lo(lo), hi(hi) {}
 
   ~LiChaoTree() { clean_up(root); }
   LiChaoTree(const LiChaoTree &) = delete;
   LiChaoTree &operator=(const LiChaoTree &) = delete;
-  void add_line(long long m, long long b) { add_line(root, lo, hi, Line(m, b)); }
+  void add_line(int64_t m, int64_t b) { add_line(root, lo, hi, Line(m, b)); }
 
-  long long query(long long x) const {
+  int64_t query(int64_t x) const {
     assert(lo <= x && x <= hi);
     return query(root, lo, hi, x);
   }

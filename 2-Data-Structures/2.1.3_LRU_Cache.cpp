@@ -48,7 +48,7 @@ class LRUCache {
  public:
   explicit LRUCache(int capacity) : cap(capacity) {}
 
-  int size() const { return items.size(); }
+  int size() const { return static_cast<int>(items.size()); }
 
   bool get(const Key &key, Value *value) {
     auto it = where.find(key);

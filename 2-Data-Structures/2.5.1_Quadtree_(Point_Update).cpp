@@ -45,6 +45,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 
 template<class T>
 class Quadtree {
@@ -52,7 +53,7 @@ class Quadtree {
   static const int C = 1000000000;
 
   static T combine(const T &a, const T &b) { return std::min(a, b); }
-  static T repeat_value(const T &v, long long area) { return v; }
+  static T repeat_value(const T &v, int64_t area) { return v; }
   static T apply_delta(const T &v, const T &d) { return d; }
 
   struct Node {
@@ -74,8 +75,8 @@ class Quadtree {
   T res;
   bool found;
 
-  static long long area(int r1, int c1, int r2, int c2) {
-    return static_cast<long long>(r2 - r1 + 1) * (c2 - c1 + 1);
+  static int64_t area(int r1, int c1, int r2, int c2) {
+    return static_cast<int64_t>(r2 - r1 + 1) * (c2 - c1 + 1);
   }
 
   void append_result(const T &v) {
@@ -94,7 +95,7 @@ class Quadtree {
     if (n == nullptr) {
       int rlen = std::min(r2, tgt_r2) - std::max(r1, tgt_r1) + 1;
       int clen = std::min(c2, tgt_c2) - std::max(c1, tgt_c1) + 1;
-      append_result(repeat_value(init, static_cast<long long>(rlen) * clen));
+      append_result(repeat_value(init, static_cast<int64_t>(rlen) * clen));
       return;
     }
     if (tgt_r1 <= r1 && r2 <= tgt_r2 && tgt_c1 <= c1 && c2 <= tgt_c2) {

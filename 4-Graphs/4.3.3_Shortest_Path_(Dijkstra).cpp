@@ -9,8 +9,8 @@ Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative
 priority queue and relaxes its outgoing edges. Because the weights are nonnegative, a node's
 distance is final the first time it is removed from the queue.
 
-- `dijkstra(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj`
-  which must consist of nodes numbered from 0 to `adj.size() - 1`. Each edge is stored as
+- `dijkstra(start, adj, dist, pred)` returns a pair of vectors `dist` and `pred` for an adjacency
+  list `adj` which must consist of nodes numbered from 0 to `adj.size() - 1`. Each edge is stored as
   `(neighbor, weight)`, where `weight` is nonnegative.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
@@ -30,39 +30,33 @@ Space Complexity:
 
 */
 
-#include <climits>
+#include <cstdint>
 #include <functional>
+#include <limits>
 #include <queue>
 #include <utility>
 #include <vector>
 
-const long long INF = LLONG_MAX / 4;
-std::vector<std::vector<std::pair<int, int>>> adj;
-std::vector<long long> dist;
-std::vector<int> pred;
-
-void dijkstra(int start) {
-  int nodes = adj.size();
-  std::vector<bool> visit(nodes, false);
-  dist.assign(nodes, INF);
-  pred.assign(nodes, -1);
+template<class T>
+std::pair<std::vector<T>, std::vector<int>> dijkstra(
+    const std::vector<std::vector<std::pair<int, T>>> &adj, int start
+) {
+  const T INF = std::numeric_limits<T>::max() / 4;
+  int nodes = static_cast<int>(adj.size());
+  std::vector<T> dist(nodes, INF);
+  std::vector<int> pred(nodes, -1);
   dist[start] = 0;
   std::priority_queue<
-      std::pair<long long, int>, std::vector<std::pair<long long, int>>,
-      std::greater<std::pair<long long, int>>>
+      std::pair<T, int>, std::vector<std::pair<T, int>>, std::greater<std::pair<T, int>>>
       pq;
   pq.emplace(0, start);
   while (!pq.empty()) {
     auto [du, u] = pq.top();
     pq.pop();
-    if (visit[u] || du != dist[u]) {
+    if (du != dist[u]) {
       continue;
     }
-    visit[u] = true;
     for (auto &[v, w] : adj[u]) {
-      if (visit[v]) {
-        continue;
-      }
       if (dist[v] > dist[u] + w) {
         dist[v] = dist[u] + w;
         pred[v] = u;
@@ -70,6 +64,7 @@ void dijkstra(int start) {
       }
     }
   }
+  return {dist, pred};
 }
 
 /*** Example Usage and Output:
@@ -82,7 +77,9 @@ Take the path: 0->1->2->3.
 #include <iostream>
 using namespace std;
 
-void print_path(int dest) {
+vector<vector<pair<int, int64_t>>> adj;
+
+void print_path(const vector<int> &pred, int dest) {
   vector<int> path;
   for (int j = dest; pred[j] != -1; j = pred[j]) {
     path.push_back(pred[j]);
@@ -103,9 +100,8 @@ int main() {
   adj[1].push_back({2, 2});
   adj[1].push_back({3, 4});
   adj[2].push_back({3, 1});
-  dijkstra(start);
-  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << "."
-       << endl;
-  print_path(dest);
+  auto [dist, pred] = dijkstra(adj, start);
+  cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
+  print_path(pred, dest);
   return 0;
 }

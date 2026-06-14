@@ -25,14 +25,15 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <vector>
 
 class PersistentSegTree {
   struct node {
-    long long sum;
+    int64_t sum;
     int left, right;
 
-    node(long long sum = 0, int left = -1, int right = -1) : sum(sum), left(left), right(right) {}
+    node(int64_t sum = 0, int left = -1, int right = -1) : sum(sum), left(left), right(right) {}
   };
 
   int n;
@@ -67,12 +68,12 @@ class PersistentSegTree {
     return static_cast<int>(tree.size()) - 1;
   }
 
-  long long query(int cur, int lo, int hi, int qlo, int qhi) const {
+  int64_t query(int cur, int lo, int hi, int qlo, int qhi) const {
     if (qlo <= lo && hi <= qhi) {
       return tree[cur].sum;
     }
     int mid = lo + (hi - lo) / 2;
-    long long res = 0;
+    int64_t res = 0;
     if (qlo <= mid) {
       res += query(tree[cur].left, lo, mid, qlo, qhi);
     }
@@ -89,14 +90,14 @@ class PersistentSegTree {
     }
   }
 
-  int versions() const { return root.size(); }
+  int versions() const { return static_cast<int>(root.size()); }
 
   int update(int version, int index, int value) {
     root.push_back(update(root[version], 0, n - 1, index, value));
     return static_cast<int>(root.size()) - 1;
   }
 
-  long long query(int version, int lo, int hi) const {
+  int64_t query(int version, int lo, int hi) const {
     return query(root[version], 0, n - 1, lo, hi);
   }
 };

@@ -56,7 +56,7 @@ Space Complexity:
 template<class T>
 class ImplicitTreap {
   static T combine(const T &a, const T &b) { return a < b ? a : b; }
-  static T apply_delta(const T &v, const T &d, long long len) { return d; }
+  static T apply_delta(const T &v, const T &d, int64_t len) { return d; }
   static T compose_deltas(const T &d1, const T &d2) { return d2; }
 
   struct Node {

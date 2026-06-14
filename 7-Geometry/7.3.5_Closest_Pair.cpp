@@ -95,11 +95,12 @@ T closest_pair_rec(
       strip.push_back(it);
     }
   }
-  for (int i = 0; i < (int)strip.size(); i++) {
-    for (int j = i + 1; j < (int)strip.size(); j++) {
+  for (int i = 0; i < static_cast<int>(strip.size()); i++) {
+    for (int j = i + 1; j < static_cast<int>(strip.size()); j++) {
       auto dy = strip[j]->y - strip[i]->y;
-      if (dy * dy >= best) break;
-
+      if (dy * dy >= best) {
+        break;
+      }
       T d = sqdist(*strip[i], *strip[j]);
       if (d < best) {
         best = d;

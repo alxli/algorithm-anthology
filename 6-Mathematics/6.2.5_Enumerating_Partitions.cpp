@@ -31,6 +31,7 @@ Space Complexity:
 
 */
 
+#include <cstdint>
 #include <vector>
 
 bool next_partition(std::vector<int> &p) {
@@ -50,10 +51,10 @@ bool next_partition(std::vector<int> &p) {
   return true;
 }
 
-long long partition_function(int a, int b) {
-  static std::vector<std::vector<long long>> p(1, std::vector<long long>(1, 1));
+int64_t partition_function(int a, int b) {
+  static std::vector<std::vector<int64_t>> p(1, std::vector<int64_t>(1, 1));
   if (a >= static_cast<int>(p.size())) {
-    int old = p.size();
+    int old = static_cast<int>(p.size());
     p.resize(a + 1);
     p[0].resize(a + 1);
     for (int i = 1; i <= a; i++) {
@@ -66,11 +67,11 @@ long long partition_function(int a, int b) {
   return p[a][b];
 }
 
-std::vector<int> partition_by_rank(int n, long long r) {
+std::vector<int> partition_by_rank(int n, int64_t r) {
   std::vector<int> res;
   for (int i = n, j; i > 0; i -= j) {
     for (j = 1;; j++) {
-      long long count = partition_function(i, j);
+      int64_t count = partition_function(i, j);
       if (r < count) {
         break;
       }
@@ -81,8 +82,8 @@ std::vector<int> partition_by_rank(int n, long long r) {
   return res;
 }
 
-long long rank_by_partition(const std::vector<int> &p) {
-  long long res = 0;
+int64_t rank_by_partition(const std::vector<int> &p) {
+  int64_t res = 0;
   int sum = 0;
   for (int x : p) {
     sum += x;

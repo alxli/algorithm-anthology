@@ -3,22 +3,20 @@
 A spanning arborescence rooted at a node `root` of a weighted, directed graph is a set of edges
 forming a tree in which every other node is reachable from the root along directed edges, that is,
 every node except the root has exactly one incoming edge. The minimum spanning arborescence
-minimizes the total edge weight, and is the directed analog of the minimum spanning tree. Edmonds'
-algorithm (also called the Chu-Liu/Edmonds algorithm) computes it.
+minimizes the total edge weight, and is the directed analog of the minimum spanning tree.
 
-The algorithm first selects, for each non-root node, its cheapest incoming edge. If these choices
-form no cycle, they already constitute the answer. Otherwise each cycle is contracted into a single
-supernode, and every edge entering the cycle has its weight reduced by the cost of the edge it would
-replace inside the cycle. Solving the problem on the contracted graph and expanding the cycles back
-yields the optimum. The implementation below repeats this contraction in rounds, accumulating the
-selected weights, until no cycle remains.
-
-Edges are given as `(from, to, weight)` triples; parallel edges and self-loops are allowed, with
-self-loops simply ignored.
+Edmonds' (a.k.a. the Chu-Liu/Edmonds) algorithm computes the arborescence by first selecting, for
+each non-root node, its cheapest incoming edge. If these choices form no cycle, they already
+constitute the answer. Otherwise each cycle is contracted into a single supernode, and every edge
+entering the cycle has its weight reduced by the cost of the edge it would replace inside the cycle.
+Solving the problem on the contracted graph and expanding the cycles back yields the optimum. The
+implementation below repeats this contraction in rounds, accumulating the selected weights, until no
+cycle remains.
 
 - `directed_mst(n, root, edges)` returns the total weight of the minimum spanning arborescence
   rooted at `root` over `n` nodes numbered from 0 to `n - 1`, or $-1$ if some node is unreachable
-  from the root (no arborescence exists).
+  from the root (no arborescence exists). Edges are given as `(from, to, weight)` triples; parallel
+  edges and self-loops are allowed, with self-loops simply ignored.
 
 Time Complexity:
 - O(n * m) per call, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -28,19 +26,19 @@ Space Complexity:
 
 */
 
-#include <climits>
+#include <cstdint>
 #include <vector>
 
 struct Edge {
   int from, to;
-  long long weight;
+  int64_t weight;
 };
 
-long long directed_mst(int n, int root, std::vector<Edge> edges) {
-  const long long INF = LLONG_MAX / 4;
-  long long result = 0;
+int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
+  const int64_t INF = INT64_MAX / 4;
+  int64_t result = 0;
   while (true) {
-    std::vector<long long> min_in(n, INF);
+    std::vector<int64_t> min_in(n, INF);
     std::vector<int> pre(n, -1);
     for (const Edge &e : edges) {
       if (e.from != e.to && e.weight < min_in[e.to]) {
