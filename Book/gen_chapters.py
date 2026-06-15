@@ -66,6 +66,13 @@ SECTION_NAMES = {
     (7, 2): 'Angles, Distances, and Intersections',
     (7, 3): 'Polygons and Planar Searches',
     (7, 4): 'Advanced Planar Geometry',
+    (8, 1): 'Contest Utilities',
+    (8, 2): 'Fast IO',
+    (8, 3): 'Debugging',
+    (8, 4): 'Timing and Benchmarking',
+    (8, 5): 'Stress Testing',
+    (8, 6): 'Policy-Based Data Structures',
+    (8, 7): 'Multithreading',
 }
 
 
@@ -497,7 +504,10 @@ def gen_chapter(dirname, chapter, chapter_name):
             if section < 1:
                 continue
             if section != prev_section:
-                section_name = SECTION_NAMES.get((chapter, section), "")
+                section_name = (
+                    name.replace('_', ' ') if subsection is None
+                    else SECTION_NAMES.get((chapter, section), "")
+                )
                 # Number the PDF bookmark only; the body/TOC number is added by LaTeX.
                 fout.write(
                     '\n\\section{{\\texorpdfstring{{{0}}}{{{1}.{2} {0}}}}}\n'.format(

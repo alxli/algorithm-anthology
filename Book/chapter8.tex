@@ -1,0 +1,887 @@
+\chapter{\texorpdfstring{Miscellany}{8. Miscellany}}
+
+\section{\texorpdfstring{Contest Utilities}{8.1 Contest Utilities}}
+\setcounter{section}{1}
+Small contest-template helpers that are useful across many algorithms. These snippets avoid algorithm-specific policy and are meant to be pasted near the top of a solution file.
+
+\begin{compactitem}
+  \item \inlinecode{y\_combinator(f)} wraps a recursive lambda so that the lambda can call itself as its first argument.
+  \item \inlinecode{ckmin(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{b \textless{} a} before the assignment.
+  \item \inlinecode{ckmax(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{a \textless{} b} before the assignment.
+  \item \inlinecode{ssize(c)} returns the signed size of a container.
+  \item \inlinecode{between(x, lo, hi)} returns whether \inlinecode{lo} $\leq$ \inlinecode{x} $\leq$ \inlinecode{hi}.
+  \item \inlinecode{clamped(x, lo, hi)} returns \inlinecode{x} clamped into the interval \inlinecode{[lo, hi]}.
+  \item \inlinecode{RNG()} constructs a 64-bit Mersenne Twister seeded from the steady clock.
+  \item \inlinecode{RNG(seed)} constructs a reproducible 64-bit Mersenne Twister.
+  \item \inlinecode{rng.uniform\_int(lo, hi)} returns a random integer in the inclusive range \inlinecode{[lo, hi]}.
+  \item \inlinecode{rng.uniform\_real(lo, hi)} returns a random real number in the half-open range \inlinecode{[lo, hi)}.
+  \item \inlinecode{rng.shuffle(lo, hi)} randomly shuffles the iterator range \inlinecode{[lo, hi)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <chrono>
+#include <functional>
+#include <random>
+#include <type_traits>
+#include <vector>
+
+template<class Fun>
+class y_combinator_result {
+  Fun fun;
+
+ public:
+  template<class T>
+  explicit y_combinator_result(T &&fun_) : fun(std::forward<T>(fun_)) {}
+
+  template<class... Args>
+  decltype(auto) operator()(Args &&...args) {
+    return fun(std::ref(*this), std::forward<Args>(args)...);
+  }
+};
+
+template<class Fun>
+decltype(auto) y_combinator(Fun &&fun) {
+  return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
+}
+
+template<class T, class U>
+bool ckmin(T &a, const U &b) {
+  if (b < a) {
+    a = b;
+    return true;
+  }
+  return false;
+}
+
+template<class T, class U>
+bool ckmax(T &a, const U &b) {
+  if (a < b) {
+    a = b;
+    return true;
+  }
+  return false;
+}
+
+template<class C>
+int ssize(const C &c) {
+  return static_cast<int>(c.size());
+}
+
+template<class T>
+bool between(const T &x, const T &lo, const T &hi) {
+  return !(x < lo) && !(hi < x);
+}
+
+template<class T>
+T clamped(const T &x, const T &lo, const T &hi) {
+  return std::min(std::max(x, lo), hi);
+}
+
+struct RNG {
+  std::mt19937_64 gen;
+
+  RNG() : RNG(std::chrono::steady_clock::now().time_since_epoch().count()) {}
+  explicit RNG(uint64_t seed) : gen(seed) {}
+
+  template<class T>
+  T uniform_int(T lo, T hi) {
+    static_assert(std::is_integral<T>::value, "uniform_int() requires an integral type");
+    return std::uniform_int_distribution<T>(lo, hi)(gen);
+  }
+
+  double uniform_real(double lo = 0.0, double hi = 1.0) {
+    return std::uniform_real_distribution<double>(lo, hi)(gen);
+  }
+
+  template<class It>
+  void shuffle(It lo, It hi) {
+    std::shuffle(lo, hi, gen);
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  auto fib =
+      y_combinator([](auto self, int n) -> int { return n < 2 ? n : self(n - 1) + self(n - 2); });
+  assert(fib(10) == 55);
+
+  int x = 10;
+  assert(ckmin(x, 7) && x == 7);
+  assert(!ckmin(x, 9) && x == 7);
+  assert(ckmax(x, 11) && x == 11);
+
+  std::vector<int> v = {1, 2, 3};
+  assert(ssize(v) == 3);
+  assert(between(2, 1, 3));
+  assert(clamped(10, 1, 3) == 3);
+
+  RNG rng(123);
+  int r = rng.uniform_int(1, 6);
+  assert(1 <= r && r <= 6);
+  rng.shuffle(v.begin(), v.end());
+  assert(ssize(v) == 3);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Fast IO}{8.2 Fast IO}}
+\setcounter{section}{2}
+Fast input and output wrappers based on \inlinecode{fread()} and \inlinecode{fwrite()}. For most problems, \inlinecode{ios::sync\_with\_stdio(false); cin.tie(nullptr);} is simpler and fast enough. Use these classes when input is huge or when iostream overhead is measurable.
+
+\begin{compactitem}
+  \item \inlinecode{FastInput in(file)} reads tokens from a \inlinecode{FILE*}, defaulting to \inlinecode{stdin}.
+  \item \inlinecode{in \textgreater{}\textgreater{} x} reads a non-whitespace token into \inlinecode{char}, \inlinecode{std::string}, integral types, or floating point types.
+  \item \inlinecode{FastOutput out(file)} writes to a \inlinecode{FILE*}, defaulting to \inlinecode{stdout}.
+  \item \inlinecode{out \textless{}\textless{} x} writes \inlinecode{char}, C strings, \inlinecode{std::string}, integral types, or floating point types.
+  \item \inlinecode{out.flush()} writes any buffered output immediately.
+\end{compactitem}
+
+The parser assumes valid input. Floating point input/output is provided for convenience, not as the main performance path.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <limits>
+#include <string>
+#include <type_traits>
+
+struct FastInput {
+  static constexpr int BUF_SIZE = 1 << 20;
+  FILE *file;
+  char buf[BUF_SIZE];
+  int pos = 0, len = 0;
+
+  explicit FastInput(FILE *file_ = stdin) : file(file_) {}
+
+  char get_char() {
+    if (pos == len) {
+      len = fread(buf, 1, BUF_SIZE, file);
+      pos = 0;
+      if (len == 0) {
+        return 0;
+      }
+    }
+    return buf[pos++];
+  }
+
+  char peek_char() {
+    char c = get_char();
+    if (c) {
+      --pos;
+    }
+    return c;
+  }
+
+  void skip_blanks() {
+    while (true) {
+      char c = get_char();
+      if (!c) {
+        return;
+      }
+      if (!std::isspace(static_cast<unsigned char>(c))) {
+        --pos;
+        return;
+      }
+    }
+  }
+
+  FastInput &operator>>(char &c) {
+    skip_blanks();
+    c = get_char();
+    return *this;
+  }
+
+  FastInput &operator>>(std::string &s) {
+    skip_blanks();
+    s.clear();
+    while (true) {
+      char c = get_char();
+      if (!c || std::isspace(static_cast<unsigned char>(c))) {
+        break;
+      }
+      s += c;
+    }
+    return *this;
+  }
+
+  FastInput &operator>>(bool &x) {
+    int val;
+    *this >> val;
+    x = val != 0;
+    return *this;
+  }
+
+  template<class T>
+  typename std::enable_if<
+      std::is_integral<T>::value && !std::is_same<T, bool>::value, FastInput &>::type
+  operator>>(T &x) {
+    skip_blanks();
+    char c = get_char();
+    bool neg = false;
+    if (c == '-') {
+      neg = true;
+      c = get_char();
+    }
+    using U = typename std::make_unsigned<T>::type;
+    U val = 0;
+    while (c && !std::isspace(static_cast<unsigned char>(c))) {
+      val = U(10) * val + U(c - '0');
+      c = get_char();
+    }
+    if constexpr (std::is_signed<T>::value) {
+      x = neg ? T(U(0) - val) : T(val);
+    } else {
+      x = T(val);
+    }
+    return *this;
+  }
+
+  template<class T>
+  typename std::enable_if<std::is_floating_point<T>::value, FastInput &>::type operator>>(T &x) {
+    std::string s;
+    *this >> s;
+    x = static_cast<T>(std::strtod(s.c_str(), nullptr));
+    return *this;
+  }
+};
+
+struct FastOutput {
+  static constexpr int BUF_SIZE = 1 << 20;
+  FILE *file;
+  char buf[BUF_SIZE];
+  int pos = 0;
+
+  explicit FastOutput(FILE *file_ = stdout) : file(file_) {}
+  ~FastOutput() { flush(); }
+
+  void flush() {
+    if (pos) {
+      fwrite(buf, 1, pos, file);
+      pos = 0;
+    }
+  }
+
+  void put_char(char c) {
+    if (pos == BUF_SIZE) {
+      flush();
+    }
+    buf[pos++] = c;
+  }
+
+  FastOutput &operator<<(char c) {
+    put_char(c);
+    return *this;
+  }
+
+  FastOutput &operator<<(const char *s) {
+    while (*s) {
+      put_char(*s++);
+    }
+    return *this;
+  }
+
+  FastOutput &operator<<(const std::string &s) {
+    for (char c : s) {
+      put_char(c);
+    }
+    return *this;
+  }
+
+  FastOutput &operator<<(bool x) {
+    put_char(x ? '1' : '0');
+    return *this;
+  }
+
+  template<class T>
+  typename std::enable_if<
+      std::is_integral<T>::value && !std::is_same<T, bool>::value, FastOutput &>::type
+  operator<<(T x) {
+    if (x == 0) {
+      put_char('0');
+      return *this;
+    }
+    using U = typename std::make_unsigned<T>::type;
+    U val;
+    if constexpr (std::is_signed<T>::value) {
+      if (x < 0) {
+        put_char('-');
+        val = U(0) - U(x);
+      } else {
+        val = U(x);
+      }
+    } else {
+      val = x;
+    }
+    char s[32];
+    int n = 0;
+    while (val > 0) {
+      s[n++] = char('0' + val % 10);
+      val /= 10;
+    }
+    while (n--) {
+      put_char(s[n]);
+    }
+    return *this;
+  }
+
+  template<class T>
+  typename std::enable_if<std::is_floating_point<T>::value, FastOutput &>::type operator<<(T x) {
+    char s[64];
+    std::snprintf(s, sizeof(s), "%.17g", static_cast<double>(x));
+    return *this << s;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  FILE *input = tmpfile();
+  std::fputs("42 hello 3.5 -2147483648\n", input);
+  std::rewind(input);
+
+  FastInput in(input);
+  int x;
+  std::string s;
+  double y;
+  int z;
+  in >> x >> s >> y >> z;
+  assert(x == 42 && s == "hello" && y == 3.5);
+  assert(z == std::numeric_limits<int>::min());
+  std::fclose(input);
+
+  FILE *output = tmpfile();
+  {
+    FastOutput out(output);
+    out << x << ' ' << s << ' ' << y << ' ' << z << '\n';
+    out.flush();
+  }
+  std::rewind(output);
+  char buf[64] = {};
+  std::fgets(buf, sizeof(buf), output);
+  assert(std::strncmp(buf, "42 hello 3.5 -2147483648", 24) == 0);
+  std::fclose(output);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Debugging}{8.3 Debugging}}
+\setcounter{section}{3}
+Local-only debug printing for contest code. The macro expands to a no-op unless \inlinecode{LOCAL} is defined (e.g. by passing \inlinecode{-DLOCAL} to the compiler flags), so it can remain in submitted code without producing output.
+
+\begin{compactitem}
+  \item \inlinecode{dbg\_repr(x)} returns a string representation of arithmetic types, strings, pairs, tuples, and iterable containers.
+  \item \inlinecode{dbg(a, b, c)} prints the function name, line number, argument names, and values to \inlinecode{std::cerr} when \inlinecode{LOCAL} is defined.
+  \item \inlinecode{pr(a, b, c)} prints only the values to \inlinecode{std::cerr} when \inlinecode{LOCAL} is defined.
+  \item \inlinecode{dbg(...)} evaluates to no output when \inlinecode{LOCAL} is not defined.
+  \item \inlinecode{pr(...)} evaluates to no output when \inlinecode{LOCAL} is not defined.
+\end{compactitem}
+
+Avoid naming these helpers \inlinecode{to\_string()} unless you want them mixed into overload resolution with \inlinecode{std::to\_string()} and other user-defined \inlinecode{to\_string()} functions. A separate name keeps debug formatting local to this snippet.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <set>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+template<class T, class = void>
+struct is_iterable : std::false_type {};
+
+template<class T>
+struct is_iterable<
+    T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
+    : std::true_type {};
+
+std::string dbg_repr(const std::string &s) {
+  return '"' + s + '"';
+}
+
+std::string dbg_repr(const char *s) {
+  return dbg_repr(std::string(s));
+}
+
+std::string dbg_repr(char c) {
+  return std::string("'") + c + "'";
+}
+
+std::string dbg_repr(bool b) {
+  return b ? "true" : "false";
+}
+
+template<class T>
+typename std::enable_if<
+    std::is_arithmetic<T>::value && !std::is_same<T, char>::value &&
+        !std::is_same<T, bool>::value && !std::is_floating_point<T>::value,
+    std::string>::type
+dbg_repr(T x) {
+  std::ostringstream out;
+  out << x;
+  return out.str();
+}
+
+template<class T>
+typename std::enable_if<std::is_floating_point<T>::value, std::string>::type dbg_repr(T x) {
+  std::ostringstream out;
+  out << std::setprecision(10) << x;  // Set floating point dbg precision here.
+  return out.str();
+}
+
+template<class A, class B>
+std::string dbg_repr(const std::pair<A, B> &p) {
+  return "(" + dbg_repr(p.first) + ", " + dbg_repr(p.second) + ")";
+}
+
+template<class Tuple, size_t... Is>
+std::string dbg_tuple_repr(const Tuple &t, std::index_sequence<Is...>) {
+  std::string res = "(";
+  bool first = true;
+  ((res += (first ? (first = false, "") : ", ") + dbg_repr(std::get<Is>(t))), ...);
+  return res + ")";
+}
+
+template<class... Ts>
+std::string dbg_repr(const std::tuple<Ts...> &t) {
+  return dbg_tuple_repr(t, std::index_sequence_for<Ts...>{});
+}
+
+template<class T>
+typename std::enable_if<
+    is_iterable<T>::value && !std::is_convertible<T, std::string>::value, std::string>::type
+dbg_repr(const T &v) {
+  std::string res = "{";
+  bool first = true;
+  for (const auto &x : v) {
+    if (!first) {
+      res += ", ";
+    }
+    first = false;
+    res += dbg_repr(x);
+  }
+  return res + "}";
+}
+
+void dbg_out(bool) {
+  std::cerr << '\n';
+}
+
+template<class Head, class... Tail>
+void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
+  if (leading_space) {
+    std::cerr << ' ';
+  }
+  std::cerr << dbg_repr(head);
+  ((std::cerr << ' ' << dbg_repr(tail)), ...);
+  std::cerr << '\n';
+}
+
+#ifdef LOCAL
+#define dbg(...)                                                                  \
+  std::cerr << "[" << __func__ << ":" << __LINE__ << "] " << #__VA_ARGS__ << ":", \
+      dbg_out(true, __VA_ARGS__)
+#define pr(...) dbg_out(false, __VA_ARGS__)
+#else
+#define dbg(...) ((void)0)
+#define pr(...) ((void)0)
+#endif
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+struct Point {
+  int x, y;
+};
+
+// Can overload dbg_repr to dbg your custom structs.
+std::string dbg_repr(const Point &p) {
+  return "(" + dbg_repr(p.x) + ", " + dbg_repr(p.y) + ")";
+}
+
+struct Edge {
+  int from, to, weight;
+};
+
+std::string dbg_repr(const Edge &e) {
+  return "{from=" + dbg_repr(e.from) + ", to=" + dbg_repr(e.to) + ", weight=" + dbg_repr(e.weight) +
+         "}";
+}
+
+int main() {
+  std::vector<int> v = {1, 2, 3};
+  std::map<std::string, int> mp = {{"a", 1}, {"b", 2}};
+  auto p = std::make_pair(4, std::string("x"));
+  auto t = std::make_tuple(1, true, std::string("ok"));
+  Point pt{2, 3};
+  Edge e{0, 1, 5};
+  assert(dbg_repr(v) == "{1, 2, 3}");
+  assert(dbg_repr(p) == "(4, \"x\")");
+  assert(dbg_repr(t) == "(1, true, \"ok\")");
+  assert(dbg_repr(mp) == "{(\"a\", 1), (\"b\", 2)}");
+  assert(dbg_repr(pt) == "(2, 3)");
+  assert(dbg_repr(e) == "{from=0, to=1, weight=5}");
+  double d = 3.141592653589793;
+  dbg(v, mp);
+  dbg(p, t);
+  dbg(pt, e);
+  pr("plain output", d);
+  assert(dbg_repr(1.0 / 3.0) == "0.3333333333");
+  assert(dbg_repr(d) == "3.141592654");
+  return 0;
+}
+\end{lstlisting}
+\begin{exampleoutput}
+[main:175] v, mp: {1, 2, 3} {("a", 1), ("b", 2)}
+[main:176] p, t: (4, "x") (1, true, "ok")
+[main:177] pt, e: (2, 3) {from=0, to=1, weight=5}
+"plain output" 3.141592654
+\end{exampleoutput}
+
+\section{\texorpdfstring{Timing and Benchmarking}{8.4 Timing and Benchmarking}}
+\setcounter{section}{4}
+Small timing helpers for local profiling and codebook examples. Use \inlinecode{std::chrono::steady\_clock} instead of wall-clock time so elapsed durations are monotonic.
+
+\begin{compactitem}
+  \item \inlinecode{Timer()} starts a timer immediately.
+  \item \inlinecode{timer.reset()} restarts the timer.
+  \item \inlinecode{timer.elapsed()} returns the elapsed time in milliseconds as a double.
+  \item \inlinecode{benchmark(name, iterations, f)} runs \inlinecode{f()} \inlinecode{iterations} times and returns the average elapsed milliseconds per call with the given name.
+\end{compactitem}
+
+Benchmarks should be treated as local measurements, not proofs of asymptotic performance. Warm-up, CPU frequency scaling, compiler optimization, and input choice can dominate tiny timings.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <chrono>
+#include <numeric>
+#include <string>
+#include <utility>
+#include <vector>
+
+class Timer {
+  using Clock = std::chrono::steady_clock;
+  Clock::time_point start_time;
+
+ public:
+  Timer() { reset(); }
+
+  void reset() { start_time = Clock::now(); }
+
+  double elapsed() const {
+    std::chrono::duration<double, std::milli> diff = Clock::now() - start_time;
+    return diff.count();
+  }
+};
+
+template<class Fun>
+std::pair<std::string, double> benchmark(const std::string &name, int iterations, Fun f) {
+  Timer timer;
+  for (int i = 0; i < iterations; ++i) {
+    f();
+  }
+  return {name, timer.elapsed() / iterations};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  Timer timer;
+  std::vector<int> v(1000);
+  std::iota(v.begin(), v.end(), 0);
+  assert(timer.elapsed() >= 0.0);
+
+  volatile long long sink = 0;
+  auto res = benchmark("sum", 5, [&] {
+    long long cur = 0;
+    for (int x : v) {
+      cur += x;
+    }
+    sink += cur;
+  });
+  assert(res.first == "sum");
+  assert(res.second >= 0.0);
+  assert(sink > 0);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Stress Testing}{8.5 Stress Testing}}
+\setcounter{section}{5}
+A simple stress-testing harness compares a trusted brute force implementation against an optimized implementation on many generated tests. This is most useful for finding small counterexamples while developing an algorithm.
+
+\begin{compactitem}
+  \item \inlinecode{stress(trials, generate, solve, brute)} runs \inlinecode{generate()} for each trial, compares \inlinecode{solve(test)} with \inlinecode{brute(test)}, and returns the first failing test if one is found.
+  \item \inlinecode{stress(...)} returns \inlinecode{std::nullopt} if all generated tests pass.
+\end{compactitem}
+
+The generated test type only needs to be copyable enough to store in \inlinecode{std::optional}, and both solutions must return comparable results.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <optional>
+#include <random>
+#include <vector>
+
+template<class Generate, class Solve, class Brute>
+auto stress(int trials, Generate generate, Solve solve, Brute brute)
+    -> std::optional<decltype(generate())> {
+  for (int tc = 0; tc < trials; ++tc) {
+    auto test = generate();
+    if (solve(test) != brute(test)) {
+      return test;
+    }
+  }
+  return std::nullopt;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  std::mt19937 rng(123);
+  auto generate = [&] {
+    int n = std::uniform_int_distribution<int>(1, 8)(rng);
+    std::vector<int> a(n);
+    for (int &x : a) {
+      x = std::uniform_int_distribution<int>(-5, 5)(rng);
+    }
+    return a;
+  };
+
+  auto solve = [](std::vector<int> a) {
+    std::sort(a.begin(), a.end());
+    return a;
+  };
+
+  auto brute = [](std::vector<int> a) {
+    do {
+      if (std::is_sorted(a.begin(), a.end())) {
+        return a;
+      }
+    } while (std::next_permutation(a.begin(), a.end()));
+    std::sort(a.begin(), a.end());
+    return a;
+  };
+
+  assert(!stress(100, generate, solve, brute));
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Policy-Based Data Structures}{8.6 Policy-Based Data Structures}}
+\setcounter{section}{6}
+GNU policy-based data structures provide ordered sets and maps with order statistics. They are not part of the C++ standard library, but they are available on many GNU C++ contest judges.
+
+\begin{compactitem}
+  \item \inlinecode{ordered\_set\textless{}T\textgreater{}} behaves like a set with \inlinecode{find\_by\_order(k)} and \inlinecode{order\_of\_key(x)}.
+  \item \inlinecode{ordered\_map\textless{}K, V\textgreater{}} behaves like a map with \inlinecode{find\_by\_order(k)} and \inlinecode{order\_of\_key(x)}.
+  \item \inlinecode{ordered\_multiset\textless{}T\textgreater{}} stores duplicates by pairing each value with a unique id.
+  \item \inlinecode{ordered\_multimap\textless{}K, V\textgreater{}} stores duplicate keys by pairing each key with a unique id.
+  \item \inlinecode{PairingHeap\textless{}T\textgreater{}} is a meldable priority queue; \inlinecode{push()} returns an iterator that can be passed to \inlinecode{modify()} or \inlinecode{erase()}.
+  \item \inlinecode{BinaryHeap\textless{}T\textgreater{}}, \inlinecode{BinomialHeap\textless{}T\textgreater{}}, and \inlinecode{RcBinomialHeap\textless{}T\textgreater{}} are alternative GNU priority queue tags with the same interface.
+\end{compactitem}
+
+The order statistic operations are 0-indexed. The priority queue \inlinecode{join()} operation melds another heap into the current one. Since this depends on \inlinecode{\_\_gnu\_pbds}, keep a standard library fallback in mind when portability matters.
+
+\textbf{Time Complexity}: $O(\log n)$ per operation.
+
+\textbf{Space Complexity}: $O(n)$.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/priority_queue.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+#include <functional>
+#include <utility>
+
+template<class K, class V, class Compare = std::less<K>>
+using ordered_map = __gnu_pbds::tree<
+    K, V, Compare, __gnu_pbds::rb_tree_tag, __gnu_pbds::tree_order_statistics_node_update>;
+
+template<class T, class Compare = std::less<T>>
+using ordered_set = ordered_map<T, __gnu_pbds::null_type, Compare>;
+
+template<class T>
+class ordered_multiset {
+  ordered_set<std::pair<T, int>> tree;
+  int timer = 0;
+
+ public:
+  void insert(const T &x) { tree.insert({x, timer++}); }
+
+  bool erase_one(const T &x) {
+    auto it = tree.lower_bound({x, -1});
+    if (it == tree.end() || it->first != x) {
+      return false;
+    }
+    tree.erase(it);
+    return true;
+  }
+
+  int order_of_key(const T &x) const { return tree.order_of_key({x, -1}); }
+  T find_by_order(int k) const { return tree.find_by_order(k)->first; }
+  int size() const { return static_cast<int>(tree.size()); }
+};
+
+template<class K, class V>
+class ordered_multimap {
+  ordered_map<std::pair<K, int>, V> tree;
+  int timer = 0;
+
+ public:
+  void insert(const K &key, const V &value) { tree.insert({{key, timer++}, value}); }
+
+  bool erase_one(const K &key) {
+    auto it = tree.lower_bound({key, -1});
+    if (it == tree.end() || it->first.first != key) {
+      return false;
+    }
+    tree.erase(it);
+    return true;
+  }
+
+  int order_of_key(const K &key) const { return tree.order_of_key({key, -1}); }
+
+  std::pair<K, V> find_by_order(int k) const {
+    auto it = tree.find_by_order(k);
+    return {it->first.first, it->second};
+  }
+
+  int size() const { return static_cast<int>(tree.size()); }
+};
+
+template<class T, class Compare = std::less<T>>
+using PairingHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::pairing_heap_tag>;
+
+template<class T, class Compare = std::less<T>>
+using BinaryHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::binary_heap_tag>;
+
+template<class T, class Compare = std::less<T>>
+using BinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::binomial_heap_tag>;
+
+template<class T, class Compare = std::less<T>>
+using RcBinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::rc_binomial_heap_tag>;
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  ordered_set<int> s;
+  s.insert(10);
+  s.insert(20);
+  s.insert(30);
+  assert(*s.find_by_order(1) == 20);
+  assert(s.order_of_key(25) == 2);
+
+  ordered_multiset<int> ms;
+  ms.insert(5);
+  ms.insert(5);
+  ms.insert(7);
+  assert(ms.size() == 3);
+  assert(ms.order_of_key(7) == 2);
+  assert(ms.find_by_order(1) == 5);
+  assert(ms.erase_one(5));
+  assert(ms.order_of_key(7) == 1);
+
+  ordered_multimap<int, char> mp;
+  mp.insert(5, 'a');
+  mp.insert(5, 'b');
+  mp.insert(7, 'c');
+  assert(mp.order_of_key(7) == 2);
+  assert(mp.find_by_order(1).first == 5);
+  assert(mp.erase_one(5));
+  assert(mp.order_of_key(7) == 1);
+
+  PairingHeap<int> h1, h2;
+  auto it = h1.push(10);
+  h1.push(5);
+  h1.modify(it, 20);
+  h2.push(7);
+  h1.join(h2);
+  assert(h1.top() == 20);
+  h1.pop();
+  assert(h1.top() == 7);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Multithreading}{8.7 Multithreading}}
+\setcounter{section}{7}
+Basic multithreading can speed up independent local work such as stress tests, batch experiments, or offline preprocessing. It is rarely useful in standard contest submissions, and many judges restrict threads, so use it only when the environment allows it.
+
+\begin{compactitem}
+  \item \inlinecode{parallel\_for(n, threads, f)} runs \inlinecode{f(i)} once for each \inlinecode{0 \textless{}= i \textless{} n}, splitting the indices among at most \inlinecode{threads} worker threads.
+  \item \inlinecode{parallel\_cases(cases, threads, solve)} solves independent test cases in parallel and returns the outputs in the original case order.
+\end{compactitem}
+
+Each call to \inlinecode{f(i)} must be safe to run concurrently with the others. If it writes shared state, use separate output slots or synchronization.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <numeric>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <vector>
+
+template<class Fun>
+void parallel_for(int n, int threads, Fun f) {
+  threads = std::max(1, std::min(threads, n));
+  std::vector<std::thread> workers;
+  workers.reserve(threads);
+  for (int id = 0; id < threads; ++id) {
+    workers.emplace_back([=, &f] {
+      for (int i = id; i < n; i += threads) {
+        f(i);
+      }
+    });
+  }
+  for (auto &worker : workers) {
+    worker.join();
+  }
+}
+
+template<class Case, class Solve>
+std::vector<std::string> parallel_cases(const std::vector<Case> &cases, int threads, Solve solve) {
+  std::vector<std::string> out(cases.size());
+  parallel_for(static_cast<int>(cases.size()), threads, [&](int i) {
+    std::ostringstream os;
+    solve(cases[i], os);
+    out[i] = os.str();
+  });
+  return out;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  std::vector<long long> squares(1000);
+  parallel_for(static_cast<int>(squares.size()), 4, [&](int i) { squares[i] = 1LL * i * i; });
+  assert(squares[17] == 289);
+  assert(std::accumulate(squares.begin(), squares.end(), 0LL) == 332833500);
+
+  std::vector<int> cases = {3, 1, 4, 2};
+  auto out =
+      parallel_cases(cases, 2, [](int x, std::ostringstream &os) { os << x << "^2 = " << x * x; });
+  assert((out == std::vector<std::string>{"3^2 = 9", "1^2 = 1", "4^2 = 16", "2^2 = 4"}));
+  return 0;
+}
+\end{lstlisting}
