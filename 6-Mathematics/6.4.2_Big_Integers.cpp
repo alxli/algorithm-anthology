@@ -363,7 +363,6 @@ class BigInt {
 
   // The comparison and binary arithmetic operators are hidden friends, so a raw integer operand on
   // either side converts through the implicit constructor.
-  // clang-format off
   friend bool operator<(const BigInt &a, const BigInt &b) { return a.comp(b) < 0; }
   friend bool operator>(const BigInt &a, const BigInt &b) { return a.comp(b) > 0; }
   friend bool operator<=(const BigInt &a, const BigInt &b) { return a.comp(b) <= 0; }
@@ -371,6 +370,7 @@ class BigInt {
   friend bool operator==(const BigInt &a, const BigInt &b) { return a.comp(b) == 0; }
   friend bool operator!=(const BigInt &a, const BigInt &b) { return a.comp(b) != 0; }
 
+  // clang-format off
   BigInt abs() const { BigInt res(*this); res.sign = 1; return res; }
   BigInt operator-() const { BigInt res(*this); res.sign = -sign; return res; }
   // clang-format on

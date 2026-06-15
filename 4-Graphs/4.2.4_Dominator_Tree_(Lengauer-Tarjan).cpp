@@ -12,8 +12,8 @@ dominators from semidominator buckets.
 
 - `Dominators(n)` constructs a directed graph on nodes numbered from 0 to `n - 1`.
 - `add_edge(u, v)` adds a directed edge from `u` to `v`.
-- `find_dominators(start)` returns a vector `idom` where `idom[start] == start`, `idom[v]` is the
-  immediate dominator of reachable node `v`, and `idom[v] == -1` if `v` is unreachable.
+- `find_dominators(start)` returns a vector `idom` where `idom[start]` = `start`, `idom[v]` is the
+  immediate dominator of reachable node `v`, and `idom[v]` $= -1$ if `v` is unreachable.
 
 Time Complexity:
 - O(max(n, m) log n) per call to `find_dominators()` in this path-compressed implementation, where

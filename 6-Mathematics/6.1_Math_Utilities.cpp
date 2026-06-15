@@ -7,16 +7,19 @@ heavily optimized as their standard library counterparts.
 
 Time Complexity:
 - O(1) for most operations.
-- O(log n) per call to `mulmod()` and `powmod()`, where $n$ is the second argument.
-- O(d + e) for `convert_base(d, a, b)`, where $d$ is the number of input digits and $e$ is the
+- O(1) per call to `mulmod()` with `__uint128_t`, or O(log n) with the portable fallback, where
+  $n$ is the second argument.
+- O(log n) calls to `mulmod()` per call to `powmod(x, n, m)`.
+- O(d*e) for `convert_base(d, a, b)`, where $d$ is the number of input digits and $e$ is the
   number of output digits.
 - O(log_b(x + 1) + 1) for `to_base(x, b)`.
 - O(x / 1000 + 1) for `to_roman(x)`, due to the repeated `M` prefix.
 
 Space Complexity:
 - O(1) auxiliary for most operations.
-- O(e) auxiliary heap space for `convert_base(d, a, b)` and `to_base(x, b)`, where $e$ is the
-  number of output digits.
+- O(d + e) auxiliary heap space for `convert_base(d, a, b)`, where $d$ is the number of input
+  digits and $e$ is the number of output digits.
+- O(e) auxiliary heap space for `to_base(x, b)`, where $e$ is the number of output digits.
 - O(x / 1000 + 1) auxiliary heap space for `to_roman(x)`.
 
 */
@@ -322,12 +325,10 @@ double lgamma_(double x) {
 
 Binary Exponentiation:
 
-`powmod()` and `mulmod()` compute modular powers and products using binary exponentiation, also
-known as exponentiation by squaring. When `__uint128_t` is available, `mulmod()` uses a single
-128-bit product; otherwise, it uses portable double-and-add multiplication. In the fallback path,
-the inputs must not exceed $2^{63} - 1$.
-
-- `mulmod(x, n, m)` returns `x` multiplied by `n`, modulo `m`.
+- `mulmod(x, n, m)` returns `x` multiplied by `n`, modulo `m`. This is done in a way to avoid
+  overflow: on compilers with `__uint128_t` it uses one wide product, while the portable fallback
+  uses double-and-add multiplication. The fallback is slower by a logarithmic factor, but avoids
+  relying on nonstandard 128-bit integers.
 - `powmod(x, n, m)` returns `x` raised to the power `n`, modulo `m`.
 
 */
@@ -339,11 +340,11 @@ uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
   uint64_t a = 0, b = x % m;
   for (; n > 0; n >>= 1) {
     if (n & 1) {
-      a = (a + b) % m;
+      a = a >= m - b ? a - (m - b) : a + b;
     }
-    b = (b << 1) % m;
+    b = b >= m - b ? b - (m - b) : b + b;
   }
-  return a % m;
+  return a;
 #endif
 }
 
@@ -362,30 +363,15 @@ uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
 
 Base Conversion:
 
-- Given an integer in base `a` as a vector `d` of digits (where `d[0]` is the least significant
-  digit), `convert_base(d, a, b)` returns a vector of the integer's digits when converted base `b`
-  (again with index 0 storing the least significant digit). The actual value of the entire integer
-  to be converted must be able to fit within an unsigned 64-bit integer for intermediate storage.
 - `to_base(x, b)` returns the digits of the unsigned integer `x` in base `b`, where index 0 of the
   result stores the least significant digit.
-- `to_roman(x)` returns the Roman numeral representation of the unsigned integer `x` as an
-  `std::string`.
+- `to_roman(x)` returns the Roman numeral representation of the unsigned integer `x` as a string.
+- `convert_base(d, a, b)` converts an integer in base `a` as a vector `d` of digits (where `d[0]` is
+  the least significant digit) to base `b` as a vector of digits (again with index 0 holding the
+  least significant digit). This uses repeated long division, so the value itself does not need to
+  fit in a machine integer. Each intermediate `rem*a + digit` must fit in `uint64_t`.
 
 */
-
-std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
-  uint64_t x = 0, power = 1;
-  for (int di : d) {
-    x += di * power;
-    power *= a;
-  }
-  std::vector<int> res;
-  do {  // do-while so that a value of 0 yields the single digit {0}
-    res.push_back(x % b);
-    x /= b;
-  } while (x != 0);
-  return res;
-}
 
 std::vector<int> to_base(unsigned int x, int b = 10) {
   std::vector<int> res;
@@ -403,6 +389,32 @@ std::string to_roman(unsigned int x) {
   std::string prefix(x / 1000, 'M');
   x %= 1000;
   return prefix + h[x / 100] + t[x / 10 % 10] + o[x % 10];
+}
+
+std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
+  std::vector<int> cur = d, res;
+  auto trim = [](std::vector<int> &v) {
+    while (v.size() > 1 && v.back() == 0) {
+      v.pop_back();
+    }
+  };
+  trim(cur);
+  if (cur.empty() || (cur.size() == 1 && cur[0] == 0)) {
+    return {0};
+  }
+  while (!(cur.size() == 1 && cur[0] == 0)) {
+    std::vector<int> q(cur.size());
+    uint64_t rem = 0;
+    for (int i = static_cast<int>(cur.size()) - 1; i >= 0; i--) {
+      uint64_t x = rem * static_cast<uint64_t>(a) + static_cast<uint64_t>(cur[i]);
+      q[i] = static_cast<int>(x / static_cast<uint64_t>(b));
+      rem = x % static_cast<uint64_t>(b);
+    }
+    res.push_back(static_cast<int>(rem));
+    trim(q);
+    cur = std::move(q);
+  }
+  return res;
 }
 
 /*** Example Usage ***/
@@ -452,10 +464,15 @@ int main() {
   assert(powmod(2, 62, 1000000) == 387904);
   assert(powmod(10001, 10001, 100000) == 10001);
 
+  assert(to_roman(1234) == "MCCXXXIV");
+  assert(to_roman(5678) == "MMMMMDCLXXVIII");
   std::vector<int> digits{6, 5, 4, 3, 2, 1};
   std::vector<int> base20 = to_base(123456, 20);
   assert(convert_base(base20, 20, 10) == digits);
-  assert(to_roman(1234) == "MCCXXXIV");
-  assert(to_roman(5678) == "MMMMMDCLXXVIII");
+  assert(convert_base(std::vector<int>{0, 0, 0}, 10, 2) == std::vector<int>{0});
+
+  std::vector<int> big_decimal(30, 9);  // 10^30 - 1, larger than uint64_t.
+  std::vector<int> big_binary = convert_base(big_decimal, 10, 2);
+  assert(convert_base(big_binary, 2, 10) == big_decimal);
   return 0;
 }

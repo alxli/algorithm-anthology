@@ -10,9 +10,9 @@ rectangle sums. It avoids allocating the dense `R*C` table of the simple 2D Fenw
 less general than the sparse 2D segment tree or quadtrees because Fenwick-tree algebra relies on
 addition and subtraction.
 
-- `SparseFenwick2D()` constructs a 2D array over rows 0 to $R$ (inclusive) and columns 0 to $C$
-  (inclusive), where $R$ and $C$ are large bounds hardcoded in the class. All values are implicitly
-  initialized to 0, as nodes are allocated lazily as indices are touched.
+- `SparseFenwick2D<T, R, C>()` constructs a 2D array over rows 0 to $R - 1$ (inclusive) and columns
+  0 to $C - 1$ (inclusive). All values
+  are implicitly initialized to 0, as nodes are allocated lazily as indices are touched.
 - `add(r, c, x)` adds `x` to the value at index `(r, c)`.
 - `add(r1, c1, r2, c2, x)` adds `x` to all indices in the rectangle with upper-left corner
   `(r1, c1)` and lower-right corner `(r2, c2)`.
@@ -27,8 +27,8 @@ Time Complexity:
 - O(log(R)*log(C)) per call to all member functions.
 
 Space Complexity:
-- O(n*log(R)*log(C)) for storage of the array elements, where $n$ is the number of
-  distinct indices that have been accessed across all of the operations so far.
+- O(n*log(R)*log(C)) for storage of the array elements, where $n$ is the number of distinct indices
+  that have been accessed across all of the operations so far.
 - O(1) auxiliary for all operations.
 
 */
@@ -37,11 +37,8 @@ Space Complexity:
 #include <unordered_map>
 #include <utility>
 
-template<class T>
+template<class T, int R = 1000000001, int C = 1000000001>
 class SparseFenwick2D {
-  static const int R = 1000000001;
-  static const int C = 1000000001;
-
   std::unordered_map<int64_t, T> t1, t2, t3, t4;
 
   template<class Map>
@@ -136,6 +133,6 @@ int main() {
   assert(t.sum(0, 0, 1, 0) == 8);
   assert(t.sum(1, 1, 2, 2) == 29);
   t.set(500000000, 500000000, 100);
-  assert(t.sum(0, 0, 1000000000, 1000000000) == 143);
+  assert(t.sum(0, 0, 999999999, 999999999) == 143);
   return 0;
 }

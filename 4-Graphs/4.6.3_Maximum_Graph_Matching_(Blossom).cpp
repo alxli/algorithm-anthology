@@ -36,7 +36,7 @@ std::vector<int> blossom(const std::vector<std::vector<int>> &adj) {
   int aux_time = -1;
   auto lca = [&](int u, int v) {
     aux_time++;
-    for (;;) {
+    while (true) {
       if (u != -1) {
         u = base[u];
         if (aux[u] == aux_time) {

@@ -283,9 +283,9 @@ using namespace std;
 int main() {
   //   w=40   w=20   w=10
   // 0------1------2------3    5------6
-  //                \
-  //                 -----4
-  //                  w=30
+  //               |
+  //                ------4
+  //                 w=30
   vector<vector<int>> adj(7);
   adj[0].push_back(1);
   adj[1].push_back(0);

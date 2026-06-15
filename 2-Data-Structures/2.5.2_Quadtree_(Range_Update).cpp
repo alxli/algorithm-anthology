@@ -25,9 +25,9 @@ aligned regions of a huge sparse grid. Choose a sparse 2D segment tree when wors
 may be long, thin, or otherwise poorly aligned with quadrant boundaries; the quadtree can visit many
 boundary nodes in those cases.
 
-- `LazyQuadtree(v)` constructs a 2D array with rows 0 to $R$ (inclusive) and columns 0 to $C$
-  (inclusive), where $R$ and $C$ are large bounds hardcoded in the class. All array values are
-  implicitly initialized to `v`. Nodes are allocated lazily as indices are touched.
+- `LazyQuadtree<T, R, C>(v)` constructs a 2D array with rows 0 to $R$ (inclusive) and columns 0 to
+  $C$ (inclusive), where template parameters `R` and `C`. All array values are implicitly
+  initialized to `v`. Nodes are allocated lazily as indices are touched.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows from `r1` to `r2` and columns from `c1` to `c2`, inclusive.
@@ -54,11 +54,8 @@ Space Complexity:
 #include <cstddef>
 #include <cstdint>
 
-template<class T>
+template<class T, int R = 1000000000, int C = 1000000000>
 class LazyQuadtree {
-  static const int R = 1000000000;
-  static const int C = 1000000000;
-
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t area) { return v; }
   static T apply_delta(const T &v, const T &d, int64_t area) { return d; }

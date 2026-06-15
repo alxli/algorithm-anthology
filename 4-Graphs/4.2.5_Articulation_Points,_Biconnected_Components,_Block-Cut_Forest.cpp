@@ -21,7 +21,7 @@ forest describes edge connectivity after compressing 2-edge-connected components
   the previous `build_bcc()` call.
 - BCC nodes in `block_cut_forest` are numbered `[0, biconnected_components.size())`.
 - For an articulation point `v`, `block_cut_id[v]` stores its node ID in the block-cut forest.
-- For a non-articulation point `v`, `block_cut_id[v] == -1`.
+- For a non-articulation point `v`, `block_cut_id[v]` is $-1$.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_bcc()` and `build_block_cut_forest()`, where $n$ is the number of
@@ -58,7 +58,7 @@ struct BiconnectedComponents {
 
   void add_component_until(int stop_id) {
     std::vector<int> component;
-    for (;;) {
+    while (true) {
       int id = edge_stack.back();
       edge_stack.pop_back();
       component.push_back(edges[id].first);

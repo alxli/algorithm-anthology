@@ -54,7 +54,7 @@ bool next_permutation_(It lo, It hi) {
   }
   i = hi;
   --i;
-  for (;;) {
+  while (true) {
     It j = i;
     if (*--i < *j) {
       It k = hi;

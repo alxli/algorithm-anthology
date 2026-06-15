@@ -22,8 +22,8 @@ interval's lower bound.
   intersects with `[lo, hi]`, or `nullptr` if no such entry was found.
 - `find_all(lo, hi, f)` calls the function `f(lo, hi, v)` on each entry in the map that overlaps
   with `[lo, hi]`, in lexicographically ascending order of intervals.
-- `walk(f)` calls the function `f(lo, hi, v)` on each interval in the map, in lexicographically
-  ascending order of intervals.
+- `entries()` returns all intervals and their values in lexicographically ascending order of
+  intervals.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
@@ -31,7 +31,7 @@ Time Complexity:
   of intervals currently in the set.
 - O(log n + m) on average per call to `find_all()`, where $m$ is the number of intersecting
   intervals that are reported.
-- O(n) per call to `walk()`.
+- O(n) per call to `entries()`.
 
 Space Complexity:
 - O(n) for storage of the map elements.
@@ -41,7 +41,9 @@ Space Complexity:
 */
 
 #include <cstdint>
+#include <tuple>
 #include <utility>
+#include <vector>
 
 template<class K, class V>
 class IntervalTreap {
@@ -171,12 +173,11 @@ class IntervalTreap {
     }
   }
 
-  template<class Fn>
-  static void walk(Node *n, Fn f) {
+  static void collect_entries(Node *n, std::vector<std::tuple<K, K, V>> &res) {
     if (n != nullptr) {
-      walk(n->left, f);
-      f(n->interval.first, n->interval.second, n->value);
-      walk(n->right, f);
+      collect_entries(n->left, res);
+      res.push_back({n->interval.first, n->interval.second, n->value});
+      collect_entries(n->right, res);
     }
   }
 
@@ -228,9 +229,11 @@ class IntervalTreap {
     find_all(root, Interval{lo, hi}, f);
   }
 
-  template<class Fn>
-  void walk(Fn f) const {
-    walk(root, f);
+  std::vector<std::tuple<K, K, V>> entries() const {
+    std::vector<std::tuple<K, K, V>> res;
+    res.reserve(num_nodes);
+    collect_entries(root, res);
+    return res;
   }
 };
 
@@ -263,7 +266,9 @@ int main() {
   auto print = [](int lo, int hi, char v) { cout << " [" << lo << ", " << hi << "]"; };
   t.find_all(16, 20, print);
   cout << "\nAll intervals:";
-  t.walk(print);
+  for (const auto &[lo, hi, v] : t.entries()) {
+    print(lo, hi, v);
+  }
   cout << endl;
   return 0;
 }

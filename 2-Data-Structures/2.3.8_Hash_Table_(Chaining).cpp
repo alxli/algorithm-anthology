@@ -22,7 +22,7 @@ entry and cache-unfriendly pointer chasing during traversal.
 - `operator[k]` returns a reference to key `k`'s associated value (which may be modified), or if
   necessary, inserts and returns a new entry with the default constructed value if key `k` was not
   originally found.
-- `walk(f)` calls the function `f(k, v)` on each entry of the map, in no guaranteed order.
+- `entries()` returns all key-value entries in no guaranteed order.
 
 This is an educational implementation; in practice prefer one of the standard options:
 - `std::unordered_map` is the portable standard-library hash map. It is also chaining-based, so this
@@ -35,7 +35,7 @@ This is an educational implementation; in practice prefer one of the standard op
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
 - O(1) amortized per call to `insert()`, `erase()`, `find()`, and `operator[]`.
-- O(n) per call to `walk()`, where $n$ is the number of entries in the map.
+- O(n) per call to `entries()`, where $n$ is the number of entries in the map.
 
 Space Complexity:
 - O(n) for storage of the map elements.
@@ -46,6 +46,7 @@ Space Complexity:
 
 #include <cstdint>
 #include <list>
+#include <utility>
 #include <vector>
 
 template<class K, class V, class Hash>
@@ -129,13 +130,15 @@ class ChainingHashMap {
     return table[i].back().value;
   }
 
-  template<class Fn>
-  void walk(Fn f) const {
+  std::vector<std::pair<K, V>> entries() const {
+    std::vector<std::pair<K, V>> res;
+    res.reserve(num_entries);
     for (int i = 0; i < table_size; i++) {
       for (const auto &entry : table[i]) {
-        f(entry.key, entry.value);
+        res.push_back({entry.key, entry.value});
       }
     }
+    return res;
   }
 };
 
@@ -196,7 +199,9 @@ int main() {
   m["baz"] = 'c';
 
   string vals;
-  m.walk([&](const string &k, char c) { vals += c; });
+  for (const auto &[k, v] : m.entries()) {
+    vals += v;
+  }
   sort(vals.begin(), vals.end());
   assert(vals == "abc");
   assert(m.erase("foo"));

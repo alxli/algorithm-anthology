@@ -14,15 +14,16 @@ This is the same divide-and-conquer butterfly as the fast Fourier transform, wit
 and all arithmetic taken modulo the prime.
 
 - `ntt(a, invert)` transforms the vector `a` in place, whose length must be a power of two. The
-  forward transform uses `invert == false`; the inverse uses `invert == true`.
+  forward transform uses `invert = false`; the inverse uses `invert = true`.
 - `convolve(a, b)` returns the convolution of `a` and `b` modulo the prime, that is, the
   coefficients of the product of the two polynomials whose coefficients are the inputs. The result
   has length `a.size() + b.size() - 1`, or is empty if either input is empty. Input values are
-  assumed to lie in `[0, MOD)`.
+  assumed to lie in `[0, MOD)`. Small inputs use direct multiplication to avoid NTT overhead.
 
 Time Complexity:
 - O(n log n) per call to `ntt()`, where $n$ is the length of the vector.
-- O(n log n) per call to `convolve()`, where $n$ is the size of the result.
+- O(|a||b|) for the small-input branch of `convolve()`, otherwise O(n log n), where $n$ is the
+  padded transform length.
 
 Space Complexity:
 - O(1) auxiliary for `ntt()`, transforming in place.
@@ -31,11 +32,14 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
 const int64_t MOD = 998244353;
 const int64_t ROOT = 3;
+const int MAX_POWER_OF_TWO = 23;
+const int NAIVE_CUTOFF = 150;
 
 int64_t powmod(int64_t b, int64_t e, int64_t m) {
   int64_t res = 1;
@@ -50,6 +54,7 @@ int64_t powmod(int64_t b, int64_t e, int64_t m) {
 
 void ntt(std::vector<int64_t> &a, bool invert) {
   int n = static_cast<int>(a.size());
+  assert((n & (n - 1)) == 0 && n <= (1 << MAX_POWER_OF_TWO));
   for (int i = 1, j = 0; i < n; i++) {
     int bit = n >> 1;
     for (; j & bit; bit >>= 1) {
@@ -88,10 +93,20 @@ std::vector<int64_t> convolve(std::vector<int64_t> a, std::vector<int64_t> b) {
     return {};
   }
   int result_size = a.size() + b.size() - 1;
+  if (std::min(a.size(), b.size()) < NAIVE_CUTOFF) {
+    std::vector<int64_t> res(result_size);
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
+      for (int j = 0; j < static_cast<int>(b.size()); j++) {
+        res[i + j] = (res[i + j] + a[i] * b[j]) % MOD;
+      }
+    }
+    return res;
+  }
   int n = 1;
   while (n < result_size) {
     n <<= 1;
   }
+  assert(n <= (1 << MAX_POWER_OF_TWO));
   a.resize(n);
   b.resize(n);
   ntt(a, false);
@@ -114,5 +129,8 @@ int main() {
   vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
   vector<int64_t> c = convolve(a, b);
   assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
+  vector<int64_t> ones(160, 1);
+  vector<int64_t> d = convolve(ones, ones);
+  assert(d[0] == 1 && d[159] == 160 && d[318] == 1);
   return 0;
 }

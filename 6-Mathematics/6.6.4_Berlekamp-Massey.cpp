@@ -16,8 +16,13 @@ The code operates modulo the prime 998244353; change `MOD` to use a different pr
   satisfies, as described above. The returned length is the order $L$ of the recurrence. An empty
   vector is returned when `s` is entirely zero (no recurrence is needed).
 
+A recurrence of order $L$ is only certified by at least $2L + 1$ terms, so the result is trustworthy
+only when `s` is comfortably longer than twice the returned length. If the returned $L$ is close to
+$n / 2$, the sequence is likely under-determined and the recurrence may be a spurious overfit.
+
 Time Complexity:
-- O(n^2 + n log p) per call, where $n$ is the length of `s` and $p$ is the modulus.
+- O(n^2 + L log p) per call, where $n$ is the length of `s`, $L$ is the order of the recurrence
+  found, and $p$ is the modulus.
 
 Space Complexity:
 - O(n) auxiliary heap space.
@@ -44,7 +49,7 @@ std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
   int n = static_cast<int>(s.size()), len = 0, m = 0;
   std::vector<int64_t> cur(n), last(n), prev;
   cur[0] = last[0] = 1;
-  int64_t last_delta = 1;
+  int64_t inv_last_delta = 1;
   for (int i = 0; i < n; i++) {
     m++;
     int64_t delta = s[i] % MOD;
@@ -55,7 +60,7 @@ std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
       continue;
     }
     prev = cur;
-    int64_t coef = delta * powmod(last_delta, MOD - 2, MOD) % MOD;
+    int64_t coef = delta * inv_last_delta % MOD;
     for (int j = m; j < n; j++) {
       cur[j] = (cur[j] - coef * last[j - m] % MOD + MOD) % MOD;
     }
@@ -64,7 +69,7 @@ std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
     }
     len = i + 1 - len;
     last = prev;
-    last_delta = delta;
+    inv_last_delta = powmod(delta, MOD - 2, MOD);  // Refresh only when the length increases.
     m = 0;
   }
   cur.resize(len + 1);

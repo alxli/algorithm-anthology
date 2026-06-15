@@ -16,12 +16,12 @@ so compressed data normally stores enough metadata to reconstruct the same tree.
 - `decode(bits)` returns the decoded text.
 
 Time Complexity:
-- O(n + A log A) to construct the tree, where $n$ is the input length and $A$ is the number of
+- O(n + m log m) to construct the tree, where $n$ is the input length and $m$ is the number of
   distinct characters.
 - O(n) to encode or decode, plus the number of produced or consumed bits.
 
 Space Complexity:
-- O(A) for the tree and code table.
+- O(m) for the tree and code table, where $m$ is the number of distinct characters.
 - O(n) for the encoded or decoded output.
 
 */

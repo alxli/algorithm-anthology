@@ -19,7 +19,8 @@ adding new edges or increasing capacities; call `clear_flow()` first to recomput
 capacity type `T` should be signed, since reverse residual edges store negative flow.
 
 Time Complexity:
-- O(n^2*m) per call to `max_flow()`, where $n$ is the number of nodes and $m$ is the number of edges.
+- O(n^2*m) per call to `max_flow()`, where $n$ is the number of nodes and $m$ is the number of
+  edges.
 - O(n + m) per call to `min_cut()`.
 
 Space Complexity:

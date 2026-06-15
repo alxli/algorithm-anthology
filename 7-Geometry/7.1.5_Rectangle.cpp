@@ -4,19 +4,18 @@ Common axis-aligned rectangle calculations in two dimensions. The functions are 
 point type `Pt`, which should work with `Point`/`PointD`/`PointI` from 7.1.1, or any struct with
 numeric `.x` and `.y` fields.
 
-- `point_in_rectangle(p, v, w, h)` returns whether point `p` lies inside the axis-aligned rectangle
-  with corner `v`, width `w`, and height `h`. Negative widths and heights are supported.
-- `point_in_rectangle(p, a, b)` returns whether point `p` lies inside the axis-aligned rectangle
-  with opposite corners `a` and `b`.
-- `rectangle_intersection(a1, b1, a2, b2, &p, &q)` computes the intersection of two axis-aligned
-  rectangles, where `a1`/`b1` and `a2`/`b2` are opposite-corner pairs. Returns -1 if the rectangles
-  are disjoint, 0 if they partially intersect, 1 if the first rectangle is completely inside the
-  second, and 2 if the second rectangle is completely inside the first. If an intersection exists,
-  its lower-left and upper-right corners are stored in `p` and `q` when those pointers are non-null.
-
-Boundary behavior is controlled independently inside each function by `EDGE_IS_INSIDE`. If true,
-rectangle edges count as inside/intersecting; if false, boundary-only contact is treated as
-outside/disjoint.
+- `point_in_rectangle(p, v, w, h, EDGE_IS_INSIDE)` returns whether point `p` lies inside the
+  axis-aligned rectangle with corner `v`, width `w`, and height `h`. Negative widths and heights are
+  supported. The `EDGE_IS_INSIDE` flag (default `true`) controls whether boundary points count.
+- `point_in_rectangle(p, a, b, EDGE_IS_INSIDE)` returns whether point `p` lies inside the
+  axis-aligned rectangle with opposite corners `a` and `b`.
+- `rectangle_intersection(a1, b1, a2, b2, &p, &q, EDGE_IS_INSIDE)` computes the intersection of two
+  axis-aligned rectangles, where `a1`/`b1` and `a2`/`b2` are opposite-corner pairs. Returns -1 if
+  the rectangles are disjoint, 0 if they partially intersect, 1 if the first rectangle is completely
+  inside the second, and 2 if the second rectangle is completely inside the first. If an
+  intersection exists, its lower-left and upper-right corners are stored in `p` and `q` when those
+  pointers are non-null. The `EDGE_IS_INSIDE` flag (default `true`) controls whether boundary-only
+  contact counts as intersecting.
 
 For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions,
 subtractions, and min/max values do not overflow. Floating-point inputs use EPS-based comparisons.
@@ -43,30 +42,31 @@ const double EPS = 1e-9;
 #define GE(a, b) ((a) >= (b) - EPS)
 
 template<class Pt, class T>
-bool point_in_rectangle(const Pt &p, const Pt &v, const T &w, const T &h) {
-  static const bool EDGE_IS_INSIDE = true;
+bool point_in_rectangle(
+    const Pt &p, const Pt &v, const T &w, const T &h, bool EDGE_IS_INSIDE = true
+) {
   if (w < 0) {
-    return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h);
+    return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h, EDGE_IS_INSIDE);
   }
   if (h < 0) {
-    return point_in_rectangle(p, Pt(v.x, v.y + h), w, -h);
+    return point_in_rectangle(p, Pt(v.x, v.y + h), w, -h, EDGE_IS_INSIDE);
   }
   return EDGE_IS_INSIDE ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
                         : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
 }
 
 template<class Pt>
-bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b) {
+bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, bool EDGE_IS_INSIDE = true) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl);
+  return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl, EDGE_IS_INSIDE);
 }
 
 template<class Pt>
 int rectangle_intersection(
-    const Pt &a1, const Pt &b1, const Pt &a2, const Pt &b2, Pt *p = nullptr, Pt *q = nullptr
+    const Pt &a1, const Pt &b1, const Pt &a2, const Pt &b2, Pt *p = nullptr, Pt *q = nullptr,
+    bool EDGE_IS_INSIDE = true
 ) {
-  static const bool EDGE_IS_INSIDE = true;
   // Normalize each rectangle to [xl, xh] x [yl, yh] with coordinate-wise min/max only.
   // (Using auto keeps the native coordinate type, so integer rectangles stay exact.)
   auto xl1 = std::min(a1.x, b1.x), xh1 = std::max(a1.x, b1.x);
@@ -109,9 +109,11 @@ struct Point {
 
 int main() {
   assert(point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2));
+  assert(!point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2, false));
   assert(point_in_rectangle(Point(2, -2), Point(3, -3), -3, 2));
   assert(!point_in_rectangle(Point(0, 0), Point(3, -1), -3, -2));
   assert(point_in_rectangle(Point(2, -2), Point(3, -3), Point(0, -1)));
+  assert(!point_in_rectangle(Point(0, -1), Point(3, -3), Point(0, -1), false));
   assert(!point_in_rectangle(Point(-1, -2), Point(3, -3), Point(0, -1)));
 
   Point p, q;
@@ -122,5 +124,9 @@ int main() {
   assert(p == Point(0, 0) && q == Point(1, 1));
   assert(2 == rectangle_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
   assert(p == Point(1, 5) && q == Point(2, 6));
+  assert(
+      -1 ==
+      rectangle_intersection(Point(0, 0), Point(1, 1), Point(1, 1), Point(2, 2), &p, &q, false)
+  );
   return 0;
 }

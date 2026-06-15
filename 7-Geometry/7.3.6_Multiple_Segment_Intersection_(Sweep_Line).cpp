@@ -9,10 +9,10 @@ endpoints may be integer (`PointI`) or floating-point (`Point`/`PointD`), but mu
 `operator<` which orders points lexicographically. The cross-product sign tests in
 `seg_intersection` are exact for integer endpoints, so intersection detection is exact.
 
-- `find_intersection(lo, hi, &res1, &res2, touch_is_intersect)` returns whether any pair of segments
+- `find_intersection(lo, hi, &res1, &res2, TOUCH_IS_INTERSECT)` returns whether any pair of segments
   intersect given a range `[lo, hi)` of segments, where `lo` and `hi` are random-access iterators.
   If an intersection is found, then one such pair of segments will be stored into pointers `res1`
-  and `res2`. The `touch_is_intersect` flag (default `true`) controls whether segments that meet
+  and `res2`. The `TOUCH_IS_INTERSECT` flag (default `true`) controls whether segments that meet
   only at an endpoint count as intersecting; set it to `false` to report proper crossings only,
   as when testing a polygon for self-intersection among edges that legitimately share endpoints.
 
@@ -48,7 +48,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
 // Simplified detection-only version of `seg_intersection()` from 7.2.3 (exact for integral Pt).
 template<class Pt>
 int seg_intersection(
-    const Pt &a, const Pt &b, const Pt &c, const Pt &d, bool touch_is_intersect = true
+    const Pt &a, const Pt &b, const Pt &c, const Pt &d, const bool TOUCH_IS_INTERSECT = true
 ) {
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
@@ -56,17 +56,17 @@ int seg_intersection(
   auto ab2 = ab_x * ab_x + ab_y * ab_y;
   auto cd2 = cd_x * cd_x + cd_y * cd_y;
   if (ab2 == 0) {
-    return (touch_is_intersect && point_on_segment(a, c, d)) ? 0 : -1;
+    return (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) ? 0 : -1;
   }
   if (cd2 == 0) {
-    return (touch_is_intersect && point_on_segment(c, a, b)) ? 0 : -1;
+    return (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) ? 0 : -1;
   }
   auto c1 = ab_x * cd_y - ab_y * cd_x;
   auto c2 = ac_x * ab_y - ac_y * ab_x;
   if (c1 == 0 && c2 == 0) {
     Pt res1 = std::max(std::min(a, b), std::min(c, d));
     Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    bool overlap = touch_is_intersect ? !(res2 < res1) : (res1 < res2);
+    bool overlap = TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2);
     if (overlap) {
       return (res1 == res2) ? 0 : 1;
     }
@@ -78,10 +78,10 @@ int seg_intersection(
   auto t_num = ac_x * cd_y - ac_y * cd_x;
   bool c1_pos = c1 > 0;
   bool t_between_01 =
-      c1_pos ? (touch_is_intersect ? (0 <= t_num && t_num <= c1) : (0 < t_num && t_num < c1))
-             : (touch_is_intersect ? (c1 <= t_num && t_num <= 0) : (c1 < t_num && t_num < 0));
-  bool u_between_01 = c1_pos ? (touch_is_intersect ? (0 <= c2 && c2 <= c1) : (0 < c2 && c2 < c1))
-                             : (touch_is_intersect ? (c1 <= c2 && c2 <= 0) : (c1 < c2 && c2 < 0));
+      c1_pos ? (TOUCH_IS_INTERSECT ? (0 <= t_num && t_num <= c1) : (0 < t_num && t_num < c1))
+             : (TOUCH_IS_INTERSECT ? (c1 <= t_num && t_num <= 0) : (c1 < t_num && t_num < 0));
+  bool u_between_01 = c1_pos ? (TOUCH_IS_INTERSECT ? (0 <= c2 && c2 <= c1) : (0 < c2 && c2 < c1))
+                             : (TOUCH_IS_INTERSECT ? (c1 <= c2 && c2 <= 0) : (c1 < c2 && c2 < 0));
   return (t_between_01 && u_between_01) ? 0 : -1;
 }
 
@@ -94,13 +94,15 @@ struct Segment {
 };
 
 template<class Pt>
-bool intersects(const Segment<Pt> &s1, const Segment<Pt> &s2, bool touch_is_intersect = true) {
-  return seg_intersection(s1.p, s1.q, s2.p, s2.q, touch_is_intersect) >= 0;
+bool intersects(
+    const Segment<Pt> &s1, const Segment<Pt> &s2, const bool TOUCH_IS_INTERSECT = true
+) {
+  return seg_intersection(s1.p, s1.q, s2.p, s2.q, TOUCH_IS_INTERSECT) >= 0;
 }
 
 // Seg is deduced from the output pointers (e.g. Segment<PointI>* or Segment<PointD>*).
 template<class It, class Seg>
-bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, bool touch_is_intersect = true) {
+bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, const bool TOUCH_IS_INTERSECT = true) {
   using Pt = std::decay_t<decltype(lo->p)>;
   struct Event {
     Pt p;
@@ -160,12 +162,12 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, bool touch_is_interse
       auto it = s.insert(seg).first;
       position[seg - lo] = it;
       auto next = it;
-      if (++next != s.end() && intersects(**next, *seg, touch_is_intersect)) {
+      if (++next != s.end() && intersects(**next, *seg, TOUCH_IS_INTERSECT)) {
         *res1 = **next;
         *res2 = *seg;
         return true;
       }
-      if (it != s.begin() && intersects(**--it, *seg, touch_is_intersect)) {
+      if (it != s.begin() && intersects(**--it, *seg, TOUCH_IS_INTERSECT)) {
         *res1 = **it;
         *res2 = *seg;
         return true;
@@ -175,7 +177,7 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, bool touch_is_interse
       auto next = it;
       if (++next != s.end() && it != s.begin()) {
         auto prev = it;
-        if (intersects(**next, **--prev, touch_is_intersect)) {
+        if (intersects(**next, **--prev, TOUCH_IS_INTERSECT)) {
           *res1 = **next;
           *res2 = **prev;
           return true;
@@ -234,7 +236,7 @@ int main() {
     };
     assert(!find_intersection(disjoint.begin(), disjoint.end(), &res1, &res2));
   }
-  {  // touch_is_intersect = false reports proper crossings only, ignoring shared endpoints.
+  {  // TOUCH_IS_INTERSECT = false reports proper crossings only, ignoring shared endpoints.
     vector<Segment<PointI>> shared{
         Segment<PointI>({0, 0}, {2, 2}), Segment<PointI>({2, 2}, {4, 0})
     };

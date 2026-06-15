@@ -2,12 +2,13 @@
 
 The following functions implement common operations in combinatorics. All inputs must be
 non-negative. All return values and table entries are computed as 64-bit integers modulo an input
-argument $m$ or $p$.
+argument $m$ or $p$. Modular products use ordinary `int64_t` multiplication, so the square of the
+chosen modulus must fit in `int64_t`.
 
 - `factorial(n, m)` returns $n! \bmod m$.
 - `factorialp(n, p)` returns $n! \bmod p$, where $p$ is prime.
-- `binomial_table(n, m)` returns rows $0$ to $n$ of Pascal's triangle as a table $t$ such that
-  $t[i][j] = \binom{i}{j} \bmod m$.
+- `binomial_table(n, m)` returns rows $0$ to $n$ of Pascal's triangle as a two-dimensional vector
+  $t$ such that $t[i][j] = \binom{i}{j} \bmod m$.
 - `permute(n, k, m)` returns $(n \mathbin{\text{permute}} k) \bmod m$.
 - `choose(n, k, p)` returns $\binom{n}{k} \bmod p$, where $p$ is prime.
 - `multichoose(n, k, p)` returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is prime.
@@ -42,19 +43,16 @@ Space Complexity:
 #include <cstdint>
 #include <vector>
 
-using int64 = int64_t;
-using table = std::vector<std::vector<int64>>;
-
-int64 factorial(int n, int m = 1000000007) {
-  int64 res = 1;
+int64_t factorial(int n, int m = 1000000007) {
+  int64_t res = 1;
   for (int i = 2; i <= n; i++) {
     res = (res * i) % m;
   }
   return res % m;
 }
 
-int64 factorialp(int64 n, int64 p = 1000000007) {
-  int64 res = 1;
+int64_t factorialp(int64_t n, int64_t p = 1000000007) {
+  int64_t res = 1;
   while (n > 1) {
     if (n / p % 2 == 1) {
       res = res * (p - 1) % p;
@@ -68,8 +66,8 @@ int64 factorialp(int64 n, int64 p = 1000000007) {
   return res % p;
 }
 
-table binomial_table(int n, int64 m = 1000000007) {
-  table t(n + 1);
+std::vector<std::vector<int64_t>> binomial_table(int n, int64_t m = 1000000007) {
+  std::vector<std::vector<int64_t>> t(n + 1);
   for (int i = 0; i <= n; i++) {
     for (int j = 0; j <= i; j++) {
       if (i < 2 || j == 0 || i == j) {
@@ -82,47 +80,36 @@ table binomial_table(int n, int64 m = 1000000007) {
   return t;
 }
 
-int64 permute(int n, int k, int64 m = 1000000007) {
+int64_t permute(int n, int k, int64_t m = 1000000007) {
   if (n < k) {
     return 0;
   }
-  int64 res = 1;
+  int64_t res = 1;
   for (int i = 0; i < k; i++) {
     res = res * (n - i) % m;
   }
   return res % m;
 }
 
-int64 mulmod(int64 x, int64 n, int64 m) {
-  int64 a = 0, b = x % m;
+int64_t powmod(int64_t x, int64_t n, int64_t m) {
+  int64_t a = 1, b = x % m;
   for (; n > 0; n >>= 1) {
     if (n & 1) {
-      a = (a + b) % m;
+      a = a * b % m;
     }
-    b = (b << 1) % m;
+    b = b * b % m;
   }
   return a % m;
 }
 
-int64 powmod(int64 x, int64 n, int64 m) {
-  int64 a = 1, b = x;
-  for (; n > 0; n >>= 1) {
-    if (n & 1) {
-      a = mulmod(a, b, m);
-    }
-    b = mulmod(b, b, m);
-  }
-  return a % m;
-}
-
-int64 choose(int n, int k, int64 p = 1000000007) {
+int64_t choose(int n, int k, int64_t p = 1000000007) {
   if (n < k) {
     return 0;
   }
   if (k > n - k) {
     k = n - k;
   }
-  int64 num = 1, den = 1;
+  int64_t num = 1, den = 1;
   for (int i = 0; i < k; i++) {
     num = num * (n - i) % p;
   }
@@ -132,16 +119,16 @@ int64 choose(int n, int k, int64 p = 1000000007) {
   return num * powmod(den, p - 2, p) % p;
 }
 
-int64 multichoose(int n, int k, int64 p = 1000000007) {
+int64_t multichoose(int n, int k, int64_t p = 1000000007) {
   return choose(n + k - 1, k, p);
 }
 
-int64 catalan(int n, int64 p = 1000000007) {
+int64_t catalan(int n, int64_t p = 1000000007) {
   return choose(2 * n, n, p) * powmod(n + 1, p - 2, p) % p;
 }
 
-int64 partitions(int n, int64 m = 1000000007) {
-  std::vector<int64> t(n + 1, 0);
+int64_t partitions(int n, int64_t m = 1000000007) {
+  std::vector<int64_t> t(n + 1, 0);
   t[0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = i; j <= n; j++) {
@@ -151,8 +138,8 @@ int64 partitions(int n, int64 m = 1000000007) {
   return t[n] % m;
 }
 
-int64 partitions(int n, int k, int64 m = 1000000007) {
-  table t(n + 1, std::vector<int64>(k + 1, 0));
+int64_t partitions(int n, int k, int64_t m = 1000000007) {
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
   t[0][1] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1, h = k < i ? k : i; j <= h; j++) {
@@ -162,8 +149,8 @@ int64 partitions(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 stirling1(int n, int k, int64 m = 1000000007) {
-  table t(n + 1, std::vector<int64>(k + 1, 0));
+int64_t stirling1(int n, int k, int64_t m = 1000000007) {
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
@@ -174,8 +161,8 @@ int64 stirling1(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 stirling2(int n, int k, int64 m = 1000000007) {
-  table t(n + 1, std::vector<int64>(k + 1, 0));
+int64_t stirling2(int n, int k, int64_t m = 1000000007) {
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
@@ -186,11 +173,11 @@ int64 stirling2(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 eulerian1(int n, int k, int64 m = 1000000007) {
+int64_t eulerian1(int n, int k, int64_t m = 1000000007) {
   if (k > n - 1 - k) {
     k = n - 1 - k;
   }
-  table t(n + 1, std::vector<int64>(k + 1, 1));
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 1));
   for (int j = 1; j <= k; j++) {
     t[0][j] = 0;
   }
@@ -203,8 +190,8 @@ int64 eulerian1(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 eulerian2(int n, int k, int64 m = 1000000007) {
-  table t(n + 1, std::vector<int64>(k + 1, 1));
+int64_t eulerian2(int n, int k, int64_t m = 1000000007) {
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 1));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
       if (i == j) {
@@ -223,7 +210,7 @@ int64 eulerian2(int n, int k, int64 m = 1000000007) {
 #include <cassert>
 
 int main() {
-  table t = binomial_table(10);
+  auto t = binomial_table(10);
   for (int i = 0; i < static_cast<int>(t.size()); i++) {
     for (int j = 0; j < static_cast<int>(t[i].size()); j++) {
       assert(t[i][j] == choose(i, j));

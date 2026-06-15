@@ -9,12 +9,13 @@ roots are needed, a real-root isolator such as derivative recursion with bisecti
 reliable. Multiple or tightly clustered roots may converge slowly, and very large or very small root
 scales may require rescaling the input or using multiprecision arithmetic.
 
-- `eval_with_derivative(p, x)` returns `p(x)` and `p'(x)` for a polynomial `p` represented as a
-  vector where `p[i]` stores the coefficient for the $x^i$ term.
+- `eval_with_derivative(p, x)` returns a pair $(p(x), p'(x))$ for a polynomial $p$ given as a vector
+  `p` where `p[i]` stores the coefficient for the $x^i$ term.
 - `find_all_roots(p, EPS, ITERATIONS)` returns a vector of all complex roots for a complex
-  polynomial `p`. A `vector<LD>` overload is provided for polynomials with real coefficients. The
-  roots are found to a tolerance of `EPS` in absolute or relative error (whichever is reached
-  first), and zero roots are removed exactly before the simultaneous iteration starts.
+  polynomial given by the vector of coefficients `p`. A `vector<LD>` overload is provided for
+  polynomials with real coefficients. The roots are found to a tolerance of `EPS` in absolute or
+  relative error (whichever is reached first), and zero roots are removed exactly before the
+  simultaneous iteration starts.
 
 Time Complexity:
 - O(n) per call to `eval_with_derivative(p, x)`, where $n$ is the degree of the polynomial.

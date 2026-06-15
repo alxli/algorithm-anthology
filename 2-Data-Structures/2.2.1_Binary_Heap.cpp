@@ -38,7 +38,7 @@ class BinaryHeap {
   std::vector<T> heap;
 
   void sift_down(int i) {
-    for (;;) {
+    while (true) {
       int child = 2 * i + 1;
       if (child >= static_cast<int>(heap.size())) {
         break;

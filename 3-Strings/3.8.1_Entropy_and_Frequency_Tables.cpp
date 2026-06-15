@@ -15,11 +15,11 @@ uniquely decodable code for the same independent symbol model.
   `length[c]`.
 
 Time Complexity:
-- O(n + A) per call to `entropy(s)`, where $n$ is the string length and $A = 256$.
-- O(A) per call to `entropy(freq)` and `expected_code_length(freq, length)`.
+- O(n + m) per call to `entropy(s)`, where $n$ is the string length and $m = 256$.
+- O(m) per call to `entropy(freq)` and `expected_code_length(freq, length)`.
 
 Space Complexity:
-- O(A) auxiliary heap space for `byte_frequencies(s)`.
+- O(m) auxiliary heap space for `byte_frequencies(s)`.
 - O(1) auxiliary for the other operations.
 
 */

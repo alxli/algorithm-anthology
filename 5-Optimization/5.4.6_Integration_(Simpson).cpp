@@ -2,8 +2,8 @@
 
 Computes the definite integral from $a$ to $b$ for a continuous function $f$ using the composite
 Simpson's rule: the interval is split into `n` equal subintervals and each consecutive pair is
-approximated by a parabola, giving $\text{integral} \sim h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) +
-\ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a) / n$.
+approximated by a parabola, giving the approximation $\int_{a}^{b} f(x) \,dx \approx$
+$h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a)/n$.
 
 - `integrate(f, a, b, n)` returns the definite integral of a function `f` from `a` to `b` using `n`
   subintervals, where `n` must be even. Larger `n` trades runtime for accuracy: the error is

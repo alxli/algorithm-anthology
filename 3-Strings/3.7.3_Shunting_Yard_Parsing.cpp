@@ -179,7 +179,7 @@ class ShuntingYardParser {
       ) {
         op_stack.emplace(curr, true);
       } else {
-        for (;;) {
+        while (true) {
           auto [op, is_unary] = op_stack.top();
           auto it1 = binary_ops.find(op);
           auto it2 = binary_ops.find(curr);

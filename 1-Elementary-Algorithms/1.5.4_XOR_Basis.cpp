@@ -1,6 +1,6 @@
 /*
 
-A XOR basis (also called a linear basis over the field GF(2)) is the analog of a vector space basis
+An XOR basis (also called a linear basis over the field GF(2)) is the analog of a vector space basis
 for integers under the bitwise XOR operation. Each integer is treated as a vector of bits, where XOR
 plays the role of vector addition. Inserting a set of integers one at a time and keeping only those
 that are linearly independent yields a basis whose XOR-combinations (subset XORs) span exactly the

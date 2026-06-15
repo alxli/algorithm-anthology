@@ -71,7 +71,7 @@ int hopcroft_karp(int n2) {
   match.assign(n2, -1);
   used.assign(n1, false);
   int res = 0;
-  for (;;) {
+  while (true) {
     bfs();
     visit.assign(n1, false);
     int f = 0;

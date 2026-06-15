@@ -18,22 +18,24 @@ any sequence of operations averages out to O(log n) amortized each.
   successful or `false` if the key to be removed was not found.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
-- `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending order of keys.
+- `entries()` returns all key-value entries in ascending order of keys.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
 - O(log n) amortized per call to `insert()`, `erase()`, and `find()`, where $n$ is the number of
   entries currently in the map.
-- O(n) per call to `walk()`.
+- O(n) per call to `entries()`.
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for `insert()`, `erase()`, and `walk()`.
+- O(log n) auxiliary stack space for `insert()`, `erase()`, and `entries()`.
 - O(1) auxiliary for all other operations.
 
 */
 
 #include <cstddef>
+#include <utility>
+#include <vector>
 
 template<class K, class V>
 class SplayTree {
@@ -138,12 +140,11 @@ class SplayTree {
     return true;
   }
 
-  template<class Fn>
-  static void walk(Node *n, Fn f) {
+  static void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) {
     if (n != nullptr) {
-      walk(n->left, f);
-      f(n->key, n->value);
-      walk(n->right, f);
+      collect_entries(n->left, res);
+      res.push_back({n->key, n->value});
+      collect_entries(n->right, res);
     }
   }
 
@@ -188,9 +189,11 @@ class SplayTree {
     return (k < root->key || root->key < k) ? nullptr : &(root->value);
   }
 
-  template<class Fn>
-  void walk(Fn f) const {
-    walk(root, f);
+  std::vector<std::pair<K, V>> entries() const {
+    std::vector<std::pair<K, V>> res;
+    res.reserve(num_nodes);
+    collect_entries(root, res);
+    return res;
   }
 };
 
@@ -214,13 +217,16 @@ int main() {
   assert(t.insert(4, 'd'));
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
-  auto printch = [](int k, char v) { cout << v; };
-  t.walk(printch);
+  for (const auto &[k, v] : t.entries()) {
+    cout << v;
+  }
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
-  t.walk(printch);
+  for (const auto &[k, v] : t.entries()) {
+    cout << v;
+  }
   cout << endl;
   return 0;
 }

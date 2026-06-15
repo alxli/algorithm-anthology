@@ -27,9 +27,10 @@ For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.5. A
 but it needs O(R*C) storage with large constants, so this sparse version is usually the safer
 codebook default.
 
-- `SegTree2D(v)` constructs a two-dimensional array with rows from 0 to $R$ (inclusive) and
-  columns from 0 to $C$ (inclusive), where $R$ and $C$ are large bounds hardcoded in the class. All
-  array values are implicitly initialized to `v`. Nodes are allocated lazily as indices are touched.
+- `SegTree2D<T, R, C>(v)` constructs a two-dimensional array with rows from 0 to $R$ (inclusive)
+  and columns from 0 to $C$ (inclusive).
+  All array values are implicitly initialized to `v`. Nodes are allocated lazily as indices are
+  touched.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows from `r1` to `r2`, inclusive, and columns from `c1` to `c2`,
@@ -51,11 +52,8 @@ Space Complexity:
 #include <cstdint>
 #include <optional>
 
-template<class T>
+template<class T, int R = 1000000000, int C = 1000000000>
 class SegTree2D {
-  static const int R = 1000000000;
-  static const int C = 1000000000;
-
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t area) { return v; }
   static T apply_delta(const T &v, const T &d) { return d; }

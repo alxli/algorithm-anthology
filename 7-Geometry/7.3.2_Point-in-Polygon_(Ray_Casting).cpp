@@ -8,9 +8,10 @@ replace it with `Point`/`PointD`/ `PointI` from 7.1.1 or any struct with numeric
 fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent
 comparison to be correct, and the result is exact for integer-coordinate points.
 
-- `point_in_polygon(p, lo, hi)` returns whether `p` lies within the polygon with vertices specified
-  by the range `[lo, hi)` of points in either clockwise or counter-clockwise order. If `p` lies
-  exactly on an edge or vertex, the result will depend on the value of `EDGE_IS_INSIDE`.
+- `point_in_polygon(p, lo, hi, EDGE_IS_INSIDE)` returns whether `p` lies within the polygon with
+  vertices specified by the range `[lo, hi)` of points in either clockwise or counter-clockwise
+  order. The `EDGE_IS_INSIDE` flag (default `true`) controls whether points exactly on an edge or
+  vertex count as inside.
 
 Overflow warning: the edge orientation test forms a cross product that grows like the squared
 coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. `PointL` from
@@ -34,8 +35,7 @@ auto cross(const Pt &a, const Pt &b, const Pt &o) {
 
 // Detection is exact for integer-coordinate Pt.
 template<class Pt, class It>
-bool point_in_polygon(const Pt &p, It lo, It hi) {
-  static const bool EDGE_IS_INSIDE = true;
+bool point_in_polygon(const Pt &p, It lo, It hi, bool EDGE_IS_INSIDE = true) {
   if (lo == hi) {
     return false;
   }
@@ -77,12 +77,14 @@ int main() {
   vector<Point> poly{Point(-1, 3), Point(1, 3), Point(2, 1), Point(0, 0)};
   assert(point_in_polygon(Point(1, 2), poly.begin(), poly.end()));
   assert(point_in_polygon(Point(0, 3), poly.begin(), poly.end()));
+  assert(!point_in_polygon(Point(0, 3), poly.begin(), poly.end(), false));
   assert(!point_in_polygon(Point(0, 3.01), poly.begin(), poly.end()));
   assert(!point_in_polygon(Point(2, 2), poly.begin(), poly.end()));
 
   // Integer-coordinate points: exact detection.
   vector<PointI> ipoly{{0, 0}, {4, 0}, {4, 4}, {0, 4}};
   assert(point_in_polygon(PointI(2, 2), ipoly.begin(), ipoly.end()));
+  assert(!point_in_polygon(PointI(4, 2), ipoly.begin(), ipoly.end(), false));
   assert(!point_in_polygon(PointI(5, 2), ipoly.begin(), ipoly.end()));
   return 0;
 }

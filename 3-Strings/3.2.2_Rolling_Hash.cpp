@@ -19,9 +19,9 @@ proof of equality when exact verification is required.
 By default, each sequence value is cast to `uint64_t` and mixed. For non-integer element types, pass
 a custom value hasher that maps each element to a stable nonzero value in `[1, HASH_MOD)`.
 
-- `RollingHash<T>(first, last)` constructs prefix hashes for any iterator range of values accepted
-  by the value hasher.
-- `RollingHash<T>(v)` constructs prefix hashes for vector `v`.
+- `RollingHash(first, last)` constructs prefix hashes for any iterator range of values accepted by
+  the value hasher.
+- `RollingHash(v)` constructs prefix hashes for vector `v`.
 - `get(l, r)` returns the hash of the half-open subsequence `[l, r)`.
 - `hash(first, last)` returns the hash of an iterator range.
 - `hash(v)` returns the hash of vector `v`.
@@ -59,9 +59,7 @@ uint64_t hash_sub(uint64_t a, uint64_t b) {
 uint64_t hash_mul(uint64_t a, uint64_t b) {
 #if defined(__SIZEOF_INT128__)
   __uint128_t p = static_cast<__uint128_t>(a) * b;
-  uint64_t low = static_cast<uint64_t>(p) & HASH_MOD;
-  uint64_t high = static_cast<uint64_t>(p >> 61);
-  return hash_add(low, high);
+  return hash_add(static_cast<uint64_t>(p) & HASH_MOD, static_cast<uint64_t>(p >> 61));
 #else
   // Portable fallback when no 128-bit type exists: double-and-add modular multiply.
   uint64_t res = 0;
@@ -75,7 +73,7 @@ uint64_t hash_mul(uint64_t a, uint64_t b) {
 #endif
 }
 
-uint64_t hash_mix(uint64_t x) {
+uint64_t mix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -86,7 +84,7 @@ template<class T>
 struct RollingValueHasher {
   // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
   // hash is invisible and enables trivial collisions.
-  uint64_t operator()(const T &x) const { return hash_mix((uint64_t)x) % (HASH_MOD - 1) + 1; }
+  uint64_t operator()(const T &x) const { return mix64((uint64_t)x) % (HASH_MOD - 1) + 1; }
 };
 
 template<class T, class ValueHasher = RollingValueHasher<T>>
@@ -166,7 +164,7 @@ struct PointHasher {
     // points never collide pre-mix (a small-multiplier combine like a * C + b would).
     uint64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(p.first)) << 32) |
                    static_cast<uint32_t>(p.second);
-    return hash_mix(key) % (HASH_MOD - 1) + 1;
+    return mix64(key) % (HASH_MOD - 1) + 1;
   }
 };
 

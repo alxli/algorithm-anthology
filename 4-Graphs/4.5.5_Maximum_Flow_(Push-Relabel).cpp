@@ -48,7 +48,7 @@ int64_t push_relabel(int source, int sink) {
     e[i] = cap[source][i];
   }
   int size = 0;
-  for (;;) {
+  while (true) {
     if (size == 0) {
       for (int i = 0; i < nodes; i++) {
         if (i != source && i != sink && e[i] > 0) {

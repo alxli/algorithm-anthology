@@ -9,6 +9,7 @@ replace the default `operator<`.
 - `quicksort(lo, hi)` sorts the range using quicksort.
 - `mergesort(lo, hi)` sorts the range using merge sort, which is stable.
 - `heapsort(lo, hi)` sorts the range using heapsort.
+- `insertion_sort(lo, hi)` sorts the range using insertion sort, which is stable.
 - `combsort(lo, hi)` sorts the range using comb sort.
 - `radix_sort(lo, hi)` sorts the range using least-significant-byte radix sort.
 
@@ -22,6 +23,7 @@ algorithms can be concisely implemented in C++.
 #include <algorithm>
 #include <functional>
 #include <iterator>
+#include <type_traits>
 #include <vector>
 
 /*
@@ -96,6 +98,7 @@ void mergesort(It lo, It hi, Compare comp = Compare()) {
   mergesort(mid + 1, hi, comp);
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> merged;
+  merged.reserve(hi - lo);
   while (a <= mid && c < hi) {
     merged.push_back(comp(*c, *a) ? *c++ : *a++);
   }
@@ -131,7 +134,7 @@ void heapsort(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
   T tmp;
   It i = lo + (hi - lo) / 2, j = hi, parent, child;
-  for (;;) {
+  while (true) {
     if (i <= lo) {
       if (--j == lo) {
         return;
@@ -154,7 +157,44 @@ void heapsort(It lo, It hi, Compare comp = Compare()) {
       parent = child;
       child = lo + 2 * (parent - lo) + 1;
     }
-    *(lo + (parent - lo)) = tmp;
+    *parent = tmp;
+  }
+}
+
+/*
+
+Insertion sort builds the sorted range one element at a time. It scans left to right, and for each
+element shifts the larger elements of the already-sorted prefix one position to the right to open a
+slot where the element belongs. Although its average and worst cases are quadratic, it is simple,
+stable, in-place, and online (it can sort a stream as elements arrive).
+
+Its strength is being adaptive: on an already-sorted or nearly-sorted range, each element travels
+only a short distance, giving O(n) best-case time and O(n + d) in general for `d` total inversions.
+This is why it outperforms the asymptotically faster sorts on small or nearly-sorted ranges, and why
+hybrid sorts such as introsort and Timsort fall back to it once a subrange is small enough.
+
+The comparison `comp(key, *(j - 1))` is strict, so an element never moves past an earlier element it
+compares equal to, which keeps the sort stable.
+
+Time Complexity (Best): O(n) on an already-sorted range.
+Time Complexity (Average): O(n^2).
+Time Complexity (Worst): O(n^2).
+Space Complexity: O(1) auxiliary.
+Stable?: Yes.
+
+*/
+
+template<class It, class Compare = std::less<>>
+void insertion_sort(It lo, It hi, Compare comp = Compare()) {
+  using T = typename std::iterator_traits<It>::value_type;
+  for (It i = lo; i != hi; ++i) {
+    T key = *i;
+    It j = i;
+    while (j != lo && comp(key, *(j - 1))) {
+      *j = *(j - 1);
+      --j;
+    }
+    *j = key;
   }
 }
 
@@ -178,7 +218,7 @@ Stable?: No.
 
 template<class It, class Compare = std::less<>>
 void combsort(It lo, It hi, Compare comp = Compare()) {
-  int gap = hi - lo;
+  int gap = static_cast<int>(hi - lo);
   bool swapped = true;
   while (gap > 1 || swapped) {
     if (gap > 1) {
@@ -187,7 +227,7 @@ void combsort(It lo, It hi, Compare comp = Compare()) {
     swapped = false;
     for (It it = lo; it + gap < hi; ++it) {
       if (comp(*(it + gap), *it)) {
-        std::swap(*it, *(it + gap));
+        std::iter_swap(it, it + gap);
         swapped = true;
       }
     }
@@ -197,16 +237,15 @@ void combsort(It lo, It hi, Compare comp = Compare()) {
 /*
 
 Radix sort is used to sort integer elements with a constant number of bits in linear time. This
-implementation only works on ranges pointing to unsigned integer primitives. The elements in the
-input range do not strictly have to be unsigned types, as long as their values are nonnegative
-integers.
+implementation works on ranges pointing to any signed or unsigned integer primitive. Signed values
+are handled by sorting on a key that flips the sign bit, which maps the two's-complement order onto
+the unsigned order so the most negative value sorts first.
 
 In this implementation, a power of two is chosen to be the base for the sort so that bitwise
-operations can be easily used to extract digits. This avoids the need to use modulo and
-exponentiation, which are much more expensive operations. In practice, it's been demonstrated that
-$2^8$ is the best choice for sorting 32-bit integers (approximately 5 times faster than
-`std::sort()`, and typically 2-4 times faster than radix sort using any other power of two chosen as
-the base).
+operations can be easily used to extract digits. This avoids the need to use modulo/exponentiation,
+which are much more expensive operations. In practice, it's been demonstrated that $2^8$ is the best
+choice for sorting 32-bit integers (approximately 5 times faster than `std::sort()`, and typically
+2-4 times faster than radix sort using any other power of two chosen as the base).
 
 Time Complexity: O(n*w) for $n$ integers of $w$ bits each.
 Space Complexity: O(n + 2^b) auxiliary for a radix of $b$ bits, i.e. O(n) for constant $b$.
@@ -221,13 +260,20 @@ void radix_sort(It lo, It hi) {
   const int radix_bits = 8;
   const int radix_base = 1 << radix_bits;  // e.g. 2^8 = 256
   const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
-  int num_bits = 8 * sizeof(*lo);          // 8 bits per byte
   using T = typename std::iterator_traits<It>::value_type;
+  using U = typename std::make_unsigned<T>::type;
+  int num_bits = 8 * sizeof(T);  // 8 bits per byte
+  // Sort on an unsigned key. For signed types, flipping the sign bit sends the most negative value
+  // to 0, mapping the signed order onto the unsigned order; logical shifts then extract each digit.
+  auto key = [](T x) -> U {
+    U u = static_cast<U>(x);
+    return std::is_signed<T>::value ? (u ^ (U(1) << (8 * sizeof(T) - 1))) : u;
+  };
   std::vector<T> buf(hi - lo);
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
     std::vector<int> count(radix_base);
     for (It it = lo; it != hi; ++it) {
-      count[(*it >> pos) & radix_mask]++;
+      count[(key(*it) >> pos) & radix_mask]++;
     }
     std::vector<T *> bucket(radix_base);
     T *curr = buf.data();
@@ -235,7 +281,7 @@ void radix_sort(It lo, It hi) {
       bucket[i] = curr;
     }
     for (It it = lo; it != hi; ++it) {
-      *bucket[(*it >> pos) & radix_mask]++ = *it;
+      *bucket[(key(*it) >> pos) & radix_mask]++ = *it;
     }
     std::copy(buf.begin(), buf.end(), lo);
   }
@@ -261,6 +307,7 @@ radix_sort(): 0.016s
 #include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <random>
 #include <vector>
 using namespace std;
 
@@ -307,10 +354,15 @@ int main() {
     combsort(a.begin(), a.end());
     assert(sorted(a.begin(), a.end()));
   }
-  {  // Must use radix_sort with unsigned values, but sorting in reverse works!
-    vector<unsigned int> a{32, 71, 12, 45, 26, 80, 53, 33};
-    radix_sort(a.rbegin(), a.rend());
-    assert(sorted(a.rbegin(), a.rend()));
+  {  // Insertion sort is adaptive: an already-sorted range is left untouched in O(n).
+    vector<int> a{12, 26, 32, 33, 45, 53, 71, 80};
+    insertion_sort(a.begin(), a.end());
+    assert(sorted(a.begin(), a.end()));
+  }
+  {  // radix_sort() handles signed integers (including negatives), unlike a plain counting sort.
+    vector<int> a{32, -71, 12, -45, 26, -80, 53, 33};
+    radix_sort(a.begin(), a.end());
+    assert(sorted(a.begin(), a.end()));
   }
 
   // Example from: http://www.cplusplus.com/reference/algorithm/stable_sort
@@ -329,29 +381,29 @@ int main() {
   }
   cout << "------" << endl;
 
-  vector<int> v, v2;
+  std::mt19937 rng(std::random_device{}());
+  vector<int> data;
   for (int i = 0; i < 5000000; i++) {
-    v.push_back((rand() & 0x7fff) | ((rand() & 0x7fff) << 15));
+    data.push_back(static_cast<int>(rng()));
   }
-  v2 = v;
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
 
-#define test(sort_function)                                             \
-  {                                                                     \
-    clock_t start = clock();                                            \
-    sort_function(v.begin(), v.end());                                  \
-    double t = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC; \
-    cout << setw(14) << left << #sort_function "(): ";                  \
-    cout << fixed << t << "s" << endl;                                  \
-    assert(sorted(v.begin(), v.end()));                                 \
-    v = v2;                                                             \
-  }
-  test(std::sort);
-  test(quicksort);
-  test(mergesort);
-  test(heapsort);
-  test(combsort);
-  test(radix_sort);
+  // Each sort is wrapped in a lambda so its name resolves at the call site (the bare names are
+  // function templates, not values), then timed on a fresh copy of the same unsorted data.
+  auto benchmark = [&](const string &name, auto sort) {
+    vector<int> v = data;
+    clock_t start = clock();
+    sort(v.begin(), v.end());
+    double t = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
+    cout << setw(14) << left << name + "(): " << fixed << t << "s" << endl;
+    assert(sorted(v.begin(), v.end()));
+  };
+  benchmark("std::sort", [](auto lo, auto hi) { std::sort(lo, hi); });
+  benchmark("quicksort", [](auto lo, auto hi) { quicksort(lo, hi); });
+  benchmark("mergesort", [](auto lo, auto hi) { mergesort(lo, hi); });
+  benchmark("heapsort", [](auto lo, auto hi) { heapsort(lo, hi); });
+  benchmark("combsort", [](auto lo, auto hi) { combsort(lo, hi); });
+  benchmark("radix_sort", [](auto lo, auto hi) { radix_sort(lo, hi); });
   return 0;
 }

@@ -17,16 +17,18 @@ of two until its parent is the lowest common ancestor.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`, or $-1$ if they are in
   different trees.
 - `is_ancestor(parent, child)` returns whether `parent` is an ancestor of `child`.
+- `dist(u, v)` returns the number of edges on the path between nodes `u` and `v`, or $-1$ if they
+  are in different trees.
 
 Time Complexity:
 - O(n log n) for construction, where $n$ is the number of nodes.
-- O(log n) per call to `go_up()` or `lca()`.
+- O(log n) per call to `go_up()`, `lca()`, and `dist()`.
 - O(1) per call to `is_ancestor()`.
 
 Space Complexity:
 - O(n log n) to store the binary ancestor table.
 - O(n) auxiliary stack space for construction.
-- O(1) auxiliary for `go_up()`, `lca()`, and `is_ancestor()`.
+- O(1) auxiliary for `go_up()`, `lca()`, `is_ancestor()`, and `dist()`.
 
 */
 
@@ -104,6 +106,11 @@ class SparseTableLCA {
     }
     return up[u][0];
   }
+
+  int dist(int u, int v) const {
+    int l = lca(u, v);
+    return l == -1 ? -1 : depth[u] + depth[v] - 2 * depth[l];
+  }
 };
 
 /*** Example Usage ***/
@@ -132,5 +139,9 @@ int main() {
   assert(tree.lca(2, 4) == 0);
   assert(tree.lca(2, 6) == -1);
   assert(tree.lca(5, 6) == 5);
+  assert(tree.dist(3, 2) == 2);   // 3-1-2.
+  assert(tree.dist(2, 4) == 3);   // 2-1-0-4.
+  assert(tree.dist(5, 6) == 1);   // 5-6.
+  assert(tree.dist(2, 6) == -1);  // Different trees.
   return 0;
 }

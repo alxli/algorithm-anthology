@@ -13,7 +13,7 @@ whenever available, or on C++20 systems the `<bit>` header, whose generic `const
 - `test_bit(x, i)` returns whether the `i`-th bit of `x` is set.
 - `set_bit(x, i)`, `clear_bit(x, i)`, and `toggle_bit(x, i)` return `x` with the `i`-th respectively
   forced to 1, forced to 0, or flipped.
-- `lowest_set_bit(x)` returns the value of the lowest set bit of `x` (a power of 2), or 0 if `x`
+- `lowest_set_bit(x)` returns the value of the lowest set bit of `x` (a power of two), or 0 if `x`
   is 0. `clear_lowest_set_bit(x)` returns `x` with its lowest set bit removed.
 - `popcount(x)` returns the number of set bits, analogous to `__builtin_popcount()` and C++20's
   `std::popcount()`.
@@ -27,9 +27,9 @@ whenever available, or on C++20 systems the `<bit>` header, whose generic `const
   and C++20's `std::countl_zero()`.
 - `is_pow2(x)` returns whether `x` has exactly one set bit, analogous to C++20's
   `std::has_single_bit()`.
-- `floor_pow2(x)` returns the largest power of 2 that is $\leq$ `x` (for `x` $> 0$), analogous to
+- `floor_pow2(x)` returns the largest power of two that is $\leq$ `x` (for `x` $> 0$), analogous to
   C++20's `std::bit_floor()`.
-- `ceil_pow2(x)` returns the smallest power of 2 that is $\geq$ `x` (for `x` $> 0$), analogous to
+- `ceil_pow2(x)` returns the smallest power of two that is $\geq$ `x` (for `x` $> 0$), analogous to
   C++20's `std::bit_ceil()`.
 - `for_each_set_bit(x, f)` calls `f(i)` once for each set bit position `i` of `x`, in increasing
   order.

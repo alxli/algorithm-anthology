@@ -162,7 +162,7 @@ class Dinic {
       rem[id] = edges[id].flow;
     }
     std::vector<FlowPath> res;
-    for (;;) {
+    while (true) {
       FlowPath path{std::numeric_limits<T>::max(), {source}, {}};
       std::vector<bool> seen(nodes);
       std::function<bool(int)> find_path = [&](int u) {

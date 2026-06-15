@@ -571,66 +571,68 @@ int main() {
 Given a tree, build its centroid decomposition. A centroid is a node whose removal splits the current subtree into connected components of size at most half of that subtree. Recursively choosing centroids creates a decomposition tree of height $O(\log n)$, which is useful for queries based on distances to marked nodes, nearest special node, and other ``path through a centroid'' problems.
 
 \begin{compactitem}
-  \item \inlinecode{build\_centroid\_tree()} populates \inlinecode{subtree\_size}, \inlinecode{removed}, and \inlinecode{centroid\_parent} for the global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must form a valid tree with nodes numbered from 0 to \inlinecode{adj.size() - 1}.
-  \item \inlinecode{centroid\_parent[u]} stores the parent of node $u$ in the centroid tree.
-  \item The root centroid has parent $-1$.
+  \item \inlinecode{CentroidDecomposition(adj)} builds the centroid decomposition of the tree given by a bidirectional adjacency list \inlinecode{adj}, which must form a valid tree with nodes numbered from 0 to \inlinecode{adj.size() - 1}.
+  \item \inlinecode{parent(u)} returns the parent of node \inlinecode{u} in the centroid tree, or $-1$ if \inlinecode{u} is the root centroid.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{build\_centroid\_tree()}, where $n$ is the number of nodes.
+\textbf{Time Complexity}: $O(n \log n)$ for construction, where $n$ is the number of nodes.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ for \inlinecode{subtree\_size}, \inlinecode{removed}, and \inlinecode{centroid\_parent}.
+  \item $O(n)$ for storage of the centroid tree.
   \item $O(n)$ auxiliary stack space for the recursive searches.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
 #include <vector>
 
-std::vector<std::vector<int>> adj;
-std::vector<int> subtree_size, centroid_parent;
-std::vector<bool> removed;
+class CentroidDecomposition {
+  std::vector<std::vector<int>> adj;
+  std::vector<int> subtree_size, par;
+  std::vector<bool> removed;
 
-int get_size(int u, int p) {
-  subtree_size[u] = 1;
-  for (int v : adj[u]) {
-    if (v != p && !removed[v]) {
-      subtree_size[u] += get_size(v, u);
+  int get_size(int u, int p) {
+    subtree_size[u] = 1;
+    for (int v : adj[u]) {
+      if (v != p && !removed[v]) {
+        subtree_size[u] += get_size(v, u);
+      }
+    }
+    return subtree_size[u];
+  }
+
+  int get_centroid(int u, int p, int total) {
+    for (int v : adj[u]) {
+      if (v != p && !removed[v] && subtree_size[v] > total / 2) {
+        return get_centroid(v, u, total);
+      }
+    }
+    return u;
+  }
+
+  void decompose(int entry, int parent) {
+    int total = get_size(entry, -1);
+    int centroid = get_centroid(entry, -1, total);
+    par[centroid] = parent;
+    removed[centroid] = true;
+    for (int v : adj[centroid]) {
+      if (!removed[v]) {
+        decompose(v, centroid);
+      }
     }
   }
-  return subtree_size[u];
-}
 
-int get_centroid(int u, int p, int total) {
-  for (int v : adj[u]) {
-    if (v != p && !removed[v] && subtree_size[v] > total / 2) {
-      return get_centroid(v, u, total);
+ public:
+  explicit CentroidDecomposition(const std::vector<std::vector<int>> &adj)
+      : adj(adj), subtree_size(adj.size()), par(adj.size(), -1), removed(adj.size()) {
+    if (adj.size() > 0) {
+      decompose(0, -1);
     }
   }
-  return u;
-}
 
-void decompose(int entry, int parent) {
-  int total = get_size(entry, -1);
-  int centroid = get_centroid(entry, -1, total);
-  centroid_parent[centroid] = parent;
-  removed[centroid] = true;
-  for (int v : adj[centroid]) {
-    if (!removed[v]) {
-      decompose(v, centroid);
-    }
-  }
-}
-
-void build_centroid_tree() {
-  int nodes = static_cast<int>(adj.size());
-  subtree_size.assign(nodes, 0);
-  centroid_parent.assign(nodes, -1);
-  removed.assign(nodes, false);
-  decompose(0, -1);
-}
+  int parent(int u) const { return par[u]; }
+};
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -638,23 +640,24 @@ void build_centroid_tree() {
 #include <cassert>
 using namespace std;
 
-void add_edge(int u, int v) {
+void add_edge(vector<vector<int>> &adj, int u, int v) {
   adj[u].push_back(v);
   adj[v].push_back(u);
 }
 
 int main() {
-  adj.assign(7, {});
-  add_edge(0, 1);
-  add_edge(1, 2);
-  add_edge(1, 3);
-  add_edge(3, 4);
-  add_edge(3, 5);
-  add_edge(5, 6);
-  build_centroid_tree();
-  assert(centroid_parent[3] == -1);
-  assert(centroid_parent[1] == 3);
-  assert(centroid_parent[5] == 3);
+  vector<vector<int>> adj(7);
+  add_edge(adj, 0, 1);
+  add_edge(adj, 1, 2);
+  add_edge(adj, 1, 3);
+  add_edge(adj, 3, 4);
+  add_edge(adj, 3, 5);
+  add_edge(adj, 5, 6);
+
+  CentroidDecomposition tree(adj);
+  assert(tree.parent(3) == -1);
+  assert(tree.parent(1) == 3);
+  assert(tree.parent(5) == 3);
   return 0;
 }
 \end{lstlisting}
@@ -930,7 +933,7 @@ Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice
 \begin{compactitem}
   \item \inlinecode{EulerianGraph(n, directed)} constructs a graph on \inlinecode{n} nodes, directed if \inlinecode{directed} is true and undirected otherwise.
   \item \inlinecode{add\_edge(u, v)} adds an edge and returns its edge ID.
-  \item \inlinecode{eulerian\_path(start)} returns a trail using every edge exactly once, or a result with \inlinecode{start == -1} if no such trail exists. If \inlinecode{start == -1}, a valid start is chosen automatically.
+  \item \inlinecode{eulerian\_path(start)} returns a trail using every edge exactly once, or a result with \inlinecode{start} $= -1$ if no such trail exists. If \inlinecode{start} $= -1$, a valid start is chosen automatically.
   \item \inlinecode{EulerianTrail::is\_cycle()} returns whether the trail begins and ends on the same node.
 \end{compactitem}
 
@@ -1386,7 +1389,7 @@ Given a directed graph, determine the strongly connected components (SCCs) using
 struct TarjanSCC {
   static const int INF = INT_MAX / 2;
   std::vector<std::vector<int>> adj, scc;
-  std::vector<int> component, curstack, lowlink;
+  std::vector<int> component, stack, lowlink;
   std::vector<bool> visited;
   int timer;
 
@@ -1397,7 +1400,7 @@ struct TarjanSCC {
   void dfs(int u) {
     lowlink[u] = timer++;
     visited[u] = true;
-    curstack.push_back(u);
+    stack.push_back(u);
     bool is_component_root = true;
     for (int v : adj[u]) {
       if (!visited[v]) {
@@ -1415,8 +1418,8 @@ struct TarjanSCC {
     int id = static_cast<int>(scc.size());
     int v;
     do {
-      v = curstack.back();
-      curstack.pop_back();
+      v = stack.back();
+      stack.pop_back();
       lowlink[v] = INF;  // marks v as removed from the stack
       component[v] = id;
       comp_nodes.push_back(v);
@@ -1428,7 +1431,7 @@ struct TarjanSCC {
     int nodes = static_cast<int>(adj.size());
     scc.clear();
     component.assign(nodes, -1);
-    curstack.clear();
+    stack.clear();
     lowlink.assign(nodes, 0);
     visited.assign(nodes, false);
     timer = 0;
@@ -1487,7 +1490,7 @@ Lengauer-Tarjan's algorithm numbers vertices by DFS order, computes each reachab
 \begin{compactitem}
   \item \inlinecode{Dominators(n)} constructs a directed graph on nodes numbered from 0 to \inlinecode{n - 1}.
   \item \inlinecode{add\_edge(u, v)} adds a directed edge from \inlinecode{u} to \inlinecode{v}.
-  \item \inlinecode{find\_dominators(start)} returns a vector \inlinecode{idom} where \inlinecode{idom[start] == start}, \inlinecode{idom[v]} is the immediate dominator of reachable node \inlinecode{v}, and \inlinecode{idom[v] == -1} if \inlinecode{v} is unreachable.
+  \item \inlinecode{find\_dominators(start)} returns a vector \inlinecode{idom} where \inlinecode{idom[start]} = \inlinecode{start}, \inlinecode{idom[v]} is the immediate dominator of reachable node \inlinecode{v}, and \inlinecode{idom[v]} $= -1$ if \inlinecode{v} is unreachable.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right) \log n)$ per call to \inlinecode{find\_dominators()} in this path-compressed implementation, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -1622,7 +1625,7 @@ The block-cut forest is a bipartite forest with one node for each BCC and one no
   \item \inlinecode{build\_block\_cut\_forest()} populates \inlinecode{block\_cut\_forest} and \inlinecode{block\_cut\_id} using the results of the previous \inlinecode{build\_bcc()} call.
   \item BCC nodes in \inlinecode{block\_cut\_forest} are numbered \inlinecode{[0, biconnected\_components.size())}.
   \item For an articulation point \inlinecode{v}, \inlinecode{block\_cut\_id[v]} stores its node ID in the block-cut forest.
-  \item For a non-articulation point \inlinecode{v}, \inlinecode{block\_cut\_id[v] == -1}.
+  \item For a non-articulation point \inlinecode{v}, \inlinecode{block\_cut\_id[v]} is $-1$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\max\left(n, m\right))$ per call to \inlinecode{build\_bcc()} and \inlinecode{build\_block\_cut\_forest()}, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -1660,7 +1663,7 @@ struct BiconnectedComponents {
 
   void add_component_until(int stop_id) {
     std::vector<int> component;
-    for (;;) {
+    while (true) {
       int id = edge_stack.back();
       edge_stack.pop_back();
       component.push_back(edges[id].first);
@@ -2136,7 +2139,7 @@ Variables are numbered from $0$ to $n - 1$. A literal is represented by \inlinec
   \item \inlinecode{add\_true(a)} forces literal \inlinecode{a} to be true.
   \item \inlinecode{add\_false(a)} forces literal \inlinecode{a} to be false.
   \item \inlinecode{add(variable, value)} forces a variable to equal \inlinecode{value}.
-  \item \inlinecode{add(x, xval, y, yval)} adds the clause $({\inlinecodemath{x}} == {\inlinecodemath{xval}} \lor {\inlinecodemath{y}} == {\inlinecodemath{yval}})$.
+  \item \inlinecode{add(x, xval, y, yval)} adds the clause $({\inlinecodemath{x}} = {\inlinecodemath{xval}} \lor {\inlinecodemath{y}} = {\inlinecodemath{yval}})$.
   \item \inlinecode{satisfiable()} returns whether all added clauses can be satisfied and stores one valid assignment in \inlinecode{answer}.
 \end{compactitem}
 
@@ -3616,7 +3619,7 @@ int dfs(int u, int f, int sink) {
 int64_t ford_fulkerson(int source, int sink) {
   int nodes = static_cast<int>(cap.size());
   int64_t max_flow = 0;
-  for (;;) {
+  while (true) {
     visit.assign(nodes, false);
     int flow = dfs(source, INF, sink);
     if (flow == 0) {
@@ -3719,7 +3722,7 @@ class EdmondsKarp {
   }
 
   T max_flow(int source, int sink) {
-    for (;;) {
+    while (true) {
       std::vector<Edge *> pred(nodes, nullptr);
       std::queue<int> q;
       q.push(source);
@@ -4132,7 +4135,7 @@ class Dinic {
       rem[id] = edges[id].flow;
     }
     std::vector<FlowPath> res;
-    for (;;) {
+    while (true) {
       FlowPath path{std::numeric_limits<T>::max(), {source}, {}};
       std::vector<bool> seen(nodes);
       std::function<bool(int)> find_path = [&](int u) {
@@ -4286,7 +4289,7 @@ int64_t push_relabel(int source, int sink) {
     e[i] = cap[source][i];
   }
   int size = 0;
-  for (;;) {
+  while (true) {
     if (size == 0) {
       for (int i = 0; i < nodes; i++) {
         if (i != source && i != sink && e[i] > 0) {
@@ -5204,7 +5207,7 @@ int hopcroft_karp(int n2) {
   match.assign(n2, -1);
   used.assign(n1, false);
   int res = 0;
-  for (;;) {
+  while (true) {
     bfs();
     visit.assign(n1, false);
     int f = 0;
@@ -5282,7 +5285,7 @@ std::vector<int> blossom(const std::vector<std::vector<int>> &adj) {
   int aux_time = -1;
   auto lca = [&](int u, int v) {
     aux_time++;
-    for (;;) {
+    while (true) {
       if (u != -1) {
         u = base[u];
         if (aux[u] == aux_time) {

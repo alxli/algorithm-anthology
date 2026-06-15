@@ -15,14 +15,14 @@ calculations are exact when `Pt` has integer coordinates.
   (identical).
 - `line_intersection(p1, p2, p3, p4, &p)` intersects the infinite lines through `p1`-`p2` and
   `p3`-`p4`.
-- `seg_intersection(a, b, c, d, &p, &q, touch_is_intersect)` intersects segments `a`-`b` and
+- `seg_intersection(a, b, c, d, &p, &q, TOUCH_IS_INTERSECT)` intersects segments `a`-`b` and
   `c`-`d`, returning $-1$ (none), 0 (one point), or 1 (overlapping segment). The
-  `touch_is_intersect` flag (default `true`) controls whether segments that meet only at an
+  `TOUCH_IS_INTERSECT` flag (default `true`) controls whether segments that meet only at an
   endpoint count as intersecting. If the intersection is a point (and `p` is not `nullptr`), it
   will be stored into `p`. If the intersection is an overlapping segment (and `p` and `q` are not
   `nullptr`) then their endpoints will be stored into `p` and `q`. The output types `p` and `q`
   must be floating-point points.
-- `seg_intersection(a, b, c, d, touch_is_intersect)` is a simplified, detection-only version of the
+- `seg_intersection(a, b, c, d, TOUCH_IS_INTERSECT)` is a simplified, detection-only version of the
   above. Both versions are exact for detection if the input `Pt` type is integral.
 - `closest_point(a, b, c, p)` returns the closest point on line $ax + by + c = 0$ to point `p`.
 
@@ -96,7 +96,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
 template<class Pt, class OutPt>
 int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, OutPt *p = nullptr, OutPt *q = nullptr,
-    bool touch_is_intersect = true
+    const bool TOUCH_IS_INTERSECT = true
 ) {
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
@@ -104,7 +104,7 @@ int seg_intersection(
   auto ab2 = ab_x * ab_x + ab_y * ab_y;
   auto cd2 = cd_x * cd_x + cd_y * cd_y;
   if (EQ(ab2, 0)) {
-    if (touch_is_intersect && point_on_segment(a, c, d)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
       if (p != nullptr) {
         p->x = static_cast<double>(a.x);
         p->y = static_cast<double>(a.y);
@@ -114,7 +114,7 @@ int seg_intersection(
     return -1;  // Degenerate: first segment is a point not intersecting the second segment.
   }
   if (EQ(cd2, 0)) {
-    if (touch_is_intersect && point_on_segment(c, a, b)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) {
       if (p != nullptr) {
         p->x = static_cast<double>(c.x);
         p->y = static_cast<double>(c.y);
@@ -128,7 +128,7 @@ int seg_intersection(
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     Pt res1 = std::max(std::min(a, b), std::min(c, d));
     Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    bool overlap = touch_is_intersect ? !(res2 < res1) : (res1 < res2);
+    bool overlap = TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2);
     if (overlap) {
       if (res1 == res2) {
         if (p != nullptr) {
@@ -152,12 +152,12 @@ int seg_intersection(
   }
   auto t_num = ac_x * cd_y - ac_y * cd_x;
   bool c1_pos = c1 > 0;
-  bool t_ok = c1_pos ? (touch_is_intersect ? (LE(0, t_num) && LE(t_num, c1))
+  bool t_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, t_num) && LE(t_num, c1))
                                            : (LT(0, t_num) && LT(t_num, c1)))
-                     : (touch_is_intersect ? (LE(c1, t_num) && LE(t_num, 0))
+                     : (TOUCH_IS_INTERSECT ? (LE(c1, t_num) && LE(t_num, 0))
                                            : (LT(c1, t_num) && LT(t_num, 0)));
-  bool u_ok = c1_pos ? (touch_is_intersect ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
-                     : (touch_is_intersect ? (LE(c1, c2) && LE(c2, 0)) : (LT(c1, c2) && LT(c2, 0)));
+  bool u_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
+                     : (TOUCH_IS_INTERSECT ? (LE(c1, c2) && LE(c2, 0)) : (LT(c1, c2) && LT(c2, 0)));
   if (t_ok && u_ok) {
     if (p != nullptr) {
       double t = static_cast<double>(t_num) / c1;
@@ -173,7 +173,7 @@ int seg_intersection(
 // Alternatively, just call the version above and pass static_cast<Pt *>(nullptr) for p and q.
 template<class Pt>
 int seg_intersection(
-    const Pt &a, const Pt &b, const Pt &c, const Pt &d, bool touch_is_intersect = true
+    const Pt &a, const Pt &b, const Pt &c, const Pt &d, bool TOUCH_IS_INTERSECT = true
 ) {
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
@@ -181,17 +181,17 @@ int seg_intersection(
   auto ab2 = ab_x * ab_x + ab_y * ab_y;
   auto cd2 = cd_x * cd_x + cd_y * cd_y;
   if (EQ(ab2, 0)) {
-    return (touch_is_intersect && point_on_segment(a, c, d)) ? 0 : -1;
+    return (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) ? 0 : -1;
   }
   if (EQ(cd2, 0)) {
-    return (touch_is_intersect && point_on_segment(c, a, b)) ? 0 : -1;
+    return (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) ? 0 : -1;
   }
   auto c1 = ab_x * cd_y - ab_y * cd_x;
   auto c2 = ac_x * ab_y - ac_y * ab_x;
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     Pt res1 = std::max(std::min(a, b), std::min(c, d));
     Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    bool overlap = touch_is_intersect ? !(res2 < res1) : (res1 < res2);
+    bool overlap = TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2);
     if (overlap) {
       return (res1 == res2) ? 0 : 1;
     }
@@ -202,12 +202,12 @@ int seg_intersection(
   }
   auto t_num = ac_x * cd_y - ac_y * cd_x;
   bool c1_pos = c1 > 0;
-  bool t_ok = c1_pos ? (touch_is_intersect ? (LE(0, t_num) && LE(t_num, c1))
+  bool t_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, t_num) && LE(t_num, c1))
                                            : (LT(0, t_num) && LT(t_num, c1)))
-                     : (touch_is_intersect ? (LE(c1, t_num) && LE(t_num, 0))
+                     : (TOUCH_IS_INTERSECT ? (LE(c1, t_num) && LE(t_num, 0))
                                            : (LT(c1, t_num) && LT(t_num, 0)));
-  bool u_ok = c1_pos ? (touch_is_intersect ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
-                     : (touch_is_intersect ? (LE(c1, c2) && LE(c2, 0)) : (LT(c1, c2) && LT(c2, 0)));
+  bool u_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
+                     : (TOUCH_IS_INTERSECT ? (LE(c1, c2) && LE(c2, 0)) : (LT(c1, c2) && LT(c2, 0)));
   return (t_ok && u_ok) ? 0 : -1;
 }
 
@@ -256,19 +256,17 @@ int main() {
   assert(line_intersection(Point(0, 0), Point(1, 1), Point(0, 4), Point(4, 0), &p) == 0);
   assert(p == Point(2, 2));
 
-  {
-#define test(a, b, c, d, e, f, g, h) \
-  seg_intersection(Point(a, b), Point(c, d), Point(e, f), Point(g, h), &p, &q)
-
-    assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && p == Point(0, 0));
-    assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && p == Point(2, 2));
-    assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && p == Point(-2, 0));
-    assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && p == Point(4, 4));
-    assert(1 == test(10, 10, 0, 0, 2, 2, 6, 6));
-    assert(p == Point(2, 2) && q == Point(6, 6));
-    assert(-1 == test(6, 8, 8, 10, 12, 12, 4, 4));
-    assert(-1 == test(-4, 2, -8, 8, 0, 0, -4, 6));
-  }
+  auto test = [&](double a, double b, double c, double d, double e, double f, double g, double h) {
+    return seg_intersection(Point(a, b), Point(c, d), Point(e, f), Point(g, h), &p, &q);
+  };
+  assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && p == Point(0, 0));
+  assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && p == Point(2, 2));
+  assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && p == Point(-2, 0));
+  assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && p == Point(4, 4));
+  assert(1 == test(10, 10, 0, 0, 2, 2, 6, 6));
+  assert(p == Point(2, 2) && q == Point(6, 6));
+  assert(-1 == test(6, 8, 8, 10, 12, 12, 4, 4));
+  assert(-1 == test(-4, 2, -8, 8, 0, 0, -4, 6));
 
   assert(Point(2.5, 2.5) == closest_point(-1.0, -1.0, 5.0, Point(0, 0)));
   assert(Point(3, 0) == closest_point(1.0, 0.0, -3.0, Point(0, 0)));
@@ -279,7 +277,7 @@ int main() {
   assert(seg_intersection(PointI(0, 0), PointI(4, 4), PointI(0, 4), PointI(4, 0), &p) == 0);
   assert(p == Point(2, 2));
 
-  // touch_is_intersect = false treats endpoint-only contact as non-intersecting. The T-junction
+  // TOUCH_IS_INTERSECT = false treats endpoint-only contact as non-intersecting. The T-junction
   // and shared-endpoint cases below intersect by default but are rejected when the flag is off.
   assert(0 == seg_intersection(Point(0, 4), Point(4, 4), Point(4, 0), Point(4, 8), &p, &q));
   assert(-1 == seg_intersection(Point(0, 4), Point(4, 4), Point(4, 0), Point(4, 8), &p, &q, false));

@@ -5,8 +5,8 @@ Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, che
 sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness
 that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo
 $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with
-their difference. Prime factorizations are represented as sorted vectors of `(prime, exponent)`
-pairs. For 0 and 1, the prime factorization is empty.
+their difference. Prime factorizations are represented as sorted vectors of (prime, exponent) pairs.
+For 0 and 1, the prime factorization is empty.
 
 - `is_prime_slow(n)` returns whether the integer `n` is prime using trial division.
 - `is_probable_prime(n, k)` returns whether `n` is probably prime using `k` random Miller-Rabin
@@ -17,35 +17,38 @@ pairs. For 0 and 1, the prime factorization is empty.
 - `is_prime(n)` returns whether the signed 64-bit integer `n` is prime using deterministic
   Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
 - `factorize_slow(n)` returns the prime factorization of `n` using trial division.
-- `get_divisors_slow(n)` returns a sorted vector of all divisors of `n` using trial division.
 - `rho_factor(n)` returns a factor of `n` that is not necessarily prime using Pollard's rho with
   Brent's optimization. If `n` is prime, then `n` itself is returned. While this algorithm is
   non-deterministic and may fail to detect factors on certain runs of the same input, it can be
   retried until a nontrivial factor is found, as done in `factorize()`.
-- `cached_primes(n)` returns a cached vector of primes up to and including `n`, rebuilding it with a
-  linear sieve if needed.
+- `cached_sieve(n)` returns a cached linear sieve up to and including `n`, storing both primes and
+  least prime factors.
 - `merge_factors(a, b)` merges two sorted compressed factorizations.
 - `factorize_rho(n)` returns the prime factorization of a 64-bit integer using Miller-Rabin and
   Pollard's rho without initial trial division.
-- `factorize(n, trial_division_cutoff)` returns the prime factorization of a 64-bit integer `n`
-  using a combination of trial division, the Miller-Rabin primality test, and Pollard's rho 
-  algorithm. `trial_division_cutoff` specifies the largest prime to test with trial division before
-  falling back to the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
+- `factorize(n, small_prime_limit)` returns the prime factorization of a 64-bit integer `n` using a
+  combination of trial division, the Miller-Rabin primality test, and Pollard's rho  algorithm.
+  `small_prime_limit` specifies the largest prime to test with trial division before falling back to
+  the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
 - `divisors_from_factors(factors)` returns all divisors from a compressed factorization.
 - `get_divisors(n)` returns all divisors of a 64-bit integer using `factorize()` followed by
   `divisors_from_factors()`.
 
+Modular multiplication inside Miller-Rabin and Pollard's rho uses `__uint128_t` when available for
+speed, with a slower portable double-and-add fallback to avoid overflow on compilers without
+128-bit integers.
+
 Time Complexity:
-- O(sqrt(n)) per call to `is_prime_slow(n)`.
+- O(sqrt n) per call to `is_prime_slow(n)`.
 - O(k log^3(n)) per call to `is_probable_prime(n, k)`.
 - O(log^3(n)) per call to `is_prime(n)`.
-- O(sqrt(n)) per call to `factorize_slow(n)` and `get_divisors_slow(n)`.
-- O(n) to rebuild the prime cache in `cached_primes(n)`.
+- O(sqrt n) per call to `factorize_slow(n)`.
+- O(n) to rebuild the prime cache in `cached_sieve(n)`.
 - Unknown, but approximately O(n^(1/4)) per call to `rho_factor(n)` and `factorize(n)`.
 
 Space Complexity:
 - O(f) auxiliary heap space for all operations, where $f$ is the number of factors returned.
-- O(c) cached heap space for the largest `cached_primes(c)` call.
+- O(c) cached heap space for the largest `cached_sieve(c)` call.
 
 */
 
@@ -96,26 +99,6 @@ std::vector<std::pair<Int, int>> factorize_slow(Int n) {
   return res;
 }
 
-template<class Int>
-std::vector<Int> get_divisors_slow(Int n) {
-  if (n <= 1) {
-    return (n < 1) ? std::vector<Int>() : std::vector<Int>(1, 1);
-  }
-  std::vector<Int> res{1};
-  for (const auto &factor : factorize_slow(n)) {
-    int old_size = static_cast<int>(res.size());
-    Int power = 1;
-    for (int e = 1; e <= factor.second; e++) {
-      power *= factor.first;
-      for (int i = 0; i < old_size; i++) {
-        res.push_back(res[i] * power);
-      }
-    }
-  }
-  std::sort(res.begin(), res.end());
-  return res;
-}
-
 uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
 #if defined(__SIZEOF_INT128__)
   return static_cast<uint64_t>(static_cast<__uint128_t>(x) * n % m);
@@ -123,11 +106,11 @@ uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
   uint64_t a = 0, b = x % m;
   for (; n > 0; n >>= 1) {
     if (n & 1) {
-      a = (a + b) % m;
+      a = a >= m - b ? a - (m - b) : a + b;
     }
-    b = (b << 1) % m;
+    b = b >= m - b ? b - (m - b) : b + b;
   }
-  return a % m;
+  return a;
 #endif
 }
 
@@ -241,28 +224,32 @@ bool is_prime(int64_t n) {
   return true;
 }
 
-std::vector<int> cached_primes(int n) {
-  static int limit = 1;
-  static std::vector<int> primes;
-  if (n <= limit) {
-    return primes;
+struct SieveCache {
+  int limit = 1;
+  std::vector<int> least{0, 1}, primes;
+};
+
+SieveCache &cached_sieve(int n) {
+  static SieveCache cache;
+  if (n <= cache.limit) {
+    return cache;
   }
-  std::vector<int> least(n + 1, 0);
-  primes.clear();
-  for (int i = 2; i <= n; i++) {
-    if (least[i] == 0) {
-      least[i] = i;
-      primes.push_back(i);
+  cache.limit = std::max(1, n);
+  cache.least.assign(cache.limit + 1, 0);
+  cache.primes.clear();
+  for (int i = 2; i <= cache.limit; i++) {
+    if (cache.least[i] == 0) {
+      cache.least[i] = i;
+      cache.primes.push_back(i);
     }
-    for (int p : primes) {
-      if (p > least[i] || i > n / p) {
+    for (int p : cache.primes) {
+      if (p > cache.least[i] || i > cache.limit / p) {
         break;
       }
-      least[i * p] = p;
+      cache.least[i * p] = p;
     }
   }
-  limit = n;
-  return primes;
+  return cache;
 }
 
 using vfactors = std::vector<std::pair<int64_t, int>>;
@@ -305,14 +292,27 @@ vfactors factorize_rho(int64_t n) {
   return merge_factors(factorize_rho(p), factorize_rho(n / p));
 }
 
-vfactors factorize(int64_t n, int trial_division_cutoff = 1000000) {
+vfactors factorize(int64_t n, int small_prime_limit = 1000000) {
   if (n <= 1) {
     return {};
   }
+  const SieveCache &sieve = cached_sieve(small_prime_limit);
+  if (n <= sieve.limit) {
+    vfactors res;
+    while (n > 1) {
+      int p = sieve.least[n], cnt = 0;
+      do {
+        n /= p;
+        cnt++;
+      } while (n > 1 && sieve.least[n] == p);
+      res.emplace_back(p, cnt);
+    }
+    return res;
+  }
   vfactors res;
-  auto primes = cached_primes(trial_division_cutoff);
+  const std::vector<int> &primes = sieve.primes;
   for (int p : primes) {
-    if (p > trial_division_cutoff || static_cast<int64_t>(p) > n / p) {
+    if (p > small_prime_limit || static_cast<int64_t>(p) > n / p) {
       break;
     }
     if (n % p == 0) {
@@ -354,19 +354,19 @@ std::vector<int64_t> get_divisors(int64_t n) {
 
 Primality test:
 num:           is_prime_slow():  is_probable_prime():  is_prime():
-772023803            0.008ms           0.006ms           0.003ms
+772023803            0.006ms           0.005ms           0.001ms
 2147483647           0.009ms           0.006ms           0.002ms
-5705234089           0.013ms           0.000ms           0.000ms
+5705234089           0.014ms           0.000ms           0.001ms
 6339503641           0.013ms           0.001ms           0.001ms
-999966000289         0.162ms           0.001ms           0.000ms
+999966000289         0.171ms           0.001ms           0.001ms
 
 Factorization test:
 num:                    factorize_slow():   factorize():
-4611686018427387904          0.002ms           0.006ms
-9223372036854775807          0.044ms           0.010ms
-999966000289                 0.469ms           0.043ms
-9223361212852495307          0.902ms           0.105ms
-2500052700017629            24.283ms           0.123ms
+4611686018427387904          0.002ms           0.002ms
+9223372036854775807          0.049ms           0.007ms
+999966000289                 0.503ms           0.043ms
+9223361212852495307          0.952ms           0.096ms
+2500052700017629            24.587ms           0.194ms
 
 ***/
 
@@ -457,7 +457,7 @@ int main() {
       auto v2 = factorize(i);
       validate(i, v1);
       assert(v1 == v2);
-      auto d = get_divisors_slow(i);
+      auto d = get_divisors(i);
       set<int> s(d.begin(), d.end());
       assert(d.size() == s.size());
       for (int j = 1; j <= i; j++) {
@@ -467,21 +467,17 @@ int main() {
       }
     }
   }
-  for (int64_t i : {1, 2, 36, 9999, 10000}) {
-    auto d = get_divisors_slow(i);
-    assert(std::vector<int64_t>(d.begin(), d.end()) == get_divisors(i));
-  }
   {  // Compressed factors are convenient for building divisors.
     vfactors factors{{2, 3}, {3, 2}, {5, 1}};
     vector<int64_t> divisors = divisors_from_factors(factors);
     assert(divisors.size() == 24);
     assert(divisors.front() == 1 && divisors.back() == 360);
     assert(factorize(360) == factors);
-    assert(get_divisors(360) == get_divisors_slow<int64_t>(360));
+    assert(get_divisors(360) == divisors);
   }
   {  // Large factorization tests.
     const vector<int64_t> nums{
-        (1LL << 62),                    // high power of 2
+        (1LL << 62),                    // high power of two
         9223372036854775807LL,          // 2^63 - 1, many small factors
         999983LL * 999983,              // square of a large prime
         1900009LL * 1910009 * 2541547,  // three medium-size prime factors

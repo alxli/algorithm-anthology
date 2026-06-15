@@ -13,6 +13,8 @@ range additions, then the prefix sum through `hi` can be written as `hi*sum(t1, 
 - `set(i, x)` assigns the value at index `i` to `x`.
 - `sum(hi)` returns the sum of all values at indices from 0 to `hi`, inclusive.
 - `sum(lo, hi)` returns the sum of all values at indices from `lo` to `hi`, inclusive.
+- `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1) <= c`, assuming
+  prefix sums are nondecreasing. It may return any value from 0 to `size()`.
 
 Time Complexity:
 - O(n) per call to the constructor, where $n$ is the size of the array.
@@ -70,6 +72,26 @@ class FenwickRURQ {
 
   T sum(int lo, int hi) { return sum(hi) - sum(lo - 1); }
   T at(int i) { return sum(i, i); }
+
+  int max_prefix(T c) {
+    T s1 = 0, s2 = 0;
+    int pos = 0, pw = 1;
+    while (pw * 2 <= len) {
+      pw *= 2;
+    }
+    for (; pw > 0; pw >>= 1) {
+      int next = pos + pw;
+      if (next <= len) {
+        T ns1 = s1 + t1[next], ns2 = s2 + t2[next];
+        if (next * ns1 - ns2 <= c) {
+          s1 = ns1;
+          s2 = ns2;
+          pos = next;
+        }
+      }
+    }
+    return pos;
+  }
 };
 
 /*** Example Usage and Output:
@@ -96,5 +118,12 @@ int main() {
   }
   cout << endl;
   assert(t.sum(0, 4) == 27);
+  FenwickRURQ<int> freq(8);
+  freq.add(1, 1, 1);
+  freq.add(3, 3, 3);
+  freq.add(6, 6, 1);
+  assert(freq.max_prefix(0) == 1);
+  assert(freq.max_prefix(3) == 3);
+  assert(freq.max_prefix(4) == 6);
   return 0;
 }

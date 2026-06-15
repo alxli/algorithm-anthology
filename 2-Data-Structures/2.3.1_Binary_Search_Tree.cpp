@@ -17,21 +17,31 @@ subtree has a greater key.
   successful or `false` if the key to be removed was not found.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
-- `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending order of keys.
+- `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and `next(k)` return the matching
+  key-value entry, or `std::nullopt` if no such entry exists.
+- `entries()` returns all key-value entries in ascending order of keys.
+
+The explicit navigation routines above depend only on the BST property and can be copied unchanged
+to the other BST variants later in this chapter.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
-- O(n) per call to `insert()`, `erase()`, `find()`, and `walk()`, where $n$ is the number of nodes
-  currently in the map.
+- O(h) per call to `insert()`, `erase()`, `find()`, `min()`, `max()`, `lower_bound()`,
+  `upper_bound()`, `prev()`, and `next()`, where $h$ is the height of the tree. This is O(log n)
+  when the tree is balanced, but O(n) in the worst case for this unbalanced implementation.
+- O(n) per call to `entries()`, where $n$ is the number of nodes currently in the map.
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(n) auxiliary stack space for `insert()`, `erase()`, and `walk()`.
+- O(n) auxiliary stack space for `insert()`, `erase()`, and `entries()`.
 - O(1) auxiliary for all other operations.
 
 */
 
 #include <cstddef>
+#include <optional>
+#include <utility>
+#include <vector>
 
 template<class K, class V>
 class BST {
@@ -86,13 +96,19 @@ class BST {
     return true;
   }
 
-  template<class Fn>
-  static void walk(Node *n, Fn f) {
+  static void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) {
     if (n != nullptr) {
-      walk(n->left, f);
-      f(n->key, n->value);
-      walk(n->right, f);
+      collect_entries(n->left, res);
+      res.push_back({n->key, n->value});
+      collect_entries(n->right, res);
     }
+  }
+
+  static std::optional<std::pair<K, V>> entry(Node *n) {
+    if (n == nullptr) {
+      return std::nullopt;
+    }
+    return std::pair<K, V>{n->key, n->value};
   }
 
   static void clean_up(Node *n) {
@@ -142,9 +158,74 @@ class BST {
     return nullptr;
   }
 
-  template<class Fn>
-  void walk(Fn f) const {
-    walk(root, f);
+  std::optional<std::pair<K, V>> min() const {
+    Node *n = root;
+    if (n == nullptr) {
+      return std::nullopt;
+    }
+    while (n->left != nullptr) {
+      n = n->left;
+    }
+    return std::pair<K, V>{n->key, n->value};
+  }
+
+  std::optional<std::pair<K, V>> max() const {
+    Node *n = root;
+    if (n == nullptr) {
+      return std::nullopt;
+    }
+    while (n->right != nullptr) {
+      n = n->right;
+    }
+    return std::pair<K, V>{n->key, n->value};
+  }
+
+  std::optional<std::pair<K, V>> lower_bound(const K &k) const {
+    Node *n = root, *best = nullptr;
+    while (n != nullptr) {
+      if (!(n->key < k)) {
+        best = n;
+        n = n->left;
+      } else {
+        n = n->right;
+      }
+    }
+    return entry(best);
+  }
+
+  std::optional<std::pair<K, V>> upper_bound(const K &k) const {
+    Node *n = root, *best = nullptr;
+    while (n != nullptr) {
+      if (k < n->key) {
+        best = n;
+        n = n->left;
+      } else {
+        n = n->right;
+      }
+    }
+    return entry(best);
+  }
+
+  std::optional<std::pair<K, V>> prev(const K &k) const {
+    Node *n = root, *best = nullptr;
+    while (n != nullptr) {
+      if (n->key < k) {
+        best = n;
+        n = n->right;
+      } else {
+        n = n->left;
+      }
+    }
+    return entry(best);
+  }
+
+  std::optional<std::pair<K, V>> next(const K &k) const { return upper_bound(k); }
+
+  std::vector<std::pair<K, V>> entries() const {
+    std::vector<std::pair<K, V>> res;
+    res.reserve(num_nodes);
+    collect_entries(root, res);
+    return res;
   }
 };
 
@@ -168,13 +249,24 @@ int main() {
   assert(t.insert(4, 'd'));
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
-  auto printch = [](int k, char v) { cout << v; };
-  t.walk(printch);
+  assert(t.min()->first == 1 && t.min()->second == 'a');
+  assert(t.max()->first == 5 && t.max()->second == 'e');
+  assert(t.lower_bound(4)->first == 4);
+  assert(t.upper_bound(4)->first == 5);
+  assert(t.prev(4)->first == 3);
+  assert(t.next(4)->first == 5);
+  assert(!t.prev(1));
+  assert(!t.next(5));
+  for (const auto &[k, v] : t.entries()) {
+    cout << v;
+  }
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
-  t.walk(printch);
+  for (const auto &[k, v] : t.entries()) {
+    cout << v;
+  }
   cout << endl;
   return 0;
 }

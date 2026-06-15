@@ -10,6 +10,7 @@ These functions are equivalent to \inlinecode{std::sort()}, taking random-access
   \item \inlinecode{quicksort(lo, hi)} sorts the range using quicksort.
   \item \inlinecode{mergesort(lo, hi)} sorts the range using merge sort, which is stable.
   \item \inlinecode{heapsort(lo, hi)} sorts the range using heapsort.
+  \item \inlinecode{insertion\_sort(lo, hi)} sorts the range using insertion sort, which is stable.
   \item \inlinecode{combsort(lo, hi)} sorts the range using comb sort.
   \item \inlinecode{radix\_sort(lo, hi)} sorts the range using least-significant-byte radix sort.
 \end{compactitem}
@@ -20,6 +21,7 @@ These functions are equivalent to \inlinecode{std::sort()}, taking random-access
 #include <algorithm>
 #include <functional>
 #include <iterator>
+#include <type_traits>
 #include <vector>
 \end{lstlisting}
 Quicksort repeatedly selects a pivot and partitions the range so that elements comparing less than the pivot precede it, elements comparing equal stay in the middle, and elements comparing greater follow it. Divide and conquer is then applied to the two outer ranges until the original range is sorted. Despite having a worst case of $O(n^{2})$, quicksort is often faster in practice than merge sort and heapsort, which both have a worst case time complexity of $O(n \log n)$.
@@ -82,6 +84,7 @@ void mergesort(It lo, It hi, Compare comp = Compare()) {
   mergesort(mid + 1, hi, comp);
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> merged;
+  merged.reserve(hi - lo);
   while (a <= mid && c < hi) {
     merged.push_back(comp(*c, *a) ? *c++ : *a++);
   }
@@ -110,7 +113,7 @@ void heapsort(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
   T tmp;
   It i = lo + (hi - lo) / 2, j = hi, parent, child;
-  for (;;) {
+  while (true) {
     if (i <= lo) {
       if (--j == lo) {
         return;
@@ -133,7 +136,38 @@ void heapsort(It lo, It hi, Compare comp = Compare()) {
       parent = child;
       child = lo + 2 * (parent - lo) + 1;
     }
-    *(lo + (parent - lo)) = tmp;
+    *parent = tmp;
+  }
+}
+\end{lstlisting}
+Insertion sort builds the sorted range one element at a time. It scans left to right, and for each element shifts the larger elements of the already-sorted prefix one position to the right to open a slot where the element belongs. Although its average and worst cases are quadratic, it is simple, stable, in-place, and online (it can sort a stream as elements arrive).
+
+Its strength is being adaptive: on an already-sorted or nearly-sorted range, each element travels only a short distance, giving $O(n)$ best-case time and $O(n + d)$ in general for \inlinecode{d} total inversions. This is why it outperforms the asymptotically faster sorts on small or nearly-sorted ranges, and why hybrid sorts such as introsort and Timsort fall back to it once a subrange is small enough.
+
+The comparison \inlinecode{comp(key, *(j - 1))} is strict, so an element never moves past an earlier element it compares equal to, which keeps the sort stable.
+
+\textbf{Time Complexity (Best)}: $O(n)$ on an already-sorted range.
+
+\textbf{Time Complexity (Average)}: $O(n^{2})$.
+
+\textbf{Time Complexity (Worst)}: $O(n^{2})$.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\textbf{Stable?}: Yes.
+
+\begin{lstlisting}[language=C++]
+template<class It, class Compare = std::less<>>
+void insertion_sort(It lo, It hi, Compare comp = Compare()) {
+  using T = typename std::iterator_traits<It>::value_type;
+  for (It i = lo; i != hi; ++i) {
+    T key = *i;
+    It j = i;
+    while (j != lo && comp(key, *(j - 1))) {
+      *j = *(j - 1);
+      --j;
+    }
+    *j = key;
   }
 }
 \end{lstlisting}
@@ -150,7 +184,7 @@ Even though the worst case time complexity is $O(n^{2})$, a well chosen shrink f
 \begin{lstlisting}[language=C++]
 template<class It, class Compare = std::less<>>
 void combsort(It lo, It hi, Compare comp = Compare()) {
-  int gap = hi - lo;
+  int gap = static_cast<int>(hi - lo);
   bool swapped = true;
   while (gap > 1 || swapped) {
     if (gap > 1) {
@@ -159,16 +193,16 @@ void combsort(It lo, It hi, Compare comp = Compare()) {
     swapped = false;
     for (It it = lo; it + gap < hi; ++it) {
       if (comp(*(it + gap), *it)) {
-        std::swap(*it, *(it + gap));
+        std::iter_swap(it, it + gap);
         swapped = true;
       }
     }
   }
 }
 \end{lstlisting}
-Radix sort is used to sort integer elements with a constant number of bits in linear time. This implementation only works on ranges pointing to unsigned integer primitives. The elements in the input range do not strictly have to be unsigned types, as long as their values are nonnegative integers.
+Radix sort is used to sort integer elements with a constant number of bits in linear time. This implementation works on ranges pointing to any signed or unsigned integer primitive. Signed values are handled by sorting on a key that flips the sign bit, which maps the two's-complement order onto the unsigned order so the most negative value sorts first.
 
-In this implementation, a power of two is chosen to be the base for the sort so that bitwise operations can be easily used to extract digits. This avoids the need to use modulo and exponentiation, which are much more expensive operations. In practice, it's been demonstrated that $2^8$ is the best choice for sorting 32-bit integers (approximately 5 times faster than \inlinecode{std::sort()}, and typically 2-4 times faster than radix sort using any other power of two chosen as the base).
+In this implementation, a power of two is chosen to be the base for the sort so that bitwise operations can be easily used to extract digits. This avoids the need to use modulo/exponentiation, which are much more expensive operations. In practice, it's been demonstrated that $2^8$ is the best choice for sorting 32-bit integers (approximately 5 times faster than \inlinecode{std::sort()}, and typically 2-4 times faster than radix sort using any other power of two chosen as the base).
 
 \textbf{Time Complexity}: $O(n \cdot w)$ for $n$ integers of $w$ bits each.
 
@@ -183,13 +217,20 @@ void radix_sort(It lo, It hi) {
   const int radix_bits = 8;
   const int radix_base = 1 << radix_bits;  // e.g. 2^8 = 256
   const int radix_mask = radix_base - 1;   // e.g. 2^8 - 1 = 0xFF
-  int num_bits = 8 * sizeof(*lo);          // 8 bits per byte
   using T = typename std::iterator_traits<It>::value_type;
+  using U = typename std::make_unsigned<T>::type;
+  int num_bits = 8 * sizeof(T);  // 8 bits per byte
+  // Sort on an unsigned key. For signed types, flipping the sign bit sends the most negative value
+  // to 0, mapping the signed order onto the unsigned order; logical shifts then extract each digit.
+  auto key = [](T x) -> U {
+    U u = static_cast<U>(x);
+    return std::is_signed<T>::value ? (u ^ (U(1) << (8 * sizeof(T) - 1))) : u;
+  };
   std::vector<T> buf(hi - lo);
   for (int pos = 0; pos < num_bits; pos += radix_bits) {
     std::vector<int> count(radix_base);
     for (It it = lo; it != hi; ++it) {
-      count[(*it >> pos) & radix_mask]++;
+      count[(key(*it) >> pos) & radix_mask]++;
     }
     std::vector<T *> bucket(radix_base);
     T *curr = buf.data();
@@ -197,7 +238,7 @@ void radix_sort(It lo, It hi) {
       bucket[i] = curr;
     }
     for (It it = lo; it != hi; ++it) {
-      *bucket[(*it >> pos) & radix_mask]++ = *it;
+      *bucket[(key(*it) >> pos) & radix_mask]++ = *it;
     }
     std::copy(buf.begin(), buf.end(), lo);
   }
@@ -211,6 +252,7 @@ void radix_sort(It lo, It hi) {
 #include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <random>
 #include <vector>
 using namespace std;
 
@@ -257,10 +299,15 @@ int main() {
     combsort(a.begin(), a.end());
     assert(sorted(a.begin(), a.end()));
   }
-  {  // Must use radix_sort with unsigned values, but sorting in reverse works!
-    vector<unsigned int> a{32, 71, 12, 45, 26, 80, 53, 33};
-    radix_sort(a.rbegin(), a.rend());
-    assert(sorted(a.rbegin(), a.rend()));
+  {  // Insertion sort is adaptive: an already-sorted range is left untouched in O(n).
+    vector<int> a{12, 26, 32, 33, 45, 53, 71, 80};
+    insertion_sort(a.begin(), a.end());
+    assert(sorted(a.begin(), a.end()));
+  }
+  {  // radix_sort() handles signed integers (including negatives), unlike a plain counting sort.
+    vector<int> a{32, -71, 12, -45, 26, -80, 53, 33};
+    radix_sort(a.begin(), a.end());
+    assert(sorted(a.begin(), a.end()));
   }
 
   // Example from: http://www.cplusplus.com/reference/algorithm/stable_sort
@@ -279,30 +326,30 @@ int main() {
   }
   cout << "------" << endl;
 
-  vector<int> v, v2;
+  std::mt19937 rng(std::random_device{}());
+  vector<int> data;
   for (int i = 0; i < 5000000; i++) {
-    v.push_back((rand() & 0x7fff) | ((rand() & 0x7fff) << 15));
+    data.push_back(static_cast<int>(rng()));
   }
-  v2 = v;
   cout << "Sorting five million integers..." << endl;
   cout.precision(3);
 
-#define test(sort_function)                                             \
-  {                                                                     \
-    clock_t start = clock();                                            \
-    sort_function(v.begin(), v.end());                                  \
-    double t = static_cast<double>((clock() - start)) / CLOCKS_PER_SEC; \
-    cout << setw(14) << left << #sort_function "(): ";                  \
-    cout << fixed << t << "s" << endl;                                  \
-    assert(sorted(v.begin(), v.end()));                                 \
-    v = v2;                                                             \
-  }
-  test(std::sort);
-  test(quicksort);
-  test(mergesort);
-  test(heapsort);
-  test(combsort);
-  test(radix_sort);
+  // Each sort is wrapped in a lambda so its name resolves at the call site (the bare names are
+  // function templates, not values), then timed on a fresh copy of the same unsorted data.
+  auto benchmark = [&](const string &name, auto sort) {
+    vector<int> v = data;
+    clock_t start = clock();
+    sort(v.begin(), v.end());
+    double t = static_cast<double>(clock() - start) / CLOCKS_PER_SEC;
+    cout << setw(14) << left << name + "(): " << fixed << t << "s" << endl;
+    assert(sorted(v.begin(), v.end()));
+  };
+  benchmark("std::sort", [](auto lo, auto hi) { std::sort(lo, hi); });
+  benchmark("quicksort", [](auto lo, auto hi) { quicksort(lo, hi); });
+  benchmark("mergesort", [](auto lo, auto hi) { mergesort(lo, hi); });
+  benchmark("heapsort", [](auto lo, auto hi) { heapsort(lo, hi); });
+  benchmark("combsort", [](auto lo, auto hi) { combsort(lo, hi); });
+  benchmark("radix_sort", [](auto lo, auto hi) { radix_sort(lo, hi); });
   return 0;
 }
 \end{lstlisting}
@@ -1107,7 +1154,7 @@ int main() {
 \subsection{Iterated Function Cycle Detection}
 Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the position and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever.
 
-This is useful for detecting cycles in functional graphs, pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if \inlinecode{nums} has size $n + 1$ and all values are in $[1, n]$, then \inlinecode{f(i) = nums[i]} forms a functional graph; the duplicate value is the entry point of the cycle reached from 0.
+This is useful for detecting cycles in functional graphs, pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if \inlinecode{nums} has size $n + 1$ and all values are in $[1, n]$, then $f(i)$ = \inlinecode{nums[i]} forms a functional graph; the duplicate value is the entry point of the cycle reached from 0.
 
 Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient default choice: it moves two pointers through the sequence at different speeds, finds a meeting point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice, using three calls to $f$ per step.
 
@@ -1634,13 +1681,14 @@ The answer is computed by scanning left to right while maintaining, for each len
 \textbf{Space Complexity}: $O(n)$ auxiliary heap space for \inlinecode{longest\_increasing\_subsequence()}.
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <iterator>
 #include <vector>
 
 template<class It>
 auto longest_increasing_subsequence(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
-  int len = 0, n = hi - lo;
+  int len = 0, n = static_cast<int>(hi - lo);
   if (n == 0) {
     return std::vector<T>();
   }
@@ -1648,20 +1696,19 @@ auto longest_increasing_subsequence(It lo, It hi) {
   // prev[i] = index of the predecessor of element i in its LIS (or -1 if first).
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
-    int left = -1, right = len;
-    while (right - left > 1) {
-      int mid = left + (right - left) / 2;
-      if (*(lo + tail[mid]) < *(lo + i)) {
-        left = mid;
-      } else {
-        right = mid;
-      }
+    // Find the tail to extend or improve. Comparing by value through the stored indices keeps
+    // `tail` index-based for reconstruction; swap `<` for `<=` to allow a non-decreasing result.
+    int pos = static_cast<int>(
+        std::lower_bound(
+            tail.begin(), tail.begin() + len, i, [&](int t, int x) { return *(lo + t) < *(lo + x); }
+        ) -
+        tail.begin()
+    );
+    if (pos == len) {
+      len++;
     }
-    if (len < right + 1) {
-      len = right + 1;
-    }
-    prev[i] = right > 0 ? tail[right - 1] : -1;
-    tail[right] = i;
+    prev[i] = pos > 0 ? tail[pos - 1] : -1;
+    tail[pos] = i;
   }
   std::vector<T> res(len);
   for (int i = tail[len - 1]; i != -1; i = prev[i]) {
@@ -2710,15 +2757,15 @@ Integers are all fixed-size sets of bits, where the $i$-th bit (counting from th
 \begin{compactitem}
   \item \inlinecode{test\_bit(x, i)} returns whether the \inlinecode{i}-th bit of \inlinecode{x} is set.
   \item \inlinecode{set\_bit(x, i)}, \inlinecode{clear\_bit(x, i)}, and \inlinecode{toggle\_bit(x, i)} return \inlinecode{x} with the \inlinecode{i}-th respectively forced to 1, forced to 0, or flipped.
-  \item \inlinecode{lowest\_set\_bit(x)} returns the value of the lowest set bit of \inlinecode{x} (a power of 2), or 0 if \inlinecode{x} is 0. \inlinecode{clear\_lowest\_set\_bit(x)} returns \inlinecode{x} with its lowest set bit removed.
+  \item \inlinecode{lowest\_set\_bit(x)} returns the value of the lowest set bit of \inlinecode{x} (a power of two), or 0 if \inlinecode{x} is 0. \inlinecode{clear\_lowest\_set\_bit(x)} returns \inlinecode{x} with its lowest set bit removed.
   \item \inlinecode{popcount(x)} returns the number of set bits, analogous to \inlinecode{\_\_builtin\_popcount()} and C++20's \inlinecode{std::popcount()}.
   \item \inlinecode{parity(x)} returns 1 if the number of set bits is odd and 0 otherwise, analogous to \inlinecode{\_\_builtin\_parity()}.
   \item \inlinecode{ctz(x)} returns the number of trailing 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_ctz()} and C++20's \inlinecode{std::countr\_zero()}.
   \item \inlinecode{ffs(x)} returns one plus the position of the lowest 1-bit of \inlinecode{x}, or 0 if \inlinecode{x} is 0, analogous to \inlinecode{\_\_builtin\_ffs()}.
   \item \inlinecode{clz(x)} returns the number of leading 0-bits (undefined for 0), analogous to \inlinecode{\_\_builtin\_clz()} and C++20's \inlinecode{std::countl\_zero()}.
   \item \inlinecode{is\_pow2(x)} returns whether \inlinecode{x} has exactly one set bit, analogous to C++20's \inlinecode{std::has\_single\_bit()}.
-  \item \inlinecode{floor\_pow2(x)} returns the largest power of 2 that is $\leq$ \inlinecode{x} (for \inlinecode{x} $> 0$), analogous to C++20's \inlinecode{std::bit\_floor()}.
-  \item \inlinecode{ceil\_pow2(x)} returns the smallest power of 2 that is $\geq$ \inlinecode{x} (for \inlinecode{x} $> 0$), analogous to C++20's \inlinecode{std::bit\_ceil()}.
+  \item \inlinecode{floor\_pow2(x)} returns the largest power of two that is $\leq$ \inlinecode{x} (for \inlinecode{x} $> 0$), analogous to C++20's \inlinecode{std::bit\_floor()}.
+  \item \inlinecode{ceil\_pow2(x)} returns the smallest power of two that is $\geq$ \inlinecode{x} (for \inlinecode{x} $> 0$), analogous to C++20's \inlinecode{std::bit\_ceil()}.
   \item \inlinecode{for\_each\_set\_bit(x, f)} calls \inlinecode{f(i)} once for each set bit position \inlinecode{i} of \inlinecode{x}, in increasing order.
 \end{compactitem}
 
@@ -3001,6 +3048,428 @@ int main() {
     uint32_t diff = seq[i] ^ seq[(i + 1) % seq.size()];
     assert(__builtin_popcount(diff) == 1);  // Cyclically, one bit changes per step.
   }
+  return 0;
+}
+\end{lstlisting}
+\subsection{XOR Basis}
+An XOR basis (also called a linear basis over the field GF(2)) is the analog of a vector space basis for integers under the bitwise XOR operation. Each integer is treated as a vector of bits, where XOR plays the role of vector addition. Inserting a set of integers one at a time and keeping only those that are linearly independent yields a basis whose XOR-combinations (subset XORs) span exactly the same set of values as the original integers. From a basis of size $r$, exactly $2^r$ distinct values are reachable, and queries such as the maximum attainable XOR become a simple greedy scan.
+
+The basis is kept in reduced form: \inlinecode{basis[i]} is either 0 or a value whose highest set bit is bit \inlinecode{i}, and no two basis elements share the same highest bit. Reducing a value means XORing it against the basis elements from the highest bit down, eliminating each set bit that a basis element covers.
+
+\begin{compactitem}
+  \item \inlinecode{insert(x)} adds \inlinecode{x} to the basis, returning \inlinecode{true} if \inlinecode{x} was linearly independent of the current basis (increasing its size), or \inlinecode{false} if \inlinecode{x} was already representable as a subset XOR.
+  \item \inlinecode{contains(x)} returns whether \inlinecode{x} is representable as the XOR of some subset of the inserted values, i.e. whether it reduces to 0 against the basis.
+  \item \inlinecode{max\_xor(base)} returns the maximum value of \inlinecode{base} XORed with some subset XOR of the basis. With the default \inlinecode{base} of 0, this is the maximum subset XOR.
+  \item \inlinecode{size()} returns the number of elements in the basis (its rank).
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(b)$ per call to \inlinecode{insert()}, \inlinecode{contains()}, and \inlinecode{max\_xor()}, where $b$ is the number of bits.
+  \item $O(1)$ per call to \inlinecode{size()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(b)$ for storage of the basis.
+  \item $O(1)$ auxiliary for all operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <array>
+#include <climits>
+#include <cstdint>
+
+class XorBasis {
+  static const int BITS = sizeof(uint64_t) * CHAR_BIT;
+
+  std::array<uint64_t, BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
+  int sz = 0;
+
+ public:
+  bool insert(uint64_t x) {
+    for (int i = BITS - 1; i >= 0; i--) {
+      if (!((x >> i) & 1)) {
+        continue;
+      }
+      if (basis[i] == 0) {
+        basis[i] = x;
+        sz++;
+        return true;
+      }
+      x ^= basis[i];
+    }
+    return false;
+  }
+
+  bool contains(uint64_t x) const {
+    for (int i = BITS - 1; i >= 0; i--) {
+      if (((x >> i) & 1) && basis[i] != 0) {
+        x ^= basis[i];
+      }
+    }
+    return x == 0;
+  }
+
+  uint64_t max_xor(uint64_t base = 0) const {
+    for (int i = BITS - 1; i >= 0; i--) {
+      if ((base ^ basis[i]) > base) {
+        base ^= basis[i];
+      }
+    }
+    return base;
+  }
+
+  int size() const { return sz; }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  XorBasis b;
+  assert(b.insert(1));   // 001
+  assert(b.insert(2));   // 010
+  assert(!b.insert(3));  // 011 = 1 ^ 2, already representable.
+  assert(b.size() == 2);
+
+  assert(b.contains(3));
+  assert(b.contains(0));
+  assert(!b.contains(4));
+
+  assert(b.max_xor() == 3);   // Best subset XOR over {0, 1, 2, 3}.
+  assert(b.max_xor(4) == 7);  // 4 ^ 3.
+  return 0;
+}
+\end{lstlisting}
+\subsection{Binary Trie}
+Maintain a multiset of non-negative $b$-bit integers as a binary trie, storing each value as a root-to-leaf path of its bits from the most significant (bit $b - 1$) down to the least significant. Every node keeps a count of the stored values passing through it, which supports deletion and counting queries, and lets the trie answer XOR-extremal queries by a greedy walk down the bits.
+
+The classic application is the maximum-XOR query: to maximize \inlinecode{x XOR y} over all stored \inlinecode{y}, walk from the most significant bit. At each step, descend toward the child whose bit differs from that of \inlinecode{x} whenever such a branch exists, since setting a higher bit of the result always dominates any combination of lower bits. The minimum-XOR query is the mirror image, preferring the matching bit.
+
+This is a multiset (a value may be inserted more than once), and is distinct from the XOR basis: the basis spans subset XORs of a fixed set, whereas this answers XOR queries against the stored elements themselves with support for insertion and deletion.
+
+Values must lie in \inlinecode{[0, 2\textasciicircum{}BITS)}; the template parameters select the unsigned word type \inlinecode{U} and the bit width \inlinecode{BITS}, which must be less than the width of \inlinecode{U} (for example, 30 with \inlinecode{uint32\_t} or 62 with \inlinecode{uint64\_t}). Nodes are kept in a pool indexed by integer, where index 0 is the root and also serves as the null child.
+
+\begin{compactitem}
+  \item \inlinecode{BinaryTrie()} constructs an empty multiset.
+  \item \inlinecode{size()} returns the number of stored values, and \inlinecode{empty()} returns whether there are none.
+  \item \inlinecode{insert(x)} adds one occurrence of \inlinecode{x}.
+  \item \inlinecode{erase(x)} removes one occurrence of \inlinecode{x}, returning whether one was present.
+  \item \inlinecode{count(x)} returns the number of occurrences of \inlinecode{x}.
+  \item \inlinecode{max\_xor(x)} and \inlinecode{min\_xor(x)} return the maximum and minimum of \inlinecode{x XOR y} over all stored \inlinecode{y}. The trie must be non-empty.
+  \item \inlinecode{count\_xor\_less(x, k)} returns the number of stored \inlinecode{y} (with multiplicity) such that \inlinecode{x XOR y} is strictly less than \inlinecode{k}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(b)$ per call to \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{count()}, \inlinecode{max\_xor()}, \inlinecode{min\_xor()}, and \inlinecode{count\_xor\_less()}, where $b$ is the bit width \inlinecode{BITS}.
+  \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{empty()}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O({\inlinecodemath{BITS}} \cdot n)$ for storage, where $n$ is the number of distinct values inserted so far.
+
+\begin{lstlisting}[language=C++]
+#include <array>
+#include <cstdint>
+#include <vector>
+
+template<class U = uint32_t, int BITS = 30>
+class BinaryTrie {
+  std::vector<std::array<int, 2>> child;  // child[node][bit], where 0 means no child.
+  std::vector<int> cnt;                   // Number of stored values passing through each node.
+
+  int new_node() {
+    child.push_back({0, 0});
+    cnt.push_back(0);
+    return static_cast<int>(cnt.size()) - 1;
+  }
+
+ public:
+  BinaryTrie() { new_node(); }  // Node 0 is the root (and doubles as the null child).
+
+  int size() const { return cnt[0]; }
+  bool empty() const { return cnt[0] == 0; }
+
+  void insert(U x) {
+    int node = 0;
+    cnt[node]++;
+    for (int b = BITS - 1; b >= 0; b--) {
+      int bit = (x >> b) & 1;
+      if (child[node][bit] == 0) {
+        int next = new_node();
+        child[node][bit] = next;
+      }
+      node = child[node][bit];
+      cnt[node]++;
+    }
+  }
+
+  int count(U x) const {
+    int node = 0;
+    for (int b = BITS - 1; b >= 0; b--) {
+      int next = child[node][(x >> b) & 1];
+      if (next == 0) {
+        return 0;
+      }
+      node = next;
+    }
+    return cnt[node];
+  }
+
+  bool erase(U x) {
+    if (count(x) == 0) {
+      return false;
+    }
+    int node = 0;
+    cnt[node]--;
+    for (int b = BITS - 1; b >= 0; b--) {
+      node = child[node][(x >> b) & 1];
+      cnt[node]--;
+    }
+    return true;
+  }
+
+  U max_xor(U x) const {
+    int node = 0;
+    U res = 0;
+    for (int b = BITS - 1; b >= 0; b--) {
+      int bit = (x >> b) & 1;
+      int opp = child[node][bit ^ 1];
+      if (opp != 0 && cnt[opp] > 0) {
+        res |= U(1) << b;
+        node = opp;
+      } else {
+        node = child[node][bit];
+      }
+    }
+    return res;
+  }
+
+  U min_xor(U x) const {
+    int node = 0;
+    U res = 0;
+    for (int b = BITS - 1; b >= 0; b--) {
+      int bit = (x >> b) & 1;
+      int same = child[node][bit];
+      if (same != 0 && cnt[same] > 0) {
+        node = same;
+      } else {
+        res |= U(1) << b;
+        node = child[node][bit ^ 1];
+      }
+    }
+    return res;
+  }
+
+  int count_xor_less(U x, U k) const {
+    if ((k >> BITS) != 0) {
+      return cnt[0];  // Every XOR result is below 2^BITS, which is at most k.
+    }
+    int node = 0, res = 0;
+    for (int b = BITS - 1; b >= 0; b--) {
+      int xb = (x >> b) & 1, kb = (k >> b) & 1;
+      if (kb == 1) {
+        // Stored values matching x at bit b give XOR bit 0 here, hence are already below k.
+        int below = child[node][xb];
+        if (below != 0) {
+          res += cnt[below];
+        }
+        node = child[node][xb ^ 1];  // Stay tied with k by taking XOR bit 1.
+      } else {
+        node = child[node][xb];  // XOR bit must be 0 to remain below k.
+      }
+      if (node == 0) {
+        break;
+      }
+    }
+    return res;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  BinaryTrie<> trie;
+  for (int x : {3, 10, 5, 25, 2}) {
+    trie.insert(x);
+  }
+  assert(trie.size() == 5);
+
+  // x XOR y over the stored y: {26, 19, 28, 0, 27} for x = 25.
+  assert(trie.max_xor(25) == 28);                           // 25 XOR 5.
+  assert(trie.min_xor(25) == 0);                            // 25 XOR 25.
+  assert(trie.count_xor_less(25, 20) == 2);                 // XOR values 0 and 19 are below 20.
+  assert(trie.count_xor_less(25, uint32_t(1) << 30) == 5);  // Bound at/above 2^BITS counts all.
+
+  assert(trie.count(10) == 1);
+  trie.insert(10);
+  assert(trie.count(10) == 2);  // Multiset: two copies of 10.
+  assert(trie.erase(10) && trie.count(10) == 1);
+  assert(trie.erase(25) && trie.count(25) == 0);
+  assert(!trie.erase(25));        // Already gone.
+  assert(trie.max_xor(0) == 10);  // Largest remaining value is 10.
+  return 0;
+}
+\end{lstlisting}
+\subsection{Bitwise Convolution (FWHT)}
+Bitwise convolution combines two arrays indexed by masks, grouping pairs of masks by a bitwise operation instead of by ordinary addition. For arrays \inlinecode{a} and \inlinecode{b} over an \inlinecode{n}-bit universe, the XOR convolution \inlinecode{c[m]} is the sum of \inlinecode{a[x]*b[y]} over all \inlinecode{x \textasciicircum{} y = m}. OR and AND convolution replace \inlinecode{x \textasciicircum{} y} with \inlinecode{x | y} or \inlinecode{x \& y}. These appear in subset DP, counting pairs by bitwise result, and algebra over the Boolean hypercube.
+
+The fast Walsh-Hadamard transform (FWHT) diagonalizes XOR convolution in the same way that the FFT diagonalizes polynomial convolution: transform both arrays, multiply pointwise, and transform back. The OR and AND versions are zeta/Mobius transforms over the subset lattice, but they have the same butterfly-shaped implementation and the same $O(n \log n)$ runtime for arrays of length \inlinecode{n = 2\textasciicircum{}k}.
+
+\begin{compactitem}
+  \item \inlinecode{xor\_transform(f, invert)} applies the XOR FWHT to \inlinecode{f} in place. The inverse transform uses \inlinecode{invert = true} and divides every coefficient by \inlinecode{f.size()}.
+  \item \inlinecode{or\_transform(f, invert)} applies the OR zeta transform in place; the inverse is Mobius inversion.
+  \item \inlinecode{and\_transform(f, invert)} applies the AND zeta transform in place; the inverse is Mobius inversion.
+  \item \inlinecode{xor\_convolve(a, b)} returns the XOR convolution of \inlinecode{a} and \inlinecode{b}.
+  \item \inlinecode{or\_convolve(a, b)} returns the OR convolution of \inlinecode{a} and \inlinecode{b}.
+  \item \inlinecode{and\_convolve(a, b)} returns the AND convolution of \inlinecode{a} and \inlinecode{b}.
+\end{compactitem}
+
+Input arrays are padded with zeros to the next power of two. For exact integer XOR convolution, the inverse divisions are exact; for modular arithmetic, replace the division by multiplication with the modular inverse of the transform length.
+
+\textbf{Time Complexity}: $O(n \log n)$ per transform or convolution, where $n$ is the padded power-of-two length.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for the in-place transforms.
+  \item $O(n)$ auxiliary heap space for each convolution.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <vector>
+
+int next_power_of_two(int n) {
+  int res = 1;
+  while (res < n) {
+    res <<= 1;
+  }
+  return res;
+}
+
+template<class T>
+void xor_transform(std::vector<T> &f, bool invert) {
+  int n = static_cast<int>(f.size());
+  assert((n & (n - 1)) == 0);
+  for (int len = 1; len < n; len <<= 1) {
+    for (int i = 0; i < n; i += len << 1) {
+      for (int j = 0; j < len; j++) {
+        T u = f[i + j], v = f[i + j + len];
+        f[i + j] = u + v;
+        f[i + j + len] = u - v;
+      }
+    }
+  }
+  if (invert) {
+    for (T &x : f) {
+      x /= n;
+    }
+  }
+}
+
+template<class T>
+void or_transform(std::vector<T> &f, bool invert) {
+  int n = static_cast<int>(f.size());
+  assert((n & (n - 1)) == 0);
+  for (int bit = 1; bit < n; bit <<= 1) {
+    for (int mask = 0; mask < n; mask++) {
+      if (mask & bit) {
+        if (invert) {
+          f[mask] -= f[mask ^ bit];
+        } else {
+          f[mask] += f[mask ^ bit];
+        }
+      }
+    }
+  }
+}
+
+template<class T>
+void and_transform(std::vector<T> &f, bool invert) {
+  int n = static_cast<int>(f.size());
+  assert((n & (n - 1)) == 0);
+  for (int bit = 1; bit < n; bit <<= 1) {
+    for (int mask = 0; mask < n; mask++) {
+      if ((mask & bit) == 0) {
+        if (invert) {
+          f[mask] -= f[mask ^ bit];
+        } else {
+          f[mask] += f[mask ^ bit];
+        }
+      }
+    }
+  }
+}
+
+template<class T, class Transform>
+std::vector<T> bitwise_convolve(std::vector<T> a, std::vector<T> b, Transform transform) {
+  if (a.empty() || b.empty()) {
+    return {};
+  }
+  int n = next_power_of_two(static_cast<int>(std::max(a.size(), b.size())));
+  a.resize(n);
+  b.resize(n);
+  transform(a, false);
+  transform(b, false);
+  for (int i = 0; i < n; i++) {
+    a[i] *= b[i];
+  }
+  transform(a, true);
+  return a;
+}
+
+template<class T>
+std::vector<T> xor_convolve(std::vector<T> a, std::vector<T> b) {
+  return bitwise_convolve(a, b, xor_transform<T>);
+}
+
+template<class T>
+std::vector<T> or_convolve(std::vector<T> a, std::vector<T> b) {
+  return bitwise_convolve(a, b, or_transform<T>);
+}
+
+template<class T>
+std::vector<T> and_convolve(std::vector<T> a, std::vector<T> b) {
+  return bitwise_convolve(a, b, and_transform<T>);
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  vector<int64_t> a{1, 2, 3, 4};
+  vector<int64_t> b{5, 6, 7, 8};
+
+  // XOR: c[m] sums a[x] * b[y] over pairs with x ^ y == m.
+  assert((xor_convolve(a, b) == vector<int64_t>{70, 68, 62, 60}));
+
+  // OR: c[m] sums a[x] * b[y] over pairs with x | y == m.
+  assert((or_convolve(a, b) == vector<int64_t>{5, 28, 43, 184}));
+
+  // AND: c[m] sums a[x] * b[y] over pairs with x & y == m.
+  assert((and_convolve(a, b) == vector<int64_t>{103, 52, 73, 32}));
+
+  vector<int64_t> one_mask{0, 1, 0, 0};
+  vector<int64_t> two_mask{0, 0, 1};
+  assert((xor_convolve(one_mask, two_mask) == vector<int64_t>{0, 0, 0, 1}));
+  assert((or_convolve(one_mask, two_mask) == vector<int64_t>{0, 0, 0, 1}));
+  assert((and_convolve(one_mask, two_mask) == vector<int64_t>{1, 0, 0, 0}));
   return 0;
 }
 \end{lstlisting}

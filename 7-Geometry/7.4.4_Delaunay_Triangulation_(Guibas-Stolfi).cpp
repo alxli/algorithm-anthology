@@ -168,7 +168,7 @@ std::pair<Edge *, Edge *> build_triangulation(
   int mid = lo + (hi - lo) / 2;
   auto [ldo, ldi] = build_triangulation(p, lo, mid, pool);
   auto [rdi, rdo] = build_triangulation(p, mid + 1, hi, pool);
-  for (;;) {
+  while (true) {
     if (left_of(rdi->origin, ldi)) {
       ldi = ldi->lnext();
     } else if (right_of(ldi->origin, rdi)) {
@@ -184,7 +184,7 @@ std::pair<Edge *, Edge *> build_triangulation(
   if (rdi->origin == rdo->origin) {
     rdo = base;
   }
-  for (;;) {
+  while (true) {
     Edge *lcand = base->rev()->onext;
     if (right_of(lcand->dest(), base)) {
       while (in_circle(base->dest(), base->origin, lcand->dest(), lcand->onext->dest())) {

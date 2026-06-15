@@ -13,10 +13,12 @@ over the depth sequence. This version answers those queries with a segment tree.
   `adj` of nodes numbered from 0 to `adj.size() - 1`.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`, or $-1$ if they are in
   different trees.
+- `dist(u, v)` returns the number of edges on the path between nodes `u` and `v`, or $-1$ if they
+  are in different trees.
 
 Time Complexity:
 - O(n log n) for construction, where $n$ is the number of nodes.
-- O(log n) per call to `lca()`.
+- O(log n) per call to `lca()` and `dist()`.
 
 Space Complexity:
 - O(n) for storage of the segment tree.
@@ -99,6 +101,11 @@ class SegTreeLCA {
     }
     return get_minpos(std::min(first[u], first[v]), std::max(first[u], first[v]), 0, 0, len - 1);
   }
+
+  int dist(int u, int v) const {
+    int l = lca(u, v);
+    return l == -1 ? -1 : depth[u] + depth[v] - 2 * depth[l];
+  }
 };
 
 /*** Example Usage ***/
@@ -124,5 +131,9 @@ int main() {
   assert(tree.lca(2, 4) == 0);
   assert(tree.lca(2, 6) == -1);
   assert(tree.lca(5, 6) == 5);
+  assert(tree.dist(3, 2) == 2);   // 3-1-2.
+  assert(tree.dist(2, 4) == 3);   // 2-1-0-4.
+  assert(tree.dist(5, 6) == 1);   // 5-6.
+  assert(tree.dist(2, 6) == -1);  // Different trees.
   return 0;
 }

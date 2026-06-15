@@ -18,8 +18,8 @@ solutions.
   and upper triangular matrices should be accessed via the `getl(lu, i, j)` and `getu(lu, i, j)`
   functions. Optionally, a `vector<int>` pointer `p1col` may be passed to return the permutation
   vector `p1col` where `p1col[i]` stores the only column that is equal to 1 in row $i$ of the
-  permutation matrix $P$ (all other columns in row $i$ of $P$ are implicitly 0). The permutation
-  matrix $P$ corresponding to `p1col` satisfies $P a = lu$.
+  permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly 0). The permutation
+  matrix $p$ corresponding to `p1col` satisfies $pa = lu$.
 - `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix
   `a` of real values, and a length $m$ vector `b`, returning 0 if there is one solution or $-1$ if
   there are zero or infinite solutions. If there is exactly one solution, then the vector pointed to

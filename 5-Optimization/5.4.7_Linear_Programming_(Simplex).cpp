@@ -14,6 +14,11 @@ or an unbounded improving direction is found.
   found, $-1$ if there are no feasible solutions, or 1 if the objective is unbounded. If an optimum
   is found, then the vector pointed to by `x` is populated with a dense solution vector.
 
+The implementation uses a two-phase simplex tableau. Phase 1 introduces an artificial variable to
+find a feasible starting basis, which is essential when some constraint bounds are negative. Phase 2
+then optimizes the original objective. The `basis` and `nonbasis` arrays track which variable each
+tableau row or column currently represents, making solution recovery independent of pivot order.
+
 Time Complexity:
 - Polynomial (average) on the number of equations and unknowns, but exponential in the worst case.
 
@@ -22,91 +27,120 @@ Space Complexity:
 
 */
 
-#include <cfloat>
+#include <algorithm>
 #include <cmath>
 #include <vector>
 
-template<class Matrix>
 int simplex_solve(
-    const Matrix &a, const std::vector<double> &b, const std::vector<double> &c,
-    std::vector<double> *x, const bool MAXIMIZE = true, const double EPS = 1e-10
+    const std::vector<std::vector<double>> &a, const std::vector<double> &b,
+    const std::vector<double> &c, std::vector<double> *x, const bool MAXIMIZE = true,
+    const double EPS = 1e-10
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
-  Matrix t(m + 2, std::vector<double>(n + 2));
-  t[1][1] = 0;
-  for (int j = 1; j <= n; j++) {
-    t[1][j + 1] = MAXIMIZE ? c[j - 1] : -c[j - 1];
-  }
-  for (int i = 1; i <= m; i++) {
-    for (int j = 1; j <= n; j++) {
-      t[i + 1][j + 1] = -a[i - 1][j - 1];
+  std::vector<int> basis(m), nonbasis(n + 1);
+  std::vector<std::vector<double>> tab(m + 2, std::vector<double>(n + 2));
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < n; j++) {
+      tab[i][j] = a[i][j];
     }
-    t[i + 1][1] = b[i - 1];
+    basis[i] = n + i;
+    tab[i][n] = -1;
+    tab[i][n + 1] = b[i];
   }
-  for (int j = 1; j <= n; j++) {
-    t[0][j + 1] = j;
+  for (int j = 0; j < n; j++) {
+    nonbasis[j] = j;
+    tab[m][j] = MAXIMIZE ? -c[j] : c[j];
   }
-  for (int i = n + 1; i <= m + n; i++) {
-    t[i - n + 1][0] = i;
-  }
-  for (;;) {
-    int p1 = 0, p2 = 0;
-    double mn = DBL_MAX, xmax = EPS;
-    for (int j = 2; j <= n + 1; j++) {
-      if (t[1][j] > xmax) {
-        p2 = j;
-        xmax = t[1][j];
+  nonbasis[n] = -1;
+  tab[m + 1][n] = 1;
+  auto pivot = [&](int row, int col) {
+    double inv = 1.0 / tab[row][col];
+    for (int i = 0; i < m + 2; i++) {
+      if (i == row || fabs(tab[i][col]) <= EPS) {
+        continue;
+      }
+      double factor = tab[i][col] * inv;
+      for (int j = 0; j < n + 2; j++) {
+        if (j != col) {
+          tab[i][j] -= factor * tab[row][j];
+        }
+      }
+      tab[i][col] = -factor;
+    }
+    for (int j = 0; j < n + 2; j++) {
+      if (j != col) {
+        tab[row][j] *= inv;
       }
     }
-    if (p2 == 0) {
-      break;
-    }
-    for (int i = 2; i <= m + 1; i++) {
-      if (t[i][p2] < -EPS) {
-        double v = fabs(t[i][1] / t[i][p2]);
-        if (mn <= v) {
+    tab[row][col] = inv;
+    std::swap(basis[row], nonbasis[col]);
+  };
+  auto simplex = [&](int phase) {
+    int objective = (phase == 1 ? m + 1 : m);
+    while (true) {
+      int col = -1;
+      for (int j = 0; j <= n; j++) {
+        if (phase == 2 && nonbasis[j] == -1) {
           continue;
         }
-        mn = v;
-        p1 = i;
-      }
-    }
-    if (p1 == 0) {
-      return 1;
-    }
-    std::swap(t[p1][0], t[0][p2]);
-    for (int i = 1; i <= m + 1; i++) {
-      if (i != p1) {
-        for (int j = 1; j <= n + 1; j++) {
-          if (j != p2) {
-            t[i][j] -= t[p1][j] * t[i][p2] / t[p1][p2];
-          }
+        if (col == -1 || tab[objective][j] < tab[objective][col] - EPS ||
+            (fabs(tab[objective][j] - tab[objective][col]) <= EPS && nonbasis[j] < nonbasis[col])) {
+          col = j;
         }
       }
-    }
-    t[p1][p2] = 1.0 / t[p1][p2];
-    for (int j = 1; j <= n + 1; j++) {
-      if (j != p2) {
-        t[p1][j] *= fabs(t[p1][p2]);
+      if (tab[objective][col] >= -EPS) {
+        return true;
       }
-    }
-    for (int i = 1; i <= m + 1; i++) {
-      if (i != p1) {
-        t[i][p2] *= t[p1][p2];
+      int row = -1;
+      for (int i = 0; i < m; i++) {
+        if (tab[i][col] <= EPS) {
+          continue;
+        }
+        double cur = tab[i][n + 1] / tab[i][col];
+        double best = row == -1 ? 0 : tab[row][n + 1] / tab[row][col];
+        if (row == -1 || cur < best - EPS || (fabs(cur - best) <= EPS && basis[i] < basis[row])) {
+          row = i;
+        }
       }
+      if (row == -1) {
+        return false;
+      }
+      pivot(row, col);
     }
-    for (int i = 2; i <= m + 1; i++) {
-      if (t[i][1] < 0) {
-        return -1;
+  };
+  int row = 0;
+  for (int i = 1; i < m; i++) {
+    if (tab[i][n + 1] < tab[row][n + 1]) {
+      row = i;
+    }
+  }
+  if (m > 0 && tab[row][n + 1] < -EPS) {
+    pivot(row, n);
+    if (!simplex(1) || fabs(tab[m + 1][n + 1]) > EPS) {
+      return -1;
+    }
+    for (int i = 0; i < m; i++) {
+      if (basis[i] != -1) {
+        continue;
+      }
+      int col = -1;
+      for (int j = 0; j <= n; j++) {
+        if (fabs(tab[i][j]) > EPS && (col == -1 || nonbasis[j] < nonbasis[col])) {
+          col = j;
+        }
+      }
+      if (col != -1) {
+        pivot(i, col);
       }
     }
   }
+  if (!simplex(2)) {
+    return 1;
+  }
   x->assign(n, 0);
-  for (int j = 1; j <= n; j++) {
-    for (int i = 2; i <= m + 1; i++) {
-      if (fabs(t[i][0] - j) < EPS) {
-        (*x)[j - 1] = t[i][1];
-      }
+  for (int i = 0; i < m; i++) {
+    if (basis[i] < n) {
+      (*x)[basis[i]] = tab[i][n + 1];
     }
   }
   return 0;
@@ -141,5 +175,22 @@ int main() {
     cout << ", " << x[i];
   }
   cout << ")." << endl;
+
+  // Feasible even though the first RHS is negative: x >= 1 and x <= 3.
+  vector<vector<double>> negative_rhs{{-1}, {1}};
+  vector<double> negative_bounds{-1, 3};
+  vector<double> one_var{1};
+  assert(simplex_solve(negative_rhs, negative_bounds, one_var, &x) == 0);
+  assert(fabs(x[0] - 3) < 1e-9);
+
+  // Infeasible: x <= -1 contradicts x >= 0.
+  vector<vector<double>> infeasible{{1}};
+  vector<double> bad_bounds{-1};
+  assert(simplex_solve(infeasible, bad_bounds, one_var, &x) == -1);
+
+  // Unbounded: maximize x subject only to x >= 0.
+  vector<vector<double>> unbounded{{-1}};
+  vector<double> lower_bound{0};
+  assert(simplex_solve(unbounded, lower_bound, one_var, &x) == 1);
   return 0;
 }

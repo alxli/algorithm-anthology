@@ -22,13 +22,14 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <iterator>
 #include <vector>
 
 template<class It>
 auto longest_increasing_subsequence(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
-  int len = 0, n = hi - lo;
+  int len = 0, n = static_cast<int>(hi - lo);
   if (n == 0) {
     return std::vector<T>();
   }
@@ -36,20 +37,19 @@ auto longest_increasing_subsequence(It lo, It hi) {
   // prev[i] = index of the predecessor of element i in its LIS (or -1 if first).
   std::vector<int> prev(n), tail(n);
   for (int i = 0; i < n; i++) {
-    int left = -1, right = len;
-    while (right - left > 1) {
-      int mid = left + (right - left) / 2;
-      if (*(lo + tail[mid]) < *(lo + i)) {
-        left = mid;
-      } else {
-        right = mid;
-      }
+    // Find the tail to extend or improve. Comparing by value through the stored indices keeps
+    // `tail` index-based for reconstruction; swap `<` for `<=` to allow a non-decreasing result.
+    int pos = static_cast<int>(
+        std::lower_bound(
+            tail.begin(), tail.begin() + len, i, [&](int t, int x) { return *(lo + t) < *(lo + x); }
+        ) -
+        tail.begin()
+    );
+    if (pos == len) {
+      len++;
     }
-    if (len < right + 1) {
-      len = right + 1;
-    }
-    prev[i] = right > 0 ? tail[right - 1] : -1;
-    tail[right] = i;
+    prev[i] = pos > 0 ? tail[pos - 1] : -1;
+    tail[pos] = i;
   }
   std::vector<T> res(len);
   for (int i = tail[len - 1]; i != -1; i = prev[i]) {

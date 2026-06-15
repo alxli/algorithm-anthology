@@ -787,12 +787,10 @@ int main() {
 Common axis-aligned rectangle calculations in two dimensions. The functions are templated on the point type \inlinecode{Pt}, which should work with \inlinecode{Point}/\inlinecode{PointD}/\inlinecode{PointI} from 7.1.1, or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields.
 
 \begin{compactitem}
-  \item \inlinecode{point\_in\_rectangle(p, v, w, h)} returns whether point \inlinecode{p} lies inside the axis-aligned rectangle with corner \inlinecode{v}, width \inlinecode{w}, and height \inlinecode{h}. Negative widths and heights are supported.
-  \item \inlinecode{point\_in\_rectangle(p, a, b)} returns whether point \inlinecode{p} lies inside the axis-aligned rectangle with opposite corners \inlinecode{a} and \inlinecode{b}.
-  \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q)} computes the intersection of two axis-aligned rectangles, where \inlinecode{a1}/\inlinecode{b1} and \inlinecode{a2}/\inlinecode{b2} are opposite-corner pairs. Returns -1 if the rectangles are disjoint, 0 if they partially intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle is completely inside the first. If an intersection exists, its lower-left and upper-right corners are stored in \inlinecode{p} and \inlinecode{q} when those pointers are non-null.
+  \item \inlinecode{point\_in\_rectangle(p, v, w, h, EDGE\_IS\_INSIDE)} returns whether point \inlinecode{p} lies inside the axis-aligned rectangle with corner \inlinecode{v}, width \inlinecode{w}, and height \inlinecode{h}. Negative widths and heights are supported. The \inlinecode{EDGE\_IS\_INSIDE} flag (default \inlinecode{true}) controls whether boundary points count.
+  \item \inlinecode{point\_in\_rectangle(p, a, b, EDGE\_IS\_INSIDE)} returns whether point \inlinecode{p} lies inside the axis-aligned rectangle with opposite corners \inlinecode{a} and \inlinecode{b}.
+  \item \inlinecode{rectangle\_intersection(a1, b1, a2, b2, \&p, \&q, EDGE\_IS\_INSIDE)} computes the intersection of two axis-aligned rectangles, where \inlinecode{a1}/\inlinecode{b1} and \inlinecode{a2}/\inlinecode{b2} are opposite-corner pairs. Returns -1 if the rectangles are disjoint, 0 if they partially intersect, 1 if the first rectangle is completely inside the second, and 2 if the second rectangle is completely inside the first. If an intersection exists, its lower-left and upper-right corners are stored in \inlinecode{p} and \inlinecode{q} when those pointers are non-null. The \inlinecode{EDGE\_IS\_INSIDE} flag (default \inlinecode{true}) controls whether boundary-only contact counts as intersecting.
 \end{compactitem}
-
-Boundary behavior is controlled independently inside each function by \inlinecode{EDGE\_IS\_INSIDE}. If true, rectangle edges count as inside/intersecting; if false, boundary-only contact is treated as outside/disjoint.
 
 For integer-coordinate inputs, comparisons are exact as long as intermediate coordinate additions, subtractions, and min/max values do not overflow. Floating-point inputs use EPS-based comparisons.
 
@@ -815,30 +813,31 @@ const double EPS = 1e-9;
 #define GE(a, b) ((a) >= (b) - EPS)
 
 template<class Pt, class T>
-bool point_in_rectangle(const Pt &p, const Pt &v, const T &w, const T &h) {
-  static const bool EDGE_IS_INSIDE = true;
+bool point_in_rectangle(
+    const Pt &p, const Pt &v, const T &w, const T &h, bool EDGE_IS_INSIDE = true
+) {
   if (w < 0) {
-    return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h);
+    return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h, EDGE_IS_INSIDE);
   }
   if (h < 0) {
-    return point_in_rectangle(p, Pt(v.x, v.y + h), w, -h);
+    return point_in_rectangle(p, Pt(v.x, v.y + h), w, -h, EDGE_IS_INSIDE);
   }
   return EDGE_IS_INSIDE ? (GE(p.x, v.x) && LE(p.x, v.x + w) && GE(p.y, v.y) && LE(p.y, v.y + h))
                         : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
 }
 
 template<class Pt>
-bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b) {
+bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, bool EDGE_IS_INSIDE = true) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
-  return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl);
+  return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl, EDGE_IS_INSIDE);
 }
 
 template<class Pt>
 int rectangle_intersection(
-    const Pt &a1, const Pt &b1, const Pt &a2, const Pt &b2, Pt *p = nullptr, Pt *q = nullptr
+    const Pt &a1, const Pt &b1, const Pt &a2, const Pt &b2, Pt *p = nullptr, Pt *q = nullptr,
+    bool EDGE_IS_INSIDE = true
 ) {
-  static const bool EDGE_IS_INSIDE = true;
   // Normalize each rectangle to [xl, xh] x [yl, yh] with coordinate-wise min/max only.
   // (Using auto keeps the native coordinate type, so integer rectangles stay exact.)
   auto xl1 = std::min(a1.x, b1.x), xh1 = std::max(a1.x, b1.x);
@@ -882,9 +881,11 @@ struct Point {
 
 int main() {
   assert(point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2));
+  assert(!point_in_rectangle(Point(0, -1), Point(0, -3), 3, 2, false));
   assert(point_in_rectangle(Point(2, -2), Point(3, -3), -3, 2));
   assert(!point_in_rectangle(Point(0, 0), Point(3, -1), -3, -2));
   assert(point_in_rectangle(Point(2, -2), Point(3, -3), Point(0, -1)));
+  assert(!point_in_rectangle(Point(0, -1), Point(3, -3), Point(0, -1), false));
   assert(!point_in_rectangle(Point(-1, -2), Point(3, -3), Point(0, -1)));
 
   Point p, q;
@@ -895,6 +896,10 @@ int main() {
   assert(p == Point(0, 0) && q == Point(1, 1));
   assert(2 == rectangle_intersection(Point(0, 5), Point(5, 7), Point(1, 6), Point(2, 5), &p, &q));
   assert(p == Point(1, 5) && q == Point(2, 6));
+  assert(
+      -1 ==
+      rectangle_intersection(Point(0, 0), Point(1, 1), Point(1, 1), Point(2, 2), &p, &q, false)
+  );
   return 0;
 }
 \end{lstlisting}
@@ -1217,8 +1222,8 @@ Intersection calculations in two dimensions for straight lines and line segments
 \begin{compactitem}
   \item \inlinecode{line\_intersection(a1, b1, c1, a2, b2, c2, \&p)} intersects lines $a_1 x + b_1 y + c_1 = 0$ and $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), 0 (one point, stored into \inlinecode{p}), or 1 (identical).
   \item \inlinecode{line\_intersection(p1, p2, p3, p4, \&p)} intersects the infinite lines through \inlinecode{p1}-\inlinecode{p2} and \inlinecode{p3}-\inlinecode{p4}.
-  \item \inlinecode{seg\_intersection(a, b, c, d, \&p, \&q, touch\_is\_intersect)} intersects segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, returning $-1$ (none), 0 (one point), or 1 (overlapping segment). The \inlinecode{touch\_is\_intersect} flag (default \inlinecode{true}) controls whether segments that meet only at an endpoint count as intersecting. If the intersection is a point (and \inlinecode{p} is not \inlinecode{nullptr}), it will be stored into \inlinecode{p}. If the intersection is an overlapping segment (and \inlinecode{p} and \inlinecode{q} are not \inlinecode{nullptr}) then their endpoints will be stored into \inlinecode{p} and \inlinecode{q}. The output types \inlinecode{p} and \inlinecode{q} must be floating-point points.
-  \item \inlinecode{seg\_intersection(a, b, c, d, touch\_is\_intersect)} is a simplified, detection-only version of the above. Both versions are exact for detection if the input \inlinecode{Pt} type is integral.
+  \item \inlinecode{seg\_intersection(a, b, c, d, \&p, \&q, TOUCH\_IS\_INTERSECT)} intersects segments \inlinecode{a}-\inlinecode{b} and \inlinecode{c}-\inlinecode{d}, returning $-1$ (none), 0 (one point), or 1 (overlapping segment). The \inlinecode{TOUCH\_IS\_INTERSECT} flag (default \inlinecode{true}) controls whether segments that meet only at an endpoint count as intersecting. If the intersection is a point (and \inlinecode{p} is not \inlinecode{nullptr}), it will be stored into \inlinecode{p}. If the intersection is an overlapping segment (and \inlinecode{p} and \inlinecode{q} are not \inlinecode{nullptr}) then their endpoints will be stored into \inlinecode{p} and \inlinecode{q}. The output types \inlinecode{p} and \inlinecode{q} must be floating-point points.
+  \item \inlinecode{seg\_intersection(a, b, c, d, TOUCH\_IS\_INTERSECT)} is a simplified, detection-only version of the above. Both versions are exact for detection if the input \inlinecode{Pt} type is integral.
   \item \inlinecode{closest\_point(a, b, c, p)} returns the closest point on line $ax + by + c = 0$ to point \inlinecode{p}.
 \end{compactitem}
 
@@ -1286,7 +1291,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
 template<class Pt, class OutPt>
 int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, OutPt *p = nullptr, OutPt *q = nullptr,
-    bool touch_is_intersect = true
+    const bool TOUCH_IS_INTERSECT = true
 ) {
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
@@ -1294,7 +1299,7 @@ int seg_intersection(
   auto ab2 = ab_x * ab_x + ab_y * ab_y;
   auto cd2 = cd_x * cd_x + cd_y * cd_y;
   if (EQ(ab2, 0)) {
-    if (touch_is_intersect && point_on_segment(a, c, d)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) {
       if (p != nullptr) {
         p->x = static_cast<double>(a.x);
         p->y = static_cast<double>(a.y);
@@ -1304,7 +1309,7 @@ int seg_intersection(
     return -1;  // Degenerate: first segment is a point not intersecting the second segment.
   }
   if (EQ(cd2, 0)) {
-    if (touch_is_intersect && point_on_segment(c, a, b)) {
+    if (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) {
       if (p != nullptr) {
         p->x = static_cast<double>(c.x);
         p->y = static_cast<double>(c.y);
@@ -1318,7 +1323,7 @@ int seg_intersection(
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     Pt res1 = std::max(std::min(a, b), std::min(c, d));
     Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    bool overlap = touch_is_intersect ? !(res2 < res1) : (res1 < res2);
+    bool overlap = TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2);
     if (overlap) {
       if (res1 == res2) {
         if (p != nullptr) {
@@ -1342,12 +1347,12 @@ int seg_intersection(
   }
   auto t_num = ac_x * cd_y - ac_y * cd_x;
   bool c1_pos = c1 > 0;
-  bool t_ok = c1_pos ? (touch_is_intersect ? (LE(0, t_num) && LE(t_num, c1))
+  bool t_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, t_num) && LE(t_num, c1))
                                            : (LT(0, t_num) && LT(t_num, c1)))
-                     : (touch_is_intersect ? (LE(c1, t_num) && LE(t_num, 0))
+                     : (TOUCH_IS_INTERSECT ? (LE(c1, t_num) && LE(t_num, 0))
                                            : (LT(c1, t_num) && LT(t_num, 0)));
-  bool u_ok = c1_pos ? (touch_is_intersect ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
-                     : (touch_is_intersect ? (LE(c1, c2) && LE(c2, 0)) : (LT(c1, c2) && LT(c2, 0)));
+  bool u_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
+                     : (TOUCH_IS_INTERSECT ? (LE(c1, c2) && LE(c2, 0)) : (LT(c1, c2) && LT(c2, 0)));
   if (t_ok && u_ok) {
     if (p != nullptr) {
       double t = static_cast<double>(t_num) / c1;
@@ -1363,7 +1368,7 @@ int seg_intersection(
 // Alternatively, just call the version above and pass static_cast<Pt *>(nullptr) for p and q.
 template<class Pt>
 int seg_intersection(
-    const Pt &a, const Pt &b, const Pt &c, const Pt &d, bool touch_is_intersect = true
+    const Pt &a, const Pt &b, const Pt &c, const Pt &d, bool TOUCH_IS_INTERSECT = true
 ) {
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
@@ -1371,17 +1376,17 @@ int seg_intersection(
   auto ab2 = ab_x * ab_x + ab_y * ab_y;
   auto cd2 = cd_x * cd_x + cd_y * cd_y;
   if (EQ(ab2, 0)) {
-    return (touch_is_intersect && point_on_segment(a, c, d)) ? 0 : -1;
+    return (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) ? 0 : -1;
   }
   if (EQ(cd2, 0)) {
-    return (touch_is_intersect && point_on_segment(c, a, b)) ? 0 : -1;
+    return (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) ? 0 : -1;
   }
   auto c1 = ab_x * cd_y - ab_y * cd_x;
   auto c2 = ac_x * ab_y - ac_y * ab_x;
   if (EQ(c1, 0) && EQ(c2, 0)) {  // Collinear.
     Pt res1 = std::max(std::min(a, b), std::min(c, d));
     Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    bool overlap = touch_is_intersect ? !(res2 < res1) : (res1 < res2);
+    bool overlap = TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2);
     if (overlap) {
       return (res1 == res2) ? 0 : 1;
     }
@@ -1392,12 +1397,12 @@ int seg_intersection(
   }
   auto t_num = ac_x * cd_y - ac_y * cd_x;
   bool c1_pos = c1 > 0;
-  bool t_ok = c1_pos ? (touch_is_intersect ? (LE(0, t_num) && LE(t_num, c1))
+  bool t_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, t_num) && LE(t_num, c1))
                                            : (LT(0, t_num) && LT(t_num, c1)))
-                     : (touch_is_intersect ? (LE(c1, t_num) && LE(t_num, 0))
+                     : (TOUCH_IS_INTERSECT ? (LE(c1, t_num) && LE(t_num, 0))
                                            : (LT(c1, t_num) && LT(t_num, 0)));
-  bool u_ok = c1_pos ? (touch_is_intersect ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
-                     : (touch_is_intersect ? (LE(c1, c2) && LE(c2, 0)) : (LT(c1, c2) && LT(c2, 0)));
+  bool u_ok = c1_pos ? (TOUCH_IS_INTERSECT ? (LE(0, c2) && LE(c2, c1)) : (LT(0, c2) && LT(c2, c1)))
+                     : (TOUCH_IS_INTERSECT ? (LE(c1, c2) && LE(c2, 0)) : (LT(c1, c2) && LT(c2, 0)));
   return (t_ok && u_ok) ? 0 : -1;
 }
 
@@ -1447,19 +1452,17 @@ int main() {
   assert(line_intersection(Point(0, 0), Point(1, 1), Point(0, 4), Point(4, 0), &p) == 0);
   assert(p == Point(2, 2));
 
-  {
-#define test(a, b, c, d, e, f, g, h) \
-  seg_intersection(Point(a, b), Point(c, d), Point(e, f), Point(g, h), &p, &q)
-
-    assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && p == Point(0, 0));
-    assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && p == Point(2, 2));
-    assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && p == Point(-2, 0));
-    assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && p == Point(4, 4));
-    assert(1 == test(10, 10, 0, 0, 2, 2, 6, 6));
-    assert(p == Point(2, 2) && q == Point(6, 6));
-    assert(-1 == test(6, 8, 8, 10, 12, 12, 4, 4));
-    assert(-1 == test(-4, 2, -8, 8, 0, 0, -4, 6));
-  }
+  auto test = [&](double a, double b, double c, double d, double e, double f, double g, double h) {
+    return seg_intersection(Point(a, b), Point(c, d), Point(e, f), Point(g, h), &p, &q);
+  };
+  assert(0 == test(-4, 0, 4, 0, 0, -4, 0, 4) && p == Point(0, 0));
+  assert(0 == test(0, 0, 10, 10, 2, 2, 16, 4) && p == Point(2, 2));
+  assert(0 == test(-2, 2, -2, -2, -2, 0, 0, 0) && p == Point(-2, 0));
+  assert(0 == test(0, 4, 4, 4, 4, 0, 4, 8) && p == Point(4, 4));
+  assert(1 == test(10, 10, 0, 0, 2, 2, 6, 6));
+  assert(p == Point(2, 2) && q == Point(6, 6));
+  assert(-1 == test(6, 8, 8, 10, 12, 12, 4, 4));
+  assert(-1 == test(-4, 2, -8, 8, 0, 0, -4, 6));
 
   assert(Point(2.5, 2.5) == closest_point(-1.0, -1.0, 5.0, Point(0, 0)));
   assert(Point(3, 0) == closest_point(1.0, 0.0, -3.0, Point(0, 0)));
@@ -1470,7 +1473,7 @@ int main() {
   assert(seg_intersection(PointI(0, 0), PointI(4, 4), PointI(0, 4), PointI(4, 0), &p) == 0);
   assert(p == Point(2, 2));
 
-  // touch_is_intersect = false treats endpoint-only contact as non-intersecting. The T-junction
+  // TOUCH_IS_INTERSECT = false treats endpoint-only contact as non-intersecting. The T-junction
   // and shared-endpoint cases below intersect by default but are rejected when the flag is off.
   assert(0 == seg_intersection(Point(0, 4), Point(4, 4), Point(4, 0), Point(4, 8), &p, &q));
   assert(-1 == seg_intersection(Point(0, 4), Point(4, 4), Point(4, 0), Point(4, 8), &p, &q, false));
@@ -1861,7 +1864,7 @@ Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3)
 Given a point \inlinecode{p} and a polygon, determines whether \inlinecode{p} lies inside using ray casting. A ray cast from \inlinecode{p} must cross the polygon's boundary an odd number of times exactly when \inlinecode{p} is inside, so the function counts crossings between a horizontal ray and each polygon edge. The function is templated on the point type \inlinecode{Pt}. The local \inlinecode{Point} struct (\inlinecode{double} coordinates) is the default; replace it with \inlinecode{Point}/\inlinecode{PointD}/ \inlinecode{PointI} from 7.1.1 or any struct with numeric \inlinecode{.x} and \inlinecode{.y} fields. All comparisons are exact (no epsilon): the ray-crossing parity needs a consistent comparison to be correct, and the result is exact for integer-coordinate points.
 
 \begin{compactitem}
-  \item \inlinecode{point\_in\_polygon(p, lo, hi)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range \inlinecode{[lo, hi)} of points in either clockwise or counter-clockwise order. If \inlinecode{p} lies exactly on an edge or vertex, the result will depend on the value of \inlinecode{EDGE\_IS\_INSIDE}.
+  \item \inlinecode{point\_in\_polygon(p, lo, hi, EDGE\_IS\_INSIDE)} returns whether \inlinecode{p} lies within the polygon with vertices specified by the range \inlinecode{[lo, hi)} of points in either clockwise or counter-clockwise order. The \inlinecode{EDGE\_IS\_INSIDE} flag (default \inlinecode{true}) controls whether points exactly on an edge or vertex count as inside.
 \end{compactitem}
 
 Overflow warning: the edge orientation test forms a cross product that grows like the squared coordinate magnitude. For integer point types use a 64-bit coordinate type (e.g. \inlinecode{PointL} from 7.1.1) once coordinates exceed \textasciitilde{}46000.
@@ -1881,8 +1884,7 @@ auto cross(const Pt &a, const Pt &b, const Pt &o) {
 
 // Detection is exact for integer-coordinate Pt.
 template<class Pt, class It>
-bool point_in_polygon(const Pt &p, It lo, It hi) {
-  static const bool EDGE_IS_INSIDE = true;
+bool point_in_polygon(const Pt &p, It lo, It hi, bool EDGE_IS_INSIDE = true) {
   if (lo == hi) {
     return false;
   }
@@ -1925,12 +1927,14 @@ int main() {
   vector<Point> poly{Point(-1, 3), Point(1, 3), Point(2, 1), Point(0, 0)};
   assert(point_in_polygon(Point(1, 2), poly.begin(), poly.end()));
   assert(point_in_polygon(Point(0, 3), poly.begin(), poly.end()));
+  assert(!point_in_polygon(Point(0, 3), poly.begin(), poly.end(), false));
   assert(!point_in_polygon(Point(0, 3.01), poly.begin(), poly.end()));
   assert(!point_in_polygon(Point(2, 2), poly.begin(), poly.end()));
 
   // Integer-coordinate points: exact detection.
   vector<PointI> ipoly{{0, 0}, {4, 0}, {4, 4}, {0, 4}};
   assert(point_in_polygon(PointI(2, 2), ipoly.begin(), ipoly.end()));
+  assert(!point_in_polygon(PointI(4, 2), ipoly.begin(), ipoly.end(), false));
   assert(!point_in_polygon(PointI(5, 2), ipoly.begin(), ipoly.end()));
   return 0;
 }
@@ -2371,7 +2375,7 @@ int main() {
 Given a list of line segments in two dimensions, determine whether any pair of segments intersect using a sweep line algorithm. Endpoint events are processed from left to right while an ordered set maintains the segments currently crossing the sweep line, sorted by $y$; only segments that become adjacent in this set need to be tested, since any leftmost intersection must involve a pair that is adjacent just before it occurs. The input type \inlinecode{Segment\textless{}Pt\textgreater{}} is templated on the point type, so endpoints may be integer (\inlinecode{PointI}) or floating-point (\inlinecode{Point}/\inlinecode{PointD}), but must support \inlinecode{operator\textless{}} which orders points lexicographically. The cross-product sign tests in \inlinecode{seg\_intersection} are exact for integer endpoints, so intersection detection is exact.
 
 \begin{compactitem}
-  \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2, touch\_is\_intersect)} returns whether any pair of segments intersect given a range \inlinecode{[lo, hi)} of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments will be stored into pointers \inlinecode{res1} and \inlinecode{res2}. The \inlinecode{touch\_is\_intersect} flag (default \inlinecode{true}) controls whether segments that meet only at an endpoint count as intersecting; set it to \inlinecode{false} to report proper crossings only, as when testing a polygon for self-intersection among edges that legitimately share endpoints.
+  \item \inlinecode{find\_intersection(lo, hi, \&res1, \&res2, TOUCH\_IS\_INTERSECT)} returns whether any pair of segments intersect given a range \inlinecode{[lo, hi)} of segments, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators. If an intersection is found, then one such pair of segments will be stored into pointers \inlinecode{res1} and \inlinecode{res2}. The \inlinecode{TOUCH\_IS\_INTERSECT} flag (default \inlinecode{true}) controls whether segments that meet only at an endpoint count as intersecting; set it to \inlinecode{false} to report proper crossings only, as when testing a polygon for self-intersection among edges that legitimately share endpoints.
 \end{compactitem}
 
 Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross products, but the $y$-ordering cross-multiplication (\inlinecode{ay * bdx}) is cubic in the coordinate magnitude. With 32-bit \inlinecode{int} endpoints this overflows once coordinates reach the low thousands, so use a 64-bit (\inlinecode{int64\_t}) coordinate type for any non-trivial integer inputs.
@@ -2398,7 +2402,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
 // Simplified detection-only version of `seg_intersection()` from 7.2.3 (exact for integral Pt).
 template<class Pt>
 int seg_intersection(
-    const Pt &a, const Pt &b, const Pt &c, const Pt &d, bool touch_is_intersect = true
+    const Pt &a, const Pt &b, const Pt &c, const Pt &d, const bool TOUCH_IS_INTERSECT = true
 ) {
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;
@@ -2406,17 +2410,17 @@ int seg_intersection(
   auto ab2 = ab_x * ab_x + ab_y * ab_y;
   auto cd2 = cd_x * cd_x + cd_y * cd_y;
   if (ab2 == 0) {
-    return (touch_is_intersect && point_on_segment(a, c, d)) ? 0 : -1;
+    return (TOUCH_IS_INTERSECT && point_on_segment(a, c, d)) ? 0 : -1;
   }
   if (cd2 == 0) {
-    return (touch_is_intersect && point_on_segment(c, a, b)) ? 0 : -1;
+    return (TOUCH_IS_INTERSECT && point_on_segment(c, a, b)) ? 0 : -1;
   }
   auto c1 = ab_x * cd_y - ab_y * cd_x;
   auto c2 = ac_x * ab_y - ac_y * ab_x;
   if (c1 == 0 && c2 == 0) {
     Pt res1 = std::max(std::min(a, b), std::min(c, d));
     Pt res2 = std::min(std::max(a, b), std::max(c, d));
-    bool overlap = touch_is_intersect ? !(res2 < res1) : (res1 < res2);
+    bool overlap = TOUCH_IS_INTERSECT ? !(res2 < res1) : (res1 < res2);
     if (overlap) {
       return (res1 == res2) ? 0 : 1;
     }
@@ -2428,10 +2432,10 @@ int seg_intersection(
   auto t_num = ac_x * cd_y - ac_y * cd_x;
   bool c1_pos = c1 > 0;
   bool t_between_01 =
-      c1_pos ? (touch_is_intersect ? (0 <= t_num && t_num <= c1) : (0 < t_num && t_num < c1))
-             : (touch_is_intersect ? (c1 <= t_num && t_num <= 0) : (c1 < t_num && t_num < 0));
-  bool u_between_01 = c1_pos ? (touch_is_intersect ? (0 <= c2 && c2 <= c1) : (0 < c2 && c2 < c1))
-                             : (touch_is_intersect ? (c1 <= c2 && c2 <= 0) : (c1 < c2 && c2 < 0));
+      c1_pos ? (TOUCH_IS_INTERSECT ? (0 <= t_num && t_num <= c1) : (0 < t_num && t_num < c1))
+             : (TOUCH_IS_INTERSECT ? (c1 <= t_num && t_num <= 0) : (c1 < t_num && t_num < 0));
+  bool u_between_01 = c1_pos ? (TOUCH_IS_INTERSECT ? (0 <= c2 && c2 <= c1) : (0 < c2 && c2 < c1))
+                             : (TOUCH_IS_INTERSECT ? (c1 <= c2 && c2 <= 0) : (c1 < c2 && c2 < 0));
   return (t_between_01 && u_between_01) ? 0 : -1;
 }
 
@@ -2444,13 +2448,15 @@ struct Segment {
 };
 
 template<class Pt>
-bool intersects(const Segment<Pt> &s1, const Segment<Pt> &s2, bool touch_is_intersect = true) {
-  return seg_intersection(s1.p, s1.q, s2.p, s2.q, touch_is_intersect) >= 0;
+bool intersects(
+    const Segment<Pt> &s1, const Segment<Pt> &s2, const bool TOUCH_IS_INTERSECT = true
+) {
+  return seg_intersection(s1.p, s1.q, s2.p, s2.q, TOUCH_IS_INTERSECT) >= 0;
 }
 
 // Seg is deduced from the output pointers (e.g. Segment<PointI>* or Segment<PointD>*).
 template<class It, class Seg>
-bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, bool touch_is_intersect = true) {
+bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, const bool TOUCH_IS_INTERSECT = true) {
   using Pt = std::decay_t<decltype(lo->p)>;
   struct Event {
     Pt p;
@@ -2510,12 +2516,12 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, bool touch_is_interse
       auto it = s.insert(seg).first;
       position[seg - lo] = it;
       auto next = it;
-      if (++next != s.end() && intersects(**next, *seg, touch_is_intersect)) {
+      if (++next != s.end() && intersects(**next, *seg, TOUCH_IS_INTERSECT)) {
         *res1 = **next;
         *res2 = *seg;
         return true;
       }
-      if (it != s.begin() && intersects(**--it, *seg, touch_is_intersect)) {
+      if (it != s.begin() && intersects(**--it, *seg, TOUCH_IS_INTERSECT)) {
         *res1 = **it;
         *res2 = *seg;
         return true;
@@ -2525,7 +2531,7 @@ bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, bool touch_is_interse
       auto next = it;
       if (++next != s.end() && it != s.begin()) {
         auto prev = it;
-        if (intersects(**next, **--prev, touch_is_intersect)) {
+        if (intersects(**next, **--prev, TOUCH_IS_INTERSECT)) {
           *res1 = **next;
           *res2 = **prev;
           return true;
@@ -2585,7 +2591,7 @@ int main() {
     };
     assert(!find_intersection(disjoint.begin(), disjoint.end(), &res1, &res2));
   }
-  {  // touch_is_intersect = false reports proper crossings only, ignoring shared endpoints.
+  {  // TOUCH_IS_INTERSECT = false reports proper crossings only, ignoring shared endpoints.
     vector<Segment<PointI>> shared{
         Segment<PointI>({0, 0}, {2, 2}), Segment<PointI>({2, 2}, {4, 0})
     };
@@ -2753,7 +2759,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
          LE(std::min(a.y, b.y), p.y) && LE(p.y, std::max(a.y, b.y));
 }
 
-// Specialized version of seg_intersection() from 7.2.3, simplified for touch_is_intersect = true,
+// Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = true,
 // returning -1 for no intersection, 0 for one intersection point, 1 for positive length overlap.
 template<class Pt>
 int seg_intersection1(
@@ -2997,7 +3003,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-// Specialized version of seg_intersection() from 7.2.3, simplified for touch_is_intersect = false,
+// Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = false,
 // i.e. we're detecting proper crossings of two non-parallel segments whose interiors intersect.
 template<class Pt>
 bool proper_seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
@@ -3267,7 +3273,7 @@ std::pair<Edge *, Edge *> build_triangulation(
   int mid = lo + (hi - lo) / 2;
   auto [ldo, ldi] = build_triangulation(p, lo, mid, pool);
   auto [rdi, rdo] = build_triangulation(p, mid + 1, hi, pool);
-  for (;;) {
+  while (true) {
     if (left_of(rdi->origin, ldi)) {
       ldi = ldi->lnext();
     } else if (right_of(ldi->origin, rdi)) {
@@ -3283,7 +3289,7 @@ std::pair<Edge *, Edge *> build_triangulation(
   if (rdi->origin == rdo->origin) {
     rdo = base;
   }
-  for (;;) {
+  while (true) {
     Edge *lcand = base->rev()->onext;
     if (right_of(lcand->dest(), base)) {
       while (in_circle(base->dest(), base->origin, lcand->dest(), lcand->onext->dest())) {

@@ -35,7 +35,7 @@ const double EPS = 1e-9;
 #define LT(a, b) ((a) < (b) - EPS)
 #define LE(a, b) ((a) <= (b) + EPS)
 
-// Specialized version of seg_intersection() from 7.2.3, simplified for touch_is_intersect = false,
+// Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = false,
 // i.e. we're detecting proper crossings of two non-parallel segments whose interiors intersect.
 template<class Pt>
 bool proper_seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {

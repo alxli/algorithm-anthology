@@ -15,7 +15,7 @@ where `value == true` means the variable itself and `value == false` means its n
 - `add_true(a)` forces literal `a` to be true.
 - `add_false(a)` forces literal `a` to be false.
 - `add(variable, value)` forces a variable to equal `value`.
-- `add(x, xval, y, yval)` adds the clause $(`x` == `xval` \lor `y` == `yval`)$.
+- `add(x, xval, y, yval)` adds the clause $(`x` = `xval` \lor `y` = `yval`)$.
 - `satisfiable()` returns whether all added clauses can be satisfied and stores one valid assignment
   in `answer`.
 

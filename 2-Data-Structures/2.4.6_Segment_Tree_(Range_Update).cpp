@@ -33,11 +33,16 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
   element under that node qualifies (e.g. for the default min tree, `pred(v) = (v <= x)` finds the
   leftmost element `<= x`).
 - `find_last(lo, hi, pred)` is the analogous query returning the largest such index.
+- `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
+  range `[lo, hi)` satisfies `pred`, or `size()` if the predicate remains true to the end.
+- `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
+  range `[lo, hi)` satisfies `pred`, or 0 if the predicate remains true to the beginning.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
 - O(1) per call to `size()`.
-- O(log n) per call to `at()`, `update()`, `query()`, `find_first()`, and `find_last()`.
+- O(log n) per call to `at()`, `update()`, `query()`, `find_first()`, `find_last()`,
+  `max_right()`, and `min_left()`.
 
 Space Complexity:
 - O(n) for storage of the array elements.
@@ -48,6 +53,7 @@ Space Complexity:
 
 #include <algorithm>
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 template<class T>
@@ -158,6 +164,48 @@ class LazySegTree {
     return res != -1 ? res : find_last(i * 2 + 1, lo, mid, tgt_lo, tgt_hi, pred);
   }
 
+  template<class Pred>
+  int max_right(int i, int lo, int hi, int tgt_lo, const Pred &pred, std::optional<T> &acc) {
+    push_delta(i, lo, hi);
+    if (hi < tgt_lo) {
+      return -1;
+    }
+    if (tgt_lo <= lo) {
+      T next = acc ? combine(*acc, value[i]) : value[i];
+      if (pred(next)) {
+        acc = next;
+        return -1;
+      }
+      if (lo == hi) {
+        return lo;
+      }
+    }
+    int mid = lo + (hi - lo) / 2;
+    int res = max_right(i * 2 + 1, lo, mid, tgt_lo, pred, acc);
+    return res != -1 ? res : max_right(i * 2 + 2, mid + 1, hi, tgt_lo, pred, acc);
+  }
+
+  template<class Pred>
+  int min_left(int i, int lo, int hi, int tgt_hi, const Pred &pred, std::optional<T> &acc) {
+    push_delta(i, lo, hi);
+    if (tgt_hi <= lo) {
+      return -1;
+    }
+    if (hi < tgt_hi) {
+      T next = acc ? combine(value[i], *acc) : value[i];
+      if (pred(next)) {
+        acc = next;
+        return -1;
+      }
+      if (lo == hi) {
+        return lo + 1;
+      }
+    }
+    int mid = lo + (hi - lo) / 2;
+    int res = min_left(i * 2 + 2, mid + 1, hi, tgt_hi, pred, acc);
+    return res != -1 ? res : min_left(i * 2 + 1, lo, mid, tgt_hi, pred, acc);
+  }
+
  public:
   explicit LazySegTree(int n, const T &v = T())
       : len(n), value(4 * len), delta(4 * len), pending(4 * len, false) {
@@ -188,6 +236,20 @@ class LazySegTree {
   template<class Pred>
   int find_last(int lo, int hi, const Pred &pred) {
     return find_last(0, 0, len - 1, lo, hi, pred);
+  }
+
+  template<class Pred>
+  int max_right(int lo, const Pred &pred) {
+    std::optional<T> acc;
+    int res = max_right(0, 0, len - 1, lo, pred, acc);
+    return res == -1 ? len : res;
+  }
+
+  template<class Pred>
+  int min_left(int hi, const Pred &pred) {
+    std::optional<T> acc;
+    int res = min_left(0, 0, len - 1, hi, pred, acc);
+    return res == -1 ? 0 : res;
   }
 };
 
@@ -227,5 +289,7 @@ int main() {
   assert(t.find_first(0, 4, at_most_1) == 3);  // only index 3 (value 1) qualifies
   assert(t.find_last(0, 4, at_most_1) == 3);
   assert(t.find_first(0, 2, at_most_1) == -1);  // no value <= 1 in [0, 2]
+  assert(t.max_right(0, [](int mn) { return mn > 1; }) == 3);
+  assert(t.min_left(5, [](int mn) { return mn > 1; }) == 4);
   return 0;
 }

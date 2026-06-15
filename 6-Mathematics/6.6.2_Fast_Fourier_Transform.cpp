@@ -15,15 +15,16 @@ hold. When exact results modulo a prime are required, or coefficients are large,
 theoretic transform; use the FFT for real-valued convolution or big-integer multiplication.
 
 - `fft(a, invert)` transforms the complex vector `a` in place, whose length must be a power of two.
-  The forward transform uses `invert == false`; the inverse uses `invert == true`.
+  The forward transform uses `invert = false`; the inverse uses `invert = true`.
 - `convolve(a, b)` returns the convolution of two integer sequences `a` and `b`, that is, the
   coefficients of the product of the two polynomials whose coefficients are the inputs. The result
   has length `a.size() + b.size() - 1`, or is empty if either input is empty, with each entry
-  rounded to the nearest integer.
+  rounded to the nearest integer. Small inputs use direct multiplication to avoid FFT overhead.
 
 Time Complexity:
 - O(n log n) per call to `fft()`, where $n$ is the length of the vector.
-- O(n log n) per call to `convolve()`, where $n$ is the size of the result.
+- O(|a||b|) for the small-input branch of `convolve()`, otherwise O(n log n), where $n$ is the
+  padded transform length.
 
 Space Complexity:
 - O(1) auxiliary for `fft()`, transforming in place.
@@ -31,6 +32,7 @@ Space Complexity:
 
 */
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
 #include <cstdint>
@@ -38,6 +40,7 @@ Space Complexity:
 
 typedef std::complex<double> cd;
 const double PI = acos(-1.0);
+const int NAIVE_CUTOFF = 150;
 
 void fft(std::vector<cd> &a, bool invert) {
   int n = static_cast<int>(a.size());
@@ -76,6 +79,15 @@ std::vector<int64_t> convolve(const std::vector<int64_t> &a, const std::vector<i
     return {};
   }
   int result_size = a.size() + b.size() - 1;
+  if (std::min(a.size(), b.size()) < NAIVE_CUTOFF) {
+    std::vector<int64_t> res(result_size);
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
+      for (int j = 0; j < static_cast<int>(b.size()); j++) {
+        res[i + j] += a[i] * b[j];
+      }
+    }
+    return res;
+  }
   int n = 1;
   while (n < result_size) {
     n <<= 1;
@@ -106,5 +118,8 @@ int main() {
   vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
   vector<int64_t> c = convolve(a, b);
   assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
+  vector<int64_t> ones(160, 1);
+  vector<int64_t> d = convolve(ones, ones);
+  assert(d[0] == 1 && d[159] == 160 && d[318] == 1);
   return 0;
 }

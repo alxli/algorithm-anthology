@@ -1,29 +1,32 @@
 /*
 
 Converts a matrix to reduced row echelon form using Gaussian elimination to solve a system of linear
-equations as well as compute the determinant. Each round finds a row with a nonzero entry in the
-current leading column, normalizes that row, and subtracts multiples of it from every other row to
-clear the column. In practice, this method is prone to rounding error on certain matrices. For a
-more accurate algorithm for solving systems of linear equations, LU decomposition with row partial
-pivoting should be used.
+equations and compute rank. Each round finds a row with a nonzero entry in the current leading
+column, swaps the largest-magnitude candidate into place for partial pivoting, normalizes that row,
+and subtracts multiples of it from every other row to clear the column. In practice, this method can
+still be prone to rounding error on certain matrices. For a more accurate algorithm for solving
+systems of linear equations, LU decomposition with row partial pivoting should be used.
 
 - `row_reduce(a)` assigns the matrix `a` to its reduced row echelon form, returning a reference to
   the modified argument itself.
+- `matrix_rank(a)` returns the rank of matrix `a`, i.e. the number of nonzero rows after row
+  reduction.
 - `solve_system(a, b, &x)` solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix
   `a` of real values, and a length $m$ vector `b`, returning 0 if there is one solution, $-1$
   if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one
   solution, then the vector pointed to by `x` is populated with the solution vector of length $n$.
 
 Time Complexity:
-- O(m^2*n) per call to `row_reduce(a)` and `solve_system(a)`, where $m$ and $n$ are the number of
-  rows and columns of `a`, respectively.
+- O(m^2*n) per call to `row_reduce(a)`, `matrix_rank(a)`, and `solve_system(a)`, where $m$ and $n$
+  are the number of rows and columns of `a`, respectively.
 
 Space Complexity:
 - O(1) auxiliary for `row_reduce(a)`.
-- O(m*n) auxiliary heap space for `solve_system(a)`.
+- O(m*n) auxiliary heap space for `matrix_rank(a)` and `solve_system(a)`.
 
 */
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <stdexcept>
@@ -37,17 +40,17 @@ Matrix &row_reduce(Matrix &a) {
     return a;
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
-  for (int r = 0, lead = 0; r < rows && lead < cols; r++) {
-    int i = r;
-    while (fabs(a[i][lead]) < EPS) {
-      if (++i == rows) {
-        i = r;
-        if (++lead == cols) {
-          return a;
-        }
+  for (int r = 0, lead = 0; r < rows && lead < cols; lead++) {
+    int pivot = r;
+    for (int i = r + 1; i < rows; i++) {
+      if (fabs(a[i][lead]) > fabs(a[pivot][lead])) {
+        pivot = i;
       }
     }
-    std::swap(a[i], a[r]);
+    if (fabs(a[pivot][lead]) < EPS) {
+      continue;
+    }
+    std::swap(a[pivot], a[r]);
     auto lv = a[r][lead];
     for (int j = 0; j < cols; j++) {
       a[r][j] /= lv;
@@ -63,9 +66,25 @@ Matrix &row_reduce(Matrix &a) {
     for (int j = 0; j < lead; j++) {
       a[r][j] = 0;
     }
-    a[r][lead++] = 1;
+    a[r][lead] = 1;
+    r++;
   }
   return a;
+}
+
+template<class Matrix>
+int matrix_rank(Matrix a) {
+  row_reduce(a);
+  int rank = 0;
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    for (int j = 0; j < static_cast<int>(a[i].size()); j++) {
+      if (fabs(a[i][j]) > EPS) {
+        rank++;
+        break;
+      }
+    }
+  }
+  return rank;
 }
 
 template<class Matrix, class T>
@@ -121,6 +140,8 @@ int main() {
   vector<double> b{3, 1, -2};
   vector<double> x;
   assert(solve_system(a, b, &x) == 0);
+  assert(matrix_rank(a) == 3);
+  assert(matrix_rank(vector<vector<double>>{{1, 2, 3}, {2, 4, 6}, {0, 1, 1}}) == 2);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     double sum = 0;
     for (int j = 0; j < static_cast<int>(a[i].size()); j++) {

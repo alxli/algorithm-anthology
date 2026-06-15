@@ -15,7 +15,7 @@ parallel edges are distinct because each edge receives its own ID.
   undirected otherwise.
 - `add_edge(u, v)` adds an edge and returns its edge ID.
 - `eulerian_path(start)` returns a trail using every edge exactly once, or a result with
-  `start == -1` if no such trail exists. If `start == -1`, a valid start is chosen automatically.
+  `start` $= -1$ if no such trail exists. If `start` $= -1$, a valid start is chosen automatically.
 - `EulerianTrail::is_cycle()` returns whether the trail begins and ends on the same node.
 
 Time Complexity:

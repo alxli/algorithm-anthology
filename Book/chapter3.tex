@@ -718,8 +718,8 @@ The implementation works modulo the Mersenne prime $2^{61} - 1$, using \inlineco
 By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in \inlinecode{[1, HASH\_MOD)}.
 
 \begin{compactitem}
-  \item \inlinecode{RollingHash\textless{}T\textgreater{}(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
-  \item \inlinecode{RollingHash\textless{}T\textgreater{}(v)} constructs prefix hashes for vector \inlinecode{v}.
+  \item \inlinecode{RollingHash(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
+  \item \inlinecode{RollingHash(v)} constructs prefix hashes for vector \inlinecode{v}.
   \item \inlinecode{get(l, r)} returns the hash of the half-open subsequence \inlinecode{[l, r)}.
   \item \inlinecode{hash(first, last)} returns the hash of an iterator range.
   \item \inlinecode{hash(v)} returns the hash of vector \inlinecode{v}.
@@ -761,9 +761,7 @@ uint64_t hash_sub(uint64_t a, uint64_t b) {
 uint64_t hash_mul(uint64_t a, uint64_t b) {
 #if defined(__SIZEOF_INT128__)
   __uint128_t p = static_cast<__uint128_t>(a) * b;
-  uint64_t low = static_cast<uint64_t>(p) & HASH_MOD;
-  uint64_t high = static_cast<uint64_t>(p >> 61);
-  return hash_add(low, high);
+  return hash_add(static_cast<uint64_t>(p) & HASH_MOD, static_cast<uint64_t>(p >> 61));
 #else
   // Portable fallback when no 128-bit type exists: double-and-add modular multiply.
   uint64_t res = 0;
@@ -777,7 +775,7 @@ uint64_t hash_mul(uint64_t a, uint64_t b) {
 #endif
 }
 
-uint64_t hash_mix(uint64_t x) {
+uint64_t mix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
   x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -788,7 +786,7 @@ template<class T>
 struct RollingValueHasher {
   // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
   // hash is invisible and enables trivial collisions.
-  uint64_t operator()(const T &x) const { return hash_mix((uint64_t)x) % (HASH_MOD - 1) + 1; }
+  uint64_t operator()(const T &x) const { return mix64((uint64_t)x) % (HASH_MOD - 1) + 1; }
 };
 
 template<class T, class ValueHasher = RollingValueHasher<T>>
@@ -869,7 +867,7 @@ struct PointHasher {
     // points never collide pre-mix (a small-multiplier combine like a * C + b would).
     uint64_t key = (static_cast<uint64_t>(static_cast<uint32_t>(p.first)) << 32) |
                    static_cast<uint32_t>(p.second);
-    return hash_mix(key) % (HASH_MOD - 1) + 1;
+    return mix64(key) % (HASH_MOD - 1) + 1;
   }
 };
 
@@ -900,6 +898,141 @@ int main() {
   vector<PointI> poly{{1, 2}, {3, 4}};
   RollingHash<PointI, PointHasher> hp(poly);
   assert((hp.get(0, 2) == RollingHash<PointI, PointHasher>::hash(poly)));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Dynamic Rolling Hash}
+Maintain a polynomial rolling hash over a mutable sequence, supporting point updates and $O(\log n)$ subsequence hash queries. Unlike the static rolling hash, which fixes its prefix hashes at construction, this structure allows any element to change between queries, which is useful for problems that compare substrings while characters are edited.
+
+The key idea is to weight each element by a power of the base tied to its absolute position: storing $a_i B^i$ at index \inlinecode{i} turns the hash of any prefix into an ordinary prefix sum, which a Fenwick tree maintains under point updates. The raw sum over a half-open range \inlinecode{[lo, hi)} is then $\sum_i a_i B^i$, and multiplying by $B^{-{\inlinecodemath{lo}}}$ shifts it to the position-independent value $\sum_i a_i B^{i - {\inlinecodemath{lo}}}$, so two ranges with equal contents receive equal hashes (the leftmost element carries the lowest power). A segment tree could replace the Fenwick tree if range operations (such as lazy range assignment) were needed.
+
+\inlinecode{MOD1} and \inlinecode{MOD2} are two distinct primes, each kept below $2^{31}$ so that the product of any two residues fits in a 64-bit integer; hashing modulo both and comparing the resulting pair makes a collision astronomically unlikely. \inlinecode{BASE1} and \inlinecode{BASE2} are the corresponding polynomial bases, which should exceed the largest element value and may be randomized per run to resist adversarial inputs.
+
+Element values must be non-negative. As with any polynomial hash, comparing subsequences of different lengths is only safe when values are positive (for example, map an alphabet to $[1, B)$) so that trailing zeros cannot make a shorter sequence collide with a longer one.
+
+\begin{compactitem}
+  \item \inlinecode{DynamicHash(a)} builds prefix hashes over the integer sequence \inlinecode{a}.
+  \item \inlinecode{size()} returns the length of the sequence.
+  \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
+  \item \inlinecode{hash(lo, hi)} returns the pair of hashes of the half-open subsequence \inlinecode{[lo, hi)}. Two ranges are equal with high probability if and only if their \inlinecode{hash()} pairs are equal.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ for the constructor, where $n$ is the length of the sequence.
+  \item $O(\log n)$ per call to \inlinecode{set()} and \inlinecode{hash()}.
+  \item $O(1)$ per call to \inlinecode{size()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage.
+  \item $O(1)$ auxiliary per query.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+#include <utility>
+#include <vector>
+
+class DynamicHash {
+  static const uint64_t MOD1 = 1000000007, MOD2 = 1000000009;  // Distinct primes below 2^31.
+  static const uint64_t BASE1 = 131, BASE2 = 137;  // Should exceed the maximum element value.
+
+  int len;
+  std::vector<int> cur;
+  std::vector<uint64_t> pw1, pw2, ip1, ip2;  // Base powers and inverse base powers.
+  std::vector<uint64_t> ft1, ft2;            // Fenwick trees, 1-indexed of size len + 1.
+
+  // Products and sums of residues below 2^30 stay under 2^60, so 64-bit arithmetic never overflows.
+  static uint64_t power(uint64_t b, uint64_t e, uint64_t m) {
+    uint64_t res = 1;
+    for (b %= m; e > 0; e >>= 1) {
+      if (e & 1) {
+        res = res * b % m;
+      }
+      b = b * b % m;
+    }
+    return res;
+  }
+
+  void add(std::vector<uint64_t> &ft, int i, uint64_t delta, uint64_t m) {
+    for (i++; i <= len; i += i & -i) {
+      ft[i] = (ft[i] + delta) % m;
+    }
+  }
+
+  uint64_t sum(const std::vector<uint64_t> &ft, int i, uint64_t m) const {
+    uint64_t res = 0;
+    for (i++; i > 0; i -= i & -i) {
+      res = (res + ft[i]) % m;
+    }
+    return res;
+  }
+
+ public:
+  explicit DynamicHash(const std::vector<int> &a) : len(static_cast<int>(a.size())), cur(len, 0) {
+    pw1.resize(len + 1);
+    pw2.resize(len + 1);
+    ip1.resize(len + 1);
+    ip2.resize(len + 1);
+    pw1[0] = pw2[0] = ip1[0] = ip2[0] = 1;
+    uint64_t invb1 = power(BASE1, MOD1 - 2, MOD1), invb2 = power(BASE2, MOD2 - 2, MOD2);
+    for (int i = 1; i <= len; i++) {
+      pw1[i] = pw1[i - 1] * BASE1 % MOD1;
+      pw2[i] = pw2[i - 1] * BASE2 % MOD2;
+      ip1[i] = ip1[i - 1] * invb1 % MOD1;
+      ip2[i] = ip2[i - 1] * invb2 % MOD2;
+    }
+    ft1.assign(len + 1, 0);
+    ft2.assign(len + 1, 0);
+    for (int i = 0; i < len; i++) {
+      set(i, a[i]);
+    }
+  }
+
+  int size() const { return len; }
+
+  void set(int i, int x) {
+    uint64_t old1 = static_cast<uint64_t>(cur[i]) % MOD1 * pw1[i] % MOD1;
+    uint64_t old2 = static_cast<uint64_t>(cur[i]) % MOD2 * pw2[i] % MOD2;
+    uint64_t new1 = static_cast<uint64_t>(x) % MOD1 * pw1[i] % MOD1;
+    uint64_t new2 = static_cast<uint64_t>(x) % MOD2 * pw2[i] % MOD2;
+    add(ft1, i, (new1 + MOD1 - old1) % MOD1, MOD1);
+    add(ft2, i, (new2 + MOD2 - old2) % MOD2, MOD2);
+    cur[i] = x;
+  }
+
+  std::pair<uint64_t, uint64_t> hash(int lo, int hi) const {
+    uint64_t raw1 = (sum(ft1, hi - 1, MOD1) + MOD1 - sum(ft1, lo - 1, MOD1)) % MOD1;
+    uint64_t raw2 = (sum(ft2, hi - 1, MOD2) + MOD2 - sum(ft2, lo - 1, MOD2)) % MOD2;
+    return {raw1 * ip1[lo] % MOD1, raw2 * ip2[lo] % MOD2};
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <string>
+using namespace std;
+
+int main() {
+  string s = "abcabc";
+  vector<int> a(s.begin(), s.end());
+  DynamicHash h(a);
+  assert(h.size() == 6);
+  assert(h.hash(0, 3) == h.hash(3, 6));  // "abc" == "abc".
+
+  h.set(0, 'x');  // "xbcabc".
+  assert(!(h.hash(0, 3) == h.hash(3, 6)));
+  h.set(3, 'x');                         // "xbcxbc".
+  assert(h.hash(0, 3) == h.hash(3, 6));  // "xbc" == "xbc".
+
+  // A single element's hash is invariant under where an equal value sits.
+  assert(h.hash(1, 2) == h.hash(4, 5));  // both 'b'.
   return 0;
 }
 \end{lstlisting}
@@ -1427,9 +1560,1729 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Lyndon Factorization (Duval)}
+A Lyndon word is a nonempty string that is strictly smaller than all of its proper suffixes, or equivalently, strictly smaller than all of its nontrivial cyclic rotations. By the Chen-Fox-Lyndon theorem, every string has a unique factorization into a sequence of Lyndon words whose values are non-increasing: $s = w_1 w_2 \cdots w_k$ with $w_1 \geq w_2 \geq \cdots \geq w_k$. Duval's algorithm computes this factorization in linear time and constant auxiliary space by scanning the string while tracking the current candidate Lyndon prefix and the position it last matched.
 
-\section{\texorpdfstring{Expression Parsing}{3.4 Expression Parsing}}
+The same scan, applied to the string viewed as a cycle, yields the starting position of its lexicographically least rotation. This is the standard way to canonicalize a necklace, for example to test whether two strings are cyclic rotations of one another.
+
+\begin{compactitem}
+  \item \inlinecode{lyndon\_factorization(s)} returns a vector of the starting indices of the Lyndon factors of \inlinecode{s}, in order. The factor at index \inlinecode{i} of the result spans the half-open range from \inlinecode{res[i]} to \inlinecode{res[i + 1]} (or to \inlinecode{s.size()} for the final factor).
+  \item \inlinecode{min\_rotation(s)} returns the 0-indexed position \inlinecode{p} such that the rotation beginning at \inlinecode{p}, that is, \inlinecode{s[p], s[(p + 1) \% n], ..., s[(p + n - 1) \% n]}, is lexicographically smallest. If several rotations tie, the smallest such \inlinecode{p} is returned.
+\end{compactitem}
+
+Both functions operate on any random-access sequence whose elements support \inlinecode{operator\textless{}}.
+
+\textbf{Time Complexity}: $O(n)$ per call to \inlinecode{lyndon\_factorization(s)} and \inlinecode{min\_rotation(s)}, where $n$ is the length of \inlinecode{s}.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(k)$ auxiliary heap space for \inlinecode{lyndon\_factorization(s)}, where $k$ is the number of factors.
+  \item $O(1)$ auxiliary space for \inlinecode{min\_rotation(s)}.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+template<class Seq>
+std::vector<int> lyndon_factorization(const Seq &s) {
+  int n = static_cast<int>(s.size());
+  std::vector<int> starts;
+  int i = 0;
+  while (i < n) {
+    int j = i + 1, k = i;
+    while (j < n && !(s[j] < s[k])) {
+      k = (s[k] < s[j]) ? i : k + 1;
+      j++;
+    }
+    while (i <= k) {
+      starts.push_back(i);
+      i += j - k;
+    }
+  }
+  return starts;
+}
+
+template<class Seq>
+int min_rotation(const Seq &s) {
+  int n = static_cast<int>(s.size());
+  if (n == 0) {
+    return 0;
+  }
+  int i = 0, res = 0;
+  while (i < n) {
+    res = i;
+    int j = i + 1, k = i;
+    while (j < 2 * n && !(s[j % n] < s[k % n])) {
+      k = (s[k % n] < s[j % n]) ? i : k + 1;
+      j++;
+    }
+    while (i <= k) {
+      i += j - k;
+    }
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <string>
+using std::string;
+
+int main() {
+  // "banana" factors as "b" >= "an" >= "an" >= "a".
+  assert((lyndon_factorization(string("banana")) == std::vector<int>{0, 1, 3, 5}));
+
+  // Among the rotations of "baca", "abac" (starting at index 3) is smallest.
+  assert(min_rotation(string("baca")) == 3);
+
+  // Both routines work on any comparable sequence, not just strings.
+  assert(min_rotation(std::vector<int>{3, 1, 2, 1, 3}) == 1);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Suffix Arrays and LCP}{3.4 Suffix Arrays and LCP}}
 \setcounter{section}{4}
+\setcounter{subsection}{0}
+\subsection{Suffix Array and LCP (Manber-Myers)}
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is \inlinecode{[1, 2, 0]}.
+
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
+
+The doubling algorithm sorts the suffixes by their first $2^k$ characters for increasing $k$: each round orders suffixes by their pair of ranks from the previous round, so a comparison costs $O(1)$ and the full order emerges after $O(\log n)$ rounds.
+
+\begin{compactitem}
+  \item \inlinecode{SuffixArrayManberMyers(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers doubling algorithm with a comparison-based sort.
+  \item \inlinecode{get\_sa()} returns the constructed suffix array.
+  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
+  \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log^{2} n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ per call to \inlinecode{get\_sa()}.
+  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
+  \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
+  \item $O(n)$ auxiliary heap space for the constructor.
+  \item $O(1)$ auxiliary space for all other operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <numeric>
+#include <string>
+#include <utility>
+#include <vector>
+using std::string;
+
+class SuffixArrayManberMyers {
+  string s;
+  std::vector<int> sa, rk;
+
+ public:
+  explicit SuffixArrayManberMyers(const string &s) : s(s), sa(s.size()), rk(s.size()) {
+    int n = static_cast<int>(s.size());
+    std::iota(sa.begin(), sa.end(), 0);
+    for (int i = 0; i < n; i++) {
+      rk[i] = static_cast<unsigned char>(s[i]);
+    }
+    std::vector<std::pair<int, int>> rk2(n);
+    for (int gap = 1; gap < n; gap *= 2) {
+      for (int i = 0; i < n; i++) {
+        rk2[i] = {rk[i], i + gap < n ? rk[i + gap] + 1 : 0};
+      }
+      std::sort(sa.begin(), sa.end(), [&](int i, int j) { return rk2[i] < rk2[j]; });
+      for (int i = 0; i < n; i++) {
+        rk[sa[i]] = (i > 0 && rk2[sa[i - 1]] == rk2[sa[i]]) ? rk[sa[i - 1]] : i;
+      }
+    }
+  }
+
+  const std::vector<int> &get_sa() const { return sa; }
+
+  std::vector<int> get_lcp() const {
+    int n = static_cast<int>(s.size());
+    if (n == 0) {
+      return {};  // Avoid constructing a vector of size (size_t)(-1).
+    }
+    std::vector<int> lcp(n - 1);
+    for (int i = 0, k = 0; i < n; i++) {
+      if (rk[i] < n - 1) {
+        int j = sa[rk[i] + 1];
+        while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
+          k++;
+        }
+        lcp[rk[i]] = k;
+        if (k > 0) {
+          k--;
+        }
+      }
+    }
+    return lcp;
+  }
+
+  size_t find(const string &needle) {
+    if (needle.empty()) {
+      return 0;
+    }
+    int lo = 0, hi = static_cast<int>(s.size()) - 1;
+    while (lo <= hi) {
+      int mid = lo + (hi - lo) / 2;
+      int cmp = s.compare(sa[mid], needle.size(), needle);
+      if (cmp < 0) {
+        lo = mid + 1;
+      } else if (cmp > 0) {
+        hi = mid - 1;
+      } else {
+        return sa[mid];
+      }
+    }
+    return string::npos;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  SuffixArrayManberMyers sa("banana");
+  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
+  vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
+  vector<int> lcp_expected{1, 3, 0, 0, 2};
+  assert(sarr == sarr_expected);
+  assert(lcp == lcp_expected);
+  assert(sa.find("ana") == 1);
+  assert(sa.find("x") == string::npos);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Suffix Array and LCP (Counting Sort)}
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is \inlinecode{[1, 2, 0]}.
+
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
+
+The doubling algorithm sorts the suffixes by their first $2^k$ characters for increasing $k$: each round orders suffixes by their pair of ranks from the previous round, so a comparison costs $O(1)$ and the full order emerges after $O(\log n)$ rounds. Replacing the comparison sort of each round with counting-sort-style rank updates removes a logarithmic factor.
+
+\begin{compactitem}
+  \item \inlinecode{SuffixArrayCountingSort(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers doubling algorithm with counting-sort-style rank updates to reduce the running time to $O(n \log n)$.
+  \item \inlinecode{get\_sa()} returns the constructed suffix array.
+  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
+  \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ per call to \inlinecode{get\_sa()}.
+  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
+  \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
+  \item $O(n)$ auxiliary heap space for the constructor.
+  \item $O(1)$ auxiliary space for all other operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <numeric>
+#include <string>
+#include <utility>
+#include <vector>
+using std::string;
+
+class SuffixArrayCountingSort {
+  string s;
+  std::vector<int> sa, rk;
+
+ public:
+  explicit SuffixArrayCountingSort(const string &s) : s(s), sa(s.size()), rk(s.size()) {
+    int n = static_cast<int>(s.size());
+    std::iota(sa.rbegin(), sa.rend(), 0);
+    for (int i = 0; i < n; i++) {
+      rk[i] = static_cast<unsigned char>(s[i]);
+    }
+    std::stable_sort(sa.begin(), sa.end(), [&](int i, int j) {
+      return static_cast<unsigned char>(s[i]) < static_cast<unsigned char>(s[j]);
+    });
+    for (int gap = 1; gap < n; gap *= 2) {
+      std::vector<int> prev_rk(rk), prev_sa(sa), cnt(n);
+      std::iota(cnt.begin(), cnt.end(), 0);
+      for (int i = 0; i < n; i++) {
+        rk[sa[i]] = (i > 0 && prev_rk[sa[i - 1]] == prev_rk[sa[i]] && sa[i - 1] + gap < n &&
+                     prev_rk[sa[i - 1] + gap / 2] == prev_rk[sa[i] + gap / 2])
+                        ? rk[sa[i - 1]]
+                        : i;
+      }
+      for (int i = 0; i < n; i++) {
+        int s1 = prev_sa[i] - gap;
+        if (s1 >= 0) {
+          sa[cnt[rk[s1]]++] = s1;
+        }
+      }
+    }
+  }
+
+  const std::vector<int> &get_sa() const { return sa; }
+
+  std::vector<int> get_lcp() const {
+    int n = static_cast<int>(s.size());
+    if (n == 0) {
+      return {};  // Avoid constructing a vector of size (size_t)(-1).
+    }
+    std::vector<int> lcp(n - 1);
+    for (int i = 0, k = 0; i < n; i++) {
+      if (rk[i] < n - 1) {
+        int j = sa[rk[i] + 1];
+        while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
+          k++;
+        }
+        lcp[rk[i]] = k;
+        if (k > 0) {
+          k--;
+        }
+      }
+    }
+    return lcp;
+  }
+
+  size_t find(const string &needle) {
+    if (needle.empty()) {
+      return 0;
+    }
+    int lo = 0, hi = static_cast<int>(s.size()) - 1;
+    while (lo <= hi) {
+      int mid = lo + (hi - lo) / 2;
+      int cmp = s.compare(sa[mid], needle.size(), needle);
+      if (cmp < 0) {
+        lo = mid + 1;
+      } else if (cmp > 0) {
+        hi = mid - 1;
+      } else {
+        return sa[mid];
+      }
+    }
+    return string::npos;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  SuffixArrayCountingSort sa("banana");
+  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
+  vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
+  vector<int> lcp_expected{1, 3, 0, 0, 2};
+  assert(sarr == sarr_expected);
+  assert(lcp == lcp_expected);
+  assert(sa.find("ana") == 1);
+  assert(sa.find("x") == string::npos);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Suffix Array and LCP (DC3)}
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+
+For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
+
+The DC3/skew algorithm recursively constructs the suffix array of the suffixes starting at positions not divisible by 3, uses that order to sort the remaining suffixes with radix sort, and merges the two sorted groups in linear time.
+
+\begin{compactitem}
+  \item \inlinecode{SuffixArrayDC3(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
+  \item \inlinecode{get\_sa()} returns the constructed suffix array.
+  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
+  \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ per call to \inlinecode{get\_sa()}.
+  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
+  \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
+  \item $O(n)$ auxiliary heap space for the constructor.
+  \item $O(1)$ auxiliary space for all other operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
+using std::string;
+
+class SuffixArrayDC3 {
+  static bool leq(int a1, int a2, int b1, int b2) { return (a1 < b1) || (a1 == b1 && a2 <= b2); }
+
+  static bool leq(int a1, int a2, int a3, int b1, int b2, int b3) {
+    return (a1 < b1) || (a1 == b1 && leq(a2, a3, b2, b3));
+  }
+
+  template<class It>
+  static void radix_pass(It a, It b, It r, int n, int K) {
+    std::vector<int> cnt(K + 1);
+    for (int i = 0; i < n; i++) {
+      cnt[r[a[i]]]++;
+    }
+    for (int i = 1; i <= K; i++) {
+      cnt[i] += cnt[i - 1];
+    }
+    for (int i = n - 1; i >= 0; i--) {
+      b[--cnt[r[a[i]]]] = a[i];
+    }
+  }
+
+  template<class It>
+  static void suffix_array_dc3(It s, It sa, int n, int K) {
+    int n0 = (n + 2) / 3, n1 = (n + 1) / 3, n2 = n / 3, n02 = n0 + n2;
+    std::vector<int> s12(n02 + 3), sa12(n02 + 3), s0(n0), sa0(n0);
+    s12[n02] = s12[n02 + 1] = s12[n02 + 2] = 0;
+    sa12[n02] = sa12[n02 + 1] = sa12[n02 + 2] = 0;
+    for (int i = 0, j = 0; i < n + n0 - n1; i++) {
+      if (i % 3 != 0) {
+        s12[j++] = i;
+      }
+    }
+    radix_pass(s12.begin(), sa12.begin(), s + 2, n02, K);
+    radix_pass(sa12.begin(), s12.begin(), s + 1, n02, K);
+    radix_pass(s12.begin(), sa12.begin(), s, n02, K);
+    int name = 0, c0 = -1, c1 = -1, c2 = -1;
+    for (int i = 0; i < n02; i++) {
+      if (s[sa12[i]] != c0 || s[sa12[i] + 1] != c1 || s[sa12[i] + 2] != c2) {
+        name++;
+        c0 = s[sa12[i]];
+        c1 = s[sa12[i] + 1];
+        c2 = s[sa12[i] + 2];
+      }
+      (sa12[i] % 3 == 1 ? s12[sa12[i] / 3] : s12[sa12[i] / 3 + n0]) = name;
+    }
+    if (name < n02) {
+      suffix_array_dc3(s12.begin(), sa12.begin(), n02, name);
+      for (int i = 0; i < n02; i++) {
+        s12[sa12[i]] = i + 1;
+      }
+    } else {
+      for (int i = 0; i < n02; i++) {
+        sa12[s12[i] - 1] = i;
+      }
+    }
+    for (int i = 0, j = 0; i < n02; i++) {
+      if (sa12[i] < n0) {
+        s0[j++] = 3 * sa12[i];
+      }
+    }
+    radix_pass(s0.begin(), sa0.begin(), s, n0, K);
+    for (int p = 0, t = n0 - n1, k = 0; k < n; k++) {
+      int i = (sa12[t] < n0) ? 3 * sa12[t] + 1 : 3 * (sa12[t] - n0) + 2, j = sa0[p];
+      if (sa12[t] < n0
+              ? leq(s[i], s12[sa12[t] + n0], s[j], s12[j / 3])
+              : leq(s[i], s[i + 1], s12[sa12[t] - n0 + 1], s[j], s[j + 1], s12[j / 3 + n0])) {
+        sa[k] = i;
+        if (++t == n02) {
+          for (k++; p < n0; p++, k++) {
+            sa[k] = sa0[p];
+          }
+        }
+      } else {
+        sa[k] = j;
+        if (++p == n0) {
+          for (k++; t < n02; t++, k++) {
+            sa[k] = (sa12[t] < n0) ? 3 * sa12[t] + 1 : 3 * (sa12[t] - n0) + 2;
+          }
+        }
+      }
+    }
+  }
+
+  string s;
+  std::vector<int> sa;
+
+ public:
+  explicit SuffixArrayDC3(const string &s) : s(s), sa(s.size() + 1) {
+    int n = static_cast<int>(s.size());
+    std::vector<int> scopy(n);
+    for (int i = 0; i < n; i++) {
+      scopy[i] = static_cast<unsigned char>(s[i]) + 1;
+    }
+    scopy.resize(n + 4);
+    suffix_array_dc3(scopy.begin(), sa.begin(), n + 1, 256);
+    sa.erase(sa.begin());
+  }
+
+  const std::vector<int> &get_sa() const { return sa; }
+
+  std::vector<int> get_lcp() const {
+    int n = static_cast<int>(s.size());
+    if (n == 0) {
+      return {};
+    }
+    std::vector<int> rank(n), lcp(n - 1);
+    for (int i = 0; i < n; i++) {
+      rank[sa[i]] = i;
+    }
+    for (int i = 0, k = 0; i < n; i++) {
+      if (rank[i] < n - 1) {
+        int j = sa[rank[i] + 1];
+        while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
+          k++;
+        }
+        lcp[rank[i]] = k;
+        if (k > 0) {
+          k--;
+        }
+      }
+    }
+    return lcp;
+  }
+
+  size_t find(const string &needle) {
+    if (needle.empty()) {
+      return 0;
+    }
+    int lo = 0, hi = static_cast<int>(s.size()) - 1;
+    while (lo <= hi) {
+      int mid = lo + (hi - lo) / 2;
+      int cmp = s.compare(sa[mid], needle.size(), needle);
+      if (cmp < 0) {
+        lo = mid + 1;
+      } else if (cmp > 0) {
+        hi = mid - 1;
+      } else {
+        return sa[mid];
+      }
+    }
+    return string::npos;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  SuffixArrayDC3 sa("banana");
+  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
+  vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
+  vector<int> lcp_expected{1, 3, 0, 0, 2};
+  assert(sarr == sarr_expected);
+  assert(lcp == lcp_expected);
+  assert(sa.find("ana") == 1);
+  assert(sa.find("x") == string::npos);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{String Data Structures}{3.5 String Data Structures}}
+\setcounter{section}{5}
+\setcounter{subsection}{0}
+\subsection{Trie}
+Maintain a map of strings to values using a tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Children are stored in hash tables, and \inlinecode{walk()} sorts child labels as needed to preserve lexicographic traversal.
+
+\begin{compactitem}
+  \item \inlinecode{Trie()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(s, v)} adds an entry with string key \inlinecode{s} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
+  \item \inlinecode{erase(s)} removes the entry with string key \inlinecode{s} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the string to be removed was not found.
+  \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{nullptr} if the key was not found.
+  \item \inlinecode{count\_prefix(s)} returns the number of keys currently in the map that have \inlinecode{s} as a prefix (a key equal to \inlinecode{s} counts as well). \inlinecode{count\_prefix("")} therefore equals \inlinecode{size()}.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
+\end{compactitem}
+
+For a small, fixed alphabet, the \inlinecode{std::unordered\_map} children can be replaced by a fixed-size array of child pointers indexed by character. This removes the per-step hashing and lets \inlinecode{walk()} traverse in sorted order without sorting each node's labels, at the cost of restricting the alphabet and spending more memory per node.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ expected per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, \inlinecode{find(s)}, and \inlinecode{count\_prefix(s)}, where $n$ is the length of \inlinecode{s}.
+  \item $O(l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map, treating the character alphabet as constant.
+  \item $O(1)$ per call to all other operations.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(l)$ for storage of the Trie, where $l$ is the total length of string keys that are currently in the map.
+  \item $O(n)$ auxiliary stack space for construction, destruction, \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
+  \item $O(n)$ auxiliary stack space for \inlinecode{erase(s)}, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cstddef>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+using std::string;
+
+template<class V>
+class Trie {
+  struct Node {
+    V value;
+    bool is_terminal;
+    int cnt;  // Optional: maintain count of terminal keys in this subtree for count_prefix queries.
+    std::unordered_map<char, Node *> children;
+
+    Node() : is_terminal(false), cnt(0) {}
+  } *root;
+
+  static bool erase(Node *n, const string &s, int i) {
+    if (i == static_cast<int>(s.size())) {
+      if (!n->is_terminal) {
+        return false;
+      }
+      n->is_terminal = false;
+      n->cnt--;
+      return true;
+    }
+    auto it = n->children.find(s[i]);
+    if (it == n->children.end() || !erase(it->second, s, i + 1)) {
+      return false;
+    }
+    n->cnt--;
+    // Prune the child only if it is now a non-terminal leaf; a childless terminal is still a key.
+    if (it->second->children.empty() && !it->second->is_terminal) {
+      delete it->second;
+      n->children.erase(it);
+    }
+    return true;
+  }
+
+  template<class Fn>
+  static void walk(Node *n, string &s, Fn f) {
+    if (n->is_terminal) {
+      f(s, n->value);
+    }
+    std::vector<std::pair<char, Node *>> children(n->children.begin(), n->children.end());
+    std::sort(children.begin(), children.end());
+    for (auto &[c, child] : children) {
+      s += c;
+      walk(child, s, f);
+      s.pop_back();
+    }
+  }
+
+  static void clean_up(Node *n) {
+    for (auto &[c, child] : n->children) {
+      clean_up(child);
+    }
+    delete n;
+  }
+
+  int num_terminals;
+
+ public:
+  Trie() : root(new Node()), num_terminals(0) {}
+
+  ~Trie() { clean_up(root); }
+  Trie(const Trie &) = delete;
+  Trie &operator=(const Trie &) = delete;
+  int size() const { return num_terminals; }
+  bool empty() const { return num_terminals == 0; }
+
+  bool insert(const string &s, const V &v) {
+    Node *n = root;
+    for (char c : s) {
+      auto [it, inserted] = n->children.try_emplace(c, nullptr);
+      if (inserted) {
+        it->second = new Node();
+      }
+      n = it->second;
+    }
+    if (n->is_terminal) {
+      return false;
+    }
+    num_terminals++;
+    n->is_terminal = true;
+    n->value = v;
+    // Re-walk from the root to bump the subtree count along the inserted path.
+    n = root;
+    n->cnt++;
+    for (char c : s) {
+      n = n->children[c];
+      n->cnt++;
+    }
+    return true;
+  }
+
+  bool erase(const string &s) {
+    if (erase(root, s, 0)) {
+      num_terminals--;
+      return true;
+    }
+    return false;
+  }
+
+  const V *find(const string &s) const {
+    Node *n = root;
+    for (char c : s) {
+      if (auto it = n->children.find(c); it != n->children.end()) {
+        n = it->second;
+      } else {
+        return nullptr;
+      }
+    }
+    return n->is_terminal ? &(n->value) : nullptr;
+  }
+
+  int count_prefix(const string &s) const {
+    Node *n = root;
+    for (char c : s) {
+      auto it = n->children.find(c);
+      if (it == n->children.end()) {
+        return 0;
+      }
+      n = it->second;
+    }
+    return n->cnt;
+  }
+
+  template<class Fn>
+  void walk(Fn f) const {
+    string s;
+    walk(root, s, f);
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  vector<string> s{"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
+  Trie<int> t;
+  assert(t.empty());
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    assert(t.insert(s[i], i));
+  }
+  t.walk([](string k, int v) { cout << "(\"" << k << "\", " << v << ")" << endl; });
+  assert(!t.empty());
+  assert(t.size() == 9);
+  assert(!t.insert(s[0], 2));
+  assert(t.size() == 9);
+  assert(*t.find("") == 0);
+  assert(*t.find("ten") == 5);
+  assert(t.count_prefix("") == 9);    // Every key has the empty prefix.
+  assert(t.count_prefix("te") == 3);  // "tea", "ted", "ten".
+  assert(t.count_prefix("in") == 2);  // "in", "inn".
+  assert(t.count_prefix("z") == 0);
+  assert(t.erase("tea"));
+  assert(t.size() == 8);
+  assert(t.find("tea") == nullptr);
+  assert(t.count_prefix("te") == 2);  // "ted", "ten" remain.
+  assert(t.erase(""));
+  assert(t.find("") == nullptr);
+  assert(t.count_prefix("") == 7);
+
+  // Erasing a key must not delete a shorter key sharing its path.
+  Trie<int> u;
+  u.insert("bc", 1);
+  u.insert("bca", 2);
+  assert(u.erase("bca"));
+  assert(u.find("bc") != nullptr && *u.find("bc") == 1);
+  assert(u.size() == 1 && u.count_prefix("bc") == 1);
+  return 0;
+}
+\end{lstlisting}
+\begin{exampleoutput}
+("", 0)
+("a", 1)
+("i", 6)
+("in", 7)
+("inn", 8)
+("tea", 3)
+("ted", 4)
+("ten", 5)
+("to", 2)
+\end{exampleoutput}
+\subsection{Radix Tree}
+Maintain a map of strings to values using a compressed tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child. Children are stored in hash tables, and \inlinecode{walk()} sorts child labels as needed to preserve lexicographic traversal.
+
+\begin{compactitem}
+  \item \inlinecode{RadixTree()} constructs an empty map.
+  \item \inlinecode{size()} returns the size of the map.
+  \item \inlinecode{empty()} returns whether the map is empty.
+  \item \inlinecode{insert(s, v)} adds an entry with string key \inlinecode{s} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
+  \item \inlinecode{erase(s)} removes the entry with string key \inlinecode{s} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the string to be removed was not found.
+  \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{nullptr} if the key was not found.
+  \item \inlinecode{count\_prefix(s)} returns the number of keys currently in the map that have \inlinecode{s} as a prefix (a key equal to \inlinecode{s} counts as well), including the case where \inlinecode{s} ends partway along a compressed edge. \inlinecode{count\_prefix("")} therefore equals \inlinecode{size()}.
+  \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ expected per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, \inlinecode{find(s)}, and \inlinecode{count\_prefix(s)}, where $n$ is the length of \inlinecode{s}, assuming the number of outgoing compressed edges checked at each node is small.
+  \item $O(l \log l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map.
+  \item $O(1)$ per call to all other operations.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(l)$ for storage of the radix tree, where $l$ is the total length of string keys that are currently in the map.
+  \item $O(n)$ auxiliary stack space for construction, destruction, \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
+  \item $O(n)$ auxiliary stack space for \inlinecode{erase(s)}, where $n$ is the length of \inlinecode{s}.
+  \item $O(1)$ auxiliary for all other operations.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cstddef>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
+using std::string;
+
+template<class V>
+class RadixTree {
+  struct Node {
+    V value;
+    bool is_terminal;
+    int cnt;  // Optional: maintain count of terminal keys in this subtree for count_prefix queries.
+    std::unordered_map<string, Node *> children;
+
+    Node(const V &value = V(), bool is_terminal = false)
+        : value(value), is_terminal(is_terminal), cnt(0) {}
+  } *root;
+
+  static int lcp_len(const string &s1, const string &s2, int s2start) {
+    int i = 0;
+    for (int j = s2start; i < static_cast<int>(s1.size()) && j < static_cast<int>(s2.size());
+         i++, j++) {
+      if (s1[i] != s2[j]) {
+        break;
+      }
+    }
+    return i;
+  }
+
+  static bool insert(Node *n, const string &s, int i, const V &v) {
+    if (i == static_cast<int>(s.size())) {
+      if (n->is_terminal) {
+        return false;
+      }
+      n->value = v;
+      n->is_terminal = true;
+      n->cnt++;
+      return true;
+    }
+    for (auto it = n->children.begin(); it != n->children.end(); ++it) {
+      int len = lcp_len(it->first, s, i);
+      if (len == 0) {
+        continue;
+      }
+      if (len == static_cast<int>(it->first.size())) {
+        if (!insert(it->second, s, i + len, v)) {
+          return false;
+        }
+        n->cnt++;
+        return true;
+      }
+      string left = it->first.substr(0, len);
+      string right = it->first.substr(len);
+      Node *tmp = new Node();
+      tmp->cnt = it->second->cnt;  // The new split node heads the same subtree as the old child.
+      tmp->children[right] = it->second;
+      n->children.erase(it);
+      n->children[left] = tmp;
+      if (len == static_cast<int>(s.size()) - i) {
+        tmp->value = v;
+        tmp->is_terminal = true;
+        tmp->cnt++;
+      } else {
+        insert(tmp, s, i + len, v);
+      }
+      n->cnt++;
+      return true;
+    }
+    Node *leaf = new Node(v, true);
+    leaf->cnt = 1;
+    n->children[s.substr(i)] = leaf;
+    n->cnt++;
+    return true;
+  }
+
+  static bool erase(Node *n, const string &s, int i) {
+    if (i == static_cast<int>(s.size())) {
+      if (!n->is_terminal) {
+        return false;
+      }
+      n->is_terminal = false;
+      n->cnt--;
+      return true;
+    }
+    for (auto it = n->children.begin(); it != n->children.end(); ++it) {
+      int len = lcp_len(it->first, s, i);
+      if (len == 0) {
+        continue;
+      }
+      // The entire edge label must be consumed; a partial match means the key is not present, so
+      // erasing must fail rather than descend (otherwise erase("te") would remove "tea").
+      if (len < static_cast<int>(it->first.size())) {
+        return false;
+      }
+      Node *child = it->second;
+      if (!erase(child, s, i + len)) {
+        return false;
+      }
+      n->cnt--;
+      // The merge below leaves counts intact: a non-terminal node with one child already has the
+      // same subtree count as that child, so reusing the node keeps its `cnt` correct.
+      if (child->children.empty() && !child->is_terminal) {
+        delete child;
+        n->children.erase(it);
+      } else if (child->children.size() == 1) {
+        Node *grandchild = child->children.begin()->second;
+        if (!child->is_terminal) {
+          string merged_key(it->first + child->children.begin()->first);
+          child->value = grandchild->value;
+          child->is_terminal = grandchild->is_terminal;
+          child->children = grandchild->children;
+          delete grandchild;
+          n->children.erase(it);
+          n->children[merged_key] = child;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
+  template<class Fn>
+  static void walk(Node *n, string &s, Fn f) {
+    if (n->is_terminal) {
+      f(s, n->value);
+    }
+    std::vector<std::pair<string, Node *>> children(n->children.begin(), n->children.end());
+    std::sort(children.begin(), children.end());
+    for (auto &[key, child] : children) {
+      s += key;
+      walk(child, s, f);
+      s.erase(s.size() - key.size());
+    }
+  }
+
+  static void clean_up(Node *n) {
+    for (auto &[key, child] : n->children) {
+      clean_up(child);
+    }
+    delete n;
+  }
+
+  int num_terminals;
+
+ public:
+  RadixTree() : root(new Node()), num_terminals(0) {}
+
+  ~RadixTree() { clean_up(root); }
+  RadixTree(const RadixTree &) = delete;
+  RadixTree &operator=(const RadixTree &) = delete;
+  int size() const { return num_terminals; }
+  bool empty() const { return num_terminals == 0; }
+
+  bool insert(const string &s, const V &v) {
+    if (insert(root, s, 0, v)) {
+      num_terminals++;
+      return true;
+    }
+    return false;
+  }
+
+  bool erase(const string &s) {
+    if (erase(root, s, 0)) {
+      num_terminals--;
+      return true;
+    }
+    return false;
+  }
+
+  const V *find(const string &s) const {
+    Node *n = root;
+    int i = 0;
+    while (i < static_cast<int>(s.size())) {
+      bool found = false;
+      for (auto &[key, child] : n->children) {
+        if (key[0] == s[i]) {
+          // The entire edge label must be consumed; a partial match (s ends mid-edge or diverges
+          // from it) means the key is not present.
+          if (lcp_len(key, s, i) < static_cast<int>(key.size())) {
+            return nullptr;
+          }
+          i += static_cast<int>(key.size());
+          n = child;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        return nullptr;
+      }
+    }
+    return n->is_terminal ? &(n->value) : nullptr;
+  }
+
+  int count_prefix(const string &s) const {
+    Node *n = root;
+    int i = 0;
+    while (i < static_cast<int>(s.size())) {
+      bool found = false;
+      for (auto &[key, child] : n->children) {
+        if (key[0] == s[i]) {
+          int len = lcp_len(key, s, i);
+          if (i + len == static_cast<int>(s.size())) {
+            // `s` ends within (or exactly at the end of) this edge: every key below qualifies.
+            return child->cnt;
+          }
+          if (len < static_cast<int>(key.size())) {
+            return 0;  // `s` diverges partway along the edge.
+          }
+          i += len;
+          n = child;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        return 0;
+      }
+    }
+    return n->cnt;
+  }
+
+  template<class Fn>
+  void walk(Fn f) const {
+    string s;
+    walk(root, s, f);
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+void print_entry(const string &k, int v) {
+  cout << "(\"" << k << "\", " << v << ")" << endl;
+}
+
+int main() {
+  vector<string> s{"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
+  RadixTree<int> t;
+  assert(t.empty());
+  for (int i = 0; i < static_cast<int>(s.size()); i++) {
+    assert(t.insert(s[i], i));
+  }
+  t.walk([](string k, int v) { cout << "(\"" << k << "\", " << v << ")" << endl; });
+  assert(!t.empty());
+  assert(t.size() == 9);
+  assert(!t.insert(s[0], 2));
+  assert(t.size() == 9);
+  assert(t.find("") && *t.find("") == 0);
+  assert(*t.find("ten") == 5);
+  assert(t.count_prefix("") == 9);    // Every key has the empty prefix.
+  assert(t.count_prefix("te") == 3);  // "tea", "ted", "ten" (prefix ends mid-edge).
+  assert(t.count_prefix("in") == 2);  // "in", "inn".
+  assert(t.count_prefix("z") == 0);
+  assert(t.erase("tea"));
+  assert(t.size() == 8);
+  assert(t.find("tea") == nullptr);
+  assert(t.count_prefix("te") == 2);  // "ted", "ten" remain.
+  assert(t.erase(""));
+  assert(t.find("") == nullptr);
+  assert(t.count_prefix("") == 7);
+
+  // Erasing a key must not delete a shorter key sharing its path.
+  RadixTree<int> u;
+  u.insert("bc", 1);
+  u.insert("bca", 2);
+  assert(u.erase("bca"));
+  assert(u.find("bc") != nullptr && *u.find("bc") == 1);
+  assert(u.size() == 1 && u.count_prefix("bc") == 1);
+  return 0;
+}
+\end{lstlisting}
+\begin{exampleoutput}
+("", 0)
+("a", 1)
+("i", 6)
+("in", 7)
+("inn", 8)
+("tea", 3)
+("ted", 4)
+("ten", 5)
+("to", 2)
+\end{exampleoutput}
+\subsection{Suffix Automaton}
+Maintains a compact deterministic automaton representing all substrings of a string. A suffix automaton is useful for substring membership queries, counting distinct substrings, finding longest common substrings, and many other string dynamic programming tasks.
+
+Each state represents an equivalence class of substrings with the same set of ending positions. The value \inlinecode{st[v].len} is the maximum length represented by state \inlinecode{v}, while \inlinecode{st[v].link} points to the state representing the longest proper suffix of that class.
+
+\begin{compactitem}
+  \item \inlinecode{SuffixAutomaton()} constructs an empty automaton.
+  \item \inlinecode{SuffixAutomaton(s)} constructs the automaton for string \inlinecode{s}.
+  \item \inlinecode{extend(c)} appends character \inlinecode{c} to the current string.
+  \item \inlinecode{contains(t)} returns whether string \inlinecode{t} occurs as a substring.
+  \item \inlinecode{first\_occurrence(t)} returns the starting index of the first occurrence of \inlinecode{t}, or $-1$ if absent.
+  \item \inlinecode{count\_distinct\_substrings()} returns the number of distinct nonempty substrings.
+  \item \inlinecode{longest\_common\_substring(t)} returns one longest substring common to the built string and string \inlinecode{t}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ expected to construct the automaton for a string of length $n$.
+  \item $O(m)$ expected per call to \inlinecode{contains(t)}, \inlinecode{first\_occurrence(t)}, or \inlinecode{longest\_common\_substring(t)}, where $m$ is the length of \inlinecode{t}.
+  \item $O(n)$ per call to \inlinecode{count\_distinct\_substrings()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ transition storage and $O(n)$ states.
+  \item $O(1)$ auxiliary per character processed.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+#include <string>
+#include <unordered_map>
+#include <vector>
+using std::string;
+
+class SuffixAutomaton {
+  struct State {
+    int len, link, first_pos;
+    std::unordered_map<char, int> next;
+
+    State() : len(0), link(-1), first_pos(-1) {}
+  };
+
+  std::vector<State> st;
+  int last;
+
+ public:
+  SuffixAutomaton() : st(1), last(0) {}
+
+  explicit SuffixAutomaton(const string &s) : st(1), last(0) {
+    for (char c : s) {
+      extend(c);
+    }
+  }
+
+  void extend(char c) {
+    int cur = static_cast<int>(st.size());
+    st.emplace_back();
+    st[cur].len = st[last].len + 1;
+    st[cur].first_pos = st[cur].len - 1;
+    int p = last;
+    while (p != -1 && st[p].next.find(c) == st[p].next.end()) {
+      st[p].next[c] = cur;
+      p = st[p].link;
+    }
+    if (p == -1) {
+      st[cur].link = 0;
+    } else {
+      int q = st[p].next[c];
+      if (st[p].len + 1 == st[q].len) {
+        st[cur].link = q;
+      } else {
+        int clone = static_cast<int>(st.size());
+        st.push_back(st[q]);
+        st[clone].len = st[p].len + 1;
+        while (p != -1 && st[p].next[c] == q) {
+          st[p].next[c] = clone;
+          p = st[p].link;
+        }
+        st[q].link = st[cur].link = clone;
+      }
+    }
+    last = cur;
+  }
+
+  bool contains(const string &t) const {
+    int v = 0;
+    for (char c : t) {
+      if (auto it = st[v].next.find(c); it != st[v].next.end()) {
+        v = it->second;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Returns the starting index of the first (leftmost) occurrence of `t` as a substring, or -1 if
+  // `t` does not occur. `first_pos` stores the end index of the first occurrence of each state's
+  // class, so subtracting the length of `t` recovers its start.
+  int first_occurrence(const string &t) const {
+    int v = 0;
+    for (char c : t) {
+      auto it = st[v].next.find(c);
+      if (it == st[v].next.end()) {
+        return -1;
+      }
+      v = it->second;
+    }
+    return st[v].first_pos - static_cast<int>(t.size()) + 1;
+  }
+
+  int64_t count_distinct_substrings() const {
+    int64_t res = 0;
+    for (int v = 1; v < static_cast<int>(st.size()); v++) {
+      res += st[v].len - st[st[v].link].len;
+    }
+    return res;
+  }
+
+  string longest_common_substring(const string &t) const {
+    int v = 0, len = 0, best = 0, best_pos = -1;
+    for (int i = 0; i < static_cast<int>(t.size()); i++) {
+      while (v && !st[v].next.count(t[i])) {
+        v = st[v].link;
+        len = st[v].len;
+      }
+      if (auto it = st[v].next.find(t[i]); it != st[v].next.end()) {
+        v = it->second;
+        len++;
+      } else {
+        v = 0;
+        len = 0;
+      }
+      if (len > best) {
+        best = len;
+        best_pos = i;
+      }
+    }
+    return best == 0 ? "" : t.substr(best_pos - best + 1, best);
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  SuffixAutomaton sa("ababa");
+  assert(sa.contains("aba"));
+  assert(sa.contains("bab"));
+  assert(!sa.contains("abba"));
+  assert(sa.count_distinct_substrings() == 9);
+  assert(sa.longest_common_substring("zzbabab") == "baba");
+  assert(sa.first_occurrence("aba") == 0);
+  assert(sa.first_occurrence("bab") == 1);
+  assert(sa.first_occurrence("abba") == -1);
+
+  SuffixAutomaton online;
+  online.extend('a');
+  online.extend('b');
+  online.extend('c');
+  assert(online.contains("bc"));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Eertree}
+Maintains all distinct palindromic substrings of a string online using an Eertree, also known as a palindromic tree. Each non-root node represents one distinct palindrome, and suffix links connect each palindrome to its longest proper palindromic suffix.
+
+The structure has two roots: one of length $-1$, which simplifies boundary cases, and one of length $0$, representing the empty palindrome. After each appended character, \inlinecode{last} points to the node for the longest palindromic suffix of the current string.
+
+\begin{compactitem}
+  \item \inlinecode{Eertree()} constructs an empty palindromic tree.
+  \item \inlinecode{Eertree(s)} constructs the tree for string \inlinecode{s}.
+  \item \inlinecode{add(c)} appends character \inlinecode{c} and returns \inlinecode{true} if this creates a new distinct palindrome.
+  \item \inlinecode{count\_distinct\_palindromes()} returns the number of distinct nonempty palindromic substrings.
+  \item \inlinecode{longest\_suffix\_length()} returns the length of the current longest palindromic suffix.
+  \item \inlinecode{count\_occurrences()} propagates occurrence counts through suffix links and returns \inlinecode{occ[v]} for each node \inlinecode{v}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ expected to build the tree for a string of length $n$.
+  \item $O(1)$ expected amortized per call to \inlinecode{add(c)}.
+  \item $O(n)$ per call to \inlinecode{count\_occurrences()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ transition storage and $O(n)$ nodes.
+  \item $O(1)$ auxiliary per appended character.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <string>
+#include <unordered_map>
+#include <vector>
+using std::string;
+
+class Eertree {
+  struct Node {
+    int len, link, occ;
+    std::unordered_map<char, int> next;
+
+    Node(int len = 0) : len(len), link(0), occ(0) {}
+  };
+
+  std::vector<Node> tree;
+  string s;
+  int last;
+
+  int get_suffix(int v, int pos, char c) const {
+    while (pos - 1 - tree[v].len < 0 || s[pos - 1 - tree[v].len] != c) {
+      v = tree[v].link;
+    }
+    return v;
+  }
+
+ public:
+  Eertree() : tree(), s(), last(1) {
+    tree.emplace_back(-1);
+    tree.emplace_back(0);
+    tree[0].link = 0;
+    tree[1].link = 0;
+  }
+
+  explicit Eertree(const string &text) : tree(), s(), last(1) {
+    tree.emplace_back(-1);
+    tree.emplace_back(0);
+    tree[0].link = 0;
+    tree[1].link = 0;
+    for (char c : text) {
+      add(c);
+    }
+  }
+
+  bool add(char c) {
+    s += c;
+    int pos = static_cast<int>(s.size()) - 1;
+    int cur = get_suffix(last, pos, c);
+    auto it = tree[cur].next.find(c);
+    if (it != tree[cur].next.end()) {
+      last = it->second;
+      tree[last].occ++;
+      return false;
+    }
+    last = static_cast<int>(tree.size());
+    tree.emplace_back(tree[cur].len + 2);
+    tree[last].occ = 1;
+    tree[cur].next[c] = last;
+    if (tree[last].len == 1) {
+      tree[last].link = 1;
+      return true;
+    }
+    int link_parent = get_suffix(tree[cur].link, pos, c);
+    tree[last].link = tree[link_parent].next[c];
+    return true;
+  }
+
+  int count_distinct_palindromes() const { return static_cast<int>(tree.size()) - 2; }
+  int longest_suffix_length() const { return tree[last].len; }
+
+  std::vector<int> count_occurrences() const {
+    std::vector<int> occ(tree.size());
+    for (int i = 0; i < static_cast<int>(tree.size()); i++) {
+      occ[i] = tree[i].occ;
+    }
+    for (int i = static_cast<int>(tree.size()) - 1; i >= 2; i--) {
+      occ[tree[i].link] += occ[i];
+    }
+    return occ;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  Eertree t("abacaba");
+  assert(t.count_distinct_palindromes() == 7);
+  assert(t.longest_suffix_length() == 7);
+
+  Eertree online;
+  assert(online.add('a'));
+  assert(online.add('a'));
+  assert(online.add('b'));
+  assert(online.add('a'));
+  assert(online.count_distinct_palindromes() == 4);
+  assert(online.longest_suffix_length() == 3);
+
+  Eertree duplicate;
+  assert(duplicate.add('a'));
+  assert(duplicate.add('b'));
+  assert(duplicate.add('c'));
+  assert(!duplicate.add('a'));
+
+  std::vector<int> occ = t.count_occurrences();
+  assert(static_cast<int>(occ.size()) == t.count_distinct_palindromes() + 2);
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Sequence Dynamic Programming}{3.6 Sequence Dynamic Programming}}
+\setcounter{section}{6}
+\setcounter{subsection}{0}
+\subsection{Longest Common Substring}
+Given two strings, determine their longest common substring: a contiguous run of characters that appears in both. A dynamic program computes, for each pair of prefixes, the length of their longest common suffix; the largest value over all pairs locates a longest common substring. Only the previous row of the table is retained, so the auxiliary space is linear in the shorter string.
+
+\begin{compactitem}
+  \item \inlinecode{longest\_common\_substring(s1, s2)} returns a longest common substring of \inlinecode{s1} and \inlinecode{s2} (one such substring if several are tied in length), or the empty string if they have none in common.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{longest\_common\_substring(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+
+\textbf{Space Complexity}: $O(\min\left(n, m\right))$ auxiliary heap space, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+
+\begin{lstlisting}[language=C++]
+#include <string>
+#include <vector>
+using std::string;
+
+string longest_common_substring(const string &s1, const string &s2) {
+  int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
+  if (n == 0 || m == 0) {
+    return "";
+  }
+  if (n < m) {
+    return longest_common_substring(s2, s1);
+  }
+  std::vector<int> curr(m), prev(m);
+  int pos = 0, len = 0;
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      if (s1[i] == s2[j]) {
+        curr[j] = (i > 0 && j > 0) ? prev[j - 1] + 1 : 1;
+        if (len < curr[j]) {
+          len = curr[j];
+          pos = i - curr[j] + 1;
+        }
+      } else {
+        curr[j] = 0;
+      }
+    }
+    curr.swap(prev);
+  }
+  return s1.substr(pos, len);
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(longest_common_substring("bbbabca", "aababcd") == "babc");
+  return 0;
+}
+\end{lstlisting}
+\subsection{Longest Common Subsequence}
+Given two strings, determine their longest common subsequence. A subsequence is a string that can be derived from the original string by deleting some elements without changing the order of the remaining elements (e.g. \inlinecode{"ACE"} is a subsequence of \inlinecode{"ABCDE"}, but \inlinecode{"BAE"} is not).
+
+\begin{compactitem}
+  \item \inlinecode{longest\_common\_subsequence(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using a classic dynamic programming approach. This implementation computes \inlinecode{dp[i][j]} (the length of the longest common subsequence for the length $i$ prefix of \inlinecode{s1} and the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer.
+  \item \inlinecode{hirschberg\_lcs(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{longest\_common\_subsequence(s1, s2)} as well as \inlinecode{hirschberg\_lcs(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{longest\_common\_subsequence(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+  \item $O(\log\left(\max\left(n, m\right)\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_lcs(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <iterator>
+#include <string>
+#include <vector>
+using std::string;
+
+string longest_common_subsequence(const string &s1, const string &s2) {
+  int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1; j <= m; j++) {
+      if (s1[i - 1] == s2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = std::max(dp[i][j - 1], dp[i - 1][j]);
+      }
+    }
+  }
+  string res;
+  for (int i = n, j = m; i > 0 && j > 0;) {
+    if (s1[i - 1] == s2[j - 1]) {
+      res += s1[i - 1];
+      i--;
+      j--;
+    } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+  std::reverse(res.begin(), res.end());
+  return res;
+}
+
+template<class It>
+std::vector<int> lcs_len(It lo1, It hi1, It lo2, It hi2) {
+  std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
+  for (It it1 = lo1; it1 != hi1; ++it1) {
+    res.swap(prev);
+    int i = 0;
+    for (It it2 = lo2; it2 != hi2; ++it2) {
+      res[i + 1] = (*it1 == *it2) ? prev[i] + 1 : std::max(res[i], prev[i + 1]);
+      i++;
+    }
+  }
+  return res;
+}
+
+template<class It>
+void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
+  if (lo1 == hi1) {
+    return;
+  }
+  if (lo1 + 1 == hi1) {
+    if (std::find(lo2, hi2, *lo1) != hi2) {
+      *res += *lo1;
+    }
+    return;
+  }
+  It mid1 = lo1 + (hi1 - lo1) / 2;
+  std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
+  std::vector<int> fwd = lcs_len(lo1, mid1, lo2, hi2);
+  std::vector<int> rev = lcs_len(rlo1, rmid1, rlo2, rhi2);
+  It mid2 = lo2;
+  int maxlen = -1;
+  for (int i = 0, j = static_cast<int>(rev.size()) - 1; i < static_cast<int>(fwd.size());
+       i++, j--) {
+    if (fwd[i] + rev[j] > maxlen) {
+      maxlen = fwd[i] + rev[j];
+      mid2 = lo2 + i;
+    }
+  }
+  hirschberg_rec(lo1, mid1, lo2, mid2, res);
+  hirschberg_rec(mid1, hi1, mid2, hi2, res);
+}
+
+string hirschberg_lcs(const string &s1, const string &s2) {
+  if (s1.size() < s2.size()) {
+    return hirschberg_lcs(s2, s1);
+  }
+  string res;
+  hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res);
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(longest_common_subsequence("xmjyauz", "mzjawxu") == "mjau");
+  assert(hirschberg_lcs("xmjyauz", "mzjawxu") == "mjau");
+  return 0;
+}
+\end{lstlisting}
+\subsection{Sequence Alignment}
+Given two strings, determine their minimum-cost alignment. An alignment of two strings is a transformation of both strings by inserting gap characters \inlinecode{\_} in some way to make the final lengths equal. The total cost of an alignment given a \inlinecode{gap\_cost} (insertion or deletion cost) and a \inlinecode{sub\_cost} (substitution, i.e. mismatch cost) is \inlinecode{gap\_cost} times the number of inserted gaps, plus \inlinecode{sub\_cost} times the number of indices at which the two aligned strings differ.
+
+\begin{compactitem}
+  \item \inlinecode{align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns a pair of aligned strings for strings \inlinecode{s1} and \inlinecode{s2}, using a classic dynamic programming approach. This implementation first computes \inlinecode{dp[i][j]} (the cost of aligning the length $i$ prefix of \inlinecode{s1} with the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer. For \inlinecode{gap\_cost = sub\_cost = 1}, \inlinecode{dp[n][m]} will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+  \item \inlinecode{hirschberg\_align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns the sequence alignment of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{align\_sequences(s1, s2)} as well as \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+  \item $O(\log\left(\max\left(n, m\right)\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <string>
+#include <utility>
+#include <vector>
+using std::string;
+
+std::pair<string, string> align_sequences(
+    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
+) {
+  int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
+  for (int i = 0; i <= n; i++) {
+    dp[i][0] = i * gap_cost;
+  }
+  for (int j = 0; j <= m; j++) {
+    dp[0][j] = j * gap_cost;
+  }
+  for (int i = 1; i <= n; i++) {
+    for (int j = 1; j <= m; j++) {
+      dp[i][j] = (s1[i - 1] == s2[j - 1]) ? dp[i - 1][j - 1]
+                                          : std::min(
+                                                dp[i - 1][j - 1] + sub_cost,
+                                                std::min(dp[i - 1][j], dp[i][j - 1]) + gap_cost
+                                            );
+    }
+  }
+  string res1, res2;
+  int i = n, j = m;
+  while (i > 0 && j > 0) {
+    if (s1[i - 1] == s2[j - 1] || dp[i][j] == dp[i - 1][j - 1] + sub_cost) {
+      res1 += s1[--i];
+      res2 += s2[--j];
+    } else if (dp[i][j] == dp[i - 1][j] + gap_cost) {
+      res1 += s1[--i];
+      res2 += '_';
+    } else if (dp[i][j] == dp[i][j - 1] + gap_cost) {
+      res1 += '_';
+      res2 += s2[--j];
+    }
+  }
+  while (i > 0 || j > 0) {
+    res1 += (i > 0) ? s1[--i] : '_';
+    res2 += (j > 0) ? s2[--j] : '_';
+  }
+  std::reverse(res1.begin(), res1.end());
+  std::reverse(res2.begin(), res2.end());
+  return {res1, res2};
+}
+
+template<class It>
+std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2, int gap_cost, int sub_cost) {
+  std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
+  for (It it1 = lo1; it1 != hi1; ++it1) {
+    res.swap(prev);
+    int i = 0;
+    for (It it2 = lo2; it2 != hi2; ++it2) {
+      res[i + 1] = (*it1 == *it2) ? prev[i] : std::min(prev[i] + sub_cost, res[i] + gap_cost);
+      i++;
+    }
+  }
+  return res;
+}
+
+template<class It>
+void hirschberg_rec(
+    It lo1, It hi1, It lo2, It hi2, string *res1, string *res2, int gap_cost, int sub_cost
+) {
+  if (lo1 == hi1) {
+    for (It it2 = lo2; it2 != hi2; ++it2) {
+      *res1 += '_';
+      *res2 += *it2;
+    }
+    return;
+  }
+  if (lo1 + 1 == hi1) {
+    It pos = std::find(lo2, hi2, *lo1);
+    bool insert = (pos == hi2) && (gap_cost * (hi2 - lo2 + 1) < sub_cost);
+    if (lo2 == hi2 || insert) {
+      *res1 += *lo1;
+      *res2 += '_';
+    }
+    for (It it2 = lo2; it2 != hi2; ++it2) {
+      *res1 += (pos == it2 || (!insert && it2 == lo2)) ? *lo1 : '_';
+      *res2 += *it2;
+    }
+    return;
+  }
+  It mid1 = lo1 + (hi1 - lo1) / 2;
+  std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
+  std::vector<int> fwd = row_cost(lo1, mid1, lo2, hi2, gap_cost, sub_cost);
+  std::vector<int> rev = row_cost(rlo1, rmid1, rlo2, rhi2, gap_cost, sub_cost);
+  It mid2 = lo2;
+  int mincost = -1;
+  for (int i = 0, j = static_cast<int>(rev.size()) - 1; i < static_cast<int>(fwd.size());
+       i++, j--) {
+    if (mincost < 0 || fwd[i] + rev[j] < mincost) {
+      mincost = fwd[i] + rev[j];
+      mid2 = lo2 + i;
+    }
+  }
+  hirschberg_rec(lo1, mid1, lo2, mid2, res1, res2, gap_cost, sub_cost);
+  hirschberg_rec(mid1, hi1, mid2, hi2, res1, res2, gap_cost, sub_cost);
+}
+
+std::pair<string, string> hirschberg_align_sequences(
+    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
+) {
+  if (s1.size() < s2.size()) {
+    return hirschberg_align_sequences(s2, s1, gap_cost, sub_cost);
+  }
+  string res1, res2;
+  hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res1, &res2, gap_cost, sub_cost);
+  return {res1, res2};
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+
+int main() {
+  assert(
+      align_sequences("AGGGCT", "AGGCA", 2, 3) == (std::pair<string, string>{"AGGGCT", "A_GGCA"})
+  );
+  assert(
+      hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) ==
+      (std::pair<string, string>{"AGGGCT", "A_GGCA"})
+  );
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Expression Parsing}{3.7 Expression Parsing}}
+\setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Recursive Descent Parsing (Simple)}
 Evaluate an expression in accordance to the order of operations (parentheses, unary plus and minus signs, multiplication/division, addition/subtraction). The following is a minimalistic recursive descent implementation using iterators. Each precedence level is parsed by its own function that obtains operands by calling the next-tighter level, so the call structure itself enforces the order of operations.
@@ -1900,7 +3753,7 @@ class ShuntingYardParser {
       ) {
         op_stack.emplace(curr, true);
       } else {
-        for (;;) {
+        while (true) {
           auto [op, is_unary] = op_stack.top();
           auto it1 = binary_ops.find(op);
           auto it2 = binary_ops.find(curr);
@@ -1985,1545 +3838,6 @@ int main() {
 }
 \end{lstlisting}
 
-\section{\texorpdfstring{Sequence Dynamic Programming}{3.5 Sequence Dynamic Programming}}
-\setcounter{section}{5}
-\setcounter{subsection}{0}
-\subsection{Longest Common Substring}
-Given two strings, determine their longest common substring: a contiguous run of characters that appears in both. A dynamic program computes, for each pair of prefixes, the length of their longest common suffix; the largest value over all pairs locates a longest common substring. Only the previous row of the table is retained, so the auxiliary space is linear in the shorter string.
-
-\begin{compactitem}
-  \item \inlinecode{longest\_common\_substring(s1, s2)} returns a longest common substring of \inlinecode{s1} and \inlinecode{s2} (one such substring if several are tied in length), or the empty string if they have none in common.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{longest\_common\_substring(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-
-\textbf{Space Complexity}: $O(\min\left(n, m\right))$ auxiliary heap space, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-
-\begin{lstlisting}[language=C++]
-#include <string>
-#include <vector>
-using std::string;
-
-string longest_common_substring(const string &s1, const string &s2) {
-  int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
-  if (n == 0 || m == 0) {
-    return "";
-  }
-  if (n < m) {
-    return longest_common_substring(s2, s1);
-  }
-  std::vector<int> curr(m), prev(m);
-  int pos = 0, len = 0;
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < m; j++) {
-      if (s1[i] == s2[j]) {
-        curr[j] = (i > 0 && j > 0) ? prev[j - 1] + 1 : 1;
-        if (len < curr[j]) {
-          len = curr[j];
-          pos = i - curr[j] + 1;
-        }
-      } else {
-        curr[j] = 0;
-      }
-    }
-    curr.swap(prev);
-  }
-  return s1.substr(pos, len);
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  assert(longest_common_substring("bbbabca", "aababcd") == "babc");
-  return 0;
-}
-\end{lstlisting}
-\subsection{Longest Common Subsequence}
-Given two strings, determine their longest common subsequence. A subsequence is a string that can be derived from the original string by deleting some elements without changing the order of the remaining elements (e.g. \inlinecode{"ACE"} is a subsequence of \inlinecode{"ABCDE"}, but \inlinecode{"BAE"} is not).
-
-\begin{compactitem}
-  \item \inlinecode{longest\_common\_subsequence(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using a classic dynamic programming approach. This implementation computes \inlinecode{dp[i][j]} (the length of the longest common subsequence for the length $i$ prefix of \inlinecode{s1} and the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer.
-  \item \inlinecode{hirschberg\_lcs(s1, s2)} returns the longest common subsequence of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{longest\_common\_subsequence(s1, s2)} as well as \inlinecode{hirschberg\_lcs(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{longest\_common\_subsequence(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-  \item $O(\log \max\left(n, m\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_lcs(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <iterator>
-#include <string>
-#include <vector>
-using std::string;
-
-string longest_common_subsequence(const string &s1, const string &s2) {
-  int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
-  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
-  for (int i = 1; i <= n; i++) {
-    for (int j = 1; j <= m; j++) {
-      if (s1[i - 1] == s2[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1] + 1;
-      } else {
-        dp[i][j] = std::max(dp[i][j - 1], dp[i - 1][j]);
-      }
-    }
-  }
-  string res;
-  for (int i = n, j = m; i > 0 && j > 0;) {
-    if (s1[i - 1] == s2[j - 1]) {
-      res += s1[i - 1];
-      i--;
-      j--;
-    } else if (dp[i - 1][j] >= dp[i][j - 1]) {
-      i--;
-    } else {
-      j--;
-    }
-  }
-  std::reverse(res.begin(), res.end());
-  return res;
-}
-
-template<class It>
-std::vector<int> lcs_len(It lo1, It hi1, It lo2, It hi2) {
-  std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
-  for (It it1 = lo1; it1 != hi1; ++it1) {
-    res.swap(prev);
-    int i = 0;
-    for (It it2 = lo2; it2 != hi2; ++it2) {
-      res[i + 1] = (*it1 == *it2) ? prev[i] + 1 : std::max(res[i], prev[i + 1]);
-      i++;
-    }
-  }
-  return res;
-}
-
-template<class It>
-void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
-  if (lo1 == hi1) {
-    return;
-  }
-  if (lo1 + 1 == hi1) {
-    if (std::find(lo2, hi2, *lo1) != hi2) {
-      *res += *lo1;
-    }
-    return;
-  }
-  It mid1 = lo1 + (hi1 - lo1) / 2;
-  std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
-  std::vector<int> fwd = lcs_len(lo1, mid1, lo2, hi2);
-  std::vector<int> rev = lcs_len(rlo1, rmid1, rlo2, rhi2);
-  It mid2 = lo2;
-  int maxlen = -1;
-  for (int i = 0, j = static_cast<int>(rev.size()) - 1; i < static_cast<int>(fwd.size());
-       i++, j--) {
-    if (fwd[i] + rev[j] > maxlen) {
-      maxlen = fwd[i] + rev[j];
-      mid2 = lo2 + i;
-    }
-  }
-  hirschberg_rec(lo1, mid1, lo2, mid2, res);
-  hirschberg_rec(mid1, hi1, mid2, hi2, res);
-}
-
-string hirschberg_lcs(const string &s1, const string &s2) {
-  if (s1.size() < s2.size()) {
-    return hirschberg_lcs(s2, s1);
-  }
-  string res;
-  hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res);
-  return res;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  assert(longest_common_subsequence("xmjyauz", "mzjawxu") == "mjau");
-  assert(hirschberg_lcs("xmjyauz", "mzjawxu") == "mjau");
-  return 0;
-}
-\end{lstlisting}
-\subsection{Sequence Alignment}
-Given two strings, determine their minimum-cost alignment. An alignment of two strings is a transformation of both strings by inserting gap characters \inlinecode{\_} in some way to make the final lengths equal. The total cost of an alignment given a \inlinecode{gap\_cost} (insertion or deletion cost) and a \inlinecode{sub\_cost} (substitution, i.e. mismatch cost) is \inlinecode{gap\_cost} times the number of inserted gaps, plus \inlinecode{sub\_cost} times the number of indices at which the two aligned strings differ.
-
-\begin{compactitem}
-  \item \inlinecode{align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns a pair of aligned strings for strings \inlinecode{s1} and \inlinecode{s2}, using a classic dynamic programming approach. This implementation first computes \inlinecode{dp[i][j]} (the cost of aligning the length $i$ prefix of \inlinecode{s1} with the length $j$ prefix of \inlinecode{s2}) before following the path backwards to construct the answer. For \inlinecode{gap\_cost = sub\_cost = 1}, \inlinecode{dp[n][m]} will be the Levenshtein edit distance, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-  \item \inlinecode{hirschberg\_align\_sequences(s1, s2, gap\_cost, sub\_cost)} returns the sequence alignment of strings \inlinecode{s1} and \inlinecode{s2} using the more memory efficient Hirschberg's algorithm.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(n \cdot m)$ per call to \inlinecode{align\_sequences(s1, s2)} as well as \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n \cdot m)$ auxiliary heap space for \inlinecode{align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-  \item $O(\log \max\left(n, m\right))$ auxiliary stack space and $O(\min\left(n, m\right))$ auxiliary heap space for \inlinecode{hirschberg\_align\_sequences(s1, s2)}, where $n$ and $m$ are the lengths of \inlinecode{s1} and \inlinecode{s2}, respectively.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <string>
-#include <utility>
-#include <vector>
-using std::string;
-
-std::pair<string, string> align_sequences(
-    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
-) {
-  int n = static_cast<int>(s1.size()), m = static_cast<int>(s2.size());
-  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
-  for (int i = 0; i <= n; i++) {
-    dp[i][0] = i * gap_cost;
-  }
-  for (int j = 0; j <= m; j++) {
-    dp[0][j] = j * gap_cost;
-  }
-  for (int i = 1; i <= n; i++) {
-    for (int j = 1; j <= m; j++) {
-      dp[i][j] = (s1[i - 1] == s2[j - 1]) ? dp[i - 1][j - 1]
-                                          : std::min(
-                                                dp[i - 1][j - 1] + sub_cost,
-                                                std::min(dp[i - 1][j], dp[i][j - 1]) + gap_cost
-                                            );
-    }
-  }
-  string res1, res2;
-  int i = n, j = m;
-  while (i > 0 && j > 0) {
-    if (s1[i - 1] == s2[j - 1] || dp[i][j] == dp[i - 1][j - 1] + sub_cost) {
-      res1 += s1[--i];
-      res2 += s2[--j];
-    } else if (dp[i][j] == dp[i - 1][j] + gap_cost) {
-      res1 += s1[--i];
-      res2 += '_';
-    } else if (dp[i][j] == dp[i][j - 1] + gap_cost) {
-      res1 += '_';
-      res2 += s2[--j];
-    }
-  }
-  while (i > 0 || j > 0) {
-    res1 += (i > 0) ? s1[--i] : '_';
-    res2 += (j > 0) ? s2[--j] : '_';
-  }
-  std::reverse(res1.begin(), res1.end());
-  std::reverse(res2.begin(), res2.end());
-  return {res1, res2};
-}
-
-template<class It>
-std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2, int gap_cost, int sub_cost) {
-  std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
-  for (It it1 = lo1; it1 != hi1; ++it1) {
-    res.swap(prev);
-    int i = 0;
-    for (It it2 = lo2; it2 != hi2; ++it2) {
-      res[i + 1] = (*it1 == *it2) ? prev[i] : std::min(prev[i] + sub_cost, res[i] + gap_cost);
-      i++;
-    }
-  }
-  return res;
-}
-
-template<class It>
-void hirschberg_rec(
-    It lo1, It hi1, It lo2, It hi2, string *res1, string *res2, int gap_cost, int sub_cost
-) {
-  if (lo1 == hi1) {
-    for (It it2 = lo2; it2 != hi2; ++it2) {
-      *res1 += '_';
-      *res2 += *it2;
-    }
-    return;
-  }
-  if (lo1 + 1 == hi1) {
-    It pos = std::find(lo2, hi2, *lo1);
-    bool insert = (pos == hi2) && (gap_cost * (hi2 - lo2 + 1) < sub_cost);
-    if (lo2 == hi2 || insert) {
-      *res1 += *lo1;
-      *res2 += '_';
-    }
-    for (It it2 = lo2; it2 != hi2; ++it2) {
-      *res1 += (pos == it2 || (!insert && it2 == lo2)) ? *lo1 : '_';
-      *res2 += *it2;
-    }
-    return;
-  }
-  It mid1 = lo1 + (hi1 - lo1) / 2;
-  std::reverse_iterator<It> rlo1(hi1), rmid1(mid1), rlo2(hi2), rhi2(lo2);
-  std::vector<int> fwd = row_cost(lo1, mid1, lo2, hi2, gap_cost, sub_cost);
-  std::vector<int> rev = row_cost(rlo1, rmid1, rlo2, rhi2, gap_cost, sub_cost);
-  It mid2 = lo2;
-  int mincost = -1;
-  for (int i = 0, j = static_cast<int>(rev.size()) - 1; i < static_cast<int>(fwd.size());
-       i++, j--) {
-    if (mincost < 0 || fwd[i] + rev[j] < mincost) {
-      mincost = fwd[i] + rev[j];
-      mid2 = lo2 + i;
-    }
-  }
-  hirschberg_rec(lo1, mid1, lo2, mid2, res1, res2, gap_cost, sub_cost);
-  hirschberg_rec(mid1, hi1, mid2, hi2, res1, res2, gap_cost, sub_cost);
-}
-
-std::pair<string, string> hirschberg_align_sequences(
-    const string &s1, const string &s2, int gap_cost = 1, int sub_cost = 1
-) {
-  if (s1.size() < s2.size()) {
-    return hirschberg_align_sequences(s2, s1, gap_cost, sub_cost);
-  }
-  string res1, res2;
-  hirschberg_rec(s1.begin(), s1.end(), s2.begin(), s2.end(), &res1, &res2, gap_cost, sub_cost);
-  return {res1, res2};
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  assert(
-      align_sequences("AGGGCT", "AGGCA", 2, 3) == (std::pair<string, string>{"AGGGCT", "A_GGCA"})
-  );
-  assert(
-      hirschberg_align_sequences("AGGGCT", "AGGCA", 2, 3) ==
-      (std::pair<string, string>{"AGGGCT", "A_GGCA"})
-  );
-  return 0;
-}
-\end{lstlisting}
-
-\section{\texorpdfstring{Suffix Arrays and LCP}{3.6 Suffix Arrays and LCP}}
-\setcounter{section}{6}
-\setcounter{subsection}{0}
-\subsection{Suffix Array and LCP (Manber-Myers)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is \inlinecode{[1, 2, 0]}.
-
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
-
-The doubling algorithm sorts the suffixes by their first $2^k$ characters for increasing $k$: each round orders suffixes by their pair of ranks from the previous round, so a comparison costs $O(1)$ and the full order emerges after $O(\log n)$ rounds.
-
-\begin{compactitem}
-  \item \inlinecode{SuffixArrayManberMyers(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers doubling algorithm with a comparison-based sort.
-  \item \inlinecode{get\_sa()} returns the constructed suffix array.
-  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
-  \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n \log^{2} n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
-  \item $O(1)$ per call to \inlinecode{get\_sa()}.
-  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
-  \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
-  \item $O(n)$ auxiliary heap space for the constructor.
-  \item $O(1)$ auxiliary space for all other operations.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <numeric>
-#include <string>
-#include <utility>
-#include <vector>
-using std::string;
-
-class SuffixArrayManberMyers {
-  string s;
-  std::vector<int> sa, rk;
-
- public:
-  explicit SuffixArrayManberMyers(const string &s) : s(s), sa(s.size()), rk(s.size()) {
-    int n = static_cast<int>(s.size());
-    std::iota(sa.begin(), sa.end(), 0);
-    for (int i = 0; i < n; i++) {
-      rk[i] = static_cast<unsigned char>(s[i]);
-    }
-    std::vector<std::pair<int, int>> rk2(n);
-    for (int gap = 1; gap < n; gap *= 2) {
-      for (int i = 0; i < n; i++) {
-        rk2[i] = {rk[i], i + gap < n ? rk[i + gap] + 1 : 0};
-      }
-      std::sort(sa.begin(), sa.end(), [&](int i, int j) { return rk2[i] < rk2[j]; });
-      for (int i = 0; i < n; i++) {
-        rk[sa[i]] = (i > 0 && rk2[sa[i - 1]] == rk2[sa[i]]) ? rk[sa[i - 1]] : i;
-      }
-    }
-  }
-
-  const std::vector<int> &get_sa() const { return sa; }
-
-  std::vector<int> get_lcp() const {
-    int n = static_cast<int>(s.size());
-    if (n == 0) {
-      return {};  // Avoid constructing a vector of size (size_t)(-1).
-    }
-    std::vector<int> lcp(n - 1);
-    for (int i = 0, k = 0; i < n; i++) {
-      if (rk[i] < n - 1) {
-        int j = sa[rk[i] + 1];
-        while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
-          k++;
-        }
-        lcp[rk[i]] = k;
-        if (k > 0) {
-          k--;
-        }
-      }
-    }
-    return lcp;
-  }
-
-  size_t find(const string &needle) {
-    if (needle.empty()) {
-      return 0;
-    }
-    int lo = 0, hi = static_cast<int>(s.size()) - 1;
-    while (lo <= hi) {
-      int mid = lo + (hi - lo) / 2;
-      int cmp = s.compare(sa[mid], needle.size(), needle);
-      if (cmp < 0) {
-        lo = mid + 1;
-      } else if (cmp > 0) {
-        hi = mid - 1;
-      } else {
-        return sa[mid];
-      }
-    }
-    return string::npos;
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  SuffixArrayManberMyers sa("banana");
-  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
-  vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
-  vector<int> lcp_expected{1, 3, 0, 0, 2};
-  assert(sarr == sarr_expected);
-  assert(lcp == lcp_expected);
-  assert(sa.find("ana") == 1);
-  assert(sa.find("x") == string::npos);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Suffix Array and LCP (Counting Sort)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is \inlinecode{[1, 2, 0]}.
-
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
-
-The doubling algorithm sorts the suffixes by their first $2^k$ characters for increasing $k$: each round orders suffixes by their pair of ranks from the previous round, so a comparison costs $O(1)$ and the full order emerges after $O(\log n)$ rounds. Replacing the comparison sort of each round with counting-sort-style rank updates removes a logarithmic factor.
-
-\begin{compactitem}
-  \item \inlinecode{SuffixArrayCountingSort(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers doubling algorithm with counting-sort-style rank updates to reduce the running time to $O(n \log n)$.
-  \item \inlinecode{get\_sa()} returns the constructed suffix array.
-  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
-  \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n \log n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
-  \item $O(1)$ per call to \inlinecode{get\_sa()}.
-  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
-  \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
-  \item $O(n)$ auxiliary heap space for the constructor.
-  \item $O(1)$ auxiliary space for all other operations.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <numeric>
-#include <string>
-#include <utility>
-#include <vector>
-using std::string;
-
-class SuffixArrayCountingSort {
-  string s;
-  std::vector<int> sa, rk;
-
- public:
-  explicit SuffixArrayCountingSort(const string &s) : s(s), sa(s.size()), rk(s.size()) {
-    int n = static_cast<int>(s.size());
-    std::iota(sa.rbegin(), sa.rend(), 0);
-    for (int i = 0; i < n; i++) {
-      rk[i] = static_cast<unsigned char>(s[i]);
-    }
-    std::stable_sort(sa.begin(), sa.end(), [&](int i, int j) {
-      return static_cast<unsigned char>(s[i]) < static_cast<unsigned char>(s[j]);
-    });
-    for (int gap = 1; gap < n; gap *= 2) {
-      std::vector<int> prev_rk(rk), prev_sa(sa), cnt(n);
-      std::iota(cnt.begin(), cnt.end(), 0);
-      for (int i = 0; i < n; i++) {
-        rk[sa[i]] = (i > 0 && prev_rk[sa[i - 1]] == prev_rk[sa[i]] && sa[i - 1] + gap < n &&
-                     prev_rk[sa[i - 1] + gap / 2] == prev_rk[sa[i] + gap / 2])
-                        ? rk[sa[i - 1]]
-                        : i;
-      }
-      for (int i = 0; i < n; i++) {
-        int s1 = prev_sa[i] - gap;
-        if (s1 >= 0) {
-          sa[cnt[rk[s1]]++] = s1;
-        }
-      }
-    }
-  }
-
-  const std::vector<int> &get_sa() const { return sa; }
-
-  std::vector<int> get_lcp() const {
-    int n = static_cast<int>(s.size());
-    if (n == 0) {
-      return {};  // Avoid constructing a vector of size (size_t)(-1).
-    }
-    std::vector<int> lcp(n - 1);
-    for (int i = 0, k = 0; i < n; i++) {
-      if (rk[i] < n - 1) {
-        int j = sa[rk[i] + 1];
-        while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
-          k++;
-        }
-        lcp[rk[i]] = k;
-        if (k > 0) {
-          k--;
-        }
-      }
-    }
-    return lcp;
-  }
-
-  size_t find(const string &needle) {
-    if (needle.empty()) {
-      return 0;
-    }
-    int lo = 0, hi = static_cast<int>(s.size()) - 1;
-    while (lo <= hi) {
-      int mid = lo + (hi - lo) / 2;
-      int cmp = s.compare(sa[mid], needle.size(), needle);
-      if (cmp < 0) {
-        lo = mid + 1;
-      } else if (cmp > 0) {
-        hi = mid - 1;
-      } else {
-        return sa[mid];
-      }
-    }
-    return string::npos;
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  SuffixArrayCountingSort sa("banana");
-  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
-  vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
-  vector<int> lcp_expected{1, 3, 0, 0, 2};
-  assert(sarr == sarr_expected);
-  assert(lcp == lcp_expected);
-  assert(sa.find("ana") == 1);
-  assert(sa.find("x") == string::npos);
-  return 0;
-}
-\end{lstlisting}
-\subsection{Suffix Array and LCP (Linear DC3)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
-
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
-
-The DC3/skew algorithm recursively constructs the suffix array of the suffixes starting at positions not divisible by 3, uses that order to sort the remaining suffixes with radix sort, and merges the two sorted groups in linear time.
-
-\begin{compactitem}
-  \item \inlinecode{SuffixArrayDC3(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
-  \item \inlinecode{get\_sa()} returns the constructed suffix array.
-  \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
-  \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n)$ per call to the constructor, where $n$ is the length of \inlinecode{s}.
-  \item $O(1)$ per call to \inlinecode{get\_sa()}.
-  \item $O(n)$ per call to \inlinecode{get\_lcp()}, where $n$ is the length of \inlinecode{s}.
-  \item $O(m \log n)$ per call to \inlinecode{find(needle)}, where $m$ is the length of \inlinecode{needle} and $n$ is the length of \inlinecode{s}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
-  \item $O(n)$ auxiliary heap space for the constructor.
-  \item $O(1)$ auxiliary space for all other operations.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <string>
-#include <utility>
-#include <vector>
-using std::string;
-
-class SuffixArrayDC3 {
-  static bool leq(int a1, int a2, int b1, int b2) { return (a1 < b1) || (a1 == b1 && a2 <= b2); }
-
-  static bool leq(int a1, int a2, int a3, int b1, int b2, int b3) {
-    return (a1 < b1) || (a1 == b1 && leq(a2, a3, b2, b3));
-  }
-
-  template<class It>
-  static void radix_pass(It a, It b, It r, int n, int K) {
-    std::vector<int> cnt(K + 1);
-    for (int i = 0; i < n; i++) {
-      cnt[r[a[i]]]++;
-    }
-    for (int i = 1; i <= K; i++) {
-      cnt[i] += cnt[i - 1];
-    }
-    for (int i = n - 1; i >= 0; i--) {
-      b[--cnt[r[a[i]]]] = a[i];
-    }
-  }
-
-  template<class It>
-  static void suffix_array_dc3(It s, It sa, int n, int K) {
-    int n0 = (n + 2) / 3, n1 = (n + 1) / 3, n2 = n / 3, n02 = n0 + n2;
-    std::vector<int> s12(n02 + 3), sa12(n02 + 3), s0(n0), sa0(n0);
-    s12[n02] = s12[n02 + 1] = s12[n02 + 2] = 0;
-    sa12[n02] = sa12[n02 + 1] = sa12[n02 + 2] = 0;
-    for (int i = 0, j = 0; i < n + n0 - n1; i++) {
-      if (i % 3 != 0) {
-        s12[j++] = i;
-      }
-    }
-    radix_pass(s12.begin(), sa12.begin(), s + 2, n02, K);
-    radix_pass(sa12.begin(), s12.begin(), s + 1, n02, K);
-    radix_pass(s12.begin(), sa12.begin(), s, n02, K);
-    int name = 0, c0 = -1, c1 = -1, c2 = -1;
-    for (int i = 0; i < n02; i++) {
-      if (s[sa12[i]] != c0 || s[sa12[i] + 1] != c1 || s[sa12[i] + 2] != c2) {
-        name++;
-        c0 = s[sa12[i]];
-        c1 = s[sa12[i] + 1];
-        c2 = s[sa12[i] + 2];
-      }
-      (sa12[i] % 3 == 1 ? s12[sa12[i] / 3] : s12[sa12[i] / 3 + n0]) = name;
-    }
-    if (name < n02) {
-      suffix_array_dc3(s12.begin(), sa12.begin(), n02, name);
-      for (int i = 0; i < n02; i++) {
-        s12[sa12[i]] = i + 1;
-      }
-    } else {
-      for (int i = 0; i < n02; i++) {
-        sa12[s12[i] - 1] = i;
-      }
-    }
-    for (int i = 0, j = 0; i < n02; i++) {
-      if (sa12[i] < n0) {
-        s0[j++] = 3 * sa12[i];
-      }
-    }
-    radix_pass(s0.begin(), sa0.begin(), s, n0, K);
-    for (int p = 0, t = n0 - n1, k = 0; k < n; k++) {
-      int i = (sa12[t] < n0) ? 3 * sa12[t] + 1 : 3 * (sa12[t] - n0) + 2, j = sa0[p];
-      if (sa12[t] < n0
-              ? leq(s[i], s12[sa12[t] + n0], s[j], s12[j / 3])
-              : leq(s[i], s[i + 1], s12[sa12[t] - n0 + 1], s[j], s[j + 1], s12[j / 3 + n0])) {
-        sa[k] = i;
-        if (++t == n02) {
-          for (k++; p < n0; p++, k++) {
-            sa[k] = sa0[p];
-          }
-        }
-      } else {
-        sa[k] = j;
-        if (++p == n0) {
-          for (k++; t < n02; t++, k++) {
-            sa[k] = (sa12[t] < n0) ? 3 * sa12[t] + 1 : 3 * (sa12[t] - n0) + 2;
-          }
-        }
-      }
-    }
-  }
-
-  string s;
-  std::vector<int> sa;
-
- public:
-  explicit SuffixArrayDC3(const string &s) : s(s), sa(s.size() + 1) {
-    int n = static_cast<int>(s.size());
-    std::vector<int> scopy(n);
-    for (int i = 0; i < n; i++) {
-      scopy[i] = static_cast<unsigned char>(s[i]) + 1;
-    }
-    scopy.resize(n + 4);
-    suffix_array_dc3(scopy.begin(), sa.begin(), n + 1, 256);
-    sa.erase(sa.begin());
-  }
-
-  const std::vector<int> &get_sa() const { return sa; }
-
-  std::vector<int> get_lcp() const {
-    int n = static_cast<int>(s.size());
-    if (n == 0) {
-      return {};
-    }
-    std::vector<int> rank(n), lcp(n - 1);
-    for (int i = 0; i < n; i++) {
-      rank[sa[i]] = i;
-    }
-    for (int i = 0, k = 0; i < n; i++) {
-      if (rank[i] < n - 1) {
-        int j = sa[rank[i] + 1];
-        while (std::max(i, j) + k < n && s[i + k] == s[j + k]) {
-          k++;
-        }
-        lcp[rank[i]] = k;
-        if (k > 0) {
-          k--;
-        }
-      }
-    }
-    return lcp;
-  }
-
-  size_t find(const string &needle) {
-    if (needle.empty()) {
-      return 0;
-    }
-    int lo = 0, hi = static_cast<int>(s.size()) - 1;
-    while (lo <= hi) {
-      int mid = lo + (hi - lo) / 2;
-      int cmp = s.compare(sa[mid], needle.size(), needle);
-      if (cmp < 0) {
-        lo = mid + 1;
-      } else if (cmp > 0) {
-        hi = mid - 1;
-      } else {
-        return sa[mid];
-      }
-    }
-    return string::npos;
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  SuffixArrayDC3 sa("banana");
-  vector<int> sarr = sa.get_sa(), lcp = sa.get_lcp();
-  vector<int> sarr_expected{5, 3, 1, 0, 4, 2};
-  vector<int> lcp_expected{1, 3, 0, 0, 2};
-  assert(sarr == sarr_expected);
-  assert(lcp == lcp_expected);
-  assert(sa.find("ana") == 1);
-  assert(sa.find("x") == string::npos);
-  return 0;
-}
-\end{lstlisting}
-
-\section{\texorpdfstring{String Data Structures}{3.7 String Data Structures}}
-\setcounter{section}{7}
-\setcounter{subsection}{0}
-\subsection{Trie}
-Maintain a map of strings to values using a tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Children are stored in hash tables, and \inlinecode{walk()} sorts child labels as needed to preserve lexicographic traversal.
-
-\begin{compactitem}
-  \item \inlinecode{Trie()} constructs an empty map.
-  \item \inlinecode{size()} returns the size of the map.
-  \item \inlinecode{empty()} returns whether the map is empty.
-  \item \inlinecode{insert(s, v)} adds an entry with string key \inlinecode{s} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
-  \item \inlinecode{erase(s)} removes the entry with string key \inlinecode{s} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the string to be removed was not found.
-  \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{nullptr} if the key was not found.
-  \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n)$ expected per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}.
-  \item $O(l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map, treating the character alphabet as constant.
-  \item $O(1)$ per call to all other operations.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(l)$ for storage of the Trie, where $l$ is the total length of string keys that are currently in the map.
-  \item $O(n)$ auxiliary stack space for construction, destruction, \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
-  \item $O(n)$ auxiliary stack space for \inlinecode{erase(s)}, where $n$ is the length of \inlinecode{s}.
-  \item $O(1)$ auxiliary for all other operations.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cstddef>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-using std::string;
-
-template<class V>
-class Trie {
-  struct Node {
-    V value;
-    bool is_terminal;
-    std::unordered_map<char, Node *> children;
-
-    Node() : is_terminal(false) {}
-  } *root;
-
-  static bool erase(Node *n, const string &s, int i) {
-    if (i == static_cast<int>(s.size())) {
-      if (!n->is_terminal) {
-        return false;
-      }
-      n->is_terminal = false;
-      return true;
-    }
-    auto it = n->children.find(s[i]);
-    if (it == n->children.end() || !erase(it->second, s, i + 1)) {
-      return false;
-    }
-    if (it->second->children.empty()) {
-      delete it->second;
-      n->children.erase(it);
-    }
-    return true;
-  }
-
-  template<class Fn>
-  static void walk(Node *n, string &s, Fn f) {
-    if (n->is_terminal) {
-      f(s, n->value);
-    }
-    std::vector<std::pair<char, Node *>> children(n->children.begin(), n->children.end());
-    std::sort(children.begin(), children.end());
-    for (auto &[c, child] : children) {
-      s += c;
-      walk(child, s, f);
-      s.pop_back();
-    }
-  }
-
-  static void clean_up(Node *n) {
-    for (auto &[c, child] : n->children) {
-      clean_up(child);
-    }
-    delete n;
-  }
-
-  int num_terminals;
-
- public:
-  Trie() : root(new Node()), num_terminals(0) {}
-
-  ~Trie() { clean_up(root); }
-  Trie(const Trie &) = delete;
-  Trie &operator=(const Trie &) = delete;
-  int size() const { return num_terminals; }
-  bool empty() const { return num_terminals == 0; }
-
-  bool insert(const string &s, const V &v) {
-    Node *n = root;
-    for (char c : s) {
-      auto [it, inserted] = n->children.try_emplace(c, nullptr);
-      if (inserted) {
-        it->second = new Node();
-      }
-      n = it->second;
-    }
-    if (n->is_terminal) {
-      return false;
-    }
-    num_terminals++;
-    n->is_terminal = true;
-    n->value = v;
-    return true;
-  }
-
-  bool erase(const string &s) {
-    if (erase(root, s, 0)) {
-      num_terminals--;
-      return true;
-    }
-    return false;
-  }
-
-  const V *find(const string &s) const {
-    Node *n = root;
-    for (char c : s) {
-      if (auto it = n->children.find(c); it != n->children.end()) {
-        n = it->second;
-      } else {
-        return nullptr;
-      }
-    }
-    return n->is_terminal ? &(n->value) : nullptr;
-  }
-
-  template<class Fn>
-  void walk(Fn f) const {
-    string s;
-    walk(root, s, f);
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <iostream>
-using namespace std;
-
-void print_entry(const string &k, int v) {
-  cout << "(\"" << k << "\", " << v << ")" << endl;
-}
-
-int main() {
-  vector<string> s{"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
-  Trie<int> t;
-  assert(t.empty());
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    assert(t.insert(s[i], i));
-  }
-  t.walk(print_entry);
-  assert(!t.empty());
-  assert(t.size() == 9);
-  assert(!t.insert(s[0], 2));
-  assert(t.size() == 9);
-  assert(*t.find("") == 0);
-  assert(*t.find("ten") == 5);
-  assert(t.erase("tea"));
-  assert(t.size() == 8);
-  assert(t.find("tea") == nullptr);
-  assert(t.erase(""));
-  assert(t.find("") == nullptr);
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-("", 0)
-("a", 1)
-("i", 6)
-("in", 7)
-("inn", 8)
-("tea", 3)
-("ted", 4)
-("ten", 5)
-("to", 2)
-\end{exampleoutput}
-\subsection{Radix Tree}
-Maintain a map of strings to values using a compressed tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child. Children are stored in hash tables, and \inlinecode{walk()} sorts child labels as needed to preserve lexicographic traversal.
-
-\begin{compactitem}
-  \item \inlinecode{RadixTree()} constructs an empty map.
-  \item \inlinecode{size()} returns the size of the map.
-  \item \inlinecode{empty()} returns whether the map is empty.
-  \item \inlinecode{insert(s, v)} adds an entry with string key \inlinecode{s} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
-  \item \inlinecode{erase(s)} removes the entry with string key \inlinecode{s} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the string to be removed was not found.
-  \item \inlinecode{find(s)} returns a pointer to a const value associated with string key \inlinecode{s}, or \inlinecode{nullptr} if the key was not found.
-  \item \inlinecode{walk(f)} calls the function \inlinecode{f(s, v)} on each entry of the map, in lexicographically ascending order of the string keys.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n)$ expected per call to \inlinecode{insert(s, v)}, \inlinecode{erase(s)}, and \inlinecode{find(s)}, where $n$ is the length of \inlinecode{s}, assuming the number of outgoing compressed edges checked at each node is small.
-  \item $O(l \log l)$ per call to \inlinecode{walk()}, where $l$ is the total length of string keys that are currently in the map.
-  \item $O(1)$ per call to all other operations.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(l)$ for storage of the radix tree, where $l$ is the total length of string keys that are currently in the map.
-  \item $O(n)$ auxiliary stack space for construction, destruction, \inlinecode{walk()}, where $n$ is the maximum length of any string that has been inserted so far.
-  \item $O(n)$ auxiliary stack space for \inlinecode{erase(s)}, where $n$ is the length of \inlinecode{s}.
-  \item $O(1)$ auxiliary for all other operations.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cstddef>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-using std::string;
-
-template<class V>
-class RadixTree {
-  struct Node {
-    V value;
-    bool is_terminal;
-    std::unordered_map<string, Node *> children;
-
-    Node(const V &value = V(), bool is_terminal = false) : value(value), is_terminal(is_terminal) {}
-  } *root;
-
-  static int lcp_len(const string &s1, const string &s2, int s2start) {
-    int i = 0;
-    for (int j = s2start; i < static_cast<int>(s1.size()) && j < static_cast<int>(s2.size());
-         i++, j++) {
-      if (s1[i] != s2[j]) {
-        break;
-      }
-    }
-    return i;
-  }
-
-  static bool insert(Node *n, const string &s, int i, const V &v) {
-    if (i == static_cast<int>(s.size())) {
-      if (n->is_terminal) {
-        return false;
-      }
-      n->is_terminal = true;
-      return true;
-    }
-    for (auto it = n->children.begin(); it != n->children.end(); ++it) {
-      int len = lcp_len(it->first, s, i);
-      if (len == 0) {
-        continue;
-      }
-      if (len == static_cast<int>(it->first.size())) {
-        return insert(it->second, s, i + len, v);
-      }
-      string left = it->first.substr(0, len);
-      string right = it->first.substr(len);
-      Node *tmp = new Node();
-      tmp->children[right] = it->second;
-      n->children.erase(it);
-      n->children[left] = tmp;
-      if (len == static_cast<int>(s.size()) - i) {
-        tmp->value = v;
-        tmp->is_terminal = true;
-        return true;
-      }
-      return insert(tmp, s, i + len, v);
-    }
-    n->children[s.substr(i)] = new Node(v, true);
-    return true;
-  }
-
-  static bool erase(Node *n, const string &s, int i) {
-    if (i == static_cast<int>(s.size())) {
-      if (!n->is_terminal) {
-        return false;
-      }
-      n->is_terminal = false;
-      return true;
-    }
-    for (auto it = n->children.begin(); it != n->children.end(); ++it) {
-      int len = lcp_len(it->first, s, i);
-      if (len == 0) {
-        continue;
-      }
-      // The entire edge label must be consumed; a partial match means the key is not present, so
-      // erasing must fail rather than descend (otherwise erase("te") would remove "tea").
-      if (len < static_cast<int>(it->first.size())) {
-        return false;
-      }
-      Node *child = it->second;
-      if (!erase(child, s, i + len)) {
-        return false;
-      }
-      if (child->children.empty()) {
-        delete child;
-        n->children.erase(it);
-      } else if (child->children.size() == 1) {
-        Node *grandchild = child->children.begin()->second;
-        if (!child->is_terminal) {
-          string merged_key(it->first + child->children.begin()->first);
-          child->value = grandchild->value;
-          child->is_terminal = grandchild->is_terminal;
-          child->children = grandchild->children;
-          delete grandchild;
-          n->children.erase(it);
-          n->children[merged_key] = child;
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-
-  template<class Fn>
-  static void walk(Node *n, string &s, Fn f) {
-    if (n->is_terminal) {
-      f(s, n->value);
-    }
-    std::vector<std::pair<string, Node *>> children(n->children.begin(), n->children.end());
-    std::sort(children.begin(), children.end());
-    for (auto &[key, child] : children) {
-      s += key;
-      walk(child, s, f);
-      s.erase(s.size() - key.size());
-    }
-  }
-
-  static void clean_up(Node *n) {
-    for (auto &[key, child] : n->children) {
-      clean_up(child);
-    }
-    delete n;
-  }
-
-  int num_terminals;
-
- public:
-  RadixTree() : root(new Node()), num_terminals(0) {}
-
-  ~RadixTree() { clean_up(root); }
-  RadixTree(const RadixTree &) = delete;
-  RadixTree &operator=(const RadixTree &) = delete;
-  int size() const { return num_terminals; }
-  bool empty() const { return num_terminals == 0; }
-
-  bool insert(const string &s, const V &v) {
-    if (insert(root, s, 0, v)) {
-      num_terminals++;
-      return true;
-    }
-    return false;
-  }
-
-  bool erase(const string &s) {
-    if (erase(root, s, 0)) {
-      num_terminals--;
-      return true;
-    }
-    return false;
-  }
-
-  const V *find(const string &s) const {
-    Node *n = root;
-    int i = 0;
-    while (i < static_cast<int>(s.size())) {
-      bool found = false;
-      for (auto &[key, child] : n->children) {
-        if (key[0] == s[i]) {
-          // The entire edge label must be consumed; a partial match (s ends mid-edge or diverges
-          // from it) means the key is not present.
-          if (lcp_len(key, s, i) < static_cast<int>(key.size())) {
-            return nullptr;
-          }
-          i += static_cast<int>(key.size());
-          n = child;
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        return nullptr;
-      }
-    }
-    return n->is_terminal ? &(n->value) : nullptr;
-  }
-
-  template<class Fn>
-  void walk(Fn f) const {
-    string s;
-    walk(root, s, f);
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <iostream>
-using namespace std;
-
-void print_entry(const string &k, int v) {
-  cout << "(\"" << k << "\", " << v << ")" << endl;
-}
-
-int main() {
-  vector<string> s{"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
-  RadixTree<int> t;
-  assert(t.empty());
-  for (int i = 0; i < static_cast<int>(s.size()); i++) {
-    assert(t.insert(s[i], i));
-  }
-  t.walk(print_entry);
-  assert(!t.empty());
-  assert(t.size() == 9);
-  assert(!t.insert(s[0], 2));
-  assert(t.size() == 9);
-  assert(t.find("") && *t.find("") == 0);
-  assert(*t.find("ten") == 5);
-  assert(t.erase("tea"));
-  assert(t.size() == 8);
-  assert(t.find("tea") == nullptr);
-  assert(t.erase(""));
-  assert(t.find("") == nullptr);
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-("", 0)
-("a", 1)
-("i", 6)
-("in", 7)
-("inn", 8)
-("tea", 3)
-("ted", 4)
-("ten", 5)
-("to", 2)
-\end{exampleoutput}
-\subsection{Suffix Automaton}
-Maintains a compact deterministic automaton representing all substrings of a string. A suffix automaton is useful for substring membership queries, counting distinct substrings, finding longest common substrings, and many other string dynamic programming tasks.
-
-Each state represents an equivalence class of substrings with the same set of ending positions. The value \inlinecode{st[v].len} is the maximum length represented by state \inlinecode{v}, while \inlinecode{st[v].link} points to the state representing the longest proper suffix of that class.
-
-\begin{compactitem}
-  \item \inlinecode{SuffixAutomaton()} constructs an empty automaton.
-  \item \inlinecode{SuffixAutomaton(s)} constructs the automaton for string \inlinecode{s}.
-  \item \inlinecode{extend(c)} appends character \inlinecode{c} to the current string.
-  \item \inlinecode{contains(t)} returns whether string \inlinecode{t} occurs as a substring.
-  \item \inlinecode{first\_occurrence(t)} returns the starting index of the first occurrence of \inlinecode{t}, or $-1$ if absent.
-  \item \inlinecode{count\_distinct\_substrings()} returns the number of distinct nonempty substrings.
-  \item \inlinecode{longest\_common\_substring(t)} returns one longest substring common to the built string and string \inlinecode{t}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n)$ expected to construct the automaton for a string of length $n$.
-  \item $O(m)$ expected per call to \inlinecode{contains(t)}, \inlinecode{first\_occurrence(t)}, or \inlinecode{longest\_common\_substring(t)}, where $m$ is the length of \inlinecode{t}.
-  \item $O(n)$ per call to \inlinecode{count\_distinct\_substrings()}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ transition storage and $O(n)$ states.
-  \item $O(1)$ auxiliary per character processed.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <cstdint>
-#include <string>
-#include <unordered_map>
-#include <vector>
-using std::string;
-
-class SuffixAutomaton {
-  struct State {
-    int len, link, first_pos;
-    std::unordered_map<char, int> next;
-
-    State() : len(0), link(-1), first_pos(-1) {}
-  };
-
-  std::vector<State> st;
-  int last;
-
- public:
-  SuffixAutomaton() : st(1), last(0) {}
-
-  explicit SuffixAutomaton(const string &s) : st(1), last(0) {
-    for (char c : s) {
-      extend(c);
-    }
-  }
-
-  void extend(char c) {
-    int cur = static_cast<int>(st.size());
-    st.emplace_back();
-    st[cur].len = st[last].len + 1;
-    st[cur].first_pos = st[cur].len - 1;
-    int p = last;
-    while (p != -1 && st[p].next.find(c) == st[p].next.end()) {
-      st[p].next[c] = cur;
-      p = st[p].link;
-    }
-    if (p == -1) {
-      st[cur].link = 0;
-    } else {
-      int q = st[p].next[c];
-      if (st[p].len + 1 == st[q].len) {
-        st[cur].link = q;
-      } else {
-        int clone = static_cast<int>(st.size());
-        st.push_back(st[q]);
-        st[clone].len = st[p].len + 1;
-        while (p != -1 && st[p].next[c] == q) {
-          st[p].next[c] = clone;
-          p = st[p].link;
-        }
-        st[q].link = st[cur].link = clone;
-      }
-    }
-    last = cur;
-  }
-
-  bool contains(const string &t) const {
-    int v = 0;
-    for (char c : t) {
-      if (auto it = st[v].next.find(c); it != st[v].next.end()) {
-        v = it->second;
-      } else {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  // Returns the starting index of the first (leftmost) occurrence of `t` as a substring, or -1 if
-  // `t` does not occur. `first_pos` stores the end index of the first occurrence of each state's
-  // class, so subtracting the length of `t` recovers its start.
-  int first_occurrence(const string &t) const {
-    int v = 0;
-    for (char c : t) {
-      auto it = st[v].next.find(c);
-      if (it == st[v].next.end()) {
-        return -1;
-      }
-      v = it->second;
-    }
-    return st[v].first_pos - static_cast<int>(t.size()) + 1;
-  }
-
-  int64_t count_distinct_substrings() const {
-    int64_t res = 0;
-    for (int v = 1; v < static_cast<int>(st.size()); v++) {
-      res += st[v].len - st[st[v].link].len;
-    }
-    return res;
-  }
-
-  string longest_common_substring(const string &t) const {
-    int v = 0, len = 0, best = 0, best_pos = -1;
-    for (int i = 0; i < static_cast<int>(t.size()); i++) {
-      while (v && !st[v].next.count(t[i])) {
-        v = st[v].link;
-        len = st[v].len;
-      }
-      if (auto it = st[v].next.find(t[i]); it != st[v].next.end()) {
-        v = it->second;
-        len++;
-      } else {
-        v = 0;
-        len = 0;
-      }
-      if (len > best) {
-        best = len;
-        best_pos = i;
-      }
-    }
-    return best == 0 ? "" : t.substr(best_pos - best + 1, best);
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  SuffixAutomaton sa("ababa");
-  assert(sa.contains("aba"));
-  assert(sa.contains("bab"));
-  assert(!sa.contains("abba"));
-  assert(sa.count_distinct_substrings() == 9);
-  assert(sa.longest_common_substring("zzbabab") == "baba");
-  assert(sa.first_occurrence("aba") == 0);
-  assert(sa.first_occurrence("bab") == 1);
-  assert(sa.first_occurrence("abba") == -1);
-
-  SuffixAutomaton online;
-  online.extend('a');
-  online.extend('b');
-  online.extend('c');
-  assert(online.contains("bc"));
-  return 0;
-}
-\end{lstlisting}
-\subsection{Eertree}
-Maintains all distinct palindromic substrings of a string online using an Eertree, also known as a palindromic tree. Each non-root node represents one distinct palindrome, and suffix links connect each palindrome to its longest proper palindromic suffix.
-
-The structure has two roots: one of length $-1$, which simplifies boundary cases, and one of length $0$, representing the empty palindrome. After each appended character, \inlinecode{last} points to the node for the longest palindromic suffix of the current string.
-
-\begin{compactitem}
-  \item \inlinecode{Eertree()} constructs an empty palindromic tree.
-  \item \inlinecode{Eertree(s)} constructs the tree for string \inlinecode{s}.
-  \item \inlinecode{add(c)} appends character \inlinecode{c} and returns \inlinecode{true} if this creates a new distinct palindrome.
-  \item \inlinecode{count\_distinct\_palindromes()} returns the number of distinct nonempty palindromic substrings.
-  \item \inlinecode{longest\_suffix\_length()} returns the length of the current longest palindromic suffix.
-  \item \inlinecode{count\_occurrences()} propagates occurrence counts through suffix links and returns \inlinecode{occ[v]} for each node \inlinecode{v}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n)$ expected to build the tree for a string of length $n$.
-  \item $O(1)$ expected amortized per call to \inlinecode{add(c)}.
-  \item $O(n)$ per call to \inlinecode{count\_occurrences()}.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(n)$ transition storage and $O(n)$ nodes.
-  \item $O(1)$ auxiliary per appended character.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <string>
-#include <unordered_map>
-#include <vector>
-using std::string;
-
-class Eertree {
-  struct Node {
-    int len, link, occ;
-    std::unordered_map<char, int> next;
-
-    Node(int len = 0) : len(len), link(0), occ(0) {}
-  };
-
-  std::vector<Node> tree;
-  string s;
-  int last;
-
-  int get_suffix(int v, int pos, char c) const {
-    while (pos - 1 - tree[v].len < 0 || s[pos - 1 - tree[v].len] != c) {
-      v = tree[v].link;
-    }
-    return v;
-  }
-
- public:
-  Eertree() : tree(), s(), last(1) {
-    tree.emplace_back(-1);
-    tree.emplace_back(0);
-    tree[0].link = 0;
-    tree[1].link = 0;
-  }
-
-  explicit Eertree(const string &text) : tree(), s(), last(1) {
-    tree.emplace_back(-1);
-    tree.emplace_back(0);
-    tree[0].link = 0;
-    tree[1].link = 0;
-    for (char c : text) {
-      add(c);
-    }
-  }
-
-  bool add(char c) {
-    s += c;
-    int pos = static_cast<int>(s.size()) - 1;
-    int cur = get_suffix(last, pos, c);
-    auto it = tree[cur].next.find(c);
-    if (it != tree[cur].next.end()) {
-      last = it->second;
-      tree[last].occ++;
-      return false;
-    }
-    last = static_cast<int>(tree.size());
-    tree.emplace_back(tree[cur].len + 2);
-    tree[last].occ = 1;
-    tree[cur].next[c] = last;
-    if (tree[last].len == 1) {
-      tree[last].link = 1;
-      return true;
-    }
-    int link_parent = get_suffix(tree[cur].link, pos, c);
-    tree[last].link = tree[link_parent].next[c];
-    return true;
-  }
-
-  int count_distinct_palindromes() const { return static_cast<int>(tree.size()) - 2; }
-  int longest_suffix_length() const { return tree[last].len; }
-
-  std::vector<int> count_occurrences() const {
-    std::vector<int> occ(tree.size());
-    for (int i = 0; i < static_cast<int>(tree.size()); i++) {
-      occ[i] = tree[i].occ;
-    }
-    for (int i = static_cast<int>(tree.size()) - 1; i >= 2; i--) {
-      occ[tree[i].link] += occ[i];
-    }
-    return occ;
-  }
-};
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-
-int main() {
-  Eertree t("abacaba");
-  assert(t.count_distinct_palindromes() == 7);
-  assert(t.longest_suffix_length() == 7);
-
-  Eertree online;
-  assert(online.add('a'));
-  assert(online.add('a'));
-  assert(online.add('b'));
-  assert(online.add('a'));
-  assert(online.count_distinct_palindromes() == 4);
-  assert(online.longest_suffix_length() == 3);
-
-  Eertree duplicate;
-  assert(duplicate.add('a'));
-  assert(duplicate.add('b'));
-  assert(duplicate.add('c'));
-  assert(!duplicate.add('a'));
-
-  std::vector<int> occ = t.count_occurrences();
-  assert(static_cast<int>(occ.size()) == t.count_distinct_palindromes() + 2);
-  return 0;
-}
-\end{lstlisting}
-
 \section{\texorpdfstring{Encoding and Compression}{3.8 Encoding and Compression}}
 \setcounter{section}{8}
 \setcounter{subsection}{0}
@@ -3542,14 +3856,14 @@ For a string with symbol probabilities $p_i$, empirical entropy is $H = -\sum_i 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n + A)$ per call to \inlinecode{entropy(s)}, where $n$ is the string length and $A = 256$.
-  \item $O(A)$ per call to \inlinecode{entropy(freq)} and \inlinecode{expected\_code\_length(freq, length)}.
+  \item $O(n + m)$ per call to \inlinecode{entropy(s)}, where $n$ is the string length and $m = 256$.
+  \item $O(m)$ per call to \inlinecode{entropy(freq)} and \inlinecode{expected\_code\_length(freq, length)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(A)$ auxiliary heap space for \inlinecode{byte\_frequencies(s)}.
+  \item $O(m)$ auxiliary heap space for \inlinecode{byte\_frequencies(s)}.
   \item $O(1)$ auxiliary for the other operations.
 \end{compactitem}
 
@@ -3784,14 +4098,14 @@ The implementation below stores encoded bits as a string of \inlinecode{\textquo
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n + A \log A)$ to construct the tree, where $n$ is the input length and $A$ is the number of distinct characters.
+  \item $O(n + m \log m)$ to construct the tree, where $n$ is the input length and $m$ is the number of distinct characters.
   \item $O(n)$ to encode or decode, plus the number of produced or consumed bits.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(A)$ for the tree and code table.
+  \item $O(m)$ for the tree and code table, where $m$ is the number of distinct characters.
   \item $O(n)$ for the encoded or decoded output.
 \end{compactitem}
 

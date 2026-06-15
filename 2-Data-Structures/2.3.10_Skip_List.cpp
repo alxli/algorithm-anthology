@@ -21,13 +21,13 @@ take O(log n) with high probability.
 - `operator[k]` returns a reference to key `k`'s associated value (which may be modified), or if
   necessary, inserts and returns a new entry with the default constructed value if key `k` was not
   originally found.
-- `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending order of keys.
+- `entries()` returns all key-value entries in ascending order of keys.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
 - O(log n) on average per call to `insert()`, `erase()`, `find()`, and `operator[]`, where $n$ is
   the number of entries currently in the map.
-- O(n) per call to `walk()`.
+- O(n) per call to `entries()`.
 
 Space Complexity:
 - O(n) on average for storage of the map elements.
@@ -37,6 +37,7 @@ Space Complexity:
 */
 
 #include <random>
+#include <utility>
 #include <vector>
 
 template<class K, class V>
@@ -157,13 +158,15 @@ class SkipList {
     return *find(k);
   }
 
-  template<class Fn>
-  void walk(Fn f) const {
+  std::vector<std::pair<K, V>> entries() const {
+    std::vector<std::pair<K, V>> res;
+    res.reserve(num_nodes);
     Node *n = head->next[0];
     while (n != nullptr) {
-      f(n->key, n->value);
+      res.push_back({n->key, n->value});
       n = n->next[0];
     }
+    return res;
   }
 };
 
@@ -187,13 +190,16 @@ int main() {
   assert(l.insert(4, 'd'));
   assert(*l.find(4) == 'd');
   assert(!l.insert(4, 'd'));
-  auto printch = [](int k, char v) { cout << v; };
-  l.walk(printch);
+  for (const auto &[k, v] : l.entries()) {
+    cout << v;
+  }
   cout << endl;
   assert(l.erase(1));
   assert(!l.erase(1));
   assert(l.find(1) == nullptr);
-  l.walk(printch);
+  for (const auto &[k, v] : l.entries()) {
+    cout << v;
+  }
   cout << endl;
   return 0;
 }

@@ -22,7 +22,7 @@ Time Complexity:
 Space Complexity:
 - O(n*m) auxiliary heap space for `align_sequences(s1, s2)`, where $n$ and $m$ are the lengths of
   `s1` and `s2`, respectively.
-- O(log max(n, m)) auxiliary stack space and O(min(n, m)) auxiliary heap space for
+- O(log(max(n, m))) auxiliary stack space and O(min(n, m)) auxiliary heap space for
   `hirschberg_align_sequences(s1, s2)`, where $n$ and $m$ are the lengths of `s1` and `s2`,
   respectively.
 

@@ -8,8 +8,9 @@ Common mathematic constants and functions, most of which already have standard S
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ for most operations.
-  \item $O(\log n)$ per call to \inlinecode{mulmod()} and \inlinecode{powmod()}, where $n$ is the second argument.
-  \item $O(d + e)$ for \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
+  \item $O(1)$ per call to \inlinecode{mulmod()} with \inlinecode{\_\_uint128\_t}, or $O(\log n)$ with the portable fallback, where $n$ is the second argument.
+  \item $O(\log n)$ calls to \inlinecode{mulmod()} per call to \inlinecode{powmod(x, n, m)}.
+  \item $O(d \cdot e)$ for \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
   \item $O(\log_{b}\left(x + 1\right) + 1)$ for \inlinecode{to\_base(x, b)}.
   \item $O(x / 1000 + 1)$ for \inlinecode{to\_roman(x)}, due to the repeated \inlinecode{M} prefix.
 \end{compactitem}
@@ -18,7 +19,8 @@ Common mathematic constants and functions, most of which already have standard S
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for most operations.
-  \item $O(e)$ auxiliary heap space for \inlinecode{convert\_base(d, a, b)} and \inlinecode{to\_base(x, b)}, where $e$ is the number of output digits.
+  \item $O(d + e)$ auxiliary heap space for \inlinecode{convert\_base(d, a, b)}, where $d$ is the number of input digits and $e$ is the number of output digits.
+  \item $O(e)$ auxiliary heap space for \inlinecode{to\_base(x, b)}, where $e$ is the number of output digits.
   \item $O(x / 1000 + 1)$ auxiliary heap space for \inlinecode{to\_roman(x)}.
 \end{compactitem}
 
@@ -300,10 +302,8 @@ double lgamma_(double x) {
 \end{lstlisting}
 Binary Exponentiation:
 
-\inlinecode{powmod()} and \inlinecode{mulmod()} compute modular powers and products using binary exponentiation, also known as exponentiation by squaring. When \inlinecode{\_\_uint128\_t} is available, \inlinecode{mulmod()} uses a single 128-bit product; otherwise, it uses portable double-and-add multiplication. In the fallback path, the inputs must not exceed $2^{63} - 1$.
-
 \begin{compactitem}
-  \item \inlinecode{mulmod(x, n, m)} returns \inlinecode{x} multiplied by \inlinecode{n}, modulo \inlinecode{m}.
+  \item \inlinecode{mulmod(x, n, m)} returns \inlinecode{x} multiplied by \inlinecode{n}, modulo \inlinecode{m}. This is done in a way to avoid overflow: on compilers with \inlinecode{\_\_uint128\_t} it uses one wide product, while the portable fallback uses double-and-add multiplication. The fallback is slower by a logarithmic factor, but avoids relying on nonstandard 128-bit integers.
   \item \inlinecode{powmod(x, n, m)} returns \inlinecode{x} raised to the power \inlinecode{n}, modulo \inlinecode{m}.
 \end{compactitem}
 
@@ -315,11 +315,11 @@ uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
   uint64_t a = 0, b = x % m;
   for (; n > 0; n >>= 1) {
     if (n & 1) {
-      a = (a + b) % m;
+      a = a >= m - b ? a - (m - b) : a + b;
     }
-    b = (b << 1) % m;
+    b = b >= m - b ? b - (m - b) : b + b;
   }
-  return a % m;
+  return a;
 #endif
 }
 
@@ -337,26 +337,12 @@ uint64_t powmod(uint64_t x, uint64_t n, uint64_t m) {
 Base Conversion:
 
 \begin{compactitem}
-  \item Given an integer in base \inlinecode{a} as a vector \inlinecode{d} of digits (where \inlinecode{d[0]} is the least significant digit), \inlinecode{convert\_base(d, a, b)} returns a vector of the integer's digits when converted base \inlinecode{b} (again with index 0 storing the least significant digit). The actual value of the entire integer to be converted must be able to fit within an unsigned 64-bit integer for intermediate storage.
   \item \inlinecode{to\_base(x, b)} returns the digits of the unsigned integer \inlinecode{x} in base \inlinecode{b}, where index 0 of the result stores the least significant digit.
-  \item \inlinecode{to\_roman(x)} returns the Roman numeral representation of the unsigned integer \inlinecode{x} as an \inlinecode{std::string}.
+  \item \inlinecode{to\_roman(x)} returns the Roman numeral representation of the unsigned integer \inlinecode{x} as a string.
+  \item \inlinecode{convert\_base(d, a, b)} converts an integer in base \inlinecode{a} as a vector \inlinecode{d} of digits (where \inlinecode{d[0]} is the least significant digit) to base \inlinecode{b} as a vector of digits (again with index 0 holding the least significant digit). This uses repeated long division, so the value itself does not need to fit in a machine integer. Each intermediate \inlinecode{rem*a + digit} must fit in \inlinecode{uint64\_t}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
-  uint64_t x = 0, power = 1;
-  for (int di : d) {
-    x += di * power;
-    power *= a;
-  }
-  std::vector<int> res;
-  do {  // do-while so that a value of 0 yields the single digit {0}
-    res.push_back(x % b);
-    x /= b;
-  } while (x != 0);
-  return res;
-}
-
 std::vector<int> to_base(unsigned int x, int b = 10) {
   std::vector<int> res;
   do {  // do-while so that a value of 0 yields the single digit {0}
@@ -373,6 +359,32 @@ std::string to_roman(unsigned int x) {
   std::string prefix(x / 1000, 'M');
   x %= 1000;
   return prefix + h[x / 100] + t[x / 10 % 10] + o[x % 10];
+}
+
+std::vector<int> convert_base(const std::vector<int> &d, int a, int b) {
+  std::vector<int> cur = d, res;
+  auto trim = [](std::vector<int> &v) {
+    while (v.size() > 1 && v.back() == 0) {
+      v.pop_back();
+    }
+  };
+  trim(cur);
+  if (cur.empty() || (cur.size() == 1 && cur[0] == 0)) {
+    return {0};
+  }
+  while (!(cur.size() == 1 && cur[0] == 0)) {
+    std::vector<int> q(cur.size());
+    uint64_t rem = 0;
+    for (int i = static_cast<int>(cur.size()) - 1; i >= 0; i--) {
+      uint64_t x = rem * static_cast<uint64_t>(a) + static_cast<uint64_t>(cur[i]);
+      q[i] = static_cast<int>(x / static_cast<uint64_t>(b));
+      rem = x % static_cast<uint64_t>(b);
+    }
+    res.push_back(static_cast<int>(rem));
+    trim(q);
+    cur = std::move(q);
+  }
+  return res;
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -423,11 +435,16 @@ int main() {
   assert(powmod(2, 62, 1000000) == 387904);
   assert(powmod(10001, 10001, 100000) == 10001);
 
+  assert(to_roman(1234) == "MCCXXXIV");
+  assert(to_roman(5678) == "MMMMMDCLXXVIII");
   std::vector<int> digits{6, 5, 4, 3, 2, 1};
   std::vector<int> base20 = to_base(123456, 20);
   assert(convert_base(base20, 20, 10) == digits);
-  assert(to_roman(1234) == "MCCXXXIV");
-  assert(to_roman(5678) == "MMMMMDCLXXVIII");
+  assert(convert_base(std::vector<int>{0, 0, 0}, 10, 2) == std::vector<int>{0});
+
+  std::vector<int> big_decimal(30, 9);  // 10^30 - 1, larger than uint64_t.
+  std::vector<int> big_binary = convert_base(big_decimal, 10, 2);
+  assert(convert_base(big_binary, 2, 10) == big_decimal);
   return 0;
 }
 \end{lstlisting}
@@ -436,12 +453,12 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Combinatorial Calculations}
-The following functions implement common operations in combinatorics. All inputs must be non-negative. All return values and table entries are computed as 64-bit integers modulo an input argument $m$ or $p$.
+The following functions implement common operations in combinatorics. All inputs must be non-negative. All return values and table entries are computed as 64-bit integers modulo an input argument $m$ or $p$. Modular products use ordinary \inlinecode{int64\_t} multiplication, so the square of the chosen modulus must fit in \inlinecode{int64\_t}.
 
 \begin{compactitem}
   \item \inlinecode{factorial(n, m)} returns $n! \bmod m$.
   \item \inlinecode{factorialp(n, p)} returns $n! \bmod p$, where $p$ is prime.
-  \item \inlinecode{binomial\_table(n, m)} returns rows $0$ to $n$ of Pascal's triangle as a table $t$ such that $t[i][j] = \binom{i}{j} \bmod m$.
+  \item \inlinecode{binomial\_table(n, m)} returns rows $0$ to $n$ of Pascal's triangle as a two-dimensional vector $t$ such that $t[i][j] = \binom{i}{j} \bmod m$.
   \item \inlinecode{permute(n, k, m)} returns $(n \mathbin{\text{permute}} k) \bmod m$.
   \item \inlinecode{choose(n, k, p)} returns $\binom{n}{k} \bmod p$, where $p$ is prime.
   \item \inlinecode{multichoose(n, k, p)} returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is prime.
@@ -480,19 +497,16 @@ The following functions implement common operations in combinatorics. All inputs
 #include <cstdint>
 #include <vector>
 
-using int64 = int64_t;
-using table = std::vector<std::vector<int64>>;
-
-int64 factorial(int n, int m = 1000000007) {
-  int64 res = 1;
+int64_t factorial(int n, int m = 1000000007) {
+  int64_t res = 1;
   for (int i = 2; i <= n; i++) {
     res = (res * i) % m;
   }
   return res % m;
 }
 
-int64 factorialp(int64 n, int64 p = 1000000007) {
-  int64 res = 1;
+int64_t factorialp(int64_t n, int64_t p = 1000000007) {
+  int64_t res = 1;
   while (n > 1) {
     if (n / p % 2 == 1) {
       res = res * (p - 1) % p;
@@ -506,8 +520,8 @@ int64 factorialp(int64 n, int64 p = 1000000007) {
   return res % p;
 }
 
-table binomial_table(int n, int64 m = 1000000007) {
-  table t(n + 1);
+std::vector<std::vector<int64_t>> binomial_table(int n, int64_t m = 1000000007) {
+  std::vector<std::vector<int64_t>> t(n + 1);
   for (int i = 0; i <= n; i++) {
     for (int j = 0; j <= i; j++) {
       if (i < 2 || j == 0 || i == j) {
@@ -520,47 +534,36 @@ table binomial_table(int n, int64 m = 1000000007) {
   return t;
 }
 
-int64 permute(int n, int k, int64 m = 1000000007) {
+int64_t permute(int n, int k, int64_t m = 1000000007) {
   if (n < k) {
     return 0;
   }
-  int64 res = 1;
+  int64_t res = 1;
   for (int i = 0; i < k; i++) {
     res = res * (n - i) % m;
   }
   return res % m;
 }
 
-int64 mulmod(int64 x, int64 n, int64 m) {
-  int64 a = 0, b = x % m;
+int64_t powmod(int64_t x, int64_t n, int64_t m) {
+  int64_t a = 1, b = x % m;
   for (; n > 0; n >>= 1) {
     if (n & 1) {
-      a = (a + b) % m;
+      a = a * b % m;
     }
-    b = (b << 1) % m;
+    b = b * b % m;
   }
   return a % m;
 }
 
-int64 powmod(int64 x, int64 n, int64 m) {
-  int64 a = 1, b = x;
-  for (; n > 0; n >>= 1) {
-    if (n & 1) {
-      a = mulmod(a, b, m);
-    }
-    b = mulmod(b, b, m);
-  }
-  return a % m;
-}
-
-int64 choose(int n, int k, int64 p = 1000000007) {
+int64_t choose(int n, int k, int64_t p = 1000000007) {
   if (n < k) {
     return 0;
   }
   if (k > n - k) {
     k = n - k;
   }
-  int64 num = 1, den = 1;
+  int64_t num = 1, den = 1;
   for (int i = 0; i < k; i++) {
     num = num * (n - i) % p;
   }
@@ -570,16 +573,16 @@ int64 choose(int n, int k, int64 p = 1000000007) {
   return num * powmod(den, p - 2, p) % p;
 }
 
-int64 multichoose(int n, int k, int64 p = 1000000007) {
+int64_t multichoose(int n, int k, int64_t p = 1000000007) {
   return choose(n + k - 1, k, p);
 }
 
-int64 catalan(int n, int64 p = 1000000007) {
+int64_t catalan(int n, int64_t p = 1000000007) {
   return choose(2 * n, n, p) * powmod(n + 1, p - 2, p) % p;
 }
 
-int64 partitions(int n, int64 m = 1000000007) {
-  std::vector<int64> t(n + 1, 0);
+int64_t partitions(int n, int64_t m = 1000000007) {
+  std::vector<int64_t> t(n + 1, 0);
   t[0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = i; j <= n; j++) {
@@ -589,8 +592,8 @@ int64 partitions(int n, int64 m = 1000000007) {
   return t[n] % m;
 }
 
-int64 partitions(int n, int k, int64 m = 1000000007) {
-  table t(n + 1, std::vector<int64>(k + 1, 0));
+int64_t partitions(int n, int k, int64_t m = 1000000007) {
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
   t[0][1] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1, h = k < i ? k : i; j <= h; j++) {
@@ -600,8 +603,8 @@ int64 partitions(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 stirling1(int n, int k, int64 m = 1000000007) {
-  table t(n + 1, std::vector<int64>(k + 1, 0));
+int64_t stirling1(int n, int k, int64_t m = 1000000007) {
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
@@ -612,8 +615,8 @@ int64 stirling1(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 stirling2(int n, int k, int64 m = 1000000007) {
-  table t(n + 1, std::vector<int64>(k + 1, 0));
+int64_t stirling2(int n, int k, int64_t m = 1000000007) {
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 0));
   t[0][0] = 1;
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
@@ -624,11 +627,11 @@ int64 stirling2(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 eulerian1(int n, int k, int64 m = 1000000007) {
+int64_t eulerian1(int n, int k, int64_t m = 1000000007) {
   if (k > n - 1 - k) {
     k = n - 1 - k;
   }
-  table t(n + 1, std::vector<int64>(k + 1, 1));
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 1));
   for (int j = 1; j <= k; j++) {
     t[0][j] = 0;
   }
@@ -641,8 +644,8 @@ int64 eulerian1(int n, int k, int64 m = 1000000007) {
   return t[n][k] % m;
 }
 
-int64 eulerian2(int n, int k, int64 m = 1000000007) {
-  table t(n + 1, std::vector<int64>(k + 1, 1));
+int64_t eulerian2(int n, int k, int64_t m = 1000000007) {
+  std::vector<std::vector<int64_t>> t(n + 1, std::vector<int64_t>(k + 1, 1));
   for (int i = 1; i <= n; i++) {
     for (int j = 1; j <= k; j++) {
       if (i == j) {
@@ -662,7 +665,7 @@ int64 eulerian2(int n, int k, int64 m = 1000000007) {
 #include <cassert>
 
 int main() {
-  table t = binomial_table(10);
+  auto t = binomial_table(10);
   for (int i = 0; i < static_cast<int>(t.size()); i++) {
     for (int j = 0; j < static_cast<int>(t[i].size()); j++) {
       assert(t[i][j] == choose(i, j));
@@ -893,7 +896,7 @@ bool next_permutation_(It lo, It hi) {
   }
   i = hi;
   --i;
-  for (;;) {
+  while (true) {
     It j = i;
     if (*--i < *j) {
       It k = hi;
@@ -1688,37 +1691,38 @@ Partition of 4:
 Common number theory operations relating to modular arithmetic.
 
 \begin{compactitem}
-  \item \inlinecode{gcd(a, b)} and \inlinecode{gcd2(a, b)} both return the greatest common divisor of \inlinecode{a} and \inlinecode{b} using the Euclidean algorithm. The implementations are mainly for educational purposes, as \inlinecode{std::gcd(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17 (\inlinecode{\_\_gcd(a, b)} from \inlinecode{\textless{}algorithm\textgreater{}} in C++14 and earlier).
+  \item \inlinecode{gcd(a, b)} returns the greatest common divisor of \inlinecode{a} and \inlinecode{b} using the Euclidean algorithm. This is mainly for educational purposes, as \inlinecode{std::gcd(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17 (\inlinecode{\_\_gcd(a, b)} from \inlinecode{\textless{}algorithm\textgreater{}} in C++14 and earlier).
   \item \inlinecode{lcm(a, b)} returns the lowest common multiple of \inlinecode{a} and \inlinecode{b}. This implemention is mainly for educational purposes, as \inlinecode{std::lcm(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17.
-  \item \inlinecode{extended\_euclid(a, b)} and \inlinecode{extended\_euclid2(a, b)} both return a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
+  \item \inlinecode{extended\_euclid(a, b)} returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
+  \item \inlinecode{diophantine(a, b, c, x, y, g)} solves the linear Diophantine equation $ax + by = c$. It returns whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$), and on success sets \inlinecode{g} to $\gcd(a, b)$ and \inlinecode{(x, y)} to a particular solution bounded by $\max(|a|, |b|, |c|)$ in magnitude. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
   \item \inlinecode{mod(a, b)} returns the value of \inlinecode{a} mod \inlinecode{b} under the true Euclidean definition of modulo, that is, the smallest nonnegative integer $m$ satisfying $a + bn = m$ for some integer $n$. Note that this is identical to the remainder operator \inlinecode{\%} in C++ for nonnegative operands \inlinecode{a} and \inlinecode{b}, but the result will differ when an operand is negative.
-  \item \inlinecode{mod\_inverse(a, m)} and \inlinecode{mod\_inverse2(a, m)} both return an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
-  \item \inlinecode{generate\_inverse(p)} returns a vector $v$ of integers where for each index $i$ in the vector, $i \cdot \text{v[i]} \equiv 1 \pmod p$, where the argument $p$ is prime.
-  \item \inlinecode{simple\_restore(a, p)} and \inlinecode{garner\_restore(a, p)} both return the solution $x$ for the system of simultaneous congruences $x \equiv \text{a[i]} \pmod{\text{p[i]}}$ for all indices $i$ in $[0, n)$, where \inlinecode{p} consists of pairwise coprime integers. The solution $x$ is guaranteed to be unique by the Chinese remainder theorem.
+  \item \inlinecode{mod\_inverse(a, m)} returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
+  \item \inlinecode{generate\_inverse(p)} returns a vector $v$ of integers where for each index $i$ in the vector, $i \cdot {\inlinecodemath{v[i]}} \equiv 1 \pmod p$, where the argument $p$ is prime.
+  \item \inlinecode{crt(r1, m1, r2, m2, r, m)} merges the two congruences $x \equiv r_1 \pmod{m_1}$ and $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the system is consistent, and on success sets \inlinecode{m} to \inlinecode{lcm(m\_1, m\_2)} and \inlinecode{r} to the unique solution in $[0, m)$. Fold it pairwise to merge more than two congruences.
+  \item \inlinecode{garner\_restore(a, p)} returns the smallest nonnegative solution $x$ for the system of simultaneous congruences $x \equiv {\inlinecodemath{a[i]}} \pmod{{\inlinecodemath{p[i]}}}$ for all indices $i$ in $[0, n)$, where \inlinecode{p} consists of pairwise coprime integers (unlike \inlinecode{crt}, which allows shared factors). The exact solution is unique modulo the product of all moduli, so that product and the final answer must fit in \inlinecode{int64\_t}.
+  \item \inlinecode{garner\_restore\_mod(a, p, m)} returns that same CRT solution modulo \inlinecode{m}. This is the right variant when the product of the moduli is too large to fit in \inlinecode{int64\_t}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(\log\left(a + b\right))$ per call to \inlinecode{gcd(a, b)}, \inlinecode{gcd2(a, b)}, \inlinecode{lcm(a, b)}, \inlinecode{extended\_euclid(a, b)}, \inlinecode{extended\_euclid2(a, b)}, \inlinecode{mod\_inverse(a, b)}, and \inlinecode{mod\_inverse2(a, b)}.
+  \item $O(\log\left(a + b\right))$ per call to \inlinecode{gcd(a, b)}, \inlinecode{lcm(a, b)}, \inlinecode{extended\_euclid(a, b)}, \inlinecode{mod\_inverse(a, b)}, \inlinecode{diophantine(a, b, c, ...)}, and \inlinecode{crt(...)}.
   \item $O(1)$ for \inlinecode{mod(a, b)}.
   \item $O(p)$ for \inlinecode{generate\_inverse(p)}.
-  \item Exponential for \inlinecode{simple\_restore(a, p)}.
-  \item $O(n^{2})$ for \inlinecode{garner\_restore(a, p)}.
+  \item $O(n^{2})$ for \inlinecode{garner\_restore(a, p)} and \inlinecode{garner\_restore\_mod(a, p, m)}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(\log\left(a + b\right))$ auxiliary stack space for \inlinecode{gcd2(a, b)}, \inlinecode{extended\_euclid2(a, b)}, and \inlinecode{mod\_inverse2(a, b)}.
   \item $O(p)$ auxiliary heap space for \inlinecode{generate\_inverse(p)}.
-  \item $O(n)$ auxiliary heap space for \inlinecode{garner\_restore(a, p)}.
+  \item $O(n)$ auxiliary heap space for \inlinecode{garner\_restore(a, p)} and \inlinecode{garner\_restore\_mod(a, p, m)}.
   \item $O(1)$ auxiliary space for all other operations.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
-#include <cstdlib>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -1730,11 +1734,6 @@ Int gcd(Int a, Int b) {
     a = t;
   }
   return (a < 0 ? -a : a);
-}
-
-template<class Int>
-Int gcd2(Int a, Int b) {
-  return (b == 0) ? (a < 0 ? -a : a) : gcd2(b, a % b);
 }
 
 template<class Int>
@@ -1762,12 +1761,50 @@ std::pair<Int, Int> extended_euclid(Int a, Int b) {
 }
 
 template<class Int>
-std::pair<Int, Int> extended_euclid2(Int a, Int b) {
-  if (b == 0) {
-    return (a > 0) ? std::pair<Int, Int>{1, 0} : std::pair<Int, Int>{-1, 0};
+bool diophantine(Int a, Int b, Int c, Int &x, Int &y, Int &g) {
+  if (a == 0 && b == 0) {
+    x = y = g = 0;
+    return c == 0;
   }
-  std::pair<Int, Int> r = extended_euclid2(b, a % b);
-  return {r.second, r.first - a / b * r.second};
+  if (a == 0) {
+    g = (b < 0) ? -b : b;
+    if (c % b != 0) {
+      return false;
+    }
+    x = 0;
+    y = c / b;
+    return true;
+  }
+  if (b == 0) {
+    g = (a < 0) ? -a : a;
+    if (c % a != 0) {
+      return false;
+    }
+    x = c / a;
+    y = 0;
+    return true;
+  }
+  g = gcd(a, b);
+  if (c % g != 0) {
+    return false;
+  }
+  // Absorb the bulk of c into a*dx + b*dy, then scale the base solution by the small remainder so
+  // the reported (x, y) stay bounded by max(|a|, |b|, |c|). The scaled product is taken modulo b
+  // (resp. a) through a 128-bit intermediate where available, to avoid overflow.
+  std::pair<Int, Int> base = extended_euclid(a, b);
+  Int dx = c / a;
+  c -= dx * a;
+  Int dy = c / b;
+  c -= dy * b;
+  Int f = c / g;
+#if defined(__SIZEOF_INT128__)
+  __extension__ typedef std::conditional_t<sizeof(Int) <= 4, int64_t, __int128> wide_t;
+#else
+  using wide_t = int64_t;
+#endif
+  x = dx + static_cast<Int>(static_cast<wide_t>(base.first) * f % b);
+  y = dy + static_cast<Int>(static_cast<wide_t>(base.second) * f % a);
+  return true;
 }
 
 template<class Int>
@@ -1778,12 +1815,6 @@ Int mod(Int a, Int m) {
 
 template<class Int>
 Int mod_inverse(Int a, Int m) {
-  a = mod(a, m);
-  return (a == 0) ? 0 : mod((1 - m * mod_inverse(m % a, a)) / a, m);
-}
-
-template<class Int>
-Int mod_inverse2(Int a, Int m) {
   return mod(extended_euclid(a, m).first, m);
 }
 
@@ -1796,16 +1827,29 @@ std::vector<int> generate_inverse(int p) {
   return res;
 }
 
-int64_t simple_restore(const std::vector<int> &a, const std::vector<int> &p) {
-  int n = static_cast<int>(a.size());
-  int64_t res = 0, m = 1;
-  for (int i = 0; i < n; i++) {
-    while (res % p[i] != a[i]) {
-      res += m;
-    }
-    m *= p[i];
+bool crt(int64_t r1, int64_t m1, int64_t r2, int64_t m2, int64_t &r, int64_t &m) {
+  r1 = mod(r1, m1);
+  r2 = mod(r2, m2);
+  int64_t x, y, g;
+  if (!diophantine(m1, -m2, r2 - r1, x, y, g)) {
+    return false;
   }
-  return res;
+  m = m1 / g * m2;
+  r = mod(r1 + m1 * mod(x, m2 / g), m);
+  return true;
+}
+
+std::vector<int64_t> garner_digits(const std::vector<int> &a, const std::vector<int> &p) {
+  int n = static_cast<int>(a.size());
+  std::vector<int64_t> x(a.begin(), a.end());
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < i; j++) {
+      // Reduce mod p[i] each step; otherwise x[i] compounds to ~p^i and overflows int64_t.
+      x[i] = mod_inverse(static_cast<int64_t>(p[j]), static_cast<int64_t>(p[i])) * (x[i] - x[j]);
+      x[i] = (x[i] % p[i] + p[i]) % p[i];
+    }
+  }
+  return x;
 }
 
 int64_t garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
@@ -1813,17 +1857,29 @@ int64_t garner_restore(const std::vector<int> &a, const std::vector<int> &p) {
   if (n == 0) {
     return 0;
   }
-  std::vector<int64_t> x(a.begin(), a.end());
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < i; j++) {
-      x[i] = mod_inverse(static_cast<int64_t>(p[j]), static_cast<int64_t>(p[i])) * (x[i] - x[j]);
-    }
-    x[i] = (x[i] % p[i] + p[i]) % p[i];
-  }
+  std::vector<int64_t> x = garner_digits(a, p);
   int64_t res = x[0], m = 1;
   for (int i = 1; i < n; i++) {
     m *= p[i - 1];
     res += x[i] * m;
+  }
+  return res;
+}
+
+int64_t garner_restore_mod(const std::vector<int> &a, const std::vector<int> &p, int64_t m) {
+  int n = static_cast<int>(a.size());
+  if (n == 0) {
+    return 0;
+  }
+  std::vector<int64_t> x = garner_digits(a, p);
+  int64_t res = 0;
+  for (int i = n - 1; i >= 0; i--) {
+#if defined(__SIZEOF_INT128__)
+    __extension__ typedef __int128 int128_t;
+    res = static_cast<int64_t>((static_cast<int128_t>(res) * p[i] + x[i]) % m);
+#else
+    res = (res * p[i] + x[i]) % m;  // Requires the intermediate product to fit without int128.
+#endif
   }
   return res;
 }
@@ -1836,17 +1892,16 @@ using namespace std;
 
 int main() {
   {
-    for (int steps = 0; steps < 10000; steps++) {
-      int a = rand() % 200 - 10, b = rand() % 200 - 10, g = gcd(a, b);
-      assert(g == gcd2(a, b));
-      if (g == 1 && b > 1) {
-        int inv = mod_inverse(a, b);
-        assert(inv == mod_inverse2(a, b) && mod(a * inv, b) == 1);
+    for (int a = -20; a <= 20; a++) {
+      for (int b = -20; b <= 20; b++) {
+        int g = gcd(a, b);
+        auto [x, y] = extended_euclid(a, b);
+        assert(g == a * x + b * y);
+        if (g == 1 && b > 1) {
+          int inv = mod_inverse(a, b);
+          assert(mod(a * inv, b) == 1);
+        }
       }
-      auto res = extended_euclid(a, b);
-      assert(res == extended_euclid2(a, b));
-      auto [rx, ry] = res;
-      assert(g == a * rx + b * ry);
     }
   }
   {
@@ -1861,12 +1916,61 @@ int main() {
   {
     vector<int> a{2, 3, 1}, m{3, 4, 5};
     int n = static_cast<int>(a.size());
-    int x = simple_restore(a, m);
-    assert(x == garner_restore(a, m));
+    int x = garner_restore(a, m);
+    assert(x == garner_restore_mod(a, m, 1000000007));
     for (int i = 0; i < n; i++) {
       assert(mod(x, m[i]) == a[i]);
     }
     assert(x == 11);
+  }
+#if defined(__SIZEOF_INT128__)
+  {  // Garner modulo another number works even when the product of CRT moduli is too large.
+    vector<int> p{1000000007, 1000000009, 1000000033};
+    __extension__ typedef __int128 int128_t;
+    int128_t x = (static_cast<int128_t>(1) << 80) + 123456789;
+    vector<int> a;
+    for (int m : p) {
+      a.push_back(static_cast<int>(x % m));
+    }
+    int64_t m = 998244353;
+    assert(garner_restore_mod(a, p, m) == static_cast<int64_t>(x % m));
+  }
+#endif
+  {  // Diophantine: exhaustively verify solvability and that solutions satisfy a*x + b*y == c.
+    for (int a = -8; a <= 8; a++) {
+      for (int b = -8; b <= 8; b++) {
+        for (int c = -8; c <= 8; c++) {
+          int x, y, g, gg = gcd(a, b);
+          bool ok = diophantine(a, b, c, x, y, g);
+          assert(ok == (gg == 0 ? c == 0 : c % gg == 0));
+          if (ok) {
+            assert(a * x + b * y == c);
+          }
+        }
+      }
+    }
+  }
+  {  // CRT: merge two congruences, including non-coprime and inconsistent moduli.
+    for (int m1 = 1; m1 <= 12; m1++) {
+      for (int m2 = 1; m2 <= 12; m2++) {
+        for (int r1 = 0; r1 < m1; r1++) {
+          for (int r2 = 0; r2 < m2; r2++) {
+            int64_t r, m;
+            bool ok = crt(r1, m1, r2, m2, r, m);
+            int limit = lcm(m1, m2), want = -1;
+            for (int v = 0; v < limit && want < 0; v++) {
+              if (v % m1 == r1 && v % m2 == r2) {
+                want = v;
+              }
+            }
+            assert(ok == (want >= 0));
+            if (ok) {
+              assert(m == limit && r == want);
+            }
+          }
+        }
+      }
+    }
   }
   return 0;
 }
@@ -2123,10 +2227,146 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Primitive Roots}
+A primitive root modulo $m$ is a number $g$ whose powers generate every invertible residue modulo $m$. Equivalently, the multiplicative order of $g$ modulo $m$ is exactly $\phi(m)$. Primitive roots are useful for constructing generators of finite multiplicative groups, choosing roots for number theoretic transforms, discrete logarithm setups, and randomized modular hashing or testing schemes that need a full-period multiplicative generator.
+
+Primitive roots do not exist for every modulus. They exist exactly for $m \in {1, 2, 4, p^k, 2p^k}$, where $p$ is an odd prime and $k \geq 1$. This implementation first checks that classification by factoring $m$, then factors $\phi(m)$. A candidate $g$ is primitive exactly when $g^{\phi(m)} \equiv 1 \pmod m$ and $g^{\phi(m)/q} \not\equiv 1 \pmod m$ for every prime factor $q$ of $\phi(m)$.
+
+\begin{compactitem}
+  \item \inlinecode{primitive\_root(m)} returns the smallest primitive root modulo \inlinecode{m}, or \inlinecode{-1} if no primitive root exists.
+\end{compactitem}
+
+For a prime modulus $p$, this reduces to the common contest test: factor $p - 1$, then scan for the first $g$ such that $g^{(p - 1)/q} \not\equiv 1 \pmod p$ for every prime factor $q$ of $p - 1$.
+
+Modular multiplication uses \inlinecode{\_\_uint128\_t} when available for speed, with a slower portable double-and-add fallback to avoid overflow on compilers without 128-bit integers.
+
+\textbf{Time Complexity}: $O(\sqrt{m} + g \cdot k \cdot \log m)$, where \inlinecode{g} is the answer candidate tested and $k$ is the number of distinct prime factors of $\phi(m)$.
+
+\textbf{Space Complexity}: $O(k)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+#include <numeric>
+#include <set>
+#include <utility>
+#include <vector>
+
+int64_t mulmod(int64_t a, int64_t b, int64_t m) {
+#if defined(__SIZEOF_INT128__)
+  return static_cast<int64_t>(static_cast<__uint128_t>(a) * b % m);
+#else
+  int64_t res = 0;
+  for (a %= m; b > 0; b >>= 1) {
+    if (b & 1) {
+      res = res >= m - a ? res - (m - a) : res + a;
+    }
+    a = a >= m - a ? a - (m - a) : a + a;
+  }
+  return res;
+#endif
+}
+
+int64_t powmod(int64_t a, int64_t n, int64_t m) {
+  int64_t res = 1 % m;
+  for (a %= m; n > 0; n >>= 1) {
+    if (n & 1) {
+      res = mulmod(res, a, m);
+    }
+    a = mulmod(a, a, m);
+  }
+  return res;
+}
+
+std::vector<std::pair<int64_t, int>> factorize(int64_t n) {
+  std::vector<std::pair<int64_t, int>> res;
+  for (int64_t p = 2; p <= n / p; p += (p == 2 ? 1 : 2)) {
+    if (n % p != 0) {
+      continue;
+    }
+    int count = 0;
+    while (n % p == 0) {
+      n /= p;
+      count++;
+    }
+    res.push_back({p, count});
+  }
+  if (n > 1) {
+    res.push_back({n, 1});
+  }
+  return res;
+}
+
+int64_t primitive_root(int64_t m) {
+  if (m <= 0) {
+    return -1;
+  }
+  if (m == 1 || m == 2 || m == 4) {
+    return m - 1;
+  }
+  std::vector<std::pair<int64_t, int>> factors = factorize(m);
+  bool has_root = false;
+  if (factors[0].first == 2) {
+    has_root = factors[0].second == 1 && factors.size() == 2;
+  } else {
+    has_root = factors.size() == 1;
+  }
+  if (!has_root) {
+    return -1;
+  }
+  int64_t phi = m;
+  std::set<int64_t> phi_factors;
+  for (auto [p, e] : factors) {
+    phi = phi / p * (p - 1);
+    if (e > 1) {
+      phi_factors.insert(p);
+    }
+    for (auto [q, count] : factorize(p - 1)) {
+      phi_factors.insert(q);
+    }
+  }
+  for (int64_t g = 1; g < m; g++) {
+    if (std::gcd(g, m) != 1 || powmod(g, phi, m) != 1) {
+      continue;
+    }
+    bool ok = true;
+    for (int64_t q : phi_factors) {
+      if (powmod(g, phi / q, m) == 1) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) {
+      return g;
+    }
+  }
+  return -1;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  assert(primitive_root(1) == 0);
+  assert(primitive_root(2) == 1);
+  assert(primitive_root(4) == 3);
+
+  assert(primitive_root(17) == 3);         // 3 has order phi(17) = 16.
+  assert(primitive_root(998244353) == 3);  // Common NTT prime.
+  assert(primitive_root(9) == 2);          // Odd prime power.
+  assert(primitive_root(18) == 5);         // Twice an odd prime power.
+
+  assert(primitive_root(8) == -1);
+  assert(primitive_root(12) == -1);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Prime Generation}
 Generate prime numbers using the Sieve of Eratosthenes, which repeatedly marks the multiples of each prime as composite.
 
-The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting primes in a high but narrow window be found without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within \inlinecode{[lo, hi]} (each prime $p$ starting at the first of its multiples that is at least both $p*p$ and \inlinecode{lo}). This needs only $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ space instead of the $O({\inlinecodemath{hi}})$ that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
+The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting primes in a high but narrow window be found without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within \inlinecode{[lo, hi]} (each prime $p$ starting at the first of its multiples that is at least both $p^2$ and \inlinecode{lo}). This needs only $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ space instead of the $O({\inlinecodemath{hi}})$ that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
 
 \begin{compactitem}
   \item \inlinecode{sieve(n)} returns a vector of all the primes less than or equal to \inlinecode{n}.
@@ -2276,22 +2516,23 @@ sieve(n=10000000): 0.042641s
 sieve([1000000000, 1005000000]): 0.01969s
 \end{exampleoutput}
 \subsection{Prime Tests and Factorization}
-Test whether an integer is prime and compute the prime factorization of an integer $n$. The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. Prime factorizations are represented as sorted vectors of \inlinecode{(prime, exponent)} pairs. For 0 and 1, the prime factorization is empty.
+Test whether an integer is prime and compute the prime factorization of an integer $n$. The Miller-Rabin test writes $n - 1 = d \cdot 2^r$ and squares $a^d$ repeatedly, checking that the sequence behaves the only way it can for a prime; a base $a$ that breaks the pattern is a witness that $n$ is composite. For large composite inputs, Pollard's rho iterates a pseudorandom map modulo $n$; two iterates that collide modulo a hidden prime factor reveal that factor through a GCD with their difference. Prime factorizations are represented as sorted vectors of (prime, exponent) pairs. For 0 and 1, the prime factorization is empty.
 
 \begin{compactitem}
   \item \inlinecode{is\_prime\_slow(n)} returns whether the integer \inlinecode{n} is prime using trial division.
   \item \inlinecode{is\_probable\_prime(n, k)} returns whether \inlinecode{n} is probably prime using \inlinecode{k} random Miller-Rabin bases. The result is guaranteed correct when \inlinecode{n} is prime. When \inlinecode{n} is composite, it returns false with probability at least $1 - (1 / 4)^k$, so a true result has one-sided error probability at most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit deterministic setting.
   \item \inlinecode{is\_prime(n)} returns whether the signed 64-bit integer \inlinecode{n} is prime using deterministic Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
   \item \inlinecode{factorize\_slow(n)} returns the prime factorization of \inlinecode{n} using trial division.
-  \item \inlinecode{get\_divisors\_slow(n)} returns a sorted vector of all divisors of \inlinecode{n} using trial division.
   \item \inlinecode{rho\_factor(n)} returns a factor of \inlinecode{n} that is not necessarily prime using Pollard's rho with Brent's optimization. If \inlinecode{n} is prime, then \inlinecode{n} itself is returned. While this algorithm is non-deterministic and may fail to detect factors on certain runs of the same input, it can be retried until a nontrivial factor is found, as done in \inlinecode{factorize()}.
-  \item \inlinecode{cached\_primes(n)} returns a cached vector of primes up to and including \inlinecode{n}, rebuilding it with a linear sieve if needed.
+  \item \inlinecode{cached\_sieve(n)} returns a cached linear sieve up to and including \inlinecode{n}, storing both primes and least prime factors.
   \item \inlinecode{merge\_factors(a, b)} merges two sorted compressed factorizations.
   \item \inlinecode{factorize\_rho(n)} returns the prime factorization of a 64-bit integer using Miller-Rabin and Pollard's rho without initial trial division.
-  \item \inlinecode{factorize(n, trial\_division\_cutoff)} returns the prime factorization of a 64-bit integer \inlinecode{n} using a combination of trial division, the Miller-Rabin primality test, and Pollard's rho algorithm. \inlinecode{trial\_division\_cutoff} specifies the largest prime to test with trial division before falling back to the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
+  \item \inlinecode{factorize(n, small\_prime\_limit)} returns the prime factorization of a 64-bit integer \inlinecode{n} using a combination of trial division, the Miller-Rabin primality test, and Pollard's rho  algorithm. \inlinecode{small\_prime\_limit} specifies the largest prime to test with trial division before falling back to the rho algorithm. This supports 64-bit integers up to and including $2^{63} - 1$.
   \item \inlinecode{divisors\_from\_factors(factors)} returns all divisors from a compressed factorization.
   \item \inlinecode{get\_divisors(n)} returns all divisors of a 64-bit integer using \inlinecode{factorize()} followed by \inlinecode{divisors\_from\_factors()}.
 \end{compactitem}
+
+Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_\_uint128\_t} when available for speed, with a slower portable double-and-add fallback to avoid overflow on compilers without 128-bit integers.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -2299,8 +2540,8 @@ Test whether an integer is prime and compute the prime factorization of an integ
   \item $O(\sqrt{n})$ per call to \inlinecode{is\_prime\_slow(n)}.
   \item $O(k \log^{3}(n))$ per call to \inlinecode{is\_probable\_prime(n, k)}.
   \item $O(\log^{3}(n))$ per call to \inlinecode{is\_prime(n)}.
-  \item $O(\sqrt{n})$ per call to \inlinecode{factorize\_slow(n)} and \inlinecode{get\_divisors\_slow(n)}.
-  \item $O(n)$ to rebuild the prime cache in \inlinecode{cached\_primes(n)}.
+  \item $O(\sqrt{n})$ per call to \inlinecode{factorize\_slow(n)}.
+  \item $O(n)$ to rebuild the prime cache in \inlinecode{cached\_sieve(n)}.
   \item Unknown, but approximately $O(n^{1/4})$ per call to \inlinecode{rho\_factor(n)} and \inlinecode{factorize(n)}.
 \end{compactitem}
 
@@ -2308,7 +2549,7 @@ Test whether an integer is prime and compute the prime factorization of an integ
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(f)$ auxiliary heap space for all operations, where $f$ is the number of factors returned.
-  \item $O(c)$ cached heap space for the largest \inlinecode{cached\_primes(c)} call.
+  \item $O(c)$ cached heap space for the largest \inlinecode{cached\_sieve(c)} call.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -2359,26 +2600,6 @@ std::vector<std::pair<Int, int>> factorize_slow(Int n) {
   return res;
 }
 
-template<class Int>
-std::vector<Int> get_divisors_slow(Int n) {
-  if (n <= 1) {
-    return (n < 1) ? std::vector<Int>() : std::vector<Int>(1, 1);
-  }
-  std::vector<Int> res{1};
-  for (const auto &factor : factorize_slow(n)) {
-    int old_size = static_cast<int>(res.size());
-    Int power = 1;
-    for (int e = 1; e <= factor.second; e++) {
-      power *= factor.first;
-      for (int i = 0; i < old_size; i++) {
-        res.push_back(res[i] * power);
-      }
-    }
-  }
-  std::sort(res.begin(), res.end());
-  return res;
-}
-
 uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
 #if defined(__SIZEOF_INT128__)
   return static_cast<uint64_t>(static_cast<__uint128_t>(x) * n % m);
@@ -2386,11 +2607,11 @@ uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
   uint64_t a = 0, b = x % m;
   for (; n > 0; n >>= 1) {
     if (n & 1) {
-      a = (a + b) % m;
+      a = a >= m - b ? a - (m - b) : a + b;
     }
-    b = (b << 1) % m;
+    b = b >= m - b ? b - (m - b) : b + b;
   }
-  return a % m;
+  return a;
 #endif
 }
 
@@ -2504,28 +2725,32 @@ bool is_prime(int64_t n) {
   return true;
 }
 
-std::vector<int> cached_primes(int n) {
-  static int limit = 1;
-  static std::vector<int> primes;
-  if (n <= limit) {
-    return primes;
+struct SieveCache {
+  int limit = 1;
+  std::vector<int> least{0, 1}, primes;
+};
+
+SieveCache &cached_sieve(int n) {
+  static SieveCache cache;
+  if (n <= cache.limit) {
+    return cache;
   }
-  std::vector<int> least(n + 1, 0);
-  primes.clear();
-  for (int i = 2; i <= n; i++) {
-    if (least[i] == 0) {
-      least[i] = i;
-      primes.push_back(i);
+  cache.limit = std::max(1, n);
+  cache.least.assign(cache.limit + 1, 0);
+  cache.primes.clear();
+  for (int i = 2; i <= cache.limit; i++) {
+    if (cache.least[i] == 0) {
+      cache.least[i] = i;
+      cache.primes.push_back(i);
     }
-    for (int p : primes) {
-      if (p > least[i] || i > n / p) {
+    for (int p : cache.primes) {
+      if (p > cache.least[i] || i > cache.limit / p) {
         break;
       }
-      least[i * p] = p;
+      cache.least[i * p] = p;
     }
   }
-  limit = n;
-  return primes;
+  return cache;
 }
 
 using vfactors = std::vector<std::pair<int64_t, int>>;
@@ -2568,14 +2793,27 @@ vfactors factorize_rho(int64_t n) {
   return merge_factors(factorize_rho(p), factorize_rho(n / p));
 }
 
-vfactors factorize(int64_t n, int trial_division_cutoff = 1000000) {
+vfactors factorize(int64_t n, int small_prime_limit = 1000000) {
   if (n <= 1) {
     return {};
   }
+  const SieveCache &sieve = cached_sieve(small_prime_limit);
+  if (n <= sieve.limit) {
+    vfactors res;
+    while (n > 1) {
+      int p = sieve.least[n], cnt = 0;
+      do {
+        n /= p;
+        cnt++;
+      } while (n > 1 && sieve.least[n] == p);
+      res.emplace_back(p, cnt);
+    }
+    return res;
+  }
   vfactors res;
-  auto primes = cached_primes(trial_division_cutoff);
+  const std::vector<int> &primes = sieve.primes;
   for (int p : primes) {
-    if (p > trial_division_cutoff || static_cast<int64_t>(p) > n / p) {
+    if (p > small_prime_limit || static_cast<int64_t>(p) > n / p) {
       break;
     }
     if (n % p == 0) {
@@ -2701,7 +2939,7 @@ int main() {
       auto v2 = factorize(i);
       validate(i, v1);
       assert(v1 == v2);
-      auto d = get_divisors_slow(i);
+      auto d = get_divisors(i);
       set<int> s(d.begin(), d.end());
       assert(d.size() == s.size());
       for (int j = 1; j <= i; j++) {
@@ -2711,21 +2949,17 @@ int main() {
       }
     }
   }
-  for (int64_t i : {1, 2, 36, 9999, 10000}) {
-    auto d = get_divisors_slow(i);
-    assert(std::vector<int64_t>(d.begin(), d.end()) == get_divisors(i));
-  }
   {  // Compressed factors are convenient for building divisors.
     vfactors factors{{2, 3}, {3, 2}, {5, 1}};
     vector<int64_t> divisors = divisors_from_factors(factors);
     assert(divisors.size() == 24);
     assert(divisors.front() == 1 && divisors.back() == 360);
     assert(factorize(360) == factors);
-    assert(get_divisors(360) == get_divisors_slow<int64_t>(360));
+    assert(get_divisors(360) == divisors);
   }
   {  // Large factorization tests.
     const vector<int64_t> nums{
-        (1LL << 62),                    // high power of 2
+        (1LL << 62),                    // high power of two
         9223372036854775807LL,          // 2^63 - 1, many small factors
         999983LL * 999983,              // square of a large prime
         1900009LL * 1910009 * 2541547,  // three medium-size prime factors
@@ -2757,19 +2991,19 @@ int main() {
 \begin{exampleoutput}
 Primality test:
 num:           is_prime_slow():  is_probable_prime():  is_prime():
-772023803            0.008ms           0.006ms           0.003ms
+772023803            0.006ms           0.005ms           0.001ms
 2147483647           0.009ms           0.006ms           0.002ms
-5705234089           0.013ms           0.000ms           0.000ms
+5705234089           0.014ms           0.000ms           0.001ms
 6339503641           0.013ms           0.001ms           0.001ms
-999966000289         0.162ms           0.001ms           0.000ms
+999966000289         0.171ms           0.001ms           0.001ms
 
 Factorization test:
 num:                    factorize_slow():   factorize():
-4611686018427387904          0.002ms           0.006ms
-9223372036854775807          0.044ms           0.010ms
-999966000289                 0.469ms           0.043ms
-9223361212852495307          0.902ms           0.105ms
-2500052700017629            24.283ms           0.123ms
+4611686018427387904          0.002ms           0.002ms
+9223372036854775807          0.049ms           0.007ms
+999966000289                 0.503ms           0.043ms
+9223361212852495307          0.952ms           0.096ms
+2500052700017629            24.587ms           0.194ms
 \end{exampleoutput}
 \subsection{Euler's Totient Function}
 Euler's totient function $\phi(n)$ returns the number of positive integers less than or equal to $n$ that are relatively prime to $n$; that is, the number of integers $k$ in the range $[1, n]$ for which $\gcd(n, k) = 1$.
@@ -4112,22 +4346,23 @@ int main() {
 Basic matrix operations defined on a two-dimensional vector of numeric values.
 
 \begin{compactitem}
-  \item \inlinecode{make\_matrix(r, c, v)} constructs and returns a matrix with \inlinecode{r} rows and \inlinecode{c} columns where the value at every index is initialized to \inlinecode{v}.
-  \item \inlinecode{make\_matrix(a)} returns a matrix constructed from the two-dimensional vector \inlinecode{a}.
-  \item \inlinecode{identity\_matrix(n)} returns the $n$ by $n$ identity matrix, that is, a matrix where each \inlinecode{a[i][j]} equals 1 if $i = j$, or 0 otherwise.
+  \item \inlinecode{make\_matrix\textless{}T\textgreater{}(m, n, v)} constructs and returns an $m$ by $n$ matrix with 0-based indices (row indices 0 to \inlinecode{m - 1} and column indices 0 to \inlinecode{c - 1}), where every value is initialized to \inlinecode{v}.
+  \item \inlinecode{identity\_matrix\textless{}T\textgreater{}(n)} returns the $n$ by $n$ identity matrix, that is, a matrix where each \inlinecode{a[i][j]} equals 1 if $i = j$, or 0 otherwise.
   \item \inlinecode{rows(a)} returns the number of rows $m$ in matrix \inlinecode{a}.
   \item \inlinecode{columns(a)} returns the number of columns $n$ in matrix \inlinecode{a}.
-  \item \inlinecode{a[i][j]} may be used to access or modify the entry at row $i$, column $j$ of an $m$ by $n$ matrix \inlinecode{a}, for every \inlinecode{i} in \inlinecode{[0, m)} and \inlinecode{j} in \inlinecode{[0, n)}.
+  \item \inlinecode{a[i][j]} may be used to access or modify the entry at row $i$, column $j$ of an $m$ by $n$ matrix \inlinecode{a}, for every $i \in [0, m)$ and $j \in [0, n)$.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, and \inlinecode{!=} define lexicographical comparison based on that of \inlinecode{std::vector}.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, and \inlinecode{/=} define scalar addition, subtraction, multiplication, and division involving a matrix and a numeric scalar value.
   \item Operators \inlinecode{*} and \inlinecode{*=} define vector and matrix multiplication.
-  \item Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define matrix exponentiation of a square matrix \inlinecode{a} by an integer power \inlinecode{p}.
+  \item Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define iterative binary matrix exponentiation of a square matrix \inlinecode{a} by an integer power \inlinecode{p}.
   \item \inlinecode{power\_sum(a, p)} returns the power sum of a square matrix \inlinecode{a} up to an integer power \inlinecode{p}, that is, $a + a^2 + \ldots + a^p$.
   \item \inlinecode{transpose(a)} returns the transpose of an $m$ by $n$ matrix \inlinecode{a}, that is, a new $n$ by $m$ matrix $b$ such that \inlinecode{a[i][j]} $=$ \inlinecode{b[j][i]} for every \inlinecode{i} in \inlinecode{[0, m)} and \inlinecode{j} in \inlinecode{[0, n)}.
   \item \inlinecode{transpose\_in\_place(a)} assigns the square matrix \inlinecode{a} to its transpose, returning a reference to the modified argument itself.
   \item \inlinecode{rotate(a, d)} returns the matrix \inlinecode{a} rotated \inlinecode{d} degrees clockwise. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
   \item \inlinecode{rotate\_in\_place(a, d)} assigns the square matrix \inlinecode{a} to its rotation by \inlinecode{d} degrees clockwise, returning a reference to the modified argument itself. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
 \end{compactitem}
+
+Exponentiation uses the usual iterative binary exponentiation pattern: keep an accumulated result, square the base each round, and multiply the result when the current exponent bit is set. The power sum uses a block matrix identity: \inlinecode{\textbackslash{}begin\{bmatrix\} A \& A \textbackslash{}\textbackslash{} 0 \& I \textbackslash{}end\{bmatrix\}\textasciicircum{}p} has \inlinecode{A + A\textasciicircum{}2 + \textbackslash{}dots + A\textasciicircum{}p} in its upper-right block.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4145,7 +4380,8 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary space for \inlinecode{rows()}, \inlinecode{columns()}, \inlinecode{a[i][j]} access, comparison operators, and in-place operations.
-  \item $O(n^{2} \log p)$ auxiliary stack and heap space for exponentiation of an $n$ by $n$ matrix to power $p$, as well as the power sum of an $n$ by $n$ matrix up to power $p$.
+  \item $O(n^{2})$ auxiliary heap space for exponentiation of an $n$ by $n$ matrix to power $p$.
+  \item $O(n^{2})$ auxiliary heap space for \inlinecode{power\_sum()} of an $n$ by $n$ matrix up to power $p$.
   \item $O(m \cdot n)$ auxiliary heap space for all non-in-place operations returning an $m$ by $n$ matrix, \inlinecode{transpose()}, and \inlinecode{rotate()}.
 \end{compactitem}
 
@@ -4157,59 +4393,46 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 #include <stdexcept>
 #include <vector>
 
-using matrix = std::vector<std::vector<int>>;
-
-matrix make_matrix(int r, int c) {
-  return matrix(r, matrix::value_type(c));
-}
-
 template<class T>
-matrix make_matrix(int r, int c, const T &v) {
-  return matrix(r, matrix::value_type(c, v));
+using Matrix = std::vector<std::vector<T>>;
+
+template<class T = int>
+Matrix<T> make_matrix(int m, int n, const T &v = T{}) {
+  return Matrix<T>(m, std::vector<T>(n, v));
 }
 
-template<class T>
-matrix make_matrix(const std::vector<std::vector<T>> &a) {
-  int rows = static_cast<int>(a.size());
-  int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
-  matrix res(rows, matrix::value_type(cols));
-  for (int i = 0; i < rows; i++) {
-    for (int j = 0; j < cols; j++) {
-      res[i][j] = a[i][j];
-    }
-  }
-  return res;
-}
-
-matrix identity_matrix(int n) {
-  matrix res(n, matrix::value_type(n, 0));
+template<class T = int>
+Matrix<T> identity_matrix(int n) {
+  Matrix<T> res = make_matrix<T>(n, n);
   for (int i = 0; i < n; i++) {
     res[i][i] = 1;
   }
   return res;
 }
 
-int rows(const matrix &a) {
+template<class T>
+int rows(const Matrix<T> &a) {
   return static_cast<int>(a.size());
 }
 
-int columns(const matrix &a) {
+template<class T>
+int columns(const Matrix<T> &a) {
   return a.empty() ? 0 : static_cast<int>(a[0].size());
 }
 
-std::ostream &operator<<(std::ostream &out, const matrix &a) {
-  static const int W = 10, P = 5;
+template<class T>
+std::ostream &operator<<(std::ostream &out, const Matrix<T> &a) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
-      out << std::setw(W) << std::fixed << std::setprecision(P) << a[i][j];
+      out << std::setw(10) << std::fixed << std::setprecision(5) << a[i][j];
     }
     out << std::endl;
   }
   return out;
 }
 
-template<class T>
-matrix &operator+=(matrix &a, const T &v) {
+template<class T, class U>
+Matrix<T> &operator+=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] += v;
@@ -4218,8 +4441,8 @@ matrix &operator+=(matrix &a, const T &v) {
   return a;
 }
 
-template<class T>
-matrix &operator-=(matrix &a, const T &v) {
+template<class T, class U>
+Matrix<T> &operator-=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] -= v;
@@ -4228,8 +4451,8 @@ matrix &operator-=(matrix &a, const T &v) {
   return a;
 }
 
-template<class T>
-matrix &operator*=(matrix &a, const T &v) {
+template<class T, class U>
+Matrix<T> &operator*=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] *= v;
@@ -4238,8 +4461,8 @@ matrix &operator*=(matrix &a, const T &v) {
   return a;
 }
 
-template<class T>
-matrix &operator/=(matrix &a, const T &v) {
+template<class T, class U>
+Matrix<T> &operator/=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] /= v;
@@ -4248,7 +4471,8 @@ matrix &operator/=(matrix &a, const T &v) {
   return a;
 }
 
-matrix &operator+=(matrix &a, const matrix &b) {
+template<class T>
+Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
   if (rows(a) != rows(b) || columns(a) != columns(b)) {
     throw std::runtime_error("Invalid dimensions for matrix addition.");
   }
@@ -4260,9 +4484,10 @@ matrix &operator+=(matrix &a, const matrix &b) {
   return a;
 }
 
-matrix &operator-=(matrix &a, const matrix &b) {
+template<class T>
+Matrix<T> &operator-=(Matrix<T> &a, const Matrix<T> &b) {
   if (rows(a) != rows(b) || columns(a) != columns(b)) {
-    throw std::runtime_error("Invalid dimensions for matrix addition.");
+    throw std::runtime_error("Invalid dimensions for matrix subtraction.");
   }
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -4272,38 +4497,40 @@ matrix &operator-=(matrix &a, const matrix &b) {
   return a;
 }
 
-matrix operator+(const matrix &a, const matrix &b) {
-  matrix c(a);
+template<class T>
+Matrix<T> operator+(const Matrix<T> &a, const Matrix<T> &b) {
+  Matrix<T> c(a);
   return c += b;
 }
 
-matrix operator-(const matrix &a, const matrix &b) {
-  matrix c(a);
+template<class T>
+Matrix<T> operator-(const Matrix<T> &a, const Matrix<T> &b) {
+  Matrix<T> c(a);
   return c -= b;
 }
 
 template<class T>
-matrix &operator*=(matrix &a, const std::vector<T> &v) {
+Matrix<T> &operator*=(Matrix<T> &a, const std::vector<T> &v) {
   if (columns(a) != static_cast<int>(v.size()) || v.empty()) {
-    throw std::runtime_error("Invalid dimensions for matrix multiplication.");
+    throw std::runtime_error("Invalid dimensions for matrix-vector multiplication.");
   }
+  int cols = columns(a);
   for (int i = 0; i < rows(a); i++) {
-    a[i][0] *= v[0];
-    for (int j = 1; j < columns(a); j++) {
-      a[i][0] += a[i][j] * v[j];
+    T sum = 0;
+    for (int j = 0; j < cols; j++) {
+      sum += a[i][j] * v[j];
     }
-  }
-  for (int i = 0; i < rows(a); i++) {
-    a[i].resize(1);
+    a[i].assign(1, sum);
   }
   return a;
 }
 
-matrix operator*(const matrix &a, const matrix &b) {
+template<class T>
+Matrix<T> operator*(const Matrix<T> &a, const Matrix<T> &b) {
   if (columns(a) != rows(b)) {
     throw std::runtime_error("Invalid dimensions for matrix multiplication.");
   }
-  matrix res = make_matrix(rows(a), columns(b), 0);
+  Matrix<T> res = make_matrix<T>(rows(a), columns(b));
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(b); j++) {
       for (int k = 0; k < rows(b); k++) {
@@ -4314,43 +4541,87 @@ matrix operator*(const matrix &a, const matrix &b) {
   return res;
 }
 
-matrix &operator*=(matrix &a, const matrix &b) { return a = a * b; }
-template<class T> matrix operator+(const matrix &a, const T &v) { matrix m(a); return m += v; }
-template<class T> matrix operator-(const matrix &a, const T &v) { matrix m(a); return m -= v; }
-template<class T> matrix operator*(const matrix &a, const T &v) { matrix m(a); return m *= v; }
-template<class T> matrix operator/(const matrix &a, const T &v) { matrix m(a); return m /= v; }
-template<class T> matrix operator+(const T &v, const matrix &a) { return a + v; }
-template<class T> matrix operator-(const T &v, const matrix &a) { return a - v; }
-template<class T> matrix operator*(const T &v, const matrix &a) { return a * v; }
-template<class T> matrix operator/(const T &v, const matrix &a) { return a / v; }
+template<class T>
+Matrix<T> &operator*=(Matrix<T> &a, const Matrix<T> &b) { return a = a * b; }
 
-matrix operator^(const matrix &a, unsigned int p) {
+template<class T, class U>
+Matrix<T> operator+(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m += v; }
+
+template<class T, class U>
+Matrix<T> operator-(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m -= v; }
+
+template<class T, class U>
+Matrix<T> operator*(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m *= v; }
+
+template<class T, class U>
+Matrix<T> operator/(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m /= v; }
+
+template<class T, class U>
+Matrix<T> operator+(const U &v, const Matrix<T> &a) { return a + v; }
+
+template<class T, class U>
+Matrix<T> operator*(const U &v, const Matrix<T> &a) { return a * v; }
+
+template<class T, class U>
+Matrix<T> operator-(const U &v, const Matrix<T> &a) {
+  Matrix<T> m = make_matrix<T>(rows(a), columns(a), v);
+  return m -= a;
+}
+
+template<class T>
+Matrix<T> operator^(Matrix<T> a, unsigned int p) {
   if (rows(a) != columns(a)) {
     throw std::runtime_error("Matrix must be square for exponentiation.");
   }
-  if (p == 0) {
-    return identity_matrix(rows(a));
+  Matrix<T> res = identity_matrix<T>(rows(a));
+  while (p > 0) {
+    if (p & 1) {
+      res *= a;
+    }
+    a *= a;
+    p >>= 1;
   }
-  return (p % 2 == 0) ? (a * a) ^ (p / 2) : a * (a ^ (p - 1));
+  return res;
 }
 
-matrix operator^=(matrix &a, unsigned int p) {
+template<class T>
+Matrix<T> operator^=(Matrix<T> &a, unsigned int p) {
   return a = a ^ p;
 }
 
-matrix power_sum(const matrix &a, unsigned int p) {
+template<class T>
+Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
   if (rows(a) != columns(a)) {
     throw std::runtime_error("Matrix must be square for power_sum.");
   }
+  int n = rows(a);
   if (p == 0) {
-    return make_matrix(rows(a), rows(a));
+    return make_matrix<T>(n, n);
   }
-  return (p % 2 == 0) ? power_sum(a, p / 2) * (identity_matrix(rows(a)) + (a ^ (p / 2)))
-                      : (a + a * power_sum(a, p - 1));
+  // [A A]^p = [A^p  A + A^2 + ... + A^p]
+  // [0 I]     [ 0                 I          ]
+  Matrix<T> block = make_matrix<T>(2 * n, 2 * n);
+  for (int i = 0; i < n; i++) {
+    block[i][i] = a[i][i];
+    block[i + n][i + n] = 1;
+    for (int j = 0; j < n; j++) {
+      block[i][j] = a[i][j];
+      block[i][j + n] = a[i][j];
+    }
+  }
+  block = block ^ p;
+  Matrix<T> res = make_matrix<T>(n, n);
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
+      res[i][j] = block[i][j + n];
+    }
+  }
+  return res;
 }
 
-matrix transpose(const matrix &a) {
-  matrix res = make_matrix(columns(a), rows(a));
+template<class T>
+Matrix<T> transpose(const Matrix<T> &a) {
+  Matrix<T> res = make_matrix<T>(columns(a), rows(a));
   for (int i = 0; i < rows(res); i++) {
     for (int j = 0; j < columns(res); j++) {
       res[i][j] = a[j][i];
@@ -4359,7 +4630,8 @@ matrix transpose(const matrix &a) {
   return res;
 }
 
-matrix &transpose_in_place(matrix &a) {
+template<class T>
+Matrix<T> &transpose_in_place(Matrix<T> &a) {
   if (rows(a) != columns(a)) {
     throw std::runtime_error("Matrix must be square for transpose_in_place.");
   }
@@ -4371,17 +4643,18 @@ matrix &transpose_in_place(matrix &a) {
   return a;
 }
 
-matrix rotate(const matrix &a, int degrees = 90) {
+template<class T>
+Matrix<T> rotate(const Matrix<T> &a, int degrees = 90) {
   if (degrees % 90 != 0) {
     throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
   }
   if (degrees < 0) {
     degrees = 360 - ((-degrees) % 360);
   }
-  matrix res;
+  Matrix<T> res;
   switch (degrees % 360) {
     case 90: {
-      res = make_matrix(columns(a), rows(a));
+      res = make_matrix<T>(columns(a), rows(a));
       for (int i = 0; i < columns(a); i++) {
         for (int j = 0; j < rows(a); j++) {
           res[i][j] = a[rows(a) - j - 1][i];
@@ -4390,7 +4663,7 @@ matrix rotate(const matrix &a, int degrees = 90) {
       break;
     }
     case 180: {
-      res = make_matrix(rows(a), columns(a));
+      res = make_matrix<T>(rows(a), columns(a));
       for (int i = 0; i < rows(a); i++) {
         for (int j = 0; j < columns(a); j++) {
           res[i][j] = a[rows(a) - i - 1][columns(a) - j - 1];
@@ -4399,7 +4672,7 @@ matrix rotate(const matrix &a, int degrees = 90) {
       break;
     }
     case 270: {
-      res = make_matrix(columns(a), rows(a));
+      res = make_matrix<T>(columns(a), rows(a));
       for (int i = 0; i < columns(a); i++) {
         for (int j = 0; j < rows(a); j++) {
           res[i][j] = a[j][columns(a) - i - 1];
@@ -4414,7 +4687,8 @@ matrix rotate(const matrix &a, int degrees = 90) {
   return res;
 }
 
-matrix &rotate_in_place(matrix &a, int degrees = 90) {
+template<class T>
+Matrix<T> &rotate_in_place(Matrix<T> &a, int degrees = 90) {
   if (degrees % 90 != 0) {
     throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
   }
@@ -4464,6 +4738,7 @@ matrix &rotate_in_place(matrix &a, int degrees = 90) {
 using namespace std;
 
 int main() {
+  using matrix = Matrix<int>;
   matrix a{{1, 2, 3}, {4, 5, 6}};
   matrix a90{{4, 1}, {5, 2}, {6, 3}};
   matrix a180{{6, 5, 4}, {3, 2, 1}};
@@ -4491,28 +4766,35 @@ int main() {
 
   m[0][0] += 5;
   assert(m[0][0] == 25 && m[1][1] == 20);
+  assert((m ^ 0) == identity_matrix(5));
   assert(power_sum(m, 3) == m + m * m + (m ^ 3));
+
+  Matrix<double> d = make_matrix<double>(2, 2, 0.5);
+  assert(rows(d) == 2 && columns(d) == 2);
+  assert((d + 0.25)[0][0] == 0.75);
   return 0;
 }
 \end{lstlisting}
 \subsection{Row Reduction}
-Converts a matrix to reduced row echelon form using Gaussian elimination to solve a system of linear equations as well as compute the determinant. Each round finds a row with a nonzero entry in the current leading column, normalizes that row, and subtracts multiples of it from every other row to clear the column. In practice, this method is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, LU decomposition with row partial pivoting should be used.
+Converts a matrix to reduced row echelon form using Gaussian elimination to solve a system of linear equations and compute rank. Each round finds a row with a nonzero entry in the current leading column, swaps the largest-magnitude candidate into place for partial pivoting, normalizes that row, and subtracts multiples of it from every other row to clear the column. In practice, this method can still be prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, LU decomposition with row partial pivoting should be used.
 
 \begin{compactitem}
   \item \inlinecode{row\_reduce(a)} assigns the matrix \inlinecode{a} to its reduced row echelon form, returning a reference to the modified argument itself.
+  \item \inlinecode{matrix\_rank(a)} returns the rank of matrix \inlinecode{a}, i.e. the number of nonzero rows after row reduction.
   \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning 0 if there is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one solution, then the vector pointed to by \inlinecode{x} is populated with the solution vector of length $n$.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(m^{2} \cdot n)$ per call to \inlinecode{row\_reduce(a)} and \inlinecode{solve\_system(a)}, where $m$ and $n$ are the number of rows and columns of \inlinecode{a}, respectively.
+\textbf{Time Complexity}: $O(m^{2} \cdot n)$ per call to \inlinecode{row\_reduce(a)}, \inlinecode{matrix\_rank(a)}, and \inlinecode{solve\_system(a)}, where $m$ and $n$ are the number of rows and columns of \inlinecode{a}, respectively.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(1)$ auxiliary for \inlinecode{row\_reduce(a)}.
-  \item $O(m \cdot n)$ auxiliary heap space for \inlinecode{solve\_system(a)}.
+  \item $O(m \cdot n)$ auxiliary heap space for \inlinecode{matrix\_rank(a)} and \inlinecode{solve\_system(a)}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <stdexcept>
@@ -4526,17 +4808,17 @@ Matrix &row_reduce(Matrix &a) {
     return a;
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
-  for (int r = 0, lead = 0; r < rows && lead < cols; r++) {
-    int i = r;
-    while (fabs(a[i][lead]) < EPS) {
-      if (++i == rows) {
-        i = r;
-        if (++lead == cols) {
-          return a;
-        }
+  for (int r = 0, lead = 0; r < rows && lead < cols; lead++) {
+    int pivot = r;
+    for (int i = r + 1; i < rows; i++) {
+      if (fabs(a[i][lead]) > fabs(a[pivot][lead])) {
+        pivot = i;
       }
     }
-    std::swap(a[i], a[r]);
+    if (fabs(a[pivot][lead]) < EPS) {
+      continue;
+    }
+    std::swap(a[pivot], a[r]);
     auto lv = a[r][lead];
     for (int j = 0; j < cols; j++) {
       a[r][j] /= lv;
@@ -4552,9 +4834,25 @@ Matrix &row_reduce(Matrix &a) {
     for (int j = 0; j < lead; j++) {
       a[r][j] = 0;
     }
-    a[r][lead++] = 1;
+    a[r][lead] = 1;
+    r++;
   }
   return a;
+}
+
+template<class Matrix>
+int matrix_rank(Matrix a) {
+  row_reduce(a);
+  int rank = 0;
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    for (int j = 0; j < static_cast<int>(a[i].size()); j++) {
+      if (fabs(a[i][j]) > EPS) {
+        rank++;
+        break;
+      }
+    }
+  }
+  return rank;
 }
 
 template<class Matrix, class T>
@@ -4611,6 +4909,8 @@ int main() {
   vector<double> b{3, 1, -2};
   vector<double> x;
   assert(solve_system(a, b, &x) == 0);
+  assert(matrix_rank(a) == 3);
+  assert(matrix_rank(vector<vector<double>>{{1, 2, 3}, {2, 4, 6}, {0, 1, 1}}) == 2);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     double sum = 0;
     for (int j = 0; j < static_cast<int>(a[i].size()); j++) {
@@ -4622,7 +4922,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Determinant and Inverse}
-Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$ exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or non-singular. The determinant falls out of elimination as the product of the pivots, negated once per row swap. The inverse is found by appending the identity matrix and row-reducing the combined matrix: the operations that turn \inlinecode{a} into the identity turn the identity into the inverse. In practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, use LU decomposition with row partial pivoting.
+Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$ exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or non-singular. The determinant falls out of elimination as the product of the pivots, negated once per row swap. The inverse is found by appending the identity matrix and row-reducing the combined matrix: the operations that turn $a$ into the identity turn the identity into the inverse. In practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, use LU decomposition with row partial pivoting.
 
 \begin{compactitem}
   \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions.
@@ -4783,7 +5083,7 @@ int main() {
 The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions.
 
 \begin{compactitem}
-  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either 0 or 1 denoting the ``sign'' of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j] = l[i][j]} for $i > j$ and \inlinecode{lu[i][j] = u[i][j]} for $i \leq j$. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to 1 in row $i$ of the permutation matrix $P$ (all other columns in row $i$ of $P$ are implicitly 0). The permutation matrix $P$ corresponding to \inlinecode{p1col} satisfies $P a = lu$.
+  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either 0 or 1 denoting the ``sign'' of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j] = l[i][j]} for $i > j$ and \inlinecode{lu[i][j] = u[i][j]} for $i \leq j$. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to 1 in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly 0). The permutation matrix $p$ corresponding to \inlinecode{p1col} satisfies $pa = lu$.
   \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning 0 if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the vector pointed to by \inlinecode{x} is populated with the solution vector of length $n$.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using LU decomposition.
   \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning 0 if the inversion was successful or $-1$ if \inlinecode{a} has no inverse.
@@ -4994,98 +5294,334 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{XOR Basis}
-A XOR basis (also called a linear basis over the field GF(2)) is the analog of a vector space basis for integers under the bitwise XOR operation. Each integer is treated as a vector of bits, where XOR plays the role of vector addition. Inserting a set of integers one at a time and keeping only those that are linearly independent yields a basis whose XOR-combinations (subset XORs) span exactly the same set of values as the original integers. From a basis of size $r$, exactly $2^r$ distinct values are reachable, and queries such as the maximum attainable XOR become a simple greedy scan.
-
-The basis is kept in reduced form: \inlinecode{basis[i]} is either 0 or a value whose highest set bit is bit \inlinecode{i}, and no two basis elements share the same highest bit. Reducing a value means XORing it against the basis elements from the highest bit down, eliminating each set bit that a basis element covers.
+\subsection{Sparse Matrix}
+A sparse matrix stores only nonzero entries, which is useful when the matrix is large but most values are zero. This implementation keeps both row maps and column maps in sync: \inlinecode{row(i)} can iterate all nonzeros in row \inlinecode{i}, while \inlinecode{column(j)} can iterate all nonzeros in column \inlinecode{j}. That bidirectional storage is especially useful for sparse elimination or graph-like matrix operations, where both row updates and column pivot lookups are common.
 
 \begin{compactitem}
-  \item \inlinecode{insert(x)} adds \inlinecode{x} to the basis, returning \inlinecode{true} if \inlinecode{x} was linearly independent of the current basis (increasing its size), or \inlinecode{false} if \inlinecode{x} was already representable as a subset XOR.
-  \item \inlinecode{contains(x)} returns whether \inlinecode{x} is representable as the XOR of some subset of the inserted values, i.e. whether it reduces to 0 against the basis.
-  \item \inlinecode{max\_xor(base)} returns the maximum value of \inlinecode{base} XORed with some subset XOR of the basis. With the default \inlinecode{base} of 0, this is the maximum subset XOR.
-  \item \inlinecode{size()} returns the number of elements in the basis (its rank).
+  \item \inlinecode{SparseMatrix\textless{}T\textgreater{}(h, w)} constructs an \inlinecode{h} by \inlinecode{w} sparse matrix.
+  \item \inlinecode{height()} returns the number of rows.
+  \item \inlinecode{width()} returns the number of columns.
+  \item \inlinecode{nonzeros()} returns the number of stored nonzero entries.
+  \item \inlinecode{get(i, j)} returns the value at row \inlinecode{i}, column \inlinecode{j}, or 0 if the entry is not stored.
+  \item \inlinecode{set(i, j, value)} assigns an entry. Assigning zero erases it from both maps.
+  \item \inlinecode{add(i, j, delta)} adds \inlinecode{delta} to an entry. If the result becomes zero, the entry is erased.
+  \item \inlinecode{row(i)} returns a map from column index to value for the nonzero entries in row \inlinecode{i}.
+  \item \inlinecode{column(j)} returns a map from row index to value for the nonzero entries in column \inlinecode{j}.
+  \item \inlinecode{swap\_rows(i, j)} swaps two rows while keeping the column maps synchronized.
+  \item \inlinecode{transpose()} transposes the matrix in place.
+  \item \inlinecode{multiply\_vector(x)} returns the matrix-vector product \inlinecode{A*x}.
+  \item \inlinecode{row\_reduce(a, limit)} converts columns \inlinecode{[0, limit)} of \inlinecode{a} to sparse row echelon form, returning the rank found in those columns.
+  \item \inlinecode{det(a)} returns the determinant of a square sparse matrix.
+  \item \inlinecode{sparse\_rank(a)} returns the rank of a sparse matrix.
+  \item \inlinecode{solve\_system(a, b, \&x)} solves the system $ax = b$, returning 0 for one solution, $-1$ for no solution, or $-2$ for infinitely many solutions. When one solution exists, \inlinecode{x} is populated.
 \end{compactitem}
+
+The class assumes that \inlinecode{T\{\}} is the additive zero and that \inlinecode{value == T\{\}} is a valid zero test. The elimination routines also require field-like arithmetic because they divide by pivots, so use types such as \inlinecode{double}, rational numbers, or modular integers. For floating-point matrices, replace \inlinecode{is\_zero()} with an epsilon comparison if small roundoff values should be erased.
+
+Sparse elimination chooses, in each pivot column, the available pivot row with the fewest stored entries. This heuristic can reduce fill-in, although sparse elimination can still become dense on unfriendly inputs.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(b)$ per call to \inlinecode{insert()}, \inlinecode{contains()}, and \inlinecode{max\_xor()}, where $b$ is the number of bits.
-  \item $O(1)$ per call to \inlinecode{size()}.
+  \item $O(\log d)$ per call to \inlinecode{get()}, \inlinecode{set()}, and \inlinecode{add()}, where $d$ is the number of nonzeros in the touched row or column.
+  \item $O(n)$ per call to \inlinecode{transpose()} and \inlinecode{multiply\_vector()}, where $n$ is the number of stored nonzero entries.
+  \item Sparse elimination costs $O(f \cdot \log d)$, where $f$ is the number of entry updates performed after fill-in and $d$ is a touched row or column size. In the worst case this is still cubic.
+  \item $O(f \cdot \log d)$ for \inlinecode{det()}, \inlinecode{sparse\_rank()}, and \inlinecode{solve\_system()}.
+  \item $O(1)$ per call to \inlinecode{height()}, \inlinecode{width()}, \inlinecode{nonzeros()}, \inlinecode{row()}, and \inlinecode{column()}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(b)$ for storage of the basis.
-  \item $O(1)$ auxiliary for all operations.
+  \item $O(n)$ storage.
+  \item $O(1)$ auxiliary for \inlinecode{get()}, \inlinecode{set()}, \inlinecode{add()}, \inlinecode{row()}, \inlinecode{column()}, and \inlinecode{transpose()}.
+  \item $O(h)$ auxiliary heap space for \inlinecode{multiply\_vector()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-#include <array>
-#include <climits>
+#include <cassert>
 #include <cstdint>
+#include <map>
+#include <set>
+#include <utility>
+#include <vector>
 
-class XorBasis {
-  static const int BITS = sizeof(uint64_t) * CHAR_BIT;
+template<class T>
+class SparseMatrix {
+  int h = 0, w = 0, stored = 0;
+  std::vector<std::map<int, T>> rows, cols;
 
-  std::array<uint64_t, BITS> basis{};  // basis[i] != 0 has its highest set bit at bit i.
-  int sz = 0;
+  bool is_zero(const T &value) const { return value == T{}; }
 
  public:
-  bool insert(uint64_t x) {
-    for (int i = BITS - 1; i >= 0; i--) {
-      if (!((x >> i) & 1)) {
-        continue;
-      }
-      if (basis[i] == 0) {
-        basis[i] = x;
-        sz++;
-        return true;
-      }
-      x ^= basis[i];
-    }
-    return false;
+  SparseMatrix(int h_, int w_) : h(h_), w(w_), rows(h_), cols(w_) {}
+
+  int height() const { return h; }
+  int width() const { return w; }
+  int nonzeros() const { return stored; }
+
+  T get(int i, int j) const {
+    auto it = rows[i].find(j);
+    return it == rows[i].end() ? T{} : it->second;
   }
 
-  bool contains(uint64_t x) const {
-    for (int i = BITS - 1; i >= 0; i--) {
-      if (((x >> i) & 1) && basis[i] != 0) {
-        x ^= basis[i];
+  void set(int i, int j, const T &value) {
+    auto it = rows[i].find(j);
+    if (is_zero(value)) {
+      if (it != rows[i].end()) {
+        rows[i].erase(it);
+        cols[j].erase(i);
+        stored--;
       }
+      return;
     }
-    return x == 0;
+    if (it == rows[i].end()) {
+      stored++;
+    }
+    rows[i][j] = value;
+    cols[j][i] = value;
   }
 
-  uint64_t max_xor(uint64_t base = 0) const {
-    for (int i = BITS - 1; i >= 0; i--) {
-      if ((base ^ basis[i]) > base) {
-        base ^= basis[i];
-      }
+  void add(int i, int j, const T &delta) {
+    if (is_zero(delta)) {
+      return;
     }
-    return base;
+    set(i, j, get(i, j) + delta);
   }
 
-  int size() const { return sz; }
+  const std::map<int, T> &row(int i) const { return rows[i]; }
+  const std::map<int, T> &column(int j) const { return cols[j]; }
+
+  void swap_rows(int i, int j) {
+    if (i == j) {
+      return;
+    }
+    std::set<int> touched;
+    for (const auto &[col, value] : rows[i]) {
+      touched.insert(col);
+    }
+    for (const auto &[col, value] : rows[j]) {
+      touched.insert(col);
+    }
+    for (int col : touched) {
+      T x = get(i, col), y = get(j, col);
+      set(i, col, y);
+      set(j, col, x);
+    }
+  }
+
+  void transpose() {
+    std::swap(h, w);
+    std::swap(rows, cols);
+  }
+
+  std::vector<T> multiply_vector(const std::vector<T> &x) const {
+    assert(static_cast<int>(x.size()) == w);
+    std::vector<T> res(h);
+    for (int i = 0; i < h; i++) {
+      for (const auto &[j, value] : rows[i]) {
+        res[i] += value * x[j];
+      }
+    }
+    return res;
+  }
 };
+
+template<class T>
+int row_reduce(SparseMatrix<T> &a, int limit) {
+  assert(0 <= limit && limit <= a.width());
+  int r = 0;
+  for (int c = 0; c < limit && r < a.height(); c++) {
+    int pivot = -1;
+    for (const auto &[i, value] : a.column(c)) {
+      if (i >= r && (pivot == -1 || a.row(i).size() < a.row(pivot).size())) {
+        pivot = i;
+      }
+    }
+    if (pivot == -1) {
+      continue;
+    }
+    a.swap_rows(r, pivot);
+    T inv_pivot = T{1} / a.get(r, c);
+    std::vector<std::pair<int, T>> pivot_row(a.row(r).begin(), a.row(r).end());
+    std::vector<int> touched_rows;
+    for (const auto &[i, value] : a.column(c)) {
+      if (i > r) {
+        touched_rows.push_back(i);
+      }
+    }
+    for (int i : touched_rows) {
+      T coeff = -a.get(i, c) * inv_pivot;
+      for (const auto &[j, value] : pivot_row) {
+        if (j != c) {
+          a.add(i, j, coeff * value);
+        }
+      }
+      a.set(i, c, T{});
+    }
+    r++;
+  }
+  return r;
+}
+
+template<class T>
+T det(SparseMatrix<T> a) {
+  assert(a.height() == a.width());
+  int swaps = 0, r = 0, n = a.height();
+  T det = 1;
+  for (int c = 0; c < n && r < n; c++) {
+    int pivot = -1;
+    for (const auto &[i, value] : a.column(c)) {
+      if (i >= r && (pivot == -1 || a.row(i).size() < a.row(pivot).size())) {
+        pivot = i;
+      }
+    }
+    if (pivot == -1) {
+      return T{};
+    }
+    if (pivot != r) {
+      a.swap_rows(r, pivot);
+      swaps++;
+    }
+    T pivot_value = a.get(r, c);
+    det *= pivot_value;
+    T inv_pivot = T{1} / pivot_value;
+    std::vector<std::pair<int, T>> pivot_row(a.row(r).begin(), a.row(r).end());
+    std::vector<int> touched_rows;
+    for (const auto &[i, value] : a.column(c)) {
+      if (i > r) {
+        touched_rows.push_back(i);
+      }
+    }
+    for (int i : touched_rows) {
+      T coeff = -a.get(i, c) * inv_pivot;
+      for (const auto &[j, value] : pivot_row) {
+        if (j != c) {
+          a.add(i, j, coeff * value);
+        }
+      }
+      a.set(i, c, T{});
+    }
+    r++;
+  }
+  return (r == n ? (swaps % 2 == 0 ? det : -det) : T{});
+}
+
+template<class T>
+int sparse_rank(SparseMatrix<T> a) {
+  return row_reduce(a, a.width());
+}
+
+template<class T>
+int solve_system(SparseMatrix<T> a, const std::vector<T> &b, std::vector<T> *x) {
+  if (x == nullptr || a.height() != static_cast<int>(b.size())) {
+    return -1;
+  }
+  int h = a.height(), w = a.width();
+  SparseMatrix<T> aug(h, w + 1);
+  for (int i = 0; i < h; i++) {
+    for (const auto &[j, value] : a.row(i)) {
+      aug.set(i, j, value);
+    }
+    aug.set(i, w, b[i]);
+  }
+  row_reduce(aug, w);
+  std::vector<int> pivot_col;
+  for (int i = 0; i < h; i++) {
+    int lead = -1;
+    for (const auto &[j, value] : aug.row(i)) {
+      if (j < w) {
+        lead = j;
+        break;
+      }
+    }
+    if (lead == -1) {
+      if (aug.get(i, w) != T{}) {
+        return -1;
+      }
+    } else {
+      pivot_col.push_back(lead);
+    }
+  }
+  if (static_cast<int>(pivot_col.size()) < w) {
+    return -2;
+  }
+  x->assign(w, T{});
+  for (int row = static_cast<int>(pivot_col.size()) - 1; row >= 0; row--) {
+    int c = pivot_col[row];
+    T rhs = aug.get(row, w);
+    for (const auto &[j, value] : aug.row(row)) {
+      if (j > c && j < w) {
+        rhs -= value * (*x)[j];
+      }
+    }
+    (*x)[c] = rhs / aug.get(row, c);
+  }
+  return 0;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+using namespace std;
 
 int main() {
-  XorBasis b;
-  assert(b.insert(1));   // 001
-  assert(b.insert(2));   // 010
-  assert(!b.insert(3));  // 011 = 1 ^ 2, already representable.
-  assert(b.size() == 2);
+  SparseMatrix<int64_t> a(3, 4);
+  a.set(0, 1, 5);
+  a.set(2, 3, 7);
+  a.add(0, 1, -2);
+  a.add(1, 2, 4);
 
-  assert(b.contains(3));
-  assert(b.contains(0));
-  assert(!b.contains(4));
+  assert(a.height() == 3 && a.width() == 4);
+  assert(a.nonzeros() == 3);
+  assert(a.get(0, 1) == 3);
+  assert(a.get(0, 0) == 0);
+  assert(a.row(0).begin()->first == 1);
+  assert(a.column(2).begin()->first == 1);
 
-  assert(b.max_xor() == 3);   // Best subset XOR over {0, 1, 2, 3}.
-  assert(b.max_xor(4) == 7);  // 4 ^ 3.
+  vector<int64_t> x{10, 20, 30, 40};
+  assert((a.multiply_vector(x) == vector<int64_t>{60, 120, 280}));
+
+  a.add(0, 1, -3);  // Entries that become zero are removed from both row and column maps.
+  assert(a.get(0, 1) == 0);
+  assert(a.nonzeros() == 2);
+  assert(a.row(0).empty());
+  assert(a.column(1).empty());
+
+  a.transpose();
+  assert(a.height() == 4 && a.width() == 3);
+  assert(a.get(3, 2) == 7);
+  assert(a.get(2, 1) == 4);
+
+  SparseMatrix<double> d(3, 3);
+  d.set(0, 0, 2);
+  d.set(0, 1, 1);
+  d.set(1, 1, 3);
+  d.set(2, 0, 1);
+  d.set(2, 2, 4);
+  double determinant = det(d);
+  assert(determinant > 24 - 1e-9 && determinant < 24 + 1e-9);
+  assert(sparse_rank(d) == 3);
+
+  SparseMatrix<double> sys(3, 3);
+  sys.set(0, 0, -1);
+  sys.set(0, 1, 2);
+  sys.set(0, 2, 5);
+  sys.set(1, 0, 1);
+  sys.set(1, 2, -6);
+  sys.set(2, 0, -4);
+  sys.set(2, 1, 2);
+  sys.set(2, 2, 2);
+  vector<double> rhs{3, 1, -2}, sol;
+  assert(solve_system(sys, rhs, &sol) == 0);
+  for (int i = 0; i < sys.height(); i++) {
+    double sum = 0;
+    for (const auto &[j, value] : sys.row(i)) {
+      sum += value * sol[j];
+    }
+    assert(sum > rhs[i] - 1e-9 && sum < rhs[i] + 1e-9);
+  }
   return 0;
 }
 \end{lstlisting}
@@ -5099,15 +5635,15 @@ The number theoretic transform (NTT) is the discrete Fourier transform carried o
 The transform replaces a coefficient vector with its evaluations at the powers of a root of unity; pointwise multiplying two such evaluation vectors and transforming back gives their convolution. This is the same divide-and-conquer butterfly as the fast Fourier transform, with the root of unity and all arithmetic taken modulo the prime.
 
 \begin{compactitem}
-  \item \inlinecode{ntt(a, invert)} transforms the vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert == false}; the inverse uses \inlinecode{invert == true}.
-  \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, or is empty if either input is empty. Input values are assumed to lie in \inlinecode{[0, MOD)}.
+  \item \inlinecode{ntt(a, invert)} transforms the vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert = false}; the inverse uses \inlinecode{invert = true}.
+  \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, or is empty if either input is empty. Input values are assumed to lie in \inlinecode{[0, MOD)}. Small inputs use direct multiplication to avoid NTT overhead.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to \inlinecode{ntt()}, where $n$ is the length of the vector.
-  \item $O(n \log n)$ per call to \inlinecode{convolve()}, where $n$ is the size of the result.
+  \item $O(|a||b|)$ for the small-input branch of \inlinecode{convolve()}, otherwise $O(n \log n)$, where $n$ is the padded transform length.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5119,11 +5655,14 @@ The transform replaces a coefficient vector with its evaluations at the powers o
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
 const int64_t MOD = 998244353;
 const int64_t ROOT = 3;
+const int MAX_POWER_OF_TWO = 23;
+const int NAIVE_CUTOFF = 150;
 
 int64_t powmod(int64_t b, int64_t e, int64_t m) {
   int64_t res = 1;
@@ -5138,6 +5677,7 @@ int64_t powmod(int64_t b, int64_t e, int64_t m) {
 
 void ntt(std::vector<int64_t> &a, bool invert) {
   int n = static_cast<int>(a.size());
+  assert((n & (n - 1)) == 0 && n <= (1 << MAX_POWER_OF_TWO));
   for (int i = 1, j = 0; i < n; i++) {
     int bit = n >> 1;
     for (; j & bit; bit >>= 1) {
@@ -5176,10 +5716,20 @@ std::vector<int64_t> convolve(std::vector<int64_t> a, std::vector<int64_t> b) {
     return {};
   }
   int result_size = a.size() + b.size() - 1;
+  if (std::min(a.size(), b.size()) < NAIVE_CUTOFF) {
+    std::vector<int64_t> res(result_size);
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
+      for (int j = 0; j < static_cast<int>(b.size()); j++) {
+        res[i + j] = (res[i + j] + a[i] * b[j]) % MOD;
+      }
+    }
+    return res;
+  }
   int n = 1;
   while (n < result_size) {
     n <<= 1;
   }
+  assert(n <= (1 << MAX_POWER_OF_TWO));
   a.resize(n);
   b.resize(n);
   ntt(a, false);
@@ -5203,6 +5753,9 @@ int main() {
   vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
   vector<int64_t> c = convolve(a, b);
   assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
+  vector<int64_t> ones(160, 1);
+  vector<int64_t> d = convolve(ones, ones);
+  assert(d[0] == 1 && d[159] == 160 && d[318] == 1);
   return 0;
 }
 \end{lstlisting}
@@ -5212,15 +5765,15 @@ The fast Fourier transform (FFT) multiplies two polynomials, or equivalently con
 The trade-off is precision. Complex arithmetic in double precision accumulates rounding error, so the result is recovered by rounding each output to the nearest integer; this is reliable as long as the true coefficients stay well within the roughly 15 significant decimal digits a \inlinecode{double} can hold. When exact results modulo a prime are required, or coefficients are large, prefer the number theoretic transform; use the FFT for real-valued convolution or big-integer multiplication.
 
 \begin{compactitem}
-  \item \inlinecode{fft(a, invert)} transforms the complex vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert == false}; the inverse uses \inlinecode{invert == true}.
-  \item \inlinecode{convolve(a, b)} returns the convolution of two integer sequences \inlinecode{a} and \inlinecode{b}, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, or is empty if either input is empty, with each entry rounded to the nearest integer.
+  \item \inlinecode{fft(a, invert)} transforms the complex vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert = false}; the inverse uses \inlinecode{invert = true}.
+  \item \inlinecode{convolve(a, b)} returns the convolution of two integer sequences \inlinecode{a} and \inlinecode{b}, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, or is empty if either input is empty, with each entry rounded to the nearest integer. Small inputs use direct multiplication to avoid FFT overhead.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n \log n)$ per call to \inlinecode{fft()}, where $n$ is the length of the vector.
-  \item $O(n \log n)$ per call to \inlinecode{convolve()}, where $n$ is the size of the result.
+  \item $O(|a||b|)$ for the small-input branch of \inlinecode{convolve()}, otherwise $O(n \log n)$, where $n$ is the padded transform length.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -5231,6 +5784,7 @@ The trade-off is precision. Complex arithmetic in double precision accumulates r
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <cmath>
 #include <complex>
 #include <cstdint>
@@ -5238,6 +5792,7 @@ The trade-off is precision. Complex arithmetic in double precision accumulates r
 
 typedef std::complex<double> cd;
 const double PI = acos(-1.0);
+const int NAIVE_CUTOFF = 150;
 
 void fft(std::vector<cd> &a, bool invert) {
   int n = static_cast<int>(a.size());
@@ -5276,6 +5831,15 @@ std::vector<int64_t> convolve(const std::vector<int64_t> &a, const std::vector<i
     return {};
   }
   int result_size = a.size() + b.size() - 1;
+  if (std::min(a.size(), b.size()) < NAIVE_CUTOFF) {
+    std::vector<int64_t> res(result_size);
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
+      for (int j = 0; j < static_cast<int>(b.size()); j++) {
+        res[i + j] += a[i] * b[j];
+      }
+    }
+    return res;
+  }
   int n = 1;
   while (n < result_size) {
     n <<= 1;
@@ -5307,6 +5871,262 @@ int main() {
   vector<int64_t> a{1, 2, 3}, b{4, 5, 6};
   vector<int64_t> c = convolve(a, b);
   assert((c == vector<int64_t>{4, 13, 28, 27, 18}));
+  vector<int64_t> ones(160, 1);
+  vector<int64_t> d = convolve(ones, ones);
+  assert(d[0] == 1 && d[159] == 160 && d[318] == 1);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Polynomial Operations}
+Polynomial operations treat a vector \inlinecode{a} as coefficients of $a_0 + a_1 x + \dots + a_{n-1} x^{n-1}$ over a field. This section implements the core algebra needed for formal power series and polynomial division modulo the prime $998244353$. Multiplication uses the number theoretic transform, so inverse and division are fast enough for large polynomials while still keeping the API close to the underlying coefficient vectors.
+
+The code aliases one modular field element as \inlinecode{Coeff} and one coefficient vector as \inlinecode{Poly}.
+
+\begin{compactitem}
+  \item \inlinecode{trim(a)} removes trailing zero coefficients from \inlinecode{a}.
+  \item \inlinecode{add(a, b)} returns \inlinecode{a + b}.
+  \item \inlinecode{subtract(a, b)} returns \inlinecode{a - b}.
+  \item \inlinecode{multiply(a, b)} returns \inlinecode{a * b}.
+  \item \inlinecode{derivative(a)} returns the formal derivative of \inlinecode{a}.
+  \item \inlinecode{integral(a)} returns the formal antiderivative of \inlinecode{a} with constant term zero.
+  \item \inlinecode{inverse(a, n)} returns the first \inlinecode{n} coefficients of \inlinecode{1 / a}, requiring \inlinecode{a[0] != 0}.
+  \item \inlinecode{divide(a, b)} returns the polynomial quotient of \inlinecode{a / b}, requiring \inlinecode{b} to be nonzero.
+  \item \inlinecode{modulo(a, b)} returns the polynomial remainder of \inlinecode{a / b}, requiring \inlinecode{b} to be nonzero.
+\end{compactitem}
+
+The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such that $a \cdot b \equiv 1 (\pmod{x^n})$. Division uses the standard reversal trick: reverse both polynomials, compute a truncated series inverse of the reversed divisor, multiply, truncate, and reverse back.
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for \inlinecode{trim()}, \inlinecode{add()}, \inlinecode{subtract()}, \inlinecode{derivative()}, and \inlinecode{integral()}.
+  \item $O(|a||b|)$ for the small-input branch of \inlinecode{multiply()}, otherwise $O(n \log n)$, where $n$ is the padded transform length.
+  \item $O(n \log^{2} n)$ for \inlinecode{inverse(a, n)}, where $n$ is the requested length.
+  \item $O(n \log n + m \log^{2} m)$ for \inlinecode{divide()} and \inlinecode{modulo()}, where $n$ is the output quotient length and $m$ is the divisor length.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <vector>
+
+using Coeff = int64_t;
+using Poly = std::vector<Coeff>;
+
+const Coeff MOD = 998244353;
+const Coeff ROOT = 3;
+const int MAX_POWER_OF_TWO = 23;
+const int NAIVE_CUTOFF = 150;
+
+Coeff powmod(Coeff b, Coeff e, Coeff m = MOD) {
+  Coeff res = 1;
+  for (b %= m; e > 0; e >>= 1) {
+    if (e & 1) {
+      res = res * b % m;
+    }
+    b = b * b % m;
+  }
+  return res;
+}
+
+void ntt(Poly &a, bool invert) {
+  int n = static_cast<int>(a.size());
+  assert((n & (n - 1)) == 0 && n <= (1 << MAX_POWER_OF_TWO));
+  for (int i = 1, j = 0; i < n; i++) {
+    int bit = n >> 1;
+    for (; j & bit; bit >>= 1) {
+      j ^= bit;
+    }
+    j ^= bit;
+    if (i < j) {
+      std::swap(a[i], a[j]);
+    }
+  }
+  for (int len = 2; len <= n; len <<= 1) {
+    Coeff root = powmod(ROOT, (MOD - 1) / len);
+    if (invert) {
+      root = powmod(root, MOD - 2);
+    }
+    for (int i = 0; i < n; i += len) {
+      Coeff w = 1;
+      for (int k = 0; k < len / 2; k++) {
+        Coeff u = a[i + k], v = a[i + k + len / 2] * w % MOD;
+        a[i + k] = (u + v) % MOD;
+        a[i + k + len / 2] = (u - v + MOD) % MOD;
+        w = w * root % MOD;
+      }
+    }
+  }
+  if (invert) {
+    Coeff n_inv = powmod(n, MOD - 2);
+    for (Coeff &x : a) {
+      x = x * n_inv % MOD;
+    }
+  }
+}
+
+void trim(Poly &a) {
+  while (!a.empty() && a.back() == 0) {
+    a.pop_back();
+  }
+}
+
+Poly add(const Poly &a, const Poly &b) {
+  Poly res(std::max(a.size(), b.size()));
+  for (int i = 0; i < static_cast<int>(res.size()); i++) {
+    Coeff x = i < static_cast<int>(a.size()) ? a[i] : 0;
+    Coeff y = i < static_cast<int>(b.size()) ? b[i] : 0;
+    res[i] = (x + y) % MOD;
+  }
+  trim(res);
+  return res;
+}
+
+Poly subtract(const Poly &a, const Poly &b) {
+  Poly res(std::max(a.size(), b.size()));
+  for (int i = 0; i < static_cast<int>(res.size()); i++) {
+    Coeff x = i < static_cast<int>(a.size()) ? a[i] : 0;
+    Coeff y = i < static_cast<int>(b.size()) ? b[i] : 0;
+    res[i] = (x - y + MOD) % MOD;
+  }
+  trim(res);
+  return res;
+}
+
+Poly multiply(Poly a, Poly b) {
+  if (a.empty() || b.empty()) {
+    return {};
+  }
+  int result_size = a.size() + b.size() - 1;
+  if (std::min(a.size(), b.size()) < NAIVE_CUTOFF) {
+    Poly res(result_size);
+    for (int i = 0; i < static_cast<int>(a.size()); i++) {
+      for (int j = 0; j < static_cast<int>(b.size()); j++) {
+        res[i + j] = (res[i + j] + a[i] * b[j]) % MOD;
+      }
+    }
+    trim(res);
+    return res;
+  }
+  int n = 1;
+  while (n < result_size) {
+    n <<= 1;
+  }
+  assert(n <= (1 << MAX_POWER_OF_TWO));
+  a.resize(n);
+  b.resize(n);
+  ntt(a, false);
+  ntt(b, false);
+  for (int i = 0; i < n; i++) {
+    a[i] = a[i] * b[i] % MOD;
+  }
+  ntt(a, true);
+  a.resize(result_size);
+  trim(a);
+  return a;
+}
+
+Poly derivative(const Poly &a) {
+  if (a.size() <= 1) {
+    return {};
+  }
+  Poly res(a.size() - 1);
+  for (int i = 1; i < static_cast<int>(a.size()); i++) {
+    res[i - 1] = a[i] * i % MOD;
+  }
+  trim(res);
+  return res;
+}
+
+Poly integral(const Poly &a) {
+  Poly res(a.size() + 1);
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    res[i + 1] = a[i] * powmod(i + 1, MOD - 2) % MOD;
+  }
+  return res;
+}
+
+Poly inverse(const Poly &a, int n) {
+  assert(n >= 0 && !a.empty() && a[0] != 0);
+  if (n == 0) {
+    return {};
+  }
+  Poly res{powmod(a[0], MOD - 2)};
+  while (static_cast<int>(res.size()) < n) {
+    int len = static_cast<int>(res.size()) << 1;
+    Poly cut(a.begin(), a.begin() + std::min(static_cast<int>(a.size()), len));
+    Poly prod = multiply(multiply(res, res), cut);
+    res.resize(len);
+    for (int i = len / 2; i < std::min(len, static_cast<int>(prod.size())); i++) {
+      res[i] = (MOD - prod[i]) % MOD;
+    }
+  }
+  res.resize(n);
+  return res;
+}
+
+Poly divide(Poly a, Poly b) {
+  trim(a);
+  trim(b);
+  assert(!b.empty());
+  if (a.size() < b.size()) {
+    return {};
+  }
+  int quotient_size = static_cast<int>(a.size() - b.size() + 1);
+  std::reverse(a.begin(), a.end());
+  std::reverse(b.begin(), b.end());
+  b.resize(quotient_size);
+  Poly q = multiply(a, inverse(b, quotient_size));
+  q.resize(quotient_size);
+  std::reverse(q.begin(), q.end());
+  trim(q);
+  return q;
+}
+
+Poly modulo(const Poly &a, const Poly &b) {
+  Poly q = divide(a, b);
+  Poly res = subtract(a, multiply(q, b));
+  if (res.size() >= b.size()) {
+    res.resize(b.size() - 1);
+  }
+  trim(res);
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // (1 + 2x + 3x^2)(4 + 5x + 6x^2) = 4 + 13x + 28x^2 + 27x^3 + 18x^4.
+  Poly a{1, 2, 3}, b{4, 5, 6};
+  assert((add(a, b) == Poly{5, 7, 9}));
+  assert((subtract(b, a) == Poly{3, 3, 3}));
+  assert((multiply(a, b) == Poly{4, 13, 28, 27, 18}));
+
+  // d/dx (5 + 7x + 11x^2) = 7 + 22x; integrating back chooses constant term 0.
+  Poly p{5, 7, 11};
+  assert((derivative(p) == Poly{7, 22}));
+  assert((integral(derivative(p)) == Poly{0, 7, 11}));
+
+  // (1 - x)^-1 = 1 + x + x^2 + x^3 + ... modulo x^6.
+  Poly inv = inverse({1, MOD - 1}, 6);
+  assert((inv == Poly{1, 1, 1, 1, 1, 1}));
+
+  // (x^3 - 1) / (x - 1) = x^2 + x + 1, remainder 0.
+  Poly dividend{MOD - 1, 0, 0, 1};
+  Poly divisor{MOD - 1, 1};
+  assert((divide(dividend, divisor) == Poly{1, 1, 1}));
+  assert(modulo(dividend, divisor).empty());
+
+  Poly ones(160, 1);
+  Poly square = multiply(ones, ones);
+  assert(square[0] == 1 && square[159] == 160 && square[318] == 1);
   return 0;
 }
 \end{lstlisting}
@@ -5319,7 +6139,9 @@ The code operates modulo the prime 998244353; change \inlinecode{MOD} to use a d
   \item \inlinecode{berlekamp\_massey(s)} returns the coefficients of the shortest recurrence that the sequence \inlinecode{s} satisfies, as described above. The returned length is the order $L$ of the recurrence. An empty vector is returned when \inlinecode{s} is entirely zero (no recurrence is needed).
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{2} + n \log p)$ per call, where $n$ is the length of \inlinecode{s} and $p$ is the modulus.
+A recurrence of order $L$ is only certified by at least $2L + 1$ terms, so the result is trustworthy only when \inlinecode{s} is comfortably longer than twice the returned length. If the returned $L$ is close to $n / 2$, the sequence is likely under-determined and the recurrence may be a spurious overfit.
+
+\textbf{Time Complexity}: $O(n^{2} + L \log p)$ per call, where $n$ is the length of \inlinecode{s}, $L$ is the order of the recurrence found, and $p$ is the modulus.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary heap space.
 
@@ -5344,7 +6166,7 @@ std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
   int n = static_cast<int>(s.size()), len = 0, m = 0;
   std::vector<int64_t> cur(n), last(n), prev;
   cur[0] = last[0] = 1;
-  int64_t last_delta = 1;
+  int64_t inv_last_delta = 1;
   for (int i = 0; i < n; i++) {
     m++;
     int64_t delta = s[i] % MOD;
@@ -5355,7 +6177,7 @@ std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
       continue;
     }
     prev = cur;
-    int64_t coef = delta * powmod(last_delta, MOD - 2, MOD) % MOD;
+    int64_t coef = delta * inv_last_delta % MOD;
     for (int j = m; j < n; j++) {
       cur[j] = (cur[j] - coef * last[j - m] % MOD + MOD) % MOD;
     }
@@ -5364,7 +6186,7 @@ std::vector<int64_t> berlekamp_massey(const std::vector<int64_t> &s) {
     }
     len = i + 1 - len;
     last = prev;
-    last_delta = delta;
+    inv_last_delta = powmod(delta, MOD - 2, MOD);  // Refresh only when the length increases.
     m = 0;
   }
   cur.resize(len + 1);
@@ -5465,7 +6287,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Sprague-Grundy}
-Computes Grundy numbers for finite impartial games. The Grundy number \inlinecode{g[p]} of a position \inlinecode{p} is the minimum excluded nonnegative integer (MEX) of the Grundy numbers reachable in one move. A position is losing exactly when its Grundy number is 0.
+Computes Grundy numbers for finite impartial games. The Grundy number of a game position is the minimum excluded nonnegative integer (MEX) of the Grundy numbers reachable in one move. A position is losing exactly when its Grundy number is 0.
 
 For a sum of independent impartial games, the combined Grundy number is the XOR of the component Grundy numbers. This is the Sprague-Grundy theorem.
 

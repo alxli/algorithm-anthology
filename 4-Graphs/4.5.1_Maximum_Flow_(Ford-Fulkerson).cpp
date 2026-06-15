@@ -56,7 +56,7 @@ int dfs(int u, int f, int sink) {
 int64_t ford_fulkerson(int source, int sink) {
   int nodes = static_cast<int>(cap.size());
   int64_t max_flow = 0;
-  for (;;) {
+  while (true) {
     visit.assign(nodes, false);
     int flow = dfs(source, INF, sink);
     if (flow == 0) {

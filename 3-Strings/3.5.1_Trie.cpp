@@ -15,12 +15,19 @@ preserve lexicographic traversal.
   successful or `false` if the string to be removed was not found.
 - `find(s)` returns a pointer to a const value associated with string key `s`, or `nullptr` if the
   key was not found.
+- `count_prefix(s)` returns the number of keys currently in the map that have `s` as a prefix (a key
+  equal to `s` counts as well). `count_prefix("")` therefore equals `size()`.
 - `walk(f)` calls the function `f(s, v)` on each entry of the map, in lexicographically ascending
   order of the string keys.
 
+For a small, fixed alphabet, the `std::unordered_map` children can be replaced by a fixed-size array
+of child pointers indexed by character. This removes the per-step hashing and lets `walk()` traverse
+in sorted order without sorting each node's labels, at the cost of restricting the alphabet and
+spending more memory per node.
+
 Time Complexity:
-- O(n) expected per call to `insert(s, v)`, `erase(s)`, and `find(s)`, where $n$ is the length of
-  `s`.
+- O(n) expected per call to `insert(s, v)`, `erase(s)`, `find(s)`, and `count_prefix(s)`, where $n$
+  is the length of `s`.
 - O(l) per call to `walk()`, where $l$ is the total length of string keys that are currently in the
   map, treating the character alphabet as constant.
 - O(1) per call to all other operations.
@@ -48,9 +55,10 @@ class Trie {
   struct Node {
     V value;
     bool is_terminal;
+    int cnt;  // Optional: maintain count of terminal keys in this subtree for count_prefix queries.
     std::unordered_map<char, Node *> children;
 
-    Node() : is_terminal(false) {}
+    Node() : is_terminal(false), cnt(0) {}
   } *root;
 
   static bool erase(Node *n, const string &s, int i) {
@@ -59,13 +67,16 @@ class Trie {
         return false;
       }
       n->is_terminal = false;
+      n->cnt--;
       return true;
     }
     auto it = n->children.find(s[i]);
     if (it == n->children.end() || !erase(it->second, s, i + 1)) {
       return false;
     }
-    if (it->second->children.empty()) {
+    n->cnt--;
+    // Prune the child only if it is now a non-terminal leaf; a childless terminal is still a key.
+    if (it->second->children.empty() && !it->second->is_terminal) {
       delete it->second;
       n->children.erase(it);
     }
@@ -119,6 +130,13 @@ class Trie {
     num_terminals++;
     n->is_terminal = true;
     n->value = v;
+    // Re-walk from the root to bump the subtree count along the inserted path.
+    n = root;
+    n->cnt++;
+    for (char c : s) {
+      n = n->children[c];
+      n->cnt++;
+    }
     return true;
   }
 
@@ -140,6 +158,18 @@ class Trie {
       }
     }
     return n->is_terminal ? &(n->value) : nullptr;
+  }
+
+  int count_prefix(const string &s) const {
+    Node *n = root;
+    for (char c : s) {
+      auto it = n->children.find(c);
+      if (it == n->children.end()) {
+        return 0;
+      }
+      n = it->second;
+    }
+    return n->cnt;
   }
 
   template<class Fn>
@@ -167,10 +197,6 @@ class Trie {
 #include <iostream>
 using namespace std;
 
-void print_entry(const string &k, int v) {
-  cout << "(\"" << k << "\", " << v << ")" << endl;
-}
-
 int main() {
   vector<string> s{"", "a", "to", "tea", "ted", "ten", "i", "in", "inn"};
   Trie<int> t;
@@ -178,17 +204,31 @@ int main() {
   for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
-  t.walk(print_entry);
+  t.walk([](string k, int v) { cout << "(\"" << k << "\", " << v << ")" << endl; });
   assert(!t.empty());
   assert(t.size() == 9);
   assert(!t.insert(s[0], 2));
   assert(t.size() == 9);
   assert(*t.find("") == 0);
   assert(*t.find("ten") == 5);
+  assert(t.count_prefix("") == 9);    // Every key has the empty prefix.
+  assert(t.count_prefix("te") == 3);  // "tea", "ted", "ten".
+  assert(t.count_prefix("in") == 2);  // "in", "inn".
+  assert(t.count_prefix("z") == 0);
   assert(t.erase("tea"));
   assert(t.size() == 8);
   assert(t.find("tea") == nullptr);
+  assert(t.count_prefix("te") == 2);  // "ted", "ten" remain.
   assert(t.erase(""));
   assert(t.find("") == nullptr);
+  assert(t.count_prefix("") == 7);
+
+  // Erasing a key must not delete a shorter key sharing its path.
+  Trie<int> u;
+  u.insert("bc", 1);
+  u.insert("bca", 2);
+  assert(u.erase("bca"));
+  assert(u.find("bc") != nullptr && *u.find("bc") == 1);
+  assert(u.size() == 1 && u.count_prefix("bc") == 1);
   return 0;
 }

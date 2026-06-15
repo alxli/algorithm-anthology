@@ -1365,8 +1365,8 @@ Finds every complex root $x$ for a polynomial $p$ such that $p(x) = 0$ using the
 This routine is intended for well-scaled polynomials when all complex roots are wanted. If only real roots are needed, a real-root isolator such as derivative recursion with bisection is usually more reliable. Multiple or tightly clustered roots may converge slowly, and very large or very small root scales may require rescaling the input or using multiprecision arithmetic.
 
 \begin{compactitem}
-  \item \inlinecode{eval\_with\_derivative(p, x)} returns \inlinecode{p(x)} and \inlinecode{p\textquotesingle{}(x)} for a polynomial \inlinecode{p} represented as a vector where \inlinecode{p[i]} stores the coefficient for the $x^i$ term.
-  \item \inlinecode{find\_all\_roots(p, EPS, ITERATIONS)} returns a vector of all complex roots for a complex polynomial \inlinecode{p}. A \inlinecode{vector\textless{}LD\textgreater{}} overload is provided for polynomials with real coefficients. The roots are found to a tolerance of \inlinecode{EPS} in absolute or relative error (whichever is reached first), and zero roots are removed exactly before the simultaneous iteration starts.
+  \item \inlinecode{eval\_with\_derivative(p, x)} returns a pair $(p(x), p'(x))$ for a polynomial $p$ given as a vector \inlinecode{p} where \inlinecode{p[i]} stores the coefficient for the $x^i$ term.
+  \item \inlinecode{find\_all\_roots(p, EPS, ITERATIONS)} returns a vector of all complex roots for a complex polynomial given by the vector of coefficients \inlinecode{p}. A \inlinecode{vector\textless{}LD\textgreater{}} overload is provided for polynomials with real coefficients. The roots are found to a tolerance of \inlinecode{EPS} in absolute or relative error (whichever is reached first), and zero roots are removed exactly before the simultaneous iteration starts.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1595,7 +1595,7 @@ Roots of ((2 + 3i)x + 6)(x + i)(2x + (6 + 4i))(xi + 1):
 (0.00000, 1.00000)
 \end{exampleoutput}
 \subsection{Integration (Simpson)}
-Computes the definite integral from $a$ to $b$ for a continuous function $f$ using the composite Simpson's rule: the interval is split into \inlinecode{n} equal subintervals and each consecutive pair is approximated by a parabola, giving $\text{integral} \sim h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a) / n$.
+Computes the definite integral from $a$ to $b$ for a continuous function $f$ using the composite Simpson's rule: the interval is split into \inlinecode{n} equal subintervals and each consecutive pair is approximated by a parabola, giving the approximation $\int_{a}^{b} f(x) \,dx \approx$ $h/3 \cdot [f(x_0) + 4f(x_1) + 2f(x_2) + \ldots + 4f(x_{n-1}) + f(x_n)]$ with step $h = (b - a)/n$.
 
 \begin{compactitem}
   \item \inlinecode{integrate(f, a, b, n)} returns the definite integral of a function \inlinecode{f} from \inlinecode{a} to \inlinecode{b} using \inlinecode{n} subintervals, where \inlinecode{n} must be even. Larger \inlinecode{n} trades runtime for accuracy: the error is $O((b - a) \cdot h^{4})$, so for a smooth \inlinecode{f} a value of \inlinecode{n} on the order of $10^6$ reaches near double precision.
@@ -1644,96 +1644,127 @@ The simplex algorithm walks between vertices of the feasible polytope, at each s
   \item \inlinecode{simplex\_solve(a, b, c, \&x)} solves the linear programming problem for an $m$ by $n$ matrix \inlinecode{a} of real values, a length $m$ vector \inlinecode{b}, and a length $n$ vector \inlinecode{c}, returning 0 if an optimum was found, $-1$ if there are no feasible solutions, or 1 if the objective is unbounded. If an optimum is found, then the vector pointed to by \inlinecode{x} is populated with a dense solution vector.
 \end{compactitem}
 
+The implementation uses a two-phase simplex tableau. Phase 1 introduces an artificial variable to find a feasible starting basis, which is essential when some constraint bounds are negative. Phase 2 then optimizes the original objective. The \inlinecode{basis} and \inlinecode{nonbasis} arrays track which variable each tableau row or column currently represents, making solution recovery independent of pivot order.
+
 \textbf{Time Complexity}: Polynomial (average) on the number of equations and unknowns, but exponential in the worst case.
 
 \textbf{Space Complexity}: $O(m \cdot n)$ auxiliary heap space.
 
 \begin{lstlisting}[language=C++]
-#include <cfloat>
+#include <algorithm>
 #include <cmath>
 #include <vector>
 
-template<class Matrix>
 int simplex_solve(
-    const Matrix &a, const std::vector<double> &b, const std::vector<double> &c,
-    std::vector<double> *x, const bool MAXIMIZE = true, const double EPS = 1e-10
+    const std::vector<std::vector<double>> &a, const std::vector<double> &b,
+    const std::vector<double> &c, std::vector<double> *x, const bool MAXIMIZE = true,
+    const double EPS = 1e-10
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
-  Matrix t(m + 2, std::vector<double>(n + 2));
-  t[1][1] = 0;
-  for (int j = 1; j <= n; j++) {
-    t[1][j + 1] = MAXIMIZE ? c[j - 1] : -c[j - 1];
-  }
-  for (int i = 1; i <= m; i++) {
-    for (int j = 1; j <= n; j++) {
-      t[i + 1][j + 1] = -a[i - 1][j - 1];
+  std::vector<int> basis(m), nonbasis(n + 1);
+  std::vector<std::vector<double>> tab(m + 2, std::vector<double>(n + 2));
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < n; j++) {
+      tab[i][j] = a[i][j];
     }
-    t[i + 1][1] = b[i - 1];
+    basis[i] = n + i;
+    tab[i][n] = -1;
+    tab[i][n + 1] = b[i];
   }
-  for (int j = 1; j <= n; j++) {
-    t[0][j + 1] = j;
+  for (int j = 0; j < n; j++) {
+    nonbasis[j] = j;
+    tab[m][j] = MAXIMIZE ? -c[j] : c[j];
   }
-  for (int i = n + 1; i <= m + n; i++) {
-    t[i - n + 1][0] = i;
-  }
-  for (;;) {
-    int p1 = 0, p2 = 0;
-    double mn = DBL_MAX, xmax = EPS;
-    for (int j = 2; j <= n + 1; j++) {
-      if (t[1][j] > xmax) {
-        p2 = j;
-        xmax = t[1][j];
+  nonbasis[n] = -1;
+  tab[m + 1][n] = 1;
+  auto pivot = [&](int row, int col) {
+    double inv = 1.0 / tab[row][col];
+    for (int i = 0; i < m + 2; i++) {
+      if (i == row || fabs(tab[i][col]) <= EPS) {
+        continue;
+      }
+      double factor = tab[i][col] * inv;
+      for (int j = 0; j < n + 2; j++) {
+        if (j != col) {
+          tab[i][j] -= factor * tab[row][j];
+        }
+      }
+      tab[i][col] = -factor;
+    }
+    for (int j = 0; j < n + 2; j++) {
+      if (j != col) {
+        tab[row][j] *= inv;
       }
     }
-    if (p2 == 0) {
-      break;
-    }
-    for (int i = 2; i <= m + 1; i++) {
-      if (t[i][p2] < -EPS) {
-        double v = fabs(t[i][1] / t[i][p2]);
-        if (mn <= v) {
+    tab[row][col] = inv;
+    std::swap(basis[row], nonbasis[col]);
+  };
+  auto simplex = [&](int phase) {
+    int objective = (phase == 1 ? m + 1 : m);
+    while (true) {
+      int col = -1;
+      for (int j = 0; j <= n; j++) {
+        if (phase == 2 && nonbasis[j] == -1) {
           continue;
         }
-        mn = v;
-        p1 = i;
-      }
-    }
-    if (p1 == 0) {
-      return 1;
-    }
-    std::swap(t[p1][0], t[0][p2]);
-    for (int i = 1; i <= m + 1; i++) {
-      if (i != p1) {
-        for (int j = 1; j <= n + 1; j++) {
-          if (j != p2) {
-            t[i][j] -= t[p1][j] * t[i][p2] / t[p1][p2];
-          }
+        if (col == -1 || tab[objective][j] < tab[objective][col] - EPS ||
+            (fabs(tab[objective][j] - tab[objective][col]) <= EPS && nonbasis[j] < nonbasis[col])) {
+          col = j;
         }
       }
-    }
-    t[p1][p2] = 1.0 / t[p1][p2];
-    for (int j = 1; j <= n + 1; j++) {
-      if (j != p2) {
-        t[p1][j] *= fabs(t[p1][p2]);
+      if (tab[objective][col] >= -EPS) {
+        return true;
       }
-    }
-    for (int i = 1; i <= m + 1; i++) {
-      if (i != p1) {
-        t[i][p2] *= t[p1][p2];
+      int row = -1;
+      for (int i = 0; i < m; i++) {
+        if (tab[i][col] <= EPS) {
+          continue;
+        }
+        double cur = tab[i][n + 1] / tab[i][col];
+        double best = row == -1 ? 0 : tab[row][n + 1] / tab[row][col];
+        if (row == -1 || cur < best - EPS || (fabs(cur - best) <= EPS && basis[i] < basis[row])) {
+          row = i;
+        }
       }
+      if (row == -1) {
+        return false;
+      }
+      pivot(row, col);
     }
-    for (int i = 2; i <= m + 1; i++) {
-      if (t[i][1] < 0) {
-        return -1;
+  };
+  int row = 0;
+  for (int i = 1; i < m; i++) {
+    if (tab[i][n + 1] < tab[row][n + 1]) {
+      row = i;
+    }
+  }
+  if (m > 0 && tab[row][n + 1] < -EPS) {
+    pivot(row, n);
+    if (!simplex(1) || fabs(tab[m + 1][n + 1]) > EPS) {
+      return -1;
+    }
+    for (int i = 0; i < m; i++) {
+      if (basis[i] != -1) {
+        continue;
+      }
+      int col = -1;
+      for (int j = 0; j <= n; j++) {
+        if (fabs(tab[i][j]) > EPS && (col == -1 || nonbasis[j] < nonbasis[col])) {
+          col = j;
+        }
+      }
+      if (col != -1) {
+        pivot(i, col);
       }
     }
   }
+  if (!simplex(2)) {
+    return 1;
+  }
   x->assign(n, 0);
-  for (int j = 1; j <= n; j++) {
-    for (int i = 2; i <= m + 1; i++) {
-      if (fabs(t[i][0] - j) < EPS) {
-        (*x)[j - 1] = t[i][1];
-      }
+  for (int i = 0; i < m; i++) {
+    if (basis[i] < n) {
+      (*x)[basis[i]] = tab[i][n + 1];
     }
   }
   return 0;
@@ -1765,6 +1796,23 @@ int main() {
     cout << ", " << x[i];
   }
   cout << ")." << endl;
+
+  // Feasible even though the first RHS is negative: x >= 1 and x <= 3.
+  vector<vector<double>> negative_rhs{{-1}, {1}};
+  vector<double> negative_bounds{-1, 3};
+  vector<double> one_var{1};
+  assert(simplex_solve(negative_rhs, negative_bounds, one_var, &x) == 0);
+  assert(fabs(x[0] - 3) < 1e-9);
+
+  // Infeasible: x <= -1 contradicts x >= 0.
+  vector<vector<double>> infeasible{{1}};
+  vector<double> bad_bounds{-1};
+  assert(simplex_solve(infeasible, bad_bounds, one_var, &x) == -1);
+
+  // Unbounded: maximize x subject only to x >= 0.
+  vector<vector<double>> unbounded{{-1}};
+  vector<double> lower_bound{0};
+  assert(simplex_solve(unbounded, lower_bound, one_var, &x) == 1);
   return 0;
 }
 \end{lstlisting}

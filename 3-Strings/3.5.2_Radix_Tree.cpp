@@ -16,12 +16,16 @@ tables, and `walk()` sorts child labels as needed to preserve lexicographic trav
   successful or `false` if the string to be removed was not found.
 - `find(s)` returns a pointer to a const value associated with string key `s`, or `nullptr` if the
   key was not found.
+- `count_prefix(s)` returns the number of keys currently in the map that have `s` as a prefix (a key
+  equal to `s` counts as well), including the case where `s` ends partway along a compressed edge.
+  `count_prefix("")` therefore equals `size()`.
 - `walk(f)` calls the function `f(s, v)` on each entry of the map, in lexicographically ascending
   order of the string keys.
 
 Time Complexity:
-- O(n) expected per call to `insert(s, v)`, `erase(s)`, and `find(s)`, where $n$ is the length of
-  `s`, assuming the number of outgoing compressed edges checked at each node is small.
+- O(n) expected per call to `insert(s, v)`, `erase(s)`, `find(s)`, and `count_prefix(s)`, where $n$
+  is the length of `s`, assuming the number of outgoing compressed edges checked at each node is
+  small.
 - O(l log l) per call to `walk()`, where $l$ is the total length of string keys that are currently
   in the map.
 - O(1) per call to all other operations.
@@ -49,9 +53,11 @@ class RadixTree {
   struct Node {
     V value;
     bool is_terminal;
+    int cnt;  // Optional: maintain count of terminal keys in this subtree for count_prefix queries.
     std::unordered_map<string, Node *> children;
 
-    Node(const V &value = V(), bool is_terminal = false) : value(value), is_terminal(is_terminal) {}
+    Node(const V &value = V(), bool is_terminal = false)
+        : value(value), is_terminal(is_terminal), cnt(0) {}
   } *root;
 
   static int lcp_len(const string &s1, const string &s2, int s2start) {
@@ -70,7 +76,9 @@ class RadixTree {
       if (n->is_terminal) {
         return false;
       }
+      n->value = v;
       n->is_terminal = true;
+      n->cnt++;
       return true;
     }
     for (auto it = n->children.begin(); it != n->children.end(); ++it) {
@@ -79,22 +87,33 @@ class RadixTree {
         continue;
       }
       if (len == static_cast<int>(it->first.size())) {
-        return insert(it->second, s, i + len, v);
+        if (!insert(it->second, s, i + len, v)) {
+          return false;
+        }
+        n->cnt++;
+        return true;
       }
       string left = it->first.substr(0, len);
       string right = it->first.substr(len);
       Node *tmp = new Node();
+      tmp->cnt = it->second->cnt;  // The new split node heads the same subtree as the old child.
       tmp->children[right] = it->second;
       n->children.erase(it);
       n->children[left] = tmp;
       if (len == static_cast<int>(s.size()) - i) {
         tmp->value = v;
         tmp->is_terminal = true;
-        return true;
+        tmp->cnt++;
+      } else {
+        insert(tmp, s, i + len, v);
       }
-      return insert(tmp, s, i + len, v);
+      n->cnt++;
+      return true;
     }
-    n->children[s.substr(i)] = new Node(v, true);
+    Node *leaf = new Node(v, true);
+    leaf->cnt = 1;
+    n->children[s.substr(i)] = leaf;
+    n->cnt++;
     return true;
   }
 
@@ -104,6 +123,7 @@ class RadixTree {
         return false;
       }
       n->is_terminal = false;
+      n->cnt--;
       return true;
     }
     for (auto it = n->children.begin(); it != n->children.end(); ++it) {
@@ -120,7 +140,10 @@ class RadixTree {
       if (!erase(child, s, i + len)) {
         return false;
       }
-      if (child->children.empty()) {
+      n->cnt--;
+      // The merge below leaves counts intact: a non-terminal node with one child already has the
+      // same subtree count as that child, so reusing the node keeps its `cnt` correct.
+      if (child->children.empty() && !child->is_terminal) {
         delete child;
         n->children.erase(it);
       } else if (child->children.size() == 1) {
@@ -213,6 +236,34 @@ class RadixTree {
     return n->is_terminal ? &(n->value) : nullptr;
   }
 
+  int count_prefix(const string &s) const {
+    Node *n = root;
+    int i = 0;
+    while (i < static_cast<int>(s.size())) {
+      bool found = false;
+      for (auto &[key, child] : n->children) {
+        if (key[0] == s[i]) {
+          int len = lcp_len(key, s, i);
+          if (i + len == static_cast<int>(s.size())) {
+            // `s` ends within (or exactly at the end of) this edge: every key below qualifies.
+            return child->cnt;
+          }
+          if (len < static_cast<int>(key.size())) {
+            return 0;  // `s` diverges partway along the edge.
+          }
+          i += len;
+          n = child;
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        return 0;
+      }
+    }
+    return n->cnt;
+  }
+
   template<class Fn>
   void walk(Fn f) const {
     string s;
@@ -249,17 +300,31 @@ int main() {
   for (int i = 0; i < static_cast<int>(s.size()); i++) {
     assert(t.insert(s[i], i));
   }
-  t.walk(print_entry);
+  t.walk([](string k, int v) { cout << "(\"" << k << "\", " << v << ")" << endl; });
   assert(!t.empty());
   assert(t.size() == 9);
   assert(!t.insert(s[0], 2));
   assert(t.size() == 9);
   assert(t.find("") && *t.find("") == 0);
   assert(*t.find("ten") == 5);
+  assert(t.count_prefix("") == 9);    // Every key has the empty prefix.
+  assert(t.count_prefix("te") == 3);  // "tea", "ted", "ten" (prefix ends mid-edge).
+  assert(t.count_prefix("in") == 2);  // "in", "inn".
+  assert(t.count_prefix("z") == 0);
   assert(t.erase("tea"));
   assert(t.size() == 8);
   assert(t.find("tea") == nullptr);
+  assert(t.count_prefix("te") == 2);  // "ted", "ten" remain.
   assert(t.erase(""));
   assert(t.find("") == nullptr);
+  assert(t.count_prefix("") == 7);
+
+  // Erasing a key must not delete a shorter key sharing its path.
+  RadixTree<int> u;
+  u.insert("bc", 1);
+  u.insert("bca", 2);
+  assert(u.erase("bca"));
+  assert(u.find("bc") != nullptr && *u.find("bc") == 1);
+  assert(u.size() == 1 && u.count_prefix("bc") == 1);
   return 0;
 }

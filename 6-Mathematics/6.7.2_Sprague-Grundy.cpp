@@ -1,8 +1,8 @@
 /*
 
-Computes Grundy numbers for finite impartial games. The Grundy number `g[p]` of a position `p` is
-the minimum excluded nonnegative integer (MEX) of the Grundy numbers reachable in one move. A
-position is losing exactly when its Grundy number is 0.
+Computes Grundy numbers for finite impartial games. The Grundy number of a game position is the
+minimum excluded nonnegative integer (MEX) of the Grundy numbers reachable in one move. A position
+is losing exactly when its Grundy number is 0.
 
 For a sum of independent impartial games, the combined Grundy number is the XOR of the component
 Grundy numbers. This is the Sprague-Grundy theorem.

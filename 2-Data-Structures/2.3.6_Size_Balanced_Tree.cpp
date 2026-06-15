@@ -22,17 +22,17 @@ sibling's child subtrees, keeping the height logarithmic.
   throwing an exception if the rank is not between 0 and `size() - 1`.
 - `rank(k)` returns the 0-based rank of key `k` in the map, throwing an exception if the key was not
   found in the map.
-- `walk(f)` calls the function `f(k, v)` on each entry of the map, in ascending order of keys.
+- `entries()` returns all key-value entries in ascending order of keys.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
 - O(log n) per call to `insert()`, `erase()`, `find()`, `select()`, and `rank()`, where $n$ is the
   number of entries currently in the map.
-- O(n) per call to `walk()`.
+- O(n) per call to `entries()`.
 
 Space Complexity:
 - O(n) for storage of the map elements.
-- O(log n) auxiliary stack space for `insert()`, `erase()`, and `walk()`.
+- O(log n) auxiliary stack space for `insert()`, `erase()`, and `entries()`.
 - O(1) auxiliary for all other operations.
 
 */
@@ -40,6 +40,7 @@ Space Complexity:
 #include <cstddef>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 template<class K, class V>
 class SBTree {
@@ -165,12 +166,11 @@ class SBTree {
     return r;
   }
 
-  template<class Fn>
-  static void walk(Node *n, Fn f) {
+  static void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) {
     if (n != nullptr) {
-      walk(n->left, f);
-      f(n->key, n->value);
-      walk(n->right, f);
+      collect_entries(n->left, res);
+      res.push_back({n->key, n->value});
+      collect_entries(n->right, res);
     }
   }
 
@@ -215,9 +215,11 @@ class SBTree {
     return select(root, r);
   }
 
-  template<class Fn>
-  void walk(Fn f) const {
-    walk(root, f);
+  std::vector<std::pair<K, V>> entries() const {
+    std::vector<std::pair<K, V>> res;
+    res.reserve(size(root));
+    collect_entries(root, res);
+    return res;
   }
 };
 
@@ -241,13 +243,16 @@ int main() {
   assert(t.insert(4, 'd'));
   assert(*t.find(4) == 'd');
   assert(!t.insert(4, 'd'));
-  auto printch = [](int k, char v) { cout << v; };
-  t.walk(printch);
+  for (const auto &[k, v] : t.entries()) {
+    cout << v;
+  }
   cout << endl;
   assert(t.erase(1));
   assert(!t.erase(1));
   assert(t.find(1) == nullptr);
-  t.walk(printch);
+  for (const auto &[k, v] : t.entries()) {
+    cout << v;
+  }
   cout << endl;
   assert(t.rank(2) == 0);
   assert(t.rank(3) == 1);

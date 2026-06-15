@@ -14,8 +14,8 @@ independent of the capacity magnitudes.
 - `clear_flow()` resets all edge flows to zero, allowing a fresh recomputation on the same graph.
 - `min_cut(source)` returns the source side of a minimum cut after `max_flow()` has been called.
 
-Repeated calls to `max_flow()` continue augmenting from the current flow. This is useful after adding
-new edges or increasing capacities; call `clear_flow()` first to recompute from zero.
+Repeated calls to `max_flow()` continue augmenting from the current flow. This is useful after
+adding new edges or increasing capacities; call `clear_flow()` first to recompute from zero.
 The capacity type `T` should be signed, since reverse residual edges store negative flow.
 
 Time Complexity:
@@ -66,7 +66,7 @@ class EdmondsKarp {
   }
 
   T max_flow(int source, int sink) {
-    for (;;) {
+    while (true) {
       std::vector<Edge *> pred(nodes, nullptr);
       std::queue<int> q;
       q.push(source);
