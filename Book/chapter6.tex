@@ -2230,7 +2230,7 @@ int main() {
 \subsection{Primitive Roots}
 A primitive root modulo $m$ is a number $g$ whose powers generate every invertible residue modulo $m$. Equivalently, the multiplicative order of $g$ modulo $m$ is exactly $\phi(m)$. Primitive roots are useful for constructing generators of finite multiplicative groups, choosing roots for number theoretic transforms, discrete logarithm setups, and randomized modular hashing or testing schemes that need a full-period multiplicative generator.
 
-Primitive roots do not exist for every modulus. They exist exactly for $m \in {1, 2, 4, p^k, 2p^k}$, where $p$ is an odd prime and $k \geq 1$. This implementation first checks that classification by factoring $m$, then factors $\phi(m)$. A candidate $g$ is primitive exactly when $g^{\phi(m)} \equiv 1 \pmod m$ and $g^{\phi(m)/q} \not\equiv 1 \pmod m$ for every prime factor $q$ of $\phi(m)$.
+Primitive roots do not exist for every $m$. They exist exactly for $m \in \{1, 2, 4, p^k, 2p^k\}$, where $p$ is an odd prime and $k \geq 1$. This implementation first checks that classification by factoring $m$, then factors $\phi(m)$. A candidate $g$ is primitive exactly when $g^{\phi(m)} \equiv 1 \pmod m$ and $g^{\phi(m)/q} \not\equiv 1 \pmod m$ for every prime factor $q$ of $\phi(m)$.
 
 \begin{compactitem}
   \item \inlinecode{primitive\_root(m)} returns the smallest primitive root modulo \inlinecode{m}, or \inlinecode{-1} if no primitive root exists.
@@ -2360,6 +2360,291 @@ int main() {
 
   assert(primitive_root(8) == -1);
   assert(primitive_root(12) == -1);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Discrete Logarithm (Baby-Step Giant-Step)}
+Given integers $a$, $b$, and a modulus $m$, the discrete logarithm problem asks for the smallest nonnegative integer $x$ with $a^x$ congruent to $b$ modulo $m$. This is the modular analogue of a logarithm and underlies Diffie-Hellman key exchange, order computations in the multiplicative group, and many number-theory reductions.
+
+The baby-step giant-step method writes $x = np - q$ for a block size $n$ near the square root of the modulus. It tabulates the ``baby steps'' $b * a^q$ for $q$ in $[0, n]$, then walks the ``giant steps'' $a^{np}$ for increasing $p$ until one lands in the table, yielding $x = np - q$. This trades the linear scan of all exponents for $O(\sqrt m)$ work and memory. A short reduction loop first strips common factors between $a$ and $m$, so the routine works for any modulus, not only when $a$ and $m$ are coprime.
+
+\begin{compactitem}
+  \item \inlinecode{discrete\_log(a, b, m)} returns the smallest nonnegative \inlinecode{x} with \inlinecode{a\textasciicircum{}x} congruent to \inlinecode{b} modulo \inlinecode{m}, or $-1$ if no such \inlinecode{x} exists. Requires \inlinecode{m} $\geq 1$; \inlinecode{a} and \inlinecode{b} are reduced modulo \inlinecode{m} internally.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\sqrt{m} \cdot \log\left(m\right))$ per call to \inlinecode{discrete\_log()}, dominated by the hashed baby-step table.
+
+\textbf{Space Complexity}: $O(\sqrt{m})$ auxiliary heap space for the table.
+
+\begin{lstlisting}[language=C++]
+#include <cmath>
+#include <cstdint>
+#include <numeric>
+#include <unordered_map>
+
+int64_t mulmod(int64_t a, int64_t b, int64_t m) {
+#if defined(__SIZEOF_INT128__)
+  return static_cast<int64_t>(static_cast<__uint128_t>(a) * b % m);
+#else
+  int64_t res = 0;
+  for (a %= m; b > 0; b >>= 1) {
+    if (b & 1) {
+      res = res >= m - a ? res - (m - a) : res + a;
+    }
+    a = a >= m - a ? a - (m - a) : a + a;
+  }
+  return res;
+#endif
+}
+
+int64_t discrete_log(int64_t a, int64_t b, int64_t m) {
+  a %= m;
+  b %= m;
+  if (a < 0) {
+    a += m;
+  }
+  if (b < 0) {
+    b += m;
+  }
+  // Strip common factors of a and m so that a becomes invertible; add counts the exponents removed.
+  int64_t k = 1 % m, add = 0, g;
+  while ((g = std::gcd(a, m)) > 1) {
+    if (b == k) {
+      return add;
+    }
+    if (b % g != 0) {
+      return -1;
+    }
+    b /= g;
+    m /= g;
+    add++;
+    k = mulmod(k, a / g, m);
+  }
+  int64_t n = static_cast<int64_t>(std::sqrt(static_cast<double>(m))) + 1;
+  int64_t an = 1;
+  for (int64_t i = 0; i < n; i++) {
+    an = mulmod(an, a, m);  // an = a^n, the giant step.
+  }
+  std::unordered_map<int64_t, int64_t> baby;
+  int64_t cur = b;
+  for (int64_t q = 0; q <= n; q++) {
+    baby[cur] = q;  // Keep the largest q for each value to make the answer minimal.
+    cur = mulmod(cur, a, m);
+  }
+  cur = k;
+  for (int64_t p = 1; p <= n; p++) {
+    cur = mulmod(cur, an, m);
+    auto it = baby.find(cur);
+    if (it != baby.end()) {
+      return n * p - it->second + add;
+    }
+  }
+  return -1;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // 2^x = 9 (mod 11): 2^6 = 64 = 9, and 6 is the smallest such exponent.
+  assert(discrete_log(2, 9, 11) == 6);
+
+  assert(discrete_log(3, 1, 7) == 0);    // a^0 = 1 always.
+  assert(discrete_log(2, 3, 5) == 3);    // 2^3 = 8 = 3 (mod 5).
+  assert(discrete_log(2, 1, 6) == 0);    // Works for composite, non-coprime moduli.
+  assert(discrete_log(4, 6, 8) == -1);   // No power of 4 is 6 (mod 8).
+  assert(discrete_log(5, 33, 58) == 9);  // 5^9 = 33 (mod 58).
+  return 0;
+}
+\end{lstlisting}
+\subsection{Modular Square Root (Tonelli-Shanks)}
+Given an integer $a$ and an odd prime $p$, find a modular square root: an $x$ with $x^2$ congruent to $a$ modulo $p$. Exactly half of the nonzero residues modulo a prime are squares (quadratic residues), so a solution exists only for those; when it does, the two roots are $x$ and $p - x$.
+
+The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p-1)/2}$ modulo $p$, first tests whether $a$ is a residue at all. When $p$ is congruent to 3 modulo 4 the root is simply $a^{(p+1)/4}$. Otherwise the algorithm factors $p - 1$ as $s * 2^e$, picks any quadratic non-residue to generate the 2-power part of the group, and repeatedly squares a running value to find the order of the current error term, correcting the candidate root until the error becomes 1.
+
+\begin{compactitem}
+  \item \inlinecode{mod\_sqrt(a, p)} returns the smaller of the two square roots of \inlinecode{a} modulo the odd prime \inlinecode{p}, or $-1$ if \inlinecode{a} is not a quadratic residue. The value 0 maps to 0. The argument \inlinecode{a} is reduced modulo \inlinecode{p} internally. The modulus \inlinecode{p} must be an odd prime.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\log^{2} p)$ per call to \inlinecode{mod\_sqrt()} in the worst case, from the squaring loop nested inside the exponentiations.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+
+int64_t mulmod(int64_t a, int64_t b, int64_t m) {
+#if defined(__SIZEOF_INT128__)
+  return static_cast<int64_t>(static_cast<__uint128_t>(a) * b % m);
+#else
+  int64_t res = 0;
+  for (a %= m; b > 0; b >>= 1) {
+    if (b & 1) {
+      res = res >= m - a ? res - (m - a) : res + a;
+    }
+    a = a >= m - a ? a - (m - a) : a + a;
+  }
+  return res;
+#endif
+}
+
+int64_t powmod(int64_t a, int64_t n, int64_t m) {
+  int64_t res = 1 % m;
+  for (a %= m; n > 0; n >>= 1) {
+    if (n & 1) {
+      res = mulmod(res, a, m);
+    }
+    a = mulmod(a, a, m);
+  }
+  return res;
+}
+
+int64_t mod_sqrt(int64_t a, int64_t p) {
+  a %= p;
+  if (a < 0) {
+    a += p;
+  }
+  if (a == 0) {
+    return 0;
+  }
+  if (powmod(a, (p - 1) / 2, p) != 1) {
+    return -1;  // a is a quadratic non-residue.
+  }
+  if (p % 4 == 3) {
+    int64_t x = powmod(a, (p + 1) / 4, p);
+    return x < p - x ? x : p - x;
+  }
+  // Write p - 1 = s * 2^e with s odd.
+  int64_t s = p - 1, e = 0;
+  while (s % 2 == 0) {
+    s /= 2;
+    e++;
+  }
+  // Any quadratic non-residue generates the 2-power part of the group.
+  int64_t n = 2;
+  while (powmod(n, (p - 1) / 2, p) != p - 1) {
+    n++;
+  }
+  int64_t x = powmod(a, (s + 1) / 2, p);  // Candidate root, off by a 2-power factor.
+  int64_t b = powmod(a, s, p);            // Error term, a power of two in order.
+  int64_t g = powmod(n, s, p);            // Generator of the relevant 2-group.
+  int64_t r = e;
+  while (true) {
+    int64_t t = b, order = 0;
+    while (order < r && t != 1) {
+      t = mulmod(t, t, p);
+      order++;
+    }
+    if (order == 0) {
+      return x < p - x ? x : p - x;
+    }
+    int64_t gs = powmod(g, static_cast<int64_t>(1) << (r - order - 1), p);
+    g = mulmod(gs, gs, p);
+    x = mulmod(x, gs, p);
+    b = mulmod(b, g, p);
+    r = order;
+  }
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  int64_t r = mod_sqrt(2, 113);
+  assert(r != -1 && mulmod(r, r, 113) == 2);
+  assert(r == 51);  // 51^2 = 2601 = 2 (mod 113); the other root is 62.
+
+  assert(mod_sqrt(0, 7) == 0);
+  assert(mod_sqrt(5, 41) != -1);  // p = 1 (mod 4) exercises the full algorithm.
+  assert(mod_sqrt(4, 7) == 2);    // p = 3 (mod 4) fast path.
+  assert(mod_sqrt(3, 7) == -1);   // 3 is a non-residue modulo 7.
+
+  // Every residue's reported root squares back to it.
+  for (int64_t a = 0; a < 41; a++) {
+    int64_t x = mod_sqrt(a, 41);
+    if (x != -1) {
+      assert(mulmod(x, x, 41) == a);
+    }
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Jacobi Symbol}
+The Jacobi symbol $(a / n)$, defined for an odd positive integer $n$, generalizes the Legendre symbol. For an odd prime $p$ the Legendre symbol $(a / p)$ is 0 when $p$ divides $a$, 1 when $a$ is a nonzero quadratic residue modulo $p$, and $-1$ when $a$ is a non-residue. The Jacobi symbol extends this to composite $n$ by multiplying the Legendre symbols of the prime factors of $n$, counted with multiplicity. It is computed without factoring $n$, using the law of quadratic reciprocity together with the supplementary rules for $-1$ and $2$, in the style of the binary GCD.
+
+The symbol is fully multiplicative in $a$ and in $n$. For prime $n$ it exactly decides quadratic residuosity, so it is the fast way to test whether a modular square root exists. For composite $n$, beware that $(a / n) = 1$ does not guarantee that $a$ is a quadratic residue; this asymmetry is what the Solovay-Strassen primality test exploits.
+
+\begin{compactitem}
+  \item \inlinecode{jacobi(a, n)} returns the Jacobi symbol \inlinecode{(a / n)} as one of $-1$, 0, or 1. The modulus \inlinecode{n} must be a positive odd integer; \inlinecode{a} is reduced modulo \inlinecode{n} internally and may be negative. The result is 0 exactly when \inlinecode{a} and \inlinecode{n} share a common factor.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(\log a \cdot \log n)$ per call to \inlinecode{jacobi()}.
+
+\textbf{Space Complexity}: $O(1)$ auxiliary.
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+#include <utility>
+
+int jacobi(int64_t a, int64_t n) {
+  a %= n;
+  if (a < 0) {
+    a += n;
+  }
+  int result = 1;
+  while (a != 0) {
+    while (a % 2 == 0) {
+      a /= 2;
+      // (2 / n) is -1 when n is 3 or 5 modulo 8.
+      if (n % 8 == 3 || n % 8 == 5) {
+        result = -result;
+      }
+    }
+    std::swap(a, n);
+    // Quadratic reciprocity flips the sign when both are 3 modulo 4.
+    if (a % 4 == 3 && n % 4 == 3) {
+      result = -result;
+    }
+    a %= n;
+  }
+  return n == 1 ? result : 0;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int64_t legendre_via_euler(int64_t a, int64_t p) {
+  int64_t r = 1 % p;
+  for (int64_t b = ((a % p) + p) % p, e = (p - 1) / 2; e > 0; e >>= 1) {
+    if (e & 1) {
+      r = r * b % p;
+    }
+    b = b * b % p;
+  }
+  return r == p - 1 ? -1 : r;  // r is 0, 1, or p - 1.
+}
+
+int main() {
+  assert(jacobi(2, 15) == 1);  // (2/15) = (2/3)(2/5) = (-1)(-1).
+  assert(jacobi(7, 15) == -1);
+  assert(jacobi(3, 15) == 0);  // gcd(3, 15) = 3.
+  assert(jacobi(1001, 9907) == -1);
+
+  // For odd primes the Jacobi symbol equals the Legendre symbol from Euler's criterion.
+  for (int64_t p : {3, 5, 7, 11, 13, 101, 9973}) {
+    for (int64_t a = 0; a < 50; a++) {
+      assert(jacobi(a, p) == legendre_via_euler(a, p));
+    }
+  }
   return 0;
 }
 \end{lstlisting}
@@ -4362,7 +4647,7 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
   \item \inlinecode{rotate\_in\_place(a, d)} assigns the square matrix \inlinecode{a} to its rotation by \inlinecode{d} degrees clockwise, returning a reference to the modified argument itself. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
 \end{compactitem}
 
-Exponentiation uses the usual iterative binary exponentiation pattern: keep an accumulated result, square the base each round, and multiply the result when the current exponent bit is set. The power sum uses a block matrix identity: \inlinecode{\textbackslash{}begin\{bmatrix\} A \& A \textbackslash{}\textbackslash{} 0 \& I \textbackslash{}end\{bmatrix\}\textasciicircum{}p} has \inlinecode{A + A\textasciicircum{}2 + \textbackslash{}dots + A\textasciicircum{}p} in its upper-right block.
+Exponentiation uses the usual iterative binary exponentiation pattern: keep an accumulated result, square the base each round, and multiply the result when the current exponent bit is set. The power sum uses a block matrix identity that $\begin{bmatrix} A & A \\ 0 & I \end{bmatrix}^p$ has $A + A^2 + \dots + A^p$ in its upper-right block.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -4922,11 +5207,12 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Determinant and Inverse}
-Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$ exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or non-singular. The determinant falls out of elimination as the product of the pivots, negated once per row swap. The inverse is found by appending the identity matrix and row-reducing the combined matrix: the operations that turn $a$ into the identity turn the identity into the inverse. In practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, use LU decomposition with row partial pivoting.
+Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$ exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or non-singular. The determinant falls out of elimination as the product of the pivots, negated once per row swap. The inverse is found by appending the identity matrix and row-reducing the combined matrix: the operations that turn $a$ into the identity turn the identity into the inverse. In practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, use LU decomposition with row partial pivoting. For an integer matrix whose determinant is wanted exactly, the Bareiss algorithm runs a fraction-free elimination: every intermediate value is itself a determinant of a submatrix, so the divisions are always exact and the arithmetic stays in integers.
 
 \begin{compactitem}
   \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using Gaussian elimination.
+  \item \inlinecode{det\_bareiss(a)} returns the exact determinant of an integer matrix \inlinecode{a} using fraction-free elimination, with no rounding error. Intermediate values are bounded by the magnitudes of the matrix's minors, so the entries must stay within \inlinecode{int64\_t}; substitute a big-integer type for large matrices.
   \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning a reference to the modified argument itself. If \inlinecode{a} is not invertible, then its assigned values after the function call will be undefined (\inlinecode{+/-Inf} or \inlinecode{+/-NaN}).
 \end{compactitem}
 
@@ -4934,18 +5220,19 @@ Computes the determinant and inverse of a square matrix using Gaussian eliminati
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n!)$ per call to \inlinecode{det\_naive()}, where $n$ is the dimension of the matrix.
-  \item $O(n^{3})$ per call to \inlinecode{det()} and \inlinecode{invert()} where $n$ is the dimension of the matrix.
+  \item $O(n^{3})$ per call to \inlinecode{det()}, \inlinecode{det\_bareiss()}, and \inlinecode{invert()} where $n$ is the dimension of the matrix.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ auxiliary stack space and $O(n! \cdot n)$ auxiliary heap space for \inlinecode{det\_naive()}, where $n$ is the dimension of the matrix.
-  \item $O(n^{2})$ auxiliary heap space for \inlinecode{det()} and \inlinecode{invert()}.
+  \item $O(n^{2})$ auxiliary heap space for \inlinecode{det()}, \inlinecode{det\_bareiss()}, and \inlinecode{invert()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <cmath>
+#include <cstdint>
 #include <vector>
 
 template<class SquareMatrix>
@@ -5011,6 +5298,35 @@ double det(const SquareMatrix &a, double EPS = 1e-10) {
   return res;
 }
 
+int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
+  int n = static_cast<int>(a.size());
+  int64_t prev = 1, sign = 1;
+  for (int k = 0; k < n; k++) {
+    if (a[k][k] == 0) {  // Swap in a nonzero pivot; each swap flips the sign.
+      int p = -1;
+      for (int r = k + 1; r < n; r++) {
+        if (a[r][k] != 0) {
+          p = r;
+          break;
+        }
+      }
+      if (p == -1) {
+        return 0;
+      }
+      std::swap(a[k], a[p]);
+      sign = -sign;
+    }
+    for (int i = k + 1; i < n; i++) {
+      for (int j = k + 1; j < n; j++) {
+        // The division by the previous pivot is always exact (Bareiss's theorem).
+        a[i][j] = (a[i][j] * a[k][k] - a[i][k] * a[k][j]) / prev;
+      }
+    }
+    prev = a[k][k];
+  }
+  return n == 0 ? 1 : sign * a[n - 1][n - 1];
+}
+
 template<class SquareMatrix>
 SquareMatrix &invert(SquareMatrix &a) {
   int n = static_cast<int>(a.size());
@@ -5062,6 +5378,12 @@ int main() {
   vector<vector<double>> res(n, vector<double>(n, 0));
   double d = det(a);
   assert(fabs(d - det_naive(a)) < 1e-10);
+
+  // Bareiss gives the determinant of an integer matrix exactly, with no rounding.
+  vector<vector<int64_t>> ai{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
+  assert(det_bareiss(ai) == -306);
+  assert(det_bareiss({{2, 0, 0}, {0, 3, 0}, {0, 0, 5}}) == 30);
+  assert(det_bareiss({{1, 2}, {2, 4}}) == 0);  // Singular.
   vector<vector<double>> inv = a;
   invert(inv);
   for (int i = 0; i < n; i++) {
@@ -5294,6 +5616,243 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Characteristic Polynomial}
+Computes the characteristic polynomial of a square matrix over a prime field: the coefficients of $det(xI - A)$, a monic degree-$n$ polynomial whose roots are the eigenvalues of $A$. Its constant term recovers the determinant (up to sign), its second-highest coefficient is the negated trace, and evaluating it at a scalar gives $det(xI - A)$ for that $x$. It is the standard tool behind eigenvalue counting, matrix-power recurrences via Cayley-Hamilton, and problems that reduce to a determinant in an unknown.
+
+A direct expansion would cost a determinant per coefficient. Instead the matrix is first reduced to upper Hessenberg form, where every entry more than one place below the diagonal is zero. This reduction uses similarity transforms (a row operation paired with the inverse column operation), which leave the characteristic polynomial unchanged. The characteristic polynomial of a Hessenberg matrix then follows from a short recurrence over its leading principal submatrices, adding one row and column at a time, for an overall cost of $O(n^{3})$. The arithmetic is exact modulo a prime, since the Hessenberg reduction divides by pivots and is not numerically stable over the reals.
+
+\begin{compactitem}
+  \item \inlinecode{characteristic\_polynomial(a)} returns a vector $c$ of length $n + 1$ with $\det(xI - {\inlinecodemath{a}}) = c_0 + c_1 x + ... + c_n x^n$ modulo \inlinecode{MOD}, where $c_n = 1$. The matrix \inlinecode{a} must be square; its entries are reduced modulo \inlinecode{MOD} internally.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{characteristic\_polynomial()}, where $n$ is the dimension of the matrix.
+
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+#include <vector>
+
+const int64_t MOD = 998244353;
+
+int64_t powmod(int64_t b, int64_t e, int64_t m) {
+  int64_t res = 1;
+  for (b %= m; e > 0; e >>= 1) {
+    if (e & 1) {
+      res = res * b % m;
+    }
+    b = b * b % m;
+  }
+  return res;
+}
+
+int64_t inv(int64_t a) {
+  return powmod((a % MOD + MOD) % MOD, MOD - 2, MOD);
+}
+
+void to_hessenberg(std::vector<std::vector<int64_t>> &m) {
+  int n = static_cast<int>(m.size());
+  for (int j = 0; j + 2 < n; j++) {
+    int pivot = -1;
+    for (int i = j + 1; i < n; i++) {
+      if (m[i][j] != 0) {
+        pivot = i;
+        break;
+      }
+    }
+    if (pivot == -1) {
+      continue;
+    }
+    if (pivot != j + 1) {  // Move the pivot to the subdiagonal via a similarity swap.
+      std::swap(m[pivot], m[j + 1]);
+      for (int r = 0; r < n; r++) {
+        std::swap(m[r][pivot], m[r][j + 1]);
+      }
+    }
+    int64_t pinv = inv(m[j + 1][j]);
+    for (int k = j + 2; k < n; k++) {
+      int64_t u = m[k][j] * pinv % MOD;
+      if (u == 0) {
+        continue;
+      }
+      for (int c = 0; c < n; c++) {  // Row k -= u * row (j + 1).
+        m[k][c] = (m[k][c] - u * m[j + 1][c] % MOD + MOD) % MOD;
+      }
+      for (int r = 0; r < n; r++) {  // Inverse column operation keeps it a similarity.
+        m[r][j + 1] = (m[r][j + 1] + u * m[r][k]) % MOD;
+      }
+    }
+  }
+}
+
+std::vector<int64_t> characteristic_polynomial(std::vector<std::vector<int64_t>> a) {
+  int n = static_cast<int>(a.size());
+  for (auto &row : a) {
+    for (int64_t &x : row) {
+      x = (x % MOD + MOD) % MOD;
+    }
+  }
+  to_hessenberg(a);
+  std::vector<std::vector<int64_t>> p(n + 1);
+  p[0] = {1};
+  for (int k = 0; k < n; k++) {
+    p[k + 1].assign(k + 2, 0);
+    for (int i = 0; i < static_cast<int>(p[k].size()); i++) {
+      p[k + 1][i + 1] = (p[k + 1][i + 1] + p[k][i]) % MOD;                // x * p[k].
+      p[k + 1][i] = (p[k + 1][i] - a[k][k] * p[k][i] % MOD + MOD) % MOD;  // -a[k][k] * p[k].
+    }
+    int64_t t = 1;
+    for (int i = 0; i < k; i++) {
+      t = t * a[k - i][k - i - 1] % MOD;  // Running product of subdiagonal entries.
+      int64_t coef = t * a[k - i - 1][k] % MOD;
+      for (int j = 0; j < static_cast<int>(p[k - i - 1].size()); j++) {
+        p[k + 1][j] = (p[k + 1][j] - coef * p[k - i - 1][j] % MOD + MOD) % MOD;
+      }
+    }
+  }
+  return p[n];
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // [[1, 2], [3, 4]]: det(xI - A) = x^2 - 5x - 2.
+  vector<vector<int64_t>> a{{1, 2}, {3, 4}};
+  vector<int64_t> c = characteristic_polynomial(a);
+  assert((c == vector<int64_t>{MOD - 2, MOD - 5, 1}));  // -2, -5, 1.
+
+  // For any matrix, c_{n-1} = -trace and c_0 = (-1)^n det.
+  vector<vector<int64_t>> b{{2, 0, 1}, {0, 3, 0}, {4, 1, 5}};
+  vector<int64_t> cb = characteristic_polynomial(b);
+  assert(cb.size() == 4 && cb[3] == 1);
+  assert(cb[2] == (MOD - (2 + 3 + 5)) % MOD);  // Negated trace.
+  // det(B) = 2(15) - 0 + 1(0 - 12) = 18, so c_0 = (-1)^3 * 18 = -18.
+  assert(cb[0] == (MOD - 18) % MOD);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Matrix-Tree Theorem}
+Kirchhoff's matrix-tree theorem counts the spanning trees of an undirected graph. Form the Laplacian matrix $L = D - A$, where $D$ is the diagonal matrix of degrees and $A$ is the adjacency matrix (with multiplicities for parallel edges). Every cofactor of $L$ is equal, and that common value is the number of spanning trees. Equivalently, delete any one row and the matching column from $L$ and take the determinant of what remains.
+
+The determinant is evaluated modulo a prime by Gaussian elimination, so the count is returned modulo \inlinecode{MOD}. Spanning-tree counts grow astronomically, so a modular count is the usual contest form; run the routine under a few different primes and combine with the Chinese remainder theorem to recover a large exact value. The same construction handles weighted graphs (sum edge weights into the Laplacian to get the weighted tree count) and, with the directed Laplacian and a fixed deleted row, counts rooted spanning arborescences.
+
+\begin{compactitem}
+  \item \inlinecode{count\_spanning\_trees(n, edges)} returns the number of spanning trees of the undirected graph on nodes \inlinecode{0} to \inlinecode{n - 1} with the given edge list, modulo \inlinecode{MOD}. Parallel edges are honored; self-loops do not affect the count. The result is 0 when the graph is disconnected, and 1 when \inlinecode{n} is 1.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{count\_spanning\_trees()}, where $n$ is the number of nodes.
+
+\textbf{Space Complexity}: $O(n^{2})$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+#include <utility>
+#include <vector>
+
+const int64_t MOD = 998244353;
+
+int64_t powmod(int64_t b, int64_t e, int64_t m) {
+  int64_t res = 1;
+  for (b %= m; e > 0; e >>= 1) {
+    if (e & 1) {
+      res = res * b % m;
+    }
+    b = b * b % m;
+  }
+  return res;
+}
+
+int64_t count_spanning_trees(int n, const std::vector<std::pair<int, int>> &edges) {
+  if (n <= 1) {
+    return n == 1 ? 1 : 0;
+  }
+  // Build the Laplacian, then drop the last row and column to form an (n-1) by (n-1) cofactor.
+  int m = n - 1;
+  std::vector<std::vector<int64_t>> lap(m, std::vector<int64_t>(m, 0));
+  for (const auto &e : edges) {
+    int u = e.first, v = e.second;
+    if (u == v) {
+      continue;  // Self-loops contribute nothing to the Laplacian.
+    }
+    if (u < m) {
+      lap[u][u] = (lap[u][u] + 1) % MOD;
+    }
+    if (v < m) {
+      lap[v][v] = (lap[v][v] + 1) % MOD;
+    }
+    if (u < m && v < m) {
+      lap[u][v] = (lap[u][v] - 1 + MOD) % MOD;
+      lap[v][u] = (lap[v][u] - 1 + MOD) % MOD;
+    }
+  }
+  // Determinant modulo MOD by Gaussian elimination.
+  int64_t det = 1;
+  for (int col = 0; col < m; col++) {
+    int pivot = -1;
+    for (int r = col; r < m; r++) {
+      if (lap[r][col] != 0) {
+        pivot = r;
+        break;
+      }
+    }
+    if (pivot == -1) {
+      return 0;  // Singular cofactor: the graph is disconnected.
+    }
+    if (pivot != col) {
+      std::swap(lap[pivot], lap[col]);
+      det = (MOD - det) % MOD;
+    }
+    det = det * lap[col][col] % MOD;
+    int64_t pinv = powmod(lap[col][col], MOD - 2, MOD);
+    for (int r = col + 1; r < m; r++) {
+      int64_t factor = lap[r][col] * pinv % MOD;
+      if (factor == 0) {
+        continue;
+      }
+      for (int k = col; k < m; k++) {
+        lap[r][k] = (lap[r][k] - factor * lap[col][k]) % MOD;
+        if (lap[r][k] < 0) {
+          lap[r][k] += MOD;
+        }
+      }
+    }
+  }
+  return det;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // A path 0-1-2 and a single triangle each have a known number of spanning trees.
+  assert(count_spanning_trees(3, {{0, 1}, {1, 2}}) == 1);          // A tree has exactly one.
+  assert(count_spanning_trees(3, {{0, 1}, {1, 2}, {2, 0}}) == 3);  // Triangle: drop any one edge.
+
+  // Complete graphs: Cayley's formula gives n^(n-2) spanning trees.
+  auto complete = [](int n) {
+    vector<pair<int, int>> e;
+    for (int i = 0; i < n; i++) {
+      for (int j = i + 1; j < n; j++) {
+        e.push_back({i, j});
+      }
+    }
+    return count_spanning_trees(n, e);
+  };
+  assert(complete(4) == 16);   // 4^2.
+  assert(complete(5) == 125);  // 5^3.
+
+  // Disconnected graphs have no spanning tree.
+  assert(count_spanning_trees(4, {{0, 1}, {2, 3}}) == 0);
+  return 0;
+}
+\end{lstlisting}
 \subsection{Sparse Matrix}
 A sparse matrix stores only nonzero entries, which is useful when the matrix is large but most values are zero. This implementation keeps both row maps and column maps in sync: \inlinecode{row(i)} can iterate all nonzeros in row \inlinecode{i}, while \inlinecode{column(j)} can iterate all nonzeros in column \inlinecode{j}. That bidirectional storage is especially useful for sparse elimination or graph-like matrix operations, where both row updates and column pivot lookups are common.
 
@@ -5309,7 +5868,7 @@ A sparse matrix stores only nonzero entries, which is useful when the matrix is 
   \item \inlinecode{column(j)} returns a map from row index to value for the nonzero entries in column \inlinecode{j}.
   \item \inlinecode{swap\_rows(i, j)} swaps two rows while keeping the column maps synchronized.
   \item \inlinecode{transpose()} transposes the matrix in place.
-  \item \inlinecode{multiply\_vector(x)} returns the matrix-vector product \inlinecode{A*x}.
+  \item \inlinecode{multiply\_vector(x)} returns the matrix-vector product with vector \inlinecode{x}.
   \item \inlinecode{row\_reduce(a, limit)} converts columns \inlinecode{[0, limit)} of \inlinecode{a} to sparse row echelon form, returning the rank found in those columns.
   \item \inlinecode{det(a)} returns the determinant of a square sparse matrix.
   \item \inlinecode{sparse\_rank(a)} returns the rank of a sparse matrix.
@@ -6218,6 +6777,211 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{Linear Recurrence (Kitamasa)}
+Computes the $n$-th term of a linear recurrence modulo a prime in logarithmic time. Given a recurrence of order $L$, $s_i = c_0 s_{i-1} + c_1 s_{i-2} + \ldots + c_{L-1} s_{i-L}$, together with the first $L$ terms, the naive approach unrolls $n$ steps. Kitamasa's method instead computes $n$ terms ahead in $O(L^{2} \log n)$ by working with the characteristic polynomial. The coefficient layout matches the output of Berlekamp-Massey, so the two compose directly: guess the recurrence from sampled values, then jump to any index.
+
+The key identity is that the $n$-th term is a fixed linear combination of the first $L$ terms, with weights given by $x^n$ reduced modulo the characteristic polynomial $f(x) = x^L - c_0 x^{L-1} - ... - c_{L-1}$. The reduction $x^L = c_0 x^{L-1} + ... + c_{L-1}$ lets any product of two degree-$<L$ polynomials be folded back to degree $<L$, so $x^n \mod f$ is obtained by binary exponentiation, and the $n$-th term is the dot product of its coefficients with the initial terms.
+
+\begin{compactitem}
+  \item \inlinecode{kth\_term(rec, init, n)} returns $s_n$ modulo \inlinecode{MOD}, where \inlinecode{rec} holds the coefficients $c_0, ..., c_{L-1}$ and \inlinecode{init} holds at least $L$ initial terms $s_0, ..., s_{L-1}$. Indexing is 0-based and \inlinecode{n} $\geq 0$. Values are reduced modulo \inlinecode{MOD} internally.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(L^{2} \log n)$ per call to \inlinecode{kth\_term()}.
+
+\textbf{Space Complexity}: $O(L)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+#include <vector>
+
+const int64_t MOD = 998244353;
+
+void reduce(std::vector<int64_t> &p, const std::vector<int64_t> &c) {
+  int L = static_cast<int>(c.size());
+  for (int d = static_cast<int>(p.size()) - 1; d >= L; d--) {
+    if (p[d] != 0) {
+      for (int j = 0; j < L; j++) {
+        p[d - 1 - j] = (p[d - 1 - j] + p[d] * c[j]) % MOD;
+      }
+      p[d] = 0;
+    }
+  }
+  p.resize(L);
+}
+
+std::vector<int64_t> combine(
+    const std::vector<int64_t> &a, const std::vector<int64_t> &b, const std::vector<int64_t> &c
+) {
+  std::vector<int64_t> res(a.size() + b.size() - 1, 0);
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    for (int j = 0; j < static_cast<int>(b.size()); j++) {
+      res[i + j] = (res[i + j] + a[i] * b[j]) % MOD;
+    }
+  }
+  reduce(res, c);
+  return res;
+}
+
+int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &init, int64_t n) {
+  int L = static_cast<int>(rec.size());
+  if (n < static_cast<int64_t>(init.size())) {
+    return ((init[n] % MOD) + MOD) % MOD;
+  }
+  if (L == 0) {
+    return 0;
+  }
+  std::vector<int64_t> result(L, 0), base(L, 0);
+  result[0] = 1;  // The polynomial 1 = x^0.
+  if (L == 1) {
+    base[0] = rec[0] % MOD;  // x is congruent to c_0 modulo f.
+  } else {
+    base[1] = 1;  // The polynomial x.
+  }
+  for (int64_t e = n; e > 0; e >>= 1) {
+    if (e & 1) {
+      result = combine(result, base, rec);
+    }
+    base = combine(base, base, rec);
+  }
+  int64_t ans = 0;
+  for (int j = 0; j < L; j++) {
+    ans = (ans + result[j] * (((init[j] % MOD) + MOD) % MOD)) % MOD;
+  }
+  return ans;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // Fibonacci s_i = s_{i-1} + s_{i-2} with s_0 = s_1 = 1: 1, 1, 2, 3, 5, 8, ...
+  vector<int64_t> fib_rec{1, 1}, fib_init{1, 1};
+  assert(kth_term(fib_rec, fib_init, 0) == 1);
+  assert(kth_term(fib_rec, fib_init, 9) == 55);
+  assert(kth_term(fib_rec, fib_init, 10) == 89);
+
+  // Tribonacci s_i = s_{i-1} + s_{i-2} + s_{i-3} with s_0,s_1,s_2 = 0,1,1.
+  vector<int64_t> trib_rec{1, 1, 1}, trib_init{0, 1, 1};
+  assert(kth_term(trib_rec, trib_init, 8) == 44);
+
+  // Geometric s_i = 3 s_{i-1}, s_0 = 1: matches 3^n modulo MOD.
+  vector<int64_t> geo_rec{3}, geo_init{1};
+  int64_t pw = 1;
+  for (int i = 0; i < 50; i++) {
+    assert(kth_term(geo_rec, geo_init, i) == pw);
+    pw = pw * 3 % MOD;
+  }
+  return 0;
+}
+\end{lstlisting}
+\subsection{Polynomial Interpolation}
+Recovers the unique polynomial of degree less than $n$ that passes through $n$ given points, working modulo a prime. The $x$ coordinates must be distinct; the $y$ coordinates may be anything. Two operations are provided: reconstructing the full coefficient vector, and evaluating the interpolating polynomial at a single point without ever forming the coefficients.
+
+Coefficient recovery uses Newton's divided differences. It first replaces the sample values by their successive divided differences in place, then expands the Newton basis $1$, $(x - x_0)$, $(x - x_0)(x - x_1)$, $\ldots$ into ordinary coefficients by multiplying through one factor at a time. Point evaluation instead applies the Lagrange formula directly, summing each sample weighted by the product of $(t - x_j) / (x_k - x_j)$ over the other nodes. Both run in $O(n^{2})$ modular operations.
+
+\begin{compactitem}
+  \item \inlinecode{interpolate(x, y)} returns the coefficients $a_0, ..., a_{n-1}$ (constant term first) of the polynomial with \inlinecode{P(x[i]) = y[i]}, modulo \inlinecode{MOD}. The entries of \inlinecode{x} must be distinct modulo \inlinecode{MOD}.
+  \item \inlinecode{interpolate\_at(x, y, t)} returns \inlinecode{P(t)} modulo \inlinecode{MOD} for that same polynomial, without building its coefficients.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{2})$ per call to \inlinecode{interpolate()} and \inlinecode{interpolate\_at()}, where $n$ is the number of points.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+#include <vector>
+
+const int64_t MOD = 998244353;
+
+int64_t powmod(int64_t b, int64_t e, int64_t m) {
+  int64_t res = 1;
+  for (b %= m; e > 0; e >>= 1) {
+    if (e & 1) {
+      res = res * b % m;
+    }
+    b = b * b % m;
+  }
+  return res;
+}
+
+int64_t inv(int64_t a) {
+  return powmod(((a % MOD) + MOD) % MOD, MOD - 2, MOD);
+}
+
+std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y) {
+  int n = static_cast<int>(x.size());
+  for (int i = 0; i < n; i++) {
+    x[i] = ((x[i] % MOD) + MOD) % MOD;
+    y[i] = ((y[i] % MOD) + MOD) % MOD;
+  }
+  // Replace y by its divided differences in place.
+  for (int k = 0; k < n; k++) {
+    for (int i = k + 1; i < n; i++) {
+      y[i] = (y[i] - y[k] + MOD) % MOD * inv((x[i] - x[k] + MOD) % MOD) % MOD;
+    }
+  }
+  // Expand the Newton basis into ordinary coefficients.
+  std::vector<int64_t> res(n, 0), temp(n, 0);
+  temp[0] = 1;
+  for (int k = 0; k < n; k++) {
+    int64_t last = 0;
+    for (int i = 0; i < n; i++) {
+      res[i] = (res[i] + y[k] * temp[i]) % MOD;
+      int64_t old = temp[i];
+      temp[i] = last;
+      last = old;
+      temp[i] = (temp[i] - last * x[k] % MOD + MOD) % MOD;
+    }
+  }
+  return res;
+}
+
+int64_t interpolate_at(const std::vector<int64_t> &x, const std::vector<int64_t> &y, int64_t t) {
+  int n = static_cast<int>(x.size());
+  t = ((t % MOD) + MOD) % MOD;
+  int64_t res = 0;
+  for (int k = 0; k < n; k++) {
+    int64_t num = 1, den = 1;
+    for (int j = 0; j < n; j++) {
+      if (j != k) {
+        num = num * ((t - x[j]) % MOD + MOD) % MOD;
+        den = den * ((x[k] - x[j]) % MOD + MOD) % MOD;
+      }
+    }
+    res = (res + ((y[k] % MOD) + MOD) % MOD * num % MOD * inv(den)) % MOD;
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // P(x) = x^2 + 2x + 3 sampled at x = 0, 1, 2 gives y = 3, 6, 11.
+  vector<int64_t> x{0, 1, 2}, y{3, 6, 11};
+  vector<int64_t> coef = interpolate(x, y);
+  assert((coef == vector<int64_t>{3, 2, 1}));
+  assert(interpolate_at(x, y, 5) == 38);  // 25 + 10 + 3.
+
+  // Non-consecutive nodes for P(x) = 2x^3 - x + 4.
+  auto poly = [](int64_t t) { return ((2 * t * t * t - t + 4) % MOD + MOD) % MOD; };
+  vector<int64_t> xs{2, 5, 7, 10}, ys;
+  for (int64_t v : xs) {
+    ys.push_back(poly(v));
+  }
+  vector<int64_t> c = interpolate(xs, ys);
+  assert((c == vector<int64_t>{4, MOD - 1, 0, 2}));  // 4 - x + 2x^3.
+  assert(interpolate_at(xs, ys, 13) == poly(13));
+  return 0;
+}
+\end{lstlisting}
 
 \section{\texorpdfstring{Game Theory}{6.7 Game Theory}}
 \setcounter{section}{7}
@@ -6230,7 +6994,7 @@ This is the base case of the Sprague-Grundy theorem: every finite impartial game
 \begin{compactitem}
   \item \inlinecode{nim\_sum(piles)} returns the XOR of all pile sizes.
   \item \inlinecode{first\_player\_wins(piles)} returns whether the player to move has a winning strategy.
-  \item \inlinecode{winning\_move(piles)} returns a move \inlinecode{(pile, new\_size)} that moves to XOR 0, or \inlinecode{(-1, -1)} if the position is losing.
+  \item \inlinecode{winning\_move(piles)} returns a move \inlinecode{(pile, new\_size)} that moves to XOR 0, or $(-1, -1)$ if the position is losing.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of piles.
@@ -6283,6 +7047,111 @@ int main() {
   vector<int> losing{1, 2, 3};
   assert(!first_player_wins(losing));
   assert(winning_move(losing).first == -1);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Nim Product}
+Nimbers are the values of impartial games, added by XOR (see the Nim section). Under the additional operation of nim multiplication they form a field: the nonnegative integers below $2^{2^k}$ are closed under both operations, with XOR as addition and nim product as multiplication. Writing $\otimes$ for the nim product and $\oplus$ for XOR, nim multiplication is commutative, associative, and distributive over $\oplus$, and is defined recursively by $a \otimes b =$ $\operatorname{mex}\{(a' \otimes b) \oplus (a \otimes b') \oplus (a' \otimes b') : 0 \le a' < a, \, 0 \le b' < b\}$. Its main use is multiplying the Grundy values of independent ``coin-turning'' games whose move sets combine as a product, such as two-dimensional turning games built from one-dimensional ones.
+
+Rather than evaluate the recursive definition directly, this implementation precomputes the nim product of every pair of single bits $2^i \otimes 2^j$ for $i, j < 64$. Each such product follows from the Fermat-like rule $2^{2^k} \otimes 2^{2^k} = 2^{2^k} \oplus 2^{2^k - 1}$ and the fact that distinct Fermat powers multiply like ordinary powers of two. A full product then XORs together the bit-pair products selected by the set bits of the operands. Because every 64-bit value lies in the field of size $2^{64}$, the operation is total on \inlinecode{uint64\_t} and the nonzero values have multiplicative inverses.
+
+\begin{compactitem}
+  \item \inlinecode{nim\_product(x, y)} returns the nim product of \inlinecode{x} and \inlinecode{y}.
+  \item \inlinecode{nim\_pow(b, e)} returns \inlinecode{b} raised to the \inlinecode{e}-th power under nim multiplication.
+  \item \inlinecode{nim\_inverse(b)} returns the multiplicative inverse of a nonzero \inlinecode{b}, so that \inlinecode{nim\_product(b, nim\_inverse(b)) == 1}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(1)$ table construction on first use (a fixed 64 by 64 table).
+  \item $O(64^{2})$ per call to \inlinecode{nim\_product()}; $O(64^{2} \log e)$ per call to \inlinecode{nim\_pow()} and \inlinecode{nim\_inverse()}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(1)$: a fixed 64 by 64 table of 64-bit products.
+
+\begin{lstlisting}[language=C++]
+#include <cstdint>
+
+namespace {
+
+uint64_t bit_prod[64][64];
+
+// Build the single-bit products 2^i (x) 2^j. Each entry depends only on entries with a smaller
+// first index, so a single ascending pass fills the table.
+const bool nim_product_init = [] {
+  for (int i = 0; i < 64; i++) {
+    for (int j = 0; j < 64; j++) {
+      if ((i & j) == 0) {
+        bit_prod[i][j] = uint64_t(1) << (i | j);  // Distinct Fermat powers multiply like 2^(i|j).
+      } else {
+        int a = (i & j) & -(i & j);  // Lowest Fermat power shared by both exponents.
+        bit_prod[i][j] = bit_prod[i ^ a][j] ^ bit_prod[(i ^ a) | (a - 1)][(j ^ a) | (i & (a - 1))];
+      }
+    }
+  }
+  return true;
+}();
+
+}  // namespace
+
+uint64_t nim_product(uint64_t x, uint64_t y) {
+  uint64_t res = 0;
+  for (int i = 0; i < 64 && (x >> i) != 0; i++) {
+    if ((x >> i) & 1) {
+      for (int j = 0; j < 64 && (y >> j) != 0; j++) {
+        if ((y >> j) & 1) {
+          res ^= bit_prod[i][j];
+        }
+      }
+    }
+  }
+  return res;
+}
+
+uint64_t nim_pow(uint64_t b, uint64_t e) {
+  uint64_t res = 1;
+  for (; e > 0; e >>= 1) {
+    if (e & 1) {
+      res = nim_product(res, b);
+    }
+    b = nim_product(b, b);
+  }
+  return res;
+}
+
+uint64_t nim_inverse(uint64_t b) {
+  // The multiplicative group of the size-2^64 field has order 2^64 - 1, so b^(2^64 - 2) = b^{-1}.
+  return nim_pow(b, static_cast<uint64_t>(-2));
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // Smallest nontrivial products: {0,1,2,3} form the field GF(4) under XOR and nim product.
+  assert(nim_product(2, 2) == 3);
+  assert(nim_product(2, 3) == 1);
+  assert(nim_product(3, 3) == 2);
+  assert(nim_product(1, 12345) == 12345);  // 1 is the multiplicative identity.
+  assert(nim_product(0, 12345) == 0);
+
+  // Field axioms on a range of values: commutativity, distributivity over XOR, and inverses.
+  for (uint64_t a = 0; a < 64; a++) {
+    for (uint64_t b = 0; b < 64; b++) {
+      assert(nim_product(a, b) == nim_product(b, a));
+      for (uint64_t c = 0; c < 8; c++) {
+        assert(nim_product(a, b ^ c) == (nim_product(a, b) ^ nim_product(a, c)));
+      }
+    }
+    if (a != 0) {
+      assert(nim_product(a, nim_inverse(a)) == 1);
+    }
+  }
+  assert(nim_product(0x1234567890abcdefULL, nim_inverse(0x1234567890abcdefULL)) == 1);
   return 0;
 }
 \end{lstlisting}

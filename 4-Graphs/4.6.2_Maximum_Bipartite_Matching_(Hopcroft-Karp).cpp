@@ -13,12 +13,12 @@ of vertex-disjoint shortest augmenting paths to flip at once, giving $O(m \sqrt{
   and whose right-side neighbors are numbered from 0 to `n2 - 1`.
 
 Time Complexity:
-- O(m*sqrt(n1 + n2)) per call to `hopcroft_karp()`, where $m$ is the number of edges.
+- O(m*sqrt(n_1 + n_2)) per call to `hopcroft_karp()`, where $m$ is the number of edges.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of
   edges.
-- O(n1 + n2) auxiliary stack and heap space for `hopcroft_karp()`.
+- O(n_1 + n_2) auxiliary stack and heap space for `hopcroft_karp()`.
 
 */
 

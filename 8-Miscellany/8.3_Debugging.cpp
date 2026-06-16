@@ -132,9 +132,9 @@ void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
 
 /*** Example Usage and Output:
 
-[main:175] v, mp: {1, 2, 3} {("a", 1), ("b", 2)}
-[main:176] p, t: (4, "x") (1, true, "ok")
-[main:177] pt, e: (2, 3) {from=0, to=1, weight=5}
+[main:173] v, mp: {1, 2, 3} {("a", 1), ("b", 2)}
+[main:174] p, t: (4, "x") (1, true, "ok")
+[main:175] pt, e: Point(2, 3) Edge{0->1, w=5}
 "plain output" 3.141592654
 
 ***/
@@ -145,7 +145,7 @@ struct Point {
 
 // Can overload dbg_repr to dbg your custom structs.
 std::string dbg_repr(const Point &p) {
-  return "(" + dbg_repr(p.x) + ", " + dbg_repr(p.y) + ")";
+  return "Point(" + dbg_repr(p.x) + ", " + dbg_repr(p.y) + ")";
 }
 
 struct Edge {
@@ -153,8 +153,7 @@ struct Edge {
 };
 
 std::string dbg_repr(const Edge &e) {
-  return "{from=" + dbg_repr(e.from) + ", to=" + dbg_repr(e.to) + ", weight=" + dbg_repr(e.weight) +
-         "}";
+  return "Edge{" + dbg_repr(e.from) + "->" + dbg_repr(e.to) + ", w=" + dbg_repr(e.weight) + "}";
 }
 
 int main() {
@@ -168,8 +167,8 @@ int main() {
   assert(dbg_repr(p) == "(4, \"x\")");
   assert(dbg_repr(t) == "(1, true, \"ok\")");
   assert(dbg_repr(mp) == "{(\"a\", 1), (\"b\", 2)}");
-  assert(dbg_repr(pt) == "(2, 3)");
-  assert(dbg_repr(e) == "{from=0, to=1, weight=5}");
+  assert(dbg_repr(pt) == "Point(2, 3)");
+  assert(dbg_repr(e) == "Edge{0->1, w=5}");
   double d = 3.141592653589793;
   dbg(v, mp);
   dbg(p, t);

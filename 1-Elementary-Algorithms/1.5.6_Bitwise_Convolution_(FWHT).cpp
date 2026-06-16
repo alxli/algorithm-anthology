@@ -9,7 +9,7 @@ algebra over the Boolean hypercube.
 The fast Walsh-Hadamard transform (FWHT) diagonalizes XOR convolution in the same way that the FFT
 diagonalizes polynomial convolution: transform both arrays, multiply pointwise, and transform back.
 The OR and AND versions are zeta/Mobius transforms over the subset lattice, but they have the same
-butterfly-shaped implementation and the same O(n log n) runtime for arrays of length `n = 2^k`.
+butterfly-shaped implementation and the same O(n log n) runtime for arrays of length $n = 2^k$.
 
 - `xor_transform(f, invert)` applies the XOR FWHT to `f` in place. The inverse transform uses
   `invert = true` and divides every coefficient by `f.size()`.

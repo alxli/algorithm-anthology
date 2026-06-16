@@ -35,6 +35,7 @@ auto stress(int trials, Generate generate, Solve solve, Brute brute)
 
 int main() {
   std::mt19937 rng(123);
+
   auto generate = [&] {
     int n = std::uniform_int_distribution<int>(1, 8)(rng);
     std::vector<int> a(n);
@@ -43,12 +44,10 @@ int main() {
     }
     return a;
   };
-
   auto solve = [](std::vector<int> a) {
     std::sort(a.begin(), a.end());
     return a;
   };
-
   auto brute = [](std::vector<int> a) {
     do {
       if (std::is_sorted(a.begin(), a.end())) {

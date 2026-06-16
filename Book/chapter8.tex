@@ -6,11 +6,16 @@ Small contest-template helpers that are useful across many algorithms. These sni
 
 \begin{compactitem}
   \item \inlinecode{y\_combinator(f)} wraps a recursive lambda so that the lambda can call itself as its first argument.
+  \item \inlinecode{Rep(i,N)}, \inlinecode{For(i,L,H)}, \inlinecode{Rev(i,N)}, \inlinecode{Dwn(i,H,L)}, and \inlinecode{Each(x,C)} are compact loop macros.
   \item \inlinecode{ckmin(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{b \textless{} a} before the assignment.
   \item \inlinecode{ckmax(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{a \textless{} b} before the assignment.
   \item \inlinecode{ssize(c)} returns the signed size of a container.
-  \item \inlinecode{between(x, lo, hi)} returns whether \inlinecode{lo} $\leq$ \inlinecode{x} $\leq$ \inlinecode{hi}.
-  \item \inlinecode{clamped(x, lo, hi)} returns \inlinecode{x} clamped into the interval \inlinecode{[lo, hi]}.
+  \item \inlinecode{between(x, a, b)} returns whether \inlinecode{a} $\leq$ \inlinecode{x} $\leq$ \inlinecode{b}.
+  \item \inlinecode{clmp(x, a, b)} returns \inlinecode{x} clamped into the interval \inlinecode{[a, b]}. This is not needed on C++17 and later, where std::clamp() is available.
+  \item \inlinecode{ceil\_div(a, b)} and \inlinecode{floor\_div(a, b)} divide signed integers with mathematical rounding toward positive or negative infinity. Requires \inlinecode{b != 0}.
+  \item \inlinecode{sort\_unique(v)} sorts a vector and removes duplicates.
+  \item \inlinecode{erase\_one(c, x)} erases one existing value from an associative container, asserting that it is present.
+  \item \inlinecode{min\_priority\_queue\textless{}T\textgreater{}} is a min-heap alias.
   \item \inlinecode{RNG()} constructs a 64-bit Mersenne Twister seeded from the steady clock.
   \item \inlinecode{RNG(seed)} constructs a reproducible 64-bit Mersenne Twister.
   \item \inlinecode{rng.uniform\_int(lo, hi)} returns a random integer in the inclusive range \inlinecode{[lo, hi]}.
@@ -23,9 +28,17 @@ Small contest-template helpers that are useful across many algorithms. These sni
 #include <cassert>
 #include <chrono>
 #include <functional>
+#include <queue>
 #include <random>
+#include <set>
 #include <type_traits>
 #include <vector>
+
+#define Rep(i, N) for (int i = 0, _##i = (N); i < _##i; ++i)        //   0 to N-1
+#define For(i, L, H) for (int i = (L), _##i = (H); i <= _##i; ++i)  //   L to H
+#define Rev(i, N) for (int i = (N); --i >= 0;)                      // N-1 to 0
+#define Dwn(i, H, L) for (int i = (H), _##i = (L); i >= _##i; --i)  //   H to L
+#define Each(x, C) for (auto &x : (C))
 
 template<class Fun>
 class y_combinator_result {
@@ -34,7 +47,6 @@ class y_combinator_result {
  public:
   template<class T>
   explicit y_combinator_result(T &&fun_) : fun(std::forward<T>(fun_)) {}
-
   template<class... Args>
   decltype(auto) operator()(Args &&...args) {
     return fun(std::ref(*this), std::forward<Args>(args)...);
@@ -46,38 +58,41 @@ decltype(auto) y_combinator(Fun &&fun) {
   return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
 }
 
-template<class T, class U>
-bool ckmin(T &a, const U &b) {
-  if (b < a) {
-    a = b;
-    return true;
-  }
-  return false;
-}
+template<class T, class U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
+template<class T, class U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
+template<class C> int ssize(const C &c) { return static_cast<int>(c.size()); }
+template<class T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
+template<class T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
 
-template<class T, class U>
-bool ckmax(T &a, const U &b) {
-  if (a < b) {
-    a = b;
-    return true;
-  }
-  return false;
-}
-
-template<class C>
-int ssize(const C &c) {
-  return static_cast<int>(c.size());
+template<class T>
+T floor_div(T a, T b) {
+  assert(b != 0);
+  T q = a / b, r = a % b;
+  return q - (r != 0 && ((r < 0) != (b < 0)));
 }
 
 template<class T>
-bool between(const T &x, const T &lo, const T &hi) {
-  return !(x < lo) && !(hi < x);
+T ceil_div(T a, T b) {
+  assert(b != 0);
+  T q = a / b, r = a % b;
+  return q + (r != 0 && ((r < 0) == (b < 0)));
 }
 
 template<class T>
-T clamped(const T &x, const T &lo, const T &hi) {
-  return std::min(std::max(x, lo), hi);
+void sort_unique(std::vector<T> &v) {
+  std::sort(v.begin(), v.end());
+  v.erase(std::unique(v.begin(), v.end()), v.end());
 }
+
+template<class C, class T>
+void erase_one(C &c, const T &x) {
+  auto it = c.find(x);
+  assert(it != c.end());
+  c.erase(it);
+}
+
+template<class T>
+using min_priority_queue = std::priority_queue<T, std::vector<T>, std::greater<T>>;
 
 struct RNG {
   std::mt19937_64 gen;
@@ -105,9 +120,24 @@ struct RNG {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 int main() {
+  int loop_sum = 0;
+  For(i, 2, 5) loop_sum += i;
+  Rev(i, 3) loop_sum += i;
+  assert(loop_sum == 17);
+
   auto fib =
-      y_combinator([](auto self, int n) -> int { return n < 2 ? n : self(n - 1) + self(n - 2); });
+      y_combinator([](auto fib, int n) -> int { return n < 2 ? n : fib(n - 1) + fib(n - 2); });
   assert(fib(10) == 55);
+
+  // Recursive lambda without y_combinator: pass the lambda to itself as the first argument.
+  std::vector<std::vector<int>> adj{{1, 2}, {0}, {0}};
+  int seen = 0;
+  auto dfs = [&](auto &&dfs, int u, int p) -> void {
+    seen++;
+    Each(v, adj[u]) if (v != p) dfs(dfs, v, u);
+  };
+  dfs(dfs, 0, -1);
+  assert(seen == 3);
 
   int x = 10;
   assert(ckmin(x, 7) && x == 7);
@@ -117,7 +147,19 @@ int main() {
   std::vector<int> v = {1, 2, 3};
   assert(ssize(v) == 3);
   assert(between(2, 1, 3));
-  assert(clamped(10, 1, 3) == 3);
+  assert(clmp(10, 1, 3) == 3);
+  assert(floor_div(-7, 3) == -3);
+  assert(ceil_div(-7, 3) == -2);
+  v = {3, 1, 3, 2, 1};
+  sort_unique(v);
+  assert((v == std::vector<int>{1, 2, 3}));
+  std::multiset<int> ms{1, 2, 2, 3};
+  erase_one(ms, 2);
+  assert(ms.count(2) == 1);
+  min_priority_queue<int> pq;
+  pq.push(3);
+  pq.push(1);
+  assert(pq.top() == 1);
 
   RNG rng(123);
   int r = rng.uniform_int(1, 6);
@@ -138,6 +180,7 @@ Fast input and output wrappers based on \inlinecode{fread()} and \inlinecode{fwr
   \item \inlinecode{FastOutput out(file)} writes to a \inlinecode{FILE*}, defaulting to \inlinecode{stdout}.
   \item \inlinecode{out \textless{}\textless{} x} writes \inlinecode{char}, C strings, \inlinecode{std::string}, integral types, or floating point types.
   \item \inlinecode{out.flush()} writes any buffered output immediately.
+  \item \inlinecode{set\_in(name)}, \inlinecode{set\_out(name)}, and \inlinecode{set\_io(iname, oname)} redirect standard input/output to files. For example, \inlinecode{set\_io("task.in", "task.out")} is convenient for USACO-style problems.
 \end{compactitem}
 
 The parser assumes valid input. Floating point input/output is provided for convenience, not as the main performance path.
@@ -151,6 +194,19 @@ The parser assumes valid input. Floating point input/output is provided for conv
 #include <limits>
 #include <string>
 #include <type_traits>
+
+void set_in(const std::string &name) {
+  assert(freopen(name.c_str(), "r", stdin) != nullptr);
+}
+
+void set_out(const std::string &name) {
+  assert(freopen(name.c_str(), "w", stdout) != nullptr);
+}
+
+void set_io(const std::string &iname, const std::string &oname) {
+  set_in(iname);
+  set_out(oname);
+}
 
 struct FastInput {
   static constexpr int BUF_SIZE = 1 << 20;
@@ -343,6 +399,8 @@ struct FastOutput {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 int main() {
+  // set_io("file.in", "file.out");
+
   FILE *input = tmpfile();
   std::fputs("42 hello 3.5 -2147483648\n", input);
   std::rewind(input);
@@ -508,7 +566,7 @@ struct Point {
 
 // Can overload dbg_repr to dbg your custom structs.
 std::string dbg_repr(const Point &p) {
-  return "(" + dbg_repr(p.x) + ", " + dbg_repr(p.y) + ")";
+  return "Point(" + dbg_repr(p.x) + ", " + dbg_repr(p.y) + ")";
 }
 
 struct Edge {
@@ -516,8 +574,7 @@ struct Edge {
 };
 
 std::string dbg_repr(const Edge &e) {
-  return "{from=" + dbg_repr(e.from) + ", to=" + dbg_repr(e.to) + ", weight=" + dbg_repr(e.weight) +
-         "}";
+  return "Edge{" + dbg_repr(e.from) + "->" + dbg_repr(e.to) + ", w=" + dbg_repr(e.weight) + "}";
 }
 
 int main() {
@@ -531,8 +588,8 @@ int main() {
   assert(dbg_repr(p) == "(4, \"x\")");
   assert(dbg_repr(t) == "(1, true, \"ok\")");
   assert(dbg_repr(mp) == "{(\"a\", 1), (\"b\", 2)}");
-  assert(dbg_repr(pt) == "(2, 3)");
-  assert(dbg_repr(e) == "{from=0, to=1, weight=5}");
+  assert(dbg_repr(pt) == "Point(2, 3)");
+  assert(dbg_repr(e) == "Edge{0->1, w=5}");
   double d = 3.141592653589793;
   dbg(v, mp);
   dbg(p, t);
@@ -544,9 +601,9 @@ int main() {
 }
 \end{lstlisting}
 \begin{exampleoutput}
-[main:175] v, mp: {1, 2, 3} {("a", 1), ("b", 2)}
-[main:176] p, t: (4, "x") (1, true, "ok")
-[main:177] pt, e: (2, 3) {from=0, to=1, weight=5}
+[main:173] v, mp: {1, 2, 3} {("a", 1), ("b", 2)}
+[main:174] p, t: (4, "x") (1, true, "ok")
+[main:175] pt, e: Point(2, 3) Edge{0->1, w=5}
 "plain output" 3.141592654
 \end{exampleoutput}
 
@@ -654,6 +711,7 @@ auto stress(int trials, Generate generate, Solve solve, Brute brute)
 \begin{lstlisting}[language=C++]
 int main() {
   std::mt19937 rng(123);
+
   auto generate = [&] {
     int n = std::uniform_int_distribution<int>(1, 8)(rng);
     std::vector<int> a(n);
@@ -662,12 +720,10 @@ int main() {
     }
     return a;
   };
-
   auto solve = [](std::vector<int> a) {
     std::sort(a.begin(), a.end());
     return a;
   };
-
   auto brute = [](std::vector<int> a) {
     do {
       if (std::is_sorted(a.begin(), a.end())) {
@@ -690,6 +746,7 @@ GNU policy-based data structures provide ordered sets and maps with order statis
 \begin{compactitem}
   \item \inlinecode{ordered\_set\textless{}T\textgreater{}} behaves like a set with \inlinecode{find\_by\_order(k)} and \inlinecode{order\_of\_key(x)}.
   \item \inlinecode{ordered\_map\textless{}K, V\textgreater{}} behaves like a map with \inlinecode{find\_by\_order(k)} and \inlinecode{order\_of\_key(x)}.
+  \item \inlinecode{hash\_map\textless{}K, V\textgreater{}} and \inlinecode{hash\_set\textless{}K\textgreater{}} are fast hash tables using \inlinecode{gp\_hash\_table}. The default \inlinecode{splitmix64\_hash} is for integer-like keys; pass a custom hash for other key types. It randomizes the hash seed to avoid weak adversarial integer hashes.
   \item \inlinecode{ordered\_multiset\textless{}T\textgreater{}} stores duplicates by pairing each value with a unique id.
   \item \inlinecode{ordered\_multimap\textless{}K, V\textgreater{}} stores duplicate keys by pairing each key with a unique id.
   \item \inlinecode{PairingHeap\textless{}T\textgreater{}} is a meldable priority queue; \inlinecode{push()} returns an iterator that can be passed to \inlinecode{modify()} or \inlinecode{erase()}.
@@ -704,6 +761,8 @@ The order statistic operations are 0-indexed. The priority queue \inlinecode{joi
 
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <chrono>
+#include <cstdint>
 #include <ext/pb_ds/assoc_container.hpp>
 #include <ext/pb_ds/priority_queue.hpp>
 #include <ext/pb_ds/tree_policy.hpp>
@@ -716,6 +775,27 @@ using ordered_map = __gnu_pbds::tree<
 
 template<class T, class Compare = std::less<T>>
 using ordered_set = ordered_map<T, __gnu_pbds::null_type, Compare>;
+
+struct splitmix64_hash {
+  static uint64_t splitmix64(uint64_t x) {
+    x += 0x9e3779b97f4a7c15ULL;
+    x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+    x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+    return x ^ (x >> 31);
+  }
+
+  size_t operator()(uint64_t x) const {
+    static const uint64_t FIXED_RANDOM =
+        std::chrono::steady_clock::now().time_since_epoch().count();
+    return splitmix64(x + FIXED_RANDOM);
+  }
+};
+
+template<class K, class V, class Hash = splitmix64_hash>
+using hash_map = __gnu_pbds::gp_hash_table<K, V, Hash>;
+
+template<class K, class Hash = splitmix64_hash>
+using hash_set = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, Hash>;
 
 template<class T>
 class ordered_multiset {
@@ -788,6 +868,14 @@ int main() {
   s.insert(30);
   assert(*s.find_by_order(1) == 20);
   assert(s.order_of_key(25) == 2);
+
+  hash_map<int, int> hm;
+  hm[10] = 1;
+  hm[20] = 2;
+  assert(hm[10] == 1);
+  hash_set<int> hs;
+  hs.insert(7);
+  assert(hs.find(7) != hs.end());
 
   ordered_multiset<int> ms;
   ms.insert(5);
@@ -882,6 +970,93 @@ int main() {
   auto out =
       parallel_cases(cases, 2, [](int x, std::ostringstream &os) { os << x << "^2 = " << x * x; });
   assert((out == std::vector<std::string>{"3^2 = 9", "1^2 = 1", "4^2 = 16", "2^2 = 4"}));
+  return 0;
+}
+\end{lstlisting}
+
+\section{\texorpdfstring{Memory Allocation}{8.8 Memory Allocation}}
+\setcounter{section}{8}
+Simple bump allocators for local contest code. These are useful when creating many small objects and individual \inlinecode{new}/\inlinecode{delete} overhead is measurable. They allocate from one fixed buffer and do not reclaim individual objects.
+
+\begin{compactitem}
+  \item The global \inlinecode{operator new} override sends all dynamic allocations through a static buffer. This is the shortest version, but it affects the whole program and should be used only when you are sure the fixed buffer is large enough.
+  \item \inlinecode{BumpAllocator\textless{}T\textgreater{}} is an STL allocator for containers such as \inlinecode{std::vector\textless{}T, BumpAllocator\textless{}T\textgreater{}\textgreater{}}. It is less invasive than overriding global \inlinecode{new}, but still has no real deallocation.
+\end{compactitem}
+
+These snippets are not portable production allocators: they are fixed-size, monotonic, and intended for local performance-sensitive contest solutions. The global override below covers ordinary single-object \inlinecode{new}; it does not attempt to be a complete replacement for all allocation forms such as \inlinecode{new[]} or over-aligned allocation.
+
+\textbf{Time Complexity}: $O(1)$ per allocation.
+
+\textbf{Space Complexity}: $O({\inlinecodemath{BUFFER\_SIZE}})$ static memory.
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <new>
+#include <type_traits>
+#include <vector>
+
+static constexpr size_t BUFFER_SIZE = 64 << 20;
+alignas(std::max_align_t) static unsigned char bump_buffer[BUFFER_SIZE];
+static size_t bump_pos = BUFFER_SIZE;
+
+void *operator new(size_t size) {
+  size = (size + alignof(std::max_align_t) - 1) & ~(alignof(std::max_align_t) - 1);
+  assert(size <= bump_pos);
+  bump_pos -= size;
+  return bump_buffer + bump_pos;
+}
+
+void operator delete(void *) noexcept {
+}
+
+void operator delete(void *, size_t) noexcept {
+}
+
+template<class T>
+struct BumpAllocator {
+  using value_type = T;
+
+  BumpAllocator() = default;
+
+  template<class U>
+  BumpAllocator(const BumpAllocator<U> &) {}
+
+  T *allocate(size_t n) {
+    size_t size = n * sizeof(T);
+    size_t align = alignof(T);
+    assert(size <= bump_pos);
+    bump_pos = (bump_pos - size) & ~(align - 1);
+    return reinterpret_cast<T *>(bump_buffer + bump_pos);
+  }
+
+  void deallocate(T *, size_t) {}
+
+  template<class U>
+  bool operator==(const BumpAllocator<U> &) const {
+    return true;
+  }
+
+  template<class U>
+  bool operator!=(const BumpAllocator<U> &) const {
+    return false;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+int main() {
+  int *x = new int(42);
+  assert(*x == 42);
+  delete x;  // No-op.
+
+  std::vector<int, BumpAllocator<int>> v;
+  for (int i = 0; i < 1000; i++) {
+    v.push_back(i);
+  }
+  assert(v[123] == 123);
   return 0;
 }
 \end{lstlisting}

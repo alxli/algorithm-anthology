@@ -6,8 +6,8 @@ such that no node is shared between different edges in the resulting subset.
 Edmonds' blossom algorithm extends augmenting-path search to general (non-bipartite) graphs, where
 odd-length cycles called blossoms can conceal augmenting paths. Each blossom is contracted into a
 single node so the search can proceed, and is expanded afterward to recover the matching. For
-maximum-weight matching in bipartite graphs, use Hungarian or min-cost max-flow. Maximum-weight
-matching in general graphs requires a more complex weighted blossom and is not included here.
+maximum-weight matching in bipartite graphs, use Hungarian or min-cost max-flow; for maximum-weight
+matching in general graphs, use the weighted blossom algorithm in the next section.
 
 - `blossom()` returns a matching for a global, bidirectionally pre-populated adjacency list `adj`
   which must consist of nodes numbered from 0 to `adj.size() - 1`. The returned vector `match` has

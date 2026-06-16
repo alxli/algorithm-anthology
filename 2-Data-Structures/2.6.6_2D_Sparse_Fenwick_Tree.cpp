@@ -5,14 +5,17 @@ rectangle-sum queries. This is the sparse two-dimensional analogue of range-upda
 Fenwick trees: four sparse trees store the inclusion-exclusion coefficients needed to recover any
 prefix rectangle sum.
 
-Choose this for huge sparse grids when the operation is additive: point/rectangle increments and
-rectangle sums. It avoids allocating the dense `R*C` table of the simple 2D Fenwick tree, but it is
-less general than the sparse 2D segment tree or quadtrees because Fenwick-tree algebra relies on
+Choose this for huge sparse grids when the operation is additive: point or rectangle increments and
+rectangle sums. It avoids allocating the dense `R*C` table of the dense 2D Fenwick tree, and unlike
+the dense and offline variants it supports rectangle updates, not just point updates. Prefer it over
+the offline 2D Fenwick tree only when updates arrive online; if every updated cell is known in
+advance, that version compresses coordinates instead of hashing and runs with better constants. It
+is less general than the sparse 2D segment tree or quadtrees because Fenwick-tree algebra relies on
 addition and subtraction.
 
 - `SparseFenwick2D<T, R, C>()` constructs a 2D array over rows 0 to $R - 1$ (inclusive) and columns
-  0 to $C - 1$ (inclusive). All values
-  are implicitly initialized to 0, as nodes are allocated lazily as indices are touched.
+  0 to $C - 1$ (inclusive). All values are implicitly initialized to 0, as nodes are allocated
+  lazily as indices are touched.
 - `add(r, c, x)` adds `x` to the value at index `(r, c)`.
 - `add(r1, c1, r2, c2, x)` adds `x` to all indices in the rectangle with upper-left corner
   `(r1, c1)` and lower-right corner `(r2, c2)`.
@@ -43,7 +46,7 @@ class SparseFenwick2D {
 
   template<class Map>
   static T get(const Map &tree, int r, int c) {
-    auto it = tree.find(static_cast<int64_t>(r) * C + c);
+    auto it = tree.find(static_cast<int64_t>(r) * (C + 1) + c);
     return it == tree.end() ? T() : it->second;
   }
 
@@ -51,7 +54,7 @@ class SparseFenwick2D {
   static void add(Map &tree, int r, int c, const T &x) {
     for (int i = r + 1; i <= R; i += i & -i) {
       for (int j = c + 1; j <= C; j += j & -j) {
-        tree[static_cast<int64_t>(i) * C + j] += x;
+        tree[static_cast<int64_t>(i) * (C + 1) + j] += x;
       }
     }
   }

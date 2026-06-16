@@ -5061,9 +5061,9 @@ Kuhn's algorithm builds the matching one left node at a time. For each, a depth-
   \item \inlinecode{kuhn(n2)} populates \inlinecode{match\_left} and \inlinecode{match\_right}, then returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj} whose left-side nodes are numbered from 0 to \inlinecode{adj.size() - 1} and whose right-side neighbors are numbered from 0 to \inlinecode{n2 - 1}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(m \cdot (n_{1} + n_{2}))$ per call to \inlinecode{kuhn()}, where $m$ is the number of edges.
+\textbf{Time Complexity}: $O(m \cdot (n_1 + n_2))$ per call to \inlinecode{kuhn()}, where $m$ is the number of edges.
 
-\textbf{Space Complexity}: $O(n_{1} + n_{2})$ auxiliary stack space for \inlinecode{kuhn()}.
+\textbf{Space Complexity}: $O(n_1 + n_2)$ auxiliary stack space for \inlinecode{kuhn()}.
 
 \begin{lstlisting}[language=C++]
 #include <vector>
@@ -5148,13 +5148,13 @@ Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phas
   \item \inlinecode{hopcroft\_karp(n2)} populates \inlinecode{match} and returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj} whose left-side nodes are numbered from 0 to \inlinecode{adj.size() - 1} and whose right-side neighbors are numbered from 0 to \inlinecode{n2 - 1}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(m \cdot \sqrt{n_{1} + n_{2}})$ per call to \inlinecode{hopcroft\_karp()}, where $m$ is the number of edges.
+\textbf{Time Complexity}: $O(m \cdot \sqrt{n_1 + n_2})$ per call to \inlinecode{hopcroft\_karp()}, where $m$ is the number of edges.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(\max\left(n, m\right))$ for storage of the graph, where $n$ is the number of nodes and $m$ is the number of edges.
-  \item $O(n_{1} + n_{2})$ auxiliary stack and heap space for \inlinecode{hopcroft\_karp()}.
+  \item $O(n_1 + n_2)$ auxiliary stack and heap space for \inlinecode{hopcroft\_karp()}.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -5254,10 +5254,143 @@ Matched 3 pair(s):
 0 1
 2 2
 \end{exampleoutput}
+\subsection{Minimum Vertex Cover (Konig)}
+Given a bipartite graph with left nodes $A = \{0, \ldots, n_1 - 1\}$ and right nodes $B = \{0, \ldots, n_2 - 1\}$, find a minimum vertex cover: a smallest set of nodes such that every edge has at least one endpoint in the set. By Koenig's theorem, in a bipartite graph the size of a minimum vertex cover equals the size of a maximum matching, and the nodes left uncovered form a maximum independent set.
+
+The construction first computes a maximum matching with Kuhn's algorithm. It then marks every left node reachable from an unmatched left node by an alternating path (following unmatched edges from left to right and matched edges from right to left). Koenig's theorem says the minimum vertex cover is exactly the left nodes that are not reachable together with the right nodes that are reachable; each matched edge contributes exactly one endpoint, so the cover size equals the matching size.
+
+The adjacency list \inlinecode{adj} is shared with the matching routine: \inlinecode{adj[u]} lists the right-side neighbors of left node \inlinecode{u}. Cover nodes are reported with right node \inlinecode{j} encoded as \inlinecode{n1 + j} so the two sides share one index space.
+
+\begin{compactitem}
+  \item \inlinecode{min\_vertex\_cover(n2)} returns the nodes of a minimum vertex cover for the global adjacency list \inlinecode{adj} (left nodes \inlinecode{0} to \inlinecode{adj.size() - 1}, right neighbors \inlinecode{0} to \inlinecode{n2 - 1}). Each returned value is a left node \inlinecode{i} in \inlinecode{[0, n1)}, or a right node \inlinecode{j} encoded as \inlinecode{n1 + j}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(m \cdot (n_1 + n_2))$ per call to \inlinecode{min\_vertex\_cover()}, dominated by the matching, where $m$ is the number of edges.
+
+\textbf{Space Complexity}: $O(n_1 + n_2)$ auxiliary space.
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+std::vector<int> match_left, match_right;
+std::vector<int> visit;
+std::vector<std::vector<int>> adj;
+int visit_time;
+
+bool dfs(int u) {
+  visit[u] = visit_time;
+  for (int nb : adj[u]) {
+    if (match_right[nb] == -1) {
+      match_left[u] = nb;
+      match_right[nb] = u;
+      return true;
+    }
+  }
+  for (int nb : adj[u]) {
+    int v = match_right[nb];
+    if (visit[v] != visit_time && dfs(v)) {
+      match_left[u] = nb;
+      match_right[nb] = u;
+      return true;
+    }
+  }
+  return false;
+}
+
+int kuhn(int n2) {
+  int n1 = static_cast<int>(adj.size());
+  match_left.assign(n1, -1);
+  match_right.assign(n2, -1);
+  visit.assign(n1, 0);
+  visit_time = 0;
+  int matches = 0;
+  for (int i = 0; i < n1; i++) {
+    visit_time++;
+    if (dfs(i)) {
+      matches++;
+    }
+  }
+  return matches;
+}
+
+std::vector<int> min_vertex_cover(int n2) {
+  int n1 = static_cast<int>(adj.size());
+  kuhn(n2);
+  // reachable_left[u] becomes true for left nodes on an alternating path from an unmatched left
+  // node; seen_right[e] for the right nodes on those paths.
+  std::vector<bool> reachable_left(n1, true), seen_right(n2, false);
+  for (int u = 0; u < n1; u++) {
+    if (match_left[u] != -1) {
+      reachable_left[u] = false;
+    }
+  }
+  std::vector<int> stack;
+  for (int u = 0; u < n1; u++) {
+    if (reachable_left[u]) {
+      stack.push_back(u);
+    }
+  }
+  while (!stack.empty()) {
+    int u = stack.back();
+    stack.pop_back();
+    reachable_left[u] = true;
+    for (int e : adj[u]) {
+      if (!seen_right[e] && match_right[e] != -1) {
+        seen_right[e] = true;
+        stack.push_back(match_right[e]);  // Cross the matched edge back to the left.
+      }
+    }
+  }
+  std::vector<int> cover;
+  for (int u = 0; u < n1; u++) {
+    if (!reachable_left[u]) {
+      cover.push_back(u);
+    }
+  }
+  for (int e = 0; e < n2; e++) {
+    if (seen_right[e]) {
+      cover.push_back(n1 + e);
+    }
+  }
+  return cover;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+using namespace std;
+
+int main() {
+  // Left {0,1,2} and right {0,1,2,3}; a maximum matching has size 3.
+  int n1 = 3, n2 = 4;
+  adj.assign(n1, {});
+  adj[0].push_back(1);
+  adj[1].push_back(0);
+  adj[1].push_back(1);
+  adj[1].push_back(2);
+  adj[2].push_back(2);
+  adj[2].push_back(3);
+
+  vector<int> cover = min_vertex_cover(n2);
+  assert(cover.size() == 3);  // Equals the maximum matching size, by Koenig's theorem.
+
+  // The cover is valid: every edge has at least one endpoint in it.
+  for (int u = 0; u < n1; u++) {
+    for (int v : adj[u]) {
+      bool left_in = find(cover.begin(), cover.end(), u) != cover.end();
+      bool right_in = find(cover.begin(), cover.end(), n1 + v) != cover.end();
+      assert(left_in || right_in);
+    }
+  }
+  return 0;
+}
+\end{lstlisting}
 \subsection{Maximum Graph Matching (Blossom)}
 Given an undirected, unweighted graph, determine a maximum matching: a maximum subset of its edges such that no node is shared between different edges in the resulting subset.
 
-Edmonds' blossom algorithm extends augmenting-path search to general (non-bipartite) graphs, where odd-length cycles called blossoms can conceal augmenting paths. Each blossom is contracted into a single node so the search can proceed, and is expanded afterward to recover the matching. For maximum-weight matching in bipartite graphs, use Hungarian or min-cost max-flow. Maximum-weight matching in general graphs requires a more complex weighted blossom and is not included here.
+Edmonds' blossom algorithm extends augmenting-path search to general (non-bipartite) graphs, where odd-length cycles called blossoms can conceal augmenting paths. Each blossom is contracted into a single node so the search can proceed, and is expanded afterward to recover the matching. For maximum-weight matching in bipartite graphs, use Hungarian or min-cost max-flow; for maximum-weight matching in general graphs, use the weighted blossom algorithm in the next section.
 
 \begin{compactitem}
   \item \inlinecode{blossom()} returns a matching for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered from 0 to \inlinecode{adj.size() - 1}. The returned vector \inlinecode{match} has \inlinecode{match[u] = v} and \inlinecode{match[v] = u} when \inlinecode{u} and \inlinecode{v} are matched, or \inlinecode{match[u] = -1} when \inlinecode{u} is unmatched.
@@ -5419,6 +5552,396 @@ Matched 2 pair(s):
 0 1
 2 3
 \end{exampleoutput}
+\subsection{Maximum Weight Graph Matching (Weighted Blossom)}
+Given an undirected graph with positive edge weights, determine a maximum-weight matching: a subset of edges, no two sharing a node, whose total weight is as large as possible. Unlike the bipartite case (which Hungarian or min-cost max-flow solves), general graphs may contain odd cycles, so this is the weighted generalization of Edmonds' blossom algorithm.
+
+The algorithm runs a primal-dual method. Each node carries a dual label, and an edge is ``tight'' when its label sum equals twice its weight; the search uses only tight edges, exactly as unweighted blossom matching does, contracting odd cycles into blossoms. When no tight augmenting structure remains, the labels are adjusted by the largest step that keeps every dual constraint satisfied, which makes a new edge tight or lets a blossom expand, and the search resumes. Because the matching is over the implicit complete graph with absent edges weighted 0, a node may be left effectively unmatched whenever staying unmatched is at least as good as any incident edge.
+
+All edge weights must be positive; an absent edge is treated as weight 0. The node count should be kept modest, as the algorithm uses dense storage.
+
+\begin{compactitem}
+  \item \inlinecode{WeightedGeneralMatching(n)} creates a graph on \inlinecode{n} nodes numbered 0 to \inlinecode{n - 1}.
+  \item \inlinecode{add\_edge(u, v, w)} adds an undirected edge of weight \inlinecode{w \textgreater{} 0} between \inlinecode{u} and \inlinecode{v}. If several edges join the same pair, the last weight set is used.
+  \item \inlinecode{solve()} computes a maximum-weight matching and returns its total weight.
+  \item \inlinecode{partner(u)} returns the node matched with \inlinecode{u}, or $-1$ if \inlinecode{u} is unmatched. Valid after \inlinecode{solve()}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{solve()}, where $n$ is the number of nodes.
+
+\textbf{Space Complexity}: $O(n^{2})$ for the dense edge and blossom storage.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cstdint>
+#include <queue>
+#include <vector>
+
+class WeightedGeneralMatching {
+  struct Edge {
+    int u, v;
+    int64_t w;
+  };
+
+  int n, nx;  // n original nodes (1-based internally); nx includes blossom nodes.
+  std::vector<std::vector<Edge>> g;
+  std::vector<std::vector<int>> flo, flo_from;
+  std::vector<int64_t> lab;
+  std::vector<int> match_, slack, st, par, s_, aux_;
+  std::queue<int> q;
+  int aux_clock;
+
+  int64_t e_delta(const Edge &e) const { return lab[e.u] + lab[e.v] - 2 * e.w; }
+
+  void update_slack(int u, int x) {
+    if (slack[x] == 0 || e_delta(g[u][x]) < e_delta(g[slack[x]][x])) {
+      slack[x] = u;
+    }
+  }
+
+  void set_slack(int x) {
+    slack[x] = 0;
+    for (int u = 1; u <= n; u++) {
+      if (g[u][x].w > 0 && st[u] != x && s_[st[u]] == 0) {
+        update_slack(u, x);
+      }
+    }
+  }
+
+  void queue_push(int x) {
+    if (x <= n) {
+      q.push(x);
+    } else {
+      for (int t : flo[x]) {
+        queue_push(t);
+      }
+    }
+  }
+
+  void set_st(int x, int b) {
+    st[x] = b;
+    if (x > n) {
+      for (int t : flo[x]) {
+        set_st(t, b);
+      }
+    }
+  }
+
+  int get_pr(int b, int xr) {
+    int pr = static_cast<int>(std::find(flo[b].begin(), flo[b].end(), xr) - flo[b].begin());
+    if (pr & 1) {
+      std::reverse(flo[b].begin() + 1, flo[b].end());
+      return static_cast<int>(flo[b].size()) - pr;
+    }
+    return pr;
+  }
+
+  void set_match(int u, int v) {
+    match_[u] = g[u][v].v;
+    if (u <= n) {
+      return;
+    }
+    Edge e = g[u][v];
+    int xr = flo_from[u][e.u], pr = get_pr(u, xr);
+    for (int i = 0; i < pr; i++) {
+      set_match(flo[u][i], flo[u][i ^ 1]);
+    }
+    set_match(xr, v);
+    std::rotate(flo[u].begin(), flo[u].begin() + pr, flo[u].end());
+  }
+
+  void augment(int u, int v) {
+    while (true) {
+      int xnv = st[match_[u]];
+      set_match(u, v);
+      if (xnv == 0) {
+        return;
+      }
+      set_match(xnv, st[par[xnv]]);
+      u = st[par[xnv]];
+      v = xnv;
+    }
+  }
+
+  int lca(int u, int v) {
+    aux_clock++;
+    while (u != 0 || v != 0) {
+      if (u == 0) {
+        std::swap(u, v);
+        continue;
+      }
+      if (aux_[u] == aux_clock) {
+        return u;
+      }
+      aux_[u] = aux_clock;
+      u = st[match_[u]];
+      if (u != 0) {
+        u = st[par[u]];
+      }
+      std::swap(u, v);
+    }
+    return 0;
+  }
+
+  void add_blossom(int u, int anc, int v) {
+    int b = n + 1;
+    while (b <= nx && st[b] != 0) {
+      b++;
+    }
+    if (b > nx) {
+      nx++;
+    }
+    lab[b] = 0;
+    s_[b] = 0;
+    match_[b] = match_[anc];
+    flo[b] = {anc};
+    auto build = [&](int x) {
+      for (int y; x != anc; x = st[par[y]]) {
+        flo[b].push_back(x);
+        y = st[match_[x]];
+        flo[b].push_back(y);
+        queue_push(y);
+      }
+    };
+    build(u);
+    std::reverse(flo[b].begin() + 1, flo[b].end());
+    build(v);
+    set_st(b, b);
+    for (int x = 1; x <= nx; x++) {
+      g[b][x].w = g[x][b].w = 0;
+    }
+    for (int x = 1; x <= n; x++) {
+      flo_from[b][x] = 0;
+    }
+    for (int xs : flo[b]) {
+      for (int x = 1; x <= nx; x++) {
+        if (g[b][x].w == 0 || e_delta(g[xs][x]) < e_delta(g[b][x])) {
+          g[b][x] = g[xs][x];
+          g[x][b] = g[x][xs];
+        }
+      }
+      for (int x = 1; x <= n; x++) {
+        if (flo_from[xs][x] != 0) {
+          flo_from[b][x] = xs;
+        }
+      }
+    }
+    set_slack(b);
+  }
+
+  void expand_blossom(int b) {
+    for (int t : flo[b]) {
+      set_st(t, t);
+    }
+    int xr = flo_from[b][g[b][par[b]].u], pr = get_pr(b, xr);
+    for (int i = 0; i < pr; i += 2) {
+      int xs = flo[b][i], xns = flo[b][i + 1];
+      par[xs] = g[xns][xs].u;
+      s_[xs] = 1;
+      s_[xns] = 0;
+      slack[xs] = 0;
+      set_slack(xns);
+      queue_push(xns);
+    }
+    s_[xr] = 1;
+    par[xr] = par[b];
+    for (int i = pr + 1; i < static_cast<int>(flo[b].size()); i++) {
+      int xs = flo[b][i];
+      s_[xs] = -1;
+      set_slack(xs);
+    }
+    st[b] = 0;
+  }
+
+  bool on_found_edge(const Edge &e) {
+    int u = st[e.u], v = st[e.v];
+    if (s_[v] == -1) {
+      par[v] = e.u;
+      s_[v] = 1;
+      int nu = st[match_[v]];
+      slack[v] = slack[nu] = 0;
+      s_[nu] = 0;
+      queue_push(nu);
+    } else if (s_[v] == 0) {
+      int anc = lca(u, v);
+      if (anc == 0) {
+        augment(u, v);
+        augment(v, u);
+        return true;
+      }
+      add_blossom(u, anc, v);
+    }
+    return false;
+  }
+
+  bool matching() {
+    std::fill(s_.begin(), s_.begin() + nx + 1, -1);
+    std::fill(slack.begin(), slack.begin() + nx + 1, 0);
+    q = std::queue<int>();
+    for (int x = 1; x <= nx; x++) {
+      if (st[x] == x && match_[x] == 0) {
+        par[x] = s_[x] = 0;
+        queue_push(x);
+      }
+    }
+    if (q.empty()) {
+      return false;
+    }
+    while (true) {
+      while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        if (s_[st[u]] == 1) {
+          continue;
+        }
+        for (int v = 1; v <= n; v++) {
+          if (g[u][v].w > 0 && st[u] != st[v]) {
+            if (e_delta(g[u][v]) == 0) {
+              if (on_found_edge(g[u][v])) {
+                return true;
+              }
+            } else {
+              update_slack(u, st[v]);
+            }
+          }
+        }
+      }
+      int64_t d = INT64_MAX;
+      for (int b = n + 1; b <= nx; b++) {
+        if (st[b] == b && s_[b] == 1) {
+          d = std::min(d, lab[b] / 2);
+        }
+      }
+      for (int x = 1; x <= nx; x++) {
+        if (st[x] == x && slack[x] != 0) {
+          if (s_[x] == -1) {
+            d = std::min(d, e_delta(g[slack[x]][x]));
+          } else if (s_[x] == 0) {
+            d = std::min(d, e_delta(g[slack[x]][x]) / 2);
+          }
+        }
+      }
+      for (int u = 1; u <= n; u++) {
+        if (s_[st[u]] == 0) {
+          if (lab[u] <= d) {
+            return false;
+          }
+          lab[u] -= d;
+        } else if (s_[st[u]] == 1) {
+          lab[u] += d;
+        }
+      }
+      for (int b = n + 1; b <= nx; b++) {
+        if (st[b] == b && s_[b] != -1) {
+          lab[b] += (s_[b] == 0 ? 1 : -1) * d * 2;
+        }
+      }
+      q = std::queue<int>();
+      for (int x = 1; x <= nx; x++) {
+        if (st[x] == x && slack[x] != 0 && st[slack[x]] != x && e_delta(g[slack[x]][x]) == 0) {
+          if (on_found_edge(g[slack[x]][x])) {
+            return true;
+          }
+        }
+      }
+      for (int b = n + 1; b <= nx; b++) {
+        if (st[b] == b && s_[b] == 1 && lab[b] == 0) {
+          expand_blossom(b);
+        }
+      }
+    }
+  }
+
+ public:
+  explicit WeightedGeneralMatching(int n)
+      : n(n),
+        nx(n),
+        g(2 * n + 1, std::vector<Edge>(2 * n + 1)),
+        flo(2 * n + 1),
+        flo_from(2 * n + 1, std::vector<int>(n + 1, 0)),
+        lab(2 * n + 1, 0),
+        match_(2 * n + 1, 0),
+        slack(2 * n + 1, 0),
+        st(2 * n + 1, 0),
+        par(2 * n + 1, 0),
+        s_(2 * n + 1, 0),
+        aux_(2 * n + 1, 0),
+        aux_clock(0) {
+    for (int u = 1; u <= n; u++) {
+      for (int v = 1; v <= n; v++) {
+        g[u][v] = {u, v, 0};
+      }
+    }
+  }
+
+  void add_edge(int u, int v, int64_t w) { g[u + 1][v + 1].w = g[v + 1][u + 1].w = w; }
+
+  int64_t solve() {
+    nx = n;
+    for (int u = 1; u <= n; u++) {
+      st[u] = u;
+      match_[u] = 0;
+      flo[u].clear();
+    }
+    int64_t w_max = 0;
+    for (int u = 1; u <= n; u++) {
+      for (int v = 1; v <= n; v++) {
+        flo_from[u][v] = (u == v ? u : 0);
+        w_max = std::max(w_max, g[u][v].w);
+      }
+    }
+    for (int u = 1; u <= n; u++) {
+      lab[u] = w_max;
+    }
+    while (matching()) {
+    }
+    int64_t weight = 0;
+    for (int u = 1; u <= n; u++) {
+      if (match_[u] != 0 && match_[u] < u) {
+        weight += g[u][match_[u]].w;
+      }
+    }
+    return weight;
+  }
+
+  int partner(int u) const {
+    int v = match_[u + 1];
+    // A node "matched" through an absent (weight 0) edge is really unmatched.
+    if (v == 0 || g[u + 1][v].w == 0) {
+      return -1;
+    }
+    return v - 1;
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  // A 5-cycle 0-1-2-3-4-0; the heaviest matching picks two disjoint edges.
+  WeightedGeneralMatching m(5);
+  m.add_edge(0, 1, 5);
+  m.add_edge(1, 2, 6);
+  m.add_edge(2, 3, 5);
+  m.add_edge(3, 4, 6);
+  m.add_edge(4, 0, 5);
+  assert(m.solve() == 12);  // Edges (1,2) and (3,4) with weights 6 + 6.
+  assert(m.partner(1) == 2 && m.partner(2) == 1);
+  assert(m.partner(3) == 4 && m.partner(4) == 3);
+  assert(m.partner(0) == -1);  // Node 0 is left unmatched.
+
+  // A triangle plus a pendant edge: taking the pendant can beat a single triangle edge.
+  WeightedGeneralMatching t(4);
+  t.add_edge(0, 1, 3);
+  t.add_edge(1, 2, 3);
+  t.add_edge(0, 2, 3);
+  t.add_edge(2, 3, 5);
+  assert(t.solve() == 8);  // (0,1) weight 3 and (2,3) weight 5.
+  return 0;
+}
+\end{lstlisting}
 \subsection{Assignment (Hungarian Algorithm)}
 Solves the minimum-cost assignment problem for a rectangular cost matrix. Given $n$ workers and $m$ jobs (with $n \leq m$) where assigning worker \inlinecode{i} to complete job \inlinecode{j} would cost \inlinecode{cost[i][j]}, choose a distinct job for each worker so that the total assignment cost is minimized.
 
@@ -5517,11 +6040,11 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Stable Marriage (Gale-Shapley)}
-The stable marriage problem pairs \inlinecode{n} men with \inlinecode{n} women, given that every person ranks all members of the opposite group in strict order of preference. A perfect matching is stable if no man and woman both prefer each other to their assigned partners; such a pair would otherwise abandon their matches. Unlike maximum matching, the goal is not the size of the matching (it is always perfect) but its stability with respect to the preference lists.
+The stable marriage problem pairs $n$ men with $n$ women, given that every person ranks all members of the opposite group in strict order of preference. A perfect matching is stable if no man and woman both prefer each other to their assigned partners; such a pair would otherwise abandon their matches. Unlike maximum matching, the goal is not the size of the matching (it is always perfect) but its stability with respect to the preference lists.
 
 The Gale-Shapley algorithm produces a stable matching, and a stable matching always exists. Each free man proposes to the most preferred woman who has not yet rejected him. A woman provisionally accepts her best proposal so far and rejects the rest, possibly breaking a previous engagement when a man she prefers proposes later. Because every man descends his list at most once and each proposal is constant work after precomputing the women's rankings, the algorithm runs in quadratic time. The result is man-optimal: every man receives the best partner he could have in any stable matching.
 
-Both preference lists are given as \inlinecode{n} by \inlinecode{n} matrices. \inlinecode{men\_pref[m]} lists the women in \inlinecode{m}'s order of preference, most preferred first, and \inlinecode{women\_pref[w]} lists the men in \inlinecode{w}'s order of preference.
+Both preference lists are given as $n$ by $n$ matrices. \inlinecode{men\_pref[m]} lists the women in \inlinecode{m}'s order of preference, most preferred first, and \inlinecode{women\_pref[w]} lists the men in \inlinecode{w}'s order of preference.
 
 \begin{compactitem}
   \item \inlinecode{stable\_marriage(men\_pref, women\_pref)} returns a vector \inlinecode{wife} where \inlinecode{wife[m]} is the woman matched to man \inlinecode{m} in the man-optimal stable matching.
@@ -5848,6 +6371,156 @@ Color 1: 0 3
 Color 2: 1 2
 Color 3: 4
 \end{exampleoutput}
+\subsection{Edge Coloring (Misra-Gries)}
+Given a simple undirected graph with maximum degree $D$, assign a color to every edge so that no two edges sharing an endpoint receive the same color. Vizing's theorem guarantees that $D + 1$ colors always suffice for a simple graph (while $D$ colors are clearly necessary), and the Misra-Gries algorithm constructs such a coloring. Deciding between $D$ and $D + 1$ colors is NP-hard in general, though bipartite graphs can always be edge-colored with exactly $D$ colors.
+
+The algorithm colors edges one at a time. To color an edge $(u, v)$ it grows a maximal ``fan'' of $u$: a sequence of neighbors starting at $v$ in which each successive edge's color is free at the previous fan vertex. It then picks a color $c$ free at $u$ and a color $d$ free at the fan's last vertex, and flips the colors along the maximal alternating $c$/$d$ path leaving $u$. This frees $d$ at $u$, after which rotating the fan shifts colors over by one and assigns $d$ to the new edge. Each step keeps the partial coloring proper and never introduces a $(D + 2)$-th color.
+
+The graph must be simple: no self-loops and no repeated edges.
+
+\begin{compactitem}
+  \item \inlinecode{edge\_coloring(n, edges)} returns a vector of colors, one per entry of \inlinecode{edges}, using colors in the range $[0, D]$ where $D$ is the maximum degree. Nodes are numbered from 0 to \inlinecode{n - 1}, and \inlinecode{edges[i]} is an undirected edge \inlinecode{u}-\inlinecode{v}.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n^{2} \cdot m)$ in the worst case for \inlinecode{edge\_coloring()}, where $n$ is the number of nodes and $m$ the number of edges; substantially faster in practice.
+
+\textbf{Space Complexity}: $O(n^{2})$ to store the per-edge colors.
+
+\begin{lstlisting}[language=C++]
+#include <utility>
+#include <vector>
+
+class EdgeColoring {
+  int n, max_deg;
+  std::vector<std::vector<int>> color;  // color[u][v] is the color of edge (u, v), or 0 if none.
+
+  bool is_free(int x, int c) const {
+    for (int w = 0; w < n; w++) {
+      if (color[x][w] == c) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  int free_color(int x) const {
+    int c = 1;
+    while (!is_free(x, c)) {
+      c++;
+    }
+    return c;
+  }
+
+  void set_color(int u, int v, int c) {
+    color[u][v] = c;
+    color[v][u] = c;
+  }
+
+  // Flip colors c and d along the maximal alternating path of those colors starting at x.
+  void invert_path(int x, int d, int c) {
+    for (int w = 0; w < n; w++) {
+      if (color[x][w] == d) {
+        set_color(x, w, 0);
+        invert_path(w, c, d);
+        set_color(x, w, c);
+        return;
+      }
+    }
+  }
+
+ public:
+  EdgeColoring(int n, const std::vector<std::pair<int, int>> &edges)
+      : n(n), max_deg(0), color(n, std::vector<int>(n, 0)) {
+    std::vector<int> deg(n, 0);
+    for (const auto &e : edges) {
+      max_deg = std::max(max_deg, std::max(++deg[e.first], ++deg[e.second]));
+    }
+    for (const auto &e : edges) {
+      add_edge(e.first, e.second);
+    }
+  }
+
+  void add_edge(int u, int v) {
+    // Build a maximal fan of u starting at v: fan[0] = v, and color(u, fan[i+1]) is free at fan[i].
+    std::vector<int> fan{v};
+    std::vector<bool> used(n, false);
+    used[v] = true;
+    while (true) {
+      int last = fan.back(), next = -1;
+      for (int w = 0; w < n; w++) {
+        if (!used[w] && color[u][w] != 0 && is_free(last, color[u][w])) {
+          next = w;
+          break;
+        }
+      }
+      if (next == -1) {
+        break;
+      }
+      fan.push_back(next);
+      used[next] = true;
+    }
+    int c = free_color(u), d = free_color(fan.back());
+    invert_path(u, d, c);
+    // Find the prefix of the fan to rotate: the first vertex on which d is now free.
+    int k = 0;
+    while (k < static_cast<int>(fan.size()) && color[u][fan[k]] != d && !is_free(fan[k], d)) {
+      k++;
+    }
+    for (int j = 0; j < k; j++) {
+      set_color(u, fan[j], color[u][fan[j + 1]]);
+    }
+    set_color(u, fan[k], d);
+  }
+
+  std::vector<int> coloring(const std::vector<std::pair<int, int>> &edges) const {
+    std::vector<int> result;
+    result.reserve(edges.size());
+    for (const auto &e : edges) {
+      result.push_back(color[e.first][e.second] - 1);  // Shift internal 1..D+1 colors to 0..D.
+    }
+    return result;
+  }
+};
+
+std::vector<int> edge_coloring(int n, const std::vector<std::pair<int, int>> &edges) {
+  return EdgeColoring(n, edges).coloring(edges);
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <set>
+using namespace std;
+
+int main() {
+  // A 5-cycle has maximum degree 2 but is odd, so it needs 3 colors (D + 1).
+  vector<pair<int, int>> cycle{{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 0}};
+  vector<int> col = edge_coloring(5, cycle);
+  set<int> palette(col.begin(), col.end());
+  assert(palette.size() == 3);
+
+  // Verify the coloring is proper: edges sharing an endpoint differ in color.
+  int m = static_cast<int>(cycle.size());
+  for (int i = 0; i < m; i++) {
+    for (int j = i + 1; j < m; j++) {
+      bool share = cycle[i].first == cycle[j].first || cycle[i].first == cycle[j].second ||
+                   cycle[i].second == cycle[j].first || cycle[i].second == cycle[j].second;
+      if (share) {
+        assert(col[i] != col[j]);
+      }
+    }
+  }
+
+  // A bipartite graph (here K_{2,3}) is edge-colored with exactly D colors.
+  vector<pair<int, int>> bip{{0, 2}, {0, 3}, {0, 4}, {1, 2}, {1, 3}, {1, 4}};
+  vector<int> bcol = edge_coloring(5, bip);
+  set<int> bpal(bcol.begin(), bcol.end());
+  assert(static_cast<int>(bpal.size()) == 3);  // Max degree is 3.
+  return 0;
+}
+\end{lstlisting}
 \subsection{Shortest Hamiltonian Path and Cycle (Held-Karp)}
 Given a complete, weighted, directed graph, find a minimum-length Hamiltonian path or cycle. A Hamiltonian path visits each node exactly once. A Hamiltonian cycle additionally returns to its starting node; this cycle version is the traveling salesman problem.
 

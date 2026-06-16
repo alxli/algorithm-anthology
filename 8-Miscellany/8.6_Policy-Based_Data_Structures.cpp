@@ -5,6 +5,9 @@ part of the C++ standard library, but they are available on many GNU C++ contest
 
 - `ordered_set<T>` behaves like a set with `find_by_order(k)` and `order_of_key(x)`.
 - `ordered_map<K, V>` behaves like a map with `find_by_order(k)` and `order_of_key(x)`.
+- `hash_map<K, V>` and `hash_set<K>` are fast hash tables using `gp_hash_table`. The default
+  `splitmix64_hash` is for integer-like keys; pass a custom hash for other key types. It randomizes
+  the hash seed to avoid weak adversarial integer hashes.
 - `ordered_multiset<T>` stores duplicates by pairing each value with a unique id.
 - `ordered_multimap<K, V>` stores duplicate keys by pairing each key with a unique id.
 - `PairingHeap<T>` is a meldable priority queue; `push()` returns an iterator that can be passed to
@@ -25,6 +28,8 @@ Space Complexity:
 */
 
 #include <cassert>
+#include <chrono>
+#include <cstdint>
 #include <ext/pb_ds/assoc_container.hpp>
 #include <ext/pb_ds/priority_queue.hpp>
 #include <ext/pb_ds/tree_policy.hpp>
@@ -37,6 +42,27 @@ using ordered_map = __gnu_pbds::tree<
 
 template<class T, class Compare = std::less<T>>
 using ordered_set = ordered_map<T, __gnu_pbds::null_type, Compare>;
+
+struct splitmix64_hash {
+  static uint64_t splitmix64(uint64_t x) {
+    x += 0x9e3779b97f4a7c15ULL;
+    x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
+    x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
+    return x ^ (x >> 31);
+  }
+
+  size_t operator()(uint64_t x) const {
+    static const uint64_t FIXED_RANDOM =
+        std::chrono::steady_clock::now().time_since_epoch().count();
+    return splitmix64(x + FIXED_RANDOM);
+  }
+};
+
+template<class K, class V, class Hash = splitmix64_hash>
+using hash_map = __gnu_pbds::gp_hash_table<K, V, Hash>;
+
+template<class K, class Hash = splitmix64_hash>
+using hash_set = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, Hash>;
 
 template<class T>
 class ordered_multiset {
@@ -108,6 +134,14 @@ int main() {
   s.insert(30);
   assert(*s.find_by_order(1) == 20);
   assert(s.order_of_key(25) == 2);
+
+  hash_map<int, int> hm;
+  hm[10] = 1;
+  hm[20] = 2;
+  assert(hm[10] == 1);
+  hash_set<int> hs;
+  hs.insert(7);
+  assert(hs.find(7) != hs.end());
 
   ordered_multiset<int> ms;
   ms.insert(5);

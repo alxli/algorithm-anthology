@@ -44,7 +44,7 @@ Time Complexity:
 - O(log^3(n)) per call to `is_prime(n)`.
 - O(sqrt n) per call to `factorize_slow(n)`.
 - O(n) to rebuild the prime cache in `cached_sieve(n)`.
-- Unknown, but approximately O(n^(1/4)) per call to `rho_factor(n)` and `factorize(n)`.
+- Unknown, but approximately O(n^{1/4}) per call to `rho_factor(n)` and `factorize(n)`.
 
 Space Complexity:
 - O(f) auxiliary heap space for all operations, where $f$ is the number of factors returned.

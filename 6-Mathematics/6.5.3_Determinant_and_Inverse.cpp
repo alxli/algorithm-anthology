@@ -8,27 +8,35 @@ per row swap. The inverse is found by appending the identity matrix and row-redu
 matrix: the operations that turn $a$ into the identity turn the identity into the inverse. In
 practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more
 accurate algorithm for solving systems of linear equations, use LU decomposition with row partial
-pivoting.
+pivoting. For an integer matrix whose determinant is wanted exactly, the Bareiss algorithm runs a
+fraction-free elimination: every intermediate value is itself a determinant of a submatrix, so the
+divisions are always exact and the arithmetic stays in integers.
 
 - `det_naive(a)` returns the determinant of an $n$ by $n$ matrix `a`, using the classic
   divide-and-conquer algorithm by Laplace expansions.
 - `det(a)` returns the determinant of an $n$ by $n$ matrix `a` using Gaussian elimination.
+- `det_bareiss(a)` returns the exact determinant of an integer matrix `a` using fraction-free
+  elimination, with no rounding error. Intermediate values are bounded by the magnitudes of the
+  matrix's minors, so the entries must stay within `int64_t`; substitute a big-integer type for
+  large matrices.
 - `invert(a)` assigns the $n$ by $n$ matrix `a` to its inverse (if it exists), returning a reference
   to the modified argument itself. If `a` is not invertible, then its assigned values after the
   function call will be undefined (`+/-Inf` or `+/-NaN`).
 
 Time Complexity:
 - O(n!) per call to `det_naive()`, where $n$ is the dimension of the matrix.
-- O(n^3) per call to `det()` and `invert()` where $n$ is the dimension of the matrix.
+- O(n^3) per call to `det()`, `det_bareiss()`, and `invert()` where $n$ is the dimension of the
+  matrix.
 
 Space Complexity:
 - O(n) auxiliary stack space and O(n!*n) auxiliary heap space for `det_naive()`, where $n$ is the
   dimension of the matrix.
-- O(n^2) auxiliary heap space for `det()` and `invert()`.
+- O(n^2) auxiliary heap space for `det()`, `det_bareiss()`, and `invert()`.
 
 */
 
 #include <cmath>
+#include <cstdint>
 #include <vector>
 
 template<class SquareMatrix>
@@ -94,6 +102,35 @@ double det(const SquareMatrix &a, double EPS = 1e-10) {
   return res;
 }
 
+int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
+  int n = static_cast<int>(a.size());
+  int64_t prev = 1, sign = 1;
+  for (int k = 0; k < n; k++) {
+    if (a[k][k] == 0) {  // Swap in a nonzero pivot; each swap flips the sign.
+      int p = -1;
+      for (int r = k + 1; r < n; r++) {
+        if (a[r][k] != 0) {
+          p = r;
+          break;
+        }
+      }
+      if (p == -1) {
+        return 0;
+      }
+      std::swap(a[k], a[p]);
+      sign = -sign;
+    }
+    for (int i = k + 1; i < n; i++) {
+      for (int j = k + 1; j < n; j++) {
+        // The division by the previous pivot is always exact (Bareiss's theorem).
+        a[i][j] = (a[i][j] * a[k][k] - a[i][k] * a[k][j]) / prev;
+      }
+    }
+    prev = a[k][k];
+  }
+  return n == 0 ? 1 : sign * a[n - 1][n - 1];
+}
+
 template<class SquareMatrix>
 SquareMatrix &invert(SquareMatrix &a) {
   int n = static_cast<int>(a.size());
@@ -144,6 +181,12 @@ int main() {
   vector<vector<double>> res(n, vector<double>(n, 0));
   double d = det(a);
   assert(fabs(d - det_naive(a)) < 1e-10);
+
+  // Bareiss gives the determinant of an integer matrix exactly, with no rounding.
+  vector<vector<int64_t>> ai{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
+  assert(det_bareiss(ai) == -306);
+  assert(det_bareiss({{2, 0, 0}, {0, 3, 0}, {0, 0, 5}}) == 30);
+  assert(det_bareiss({{1, 2}, {2, 4}}) == 0);  // Singular.
   vector<vector<double>> inv = a;
   invert(inv);
   for (int i = 0; i < n; i++) {

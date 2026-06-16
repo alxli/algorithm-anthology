@@ -14,6 +14,9 @@ struct with numeric `.x` and `.y` fields and `<` / `==` operators.
   is integral or floating-point, depending on the input point type. For integer vertices, divide by
   2 in the caller if the exact area is needed.
 - `polygon_area(lo, hi)` returns the area as `double`.
+- `polygon_centroid(lo, hi)` returns the centroid (center of mass) of a non-degenerate simple
+  polygon with vertices in boundary order as `{x, y}`. It uses signed shoelace weights, so clockwise
+  and counter-clockwise inputs both work.
 
 Overflow warning: `cw_comp` and `polygon_area_2x` form cross products that grow like the squared
 coordinate magnitude (and the shoelace sum accumulates over all vertices). For integer point types
@@ -21,6 +24,7 @@ use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) for large or numerous co
 
 Time Complexity:
 - O(n) per call to `polygon_area`, where $n$ is the number of points.
+- O(n) per call to `polygon_centroid`.
 - O(1) per call to `cw_comp` and the comparators.
 
 Space Complexity:
@@ -83,6 +87,24 @@ auto polygon_area_2x(It lo, It hi) {
 template<class It>
 double polygon_area(It lo, It hi) {
   return static_cast<double>(polygon_area_2x(lo, hi)) / 2.0;
+}
+
+template<class It>
+std::pair<double, double> polygon_centroid(It lo, It hi) {
+  if (hi - lo < 3) {
+    throw std::runtime_error("Cannot compute centroid of a degenerate polygon.");
+  }
+  double cx = 0, cy = 0, area2 = 0;
+  for (It i = lo, j = hi - 1; i != hi; j = i++) {
+    double cross = static_cast<double>(j->x) * i->y - static_cast<double>(i->x) * j->y;
+    cx += (j->x + i->x) * cross;
+    cy += (j->y + i->y) * cross;
+    area2 += cross;
+  }
+  if (EQ(area2, 0)) {
+    throw std::runtime_error("Cannot compute centroid of zero-area polygon.");
+  }
+  return {cx / (3 * area2), cy / (3 * area2)};
 }
 
 /*** Example Usage and Output:
@@ -155,5 +177,7 @@ int main() {
   vector<PointI> iv{{0, 0}, {4, 0}, {0, 3}};            // right triangle, area = 6
   assert(polygon_area_2x(iv.begin(), iv.end()) == 12);  // exact int
   assert(EQ(polygon_area(iv.begin(), iv.end()), 6.0));
+  auto centroid = polygon_centroid(iv.begin(), iv.end());
+  assert(EQ(centroid.first, 4.0 / 3.0) && EQ(centroid.second, 1.0));
   return 0;
 }

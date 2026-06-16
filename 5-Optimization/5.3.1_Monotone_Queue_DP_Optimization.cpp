@@ -4,14 +4,14 @@ Maintains the minimum or maximum value in a sliding window using a monotone queu
 for dynamic programming recurrences where each transition may only come from one of the last $w$
 states, such as `dp[i] = a[i] + min(dp[j])` for $j \in [i - w, i - 1)$.
 
-The queue stores candidate `(index, value)` pairs in monotone order. Expired indices are removed
+The queue stores candidate (index, value) pairs in monotone order. Expired indices are removed
 from the front, and dominated values are removed from the back before inserting a new candidate.
 
 - `MonotoneQueue<Compare>()` constructs an empty queue. Use `std::less<T>` for minimum queries and
   `std::greater<T>` for maximum queries.
 - `push(index, value)` inserts candidate `value` at position `index`, removing dominated candidates.
 - `expire(first_valid)` removes candidates with index less than `first_valid`.
-- `top()` returns the best active `(index, value)` pair.
+- `top()` returns the best active (index, value) pair.
 - `empty()` returns whether the queue has no active candidates.
 
 Time Complexity:

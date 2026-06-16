@@ -64,8 +64,9 @@ SECTION_NAMES = {
     (6, 7): 'Game Theory',
     (7, 1): 'Geometry Primitives',
     (7, 2): 'Angles, Distances, and Intersections',
-    (7, 3): 'Polygons and Planar Searches',
+    (7, 3): 'Polygons and Point Sets',
     (7, 4): 'Advanced Planar Geometry',
+    (7, 5): '3D Geometry',
     (8, 1): 'Contest Utilities',
     (8, 2): 'Fast IO',
     (8, 3): 'Debugging',
@@ -73,6 +74,7 @@ SECTION_NAMES = {
     (8, 5): 'Stress Testing',
     (8, 6): 'Policy-Based Data Structures',
     (8, 7): 'Multithreading',
+    (8, 8): 'Memory Allocation',
 }
 
 

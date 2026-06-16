@@ -1,13 +1,13 @@
 /*
 
-Given a continuous function `f(x, y)` returning a `double` and a (possibly arbitrary) starting guess
-`(x0, y0)`, search for a global minimum using the hill-climbing heuristic.
+Given a continuous function $f(x, y)$ returning a real number and a (possibly arbitrary) starting
+guess `(x0, y0)`, search for a global minimum using the hill-climbing heuristic.
 
 Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each
 of a fixed number of directions. The direction with the best (in this case, minimum) value is
 chosen, and further steps are taken in it until the answer no longer improves. When this happens,
 the step size is reduced and the same process repeats until a desired absolute error is reached. The
-technique's success heavily depends on the behavior of `f` and the initial guess. Therefore, the
+technique's success heavily depends on the behavior of $f$ and the initial guess. Therefore, the
 result is not guaranteed to be the global minimum.
 
 - `find_min(f, x0, y0, critical_x, critical_y)` returns a candidate global minimum value of `f`

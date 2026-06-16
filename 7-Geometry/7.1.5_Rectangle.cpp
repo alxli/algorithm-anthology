@@ -43,7 +43,7 @@ const double EPS = 1e-9;
 
 template<class Pt, class T>
 bool point_in_rectangle(
-    const Pt &p, const Pt &v, const T &w, const T &h, bool EDGE_IS_INSIDE = true
+    const Pt &p, const Pt &v, const T &w, const T &h, const bool EDGE_IS_INSIDE = true
 ) {
   if (w < 0) {
     return point_in_rectangle(p, Pt(v.x + w, v.y), -w, h, EDGE_IS_INSIDE);
@@ -56,7 +56,7 @@ bool point_in_rectangle(
 }
 
 template<class Pt>
-bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, bool EDGE_IS_INSIDE = true) {
+bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, const bool EDGE_IS_INSIDE = true) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
   return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl, EDGE_IS_INSIDE);
@@ -65,7 +65,7 @@ bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, bool EDGE_IS_INSI
 template<class Pt>
 int rectangle_intersection(
     const Pt &a1, const Pt &b1, const Pt &a2, const Pt &b2, Pt *p = nullptr, Pt *q = nullptr,
-    bool EDGE_IS_INSIDE = true
+    const bool EDGE_IS_INSIDE = true
 ) {
   // Normalize each rectangle to [xl, xh] x [yl, yh] with coordinate-wise min/max only.
   // (Using auto keeps the native coordinate type, so integer rectangles stay exact.)

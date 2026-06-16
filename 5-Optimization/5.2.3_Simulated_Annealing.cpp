@@ -1,6 +1,6 @@
 /*
 
-Given a function `f(x, y)` to minimize over two real variables, return a good approximate minimum
+Given a function $f(x, y)$ to minimize over two real variables, return a good approximate minimum
 found by simulated annealing. This is a randomized heuristic for difficult search spaces where
 gradients, convexity, and unimodality are not available.
 

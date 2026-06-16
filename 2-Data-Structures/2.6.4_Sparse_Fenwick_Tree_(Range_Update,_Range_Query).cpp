@@ -13,8 +13,8 @@ vectors.
 - `set(i, x)` assigns the value at index `i` to `x`.
 - `sum(hi)` returns the sum of all values at indices from 0 to `hi`, inclusive.
 - `sum(lo, hi)` returns the sum of all values at indices from `lo` to `hi`, inclusive.
-- `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1) <= c`, assuming
-  prefix sums are nondecreasing. It may return any value from 0 to `N`.
+- `max_prefix(c)` returns the largest boundary `hi` such that `sum(0, hi - 1) <= c`, assuming prefix
+  sums are nondecreasing. It may return any value from 0 to `N`.
 
 Time Complexity:
 - O(log N) per call to all member functions.

@@ -1643,12 +1643,90 @@ int main() {
   return 0;
 }
 \end{lstlisting}
+\subsection{De Bruijn Sequence}
+A De Bruijn sequence $B(k, n)$ is a cyclic string over the alphabet $[0, k)$ of length $k^n$ in which every one of the $k^n$ possible length-$n$ strings appears exactly once as a (cyclic) substring. Reading a window of $n$ symbols and advancing one position at a time therefore cycles through all length-$n$ strings without repetition, which makes the sequence a compact way to probe every short pattern: cracking a rotating lock, addressing a shift register, or building the perfect-hash table that maps an isolated set bit to its index.
+
+The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It concatenates, in lexicographic order, the Lyndon words (see the Lyndon factorization section) whose length divides $n$. The result is the lexicographically smallest De Bruijn sequence. The recursion enumerates these necklace representatives directly, appending the first $p$ symbols of each candidate whenever its period $p$ divides $n$.
+
+\begin{compactitem}
+  \item \inlinecode{de\_bruijn(k, n)} returns a vector of length $k^n$ holding one period of $B(k, n)$. Each entry lies in $[0, k)$. Both $k$ and $n$ must be at least 1. Treat the result as cyclic: the length-$n$ windows that wrap past the end are exactly the ones still needed to cover all strings.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(k^{n})$ per call to \inlinecode{de\_bruijn(k, n)}, which is optimal since the output itself has length $k^n$.
+
+\textbf{Space Complexity}: $O(k^{n})$ heap space for the returned sequence, plus $O(n)$ auxiliary space for the recursion.
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+namespace {
+
+void de_bruijn_gen(int t, int p, int k, int n, std::vector<int> &word, std::vector<int> &seq) {
+  if (t > n) {
+    if (n % p == 0) {
+      for (int i = 1; i <= p; i++) {
+        seq.push_back(word[i]);
+      }
+    }
+    return;
+  }
+  word[t] = word[t - p];
+  de_bruijn_gen(t + 1, p, k, n, word, seq);
+  for (int j = word[t - p] + 1; j < k; j++) {
+    word[t] = j;
+    de_bruijn_gen(t + 1, t, k, n, word, seq);
+  }
+}
+
+}  // namespace
+
+std::vector<int> de_bruijn(int k, int n) {
+  std::vector<int> word(n + 1, 0), seq;
+  de_bruijn_gen(1, 1, k, n, word, seq);
+  return seq;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cmath>
+#include <set>
+#include <vector>
+using namespace std;
+
+int main() {
+  // B(2, 3) has length 8 and every 3-bit string appears once cyclically.
+  vector<int> seq = de_bruijn(2, 3);
+  assert(seq.size() == 8);
+
+  for (int k = 2; k <= 4; k++) {
+    for (int n = 1; n <= 4; n++) {
+      vector<int> s = de_bruijn(k, n);
+      int len = static_cast<int>(std::lround(std::pow(k, n)));
+      assert(static_cast<int>(s.size()) == len);
+
+      // Collect every length-n window, wrapping cyclically, and confirm all k^n are distinct.
+      set<vector<int>> windows;
+      for (int i = 0; i < len; i++) {
+        vector<int> w(n);
+        for (int j = 0; j < n; j++) {
+          w[j] = s[(i + j) % len];
+        }
+        windows.insert(w);
+      }
+      assert(static_cast<int>(windows.size()) == len);
+    }
+  }
+  return 0;
+}
+\end{lstlisting}
 
 \section{\texorpdfstring{Suffix Arrays and LCP}{3.4 Suffix Arrays and LCP}}
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Suffix Array and LCP (Manber-Myers)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is \inlinecode{[1, 2, 0]}.
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
@@ -1771,7 +1849,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Counting Sort)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is \inlinecode{[1, 2, 0]}.
+Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
 For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
 
@@ -2652,6 +2730,227 @@ int main() {
 ("ten", 5)
 ("to", 2)
 \end{exampleoutput}
+\subsection{Suffix Tree (Ukkonen)}
+A suffix tree is the compressed trie of every suffix of a string: a rooted tree in which each edge is labeled with a substring, no two edges leaving a node start with the same character, and the concatenation of labels from the root to each leaf spells one suffix. Paths from the root therefore spell exactly the distinct substrings of the string, which makes the tree a powerful index for substring queries, repeated-substring problems, and many other tasks. It is the explicit-pointer counterpart of the suffix automaton; the two store the same information and either can be converted into the other.
+
+This implementation is Ukkonen's algorithm, which builds the tree online in linear time by feeding one character at a time. It maintains an ``active point'' (a node, an edge, and a length along that edge) describing where the next suffix must be inserted, together with suffix links that let it hop between successive insertion points in amortized constant time. Edges to leaves are stored with an open-ended length that grows automatically as the string lengthens, so each phase touches only the suffixes that genuinely change. A unique terminal sentinel smaller than every real character is appended internally so that no suffix is a prefix of another and every suffix ends at its own leaf. The input must therefore not contain the character \inlinecode{\textquotesingle{}\textbackslash{}1\textquotesingle{}}.
+
+\begin{compactitem}
+  \item \inlinecode{SuffixTree(s)} builds the suffix tree of string \inlinecode{s}.
+  \item \inlinecode{contains(t)} returns whether string \inlinecode{t} occurs as a substring of \inlinecode{s}.
+  \item \inlinecode{count\_distinct\_substrings()} returns the number of distinct nonempty substrings of \inlinecode{s}.
+  \item \inlinecode{longest\_repeated\_substring()} returns one longest substring of \inlinecode{s} that occurs at least twice, or the empty string if every character is distinct.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ to construct the tree for a string of length $n$ (using a per-node ordered map, $O(n \log s)$ where $s$ is the alphabet size).
+  \item $O(m \log s)$ per call to \inlinecode{contains(t)}, where $m$ is the length of \inlinecode{t}.
+  \item $O(n)$ per call to \inlinecode{count\_distinct\_substrings()} and \inlinecode{longest\_repeated\_substring()}.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ nodes and edges.
+  \item $O(n)$ auxiliary stack space for the traversals.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <map>
+#include <string>
+#include <vector>
+
+class SuffixTree {
+  static const int OPEN = -1;  // Marks a leaf edge whose right end follows the growing string.
+
+  struct Node {
+    int start, end;  // Edge into this node labels s[start..end]; end == OPEN means leaf_end.
+    int link;
+    std::map<char, int> next;
+    Node(int start, int end) : start(start), end(end), link(0) {}
+  };
+
+  std::string s;
+  std::vector<Node> tree;
+  int leaf_end;
+  // Active point and bookkeeping for Ukkonen's algorithm.
+  int active_node, active_edge, active_length, remaining, last_new;
+
+  int edge_end(int v) const { return tree[v].end == OPEN ? leaf_end : tree[v].end; }
+  int edge_len(int v) const { return edge_end(v) - tree[v].start + 1; }
+
+  int make_node(int start, int end) {
+    tree.emplace_back(start, end);
+    return static_cast<int>(tree.size()) - 1;
+  }
+
+  // If the active length runs past the edge into v, descend and report that we moved.
+  bool walk_down(int v) {
+    if (active_length >= edge_len(v)) {
+      active_edge += edge_len(v);
+      active_length -= edge_len(v);
+      active_node = v;
+      return true;
+    }
+    return false;
+  }
+
+  void extend(int pos) {
+    leaf_end = pos;
+    remaining++;
+    last_new = -1;
+    while (remaining > 0) {
+      if (active_length == 0) {
+        active_edge = pos;
+      }
+      char c = s[active_edge];
+      auto it = tree[active_node].next.find(c);
+      if (it == tree[active_node].next.end()) {
+        // Rule 2: no edge starts with c, so grow a new leaf from the active node.
+        tree[active_node].next[c] = make_node(pos, OPEN);
+        if (last_new != -1) {
+          tree[last_new].link = active_node;
+          last_new = -1;
+        }
+      } else {
+        int v = it->second;
+        if (walk_down(v)) {
+          continue;  // Re-evaluate the same suffix from the deeper node.
+        }
+        if (s[tree[v].start + active_length] == s[pos]) {
+          // Rule 3: the character is already present; stop and lengthen the active point.
+          if (last_new != -1) {
+            tree[last_new].link = active_node;
+          }
+          active_length++;
+          break;
+        }
+        // Rule 2 with a split: break edge v in two and attach a new leaf at the split point.
+        int split = make_node(tree[v].start, tree[v].start + active_length - 1);
+        tree[active_node].next[c] = split;
+        tree[split].next[s[pos]] = make_node(pos, OPEN);
+        tree[v].start += active_length;
+        tree[split].next[s[tree[v].start]] = v;
+        if (last_new != -1) {
+          tree[last_new].link = split;
+        }
+        last_new = split;
+      }
+      remaining--;
+      if (active_node == 0 && active_length > 0) {
+        active_length--;
+        active_edge = pos - remaining + 1;
+      } else if (active_node != 0) {
+        active_node = tree[active_node].link;
+      }
+    }
+  }
+
+  // String depth and right end (one past) of the deepest internal node, for repeated substrings.
+  void deepest_internal(int v, int depth, int &best_depth, int &best_end) const {
+    bool internal = false;
+    for (const auto &kv : tree[v].next) {
+      internal = true;
+      int w = kv.second;
+      deepest_internal(w, depth + edge_len(w), best_depth, best_end);
+    }
+    if (internal && v != 0 && depth > best_depth) {
+      best_depth = depth;
+      best_end = edge_end(v) + 1;
+    }
+  }
+
+ public:
+  explicit SuffixTree(const std::string &str) : s(str) {
+    s.push_back('\1');  // Unique terminal sentinel, smaller than every real character.
+    make_node(-1, -1);  // Root, at index 0; its incoming edge is never read.
+    active_node = 0;
+    active_edge = 0;
+    active_length = 0;
+    remaining = 0;
+    leaf_end = -1;
+    last_new = -1;
+    for (int i = 0; i < static_cast<int>(s.size()); i++) {
+      extend(i);
+    }
+  }
+
+  bool contains(const std::string &t) const {
+    int v = 0, i = 0, m = static_cast<int>(t.size());
+    while (i < m) {
+      auto it = tree[v].next.find(t[i]);
+      if (it == tree[v].next.end()) {
+        return false;
+      }
+      v = it->second;
+      int len = edge_len(v);
+      for (int j = 0; j < len && i < m; j++, i++) {
+        if (s[tree[v].start + j] != t[i]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  int count_distinct_substrings() const {
+    int total = 0;
+    for (int v = 1; v < static_cast<int>(tree.size()); v++) {
+      total += edge_len(v);
+    }
+    // Every leaf edge ends in the sentinel; the s.size() suffixes of the sentineled string are the
+    // only substrings that contain it, so removing them leaves the count for the original string.
+    return total - static_cast<int>(s.size());
+  }
+
+  std::string longest_repeated_substring() const {
+    int best_depth = 0, best_end = 0;
+    deepest_internal(0, 0, best_depth, best_end);
+    return s.substr(best_end - best_depth, best_depth);
+  }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <set>
+using namespace std;
+
+int main() {
+  SuffixTree st("banana");
+  assert(st.contains("ana"));
+  assert(st.contains("banana"));
+  assert(st.contains(""));
+  assert(!st.contains("anana_"));
+  assert(!st.contains("nb"));
+  assert(st.longest_repeated_substring() == "ana");
+
+  // "banana" has 15 distinct substrings:
+  // a, an, ana, anan, anana, b, ba, ban, bana, banan, banana, n, na, nan, nana.
+  assert(st.count_distinct_substrings() == 15);
+
+  // Cross-check both queries against brute force on a small string.
+  string text = "mississippi";
+  SuffixTree t(text);
+  set<string> subs;
+  int n = static_cast<int>(text.size());
+  for (int i = 0; i < n; i++) {
+    for (int len = 1; i + len <= n; len++) {
+      subs.insert(text.substr(i, len));
+    }
+  }
+  assert(t.count_distinct_substrings() == static_cast<int>(subs.size()));
+  for (const string &sub : subs) {
+    assert(t.contains(sub));
+  }
+  assert(!t.contains("issa"));
+  assert(t.longest_repeated_substring() == "issi");  // "issi" appears at indices 1 and 4.
+  return 0;
+}
+\end{lstlisting}
 \subsection{Suffix Automaton}
 Maintains a compact deterministic automaton representing all substrings of a string. A suffix automaton is useful for substring membership queries, counting distinct substrings, finding longest common substrings, and many other string dynamic programming tasks.
 
@@ -3131,7 +3430,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Sequence Alignment}
+\subsection{Sequence Alignment (Needleman-Wunsch)}
 Given two strings, determine their minimum-cost alignment. An alignment of two strings is a transformation of both strings by inserting gap characters \inlinecode{\_} in some way to make the final lengths equal. The total cost of an alignment given a \inlinecode{gap\_cost} (insertion or deletion cost) and a \inlinecode{sub\_cost} (substitution, i.e. mismatch cost) is \inlinecode{gap\_cost} times the number of inserted gaps, plus \inlinecode{sub\_cost} times the number of indices at which the two aligned strings differ.
 
 \begin{compactitem}
@@ -3945,7 +4244,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Run-Length Encoding}
-Encodes consecutive equal characters as (\inlinecode{character}, \inlinecode{count}) runs. Run-length encoding is a simple lossless compression technique that works well when strings contain long repeated blocks and poorly when repetitions are rare.
+Encodes consecutive equal characters as (character, count) runs. Run-length encoding is a simple lossless compression technique that works well when strings contain long repeated blocks and poorly when repetitions are rare.
 
 The representation below stores runs in a vector of pairs rather than formatting them as a string. This avoids ambiguity when the original text contains digits or separator characters.
 
@@ -4216,6 +4515,110 @@ int main() {
   string bits = h.encode(text);
   assert(h.decode(bits) == text);
   assert(bits.size() < text.size() * 8);
+  return 0;
+}
+\end{lstlisting}
+\subsection{Burrows-Wheeler Transform}
+The Burrows-Wheeler transform (BWT) permutes a string into one that tends to be far more compressible while remaining perfectly invertible. It writes down every cyclic rotation of the string, sorts them lexicographically, and reads off the last character of each sorted rotation. Characters that occur in similar contexts are brought together, producing long runs that run-length and move-to-front coders exploit; it is the heart of the bzip2 compressor and a building block of compressed-text indexes.
+
+To make the permutation invertible, a unique sentinel character smaller than every real character is appended before transforming, so the rotations are all distinct and one of them is distinguished as the original. Sorting the rotations of the sentineled string is the same as sorting its suffixes, so the forward transform is computed with a prefix-doubling rotation sort. The inverse rebuilds the string with the last-to-first (LF) mapping: stably ordering the transformed characters yields, for each position of the sorted first column, the row that supplies the next character, and following that mapping from the sentinel row walks the original string out one character at a time.
+
+The input must not contain the sentinel character \inlinecode{\textquotesingle{}\textbackslash{}0\textquotesingle{}}.
+
+\begin{compactitem}
+  \item \inlinecode{burrows\_wheeler\_transform(s)} returns the BWT of \inlinecode{s}. The result has length \inlinecode{s.size() + 1} and contains the sentinel \inlinecode{\textquotesingle{}\textbackslash{}0\textquotesingle{}} exactly once.
+  \item \inlinecode{burrows\_wheeler\_inverse(code)} returns the original string, inverting \inlinecode{burrows\_wheeler\_transform}. The argument must be a string produced by that function.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n \log^{2} n)$ per call to \inlinecode{burrows\_wheeler\_transform(s)}, where $n$ is the length of \inlinecode{s}.
+  \item $O(n \log n)$ per call to \inlinecode{burrows\_wheeler\_inverse(code)}.
+\end{compactitem}
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for both functions.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <numeric>
+#include <string>
+#include <vector>
+
+std::string burrows_wheeler_transform(std::string s) {
+  s.push_back('\0');  // Unique sentinel, smaller than every real character.
+  int n = static_cast<int>(s.size());
+  // Sort the indices of the cyclic rotations by prefix doubling; with the sentinel this matches
+  // sorting the suffixes.
+  std::vector<int> order(n), rank(n), tmp(n);
+  for (int i = 0; i < n; i++) {
+    order[i] = i;
+    rank[i] = static_cast<unsigned char>(s[i]);
+  }
+  for (int k = 1; k < n; k <<= 1) {
+    auto cmp = [&](int a, int b) {
+      if (rank[a] != rank[b]) {
+        return rank[a] < rank[b];
+      }
+      return rank[(a + k) % n] < rank[(b + k) % n];
+    };
+    std::sort(order.begin(), order.end(), cmp);
+    tmp[order[0]] = 0;
+    for (int i = 1; i < n; i++) {
+      tmp[order[i]] = tmp[order[i - 1]] + (cmp(order[i - 1], order[i]) ? 1 : 0);
+    }
+    rank = tmp;
+    if (rank[order[n - 1]] == n - 1) {
+      break;
+    }
+  }
+  std::string code(n, '\0');
+  for (int i = 0; i < n; i++) {
+    code[i] = s[(order[i] + n - 1) % n];  // Last character of the i-th sorted rotation.
+  }
+  return code;
+}
+
+std::string burrows_wheeler_inverse(const std::string &code) {
+  int n = static_cast<int>(code.size());
+  // first[k] is the row supplying the first column's k-th character; following it from row 0 (the
+  // sentinel row, sorted first) reconstructs the sentinel followed by the original string.
+  std::vector<int> first(n);
+  std::iota(first.begin(), first.end(), 0);
+  std::stable_sort(first.begin(), first.end(), [&](int a, int b) {
+    return static_cast<unsigned char>(code[a]) < static_cast<unsigned char>(code[b]);
+  });
+  std::string res;
+  res.reserve(n);
+  for (int i = 0, row = 0; i < n; i++) {
+    row = first[row];
+    res.push_back(code[row]);
+  }
+  return res.substr(1);  // Drop the leading sentinel.
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+using namespace std;
+
+int main() {
+  string code = burrows_wheeler_transform("banana");
+  assert(code.size() == 7);  // "banana" plus the sentinel.
+  assert(burrows_wheeler_inverse(code) == "banana");
+
+  // The transform clusters equal characters: "mississippi" yields long runs.
+  string text = "mississippi";
+  string t = burrows_wheeler_transform(text);
+  assert(burrows_wheeler_inverse(t) == text);
+
+  // Round-trips on assorted strings, including repeats and a single character.
+  for (const string &s :
+       {string(""), string("a"), string("aaaa"), string("abracadabra"),
+        string("the quick brown fox"), string("\1\2abc", 5)}) {
+    assert(burrows_wheeler_inverse(burrows_wheeler_transform(s)) == s);
+  }
   return 0;
 }
 \end{lstlisting}

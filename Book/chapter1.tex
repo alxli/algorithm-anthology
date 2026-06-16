@@ -1858,18 +1858,31 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Subset Sum (Meet-in-the-Middle)}
-Given a range \inlinecode{[lo, hi)} of integers, return the maximum sum of any subset of the range that is at most a given integer \inlinecode{v}. This is a common meet-in-the-middle version of subset sum: enumerate subset sums for each half, sort one side, and binary search for the best compatible partner.
+\subsection{Subset Sum}
+Given a collection of integers and a target \inlinecode{v}, the subset sum problem asks for the maximum sum of any subset that is at most \inlinecode{v}. Two algorithms below solve this problem in complementary regimes, and which one wins depends on whether the bottleneck is the number of items or the size of the weights.
+
+The meet-in-the-middle method splits the collection in half, enumerates every subset sum for each half, sorts one side, and binary searches for the best compatible partner. It makes no assumption about the sign or size of the values, so it handles negative inputs, and it is the method of choice when the number of items \inlinecode{n} is small (up to roughly 40).
+
+Pisinger's algorithm targets the opposite regime: nonnegative weights whose maximum value is small, with possibly many items. It first greedily takes a prefix of items while they still fit, which leaves the optimum within one weight of the target. It then repairs that prefix by a balanced sweep, tracking only sums within \inlinecode{max(weight)} of the target. The running time is linear in the number of items times the largest weight, with no dependence on the target itself beyond that window. This routine is sometimes called ``fast knapsack,'' a slight misnomer: it maximizes a subset sum rather than packing items with distinct values, so it is really the bounded-weight case of subset sum rather than the 0-1 value knapsack.
 
 \begin{compactitem}
-  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, v)} returns the maximum sum of any subset of \inlinecode{[lo, hi)} that does not exceed \inlinecode{v}.
+  \item \inlinecode{max\_subset\_sum\_at\_most(lo, hi, v)} returns the maximum sum of any subset of the range \inlinecode{[lo, hi)} that does not exceed \inlinecode{v}. Values may be negative. The range is supplied as random-access iterators, and 64-bit integers are used in intermediate calculations to avoid overflow.
+  \item \inlinecode{max\_subset\_sum\_bounded(lo, hi, target)} returns the maximum sum of any subset of the range \inlinecode{[lo, hi)} that does not exceed \inlinecode{target}. All weights and \inlinecode{target} must be nonnegative integers. This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
 \end{compactitem}
 
-The range is supplied as random-access iterators. 64-bit integers are used in intermediate calculations to avoid overflow.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n \cdot W)$ per call to \inlinecode{max\_subset\_sum\_bounded()}, where $n$ is the number of items and $W$ is the largest weight.
+\end{compactitem}
 
-\textbf{Time Complexity}: $O(2^{n/2})$ per call to \inlinecode{max\_subset\_sum\_at\_most()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-
-\textbf{Space Complexity}: $O(2^{n/2})$ auxiliary heap space.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(2^{n/2})$ auxiliary heap space for \inlinecode{max\_subset\_sum\_at\_most()}.
+  \item $O(W)$ auxiliary heap space for \inlinecode{max\_subset\_sum\_bounded()}.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
@@ -1899,6 +1912,45 @@ int64_t max_subset_sum_at_most(It lo, It hi, int64_t v) {
   }
   return res;
 }
+
+template<class It>
+int64_t max_subset_sum_bounded(It lo, It hi, int target) {
+  int n = static_cast<int>(hi - lo);
+  // Greedily take a prefix while it still fits; the optimum then lies within one weight of target.
+  int sum = 0, b = 0;
+  while (b < n && sum + static_cast<int>(*(lo + b)) <= target) {
+    sum += static_cast<int>(*(lo + b++));
+  }
+  if (b == n) {
+    return sum;  // Every item fits, so the whole collection is the best subset.
+  }
+  int m = 0;
+  for (It it = lo; it != hi; ++it) {
+    m = std::max(m, static_cast<int>(*it));
+  }
+  // reach[s - target + m] = largest prefix boundary that can realize a balanced subset of sum s.
+  // Only sums within m of target are tracked, which is where the optimum must lie.
+  std::vector<int> reach(2 * m, -1);
+  reach[sum - target + m] = b;
+  for (int i = b; i < n; i++) {
+    std::vector<int> prev = reach;
+    int wi = static_cast<int>(*(lo + i));
+    for (int x = 0; x < m; x++) {  // Add item i to sums currently below target.
+      reach[x + wi] = std::max(reach[x + wi], prev[x]);
+    }
+    for (int x = 2 * m - 1; x > m; x--) {  // Drop an earlier item from sums above target.
+      for (int j = std::max(0, prev[x]); j < reach[x]; j++) {
+        int wj = static_cast<int>(*(lo + j));
+        reach[x - wj] = std::max(reach[x - wj], j);
+      }
+    }
+  }
+  int s = target;
+  while (reach[s - target + m] < 0) {
+    s--;
+  }
+  return s;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -1910,6 +1962,13 @@ int main() {
   assert(max_subset_sum_at_most(a.begin(), a.end(), 8) == 7);
   std::vector<int> b{-7, -3, -2, 5, 8};
   assert(max_subset_sum_at_most(b.begin(), b.end(), 0) == 0);
+
+  // The bounded-weight method agrees with meet-in-the-middle on nonnegative inputs.
+  assert(max_subset_sum_bounded(a.begin(), a.end(), 8) == 7);
+  std::vector<int> c{3, 34, 4, 12, 5, 2};
+  assert(max_subset_sum_bounded(c.begin(), c.end(), 9) == 9);     // 4 + 5.
+  assert(max_subset_sum_bounded(c.begin(), c.end(), 10) == 10);   // 3 + 5 + 2.
+  assert(max_subset_sum_bounded(c.begin(), c.end(), 100) == 60);  // All items fit.
   return 0;
 }
 \end{lstlisting}
@@ -3324,7 +3383,7 @@ int main() {
 \subsection{Bitwise Convolution (FWHT)}
 Bitwise convolution combines two arrays indexed by masks, grouping pairs of masks by a bitwise operation instead of by ordinary addition. For arrays \inlinecode{a} and \inlinecode{b} over an \inlinecode{n}-bit universe, the XOR convolution \inlinecode{c[m]} is the sum of \inlinecode{a[x]*b[y]} over all \inlinecode{x \textasciicircum{} y = m}. OR and AND convolution replace \inlinecode{x \textasciicircum{} y} with \inlinecode{x | y} or \inlinecode{x \& y}. These appear in subset DP, counting pairs by bitwise result, and algebra over the Boolean hypercube.
 
-The fast Walsh-Hadamard transform (FWHT) diagonalizes XOR convolution in the same way that the FFT diagonalizes polynomial convolution: transform both arrays, multiply pointwise, and transform back. The OR and AND versions are zeta/Mobius transforms over the subset lattice, but they have the same butterfly-shaped implementation and the same $O(n \log n)$ runtime for arrays of length \inlinecode{n = 2\textasciicircum{}k}.
+The fast Walsh-Hadamard transform (FWHT) diagonalizes XOR convolution in the same way that the FFT diagonalizes polynomial convolution: transform both arrays, multiply pointwise, and transform back. The OR and AND versions are zeta/Mobius transforms over the subset lattice, but they have the same butterfly-shaped implementation and the same $O(n \log n)$ runtime for arrays of length $n = 2^k$.
 
 \begin{compactitem}
   \item \inlinecode{xor\_transform(f, invert)} applies the XOR FWHT to \inlinecode{f} in place. The inverse transform uses \inlinecode{invert = true} and divides every coefficient by \inlinecode{f.size()}.

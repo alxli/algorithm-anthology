@@ -44,8 +44,9 @@ Time Complexity:
   cheaper.
 
 Space Complexity:
-- O(n (R + C)) worst-case storage after $n$ rectangle updates, although aligned rectangles and point
-  updates allocate far fewer nodes.
+- O(k) for storage, where $k$ is the number of allocated quadtree nodes. Each rectangle update can
+  allocate as many nodes as it visits; this may be large for thin or poorly aligned rectangles, but
+  aligned rectangles and point updates allocate far fewer nodes.
 - O(log(max(R, C))) auxiliary stack space for `update()`, `query()`, and `at()`.
 
 */

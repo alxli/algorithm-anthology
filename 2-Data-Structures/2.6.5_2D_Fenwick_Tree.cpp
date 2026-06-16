@@ -4,10 +4,15 @@ Maintain a two-dimensional numerical array while supporting point increments and
 queries. This is the two-dimensional form of the standard Fenwick tree: each internal entry stores a
 rectangular block sum, and a prefix query combines O(log R * log C) disjoint blocks.
 
-Choose this for dense grids with additive point updates and rectangle-sum queries; it is simpler and
-lighter than a 2D segment tree when sums are the only aggregate needed. For huge sparse grids, use
-the sparse 2D Fenwick tree; for non-additive aggregates such as min/max with custom updates, use a
-2D segment tree or quadtree.
+Choose among the three 2D Fenwick trees by coordinate range and update style. Use this dense version
+when the rows and columns are small enough to allocate the full grid: it has the simplest code and
+the best constants, supporting point updates and rectangle sums. Use the sparse 2D Fenwick tree
+(next section) when the coordinates are too large to store densely and the updates arrive online; it
+relies on hashing and is the only one of the three that also supports rectangle updates. Use the
+offline 2D Fenwick tree when the coordinates are large but every updated cell is known before the
+queries begin, which lets it coordinate-compress instead of hashing for markedly better constants
+than the sparse version. For non-additive aggregates such as min/max with custom updates, use a 2D
+segment tree or quadtree instead, since Fenwick-tree algebra relies on addition and subtraction.
 
 - `FenwickTree2D(rows, cols)` constructs a `rows` by `cols` array with 0-based indices, with all
   values initialized to 0.

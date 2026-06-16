@@ -31,9 +31,8 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 
 Exponentiation uses the usual iterative binary exponentiation pattern: keep an accumulated result,
 square the base each round, and multiply the result when the current exponent bit is set. The power
-sum uses a block matrix identity:
-`\begin{bmatrix} A & A \\ 0 & I \end{bmatrix}^p` has
-`A + A^2 + \dots + A^p` in its upper-right block.
+sum uses a block matrix identity that $\begin{bmatrix} A & A \\ 0 & I \end{bmatrix}^p$ has
+$A + A^2 + \dots + A^p$ in its upper-right block.
 
 Time Complexity:
 - O(m*n) for construction, output, comparison, and scalar arithmetic of $m$ by $n$ matrices.

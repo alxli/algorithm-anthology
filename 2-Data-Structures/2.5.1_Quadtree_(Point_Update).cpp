@@ -37,7 +37,8 @@ Time Complexity:
   that align with a few large quadrants are far cheaper.
 
 Space Complexity:
-- O(n log(max(R, C))) for storage of the quadtree nodes after $n$ point updates.
+- O(min(n*log(max(R, C)), R*C)) for storage of quadtree nodes after $n$ point updates. More
+  precisely, since bounds are inclusive, the dense-grid ceiling is $(R + 1)(C + 1)$ cells.
 - O(log(max(R, C))) auxiliary stack space for `update()`, `query()`, and `at()`.
 
 */

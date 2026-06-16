@@ -6,7 +6,7 @@ are useful for constructing generators of finite multiplicative groups, choosing
 theoretic transforms, discrete logarithm setups, and randomized modular hashing or testing schemes
 that need a full-period multiplicative generator.
 
-Primitive roots do not exist for every modulus. They exist exactly for $m \in {1, 2, 4, p^k, 2p^k}$,
+Primitive roots do not exist for every $m$. They exist exactly for $m \in \{1, 2, 4, p^k, 2p^k\}$,
 where $p$ is an odd prime and $k \geq 1$. This implementation first checks that classification by
 factoring $m$, then factors $\phi(m)$. A candidate $g$ is primitive exactly when
 $g^{\phi(m)} \equiv 1 \pmod m$ and $g^{\phi(m)/q} \not\equiv 1 \pmod m$ for every prime factor

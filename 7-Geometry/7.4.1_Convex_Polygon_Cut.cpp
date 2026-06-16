@@ -7,7 +7,7 @@ are kept, and whenever an edge crosses the line, the intersection point is appen
 - `convex_cut(lo, hi, p, q)` returns the portion of the polygon lying on or to the left of the
   directed line `p` $\to$ `q`. The input range `[lo, hi)` must contain the vertices of a convex
   polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves
-  that boundary order. If `p == q`, the cutting line is invalid and an error is thrown.
+  that boundary order. If `p` equals `q`, the cutting line is invalid and an error is thrown.
 
 The function is templated on the input point type. Side classification is done with cross products.
 For integer-coordinate inputs, classification is exact only if the intermediate products do not

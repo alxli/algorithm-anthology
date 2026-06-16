@@ -5,44 +5,46 @@ Alex's Anthology of Algorithms: Common Code for Contests in Concise C++ (A<sup>3
 
 ## Introduction
 
-Welcome to a comprehensive collection of common algorithms and data structures. The ultimate goal of this book is not to explain concepts from the ground up, but instead to explore the finer details behind their *implementations*. There are many potential ways you can use this, for instance:
+Welcome to a practical collection of concise C++ implementations for algorithms, data structures, and contest utilities. This is not a first textbook; it is a codebook about implementation details, interfaces, edge cases, and the choices that make familiar algorithms usable in real code.
 
-* as a reference to help you better understand topics that you have only studied on a high level,
-* as a printed codebook, which is a permitted resource for contests such as the ACM ICPC, or
-* to cross-check existing code you have written for contest or coding interview questions.
+There are several good ways to use this book:
 
-Before diving into any section, it is strongly recommended that you have already studied the algorithms involved. Reading the code first is never an ideal approach to properly understand an algorithm. You should instead try proving (its correctness and time/space complexity) and implementing it from scratch.
+* as a reference when you know an algorithm conceptually, but want to study a clean implementation;
+* as a printed codebook for contests whose rules allow prepared reference material, including ICPC-style contests;
+* as a checklist for edge cases, complexity, overflow, indexing conventions, and API choices;
+* as a map of related techniques: slower versions, faster versions, variants, and common reductions are often placed near one another.
 
-Every topic to be explored is easily researchable online. Thus instead of including theoretical discussions, I document just enough to establish the problem being solved, notation being used, and any special trickery involved. I have also included small, non-rigorous examples to demonstrate usage of the code.
+For learning, do not start by copying. Study the idea, prove the invariant or recurrence, implement a version yourself, then compare it against this one; the differences usually reveal the practical choices. Each section gives only the theory needed to orient the implementation: the problem, public interface, assumptions, and complexity. The source is organized as documentation, reusable implementation, then example usage. The reusable part ends before the `/*** Example Usage ***/` or `/*** Example Usage and Output: ***/` marker; the code after that marker exists only so the file can compile and demonstrate itself in isolation. When adapting a section into a solution file or personal header, remove the example block and keep the implementation above it.
 
-We mentioned that the implementation itself is the focus, but what makes an implementation good? The code is written with the following principles in mind:
+The implementations are written with the following principles in mind:
 
-* *Clarity:* A reader already familiar with an algorithm should have no problem understanding how its implementation works. Consistency in naming conventions should be emphasized, and any tricks or language-specific hacks should be documented.
-* *Concision:* To minimize the amount of scrolling and searching during the frenzy of time contests, it is helpful for code to be compact. Shorter code is also generally easier to understand, as long as it is not overly cryptic. Finally, each implementation should fit in a single source file as required by nearly all online judging systems.
-* *Efficiency:* The code here is designed to be performant on real contests, and should maintain a low constant overhead. This is often challenging in the face of clarity and tweakability, but we can hope for contest setters to be liberal with time and memory limits. If the code here times out, you can reasonably rule out insufficient constant optimization and assume that you are choosing an algorithm from a suboptimal complexity class.
-* *Genericness:* Implementations should be easy to adapt to achieve slightly different goals. One may want to tweak some core logic, parameters, data types, etc. In timed contests, we would certainly prefer this process to be as painless as possible. C++ templates are often used to increase tweakability at a slight cost to simplicity.
-* *Portability:* Different contest environments use different compiler builds. The code targets C++17, which is broadly available on modern contest systems, while still avoiding unnecessary dependencies and non-standard features where practical.
+* *Clarity:* A reader familiar with the algorithm should be able to follow the code without reverse-engineering it. Important tricks, non-obvious invariants, overflow risks, and language-specific assumptions should be documented.
+* *Concision:* Contest code has to be found, read, adapted, and typed under pressure. Short code is valuable when it removes noise, but not when it hides the idea. The goal is compactness without cleverness for its own sake, and without discarding useful interfaces. As a result, the code here is often more verbose than compact ICPC codebook-style snippets: the extra code usually buys clearer names, reusable return values, safer defaults, configurable types, edge identifiers, reset functions, or explicit handling of common variants.
+* *Efficiency:* The code should have the expected asymptotic behavior and reasonable constants. When a simpler version and a more robust or faster version both teach something useful, both may be included. If an implementation is educational rather than competitive, the section should say so.
+* *Adaptability:* Real problems rarely match a template exactly. Interfaces are chosen so that common changes, such as swapping a numeric type, changing a combine function, exposing an edge id, or choosing whether boundaries are included, are straightforward.
+* *Consistency:* Similar structures should expose similar operations where practical. Repeated naming conventions and example styles make it easier to move between chapters quickly.
+* *Portability:* The code targets modern C++17 and tries to avoid unnecessary dependencies. A few contest-useful exceptions remain, but are noted with each use.
 
-As these points and the title both suggest, there is a slight bias towards contests. Compiling a codebook for my personal reference during contests was indeed how this project got started. This work has become much more multipurpose now. Whatever your use case is, I hope you discover something enlightening.
+This project began as a personal contest codebook, so it still favors single-file snippets, predictable APIs, compact examples, and low constants. It has also become a record of design decisions: what to make generic, what to leave explicit, when to include a slow version, and how to make a known algorithm pleasant to use.
+
+Use this book actively: annotate it, delete what you dislike, rename functions to match your own habits, and stress-test anything you intend to trust.
 
 Cheers.<br>
 — Alex
 
 ## Portability Note
 
-All programs were tested with GCC using the switches below::
+All examples are intended for a modern GCC or Clang environment with C++17 support. A typical compile command is:
 
 ```
-g++ -std=gnu++17 -pedantic -Wall -O2
+g++ -std=c++17 -O2 -Wall -pedantic
 ```
 
-This means the following are assumed about data types:
-* `bool` and `char` are 8-bit.
-* `int` and `float` are 32-bit.
-* `double` and `long long` are 64-bit.
-* `long double` is 96-bit.
+Most implementations assume common contest-platform type sizes: 8-bit `char`, 32-bit `int` and `float`, and 64-bit `double` and `long long`. The width and precision of `long double` are implementation-dependent; sections that rely on it should say so explicitly.
 
-Programs target ISO C++17, except in the following regards:
-* Usage of variable sized arrays. While easily replaced by vectors, they are generally simpler and avoid dynamic memory (which some argue is a bad idea for contests).
-* Usage of GCC's built-in functions like `__builtin_popcount()` and `__builtin_clz()`. These can be extremely convenient, but are straightforward to implement if unavailable. See here for a reference: https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html
-* Hacks that may depend on the platform (e.g. endianness), such as getting the signbit with type-punned pointers. Be weary of portability for all bitwise/lower level code.
+The code targets ISO C++17 unless noted. The most common exceptions are:
+
+* GCC and Clang integer extensions such as `__int128` or `__uint128_t`, usually guarded with a portable fallback when overflow safety matters.
+* Compiler builtins such as `__builtin_popcount()` and `__builtin_clz()`. These are convenient and widely available, but C++20's `<bit>` header provides standard alternatives for many of them. See https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html for GCC's reference.
+* GNU policy-based data structures such as `__gnu_pbds::tree`, `gp_hash_table`, and PBDS priority queues, in limited sections only to show useful but non-standard library components.
+* A small number of explicitly documented representation assumptions, such as `signbit_()` in the math utilities assuming an IEEE-like floating-point sign bit layout.

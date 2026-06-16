@@ -16,7 +16,7 @@ These implementations use bitmasks of unsigned 64-bit integers, so the number of
 than 64.
 
 Time Complexity:
-- O(3^(n/3)) per call to `max_clique()` and `max_clique_weighted()`, where $n$ is the number of
+- O(3^{n/3}) per call to `max_clique()` and `max_clique_weighted()`, where $n$ is the number of
   nodes.
 
 Space Complexity:

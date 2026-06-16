@@ -173,7 +173,7 @@ int seg_intersection(
 // Alternatively, just call the version above and pass static_cast<Pt *>(nullptr) for p and q.
 template<class Pt>
 int seg_intersection(
-    const Pt &a, const Pt &b, const Pt &c, const Pt &d, bool TOUCH_IS_INTERSECT = true
+    const Pt &a, const Pt &b, const Pt &c, const Pt &d, const bool TOUCH_IS_INTERSECT = true
 ) {
   auto ab_x = b.x - a.x, ab_y = b.y - a.y;
   auto ac_x = c.x - a.x, ac_y = c.y - a.y;

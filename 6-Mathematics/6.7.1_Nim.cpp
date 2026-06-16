@@ -9,7 +9,7 @@ equivalent to a Nim pile of size equal to its Grundy number, and sums of games c
 
 - `nim_sum(piles)` returns the XOR of all pile sizes.
 - `first_player_wins(piles)` returns whether the player to move has a winning strategy.
-- `winning_move(piles)` returns a move `(pile, new_size)` that moves to XOR 0, or `(-1, -1)` if the
+- `winning_move(piles)` returns a move `(pile, new_size)` that moves to XOR 0, or $(-1, -1)$ if the
   position is losing.
 
 Time Complexity:

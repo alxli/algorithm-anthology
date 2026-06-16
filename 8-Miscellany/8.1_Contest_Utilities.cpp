@@ -5,11 +5,19 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 
 - `y_combinator(f)` wraps a recursive lambda so that the lambda can call itself as its first
   argument.
+- `Rep(i,N)`, `For(i,L,H)`, `Rev(i,N)`, `Dwn(i,H,L)`, and `Each(x,C)` are compact loop macros.
 - `ckmin(a, b)` assigns `a = b` and returns true if `b < a` before the assignment.
 - `ckmax(a, b)` assigns `a = b` and returns true if `a < b` before the assignment.
 - `ssize(c)` returns the signed size of a container.
-- `between(x, lo, hi)` returns whether `lo` $\leq$ `x` $\leq$ `hi`.
-- `clamped(x, lo, hi)` returns `x` clamped into the interval `[lo, hi]`.
+- `between(x, a, b)` returns whether `a` $\leq$ `x` $\leq$ `b`.
+- `clmp(x, a, b)` returns `x` clamped into the interval `[a, b]`. This is not needed on C++17 and
+  later, where std::clamp() is available.
+- `ceil_div(a, b)` and `floor_div(a, b)` divide signed integers with mathematical rounding toward
+  positive or negative infinity. Requires `b != 0`.
+- `sort_unique(v)` sorts a vector and removes duplicates.
+- `erase_one(c, x)` erases one existing value from an associative container, asserting that it is
+  present.
+- `min_priority_queue<T>` is a min-heap alias.
 - `RNG()` constructs a 64-bit Mersenne Twister seeded from the steady clock.
 - `RNG(seed)` constructs a reproducible 64-bit Mersenne Twister.
 - `rng.uniform_int(lo, hi)` returns a random integer in the inclusive range `[lo, hi]`.
@@ -22,9 +30,17 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 #include <cassert>
 #include <chrono>
 #include <functional>
+#include <queue>
 #include <random>
+#include <set>
 #include <type_traits>
 #include <vector>
+
+#define Rep(i, N) for (int i = 0, _##i = (N); i < _##i; ++i)        //   0 to N-1
+#define For(i, L, H) for (int i = (L), _##i = (H); i <= _##i; ++i)  //   L to H
+#define Rev(i, N) for (int i = (N); --i >= 0;)                      // N-1 to 0
+#define Dwn(i, H, L) for (int i = (H), _##i = (L); i >= _##i; --i)  //   H to L
+#define Each(x, C) for (auto &x : (C))
 
 template<class Fun>
 class y_combinator_result {
@@ -33,7 +49,6 @@ class y_combinator_result {
  public:
   template<class T>
   explicit y_combinator_result(T &&fun_) : fun(std::forward<T>(fun_)) {}
-
   template<class... Args>
   decltype(auto) operator()(Args &&...args) {
     return fun(std::ref(*this), std::forward<Args>(args)...);
@@ -45,38 +60,43 @@ decltype(auto) y_combinator(Fun &&fun) {
   return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
 }
 
-template<class T, class U>
-bool ckmin(T &a, const U &b) {
-  if (b < a) {
-    a = b;
-    return true;
-  }
-  return false;
-}
+// clang-format off
+template<class T, class U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
+template<class T, class U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
+template<class C> int ssize(const C &c) { return static_cast<int>(c.size()); }
+template<class T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
+template<class T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
+// clang-format on
 
-template<class T, class U>
-bool ckmax(T &a, const U &b) {
-  if (a < b) {
-    a = b;
-    return true;
-  }
-  return false;
-}
-
-template<class C>
-int ssize(const C &c) {
-  return static_cast<int>(c.size());
+template<class T>
+T floor_div(T a, T b) {
+  assert(b != 0);
+  T q = a / b, r = a % b;
+  return q - (r != 0 && ((r < 0) != (b < 0)));
 }
 
 template<class T>
-bool between(const T &x, const T &lo, const T &hi) {
-  return !(x < lo) && !(hi < x);
+T ceil_div(T a, T b) {
+  assert(b != 0);
+  T q = a / b, r = a % b;
+  return q + (r != 0 && ((r < 0) == (b < 0)));
 }
 
 template<class T>
-T clamped(const T &x, const T &lo, const T &hi) {
-  return std::min(std::max(x, lo), hi);
+void sort_unique(std::vector<T> &v) {
+  std::sort(v.begin(), v.end());
+  v.erase(std::unique(v.begin(), v.end()), v.end());
 }
+
+template<class C, class T>
+void erase_one(C &c, const T &x) {
+  auto it = c.find(x);
+  assert(it != c.end());
+  c.erase(it);
+}
+
+template<class T>
+using min_priority_queue = std::priority_queue<T, std::vector<T>, std::greater<T>>;
 
 struct RNG {
   std::mt19937_64 gen;
@@ -103,9 +123,24 @@ struct RNG {
 /*** Example Usage ***/
 
 int main() {
+  int loop_sum = 0;
+  For(i, 2, 5) loop_sum += i;
+  Rev(i, 3) loop_sum += i;
+  assert(loop_sum == 17);
+
   auto fib =
-      y_combinator([](auto self, int n) -> int { return n < 2 ? n : self(n - 1) + self(n - 2); });
+      y_combinator([](auto fib, int n) -> int { return n < 2 ? n : fib(n - 1) + fib(n - 2); });
   assert(fib(10) == 55);
+
+  // Recursive lambda without y_combinator: pass the lambda to itself as the first argument.
+  std::vector<std::vector<int>> adj{{1, 2}, {0}, {0}};
+  int seen = 0;
+  auto dfs = [&](auto &&dfs, int u, int p) -> void {
+    seen++;
+    Each(v, adj[u]) if (v != p) dfs(dfs, v, u);
+  };
+  dfs(dfs, 0, -1);
+  assert(seen == 3);
 
   int x = 10;
   assert(ckmin(x, 7) && x == 7);
@@ -115,7 +150,19 @@ int main() {
   std::vector<int> v = {1, 2, 3};
   assert(ssize(v) == 3);
   assert(between(2, 1, 3));
-  assert(clamped(10, 1, 3) == 3);
+  assert(clmp(10, 1, 3) == 3);
+  assert(floor_div(-7, 3) == -3);
+  assert(ceil_div(-7, 3) == -2);
+  v = {3, 1, 3, 2, 1};
+  sort_unique(v);
+  assert((v == std::vector<int>{1, 2, 3}));
+  std::multiset<int> ms{1, 2, 2, 3};
+  erase_one(ms, 2);
+  assert(ms.count(2) == 1);
+  min_priority_queue<int> pq;
+  pq.push(3);
+  pq.push(1);
+  assert(pq.top() == 1);
 
   RNG rng(123);
   int r = rng.uniform_int(1, 6);

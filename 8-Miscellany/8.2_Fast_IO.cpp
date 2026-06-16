@@ -10,6 +10,8 @@ input is huge or when iostream overhead is measurable.
 - `FastOutput out(file)` writes to a `FILE*`, defaulting to `stdout`.
 - `out << x` writes `char`, C strings, `std::string`, integral types, or floating point types.
 - `out.flush()` writes any buffered output immediately.
+- `set_in(name)`, `set_out(name)`, and `set_io(iname, oname)` redirect standard input/output to
+  files. For example, `set_io("task.in", "task.out")` is convenient for USACO-style problems.
 
 The parser assumes valid input. Floating point input/output is provided for convenience, not as the
 main performance path.
@@ -24,6 +26,19 @@ main performance path.
 #include <limits>
 #include <string>
 #include <type_traits>
+
+void set_in(const std::string &name) {
+  assert(freopen(name.c_str(), "r", stdin) != nullptr);
+}
+
+void set_out(const std::string &name) {
+  assert(freopen(name.c_str(), "w", stdout) != nullptr);
+}
+
+void set_io(const std::string &iname, const std::string &oname) {
+  set_in(iname);
+  set_out(oname);
+}
 
 struct FastInput {
   static constexpr int BUF_SIZE = 1 << 20;
@@ -215,6 +230,8 @@ struct FastOutput {
 /*** Example Usage ***/
 
 int main() {
+  // set_io("file.in", "file.out");
+
   FILE *input = tmpfile();
   std::fputs("42 hello 3.5 -2147483648\n", input);
   std::rewind(input);

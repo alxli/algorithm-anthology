@@ -149,52 +149,99 @@ int main() {
 \section{\texorpdfstring{Unimodal and Continuous Search}{5.2 Unimodal and Continuous Search}}
 \setcounter{section}{2}
 \setcounter{subsection}{0}
-\subsection{Ternary Search}
-Given a unimodal function \inlinecode{f(x)} taking a single \inlinecode{double} argument, find its global maximum or minimum point to a specified absolute error.
+\subsection{Ternary and Golden Section Search}
+Given a unimodal function $f$, find the position of its global minimum or maximum: a value $x$ such that the function strictly decreases up to $x$ and strictly increases after it (for a minimum), or the reverse (for a maximum). All three searches below exploit the same idea: evaluate two interior points, and the comparison reveals one side of the interval that cannot contain the optimum, so it can be discarded. They differ only in how the probes are placed and whether the domain is continuous or discrete. Each maximum routine is the minimum routine applied to the negated function, since the location of a maximum of $f$ is the location of a minimum of $-f$.
 
-Ternary search evaluates the function at two interior points of the current interval and discards the outer third on the side that cannot contain the optimum, shrinking the interval by a constant factor each step until it is within the target error.
+Ternary search splits the interval into thirds. It is the simplest to reason about, but it recomputes both probe points each step, spending two function evaluations per iteration while the interval shrinks to two-thirds.
+
+Golden-section search places the probes at the golden ratio so that one probe is reused as an interior point of the next, smaller interval. It therefore performs only one new evaluation per iteration while shrinking the interval by a factor of $1/\varphi$ (about 0.618), and reaches a given accuracy in roughly 2.4 times fewer evaluations than ternary search. Prefer it when the function is expensive to evaluate.
+
+The discrete version operates on an integer domain, narrowing by thirds until at most three candidates remain and then scanning them. It returns the index of the optimum rather than a real coordinate. As with ternary search on reals, the function must be strictly unimodal.
 
 \begin{compactitem}
-  \item \inlinecode{ternary\_search\_min()} takes the domain \inlinecode{[lo, hi]} of a continuous function \inlinecode{f(x)} and returns a number \inlinecode{x} such that \inlinecode{f} is strictly decreasing on the interval \inlinecode{[lo, x]} and strictly increasing on the interval \inlinecode{[x, hi]}. For the function to be correct and deterministic, such an \inlinecode{x} must exist and be unique.
+  \item \inlinecode{ternary\_search\_min(lo, hi, f)} and \inlinecode{ternary\_search\_max(lo, hi, f)} return a \inlinecode{double} \inlinecode{x} in \inlinecode{[lo, hi]} optimizing the continuous unimodal function \inlinecode{f}, to within the optional absolute error \inlinecode{eps}.
+  \item \inlinecode{golden\_section\_min(lo, hi, f)} and \inlinecode{golden\_section\_max(lo, hi, f)} do the same with one function evaluation per iteration.
+  \item \inlinecode{discrete\_ternary\_min(lo, hi, f)} and \inlinecode{discrete\_ternary\_max(lo, hi, f)} return the integer index in the inclusive range \inlinecode{[lo, hi]} optimizing the unimodal function \inlinecode{f}, breaking ties toward the smaller index.
 \end{compactitem}
 
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
 \begin{compactitem}
-  \item \inlinecode{ternary\_search\_max()} takes the domain \inlinecode{[lo, hi]} of a continuous function \inlinecode{f(x)} and returns a number \inlinecode{x} such that \inlinecode{f} is strictly increasing on the interval \inlinecode{[lo, x]} and strictly decreasing on the interval \inlinecode{[x, hi]}. For the function to be correct and deterministic, such an \inlinecode{x} must exist and be unique.
+  \item $O(\log\left(n / {\inlinecodemath{eps}}\right))$ calls to \inlinecode{f()} for the continuous searches, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}. Golden-section makes about half as many per iteration as ternary search.
+  \item $O(\log n)$ calls to \inlinecode{f()} for the discrete searches.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(\log n)$ calls will be made to \inlinecode{f()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi} divided by the specified absolute error (epsilon).
-
-\textbf{Space Complexity}: $O(1)$ auxiliary for both operations.
+\textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
 template<class Fn>
-double ternary_search_min(double lo, double hi, Fn f, const double EPS = 1e-12) {
-  double lthird, hthird;
-  while (hi - lo > EPS) {
-    lthird = lo + (hi - lo) / 3;
-    hthird = hi - (hi - lo) / 3;
-    if (f(lthird) < f(hthird)) {
-      hi = hthird;
+double ternary_search_min(double lo, double hi, Fn f, double eps = 1e-12) {
+  while (hi - lo > eps) {
+    double m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
+    if (f(m1) < f(m2)) {
+      hi = m2;
     } else {
-      lo = lthird;
+      lo = m1;
     }
   }
-  return lo;
+  return (lo + hi) / 2;
 }
 
 template<class Fn>
-double ternary_search_max(double lo, double hi, Fn f, const double EPS = 1e-12) {
-  double lthird, hthird;
-  while (hi - lo > EPS) {
-    lthird = lo + (hi - lo) / 3;
-    hthird = hi - (hi - lo) / 3;
-    if (f(lthird) < f(hthird)) {
-      lo = lthird;
+double ternary_search_max(double lo, double hi, Fn f, double eps = 1e-12) {
+  return ternary_search_min(lo, hi, [&](double x) { return -f(x); }, eps);
+}
+
+template<class Fn>
+double golden_section_min(double lo, double hi, Fn f, double eps = 1e-12) {
+  const double r = 0.6180339887498949;  // 1 / phi = (sqrt(5) - 1) / 2.
+  double m1 = hi - r * (hi - lo), m2 = lo + r * (hi - lo);
+  double f1 = f(m1), f2 = f(m2);
+  while (hi - lo > eps) {
+    if (f1 < f2) {
+      hi = m2;
+      m2 = m1;
+      f2 = f1;
+      m1 = hi - r * (hi - lo);
+      f1 = f(m1);
     } else {
-      hi = hthird;
+      lo = m1;
+      m1 = m2;
+      f1 = f2;
+      m2 = lo + r * (hi - lo);
+      f2 = f(m2);
     }
   }
-  return hi;
+  return (lo + hi) / 2;
+}
+
+template<class Fn>
+double golden_section_max(double lo, double hi, Fn f, double eps = 1e-12) {
+  return golden_section_min(lo, hi, [&](double x) { return -f(x); }, eps);
+}
+
+template<class Int, class Fn>
+Int discrete_ternary_min(Int lo, Int hi, Fn f) {
+  while (hi - lo > 2) {
+    Int m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
+    if (f(m1) < f(m2)) {
+      hi = m2 - 1;
+    } else {
+      lo = m1 + 1;
+    }
+  }
+  Int best = lo;
+  for (Int k = lo + 1; k <= hi; k++) {
+    if (f(k) < f(best)) {
+      best = k;
+    }
+  }
+  return best;
+}
+
+template<class Int, class Fn>
+Int discrete_ternary_max(Int lo, Int hi, Fn f) {
+  return discrete_ternary_min(lo, hi, [&](Int x) { return -f(x); });
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -202,37 +249,38 @@ double ternary_search_max(double lo, double hi, Fn f, const double EPS = 1e-12) 
 \begin{lstlisting}[language=C++]
 #include <cassert>
 #include <cmath>
+#include <vector>
+using namespace std;
 
-bool equal(double a, double b) {
+bool EQ(double a, double b) {
   return fabs(a - b) < 1e-7;
 }
 
-// Parabola opening up with vertex at (-2, -24).
-double f1(double x) {
-  return 3 * x * x + 12 * x - 12;
-}
-
-// Parabola opening down with vertex at (2/19, 8366/95) ~ (0.105, 88.063).
-double f2(double x) {
-  return -5.7 * x * x + 1.2 * x + 88;
-}
-
-// Absolute value function shifted to the right by 30 units.
-double f3(double x) {
-  return fabs(x - 30);
-}
-
 int main() {
-  assert(equal(ternary_search_min(-1000, 1000, f1), -2));
-  assert(equal(ternary_search_max(-1000, 1000, f2), 2.0 / 19));
-  assert(equal(ternary_search_min(-1000, 1000, f3), 30));
+  // Parabola opening up with vertex at x = -2.
+  auto up = [](double x) { return 3 * x * x + 12 * x - 12; };
+  // Parabola opening down with vertex at x = 2/19.
+  auto down = [](double x) { return -5.7 * x * x + 1.2 * x + 88; };
+
+  assert(EQ(ternary_search_min(-1000, 1000, up), -2));
+  assert(EQ(golden_section_min(-1000, 1000, up), -2));
+  assert(EQ(ternary_search_max(-1000, 1000, down), 2.0 / 19));
+  assert(EQ(golden_section_max(-1000, 1000, down), 2.0 / 19));
+
+  // Discrete unimodal arrays: a valley and a peak.
+  vector<int> valley{5, 3, 1, 2, 4, 6};
+  vector<int> peak{1, 3, 7, 6, 2};
+  auto v = [&](int i) { return valley[i]; };
+  auto p = [&](int i) { return peak[i]; };
+  assert(discrete_ternary_min(0, static_cast<int>(valley.size()) - 1, v) == 2);  // Value 1.
+  assert(discrete_ternary_max(0, static_cast<int>(peak.size()) - 1, p) == 2);    // Value 7.
   return 0;
 }
 \end{lstlisting}
 \subsection{Hill Climbing}
-Given a continuous function \inlinecode{f(x, y)} returning a \inlinecode{double} and a (possibly arbitrary) starting guess \inlinecode{(x0, y0)}, search for a global minimum using the hill-climbing heuristic.
+Given a continuous function $f(x, y)$ returning a real number and a (possibly arbitrary) starting guess \inlinecode{(x0, y0)}, search for a global minimum using the hill-climbing heuristic.
 
-Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each of a fixed number of directions. The direction with the best (in this case, minimum) value is chosen, and further steps are taken in it until the answer no longer improves. When this happens, the step size is reduced and the same process repeats until a desired absolute error is reached. The technique's success heavily depends on the behavior of \inlinecode{f} and the initial guess. Therefore, the result is not guaranteed to be the global minimum.
+Hill-climbing is a heuristic which starts at the guess, then considers taking a single step in each of a fixed number of directions. The direction with the best (in this case, minimum) value is chosen, and further steps are taken in it until the answer no longer improves. When this happens, the step size is reduced and the same process repeats until a desired absolute error is reached. The technique's success heavily depends on the behavior of $f$ and the initial guess. Therefore, the result is not guaranteed to be the global minimum.
 
 \begin{compactitem}
   \item \inlinecode{find\_min(f, x0, y0, critical\_x, critical\_y)} returns a candidate global minimum value of \inlinecode{f} reached by hill-climbing from the starting guess \inlinecode{(x0, y0)}. If the optional pointers \inlinecode{critical\_x} and \inlinecode{critical\_y} are supplied, the point attaining the returned value is stored through them. The step-size bounds and number of directions sampled are additional optional parameters.
@@ -305,7 +353,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Simulated Annealing}
-Given a function \inlinecode{f(x, y)} to minimize over two real variables, return a good approximate minimum found by simulated annealing. This is a randomized heuristic for difficult search spaces where gradients, convexity, and unimodality are not available.
+Given a function $f(x, y)$ to minimize over two real variables, return a good approximate minimum found by simulated annealing. This is a randomized heuristic for difficult search spaces where gradients, convexity, and unimodality are not available.
 
 At each temperature, the algorithm proposes a random nearby point. Better moves are always accepted, while worse moves are accepted with probability \inlinecode{exp((current - candidate) / temperature)}. This lets the search sometimes escape local minima early on, then become greedier as the temperature decreases.
 
@@ -400,13 +448,13 @@ int main() {
 \subsection{Monotone Queue DP Optimization}
 Maintains the minimum or maximum value in a sliding window using a monotone queue. This is useful for dynamic programming recurrences where each transition may only come from one of the last $w$ states, such as \inlinecode{dp[i] = a[i] + min(dp[j])} for $j \in [i - w, i - 1)$.
 
-The queue stores candidate \inlinecode{(index, value)} pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate.
+The queue stores candidate (index, value) pairs in monotone order. Expired indices are removed from the front, and dominated values are removed from the back before inserting a new candidate.
 
 \begin{compactitem}
   \item \inlinecode{MonotoneQueue\textless{}Compare\textgreater{}()} constructs an empty queue. Use \inlinecode{std::less\textless{}T\textgreater{}} for minimum queries and \inlinecode{std::greater\textless{}T\textgreater{}} for maximum queries.
   \item \inlinecode{push(index, value)} inserts candidate \inlinecode{value} at position \inlinecode{index}, removing dominated candidates.
   \item \inlinecode{expire(first\_valid)} removes candidates with index less than \inlinecode{first\_valid}.
-  \item \inlinecode{top()} returns the best active \inlinecode{(index, value)} pair.
+  \item \inlinecode{top()} returns the best active (index, value) pair.
   \item \inlinecode{empty()} returns whether the queue has no active candidates.
 \end{compactitem}
 
@@ -565,6 +613,130 @@ int main() {
   vector<int64_t> dp_two(n + 1, INF);
   compute_dc_layer(dp_cur, dp_two, 1, n, 0, n - 1, cost);
   assert(dp_two[4] == 52);  // Split as [1, 2] and [3, 4].
+  return 0;
+}
+\end{lstlisting}
+\subsection{SMAWK Row Minima}
+Finds the position of the minimum in every row of a totally monotone matrix in time linear in its dimensions, without ever materializing the matrix. A matrix is totally monotone (for row minima) when the column index of each row's leftmost minimum never decreases as the row index increases, and this holds not just for the whole matrix but for every submatrix. Monge matrices, where \inlinecode{M[i][j] + M[i+1][j+1] \textless{}= M[i][j+1] + M[i+1][j]}, are the most common source of such matrices and arise throughout dynamic programming on intervals and partitions.
+
+The SMAWK algorithm interleaves two steps. REDUCE discards columns that cannot hold the minimum of any remaining row, leaving at most as many candidate columns as active rows. INTERPOLATE recurses on the odd-indexed active rows, then recovers each even-indexed active row's minimum by scanning only the candidate-column range bounded by its already-solved neighbors; total monotonicity guarantees those scans advance monotonically and cost $O(R + C)$ overall, where R is the number of rows and C is the number of columns in the original matrix. This removes the logarithmic factor of divide-and-conquer DP optimization, but unlike that technique it is purely offline: every matrix entry must be available on demand from the oracle, so it cannot be used when an entry depends on a row minimum computed earlier in the same pass.
+
+The matrix is supplied as a function \inlinecode{get(r, c)}, and the result reports column indices, so on ties the smallest qualifying column is chosen. For row maxima, negate the oracle or reverse its comparison.
+
+\begin{compactitem}
+  \item \inlinecode{smawk\_row\_minima(R, C, get)} returns a vector \inlinecode{arg} of length \inlinecode{R}, where \inlinecode{arg[r]} is the column index minimizing \inlinecode{get(r, c)} over $0 \leq {\inlinecodemath{c}} < {\inlinecodemath{C}}$. The matrix \inlinecode{get(r, c)} must be totally monotone, with \inlinecode{R} $\geq 0$ and \inlinecode{C} $\geq 1$.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(R + C)$ evaluations of \inlinecode{get} per call to \inlinecode{smawk\_row\_minima(R, C, get)}.
+
+\textbf{Space Complexity}: $O(R + C)$ auxiliary heap space.
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+template<class Get>
+std::vector<int> smawk_rec(
+    const Get &get, const std::vector<int> &active_rows, const std::vector<int> &candidate_cols
+) {
+  int n = static_cast<int>(active_rows.size());
+  std::vector<int> arg(n, -1);
+  if (n == 0) {
+    return arg;
+  }
+  // Base case: a single row or column is cheap to scan directly.
+  if (n <= 2 || candidate_cols.size() <= 2) {
+    for (int i = 0; i < n; i++) {
+      for (int c : candidate_cols) {
+        if (arg[i] == -1 || get(active_rows[i], c) < get(active_rows[i], arg[i])) {
+          arg[i] = c;
+        }
+      }
+    }
+    return arg;
+  }
+  // REDUCE: keep only columns that can be the minimum of some row.
+  std::vector<int> kept;
+  if (static_cast<int>(candidate_cols.size()) > n) {
+    for (int c : candidate_cols) {
+      while (!kept.empty()) {
+        int r = active_rows[static_cast<int>(kept.size()) - 1];
+        if (get(r, kept.back()) <= get(r, c)) {
+          break;
+        }
+        kept.pop_back();
+      }
+      if (static_cast<int>(kept.size()) < n) {
+        kept.push_back(c);
+      }
+    }
+  } else {
+    kept = candidate_cols;
+  }
+  // INTERPOLATE: solve the odd rows recursively, then fill the even rows between known bounds.
+  std::vector<int> odd_rows;
+  for (int i = 1; i < n; i += 2) {
+    odd_rows.push_back(active_rows[i]);
+  }
+  std::vector<int> odd_arg = smawk_rec(get, odd_rows, kept);
+  for (int i = 0; i < static_cast<int>(odd_arg.size()); i++) {
+    arg[2 * i + 1] = odd_arg[i];
+  }
+  int k = 0;
+  for (int i = 0; i < n; i += 2) {
+    int hi = (i + 1 < n) ? arg[i + 1] : kept.back();
+    int r = active_rows[i];
+    while (true) {
+      int c = kept[k];
+      if (arg[i] == -1 || get(r, c) < get(r, arg[i])) {
+        arg[i] = c;
+      }
+      if (c == hi) {
+        break;  // Stop at the upper bound; the next even row starts scanning from here.
+      }
+      k++;
+    }
+  }
+  return arg;
+}
+
+template<class Get>
+std::vector<int> smawk_row_minima(int R, int C, const Get &get) {
+  std::vector<int> row_ids(R), col_ids(C);
+  for (int i = 0; i < R; i++) {
+    row_ids[i] = i;
+  }
+  for (int j = 0; j < C; j++) {
+    col_ids[j] = j;
+  }
+  return smawk_rec(get, row_ids, col_ids);
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <vector>
+using namespace std;
+
+int main() {
+  // An explicit totally monotone matrix; row minima sit at non-decreasing columns.
+  vector<vector<int>> m{
+      {10, 17, 13, 28, 23}, {17, 22, 16, 29, 23}, {24, 28, 22, 34, 24},
+      {11, 13, 6, 17, 7},   {45, 44, 32, 37, 23},
+  };
+  auto get = [&](int r, int c) { return m[r][c]; };
+  vector<int> arg = smawk_row_minima(5, 5, get);
+
+  // Cross-check each reported column against a brute-force row scan.
+  for (int r = 0; r < 5; r++) {
+    int best = 0;
+    for (int c = 1; c < 5; c++) {
+      if (m[r][c] < m[r][best]) {
+        best = c;
+      }
+    }
+    assert(m[r][arg[r]] == m[r][best]);  // Same minimum value (smallest index on ties).
+  }
   return 0;
 }
 \end{lstlisting}

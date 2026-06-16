@@ -1,6 +1,6 @@
 /*
 
-The stable marriage problem pairs `n` men with `n` women, given that every person ranks all members
+The stable marriage problem pairs $n$ men with $n$ women, given that every person ranks all members
 of the opposite group in strict order of preference. A perfect matching is stable if no man and
 woman both prefer each other to their assigned partners; such a pair would otherwise abandon their
 matches. Unlike maximum matching, the goal is not the size of the matching (it is always perfect)
@@ -13,7 +13,7 @@ a man she prefers proposes later. Because every man descends his list at most on
 is constant work after precomputing the women's rankings, the algorithm runs in quadratic time. The
 result is man-optimal: every man receives the best partner he could have in any stable matching.
 
-Both preference lists are given as `n` by `n` matrices. `men_pref[m]` lists the women in `m`'s order
+Both preference lists are given as $n$ by $n$ matrices. `men_pref[m]` lists the women in `m`'s order
 of preference, most preferred first, and `women_pref[w]` lists the men in `w`'s order of preference.
 
 - `stable_marriage(men_pref, women_pref)` returns a vector `wife` where `wife[m]` is the woman
