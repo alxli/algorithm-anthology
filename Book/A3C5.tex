@@ -165,100 +165,82 @@
 \raggedright
 \setlength{\parskip}{0.5em}
 
-Visit \href{https://github.com/alxli/algorithm-anthology}
-{\texttt{github.com/alxli/algorithm-anthology}} for the most up-to-date digital version of this
-book.
+Browse the latest version online at: 
+\href{https://algorithms.alexli.ca}{\texttt{algorithms.alexli.ca}}
+
+Contributions are always welcome on GitHub: 
+\href{https://github.com/alxli/algorithm-anthology}{\texttt{github.com/alxli/algorithm-anthology}}
 
 \section*{Introduction}
 
-Welcome to a practical collection of concise C++ implementations for algorithms, data structures,
-and contest utilities. This is not a first textbook; it is a codebook about implementation details,
-interfaces, edge cases, and the choices that make familiar algorithms usable in real code.
-
-There are several good ways to use this book:
+Welcome to a practical collection of concise C++ implementations of algorithms, data structures, and
+contest utilities. This is not a first textbook; it is a codebook about implementation details,
+interfaces, edge cases, and the choices that make familiar algorithms usable in real code. Use it:
 \begin{itemize}
-	\item as a reference when you know an algorithm conceptually, but want to study a clean
-	implementation;
-	\item as a printed codebook for contests whose rules allow prepared reference material, including
-	ICPC-style contests;
-	\item as a checklist for edge cases, complexity, overflow, indexing conventions, and API choices;
+	\item as a reference when you know an algorithm conceptually but want a clean implementation;
+	\item as a printed codebook for contests that allow prepared material, including ICPC-style
+	events;
+	\item as a checklist for edge cases, complexity, overflow, indexing, and API choices;
 	\item as a map of related techniques: slower versions, faster versions, variants, and common
-	reductions are often placed near one another.
+	reductions sit near one another.
 \end{itemize}
 
 For learning, do not start by copying. Study the idea, prove the invariant or recurrence, implement
-a version yourself, then compare it against this one; the differences usually reveal the practical
-choices. Each section gives only the theory needed to orient the implementation: the problem, public
-interface, assumptions, and complexity. The source is organized as documentation, reusable
-implementation, then example usage. The reusable part ends before the \texttt{Example Usage} marker;
-the code after that marker exists only so the file can compile and demonstrate itself in isolation.
-When adapting a section into a solution file or personal header, remove the example block and keep
-the implementation above it.
+it yourself, then compare; the differences reveal the practical choices. Each section gives only
+enough theory to orient the implementation: problem, interface, assumptions, and complexity. Source
+files are organized as documentation, reusable implementation, then example usage. The reusable part
+ends at the \texttt{Example Usage} marker; everything after exists only so the file compiles and
+demonstrates itself. When adapting a section, drop the example block and keep the implementation
+above it.
 
-The implementations are written with the following principles in mind:
+Guiding principles:
 \begin{itemize}
-	\item \textit{Clarity:} A reader familiar with the algorithm should be able to follow the code
-	without reverse-engineering it. Important tricks, non-obvious invariants, overflow risks, and
-	language-specific assumptions should be documented.
-	\item \textit{Concision:} Contest code has to be found, read, adapted, and typed under
-	pressure. Short code is valuable when it removes noise, but not when it hides the idea. The goal
-	is compactness without cleverness for its own sake, and without discarding useful interfaces. As a
-	result, the code here is often more verbose than compact ICPC codebook-style snippets: the extra
-	code usually buys clearer names, reusable return values, safer defaults, configurable types, edge
-	identifiers, reset functions, or explicit handling of common variants.
-	\item \textit{Efficiency:} The code should have the expected asymptotic behavior and reasonable
-	constants. When a simpler version and a more robust or faster version both teach something
-	useful, both may be included. If an implementation is educational rather than competitive, the
-	section should say so.
-	\item \textit{Adaptability:} Real problems rarely match a template exactly. Interfaces are
-	chosen so that common changes, such as swapping a numeric type, changing a combine function,
-	exposing an edge ID, or choosing whether boundaries are included, are straightforward.
-	\item \textit{Consistency:} Similar structures should expose similar operations where practical.
-	Repeated naming conventions and example styles make it easier to move between chapters quickly.
-	\item \textit{Portability:} The code targets modern C++17 and tries to avoid unnecessary
-	dependencies. A few contest-useful exceptions remain, but are noted with each use.
+	\item \textit{Clarity:} A reader familiar with the algorithm should follow the code without
+	reverse-engineering it. Tricks, non-obvious invariants, overflow risks, and language assumptions
+	are documented.
+	\item \textit{Concision:} Contest code is found, read, adapted, and typed under pressure. Short
+	code helps when it removes noise, not when it hides the idea. So the code here is often more
+	verbose than compact ICPC snippets; the extra lines buy clearer names, configurable types, safer
+	defaults, reset functions, explicit handling of variants, and more.
+	\item \textit{Efficiency:} Expected asymptotic behavior and reasonable constants. Both simpler
+	and more robust versions are often included, but educational-only sections are labeled so.
+	\item \textit{Adaptability:} Interfaces make common changes easy, such as swapping a numeric type,
+	changing a combine function, exposing an edge ID, or choosing whether boundaries are included.
+	\item \textit{Consistency:} Similar structures expose similar operations, with repeated naming and
+	example styles, so moving between chapters is easy.
+	\item \textit{Portability:} Targets modern C++17 and avoids unnecessary dependencies; the few
+	contest-useful exceptions are noted at each use.
 \end{itemize}
 
-This project began as a personal contest codebook, so it still favors single-file snippets,
-predictable APIs, compact examples, and low constants. It has also become a record of design
-decisions: what to make generic, what to leave explicit, when to include a slow version, and how to
-make a known algorithm pleasant to use.
-
-Use this book actively: annotate it, delete what you dislike, rename functions to match your own
-habits, and stress-test anything you intend to trust.
-
-\begin{flushright}
-Cheers.\\
---- Alex
-\end{flushright}
+This began as a personal contest codebook, so it favors single-file snippets, predictable APIs,
+compact examples, and low constants. Use it actively: annotate it, delete what you dislike, rename
+functions to match your habits, and stress-test anything you intend to trust. Cheers!
 
 \section*{Portability Notes}
 
-All examples are intended for a modern GCC or Clang environment with C++17 support. A typical
-compile command is:
+Examples target a modern GCC or Clang environment with C++17. A typical compile command:
 
 \begin{verbatim}
    g++ -std=c++17 -O2 -Wall -pedantic
 \end{verbatim}
 
-Most implementations assume common contest-platform type sizes: 8-bit \texttt{char}, 32-bit
-\texttt{int} and \texttt{float}, and 64-bit \texttt{double} and \texttt{long long}. The width and
-precision of \texttt{long double} are implementation-dependent; sections that rely on it should say
-so explicitly.
+Most code assumes common contest-platform type sizes: 8-bit \texttt{char}, 32-bit \texttt{int} and
+\texttt{float}, 64-bit \texttt{double} and \texttt{long long}. \texttt{long double} width and
+precision are implementation-dependent; sections relying on it say so.
 
-The code targets ISO C++17 unless noted. The most common exceptions are:
+The code targets ISO C++17 unless noted. The most common exceptions:
 
 \begin{itemize}
-	\item GCC and Clang integer extensions such as \texttt{\_\_int128} or
-	\texttt{\_\_uint128\_t}, usually guarded with a portable fallback when overflow safety matters.
-	\item Compiler builtins such as \texttt{\_\_builtin\_popcount()} and
-	\texttt{\_\_builtin\_clz()}. These are convenient and widely available, but C++20's
-	\texttt{\textless{}bit\textgreater{}} header provides standard alternatives for many of them.
-	See \url{https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html} for GCC's reference.
-	\item GNU policy-based data structures such as \texttt{\_\_gnu\_pbds::tree}, in limited sections
-	only to show some useful but non-standard library components.
-	\item A small number of explicitly documented representation assumptions, such as
-	\texttt{signbit\_()} in the math utilities assuming an IEEE-like floating-point sign bit layout.
+	\item GCC/Clang integer extensions like \texttt{\_\_int128} or \texttt{\_\_uint128\_t}, usually
+	guarded with a portable fallback when overflow safety matters.
+	\item Compiler builtins like \texttt{\_\_builtin\_popcount()} and \texttt{\_\_builtin\_clz()} ---
+	convenient and widely available, though C++20's \texttt{\textless{}bit\textgreater{}} header
+	standardizes many of them. See \url{https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html} for
+	GCC's reference.
+	\item GNU policy-based data structures like \texttt{\_\_gnu\_pbds::tree}, used in a few sections
+	to show useful non-standard components.
+	\item A few documented representation assumptions, such as \texttt{signbit\_()} in the math
+	utilities assuming an IEEE-like floating-point sign bit layout.
 \end{itemize}
 
 \pdfbookmark[0]{Contents}{toc}
