@@ -6883,7 +6883,7 @@ Recovers the unique polynomial of degree less than $n$ that passes through $n$ g
 Coefficient recovery uses Newton's divided differences. It first replaces the sample values by their successive divided differences in place, then expands the Newton basis $1$, $(x - x_0)$, $(x - x_0)(x - x_1)$, $\ldots$ into ordinary coefficients by multiplying through one factor at a time. Point evaluation instead applies the Lagrange formula directly, summing each sample weighted by the product of $(t - x_j) / (x_k - x_j)$ over the other nodes. Both run in $O(n^{2})$ modular operations.
 
 \begin{compactitem}
-  \item \inlinecode{interpolate(x, y)} returns the coefficients $a_0, ..., a_{n-1}$ (constant term first) of the polynomial $P$ with \$P(`x[i]`) = `y[i]`, modulo `MOD`. The entries of `x` must be distinct modulo `MOD`.
+  \item \inlinecode{interpolate(x, y)} returns the coefficients $a_0, ..., a_{n-1}$ (constant term first) of the polynomial $P$ with $P({\inlinecodemath{x[i]}}) = {\inlinecodemath{y[i]}}$, modulo \inlinecode{MOD}. The entries of \inlinecode{x} must be distinct modulo \inlinecode{MOD}.
   \item \inlinecode{interpolate\_at(x, y, t)} returns $P({\inlinecodemath{t}})$ modulo \inlinecode{MOD} for that same polynomial, without building its coefficients.
 \end{compactitem}
 
