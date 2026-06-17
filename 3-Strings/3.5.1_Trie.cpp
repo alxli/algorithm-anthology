@@ -5,7 +5,7 @@ character, and each inserted string corresponds to a path from the root to a nod
 a terminal node. Children are stored in hash tables, and `walk()` sorts child labels as needed to
 preserve lexicographic traversal.
 
-- `Trie()` constructs an empty map.
+- `Trie<V>()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(s, v)` adds an entry with string key `s` and value `v` to the map, returning `true` if a

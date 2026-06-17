@@ -10,7 +10,7 @@ graph using depth-first search, before repeating on the new residual graph.
 This variant stores residual edges in a flat array so callers can inspect edge flows and decompose
 the final flow into source-to-sink paths.
 
-- `Dinic(n)` constructs an empty flow network with nodes numbered from 0 to `n - 1`.
+- `Dinic<T>(n)` constructs an empty flow network with nodes numbered [0, `n`).
 - `add_edge(u, v, cap)` adds a directed residual-network edge from `u` to `v` and returns its edge
   ID.
 - `edge_flow(id)` returns the flow through a previously added edge.

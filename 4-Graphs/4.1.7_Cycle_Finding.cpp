@@ -6,8 +6,8 @@ multigraphs with parallel edges. In an undirected graph, the cycles found this w
 basis: one cycle for each non-tree edge. In a directed graph, this finds cycles created by back
 edges to vertices still on the recursion stack.
 
-- `CycleFinder(n, directed)` constructs a graph on `n` nodes, directed if `directed` is true and
-  undirected otherwise.
+- `CycleFinder(n, directed)` constructs a graph of `n` nodes numbered [0, `n`). The graph is
+  directed if `directed` is true, or undirected otherwise.
 - `add_edge(u, v)` adds an edge and returns its edge ID.
 - `find_cycles(max_cycles, max_total_size)` returns simple cycles as vectors of edge IDs, stopping
   once either optional limit is reached.
@@ -82,12 +82,11 @@ class CycleFinder {
   std::vector<std::vector<int>> find_cycles(
       int max_cycles = 1 << 30, int max_total_size = 1 << 30
   ) const {
-    int nodes = static_cast<int>(adj.size());
-    std::vector<int> state(nodes, -1), stack;
+    int n = static_cast<int>(adj.size());
+    std::vector<int> state(n, -1), stack;
     std::vector<std::vector<int>> cycles;
     int total_size = 0;
-
-    for (int u = 0; u < nodes; u++) {
+    for (int u = 0; u < n; u++) {
       if (state[u] == -1) {
         dfs_cycles(u, -1, max_cycles, max_total_size, state, stack, cycles, total_size);
       }

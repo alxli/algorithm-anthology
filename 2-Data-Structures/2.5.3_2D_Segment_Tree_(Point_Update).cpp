@@ -35,7 +35,7 @@ codebook default.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows from `r1` to `r2`, inclusive, and columns from `c1` to `c2`,
   inclusive.
-- `update(r, c, d)` assigns the value `v` at `(r, c)` to `apply_delta(v, d)`.
+- `update(r, c, d)` assigns the value `v` at (`r`, `c`) to `apply_delta(v, d)`.
 
 Time Complexity:
 - O(1) per call to the constructor.

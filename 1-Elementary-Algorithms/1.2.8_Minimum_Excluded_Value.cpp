@@ -7,10 +7,10 @@ elements never exceeds $n$, the one-shot version simply marks which of the value
 and scans for the first gap. The dynamic version keeps a count per value plus an ordered set of
 absent values, whose smallest member is always the current MEX.
 
-- `mex(lo, hi)` returns the MEX of the values in `[lo, hi)`.
-- `DynamicMex(n)` maintains counts of values in `[0, n]`, enough to track the MEX of a multiset of
+- `mex(lo, hi)` returns the MEX of the values in [`lo`, `hi`).
+- `DynamicMex(n)` maintains counts of values in [0, `n`], enough to track the MEX of a multiset of
   at most `n` relevant nonnegative values.
-- `add(x)` inserts one copy of value `x` if `x` $\in$ `[0, n]`.
+- `add(x)` inserts one copy of value `x` if `x` $\in$ [0, `n`].
 - `remove(x)` removes one copy of value `x` if present.
 - `get()` returns the current MEX.
 

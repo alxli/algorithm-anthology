@@ -9,7 +9,7 @@ smallest available leaf at each step. This makes the implementation deterministi
 usual textbook convention.
 
 - `encode_prufer()` returns the prufer code for the global, bidirectionally pre-populated adjacency
-  list `adj` which must form a valid tree with nodes numbered from 0 to `adj.size() - 1`.
+  list `adj` which must form a valid tree with nodes numbered [0, `n`), where `n` is `adj.size()`.
 - `decode_prufer()` takes a Prufer code and returns the corresponding tree edges.
 
 Time Complexity:
@@ -26,17 +26,17 @@ Space Complexity:
 #include <vector>
 
 std::vector<int> encode_prufer(const std::vector<std::vector<int>> &adj) {
-  int nodes = static_cast<int>(adj.size());
-  std::vector<int> degree(nodes), parent(nodes, -1), code;
+  int n = static_cast<int>(adj.size());
+  std::vector<int> degree(n), parent(n, -1), code;
   std::set<int> leaves;
-  if (nodes <= 2) {
+  if (n <= 2) {
     return code;
   }
   // Root at node n - 1, which is guaranteed to survive smallest-leaf removal (it is never the
   // smallest leaf while other nodes remain). Rooting elsewhere risks recording parent[root] == -2
   // if the chosen root itself gets stripped to a leaf (e.g. when n - 1 happens to be a leaf).
-  int root = nodes - 1;
-  for (int u = 0; u < nodes; u++) {
+  int root = n - 1;
+  for (int u = 0; u < n; u++) {
     degree[u] = static_cast<int>(adj[u].size());
     if (degree[u] == 1) {
       leaves.insert(u);
@@ -54,7 +54,7 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int>> &adj) {
       }
     }
   }
-  for (int i = 0; i < nodes - 2; i++) {
+  for (int i = 0; i < n - 2; i++) {
     int leaf = *leaves.begin();
     leaves.erase(leaves.begin());
     int p = parent[leaf];
@@ -67,14 +67,14 @@ std::vector<int> encode_prufer(const std::vector<std::vector<int>> &adj) {
 }
 
 std::vector<std::pair<int, int>> decode_prufer(const std::vector<int> &code) {
-  int nodes = static_cast<int>(code.size()) + 2;
-  std::vector<int> degree(nodes, 1);
+  int n = static_cast<int>(code.size()) + 2;
+  std::vector<int> degree(n, 1);
   std::set<int> leaves;
   std::vector<std::pair<int, int>> edges;
   for (int c : code) {
     degree[c]++;
   }
-  for (int u = 0; u < nodes; u++) {
+  for (int u = 0; u < n; u++) {
     if (degree[u] == 1) {
       leaves.insert(u);
     }

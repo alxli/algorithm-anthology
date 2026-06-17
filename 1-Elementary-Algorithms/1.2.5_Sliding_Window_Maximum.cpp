@@ -9,8 +9,8 @@ window, and indices that fall outside the window are dropped from the front. The
 is always the maximum of the current window. This is the windowed counterpart of the monotonic
 stack: each index is pushed and popped at most once.
 
-Both functions take a vector `a` of $n$ comparable values and a window length $k \in [1, n]$,
-returning a vector of $n - k + 1$ results, one per window in left-to-right order.
+Both functions take a vector of $n$ comparable values and a window length $k \in [1, n]$, returning
+a vector of $n - k + 1$ results, one per window in left-to-right order.
 
 - `sliding_window_maximum(a, k)` returns the maximum of each window of length `k`.
 - `sliding_window_minimum(a, k)` returns the minimum of each window of length `k`.

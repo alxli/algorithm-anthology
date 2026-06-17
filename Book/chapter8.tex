@@ -7,20 +7,20 @@ Small contest-template helpers that are useful across many algorithms. These sni
 \begin{compactitem}
   \item \inlinecode{y\_combinator(f)} wraps a recursive lambda so that the lambda can call itself as its first argument.
   \item \inlinecode{Rep(i,N)}, \inlinecode{For(i,L,H)}, \inlinecode{Rev(i,N)}, \inlinecode{Dwn(i,H,L)}, and \inlinecode{Each(x,C)} are compact loop macros.
+  \item \inlinecode{sz(c)} returns the signed size of a container.
   \item \inlinecode{ckmin(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{b \textless{} a} before the assignment.
   \item \inlinecode{ckmax(a, b)} assigns \inlinecode{a = b} and returns true if \inlinecode{a \textless{} b} before the assignment.
-  \item \inlinecode{ssize(c)} returns the signed size of a container.
   \item \inlinecode{between(x, a, b)} returns whether \inlinecode{a} $\leq$ \inlinecode{x} $\leq$ \inlinecode{b}.
-  \item \inlinecode{clmp(x, a, b)} returns \inlinecode{x} clamped into the interval \inlinecode{[a, b]}. This is not needed on C++17 and later, where std::clamp() is available.
+  \item \inlinecode{clmp(x, a, b)} returns \inlinecode{x} clamped into the interval [\inlinecode{a}, \inlinecode{b}]. This is not needed on C++17 and later, where std::clamp() is available.
   \item \inlinecode{ceil\_div(a, b)} and \inlinecode{floor\_div(a, b)} divide signed integers with mathematical rounding toward positive or negative infinity. Requires \inlinecode{b != 0}.
   \item \inlinecode{sort\_unique(v)} sorts a vector and removes duplicates.
   \item \inlinecode{erase\_one(c, x)} erases one existing value from an associative container, asserting that it is present.
   \item \inlinecode{min\_priority\_queue\textless{}T\textgreater{}} is a min-heap alias.
   \item \inlinecode{RNG()} constructs a 64-bit Mersenne Twister seeded from the steady clock.
   \item \inlinecode{RNG(seed)} constructs a reproducible 64-bit Mersenne Twister.
-  \item \inlinecode{rng.uniform\_int(lo, hi)} returns a random integer in the inclusive range \inlinecode{[lo, hi]}.
-  \item \inlinecode{rng.uniform\_real(lo, hi)} returns a random real number in the half-open range \inlinecode{[lo, hi)}.
-  \item \inlinecode{rng.shuffle(lo, hi)} randomly shuffles the iterator range \inlinecode{[lo, hi)}.
+  \item \inlinecode{rng.uniform\_int(lo, hi)} returns a random integer in the inclusive range [\inlinecode{lo}, \inlinecode{hi}].
+  \item \inlinecode{rng.uniform\_real(lo, hi)} returns a random real number in the half-open range [\inlinecode{lo}, \inlinecode{hi}).
+  \item \inlinecode{rng.shuffle(lo, hi)} randomly shuffles the range [\inlinecode{lo}, \inlinecode{hi}).
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
@@ -58,9 +58,9 @@ decltype(auto) y_combinator(Fun &&fun) {
   return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
 }
 
+template<class C> int sz(const C &c) { return static_cast<int>(c.size()); }
 template<class T, class U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
 template<class T, class U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
-template<class C> int ssize(const C &c) { return static_cast<int>(c.size()); }
 template<class T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
 template<class T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
 
@@ -120,11 +120,14 @@ struct RNG {
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 int main() {
-  int loop_sum = 0;
-  For(i, 2, 5) loop_sum += i;
-  Rev(i, 3) loop_sum += i;
-  assert(loop_sum == 17);
+  int tot = 0;
+  Rep(i, 4) tot += i;     // 0 + 1 + 2 + 3 = 6
+  For(i, 2, 5) tot += i;  // 6 + (2 + 3 + 4 + 5) = 20
+  Rev(i, 3) tot += i;     // 20 + (2 + 1 + 0) = 23
+  Dwn(i, 8, 6) tot += i;  // 23 + (8 + 7 + 6) = 44
+  assert(tot == 44);
 
+  // Recursive lambda with y_combinator.
   auto fib =
       y_combinator([](auto fib, int n) -> int { return n < 2 ? n : fib(n - 1) + fib(n - 2); });
   assert(fib(10) == 55);
@@ -139,13 +142,19 @@ int main() {
   dfs(dfs, 0, -1);
   assert(seen == 3);
 
+  // Recursive lambdas are automatically supported in C++23.
+#if __cplusplus >= 202302L
+  auto fact = [&](this auto fact, int n) -> int { return n ? n * fact(n - 1) : 1; };
+  assert(fact(5) == 120);
+#endif
+
   int x = 10;
   assert(ckmin(x, 7) && x == 7);
   assert(!ckmin(x, 9) && x == 7);
   assert(ckmax(x, 11) && x == 11);
 
   std::vector<int> v = {1, 2, 3};
-  assert(ssize(v) == 3);
+  assert(sz(v) == 3);
   assert(between(2, 1, 3));
   assert(clmp(10, 1, 3) == 3);
   assert(floor_div(-7, 3) == -3);
@@ -165,7 +174,7 @@ int main() {
   int r = rng.uniform_int(1, 6);
   assert(1 <= r && r <= 6);
   rng.shuffle(v.begin(), v.end());
-  assert(ssize(v) == 3);
+  assert(sz(v) == 3);
   return 0;
 }
 \end{lstlisting}
@@ -744,11 +753,11 @@ int main() {
 GNU policy-based data structures provide ordered sets and maps with order statistics. They are not part of the C++ standard library, but they are available on many GNU C++ contest judges.
 
 \begin{compactitem}
-  \item \inlinecode{ordered\_set\textless{}T\textgreater{}} behaves like a set with \inlinecode{find\_by\_order(k)} and \inlinecode{order\_of\_key(x)}.
-  \item \inlinecode{ordered\_map\textless{}K, V\textgreater{}} behaves like a map with \inlinecode{find\_by\_order(k)} and \inlinecode{order\_of\_key(x)}.
-  \item \inlinecode{hash\_map\textless{}K, V\textgreater{}} and \inlinecode{hash\_set\textless{}K\textgreater{}} are fast hash tables using \inlinecode{gp\_hash\_table}. The default \inlinecode{splitmix64\_hash} is for integer-like keys; pass a custom hash for other key types. It randomizes the hash seed to avoid weak adversarial integer hashes.
-  \item \inlinecode{ordered\_multiset\textless{}T\textgreater{}} stores duplicates by pairing each value with a unique id.
-  \item \inlinecode{ordered\_multimap\textless{}K, V\textgreater{}} stores duplicate keys by pairing each key with a unique id.
+  \item \inlinecode{OrderedSet\textless{}T\textgreater{}} behaves like a set with \inlinecode{find\_by\_order(k)} and \inlinecode{order\_of\_key(x)}.
+  \item \inlinecode{OrderedMap\textless{}K, V\textgreater{}} behaves like a map with \inlinecode{find\_by\_order(k)} and \inlinecode{order\_of\_key(x)}.
+  \item \inlinecode{HashMap\textless{}K, V\textgreater{}} and \inlinecode{HashSet\textless{}K\textgreater{}} are fast hash tables using \inlinecode{gp\_hash\_table}. The default \inlinecode{SplitMix64Hasher} is for integer-like keys; pass a custom hash for other key types. It randomizes the hash seed to avoid weak adversarial integer hashes.
+  \item \inlinecode{OrderedMultiset\textless{}T\textgreater{}} stores duplicates by pairing each value with a unique ID.
+  \item \inlinecode{OrderedMultimap\textless{}K, V\textgreater{}} stores duplicate keys by pairing each key with a unique ID.
   \item \inlinecode{PairingHeap\textless{}T\textgreater{}} is a meldable priority queue; \inlinecode{push()} returns an iterator that can be passed to \inlinecode{modify()} or \inlinecode{erase()}.
   \item \inlinecode{BinaryHeap\textless{}T\textgreater{}}, \inlinecode{BinomialHeap\textless{}T\textgreater{}}, and \inlinecode{RcBinomialHeap\textless{}T\textgreater{}} are alternative GNU priority queue tags with the same interface.
 \end{compactitem}
@@ -770,14 +779,15 @@ The order statistic operations are 0-indexed. The priority queue \inlinecode{joi
 #include <utility>
 
 template<class K, class V, class Compare = std::less<K>>
-using ordered_map = __gnu_pbds::tree<
+using OrderedMap = __gnu_pbds::tree<
     K, V, Compare, __gnu_pbds::rb_tree_tag, __gnu_pbds::tree_order_statistics_node_update>;
 
 template<class T, class Compare = std::less<T>>
-using ordered_set = ordered_map<T, __gnu_pbds::null_type, Compare>;
+using OrderedSet = OrderedMap<T, __gnu_pbds::null_type, Compare>;
 
-struct splitmix64_hash {
-  static uint64_t splitmix64(uint64_t x) {
+struct SplitMix64Hasher {
+  // SplitMix64 mixer.
+  static uint64_t mix64(uint64_t x) {
     x += 0x9e3779b97f4a7c15ULL;
     x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
     x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -787,19 +797,19 @@ struct splitmix64_hash {
   size_t operator()(uint64_t x) const {
     static const uint64_t FIXED_RANDOM =
         std::chrono::steady_clock::now().time_since_epoch().count();
-    return splitmix64(x + FIXED_RANDOM);
+    return mix64(x + FIXED_RANDOM);
   }
 };
 
-template<class K, class V, class Hash = splitmix64_hash>
-using hash_map = __gnu_pbds::gp_hash_table<K, V, Hash>;
+template<class K, class V, class Hash = SplitMix64Hasher>
+using HashMap = __gnu_pbds::gp_hash_table<K, V, Hash>;
 
-template<class K, class Hash = splitmix64_hash>
-using hash_set = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, Hash>;
+template<class K, class Hash = SplitMix64Hasher>
+using HashSet = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, Hash>;
 
 template<class T>
-class ordered_multiset {
-  ordered_set<std::pair<T, int>> tree;
+class OrderedMultiset {
+  OrderedSet<std::pair<T, int>> tree;
   int timer = 0;
 
  public:
@@ -820,8 +830,8 @@ class ordered_multiset {
 };
 
 template<class K, class V>
-class ordered_multimap {
-  ordered_map<std::pair<K, int>, V> tree;
+class OrderedMultimap {
+  OrderedMap<std::pair<K, int>, V> tree;
   int timer = 0;
 
  public:
@@ -862,22 +872,22 @@ using RcBinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::rc_bin
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 int main() {
-  ordered_set<int> s;
+  OrderedSet<int> s;
   s.insert(10);
   s.insert(20);
   s.insert(30);
   assert(*s.find_by_order(1) == 20);
   assert(s.order_of_key(25) == 2);
 
-  hash_map<int, int> hm;
+  HashMap<int, int> hm;
   hm[10] = 1;
   hm[20] = 2;
   assert(hm[10] == 1);
-  hash_set<int> hs;
+  HashSet<int> hs;
   hs.insert(7);
   assert(hs.find(7) != hs.end());
 
-  ordered_multiset<int> ms;
+  OrderedMultiset<int> ms;
   ms.insert(5);
   ms.insert(5);
   ms.insert(7);
@@ -887,7 +897,7 @@ int main() {
   assert(ms.erase_one(5));
   assert(ms.order_of_key(7) == 1);
 
-  ordered_multimap<int, char> mp;
+  OrderedMultimap<int, char> mp;
   mp.insert(5, 'a');
   mp.insert(5, 'b');
   mp.insert(7, 'c');

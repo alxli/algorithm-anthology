@@ -1,8 +1,8 @@
 /*
 
 Circle tangent and intersection calculations in two dimensions. Such calculations are floating-point
-by nature, so this section mostly computes in double. The input point `p` to `tangent()` can be any
-type with numeric `.x` and `.y` fields, and intersection point outputs are written through a
+by nature, so this section mostly computes in `double`. The input point `p` to `tangent()` can be
+any type with numeric `.x` and `.y` fields, and intersection point outputs are written through a
 caller-supplied point type.
 
 - `tangent(c, p, &l1, &l2)` determines the line(s) tangent to circle `c` that pass through point

@@ -46,7 +46,7 @@ SECTION_NAMES = {
     (3, 8): 'Encoding and Compression',
     (4, 1): 'DFS and Tree Algorithms',
     (4, 2): 'Connectivity',
-    (4, 3): 'BFS and Shortest Paths',
+    (4, 3): 'Shortest Paths',
     (4, 4): 'Spanning Trees',
     (4, 5): 'Flows and Cuts',
     (4, 6): 'Matching and Assignment',

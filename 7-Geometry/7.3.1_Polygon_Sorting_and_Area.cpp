@@ -10,13 +10,13 @@ struct with numeric `.x` and `.y` fields and `<` / `==` operators.
 - `cw_comp(a, b, c)` returns whether point `a` compares clockwise before `b` about `c`.
 - `CWComparator(c)` / `CCWComparator(c)` return comparators for `std::sort`.
 - `polygon_area_2x(lo, hi)` returns exactly double the area of the polygon with vertices specified
-  by the range `[lo, hi)` of points in either clockwise or counter-clockwise order. The return value
-  is integral or floating-point, depending on the input point type. For integer vertices, divide by
-  2 in the caller if the exact area is needed.
+  by the range [`lo`, `hi`) of points in either clockwise or counter-clockwise order. The return
+  value is integral or floating-point, depending on the input point type. For integer vertices,
+  divide by 2 in the caller if the exact area is needed.
 - `polygon_area(lo, hi)` returns the area as `double`.
 - `polygon_centroid(lo, hi)` returns the centroid (center of mass) of a non-degenerate simple
-  polygon with vertices in boundary order as `{x, y}`. It uses signed shoelace weights, so clockwise
-  and counter-clockwise inputs both work.
+  polygon with vertices in boundary order as an `std::pair<double, double>`. It uses signed shoelace
+  weights, so either clockwise or counter-clockwise inputs will work.
 
 Overflow warning: `cw_comp` and `polygon_area_2x` form cross products that grow like the squared
 coordinate magnitude (and the shoelace sum accumulates over all vertices). For integer point types

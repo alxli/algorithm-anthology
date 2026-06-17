@@ -12,11 +12,11 @@ are coprime to a modulus $m$: subtract the multiples of each prime factor of $m$
 counted twice, and so on. The signed terms are precisely the values of `mu` over the squarefree
 divisors of $m$, so `count_coprime(n, m)` equals $\sum_{d \mid m} \mu(d) \lfloor n / d \rfloor$.
 
-- `mobius(n)` returns $\mu(n)$ for a single $n$ by trial division.
+- `mobius(n)` returns $\mu(n)$ for a single `n` by trial division.
 - `mobius_sieve(n)` returns a vector of length $n + 1$ where index $i$ holds $\mu(i)$, computed
   together with a linear sieve.
-- `count_coprime(n, m)` returns the number of integers in $[1, n]$ that are coprime to $m$, via
-  inclusion-exclusion over the distinct prime factors of $m$.
+- `count_coprime(n, m)` returns the number of integers in [1, `n`] that are coprime to $m$, via
+  inclusion-exclusion over the distinct prime factors of `m`.
 
 Time Complexity:
 - O(sqrt n) per call to `mobius(n)`.

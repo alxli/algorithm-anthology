@@ -26,10 +26,10 @@ rather than epsilon comparisons. The floating-point-only operations are simply n
 unless called.
 
 Type aliases:
-- `PointI = Point<int>`: exact integer geometry (small coordinates only; see overflow warning)
-- `PointL = Point<long long>`: exact integer geometry for large coordinates
-- `PointD = Point<double>`: standard floating-point
-- `PointLD = Point<long double>`: extra precision
+- `PointI = point<int>`: exact integer geometry (small coordinates only; see overflow warning)
+- `PointL = point<long long>`: exact integer geometry for large coordinates
+- `PointD = point<double>`: standard floating-point
+- `PointLD = point<long double>`: extra precision
 - `Point = PointD`: default point type is double
 
 Time Complexity:

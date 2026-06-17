@@ -1,8 +1,8 @@
 /*
 
 Maintain an undirected forest dynamically using Euler Tour Trees. Each tree is represented by a
-sequence of directed edge occurrences in an implicit treap: an undirected edge `{u, v}` contributes
-two nodes, `(u -> v)` and `(v -> u)`. Rerooting a represented tree is a cyclic rotation of this
+sequence of directed edge occurrences in an implicit treap: an undirected edge $(u, v)$ contributes
+two nodes, $(u \to v)$ and $(v \to u)$. Rerooting a represented tree is a cyclic rotation of this
 sequence, while `link` concatenates two tours with the new edge occurrences and `cut` removes the
 two occurrences of an existing edge, splitting one tour into two.
 
@@ -10,7 +10,7 @@ This version supports dynamic connectivity, `link`, `cut`, rerooting, and listin
 connected component. It does not store vertex aggregates. To add component aggregates, a common
 extension is to insert one self-loop occurrence per vertex and maintain aggregate data in the treap.
 
-- `EulerTourTree(n)` constructs a forest on vertices `0..n-1`.
+- `EulerTourTree(n)` constructs a forest on vertices numbered [0, `n`).
 - `connected(u, v)` returns whether `u` and `v` are in the same tree.
 - `link(u, v)` adds an edge between different trees and returns false if the edge would create a
   cycle or already exists.

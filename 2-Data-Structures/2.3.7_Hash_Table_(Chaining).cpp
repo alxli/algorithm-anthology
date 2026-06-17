@@ -4,12 +4,12 @@ Maintain an unordered map: a collection of key-value pairs in which each key app
 Keys are hashed into buckets, and this implementation resolves collisions by chaining the entries in
 each bucket into a linked list. It requires `operator==` on the key type and a hash functor.
 
-Compared with the open-addressing version (2.3.9), chaining keeps each entry at a stable address: a
+Compared with the open-addressing version (2.3.8), chaining keeps each entry at a stable address: a
 rehash never moves existing nodes, so pointers from `find()` and references from `operator[]` stay
 valid, and load factors above 1 are tolerated gracefully. The costs are a separate allocation per
 entry and cache-unfriendly pointer chasing during traversal.
 
-- `ChainingHashMap()` constructs an empty map.
+- `ChainingHashMap<K, V, Hash>()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new
@@ -168,7 +168,7 @@ struct Hasher {
     return k * 2654435761u;  // Or just return k.
   }
 
-  // SplitMix64 finalizer (see 3.2.1's mix64).
+  // SplitMix64 mixer (see 3.2.1's mix64).
   uint32_t operator()(uint64_t k) {
     k += RAND_SEED;
     k = (k ^ (k >> 30)) * 0xbf58476d1ce4e5b9ULL;

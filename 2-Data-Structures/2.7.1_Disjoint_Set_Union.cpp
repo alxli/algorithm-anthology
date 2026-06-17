@@ -8,10 +8,10 @@ the root of the larger one (union-by-size). Together these keep the trees nearly
 is interchangeable with the union-by-rank strategy used by Sparse Disjoint Set Union and yields the
 same complexity bounds, but union-by-size additionally supports `set_size()` queries.
 
-This version is simplified to work only on the fixed set of integer elements 0 through `n - 1`,
-chosen at construction. For arbitrary element types, see Sparse Disjoint Set Union.
+This version is simplified to work only on the fixed set of integer elements [0, `n`), chosen at
+construction. For arbitrary element types, see Sparse Disjoint Set Union.
 
-- `DSU(n)` constructs `n` singleton partitions over elements 0 through `n - 1`.
+- `DSU(n)` constructs `n` singleton partitions over elements [0, `n`).
 - `find_root(u)` returns the unique representative of the partition containing `u`.
 - `sets()` returns the current number of partitions.
 - `set_size(u)` returns the number of elements in the partition containing `u`.
@@ -19,8 +19,6 @@ chosen at construction. For arbitrary element types, see Sparse Disjoint Set Uni
 - `unite(u, v)` replaces the partitions containing `u` and `v` with a single new partition
   consisting of the union of elements in the original partitions, returning `true` if a merge
   occurred or `false` if `u` and `v` already belonged to the same partition.
-
-All element arguments must lie in the range $[0, n)$.
 
 Time Complexity:
 - O(n) per call to `DSU(n)`, and O(1) per call to `sets()`.

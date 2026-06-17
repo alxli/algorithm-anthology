@@ -6,8 +6,8 @@ sufficient when intervals have weights. With intervals sorted by finish time, th
 first $i$ intervals either skips interval $i$ or adds its weight to the best total over intervals
 finishing no later than its start, with that predecessor located by binary search.
 
-Intervals are represented as half-open ranges `[start, finish)`, so two intervals are compatible if
-the next interval's `start` is at least the previous interval's `finish`.
+Intervals are represented as half-open ranges [`start`, `finish`), so two intervals are compatible
+if the next interval's `start` is at least the previous interval's `finish`.
 
 - `weighted_interval_scheduling(intervals)` returns the maximum total weight of a compatible subset
   from an input vector of `WeightedInterval` with fields `start`, `finish`, and `weight`.

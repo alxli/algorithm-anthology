@@ -1,11 +1,12 @@
 /*
 
 A straight line in two dimensions, templated on the coordinate type `T` (default `double`). The line
-$ax + by + c = 0$ is stored unnormalized, so a line through integer points keeps the integer
-coefficients: `a = q.y - p.y`, `b = p.x - q.x`, `c = -(a*p.x + b*p.y)`. Storage and the exact
-predicates `contains()`, `is_parallel()`, and `is_perpendicular()` therefore stay exact for integer
-`T`. The inherently-fractional operations `slope()`, `x()`, and `y()` return `fp_t`, which is
-`double` when `T` is integral and `T` itself otherwise.
+$ax + by + c = 0$ is stored unnormalized, so a line through integer points $(p_x, p_y)$ and
+$(q_x, q_y)$ keeps the integer coefficients: $a = q_y - p_y$, $b = p_x - q_x$,
+$c = -(a \cdot p_x + b \cdot p_y)$. Storage and the exact predicates `contains()`, `is_parallel()`,
+and `is_perpendicular()` therefore stay exact for integral type `T`. The inherently-fractional
+operations `slope()`, `x()`, and `y()` return `fp_t`, which is `double` when `T` is integral and `T`
+itself otherwise.
 
 Because coefficients are not normalized to a canonical form, `operator==` compares lines by
 proportionality (whether they are the same geometric line) rather than by coefficient equality.

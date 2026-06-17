@@ -1,7 +1,7 @@
 /*
 
 Given a starting node in a weighted directed graph, compute shortest paths even when some edge
-weights are negative. The Shortest Path Faster Algorithm is a queue-based optimization of
+weights are negative. The Shortest Path Faster Algorithm (SPFA) is a queue-based optimization of
 Bellman-Ford: instead of relaxing every edge in every round, it keeps a queue of nodes whose
 distances have improved and relaxes only their outgoing edges. It is often fast on benign inputs,
 but it still has Bellman-Ford's worst-case behavior and can be forced to run in O(n*m). Prefer
@@ -9,8 +9,8 @@ Dijkstra for nonnegative weights, and use SPFA mainly when negative edges are pr
 is not adversarial.
 
 - `spfa(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj` which
-  must consist of nodes numbered from 0 to `adj.size() - 1`. Each edge is stored as
-  `(neighbor, weight)`. The function returns `false` if it detects a reachable negative cycle, and
+  must consist of nodes numbered [0, `n`), where `n` is `adj.size()`. Each edge is stored as
+  (`neighbor`, `weight`). The function returns `false` if it detects a reachable negative cycle, and
   returns `true` otherwise.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
@@ -41,11 +41,11 @@ std::vector<int> pred, relax_count;
 std::vector<bool> in_queue;
 
 bool spfa(int start) {
-  int nodes = static_cast<int>(adj.size());
-  dist.assign(nodes, INF);
-  pred.assign(nodes, -1);
-  relax_count.assign(nodes, 0);
-  in_queue.assign(nodes, false);
+  int n = static_cast<int>(adj.size());
+  dist.assign(n, INF);
+  pred.assign(n, -1);
+  relax_count.assign(n, 0);
+  in_queue.assign(n, false);
   std::queue<int> q;
   dist[start] = 0;
   q.push(start);
@@ -61,7 +61,7 @@ bool spfa(int start) {
         if (!in_queue[v]) {
           q.push(v);
           in_queue[v] = true;
-          if (++relax_count[v] >= nodes) {
+          if (++relax_count[v] >= n) {
             return false;
           }
         }

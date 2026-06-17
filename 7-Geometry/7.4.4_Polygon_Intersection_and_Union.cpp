@@ -8,10 +8,10 @@ is accumulated exactly from trapezoid areas. The union then follows by inclusion
 area(A) + area(B) minus the intersection.
 
 - `intersection_area(lo1, hi1, lo2, hi2)` returns the intersection area of two polygons respectively
-  specified by two ranges `[lo1, hi1)` and `[lo2, hi2)` of vertices in clockwise order, where `lo1`,
-  `hi1`, `lo2`, and `hi2` must be random-access iterators.
+  specified by two ranges [`lo1`, `hi1`) and [`lo2`, `hi2`) of vertices in clockwise order, where
+  `lo1`, `hi1`, `lo2`, and `hi2` must be random-access iterators.
 - `union_area(lo1, hi1, lo2, hi2)` returns the union area of two polygons respectively specified by
-  two ranges `[lo1, hi1)` and `[lo2, hi2)` of vertices in clockwise order, where `lo1`, `hi1`,
+  two ranges [`lo1`, `hi1`) and [`lo2`, `hi2`) of vertices in clockwise order, where `lo1`, `hi1`,
   `lo2`, and `hi2` must be random-access iterators.
 
 Overflow warning: the segment-intersection tests form cross products in the input point's coordinate

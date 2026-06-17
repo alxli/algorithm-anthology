@@ -1,18 +1,17 @@
 /*
 
 Maintain the number of bridges in an undirected graph while edges are inserted one at a time, along
-with the 2-edge-connected components and ordinary connected components.
+with the 2-edge-connected components and ordinary connected components. When an inserted edge joins
+two different connected components, it creates a new bridge. When it joins two nodes already in the
+same connected component, it creates a cycle and every bridge on the path between the two endpoints
+stops being a bridge.
 
-- `OnlineBridges(nodes)` constructs a graph with `nodes` isolated nodes.
+- `OnlineBridges(n)` constructs a graph with `n` isolated nodes numbered [0, `n`).
 - `add_edge(u, v)` adds the undirected edge `u`-`v` and updates: `bridges` with the current number
   of bridges, and the disjoint-set parent arrays `dsu_2ecc[]` and `dsu_cc[]`, which partition the
   nodes into 2-edge-connected components and ordinary connected components respectively.
 - `find_2ecc(u)` returns node `u`'s representative in the 2-edge-connected components partition.
 - `find_cc(u)` returns node `u`'s representative in the ordinary connected components partition.
-
-When an inserted edge joins two different connected components, it creates a new bridge. When it
-joins two nodes already in the same connected component, it creates a cycle and every bridge on the
-path between the two endpoints stops being a bridge.
 
 Time Complexity:
 - O(log n) amortized per call to `add_edge()` in this implementation, where $n$ is the number of
@@ -30,15 +29,15 @@ struct OnlineBridges {
   std::vector<int> dsu_2ecc, dsu_cc, dsu_cc_size, parent, last_visit;
   int lca_iteration, bridges;
 
-  OnlineBridges(int nodes = 0) {
-    dsu_2ecc.resize(nodes);
-    dsu_cc.resize(nodes);
-    dsu_cc_size.assign(nodes, 1);
-    parent.assign(nodes, -1);
-    last_visit.assign(nodes, 0);
+  OnlineBridges(int n = 0) {
+    dsu_2ecc.resize(n);
+    dsu_cc.resize(n);
+    dsu_cc_size.assign(n, 1);
+    parent.assign(n, -1);
+    last_visit.assign(n, 0);
     lca_iteration = 0;
     bridges = 0;
-    for (int i = 0; i < nodes; i++) {
+    for (int i = 0; i < n; i++) {
       dsu_2ecc[i] = dsu_cc[i] = i;
     }
   }

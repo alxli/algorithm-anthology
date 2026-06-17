@@ -3,19 +3,19 @@
 Given a range of $n$ elements, find the majority element: an element that occurs strictly more than
 $\lfloor n/2 \rfloor$ times in the range.
 
-This uses the Boyer-Moore voting algorithm. A first pass maintains a single candidate and a counter,
-incrementing it on a match and decrementing on a mismatch, replacing the candidate when the counter
-reaches zero; any majority element necessarily survives as the final candidate. Because the absence
-of a majority must also be reported, a second pass then counts the candidate's occurrences to
-confirm it truly holds a majority. The range is therefore traversed twice, so it only needs to be
-supplied as ForwardIterators rather than random-access.
+The Boyer-Moore voting algorithm performs a first pass while maintaining a single candidate and a
+counter, incrementing it on a match and decrementing on a mismatch, replacing the candidate when the
+counter reaches zero; any majority element necessarily survives as the final candidate. The second
+pass counts the candidate's occurrences to confirm it truly holds a majority. The range is therefore
+traversed twice, so it only needs to be supplied as ForwardIterators rather than random-access.
 
 If a majority element is guaranteed in advance to exist, the verification pass can be dropped and
 the candidate returned directly. The candidate phase alone is single-pass, so that variant could be
 written as a "true" streaming API with one element per call. 
 
 - `majority(lo, hi)` returns an iterator to the first occurrence of the majority element of the
-  range `[lo, hi)`, or `hi` if no majority element exists. Requires `operator==` on the value type.
+  range [`lo`, `hi`), or `hi` if no majority element exists. Requires `operator==` on the value
+  type.
 
 Time Complexity:
 - O(n) per call to `majority()`, where $n$ is the size of the array.

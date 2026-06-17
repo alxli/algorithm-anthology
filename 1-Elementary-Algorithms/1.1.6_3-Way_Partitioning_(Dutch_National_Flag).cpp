@@ -6,9 +6,9 @@ Flag algorithm, and is the core partitioning step used in three-way quicksort an
 duplicate keys. A single pass maintains the three groups in-place using two boundary iterators,
 swapping each examined element into the region where it belongs.
 
-- `partition_three_way(lo, hi, pivot)` rearranges the range `[lo, hi)` in-place and returns
-  iterators `(mid_lo, mid_hi)`, where `[lo, mid_lo)` is less than `pivot`, `[mid_lo, mid_hi)` is
-  equal to `pivot`, and `[mid_hi, hi)` is greater than `pivot`.
+- `partition_three_way(lo, hi, pivot)` rearranges the range [`lo`, `hi`) in-place and returns
+  iterators (`mid_lo`, `mid_hi`), where [`lo`, `mid_lo`) is less than `pivot`, [`mid_lo`, `mid_hi`)
+  is equal to `pivot`, and [`mid_hi`, `hi`) is greater than `pivot`.
 - `sort_012(lo, hi)` sorts a range consisting of only the values 0, 1, and 2.
 
 Time Complexity:

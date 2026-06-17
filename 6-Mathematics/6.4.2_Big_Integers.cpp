@@ -29,7 +29,7 @@ long as at least one operand is a `BigInt` at any given level of evaluation.
 - `a.div(b)` returns a pair consisting of the quotient and remainder.
 - `v.pow(n)` returns `v` raised to the power of $n$.
 - `v.sqrt()` returns the integral part of the square root of big integer `v`.
-- `v.nth_root(n)` returns the integral part of the $n$th root of big integer `v`.
+- `v.nth_root(n)` returns the integral part of the $n$-th root of big integer `v`.
 - `rand(n)` returns a random, positive big integer with $n$ digits.
 
 `pow(n)` uses binary exponentiation. `sqrt()` uses a digit-by-digit square-root algorithm in the

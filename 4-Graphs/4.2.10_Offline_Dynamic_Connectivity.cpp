@@ -3,19 +3,19 @@
 Maintains the number of connected components of an undirected graph as edges are added and removed
 over time, answering queries offline once the entire sequence of operations is known. Each edge is
 alive over a contiguous interval of time, from when it is added until it is removed. These intervals
-are placed into a segment tree over the time axis, so that each edge appears in O(log T) nodes
-whose ranges it spans. A depth-first traversal of this segment tree unites the edges stored at each
-node on the way down and undoes them on the way back up, so at each leaf the disjoint set forest
-reflects exactly the edges alive at that moment.
+are placed into a segment tree over the time axis, so that for $T$ operations, each edge appears in
+O(log T) nodes whose ranges it spans. A depth-first traversal of this segment tree unites the edges
+stored at each node on the way down and undoes them on the way back up, so at each leaf the disjoint
+set forest reflects exactly the edges alive at that moment.
 
 Undoing unions requires a disjoint set forest with rollback (see the disjoint sets section): it
 joins by size or rank without path compression, recording each change on a stack so it can be
 reversed. Path compression is incompatible with rollback, so finding a representative costs
 O(log n) rather than near-constant time.
 
-- `OfflineDynamicConnectivity(n)` creates a structure on `n` vertices numbered from 0 to `n - 1`,
-  initially with no edges.
-- `add_edge(u, v)` and `remove_edge(u, v)` record adding or removing the undirected edge `(u, v)` at
+- `OfflineDynamicConnectivity(n)` creates a structure of `n` nodes numbered [0, `n`), initially with
+  no edges.
+- `add_edge(u, v)` and `remove_edge(u, v)` record adding or removing the undirected edge `u`-`v` at
   the current time, then advance the time by one step. Each edge may be present at most once at a
   time: `add_edge` must not name an edge that is already present, and `remove_edge` must name one
   that is. Both preconditions are checked with `assert` during `solve()`.

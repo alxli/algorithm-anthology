@@ -10,7 +10,7 @@ Lengauer-Tarjan's algorithm numbers vertices by DFS order, computes each reachab
 semidominator using a disjoint-set structure with path compression, and then resolves immediate
 dominators from semidominator buckets.
 
-- `Dominators(n)` constructs a directed graph on nodes numbered from 0 to `n - 1`.
+- `Dominators(n)` constructs a directed graph of `n` nodes numbered [0, `n`).
 - `add_edge(u, v)` adds a directed edge from `u` to `v`.
 - `find_dominators(start)` returns a vector `idom` where `idom[start]` = `start`, `idom[v]` is the
   immediate dominator of reachable node `v`, and `idom[v]` $= -1$ if `v` is unreachable.
@@ -62,22 +62,22 @@ class Dominators {
   }
 
  public:
-  explicit Dominators(int nodes) : adj(nodes), timer(0) {}
+  explicit Dominators(int n) : adj(n), timer(0) {}
 
   void add_edge(int u, int v) { adj[u].push_back(v); }
 
   std::vector<int> find_dominators(int start) {
-    int nodes = static_cast<int>(adj.size());
+    int n = static_cast<int>(adj.size());
     timer = 0;
-    time.assign(nodes, 0);
-    vertex.assign(nodes + 1, 0);
-    parent.assign(nodes + 1, 0);
-    sdom.assign(nodes + 1, 0);
-    idom_index.assign(nodes + 1, 0);
-    dsu.assign(nodes + 1, 0);
-    best.assign(nodes + 1, 0);
-    pred.assign(nodes + 1, {});
-    bucket.assign(nodes + 1, {});
+    time.assign(n, 0);
+    vertex.assign(n + 1, 0);
+    parent.assign(n + 1, 0);
+    sdom.assign(n + 1, 0);
+    idom_index.assign(n + 1, 0);
+    dsu.assign(n + 1, 0);
+    best.assign(n + 1, 0);
+    pred.assign(n + 1, {});
+    bucket.assign(n + 1, {});
     dfs(start);
     for (int i = timer; i >= 1; i--) {
       for (int v : pred[i]) {

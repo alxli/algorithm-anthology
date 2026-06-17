@@ -7,12 +7,9 @@ fractional via the `/2`). `same_side()` and `point_in_triangle()` do all arithme
 own coordinate type and are exact for integer points: they reduce each cross product to a sign
 before combining, so no precision is lost and cross products are never multiplied together.
 
-Note: with an integer point type, coordinates must be integers - fractional literals like `-2.44`
-cannot be represented. Use a floating-point point type for fractional coordinates.
-
 - `triangle_area(a, b, c)` returns the area of the triangle with vertices `a`, `b`, and `c`.
 - `triangle_area_sides(s1, s2, s3)` returns the area of a triangle with side lengths `s1`, `s2`, and
-  `s3`. The given lengths must be non-negative and form a valid triangle.
+  `s3`. The given lengths must be nonnegative and form a valid triangle.
 - `triangle_area_medians(m1, m2, m3)` returns the area of a triangle with medians of lengths `m1`,
   `m2`, and `m3`. The median of a triangle is a line segment joining a vertex to the midpoint of
   the opposing edge.
@@ -25,6 +22,9 @@ cannot be represented. Use a floating-point point type for fractional coordinate
 - `point_in_triangle(p, a, b, c)` returns whether point `p` lies within the triangle with vertices
   `a`, `b`, and `c`. If the point lies on or close to an edge (by roughly `EPS`), then the result
   will depend on the setting of `EDGE_IS_SAME_SIDE` in the function above.
+
+Use an integral point type for integer coordinates, and a floating-point type for fractional
+coordinates.
 
 Overflow warning: each individual cross product is still on the order of the squared coordinate
 magnitude, so for integer point types use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) once

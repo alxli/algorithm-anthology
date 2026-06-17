@@ -7,7 +7,7 @@ same component. For directed graphs, use a strongly connected components algorit
 
 - `connected_components()` populates `comp_id[]` (component ID for each node) and `components[]`
   (nodes for each component ID) given a global, bidirectionally pre-populated adjacency list `adj`
-  which must consist of nodes numbered from 0 to `adj.size() - 1`.
+  which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`.
 
 Time Complexity:
 - O(max(n, m)) per call to `connected_components()`, where $n$ is the number of nodes and $m$ is the
@@ -38,10 +38,10 @@ void dfs(int u, int id) {
 }
 
 void connected_components() {
-  int nodes = static_cast<int>(adj.size());
+  int n = static_cast<int>(adj.size());
   components.clear();
-  comp_id.assign(nodes, -1);
-  for (int u = 0; u < nodes; u++) {
+  comp_id.assign(n, -1);
+  for (int u = 0; u < n; u++) {
     if (comp_id[u] == -1) {
       components.push_back({});
       dfs(u, static_cast<int>(components.size()) - 1);

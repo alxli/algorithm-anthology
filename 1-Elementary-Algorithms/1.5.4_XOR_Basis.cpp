@@ -7,9 +7,10 @@ that are linearly independent yields a basis whose XOR-combinations (subset XORs
 same set of values as the original integers. From a basis of size $r$, exactly $2^r$ distinct values
 are reachable, and queries such as the maximum attainable XOR become a simple greedy scan.
 
-The basis is kept in reduced form: `basis[i]` is either 0 or a value whose highest set bit is bit
-`i`, and no two basis elements share the same highest bit. Reducing a value means XORing it against
-the basis elements from the highest bit down, eliminating each set bit that a basis element covers.
+The basis is kept in reduced form: the $i$-th basis is either 0 or a value whose highest set bit is
+bit $i$, and no two basis elements share the same highest bit. Reducing a value means XORing it
+against the basis elements from the highest bit down, eliminating each set bit that a basis element
+covers.
 
 - `insert(x)` adds `x` to the basis, returning `true` if `x` was linearly independent of the current
   basis (increasing its size), or `false` if `x` was already representable as a subset XOR.

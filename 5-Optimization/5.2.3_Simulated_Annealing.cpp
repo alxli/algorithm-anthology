@@ -14,14 +14,15 @@ function, the starting point, the initial temperature, the cooling rate, and the
 independent restarts.
 
 - `anneal_min(f, x0, y0, &best_x, &best_y)` returns a small value found by the randomized search
-  starting from `(x0, y0)`.
+  starting from (`x0`, `y0`). If the optional pointers `best_x` and `best_y` are supplied, the point
+  attaining the returned value is stored through them.
 - `TEMPERATURE_START` controls the initial move scale and willingness to accept worse states.
 - `TEMPERATURE_END` controls when the search stops.
 - `COOLING_RATE` controls how quickly the temperature decreases.
 
 Time Complexity:
 - O(r log n) calls to `f()`, where $r$ is the number of restarts and $n$ is roughly
-  `TEMPERATURE_START / TEMPERATURE_END`.
+  `TEMPERATURE_START` / `TEMPERATURE_END`.
 
 Space Complexity:
 - O(1) auxiliary.
@@ -36,13 +37,12 @@ const double TEMPERATURE_END = 1e-7;
 const double COOLING_RATE = 0.997;
 const int NUM_RESTARTS = 8;
 
-double random_unit() {
-  static std::mt19937 rng(1234567);
-  return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
-}
-
 template<class Fn>
 double anneal_min(Fn f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr) {
+  auto random_unit = []() {
+    static std::mt19937 rng(1234567);  // Set your own seed, or use std::random_device{}()
+    return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
+  };
   double sol_x = x0, sol_y = y0, best = f(x0, y0);
   for (int restart = 0; restart < NUM_RESTARTS; restart++) {
     double x = x0, y = y0, cur = f(x, y);

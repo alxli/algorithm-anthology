@@ -3,14 +3,14 @@
 Given an undirected graph, assign a color to every node such that no pair of adjacent nodes have the
 same color, and that the total number of colors used is minimized.
 
-It finds the chromatic number by backtracking: nodes (ordered by degree to prune sooner) are colored
-one at a time, each tried with every color already in use plus one new color, while the fewest
-colors seen in a complete coloring so far bounds the search and cuts off any branch at least as
-costly.
+This implementation finds the chromatic number by backtracking: nodes (ordered by degree to prune
+sooner) are colored one at a time, each tried with every color already in use plus one new color,
+while the fewest colors seen in a complete coloring so far bounds the search and cuts off any branch
+at least as costly.
 
 - `color_graph()` populates `color` and returns minimum color count for a global, bidirectionally
-  pre-populated adjacency matrix `adj` which must consist of nodes numbered from 0 to
-  `adj.size() - 1`.
+  pre-populated adjacency matrix `adj` which must consist of nodes numbered [0, `n`), where `n` is
+  `adj.size()`.
 
 Time Complexity:
 - Exponential on the number of nodes per call to `color_graph()`.
@@ -56,23 +56,23 @@ void rec(int lo, int hi, int n, int used_colors) {
 }
 
 int color_graph() {
-  int nodes = static_cast<int>(adj.size());
-  if (nodes == 0) {
+  int n = static_cast<int>(adj.size());
+  if (n == 0) {
     color.clear();
     return 0;
   }
-  color.assign(nodes, 0);
-  curr.assign(nodes, 0);
-  id.assign(nodes + 1, 0);
-  degree.assign(nodes + 1, 0);
-  for (int i = 0; i <= nodes; i++) {
+  color.assign(n, 0);
+  curr.assign(n, 0);
+  id.assign(n + 1, 0);
+  degree.assign(n + 1, 0);
+  for (int i = 0; i <= n; i++) {
     id[i] = i;
     degree[i] = 0;
   }
   int res = 1, lo = 0;
-  for (int hi = 1; hi <= nodes; hi++) {
+  for (int hi = 1; hi <= n; hi++) {
     int best = hi;
-    for (int i = hi; i < nodes; i++) {
+    for (int i = hi; i < n; i++) {
       if (adj[id[hi - 1]][id[i]]) {
         degree[id[i]]++;
       }
@@ -82,8 +82,8 @@ int color_graph() {
     }
     std::swap(id[hi], id[best]);
     if (degree[id[hi]] == 0) {
-      min_colors = nodes + 1;
-      curr.assign(nodes, 0);
+      min_colors = n + 1;
+      curr.assign(n, 0);
       rec(lo, hi, lo, 0);
       lo = hi;
       res = std::max(res, min_colors);

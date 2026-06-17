@@ -19,11 +19,11 @@ window. This routine is sometimes called "fast knapsack," a slight misnomer: it 
 sum rather than packing items with distinct values, so it is really the bounded-weight case of
 subset sum rather than the 0-1 value knapsack.
 
-- `max_subset_sum_at_most(lo, hi, v)` returns the maximum sum of any subset of the range `[lo, hi)`
-  that does not exceed `v`. Values may be negative. The range is supplied as random-access
-  iterators, and 64-bit integers are used in intermediate calculations to avoid overflow.
+- `max_subset_sum_at_most(lo, hi, v)` returns the maximum sum of any subset of the range
+  [`lo`, `hi`) that does not exceed `v`. Values may be negative. The range is supplied as
+  random-access iterators, and 64-bit integers are used in calculations to avoid overflow.
 - `max_subset_sum_bounded(lo, hi, target)` returns the maximum sum of any subset of the range
-  `[lo, hi)` that does not exceed `target`. All weights and `target` must be nonnegative integers.
+  [`lo`, `hi`) that does not exceed `target`. All weights and `target` must be nonnegative integers.
   This is faster than meet-in-the-middle when the largest weight is small relative to $2^{n/2}$.
 
 Time Complexity:

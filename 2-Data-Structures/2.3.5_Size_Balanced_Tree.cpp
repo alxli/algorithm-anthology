@@ -2,13 +2,14 @@
 
 Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible
 key appears at most once in the collection. In addition, support queries for keys given their ranks
-as well as queries for the ranks of given keys. This implementation requires an ordering on the set
-of possible keys defined by `operator<` on the key type. A size balanced tree augments each node
-with the size of its subtree, using it to maintain balance and compute order statistics. After each
-update, rotations restore the invariant that every subtree is at least as large as each of its
-sibling's child subtrees, keeping the height logarithmic.
+as well as queries for the ranks of given keys. A size balanced tree augments each node with the
+size of its subtree, using it to maintain balance and compute order statistics. After each update,
+rotations restore the invariant that every subtree is at least as large as each of its sibling's
+child subtrees, keeping the height logarithmic.
 
-- `SBTree()` constructs an empty map.
+This implementation requires an ordering on the key type `K` defined by `operator<`.
+
+- `SBTree<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new
@@ -19,10 +20,13 @@ sibling's child subtrees, keeping the height logarithmic.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
 - `select(r)` returns a key-value pair of the node with a key of 0-based rank `r` in the map,
-  throwing an exception if the rank is not between 0 and `size() - 1`.
+  throwing an exception if the rank is not in the range [0, `size()`).
 - `rank(k)` returns the 0-based rank of key `k` in the map, throwing an exception if the key was not
   found in the map.
 - `entries()` returns all key-value entries in ascending order of keys.
+
+The navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and
+`next(k)` from the treap in 2.3.1 depend only on the BST property and may be copied here unchanged.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.

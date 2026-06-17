@@ -6,19 +6,17 @@ path to a specific destination node using the shortest-path tree from the predec
 `pred`.
 
 Dijkstra's algorithm repeatedly selects the unvisited node of smallest tentative distance using a
-priority queue and relaxes its outgoing edges. Because the weights are nonnegative, a node's
-distance is final the first time it is removed from the queue.
+priority queue and relaxes its outgoing edges. Dijkstra's algorithm requires nonnegative edge
+weights. Use Bellman-Ford or SPFA instead when negative edges are present. Because the weights are
+nonnegative, a node's distance is final the first time it is removed from the queue.
 
 - `dijkstra(start, adj, dist, pred)` returns a pair of vectors `dist` and `pred` for an adjacency
-  list `adj` which must consist of nodes numbered from 0 to `adj.size() - 1`. Each edge is stored as
-  `(neighbor, weight)`, where `weight` is nonnegative.
+  list `adj` which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`. Each edge is
+  stored as (`neighbor`, `weight`), where `weight` is nonnegative.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
 destination to `start`, then reverse that sequence to recover the path.
-
-Dijkstra's algorithm requires nonnegative edge weights. Use Bellman-Ford or SPFA instead when
-negative edges are present.
 
 Time Complexity:
 - O(m log n) for `dijkstra()`, where $m$ is the number of edges and $n$ is the number of nodes.
@@ -42,9 +40,9 @@ std::pair<std::vector<T>, std::vector<int>> dijkstra(
     const std::vector<std::vector<std::pair<int, T>>> &adj, int start
 ) {
   const T INF = std::numeric_limits<T>::max() / 4;
-  int nodes = static_cast<int>(adj.size());
-  std::vector<T> dist(nodes, INF);
-  std::vector<int> pred(nodes, -1);
+  int n = static_cast<int>(adj.size());
+  std::vector<T> dist(n, INF);
+  std::vector<int> pred(n, -1);
   dist[start] = 0;
   std::priority_queue<
       std::pair<T, int>, std::vector<std::pair<T, int>>, std::greater<std::pair<T, int>>>

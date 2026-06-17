@@ -1,7 +1,7 @@
 /*
 
 Provides a small library of non-cryptographic hash functions and hash functors for common contest
-keys. These helpers are useful for fingerprinting values, combining keys, seeding randomized
+keys. These functions are useful for fingerprinting values, combining keys, seeding randomized
 algorithms, and defining `std::unordered_map` keys for pairs, tuples, and vectors. They are not
 suitable for passwords, signatures, or adversarial security.
 
@@ -15,14 +15,14 @@ traversal of its parts, so swapping in a different mixing function only requires
 FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Starting from a fixed
 offset basis, it XORs each byte into the accumulator and then multiplies by a fixed prime; the `1a`
 variant XORs before multiplying, which mixes slightly better than the original FNV-1. Reach for it
-when the key is a string or byte buffer, whereas `mix32` and `mix64` are finalizers for a single
+when the key is a string or byte buffer, whereas `mix32` and `mix64` are mixers for a single
 fixed-width integer. Its appeal is simplicity: a few lines, no lookup tables, and no seed, with
 distribution good enough for the short keys common in contests. For very long inputs a block hash
 such as MurmurHash or xxHash is faster and mixes more thoroughly, and because FNV-1a is unseeded it
 offers no protection against adversarial inputs.
 
-- `mix32(x)` mixes a 32-bit unsigned integer `x`, using the MurmurHash3 finalizer.
-- `mix64(x)` mixes a 64-bit unsigned integer `x`, using the SplitMix64 finalizer.
+- `mix32(x)` mixes a 32-bit unsigned integer `x`, using MurmurHash3's fmix32 mixer.
+- `mix64(x)` mixes a 64-bit unsigned integer `x`, using the SplitMix64 mixer.
 - `hash32(x)` and `hash64(x)` hash any integer type that can be converted to `uint32_t` or
   `uint64_t`, respectively.
 - `hash_combine32(h, x)` and `hash_combine64(h, x)` fold another already-hashed value into an
@@ -67,6 +67,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
+// MurmurHash3's fmix32 mixer.
 uint32_t mix32(uint32_t x) {
   x ^= x >> 16;
   x *= 0x85ebca6bU;
@@ -75,6 +76,7 @@ uint32_t mix32(uint32_t x) {
   return x ^ (x >> 16);
 }
 
+// SplitMix64 mixer.
 uint64_t mix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;

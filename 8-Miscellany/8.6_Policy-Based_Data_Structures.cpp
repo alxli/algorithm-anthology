@@ -3,13 +3,13 @@
 GNU policy-based data structures provide ordered sets and maps with order statistics. They are not
 part of the C++ standard library, but they are available on many GNU C++ contest judges.
 
-- `ordered_set<T>` behaves like a set with `find_by_order(k)` and `order_of_key(x)`.
-- `ordered_map<K, V>` behaves like a map with `find_by_order(k)` and `order_of_key(x)`.
-- `hash_map<K, V>` and `hash_set<K>` are fast hash tables using `gp_hash_table`. The default
-  `splitmix64_hash` is for integer-like keys; pass a custom hash for other key types. It randomizes
+- `OrderedSet<T>` behaves like a set with `find_by_order(k)` and `order_of_key(x)`.
+- `OrderedMap<K, V>` behaves like a map with `find_by_order(k)` and `order_of_key(x)`.
+- `HashMap<K, V>` and `HashSet<K>` are fast hash tables using `gp_hash_table`. The default
+  `SplitMix64Hasher` is for integer-like keys; pass a custom hash for other key types. It randomizes
   the hash seed to avoid weak adversarial integer hashes.
-- `ordered_multiset<T>` stores duplicates by pairing each value with a unique id.
-- `ordered_multimap<K, V>` stores duplicate keys by pairing each key with a unique id.
+- `OrderedMultiset<T>` stores duplicates by pairing each value with a unique ID.
+- `OrderedMultimap<K, V>` stores duplicate keys by pairing each key with a unique ID.
 - `PairingHeap<T>` is a meldable priority queue; `push()` returns an iterator that can be passed to
   `modify()` or `erase()`.
 - `BinaryHeap<T>`, `BinomialHeap<T>`, and `RcBinomialHeap<T>` are alternative GNU priority queue
@@ -37,14 +37,15 @@ Space Complexity:
 #include <utility>
 
 template<class K, class V, class Compare = std::less<K>>
-using ordered_map = __gnu_pbds::tree<
+using OrderedMap = __gnu_pbds::tree<
     K, V, Compare, __gnu_pbds::rb_tree_tag, __gnu_pbds::tree_order_statistics_node_update>;
 
 template<class T, class Compare = std::less<T>>
-using ordered_set = ordered_map<T, __gnu_pbds::null_type, Compare>;
+using OrderedSet = OrderedMap<T, __gnu_pbds::null_type, Compare>;
 
-struct splitmix64_hash {
-  static uint64_t splitmix64(uint64_t x) {
+struct SplitMix64Hasher {
+  // SplitMix64 mixer.
+  static uint64_t mix64(uint64_t x) {
     x += 0x9e3779b97f4a7c15ULL;
     x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
     x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -54,19 +55,19 @@ struct splitmix64_hash {
   size_t operator()(uint64_t x) const {
     static const uint64_t FIXED_RANDOM =
         std::chrono::steady_clock::now().time_since_epoch().count();
-    return splitmix64(x + FIXED_RANDOM);
+    return mix64(x + FIXED_RANDOM);
   }
 };
 
-template<class K, class V, class Hash = splitmix64_hash>
-using hash_map = __gnu_pbds::gp_hash_table<K, V, Hash>;
+template<class K, class V, class Hash = SplitMix64Hasher>
+using HashMap = __gnu_pbds::gp_hash_table<K, V, Hash>;
 
-template<class K, class Hash = splitmix64_hash>
-using hash_set = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, Hash>;
+template<class K, class Hash = SplitMix64Hasher>
+using HashSet = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, Hash>;
 
 template<class T>
-class ordered_multiset {
-  ordered_set<std::pair<T, int>> tree;
+class OrderedMultiset {
+  OrderedSet<std::pair<T, int>> tree;
   int timer = 0;
 
  public:
@@ -87,8 +88,8 @@ class ordered_multiset {
 };
 
 template<class K, class V>
-class ordered_multimap {
-  ordered_map<std::pair<K, int>, V> tree;
+class OrderedMultimap {
+  OrderedMap<std::pair<K, int>, V> tree;
   int timer = 0;
 
  public:
@@ -128,22 +129,22 @@ using RcBinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::rc_bin
 /*** Example Usage ***/
 
 int main() {
-  ordered_set<int> s;
+  OrderedSet<int> s;
   s.insert(10);
   s.insert(20);
   s.insert(30);
   assert(*s.find_by_order(1) == 20);
   assert(s.order_of_key(25) == 2);
 
-  hash_map<int, int> hm;
+  HashMap<int, int> hm;
   hm[10] = 1;
   hm[20] = 2;
   assert(hm[10] == 1);
-  hash_set<int> hs;
+  HashSet<int> hs;
   hs.insert(7);
   assert(hs.find(7) != hs.end());
 
-  ordered_multiset<int> ms;
+  OrderedMultiset<int> ms;
   ms.insert(5);
   ms.insert(5);
   ms.insert(7);
@@ -153,7 +154,7 @@ int main() {
   assert(ms.erase_one(5));
   assert(ms.order_of_key(7) == 1);
 
-  ordered_multimap<int, char> mp;
+  OrderedMultimap<int, char> mp;
   mp.insert(5, 'a');
   mp.insert(5, 'b');
   mp.insert(7, 'c');

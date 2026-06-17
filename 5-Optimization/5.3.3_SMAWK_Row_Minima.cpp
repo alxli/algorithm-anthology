@@ -4,26 +4,23 @@ Finds the position of the minimum in every row of a totally monotone matrix in t
 dimensions, without ever materializing the matrix. A matrix is totally monotone (for row minima)
 when the column index of each row's leftmost minimum never decreases as the row index increases, and
 this holds not just for the whole matrix but for every submatrix. Monge matrices, where
-`M[i][j] + M[i+1][j+1] <= M[i][j+1] + M[i+1][j]`, are the most common source of such matrices and
-arise throughout dynamic programming on intervals and partitions.
+$M_{i,j} + M_{i+1,j+1} \leq M_{i,j+1} + M_{i+1,j}$, are the most common source of such matrices
+and arise throughout dynamic programming on intervals and partitions.
 
 The SMAWK algorithm interleaves two steps. REDUCE discards columns that cannot hold the minimum of
 any remaining row, leaving at most as many candidate columns as active rows. INTERPOLATE recurses on
 the odd-indexed active rows, then recovers each even-indexed active row's minimum by scanning only
 the candidate-column range bounded by its already-solved neighbors; total monotonicity guarantees
-those scans advance monotonically and cost O(R + C) overall, where R is the number of rows and C is
-the number of columns in the original matrix. This removes the logarithmic factor of
+those scans advance monotonically and cost O(R + C) overall, where $R$ is the number of rows and $C$
+is the number of columns in the original matrix. This removes the logarithmic factor of
 divide-and-conquer DP optimization, but unlike that technique it is purely offline: every matrix
 entry must be available on demand from the oracle, so it cannot be used when an entry depends on a
 row minimum computed earlier in the same pass.
 
-The matrix is supplied as a function `get(r, c)`, and the result reports column indices, so on ties
-the smallest qualifying column is chosen. For row maxima, negate the oracle or reverse its
-comparison.
-
 - `smawk_row_minima(R, C, get)` returns a vector `arg` of length `R`, where `arg[r]` is the column
-  index minimizing `get(r, c)` over $0 \leq `c` < `C`$. The matrix `get(r, c)` must be totally
-  monotone, with `R` $\geq 0$ and `C` $\geq 1$.
+  index minimizing `get(r, c)` over $0 \leq `c` < `C`$ (on ties, the smallest qualifying column is
+  chosen). The input matrix is supplied as a totally monotone function `get(r, c)` with bounds `R`
+  $\geq 0$ and `C` $\geq 1$.
 
 Time Complexity:
 - O(R + C) evaluations of `get` per call to `smawk_row_minima(R, C, get)`.

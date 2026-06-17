@@ -13,11 +13,10 @@ a man she prefers proposes later. Because every man descends his list at most on
 is constant work after precomputing the women's rankings, the algorithm runs in quadratic time. The
 result is man-optimal: every man receives the best partner he could have in any stable matching.
 
-Both preference lists are given as $n$ by $n$ matrices. `men_pref[m]` lists the women in `m`'s order
-of preference, most preferred first, and `women_pref[w]` lists the men in `w`'s order of preference.
-
 - `stable_marriage(men_pref, women_pref)` returns a vector `wife` where `wife[m]` is the woman
-  matched to man `m` in the man-optimal stable matching.
+  matched to man `m` in the man-optimal stable matching, given the input preference lists each as
+  $n$ by $n$ matrices. `men_pref[m]` lists the women in `m`'s order of preference, most preferred
+  first, and `women_pref[w]` lists the men in `w`'s order of preference.
 
 Time Complexity:
 - O(n^2) per call, where $n$ is the number of men (equivalently, women).

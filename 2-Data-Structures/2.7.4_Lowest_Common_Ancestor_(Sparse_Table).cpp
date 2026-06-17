@@ -11,7 +11,7 @@ case where one node is already an ancestor of the other, then jumps `u` upward b
 of two until its parent is the lowest common ancestor.
 
 - `SparseTableLCA(adj)` builds the structure over a forest represented by a bidirectional adjacency
-  list `adj` of nodes numbered from 0 to `adj.size() - 1`.
+  list `adj` of nodes numbered [0, `n`), where `n` is `adj.size()`.
 - `go_up(u, k)` returns the $k$-th ancestor of node `u`, stopping at that tree's root if `k` is
   larger than `u`'s depth.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`, or $-1$ if they are in
@@ -58,17 +58,17 @@ class SparseTableLCA {
 
  public:
   explicit SparseTableLCA(const std::vector<std::vector<int>> &adj) : adj(adj), timer(0) {
-    int nodes = static_cast<int>(adj.size());
+    int n = static_cast<int>(adj.size());
     len = 1;
-    while ((1 << len) <= std::max(1, nodes)) {
+    while ((1 << len) <= std::max(1, n)) {
       len++;
     }
-    up.assign(nodes, std::vector<int>(len));
-    tin.assign(nodes, 0);
-    tout.assign(nodes, 0);
-    depth.assign(nodes, 0);
-    root.assign(nodes, -1);
-    for (int u = 0; u < nodes; u++) {
+    up.assign(n, std::vector<int>(len));
+    tin.assign(n, 0);
+    tout.assign(n, 0);
+    depth.assign(n, 0);
+    root.assign(n, -1);
+    for (int u = 0; u < n; u++) {
       if (root[u] == -1) {
         dfs(u, u, u, 0);
       }

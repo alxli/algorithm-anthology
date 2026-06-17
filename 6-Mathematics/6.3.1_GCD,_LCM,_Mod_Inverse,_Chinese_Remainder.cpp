@@ -8,9 +8,9 @@ Common number theory operations relating to modular arithmetic.
 - `lcm(a, b)` returns the lowest common multiple of `a` and `b`. This implemention is mainly for
   educational purposes, as `std::lcm(a, b)` from `<numeric>` is available as of C++17.
 - `extended_euclid(a, b)` returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
-- `diophantine(a, b, c, x, y, g)` solves the linear Diophantine equation $ax + by = c$. It returns
+- `diophantine(a, b, c, &x, &y, &g)` solves the linear Diophantine equation $ax + by = c$, returning
   whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$), and on success sets
-  `g` to $\gcd(a, b)$ and `(x, y)` to a particular solution bounded by $\max(|a|, |b|, |c|)$ in
+  `g` to $\gcd(a, b)$ and (`x`, `y`) to a particular solution bounded by $\max(|a|, |b|, |c|)$ in
   magnitude. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
 - `mod(a, b)` returns the value of `a` mod `b` under the true Euclidean definition of modulo, that
   is, the smallest nonnegative integer $m$ satisfying $a + bn = m$ for some integer $n$. Note that
@@ -18,14 +18,14 @@ Common number theory operations relating to modular arithmetic.
   the result will differ when an operand is negative.
 - `mod_inverse(a, m)` returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments
   must satisfy $m > 0$ and $\gcd(a, m) = 1$.
-- `generate_inverse(p)` returns a vector $v$ of integers where for each index $i$ in the vector,
+- `generate_inverse(p)` returns a vector `v` of integers where for each index $i$ in the vector,
   $i \cdot `v[i]` \equiv 1 \pmod p$, where the argument $p$ is prime.
 - `crt(r1, m1, r2, m2, r, m)` merges the two congruences $x \equiv r_1 \pmod{m_1}$ and
   $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the
   system is consistent, and on success sets `m` to `lcm(m_1, m_2)` and `r` to the unique solution
   in $[0, m)$. Fold it pairwise to merge more than two congruences.
 - `garner_restore(a, p)` returns the smallest nonnegative solution $x$ for the system of
-  simultaneous congruences $x \equiv `a[i]` \pmod{`p[i]`}$ for all indices $i$ in $[0, n)$, where
+  simultaneous congruences $x \equiv `a[i]` \pmod{`p[i]`}$ for all indices `i` in $[0, n)$, where
   `p` consists of pairwise coprime integers (unlike `crt`, which allows shared factors). The exact
   solution is unique modulo the product of all moduli, so that product and the final answer must fit
   in `int64_t`.

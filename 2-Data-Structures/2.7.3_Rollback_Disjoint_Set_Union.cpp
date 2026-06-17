@@ -8,7 +8,7 @@ Path compression is intentionally not used, because it is hard to undo. Union by
 height logarithmic, and every successful union records enough information to restore the previous
 state.
 
-- `RollbackDSU(n)` constructs `n` singleton sets over elements 0 through `n - 1`.
+- `RollbackDSU(n)` constructs `n` singleton sets over elements [0, `n`).
 - `count_sets()` returns the current number of disjoint sets.
 - `find_root(u)` returns the representative of the set containing `u`.
 - `is_united(u, v)` returns whether `u` and `v` are in the same set.
@@ -50,8 +50,6 @@ class RollbackDSU {
   }
 
  public:
-  RollbackDSU() : sets(0) {}
-
   explicit RollbackDSU(int n) {
     root.resize(n);
     size.assign(n, 1);

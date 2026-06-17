@@ -1,12 +1,12 @@
 /*
 
-Common string functions, many of which already have standard STL equivalents. These are written for
-educational purposes, without heavy optimizations (often depending on certain `std::string`
-functions that have unspecified complexity).
+Common string functions, many of which already have standard STL equivalents. Most of the following
+implementations are presented for educational purposes, and are not heavy optimized. They often
+depend on certain `std::string` functions that have unspecified complexity.
 
 Time Complexity:
 - O(n) per call to most operations, where $n$ is the length of the input string or total length of
-  all input strings. Exceptions are noted with the individual helpers below.
+  all input strings. Exceptions are noted with the individual functions below.
 
 Space Complexity:
 - O(n) auxiliary heap space per call to operations that return a new string or vector of strings.
@@ -137,18 +137,16 @@ Case Conversion:
 
 string to_upper(const string &s) {
   string res;
-  auto upper = [](unsigned char c) { return static_cast<char>(toupper(c)); };
   for (char c : s) {
-    res.push_back(upper(c));
+    res.push_back(static_cast<char>(toupper(c)));
   }
   return res;
 }
 
 string to_lower(const string &s) {
   string res;
-  auto lower = [](unsigned char c) { return static_cast<char>(tolower(c)); };
   for (char c : s) {
-    res.push_back(lower(c));
+    res.push_back(static_cast<char>(tolower(c)));
   }
   return res;
 }

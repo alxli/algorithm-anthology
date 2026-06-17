@@ -8,7 +8,7 @@ a number of levels decided by repeated coin flips, and a search starts at the sp
 forward until the next key would overshoot and then dropping down a level, which makes operations
 take O(log n) with high probability.
 
-- `SkipList()` constructs an empty map.
+- `SkipList<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new

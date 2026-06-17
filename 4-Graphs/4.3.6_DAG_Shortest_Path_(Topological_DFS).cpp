@@ -9,9 +9,9 @@ The same pass computes longest paths if the relaxation comparison is reversed, w
 way to find the critical path in a schedule of dependent tasks.
 
 - `dag_shortest_path(start)` populates `dist` and `pred` for a global, pre-populated adjacency list
-  `adj` whose nodes are numbered from 0 to `adj.size() - 1`. Each edge is stored as
-  `(neighbor, weight)` and may have any sign. `dist[v]` is set to `INF` for nodes not reachable from
-  `start`, and `pred` stores the shortest-path tree for path reconstruction.
+  `adj` whose nodes are numbered [0, `n`), where `n` is `adj.size()`. Each edge is stored as
+  (`neighbor`, `weight`) and may have any sign. `dist[v]` is set to `INF` for nodes not reachable
+  from `start`, and `pred` stores the shortest-path tree for path reconstruction.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
@@ -48,17 +48,17 @@ void topological_dfs(int u, std::vector<bool> &visit, std::vector<int> &order) {
 }
 
 void dag_shortest_path(int start) {
-  int nodes = static_cast<int>(adj.size());
-  std::vector<bool> visit(nodes, false);
+  int n = static_cast<int>(adj.size());
+  std::vector<bool> visit(n, false);
   std::vector<int> order;
-  for (int i = 0; i < nodes; i++) {
+  for (int i = 0; i < n; i++) {
     if (!visit[i]) {
       topological_dfs(i, visit, order);
     }
   }
   std::reverse(order.begin(), order.end());
-  dist.assign(nodes, INF);
-  pred.assign(nodes, -1);
+  dist.assign(n, INF);
+  pred.assign(n, -1);
   dist[start] = 0;
   for (int u : order) {
     if (dist[u] == INF) {

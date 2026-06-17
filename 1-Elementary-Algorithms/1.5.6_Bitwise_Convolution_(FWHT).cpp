@@ -1,20 +1,20 @@
 /*
 
 Bitwise convolution combines two arrays indexed by masks, grouping pairs of masks by a bitwise
-operation instead of by ordinary addition. For arrays `a` and `b` over an `n`-bit universe, the XOR
+operation instead of by ordinary addition. For arrays `a` and `b` over an $n$-bit universe, the XOR
 convolution `c[m]` is the sum of `a[x]*b[y]` over all `x ^ y = m`. OR and AND convolution replace
 `x ^ y` with `x | y` or `x & y`. These appear in subset DP, counting pairs by bitwise result, and
 algebra over the Boolean hypercube.
 
 The fast Walsh-Hadamard transform (FWHT) diagonalizes XOR convolution in the same way that the FFT
 diagonalizes polynomial convolution: transform both arrays, multiply pointwise, and transform back.
-The OR and AND versions are zeta/Mobius transforms over the subset lattice, but they have the same
+The OR and AND versions are Zeta/Mobius transforms over the subset lattice, but they have the same
 butterfly-shaped implementation and the same O(n log n) runtime for arrays of length $n = 2^k$.
 
 - `xor_transform(f, invert)` applies the XOR FWHT to `f` in place. The inverse transform uses
   `invert = true` and divides every coefficient by `f.size()`.
-- `or_transform(f, invert)` applies the OR zeta transform in place; the inverse is Mobius inversion.
-- `and_transform(f, invert)` applies the AND zeta transform in place; the inverse is Mobius
+- `or_transform(f, invert)` applies the OR Zeta transform in place; the inverse is Mobius inversion.
+- `and_transform(f, invert)` applies the AND Zeta transform in place; the inverse is Mobius
   inversion.
 - `xor_convolve(a, b)` returns the XOR convolution of `a` and `b`.
 - `or_convolve(a, b)` returns the OR convolution of `a` and `b`.

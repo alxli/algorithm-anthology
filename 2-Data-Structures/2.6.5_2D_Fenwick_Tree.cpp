@@ -14,15 +14,15 @@ queries begin, which lets it coordinate-compress instead of hashing for markedly
 than the sparse version. For non-additive aggregates such as min/max with custom updates, use a 2D
 segment tree or quadtree instead, since Fenwick-tree algebra relies on addition and subtraction.
 
-- `FenwickTree2D(rows, cols)` constructs a `rows` by `cols` array with 0-based indices, with all
+- `Fenwick2D<T>(rows, cols)` constructs a `rows` by `cols` array with 0-based indices, with all
   values initialized to 0.
 - `size_rows()` and `size_cols()` return the number of rows and columns.
-- `add(r, c, x)` adds `x` to the value at index `(r, c)`.
-- `set(r, c, x)` assigns `x` to the value at index `(r, c)`.
-- `at(r, c)` returns the value at index `(r, c)`.
-- `sum(r, c)` returns the sum of the rectangle with corners `(0, 0)` and `(r, c)`, inclusive.
-- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner `(r1, c1)` and
-  lower-right corner `(r2, c2)`, inclusive.
+- `add(r, c, x)` adds `x` to the value at index (`r`, `c`).
+- `set(r, c, x)` assigns `x` to the value at index (`r`, `c`).
+- `at(r, c)` returns the value at index (`r`, `c`).
+- `sum(r, c)` returns the sum of the rectangle with corners (`0`, `0`) and (`r`, `c`), inclusive.
+- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner (`r1`, `c1`) and
+  lower-right corner (`r2`, `c2`), inclusive.
 
 Time Complexity:
 - O(R*C) per call to the constructor, where $R$ and $C$ are the number of rows and columns.
@@ -38,12 +38,12 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class FenwickTree2D {
+class Fenwick2D {
   int rows, cols;
   std::vector<std::vector<T>> tree;
 
  public:
-  FenwickTree2D(int rows, int cols)
+  Fenwick2D(int rows, int cols)
       : rows(rows), cols(cols), tree(rows + 1, std::vector<T>(cols + 1)) {}
 
   int size_rows() const { return rows; }
@@ -81,7 +81,7 @@ class FenwickTree2D {
 using namespace std;
 
 int main() {
-  FenwickTree2D<int> t(3, 3);
+  Fenwick2D<int> t(3, 3);
   t.set(0, 0, 5);
   t.set(0, 1, 6);
   t.set(1, 0, 7);

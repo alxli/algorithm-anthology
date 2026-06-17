@@ -2,7 +2,7 @@
 
 A circle in two dimensions supporting epsilon comparisons. The circle centered at $(h, k)$ is
 represented by the relation $(x - h)^2 + (y - k)^2 = r^2$, where the radius $r$ is normalized to a
-non-negative number.
+nonnegative number.
 
 This implementation stores and computes circle parameters in `double`. Point-accepting
 constructors and predicates are templated on the point type `Pt` and only read `.x`/`.y`, so they
@@ -10,7 +10,7 @@ accept `Point`/`PointD`/`PointI` from 7.1.1 or any struct with numeric `.x` and 
 
 - `Circle()` constructs the zero-radius circle centered at the origin.
 - `Circle(r)` constructs a circle of radius `abs(r)` centered at the origin.
-- `Circle(h, k, r)` constructs a circle of radius `abs(r)` centered at `(h, k)`.
+- `Circle(h, k, r)` constructs a circle of radius `abs(r)` centered at (`h`, `k`).
 - `Circle(o, r)` constructs a circle of radius `abs(r)` centered at point `o`.
 - `Circle(a, b)` constructs the circle whose diameter is segment `a`-`b`.
 - `Circle(a, b, c)` constructs the circumcircle through non-collinear points `a`, `b`, and `c`,
@@ -22,13 +22,11 @@ accept `Point`/`PointD`/`PointI` from 7.1.1 or any struct with numeric `.x` and 
 - `on_edge(p)` returns whether point `p` lies on the circle boundary.
 - `incircle(a, b, c)` returns the circle inscribed in triangle `abc`.
 - `in_circumcircle(a, b, c, d)` returns 1 if `d` lies strictly inside the circle through `a`, `b`,
-  and `c`, 0 if it lies on the circle, or $-1$ if it lies outside.
-
-When exact integer reasoning about a circumcircle is needed, use `in_circumcircle(a, b, c, d)`.
-It evaluates the determinant directly, without constructing a `Circle` or taking a square root.
-For integer inputs, the sign test is exact provided the chosen intermediate type does not overflow.
-The determinant has degree four in the coordinate magnitude, so use a wider type for large integer
-coordinates.
+  and `c`, 0 if it lies on the circle, or $-1$ if it lies outside. This has exact reasoning for
+  integral points by evaluating the determinant directly without constructing a `Circle` or taking
+  square roots. For integer inputs, the sign test is exact provided the chosen intermediate type
+  does not overflow. The determinant has degree four in the coordinate magnitude, so use a wider
+  type for large integer coordinates.
 
 Time Complexity:
 - O(1) per call to the constructors and all other operations.

@@ -8,7 +8,7 @@ processed one at a time while maintaining the current minimum enclosing circle. 
 lies outside the current circle, the circle is rebuilt with that point constrained to lie on the
 boundary. The final circle is determined by at most three boundary points.
 
-- `minimum_enclosing_circle(lo, hi)` returns the minimum enclosing circle for the range `[lo, hi)`
+- `minimum_enclosing_circle(lo, hi)` returns the minimum enclosing circle for the range [`lo`, `hi`)
   of points, where `lo` and `hi` must be random-access iterators. The input range is shuffled in
   place. The point type may be any type exposing numeric `.x` and `.y` members. The returned circle
   always uses `double` coordinates, so integer-coordinate inputs are accepted.

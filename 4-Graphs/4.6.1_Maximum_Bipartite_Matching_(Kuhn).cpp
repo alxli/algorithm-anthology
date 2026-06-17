@@ -9,8 +9,8 @@ for an augmenting path: an alternating sequence of unmatched and matched edges t
 right node. Flipping the edges along such a path enlarges the matching by one.
 
 - `kuhn(n2)` populates `match_left` and `match_right`, then returns maximum matching size for a
-  global, pre-populated adjacency list `adj` whose left-side nodes are numbered from 0 to
-  `adj.size() - 1` and whose right-side neighbors are numbered from 0 to `n2 - 1`.
+  global, pre-populated adjacency list `adj` whose left-side nodes are numbered [0, `n`) and whose
+  right-side neighbors are numbered [0, `n2`), where `n` is `adj.size()`.
 
 Time Complexity:
 - O(m*(n_1 + n_2)) per call to `kuhn()`, where $m$ is the number of edges.

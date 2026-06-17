@@ -1,7 +1,7 @@
 /*
 
 The following functions implement common operations in combinatorics. All inputs must be
-non-negative. All return values and table entries are computed as 64-bit integers modulo an input
+nonnegative. All return values and table entries are computed as 64-bit integers modulo an input
 argument $m$ or $p$. Modular products use ordinary `int64_t` multiplication, so the square of the
 chosen modulus must fit in `int64_t`.
 
@@ -12,7 +12,7 @@ chosen modulus must fit in `int64_t`.
 - `permute(n, k, m)` returns $(n \mathbin{\text{permute}} k) \bmod m$.
 - `choose(n, k, p)` returns $\binom{n}{k} \bmod p$, where $p$ is prime.
 - `multichoose(n, k, p)` returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is prime.
-- `catalan(n, p)` returns the $n$th Catalan number mod $p$, where $p$ is prime.
+- `catalan(n, p)` returns the $n$-th Catalan number mod $p$, where $p$ is prime.
 - `partitions(n, m)` returns the number of partitions of $n$, mod $m$.
 - `partitions(n, k, m)` returns the number of partitions of $n$ into $k$ parts, mod $m$.
 - `stirling1(n, k, m)` returns the $(n, k)$ unsigned Stirling number of the 1st kind mod $m$.

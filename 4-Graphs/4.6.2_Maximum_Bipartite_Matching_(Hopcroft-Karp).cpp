@@ -9,8 +9,8 @@ breadth-first search to layer the graph by distance, then a depth-first search t
 of vertex-disjoint shortest augmenting paths to flip at once, giving $O(m \sqrt{n})$ overall.
 
 - `hopcroft_karp(n2)` populates `match` and returns maximum matching size for a global,
-  pre-populated adjacency list `adj` whose left-side nodes are numbered from 0 to `adj.size() - 1`
-  and whose right-side neighbors are numbered from 0 to `n2 - 1`.
+  pre-populated adjacency list `adj` whose left-side nodes are numbered [0, `n`) and whose
+  right-side neighbors are numbered [0, `n2`), where `n` is `adj.size()`.
 
 Time Complexity:
 - O(m*sqrt(n_1 + n_2)) per call to `hopcroft_karp()`, where $m$ is the number of edges.

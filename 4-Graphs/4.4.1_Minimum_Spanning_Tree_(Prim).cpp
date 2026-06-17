@@ -11,10 +11,12 @@ edge at each step.
 
 - `prim_mst()` populates `mst` with the edge IDs in the minimum spanning tree (returning the total
   MST weight) for a global, bidirectionally pre-populated adjacency list `adj` which must consist of
-  nodes numbered from 0 to `adj.size() - 1`. Each edge is stored as `(neighbor, weight, edge_id)`.
+  nodes numbered [0, `n`), where `n` is `adj.size()`. Edges are stored as (`neighbor`, `weight`,
+  `edge_id`).
 
-The priority queue stores candidate edges as `(weight, from, to, edge_id)` and uses `std::greater`
-to make it a min-heap. To find a maximum spanning tree instead, use the default max-heap ordering.
+The priority queue stores candidate edges as (`weight`, `from`, `to`, `edge_id`) and uses
+`std::greater` to make it a min-heap. To find a maximum spanning tree instead, use the default
+max-heap ordering.
 
 Time Complexity:
 - O(m log n) per call to `prim_mst()`, where $m$ is the number of edges and $n$ is the number of
@@ -37,11 +39,11 @@ std::vector<std::vector<std::tuple<int, int, int>>> adj;  // adj[u] = {(v, weigh
 std::vector<int> mst;
 
 int prim_mst() {
-  int nodes = static_cast<int>(adj.size());
+  int n = static_cast<int>(adj.size());
   mst.clear();
-  std::vector<bool> visit(nodes);
+  std::vector<bool> visit(n);
   int total_dist = 0;
-  for (int i = 0; i < nodes; i++) {
+  for (int i = 0; i < n; i++) {
     if (visit[i]) {
       continue;
     }

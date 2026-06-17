@@ -16,10 +16,10 @@ single updated index. The default definition below supports updates that "set" t
 index to a new value. Another possible update operation is "increment", in which case
 `apply_delta(v, d)` should return `v + d`.
 
-- `SqrtDecomposition(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`,
-  inclusive, and all values initialized to `v`.
-- `SqrtDecomposition(lo, hi)` constructs an array from two random-access iterators, initialized to
-  the elements of the range in the same order.
+- `SqrtDecomposition<T>(n, v)` constructs an array of size `n` with indices [0, `n`), and all values
+  initialized to `v`.
+- `SqrtDecomposition<T>(lo, hi)` constructs an array from two random-access iterators, initialized
+  to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,

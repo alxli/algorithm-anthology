@@ -6,7 +6,7 @@ combining step then only needs to examine points within the best distance so far
 line, where each point in this strip is compared to a constant number of $y$-ordered neighbors.
 
 - `closest_pair(lo, hi, &res)` returns the minimum squared distance between any two points in the
-  range `[lo, hi)`, where `lo` and `hi` must be random-access iterators. The input range is
+  range [`lo`, `hi`), where `lo` and `hi` must be random-access iterators. The input range is
   reordered during the computation and is sorted by $y$-coordinate on return. If `res` is non-null,
   one closest pair is stored there in lexicographic order. The function is templated on the point
   type and works with any type exposing numeric `.x` and `.y` members.

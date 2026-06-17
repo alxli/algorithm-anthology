@@ -6,10 +6,10 @@ combinatorial sequences starting with the given prefix.
 
 - `to_rank(a)` returns an integer representing the 0-based rank of the combinatorial sequence `a`.
 - `from_rank(r)` returns a combinatorial sequence of integers that is lexicographically ranked `r`,
-  where `r` is a 0-based rank in the range `[0, total_count())`.
+  where `r` is a 0-based rank in the range [0, `total_count()`).
 - `enumerate(f)` calls the function `f(lo, hi)` on every specified combinatorial sequence in
   lexicographically increasing order, where `lo` and `hi` are two random-access iterators to a range
-  `[lo, hi)` of integers.
+  [`lo`, `hi`) of integers.
 
 Time Complexity:
 - O(n^2) calls will be made to `count()` per call to all operations, where $n$ is the length of the

@@ -1,7 +1,7 @@
 /*
 
-Solves normal-play Nim and related impartial games where each position is the disjoint sum of
-independent piles. In normal play, the player who makes the last move wins. A Nim position is losing
+Solves normal-play nim and related impartial games where each position is the disjoint sum of
+independent piles. In normal play, the player who makes the last move wins. A nim position is losing
 exactly when the XOR of all pile sizes is 0.
 
 This is the base case of the Sprague-Grundy theorem: every finite impartial game position is
@@ -9,7 +9,7 @@ equivalent to a Nim pile of size equal to its Grundy number, and sums of games c
 
 - `nim_sum(piles)` returns the XOR of all pile sizes.
 - `first_player_wins(piles)` returns whether the player to move has a winning strategy.
-- `winning_move(piles)` returns a move `(pile, new_size)` that moves to XOR 0, or $(-1, -1)$ if the
+- `winning_move(piles)` returns a move (pile, new_size) that moves to XOR 0, or $(-1, -1)$ if the
   position is losing.
 
 Time Complexity:

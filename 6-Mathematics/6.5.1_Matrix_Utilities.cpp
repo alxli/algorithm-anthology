@@ -3,13 +3,12 @@
 Basic matrix operations defined on a two-dimensional vector of numeric values.
 
 - `make_matrix<T>(m, n, v)` constructs and returns an $m$ by $n$ matrix with 0-based indices (row
-  indices 0 to `m - 1` and column indices 0 to `c - 1`), where every value is initialized to `v`.
-- `identity_matrix<T>(n)` returns the $n$ by $n$ identity matrix, that is, a matrix where each
-  `a[i][j]` equals 1 if $i = j$, or 0 otherwise.
-- `rows(a)` returns the number of rows $m$ in matrix `a`.
-- `columns(a)` returns the number of columns $n$ in matrix `a`.
-- `a[i][j]` may be used to access or modify the entry at row $i$, column $j$ of an $m$ by $n$ matrix
-  `a`, for every $i \in [0, m)$ and $j \in [0, n)$.
+  indices [0, `m`) and column indices [0, `n`)), where every value is initialized to `v`.
+- `identity_matrix<T>(n)` returns the `n` by `n` identity matrix, that is, a matrix where each
+  `a[i][j]` equals 1 if `i` = `j`, or 0 otherwise.
+- `rows(a)` returns the number of rows in matrix `a`.
+- `columns(a)` returns the number of columns in matrix `a`.
+- `a[i][j]` may be used to access or modify the specified entry of `a`.
 - Operators `<`, `>`, `<=`, `>=`, `==`, and `!=` define lexicographical comparison based on that of
   `std::vector`.
 - Operators `+`, `-`, `*`, `/`, `+=`, `-=`, `*=`, and `/=` define scalar addition, subtraction,
@@ -20,7 +19,7 @@ Basic matrix operations defined on a two-dimensional vector of numeric values.
 - `power_sum(a, p)` returns the power sum of a square matrix `a` up to an integer power `p`, that
   is, $a + a^2 + \ldots + a^p$.
 - `transpose(a)` returns the transpose of an $m$ by $n$ matrix `a`, that is, a new $n$ by $m$ matrix
-  $b$ such that `a[i][j]` $=$ `b[j][i]` for every `i` in `[0, m)` and `j` in `[0, n)`.
+  $b$ such that `a[i][j]` = `b[j][i]` for every `i` $\in [0, m)$ and `j` $\in [0, n)$.
 - `transpose_in_place(a)` assigns the square matrix `a` to its transpose, returning a reference to
   the modified argument itself.
 - `rotate(a, d)` returns the matrix `a` rotated `d` degrees clockwise. A negative `d` specifies a

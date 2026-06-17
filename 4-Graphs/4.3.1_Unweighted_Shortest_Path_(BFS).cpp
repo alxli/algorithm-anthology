@@ -7,7 +7,7 @@ output the shortest path to a specific destination node using the shortest-path 
 predecessor vector `pred`.
 
 - `bfs(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj` which
-  must consist of nodes numbered from 0 to `adj.size() - 1`.
+  must consist of nodes numbered [0, `n`), where `n` is `adj.size()`.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
@@ -33,9 +33,9 @@ std::vector<std::vector<int>> adj;
 std::vector<int> dist, pred;
 
 void bfs(int start) {
-  int nodes = static_cast<int>(adj.size());
-  dist.assign(nodes, INF);
-  pred.assign(nodes, -1);
+  int n = static_cast<int>(adj.size());
+  dist.assign(n, INF);
+  pred.assign(n, -1);
   std::queue<int> q;
   dist[start] = 0;
   q.push(start);

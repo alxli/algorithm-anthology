@@ -1,8 +1,6 @@
 /*
 
-Finds every complex root $x$ for a polynomial $p$ with complex coefficients such that $p(x) = 0$
-using Laguerre's method.
-
+Finds every complex root $x$ for a polynomial $p$ with complex coefficients such that $p(x) = 0$.
 Laguerre's method is a root-finding iteration with reliable, near-cubic convergence from almost any
 starting point. Once a root is found it is removed by polynomial deflation, and the iteration
 repeats on the lower-degree quotient until every root has been extracted.

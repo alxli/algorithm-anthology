@@ -11,14 +11,14 @@ The same scan, applied to the string viewed as a cycle, yields the starting posi
 lexicographically least rotation. This is the standard way to canonicalize a necklace, for example
 to test whether two strings are cyclic rotations of one another.
 
+Both functions below operate on any random-access sequence whose elements support `operator<`.
+
 - `lyndon_factorization(s)` returns a vector of the starting indices of the Lyndon factors of `s`,
   in order. The factor at index `i` of the result spans the half-open range from `res[i]` to
   `res[i + 1]` (or to `s.size()` for the final factor).
 - `min_rotation(s)` returns the 0-indexed position `p` such that the rotation beginning at `p`, that
-  is, `s[p], s[(p + 1) % n], ..., s[(p + n - 1) % n]`, is lexicographically smallest. If several
+  is, `s[p]`, `s[(p + 1) % n]`, ..., `s[(p + n - 1) % n]`, is lexicographically smallest. If several
   rotations tie, the smallest such `p` is returned.
-
-Both functions operate on any random-access sequence whose elements support `operator<`.
 
 Time Complexity:
 - O(n) per call to `lyndon_factorization(s)` and `min_rotation(s)`, where $n$ is the length of `s`.

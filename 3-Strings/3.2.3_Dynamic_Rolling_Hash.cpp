@@ -1,32 +1,31 @@
 /*
 
-Maintain a polynomial rolling hash over a mutable sequence, supporting point updates and O(log n)
-subsequence hash queries. Unlike the static rolling hash, which fixes its prefix hashes at
+Maintain a polynomial rolling hash over a nonnegative integer sequence, supporting point updates and
+O(log n) subsequence hash queries. Unlike the static rolling hash, which fixes its prefix hashes at
 construction, this structure allows any element to change between queries, which is useful for
 problems that compare substrings while characters are edited.
 
 The key idea is to weight each element by a power of the base tied to its absolute position: storing
 $a_i B^i$ at index `i` turns the hash of any prefix into an ordinary prefix sum, which a Fenwick
-tree maintains under point updates. The raw sum over a half-open range `[lo, hi)` is then
-$\sum_i a_i B^i$, and multiplying by $B^{-`lo`}$ shifts it to the position-independent value
-$\sum_i a_i B^{i - `lo`}$, so two ranges with equal contents receive equal hashes (the leftmost
-element carries the lowest power). A segment tree could replace the Fenwick tree if range operations
-(such as lazy range assignment) were needed.
+tree maintains under point updates. The raw sum over a half-open range $[l, h)$ is $\sum_i a_i B^i$,
+and multiplying by $B^{-l}$ shifts it to the position-independent value $\sum_i a_i B^{i - l}$, so
+two ranges with equal contents receive equal hashes (the leftmost element carries the lowest power).
+A segment tree could replace the Fenwick tree if lazy range updates are needed.
 
 `MOD1` and `MOD2` are two distinct primes, each kept below $2^{31}$ so that the product of any two
 residues fits in a 64-bit integer; hashing modulo both and comparing the resulting pair makes a
 collision astronomically unlikely. `BASE1` and `BASE2` are the corresponding polynomial bases, which
 should exceed the largest element value and may be randomized per run to resist adversarial inputs.
 
-Element values must be non-negative. As with any polynomial hash, comparing subsequences of
+Element values must be nonnegative. As with any polynomial hash, comparing subsequences of
 different lengths is only safe when values are positive (for example, map an alphabet to $[1, B)$)
 so that trailing zeros cannot make a shorter sequence collide with a longer one.
 
 - `DynamicHash(a)` builds prefix hashes over the integer sequence `a`.
 - `size()` returns the length of the sequence.
 - `set(i, x)` assigns the value at index `i` to `x`.
-- `hash(lo, hi)` returns the pair of hashes of the half-open subsequence `[lo, hi)`. Two ranges are
-  equal with high probability if and only if their `hash()` pairs are equal.
+- `hash(lo, hi)` returns the pair of hashes of the half-open subsequence [`lo`, `hi`). Two ranges
+  are equal with high probability if and only if their `hash()` pairs are equal.
 
 Time Complexity:
 - O(n log n) for the constructor, where $n$ is the length of the sequence.
@@ -53,7 +52,7 @@ class DynamicHash {
   std::vector<uint64_t> ft1, ft2;            // Fenwick trees, 1-indexed of size len + 1.
 
   // Products and sums of residues below 2^30 stay under 2^60, so 64-bit arithmetic never overflows.
-  static uint64_t power(uint64_t b, uint64_t e, uint64_t m) {
+  static uint64_t powmod(uint64_t b, uint64_t e, uint64_t m) {
     uint64_t res = 1;
     for (b %= m; e > 0; e >>= 1) {
       if (e & 1) {
@@ -85,7 +84,7 @@ class DynamicHash {
     ip1.resize(len + 1);
     ip2.resize(len + 1);
     pw1[0] = pw2[0] = ip1[0] = ip2[0] = 1;
-    uint64_t invb1 = power(BASE1, MOD1 - 2, MOD1), invb2 = power(BASE2, MOD2 - 2, MOD2);
+    uint64_t invb1 = powmod(BASE1, MOD1 - 2, MOD1), invb2 = powmod(BASE2, MOD2 - 2, MOD2);
     for (int i = 1; i <= len; i++) {
       pw1[i] = pw1[i - 1] * BASE1 % MOD1;
       pw2[i] = pw2[i - 1] * BASE2 % MOD2;

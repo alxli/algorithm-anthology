@@ -1,6 +1,6 @@
 /*
 
-Given a range `[lo, hi)` of $n$ numerical elements, reassign each element to an integer in $[0, k)$,
+Given a range of $n$ numerical elements, reassign each element to an integer in the domain $[0, k)$,
 where $k$ is the number of distinct elements in the original range, while preserving the initial
 relative ordering of elements. That is, if $a$ is the array of original values and $b$ is the array
 of compressed values, then every pair of indices $i, j$ in $[0, n)$ shall satisfy $a[i] < a[j]$ if
@@ -18,9 +18,9 @@ type. The two `compress()` functions rewrite a range in place and then discard t
 arbitrary values can be mapped to and from compressed ranks long after construction (e.g. for
 offline queries arriving separately from the array being compressed).
 
-- `CoordinateCompressor(lo, hi)` constructs a compressor over the values of `[lo, hi)`, ready for
-  querying. Alternatively, use the default constructor and register values with `add(x)`, then call
-  `build()` once after all values are registered and before the first query.
+- `CoordinateCompressor<T>(lo, hi)` constructs a compressor over the values of [`lo`, `hi`), ready
+  for querying. Alternatively, use the default constructor and register values with `add(x)`, then
+  call `build()` once after all values are registered and before the first query.
 - `size()` returns the number of distinct registered values $k$.
 - `value(r)` returns the original value with rank `r`, inverting `rank()`.
 - `rank(x)` returns the compressed value (rank) of `x` in $[0, k)$. `x` must have been registered.

@@ -14,9 +14,9 @@ implementation below repeats this contraction in rounds, accumulating the select
 cycle remains.
 
 - `directed_mst(n, root, edges)` returns the total weight of the minimum spanning arborescence
-  rooted at `root` over `n` nodes numbered from 0 to `n - 1`, or $-1$ if some node is unreachable
-  from the root (no arborescence exists). Edges are given as `(from, to, weight)` triples; parallel
-  edges and self-loops are allowed, with self-loops simply ignored.
+  rooted at `root` over `n` nodes numbered [0, `n`), or $-1$ if some node is unreachable from the
+  root (no arborescence exists). Edges are given as (`from`, `to`, `weight`) triples; parallel edges
+  and self-loops are allowed, with self-loops simply ignored.
 
 Time Complexity:
 - O(n * m) per call, where $n$ is the number of nodes and $m$ is the number of edges.
@@ -51,8 +51,7 @@ int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
         return -1;  // Node v has no incoming edge, so it is unreachable.
       }
     }
-
-    // Identify cycles formed by the chosen incoming edges, labeling each with an id in `comp`.
+    // Identify cycles formed by the chosen incoming edges, labeling each with an ID in `comp`.
     int cycles = 0;
     std::vector<int> comp(n, -1), seen(n, -1);
     min_in[root] = 0;
@@ -73,7 +72,6 @@ int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
     if (cycles == 0) {
       break;  // No cycle remains; the selected edges form the arborescence.
     }
-
     // Contract each cycle into a supernode and reduce the weights of edges entering it.
     for (int v = 0; v < n; v++) {
       if (comp[v] == -1) {

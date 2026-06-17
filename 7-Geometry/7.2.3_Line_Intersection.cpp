@@ -14,16 +14,16 @@ calculations are exact when `Pt` has integer coordinates.
   $a_2 x + b_2 y + c_2 = 0$, returning $-1$ (parallel), 0 (one point, stored into `p`), or 1
   (identical).
 - `line_intersection(p1, p2, p3, p4, &p)` intersects the infinite lines through `p1`-`p2` and
-  `p3`-`p4`.
+  `p3`-`p4`, returning $-1$ (parallel), 0 (one point, stored into `p`), or 1 (identical).
 - `seg_intersection(a, b, c, d, &p, &q, TOUCH_IS_INTERSECT)` intersects segments `a`-`b` and
   `c`-`d`, returning $-1$ (none), 0 (one point), or 1 (overlapping segment). The
   `TOUCH_IS_INTERSECT` flag (default `true`) controls whether segments that meet only at an
   endpoint count as intersecting. If the intersection is a point (and `p` is not `nullptr`), it
   will be stored into `p`. If the intersection is an overlapping segment (and `p` and `q` are not
-  `nullptr`) then their endpoints will be stored into `p` and `q`. The output types `p` and `q`
-  must be floating-point points.
+  `nullptr`) then their endpoints will be stored into pointers `p` and `q`, which must reference a
+  floating-point point type.
 - `seg_intersection(a, b, c, d, TOUCH_IS_INTERSECT)` is a simplified, detection-only version of the
-  above. Both versions are exact for detection if the input `Pt` type is integral.
+  above. Both versions are exact for detection if the input point type is integral.
 - `closest_point(a, b, c, p)` returns the closest point on line $ax + by + c = 0$ to point `p`.
 
 Overflow warning: the exact integer paths multiply coordinate differences (cross products and

@@ -7,11 +7,11 @@ search keeps visited nodes on a stack and tracks each node's low-link, the small
 reachable from its subtree; a node whose low-link equals its own entry time roots a component, which
 is popped off the stack in one piece.
 
-- `TarjanSCC(n)` constructs a directed graph on nodes numbered from 0 to `n - 1`.
+- `TarjanSCC(n)` constructs a directed graph of `n` nodes numbered [0, `n`).
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.
 - `build_scc()` populates `scc` with the strongly connected components and `component[v]` with
   the component ID containing vertex `v`. Component IDs are in reverse topological order: for every
-  edge from component `a` to a different component `b`, `a > b`.
+  edge from component $a$ to a different component $b$, $a > b$.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_scc()`, where $n$ is the number of nodes and $m$ is the number of
@@ -34,7 +34,7 @@ struct TarjanSCC {
   std::vector<bool> visited;
   int timer;
 
-  TarjanSCC(int nodes = 0) : adj(nodes) {}
+  TarjanSCC(int n = 0) : adj(n) {}
 
   void add_edge(int u, int v) { adj[u].push_back(v); }
 
@@ -69,14 +69,14 @@ struct TarjanSCC {
   }
 
   void build_scc() {
-    int nodes = static_cast<int>(adj.size());
+    int n = static_cast<int>(adj.size());
     scc.clear();
-    component.assign(nodes, -1);
+    component.assign(n, -1);
     stack.clear();
-    lowlink.assign(nodes, 0);
-    visited.assign(nodes, false);
+    lowlink.assign(n, 0);
+    visited.assign(n, false);
     timer = 0;
-    for (int i = 0; i < nodes; i++) {
+    for (int i = 0; i < n; i++) {
       if (!visited[i]) {
         dfs(i);
       }

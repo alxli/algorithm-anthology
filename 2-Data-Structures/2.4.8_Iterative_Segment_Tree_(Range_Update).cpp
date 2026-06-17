@@ -21,10 +21,10 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-- `IterativeLazySegTree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`,
-  inclusive, and all values initialized to `v`.
-- `IterativeLazySegTree(lo, hi)` constructs an array from two random-access iterators as a range
-  `[lo, hi)`, initialized to the elements of the range in the same order.
+- `IterativeLazySegTree<T>(n, v)` constructs an array of size `n` with indices [0, `n`), and all
+  values initialized to `v`.
+- `IterativeLazySegTree<T>(lo, hi)` constructs an array from two random-access iterators as a range
+  [`lo`, `hi`), initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`, where `i` is between 0 and `size() - 1`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
@@ -32,14 +32,14 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
 - `update(i, d)` assigns the value at index `i` by applying the delta `d`.
 - `update(lo, hi, d)` modifies the value at each array index from `lo` to `hi`, inclusive, by
   applying the delta `d` to each value.
-- `find_first(lo, hi, pred)` returns the smallest index in `[lo, hi]` matching the search, or $-1$
+- `find_first(lo, hi, pred)` returns the smallest index in [`lo`, `hi`] matching the search, or $-1$
   if none. `pred(v)` takes a node aggregate and must be monotone: if it is false, no element under
   that node qualifies.
 - `find_last(lo, hi, pred)` is the analogous query returning the largest such index.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
-  range `[lo, hi)` satisfies `pred`, or `size()` if the predicate remains true to the end.
+  range [`lo`, `hi`) satisfies `pred`, or `size()` if the predicate remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range `[lo, hi)` satisfies `pred`, or 0 if the predicate remains true to the beginning.
+  range [`lo`, `hi`) satisfies `pred`, or 0 if the predicate remains true to the beginning.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
@@ -239,13 +239,7 @@ class IterativeLazySegTree {
         right = right ? combine(value[--r], *right) : value[--r];
       }
     }
-    if (!left) {
-      return *right;
-    }
-    if (!right) {
-      return *left;
-    }
-    return combine(*left, *right);
+    return !left ? *right : (!right ? *left : combine(*left, *right));
   }
 
   void update(int lo, int hi, const T &d) {

@@ -45,10 +45,10 @@ void dfs(int u, std::vector<bool> &visit, std::vector<bool> &done, std::vector<i
 }
 
 std::vector<int> toposort_dfs() {
-  int nodes = static_cast<int>(adj.size());
-  std::vector<bool> visit(nodes, false), done(nodes, false);
+  int n = static_cast<int>(adj.size());
+  std::vector<bool> visit(n, false), done(n, false);
   std::vector<int> res;
-  for (int i = 0; i < nodes; i++) {
+  for (int i = 0; i < n; i++) {
     if (!done[i]) {
       dfs(i, visit, done, res);
     }
@@ -58,15 +58,15 @@ std::vector<int> toposort_dfs() {
 }
 
 std::vector<int> toposort_kahn() {
-  int nodes = static_cast<int>(adj.size());
-  std::vector<int> indegree(nodes), res;
-  for (int u = 0; u < nodes; u++) {
+  int n = static_cast<int>(adj.size());
+  std::vector<int> indegree(n), res;
+  for (int u = 0; u < n; u++) {
     for (int v : adj[u]) {
       indegree[v]++;
     }
   }
   std::queue<int> q;
-  for (int i = 0; i < nodes; i++) {
+  for (int i = 0; i < n; i++) {
     if (indegree[i] == 0) {
       q.push(i);
     }
@@ -81,7 +81,7 @@ std::vector<int> toposort_kahn() {
       }
     }
   }
-  return static_cast<int>(res.size()) == nodes ? res : std::vector<int>();
+  return static_cast<int>(res.size()) == n ? res : std::vector<int>();
 }
 
 /*** Example Usage and Output:

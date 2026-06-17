@@ -5,8 +5,8 @@ queries. This is the sparse version of the two-tree Fenwick range-update/range-q
 Fenwick nodes reached by previous operations are stored, using `std::unordered_map` instead of dense
 vectors.
 
-- `SparseFenwickRURQ<T, N>()` constructs an array with 0-based indices 0 to `N - 1` (inclusive),
-  implicitly initialized to 0.
+- `SparseFenwick<T, N>()` constructs an array with 0-based indices [0, `N`), implicitly initialized
+  to 0.
 - `at(i)` returns the value at index `i`.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `add(lo, hi, x)` adds `x` to the values at all indices from `lo` to `hi`, inclusive.
@@ -29,7 +29,7 @@ Space Complexity:
 #include <unordered_map>
 
 template<class T, int N = 1000000001>
-class SparseFenwickRURQ {
+class SparseFenwick {
   std::unordered_map<int, T> tmul, tadd;
 
   T get(const std::unordered_map<int, T> &tree, int i) const {
@@ -105,7 +105,7 @@ using namespace std;
 
 int main() {
   vector<int> a{10, 1, 2, 3, 4};
-  SparseFenwickRURQ<int> t;
+  SparseFenwick<int> t;
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     t.set(i, a[i]);
   }
@@ -122,7 +122,7 @@ int main() {
   t.set(500000000, 10);
   assert(t.sum(0, 1000000000) == 92);
 
-  SparseFenwickRURQ<long long> freq;
+  SparseFenwick<long long> freq;
   freq.add(1, 1, 1);
   freq.add(3, 3, 3);
   freq.add(6, 6, 1);

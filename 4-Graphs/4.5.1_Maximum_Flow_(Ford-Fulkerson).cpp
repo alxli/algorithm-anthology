@@ -6,14 +6,12 @@ every node other than the source and sink.
 
 The Ford-Fulkerson method repeatedly finds any augmenting path from source to sink in the residual
 graph (here by depth-first search) and pushes as much flow as the path allows, until no augmenting
-path remains.
-
-- `ford_fulkerson()` uses global `source` and `sink`, modifies the global residual capacity matrix
-  `cap`, and returns maximum flow. Nodes are numbered from 0 to `cap.size() - 1`.
-
-The Ford-Fulkerson algorithm should only be used on graphs with integer capacities, as there exists
+path remains. This algorithm should only be used on graphs with integer capacities, as there exists
 certain real-valued flow inputs for which the algorithm never terminates. The Edmonds-Karp algorithm
 is an improvement using breadth-first search, addressing this problem.
+
+- `ford_fulkerson()` uses global `source` and `sink`, modifies the global residual capacity matrix
+  `cap`, and returns maximum flow. Nodes are numbered [0, `n`), where `n` is `cap.size()`.
 
 Time Complexity:
 - O(n^2*f) per call to `ford_fulkerson()`, where $n$ is the number of nodes and $f$ is the maximum
@@ -35,12 +33,12 @@ std::vector<std::vector<int>> cap;
 std::vector<bool> visit;
 
 int dfs(int u, int f, int sink) {
-  int nodes = static_cast<int>(cap.size());
+  int n = static_cast<int>(cap.size());
   if (u == sink) {
     return f;
   }
   visit[u] = true;
-  for (int v = 0; v < nodes; v++) {
+  for (int v = 0; v < n; v++) {
     if (!visit[v] && cap[u][v] > 0) {
       int flow = dfs(v, std::min(f, cap[u][v]), sink);
       if (flow > 0) {
@@ -54,10 +52,10 @@ int dfs(int u, int f, int sink) {
 }
 
 int64_t ford_fulkerson(int source, int sink) {
-  int nodes = static_cast<int>(cap.size());
+  int n = static_cast<int>(cap.size());
   int64_t max_flow = 0;
   while (true) {
-    visit.assign(nodes, false);
+    visit.assign(n, false);
     int flow = dfs(source, INF, sink);
     if (flow == 0) {
       break;

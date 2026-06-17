@@ -10,7 +10,7 @@ height label on each node, repeatedly pushing excess flow to lower-labeled neigh
 holds excess.
 
 - `push_relabel(source, sink)` returns maximum flow for a global capacity matrix `cap` whose nodes
-  are numbered from 0 to `cap.size() - 1`.
+  are numbered [0, `n`), where `n` is `cap.size()`.
 - `min_cut(source)` returns the source side of a minimum cut after `push_relabel()` has been called.
 
 Although the push-relabel algorithm is considered one of the most efficient maximum flow algorithms,
@@ -38,11 +38,11 @@ std::vector<std::vector<int>> cap;
 std::vector<std::vector<int>> f;
 
 int64_t push_relabel(int source, int sink) {
-  int nodes = static_cast<int>(cap.size());
-  f.assign(nodes, std::vector<int>(nodes, 0));
-  std::vector<int> e(nodes, 0), h(nodes, 0), maxh(nodes, 0);
-  h[source] = nodes - 1;
-  for (int i = 0; i < nodes; i++) {
+  int n = static_cast<int>(cap.size());
+  f.assign(n, std::vector<int>(n, 0));
+  std::vector<int> e(n, 0), h(n, 0), maxh(n, 0);
+  h[source] = n - 1;
+  for (int i = 0; i < n; i++) {
     f[source][i] = cap[source][i];
     f[i][source] = -f[source][i];
     e[i] = cap[source][i];
@@ -50,7 +50,7 @@ int64_t push_relabel(int source, int sink) {
   int size = 0;
   while (true) {
     if (size == 0) {
-      for (int i = 0; i < nodes; i++) {
+      for (int i = 0; i < n; i++) {
         if (i != source && i != sink && e[i] > 0) {
           if (size != 0 && h[i] > h[maxh[0]]) {
             size = 0;
@@ -65,7 +65,7 @@ int64_t push_relabel(int source, int sink) {
     while (size != 0) {
       int i = maxh[size - 1];
       bool pushed = false;
-      for (int j = 0; j < nodes && e[i] != 0; j++) {
+      for (int j = 0; j < n && e[i] != 0; j++) {
         if (h[i] == h[j] + 1 && cap[i][j] - f[i][j] > 0) {
           int df = std::min(cap[i][j] - f[i][j], e[i]);
           f[i][j] += df;
@@ -82,7 +82,7 @@ int64_t push_relabel(int source, int sink) {
         continue;
       }
       h[i] = INF;
-      for (int j = 0; j < nodes; j++) {
+      for (int j = 0; j < n; j++) {
         if (h[i] > h[j] + 1 && cap[i][j] - f[i][j] > 0) {
           h[i] = h[j] + 1;
         }
@@ -94,22 +94,22 @@ int64_t push_relabel(int source, int sink) {
     }
   }
   int64_t max_flow = 0;
-  for (int i = 0; i < nodes; i++) {
+  for (int i = 0; i < n; i++) {
     max_flow += f[source][i];
   }
   return max_flow;
 }
 
 std::vector<bool> min_cut(int source) {
-  int nodes = static_cast<int>(cap.size());
-  std::vector<bool> reachable(nodes);
+  int n = static_cast<int>(cap.size());
+  std::vector<bool> reachable(n);
   std::queue<int> q;
   reachable[source] = true;
   q.push(source);
   while (!q.empty()) {
     int u = q.front();
     q.pop();
-    for (int v = 0; v < nodes; v++) {
+    for (int v = 0; v < n; v++) {
       if (!reachable[v] && cap[u][v] - f[u][v] > 0) {
         reachable[v] = true;
         q.push(v);

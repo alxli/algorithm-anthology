@@ -1,16 +1,16 @@
 /*
 
-Given a set $P$ of distinct two-dimensional points, the Delaunay triangulation of $P$ is a set of
-non-overlapping triangles that covers the entire convex hull of $P$ such that no point in $P$ lies
-within the circumcircle of any of the resulting triangles.
+Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of $P$ is a
+triangulation of the convex hull of P such that no point of P lies strictly inside the circumcircle
+of any triangle in the triangulation. The Delaunay triangulation is not necessarily unique when four
+or more points are cocircular.
 
-The Delaunay triangulation is not necessarily unique when four or more points are cocircular.
 This implementation produces one valid triangulation using a simple brute-force algorithm. Each
 candidate triangle is tested against the empty-circumcircle condition, and candidates whose edges
 would properly cross already accepted triangles are rejected.
 
-- `delaunay_triangulation(lo, hi)` returns a Delaunay triangulation for the input range `[lo, hi)`
-  of distinct points, where `lo` and `hi` must be random-access iterators, or an empty vector if a
+- `delaunay_triangulation(lo, hi)` returns a Delaunay triangulation for a range [`lo`, `hi`) of
+  distinct points, where `lo` and `hi` must be random-access iterators, or an empty vector if a
   triangulation does not exist.
 
 Time Complexity:

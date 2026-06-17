@@ -10,7 +10,7 @@ endpoints may be integer (`PointI`) or floating-point (`Point`/`PointD`), but mu
 `seg_intersection` are exact for integer endpoints, so intersection detection is exact.
 
 - `find_intersection(lo, hi, &res1, &res2, TOUCH_IS_INTERSECT)` returns whether any pair of segments
-  intersect given a range `[lo, hi)` of segments, where `lo` and `hi` are random-access iterators.
+  intersect given a range [`lo`, `hi`) of segments, where `lo` and `hi` are random-access iterators.
   If an intersection is found, then one such pair of segments will be stored into pointers `res1`
   and `res2`. The `TOUCH_IS_INTERSECT` flag (default `true`) controls whether segments that meet
   only at an endpoint count as intersecting; set it to `false` to report proper crossings only,

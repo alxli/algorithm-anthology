@@ -1,14 +1,15 @@
 /*
 
 Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires an ordering on the set of
-possible keys defined by `operator<` on the key type. An AVL tree is a binary search tree balanced
-by height, guaranteeing O(log n) worst-case running time in insertions and deletions by making sure
-that the heights of the left and right subtrees at every node differ by at most 1. Whenever an
-insertion or deletion breaks this invariant, it is repaired with one or two rotations at each
-affected node along the search path.
+key appears at most once in the collection. An AVL tree is a binary search tree balanced by height,
+guaranteeing O(log n) worst-case running time in insertions and deletions by making sure that the
+heights of the left and right subtrees at every node differ by at most 1. Whenever an insertion or
+deletion breaks this invariant, it is repaired with one or two rotations at each affected node along
+the search path.
 
-- `AVLTree()` constructs an empty map.
+This implementation requires an ordering on the key type `K` defined by `operator<`.
+
+- `AVLTree<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new
@@ -19,6 +20,9 @@ affected node along the search path.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
 - `entries()` returns all key-value entries in ascending order of keys.
+
+The navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and
+`next(k)` from the treap in 2.3.1 depend only on the BST property and may be copied here unchanged.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
@@ -100,9 +104,10 @@ class AVLTree {
     }
   }
 
-  static bool insert(Node *&n, const K &k, const V &v) {
+  bool insert(Node *&n, const K &k, const V &v) {
     if (n == nullptr) {
       n = new Node(k, v);
+      num_nodes++;
       return true;
     }
     if ((k < n->key && insert(n->left, k, v)) || (n->key < k && insert(n->right, k, v))) {
@@ -112,7 +117,7 @@ class AVLTree {
     return false;
   }
 
-  static bool erase(Node *&n, const K &k) {
+  bool erase(Node *&n, const K &k) {
     if (n == nullptr) {
       return false;
     }
@@ -136,6 +141,7 @@ class AVLTree {
         Node *tmp = (n->left != nullptr) ? n->left : n->right;
         delete n;
         n = tmp;
+        num_nodes--;
       }
       rebalance(n);
       return true;
@@ -171,22 +177,8 @@ class AVLTree {
   AVLTree &operator=(const AVLTree &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
-
-  bool insert(const K &k, const V &v) {
-    if (insert(root, k, v)) {
-      num_nodes++;
-      return true;
-    }
-    return false;
-  }
-
-  bool erase(const K &k) {
-    if (erase(root, k)) {
-      num_nodes--;
-      return true;
-    }
-    return false;
-  }
+  bool insert(const K &k, const V &v) { return insert(root, k, v); }
+  bool erase(const K &k) { return erase(root, k); }
 
   const V *find(const K &k) const {
     Node *n = root;

@@ -1,14 +1,15 @@
 /*
 
 Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires an ordering on the set of
-possible keys defined by `operator<` on the key type. A splay tree is a balanced binary search tree
-with the additional property that recently accessed elements are quick to access again. Every
-operation "splays" its target node up to the root through a series of rotations, reshaping the tree
-so that frequently accessed keys settle near the top. A single operation may degrade to O(n), but
-any sequence of operations averages out to O(log n) amortized each.
+key appears at most once in the collection. A splay tree is a balanced binary search tree with the
+additional property that recently accessed elements are quick to access again. Every operation
+"splays" its target node up to the root through a series of rotations, reshaping the tree so that
+frequently accessed keys settle near the top. A single operation may degrade to O(n), but any
+sequence of operations averages out to O(log n) amortized each.
 
-- `SplayTree()` constructs an empty map.
+This implementation requires an ordering on the key type `K` defined by `operator<`.
+
+- `SplayTree<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new
@@ -19,6 +20,9 @@ any sequence of operations averages out to O(log n) amortized each.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
 - `entries()` returns all key-value entries in ascending order of keys.
+
+The navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and
+`next(k)` from the treap in 2.3.1 depend only on the BST property and may be copied here unchanged.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
@@ -96,9 +100,10 @@ class SplayTree {
     }
   }
 
-  static bool insert(Node *&n, const K &k, const V &v) {
+  bool insert(Node *&n, const K &k, const V &v) {
     if (n == nullptr) {
       n = new Node(k, v);
+      num_nodes++;
       return true;
     }
     splay(n, k);
@@ -120,7 +125,7 @@ class SplayTree {
     return true;
   }
 
-  static bool erase(Node *&n, const K &k) {
+  bool erase(Node *&n, const K &k) {
     if (n == nullptr) {
       return false;
     }
@@ -137,6 +142,7 @@ class SplayTree {
       n->right = tmp->right;
     }
     delete tmp;
+    num_nodes--;
     return true;
   }
 
@@ -164,22 +170,8 @@ class SplayTree {
   SplayTree &operator=(const SplayTree &) = delete;
   int size() const { return num_nodes; }
   bool empty() const { return root == nullptr; }
-
-  bool insert(const K &k, const V &v) {
-    if (insert(root, k, v)) {
-      num_nodes++;
-      return true;
-    }
-    return false;
-  }
-
-  bool erase(const K &k) {
-    if (erase(root, k)) {
-      num_nodes--;
-      return true;
-    }
-    return false;
-  }
+  bool insert(const K &k, const V &v) { return insert(root, k, v); }
+  bool erase(const K &k) { return erase(root, k); }
 
   const V *find(const K &k) {
     splay(root, k);

@@ -2,7 +2,7 @@
 
 Given a complete, weighted, directed graph, find a minimum-length Hamiltonian path or cycle. A
 Hamiltonian path visits each node exactly once. A Hamiltonian cycle additionally returns to its
-starting node; this cycle version is the traveling salesman problem.
+starting node; this cycle version is the traveling salesman problem (TSP).
 
 Both functions use the Held-Karp subset dynamic program, where `dp[S][i]` is the shortest path
 visiting exactly the nodes in `S` and ending at node `i`.
@@ -34,18 +34,18 @@ std::vector<std::vector<int64_t>> adj, dp;
 std::vector<int> path;
 
 int64_t shortest_hamiltonian_path() {
-  int nodes = static_cast<int>(adj.size());
-  assert(nodes >= 1);
-  int max_mask = (1 << nodes) - 1;
-  dp.assign(max_mask + 1, std::vector<int64_t>(nodes, INF));
-  path.assign(nodes, 0);
-  for (int i = 0; i < nodes; i++) {
+  int n = static_cast<int>(adj.size());
+  assert(n >= 1);
+  int max_mask = (1 << n) - 1;
+  dp.assign(max_mask + 1, std::vector<int64_t>(n, INF));
+  path.assign(n, 0);
+  for (int i = 0; i < n; i++) {
     dp[1 << i][i] = 0;
   }
   for (int mask = 1; mask <= max_mask; mask++) {
-    for (int i = 0; i < nodes; i++) {
+    for (int i = 0; i < n; i++) {
       if ((mask & (1 << i)) != 0) {
-        for (int j = 0; j < nodes; j++) {
+        for (int j = 0; j < n; j++) {
           if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
             dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
           }
@@ -54,13 +54,13 @@ int64_t shortest_hamiltonian_path() {
     }
   }
   int64_t res = INF;
-  for (int i = 0; i < nodes; i++) {
+  for (int i = 0; i < n; i++) {
     res = std::min(res, dp[max_mask][i]);
   }
   int mask = max_mask, old = -1;
-  for (int i = nodes - 1; i >= 0; i--) {
+  for (int i = n - 1; i >= 0; i--) {
     int best = -1;
-    for (int j = 0; j < nodes; j++) {
+    for (int j = 0; j < n; j++) {
       if ((mask & (1 << j)) != 0 &&
           (best == -1 || dp[mask][best] + (old == -1 ? 0 : adj[best][old]) >
                              dp[mask][j] + (old == -1 ? 0 : adj[j][old]))) {
@@ -75,20 +75,20 @@ int64_t shortest_hamiltonian_path() {
 }
 
 int64_t shortest_hamiltonian_cycle() {
-  int nodes = static_cast<int>(adj.size());
-  assert(nodes >= 1);
-  if (nodes == 1) {
+  int n = static_cast<int>(adj.size());
+  assert(n >= 1);
+  if (n == 1) {
     path = {0};
     return 0;
   }
-  int max_mask = (1 << nodes) - 1;
-  dp.assign(max_mask + 1, std::vector<int64_t>(nodes, INF));
-  path.assign(nodes, 0);
+  int max_mask = (1 << n) - 1;
+  dp.assign(max_mask + 1, std::vector<int64_t>(n, INF));
+  path.assign(n, 0);
   dp[1][0] = 0;
   for (int mask = 1; mask <= max_mask; mask += 2) {
-    for (int i = 1; i < nodes; i++) {
+    for (int i = 1; i < n; i++) {
       if ((mask & (1 << i)) != 0) {
-        for (int j = 0; j < nodes; j++) {
+        for (int j = 0; j < n; j++) {
           if ((mask & (1 << j)) != 0 && dp[mask ^ (1 << i)][j] != INF) {
             dp[mask][i] = std::min(dp[mask][i], dp[mask ^ (1 << i)][j] + adj[j][i]);
           }
@@ -97,13 +97,13 @@ int64_t shortest_hamiltonian_cycle() {
     }
   }
   int64_t res = INF;
-  for (int i = 1; i < nodes; i++) {
+  for (int i = 1; i < n; i++) {
     res = std::min(res, dp[max_mask][i] + adj[i][0]);
   }
   int mask = max_mask, old = 0;
-  for (int i = nodes - 1; i >= 1; i--) {
+  for (int i = n - 1; i >= 1; i--) {
     int best = -1;
-    for (int j = 1; j < nodes; j++) {
+    for (int j = 1; j < n; j++) {
       if ((mask & (1 << j)) != 0 &&
           (best == -1 || dp[mask][best] + adj[best][old] > dp[mask][j] + adj[j][old])) {
         best = j;

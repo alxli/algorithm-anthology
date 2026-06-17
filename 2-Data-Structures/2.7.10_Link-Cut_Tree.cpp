@@ -6,12 +6,11 @@ addition, support testing of whether two nodes are connected in the forest, as w
 and splitting of trees by adding or removing specific edges. Link/cut forests divide each of its
 trees into vertex-disjoint paths, each represented by a splay tree.
 
-The query operation is defined by an associative `combine()` function which satisfies
-`combine(x, combine(y, z)) = combine(combine(x, y), z)` for all values `x`, `y`, and `z` in the
-forest. The default code below assumes a numerical forest type, defining queries for the "min" of
-the target range. Another possible query operation is "sum", in which case `combine(a, b)` should
-return `a + b`. For direction-independent path queries, `combine()` should also be commutative;
-otherwise, store enough information in each aggregate to combine paths in the required order.
+The query operation is defined by an associative `combine()` function. The default code below
+assumes a numerical forest type, defining queries for the "min" of the target range. Another
+possible query operation is "sum", in which case `combine(a, b)` should return `a + b`. For
+direction-independent path queries, `combine()` should also be commutative; otherwise, store enough
+information in each aggregate to combine paths in the required order.
 
 The update operation is defined by `apply_delta()` and `compose_deltas()`. A delta must act on an
 aggregate summary of a path of length `len`: `apply_delta(v, d, len)` returns the aggregate after
@@ -23,7 +22,7 @@ The default code below defines updates that "set" a path's nodes to a new value.
 updates, `apply_delta(v, d, len)` would return `v + d` for min/max queries, or `v + d * len` for sum
 queries, and `compose_deltas(old, d)` would return `old + d`.
 
-- `LinkCut()` constructs an empty forest.
+- `LinkCut<T>()` constructs an empty forest.
 - `size()` returns the number of nodes in the forest.
 - `trees()` returns the number of trees in the forest.
 - `add_node(i, v)` adds a new single-node tree to the forest, labeled with the integer `i` and with

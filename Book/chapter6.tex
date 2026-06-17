@@ -142,14 +142,14 @@ Double round_half_from0(const Double &x) {
 }
 
 template<class Double>
-Double round_half_even(const Double &x, const Double &eps = 1e-9) {
+Double round_half_even(const Double &x, const Double &EPS = 1e-9) {
   if (x < 0.0) {
-    return -round_half_even(-x, eps);
+    return -round_half_even(-x, EPS);
   }
   Double ipart;
   modf(x, &ipart);
-  if (fabs(x - (ipart + 0.5)) < eps) {  // exactly halfway: break the tie towards even
-    return (fmod(ipart, 2.0) < eps) ? ipart : ceil0(ipart + 0.5);
+  if (fabs(x - (ipart + 0.5)) < EPS) {  // exactly halfway: break the tie towards even
+    return (fmod(ipart, 2.0) < EPS) ? ipart : ceil0(ipart + 0.5);
   }
   return round_half_from0(x);
 }
@@ -453,7 +453,7 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Combinatorial Calculations}
-The following functions implement common operations in combinatorics. All inputs must be non-negative. All return values and table entries are computed as 64-bit integers modulo an input argument $m$ or $p$. Modular products use ordinary \inlinecode{int64\_t} multiplication, so the square of the chosen modulus must fit in \inlinecode{int64\_t}.
+The following functions implement common operations in combinatorics. All inputs must be nonnegative. All return values and table entries are computed as 64-bit integers modulo an input argument $m$ or $p$. Modular products use ordinary \inlinecode{int64\_t} multiplication, so the square of the chosen modulus must fit in \inlinecode{int64\_t}.
 
 \begin{compactitem}
   \item \inlinecode{factorial(n, m)} returns $n! \bmod m$.
@@ -462,7 +462,7 @@ The following functions implement common operations in combinatorics. All inputs
   \item \inlinecode{permute(n, k, m)} returns $(n \mathbin{\text{permute}} k) \bmod m$.
   \item \inlinecode{choose(n, k, p)} returns $\binom{n}{k} \bmod p$, where $p$ is prime.
   \item \inlinecode{multichoose(n, k, p)} returns $(n \mathbin{\text{multichoose}} k) \bmod p$, where $p$ is prime.
-  \item \inlinecode{catalan(n, p)} returns the $n$th Catalan number mod $p$, where $p$ is prime.
+  \item \inlinecode{catalan(n, p)} returns the $n$-th Catalan number mod $p$, where $p$ is prime.
   \item \inlinecode{partitions(n, m)} returns the number of partitions of $n$, mod $m$.
   \item \inlinecode{partitions(n, k, m)} returns the number of partitions of $n$ into $k$ parts, mod $m$.
   \item \inlinecode{stirling1(n, k, m)} returns the $(n, k)$ unsigned Stirling number of the 1st kind mod $m$.
@@ -855,7 +855,7 @@ int main() {
 A permutation is an ordered list consisting of $n$ (not necessarily distinct) elements.
 
 \begin{compactitem}
-  \item \inlinecode{next\_permutation\_(lo, hi)} is analogous to \inlinecode{std::next\_permutation(lo, hi)}, taking two BidirectionalIterators \inlinecode{lo} and \inlinecode{hi} as a range \inlinecode{[lo, hi)} for which the function tries to rearrange to the next lexicographically greater permutation. The function returns true if such a permutation exists, or false if the range is already in descending order (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by the \inlinecode{\textless{}} operator on the iterator's value type.
+  \item \inlinecode{next\_permutation\_(lo, hi)} is analogous to \inlinecode{std::next\_permutation(lo, hi)}, taking two BidirectionalIterators as a range [\inlinecode{lo}, \inlinecode{hi}) for which the function tries to rearrange to the next lexicographically greater permutation. The function returns true if such a permutation exists, or false if the range is already in descending order (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by the \inlinecode{\textless{}} operator on the iterator's value type.
   \item \inlinecode{next\_permutation(a)} is analogous to \inlinecode{next\_permutation()}, except that it takes a vector instead of a range.
   \item \inlinecode{next\_permutation(x)} returns the next lexicographically greater permutation of the binary digits of the integer \inlinecode{x}, that is, the lowest integer greater than \inlinecode{x} with the same number of 1-bits. This can be used to generate combinations of a set of $n$ items by treating each 1 bit as whether to ``take'' the item at the corresponding position.
   \item \inlinecode{permutation\_by\_rank(n, r)} returns the permutation of the integers in the range $[0, n)$ which is lexicographically ranked $r$, where $r$ is a 0-based rank in the range $[0, n!)$.
@@ -1072,7 +1072,7 @@ Decomposition of {3,1,0,2} into cycles:
 A combination is a subset of size $k$ chosen from a total of $n$ (not necessarily distinct) elements, where order does not matter.
 
 \begin{compactitem}
-  \item \inlinecode{next\_combination(lo, mid, hi)} takes random-access iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} as a range \inlinecode{[lo, hi)} of $n$ elements for which the function will rearrange such that the $k$ elements in \inlinecode{[lo, mid)} become the next lexicographically greater combination. The function returns true if such a combination exists, or false if \inlinecode{[lo, mid)} already consists of the lexicographically greatest combination of the elements in \inlinecode{[lo, hi)} (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}} on the iterator's value type.
+  \item \inlinecode{next\_combination(lo, mid, hi)} takes random-access iterators \inlinecode{lo}, \inlinecode{mid}, and \inlinecode{hi} as a range [\inlinecode{lo}, \inlinecode{hi}) of $n$ elements for which the function will rearrange such that the $k$ elements in [\inlinecode{lo}, \inlinecode{mid}) become the next lexicographically greater combination. The function returns true if such a combination exists, or false if [\inlinecode{lo}, \inlinecode{mid}) already consists of the lexicographically greatest combination of the elements in [\inlinecode{lo}, \inlinecode{hi}) (in which case the values are unchanged). This implementation requires an ordering on the set of possible elements defined by \inlinecode{operator\textless{}} on the iterator's value type.
   \item \inlinecode{next\_combination(n, a)} rearranges \inlinecode{a} to become the next lexicographically greater combination of distinct integers in the range $[0, n)$. The vector \inlinecode{a} must be sorted and contain distinct integers in the range $[0, n)$.
   \item \inlinecode{next\_combination\_mask(x)} interprets the bits of an integer \inlinecode{x} as a mask with 1-bits specifying the chosen items for a combination and returns the mask of the next lexicographically greater combination (that is, the lowest integer greater than \inlinecode{x} with the same number of 1 bits). Note that this does not generate combinations in the same order as \inlinecode{next\_combination()}, nor does it work if the corresponding $n$ items are not distinct (in that case, duplicate combinations will be generated).
   \item \inlinecode{combination\_by\_rank(n, k, r)} returns the combination of $k$ distinct integers in the range $[0, n)$ that is lexicographically ranked $r$, where $r$ is a 0-based rank in the range $[0, \binom{n}{k})$.
@@ -1321,7 +1321,7 @@ A partition of a natural number $n$ is a way to write $n$ as a sum of positive i
   \item \inlinecode{next\_partition(p)} takes a reference to a vector \inlinecode{p} of positive integers as a partition of $n$ for which the function will re-assign to become the next lexicographically greater partition. The function returns true if such a partition exists, or false if \inlinecode{p} already consists of the lexicographically greatest partition (i.e. the single integer $n$).
   \item \inlinecode{partition\_by\_rank(n, r)} returns the partition of $n$ that is lexicographically ranked $r$ if addends in each partition were sorted in non-increasing order, where $r$ is a 0-based rank in the range $[0, \text{partitions}(n))$.
   \item \inlinecode{rank\_by\_partition(p)} returns an integer representing the 0-based rank of the partition specified by vector \inlinecode{p}, which must consist of positive integers sorted in non-increasing order.
-  \item \inlinecode{generate\_increasing\_partitions(n, f)} calls the function \inlinecode{f(lo, hi)} on strictly increasing partitions of $n$ in lexicographically increasing order of partition, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to a range \inlinecode{[lo, hi)} of integers. Note that non-strictly increasing partitions like $\{1, 1, 1, 1\}$ are skipped.
+  \item \inlinecode{generate\_increasing\_partitions(n, f)} calls the function \inlinecode{f(lo, hi)} on strictly increasing partitions of $n$ in lexicographically increasing order of partition, where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to a range [\inlinecode{lo}, \inlinecode{hi}) of integers. Note that non-strictly increasing partitions like $\{1, 1, 1, 1\}$ are skipped.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1476,8 +1476,8 @@ Enumerate combinatorial sequences by inheriting an abstract class. Child classes
 
 \begin{compactitem}
   \item \inlinecode{to\_rank(a)} returns an integer representing the 0-based rank of the combinatorial sequence \inlinecode{a}.
-  \item \inlinecode{from\_rank(r)} returns a combinatorial sequence of integers that is lexicographically ranked \inlinecode{r}, where \inlinecode{r} is a 0-based rank in the range \inlinecode{[0, total\_count())}.
-  \item \inlinecode{enumerate(f)} calls the function \inlinecode{f(lo, hi)} on every specified combinatorial sequence in lexicographically increasing order, where \inlinecode{lo} and \inlinecode{hi} are two random-access iterators to a range \inlinecode{[lo, hi)} of integers.
+  \item \inlinecode{from\_rank(r)} returns a combinatorial sequence of integers that is lexicographically ranked \inlinecode{r}, where \inlinecode{r} is a 0-based rank in the range [0, \inlinecode{total\_count()}).
+  \item \inlinecode{enumerate(f)} calls the function \inlinecode{f(lo, hi)} on every specified combinatorial sequence in lexicographically increasing order, where \inlinecode{lo} and \inlinecode{hi} are two random-access iterators to a range [\inlinecode{lo}, \inlinecode{hi}) of integers.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{2})$ calls will be made to \inlinecode{count()} per call to all operations, where $n$ is the length of the combinatorial sequence.
@@ -1694,12 +1694,12 @@ Common number theory operations relating to modular arithmetic.
   \item \inlinecode{gcd(a, b)} returns the greatest common divisor of \inlinecode{a} and \inlinecode{b} using the Euclidean algorithm. This is mainly for educational purposes, as \inlinecode{std::gcd(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17 (\inlinecode{\_\_gcd(a, b)} from \inlinecode{\textless{}algorithm\textgreater{}} in C++14 and earlier).
   \item \inlinecode{lcm(a, b)} returns the lowest common multiple of \inlinecode{a} and \inlinecode{b}. This implemention is mainly for educational purposes, as \inlinecode{std::lcm(a, b)} from \inlinecode{\textless{}numeric\textgreater{}} is available as of C++17.
   \item \inlinecode{extended\_euclid(a, b)} returns a pair $(x, y)$ of integers such that $\gcd(a, b) = ax + by$.
-  \item \inlinecode{diophantine(a, b, c, x, y, g)} solves the linear Diophantine equation $ax + by = c$. It returns whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$), and on success sets \inlinecode{g} to $\gcd(a, b)$ and \inlinecode{(x, y)} to a particular solution bounded by $\max(|a|, |b|, |c|)$ in magnitude. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
+  \item \inlinecode{diophantine(a, b, c, \&x, \&y, \&g)} solves the linear Diophantine equation $ax + by = c$, returning whether a solution exists (one does if and only if $\gcd(a, b)$ divides $c$), and on success sets \inlinecode{g} to $\gcd(a, b)$ and (\inlinecode{x}, \inlinecode{y}) to a particular solution bounded by $\max(|a|, |b|, |c|)$ in magnitude. A 128-bit intermediate is used where available to keep the scaling step overflow-free.
   \item \inlinecode{mod(a, b)} returns the value of \inlinecode{a} mod \inlinecode{b} under the true Euclidean definition of modulo, that is, the smallest nonnegative integer $m$ satisfying $a + bn = m$ for some integer $n$. Note that this is identical to the remainder operator \inlinecode{\%} in C++ for nonnegative operands \inlinecode{a} and \inlinecode{b}, but the result will differ when an operand is negative.
   \item \inlinecode{mod\_inverse(a, m)} returns an integer $x$ such that $ax \equiv 1 \pmod m$, where the arguments must satisfy $m > 0$ and $\gcd(a, m) = 1$.
-  \item \inlinecode{generate\_inverse(p)} returns a vector $v$ of integers where for each index $i$ in the vector, $i \cdot {\inlinecodemath{v[i]}} \equiv 1 \pmod p$, where the argument $p$ is prime.
+  \item \inlinecode{generate\_inverse(p)} returns a vector \inlinecode{v} of integers where for each index $i$ in the vector, $i \cdot {\inlinecodemath{v[i]}} \equiv 1 \pmod p$, where the argument $p$ is prime.
   \item \inlinecode{crt(r1, m1, r2, m2, r, m)} merges the two congruences $x \equiv r_1 \pmod{m_1}$ and $x \equiv r_2 \pmod{m_2}$ for arbitrary moduli (not necessarily coprime). It returns whether the system is consistent, and on success sets \inlinecode{m} to \inlinecode{lcm(m\_1, m\_2)} and \inlinecode{r} to the unique solution in $[0, m)$. Fold it pairwise to merge more than two congruences.
-  \item \inlinecode{garner\_restore(a, p)} returns the smallest nonnegative solution $x$ for the system of simultaneous congruences $x \equiv {\inlinecodemath{a[i]}} \pmod{{\inlinecodemath{p[i]}}}$ for all indices $i$ in $[0, n)$, where \inlinecode{p} consists of pairwise coprime integers (unlike \inlinecode{crt}, which allows shared factors). The exact solution is unique modulo the product of all moduli, so that product and the final answer must fit in \inlinecode{int64\_t}.
+  \item \inlinecode{garner\_restore(a, p)} returns the smallest nonnegative solution $x$ for the system of simultaneous congruences $x \equiv {\inlinecodemath{a[i]}} \pmod{{\inlinecodemath{p[i]}}}$ for all indices \inlinecode{i} in $[0, n)$, where \inlinecode{p} consists of pairwise coprime integers (unlike \inlinecode{crt}, which allows shared factors). The exact solution is unique modulo the product of all moduli, so that product and the final answer must fit in \inlinecode{int64\_t}.
   \item \inlinecode{garner\_restore\_mod(a, p, m)} returns that same CRT solution modulo \inlinecode{m}. This is the right variant when the product of the moduli is too large to fit in \inlinecode{int64\_t}.
 \end{compactitem}
 
@@ -1976,19 +1976,19 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Modular Arithmetic}
-Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all answers are taken modulo some number $P$ such as $10^9 + 7$.
+Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all answers are taken modulo some number $p$ such as $10^9 + 7$.
 
 The implementation is intentionally close to common contest ``Mint'' templates: normalization happens at construction, arithmetic operators are overloaded, mixed integer operations are supported through implicit construction, and combinations can be computed from lazy factorial tables. The operators use the hidden friend idiom: each \inlinecode{friend} defined inside the class is a non-template function, so mixed expressions like \inlinecode{2 + Mint(3)} convert the integer operand through the implicit constructor. (Free function template operators cannot do this - template argument deduction ignores implicit conversions - which is why some contest templates carry per-operator \inlinecode{Modular op U} and \inlinecode{U op Modular} overloads instead.)
 
 The modulus is supplied directly as the \inlinecode{auto} template argument, so \inlinecode{Modular\textless{}1000000007\textgreater{}} and \inlinecode{Modular\textless{}998244353\textgreater{}} are all that is needed. Its literal type determines the storage type, so a 64-bit modulus (e.g. \inlinecode{Modular\textless{}(1LL \textless{}\textless{} 61) - 1\textgreater{}}) is stored in 64 bits without any extra annotation. The modulus must be a compile-time constant; a runtime-chosen modulus is not supported by this design.
 
-Two integer types are at play: the type of the modulus stores the representative, while construction, multiplication, and inverses widen through an intermediate type chosen automatically from the storage width - \inlinecode{int64\_t} for 32-bit storage, or \inlinecode{\_\_int128} (a GCC/Clang extension, in line with this book's use of \inlinecode{\_\_builtin} functions) for 64-bit storage; on compilers without \inlinecode{\_\_int128}, only 32-bit moduli are supported. The requirements are that $2P$ fits the storage type (for addition) and $(P - 1)^2$ fits the intermediate type (for the widening multiply), so any modulus up to half the storage type's range works out of the box; 64-bit moduli simply pay the cost of slower 128-bit multiplies. (Some contest templates instead estimate the multiply's quotient in \inlinecode{long double} to avoid \inlinecode{\_\_int128}; beware that this requires x86's 80-bit \inlinecode{long double} and silently breaks for large moduli on ARM, where \inlinecode{long double} is only 64-bit.)
+Two integer types are at play: the type of the modulus stores the representative, while construction, multiplication, and inverses widen through an intermediate type chosen automatically from the storage width - \inlinecode{int64\_t} for 32-bit storage, or \inlinecode{\_\_int128} (a GCC/Clang extension, in line with this book's use of \inlinecode{\_\_builtin} functions) for 64-bit storage; on compilers without \inlinecode{\_\_int128}, only 32-bit moduli are supported. The requirements are that $2p$ fits the storage type (for addition) and $(p - 1)^2$ fits the intermediate type (for the widening multiply), so any modulus up to half the storage type's range works out of the box; 64-bit moduli simply pay the cost of slower 128-bit multiplies. (Some contest templates instead estimate the multiply's quotient in \inlinecode{long double} to avoid \inlinecode{\_\_int128}; beware that this requires x86's 80-bit \inlinecode{long double} and silently breaks for large moduli on ARM, where \inlinecode{long double} is only 64-bit.)
 
-Division uses the extended Euclidean algorithm, so the divisor only needs to be coprime to the modulus. For the factorial-table combination helper, the usual contest assumption is that $P$ is prime and the requested factorials are invertible modulo $P$.
+Division uses the extended Euclidean algorithm, so the divisor only needs to be coprime to the modulus. For the factorial-table combination helper, the usual contest assumption is that $p$ is prime and the requested factorials are invertible modulo $p$.
 
 \begin{compactitem}
   \item \inlinecode{Modular\textless{}MOD\textgreater{}(x)} constructs the residue class of integer \inlinecode{x} modulo \inlinecode{MOD}.
-  \item \inlinecode{value()} and \inlinecode{operator()()} return the stored representative in $[0, P)$.
+  \item \inlinecode{value()} and \inlinecode{operator()()} return the stored representative in $[0, {\inlinecodemath{MOD}})$.
   \item \inlinecode{pow(n)} returns this value raised to nonnegative integer exponent \inlinecode{n}.
   \item \inlinecode{inv()} returns the multiplicative inverse, asserting it exists.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, comparison, increment, decrement, and stream I/O are overloaded.
@@ -2003,7 +2003,7 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
 \begin{compactitem}
   \item $O(1)$ per addition, subtraction, multiplication, comparison, and stream output.
   \item $O(\log n)$ per call to \inlinecode{pow(n)}.
-  \item $O(\log P)$ per call to \inlinecode{inv()} and division.
+  \item $O(\log {\inlinecodemath{MOD}})$ per call to \inlinecode{inv()} and division.
   \item $O(n)$ total table growth to answer factorials and combinations up to size \inlinecode{n}.
 \end{compactitem}
 
@@ -2366,7 +2366,7 @@ int main() {
 \subsection{Discrete Logarithm (Baby-Step Giant-Step)}
 Given integers $a$, $b$, and a modulus $m$, the discrete logarithm problem asks for the smallest nonnegative integer $x$ with $a^x$ congruent to $b$ modulo $m$. This is the modular analogue of a logarithm and underlies Diffie-Hellman key exchange, order computations in the multiplicative group, and many number-theory reductions.
 
-The baby-step giant-step method writes $x = np - q$ for a block size $n$ near the square root of the modulus. It tabulates the ``baby steps'' $b * a^q$ for $q$ in $[0, n]$, then walks the ``giant steps'' $a^{np}$ for increasing $p$ until one lands in the table, yielding $x = np - q$. This trades the linear scan of all exponents for $O(\sqrt m)$ work and memory. A short reduction loop first strips common factors between $a$ and $m$, so the routine works for any modulus, not only when $a$ and $m$ are coprime.
+The baby-step giant-step method writes $x = np - q$ for a block size $n$ near the square root of the modulus. It tabulates the ``baby steps'' $b \cdot a^q$ for $q$ in $[0, n]$, then walks the ``giant steps'' $a^{np}$ for increasing $p$ until one lands in the table, yielding $x = np - q$. This trades the linear scan of all exponents for $O(\sqrt m)$ work and memory. A short reduction loop first strips common factors between $a$ and $m$, so the routine works for any modulus, not only when $a$ and $m$ are coprime.
 
 \begin{compactitem}
   \item \inlinecode{discrete\_log(a, b, m)} returns the smallest nonnegative \inlinecode{x} with \inlinecode{a\textasciicircum{}x} congruent to \inlinecode{b} modulo \inlinecode{m}, or $-1$ if no such \inlinecode{x} exists. Requires \inlinecode{m} $\geq 1$; \inlinecode{a} and \inlinecode{b} are reduced modulo \inlinecode{m} internally.
@@ -2463,7 +2463,7 @@ int main() {
 \subsection{Modular Square Root (Tonelli-Shanks)}
 Given an integer $a$ and an odd prime $p$, find a modular square root: an $x$ with $x^2$ congruent to $a$ modulo $p$. Exactly half of the nonzero residues modulo a prime are squares (quadratic residues), so a solution exists only for those; when it does, the two roots are $x$ and $p - x$.
 
-The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p-1)/2}$ modulo $p$, first tests whether $a$ is a residue at all. When $p$ is congruent to 3 modulo 4 the root is simply $a^{(p+1)/4}$. Otherwise the algorithm factors $p - 1$ as $s * 2^e$, picks any quadratic non-residue to generate the 2-power part of the group, and repeatedly squares a running value to find the order of the current error term, correcting the candidate root until the error becomes 1.
+The Tonelli-Shanks algorithm handles the general case. Euler's criterion, $a^{(p-1)/2}$ modulo $p$, first tests whether $a$ is a residue at all. When $p$ is congruent to 3 modulo 4 the root is simply $a^{(p+1)/4}$. Otherwise the algorithm factors $p - 1$ as $s \cdot 2^e$, picks any quadratic non-residue to generate the 2-power part of the group, and repeatedly squares a running value to find the order of the current error term, correcting the candidate root until the error becomes 1.
 
 \begin{compactitem}
   \item \inlinecode{mod\_sqrt(a, p)} returns the smaller of the two square roots of \inlinecode{a} modulo the odd prime \inlinecode{p}, or $-1$ if \inlinecode{a} is not a quadratic residue. The value 0 maps to 0. The argument \inlinecode{a} is reduced modulo \inlinecode{p} internally. The modulus \inlinecode{p} must be an odd prime.
@@ -2581,7 +2581,7 @@ The Jacobi symbol $(a / n)$, defined for an odd positive integer $n$, generalize
 The symbol is fully multiplicative in $a$ and in $n$. For prime $n$ it exactly decides quadratic residuosity, so it is the fast way to test whether a modular square root exists. For composite $n$, beware that $(a / n) = 1$ does not guarantee that $a$ is a quadratic residue; this asymmetry is what the Solovay-Strassen primality test exploits.
 
 \begin{compactitem}
-  \item \inlinecode{jacobi(a, n)} returns the Jacobi symbol \inlinecode{(a / n)} as one of $-1$, 0, or 1. The modulus \inlinecode{n} must be a positive odd integer; \inlinecode{a} is reduced modulo \inlinecode{n} internally and may be negative. The result is 0 exactly when \inlinecode{a} and \inlinecode{n} share a common factor.
+  \item \inlinecode{jacobi(a, n)} returns the Jacobi symbol (\inlinecode{a} / \inlinecode{n}) as one of $-1$, 0, or 1. The modulus \inlinecode{n} must be a positive odd integer; \inlinecode{a} is reduced modulo \inlinecode{n} internally and may be negative. The result is 0 exactly when \inlinecode{a} and \inlinecode{n} share a common factor.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(\log a \cdot \log n)$ per call to \inlinecode{jacobi()}.
@@ -2651,11 +2651,11 @@ int main() {
 \subsection{Prime Generation}
 Generate prime numbers using the Sieve of Eratosthenes, which repeatedly marks the multiples of each prime as composite.
 
-The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting primes in a high but narrow window be found without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within \inlinecode{[lo, hi]} (each prime $p$ starting at the first of its multiples that is at least both $p^2$ and \inlinecode{lo}). This needs only $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ space instead of the $O({\inlinecodemath{hi}})$ that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
+The range overload \inlinecode{sieve(lo, hi)} uses a segmented sieve, letting primes in a high but narrow window be found without sieving everything below it. Since every composite at most \inlinecode{hi} has a prime factor at most $\sqrt{{\inlinecodemath{hi}}}$, it first sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, then uses only those primes to mark composites within [\inlinecode{lo}, \inlinecode{hi}] (each prime $p$ starting at the first of its multiples that is at least both $p^2$ and \inlinecode{lo}). This needs only $O({\inlinecodemath{hi}} - {\inlinecodemath{lo}} + \sqrt{{\inlinecodemath{hi}}})$ space instead of the $O({\inlinecodemath{hi}})$ that sieving all of $[2, {\inlinecodemath{hi}}]$ would require.
 
 \begin{compactitem}
   \item \inlinecode{sieve(n)} returns a vector of all the primes less than or equal to \inlinecode{n}.
-  \item \inlinecode{sieve(lo, hi)} returns a vector of all the primes in the range \inlinecode{[lo, hi]}.
+  \item \inlinecode{sieve(lo, hi)} returns a vector of all the primes in the range [\inlinecode{lo}, \inlinecode{hi}].
   \item \inlinecode{linear\_sieve(n, least\_out)} returns a vector of all primes less than or equal to \inlinecode{n} in linear time. If \inlinecode{least\_out} is not null, it is filled so that \inlinecode{(*least\_out)[x]} is the least prime factor of \inlinecode{x} for every \inlinecode{x} $\geq 2$.
 \end{compactitem}
 
@@ -3295,12 +3295,12 @@ Euler's totient function $\phi(n)$ returns the number of positive integers less 
 
 The function is multiplicative, with $\phi(p^k) = p^k - p^{k-1}$ for a prime power, which yields the product formula $\phi(n) = n \prod_{p \mid n} (1 - 1/p)$ taken over the distinct primes $p$ dividing $n$. \inlinecode{phi(n)} applies this formula directly, factoring \inlinecode{n} by trial division. \inlinecode{phi\_table(n)} computes the whole range at once with a sieve of Eratosthenes: starting from \inlinecode{v[i] = i}, it sweeps each prime $p$ across its multiples \inlinecode{j} and folds in the factor $(1 - 1/p)$ by replacing \inlinecode{v[j]} with \inlinecode{v[j] - v[j] / p}. This is faster than the alternative that uses the divisor-sum identity $\sum_{d \mid n} \phi(d) = n$ to subtract each \inlinecode{v[i]} from its multiples, which costs $O(n \log n)$.
 
-The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but narrow range with a segmented sieve, analogous to the segmented prime sieve. It sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, applies each one's $(1 - 1/p)$ factor to its multiples within \inlinecode{[lo, hi]} while dividing that prime out of a parallel copy of every value, and finally folds in any single leftover prime factor greater than $\sqrt{{\inlinecodemath{hi}}}$ (a number at most \inlinecode{hi} can have at most one such factor).
+The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but narrow range with a segmented sieve, analogous to the segmented prime sieve. It sieves the primes up to $\sqrt{{\inlinecodemath{hi}}}$, applies each one's $(1 - 1/p)$ factor to its multiples within [\inlinecode{lo}, \inlinecode{hi}] while dividing that prime out of a parallel copy of every value, and finally folds in any single leftover prime factor greater than $\sqrt{{\inlinecodemath{hi}}}$ (a number at most \inlinecode{hi} can have at most one such factor).
 
 \begin{compactitem}
   \item \inlinecode{phi(n)} returns Euler's totient of \inlinecode{n}.
   \item \inlinecode{phi\_table(n)} returns a vector \inlinecode{v} of length \inlinecode{n + 1} such that \inlinecode{v[i]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range $[0, n]$.
-  \item \inlinecode{phi\_table(lo, hi)} returns a vector \inlinecode{v} of length \inlinecode{hi - lo + 1} such that \inlinecode{v[i - lo]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range \inlinecode{[lo, hi]}. This overload assumes \inlinecode{lo} $\geq 0$; if \inlinecode{hi} \textless{} \inlinecode{lo}, it returns an empty vector.
+  \item \inlinecode{phi\_table(lo, hi)} returns a vector \inlinecode{v} of length \inlinecode{hi - lo + 1} such that \inlinecode{v[i - lo]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range [\inlinecode{lo}, \inlinecode{hi}]. This overload assumes \inlinecode{lo} $\geq$ 0; if \inlinecode{hi} \textless{} \inlinecode{lo}, it returns an empty vector.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3435,9 +3435,9 @@ The Mobius function $\mu(n)$ is the multiplicative function defined as 1 if $n =
 Inclusion-exclusion itself counts the size of a union by alternately adding and subtracting the sizes of intersections. A canonical number-theoretic instance is counting integers in $[1, n]$ that are coprime to a modulus $m$: subtract the multiples of each prime factor of $m$, add back those counted twice, and so on. The signed terms are precisely the values of \inlinecode{mu} over the squarefree divisors of $m$, so \inlinecode{count\_coprime(n, m)} equals $\sum_{d \mid m} \mu(d) \lfloor n / d \rfloor$.
 
 \begin{compactitem}
-  \item \inlinecode{mobius(n)} returns $\mu(n)$ for a single $n$ by trial division.
+  \item \inlinecode{mobius(n)} returns $\mu(n)$ for a single \inlinecode{n} by trial division.
   \item \inlinecode{mobius\_sieve(n)} returns a vector of length $n + 1$ where index $i$ holds $\mu(i)$, computed together with a linear sieve.
-  \item \inlinecode{count\_coprime(n, m)} returns the number of integers in $[1, n]$ that are coprime to $m$, via inclusion-exclusion over the distinct prime factors of $m$.
+  \item \inlinecode{count\_coprime(n, m)} returns the number of integers in [1, \inlinecode{n}] that are coprime to $m$, via inclusion-exclusion over the distinct prime factors of \inlinecode{m}.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3791,7 +3791,7 @@ Perform operations on arbitrary precision big integers internally represented as
   \item \inlinecode{a.div(b)} returns a pair consisting of the quotient and remainder.
   \item \inlinecode{v.pow(n)} returns \inlinecode{v} raised to the power of $n$.
   \item \inlinecode{v.sqrt()} returns the integral part of the square root of big integer \inlinecode{v}.
-  \item \inlinecode{v.nth\_root(n)} returns the integral part of the $n$th root of big integer \inlinecode{v}.
+  \item \inlinecode{v.nth\_root(n)} returns the integral part of the $n$-th root of big integer \inlinecode{v}.
   \item \inlinecode{rand(n)} returns a random, positive big integer with $n$ digits.
 \end{compactitem}
 
@@ -4448,8 +4448,8 @@ int main() {
 Perform operations on rational numbers internally represented as two integers: a numerator and a denominator. The template integer type must support streamed input/output, comparisons, and arithmetic operations. Overflow is not checked for in internal operations: comparisons and arithmetic cross-multiply numerators and denominators, so instantiate with a wider integer type (such as \inlinecode{\_\_int128}, or even \inlinecode{BigInt}) if the values may grow large.
 
 \begin{compactitem}
-  \item \inlinecode{Rational(n)} constructs a rational number with numerator \inlinecode{n} and denominator 1.
-  \item \inlinecode{Rational(n, d)} constructs a rational number with numerator \inlinecode{n} and denominator \inlinecode{d}.
+  \item \inlinecode{Rational\textless{}Int\textgreater{}(n)} constructs a rational number with numerator \inlinecode{n} and denominator 1.
+  \item \inlinecode{Rational\textless{}Int\textgreater{}(n, d)} constructs a rational number with numerator \inlinecode{n} and denominator \inlinecode{d}.
   \item \inlinecode{operator\textgreater{}\textgreater{}} inputs a rational number using the next integer from the stream as the numerator and 1 as the denominator.
   \item \inlinecode{operator\textless{}\textless{}} outputs the rational number as a string consisting of possibly a minus sign followed by the numerator, followed by a slash, followed by the denominator.
   \item \inlinecode{v.to\_string()}, \inlinecode{v.to\_llong()}, \inlinecode{v.to\_double()}, and \inlinecode{v.to\_ldouble()} return the rational \inlinecode{v} converted to an \inlinecode{std::string}, \inlinecode{int64\_t}, \inlinecode{double}, and \inlinecode{long double} respectively.
@@ -4631,17 +4631,17 @@ int main() {
 Basic matrix operations defined on a two-dimensional vector of numeric values.
 
 \begin{compactitem}
-  \item \inlinecode{make\_matrix\textless{}T\textgreater{}(m, n, v)} constructs and returns an $m$ by $n$ matrix with 0-based indices (row indices 0 to \inlinecode{m - 1} and column indices 0 to \inlinecode{c - 1}), where every value is initialized to \inlinecode{v}.
-  \item \inlinecode{identity\_matrix\textless{}T\textgreater{}(n)} returns the $n$ by $n$ identity matrix, that is, a matrix where each \inlinecode{a[i][j]} equals 1 if $i = j$, or 0 otherwise.
-  \item \inlinecode{rows(a)} returns the number of rows $m$ in matrix \inlinecode{a}.
-  \item \inlinecode{columns(a)} returns the number of columns $n$ in matrix \inlinecode{a}.
-  \item \inlinecode{a[i][j]} may be used to access or modify the entry at row $i$, column $j$ of an $m$ by $n$ matrix \inlinecode{a}, for every $i \in [0, m)$ and $j \in [0, n)$.
+  \item \inlinecode{make\_matrix\textless{}T\textgreater{}(m, n, v)} constructs and returns an $m$ by $n$ matrix with 0-based indices (row indices [0, \inlinecode{m}) and column indices [0, \inlinecode{n})), where every value is initialized to \inlinecode{v}.
+  \item \inlinecode{identity\_matrix\textless{}T\textgreater{}(n)} returns the \inlinecode{n} by \inlinecode{n} identity matrix, that is, a matrix where each \inlinecode{a[i][j]} equals 1 if \inlinecode{i} = \inlinecode{j}, or 0 otherwise.
+  \item \inlinecode{rows(a)} returns the number of rows in matrix \inlinecode{a}.
+  \item \inlinecode{columns(a)} returns the number of columns in matrix \inlinecode{a}.
+  \item \inlinecode{a[i][j]} may be used to access or modify the specified entry of \inlinecode{a}.
   \item Operators \inlinecode{\textless{}}, \inlinecode{\textgreater{}}, \inlinecode{\textless{}=}, \inlinecode{\textgreater{}=}, \inlinecode{==}, and \inlinecode{!=} define lexicographical comparison based on that of \inlinecode{std::vector}.
   \item Operators \inlinecode{+}, \inlinecode{-}, \inlinecode{*}, \inlinecode{/}, \inlinecode{+=}, \inlinecode{-=}, \inlinecode{*=}, and \inlinecode{/=} define scalar addition, subtraction, multiplication, and division involving a matrix and a numeric scalar value.
   \item Operators \inlinecode{*} and \inlinecode{*=} define vector and matrix multiplication.
   \item Operators \inlinecode{\textasciicircum{}} and \inlinecode{\textasciicircum{}=} define iterative binary matrix exponentiation of a square matrix \inlinecode{a} by an integer power \inlinecode{p}.
   \item \inlinecode{power\_sum(a, p)} returns the power sum of a square matrix \inlinecode{a} up to an integer power \inlinecode{p}, that is, $a + a^2 + \ldots + a^p$.
-  \item \inlinecode{transpose(a)} returns the transpose of an $m$ by $n$ matrix \inlinecode{a}, that is, a new $n$ by $m$ matrix $b$ such that \inlinecode{a[i][j]} $=$ \inlinecode{b[j][i]} for every \inlinecode{i} in \inlinecode{[0, m)} and \inlinecode{j} in \inlinecode{[0, n)}.
+  \item \inlinecode{transpose(a)} returns the transpose of an $m$ by $n$ matrix \inlinecode{a}, that is, a new $n$ by $m$ matrix $b$ such that \inlinecode{a[i][j]} = \inlinecode{b[j][i]} for every \inlinecode{i} $\in [0, m)$ and \inlinecode{j} $\in [0, n)$.
   \item \inlinecode{transpose\_in\_place(a)} assigns the square matrix \inlinecode{a} to its transpose, returning a reference to the modified argument itself.
   \item \inlinecode{rotate(a, d)} returns the matrix \inlinecode{a} rotated \inlinecode{d} degrees clockwise. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
   \item \inlinecode{rotate\_in\_place(a, d)} assigns the square matrix \inlinecode{a} to its rotation by \inlinecode{d} degrees clockwise, returning a reference to the modified argument itself. A negative \inlinecode{d} specifies a counter-clockwise rotation, and \inlinecode{d} must be a multiple of 90.
@@ -5066,7 +5066,7 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 \begin{compactitem}
   \item \inlinecode{row\_reduce(a)} assigns the matrix \inlinecode{a} to its reduced row echelon form, returning a reference to the modified argument itself.
   \item \inlinecode{matrix\_rank(a)} returns the rank of matrix \inlinecode{a}, i.e. the number of nonzero rows after row reduction.
-  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning 0 if there is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one solution, then the vector pointed to by \inlinecode{x} is populated with the solution vector of length $n$.
+  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning 0 if there is one solution, $-1$ if there are zero solutions, or $-2$ if there are infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(m^{2} \cdot n)$ per call to \inlinecode{row\_reduce(a)}, \inlinecode{matrix\_rank(a)}, and \inlinecode{solve\_system(a)}, where $m$ and $n$ are the number of rows and columns of \inlinecode{a}, respectively.
@@ -5405,8 +5405,8 @@ int main() {
 The LU decomposition of a matrix $a$ with row-partial pivoting is a factorization of $a$ (after some rows are possibly permuted by a permutation matrix $p$) as a product of a lower triangular matrix $l$ and an upper triangular matrix $u$. This factorization can be used to tackle many common problems in linear algebra such as solving systems of linear equations and computing determinants. An improvement on basic row reduction, LU decomposition by row-partial pivoting keeps the relative magnitude of matrix values small, thus reducing the relative error due to rounding in computed solutions.
 
 \begin{compactitem}
-  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either 0 or 1 denoting the ``sign'' of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j] = l[i][j]} for $i > j$ and \inlinecode{lu[i][j] = u[i][j]} for $i \leq j$. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to 1 in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly 0). The permutation matrix $p$ corresponding to \inlinecode{p1col} satisfies $pa = lu$.
-  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning 0 if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the vector pointed to by \inlinecode{x} is populated with the solution vector of length $n$.
+  \item \inlinecode{lu\_decompose(a, \&p1col)} assigns the $m$ by $n$ matrix \inlinecode{a} to merged LU decomposition matrix \inlinecode{lu}, returning either 0 or 1 denoting the ``sign'' of the permutation parity (0 if the number of overall row swaps performed is even, or 1 if it is odd), or $-1$ denoting a degenerate matrix (i.e. singular for square matrices). The merged matrix \inlinecode{lu} has \inlinecode{lu[i][j]} = \inlinecode{l[i][j]} for \inlinecode{i} \textgreater{} \inlinecode{j} and \inlinecode{lu[i][j]} = \inlinecode{u[i][j]} for \inlinecode{i} $\leq$ \inlinecode{j}. Note that the algorithm always yields an atomic lower triangular matrix for which the diagonal entries \inlinecode{l[i][i]} are always equal to 1, so this is not explicitly stored in the resulting merged matrix. For general $i$ and $j$, the values of the lower and upper triangular matrices should be accessed via the \inlinecode{getl(lu, i, j)} and \inlinecode{getu(lu, i, j)} functions. Optionally, a \inlinecode{vector\textless{}int\textgreater{}} pointer \inlinecode{p1col} may be passed to return the permutation vector \inlinecode{p1col} where \inlinecode{p1col[i]} stores the only column that is equal to 1 in row $i$ of the permutation matrix $p$ (all other columns in row $i$ of $p$ are implicitly 0). The permutation matrix $p$ corresponding to \inlinecode{p1col} satisfies $pa = lu$.
+  \item \inlinecode{solve\_system(a, b, \&x)} solves the system of linear equations $ax = b$ given an $m$ by $n$ matrix \inlinecode{a} of real values, and a length $m$ vector \inlinecode{b}, returning 0 if there is one solution or $-1$ if there are zero or infinite solutions. If there is exactly one solution, then the output pointer \inlinecode{x} is populated with the solution vector of length $n$.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using LU decomposition.
   \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning 0 if the inversion was successful or $-1$ if \inlinecode{a} has no inverse.
 \end{compactitem}
@@ -5617,7 +5617,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Characteristic Polynomial}
-Computes the characteristic polynomial of a square matrix over a prime field: the coefficients of $det(xI - A)$, a monic degree-$n$ polynomial whose roots are the eigenvalues of $A$. Its constant term recovers the determinant (up to sign), its second-highest coefficient is the negated trace, and evaluating it at a scalar gives $det(xI - A)$ for that $x$. It is the standard tool behind eigenvalue counting, matrix-power recurrences via Cayley-Hamilton, and problems that reduce to a determinant in an unknown.
+Computes the characteristic polynomial of a square matrix over a prime field: the coefficients of $\det(xI - A)$, a monic degree-$n$ polynomial whose roots are the eigenvalues of $A$. Its constant term recovers the determinant (up to sign), its second-highest coefficient is the negated trace, and evaluating it at a scalar gives $\det(xI - A)$ for that $x$. It is the standard tool behind eigenvalue counting, matrix-power recurrences via Cayley-Hamilton, and problems that reduce to a determinant in an unknown.
 
 A direct expansion would cost a determinant per coefficient. Instead the matrix is first reduced to upper Hessenberg form, where every entry more than one place below the diagonal is zero. This reduction uses similarity transforms (a row operation paired with the inverse column operation), which leave the characteristic polynomial unchanged. The characteristic polynomial of a Hessenberg matrix then follows from a short recurrence over its leading principal submatrices, adding one row and column at a time, for an overall cost of $O(n^{3})$. The arithmetic is exact modulo a prime, since the Hessenberg reduction divides by pivots and is not numerically stable over the reals.
 
@@ -5741,7 +5741,7 @@ Kirchhoff's matrix-tree theorem counts the spanning trees of an undirected graph
 The determinant is evaluated modulo a prime by Gaussian elimination, so the count is returned modulo \inlinecode{MOD}. Spanning-tree counts grow astronomically, so a modular count is the usual contest form; run the routine under a few different primes and combine with the Chinese remainder theorem to recover a large exact value. The same construction handles weighted graphs (sum edge weights into the Laplacian to get the weighted tree count) and, with the directed Laplacian and a fixed deleted row, counts rooted spanning arborescences.
 
 \begin{compactitem}
-  \item \inlinecode{count\_spanning\_trees(n, edges)} returns the number of spanning trees of the undirected graph on nodes \inlinecode{0} to \inlinecode{n - 1} with the given edge list, modulo \inlinecode{MOD}. Parallel edges are honored; self-loops do not affect the count. The result is 0 when the graph is disconnected, and 1 when \inlinecode{n} is 1.
+  \item \inlinecode{count\_spanning\_trees(n, edges)} returns the number of spanning trees of the undirected graph on nodes [0, \inlinecode{n}) with the given edge list, modulo \inlinecode{MOD}. Parallel edges are honored; self-loops do not affect the count. The result is 0 when the graph is disconnected, and 1 when \inlinecode{n} is 1.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{3})$ per call to \inlinecode{count\_spanning\_trees()}, where $n$ is the number of nodes.
@@ -5869,7 +5869,7 @@ A sparse matrix stores only nonzero entries, which is useful when the matrix is 
   \item \inlinecode{swap\_rows(i, j)} swaps two rows while keeping the column maps synchronized.
   \item \inlinecode{transpose()} transposes the matrix in place.
   \item \inlinecode{multiply\_vector(x)} returns the matrix-vector product with vector \inlinecode{x}.
-  \item \inlinecode{row\_reduce(a, limit)} converts columns \inlinecode{[0, limit)} of \inlinecode{a} to sparse row echelon form, returning the rank found in those columns.
+  \item \inlinecode{row\_reduce(a, limit)} converts columns [0, \inlinecode{limit}) of \inlinecode{a} to sparse row echelon form, returning the rank found in those columns.
   \item \inlinecode{det(a)} returns the determinant of a square sparse matrix.
   \item \inlinecode{sparse\_rank(a)} returns the rank of a sparse matrix.
   \item \inlinecode{solve\_system(a, b, \&x)} solves the system $ax = b$, returning 0 for one solution, $-1$ for no solution, or $-2$ for infinitely many solutions. When one solution exists, \inlinecode{x} is populated.
@@ -6195,7 +6195,7 @@ The transform replaces a coefficient vector with its evaluations at the powers o
 
 \begin{compactitem}
   \item \inlinecode{ntt(a, invert)} transforms the vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert = false}; the inverse uses \inlinecode{invert = true}.
-  \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, or is empty if either input is empty. Input values are assumed to lie in \inlinecode{[0, MOD)}. Small inputs use direct multiplication to avoid NTT overhead.
+  \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, or is empty if either input is empty. Input values are assumed to lie in [0, \inlinecode{MOD}). Small inputs use direct multiplication to avoid NTT overhead.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6448,12 +6448,12 @@ The code aliases one modular field element as \inlinecode{Coeff} and one coeffic
   \item \inlinecode{multiply(a, b)} returns \inlinecode{a * b}.
   \item \inlinecode{derivative(a)} returns the formal derivative of \inlinecode{a}.
   \item \inlinecode{integral(a)} returns the formal antiderivative of \inlinecode{a} with constant term zero.
-  \item \inlinecode{inverse(a, n)} returns the first \inlinecode{n} coefficients of \inlinecode{1 / a}, requiring \inlinecode{a[0] != 0}.
+  \item \inlinecode{inverse(a, n)} returns the first \inlinecode{n} coefficients of \inlinecode{1 / a}, requiring \inlinecode{a[0]} to be nonzero.
   \item \inlinecode{divide(a, b)} returns the polynomial quotient of \inlinecode{a / b}, requiring \inlinecode{b} to be nonzero.
   \item \inlinecode{modulo(a, b)} returns the polynomial remainder of \inlinecode{a / b}, requiring \inlinecode{b} to be nonzero.
 \end{compactitem}
 
-The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such that $a \cdot b \equiv 1 (\pmod{x^n})$. Division uses the standard reversal trick: reverse both polynomials, compute a truncated series inverse of the reversed divisor, multiply, truncate, and reverse back.
+The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such that $a \cdot b \equiv 1 \pmod{x^n}$. Division uses the standard reversal trick: reverse both polynomials, compute a truncated series inverse of the reversed divisor, multiply, truncate, and reverse back.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
@@ -6692,13 +6692,13 @@ int main() {
 \subsection{Berlekamp-Massey}
 The Berlekamp-Massey algorithm finds the shortest linear recurrence that generates a given sequence over a field. Given the first terms of a sequence taken modulo a prime, it returns coefficients $\Lambda_0, \dots, \Lambda_{L-1}$ of the minimal recurrence $s_i = \Lambda_0 \, s_{i-1} + \Lambda_1 \, s_{i-2} + \dots + \Lambda_{L-1} \, s_{i-L} \pmod{p}$, holding for every $i \geq L$. It scans the sequence once, maintaining a current candidate recurrence and correcting it whenever a term fails to match the prediction, using the last position where a correction was needed. The order $L$ never decreases, and $2L + 1$ terms suffice to certify a recurrence of order $L$. This is the standard tool for guessing a linear recurrence from sampled values, after which the sequence can be extended or its $n$-th term found by fast methods.
 
+A recurrence of order $L$ is only certified by at least $2L + 1$ terms, so the result is trustworthy only when \inlinecode{s} is comfortably longer than twice the returned length. If the returned $L$ is close to $n / 2$, the sequence is likely under-determined and the recurrence may be a spurious overfit.
+
 The code operates modulo the prime 998244353; change \inlinecode{MOD} to use a different prime field.
 
 \begin{compactitem}
   \item \inlinecode{berlekamp\_massey(s)} returns the coefficients of the shortest recurrence that the sequence \inlinecode{s} satisfies, as described above. The returned length is the order $L$ of the recurrence. An empty vector is returned when \inlinecode{s} is entirely zero (no recurrence is needed).
 \end{compactitem}
-
-A recurrence of order $L$ is only certified by at least $2L + 1$ terms, so the result is trustworthy only when \inlinecode{s} is comfortably longer than twice the returned length. If the returned $L$ is close to $n / 2$, the sequence is likely under-determined and the recurrence may be a spurious overfit.
 
 \textbf{Time Complexity}: $O(n^{2} + L \log p)$ per call, where $n$ is the length of \inlinecode{s}, $L$ is the order of the recurrence found, and $p$ is the modulus.
 
@@ -6883,8 +6883,8 @@ Recovers the unique polynomial of degree less than $n$ that passes through $n$ g
 Coefficient recovery uses Newton's divided differences. It first replaces the sample values by their successive divided differences in place, then expands the Newton basis $1$, $(x - x_0)$, $(x - x_0)(x - x_1)$, $\ldots$ into ordinary coefficients by multiplying through one factor at a time. Point evaluation instead applies the Lagrange formula directly, summing each sample weighted by the product of $(t - x_j) / (x_k - x_j)$ over the other nodes. Both run in $O(n^{2})$ modular operations.
 
 \begin{compactitem}
-  \item \inlinecode{interpolate(x, y)} returns the coefficients $a_0, ..., a_{n-1}$ (constant term first) of the polynomial with \inlinecode{P(x[i]) = y[i]}, modulo \inlinecode{MOD}. The entries of \inlinecode{x} must be distinct modulo \inlinecode{MOD}.
-  \item \inlinecode{interpolate\_at(x, y, t)} returns \inlinecode{P(t)} modulo \inlinecode{MOD} for that same polynomial, without building its coefficients.
+  \item \inlinecode{interpolate(x, y)} returns the coefficients $a_0, ..., a_{n-1}$ (constant term first) of the polynomial $P$ with \$P(`x[i]`) = `y[i]`, modulo `MOD`. The entries of `x` must be distinct modulo `MOD`.
+  \item \inlinecode{interpolate\_at(x, y, t)} returns $P({\inlinecodemath{t}})$ modulo \inlinecode{MOD} for that same polynomial, without building its coefficients.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n^{2})$ per call to \inlinecode{interpolate()} and \inlinecode{interpolate\_at()}, where $n$ is the number of points.
@@ -6987,14 +6987,14 @@ int main() {
 \setcounter{section}{7}
 \setcounter{subsection}{0}
 \subsection{Nim}
-Solves normal-play Nim and related impartial games where each position is the disjoint sum of independent piles. In normal play, the player who makes the last move wins. A Nim position is losing exactly when the XOR of all pile sizes is 0.
+Solves normal-play nim and related impartial games where each position is the disjoint sum of independent piles. In normal play, the player who makes the last move wins. A nim position is losing exactly when the XOR of all pile sizes is 0.
 
 This is the base case of the Sprague-Grundy theorem: every finite impartial game position is equivalent to a Nim pile of size equal to its Grundy number, and sums of games combine by XOR.
 
 \begin{compactitem}
   \item \inlinecode{nim\_sum(piles)} returns the XOR of all pile sizes.
   \item \inlinecode{first\_player\_wins(piles)} returns whether the player to move has a winning strategy.
-  \item \inlinecode{winning\_move(piles)} returns a move \inlinecode{(pile, new\_size)} that moves to XOR 0, or $(-1, -1)$ if the position is losing.
+  \item \inlinecode{winning\_move(piles)} returns a move (pile, new\_size) that moves to XOR 0, or $(-1, -1)$ if the position is losing.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n)$ per call, where $n$ is the number of piles.
@@ -7051,7 +7051,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Nim Product}
-Nimbers are the values of impartial games, added by XOR (see the Nim section). Under the additional operation of nim multiplication they form a field: the nonnegative integers below $2^{2^k}$ are closed under both operations, with XOR as addition and nim product as multiplication. Writing $\otimes$ for the nim product and $\oplus$ for XOR, nim multiplication is commutative, associative, and distributive over $\oplus$, and is defined recursively by $a \otimes b =$ $\operatorname{mex}\{(a' \otimes b) \oplus (a \otimes b') \oplus (a' \otimes b') : 0 \le a' < a, \, 0 \le b' < b\}$. Its main use is multiplying the Grundy values of independent ``coin-turning'' games whose move sets combine as a product, such as two-dimensional turning games built from one-dimensional ones.
+Nimbers are the values of impartial games, added by XOR. Under the additional operation of nim multiplication they form a field: the nonnegative integers below $2^{2^k}$ are closed under both operations, with XOR as addition and nim product as multiplication. Writing $\otimes$ for the nim product and $\oplus$ for XOR, nim multiplication is commutative, associative, and distributive over $\oplus$, and is defined recursively by $a \otimes b = \operatorname{mex}\{(a' \otimes b) \oplus (a \otimes b') \oplus (a' \otimes b') : 0 \le a' < a, \, 0 \le b' < b\}$. Its main use is multiplying the Grundy values of independent ``coin-turning'' games whose move sets combine as a product, such as two-dimensional turning games built from one-dimensional ones.
 
 Rather than evaluate the recursive definition directly, this implementation precomputes the nim product of every pair of single bits $2^i \otimes 2^j$ for $i, j < 64$. Each such product follows from the Fermat-like rule $2^{2^k} \otimes 2^{2^k} = 2^{2^k} \oplus 2^{2^k - 1}$ and the fact that distinct Fermat powers multiply like ordinary powers of two. A full product then XORs together the bit-pair products selected by the set bits of the operands. Because every 64-bit value lies in the field of size $2^{64}$, the operation is total on \inlinecode{uint64\_t} and the nonzero values have multiplicative inverses.
 

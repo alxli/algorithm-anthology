@@ -1,11 +1,11 @@
 /*
 
-Nimbers are the values of impartial games, added by XOR (see the Nim section). Under the additional
-operation of nim multiplication they form a field: the nonnegative integers below $2^{2^k}$ are
-closed under both operations, with XOR as addition and nim product as multiplication. Writing
-$\otimes$ for the nim product and $\oplus$ for XOR, nim multiplication is commutative, associative,
-and distributive over $\oplus$, and is defined recursively by $a \otimes b =$
-$\operatorname{mex}\{(a' \otimes b) \oplus (a \otimes b') \oplus (a' \otimes b') : 0 \le a' < a, \, 0 \le b' < b\}$.
+Nimbers are the values of impartial games, added by XOR. Under the additional operation of nim
+multiplication they form a field: the nonnegative integers below $2^{2^k}$ are closed under both
+operations, with XOR as addition and nim product as multiplication. Writing $\otimes$ for the nim
+product and $\oplus$ for XOR, nim multiplication is commutative, associative, and distributive over
+$\oplus$, and is defined recursively by
+$a \otimes b = \operatorname{mex}\{(a' \otimes b) \oplus (a \otimes b') \oplus (a' \otimes b') : 0 \le a' < a, \, 0 \le b' < b\}$.
 Its main use is multiplying the Grundy values of independent "coin-turning" games whose move sets
 combine as a product, such as two-dimensional turning games built from one-dimensional ones.
 

@@ -31,7 +31,7 @@ boundary nodes in those cases.
 - `at(r, c)` returns the value at row `r`, column `c`.
 - `query(r1, c1, r2, c2)` returns the result of `combine()` applied to every value in the
   rectangular region consisting of rows from `r1` to `r2` and columns from `c1` to `c2`, inclusive.
-- `update(r, c, d)` assigns the value `v` at `(r, c)` to `apply_delta(v, d)`.
+- `update(r, c, d)` assigns the value `v` at (`r`, `c`) to `apply_delta(v, d)`.
 - `update(r1, c1, r2, c2)` modifies the value at each index of the rectangular region consisting of
   rows from `r1` to `r2` and columns from `c1` to `c2`, inclusive, by applying the delta `d` to each
   value.

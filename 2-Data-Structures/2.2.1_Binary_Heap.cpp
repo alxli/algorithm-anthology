@@ -8,9 +8,9 @@ is stored implicitly in an array, where the children of the node at index $i$ li
 $2i + 1$ and $2i + 2$. Insertion appends the new element and bubbles it up toward the root, while
 extraction moves the last element to the root and sifts it down.
 
-- `BinaryHeap()` constructs an empty priority queue.
-- `BinaryHeap(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
-  elements in the range `[lo, hi)`.
+- `BinaryHeap<T>()` constructs an empty priority queue.
+- `BinaryHeap<T>(lo, hi)` constructs a priority queue from two ForwardIterators, consisting of
+  elements in the range [`lo`, `hi`).
 - `size()` returns the size of the priority queue.
 - `empty()` returns whether the priority queue is empty.
 - `push(v)` inserts the value `v` into the priority queue.

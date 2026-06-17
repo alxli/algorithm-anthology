@@ -13,8 +13,8 @@ lifting table stores `f` applied $2^k$ times, so any number of steps can be take
 time. Together these answer, for any node, which cycle it eventually reaches, how many steps until
 it gets there, and exactly where it lands after a huge number of steps.
 
-- `FunctionalGraph(f)` builds the structure for the successor function `f` over nodes numbered from
-  0 to `f.size() - 1`.
+- `FunctionalGraph(f)` builds the structure for the successor function `f` over nodes numbered [0,
+  `n`), where `n` is `f.size()`.
 - `on_cycle(i)` returns whether node `i` lies on a cycle.
 - `dist_to_cycle(i)` returns the number of steps from `i` to the first cycle node it reaches (0 if
   `i` is itself on a cycle).
@@ -23,7 +23,7 @@ it gets there, and exactly where it lands after a huge number of steps.
 - `cycle_length(id)` returns the length of the cycle with the given identifier.
 - `num_cycles()` returns the number of distinct cycles.
 - `successor(i, steps)` returns the node reached from `i` after applying `f` exactly `steps` times,
-  for any `steps >= 0` (which may be astronomically large).
+  for any nonnegative `steps` (which may be astronomically large).
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the number of nodes.

@@ -7,11 +7,11 @@ order. Each node of a segment tree over the domain keeps the line that wins at i
 midpoint; inserting a line keeps the midpoint winner and recurses only into the half where the
 losing line may still win, and a query takes the best line along one root-to-leaf path.
 
-This implementation stores the lower envelope of lines over the inclusive domain `[lo, hi]`.
+This implementation stores the lower envelope of lines over the inclusive domain [`lo`, `hi`].
 It supports adding arbitrary lines and querying arbitrary integer $x$-coordinates in logarithmic
 time with respect to the domain size.
 
-- `LiChaoTree(lo, hi)` constructs an empty tree over integer domain `[lo, hi]`.
+- `LiChaoTree(lo, hi)` constructs an empty tree over integer domain [`lo`, `hi`].
 - `add_line(m, b)` inserts line $y = mx + b$ (can be called in any order).
 - `query(x)` returns the minimum $y$-value among all inserted lines at coordinate `x`. At least one
   line must have been inserted.

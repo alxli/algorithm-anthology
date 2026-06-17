@@ -7,8 +7,8 @@ checks, repeated subarray detection, and binary-searching over candidate lengths
 Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is
 the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is `HASH_BASE` and $M$
 is `HASH_MOD`. Equivalently, it is built left-to-right by the recurrence
-`pref[i + 1] = pref[i] * HASH_BASE + h(a[i])`. A subsequence hash for `[l, r)` is obtained by
-subtracting away the prefix before `l`: `pref[r] - pref[l] * pow(HASH_BASE, r - l)`.
+`pref[i + 1] = pref[i] * HASH_BASE + h(a[i])`. A subsequence hash for [`l`, `r`) is obtained by
+subtracting away the prefix before $l$: `pref[r] - pref[l] * pow(HASH_BASE, r - l)`.
 
 The implementation works modulo the Mersenne prime $2^{61} - 1$, using `__uint128_t` for the
 multiplication where available and falling back to a double-and-add modular multiply otherwise. The
@@ -17,12 +17,12 @@ base, hashing remains fast and practical, but it is still probabilistic and shou
 proof of equality when exact verification is required.
 
 By default, each sequence value is cast to `uint64_t` and mixed. For non-integer element types, pass
-a custom value hasher that maps each element to a stable nonzero value in `[1, HASH_MOD)`.
+a custom value hasher that maps each element to a stable nonzero value in [1, `HASH_MOD`).
 
-- `RollingHash(first, last)` constructs prefix hashes for any iterator range of values accepted by
-  the value hasher.
-- `RollingHash(v)` constructs prefix hashes for vector `v`.
-- `get(l, r)` returns the hash of the half-open subsequence `[l, r)`.
+- `RollingHash<T, ValueHasher>(first, last)` constructs prefix hashes for any iterator range of
+  values accepted by the value hasher.
+- `RollingHash<T, ValueHasher>(v)` constructs prefix hashes for vector `v`.
+- `get(l, r)` returns the hash of the half-open subsequence [`l`, `r`).
 - `hash(first, last)` returns the hash of an iterator range.
 - `hash(v)` returns the hash of vector `v`.
 - `concat(left, right, right_len)` returns the hash of the concatenation of a sequence with hash
@@ -73,6 +73,7 @@ uint64_t hash_mul(uint64_t a, uint64_t b) {
 #endif
 }
 
+// SplitMix64 mixer.
 uint64_t mix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;

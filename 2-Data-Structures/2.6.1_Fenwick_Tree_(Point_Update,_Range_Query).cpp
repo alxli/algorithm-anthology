@@ -8,10 +8,10 @@ O(log n) covering blocks, and a prefix-sum query combines O(log n) disjoint bloc
 When prefix sums are nondecreasing, `max_prefix(c)` answers prefix-boundary queries by binary
 lifting: it walks the implicit power-of-two block structure to find the longest prefix with sum at
 most `c`. This lets the same structure double as a dynamic multiset over a bounded integer domain,
-useful for coordinate-compressed kth-element lookups and online rank queries.
+useful for coordinate-compressed $k$-th element lookups and online rank queries.
 
-- `FenwickTree(n)` constructs an array with 0-based indices from 0 to `n - 1`, inclusive, with all
-  values initialized to 0.
+- `Fenwick<T>(n)` constructs an array with 0-based indices [0, `n`), with all values initialized to
+  0.
 - `size()` returns the size of the array.
 - `add(i, x)` adds `x` to the value at index `i`.
 - `set(i, x)` assigns the value at index `i` to `x`.
@@ -35,12 +35,12 @@ Space Complexity:
 #include <vector>
 
 template<class T>
-class FenwickTree {
+class Fenwick {
   int len;
   std::vector<T> tree;
 
  public:
-  explicit FenwickTree(int n) : len(n), tree(n + 1) {}
+  explicit Fenwick(int n) : len(n), tree(n + 1) {}
 
   int size() const { return len; }
 
@@ -84,7 +84,7 @@ using namespace std;
 
 int main() {
   vector<int> a{10, 1, 2, 3, 4};
-  FenwickTree<int> t(5);
+  Fenwick<int> t(5);
   for (int i = 0; i < static_cast<int>(a.size()); i++) {
     t.set(i, a[i]);
   }
@@ -94,7 +94,7 @@ int main() {
   assert(t.sum(4) == 15);    // 5 + 1 + 2 + 3 + 4
 
   // With nonnegative values, the tree doubles as a frequency table for order-statistic queries.
-  FenwickTree<int> freq(8);
+  Fenwick<int> freq(8);
   freq.add(1, 1);                   // One element of value 1.
   freq.add(3, 3);                   // Three elements of value 3.
   freq.add(6, 1);                   // One element of value 6.

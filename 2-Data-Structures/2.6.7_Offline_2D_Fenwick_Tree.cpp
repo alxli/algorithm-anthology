@@ -19,15 +19,15 @@ Usage is two-phase. First declare every cell that will be updated with `reserve(
 `build()` once; then issue `add()` updates and `sum()` / `at()` queries freely. Updates may only
 target reserved cells, but queries may use any coordinates.
 
-- `OfflineFenwick2D()` constructs an empty structure in the declaration phase.
-- `reserve(r, c)` declares that the cell `(r, c)` may later be updated. Call before `build()`.
+- `OfflineFenwick2D<T>()` constructs an empty structure in the declaration phase.
+- `reserve(r, c)` declares that the cell (`r`, `c`) may later be updated. Call before `build()`.
 - `build()` finalizes the coordinate compression. Call exactly once, after all `reserve()` calls.
-- `add(r, c, x)` adds `x` to the value at index `(r, c)`, which must have been reserved.
-- `set(r, c, x)` assigns `x` to the value at index `(r, c)`, which must have been reserved.
-- `sum(r, c)` returns the sum of the rectangle with corners `(0, 0)` and `(r, c)`, inclusive.
-- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner `(r1, c1)` and
-  lower-right corner `(r2, c2)`, inclusive.
-- `at(r, c)` returns the value at index `(r, c)`.
+- `add(r, c, x)` adds `x` to the value at index (`r`, `c`), which must have been reserved.
+- `set(r, c, x)` assigns `x` to the value at index (`r`, `c`), which must have been reserved.
+- `sum(r, c)` returns the sum of the rectangle with corners (`0`, `0`) and (`r`, `c`), inclusive.
+- `sum(r1, c1, r2, c2)` returns the sum of the rectangle with upper-left corner (`r1`, `c1`) and
+  lower-right corner (`r2`, `c2`), inclusive.
+- `at(r, c)` returns the value at index (`r`, `c`).
 
 Time Complexity:
 - O(n log n) per call to `build()`, where $n$ is the number of reserved cells.

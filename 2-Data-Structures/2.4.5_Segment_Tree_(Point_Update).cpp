@@ -13,24 +13,24 @@ single updated index. The default definition below supports updates that "set" t
 index to a new value. Another possible update operation is "increment", in which case
 `apply_delta(v, d)` should return `v + d`.
 
-- `SegTree(n, v)` constructs an array of size `n` with indices from 0 to `n - 1`, inclusive,
-  and all values initialized to `v`.
-- `SegTree(lo, hi)` constructs an array from two random-access iterators as a range `[lo, hi)`,
+- `SegTree<T>(n, v)` constructs an array of size `n` with indices [0, `n`), and all values
+  initialized to `v`.
+- `SegTree<T>(lo, hi)` constructs an array from two random-access iterators as a range [`lo`, `hi`),
   initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
 - `at(i)` returns the value at index `i`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
   inclusive. If `lo == hi`, then the single specified value is returned.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
-- `find_first(lo, hi, pred)` returns the smallest index in `[lo, hi]` matching the search, or $-1$
+- `find_first(lo, hi, pred)` returns the smallest index in [`lo`, `hi`] matching the search, or $-1$
   if none, in O(log n). `pred(v)` takes a node aggregate and must be monotone: if it is false, no
   element under that node qualifies (e.g. for the default min tree, `pred(v) = (v <= x)` finds the
   leftmost element `<= x`).
 - `find_last(lo, hi, pred)` is the analogous query returning the largest such index.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
-  range `[lo, hi)` satisfies `pred`, or `size()` if the predicate remains true to the end.
+  range [`lo`, `hi`) satisfies `pred`, or `size()` if the predicate remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range `[lo, hi)` satisfies `pred`, or 0 if the predicate remains true to the beginning.
+  range [`lo`, `hi`) satisfies `pred`, or 0 if the predicate remains true to the beginning.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.

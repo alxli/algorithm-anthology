@@ -9,13 +9,13 @@ An arbitrary operand type is supported by changing the `Operand` alias and the s
 and `eval_operand()` helpers. For maximum reliability, the string representation of operands should
 not use characters shared by any operator. For instance, the best practice instead of accepting `-1`
 as a valid operand (since the `-` sign may conflict with the identical binary operator), is to
-specify non-negative numbers as operands alongside the unary operator `-`.
+specify nonnegative numbers as operands alongside the unary operator `-`.
 
 Operators may be non-empty strings of any length, but should not contain any parentheses or shared
 characters with the string representations of operands. Ideally, operators should not be prefixes or
 suffixes of one another, else the tokenization process may be ambiguous. For example, if `++` and
-`+` are both operators, then `++` may be split into either `["+", "+"]` or `["++"]` depending on the
-lexicographical ordering of conflicting operators.
+`+` are both operators, then `++` may be split into either [`"+"`, `"+"`] or [`"++"`] depending on
+the lexicographical ordering of conflicting operators.
 
 - `ShuntingYardParser(unary_op, binary_op)` initializes a parser with operators specified by hash
   tables `unary_op` (of operator to unary function object) and `binary_op` (of operator to pair of
@@ -25,8 +25,8 @@ lexicographical ordering of conflicting operators.
   construction. Each parenthesis, operator, and operand satisfying `is_operand()` will be split into
   a separate token. The algorithm is naive, matching operators lazily in the case of overlapping
   operators as mentioned above. Under these circumstances, the parse may not always succeed.
-- `eval(lo, hi)` returns the evaluation of a range `[lo, hi)` of already split-up expression tokens,
-  where `lo` and `hi` must be random-access iterators.
+- `eval(lo, hi)` returns the evaluation of a range [`lo`, `hi`) of already split-up expression
+  tokens, where `lo` and `hi` must be random-access iterators.
 - `eval(s)` returns the evaluation of expression `s`, after first calling `split(s)` to obtain the
   tokens.
 

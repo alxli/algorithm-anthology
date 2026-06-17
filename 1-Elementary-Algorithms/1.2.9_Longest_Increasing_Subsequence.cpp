@@ -1,9 +1,9 @@
 /*
 
-Given a range `[lo, hi)`, determine a longest subsequence of the range such that all of its elements
-are in strictly ascending order. The subsequence is not necessarily contiguous or unique, so only
-one such answer will be found. This implementation requires random-access iterators and `operator<`
-on the value type.
+Given a range of elements, determine a longest subsequence of the range where all elements are in
+strictly ascending order. The subsequence is not necessarily contiguous or unique, so only one such
+answer will be found. This implementation requires random-access iterators and `operator<` on the
+value type.
 
 The answer is computed by scanning left to right while maintaining, for each length, the smallest
 possible tail value of an increasing subsequence of that length. Each element extends or improves
@@ -11,7 +11,7 @@ one of these tails, located in O(log n) by binary search; predecessor links then
 subsequence.
 
 - `longest_increasing_subsequence(lo, hi)` returns a longest strictly increasing subsequence of
-  `[lo, hi)` as a `std::vector` of the selected values, in order.
+  [`lo`, `hi`) as a `std::vector` of the selected values, in order.
 
 Time Complexity:
 - O(n log n) per call to `longest_increasing_subsequence()`, where $n$ is the distance between `lo`

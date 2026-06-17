@@ -12,7 +12,7 @@ To implement the same cache without `std::list`, use the intrusive doubly linked
 from section 2.1.2. Store a `Node*` in the map instead of a list iterator, move hits to the front
 with `move_to_front(&sentinel, node)`, and evict `sentinel.prev`.
 
-- `LRUCache(capacity)` constructs an empty cache holding at most `capacity` keys.
+- `LRUCache<Key, Value>(capacity)` constructs an empty cache holding at most `capacity` keys.
 - `get(key, &value)` returns whether `key` is present. If present, it stores the value in `value`
   and marks the key as most recently used.
 - `put(key, value)` inserts or updates `key`, marking it as most recently used and evicting the
@@ -31,11 +31,17 @@ Space Complexity:
 #include <unordered_map>
 #include <utility>
 
-// Manual-list variant sketch:
-// struct Node { Key key; Value value; Node *prev, *next; };
-// std::unordered_map<Key, Node*> where;
-// On get: move_to_front(&sentinel, where[key]).
-// On eviction: Node *old = sentinel.prev; erase(old); where.erase(old->key).
+// Replacing std::list with a manual doubly-linked list would look something like:
+//   struct DListNode { Key key; Value value; DListNode *prev, *next; };
+//   std::unordered_map<Key, DListNode*> where;
+//
+// On get:
+//   move_to_front(&sentinel, where[key]);
+//
+// On eviction:
+//   DListNode *old = sentinel.prev;
+//   erase(old);
+//   where.erase(old->key).
 
 template<class Key, class Value>
 class LRUCache {

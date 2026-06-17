@@ -1,8 +1,8 @@
 /*
 
-Finds every complex root $x$ for a polynomial $p$ such that $p(x) = 0$ using the Ehrlich-Aberth
-method. This is a simultaneous iteration: every root estimate is updated using both the Newton
-correction and a repulsion term from the other estimates.
+Finds every complex root $x$ for a polynomial $p$ such that $p(x) = 0$. The Ehrlich-Aberth method is
+a simultaneous iteration: every root estimate is updated using both the Newton correction and a
+repulsion term from the other estimates.
 
 This routine is intended for well-scaled polynomials when all complex roots are wanted. If only real
 roots are needed, a real-root isolator such as derivative recursion with bisection is usually more

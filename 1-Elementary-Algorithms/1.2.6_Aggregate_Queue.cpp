@@ -18,7 +18,7 @@ The fold is defined by an associative `combine(a, b)` function. The default code
 "min" of the elements; for "sum", `combine(a, b)` should return `a + b`. The fold is taken in queue
 order (front to back), so non-commutative operations such as matrix products are also supported.
 
-- `AggregateQueue()` constructs an empty queue.
+- `AggregateQueue<T>()` constructs an empty queue.
 - `empty()` returns whether the queue is empty.
 - `size()` returns the number of elements in the queue.
 - `push(x)` appends `x` to the back of the queue.

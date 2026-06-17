@@ -2,16 +2,14 @@
 
 Maintains immutable versions of a segment tree under point updates. Each update creates a new root
 by copying only the nodes on the path from the root to the updated leaf, while all unchanged
-subtrees are shared with previous versions.
+subtrees are shared with previous versions. Persistent segment trees are useful for offline
+order-statistics queries, rollback-like histories, and functional dynamic programming states.
 
-The implementation below stores sums over a fixed index range $[0, n)$. Persistent segment trees are
-useful for offline order-statistics queries, rollback-like histories, and functional dynamic
-programming states.
-
-- `PersistentSegTree(a)` constructs version 0 from array `a`.
+- `PersistentSegTree(a)` constructs version 0 of an array with indices [0, `n`) from an array `a`
+  of length `n`.
 - `update(version, index, value)` returns a new version where `a[index]` is set to `value`, leaving
   the old version unchanged.
-- `query(version, lo, hi)` returns the sum of the inclusive range `[lo, hi]` in the specified
+- `query(version, lo, hi)` returns the sum of the inclusive range [`lo`, `hi`] in the specified
   version.
 - `versions()` returns the number of stored roots.
 

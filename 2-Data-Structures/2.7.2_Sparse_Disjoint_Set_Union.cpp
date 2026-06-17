@@ -12,7 +12,7 @@ This version uses an `std::unordered_map` for storage and coordinate compression
 types must meet the requirements of key types for `std::unordered_map`). The order of sets returned
 by `get_all_sets()` is unspecified.
 
-- `SparseDSU()` constructs an empty set.
+- `SparseDSU<T>()` constructs an empty set.
 - `make_set(u)` creates a new partition consisting of the single element `u`, which must not have
   been previously added to the data structure.
 - `size()` returns the number of elements that have been added.

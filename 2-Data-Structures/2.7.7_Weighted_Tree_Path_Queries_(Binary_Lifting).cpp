@@ -13,9 +13,9 @@ minimum, use `std::min` with `std::numeric_limits<W>::max()`; for the sum (the p
 to orientation. For an invertible aggregate such as the sum, an alternative that avoids the `agg`
 table is to store each node's weighted depth `dw[u]` and return `dw[u] + dw[v] - 2*dw[lca]`.
 
-- `WeightedTreePath(adj)` builds the structure over a forest given by a weighted, bidirectional
+- `WeightedTreePath<W>(adj)` builds the structure over a forest given by a weighted, bidirectional
   adjacency list `adj`, where `adj[u]` holds `{v, w}` pairs for each edge `u`-`v` of weight `w`,
-  over nodes numbered from 0 to `adj.size() - 1`.
+  over nodes numbered [0, `n`), where `n` is `adj.size()`.
 - `lca(u, v)` returns the lowest common ancestor of `u` and `v`, or $-1$ if they lie in different
   trees.
 - `kth_ancestor(u, k)` returns the $k$-th ancestor of `u`, stopping at that tree's root if `k`
@@ -87,18 +87,18 @@ class WeightedTreePath {
 
  public:
   explicit WeightedTreePath(const std::vector<std::vector<std::pair<int, W>>> &adj) : timer(0) {
-    int nodes = static_cast<int>(adj.size());
+    int n = static_cast<int>(adj.size());
     len = 1;
-    while ((1 << len) <= std::max(1, nodes)) {
+    while ((1 << len) <= std::max(1, n)) {
       len++;
     }
-    up.assign(nodes, std::vector<int>(len));
-    agg.assign(nodes, std::vector<W>(len, identity()));
-    tin.assign(nodes, 0);
-    tout.assign(nodes, 0);
-    depth.assign(nodes, 0);
-    root.assign(nodes, -1);
-    for (int u = 0; u < nodes; u++) {
+    up.assign(n, std::vector<int>(len));
+    agg.assign(n, std::vector<W>(len, identity()));
+    tin.assign(n, 0);
+    tout.assign(n, 0);
+    depth.assign(n, 0);
+    root.assign(n, -1);
+    for (int u = 0; u < n; u++) {
       if (root[u] == -1) {
         dfs(u, u, u, 0, adj);
       }

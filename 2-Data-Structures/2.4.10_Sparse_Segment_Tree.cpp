@@ -21,23 +21,23 @@ performing their updates sequentially. The default code below defines range assi
 increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, len)` should return
 `v + d` for range-min/range-max queries, and `v + d * len` for range-sum queries.
 
-- `SparseSegTree<T, N>(v)` constructs an array over indices 0 to $N$ (inclusive), with every value
-  implicitly initialized to `v`. Nodes are allocated lazily as indices are touched.
+- `SparseSegTree<T, N>(v)` constructs an array over indices [0, `N`], with every value implicitly
+  initialized to `v`. Nodes are allocated lazily as indices are touched.
 - `at(i)` returns the value at index `i`, where `i` is between 0 and `N`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
   inclusive. If `lo == hi`, then the single specified value is returned.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
 - `update(lo, hi, d)` modifies the value at each array index from `lo` to `hi`, inclusive, by
   applying the delta `d` to each value.
-- `find_first(lo, hi, pred)` returns the smallest index in `[lo, hi]` matching the search, or $-1$
+- `find_first(lo, hi, pred)` returns the smallest index in [`lo`, `hi`] matching the search, or $-1$
   if none, in O(log N). `pred(v)` takes a node aggregate and must be monotone: if it is false, no
   element under that node qualifies (untouched ranges use the implicit `repeat_value(init, len)`).
   For the default min tree, `pred(v) = (v <= x)` finds the leftmost element `<= x`.
 - `find_last(lo, hi, pred)` is the analogous query returning the largest such index.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
-  range `[lo, hi)` satisfies `pred`, or $N + 1$ if the predicate remains true to the end.
+  range [`lo`, `hi`) satisfies `pred`, or $N + 1$ if the predicate remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range `[lo, hi)` satisfies `pred`, or 0 if the predicate remains true to the beginning.
+  range [`lo`, `hi`) satisfies `pred`, or 0 if the predicate remains true to the beginning.
 
 Time Complexity:
 - O(1) per call to the constructor.

@@ -1,13 +1,16 @@
 /*
 
 Given a starting node in a weighted graph whose edge weights are only 0 or 1, compute the shortest
-distance to every reachable node. 0-1 BFS is a specialized version of Dijkstra's algorithm. Because
-every relaxation changes the distance by either $0$ or $1$, a deque maintains nodes in nondecreasing
-distance order: push weight-0 relaxations to the front and weight-1 relaxations to the back.
+distance to every reachable node. Optionally, output the shortest path to a specific destination
+node using the shortest-path tree from the predecessor array `pred`.
+
+0-1 BFS is a specialized version of Dijkstra's algorithm. Because every relaxation changes the
+distance by either $0$ or $1$, a deque maintains nodes in nondecreasing distance order: push
+weight-0 relaxations to the front and weight-1 relaxations to the back.
 
 - `bfs_zero_one(start)` populates `dist` and `pred` for a global, pre-populated adjacency list `adj`
-  which must consist of nodes numbered from 0 to `adj.size() - 1`. Each edge is stored as
-  `(neighbor, weight)`, where `weight` is either 0 or 1.
+  which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`. Each edge is stored as
+  (`neighbor`, `weight`), where `weight` is either 0 or 1.
 
 For path reconstruction, `pred[v]` stores the node immediately before `v` on the shortest path from
 `start` to `v`, or $-1$ if `v` is `start` or unreachable. Follow `pred` backward from the
@@ -35,9 +38,9 @@ std::vector<std::vector<std::pair<int, int>>> adj;
 std::vector<int> dist, pred;
 
 void bfs_zero_one(int start) {
-  int nodes = static_cast<int>(adj.size());
-  dist.assign(nodes, INF);
-  pred.assign(nodes, -1);
+  int n = static_cast<int>(adj.size());
+  dist.assign(n, INF);
+  pred.assign(n, -1);
   std::deque<int> dq;
   dist[start] = 0;
   dq.push_front(start);

@@ -7,11 +7,11 @@ algorithm runs two passes of depth-first search: the first records the order in 
 and the second explores the transposed graph in reverse finish order, with each search collecting
 exactly one component.
 
-- `KosarajuSCC(n)` constructs a directed graph on nodes numbered from 0 to `n - 1`.
+- `KosarajuSCC(n)` constructs a directed graph of `n` nodes numbered [0, `n`).
 - `add_edge(u, v)` adds the directed edge from `u` to `v`.
 - `build_scc()` populates `scc` with the strongly connected components and `component[v]` with
   the component ID containing vertex `v`. Component IDs are in topological order: for every edge
-  from component `a` to a different component `b`, `a < b`.
+  from component $a$ to a different component $b$, $a < b$.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_scc()`, where $n$ is the number of nodes and $m$ is the number of
@@ -31,7 +31,7 @@ struct KosarajuSCC {
   std::vector<int> component;
   std::vector<bool> visited;
 
-  KosarajuSCC(int nodes = 0) : adj(nodes), rev(nodes) {}
+  KosarajuSCC(int n = 0) : adj(n), rev(n) {}
 
   void add_edge(int u, int v) {
     adj[u].push_back(v);
@@ -60,17 +60,17 @@ struct KosarajuSCC {
   }
 
   void build_scc() {
-    int nodes = static_cast<int>(adj.size());
-    visited.assign(nodes, false);
+    int n = static_cast<int>(adj.size());
+    visited.assign(n, false);
     std::vector<int> order;
-    for (int i = 0; i < nodes; i++) {
+    for (int i = 0; i < n; i++) {
       if (!visited[i]) {
         dfs(adj, order, i);
       }
     }
     std::reverse(order.begin(), order.end());
-    visited.assign(nodes, false);
-    component.assign(nodes, -1);
+    visited.assign(n, false);
+    component.assign(n, -1);
     scc.clear();
     for (int u : order) {
       if (visited[u]) {

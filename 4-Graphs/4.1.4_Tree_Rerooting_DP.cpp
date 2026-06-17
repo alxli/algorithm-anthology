@@ -8,7 +8,7 @@ The prefix/suffix aggregation requires `combine` to be associative for a running
 is usually preferred, but a segment-tree/exclusive-combine variant can support a left-fold style
 interface in O(n log n).
 
-- `RerootingTree(n)` constructs a tree with `n` nodes numbered from 0 to `n - 1`.
+- `RerootingTree(n)` constructs a tree with `n` nodes numbered [0, `n`).
 - `add_edge(u, v)` adds an undirected edge between nodes `u` and `v`.
 - `build_rooted_tree(root)` populates `parent`, `depth`, `subtree_size`, `order`, `tin`, and `tout`
   for the tree rooted at `root` (default 0). This must be called only after the added edges define a
@@ -20,7 +20,7 @@ interface in O(n log n).
 
 The aggregation scheme for `rerooting_dp()` is defined by the following pieces:
 - `Data` is the return type of a normal fixed-root DFS call `dfs(u, p)`. It summarizes the
-  component containing `u` after removing edge `u-p`, with all values measured from node `u`.
+  component containing `u` after removing edge `u`-`p`, with all values measured from node `u`.
 - `identity` is the neutral value for an empty component, which for all aggregate values `a` must
   satisfy `combine(a, identity) = combine(identity, a) = a`.
 - `combine(a, b)` merges two independent neighbor contributions into the same node `u`, like two
@@ -84,13 +84,13 @@ class RerootingTree {
   }
 
   void build_rooted_tree(int root = 0) {
-    int nodes = static_cast<int>(adj.size());
-    parent.assign(nodes, -1);
-    depth.assign(nodes, 0);
-    subtree_size.assign(nodes, 0);
+    int n = static_cast<int>(adj.size());
+    parent.assign(n, -1);
+    depth.assign(n, 0);
+    subtree_size.assign(n, 0);
     order.clear();
-    tin.assign(nodes, 0);
-    tout.assign(nodes, 0);
+    tin.assign(n, 0);
+    tout.assign(n, 0);
     timer = 0;
     dfs_rooted(root, -1);
   }
@@ -101,10 +101,10 @@ class RerootingTree {
   std::vector<Data> rerooting_dp(
       const Data &identity, Combine combine, Finalize finalize, Lift lift
   ) {
-    int nodes = static_cast<int>(adj.size());
-    std::vector<Data> down(nodes, identity), outside(nodes, identity), answer(nodes, identity);
+    int n = static_cast<int>(adj.size());
+    std::vector<Data> down(n, identity), outside(n, identity), answer(n, identity);
     build_rooted_tree();
-    for (int i = nodes - 1; i >= 0; i--) {
+    for (int i = n - 1; i >= 0; i--) {
       int u = order[i];
       Data acc = identity;
       for (int v : adj[u]) {

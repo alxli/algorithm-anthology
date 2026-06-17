@@ -5,7 +5,7 @@ peeling away the leaves of the tree until one or two nodes remain. The diameter 
 that the farthest node from any start is always one endpoint of a diameter, so a second traversal
 from that endpoint measures the full diameter. The following functions apply to a global,
 bidirectionally pre-populated adjacency list `adj` which must form a valid tree with nodes numbered
-from 0 to `adj.size() - 1`.
+[0, `n`), where `n` is `adj.size()`.
 
 - `find_centers()` returns a vector of either one or two tree Jordan centers. The Jordan center of a
   tree is the set of all nodes with minimum eccentricity, that is, the set of all nodes where the
@@ -32,16 +32,16 @@ Space Complexity:
 std::vector<std::vector<int>> adj;
 
 std::vector<int> find_centers() {
-  int nodes = static_cast<int>(adj.size());
-  std::vector<int> leaves, degree(nodes);
-  for (int i = 0; i < nodes; i++) {
+  int n = static_cast<int>(adj.size());
+  std::vector<int> leaves, degree(n);
+  for (int i = 0; i < n; i++) {
     degree[i] = static_cast<int>(adj[i].size());
     if (degree[i] <= 1) {
       leaves.push_back(i);
     }
   }
   int removed = static_cast<int>(leaves.size());
-  while (removed < nodes) {
+  while (removed < n) {
     std::vector<int> nleaves;
     for (int u : leaves) {
       for (int v : adj[u]) {
@@ -59,7 +59,7 @@ std::vector<int> find_centers() {
 // Returns the centroid node index if found in this subtree, or -(subtree size) to propagate
 // the size up to the parent so it can check the complementary component's size.
 int find_centroid(int u = 0, int p = -1) {
-  int nodes = static_cast<int>(adj.size());
+  int n = static_cast<int>(adj.size());
   int count = 1;
   bool good_center = true;
   for (int v : adj[u]) {
@@ -71,10 +71,10 @@ int find_centroid(int u = 0, int p = -1) {
       return res;
     }
     int size = -res;
-    good_center &= (size <= nodes / 2);
+    good_center &= (size <= n / 2);
     count += size;
   }
-  good_center &= (nodes - count <= nodes / 2);
+  good_center &= (n - count <= n / 2);
   return good_center ? u : -count;
 }
 

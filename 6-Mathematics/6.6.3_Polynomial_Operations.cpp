@@ -14,12 +14,12 @@ The code aliases one modular field element as `Coeff` and one coefficient vector
 - `multiply(a, b)` returns `a * b`.
 - `derivative(a)` returns the formal derivative of `a`.
 - `integral(a)` returns the formal antiderivative of `a` with constant term zero.
-- `inverse(a, n)` returns the first `n` coefficients of `1 / a`, requiring `a[0] != 0`.
+- `inverse(a, n)` returns the first `n` coefficients of `1 / a`, requiring `a[0]` to be nonzero.
 - `divide(a, b)` returns the polynomial quotient of `a / b`, requiring `b` to be nonzero.
 - `modulo(a, b)` returns the polynomial remainder of `a / b`, requiring `b` to be nonzero.
 
 The inverse is a formal power series inverse modulo $x^n$: it finds $b$ such that
-$a \cdot b \equiv 1 (\pmod{x^n})$. Division uses the standard reversal trick: reverse both
+$a \cdot b \equiv 1 \pmod{x^n}$. Division uses the standard reversal trick: reverse both
 polynomials, compute a truncated series inverse of the reversed divisor, multiply, truncate, and
 reverse back.
 

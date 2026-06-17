@@ -12,10 +12,10 @@ search tree rather than an aggregate structure: for rectangle reporting use the 
 2D range tree, and for grid cell updates or rectangle sums/minima use a Fenwick tree, quadtree, or
 2D segment tree.
 
-- `NearestKDTree(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a
-  range `[lo, hi)` of points.
-- `nearest(x, y, can_equal)` returns a point in the set that is closest to `(x, y)` by Euclidean
-  distance. This may be equal to `(x, y)` only if `can_equal` is `true`.
+- `NearestKDTree<T>(lo, hi)` constructs a set from two random-access iterators to `std::pair` as a
+  range [`lo`, `hi`) of points.
+- `nearest(x, y, can_equal)` returns a point in the set that is closest to (`x`, `y`) by Euclidean
+  distance. This may be equal to (`x`, `y`) only if `can_equal` is `true`.
 
 Time Complexity:
 - O(n log n) per call to the constructor, where $n$ is the number of points.

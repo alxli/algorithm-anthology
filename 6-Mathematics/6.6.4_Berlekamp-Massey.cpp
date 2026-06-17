@@ -10,15 +10,15 @@ correction was needed. The order $L$ never decreases, and $2L + 1$ terms suffice
 recurrence of order $L$. This is the standard tool for guessing a linear recurrence from sampled
 values, after which the sequence can be extended or its $n$-th term found by fast methods.
 
+A recurrence of order $L$ is only certified by at least $2L + 1$ terms, so the result is trustworthy
+only when `s` is comfortably longer than twice the returned length. If the returned $L$ is close to
+$n / 2$, the sequence is likely under-determined and the recurrence may be a spurious overfit.
+
 The code operates modulo the prime 998244353; change `MOD` to use a different prime field.
 
 - `berlekamp_massey(s)` returns the coefficients of the shortest recurrence that the sequence `s`
   satisfies, as described above. The returned length is the order $L$ of the recurrence. An empty
   vector is returned when `s` is entirely zero (no recurrence is needed).
-
-A recurrence of order $L$ is only certified by at least $2L + 1$ terms, so the result is trustworthy
-only when `s` is comfortably longer than twice the returned length. If the returned $L$ is close to
-$n / 2$, the sequence is likely under-determined and the recurrence may be a spurious overfit.
 
 Time Complexity:
 - O(n^2 + L log p) per call, where $n$ is the length of `s`, $L$ is the order of the recurrence

@@ -1,15 +1,16 @@
 /*
 
 Maintain an ordered map, that is, an ordered collection of key-value pairs such that each possible
-key appears at most once in the collection. This implementation requires an ordering on the set of
-possible keys defined by `operator<` on the key type. A red-black tree is a binary search tree
-balanced by coloring its nodes red or black, then constraining node colors on any simple path from
-the root to a leaf. Specifically, a red node may never have a red child, and every path from the
-root to a null leaf must pass through the same number of black nodes, which together bound the
-tree's height to O(log n). Insertions and deletions repair these invariants by recoloring nodes and
-performing rotations.
+key appears at most once in the collection. A red-black tree is a binary search tree balanced by
+coloring its nodes red or black, then constraining node colors on any simple path from the root to a
+leaf. Specifically, a red node may never have a red child, and every path from the root to a null
+leaf must pass through the same number of black nodes, which together bound the tree's height to
+O(log n). Insertions and deletions repair these invariants by recoloring nodes and performing
+rotations.
 
-- `RedBlackTree()` constructs an empty map.
+This implementation requires an ordering on the key type `K` defined by `operator<`.
+
+- `RedBlackTree<K, V>()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new
@@ -20,6 +21,9 @@ performing rotations.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
 - `entries()` returns all key-value entries in ascending order of keys.
+
+The navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and
+`next(k)` from the treap in 2.3.1 depend only on the BST property and may be copied here unchanged.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.

@@ -7,12 +7,13 @@ that currently exceed `t`. Segment tree beats (the Ji Driver tree) resolves this
 each node, the strict maximum, the second-largest distinct value, and a count of entries equal to
 the maximum. A clamp then has three cases at each node.
 
-- If `t >= max1`, the clamp changes nothing and the recursion stops (the prune case).
-- If `max2 < t < max1`, every entry equal to `max1` drops to `t` and all others are untouched, so
-  the node updates in O(1): the sum falls by `(max1 - t) * count` and `max1` becomes `t` (the break,
-  or tag, case). This lazy tag pushes down to a child only when the child's maximum is larger.
-- Otherwise (`t <= max2`) the node is too coarse to update directly, so the clamp recurses into both
-  children and re-pulls.
+- If `t` $\geq$ `max1`, the clamp changes nothing and the recursion stops (the prune case).
+- If `max2` < `t` < `max1`, every entry equal to `max1` drops to `t` and all others are untouched,
+  so the node updates in O(1): the sum falls by $(`max1` - `t`) * `count`$ and `max1` becomes `t`
+  (the break, or tag, case). This lazy tag pushes down to a child only when the child's maximum is
+  larger.
+- Otherwise (`t` $\leq$ `max2`) the node is too coarse to update directly, so the clamp recurses
+  into both children and re-pulls.
 
 The break condition is what makes this efficient: a potential-function argument on the number of
 distinct values along root-to-leaf paths shows the total work over any sequence of clamps is
@@ -23,14 +24,13 @@ the generic lazy segment tree, this structure cannot be reduced to a pluggable `
 `apply`, because a clamp acts on only the maximal entries of a node rather than uniformly on all of
 them, so each operation set must be hand-written and its amortized bound argued separately.
 
-Use a 64-bit element type `T` when sums can be large.
-
-- `SegTreeBeats(n, v)` constructs an array of size `n`, indices 0 to `n - 1`, all equal to `v`.
-- `SegTreeBeats(lo, hi)` constructs the array from the range `[lo, hi)` of random-access iterators.
+- `SegTreeBeats<T>(n, v)` constructs an array of size `n`, indices [0, `n`), all equal to `v`.
+- `SegTreeBeats<T>(lo, hi)` constructs an array from two random-access iterators as a range
+  [`lo`, `hi`), initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
-- `chmin(lo, hi, t)` replaces `a[i]` with `min(a[i], t)` for every `i` in `[lo, hi]`, inclusive.
-- `query_sum(lo, hi)` returns the sum of `a[i]` over `i` in `[lo, hi]`, inclusive.
-- `query_max(lo, hi)` returns the maximum of `a[i]` over `i` in `[lo, hi]`, inclusive.
+- `chmin(lo, hi, t)` replaces `a[i]` with `min(a[i], t)` for every `i` in [`lo`, `hi`], inclusive.
+- `query_sum(lo, hi)` returns the sum of `a[i]` over `i` in [`lo`, `hi`], inclusive.
+- `query_max(lo, hi)` returns the maximum of `a[i]` over `i` in [`lo`, `hi`], inclusive.
 - `at(i)` returns the value at index `i`.
 
 Time Complexity:

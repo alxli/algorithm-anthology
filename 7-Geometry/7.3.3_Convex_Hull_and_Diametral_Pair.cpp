@@ -9,7 +9,7 @@ time. The functions are templated on the iterator type; the value type of the it
 the point type. Both functions accept either floating-point or integral coordinates, but since they
 use only cross product comparisons, they happen to be exact for integral points.
 
-- `convex_hull(lo, hi)` returns the convex hull in clockwise order for an input range `[lo, hi)` of
+- `convex_hull(lo, hi)` returns the convex hull in clockwise order for a range [`lo`, `hi`) of
   points. The input range is sorted lexicographically after the call. To instead return the hull
   points counter-clockwise order, replace every `>= 0` with `<= 0`.
 - `diametral_pair(lo, hi)` returns the maximum-distance pair of points.

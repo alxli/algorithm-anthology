@@ -11,8 +11,8 @@ Hierholzer's algorithm walks unused edges until stuck, then backtracks to splice
 into the final trail. This implementation stores and returns edge IDs, which supports multigraphs:
 parallel edges are distinct because each edge receives its own ID.
 
-- `EulerianGraph(n, directed)` constructs a graph on `n` nodes, directed if `directed` is true and
-  undirected otherwise.
+- `EulerianGraph(n, directed)` constructs a graph of `n` nodes numbered [0, `n`). The graph is
+  directed if `directed` is true, or undirected otherwise.
 - `add_edge(u, v)` adds an edge and returns its edge ID.
 - `eulerian_path(start)` returns a trail using every edge exactly once, or a result with
   `start` $= -1$ if no such trail exists. If `start` $= -1$, a valid start is chosen automatically.
@@ -36,15 +36,15 @@ class EulerianGraph {
   bool directed;
 
   bool valid_degrees(int start) const {
-    int nodes = static_cast<int>(adj.size());
+    int n = static_cast<int>(adj.size());
     if (directed) {
-      std::vector<int> indeg(nodes), outdeg(nodes);
+      std::vector<int> indeg(n), outdeg(n);
       for (const auto &[eu, ev] : edges) {
         outdeg[eu]++;
         indeg[ev]++;
       }
       int source = -1, sink = -1;
-      for (int u = 0; u < nodes; u++) {
+      for (int u = 0; u < n; u++) {
         int diff = outdeg[u] - indeg[u];
         if (diff == 1) {
           if (source != -1) {
@@ -68,13 +68,13 @@ class EulerianGraph {
       }
       return true;
     }
-    std::vector<int> degree(nodes);
+    std::vector<int> degree(n);
     for (const auto &[eu, ev] : edges) {
       degree[eu]++;
       degree[ev]++;
     }
     std::vector<int> odd;
-    for (int u = 0; u < nodes; u++) {
+    for (int u = 0; u < n; u++) {
       if (degree[u] % 2 == 1) {
         odd.push_back(u);
       }
@@ -89,35 +89,35 @@ class EulerianGraph {
   }
 
   int choose_start() const {
-    int nodes = static_cast<int>(adj.size());
+    int n = static_cast<int>(adj.size());
     if (directed) {
-      std::vector<int> indeg(nodes), outdeg(nodes);
+      std::vector<int> indeg(n), outdeg(n);
       for (const auto &[eu, ev] : edges) {
         outdeg[eu]++;
         indeg[ev]++;
       }
-      for (int u = 0; u < nodes; u++) {
+      for (int u = 0; u < n; u++) {
         if (outdeg[u] - indeg[u] == 1) {
           return u;
         }
       }
-      for (int u = 0; u < nodes; u++) {
+      for (int u = 0; u < n; u++) {
         if (outdeg[u] > 0) {
           return u;
         }
       }
     } else {
-      std::vector<int> degree(nodes);
+      std::vector<int> degree(n);
       for (const auto &[eu, ev] : edges) {
         degree[eu]++;
         degree[ev]++;
       }
-      for (int u = 0; u < nodes; u++) {
+      for (int u = 0; u < n; u++) {
         if (degree[u] % 2 == 1) {
           return u;
         }
       }
-      for (int u = 0; u < nodes; u++) {
+      for (int u = 0; u < n; u++) {
         if (degree[u] > 0) {
           return u;
         }
@@ -161,9 +161,9 @@ class EulerianGraph {
   }
 
   EulerianTrail eulerian_path(int start = -1) const {
-    int nodes = static_cast<int>(adj.size());
-    int edge_count = static_cast<int>(edges.size());
-    if (edge_count == 0) {
+    int n = static_cast<int>(adj.size());
+    int m = static_cast<int>(edges.size());
+    if (m == 0) {
       int s = (start == -1 ? 0 : start);
       return EulerianTrail{s, {}, {s}};
     }
@@ -173,8 +173,8 @@ class EulerianGraph {
     if (start == -1) {
       start = choose_start();
     }
-    std::vector<bool> used(edge_count, false);
-    std::vector<int> ptr(nodes), vertex_stack{start}, edge_stack{-1}, trail_edges;
+    std::vector<bool> used(m, false);
+    std::vector<int> ptr(n), vertex_stack{start}, edge_stack{-1}, trail_edges;
     while (!vertex_stack.empty()) {
       int u = vertex_stack.back();
       while (ptr[u] < static_cast<int>(adj[u].size()) && used[adj[u][ptr[u]]]) {
@@ -195,7 +195,7 @@ class EulerianGraph {
         edge_stack.push_back(id);
       }
     }
-    if (static_cast<int>(trail_edges.size()) != edge_count) {
+    if (static_cast<int>(trail_edges.size()) != m) {
       return EulerianTrail{};
     }
     std::reverse(trail_edges.begin(), trail_edges.end());

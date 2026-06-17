@@ -23,16 +23,16 @@ candidates remain and then scanning them. It returns the index of the optimum ra
 coordinate. As with ternary search on reals, the function must be strictly unimodal.
 
 - `ternary_search_min(lo, hi, f)` and `ternary_search_max(lo, hi, f)` return a `double` `x` in
-  `[lo, hi]` optimizing the continuous unimodal function `f`, to within the optional absolute error
-  `eps`.
+  [`lo`, `hi`] optimizing the continuous unimodal function `f`, to within the optional absolute
+  error `EPS`.
 - `golden_section_min(lo, hi, f)` and `golden_section_max(lo, hi, f)` do the same with one function
   evaluation per iteration.
 - `discrete_ternary_min(lo, hi, f)` and `discrete_ternary_max(lo, hi, f)` return the integer index
-  in the inclusive range `[lo, hi]` optimizing the unimodal function `f`, breaking ties toward the
+  in the inclusive range [`lo`, `hi`] optimizing the unimodal function `f`, breaking ties toward the
   smaller index.
 
 Time Complexity:
-- O(log(n / `eps`)) calls to `f()` for the continuous searches, where $n$ is the distance between
+- O(log(n / `EPS`)) calls to `f()` for the continuous searches, where $n$ is the distance between
   `lo` and `hi`. Golden-section makes about half as many per iteration as ternary search.
 - O(log n) calls to `f()` for the discrete searches.
 
@@ -42,8 +42,8 @@ Space Complexity:
 */
 
 template<class Fn>
-double ternary_search_min(double lo, double hi, Fn f, double eps = 1e-12) {
-  while (hi - lo > eps) {
+double ternary_search_min(double lo, double hi, Fn f, double EPS = 1e-12) {
+  while (hi - lo > EPS) {
     double m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
     if (f(m1) < f(m2)) {
       hi = m2;
@@ -55,16 +55,16 @@ double ternary_search_min(double lo, double hi, Fn f, double eps = 1e-12) {
 }
 
 template<class Fn>
-double ternary_search_max(double lo, double hi, Fn f, double eps = 1e-12) {
-  return ternary_search_min(lo, hi, [&](double x) { return -f(x); }, eps);
+double ternary_search_max(double lo, double hi, Fn f, double EPS = 1e-12) {
+  return ternary_search_min(lo, hi, [&](double x) { return -f(x); }, EPS);
 }
 
 template<class Fn>
-double golden_section_min(double lo, double hi, Fn f, double eps = 1e-12) {
+double golden_section_min(double lo, double hi, Fn f, double EPS = 1e-12) {
   const double r = 0.6180339887498949;  // 1 / phi = (sqrt(5) - 1) / 2.
   double m1 = hi - r * (hi - lo), m2 = lo + r * (hi - lo);
   double f1 = f(m1), f2 = f(m2);
-  while (hi - lo > eps) {
+  while (hi - lo > EPS) {
     if (f1 < f2) {
       hi = m2;
       m2 = m1;
@@ -83,7 +83,7 @@ double golden_section_min(double lo, double hi, Fn f, double eps = 1e-12) {
 }
 
 template<class Fn>
-double golden_section_max(double lo, double hi, Fn f, double eps = 1e-12) {
+double golden_section_max(double lo, double hi, Fn f, double EPS = 1e-12) {
   return golden_section_min(lo, hi, [&](double x) { return -f(x); }, eps);
 }
 

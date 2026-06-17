@@ -132,10 +132,6 @@ Matched "abccab" at position 0.
 #include <iostream>
 using namespace std;
 
-void report_match(const string &needle, int pos) {
-  cout << "Matched \"" << needle << "\" at position " << pos << "." << endl;
-}
-
 int main() {
   vector<string> needles;
   needles.push_back("a");
@@ -147,6 +143,8 @@ int main() {
   needles.push_back("caa");
   needles.push_back("abccab");
 
-  AhoCorasick(needles).find_all_in("abccab", report_match);
+  AhoCorasick(needles).find_all_in("abccab", [](const string &needle, int pos) {
+    cout << "Matched \"" << needle << "\" at position " << pos << "." << endl;
+  });
   return 0;
 }

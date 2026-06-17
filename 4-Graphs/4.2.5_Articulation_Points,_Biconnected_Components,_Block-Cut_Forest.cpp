@@ -14,14 +14,13 @@ articulation point, with an edge whenever an articulation point belongs to a BCC
 differs from a bridge forest: the block-cut forest describes vertex connectivity, while a bridge
 forest describes edge connectivity after compressing 2-edge-connected components.
 
-- `BiconnectedComponents(n)` constructs an undirected graph on nodes numbered from 0 to `n - 1`.
+- `BiconnectedComponents(n)` constructs an undirected graph of `n` nodes numbered [0, `n`).
 - `add_edge(u, v)` adds the undirected edge `u`-`v`. Parallel edges are supported.
-- `build_bcc()` populates `articulation_points` and `biconnected_components`.
+- `build_bcc()` populates `articulation_points` and `bccs`.
 - `build_block_cut_forest()` populates `block_cut_forest` and `block_cut_id` using the results of
-  the previous `build_bcc()` call.
-- BCC nodes in `block_cut_forest` are numbered `[0, biconnected_components.size())`.
-- For an articulation point `v`, `block_cut_id[v]` stores its node ID in the block-cut forest.
-- For a non-articulation point `v`, `block_cut_id[v]` is $-1$.
+  the previous `build_bcc()` call. After the call, `block_cut_forest` nodes are numbered in the
+  range [0, `bccs.size()`), and `block_cut_id[v]` stores the node ID of articulation point `v` in
+  the block-cut forest, or $-1$ if `v` is not an articulation point.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_bcc()` and `build_block_cut_forest()`, where $n$ is the number of
@@ -45,7 +44,7 @@ struct BiconnectedComponents {
   std::vector<int> edge_stack;
   int timer;
 
-  BiconnectedComponents(int nodes = 0) : adj(nodes) {}
+  BiconnectedComponents(int n = 0) : adj(n) {}
 
   void add_edge(int u, int v) {
     int id = static_cast<int>(edges.size());
@@ -105,21 +104,21 @@ struct BiconnectedComponents {
   }
 
   void build_bcc() {
-    int nodes = static_cast<int>(adj.size());
+    int n = static_cast<int>(adj.size());
     articulation_points.clear();
     bccs.clear();
     edge_stack.clear();
-    lowlink.assign(nodes, 0);
-    tin.assign(nodes, 0);
-    visited.assign(nodes, false);
-    is_articulation.assign(nodes, false);
+    lowlink.assign(n, 0);
+    tin.assign(n, 0);
+    visited.assign(n, false);
+    is_articulation.assign(n, false);
     timer = 0;
-    for (int i = 0; i < nodes; i++) {
+    for (int i = 0; i < n; i++) {
       if (!visited[i]) {
         dfs(i, -1);
       }
     }
-    for (int i = 0; i < nodes; i++) {
+    for (int i = 0; i < n; i++) {
       if (is_articulation[i]) {
         articulation_points.push_back(i);
       }
@@ -127,9 +126,9 @@ struct BiconnectedComponents {
   }
 
   void build_block_cut_forest() {
-    int nodes = static_cast<int>(adj.size());
+    int n = static_cast<int>(adj.size());
     int blocks = static_cast<int>(bccs.size());
-    block_cut_id.assign(nodes, -1);
+    block_cut_id.assign(n, -1);
     int total = blocks;
     for (int v : articulation_points) {
       block_cut_id[v] = total++;

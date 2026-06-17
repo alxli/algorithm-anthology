@@ -17,14 +17,14 @@ that mapping from the sentinel row walks the original string out one character a
 
 The input must not contain the sentinel character `'\0'`.
 
-- `burrows_wheeler_transform(s)` returns the BWT of `s`. The result has length `s.size() + 1` and
-  contains the sentinel `'\0'` exactly once.
-- `burrows_wheeler_inverse(code)` returns the original string, inverting
-  `burrows_wheeler_transform`. The argument must be a string produced by that function.
+- `bwt(s)` returns the BWT of `s`. The result has length `s.size() + 1` and contains the sentinel
+  `'\0'` exactly once.
+- `inverse_bwt(code)` returns the original string, inverting `bwt`. The argument must be a string
+  produced by that function.
 
 Time Complexity:
-- O(n log^2 n) per call to `burrows_wheeler_transform(s)`, where $n$ is the length of `s`.
-- O(n log n) per call to `burrows_wheeler_inverse(code)`.
+- O(n log^2 n) per call to `bwt(s)`, where $n$ is the length of `s`.
+- O(n log n) per call to `inverse_bwt(code)`.
 
 Space Complexity:
 - O(n) auxiliary heap space for both functions.
@@ -36,7 +36,7 @@ Space Complexity:
 #include <string>
 #include <vector>
 
-std::string burrows_wheeler_transform(std::string s) {
+std::string bwt(std::string s) {
   s.push_back('\0');  // Unique sentinel, smaller than every real character.
   int n = static_cast<int>(s.size());
   // Sort the indices of the cyclic rotations by prefix doubling; with the sentinel this matches
@@ -70,7 +70,7 @@ std::string burrows_wheeler_transform(std::string s) {
   return code;
 }
 
-std::string burrows_wheeler_inverse(const std::string &code) {
+std::string inverse_bwt(const std::string &code) {
   int n = static_cast<int>(code.size());
   // first[k] is the row supplying the first column's k-th character; following it from row 0 (the
   // sentinel row, sorted first) reconstructs the sentinel followed by the original string.
@@ -94,20 +94,20 @@ std::string burrows_wheeler_inverse(const std::string &code) {
 using namespace std;
 
 int main() {
-  string code = burrows_wheeler_transform("banana");
+  string code = bwt("banana");
   assert(code.size() == 7);  // "banana" plus the sentinel.
-  assert(burrows_wheeler_inverse(code) == "banana");
+  assert(inverse_bwt(code) == "banana");
 
   // The transform clusters equal characters: "mississippi" yields long runs.
   string text = "mississippi";
-  string t = burrows_wheeler_transform(text);
-  assert(burrows_wheeler_inverse(t) == text);
+  string t = bwt(text);
+  assert(inverse_bwt(t) == text);
 
   // Round-trips on assorted strings, including repeats and a single character.
   for (const string &s :
        {string(""), string("a"), string("aaaa"), string("abracadabra"),
         string("the quick brown fox"), string("\1\2abc", 5)}) {
-    assert(burrows_wheeler_inverse(burrows_wheeler_transform(s)) == s);
+    assert(inverse_bwt(bwt(s)) == s);
   }
   return 0;
 }

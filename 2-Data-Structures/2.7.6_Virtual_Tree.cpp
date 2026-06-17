@@ -17,15 +17,15 @@ binary lifting so it is self-contained; given an existing lowest common ancestor
 sort-and-stack logic applies directly.
 
 - `VirtualTree(adj, root)` builds the structure over a tree rooted at `root`, given a bidirectional
-  adjacency list `adj` of nodes numbered from 0 to `adj.size() - 1`.
+  adjacency list `adj` of nodes numbered [0, `n`), where `n` is `adj.size()`.
 - `lca(u, v)` returns the lowest common ancestor of nodes `u` and `v`.
 - `depth_of(u)` returns the depth of `u` in the original tree (the root has depth 0). The original
-  path length of a virtual-tree edge `(p, c)` is `depth_of(c) - depth_of(p)`.
+  path length of a virtual-tree edge (`p`, `c`) is `depth_of(c) - depth_of(p)`.
 - `build(nodes)` returns the virtual tree induced by `nodes`. The result has `root` set to the
-  topmost node (the common ancestor of `nodes`), `vertices` listing every original node id in the
-  virtual tree sorted by entry time, and `edges` listing each `(parent, child)` pair in original
-  ids. Both the vertex set and the edges use the node numbering of the original tree. An empty input
-  yields an empty result with `root == -1`.
+  topmost node (the common ancestor of `nodes`), `vertices` listing every original node ID in the
+  virtual tree sorted by entry time, and `edges` listing each (`p`, `c`) pair in original IDs. Both
+  the vertex set and the edges use the node numbering of the original tree. An empty input yields an
+  empty result with `root` = $-1$.
 
 Time Complexity:
 - O(n log n) for construction, where $n$ is the number of nodes.
@@ -69,15 +69,15 @@ class VirtualTree {
   };
 
   VirtualTree(const std::vector<std::vector<int>> &adj, int root) {
-    int nodes = static_cast<int>(adj.size());
+    int n = static_cast<int>(adj.size());
     len = 1;
-    while ((1 << len) <= std::max(1, nodes)) {
+    while ((1 << len) <= std::max(1, n)) {
       len++;
     }
-    up.assign(nodes, std::vector<int>(len));
-    tin.assign(nodes, 0);
-    tout.assign(nodes, 0);
-    depth.assign(nodes, 0);
+    up.assign(n, std::vector<int>(len));
+    tin.assign(n, 0);
+    tout.assign(n, 0);
+    depth.assign(n, 0);
     timer = 0;
     dfs(adj, root, root, 0);
   }

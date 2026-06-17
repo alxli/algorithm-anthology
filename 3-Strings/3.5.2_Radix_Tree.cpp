@@ -6,7 +6,7 @@ node that is flagged as a terminal node. Contrary to a regular trie, a radix tre
 efficient as it combines chains of nodes with only a single child. Children are stored in hash
 tables, and `walk()` sorts child labels as needed to preserve lexicographic traversal.
 
-- `RadixTree()` constructs an empty map.
+- `RadixTree<V>()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(s, v)` adds an entry with string key `s` and value `v` to the map, returning `true` if a

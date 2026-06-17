@@ -2,9 +2,9 @@
 
 \section{\texorpdfstring{String Utilities}{3.1 String Utilities}}
 \setcounter{section}{1}
-Common string functions, many of which already have standard STL equivalents. These are written for educational purposes, without heavy optimizations (often depending on certain \inlinecode{std::string} functions that have unspecified complexity).
+Common string functions, many of which already have standard STL equivalents. Most of the following implementations are presented for educational purposes, and are not heavy optimized. They often depend on certain \inlinecode{std::string} functions that have unspecified complexity.
 
-\textbf{Time Complexity}: $O(n)$ per call to most operations, where $n$ is the length of the input string or total length of all input strings. Exceptions are noted with the individual helpers below.
+\textbf{Time Complexity}: $O(n)$ per call to most operations, where $n$ is the length of the input string or total length of all input strings. Exceptions are noted with the individual functions below.
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
@@ -130,18 +130,16 @@ Case Conversion:
 \begin{lstlisting}[language=C++]
 string to_upper(const string &s) {
   string res;
-  auto upper = [](unsigned char c) { return static_cast<char>(toupper(c)); };
   for (char c : s) {
-    res.push_back(upper(c));
+    res.push_back(static_cast<char>(toupper(c)));
   }
   return res;
 }
 
 string to_lower(const string &s) {
   string res;
-  auto lower = [](unsigned char c) { return static_cast<char>(tolower(c)); };
   for (char c : s) {
-    res.push_back(lower(c));
+    res.push_back(static_cast<char>(tolower(c)));
   }
   return res;
 }
@@ -407,17 +405,17 @@ int main() {
 \setcounter{section}{2}
 \setcounter{subsection}{0}
 \subsection{Hash Functions}
-Provides a small library of non-cryptographic hash functions and hash functors for common contest keys. These helpers are useful for fingerprinting values, combining keys, seeding randomized algorithms, and defining \inlinecode{std::unordered\_map} keys for pairs, tuples, and vectors. They are not suitable for passwords, signatures, or adversarial security.
+Provides a small library of non-cryptographic hash functions and hash functors for common contest keys. These functions are useful for fingerprinting values, combining keys, seeding randomized algorithms, and defining \inlinecode{std::unordered\_map} keys for pairs, tuples, and vectors. They are not suitable for passwords, signatures, or adversarial security.
 
 The standalone functions below are deterministic. The \inlinecode{IntHasher} functor adds a per-run random seed before mixing, which is useful for making integer-keyed hash tables harder to hack in open-test contests.
 
 The composite hashers separate the mixing primitive (\inlinecode{mix64}/\inlinecode{hash\_combine64}) from each type's traversal of its parts, so swapping in a different mixing function only requires editing one place.
 
-FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Starting from a fixed offset basis, it XORs each byte into the accumulator and then multiplies by a fixed prime; the \inlinecode{1a} variant XORs before multiplying, which mixes slightly better than the original FNV-1. Reach for it when the key is a string or byte buffer, whereas \inlinecode{mix32} and \inlinecode{mix64} are finalizers for a single fixed-width integer. Its appeal is simplicity: a few lines, no lookup tables, and no seed, with distribution good enough for the short keys common in contests. For very long inputs a block hash such as MurmurHash or xxHash is faster and mixes more thoroughly, and because FNV-1a is unseeded it offers no protection against adversarial inputs.
+FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Starting from a fixed offset basis, it XORs each byte into the accumulator and then multiplies by a fixed prime; the \inlinecode{1a} variant XORs before multiplying, which mixes slightly better than the original FNV-1. Reach for it when the key is a string or byte buffer, whereas \inlinecode{mix32} and \inlinecode{mix64} are mixers for a single fixed-width integer. Its appeal is simplicity: a few lines, no lookup tables, and no seed, with distribution good enough for the short keys common in contests. For very long inputs a block hash such as MurmurHash or xxHash is faster and mixes more thoroughly, and because FNV-1a is unseeded it offers no protection against adversarial inputs.
 
 \begin{compactitem}
-  \item \inlinecode{mix32(x)} mixes a 32-bit unsigned integer \inlinecode{x}, using the MurmurHash3 finalizer.
-  \item \inlinecode{mix64(x)} mixes a 64-bit unsigned integer \inlinecode{x}, using the SplitMix64 finalizer.
+  \item \inlinecode{mix32(x)} mixes a 32-bit unsigned integer \inlinecode{x}, using MurmurHash3's fmix32 mixer.
+  \item \inlinecode{mix64(x)} mixes a 64-bit unsigned integer \inlinecode{x}, using the SplitMix64 mixer.
   \item \inlinecode{hash32(x)} and \inlinecode{hash64(x)} hash any integer type that can be converted to \inlinecode{uint32\_t} or \inlinecode{uint64\_t}, respectively.
   \item \inlinecode{hash\_combine32(h, x)} and \inlinecode{hash\_combine64(h, x)} fold another already-hashed value into an existing hash accumulator.
   \item \inlinecode{hash\_float(x)} and \inlinecode{hash\_double(x)} hash floating-point bit patterns, normalizing \inlinecode{-0.0} to \inlinecode{0.0}. Different NaN representations may still hash differently.
@@ -452,6 +450,7 @@ FNV-1a (Fowler-Noll-Vo) is a tiny hash for variable-length byte sequences. Start
 #include <utility>
 #include <vector>
 
+// MurmurHash3's fmix32 mixer.
 uint32_t mix32(uint32_t x) {
   x ^= x >> 16;
   x *= 0x85ebca6bU;
@@ -460,6 +459,7 @@ uint32_t mix32(uint32_t x) {
   return x ^ (x >> 16);
 }
 
+// SplitMix64 mixer.
 uint64_t mix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
@@ -711,16 +711,16 @@ int main() {
 \subsection{Rolling Hash}
 Computes polynomial rolling hashes for sequences, supporting $O(1)$ contiguous subsequence hash queries after preprocessing. This is useful for probabilistic string matching, substring equality checks, repeated subarray detection, and binary-searching over candidate lengths.
 
-Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Equivalently, it is built left-to-right by the recurrence \inlinecode{pref[i + 1] = pref[i] * HASH\_BASE + h(a[i])}. A subsequence hash for \inlinecode{[l, r)} is obtained by subtracting away the prefix before \inlinecode{l}: \inlinecode{pref[r] - pref[l] * pow(HASH\_BASE, r - l)}.
+Given a sequence $a_0, a_1, \ldots, a_{n-1}$ and a value hash $h(a_i)$ for each element, the hash is the polynomial $H(a) = \sum_{i=0}^{n-1} h(a_i) B^{n-1-i} \pmod M$, where $B$ is \inlinecode{HASH\_BASE} and $M$ is \inlinecode{HASH\_MOD}. Equivalently, it is built left-to-right by the recurrence \inlinecode{pref[i + 1] = pref[i] * HASH\_BASE + h(a[i])}. A subsequence hash for [\inlinecode{l}, \inlinecode{r}) is obtained by subtracting away the prefix before $l$: \inlinecode{pref[r] - pref[l] * pow(HASH\_BASE, r - l)}.
 
 The implementation works modulo the Mersenne prime $2^{61} - 1$, using \inlinecode{\_\_uint128\_t} for the multiplication where available and falling back to a double-and-add modular multiply otherwise. The base \inlinecode{HASH\_BASE} should be changed or chosen randomly for open-hacking environments. With a fixed base, hashing remains fast and practical, but it is still probabilistic and should not be used as proof of equality when exact verification is required.
 
-By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in \inlinecode{[1, HASH\_MOD)}.
+By default, each sequence value is cast to \inlinecode{uint64\_t} and mixed. For non-integer element types, pass a custom value hasher that maps each element to a stable nonzero value in [1, \inlinecode{HASH\_MOD}).
 
 \begin{compactitem}
-  \item \inlinecode{RollingHash(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
-  \item \inlinecode{RollingHash(v)} constructs prefix hashes for vector \inlinecode{v}.
-  \item \inlinecode{get(l, r)} returns the hash of the half-open subsequence \inlinecode{[l, r)}.
+  \item \inlinecode{RollingHash\textless{}T, ValueHasher\textgreater{}(first, last)} constructs prefix hashes for any iterator range of values accepted by the value hasher.
+  \item \inlinecode{RollingHash\textless{}T, ValueHasher\textgreater{}(v)} constructs prefix hashes for vector \inlinecode{v}.
+  \item \inlinecode{get(l, r)} returns the hash of the half-open subsequence [\inlinecode{l}, \inlinecode{r}).
   \item \inlinecode{hash(first, last)} returns the hash of an iterator range.
   \item \inlinecode{hash(v)} returns the hash of vector \inlinecode{v}.
   \item \inlinecode{concat(left, right, right\_len)} returns the hash of the concatenation of a sequence with hash \inlinecode{left} and a sequence with hash \inlinecode{right} and length \inlinecode{right\_len}.
@@ -775,6 +775,7 @@ uint64_t hash_mul(uint64_t a, uint64_t b) {
 #endif
 }
 
+// SplitMix64 mixer.
 uint64_t mix64(uint64_t x) {
   x += 0x9e3779b97f4a7c15ULL;
   x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
@@ -902,19 +903,19 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Dynamic Rolling Hash}
-Maintain a polynomial rolling hash over a mutable sequence, supporting point updates and $O(\log n)$ subsequence hash queries. Unlike the static rolling hash, which fixes its prefix hashes at construction, this structure allows any element to change between queries, which is useful for problems that compare substrings while characters are edited.
+Maintain a polynomial rolling hash over a nonnegative integer sequence, supporting point updates and $O(\log n)$ subsequence hash queries. Unlike the static rolling hash, which fixes its prefix hashes at construction, this structure allows any element to change between queries, which is useful for problems that compare substrings while characters are edited.
 
-The key idea is to weight each element by a power of the base tied to its absolute position: storing $a_i B^i$ at index \inlinecode{i} turns the hash of any prefix into an ordinary prefix sum, which a Fenwick tree maintains under point updates. The raw sum over a half-open range \inlinecode{[lo, hi)} is then $\sum_i a_i B^i$, and multiplying by $B^{-{\inlinecodemath{lo}}}$ shifts it to the position-independent value $\sum_i a_i B^{i - {\inlinecodemath{lo}}}$, so two ranges with equal contents receive equal hashes (the leftmost element carries the lowest power). A segment tree could replace the Fenwick tree if range operations (such as lazy range assignment) were needed.
+The key idea is to weight each element by a power of the base tied to its absolute position: storing $a_i B^i$ at index \inlinecode{i} turns the hash of any prefix into an ordinary prefix sum, which a Fenwick tree maintains under point updates. The raw sum over a half-open range $[l, h)$ is $\sum_i a_i B^i$, and multiplying by $B^{-l}$ shifts it to the position-independent value $\sum_i a_i B^{i - l}$, so two ranges with equal contents receive equal hashes (the leftmost element carries the lowest power). A segment tree could replace the Fenwick tree if lazy range updates are needed.
 
 \inlinecode{MOD1} and \inlinecode{MOD2} are two distinct primes, each kept below $2^{31}$ so that the product of any two residues fits in a 64-bit integer; hashing modulo both and comparing the resulting pair makes a collision astronomically unlikely. \inlinecode{BASE1} and \inlinecode{BASE2} are the corresponding polynomial bases, which should exceed the largest element value and may be randomized per run to resist adversarial inputs.
 
-Element values must be non-negative. As with any polynomial hash, comparing subsequences of different lengths is only safe when values are positive (for example, map an alphabet to $[1, B)$) so that trailing zeros cannot make a shorter sequence collide with a longer one.
+Element values must be nonnegative. As with any polynomial hash, comparing subsequences of different lengths is only safe when values are positive (for example, map an alphabet to $[1, B)$) so that trailing zeros cannot make a shorter sequence collide with a longer one.
 
 \begin{compactitem}
   \item \inlinecode{DynamicHash(a)} builds prefix hashes over the integer sequence \inlinecode{a}.
   \item \inlinecode{size()} returns the length of the sequence.
   \item \inlinecode{set(i, x)} assigns the value at index \inlinecode{i} to \inlinecode{x}.
-  \item \inlinecode{hash(lo, hi)} returns the pair of hashes of the half-open subsequence \inlinecode{[lo, hi)}. Two ranges are equal with high probability if and only if their \inlinecode{hash()} pairs are equal.
+  \item \inlinecode{hash(lo, hi)} returns the pair of hashes of the half-open subsequence [\inlinecode{lo}, \inlinecode{hi}). Two ranges are equal with high probability if and only if their \inlinecode{hash()} pairs are equal.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -947,7 +948,7 @@ class DynamicHash {
   std::vector<uint64_t> ft1, ft2;            // Fenwick trees, 1-indexed of size len + 1.
 
   // Products and sums of residues below 2^30 stay under 2^60, so 64-bit arithmetic never overflows.
-  static uint64_t power(uint64_t b, uint64_t e, uint64_t m) {
+  static uint64_t powmod(uint64_t b, uint64_t e, uint64_t m) {
     uint64_t res = 1;
     for (b %= m; e > 0; e >>= 1) {
       if (e & 1) {
@@ -979,7 +980,7 @@ class DynamicHash {
     ip1.resize(len + 1);
     ip2.resize(len + 1);
     pw1[0] = pw2[0] = ip1[0] = ip2[0] = 1;
-    uint64_t invb1 = power(BASE1, MOD1 - 2, MOD1), invb2 = power(BASE2, MOD2 - 2, MOD2);
+    uint64_t invb1 = powmod(BASE1, MOD1 - 2, MOD1), invb2 = powmod(BASE2, MOD2 - 2, MOD2);
     for (int i = 1; i <= len; i++) {
       pw1[i] = pw1[i - 1] * BASE1 % MOD1;
       pw2[i] = pw2[i - 1] * BASE2 % MOD2;
@@ -1042,10 +1043,10 @@ Computes randomized XOR fingerprints for keys and sets of keys using Zobrist has
 This technique is useful for probabilistic equality checks on sets, distinct-prefix queries, board-game states, and other unordered collections. It is not cryptographic, and collisions are possible with probability roughly $q^2 / 2^{64}$ over $q$ compared fingerprints. For multisets, plain XOR only records element parity; use a summed hash or pair it with counts if multiplicity matters.
 
 \begin{compactitem}
-  \item \inlinecode{ZobristHash(seed)} constructs a token generator with initial value \inlinecode{seed}.
+  \item \inlinecode{ZobristHash\textless{}T\textgreater{}(seed)} constructs a token generator with initial value \inlinecode{seed}.
   \item \inlinecode{get(x)} returns the stable token assigned to key \inlinecode{x}, creating it if needed.
   \item \inlinecode{toggle(h, x)} returns the hash obtained by inserting \inlinecode{x} into set hash \inlinecode{h} if absent, or removing \inlinecode{x} from \inlinecode{h} if present.
-  \item \inlinecode{distinct\_prefix\_hashes(lo, hi)} returns prefix hashes where each distinct key in the range \inlinecode{[lo, hi)} contributes only on its first occurrence.
+  \item \inlinecode{distinct\_prefix\_hashes(lo, hi)} returns prefix hashes where each distinct key in the range [\inlinecode{lo}, \inlinecode{hi}) contributes only on its first occurrence.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1073,7 +1074,8 @@ class ZobristHash {
   std::unordered_map<T, uint64_t> token;
   uint64_t state;
 
-  static uint64_t splitmix64(uint64_t x) {
+  // SplitMix64 mixer.
+  static uint64_t mix64(uint64_t x) {
     x += 0x9e3779b97f4a7c15ULL;
     x = (x ^ (x >> 30)) * 0xbf58476d1ce4e5b9ULL;
     x = (x ^ (x >> 27)) * 0x94d049bb133111ebULL;
@@ -1087,7 +1089,7 @@ class ZobristHash {
     if (auto it = token.find(x); it != token.end()) {
       return it->second;
     }
-    state = splitmix64(state);
+    state = mix64(state);
     token[x] = state;
     return state;
   }
@@ -1411,10 +1413,6 @@ class AhoCorasick {
 #include <iostream>
 using namespace std;
 
-void report_match(const string &needle, int pos) {
-  cout << "Matched \"" << needle << "\" at position " << pos << "." << endl;
-}
-
 int main() {
   vector<string> needles;
   needles.push_back("a");
@@ -1426,7 +1424,9 @@ int main() {
   needles.push_back("caa");
   needles.push_back("abccab");
 
-  AhoCorasick(needles).find_all_in("abccab", report_match);
+  AhoCorasick(needles).find_all_in("abccab", [](const string &needle, int pos) {
+    cout << "Matched \"" << needle << "\" at position " << pos << "." << endl;
+  });
   return 0;
 }
 \end{lstlisting}
@@ -1443,11 +1443,11 @@ Matched "abccab" at position 0.
 \subsection{Palindrome Searching (Manacher)}
 Computes all odd- and even-length palindromic radii of a string in linear time using Manacher's algorithm. These radii can be used to test whether any substring is a palindrome in $O(1)$, find the longest palindromic substring, or count all palindromic substrings. The algorithm tracks the rightmost known palindrome and seeds each new center with the radius of its mirror inside that window, so characters are only ever compared when a palindrome is extended past the window.
 
-For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \inlinecode{s[i]}, including the center character. Thus the palindrome spans \inlinecode{[i - odd[i] + 1, i + odd[i])}. For even palindromes, \inlinecode{even[i]} is the radius centered between \inlinecode{s[i - 1]} and \inlinecode{s[i]}. Thus the palindrome spans \inlinecode{[i - even[i], i + even[i])}.
+For odd palindromes, \inlinecode{odd[i]} is the radius centered at character \inlinecode{s[i]}, including the center character. Thus the palindrome spans [\inlinecode{i} - \inlinecode{odd[i]} + 1, \inlinecode{i} + \inlinecode{odd[i]}). For even palindromes, \inlinecode{even[i]} is the radius centered between \inlinecode{s[i - 1]} and \inlinecode{s[i]}. Thus the palindrome spans [\inlinecode{i} - \inlinecode{even[i]}, \inlinecode{i} + \inlinecode{even[i]}).
 
 \begin{compactitem}
   \item \inlinecode{Manacher(s)} constructs the palindromic radii arrays for string \inlinecode{s}.
-  \item \inlinecode{is\_palindrome(lo, hi)} returns whether substring \inlinecode{[lo, hi)} is a palindrome.
+  \item \inlinecode{is\_palindrome(lo, hi)} returns whether substring [\inlinecode{lo}, \inlinecode{hi}) is a palindrome.
   \item \inlinecode{longest\_palindrome()} returns one longest palindromic substring of \inlinecode{s}.
   \item \inlinecode{count\_palindromes()} returns the total number of palindromic substrings of \inlinecode{s}, counted with multiplicity by position.
 \end{compactitem}
@@ -1565,12 +1565,12 @@ A Lyndon word is a nonempty string that is strictly smaller than all of its prop
 
 The same scan, applied to the string viewed as a cycle, yields the starting position of its lexicographically least rotation. This is the standard way to canonicalize a necklace, for example to test whether two strings are cyclic rotations of one another.
 
+Both functions below operate on any random-access sequence whose elements support \inlinecode{operator\textless{}}.
+
 \begin{compactitem}
   \item \inlinecode{lyndon\_factorization(s)} returns a vector of the starting indices of the Lyndon factors of \inlinecode{s}, in order. The factor at index \inlinecode{i} of the result spans the half-open range from \inlinecode{res[i]} to \inlinecode{res[i + 1]} (or to \inlinecode{s.size()} for the final factor).
-  \item \inlinecode{min\_rotation(s)} returns the 0-indexed position \inlinecode{p} such that the rotation beginning at \inlinecode{p}, that is, \inlinecode{s[p], s[(p + 1) \% n], ..., s[(p + n - 1) \% n]}, is lexicographically smallest. If several rotations tie, the smallest such \inlinecode{p} is returned.
+  \item \inlinecode{min\_rotation(s)} returns the 0-indexed position \inlinecode{p} such that the rotation beginning at \inlinecode{p}, that is, \inlinecode{s[p]}, \inlinecode{s[(p + 1) \% n]}, ..., \inlinecode{s[(p + n - 1) \% n]}, is lexicographically smallest. If several rotations tie, the smallest such \inlinecode{p} is returned.
 \end{compactitem}
-
-Both functions operate on any random-access sequence whose elements support \inlinecode{operator\textless{}}.
 
 \textbf{Time Complexity}: $O(n)$ per call to \inlinecode{lyndon\_factorization(s)} and \inlinecode{min\_rotation(s)}, where $n$ is the length of \inlinecode{s}.
 
@@ -1726,14 +1726,14 @@ int main() {
 \setcounter{section}{4}
 \setcounter{subsection}{0}
 \subsection{Suffix Array and LCP (Manber-Myers)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+Given a string $s$, a suffix array is the array of the smallest starting positions for the sorted suffixes of $s$. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
+For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
-The doubling algorithm sorts the suffixes by their first $2^k$ characters for increasing $k$: each round orders suffixes by their pair of ranks from the previous round, so a comparison costs $O(1)$ and the full order emerges after $O(\log n)$ rounds.
+The original Manber-Myers doubling algorithm comparison-sorts the suffixes by their first $2^k$ characters for increasing $k$: each round orders suffixes by their pair of ranks from the previous round, so a comparison costs $O(1)$ and the full order emerges after $O(\log n)$ rounds.
 
 \begin{compactitem}
-  \item \inlinecode{SuffixArrayManberMyers(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers doubling algorithm with a comparison-based sort.
+  \item \inlinecode{SuffixArrayManberMyers(s)} constructs a suffix array from string \inlinecode{s}.
   \item \inlinecode{get\_sa()} returns the constructed suffix array.
   \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
@@ -1751,7 +1751,7 @@ The doubling algorithm sorts the suffixes by their first $2^k$ characters for in
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays.
   \item $O(n)$ auxiliary heap space for the constructor.
   \item $O(1)$ auxiliary space for all other operations.
 \end{compactitem}
@@ -1849,14 +1849,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (Counting Sort)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+Given a string $s$, a suffix array is the array of the smallest starting positions for the sorted suffixes of $s$. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of \inlinecode{[1, 0]}.
+For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
-The doubling algorithm sorts the suffixes by their first $2^k$ characters for increasing $k$: each round orders suffixes by their pair of ranks from the previous round, so a comparison costs $O(1)$ and the full order emerges after $O(\log n)$ rounds. Replacing the comparison sort of each round with counting-sort-style rank updates removes a logarithmic factor.
+The original Manber-Myers doubling algorithm comparison-sorts the suffixes by their first $2^k$ characters for increasing $k$: each round orders suffixes by their pair of ranks from the previous round, so a comparison costs $O(1)$ and the full order emerges after $O(\log n)$ rounds. Replacing the comparison sort of each round with counting-sort-style rank updates removes a logarithmic factor.
 
 \begin{compactitem}
-  \item \inlinecode{SuffixArrayCountingSort(s)} constructs a suffix array from the given string \inlinecode{s} using the original Manber-Myers doubling algorithm with counting-sort-style rank updates to reduce the running time to $O(n \log n)$.
+  \item \inlinecode{SuffixArrayCountingSort(s)} constructs a suffix array from string \inlinecode{s}.
   \item \inlinecode{get\_sa()} returns the constructed suffix array.
   \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
@@ -1874,7 +1874,7 @@ The doubling algorithm sorts the suffixes by their first $2^k$ characters for in
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays.
   \item $O(n)$ auxiliary heap space for the constructor.
   \item $O(1)$ auxiliary space for all other operations.
 \end{compactitem}
@@ -1981,14 +1981,14 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Suffix Array and LCP (DC3)}
-Given a string \inlinecode{s}, a suffix array is the array of the smallest starting positions for the sorted suffixes of \inlinecode{s}. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of \inlinecode{s}. For example, \inlinecode{s = "cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
+Given a string $s$, a suffix array is the array of the smallest starting positions for the sorted suffixes of $s$. That is, the $i$-th position of the suffix array stores the starting position of the $i$-th lexicographically smallest suffix of $s$. For example, $s$ = \inlinecode{"cab"} has the suffixes \inlinecode{"cab"}, \inlinecode{"ab"}, and \inlinecode{"b"}. When sorted, the indices of the suffixes are \inlinecode{"ab"}, \inlinecode{"b"}, and \inlinecode{"cab"}, so the suffix array (assuming 0-based indices) is $[1, 2, 0]$.
 
-For a string \inlinecode{s} of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in \inlinecode{s}. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
+For a string $s$ of length $n$, the longest common prefix (LCP) array of length $n - 1$ stores the lengths of the longest common prefixes between all pairs of lexicographically adjacent suffixes in $s$. For example, \inlinecode{"baa"} has the sorted suffixes \inlinecode{"a"}, \inlinecode{"aa"}, and \inlinecode{"baa"}, with an LCP array of $[1, 0]$.
 
 The DC3/skew algorithm recursively constructs the suffix array of the suffixes starting at positions not divisible by 3, uses that order to sort the remaining suffixes with radix sort, and merges the two sorted groups in linear time.
 
 \begin{compactitem}
-  \item \inlinecode{SuffixArrayDC3(s)} constructs a suffix array from the given string \inlinecode{s} using the linear time DC3/skew algorithm by Karkkainen \& Sanders (2003) with radix sort.
+  \item \inlinecode{SuffixArrayDC3(s)} constructs a suffix array from string \inlinecode{s}.
   \item \inlinecode{get\_sa()} returns the constructed suffix array.
   \item \inlinecode{get\_lcp()} returns the corresponding LCP array for the suffix array.
   \item \inlinecode{find(needle)} returns one position that \inlinecode{needle} occurs in \inlinecode{s} (not necessarily the first), or \inlinecode{std::string::npos} if it cannot be found. For a \inlinecode{needle} of length $m$, this implementation uses an $O(m \log n)$ binary search, but can be optimized to $O(m + \log n)$ by first computing the LCP-LR array using the LCP array.
@@ -2006,7 +2006,7 @@ The DC3/skew algorithm recursively constructs the suffix array of the suffixes s
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
-  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays, where $n$ is the length of \inlinecode{s}.
+  \item $O(n)$ auxiliary for storage of the suffix and LCP arrays.
   \item $O(n)$ auxiliary heap space for the constructor.
   \item $O(1)$ auxiliary space for all other operations.
 \end{compactitem}
@@ -2188,7 +2188,7 @@ int main() {
 Maintain a map of strings to values using a tree data structure. Each node corresponds to a character, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Children are stored in hash tables, and \inlinecode{walk()} sorts child labels as needed to preserve lexicographic traversal.
 
 \begin{compactitem}
-  \item \inlinecode{Trie()} constructs an empty map.
+  \item \inlinecode{Trie\textless{}V\textgreater{}()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(s, v)} adds an entry with string key \inlinecode{s} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
@@ -2413,7 +2413,7 @@ int main() {
 Maintain a map of strings to values using a compressed tree data structure. Each node corresponds to a substring of an inserted string, and each inserted string corresponds to a path from the root to a node that is flagged as a terminal node. Contrary to a regular trie, a radix tree is more space efficient as it combines chains of nodes with only a single child. Children are stored in hash tables, and \inlinecode{walk()} sorts child labels as needed to preserve lexicographic traversal.
 
 \begin{compactitem}
-  \item \inlinecode{RadixTree()} constructs an empty map.
+  \item \inlinecode{RadixTree\textless{}V\textgreater{}()} constructs an empty map.
   \item \inlinecode{size()} returns the size of the map.
   \item \inlinecode{empty()} returns whether the map is empty.
   \item \inlinecode{insert(s, v)} adds an entry with string key \inlinecode{s} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the string already exists (in which case the map is unchanged and the old value associated with the string key is preserved).
@@ -3653,14 +3653,14 @@ int main() {
 \subsection{Recursive Descent Parsing}
 Evaluate an expression with custom operand types, prefix unary operators, binary operators, and precedences. Evaluation is performed by recursive descent: the parser recursively evaluates tighter precedence levels before looser ones. Parentheses are supported, but multiplication by juxtaposition is not.
 
-An arbitrary operand type is supported by changing the \inlinecode{Operand} alias and the static \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} helpers. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative numbers as operands alongside the unary operator \inlinecode{-}.
+An arbitrary operand type is supported by changing the \inlinecode{Operand} alias and the static \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} helpers. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify nonnegative numbers as operands alongside the unary operator \inlinecode{-}.
 
-Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
+Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either [\inlinecode{"+"}, \inlinecode{"+"}] or [\inlinecode{"++"}] depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
   \item \inlinecode{RecursiveDescentParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to unary function object) and \inlinecode{binary\_op} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
-  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range \inlinecode{[lo, hi)} of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
+  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range [\inlinecode{lo}, \inlinecode{hi}) of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
 \end{compactitem}
 
@@ -3891,14 +3891,14 @@ int main() {
 \subsection{Shunting Yard Parsing}
 Evaluate an expression with custom operand types, prefix unary operators, binary operators, and precedences. Evaluation is performed using the shunting yard algorithm, which maintains operator and value stacks while respecting precedence and parentheses. Multiplication by juxtaposition is not supported.
 
-An arbitrary operand type is supported by changing the \inlinecode{Operand} alias and the static \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} helpers. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify non-negative numbers as operands alongside the unary operator \inlinecode{-}.
+An arbitrary operand type is supported by changing the \inlinecode{Operand} alias and the static \inlinecode{is\_operand()} and \inlinecode{eval\_operand()} helpers. For maximum reliability, the string representation of operands should not use characters shared by any operator. For instance, the best practice instead of accepting \inlinecode{-1} as a valid operand (since the \inlinecode{-} sign may conflict with the identical binary operator), is to specify nonnegative numbers as operands alongside the unary operator \inlinecode{-}.
 
-Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either \inlinecode{["+", "+"]} or \inlinecode{["++"]} depending on the lexicographical ordering of conflicting operators.
+Operators may be non-empty strings of any length, but should not contain any parentheses or shared characters with the string representations of operands. Ideally, operators should not be prefixes or suffixes of one another, else the tokenization process may be ambiguous. For example, if \inlinecode{++} and \inlinecode{+} are both operators, then \inlinecode{++} may be split into either [\inlinecode{"+"}, \inlinecode{"+"}] or [\inlinecode{"++"}] depending on the lexicographical ordering of conflicting operators.
 
 \begin{compactitem}
   \item \inlinecode{ShuntingYardParser(unary\_op, binary\_op)} initializes a parser with operators specified by hash tables \inlinecode{unary\_op} (of operator to unary function object) and \inlinecode{binary\_op} (of operator to pair of binary function object and operator precedence). Operator precedences should be numbered upwards starting at 0 (lowest precedence, evaluated last).
   \item \inlinecode{split(s)} returns a vector of tokens for the expression \inlinecode{s}, split on the given operators during construction. Each parenthesis, operator, and operand satisfying \inlinecode{is\_operand()} will be split into a separate token. The algorithm is naive, matching operators lazily in the case of overlapping operators as mentioned above. Under these circumstances, the parse may not always succeed.
-  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range \inlinecode{[lo, hi)} of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
+  \item \inlinecode{eval(lo, hi)} returns the evaluation of a range [\inlinecode{lo}, \inlinecode{hi}) of already split-up expression tokens, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators.
   \item \inlinecode{eval(s)} returns the evaluation of expression \inlinecode{s}, after first calling \inlinecode{split(s)} to obtain the tokens.
 \end{compactitem}
 
@@ -4526,15 +4526,15 @@ To make the permutation invertible, a unique sentinel character smaller than eve
 The input must not contain the sentinel character \inlinecode{\textquotesingle{}\textbackslash{}0\textquotesingle{}}.
 
 \begin{compactitem}
-  \item \inlinecode{burrows\_wheeler\_transform(s)} returns the BWT of \inlinecode{s}. The result has length \inlinecode{s.size() + 1} and contains the sentinel \inlinecode{\textquotesingle{}\textbackslash{}0\textquotesingle{}} exactly once.
-  \item \inlinecode{burrows\_wheeler\_inverse(code)} returns the original string, inverting \inlinecode{burrows\_wheeler\_transform}. The argument must be a string produced by that function.
+  \item \inlinecode{bwt(s)} returns the BWT of \inlinecode{s}. The result has length \inlinecode{s.size() + 1} and contains the sentinel \inlinecode{\textquotesingle{}\textbackslash{}0\textquotesingle{}} exactly once.
+  \item \inlinecode{inverse\_bwt(code)} returns the original string, inverting \inlinecode{bwt}. The argument must be a string produced by that function.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(n \log^{2} n)$ per call to \inlinecode{burrows\_wheeler\_transform(s)}, where $n$ is the length of \inlinecode{s}.
-  \item $O(n \log n)$ per call to \inlinecode{burrows\_wheeler\_inverse(code)}.
+  \item $O(n \log^{2} n)$ per call to \inlinecode{bwt(s)}, where $n$ is the length of \inlinecode{s}.
+  \item $O(n \log n)$ per call to \inlinecode{inverse\_bwt(code)}.
 \end{compactitem}
 
 \textbf{Space Complexity}: $O(n)$ auxiliary heap space for both functions.
@@ -4545,7 +4545,7 @@ The input must not contain the sentinel character \inlinecode{\textquotesingle{}
 #include <string>
 #include <vector>
 
-std::string burrows_wheeler_transform(std::string s) {
+std::string bwt(std::string s) {
   s.push_back('\0');  // Unique sentinel, smaller than every real character.
   int n = static_cast<int>(s.size());
   // Sort the indices of the cyclic rotations by prefix doubling; with the sentinel this matches
@@ -4579,7 +4579,7 @@ std::string burrows_wheeler_transform(std::string s) {
   return code;
 }
 
-std::string burrows_wheeler_inverse(const std::string &code) {
+std::string inverse_bwt(const std::string &code) {
   int n = static_cast<int>(code.size());
   // first[k] is the row supplying the first column's k-th character; following it from row 0 (the
   // sentinel row, sorted first) reconstructs the sentinel followed by the original string.
@@ -4604,20 +4604,20 @@ std::string burrows_wheeler_inverse(const std::string &code) {
 using namespace std;
 
 int main() {
-  string code = burrows_wheeler_transform("banana");
+  string code = bwt("banana");
   assert(code.size() == 7);  // "banana" plus the sentinel.
-  assert(burrows_wheeler_inverse(code) == "banana");
+  assert(inverse_bwt(code) == "banana");
 
   // The transform clusters equal characters: "mississippi" yields long runs.
   string text = "mississippi";
-  string t = burrows_wheeler_transform(text);
-  assert(burrows_wheeler_inverse(t) == text);
+  string t = bwt(text);
+  assert(inverse_bwt(t) == text);
 
   // Round-trips on assorted strings, including repeats and a single character.
   for (const string &s :
        {string(""), string("a"), string("aaaa"), string("abracadabra"),
         string("the quick brown fox"), string("\1\2abc", 5)}) {
-    assert(burrows_wheeler_inverse(burrows_wheeler_transform(s)) == s);
+    assert(inverse_bwt(bwt(s)) == s);
   }
   return 0;
 }

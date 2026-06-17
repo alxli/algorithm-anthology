@@ -3,10 +3,11 @@
 Partially sort a range so that one chosen position ends up holding its final sorted element, like
 `std::nth_element()`.
 
-- `nth_element2(lo, nth, hi)` rearranges the range `[lo, hi)` such that the value pointed to by
+- `nth_element2(lo, nth, hi)` rearranges the range [`lo`, `hi`) such that the value pointed to by
   `nth` is the element that would be there if the range were fully sorted. Furthermore, the range is
-  partitioned such that no value in `[lo, nth)` compares greater than the value pointed to by `nth`
-  and no value in `(nth, hi)` compares less. Requires `operator<` on the iterator's value type.
+  partitioned such that no value in [`lo`, `nth`) compares greater than the value pointed to by
+  `nth` and no value in (`nth`, `hi`) compares less. This requires `operator<` defined on the
+  iterator's value type.
 
 The pivot is chosen uniformly at random, and the partition step groups equal keys together so arrays
 with many duplicate values remain efficient. After each partition, the search continues in only the

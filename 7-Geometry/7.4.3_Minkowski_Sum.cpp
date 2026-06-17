@@ -1,7 +1,7 @@
 /*
 
-Given two convex polygons, compute their Minkowski sum: the set of all points `a + b` where `a`
-comes from the first polygon and `b` comes from the second. After rotating both polygons to start at
+Given two convex polygons, compute their Minkowski sum: the set of all points $a + b$ where $a$
+comes from the first polygon and $b$ comes from the second. After rotating both polygons to start at
 their lowest-leftmost vertex, the boundary edges of the sum are obtained by merging the two cyclic
 edge-angle lists. Minkowski sums are useful for collision/translation problems, convex polygon
 distance checks, and diameter computations via $P + (-P)$.

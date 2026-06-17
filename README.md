@@ -14,14 +14,14 @@ There are several good ways to use this book:
 * as a checklist for edge cases, complexity, overflow, indexing conventions, and API choices;
 * as a map of related techniques: slower versions, faster versions, variants, and common reductions are often placed near one another.
 
-For learning, do not start by copying. Study the idea, prove the invariant or recurrence, implement a version yourself, then compare it against this one; the differences usually reveal the practical choices. Each section gives only the theory needed to orient the implementation: the problem, public interface, assumptions, and complexity. The source is organized as documentation, reusable implementation, then example usage. The reusable part ends before the `/*** Example Usage ***/` or `/*** Example Usage and Output: ***/` marker; the code after that marker exists only so the file can compile and demonstrate itself in isolation. When adapting a section into a solution file or personal header, remove the example block and keep the implementation above it.
+For learning, do not start by copying. Study the idea, prove the invariant or recurrence, implement a version yourself, then compare it against this one; the differences usually reveal the practical choices. Each section gives only the theory needed to orient the implementation: the problem, public interface, assumptions, and complexity. The source is organized as documentation, reusable implementation, then example usage. The reusable part ends before the `Example Usage` marker; the code after that marker exists only so the file can compile and demonstrate itself in isolation. When adapting a section into a solution file or personal header, remove the example block and keep the implementation above it.
 
 The implementations are written with the following principles in mind:
 
 * *Clarity:* A reader familiar with the algorithm should be able to follow the code without reverse-engineering it. Important tricks, non-obvious invariants, overflow risks, and language-specific assumptions should be documented.
 * *Concision:* Contest code has to be found, read, adapted, and typed under pressure. Short code is valuable when it removes noise, but not when it hides the idea. The goal is compactness without cleverness for its own sake, and without discarding useful interfaces. As a result, the code here is often more verbose than compact ICPC codebook-style snippets: the extra code usually buys clearer names, reusable return values, safer defaults, configurable types, edge identifiers, reset functions, or explicit handling of common variants.
 * *Efficiency:* The code should have the expected asymptotic behavior and reasonable constants. When a simpler version and a more robust or faster version both teach something useful, both may be included. If an implementation is educational rather than competitive, the section should say so.
-* *Adaptability:* Real problems rarely match a template exactly. Interfaces are chosen so that common changes, such as swapping a numeric type, changing a combine function, exposing an edge id, or choosing whether boundaries are included, are straightforward.
+* *Adaptability:* Real problems rarely match a template exactly. Interfaces are chosen so that common changes, such as swapping a numeric type, changing a combine function, exposing an edge ID, or choosing whether boundaries are included, are straightforward.
 * *Consistency:* Similar structures should expose similar operations where practical. Repeated naming conventions and example styles make it easier to move between chapters quickly.
 * *Portability:* The code targets modern C++17 and tries to avoid unnecessary dependencies. A few contest-useful exceptions remain, but are noted with each use.
 
@@ -46,5 +46,5 @@ The code targets ISO C++17 unless noted. The most common exceptions are:
 
 * GCC and Clang integer extensions such as `__int128` or `__uint128_t`, usually guarded with a portable fallback when overflow safety matters.
 * Compiler builtins such as `__builtin_popcount()` and `__builtin_clz()`. These are convenient and widely available, but C++20's `<bit>` header provides standard alternatives for many of them. See https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html for GCC's reference.
-* GNU policy-based data structures such as `__gnu_pbds::tree`, `gp_hash_table`, and PBDS priority queues, in limited sections only to show useful but non-standard library components.
+* GNU policy-based data structures such as `__gnu_pbds::tree`, in limited sections only to show some useful but non-standard library components.
 * A small number of explicitly documented representation assumptions, such as `signbit_()` in the math utilities assuming an IEEE-like floating-point sign bit layout.

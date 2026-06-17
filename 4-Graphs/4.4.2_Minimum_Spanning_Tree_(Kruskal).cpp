@@ -9,9 +9,9 @@ Kruskal's algorithm scans the edges in nondecreasing weight order, adding each e
 lie in different components (tracked with a disjoint-set structure) and skipping any edge that would
 form a cycle.
 
-- `kruskal_mst(nodes)` populates `mst` with the edge IDs in the minimum spanning tree (returning
-  the total MST weight) for a global, pre-populated edge list `edges` whose endpoints must be
-  numbered from 0 to `nodes - 1`. Each edge is stored as `(weight, u, v)`.
+- `kruskal_mst(n)` populates `mst` with the edge IDs in the minimum spanning tree (returning the
+  total MST weight) for a global, pre-populated edge list `edges` whose endpoints must be numbered
+  [0, `n`). Each edge is stored as (`weight`, `u`, `v`).
 
 Time Complexity:
 - O(m log n) per call to `kruskal_mst()`, where $m$ is the number of edges and $n$ is the number of
@@ -41,7 +41,7 @@ int find_root(int u) {
   return dsu_root[u];
 }
 
-int kruskal_mst(int nodes) {
+int kruskal_mst(int n) {
   mst.clear();
   std::vector<int> order(edges.size());
   std::iota(order.begin(), order.end(), 0);
@@ -49,8 +49,8 @@ int kruskal_mst(int nodes) {
     return std::get<0>(edges[a]) < std::get<0>(edges[b]);
   });
   int total_dist = 0;
-  dsu_root.assign(nodes, 0);
-  dsu_size.assign(nodes, 1);
+  dsu_root.assign(n, 0);
+  dsu_size.assign(n, 1);
   std::iota(dsu_root.begin(), dsu_root.end(), 0);
   for (int id : order) {
     auto &[w, a, b] = edges[id];

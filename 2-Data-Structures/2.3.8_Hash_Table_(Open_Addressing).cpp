@@ -10,13 +10,13 @@ or an empty slot is found. Other probe-step schemes include quadratic probing an
 but these require additional table-sizing and coprimality conditions to guarantee correct coverage
 of the table. They are omitted to keep this implementation focused on core ideas of open addressing.
 
-Compared with the chaining version (2.3.8), open addressing stores entries contiguously, so it is
+Compared with the chaining version (2.3.7), open addressing stores entries contiguously, so it is
 more cache-friendly and needs no per-entry allocation. The costs: deletions must leave tombstones,
 the load factor must stay well below 1, and, unlike chaining or `std::unordered_map`, a pointer from
 `find()` or reference from `operator[]` is invalidated as soon as a later insertion rehashes and
 relocates the entries.
 
-- `ProbingHashMap()` constructs an empty map.
+- `ProbingHashMap<K, V, Hash>()` constructs an empty map.
 - `size()` returns the size of the map.
 - `empty()` returns whether the map is empty.
 - `insert(k, v)` adds an entry with key `k` and value `v` to the map, returning `true` if a new
@@ -236,7 +236,7 @@ struct Hasher {
     return k * 2654435761u;  // Or just return k.
   }
 
-  // SplitMix64 finalizer (see 3.2.1's mix64).
+  // SplitMix64 mixer (see 3.2.1's mix64).
   uint32_t operator()(uint64_t k) {
     k += RAND_SEED;
     k = (k ^ (k >> 30)) * 0xbf58476d1ce4e5b9ULL;

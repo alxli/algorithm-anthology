@@ -13,8 +13,9 @@ by the product of $(t - x_j) / (x_k - x_j)$ over the other nodes. Both run in O(
 operations.
 
 - `interpolate(x, y)` returns the coefficients $a_0, ..., a_{n-1}$ (constant term first) of the
-  polynomial with `P(x[i]) = y[i]`, modulo `MOD`. The entries of `x` must be distinct modulo `MOD`.
-- `interpolate_at(x, y, t)` returns `P(t)` modulo `MOD` for that same polynomial, without building
+  polynomial $P$ with $P(`x[i]`) = `y[i]`, modulo `MOD`. The entries of `x` must be distinct modulo
+  `MOD`.
+- `interpolate_at(x, y, t)` returns $P(`t`)$ modulo `MOD` for that same polynomial, without building
   its coefficients.
 
 Time Complexity:

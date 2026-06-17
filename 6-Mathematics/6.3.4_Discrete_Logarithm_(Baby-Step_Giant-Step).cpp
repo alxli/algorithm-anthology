@@ -6,11 +6,11 @@ logarithm and underlies Diffie-Hellman key exchange, order computations in the m
 and many number-theory reductions.
 
 The baby-step giant-step method writes $x = np - q$ for a block size $n$ near the square root of the
-modulus. It tabulates the "baby steps" $b * a^q$ for $q$ in $[0, n]$, then walks the "giant steps"
-$a^{np}$ for increasing $p$ until one lands in the table, yielding $x = np - q$. This trades the
-linear scan of all exponents for $O(\sqrt m)$ work and memory. A short reduction loop first strips
-common factors between $a$ and $m$, so the routine works for any modulus, not only when $a$ and $m$
-are coprime.
+modulus. It tabulates the "baby steps" $b \cdot a^q$ for $q$ in $[0, n]$, then walks the "giant
+steps" $a^{np}$ for increasing $p$ until one lands in the table, yielding $x = np - q$. This trades
+the linear scan of all exponents for $O(\sqrt m)$ work and memory. A short reduction loop first
+strips common factors between $a$ and $m$, so the routine works for any modulus, not only when $a$
+and $m$ are coprime.
 
 - `discrete_log(a, b, m)` returns the smallest nonnegative `x` with `a^x` congruent to `b` modulo
   `m`, or $-1$ if no such `x` exists. Requires `m` $\geq 1$; `a` and `b` are reduced modulo `m`

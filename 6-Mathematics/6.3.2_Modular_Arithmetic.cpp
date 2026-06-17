@@ -2,7 +2,7 @@
 
 Wraps arithmetic modulo a compile-time constant in a small value type. This is a common contest
 helper for dynamic programming, combinatorics, polynomial operations, and any calculation where all
-answers are taken modulo some number $P$ such as $10^9 + 7$.
+answers are taken modulo some number $p$ such as $10^9 + 7$.
 
 The implementation is intentionally close to common contest "Mint" templates: normalization happens
 at construction, arithmetic operators are overloaded, mixed integer operations are supported through
@@ -23,19 +23,19 @@ Two integer types are at play: the type of the modulus stores the representative
 construction, multiplication, and inverses widen through an intermediate type chosen automatically
 from the storage width - `int64_t` for 32-bit storage, or `__int128` (a GCC/Clang extension, in
 line with this book's use of `__builtin` functions) for 64-bit storage; on compilers without
-`__int128`, only 32-bit moduli are supported. The requirements are that $2P$ fits the storage type
-(for addition) and $(P - 1)^2$ fits the intermediate type (for the widening multiply), so any
+`__int128`, only 32-bit moduli are supported. The requirements are that $2p$ fits the storage type
+(for addition) and $(p - 1)^2$ fits the intermediate type (for the widening multiply), so any
 modulus up to half the storage type's range works out of the box; 64-bit moduli simply pay the cost
 of slower 128-bit multiplies. (Some contest templates instead estimate the multiply's quotient in
 `long double` to avoid `__int128`; beware that this requires x86's 80-bit `long double` and silently
 breaks for large moduli on ARM, where `long double` is only 64-bit.)
 
 Division uses the extended Euclidean algorithm, so the divisor only needs to be coprime to the
-modulus. For the factorial-table combination helper, the usual contest assumption is that $P$ is
-prime and the requested factorials are invertible modulo $P$.
+modulus. For the factorial-table combination helper, the usual contest assumption is that $p$ is
+prime and the requested factorials are invertible modulo $p$.
 
 - `Modular<MOD>(x)` constructs the residue class of integer `x` modulo `MOD`.
-- `value()` and `operator()()` return the stored representative in $[0, P)$.
+- `value()` and `operator()()` return the stored representative in $[0, `MOD`)$.
 - `pow(n)` returns this value raised to nonnegative integer exponent `n`.
 - `inv()` returns the multiplicative inverse, asserting it exists.
 - Operators `+`, `-`, `*`, `/`, comparison, increment, decrement, and stream I/O are overloaded.
@@ -50,7 +50,7 @@ prime and the requested factorials are invertible modulo $P$.
 Time Complexity:
 - O(1) per addition, subtraction, multiplication, comparison, and stream output.
 - O(log n) per call to `pow(n)`.
-- O(log P) per call to `inv()` and division.
+- O(log `MOD`) per call to `inv()` and division.
 - O(n) total table growth to answer factorials and combinations up to size `n`.
 
 Space Complexity:

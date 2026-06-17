@@ -10,9 +10,9 @@ maximum-weight matching in bipartite graphs, use Hungarian or min-cost max-flow;
 matching in general graphs, use the weighted blossom algorithm in the next section.
 
 - `blossom()` returns a matching for a global, bidirectionally pre-populated adjacency list `adj`
-  which must consist of nodes numbered from 0 to `adj.size() - 1`. The returned vector `match` has
-  `match[u] = v` and `match[v] = u` when `u` and `v` are matched, or `match[u] = -1` when `u` is
-  unmatched.
+  which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`. The returned vector
+  `match` has `match[u] == v` and `match[v] == u` when `u` and `v` are matched, or `match[u] == -1`
+  when `u` is unmatched.
 
 Time Complexity:
 - O(n^3) per call to `blossom()`, where $n$ is the number of nodes.
@@ -30,8 +30,8 @@ Space Complexity:
 #include <vector>
 
 std::vector<int> blossom(const std::vector<std::vector<int>> &adj) {
-  int nodes = static_cast<int>(adj.size());
-  std::vector<int> match(nodes, -1), label(nodes), parent(nodes), base(nodes), aux(nodes, -1);
+  int n = static_cast<int>(adj.size());
+  std::vector<int> match(n, -1), label(n), parent(n), base(n), aux(n, -1);
   std::queue<int> q;
   int aux_time = -1;
   auto lca = [&](int u, int v) {
@@ -103,7 +103,7 @@ std::vector<int> blossom(const std::vector<std::vector<int>> &adj) {
     }
     return false;
   };
-  for (int i = 0; i < nodes; i++) {
+  for (int i = 0; i < n; i++) {
     if (match[i] == -1) {
       for (int v : adj[i]) {
         if (i != v && match[v] == -1) {
@@ -114,7 +114,7 @@ std::vector<int> blossom(const std::vector<std::vector<int>> &adj) {
       }
     }
   }
-  for (int i = 0; i < nodes; i++) {
+  for (int i = 0; i < n; i++) {
     if (match[i] == -1) {
       find_path(i);
     }

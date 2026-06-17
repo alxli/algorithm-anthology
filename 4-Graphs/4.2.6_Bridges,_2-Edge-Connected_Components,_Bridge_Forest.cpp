@@ -12,12 +12,12 @@ nodes into a bridge tree, or a bridge forest when the original graph is disconne
 from a block-cut forest: the bridge forest describes edge connectivity, while the block-cut forest
 describes vertex connectivity using articulation points and vertex-biconnected components.
 
-- `BridgeDecomposition(n)` constructs an undirected graph on nodes numbered from 0 to `n - 1`.
+- `BridgeDecomposition(n)` constructs an undirected graph of `n` nodes numbered [0, `n`).
 - `add_edge(u, v)` adds the undirected edge `u`-`v`. Parallel edges are supported.
 - `build_bridges()` populates `bridges`.
 - `build_bridge_forest()` populates `component`, `two_edge_components`, and `bridge_forest` using
-  the results of the previous `build_bridges()` call.
-- `component[u]` stores the 2-edge-connected component ID containing vertex `u`.
+  the results of the previous `build_bridges()` call. After the call, `component[u]` stores the
+  2-edge-connected component ID containing vertex `u`.
 
 Time Complexity:
 - O(max(n, m)) per call to `build_bridges()` followed by `build_bridge_forest()`, where $n$ is the
@@ -40,7 +40,7 @@ struct BridgeDecomposition {
   std::vector<std::pair<int, int>> edges, bridges;
   int timer;
 
-  BridgeDecomposition(int nodes = 0) : adj(nodes) {}
+  BridgeDecomposition(int n = 0) : adj(n) {}
 
   void add_edge(int u, int v) {
     int id = static_cast<int>(edges.size());
@@ -73,14 +73,14 @@ struct BridgeDecomposition {
   }
 
   void build_bridges() {
-    int nodes = static_cast<int>(adj.size());
+    int n = static_cast<int>(adj.size());
     bridges.clear();
-    lowlink.assign(nodes, 0);
-    tin.assign(nodes, 0);
-    visited.assign(nodes, false);
+    lowlink.assign(n, 0);
+    tin.assign(n, 0);
+    visited.assign(n, false);
     is_bridge_edge.assign(edges.size(), false);
     timer = 0;
-    for (int i = 0; i < nodes; i++) {
+    for (int i = 0; i < n; i++) {
       if (!visited[i]) {
         dfs_bridges(i, -1);
       }
@@ -99,10 +99,10 @@ struct BridgeDecomposition {
   }
 
   void build_bridge_forest() {
-    int nodes = static_cast<int>(adj.size());
-    component.assign(nodes, -1);
+    int n = static_cast<int>(adj.size());
+    component.assign(n, -1);
     two_edge_components.clear();
-    for (int i = 0; i < nodes; i++) {
+    for (int i = 0; i < n; i++) {
       if (component[i] == -1) {
         two_edge_components.push_back({});
         dfs_component(i, static_cast<int>(two_edge_components.size()) - 1);

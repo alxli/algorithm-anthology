@@ -11,16 +11,16 @@ All functions below take a vector `a` of $n$ comparable values and return a vect
 A "less" query uses a strictly smaller neighbor and a "greater" query uses a strictly larger one;
 changing the comparison from strict to non-strict (e.g. `>=` to `>`) toggles how ties are handled.
 
-- `previous_less(a)` returns, for each `i`, the largest index `j < i` with `a[j] < a[i]`, or $-1$ if
+- `previous_less(a)` returns, for each $i$, the largest index $j < i$ with $a[j] < a[i]$, or $-1$ if
   there's no such index.
-- `next_less(a)` returns, for each `i`, the smallest index `j > i` with `a[j] < a[i]`, or `n` if
+- `next_less(a)` returns, for each $i$, the smallest index $j > i$ with $a[j] < a[i]$, or $n$ if
   there's no such index.
-- `previous_greater(a)` returns, for each `i`, the largest index `j < i` with `a[j] > a[i]`, or
-  $-1$ if there's no such index.
-- `next_greater(a)` returns, for each `i`, the smallest index `j > i` with `a[j] > a[i]`, or `n` if
+- `previous_greater(a)` returns, for each $i$, the largest index $j < i$ with $a[j] > a[i]$, or $-1$
+  if there's no such index.
+- `next_greater(a)` returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if
   there's no such index.
 - `largest_rectangle(heights)` returns the maximum area of an axis-aligned rectangle that fits under
-  the given histogram, where bar `i` has width 1 and height `heights[i]`.
+  the given histogram, given an array of `heights` where each bar has width 1.
 
 Time Complexity:
 - O(n) per call to all functions, where $n$ is the size of the input.

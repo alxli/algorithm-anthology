@@ -6,11 +6,11 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 - `y_combinator(f)` wraps a recursive lambda so that the lambda can call itself as its first
   argument.
 - `Rep(i,N)`, `For(i,L,H)`, `Rev(i,N)`, `Dwn(i,H,L)`, and `Each(x,C)` are compact loop macros.
+- `sz(c)` returns the signed size of a container.
 - `ckmin(a, b)` assigns `a = b` and returns true if `b < a` before the assignment.
 - `ckmax(a, b)` assigns `a = b` and returns true if `a < b` before the assignment.
-- `ssize(c)` returns the signed size of a container.
 - `between(x, a, b)` returns whether `a` $\leq$ `x` $\leq$ `b`.
-- `clmp(x, a, b)` returns `x` clamped into the interval `[a, b]`. This is not needed on C++17 and
+- `clmp(x, a, b)` returns `x` clamped into the interval [`a`, `b`]. This is not needed on C++17 and
   later, where std::clamp() is available.
 - `ceil_div(a, b)` and `floor_div(a, b)` divide signed integers with mathematical rounding toward
   positive or negative infinity. Requires `b != 0`.
@@ -20,9 +20,9 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 - `min_priority_queue<T>` is a min-heap alias.
 - `RNG()` constructs a 64-bit Mersenne Twister seeded from the steady clock.
 - `RNG(seed)` constructs a reproducible 64-bit Mersenne Twister.
-- `rng.uniform_int(lo, hi)` returns a random integer in the inclusive range `[lo, hi]`.
-- `rng.uniform_real(lo, hi)` returns a random real number in the half-open range `[lo, hi)`.
-- `rng.shuffle(lo, hi)` randomly shuffles the iterator range `[lo, hi)`.
+- `rng.uniform_int(lo, hi)` returns a random integer in the inclusive range [`lo`, `hi`].
+- `rng.uniform_real(lo, hi)` returns a random real number in the half-open range [`lo`, `hi`).
+- `rng.shuffle(lo, hi)` randomly shuffles the range [`lo`, `hi`).
 
 */
 
@@ -61,9 +61,9 @@ decltype(auto) y_combinator(Fun &&fun) {
 }
 
 // clang-format off
+template<class C> int sz(const C &c) { return static_cast<int>(c.size()); }
 template<class T, class U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
 template<class T, class U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
-template<class C> int ssize(const C &c) { return static_cast<int>(c.size()); }
 template<class T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
 template<class T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
 // clang-format on
@@ -123,11 +123,14 @@ struct RNG {
 /*** Example Usage ***/
 
 int main() {
-  int loop_sum = 0;
-  For(i, 2, 5) loop_sum += i;
-  Rev(i, 3) loop_sum += i;
-  assert(loop_sum == 17);
+  int tot = 0;
+  Rep(i, 4) tot += i;     // 0 + 1 + 2 + 3 = 6
+  For(i, 2, 5) tot += i;  // 6 + (2 + 3 + 4 + 5) = 20
+  Rev(i, 3) tot += i;     // 20 + (2 + 1 + 0) = 23
+  Dwn(i, 8, 6) tot += i;  // 23 + (8 + 7 + 6) = 44
+  assert(tot == 44);
 
+  // Recursive lambda with y_combinator.
   auto fib =
       y_combinator([](auto fib, int n) -> int { return n < 2 ? n : fib(n - 1) + fib(n - 2); });
   assert(fib(10) == 55);
@@ -142,13 +145,19 @@ int main() {
   dfs(dfs, 0, -1);
   assert(seen == 3);
 
+  // Recursive lambdas are automatically supported in C++23.
+#if __cplusplus >= 202302L
+  auto fact = [&](this auto fact, int n) -> int { return n ? n * fact(n - 1) : 1; };
+  assert(fact(5) == 120);
+#endif
+
   int x = 10;
   assert(ckmin(x, 7) && x == 7);
   assert(!ckmin(x, 9) && x == 7);
   assert(ckmax(x, 11) && x == 11);
 
   std::vector<int> v = {1, 2, 3};
-  assert(ssize(v) == 3);
+  assert(sz(v) == 3);
   assert(between(2, 1, 3));
   assert(clmp(10, 1, 3) == 3);
   assert(floor_div(-7, 3) == -3);
@@ -168,6 +177,6 @@ int main() {
   int r = rng.uniform_int(1, 6);
   assert(1 <= r && r <= 6);
   rng.shuffle(v.begin(), v.end());
-  assert(ssize(v) == 3);
+  assert(sz(v) == 3);
   return 0;
 }

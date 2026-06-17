@@ -5,7 +5,7 @@ half-plane of that line. The polygon is walked edge by edge: vertices on the lef
 are kept, and whenever an edge crosses the line, the intersection point is appended to the output.
 
 - `convex_cut(lo, hi, p, q)` returns the portion of the polygon lying on or to the left of the
-  directed line `p` $\to$ `q`. The input range `[lo, hi)` must contain the vertices of a convex
+  directed line `p` $\to$ `q`. The input range [`lo`, `hi`) must contain the vertices of a convex
   polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves
   that boundary order. If `p` equals `q`, the cutting line is invalid and an error is thrown.
 

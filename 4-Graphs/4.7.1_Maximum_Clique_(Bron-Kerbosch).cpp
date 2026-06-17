@@ -9,7 +9,7 @@ nodes that may still be added and the set of nodes already excluded. Choosing a 
 branching on its neighbors prunes large parts of the search, keeping it efficient on most graphs.
 
 - `max_clique()` returns the maximum clique size for a global, bidirectionally pre-populated
-  adjacency matrix `adj` which must consist of nodes numbered from 0 to `adj.size() - 1`.
+  adjacency matrix `adj` which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`.
 - `max_clique_weighted()` additionally uses global `w` and returns the maximum clique weight.
 
 These implementations use bitmasks of unsigned 64-bit integers, so the number of nodes must be less
@@ -33,10 +33,10 @@ std::vector<std::vector<bool>> adj;
 std::vector<int> w;
 
 std::vector<uint64_t> build_mask_graph() {
-  int nodes = static_cast<int>(adj.size());
-  std::vector<uint64_t> g(nodes);
-  for (int i = 0; i < nodes; i++) {
-    for (int j = 0; j < nodes; j++) {
+  int n = static_cast<int>(adj.size());
+  std::vector<uint64_t> g(n);
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n; j++) {
       if (adj[i][j]) {
         g[i] |= 1ULL << j;
       }
@@ -63,9 +63,9 @@ int max_clique_rec(const std::vector<uint64_t> &g, uint64_t curr, uint64_t pool,
 }
 
 int max_clique() {
-  int nodes = static_cast<int>(adj.size());
+  int n = static_cast<int>(adj.size());
   std::vector<uint64_t> g = build_mask_graph();
-  return max_clique_rec(g, 0, (1ULL << nodes) - 1, 0);
+  return max_clique_rec(g, 0, (1ULL << n) - 1, 0);
 }
 
 int max_clique_weighted_rec(
@@ -93,9 +93,9 @@ int max_clique_weighted_rec(
 }
 
 int max_clique_weighted() {
-  int nodes = static_cast<int>(adj.size());
+  int n = static_cast<int>(adj.size());
   std::vector<uint64_t> g = build_mask_graph();
-  return max_clique_weighted_rec(g, 0, (1ULL << nodes) - 1, 0);
+  return max_clique_weighted_rec(g, 0, (1ULL << n) - 1, 0);
 }
 
 /*** Example Usage ***/

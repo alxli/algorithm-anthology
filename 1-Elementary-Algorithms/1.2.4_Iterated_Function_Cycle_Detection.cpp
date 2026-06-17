@@ -19,9 +19,9 @@ evaluating $f$ is expensive and constant factors matter. In the detection phase,
 one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare
 twice, using three calls to $f$ per step.
 
-- `find_cycle_floyd(f, x0)` returns the reached cycle as a pair `(start, length)`, where `start`
-  is the smallest index $i$ such that $x_i$ is in the cycle, and `length` is the number of
-  distinct values in the cycle.
+- `find_cycle_floyd(f, x0)` returns the reached cycle as a pair (`start`, `length`), where `start`
+  is the smallest index $i$ such that $x_i$ is in the cycle, and `length` is the number of distinct
+  values in the cycle.
 - `find_cycle_brent(f, x0)` does the same with fewer calls to $f$ in many cases.
 
 Time Complexity:

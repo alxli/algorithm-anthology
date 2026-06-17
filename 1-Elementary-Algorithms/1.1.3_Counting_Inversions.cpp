@@ -9,7 +9,7 @@ whenever the merge step emits an element from the right half, that element jumps
 unmerged left-half element, and exactly that many inversions are added to the count.
 
 - `inversions(lo, hi)` uses merge sort to return the number of inversions given two random-access
-  iterators as a range `[lo, hi)`. The input range will be sorted after the function call. 
+  iterators as a range [`lo`, `hi`). The input range will be sorted after the function call. 
   Optionally, a comparison function object specifying a strict weak ordering may be specified to
   replace the default `operator<`.
 - `inversions(a)` uses coordinate compression and a Fenwick tree to return the number of

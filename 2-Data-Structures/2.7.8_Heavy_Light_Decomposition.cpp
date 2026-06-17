@@ -8,12 +8,11 @@ when its subtree contains at least half of its parent's nodes, so walking from a
 crosses O(log n) different paths. Each path stores its values in its own lazy segment tree,
 decomposing any path query or update into O(log n) contiguous range operations.
 
-The query operation is defined by an associative `combine()` function which satisfies
-`combine(x, combine(y, z)) = combine(combine(x, y), z)` for all values `x`, `y`, and `z` in the
-tree. The default code below assumes a numerical tree type, defining queries for the "min" of the
-target range. Another possible query operation is "sum", in which case `combine(a, b)` should return
-`a + b`. For direction-independent path queries, `combine()` should also be commutative; otherwise,
-store enough information in each aggregate to combine paths in the required order.
+The query operation is defined by an associative `combine()` function. The default code below
+assumes a numerical tree type, defining queries for the "min" of the target range. Another possible
+query operation is "sum", in which case `combine(a, b)` should return `a + b`. For
+direction-independent path queries, `combine()` should also be commutative; otherwise, store enough
+information in each aggregate to combine paths in the required order.
 
 The update operation is defined by `apply_delta()` and `compose_deltas()`. A delta must act on an
 aggregate summary of a path of length `len`: `apply_delta(v, d, len)` returns the aggregate after
@@ -25,9 +24,9 @@ The default code below defines updates that "set" a path's edges or nodes to a n
 increment updates, `apply_delta(v, d, len)` would return `v + d` for min/max queries, or
 `v + d * len` for sum queries, and `compose_deltas(old, d)` would return `old + d`.
 
-- `HeavyLight(adj, v)` constructs a new heavy light decomposition on a forest defined by the
+- `HeavyLight<T>(adj, v)` constructs a new heavy light decomposition on a forest defined by the
   adjacency list `adj`, with all values initialized to `v`. The adjacency list must consist of only
-  the integers from 0 to `adj.size() - 1`, inclusive. No duplicate edges should exist.
+  the integers [0, `n`), where `n` is `adj.size()`. No duplicate edges should exist.
 - `query(u, v)` returns the result of `combine()` applied to all values on the path from node `u` to
   node `v`, or throws if `u` and `v` are in different trees.
 - `update(u, v, d)` modifies all values on the path from node `u` to node `v` by respectively

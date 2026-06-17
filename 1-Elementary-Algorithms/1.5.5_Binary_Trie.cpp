@@ -1,12 +1,12 @@
 /*
 
-Maintain a multiset of non-negative $b$-bit integers as a binary trie, storing each value as a
+Maintain a multiset of nonnegative $b$-bit integers as a binary trie, storing each value as a
 root-to-leaf path of its bits from the most significant (bit $b - 1$) down to the least significant.
 Every node keeps a count of the stored values passing through it, which supports deletion and
 counting queries, and lets the trie answer XOR-extremal queries by a greedy walk down the bits.
 
-The classic application is the maximum-XOR query: to maximize `x XOR y` over all stored `y`, walk
-from the most significant bit. At each step, descend toward the child whose bit differs from that of
+The classic application is the maximum-XOR query: to maximize `x ^ y` over all stored `y`, walk from
+the most significant bit. At each step, descend toward the child whose bit differs from that of
 `x` whenever such a branch exists, since setting a higher bit of the result always dominates any
 combination of lower bits. The minimum-XOR query is the mirror image, preferring the matching bit.
 
@@ -14,12 +14,12 @@ This is a multiset (a value may be inserted more than once), and is distinct fro
 basis spans subset XORs of a fixed set, whereas this answers XOR queries against the stored elements
 themselves with support for insertion and deletion.
 
-Values must lie in `[0, 2^BITS)`; the template parameters select the unsigned word type `U` and the
-bit width `BITS`, which must be less than the width of `U` (for example, 30 with `uint32_t` or
-62 with `uint64_t`). Nodes are kept in a pool indexed by integer, where index 0 is the root and also
-serves as the null child.
+Values must lie in $[0, 2^b)$ for bit width $b$; the template parameters select the unsigned word
+type `U` and the bit width `BITS`, which must be less than the width of `U` (for example, 30 with
+`uint32_t` or 62 with `uint64_t`). Nodes are kept in a pool indexed by integer, where index 0 is the
+root and also serves as the null child.
 
-- `BinaryTrie()` constructs an empty multiset.
+- `BinaryTrie<U, BITS>()` constructs an empty multiset.
 - `size()` returns the number of stored values, and `empty()` returns whether there are none.
 - `insert(x)` adds one occurrence of `x`.
 - `erase(x)` removes one occurrence of `x`, returning whether one was present.

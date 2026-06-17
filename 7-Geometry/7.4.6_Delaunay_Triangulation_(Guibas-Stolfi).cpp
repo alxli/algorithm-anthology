@@ -1,19 +1,20 @@
 /*
 
-Given a set of two-dimensional points, computes a Delaunay triangulation: a triangulation of the
-convex hull such that no input point lies strictly inside the circumcircle of any triangle.
+Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of $P$ is a
+triangulation of the convex hull of P such that no point of P lies strictly inside the circumcircle
+of any triangle in the triangulation. The Delaunay triangulation is not necessarily unique when four
+or more points are cocircular.
 
-This implementation uses the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data
-structure. The point set is split in half, each half is triangulated recursively, and the halves are
-stitched together from the bottom up by a sequence of cross edges, with circumcircle tests deciding
-each connecting edge and deleting invalidated ones. Input points are copied to `Point` with `double`
-coordinates, sorted lexicographically, and duplicates are removed. If four or more points are
-cocircular, the Delaunay triangulation is not unique; this implementation returns one valid
-triangulation.
+This implementation produces one valid triangulation using the Guibas-Stolfi divide-and-conquer
+algorithm with a quad-edge data structure. The point set is split in half, each half is triangulated
+recursively, and the halves are stitched together from the bottom up by a sequence of cross edges,
+with circumcircle tests deciding each connecting edge and deleting invalidated ones. Input points
+are copied to `Point` with `double` coordinates, sorted lexicographically, and duplicates are
+removed.
 
-- `delaunay_triangulation(lo, hi)` returns the triangles of one Delaunay triangulation for the input
-  range `[lo, hi)`. The input iterator value type may be any point type with numeric `.x` and `.y`
-  members. The returned triangles use `Point` with `double` coordinates. Duplicate points are
+- `delaunay_triangulation(lo, hi)` returns the triangles of one Delaunay triangulation for a range
+  [`lo`, `hi`) of points. The input iterator value type may be any point type with numeric `.x` and
+  `.y` members. The returned triangles use `Point` with `double` coordinates. Duplicate points are
   ignored. If fewer than three non-collinear unique points are available, the result is empty. Note
   that all predicates are evaluated using floating-point arithmetic, so results are subject to
   numerical error on nearly collinear or nearly cocircular inputs.

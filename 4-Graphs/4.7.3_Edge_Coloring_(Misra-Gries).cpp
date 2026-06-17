@@ -16,8 +16,8 @@ step keeps the partial coloring proper and never introduces a $(D + 2)$-th color
 The graph must be simple: no self-loops and no repeated edges.
 
 - `edge_coloring(n, edges)` returns a vector of colors, one per entry of `edges`, using colors in
-  the range $[0, D]$ where $D$ is the maximum degree. Nodes are numbered from 0 to `n - 1`, and
-  `edges[i]` is an undirected edge `u`-`v`.
+  the range $[0, D]$ where $D$ is the maximum degree. Nodes are numbered [0, `n`), and `edges[i]` is
+  an undirected edge `u`-`v`.
 
 Time Complexity:
 - O(n^2 * m) in the worst case for `edge_coloring()`, where $n$ is the number of nodes and $m$ the
