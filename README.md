@@ -27,9 +27,9 @@ The implementations are written with the following principles in mind:
 
 This project began as a personal contest codebook, so it still favors single-file snippets, predictable APIs, compact examples, and low constants. It has also become a record of design decisions: what to make generic, what to leave explicit, when to include a slow version, and how to make a known algorithm pleasant to use.
 
-Use this book actively: annotate it, delete what you dislike, rename functions to match your own habits, and stress-test anything you intend to trust.
+Use this anthology actively: annotate it, delete what you dislike, rename functions to match your own habits, and stress-test anything you intend to trust.
 
-Cheers.<br>
+Cheers,
 — Alex
 
 ## Portability Note
