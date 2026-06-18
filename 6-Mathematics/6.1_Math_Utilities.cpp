@@ -55,11 +55,11 @@ Epsilon Comparisons:
   is used: values within `EPS` of each other are considered equal, and `LT`/`GT`/`LE`/`GE` shift
   the boundary by `EPS` accordingly.
 - `rEQ(ref, val)` returns whether `val` equals reference `ref` within relative error `EPS`. The
-  tolerance scales with `|ref|`, so `rEQ(ref, val)` is NOT the same as `rEQ(val, ref)`. Use this
+  tolerance scales with $|`ref`|$, so `rEQ(ref, val)` is NOT the same as `rEQ(val, ref)`. Use this
   when one argument is a known exact value and the other is a computed approximation. Degenerates
   to exact comparison when `ref` = 0, since the tolerance collapses to 0; use `EQ` near zero.
 - `rEQ_sym(x, y)` is the symmetric (commutative) variant: tolerance scales with
-  `max(|x|, |y|)`, so the result is the same regardless of argument order. Still degenerates
+  $max(|`x`|, |`y`|)$, so the result is the same regardless of argument order. Still degenerates
   near zero when both arguments are close to 0.
 
 */
