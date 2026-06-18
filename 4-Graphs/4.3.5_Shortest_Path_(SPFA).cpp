@@ -45,7 +45,6 @@ bool spfa(int start) {
   pred.assign(n, -1);
   std::vector<int> relax_count(n, 0);
   std::vector<bool> in_queue(n, false);
-  in_queue.assign(n, false);
   std::queue<int> q;
   dist[start] = 0;
   q.push(start);
