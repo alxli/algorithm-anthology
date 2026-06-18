@@ -1291,8 +1291,8 @@ Finds every root $x$ for a polynomial $p$ such that $p(x) = 0$ by differentiatio
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{horner\_eval()}, where $n$ is the degree of the polynomial.
-  \item $O(n \log p)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $p = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
-  \item $O(n^{3} \log p)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $p = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n \log d)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n^{3} \log d)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -1381,7 +1381,7 @@ int main() {
 Finds every complex root $x$ for a polynomial $p$ with complex coefficients such that $p(x) = 0$. Laguerre's method is a root-finding iteration with reliable, near-cubic convergence from almost any starting point. Once a root is found it is removed by polynomial deflation, and the iteration repeats on the lower-degree quotient until every root has been extracted.
 
 \begin{compactitem}
-  \item \inlinecode{horner\_eval(p, x)} evaluates the complex polynomial \inlinecode{p} of degree $d$ (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) at \inlinecode{x}, using Horner's method, returning a pair where the first value is the final result $p(x)$ and the second value is the quotient polynomial produced by synthetic division by $(X - x)$.
+  \item \inlinecode{horner\_eval(p, x)} evaluates a complex polynomial $p$ of degree $d$ (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) at \inlinecode{x}, using Horner's method, returning a pair where the first value is the final result $p(x)$ and the second value is the quotient polynomial $q$ from the identity $p(t) = (t - x)q(t) + p(x)$.
   \item \inlinecode{find\_one\_root(p, x0)} returns a complex root $x$ for a polynomial \inlinecode{p} (represented as a vector of size $d + 1$ where \inlinecode{p[i]} stores the complex coefficient for the $x^i$ term) using an initial guess \inlinecode{x0} which should be relatively close to $x$. The root is found to a tolerance of \inlinecode{EPS} in absolute or relative error (whichever is reached first).
   \item \inlinecode{find\_all\_roots(p)} returns a vector of all complex roots for a complex polynomial \inlinecode{p}. The roots are found to a tolerance of \inlinecode{EPS} in absolute or relative error (whichever is reached first).
 \end{compactitem}
@@ -1390,8 +1390,8 @@ Finds every complex root $x$ for a polynomial $p$ with complex coefficients such
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(n)$ per call to \inlinecode{horner\_eval()}, where $n$ is the degree of the polynomial.
-  \item $O(n \log p)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $p = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
-  \item $O(n^{2} \log p)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $p = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n \log d)$ per call to \inlinecode{find\_one\_root()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
+  \item $O(n^{2} \log d)$ per call to \inlinecode{find\_all\_roots()}, where $n$ is the degree of the polynomial and $d = -\log_{10}({\inlinecodemath{EPS}})$ is the number of digits of absolute or relative precision that is desired.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}

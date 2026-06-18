@@ -49,7 +49,7 @@ int prim_mst() {
       continue;
     }
     visit[i] = true;
-    using qnode = std::tuple<int, int, int, int>;  // (weight, from, to, edge_id)
+    using qnode = std::tuple<int, int, int, int>;  // (weight, u, v, edge_id)
     std::priority_queue<qnode, std::vector<qnode>, std::greater<qnode>> pq;
     for (auto &[v, w, id] : adj[i]) {
       pq.emplace(w, i, v, id);

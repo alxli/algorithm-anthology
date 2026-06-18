@@ -90,7 +90,7 @@ class SuffixArrayManberMyers {
     return lcp;
   }
 
-  size_t find(const string &needle) {
+  std::size_t find(const string &needle) {
     if (needle.empty()) {
       return 0;
     }

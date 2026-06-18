@@ -13,11 +13,7 @@ solutions must return comparable results.
 
 */
 
-#include <algorithm>
-#include <cassert>
 #include <optional>
-#include <random>
-#include <vector>
 
 template<typename Generate, typename Solve, typename Brute>
 auto stress(int trials, Generate generate, Solve solve, Brute brute)
@@ -32,6 +28,12 @@ auto stress(int trials, Generate generate, Solve solve, Brute brute)
 }
 
 /*** Example Usage ***/
+
+#include <algorithm>
+#include <cassert>
+#include <random>
+#include <vector>
+using namespace std;
 
 int main() {
   std::mt19937 rng(123);

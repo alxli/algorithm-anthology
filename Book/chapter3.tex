@@ -167,7 +167,7 @@ Stripping:
 
 \begin{lstlisting}[language=C++]
 string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
-  size_t pos = s.find_first_not_of(delim);
+  std::size_t pos = s.find_first_not_of(delim);
   if (pos != string::npos) {
     s.erase(0, pos);
   }
@@ -175,7 +175,7 @@ string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
 }
 
 string &rstrip(string &s, const string &delim = " \n\t\v\f\r") {
-  size_t pos = s.find_last_not_of(delim);
+  std::size_t pos = s.find_last_not_of(delim);
   if (pos != string::npos) {
     s.erase(pos + 1);
   }
@@ -228,7 +228,7 @@ bool contains(const string &s, const string &needle) {
 
 std::vector<int> find_all(const string &haystack, const string &needle) {
   std::vector<int> res;
-  size_t pos = haystack.find(needle, 0);
+  std::size_t pos = haystack.find(needle, 0);
   while (pos != string::npos) {
     res.push_back(pos);
     pos = haystack.find(needle, pos + 1);
@@ -241,7 +241,7 @@ int count(const string &haystack, const string &needle) {
     return 0;
   }
   int res = 0;
-  size_t pos = haystack.find(needle, 0);
+  std::size_t pos = haystack.find(needle, 0);
   while (pos != string::npos) {
     res++;
     pos = haystack.find(needle, pos + needle.size());
@@ -254,7 +254,7 @@ string replace(const string &s, const string &old, const string &replacement) {
     return s;
   }
   string res(s);
-  size_t pos = 0;
+  std::size_t pos = 0;
   while ((pos = res.find(old, pos)) != string::npos) {
     res.replace(pos, old.length(), replacement);
     pos += replacement.length();
@@ -673,12 +673,12 @@ namespace std {
 
 template<typename A, typename B>
 struct hash<pair<A, B>> {
-  size_t operator()(const pair<A, B> &p) const { return ::GenericHasher<pair<A, B>>()(p); }
+  std::size_t operator()(const pair<A, B> &p) const { return ::GenericHasher<pair<A, B>>()(p); }
 };
 
 template<class... Ts>
 struct hash<tuple<Ts...>> {
-  size_t operator()(const tuple<Ts...> &t) const { return ::GenericHasher<tuple<Ts...>>()(t); }
+  std::size_t operator()(const tuple<Ts...> &t) const { return ::GenericHasher<tuple<Ts...>>()(t); }
 };
 
 }  // namespace std
@@ -1410,7 +1410,7 @@ class KMP {
     }
   }
 
-  size_t find_in(const string &haystack) {
+  std::size_t find_in(const string &haystack) {
     int m = static_cast<int>(needle.size());
     if (m == 0) {
       return 0;
@@ -1490,7 +1490,7 @@ std::vector<int> z_array(const Seq &s) {
   return z;
 }
 
-size_t find(const string &haystack, const string &needle) {
+std::size_t find(const string &haystack, const string &needle) {
   if (needle.empty()) {
     return 0;
   }
@@ -1886,8 +1886,6 @@ The construction here is the Fredricksen-Kessler-Maiorana (FKM) algorithm. It co
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-namespace {
-
 void de_bruijn_gen(int t, int p, int k, int n, std::vector<int> &word, std::vector<int> &seq) {
   if (t > n) {
     if (n % p == 0) {
@@ -1904,8 +1902,6 @@ void de_bruijn_gen(int t, int p, int k, int n, std::vector<int> &word, std::vect
     de_bruijn_gen(t + 1, t, k, n, word, seq);
   }
 }
-
-}  // namespace
 
 std::vector<int> de_bruijn(int k, int n) {
   std::vector<int> word(n + 1, 0), seq;
@@ -2037,7 +2033,7 @@ class SuffixArrayManberMyers {
     return lcp;
   }
 
-  size_t find(const string &needle) {
+  std::size_t find(const string &needle) {
     if (needle.empty()) {
       return 0;
     }
@@ -2169,7 +2165,7 @@ class SuffixArrayCountingSort {
     return lcp;
   }
 
-  size_t find(const string &needle) {
+  std::size_t find(const string &needle) {
     if (needle.empty()) {
       return 0;
     }
@@ -2369,7 +2365,7 @@ class SuffixArrayDC3 {
     return lcp;
   }
 
-  size_t find(const string &needle) {
+  std::size_t find(const string &needle) {
     if (needle.empty()) {
       return 0;
     }

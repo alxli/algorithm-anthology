@@ -44,7 +44,7 @@ class BigInt {
   int sign;
 
   void normalize() {
-    size_t pos = digits.find_last_not_of('0');
+    std::size_t pos = digits.find_last_not_of('0');
     if (pos != std::string::npos) {
       digits.erase(pos + 1);
     } else {

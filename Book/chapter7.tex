@@ -2988,7 +2988,7 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Max Collinear Points}
+\subsection{Maximum Collinear Points}
 Given a set of points with integer coordinates, compute the maximum number of points that lie on one line. For every anchor point, normalize the direction vector to every other point by dividing by \inlinecode{gcd(abs(dx), abs(dy))} and choosing a canonical sign; equal normalized directions from the same anchor are collinear with it.
 
 \begin{compactitem}
@@ -3903,22 +3903,17 @@ template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
   return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
 }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
   return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
 }
-template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
 
 template<typename T>
 struct Point {
   T x, y;
   Point(T x = 0, T y = 0) : x(x), y(y) {}
   bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
-  // Lexicographic order used only to sort and deduplicate the input. With integer coordinates this
-  // is an exact total order; with floating-point coordinates the epsilon comparisons make it only
-  // an approximate, non-transitive order (not a strict weak ordering), which is fine for
-  // well-separated points but means near-coincident points may sort or deduplicate unpredictably.
-  bool operator<(const Point &p) const { return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x); }
 };
 
 template<typename T>
@@ -3967,14 +3962,14 @@ struct QuadEdgePool {
   QuadEdgePool(const QuadEdgePool &) = delete;
   QuadEdgePool &operator=(const QuadEdgePool &) = delete;
 
-  Edge<T> *make_edge(const Point<T> &from, const Point<T> &to) {
+  Edge<T> *make_edge(const Point<T> &u, const Point<T> &v) {
     Edge<T> *e1 = new Edge<T>, *e2 = new Edge<T>, *e3 = new Edge<T>, *e4 = new Edge<T>;
     edges.push_back(e1);
     edges.push_back(e2);
     edges.push_back(e3);
     edges.push_back(e4);
-    e1->origin = from;
-    e2->origin = to;
+    e1->origin = u;
+    e2->origin = v;
     e1->rot = e3;
     e2->rot = e4;
     e3->rot = e2;
@@ -4011,7 +4006,7 @@ struct QuadEdgePool {
 
 template<typename T>
 bool left_of(const Point<T> &p, Edge<T> *e) {
-  return GT(cross(e->origin, e->dest(), p), 0);
+  return LT(0, cross(e->origin, e->dest(), p));
 }
 
 template<typename T>
@@ -4021,7 +4016,7 @@ bool right_of(const Point<T> &p, Edge<T> *e) {
 
 template<typename T>
 bool in_circle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Point<T> &d) {
-  return GT(incircle(a, b, c, d), 0);
+  return LT(0, incircle(a, b, c, d));
 }
 
 template<typename T>
@@ -4036,7 +4031,7 @@ std::pair<Edge<T> *, Edge<T> *> build_triangulation(
     Edge<T> *a = pool.make_edge(p[lo], p[lo + 1]);
     Edge<T> *b = pool.make_edge(p[lo + 1], p[hi]);
     pool.splice(a->rev(), b);
-    int side = GT(cross(p[lo], p[lo + 1], p[hi]), 0)
+    int side = LT(0, cross(p[lo], p[lo + 1], p[hi]))
                    ? 1
                    : (LT(cross(p[lo], p[lo + 1], p[hi]), 0) ? -1 : 0);
     if (side == 0) {
@@ -4098,25 +4093,27 @@ std::pair<Edge<T> *, Edge<T> *> build_triangulation(
   return {ldo, rdo};
 }
 
-// Rotates a triangle's vertices so that the lexicographically smallest comes first, preserving the
-// cyclic (counterclockwise) order, to give each triangle a canonical, comparable representation.
 template<typename Pt>
-std::tuple<Pt, Pt, Pt> canonical(const Pt &a, const Pt &b, const Pt &c) {
-  if (b < a && b < c) {
-    return {b, c, a};
-  }
-  if (c < a && c < b) {
-    return {c, a, b};
-  }
-  return {a, b, c};
-}
-
-template<typename Pt>
-std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(std::vector<Pt> &p) {
+auto delaunay_triangulation(std::vector<Pt> &p) {
   using T = decltype(Pt::x);
-  std::sort(p.begin(), p.end());
+  using Triangle = std::tuple<Pt, Pt, Pt>;
+  // Forgo using epsilon comparisons here, since std::sort needs a strict weak ordering to avoid
+  // unpredictably sorting/deduping near-coincident points.
+  auto ptcmp = [](const Pt &a, const Pt &b) { return a.x == b.x ? a.y < b.y : a.x < b.x; };
+  // Rotates triangle vertices so that the lexicographically smallest comes first, preserving the
+  // cyclic (counterclockwise) order, to give each triangle a canonical, comparable representation.
+  auto canonical = [&](const Pt &a, const Pt &b, const Pt &c) -> Triangle {
+    if (ptcmp(b, a) && ptcmp(b, c)) {
+      return {b, c, a};
+    }
+    if (ptcmp(c, a) && ptcmp(c, b)) {
+      return {c, a, b};
+    }
+    return {a, b, c};
+  };
+  std::sort(p.begin(), p.end(), ptcmp);
   p.erase(std::unique(p.begin(), p.end()), p.end());
-  std::vector<std::tuple<Pt, Pt, Pt>> res;
+  std::vector<Triangle> res;
   if (p.size() < 3) {
     return res;
   }
@@ -4133,11 +4130,21 @@ std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(std::vector<Pt> &p) {
       face.push_back(curr->origin);
       curr = curr->lnext();
     } while (curr != start);
-    if (face.size() == 3 && GT(cross(face[0], face[1], face[2]), 0)) {
+    if (face.size() == 3 && LT(0, cross(face[0], face[1], face[2]))) {
       res.push_back(canonical(face[0], face[1], face[2]));
     }
   }
-  std::sort(res.begin(), res.end());
+  std::sort(res.begin(), res.end(), [&](const Triangle &t1, const Triangle &t2) {
+    const auto &[a1, b1, c1] = t1;
+    const auto &[a2, b2, c2] = t2;
+    if (ptcmp(a1, a2) || (!ptcmp(a2, a1) && ptcmp(b1, b2))) {
+      return true;
+    }
+    if (ptcmp(a2, a1) || (!ptcmp(a1, a2) && ptcmp(b2, b1))) {
+      return false;
+    }
+    return ptcmp(c1, c2);
+  });
   return res;
 }
 \end{lstlisting}

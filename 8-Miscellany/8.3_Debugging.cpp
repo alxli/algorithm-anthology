@@ -18,17 +18,13 @@ formatting local to this snippet.
 
 */
 
-#include <cassert>
 #include <iomanip>
 #include <iostream>
-#include <map>
-#include <set>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 template<typename T, typename = void>
 struct is_iterable : std::false_type {};
@@ -77,7 +73,7 @@ std::string dbg_repr(const std::pair<A, B> &p) {
   return "(" + dbg_repr(p.first) + ", " + dbg_repr(p.second) + ")";
 }
 
-template<typename Tuple, size_t... Is>
+template<typename Tuple, std::size_t... Is>
 std::string dbg_tuple_repr(const Tuple &t, std::index_sequence<Is...>) {
   std::string res = "(";
   bool first = true;
@@ -139,28 +135,34 @@ void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
 
 ***/
 
+#include <cassert>
+#include <map>
+#include <set>
+#include <vector>
+using namespace std;
+
 struct Point {
   int x, y;
 };
 
 // Can overload dbg_repr to dbg your custom structs.
-std::string dbg_repr(const Point &p) {
+string dbg_repr(const Point &p) {
   return "Point(" + dbg_repr(p.x) + ", " + dbg_repr(p.y) + ")";
 }
 
 struct Edge {
-  int from, to, weight;
+  int u, v, w;
 };
 
-std::string dbg_repr(const Edge &e) {
-  return "Edge{" + dbg_repr(e.from) + "->" + dbg_repr(e.to) + ", w=" + dbg_repr(e.weight) + "}";
+string dbg_repr(const Edge &e) {
+  return "Edge{" + dbg_repr(e.u) + "->" + dbg_repr(e.v) + ", w=" + dbg_repr(e.w) + "}";
 }
 
 int main() {
-  std::vector<int> v = {1, 2, 3};
-  std::map<std::string, int> mp = {{"a", 1}, {"b", 2}};
-  auto p = std::make_pair(4, std::string("x"));
-  auto t = std::make_tuple(1, true, std::string("ok"));
+  vector<int> v = {1, 2, 3};
+  map<string, int> mp = {{"a", 1}, {"b", 2}};
+  auto p = make_pair(4, string("x"));
+  auto t = make_tuple(1, true, string("ok"));
   Point pt{2, 3};
   Edge e{0, 1, 5};
   assert(dbg_repr(v) == "{1, 2, 3}");

@@ -30,7 +30,7 @@ Space Complexity:
 #include <vector>
 
 struct Edge {
-  int from, to;
+  int u, v;
   int64_t weight;
 };
 
@@ -41,9 +41,9 @@ int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
     std::vector<int64_t> min_in(n, INF);
     std::vector<int> pre(n, -1);
     for (const Edge &e : edges) {
-      if (e.from != e.to && e.weight < min_in[e.to]) {
-        min_in[e.to] = e.weight;
-        pre[e.to] = e.from;
+      if (e.u != e.v && e.weight < min_in[e.v]) {
+        min_in[e.v] = e.weight;
+        pre[e.v] = e.u;
       }
     }
     for (int v = 0; v < n; v++) {
@@ -79,12 +79,12 @@ int64_t directed_mst(int n, int root, std::vector<Edge> edges) {
       }
     }
     for (Edge &e : edges) {
-      int from = comp[e.from], to = comp[e.to];
-      if (from != to) {
-        e.weight -= min_in[e.to];
+      int u = comp[e.u], v = comp[e.v];
+      if (u != v) {
+        e.weight -= min_in[e.v];
       }
-      e.from = from;
-      e.to = to;
+      e.u = u;
+      e.v = v;
     }
     n = cycles;
     root = comp[root];

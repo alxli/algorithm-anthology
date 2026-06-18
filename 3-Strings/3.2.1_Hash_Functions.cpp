@@ -252,12 +252,12 @@ namespace std {
 
 template<typename A, typename B>
 struct hash<pair<A, B>> {
-  size_t operator()(const pair<A, B> &p) const { return ::GenericHasher<pair<A, B>>()(p); }
+  std::size_t operator()(const pair<A, B> &p) const { return ::GenericHasher<pair<A, B>>()(p); }
 };
 
 template<class... Ts>
 struct hash<tuple<Ts...>> {
-  size_t operator()(const tuple<Ts...> &t) const { return ::GenericHasher<tuple<Ts...>>()(t); }
+  std::size_t operator()(const tuple<Ts...> &t) const { return ::GenericHasher<tuple<Ts...>>()(t); }
 };
 
 }  // namespace std

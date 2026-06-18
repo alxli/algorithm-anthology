@@ -23,7 +23,6 @@ main performance path.
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <limits>
 #include <string>
 #include <type_traits>
 
@@ -243,7 +242,7 @@ int main() {
   int z;
   in >> x >> s >> y >> z;
   assert(x == 42 && s == "hello" && y == 3.5);
-  assert(z == std::numeric_limits<int>::min());
+  assert(z == -2147483648);
   std::fclose(input);
 
   FILE *output = tmpfile();

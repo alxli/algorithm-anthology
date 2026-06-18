@@ -37,14 +37,14 @@ Space Complexity:
 const int64_t INF = INT64_MAX / 4;
 std::vector<std::vector<std::pair<int, int>>> adj;
 std::vector<int64_t> dist;
-std::vector<int> pred, relax_count;
-std::vector<bool> in_queue;
+std::vector<int> pred;
 
 bool spfa(int start) {
   int n = static_cast<int>(adj.size());
   dist.assign(n, INF);
   pred.assign(n, -1);
-  relax_count.assign(n, 0);
+  std::vector<int> relax_count(n, 0);
+  std::vector<bool> in_queue(n, false);
   in_queue.assign(n, false);
   std::queue<int> q;
   dist[start] = 0;

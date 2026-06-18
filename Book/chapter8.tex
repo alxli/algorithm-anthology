@@ -27,11 +27,11 @@ Small contest-template helpers that are useful across many algorithms. These sni
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <functional>
+#include <cstdint>
 #include <queue>
 #include <random>
-#include <set>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #define Rep(i, N) for (int i = 0, _##i = (N); i < _##i; ++i)        //   0 to N-1
@@ -119,6 +119,9 @@ struct RNG {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <set>
+using namespace std;
+
 int main() {
   int tot = 0;
   Rep(i, 4) tot += i;     // 0 + 1 + 2 + 3 = 6
@@ -133,7 +136,7 @@ int main() {
   assert(fib(10) == 55);
 
   // Recursive lambda without y_combinator: pass the lambda to itself as the first argument.
-  std::vector<std::vector<int>> adj{{1, 2}, {0}, {0}};
+  vector<vector<int>> adj{{1, 2}, {0}, {0}};
   int seen = 0;
   auto dfs = [&](auto &&dfs, int u, int p) -> void {
     seen++;
@@ -153,7 +156,7 @@ int main() {
   assert(!ckmin(x, 9) && x == 7);
   assert(ckmax(x, 11) && x == 11);
 
-  std::vector<int> v = {1, 2, 3};
+  vector<int> v = {1, 2, 3};
   assert(sz(v) == 3);
   assert(between(2, 1, 3));
   assert(clmp(10, 1, 3) == 3);
@@ -161,8 +164,8 @@ int main() {
   assert(ceil_div(-7, 3) == -2);
   v = {3, 1, 3, 2, 1};
   sort_unique(v);
-  assert((v == std::vector<int>{1, 2, 3}));
-  std::multiset<int> ms{1, 2, 2, 3};
+  assert((v == vector<int>{1, 2, 3}));
+  multiset<int> ms{1, 2, 2, 3};
   erase_one(ms, 2);
   assert(ms.count(2) == 1);
   min_priority_queue<int> pq;
@@ -200,7 +203,6 @@ The parser assumes valid input. Floating point input/output is provided for conv
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <limits>
 #include <string>
 #include <type_traits>
 
@@ -421,7 +423,7 @@ int main() {
   int z;
   in >> x >> s >> y >> z;
   assert(x == 42 && s == "hello" && y == 3.5);
-  assert(z == std::numeric_limits<int>::min());
+  assert(z == -2147483648);
   std::fclose(input);
 
   FILE *output = tmpfile();
@@ -454,17 +456,13 @@ Local-only debug printing for contest code. The macro expands to a no-op unless 
 Avoid naming these helpers \inlinecode{to\_string()} unless you want them mixed into overload resolution with \inlinecode{std::to\_string()} and other user-defined \inlinecode{to\_string()} functions. A separate name keeps debug formatting local to this snippet.
 
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <iomanip>
 #include <iostream>
-#include <map>
-#include <set>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include <vector>
 
 template<typename T, typename = void>
 struct is_iterable : std::false_type {};
@@ -513,7 +511,7 @@ std::string dbg_repr(const std::pair<A, B> &p) {
   return "(" + dbg_repr(p.first) + ", " + dbg_repr(p.second) + ")";
 }
 
-template<typename Tuple, size_t... Is>
+template<typename Tuple, std::size_t... Is>
 std::string dbg_tuple_repr(const Tuple &t, std::index_sequence<Is...>) {
   std::string res = "(";
   bool first = true;
@@ -569,28 +567,34 @@ void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
+#include <map>
+#include <set>
+#include <vector>
+using namespace std;
+
 struct Point {
   int x, y;
 };
 
 // Can overload dbg_repr to dbg your custom structs.
-std::string dbg_repr(const Point &p) {
+string dbg_repr(const Point &p) {
   return "Point(" + dbg_repr(p.x) + ", " + dbg_repr(p.y) + ")";
 }
 
 struct Edge {
-  int from, to, weight;
+  int u, v, w;
 };
 
-std::string dbg_repr(const Edge &e) {
-  return "Edge{" + dbg_repr(e.from) + "->" + dbg_repr(e.to) + ", w=" + dbg_repr(e.weight) + "}";
+string dbg_repr(const Edge &e) {
+  return "Edge{" + dbg_repr(e.u) + "->" + dbg_repr(e.v) + ", w=" + dbg_repr(e.w) + "}";
 }
 
 int main() {
-  std::vector<int> v = {1, 2, 3};
-  std::map<std::string, int> mp = {{"a", 1}, {"b", 2}};
-  auto p = std::make_pair(4, std::string("x"));
-  auto t = std::make_tuple(1, true, std::string("ok"));
+  vector<int> v = {1, 2, 3};
+  map<string, int> mp = {{"a", 1}, {"b", 2}};
+  auto p = make_pair(4, string("x"));
+  auto t = make_tuple(1, true, string("ok"));
   Point pt{2, 3};
   Edge e{0, 1, 5};
   assert(dbg_repr(v) == "{1, 2, 3}");
@@ -630,9 +634,7 @@ Small timing helpers for local profiling and codebook examples. Use \inlinecode{
 Benchmarks should be treated as local measurements, not proofs of asymptotic performance. Warm-up, CPU frequency scaling, compiler optimization, and input choice can dominate tiny timings.
 
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <chrono>
-#include <numeric>
 #include <string>
 #include <utility>
 #include <vector>
@@ -664,6 +666,11 @@ std::pair<std::string, double> benchmark(const std::string &name, int iterations
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
+#include <numeric>
+#include <vector>
+using namespace std;
+
 int main() {
   Timer timer;
   std::vector<int> v(1000);
@@ -697,11 +704,7 @@ A simple stress-testing harness compares a trusted brute force implementation ag
 The generated test type only needs to be copyable enough to store in \inlinecode{std::optional}, and both solutions must return comparable results.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cassert>
 #include <optional>
-#include <random>
-#include <vector>
 
 template<typename Generate, typename Solve, typename Brute>
 auto stress(int trials, Generate generate, Solve solve, Brute brute)
@@ -718,6 +721,12 @@ auto stress(int trials, Generate generate, Solve solve, Brute brute)
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cassert>
+#include <random>
+#include <vector>
+using namespace std;
+
 int main() {
   std::mt19937 rng(123);
 
@@ -769,8 +778,8 @@ The order statistic operations are 0-indexed. The priority queue \inlinecode{joi
 \textbf{Space Complexity}: $O(n)$.
 
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <ext/pb_ds/assoc_container.hpp>
 #include <ext/pb_ds/priority_queue.hpp>
@@ -794,7 +803,7 @@ struct SplitMix64Hasher {
     return x ^ (x >> 31);
   }
 
-  size_t operator()(uint64_t x) const {
+  std::size_t operator()(uint64_t x) const {
     static const uint64_t FIXED_RANDOM =
         std::chrono::steady_clock::now().time_since_epoch().count();
     return mix64(x + FIXED_RANDOM);
@@ -871,6 +880,8 @@ using RcBinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::rc_bin
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
+
 int main() {
   OrderedSet<int> s;
   s.insert(10);
@@ -1007,11 +1018,11 @@ These snippets are not portable production allocators: they are fixed-size, mono
 #include <type_traits>
 #include <vector>
 
-static constexpr size_t BUFFER_SIZE = 64 << 20;
+static constexpr std::size_t BUFFER_SIZE = 64 << 20;
 alignas(std::max_align_t) static unsigned char bump_buffer[BUFFER_SIZE];
-static size_t bump_pos = BUFFER_SIZE;
+static std::size_t bump_pos = BUFFER_SIZE;
 
-void *operator new(size_t size) {
+void *operator new(std::size_t size) {
   size = (size + alignof(std::max_align_t) - 1) & ~(alignof(std::max_align_t) - 1);
   assert(size <= bump_pos);
   bump_pos -= size;
@@ -1021,7 +1032,7 @@ void *operator new(size_t size) {
 void operator delete(void *) noexcept {
 }
 
-void operator delete(void *, size_t) noexcept {
+void operator delete(void *, std::size_t) noexcept {
 }
 
 template<typename T>
@@ -1033,15 +1044,15 @@ struct BumpAllocator {
   template<typename U>
   BumpAllocator(const BumpAllocator<U> &) {}
 
-  T *allocate(size_t n) {
-    size_t size = n * sizeof(T);
-    size_t align = alignof(T);
+  T *allocate(std::size_t n) {
+    std::size_t size = n * sizeof(T);
+    std::size_t align = alignof(T);
     assert(size <= bump_pos);
     bump_pos = (bump_pos - size) & ~(align - 1);
     return reinterpret_cast<T *>(bump_buffer + bump_pos);
   }
 
-  void deallocate(T *, size_t) {}
+  void deallocate(T *, std::size_t) {}
 
   template<typename U>
   bool operator==(const BumpAllocator<U> &) const {

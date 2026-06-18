@@ -29,11 +29,11 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <functional>
+#include <cstdint>
 #include <queue>
 #include <random>
-#include <set>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #define Rep(i, N) for (int i = 0, _##i = (N); i < _##i; ++i)        //   0 to N-1
@@ -122,6 +122,9 @@ struct RNG {
 
 /*** Example Usage ***/
 
+#include <set>
+using namespace std;
+
 int main() {
   int tot = 0;
   Rep(i, 4) tot += i;     // 0 + 1 + 2 + 3 = 6
@@ -136,7 +139,7 @@ int main() {
   assert(fib(10) == 55);
 
   // Recursive lambda without y_combinator: pass the lambda to itself as the first argument.
-  std::vector<std::vector<int>> adj{{1, 2}, {0}, {0}};
+  vector<vector<int>> adj{{1, 2}, {0}, {0}};
   int seen = 0;
   auto dfs = [&](auto &&dfs, int u, int p) -> void {
     seen++;
@@ -156,7 +159,7 @@ int main() {
   assert(!ckmin(x, 9) && x == 7);
   assert(ckmax(x, 11) && x == 11);
 
-  std::vector<int> v = {1, 2, 3};
+  vector<int> v = {1, 2, 3};
   assert(sz(v) == 3);
   assert(between(2, 1, 3));
   assert(clmp(10, 1, 3) == 3);
@@ -164,8 +167,8 @@ int main() {
   assert(ceil_div(-7, 3) == -2);
   v = {3, 1, 3, 2, 1};
   sort_unique(v);
-  assert((v == std::vector<int>{1, 2, 3}));
-  std::multiset<int> ms{1, 2, 2, 3};
+  assert((v == vector<int>{1, 2, 3}));
+  multiset<int> ms{1, 2, 2, 3};
   erase_one(ms, 2);
   assert(ms.count(2) == 1);
   min_priority_queue<int> pq;

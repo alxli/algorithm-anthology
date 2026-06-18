@@ -14,9 +14,7 @@ CPU frequency scaling, compiler optimization, and input choice can dominate tiny
 
 */
 
-#include <cassert>
 #include <chrono>
-#include <numeric>
 #include <string>
 #include <utility>
 #include <vector>
@@ -46,6 +44,11 @@ std::pair<std::string, double> benchmark(const std::string &name, int iterations
 }
 
 /*** Example Usage ***/
+
+#include <cassert>
+#include <numeric>
+#include <vector>
+using namespace std;
 
 int main() {
   Timer timer;

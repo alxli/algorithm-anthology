@@ -3330,7 +3330,7 @@ The overload \inlinecode{phi\_table(lo, hi)} computes the totients of a high but
 \begin{compactitem}
   \item \inlinecode{phi(n)} returns Euler's totient of \inlinecode{n}.
   \item \inlinecode{phi\_table(n)} returns a vector \inlinecode{v} of length \inlinecode{n + 1} such that \inlinecode{v[i]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range $[0, n]$.
-  \item \inlinecode{phi\_table(lo, hi)} returns a vector \inlinecode{v} of length \inlinecode{hi - lo + 1} such that \inlinecode{v[i - lo]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range [\inlinecode{lo}, \inlinecode{hi}]. This overload assumes \inlinecode{lo} $\geq$ 0; if \inlinecode{hi} \textless{} \inlinecode{lo}, it returns an empty vector.
+  \item \inlinecode{phi\_table(lo, hi)} returns a vector \inlinecode{v} of length ${\inlinecodemath{hi}} - {\inlinecodemath{lo}} + 1$ such that \inlinecode{v[i - lo]} stores \inlinecode{phi(i)} for every \inlinecode{i} in the range [\inlinecode{lo}, \inlinecode{hi}]. This overload assumes \inlinecode{lo} $\geq$ 0; if \inlinecode{hi} \textless{} \inlinecode{lo}, it returns an empty vector.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -3632,7 +3632,7 @@ class BigInt {
   int sign;
 
   void normalize() {
-    size_t pos = digits.find_last_not_of('0');
+    std::size_t pos = digits.find_last_not_of('0');
     if (pos != std::string::npos) {
       digits.erase(pos + 1);
     } else {
@@ -7109,8 +7109,6 @@ Rather than evaluate the recursive definition directly, this implementation prec
 \begin{lstlisting}[language=C++]
 #include <cstdint>
 
-namespace {
-
 uint64_t bit_prod[64][64];
 
 // Build the single-bit products 2^i (x) 2^j. Each entry depends only on entries with a smaller
@@ -7128,8 +7126,6 @@ const bool nim_product_init = [] {
   }
   return true;
 }();
-
-}  // namespace
 
 uint64_t nim_product(uint64_t x, uint64_t y) {
   uint64_t res = 0;

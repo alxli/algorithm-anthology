@@ -54,7 +54,7 @@ std::vector<int> z_array(const Seq &s) {
   return z;
 }
 
-size_t find(const string &haystack, const string &needle) {
+std::size_t find(const string &haystack, const string &needle) {
   if (needle.empty()) {
     return 0;
   }

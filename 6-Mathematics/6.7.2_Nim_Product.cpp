@@ -33,8 +33,6 @@ Space Complexity:
 
 #include <cstdint>
 
-namespace {
-
 uint64_t bit_prod[64][64];
 
 // Build the single-bit products 2^i (x) 2^j. Each entry depends only on entries with a smaller
@@ -52,8 +50,6 @@ const bool nim_product_init = [] {
   }
   return true;
 }();
-
-}  // namespace
 
 uint64_t nim_product(uint64_t x, uint64_t y) {
   uint64_t res = 0;

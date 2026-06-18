@@ -177,7 +177,7 @@ Stripping:
 */
 
 string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
-  size_t pos = s.find_first_not_of(delim);
+  std::size_t pos = s.find_first_not_of(delim);
   if (pos != string::npos) {
     s.erase(0, pos);
   }
@@ -185,7 +185,7 @@ string &lstrip(string &s, const string &delim = " \n\t\v\f\r") {
 }
 
 string &rstrip(string &s, const string &delim = " \n\t\v\f\r") {
-  size_t pos = s.find_last_not_of(delim);
+  std::size_t pos = s.find_last_not_of(delim);
   if (pos != string::npos) {
     s.erase(pos + 1);
   }
@@ -245,7 +245,7 @@ bool contains(const string &s, const string &needle) {
 
 std::vector<int> find_all(const string &haystack, const string &needle) {
   std::vector<int> res;
-  size_t pos = haystack.find(needle, 0);
+  std::size_t pos = haystack.find(needle, 0);
   while (pos != string::npos) {
     res.push_back(pos);
     pos = haystack.find(needle, pos + 1);
@@ -258,7 +258,7 @@ int count(const string &haystack, const string &needle) {
     return 0;
   }
   int res = 0;
-  size_t pos = haystack.find(needle, 0);
+  std::size_t pos = haystack.find(needle, 0);
   while (pos != string::npos) {
     res++;
     pos = haystack.find(needle, pos + needle.size());
@@ -271,7 +271,7 @@ string replace(const string &s, const string &old, const string &replacement) {
     return s;
   }
   string res(s);
-  size_t pos = 0;
+  std::size_t pos = 0;
   while ((pos = res.find(old, pos)) != string::npos) {
     res.replace(pos, old.length(), replacement);
     pos += replacement.length();

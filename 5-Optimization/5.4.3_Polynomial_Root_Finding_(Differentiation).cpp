@@ -16,10 +16,10 @@ found by finding the root of the derivative.
 
 Time Complexity:
 - O(n) per call to `horner_eval()`, where $n$ is the degree of the polynomial.
-- O(n log p) per call to `find_one_root()`, where $n$ is the degree of the polynomial and
-  $p = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
-- O(n^3 log p) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and
-  $p = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
+- O(n log d) per call to `find_one_root()`, where $n$ is the degree of the polynomial and
+  $d = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
+- O(n^3 log d) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and
+  $d = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
 
 Space Complexity:
 - O(1) auxiliary space for `horner_eval()` and `find_one_root()`.

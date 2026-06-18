@@ -5,10 +5,10 @@ Laguerre's method is a root-finding iteration with reliable, near-cubic converge
 starting point. Once a root is found it is removed by polynomial deflation, and the iteration
 repeats on the lower-degree quotient until every root has been extracted.
 
-- `horner_eval(p, x)` evaluates the complex polynomial `p` of degree $d$ (represented as a vector of
+- `horner_eval(p, x)` evaluates a complex polynomial $p$ of degree $d$ (represented as a vector of
   size $d + 1$ where `p[i]` stores the complex coefficient for the $x^i$ term) at `x`, using
   Horner's method, returning a pair where the first value is the final result $p(x)$ and the second
-  value is the quotient polynomial produced by synthetic division by $(X - x)$.
+  value is the quotient polynomial $q$ from the identity $p(t) = (t - x)q(t) + p(x)$.
 - `find_one_root(p, x0)` returns a complex root $x$ for a polynomial `p` (represented as a vector of
   size $d + 1$ where `p[i]` stores the complex coefficient for the $x^i$ term) using an initial
   guess `x0` which should be relatively close to $x$. The root is found to a tolerance of `EPS` in
@@ -18,10 +18,10 @@ repeats on the lower-degree quotient until every root has been extracted.
 
 Time Complexity:
 - O(n) per call to `horner_eval()`, where $n$ is the degree of the polynomial.
-- O(n log p) per call to `find_one_root()`, where $n$ is the degree of the polynomial and
-  $p = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
-- O(n^2 log p) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and
-  $p = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
+- O(n log d) per call to `find_one_root()`, where $n$ is the degree of the polynomial and
+  $d = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
+- O(n^2 log d) per call to `find_all_roots()`, where $n$ is the degree of the polynomial and
+  $d = -\log_{10}(`EPS`)$ is the number of digits of absolute or relative precision that is desired.
 
 Space Complexity:
 - O(n) auxiliary heap space and O(1) auxiliary stack space for `horner_eval()` and

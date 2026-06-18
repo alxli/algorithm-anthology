@@ -27,8 +27,6 @@ Space Complexity:
 
 #include <vector>
 
-namespace {
-
 void de_bruijn_gen(int t, int p, int k, int n, std::vector<int> &word, std::vector<int> &seq) {
   if (t > n) {
     if (n % p == 0) {
@@ -45,8 +43,6 @@ void de_bruijn_gen(int t, int p, int k, int n, std::vector<int> &word, std::vect
     de_bruijn_gen(t + 1, t, k, n, word, seq);
   }
 }
-
-}  // namespace
 
 std::vector<int> de_bruijn(int k, int n) {
   std::vector<int> word(n + 1, 0), seq;

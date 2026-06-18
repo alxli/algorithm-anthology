@@ -39,17 +39,11 @@ Space Complexity:
 
 class EulerTourTree {
   struct Node {
-    int from, to, priority, size;
+    int u, v, priority, size;
     Node *left, *right, *parent;
 
-    Node(int from, int to, int priority)
-        : from(from),
-          to(to),
-          priority(priority),
-          size(1),
-          left(nullptr),
-          right(nullptr),
-          parent(nullptr) {}
+    Node(int u, int v, int priority)
+        : u(u), v(v), priority(priority), size(1), left(nullptr), right(nullptr), parent(nullptr) {}
   };
 
   int n;
@@ -147,8 +141,8 @@ class EulerTourTree {
     return rest;
   }
 
-  Node *new_node(int from, int to) {
-    Node *node = new Node(from, to, std::uniform_int_distribution<int>()(rng));
+  Node *new_node(int u, int v) {
+    Node *node = new Node(u, v, std::uniform_int_distribution<int>()(rng));
     allocated.push_back(node);
     return node;
   }
@@ -160,7 +154,7 @@ class EulerTourTree {
       return;
     }
     collect(t->left, out);
-    out.push_back(t->from);
+    out.push_back(t->u);
     collect(t->right, out);
   }
 

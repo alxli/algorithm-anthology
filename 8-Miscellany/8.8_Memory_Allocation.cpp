@@ -30,11 +30,11 @@ Space Complexity:
 #include <type_traits>
 #include <vector>
 
-static constexpr size_t BUFFER_SIZE = 64 << 20;
+static constexpr std::size_t BUFFER_SIZE = 64 << 20;
 alignas(std::max_align_t) static unsigned char bump_buffer[BUFFER_SIZE];
-static size_t bump_pos = BUFFER_SIZE;
+static std::size_t bump_pos = BUFFER_SIZE;
 
-void *operator new(size_t size) {
+void *operator new(std::size_t size) {
   size = (size + alignof(std::max_align_t) - 1) & ~(alignof(std::max_align_t) - 1);
   assert(size <= bump_pos);
   bump_pos -= size;
@@ -44,7 +44,7 @@ void *operator new(size_t size) {
 void operator delete(void *) noexcept {
 }
 
-void operator delete(void *, size_t) noexcept {
+void operator delete(void *, std::size_t) noexcept {
 }
 
 template<typename T>
@@ -56,15 +56,15 @@ struct BumpAllocator {
   template<typename U>
   BumpAllocator(const BumpAllocator<U> &) {}
 
-  T *allocate(size_t n) {
-    size_t size = n * sizeof(T);
-    size_t align = alignof(T);
+  T *allocate(std::size_t n) {
+    std::size_t size = n * sizeof(T);
+    std::size_t align = alignof(T);
     assert(size <= bump_pos);
     bump_pos = (bump_pos - size) & ~(align - 1);
     return reinterpret_cast<T *>(bump_buffer + bump_pos);
   }
 
-  void deallocate(T *, size_t) {}
+  void deallocate(T *, std::size_t) {}
 
   template<typename U>
   bool operator==(const BumpAllocator<U> &) const {

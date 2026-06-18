@@ -27,8 +27,8 @@ Space Complexity:
 
 */
 
-#include <cassert>
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <ext/pb_ds/assoc_container.hpp>
 #include <ext/pb_ds/priority_queue.hpp>
@@ -52,7 +52,7 @@ struct SplitMix64Hasher {
     return x ^ (x >> 31);
   }
 
-  size_t operator()(uint64_t x) const {
+  std::size_t operator()(uint64_t x) const {
     static const uint64_t FIXED_RANDOM =
         std::chrono::steady_clock::now().time_since_epoch().count();
     return mix64(x + FIXED_RANDOM);
@@ -127,6 +127,8 @@ template<typename T, typename Compare = std::less<T>>
 using RcBinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::rc_binomial_heap_tag>;
 
 /*** Example Usage ***/
+
+#include <cassert>
 
 int main() {
   OrderedSet<int> s;
