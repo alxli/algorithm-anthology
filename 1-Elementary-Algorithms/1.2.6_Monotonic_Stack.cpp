@@ -5,7 +5,8 @@ entries that would violate the ordering. Scanning an array once while keeping su
 indices answers, for every position, where the nearest smaller or larger neighbor lies. These
 "nearest smaller/greater" relationships underlie many array problems, the most famous being the
 largest rectangle in a histogram. Each index is pushed and popped at most once, so a full scan runs
-in linear time.
+in linear time. A largest all-zero submatrix can then be found by sweeping rows, turning each row
+into a histogram of consecutive zeros ending at that row.
 
 All functions below take a vector `a` of $n$ comparable values and return a vector of $n$ indices.
 A "less" query uses a strictly smaller neighbor and a "greater" query uses a strictly larger one;
@@ -21,15 +22,20 @@ changing the comparison from strict to non-strict (e.g. `>=` to `>`) toggles how
   there's no such index.
 - `largest_rectangle(heights)` returns the maximum area of an axis-aligned rectangle that fits under
   the given histogram, given an array of `heights` where each bar has width 1.
+- `largest_zero_submatrix(a)` returns the area of the largest all-zero rectangular submatrix of the
+  0/1 matrix `a`.
 
 Time Complexity:
-- O(n) per call to all functions, where $n$ is the size of the input.
+- O(n) per call to all one-dimensional functions, where $n$ is the size of the input.
+- O(r*c) per call to `largest_zero_submatrix()`, where $r$ and $c$ are the matrix dimensions.
 
 Space Complexity:
 - O(n) auxiliary heap space for the stack and result.
+- O(c) auxiliary heap space for `largest_zero_submatrix()`.
 
 */
 
+#include <algorithm>
 #include <stack>
 #include <vector>
 
@@ -107,6 +113,22 @@ T largest_rectangle(const std::vector<T> &heights) {
   return best;
 }
 
+int largest_zero_submatrix(const std::vector<std::vector<bool>> &a) {
+  if (a.empty()) {
+    return 0;
+  }
+  int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
+  int best = 0;
+  std::vector<int> height(cols, 0);
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      height[j] = a[i][j] ? 0 : height[j] + 1;
+    }
+    best = std::max(best, largest_rectangle(height));
+  }
+  return best;
+}
+
 /*** Example Usage ***/
 
 #include <cassert>
@@ -121,5 +143,14 @@ int main() {
 
   vector<int> hist{2, 1, 5, 6, 2, 3};
   assert(largest_rectangle(hist) == 10);
+
+  vector<vector<bool>> grid{
+      {1, 0, 1, 1, 0, 0},
+      {1, 0, 0, 1, 0, 0},
+      {0, 0, 0, 0, 0, 1},
+      {1, 0, 0, 1, 0, 0},
+      {1, 0, 1, 0, 0, 1}
+  };
+  assert(largest_zero_submatrix(grid) == 6);
   return 0;
 }

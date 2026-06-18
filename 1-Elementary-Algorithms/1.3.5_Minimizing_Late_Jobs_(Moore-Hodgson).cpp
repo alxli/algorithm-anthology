@@ -5,6 +5,11 @@ processing time and deadline, and all jobs are available at time 0. The Moore-Ho
 sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the
 schedule becomes late, it removes the longest accepted job.
 
+After considering jobs up to some deadline, if the accepted set no longer fits, at least one
+accepted job must be removed. Removing the longest one leaves the most remaining time while keeping
+the same number of removed jobs, so it is never worse than removing a shorter accepted job. Repeating
+this repair after each deadline leaves a largest feasible accepted set.
+
 - `maximize_on_time_jobs(jobs)` returns the maximum number of jobs that can finish by their
   deadlines for an input vector of `TimedJob` with fields `duration` and `deadline`.
 

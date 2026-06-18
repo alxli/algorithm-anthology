@@ -1,7 +1,15 @@
 /*
 
-Selects the maximum number of non-overlapping intervals using the classic greedy algorithm that
-sorts by earliest finish time. This is also known as activity selection.
+Selects the maximum number of non-overlapping intervals using the classic earliest-finish-time
+greedy algorithm. This is the unweighted interval scheduling problem, also known as activity
+selection: every interval has the same value, so the objective is to choose as many compatible
+intervals as possible.
+
+The greedy choice is safe because among all intervals that could be chosen first, taking one with
+the earliest finish time leaves the most room for the remaining intervals. In any optimal solution,
+the first chosen interval can be exchanged for an earliest-finishing compatible interval without
+reducing the number of intervals selected. Repeating this argument after each choice proves the
+greedy algorithm optimal. The weighted version in 1.3.2 needs dynamic programming instead.
 
 Intervals are represented as half-open ranges [`start`, `finish`), so two intervals are compatible
 if the next interval's `start` is at least the previous interval's `finish`.

@@ -537,14 +537,14 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
   \item \inlinecode{pop()} removes the minimum element from the priority queue.
   \item \inlinecode{top()} returns the minimum element in the priority queue.
-  \item \inlinecode{absorb(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
+  \item \inlinecode{join(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{top()}.
-  \item $O(\log n)$ per call to \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{absorb()}, where $n$ is the number of elements in the priority queue.
+  \item $O(\log n)$ per call to \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{join()}, where $n$ is the number of elements in the priority queue.
   \item $O(n)$ per call to the second constructor, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 \end{compactitem}
 
@@ -552,7 +552,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the priority queue elements.
-  \item $O(\log n)$ auxiliary stack space for \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{absorb()}.
+  \item $O(\log n)$ auxiliary stack space for \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{join()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -639,7 +639,7 @@ class LeftistHeap {
     return root->value;
   }
 
-  void absorb(LeftistHeap &h) {
+  void join(LeftistHeap &h) {
     root = merge(root, h.root);
     num_nodes += h.num_nodes;
     h.root = nullptr;
@@ -660,7 +660,7 @@ int main() {
   h2.push(5);
   h2.push(-1);
   h2.push(0);
-  h.absorb(h2);
+  h.join(h2);
   while (!h.empty()) {
     cout << h.top() << endl;
     h.pop();
@@ -686,14 +686,14 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} into the priority queue.
   \item \inlinecode{pop()} removes the minimum element from the priority queue.
   \item \inlinecode{top()} returns the minimum element in the priority queue.
-  \item \inlinecode{absorb(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
+  \item \inlinecode{join(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, and \inlinecode{top()}.
-  \item $O(\log n)$ amortized auxiliary per call to \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{absorb()}, where $n$ is the number of elements in the priority queue.
+  \item $O(\log n)$ amortized auxiliary per call to \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{join()}, where $n$ is the number of elements in the priority queue.
   \item $O(n)$ per call to the second constructor, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
 \end{compactitem}
 
@@ -701,7 +701,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 \textbf{Space Complexity}:
 \begin{compactitem}
   \item $O(n)$ for storage of the priority queue elements.
-  \item $O(\log n)$ amortized auxiliary stack space for \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{absorb()}.
+  \item $O(\log n)$ amortized auxiliary stack space for \inlinecode{push()}, \inlinecode{pop()}, and \inlinecode{join()}.
   \item $O(1)$ auxiliary for all other operations.
 \end{compactitem}
 
@@ -782,7 +782,7 @@ class SkewHeap {
     return root->value;
   }
 
-  void absorb(SkewHeap &h) {
+  void join(SkewHeap &h) {
     root = merge(root, h.root);
     num_nodes += h.num_nodes;
     h.root = nullptr;
@@ -803,7 +803,7 @@ int main() {
   h2.push(5);
   h2.push(-1);
   h2.push(0);
-  h.absorb(h2);
+  h.join(h2);
   while (!h.empty()) {
     cout << h.top() << endl;
     h.pop();
@@ -829,17 +829,17 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
   \item \inlinecode{push(v)} inserts the value \inlinecode{v} and returns a handle to the new element. The handle remains valid until that element is removed by \inlinecode{pop()} or \inlinecode{erase()}.
   \item \inlinecode{pop()} removes the minimum element from the priority queue.
   \item \inlinecode{top()} returns the minimum element in the priority queue.
-  \item \inlinecode{absorb(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
+  \item \inlinecode{join(h)} inserts every value from \inlinecode{h} and sets \inlinecode{h} to the empty priority queue.
   \item \inlinecode{decrease\_key(h, v)} lowers the value of the element at handle \inlinecode{h} to \inlinecode{v}, which must not be greater than its current value.
   \item \inlinecode{erase(h)} removes the element at handle \inlinecode{h} from the priority queue.
 \end{compactitem}
 
-In practice, \inlinecode{decrease\_key()} runs in near-constant time, making the pairing heap the usual practical substitute for a Fibonacci heap. When handles are not needed, the lazy-deletion idiom (push updated entries and skip stale ones on \inlinecode{pop()}, as the Dijkstra section does) is simpler and often faster.
+In practice, \inlinecode{decrease\_key()} runs in near-constant time, making the pairing heap the usual practical substitute for a Fibonacci heap. When handles are not needed, the lazy-deletion idiom (push updated entries and skip stale ones on \inlinecode{pop()}, as the Dijkstra section does) is simpler and often faster. On GNU C++ judges, \inlinecode{\_\_gnu\_pbds::priority\_queue} with \inlinecode{pairing\_heap\_tag} provides a shorter handled and meldable heap; see 8.6 for the contest wrapper.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
-  \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, \inlinecode{top()}, \inlinecode{push()}, and \inlinecode{absorb()}.
+  \item $O(1)$ per call to the first constructor, \inlinecode{size()}, \inlinecode{empty()}, \inlinecode{top()}, \inlinecode{push()}, and \inlinecode{join()}.
   \item $O(\log n)$ amortized per call to \inlinecode{pop()} and \inlinecode{erase()}.
   \item $O(\log n)$ amortized per call to \inlinecode{decrease\_key()}, a safe bound to budget for. The true amortized cost is sub-logarithmic, though the long-conjectured $O(1)$ bound is provably impossible.
   \item $O(n)$ per call to the second constructor on the distance between \inlinecode{lo} and \inlinecode{hi}.
@@ -969,7 +969,7 @@ class PairingHeap {
     return root->value;
   }
 
-  void absorb(PairingHeap &h) {
+  void join(PairingHeap &h) {
     root = merge(root, h.root);
     num_nodes += h.num_nodes;
     h.root = nullptr;
@@ -1013,7 +1013,7 @@ int main() {
   h2.push(5);
   h2.push(-1);
   h2.push(0);
-  h.absorb(h2);
+  h.join(h2);
 
   auto handle = h.push(100);
   h.decrease_key(handle, -5);  // 100 -> -5, the new minimum.
@@ -2142,18 +2142,20 @@ This implementation requires an ordering on the key type \inlinecode{K} defined 
   \item \inlinecode{insert(k, v)} adds an entry with key \inlinecode{k} and value \inlinecode{v} to the map, returning \inlinecode{true} if a new entry was added or \inlinecode{false} if the key already exists (in which case the map is unchanged and the old value associated with the key is preserved).
   \item \inlinecode{erase(k)} removes the entry with key \inlinecode{k} from the map, returning \inlinecode{true} if the removal was successful or \inlinecode{false} if the key to be removed was not found.
   \item \inlinecode{find(k)} returns a pointer to a const value associated with key \inlinecode{k}, or \inlinecode{nullptr} if the key was not found.
-  \item \inlinecode{select(r)} returns a key-value pair of the node with a key of 0-based rank \inlinecode{r} in the map, throwing an exception if the rank is not in the range [0, \inlinecode{size()}).
-  \item \inlinecode{rank(k)} returns the 0-based rank of key \inlinecode{k} in the map, throwing an exception if the key was not found in the map.
+  \item \inlinecode{find\_by\_order(k)} returns a key-value pair of the node with a key of 0-based rank \inlinecode{k}, throwing an exception if the rank is not in the range [0, \inlinecode{size()}).
+  \item \inlinecode{order\_of\_key(x)} returns the number of keys strictly less than \inlinecode{x}. The key does not need to be present in the map.
   \item \inlinecode{entries()} returns all key-value entries in ascending order of keys.
 \end{compactitem}
 
-The navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lower\_bound(k)}, \inlinecode{upper\_bound(k)}, \inlinecode{prev(k)}, and \inlinecode{next(k)} from the treap in 2.3.1 depend only on the BST property and may be copied here unchanged.
+The navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lower\_bound(k)}, \inlinecode{upper\_bound(k)}, \inlinecode{prev(k)}, and \inlinecode{next(k)} from the treap in 2.3.1 depend only on the BST property and may be copied here unchanged. For contest use on GNU C++ judges, PBDS ordered trees provide the same order-statistic operations with much less code; see 8.6. This implementation is useful when PBDS is unavailable or when customizing tree internals.
+
+The order-statistic API matches GNU PBDS naming and 0-based rank conventions.
 
 \Needspace*{3\baselineskip}
 \textbf{Time Complexity}:
 \begin{compactitem}
   \item $O(1)$ per call to the constructor, \inlinecode{size()}, and \inlinecode{empty()}.
-  \item $O(\log n)$ per call to \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{find()}, \inlinecode{select()}, and \inlinecode{rank()}, where $n$ is the number of entries currently in the map.
+  \item $O(\log n)$ per call to \inlinecode{insert()}, \inlinecode{erase()}, \inlinecode{find()}, \inlinecode{find\_by\_order()}, and \inlinecode{order\_of\_key()}, where $n$ is the number of entries currently in the map.
   \item $O(n)$ per call to \inlinecode{entries()}.
 \end{compactitem}
 
@@ -2272,27 +2274,26 @@ class SBTree {
     return found;
   }
 
-  static std::pair<K, V> select(Node *n, int r) {
-    int rank = size(n->left);
-    if (r < rank) {
-      return select(n->left, r);
-    } else if (r > rank) {
-      return select(n->right, r - rank - 1);
+  static std::pair<K, V> find_by_order(Node *n, int k) {
+    int left_size = size(n->left);
+    if (k < left_size) {
+      return find_by_order(n->left, k);
+    } else if (k > left_size) {
+      return find_by_order(n->right, k - left_size - 1);
     }
     return {n->key, n->value};
   }
 
-  static int rank(Node *n, const K &k) {
+  static int order_of_key(Node *n, const K &x) {
     if (n == nullptr) {
-      throw std::runtime_error("Cannot rank key that's not in tree.");
+      return 0;
     }
-    int r = size(n->left);
-    if (k < n->key) {
-      return rank(n->left, k);
-    } else if (n->key < k) {
-      return rank(n->right, k) + r + 1;
+    if (x < n->key) {
+      return order_of_key(n->left, x);
+    } else if (n->key < x) {
+      return order_of_key(n->right, x) + size(n->left) + 1;
     }
-    return r;
+    return size(n->left);
   }
 
   static void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) {
@@ -2321,7 +2322,7 @@ class SBTree {
   bool empty() const { return root == nullptr; }
   bool insert(const K &k, const V &v) { return insert(root, k, v); }
   bool erase(const K &k) { return erase(root, k); }
-  int rank(const K &k) const { return rank(root, k); }
+  int order_of_key(const K &x) const { return order_of_key(root, x); }
 
   const V *find(const K &k) const {
     Node *n = root;
@@ -2337,11 +2338,11 @@ class SBTree {
     return nullptr;
   }
 
-  std::pair<K, V> select(int r) const {
-    if (r < 0 || r >= size(root)) {
-      throw std::runtime_error("Select rank must be between 0 and size() - 1.");
+  std::pair<K, V> find_by_order(int k) const {
+    if (k < 0 || k >= size(root)) {
+      throw std::runtime_error("Order statistic must be between 0 and size() - 1.");
     }
-    return select(root, r);
+    return find_by_order(root, k);
   }
 
   std::vector<std::pair<K, V>> entries() const {
@@ -2379,12 +2380,13 @@ int main() {
     cout << v;
   }
   cout << endl;
-  assert(t.rank(2) == 0);
-  assert(t.rank(3) == 1);
-  assert(t.rank(5) == 3);
-  assert(t.select(0).first == 2);
-  assert(t.select(1).first == 3);
-  assert(t.select(2).first == 4);
+  assert(t.order_of_key(2) == 0);
+  assert(t.order_of_key(3) == 1);
+  assert(t.order_of_key(5) == 3);
+  assert(t.order_of_key(6) == 4);
+  assert(t.find_by_order(0).first == 2);
+  assert(t.find_by_order(1).first == 3);
+  assert(t.find_by_order(2).first == 4);
   return 0;
 }
 \end{lstlisting}
@@ -2668,7 +2670,7 @@ This is an educational implementation; in practice prefer one of the standard op
 
 \begin{compactitem}
   \item \inlinecode{std::unordered\_map} is the portable standard-library hash map. It is also chaining-based, so this class is essentially a transparent version of it. Pass a custom hash (see 3.2.1) to harden it against adversarial inputs, as its default integer hash is effectively the identity.
-  \item \inlinecode{\_\_gnu\_pbds::gp\_hash\_table} (from GCC's policy-based library) is an open-addressing table that is typically several times faster than \inlinecode{std::unordered\_map}, but is a non-portable GNU extension. Prefer it on GCC-only judges when hashing is the bottleneck.
+  \item \inlinecode{\_\_gnu\_pbds::gp\_hash\_table} (from GCC's policy-based library) is an open-addressing table that is typically several times faster than \inlinecode{std::unordered\_map}, but is a non-portable GNU extension. Prefer it on GCC-only judges when hashing is the bottleneck; see 8.6 for \inlinecode{HashMap}/\inlinecode{HashSet} wrappers with a randomized integer hash.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -2878,7 +2880,7 @@ This is an educational implementation; in practice prefer one of the standard op
 
 \begin{compactitem}
   \item \inlinecode{std::unordered\_map} is the portable standard-library hash map. Unlike this class, it is chaining-based rather than open-addressed. Pass a custom hash (see 3.2.1) to harden it against adversarial inputs, as its default integer hash is effectively the identity.
-  \item \inlinecode{\_\_gnu\_pbds::gp\_hash\_table} (from GCC's policy-based library) is an open-addressing table that is typically several times faster than \inlinecode{std::unordered\_map}, but is a non-portable GNU extension. Prefer it on GCC-only judges when hashing is the bottleneck.
+  \item \inlinecode{\_\_gnu\_pbds::gp\_hash\_table} (from GCC's policy-based library) is an open-addressing table that is typically several times faster than \inlinecode{std::unordered\_map}, but is a non-portable GNU extension. Prefer it on GCC-only judges when hashing is the bottleneck; see 8.6 for \inlinecode{HashMap}/\inlinecode{HashSet} wrappers with a randomized integer hash.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}

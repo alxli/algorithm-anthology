@@ -19,19 +19,24 @@ This implementation requires an ordering on the key type `K` defined by `operato
   successful or `false` if the key to be removed was not found.
 - `find(k)` returns a pointer to a const value associated with key `k`, or `nullptr` if the key was
   not found.
-- `select(r)` returns a key-value pair of the node with a key of 0-based rank `r` in the map,
-  throwing an exception if the rank is not in the range [0, `size()`).
-- `rank(k)` returns the 0-based rank of key `k` in the map, throwing an exception if the key was not
-  found in the map.
+- `find_by_order(k)` returns a key-value pair of the node with a key of 0-based rank `k`, throwing
+  an exception if the rank is not in the range [0, `size()`).
+- `order_of_key(x)` returns the number of keys strictly less than `x`. The key does not need to be
+  present in the map.
 - `entries()` returns all key-value entries in ascending order of keys.
 
 The navigation routines `min()`, `max()`, `lower_bound(k)`, `upper_bound(k)`, `prev(k)`, and
 `next(k)` from the treap in 2.3.1 depend only on the BST property and may be copied here unchanged.
+For contest use on GNU C++ judges, PBDS ordered trees provide the same order-statistic operations
+with much less code; see 8.6. This implementation is useful when PBDS is unavailable or when
+customizing tree internals.
+
+The order-statistic API matches GNU PBDS naming and 0-based rank conventions.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.
-- O(log n) per call to `insert()`, `erase()`, `find()`, `select()`, and `rank()`, where $n$ is the
-  number of entries currently in the map.
+- O(log n) per call to `insert()`, `erase()`, `find()`, `find_by_order()`, and `order_of_key()`,
+  where $n$ is the number of entries currently in the map.
 - O(n) per call to `entries()`.
 
 Space Complexity:
@@ -147,27 +152,26 @@ class SBTree {
     return found;
   }
 
-  static std::pair<K, V> select(Node *n, int r) {
-    int rank = size(n->left);
-    if (r < rank) {
-      return select(n->left, r);
-    } else if (r > rank) {
-      return select(n->right, r - rank - 1);
+  static std::pair<K, V> find_by_order(Node *n, int k) {
+    int left_size = size(n->left);
+    if (k < left_size) {
+      return find_by_order(n->left, k);
+    } else if (k > left_size) {
+      return find_by_order(n->right, k - left_size - 1);
     }
     return {n->key, n->value};
   }
 
-  static int rank(Node *n, const K &k) {
+  static int order_of_key(Node *n, const K &x) {
     if (n == nullptr) {
-      throw std::runtime_error("Cannot rank key that's not in tree.");
+      return 0;
     }
-    int r = size(n->left);
-    if (k < n->key) {
-      return rank(n->left, k);
-    } else if (n->key < k) {
-      return rank(n->right, k) + r + 1;
+    if (x < n->key) {
+      return order_of_key(n->left, x);
+    } else if (n->key < x) {
+      return order_of_key(n->right, x) + size(n->left) + 1;
     }
-    return r;
+    return size(n->left);
   }
 
   static void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) {
@@ -196,7 +200,7 @@ class SBTree {
   bool empty() const { return root == nullptr; }
   bool insert(const K &k, const V &v) { return insert(root, k, v); }
   bool erase(const K &k) { return erase(root, k); }
-  int rank(const K &k) const { return rank(root, k); }
+  int order_of_key(const K &x) const { return order_of_key(root, x); }
 
   const V *find(const K &k) const {
     Node *n = root;
@@ -212,11 +216,11 @@ class SBTree {
     return nullptr;
   }
 
-  std::pair<K, V> select(int r) const {
-    if (r < 0 || r >= size(root)) {
-      throw std::runtime_error("Select rank must be between 0 and size() - 1.");
+  std::pair<K, V> find_by_order(int k) const {
+    if (k < 0 || k >= size(root)) {
+      throw std::runtime_error("Order statistic must be between 0 and size() - 1.");
     }
-    return select(root, r);
+    return find_by_order(root, k);
   }
 
   std::vector<std::pair<K, V>> entries() const {
@@ -258,11 +262,12 @@ int main() {
     cout << v;
   }
   cout << endl;
-  assert(t.rank(2) == 0);
-  assert(t.rank(3) == 1);
-  assert(t.rank(5) == 3);
-  assert(t.select(0).first == 2);
-  assert(t.select(1).first == 3);
-  assert(t.select(2).first == 4);
+  assert(t.order_of_key(2) == 0);
+  assert(t.order_of_key(3) == 1);
+  assert(t.order_of_key(5) == 3);
+  assert(t.order_of_key(6) == 4);
+  assert(t.find_by_order(0).first == 2);
+  assert(t.find_by_order(1).first == 3);
+  assert(t.find_by_order(2).first == 4);
   return 0;
 }

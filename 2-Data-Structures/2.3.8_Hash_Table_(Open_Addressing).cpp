@@ -37,7 +37,8 @@ This is an educational implementation; in practice prefer one of the standard op
   adversarial inputs, as its default integer hash is effectively the identity.
 - `__gnu_pbds::gp_hash_table` (from GCC's policy-based library) is an open-addressing table that is
   typically several times faster than `std::unordered_map`, but is a non-portable GNU extension.
-  Prefer it on GCC-only judges when hashing is the bottleneck.
+  Prefer it on GCC-only judges when hashing is the bottleneck; see 8.6 for `HashMap`/`HashSet`
+  wrappers with a randomized integer hash.
 
 Time Complexity:
 - O(1) per call to the constructor, `size()`, and `empty()`.

@@ -1,20 +1,20 @@
 /*
 
-Partially sort a range so that one chosen position ends up holding its final sorted element, like
-`std::nth_element()`.
+Select the element with a given sorted rank without fully sorting the range. This is the same task
+as `std::nth_element()`: after the call, `*nth` is the value that would appear at position `nth` in
+sorted order, all earlier positions contain values no larger than it, and all later positions
+contain values no smaller than it. The order within each side is unspecified.
 
-- `nth_element2(lo, nth, hi)` rearranges the range [`lo`, `hi`) such that the value pointed to by
-  `nth` is the element that would be there if the range were fully sorted. Furthermore, the range is
-  partitioned such that no value in [`lo`, `nth`) compares greater than the value pointed to by
-  `nth` and no value in (`nth`, `hi`) compares less. This requires `operator<` defined on the
-  iterator's value type.
+Quickselect repeatedly partitions around a pivot, then continues only into the side containing the
+desired rank. This implementation chooses the pivot uniformly at random and uses a 3-way partition
+(`less than`, `equal to`, `greater than`) so duplicate-heavy inputs do not cause unnecessary work.
 
-The pivot is chosen uniformly at random, and the partition step groups equal keys together so arrays
-with many duplicate values remain efficient. After each partition, the search continues in only the
-side that contains `nth`, shrinking the expected remaining work geometrically for a linear average.
+- `nth_element2(lo, nth, hi)` rearranges the range [`lo`, `hi`) around the 0-based rank represented
+  by iterator `nth`. This requires random-access iterators and `operator<` on the value type.
 
 Time Complexity:
-- O(n) on average per call to `nth_element2()`, where $n$ is the distance between `lo` and `hi`.
+- O(n) expected per call to `nth_element2()`, where $n$ is the distance between `lo` and `hi`.
+- O(n^2) in the worst case.
 
 Space Complexity:
 - O(1) auxiliary.

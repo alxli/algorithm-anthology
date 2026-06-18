@@ -4,8 +4,10 @@ Schedules unit-time jobs with deadlines and profits to maximize total profit. Ea
 time slot and must be scheduled at or before its deadline. The greedy algorithm processes jobs in
 decreasing profit order and places each chosen job in the latest available slot before its deadline.
 
-This is a compact scheduling pattern that combines sorting with a disjoint-set forest over available
-time slots.
+The latest-slot choice is safe because it uses the current high-profit job while leaving earlier
+slots available for jobs with tighter deadlines. A disjoint-set forest over time slots makes this
+efficient: `find_root(t)` returns the latest still-free slot at or before `t`, and occupying slot
+`t` links it to the next candidate slot `t - 1`.
 
 - `schedule_deadline_jobs(jobs)` returns the maximum total profit for a vector of `Job` with fields
   `deadline` and `profit`. Deadlines are positive integer time slots.

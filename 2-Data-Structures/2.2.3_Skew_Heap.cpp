@@ -15,17 +15,17 @@ merges the root's two subtrees.
 - `push(v)` inserts the value `v` into the priority queue.
 - `pop()` removes the minimum element from the priority queue.
 - `top()` returns the minimum element in the priority queue.
-- `absorb(h)` inserts every value from `h` and sets `h` to the empty priority queue.
+- `join(h)` inserts every value from `h` and sets `h` to the empty priority queue.
 
 Time Complexity:
 - O(1) per call to the first constructor, `size()`, `empty()`, and `top()`.
-- O(log n) amortized auxiliary per call to `push()`, `pop()`, and `absorb()`, where $n$ is the
+- O(log n) amortized auxiliary per call to `push()`, `pop()`, and `join()`, where $n$ is the
   number of elements in the priority queue.
 - O(n) per call to the second constructor, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(n) for storage of the priority queue elements.
-- O(log n) amortized auxiliary stack space for `push()`, `pop()`, and `absorb()`.
+- O(log n) amortized auxiliary stack space for `push()`, `pop()`, and `join()`.
 - O(1) auxiliary for all other operations.
 
 */
@@ -106,7 +106,7 @@ class SkewHeap {
     return root->value;
   }
 
-  void absorb(SkewHeap &h) {
+  void join(SkewHeap &h) {
     root = merge(root, h.root);
     num_nodes += h.num_nodes;
     h.root = nullptr;
@@ -134,7 +134,7 @@ int main() {
   h2.push(5);
   h2.push(-1);
   h2.push(0);
-  h.absorb(h2);
+  h.join(h2);
   while (!h.empty()) {
     cout << h.top() << endl;
     h.pop();

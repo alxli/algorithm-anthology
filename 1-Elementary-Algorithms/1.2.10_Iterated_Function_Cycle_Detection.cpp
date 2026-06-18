@@ -4,12 +4,11 @@ Given a function $f$ mapping a finite set to itself and a starting value $x_0$, 
 position and length of the cycle reached by repeatedly applying $f$. Formally, the sequence
   $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$
 must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to
-$x_{j - 1}$ repeats forever.
-
-This is useful for detecting cycles in functional graphs, pseudo-random generators, Pollard rho
-style algorithms, degenerate linked lists, and arrays where each index points to the next index.
-For example, if `nums` has size $n + 1$ and all values are in $[1, n]$, then $f(i)$ = `nums[i]`
-forms a functional graph; the duplicate value is the entry point of the cycle reached from 0.
+$x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs, pseudo-random
+generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index
+points to the next index. For example, if `nums` has size $n + 1$ and all values are in $[1, n]$,
+then $f(i)$ = `nums[i]` forms a functional graph; the duplicate value is the entry point of the
+cycle reached from 0.
 
 Floyd's cycle-finding algorithm, a.k.a. the "tortoise and the hare algorithm", is a space-efficient
 default choice: it moves two pointers through the sequence at different speeds, finds a meeting

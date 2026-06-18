@@ -16,7 +16,7 @@ by `push()`, the feature pairing heaps are best known for.
   until that element is removed by `pop()` or `erase()`.
 - `pop()` removes the minimum element from the priority queue.
 - `top()` returns the minimum element in the priority queue.
-- `absorb(h)` inserts every value from `h` and sets `h` to the empty priority queue.
+- `join(h)` inserts every value from `h` and sets `h` to the empty priority queue.
 - `decrease_key(h, v)` lowers the value of the element at handle `h` to `v`, which must not be
   greater than its current value.
 - `erase(h)` removes the element at handle `h` from the priority queue.
@@ -24,10 +24,11 @@ by `push()`, the feature pairing heaps are best known for.
 In practice, `decrease_key()` runs in near-constant time, making the pairing heap the usual
 practical substitute for a Fibonacci heap. When handles are not needed, the lazy-deletion idiom
 (push updated entries and skip stale ones on `pop()`, as the Dijkstra section does) is simpler and
-often faster.
+often faster. On GNU C++ judges, `__gnu_pbds::priority_queue` with `pairing_heap_tag` provides a
+shorter handled and meldable heap; see 8.6 for the contest wrapper.
 
 Time Complexity:
-- O(1) per call to the first constructor, `size()`, `empty()`, `top()`, `push()`, and `absorb()`.
+- O(1) per call to the first constructor, `size()`, `empty()`, `top()`, `push()`, and `join()`.
 - O(log n) amortized per call to `pop()` and `erase()`.
 - O(log n) amortized per call to `decrease_key()`, a safe bound to budget for. The true amortized
   cost is sub-logarithmic, though the long-conjectured O(1) bound is provably impossible.
@@ -155,7 +156,7 @@ class PairingHeap {
     return root->value;
   }
 
-  void absorb(PairingHeap &h) {
+  void join(PairingHeap &h) {
     root = merge(root, h.root);
     num_nodes += h.num_nodes;
     h.root = nullptr;
@@ -206,7 +207,7 @@ int main() {
   h2.push(5);
   h2.push(-1);
   h2.push(0);
-  h.absorb(h2);
+  h.join(h2);
 
   auto handle = h.push(100);
   h.decrease_key(handle, -5);  // 100 -> -5, the new minimum.

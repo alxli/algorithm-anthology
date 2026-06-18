@@ -1502,7 +1502,9 @@ Increasing partitions of 8:
 {1,2,5} {1,3,4} {1,7} {2,6} {3,5} {8}
 \end{exampleoutput}
 \subsection{Enumerating Generic Combinatorial Sequences}
-Enumerate combinatorial sequences by inheriting an abstract class. Child classes of \inlinecode{AbstractEnumerator} must implement the \inlinecode{count()} function which should return the number of combinatorial sequences starting with the given prefix.
+Rank, unrank, and enumerate combinatorial sequences in lexicographic order using only a prefix counting oracle. This is useful when the objects are too numerous to precompute, but there is a simple dynamic-programming formula for the number of valid completions after a fixed prefix. Child classes of \inlinecode{AbstractEnumerator} implement \inlinecode{count(prefix)}, which returns how many valid full sequences begin with that prefix.
+
+Let $A$ be the number of candidate values considered at each position (the base class \inlinecode{range}), $L$ be the output sequence length (the base class \inlinecode{length}), and $T$ be \inlinecode{total\_count()}, the number of valid sequences. The base class tries candidate values in $[0, A)$ at each of the $L$ positions, asking \inlinecode{count()} how many completions each prefix admits. The concrete classes may still use their own conventional constructor names, such as \inlinecode{n} and \inlinecode{k} for combinations.
 
 \begin{compactitem}
   \item \inlinecode{to\_rank(a)} returns an integer representing the 0-based rank of the combinatorial sequence \inlinecode{a}.
@@ -1510,9 +1512,22 @@ Enumerate combinatorial sequences by inheriting an abstract class. Child classes
   \item \inlinecode{enumerate(f)} calls the function \inlinecode{f(lo, hi)} on every specified combinatorial sequence in lexicographically increasing order, where \inlinecode{lo} and \inlinecode{hi} are two random-access iterators to a range [\inlinecode{lo}, \inlinecode{hi}) of integers.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{2})$ calls will be made to \inlinecode{count()} per call to all operations, where $n$ is the length of the combinatorial sequence.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(A \cdot L)$ calls to \inlinecode{count()} per call to \inlinecode{to\_rank()} and \inlinecode{from\_rank()}.
+  \item $O(T \cdot A \cdot L)$ calls to \inlinecode{count()} per call to \inlinecode{enumerate()}, excluding the cost of the callback \inlinecode{f}.
+  \item The actual running time multiplies these bounds by the subclass cost of \inlinecode{count()}. In the implementations below, \inlinecode{CombinationEnumerator::count()} is $O(1)$, while \inlinecode{ArrangementEnumerator::count()} and \inlinecode{PartitionEnumerator::count()} are $O(L)$.
+  \item $O(A^{2})$ constructor time for \inlinecode{CombinationEnumerator} and $O(L^{2})$ constructor time for \inlinecode{PartitionEnumerator} to build their tables.
+\end{compactitem}
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space per call to all operations.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(L)$ auxiliary heap space per call to \inlinecode{to\_rank()}, \inlinecode{from\_rank()}, and \inlinecode{enumerate()}, excluding output storage.
+  \item $O(1)$ object storage for \inlinecode{ArrangementEnumerator} and \inlinecode{PermutationEnumerator}.
+  \item $O(A^{2})$ object storage for \inlinecode{CombinationEnumerator} and $O(L^{2})$ object storage for \inlinecode{PartitionEnumerator} tables.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
 #include <cstdint>
@@ -1526,7 +1541,7 @@ class AbstractEnumerator {
   virtual ~AbstractEnumerator() = default;
   virtual int64_t count(const std::vector<int> &prefix) { return 0; }
   std::vector<int> next(std::vector<int> &a) { return from_rank(to_rank(a) + 1); }
-  int64_t total_count() { return count(std::vector<int>(0)); }
+  int64_t total_count() { return count(std::vector<int>{}); }
 
  public:
   int64_t to_rank(const std::vector<int> &a) {

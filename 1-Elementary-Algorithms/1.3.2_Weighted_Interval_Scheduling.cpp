@@ -11,6 +11,7 @@ if the next interval's `start` is at least the previous interval's `finish`.
 
 - `weighted_interval_scheduling(intervals)` returns the maximum total weight of a compatible subset
   from an input vector of `WeightedInterval` with fields `start`, `finish`, and `weight`.
+  `dp[i]` stores the best answer using the first `i` intervals after sorting by finish time.
 
 Time Complexity:
 - O(n log n) per call due to sorting and binary searching compatible intervals.

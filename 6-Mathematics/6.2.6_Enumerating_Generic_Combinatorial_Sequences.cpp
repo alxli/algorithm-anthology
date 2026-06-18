@@ -1,8 +1,16 @@
 /*
 
-Enumerate combinatorial sequences by inheriting an abstract class. Child classes of
-`AbstractEnumerator` must implement the `count()` function which should return the number of
-combinatorial sequences starting with the given prefix.
+Rank, unrank, and enumerate combinatorial sequences in lexicographic order using only a prefix
+counting oracle. This is useful when the objects are too numerous to precompute, but there is a
+simple dynamic-programming formula for the number of valid completions after a fixed prefix. Child
+classes of `AbstractEnumerator` implement `count(prefix)`, which returns how many valid full
+sequences begin with that prefix.
+
+Let $A$ be the number of candidate values considered at each position (the base class `range`),
+$L$ be the output sequence length (the base class `length`), and $T$ be `total_count()`, the number
+of valid sequences. The base class tries candidate values in $[0, A)$ at each of the $L$ positions,
+asking `count()` how many completions each prefix admits. The concrete classes may still use their
+own conventional constructor names, such as `n` and `k` for combinations.
 
 - `to_rank(a)` returns an integer representing the 0-based rank of the combinatorial sequence `a`.
 - `from_rank(r)` returns a combinatorial sequence of integers that is lexicographically ranked `r`,
@@ -12,11 +20,20 @@ combinatorial sequences starting with the given prefix.
   [`lo`, `hi`) of integers.
 
 Time Complexity:
-- O(n^2) calls will be made to `count()` per call to all operations, where $n$ is the length of the
-  combinatorial sequence.
+- O(A*L) calls to `count()` per call to `to_rank()` and `from_rank()`.
+- O(T*A*L) calls to `count()` per call to `enumerate()`, excluding the cost of the callback `f`.
+- The actual running time multiplies these bounds by the subclass cost of `count()`. In the
+  implementations below, `CombinationEnumerator::count()` is O(1), while
+  `ArrangementEnumerator::count()` and `PartitionEnumerator::count()` are O(L).
+- O(A^2) constructor time for `CombinationEnumerator` and O(L^2) constructor time for
+  `PartitionEnumerator` to build their tables.
 
 Space Complexity:
-- O(n) auxiliary heap space per call to all operations.
+- O(L) auxiliary heap space per call to `to_rank()`, `from_rank()`, and `enumerate()`, excluding
+  output storage.
+- O(1) object storage for `ArrangementEnumerator` and `PermutationEnumerator`.
+- O(A^2) object storage for `CombinationEnumerator` and O(L^2) object storage for
+  `PartitionEnumerator` tables.
 
 */
 
@@ -31,7 +48,7 @@ class AbstractEnumerator {
   virtual ~AbstractEnumerator() = default;
   virtual int64_t count(const std::vector<int> &prefix) { return 0; }
   std::vector<int> next(std::vector<int> &a) { return from_rank(to_rank(a) + 1); }
-  int64_t total_count() { return count(std::vector<int>(0)); }
+  int64_t total_count() { return count(std::vector<int>{}); }
 
  public:
   int64_t to_rank(const std::vector<int> &a) {

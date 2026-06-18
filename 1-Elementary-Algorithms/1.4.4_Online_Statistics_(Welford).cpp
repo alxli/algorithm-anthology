@@ -1,10 +1,11 @@
 /*
 
-Maintains the mean and variance of a stream of numbers in one pass using Welford's algorithm. This
-is more numerically stable than maintaining the sum of values and the sum of squares separately.
-Each new value shifts the running mean by its deviation divided by the new count, and accumulates
-the product of its deviations from the old and new means into a running sum of squared deviations,
-from which both population and sample variance follow directly.
+Maintains the mean and variance of a stream of numbers in one pass using Welford's algorithm. The
+naive formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose precision when the two terms are
+large and close together. Welford instead keeps the current mean and `m2`, the sum of squared
+deviations from that mean. Each new value shifts the running mean by its deviation divided by the
+new count, then adds the product of its deviations from the old and new means to `m2`. Population
+and sample variance follow by dividing `m2` by $n$ or $n - 1$.
 
 - `OnlineStatistics()` constructs an empty summary.
 - `add(x)` incorporates one more value `x` into the summary.

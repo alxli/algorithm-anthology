@@ -4,7 +4,7 @@
 \setcounter{section}{1}
 \setcounter{subsection}{0}
 \subsection{Sorting Algorithms}
-These functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}) to be sorted. Elements between \inlinecode{lo} and \inlinecode{hi} (including the element pointed to by \inlinecode{lo} but excluding the element pointed to by \inlinecode{hi}) will be sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
+The following functions are equivalent to \inlinecode{std::sort()}, taking random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}) to be sorted. Elements between \inlinecode{lo} and \inlinecode{hi} (including the element pointed to by \inlinecode{lo} but excluding the element pointed to by \inlinecode{hi}) will be sorted into ascending order after the function call. Optionally, a comparison function object specifying a strict weak ordering may be specified to replace the default \inlinecode{operator\textless{}}.
 
 \begin{compactitem}
   \item \inlinecode{quicksort(lo, hi)} sorts the range using quicksort.
@@ -752,15 +752,20 @@ int main() {
 1 0 2 0 3 1
 \end{exampleoutput}
 \subsection{Selection (Quickselect)}
-Partially sort a range so that one chosen position ends up holding its final sorted element, like \inlinecode{std::nth\_element()}.
+Select the element with a given sorted rank without fully sorting the range. This is the same task as \inlinecode{std::nth\_element()}: after the call, \inlinecode{*nth} is the value that would appear at position \inlinecode{nth} in sorted order, all earlier positions contain values no larger than it, and all later positions contain values no smaller than it. The order within each side is unspecified.
+
+Quickselect repeatedly partitions around a pivot, then continues only into the side containing the desired rank. This implementation chooses the pivot uniformly at random and uses a 3-way partition (\inlinecode{less than}, \inlinecode{equal to}, \inlinecode{greater than}) so duplicate-heavy inputs do not cause unnecessary work.
 
 \begin{compactitem}
-  \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges the range [\inlinecode{lo}, \inlinecode{hi}) such that the value pointed to by \inlinecode{nth} is the element that would be there if the range were fully sorted. Furthermore, the range is partitioned such that no value in [\inlinecode{lo}, \inlinecode{nth}) compares greater than the value pointed to by \inlinecode{nth} and no value in (\inlinecode{nth}, \inlinecode{hi}) compares less. This requires \inlinecode{operator\textless{}} defined on the iterator's value type.
+  \item \inlinecode{nth\_element2(lo, nth, hi)} rearranges the range [\inlinecode{lo}, \inlinecode{hi}) around the 0-based rank represented by iterator \inlinecode{nth}. This requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
 \end{compactitem}
 
-The pivot is chosen uniformly at random, and the partition step groups equal keys together so arrays with many duplicate values remain efficient. After each partition, the search continues in only the side that contains \inlinecode{nth}, shrinking the expected remaining work geometrically for a linear average.
-
-\textbf{Time Complexity}: $O(n)$ on average per call to \inlinecode{nth\_element2()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ expected per call to \inlinecode{nth\_element2()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(n^{2})$ in the worst case.
+\end{compactitem}
 
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
@@ -1080,20 +1085,30 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Two Pointers}
-Uses two moving indices to process subarrays in linear time. This technique is most useful when expanding the right endpoint of a window monotonically and shrinking the left endpoint monotonically preserves enough state to test a condition or update an answer.
+Uses two moving indices to avoid trying all pairs of positions. This technique has two common forms: opposite-end pointers over sorted arrays, and a sliding window over contiguous subarrays. The opposite-end form moves the smaller or larger side according to the current comparison. The sliding-window form is useful when expanding the right endpoint and shrinking the left endpoint monotonically preserves enough state to test a condition or update an answer.
 
-The examples below cover two common patterns: finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most \inlinecode{k} distinct values.
+The examples below cover sorted 2-sum/3-sum variants, finding the shortest subarray with sum at least a target when all values are nonnegative, and finding the longest subarray with at most \inlinecode{k} distinct values.
 
 \begin{compactitem}
+  \item \inlinecode{two\_sum\_sorted(a, target)} returns two indices whose values sum to \inlinecode{target}, or ${-1, -1}$ if no such pair exists. The input array must be sorted.
+  \item \inlinecode{three\_sum\_exists(a, target)} returns whether any three values in \inlinecode{a} sum to \inlinecode{target}. It sorts a copy of the input array.
   \item \inlinecode{min\_length\_at\_least(a, target)} returns the minimum length of a contiguous subarray with sum at least \inlinecode{target}, or $-1$ if none exists. Values in \inlinecode{a} must be nonnegative.
   \item \inlinecode{longest\_at\_most\_k\_distinct(a, k)} returns the maximum length of a contiguous subarray containing at most \inlinecode{k} distinct values.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ expected per call, where $n$ is the array size.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{two\_sum\_sorted()} and \inlinecode{min\_length\_at\_least()}, where $n$ is the array size.
+  \item $O(n^{2})$ per call to \inlinecode{three\_sum\_exists()}.
+  \item $O(n)$ expected per call to \inlinecode{longest\_at\_most\_k\_distinct()}.
+\end{compactitem}
 
 \Needspace*{3\baselineskip}
 \textbf{Space Complexity}:
 \begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{two\_sum\_sorted(a, target)}.
+  \item $O(n)$ auxiliary heap space for \inlinecode{three\_sum\_exists(a, target)}.
   \item $O(1)$ auxiliary for \inlinecode{min\_length\_at\_least(a, target)}.
   \item $O(k)$ auxiliary heap space for \inlinecode{longest\_at\_most\_k\_distinct(a, k)}.
 \end{compactitem}
@@ -1102,7 +1117,40 @@ The examples below cover two common patterns: finding the shortest subarray with
 #include <algorithm>
 #include <cstdint>
 #include <unordered_map>
+#include <utility>
 #include <vector>
+
+std::pair<int, int> two_sum_sorted(const std::vector<int> &a, int64_t target) {
+  for (int l = 0, r = static_cast<int>(a.size()) - 1; l < r;) {
+    int64_t sum = static_cast<int64_t>(a[l]) + a[r];
+    if (sum == target) {
+      return {l, r};
+    } else if (sum < target) {
+      l++;
+    } else {
+      r--;
+    }
+  }
+  return {-1, -1};
+}
+
+bool three_sum_exists(std::vector<int> a, int64_t target) {
+  std::sort(a.begin(), a.end());
+  for (int i = 0; i < static_cast<int>(a.size()); i++) {
+    int l = i + 1, r = static_cast<int>(a.size()) - 1;
+    while (l < r) {
+      int64_t sum = static_cast<int64_t>(a[i]) + a[l] + a[r];
+      if (sum == target) {
+        return true;
+      } else if (sum < target) {
+        l++;
+      } else {
+        r--;
+      }
+    }
+  }
+  return false;
+}
 
 int min_length_at_least(const std::vector<int> &a, int64_t target) {
   int best = static_cast<int>(a.size()) + 1;
@@ -1143,136 +1191,20 @@ int longest_at_most_k_distinct(const std::vector<int> &a, int k) {
 using namespace std;
 
 int main() {
+  vector<int> c{-3, -1, 2, 4, 8, 11};
+  assert(two_sum_sorted(c, 10) == make_pair(1, 5));  // -1 + 11.
+  assert(two_sum_sorted(c, 7) == make_pair(1, 4));   // -1 + 8.
+  assert(two_sum_sorted(c, 100) == make_pair(-1, -1));
+
+  vector<int> d{4, -1, 8, 2, -3, 11};
+  assert(three_sum_exists(d, 9));   // -3 + 4 + 8.
+  assert(!three_sum_exists(d, 30));
+
   vector<int> a{2, 3, 1, 2, 4, 3};
   assert(min_length_at_least(a, 7) == 2);  // [4, 3].
 
   vector<int> b{1, 2, 1, 3, 4, 3, 5};
   assert(longest_at_most_k_distinct(b, 2) == 3);  // [1, 2, 1].
-  return 0;
-}
-\end{lstlisting}
-\subsection{Iterated Function Cycle Detection}
-Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the position and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever.
-
-This is useful for detecting cycles in functional graphs, pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if \inlinecode{nums} has size $n + 1$ and all values are in $[1, n]$, then $f(i)$ = \inlinecode{nums[i]} forms a functional graph; the duplicate value is the entry point of the cycle reached from 0.
-
-Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient default choice: it moves two pointers through the sequence at different speeds, finds a meeting point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice, using three calls to $f$ per step.
-
-\begin{compactitem}
-  \item \inlinecode{find\_cycle\_floyd(f, x0)} returns the reached cycle as a pair (\inlinecode{start}, \inlinecode{length}), where \inlinecode{start} is the smallest index $i$ such that $x_i$ is in the cycle, and \inlinecode{length} is the number of distinct values in the cycle.
-  \item \inlinecode{find\_cycle\_brent(f, x0)} does the same with fewer calls to $f$ in many cases.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(m + n)$ per call, where $m$ is the first index in the cycle and $n$ is the cycle length.
-
-\textbf{Space Complexity}: $O(1)$ auxiliary.
-
-\begin{lstlisting}[language=C++]
-#include <utility>
-
-template<typename Fn, typename T>
-std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
-  T tortoise = f(x0), hare = f(f(x0));
-  while (tortoise != hare) {
-    tortoise = f(tortoise);
-    hare = f(f(hare));
-  }
-  int start = 0;
-  tortoise = x0;
-  while (tortoise != hare) {
-    tortoise = f(tortoise);
-    hare = f(hare);
-    start++;
-  }
-  int length = 1;
-  hare = f(tortoise);
-  while (tortoise != hare) {
-    hare = f(hare);
-    length++;
-  }
-  return {start, length};
-}
-
-template<typename Fn, typename T>
-std::pair<int, int> find_cycle_brent(Fn f, T x0) {
-  int power = 1, length = 1;
-  T tortoise = x0, hare = f(x0);
-  while (tortoise != hare) {
-    if (power == length) {
-      tortoise = hare;
-      power *= 2;
-      length = 0;
-    }
-    hare = f(hare);
-    length++;
-  }
-  hare = x0;
-  for (int i = 0; i < length; i++) {
-    hare = f(hare);
-  }
-  int start = 0;
-  tortoise = x0;
-  while (tortoise != hare) {
-    tortoise = f(tortoise);
-    hare = f(hare);
-    start++;
-  }
-  return {start, length};
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <set>
-#include <vector>
-using namespace std;
-
-int f(int x) {
-  return (123 * x * x + 4567890) % 1337;
-}
-
-void verify(int x0, int start, int length) {
-  set<int> s;
-  int x = x0;
-  for (int i = 0; i < start; i++) {
-    assert(!s.count(x));
-    s.insert(x);
-    x = f(x);
-  }
-  int startx = x;
-  s.clear();
-  for (int i = 0; i < length; i++) {
-    assert(!s.count(x));
-    s.insert(x);
-    x = f(x);
-  }
-  assert(startx == x);
-}
-
-// Given n + 1 integers within [1, n], where one value in [1, n] is present 2 or more times (but
-// other values in [1, n] are present at most once), find the duplicate without modifying the array.
-// Interpret each value as a pointer to the next index; the duplicate is the cycle entry.
-int find_duplicate_integer(const vector<int> &nums) {
-  auto [start, _] = find_cycle_floyd([&](int i) { return nums[i]; }, 0);
-  int res = 0;
-  for (int i = 0; i < start; i++) {
-    res = nums[res];
-  }
-  return res;
-}
-
-int main() {
-  int x0 = 0;
-  auto [floyd_start, floyd_len] = find_cycle_floyd(f, x0);
-  assert(floyd_start == 4 && floyd_len == 2);
-  verify(x0, floyd_start, floyd_len);
-
-  auto [brent_start, brent_len] = find_cycle_brent(f, x0);
-  assert(brent_start == floyd_start && brent_len == floyd_len);
-
-  assert(find_duplicate_integer({1, 3, 4, 2, 2}) == 2);
-  assert(find_duplicate_integer({3, 1, 3, 4, 2}) == 3);
   return 0;
 }
 \end{lstlisting}
@@ -1466,7 +1398,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Monotonic Stack}
-A monotonic stack maintains its elements in sorted order as values are pushed, popping away any entries that would violate the ordering. Scanning an array once while keeping such a stack of indices answers, for every position, where the nearest smaller or larger neighbor lies. These ``nearest smaller/greater'' relationships underlie many array problems, the most famous being the largest rectangle in a histogram. Each index is pushed and popped at most once, so a full scan runs in linear time.
+A monotonic stack maintains its elements in sorted order as values are pushed, popping away any entries that would violate the ordering. Scanning an array once while keeping such a stack of indices answers, for every position, where the nearest smaller or larger neighbor lies. These ``nearest smaller/greater'' relationships underlie many array problems, the most famous being the largest rectangle in a histogram. Each index is pushed and popped at most once, so a full scan runs in linear time. A largest all-zero submatrix can then be found by sweeping rows, turning each row into a histogram of consecutive zeros ending at that row.
 
 All functions below take a vector \inlinecode{a} of $n$ comparable values and return a vector of $n$ indices. A ``less'' query uses a strictly smaller neighbor and a ``greater'' query uses a strictly larger one; changing the comparison from strict to non-strict (e.g. \inlinecode{\textgreater{}=} to \inlinecode{\textgreater{}}) toggles how ties are handled.
 
@@ -1476,13 +1408,25 @@ All functions below take a vector \inlinecode{a} of $n$ comparable values and re
   \item \inlinecode{previous\_greater(a)} returns, for each $i$, the largest index $j < i$ with $a[j] > a[i]$, or $-1$ if there's no such index.
   \item \inlinecode{next\_greater(a)} returns, for each $i$, the smallest index $j > i$ with $a[j] > a[i]$, or $n$ if there's no such index.
   \item \inlinecode{largest\_rectangle(heights)} returns the maximum area of an axis-aligned rectangle that fits under the given histogram, given an array of \inlinecode{heights} where each bar has width 1.
+  \item \inlinecode{largest\_zero\_submatrix(a)} returns the area of the largest all-zero rectangular submatrix of the 0/1 matrix \inlinecode{a}.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n)$ per call to all functions, where $n$ is the size of the input.
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to all one-dimensional functions, where $n$ is the size of the input.
+  \item $O(r \cdot c)$ per call to \inlinecode{largest\_zero\_submatrix()}, where $r$ and $c$ are the matrix dimensions.
+\end{compactitem}
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space for the stack and result.
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ auxiliary heap space for the stack and result.
+  \item $O(c)$ auxiliary heap space for \inlinecode{largest\_zero\_submatrix()}.
+\end{compactitem}
 
 \begin{lstlisting}[language=C++]
+#include <algorithm>
 #include <stack>
 #include <vector>
 
@@ -1559,6 +1503,22 @@ T largest_rectangle(const std::vector<T> &heights) {
   }
   return best;
 }
+
+int largest_zero_submatrix(const std::vector<std::vector<bool>> &a) {
+  if (a.empty()) {
+    return 0;
+  }
+  int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
+  int best = 0;
+  std::vector<int> height(cols, 0);
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      height[j] = a[i][j] ? 0 : height[j] + 1;
+    }
+    best = std::max(best, largest_rectangle(height));
+  }
+  return best;
+}
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -1575,9 +1535,224 @@ int main() {
 
   vector<int> hist{2, 1, 5, 6, 2, 3};
   assert(largest_rectangle(hist) == 10);
+
+  vector<vector<bool>> grid{
+      {1, 0, 1, 1, 0, 0},
+      {1, 0, 0, 1, 0, 0},
+      {0, 0, 0, 0, 0, 1},
+      {1, 0, 0, 1, 0, 0},
+      {1, 0, 1, 0, 0, 1}
+  };
+  assert(largest_zero_submatrix(grid) == 6);
   return 0;
 }
 \end{lstlisting}
+\subsection{Maximum Subarray Sum (Kadane)}
+Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans through the array, at each index computing the maximum nonnegative sum subarray ending there. Either this subarray is empty (in which case its sum is zero), or it consists of one more element than the maximum sequence ending at the previous position. This can be adapted to compute the maximal submatrix sum as well.
+
+\begin{compactitem}
+  \item \inlinecode{max\_subarray\_sum(lo, hi, \&res\_lo, \&res\_hi)} returns the maximal subarray sum for the range [\inlinecode{lo}, \inlinecode{hi}), where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, two \inlinecode{int} pointers may be passed to store the inclusive boundary indices [\inlinecode{res\_lo}, \inlinecode{res\_hi}] of the resulting subarray. By convention, the empty subarray is allowed, so an input range consisting of only negative values returns 0 with an empty result interval.
+  \item \inlinecode{max\_submatrix\_sum(a, \&r1, \&c1, \&r2, \&c2)} returns the largest sum of any rectangular submatrix for a matrix \inlinecode{a} with $m$ rows and $n$ columns. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, four \inlinecode{int} pointers may be passed to store the boundary indices of the resulting subarray, with (\inlinecode{r1}, \inlinecode{c1}) specifiying the top-left index and (\inlinecode{r2}, \inlinecode{c2}) specifying the bottom-right index. By convention, the empty submatrix is allowed, so an input matrix consisting of only negative values returns 0 with an empty result interval.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Time Complexity}:
+\begin{compactitem}
+  \item $O(n)$ per call to \inlinecode{max\_subarray\_sum()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+  \item $O(m \cdot n^{2})$ per call to \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows and $n$ is the number of columns in the matrix.
+\end{compactitem}
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(1)$ auxiliary for \inlinecode{max\_subarray\_sum()}.
+  \item $O(m)$ auxiliary heap space for \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows in the matrix.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
+#include <vector>
+
+template<typename It>
+auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr) {
+  using T = typename std::iterator_traits<It>::value_type;
+  if (lo == hi) {
+    return T();
+  }
+  int curr_begin = 0, begin = 0, end = -1;
+  T sum = 0, max_sum = 0;
+  for (It it = lo; it != hi; ++it) {
+    sum += *it;
+    if (sum < 0) {
+      sum = 0;
+      curr_begin = (it - lo) + 1;
+    } else if (max_sum < sum) {
+      max_sum = sum;
+      begin = curr_begin;
+      end = it - lo;
+    }
+  }
+  if (res_lo != nullptr && res_hi != nullptr) {
+    *res_lo = begin;
+    *res_hi = end;
+  }
+  return max_sum;
+}
+
+template<typename T>
+T max_submatrix_sum(
+    const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr, int *r2 = nullptr,
+    int *c2 = nullptr
+) {
+  if (a.empty() || a[0].empty()) {
+    return T();
+  }
+  int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
+  T sum, max_sum = 0;
+  for (int clo = 0; clo < cols; clo++) {
+    std::vector<T> sums(rows, 0);
+    for (int chi = clo; chi < cols; chi++) {
+      for (int i = 0; i < rows; i++) {
+        sums[i] += a[i][chi];
+      }
+      int rlo, rhi;
+      sum = max_subarray_sum(sums.begin(), sums.end(), &rlo, &rhi);
+      if (max_sum < sum) {
+        max_sum = sum;
+        if (r1 != nullptr && c1 != nullptr && r2 != nullptr && c2 != nullptr) {
+          *r1 = rlo;
+          *c1 = clo;
+          *r2 = rhi;
+          *c2 = chi;
+        }
+      }
+    }
+  }
+  return max_sum;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <iostream>
+using namespace std;
+
+int main() {
+  {
+    vector<int> a{-2, -1, -3, 4, -1, 2, 1, -5, 4};
+    int lo = 0, hi = 0;
+    assert(max_subarray_sum(a.begin(), a.begin() + 3) == 0);
+    assert(max_subarray_sum(a.begin(), a.end(), &lo, &hi) == 6);
+    cout << "Maximal sum subarray:" << endl;
+    for (int i = lo; i <= hi; i++) {
+      cout << a[i] << " ";
+    }
+    cout << endl;
+  }
+  {
+    vector<vector<int>> a{{0, -2, -7, 0, 5},
+                          {9, 2, -6, 2, -4},
+                          {-4, 1, -4, 1, 0},
+                          {-1, 8, 0, -2, 3}};
+    int r1 = 0, c1 = 0, r2 = 0, c2 = 0;
+    assert(max_submatrix_sum(a, &r1, &c1, &r2, &c2) == 15);
+    cout << "\nMaximal sum submatrix:" << endl;
+    for (int i = r1; i <= r2; i++) {
+      for (int j = c1; j <= c2; j++) {
+        cout << a[i][j] << " ";
+      }
+      cout << endl;
+    }
+  }
+  return 0;
+}
+\end{lstlisting}
+\begin{exampleoutput}
+Maximal sum subarray:
+4 -1 2 1
+
+Maximal sum submatrix:
+9 2
+-4 1
+-1 8
+\end{exampleoutput}
+\subsection{Longest Increasing Subsequence}
+Given a range of elements, determine a longest subsequence of the range where all elements are in strictly ascending order. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. This implementation requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
+
+The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence.
+
+\begin{compactitem}
+  \item \inlinecode{longest\_increasing\_subsequence(lo, hi)} returns a longest strictly increasing subsequence of [\inlinecode{lo}, \inlinecode{hi}) as a \inlinecode{std::vector} of the selected values, in order.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{longest\_increasing\_subsequence()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+
+\textbf{Space Complexity}: $O(n)$ auxiliary heap space for \inlinecode{longest\_increasing\_subsequence()}.
+
+\begin{lstlisting}[language=C++]
+#include <algorithm>
+#include <iterator>
+#include <vector>
+
+template<typename It>
+auto longest_increasing_subsequence(It lo, It hi) {
+  using T = typename std::iterator_traits<It>::value_type;
+  int len = 0, n = static_cast<int>(hi - lo);
+  if (n == 0) {
+    return std::vector<T>();
+  }
+  // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i+1.
+  // prev[i] = index of the predecessor of element i in its LIS (or -1 if first).
+  std::vector<int> prev(n), tail(n);
+  for (int i = 0; i < n; i++) {
+    // Find the tail to extend or improve. Comparing by value through the stored indices keeps
+    // `tail` index-based for reconstruction; swap `<` for `<=` to allow a non-decreasing result.
+    int pos = static_cast<int>(
+        std::lower_bound(
+            tail.begin(), tail.begin() + len, i, [&](int t, int x) { return *(lo + t) < *(lo + x); }
+        ) -
+        tail.begin()
+    );
+    if (pos == len) {
+      len++;
+    }
+    prev[i] = pos > 0 ? tail[pos - 1] : -1;
+    tail[pos] = i;
+  }
+  std::vector<T> res(len);
+  for (int i = tail[len - 1]; i != -1; i = prev[i]) {
+    res[--len] = *(lo + i);
+  }
+  return res;
+}
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <iostream>
+using namespace std;
+
+template<typename It>
+void print_range(It lo, It hi) {
+  while (lo != hi) {
+    cout << *lo++ << " ";
+  }
+  cout << endl;
+}
+
+int main() {
+  vector<int> a{-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
+  vector<int> res = longest_increasing_subsequence(a.begin(), a.end());
+  print_range(res.begin(), res.end());
+  return 0;
+}
+\end{lstlisting}
+\begin{exampleoutput}
+-5 1 9 10 11 13
+\end{exampleoutput}
 \subsection{Minimum Excluded Value}
 Computes the minimum excluded nonnegative integer, commonly called the MEX. The MEX of a set is the smallest integer $x \geq 0$ that does not appear in the set. It appears frequently in array problems, game theory with Grundy numbers, and dynamic programming states. Since the MEX of $n$ elements never exceeds $n$, the one-shot version simply marks which of the values $0$ to $n$ occur and scans for the first gap. The dynamic version keeps a count per value plus an ordered set of absent values, whose smallest member is always the current MEX.
 
@@ -1667,80 +1842,129 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Longest Increasing Subsequence}
-Given a range of elements, determine a longest subsequence of the range where all elements are in strictly ascending order. The subsequence is not necessarily contiguous or unique, so only one such answer will be found. This implementation requires random-access iterators and \inlinecode{operator\textless{}} on the value type.
+\subsection{Iterated Function Cycle Detection}
+Given a function $f$ mapping a finite set to itself and a starting value $x_0$, return the position and length of the cycle reached by repeatedly applying $f$. Formally, the sequence $x_0, x_1 = f(x_0), x_2 = f(x_1), \ldots, x_n = f(x_{n - 1}), \ldots$ must eventually repeat some value. If $x_i = x_j$ for $i < j$, then the sequence from $x_i$ to $x_{j - 1}$ repeats forever. This is useful for detecting cycles in functional graphs, pseudo-random generators, Pollard rho style algorithms, degenerate linked lists, and arrays where each index points to the next index. For example, if \inlinecode{nums} has size $n + 1$ and all values are in $[1, n]$, then $f(i)$ = \inlinecode{nums[i]} forms a functional graph; the duplicate value is the entry point of the cycle reached from 0.
 
-The answer is computed by scanning left to right while maintaining, for each length, the smallest possible tail value of an increasing subsequence of that length. Each element extends or improves one of these tails, located in $O(\log n)$ by binary search; predecessor links then reconstruct the subsequence.
+Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'', is a space-efficient default choice: it moves two pointers through the sequence at different speeds, finds a meeting point inside the cycle, then locates the cycle start. Brent's algorithm is a compact variant that usually calls $f$ fewer times by only resetting the tortoise at powers of two; prefer it when evaluating $f$ is expensive and constant factors matter. In the detection phase, Brent advances one pointer with one call to $f$ per step, while Floyd advances the tortoise once and the hare twice, using three calls to $f$ per step.
 
 \begin{compactitem}
-  \item \inlinecode{longest\_increasing\_subsequence(lo, hi)} returns a longest strictly increasing subsequence of [\inlinecode{lo}, \inlinecode{hi}) as a \inlinecode{std::vector} of the selected values, in order.
+  \item \inlinecode{find\_cycle\_floyd(f, x0)} returns the reached cycle as a pair (\inlinecode{start}, \inlinecode{length}), where \inlinecode{start} is the smallest index $i$ such that $x_i$ is in the cycle, and \inlinecode{length} is the number of distinct values in the cycle.
+  \item \inlinecode{find\_cycle\_brent(f, x0)} does the same with fewer calls to $f$ in many cases.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{longest\_increasing\_subsequence()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
+\textbf{Time Complexity}: $O(m + n)$ per call, where $m$ is the first index in the cycle and $n$ is the cycle length.
 
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space for \inlinecode{longest\_increasing\_subsequence()}.
+\textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <iterator>
-#include <vector>
+#include <utility>
 
-template<typename It>
-auto longest_increasing_subsequence(It lo, It hi) {
-  using T = typename std::iterator_traits<It>::value_type;
-  int len = 0, n = static_cast<int>(hi - lo);
-  if (n == 0) {
-    return std::vector<T>();
+template<typename Fn, typename T>
+std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
+  T tortoise = f(x0), hare = f(f(x0));
+  while (tortoise != hare) {
+    tortoise = f(tortoise);
+    hare = f(f(hare));
   }
-  // tail[i] = index (into [lo, hi)) of the last element of the best known LIS of length i+1.
-  // prev[i] = index of the predecessor of element i in its LIS (or -1 if first).
-  std::vector<int> prev(n), tail(n);
-  for (int i = 0; i < n; i++) {
-    // Find the tail to extend or improve. Comparing by value through the stored indices keeps
-    // `tail` index-based for reconstruction; swap `<` for `<=` to allow a non-decreasing result.
-    int pos = static_cast<int>(
-        std::lower_bound(
-            tail.begin(), tail.begin() + len, i, [&](int t, int x) { return *(lo + t) < *(lo + x); }
-        ) -
-        tail.begin()
-    );
-    if (pos == len) {
-      len++;
+  int start = 0;
+  tortoise = x0;
+  while (tortoise != hare) {
+    tortoise = f(tortoise);
+    hare = f(hare);
+    start++;
+  }
+  int length = 1;
+  hare = f(tortoise);
+  while (tortoise != hare) {
+    hare = f(hare);
+    length++;
+  }
+  return {start, length};
+}
+
+template<typename Fn, typename T>
+std::pair<int, int> find_cycle_brent(Fn f, T x0) {
+  int power = 1, length = 1;
+  T tortoise = x0, hare = f(x0);
+  while (tortoise != hare) {
+    if (power == length) {
+      tortoise = hare;
+      power *= 2;
+      length = 0;
     }
-    prev[i] = pos > 0 ? tail[pos - 1] : -1;
-    tail[pos] = i;
+    hare = f(hare);
+    length++;
   }
-  std::vector<T> res(len);
-  for (int i = tail[len - 1]; i != -1; i = prev[i]) {
-    res[--len] = *(lo + i);
+  hare = x0;
+  for (int i = 0; i < length; i++) {
+    hare = f(hare);
   }
-  return res;
+  int start = 0;
+  tortoise = x0;
+  while (tortoise != hare) {
+    tortoise = f(tortoise);
+    hare = f(hare);
+    start++;
+  }
+  return {start, length};
 }
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
-#include <iostream>
+#include <cassert>
+#include <set>
+#include <vector>
 using namespace std;
 
-template<typename It>
-void print_range(It lo, It hi) {
-  while (lo != hi) {
-    cout << *lo++ << " ";
+int f(int x) {
+  return (123 * x * x + 4567890) % 1337;
+}
+
+void verify(int x0, int start, int length) {
+  set<int> s;
+  int x = x0;
+  for (int i = 0; i < start; i++) {
+    assert(!s.count(x));
+    s.insert(x);
+    x = f(x);
   }
-  cout << endl;
+  int startx = x;
+  s.clear();
+  for (int i = 0; i < length; i++) {
+    assert(!s.count(x));
+    s.insert(x);
+    x = f(x);
+  }
+  assert(startx == x);
+}
+
+// Given n + 1 integers within [1, n], where one value in [1, n] is present 2 or more times (but
+// other values in [1, n] are present at most once), find the duplicate without modifying the array.
+// Interpret each value as a pointer to the next index; the duplicate is the cycle entry.
+int find_duplicate_integer(const vector<int> &nums) {
+  auto [start, _] = find_cycle_floyd([&](int i) { return nums[i]; }, 0);
+  int res = 0;
+  for (int i = 0; i < start; i++) {
+    res = nums[res];
+  }
+  return res;
 }
 
 int main() {
-  vector<int> a{-2, -5, 1, 9, 10, 8, 11, 10, 13, 11};
-  vector<int> res = longest_increasing_subsequence(a.begin(), a.end());
-  print_range(res.begin(), res.end());
+  int x0 = 0;
+  auto [floyd_start, floyd_len] = find_cycle_floyd(f, x0);
+  assert(floyd_start == 4 && floyd_len == 2);
+  verify(x0, floyd_start, floyd_len);
+
+  auto [brent_start, brent_len] = find_cycle_brent(f, x0);
+  assert(brent_start == floyd_start && brent_len == floyd_len);
+
+  assert(find_duplicate_integer({1, 3, 4, 2, 2}) == 2);
+  assert(find_duplicate_integer({3, 1, 3, 4, 2}) == 3);
   return 0;
 }
 \end{lstlisting}
-\begin{exampleoutput}
--5 1 9 10 11 13
-\end{exampleoutput}
 \subsection{0-1 Knapsack}
 Solves the 0-1 knapsack problem: given items with nonnegative integer weights and values, choose each item at most once to maximize total value without exceeding a capacity limit.
 
@@ -1972,87 +2196,14 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Largest Zero Submatrix}
-Given a rectangular matrix with $m$ rows and $n$ columns consisting of only 0's and 1's as a two-dimensional vector of bool, return the area of the largest rectangular submatrix consisting of only 0's. This solution sweeps the rows from top to bottom, maintaining for each column the height of the run of 0's ending at the current row. Each row then reduces to finding the maximum rectangular area under a histogram, which is solved in linear time with a monotonic stack.
-
-\begin{compactitem}
-  \item \inlinecode{max\_zero\_submatrix(a)} returns the area of the largest all-zero rectangular submatrix of \inlinecode{a}, a two-dimensional vector of bool.
-\end{compactitem}
-
-\textbf{Time Complexity}: $O(m \cdot n)$ per call to \inlinecode{max\_zero\_submatrix()}, where $m$ is the number of rows and $n$ is the number of columns in the matrix.
-
-\textbf{Space Complexity}: $O(n)$ auxiliary heap space, where $n$ is the number of columns in the matrix.
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <stack>
-#include <vector>
-
-int max_zero_submatrix(const std::vector<std::vector<bool>> &a) {
-  if (a.empty()) {
-    return 0;
-  }
-  int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
-  int res = 0;
-  // last1[j] = row index of the most recent 1 in column j (-1 if none yet).
-  // left_wall[j] = nearest col left of j whose last1 value >= last1[j] (exclusive left bound).
-  // right_wall[j] = nearest col right of j whose last1 value >= last1[j] (exclusive right bound).
-  std::vector<int> last1(cols, -1), left_wall(cols), right_wall(cols);
-  for (int i = 0; i < rows; i++) {
-    for (int j = 0; j < cols; j++) {
-      if (a[i][j]) {
-        last1[j] = i;
-      }
-    }
-    std::stack<int> s;
-    for (int j = 0; j < cols; j++) {
-      while (!s.empty() && last1[s.top()] <= last1[j]) {
-        s.pop();
-      }
-      left_wall[j] = s.empty() ? -1 : s.top();
-      s.push(j);
-    }
-    while (!s.empty()) {
-      s.pop();
-    }
-    for (int j = cols - 1; j >= 0; j--) {
-      while (!s.empty() && last1[s.top()] <= last1[j]) {
-        s.pop();
-      }
-      right_wall[j] = s.empty() ? cols : s.top();
-      s.push(j);
-    }
-    for (int j = 0; j < cols; j++) {
-      res = std::max(res, (i - last1[j]) * (right_wall[j] - left_wall[j] - 1));
-    }
-  }
-  return res;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-using namespace std;
-
-int main() {
-  vector<vector<bool>> a{
-      {1, 0, 1, 1, 0, 0},
-      {1, 0, 0, 1, 0, 0},
-      {0, 0, 0, 0, 0, 1},
-      {1, 0, 0, 1, 0, 0},
-      {1, 0, 1, 0, 0, 1}
-  };
-  assert(max_zero_submatrix(a) == 6);
-  return 0;
-}
-\end{lstlisting}
 
 \section{\texorpdfstring{Greedy and Scheduling}{1.3 Greedy and Scheduling}}
 \setcounter{section}{3}
 \setcounter{subsection}{0}
 \subsection{Interval Scheduling}
-Selects the maximum number of non-overlapping intervals using the classic greedy algorithm that sorts by earliest finish time. This is also known as activity selection.
+Selects the maximum number of non-overlapping intervals using the classic earliest-finish-time greedy algorithm. This is the unweighted interval scheduling problem, also known as activity selection: every interval has the same value, so the objective is to choose as many compatible intervals as possible.
+
+The greedy choice is safe because among all intervals that could be chosen first, taking one with the earliest finish time leaves the most room for the remaining intervals. In any optimal solution, the first chosen interval can be exchanged for an earliest-finishing compatible interval without reducing the number of intervals selected. Repeating this argument after each choice proves the greedy algorithm optimal. The weighted version in 1.3.2 needs dynamic programming instead.
 
 Intervals are represented as half-open ranges [\inlinecode{start}, \inlinecode{finish}), so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
@@ -2110,7 +2261,7 @@ Selects a maximum-weight subset of non-overlapping intervals using dynamic progr
 Intervals are represented as half-open ranges [\inlinecode{start}, \inlinecode{finish}), so two intervals are compatible if the next interval's \inlinecode{start} is at least the previous interval's \inlinecode{finish}.
 
 \begin{compactitem}
-  \item \inlinecode{weighted\_interval\_scheduling(intervals)} returns the maximum total weight of a compatible subset from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}.
+  \item \inlinecode{weighted\_interval\_scheduling(intervals)} returns the maximum total weight of a compatible subset from an input vector of \inlinecode{WeightedInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{weight}. \inlinecode{dp[i]} stores the best answer using the first \inlinecode{i} intervals after sorting by finish time.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(n \log n)$ per call due to sorting and binary searching compatible intervals.
@@ -2162,7 +2313,9 @@ int main() {
 \subsection{Interval Partitioning}
 Assigns intervals to the minimum number of groups so that no two intervals in the same group overlap. This is the classic interval partitioning problem, also known as finding the minimum number of rooms needed for meetings.
 
-The greedy algorithm sorts intervals by start time and reuses the group whose current finish time is earliest whenever possible. Otherwise, it creates a new group.
+The greedy algorithm sorts intervals by start time and reuses the group whose current finish time is earliest whenever possible. Otherwise, it creates a new group. This is optimal because the number of groups must be at least the maximum number of intervals overlapping at any time. When the earliest-finishing active group still overlaps the next interval, every active group overlaps it, so creating a new group is unavoidable. If that group is free, reusing it preserves as many later options as possible.
+
+Intervals are treated as half-open ranges [\inlinecode{start}, \inlinecode{finish}), so one interval may reuse a room that another interval vacates at the same time.
 
 \begin{compactitem}
   \item \inlinecode{interval\_partitioning(intervals)} returns a vector \inlinecode{room}, where \inlinecode{room[id]} is the assigned room for each input interval given as a vector of \inlinecode{PartitionInterval} with fields \inlinecode{start}, \inlinecode{finish}, and \inlinecode{id}. The number of rooms used in the returned assignment is $1 + \max({\inlinecodemath{room[id]}})$, or 0 if there are no intervals.
@@ -2227,7 +2380,7 @@ int main() {
 \subsection{Deadline Scheduling}
 Schedules unit-time jobs with deadlines and profits to maximize total profit. Each job takes one time slot and must be scheduled at or before its deadline. The greedy algorithm processes jobs in decreasing profit order and places each chosen job in the latest available slot before its deadline.
 
-This is a compact scheduling pattern that combines sorting with a disjoint-set forest over available time slots.
+The latest-slot choice is safe because it uses the current high-profit job while leaving earlier slots available for jobs with tighter deadlines. A disjoint-set forest over time slots makes this efficient: \inlinecode{find\_root(t)} returns the latest still-free slot at or before \inlinecode{t}, and occupying slot \inlinecode{t} links it to the next candidate slot \inlinecode{t - 1}.
 
 \begin{compactitem}
   \item \inlinecode{schedule\_deadline\_jobs(jobs)} returns the maximum total profit for a vector of \inlinecode{Job} with fields \inlinecode{deadline} and \inlinecode{profit}. Deadlines are positive integer time slots.
@@ -2298,6 +2451,8 @@ int main() {
 \end{lstlisting}
 \subsection{Minimizing Late Jobs (Moore-Hodgson)}
 Selects a maximum-size subset of jobs that can all be completed by their deadlines. Each job has a processing time and deadline, and all jobs are available at time 0. The Moore-Hodgson algorithm sorts by deadline and keeps the accepted jobs in a max-heap by processing time; whenever the schedule becomes late, it removes the longest accepted job.
+
+After considering jobs up to some deadline, if the accepted set no longer fits, at least one accepted job must be removed. Removing the longest one leaves the most remaining time while keeping the same number of removed jobs, so it is never worse than removing a shorter accepted job. Repeating this repair after each deadline leaves a largest feasible accepted set.
 
 \begin{compactitem}
   \item \inlinecode{maximize\_on\_time\_jobs(jobs)} returns the maximum number of jobs that can finish by their deadlines for an input vector of \inlinecode{TimedJob} with fields \inlinecode{duration} and \inlinecode{deadline}.
@@ -2394,7 +2549,9 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Reservoir Sampling}
-Selects uniformly random samples from a stream whose length may be unknown in advance. Reservoir sampling keeps only the chosen sample or samples in memory while processing each element once. The first arrivals fill the reservoir, and the $i$-th element then replaces a uniformly chosen occupant with probability $1/i$ (or $k/i$ when keeping $k$ samples), which by induction leaves every element seen so far equally likely to be in the sample.
+Selects uniformly random samples from a stream whose length may be unknown in advance. This is useful when values arrive online or when storing the full dataset is unnecessary.
+
+Reservoir sampling keeps only the chosen sample or samples in memory while processing each element once. The first arrivals fill the reservoir, and the $i$-th element then replaces a uniformly chosen occupant with probability $1/i$ (or $k/i$ when keeping $k$ samples), which by induction leaves every element seen so far equally likely to be in the sample.
 
 Each class maintains its reservoir incrementally; call \inlinecode{add(x)} once per stream element in any order, then \inlinecode{get()} to retrieve the result.
 
@@ -2501,138 +2658,6 @@ int main() {
   return 0;
 }
 \end{lstlisting}
-\subsection{Maximum Subarray Sum (Kadane)}
-Given an array of numbers, determine the maximum possible sum of any contiguous subarray. Kadane's algorithm scans through the array, at each index computing the maximum nonnegative sum subarray ending there. Either this subarray is empty (in which case its sum is zero), or it consists of one more element than the maximum sequence ending at the previous position. This can be adapted to compute the maximal submatrix sum as well.
-
-\begin{compactitem}
-  \item \inlinecode{max\_subarray\_sum(lo, hi, \&res\_lo, \&res\_hi)} returns the maximal subarray sum for the range [\inlinecode{lo}, \inlinecode{hi}), where \inlinecode{lo} and \inlinecode{hi} are random-access iterators to numeric types. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, two \inlinecode{int} pointers may be passed to store the inclusive boundary indices [\inlinecode{res\_lo}, \inlinecode{res\_hi}] of the resulting subarray. By convention, the empty subarray is allowed, so an input range consisting of only negative values returns 0 with an empty result interval.
-  \item \inlinecode{max\_submatrix\_sum(a, \&r1, \&c1, \&r2, \&c2)} returns the largest sum of any rectangular submatrix for a matrix \inlinecode{a} with $m$ rows and $n$ columns. This implementation requires operators \inlinecode{+} and \inlinecode{\textless{}} to be defined on the iterators' value type. Optionally, four \inlinecode{int} pointers may be passed to store the boundary indices of the resulting subarray, with (\inlinecode{r1}, \inlinecode{c1}) specifiying the top-left index and (\inlinecode{r2}, \inlinecode{c2}) specifying the bottom-right index. By convention, the empty submatrix is allowed, so an input matrix consisting of only negative values returns 0 with an empty result interval.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Time Complexity}:
-\begin{compactitem}
-  \item $O(n)$ per call to \inlinecode{max\_subarray\_sum()}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}.
-  \item $O(m \cdot n^{2})$ per call to \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows and $n$ is the number of columns in the matrix.
-\end{compactitem}
-
-\Needspace*{3\baselineskip}
-\textbf{Space Complexity}:
-\begin{compactitem}
-  \item $O(1)$ auxiliary for \inlinecode{max\_subarray\_sum()}.
-  \item $O(m)$ auxiliary heap space for \inlinecode{max\_submatrix\_sum()}, where $m$ is the number of rows in the matrix.
-\end{compactitem}
-
-\begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <cstddef>
-#include <iterator>
-#include <vector>
-
-template<typename It>
-auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr) {
-  using T = typename std::iterator_traits<It>::value_type;
-  if (lo == hi) {
-    return T();
-  }
-  int curr_begin = 0, begin = 0, end = -1;
-  T sum = 0, max_sum = 0;
-  for (It it = lo; it != hi; ++it) {
-    sum += *it;
-    if (sum < 0) {
-      sum = 0;
-      curr_begin = (it - lo) + 1;
-    } else if (max_sum < sum) {
-      max_sum = sum;
-      begin = curr_begin;
-      end = it - lo;
-    }
-  }
-  if (res_lo != nullptr && res_hi != nullptr) {
-    *res_lo = begin;
-    *res_hi = end;
-  }
-  return max_sum;
-}
-
-template<typename T>
-T max_submatrix_sum(
-    const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr, int *r2 = nullptr,
-    int *c2 = nullptr
-) {
-  if (a.empty() || a[0].empty()) {
-    return T();
-  }
-  int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
-  T sum, max_sum = 0;
-  for (int clo = 0; clo < cols; clo++) {
-    std::vector<T> sums(rows, 0);
-    for (int chi = clo; chi < cols; chi++) {
-      for (int i = 0; i < rows; i++) {
-        sums[i] += a[i][chi];
-      }
-      int rlo, rhi;
-      sum = max_subarray_sum(sums.begin(), sums.end(), &rlo, &rhi);
-      if (max_sum < sum) {
-        max_sum = sum;
-        if (r1 != nullptr && c1 != nullptr && r2 != nullptr && c2 != nullptr) {
-          *r1 = rlo;
-          *c1 = clo;
-          *r2 = rhi;
-          *c2 = chi;
-        }
-      }
-    }
-  }
-  return max_sum;
-}
-\end{lstlisting}
-\Needspace*{4\baselineskip}
-\textbf{Example Usage}\par
-\begin{lstlisting}[language=C++]
-#include <cassert>
-#include <iostream>
-using namespace std;
-
-int main() {
-  {
-    vector<int> a{-2, -1, -3, 4, -1, 2, 1, -5, 4};
-    int lo = 0, hi = 0;
-    assert(max_subarray_sum(a.begin(), a.begin() + 3) == 0);
-    assert(max_subarray_sum(a.begin(), a.end(), &lo, &hi) == 6);
-    cout << "Maximal sum subarray:" << endl;
-    for (int i = lo; i <= hi; i++) {
-      cout << a[i] << " ";
-    }
-    cout << endl;
-  }
-  {
-    vector<vector<int>> a{{0, -2, -7, 0, 5},
-                          {9, 2, -6, 2, -4},
-                          {-4, 1, -4, 1, 0},
-                          {-1, 8, 0, -2, 3}};
-    int r1 = 0, c1 = 0, r2 = 0, c2 = 0;
-    assert(max_submatrix_sum(a, &r1, &c1, &r2, &c2) == 15);
-    cout << "\nMaximal sum submatrix:" << endl;
-    for (int i = r1; i <= r2; i++) {
-      for (int j = c1; j <= c2; j++) {
-        cout << a[i][j] << " ";
-      }
-      cout << endl;
-    }
-  }
-  return 0;
-}
-\end{lstlisting}
-\begin{exampleoutput}
-Maximal sum subarray:
-4 -1 2 1
-
-Maximal sum submatrix:
-9 2
--4 1
--1 8
-\end{exampleoutput}
 \subsection{Majority Element (Boyer-Moore)}
 Given a range of $n$ elements, find the majority element: an element that occurs strictly more than $\lfloor n/2 \rfloor$ times in the range.
 
@@ -2692,7 +2717,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Online Statistics (Welford)}
-Maintains the mean and variance of a stream of numbers in one pass using Welford's algorithm. This is more numerically stable than maintaining the sum of values and the sum of squares separately. Each new value shifts the running mean by its deviation divided by the new count, and accumulates the product of its deviations from the old and new means into a running sum of squared deviations, from which both population and sample variance follow directly.
+Maintains the mean and variance of a stream of numbers in one pass using Welford's algorithm. The naive formula $\operatorname{Var}(X) = E[X^2] - E[X]^2$ can lose precision when the two terms are large and close together. Welford instead keeps the current mean and \inlinecode{m2}, the sum of squared deviations from that mean. Each new value shifts the running mean by its deviation divided by the new count, then adds the product of its deviations from the old and new means to \inlinecode{m2}. Population and sample variance follow by dividing \inlinecode{m2} by $n$ or $n - 1$.
 
 \begin{compactitem}
   \item \inlinecode{OnlineStatistics()} constructs an empty summary.
