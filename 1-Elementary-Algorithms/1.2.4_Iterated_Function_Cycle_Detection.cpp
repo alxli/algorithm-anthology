@@ -34,7 +34,7 @@ Space Complexity:
 
 #include <utility>
 
-template<class Fn, class T>
+template<typename Fn, typename T>
 std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
   T tortoise = f(x0), hare = f(f(x0));
   while (tortoise != hare) {
@@ -57,7 +57,7 @@ std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
   return {start, length};
 }
 
-template<class Fn, class T>
+template<typename Fn, typename T>
 std::pair<int, int> find_cycle_brent(Fn f, T x0) {
   int power = 1, length = 1;
   T tortoise = x0, hare = f(x0);

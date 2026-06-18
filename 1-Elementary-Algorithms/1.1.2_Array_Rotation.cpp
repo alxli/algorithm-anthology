@@ -28,7 +28,7 @@ Space Complexity:
 #include <algorithm>
 #include <numeric>
 
-template<class It>
+template<typename It>
 void rotate1(It lo, It mid, It hi) {
   if (lo == mid || mid == hi) {
     return;
@@ -44,7 +44,7 @@ void rotate1(It lo, It mid, It hi) {
   }
 }
 
-template<class It>
+template<typename It>
 void rotate2(It lo, It mid, It hi) {
   if (lo == mid || mid == hi) {
     return;
@@ -54,7 +54,7 @@ void rotate2(It lo, It mid, It hi) {
   std::reverse(lo, hi);
 }
 
-template<class It>
+template<typename It>
 void rotate3(It lo, It mid, It hi) {
   if (lo == mid || mid == hi) {
     return;

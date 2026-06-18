@@ -102,7 +102,7 @@ uint32_t ceil_pow2(uint32_t x) {  // std::bit_ceil(x) in C++20.
   return is_pow2(x) ? x : 1u << (32 - __builtin_clz(x));
 }
 
-template<class Fn>
+template<typename Fn>
 void for_each_set_bit(uint32_t x, Fn f) {
   while (x != 0) {
     f(ctz(x));

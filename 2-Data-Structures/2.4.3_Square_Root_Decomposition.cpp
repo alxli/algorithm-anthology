@@ -43,7 +43,7 @@ Space Complexity:
 #include <cmath>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SqrtDecomposition {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d) { return d; }
@@ -67,7 +67,7 @@ class SqrtDecomposition {
  public:
   explicit SqrtDecomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
 
-  template<class It>
+  template<typename It>
   SqrtDecomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
     init();
   }

@@ -43,15 +43,24 @@ Space Complexity:
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
+// clang-format off
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+// clang-format on
 
-template<class OutPt>
+template<typename OutPt>
 int line_intersection(double a1, double b1, double c1, double a2, double b2, double c2, OutPt *p) {
   // Cramer's rule for a1*x + b1*y = -c1, a2*x + b2*y = -c2.
   double det = a1 * b2 - a2 * b1;
@@ -68,7 +77,7 @@ int line_intersection(double a1, double b1, double c1, double a2, double b2, dou
   return 0;
 }
 
-template<class Pt, class OutPt>
+template<typename Pt, typename OutPt>
 int line_intersection(const Pt &p1, const Pt &p2, const Pt &p3, const Pt &p4, OutPt *p) {
   auto a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   auto c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -84,7 +93,7 @@ int line_intersection(const Pt &p1, const Pt &p2, const Pt &p3, const Pt &p4, Ou
   return 0;
 }
 
-template<class Pt>
+template<typename Pt>
 bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return EQ((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x), 0) &&
@@ -93,7 +102,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
 }
 
 // Detection is exact for integer Pt. Intersection point output may use a separate float OutPt.
-template<class Pt, class OutPt>
+template<typename Pt, typename OutPt>
 int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, OutPt *p = nullptr, OutPt *q = nullptr,
     const bool TOUCH_IS_INTERSECT = true
@@ -171,7 +180,7 @@ int seg_intersection(
 
 // Simplified detection-only version (no output points needed); exact for integer Pt.
 // Alternatively, just call the version above and pass static_cast<Pt *>(nullptr) for p and q.
-template<class Pt>
+template<typename Pt>
 int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, const bool TOUCH_IS_INTERSECT = true
 ) {
@@ -211,7 +220,7 @@ int seg_intersection(
   return (t_ok && u_ok) ? 0 : -1;
 }
 
-template<class Pt>
+template<typename Pt>
 Pt closest_point(double a, double b, double c, const Pt &p) {
   Pt res{};
   if (EQ(a, 0)) {

@@ -47,13 +47,13 @@ void operator delete(void *) noexcept {
 void operator delete(void *, size_t) noexcept {
 }
 
-template<class T>
+template<typename T>
 struct BumpAllocator {
   using value_type = T;
 
   BumpAllocator() = default;
 
-  template<class U>
+  template<typename U>
   BumpAllocator(const BumpAllocator<U> &) {}
 
   T *allocate(size_t n) {
@@ -66,12 +66,12 @@ struct BumpAllocator {
 
   void deallocate(T *, size_t) {}
 
-  template<class U>
+  template<typename U>
   bool operator==(const BumpAllocator<U> &) const {
     return true;
   }
 
-  template<class U>
+  template<typename U>
   bool operator!=(const BumpAllocator<U> &) const {
     return false;
   }

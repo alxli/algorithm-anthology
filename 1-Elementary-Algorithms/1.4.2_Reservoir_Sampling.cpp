@@ -36,7 +36,7 @@ int rand_int(int lo, int hi) {
   return std::uniform_int_distribution<int>(lo, hi)(rng);
 }
 
-template<class T>
+template<typename T>
 class ReservoirSampleOne {
   T sample{};
   int seen;
@@ -58,7 +58,7 @@ class ReservoirSampleOne {
   int count() const { return seen; }
 };
 
-template<class T>
+template<typename T>
 class ReservoirSampleK {
   int k, seen;
   std::vector<T> reservoir;

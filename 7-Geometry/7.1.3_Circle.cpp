@@ -45,13 +45,21 @@ Space Complexity:
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
+// clang-format off
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+// clang-format on
 
 // SFINAE guard: valid only when Pt exposes numeric .x/.y members. This keeps the templated point
 // constructors from hijacking calls like Circle(double, double, double).
-template<class Pt>
+template<typename Pt>
 using if_point = decltype(std::declval<const Pt &>().x, std::declval<const Pt &>().y, void());
 
 struct Circle {
@@ -61,11 +69,11 @@ struct Circle {
   explicit Circle(double r) : h(0), k(0), r(fabs(r)) {}
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &o, double r) : h(o.x), k(o.y), r(fabs(r)) {}
 
   // Circle with the line segment ab as a diameter.
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
@@ -73,7 +81,7 @@ struct Circle {
   }
 
   // Circumcircle of three points.
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b, const Pt &c) {
     double an =
         static_cast<double>(b.x - c.x) * (b.x - c.x) + static_cast<double>(b.y - c.y) * (b.y - c.y);
@@ -98,7 +106,7 @@ struct Circle {
   // dist(a, b) = 2*r, then there is only one possible center. If points a and b are identical, then
   // there are infinite circles. If the points are too far away relative to the radius, then there
   // is no possible Circle. In the latter two cases, an exception is thrown.
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b, double r) : r(fabs(r)) {
     if (LE(r, 0) && EQ(a.x, b.x) && EQ(a.y, b.y)) {  // Zero-radius circle.
       h = a.x;
@@ -122,14 +130,14 @@ struct Circle {
   bool operator==(const Circle &c) const { return EQ(h, c.h) && EQ(k, c.k) && EQ(r, c.r); }
   bool operator!=(const Circle &c) const { return !(*this == c); }
 
-  template<class Pt>
+  template<typename Pt>
   bool contains(const Pt &p) const {
     return LE(
         static_cast<double>(p.x - h) * (p.x - h) + static_cast<double>(p.y - k) * (p.y - k), r * r
     );
   }
 
-  template<class Pt>
+  template<typename Pt>
   bool on_edge(const Pt &p) const {
     return EQ(
         static_cast<double>(p.x - h) * (p.x - h) + static_cast<double>(p.y - k) * (p.y - k), r * r
@@ -144,7 +152,7 @@ struct Circle {
 };
 
 // Returns the Circle inscribed inside the triangle abc.
-template<class Pt>
+template<typename Pt>
 Circle incircle(const Pt &a, const Pt &b, const Pt &c) {
   double al = hypot(b.x - c.x, b.y - c.y);
   double bl = hypot(a.x - c.x, a.y - c.y);
@@ -163,7 +171,7 @@ Circle incircle(const Pt &a, const Pt &b, const Pt &c) {
 // coordinates: the result is computed in `int64_t` for integral inputs (watch overflow for large
 // coordinates, where the determinant is degree four) and `long double` otherwise. The points a, b,
 // c must not be collinear; the result does not depend on their orientation.
-template<class Pt>
+template<typename Pt>
 int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   using CoordT = decltype(a.x + a.x);
   using W = std::conditional_t<std::is_integral<CoordT>::value, int64_t, long double>;

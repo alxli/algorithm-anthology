@@ -37,9 +37,9 @@ const double TEMPERATURE_END = 1e-7;
 const double COOLING_RATE = 0.997;
 const int NUM_RESTARTS = 8;
 
-template<class Fn>
+template<typename Fn>
 double anneal_min(Fn f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr) {
-  auto random_unit = []() {
+  auto rand_unit = []() {
     static std::mt19937 rng(1234567);  // Set your own seed, or use std::random_device{}()
     return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
   };
@@ -48,11 +48,11 @@ double anneal_min(Fn f, double x0, double y0, double *best_x = nullptr, double *
     double x = x0, y = y0, cur = f(x, y);
     double temperature = TEMPERATURE_START;
     while (temperature > TEMPERATURE_END) {
-      double nx = x + (2.0 * random_unit() - 1.0) * temperature;
-      double ny = y + (2.0 * random_unit() - 1.0) * temperature;
+      double nx = x + (2.0 * rand_unit() - 1.0) * temperature;
+      double ny = y + (2.0 * rand_unit() - 1.0) * temperature;
       double next = f(nx, ny);
       double probability = exp((cur - next) / temperature);
-      if (next < cur || random_unit() < probability) {
+      if (next < cur || rand_unit() < probability) {
         x = nx;
         y = ny;
         cur = next;
@@ -92,6 +92,7 @@ int main() {
   double x, y;
   double value = anneal_min(f, 0, 0, &x, &y);
   assert(value < 1e-4);
+  // value < 1e-4 already forces |x-2|, |y+3| < 1e-2 = sqrt(1e-4); these confirm the out-params.
   assert(close(x, 2));
   assert(close(y, -3));
   return 0;

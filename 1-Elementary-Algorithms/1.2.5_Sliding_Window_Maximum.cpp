@@ -26,7 +26,7 @@ Space Complexity:
 #include <deque>
 #include <vector>
 
-template<class T>
+template<typename T>
 std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
   int n = static_cast<int>(a.size());
   std::deque<int> window;
@@ -46,7 +46,7 @@ std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
   return res;
 }
 
-template<class T>
+template<typename T>
 std::vector<T> sliding_window_minimum(const std::vector<T> &a, int k) {
   int n = static_cast<int>(a.size());
   std::deque<int> window;

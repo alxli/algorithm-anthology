@@ -73,10 +73,10 @@ std::vector<std::pair<int64_t, int>> factorize(int64_t n) {
       n /= p;
       count++;
     }
-    res.push_back({p, count});
+    res.emplace_back(p, count);
   }
   if (n > 1) {
-    res.push_back({n, 1});
+    res.emplace_back(n, 1);
   }
   return res;
 }

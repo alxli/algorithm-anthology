@@ -38,14 +38,22 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 
 const double EPS = 1e-9;
 const double PI = acos(-1.0);
 const double DEG = PI / 180;
 const double RAD = 180 / PI;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
 
 double reduce_deg(double t) {
   if (t < -360) {
@@ -67,18 +75,18 @@ double reduce_rad(double t) {
   return (t >= 2 * PI) ? fmod(t, 2 * PI) : t;
 }
 
-template<class OutPt>
+template<typename OutPt>
 OutPt polar_point(double r, double t) {
   return OutPt(r * cos(t), r * sin(t));
 }
 
-template<class Pt>
+template<typename Pt>
 double polar_angle(const Pt &p) {
   double t = atan2(static_cast<double>(p.y), static_cast<double>(p.x));
   return (t < 0) ? (t + 2 * PI) : t;
 }
 
-template<class Pt>
+template<typename Pt>
 double angle(const Pt &a, const Pt &o, const Pt &b) {
   double ux = o.x - a.x, uy = o.y - a.y;
   double vx = o.x - b.x, vy = o.y - b.y;
@@ -86,7 +94,7 @@ double angle(const Pt &a, const Pt &o, const Pt &b) {
   return acos(std::max(-1.0, std::min(1.0, cosine)));
 }
 
-template<class Pt>
+template<typename Pt>
 double angle_between(const Pt &a, const Pt &b) {
   double t = atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
   return (t < 0) ? (t + 2 * PI) : t;
@@ -100,7 +108,7 @@ double angle_between(const double &a1, const double &b1, const double &a2, const
   return LT(PI / 2, t) ? (PI - t) : t;
 }
 
-template<class Pt>
+template<typename Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o = Pt(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
@@ -108,7 +116,7 @@ auto cross(const Pt &a, const Pt &b, const Pt &o = Pt(0, 0)) {
 // Built on cross(a, b, o), whose sign is the opposite of the path-direction cross product, so a
 // positive cross here is a right turn: this returns +1 for right/clockwise (NOT the more common
 // +1 = counter-clockwise convention), -1 for left/counter-clockwise, and 0 if collinear.
-template<class Pt>
+template<typename Pt>
 int turn(const Pt &a, const Pt &o, const Pt &b) {
   auto c = cross(a, b, o);
   return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);

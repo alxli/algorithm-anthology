@@ -28,7 +28,7 @@ Space Complexity:
 
 const int64_t INF = (1LL << 62);
 
-template<class Cost>
+template<typename Cost>
 std::vector<std::vector<int64_t>> knuth_interval_dp(
     int n, Cost cost, std::vector<std::vector<int>> *out = nullptr
 ) {

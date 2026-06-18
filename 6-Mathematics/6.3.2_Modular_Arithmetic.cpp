@@ -66,7 +66,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 T inverse(T a, T m) {
   T original_m = m;
   T u = 0, v = 1;
@@ -180,7 +180,7 @@ class Modular {
   }
 };
 
-template<class Mint>
+template<typename Mint>
 class ModCombinatorics {
   std::vector<Mint> fact, inv_fact;
 

@@ -46,7 +46,7 @@ Space Complexity:
 #include <map>
 #include <vector>
 
-template<class It>
+template<typename It>
 void compress1(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> v(lo, hi);
@@ -57,7 +57,7 @@ void compress1(It lo, It hi) {
   }
 }
 
-template<class It>
+template<typename It>
 void compress2(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   std::map<T, int> m;
@@ -73,14 +73,14 @@ void compress2(It lo, It hi) {
   }
 }
 
-template<class T>
+template<typename T>
 class CoordinateCompressor {
   std::vector<T> values;
 
  public:
   CoordinateCompressor() {}
 
-  template<class It>
+  template<typename It>
   CoordinateCompressor(It lo, It hi) : values(lo, hi) {
     build();
   }
@@ -114,7 +114,7 @@ class CoordinateCompressor {
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   while (lo != hi) {
     cout << *lo++ << " ";

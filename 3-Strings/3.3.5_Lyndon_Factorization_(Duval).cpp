@@ -31,7 +31,7 @@ Space Complexity:
 
 #include <vector>
 
-template<class Seq>
+template<typename Seq>
 std::vector<int> lyndon_factorization(const Seq &s) {
   int n = static_cast<int>(s.size());
   std::vector<int> starts;
@@ -50,7 +50,7 @@ std::vector<int> lyndon_factorization(const Seq &s) {
   return starts;
 }
 
-template<class Seq>
+template<typename Seq>
 int min_rotation(const Seq &s) {
   int n = static_cast<int>(s.size());
   if (n == 0) {

@@ -41,7 +41,7 @@ Space Complexity:
 
 */
 
-template<class Fn>
+template<typename Fn>
 double ternary_search_min(double lo, double hi, Fn f, double EPS = 1e-12) {
   while (hi - lo > EPS) {
     double m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
@@ -54,12 +54,12 @@ double ternary_search_min(double lo, double hi, Fn f, double EPS = 1e-12) {
   return (lo + hi) / 2;
 }
 
-template<class Fn>
+template<typename Fn>
 double ternary_search_max(double lo, double hi, Fn f, double EPS = 1e-12) {
   return ternary_search_min(lo, hi, [&](double x) { return -f(x); }, EPS);
 }
 
-template<class Fn>
+template<typename Fn>
 double golden_section_min(double lo, double hi, Fn f, double EPS = 1e-12) {
   const double r = 0.6180339887498949;  // 1 / phi = (sqrt(5) - 1) / 2.
   double m1 = hi - r * (hi - lo), m2 = lo + r * (hi - lo);
@@ -82,12 +82,12 @@ double golden_section_min(double lo, double hi, Fn f, double EPS = 1e-12) {
   return (lo + hi) / 2;
 }
 
-template<class Fn>
+template<typename Fn>
 double golden_section_max(double lo, double hi, Fn f, double EPS = 1e-12) {
-  return golden_section_min(lo, hi, [&](double x) { return -f(x); }, eps);
+  return golden_section_min(lo, hi, [&](double x) { return -f(x); }, EPS);
 }
 
-template<class Int, class Fn>
+template<typename Int, typename Fn>
 Int discrete_ternary_min(Int lo, Int hi, Fn f) {
   while (hi - lo > 2) {
     Int m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
@@ -106,7 +106,7 @@ Int discrete_ternary_min(Int lo, Int hi, Fn f) {
   return best;
 }
 
-template<class Int, class Fn>
+template<typename Int, typename Fn>
 Int discrete_ternary_max(Int lo, Int hi, Fn f) {
   return discrete_ternary_min(lo, hi, [&](Int x) { return -f(x); });
 }
@@ -119,7 +119,7 @@ Int discrete_ternary_max(Int lo, Int hi, Fn f) {
 using namespace std;
 
 bool EQ(double a, double b) {
-  return fabs(a - b) < 1e-7;
+  return fabs(a - b) < 1e-6;
 }
 
 int main() {

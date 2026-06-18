@@ -33,7 +33,7 @@ Space Complexity:
 #include <unordered_set>
 #include <vector>
 
-template<class T>
+template<typename T>
 class ZobristHash {
   std::unordered_map<T, uint64_t> token;
   uint64_t state;
@@ -60,7 +60,7 @@ class ZobristHash {
 
   uint64_t toggle(uint64_t h, const T &x) { return h ^ get(x); }
 
-  template<class It>
+  template<typename It>
   std::vector<uint64_t> distinct_prefix_hashes(It lo, It hi) {
     std::unordered_set<T> seen;
     std::vector<uint64_t> res(1, 0);

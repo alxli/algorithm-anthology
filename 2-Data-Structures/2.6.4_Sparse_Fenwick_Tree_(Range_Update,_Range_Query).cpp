@@ -28,7 +28,7 @@ Space Complexity:
 
 #include <unordered_map>
 
-template<class T, int N = 1000000001>
+template<typename T, int N = 1000000001>
 class SparseFenwick {
   std::unordered_map<int, T> tmul, tadd;
 

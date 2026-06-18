@@ -22,7 +22,7 @@ separate output slots or synchronization.
 #include <thread>
 #include <vector>
 
-template<class Fun>
+template<typename Fun>
 void parallel_for(int n, int threads, Fun f) {
   threads = std::max(1, std::min(threads, n));
   std::vector<std::thread> workers;
@@ -39,7 +39,7 @@ void parallel_for(int n, int threads, Fun f) {
   }
 }
 
-template<class Case, class Solve>
+template<typename Case, typename Solve>
 std::vector<std::string> parallel_cases(const std::vector<Case> &cases, int threads, Solve solve) {
   std::vector<std::string> out(cases.size());
   parallel_for(static_cast<int>(cases.size()), threads, [&](int i) {

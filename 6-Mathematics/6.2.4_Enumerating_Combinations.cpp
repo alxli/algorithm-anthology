@@ -47,7 +47,7 @@ Space Complexity:
 #include <iterator>
 #include <vector>
 
-template<class It>
+template<typename It>
 bool next_combination(It lo, It mid, It hi) {
   if (lo == mid || mid == hi) {
     return false;
@@ -192,7 +192,7 @@ abc abd acd bcd abe ace bce ade bde
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   cout << "{";
   for (; lo != hi; ++lo) {

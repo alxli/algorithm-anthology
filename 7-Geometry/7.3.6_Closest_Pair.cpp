@@ -36,13 +36,13 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class Pt>
+template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
   auto dx = a.x - b.x, dy = a.y - b.y;
   return dx * dx + dy * dy;  // Overflow warning!
 }
 
-template<class It, class T>
+template<typename It, typename T>
 T closest_pair_rec(
     It lo, It hi,
     std::pair<
@@ -113,7 +113,7 @@ T closest_pair_rec(
   return best;
 }
 
-template<class It>
+template<typename It>
 auto closest_pair(
     It lo, It hi,
     std::pair<
@@ -127,11 +127,15 @@ auto closest_pair(
 /*** Example Usage ***/
 
 #include <cassert>
+#include <type_traits>
 #include <vector>
 using namespace std;
 
 const double EPS = 1e-9;
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
 
 struct Point {
   double x, y;

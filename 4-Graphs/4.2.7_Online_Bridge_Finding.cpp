@@ -13,6 +13,10 @@ stops being a bridge.
 - `find_2ecc(u)` returns node `u`'s representative in the 2-edge-connected components partition.
 - `find_cc(u)` returns node `u`'s representative in the ordinary connected components partition.
 
+Parallel edges are supported. Adding a second edge between two nodes that are already in the same
+connected component dissolves every bridge on the path between them, merging those nodes into the
+same 2-edge-connected component.
+
 Time Complexity:
 - O(log n) amortized per call to `add_edge()` in this implementation, where $n$ is the number of
   nodes.

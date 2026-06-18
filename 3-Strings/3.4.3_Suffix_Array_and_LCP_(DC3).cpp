@@ -50,7 +50,7 @@ class SuffixArrayDC3 {
     return (a1 < b1) || (a1 == b1 && leq(a2, a3, b2, b3));
   }
 
-  template<class It>
+  template<typename It>
   static void radix_pass(It a, It b, It r, int n, int K) {
     std::vector<int> cnt(K + 1);
     for (int i = 0; i < n; i++) {
@@ -64,7 +64,7 @@ class SuffixArrayDC3 {
     }
   }
 
-  template<class It>
+  template<typename It>
   static void suffix_array_dc3(It s, It sa, int n, int K) {
     int n0 = (n + 2) / 3, n1 = (n + 1) / 3, n2 = n / 3, n02 = n0 + n2;
     std::vector<int> s12(n02 + 3), sa12(n02 + 3), s0(n0), sa0(n0);

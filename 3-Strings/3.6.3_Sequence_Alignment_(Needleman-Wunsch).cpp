@@ -77,7 +77,7 @@ std::pair<string, string> align_sequences(
   return {res1, res2};
 }
 
-template<class It>
+template<typename It>
 std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2, int gap_cost, int sub_cost) {
   std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
   for (It it1 = lo1; it1 != hi1; ++it1) {
@@ -91,7 +91,7 @@ std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2, int gap_cost, int sub_
   return res;
 }
 
-template<class It>
+template<typename It>
 void hirschberg_rec(
     It lo1, It hi1, It lo2, It hi2, string *res1, string *res2, int gap_cost, int sub_cost
 ) {

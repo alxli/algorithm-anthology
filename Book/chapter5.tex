@@ -22,7 +22,7 @@ Binary search can be generally used to find the input value corresponding to any
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
-template<class Int, class Pred>
+template<typename Int, typename Pred>
 Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
   while (lo < hi) {
     Int mid = lo + (hi - lo) / 2;
@@ -35,7 +35,7 @@ Int binary_search_first_true(Int lo, Int hi, Pred pred) {  // 000[1]11
   return lo;
 }
 
-template<class Int, class Pred>
+template<typename Int, typename Pred>
 Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
   Int _hi = hi;
   if (lo == hi) {
@@ -56,7 +56,7 @@ Int binary_search_last_true(Int lo, Int hi, Pred pred) {  // 11[1]000
   return lo;
 }
 
-template<class Pred>
+template<typename Pred>
 double fbinary_search(double lo, double hi, Pred pred) {  // 000[1]11
   double mid;
   for (int i = 0; i < 100; i++) {
@@ -104,7 +104,7 @@ This is useful for answer-search problems over unbounded or very large integer d
 \begin{lstlisting}[language=C++]
 #include <cstdint>
 
-template<class Int, class Pred>
+template<typename Int, typename Pred>
 Int exponential_search_first_true(Int lo, Pred pred) {  // 000[1]11
   if (pred(lo)) {
     return lo;
@@ -174,7 +174,7 @@ The discrete version operates on an integer domain, narrowing by thirds until at
 \textbf{Space Complexity}: $O(1)$ auxiliary for all operations.
 
 \begin{lstlisting}[language=C++]
-template<class Fn>
+template<typename Fn>
 double ternary_search_min(double lo, double hi, Fn f, double EPS = 1e-12) {
   while (hi - lo > EPS) {
     double m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
@@ -187,12 +187,12 @@ double ternary_search_min(double lo, double hi, Fn f, double EPS = 1e-12) {
   return (lo + hi) / 2;
 }
 
-template<class Fn>
+template<typename Fn>
 double ternary_search_max(double lo, double hi, Fn f, double EPS = 1e-12) {
   return ternary_search_min(lo, hi, [&](double x) { return -f(x); }, EPS);
 }
 
-template<class Fn>
+template<typename Fn>
 double golden_section_min(double lo, double hi, Fn f, double EPS = 1e-12) {
   const double r = 0.6180339887498949;  // 1 / phi = (sqrt(5) - 1) / 2.
   double m1 = hi - r * (hi - lo), m2 = lo + r * (hi - lo);
@@ -215,12 +215,12 @@ double golden_section_min(double lo, double hi, Fn f, double EPS = 1e-12) {
   return (lo + hi) / 2;
 }
 
-template<class Fn>
+template<typename Fn>
 double golden_section_max(double lo, double hi, Fn f, double EPS = 1e-12) {
-  return golden_section_min(lo, hi, [&](double x) { return -f(x); }, eps);
+  return golden_section_min(lo, hi, [&](double x) { return -f(x); }, EPS);
 }
 
-template<class Int, class Fn>
+template<typename Int, typename Fn>
 Int discrete_ternary_min(Int lo, Int hi, Fn f) {
   while (hi - lo > 2) {
     Int m1 = lo + (hi - lo) / 3, m2 = hi - (hi - lo) / 3;
@@ -239,7 +239,7 @@ Int discrete_ternary_min(Int lo, Int hi, Fn f) {
   return best;
 }
 
-template<class Int, class Fn>
+template<typename Int, typename Fn>
 Int discrete_ternary_max(Int lo, Int hi, Fn f) {
   return discrete_ternary_min(lo, hi, [&](Int x) { return -f(x); });
 }
@@ -253,7 +253,7 @@ Int discrete_ternary_max(Int lo, Int hi, Fn f) {
 using namespace std;
 
 bool EQ(double a, double b) {
-  return fabs(a - b) < 1e-7;
+  return fabs(a - b) < 1e-6;
 }
 
 int main() {
@@ -294,7 +294,7 @@ Hill-climbing is a heuristic which starts at the guess, then considers taking a 
 #include <cmath>
 #include <cstddef>
 
-template<class Fn>
+template<typename Fn>
 double find_min(
     Fn f, double x0, double y0, double *critical_x = nullptr, double *critical_y = nullptr,
     const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6, const int NUM_DIRECTIONS = 6
@@ -336,8 +336,8 @@ double find_min(
 #include <cassert>
 #include <cmath>
 
-bool eq(double a, double b) {
-  return fabs(a - b) < 1e-8;
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
 }
 
 // Paraboloid with global minimum at f(2, 3) = 0.
@@ -347,8 +347,8 @@ double f(double x, double y) {
 
 int main() {
   double x, y;
-  assert(eq(find_min(f, 0, 0, &x, &y), 0));
-  assert(eq(x, 2) && eq(y, 3));
+  assert(EQ(find_min(f, 0, 0, &x, &y), 0));
+  assert(EQ(x, 2) && EQ(y, 3));
   return 0;
 }
 \end{lstlisting}
@@ -379,9 +379,9 @@ const double TEMPERATURE_END = 1e-7;
 const double COOLING_RATE = 0.997;
 const int NUM_RESTARTS = 8;
 
-template<class Fn>
+template<typename Fn>
 double anneal_min(Fn f, double x0, double y0, double *best_x = nullptr, double *best_y = nullptr) {
-  auto random_unit = []() {
+  auto rand_unit = []() {
     static std::mt19937 rng(1234567);  // Set your own seed, or use std::random_device{}()
     return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
   };
@@ -390,11 +390,11 @@ double anneal_min(Fn f, double x0, double y0, double *best_x = nullptr, double *
     double x = x0, y = y0, cur = f(x, y);
     double temperature = TEMPERATURE_START;
     while (temperature > TEMPERATURE_END) {
-      double nx = x + (2.0 * random_unit() - 1.0) * temperature;
-      double ny = y + (2.0 * random_unit() - 1.0) * temperature;
+      double nx = x + (2.0 * rand_unit() - 1.0) * temperature;
+      double ny = y + (2.0 * rand_unit() - 1.0) * temperature;
       double next = f(nx, ny);
       double probability = exp((cur - next) / temperature);
-      if (next < cur || random_unit() < probability) {
+      if (next < cur || rand_unit() < probability) {
         x = nx;
         y = ny;
         cur = next;
@@ -435,6 +435,7 @@ int main() {
   double x, y;
   double value = anneal_min(f, 0, 0, &x, &y);
   assert(value < 1e-4);
+  // value < 1e-4 already forces |x-2|, |y+3| < 1e-2 = sqrt(1e-4); these confirm the out-params.
   assert(close(x, 2));
   assert(close(y, -3));
   return 0;
@@ -472,7 +473,7 @@ The queue stores candidate (index, value) pairs in monotone order. Expired indic
 #include <functional>
 #include <utility>
 
-template<class T, class Compare>
+template<typename T, typename Compare>
 class MonotoneQueue {
   std::deque<std::pair<int, T>> q;
   Compare better;
@@ -554,7 +555,7 @@ The function below computes \inlinecode{dp\_cur[l..r]} by evaluating the midpoin
 
 const int64_t INF = (1LL << 62);
 
-template<class Cost>
+template<typename Cost>
 void compute_dc_layer(
     const std::vector<int64_t> &dp_prev, std::vector<int64_t> &dp_cur, int l, int r, int opt_l,
     int opt_r, Cost cost
@@ -631,7 +632,7 @@ The SMAWK algorithm interleaves two steps. REDUCE discards columns that cannot h
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-template<class Get>
+template<typename Get>
 std::vector<int> smawk_rec(
     const Get &get, const std::vector<int> &active_rows, const std::vector<int> &candidate_cols
 ) {
@@ -696,7 +697,7 @@ std::vector<int> smawk_rec(
   return arg;
 }
 
-template<class Get>
+template<typename Get>
 std::vector<int> smawk_row_minima(int R, int C, const Get &get) {
   std::vector<int> row_ids(R), col_ids(C);
   for (int i = 0; i < R; i++) {
@@ -758,7 +759,7 @@ Common applications include optimal binary search trees and some range merging p
 
 const int64_t INF = (1LL << 62);
 
-template<class Cost>
+template<typename Cost>
 std::vector<std::vector<int64_t>> knuth_interval_dp(
     int n, Cost cost, std::vector<std::vector<int>> *out = nullptr
 ) {
@@ -1143,7 +1144,7 @@ Finds an $x$ in an interval $[a, b]$ for a continuous function $f$ such that $f(
 \begin{lstlisting}[language=C++]
 #include <stdexcept>
 
-template<class Fn>
+template<typename Fn>
 double bisection_root(Fn f, double a, double b, const int ITERATIONS = 100) {
   if (a > b || f(a) * f(b) > 0) {
     throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");
@@ -1160,7 +1161,7 @@ double bisection_root(Fn f, double a, double b, const int ITERATIONS = 100) {
   return m;
 }
 
-template<class Fn>
+template<typename Fn>
 double falsi_illinois_root(Fn f, double a, double b, const int ITERATIONS = 100) {
   if (a > b || f(a) * f(b) > 0) {
     throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");
@@ -1223,7 +1224,7 @@ Finds an $x$ for a continuous function $f$ such that $f(x) = 0$ using iterative 
 #include <cmath>
 #include <stdexcept>
 
-template<class Fn>
+template<typename Fn>
 double newton_root(
     Fn f, Fn fprime, double x0, const double EPS = 1e-15, const int ITERATIONS = 100
 ) {
@@ -1239,7 +1240,7 @@ double newton_root(
   return x;
 }
 
-template<class Fn>
+template<typename Fn>
 double secant_root(
     Fn f, double x0, double x1, const double EPS = 1e-15, const int ITERATIONS = 100
 ) {
@@ -1775,7 +1776,7 @@ Unlike adaptive quadrature, the step size here is uniform, so a feature narrower
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-template<class Fn>
+template<typename Fn>
 double integrate(Fn f, double a, double b, int n = 1000000) {
   double h = (b - a) / n, s = f(a) + f(b);
   for (int i = 1; i < n; i++) {

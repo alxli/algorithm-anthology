@@ -5,19 +5,19 @@ A 2D point class template supporting epsilon comparisons. The coordinate type `T
 operations (`norm`, `arg`, `normalize`, `rotateCW/CCW`, `reflect` across a line) return coordinates
 of type `fp_t`, which is `double` when `T` is integral and `T` itself otherwise.
 
-Exact operations (return `point<T>` or `T`, no precision lost for integers):
+Exact operations (return `TPoint<T>` or `T`, no precision lost for integers):
 - element-wise arithmetic, `dot()`, `cross()`, `sqnorm()`, cardinal rotations, `reflect(point)`,
   comparisons.
 
 Overflow warning: the exact products `dot()`, `cross()`, and `sqnorm()` grow like the squared
-coordinate magnitude. With `point<int>` these overflow a 32-bit `int` once coordinates exceed
-~46000, so use `PointL` (`point<long long>`) for larger integer coordinates.
+coordinate magnitude. With `TPoint<int>` these overflow a 32-bit `int` once coordinates exceed
+~46000, so use `PointL` (`TPoint<long long>`) for larger integer coordinates.
 
-Floating-point-only operations (return `point<fp_t>` or `fp_t`):
+Floating-point-only operations (return `TPoint<fp_t>` or `fp_t`):
 - `norm()`, `arg()`, `proj()`, `normalize()`, `rotateCW()`, `rotateCCW()`, `reflect(line)`.
 - `operator/` also promotes to `fp_t`.
 
-Implicit conversion from `point<U>` to `point<T>` is provided when `U` is integral and `T` is
+Implicit conversion from `TPoint<U>` to `TPoint<T>` is provided when `U` is integral and `T` is
 floating-point, so `PointI` can be passed wherever `PointD` is expected.
 
 Non-floating-point coordinate types such as `Modular` or `Rational` compose for the exact
@@ -26,10 +26,10 @@ rather than epsilon comparisons. The floating-point-only operations are simply n
 unless called.
 
 Type aliases:
-- `PointI = point<int>`: exact integer geometry (small coordinates only; see overflow warning)
-- `PointL = point<long long>`: exact integer geometry for large coordinates
-- `PointD = point<double>`: standard floating-point
-- `PointLD = point<long double>`: extra precision
+- `PointI = TPoint<int>`: exact integer geometry (small coordinates only; see overflow warning)
+- `PointL = TPoint<long long>`: exact integer geometry for large coordinates
+- `PointD = TPoint<double>`: standard floating-point
+- `PointLD = TPoint<long double>`: extra precision
 - `Point = PointD`: default point type is double
 
 Time Complexity:
@@ -49,79 +49,86 @@ Space Complexity:
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
 
 template<typename T>
-struct point {
+struct TPoint {
   // fp_t is T for floating-point types, double for integral types.
   using fp_t = std::conditional_t<std::is_integral<T>::value, double, T>;
 
   T x, y;
 
-  point() : x(0), y(0) {}
-  point(T x, T y) : x(x), y(y) {}
-  explicit point(const std::pair<T, T> &p) : x(p.first), y(p.second) {}
+  TPoint() : x(0), y(0) {}
+  TPoint(T x, T y) : x(x), y(y) {}
+  explicit TPoint(const std::pair<T, T> &p) : x(p.first), y(p.second) {}
 
   // Implicit conversion from integral to floating-point point (optional, can just use to_double()).
   template<
       typename U,
       typename = std::enable_if_t<std::is_integral<U>::value && std::is_floating_point<T>::value>>
-  point(const point<U> &p) : x(static_cast<T>(p.x)), y(static_cast<T>(p.y)) {}
+  TPoint(const TPoint<U> &p) : x(static_cast<T>(p.x)), y(static_cast<T>(p.y)) {}
 
-  bool operator==(const point &p) const {
+  bool operator==(const TPoint &p) const {
     if constexpr (std::is_floating_point<T>::value) {
       return EQ(x, p.x) && EQ(y, p.y);
     }
     return x == p.x && y == p.y;  // exact for ints and types like Modular/Rational
   }
 
-  bool operator!=(const point &p) const { return !(*this == p); }
+  bool operator!=(const TPoint &p) const { return !(*this == p); }
 
-  bool operator<(const point &p) const {
+  bool operator<(const TPoint &p) const {
     if constexpr (std::is_floating_point<T>::value) {
       return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
     }
     return x == p.x ? y < p.y : x < p.x;  // exact for ints and types like Modular/Rational
   }
 
-  bool operator>(const point &p) const { return p < *this; }
-  bool operator<=(const point &p) const { return !(*this > p); }
-  bool operator>=(const point &p) const { return !(*this < p); }
-  point operator+(const point &p) const { return {x + p.x, y + p.y}; }
-  point operator-(const point &p) const { return {x - p.x, y - p.y}; }
-  point operator+(T v) const { return {x + v, y + v}; }
-  point operator-(T v) const { return {x - v, y - v}; }
-  point operator*(T v) const { return {x * v, y * v}; }
+  bool operator>(const TPoint &p) const { return p < *this; }
+  bool operator<=(const TPoint &p) const { return !(*this > p); }
+  bool operator>=(const TPoint &p) const { return !(*this < p); }
+  TPoint operator+(const TPoint &p) const { return {x + p.x, y + p.y}; }
+  TPoint operator-(const TPoint &p) const { return {x - p.x, y - p.y}; }
+  TPoint operator+(T v) const { return {x + v, y + v}; }
+  TPoint operator-(T v) const { return {x - v, y - v}; }
+  TPoint operator*(T v) const { return {x * v, y * v}; }
 
   // Division always promotes to fp_t to avoid integer truncation.
-  point<fp_t> operator/(fp_t v) const { return {(fp_t)x / v, (fp_t)y / v}; }
+  TPoint<fp_t> operator/(fp_t v) const { return {(fp_t)x / v, (fp_t)y / v}; }
 
   // clang-format off
-  point &operator+=(const point &p) { x += p.x; y += p.y; return *this; }
-  point &operator-=(const point &p) { x -= p.x; y -= p.y; return *this; }
-  point &operator+=(T v) { x += v; y += v; return *this; }
-  point &operator-=(T v) { x -= v; y -= v; return *this; }
-  point &operator*=(T v) { x *= v; y *= v; return *this; }
-  friend point operator+(T v, const point &p) { return p + v; }
-  friend point operator*(T v, const point &p) { return p * v; }
+  TPoint &operator+=(const TPoint &p) { x += p.x; y += p.y; return *this; }
+  TPoint &operator-=(const TPoint &p) { x -= p.x; y -= p.y; return *this; }
+  TPoint &operator+=(T v) { x += v; y += v; return *this; }
+  TPoint &operator-=(T v) { x -= v; y -= v; return *this; }
+  TPoint &operator*=(T v) { x *= v; y *= v; return *this; }
+  friend TPoint operator+(T v, const TPoint &p) { return p + v; }
+  friend TPoint operator*(T v, const TPoint &p) { return p * v; }
   // clang-format on
 
-  // --- Exact operations: return T or point<T>, work for any coordinate type ---
+  // --- Exact operations: return T or TPoint<T>, work for any coordinate type ---
 
   // Overflow warning: these products grow like the squared coordinate magnitude, so for integer T
   // with large coordinates (beyond a few thousand for 32-bit int) use a wider type such as PointL.
   T sqnorm() const { return x * x + y * y; }
-  T dot(const point &p) const { return x * p.x + y * p.y; }
-  T cross(const point &p) const { return x * p.y - y * p.x; }
+  T dot(const TPoint &p) const { return x * p.x + y * p.y; }
+  T cross(const TPoint &p) const { return x * p.y - y * p.x; }
 
-  // --- Floating-point operations: return fp_t or point<fp_t> ---
+  // --- Floating-point operations: return fp_t or TPoint<fp_t> ---
 
   fp_t norm() const { return sqrt(static_cast<fp_t>(sqnorm())); }
   fp_t arg() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
-  fp_t proj(const point &p) const { return static_cast<fp_t>(dot(p)) / p.norm(); }
+  fp_t proj(const TPoint &p) const { return static_cast<fp_t>(dot(p)) / p.norm(); }
 
-  point<fp_t> normalize() const {
+  TPoint<fp_t> normalize() const {
     fp_t n = norm();
     if (n < static_cast<fp_t>(1e-30)) {  // guard against dividing by a near-zero norm, not a
       return {fp_t(0), fp_t(0)};         // geometric tolerance (EPS is too coarse here)
@@ -132,106 +139,103 @@ struct point {
   // --- Cardinal rotations: exact for all coordinate types including int ---
 
   // Returns (x, y) rotated 90/180/270 degrees counter-clockwise about the origin.
-  point rotate90() const { return {-y, x}; }
-  point rotate180() const { return {-x, -y}; }
-  point rotate270() const { return {y, -x}; }
+  TPoint rotate90() const { return {-y, x}; }
+  TPoint rotate180() const { return {-x, -y}; }
+  TPoint rotate270() const { return {y, -x}; }
 
   // Returns (x, y) rotated 90/180/270 degrees counter-clockwise about point p.
-  point rotate90(const point &p) const { return (*this - p).rotate90() + p; }
-  point rotate180(const point &p) const { return (*this - p).rotate180() + p; }
-  point rotate270(const point &p) const { return (*this - p).rotate270() + p; }
+  TPoint rotate90(const TPoint &p) const { return (*this - p).rotate90() + p; }
+  TPoint rotate180(const TPoint &p) const { return (*this - p).rotate180() + p; }
+  TPoint rotate270(const TPoint &p) const { return (*this - p).rotate270() + p; }
 
   // --- Arbitrary-angle rotations: always return floating-point ---
 
   // Returns (x, y) rotated t radians clockwise about the origin.
-  point<fp_t> rotateCW(fp_t t) const {
+  TPoint<fp_t> rotateCW(fp_t t) const {
     fp_t fx = (fp_t)x, fy = (fp_t)y;
     return {fx * cos(t) + fy * sin(t), fy * cos(t) - fx * sin(t)};
   }
 
   // Returns (x, y) rotated t radians counter-clockwise about the origin.
-  point<fp_t> rotateCCW(fp_t t) const {
+  TPoint<fp_t> rotateCCW(fp_t t) const {
     fp_t fx = (fp_t)x, fy = (fp_t)y;
     return {fx * cos(t) - fy * sin(t), fx * sin(t) + fy * cos(t)};
   }
 
   // Returns (x, y) rotated t radians clockwise about point p.
-  point<fp_t> rotateCW(const point &p, fp_t t) const {
-    return point<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCW(t) +
-           point<fp_t>{(fp_t)p.x, (fp_t)p.y};
+  TPoint<fp_t> rotateCW(const TPoint &p, fp_t t) const {
+    return TPoint<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCW(t) +
+           TPoint<fp_t>{(fp_t)p.x, (fp_t)p.y};
   }
 
   // Returns (x, y) rotated t radians counter-clockwise about point p.
-  point<fp_t> rotateCCW(const point &p, fp_t t) const {
-    return point<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCCW(t) +
-           point<fp_t>{(fp_t)p.x, (fp_t)p.y};
+  TPoint<fp_t> rotateCCW(const TPoint &p, fp_t t) const {
+    return TPoint<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCCW(t) +
+           TPoint<fp_t>{(fp_t)p.x, (fp_t)p.y};
   }
 
   // --- Reflections ---
 
   // Returns (x, y) reflected across point p. Exact for any coordinate type.
-  point reflect(const point &p) const { return {2 * p.x - x, 2 * p.y - y}; }
+  TPoint reflect(const TPoint &p) const { return {2 * p.x - x, 2 * p.y - y}; }
 
   // Returns (x, y) reflected across the line containing points p and q.
   // Always returns floating-point coordinates.
-  point<fp_t> reflect(const point &p, const point &q) const {
-    point<fp_t> fp{(fp_t)p.x, (fp_t)p.y};
+  TPoint<fp_t> reflect(const TPoint &p, const TPoint &q) const {
+    TPoint<fp_t> fp{(fp_t)p.x, (fp_t)p.y};
     if (p == q) {
-      return point<fp_t>{(fp_t)x, (fp_t)y}.reflect(fp);
+      return TPoint<fp_t>{(fp_t)x, (fp_t)y}.reflect(fp);
     }
-    point<fp_t> r{(fp_t)(x - p.x), (fp_t)(y - p.y)};
-    point<fp_t> s{(fp_t)(q.x - p.x), (fp_t)(q.y - p.y)};
+    TPoint<fp_t> r{(fp_t)(x - p.x), (fp_t)(y - p.y)}, s{(fp_t)(q.x - p.x), (fp_t)(q.y - p.y)};
     fp_t ssq = s.sqnorm();
-    r = point<fp_t>{(r.x * s.x + r.y * s.y) / ssq, (r.x * s.y - r.y * s.x) / ssq};
-    return point<fp_t>{r.x * s.x - r.y * s.y + fp.x, r.x * s.y + r.y * s.x + fp.y};
+    r = TPoint<fp_t>{(r.x * s.x + r.y * s.y) / ssq, (r.x * s.y - r.y * s.x) / ssq};
+    return TPoint<fp_t>{r.x * s.x - r.y * s.y + fp.x, r.x * s.y + r.y * s.x + fp.y};
   }
 
   // --- Explicit type conversions ---
 
-  point<double> to_double() const { return {static_cast<double>(x), static_cast<double>(y)}; }
+  TPoint<double> to_double() const { return {static_cast<double>(x), static_cast<double>(y)}; }
 
-  point<long double> to_ldouble() const {
+  TPoint<long double> to_ldouble() const {
     return {static_cast<long double>(x), static_cast<long double>(y)};
   }
 
   // --- Friend free-function versions ---
 
-  friend T sqnorm(const point &p) { return p.sqnorm(); }
-  friend fp_t norm(const point &p) { return p.norm(); }
-  friend fp_t arg(const point &p) { return p.arg(); }
-  friend T dot(const point &p, const point &q) { return p.dot(q); }
-  friend T cross(const point &p, const point &q) { return p.cross(q); }
-  friend fp_t proj(const point &p, const point &q) { return p.proj(q); }
-  friend point<fp_t> normalize(const point &p) { return p.normalize(); }
-  friend point rotate90(const point &p) { return p.rotate90(); }
-  friend point rotate180(const point &p) { return p.rotate180(); }
-  friend point rotate270(const point &p) { return p.rotate270(); }
-  friend point rotate90(const point &p, const point &q) { return p.rotate90(q); }
-  friend point rotate180(const point &p, const point &q) { return p.rotate180(q); }
-  friend point rotate270(const point &p, const point &q) { return p.rotate270(q); }
-  friend point<fp_t> rotateCW(const point &p, fp_t t) { return p.rotateCW(t); }
-  friend point<fp_t> rotateCCW(const point &p, fp_t t) { return p.rotateCCW(t); }
-  friend point<fp_t> rotateCW(const point &p, const point &q, fp_t t) { return p.rotateCW(q, t); }
-  friend point<fp_t> rotateCCW(const point &p, const point &q, fp_t t) { return p.rotateCCW(q, t); }
-  friend point reflect(const point &p, const point &q) { return p.reflect(q); }
+  // clang-format off
+  friend T sqnorm(const TPoint &p) { return p.sqnorm(); }
+  friend fp_t norm(const TPoint &p) { return p.norm(); }
+  friend fp_t arg(const TPoint &p) { return p.arg(); }
+  friend T dot(const TPoint &p, const TPoint &q) { return p.dot(q); }
+  friend T cross(const TPoint &p, const TPoint &q) { return p.cross(q); }
+  friend fp_t proj(const TPoint &p, const TPoint &q) { return p.proj(q); }
+  friend TPoint<fp_t> normalize(const TPoint &p) { return p.normalize(); }
+  friend TPoint rotate90(const TPoint &p) { return p.rotate90(); }
+  friend TPoint rotate180(const TPoint &p) { return p.rotate180(); }
+  friend TPoint rotate270(const TPoint &p) { return p.rotate270(); }
+  friend TPoint rotate90(const TPoint &p, const TPoint &q) { return p.rotate90(q); }
+  friend TPoint rotate180(const TPoint &p, const TPoint &q) { return p.rotate180(q); }
+  friend TPoint rotate270(const TPoint &p, const TPoint &q) { return p.rotate270(q); }
+  friend TPoint<fp_t> rotateCW(const TPoint &p, fp_t t) { return p.rotateCW(t); }
+  friend TPoint<fp_t> rotateCCW(const TPoint &p, fp_t t) { return p.rotateCCW(t); }
+  friend TPoint<fp_t> rotateCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCW(q, t); }
+  friend TPoint<fp_t> rotateCCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCCW(q, t); }
+  friend TPoint reflect(const TPoint &p, const TPoint &q) { return p.reflect(q); }
+  friend TPoint<fp_t> reflect(const TPoint &p, const TPoint &a, const TPoint &b) { return p.reflect(a, b); }
+  // clang-format on
 
-  friend point<fp_t> reflect(const point &p, const point &a, const point &b) {
-    return p.reflect(a, b);
-  }
-
-  friend std::ostream &operator<<(std::ostream &out, const point &p) {
+  friend std::ostream &operator<<(std::ostream &out, const TPoint &p) {
     if constexpr (std::is_floating_point<T>::value) {
       return out << "(" << (fabs(p.x) < EPS ? 0 : p.x) << "," << (fabs(p.y) < EPS ? 0 : p.y) << ")";
-    } else {
-      return out << "(" << p.x << "," << p.y << ")";
     }
+    return out << "(" << p.x << "," << p.y << ")";
   }
 };
 
-using PointI = point<int>;
-using PointL = point<long long>;
-using PointD = point<double>;
-using PointLD = point<long double>;
+using PointI = TPoint<int>;
+using PointL = TPoint<long long>;
+using PointD = TPoint<double>;
+using PointLD = TPoint<long double>;
 using Point = PointD;  // Default point type is double.
 
 /*** Example Usage ***/

@@ -34,7 +34,7 @@ Space Complexity:
 #include <queue>
 #include <vector>
 
-template<class T>
+template<typename T>
 class Dinic {
   struct Edge {
     int v, rev;

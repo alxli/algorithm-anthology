@@ -34,7 +34,7 @@ Space Complexity:
 
 const double EPS = 1e-9;
 
-template<class Matrix>
+template<typename Matrix>
 Matrix &row_reduce(Matrix &a) {
   if (a.empty()) {
     return a;
@@ -72,7 +72,7 @@ Matrix &row_reduce(Matrix &a) {
   return a;
 }
 
-template<class Matrix>
+template<typename Matrix>
 int matrix_rank(Matrix a) {
   row_reduce(a);
   int rank = 0;
@@ -87,7 +87,7 @@ int matrix_rank(Matrix a) {
   return rank;
 }
 
-template<class Matrix, class T>
+template<typename Matrix, typename T>
 int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
   if (x == nullptr || a.empty() || a.size() != b.size()) {
     return -1;

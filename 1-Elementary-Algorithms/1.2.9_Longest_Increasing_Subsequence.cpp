@@ -26,7 +26,7 @@ Space Complexity:
 #include <iterator>
 #include <vector>
 
-template<class It>
+template<typename It>
 auto longest_increasing_subsequence(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   int len = 0, n = static_cast<int>(hi - lo);
@@ -67,7 +67,7 @@ auto longest_increasing_subsequence(It lo, It hi) {
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   while (lo != hi) {
     cout << *lo++ << " ";

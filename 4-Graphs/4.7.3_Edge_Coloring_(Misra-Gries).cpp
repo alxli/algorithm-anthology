@@ -13,7 +13,8 @@ vertex, and flips the colors along the maximal alternating $c$/$d$ path leaving 
 at $u$, after which rotating the fan shifts colors over by one and assigns $d$ to the new edge. Each
 step keeps the partial coloring proper and never introduces a $(D + 2)$-th color.
 
-The graph must be simple: no self-loops and no repeated edges.
+The graph must be simple: the implementation stores one color per ordered node pair in a dense
+matrix, so self-loops and parallel edges between the same pair cannot be represented.
 
 - `edge_coloring(n, edges)` returns a vector of colors, one per entry of `edges`, using colors in
   the range $[0, D]$ where $D$ is the maximum degree. Nodes are numbered [0, `n`), and `edges[i]` is

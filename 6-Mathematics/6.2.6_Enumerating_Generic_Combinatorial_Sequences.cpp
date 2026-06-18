@@ -64,7 +64,7 @@ class AbstractEnumerator {
   }
 
   // Accepts any callable f(lo, hi), including capturing lambdas and functors.
-  template<class Fn>
+  template<typename Fn>
   void enumerate(Fn f) {
     int64_t total = total_count();
     for (int64_t i = 0; i < total; i++) {
@@ -181,7 +181,7 @@ Partition of 4:
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   cout << "{";
   for (; lo != hi; ++lo) {

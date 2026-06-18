@@ -97,7 +97,7 @@ class RerootingTree {
 
   bool is_ancestor(int u, int v) const { return tin[u] <= tin[v] && tout[v] <= tout[u]; }
 
-  template<class Data, class Combine, class Finalize, class Lift>
+  template<typename Data, typename Combine, typename Finalize, typename Lift>
   std::vector<Data> rerooting_dp(
       const Data &identity, Combine combine, Finalize finalize, Lift lift
   ) {

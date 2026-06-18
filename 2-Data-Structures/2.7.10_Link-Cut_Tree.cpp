@@ -60,7 +60,7 @@ Space Complexity:
 #include <stdexcept>
 #include <unordered_map>
 
-template<class T>
+template<typename T>
 class LinkCut {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, int len) { return d; }

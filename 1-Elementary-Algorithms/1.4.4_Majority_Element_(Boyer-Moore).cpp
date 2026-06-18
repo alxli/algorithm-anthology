@@ -25,7 +25,7 @@ Space Complexity:
 
 */
 
-template<class It>
+template<typename It>
 It majority(It lo, It hi) {
   int count = 0, n = 0;
   It candidate = lo;

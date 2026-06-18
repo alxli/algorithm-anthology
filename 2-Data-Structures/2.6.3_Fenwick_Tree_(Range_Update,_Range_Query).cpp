@@ -28,7 +28,7 @@ Space Complexity:
 
 #include <vector>
 
-template<class T>
+template<typename T>
 class FenwickRURQ {
   int len;
   std::vector<T> t1, t2;

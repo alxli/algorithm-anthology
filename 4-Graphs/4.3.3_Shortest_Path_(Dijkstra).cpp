@@ -35,7 +35,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 std::pair<std::vector<T>, std::vector<int>> dijkstra(
     const std::vector<std::vector<std::pair<int, T>>> &adj, int start
 ) {
@@ -93,11 +93,11 @@ void print_path(const vector<int> &pred, int dest) {
 int main() {
   int start = 0, dest = 3;
   adj.assign(4, {});
-  adj[0].push_back({1, 2});
-  adj[0].push_back({3, 8});
-  adj[1].push_back({2, 2});
-  adj[1].push_back({3, 4});
-  adj[2].push_back({3, 1});
+  adj[0].emplace_back(1, 2);
+  adj[0].emplace_back(3, 8);
+  adj[1].emplace_back(2, 2);
+  adj[1].emplace_back(3, 4);
+  adj[2].emplace_back(3, 1);
   auto [dist, pred] = dijkstra(adj, start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(pred, dest);

@@ -9,8 +9,8 @@ The algorithm starts with every vertex attached to vertex 0, then performs $n - 
 computations. After computing the minimum cut between vertex $s$ and its current parent, vertices on
 the $s$ side of that cut are reparented under $s$, gradually refining the cut-equivalent tree.
 
-- `gomory_hu(n, edges)` returns the `n - 1` edges of a Gomory-Hu tree as (`u`, `v`, `weight`)
-  tripes for an undirected, weighted graph specificed by `edges` of the same shape.
+- `gomory_hu(n, edges)` returns the $`n` - 1$ edges of a Gomory-Hu tree as (`u`, `v`, `weight`)
+  tripes for an undirected, weighted graph with `n` nodes and `edges` of the same shape.
 - `min_cut_value(n, tree, source, sink)` returns the minimum cut value between two vertices using a
   Gomory-Hu tree. Note that for many pairwise cut queries on the same tree, it's more efficient to
   prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting
@@ -34,7 +34,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class Dinic {
   int nodes;
   std::vector<std::vector<std::tuple<int, int, T>>> adj;  // (v, rev, cap)
@@ -118,10 +118,10 @@ class Dinic {
   }
 };
 
-template<class T>
+template<typename T>
 using Edge = std::tuple<int, int, T>;
 
-template<class T>
+template<typename T>
 std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
   assert(n >= 1);
   std::vector<int> parent(n, 0);
@@ -156,7 +156,7 @@ std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
   return tree;
 }
 
-template<class T>
+template<typename T>
 T min_cut_value_dfs(
     const std::vector<std::vector<std::pair<int, T>>> &adj, std::vector<bool> &seen, int u,
     int sink, T best
@@ -176,7 +176,7 @@ T min_cut_value_dfs(
   return -1;
 }
 
-template<class T>
+template<typename T>
 T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
   assert(0 <= source && source < n && 0 <= sink && sink < n && source != sink);
   // For many queries, prebuild this adjacency and add LCA/binary lifting for min edge on path.

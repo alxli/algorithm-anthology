@@ -45,7 +45,7 @@ Stable?: No.
 
 */
 
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 void quicksort(It lo, It hi, Compare comp = Compare()) {
   while (hi - lo >= 2) {
     auto pivot = *(lo + (hi - lo) / 2);
@@ -88,7 +88,7 @@ Stable?: Yes.
 
 */
 
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 void mergesort(It lo, It hi, Compare comp = Compare()) {
   if (hi - lo < 2) {
     return;
@@ -129,7 +129,7 @@ Stable?: No.
 
 */
 
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 void heapsort(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
   T tmp;
@@ -184,7 +184,7 @@ Stable?: Yes.
 
 */
 
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 void insertion_sort(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
   for (It i = lo; i != hi; ++i) {
@@ -216,7 +216,7 @@ Stable?: No.
 
 */
 
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 void combsort(It lo, It hi, Compare comp = Compare()) {
   int gap = static_cast<int>(hi - lo);
   bool swapped = true;
@@ -252,7 +252,7 @@ Space Complexity: O(n + 2^b) auxiliary for a radix of $b$ bits, i.e. O(n) for co
 
 */
 
-template<class It>
+template<typename It>
 void radix_sort(It lo, It hi) {
   if (hi - lo < 2) {
     return;
@@ -311,7 +311,7 @@ radix_sort(): 0.016s
 #include <vector>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   while (lo != hi) {
     cout << *lo++ << " ";
@@ -319,7 +319,7 @@ void print_range(It lo, It hi) {
   cout << endl;
 }
 
-template<class It>
+template<typename It>
 bool sorted(It lo, It hi) {
   while (++lo != hi) {
     if (*lo < *(lo - 1)) {

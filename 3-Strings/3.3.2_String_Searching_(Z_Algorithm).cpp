@@ -36,7 +36,7 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-template<class Seq>
+template<typename Seq>
 std::vector<int> z_array(const Seq &s) {
   std::vector<int> z(s.size());
   for (int i = 1, l = 0, r = 0; i < static_cast<int>(z.size()); i++) {

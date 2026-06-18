@@ -22,7 +22,7 @@ Space Complexity:
 #include <algorithm>
 #include <utility>
 
-template<class It, class T>
+template<typename It, typename T>
 std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
   It lt = lo, i = lo, gt = hi;
   while (i != gt) {
@@ -37,7 +37,7 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
   return {lt, gt};
 }
 
-template<class It>
+template<typename It>
 void sort_012(It lo, It hi) {
   partition_three_way(lo, hi, 1);
 }

@@ -55,7 +55,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class HeavyLight {
   // Set this to true to store values on edges, false to store values on nodes.
   static const bool VALUES_ON_EDGES = true;
@@ -212,7 +212,7 @@ class HeavyLight {
     }
   }
 
-  template<class Fn>
+  template<typename Fn>
   bool for_each_path(int u, int v, bool include_lca, Fn f) {
     if (root[u] != root[v]) {
       return false;

@@ -8,7 +8,7 @@ and many number-theory reductions.
 The baby-step giant-step method writes $x = np - q$ for a block size $n$ near the square root of the
 modulus. It tabulates the "baby steps" $b \cdot a^q$ for $q$ in $[0, n]$, then walks the "giant
 steps" $a^{np}$ for increasing $p$ until one lands in the table, yielding $x = np - q$. This trades
-the linear scan of all exponents for $O(\sqrt m)$ work and memory. A short reduction loop first
+the linear scan of all exponents for O(sqrt(m)) work and memory. A short reduction loop first
 strips common factors between $a$ and $m$, so the routine works for any modulus, not only when $a$
 and $m$ are coprime.
 

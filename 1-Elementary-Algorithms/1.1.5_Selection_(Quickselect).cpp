@@ -25,7 +25,7 @@ Space Complexity:
 #include <iterator>
 #include <random>
 
-template<class It>
+template<typename It>
 void nth_element2(It lo, It nth, It hi) {
   static std::mt19937 rng(std::random_device{}());
   while (hi - lo > 1) {

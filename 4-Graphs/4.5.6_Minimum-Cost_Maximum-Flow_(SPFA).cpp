@@ -38,7 +38,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T, class C = int64_t>
+template<typename T, typename C = int64_t>
 class MinCostMaxFlow {
   struct Edge {
     int u, v;

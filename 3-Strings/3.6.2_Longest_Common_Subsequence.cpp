@@ -57,7 +57,7 @@ string longest_common_subsequence(const string &s1, const string &s2) {
   return res;
 }
 
-template<class It>
+template<typename It>
 std::vector<int> lcs_len(It lo1, It hi1, It lo2, It hi2) {
   std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
   for (It it1 = lo1; it1 != hi1; ++it1) {
@@ -71,7 +71,7 @@ std::vector<int> lcs_len(It lo1, It hi1, It lo2, It hi2) {
   return res;
 }
 
-template<class It>
+template<typename It>
 void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
   if (lo1 == hi1) {
     return;

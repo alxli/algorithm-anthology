@@ -42,7 +42,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class W>
+template<typename W>
 class WeightedTreePath {
   // Edit combine() and identity() together for the desired commutative monoid.
   // The defaults give the maximum edge weight on the path; for the minimum use std::min with

@@ -64,7 +64,7 @@ std::vector<uint32_t> masks_with_popcount(int n, int k) {
   return res;
 }
 
-template<class T>
+template<typename T>
 void subset_sum_transform(std::vector<T> &f) {
   int n = __builtin_ctz(f.size());  // f.size() must be a power of two, 2^n.
   for (int b = 0; b < n; b++) {

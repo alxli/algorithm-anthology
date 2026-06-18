@@ -44,7 +44,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class OfflineFenwick2D {
   std::vector<int> xs;                       // Sorted distinct update rows.
   std::vector<std::vector<int>> ys;          // ys[p]: sorted distinct columns at outer node p.

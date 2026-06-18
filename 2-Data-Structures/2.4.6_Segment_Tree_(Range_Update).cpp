@@ -22,7 +22,7 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
 - `LazySegTree<T>(lo, hi)` constructs an array from two random-access iterators as a range
   [`lo`, `hi`), initialized to the elements of the range in the same order.
 - `size()` returns the size of the array.
-- `at(i)` returns the value at index `i`, where `i` is between 0 and `size() - 1`.
+- `at(i)` returns the value at index `i`.
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
   inclusive. If `lo == hi`, then the single specified value is returned.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
@@ -56,7 +56,7 @@ Space Complexity:
 #include <optional>
 #include <vector>
 
-template<class T>
+template<typename T>
 class LazySegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, int64_t len) { return d; }
@@ -77,7 +77,7 @@ class LazySegTree {
     value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
-  template<class It>
+  template<typename It>
   void build(int i, int lo, int hi, It arr) {
     if (lo == hi) {
       value[i] = *(arr + lo);
@@ -136,7 +136,7 @@ class LazySegTree {
     value[i] = combine(value[2 * i + 1], value[2 * i + 2]);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) {
     push_delta(i, lo, hi);
     if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
@@ -150,7 +150,7 @@ class LazySegTree {
     return res != -1 ? res : find_first(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) {
     push_delta(i, lo, hi);
     if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
@@ -164,7 +164,7 @@ class LazySegTree {
     return res != -1 ? res : find_last(i * 2 + 1, lo, mid, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int i, int lo, int hi, int tgt_lo, const Pred &pred, std::optional<T> &acc) {
     push_delta(i, lo, hi);
     if (hi < tgt_lo) {
@@ -185,7 +185,7 @@ class LazySegTree {
     return res != -1 ? res : max_right(i * 2 + 2, mid + 1, hi, tgt_lo, pred, acc);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int i, int lo, int hi, int tgt_hi, const Pred &pred, std::optional<T> &acc) {
     push_delta(i, lo, hi);
     if (tgt_hi <= lo) {
@@ -214,7 +214,7 @@ class LazySegTree {
     }
   }
 
-  template<class It>
+  template<typename It>
   LazySegTree(It lo, It hi)
       : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
@@ -228,24 +228,24 @@ class LazySegTree {
   void update(int i, const T &d) { update(0, 0, len - 1, i, i, d); }
   void update(int lo, int hi, const T &d) { update(0, 0, len - 1, lo, hi, d); }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int lo, int hi, const Pred &pred) {
     return find_first(0, 0, len - 1, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int lo, int hi, const Pred &pred) {
     return find_last(0, 0, len - 1, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int lo, const Pred &pred) {
     std::optional<T> acc;
     int res = max_right(0, 0, len - 1, lo, pred, acc);
     return res == -1 ? len : res;
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int hi, const Pred &pred) {
     std::optional<T> acc;
     int res = min_left(0, 0, len - 1, hi, pred, acc);

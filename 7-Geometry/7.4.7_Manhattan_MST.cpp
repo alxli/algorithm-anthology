@@ -64,8 +64,10 @@ std::vector<std::tuple<int64_t, int, int>> manhattan_mst_edges(std::vector<Point
 
 struct DSU {
   std::vector<int> parent, rank;
+
   explicit DSU(int n) : parent(n), rank(n, 0) { std::iota(parent.begin(), parent.end(), 0); }
   int find(int u) { return parent[u] == u ? u : parent[u] = find(parent[u]); }
+
   bool unite(int u, int v) {
     u = find(u);
     v = find(v);

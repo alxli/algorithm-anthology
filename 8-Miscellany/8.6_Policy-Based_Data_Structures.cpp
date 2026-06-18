@@ -36,11 +36,11 @@ Space Complexity:
 #include <functional>
 #include <utility>
 
-template<class K, class V, class Compare = std::less<K>>
+template<typename K, typename V, typename Compare = std::less<K>>
 using OrderedMap = __gnu_pbds::tree<
     K, V, Compare, __gnu_pbds::rb_tree_tag, __gnu_pbds::tree_order_statistics_node_update>;
 
-template<class T, class Compare = std::less<T>>
+template<typename T, typename Compare = std::less<T>>
 using OrderedSet = OrderedMap<T, __gnu_pbds::null_type, Compare>;
 
 struct SplitMix64Hasher {
@@ -59,13 +59,13 @@ struct SplitMix64Hasher {
   }
 };
 
-template<class K, class V, class Hash = SplitMix64Hasher>
+template<typename K, typename V, typename Hash = SplitMix64Hasher>
 using HashMap = __gnu_pbds::gp_hash_table<K, V, Hash>;
 
-template<class K, class Hash = SplitMix64Hasher>
+template<typename K, typename Hash = SplitMix64Hasher>
 using HashSet = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, Hash>;
 
-template<class T>
+template<typename T>
 class OrderedMultiset {
   OrderedSet<std::pair<T, int>> tree;
   int timer = 0;
@@ -87,7 +87,7 @@ class OrderedMultiset {
   int size() const { return static_cast<int>(tree.size()); }
 };
 
-template<class K, class V>
+template<typename K, typename V>
 class OrderedMultimap {
   OrderedMap<std::pair<K, int>, V> tree;
   int timer = 0;
@@ -114,16 +114,16 @@ class OrderedMultimap {
   int size() const { return static_cast<int>(tree.size()); }
 };
 
-template<class T, class Compare = std::less<T>>
+template<typename T, typename Compare = std::less<T>>
 using PairingHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::pairing_heap_tag>;
 
-template<class T, class Compare = std::less<T>>
+template<typename T, typename Compare = std::less<T>>
 using BinaryHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::binary_heap_tag>;
 
-template<class T, class Compare = std::less<T>>
+template<typename T, typename Compare = std::less<T>>
 using BinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::binomial_heap_tag>;
 
-template<class T, class Compare = std::less<T>>
+template<typename T, typename Compare = std::less<T>>
 using RcBinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::rc_binomial_heap_tag>;
 
 /*** Example Usage ***/

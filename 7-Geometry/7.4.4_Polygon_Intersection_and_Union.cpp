@@ -34,16 +34,25 @@ Space Complexity:
 #include <cmath>
 #include <cstdint>
 #include <set>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
+// clang-format off
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+// clang-format on
 
-template<class Pt>
+template<typename Pt>
 bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return EQ((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x), 0) &&
@@ -53,7 +62,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
 
 // Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = true,
 // returning -1 for no intersection, 0 for one intersection point, 1 for positive length overlap.
-template<class Pt>
+template<typename Pt>
 int seg_intersection1(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, double *outx, double *outy
 ) {
@@ -110,7 +119,7 @@ int seg_intersection1(
 }
 
 // The two segments may use different point types (e.g. polygon edge vs. sweep line).
-template<class PtA, class PtB>
+template<typename PtA, typename PtB>
 int line_intersection1(
     const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, double *outx, double *outy
 ) {
@@ -136,7 +145,7 @@ struct Event {
   Event(double y = 0, int mask_delta = 0) : y(y), mask_delta(mask_delta) {}
 };
 
-template<class It>
+template<typename It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   if (lo1 == hi1 || lo2 == hi2) {
     return 0;
@@ -206,7 +215,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   return res;
 }
 
-template<class It>
+template<typename It>
 double polygon_area(It lo, It hi) {
   if (lo == hi) {
     return 0;
@@ -218,7 +227,7 @@ double polygon_area(It lo, It hi) {
   return fabs(area / 2.0);
 }
 
-template<class It>
+template<typename It>
 double union_area(It lo1, It hi1, It lo2, It hi2) {
   return polygon_area(lo1, hi1) + polygon_area(lo2, hi2) - intersection_area(lo1, hi1, lo2, hi2);
 }

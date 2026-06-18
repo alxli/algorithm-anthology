@@ -19,7 +19,7 @@ Space Complexity:
 #include <algorithm>
 #include <random>
 
-template<class It>
+template<typename It>
 void fisher_yates_shuffle(It lo, It hi) {
   static std::mt19937 rng(std::random_device{}());
   int n = static_cast<int>(hi - lo);

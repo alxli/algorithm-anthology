@@ -41,7 +41,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class K, class V>
+template<typename K, typename V>
 class SplayTree {
   struct Node {
     K key;
@@ -149,7 +149,7 @@ class SplayTree {
   static void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) {
     if (n != nullptr) {
       collect_entries(n->left, res);
-      res.push_back({n->key, n->value});
+      res.emplace_back(n->key, n->value);
       collect_entries(n->right, res);
     }
   }

@@ -55,7 +55,7 @@ Space Complexity:
 #include <cstdint>
 #include <optional>
 
-template<class T, int N = 1000000000>
+template<typename T, int N = 1000000000>
 class SparseSegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t len) { return v; }
@@ -142,7 +142,7 @@ class SparseSegTree {
     n->value = combine(left_value, right_value);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(Node *n, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) {
     if (hi < tgt_lo || lo > tgt_hi) {
       return -1;
@@ -163,7 +163,7 @@ class SparseSegTree {
     return res != -1 ? res : find_first(n->right, mid + 1, hi, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(Node *n, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) {
     if (hi < tgt_lo || lo > tgt_hi) {
       return -1;
@@ -183,7 +183,7 @@ class SparseSegTree {
     return res != -1 ? res : find_last(n->left, lo, mid, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(Node *n, int lo, int hi, int tgt_lo, const Pred &pred, std::optional<T> &acc) {
     if (hi < tgt_lo) {
       return -1;
@@ -208,7 +208,7 @@ class SparseSegTree {
                      : max_right(n == nullptr ? nullptr : n->right, mid + 1, hi, tgt_lo, pred, acc);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(Node *n, int lo, int hi, int tgt_hi, const Pred &pred, std::optional<T> &acc) {
     if (tgt_hi <= lo) {
       return -1;
@@ -251,24 +251,24 @@ class SparseSegTree {
   void update(int i, const T &d) { return update(i, i, d); }
   void update(int lo, int hi, const T &d) { return update(root, 0, N, lo, hi, d); }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int lo, int hi, const Pred &pred) {
     return find_first(root, 0, N, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int lo, int hi, const Pred &pred) {
     return find_last(root, 0, N, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int lo, const Pred &pred) {
     std::optional<T> acc;
     int res = max_right(root, 0, N, lo, pred, acc);
     return res == -1 ? N + 1 : res;
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int hi, const Pred &pred) {
     std::optional<T> acc;
     int res = min_left(root, 0, N, hi, pred, acc);

@@ -42,12 +42,12 @@ algorithm-specific policy and are meant to be pasted near the top of a solution 
 #define Dwn(i, H, L) for (int i = (H), _##i = (L); i >= _##i; --i)  //   H to L
 #define Each(x, C) for (auto &x : (C))
 
-template<class Fun>
+template<typename Fun>
 class y_combinator_result {
   Fun fun;
 
  public:
-  template<class T>
+  template<typename T>
   explicit y_combinator_result(T &&fun_) : fun(std::forward<T>(fun_)) {}
   template<class... Args>
   decltype(auto) operator()(Args &&...args) {
@@ -55,47 +55,47 @@ class y_combinator_result {
   }
 };
 
-template<class Fun>
+template<typename Fun>
 decltype(auto) y_combinator(Fun &&fun) {
   return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
 }
 
 // clang-format off
-template<class C> int sz(const C &c) { return static_cast<int>(c.size()); }
-template<class T, class U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
-template<class T, class U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
-template<class T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
-template<class T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
+template<typename C> int sz(const C &c) { return static_cast<int>(c.size()); }
+template<typename T, typename U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
+template<typename T, typename U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
+template<typename T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
+template<typename T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
 // clang-format on
 
-template<class T>
+template<typename T>
 T floor_div(T a, T b) {
   assert(b != 0);
   T q = a / b, r = a % b;
   return q - (r != 0 && ((r < 0) != (b < 0)));
 }
 
-template<class T>
+template<typename T>
 T ceil_div(T a, T b) {
   assert(b != 0);
   T q = a / b, r = a % b;
   return q + (r != 0 && ((r < 0) == (b < 0)));
 }
 
-template<class T>
+template<typename T>
 void sort_unique(std::vector<T> &v) {
   std::sort(v.begin(), v.end());
   v.erase(std::unique(v.begin(), v.end()), v.end());
 }
 
-template<class C, class T>
+template<typename C, typename T>
 void erase_one(C &c, const T &x) {
   auto it = c.find(x);
   assert(it != c.end());
   c.erase(it);
 }
 
-template<class T>
+template<typename T>
 using min_priority_queue = std::priority_queue<T, std::vector<T>, std::greater<T>>;
 
 struct RNG {
@@ -104,7 +104,7 @@ struct RNG {
   RNG() : RNG(std::chrono::steady_clock::now().time_since_epoch().count()) {}
   explicit RNG(uint64_t seed) : gen(seed) {}
 
-  template<class T>
+  template<typename T>
   T uniform_int(T lo, T hi) {
     static_assert(std::is_integral<T>::value, "uniform_int() requires an integral type");
     return std::uniform_int_distribution<T>(lo, hi)(gen);
@@ -114,7 +114,7 @@ struct RNG {
     return std::uniform_real_distribution<double>(lo, hi)(gen);
   }
 
-  template<class It>
+  template<typename It>
   void shuffle(It lo, It hi) {
     std::shuffle(lo, hi, gen);
   }

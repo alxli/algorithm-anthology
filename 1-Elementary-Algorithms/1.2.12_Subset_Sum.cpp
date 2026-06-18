@@ -42,7 +42,7 @@ Space Complexity:
 #include <cstdint>
 #include <vector>
 
-template<class It>
+template<typename It>
 int64_t max_subset_sum_at_most(It lo, It hi, int64_t v) {
   int n = static_cast<int>(hi - lo);
   int64_t llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
@@ -66,7 +66,7 @@ int64_t max_subset_sum_at_most(It lo, It hi, int64_t v) {
   return res;
 }
 
-template<class It>
+template<typename It>
 int64_t max_subset_sum_bounded(It lo, It hi, int target) {
   int n = static_cast<int>(hi - lo);
   // Greedily take a prefix while it still fits; the optimum then lies within one weight of target.

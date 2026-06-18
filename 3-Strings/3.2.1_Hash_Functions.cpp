@@ -84,12 +84,12 @@ uint64_t mix64(uint64_t x) {
   return x ^ (x >> 31);
 }
 
-template<class Int>
+template<typename Int>
 uint32_t hash32(Int x) {
   return mix32(static_cast<uint32_t>(x));
 }
 
-template<class Int>
+template<typename Int>
 uint64_t hash64(Int x) {
   return mix64(static_cast<uint64_t>(x));
 }
@@ -138,7 +138,7 @@ uint64_t hash_string_fnv1a64(const std::string &s) {
   return h;
 }
 
-template<class It>
+template<typename It>
 uint32_t hash_range32(It first, It last) {
   uint32_t h = 0;
   for (It it = first; it != last; ++it) {
@@ -147,7 +147,7 @@ uint32_t hash_range32(It first, It last) {
   return h;
 }
 
-template<class It>
+template<typename It>
 uint64_t hash_range64(It first, It last) {
   uint64_t h = 0;
   for (It it = first; it != last; ++it) {
@@ -156,7 +156,7 @@ uint64_t hash_range64(It first, It last) {
   return h;
 }
 
-template<class Int>
+template<typename Int>
 struct IntHasher {
   std::size_t operator()(Int x) const {
     static const uint64_t RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
@@ -164,17 +164,17 @@ struct IntHasher {
   }
 };
 
-template<class T>
+template<typename T>
 struct GenericHasher;
 
 // Use std::hash by default.
-template<class T, bool IsInteger>
+template<typename T, bool IsInteger>
 struct ScalarHasher {
   std::size_t operator()(const T &x) const { return std::hash<T>()(x); }
 };
 
 // Optional: Use our seeded hasher for ints in open-hacking environments.
-template<class T>
+template<typename T>
 struct ScalarHasher<T, true> {
   std::size_t operator()(T x) const { return IntHasher<T>{}(x); }
 };
@@ -194,7 +194,7 @@ struct PairIntHasher {
   }
 };
 
-template<class A, class B>
+template<typename A, typename B>
 struct PairHasher {
   std::size_t operator()(const std::pair<A, B> &p) const {
     uint64_t h = 0;
@@ -204,7 +204,7 @@ struct PairHasher {
   }
 };
 
-template<class T>
+template<typename T>
 struct VectorHasher {
   std::size_t operator()(const std::vector<T> &v) const {
     uint64_t h = 0;
@@ -230,16 +230,16 @@ struct TupleHasher {
   }
 };
 
-template<class T>
+template<typename T>
 struct GenericHasher : ScalarHasher<T, std::is_integral<T>::value> {};
 
-template<class A, class B>
+template<typename A, typename B>
 struct GenericHasher<std::pair<A, B>> : PairHasher<A, B> {};
 
 template<class... Ts>
 struct GenericHasher<std::tuple<Ts...>> : TupleHasher<Ts...> {};
 
-template<class T>
+template<typename T>
 struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 
 // Specializing std::hash lets pair and tuple keys be used directly in std::unordered_map and
@@ -250,7 +250,7 @@ struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 // std::hash<std::vector<bool>>; pass VectorHasher or GenericHasher explicitly for those.
 namespace std {
 
-template<class A, class B>
+template<typename A, typename B>
 struct hash<pair<A, B>> {
   size_t operator()(const pair<A, B> &p) const { return ::GenericHasher<pair<A, B>>()(p); }
 };

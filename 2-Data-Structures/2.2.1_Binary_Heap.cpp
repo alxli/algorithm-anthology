@@ -33,7 +33,7 @@ Space Complexity:
 #include <stdexcept>
 #include <vector>
 
-template<class T>
+template<typename T>
 class BinaryHeap {
   std::vector<T> heap;
 
@@ -58,7 +58,7 @@ class BinaryHeap {
  public:
   BinaryHeap() {}
 
-  template<class It>
+  template<typename It>
   BinaryHeap(It lo, It hi) : heap(lo, hi) {
     for (int i = static_cast<int>(heap.size()) / 2 - 1; i >= 0; i--) {
       sift_down(i);

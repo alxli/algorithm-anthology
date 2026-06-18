@@ -46,7 +46,7 @@ class Graph {
   std::vector<std::vector<int>> adj;
   bool directed;
 
-  template<class Fn>
+  template<typename Fn>
   void dfs(int n, std::vector<bool> &visit, Fn f) const {
     f(n);
     visit[n] = true;
@@ -107,7 +107,7 @@ class Graph {
   bool is_forest() const { return !directed && !has_cycle(); }
   bool is_dag() const { return directed && !has_cycle(); }
 
-  template<class Fn>
+  template<typename Fn>
   void dfs(int start, Fn f) const {
     std::vector<bool> visit(adj.size(), false);
     dfs(start, visit, f);
@@ -475,7 +475,7 @@ class RerootingTree {
 
   bool is_ancestor(int u, int v) const { return tin[u] <= tin[v] && tout[v] <= tout[u]; }
 
-  template<class Data, class Combine, class Finalize, class Lift>
+  template<typename Data, typename Combine, typename Finalize, typename Lift>
   std::vector<Data> rerooting_dp(
       const Data &identity, Combine combine, Finalize finalize, Lift lift
   ) {
@@ -1652,7 +1652,7 @@ struct BiconnectedComponents {
     int id = static_cast<int>(edges.size());
     adj[u].push_back(id);
     adj[v].push_back(id);
-    edges.push_back({u, v});
+    edges.emplace_back(u, v);
   }
 
   int other(int id, int u) const { return edges[id].first ^ edges[id].second ^ u; }
@@ -1979,6 +1979,8 @@ Maintain the number of bridges in an undirected graph while edges are inserted o
   \item \inlinecode{find\_2ecc(u)} returns node \inlinecode{u}'s representative in the 2-edge-connected components partition.
   \item \inlinecode{find\_cc(u)} returns node \inlinecode{u}'s representative in the ordinary connected components partition.
 \end{compactitem}
+
+Parallel edges are supported. Adding a second edge between two nodes that are already in the same connected component dissolves every bridge on the path between them, merging those nodes into the same 2-edge-connected component.
 
 \textbf{Time Complexity}: $O(\log n)$ amortized per call to \inlinecode{add\_edge()} in this implementation, where $n$ is the number of nodes.
 
@@ -2725,7 +2727,7 @@ void bfs_zero_one(int start) {
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].push_back({v, w});
+  adj[u].emplace_back(v, w);
 }
 
 void print_path(int dest) {
@@ -2787,7 +2789,7 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 std::pair<std::vector<T>, std::vector<int>> dijkstra(
     const std::vector<std::vector<std::pair<int, T>>> &adj, int start
 ) {
@@ -2841,11 +2843,11 @@ void print_path(const vector<int> &pred, int dest) {
 int main() {
   int start = 0, dest = 3;
   adj.assign(4, {});
-  adj[0].push_back({1, 2});
-  adj[0].push_back({3, 8});
-  adj[1].push_back({2, 2});
-  adj[1].push_back({3, 4});
-  adj[2].push_back({3, 1});
+  adj[0].emplace_back(1, 2);
+  adj[0].emplace_back(3, 8);
+  adj[1].emplace_back(2, 2);
+  adj[1].emplace_back(3, 4);
+  adj[2].emplace_back(3, 1);
   auto [dist, pred] = dijkstra(adj, start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
   print_path(pred, dest);
@@ -2881,12 +2883,8 @@ For path reconstruction, \inlinecode{pred[v]} stores the node immediately before
 #include <stdexcept>
 #include <vector>
 
-struct Edge {
-  int u, v, w;
-};
-
 const int64_t INF = INT64_MAX / 4;
-std::vector<Edge> edges;
+std::vector<std::tuple<int, int, int>> edges;  // (u, v, w)
 std::vector<int64_t> dist;
 std::vector<int> pred;
 
@@ -2932,9 +2930,9 @@ void print_path(int dest) {
 }
 
 int main() {
-  edges.push_back(Edge{0, 1, 1});
-  edges.push_back(Edge{1, 2, 2});
-  edges.push_back(Edge{0, 2, 5});
+  edges.emplace_back(0, 1, 1);
+  edges.emplace_back(1, 2, 2);
+  edges.emplace_back(0, 2, 5);
   int start = 0, dest = 2;
   bellman_ford(3, start);
   cout << "The shortest distance from " << start << " to " << dest << " is " << dist[dest] << ".\n";
@@ -3015,7 +3013,7 @@ bool spfa(int start) {
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].push_back({v, w});
+  adj[u].emplace_back(v, w);
 }
 
 void print_path(int dest) {
@@ -3262,7 +3260,7 @@ Prim's algorithm grows the tree from an arbitrary start node, repeatedly adding 
   \item \inlinecode{prim\_mst()} populates \inlinecode{mst} with the edge IDs in the minimum spanning tree (returning the total MST weight) for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}. Edges are stored as (\inlinecode{neighbor}, \inlinecode{weight}, \inlinecode{edge\_id}).
 \end{compactitem}
 
-The priority queue stores candidate edges as (\inlinecode{weight}, \inlinecode{from}, \inlinecode{to}, \inlinecode{edge\_id}) and uses \inlinecode{std::greater} to make it a min-heap. To find a maximum spanning tree instead, use the default max-heap ordering.
+The priority queue stores candidate edges as (\inlinecode{weight}, \inlinecode{from}, \inlinecode{to}, \inlinecode{edge\_id}) and uses \inlinecode{std::greater} to make it a min-heap. To find a maximum spanning tree instead, use the default max-heap ordering. Multigraphs are supported; parallel edges are stored as separate adjacency entries and the algorithm automatically selects the minimum-weight one to each unvisited node.
 
 \textbf{Time Complexity}: $O(m \log n)$ per call to \inlinecode{prim\_mst()}, where $m$ is the number of edges and $n$ is the number of nodes.
 
@@ -3326,9 +3324,9 @@ vector<pair<int, int>> edge_endpoints;
 
 void add_edge(int u, int v, int w) {
   int id = static_cast<int>(edge_endpoints.size());
-  edge_endpoints.push_back({u, v});
-  adj[u].push_back({v, w, id});
-  adj[v].push_back({u, w, id});
+  edge_endpoints.emplace_back(u, v);
+  adj[u].emplace_back(v, w, id);
+  adj[v].emplace_back(u, w, id);
 }
 
 int main() {
@@ -3365,6 +3363,8 @@ Kruskal's algorithm scans the edges in nondecreasing weight order, adding each e
 \begin{compactitem}
   \item \inlinecode{kruskal\_mst(n)} populates \inlinecode{mst} with the edge IDs in the minimum spanning tree (returning the total MST weight) for a global, pre-populated edge list \inlinecode{edges} whose endpoints must be numbered [0, \inlinecode{n}). Each edge is stored as (\inlinecode{weight}, \inlinecode{u}, \inlinecode{v}).
 \end{compactitem}
+
+Multigraphs are supported; parallel edges appear as separate entries in \inlinecode{edges} and any redundant ones are skipped once the cheaper edge has already connected the two components.
 
 \textbf{Time Complexity}: $O(m \log n)$ per call to \inlinecode{kruskal\_mst()}, where $m$ is the number of edges and $n$ is the number of nodes. The internal DSU uses path compression and union by size, making each DSU operation $O(\alpha\left(n\right))$ amortized.
 
@@ -3677,7 +3677,7 @@ Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current 
 #include <queue>
 #include <vector>
 
-template<class T>
+template<typename T>
 class EdmondsKarp {
   struct Edge {
     int u, v, rev;
@@ -3827,7 +3827,7 @@ Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current 
 #include <queue>
 #include <vector>
 
-template<class T>
+template<typename T>
 class Dinic {
   struct Edge {
     int v, rev;
@@ -4002,7 +4002,7 @@ Repeated calls to \inlinecode{max\_flow()} continue augmenting from the current 
 #include <queue>
 #include <vector>
 
-template<class T>
+template<typename T>
 class Dinic {
   struct Edge {
     int u, v;
@@ -4410,7 +4410,7 @@ This implementation uses shortest augmenting paths with SPFA, so it supports neg
 #include <utility>
 #include <vector>
 
-template<class T, class C = int64_t>
+template<typename T, typename C = int64_t>
 class MinCostMaxFlow {
   struct Edge {
     int u, v;
@@ -4533,7 +4533,7 @@ int main() {
 }
 \end{lstlisting}
 \subsection{Minimum-Cost Maximum-Flow (Potentials)}
-Given a flow network with capacities and edge costs, find a minimum-cost flow from a source node to a sink node. This is the successive shortest path method with Johnson potentials: after initial potentials make all residual reduced costs nonnegative, each augmenting path is found with Dijkstra's algorithm.
+Given a flow network with capacities and edge costs, find a minimum-cost flow from a source node to a sink node. This is the successive shortest path method with Johnson potentials. A node potential $h[v]$ transforms each edge cost $c(u, v)$ into a reduced cost $c(u, v) + h[u] - h[v]$; when all reduced costs are nonnegative, Dijkstra's algorithm can find the shortest augmenting path safely. After each augmentation, $h$ is updated with the new shortest-path distances so that reduced costs remain nonnegative on the updated residual graph.
 
 \begin{compactitem}
   \item \inlinecode{MinCostMaxFlow\textless{}T, C\textgreater{}(n)} constructs an empty residual network with nodes numbered [0, \inlinecode{n}).
@@ -4565,7 +4565,7 @@ If all initial edge costs are nonnegative, the initial potentials can be zero an
 #include <utility>
 #include <vector>
 
-template<class T, class C = int64_t>
+template<typename T, typename C = int64_t>
 class MinCostMaxFlow {
   struct Edge {
     int u, v;
@@ -4739,7 +4739,7 @@ Given an undirected graph with nonnegative edge weights, build a Gomory-Hu tree:
 The algorithm starts with every vertex attached to vertex 0, then performs $n - 1$ max-flow/min-cut computations. After computing the minimum cut between vertex $s$ and its current parent, vertices on the $s$ side of that cut are reparented under $s$, gradually refining the cut-equivalent tree.
 
 \begin{compactitem}
-  \item \inlinecode{gomory\_hu(n, edges)} returns the \inlinecode{n - 1} edges of a Gomory-Hu tree as (\inlinecode{u}, \inlinecode{v}, \inlinecode{weight}) tripes for an undirected, weighted graph specificed by \inlinecode{edges} of the same shape.
+  \item \inlinecode{gomory\_hu(n, edges)} returns the ${\inlinecodemath{n}} - 1$ edges of a Gomory-Hu tree as (\inlinecode{u}, \inlinecode{v}, \inlinecode{weight}) tripes for an undirected, weighted graph with \inlinecode{n} nodes and \inlinecode{edges} of the same shape.
   \item \inlinecode{min\_cut\_value(n, tree, source, sink)} returns the minimum cut value between two vertices using a Gomory-Hu tree. Note that for many pairwise cut queries on the same tree, it's more efficient to prebuild the tree adjacency once and answer minimum edge-on-path queries with LCA/binary lifting instead of calling \inlinecode{min\_cut\_value()} each time.
 \end{compactitem}
 
@@ -4761,7 +4761,7 @@ The algorithm starts with every vertex attached to vertex 0, then performs $n - 
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class Dinic {
   int nodes;
   std::vector<std::vector<std::tuple<int, int, T>>> adj;  // (v, rev, cap)
@@ -4845,10 +4845,10 @@ class Dinic {
   }
 };
 
-template<class T>
+template<typename T>
 using Edge = std::tuple<int, int, T>;
 
-template<class T>
+template<typename T>
 std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
   assert(n >= 1);
   std::vector<int> parent(n, 0);
@@ -4883,7 +4883,7 @@ std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
   return tree;
 }
 
-template<class T>
+template<typename T>
 T min_cut_value_dfs(
     const std::vector<std::vector<std::pair<int, T>>> &adj, std::vector<bool> &seen, int u,
     int sink, T best
@@ -4903,7 +4903,7 @@ T min_cut_value_dfs(
   return -1;
 }
 
-template<class T>
+template<typename T>
 T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
   assert(0 <= source && source < n && 0 <= sink && sink < n && source != sink);
   // For many queries, prebuild this adjacency and add LCA/binary lifting for min edge on path.
@@ -4943,6 +4943,8 @@ A phase grows a set, starting from an arbitrary vertex, by repeatedly adding the
 \begin{compactitem}
   \item \inlinecode{stoer\_wagner(adj)} returns a pair (\inlinecode{weight}, \inlinecode{side}) for a graph as a symmetric adjacency matrix \inlinecode{adj} (with 0 for the diagonal and absent edges), where \inlinecode{weight} is the total weight of the global minimum cut and \inlinecode{side} lists the vertices on one side of that cut. The graph must have at least two vertices.
 \end{compactitem}
+
+Parallel edges should be pre-summed into the adjacency matrix before calling: \inlinecode{adj[u][v]} holds a single combined weight, so the sum of all parallel edge weights between \inlinecode{u} and \inlinecode{v} should be stored there.
 
 \textbf{Time Complexity}: $O(n^{3})$ per call, where $n$ is the number of vertices.
 
@@ -5119,7 +5121,7 @@ Matched 3 pair(s):
 \subsection{Maximum Bipartite Matching (Hopcroft-Karp)}
 Given two sets of nodes $A = \{0, 1, \ldots, n_1 - 1\}$ and $B = \{0, 1, \ldots, n_2 - 1\}$, as well as a set of edges $E$ mapping nodes from set $A$ to set $B$, find the largest possible subset of $E$ containing no edges that share the same node.
 
-Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set of vertex-disjoint shortest augmenting paths to flip at once, giving $O(m \sqrt{n})$ overall.
+Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set of vertex-disjoint shortest augmenting paths to flip at once, for $O(m \sqrt{n})$ running time overall.
 
 \begin{compactitem}
   \item \inlinecode{hopcroft\_karp(n2)} populates \inlinecode{match} and returns maximum matching size for a global, pre-populated adjacency list \inlinecode{adj} whose left-side nodes are numbered [0, \inlinecode{n}) and whose right-side neighbors are numbered [0, \inlinecode{n2}), where \inlinecode{n} is \inlinecode{adj.size()}.
@@ -5368,6 +5370,8 @@ int main() {
 Given an undirected, unweighted graph, determine a maximum matching: a maximum subset of its edges such that no node is shared between different edges in the resulting subset.
 
 Edmonds' blossom algorithm extends augmenting-path search to general (non-bipartite) graphs, where odd-length cycles called blossoms can conceal augmenting paths. Each blossom is contracted into a single node so the search can proceed, and is expanded afterward to recover the matching. For maximum-weight matching in bipartite graphs, use Hungarian or min-cost max-flow; for maximum-weight matching in general graphs, use the weighted blossom algorithm in the next section.
+
+The graph must be simple; parallel edges and self-loops are not supported.
 
 \begin{compactitem}
   \item \inlinecode{blossom()} returns a matching for a global, bidirectionally pre-populated adjacency list \inlinecode{adj} which must consist of nodes numbered [0, \inlinecode{n}), where \inlinecode{n} is \inlinecode{adj.size()}. The returned vector \inlinecode{match} has \inlinecode{match[u] == v} and \inlinecode{match[v] == u} when \inlinecode{u} and \inlinecode{v} are matched, or \inlinecode{match[u] == -1} when \inlinecode{u} is unmatched.
@@ -5939,7 +5943,7 @@ The classical Hungarian algorithm using potentials transforms a cost matrix usin
 #include <limits>
 #include <vector>
 
-template<class T>
+template<typename T>
 T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignment) {
   static const T INF = std::numeric_limits<T>::max() / 4;
   int n = static_cast<int>(cost.size());
@@ -6351,7 +6355,7 @@ Given a simple undirected graph with maximum degree $D$, assign a color to every
 
 The algorithm colors edges one at a time. To color an edge $(u, v)$ it grows a maximal ``fan'' of $u$: a sequence of neighbors starting at $v$ in which each successive edge's color is free at the previous fan vertex. It then picks a color $c$ free at $u$ and a color $d$ free at the fan's last vertex, and flips the colors along the maximal alternating $c$/$d$ path leaving $u$. This frees $d$ at $u$, after which rotating the fan shifts colors over by one and assigns $d$ to the new edge. Each step keeps the partial coloring proper and never introduces a $(D + 2)$-th color.
 
-The graph must be simple: no self-loops and no repeated edges.
+The graph must be simple: the implementation stores one color per ordered node pair in a dense matrix, so self-loops and parallel edges between the same pair cannot be represented.
 
 \begin{compactitem}
   \item \inlinecode{edge\_coloring(n, edges)} returns a vector of colors, one per entry of \inlinecode{edges}, using colors in the range $[0, D]$ where $D$ is the maximum degree. Nodes are numbered [0, \inlinecode{n}), and \inlinecode{edges[i]} is an undirected edge \inlinecode{u}-\inlinecode{v}.

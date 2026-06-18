@@ -26,13 +26,22 @@ Space Complexity:
 #include <cmath>
 #include <random>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
-#define LT(a, b) ((a) < (b) - EPS)
+// clang-format off
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+// clang-format on
 
 double sqnorm(double x, double y) {
   return x * x + y * y;
@@ -40,7 +49,7 @@ double sqnorm(double x, double y) {
 
 // SFINAE guard: valid only when Pt exposes numeric .x/.y members. This keeps the templated point
 // constructors from hijacking calls like Circle(double, double, double).
-template<class Pt>
+template<typename Pt>
 using if_point = decltype(std::declval<const Pt &>().x, std::declval<const Pt &>().y, void());
 
 struct Circle {
@@ -49,14 +58,14 @@ struct Circle {
   Circle() : h(0), k(0), r(0) {}
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
     r = std::hypot(a.x - h, a.y - k);
   }
 
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b, const Pt &c) {
     double an = sqnorm(b.x - c.x, b.y - c.y);
     double bn = sqnorm(a.x - c.x, a.y - c.y);
@@ -71,14 +80,14 @@ struct Circle {
     r = std::hypot(a.x - h, a.y - k);
   }
 
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   bool contains(const Pt &p) const {
     return LE(sqnorm(p.x - h, p.y - k), r * r);
   }
 };
 
 // Input points can be any type with .x and .y fields; Circle output is always double.
-template<class It>
+template<typename It>
 Circle minimum_enclosing_circle(It lo, It hi) {
   if (lo == hi) {
     return Circle(0, 0, 0);

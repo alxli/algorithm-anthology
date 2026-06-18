@@ -53,7 +53,7 @@ Space Complexity:
 
 #include <cstdint>
 
-template<class T>
+template<typename T>
 class ImplicitTreap {
   static T combine(const T &a, const T &b) { return a < b ? a : b; }
   static T apply_delta(const T &v, const T &d, int64_t len) { return d; }
@@ -206,7 +206,7 @@ class ImplicitTreap {
     }
   }
 
-  template<class It>
+  template<typename It>
   ImplicitTreap(It lo, It hi) : root(nullptr) {
     for (; lo != hi; ++lo) {
       push_back(*lo);

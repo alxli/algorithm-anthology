@@ -194,7 +194,7 @@ class BigInt {
     return res;
   }
 
-  template<class It>
+  template<typename It>
   static vint64 karatsuba(It alo, It ahi, It blo, It bhi) {
     int n = std::distance(alo, ahi), k = n / 2;
     vint64 res(n * 2);
@@ -228,7 +228,7 @@ class BigInt {
     return res;
   }
 
-  template<class It>
+  template<typename It>
   static vcd fft(It lo, It hi, bool invert = false) {
     int n = std::distance(lo, hi), k = 0, high1 = -1;
     while ((1 << k) < n) {

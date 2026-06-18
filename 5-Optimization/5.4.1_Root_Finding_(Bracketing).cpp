@@ -27,7 +27,7 @@ Space Complexity:
 
 #include <stdexcept>
 
-template<class Fn>
+template<typename Fn>
 double bisection_root(Fn f, double a, double b, const int ITERATIONS = 100) {
   if (a > b || f(a) * f(b) > 0) {
     throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");
@@ -44,7 +44,7 @@ double bisection_root(Fn f, double a, double b, const int ITERATIONS = 100) {
   return m;
 }
 
-template<class Fn>
+template<typename Fn>
 double falsi_illinois_root(Fn f, double a, double b, const int ITERATIONS = 100) {
   if (a > b || f(a) * f(b) > 0) {
     throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");

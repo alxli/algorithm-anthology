@@ -6,9 +6,10 @@ algebraic predicates (`dot`, `cross`, `sqnorm`) as long as intermediate products
 metric operations return floating-point values.
 
 Type aliases:
-- `Point3I = Point3D<int>`
-- `Point3L = Point3D<int64_t>`
-- `Point3 = Point3D<double>`
+- `Point3I = TPoint3<int>`
+- `Point3L = TPoint3<int64_t>`
+- `Point3D = TPoint3<double>`
+- `Point3LD = TPoint3<long double>`
 
 Time Complexity:
 - O(1) per operation.
@@ -26,44 +27,54 @@ Space Complexity:
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+// clang-format off
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+// clang-format on
 
-template<class T>
-struct Point3D {
+template<typename T>
+struct TPoint3 {
   using fp_t = std::conditional_t<std::is_integral<T>::value, double, T>;
 
   T x, y, z;
 
-  Point3D(T x = 0, T y = 0, T z = 0) : x(x), y(y), z(z) {}
-  bool operator==(const Point3D &p) const { return std::tie(x, y, z) == std::tie(p.x, p.y, p.z); }
-  bool operator!=(const Point3D &p) const { return !(*this == p); }
-  bool operator<(const Point3D &p) const { return std::tie(x, y, z) < std::tie(p.x, p.y, p.z); }
-  Point3D operator+(const Point3D &p) const { return {x + p.x, y + p.y, z + p.z}; }
-  Point3D operator-(const Point3D &p) const { return {x - p.x, y - p.y, z - p.z}; }
-  Point3D operator*(T k) const { return {x * k, y * k, z * k}; }
-  Point3D<fp_t> operator/(fp_t k) const { return {(fp_t)x / k, (fp_t)y / k, (fp_t)z / k}; }
-  T dot(const Point3D &p) const { return x * p.x + y * p.y + z * p.z; }
-  Point3D cross(const Point3D &p) const {
-    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};
-  }
+  TPoint3(T x = 0, T y = 0, T z = 0) : x(x), y(y), z(z) {}
+  bool operator==(const TPoint3 &p) const { return std::tie(x, y, z) == std::tie(p.x, p.y, p.z); }
+  bool operator!=(const TPoint3 &p) const { return !(*this == p); }
+  bool operator<(const TPoint3 &p) const { return std::tie(x, y, z) < std::tie(p.x, p.y, p.z); }
+  TPoint3 operator+(const TPoint3 &p) const { return {x + p.x, y + p.y, z + p.z}; }
+  TPoint3 operator-(const TPoint3 &p) const { return {x - p.x, y - p.y, z - p.z}; }
+  TPoint3 operator*(T k) const { return {x * k, y * k, z * k}; }
+  TPoint3<fp_t> operator/(fp_t k) const { return {(fp_t)x / k, (fp_t)y / k, (fp_t)z / k}; }
+  T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }
   T sqnorm() const { return x * x + y * y + z * z; }
   fp_t norm() const { return sqrt(static_cast<fp_t>(sqnorm())); }
   fp_t phi() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
+  TPoint3<fp_t> unit() const { return *this / norm(); }
+
+  TPoint3 cross(const TPoint3 &p) const {
+    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};
+  }
+
+  TPoint3<fp_t> normal(const TPoint3 &p) const { return cross(p).unit(); }
+
   fp_t theta() const {
     return atan2(hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
   }
-  Point3D<fp_t> unit() const { return *this / norm(); }
-  Point3D<fp_t> normal(const Point3D &p) const { return cross(p).unit(); }
-  Point3D<fp_t> rotate(fp_t angle, const Point3D &axis) const {
+
+  TPoint3<fp_t> rotate(fp_t angle, const TPoint3 &axis) const {
     fp_t s = sin(angle), c = cos(angle);
-    Point3D<fp_t> u = axis.unit(), v((fp_t)x, (fp_t)y, (fp_t)z);
+    TPoint3<fp_t> u = axis.unit(), v((fp_t)x, (fp_t)y, (fp_t)z);
     return u * v.dot(u) * (1 - c) + v * c - v.cross(u) * s;
   }
 };
 
-using Point3I = Point3D<int>;
-using Point3L = Point3D<int64_t>;
-using Point3 = Point3D<double>;
+using Point3I = TPoint3<int>;
+using Point3L = TPoint3<int64_t>;
+using Point3D = TPoint3<double>;
+using Point3LD = TPoint3<long double>;
 
 /*** Example Usage ***/
 
@@ -73,8 +84,8 @@ int main() {
   assert(a.cross(b) == Point3I(0, 0, 1));
   assert(a.sqnorm() == 1);
 
-  Point3 p(1, 0, 0);
-  auto r = p.rotate(acos(-1.0) / 2, Point3(0, 0, 1));
+  Point3D p(1, 0, 0);
+  auto r = p.rotate(acos(-1.0) / 2, Point3D(0, 0, 1));
   assert(EQ(r.x, 0) && EQ(r.y, 1) && EQ(r.z, 0));
   return 0;
 }

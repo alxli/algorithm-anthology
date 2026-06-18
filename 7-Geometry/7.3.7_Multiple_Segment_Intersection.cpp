@@ -39,14 +39,14 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class Pt>
+template<typename Pt>
 bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
   return (p.x - a.x) * (b.y - a.y) == (p.y - a.y) * (b.x - a.x) && std::min(a.x, b.x) <= p.x &&
          p.x <= std::max(a.x, b.x) && std::min(a.y, b.y) <= p.y && p.y <= std::max(a.y, b.y);
 }
 
 // Simplified detection-only version of `seg_intersection()` from 7.2.3 (exact for integral Pt).
-template<class Pt>
+template<typename Pt>
 int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, const bool TOUCH_IS_INTERSECT = true
 ) {
@@ -86,14 +86,14 @@ int seg_intersection(
 }
 
 // The point type Pt must support operator< (used to canonicalize endpoint order).
-template<class Pt>
+template<typename Pt>
 struct Segment {
   Pt p, q;
   Segment() {}
   Segment(const Pt &p, const Pt &q) : p(std::min(p, q)), q(std::max(p, q)) {}
 };
 
-template<class Pt>
+template<typename Pt>
 bool intersects(
     const Segment<Pt> &s1, const Segment<Pt> &s2, const bool TOUCH_IS_INTERSECT = true
 ) {
@@ -101,7 +101,7 @@ bool intersects(
 }
 
 // Seg is deduced from the output pointers (e.g. Segment<PointI>* or Segment<PointD>*).
-template<class It, class Seg>
+template<typename It, typename Seg>
 bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, const bool TOUCH_IS_INTERSECT = true) {
   using Pt = std::decay_t<decltype(lo->p)>;
   struct Event {

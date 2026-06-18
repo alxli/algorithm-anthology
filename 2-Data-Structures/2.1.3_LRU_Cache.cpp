@@ -43,7 +43,7 @@ Space Complexity:
 //   erase(old);
 //   where.erase(old->key).
 
-template<class Key, class Value>
+template<typename Key, typename Value>
 class LRUCache {
   using ListIter = typename std::list<std::pair<Key, Value>>::iterator;
 

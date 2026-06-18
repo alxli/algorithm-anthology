@@ -167,9 +167,9 @@ The functions below use a circular sentinel node. When the list is empty, \inlin
   \item \inlinecode{push\_front(sentinel, node)} inserts detached \inlinecode{node} at the front of the list.
   \item \inlinecode{push\_back(sentinel, node)} inserts detached \inlinecode{node} at the back of the list.
   \item \inlinecode{move\_to\_front(sentinel, node)} moves an already-linked \inlinecode{node} to the front of the list.
+  \item \inlinecode{empty(sentinel)} returns whether the list has no data nodes.
   \item \inlinecode{splice(pos, node)} moves an already-linked \inlinecode{node} so it appears immediately before \inlinecode{pos}.
   \item \inlinecode{splice\_range(pos, first, last)} moves the half-open range [\inlinecode{first}, \inlinecode{last}) so it appears immediately before \inlinecode{pos}.
-  \item \inlinecode{empty(sentinel)} returns whether the list has no data nodes.
 \end{compactitem}
 
 The data nodes passed to insertion functions must be detached, meaning their \inlinecode{prev} and \inlinecode{next} pointers are both null. The node passed to \inlinecode{erase()} or \inlinecode{move\_to\_front()} must already be linked into a list and must not be the sentinel. For \inlinecode{splice\_range(pos, first, last)}, the \inlinecode{pos} node must not lie inside the moved range.
@@ -334,7 +334,7 @@ To implement the same cache without \inlinecode{std::list}, use the intrusive do
 //   erase(old);
 //   where.erase(old->key).
 
-template<class Key, class Value>
+template<typename Key, typename Value>
 class LRUCache {
   using ListIter = typename std::list<std::pair<Key, Value>>::iterator;
 
@@ -435,7 +435,7 @@ Maintain a min-priority queue, that is, a collection of elements with support fo
 #include <stdexcept>
 #include <vector>
 
-template<class T>
+template<typename T>
 class BinaryHeap {
   std::vector<T> heap;
 
@@ -460,7 +460,7 @@ class BinaryHeap {
  public:
   BinaryHeap() {}
 
-  template<class It>
+  template<typename It>
   BinaryHeap(It lo, It hi) : heap(lo, hi) {
     for (int i = static_cast<int>(heap.size()) / 2 - 1; i >= 0; i--) {
       sift_down(i);
@@ -561,7 +561,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 #include <cstddef>
 #include <stdexcept>
 
-template<class T>
+template<typename T>
 class LeftistHeap {
   struct Node {
     T value;
@@ -604,7 +604,7 @@ class LeftistHeap {
  public:
   LeftistHeap() : root(nullptr), num_nodes(0) {}
 
-  template<class It>
+  template<typename It>
   LeftistHeap(It lo, It hi) : root(nullptr), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));
@@ -710,7 +710,7 @@ Maintain a mergeable min-priority queue, that is, a collection of elements with 
 #include <cstddef>
 #include <stdexcept>
 
-template<class T>
+template<typename T>
 class SkewHeap {
   struct Node {
     T value;
@@ -747,7 +747,7 @@ class SkewHeap {
  public:
   SkewHeap() : root(nullptr), num_nodes(0) {}
 
-  template<class It>
+  template<typename It>
   SkewHeap(It lo, It hi) : root(nullptr), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));
@@ -857,7 +857,7 @@ In practice, \inlinecode{decrease\_key()} runs in near-constant time, making the
 #include <cstddef>
 #include <stdexcept>
 
-template<class T>
+template<typename T>
 class PairingHeap {
   struct Node {
     T value;
@@ -929,7 +929,7 @@ class PairingHeap {
  public:
   PairingHeap() : root(nullptr), num_nodes(0) {}
 
-  template<class It>
+  template<typename It>
   PairingHeap(It lo, It hi) : root(nullptr), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));
@@ -1079,7 +1079,7 @@ This implementation requires an ordering on the key type \inlinecode{K} defined 
 #include <utility>
 #include <vector>
 
-template<class K, class V>
+template<typename K, typename V>
 class Treap {
   struct Node {
     static uint32_t rand32() {
@@ -1163,7 +1163,7 @@ class Treap {
   static void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) {
     if (n != nullptr) {
       collect_entries(n->left, res);
-      res.push_back({n->key, n->value});
+      res.emplace_back(n->key, n->value);
       collect_entries(n->right, res);
     }
   }
@@ -1360,7 +1360,7 @@ The navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lowe
 #include <utility>
 #include <vector>
 
-template<class K, class V>
+template<typename K, typename V>
 class AVLTree {
   struct Node {
     K key;
@@ -1474,7 +1474,7 @@ class AVLTree {
   static void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) {
     if (n != nullptr) {
       collect_entries(n->left, res);
-      res.push_back({n->key, n->value});
+      res.emplace_back(n->key, n->value);
       collect_entries(n->right, res);
     }
   }
@@ -1593,7 +1593,7 @@ The navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lowe
 #include <utility>
 #include <vector>
 
-template<class K, class V>
+template<typename K, typename V>
 class RedBlackTree {
   enum Color { RED, BLACK };
   struct Node {
@@ -1948,7 +1948,7 @@ The navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lowe
 #include <utility>
 #include <vector>
 
-template<class K, class V>
+template<typename K, typename V>
 class SplayTree {
   struct Node {
     K key;
@@ -2056,7 +2056,7 @@ class SplayTree {
   static void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) {
     if (n != nullptr) {
       collect_entries(n->left, res);
-      res.push_back({n->key, n->value});
+      res.emplace_back(n->key, n->value);
       collect_entries(n->right, res);
     }
   }
@@ -2171,7 +2171,7 @@ The navigation routines \inlinecode{min()}, \inlinecode{max()}, \inlinecode{lowe
 #include <utility>
 #include <vector>
 
-template<class K, class V>
+template<typename K, typename V>
 class SBTree {
   struct Node {
     K key;
@@ -2298,7 +2298,7 @@ class SBTree {
   static void collect_entries(Node *n, std::vector<std::pair<K, V>> &res) {
     if (n != nullptr) {
       collect_entries(n->left, res);
-      res.push_back({n->key, n->value});
+      res.emplace_back(n->key, n->value);
       collect_entries(n->right, res);
     }
   }
@@ -2432,7 +2432,7 @@ This implementation uses \inlinecode{std::pair} to represent intervals, requirin
 #include <utility>
 #include <vector>
 
-template<class K, class V>
+template<typename K, typename V>
 class IntervalTreap {
   using Interval = std::pair<K, K>;
 
@@ -2548,7 +2548,7 @@ class IntervalTreap {
     return find_any(n->right, i);
   }
 
-  template<class Fn>
+  template<typename Fn>
   static void find_all(Node *n, const Interval &i, Fn f) {
     if (n == nullptr || n->max < i.first) {
       return;
@@ -2565,7 +2565,7 @@ class IntervalTreap {
   static void collect_entries(Node *n, std::vector<std::tuple<K, K, V>> &res) {
     if (n != nullptr) {
       collect_entries(n->left, res);
-      res.push_back({n->interval.first, n->interval.second, n->value});
+      res.emplace_back(n->interval.first, n->interval.second, n->value);
       collect_entries(n->right, res);
     }
   }
@@ -2599,7 +2599,7 @@ class IntervalTreap {
     return (n == nullptr) ? nullptr : &(n->value);
   }
 
-  template<class Fn>
+  template<typename Fn>
   void find_all(const K &lo, const K &hi, Fn f) const {
     find_all(root, Interval{lo, hi}, f);
   }
@@ -2693,7 +2693,7 @@ This is an educational implementation; in practice prefer one of the standard op
 #include <utility>
 #include <vector>
 
-template<class K, class V, class Hash>
+template<typename K, typename V, typename Hash>
 class ChainingHashMap {
   struct HashNode {
     K key;
@@ -2778,8 +2778,8 @@ class ChainingHashMap {
     std::vector<std::pair<K, V>> res;
     res.reserve(num_entries);
     for (int i = 0; i < table_size; i++) {
-      for (const auto &entry : table[i]) {
-        res.push_back({entry.key, entry.value});
+      for (const auto &[k, v] : table[i]) {
+        res.emplace_back(k, v);
       }
     }
     return res;
@@ -2903,7 +2903,7 @@ This is an educational implementation; in practice prefer one of the standard op
 #include <utility>
 #include <vector>
 
-template<class K, class V, class Hash>
+template<typename K, typename V, typename Hash>
 class ProbingHashMap {
   enum class State { EMPTY, OCCUPIED, DELETED };
 
@@ -3049,7 +3049,7 @@ class ProbingHashMap {
     res.reserve(num_entries);
     for (int i = 0; i < table_size; i++) {
       if (state[i] == State::OCCUPIED) {
-        res.push_back({table[i]->key, table[i]->value});
+        res.emplace_back(table[i]->key, table[i]->value);
       }
     }
     return res;
@@ -3161,7 +3161,7 @@ Maintain an ordered map, that is, an ordered collection of key-value pairs such 
 #include <utility>
 #include <vector>
 
-template<class K, class V>
+template<typename K, typename V>
 class SkipList {
   static const int MAX_LEVELS = 32;  // log2(max possible keys)
 
@@ -3284,7 +3284,7 @@ class SkipList {
     res.reserve(num_nodes);
     Node *n = head->next[0];
     while (n != nullptr) {
-      res.push_back({n->key, n->value});
+      res.emplace_back(n->key, n->value);
       n = n->next[0];
     }
     return res;
@@ -3358,9 +3358,10 @@ The query operation is defined by an associative and idempotent function \inline
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SparseTable {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
 
@@ -3369,7 +3370,7 @@ class SparseTable {
   std::vector<std::vector<T>> dp;  // dp[j][i] = combine() over [i, i + 2^j).
 
  public:
-  template<class It>
+  template<typename It>
   SparseTable(It lo, It hi) {
     std::vector<T> a(lo, hi);
     len = static_cast<int>(a.size());
@@ -3389,6 +3390,7 @@ class SparseTable {
   int size() const { return len; }
 
   T query(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi < len);
     int j = log2[hi - lo + 1];
     return combine(dp[j][lo], dp[j][hi - (1 << j) + 1]);
   }
@@ -3439,10 +3441,11 @@ The query operation is defined by an associative function \inlinecode{combine(a,
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
-template<class T>
+template<typename T>
 class DisjointSparseTable {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
 
@@ -3451,7 +3454,7 @@ class DisjointSparseTable {
   std::vector<std::vector<T>> fold;
 
  public:
-  template<class It>
+  template<typename It>
   DisjointSparseTable(It lo, It hi) : a(lo, hi) {
     len = static_cast<int>(a.size());
     int levels = 1;
@@ -3481,6 +3484,7 @@ class DisjointSparseTable {
   int size() const { return len; }
 
   T query(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi < len);
     if (lo == hi) {
       return a[lo];
     }
@@ -3544,7 +3548,7 @@ The supported operations are identical to those of the point-update segment tree
 #include <cmath>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SqrtDecomposition {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d) { return d; }
@@ -3568,7 +3572,7 @@ class SqrtDecomposition {
  public:
   explicit SqrtDecomposition(int n, const T &v = T()) : len(n), value(n, v) { init(); }
 
-  template<class It>
+  template<typename It>
   SqrtDecomposition(It lo, It hi) : len(hi - lo), value(lo, hi) {
     init();
   }
@@ -3635,7 +3639,7 @@ Values: 6 -2 4 8 10
 \subsection{Mo's Algorithm}
 Mo's algorithm answers a batch of range queries offline by reordering them so that the current window [\inlinecode{cur\_l}, \inlinecode{cur\_r}] can be transformed into the next query's range with as few single-element insertions and deletions as possible. It applies whenever there is no fast direct formula, but extending or shrinking the window by one element updates the answer cheaply, as with the number of distinct values in a range or the sum of squares of element frequencies.
 
-The trick is the query order. Sort queries by the block of their left endpoint, where each block spans about $n / \sqrt{q}$ indices, breaking ties by right endpoint. The left pointer then travels $O(n / \sqrt{q})$ per query, for $O(n\sqrt{q})$ moves in all, while within each block the right pointer sweeps monotonically across the array, contributing $O(n)$ per block over the $\sqrt{q}$ blocks, again $O(n\sqrt{q})$. So the pointers move $O(n\sqrt{q})$ times in total. Sorting the right endpoint in alternating directions between consecutive blocks (a ``boustrophedon'' order) avoids resetting the right pointer at every block boundary.
+The trick is the query order. Sort queries by the block of their left endpoint, where each block spans about $n / \sqrt{q}$ indices, breaking ties by right endpoint. The left pointer then travels $O(n / \sqrt{q})$ per query, for $O(n \sqrt{q})$ moves in all, while within each block the right pointer sweeps monotonically across the array, contributing $O(n)$ per block over the $\sqrt{q}$ blocks, again $O(n \sqrt{q})$. So the pointers move $O(n \sqrt{q})$ times in total. Sorting the right endpoint in alternating directions between consecutive blocks (a ``boustrophedon'' order) avoids resetting the right pointer at every block boundary.
 
 \begin{compactitem}
   \item \inlinecode{mos\_algorithm(n, queries, add, remove, current)} answers the given inclusive 0-based ranges over an array of size \inlinecode{n}. The caller supplies three callbacks that maintain an arbitrary window state: \inlinecode{add(i)} and \inlinecode{remove(i)} insert or delete index \inlinecode{i} from the current window, and \inlinecode{current()} returns the answer for the window in its present state. The result is a vector of answers in the original query order, with element type matching the return type of \inlinecode{current()}.
@@ -3652,7 +3656,7 @@ The trick is the query order. Sort queries by the block of their left endpoint, 
 #include <utility>
 #include <vector>
 
-template<class AddFn, class RemoveFn, class CurrentFn>
+template<typename AddFn, typename RemoveFn, typename CurrentFn>
 std::vector<decltype(std::declval<CurrentFn>()())> mos_algorithm(
     int n, const std::vector<std::pair<int, int>> &queries, AddFn add, RemoveFn remove,
     CurrentFn current
@@ -3749,7 +3753,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
 #include <optional>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d) { return d; }
@@ -3768,7 +3772,7 @@ class SegTree {
     value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
-  template<class It>
+  template<typename It>
   void build(int i, int lo, int hi, It arr) {
     if (lo == hi) {
       value[i] = *(arr + lo);
@@ -3811,7 +3815,7 @@ class SegTree {
     value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) const {
     if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
       return -1;
@@ -3824,7 +3828,7 @@ class SegTree {
     return res != -1 ? res : find_first(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) const {
     if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
       return -1;
@@ -3837,7 +3841,7 @@ class SegTree {
     return res != -1 ? res : find_last(i * 2 + 1, lo, mid, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int i, int lo, int hi, int tgt_lo, const Pred &pred, std::optional<T> &acc) const {
     if (hi < tgt_lo) {
       return -1;
@@ -3857,7 +3861,7 @@ class SegTree {
     return res != -1 ? res : max_right(i * 2 + 2, mid + 1, hi, tgt_lo, pred, acc);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int i, int lo, int hi, int tgt_hi, const Pred &pred, std::optional<T> &acc) const {
     if (tgt_hi <= lo) {
       return -1;
@@ -3884,7 +3888,7 @@ class SegTree {
     }
   }
 
-  template<class It>
+  template<typename It>
   SegTree(It lo, It hi) : len(hi - lo), value(4 * len) {
     if (len > 0) {
       build(0, 0, len - 1, lo);
@@ -3896,24 +3900,24 @@ class SegTree {
   T query(int lo, int hi) const { return query(0, 0, len - 1, lo, hi); }
   void update(int i, const T &d) { update(0, 0, len - 1, i, d); }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int lo, int hi, const Pred &pred) const {
     return find_first(0, 0, len - 1, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int lo, int hi, const Pred &pred) const {
     return find_last(0, 0, len - 1, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int lo, const Pred &pred) const {
     std::optional<T> acc;
     int res = max_right(0, 0, len - 1, lo, pred, acc);
     return res == -1 ? len : res;
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int hi, const Pred &pred) const {
     std::optional<T> acc;
     int res = min_left(0, 0, len - 1, hi, pred, acc);
@@ -3967,7 +3971,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
   \item \inlinecode{LazySegTree\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices [0, \inlinecode{n}), and all values initialized to \inlinecode{v}.
   \item \inlinecode{LazySegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
-  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value \inlinecode{v} at index \inlinecode{i} to \inlinecode{apply\_delta(v, d)}.
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by applying the delta \inlinecode{d} to each value.
@@ -3999,7 +4003,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
 #include <optional>
 #include <vector>
 
-template<class T>
+template<typename T>
 class LazySegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, int64_t len) { return d; }
@@ -4020,7 +4024,7 @@ class LazySegTree {
     value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
-  template<class It>
+  template<typename It>
   void build(int i, int lo, int hi, It arr) {
     if (lo == hi) {
       value[i] = *(arr + lo);
@@ -4079,7 +4083,7 @@ class LazySegTree {
     value[i] = combine(value[2 * i + 1], value[2 * i + 2]);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) {
     push_delta(i, lo, hi);
     if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
@@ -4093,7 +4097,7 @@ class LazySegTree {
     return res != -1 ? res : find_first(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) {
     push_delta(i, lo, hi);
     if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
@@ -4107,7 +4111,7 @@ class LazySegTree {
     return res != -1 ? res : find_last(i * 2 + 1, lo, mid, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int i, int lo, int hi, int tgt_lo, const Pred &pred, std::optional<T> &acc) {
     push_delta(i, lo, hi);
     if (hi < tgt_lo) {
@@ -4128,7 +4132,7 @@ class LazySegTree {
     return res != -1 ? res : max_right(i * 2 + 2, mid + 1, hi, tgt_lo, pred, acc);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int i, int lo, int hi, int tgt_hi, const Pred &pred, std::optional<T> &acc) {
     push_delta(i, lo, hi);
     if (tgt_hi <= lo) {
@@ -4157,7 +4161,7 @@ class LazySegTree {
     }
   }
 
-  template<class It>
+  template<typename It>
   LazySegTree(It lo, It hi)
       : len(hi - lo), value(4 * len), delta(4 * len), pending(4 * len, false) {
     if (len > 0) {
@@ -4171,24 +4175,24 @@ class LazySegTree {
   void update(int i, const T &d) { update(0, 0, len - 1, i, i, d); }
   void update(int lo, int hi, const T &d) { update(0, 0, len - 1, lo, hi, d); }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int lo, int hi, const Pred &pred) {
     return find_first(0, 0, len - 1, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int lo, int hi, const Pred &pred) {
     return find_last(0, 0, len - 1, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int lo, const Pred &pred) {
     std::optional<T> acc;
     int res = max_right(0, 0, len - 1, lo, pred, acc);
     return res == -1 ? len : res;
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int hi, const Pred &pred) {
     std::optional<T> acc;
     int res = min_left(0, 0, len - 1, hi, pred, acc);
@@ -4277,7 +4281,7 @@ The point update operation is defined by \inlinecode{apply\_delta(v, d)}, which 
 #include <optional>
 #include <vector>
 
-template<class T>
+template<typename T>
 class IterativeSegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d) { return d; }
@@ -4285,7 +4289,7 @@ class IterativeSegTree {
   int len, base;
   std::vector<T> value;
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int i, int lo, int hi, int qlo, int qhi, const Pred &pred) const {
     if (hi <= qlo || qhi <= lo || len <= lo) {
       return -1;
@@ -4301,7 +4305,7 @@ class IterativeSegTree {
     return res != -1 ? res : find_first(i << 1 | 1, mid, hi, qlo, qhi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int i, int lo, int hi, int qlo, int qhi, const Pred &pred) const {
     if (hi <= qlo || qhi <= lo || len <= lo) {
       return -1;
@@ -4317,7 +4321,7 @@ class IterativeSegTree {
     return res != -1 ? res : find_last(i << 1, lo, mid, qlo, qhi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int i, int lo, int hi, int qlo, const Pred &pred, std::optional<T> &acc) const {
     if (hi <= qlo || len <= lo) {
       return -1;
@@ -4337,7 +4341,7 @@ class IterativeSegTree {
     return res != -1 ? res : max_right(i << 1 | 1, mid, hi, qlo, pred, acc);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int i, int lo, int hi, int qhi, const Pred &pred, std::optional<T> &acc) const {
     if (qhi <= lo || len <= lo) {
       return -1;
@@ -4371,7 +4375,7 @@ class IterativeSegTree {
     }
   }
 
-  template<class It>
+  template<typename It>
   IterativeSegTree(It lo, It hi) : len(hi - lo), base(1) {
     while (base < len) {
       base <<= 1;
@@ -4415,24 +4419,24 @@ class IterativeSegTree {
     }
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int lo, int hi, const Pred &pred) const {
     return find_first(1, 0, base, lo, hi + 1, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int lo, int hi, const Pred &pred) const {
     return find_last(1, 0, base, lo, hi + 1, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int lo, const Pred &pred) const {
     std::optional<T> acc;
     int res = max_right(1, 0, base, lo, pred, acc);
     return res == -1 ? len : res;
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int hi, const Pred &pred) const {
     std::optional<T> acc;
     int res = min_left(1, 0, base, hi, pred, acc);
@@ -4484,7 +4488,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
   \item \inlinecode{IterativeLazySegTree\textless{}T\textgreater{}(n, v)} constructs an array of size \inlinecode{n} with indices [0, \inlinecode{n}), and all values initialized to \inlinecode{v}.
   \item \inlinecode{IterativeLazySegTree\textless{}T\textgreater{}(lo, hi)} constructs an array from two random-access iterators as a range [\inlinecode{lo}, \inlinecode{hi}), initialized to the elements of the range in the same order.
   \item \inlinecode{size()} returns the size of the array.
-  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}, where \inlinecode{i} is between 0 and \inlinecode{size() - 1}.
+  \item \inlinecode{at(i)} returns the value at index \inlinecode{i}.
   \item \inlinecode{query(lo, hi)} returns the result of \inlinecode{combine()} applied to all indices from \inlinecode{lo} to \inlinecode{hi}, inclusive. If \inlinecode{lo == hi}, then the single specified value is returned.
   \item \inlinecode{update(i, d)} assigns the value at index \inlinecode{i} by applying the delta \inlinecode{d}.
   \item \inlinecode{update(lo, hi, d)} modifies the value at each array index from \inlinecode{lo} to \inlinecode{hi}, inclusive, by applying the delta \inlinecode{d} to each value.
@@ -4515,7 +4519,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
 #include <optional>
 #include <vector>
 
-template<class T>
+template<typename T>
 class IterativeLazySegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, int64_t len) { return d; }
@@ -4577,7 +4581,7 @@ class IterativeLazySegTree {
     }
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int i, int lo, int hi, int qlo, int qhi, const Pred &pred) {
     if (hi <= qlo || qhi <= lo || len <= lo) {
       return -1;
@@ -4594,7 +4598,7 @@ class IterativeLazySegTree {
     return res != -1 ? res : find_first(i << 1 | 1, mid, hi, qlo, qhi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int i, int lo, int hi, int qlo, int qhi, const Pred &pred) {
     if (hi <= qlo || qhi <= lo || len <= lo) {
       return -1;
@@ -4611,7 +4615,7 @@ class IterativeLazySegTree {
     return res != -1 ? res : find_last(i << 1, lo, mid, qlo, qhi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int i, int lo, int hi, int qlo, const Pred &pred, std::optional<T> &acc) {
     if (hi <= qlo || len <= lo) {
       return -1;
@@ -4632,7 +4636,7 @@ class IterativeLazySegTree {
     return res != -1 ? res : max_right(i << 1 | 1, mid, hi, qlo, pred, acc);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int i, int lo, int hi, int qhi, const Pred &pred, std::optional<T> &acc) {
     if (qhi <= lo || len <= lo) {
       return -1;
@@ -4664,7 +4668,7 @@ class IterativeLazySegTree {
     }
   }
 
-  template<class It>
+  template<typename It>
   IterativeLazySegTree(It lo, It hi) : len(hi - lo) {
     init_storage();
     for (int i = 0; i < len; i++) {
@@ -4717,24 +4721,24 @@ class IterativeLazySegTree {
 
   void update(int i, const T &d) { update(i, i, d); }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int lo, int hi, const Pred &pred) {
     return find_first(1, 0, base, lo, hi + 1, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int lo, int hi, const Pred &pred) {
     return find_last(1, 0, base, lo, hi + 1, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int lo, const Pred &pred) {
     std::optional<T> acc;
     int res = max_right(1, 0, base, lo, pred, acc);
     return res == -1 ? len : res;
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int hi, const Pred &pred) {
     std::optional<T> acc;
     int res = min_left(1, 0, base, hi, pred, acc);
@@ -4826,7 +4830,7 @@ The break condition is what makes this efficient: a potential-function argument 
 #include <limits>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SegTreeBeats {
   static constexpr T NEG_INF = std::numeric_limits<T>::lowest();
 
@@ -4867,7 +4871,7 @@ class SegTreeBeats {
     }
   }
 
-  template<class Gen>
+  template<typename Gen>
   void build(int i, int lo, int hi, const Gen &gen) {
     if (lo == hi) {
       max1[i] = sum[i] = gen(lo);
@@ -4930,7 +4934,7 @@ class SegTreeBeats {
     }
   }
 
-  template<class It>
+  template<typename It>
   SegTreeBeats(It lo, It hi)
       : len(static_cast<int>(hi - lo)), max1(4 * len), max2(4 * len), sum(4 * len), cnt(4 * len) {
     if (len > 0) {
@@ -5028,7 +5032,7 @@ Range updates are defined by \inlinecode{apply\_delta(v, d, len)}, which applies
 #include <cstdint>
 #include <optional>
 
-template<class T, int N = 1000000000>
+template<typename T, int N = 1000000000>
 class SparseSegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t len) { return v; }
@@ -5115,7 +5119,7 @@ class SparseSegTree {
     n->value = combine(left_value, right_value);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(Node *n, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) {
     if (hi < tgt_lo || lo > tgt_hi) {
       return -1;
@@ -5136,7 +5140,7 @@ class SparseSegTree {
     return res != -1 ? res : find_first(n->right, mid + 1, hi, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(Node *n, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) {
     if (hi < tgt_lo || lo > tgt_hi) {
       return -1;
@@ -5156,7 +5160,7 @@ class SparseSegTree {
     return res != -1 ? res : find_last(n->left, lo, mid, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(Node *n, int lo, int hi, int tgt_lo, const Pred &pred, std::optional<T> &acc) {
     if (hi < tgt_lo) {
       return -1;
@@ -5181,7 +5185,7 @@ class SparseSegTree {
                      : max_right(n == nullptr ? nullptr : n->right, mid + 1, hi, tgt_lo, pred, acc);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(Node *n, int lo, int hi, int tgt_hi, const Pred &pred, std::optional<T> &acc) {
     if (tgt_hi <= lo) {
       return -1;
@@ -5224,24 +5228,24 @@ class SparseSegTree {
   void update(int i, const T &d) { return update(i, i, d); }
   void update(int lo, int hi, const T &d) { return update(root, 0, N, lo, hi, d); }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int lo, int hi, const Pred &pred) {
     return find_first(root, 0, N, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int lo, int hi, const Pred &pred) {
     return find_last(root, 0, N, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int lo, const Pred &pred) {
     std::optional<T> acc;
     int res = max_right(root, 0, N, lo, pred, acc);
     return res == -1 ? N + 1 : res;
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int hi, const Pred &pred) {
     std::optional<T> acc;
     int res = min_left(root, 0, N, hi, pred, acc);
@@ -5443,7 +5447,7 @@ The structure is built once and not modified afterward. All index ranges are inc
 #include <iterator>
 #include <vector>
 
-template<class T>
+template<typename T>
 class MergeSortTree {
   int len;
   std::vector<std::vector<T>> tree;
@@ -5462,7 +5466,7 @@ class MergeSortTree {
     );
   }
 
-  template<class Fn>
+  template<typename Fn>
   int query(int node, int lo, int hi, int tgt_lo, int tgt_hi, Fn count_node) const {
     if (tgt_hi < lo || hi < tgt_lo) {
       return 0;
@@ -5544,6 +5548,7 @@ All position ranges are inclusive [\inlinecode{lo}, \inlinecode{hi}] with 0-base
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <vector>
 
@@ -5598,10 +5603,23 @@ class WaveletTree {
   WaveletTree(std::vector<int> a, int min_val, int max_val)
       : WaveletTree(a.begin(), a.end(), min_val, max_val) {}
 
-  int kth_smallest(int lo, int hi, int k) const { return kth(lo + 1, hi + 1, k); }
-  int count_leq(int lo, int hi, int x) const { return leq(lo + 1, hi + 1, x); }
+  int kth_smallest(int lo, int hi, int k) const {
+    int n = static_cast<int>(b.size()) - 1;
+    assert(0 <= lo && lo <= hi && hi < n);
+    assert(1 <= k && k <= hi - lo + 1);
+    return kth(lo + 1, hi + 1, k);
+  }
+
+  int count_leq(int lo, int hi, int x) const {
+    int n = static_cast<int>(b.size()) - 1;
+    assert(0 <= lo && lo <= hi && hi < n);
+    return leq(lo + 1, hi + 1, x);
+  }
 
   int count_in(int lo, int hi, int x, int y) const {
+    int n = static_cast<int>(b.size()) - 1;
+    assert(0 <= lo && lo <= hi && hi < n);
+    assert(x <= y);
     return leq(lo + 1, hi + 1, y) - leq(lo + 1, hi + 1, x - 1);
   }
 };
@@ -5744,7 +5762,7 @@ The query and update operations match those of the point- and range-update segme
 \begin{lstlisting}[language=C++]
 #include <cstdint>
 
-template<class T>
+template<typename T>
 class ImplicitTreap {
   static T combine(const T &a, const T &b) { return a < b ? a : b; }
   static T apply_delta(const T &v, const T &d, int64_t len) { return d; }
@@ -5897,7 +5915,7 @@ class ImplicitTreap {
     }
   }
 
-  template<class It>
+  template<typename It>
   ImplicitTreap(It lo, It hi) : root(nullptr) {
     for (; lo != hi; ++lo) {
       push_back(*lo);
@@ -6012,7 +6030,7 @@ Choose this over a sparse 2D segment tree when the grid is huge and touched cell
 #include <cstddef>
 #include <cstdint>
 
-template<class T, int R = 1000000000, int C = 1000000000>
+template<typename T, int R = 1000000000, int C = 1000000000>
 class Quadtree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t area) { return v; }
@@ -6212,7 +6230,7 @@ Choose this over a sparse 2D segment tree when rectangle updates or queries ofte
 #include <cstddef>
 #include <cstdint>
 
-template<class T, int R = 1000000000, int C = 1000000000>
+template<typename T, int R = 1000000000, int C = 1000000000>
 class LazyQuadtree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t area) { return v; }
@@ -6448,7 +6466,7 @@ For dense additive rectangle sums, prefer the simple 2D Fenwick tree in 2.6.5. A
 #include <cstdint>
 #include <optional>
 
-template<class T, int R = 1000000000, int C = 1000000000>
+template<typename T, int R = 1000000000, int C = 1000000000>
 class SegTree2D {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t area) { return v; }
@@ -6722,7 +6740,7 @@ Use this for static point-reporting queries when guaranteed worst-case bounds ar
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class RangeTree {
   using point = std::pair<T, T>;
   using colindex = std::pair<int, T>;
@@ -6753,7 +6771,7 @@ class RangeTree {
   // Helper variables for query().
   T x1, y1, x2, y2;
 
-  template<class Fn>
+  template<typename Fn>
   void query(int n, int lo, int hi, Fn f) {
     if (points[hi].first < x1 || x2 < points[lo].first) {
       return;
@@ -6773,7 +6791,7 @@ class RangeTree {
   }
 
  public:
-  template<class It>
+  template<typename It>
   RangeTree(It lo, It hi) : points(lo, hi) {
     int n = std::distance(lo, hi);
     columns.resize(4 * n + 1);
@@ -6781,7 +6799,7 @@ class RangeTree {
     build(0, 0, n - 1);
   }
 
-  template<class Fn>
+  template<typename Fn>
   void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
     this->x1 = x1;
     this->y1 = y1;
@@ -6847,7 +6865,7 @@ Use this for static point-reporting queries when $O(n)$ space and good average p
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class RangeKDTree {
   using point = std::pair<T, T>;
 
@@ -6882,7 +6900,7 @@ class RangeKDTree {
   // Helper variables for query().
   T x1, y1, x2, y2;
 
-  template<class Fn>
+  template<typename Fn>
   void query(int lo, int hi, Fn f) {
     if (lo >= hi) {
       return;
@@ -6909,7 +6927,7 @@ class RangeKDTree {
   }
 
  public:
-  template<class It>
+  template<typename It>
   RangeKDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     l_index.resize(n);
@@ -6919,7 +6937,7 @@ class RangeKDTree {
     build(0, n, true);
   }
 
-  template<class Fn>
+  template<typename Fn>
   void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
     this->x1 = x1;
     this->y1 = y1;
@@ -6987,7 +7005,7 @@ Use this for static nearest-neighbor queries on point sets in low dimensions. It
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class NearestKDTree {
   using point = std::pair<T, T>;
 
@@ -7053,7 +7071,7 @@ class NearestKDTree {
   }
 
  public:
-  template<class It>
+  template<typename It>
   NearestKDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     if (n <= 1) {
@@ -7124,7 +7142,7 @@ When prefix sums are nondecreasing, \inlinecode{max\_prefix(c)} answers prefix-b
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-template<class T>
+template<typename T>
 class Fenwick {
   int len;
   std::vector<T> tree;
@@ -7224,7 +7242,7 @@ Maintain a numerical array while supporting range increments and point queries. 
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-template<class T>
+template<typename T>
 class FenwickRUPQ {
   int len;
   std::vector<T> tree;
@@ -7309,7 +7327,7 @@ Maintain a numerical array while supporting range increments and range-sum queri
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-template<class T>
+template<typename T>
 class FenwickRURQ {
   int len;
   std::vector<T> t1, t2;
@@ -7434,7 +7452,7 @@ Maintain a numerical array over a huge index range while supporting range increm
 \begin{lstlisting}[language=C++]
 #include <unordered_map>
 
-template<class T, int N = 1000000001>
+template<typename T, int N = 1000000001>
 class SparseFenwick {
   std::unordered_map<int, T> tmul, tadd;
 
@@ -7571,7 +7589,7 @@ Choose among the three 2D Fenwick trees by coordinate range and update style. Us
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-template<class T>
+template<typename T>
 class Fenwick2D {
   int rows, cols;
   std::vector<std::vector<T>> tree;
@@ -7658,17 +7676,17 @@ Choose this for huge sparse grids when the operation is additive: point or recta
 #include <unordered_map>
 #include <utility>
 
-template<class T, int R = 1000000001, int C = 1000000001>
+template<typename T, int R = 1000000001, int C = 1000000001>
 class SparseFenwick2D {
   std::unordered_map<int64_t, T> t1, t2, t3, t4;
 
-  template<class Map>
+  template<typename Map>
   static T get(const Map &tree, int r, int c) {
     auto it = tree.find(static_cast<int64_t>(r) * (C + 1) + c);
     return it == tree.end() ? T() : it->second;
   }
 
-  template<class Map>
+  template<typename Map>
   static void add(Map &tree, int r, int c, const T &x) {
     for (int i = r + 1; i <= R; i += i & -i) {
       for (int j = c + 1; j <= C; j += j & -j) {
@@ -7796,7 +7814,7 @@ Usage is two-phase. First declare every cell that will be updated with \inlineco
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class OfflineFenwick2D {
   std::vector<int> xs;                       // Sorted distinct update rows.
   std::vector<std::vector<int>> ys;          // ys[p]: sorted distinct columns at outer node p.
@@ -8048,7 +8066,7 @@ A precondition to the last three operations is that \inlinecode{make\_set()} mus
 #include <unordered_map>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SparseDSU {
   int num_elements, num_sets;
   std::unordered_map<T, int> id;
@@ -8769,7 +8787,7 @@ The aggregate is a commutative monoid defined by \inlinecode{combine()} and its 
 #include <utility>
 #include <vector>
 
-template<class W>
+template<typename W>
 class WeightedTreePath {
   // Edit combine() and identity() together for the desired commutative monoid.
   // The defaults give the maximum edge weight on the path; for the minimum use std::min with
@@ -8957,7 +8975,7 @@ The update operation is defined by \inlinecode{apply\_delta()} and \inlinecode{c
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class HeavyLight {
   // Set this to true to store values on edges, false to store values on nodes.
   static const bool VALUES_ON_EDGES = true;
@@ -9114,7 +9132,7 @@ class HeavyLight {
     }
   }
 
-  template<class Fn>
+  template<typename Fn>
   bool for_each_path(int u, int v, bool include_lca, Fn f) {
     if (root[u] != root[v]) {
       return false;
@@ -9527,7 +9545,7 @@ The forest is unrooted: a tree's root is whichever node was most recently establ
 #include <stdexcept>
 #include <unordered_map>
 
-template<class T>
+template<typename T>
 class LinkCut {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d, int len) { return d; }

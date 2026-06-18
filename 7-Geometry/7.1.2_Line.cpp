@@ -18,14 +18,14 @@ the `parallel()` or `perpendicular()` line through a point.
 
 Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in
 `is_parallel()`/`is_perpendicular()` and `a*p.x + b*p.y` in `contains()`), which grow like the
-squared coordinate magnitude. For integral type `T`, use `LineL` (`line<int64_t>`) once
+squared coordinate magnitude. For integral type `T`, use `LineL` (`TLine<int64_t>`) once
 coordinates exceed ~46000, or the 32-bit products overflow.
 
 Type aliases:
-- `LineI = line<int>`: exact integer-coefficient lines (small values only; see overflow warning)
-- `LineL = line<int64_t>`: exact integer-coefficient lines for large coordinates
-- `LineD = line<double>`: standard floating-point
-- `LineLD = line<long double>`: extra precision
+- `LineI = TLine<int>`: exact integer-coefficient lines (small values only; see overflow warning)
+- `LineL = TLine<int64_t>`: exact integer-coefficient lines for large coordinates
+- `LineD = TLine<double>`: standard floating-point
+- `LineLD = TLine<long double>`: extra precision
 - `Line = LineD`: default line type is double
 
 Time Complexity:
@@ -49,33 +49,33 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
 // SFINAE guard: valid only when Pt exposes numeric .x/.y members, so templated point constructors
 // don't hijack scalar-argument calls.
-template<class Pt>
+template<typename Pt>
 using if_point = decltype(std::declval<const Pt &>().x, std::declval<const Pt &>().y, void());
 
-template<class T>
-struct line {
+template<typename T>
+struct TLine {
   // fp_t is T for floating-point types, double for integral types.
   using fp_t = std::conditional_t<std::is_integral<T>::value, double, T>;
 
   T a, b, c;
 
-  line() : a(0), b(0), c(0) {}  // Invalid or uninitialized line.
-  line(T a, T b, T c) : a(a), b(b), c(c) {}
+  TLine() : a(0), b(0), c(0) {}  // Invalid or uninitialized line.
+  TLine(T a, T b, T c) : a(a), b(b), c(c) {}
 
   // Line through two points. Coefficients are exact (type T) for integer points.
-  template<class Pt, class = if_point<Pt>>
-  line(const Pt &p, const Pt &q) : a(q.y - p.y), b(p.x - q.x), c(-(a * p.x + b * p.y)) {}
+  template<typename Pt, typename = if_point<Pt>>
+  TLine(const Pt &p, const Pt &q) : a(q.y - p.y), b(p.x - q.x), c(-(a * p.x + b * p.y)) {}
 
   // Line of a given slope through a point. Intended for floating-point T (a generic slope
   // produces non-integer coefficients), so this constructor is disabled for integer T.
   template<
-      class Pt, class = if_point<Pt>, class U = T,
+      class Pt, typename = if_point<Pt>, typename U = T,
       class = std::enable_if_t<std::is_floating_point<U>::value>>
-  line(fp_t slope, const Pt &p) : a(-slope), b(1), c(slope * p.x - p.y) {}
+  TLine(fp_t slope, const Pt &p) : a(-slope), b(1), c(slope * p.x - p.y) {}
 
   // Epsilon-aware for floating-point T; exact for int and for coordinate types like Modular or
   // Rational, which therefore compose for all of the predicates below.
-  template<class A, class B>
+  template<typename A, typename B>
   static bool eq(const A &p, const B &q) {
     if constexpr (std::is_floating_point<T>::value) {
       return fabs(p - q) <= EPS;
@@ -84,11 +84,11 @@ struct line {
   }
 
   // Two lines are equal iff their coefficient vectors are proportional (the same line).
-  bool operator==(const line &l) const {
+  bool operator==(const TLine &l) const {
     return eq(a * l.b, l.a * b) && eq(b * l.c, l.b * c) && eq(a * l.c, l.a * c);
   }
 
-  bool operator!=(const line &l) const { return !(*this == l); }
+  bool operator!=(const TLine &l) const { return !(*this == l); }
 
   // Returns whether the line is a valid line (not both a and b zero).
   bool valid() const { return !(eq(a, 0) && eq(b, 0)); }
@@ -105,28 +105,28 @@ struct line {
   fp_t y(fp_t x) const { return (!valid() || eq(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
 
   // Whether point p lies on the line. Exact for integer T and integer p.
-  template<class Pt>
+  template<typename Pt>
   bool contains(const Pt &p) const {
     return eq(a * p.x + b * p.y + c, 0);
   }
 
   // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are
   // perpendicular (dot == 0). Both exact for integer T.
-  bool is_parallel(const line &l) const { return eq(a * l.b, l.a * b); }
-  bool is_perpendicular(const line &l) const { return eq(a * l.a, -(b * l.b)); }
+  bool is_parallel(const TLine &l) const { return eq(a * l.b, l.a * b); }
+  bool is_perpendicular(const TLine &l) const { return eq(a * l.a, -(b * l.b)); }
 
   // Parallel/perpendicular line through point p. Exact for integer T and integer p.
-  template<class Pt, class = if_point<Pt>>
-  line parallel(const Pt &p) const {
-    return line(a, b, -(a * p.x + b * p.y));
+  template<typename Pt, typename = if_point<Pt>>
+  TLine parallel(const Pt &p) const {
+    return TLine(a, b, -(a * p.x + b * p.y));
   }
 
-  template<class Pt, class = if_point<Pt>>
-  line perpendicular(const Pt &p) const {
-    return line(-b, a, b * p.x - a * p.y);
+  template<typename Pt, typename = if_point<Pt>>
+  TLine perpendicular(const Pt &p) const {
+    return TLine(-b, a, b * p.x - a * p.y);
   }
 
-  friend std::ostream &operator<<(std::ostream &out, const line &l) {
+  friend std::ostream &operator<<(std::ostream &out, const TLine &l) {
     auto clean = [](T v) -> double {
       return fabs(static_cast<double>(v)) < EPS ? 0 : static_cast<double>(v);
     };
@@ -135,10 +135,10 @@ struct line {
   }
 };
 
-using LineI = line<int>;
-using LineL = line<int64_t>;
-using LineD = line<double>;
-using LineLD = line<long double>;
+using LineI = TLine<int>;
+using LineL = TLine<int64_t>;
+using LineD = TLine<double>;
+using LineLD = TLine<long double>;
 using Line = LineD;  // Default line type is double.
 
 /*** Example Usage ***/

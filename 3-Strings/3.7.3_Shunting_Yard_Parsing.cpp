@@ -161,7 +161,7 @@ class ShuntingYardParser {
     return res;
   }
 
-  template<class StrIt>
+  template<typename StrIt>
   Operand eval(StrIt lo, StrIt hi) {
     std::stack<Operand> vals;
     std::stack<std::pair<string, bool>> op_stack;
@@ -229,7 +229,9 @@ class ShuntingYardParser {
 #include <cmath>
 using namespace std;
 
-#define EQ(a, b) (fabs((a) - (b)) < 1e-7)
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-7;
+}
 
 int main() {
   unordered_map<string, UnaryOp> unary_ops;

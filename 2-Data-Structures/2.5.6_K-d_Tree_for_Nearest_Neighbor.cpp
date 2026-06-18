@@ -33,7 +33,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class NearestKDTree {
   using point = std::pair<T, T>;
 
@@ -99,7 +99,7 @@ class NearestKDTree {
   }
 
  public:
-  template<class It>
+  template<typename It>
   NearestKDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     if (n <= 1) {

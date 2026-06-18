@@ -52,7 +52,7 @@ Space Complexity:
 #include <cstdint>
 #include <optional>
 
-template<class T, int R = 1000000000, int C = 1000000000>
+template<typename T, int R = 1000000000, int C = 1000000000>
 class SegTree2D {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t area) { return v; }

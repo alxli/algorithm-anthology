@@ -4,7 +4,7 @@ A merge sort tree is a static segment tree in which every node stores the sorted
 values in its range. The nodes are exactly the ranges visited by a merge sort, and each node's
 sorted list is the merge of its two children's lists. This supports queries that count, within a
 range of indices, how many values fall below a threshold or inside a value interval: decompose the
-index range into $O(\log n)$ canonical nodes and binary search each node's sorted list.
+index range into O(log n) canonical nodes and binary search each node's sorted list.
 
 The structure is built once and not modified afterward. All index ranges are inclusive [`lo`, `hi`]
 with 0-based indices, and values may be of any comparable type.
@@ -28,7 +28,7 @@ Space Complexity:
 #include <iterator>
 #include <vector>
 
-template<class T>
+template<typename T>
 class MergeSortTree {
   int len;
   std::vector<std::vector<T>> tree;
@@ -47,7 +47,7 @@ class MergeSortTree {
     );
   }
 
-  template<class Fn>
+  template<typename Fn>
   int query(int node, int lo, int hi, int tgt_lo, int tgt_hi, Fn count_node) const {
     if (tgt_hi < lo || hi < tgt_lo) {
       return 0;

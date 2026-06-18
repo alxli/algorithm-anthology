@@ -30,10 +30,10 @@ formatting local to this snippet.
 #include <utility>
 #include <vector>
 
-template<class T, class = void>
+template<typename T, typename = void>
 struct is_iterable : std::false_type {};
 
-template<class T>
+template<typename T>
 struct is_iterable<
     T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
     : std::true_type {};
@@ -54,7 +54,7 @@ std::string dbg_repr(bool b) {
   return b ? "true" : "false";
 }
 
-template<class T>
+template<typename T>
 typename std::enable_if<
     std::is_arithmetic<T>::value && !std::is_same<T, char>::value &&
         !std::is_same<T, bool>::value && !std::is_floating_point<T>::value,
@@ -65,19 +65,19 @@ dbg_repr(T x) {
   return out.str();
 }
 
-template<class T>
+template<typename T>
 typename std::enable_if<std::is_floating_point<T>::value, std::string>::type dbg_repr(T x) {
   std::ostringstream out;
   out << std::setprecision(10) << x;  // Set floating point dbg precision here.
   return out.str();
 }
 
-template<class A, class B>
+template<typename A, typename B>
 std::string dbg_repr(const std::pair<A, B> &p) {
   return "(" + dbg_repr(p.first) + ", " + dbg_repr(p.second) + ")";
 }
 
-template<class Tuple, size_t... Is>
+template<typename Tuple, size_t... Is>
 std::string dbg_tuple_repr(const Tuple &t, std::index_sequence<Is...>) {
   std::string res = "(";
   bool first = true;
@@ -90,7 +90,7 @@ std::string dbg_repr(const std::tuple<Ts...> &t) {
   return dbg_tuple_repr(t, std::index_sequence_for<Ts...>{});
 }
 
-template<class T>
+template<typename T>
 typename std::enable_if<
     is_iterable<T>::value && !std::is_convertible<T, std::string>::value, std::string>::type
 dbg_repr(const T &v) {
@@ -110,7 +110,7 @@ void dbg_out(bool) {
   std::cerr << '\n';
 }
 
-template<class Head, class... Tail>
+template<typename Head, class... Tail>
 void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
   if (leading_space) {
     std::cerr << ' ';

@@ -49,7 +49,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class K, class V, class Hash>
+template<typename K, typename V, typename Hash>
 class ChainingHashMap {
   struct HashNode {
     K key;
@@ -134,8 +134,8 @@ class ChainingHashMap {
     std::vector<std::pair<K, V>> res;
     res.reserve(num_entries);
     for (int i = 0; i < table_size; i++) {
-      for (const auto &entry : table[i]) {
-        res.push_back({entry.key, entry.value});
+      for (const auto &[k, v] : table[i]) {
+        res.emplace_back(k, v);
       }
     }
     return res;

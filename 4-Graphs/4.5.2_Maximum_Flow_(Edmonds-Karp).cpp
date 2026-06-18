@@ -34,7 +34,7 @@ Space Complexity:
 #include <queue>
 #include <vector>
 
-template<class T>
+template<typename T>
 class EdmondsKarp {
   struct Edge {
     int u, v, rev;

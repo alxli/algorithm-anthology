@@ -37,7 +37,7 @@ Space Complexity:
 #include <sstream>
 #include <string>
 
-template<class Int>
+template<typename Int>
 class Rational {
   Int num, den;
 
@@ -45,7 +45,7 @@ class Rational {
   Rational() : num(0), den(1) {}
   Rational(const Int &n) : num(n), den(1) {}
 
-  template<class T1, class T2>
+  template<typename T1, typename T2>
   Rational(const T1 &n, const T2 &d) : num(n), den(d) {
     if (den == 0) {
       throw std::runtime_error("Division by zero in Rational.");
@@ -169,7 +169,9 @@ class Rational {
 #include <cassert>
 #include <cmath>
 
-#define EQ(a, b) (fabs((a) - (b)) <= 1e-9)
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
 
 int main() {
   using Rational = Rational<int64_t>;

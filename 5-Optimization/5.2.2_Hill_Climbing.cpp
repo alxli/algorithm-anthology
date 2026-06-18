@@ -29,7 +29,7 @@ Space Complexity:
 #include <cmath>
 #include <cstddef>
 
-template<class Fn>
+template<typename Fn>
 double find_min(
     Fn f, double x0, double y0, double *critical_x = nullptr, double *critical_y = nullptr,
     const double STEP_MIN = 1e-9, const double STEP_MAX = 1e6, const int NUM_DIRECTIONS = 6
@@ -70,8 +70,8 @@ double find_min(
 #include <cassert>
 #include <cmath>
 
-bool eq(double a, double b) {
-  return fabs(a - b) < 1e-8;
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
 }
 
 // Paraboloid with global minimum at f(2, 3) = 0.
@@ -81,7 +81,7 @@ double f(double x, double y) {
 
 int main() {
   double x, y;
-  assert(eq(find_min(f, 0, 0, &x, &y), 0));
-  assert(eq(x, 2) && eq(y, 3));
+  assert(EQ(find_min(f, 0, 0, &x, &y), 0));
+  assert(EQ(x, 2) && EQ(y, 3));
   return 0;
 }

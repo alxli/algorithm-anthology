@@ -27,14 +27,14 @@ Space Complexity:
 
 #include <cstdint>
 
-template<class Pt>
+template<typename Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 // Detection is exact for integer-coordinate Pt.
-template<class Pt, class It>
+template<typename Pt, typename It>
 bool point_in_polygon(const Pt &p, It lo, It hi, bool EDGE_IS_INSIDE = true) {
   if (lo == hi) {
     return false;

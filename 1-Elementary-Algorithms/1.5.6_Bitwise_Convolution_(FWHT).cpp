@@ -46,7 +46,7 @@ int next_power_of_two(int n) {
   return res;
 }
 
-template<class T>
+template<typename T>
 void xor_transform(std::vector<T> &f, bool invert) {
   int n = static_cast<int>(f.size());
   assert((n & (n - 1)) == 0);
@@ -66,7 +66,7 @@ void xor_transform(std::vector<T> &f, bool invert) {
   }
 }
 
-template<class T>
+template<typename T>
 void or_transform(std::vector<T> &f, bool invert) {
   int n = static_cast<int>(f.size());
   assert((n & (n - 1)) == 0);
@@ -83,7 +83,7 @@ void or_transform(std::vector<T> &f, bool invert) {
   }
 }
 
-template<class T>
+template<typename T>
 void and_transform(std::vector<T> &f, bool invert) {
   int n = static_cast<int>(f.size());
   assert((n & (n - 1)) == 0);
@@ -100,7 +100,7 @@ void and_transform(std::vector<T> &f, bool invert) {
   }
 }
 
-template<class T, class Transform>
+template<typename T, typename Transform>
 std::vector<T> bitwise_convolve(std::vector<T> a, std::vector<T> b, Transform transform) {
   if (a.empty() || b.empty()) {
     return {};
@@ -117,17 +117,17 @@ std::vector<T> bitwise_convolve(std::vector<T> a, std::vector<T> b, Transform tr
   return a;
 }
 
-template<class T>
+template<typename T>
 std::vector<T> xor_convolve(std::vector<T> a, std::vector<T> b) {
   return bitwise_convolve(a, b, xor_transform<T>);
 }
 
-template<class T>
+template<typename T>
 std::vector<T> or_convolve(std::vector<T> a, std::vector<T> b) {
   return bitwise_convolve(a, b, or_transform<T>);
 }
 
-template<class T>
+template<typename T>
 std::vector<T> and_convolve(std::vector<T> a, std::vector<T> b) {
   return bitwise_convolve(a, b, and_transform<T>);
 }

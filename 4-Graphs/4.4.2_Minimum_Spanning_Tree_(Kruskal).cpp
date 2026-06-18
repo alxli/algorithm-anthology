@@ -13,6 +13,9 @@ form a cycle.
   total MST weight) for a global, pre-populated edge list `edges` whose endpoints must be numbered
   [0, `n`). Each edge is stored as (`weight`, `u`, `v`).
 
+Multigraphs are supported; parallel edges appear as separate entries in `edges` and any redundant
+ones are skipped once the cheaper edge has already connected the two components.
+
 Time Complexity:
 - O(m log n) per call to `kruskal_mst()`, where $m$ is the number of edges and $n$ is the number of
   nodes. The internal DSU uses path compression and union by size, making each DSU operation

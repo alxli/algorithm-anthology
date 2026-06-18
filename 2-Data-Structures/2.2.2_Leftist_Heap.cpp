@@ -37,7 +37,7 @@ Space Complexity:
 #include <cstddef>
 #include <stdexcept>
 
-template<class T>
+template<typename T>
 class LeftistHeap {
   struct Node {
     T value;
@@ -80,7 +80,7 @@ class LeftistHeap {
  public:
   LeftistHeap() : root(nullptr), num_nodes(0) {}
 
-  template<class It>
+  template<typename It>
   LeftistHeap(It lo, It hi) : root(nullptr), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));

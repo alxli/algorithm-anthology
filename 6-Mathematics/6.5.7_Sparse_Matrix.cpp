@@ -58,7 +58,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SparseMatrix {
   int h = 0, w = 0, stored = 0;
   std::vector<std::map<int, T>> rows, cols;
@@ -139,7 +139,7 @@ class SparseMatrix {
   }
 };
 
-template<class T>
+template<typename T>
 int row_reduce(SparseMatrix<T> &a, int limit) {
   assert(0 <= limit && limit <= a.width());
   int r = 0;
@@ -176,7 +176,7 @@ int row_reduce(SparseMatrix<T> &a, int limit) {
   return r;
 }
 
-template<class T>
+template<typename T>
 T det(SparseMatrix<T> a) {
   assert(a.height() == a.width());
   int swaps = 0, r = 0, n = a.height();
@@ -219,12 +219,12 @@ T det(SparseMatrix<T> a) {
   return (r == n ? (swaps % 2 == 0 ? det : -det) : T{});
 }
 
-template<class T>
+template<typename T>
 int sparse_rank(SparseMatrix<T> a) {
   return row_reduce(a, a.width());
 }
 
-template<class T>
+template<typename T>
 int solve_system(SparseMatrix<T> a, const std::vector<T> &b, std::vector<T> *x) {
   if (x == nullptr || a.height() != static_cast<int>(b.size())) {
     return -1;

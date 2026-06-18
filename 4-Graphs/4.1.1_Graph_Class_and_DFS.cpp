@@ -48,7 +48,7 @@ class Graph {
   std::vector<std::vector<int>> adj;
   bool directed;
 
-  template<class Fn>
+  template<typename Fn>
   void dfs(int n, std::vector<bool> &visit, Fn f) const {
     f(n);
     visit[n] = true;
@@ -109,7 +109,7 @@ class Graph {
   bool is_forest() const { return !directed && !has_cycle(); }
   bool is_dag() const { return directed && !has_cycle(); }
 
-  template<class Fn>
+  template<typename Fn>
   void dfs(int start, Fn f) const {
     std::vector<bool> visit(adj.size(), false);
     dfs(start, visit, f);

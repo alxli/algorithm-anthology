@@ -43,7 +43,7 @@ Space Complexity:
 #include <numeric>
 #include <vector>
 
-template<class It>
+template<typename It>
 bool next_permutation_(It lo, It hi) {
   if (lo == hi) {
     return false;
@@ -71,7 +71,7 @@ bool next_permutation_(It lo, It hi) {
   }
 }
 
-template<class T>
+template<typename T>
 bool next_permutation(std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   for (int i = n - 2; i >= 0; i--) {
@@ -173,7 +173,7 @@ Decomposition of {3,1,0,2} into cycles:
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   cout << "{";
   for (; lo != hi; ++lo) {

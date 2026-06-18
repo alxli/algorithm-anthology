@@ -28,34 +28,43 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
-#define GE(a, b) ((a) >= (b) - EPS)
+// clang-format off
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
+// clang-format on
 
 // sqdist returns the coordinate type (exact for integer points).
-template<class Pt>
+template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
   auto dx = b.x - a.x, dy = b.y - a.y;
   return dx * dx + dy * dy;
 }
 
-template<class Pt>
+template<typename Pt>
 double dist(const Pt &a, const Pt &b) {
   return sqrt(static_cast<double>(sqdist(a, b)));
 }
 
-template<class Pt, class T>
+template<typename Pt, typename T>
 double line_dist(const Pt &p, const T &a, const T &b, const T &c) {
   return fabs(static_cast<double>(a) * p.x + static_cast<double>(b) * p.y + c) /
          sqrt(static_cast<double>(a) * a + static_cast<double>(b) * b);
 }
 
-template<class Pt>
+template<typename Pt>
 double line_dist(const Pt &p, const Pt &a, const Pt &b) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return dist(p, a);
@@ -67,7 +76,7 @@ double line_dist(const Pt &p, const Pt &a, const Pt &b) {
   return sqrt(dx * dx + dy * dy);
 }
 
-template<class T>
+template<typename T>
 double line_dist(const T &a1, const T &b1, const T &c1, const T &a2, const T &b2, const T &c2) {
   if (EQ(a1 * b2, a2 * b1)) {
     double factor = EQ(b1, 0) ? (static_cast<double>(a1) / a2) : (static_cast<double>(b1) / b2);
@@ -79,7 +88,7 @@ double line_dist(const T &a1, const T &b1, const T &c1, const T &a2, const T &b2
   return 0;
 }
 
-template<class Pt>
+template<typename Pt>
 double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return dist(p, a);
@@ -97,7 +106,7 @@ double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
   return sqrt(dx * dx + dy * dy);
 }
 
-template<class Pt>
+template<typename Pt>
 double seg_dist(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return seg_dist(a, c, d);
@@ -133,7 +142,7 @@ double seg_dist(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   );
 }
 
-template<class Pt>
+template<typename Pt>
 Pt closest_point(const Pt &a, const Pt &b, const Pt &p) {
   Pt res{};
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {

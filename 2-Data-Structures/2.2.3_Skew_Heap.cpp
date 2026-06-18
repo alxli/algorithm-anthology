@@ -34,7 +34,7 @@ Space Complexity:
 #include <cstddef>
 #include <stdexcept>
 
-template<class T>
+template<typename T>
 class SkewHeap {
   struct Node {
     T value;
@@ -71,7 +71,7 @@ class SkewHeap {
  public:
   SkewHeap() : root(nullptr), num_nodes(0) {}
 
-  template<class It>
+  template<typename It>
   SkewHeap(It lo, It hi) : root(nullptr), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));

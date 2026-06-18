@@ -48,7 +48,7 @@ Space Complexity:
 #include <unordered_map>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SparseDSU {
   int num_elements, num_sets;
   std::unordered_map<T, int> id;

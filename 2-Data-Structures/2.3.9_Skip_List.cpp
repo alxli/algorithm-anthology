@@ -40,7 +40,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class K, class V>
+template<typename K, typename V>
 class SkipList {
   static const int MAX_LEVELS = 32;  // log2(max possible keys)
 
@@ -163,7 +163,7 @@ class SkipList {
     res.reserve(num_nodes);
     Node *n = head->next[0];
     while (n != nullptr) {
-      res.push_back({n->key, n->value});
+      res.emplace_back(n->key, n->value);
       n = n->next[0];
     }
     return res;

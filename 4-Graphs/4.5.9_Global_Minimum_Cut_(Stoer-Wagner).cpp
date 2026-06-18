@@ -18,6 +18,10 @@ considered, and the smallest is the global minimum cut.
   minimum cut and `side` lists the vertices on one side of that cut. The graph must have at least
   two vertices.
 
+Parallel edges should be pre-summed into the adjacency matrix before calling: `adj[u][v]` holds a
+single combined weight, so the sum of all parallel edge weights between `u` and `v` should be
+stored there.
+
 Time Complexity:
 - O(n^3) per call, where $n$ is the number of vertices.
 

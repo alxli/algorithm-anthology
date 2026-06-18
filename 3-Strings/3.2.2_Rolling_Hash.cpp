@@ -81,14 +81,14 @@ uint64_t mix64(uint64_t x) {
   return x ^ (x >> 31);
 }
 
-template<class T>
+template<typename T>
 struct RollingValueHasher {
   // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
   // hash is invisible and enables trivial collisions.
   uint64_t operator()(const T &x) const { return mix64((uint64_t)x) % (HASH_MOD - 1) + 1; }
 };
 
-template<class T, class ValueHasher = RollingValueHasher<T>>
+template<typename T, typename ValueHasher = RollingValueHasher<T>>
 class RollingHash {
   static std::vector<uint64_t> pow_base;
   std::vector<uint64_t> pref;
@@ -100,7 +100,7 @@ class RollingHash {
     }
   }
 
-  template<class It>
+  template<typename It>
   void build(It first, It last) {
     pref.clear();
     pref.push_back(0);
@@ -116,7 +116,7 @@ class RollingHash {
     pref.push_back(0);
   }
 
-  template<class It>
+  template<typename It>
   RollingHash(It first, It last, const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
     build(first, last);
   }
@@ -132,7 +132,7 @@ class RollingHash {
     return hash_sub(pref[hi], hash_mul(pref[lo], pow_base[hi - lo]));
   }
 
-  template<class It>
+  template<typename It>
   static uint64_t hash(It first, It last, const ValueHasher &hasher = ValueHasher()) {
     RollingHash<T, ValueHasher> h(first, last, hasher);
     return h.get(0, h.size());
@@ -149,7 +149,7 @@ class RollingHash {
   }
 };
 
-template<class T, class ValueHasher>
+template<typename T, typename ValueHasher>
 std::vector<uint64_t> RollingHash<T, ValueHasher>::pow_base(1, 1);
 
 /*** Example Usage ***/

@@ -21,7 +21,7 @@ Space Complexity:
 
 #include <cstdint>
 
-template<class Int, class Pred>
+template<typename Int, typename Pred>
 Int exponential_search_first_true(Int lo, Pred pred) {  // 000[1]11
   if (pred(lo)) {
     return lo;

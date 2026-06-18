@@ -36,7 +36,7 @@ class Timer {
   }
 };
 
-template<class Fun>
+template<typename Fun>
 std::pair<std::string, double> benchmark(const std::string &name, int iterations, Fun f) {
   Timer timer;
   for (int i = 0; i < iterations; ++i) {

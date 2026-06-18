@@ -38,7 +38,7 @@ Integer Conversion:
 
 */
 
-template<class Int>
+template<typename Int>
 string to_str(Int i) {
   std::ostringstream oss;
   oss << i;
@@ -216,7 +216,10 @@ Find and Replace:
 - `ends_with(s, suffix)` returns whether `s` ends with `suffix`.
 - `contains(s, needle)` returns whether `needle` occurs in `s`.
 - `find_all(haystack, needle)` returns a vector of all positions where the string `needle` appears
-  in the string `haystack`.
+  in the string `haystack`. Matches may overlap; e.g. `find_all("aaa", "aa")` returns `{0, 1}`.
+- `count(haystack, needle)` returns the number of non-overlapping occurrences of `needle` in
+  `haystack`, like Python's `str.count`. This differs from `find_all().size()`, which counts
+  overlapping matches; e.g. `count("aaa", "aa")` returns `1`, but `find_all("aaa", "aa")` finds two.
 - `replace(s, old, replacement)` returns a copy of `s` with all occurrences of the string `old`
   replaced with the given `replacement`.
 - `regex_find_all(s, pattern)` returns every substring of `s` matched by `pattern`.
@@ -246,6 +249,19 @@ std::vector<int> find_all(const string &haystack, const string &needle) {
   while (pos != string::npos) {
     res.push_back(pos);
     pos = haystack.find(needle, pos + 1);
+  }
+  return res;
+}
+
+int count(const string &haystack, const string &needle) {
+  if (needle.empty()) {
+    return 0;
+  }
+  int res = 0;
+  size_t pos = haystack.find(needle, 0);
+  while (pos != string::npos) {
+    res++;
+    pos = haystack.find(needle, pos + needle.size());
   }
   return res;
 }
@@ -289,8 +305,15 @@ string regex_replace_all(const string &s, const string &pattern, const string &r
 Joining and Splitting:
 
 - `join(v, delim)` returns the strings in vector `v` concatenated, separated by the given delimiter.
-- `pad_left(s, width, ch)` returns `s` left-padded with `ch` until its length is at least `width`.
-- `pad_right(s, width, ch)` returns `s` right-padded with `ch` until its length is at least `width`.
+- `repeat(s, n)` returns `s` concatenated with itself `n` times, like Python's `s * n`. For a single
+  repeated character, prefer `std::string(n, ch)`.
+- `ljust(s, width, ch)` returns `s` left-justified (padded on the right with `ch`) to at least
+  `width` characters, like Python's `str.ljust`.
+- `rjust(s, width, ch)` returns `s` right-justified (padded on the left with `ch`) to at least
+  `width` characters, like Python's `str.rjust`.
+- `center(s, width, ch)` returns `s` centered in a field of at least `width` characters by padding
+  both sides with `ch`, like Python's `str.center`. If the padding is uneven, the extra character
+  goes on the right.
 - `split(s, char delim)` returns a vector of tokens of `s`, split on a single character delimiter.
   Empty tokens are skipped, so `split("a::b", ':')` returns `{"a", "b"}`, not `{"a", "", "b"}`.
 - `split(s, string delim)` returns a vector of tokens of `s`, split on a set of many possible single
@@ -309,21 +332,39 @@ Joining and Splitting:
 
 string join(const std::vector<string> &v, const string &delim = " ") {
   string res;
+  res.reserve(v.size() + delim.size() * (v.size() - 1));
   for (int i = 0; i < static_cast<int>(v.size()); i++) {
-    if (i > 0) res += delim;
-    res += v[i];
+    res += (i > 0 ? delim : "") + v[i];
   }
   return res;
 }
 
-string pad_left(const string &s, int width, char ch = ' ') {
+string repeat(const string &s, int n) {
+  string res;
+  res.reserve(s.size() * n);
+  for (int i = 0; i < n; i++) {
+    res += s;
+  }
+  return res;
+}
+
+string ljust(const string &s, int width, char ch = ' ') {
+  int pad = width - static_cast<int>(s.size());
+  return pad > 0 ? s + string(pad, ch) : s;
+}
+
+string rjust(const string &s, int width, char ch = ' ') {
   int pad = width - static_cast<int>(s.size());
   return pad > 0 ? string(pad, ch) + s : s;
 }
 
-string pad_right(const string &s, int width, char ch = ' ') {
+string center(const string &s, int width, char ch = ' ') {
   int pad = width - static_cast<int>(s.size());
-  return pad > 0 ? s + string(pad, ch) : s;
+  if (pad <= 0) {
+    return s;
+  }
+  int left = pad / 2;
+  return string(left, ch) + s + string(pad - left, ch);
 }
 
 std::vector<string> split(const string &s, char delim) {
@@ -409,13 +450,17 @@ int main() {
   assert(ends_with("abracadabra", "dabra"));
   assert(contains("abracadabra", "cad"));
   assert(find_all("abracadabra", "ab") == pos);
+  assert(count("abracadabra", "ab") == 2);
+  assert(count("aaa", "aa") == 1 && find_all("aaa", "aa").size() == 2);
   assert(replace("abcdabba", "ab", "00") == "00cd00ba");
   assert(join(regex_find_all("a12b345", "[0-9]+"), "|") == "12|345");
   assert(join(regex_groups("abc-123", "([a-z]+)-([0-9]+)"), "|") == "abc|123");
   assert(regex_replace_all("a12b345", "[0-9]+", "#") == "a#b#");
 
-  assert(pad_left("42", 5, '0') == "00042");
-  assert(pad_right("hi", 4, '.') == "hi..");
+  assert(repeat("ab", 3) == "ababab");
+  assert(rjust("42", 5, '0') == "00042");
+  assert(ljust("hi", 4, '.') == "hi..");
+  assert(center("ab", 5, '*') == "*ab**");
   assert(join(split("a\nb\ncde\nf", '\n'), "|") == "a|b|cde|f");  // split v1
   assert(join(split("a::b", ':'), "|") == "a|b");                 // split v1 skips empty tokens
   assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");   // split v2

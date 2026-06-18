@@ -5,7 +5,7 @@ constant time. Unlike the ordinary sparse table for range minimum queries, the d
 does not require the operation to be idempotent, so it also handles sums, products, and matrix
 products where overlapping the two query halves would double-count.
 
-The array is divided into blocks whose size doubles at each of the $O(\log n)$ levels. At the level
+The array is divided into blocks whose size doubles at each of the O(log n) levels. At the level
 whose block size is $2^{k+1}$, every block is split at its center, and the table stores, for each
 position, the fold of the contiguous run from that position up to (or down to) the center. To answer
 a query [`lo`, `hi`], find the level at which `lo` and `hi` first fall on opposite sides of a
@@ -31,10 +31,11 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
-template<class T>
+template<typename T>
 class DisjointSparseTable {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
 
@@ -43,7 +44,7 @@ class DisjointSparseTable {
   std::vector<std::vector<T>> fold;
 
  public:
-  template<class It>
+  template<typename It>
   DisjointSparseTable(It lo, It hi) : a(lo, hi) {
     len = static_cast<int>(a.size());
     int levels = 1;
@@ -73,6 +74,7 @@ class DisjointSparseTable {
   int size() const { return len; }
 
   T query(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi < len);
     if (lo == hi) {
       return a[lo];
     }

@@ -18,7 +18,7 @@ Space Complexity:
 
 #include <string>
 
-template<class It>
+template<typename It>
 int eval(It &it, int prec) {
   if (prec == 0) {
     int sign = 1, res = 0;

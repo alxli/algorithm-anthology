@@ -33,14 +33,14 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class Pt>
+template<typename Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 // Convex hull: exact for integer-coordinate points.
-template<class It>
+template<typename It>
 auto convex_hull(It lo, It hi) {
   using Pt = typename std::iterator_traits<It>::value_type;
   int k = 0;
@@ -68,7 +68,7 @@ auto convex_hull(It lo, It hi) {
 }
 
 // Diametral pair: squared-distance comparisons are exact for integer-coordinate points.
-template<class It>
+template<typename It>
 auto diametral_pair(It lo, It hi) {
   using Pt = typename std::iterator_traits<It>::value_type;
   auto h = convex_hull(lo, hi);

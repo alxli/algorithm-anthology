@@ -60,15 +60,15 @@ Space Complexity:
 #include <stdexcept>
 #include <vector>
 
-template<class T>
+template<typename T>
 using Matrix = std::vector<std::vector<T>>;
 
-template<class T = int>
+template<typename T = int>
 Matrix<T> make_matrix(int m, int n, const T &v = T{}) {
   return Matrix<T>(m, std::vector<T>(n, v));
 }
 
-template<class T = int>
+template<typename T = int>
 Matrix<T> identity_matrix(int n) {
   Matrix<T> res = make_matrix<T>(n, n);
   for (int i = 0; i < n; i++) {
@@ -77,17 +77,17 @@ Matrix<T> identity_matrix(int n) {
   return res;
 }
 
-template<class T>
+template<typename T>
 int rows(const Matrix<T> &a) {
   return static_cast<int>(a.size());
 }
 
-template<class T>
+template<typename T>
 int columns(const Matrix<T> &a) {
   return a.empty() ? 0 : static_cast<int>(a[0].size());
 }
 
-template<class T>
+template<typename T>
 std::ostream &operator<<(std::ostream &out, const Matrix<T> &a) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -98,7 +98,7 @@ std::ostream &operator<<(std::ostream &out, const Matrix<T> &a) {
   return out;
 }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> &operator+=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -108,7 +108,7 @@ Matrix<T> &operator+=(Matrix<T> &a, const U &v) {
   return a;
 }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> &operator-=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -118,7 +118,7 @@ Matrix<T> &operator-=(Matrix<T> &a, const U &v) {
   return a;
 }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> &operator*=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -128,7 +128,7 @@ Matrix<T> &operator*=(Matrix<T> &a, const U &v) {
   return a;
 }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> &operator/=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -138,7 +138,7 @@ Matrix<T> &operator/=(Matrix<T> &a, const U &v) {
   return a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
   if (rows(a) != rows(b) || columns(a) != columns(b)) {
     throw std::runtime_error("Invalid dimensions for matrix addition.");
@@ -151,7 +151,7 @@ Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
   return a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> &operator-=(Matrix<T> &a, const Matrix<T> &b) {
   if (rows(a) != rows(b) || columns(a) != columns(b)) {
     throw std::runtime_error("Invalid dimensions for matrix subtraction.");
@@ -164,19 +164,19 @@ Matrix<T> &operator-=(Matrix<T> &a, const Matrix<T> &b) {
   return a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> operator+(const Matrix<T> &a, const Matrix<T> &b) {
   Matrix<T> c(a);
   return c += b;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> operator-(const Matrix<T> &a, const Matrix<T> &b) {
   Matrix<T> c(a);
   return c -= b;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> &operator*=(Matrix<T> &a, const std::vector<T> &v) {
   if (columns(a) != static_cast<int>(v.size()) || v.empty()) {
     throw std::runtime_error("Invalid dimensions for matrix-vector multiplication.");
@@ -192,7 +192,7 @@ Matrix<T> &operator*=(Matrix<T> &a, const std::vector<T> &v) {
   return a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> operator*(const Matrix<T> &a, const Matrix<T> &b) {
   if (columns(a) != rows(b)) {
     throw std::runtime_error("Invalid dimensions for matrix multiplication.");
@@ -209,35 +209,35 @@ Matrix<T> operator*(const Matrix<T> &a, const Matrix<T> &b) {
 }
 
 // clang-format off
-template<class T>
+template<typename T>
 Matrix<T> &operator*=(Matrix<T> &a, const Matrix<T> &b) { return a = a * b; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator+(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m += v; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator-(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m -= v; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator*(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m *= v; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator/(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m /= v; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator+(const U &v, const Matrix<T> &a) { return a + v; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator*(const U &v, const Matrix<T> &a) { return a * v; }
 // clang-format on
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator-(const U &v, const Matrix<T> &a) {
   Matrix<T> m = make_matrix<T>(rows(a), columns(a), v);
   return m -= a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> operator^(Matrix<T> a, unsigned int p) {
   if (rows(a) != columns(a)) {
     throw std::runtime_error("Matrix must be square for exponentiation.");
@@ -253,12 +253,12 @@ Matrix<T> operator^(Matrix<T> a, unsigned int p) {
   return res;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> operator^=(Matrix<T> &a, unsigned int p) {
   return a = a ^ p;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
   if (rows(a) != columns(a)) {
     throw std::runtime_error("Matrix must be square for power_sum.");
@@ -288,7 +288,7 @@ Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
   return res;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> transpose(const Matrix<T> &a) {
   Matrix<T> res = make_matrix<T>(columns(a), rows(a));
   for (int i = 0; i < rows(res); i++) {
@@ -299,7 +299,7 @@ Matrix<T> transpose(const Matrix<T> &a) {
   return res;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> &transpose_in_place(Matrix<T> &a) {
   if (rows(a) != columns(a)) {
     throw std::runtime_error("Matrix must be square for transpose_in_place.");
@@ -312,7 +312,7 @@ Matrix<T> &transpose_in_place(Matrix<T> &a) {
   return a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> rotate(const Matrix<T> &a, int degrees = 90) {
   if (degrees % 90 != 0) {
     throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
@@ -356,7 +356,7 @@ Matrix<T> rotate(const Matrix<T> &a, int degrees = 90) {
   return res;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> &rotate_in_place(Matrix<T> &a, int degrees = 90) {
   if (degrees % 90 != 0) {
     throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");

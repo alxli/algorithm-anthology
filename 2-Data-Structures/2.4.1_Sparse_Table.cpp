@@ -33,9 +33,10 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SparseTable {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
 
@@ -44,7 +45,7 @@ class SparseTable {
   std::vector<std::vector<T>> dp;  // dp[j][i] = combine() over [i, i + 2^j).
 
  public:
-  template<class It>
+  template<typename It>
   SparseTable(It lo, It hi) {
     std::vector<T> a(lo, hi);
     len = static_cast<int>(a.size());
@@ -64,6 +65,7 @@ class SparseTable {
   int size() const { return len; }
 
   T query(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi < len);
     int j = log2[hi - lo + 1];
     return combine(dp[j][lo], dp[j][hi - (1 << j) + 1]);
   }

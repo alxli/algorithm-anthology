@@ -23,7 +23,7 @@ Space Complexity:
 
 #include <vector>
 
-template<class T>
+template<typename T>
 class FenwickRUPQ {
   int len;
   std::vector<T> tree;

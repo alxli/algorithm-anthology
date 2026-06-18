@@ -35,7 +35,7 @@ Time Complexity:
 - O(1) per call to `size()` and `empty()`.
 
 Space Complexity:
-- O(`BITS` * n) for storage, where $n$ is the number of distinct values inserted so far.
+- O(n * b) for storage, where $n$ is the number of distinct values inserted so far.
 
 */
 
@@ -43,7 +43,7 @@ Space Complexity:
 #include <cstdint>
 #include <vector>
 
-template<class U = uint32_t, int BITS = 30>
+template<typename U = uint32_t, int BITS = 30>
 class BinaryTrie {
   std::vector<std::array<int, 2>> child;  // child[node][bit], where 0 means no child.
   std::vector<int> cnt;                   // Number of stored values passing through each node.

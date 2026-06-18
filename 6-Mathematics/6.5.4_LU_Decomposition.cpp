@@ -47,7 +47,7 @@ Space Complexity:
 #include <numeric>
 #include <vector>
 
-template<class Matrix>
+template<typename Matrix>
 int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS = 1e-10) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
@@ -83,17 +83,17 @@ int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS 
   return parity;
 }
 
-template<class Matrix>
+template<typename Matrix>
 double getl(const Matrix &lu, int i, int j) {
   return i > j ? lu[i][j] : (i < j ? 0 : 1);
 }
 
-template<class Matrix>
+template<typename Matrix>
 double getu(const Matrix &lu, int i, int j) {
   return i <= j ? lu[i][j] : 0;
 }
 
-template<class Matrix, class T>
+template<typename Matrix, typename T>
 int solve_system(
     const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double EPS = 1e-10
 ) {
@@ -135,7 +135,7 @@ int solve_system(
   return 0;
 }
 
-template<class T>
+template<typename T>
 double det(const T &a) {
   int n = static_cast<int>(a.size());
   T lu;
@@ -150,7 +150,7 @@ double det(const T &a) {
   return status == 0 ? res : -res;
 }
 
-template<class T>
+template<typename T>
 int invert(T &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> p1col;
@@ -186,7 +186,9 @@ int invert(T &a) {
 #include <cassert>
 using namespace std;
 
-#define EQ(a, b) (fabs((a) - (b)) < 1e-10)
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
 
 int main() {
   {  // Solve a system.

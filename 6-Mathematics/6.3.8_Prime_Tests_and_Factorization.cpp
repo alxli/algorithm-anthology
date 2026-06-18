@@ -9,18 +9,18 @@ their difference. Prime factorizations are represented as sorted vectors of (pri
 For 0 and 1, the prime factorization is empty.
 
 - `is_prime_slow(n)` returns whether the integer `n` is prime using trial division.
+- `factorize_slow(n)` returns the prime factorization of `n` using trial division.
 - `is_probable_prime(n, k)` returns whether `n` is probably prime using `k` random Miller-Rabin
   bases. The result is guaranteed correct when `n` is prime. When `n` is composite, it returns
   false with probability at least $1 - (1 / 4)^k$, so a true result has one-sided error probability
   at most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit
   deterministic setting.
-- `is_prime(n)` returns whether the signed 64-bit integer `n` is prime using deterministic
-  Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
-- `factorize_slow(n)` returns the prime factorization of `n` using trial division.
 - `rho_factor(n)` returns a factor of `n` that is not necessarily prime using Pollard's rho with
   Brent's optimization. If `n` is prime, then `n` itself is returned. While this algorithm is
   non-deterministic and may fail to detect factors on certain runs of the same input, it can be
   retried until a nontrivial factor is found, as done in `factorize()`.
+- `is_prime(n)` returns whether the signed 64-bit integer `n` is prime using deterministic
+  Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
 - `cached_sieve(n)` returns a cached linear sieve up to and including `n`, storing both primes and
   least prime factors.
 - `merge_factors(a, b)` merges two sorted compressed factorizations.
@@ -60,7 +60,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class Int>
+template<typename Int>
 bool is_prime_slow(Int n) {
   if (n == 2 || n == 3) {
     return true;
@@ -77,7 +77,7 @@ bool is_prime_slow(Int n) {
   return true;
 }
 
-template<class Int>
+template<typename Int>
 std::vector<std::pair<Int, int>> factorize_slow(Int n) {
   if (n <= 1) {
     return {};

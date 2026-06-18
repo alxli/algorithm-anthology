@@ -36,7 +36,7 @@ Space Complexity:
 #include <iterator>
 #include <vector>
 
-template<class It>
+template<typename It>
 auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
@@ -62,7 +62,7 @@ auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr
   return max_sum;
 }
 
-template<class T>
+template<typename T>
 T max_submatrix_sum(
     const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr, int *r2 = nullptr,
     int *c2 = nullptr

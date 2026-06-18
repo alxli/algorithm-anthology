@@ -25,7 +25,7 @@ Space Complexity:
 #include <cmath>
 #include <stdexcept>
 
-template<class Fn>
+template<typename Fn>
 double newton_root(
     Fn f, Fn fprime, double x0, const double EPS = 1e-15, const int ITERATIONS = 100
 ) {
@@ -41,7 +41,7 @@ double newton_root(
   return x;
 }
 
-template<class Fn>
+template<typename Fn>
 double secant_root(
     Fn f, double x0, double x1, const double EPS = 1e-15, const int ITERATIONS = 100
 ) {

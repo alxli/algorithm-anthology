@@ -10,7 +10,7 @@ range.
 The recorded prefix counts let a query at any node translate a range of array positions into the
 corresponding range of positions in either child, so a single root-to-leaf descent answers order
 statistics and rank queries. This is strictly more powerful than a merge sort tree: besides counting
-values below a threshold, it reports the $k$-th smallest value of a range in $O(\log \sigma)$ time.
+values below a threshold, it reports the $k$-th smallest value of a range in O(log \sigma) time.
 
 All position ranges are inclusive [`lo`, `hi`] with 0-based indices. If the values are large or
 sparse, compress them to a small contiguous range first.
@@ -35,6 +35,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <vector>
 
@@ -89,10 +90,23 @@ class WaveletTree {
   WaveletTree(std::vector<int> a, int min_val, int max_val)
       : WaveletTree(a.begin(), a.end(), min_val, max_val) {}
 
-  int kth_smallest(int lo, int hi, int k) const { return kth(lo + 1, hi + 1, k); }
-  int count_leq(int lo, int hi, int x) const { return leq(lo + 1, hi + 1, x); }
+  int kth_smallest(int lo, int hi, int k) const {
+    int n = static_cast<int>(b.size()) - 1;
+    assert(0 <= lo && lo <= hi && hi < n);
+    assert(1 <= k && k <= hi - lo + 1);
+    return kth(lo + 1, hi + 1, k);
+  }
+
+  int count_leq(int lo, int hi, int x) const {
+    int n = static_cast<int>(b.size()) - 1;
+    assert(0 <= lo && lo <= hi && hi < n);
+    return leq(lo + 1, hi + 1, x);
+  }
 
   int count_in(int lo, int hi, int x, int y) const {
+    int n = static_cast<int>(b.size()) - 1;
+    assert(0 <= lo && lo <= hi && hi < n);
+    assert(x <= y);
     return leq(lo + 1, hi + 1, y) - leq(lo + 1, hi + 1, x - 1);
   }
 };

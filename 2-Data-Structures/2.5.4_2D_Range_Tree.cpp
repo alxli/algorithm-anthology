@@ -35,7 +35,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class RangeTree {
   using point = std::pair<T, T>;
   using colindex = std::pair<int, T>;
@@ -66,7 +66,7 @@ class RangeTree {
   // Helper variables for query().
   T x1, y1, x2, y2;
 
-  template<class Fn>
+  template<typename Fn>
   void query(int n, int lo, int hi, Fn f) {
     if (points[hi].first < x1 || x2 < points[lo].first) {
       return;
@@ -86,7 +86,7 @@ class RangeTree {
   }
 
  public:
-  template<class It>
+  template<typename It>
   RangeTree(It lo, It hi) : points(lo, hi) {
     int n = std::distance(lo, hi);
     columns.resize(4 * n + 1);
@@ -94,7 +94,7 @@ class RangeTree {
     build(0, 0, n - 1);
   }
 
-  template<class Fn>
+  template<typename Fn>
   void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
     this->x1 = x1;
     this->y1 = y1;

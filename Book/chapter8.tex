@@ -40,12 +40,12 @@ Small contest-template helpers that are useful across many algorithms. These sni
 #define Dwn(i, H, L) for (int i = (H), _##i = (L); i >= _##i; --i)  //   H to L
 #define Each(x, C) for (auto &x : (C))
 
-template<class Fun>
+template<typename Fun>
 class y_combinator_result {
   Fun fun;
 
  public:
-  template<class T>
+  template<typename T>
   explicit y_combinator_result(T &&fun_) : fun(std::forward<T>(fun_)) {}
   template<class... Args>
   decltype(auto) operator()(Args &&...args) {
@@ -53,45 +53,45 @@ class y_combinator_result {
   }
 };
 
-template<class Fun>
+template<typename Fun>
 decltype(auto) y_combinator(Fun &&fun) {
   return y_combinator_result<std::decay_t<Fun>>(std::forward<Fun>(fun));
 }
 
-template<class C> int sz(const C &c) { return static_cast<int>(c.size()); }
-template<class T, class U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
-template<class T, class U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
-template<class T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
-template<class T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
+template<typename C> int sz(const C &c) { return static_cast<int>(c.size()); }
+template<typename T, typename U> bool ckmin(T &a, const U &b) { return b < a ? a = b, true : false; }
+template<typename T, typename U> bool ckmax(T &a, const U &b) { return a < b ? a = b, true : false; }
+template<typename T> bool between(const T &x, const T &a, const T &b) { return !(x < a) && !(b < x); }
+template<typename T> T clmp(const T &x, const T &a, const T &b) { return std::min(std::max(x, a), b); }
 
-template<class T>
+template<typename T>
 T floor_div(T a, T b) {
   assert(b != 0);
   T q = a / b, r = a % b;
   return q - (r != 0 && ((r < 0) != (b < 0)));
 }
 
-template<class T>
+template<typename T>
 T ceil_div(T a, T b) {
   assert(b != 0);
   T q = a / b, r = a % b;
   return q + (r != 0 && ((r < 0) == (b < 0)));
 }
 
-template<class T>
+template<typename T>
 void sort_unique(std::vector<T> &v) {
   std::sort(v.begin(), v.end());
   v.erase(std::unique(v.begin(), v.end()), v.end());
 }
 
-template<class C, class T>
+template<typename C, typename T>
 void erase_one(C &c, const T &x) {
   auto it = c.find(x);
   assert(it != c.end());
   c.erase(it);
 }
 
-template<class T>
+template<typename T>
 using min_priority_queue = std::priority_queue<T, std::vector<T>, std::greater<T>>;
 
 struct RNG {
@@ -100,7 +100,7 @@ struct RNG {
   RNG() : RNG(std::chrono::steady_clock::now().time_since_epoch().count()) {}
   explicit RNG(uint64_t seed) : gen(seed) {}
 
-  template<class T>
+  template<typename T>
   T uniform_int(T lo, T hi) {
     static_assert(std::is_integral<T>::value, "uniform_int() requires an integral type");
     return std::uniform_int_distribution<T>(lo, hi)(gen);
@@ -110,7 +110,7 @@ struct RNG {
     return std::uniform_real_distribution<double>(lo, hi)(gen);
   }
 
-  template<class It>
+  template<typename It>
   void shuffle(It lo, It hi) {
     std::shuffle(lo, hi, gen);
   }
@@ -283,7 +283,7 @@ struct FastInput {
     return *this;
   }
 
-  template<class T>
+  template<typename T>
   typename std::enable_if<
       std::is_integral<T>::value && !std::is_same<T, bool>::value, FastInput &>::type
   operator>>(T &x) {
@@ -308,7 +308,7 @@ struct FastInput {
     return *this;
   }
 
-  template<class T>
+  template<typename T>
   typename std::enable_if<std::is_floating_point<T>::value, FastInput &>::type operator>>(T &x) {
     std::string s;
     *this >> s;
@@ -364,7 +364,7 @@ struct FastOutput {
     return *this;
   }
 
-  template<class T>
+  template<typename T>
   typename std::enable_if<
       std::is_integral<T>::value && !std::is_same<T, bool>::value, FastOutput &>::type
   operator<<(T x) {
@@ -396,7 +396,7 @@ struct FastOutput {
     return *this;
   }
 
-  template<class T>
+  template<typename T>
   typename std::enable_if<std::is_floating_point<T>::value, FastOutput &>::type operator<<(T x) {
     char s[64];
     std::snprintf(s, sizeof(s), "%.17g", static_cast<double>(x));
@@ -466,10 +466,10 @@ Avoid naming these helpers \inlinecode{to\_string()} unless you want them mixed 
 #include <utility>
 #include <vector>
 
-template<class T, class = void>
+template<typename T, typename = void>
 struct is_iterable : std::false_type {};
 
-template<class T>
+template<typename T>
 struct is_iterable<
     T, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
     : std::true_type {};
@@ -490,7 +490,7 @@ std::string dbg_repr(bool b) {
   return b ? "true" : "false";
 }
 
-template<class T>
+template<typename T>
 typename std::enable_if<
     std::is_arithmetic<T>::value && !std::is_same<T, char>::value &&
         !std::is_same<T, bool>::value && !std::is_floating_point<T>::value,
@@ -501,19 +501,19 @@ dbg_repr(T x) {
   return out.str();
 }
 
-template<class T>
+template<typename T>
 typename std::enable_if<std::is_floating_point<T>::value, std::string>::type dbg_repr(T x) {
   std::ostringstream out;
   out << std::setprecision(10) << x;  // Set floating point dbg precision here.
   return out.str();
 }
 
-template<class A, class B>
+template<typename A, typename B>
 std::string dbg_repr(const std::pair<A, B> &p) {
   return "(" + dbg_repr(p.first) + ", " + dbg_repr(p.second) + ")";
 }
 
-template<class Tuple, size_t... Is>
+template<typename Tuple, size_t... Is>
 std::string dbg_tuple_repr(const Tuple &t, std::index_sequence<Is...>) {
   std::string res = "(";
   bool first = true;
@@ -526,7 +526,7 @@ std::string dbg_repr(const std::tuple<Ts...> &t) {
   return dbg_tuple_repr(t, std::index_sequence_for<Ts...>{});
 }
 
-template<class T>
+template<typename T>
 typename std::enable_if<
     is_iterable<T>::value && !std::is_convertible<T, std::string>::value, std::string>::type
 dbg_repr(const T &v) {
@@ -546,7 +546,7 @@ void dbg_out(bool) {
   std::cerr << '\n';
 }
 
-template<class Head, class... Tail>
+template<typename Head, class... Tail>
 void dbg_out(bool leading_space, const Head &head, const Tail &...tail) {
   if (leading_space) {
     std::cerr << ' ';
@@ -652,7 +652,7 @@ class Timer {
   }
 };
 
-template<class Fun>
+template<typename Fun>
 std::pair<std::string, double> benchmark(const std::string &name, int iterations, Fun f) {
   Timer timer;
   for (int i = 0; i < iterations; ++i) {
@@ -703,7 +703,7 @@ The generated test type only needs to be copyable enough to store in \inlinecode
 #include <random>
 #include <vector>
 
-template<class Generate, class Solve, class Brute>
+template<typename Generate, typename Solve, typename Brute>
 auto stress(int trials, Generate generate, Solve solve, Brute brute)
     -> std::optional<decltype(generate())> {
   for (int tc = 0; tc < trials; ++tc) {
@@ -778,11 +778,11 @@ The order statistic operations are 0-indexed. The priority queue \inlinecode{joi
 #include <functional>
 #include <utility>
 
-template<class K, class V, class Compare = std::less<K>>
+template<typename K, typename V, typename Compare = std::less<K>>
 using OrderedMap = __gnu_pbds::tree<
     K, V, Compare, __gnu_pbds::rb_tree_tag, __gnu_pbds::tree_order_statistics_node_update>;
 
-template<class T, class Compare = std::less<T>>
+template<typename T, typename Compare = std::less<T>>
 using OrderedSet = OrderedMap<T, __gnu_pbds::null_type, Compare>;
 
 struct SplitMix64Hasher {
@@ -801,13 +801,13 @@ struct SplitMix64Hasher {
   }
 };
 
-template<class K, class V, class Hash = SplitMix64Hasher>
+template<typename K, typename V, typename Hash = SplitMix64Hasher>
 using HashMap = __gnu_pbds::gp_hash_table<K, V, Hash>;
 
-template<class K, class Hash = SplitMix64Hasher>
+template<typename K, typename Hash = SplitMix64Hasher>
 using HashSet = __gnu_pbds::gp_hash_table<K, __gnu_pbds::null_type, Hash>;
 
-template<class T>
+template<typename T>
 class OrderedMultiset {
   OrderedSet<std::pair<T, int>> tree;
   int timer = 0;
@@ -829,7 +829,7 @@ class OrderedMultiset {
   int size() const { return static_cast<int>(tree.size()); }
 };
 
-template<class K, class V>
+template<typename K, typename V>
 class OrderedMultimap {
   OrderedMap<std::pair<K, int>, V> tree;
   int timer = 0;
@@ -856,16 +856,16 @@ class OrderedMultimap {
   int size() const { return static_cast<int>(tree.size()); }
 };
 
-template<class T, class Compare = std::less<T>>
+template<typename T, typename Compare = std::less<T>>
 using PairingHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::pairing_heap_tag>;
 
-template<class T, class Compare = std::less<T>>
+template<typename T, typename Compare = std::less<T>>
 using BinaryHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::binary_heap_tag>;
 
-template<class T, class Compare = std::less<T>>
+template<typename T, typename Compare = std::less<T>>
 using BinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::binomial_heap_tag>;
 
-template<class T, class Compare = std::less<T>>
+template<typename T, typename Compare = std::less<T>>
 using RcBinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::rc_binomial_heap_tag>;
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -939,7 +939,7 @@ Each call to \inlinecode{f(i)} must be safe to run concurrently with the others.
 #include <thread>
 #include <vector>
 
-template<class Fun>
+template<typename Fun>
 void parallel_for(int n, int threads, Fun f) {
   threads = std::max(1, std::min(threads, n));
   std::vector<std::thread> workers;
@@ -956,7 +956,7 @@ void parallel_for(int n, int threads, Fun f) {
   }
 }
 
-template<class Case, class Solve>
+template<typename Case, typename Solve>
 std::vector<std::string> parallel_cases(const std::vector<Case> &cases, int threads, Solve solve) {
   std::vector<std::string> out(cases.size());
   parallel_for(static_cast<int>(cases.size()), threads, [&](int i) {
@@ -1024,13 +1024,13 @@ void operator delete(void *) noexcept {
 void operator delete(void *, size_t) noexcept {
 }
 
-template<class T>
+template<typename T>
 struct BumpAllocator {
   using value_type = T;
 
   BumpAllocator() = default;
 
-  template<class U>
+  template<typename U>
   BumpAllocator(const BumpAllocator<U> &) {}
 
   T *allocate(size_t n) {
@@ -1043,12 +1043,12 @@ struct BumpAllocator {
 
   void deallocate(T *, size_t) {}
 
-  template<class U>
+  template<typename U>
   bool operator==(const BumpAllocator<U> &) const {
     return true;
   }
 
-  template<class U>
+  template<typename U>
   bool operator!=(const BumpAllocator<U> &) const {
     return false;
   }

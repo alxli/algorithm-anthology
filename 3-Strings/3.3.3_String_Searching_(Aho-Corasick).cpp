@@ -104,7 +104,7 @@ class AhoCorasick {
     }
   }
 
-  template<class Fn>
+  template<typename Fn>
   void find_all_in(const string &haystack, Fn report_match) {
     int state = 0;
     for (int i = 0; i < static_cast<int>(haystack.size()); i++) {

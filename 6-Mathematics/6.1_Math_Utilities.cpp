@@ -32,6 +32,7 @@ Space Complexity:
 #include <limits>
 #include <random>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #ifndef M_PI
@@ -48,25 +49,47 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
 Epsilon Comparisons:
 
-- `EQ()`, `NE()`, `LT()`, `GT()`, `LE()`, and `GE()` relationally compare two values $x$ and $y$
-  accounting for absolute error. For any $x$, the range of values considered equal barring absolute
-  error is $[x - `EPS`, x + `EPS`]$. Values outside of this range are considered not equal
-  (strictly less or strictly greater).
-
-- `rEQ()` returns whether $x$ and $y$ are equal barring relative error. For any $x$, the range of
-  values considered equal is $[x(1 - `EPS`), x(1 + `EPS`)]$.
+- `EQ()`, `NE()`, `LT()`, `GT()`, `LE()`, and `GE()` relationally compare two values $x$ and $y$.
+  Arguments may be of different types; the common type governs behavior. If the common type is
+  integral, exact comparison is used (`==`, `<`, etc.). Otherwise, absolute-error epsilon comparison
+  is used: values within `EPS` of each other are considered equal, and `LT`/`GT`/`LE`/`GE` shift
+  the boundary by `EPS` accordingly.
+- `rEQ(ref, val)` returns whether `val` equals reference `ref` within relative error `EPS`. The
+  tolerance scales with `|ref|`, so `rEQ(ref, val)` is NOT the same as `rEQ(val, ref)`. Use this
+  when one argument is a known exact value and the other is a computed approximation. Degenerates
+  to exact comparison when `ref` = 0, since the tolerance collapses to 0; use `EQ` near zero.
+- `rEQ_sym(x, y)` is the symmetric (commutative) variant: tolerance scales with
+  `max(|x|, |y|)`, so the result is the same regardless of argument order. Still degenerates
+  near zero when both arguments are close to 0.
 
 */
 
 const double EPS = 1e-9;
 
-#define EQ(x, y) (fabs((x) - (y)) <= EPS)
-#define NE(x, y) (fabs((x) - (y)) > EPS)
-#define LT(x, y) ((x) < (y) - EPS)
-#define GT(x, y) ((x) > (y) + EPS)
-#define LE(x, y) ((x) <= (y) + EPS)
-#define GE(x, y) ((x) >= (y) - EPS)
-#define rEQ(x, y) (fabs((x) - (y)) <= EPS * fabs(x))
+// clang-format off
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U> bool NE(T a, U b) { return !EQ(a, b); }
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
+// clang-format on
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool rEQ(T ref, U val) {
+  return std::fabs(C(ref) - C(val)) <= EPS * std::fabs(C(ref));
+}
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool rEQ_sym(T x, U y) {
+  return std::fabs(C(x) - C(y)) <= EPS * std::max(std::fabs(C(x)), std::fabs(C(y)));
+}
 
 /*
 
@@ -84,17 +107,17 @@ Sign Functions:
 
 */
 
-template<class T>
+template<typename T>
 int sgn(const T &x) {
   return (T(0) < x) - (x < T(0));
 }
 
-template<class Double>
+template<typename Double>
 bool signbit_(Double x) {
   return (((unsigned char *)&x)[sizeof(x) - 1] >> (CHAR_BIT - 1)) & 1;
 }
 
-template<class Double>
+template<typename Double>
 Double copysign_(Double x, Double y) {
   return signbit_(y) ? -fabs(x) : fabs(x);
 }
@@ -122,41 +145,41 @@ Rounding Functions:
 
 */
 
-template<class Double>
+template<typename Double>
 Double floor0(const Double &x) {
   Double res = floor(fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
-template<class Double>
+template<typename Double>
 Double ceil0(const Double &x) {
   Double res = ceil(fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_up(const Double &x) {
   return floor(x + 0.5);
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_down(const Double &x) {
   return ceil(x - 0.5);
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_to0(const Double &x) {
   Double res = round_half_down(fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_from0(const Double &x) {
   Double res = round_half_up(fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_even(const Double &x, const Double &EPS = 1e-9) {
   if (x < 0.0) {
     return -round_half_even(-x, EPS);
@@ -169,25 +192,25 @@ Double round_half_even(const Double &x, const Double &EPS = 1e-9) {
   return round_half_from0(x);
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_alternate(const Double &x) {
   static bool up = true;
   return (up = !up) ? round_half_up(x) : round_half_down(x);
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_alternate0(const Double &x) {
   static bool up = true;
   return (up = !up) ? round_half_from0(x) : round_half_to0(x);
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_random(const Double &x) {
   static std::mt19937 rng(std::random_device{}());
   return (rng() % 2 == 0) ? round_half_from0(x) : round_half_to0(x);
 }
 
-template<class Double, class RoundingFunction>
+template<typename Double, typename RoundingFunction>
 Double round_n_places(const Double &x, unsigned int n, RoundingFunction f) {
   return f(x * pow(10, n)) / pow(10, n);
 }
@@ -323,15 +346,32 @@ double lgamma_(double x) {
 
 /*
 
-Binary Exponentiation:
+Modular Arithmetic:
 
+- `addmod(a, b, m)` returns `(a + b) mod m` and `submod(a, b, m)` returns `(a - b) mod m`, each in
+  $[0, m)$. Both operands may be negative or unreduced; the result is normalized into range. These
+  use signed arithmetic, so `m` (and the reduced operands) must be small enough that `a + b` does
+  not overflow `int64_t`, i.e. `m` up to roughly `2^62`, which covers all common contest moduli.
 - `mulmod(x, n, m)` returns `x` multiplied by `n`, modulo `m`. This is done in a way to avoid
   overflow: on compilers with `__uint128_t` it uses one wide product, while the portable fallback
   uses double-and-add multiplication. The fallback is slower by a logarithmic factor, but avoids
-  relying on nonstandard 128-bit integers.
+  relying on nonstandard 128-bit integers. Unlike `addmod`/`submod`, this takes unsigned operands
+  and supports a full 64-bit modulus.
 - `powmod(x, n, m)` returns `x` raised to the power `n`, modulo `m`.
 
+These are lightweight standalone helpers for the occasional modular computation. For a full value
+type that wraps a fixed modulus with overloaded operators, modular inverses, and combinatorics, see
+the `Modular` ("Mint") class in section 6.3.2.
+
 */
+
+int64_t addmod(int64_t a, int64_t b, int64_t m) {
+  return ((a + b) % m + m) % m;
+}
+
+int64_t submod(int64_t a, int64_t b, int64_t m) {
+  return ((a - b) % m + m) % m;
+}
 
 uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
 #if defined(__SIZEOF_INT128__)
@@ -459,6 +499,11 @@ int main() {
   assert(EQ(erf_(1.0), 0.8427007929) && EQ(erf_(-1.0), -0.8427007929));
   assert(EQ(tgamma_(0.5), 1.7724538509) && EQ(tgamma_(1.0), 1.0));
   assert(EQ(lgamma_(0.5), 0.5723649429) && EQ(lgamma_(1.0), 0.0));
+
+  assert(addmod(7, 8, 10) == 5 && submod(2, 5, 10) == 7);
+  // Negative and unreduced operands are normalized into [0, m).
+  assert(addmod(-3, -4, 10) == 3 && submod(-3, 4, 10) == 3);
+  assert(addmod(25, -7, 10) == 8);
 
   assert(powmod(2, 10, 1000000007) == 1024);
   assert(powmod(2, 62, 1000000) == 387904);

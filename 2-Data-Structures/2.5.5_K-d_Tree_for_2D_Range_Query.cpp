@@ -33,7 +33,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class RangeKDTree {
   using point = std::pair<T, T>;
 
@@ -68,7 +68,7 @@ class RangeKDTree {
   // Helper variables for query().
   T x1, y1, x2, y2;
 
-  template<class Fn>
+  template<typename Fn>
   void query(int lo, int hi, Fn f) {
     if (lo >= hi) {
       return;
@@ -95,7 +95,7 @@ class RangeKDTree {
   }
 
  public:
-  template<class It>
+  template<typename It>
   RangeKDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
     l_index.resize(n);
@@ -105,7 +105,7 @@ class RangeKDTree {
     build(0, n, true);
   }
 
-  template<class Fn>
+  template<typename Fn>
   void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
     this->x1 = x1;
     this->y1 = y1;

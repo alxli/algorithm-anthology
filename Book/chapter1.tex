@@ -37,7 +37,7 @@ The pivot chosen in this implementation is always a middle element of the range 
 \textbf{Stable?}: No.
 
 \begin{lstlisting}[language=C++]
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 void quicksort(It lo, It hi, Compare comp = Compare()) {
   while (hi - lo >= 2) {
     auto pivot = *(lo + (hi - lo) / 2);
@@ -74,7 +74,7 @@ An analogous function in the C++ standard library is \inlinecode{std::stable\_so
 \textbf{Stable?}: Yes.
 
 \begin{lstlisting}[language=C++]
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 void mergesort(It lo, It hi, Compare comp = Compare()) {
   if (hi - lo < 2) {
     return;
@@ -108,7 +108,7 @@ The loop below has two modes controlled by whether \inlinecode{i \textgreater{} 
 \textbf{Stable?}: No.
 
 \begin{lstlisting}[language=C++]
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 void heapsort(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
   T tmp;
@@ -157,7 +157,7 @@ The comparison \inlinecode{comp(key, *(j - 1))} is strict, so an element never m
 \textbf{Stable?}: Yes.
 
 \begin{lstlisting}[language=C++]
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 void insertion_sort(It lo, It hi, Compare comp = Compare()) {
   using T = typename std::iterator_traits<It>::value_type;
   for (It i = lo; i != hi; ++i) {
@@ -182,7 +182,7 @@ Even though the worst case time complexity is $O(n^{2})$, a well chosen shrink f
 \textbf{Stable?}: No.
 
 \begin{lstlisting}[language=C++]
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 void combsort(It lo, It hi, Compare comp = Compare()) {
   int gap = static_cast<int>(hi - lo);
   bool swapped = true;
@@ -209,7 +209,7 @@ In this implementation, a power of two is chosen to be the base for the sort so 
 \textbf{Space Complexity}: $O(n + 2^{b})$ auxiliary for a radix of $b$ bits, i.e. $O(n)$ for constant $b$.
 
 \begin{lstlisting}[language=C++]
-template<class It>
+template<typename It>
 void radix_sort(It lo, It hi) {
   if (hi - lo < 2) {
     return;
@@ -256,7 +256,7 @@ void radix_sort(It lo, It hi) {
 #include <vector>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   while (lo != hi) {
     cout << *lo++ << " ";
@@ -264,7 +264,7 @@ void print_range(It lo, It hi) {
   cout << endl;
 }
 
-template<class It>
+template<typename It>
 bool sorted(It lo, It hi) {
   while (++lo != hi) {
     if (*lo < *(lo - 1)) {
@@ -384,7 +384,7 @@ All three versions below achieve the same result using in-place algorithms.
 #include <algorithm>
 #include <numeric>
 
-template<class It>
+template<typename It>
 void rotate1(It lo, It mid, It hi) {
   if (lo == mid || mid == hi) {
     return;
@@ -400,7 +400,7 @@ void rotate1(It lo, It mid, It hi) {
   }
 }
 
-template<class It>
+template<typename It>
 void rotate2(It lo, It mid, It hi) {
   if (lo == mid || mid == hi) {
     return;
@@ -410,7 +410,7 @@ void rotate2(It lo, It mid, It hi) {
   std::reverse(lo, hi);
 }
 
-template<class It>
+template<typename It>
 void rotate3(It lo, It mid, It hi) {
   if (lo == mid || mid == hi) {
     return;
@@ -523,7 +523,7 @@ The number of inversions for a sequence \inlinecode{a} is the number of ordered 
 #include <iterator>
 #include <vector>
 
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 int64_t inversions(It lo, It hi, Compare comp = Compare()) {
   if (hi - lo < 2) {
     return 0;
@@ -637,7 +637,7 @@ All implementations below take ranges as ForwardIterators and require \inlinecod
 #include <map>
 #include <vector>
 
-template<class It>
+template<typename It>
 void compress1(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   std::vector<T> v(lo, hi);
@@ -648,7 +648,7 @@ void compress1(It lo, It hi) {
   }
 }
 
-template<class It>
+template<typename It>
 void compress2(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   std::map<T, int> m;
@@ -664,14 +664,14 @@ void compress2(It lo, It hi) {
   }
 }
 
-template<class T>
+template<typename T>
 class CoordinateCompressor {
   std::vector<T> values;
 
  public:
   CoordinateCompressor() {}
 
-  template<class It>
+  template<typename It>
   CoordinateCompressor(It lo, It hi) : values(lo, hi) {
     build();
   }
@@ -700,7 +700,7 @@ class CoordinateCompressor {
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   while (lo != hi) {
     cout << *lo++ << " ";
@@ -769,7 +769,7 @@ The pivot is chosen uniformly at random, and the partition step groups equal key
 #include <iterator>
 #include <random>
 
-template<class It>
+template<typename It>
 void nth_element2(It lo, It nth, It hi) {
   static std::mt19937 rng(std::random_device{}());
   while (hi - lo > 1) {
@@ -834,7 +834,7 @@ Partitions a range into three consecutive groups according to a pivot value: ele
 #include <algorithm>
 #include <utility>
 
-template<class It, class T>
+template<typename It, typename T>
 std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
   It lt = lo, i = lo, gt = hi;
   while (i != gt) {
@@ -849,7 +849,7 @@ std::pair<It, It> partition_three_way(It lo, It hi, const T &pivot) {
   return {lt, gt};
 }
 
-template<class It>
+template<typename It>
 void sort_012(It lo, It hi) {
   partition_three_way(lo, hi, 1);
 }
@@ -1170,7 +1170,7 @@ Floyd's cycle-finding algorithm, a.k.a. the ``tortoise and the hare algorithm'',
 \begin{lstlisting}[language=C++]
 #include <utility>
 
-template<class Fn, class T>
+template<typename Fn, typename T>
 std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
   T tortoise = f(x0), hare = f(f(x0));
   while (tortoise != hare) {
@@ -1193,7 +1193,7 @@ std::pair<int, int> find_cycle_floyd(Fn f, T x0) {
   return {start, length};
 }
 
-template<class Fn, class T>
+template<typename Fn, typename T>
 std::pair<int, int> find_cycle_brent(Fn f, T x0) {
   int power = 1, length = 1;
   T tortoise = x0, hare = f(x0);
@@ -1294,7 +1294,7 @@ Both functions take a vector of $n$ comparable values and a window length $k \in
 #include <deque>
 #include <vector>
 
-template<class T>
+template<typename T>
 std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
   int n = static_cast<int>(a.size());
   std::deque<int> window;
@@ -1314,7 +1314,7 @@ std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
   return res;
 }
 
-template<class T>
+template<typename T>
 std::vector<T> sliding_window_minimum(const std::vector<T> &a, int k) {
   int n = static_cast<int>(a.size());
   std::deque<int> window;
@@ -1383,7 +1383,7 @@ The fold is defined by an associative \inlinecode{combine(a, b)} function. The d
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class AggregateQueue {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
 
@@ -1486,7 +1486,7 @@ All functions below take a vector \inlinecode{a} of $n$ comparable values and re
 #include <stack>
 #include <vector>
 
-template<class T>
+template<typename T>
 std::vector<int> previous_less(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
@@ -1501,7 +1501,7 @@ std::vector<int> previous_less(const std::vector<T> &a) {
   return res;
 }
 
-template<class T>
+template<typename T>
 std::vector<int> next_less(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
@@ -1516,7 +1516,7 @@ std::vector<int> next_less(const std::vector<T> &a) {
   return res;
 }
 
-template<class T>
+template<typename T>
 std::vector<int> previous_greater(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
@@ -1531,7 +1531,7 @@ std::vector<int> previous_greater(const std::vector<T> &a) {
   return res;
 }
 
-template<class T>
+template<typename T>
 std::vector<int> next_greater(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
@@ -1546,7 +1546,7 @@ std::vector<int> next_greater(const std::vector<T> &a) {
   return res;
 }
 
-template<class T>
+template<typename T>
 T largest_rectangle(const std::vector<T> &heights) {
   int n = static_cast<int>(heights.size());
   std::vector<int> left = previous_less(heights), right = next_less(heights);
@@ -1602,7 +1602,7 @@ Computes the minimum excluded nonnegative integer, commonly called the MEX. The 
 #include <set>
 #include <vector>
 
-template<class It>
+template<typename It>
 int mex(It lo, It hi) {
   int n = static_cast<int>(hi - lo);
   std::vector<bool> seen(n + 1, false);
@@ -1685,7 +1685,7 @@ The answer is computed by scanning left to right while maintaining, for each len
 #include <iterator>
 #include <vector>
 
-template<class It>
+template<typename It>
 auto longest_increasing_subsequence(It lo, It hi) {
   using T = typename std::iterator_traits<It>::value_type;
   int len = 0, n = static_cast<int>(hi - lo);
@@ -1723,7 +1723,7 @@ auto longest_increasing_subsequence(It lo, It hi) {
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   while (lo != hi) {
     cout << *lo++ << " ";
@@ -1889,7 +1889,7 @@ Pisinger's algorithm targets the opposite regime: nonnegative weights whose maxi
 #include <cstdint>
 #include <vector>
 
-template<class It>
+template<typename It>
 int64_t max_subset_sum_at_most(It lo, It hi, int64_t v) {
   int n = static_cast<int>(hi - lo);
   int64_t llen = 1LL << (n / 2), hlen = 1LL << (n - n / 2);
@@ -1913,7 +1913,7 @@ int64_t max_subset_sum_at_most(It lo, It hi, int64_t v) {
   return res;
 }
 
-template<class It>
+template<typename It>
 int64_t max_subset_sum_bounded(It lo, It hi, int target) {
   int n = static_cast<int>(hi - lo);
   // Greedily take a prefix while it still fits; the optimum then lies within one weight of target.
@@ -2366,7 +2366,7 @@ The algorithm scans from right to left. At each position $i$, it chooses a rando
 #include <algorithm>
 #include <random>
 
-template<class It>
+template<typename It>
 void fisher_yates_shuffle(It lo, It hi) {
   static std::mt19937 rng(std::random_device{}());
   int n = static_cast<int>(hi - lo);
@@ -2430,7 +2430,7 @@ int rand_int(int lo, int hi) {
   return std::uniform_int_distribution<int>(lo, hi)(rng);
 }
 
-template<class T>
+template<typename T>
 class ReservoirSampleOne {
   T sample{};
   int seen;
@@ -2452,7 +2452,7 @@ class ReservoirSampleOne {
   int count() const { return seen; }
 };
 
-template<class T>
+template<typename T>
 class ReservoirSampleK {
   int k, seen;
   std::vector<T> reservoir;
@@ -2529,7 +2529,7 @@ Given an array of numbers, determine the maximum possible sum of any contiguous 
 #include <iterator>
 #include <vector>
 
-template<class It>
+template<typename It>
 auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr) {
   using T = typename std::iterator_traits<It>::value_type;
   if (lo == hi) {
@@ -2555,7 +2555,7 @@ auto max_subarray_sum(It lo, It hi, int *res_lo = nullptr, int *res_hi = nullptr
   return max_sum;
 }
 
-template<class T>
+template<typename T>
 T max_submatrix_sum(
     const std::vector<std::vector<T>> &a, int *r1 = nullptr, int *c1 = nullptr, int *r2 = nullptr,
     int *c2 = nullptr
@@ -2649,7 +2649,7 @@ If a majority element is guaranteed in advance to exist, the verification pass c
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-template<class It>
+template<typename It>
 It majority(It lo, It hi) {
   int count = 0, n = 0;
   It candidate = lo;
@@ -2768,7 +2768,7 @@ The candidates are not automatically verified, since the algorithm intentionally
 #include <unordered_map>
 #include <vector>
 
-template<class T, class It>
+template<typename T, typename It>
 std::unordered_map<T, int> misra_gries(It lo, It hi, int k) {
   std::unordered_map<T, int> count;
   for (It it = lo; it != hi; ++it) {
@@ -2894,7 +2894,7 @@ uint32_t ceil_pow2(uint32_t x) {  // std::bit_ceil(x) in C++20.
   return is_pow2(x) ? x : 1u << (32 - __builtin_clz(x));
 }
 
-template<class Fn>
+template<typename Fn>
 void for_each_set_bit(uint32_t x, Fn f) {
   while (x != 0) {
     f(ctz(x));
@@ -3001,7 +3001,7 @@ std::vector<uint32_t> masks_with_popcount(int n, int k) {
   return res;
 }
 
-template<class T>
+template<typename T>
 void subset_sum_transform(std::vector<T> &f) {
   int n = __builtin_ctz(f.size());  // f.size() must be a power of two, 2^n.
   for (int b = 0; b < n; b++) {
@@ -3231,14 +3231,14 @@ Values must lie in $[0, 2^b)$ for bit width $b$; the template parameters select 
   \item $O(1)$ per call to \inlinecode{size()} and \inlinecode{empty()}.
 \end{compactitem}
 
-\textbf{Space Complexity}: $O({\inlinecodemath{BITS}} \cdot n)$ for storage, where $n$ is the number of distinct values inserted so far.
+\textbf{Space Complexity}: $O(n \cdot b)$ for storage, where $n$ is the number of distinct values inserted so far.
 
 \begin{lstlisting}[language=C++]
 #include <array>
 #include <cstdint>
 #include <vector>
 
-template<class U = uint32_t, int BITS = 30>
+template<typename U = uint32_t, int BITS = 30>
 class BinaryTrie {
   std::vector<std::array<int, 2>> child;  // child[node][bit], where 0 means no child.
   std::vector<int> cnt;                   // Number of stored values passing through each node.
@@ -3419,7 +3419,7 @@ int next_power_of_two(int n) {
   return res;
 }
 
-template<class T>
+template<typename T>
 void xor_transform(std::vector<T> &f, bool invert) {
   int n = static_cast<int>(f.size());
   assert((n & (n - 1)) == 0);
@@ -3439,7 +3439,7 @@ void xor_transform(std::vector<T> &f, bool invert) {
   }
 }
 
-template<class T>
+template<typename T>
 void or_transform(std::vector<T> &f, bool invert) {
   int n = static_cast<int>(f.size());
   assert((n & (n - 1)) == 0);
@@ -3456,7 +3456,7 @@ void or_transform(std::vector<T> &f, bool invert) {
   }
 }
 
-template<class T>
+template<typename T>
 void and_transform(std::vector<T> &f, bool invert) {
   int n = static_cast<int>(f.size());
   assert((n & (n - 1)) == 0);
@@ -3473,7 +3473,7 @@ void and_transform(std::vector<T> &f, bool invert) {
   }
 }
 
-template<class T, class Transform>
+template<typename T, typename Transform>
 std::vector<T> bitwise_convolve(std::vector<T> a, std::vector<T> b, Transform transform) {
   if (a.empty() || b.empty()) {
     return {};
@@ -3490,17 +3490,17 @@ std::vector<T> bitwise_convolve(std::vector<T> a, std::vector<T> b, Transform tr
   return a;
 }
 
-template<class T>
+template<typename T>
 std::vector<T> xor_convolve(std::vector<T> a, std::vector<T> b) {
   return bitwise_convolve(a, b, xor_transform<T>);
 }
 
-template<class T>
+template<typename T>
 std::vector<T> or_convolve(std::vector<T> a, std::vector<T> b) {
   return bitwise_convolve(a, b, or_transform<T>);
 }
 
-template<class T>
+template<typename T>
 std::vector<T> and_convolve(std::vector<T> a, std::vector<T> b) {
   return bitwise_convolve(a, b, and_transform<T>);
 }

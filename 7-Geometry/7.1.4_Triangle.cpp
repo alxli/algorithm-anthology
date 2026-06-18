@@ -40,15 +40,22 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
 
-template<class Pt>
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+
+template<typename Pt>
 double triangle_area(const Pt &a, const Pt &b, const Pt &c) {
   double acx = a.x - c.x, acy = a.y - c.y, bcx = b.x - c.x, bcy = b.y - c.y;
   return fabs(acx * bcy - acy * bcx) / 2.0;
@@ -72,7 +79,7 @@ double triangle_area_altitudes(double h1, double h2, double h3) {
   return 1.0 / sqrt(v - 1.0 / (x * x) - 1.0 / (y * y) - 1.0 / (z * z));
 }
 
-template<class Pt>
+template<typename Pt>
 bool same_side(const Pt &p1, const Pt &p2, const Pt &a, const Pt &b) {
   static const bool EDGE_IS_SAME_SIDE = true;
   // Cross products in the point's native coordinate type (exact for integer points).
@@ -84,7 +91,7 @@ bool same_side(const Pt &p1, const Pt &p2, const Pt &a, const Pt &b) {
   return EDGE_IS_SAME_SIDE ? (s1 * s2 >= 0) : (s1 * s2 > 0);
 }
 
-template<class Pt>
+template<typename Pt>
 bool point_in_triangle(const Pt &p, const Pt &a, const Pt &b, const Pt &c) {
   return same_side(p, a, b, c) && same_side(p, b, a, c) && same_side(p, c, a, b);
 }

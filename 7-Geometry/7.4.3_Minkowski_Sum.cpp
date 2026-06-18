@@ -20,12 +20,16 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
 
 struct Point {
   double x, y;

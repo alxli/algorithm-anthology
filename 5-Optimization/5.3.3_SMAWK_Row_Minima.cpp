@@ -32,7 +32,7 @@ Space Complexity:
 
 #include <vector>
 
-template<class Get>
+template<typename Get>
 std::vector<int> smawk_rec(
     const Get &get, const std::vector<int> &active_rows, const std::vector<int> &candidate_cols
 ) {
@@ -97,7 +97,7 @@ std::vector<int> smawk_rec(
   return arg;
 }
 
-template<class Get>
+template<typename Get>
 std::vector<int> smawk_row_minima(int R, int C, const Get &get) {
   std::vector<int> row_ids(R), col_ids(C);
   for (int i = 0; i < R; i++) {

@@ -72,7 +72,7 @@ Take the path: 0->2->3.
 using namespace std;
 
 void add_edge(int u, int v, int w) {
-  adj[u].push_back({v, w});
+  adj[u].emplace_back(v, w);
 }
 
 void print_path(int dest) {

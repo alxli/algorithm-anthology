@@ -50,7 +50,7 @@ Space Complexity:
 #include <limits>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SegTreeBeats {
   static constexpr T NEG_INF = std::numeric_limits<T>::lowest();
 
@@ -91,7 +91,7 @@ class SegTreeBeats {
     }
   }
 
-  template<class Gen>
+  template<typename Gen>
   void build(int i, int lo, int hi, const Gen &gen) {
     if (lo == hi) {
       max1[i] = sum[i] = gen(lo);
@@ -154,7 +154,7 @@ class SegTreeBeats {
     }
   }
 
-  template<class It>
+  template<typename It>
   SegTreeBeats(It lo, It hi)
       : len(static_cast<int>(hi - lo)), max1(4 * len), max2(4 * len), sum(4 * len), cnt(4 * len) {
     if (len > 0) {

@@ -36,16 +36,20 @@ Space Complexity:
 #include <cmath>
 #include <random>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
 
 // Comparator (clockwise angular order about c). Exact: comparisons are pure sign tests on
 // coordinate differences and the cross product, so it is a valid strict weak ordering and is
 // exact for integer-coordinate points.
-template<class Pt>
+template<typename Pt>
 bool cw_comp(const Pt &a, const Pt &b, const Pt &c) {
   if (a.x - c.x >= 0 && b.x - c.x < 0) {
     return true;
@@ -71,7 +75,7 @@ bool cw_comp(const Pt &a, const Pt &b, const Pt &c) {
 }
 
 // Returns 2 * area. Result is exact (integer) for integer-coordinate points.
-template<class It>
+template<typename It>
 auto polygon_area_2x(It lo, It hi) {
   using T = decltype(lo->x * lo->y);
   if (lo == hi) {
@@ -84,12 +88,12 @@ auto polygon_area_2x(It lo, It hi) {
   return area < T(0) ? -area : area;
 }
 
-template<class It>
+template<typename It>
 double polygon_area(It lo, It hi) {
   return static_cast<double>(polygon_area_2x(lo, hi)) / 2.0;
 }
 
-template<class It>
+template<typename It>
 std::pair<double, double> polygon_centroid(It lo, It hi) {
   if (hi - lo < 3) {
     throw std::runtime_error("Cannot compute centroid of a degenerate polygon.");
@@ -137,7 +141,7 @@ struct PointI {
   bool operator>(const PointI &p) const { return p < *this; }
 };
 
-template<class It>
+template<typename It>
 Point mean_center(It lo, It hi) {
   if (lo == hi) {
     throw std::runtime_error("Cannot get center of an empty range.");

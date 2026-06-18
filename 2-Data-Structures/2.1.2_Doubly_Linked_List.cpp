@@ -16,10 +16,10 @@ at the front and back of the list.
 - `push_front(sentinel, node)` inserts detached `node` at the front of the list.
 - `push_back(sentinel, node)` inserts detached `node` at the back of the list.
 - `move_to_front(sentinel, node)` moves an already-linked `node` to the front of the list.
+- `empty(sentinel)` returns whether the list has no data nodes.
 - `splice(pos, node)` moves an already-linked `node` so it appears immediately before `pos`.
 - `splice_range(pos, first, last)` moves the half-open range [`first`, `last`) so it appears
   immediately before `pos`.
-- `empty(sentinel)` returns whether the list has no data nodes.
 
 The data nodes passed to insertion functions must be detached, meaning their `prev` and `next`
 pointers are both null. The node passed to `erase()` or `move_to_front()` must already be linked

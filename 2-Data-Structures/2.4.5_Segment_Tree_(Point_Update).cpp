@@ -49,7 +49,7 @@ Space Complexity:
 #include <optional>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d) { return d; }
@@ -68,7 +68,7 @@ class SegTree {
     value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
-  template<class It>
+  template<typename It>
   void build(int i, int lo, int hi, It arr) {
     if (lo == hi) {
       value[i] = *(arr + lo);
@@ -111,7 +111,7 @@ class SegTree {
     value[i] = combine(value[i * 2 + 1], value[i * 2 + 2]);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) const {
     if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
       return -1;
@@ -124,7 +124,7 @@ class SegTree {
     return res != -1 ? res : find_first(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) const {
     if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
       return -1;
@@ -137,7 +137,7 @@ class SegTree {
     return res != -1 ? res : find_last(i * 2 + 1, lo, mid, tgt_lo, tgt_hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int i, int lo, int hi, int tgt_lo, const Pred &pred, std::optional<T> &acc) const {
     if (hi < tgt_lo) {
       return -1;
@@ -157,7 +157,7 @@ class SegTree {
     return res != -1 ? res : max_right(i * 2 + 2, mid + 1, hi, tgt_lo, pred, acc);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int i, int lo, int hi, int tgt_hi, const Pred &pred, std::optional<T> &acc) const {
     if (tgt_hi <= lo) {
       return -1;
@@ -184,7 +184,7 @@ class SegTree {
     }
   }
 
-  template<class It>
+  template<typename It>
   SegTree(It lo, It hi) : len(hi - lo), value(4 * len) {
     if (len > 0) {
       build(0, 0, len - 1, lo);
@@ -196,24 +196,24 @@ class SegTree {
   T query(int lo, int hi) const { return query(0, 0, len - 1, lo, hi); }
   void update(int i, const T &d) { update(0, 0, len - 1, i, d); }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int lo, int hi, const Pred &pred) const {
     return find_first(0, 0, len - 1, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int lo, int hi, const Pred &pred) const {
     return find_last(0, 0, len - 1, lo, hi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int lo, const Pred &pred) const {
     std::optional<T> acc;
     int res = max_right(0, 0, len - 1, lo, pred, acc);
     return res == -1 ? len : res;
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int hi, const Pred &pred) const {
     std::optional<T> acc;
     int res = min_left(0, 0, len - 1, hi, pred, acc);

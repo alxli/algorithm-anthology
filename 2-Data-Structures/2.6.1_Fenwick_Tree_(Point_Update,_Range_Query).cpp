@@ -34,7 +34,7 @@ Space Complexity:
 
 #include <vector>
 
-template<class T>
+template<typename T>
 class Fenwick {
   int len;
   std::vector<T> tree;

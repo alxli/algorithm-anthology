@@ -28,7 +28,7 @@ Space Complexity:
 #include <functional>
 #include <utility>
 
-template<class T, class Compare>
+template<typename T, typename Compare>
 class MonotoneQueue {
   std::deque<std::pair<int, T>> q;
   Compare better;

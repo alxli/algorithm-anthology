@@ -97,7 +97,7 @@ class RecursiveDescentParser {
     return res;
   }
 
-  template<class StrIt>
+  template<typename StrIt>
   Operand eval_unary(StrIt &lo, StrIt hi) {
     if (is_operand(*lo)) {
       return eval_operand(*(lo++));
@@ -116,7 +116,7 @@ class RecursiveDescentParser {
     return res;
   }
 
-  template<class StrIt>
+  template<typename StrIt>
   Operand eval_binary(StrIt &lo, StrIt hi, int precedence) {
     if (precedence > max_precedence) {
       return eval_unary(lo, hi);
@@ -198,7 +198,7 @@ class RecursiveDescentParser {
     return res;
   }
 
-  template<class StrIt>
+  template<typename StrIt>
   Operand eval(StrIt lo, StrIt hi) {
     Operand res = eval_binary(lo, hi, 0);
     if (lo != hi) {
@@ -219,7 +219,9 @@ class RecursiveDescentParser {
 #include <cmath>
 using namespace std;
 
-#define EQ(a, b) (fabs((a) - (b)) < 1e-7)
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-7;
+}
 
 int main() {
   unordered_map<string, UnaryOp> unary_ops;

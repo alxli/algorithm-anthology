@@ -23,7 +23,7 @@ Space Complexity:
 
 */
 
-template<class Fn>
+template<typename Fn>
 double integrate(Fn f, double a, double b, int n = 1000000) {
   double h = (b - a) / n, s = f(a) + f(b);
   for (int i = 1; i < n; i++) {

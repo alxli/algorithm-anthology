@@ -34,24 +34,24 @@ Space Complexity:
 #include <cstdint>
 #include <vector>
 
-template<class Pt>
+template<typename Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-template<class T>
+template<typename T>
 int signum(const T &x) {
   return (T(0) < x) - (x < T(0));
 }
 
-template<class Pt>
+template<typename Pt>
 bool on_segment(const Pt &p, const Pt &a, const Pt &b) {
   return cross(a, b, p) == 0 && std::min(a.x, b.x) <= p.x && p.x <= std::max(a.x, b.x) &&
          std::min(a.y, b.y) <= p.y && p.y <= std::max(a.y, b.y);
 }
 
-template<class Pt>
+template<typename Pt>
 bool point_in_convex_polygon(
     const std::vector<Pt> &poly, const Pt &p, const bool EDGE_IS_INSIDE = true
 ) {
@@ -89,7 +89,7 @@ bool point_in_convex_polygon(
   return EDGE_IS_INSIDE ? s >= 0 : s > 0;
 }
 
-template<class Pt>
+template<typename Pt>
 std::array<int, 2> line_convex_polygon_intersection(
     const std::vector<Pt> &poly, const Pt &a, const Pt &b
 ) {
@@ -139,7 +139,7 @@ std::array<int, 2> line_convex_polygon_intersection(
   return {cross_edges[0], cross_edges[1]};
 }
 
-template<class Pt>
+template<typename Pt>
 std::array<int, 2> convex_polygon_tangents(const std::vector<Pt> &poly, const Pt &p) {
   int n = static_cast<int>(poly.size());
   std::array<int, 2> res{-1, -1};

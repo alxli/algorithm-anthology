@@ -8,19 +8,20 @@ or more points are cocircular.
 This implementation produces one valid triangulation using the Guibas-Stolfi divide-and-conquer
 algorithm with a quad-edge data structure. The point set is split in half, each half is triangulated
 recursively, and the halves are stitched together from the bottom up by a sequence of cross edges,
-with circumcircle tests deciding each connecting edge and deleting invalidated ones. Input points
-are copied to `Point` with `double` coordinates, sorted lexicographically, and duplicates are
-removed.
+with circumcircle tests deciding each connecting edge and deleting invalidated ones.
 
-- `delaunay_triangulation(lo, hi)` returns the triangles of one Delaunay triangulation for a range
-  [`lo`, `hi`) of points. The input iterator value type may be any point type with numeric `.x` and
-  `.y` members. The returned triangles use `Point` with `double` coordinates. Duplicate points are
-  ignored. If fewer than three non-collinear unique points are available, the result is empty. Note
-  that all predicates are evaluated using floating-point arithmetic, so results are subject to
-  numerical error on nearly collinear or nearly cocircular inputs.
+- `delaunay_triangulation(pts)` sorts `pts` lexicographically and removes duplicate points in place
+  (so the input vector is modified), then returns the triangles of one Delaunay triangulation as a
+  vector of counterclockwise-oriented vertex triples (`std::tuple`) of the input point type. If
+  fewer than three non-collinear unique points remain, the result is empty.
+
+All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation.
+The in-circle test is a degree-4 polynomial in the coordinates and dominates the overflow budget: a
+64-bit integer coordinate type stays exact up to |C| ~= 1.4e4, where `C` is the coordinate
+magnitude. For floating-point coordinates the predicates are subject to the usual rounding error.
 
 Time Complexity:
-- O(n log n) per call to `delaunay_triangulation(lo, hi)`, where $n$ is the number of input points.
+- O(n log n) per call to `delaunay_triangulation(pts)`, where $n$ is the number of input points.
 
 Space Complexity:
 - O(n) heap space for the quad-edge structure and returned triangulation.
@@ -29,59 +30,77 @@ Space Complexity:
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define GT(a, b) ((a) > (b) + EPS)
+// clang-format off
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
+// clang-format on
 
+template<typename T>
 struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
+  T x, y;
+  Point(T x = 0, T y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  // Lexicographic order used only to sort and deduplicate the input. With integer coordinates this
+  // is an exact total order; with floating-point coordinates the epsilon comparisons make it only
+  // an approximate, non-transitive order (not a strict weak ordering), which is fine for
+  // well-separated points but means near-coincident points may sort or deduplicate unpredictably.
+  bool operator<(const Point &p) const { return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x); }
 };
 
-double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
-  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+template<typename T>
+T cross(const Point<T> &a, const Point<T> &b, const Point<T> &o) {
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);  // Overflow warning!
 }
 
-long double incircle(const Point &a, const Point &b, const Point &c, const Point &d) {
-  long double adx = a.x - d.x, ady = a.y - d.y;
-  long double bdx = b.x - d.x, bdy = b.y - d.y;
-  long double cdx = c.x - d.x, cdy = c.y - d.y;
-  long double abdet = adx * bdy - bdx * ady;
-  long double bcdet = bdx * cdy - cdx * bdy;
-  long double cadet = cdx * ady - adx * cdy;
-  long double alift = adx * adx + ady * ady;
-  long double blift = bdx * bdx + bdy * bdy;
-  long double clift = cdx * cdx + cdy * cdy;
+template<typename T>
+T incircle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Point<T> &d) {
+  T adx = a.x - d.x, ady = a.y - d.y;
+  T bdx = b.x - d.x, bdy = b.y - d.y;
+  T cdx = c.x - d.x, cdy = c.y - d.y;
+  T abdet = adx * bdy - bdx * ady;  // Overflow warning!
+  T bcdet = bdx * cdy - cdx * bdy;
+  T cadet = cdx * ady - adx * cdy;
+  T alift = adx * adx + ady * ady;
+  T blift = bdx * bdx + bdy * bdy;
+  T clift = cdx * cdx + cdy * cdy;
   return alift * bcdet + blift * cadet + clift * abdet;
 }
 
+template<typename T>
 struct Edge {
-  Point origin;
+  Point<T> origin;
   Edge *rot, *onext;
   bool primal, deleted, used;
 
   Edge *rev() const { return rot->rot; }
   Edge *lnext() const { return rot->rev()->onext->rot; }
   Edge *oprev() const { return rot->onext->rot; }
-  Point dest() const { return rev()->origin; }
+  Point<T> dest() const { return rev()->origin; }
 };
 
+template<typename T>
 struct QuadEdgePool {
-  std::vector<Edge *> edges;
+  std::vector<Edge<T> *> edges;
 
   QuadEdgePool() = default;
 
   ~QuadEdgePool() {
-    for (Edge *e : edges) {
+    for (Edge<T> *e : edges) {
       delete e;
     }
   }
@@ -89,8 +108,8 @@ struct QuadEdgePool {
   QuadEdgePool(const QuadEdgePool &) = delete;
   QuadEdgePool &operator=(const QuadEdgePool &) = delete;
 
-  Edge *make_edge(const Point &from, const Point &to) {
-    Edge *e1 = new Edge, *e2 = new Edge, *e3 = new Edge, *e4 = new Edge;
+  Edge<T> *make_edge(const Point<T> &from, const Point<T> &to) {
+    Edge<T> *e1 = new Edge<T>, *e2 = new Edge<T>, *e3 = new Edge<T>, *e4 = new Edge<T>;
     edges.push_back(e1);
     edges.push_back(e2);
     edges.push_back(e3);
@@ -112,47 +131,51 @@ struct QuadEdgePool {
     return e1;
   }
 
-  void delete_edge(Edge *e) {
+  void delete_edge(Edge<T> *e) {
     splice(e, e->oprev());
     splice(e->rev(), e->rev()->oprev());
     e->deleted = e->rot->deleted = e->rev()->deleted = e->rev()->rot->deleted = true;
   }
 
-  Edge *connect(Edge *a, Edge *b) {
-    Edge *e = make_edge(a->dest(), b->origin);
+  Edge<T> *connect(Edge<T> *a, Edge<T> *b) {
+    Edge<T> *e = make_edge(a->dest(), b->origin);
     splice(e, a->lnext());
     splice(e->rev(), b);
     return e;
   }
 
-  static void splice(Edge *a, Edge *b) {
+  static void splice(Edge<T> *a, Edge<T> *b) {
     std::swap(a->onext->rot->onext, b->onext->rot->onext);
     std::swap(a->onext, b->onext);
   }
 };
 
-bool left_of(const Point &p, Edge *e) {
+template<typename T>
+bool left_of(const Point<T> &p, Edge<T> *e) {
   return GT(cross(e->origin, e->dest(), p), 0);
 }
 
-bool right_of(const Point &p, Edge *e) {
+template<typename T>
+bool right_of(const Point<T> &p, Edge<T> *e) {
   return LT(cross(e->origin, e->dest(), p), 0);
 }
 
-bool in_circle(const Point &a, const Point &b, const Point &c, const Point &d) {
-  return incircle(a, b, c, d) > EPS;
+template<typename T>
+bool in_circle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Point<T> &d) {
+  return GT(incircle(a, b, c, d), 0);
 }
 
-std::pair<Edge *, Edge *> build_triangulation(
-    std::vector<Point> &p, int lo, int hi, QuadEdgePool &pool
+template<typename T>
+std::pair<Edge<T> *, Edge<T> *> build_triangulation(
+    std::vector<Point<T>> &p, int lo, int hi, QuadEdgePool<T> &pool
 ) {
   if (hi - lo == 1) {
-    Edge *a = pool.make_edge(p[lo], p[hi]);
+    Edge<T> *a = pool.make_edge(p[lo], p[hi]);
     return {a, a->rev()};
   }
   if (hi - lo == 2) {
-    Edge *a = pool.make_edge(p[lo], p[lo + 1]);
-    Edge *b = pool.make_edge(p[lo + 1], p[hi]);
+    Edge<T> *a = pool.make_edge(p[lo], p[lo + 1]);
+    Edge<T> *b = pool.make_edge(p[lo + 1], p[hi]);
     pool.splice(a->rev(), b);
     int side = GT(cross(p[lo], p[lo + 1], p[hi]), 0)
                    ? 1
@@ -160,7 +183,7 @@ std::pair<Edge *, Edge *> build_triangulation(
     if (side == 0) {
       return {a, b->rev()};
     }
-    Edge *c = pool.connect(b, a);
+    Edge<T> *c = pool.connect(b, a);
     if (side == 1) {
       return {a, b->rev()};
     }
@@ -178,7 +201,7 @@ std::pair<Edge *, Edge *> build_triangulation(
       break;
     }
   }
-  Edge *base = pool.connect(rdi->rev(), ldi);
+  Edge<T> *base = pool.connect(rdi->rev(), ldi);
   if (ldi->origin == ldo->origin) {
     ldo = base->rev();
   }
@@ -186,24 +209,23 @@ std::pair<Edge *, Edge *> build_triangulation(
     rdo = base;
   }
   while (true) {
-    Edge *lcand = base->rev()->onext;
+    Edge<T> *lcand = base->rev()->onext;
     if (right_of(lcand->dest(), base)) {
       while (in_circle(base->dest(), base->origin, lcand->dest(), lcand->onext->dest())) {
-        Edge *next = lcand->onext;
+        Edge<T> *next = lcand->onext;
         pool.delete_edge(lcand);
         lcand = next;
       }
     }
-    Edge *rcand = base->oprev();
+    Edge<T> *rcand = base->oprev();
     if (right_of(rcand->dest(), base)) {
       while (in_circle(base->dest(), base->origin, rcand->dest(), rcand->oprev()->dest())) {
-        Edge *prev = rcand->oprev();
+        Edge<T> *prev = rcand->oprev();
         pool.delete_edge(rcand);
         rcand = prev;
       }
     }
-    bool lvalid = right_of(lcand->dest(), base);
-    bool rvalid = right_of(rcand->dest(), base);
+    bool lvalid = right_of(lcand->dest(), base), rvalid = right_of(rcand->dest(), base);
     if (!lvalid && !rvalid) {
       break;
     }
@@ -217,56 +239,43 @@ std::pair<Edge *, Edge *> build_triangulation(
   return {ldo, rdo};
 }
 
-struct Triangle {
-  Point a, b, c;
-
-  Triangle(const Point &a, const Point &b, const Point &c) : a(a), b(b), c(c) {
-    if (b < a && b < c) {
-      this->a = b;
-      this->b = c;
-      this->c = a;
-    } else if (c < a && c < b) {
-      this->a = c;
-      this->b = a;
-      this->c = b;
-    }
+// Rotates a triangle's vertices so that the lexicographically smallest comes first, preserving the
+// cyclic (counterclockwise) order, to give each triangle a canonical, comparable representation.
+template<typename Pt>
+std::tuple<Pt, Pt, Pt> canonical(const Pt &a, const Pt &b, const Pt &c) {
+  if (b < a && b < c) {
+    return {b, c, a};
   }
-
-  bool operator==(const Triangle &t) const { return a == t.a && b == t.b && c == t.c; }
-
-  bool operator<(const Triangle &t) const {
-    return a != t.a ? a < t.a : (b != t.b ? b < t.b : c < t.c);
+  if (c < a && c < b) {
+    return {c, a, b};
   }
-};
+  return {a, b, c};
+}
 
-// Accepts any point type with numeric .x/.y; inputs are copied to double Points.
-template<class It>
-std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
-  std::vector<Point> p;
-  for (It it = lo; it != hi; ++it) {
-    p.emplace_back(it->x, it->y);
-  }
+template<typename Pt>
+std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(std::vector<Pt> &p) {
+  using T = decltype(Pt::x);
   std::sort(p.begin(), p.end());
   p.erase(std::unique(p.begin(), p.end()), p.end());
+  std::vector<std::tuple<Pt, Pt, Pt>> res;
   if (p.size() < 3) {
-    return std::vector<Triangle>();
+    return res;
   }
-  QuadEdgePool pool;
-  build_triangulation(p, 0, p.size() - 1, pool);
-  std::vector<Triangle> res;
-  for (Edge *start : pool.edges) {
+  QuadEdgePool<T> pool;
+  build_triangulation(p, 0, static_cast<int>(p.size()) - 1, pool);
+  for (Edge<T> *start : pool.edges) {
     if (!start->primal || start->deleted || start->used) {
       continue;
     }
-    std::vector<Point> face;
-    Edge *curr = start;
+    std::vector<Pt> face;
+    Edge<T> *curr = start;
     do {
       curr->used = true;
       face.push_back(curr->origin);
       curr = curr->lnext();
     } while (curr != start);
     if (face.size() == 3 && GT(cross(face[0], face[1], face[2]), 0)) {
-      res.emplace_back(face[0], face[1], face[2]);
+      res.push_back(canonical(face[0], face[1], face[2]));
     }
   }
   std::sort(res.begin(), res.end());
@@ -278,23 +287,27 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
 #include <cassert>
 using namespace std;
 
-struct PointI {
-  int x, y;
-  PointI(int x = 0, int y = 0) : x(x), y(y) {}
-};
+using PointL = Point<int64_t>;
+using PointD = Point<double>;
 
 int main() {
-  vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
-  vector<Triangle> t{
-      Triangle(Point(-1, 3), Point(0, 0), Point(1, 2)),
-      Triangle(Point(-1, 3), Point(1, 2), Point(1, 3)),
-      Triangle(Point(0, 0), Point(2, 1), Point(1, 2)),
-      Triangle(Point(1, 2), Point(2, 1), Point(1, 3))
+  vector<PointD> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<tuple<PointD, PointD, PointD>> t{
+      {PointD{-1, 3}, PointD{0, 0}, PointD{1, 2}},
+      {PointD{-1, 3}, PointD{1, 2}, PointD{1, 3}},
+      {PointD{0, 0}, PointD{2, 1}, PointD{1, 2}},
+      {PointD{1, 2}, PointD{2, 1}, PointD{1, 3}}
   };
-  assert(delaunay_triangulation(v.begin(), v.end()) == t);
+  assert(delaunay_triangulation(v) == t);
 
-  // Integer-coordinate inputs are accepted (triangulation computed in double).
-  vector<PointI> iv{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
-  assert(delaunay_triangulation(iv.begin(), iv.end()) == t);
+  // Integer-coordinate inputs are triangulated using exact integer arithmetic.
+  vector<PointL> iv{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<tuple<PointL, PointL, PointL>> ti{
+      {PointL{-1, 3}, PointL{0, 0}, PointL{1, 2}},
+      {PointL{-1, 3}, PointL{1, 2}, PointL{1, 3}},
+      {PointL{0, 0}, PointL{2, 1}, PointL{1, 2}},
+      {PointL{1, 2}, PointL{2, 1}, PointL{1, 3}}
+  };
+  assert(delaunay_triangulation(iv) == ti);
   return 0;
 }

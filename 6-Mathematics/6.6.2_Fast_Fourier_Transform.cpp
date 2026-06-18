@@ -18,7 +18,7 @@ theoretic transform; use the FFT for real-valued convolution or big-integer mult
   The forward transform uses `invert = false`; the inverse uses `invert = true`.
 - `convolve(a, b)` returns the convolution of two integer sequences `a` and `b`, that is, the
   coefficients of the product of the two polynomials whose coefficients are the inputs. The result
-  has length `a.size() + b.size() - 1`, or is empty if either input is empty, with each entry
+  has length $`a.size()` + `b.size()` - 1$, or is empty if either input is empty, with each entry
   rounded to the nearest integer. Small inputs use direct multiplication to avoid FFT overhead.
 
 Time Complexity:

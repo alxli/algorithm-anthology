@@ -46,7 +46,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class K, class V>
+template<typename K, typename V>
 class IntervalTreap {
   using Interval = std::pair<K, K>;
 
@@ -162,7 +162,7 @@ class IntervalTreap {
     return find_any(n->right, i);
   }
 
-  template<class Fn>
+  template<typename Fn>
   static void find_all(Node *n, const Interval &i, Fn f) {
     if (n == nullptr || n->max < i.first) {
       return;
@@ -179,7 +179,7 @@ class IntervalTreap {
   static void collect_entries(Node *n, std::vector<std::tuple<K, K, V>> &res) {
     if (n != nullptr) {
       collect_entries(n->left, res);
-      res.push_back({n->interval.first, n->interval.second, n->value});
+      res.emplace_back(n->interval.first, n->interval.second, n->value);
       collect_entries(n->right, res);
     }
   }
@@ -213,7 +213,7 @@ class IntervalTreap {
     return (n == nullptr) ? nullptr : &(n->value);
   }
 
-  template<class Fn>
+  template<typename Fn>
   void find_all(const K &lo, const K &hi, Fn f) const {
     find_all(root, Interval{lo, hi}, f);
   }

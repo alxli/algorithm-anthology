@@ -6,32 +6,32 @@
 \subsection{Point}
 A 2D point class template supporting epsilon comparisons. The coordinate type \inlinecode{T} defaults to \inlinecode{double}. Integer types (e.g. \inlinecode{int}) fully support all exact operations. Floating-point-only operations (\inlinecode{norm}, \inlinecode{arg}, \inlinecode{normalize}, \inlinecode{rotateCW/CCW}, \inlinecode{reflect} across a line) return coordinates of type \inlinecode{fp\_t}, which is \inlinecode{double} when \inlinecode{T} is integral and \inlinecode{T} itself otherwise.
 
-Exact operations (return \inlinecode{point\textless{}T\textgreater{}} or \inlinecode{T}, no precision lost for integers):
+Exact operations (return \inlinecode{TPoint\textless{}T\textgreater{}} or \inlinecode{T}, no precision lost for integers):
 
 \begin{compactitem}
   \item element-wise arithmetic, \inlinecode{dot()}, \inlinecode{cross()}, \inlinecode{sqnorm()}, cardinal rotations, \inlinecode{reflect(point)}, comparisons.
 \end{compactitem}
 
-Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{point\textless{}int\textgreater{}} these overflow a 32-bit \inlinecode{int} once coordinates exceed \textasciitilde{}46000, so use \inlinecode{PointL} (\inlinecode{point\textless{}long long\textgreater{}}) for larger integer coordinates.
+Overflow warning: the exact products \inlinecode{dot()}, \inlinecode{cross()}, and \inlinecode{sqnorm()} grow like the squared coordinate magnitude. With \inlinecode{TPoint\textless{}int\textgreater{}} these overflow a 32-bit \inlinecode{int} once coordinates exceed \textasciitilde{}46000, so use \inlinecode{PointL} (\inlinecode{TPoint\textless{}long long\textgreater{}}) for larger integer coordinates.
 
-Floating-point-only operations (return \inlinecode{point\textless{}fp\_t\textgreater{}} or \inlinecode{fp\_t}):
+Floating-point-only operations (return \inlinecode{TPoint\textless{}fp\_t\textgreater{}} or \inlinecode{fp\_t}):
 
 \begin{compactitem}
   \item \inlinecode{norm()}, \inlinecode{arg()}, \inlinecode{proj()}, \inlinecode{normalize()}, \inlinecode{rotateCW()}, \inlinecode{rotateCCW()}, \inlinecode{reflect(line)}.
   \item \inlinecode{operator/} also promotes to \inlinecode{fp\_t}.
 \end{compactitem}
 
-Implicit conversion from \inlinecode{point\textless{}U\textgreater{}} to \inlinecode{point\textless{}T\textgreater{}} is provided when \inlinecode{U} is integral and \inlinecode{T} is floating-point, so \inlinecode{PointI} can be passed wherever \inlinecode{PointD} is expected.
+Implicit conversion from \inlinecode{TPoint\textless{}U\textgreater{}} to \inlinecode{TPoint\textless{}T\textgreater{}} is provided when \inlinecode{U} is integral and \inlinecode{T} is floating-point, so \inlinecode{PointI} can be passed wherever \inlinecode{PointD} is expected.
 
 Non-floating-point coordinate types such as \inlinecode{Modular} or \inlinecode{Rational} compose for the exact operations (arithmetic, \inlinecode{dot}, \inlinecode{cross}, \inlinecode{sqnorm}, comparisons): these route to exact \inlinecode{==}/\inlinecode{\textless{}} rather than epsilon comparisons. The floating-point-only operations are simply not instantiated unless called.
 
 Type aliases:
 
 \begin{compactitem}
-  \item \inlinecode{PointI = point\textless{}int\textgreater{}}: exact integer geometry (small coordinates only; see overflow warning)
-  \item \inlinecode{PointL = point\textless{}long long\textgreater{}}: exact integer geometry for large coordinates
-  \item \inlinecode{PointD = point\textless{}double\textgreater{}}: standard floating-point
-  \item \inlinecode{PointLD = point\textless{}long double\textgreater{}}: extra precision
+  \item \inlinecode{PointI = TPoint\textless{}int\textgreater{}}: exact integer geometry (small coordinates only; see overflow warning)
+  \item \inlinecode{PointL = TPoint\textless{}long long\textgreater{}}: exact integer geometry for large coordinates
+  \item \inlinecode{PointD = TPoint\textless{}double\textgreater{}}: standard floating-point
+  \item \inlinecode{PointLD = TPoint\textless{}long double\textgreater{}}: extra precision
   \item \inlinecode{Point = PointD}: default point type is double
 \end{compactitem}
 
@@ -53,77 +53,84 @@ Type aliases:
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
 
 template<typename T>
-struct point {
+struct TPoint {
   // fp_t is T for floating-point types, double for integral types.
   using fp_t = std::conditional_t<std::is_integral<T>::value, double, T>;
 
   T x, y;
 
-  point() : x(0), y(0) {}
-  point(T x, T y) : x(x), y(y) {}
-  explicit point(const std::pair<T, T> &p) : x(p.first), y(p.second) {}
+  TPoint() : x(0), y(0) {}
+  TPoint(T x, T y) : x(x), y(y) {}
+  explicit TPoint(const std::pair<T, T> &p) : x(p.first), y(p.second) {}
 
   // Implicit conversion from integral to floating-point point (optional, can just use to_double()).
   template<
       typename U,
       typename = std::enable_if_t<std::is_integral<U>::value && std::is_floating_point<T>::value>>
-  point(const point<U> &p) : x(static_cast<T>(p.x)), y(static_cast<T>(p.y)) {}
+  TPoint(const TPoint<U> &p) : x(static_cast<T>(p.x)), y(static_cast<T>(p.y)) {}
 
-  bool operator==(const point &p) const {
+  bool operator==(const TPoint &p) const {
     if constexpr (std::is_floating_point<T>::value) {
       return EQ(x, p.x) && EQ(y, p.y);
     }
     return x == p.x && y == p.y;  // exact for ints and types like Modular/Rational
   }
 
-  bool operator!=(const point &p) const { return !(*this == p); }
+  bool operator!=(const TPoint &p) const { return !(*this == p); }
 
-  bool operator<(const point &p) const {
+  bool operator<(const TPoint &p) const {
     if constexpr (std::is_floating_point<T>::value) {
       return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x);
     }
     return x == p.x ? y < p.y : x < p.x;  // exact for ints and types like Modular/Rational
   }
 
-  bool operator>(const point &p) const { return p < *this; }
-  bool operator<=(const point &p) const { return !(*this > p); }
-  bool operator>=(const point &p) const { return !(*this < p); }
-  point operator+(const point &p) const { return {x + p.x, y + p.y}; }
-  point operator-(const point &p) const { return {x - p.x, y - p.y}; }
-  point operator+(T v) const { return {x + v, y + v}; }
-  point operator-(T v) const { return {x - v, y - v}; }
-  point operator*(T v) const { return {x * v, y * v}; }
+  bool operator>(const TPoint &p) const { return p < *this; }
+  bool operator<=(const TPoint &p) const { return !(*this > p); }
+  bool operator>=(const TPoint &p) const { return !(*this < p); }
+  TPoint operator+(const TPoint &p) const { return {x + p.x, y + p.y}; }
+  TPoint operator-(const TPoint &p) const { return {x - p.x, y - p.y}; }
+  TPoint operator+(T v) const { return {x + v, y + v}; }
+  TPoint operator-(T v) const { return {x - v, y - v}; }
+  TPoint operator*(T v) const { return {x * v, y * v}; }
 
   // Division always promotes to fp_t to avoid integer truncation.
-  point<fp_t> operator/(fp_t v) const { return {(fp_t)x / v, (fp_t)y / v}; }
+  TPoint<fp_t> operator/(fp_t v) const { return {(fp_t)x / v, (fp_t)y / v}; }
 
-  point &operator+=(const point &p) { x += p.x; y += p.y; return *this; }
-  point &operator-=(const point &p) { x -= p.x; y -= p.y; return *this; }
-  point &operator+=(T v) { x += v; y += v; return *this; }
-  point &operator-=(T v) { x -= v; y -= v; return *this; }
-  point &operator*=(T v) { x *= v; y *= v; return *this; }
-  friend point operator+(T v, const point &p) { return p + v; }
-  friend point operator*(T v, const point &p) { return p * v; }
+  TPoint &operator+=(const TPoint &p) { x += p.x; y += p.y; return *this; }
+  TPoint &operator-=(const TPoint &p) { x -= p.x; y -= p.y; return *this; }
+  TPoint &operator+=(T v) { x += v; y += v; return *this; }
+  TPoint &operator-=(T v) { x -= v; y -= v; return *this; }
+  TPoint &operator*=(T v) { x *= v; y *= v; return *this; }
+  friend TPoint operator+(T v, const TPoint &p) { return p + v; }
+  friend TPoint operator*(T v, const TPoint &p) { return p * v; }
 
-  // --- Exact operations: return T or point<T>, work for any coordinate type ---
+  // --- Exact operations: return T or TPoint<T>, work for any coordinate type ---
 
   // Overflow warning: these products grow like the squared coordinate magnitude, so for integer T
   // with large coordinates (beyond a few thousand for 32-bit int) use a wider type such as PointL.
   T sqnorm() const { return x * x + y * y; }
-  T dot(const point &p) const { return x * p.x + y * p.y; }
-  T cross(const point &p) const { return x * p.y - y * p.x; }
+  T dot(const TPoint &p) const { return x * p.x + y * p.y; }
+  T cross(const TPoint &p) const { return x * p.y - y * p.x; }
 
-  // --- Floating-point operations: return fp_t or point<fp_t> ---
+  // --- Floating-point operations: return fp_t or TPoint<fp_t> ---
 
   fp_t norm() const { return sqrt(static_cast<fp_t>(sqnorm())); }
   fp_t arg() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
-  fp_t proj(const point &p) const { return static_cast<fp_t>(dot(p)) / p.norm(); }
+  fp_t proj(const TPoint &p) const { return static_cast<fp_t>(dot(p)) / p.norm(); }
 
-  point<fp_t> normalize() const {
+  TPoint<fp_t> normalize() const {
     fp_t n = norm();
     if (n < static_cast<fp_t>(1e-30)) {  // guard against dividing by a near-zero norm, not a
       return {fp_t(0), fp_t(0)};         // geometric tolerance (EPS is too coarse here)
@@ -134,106 +141,101 @@ struct point {
   // --- Cardinal rotations: exact for all coordinate types including int ---
 
   // Returns (x, y) rotated 90/180/270 degrees counter-clockwise about the origin.
-  point rotate90() const { return {-y, x}; }
-  point rotate180() const { return {-x, -y}; }
-  point rotate270() const { return {y, -x}; }
+  TPoint rotate90() const { return {-y, x}; }
+  TPoint rotate180() const { return {-x, -y}; }
+  TPoint rotate270() const { return {y, -x}; }
 
   // Returns (x, y) rotated 90/180/270 degrees counter-clockwise about point p.
-  point rotate90(const point &p) const { return (*this - p).rotate90() + p; }
-  point rotate180(const point &p) const { return (*this - p).rotate180() + p; }
-  point rotate270(const point &p) const { return (*this - p).rotate270() + p; }
+  TPoint rotate90(const TPoint &p) const { return (*this - p).rotate90() + p; }
+  TPoint rotate180(const TPoint &p) const { return (*this - p).rotate180() + p; }
+  TPoint rotate270(const TPoint &p) const { return (*this - p).rotate270() + p; }
 
   // --- Arbitrary-angle rotations: always return floating-point ---
 
   // Returns (x, y) rotated t radians clockwise about the origin.
-  point<fp_t> rotateCW(fp_t t) const {
+  TPoint<fp_t> rotateCW(fp_t t) const {
     fp_t fx = (fp_t)x, fy = (fp_t)y;
     return {fx * cos(t) + fy * sin(t), fy * cos(t) - fx * sin(t)};
   }
 
   // Returns (x, y) rotated t radians counter-clockwise about the origin.
-  point<fp_t> rotateCCW(fp_t t) const {
+  TPoint<fp_t> rotateCCW(fp_t t) const {
     fp_t fx = (fp_t)x, fy = (fp_t)y;
     return {fx * cos(t) - fy * sin(t), fx * sin(t) + fy * cos(t)};
   }
 
   // Returns (x, y) rotated t radians clockwise about point p.
-  point<fp_t> rotateCW(const point &p, fp_t t) const {
-    return point<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCW(t) +
-           point<fp_t>{(fp_t)p.x, (fp_t)p.y};
+  TPoint<fp_t> rotateCW(const TPoint &p, fp_t t) const {
+    return TPoint<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCW(t) +
+           TPoint<fp_t>{(fp_t)p.x, (fp_t)p.y};
   }
 
   // Returns (x, y) rotated t radians counter-clockwise about point p.
-  point<fp_t> rotateCCW(const point &p, fp_t t) const {
-    return point<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCCW(t) +
-           point<fp_t>{(fp_t)p.x, (fp_t)p.y};
+  TPoint<fp_t> rotateCCW(const TPoint &p, fp_t t) const {
+    return TPoint<fp_t>{(fp_t)(x - p.x), (fp_t)(y - p.y)}.rotateCCW(t) +
+           TPoint<fp_t>{(fp_t)p.x, (fp_t)p.y};
   }
 
   // --- Reflections ---
 
   // Returns (x, y) reflected across point p. Exact for any coordinate type.
-  point reflect(const point &p) const { return {2 * p.x - x, 2 * p.y - y}; }
+  TPoint reflect(const TPoint &p) const { return {2 * p.x - x, 2 * p.y - y}; }
 
   // Returns (x, y) reflected across the line containing points p and q.
   // Always returns floating-point coordinates.
-  point<fp_t> reflect(const point &p, const point &q) const {
-    point<fp_t> fp{(fp_t)p.x, (fp_t)p.y};
+  TPoint<fp_t> reflect(const TPoint &p, const TPoint &q) const {
+    TPoint<fp_t> fp{(fp_t)p.x, (fp_t)p.y};
     if (p == q) {
-      return point<fp_t>{(fp_t)x, (fp_t)y}.reflect(fp);
+      return TPoint<fp_t>{(fp_t)x, (fp_t)y}.reflect(fp);
     }
-    point<fp_t> r{(fp_t)(x - p.x), (fp_t)(y - p.y)};
-    point<fp_t> s{(fp_t)(q.x - p.x), (fp_t)(q.y - p.y)};
+    TPoint<fp_t> r{(fp_t)(x - p.x), (fp_t)(y - p.y)}, s{(fp_t)(q.x - p.x), (fp_t)(q.y - p.y)};
     fp_t ssq = s.sqnorm();
-    r = point<fp_t>{(r.x * s.x + r.y * s.y) / ssq, (r.x * s.y - r.y * s.x) / ssq};
-    return point<fp_t>{r.x * s.x - r.y * s.y + fp.x, r.x * s.y + r.y * s.x + fp.y};
+    r = TPoint<fp_t>{(r.x * s.x + r.y * s.y) / ssq, (r.x * s.y - r.y * s.x) / ssq};
+    return TPoint<fp_t>{r.x * s.x - r.y * s.y + fp.x, r.x * s.y + r.y * s.x + fp.y};
   }
 
   // --- Explicit type conversions ---
 
-  point<double> to_double() const { return {static_cast<double>(x), static_cast<double>(y)}; }
+  TPoint<double> to_double() const { return {static_cast<double>(x), static_cast<double>(y)}; }
 
-  point<long double> to_ldouble() const {
+  TPoint<long double> to_ldouble() const {
     return {static_cast<long double>(x), static_cast<long double>(y)};
   }
 
   // --- Friend free-function versions ---
 
-  friend T sqnorm(const point &p) { return p.sqnorm(); }
-  friend fp_t norm(const point &p) { return p.norm(); }
-  friend fp_t arg(const point &p) { return p.arg(); }
-  friend T dot(const point &p, const point &q) { return p.dot(q); }
-  friend T cross(const point &p, const point &q) { return p.cross(q); }
-  friend fp_t proj(const point &p, const point &q) { return p.proj(q); }
-  friend point<fp_t> normalize(const point &p) { return p.normalize(); }
-  friend point rotate90(const point &p) { return p.rotate90(); }
-  friend point rotate180(const point &p) { return p.rotate180(); }
-  friend point rotate270(const point &p) { return p.rotate270(); }
-  friend point rotate90(const point &p, const point &q) { return p.rotate90(q); }
-  friend point rotate180(const point &p, const point &q) { return p.rotate180(q); }
-  friend point rotate270(const point &p, const point &q) { return p.rotate270(q); }
-  friend point<fp_t> rotateCW(const point &p, fp_t t) { return p.rotateCW(t); }
-  friend point<fp_t> rotateCCW(const point &p, fp_t t) { return p.rotateCCW(t); }
-  friend point<fp_t> rotateCW(const point &p, const point &q, fp_t t) { return p.rotateCW(q, t); }
-  friend point<fp_t> rotateCCW(const point &p, const point &q, fp_t t) { return p.rotateCCW(q, t); }
-  friend point reflect(const point &p, const point &q) { return p.reflect(q); }
+  friend T sqnorm(const TPoint &p) { return p.sqnorm(); }
+  friend fp_t norm(const TPoint &p) { return p.norm(); }
+  friend fp_t arg(const TPoint &p) { return p.arg(); }
+  friend T dot(const TPoint &p, const TPoint &q) { return p.dot(q); }
+  friend T cross(const TPoint &p, const TPoint &q) { return p.cross(q); }
+  friend fp_t proj(const TPoint &p, const TPoint &q) { return p.proj(q); }
+  friend TPoint<fp_t> normalize(const TPoint &p) { return p.normalize(); }
+  friend TPoint rotate90(const TPoint &p) { return p.rotate90(); }
+  friend TPoint rotate180(const TPoint &p) { return p.rotate180(); }
+  friend TPoint rotate270(const TPoint &p) { return p.rotate270(); }
+  friend TPoint rotate90(const TPoint &p, const TPoint &q) { return p.rotate90(q); }
+  friend TPoint rotate180(const TPoint &p, const TPoint &q) { return p.rotate180(q); }
+  friend TPoint rotate270(const TPoint &p, const TPoint &q) { return p.rotate270(q); }
+  friend TPoint<fp_t> rotateCW(const TPoint &p, fp_t t) { return p.rotateCW(t); }
+  friend TPoint<fp_t> rotateCCW(const TPoint &p, fp_t t) { return p.rotateCCW(t); }
+  friend TPoint<fp_t> rotateCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCW(q, t); }
+  friend TPoint<fp_t> rotateCCW(const TPoint &p, const TPoint &q, fp_t t) { return p.rotateCCW(q, t); }
+  friend TPoint reflect(const TPoint &p, const TPoint &q) { return p.reflect(q); }
+  friend TPoint<fp_t> reflect(const TPoint &p, const TPoint &a, const TPoint &b) { return p.reflect(a, b); }
 
-  friend point<fp_t> reflect(const point &p, const point &a, const point &b) {
-    return p.reflect(a, b);
-  }
-
-  friend std::ostream &operator<<(std::ostream &out, const point &p) {
+  friend std::ostream &operator<<(std::ostream &out, const TPoint &p) {
     if constexpr (std::is_floating_point<T>::value) {
       return out << "(" << (fabs(p.x) < EPS ? 0 : p.x) << "," << (fabs(p.y) < EPS ? 0 : p.y) << ")";
-    } else {
-      return out << "(" << p.x << "," << p.y << ")";
     }
+    return out << "(" << p.x << "," << p.y << ")";
   }
 };
 
-using PointI = point<int>;
-using PointL = point<long long>;
-using PointD = point<double>;
-using PointLD = point<long double>;
+using PointI = TPoint<int>;
+using PointL = TPoint<long long>;
+using PointD = TPoint<double>;
+using PointLD = TPoint<long double>;
 using Point = PointD;  // Default point type is double.
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -294,15 +296,15 @@ Because coefficients are not normalized to a canonical form, \inlinecode{operato
 
 Operations include \inlinecode{horizontal()}, \inlinecode{vertical()}, \inlinecode{slope()}, evaluating $y$ at some $x$ with \inlinecode{y()} (and vice versa with \inlinecode{x()}), checking if a point falls on the line with \inlinecode{contains()}, checking if another line is parallel or perpendicular with \inlinecode{is\_parallel()} or \inlinecode{is\_perpendicular()}, and finding the \inlinecode{parallel()} or \inlinecode{perpendicular()} line through a point.
 
-Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in \inlinecode{is\_parallel()}/\inlinecode{is\_perpendicular()} and \inlinecode{a*p.x + b*p.y} in \inlinecode{contains()}), which grow like the squared coordinate magnitude. For integral type \inlinecode{T}, use \inlinecode{LineL} (\inlinecode{line\textless{}int64\_t\textgreater{}}) once coordinates exceed \textasciitilde{}46000, or the 32-bit products overflow.
+Overflow warning: the exact predicates form products of coefficients (e.g. cross terms in \inlinecode{is\_parallel()}/\inlinecode{is\_perpendicular()} and \inlinecode{a*p.x + b*p.y} in \inlinecode{contains()}), which grow like the squared coordinate magnitude. For integral type \inlinecode{T}, use \inlinecode{LineL} (\inlinecode{TLine\textless{}int64\_t\textgreater{}}) once coordinates exceed \textasciitilde{}46000, or the 32-bit products overflow.
 
 Type aliases:
 
 \begin{compactitem}
-  \item \inlinecode{LineI = line\textless{}int\textgreater{}}: exact integer-coefficient lines (small values only; see overflow warning)
-  \item \inlinecode{LineL = line\textless{}int64\_t\textgreater{}}: exact integer-coefficient lines for large coordinates
-  \item \inlinecode{LineD = line\textless{}double\textgreater{}}: standard floating-point
-  \item \inlinecode{LineLD = line\textless{}long double\textgreater{}}: extra precision
+  \item \inlinecode{LineI = TLine\textless{}int\textgreater{}}: exact integer-coefficient lines (small values only; see overflow warning)
+  \item \inlinecode{LineL = TLine\textless{}int64\_t\textgreater{}}: exact integer-coefficient lines for large coordinates
+  \item \inlinecode{LineD = TLine\textless{}double\textgreater{}}: standard floating-point
+  \item \inlinecode{LineLD = TLine\textless{}long double\textgreater{}}: extra precision
   \item \inlinecode{Line = LineD}: default line type is double
 \end{compactitem}
 
@@ -328,33 +330,33 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
 // SFINAE guard: valid only when Pt exposes numeric .x/.y members, so templated point constructors
 // don't hijack scalar-argument calls.
-template<class Pt>
+template<typename Pt>
 using if_point = decltype(std::declval<const Pt &>().x, std::declval<const Pt &>().y, void());
 
-template<class T>
-struct line {
+template<typename T>
+struct TLine {
   // fp_t is T for floating-point types, double for integral types.
   using fp_t = std::conditional_t<std::is_integral<T>::value, double, T>;
 
   T a, b, c;
 
-  line() : a(0), b(0), c(0) {}  // Invalid or uninitialized line.
-  line(T a, T b, T c) : a(a), b(b), c(c) {}
+  TLine() : a(0), b(0), c(0) {}  // Invalid or uninitialized line.
+  TLine(T a, T b, T c) : a(a), b(b), c(c) {}
 
   // Line through two points. Coefficients are exact (type T) for integer points.
-  template<class Pt, class = if_point<Pt>>
-  line(const Pt &p, const Pt &q) : a(q.y - p.y), b(p.x - q.x), c(-(a * p.x + b * p.y)) {}
+  template<typename Pt, typename = if_point<Pt>>
+  TLine(const Pt &p, const Pt &q) : a(q.y - p.y), b(p.x - q.x), c(-(a * p.x + b * p.y)) {}
 
   // Line of a given slope through a point. Intended for floating-point T (a generic slope
   // produces non-integer coefficients), so this constructor is disabled for integer T.
   template<
-      class Pt, class = if_point<Pt>, class U = T,
+      class Pt, typename = if_point<Pt>, typename U = T,
       class = std::enable_if_t<std::is_floating_point<U>::value>>
-  line(fp_t slope, const Pt &p) : a(-slope), b(1), c(slope * p.x - p.y) {}
+  TLine(fp_t slope, const Pt &p) : a(-slope), b(1), c(slope * p.x - p.y) {}
 
   // Epsilon-aware for floating-point T; exact for int and for coordinate types like Modular or
   // Rational, which therefore compose for all of the predicates below.
-  template<class A, class B>
+  template<typename A, typename B>
   static bool eq(const A &p, const B &q) {
     if constexpr (std::is_floating_point<T>::value) {
       return fabs(p - q) <= EPS;
@@ -363,11 +365,11 @@ struct line {
   }
 
   // Two lines are equal iff their coefficient vectors are proportional (the same line).
-  bool operator==(const line &l) const {
+  bool operator==(const TLine &l) const {
     return eq(a * l.b, l.a * b) && eq(b * l.c, l.b * c) && eq(a * l.c, l.a * c);
   }
 
-  bool operator!=(const line &l) const { return !(*this == l); }
+  bool operator!=(const TLine &l) const { return !(*this == l); }
 
   // Returns whether the line is a valid line (not both a and b zero).
   bool valid() const { return !(eq(a, 0) && eq(b, 0)); }
@@ -384,28 +386,28 @@ struct line {
   fp_t y(fp_t x) const { return (!valid() || eq(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
 
   // Whether point p lies on the line. Exact for integer T and integer p.
-  template<class Pt>
+  template<typename Pt>
   bool contains(const Pt &p) const {
     return eq(a * p.x + b * p.y + c, 0);
   }
 
   // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are
   // perpendicular (dot == 0). Both exact for integer T.
-  bool is_parallel(const line &l) const { return eq(a * l.b, l.a * b); }
-  bool is_perpendicular(const line &l) const { return eq(a * l.a, -(b * l.b)); }
+  bool is_parallel(const TLine &l) const { return eq(a * l.b, l.a * b); }
+  bool is_perpendicular(const TLine &l) const { return eq(a * l.a, -(b * l.b)); }
 
   // Parallel/perpendicular line through point p. Exact for integer T and integer p.
-  template<class Pt, class = if_point<Pt>>
-  line parallel(const Pt &p) const {
-    return line(a, b, -(a * p.x + b * p.y));
+  template<typename Pt, typename = if_point<Pt>>
+  TLine parallel(const Pt &p) const {
+    return TLine(a, b, -(a * p.x + b * p.y));
   }
 
-  template<class Pt, class = if_point<Pt>>
-  line perpendicular(const Pt &p) const {
-    return line(-b, a, b * p.x - a * p.y);
+  template<typename Pt, typename = if_point<Pt>>
+  TLine perpendicular(const Pt &p) const {
+    return TLine(-b, a, b * p.x - a * p.y);
   }
 
-  friend std::ostream &operator<<(std::ostream &out, const line &l) {
+  friend std::ostream &operator<<(std::ostream &out, const TLine &l) {
     auto clean = [](T v) -> double {
       return fabs(static_cast<double>(v)) < EPS ? 0 : static_cast<double>(v);
     };
@@ -414,10 +416,10 @@ struct line {
   }
 };
 
-using LineI = line<int>;
-using LineL = line<int64_t>;
-using LineD = line<double>;
-using LineLD = line<long double>;
+using LineI = TLine<int>;
+using LineL = TLine<int64_t>;
+using LineD = TLine<double>;
+using LineLD = TLine<long double>;
 using Line = LineD;  // Default line type is double.
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -497,13 +499,19 @@ This implementation stores and computes circle parameters in \inlinecode{double}
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 
 // SFINAE guard: valid only when Pt exposes numeric .x/.y members. This keeps the templated point
 // constructors from hijacking calls like Circle(double, double, double).
-template<class Pt>
+template<typename Pt>
 using if_point = decltype(std::declval<const Pt &>().x, std::declval<const Pt &>().y, void());
 
 struct Circle {
@@ -513,11 +521,11 @@ struct Circle {
   explicit Circle(double r) : h(0), k(0), r(fabs(r)) {}
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &o, double r) : h(o.x), k(o.y), r(fabs(r)) {}
 
   // Circle with the line segment ab as a diameter.
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
@@ -525,7 +533,7 @@ struct Circle {
   }
 
   // Circumcircle of three points.
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b, const Pt &c) {
     double an =
         static_cast<double>(b.x - c.x) * (b.x - c.x) + static_cast<double>(b.y - c.y) * (b.y - c.y);
@@ -550,7 +558,7 @@ struct Circle {
   // dist(a, b) = 2*r, then there is only one possible center. If points a and b are identical, then
   // there are infinite circles. If the points are too far away relative to the radius, then there
   // is no possible Circle. In the latter two cases, an exception is thrown.
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b, double r) : r(fabs(r)) {
     if (LE(r, 0) && EQ(a.x, b.x) && EQ(a.y, b.y)) {  // Zero-radius circle.
       h = a.x;
@@ -574,14 +582,14 @@ struct Circle {
   bool operator==(const Circle &c) const { return EQ(h, c.h) && EQ(k, c.k) && EQ(r, c.r); }
   bool operator!=(const Circle &c) const { return !(*this == c); }
 
-  template<class Pt>
+  template<typename Pt>
   bool contains(const Pt &p) const {
     return LE(
         static_cast<double>(p.x - h) * (p.x - h) + static_cast<double>(p.y - k) * (p.y - k), r * r
     );
   }
 
-  template<class Pt>
+  template<typename Pt>
   bool on_edge(const Pt &p) const {
     return EQ(
         static_cast<double>(p.x - h) * (p.x - h) + static_cast<double>(p.y - k) * (p.y - k), r * r
@@ -596,7 +604,7 @@ struct Circle {
 };
 
 // Returns the Circle inscribed inside the triangle abc.
-template<class Pt>
+template<typename Pt>
 Circle incircle(const Pt &a, const Pt &b, const Pt &c) {
   double al = hypot(b.x - c.x, b.y - c.y);
   double bl = hypot(a.x - c.x, a.y - c.y);
@@ -615,7 +623,7 @@ Circle incircle(const Pt &a, const Pt &b, const Pt &c) {
 // coordinates: the result is computed in `int64_t` for integral inputs (watch overflow for large
 // coordinates, where the determinant is degree four) and `long double` otherwise. The points a, b,
 // c must not be collinear; the result does not depend on their orientation.
-template<class Pt>
+template<typename Pt>
 int in_circumcircle(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   using CoordT = decltype(a.x + a.x);
   using W = std::conditional_t<std::is_integral<CoordT>::value, int64_t, long double>;
@@ -697,15 +705,22 @@ Overflow warning: each individual cross product is still on the order of the squ
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
 
-template<class Pt>
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+
+template<typename Pt>
 double triangle_area(const Pt &a, const Pt &b, const Pt &c) {
   double acx = a.x - c.x, acy = a.y - c.y, bcx = b.x - c.x, bcy = b.y - c.y;
   return fabs(acx * bcy - acy * bcx) / 2.0;
@@ -729,7 +744,7 @@ double triangle_area_altitudes(double h1, double h2, double h3) {
   return 1.0 / sqrt(v - 1.0 / (x * x) - 1.0 / (y * y) - 1.0 / (z * z));
 }
 
-template<class Pt>
+template<typename Pt>
 bool same_side(const Pt &p1, const Pt &p2, const Pt &a, const Pt &b) {
   static const bool EDGE_IS_SAME_SIDE = true;
   // Cross products in the point's native coordinate type (exact for integer points).
@@ -741,7 +756,7 @@ bool same_side(const Pt &p1, const Pt &p2, const Pt &a, const Pt &b) {
   return EDGE_IS_SAME_SIDE ? (s1 * s2 >= 0) : (s1 * s2 > 0);
 }
 
-template<class Pt>
+template<typename Pt>
 bool point_in_triangle(const Pt &p, const Pt &a, const Pt &b, const Pt &c) {
   return same_side(p, a, b, c) && same_side(p, b, a, c) && same_side(p, c, a, b);
 }
@@ -800,17 +815,24 @@ For integer-coordinate inputs, comparisons are exact as long as intermediate coo
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define GT(a, b) ((a) > (b) + EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
-#define GE(a, b) ((a) >= (b) - EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 
-template<class Pt, class T>
+template<typename Pt, typename T>
 bool point_in_rectangle(
     const Pt &p, const Pt &v, const T &w, const T &h, const bool EDGE_IS_INSIDE = true
 ) {
@@ -824,14 +846,14 @@ bool point_in_rectangle(
                         : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
 }
 
-template<class Pt>
+template<typename Pt>
 bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, const bool EDGE_IS_INSIDE = true) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
   return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl, EDGE_IS_INSIDE);
 }
 
-template<class Pt>
+template<typename Pt>
 int rectangle_intersection(
     const Pt &a1, const Pt &b1, const Pt &a2, const Pt &b2, Pt *p = nullptr, Pt *q = nullptr,
     const bool EDGE_IS_INSIDE = true
@@ -927,14 +949,22 @@ Angle calculations in two dimensions. All operations are inherently floating-poi
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 
 const double EPS = 1e-9;
 const double PI = acos(-1.0);
 const double DEG = PI / 180;
 const double RAD = 180 / PI;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
 
 double reduce_deg(double t) {
   if (t < -360) {
@@ -956,18 +986,18 @@ double reduce_rad(double t) {
   return (t >= 2 * PI) ? fmod(t, 2 * PI) : t;
 }
 
-template<class OutPt>
+template<typename OutPt>
 OutPt polar_point(double r, double t) {
   return OutPt(r * cos(t), r * sin(t));
 }
 
-template<class Pt>
+template<typename Pt>
 double polar_angle(const Pt &p) {
   double t = atan2(static_cast<double>(p.y), static_cast<double>(p.x));
   return (t < 0) ? (t + 2 * PI) : t;
 }
 
-template<class Pt>
+template<typename Pt>
 double angle(const Pt &a, const Pt &o, const Pt &b) {
   double ux = o.x - a.x, uy = o.y - a.y;
   double vx = o.x - b.x, vy = o.y - b.y;
@@ -975,7 +1005,7 @@ double angle(const Pt &a, const Pt &o, const Pt &b) {
   return acos(std::max(-1.0, std::min(1.0, cosine)));
 }
 
-template<class Pt>
+template<typename Pt>
 double angle_between(const Pt &a, const Pt &b) {
   double t = atan2(a.x * b.y - a.y * b.x, a.x * b.x + a.y * b.y);
   return (t < 0) ? (t + 2 * PI) : t;
@@ -989,7 +1019,7 @@ double angle_between(const double &a1, const double &b1, const double &a2, const
   return LT(PI / 2, t) ? (PI - t) : t;
 }
 
-template<class Pt>
+template<typename Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o = Pt(0, 0)) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
@@ -997,7 +1027,7 @@ auto cross(const Pt &a, const Pt &b, const Pt &o = Pt(0, 0)) {
 // Built on cross(a, b, o), whose sign is the opposite of the path-direction cross product, so a
 // positive cross here is a right turn: this returns +1 for right/clockwise (NOT the more common
 // +1 = counter-clockwise convention), -1 for left/counter-clockwise, and 0 if collinear.
-template<class Pt>
+template<typename Pt>
 int turn(const Pt &a, const Pt &o, const Pt &b) {
   auto c = cross(a, b, o);
   return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
@@ -1048,34 +1078,41 @@ Distance calculations in two dimensions for points, lines, and line segments. Th
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
-#define GE(a, b) ((a) >= (b) - EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
 
 // sqdist returns the coordinate type (exact for integer points).
-template<class Pt>
+template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
   auto dx = b.x - a.x, dy = b.y - a.y;
   return dx * dx + dy * dy;
 }
 
-template<class Pt>
+template<typename Pt>
 double dist(const Pt &a, const Pt &b) {
   return sqrt(static_cast<double>(sqdist(a, b)));
 }
 
-template<class Pt, class T>
+template<typename Pt, typename T>
 double line_dist(const Pt &p, const T &a, const T &b, const T &c) {
   return fabs(static_cast<double>(a) * p.x + static_cast<double>(b) * p.y + c) /
          sqrt(static_cast<double>(a) * a + static_cast<double>(b) * b);
 }
 
-template<class Pt>
+template<typename Pt>
 double line_dist(const Pt &p, const Pt &a, const Pt &b) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return dist(p, a);
@@ -1087,7 +1124,7 @@ double line_dist(const Pt &p, const Pt &a, const Pt &b) {
   return sqrt(dx * dx + dy * dy);
 }
 
-template<class T>
+template<typename T>
 double line_dist(const T &a1, const T &b1, const T &c1, const T &a2, const T &b2, const T &c2) {
   if (EQ(a1 * b2, a2 * b1)) {
     double factor = EQ(b1, 0) ? (static_cast<double>(a1) / a2) : (static_cast<double>(b1) / b2);
@@ -1099,7 +1136,7 @@ double line_dist(const T &a1, const T &b1, const T &c1, const T &a2, const T &b2
   return 0;
 }
 
-template<class Pt>
+template<typename Pt>
 double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return dist(p, a);
@@ -1117,7 +1154,7 @@ double seg_dist(const Pt &p, const Pt &a, const Pt &b) {
   return sqrt(dx * dx + dy * dy);
 }
 
-template<class Pt>
+template<typename Pt>
 double seg_dist(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
     return seg_dist(a, c, d);
@@ -1153,7 +1190,7 @@ double seg_dist(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   );
 }
 
-template<class Pt>
+template<typename Pt>
 Pt closest_point(const Pt &a, const Pt &b, const Pt &p) {
   Pt res{};
   if (EQ(a.x, b.x) && EQ(a.y, b.y)) {
@@ -1236,15 +1273,22 @@ Overflow warning: the exact integer paths multiply coordinate differences (cross
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 
-template<class OutPt>
+template<typename OutPt>
 int line_intersection(double a1, double b1, double c1, double a2, double b2, double c2, OutPt *p) {
   // Cramer's rule for a1*x + b1*y = -c1, a2*x + b2*y = -c2.
   double det = a1 * b2 - a2 * b1;
@@ -1261,7 +1305,7 @@ int line_intersection(double a1, double b1, double c1, double a2, double b2, dou
   return 0;
 }
 
-template<class Pt, class OutPt>
+template<typename Pt, typename OutPt>
 int line_intersection(const Pt &p1, const Pt &p2, const Pt &p3, const Pt &p4, OutPt *p) {
   auto a1 = p2.y - p1.y, b1 = p1.x - p2.x;
   auto c1 = -(p1.x * p2.y - p2.x * p1.y);
@@ -1277,7 +1321,7 @@ int line_intersection(const Pt &p1, const Pt &p2, const Pt &p3, const Pt &p4, Ou
   return 0;
 }
 
-template<class Pt>
+template<typename Pt>
 bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return EQ((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x), 0) &&
@@ -1286,7 +1330,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
 }
 
 // Detection is exact for integer Pt. Intersection point output may use a separate float OutPt.
-template<class Pt, class OutPt>
+template<typename Pt, typename OutPt>
 int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, OutPt *p = nullptr, OutPt *q = nullptr,
     const bool TOUCH_IS_INTERSECT = true
@@ -1364,7 +1408,7 @@ int seg_intersection(
 
 // Simplified detection-only version (no output points needed); exact for integer Pt.
 // Alternatively, just call the version above and pass static_cast<Pt *>(nullptr) for p and q.
-template<class Pt>
+template<typename Pt>
 int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, const bool TOUCH_IS_INTERSECT = true
 ) {
@@ -1404,7 +1448,7 @@ int seg_intersection(
   return (t_ok && u_ok) ? 0 : -1;
 }
 
-template<class Pt>
+template<typename Pt>
 Pt closest_point(double a, double b, double c, const Pt &p) {
   Pt res{};
   if (EQ(a, 0)) {
@@ -1497,13 +1541,20 @@ Circle tangent and intersection calculations in two dimensions. Such calculation
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9, PI = acos(-1.0);
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 
 struct Circle {
   double h, k, r;
@@ -1549,7 +1600,7 @@ struct Line {
   bool operator==(const Line &l) const { return EQ(a, l.a) && EQ(b, l.b) && EQ(c, l.c); }
 };
 
-template<class Pt>
+template<typename Pt>
 int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr) {
   auto sqnorm = [](double x, double y) { return x * x + y * y; };
   double vopx = p.x - c.h, vopy = p.y - c.k;
@@ -1586,7 +1637,7 @@ int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr
   return 1;
 }
 
-template<class OutPt>
+template<typename OutPt>
 int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = nullptr) {
   double v = c.h * l.a + c.k * l.b + l.c;
   double aabb = l.a * l.a + l.b * l.b;
@@ -1612,7 +1663,7 @@ int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = 
   return 1;
 }
 
-template<class OutPt>
+template<typename OutPt>
 int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *q = nullptr) {
   if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k)) {
     return EQ(c1.r, c2.r) ? 3 : (c1.r > c2.r ? -1 : -2);
@@ -1719,13 +1770,21 @@ If the two circles are identical, there are infinitely many tangents and the fun
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
 
 struct Point {
   double x, y;
@@ -1739,7 +1798,7 @@ struct Point {
   Point rotate90() const { return {-y, x}; }
 };
 
-template<class PtA, class PtB>
+template<typename PtA, typename PtB>
 std::vector<std::pair<Point, Point>> circle_tangents(
     const PtA &c1, double r1, const PtB &c2, double r2, const bool INTERNAL = false
 ) {
@@ -1764,7 +1823,7 @@ std::vector<std::pair<Point, Point>> circle_tangents(
   return res;
 }
 
-template<class PtA, class PtB>
+template<typename PtA, typename PtB>
 std::vector<std::pair<Point, Point>> all_circle_tangents(
     const PtA &c1, double r1, const PtB &c2, double r2
 ) {
@@ -1834,16 +1893,20 @@ Overflow warning: \inlinecode{cw\_comp} and \inlinecode{polygon\_area\_2x} form 
 #include <cmath>
 #include <random>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
 
 // Comparator (clockwise angular order about c). Exact: comparisons are pure sign tests on
 // coordinate differences and the cross product, so it is a valid strict weak ordering and is
 // exact for integer-coordinate points.
-template<class Pt>
+template<typename Pt>
 bool cw_comp(const Pt &a, const Pt &b, const Pt &c) {
   if (a.x - c.x >= 0 && b.x - c.x < 0) {
     return true;
@@ -1869,7 +1932,7 @@ bool cw_comp(const Pt &a, const Pt &b, const Pt &c) {
 }
 
 // Returns 2 * area. Result is exact (integer) for integer-coordinate points.
-template<class It>
+template<typename It>
 auto polygon_area_2x(It lo, It hi) {
   using T = decltype(lo->x * lo->y);
   if (lo == hi) {
@@ -1882,12 +1945,12 @@ auto polygon_area_2x(It lo, It hi) {
   return area < T(0) ? -area : area;
 }
 
-template<class It>
+template<typename It>
 double polygon_area(It lo, It hi) {
   return static_cast<double>(polygon_area_2x(lo, hi)) / 2.0;
 }
 
-template<class It>
+template<typename It>
 std::pair<double, double> polygon_centroid(It lo, It hi) {
   if (hi - lo < 3) {
     throw std::runtime_error("Cannot compute centroid of a degenerate polygon.");
@@ -1931,7 +1994,7 @@ struct PointI {
   bool operator>(const PointI &p) const { return p < *this; }
 };
 
-template<class It>
+template<typename It>
 Point mean_center(It lo, It hi) {
   if (lo == hi) {
     throw std::runtime_error("Cannot get center of an empty range.");
@@ -1996,14 +2059,14 @@ Overflow warning: the edge orientation test forms a cross product that grows lik
 \begin{lstlisting}[language=C++]
 #include <cstdint>
 
-template<class Pt>
+template<typename Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 // Detection is exact for integer-coordinate Pt.
-template<class Pt, class It>
+template<typename Pt, typename It>
 bool point_in_polygon(const Pt &p, It lo, It hi, bool EDGE_IS_INSIDE = true) {
   if (lo == hi) {
     return false;
@@ -2081,14 +2144,14 @@ Overflow warning: \inlinecode{cross()} and the squared distance in \inlinecode{d
 #include <utility>
 #include <vector>
 
-template<class Pt>
+template<typename Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
 // Convex hull: exact for integer-coordinate points.
-template<class It>
+template<typename It>
 auto convex_hull(It lo, It hi) {
   using Pt = typename std::iterator_traits<It>::value_type;
   int k = 0;
@@ -2116,7 +2179,7 @@ auto convex_hull(It lo, It hi) {
 }
 
 // Diametral pair: squared-distance comparisons are exact for integer-coordinate points.
-template<class It>
+template<typename It>
 auto diametral_pair(It lo, It hi) {
   using Pt = typename std::iterator_traits<It>::value_type;
   auto h = convex_hull(lo, hi);
@@ -2231,24 +2294,24 @@ For integer-coordinate inputs, all tests are exact provided the cross products d
 #include <cstdint>
 #include <vector>
 
-template<class Pt>
+template<typename Pt>
 auto cross(const Pt &a, const Pt &b, const Pt &o) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-template<class T>
+template<typename T>
 int signum(const T &x) {
   return (T(0) < x) - (x < T(0));
 }
 
-template<class Pt>
+template<typename Pt>
 bool on_segment(const Pt &p, const Pt &a, const Pt &b) {
   return cross(a, b, p) == 0 && std::min(a.x, b.x) <= p.x && p.x <= std::max(a.x, b.x) &&
          std::min(a.y, b.y) <= p.y && p.y <= std::max(a.y, b.y);
 }
 
-template<class Pt>
+template<typename Pt>
 bool point_in_convex_polygon(
     const std::vector<Pt> &poly, const Pt &p, const bool EDGE_IS_INSIDE = true
 ) {
@@ -2286,7 +2349,7 @@ bool point_in_convex_polygon(
   return EDGE_IS_INSIDE ? s >= 0 : s > 0;
 }
 
-template<class Pt>
+template<typename Pt>
 std::array<int, 2> line_convex_polygon_intersection(
     const std::vector<Pt> &poly, const Pt &a, const Pt &b
 ) {
@@ -2336,7 +2399,7 @@ std::array<int, 2> line_convex_polygon_intersection(
   return {cross_edges[0], cross_edges[1]};
 }
 
-template<class Pt>
+template<typename Pt>
 std::array<int, 2> convex_polygon_tangents(const std::vector<Pt> &poly, const Pt &p) {
   int n = static_cast<int>(poly.size());
   std::array<int, 2> res{-1, -1};
@@ -2414,13 +2477,20 @@ This implementation uses Welzl's randomized incremental algorithm. The points ar
 #include <cmath>
 #include <random>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
-#define LT(a, b) ((a) < (b) - EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 
 double sqnorm(double x, double y) {
   return x * x + y * y;
@@ -2428,7 +2498,7 @@ double sqnorm(double x, double y) {
 
 // SFINAE guard: valid only when Pt exposes numeric .x/.y members. This keeps the templated point
 // constructors from hijacking calls like Circle(double, double, double).
-template<class Pt>
+template<typename Pt>
 using if_point = decltype(std::declval<const Pt &>().x, std::declval<const Pt &>().y, void());
 
 struct Circle {
@@ -2437,14 +2507,14 @@ struct Circle {
   Circle() : h(0), k(0), r(0) {}
   Circle(double h, double k, double r) : h(h), k(k), r(fabs(r)) {}
 
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b) {
     h = (a.x + b.x) / 2.0;
     k = (a.y + b.y) / 2.0;
     r = std::hypot(a.x - h, a.y - k);
   }
 
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   Circle(const Pt &a, const Pt &b, const Pt &c) {
     double an = sqnorm(b.x - c.x, b.y - c.y);
     double bn = sqnorm(a.x - c.x, a.y - c.y);
@@ -2459,14 +2529,14 @@ struct Circle {
     r = std::hypot(a.x - h, a.y - k);
   }
 
-  template<class Pt, class = if_point<Pt>>
+  template<typename Pt, typename = if_point<Pt>>
   bool contains(const Pt &p) const {
     return LE(sqnorm(p.x - h, p.y - k), r * r);
   }
 };
 
 // Input points can be any type with .x and .y fields; Circle output is always double.
-template<class It>
+template<typename It>
 Circle minimum_enclosing_circle(It lo, It hi) {
   if (lo == hi) {
     return Circle(0, 0, 0);
@@ -2555,13 +2625,13 @@ Overflow warning: squared distances grow like the square of the coordinate magni
 #include <utility>
 #include <vector>
 
-template<class Pt>
+template<typename Pt>
 auto sqdist(const Pt &a, const Pt &b) {
   auto dx = a.x - b.x, dy = a.y - b.y;
   return dx * dx + dy * dy;  // Overflow warning!
 }
 
-template<class It, class T>
+template<typename It, typename T>
 T closest_pair_rec(
     It lo, It hi,
     std::pair<
@@ -2632,7 +2702,7 @@ T closest_pair_rec(
   return best;
 }
 
-template<class It>
+template<typename It>
 auto closest_pair(
     It lo, It hi,
     std::pair<
@@ -2647,11 +2717,15 @@ auto closest_pair(
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
 #include <cassert>
+#include <type_traits>
 #include <vector>
 using namespace std;
 
 const double EPS = 1e-9;
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
 
 struct Point {
   double x, y;
@@ -2705,14 +2779,14 @@ Overflow warning: \inlinecode{seg\_intersection} forms the usual quadratic cross
 #include <utility>
 #include <vector>
 
-template<class Pt>
+template<typename Pt>
 bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
   return (p.x - a.x) * (b.y - a.y) == (p.y - a.y) * (b.x - a.x) && std::min(a.x, b.x) <= p.x &&
          p.x <= std::max(a.x, b.x) && std::min(a.y, b.y) <= p.y && p.y <= std::max(a.y, b.y);
 }
 
 // Simplified detection-only version of `seg_intersection()` from 7.2.3 (exact for integral Pt).
-template<class Pt>
+template<typename Pt>
 int seg_intersection(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, const bool TOUCH_IS_INTERSECT = true
 ) {
@@ -2752,14 +2826,14 @@ int seg_intersection(
 }
 
 // The point type Pt must support operator< (used to canonicalize endpoint order).
-template<class Pt>
+template<typename Pt>
 struct Segment {
   Pt p, q;
   Segment() {}
   Segment(const Pt &p, const Pt &q) : p(std::min(p, q)), q(std::max(p, q)) {}
 };
 
-template<class Pt>
+template<typename Pt>
 bool intersects(
     const Segment<Pt> &s1, const Segment<Pt> &s2, const bool TOUCH_IS_INTERSECT = true
 ) {
@@ -2767,7 +2841,7 @@ bool intersects(
 }
 
 // Seg is deduced from the output pointers (e.g. Segment<PointI>* or Segment<PointD>*).
-template<class It, class Seg>
+template<typename It, typename Seg>
 bool find_intersection(It lo, It hi, Seg *res1, Seg *res2, const bool TOUCH_IS_INTERSECT = true) {
   using Pt = std::decay_t<decltype(lo->p)>;
   struct Event {
@@ -3004,13 +3078,21 @@ The function is templated on the input point type. Side classification is done w
 #include <cmath>
 #include <cstddef>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
 
 struct Point {
   double x, y;
@@ -3018,18 +3100,18 @@ struct Point {
   bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
 };
 
-template<class PtA, class PtB, class PtO>
+template<typename PtA, typename PtB, typename PtO>
 double cross(const PtA &a, const PtB &b, const PtO &o) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-template<class PtA, class PtO, class PtB>
+template<typename PtA, typename PtO, typename PtB>
 int turn(const PtA &a, const PtO &o, const PtB &b) {
   double c = cross(a, b, o);
   return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
 }
 
-template<class PtA, class PtB>
+template<typename PtA, typename PtB>
 int line_intersection(
     const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, Point *p = nullptr
 ) {
@@ -3048,7 +3130,7 @@ int line_intersection(
   return 0;
 }
 
-template<class It, class Pt>
+template<typename It, typename Pt>
 std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
   if (EQ(p.x, q.x) && EQ(p.y, q.y)) {
     throw std::runtime_error("Cannot cut using line from identical points.");
@@ -3121,12 +3203,20 @@ Given a list of directed lines, compute the convex polygon contained in every le
 #include <algorithm>
 #include <cmath>
 #include <deque>
+#include <type_traits>
 #include <vector>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
 
 struct Point {
   double x, y;
@@ -3255,12 +3345,16 @@ Given two convex polygons, compute their Minkowski sum: the set of all points $a
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
 
 struct Point {
   double x, y;
@@ -3402,16 +3496,23 @@ Overflow warning: the segment-intersection tests form cross products in the inpu
 #include <cmath>
 #include <cstdint>
 #include <set>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 
-template<class Pt>
+template<typename Pt>
 bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
   // Overflow risk for integer Pt: these products are ~O(max_coord^2); use int64_t if necessary.
   return EQ((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x), 0) &&
@@ -3421,7 +3522,7 @@ bool point_on_segment(const Pt &p, const Pt &a, const Pt &b) {
 
 // Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = true,
 // returning -1 for no intersection, 0 for one intersection point, 1 for positive length overlap.
-template<class Pt>
+template<typename Pt>
 int seg_intersection1(
     const Pt &a, const Pt &b, const Pt &c, const Pt &d, double *outx, double *outy
 ) {
@@ -3478,7 +3579,7 @@ int seg_intersection1(
 }
 
 // The two segments may use different point types (e.g. polygon edge vs. sweep line).
-template<class PtA, class PtB>
+template<typename PtA, typename PtB>
 int line_intersection1(
     const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, double *outx, double *outy
 ) {
@@ -3504,7 +3605,7 @@ struct Event {
   Event(double y = 0, int mask_delta = 0) : y(y), mask_delta(mask_delta) {}
 };
 
-template<class It>
+template<typename It>
 double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   if (lo1 == hi1 || lo2 == hi2) {
     return 0;
@@ -3574,7 +3675,7 @@ double intersection_area(It lo1, It hi1, It lo2, It hi2) {
   return res;
 }
 
-template<class It>
+template<typename It>
 double polygon_area(It lo, It hi) {
   if (lo == hi) {
     return 0;
@@ -3586,7 +3687,7 @@ double polygon_area(It lo, It hi) {
   return fabs(area / 2.0);
 }
 
-template<class It>
+template<typename It>
 double union_area(It lo1, It hi1, It lo2, It hi2) {
   return polygon_area(lo1, hi1) + polygon_area(lo2, hi2) - intersection_area(lo1, hi1, lo2, hi2);
 }
@@ -3643,89 +3744,76 @@ Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of 
 This implementation produces one valid triangulation using a simple brute-force algorithm. Each candidate triangle is tested against the empty-circumcircle condition, and candidates whose edges would properly cross already accepted triangles are rejected.
 
 \begin{compactitem}
-  \item \inlinecode{delaunay\_triangulation(lo, hi)} returns a Delaunay triangulation for a range [\inlinecode{lo}, \inlinecode{hi}) of distinct points, where \inlinecode{lo} and \inlinecode{hi} must be random-access iterators, or an empty vector if a triangulation does not exist.
+  \item \inlinecode{delaunay\_triangulation(p)} returns a Delaunay triangulation of the distinct points in \inlinecode{p} as a vector of clockwise-oriented vertex triples, or an empty vector if no triangulation exists (e.g. fewer than three points, or all points collinear).
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n^{6})$ per call to \inlinecode{delaunay\_triangulation(lo, hi)}, where $n$ is the distance between \inlinecode{lo} and \inlinecode{hi}. The empty-circumcircle test contributes $O(n^{4})$; the remaining factor comes from checking candidate triangles against previously accepted triangles.
+All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation. The lifted-paraboloid test scales as \textasciitilde{}96*C\textasciicircum{}4 where \inlinecode{C} is the coordinate magnitude, so a 64-bit integer coordinate type is safe up to |C| $\leq$ \textasciitilde{}17600. For floating-point coordinates the test is subject to the usual rounding error.
+
+\textbf{Time Complexity}: $O(n^{6})$ per call to \inlinecode{delaunay\_triangulation(p)}, where $n$ is the number of points. The empty-circumcircle test contributes $O(n^{4})$; the remaining factor comes from checking candidate triangles against previously accepted triangles.
 
 \textbf{Space Complexity}: $O(n)$ auxiliary heap space, excluding the returned triangulation.
 
 \begin{lstlisting}[language=C++]
-#include <algorithm>
-#include <array>
 #include <cmath>
-#include <utility>
+#include <tuple>
+#include <type_traits>
 #include <vector>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 
 // Specialized version of seg_intersection() from 7.2.3, simplified for TOUCH_IS_INTERSECT = false,
 // i.e. we're detecting proper crossings of two non-parallel segments whose interiors intersect.
-template<class Pt>
+template<typename Pt>
 bool proper_seg_intersection(const Pt &a, const Pt &b, const Pt &c, const Pt &d) {
   auto cross = [](const Pt &o, const Pt &p, const Pt &q) {
     return (p.x - o.x) * (q.y - o.y) - (p.y - o.y) * (q.x - o.x);  // Overflow warning!
   };
-  auto c1 = cross(a, b, c);
-  auto c2 = cross(a, b, d);
-  auto c3 = cross(c, d, a);
-  auto c4 = cross(c, d, b);
+  auto c1 = cross(a, b, c), c2 = cross(a, b, d), c3 = cross(c, d, a), c4 = cross(c, d, b);
   return ((LT(c1, 0) && LT(0, c2)) || (LT(c2, 0) && LT(0, c1))) &&
          ((LT(c3, 0) && LT(0, c4)) || (LT(c4, 0) && LT(0, c3)));
 }
 
-struct Triangle {
-  double ax, ay, bx, by, cx, cy;
-
-  Triangle(double ax, double ay, double bx, double by, double cx, double cy)
-      : ax(ax), ay(ay), bx(bx), by(by), cx(cx), cy(cy) {}
-
-  bool operator==(const Triangle &t) const {
-    return EQ(ax, t.ax) && EQ(ay, t.ay) && EQ(bx, t.bx) && EQ(by, t.by) && EQ(cx, t.cx) &&
-           EQ(cy, t.cy);
+template<typename Pt>
+std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(const std::vector<Pt> &p) {
+  int n = static_cast<int>(p.size());
+  std::vector<decltype(Pt::x)> z;
+  for (const auto &[px, py] : p) {
+    z.emplace_back(px * px + py * py);  // Overflow warning!
   }
-};
-
-// Accepts any point type with numeric .x/.y; coordinates are copied to double arrays.
-template<class It>
-std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
-  using Pt = typename std::iterator_traits<It>::value_type;
-  int n = hi - lo;
-  std::vector<Pt> pts;
-  std::vector<double> x, y, z;
-  for (It it = lo; it != hi; ++it) {
-    pts.emplace_back(it->x, it->y);
-    x.emplace_back(it->x);
-    y.emplace_back(it->y);
-    z.emplace_back(static_cast<double>(it->x) * it->x + static_cast<double>(it->y) * it->y);
-  }
-  std::vector<Triangle> res;
-  std::vector<std::array<int, 3>> res_idx;
+  std::vector<std::tuple<Pt, Pt, Pt>> res;
+  std::vector<std::tuple<int, int, int>> res_idx;
   for (int i = 0; i < n - 2; i++) {
     for (int j = i + 1; j < n; j++) {
       for (int k = i + 1; k < n; k++) {
         if (j == k) {
           continue;
         }
-        double nx = (y[j] - y[i]) * (z[k] - z[i]) - (y[k] - y[i]) * (z[j] - z[i]);
-        double ny = (x[k] - x[i]) * (z[j] - z[i]) - (x[j] - x[i]) * (z[k] - z[i]);
-        double nz = (x[j] - x[i]) * (y[k] - y[i]) - (x[k] - x[i]) * (y[j] - y[i]);
+        // Overflow warning!
+        auto nx = (p[j].y - p[i].y) * (z[k] - z[i]) - (p[k].y - p[i].y) * (z[j] - z[i]);
+        auto ny = (p[k].x - p[i].x) * (z[j] - z[i]) - (p[j].x - p[i].x) * (z[k] - z[i]);
+        auto nz = (p[j].x - p[i].x) * (p[k].y - p[i].y) - (p[k].x - p[i].x) * (p[j].y - p[i].y);
         if (LE(0, nz)) {
           continue;
         }
-        std::vector<Pt> s1{pts[i], pts[j], pts[k], pts[i]};
+        std::vector<Pt> s1{p[i], p[j], p[k], p[i]};
         for (int m = 0; m < n; m++) {
-          if (LT(0, nx * (x[m] - x[i]) + ny * (y[m] - y[i]) + nz * (z[m] - z[i]))) {
+          if (LT(0, nx * (p[m].x - p[i].x) + ny * (p[m].y - p[i].y) + nz * (z[m] - z[i]))) {
             goto skip;
           }
         }
         // Reject candidates whose edges properly cross already accepted triangles.
-        for (const auto &tri : res_idx) {
-          std::vector<Pt> s2{pts[tri[0]], pts[tri[1]], pts[tri[2]], pts[tri[0]]};
+        for (auto [t0, t1, t2] : res_idx) {
+          std::vector<Pt> s2{p[t0], p[t1], p[t2], p[t0]};
           for (int u = 0; u < 3; u++) {
             for (int v = 0; v < 3; v++) {
               if (proper_seg_intersection(s1[u], s1[u + 1], s2[v], s2[v + 1])) {
@@ -3734,8 +3822,8 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
             }
           }
         }
-        res.emplace_back(pts[i].x, pts[i].y, pts[j].x, pts[j].y, pts[k].x, pts[k].y);
-        res_idx.push_back({i, j, k});
+        res.emplace_back(p[i], p[j], p[k]);
+        res_idx.emplace_back(i, j, k);
       skip:;
       }
     }
@@ -3765,87 +3853,113 @@ struct PointI {
 
 int main() {
   vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
-  vector<Triangle> t{
-      Triangle(1, 3, 1, 2, -1, 3), Triangle(1, 3, 2, 1, 1, 2), Triangle(1, 2, 2, 1, 0, 0),
-      Triangle(1, 2, 0, 0, -1, 3)
+  vector<tuple<Point, Point, Point>> t{
+      {Point{1, 3}, Point{1, 2}, Point{-1, 3}},
+      {Point{1, 3}, Point{2, 1}, Point{1, 2}},
+      {Point{1, 2}, Point{2, 1}, Point{0, 0}},
+      {Point{1, 2}, Point{0, 0}, Point{-1, 3}}
   };
-  assert(delaunay_triangulation(v.begin(), v.end()) == t);
+  assert(delaunay_triangulation(v) == t);
 
-  // Integer-coordinate inputs are accepted (triangulation computed in double).
+  // Integer-coordinate inputs are triangulated using exact integer arithmetic.
   vector<PointI> iv{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
-  assert(delaunay_triangulation(iv.begin(), iv.end()) == t);
+  vector<tuple<PointI, PointI, PointI>> ti{
+      {PointI{1, 3}, PointI{1, 2}, PointI{-1, 3}},
+      {PointI{1, 3}, PointI{2, 1}, PointI{1, 2}},
+      {PointI{1, 2}, PointI{2, 1}, PointI{0, 0}},
+      {PointI{1, 2}, PointI{0, 0}, PointI{-1, 3}}
+  };
+  assert(delaunay_triangulation(iv) == ti);
   return 0;
 }
 \end{lstlisting}
 \subsection{Delaunay Triangulation (Guibas-Stolfi)}
 Given a set $P$ of distinct two-dimensional points, a Delaunay triangulation of $P$ is a triangulation of the convex hull of P such that no point of P lies strictly inside the circumcircle of any triangle in the triangulation. The Delaunay triangulation is not necessarily unique when four or more points are cocircular.
 
-This implementation produces one valid triangulation using the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data structure. The point set is split in half, each half is triangulated recursively, and the halves are stitched together from the bottom up by a sequence of cross edges, with circumcircle tests deciding each connecting edge and deleting invalidated ones. Input points are copied to \inlinecode{Point} with \inlinecode{double} coordinates, sorted lexicographically, and duplicates are removed.
+This implementation produces one valid triangulation using the Guibas-Stolfi divide-and-conquer algorithm with a quad-edge data structure. The point set is split in half, each half is triangulated recursively, and the halves are stitched together from the bottom up by a sequence of cross edges, with circumcircle tests deciding each connecting edge and deleting invalidated ones.
 
 \begin{compactitem}
-  \item \inlinecode{delaunay\_triangulation(lo, hi)} returns the triangles of one Delaunay triangulation for a range [\inlinecode{lo}, \inlinecode{hi}) of points. The input iterator value type may be any point type with numeric \inlinecode{.x} and \inlinecode{.y} members. The returned triangles use \inlinecode{Point} with \inlinecode{double} coordinates. Duplicate points are ignored. If fewer than three non-collinear unique points are available, the result is empty. Note that all predicates are evaluated using floating-point arithmetic, so results are subject to numerical error on nearly collinear or nearly cocircular inputs.
+  \item \inlinecode{delaunay\_triangulation(pts)} sorts \inlinecode{pts} lexicographically and removes duplicate points in place (so the input vector is modified), then returns the triangles of one Delaunay triangulation as a vector of counterclockwise-oriented vertex triples (\inlinecode{std::tuple}) of the input point type. If fewer than three non-collinear unique points remain, the result is empty.
 \end{compactitem}
 
-\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{delaunay\_triangulation(lo, hi)}, where $n$ is the number of input points.
+All arithmetic uses the point's own coordinate type, so integer inputs yield an exact triangulation. The in-circle test is a degree-4 polynomial in the coordinates and dominates the overflow budget: a 64-bit integer coordinate type stays exact up to |C| \textasciitilde{}= 1.4e4, where \inlinecode{C} is the coordinate magnitude. For floating-point coordinates the predicates are subject to the usual rounding error.
+
+\textbf{Time Complexity}: $O(n \log n)$ per call to \inlinecode{delaunay\_triangulation(pts)}, where $n$ is the number of input points.
 
 \textbf{Space Complexity}: $O(n)$ heap space for the quad-edge structure and returned triangulation.
 
 \begin{lstlisting}[language=C++]
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
+#include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define GT(a, b) ((a) > (b) + EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
 
+template<typename T>
 struct Point {
-  double x, y;
-  Point(double x = 0, double y = 0) : x(x), y(y) {}
-  bool operator==(const Point &p) const { return x == p.x && y == p.y; }
-  bool operator!=(const Point &p) const { return !(*this == p); }
-  bool operator<(const Point &p) const { return x != p.x ? x < p.x : y < p.y; }
-  bool operator>(const Point &p) const { return p < *this; }
+  T x, y;
+  Point(T x = 0, T y = 0) : x(x), y(y) {}
+  bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
+  // Lexicographic order used only to sort and deduplicate the input. With integer coordinates this
+  // is an exact total order; with floating-point coordinates the epsilon comparisons make it only
+  // an approximate, non-transitive order (not a strict weak ordering), which is fine for
+  // well-separated points but means near-coincident points may sort or deduplicate unpredictably.
+  bool operator<(const Point &p) const { return EQ(x, p.x) ? LT(y, p.y) : LT(x, p.x); }
 };
 
-double cross(const Point &a, const Point &b, const Point &o = Point(0, 0)) {
-  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+template<typename T>
+T cross(const Point<T> &a, const Point<T> &b, const Point<T> &o) {
+  return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);  // Overflow warning!
 }
 
-long double incircle(const Point &a, const Point &b, const Point &c, const Point &d) {
-  long double adx = a.x - d.x, ady = a.y - d.y;
-  long double bdx = b.x - d.x, bdy = b.y - d.y;
-  long double cdx = c.x - d.x, cdy = c.y - d.y;
-  long double abdet = adx * bdy - bdx * ady;
-  long double bcdet = bdx * cdy - cdx * bdy;
-  long double cadet = cdx * ady - adx * cdy;
-  long double alift = adx * adx + ady * ady;
-  long double blift = bdx * bdx + bdy * bdy;
-  long double clift = cdx * cdx + cdy * cdy;
+template<typename T>
+T incircle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Point<T> &d) {
+  T adx = a.x - d.x, ady = a.y - d.y;
+  T bdx = b.x - d.x, bdy = b.y - d.y;
+  T cdx = c.x - d.x, cdy = c.y - d.y;
+  T abdet = adx * bdy - bdx * ady;  // Overflow warning!
+  T bcdet = bdx * cdy - cdx * bdy;
+  T cadet = cdx * ady - adx * cdy;
+  T alift = adx * adx + ady * ady;
+  T blift = bdx * bdx + bdy * bdy;
+  T clift = cdx * cdx + cdy * cdy;
   return alift * bcdet + blift * cadet + clift * abdet;
 }
 
+template<typename T>
 struct Edge {
-  Point origin;
+  Point<T> origin;
   Edge *rot, *onext;
   bool primal, deleted, used;
 
   Edge *rev() const { return rot->rot; }
   Edge *lnext() const { return rot->rev()->onext->rot; }
   Edge *oprev() const { return rot->onext->rot; }
-  Point dest() const { return rev()->origin; }
+  Point<T> dest() const { return rev()->origin; }
 };
 
+template<typename T>
 struct QuadEdgePool {
-  std::vector<Edge *> edges;
+  std::vector<Edge<T> *> edges;
 
   QuadEdgePool() = default;
 
   ~QuadEdgePool() {
-    for (Edge *e : edges) {
+    for (Edge<T> *e : edges) {
       delete e;
     }
   }
@@ -3853,8 +3967,8 @@ struct QuadEdgePool {
   QuadEdgePool(const QuadEdgePool &) = delete;
   QuadEdgePool &operator=(const QuadEdgePool &) = delete;
 
-  Edge *make_edge(const Point &from, const Point &to) {
-    Edge *e1 = new Edge, *e2 = new Edge, *e3 = new Edge, *e4 = new Edge;
+  Edge<T> *make_edge(const Point<T> &from, const Point<T> &to) {
+    Edge<T> *e1 = new Edge<T>, *e2 = new Edge<T>, *e3 = new Edge<T>, *e4 = new Edge<T>;
     edges.push_back(e1);
     edges.push_back(e2);
     edges.push_back(e3);
@@ -3876,47 +3990,51 @@ struct QuadEdgePool {
     return e1;
   }
 
-  void delete_edge(Edge *e) {
+  void delete_edge(Edge<T> *e) {
     splice(e, e->oprev());
     splice(e->rev(), e->rev()->oprev());
     e->deleted = e->rot->deleted = e->rev()->deleted = e->rev()->rot->deleted = true;
   }
 
-  Edge *connect(Edge *a, Edge *b) {
-    Edge *e = make_edge(a->dest(), b->origin);
+  Edge<T> *connect(Edge<T> *a, Edge<T> *b) {
+    Edge<T> *e = make_edge(a->dest(), b->origin);
     splice(e, a->lnext());
     splice(e->rev(), b);
     return e;
   }
 
-  static void splice(Edge *a, Edge *b) {
+  static void splice(Edge<T> *a, Edge<T> *b) {
     std::swap(a->onext->rot->onext, b->onext->rot->onext);
     std::swap(a->onext, b->onext);
   }
 };
 
-bool left_of(const Point &p, Edge *e) {
+template<typename T>
+bool left_of(const Point<T> &p, Edge<T> *e) {
   return GT(cross(e->origin, e->dest(), p), 0);
 }
 
-bool right_of(const Point &p, Edge *e) {
+template<typename T>
+bool right_of(const Point<T> &p, Edge<T> *e) {
   return LT(cross(e->origin, e->dest(), p), 0);
 }
 
-bool in_circle(const Point &a, const Point &b, const Point &c, const Point &d) {
-  return incircle(a, b, c, d) > EPS;
+template<typename T>
+bool in_circle(const Point<T> &a, const Point<T> &b, const Point<T> &c, const Point<T> &d) {
+  return GT(incircle(a, b, c, d), 0);
 }
 
-std::pair<Edge *, Edge *> build_triangulation(
-    std::vector<Point> &p, int lo, int hi, QuadEdgePool &pool
+template<typename T>
+std::pair<Edge<T> *, Edge<T> *> build_triangulation(
+    std::vector<Point<T>> &p, int lo, int hi, QuadEdgePool<T> &pool
 ) {
   if (hi - lo == 1) {
-    Edge *a = pool.make_edge(p[lo], p[hi]);
+    Edge<T> *a = pool.make_edge(p[lo], p[hi]);
     return {a, a->rev()};
   }
   if (hi - lo == 2) {
-    Edge *a = pool.make_edge(p[lo], p[lo + 1]);
-    Edge *b = pool.make_edge(p[lo + 1], p[hi]);
+    Edge<T> *a = pool.make_edge(p[lo], p[lo + 1]);
+    Edge<T> *b = pool.make_edge(p[lo + 1], p[hi]);
     pool.splice(a->rev(), b);
     int side = GT(cross(p[lo], p[lo + 1], p[hi]), 0)
                    ? 1
@@ -3924,7 +4042,7 @@ std::pair<Edge *, Edge *> build_triangulation(
     if (side == 0) {
       return {a, b->rev()};
     }
-    Edge *c = pool.connect(b, a);
+    Edge<T> *c = pool.connect(b, a);
     if (side == 1) {
       return {a, b->rev()};
     }
@@ -3942,7 +4060,7 @@ std::pair<Edge *, Edge *> build_triangulation(
       break;
     }
   }
-  Edge *base = pool.connect(rdi->rev(), ldi);
+  Edge<T> *base = pool.connect(rdi->rev(), ldi);
   if (ldi->origin == ldo->origin) {
     ldo = base->rev();
   }
@@ -3950,24 +4068,23 @@ std::pair<Edge *, Edge *> build_triangulation(
     rdo = base;
   }
   while (true) {
-    Edge *lcand = base->rev()->onext;
+    Edge<T> *lcand = base->rev()->onext;
     if (right_of(lcand->dest(), base)) {
       while (in_circle(base->dest(), base->origin, lcand->dest(), lcand->onext->dest())) {
-        Edge *next = lcand->onext;
+        Edge<T> *next = lcand->onext;
         pool.delete_edge(lcand);
         lcand = next;
       }
     }
-    Edge *rcand = base->oprev();
+    Edge<T> *rcand = base->oprev();
     if (right_of(rcand->dest(), base)) {
       while (in_circle(base->dest(), base->origin, rcand->dest(), rcand->oprev()->dest())) {
-        Edge *prev = rcand->oprev();
+        Edge<T> *prev = rcand->oprev();
         pool.delete_edge(rcand);
         rcand = prev;
       }
     }
-    bool lvalid = right_of(lcand->dest(), base);
-    bool rvalid = right_of(rcand->dest(), base);
+    bool lvalid = right_of(lcand->dest(), base), rvalid = right_of(rcand->dest(), base);
     if (!lvalid && !rvalid) {
       break;
     }
@@ -3981,56 +4098,43 @@ std::pair<Edge *, Edge *> build_triangulation(
   return {ldo, rdo};
 }
 
-struct Triangle {
-  Point a, b, c;
-
-  Triangle(const Point &a, const Point &b, const Point &c) : a(a), b(b), c(c) {
-    if (b < a && b < c) {
-      this->a = b;
-      this->b = c;
-      this->c = a;
-    } else if (c < a && c < b) {
-      this->a = c;
-      this->b = a;
-      this->c = b;
-    }
+// Rotates a triangle's vertices so that the lexicographically smallest comes first, preserving the
+// cyclic (counterclockwise) order, to give each triangle a canonical, comparable representation.
+template<typename Pt>
+std::tuple<Pt, Pt, Pt> canonical(const Pt &a, const Pt &b, const Pt &c) {
+  if (b < a && b < c) {
+    return {b, c, a};
   }
-
-  bool operator==(const Triangle &t) const { return a == t.a && b == t.b && c == t.c; }
-
-  bool operator<(const Triangle &t) const {
-    return a != t.a ? a < t.a : (b != t.b ? b < t.b : c < t.c);
+  if (c < a && c < b) {
+    return {c, a, b};
   }
-};
+  return {a, b, c};
+}
 
-// Accepts any point type with numeric .x/.y; inputs are copied to double Points.
-template<class It>
-std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
-  std::vector<Point> p;
-  for (It it = lo; it != hi; ++it) {
-    p.emplace_back(it->x, it->y);
-  }
+template<typename Pt>
+std::vector<std::tuple<Pt, Pt, Pt>> delaunay_triangulation(std::vector<Pt> &p) {
+  using T = decltype(Pt::x);
   std::sort(p.begin(), p.end());
   p.erase(std::unique(p.begin(), p.end()), p.end());
+  std::vector<std::tuple<Pt, Pt, Pt>> res;
   if (p.size() < 3) {
-    return std::vector<Triangle>();
+    return res;
   }
-  QuadEdgePool pool;
-  build_triangulation(p, 0, p.size() - 1, pool);
-  std::vector<Triangle> res;
-  for (Edge *start : pool.edges) {
+  QuadEdgePool<T> pool;
+  build_triangulation(p, 0, static_cast<int>(p.size()) - 1, pool);
+  for (Edge<T> *start : pool.edges) {
     if (!start->primal || start->deleted || start->used) {
       continue;
     }
-    std::vector<Point> face;
-    Edge *curr = start;
+    std::vector<Pt> face;
+    Edge<T> *curr = start;
     do {
       curr->used = true;
       face.push_back(curr->origin);
       curr = curr->lnext();
     } while (curr != start);
     if (face.size() == 3 && GT(cross(face[0], face[1], face[2]), 0)) {
-      res.emplace_back(face[0], face[1], face[2]);
+      res.push_back(canonical(face[0], face[1], face[2]));
     }
   }
   std::sort(res.begin(), res.end());
@@ -4043,24 +4147,28 @@ std::vector<Triangle> delaunay_triangulation(It lo, It hi) {
 #include <cassert>
 using namespace std;
 
-struct PointI {
-  int x, y;
-  PointI(int x = 0, int y = 0) : x(x), y(y) {}
-};
+using PointL = Point<int64_t>;
+using PointD = Point<double>;
 
 int main() {
-  vector<Point> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
-  vector<Triangle> t{
-      Triangle(Point(-1, 3), Point(0, 0), Point(1, 2)),
-      Triangle(Point(-1, 3), Point(1, 2), Point(1, 3)),
-      Triangle(Point(0, 0), Point(2, 1), Point(1, 2)),
-      Triangle(Point(1, 2), Point(2, 1), Point(1, 3))
+  vector<PointD> v{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<tuple<PointD, PointD, PointD>> t{
+      {PointD{-1, 3}, PointD{0, 0}, PointD{1, 2}},
+      {PointD{-1, 3}, PointD{1, 2}, PointD{1, 3}},
+      {PointD{0, 0}, PointD{2, 1}, PointD{1, 2}},
+      {PointD{1, 2}, PointD{2, 1}, PointD{1, 3}}
   };
-  assert(delaunay_triangulation(v.begin(), v.end()) == t);
+  assert(delaunay_triangulation(v) == t);
 
-  // Integer-coordinate inputs are accepted (triangulation computed in double).
-  vector<PointI> iv{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
-  assert(delaunay_triangulation(iv.begin(), iv.end()) == t);
+  // Integer-coordinate inputs are triangulated using exact integer arithmetic.
+  vector<PointL> iv{{1, 3}, {1, 2}, {2, 1}, {0, 0}, {-1, 3}};
+  vector<tuple<PointL, PointL, PointL>> ti{
+      {PointL{-1, 3}, PointL{0, 0}, PointL{1, 2}},
+      {PointL{-1, 3}, PointL{1, 2}, PointL{1, 3}},
+      {PointL{0, 0}, PointL{2, 1}, PointL{1, 2}},
+      {PointL{1, 2}, PointL{2, 1}, PointL{1, 3}}
+  };
+  assert(delaunay_triangulation(iv) == ti);
   return 0;
 }
 \end{lstlisting}
@@ -4125,8 +4233,10 @@ std::vector<std::tuple<int64_t, int, int>> manhattan_mst_edges(std::vector<Point
 
 struct DSU {
   std::vector<int> parent, rank;
+
   explicit DSU(int n) : parent(n), rank(n, 0) { std::iota(parent.begin(), parent.end(), 0); }
   int find(int u) { return parent[u] == u ? u : parent[u] = find(parent[u]); }
+
   bool unite(int u, int v) {
     u = find(u);
     v = find(v);
@@ -4178,9 +4288,10 @@ A 3D point class template supporting vector arithmetic, dot and cross products, 
 Type aliases:
 
 \begin{compactitem}
-  \item \inlinecode{Point3I = Point3D\textless{}int\textgreater{}}
-  \item \inlinecode{Point3L = Point3D\textless{}int64\_t\textgreater{}}
-  \item \inlinecode{Point3 = Point3D\textless{}double\textgreater{}}
+  \item \inlinecode{Point3I = TPoint3\textless{}int\textgreater{}}
+  \item \inlinecode{Point3L = TPoint3\textless{}int64\_t\textgreater{}}
+  \item \inlinecode{Point3D = TPoint3\textless{}double\textgreater{}}
+  \item \inlinecode{Point3LD = TPoint3\textless{}long double\textgreater{}}
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(1)$ per operation.
@@ -4196,44 +4307,52 @@ Type aliases:
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
 
-template<class T>
-struct Point3D {
+template<typename T>
+struct TPoint3 {
   using fp_t = std::conditional_t<std::is_integral<T>::value, double, T>;
 
   T x, y, z;
 
-  Point3D(T x = 0, T y = 0, T z = 0) : x(x), y(y), z(z) {}
-  bool operator==(const Point3D &p) const { return std::tie(x, y, z) == std::tie(p.x, p.y, p.z); }
-  bool operator!=(const Point3D &p) const { return !(*this == p); }
-  bool operator<(const Point3D &p) const { return std::tie(x, y, z) < std::tie(p.x, p.y, p.z); }
-  Point3D operator+(const Point3D &p) const { return {x + p.x, y + p.y, z + p.z}; }
-  Point3D operator-(const Point3D &p) const { return {x - p.x, y - p.y, z - p.z}; }
-  Point3D operator*(T k) const { return {x * k, y * k, z * k}; }
-  Point3D<fp_t> operator/(fp_t k) const { return {(fp_t)x / k, (fp_t)y / k, (fp_t)z / k}; }
-  T dot(const Point3D &p) const { return x * p.x + y * p.y + z * p.z; }
-  Point3D cross(const Point3D &p) const {
-    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};
-  }
+  TPoint3(T x = 0, T y = 0, T z = 0) : x(x), y(y), z(z) {}
+  bool operator==(const TPoint3 &p) const { return std::tie(x, y, z) == std::tie(p.x, p.y, p.z); }
+  bool operator!=(const TPoint3 &p) const { return !(*this == p); }
+  bool operator<(const TPoint3 &p) const { return std::tie(x, y, z) < std::tie(p.x, p.y, p.z); }
+  TPoint3 operator+(const TPoint3 &p) const { return {x + p.x, y + p.y, z + p.z}; }
+  TPoint3 operator-(const TPoint3 &p) const { return {x - p.x, y - p.y, z - p.z}; }
+  TPoint3 operator*(T k) const { return {x * k, y * k, z * k}; }
+  TPoint3<fp_t> operator/(fp_t k) const { return {(fp_t)x / k, (fp_t)y / k, (fp_t)z / k}; }
+  T dot(const TPoint3 &p) const { return x * p.x + y * p.y + z * p.z; }
   T sqnorm() const { return x * x + y * y + z * z; }
   fp_t norm() const { return sqrt(static_cast<fp_t>(sqnorm())); }
   fp_t phi() const { return atan2(static_cast<fp_t>(y), static_cast<fp_t>(x)); }
+  TPoint3<fp_t> unit() const { return *this / norm(); }
+
+  TPoint3 cross(const TPoint3 &p) const {
+    return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};
+  }
+
+  TPoint3<fp_t> normal(const TPoint3 &p) const { return cross(p).unit(); }
+
   fp_t theta() const {
     return atan2(hypot(static_cast<fp_t>(x), static_cast<fp_t>(y)), static_cast<fp_t>(z));
   }
-  Point3D<fp_t> unit() const { return *this / norm(); }
-  Point3D<fp_t> normal(const Point3D &p) const { return cross(p).unit(); }
-  Point3D<fp_t> rotate(fp_t angle, const Point3D &axis) const {
+
+  TPoint3<fp_t> rotate(fp_t angle, const TPoint3 &axis) const {
     fp_t s = sin(angle), c = cos(angle);
-    Point3D<fp_t> u = axis.unit(), v((fp_t)x, (fp_t)y, (fp_t)z);
+    TPoint3<fp_t> u = axis.unit(), v((fp_t)x, (fp_t)y, (fp_t)z);
     return u * v.dot(u) * (1 - c) + v * c - v.cross(u) * s;
   }
 };
 
-using Point3I = Point3D<int>;
-using Point3L = Point3D<int64_t>;
-using Point3 = Point3D<double>;
+using Point3I = TPoint3<int>;
+using Point3L = TPoint3<int64_t>;
+using Point3D = TPoint3<double>;
+using Point3LD = TPoint3<long double>;
 \end{lstlisting}
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
@@ -4244,8 +4363,8 @@ int main() {
   assert(a.cross(b) == Point3I(0, 0, 1));
   assert(a.sqnorm() == 1);
 
-  Point3 p(1, 0, 0);
-  auto r = p.rotate(acos(-1.0) / 2, Point3(0, 0, 1));
+  Point3D p(1, 0, 0);
+  auto r = p.rotate(acos(-1.0) / 2, Point3D(0, 0, 1));
   assert(EQ(r.x, 0) && EQ(r.y, 1) && EQ(r.z, 0));
   return 0;
 }
@@ -4272,13 +4391,14 @@ Preconditions: at least four points, and no four points coplanar. For coplanar o
 
 const double EPS = 1e-9;
 
-struct Point3 {
+struct Point3D {
   double x, y, z;
-  Point3(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
-  Point3 operator-(const Point3 &p) const { return {x - p.x, y - p.y, z - p.z}; }
-  Point3 operator*(double k) const { return {x * k, y * k, z * k}; }
-  double dot(const Point3 &p) const { return x * p.x + y * p.y + z * p.z; }
-  Point3 cross(const Point3 &p) const {
+
+  Point3D(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
+  Point3D operator-(const Point3D &p) const { return {x - p.x, y - p.y, z - p.z}; }
+  Point3D operator*(double k) const { return {x * k, y * k, z * k}; }
+  double dot(const Point3D &p) const { return x * p.x + y * p.y + z * p.z; }
+  Point3D cross(const Point3D &p) const {
     return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};
   }
 };
@@ -4288,7 +4408,7 @@ struct Face {
   Face(int a = 0, int b = 0, int c = 0) : a(a), b(b), c(c) {}
 };
 
-std::vector<Face> convex_hull_3d(const std::vector<Point3> &p) {
+std::vector<Face> convex_hull_3d(const std::vector<Point3D> &p) {
   int n = static_cast<int>(p.size());
   assert(n >= 4);
   std::vector<std::vector<std::array<int, 2>>> edge(
@@ -4371,21 +4491,21 @@ std::vector<Face> convex_hull_3d(const std::vector<Point3> &p) {
 using namespace std;
 
 int main() {
-  vector<Point3> tetra{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+  vector<Point3D> tetra{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   auto faces = convex_hull_3d(tetra);
   assert(faces.size() == 4);
 
-  tetra.push_back(Point3(1, 1, 1));
+  tetra.push_back(Point3D(1, 1, 1));
   faces = convex_hull_3d(tetra);
   assert(faces.size() == 6);
   return 0;
 }
 \end{lstlisting}
 \subsection{Polyhedron Volume}
-Given an oriented triangular mesh of a closed polyhedron, compute its signed volume. Each triangle contributes the signed volume of the tetrahedron formed by the triangle and the origin: \inlinecode{dot(cross(a, b), c) / 6}. If faces are oriented outward, the result is positive for the orientation used by \inlinecode{convex\_hull\_3d()} in 7.5.2; take \inlinecode{abs()} if only the magnitude is needed.
+Given an oriented triangular mesh of a closed polyhedron, compute its signed volume. Each triangle contributes the signed volume of the tetrahedron formed by the triangle $abc$ and the origin $((a \times b) \cdot c) / 6$. If faces are oriented outward, the result is positive for the orientation used by \inlinecode{convex\_hull\_3d()} in 7.5.2; take \inlinecode{abs()} if only the magnitude is needed.
 
 \begin{compactitem}
-  \item \inlinecode{signed\_polyhedron\_volume(points, faces)} returns the signed volume. Each face is an index triple with fields \inlinecode{.a}, \inlinecode{.b}, \inlinecode{.c}.
+  \item \inlinecode{signed\_polyhedron\_volume(points, faces)} returns the signed volume. Each face is an index triple.
 \end{compactitem}
 
 \textbf{Time Complexity}: $O(f)$, where $f$ is the number of triangular faces.
@@ -4393,33 +4513,26 @@ Given an oriented triangular mesh of a closed polyhedron, compute its signed vol
 \textbf{Space Complexity}: $O(1)$ auxiliary.
 
 \begin{lstlisting}[language=C++]
-#include <cassert>
 #include <cmath>
+#include <tuple>
+#include <type_traits>
 #include <vector>
 
-const double EPS = 1e-9;
-
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-
-struct Point3 {
+struct Point3D {
   double x, y, z;
-  Point3(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
-  double dot(const Point3 &p) const { return x * p.x + y * p.y + z * p.z; }
-  Point3 cross(const Point3 &p) const {
+
+  Point3D(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
+  double dot(const Point3D &p) const { return x * p.x + y * p.y + z * p.z; }
+  Point3D cross(const Point3D &p) const {
     return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};
   }
 };
 
-struct Face {
-  int a, b, c;
-  Face(int a = 0, int b = 0, int c = 0) : a(a), b(b), c(c) {}
-};
-
-template<class Pt, class F>
+template<typename Pt, typename F>
 double signed_polyhedron_volume(const std::vector<Pt> &p, const std::vector<F> &faces) {
   double volume = 0;
-  for (const F &f : faces) {
-    volume += p[f.a].cross(p[f.b]).dot(p[f.c]);
+  for (const auto &[a, b, c] : faces) {
+    volume += p[a].cross(p[b]).dot(p[c]);
   }
   return volume / 6.0;
 }
@@ -4427,10 +4540,18 @@ double signed_polyhedron_volume(const std::vector<Pt> &p, const std::vector<F> &
 \Needspace*{4\baselineskip}
 \textbf{Example Usage}\par
 \begin{lstlisting}[language=C++]
+#include <cassert>
 using namespace std;
 
+const double EPS = 1e-9;
+
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
+
 int main() {
-  vector<Point3> p{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+  using Face = std::tuple<int, int, int>;  // (a, b, c)
+  vector<Point3D> p{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   vector<Face> faces{
       Face(0, 2, 1),
       Face(0, 1, 3),

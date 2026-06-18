@@ -19,7 +19,7 @@ solutions must return comparable results.
 #include <random>
 #include <vector>
 
-template<class Generate, class Solve, class Brute>
+template<typename Generate, typename Solve, typename Brute>
 auto stress(int trials, Generate generate, Solve solve, Brute brute)
     -> std::optional<decltype(generate())> {
   for (int tc = 0; tc < trials; ++tc) {

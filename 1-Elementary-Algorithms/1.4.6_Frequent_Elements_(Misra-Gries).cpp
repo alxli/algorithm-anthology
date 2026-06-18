@@ -29,7 +29,7 @@ Space Complexity:
 #include <unordered_map>
 #include <vector>
 
-template<class T, class It>
+template<typename T, typename It>
 std::unordered_map<T, int> misra_gries(It lo, It hi, int k) {
   std::unordered_map<T, int> count;
   for (It it = lo; it != hi; ++it) {

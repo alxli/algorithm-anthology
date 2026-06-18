@@ -43,7 +43,7 @@ Space Complexity:
 #include <cstddef>
 #include <stdexcept>
 
-template<class T>
+template<typename T>
 class PairingHeap {
   struct Node {
     T value;
@@ -115,7 +115,7 @@ class PairingHeap {
  public:
   PairingHeap() : root(nullptr), num_nodes(0) {}
 
-  template<class It>
+  template<typename It>
   PairingHeap(It lo, It hi) : root(nullptr), num_nodes(0) {
     while (lo != hi) {
       push(*(lo++));

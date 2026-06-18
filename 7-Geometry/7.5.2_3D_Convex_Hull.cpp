@@ -25,13 +25,14 @@ Space Complexity:
 
 const double EPS = 1e-9;
 
-struct Point3 {
+struct Point3D {
   double x, y, z;
-  Point3(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
-  Point3 operator-(const Point3 &p) const { return {x - p.x, y - p.y, z - p.z}; }
-  Point3 operator*(double k) const { return {x * k, y * k, z * k}; }
-  double dot(const Point3 &p) const { return x * p.x + y * p.y + z * p.z; }
-  Point3 cross(const Point3 &p) const {
+
+  Point3D(double x = 0, double y = 0, double z = 0) : x(x), y(y), z(z) {}
+  Point3D operator-(const Point3D &p) const { return {x - p.x, y - p.y, z - p.z}; }
+  Point3D operator*(double k) const { return {x * k, y * k, z * k}; }
+  double dot(const Point3D &p) const { return x * p.x + y * p.y + z * p.z; }
+  Point3D cross(const Point3D &p) const {
     return {y * p.z - z * p.y, z * p.x - x * p.z, x * p.y - y * p.x};
   }
 };
@@ -41,7 +42,7 @@ struct Face {
   Face(int a = 0, int b = 0, int c = 0) : a(a), b(b), c(c) {}
 };
 
-std::vector<Face> convex_hull_3d(const std::vector<Point3> &p) {
+std::vector<Face> convex_hull_3d(const std::vector<Point3D> &p) {
   int n = static_cast<int>(p.size());
   assert(n >= 4);
   std::vector<std::vector<std::array<int, 2>>> edge(
@@ -123,11 +124,11 @@ std::vector<Face> convex_hull_3d(const std::vector<Point3> &p) {
 using namespace std;
 
 int main() {
-  vector<Point3> tetra{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+  vector<Point3D> tetra{{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   auto faces = convex_hull_3d(tetra);
   assert(faces.size() == 4);
 
-  tetra.push_back(Point3(1, 1, 1));
+  tetra.push_back(Point3D(1, 1, 1));
   faces = convex_hull_3d(tetra);
   assert(faces.size() == 6);
   return 0;

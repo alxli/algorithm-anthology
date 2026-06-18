@@ -26,7 +26,7 @@ Space Complexity:
 #include <set>
 #include <vector>
 
-template<class It>
+template<typename It>
 int mex(It lo, It hi) {
   int n = static_cast<int>(hi - lo);
   std::vector<bool> seen(n + 1, false);

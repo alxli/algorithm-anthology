@@ -25,13 +25,21 @@ Space Complexity:
 #include <cmath>
 #include <cstddef>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
 
 struct Point {
   double x, y;
@@ -39,18 +47,18 @@ struct Point {
   bool operator==(const Point &p) const { return EQ(x, p.x) && EQ(y, p.y); }
 };
 
-template<class PtA, class PtB, class PtO>
+template<typename PtA, typename PtB, typename PtO>
 double cross(const PtA &a, const PtB &b, const PtO &o) {
   return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
-template<class PtA, class PtO, class PtB>
+template<typename PtA, typename PtO, typename PtB>
 int turn(const PtA &a, const PtO &o, const PtB &b) {
   double c = cross(a, b, o);
   return LT(c, 0) ? -1 : (LT(0, c) ? 1 : 0);
 }
 
-template<class PtA, class PtB>
+template<typename PtA, typename PtB>
 int line_intersection(
     const PtA &p1, const PtA &p2, const PtB &p3, const PtB &p4, Point *p = nullptr
 ) {
@@ -69,7 +77,7 @@ int line_intersection(
   return 0;
 }
 
-template<class It, class Pt>
+template<typename It, typename Pt>
 std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
   if (EQ(p.x, q.x) && EQ(p.y, q.y)) {
     throw std::runtime_error("Cannot cut using line from identical points.");

@@ -28,7 +28,7 @@ Space Complexity:
 
 const int64_t INF = (1LL << 62);
 
-template<class Cost>
+template<typename Cost>
 void compute_dc_layer(
     const std::vector<int64_t> &dp_prev, std::vector<int64_t> &dp_cur, int l, int r, int opt_l,
     int opt_r, Cost cost

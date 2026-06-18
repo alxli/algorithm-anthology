@@ -50,7 +50,7 @@ Space Complexity:
 #include <vector>
 using std::string;
 
-template<class V>
+template<typename V>
 class Trie {
   struct Node {
     V value;
@@ -83,7 +83,7 @@ class Trie {
     return true;
   }
 
-  template<class Fn>
+  template<typename Fn>
   static void walk(Node *n, string &s, Fn f) {
     if (n->is_terminal) {
       f(s, n->value);
@@ -172,7 +172,7 @@ class Trie {
     return n->cnt;
   }
 
-  template<class Fn>
+  template<typename Fn>
   void walk(Fn f) const {
     string s;
     walk(root, s, f);

@@ -6,7 +6,7 @@ of $E$ containing no edges that share the same node.
 
 Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phase first runs a
 breadth-first search to layer the graph by distance, then a depth-first search to find a maximal set
-of vertex-disjoint shortest augmenting paths to flip at once, giving $O(m \sqrt{n})$ overall.
+of vertex-disjoint shortest augmenting paths to flip at once, for O(m sqrt(n)) running time overall.
 
 - `hopcroft_karp(n2)` populates `match` and returns maximum matching size for a global,
   pre-populated adjacency list `adj` whose left-side nodes are numbered [0, `n`) and whose

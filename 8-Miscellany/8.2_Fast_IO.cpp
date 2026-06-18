@@ -106,7 +106,7 @@ struct FastInput {
     return *this;
   }
 
-  template<class T>
+  template<typename T>
   typename std::enable_if<
       std::is_integral<T>::value && !std::is_same<T, bool>::value, FastInput &>::type
   operator>>(T &x) {
@@ -131,7 +131,7 @@ struct FastInput {
     return *this;
   }
 
-  template<class T>
+  template<typename T>
   typename std::enable_if<std::is_floating_point<T>::value, FastInput &>::type operator>>(T &x) {
     std::string s;
     *this >> s;
@@ -187,7 +187,7 @@ struct FastOutput {
     return *this;
   }
 
-  template<class T>
+  template<typename T>
   typename std::enable_if<
       std::is_integral<T>::value && !std::is_same<T, bool>::value, FastOutput &>::type
   operator<<(T x) {
@@ -219,7 +219,7 @@ struct FastOutput {
     return *this;
   }
 
-  template<class T>
+  template<typename T>
   typename std::enable_if<std::is_floating_point<T>::value, FastOutput &>::type operator<<(T x) {
     char s[64];
     std::snprintf(s, sizeof(s), "%.17g", static_cast<double>(x));

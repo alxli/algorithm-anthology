@@ -40,17 +40,17 @@ Space Complexity:
 #include <unordered_map>
 #include <utility>
 
-template<class T, int R = 1000000001, int C = 1000000001>
+template<typename T, int R = 1000000001, int C = 1000000001>
 class SparseFenwick2D {
   std::unordered_map<int64_t, T> t1, t2, t3, t4;
 
-  template<class Map>
+  template<typename Map>
   static T get(const Map &tree, int r, int c) {
     auto it = tree.find(static_cast<int64_t>(r) * (C + 1) + c);
     return it == tree.end() ? T() : it->second;
   }
 
-  template<class Map>
+  template<typename Map>
   static void add(Map &tree, int r, int c, const T &x) {
     for (int i = r + 1; i <= R; i += i & -i) {
       for (int j = c + 1; j <= C; j += j & -j) {

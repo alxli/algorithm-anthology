@@ -8,9 +8,9 @@ distinct values in a range or the sum of squares of element frequencies.
 
 The trick is the query order. Sort queries by the block of their left endpoint, where each block
 spans about $n / \sqrt{q}$ indices, breaking ties by right endpoint. The left pointer then travels
-$O(n / \sqrt{q})$ per query, for $O(n\sqrt{q})$ moves in all, while within each block the right
-pointer sweeps monotonically across the array, contributing $O(n)$ per block over the $\sqrt{q}$
-blocks, again $O(n\sqrt{q})$. So the pointers move $O(n\sqrt{q})$ times in total. Sorting the right
+O(n / sqrt(q)) per query, for O(n sqrt(q)) moves in all, while within each block the right
+pointer sweeps monotonically across the array, contributing O(n) per block over the $\sqrt{q}$
+blocks, again O(n sqrt(q)). So the pointers move O(n sqrt(q)) times in total. Sorting the right
 endpoint in alternating directions between consecutive blocks (a "boustrophedon" order) avoids
 resetting the right pointer at every block boundary.
 
@@ -35,7 +35,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class AddFn, class RemoveFn, class CurrentFn>
+template<typename AddFn, typename RemoveFn, typename CurrentFn>
 std::vector<decltype(std::declval<CurrentFn>()())> mos_algorithm(
     int n, const std::vector<std::pair<int, int>> &queries, AddFn add, RemoveFn remove,
     CurrentFn current

@@ -33,7 +33,7 @@ Integer Conversion:
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-template<class Int>
+template<typename Int>
 string to_str(Int i) {
   std::ostringstream oss;
   oss << i;
@@ -204,7 +204,8 @@ Find and Replace:
   \item \inlinecode{starts\_with(s, prefix)} returns whether \inlinecode{s} begins with \inlinecode{prefix}.
   \item \inlinecode{ends\_with(s, suffix)} returns whether \inlinecode{s} ends with \inlinecode{suffix}.
   \item \inlinecode{contains(s, needle)} returns whether \inlinecode{needle} occurs in \inlinecode{s}.
-  \item \inlinecode{find\_all(haystack, needle)} returns a vector of all positions where the string \inlinecode{needle} appears in the string \inlinecode{haystack}.
+  \item \inlinecode{find\_all(haystack, needle)} returns a vector of all positions where the string \inlinecode{needle} appears in the string \inlinecode{haystack}. Matches may overlap; e.g. \inlinecode{find\_all("aaa", "aa")} returns \inlinecode{\{0, 1\}}.
+  \item \inlinecode{count(haystack, needle)} returns the number of non-overlapping occurrences of \inlinecode{needle} in \inlinecode{haystack}, like Python's \inlinecode{str.count}. This differs from \inlinecode{find\_all().size()}, which counts overlapping matches; e.g. \inlinecode{count("aaa", "aa")} returns \inlinecode{1}, but \inlinecode{find\_all("aaa", "aa")} finds two.
   \item \inlinecode{replace(s, old, replacement)} returns a copy of \inlinecode{s} with all occurrences of the string \inlinecode{old} replaced with the given \inlinecode{replacement}.
   \item \inlinecode{regex\_find\_all(s, pattern)} returns every substring of \inlinecode{s} matched by \inlinecode{pattern}.
   \item \inlinecode{regex\_groups(s, pattern)} returns the capture groups of the first match of \inlinecode{pattern} in \inlinecode{s}, excluding the full match. If there is no match, returns an empty vector.
@@ -231,6 +232,19 @@ std::vector<int> find_all(const string &haystack, const string &needle) {
   while (pos != string::npos) {
     res.push_back(pos);
     pos = haystack.find(needle, pos + 1);
+  }
+  return res;
+}
+
+int count(const string &haystack, const string &needle) {
+  if (needle.empty()) {
+    return 0;
+  }
+  int res = 0;
+  size_t pos = haystack.find(needle, 0);
+  while (pos != string::npos) {
+    res++;
+    pos = haystack.find(needle, pos + needle.size());
   }
   return res;
 }
@@ -273,8 +287,10 @@ Joining and Splitting:
 
 \begin{compactitem}
   \item \inlinecode{join(v, delim)} returns the strings in vector \inlinecode{v} concatenated, separated by the given delimiter.
-  \item \inlinecode{pad\_left(s, width, ch)} returns \inlinecode{s} left-padded with \inlinecode{ch} until its length is at least \inlinecode{width}.
-  \item \inlinecode{pad\_right(s, width, ch)} returns \inlinecode{s} right-padded with \inlinecode{ch} until its length is at least \inlinecode{width}.
+  \item \inlinecode{repeat(s, n)} returns \inlinecode{s} concatenated with itself \inlinecode{n} times, like Python's \inlinecode{s * n}. For a single repeated character, prefer \inlinecode{std::string(n, ch)}.
+  \item \inlinecode{ljust(s, width, ch)} returns \inlinecode{s} left-justified (padded on the right with \inlinecode{ch}) to at least \inlinecode{width} characters, like Python's \inlinecode{str.ljust}.
+  \item \inlinecode{rjust(s, width, ch)} returns \inlinecode{s} right-justified (padded on the left with \inlinecode{ch}) to at least \inlinecode{width} characters, like Python's \inlinecode{str.rjust}.
+  \item \inlinecode{center(s, width, ch)} returns \inlinecode{s} centered in a field of at least \inlinecode{width} characters by padding both sides with \inlinecode{ch}, like Python's \inlinecode{str.center}. If the padding is uneven, the extra character goes on the right.
   \item \inlinecode{split(s, char delim)} returns a vector of tokens of \inlinecode{s}, split on a single character delimiter. Empty tokens are skipped, so \inlinecode{split("a::b", \textquotesingle{}:\textquotesingle{})} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
   \item \inlinecode{split(s, string delim)} returns a vector of tokens of \inlinecode{s}, split on a set of many possible single character delimiters. All characters of \inlinecode{delim} will be removed from \inlinecode{s}, and the remaining token(s) of \inlinecode{s} will be added sequentially to a vector and returned. As with the first version, empty tokens are skipped. For example, \inlinecode{split("a::b", ":")} returns \inlinecode{\{"a", "b"\}}, not \inlinecode{\{"a", "", "b"\}}.
   \item \inlinecode{explode(s, delim)} returns a vector of tokens of \inlinecode{s}, split on the entire delimiter string \inlinecode{delim}. Unlike the \inlinecode{split()} functions above, \inlinecode{delim} is treated as a contiguous boundary string, not merely a set of possible boundary characters. This will not skip empty tokens. For example, \inlinecode{explode("a::::b", "::")} yields \inlinecode{\{"a", "", "b"\}}, not \inlinecode{\{"a", "b"\}}.
@@ -284,21 +300,39 @@ Joining and Splitting:
 \begin{lstlisting}[language=C++]
 string join(const std::vector<string> &v, const string &delim = " ") {
   string res;
+  res.reserve(v.size() + delim.size() * (v.size() - 1));
   for (int i = 0; i < static_cast<int>(v.size()); i++) {
-    if (i > 0) res += delim;
-    res += v[i];
+    res += (i > 0 ? delim : "") + v[i];
   }
   return res;
 }
 
-string pad_left(const string &s, int width, char ch = ' ') {
+string repeat(const string &s, int n) {
+  string res;
+  res.reserve(s.size() * n);
+  for (int i = 0; i < n; i++) {
+    res += s;
+  }
+  return res;
+}
+
+string ljust(const string &s, int width, char ch = ' ') {
+  int pad = width - static_cast<int>(s.size());
+  return pad > 0 ? s + string(pad, ch) : s;
+}
+
+string rjust(const string &s, int width, char ch = ' ') {
   int pad = width - static_cast<int>(s.size());
   return pad > 0 ? string(pad, ch) + s : s;
 }
 
-string pad_right(const string &s, int width, char ch = ' ') {
+string center(const string &s, int width, char ch = ' ') {
   int pad = width - static_cast<int>(s.size());
-  return pad > 0 ? s + string(pad, ch) : s;
+  if (pad <= 0) {
+    return s;
+  }
+  int left = pad / 2;
+  return string(left, ch) + s + string(pad - left, ch);
 }
 
 std::vector<string> split(const string &s, char delim) {
@@ -385,13 +419,17 @@ int main() {
   assert(ends_with("abracadabra", "dabra"));
   assert(contains("abracadabra", "cad"));
   assert(find_all("abracadabra", "ab") == pos);
+  assert(count("abracadabra", "ab") == 2);
+  assert(count("aaa", "aa") == 1 && find_all("aaa", "aa").size() == 2);
   assert(replace("abcdabba", "ab", "00") == "00cd00ba");
   assert(join(regex_find_all("a12b345", "[0-9]+"), "|") == "12|345");
   assert(join(regex_groups("abc-123", "([a-z]+)-([0-9]+)"), "|") == "abc|123");
   assert(regex_replace_all("a12b345", "[0-9]+", "#") == "a#b#");
 
-  assert(pad_left("42", 5, '0') == "00042");
-  assert(pad_right("hi", 4, '.') == "hi..");
+  assert(repeat("ab", 3) == "ababab");
+  assert(rjust("42", 5, '0') == "00042");
+  assert(ljust("hi", 4, '.') == "hi..");
+  assert(center("ab", 5, '*') == "*ab**");
   assert(join(split("a\nb\ncde\nf", '\n'), "|") == "a|b|cde|f");  // split v1
   assert(join(split("a::b", ':'), "|") == "a|b");                 // split v1 skips empty tokens
   assert(join(split("a::b,cde:,f", ":,"), "|") == "a|b|cde|f");   // split v2
@@ -467,12 +505,12 @@ uint64_t mix64(uint64_t x) {
   return x ^ (x >> 31);
 }
 
-template<class Int>
+template<typename Int>
 uint32_t hash32(Int x) {
   return mix32(static_cast<uint32_t>(x));
 }
 
-template<class Int>
+template<typename Int>
 uint64_t hash64(Int x) {
   return mix64(static_cast<uint64_t>(x));
 }
@@ -521,7 +559,7 @@ uint64_t hash_string_fnv1a64(const std::string &s) {
   return h;
 }
 
-template<class It>
+template<typename It>
 uint32_t hash_range32(It first, It last) {
   uint32_t h = 0;
   for (It it = first; it != last; ++it) {
@@ -530,7 +568,7 @@ uint32_t hash_range32(It first, It last) {
   return h;
 }
 
-template<class It>
+template<typename It>
 uint64_t hash_range64(It first, It last) {
   uint64_t h = 0;
   for (It it = first; it != last; ++it) {
@@ -539,7 +577,7 @@ uint64_t hash_range64(It first, It last) {
   return h;
 }
 
-template<class Int>
+template<typename Int>
 struct IntHasher {
   std::size_t operator()(Int x) const {
     static const uint64_t RAND_SEED = std::chrono::steady_clock::now().time_since_epoch().count();
@@ -547,17 +585,17 @@ struct IntHasher {
   }
 };
 
-template<class T>
+template<typename T>
 struct GenericHasher;
 
 // Use std::hash by default.
-template<class T, bool IsInteger>
+template<typename T, bool IsInteger>
 struct ScalarHasher {
   std::size_t operator()(const T &x) const { return std::hash<T>()(x); }
 };
 
 // Optional: Use our seeded hasher for ints in open-hacking environments.
-template<class T>
+template<typename T>
 struct ScalarHasher<T, true> {
   std::size_t operator()(T x) const { return IntHasher<T>{}(x); }
 };
@@ -577,7 +615,7 @@ struct PairIntHasher {
   }
 };
 
-template<class A, class B>
+template<typename A, typename B>
 struct PairHasher {
   std::size_t operator()(const std::pair<A, B> &p) const {
     uint64_t h = 0;
@@ -587,7 +625,7 @@ struct PairHasher {
   }
 };
 
-template<class T>
+template<typename T>
 struct VectorHasher {
   std::size_t operator()(const std::vector<T> &v) const {
     uint64_t h = 0;
@@ -613,16 +651,16 @@ struct TupleHasher {
   }
 };
 
-template<class T>
+template<typename T>
 struct GenericHasher : ScalarHasher<T, std::is_integral<T>::value> {};
 
-template<class A, class B>
+template<typename A, typename B>
 struct GenericHasher<std::pair<A, B>> : PairHasher<A, B> {};
 
 template<class... Ts>
 struct GenericHasher<std::tuple<Ts...>> : TupleHasher<Ts...> {};
 
-template<class T>
+template<typename T>
 struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 
 // Specializing std::hash lets pair and tuple keys be used directly in std::unordered_map and
@@ -633,7 +671,7 @@ struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 // std::hash<std::vector<bool>>; pass VectorHasher or GenericHasher explicitly for those.
 namespace std {
 
-template<class A, class B>
+template<typename A, typename B>
 struct hash<pair<A, B>> {
   size_t operator()(const pair<A, B> &p) const { return ::GenericHasher<pair<A, B>>()(p); }
 };
@@ -783,14 +821,14 @@ uint64_t mix64(uint64_t x) {
   return x ^ (x >> 31);
 }
 
-template<class T>
+template<typename T>
 struct RollingValueHasher {
   // +1 ensures the result is in [1, HASH_MOD) and never zero; a zero element in a polynomial
   // hash is invisible and enables trivial collisions.
   uint64_t operator()(const T &x) const { return mix64((uint64_t)x) % (HASH_MOD - 1) + 1; }
 };
 
-template<class T, class ValueHasher = RollingValueHasher<T>>
+template<typename T, typename ValueHasher = RollingValueHasher<T>>
 class RollingHash {
   static std::vector<uint64_t> pow_base;
   std::vector<uint64_t> pref;
@@ -802,7 +840,7 @@ class RollingHash {
     }
   }
 
-  template<class It>
+  template<typename It>
   void build(It first, It last) {
     pref.clear();
     pref.push_back(0);
@@ -818,7 +856,7 @@ class RollingHash {
     pref.push_back(0);
   }
 
-  template<class It>
+  template<typename It>
   RollingHash(It first, It last, const ValueHasher &hasher = ValueHasher()) : value_hasher(hasher) {
     build(first, last);
   }
@@ -834,7 +872,7 @@ class RollingHash {
     return hash_sub(pref[hi], hash_mul(pref[lo], pow_base[hi - lo]));
   }
 
-  template<class It>
+  template<typename It>
   static uint64_t hash(It first, It last, const ValueHasher &hasher = ValueHasher()) {
     RollingHash<T, ValueHasher> h(first, last, hasher);
     return h.get(0, h.size());
@@ -851,7 +889,7 @@ class RollingHash {
   }
 };
 
-template<class T, class ValueHasher>
+template<typename T, typename ValueHasher>
 std::vector<uint64_t> RollingHash<T, ValueHasher>::pow_base(1, 1);
 \end{lstlisting}
 \Needspace*{4\baselineskip}
@@ -899,6 +937,195 @@ int main() {
   vector<PointI> poly{{1, 2}, {3, 4}};
   RollingHash<PointI, PointHasher> hp(poly);
   assert((hp.get(0, 2) == RollingHash<PointI, PointHasher>::hash(poly)));
+  return 0;
+}
+\end{lstlisting}
+\subsection{Rolling Hash Deque}
+Maintain a polynomial rolling hash over a sequence of elements of an arbitrary type \inlinecode{T}, under insertion and deletion at either end, in $O(1)$ time per operation. Each element is first reduced to a nonnegative integer ``digit'' by a user-supplied hasher, so any comparable type (characters, integers, whole words, tuples) can be hashed. This is the deque generalization of the classic Rabin-Karp sliding window: pushing at the back and popping from the front is exactly a moving window, and this structure additionally supports pushing at the front and popping from the back.
+
+The sequence of digits is hashed with the front element as the most significant digit, so a sequence of length $n$ has hash $\sum_{i=0}^{n-1} a_i B^{n-1-i}$ (the front element $a_0$ carries the highest power). This makes the four end operations pure $O(1)$ updates of a running accumulator:
+
+\begin{compactitem}
+  \item \inlinecode{push\_back(c)}:  $H \to H \cdot B + c$ (Horner's step; the existing weights all shift up).
+  \item \inlinecode{pop\_front()}:   $H \to H - a_0 \cdot B^{n-1}$ (drop the most significant term).
+  \item \inlinecode{push\_front(c)}: $H \to c \cdot B^{n} + H$ (the new front becomes the most significant term).
+  \item \inlinecode{pop\_back()}:    $H \to (H - a_{n-1}) \cdot B^{-1}$ (drop the constant term, then renormalize).
+\end{compactitem}
+
+Only \inlinecode{pop\_back()} needs a modular inverse of the base, which is precomputed once. The weight of the front element, $B^{n-1}$, is maintained incrementally (multiplied by $B$ on a push, by $B^{-1}$ on a pop), so no power table or length-dependent exponentiation is needed. Each element's digit is stored when pushed, so popping never re-invokes the hasher. Because the hash depends only on the current contents, two deques with equal sequences hash equally regardless of how they were built, and a sliding window can be compared against a fixed target in $O(1)$ per step.
+
+\inlinecode{MOD1} and \inlinecode{MOD2} are two distinct primes, each kept below $2^{31}$ so that the product of any two residues fits in a 64-bit integer; hashing modulo both and comparing the resulting pair makes a collision astronomically unlikely. \inlinecode{BASE1} and \inlinecode{BASE2} are the corresponding polynomial bases, which should exceed the largest digit value and may be randomized per run to resist adversarial inputs.
+
+The hasher's output must be nonnegative. As with any polynomial hash, comparing sequences of different lengths is only safe when digits are positive (for example, map an alphabet to $[1, B)$) so that a leading zero cannot make a shorter sequence collide with a longer one.
+
+\begin{compactitem}
+  \item \inlinecode{HashDeque\textless{}T, Hash\textgreater{}(hasher)} constructs an empty deque whose \inlinecode{hasher} maps each element to its nonnegative integer digit. For integer-like \inlinecode{T} the default hasher casts the element to \inlinecode{uint64\_t}, so \inlinecode{HashDeque\textless{}char\textgreater{}} and \inlinecode{HashDeque\textless{}int\textgreater{}} work with no hasher supplied.
+  \item \inlinecode{size()} returns the number of elements, and \inlinecode{empty()} whether there are none.
+  \item \inlinecode{push\_back(x)} and \inlinecode{push\_front(x)} append \inlinecode{x} at the back or front.
+  \item \inlinecode{pop\_back()} and \inlinecode{pop\_front()} remove the back or front element; the deque must be nonempty.
+  \item \inlinecode{hash()} returns the pair of hashes of the current sequence.
+  \item \inlinecode{a == b} (and \inlinecode{a != b}) compares two deques: it checks equal length, then equal hash pairs, so two deques hold equal sequences with high probability if and only if they compare equal.
+\end{compactitem}
+
+\textbf{Time Complexity}: $O(1)$ per call to every operation, plus one hasher evaluation per \inlinecode{push\_back()} / \inlinecode{push\_front()}.
+
+\Needspace*{3\baselineskip}
+\textbf{Space Complexity}:
+\begin{compactitem}
+  \item $O(n)$ for storage, where $n$ is the current number of elements.
+  \item $O(1)$ auxiliary per operation.
+\end{compactitem}
+
+\begin{lstlisting}[language=C++]
+#include <cassert>
+#include <cstdint>
+#include <deque>
+#include <utility>
+
+template<class T>
+struct identity_digit {
+  uint64_t operator()(const T &x) const { return static_cast<uint64_t>(x); }
+};
+
+template<class T = int, class Hash = identity_digit<T>>
+class HashDeque {
+  static const uint64_t MOD1 = 1000000007, MOD2 = 1000000009;  // Distinct primes below 2^31.
+  static const uint64_t BASE1 = 131, BASE2 = 137;  // Should exceed the maximum digit value.
+
+  Hash hasher;                  // Maps an element to its nonnegative integer digit.
+  std::deque<uint64_t> digits;  // Per-element digit values, retained so pops never re-hash.
+  uint64_t h1 = 0, h2 = 0;      // Hash of the current sequence modulo MOD1, MOD2.
+  uint64_t top1, top2;          // B^(len-1): weight of the front element (B^-1 while empty).
+  uint64_t inv1, inv2;          // Modular inverses of BASE1, BASE2, for pop_back().
+
+  // Products and sums of residues below 2^30 stay under 2^60, so 64-bit arithmetic never overflows.
+  static uint64_t powmod(uint64_t b, uint64_t e, uint64_t m) {
+    uint64_t res = 1;
+    for (b %= m; e > 0; e >>= 1) {
+      if (e & 1) {
+        res = res * b % m;
+      }
+      b = b * b % m;
+    }
+    return res;
+  }
+
+ public:
+  explicit HashDeque(Hash hasher = Hash()) : hasher(hasher) {
+    inv1 = powmod(BASE1, MOD1 - 2, MOD1);
+    inv2 = powmod(BASE2, MOD2 - 2, MOD2);
+    top1 = inv1;  // B^(0-1) = B^-1, so the first push lifts the front weight to B^0 = 1.
+    top2 = inv2;
+  }
+
+  int size() const { return static_cast<int>(digits.size()); }
+  bool empty() const { return digits.empty(); }
+  std::pair<uint64_t, uint64_t> hash() const { return {h1, h2}; }
+
+  void push_back(const T &x) {
+    uint64_t d = hasher(x), c1 = d % MOD1, c2 = d % MOD2;
+    h1 = (h1 * BASE1 + c1) % MOD1;
+    h2 = (h2 * BASE2 + c2) % MOD2;
+    top1 = top1 * BASE1 % MOD1;
+    top2 = top2 * BASE2 % MOD2;
+    digits.push_back(d);
+  }
+
+  void push_front(const T &x) {
+    uint64_t d = hasher(x), c1 = d % MOD1, c2 = d % MOD2;
+    top1 = top1 * BASE1 % MOD1;  // Now B^len: the weight the new front element receives.
+    top2 = top2 * BASE2 % MOD2;
+    h1 = (c1 * top1 + h1) % MOD1;
+    h2 = (c2 * top2 + h2) % MOD2;
+    digits.push_front(d);
+  }
+
+  void pop_front() {
+    assert(!digits.empty());
+    uint64_t d = digits.front(), c1 = d % MOD1, c2 = d % MOD2;
+    h1 = (h1 + MOD1 - c1 * top1 % MOD1) % MOD1;
+    h2 = (h2 + MOD2 - c2 * top2 % MOD2) % MOD2;
+    top1 = top1 * inv1 % MOD1;
+    top2 = top2 * inv2 % MOD2;
+    digits.pop_front();
+  }
+
+  void pop_back() {
+    assert(!digits.empty());
+    uint64_t d = digits.back(), c1 = d % MOD1, c2 = d % MOD2;
+    h1 = (h1 + MOD1 - c1) % MOD1 * inv1 % MOD1;
+    h2 = (h2 + MOD2 - c2) % MOD2 * inv2 % MOD2;
+    top1 = top1 * inv1 % MOD1;
+    top2 = top2 * inv2 % MOD2;
+    digits.pop_back();
+  }
+
+  // Compares lengths first, so sequences of different lengths never compare equal.
+  friend bool operator==(const HashDeque &a, const HashDeque &b) {
+    return a.digits.size() == b.digits.size() && a.h1 == b.h1 && a.h2 == b.h2;
+  }
+
+  friend bool operator!=(const HashDeque &a, const HashDeque &b) { return !(a == b); }
+};
+\end{lstlisting}
+\Needspace*{4\baselineskip}
+\textbf{Example Usage}\par
+\begin{lstlisting}[language=C++]
+#include <functional>
+#include <string>
+using namespace std;
+
+int main() {
+  // Default hasher: characters hash by their code point.
+  HashDeque<char> hd, hdrev;
+  for (char c : string("abc")) {
+    hd.push_back(c);
+  }
+  for (char c : string("cba")) {
+    hdrev.push_front(c);  // Prepending c, b, a also yields "abc".
+  }
+  assert(hd.size() == 3 && hd == hdrev);
+
+  // Slide a width-3 window across the text like Rabin-Karp: push_back + pop_front.
+  string text = "Xabcab";
+  auto target = hd.hash();  // Hash of "abc".
+  HashDeque<char> window;
+  for (int i = 0; i < 3; i++) {
+    window.push_back(text[i]);  // "Xab".
+  }
+  bool found = (window.hash() == target);
+  for (int i = 3; i < static_cast<int>(text.size()); i++) {
+    window.push_back(text[i]);
+    window.pop_front();
+    found = found || (window.hash() == target);
+  }
+  assert(found);  // "abc" occurs in "Xabcab".
+
+  // pop_back undoes a push_back, restoring an earlier state's hash.
+  HashDeque<char> d;
+  d.push_back('a');
+  d.push_back('b');
+  auto ab = d.hash();
+  d.push_back('c');
+  d.pop_back();
+  assert(d.hash() == ab);  // Back to "ab".
+
+  // An arbitrary element type via a custom hasher: a deque of whole words.
+  auto whash = [](const string &w) -> uint64_t { return std::hash<string>{}(w); };
+  HashDeque<string, decltype(whash)> sentence(whash), reversed(whash);
+  for (string w : {string("the"), string("quick"), string("fox")}) {
+    sentence.push_back(w);
+  }
+  for (string w : {string("fox"), string("quick"), string("the")}) {
+    reversed.push_front(w);  // Same word sequence, assembled from the front.
+  }
+  assert(sentence == reversed);
+
+  sentence.pop_back();  // Drop "fox", leaving the words "the quick".
+  HashDeque<string, decltype(whash)> prefix(whash);
+  prefix.push_back("the");
+  prefix.push_back("quick");
+  assert(sentence == prefix);
   return 0;
 }
 \end{lstlisting}
@@ -1069,7 +1296,7 @@ This technique is useful for probabilistic equality checks on sets, distinct-pre
 #include <unordered_set>
 #include <vector>
 
-template<class T>
+template<typename T>
 class ZobristHash {
   std::unordered_map<T, uint64_t> token;
   uint64_t state;
@@ -1096,7 +1323,7 @@ class ZobristHash {
 
   uint64_t toggle(uint64_t h, const T &x) { return h ^ get(x); }
 
-  template<class It>
+  template<typename It>
   std::vector<uint64_t> distinct_prefix_hashes(It lo, It hi) {
     std::unordered_set<T> seen;
     std::vector<uint64_t> res(1, 0);
@@ -1245,7 +1472,7 @@ The \inlinecode{find()} function below calls the Z algorithm on the concatenatio
 #include <vector>
 using std::string;
 
-template<class Seq>
+template<typename Seq>
 std::vector<int> z_array(const Seq &s) {
   std::vector<int> z(s.size());
   for (int i = 1, l = 0, r = 0; i < static_cast<int>(z.size()); i++) {
@@ -1395,7 +1622,7 @@ class AhoCorasick {
     }
   }
 
-  template<class Fn>
+  template<typename Fn>
   void find_all_in(const string &haystack, Fn report_match) {
     int state = 0;
     for (int i = 0; i < static_cast<int>(haystack.size()); i++) {
@@ -1584,7 +1811,7 @@ Both functions below operate on any random-access sequence whose elements suppor
 \begin{lstlisting}[language=C++]
 #include <vector>
 
-template<class Seq>
+template<typename Seq>
 std::vector<int> lyndon_factorization(const Seq &s) {
   int n = static_cast<int>(s.size());
   std::vector<int> starts;
@@ -1603,7 +1830,7 @@ std::vector<int> lyndon_factorization(const Seq &s) {
   return starts;
 }
 
-template<class Seq>
+template<typename Seq>
 int min_rotation(const Seq &s) {
   int n = static_cast<int>(s.size());
   if (n == 0) {
@@ -2025,7 +2252,7 @@ class SuffixArrayDC3 {
     return (a1 < b1) || (a1 == b1 && leq(a2, a3, b2, b3));
   }
 
-  template<class It>
+  template<typename It>
   static void radix_pass(It a, It b, It r, int n, int K) {
     std::vector<int> cnt(K + 1);
     for (int i = 0; i < n; i++) {
@@ -2039,7 +2266,7 @@ class SuffixArrayDC3 {
     }
   }
 
-  template<class It>
+  template<typename It>
   static void suffix_array_dc3(It s, It sa, int n, int K) {
     int n0 = (n + 2) / 3, n1 = (n + 1) / 3, n2 = n / 3, n02 = n0 + n2;
     std::vector<int> s12(n02 + 3), sa12(n02 + 3), s0(n0), sa0(n0);
@@ -2226,7 +2453,7 @@ For a small, fixed alphabet, the \inlinecode{std::unordered\_map} children can b
 #include <vector>
 using std::string;
 
-template<class V>
+template<typename V>
 class Trie {
   struct Node {
     V value;
@@ -2259,7 +2486,7 @@ class Trie {
     return true;
   }
 
-  template<class Fn>
+  template<typename Fn>
   static void walk(Node *n, string &s, Fn f) {
     if (n->is_terminal) {
       f(s, n->value);
@@ -2348,7 +2575,7 @@ class Trie {
     return n->cnt;
   }
 
-  template<class Fn>
+  template<typename Fn>
   void walk(Fn f) const {
     string s;
     walk(root, s, f);
@@ -2449,7 +2676,7 @@ Maintain a map of strings to values using a compressed tree data structure. Each
 #include <vector>
 using std::string;
 
-template<class V>
+template<typename V>
 class RadixTree {
   struct Node {
     V value;
@@ -2564,7 +2791,7 @@ class RadixTree {
     return false;
   }
 
-  template<class Fn>
+  template<typename Fn>
   static void walk(Node *n, string &s, Fn f) {
     if (n->is_terminal) {
       f(s, n->value);
@@ -2665,7 +2892,7 @@ class RadixTree {
     return n->cnt;
   }
 
-  template<class Fn>
+  template<typename Fn>
   void walk(Fn f) const {
     string s;
     walk(root, s, f);
@@ -3368,7 +3595,7 @@ string longest_common_subsequence(const string &s1, const string &s2) {
   return res;
 }
 
-template<class It>
+template<typename It>
 std::vector<int> lcs_len(It lo1, It hi1, It lo2, It hi2) {
   std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
   for (It it1 = lo1; it1 != hi1; ++it1) {
@@ -3382,7 +3609,7 @@ std::vector<int> lcs_len(It lo1, It hi1, It lo2, It hi2) {
   return res;
 }
 
-template<class It>
+template<typename It>
 void hirschberg_rec(It lo1, It hi1, It lo2, It hi2, string *res) {
   if (lo1 == hi1) {
     return;
@@ -3497,7 +3724,7 @@ std::pair<string, string> align_sequences(
   return {res1, res2};
 }
 
-template<class It>
+template<typename It>
 std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2, int gap_cost, int sub_cost) {
   std::vector<int> res(std::distance(lo2, hi2) + 1), prev(res);
   for (It it1 = lo1; it1 != hi1; ++it1) {
@@ -3511,7 +3738,7 @@ std::vector<int> row_cost(It lo1, It hi1, It lo2, It hi2, int gap_cost, int sub_
   return res;
 }
 
-template<class It>
+template<typename It>
 void hirschberg_rec(
     It lo1, It hi1, It lo2, It hi2, string *res1, string *res2, int gap_cost, int sub_cost
 ) {
@@ -3597,7 +3824,7 @@ Evaluate an expression in accordance to the order of operations (parentheses, un
 \begin{lstlisting}[language=C++]
 #include <string>
 
-template<class It>
+template<typename It>
 int eval(It &it, int prec) {
   if (prec == 0) {
     int sign = 1, res = 0;
@@ -3732,7 +3959,7 @@ class RecursiveDescentParser {
     return res;
   }
 
-  template<class StrIt>
+  template<typename StrIt>
   Operand eval_unary(StrIt &lo, StrIt hi) {
     if (is_operand(*lo)) {
       return eval_operand(*(lo++));
@@ -3751,7 +3978,7 @@ class RecursiveDescentParser {
     return res;
   }
 
-  template<class StrIt>
+  template<typename StrIt>
   Operand eval_binary(StrIt &lo, StrIt hi, int precedence) {
     if (precedence > max_precedence) {
       return eval_unary(lo, hi);
@@ -3833,7 +4060,7 @@ class RecursiveDescentParser {
     return res;
   }
 
-  template<class StrIt>
+  template<typename StrIt>
   Operand eval(StrIt lo, StrIt hi) {
     Operand res = eval_binary(lo, hi, 0);
     if (lo != hi) {
@@ -3855,7 +4082,9 @@ class RecursiveDescentParser {
 #include <cmath>
 using namespace std;
 
-#define EQ(a, b) (fabs((a) - (b)) < 1e-7)
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-7;
+}
 
 int main() {
   unordered_map<string, UnaryOp> unary_ops;
@@ -4034,7 +4263,7 @@ class ShuntingYardParser {
     return res;
   }
 
-  template<class StrIt>
+  template<typename StrIt>
   Operand eval(StrIt lo, StrIt hi) {
     std::stack<Operand> vals;
     std::stack<std::pair<string, bool>> op_stack;
@@ -4103,7 +4332,9 @@ class ShuntingYardParser {
 #include <cmath>
 using namespace std;
 
-#define EQ(a, b) (fabs((a) - (b)) < 1e-7)
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-7;
+}
 
 int main() {
   unordered_map<string, UnaryOp> unary_ops;

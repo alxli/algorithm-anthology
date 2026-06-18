@@ -51,7 +51,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class Int>
+template<typename Int>
 Int gcd(Int a, Int b) {
   while (b != 0) {
     Int t = b;
@@ -61,7 +61,7 @@ Int gcd(Int a, Int b) {
   return (a < 0 ? -a : a);
 }
 
-template<class Int>
+template<typename Int>
 Int lcm(Int a, Int b) {
   if (a == 0 || b == 0) {
     return 0;
@@ -70,7 +70,7 @@ Int lcm(Int a, Int b) {
   return (res < 0 ? -res : res);
 }
 
-template<class Int>
+template<typename Int>
 std::pair<Int, Int> extended_euclid(Int a, Int b) {
   Int x = 1, y = 0, x1 = 0, y1 = 1;
   while (b != 0) {
@@ -85,7 +85,7 @@ std::pair<Int, Int> extended_euclid(Int a, Int b) {
   return (a > 0) ? std::pair<Int, Int>{x, y} : std::pair<Int, Int>{-x, -y};
 }
 
-template<class Int>
+template<typename Int>
 bool diophantine(Int a, Int b, Int c, Int &x, Int &y, Int &g) {
   if (a == 0 && b == 0) {
     x = y = g = 0;
@@ -132,13 +132,13 @@ bool diophantine(Int a, Int b, Int c, Int &x, Int &y, Int &g) {
   return true;
 }
 
-template<class Int>
+template<typename Int>
 Int mod(Int a, Int m) {
   Int r = a % m;
   return (r >= 0) ? r : (r + m);
 }
 
-template<class Int>
+template<typename Int>
 Int mod_inverse(Int a, Int m) {
   return mod(extended_euclid(a, m).first, m);
 }

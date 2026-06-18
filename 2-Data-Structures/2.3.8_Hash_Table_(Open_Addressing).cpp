@@ -57,7 +57,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class K, class V, class Hash>
+template<typename K, typename V, typename Hash>
 class ProbingHashMap {
   enum class State { EMPTY, OCCUPIED, DELETED };
 
@@ -203,7 +203,7 @@ class ProbingHashMap {
     res.reserve(num_entries);
     for (int i = 0; i < table_size; i++) {
       if (state[i] == State::OCCUPIED) {
-        res.push_back({table[i]->key, table[i]->value});
+        res.emplace_back(table[i]->key, table[i]->value);
       }
     }
     return res;

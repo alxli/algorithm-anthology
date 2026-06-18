@@ -29,7 +29,7 @@ Space Complexity:
 #include <limits>
 #include <vector>
 
-template<class T>
+template<typename T>
 T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignment) {
   static const T INF = std::numeric_limits<T>::max() / 4;
   int n = static_cast<int>(cost.size());

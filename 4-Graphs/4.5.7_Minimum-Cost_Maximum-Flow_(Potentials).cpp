@@ -1,9 +1,11 @@
 /*
 
 Given a flow network with capacities and edge costs, find a minimum-cost flow from a source node to
-a sink node. This is the successive shortest path method with Johnson potentials: after initial
-potentials make all residual reduced costs nonnegative, each augmenting path is found with
-Dijkstra's algorithm.
+a sink node. This is the successive shortest path method with Johnson potentials. A node potential
+$h[v]$ transforms each edge cost $c(u, v)$ into a reduced cost $c(u, v) + h[u] - h[v]$; when all
+reduced costs are nonnegative, Dijkstra's algorithm can find the shortest augmenting path safely.
+After each augmentation, $h$ is updated with the new shortest-path distances so that reduced costs
+remain nonnegative on the updated residual graph.
 
 - `MinCostMaxFlow<T, C>(n)` constructs an empty residual network with nodes numbered [0, `n`).
 - `add_edge(u, v, cap, cost, rev_cap = 0)` adds a directed residual-network edge and returns its
@@ -40,7 +42,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T, class C = int64_t>
+template<typename T, typename C = int64_t>
 class MinCostMaxFlow {
   struct Edge {
     int u, v;

@@ -33,7 +33,7 @@ Space Complexity:
 #include <stack>
 #include <vector>
 
-template<class T>
+template<typename T>
 std::vector<int> previous_less(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
@@ -48,7 +48,7 @@ std::vector<int> previous_less(const std::vector<T> &a) {
   return res;
 }
 
-template<class T>
+template<typename T>
 std::vector<int> next_less(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
@@ -63,7 +63,7 @@ std::vector<int> next_less(const std::vector<T> &a) {
   return res;
 }
 
-template<class T>
+template<typename T>
 std::vector<int> previous_greater(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
@@ -78,7 +78,7 @@ std::vector<int> previous_greater(const std::vector<T> &a) {
   return res;
 }
 
-template<class T>
+template<typename T>
 std::vector<int> next_greater(const std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> res(n);
@@ -93,7 +93,7 @@ std::vector<int> next_greater(const std::vector<T> &a) {
   return res;
 }
 
-template<class T>
+template<typename T>
 T largest_rectangle(const std::vector<T> &heights) {
   int n = static_cast<int>(heights.size());
   std::vector<int> left = previous_less(heights), right = next_less(heights);

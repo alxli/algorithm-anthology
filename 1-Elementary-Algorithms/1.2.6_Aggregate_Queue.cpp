@@ -40,7 +40,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class AggregateQueue {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
 

@@ -16,7 +16,8 @@ edge at each step.
 
 The priority queue stores candidate edges as (`weight`, `from`, `to`, `edge_id`) and uses
 `std::greater` to make it a min-heap. To find a maximum spanning tree instead, use the default
-max-heap ordering.
+max-heap ordering. Multigraphs are supported; parallel edges are stored as separate adjacency
+entries and the algorithm automatically selects the minimum-weight one to each unvisited node.
 
 Time Complexity:
 - O(m log n) per call to `prim_mst()`, where $m$ is the number of edges and $n$ is the number of
@@ -89,9 +90,9 @@ vector<pair<int, int>> edge_endpoints;
 
 void add_edge(int u, int v, int w) {
   int id = static_cast<int>(edge_endpoints.size());
-  edge_endpoints.push_back({u, v});
-  adj[u].push_back({v, w, id});
-  adj[v].push_back({u, w, id});
+  edge_endpoints.emplace_back(u, v);
+  adj[u].emplace_back(v, w, id);
+  adj[v].emplace_back(u, w, id);
 }
 
 int main() {

@@ -33,6 +33,7 @@ Common mathematic constants and functions, most of which already have standard S
 #include <limits>
 #include <random>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #ifndef M_PI
@@ -48,23 +49,36 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 Epsilon Comparisons:
 
 \begin{compactitem}
-  \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$ accounting for absolute error. For any $x$, the range of values considered equal barring absolute error is $[x - {\inlinecodemath{EPS}}, x + {\inlinecodemath{EPS}}]$. Values outside of this range are considered not equal (strictly less or strictly greater).
-\end{compactitem}
-
-\begin{compactitem}
-  \item \inlinecode{rEQ()} returns whether $x$ and $y$ are equal barring relative error. For any $x$, the range of values considered equal is $[x(1 - {\inlinecodemath{EPS}}), x(1 + {\inlinecodemath{EPS}})]$.
+  \item \inlinecode{EQ()}, \inlinecode{NE()}, \inlinecode{LT()}, \inlinecode{GT()}, \inlinecode{LE()}, and \inlinecode{GE()} relationally compare two values $x$ and $y$. Arguments may be of different types; the common type governs behavior. If the common type is integral, exact comparison is used (\inlinecode{==}, \inlinecode{\textless{}}, etc.). Otherwise, absolute-error epsilon comparison is used: values within \inlinecode{EPS} of each other are considered equal, and \inlinecode{LT}/\inlinecode{GT}/\inlinecode{LE}/\inlinecode{GE} shift the boundary by \inlinecode{EPS} accordingly.
+  \item \inlinecode{rEQ(ref, val)} returns whether \inlinecode{val} equals reference \inlinecode{ref} within relative error \inlinecode{EPS}. The tolerance scales with \inlinecode{|ref|}, so \inlinecode{rEQ(ref, val)} is NOT the same as \inlinecode{rEQ(val, ref)}. Use this when one argument is a known exact value and the other is a computed approximation. Degenerates to exact comparison when \inlinecode{ref} = 0, since the tolerance collapses to 0; use \inlinecode{EQ} near zero.
+  \item \inlinecode{rEQ\_sym(x, y)} is the symmetric (commutative) variant: tolerance scales with \inlinecode{max(|x|, |y|)}, so the result is the same regardless of argument order. Still degenerates near zero when both arguments are close to 0.
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
 const double EPS = 1e-9;
 
-#define EQ(x, y) (fabs((x) - (y)) <= EPS)
-#define NE(x, y) (fabs((x) - (y)) > EPS)
-#define LT(x, y) ((x) < (y) - EPS)
-#define GT(x, y) ((x) > (y) + EPS)
-#define LE(x, y) ((x) <= (y) + EPS)
-#define GE(x, y) ((x) >= (y) - EPS)
-#define rEQ(x, y) (fabs((x) - (y)) <= EPS * fabs(x))
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U> bool NE(T a, U b) { return !EQ(a, b); }
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool rEQ(T ref, U val) {
+  return std::fabs(C(ref) - C(val)) <= EPS * std::fabs(C(ref));
+}
+
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool rEQ_sym(T x, U y) {
+  return std::fabs(C(x) - C(y)) <= EPS * std::max(std::fabs(C(x)), std::fabs(C(y)));
+}
 \end{lstlisting}
 Sign Functions:
 
@@ -75,17 +89,17 @@ Sign Functions:
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-template<class T>
+template<typename T>
 int sgn(const T &x) {
   return (T(0) < x) - (x < T(0));
 }
 
-template<class Double>
+template<typename Double>
 bool signbit_(Double x) {
   return (((unsigned char *)&x)[sizeof(x) - 1] >> (CHAR_BIT - 1)) & 1;
 }
 
-template<class Double>
+template<typename Double>
 Double copysign_(Double x, Double y) {
   return signbit_(y) ? -fabs(x) : fabs(x);
 }
@@ -107,41 +121,41 @@ Rounding Functions:
 \end{compactitem}
 
 \begin{lstlisting}[language=C++]
-template<class Double>
+template<typename Double>
 Double floor0(const Double &x) {
   Double res = floor(fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
-template<class Double>
+template<typename Double>
 Double ceil0(const Double &x) {
   Double res = ceil(fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_up(const Double &x) {
   return floor(x + 0.5);
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_down(const Double &x) {
   return ceil(x - 0.5);
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_to0(const Double &x) {
   Double res = round_half_down(fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_from0(const Double &x) {
   Double res = round_half_up(fabs(x));
   return (x < 0.0) ? -res : res;
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_even(const Double &x, const Double &EPS = 1e-9) {
   if (x < 0.0) {
     return -round_half_even(-x, EPS);
@@ -154,25 +168,25 @@ Double round_half_even(const Double &x, const Double &EPS = 1e-9) {
   return round_half_from0(x);
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_alternate(const Double &x) {
   static bool up = true;
   return (up = !up) ? round_half_up(x) : round_half_down(x);
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_alternate0(const Double &x) {
   static bool up = true;
   return (up = !up) ? round_half_from0(x) : round_half_to0(x);
 }
 
-template<class Double>
+template<typename Double>
 Double round_half_random(const Double &x) {
   static std::mt19937 rng(std::random_device{}());
   return (rng() % 2 == 0) ? round_half_from0(x) : round_half_to0(x);
 }
 
-template<class Double, class RoundingFunction>
+template<typename Double, typename RoundingFunction>
 Double round_n_places(const Double &x, unsigned int n, RoundingFunction f) {
   return f(x * pow(10, n)) / pow(10, n);
 }
@@ -300,14 +314,25 @@ double lgamma_(double x) {
   return (x - 0.5) * log(x) - x + 0.91893853320467274178032973640562 + sum / x;
 }
 \end{lstlisting}
-Binary Exponentiation:
+Modular Arithmetic:
 
 \begin{compactitem}
-  \item \inlinecode{mulmod(x, n, m)} returns \inlinecode{x} multiplied by \inlinecode{n}, modulo \inlinecode{m}. This is done in a way to avoid overflow: on compilers with \inlinecode{\_\_uint128\_t} it uses one wide product, while the portable fallback uses double-and-add multiplication. The fallback is slower by a logarithmic factor, but avoids relying on nonstandard 128-bit integers.
+  \item \inlinecode{addmod(a, b, m)} returns \inlinecode{(a + b) mod m} and \inlinecode{submod(a, b, m)} returns \inlinecode{(a - b) mod m}, each in $[0, m)$. Both operands may be negative or unreduced; the result is normalized into range. These use signed arithmetic, so \inlinecode{m} (and the reduced operands) must be small enough that \inlinecode{a + b} does not overflow \inlinecode{int64\_t}, i.e. \inlinecode{m} up to roughly \inlinecode{2\textasciicircum{}62}, which covers all common contest moduli.
+  \item \inlinecode{mulmod(x, n, m)} returns \inlinecode{x} multiplied by \inlinecode{n}, modulo \inlinecode{m}. This is done in a way to avoid overflow: on compilers with \inlinecode{\_\_uint128\_t} it uses one wide product, while the portable fallback uses double-and-add multiplication. The fallback is slower by a logarithmic factor, but avoids relying on nonstandard 128-bit integers. Unlike \inlinecode{addmod}/\inlinecode{submod}, this takes unsigned operands and supports a full 64-bit modulus.
   \item \inlinecode{powmod(x, n, m)} returns \inlinecode{x} raised to the power \inlinecode{n}, modulo \inlinecode{m}.
 \end{compactitem}
 
+These are lightweight standalone helpers for the occasional modular computation. For a full value type that wraps a fixed modulus with overloaded operators, modular inverses, and combinatorics, see the \inlinecode{Modular} (``Mint'') class in section 6.3.2.
+
 \begin{lstlisting}[language=C++]
+int64_t addmod(int64_t a, int64_t b, int64_t m) {
+  return ((a + b) % m + m) % m;
+}
+
+int64_t submod(int64_t a, int64_t b, int64_t m) {
+  return ((a - b) % m + m) % m;
+}
+
 uint64_t mulmod(uint64_t x, uint64_t n, uint64_t m) {
 #if defined(__SIZEOF_INT128__)
   return static_cast<uint64_t>(static_cast<__uint128_t>(x) * n % m);
@@ -430,6 +455,11 @@ int main() {
   assert(EQ(erf_(1.0), 0.8427007929) && EQ(erf_(-1.0), -0.8427007929));
   assert(EQ(tgamma_(0.5), 1.7724538509) && EQ(tgamma_(1.0), 1.0));
   assert(EQ(lgamma_(0.5), 0.5723649429) && EQ(lgamma_(1.0), 0.0));
+
+  assert(addmod(7, 8, 10) == 5 && submod(2, 5, 10) == 7);
+  // Negative and unreduced operands are normalized into [0, m).
+  assert(addmod(-3, -4, 10) == 3 && submod(-3, 4, 10) == 3);
+  assert(addmod(25, -7, 10) == 8);
 
   assert(powmod(2, 10, 1000000007) == 1024);
   assert(powmod(2, 62, 1000000) == 387904);
@@ -797,7 +827,7 @@ bool next_arrangement_with_repeats(int n, std::vector<int> &a) {
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   cout << "{";
   for (; lo != hi; ++lo) {
@@ -885,7 +915,7 @@ A permutation is an ordered list consisting of $n$ (not necessarily distinct) el
 #include <numeric>
 #include <vector>
 
-template<class It>
+template<typename It>
 bool next_permutation_(It lo, It hi) {
   if (lo == hi) {
     return false;
@@ -913,7 +943,7 @@ bool next_permutation_(It lo, It hi) {
   }
 }
 
-template<class T>
+template<typename T>
 bool next_permutation(std::vector<T> &a) {
   int n = static_cast<int>(a.size());
   for (int i = n - 2; i >= 0; i--) {
@@ -1003,7 +1033,7 @@ cycles permutation_cycles(const std::vector<int> &a) {
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   cout << "{";
   for (; lo != hi; ++lo) {
@@ -1102,7 +1132,7 @@ A combination is a subset of size $k$ chosen from a total of $n$ (not necessaril
 #include <iterator>
 #include <vector>
 
-template<class It>
+template<typename It>
 bool next_combination(It lo, It mid, It hi) {
   if (lo == mid || mid == hi) {
     return false;
@@ -1234,7 +1264,7 @@ bool next_combination_with_repeats(int n, std::vector<int> &a) {
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   cout << "{";
   for (; lo != hi; ++lo) {
@@ -1431,7 +1461,7 @@ void generate_increasing_partitions(int n, Fn f) {
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   cout << "{";
   for (; lo != hi; ++lo) {
@@ -1529,7 +1559,7 @@ class AbstractEnumerator {
   }
 
   // Accepts any callable f(lo, hi), including capturing lambdas and functors.
-  template<class Fn>
+  template<typename Fn>
   void enumerate(Fn f) {
     int64_t total = total_count();
     for (int64_t i = 0; i < total; i++) {
@@ -1633,7 +1663,7 @@ class PartitionEnumerator : public AbstractEnumerator {
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   cout << "{";
   for (; lo != hi; ++lo) {
@@ -1726,7 +1756,7 @@ Common number theory operations relating to modular arithmetic.
 #include <utility>
 #include <vector>
 
-template<class Int>
+template<typename Int>
 Int gcd(Int a, Int b) {
   while (b != 0) {
     Int t = b;
@@ -1736,7 +1766,7 @@ Int gcd(Int a, Int b) {
   return (a < 0 ? -a : a);
 }
 
-template<class Int>
+template<typename Int>
 Int lcm(Int a, Int b) {
   if (a == 0 || b == 0) {
     return 0;
@@ -1745,7 +1775,7 @@ Int lcm(Int a, Int b) {
   return (res < 0 ? -res : res);
 }
 
-template<class Int>
+template<typename Int>
 std::pair<Int, Int> extended_euclid(Int a, Int b) {
   Int x = 1, y = 0, x1 = 0, y1 = 1;
   while (b != 0) {
@@ -1760,7 +1790,7 @@ std::pair<Int, Int> extended_euclid(Int a, Int b) {
   return (a > 0) ? std::pair<Int, Int>{x, y} : std::pair<Int, Int>{-x, -y};
 }
 
-template<class Int>
+template<typename Int>
 bool diophantine(Int a, Int b, Int c, Int &x, Int &y, Int &g) {
   if (a == 0 && b == 0) {
     x = y = g = 0;
@@ -1807,13 +1837,13 @@ bool diophantine(Int a, Int b, Int c, Int &x, Int &y, Int &g) {
   return true;
 }
 
-template<class Int>
+template<typename Int>
 Int mod(Int a, Int m) {
   Int r = a % m;
   return (r >= 0) ? r : (r + m);
 }
 
-template<class Int>
+template<typename Int>
 Int mod_inverse(Int a, Int m) {
   return mod(extended_euclid(a, m).first, m);
 }
@@ -2022,7 +2052,7 @@ Division uses the extended Euclidean algorithm, so the divisor only needs to be 
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 T inverse(T a, T m) {
   T original_m = m;
   T u = 0, v = 1;
@@ -2134,7 +2164,7 @@ class Modular {
   }
 };
 
-template<class Mint>
+template<typename Mint>
 class ModCombinatorics {
   std::vector<Mint> fact, inv_fact;
 
@@ -2288,10 +2318,10 @@ std::vector<std::pair<int64_t, int>> factorize(int64_t n) {
       n /= p;
       count++;
     }
-    res.push_back({p, count});
+    res.emplace_back(p, count);
   }
   if (n > 1) {
-    res.push_back({n, 1});
+    res.emplace_back(n, 1);
   }
   return res;
 }
@@ -2366,7 +2396,7 @@ int main() {
 \subsection{Discrete Logarithm (Baby-Step Giant-Step)}
 Given integers $a$, $b$, and a modulus $m$, the discrete logarithm problem asks for the smallest nonnegative integer $x$ with $a^x$ congruent to $b$ modulo $m$. This is the modular analogue of a logarithm and underlies Diffie-Hellman key exchange, order computations in the multiplicative group, and many number-theory reductions.
 
-The baby-step giant-step method writes $x = np - q$ for a block size $n$ near the square root of the modulus. It tabulates the ``baby steps'' $b \cdot a^q$ for $q$ in $[0, n]$, then walks the ``giant steps'' $a^{np}$ for increasing $p$ until one lands in the table, yielding $x = np - q$. This trades the linear scan of all exponents for $O(\sqrt m)$ work and memory. A short reduction loop first strips common factors between $a$ and $m$, so the routine works for any modulus, not only when $a$ and $m$ are coprime.
+The baby-step giant-step method writes $x = np - q$ for a block size $n$ near the square root of the modulus. It tabulates the ``baby steps'' $b \cdot a^q$ for $q$ in $[0, n]$, then walks the ``giant steps'' $a^{np}$ for increasing $p$ until one lands in the table, yielding $x = np - q$. This trades the linear scan of all exponents for $O(\sqrt{m})$ work and memory. A short reduction loop first strips common factors between $a$ and $m$, so the routine works for any modulus, not only when $a$ and $m$ are coprime.
 
 \begin{compactitem}
   \item \inlinecode{discrete\_log(a, b, m)} returns the smallest nonnegative \inlinecode{x} with \inlinecode{a\textasciicircum{}x} congruent to \inlinecode{b} modulo \inlinecode{m}, or $-1$ if no such \inlinecode{x} exists. Requires \inlinecode{m} $\geq 1$; \inlinecode{a} and \inlinecode{b} are reduced modulo \inlinecode{m} internally.
@@ -2805,10 +2835,10 @@ Test whether an integer is prime and compute the prime factorization of an integ
 
 \begin{compactitem}
   \item \inlinecode{is\_prime\_slow(n)} returns whether the integer \inlinecode{n} is prime using trial division.
-  \item \inlinecode{is\_probable\_prime(n, k)} returns whether \inlinecode{n} is probably prime using \inlinecode{k} random Miller-Rabin bases. The result is guaranteed correct when \inlinecode{n} is prime. When \inlinecode{n} is composite, it returns false with probability at least $1 - (1 / 4)^k$, so a true result has one-sided error probability at most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit deterministic setting.
-  \item \inlinecode{is\_prime(n)} returns whether the signed 64-bit integer \inlinecode{n} is prime using deterministic Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
   \item \inlinecode{factorize\_slow(n)} returns the prime factorization of \inlinecode{n} using trial division.
+  \item \inlinecode{is\_probable\_prime(n, k)} returns whether \inlinecode{n} is probably prime using \inlinecode{k} random Miller-Rabin bases. The result is guaranteed correct when \inlinecode{n} is prime. When \inlinecode{n} is composite, it returns false with probability at least $1 - (1 / 4)^k$, so a true result has one-sided error probability at most $(1 / 4)^k$. This is mostly useful when adapting Miller-Rabin outside the known 64-bit deterministic setting.
   \item \inlinecode{rho\_factor(n)} returns a factor of \inlinecode{n} that is not necessarily prime using Pollard's rho with Brent's optimization. If \inlinecode{n} is prime, then \inlinecode{n} itself is returned. While this algorithm is non-deterministic and may fail to detect factors on certain runs of the same input, it can be retried until a nontrivial factor is found, as done in \inlinecode{factorize()}.
+  \item \inlinecode{is\_prime(n)} returns whether the signed 64-bit integer \inlinecode{n} is prime using deterministic Miller-Rabin bases sufficient up to and including $2^{63} - 1$.
   \item \inlinecode{cached\_sieve(n)} returns a cached linear sieve up to and including \inlinecode{n}, storing both primes and least prime factors.
   \item \inlinecode{merge\_factors(a, b)} merges two sorted compressed factorizations.
   \item \inlinecode{factorize\_rho(n)} returns the prime factorization of a 64-bit integer using Miller-Rabin and Pollard's rho without initial trial division.
@@ -2846,7 +2876,7 @@ Modular multiplication inside Miller-Rabin and Pollard's rho uses \inlinecode{\_
 #include <utility>
 #include <vector>
 
-template<class Int>
+template<typename Int>
 bool is_prime_slow(Int n) {
   if (n == 2 || n == 3) {
     return true;
@@ -2863,7 +2893,7 @@ bool is_prime_slow(Int n) {
   return true;
 }
 
-template<class Int>
+template<typename Int>
 std::vector<std::pair<Int, int>> factorize_slow(Int n) {
   if (n <= 1) {
     return {};
@@ -3953,7 +3983,7 @@ class BigInt {
     return res;
   }
 
-  template<class It>
+  template<typename It>
   static vint64 karatsuba(It alo, It ahi, It blo, It bhi) {
     int n = std::distance(alo, ahi), k = n / 2;
     vint64 res(n * 2);
@@ -3987,7 +4017,7 @@ class BigInt {
     return res;
   }
 
-  template<class It>
+  template<typename It>
   static vcd fft(It lo, It hi, bool invert = false) {
     int n = std::distance(lo, hi), k = 0, high1 = -1;
     while ((1 << k) < n) {
@@ -4478,7 +4508,7 @@ Perform operations on rational numbers internally represented as two integers: a
 #include <sstream>
 #include <string>
 
-template<class Int>
+template<typename Int>
 class Rational {
   Int num, den;
 
@@ -4486,7 +4516,7 @@ class Rational {
   Rational() : num(0), den(1) {}
   Rational(const Int &n) : num(n), den(1) {}
 
-  template<class T1, class T2>
+  template<typename T1, typename T2>
   Rational(const T1 &n, const T2 &d) : num(n), den(d) {
     if (den == 0) {
       throw std::runtime_error("Division by zero in Rational.");
@@ -4607,7 +4637,9 @@ class Rational {
 #include <cassert>
 #include <cmath>
 
-#define EQ(a, b) (fabs((a) - (b)) <= 1e-9)
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
 
 int main() {
   using Rational = Rational<int64_t>;
@@ -4678,15 +4710,15 @@ Exponentiation uses the usual iterative binary exponentiation pattern: keep an a
 #include <stdexcept>
 #include <vector>
 
-template<class T>
+template<typename T>
 using Matrix = std::vector<std::vector<T>>;
 
-template<class T = int>
+template<typename T = int>
 Matrix<T> make_matrix(int m, int n, const T &v = T{}) {
   return Matrix<T>(m, std::vector<T>(n, v));
 }
 
-template<class T = int>
+template<typename T = int>
 Matrix<T> identity_matrix(int n) {
   Matrix<T> res = make_matrix<T>(n, n);
   for (int i = 0; i < n; i++) {
@@ -4695,17 +4727,17 @@ Matrix<T> identity_matrix(int n) {
   return res;
 }
 
-template<class T>
+template<typename T>
 int rows(const Matrix<T> &a) {
   return static_cast<int>(a.size());
 }
 
-template<class T>
+template<typename T>
 int columns(const Matrix<T> &a) {
   return a.empty() ? 0 : static_cast<int>(a[0].size());
 }
 
-template<class T>
+template<typename T>
 std::ostream &operator<<(std::ostream &out, const Matrix<T> &a) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -4716,7 +4748,7 @@ std::ostream &operator<<(std::ostream &out, const Matrix<T> &a) {
   return out;
 }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> &operator+=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -4726,7 +4758,7 @@ Matrix<T> &operator+=(Matrix<T> &a, const U &v) {
   return a;
 }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> &operator-=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -4736,7 +4768,7 @@ Matrix<T> &operator-=(Matrix<T> &a, const U &v) {
   return a;
 }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> &operator*=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -4746,7 +4778,7 @@ Matrix<T> &operator*=(Matrix<T> &a, const U &v) {
   return a;
 }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> &operator/=(Matrix<T> &a, const U &v) {
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
@@ -4756,7 +4788,7 @@ Matrix<T> &operator/=(Matrix<T> &a, const U &v) {
   return a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
   if (rows(a) != rows(b) || columns(a) != columns(b)) {
     throw std::runtime_error("Invalid dimensions for matrix addition.");
@@ -4769,7 +4801,7 @@ Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
   return a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> &operator-=(Matrix<T> &a, const Matrix<T> &b) {
   if (rows(a) != rows(b) || columns(a) != columns(b)) {
     throw std::runtime_error("Invalid dimensions for matrix subtraction.");
@@ -4782,19 +4814,19 @@ Matrix<T> &operator-=(Matrix<T> &a, const Matrix<T> &b) {
   return a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> operator+(const Matrix<T> &a, const Matrix<T> &b) {
   Matrix<T> c(a);
   return c += b;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> operator-(const Matrix<T> &a, const Matrix<T> &b) {
   Matrix<T> c(a);
   return c -= b;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> &operator*=(Matrix<T> &a, const std::vector<T> &v) {
   if (columns(a) != static_cast<int>(v.size()) || v.empty()) {
     throw std::runtime_error("Invalid dimensions for matrix-vector multiplication.");
@@ -4810,7 +4842,7 @@ Matrix<T> &operator*=(Matrix<T> &a, const std::vector<T> &v) {
   return a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> operator*(const Matrix<T> &a, const Matrix<T> &b) {
   if (columns(a) != rows(b)) {
     throw std::runtime_error("Invalid dimensions for matrix multiplication.");
@@ -4826,34 +4858,34 @@ Matrix<T> operator*(const Matrix<T> &a, const Matrix<T> &b) {
   return res;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> &operator*=(Matrix<T> &a, const Matrix<T> &b) { return a = a * b; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator+(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m += v; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator-(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m -= v; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator*(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m *= v; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator/(const Matrix<T> &a, const U &v) { Matrix<T> m(a); return m /= v; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator+(const U &v, const Matrix<T> &a) { return a + v; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator*(const U &v, const Matrix<T> &a) { return a * v; }
 
-template<class T, class U>
+template<typename T, typename U>
 Matrix<T> operator-(const U &v, const Matrix<T> &a) {
   Matrix<T> m = make_matrix<T>(rows(a), columns(a), v);
   return m -= a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> operator^(Matrix<T> a, unsigned int p) {
   if (rows(a) != columns(a)) {
     throw std::runtime_error("Matrix must be square for exponentiation.");
@@ -4869,12 +4901,12 @@ Matrix<T> operator^(Matrix<T> a, unsigned int p) {
   return res;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> operator^=(Matrix<T> &a, unsigned int p) {
   return a = a ^ p;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
   if (rows(a) != columns(a)) {
     throw std::runtime_error("Matrix must be square for power_sum.");
@@ -4904,7 +4936,7 @@ Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
   return res;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> transpose(const Matrix<T> &a) {
   Matrix<T> res = make_matrix<T>(columns(a), rows(a));
   for (int i = 0; i < rows(res); i++) {
@@ -4915,7 +4947,7 @@ Matrix<T> transpose(const Matrix<T> &a) {
   return res;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> &transpose_in_place(Matrix<T> &a) {
   if (rows(a) != columns(a)) {
     throw std::runtime_error("Matrix must be square for transpose_in_place.");
@@ -4928,7 +4960,7 @@ Matrix<T> &transpose_in_place(Matrix<T> &a) {
   return a;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> rotate(const Matrix<T> &a, int degrees = 90) {
   if (degrees % 90 != 0) {
     throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
@@ -4972,7 +5004,7 @@ Matrix<T> rotate(const Matrix<T> &a, int degrees = 90) {
   return res;
 }
 
-template<class T>
+template<typename T>
 Matrix<T> &rotate_in_place(Matrix<T> &a, int degrees = 90) {
   if (degrees % 90 != 0) {
     throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
@@ -5087,7 +5119,7 @@ Converts a matrix to reduced row echelon form using Gaussian elimination to solv
 
 const double EPS = 1e-9;
 
-template<class Matrix>
+template<typename Matrix>
 Matrix &row_reduce(Matrix &a) {
   if (a.empty()) {
     return a;
@@ -5125,7 +5157,7 @@ Matrix &row_reduce(Matrix &a) {
   return a;
 }
 
-template<class Matrix>
+template<typename Matrix>
 int matrix_rank(Matrix a) {
   row_reduce(a);
   int rank = 0;
@@ -5140,7 +5172,7 @@ int matrix_rank(Matrix a) {
   return rank;
 }
 
-template<class Matrix, class T>
+template<typename Matrix, typename T>
 int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
   if (x == nullptr || a.empty() || a.size() != b.size()) {
     return -1;
@@ -5210,7 +5242,7 @@ int main() {
 Computes the determinant and inverse of a square matrix using Gaussian elimination. The inverse of a matrix $a$ is another matrix $b$ such that $ab$ equals the identity matrix. The inverse of $a$ exists if and only if the determinant of $a$ is nonzero. In this case, $a$ is called invertible or non-singular. The determinant falls out of elimination as the product of the pivots, negated once per row swap. The inverse is found by appending the identity matrix and row-reducing the combined matrix: the operations that turn $a$ into the identity turn the identity into the inverse. In practice, simple Gaussian elimination is prone to rounding error on certain matrices. For a more accurate algorithm for solving systems of linear equations, use LU decomposition with row partial pivoting. For an integer matrix whose determinant is wanted exactly, the Bareiss algorithm runs a fraction-free elimination: every intermediate value is itself a determinant of a submatrix, so the divisions are always exact and the arithmetic stays in integers.
 
 \begin{compactitem}
-  \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions.
+  \item \inlinecode{det\_naive(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a}, using the classic divide-and-conquer algorithm by Laplace expansions. It is division-free and computes in the matrix's element type, so an integer matrix yields an exact integer determinant; but at $O(n!)$ it is only practical for tiny \inlinecode{n}, so prefer \inlinecode{det\_bareiss} for exact integer determinants.
   \item \inlinecode{det(a)} returns the determinant of an $n$ by $n$ matrix \inlinecode{a} using Gaussian elimination.
   \item \inlinecode{det\_bareiss(a)} returns the exact determinant of an integer matrix \inlinecode{a} using fraction-free elimination, with no rounding error. Intermediate values are bounded by the magnitudes of the matrix's minors, so the entries must stay within \inlinecode{int64\_t}; substitute a big-integer type for large matrices.
   \item \inlinecode{invert(a)} assigns the $n$ by $n$ matrix \inlinecode{a} to its inverse (if it exists), returning a reference to the modified argument itself. If \inlinecode{a} is not invertible, then its assigned values after the function call will be undefined (\inlinecode{+/-Inf} or \inlinecode{+/-NaN}).
@@ -5233,10 +5265,11 @@ Computes the determinant and inverse of a square matrix using Gaussian eliminati
 \begin{lstlisting}[language=C++]
 #include <cmath>
 #include <cstdint>
+#include <type_traits>
 #include <vector>
 
-template<class SquareMatrix>
-double det_naive(const SquareMatrix &a) {
+template<typename SquareMatrix>
+auto det_naive(const SquareMatrix &a) {
   int n = static_cast<int>(a.size());
   if (n == 1) {
     return a[0][0];
@@ -5244,7 +5277,7 @@ double det_naive(const SquareMatrix &a) {
   if (n == 2) {
     return a[0][0] * a[1][1] - a[0][1] * a[1][0];
   }
-  double res = 0;
+  std::decay_t<decltype(a[0][0])> res = 0;
   SquareMatrix temp(n - 1, typename SquareMatrix::value_type(n - 1));
   for (int p = 0; p < n; p++) {
     int h = 0, k = 0;
@@ -5265,10 +5298,10 @@ double det_naive(const SquareMatrix &a) {
   return res;
 }
 
-template<class SquareMatrix>
+template<typename SquareMatrix>
 double det(const SquareMatrix &a, double EPS = 1e-10) {
-  SquareMatrix b(a);
   int n = static_cast<int>(a.size());
+  SquareMatrix b(a);
   double res = 1.0;
   for (int i = 0; i < n; i++) {
     // Partial pivoting: bring the largest-magnitude entry in column i to the diagonal. Each row
@@ -5327,7 +5360,7 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
   return n == 0 ? 1 : sign * a[n - 1][n - 1];
 }
 
-template<class SquareMatrix>
+template<typename SquareMatrix>
 SquareMatrix &invert(SquareMatrix &a) {
   int n = static_cast<int>(a.size());
   for (int i = 0; i < n; i++) {
@@ -5381,6 +5414,7 @@ int main() {
 
   // Bareiss gives the determinant of an integer matrix exactly, with no rounding.
   vector<vector<int64_t>> ai{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
+  assert(det_naive(ai) == -306);  // Division-free, so also exact in the int64_t element type.
   assert(det_bareiss(ai) == -306);
   assert(det_bareiss({{2, 0, 0}, {0, 3, 0}, {0, 0, 5}}) == 30);
   assert(det_bareiss({{1, 2}, {2, 4}}) == 0);  // Singular.
@@ -5434,7 +5468,7 @@ The LU decomposition of a matrix $a$ with row-partial pivoting is a factorizatio
 #include <numeric>
 #include <vector>
 
-template<class Matrix>
+template<typename Matrix>
 int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS = 1e-10) {
   int rows = static_cast<int>(a.size());
   int cols = a.empty() ? 0 : static_cast<int>(a[0].size());
@@ -5470,17 +5504,17 @@ int lu_decompose(Matrix &a, std::vector<int> *p1col = nullptr, const double EPS 
   return parity;
 }
 
-template<class Matrix>
+template<typename Matrix>
 double getl(const Matrix &lu, int i, int j) {
   return i > j ? lu[i][j] : (i < j ? 0 : 1);
 }
 
-template<class Matrix>
+template<typename Matrix>
 double getu(const Matrix &lu, int i, int j) {
   return i <= j ? lu[i][j] : 0;
 }
 
-template<class Matrix, class T>
+template<typename Matrix, typename T>
 int solve_system(
     const Matrix &a, const std::vector<T> &b, std::vector<T> *x, const double EPS = 1e-10
 ) {
@@ -5522,7 +5556,7 @@ int solve_system(
   return 0;
 }
 
-template<class T>
+template<typename T>
 double det(const T &a) {
   int n = static_cast<int>(a.size());
   T lu;
@@ -5537,7 +5571,7 @@ double det(const T &a) {
   return status == 0 ? res : -res;
 }
 
-template<class T>
+template<typename T>
 int invert(T &a) {
   int n = static_cast<int>(a.size());
   std::vector<int> p1col;
@@ -5574,7 +5608,9 @@ int invert(T &a) {
 #include <cassert>
 using namespace std;
 
-#define EQ(a, b) (fabs((a) - (b)) < 1e-10)
+bool EQ(double a, double b) {
+  return fabs(a - b) < 1e-9;
+}
 
 int main() {
   {  // Solve a system.
@@ -5840,7 +5876,7 @@ int main() {
     vector<pair<int, int>> e;
     for (int i = 0; i < n; i++) {
       for (int j = i + 1; j < n; j++) {
-        e.push_back({i, j});
+        e.emplace_back(i, j);
       }
     }
     return count_spanning_trees(n, e);
@@ -5905,7 +5941,7 @@ Sparse elimination chooses, in each pivot column, the available pivot row with t
 #include <utility>
 #include <vector>
 
-template<class T>
+template<typename T>
 class SparseMatrix {
   int h = 0, w = 0, stored = 0;
   std::vector<std::map<int, T>> rows, cols;
@@ -5986,7 +6022,7 @@ class SparseMatrix {
   }
 };
 
-template<class T>
+template<typename T>
 int row_reduce(SparseMatrix<T> &a, int limit) {
   assert(0 <= limit && limit <= a.width());
   int r = 0;
@@ -6023,7 +6059,7 @@ int row_reduce(SparseMatrix<T> &a, int limit) {
   return r;
 }
 
-template<class T>
+template<typename T>
 T det(SparseMatrix<T> a) {
   assert(a.height() == a.width());
   int swaps = 0, r = 0, n = a.height();
@@ -6066,12 +6102,12 @@ T det(SparseMatrix<T> a) {
   return (r == n ? (swaps % 2 == 0 ? det : -det) : T{});
 }
 
-template<class T>
+template<typename T>
 int sparse_rank(SparseMatrix<T> a) {
   return row_reduce(a, a.width());
 }
 
-template<class T>
+template<typename T>
 int solve_system(SparseMatrix<T> a, const std::vector<T> &b, std::vector<T> *x) {
   if (x == nullptr || a.height() != static_cast<int>(b.size())) {
     return -1;
@@ -6195,7 +6231,7 @@ The transform replaces a coefficient vector with its evaluations at the powers o
 
 \begin{compactitem}
   \item \inlinecode{ntt(a, invert)} transforms the vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert = false}; the inverse uses \inlinecode{invert = true}.
-  \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, or is empty if either input is empty. Input values are assumed to lie in [0, \inlinecode{MOD}). Small inputs use direct multiplication to avoid NTT overhead.
+  \item \inlinecode{convolve(a, b)} returns the convolution of \inlinecode{a} and \inlinecode{b} modulo the prime, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length ${\inlinecodemath{a.size()}} + {\inlinecodemath{b.size()}} - 1$, or is empty if either input is empty. Input values are assumed to lie in [0, \inlinecode{MOD}). Small inputs use direct multiplication to avoid NTT overhead.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}
@@ -6325,7 +6361,7 @@ The trade-off is precision. Complex arithmetic in double precision accumulates r
 
 \begin{compactitem}
   \item \inlinecode{fft(a, invert)} transforms the complex vector \inlinecode{a} in place, whose length must be a power of two. The forward transform uses \inlinecode{invert = false}; the inverse uses \inlinecode{invert = true}.
-  \item \inlinecode{convolve(a, b)} returns the convolution of two integer sequences \inlinecode{a} and \inlinecode{b}, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length \inlinecode{a.size() + b.size() - 1}, or is empty if either input is empty, with each entry rounded to the nearest integer. Small inputs use direct multiplication to avoid FFT overhead.
+  \item \inlinecode{convolve(a, b)} returns the convolution of two integer sequences \inlinecode{a} and \inlinecode{b}, that is, the coefficients of the product of the two polynomials whose coefficients are the inputs. The result has length ${\inlinecodemath{a.size()}} + {\inlinecodemath{b.size()}} - 1$, or is empty if either input is empty, with each entry rounded to the nearest integer. Small inputs use direct multiplication to avoid FFT overhead.
 \end{compactitem}
 
 \Needspace*{3\baselineskip}

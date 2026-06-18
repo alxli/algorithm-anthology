@@ -9,6 +9,8 @@ single node so the search can proceed, and is expanded afterward to recover the 
 maximum-weight matching in bipartite graphs, use Hungarian or min-cost max-flow; for maximum-weight
 matching in general graphs, use the weighted blossom algorithm in the next section.
 
+The graph must be simple; parallel edges and self-loops are not supported.
+
 - `blossom()` returns a matching for a global, bidirectionally pre-populated adjacency list `adj`
   which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`. The returned vector
   `match` has `match[u] == v` and `match[v] == u` when `u` and `v` are matched, or `match[u] == -1`

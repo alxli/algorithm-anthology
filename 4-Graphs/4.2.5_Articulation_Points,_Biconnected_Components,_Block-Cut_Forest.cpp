@@ -50,7 +50,7 @@ struct BiconnectedComponents {
     int id = static_cast<int>(edges.size());
     adj[u].push_back(id);
     adj[v].push_back(id);
-    edges.push_back({u, v});
+    edges.emplace_back(u, v);
   }
 
   int other(int id, int u) const { return edges[id].first ^ edges[id].second ^ u; }

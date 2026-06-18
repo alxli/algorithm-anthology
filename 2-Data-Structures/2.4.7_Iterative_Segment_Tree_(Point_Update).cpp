@@ -50,7 +50,7 @@ Space Complexity:
 #include <optional>
 #include <vector>
 
-template<class T>
+template<typename T>
 class IterativeSegTree {
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T apply_delta(const T &v, const T &d) { return d; }
@@ -58,7 +58,7 @@ class IterativeSegTree {
   int len, base;
   std::vector<T> value;
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int i, int lo, int hi, int qlo, int qhi, const Pred &pred) const {
     if (hi <= qlo || qhi <= lo || len <= lo) {
       return -1;
@@ -74,7 +74,7 @@ class IterativeSegTree {
     return res != -1 ? res : find_first(i << 1 | 1, mid, hi, qlo, qhi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int i, int lo, int hi, int qlo, int qhi, const Pred &pred) const {
     if (hi <= qlo || qhi <= lo || len <= lo) {
       return -1;
@@ -90,7 +90,7 @@ class IterativeSegTree {
     return res != -1 ? res : find_last(i << 1, lo, mid, qlo, qhi, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int i, int lo, int hi, int qlo, const Pred &pred, std::optional<T> &acc) const {
     if (hi <= qlo || len <= lo) {
       return -1;
@@ -110,7 +110,7 @@ class IterativeSegTree {
     return res != -1 ? res : max_right(i << 1 | 1, mid, hi, qlo, pred, acc);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int i, int lo, int hi, int qhi, const Pred &pred, std::optional<T> &acc) const {
     if (qhi <= lo || len <= lo) {
       return -1;
@@ -144,7 +144,7 @@ class IterativeSegTree {
     }
   }
 
-  template<class It>
+  template<typename It>
   IterativeSegTree(It lo, It hi) : len(hi - lo), base(1) {
     while (base < len) {
       base <<= 1;
@@ -188,24 +188,24 @@ class IterativeSegTree {
     }
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_first(int lo, int hi, const Pred &pred) const {
     return find_first(1, 0, base, lo, hi + 1, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int find_last(int lo, int hi, const Pred &pred) const {
     return find_last(1, 0, base, lo, hi + 1, pred);
   }
 
-  template<class Pred>
+  template<typename Pred>
   int max_right(int lo, const Pred &pred) const {
     std::optional<T> acc;
     int res = max_right(1, 0, base, lo, pred, acc);
     return res == -1 ? len : res;
   }
 
-  template<class Pred>
+  template<typename Pred>
   int min_left(int hi, const Pred &pred) const {
     std::optional<T> acc;
     int res = min_left(1, 0, base, hi, pred, acc);

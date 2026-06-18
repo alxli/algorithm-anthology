@@ -37,7 +37,7 @@ Space Complexity:
 
 #include <vector>
 
-template<class T>
+template<typename T>
 class Fenwick2D {
   int rows, cols;
   std::vector<std::vector<T>> tree;

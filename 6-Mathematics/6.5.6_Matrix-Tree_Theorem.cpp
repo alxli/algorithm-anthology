@@ -115,7 +115,7 @@ int main() {
     vector<pair<int, int>> e;
     for (int i = 0; i < n; i++) {
       for (int j = i + 1; j < n; j++) {
-        e.push_back({i, j});
+        e.emplace_back(i, j);
       }
     }
     return count_spanning_trees(n, e);

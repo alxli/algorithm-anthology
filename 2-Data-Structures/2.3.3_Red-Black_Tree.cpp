@@ -43,7 +43,7 @@ Space Complexity:
 #include <utility>
 #include <vector>
 
-template<class K, class V>
+template<typename K, typename V>
 class RedBlackTree {
   enum Color { RED, BLACK };
   struct Node {

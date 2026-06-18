@@ -13,7 +13,9 @@ fraction-free elimination: every intermediate value is itself a determinant of a
 divisions are always exact and the arithmetic stays in integers.
 
 - `det_naive(a)` returns the determinant of an $n$ by $n$ matrix `a`, using the classic
-  divide-and-conquer algorithm by Laplace expansions.
+  divide-and-conquer algorithm by Laplace expansions. It is division-free and computes in the
+  matrix's element type, so an integer matrix yields an exact integer determinant; but at O(n!) it
+  is only practical for tiny `n`, so prefer `det_bareiss` for exact integer determinants.
 - `det(a)` returns the determinant of an $n$ by $n$ matrix `a` using Gaussian elimination.
 - `det_bareiss(a)` returns the exact determinant of an integer matrix `a` using fraction-free
   elimination, with no rounding error. Intermediate values are bounded by the magnitudes of the
@@ -37,10 +39,11 @@ Space Complexity:
 
 #include <cmath>
 #include <cstdint>
+#include <type_traits>
 #include <vector>
 
-template<class SquareMatrix>
-double det_naive(const SquareMatrix &a) {
+template<typename SquareMatrix>
+auto det_naive(const SquareMatrix &a) {
   int n = static_cast<int>(a.size());
   if (n == 1) {
     return a[0][0];
@@ -48,7 +51,7 @@ double det_naive(const SquareMatrix &a) {
   if (n == 2) {
     return a[0][0] * a[1][1] - a[0][1] * a[1][0];
   }
-  double res = 0;
+  std::decay_t<decltype(a[0][0])> res = 0;
   SquareMatrix temp(n - 1, typename SquareMatrix::value_type(n - 1));
   for (int p = 0; p < n; p++) {
     int h = 0, k = 0;
@@ -69,10 +72,10 @@ double det_naive(const SquareMatrix &a) {
   return res;
 }
 
-template<class SquareMatrix>
+template<typename SquareMatrix>
 double det(const SquareMatrix &a, double EPS = 1e-10) {
-  SquareMatrix b(a);
   int n = static_cast<int>(a.size());
+  SquareMatrix b(a);
   double res = 1.0;
   for (int i = 0; i < n; i++) {
     // Partial pivoting: bring the largest-magnitude entry in column i to the diagonal. Each row
@@ -131,7 +134,7 @@ int64_t det_bareiss(std::vector<std::vector<int64_t>> a) {
   return n == 0 ? 1 : sign * a[n - 1][n - 1];
 }
 
-template<class SquareMatrix>
+template<typename SquareMatrix>
 SquareMatrix &invert(SquareMatrix &a) {
   int n = static_cast<int>(a.size());
   for (int i = 0; i < n; i++) {
@@ -184,6 +187,7 @@ int main() {
 
   // Bareiss gives the determinant of an integer matrix exactly, with no rounding.
   vector<vector<int64_t>> ai{{6, 1, 1}, {4, -2, 5}, {2, 8, 7}};
+  assert(det_naive(ai) == -306);  // Division-free, so also exact in the int64_t element type.
   assert(det_bareiss(ai) == -306);
   assert(det_bareiss({{2, 0, 0}, {0, 3, 0}, {0, 0, 5}}) == 30);
   assert(det_bareiss({{1, 2}, {2, 4}}) == 0);  // Singular.

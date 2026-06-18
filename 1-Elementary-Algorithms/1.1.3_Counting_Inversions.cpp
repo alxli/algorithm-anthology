@@ -31,7 +31,7 @@ Space Complexity:
 #include <iterator>
 #include <vector>
 
-template<class It, class Compare = std::less<>>
+template<typename It, typename Compare = std::less<>>
 int64_t inversions(It lo, It hi, Compare comp = Compare()) {
   if (hi - lo < 2) {
     return 0;

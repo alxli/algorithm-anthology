@@ -31,17 +31,26 @@ Space Complexity:
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9;
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define GT(a, b) ((a) > (b) + EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
-#define GE(a, b) ((a) >= (b) - EPS)
+// clang-format off
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
+// clang-format on
 
-template<class Pt, class T>
+template<typename Pt, typename T>
 bool point_in_rectangle(
     const Pt &p, const Pt &v, const T &w, const T &h, const bool EDGE_IS_INSIDE = true
 ) {
@@ -55,14 +64,14 @@ bool point_in_rectangle(
                         : (GT(p.x, v.x) && LT(p.x, v.x + w) && GT(p.y, v.y) && LT(p.y, v.y + h));
 }
 
-template<class Pt>
+template<typename Pt>
 bool point_in_rectangle(const Pt &p, const Pt &a, const Pt &b, const bool EDGE_IS_INSIDE = true) {
   auto xl = std::min(a.x, b.x), yl = std::min(a.y, b.y);
   auto xh = std::max(a.x, b.x), yh = std::max(a.y, b.y);
   return point_in_rectangle(p, Pt(xl, yl), xh - xl, yh - yl, EDGE_IS_INSIDE);
 }
 
-template<class Pt>
+template<typename Pt>
 int rectangle_intersection(
     const Pt &a1, const Pt &b1, const Pt &a2, const Pt &b2, Pt *p = nullptr, Pt *q = nullptr,
     const bool EDGE_IS_INSIDE = true

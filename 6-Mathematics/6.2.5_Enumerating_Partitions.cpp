@@ -128,7 +128,7 @@ Increasing partitions of 8:
 #include <iostream>
 using namespace std;
 
-template<class It>
+template<typename It>
 void print_range(It lo, It hi) {
   cout << "{";
   for (; lo != hi; ++lo) {

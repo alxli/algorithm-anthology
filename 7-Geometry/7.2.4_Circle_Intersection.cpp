@@ -35,13 +35,22 @@ Space Complexity:
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <type_traits>
 #include <utility>
 
 const double EPS = 1e-9, PI = acos(-1.0);
 
-#define EQ(a, b) (fabs((a) - (b)) <= EPS)
-#define LT(a, b) ((a) < (b) - EPS)
-#define LE(a, b) ((a) <= (b) + EPS)
+// clang-format off
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+}
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool LT(T a, U b) {
+  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+}
+template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
+// clang-format on
 
 struct Circle {
   double h, k, r;
@@ -87,7 +96,7 @@ struct Line {
   bool operator==(const Line &l) const { return EQ(a, l.a) && EQ(b, l.b) && EQ(c, l.c); }
 };
 
-template<class Pt>
+template<typename Pt>
 int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr) {
   auto sqnorm = [](double x, double y) { return x * x + y * y; };
   double vopx = p.x - c.h, vopy = p.y - c.k;
@@ -124,7 +133,7 @@ int tangent(const Circle &c, const Pt &p, Line *l1 = nullptr, Line *l2 = nullptr
   return 1;
 }
 
-template<class OutPt>
+template<typename OutPt>
 int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = nullptr) {
   double v = c.h * l.a + c.k * l.b + l.c;
   double aabb = l.a * l.a + l.b * l.b;
@@ -150,7 +159,7 @@ int intersection(const Circle &c, const Line &l, OutPt *p = nullptr, OutPt *q = 
   return 1;
 }
 
-template<class OutPt>
+template<typename OutPt>
 int intersection(const Circle &c1, const Circle &c2, OutPt *p = nullptr, OutPt *q = nullptr) {
   if (EQ(c1.h, c2.h) && EQ(c1.k, c2.k)) {
     return EQ(c1.r, c2.r) ? 3 : (c1.r > c2.r ? -1 : -2);
