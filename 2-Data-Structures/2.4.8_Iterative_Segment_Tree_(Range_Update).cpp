@@ -67,7 +67,7 @@ class IterativeLazySegTree {
   int len, base, height;
   std::vector<T> value, delta;
   std::vector<int64_t> seg_len;
-  std::vector<bool> pending;
+  std::vector<char> pending;
 
   void init_storage() {
     base = 1;

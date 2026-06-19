@@ -25,7 +25,7 @@ Space Complexity:
 class CentroidDecomposition {
   std::vector<std::vector<int>> adj;
   std::vector<int> subtree_size, par;
-  std::vector<bool> removed;
+  std::vector<char> removed;
 
   int get_size(int u, int p) {
     subtree_size[u] = 1;

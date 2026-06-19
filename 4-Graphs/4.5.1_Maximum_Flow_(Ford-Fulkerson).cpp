@@ -30,7 +30,7 @@ Space Complexity:
 
 const int INF = INT_MAX / 2;
 std::vector<std::vector<int>> cap;
-std::vector<bool> visit;
+std::vector<char> visit;
 
 int dfs(int u, int f, int sink) {
   int n = static_cast<int>(cap.size());

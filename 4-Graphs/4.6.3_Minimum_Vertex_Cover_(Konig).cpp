@@ -77,7 +77,7 @@ std::vector<int> min_vertex_cover(int n2) {
   kuhn(n2);
   // reachable_left[u] becomes true for left nodes on an alternating path from an unmatched left
   // node; seen_right[e] for the right nodes on those paths.
-  std::vector<bool> reachable_left(n1, true), seen_right(n2, false);
+  std::vector<char> reachable_left(n1, true), seen_right(n2, false);
   for (int u = 0; u < n1; u++) {
     if (match_left[u] != -1) {
       reachable_left[u] = false;

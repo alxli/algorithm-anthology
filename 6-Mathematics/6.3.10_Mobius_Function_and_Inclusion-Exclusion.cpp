@@ -56,7 +56,7 @@ int mobius(int n) {
 
 std::vector<int> mobius_sieve(int n) {
   std::vector<int> mu(n + 1, 0), primes;
-  std::vector<bool> composite(n + 1, false);
+  std::vector<char> composite(n + 1, false);
   if (n >= 1) {
     mu[1] = 1;
   }

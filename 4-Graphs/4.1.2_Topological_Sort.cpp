@@ -28,7 +28,7 @@ Space Complexity:
 
 std::vector<std::vector<int>> adj;
 
-void dfs(int u, std::vector<bool> &visit, std::vector<bool> &done, std::vector<int> &res) {
+void dfs(int u, std::vector<char> &visit, std::vector<char> &done, std::vector<int> &res) {
   if (visit[u]) {
     throw std::runtime_error("Not a directed acyclic graph.");
   }
@@ -46,7 +46,7 @@ void dfs(int u, std::vector<bool> &visit, std::vector<bool> &done, std::vector<i
 
 std::vector<int> toposort_dfs() {
   int n = static_cast<int>(adj.size());
-  std::vector<bool> visit(n, false), done(n, false);
+  std::vector<char> visit(n, false), done(n, false);
   std::vector<int> res;
   for (int i = 0; i < n; i++) {
     if (!done[i]) {

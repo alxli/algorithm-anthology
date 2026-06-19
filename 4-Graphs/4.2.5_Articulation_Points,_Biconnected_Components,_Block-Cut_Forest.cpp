@@ -39,7 +39,7 @@ Space Complexity:
 struct BiconnectedComponents {
   std::vector<std::vector<int>> adj, bccs, block_cut_forest;
   std::vector<int> lowlink, tin, block_cut_id, articulation_points;
-  std::vector<bool> visited, is_articulation;
+  std::vector<char> visited, is_articulation;
   std::vector<std::pair<int, int>> edges;
   std::vector<int> edge_stack;
   int timer;

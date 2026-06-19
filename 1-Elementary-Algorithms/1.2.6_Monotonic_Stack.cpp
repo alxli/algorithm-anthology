@@ -113,7 +113,7 @@ T largest_rectangle(const std::vector<T> &heights) {
   return best;
 }
 
-int largest_zero_submatrix(const std::vector<std::vector<bool>> &a) {
+int largest_zero_submatrix(const std::vector<std::vector<char>> &a) {
   if (a.empty()) {
     return 0;
   }
@@ -144,7 +144,7 @@ int main() {
   vector<int> hist{2, 1, 5, 6, 2, 3};
   assert(largest_rectangle(hist) == 10);
 
-  vector<vector<bool>> grid{
+  vector<vector<char>> grid{
       {1, 0, 1, 1, 0, 0},
       {1, 0, 0, 1, 0, 0},
       {0, 0, 0, 0, 0, 1},

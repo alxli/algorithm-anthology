@@ -253,7 +253,7 @@ int main() {
   }
   std::rewind(output);
   char buf[64] = {};
-  std::fgets(buf, sizeof(buf), output);
+  assert(std::fgets(buf, sizeof(buf), output));
   assert(std::strncmp(buf, "42 hello 3.5 -2147483648", 24) == 0);
   std::fclose(output);
   return 0;

@@ -136,7 +136,7 @@ using cycles = std::vector<std::vector<int>>;
 
 cycles permutation_cycles(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
-  std::vector<bool> visit(n);
+  std::vector<char> visit(n);
   cycles res;
   for (int i = 0; i < n; i++) {
     if (!visit[i]) {

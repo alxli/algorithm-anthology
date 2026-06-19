@@ -99,8 +99,8 @@ class Dinic {
     return flow;
   }
 
-  std::vector<bool> min_cut(int source) const {
-    std::vector<bool> reachable(nodes);
+  std::vector<char> min_cut(int source) const {
+    std::vector<char> reachable(nodes);
     std::queue<int> q;
     reachable[source] = true;
     q.push(source);
@@ -134,7 +134,7 @@ std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
       mf.add_edge(v, u, w);
     }
     T flow = mf.max_flow(s, t);
-    std::vector<bool> cut = mf.min_cut(s);
+    std::vector<char> cut = mf.min_cut(s);
     for (int v = s + 1; v < n; v++) {
       if (parent[v] == t && cut[v] == cut[s]) {
         parent[v] = s;
@@ -158,7 +158,7 @@ std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
 
 template<typename T>
 T min_cut_value_dfs(
-    const std::vector<std::vector<std::pair<int, T>>> &adj, std::vector<bool> &seen, int u,
+    const std::vector<std::vector<std::pair<int, T>>> &adj, std::vector<char> &seen, int u,
     int sink, T best
 ) {
   if (u == sink) {
@@ -185,7 +185,7 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
     adj[u].emplace_back(v, w);
     adj[v].emplace_back(u, w);
   }
-  std::vector<bool> seen(n);
+  std::vector<char> seen(n);
   return min_cut_value_dfs(adj, seen, source, sink, std::numeric_limits<T>::max());
 }
 

@@ -137,8 +137,8 @@ class Dinic {
     return flow;
   }
 
-  std::vector<bool> min_cut(int source) const {
-    std::vector<bool> reachable(nodes);
+  std::vector<char> min_cut(int source) const {
+    std::vector<char> reachable(nodes);
     std::queue<int> q;
     reachable[source] = true;
     q.push(source);
@@ -164,7 +164,7 @@ class Dinic {
     std::vector<FlowPath> res;
     while (true) {
       FlowPath path{std::numeric_limits<T>::max(), {source}, {}};
-      std::vector<bool> seen(nodes);
+      std::vector<char> seen(nodes);
       std::function<bool(int)> find_path = [&](int u) {
         if (u == sink) {
           return true;
@@ -244,7 +244,7 @@ int main() {
   assert(g.edge_flow(id24) == 2);
   assert(g.edge_flow(id35) == 2);
   assert(g.edge_flow(id45) == 3);
-  vector<bool> cut = g.min_cut(0);
+  vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
   vector<Dinic<int>::FlowPath> paths = g.decompose(0, 5);
   cout << "Flow decomposition:\n";

@@ -29,7 +29,7 @@ Space Complexity:
 #include <cstdint>
 #include <vector>
 
-std::vector<std::vector<bool>> adj;
+std::vector<std::vector<char>> adj;
 std::vector<int> w;
 
 std::vector<uint64_t> build_mask_graph() {
@@ -109,7 +109,7 @@ void add_edge(int u, int v) {
 
 int main() {
   int nodes = 5;
-  adj.assign(nodes, std::vector<bool>(nodes));
+  adj.assign(nodes, std::vector<char>(nodes));
   w.assign(nodes, 0);
   add_edge(0, 1);
   add_edge(0, 2);

@@ -24,7 +24,7 @@ Space Complexity:
 #include <algorithm>
 #include <vector>
 
-std::vector<std::vector<bool>> adj;
+std::vector<std::vector<char>> adj;
 int min_colors;
 std::vector<int> color, curr, id, degree;
 
@@ -39,7 +39,7 @@ void rec(int lo, int hi, int n, int used_colors) {
     min_colors = used_colors;
     return;
   }
-  std::vector<bool> used(used_colors + 1);
+  std::vector<char> used(used_colors + 1);
   for (int i = 0; i < n; i++) {
     if (adj[id[n]][id[i]]) {
       used[curr[i]] = true;
@@ -112,7 +112,7 @@ void add_edge(int u, int v) {
 
 int main() {
   int nodes = 5;
-  adj.assign(nodes, std::vector<bool>(nodes));
+  adj.assign(nodes, std::vector<char>(nodes));
   add_edge(0, 1);
   add_edge(0, 4);
   add_edge(1, 3);

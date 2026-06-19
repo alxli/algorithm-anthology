@@ -40,7 +40,7 @@ Space Complexity:
 
 bool next_arrangement(int n, std::vector<int> &a) {
   int k = static_cast<int>(a.size());
-  std::vector<bool> used(n);
+  std::vector<char> used(n);
   for (int i = 0; i < k; i++) {
     used[a[i]] = true;
   }
@@ -86,7 +86,7 @@ std::vector<int> arrangement_by_rank(int n, int k, int64_t r) {
 int64_t rank_by_arrangement(int n, const std::vector<int> &a) {
   int k = static_cast<int>(a.size());
   int64_t res = 0;
-  std::vector<bool> used(n);
+  std::vector<char> used(n);
   for (int i = 0; i < k; i++) {
     int count = 0;
     for (int j = 0; j < a[i]; j++) {

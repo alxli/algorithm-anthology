@@ -96,8 +96,8 @@ class EdmondsKarp {
     return flow;
   }
 
-  std::vector<bool> min_cut(int source) const {
-    std::vector<bool> reachable(nodes);
+  std::vector<char> min_cut(int source) const {
+    std::vector<char> reachable(nodes);
     std::queue<int> q;
     reachable[source] = true;
     q.push(source);
@@ -141,7 +141,7 @@ int main() {
   g.add_edge(4, 5, 3);
   assert(g.max_flow(0, 5) == 5);
   assert(g.max_flow(0, 5) == 5);
-  std::vector<bool> cut = g.min_cut(0);
+  std::vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);

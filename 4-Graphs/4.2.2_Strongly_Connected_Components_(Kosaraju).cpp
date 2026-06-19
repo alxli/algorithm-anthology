@@ -29,7 +29,7 @@ Space Complexity:
 struct KosarajuSCC {
   std::vector<std::vector<int>> adj, rev, scc;
   std::vector<int> component;
-  std::vector<bool> visited;
+  std::vector<char> visited;
 
   KosarajuSCC(int n = 0) : adj(n), rev(n) {}
 

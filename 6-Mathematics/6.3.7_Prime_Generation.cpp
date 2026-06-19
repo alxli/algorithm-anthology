@@ -37,7 +37,7 @@ std::vector<int> sieve(int n) {
   if (n < 2) {
     return {};
   }
-  std::vector<bool> prime(n + 1, true);
+  std::vector<char> prime(n + 1, true);
   for (int i = 2; i <= n / i; i++) {
     if (prime[i]) {
       for (int64_t j = 1LL * i * i; j <= n; j += i) {
@@ -66,7 +66,7 @@ std::vector<int> sieve(int lo, int hi) {
   while (1LL * (fourth_root_hi + 1) * (fourth_root_hi + 1) <= sqrt_hi) {
     fourth_root_hi++;
   }
-  std::vector<bool> prime1(sqrt_hi + 1, true), prime2(hi - lo + 1, true);
+  std::vector<char> prime1(sqrt_hi + 1, true), prime2(hi - lo + 1, true);
   for (int i = 2; i <= fourth_root_hi; i++) {
     if (prime1[i]) {
       for (int64_t j = 1LL * i * i; j <= sqrt_hi; j += i) {

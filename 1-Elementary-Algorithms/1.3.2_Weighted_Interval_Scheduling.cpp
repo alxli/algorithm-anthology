@@ -9,7 +9,7 @@ finishing no later than its start, with that predecessor located by binary searc
 Intervals are represented as half-open ranges [`start`, `finish`), so two intervals are compatible
 if the next interval's `start` is at least the previous interval's `finish`.
 
-- `weighted_interval_scheduling(intervals)` returns the maximum total weight of a compatible subset
+- `schedule_weighted_intervals(intervals)` returns the maximum total weight of a compatible subset
   from an input vector of `WeightedInterval` with fields `start`, `finish`, and `weight`.
   `dp[i]` stores the best answer using the first `i` intervals after sorting by finish time.
 
@@ -30,7 +30,7 @@ struct WeightedInterval {
   int64_t weight;
 };
 
-int64_t weighted_interval_scheduling(std::vector<WeightedInterval> intervals) {
+int64_t schedule_weighted_intervals(std::vector<WeightedInterval> intervals) {
   std::sort(
       intervals.begin(), intervals.end(), [](const WeightedInterval &a, const WeightedInterval &b) {
         return a.finish != b.finish ? a.finish < b.finish : a.start < b.start;
@@ -57,6 +57,6 @@ using namespace std;
 
 int main() {
   vector<WeightedInterval> intervals{{1, 3, 5}, {2, 5, 6}, {4, 6, 5}, {6, 7, 4}, {5, 8, 11}};
-  assert(weighted_interval_scheduling(intervals) == 17);
+  assert(schedule_weighted_intervals(intervals) == 17);
   return 0;
 }

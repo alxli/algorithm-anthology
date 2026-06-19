@@ -49,7 +49,7 @@ class Graph {
   bool directed;
 
   template<typename Fn>
-  void dfs(int n, std::vector<bool> &visit, Fn f) const {
+  void dfs(int n, std::vector<char> &visit, Fn f) const {
     f(n);
     visit[n] = true;
     for (int v : adj[n]) {
@@ -59,7 +59,7 @@ class Graph {
     }
   }
 
-  bool has_cycle(int n, int prev, std::vector<bool> &visit, std::vector<bool> &onstack) const {
+  bool has_cycle(int n, int prev, std::vector<char> &visit, std::vector<char> &onstack) const {
     visit[n] = true;
     onstack[n] = true;
     for (int v : adj[n]) {
@@ -96,7 +96,7 @@ class Graph {
 
   bool has_cycle() const {
     int n = static_cast<int>(adj.size());
-    std::vector<bool> visit(n, false), onstack(n, false);
+    std::vector<char> visit(n, false), onstack(n, false);
     for (int i = 0; i < n; i++) {
       if (!visit[i] && has_cycle(i, -1, visit, onstack)) {
         return true;
@@ -111,7 +111,7 @@ class Graph {
 
   template<typename Fn>
   void dfs(int start, Fn f) const {
-    std::vector<bool> visit(adj.size(), false);
+    std::vector<char> visit(adj.size(), false);
     dfs(start, visit, f);
   }
 };

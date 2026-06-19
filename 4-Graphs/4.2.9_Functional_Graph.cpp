@@ -41,7 +41,7 @@ Space Complexity:
 class FunctionalGraph {
   int n, LOG;
   std::vector<std::vector<int>> up;  // up[k][i] = f applied 2^k times to i.
-  std::vector<bool> on_cyc;
+  std::vector<char> on_cyc;
   std::vector<int> to_cyc;  // Steps from i to the first cycle node.
   std::vector<int> comp;    // Identifier of the cycle that i reaches.
   std::vector<int> clen;    // clen[c] = length of cycle c.
@@ -73,7 +73,7 @@ class FunctionalGraph {
     for (int i = 0; i < n; i++) {
       indeg[f[i]]++;
     }
-    std::vector<bool> removed(n, false);
+    std::vector<char> removed(n, false);
     std::vector<int> stack;
     for (int i = 0; i < n; i++) {
       if (indeg[i] == 0) {

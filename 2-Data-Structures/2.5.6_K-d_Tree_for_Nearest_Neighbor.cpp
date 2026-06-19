@@ -41,7 +41,7 @@ class NearestKDTree {
   static inline bool comp2(const point &a, const point &b) { return a.second < b.second; }
 
   std::vector<point> tree;
-  std::vector<bool> div_x;
+  std::vector<char> div_x;
 
   void build(int lo, int hi) {
     if (lo >= hi) {

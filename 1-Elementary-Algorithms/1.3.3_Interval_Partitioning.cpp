@@ -14,7 +14,7 @@ options as possible.
 Intervals are treated as half-open ranges [`start`, `finish`), so one interval may reuse a room
 that another interval vacates at the same time.
 
-- `interval_partitioning(intervals)` returns a vector `room`, where `room[id]` is the assigned room
+- `partition_intervals(intervals)` returns a vector `room`, where `room[id]` is the assigned room
   for each input interval given as a vector of `PartitionInterval` with fields `start`, `finish`,
   and `id`. The number of rooms used in the returned assignment is $1 + \max(`room[id]`)$, or 0 if
   there are no intervals.
@@ -37,7 +37,7 @@ struct PartitionInterval {
   int start, finish, id;
 };
 
-std::vector<int> interval_partitioning(std::vector<PartitionInterval> intervals) {
+std::vector<int> partition_intervals(std::vector<PartitionInterval> intervals) {
   std::sort(
       intervals.begin(), intervals.end(),
       [](const PartitionInterval &a, const PartitionInterval &b) {
@@ -70,7 +70,7 @@ using namespace std;
 
 int main() {
   vector<PartitionInterval> intervals{{0, 30, 0}, {5, 10, 1}, {15, 20, 2}};
-  vector<int> room = interval_partitioning(intervals);
+  vector<int> room = partition_intervals(intervals);
   assert(1 + *max_element(room.begin(), room.end()) == 2);
   assert(room[1] == room[2]);
   assert(room[0] != room[1]);

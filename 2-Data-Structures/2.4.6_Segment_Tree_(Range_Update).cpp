@@ -64,7 +64,7 @@ class LazySegTree {
 
   int len;
   std::vector<T> value, delta;
-  std::vector<bool> pending;
+  std::vector<char> pending;
 
   void build(int i, int lo, int hi, const T &v) {
     if (lo == hi) {

@@ -173,7 +173,7 @@ class EulerianGraph {
     if (start == -1) {
       start = choose_start();
     }
-    std::vector<bool> used(m, false);
+    std::vector<char> used(m, false);
     std::vector<int> ptr(n), vertex_stack{start}, edge_stack{-1}, trail_edges;
     while (!vertex_stack.empty()) {
       int u = vertex_stack.back();

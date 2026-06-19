@@ -748,7 +748,7 @@ For the purposes of this section, we define a ``size $k$ arrangement of $n$'' to
 
 bool next_arrangement(int n, std::vector<int> &a) {
   int k = static_cast<int>(a.size());
-  std::vector<bool> used(n);
+  std::vector<char> used(n);
   for (int i = 0; i < k; i++) {
     used[a[i]] = true;
   }
@@ -794,7 +794,7 @@ std::vector<int> arrangement_by_rank(int n, int k, int64_t r) {
 int64_t rank_by_arrangement(int n, const std::vector<int> &a) {
   int k = static_cast<int>(a.size());
   int64_t res = 0;
-  std::vector<bool> used(n);
+  std::vector<char> used(n);
   for (int i = 0; i < k; i++) {
     int count = 0;
     for (int j = 0; j < a[i]; j++) {
@@ -1008,7 +1008,7 @@ using cycles = std::vector<std::vector<int>>;
 
 cycles permutation_cycles(const std::vector<int> &a) {
   int n = static_cast<int>(a.size());
-  std::vector<bool> visit(n);
+  std::vector<char> visit(n);
   cycles res;
   for (int i = 0; i < n; i++) {
     if (!visit[i]) {
@@ -2730,7 +2730,7 @@ std::vector<int> sieve(int n) {
   if (n < 2) {
     return {};
   }
-  std::vector<bool> prime(n + 1, true);
+  std::vector<char> prime(n + 1, true);
   for (int i = 2; i <= n / i; i++) {
     if (prime[i]) {
       for (int64_t j = 1LL * i * i; j <= n; j += i) {
@@ -2759,7 +2759,7 @@ std::vector<int> sieve(int lo, int hi) {
   while (1LL * (fourth_root_hi + 1) * (fourth_root_hi + 1) <= sqrt_hi) {
     fourth_root_hi++;
   }
-  std::vector<bool> prime1(sqrt_hi + 1, true), prime2(hi - lo + 1, true);
+  std::vector<char> prime1(sqrt_hi + 1, true), prime2(hi - lo + 1, true);
   for (int i = 2; i <= fourth_root_hi; i++) {
     if (prime1[i]) {
       for (int64_t j = 1LL * i * i; j <= sqrt_hi; j += i) {
@@ -3409,7 +3409,7 @@ std::vector<int> phi_table(int lo, int hi) {
     root++;
   }
   // Sieve the primes up to sqrt(hi); these are the only ones that can divide a value in [lo, hi].
-  std::vector<bool> composite(root + 1, false);
+  std::vector<char> composite(root + 1, false);
   std::vector<int> primes;
   for (int i = 2; i <= root; i++) {
     if (!composite[i]) {
@@ -3527,7 +3527,7 @@ int mobius(int n) {
 
 std::vector<int> mobius_sieve(int n) {
   std::vector<int> mu(n + 1, 0), primes;
-  std::vector<bool> composite(n + 1, false);
+  std::vector<char> composite(n + 1, false);
   if (n >= 1) {
     mu[1] = 1;
   }
@@ -7221,7 +7221,7 @@ For a sum of independent impartial games, the combined Grundy number is the XOR 
 #include <vector>
 
 int mex(const std::vector<int> &values) {
-  std::vector<bool> seen(values.size() + 1, false);
+  std::vector<char> seen(values.size() + 1, false);
   for (int v : values) {
     if (0 <= v && v < static_cast<int>(seen.size())) {
       seen[v] = true;
@@ -7297,7 +7297,7 @@ int grundy_dfs(int u, const std::vector<std::vector<int>> &g, std::vector<int> *
   if ((*memo)[u] != -1) {
     return (*memo)[u];
   }
-  std::vector<bool> seen(g[u].size() + 1, false);
+  std::vector<char> seen(g[u].size() + 1, false);
   for (int v : g[u]) {
     int x = grundy_dfs(v, g, memo);
     if (x < static_cast<int>(seen.size())) {

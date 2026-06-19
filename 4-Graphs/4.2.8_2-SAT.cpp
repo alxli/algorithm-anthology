@@ -59,7 +59,7 @@ struct TwoSAT {
   void add(int variable, bool value) { add_true(literal(variable, value)); }
   void add(int x, bool xval, int y, bool yval) { add_or(literal(x, xval), literal(y, yval)); }
 
-  void dfs_order(int u, std::vector<bool> &visited) {
+  void dfs_order(int u, std::vector<char> &visited) {
     visited[u] = true;
     for (int v : adj[u]) {
       if (!visited[v]) {
@@ -81,7 +81,7 @@ struct TwoSAT {
   bool satisfiable() {
     order.clear();
     component.assign(2 * variables, -1);
-    std::vector<bool> visited(2 * variables, false);
+    std::vector<char> visited(2 * variables, false);
     for (int i = 0; i < 2 * variables; i++) {
       if (!visited[i]) {
         dfs_order(i, visited);

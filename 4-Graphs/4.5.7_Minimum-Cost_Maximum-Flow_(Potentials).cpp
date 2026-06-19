@@ -69,7 +69,7 @@ class MinCostMaxFlow {
       return;
     }
     std::fill(potential.begin(), potential.end(), INF_COST);
-    std::vector<bool> in_queue(nodes);
+    std::vector<char> in_queue(nodes);
     std::queue<int> q;
     potential[source] = 0;
     q.push(source);

@@ -47,7 +47,7 @@ class Graph {
   bool directed;
 
   template<typename Fn>
-  void dfs(int n, std::vector<bool> &visit, Fn f) const {
+  void dfs(int n, std::vector<char> &visit, Fn f) const {
     f(n);
     visit[n] = true;
     for (int v : adj[n]) {
@@ -57,7 +57,7 @@ class Graph {
     }
   }
 
-  bool has_cycle(int n, int prev, std::vector<bool> &visit, std::vector<bool> &onstack) const {
+  bool has_cycle(int n, int prev, std::vector<char> &visit, std::vector<char> &onstack) const {
     visit[n] = true;
     onstack[n] = true;
     for (int v : adj[n]) {
@@ -94,7 +94,7 @@ class Graph {
 
   bool has_cycle() const {
     int n = static_cast<int>(adj.size());
-    std::vector<bool> visit(n, false), onstack(n, false);
+    std::vector<char> visit(n, false), onstack(n, false);
     for (int i = 0; i < n; i++) {
       if (!visit[i] && has_cycle(i, -1, visit, onstack)) {
         return true;
@@ -109,7 +109,7 @@ class Graph {
 
   template<typename Fn>
   void dfs(int start, Fn f) const {
-    std::vector<bool> visit(adj.size(), false);
+    std::vector<char> visit(adj.size(), false);
     dfs(start, visit, f);
   }
 };
@@ -186,7 +186,7 @@ Given a directed acyclic graph, find one of possibly many orderings of the nodes
 
 std::vector<std::vector<int>> adj;
 
-void dfs(int u, std::vector<bool> &visit, std::vector<bool> &done, std::vector<int> &res) {
+void dfs(int u, std::vector<char> &visit, std::vector<char> &done, std::vector<int> &res) {
   if (visit[u]) {
     throw std::runtime_error("Not a directed acyclic graph.");
   }
@@ -204,7 +204,7 @@ void dfs(int u, std::vector<bool> &visit, std::vector<bool> &done, std::vector<i
 
 std::vector<int> toposort_dfs() {
   int n = static_cast<int>(adj.size());
-  std::vector<bool> visit(n, false), done(n, false);
+  std::vector<char> visit(n, false), done(n, false);
   std::vector<int> res;
   for (int i = 0; i < n; i++) {
     if (!done[i]) {
@@ -590,7 +590,7 @@ Given a tree, build its centroid decomposition. A centroid is a node whose remov
 class CentroidDecomposition {
   std::vector<std::vector<int>> adj;
   std::vector<int> subtree_size, par;
-  std::vector<bool> removed;
+  std::vector<char> removed;
 
   int get_size(int u, int p) {
     subtree_size[u] = 1;
@@ -1087,7 +1087,7 @@ class EulerianGraph {
     if (start == -1) {
       start = choose_start();
     }
-    std::vector<bool> used(m, false);
+    std::vector<char> used(m, false);
     std::vector<int> ptr(n), vertex_stack{start}, edge_stack{-1}, trail_edges;
     while (!vertex_stack.empty()) {
       int u = vertex_stack.back();
@@ -1269,7 +1269,7 @@ Given a directed graph, determine the strongly connected components (SCCs) using
 struct KosarajuSCC {
   std::vector<std::vector<int>> adj, rev, scc;
   std::vector<int> component;
-  std::vector<bool> visited;
+  std::vector<char> visited;
 
   KosarajuSCC(int n = 0) : adj(n), rev(n) {}
 
@@ -1389,7 +1389,7 @@ struct TarjanSCC {
   static const int INF = INT_MAX / 2;
   std::vector<std::vector<int>> adj, scc;
   std::vector<int> component, stack, lowlink;
-  std::vector<bool> visited;
+  std::vector<char> visited;
   int timer;
 
   TarjanSCC(int n = 0) : adj(n) {}
@@ -1641,7 +1641,7 @@ The block-cut forest is a bipartite forest with one node for each BCC and one no
 struct BiconnectedComponents {
   std::vector<std::vector<int>> adj, bccs, block_cut_forest;
   std::vector<int> lowlink, tin, block_cut_id, articulation_points;
-  std::vector<bool> visited, is_articulation;
+  std::vector<char> visited, is_articulation;
   std::vector<std::pair<int, int>> edges;
   std::vector<int> edge_stack;
   int timer;
@@ -1831,7 +1831,7 @@ After each 2-edge-connected component is condensed into one node, the original b
 struct BridgeDecomposition {
   std::vector<std::vector<int>> adj, two_edge_components, bridge_forest;
   std::vector<int> lowlink, tin, component;
-  std::vector<bool> visited, is_bridge_edge;
+  std::vector<char> visited, is_bridge_edge;
   std::vector<std::pair<int, int>> edges, bridges;
   int timer;
 
@@ -2177,7 +2177,7 @@ struct TwoSAT {
   void add(int variable, bool value) { add_true(literal(variable, value)); }
   void add(int x, bool xval, int y, bool yval) { add_or(literal(x, xval), literal(y, yval)); }
 
-  void dfs_order(int u, std::vector<bool> &visited) {
+  void dfs_order(int u, std::vector<char> &visited) {
     visited[u] = true;
     for (int v : adj[u]) {
       if (!visited[v]) {
@@ -2199,7 +2199,7 @@ struct TwoSAT {
   bool satisfiable() {
     order.clear();
     component.assign(2 * variables, -1);
-    std::vector<bool> visited(2 * variables, false);
+    std::vector<char> visited(2 * variables, false);
     for (int i = 0; i < 2 * variables; i++) {
       if (!visited[i]) {
         dfs_order(i, visited);
@@ -2275,7 +2275,7 @@ Building the structure peels away nodes of in-degree zero to expose the cycles (
 class FunctionalGraph {
   int n, LOG;
   std::vector<std::vector<int>> up;  // up[k][i] = f applied 2^k times to i.
-  std::vector<bool> on_cyc;
+  std::vector<char> on_cyc;
   std::vector<int> to_cyc;  // Steps from i to the first cycle node.
   std::vector<int> comp;    // Identifier of the cycle that i reaches.
   std::vector<int> clen;    // clen[c] = length of cycle c.
@@ -2307,7 +2307,7 @@ class FunctionalGraph {
     for (int i = 0; i < n; i++) {
       indeg[f[i]]++;
     }
-    std::vector<bool> removed(n, false);
+    std::vector<char> removed(n, false);
     std::vector<int> stack;
     for (int i = 0; i < n; i++) {
       if (indeg[i] == 0) {
@@ -2979,7 +2979,7 @@ bool spfa(int start) {
   dist.assign(n, INF);
   pred.assign(n, -1);
   std::vector<int> relax_count(n, 0);
-  std::vector<bool> in_queue(n, false);
+  std::vector<char> in_queue(n, false);
   std::queue<int> q;
   dist[start] = 0;
   q.push(start);
@@ -3074,7 +3074,7 @@ std::vector<std::vector<std::pair<int, int>>> adj;
 std::vector<int64_t> dist;
 std::vector<int> pred;
 
-void topological_dfs(int u, std::vector<bool> &visit, std::vector<int> &order) {
+void topological_dfs(int u, std::vector<char> &visit, std::vector<int> &order) {
   visit[u] = true;
   for (auto &[v, w] : adj[u]) {
     if (!visit[v]) {
@@ -3086,7 +3086,7 @@ void topological_dfs(int u, std::vector<bool> &visit, std::vector<int> &order) {
 
 void dag_shortest_path(int start) {
   int n = static_cast<int>(adj.size());
-  std::vector<bool> visit(n, false);
+  std::vector<char> visit(n, false);
   std::vector<int> order;
   for (int i = 0; i < n; i++) {
     if (!visit[i]) {
@@ -3283,7 +3283,7 @@ std::vector<int> mst;
 int prim_mst() {
   int n = static_cast<int>(adj.size());
   mst.clear();
-  std::vector<bool> visit(n);
+  std::vector<char> visit(n);
   int total_dist = 0;
   for (int i = 0; i < n; i++) {
     if (visit[i]) {
@@ -3581,7 +3581,7 @@ The Ford-Fulkerson method repeatedly finds any augmenting path from source to si
 
 const int INF = INT_MAX / 2;
 std::vector<std::vector<int>> cap;
-std::vector<bool> visit;
+std::vector<char> visit;
 
 int dfs(int u, int f, int sink) {
   int n = static_cast<int>(cap.size());
@@ -3738,8 +3738,8 @@ class EdmondsKarp {
     return flow;
   }
 
-  std::vector<bool> min_cut(int source) const {
-    std::vector<bool> reachable(nodes);
+  std::vector<char> min_cut(int source) const {
+    std::vector<char> reachable(nodes);
     std::queue<int> q;
     reachable[source] = true;
     q.push(source);
@@ -3784,7 +3784,7 @@ int main() {
   g.add_edge(4, 5, 3);
   assert(g.max_flow(0, 5) == 5);
   assert(g.max_flow(0, 5) == 5);
-  std::vector<bool> cut = g.min_cut(0);
+  std::vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);
@@ -3908,8 +3908,8 @@ class Dinic {
     return flow;
   }
 
-  std::vector<bool> min_cut(int source) const {
-    std::vector<bool> reachable(nodes);
+  std::vector<char> min_cut(int source) const {
+    std::vector<char> reachable(nodes);
     std::queue<int> q;
     reachable[source] = true;
     q.push(source);
@@ -3954,7 +3954,7 @@ int main() {
   g.add_edge(4, 5, 3);
   assert(g.max_flow(0, 5) == 5);
   assert(g.max_flow(0, 5) == 5);
-  std::vector<bool> cut = g.min_cut(0);
+  std::vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
   g.clear_flow();
   assert(g.max_flow(0, 5) == 5);
@@ -4096,8 +4096,8 @@ class Dinic {
     return flow;
   }
 
-  std::vector<bool> min_cut(int source) const {
-    std::vector<bool> reachable(nodes);
+  std::vector<char> min_cut(int source) const {
+    std::vector<char> reachable(nodes);
     std::queue<int> q;
     reachable[source] = true;
     q.push(source);
@@ -4123,7 +4123,7 @@ class Dinic {
     std::vector<FlowPath> res;
     while (true) {
       FlowPath path{std::numeric_limits<T>::max(), {source}, {}};
-      std::vector<bool> seen(nodes);
+      std::vector<char> seen(nodes);
       std::function<bool(int)> find_path = [&](int u) {
         if (u == sink) {
           return true;
@@ -4196,7 +4196,7 @@ int main() {
   assert(g.edge_flow(id24) == 2);
   assert(g.edge_flow(id35) == 2);
   assert(g.edge_flow(id45) == 3);
-  vector<bool> cut = g.min_cut(0);
+  vector<char> cut = g.min_cut(0);
   assert(cut[0] && !cut[5]);
   vector<Dinic<int>::FlowPath> paths = g.decompose(0, 5);
   cout << "Flow decomposition:\n";
@@ -4327,9 +4327,9 @@ int64_t push_relabel(int source, int sink) {
   return max_flow;
 }
 
-std::vector<bool> min_cut(int source) {
+std::vector<char> min_cut(int source) {
   int n = static_cast<int>(cap.size());
-  std::vector<bool> reachable(n);
+  std::vector<char> reachable(n);
   std::queue<int> q;
   reachable[source] = true;
   q.push(source);
@@ -4373,7 +4373,7 @@ int main() {
   cap[3][5] = 2;
   cap[4][5] = 3;
   assert(push_relabel(0, 5) == 5);
-  std::vector<bool> cut = min_cut(0);
+  std::vector<char> cut = min_cut(0);
   assert(cut[0] && !cut[5]);
   return 0;
 }
@@ -4449,7 +4449,7 @@ class MinCostMaxFlow {
     C cost = 0;
     std::vector<C> dist(nodes);
     std::vector<int> parent_edge(nodes);
-    std::vector<bool> in_queue(nodes);
+    std::vector<char> in_queue(nodes);
     while (flow < target_flow) {
       std::fill(dist.begin(), dist.end(), INF_COST);
       std::fill(in_queue.begin(), in_queue.end(), false);
@@ -4591,7 +4591,7 @@ class MinCostMaxFlow {
       return;
     }
     std::fill(potential.begin(), potential.end(), INF_COST);
-    std::vector<bool> in_queue(nodes);
+    std::vector<char> in_queue(nodes);
     std::queue<int> q;
     potential[source] = 0;
     q.push(source);
@@ -4825,8 +4825,8 @@ class Dinic {
     return flow;
   }
 
-  std::vector<bool> min_cut(int source) const {
-    std::vector<bool> reachable(nodes);
+  std::vector<char> min_cut(int source) const {
+    std::vector<char> reachable(nodes);
     std::queue<int> q;
     reachable[source] = true;
     q.push(source);
@@ -4860,7 +4860,7 @@ std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
       mf.add_edge(v, u, w);
     }
     T flow = mf.max_flow(s, t);
-    std::vector<bool> cut = mf.min_cut(s);
+    std::vector<char> cut = mf.min_cut(s);
     for (int v = s + 1; v < n; v++) {
       if (parent[v] == t && cut[v] == cut[s]) {
         parent[v] = s;
@@ -4884,7 +4884,7 @@ std::vector<Edge<T>> gomory_hu(int n, const std::vector<Edge<T>> &edges) {
 
 template<typename T>
 T min_cut_value_dfs(
-    const std::vector<std::vector<std::pair<int, T>>> &adj, std::vector<bool> &seen, int u,
+    const std::vector<std::vector<std::pair<int, T>>> &adj, std::vector<char> &seen, int u,
     int sink, T best
 ) {
   if (u == sink) {
@@ -4911,7 +4911,7 @@ T min_cut_value(int n, const std::vector<Edge<T>> &tree, int source, int sink) {
     adj[u].emplace_back(v, w);
     adj[v].emplace_back(u, w);
   }
-  std::vector<bool> seen(n);
+  std::vector<char> seen(n);
   return min_cut_value_dfs(adj, seen, source, sink, std::numeric_limits<T>::max());
 }
 \end{lstlisting}
@@ -4969,7 +4969,7 @@ std::pair<int64_t, std::vector<int>> stoer_wagner(std::vector<std::vector<int64_
   std::pair<int64_t, std::vector<int>> best = {INT64_MAX, {}};
   std::vector<std::vector<int>> groups(n);
   std::vector<int64_t> weight(n);
-  std::vector<bool> exists(n, true), added(n);
+  std::vector<char> exists(n, true), added(n);
   for (int i = 0; i < n; i++) {
     groups[i] = {i};
   }
@@ -5141,7 +5141,7 @@ Hopcroft-Karp augments along many shortest augmenting paths per phase. Each phas
 #include <vector>
 
 std::vector<std::vector<int>> adj;
-std::vector<bool> used, visit;
+std::vector<char> used, visit;
 std::vector<int> match, dist;
 
 void bfs() {
@@ -5296,7 +5296,7 @@ std::vector<int> min_vertex_cover(int n2) {
   kuhn(n2);
   // reachable_left[u] becomes true for left nodes on an alternating path from an unmatched left
   // node; seen_right[e] for the right nodes on those paths.
-  std::vector<bool> reachable_left(n1, true), seen_right(n2, false);
+  std::vector<char> reachable_left(n1, true), seen_right(n2, false);
   for (int u = 0; u < n1; u++) {
     if (match_left[u] != -1) {
       reachable_left[u] = false;
@@ -5950,7 +5950,7 @@ T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignmen
   assert(n <= m);
   std::vector<T> u(n + 1), v(m + 1), minv(m + 1);
   std::vector<int> p(m + 1), way(m + 1);
-  std::vector<bool> used(m + 1);
+  std::vector<char> used(m + 1);
   for (int i = 1; i <= n; i++) {
     std::fill(minv.begin(), minv.end(), INF);
     std::fill(used.begin(), used.end(), false);
@@ -6116,7 +6116,7 @@ These implementations use bitmasks of unsigned 64-bit integers, so the number of
 #include <cstdint>
 #include <vector>
 
-std::vector<std::vector<bool>> adj;
+std::vector<std::vector<char>> adj;
 std::vector<int> w;
 
 std::vector<uint64_t> build_mask_graph() {
@@ -6197,7 +6197,7 @@ void add_edge(int u, int v) {
 
 int main() {
   int nodes = 5;
-  adj.assign(nodes, std::vector<bool>(nodes));
+  adj.assign(nodes, std::vector<char>(nodes));
   w.assign(nodes, 0);
   add_edge(0, 1);
   add_edge(0, 2);
@@ -6239,7 +6239,7 @@ This implementation finds the chromatic number by backtracking: nodes (ordered b
 #include <algorithm>
 #include <vector>
 
-std::vector<std::vector<bool>> adj;
+std::vector<std::vector<char>> adj;
 int min_colors;
 std::vector<int> color, curr, id, degree;
 
@@ -6254,7 +6254,7 @@ void rec(int lo, int hi, int n, int used_colors) {
     min_colors = used_colors;
     return;
   }
-  std::vector<bool> used(used_colors + 1);
+  std::vector<char> used(used_colors + 1);
   for (int i = 0; i < n; i++) {
     if (adj[id[n]][id[i]]) {
       used[curr[i]] = true;
@@ -6321,7 +6321,7 @@ void add_edge(int u, int v) {
 
 int main() {
   int nodes = 5;
-  adj.assign(nodes, std::vector<bool>(nodes));
+  adj.assign(nodes, std::vector<char>(nodes));
   add_edge(0, 1);
   add_edge(0, 4);
   add_edge(1, 3);
@@ -6421,7 +6421,7 @@ class EdgeColoring {
   void add_edge(int u, int v) {
     // Build a maximal fan of u starting at v: fan[0] = v, and color(u, fan[i+1]) is free at fan[i].
     std::vector<int> fan{v};
-    std::vector<bool> used(n, false);
+    std::vector<char> used(n, false);
     used[v] = true;
     while (true) {
       int last = fan.back(), next = -1;

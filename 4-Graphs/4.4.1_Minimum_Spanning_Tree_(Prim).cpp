@@ -42,7 +42,7 @@ std::vector<int> mst;
 int prim_mst() {
   int n = static_cast<int>(adj.size());
   mst.clear();
-  std::vector<bool> visit(n);
+  std::vector<char> visit(n);
   int total_dist = 0;
   for (int i = 0; i < n; i++) {
     if (visit[i]) {

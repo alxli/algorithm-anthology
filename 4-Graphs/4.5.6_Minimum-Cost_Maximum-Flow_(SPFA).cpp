@@ -78,7 +78,7 @@ class MinCostMaxFlow {
     C cost = 0;
     std::vector<C> dist(nodes);
     std::vector<int> parent_edge(nodes);
-    std::vector<bool> in_queue(nodes);
+    std::vector<char> in_queue(nodes);
     while (flow < target_flow) {
       std::fill(dist.begin(), dist.end(), INF_COST);
       std::fill(in_queue.begin(), in_queue.end(), false);

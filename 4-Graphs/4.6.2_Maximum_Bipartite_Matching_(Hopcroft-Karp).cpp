@@ -27,7 +27,7 @@ Space Complexity:
 #include <vector>
 
 std::vector<std::vector<int>> adj;
-std::vector<bool> used, visit;
+std::vector<char> used, visit;
 std::vector<int> match, dist;
 
 void bfs() {

@@ -49,7 +49,7 @@ std::pair<int64_t, std::vector<int>> stoer_wagner(std::vector<std::vector<int64_
   std::pair<int64_t, std::vector<int>> best = {INT64_MAX, {}};
   std::vector<std::vector<int>> groups(n);
   std::vector<int64_t> weight(n);
-  std::vector<bool> exists(n, true), added(n);
+  std::vector<char> exists(n, true), added(n);
   for (int i = 0; i < n; i++) {
     groups[i] = {i};
   }

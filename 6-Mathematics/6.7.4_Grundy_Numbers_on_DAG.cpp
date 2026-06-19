@@ -25,7 +25,7 @@ int grundy_dfs(int u, const std::vector<std::vector<int>> &g, std::vector<int> *
   if ((*memo)[u] != -1) {
     return (*memo)[u];
   }
-  std::vector<bool> seen(g[u].size() + 1, false);
+  std::vector<char> seen(g[u].size() + 1, false);
   for (int v : g[u]) {
     int x = grundy_dfs(v, g, memo);
     if (x < static_cast<int>(seen.size())) {

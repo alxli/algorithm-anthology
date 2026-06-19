@@ -37,7 +37,7 @@ T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignmen
   assert(n <= m);
   std::vector<T> u(n + 1), v(m + 1), minv(m + 1);
   std::vector<int> p(m + 1), way(m + 1);
-  std::vector<bool> used(m + 1);
+  std::vector<char> used(m + 1);
   for (int i = 1; i <= n; i++) {
     std::fill(minv.begin(), minv.end(), INF);
     std::fill(used.begin(), used.end(), false);

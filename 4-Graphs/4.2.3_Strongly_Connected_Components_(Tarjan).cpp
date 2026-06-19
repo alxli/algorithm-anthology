@@ -31,7 +31,7 @@ struct TarjanSCC {
   static const int INF = INT_MAX / 2;
   std::vector<std::vector<int>> adj, scc;
   std::vector<int> component, stack, lowlink;
-  std::vector<bool> visited;
+  std::vector<char> visited;
   int timer;
 
   TarjanSCC(int n = 0) : adj(n) {}

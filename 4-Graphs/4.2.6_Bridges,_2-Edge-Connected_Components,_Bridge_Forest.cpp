@@ -36,7 +36,7 @@ Space Complexity:
 struct BridgeDecomposition {
   std::vector<std::vector<int>> adj, two_edge_components, bridge_forest;
   std::vector<int> lowlink, tin, component;
-  std::vector<bool> visited, is_bridge_edge;
+  std::vector<char> visited, is_bridge_edge;
   std::vector<std::pair<int, int>> edges, bridges;
   int timer;
 

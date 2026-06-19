@@ -24,7 +24,7 @@ Space Complexity:
 #include <vector>
 
 int mex(const std::vector<int> &values) {
-  std::vector<bool> seen(values.size() + 1, false);
+  std::vector<char> seen(values.size() + 1, false);
   for (int v : values) {
     if (0 <= v && v < static_cast<int>(seen.size())) {
       seen[v] = true;

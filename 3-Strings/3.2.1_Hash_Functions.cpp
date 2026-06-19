@@ -42,7 +42,7 @@ offers no protection against adversarial inputs.
   keys be used in `std::unordered_map`/`std::unordered_set` without an explicit hasher argument.
   Specializing `std::hash` for purely standard types is technically nonstandard, so the functor
   forms above are the portable alternative. (Vector keys are left to the functors to avoid clashing
-  with the standard `std::hash<std::vector<bool>>`.)
+  with the standard `std::hash<std::vector<char>>`.)
 
 Time Complexity:
 - O(1) per call to the integer, combiner, and floating-point hash functions.
@@ -247,7 +247,7 @@ struct GenericHasher<std::vector<T>> : VectorHasher<T> {};
 // specializing std::hash when a user-defined type is involved, so the functors above remain the
 // portable choice; these specializations are a widely supported contest convenience. Vector keys
 // are intentionally left out here to avoid clashing with the standard library's own
-// std::hash<std::vector<bool>>; pass VectorHasher or GenericHasher explicitly for those.
+// std::hash<std::vector<char>>; pass VectorHasher or GenericHasher explicitly for those.
 namespace std {
 
 template<typename A, typename B>

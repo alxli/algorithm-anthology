@@ -42,20 +42,23 @@ int64_t powmod(int64_t b, int64_t e, int64_t m) {
   return res;
 }
 
-int64_t inv(int64_t a) {
-  return powmod(((a % MOD) + MOD) % MOD, MOD - 2, MOD);
-}
+// clang-format off
+int64_t modnorm(int64_t a) { return (a %= MOD) < 0 ? a + MOD : a; }
+int64_t addmod(int64_t a, int64_t b) { return modnorm(modnorm(a) + modnorm(b)); }
+int64_t submod(int64_t a, int64_t b) { return modnorm(modnorm(a) - modnorm(b)); }
+int64_t inv(int64_t a) { return powmod(modnorm(a), MOD - 2, MOD); }
+// clang-format on
 
 std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y) {
   int n = static_cast<int>(x.size());
   for (int i = 0; i < n; i++) {
-    x[i] = ((x[i] % MOD) + MOD) % MOD;
-    y[i] = ((y[i] % MOD) + MOD) % MOD;
+    x[i] = modnorm(x[i]);
+    y[i] = modnorm(y[i]);
   }
   // Replace y by its divided differences in place.
   for (int k = 0; k < n; k++) {
     for (int i = k + 1; i < n; i++) {
-      y[i] = (y[i] - y[k] + MOD) % MOD * inv((x[i] - x[k] + MOD) % MOD) % MOD;
+      y[i] = submod(y[i], y[k]) * inv(submod(x[i], x[k])) % MOD;
     }
   }
   // Expand the Newton basis into ordinary coefficients.
@@ -64,11 +67,11 @@ std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y)
   for (int k = 0; k < n; k++) {
     int64_t last = 0;
     for (int i = 0; i < n; i++) {
-      res[i] = (res[i] + y[k] * temp[i]) % MOD;
+      res[i] = addmod(res[i], y[k] * temp[i] % MOD);
       int64_t old = temp[i];
       temp[i] = last;
       last = old;
-      temp[i] = (temp[i] - last * x[k] % MOD + MOD) % MOD;
+      temp[i] = submod(temp[i], last * x[k] % MOD);
     }
   }
   return res;
@@ -76,17 +79,17 @@ std::vector<int64_t> interpolate(std::vector<int64_t> x, std::vector<int64_t> y)
 
 int64_t interpolate_at(const std::vector<int64_t> &x, const std::vector<int64_t> &y, int64_t t) {
   int n = static_cast<int>(x.size());
-  t = ((t % MOD) + MOD) % MOD;
+  t = modnorm(t);
   int64_t res = 0;
   for (int k = 0; k < n; k++) {
     int64_t num = 1, den = 1;
     for (int j = 0; j < n; j++) {
       if (j != k) {
-        num = num * ((t - x[j]) % MOD + MOD) % MOD;
-        den = den * ((x[k] - x[j]) % MOD + MOD) % MOD;
+        num = num * submod(t, x[j]) % MOD;
+        den = den * submod(x[k], x[j]) % MOD;
       }
     }
-    res = (res + ((y[k] % MOD) + MOD) % MOD * num % MOD * inv(den)) % MOD;
+    res = addmod(res, modnorm(y[k]) * num % MOD * inv(den) % MOD);
   }
   return res;
 }
@@ -104,7 +107,7 @@ int main() {
   assert(interpolate_at(x, y, 5) == 38);  // 25 + 10 + 3.
 
   // Non-consecutive nodes for P(x) = 2x^3 - x + 4.
-  auto poly = [](int64_t t) { return ((2 * t * t * t - t + 4) % MOD + MOD) % MOD; };
+  auto poly = [](int64_t t) { return modnorm(2 * t * t * t - t + 4); };
   vector<int64_t> xs{2, 5, 7, 10}, ys;
   for (int64_t v : xs) {
     ys.push_back(poly(v));

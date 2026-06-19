@@ -66,7 +66,7 @@ class HeavyLight {
 
   std::vector<std::vector<int>> adj;
   std::vector<std::vector<T>> value, delta;
-  std::vector<std::vector<bool>> pending;
+  std::vector<std::vector<char>> pending;
   std::vector<std::vector<int>> len;
   std::vector<int> size, parent, root, tin, tout, path, pathlen, pathpos, pathroot;
   int counter, paths;

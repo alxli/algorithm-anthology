@@ -37,7 +37,7 @@ std::vector<std::vector<std::pair<int, int>>> adj;
 std::vector<int64_t> dist;
 std::vector<int> pred;
 
-void topological_dfs(int u, std::vector<bool> &visit, std::vector<int> &order) {
+void topological_dfs(int u, std::vector<char> &visit, std::vector<int> &order) {
   visit[u] = true;
   for (auto &[v, w] : adj[u]) {
     if (!visit[v]) {
@@ -49,7 +49,7 @@ void topological_dfs(int u, std::vector<bool> &visit, std::vector<int> &order) {
 
 void dag_shortest_path(int start) {
   int n = static_cast<int>(adj.size());
-  std::vector<bool> visit(n, false);
+  std::vector<char> visit(n, false);
   std::vector<int> order;
   for (int i = 0; i < n; i++) {
     if (!visit[i]) {

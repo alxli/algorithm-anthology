@@ -100,9 +100,9 @@ int64_t push_relabel(int source, int sink) {
   return max_flow;
 }
 
-std::vector<bool> min_cut(int source) {
+std::vector<char> min_cut(int source) {
   int n = static_cast<int>(cap.size());
-  std::vector<bool> reachable(n);
+  std::vector<char> reachable(n);
   std::queue<int> q;
   reachable[source] = true;
   q.push(source);
@@ -145,7 +145,7 @@ int main() {
   cap[3][5] = 2;
   cap[4][5] = 3;
   assert(push_relabel(0, 5) == 5);
-  std::vector<bool> cut = min_cut(0);
+  std::vector<char> cut = min_cut(0);
   assert(cut[0] && !cut[5]);
   return 0;
 }
