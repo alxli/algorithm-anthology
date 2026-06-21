@@ -54,10 +54,10 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <iomanip>
 #include <ostream>
-#include <stdexcept>
 #include <vector>
 
 template<typename T>
@@ -140,9 +140,7 @@ Matrix<T> &operator/=(Matrix<T> &a, const U &v) {
 
 template<typename T>
 Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
-  if (rows(a) != rows(b) || columns(a) != columns(b)) {
-    throw std::runtime_error("Invalid dimensions for matrix addition.");
-  }
+  assert(rows(a) == rows(b) && columns(a) == columns(b));
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] += b[i][j];
@@ -153,9 +151,7 @@ Matrix<T> &operator+=(Matrix<T> &a, const Matrix<T> &b) {
 
 template<typename T>
 Matrix<T> &operator-=(Matrix<T> &a, const Matrix<T> &b) {
-  if (rows(a) != rows(b) || columns(a) != columns(b)) {
-    throw std::runtime_error("Invalid dimensions for matrix subtraction.");
-  }
+  assert(rows(a) == rows(b) && columns(a) == columns(b));
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(a); j++) {
       a[i][j] -= b[i][j];
@@ -178,9 +174,7 @@ Matrix<T> operator-(const Matrix<T> &a, const Matrix<T> &b) {
 
 template<typename T>
 Matrix<T> &operator*=(Matrix<T> &a, const std::vector<T> &v) {
-  if (columns(a) != static_cast<int>(v.size()) || v.empty()) {
-    throw std::runtime_error("Invalid dimensions for matrix-vector multiplication.");
-  }
+  assert(columns(a) == static_cast<int>(v.size()) && !v.empty());
   int cols = columns(a);
   for (int i = 0; i < rows(a); i++) {
     T sum = 0;
@@ -194,9 +188,7 @@ Matrix<T> &operator*=(Matrix<T> &a, const std::vector<T> &v) {
 
 template<typename T>
 Matrix<T> operator*(const Matrix<T> &a, const Matrix<T> &b) {
-  if (columns(a) != rows(b)) {
-    throw std::runtime_error("Invalid dimensions for matrix multiplication.");
-  }
+  assert(columns(a) == rows(b));
   Matrix<T> res = make_matrix<T>(rows(a), columns(b));
   for (int i = 0; i < rows(a); i++) {
     for (int j = 0; j < columns(b); j++) {
@@ -239,9 +231,7 @@ Matrix<T> operator-(const U &v, const Matrix<T> &a) {
 
 template<typename T>
 Matrix<T> operator^(Matrix<T> a, unsigned int p) {
-  if (rows(a) != columns(a)) {
-    throw std::runtime_error("Matrix must be square for exponentiation.");
-  }
+  assert(rows(a) == columns(a));
   Matrix<T> res = identity_matrix<T>(rows(a));
   while (p > 0) {
     if (p & 1) {
@@ -260,9 +250,7 @@ Matrix<T> operator^=(Matrix<T> &a, unsigned int p) {
 
 template<typename T>
 Matrix<T> power_sum(const Matrix<T> &a, unsigned int p) {
-  if (rows(a) != columns(a)) {
-    throw std::runtime_error("Matrix must be square for power_sum.");
-  }
+  assert(rows(a) == columns(a));
   int n = rows(a);
   if (p == 0) {
     return make_matrix<T>(n, n);
@@ -301,9 +289,7 @@ Matrix<T> transpose(const Matrix<T> &a) {
 
 template<typename T>
 Matrix<T> &transpose_in_place(Matrix<T> &a) {
-  if (rows(a) != columns(a)) {
-    throw std::runtime_error("Matrix must be square for transpose_in_place.");
-  }
+  assert(rows(a) == columns(a));
   for (int i = 0; i < rows(a); i++) {
     for (int j = i + 1; j < columns(a); j++) {
       std::swap(a[i][j], a[j][i]);
@@ -314,9 +300,7 @@ Matrix<T> &transpose_in_place(Matrix<T> &a) {
 
 template<typename T>
 Matrix<T> rotate(const Matrix<T> &a, int degrees = 90) {
-  if (degrees % 90 != 0) {
-    throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
-  }
+  assert(degrees % 90 == 0);
   if (degrees < 0) {
     degrees = 360 - ((-degrees) % 360);
   }
@@ -358,12 +342,8 @@ Matrix<T> rotate(const Matrix<T> &a, int degrees = 90) {
 
 template<typename T>
 Matrix<T> &rotate_in_place(Matrix<T> &a, int degrees = 90) {
-  if (degrees % 90 != 0) {
-    throw std::runtime_error("Rotation must be by a multiple of 90 degrees.");
-  }
-  if (degrees % 180 != 0 && rows(a) != columns(a)) {
-    throw std::runtime_error("Matrix must be square for rotate_in_place.");
-  }
+  assert(degrees % 90 == 0);
+  assert(degrees % 180 == 0 || rows(a) == columns(a));
   if (degrees < 0) {
     degrees = 360 - ((-degrees) % 360);
   }
@@ -401,7 +381,6 @@ Matrix<T> &rotate_in_place(Matrix<T> &a, int degrees = 90) {
 
 /*** Example Usage ***/
 
-#include <cassert>
 #include <iostream>
 using namespace std;
 

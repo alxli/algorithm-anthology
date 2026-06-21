@@ -41,8 +41,8 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstddef>
-#include <stdexcept>
 
 template<typename T>
 class PairingHeap {
@@ -137,9 +137,7 @@ class PairingHeap {
   }
 
   void pop() {
-    if (empty()) {
-      throw std::runtime_error("Cannot pop from empty heap.");
-    }
+    assert(!empty());
     Node *tmp = root;
     root = merge_pairs(root->left);
     if (root != nullptr) {
@@ -150,9 +148,7 @@ class PairingHeap {
   }
 
   T top() const {
-    if (empty()) {
-      throw std::runtime_error("Cannot get top of empty heap.");
-    }
+    assert(!empty());
     return root->value;
   }
 
@@ -164,9 +160,7 @@ class PairingHeap {
   }
 
   void decrease_key(Node *n, const T &v) {
-    if (n->value < v) {
-      throw std::runtime_error("decrease_key cannot increase the value.");
-    }
+    assert(!(n->value < v));
     n->value = v;
     if (n != root) {
       cut(n);
@@ -196,7 +190,6 @@ class PairingHeap {
 
 ***/
 
-#include <cassert>
 #include <iostream>
 using namespace std;
 

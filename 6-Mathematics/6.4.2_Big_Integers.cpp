@@ -57,6 +57,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <complex>
 #include <cstdint>
@@ -66,7 +67,6 @@ Space Complexity:
 #include <istream>
 #include <ostream>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -442,9 +442,7 @@ class BigInt {
   }
 
   BigInt &operator/=(int v) {
-    if (v == 0) {
-      throw std::runtime_error("Division by zero in BigInt.");
-    }
+    assert(v != 0);
     if (v < 0) {
       sign = -sign;
       v = -v;
@@ -465,9 +463,7 @@ class BigInt {
   }
 
   int operator%(int v) const {
-    if (v == 0) {
-      throw std::runtime_error("Division by zero in BigInt.");
-    }
+    assert(v != 0);
     if (v < 0) {
       v = -v;
     }
@@ -479,9 +475,7 @@ class BigInt {
   }
 
   std::pair<BigInt, BigInt> div(const BigInt &v) const {
-    if (v == 0) {
-      throw std::runtime_error("Division by zero in BigInt.");
-    }
+    assert(v != 0);
     if (comp(digits, v.digits, 1, 1) < 0) {
       return {BigInt(0), *this};
     }
@@ -538,9 +532,7 @@ class BigInt {
   }
 
   BigInt sqrt() const {
-    if (sign == -1) {
-      throw std::runtime_error("Cannot take square root of a negative number.");
-    }
+    assert(sign != -1);
     BigInt v(*this);
     while (v.digits.empty() || v.digits.size() % 2 == 1) {
       v.digits.push_back(0);
@@ -584,10 +576,8 @@ class BigInt {
   }
 
   BigInt nth_root(int n) const {
-    if (sign == -1 && n % 2 == 0) {
-      throw std::runtime_error("Cannot take even root of a negative number.");
-    }
-    if (*this == 0 || n < 0) {
+    assert(n > 0 && (sign != -1 || n % 2 == 1));
+    if (*this == 0) {
       return BigInt(0);
     }
     if (n >= size()) {
@@ -632,8 +622,6 @@ class BigInt {
 };
 
 /*** Example Usage ***/
-
-#include <cassert>
 
 int main() {
   BigInt a("-9899819294989142124"), b("12398124981294214");

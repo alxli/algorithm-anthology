@@ -31,6 +31,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <istream>
 #include <ostream>
@@ -47,9 +48,7 @@ class Rational {
 
   template<typename T1, typename T2>
   Rational(const T1 &n, const T2 &d) : num(n), den(d) {
-    if (den == 0) {
-      throw std::runtime_error("Division by zero in Rational.");
-    }
+    assert(den != 0);
     if (den < 0) {
       num = -num;
       den = -den;
@@ -166,7 +165,6 @@ class Rational {
 
 /*** Example Usage ***/
 
-#include <cassert>
 #include <cmath>
 
 bool EQ(double a, double b) {

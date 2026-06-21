@@ -34,6 +34,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <cstdint>
 #include <stdexcept>
@@ -180,9 +181,7 @@ class BigInt {
   }
 
   friend BigInt div(const BigInt &a, const BigInt &b) {
-    if (b.digits.size() == 1 && b.digits[0] == '0') {
-      throw std::runtime_error("Division by zero in BigInt.");
-    }
+    assert(b.digits.size() != 1 || b.digits[0] != '0');
     BigInt res, row;
     res.digits.assign(a.digits.size(), '0');
     row.digits.clear();  // Running remainder; kept normalized and nonnegative below.
@@ -203,8 +202,6 @@ class BigInt {
 };
 
 /*** Example Usage ***/
-
-#include <cassert>
 
 int main() {
   BigInt a("-9899819294989142124"), b("12398124981294214");

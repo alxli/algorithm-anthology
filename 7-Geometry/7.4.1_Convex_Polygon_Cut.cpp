@@ -7,7 +7,7 @@ are kept, and whenever an edge crosses the line, the intersection point is appen
 - `convex_cut(lo, hi, p, q)` returns the portion of the polygon lying on or to the left of the
   directed line `p` $\to$ `q`. The input range [`lo`, `hi`) must contain the vertices of a convex
   polygon in boundary order, either clockwise or counterclockwise. The returned polygon preserves
-  that boundary order. If `p` equals `q`, the cutting line is invalid and an error is thrown.
+  that boundary order. The points `p` and `q` must differ.
 
 The function is templated on the input point type. Side classification is done with cross products.
 For integer-coordinate inputs, classification is exact only if the intermediate products do not
@@ -22,9 +22,9 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -79,9 +79,7 @@ int line_intersection(
 
 template<typename It, typename Pt>
 std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
-  if (EQ(p.x, q.x) && EQ(p.y, q.y)) {
-    throw std::runtime_error("Cannot cut using line from identical points.");
-  }
+  assert(!EQ(p.x, q.x) || !EQ(p.y, q.y));
   if (lo == hi) {
     return {};
   }
@@ -104,7 +102,6 @@ std::vector<Point> convex_cut(It lo, It hi, const Pt &p, const Pt &q) {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 struct PointI {

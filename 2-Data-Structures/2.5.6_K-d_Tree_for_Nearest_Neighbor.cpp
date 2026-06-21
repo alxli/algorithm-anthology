@@ -28,8 +28,8 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cfloat>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -102,9 +102,7 @@ class NearestKDTree {
   template<typename It>
   NearestKDTree(It lo, It hi) : tree(lo, hi) {
     int n = std::distance(lo, hi);
-    if (n <= 1) {
-      throw std::runtime_error("K-d tree must have at least 2 points.");
-    }
+    assert(n >= 2);
     div_x.resize(n);
     build(0, n);
   }
@@ -118,7 +116,6 @@ class NearestKDTree {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

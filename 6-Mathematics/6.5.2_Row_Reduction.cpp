@@ -30,7 +30,6 @@ Space Complexity:
 #include <cassert>
 #include <cmath>
 #include <cstddef>
-#include <stdexcept>
 #include <vector>
 
 const double EPS = 1e-9;

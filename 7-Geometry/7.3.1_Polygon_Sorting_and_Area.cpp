@@ -33,6 +33,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <random>
 #include <stdexcept>
@@ -95,9 +96,7 @@ double polygon_area(It lo, It hi) {
 
 template<typename It>
 std::pair<double, double> polygon_centroid(It lo, It hi) {
-  if (hi - lo < 3) {
-    throw std::runtime_error("Cannot compute centroid of a degenerate polygon.");
-  }
+  assert(hi - lo >= 3);
   double cx = 0, cy = 0, area2 = 0;
   for (It i = lo, j = hi - 1; i != hi; j = i++) {
     double cross = static_cast<double>(j->x) * i->y - static_cast<double>(i->x) * j->y;
@@ -118,7 +117,6 @@ Counterclockwise vertices: (-1, 3) (0, 0) (2, 1) (1, 2) (1, 3)
 
 ***/
 
-#include <cassert>
 #include <iostream>
 #include <vector>
 using namespace std;
@@ -143,9 +141,7 @@ struct PointI {
 
 template<typename It>
 Point mean_center(It lo, It hi) {
-  if (lo == hi) {
-    throw std::runtime_error("Cannot get center of an empty range.");
-  }
+  assert(lo != hi);
   double x_sum = 0, y_sum = 0, n = hi - lo;
   for (It it = lo; it != hi; ++it) {
     x_sum += it->x;

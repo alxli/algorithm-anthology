@@ -56,8 +56,8 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
-#include <stdexcept>
 #include <unordered_map>
 
 template<typename T>
@@ -204,9 +204,7 @@ class LinkCut {
   void get_uv(int a, int b) {
     auto it1 = nodes.find(a);
     auto it2 = nodes.find(b);
-    if (it1 == nodes.end() || it2 == nodes.end()) {
-      throw std::runtime_error("Queried node ID does not exist in forest.");
-    }
+    assert(it1 != nodes.end() && it2 != nodes.end());
     u = it1->second;
     v = it2->second;
   }
@@ -226,9 +224,7 @@ class LinkCut {
   int trees() const { return num_trees; }
 
   void add_node(int i, const T &v = T()) {
-    if (auto it = nodes.find(i); it != nodes.end()) {
-      throw std::runtime_error("Cannot add a node with an existing ID.");
-    }
+    assert(nodes.find(i) == nodes.end());
     Node *n = new Node(i, v);
     expose(n);
     n->rev = !n->rev;
@@ -247,9 +243,7 @@ class LinkCut {
   }
 
   void link(int a, int b) {
-    if (is_connected(a, b)) {
-      throw std::runtime_error("Cannot link nodes that are already connected.");
-    }
+    assert(!is_connected(a, b));
     get_uv(a, b);
     expose(u);
     u->rev = !u->rev;
@@ -262,18 +256,14 @@ class LinkCut {
     expose(u);
     u->rev = !u->rev;
     expose(v);
-    if (v->left != u || u->right != nullptr) {
-      throw std::runtime_error("Cannot cut edge that does not exist.");
-    }
+    assert(v->left == u && u->right == nullptr);
     v->left->parent = nullptr;
     v->left = nullptr;
     num_trees++;
   }
 
   T query(int a, int b) {
-    if (!is_connected(a, b)) {
-      throw std::runtime_error("Cannot query nodes that are not connected.");
-    }
+    assert(is_connected(a, b));
     get_uv(a, b);
     expose(u);
     u->rev = !u->rev;
@@ -282,9 +272,7 @@ class LinkCut {
   }
 
   void update(int a, int b, const T &d) {
-    if (!is_connected(a, b)) {
-      throw std::runtime_error("Cannot update nodes that are not connected.");
-    }
+    assert(is_connected(a, b));
     get_uv(a, b);
     expose(u);
     u->rev = !u->rev;
@@ -295,18 +283,14 @@ class LinkCut {
 
   void reroot(int i) {
     auto it = nodes.find(i);
-    if (it == nodes.end()) {
-      throw std::runtime_error("Rerooted node ID does not exist in forest.");
-    }
+    assert(it != nodes.end());
     expose(it->second);
     it->second->rev = !it->second->rev;
   }
 
   int find_root(int i) {
     auto it = nodes.find(i);
-    if (it == nodes.end()) {
-      throw std::runtime_error("Queried node ID does not exist in forest.");
-    }
+    assert(it != nodes.end());
     Node *n = it->second;
     expose(n);
     while (n->left != nullptr) {  // The leftmost node of the exposed path is the tree's root.
@@ -324,9 +308,7 @@ class LinkCut {
     }
     expose(u);
     expose(v);
-    if (u->parent == nullptr) {
-      throw std::runtime_error("Cannot compute LCA of nodes that are not connected.");
-    }
+    assert(u->parent != nullptr);
     splay(u);  // u->parent is now the node where u's path rejoins v's exposed path, i.e. the LCA.
     return u->parent != nullptr ? u->parent->id : u->id;
   }
@@ -334,7 +316,6 @@ class LinkCut {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

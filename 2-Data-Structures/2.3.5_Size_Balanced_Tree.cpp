@@ -46,8 +46,8 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstddef>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -217,9 +217,7 @@ class SBTree {
   }
 
   std::pair<K, V> find_by_order(int k) const {
-    if (k < 0 || k >= size(root)) {
-      throw std::runtime_error("Order statistic must be between 0 and size() - 1.");
-    }
+    assert(0 <= k && k < size(root));
     return find_by_order(root, k);
   }
 
@@ -238,7 +236,6 @@ bcde
 
 ***/
 
-#include <cassert>
 #include <iostream>
 using namespace std;
 

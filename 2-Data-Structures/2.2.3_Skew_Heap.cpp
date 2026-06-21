@@ -31,8 +31,8 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
-#include <stdexcept>
 
 template<typename T>
 class SkewHeap {
@@ -90,9 +90,7 @@ class SkewHeap {
   }
 
   void pop() {
-    if (empty()) {
-      throw std::runtime_error("Cannot pop from empty heap.");
-    }
+    assert(!empty());
     Node *tmp = root;
     root = merge(root->left, root->right);
     delete tmp;
@@ -100,9 +98,7 @@ class SkewHeap {
   }
 
   T top() const {
-    if (empty()) {
-      throw std::runtime_error("Cannot get top of empty heap.");
-    }
+    assert(!empty());
     return root->value;
   }
 

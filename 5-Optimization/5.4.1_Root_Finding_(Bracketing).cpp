@@ -25,13 +25,11 @@ Space Complexity:
 
 */
 
-#include <stdexcept>
+#include <cassert>
 
 template<typename Fn>
 double bisection_root(Fn f, double a, double b, const int ITERATIONS = 100) {
-  if (a > b || f(a) * f(b) > 0) {
-    throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");
-  }
+  assert(a <= b && f(a) * f(b) <= 0);
   double m;
   for (int i = 0; i < ITERATIONS; i++) {
     m = a + (b - a) / 2;
@@ -46,9 +44,7 @@ double bisection_root(Fn f, double a, double b, const int ITERATIONS = 100) {
 
 template<typename Fn>
 double falsi_illinois_root(Fn f, double a, double b, const int ITERATIONS = 100) {
-  if (a > b || f(a) * f(b) > 0) {
-    throw std::runtime_error("Must give [a, b] where sgn(f(a)) != sgn(f(b)).");
-  }
+  assert(a <= b && f(a) * f(b) <= 0);
   double m, fm, fa = f(a), fb = f(b);
   int side = 0;
   for (int i = 0; i < ITERATIONS; i++) {
@@ -77,7 +73,6 @@ double falsi_illinois_root(Fn f, double a, double b, const int ITERATIONS = 100)
 
 /*** Example Usage ***/
 
-#include <cassert>
 #include <cmath>
 
 double f(double x) {

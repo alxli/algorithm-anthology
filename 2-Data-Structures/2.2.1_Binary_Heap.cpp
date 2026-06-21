@@ -30,7 +30,7 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <stdexcept>
+#include <cassert>
 #include <vector>
 
 template<typename T>
@@ -82,9 +82,7 @@ class BinaryHeap {
   }
 
   void pop() {
-    if (heap.empty()) {
-      throw std::runtime_error("Cannot pop from empty heap.");
-    }
+    assert(!heap.empty());
     heap[0] = heap.back();
     heap.pop_back();
     if (!heap.empty()) {
@@ -93,9 +91,7 @@ class BinaryHeap {
   }
 
   T top() const {
-    if (heap.empty()) {
-      throw std::runtime_error("Cannot get top of empty heap.");
-    }
+    assert(!heap.empty());
     return heap[0];
   }
 };

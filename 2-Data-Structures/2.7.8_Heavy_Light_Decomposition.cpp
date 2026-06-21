@@ -28,9 +28,9 @@ increment updates, `apply_delta(v, d, len)` would return `v + d` for min/max que
   adjacency list `adj`, with all values initialized to `v`. The adjacency list must consist of only
   the integers [0, `n`), where `n` is `adj.size()`. No duplicate edges should exist.
 - `query(u, v)` returns the result of `combine()` applied to all values on the path from node `u` to
-  node `v`, or throws if `u` and `v` are in different trees.
+  node `v`. The nodes must be in the same tree.
 - `update(u, v, d)` modifies all values on the path from node `u` to node `v` by respectively
-  applying the delta `d`, or throws if `u` and `v` are in different trees.
+  applying the delta `d`. The nodes must be in the same tree.
 - `for_each_path(u, v, include_lca, f)` decomposes the path from node `u` to node `v` into heavy
   path ranges and calls `f(path, lo, hi, up)` on each range, where `up` says the path segment is
   traversed upward from `u` toward the LCA. If values are stored on edges, pass
@@ -50,7 +50,7 @@ Space Complexity:
 */
 
 #include <algorithm>
-#include <stdexcept>
+#include <cassert>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -241,12 +241,8 @@ class HeavyLight {
   }
 
   T query(int u, int v) {
-    if (root[u] != root[v]) {
-      throw std::runtime_error("No path exists between nodes in different trees.");
-    }
-    if (VALUES_ON_EDGES && u == v) {
-      throw std::runtime_error("No edge between u and v to be queried.");
-    }
+    assert(root[u] == root[v]);
+    assert(!VALUES_ON_EDGES || u != v);
     bool found = false;
     T res = T(), value;
     for_each_path(u, v, !VALUES_ON_EDGES, [&](int path, int lo, int hi, bool) {
@@ -255,16 +251,12 @@ class HeavyLight {
         found = true;
       }
     });
-    if (!found) {
-      throw std::runtime_error("Unexpected error: No values found.");
-    }
+    assert(found);
     return res;
   }
 
   void update(int u, int v, const T &d) {
-    if (root[u] != root[v]) {
-      throw std::runtime_error("No path exists between nodes in different trees.");
-    }
+    assert(root[u] == root[v]);
     if (VALUES_ON_EDGES && u == v) {
       return;
     }
@@ -276,7 +268,6 @@ class HeavyLight {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {
