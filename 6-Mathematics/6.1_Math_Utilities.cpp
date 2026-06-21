@@ -67,22 +67,22 @@ Epsilon Comparisons:
 
 const double EPS = 1e-9;
 
-// clang-format off
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
   if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
   return C(a) == C(b);
 }
-template<typename T, typename U> bool NE(T a, U b) { return !EQ(a, b); }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
   if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
   return C(a) < C(b);
 }
+
+template<typename T, typename U> bool NE(T a, U b) { return !EQ(a, b); }
 template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
 template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
 template<typename T, typename U> bool GE(T a, U b) { return !LT(a, b); }
-// clang-format on
 
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool rEQ(T ref, U val) {
