@@ -20,7 +20,7 @@ the Hessenberg reduction divides by pivots and is not numerically stable over th
   be square; its entries are reduced modulo `MOD` internally.
 
 Time Complexity:
-- O(n^3) per call to `characteristic_polynomial()`, where $n$ is the dimension of the matrix.
+- O(n^3) per call, where $n$ is the dimension of the matrix.
 
 Space Complexity:
 - O(n^2) auxiliary heap space.

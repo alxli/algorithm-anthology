@@ -9,8 +9,7 @@ previous row of the table is retained, so the auxiliary space is linear in the s
   substring if several are tied in length), or the empty string if they have none in common.
 
 Time Complexity:
-- O(n*m) per call to `longest_common_substring(s1, s2)`, where $n$ and $m$ are the lengths of `s1`
-  and `s2`, respectively.
+- O(n*m) per call, where $n$ and $m$ are the lengths of `s1` and `s2`, respectively.
 
 Space Complexity:
 - O(min(n, m)) auxiliary heap space, where $n$ and $m$ are the lengths of `s1` and `s2`,

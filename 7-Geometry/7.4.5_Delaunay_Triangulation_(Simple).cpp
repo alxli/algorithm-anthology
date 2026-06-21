@@ -19,9 +19,8 @@ integer coordinate type is safe up to |C| <= ~17600. For floating-point coordina
 subject to the usual rounding error.
 
 Time Complexity:
-- O(n^6) per call to `delaunay_triangulation(p)`, where $n$ is the number of points. The
-  empty-circumcircle test contributes O(n^4); the remaining factor comes from checking candidate
-  triangles against previously accepted triangles.
+- O(n^6) per call, where $n$ is the number of points. The empty-circumcircle test contributes O(n^4)
+  while O(n^2) comes from checking candidate triangles against previously accepted triangles.
 
 Space Complexity:
 - O(n) auxiliary heap space, excluding the returned triangulation.

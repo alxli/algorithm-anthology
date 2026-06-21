@@ -14,8 +14,7 @@ is an improvement using breadth-first search, addressing this problem.
   `cap`, and returns maximum flow. Nodes are numbered [0, `n`), where `n` is `cap.size()`.
 
 Time Complexity:
-- O(n^2*f) per call to `ford_fulkerson()`, where $n$ is the number of nodes and $f$ is the maximum
-  flow.
+- O(n^2*f) per call, where $n$ is the number of nodes and $f$ is the maximum flow.
 
 Space Complexity:
 - O(n^2) for storage of the flow network, where $n$ is the number of nodes.

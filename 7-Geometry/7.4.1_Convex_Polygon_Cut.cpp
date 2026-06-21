@@ -15,7 +15,7 @@ overflow. Edge-line intersection points are computed in floating point, and the 
 uses `Point` with `double` coordinates.
 
 Time Complexity:
-- O(n) per call to `convex_cut(lo, hi, p, q)`, where $n$ is the distance between `lo` and `hi`.
+- O(n) per call, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(n) auxiliary space for the returned polygon.

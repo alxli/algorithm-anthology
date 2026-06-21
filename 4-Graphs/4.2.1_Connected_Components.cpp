@@ -10,8 +10,7 @@ same component. For directed graphs, use a strongly connected components algorit
   which must consist of nodes numbered [0, `n`), where `n` is `adj.size()`.
 
 Time Complexity:
-- O(max(n, m)) per call to `connected_components()`, where $n$ is the number of nodes and $m$ is the
-  number of edges.
+- O(max(n, m)) per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of

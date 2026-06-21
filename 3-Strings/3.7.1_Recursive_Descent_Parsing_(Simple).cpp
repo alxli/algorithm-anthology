@@ -9,7 +9,7 @@ of operations.
 - `eval(s)` returns an evaluation of the arithmetic expression `s`.
 
 Time Complexity:
-- O(n) per call to `eval(s)`, where $n$ is the length of `s`.
+- O(n) per call, where $n$ is the length of `s`.
 
 Space Complexity:
 - O(n) auxiliary stack space for `eval(s)`, where $n$ is the length of `s`.

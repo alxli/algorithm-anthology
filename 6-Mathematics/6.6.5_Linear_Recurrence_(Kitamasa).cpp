@@ -19,7 +19,7 @@ the initial terms.
   0-based and `n` $\geq 0$. Values are reduced modulo `MOD` internally.
 
 Time Complexity:
-- O(L^2 log n) per call to `kth_term()`.
+- O(L^2 log n) per call.
 
 Space Complexity:
 - O(L) auxiliary heap space.

@@ -13,7 +13,7 @@ at least as costly.
   `adj.size()`.
 
 Time Complexity:
-- Exponential on the number of nodes per call to `color_graph()`.
+- Exponential on the number of nodes per call.
 
 Space Complexity:
 - O(n^2) for storage of the graph, where $n$ is the number of nodes.

@@ -21,7 +21,7 @@ The in-circle test is a degree-4 polynomial in the coordinates and dominates the
 magnitude. For floating-point coordinates the predicates are subject to the usual rounding error.
 
 Time Complexity:
-- O(n log n) per call to `delaunay_triangulation(pts)`, where $n$ is the number of input points.
+- O(n log n) per call, where $n$ is the number of input points.
 
 Space Complexity:
 - O(n) heap space for the quad-edge structure and returned triangulation.

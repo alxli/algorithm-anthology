@@ -18,7 +18,7 @@ written as a "true" streaming API with one element per call.
   type.
 
 Time Complexity:
-- O(n) per call to `majority()`, where $n$ is the size of the array.
+- O(n) per call, where $n$ is the size of the array.
 
 Space Complexity:
 - O(1) auxiliary.

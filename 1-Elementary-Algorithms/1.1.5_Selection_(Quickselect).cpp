@@ -13,7 +13,7 @@ desired rank. This implementation chooses the pivot uniformly at random and uses
   by iterator `nth`. This requires random-access iterators and `operator<` on the value type.
 
 Time Complexity:
-- O(n) expected per call to `nth_element2()`, where $n$ is the distance between `lo` and `hi`.
+- O(n) expected per call, where $n$ is the distance between `lo` and `hi`.
 - O(n^2) in the worst case.
 
 Space Complexity:

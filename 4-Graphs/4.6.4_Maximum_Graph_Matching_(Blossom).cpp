@@ -17,7 +17,7 @@ The graph must be simple; parallel edges and self-loops are not supported.
   when `u` is unmatched.
 
 Time Complexity:
-- O(n^3) per call to `blossom()`, where $n$ is the number of nodes.
+- O(n^3) per call, where $n$ is the number of nodes.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of

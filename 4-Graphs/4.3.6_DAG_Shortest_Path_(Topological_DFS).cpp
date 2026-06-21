@@ -18,8 +18,7 @@ For path reconstruction, `pred[v]` stores the node immediately before `v` on the
 destination to `start`, then reverse that sequence to recover the path.
 
 Time Complexity:
-- O(n + m) per call to `dag_shortest_path()`, where $n$ is the number of nodes and $m$ is the number
-  of edges.
+- O(n + m) per call, where $n$ is the number of nodes and $m$ is the number of edges.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph.

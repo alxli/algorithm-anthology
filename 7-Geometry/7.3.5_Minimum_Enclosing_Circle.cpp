@@ -14,8 +14,8 @@ boundary. The final circle is determined by at most three boundary points.
   always uses `double` coordinates, so integer-coordinate inputs are accepted.
 
 Time Complexity:
-- O(n) expected time per call to `minimum_enclosing_circle(lo, hi)`, where $n$ is the distance
-  between `lo` and `hi`, or O(n^3) in the worst-case for a particular shuffle order.
+- O(n) expected time per call, where $n$ is the distance between `lo` and `hi`, or O(n^3) in the
+  worst-case for a particular shuffle order.
 
 Space Complexity:
 - O(1) auxiliary.

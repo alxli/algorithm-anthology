@@ -15,8 +15,7 @@ find the order of the current error term, correcting the candidate root until th
   `p` internally. The modulus `p` must be an odd prime.
 
 Time Complexity:
-- O(log^2 p) per call to `mod_sqrt()` in the worst case, from the squaring loop nested inside the
-  exponentiations.
+- O(log^2 p) per call in the worst case, from the squaring loop nested inside the exponentiations.
 
 Space Complexity:
 - O(1) auxiliary.

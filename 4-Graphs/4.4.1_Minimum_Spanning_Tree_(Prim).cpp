@@ -20,8 +20,7 @@ max-heap ordering. Multigraphs are supported; parallel edges are stored as separ
 entries and the algorithm automatically selects the minimum-weight one to each unvisited node.
 
 Time Complexity:
-- O(m log n) per call to `prim_mst()`, where $m$ is the number of edges and $n$ is the number of
-  nodes.
+- O(m log n) per call, where $m$ is the number of edges and $n$ is the number of nodes.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of

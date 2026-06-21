@@ -17,9 +17,8 @@ Multigraphs are supported; parallel edges appear as separate entries in `edges` 
 ones are skipped once the cheaper edge has already connected the two components.
 
 Time Complexity:
-- O(m log n) per call to `kruskal_mst()`, where $m$ is the number of edges and $n$ is the number of
-  nodes. The internal DSU uses path compression and union by size, making each DSU operation
-  O(alpha(n)) amortized.
+- O(m log n) per call, where $m$ is the number of edges and $n$ is the number of nodes. The internal
+  DSU uses path compression and union by size, making each DSU operation O(alpha(n)) amortized.
 
 Space Complexity:
 - O(max(n, m)) for storage of the graph, where $n$ is the number of nodes and $m$ is the number of

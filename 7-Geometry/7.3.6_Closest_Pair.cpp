@@ -20,8 +20,7 @@ point types, use a 64-bit coordinate type (e.g. `PointL` from 7.1.1) when coordi
 few tens of thousands.
 
 Time Complexity:
-- O(n log^2 n) per call to `closest_pair(lo, hi, &res)`, where n is the distance between `lo` and
-  `hi`.
+- O(n log^2 n) per call, where n is the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(n) auxiliary heap space.

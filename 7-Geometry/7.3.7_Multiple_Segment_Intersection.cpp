@@ -22,8 +22,7 @@ this overflows once coordinates reach the low thousands, so use a 64-bit (`int64
 type for any non-trivial integer inputs.
 
 Time Complexity:
-- O(n log n) per call to `find_intersection(lo, hi, &res1, &res2)`, where $n$ is the distance
-  between `lo` and `hi`.
+- O(n log n) per call, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(n) auxiliary heap space for `find_intersection(lo, hi, &res1, &res2)`, where $n$ is the distance

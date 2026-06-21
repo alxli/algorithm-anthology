@@ -21,8 +21,7 @@ neighbors of left node `u`. Cover nodes are reported with right node `j` encoded
 two sides share one index space.
 
 Time Complexity:
-- O(m*(n_1 + n_2)) per call to `min_vertex_cover()`, dominated by the matching, where $m$ is the
-  number of edges.
+- O(m*(n_1 + n_2)) per call, dominated by the matching, where $m$ is the number of edges.
 
 Space Complexity:
 - O(n_1 + n_2) auxiliary space.

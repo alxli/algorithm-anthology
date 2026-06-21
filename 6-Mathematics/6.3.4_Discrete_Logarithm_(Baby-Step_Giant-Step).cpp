@@ -17,7 +17,7 @@ and $m$ are coprime.
   internally.
 
 Time Complexity:
-- O(sqrt(m) * log(m)) per call to `discrete_log()`, dominated by the hashed baby-step table.
+- O(sqrt(m) * log(m)) per call, dominated by the hashed baby-step table.
 
 Space Complexity:
 - O(sqrt(m)) auxiliary heap space for the table.

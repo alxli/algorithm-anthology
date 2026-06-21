@@ -14,8 +14,7 @@ subsequence.
   [`lo`, `hi`) as a `std::vector` of the selected values, in order.
 
 Time Complexity:
-- O(n log n) per call to `longest_increasing_subsequence()`, where $n$ is the distance between `lo`
-  and `hi`.
+- O(n log n) per call, where $n$ is the distance between `lo` and `hi`.
 
 Space Complexity:
 - O(n) auxiliary heap space for `longest_increasing_subsequence()`.

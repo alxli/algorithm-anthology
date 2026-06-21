@@ -16,7 +16,7 @@ fooled by the premature-termination heuristic that adaptive Simpson's rule can s
 whose coarse sample points happen to fit a parabola.
 
 Time Complexity:
-- O(n) per call to `integrate()`, requiring $n + 1$ evaluations of $f$.
+- O(n) per call, requiring $n + 1$ evaluations of $f$.
 
 Space Complexity:
 - O(1) auxiliary.

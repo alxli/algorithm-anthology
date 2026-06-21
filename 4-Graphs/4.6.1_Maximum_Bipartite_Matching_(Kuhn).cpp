@@ -13,7 +13,7 @@ right node. Flipping the edges along such a path enlarges the matching by one.
   right-side neighbors are numbered [0, `n2`), where `n` is `adj.size()`.
 
 Time Complexity:
-- O(m*(n_1 + n_2)) per call to `kuhn()`, where $m$ is the number of edges.
+- O(m*(n_1 + n_2)) per call, where $m$ is the number of edges.
 
 Space Complexity:
 - O(n_1 + n_2) auxiliary stack space for `kuhn()`.
