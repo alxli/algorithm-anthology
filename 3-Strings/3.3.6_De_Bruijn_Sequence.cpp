@@ -25,6 +25,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <vector>
 
 void de_bruijn_gen(int t, int p, int k, int n, std::vector<int> &word, std::vector<int> &seq) {
@@ -45,6 +46,7 @@ void de_bruijn_gen(int t, int p, int k, int n, std::vector<int> &word, std::vect
 }
 
 std::vector<int> de_bruijn(int k, int n) {
+  assert(k >= 1 && n >= 1);
   std::vector<int> word(n + 1, 0), seq;
   de_bruijn_gen(1, 1, k, n, word, seq);
   return seq;
@@ -52,7 +54,6 @@ std::vector<int> de_bruijn(int k, int n) {
 
 /*** Example Usage ***/
 
-#include <cassert>
 #include <cmath>
 #include <set>
 #include <vector>

@@ -33,6 +33,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <complex>
 #include <cstdint>
@@ -44,6 +45,7 @@ const int NAIVE_CUTOFF = 150;
 
 void fft(std::vector<cd> &a, bool invert) {
   int n = static_cast<int>(a.size());
+  assert(n > 0 && (n & (n - 1)) == 0);
   for (int i = 1, j = 0; i < n; i++) {
     int bit = n >> 1;
     for (; j & bit; bit >>= 1) {
@@ -110,7 +112,6 @@ std::vector<int64_t> convolve(const std::vector<int64_t> &a, const std::vector<i
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

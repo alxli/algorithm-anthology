@@ -23,8 +23,11 @@ Space Complexity:
 
 */
 
+#include <cassert>
+
 template<typename Fn>
 double integrate(Fn f, double a, double b, int n = 1000000) {
+  assert(n > 0 && n % 2 == 0);
   double h = (b - a) / n, s = f(a) + f(b);
   for (int i = 1; i < n; i++) {
     s += f(a + h * i) * (i & 1 ? 4 : 2);
@@ -34,7 +37,6 @@ double integrate(Fn f, double a, double b, int n = 1000000) {
 
 /*** Example Usage ***/
 
-#include <cassert>
 #include <cmath>
 #include <cstdio>
 using namespace std;

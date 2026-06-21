@@ -24,10 +24,12 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <utility>
 
 int jacobi(int64_t a, int64_t n) {
+  assert(n > 0 && n % 2 == 1);
   a %= n;
   if (a < 0) {
     a += n;
@@ -53,7 +55,6 @@ int jacobi(int64_t a, int64_t n) {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int64_t legendre_via_euler(int64_t a, int64_t p) {

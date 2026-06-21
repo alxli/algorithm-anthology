@@ -31,6 +31,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -66,6 +67,7 @@ std::vector<uint32_t> masks_with_popcount(int n, int k) {
 
 template<typename T>
 void subset_sum_transform(std::vector<T> &f) {
+  assert(!f.empty() && (f.size() & (f.size() - 1)) == 0);
   int n = __builtin_ctz(f.size());  // f.size() must be a power of two, 2^n.
   for (int b = 0; b < n; b++) {
     for (uint32_t m = 0; m < static_cast<uint32_t>(f.size()); m++) {
@@ -78,7 +80,6 @@ void subset_sum_transform(std::vector<T> &f) {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

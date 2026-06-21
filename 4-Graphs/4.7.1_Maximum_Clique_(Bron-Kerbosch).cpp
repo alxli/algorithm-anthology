@@ -26,6 +26,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -34,6 +35,10 @@ std::vector<int> w;
 
 std::vector<uint64_t> build_mask_graph() {
   int n = static_cast<int>(adj.size());
+  assert(n < 64);
+  for (const auto &row : adj) {
+    assert(static_cast<int>(row.size()) == n);
+  }
   std::vector<uint64_t> g(n);
   for (int i = 0; i < n; i++) {
     for (int j = 0; j < n; j++) {
@@ -99,8 +104,6 @@ int max_clique_weighted() {
 }
 
 /*** Example Usage ***/
-
-#include <cassert>
 
 void add_edge(int u, int v) {
   adj[u][v] = true;

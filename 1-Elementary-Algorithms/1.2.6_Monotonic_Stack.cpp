@@ -36,6 +36,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <stack>
 #include <vector>
 
@@ -118,6 +119,9 @@ int largest_zero_submatrix(const std::vector<std::vector<char>> &a) {
     return 0;
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
+  for (const auto &row : a) {
+    assert(static_cast<int>(row.size()) == cols);
+  }
   int best = 0;
   std::vector<int> height(cols, 0);
   for (int i = 0; i < rows; i++) {
@@ -131,7 +135,6 @@ int largest_zero_submatrix(const std::vector<std::vector<char>> &a) {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

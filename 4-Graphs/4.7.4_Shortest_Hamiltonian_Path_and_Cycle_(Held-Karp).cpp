@@ -35,7 +35,10 @@ std::vector<int> path;
 
 int64_t shortest_hamiltonian_path() {
   int n = static_cast<int>(adj.size());
-  assert(n >= 1);
+  assert(1 <= n && n < 31);
+  for (const auto &row : adj) {
+    assert(static_cast<int>(row.size()) == n);
+  }
   int max_mask = (1 << n) - 1;
   dp.assign(max_mask + 1, std::vector<int64_t>(n, INF));
   path.assign(n, 0);
@@ -76,7 +79,8 @@ int64_t shortest_hamiltonian_path() {
 
 int64_t shortest_hamiltonian_cycle() {
   int n = static_cast<int>(adj.size());
-  assert(n >= 1);
+  assert(1 <= n && n < 31);
+  for (const auto &row : adj) assert(static_cast<int>(row.size()) == n);
   if (n == 1) {
     path = {0};
     return 0;

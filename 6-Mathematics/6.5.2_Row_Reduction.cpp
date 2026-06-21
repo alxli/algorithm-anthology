@@ -27,6 +27,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <stdexcept>
@@ -40,6 +41,9 @@ Matrix &row_reduce(Matrix &a) {
     return a;
   }
   int rows = static_cast<int>(a.size()), cols = static_cast<int>(a[0].size());
+  for (const auto &row : a) {
+    assert(static_cast<int>(row.size()) == cols);
+  }
   for (int r = 0, lead = 0; r < rows && lead < cols; lead++) {
     int pivot = r;
     for (int i = r + 1; i < rows; i++) {
@@ -132,7 +136,6 @@ int solve_system(const Matrix &a, const std::vector<T> &b, std::vector<T> *x) {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {
