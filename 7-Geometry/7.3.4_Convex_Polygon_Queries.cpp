@@ -41,7 +41,7 @@ auto cross(const Pt &a, const Pt &b, const Pt &o) {
 }
 
 template<typename T>
-int signum(const T &x) {
+int sgn(const T &x) {
   return (T(0) < x) - (x < T(0));
 }
 
@@ -65,8 +65,8 @@ bool point_in_convex_polygon(
   if (n == 2) {
     return EDGE_IS_INSIDE && on_segment(p, poly[0], poly[1]);
   }
-  int left = signum(cross(poly[1], p, poly[0]));
-  int right = signum(cross(poly[n - 1], p, poly[0]));
+  int left = sgn(cross(poly[1], p, poly[0]));
+  int right = sgn(cross(poly[n - 1], p, poly[0]));
   if (left < 0 || right > 0) {
     return false;
   }
@@ -85,7 +85,7 @@ bool point_in_convex_polygon(
       hi = mid;
     }
   }
-  int s = signum(cross(poly[lo + 1], p, poly[lo]));
+  int s = sgn(cross(poly[lo + 1], p, poly[lo]));
   return EDGE_IS_INSIDE ? s >= 0 : s > 0;
 }
 
@@ -97,7 +97,7 @@ std::array<int, 2> line_convex_polygon_intersection(
   std::vector<int> on, cross_edges;
   bool has_pos = false, has_neg = false;
   for (int i = 0; i < n; i++) {
-    int s = signum(cross(b, poly[i], a));
+    int s = sgn(cross(b, poly[i], a));
     has_pos |= s > 0;
     has_neg |= s < 0;
     if (s == 0) {
@@ -118,7 +118,7 @@ std::array<int, 2> line_convex_polygon_intersection(
   }
   for (int i = 0; i < n; i++) {
     int j = (i + 1) % n;
-    int si = signum(cross(b, poly[i], a)), sj = signum(cross(b, poly[j], a));
+    int si = sgn(cross(b, poly[i], a)), sj = sgn(cross(b, poly[j], a));
     if (si == 0 || si * sj < 0) {
       cross_edges.push_back(i);
     }
@@ -146,7 +146,7 @@ std::array<int, 2> convex_polygon_tangents(const std::vector<Pt> &poly, const Pt
   for (int i = 0; i < n; i++) {
     bool left = true, right = true;
     for (int j = 0; j < n; j++) {
-      int s = signum(cross(poly[i], poly[j], p));
+      int s = sgn(cross(poly[i], poly[j], p));
       left &= s >= 0;
       right &= s <= 0;
     }

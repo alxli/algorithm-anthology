@@ -27,7 +27,7 @@ Time Complexity:
 - O(64^2) per call to `nim_product()`; O(64^2 log e) per call to `nim_pow()` and `nim_inverse()`.
 
 Space Complexity:
-- O(1): a fixed 64 by 64 table of 64-bit products.
+- O(1) for a fixed 64 by 64 table of 64-bit products.
 
 */
 

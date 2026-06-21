@@ -50,10 +50,11 @@ const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 Epsilon Comparisons:
 
 - `EQ()`, `NE()`, `LT()`, `GT()`, `LE()`, and `GE()` relationally compare two values $x$ and $y$.
-  Arguments may be of different types; the common type governs behavior. If the common type is
-  integral, exact comparison is used (`==`, `<`, etc.). Otherwise, absolute-error epsilon comparison
-  is used: values within `EPS` of each other are considered equal, and `LT`/`GT`/`LE`/`GE` shift
-  the boundary by `EPS` accordingly.
+  Arguments may be of different types; the common type governs behavior. If the common type is a
+  floating-point type, absolute-error epsilon comparison is used: values within `EPS` of each other
+  are considered equal, and `LT`/`GT`/`LE`/`GE` shift the boundary by `EPS` accordingly. Otherwise
+  exact comparison is used (`==`, `<`, etc.). The branch is selected with `if constexpr`, so exact
+  types without floating-point arithmetic (e.g. integers, `Modular`, `Rational`) compose as well.
 - `rEQ(ref, val)` returns whether `val` equals reference `ref` within relative error `EPS`. The
   tolerance scales with $|`ref`|$, so `rEQ(ref, val)` is NOT the same as `rEQ(val, ref)`. Use this
   when one argument is a known exact value and the other is a computed approximation. Degenerates
@@ -69,12 +70,14 @@ const double EPS = 1e-9;
 // clang-format off
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
 template<typename T, typename U> bool NE(T a, U b) { return !EQ(a, b); }
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
 template<typename T, typename U> bool GT(T a, U b) { return LT(b, a); }
 template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }

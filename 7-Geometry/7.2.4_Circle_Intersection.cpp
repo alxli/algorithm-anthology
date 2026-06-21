@@ -40,17 +40,19 @@ Space Complexity:
 
 const double EPS = 1e-9, PI = acos(-1.0);
 
-// clang-format off
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool EQ(T a, U b) {
-  return std::is_integral_v<C> ? C(a) == C(b) : std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
 }
+
 template<typename T, typename U, typename C = std::common_type_t<T, U>>
 bool LT(T a, U b) {
-  return std::is_integral_v<C> ? C(a) < C(b) : C(a) < C(b) - static_cast<C>(EPS);
+  if constexpr (std::is_floating_point_v<C>) return C(a) < C(b) - static_cast<C>(EPS);
+  return C(a) < C(b);
 }
+
 template<typename T, typename U> bool LE(T a, U b) { return !LT(b, a); }
-// clang-format on
 
 struct Circle {
   double h, k, r;

@@ -47,6 +47,14 @@ Space Complexity:
 const double EPS = 1e-9;
 const double M_NAN = std::numeric_limits<double>::quiet_NaN();
 
+// Epsilon-aware for floating-point coordinates; exact for int and for coordinate types like Modular
+// or Rational, which therefore compose for all of the predicates below.
+template<typename T, typename U, typename C = std::common_type_t<T, U>>
+bool EQ(T a, U b) {
+  if constexpr (std::is_floating_point_v<C>) return std::fabs(C(a) - C(b)) <= static_cast<C>(EPS);
+  return C(a) == C(b);
+}
+
 // SFINAE guard: valid only when Pt exposes numeric .x/.y members, so templated point constructors
 // don't hijack scalar-argument calls.
 template<typename Pt>
@@ -73,47 +81,37 @@ struct TLine {
       class = std::enable_if_t<std::is_floating_point<U>::value>>
   TLine(fp_t slope, const Pt &p) : a(-slope), b(1), c(slope * p.x - p.y) {}
 
-  // Epsilon-aware for floating-point T; exact for int and for coordinate types like Modular or
-  // Rational, which therefore compose for all of the predicates below.
-  template<typename A, typename B>
-  static bool eq(const A &p, const B &q) {
-    if constexpr (std::is_floating_point<T>::value) {
-      return fabs(p - q) <= EPS;
-    }
-    return p == q;
-  }
-
   // Two lines are equal iff their coefficient vectors are proportional (the same line).
   bool operator==(const TLine &l) const {
-    return eq(a * l.b, l.a * b) && eq(b * l.c, l.b * c) && eq(a * l.c, l.a * c);
+    return EQ(a * l.b, l.a * b) && EQ(b * l.c, l.b * c) && EQ(a * l.c, l.a * c);
   }
 
   bool operator!=(const TLine &l) const { return !(*this == l); }
 
   // Returns whether the line is a valid line (not both a and b zero).
-  bool valid() const { return !(eq(a, 0) && eq(b, 0)); }
-  bool horizontal() const { return valid() && eq(a, 0); }
-  bool vertical() const { return valid() && eq(b, 0); }
+  bool valid() const { return !(EQ(a, 0) && EQ(b, 0)); }
+  bool horizontal() const { return valid() && EQ(a, 0); }
+  bool vertical() const { return valid() && EQ(b, 0); }
 
   // Slope -a/b, or NaN if the line is vertical or invalid.
-  fp_t slope() const { return (!valid() || eq(b, 0)) ? M_NAN : -(fp_t)a / b; }
+  fp_t slope() const { return (!valid() || EQ(b, 0)) ? M_NAN : -(fp_t)a / b; }
 
   // Solve for x at a given y (NaN if horizontal or invalid).
-  fp_t x(fp_t y) const { return (!valid() || eq(a, 0)) ? M_NAN : -((fp_t)b * y + c) / a; }
+  fp_t x(fp_t y) const { return (!valid() || EQ(a, 0)) ? M_NAN : -((fp_t)b * y + c) / a; }
 
   // Solve for y at a given x (NaN if vertical or invalid).
-  fp_t y(fp_t x) const { return (!valid() || eq(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
+  fp_t y(fp_t x) const { return (!valid() || EQ(b, 0)) ? M_NAN : -((fp_t)a * x + c) / b; }
 
   // Whether point p lies on the line. Exact for integer T and integer p.
   template<typename Pt>
   bool contains(const Pt &p) const {
-    return eq(a * p.x + b * p.y + c, 0);
+    return EQ(a * p.x + b * p.y + c, 0);
   }
 
   // Parallel iff the normals are parallel (cross == 0); perpendicular iff normals are
   // perpendicular (dot == 0). Both exact for integer T.
-  bool is_parallel(const TLine &l) const { return eq(a * l.b, l.a * b); }
-  bool is_perpendicular(const TLine &l) const { return eq(a * l.a, -(b * l.b)); }
+  bool is_parallel(const TLine &l) const { return EQ(a * l.b, l.a * b); }
+  bool is_perpendicular(const TLine &l) const { return EQ(a * l.a, -(b * l.b)); }
 
   // Parallel/perpendicular line through point p. Exact for integer T and integer p.
   template<typename Pt, typename = if_point<Pt>>
