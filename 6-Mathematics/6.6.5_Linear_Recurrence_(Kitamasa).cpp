@@ -26,6 +26,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -58,6 +59,7 @@ std::vector<int64_t> combine(
 }
 
 int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &init, int64_t n) {
+  assert(n >= 0 && init.size() >= rec.size());
   int L = static_cast<int>(rec.size());
   if (n < static_cast<int64_t>(init.size())) {
     return ((init[n] % MOD) + MOD) % MOD;
@@ -87,7 +89,6 @@ int64_t kth_term(const std::vector<int64_t> &rec, const std::vector<int64_t> &in
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

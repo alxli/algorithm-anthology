@@ -43,6 +43,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -98,7 +99,11 @@ class OrderedMultiset {
     return true;
   }
 
-  T find_by_order(int k) const { return tree.find_by_order(k)->first; }
+  T find_by_order(int k) const {
+    assert(0 <= k && k < size());
+    return tree.find_by_order(k)->first;
+  }
+  
   int order_of_key(const T &x) const { return tree.order_of_key({x, -1}); }
   int size() const { return static_cast<int>(tree.size()); }
 };
@@ -121,6 +126,7 @@ class OrderedMultimap {
   }
 
   std::pair<K, V> find_by_order(int k) const {
+    assert(0 <= k && k < size());
     auto it = tree.find_by_order(k);
     return {it->first.first, it->second};
   }
@@ -142,8 +148,6 @@ template<typename T, typename Compare = std::less<T>>
 using RcBinomialHeap = __gnu_pbds::priority_queue<T, Compare, __gnu_pbds::rc_binomial_heap_tag>;
 
 /*** Example Usage ***/
-
-#include <cassert>
 
 int main() {
   OrderedSet<int> s;

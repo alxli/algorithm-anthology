@@ -38,6 +38,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -101,6 +102,7 @@ class DynamicHash {
   int size() const { return len; }
 
   void set(int i, int x) {
+    assert(0 <= i && i < len && x >= 0);
     uint64_t old1 = static_cast<uint64_t>(cur[i]) % MOD1 * pw1[i] % MOD1;
     uint64_t old2 = static_cast<uint64_t>(cur[i]) % MOD2 * pw2[i] % MOD2;
     uint64_t new1 = static_cast<uint64_t>(x) % MOD1 * pw1[i] % MOD1;
@@ -111,6 +113,7 @@ class DynamicHash {
   }
 
   std::pair<uint64_t, uint64_t> hash(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi <= len);
     uint64_t raw1 = (sum(ft1, hi - 1, MOD1) + MOD1 - sum(ft1, lo - 1, MOD1)) % MOD1;
     uint64_t raw2 = (sum(ft2, hi - 1, MOD2) + MOD2 - sum(ft2, lo - 1, MOD2)) % MOD2;
     return {raw1 * ip1[lo] % MOD1, raw2 * ip2[lo] % MOD2};
@@ -119,7 +122,6 @@ class DynamicHash {
 
 /*** Example Usage ***/
 
-#include <cassert>
 #include <string>
 using namespace std;
 

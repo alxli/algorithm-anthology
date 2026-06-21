@@ -37,6 +37,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <utility>
 #include <vector>
 
@@ -58,6 +59,7 @@ class AggregateQueue {
   }
 
   void pop() {
+    assert(!empty());
     if (front_stack.empty()) {
       // Flip the back stack onto the front stack, reversing order so the oldest element ends up on
       // top, and recompute the front folds in queue order.
@@ -72,10 +74,12 @@ class AggregateQueue {
   }
 
   T front() const {
+    assert(!empty());
     return front_stack.empty() ? back_stack.front().first : front_stack.back().first;
   }
 
   T fold() const {
+    assert(!empty());
     if (front_stack.empty()) {
       return back_stack.back().second;
     }
@@ -88,7 +92,6 @@ class AggregateQueue {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

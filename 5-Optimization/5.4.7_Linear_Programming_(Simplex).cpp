@@ -28,6 +28,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <vector>
 
@@ -37,6 +38,10 @@ int simplex_solve(
     const double EPS = 1e-10
 ) {
   int m = static_cast<int>(a.size()), n = static_cast<int>(c.size());
+  assert(x != nullptr && b.size() == a.size());
+  for (const auto &row : a) {
+    assert(row.size() == c.size());
+  }
   std::vector<int> basis(m), nonbasis(n + 1);
   std::vector<std::vector<double>> tab(m + 2, std::vector<double>(n + 2));
   for (int i = 0; i < m; i++) {
@@ -152,7 +157,6 @@ Solution = 33.3043 at (5.30435, 4.34783).
 
 ***/
 
-#include <cassert>
 #include <iostream>
 using namespace std;
 

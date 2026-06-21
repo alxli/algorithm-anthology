@@ -34,7 +34,10 @@ T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignmen
   static const T INF = std::numeric_limits<T>::max() / 4;
   int n = static_cast<int>(cost.size());
   int m = cost.empty() ? 0 : static_cast<int>(cost[0].size());
-  assert(n <= m);
+  assert(assignment != nullptr && n <= m);
+  for (const auto &row : cost) {
+    assert(static_cast<int>(row.size()) == m);
+  }
   std::vector<T> u(n + 1), v(m + 1), minv(m + 1);
   std::vector<int> p(m + 1), way(m + 1);
   std::vector<char> used(m + 1);
@@ -88,7 +91,6 @@ T hungarian(const std::vector<std::vector<T>> &cost, std::vector<int> *assignmen
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

@@ -23,12 +23,14 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <deque>
 #include <vector>
 
 template<typename T>
 std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
   int n = static_cast<int>(a.size());
+  assert(1 <= k && k <= n);
   std::deque<int> window;
   std::vector<T> res;
   for (int i = 0; i < n; i++) {
@@ -49,6 +51,7 @@ std::vector<T> sliding_window_maximum(const std::vector<T> &a, int k) {
 template<typename T>
 std::vector<T> sliding_window_minimum(const std::vector<T> &a, int k) {
   int n = static_cast<int>(a.size());
+  assert(1 <= k && k <= n);
   std::deque<int> window;
   std::vector<T> res;
   for (int i = 0; i < n; i++) {
@@ -68,7 +71,6 @@ std::vector<T> sliding_window_minimum(const std::vector<T> &a, int k) {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {
