@@ -21,6 +21,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <vector>
 
 template<typename T>
@@ -42,12 +43,14 @@ class FenwickRUPQ {
   }
 
   void add(int i, const T &x) {
+    assert(0 <= i && i <= len);
     for (i++; i <= len + 1; i += i & -i) {
       tree[i] += x;
     }
   }
 
   void add(int lo, int hi, const T &x) {
+    assert(0 <= lo && lo <= hi && hi < len);
     add(lo, x);
     add(hi + 1, -x);
   }

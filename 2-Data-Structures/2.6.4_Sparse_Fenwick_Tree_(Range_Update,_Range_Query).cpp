@@ -26,6 +26,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <unordered_map>
 
 template<typename T, int N = 1000000001>
@@ -40,6 +41,7 @@ class SparseFenwick {
   }
 
   void add_helper(int at, const T &mul, const T &add) {
+    assert(1 <= at && at <= N + 1);
     for (int i = at; i <= N; i += i & -i) {
       tmul[i] += mul;
       tadd[i] += add;
@@ -58,6 +60,7 @@ class SparseFenwick {
   void set(int i, const T &x) { add(i, x - at(i)); }
 
   T sum(int hi) {
+    assert(-1 <= hi && hi < N);
     T mul = 0, add = 0;
     hi++;
     for (int i = hi; i > 0; i -= i & -i) {
@@ -98,7 +101,6 @@ Values: 15 6 7 -5 4
 
 ***/
 
-#include <cassert>
 #include <iostream>
 #include <vector>
 using namespace std;

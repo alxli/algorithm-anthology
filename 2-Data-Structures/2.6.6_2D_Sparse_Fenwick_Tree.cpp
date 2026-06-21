@@ -36,6 +36,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <unordered_map>
 #include <utility>
@@ -52,6 +53,7 @@ class SparseFenwick2D {
 
   template<typename Map>
   static void add(Map &tree, int r, int c, const T &x) {
+    assert(0 <= r && r <= R && 0 <= c && c <= C);
     for (int i = r + 1; i <= R; i += i & -i) {
       for (int j = c + 1; j <= C; j += j & -j) {
         tree[static_cast<int64_t>(i) * (C + 1) + j] += x;
@@ -83,6 +85,7 @@ class SparseFenwick2D {
   void set(int r, int c, const T &x) { add(r, c, x - at(r, c)); }
 
   T sum(int r, int c) {
+    assert(-1 <= r && r < R && -1 <= c && c < C);
     r++;
     c++;
     T s1 = 0, s2 = 0, s3 = 0, s4 = 0;
@@ -113,7 +116,6 @@ Values:
 
 ***/
 
-#include <cassert>
 #include <iostream>
 using namespace std;
 

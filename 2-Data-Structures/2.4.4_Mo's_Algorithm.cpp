@@ -30,6 +30,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <numeric>
 #include <utility>
@@ -40,6 +41,9 @@ std::vector<decltype(std::declval<CurrentFn>()())> mos_algorithm(
     int n, const std::vector<std::pair<int, int>> &queries, AddFn add, RemoveFn remove,
     CurrentFn current
 ) {
+  for (auto [lo, hi] : queries) {
+    assert(0 <= lo && lo <= hi && hi < n);
+  }
   int q = static_cast<int>(queries.size());
   int block = std::max(1, static_cast<int>(n / std::max(1.0, std::sqrt(static_cast<double>(q)))));
   std::vector<int> order(q);
@@ -66,7 +70,6 @@ std::vector<decltype(std::declval<CurrentFn>()())> mos_algorithm(
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

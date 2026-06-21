@@ -35,6 +35,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <vector>
 
 template<typename T>
@@ -50,6 +51,7 @@ class Fenwick2D {
   int size_cols() const { return cols; }
 
   void add(int r, int c, const T &x) {
+    assert(0 <= r && r < rows && 0 <= c && c < cols);
     for (int i = r + 1; i <= rows; i += i & -i) {
       for (int j = c + 1; j <= cols; j += j & -j) {
         tree[i][j] += x;
@@ -58,6 +60,7 @@ class Fenwick2D {
   }
 
   T sum(int r, int c) const {
+    assert(-1 <= r && r < rows && -1 <= c && c < cols);
     T res = 0;
     for (int i = r + 1; i > 0; i -= i & -i) {
       for (int j = c + 1; j > 0; j -= j & -j) {
@@ -77,7 +80,6 @@ class Fenwick2D {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

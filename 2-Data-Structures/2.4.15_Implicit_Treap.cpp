@@ -51,6 +51,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 
 template<typename T>
@@ -167,6 +168,7 @@ class ImplicitTreap {
   }
 
   static void erase(Node *&n, int i) {
+    assert(n != nullptr);
     push_delta(n);
     if (i == size(n->left)) {
       Node *left = n->left, *right = n->right;
@@ -181,6 +183,7 @@ class ImplicitTreap {
   }
 
   static Node *select(Node *n, int i) {
+    assert(n != nullptr);
     push_delta(n);
     if (i < size(n->left)) {
       return select(n->left, i);

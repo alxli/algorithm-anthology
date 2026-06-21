@@ -32,6 +32,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <vector>
 
 template<typename T>
@@ -45,12 +46,14 @@ class Fenwick {
   int size() const { return len; }
 
   void add(int i, const T &x) {
+    assert(0 <= i && i < len);
     for (++i; i <= len; i += i & -i) {
       tree[i] += x;
     }
   }
 
   T sum(int hi) const {
+    assert(-1 <= hi && hi < len);
     T res = 0;
     for (++hi; hi > 0; hi -= hi & -hi) {
       res += tree[hi];
@@ -79,7 +82,6 @@ class Fenwick {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

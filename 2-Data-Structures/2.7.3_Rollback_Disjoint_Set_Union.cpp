@@ -27,6 +27,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <numeric>
 #include <vector>
 
@@ -82,6 +83,7 @@ class RollbackDSU {
   int snapshot() const { return static_cast<int>(history.size()); }
 
   void rollback(int snapshot) {
+    assert(0 <= snapshot && snapshot <= static_cast<int>(history.size()));
     while (static_cast<int>(history.size()) > snapshot) {
       Change c = history.back();
       history.pop_back();
@@ -93,8 +95,6 @@ class RollbackDSU {
 };
 
 /*** Example Usage ***/
-
-#include <cassert>
 
 int main() {
   RollbackDSU dsu(5);

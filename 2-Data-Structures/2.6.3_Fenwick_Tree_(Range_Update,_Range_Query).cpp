@@ -26,6 +26,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <vector>
 
 template<typename T>
@@ -34,6 +35,7 @@ class FenwickRURQ {
   std::vector<T> t1, t2;
 
   T sum(const std::vector<T> &tree, int i) {
+    assert(0 <= i && i <= len);
     T res = 0;
     for (; i != 0; i -= i & -i) {
       res += tree[i];
@@ -42,6 +44,7 @@ class FenwickRURQ {
   }
 
   void add(std::vector<T> &tree, int i, const T &x) {
+    assert(1 <= i && i <= len + 1);
     for (; i <= len + 1; i += i & -i) {
       tree[i] += x;
     }
@@ -99,7 +102,6 @@ Values: 15 6 7 -5 4
 
 ***/
 
-#include <cassert>
 #include <iostream>
 using namespace std;
 

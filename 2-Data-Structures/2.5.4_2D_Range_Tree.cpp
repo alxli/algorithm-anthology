@@ -31,6 +31,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <utility>
 #include <vector>
@@ -89,6 +90,7 @@ class RangeTree {
   template<typename It>
   RangeTree(It lo, It hi) : points(lo, hi) {
     int n = std::distance(lo, hi);
+    assert(n > 0);
     columns.resize(4 * n + 1);
     std::sort(points.begin(), points.end());
     build(0, 0, n - 1);
@@ -96,6 +98,7 @@ class RangeTree {
 
   template<typename Fn>
   void query(const T &x1, const T &y1, const T &x2, const T &y2, Fn f) {
+    assert(!(x2 < x1) && !(y2 < y1));
     this->x1 = x1;
     this->y1 = y1;
     this->x2 = x2;
