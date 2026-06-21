@@ -22,30 +22,31 @@ index to a new value. Another possible update operation is "increment", in which
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
   inclusive. If `lo == hi`, then the single specified value is returned.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
-- `find_first(lo, hi, pred)` returns the smallest index in [`lo`, `hi`] matching the search, or $-1$
-  if none, in O(log n). `pred(v)` takes a node aggregate and must be monotone: if it is false, no
-  element under that node qualifies (e.g. for the default min tree, `pred(v) = (v <= x)` finds the
-  leftmost element `<= x`).
-- `find_last(lo, hi, pred)` is the analogous query returning the largest such index.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
-  range [`lo`, `hi`) satisfies `pred`, or `size()` if the predicate remains true to the end.
+  range [`lo`, `hi`) satisfies `pred`. It returns `size()` if `pred` remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range [`lo`, `hi`) satisfies `pred`, or 0 if the predicate remains true to the beginning.
+  range [`lo`, `hi`) satisfies `pred`. It returns 0 if `pred` remains true to the beginning.
+
+For the boundary-search functions, `pred` takes aggregate `T` values of candidate ranges. As a range
+grows, `pred` may change from true to false but never back to true; The empty range is considered
+valid. E.g. for `combine = min`, use `pred(mn) = (mn > x)` to find the first value `<= x`, or for
+`combine = sum`, use `pred(sum) = (sum <= x)` with nonnegative values to find the longest range
+within the limit `x`.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
 - O(1) per call to `size()`.
-- O(log n) per call to `at()`, `update()`, `query()`, `find_first()`, `find_last()`,
-  `max_right()`, and `min_left()`.
+- O(log n) per call to `at()`, `update()`, `query()`, `max_right()`, and `min_left()`.
 
 Space Complexity:
 - O(n) for storage of the array elements.
-- O(log n) auxiliary stack space for `update()` and `query()`.
+- O(log n) auxiliary stack space for `update()`, `query()`, `max_right()`, and `min_left()`.
 - O(1) auxiliary for `size()`.
 
 */
 
 #include <algorithm>
+#include <cassert>
 #include <optional>
 #include <vector>
 
@@ -112,32 +113,6 @@ class SegTree {
   }
 
   template<typename Pred>
-  int find_first(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) const {
-    if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
-      return -1;
-    }
-    if (lo == hi) {
-      return lo;
-    }
-    int mid = lo + (hi - lo) / 2;
-    int res = find_first(i * 2 + 1, lo, mid, tgt_lo, tgt_hi, pred);
-    return res != -1 ? res : find_first(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi, pred);
-  }
-
-  template<typename Pred>
-  int find_last(int i, int lo, int hi, int tgt_lo, int tgt_hi, const Pred &pred) const {
-    if (tgt_hi < lo || hi < tgt_lo || !pred(value[i])) {
-      return -1;
-    }
-    if (lo == hi) {
-      return lo;
-    }
-    int mid = lo + (hi - lo) / 2;
-    int res = find_last(i * 2 + 2, mid + 1, hi, tgt_lo, tgt_hi, pred);
-    return res != -1 ? res : find_last(i * 2 + 1, lo, mid, tgt_lo, tgt_hi, pred);
-  }
-
-  template<typename Pred>
   int max_right(int i, int lo, int hi, int tgt_lo, const Pred &pred, std::optional<T> &acc) const {
     if (hi < tgt_lo) {
       return -1;
@@ -179,35 +154,36 @@ class SegTree {
 
  public:
   explicit SegTree(int n, const T &v = T()) : len(n), value(4 * len) {
-    if (len > 0) {
-      build(0, 0, len - 1, v);
-    }
+    assert(len > 0);
+    build(0, 0, len - 1, v);
   }
 
   template<typename It>
   SegTree(It lo, It hi) : len(hi - lo), value(4 * len) {
-    if (len > 0) {
-      build(0, 0, len - 1, lo);
-    }
+    assert(len > 0);
+    build(0, 0, len - 1, lo);
   }
 
   int size() const { return len; }
-  T at(int i) const { return query(i, i); }
-  T query(int lo, int hi) const { return query(0, 0, len - 1, lo, hi); }
-  void update(int i, const T &d) { update(0, 0, len - 1, i, d); }
 
-  template<typename Pred>
-  int find_first(int lo, int hi, const Pred &pred) const {
-    return find_first(0, 0, len - 1, lo, hi, pred);
+  T at(int i) const {
+    assert(0 <= i && i < len);
+    return query(i, i);
   }
 
-  template<typename Pred>
-  int find_last(int lo, int hi, const Pred &pred) const {
-    return find_last(0, 0, len - 1, lo, hi, pred);
+  T query(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi < len);
+    return query(0, 0, len - 1, lo, hi);
+  }
+
+  void update(int i, const T &d) {
+    assert(0 <= i && i < len);
+    update(0, 0, len - 1, i, d);
   }
 
   template<typename Pred>
   int max_right(int lo, const Pred &pred) const {
+    assert(0 <= lo && lo <= len);
     std::optional<T> acc;
     int res = max_right(0, 0, len - 1, lo, pred, acc);
     return res == -1 ? len : res;
@@ -215,6 +191,7 @@ class SegTree {
 
   template<typename Pred>
   int min_left(int hi, const Pred &pred) const {
+    assert(0 <= hi && hi <= len);
     std::optional<T> acc;
     int res = min_left(0, 0, len - 1, hi, pred, acc);
     return res == -1 ? 0 : res;
@@ -228,7 +205,6 @@ The minimum value in the range [0, 3] is -2.
 
 ***/
 
-#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -244,14 +220,10 @@ int main() {
   cout << "The minimum value in the range [0, 3] is " << t.query(0, 3) << "." << endl;
   assert(t.query(0, 3) == -2);
 
-  // Segment-tree descent: leftmost/rightmost index in a range with value <= a threshold.
-  auto at_most_4 = [](int v) { return v <= 4; };
-  assert(t.find_first(0, 4, at_most_4) == 1);                       // value -2 at index 1
-  assert(t.find_last(0, 4, at_most_4) == 2);                        // value 4 at index 2
-  assert(t.find_first(0, 4, [](int v) { return v <= -5; }) == -1);  // no value <= -5
-
   // Boundary search by accumulated aggregate: stop before including the -2 at index 1.
   assert(t.max_right(0, [](int mn) { return mn > -2; }) == 1);
   assert(t.min_left(5, [](int mn) { return mn > -2; }) == 2);
+  assert(t.max_right(2, [](int mn) { return mn >= 4; }) == t.size());
+  assert(t.min_left(2, [](int mn) { return mn >= 0; }) == 2);
   return 0;
 }

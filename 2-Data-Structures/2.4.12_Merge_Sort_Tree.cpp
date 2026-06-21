@@ -25,6 +25,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <iterator>
 #include <vector>
 
@@ -62,18 +63,20 @@ class MergeSortTree {
 
  public:
   MergeSortTree(const std::vector<T> &a) : len(a.size()), tree(4 * a.size()) {
-    if (len > 0) {
-      build(1, 0, len - 1, a);
-    }
+    assert(len > 0);
+    build(1, 0, len - 1, a);
   }
 
   int count_leq(int lo, int hi, const T &x) const {
+    assert(0 <= lo && lo <= hi && hi < len);
     return query(1, 0, len - 1, lo, hi, [&](const std::vector<T> &v) {
       return static_cast<int>(std::upper_bound(v.begin(), v.end(), x) - v.begin());
     });
   }
 
   int count_in(int lo, int hi, const T &x, const T &y) const {
+    assert(0 <= lo && lo <= hi && hi < len);
+    assert(!(y < x));
     return query(1, 0, len - 1, lo, hi, [&](const std::vector<T> &v) {
       return static_cast<int>(
           std::upper_bound(v.begin(), v.end(), y) - std::lower_bound(v.begin(), v.end(), x)
@@ -84,7 +87,6 @@ class MergeSortTree {
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

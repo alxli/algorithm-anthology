@@ -32,20 +32,21 @@ increment, `compose_deltas(old, d)` should return `old + d`; `apply_delta(v, d, 
 - `update(i, d)` assigns the value at index `i` by applying the delta `d`.
 - `update(lo, hi, d)` modifies the value at each array index from `lo` to `hi`, inclusive, by
   applying the delta `d` to each value.
-- `find_first(lo, hi, pred)` returns the smallest index in [`lo`, `hi`] matching the search, or $-1$
-  if none. `pred(v)` takes a node aggregate and must be monotone: if it is false, no element under
-  that node qualifies.
-- `find_last(lo, hi, pred)` is the analogous query returning the largest such index.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
-  range [`lo`, `hi`) satisfies `pred`, or `size()` if the predicate remains true to the end.
+  range [`lo`, `hi`) satisfies `pred`. It returns `size()` if `pred` remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range [`lo`, `hi`) satisfies `pred`, or 0 if the predicate remains true to the beginning.
+  range [`lo`, `hi`) satisfies `pred`. It returns 0 if `pred` remains true to the beginning.
+
+For the boundary-search functions, `pred` takes aggregate `T` values of candidate ranges. As a range
+grows, `pred` may change from true to false but never back to true; The empty range is considered
+valid. E.g. for `combine = min`, use `pred(mn) = (mn > x)` to find the first value `<= x`, or for
+`combine = sum`, use `pred(sum) = (sum <= x)` with nonnegative values to find the longest range
+within the limit `x`.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
 - O(1) per call to `size()`.
-- O(log n) per call to `at()`, `update()`, `query()`, `find_first()`, `find_last()`,
-  `max_right()`, and `min_left()`.
+- O(log n) per call to `at()`, `update()`, `query()`, `max_right()`, and `min_left()`.
 
 Space Complexity:
 - O(n) for storage of the array elements and lazy deltas.
@@ -54,6 +55,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <optional>
 #include <vector>
@@ -121,40 +123,6 @@ class IterativeLazySegTree {
   }
 
   template<typename Pred>
-  int find_first(int i, int lo, int hi, int qlo, int qhi, const Pred &pred) {
-    if (hi <= qlo || qhi <= lo || len <= lo) {
-      return -1;
-    }
-    if (qlo <= lo && hi <= qhi && hi <= len && !pred(value[i])) {
-      return -1;
-    }
-    if (hi - lo == 1) {
-      return lo;
-    }
-    push(i);
-    int mid = (lo + hi) / 2;
-    int res = find_first(i << 1, lo, mid, qlo, qhi, pred);
-    return res != -1 ? res : find_first(i << 1 | 1, mid, hi, qlo, qhi, pred);
-  }
-
-  template<typename Pred>
-  int find_last(int i, int lo, int hi, int qlo, int qhi, const Pred &pred) {
-    if (hi <= qlo || qhi <= lo || len <= lo) {
-      return -1;
-    }
-    if (qlo <= lo && hi <= qhi && hi <= len && !pred(value[i])) {
-      return -1;
-    }
-    if (hi - lo == 1) {
-      return lo;
-    }
-    push(i);
-    int mid = (lo + hi) / 2;
-    int res = find_last(i << 1 | 1, mid, hi, qlo, qhi, pred);
-    return res != -1 ? res : find_last(i << 1, lo, mid, qlo, qhi, pred);
-  }
-
-  template<typename Pred>
   int max_right(int i, int lo, int hi, int qlo, const Pred &pred, std::optional<T> &acc) {
     if (hi <= qlo || len <= lo) {
       return -1;
@@ -198,6 +166,7 @@ class IterativeLazySegTree {
 
  public:
   explicit IterativeLazySegTree(int n, const T &v = T()) : len(n) {
+    assert(len > 0);
     init_storage();
     for (int i = 0; i < len; i++) {
       value[base + i] = v;
@@ -209,6 +178,7 @@ class IterativeLazySegTree {
 
   template<typename It>
   IterativeLazySegTree(It lo, It hi) : len(hi - lo) {
+    assert(len > 0);
     init_storage();
     for (int i = 0; i < len; i++) {
       value[base + i] = *(lo + i);
@@ -221,12 +191,14 @@ class IterativeLazySegTree {
   int size() const { return len; }
 
   T at(int i) {
+    assert(0 <= i && i < len);
     i += base;
     push_path(i);
     return value[i];
   }
 
   T query(int lo, int hi) {
+    assert(0 <= lo && lo <= hi && hi < len);
     int l = lo + base, r = hi + 1 + base;
     push_path(l);
     push_path(r - 1);
@@ -243,6 +215,7 @@ class IterativeLazySegTree {
   }
 
   void update(int lo, int hi, const T &d) {
+    assert(0 <= lo && lo <= hi && hi < len);
     int l = lo + base, r = hi + 1 + base;
     push_path(l);
     push_path(r - 1);
@@ -258,20 +231,14 @@ class IterativeLazySegTree {
     pull_after_update(l0, r0);
   }
 
-  void update(int i, const T &d) { update(i, i, d); }
-
-  template<typename Pred>
-  int find_first(int lo, int hi, const Pred &pred) {
-    return find_first(1, 0, base, lo, hi + 1, pred);
-  }
-
-  template<typename Pred>
-  int find_last(int lo, int hi, const Pred &pred) {
-    return find_last(1, 0, base, lo, hi + 1, pred);
+  void update(int i, const T &d) {
+    assert(0 <= i && i < len);
+    update(i, i, d);
   }
 
   template<typename Pred>
   int max_right(int lo, const Pred &pred) {
+    assert(0 <= lo && lo <= len);
     std::optional<T> acc;
     int res = max_right(1, 0, base, lo, pred, acc);
     return res == -1 ? len : res;
@@ -279,6 +246,7 @@ class IterativeLazySegTree {
 
   template<typename Pred>
   int min_left(int hi, const Pred &pred) {
+    assert(0 <= hi && hi <= len);
     std::optional<T> acc;
     int res = min_left(1, 0, base, hi, pred, acc);
     return res == -1 ? 0 : res;
@@ -292,7 +260,6 @@ Values: 5 5 5 1 5
 
 ***/
 
-#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -316,11 +283,7 @@ int main() {
   cout << endl;
   assert(t.query(0, 3) == 1);
 
-  // Segment-tree descent works through lazy updates too; values are now {5, 5, 5, 1, 5}.
-  auto at_most_1 = [](int v) { return v <= 1; };
-  assert(t.find_first(0, 4, at_most_1) == 3);  // only index 3 (value 1) qualifies
-  assert(t.find_last(0, 4, at_most_1) == 3);
-  assert(t.find_first(0, 2, at_most_1) == -1);  // no value <= 1 in [0, 2]
+  // Boundary search works through lazy updates too; values are now {5, 5, 5, 1, 5}.
   assert(t.max_right(0, [](int mn) { return mn > 1; }) == 3);
   assert(t.min_left(5, [](int mn) { return mn > 1; }) == 4);
   return 0;

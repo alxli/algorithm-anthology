@@ -44,11 +44,14 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 
 template<typename T, int R = 1000000000, int C = 1000000000>
 class Quadtree {
+  static_assert(R >= 0 && C >= 0);
+
   static T combine(const T &a, const T &b) { return std::min(a, b); }
   static T repeat_value(const T &v, int64_t area) { return v; }
   static T apply_delta(const T &v, const T &d) { return d; }
@@ -153,9 +156,15 @@ class Quadtree {
   ~Quadtree() { clean_up(root); }
   Quadtree(const Quadtree &) = delete;
   Quadtree &operator=(const Quadtree &) = delete;
-  T at(int r, int c) { return query(r, c, r, c); }
+  
+  T at(int r, int c) {
+    assert(0 <= r && r <= R && 0 <= c && c <= C);
+    return query(r, c, r, c);
+  }
 
   T query(int r1, int c1, int r2, int c2) {
+    assert(0 <= r1 && r1 <= r2 && r2 <= R);
+    assert(0 <= c1 && c1 <= c2 && c2 <= C);
     tgt_r1 = r1;
     tgt_c1 = c1;
     tgt_r2 = r2;
@@ -166,6 +175,7 @@ class Quadtree {
   }
 
   void update(int r, int c, const T &d) {
+    assert(0 <= r && r <= R && 0 <= c && c <= C);
     tgt_r = r;
     tgt_c = c;
     delta = d;
@@ -182,7 +192,6 @@ Values:
 
 ***/
 
-#include <cassert>
 #include <iostream>
 using namespace std;
 

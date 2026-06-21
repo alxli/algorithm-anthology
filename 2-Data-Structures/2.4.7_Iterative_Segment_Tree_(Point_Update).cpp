@@ -25,20 +25,21 @@ index to a new value. Another possible update operation is "increment", in which
 - `query(lo, hi)` returns the result of `combine()` applied to all indices from `lo` to `hi`,
   inclusive. If `lo == hi`, then the single specified value is returned.
 - `update(i, d)` assigns the value `v` at index `i` to `apply_delta(v, d)`.
-- `find_first(lo, hi, pred)` returns the smallest index in [`lo`, `hi`] matching the search, or $-1$
-  if none. `pred(v)` takes a node aggregate and must be monotone: if it is false, no element under
-  that node qualifies.
-- `find_last(lo, hi, pred)` is the analogous query returning the largest such index.
 - `max_right(lo, pred)` returns the largest boundary `hi` such that the aggregate over the half-open
-  range [`lo`, `hi`) satisfies `pred`, or `size()` if the predicate remains true to the end.
+  range [`lo`, `hi`) satisfies `pred`. It returns `size()` if `pred` remains true to the end.
 - `min_left(hi, pred)` returns the smallest boundary `lo` such that the aggregate over the half-open
-  range [`lo`, `hi`) satisfies `pred`, or 0 if the predicate remains true to the beginning.
+  range [`lo`, `hi`) satisfies `pred`. It returns 0 if `pred` remains true to the beginning.
+
+For the boundary-search functions, `pred` takes aggregate `T` values of candidate ranges. As a range
+grows, `pred` may change from true to false but never back to true; The empty range is considered
+valid. E.g. for `combine = min`, use `pred(mn) = (mn > x)` to find the first value `<= x`, or for
+`combine = sum`, use `pred(sum) = (sum <= x)` with nonnegative values to find the longest range
+within the limit `x`.
 
 Time Complexity:
 - O(n) per call to both constructors, where $n$ is the size of the array.
 - O(1) per call to `size()` and `at()`.
-- O(log n) per call to `update()`, `query()`, `find_first()`, `find_last()`, `max_right()`, and
-  `min_left()`.
+- O(log n) per call to `update()`, `query()`, `max_right()`, and `min_left()`.
 
 Space Complexity:
 - O(n) for storage of the array elements.
@@ -47,6 +48,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <optional>
 #include <vector>
 
@@ -57,38 +59,6 @@ class IterativeSegTree {
 
   int len, base;
   std::vector<T> value;
-
-  template<typename Pred>
-  int find_first(int i, int lo, int hi, int qlo, int qhi, const Pred &pred) const {
-    if (hi <= qlo || qhi <= lo || len <= lo) {
-      return -1;
-    }
-    if (qlo <= lo && hi <= qhi && hi <= len && !pred(value[i])) {
-      return -1;
-    }
-    if (hi - lo == 1) {
-      return lo;
-    }
-    int mid = (lo + hi) / 2;
-    int res = find_first(i << 1, lo, mid, qlo, qhi, pred);
-    return res != -1 ? res : find_first(i << 1 | 1, mid, hi, qlo, qhi, pred);
-  }
-
-  template<typename Pred>
-  int find_last(int i, int lo, int hi, int qlo, int qhi, const Pred &pred) const {
-    if (hi <= qlo || qhi <= lo || len <= lo) {
-      return -1;
-    }
-    if (qlo <= lo && hi <= qhi && hi <= len && !pred(value[i])) {
-      return -1;
-    }
-    if (hi - lo == 1) {
-      return lo;
-    }
-    int mid = (lo + hi) / 2;
-    int res = find_last(i << 1 | 1, mid, hi, qlo, qhi, pred);
-    return res != -1 ? res : find_last(i << 1, lo, mid, qlo, qhi, pred);
-  }
 
   template<typename Pred>
   int max_right(int i, int lo, int hi, int qlo, const Pred &pred, std::optional<T> &acc) const {
@@ -132,6 +102,7 @@ class IterativeSegTree {
 
  public:
   explicit IterativeSegTree(int n, const T &v = T()) : len(n), base(1) {
+    assert(len > 0);
     while (base < len) {
       base <<= 1;
     }
@@ -146,6 +117,7 @@ class IterativeSegTree {
 
   template<typename It>
   IterativeSegTree(It lo, It hi) : len(hi - lo), base(1) {
+    assert(len > 0);
     while (base < len) {
       base <<= 1;
     }
@@ -159,9 +131,14 @@ class IterativeSegTree {
   }
 
   int size() const { return len; }
-  T at(int i) const { return value[base + i]; }
+  
+  T at(int i) const {
+    assert(0 <= i && i < len);
+    return value[base + i];
+  }
 
   T query(int lo, int hi) const {
+    assert(0 <= lo && lo <= hi && hi < len);
     std::optional<T> left, right;
     for (lo += base, hi += base + 1; lo < hi; lo >>= 1, hi >>= 1) {
       if (lo & 1) {
@@ -181,6 +158,7 @@ class IterativeSegTree {
   }
 
   void update(int i, const T &d) {
+    assert(0 <= i && i < len);
     i += base;
     value[i] = apply_delta(value[i], d);
     for (i >>= 1; i > 0; i >>= 1) {
@@ -189,17 +167,8 @@ class IterativeSegTree {
   }
 
   template<typename Pred>
-  int find_first(int lo, int hi, const Pred &pred) const {
-    return find_first(1, 0, base, lo, hi + 1, pred);
-  }
-
-  template<typename Pred>
-  int find_last(int lo, int hi, const Pred &pred) const {
-    return find_last(1, 0, base, lo, hi + 1, pred);
-  }
-
-  template<typename Pred>
   int max_right(int lo, const Pred &pred) const {
+    assert(0 <= lo && lo <= len);
     std::optional<T> acc;
     int res = max_right(1, 0, base, lo, pred, acc);
     return res == -1 ? len : res;
@@ -207,6 +176,7 @@ class IterativeSegTree {
 
   template<typename Pred>
   int min_left(int hi, const Pred &pred) const {
+    assert(0 <= hi && hi <= len);
     std::optional<T> acc;
     int res = min_left(1, 0, base, hi, pred, acc);
     return res == -1 ? 0 : res;
@@ -220,7 +190,6 @@ The minimum value in the range [0, 3] is -2.
 
 ***/
 
-#include <cassert>
 #include <iostream>
 using namespace std;
 
@@ -235,11 +204,6 @@ int main() {
   cout << endl;
   cout << "The minimum value in the range [0, 3] is " << t.query(0, 3) << "." << endl;
   assert(t.query(0, 3) == -2);
-
-  auto at_most_4 = [](int v) { return v <= 4; };
-  assert(t.find_first(0, 4, at_most_4) == 1);
-  assert(t.find_last(0, 4, at_most_4) == 2);
-  assert(t.find_first(0, 4, [](int v) { return v <= -5; }) == -1);
 
   assert(t.max_right(0, [](int mn) { return mn > -2; }) == 1);
   assert(t.min_left(5, [](int mn) { return mn > -2; }) == 2);

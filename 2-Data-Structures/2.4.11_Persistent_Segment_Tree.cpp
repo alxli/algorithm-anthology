@@ -23,6 +23,7 @@ Space Complexity:
 
 */
 
+#include <cassert>
 #include <cstdint>
 #include <vector>
 
@@ -83,26 +84,28 @@ class PersistentSegTree {
 
  public:
   explicit PersistentSegTree(const std::vector<int> &a) : n(a.size()) {
-    if (n > 0) {
-      root.push_back(build(a, 0, n - 1));
-    }
+    assert(n > 0);
+    root.push_back(build(a, 0, n - 1));
   }
 
   int versions() const { return static_cast<int>(root.size()); }
 
   int update(int version, int index, int value) {
+    assert(0 <= version && version < versions());
+    assert(0 <= index && index < n);
     root.push_back(update(root[version], 0, n - 1, index, value));
     return static_cast<int>(root.size()) - 1;
   }
 
   int64_t query(int version, int lo, int hi) const {
+    assert(0 <= version && version < versions());
+    assert(0 <= lo && lo <= hi && hi < n);
     return query(root[version], 0, n - 1, lo, hi);
   }
 };
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {

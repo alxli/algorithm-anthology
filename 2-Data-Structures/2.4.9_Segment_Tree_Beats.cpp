@@ -46,6 +46,7 @@ Space Complexity:
 */
 
 #include <algorithm>
+#include <cassert>
 #include <cstdint>
 #include <limits>
 #include <vector>
@@ -149,29 +150,42 @@ class SegTreeBeats {
  public:
   explicit SegTreeBeats(int n, const T &v = T())
       : len(n), max1(4 * n), max2(4 * n), sum(4 * n), cnt(4 * n) {
-    if (len > 0) {
-      build(0, 0, len - 1, [&](int) { return v; });
-    }
+    assert(len > 0);
+    build(0, 0, len - 1, [&](int) { return v; });
   }
 
   template<typename It>
   SegTreeBeats(It lo, It hi)
       : len(static_cast<int>(hi - lo)), max1(4 * len), max2(4 * len), sum(4 * len), cnt(4 * len) {
-    if (len > 0) {
-      build(0, 0, len - 1, [&](int i) { return *(lo + i); });
-    }
+    assert(len > 0);
+    build(0, 0, len - 1, [&](int i) { return *(lo + i); });
   }
 
   int size() const { return len; }
-  void chmin(int lo, int hi, const T &t) { chmin(0, 0, len - 1, lo, hi, t); }
-  T query_sum(int lo, int hi) { return query_sum(0, 0, len - 1, lo, hi); }
-  T query_max(int lo, int hi) { return query_max(0, 0, len - 1, lo, hi); }
-  T at(int i) { return query_sum(0, 0, len - 1, i, i); }
+
+  void chmin(int lo, int hi, const T &t) {
+    assert(0 <= lo && lo <= hi && hi < len);
+    chmin(0, 0, len - 1, lo, hi, t);
+  }
+
+  T query_sum(int lo, int hi) {
+    assert(0 <= lo && lo <= hi && hi < len);
+    return query_sum(0, 0, len - 1, lo, hi);
+  }
+
+  T query_max(int lo, int hi) {
+    assert(0 <= lo && lo <= hi && hi < len);
+    return query_max(0, 0, len - 1, lo, hi);
+  }
+  
+  T at(int i) {
+    assert(0 <= i && i < len);
+    return query_sum(0, 0, len - 1, i, i);
+  }
 };
 
 /*** Example Usage ***/
 
-#include <cassert>
 using namespace std;
 
 int main() {
