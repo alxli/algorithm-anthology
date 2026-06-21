@@ -148,13 +148,7 @@ class IterativeSegTree {
         right = right ? combine(value[--hi], *right) : value[--hi];
       }
     }
-    if (!left) {
-      return *right;
-    }
-    if (!right) {
-      return *left;
-    }
-    return combine(*left, *right);
+    return !left ? *right : (!right ? *left : combine(*left, *right));
   }
 
   void update(int i, const T &d) {
