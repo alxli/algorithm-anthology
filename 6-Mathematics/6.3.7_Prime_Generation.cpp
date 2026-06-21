@@ -76,7 +76,8 @@ std::vector<int> sieve(int lo, int hi) {
   }
   for (int i = 2; i <= sqrt_hi; i++) {
     if (prime1[i]) {
-      int64_t start = std::max(1LL * i * i, ((static_cast<int64_t>(lo) + i - 1) / i) * i);
+      int64_t first_multiple = ((static_cast<int64_t>(lo) + i - 1) / i) * i;
+      int64_t start = std::max(static_cast<int64_t>(i) * i, first_multiple);
       for (int64_t j = start; j <= hi; j += i) {
         prime2[j - lo] = false;
       }

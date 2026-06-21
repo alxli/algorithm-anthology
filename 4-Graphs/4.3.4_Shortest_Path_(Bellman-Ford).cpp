@@ -32,6 +32,7 @@ Space Complexity:
 
 #include <cstdint>
 #include <stdexcept>
+#include <tuple>
 #include <vector>
 
 const int64_t INF = INT64_MAX / 4;
